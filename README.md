@@ -78,19 +78,10 @@ Funktionen ab Version 2.2.0:
 
 INSTALLATION:
 ===================  
-Installationshilfe von Otto Kerner (Plex-Forum Mai 2015):
-Anleitung zum manuellen Installieren von Plex Software-Bundles (Channels, Agenten, Scanner):
-- zip-Datei von Github herunterladen
-- zip auspacken, heraus kommt ein Ordner namens "Plex-Plugin-ARDMediathek2016-master"
-- Diesen Ordner umbenennen in "ARDMediathek2016.bundle"
-- den kompletten Ordner kopieren ins Plex Datenverzeichnis, in den Unterordner /Plug-ins
-
-ein Neustart von Plex oder ein vorheriges Beenden von Plex ist i.d.R. nicht erforderlich
-Beim Aktualisieren einfach den .bundle Ordner löschen und die neue Version an seine Stelle kopieren.
-Ergänzung:
- 
-### Ergänzung
-beim Download der zip-Datei aus ARDundZDF/release entfällt das Umbenennen.
+Download der zip-Datei hier: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
+Im Kodi-Menü Addons/Addon-Browser anklicken: aus Repository installieren
+Heruntergeladene zip-Datei im Browser auswählen.
+Addon öffen und Addon-Einstellungen anpassen.
 
 Credits:
 ===================  
