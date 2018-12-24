@@ -78,10 +78,10 @@ Funktionen ab Version 2.2.0:
 
 INSTALLATION:
 ===================  
-Download der zip-Datei hier: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
-Im Kodi-Menü Addons/Addon-Browser anklicken: aus Repository installieren
-Heruntergeladene zip-Datei im Browser auswählen.
-Addon öffen und Addon-Einstellungen anpassen.
+- Download der zip-Datei hier: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
+- Im Kodi-Menü Addons/Addon-Browser anklicken: aus Repository installieren
+- Heruntergeladene zip-Datei im Browser auswählen.
+- Addon öffen und Addon-Einstellungen anpassen.
 
 Credits:
 ===================  
