@@ -306,8 +306,8 @@ def Main():
 			call_update = True
 			title = 'neues Update vorhanden - jetzt installieren'
 			summary = 'Plugin aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
-			# Bsp.: https://github.com/rols1/ARDundZDF/releases/download/0.2.9/ARDundZDF.bundle.zip
-			url = 'https://github.com/{0}/releases/download/{1}/{2}.bundle.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
+			# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
+			url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
 			fparams="&fparams={'url': '%s', 'ver': '%s'}" % (urllib.quote_plus(url), latest_version) 
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.updater.update", fanart=R(FANART), 
 				thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary)
@@ -514,8 +514,8 @@ def SearchUpdate(title):
 	summ = ret[3]			# Changes
 	tag = ret[4]			# tag, Bsp. 029
 	
-	# Bsp.: https://github.com/rols1/ARDundZDF/releases/download/0.2.9/ARDundZDF.bundle.zip
-	url = 'https://github.com/{0}/releases/download/{1}/{2}.bundle.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
+	# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
+	url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
 
 	PLog(int_lv); PLog(int_lc); PLog(latest_version); PLog(summ);  PLog(url);
 	
@@ -538,7 +538,8 @@ def SearchUpdate(title):
 	else:	
 		title = 'Plugin ist aktuell | weiter zum aktuellen Plugin'
 		summary = 'Plugin Version ' + VERSION + ' ist aktuell (kein Update vorhanden)'
-		tagline = cleanhtml(summ)
+		summ = summ.splitlines()[0]		# nur 1. Zeile changelog
+		tagline = "%s | Mehr in changelog.txt" % summ
 		thumb = R(ICON_OK)
 		fparams='&fparams=title=Update Plugin'
 		addDir(li=li, label=title, action="dirList", dirID="updater.menu", fanart=R(ICON_OK), 
