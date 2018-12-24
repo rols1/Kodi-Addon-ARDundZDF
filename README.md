@@ -1,7 +1,8 @@
 ARDundZDF
 ===================
-Plugin für den Plexmediaserver 
-mit Inhalten der Mediatheken von ARD und ZDF, 
+
+Addon für den Kodi / XBMC (Kodi-Version von [Plex-Plugin ARDundZDF](https://github.com/rols1/ARDundZDF).
+Mit Inhalten der Mediatheken von ARD und ZDF, 
 einschließlich Live-TV mit Aufnahmefunktion, Live-Radio, Podcasts
 
 Für die ZDF Mediathek kann wahlweise die kompakte Version ZDFmobile genutzt werden. 
@@ -13,7 +14,7 @@ Das Plugin löst die Vorgänger Plex-Plugin-ARDMediathek2015 und Plex-Plugin-ARD
 ab. Der Relaunch des ZDF-Mediathek-Internetangebots vom 28.10.2016 ist eingearbeitet. 
 
 #### Rückmeldungen willkommen:
-Im Forum: https://forums.plex.tv/t/rel-ardundzdf/309751
+Im Forum: wird nachgereicht
 direkt: rols1@gmx.de 
   
 Funktionen ab Version 2.2.0: 
