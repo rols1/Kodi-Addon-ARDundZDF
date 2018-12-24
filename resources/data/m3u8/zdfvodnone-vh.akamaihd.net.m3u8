@@ -1,9 +1,0 @@
-#EXTM3U
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=369000,RESOLUTION=480x272,CODECS="avc1.77.30, mp4a.40.2",CLOSED-CAPTIONS=NONE
-http://zdfvodnone-vh.akamaihd.net/i/meta-files/zdf/smil/m3u8/200/18/12/181218_topthema_mom/1/181218_topthema_mom.smil/index_476000_av.m3u8?null=0
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=587000,RESOLUTION=640x360,CODECS="avc1.77.30, mp4a.40.2",CLOSED-CAPTIONS=NONE
-http://zdfvodnone-vh.akamaihd.net/i/meta-files/zdf/smil/m3u8/200/18/12/181218_topthema_mom/1/181218_topthema_mom.smil/index_776000_av.m3u8?null=0
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1119000,RESOLUTION=852x480,CODECS="avc1.77.30, mp4a.40.2",CLOSED-CAPTIONS=NONE
-http://zdfvodnone-vh.akamaihd.net/i/meta-files/zdf/smil/m3u8/200/18/12/181218_topthema_mom/1/181218_topthema_mom.smil/index_1496000_av.m3u8?null=0
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=96000,CODECS="mp4a.40.2",CLOSED-CAPTIONS=NONE
-http://zdfvodnone-vh.akamaihd.net/i/meta-files/zdf/smil/m3u8/200/18/12/181218_topthema_mom/1/181218_topthema_mom.smil/index_476000_a.m3u8?null=0

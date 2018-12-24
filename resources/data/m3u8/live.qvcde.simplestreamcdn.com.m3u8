@@ -1,7 +1,0 @@
-#EXTM3U
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=414000
-http://live.qvcde.simplestreamcdn.com/live/qvcde_plus_clean/bitrate1.isml/1/prog_index.m3u8
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=964000
-http://live.qvcde.simplestreamcdn.com/live/qvcde_plus_clean/bitrate1.isml/2/prog_index.m3u8
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1564000
-http://live.qvcde.simplestreamcdn.com/live/qvcde_plus_clean/bitrate1.isml/3/prog_index.m3u8

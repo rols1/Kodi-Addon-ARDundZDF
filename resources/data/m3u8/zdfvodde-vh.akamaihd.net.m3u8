@@ -1,9 +1,0 @@
-#EXTM3U
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=379000,RESOLUTION=480x272,CODECS="avc1.77.30, mp4a.40.2",CLOSED-CAPTIONS=NONE
-http://zdfvodde-vh.akamaihd.net/i/meta-files/tivi/smil/m3u8/200/15/03/150302_spinne_low/6/150302_spinne_low.smil/index_476000_av.m3u8?null=0
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=605000,RESOLUTION=640x360,CODECS="avc1.77.30, mp4a.40.2",CLOSED-CAPTIONS=NONE
-http://zdfvodde-vh.akamaihd.net/i/meta-files/tivi/smil/m3u8/200/15/03/150302_spinne_low/6/150302_spinne_low.smil/index_776000_av.m3u8?null=0
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1154000,RESOLUTION=852x480,CODECS="avc1.77.30, mp4a.40.2",CLOSED-CAPTIONS=NONE
-http://zdfvodde-vh.akamaihd.net/i/meta-files/tivi/smil/m3u8/200/15/03/150302_spinne_low/6/150302_spinne_low.smil/index_1496000_av.m3u8?null=0
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=96000,CODECS="mp4a.40.2",CLOSED-CAPTIONS=NONE
-http://zdfvodde-vh.akamaihd.net/i/meta-files/tivi/smil/m3u8/200/15/03/150302_spinne_low/6/150302_spinne_low.smil/index_476000_a.m3u8?null=0
