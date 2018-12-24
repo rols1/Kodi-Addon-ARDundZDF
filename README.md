@@ -1,4 +1,4 @@
-ARDundZDF
+Kodi-Addon-ARDundZDF
 ===================
 
 Addon für den Kodi / XBMC (Kodi-Version von [Plex-Plugin ARDundZDF](https://github.com/rols1/ARDundZDF).
@@ -7,7 +7,7 @@ einschließlich Live-TV mit Aufnahmefunktion, Live-Radio, Podcasts
 
 Für die ZDF Mediathek kann wahlweise die kompakte Version ZDFmobile genutzt werden. 
 
-Download aktuelle Version: https://github.com/rols1/ARDundZDF/releases/latest
+Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-ARDundZDF/total.svg "Downloads")
 
 Das Plugin löst die Vorgänger Plex-Plugin-ARDMediathek2015 und Plex-Plugin-ARDMediathek2016
