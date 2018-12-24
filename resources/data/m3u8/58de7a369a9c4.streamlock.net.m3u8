@@ -1,0 +1,8 @@
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-STREAM-INF:BANDWIDTH=414810,RESOLUTION=360x240
+https://58de7a369a9c4.streamlock.net/aktionaertv_live/smil:aktionaertv_live_abr.smil/chunklist_w1544370496_b414810_slger.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=871500,RESOLUTION=480x360
+https://58de7a369a9c4.streamlock.net/aktionaertv_live/smil:aktionaertv_live_abr.smil/chunklist_w1544370496_b871500_slger.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2616000,RESOLUTION=1280x720
+https://58de7a369a9c4.streamlock.net/aktionaertv_live/smil:aktionaertv_live_abr.smil/chunklist_w1544370496_b2616000_slger.m3u8

@@ -1,0 +1,3026 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--Profile: EBU-TT-D-Basic-DE-->
+<tt:tt xmlns:tt="http://www.w3.org/ns/ttml" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ebuttm="urn:ebu:tt:metadata" ttp:timeBase="media" ttp:cellResolution="50 30" xml:lang="de-DE">
+  <tt:head>
+    <tt:metadata>
+      <ebuttm:documentMetadata>
+        <ebuttm:documentEbuttVersion>v1.0</ebuttm:documentEbuttVersion>
+      </ebuttm:documentMetadata>
+    </tt:metadata>
+    <tt:styling>
+      <tt:style xml:id="defaultStyle" tts:fontFamily="Verdana,Arial,Tiresias" tts:fontSize="160%" tts:lineHeight="125%" />
+      <tt:style xml:id="textBlack" tts:color="#000000" tts:backgroundColor="#000000c2" />
+      <tt:style xml:id="textRed" tts:color="#FF0000" tts:backgroundColor="#000000c2" />
+      <tt:style xml:id="textGreen" tts:color="#00FF00" tts:backgroundColor="#000000c2" />
+      <tt:style xml:id="textYellow" tts:color="#FFFF00" tts:backgroundColor="#000000c2" />
+      <tt:style xml:id="textBlue" tts:color="#0000FF" tts:backgroundColor="#000000c2" />
+      <tt:style xml:id="textMagenta" tts:color="#FF00FF" tts:backgroundColor="#000000c2" />
+      <tt:style xml:id="textCyan" tts:color="#00FFFF" tts:backgroundColor="#000000c2" />
+      <tt:style xml:id="textWhite" tts:color="#FFFFFF" tts:backgroundColor="#000000c2" />
+      <tt:style xml:id="textCenter" tts:textAlign="center" />
+      <tt:style xml:id="textLeft" tts:textAlign="left" />
+      <tt:style xml:id="textRight" tts:textAlign="right" />
+    </tt:styling>
+    <tt:layout>
+      <tt:region xml:id="top" tts:origin="10% 10%" tts:extent="80% 80%" tts:displayAlign="before" />
+      <tt:region xml:id="bottom" tts:origin="10% 10%" tts:extent="80% 80%" tts:displayAlign="after" />
+    </tt:layout>
+  </tt:head>
+  <tt:body>
+    <tt:div style="defaultStyle">
+      <tt:p xml:id="sub0" style="textCenter" region="bottom" begin="00:00:07.600" end="00:00:12.000">
+        <tt:span style="textWhite">Produkte für Schönheit und Pflege.</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Erschwinglich und für jeden Typ.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub1" style="textCenter" region="bottom" begin="00:00:12.800" end="00:00:15.080">
+        <tt:span style="textWhite">Damit lockt die Kosmetikindustrie.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub2" style="textCenter" region="bottom" begin="00:00:15.400" end="00:00:19.000">
+        <tt:span style="textYellow">Wenn ich das Bedürfnis habe,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">reich, schön und berühmt zu sein.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub3" style="textCenter" region="bottom" begin="00:00:19.080" end="00:00:21.400">
+        <tt:span style="textYellow">Dann bin ich dankbar</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">für jedes Angebot,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub4" style="textCenter" region="bottom" begin="00:00:21.480" end="00:00:24.160">
+        <tt:span style="textYellow">was mir diesem Bedürfnis</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">etwas näherbringt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub5" style="textCenter" region="bottom" begin="00:00:24.240" end="00:00:27.320">
+        <tt:span style="textWhite">Wir stellen Werbeversprechen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">auf den Prüfstand.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub6" style="textCenter" region="bottom" begin="00:00:28.520" end="00:00:30.440">
+        <tt:span style="textWhite">Lohnen sich Antifaltencremes?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub7" style="textCenter" region="bottom" begin="00:00:31.120" end="00:00:35.640">
+        <tt:span style="textWhite">Unsere Experten schauen ganz genau</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">hin. Und was wollen die Kundinnen?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub8" style="textCenter" region="bottom" begin="00:00:37.800" end="00:00:39.720">
+        <tt:span style="textYellow">Wir Frauen sind eitel, nicht?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub9" style="textCenter" region="bottom" begin="00:00:39.800" end="00:00:43.920">
+        <tt:span style="textYellow">Wir müssen mit der Zeit mitgehen.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Die Konkurrenz schläft nicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub10" style="textCenter" region="bottom" begin="00:00:44.000" end="00:00:47.800">
+        <tt:span style="textWhite">Bei Männern soll Coffein-Shampoo</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">für volleres Haar sorgen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub11" style="textCenter" region="bottom" begin="00:00:47.880" end="00:00:50.760">
+        <tt:span style="textWhite">Funktioniert das?</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Wir machen ein Experiment.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub12" style="textCenter" region="bottom" begin="00:00:52.920" end="00:00:57.200">
+        <tt:span style="textYellow">Wenn&apos;s nur für die Haare ist, dann</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">tut&apos;s für eure Frauen, Männer!</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub13" style="textCenter" region="bottom" begin="00:01:02.160" end="00:01:04.960">
+        <tt:span style="textWhite">Außerdem: Whitening-</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">und Repair-Zahncremes.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub14" style="textCenter" region="bottom" begin="00:01:05.080" end="00:01:06.960">
+        <tt:span style="textWhite">Für ein strahlendes Lächeln.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub15" style="textCenter" region="bottom" begin="00:01:07.160" end="00:01:11.440">
+        <tt:span style="textWhite">Doch was steckt drin? Und halten</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die Pasten, was sie versprechen?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub16" style="textCenter" region="bottom" begin="00:01:16.280" end="00:01:19.160">
+        <tt:span style="textWhite">Wir zeigen die Tricks</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">der Kosmetikindustrie.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub17" style="textCenter" region="bottom" begin="00:01:23.000" end="00:01:26.440">
+        <tt:span style="textWhite">Das Markenzeichen des reifen Mannes:</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">schütteres Haar.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub18" style="textCenter" region="bottom" begin="00:01:26.520" end="00:01:30.720">
+        <tt:span style="textWhite">Wer &quot;obenrum&quot; gern mehr hätte,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">für den gibt es Coffein-Shampoos.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub19" style="textCenter" region="bottom" begin="00:01:31.160" end="00:01:33.080">
+        <tt:span style="textWhite">Doch was können die wirklich?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub20" style="textCenter" region="bottom" begin="00:01:33.680" end="00:01:37.360">
+        <tt:span style="textWhite">Im Sportpark München-Haar</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">treffen wir eine Männergruppe,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub21" style="textCenter" region="bottom" begin="00:01:37.440" end="00:01:41.320">
+        <tt:span style="textWhite">die nicht nur fußballerisch</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">einige &quot;Nachwuchsprobleme&quot; hat.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub22" style="textCenter" region="bottom" begin="00:01:43.200" end="00:01:46.040">
+        <tt:span style="textWhite">Die Altherren-Mannschaft</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">der &quot;Luftschnapper&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub23" style="textCenter" region="bottom" begin="00:01:46.120" end="00:01:47.920">
+        <tt:span style="textWhite">aus der Münchner Hobbyliga.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub24" style="textCenter" region="bottom" begin="00:01:51.120" end="00:01:52.600">
+        <tt:span style="textWhite">* Pfiff *</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub25" style="textCenter" region="bottom" begin="00:01:52.680" end="00:01:56.480">
+        <tt:span style="textWhite">Seit Jahren gehören sie zu</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">den erfolglosesten Mannschaften</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub26" style="textCenter" region="bottom" begin="00:01:56.560" end="00:01:58.040">
+        <tt:span style="textWhite">im Wettbewerb.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub27" style="textCenter" region="bottom" begin="00:01:59.960" end="00:02:03.080">
+        <tt:span style="textWhite">Und auch heute machen sie</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">ihrem Namen alle Ehre.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub28" style="textCenter" region="bottom" begin="00:02:03.160" end="00:02:05.680">
+        <tt:span style="textWhite">Die Luftschnapper</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">verlieren mit 1 zu 5.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub29" style="textCenter" region="bottom" begin="00:02:08.040" end="00:02:11.160">
+        <tt:span style="textWhite">Niederlagen tun weh,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">aber man gewöhnt sich dran.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub30" style="textCenter" region="bottom" begin="00:02:11.720" end="00:02:14.800">
+        <tt:span style="textWhite">Und was sagen die Männer</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">zum Thema Haarausfall?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub31" style="textCenter" region="bottom" begin="00:02:15.880" end="00:02:19.960">
+        <tt:span style="textYellow">Nein, nein, stört mich nicht.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Ein bisschen was ist ja noch da.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub32" style="textCenter" region="bottom" begin="00:02:20.240" end="00:02:22.960">
+        <tt:span style="textYellow">Nein, ist halt weg,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">und dann sind sie weg.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub33" style="textCenter" region="bottom" begin="00:02:23.080" end="00:02:24.800">
+        <tt:span style="textYellow">Habe keine Probleme damit.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub34" style="textCenter" region="bottom" begin="00:02:24.880" end="00:02:26.880">
+        <tt:span style="textYellow">Hab mal beim Hautarzt gefragt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub35" style="textCenter" region="bottom" begin="00:02:26.960" end="00:02:29.480">
+        <tt:span style="textYellow">Dann heißt es,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">das ist erblich bedingt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub36" style="textCenter" region="bottom" begin="00:02:29.560" end="00:02:32.240">
+        <tt:span style="textYellow">Ich steh dazu,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">auch zu den grauen Haaren.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub37" style="textCenter" region="bottom" begin="00:02:32.320" end="00:02:35.840">
+        <tt:span style="textYellow">Die stören mich, die habe ich</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">von meinem Vater geerbt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub38" style="textCenter" region="bottom" begin="00:02:35.920" end="00:02:40.680">
+        <tt:span style="textWhite">Erblich bedingt haben manche Männer</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">mehr Haar, andere mehr Hormone.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub39" style="textCenter" region="bottom" begin="00:02:42.560" end="00:02:44.440">
+        <tt:span style="textWhite">Wissenschaftlich ist belegt:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub40" style="textCenter" region="bottom" begin="00:02:44.520" end="00:02:48.400">
+        <tt:span style="textWhite">Das Männlichkeitshormon Testosteron</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">hemmt das Haarwachstum.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub41" style="textCenter" region="bottom" begin="00:02:48.480" end="00:02:50.800">
+        <tt:span style="textWhite">Irgendwann sprießt gar nichts mehr.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub42" style="textCenter" region="bottom" begin="00:02:55.520" end="00:02:58.640">
+        <tt:span style="textWhite">Doch kann Coffein</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">da wirklich Abhilfe schaffen ?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub43" style="textCenter" region="bottom" begin="00:02:59.960" end="00:03:04.840">
+        <tt:span style="textWhite">Es treten an: Der Marktführer Alpecin</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">gegen die Drogerie-Eigenmarke Balea.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub44" style="textCenter" region="bottom" begin="00:03:05.840" end="00:03:08.320">
+        <tt:span style="textWhite">Das eine kostet im Schnitt 5,46 Euro.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub45" style="textCenter" region="bottom" begin="00:03:08.400" end="00:03:11.280">
+        <tt:span style="textWhite">Das andere nur ein Viertel davon:</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">1,35 Euro.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub46" style="textCenter" region="bottom" begin="00:03:14.160" end="00:03:18.880">
+        <tt:span style="textWhite">Jeder unserer Fußballer soll eins der</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Produkte fünf Wochen ausprobieren.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub47" style="textCenter" region="bottom" begin="00:03:19.440" end="00:03:23.160">
+        <tt:span style="textYellow">Ich hab was dabei zum Ausprobieren</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">für euch alle: Doping!</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub48" style="textCenter" region="bottom" begin="00:03:23.240" end="00:03:25.440">
+        <tt:span style="textYellow">Zwar nur für die Haare angeblich.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub49" style="textCenter" region="bottom" begin="00:03:25.520" end="00:03:28.320">
+        <tt:span style="textYellow">Wenn&apos;s aber mehr ist,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">dann steigen wir auf.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub50" style="textCenter" region="bottom" begin="00:03:28.400" end="00:03:29.880">
+        <tt:span style="textYellow">Yeah!</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub51" style="textCenter" region="bottom" begin="00:03:29.960" end="00:03:31.440">
+        <tt:span style="textYellow">Stopp! Stopp!</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub52" style="textCenter" region="bottom" begin="00:03:31.520" end="00:03:35.800">
+        <tt:span style="textYellow">Wenn&apos;s nur für die Haare ist, dann</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">tut&apos;s für eure Frauen, Männer!</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub53" style="textCenter" region="bottom" begin="00:03:39.240" end="00:03:41.240">
+        <tt:span style="textWhite">* Musik *</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub54" style="textCenter" region="bottom" begin="00:03:44.760" end="00:03:47.360">
+        <tt:span style="textWhite">An der Uniklinik München</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wollen wir mehr</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub55" style="textCenter" region="bottom" begin="00:03:47.440" end="00:03:50.560">
+        <tt:span style="textWhite">über den erblich bedingten</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Haarausfall erfahren.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub56" style="textCenter" region="bottom" begin="00:03:50.640" end="00:03:53.960">
+        <tt:span style="textWhite">Dort treffen wir den Dermatologen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Prof. Hans Wolff.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub57" style="textCenter" region="bottom" begin="00:03:54.080" end="00:03:56.560">
+        <tt:span style="textWhite">Er hat täglich</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">mit Betroffenen zu tun.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub58" style="textCenter" region="bottom" begin="00:03:57.400" end="00:04:00.800">
+        <tt:span style="textYellow">Das deutet schon auf einen</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">erblichen Haarausfall hin.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub59" style="textCenter" region="bottom" begin="00:04:02.480" end="00:04:06.160">
+        <tt:span style="textYellow">In den häufigsten Fällen</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">liegt ein erblicher Haarausfall</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub60" style="textCenter" region="bottom" begin="00:04:06.240" end="00:04:07.840">
+        <tt:span style="textYellow">bei den Erwachsenen vor.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub61" style="textCenter" region="bottom" begin="00:04:08.720" end="00:04:11.520">
+        <tt:span style="textYellow">Da ist ja jeder zweite Mann</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">etwa betroffen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub62" style="textCenter" region="bottom" begin="00:04:12.080" end="00:04:15.760">
+        <tt:span style="textYellow">Aber auch jede zehnte,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">vielleicht sogar jede fünfte Frau</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub63" style="textCenter" region="bottom" begin="00:04:15.840" end="00:04:17.320">
+        <tt:span style="textYellow">im Lauf des Lebens.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub64" style="textCenter" region="bottom" begin="00:04:18.040" end="00:04:19.560">
+        <tt:span style="textWhite">&quot;Doping für die Haare!&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub65" style="textCenter" region="bottom" begin="00:04:19.640" end="00:04:23.360">
+        <tt:span style="textWhite">Marktführer Alpecin verspricht</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">in seiner Werbung Abhilfe.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub66" style="textCenter" region="bottom" begin="00:04:25.200" end="00:04:26.680">
+        <tt:span style="textYellow">Es trägt dazu bei,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub67" style="textCenter" region="bottom" begin="00:04:26.760" end="00:04:30.040">
+        <tt:span style="textYellow">die Wachstumsphasen der Haarwurzeln</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">zu verlängern.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub68" style="textCenter" region="bottom" begin="00:04:30.120" end="00:04:34.720">
+        <tt:span style="textWhite">Verschiedene Hersteller versprechen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">&quot;volleres&quot; oder &quot;kräftigeres&quot; Haar</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub69" style="textCenter" region="bottom" begin="00:04:34.800" end="00:04:36.280">
+        <tt:span style="textWhite">durch Coffein.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub70" style="textCenter" region="bottom" begin="00:04:36.360" end="00:04:38.440">
+        <tt:span style="textWhite">Und verweisen auf Laborstudien.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub71" style="textCenter" region="bottom" begin="00:04:42.000" end="00:04:44.240">
+        <tt:span style="textWhite">Und die liefen zum Beispiel so ab:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub72" style="textCenter" region="bottom" begin="00:04:44.320" end="00:04:47.120">
+        <tt:span style="textWhite">Mediziner legten menschliche</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Kopfhautproben</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub73" style="textCenter" region="bottom" begin="00:04:47.200" end="00:04:49.400">
+        <tt:span style="textWhite">in verschiedene Nährlösungen ein.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub74" style="textCenter" region="bottom" begin="00:04:50.600" end="00:04:54.400">
+        <tt:span style="textWhite">Neben Testosteron, dem Hormon,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">das Haarwachstum ausbremst,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub75" style="textCenter" region="bottom" begin="00:04:54.480" end="00:04:56.960">
+        <tt:span style="textWhite">enthielten manche zusätzlich Coffein.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub76" style="textCenter" region="bottom" begin="00:04:57.760" end="00:05:00.280">
+        <tt:span style="textWhite">Nach fünf Tagen einweichen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">zeigte sich:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub77" style="textCenter" region="bottom" begin="00:05:01.440" end="00:05:05.640">
+        <tt:span style="textWhite">Unter Laborbedingungen konnte Coffein</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">den Hormon-Effekt mindern.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub78" style="textCenter" region="bottom" begin="00:05:05.720" end="00:05:09.760">
+        <tt:span style="textWhite">Aber ein Shampoo? Das hat man doch</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nicht tagelang auf dem Kopf.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub79" style="textCenter" region="bottom" begin="00:05:09.840" end="00:05:13.440">
+        <tt:span style="textYellow">Die Studien wurden zum Teil</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">gar nicht mal an Patienten,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub80" style="textCenter" region="bottom" begin="00:05:13.520" end="00:05:15.000">
+        <tt:span style="textYellow">an Menschen gemacht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub81" style="textCenter" region="bottom" begin="00:05:15.080" end="00:05:18.800">
+        <tt:span style="textYellow">Sondern man hat einfach</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">irgendwelche Haarwurzeln isoliert</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub82" style="textCenter" region="bottom" begin="00:05:18.880" end="00:05:21.000">
+        <tt:span style="textYellow">und dort irgendwas draufgekippt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub83" style="textCenter" region="bottom" begin="00:05:21.080" end="00:05:23.880">
+        <tt:span style="textYellow">Die sind dann ein bisschen</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">weitergewachsen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub84" style="textCenter" region="bottom" begin="00:05:24.000" end="00:05:27.280">
+        <tt:span style="textYellow">Das ist nicht wissenschaftlich</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">satisfaktionsfähig.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub85" style="textCenter" region="bottom" begin="00:05:27.880" end="00:05:30.800">
+        <tt:span style="textWhite">Fazit: Das Versprechen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">fußt auf Laborstudien,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub86" style="textCenter" region="bottom" begin="00:05:30.880" end="00:05:33.280">
+        <tt:span style="textWhite">deren Übertragbarkeit</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">umstritten ist.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub87" style="textCenter" region="bottom" begin="00:05:34.720" end="00:05:38.400">
+        <tt:span style="textWhite">Zudem bemängeln Kritiker,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">dass die Hersteller oft selbst</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub88" style="textCenter" region="bottom" begin="00:05:38.480" end="00:05:41.080">
+        <tt:span style="textWhite">an den zitierten Studien</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">beteiligt sind.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub89" style="textCenter" region="bottom" begin="00:05:41.160" end="00:05:43.280">
+        <tt:span style="textWhite">Und was meinen unsere Fußballer?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub90" style="textCenter" region="bottom" begin="00:05:44.200" end="00:05:48.400">
+        <tt:span style="textWhite">Persönliche Eindrücke</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nach fünf Wochen Coffein-Doping:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub91" style="textCenter" region="bottom" begin="00:05:51.000" end="00:05:54.400">
+        <tt:span style="textYellow">Ich war beim Friseur vor zwei Tagen.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Der hat geschmunzelt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub92" style="textCenter" region="bottom" begin="00:05:54.480" end="00:05:56.960">
+        <tt:span style="textYellow">Meine Ohrhaare</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sind stärker gewachsen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub93" style="textCenter" region="bottom" begin="00:05:57.040" end="00:05:59.280">
+        <tt:span style="textYellow">Es sind nicht mehr Haare geworden.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub94" style="textCenter" region="bottom" begin="00:05:59.360" end="00:06:02.480">
+        <tt:span style="textYellow">Ich hab das Gefühl,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sie sind griffiger geworden.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub95" style="textCenter" region="bottom" begin="00:06:02.560" end="00:06:05.960">
+        <tt:span style="textYellow">Aber auch schuppiger.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Mir wäre lieber ohne Schuppen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub96" style="textCenter" region="bottom" begin="00:06:06.040" end="00:06:08.440">
+        <tt:span style="textYellow">Das Haar ist etwas weicher geworden.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub97" style="textCenter" region="bottom" begin="00:06:08.520" end="00:06:12.200">
+        <tt:span style="textYellow">Aber ich merke keinen Unterschied,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">was das Produkt verspricht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub98" style="textCenter" region="bottom" begin="00:06:12.280" end="00:06:14.360">
+        <tt:span style="textYellow">Etwas länger sind sie geworden,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub99" style="textCenter" region="bottom" begin="00:06:14.440" end="00:06:17.000">
+        <tt:span style="textYellow">weil ich sie nicht geschnitten habe</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">seitdem.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub100" style="textCenter" region="bottom" begin="00:06:17.080" end="00:06:19.800">
+        <tt:span style="textYellow">Aber die Geheimratsecken</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sind immer noch da.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub101" style="textCenter" region="bottom" begin="00:06:19.880" end="00:06:23.000">
+        <tt:span style="textYellow">Hat sich nichts verändert,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">absolut gleichbleibend.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub102" style="textCenter" region="bottom" begin="00:06:23.160" end="00:06:24.680">
+        <tt:span style="textWhite">Was sagt die Industrie?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub103" style="textCenter" region="bottom" begin="00:06:24.760" end="00:06:28.360">
+        <tt:span style="textWhite">Der Hersteller von Alpecin</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">möchte kein Interview geben.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub104" style="textCenter" region="bottom" begin="00:06:28.440" end="00:06:30.720">
+        <tt:span style="textWhite">Die Rückmeldung kommt schriftlich:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub105" style="textCenter" region="bottom" begin="00:06:42.400" end="00:06:44.600">
+        <tt:span style="textWhite">Billig-Konkurrent Balea schreibt:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub106" style="textCenter" region="bottom" begin="00:06:57.600" end="00:07:01.920">
+        <tt:span style="textWhite">Fazit: Ob billig oder teuer,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">uns hat keins der Shampoos überzeugt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub107" style="textCenter" region="bottom" begin="00:07:02.600" end="00:07:05.200">
+        <tt:span style="textWhite">Was unter Laborbedingungen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">funktioniert,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub108" style="textCenter" region="bottom" begin="00:07:05.280" end="00:07:08.520">
+        <tt:span style="textWhite">übertragen die Hersteller</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">auf den Alltagsgebrauch.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub109" style="textCenter" region="bottom" begin="00:07:08.640" end="00:07:11.720">
+        <tt:span style="textWhite">Rechtlich genügt das</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">als Wirksamkeits-Nachweis.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub110" style="textCenter" region="bottom" begin="00:07:11.800" end="00:07:13.600">
+        <tt:span style="textWhite">Egal, was das Shampoo kann.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub111" style="textCenter" region="bottom" begin="00:07:16.000" end="00:07:17.480">
+        <tt:span style="textWhite">Doch es gibt Hoffnung:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub112" style="textCenter" region="bottom" begin="00:07:17.560" end="00:07:20.760">
+        <tt:span style="textWhite">Wer bei Haarausfall</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">frühzeitig zum Hautarzt geht,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub113" style="textCenter" region="bottom" begin="00:07:20.840" end="00:07:22.920">
+        <tt:span style="textWhite">hat gute Chancen auf Besserung.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub114" style="textCenter" region="bottom" begin="00:07:26.840" end="00:07:30.520">
+        <tt:span style="textYellow">Eine wichtige Erkenntnis ist,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">dass man gegen Haarausfall</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub115" style="textCenter" region="bottom" begin="00:07:30.600" end="00:07:33.400">
+        <tt:span style="textYellow">etwas medizinisch vernünftiges</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">machen kann.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub116" style="textCenter" region="bottom" begin="00:07:34.960" end="00:07:38.160">
+        <tt:span style="textYellow">Dafür sollte man allerdings</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">einen Arzt aufsuchen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub117" style="textCenter" region="bottom" begin="00:07:38.840" end="00:07:42.560">
+        <tt:span style="textYellow">Und da gibt es verschiedene</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Produkte, die sind preiswert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub118" style="textCenter" region="bottom" begin="00:07:42.640" end="00:07:46.920">
+        <tt:span style="textYellow">Die kosten vielleicht höchstens</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">50 Cent Behandlungskosten am Tag.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub119" style="textCenter" region="bottom" begin="00:07:47.040" end="00:07:49.160">
+        <tt:span style="textYellow">Das ist rational und vernünftig.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub120" style="textCenter" region="bottom" begin="00:07:49.240" end="00:07:52.120">
+        <tt:span style="textYellow">Alle anderen Mittel,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">die so erhältlich sind,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub121" style="textCenter" region="bottom" begin="00:07:52.200" end="00:07:55.400">
+        <tt:span style="textYellow">sind meiner Ansicht nach</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">reine Geldverschwendung.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub122" style="textCenter" region="bottom" begin="00:07:55.480" end="00:07:58.080">
+        <tt:span style="textWhite">Ein Gutes aber hatte</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">unser Shampoo-Test:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub123" style="textCenter" region="bottom" begin="00:07:58.160" end="00:08:01.080">
+        <tt:span style="textWhite">Die Hobbykicker aus München</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">sind in Bestform.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub124" style="textCenter" region="bottom" begin="00:08:01.400" end="00:08:04.680">
+        <tt:span style="textWhite">Heute macht ihnen auf dem Platz</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">niemand etwas vor.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub125" style="textCenter" region="bottom" begin="00:08:06.600" end="00:08:09.240">
+        <tt:span style="textWhite">Ob&apos;s vom Coffein-Doping kommt</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">oder nicht:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub126" style="textCenter" region="bottom" begin="00:08:09.320" end="00:08:12.520">
+        <tt:span style="textWhite">Nach vier Niederlagen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">in den letzten vier Spielen</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub127" style="textCenter" region="bottom" begin="00:08:12.600" end="00:08:16.480">
+        <tt:span style="textWhite">folgt endlich der wohlverdiente Sieg</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">für die Luftschnapper.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub128" style="textCenter" region="bottom" begin="00:08:18.120" end="00:08:22.240">
+        <tt:span style="textWhite">Der Jubel des Publikums ermuntert</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">auch die schüttersten Herren.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub129" style="textCenter" region="bottom" begin="00:08:22.640" end="00:08:25.120">
+        <tt:span style="textWhite">Erfolg macht ja bekanntlich</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">auch sexy.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub130" style="textCenter" region="bottom" begin="00:08:27.400" end="00:08:31.600">
+        <tt:span style="textWhite">Übrigens: Viele Produkte, die mit</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">medizinisch klingenden Formeln</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub131" style="textCenter" region="bottom" begin="00:08:31.680" end="00:08:34.960">
+        <tt:span style="textWhite">und Versprechen locken,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">sind einfach nur Kosmetik.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub132" style="textCenter" region="bottom" begin="00:08:35.080" end="00:08:36.560">
+        <tt:span style="textWhite">Und lukrativ:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub133" style="textCenter" region="bottom" begin="00:08:36.640" end="00:08:39.960">
+        <tt:span style="textWhite">Über 13 Mrd. Euro setzte</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die Industrie letztes Jahr</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub134" style="textCenter" region="bottom" begin="00:08:40.080" end="00:08:41.560">
+        <tt:span style="textWhite">in Deutschland um.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub135" style="textCenter" region="bottom" begin="00:08:41.640" end="00:08:43.840">
+        <tt:span style="textWhite">Das sind pro Kopf knapp 170 Euro.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub136" style="textCenter" region="bottom" begin="00:08:44.000" end="00:08:46.520">
+        <tt:span style="textWhite">Offenbar lassen wir uns</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">von Schönheits-</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub137" style="textCenter" region="bottom" begin="00:08:46.600" end="00:08:50.080">
+        <tt:span style="textWhite">und Gesundheitsversprechen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nur allzu gerne verführen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub138" style="textCenter" region="bottom" begin="00:08:54.200" end="00:08:57.200">
+        <tt:span style="textWhite">&quot;Bewiesene Wirksamkeit&quot;,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">&quot;Klinisch bestätigt&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub139" style="textCenter" region="bottom" begin="00:08:57.560" end="00:09:01.040">
+        <tt:span style="textWhite">&quot;Dermatologisch getestet&quot;,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">&quot;Von Zahnärzten empfohlen&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub140" style="textCenter" region="bottom" begin="00:09:04.040" end="00:09:07.720">
+        <tt:span style="textWhite">Was sagt der Verbraucherschutz:</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Echte Qualitätsmerkmale?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub141" style="textCenter" region="bottom" begin="00:09:07.800" end="00:09:09.880">
+        <tt:span style="textWhite">Oder nur wohlklingende Phrasen?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub142" style="textCenter" region="bottom" begin="00:09:11.920" end="00:09:14.480">
+        <tt:span style="textYellow">Grundsätzlich darf Werbung</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">nicht lügen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub143" style="textCenter" region="bottom" begin="00:09:14.560" end="00:09:17.240">
+        <tt:span style="textYellow">Aber es wird auch nicht</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">vorher genehmigt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub144" style="textCenter" region="bottom" begin="00:09:17.320" end="00:09:19.920">
+        <tt:span style="textYellow">Der Hersteller entscheidet</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">letztendlich,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub145" style="textCenter" region="bottom" begin="00:09:20.040" end="00:09:22.720">
+        <tt:span style="textYellow">ob die Werbung in Ordnung ist</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">oder nicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub146" style="textCenter" region="bottom" begin="00:09:23.360" end="00:09:25.840">
+        <tt:span style="textYellow">Werbung ist nun mal Werbung</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">und dient,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub147" style="textCenter" region="bottom" begin="00:09:25.920" end="00:09:30.720">
+        <tt:span style="textYellow">auch wenn es im Gesetz anders steht,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">nicht zur Information hauptsächlich.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub148" style="textCenter" region="bottom" begin="00:09:30.800" end="00:09:32.320">
+        <tt:span style="textYellow">Sondern zum Kaufanreiz.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub149" style="textCenter" region="bottom" begin="00:09:33.320" end="00:09:37.040">
+        <tt:span style="textWhite">Wir fragen die Kunden:</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Was bedeutet &quot;klinisch bestätigt&quot;?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub150" style="textCenter" region="bottom" begin="00:09:37.960" end="00:09:40.360">
+        <tt:span style="textYellow">Das hat so was von Professor</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">und Uni.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub151" style="textCenter" region="bottom" begin="00:09:40.440" end="00:09:44.000">
+        <tt:span style="textYellow">Aber wirklich was sagen</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">tut&apos;s mir jetzt nicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub152" style="textCenter" region="bottom" begin="00:09:44.680" end="00:09:48.880">
+        <tt:span style="textYellow">Für mich bedeutet es, dass es</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">getestet wurde und geschaut wurde,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub153" style="textCenter" region="bottom" begin="00:09:48.960" end="00:09:50.440">
+        <tt:span style="textYellow">ob&apos;s verträglich ist.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub154" style="textCenter" region="bottom" begin="00:09:50.800" end="00:09:52.280">
+        <tt:span style="textWhite">Gar nicht schlecht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub155" style="textCenter" region="bottom" begin="00:09:53.520" end="00:09:57.920">
+        <tt:span style="textYellow">Das bedeutet, dass eine Untersuchung</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">am Menschen stattgefunden hat.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub156" style="textCenter" region="bottom" begin="00:09:58.040" end="00:10:01.600">
+        <tt:span style="textYellow">Was diese Untersuchung aber genau</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sagt und wie viele Menschen</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub157" style="textCenter" region="bottom" begin="00:10:01.680" end="00:10:03.360">
+        <tt:span style="textYellow">da wie untersucht werden.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub158" style="textCenter" region="bottom" begin="00:10:03.440" end="00:10:06.360">
+        <tt:span style="textYellow">Und mit welchen Stoffen</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">ist überhaupt nicht klar.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub159" style="textCenter" region="bottom" begin="00:10:06.440" end="00:10:09.160">
+        <tt:span style="textYellow">Für den Verbraucher</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">überhaupt keine Hilfe.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub160" style="textCenter" region="bottom" begin="00:10:09.240" end="00:10:13.520">
+        <tt:span style="textWhite">&quot;Klinisch bestätigt“ steht also</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nicht für besonders gute Wirkung.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub161" style="textCenter" region="bottom" begin="00:10:13.600" end="00:10:15.080">
+        <tt:span style="textWhite">Weiter geht&apos;s.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub162" style="textCenter" region="bottom" begin="00:10:16.160" end="00:10:18.960">
+        <tt:span style="textYellow">Wahrscheinlich eine Polsterfirma</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">für Möbel.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub163" style="textCenter" region="bottom" begin="00:10:20.320" end="00:10:23.280">
+        <tt:span style="textYellow">Wenn man jetzt so was liest,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">denkt der Kunde:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub164" style="textCenter" region="bottom" begin="00:10:23.360" end="00:10:26.200">
+        <tt:span style="textYellow">Das ist ja bewiesen,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">dann muss es auch so sein.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub165" style="textCenter" region="bottom" begin="00:10:26.280" end="00:10:29.640">
+        <tt:span style="textYellow">Laut Kosmetikverordnung</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">müssen Kosmetika die Funktionen,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub166" style="textCenter" region="bottom" begin="00:10:29.720" end="00:10:32.080">
+        <tt:span style="textYellow">die sie bewerben,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">auch beweisen können.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub167" style="textCenter" region="bottom" begin="00:10:32.160" end="00:10:36.000">
+        <tt:span style="textYellow">Aus unserer Sicht ist es Werbung</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">mit Selbstverständlichkeiten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub168" style="textCenter" region="bottom" begin="00:10:36.080" end="00:10:39.320">
+        <tt:span style="textWhite">Denn die Aussage gilt</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">für jedes zugelassene Produkt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub169" style="textCenter" region="bottom" begin="00:10:39.400" end="00:10:41.200">
+        <tt:span style="textWhite">Ob&apos;s draufsteht oder nicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub170" style="textCenter" region="bottom" begin="00:10:41.280" end="00:10:43.680">
+        <tt:span style="textYellow">Das ist absolut übertrieben.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Absolut.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub171" style="textCenter" region="bottom" begin="00:10:43.960" end="00:10:47.880">
+        <tt:span style="textYellow">Daran glaube ich überhaupt nicht:</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">&quot;Von Zahnärzten empfohlen&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub172" style="textCenter" region="bottom" begin="00:10:48.640" end="00:10:52.040">
+        <tt:span style="textWhite">Doch warum fallen selbst</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die misstrauischsten Kunden</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub173" style="textCenter" region="bottom" begin="00:10:52.120" end="00:10:54.000">
+        <tt:span style="textWhite">auf Werbeversprechen herein?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub174" style="textCenter" region="bottom" begin="00:10:56.680" end="00:10:58.760">
+        <tt:span style="textYellow">Es gibt im Gehirn zwei Systeme:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub175" style="textCenter" region="bottom" begin="00:10:58.840" end="00:11:01.400">
+        <tt:span style="textYellow">Das nachdenkende,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">das reflektierte System.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub176" style="textCenter" region="bottom" begin="00:11:01.480" end="00:11:04.760">
+        <tt:span style="textYellow">Und es gibt das intuitive System,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">unser Autopilot.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub177" style="textCenter" region="bottom" begin="00:11:04.840" end="00:11:07.800">
+        <tt:span style="textYellow">Kaufentscheidungen</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">basieren auf dem Autopiloten,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub178" style="textCenter" region="bottom" begin="00:11:07.880" end="00:11:10.080">
+        <tt:span style="textYellow">nicht auf</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">reflektierendem Nachdenken.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub179" style="textCenter" region="bottom" begin="00:11:10.160" end="00:11:14.400">
+        <tt:span style="textYellow">Wenn wir darüber nachdenken würden,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">was da steht, dann zerfällt das.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub180" style="textCenter" region="bottom" begin="00:11:14.480" end="00:11:18.200">
+        <tt:span style="textYellow">Aber so entscheiden wir nicht,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sondern nehmen die Signale wahr.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub181" style="textCenter" region="bottom" begin="00:11:18.680" end="00:11:22.400">
+        <tt:span style="textYellow">Wenn ich das Bedürfnis habe,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">reich, schön und berühmt zu sein,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub182" style="textCenter" region="bottom" begin="00:11:22.480" end="00:11:24.080">
+        <tt:span style="textYellow">der narzisstische Traum...</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub183" style="textCenter" region="bottom" begin="00:11:24.160" end="00:11:26.680">
+        <tt:span style="textYellow">Dann bin ich dankbar</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">für jedes Angebot,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub184" style="textCenter" region="bottom" begin="00:11:26.760" end="00:11:29.840">
+        <tt:span style="textYellow">was mir diesem Bedürfnis</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">ein Stück näherbringt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub185" style="textCenter" region="bottom" begin="00:11:29.920" end="00:11:31.600">
+        <tt:span style="textWhite">Unwiderstehliche Angebote</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub186" style="textCenter" region="bottom" begin="00:11:31.680" end="00:11:35.480">
+        <tt:span style="textWhite">machen Kosmetik-Firmen schon</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">in der Frühzeit des Kintopps.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub187" style="textCenter" region="bottom" begin="00:11:35.960" end="00:11:41.280">
+        <tt:span style="textYellow">&quot;Die Zähne, wie der Mund so wohl,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">verlangen dabei nach Odol.&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub188" style="textCenter" region="bottom" begin="00:11:42.160" end="00:11:46.240">
+        <tt:span style="textWhite">Gesunde Zähne und am besten auch</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">ein strahlend weißes Lächeln.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub189" style="textCenter" region="bottom" begin="00:11:46.320" end="00:11:49.000">
+        <tt:span style="textWhite">Darum geht&apos;s</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">in unserem nächsten Kapitel.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub190" style="textCenter" region="bottom" begin="00:11:50.160" end="00:11:53.080">
+        <tt:span style="textWhite">Seit Jahren ein Trend</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">im Drogeriemarkt-Regal:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub191" style="textCenter" region="bottom" begin="00:11:53.160" end="00:11:57.240">
+        <tt:span style="textWhite">Zahncremes mit zusätzlichem</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Whitening- oder Weißmacher-Effekt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub192" style="textCenter" region="bottom" begin="00:12:02.200" end="00:12:06.720">
+        <tt:span style="textWhite">In der Augsburger Fußgängerzone</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">bitten wir Passanten zum Schnelltest.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub193" style="textCenter" region="bottom" begin="00:12:06.800" end="00:12:09.520">
+        <tt:span style="textWhite">Glauben sie an die Wirkung</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">der Weißmacher?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub194" style="textCenter" region="bottom" begin="00:12:12.440" end="00:12:15.600">
+        <tt:span style="textYellow">Die habe ich zu Hause,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">aber ich weiß es jetzt nicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub195" style="textCenter" region="bottom" begin="00:12:15.680" end="00:12:17.160">
+        <tt:span style="textYellow">Ich vermute es mal.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub196" style="textCenter" region="bottom" begin="00:12:17.240" end="00:12:19.920">
+        <tt:span style="textYellow">Man hat danach schon</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">so ein gutes Gefühl.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub197" style="textCenter" region="bottom" begin="00:12:20.000" end="00:12:22.720">
+        <tt:span style="textYellow">Es fühlt sich danach ziemlich</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">angenehm an.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub198" style="textCenter" region="bottom" begin="00:12:22.800" end="00:12:26.320">
+        <tt:span style="textYellow">Ich glaube an die Werbung.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Ich vermute, dass es hilft.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub199" style="textCenter" region="bottom" begin="00:12:27.480" end="00:12:30.480">
+        <tt:span style="textWhite">Im Angebot sind</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">verschiedene Whitening-Cremes.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub200" style="textCenter" region="bottom" begin="00:12:30.560" end="00:12:34.840">
+        <tt:span style="textWhite">Unsere Passanten wählen eine davon</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">aus und putzen sich die Zähne.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub201" style="textCenter" region="bottom" begin="00:12:34.920" end="00:12:39.240">
+        <tt:span style="textWhite">Vorher bestimmen wir mit einem</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Messgerät die Helligkeit der Zähne.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub202" style="textCenter" region="bottom" begin="00:12:39.320" end="00:12:41.440">
+        <tt:span style="textWhite">Und nach dem Putzen dann wieder.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub203" style="textCenter" region="bottom" begin="00:12:42.120" end="00:12:44.200">
+        <tt:span style="textYellow">180. 120.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub204" style="textCenter" region="bottom" begin="00:12:56.840" end="00:12:58.320">
+        <tt:span style="textYellow">150, 150, 150.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub205" style="textCenter" region="bottom" begin="00:12:59.680" end="00:13:01.760">
+        <tt:span style="textYellow">Also ziemlich genau</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">das Gleiche.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub206" style="textCenter" region="bottom" begin="00:13:02.680" end="00:13:06.360">
+        <tt:span style="textWhite">Bei keiner Testperson</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">sind die Zähne hinterher subjektiv</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub207" style="textCenter" region="bottom" begin="00:13:06.440" end="00:13:07.920">
+        <tt:span style="textWhite">oder messbar weißer.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub208" style="textCenter" region="bottom" begin="00:13:08.000" end="00:13:11.080">
+        <tt:span style="textYellow">Bist du jetzt enttäuscht?</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">- Schon ein bisschen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub209" style="textCenter" region="bottom" begin="00:13:11.160" end="00:13:13.440">
+        <tt:span style="textYellow">Weil die ist schon ziemlich teuer.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub210" style="textCenter" region="bottom" begin="00:13:13.520" end="00:13:16.920">
+        <tt:span style="textYellow">Keine Veränderung.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">- Jetzt bin ich schon enttäuscht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub211" style="textCenter" region="bottom" begin="00:13:17.040" end="00:13:20.040">
+        <tt:span style="textYellow">Ich zahle dafür 3 Euro,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">und sie bringt nichts.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub212" style="textCenter" region="bottom" begin="00:13:21.520" end="00:13:24.200">
+        <tt:span style="textWhite">Wie aussagekräftig</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">ist unser Straßentest?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub213" style="textCenter" region="bottom" begin="00:13:24.280" end="00:13:26.360">
+        <tt:span style="textWhite">Wir wollen es vom Profi wissen:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub214" style="textCenter" region="bottom" begin="00:13:26.440" end="00:13:30.760">
+        <tt:span style="textWhite">An der Uniklinik Gießen erforscht</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die Zahnmedizinerin Carolina Ganß</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub215" style="textCenter" region="bottom" begin="00:13:30.920" end="00:13:33.400">
+        <tt:span style="textWhite">mit ihrem Team regelmäßig Zahncremes.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub216" style="textCenter" region="bottom" begin="00:13:35.760" end="00:13:39.960">
+        <tt:span style="textWhite">Für uns vergleicht sie drei</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Zahncremes des Marktführers Colgate:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub217" style="textCenter" region="bottom" begin="00:13:40.080" end="00:13:43.080">
+        <tt:span style="textWhite">Eine ohne Weißmacher</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">für im Schnitt 1,67 Euro.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub218" style="textCenter" region="bottom" begin="00:13:43.920" end="00:13:47.200">
+        <tt:span style="textWhite">Die &quot;Max White Optic&quot; mit Aufheller</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">für 2,49 Euro.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub219" style="textCenter" region="bottom" begin="00:13:48.080" end="00:13:49.560">
+        <tt:span style="textWhite">Und die &quot;Expert White&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub220" style="textCenter" region="bottom" begin="00:13:49.640" end="00:13:52.360">
+        <tt:span style="textWhite">mit &quot;Whitening-Inhaltsstoff</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">vom Zahnarzt&quot;.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub221" style="textCenter" region="bottom" begin="00:13:52.440" end="00:13:54.440">
+        <tt:span style="textWhite">Für fast fünf Euro im Schnitt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub222" style="textCenter" region="bottom" begin="00:13:54.520" end="00:13:56.560">
+        <tt:span style="textWhite">Getestet wird an echten Zähnen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub223" style="textCenter" region="bottom" begin="00:13:57.000" end="00:14:00.080">
+        <tt:span style="textWhite">Die werden zur Hälfte</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">mit Kunststoff abgedeckt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub224" style="textCenter" region="bottom" begin="00:14:00.160" end="00:14:04.240">
+        <tt:span style="textWhite">So dass man später behandelt</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">und unbehandelt vergleichen kann.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub225" style="textCenter" region="bottom" begin="00:14:09.840" end="00:14:14.080">
+        <tt:span style="textWhite">Jetzt landen die Proben für mehrere</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Tage in künstlichem Speichel.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub226" style="textCenter" region="bottom" begin="00:14:14.520" end="00:14:17.240">
+        <tt:span style="textWhite">Und werden regelmäßig</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">ganz nach Vorschrift</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub227" style="textCenter" region="bottom" begin="00:14:17.320" end="00:14:19.720">
+        <tt:span style="textWhite">mit den drei Testzahncremes geputzt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub228" style="textCenter" region="bottom" begin="00:14:24.680" end="00:14:27.800">
+        <tt:span style="textWhite">Weil uns nur der Weißmacher-Effekt</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">interessiert,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub229" style="textCenter" region="bottom" begin="00:14:27.880" end="00:14:30.600">
+        <tt:span style="textWhite">vergleichen die Forscher</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">per Farbmessgerät</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub230" style="textCenter" region="bottom" begin="00:14:30.680" end="00:14:33.400">
+        <tt:span style="textWhite">die geputzten</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">und ungeputzten Zahnhälften.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub231" style="textCenter" region="bottom" begin="00:14:33.560" end="00:14:36.960">
+        <tt:span style="textWhite">Ist der Farbunterschied</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">bei Whitening-Cremes größer?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub232" style="textCenter" region="bottom" begin="00:14:37.760" end="00:14:41.880">
+        <tt:span style="textYellow">Bei den Weißmacherpasten konnten wir</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">nicht viel Ergebnis sehen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub233" style="textCenter" region="bottom" begin="00:14:42.000" end="00:14:45.120">
+        <tt:span style="textYellow">Diejenigen, die bereits schon</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">relativ saubere Zähne</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub234" style="textCenter" region="bottom" begin="00:14:45.200" end="00:14:46.680">
+        <tt:span style="textYellow">behandelt haben:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub235" style="textCenter" region="bottom" begin="00:14:46.760" end="00:14:50.440">
+        <tt:span style="textYellow">Da sieht man zwischen dem</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Behandelten und dem Unbehandelten</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub236" style="textCenter" region="bottom" begin="00:14:50.520" end="00:14:53.000">
+        <tt:span style="textYellow">nicht sehr viel</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">in unserem Laborversuch.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub237" style="textCenter" region="bottom" begin="00:14:53.080" end="00:14:56.560">
+        <tt:span style="textWhite">Weder &quot;Max White Optic&quot;</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">noch die teure &quot;Expert White&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub238" style="textCenter" region="bottom" begin="00:14:56.640" end="00:14:58.840">
+        <tt:span style="textWhite">machen die Zähne deutlich weißer.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub239" style="textCenter" region="bottom" begin="00:14:58.920" end="00:15:02.120">
+        <tt:span style="textWhite">Das sieht bei der günstigeren</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Universal-Zahnpasta</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub240" style="textCenter" region="bottom" begin="00:15:02.200" end="00:15:03.920">
+        <tt:span style="textWhite">auch nicht schlechter aus.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub241" style="textCenter" region="bottom" begin="00:15:04.520" end="00:15:09.240">
+        <tt:span style="textWhite">Immerhin: Oberflächliche Verfärbungen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">kriegen die Weißmacher besser weg.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub242" style="textCenter" region="bottom" begin="00:15:09.320" end="00:15:13.600">
+        <tt:span style="textWhite">Aber aus gelben Zähnen weiße machen?</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Das schafft keine Zahncreme.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub243" style="textCenter" region="bottom" begin="00:15:18.280" end="00:15:22.560">
+        <tt:span style="textYellow">Die Wirkstoffkonzentrationen,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">die erlaubt sind, sind sehr gering.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub244" style="textCenter" region="bottom" begin="00:15:22.640" end="00:15:24.920">
+        <tt:span style="textYellow">Von solch geringen Konzentrationen</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub245" style="textCenter" region="bottom" begin="00:15:25.040" end="00:15:28.840">
+        <tt:span style="textYellow">können wir nicht viele chemische</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Effekte im Zahn erwarten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub246" style="textCenter" region="bottom" begin="00:15:28.920" end="00:15:32.480">
+        <tt:span style="textYellow">Wenn Sie sehr dunkle Zähne</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">oder einzelne dunkle Zähne haben,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub247" style="textCenter" region="bottom" begin="00:15:32.560" end="00:15:35.440">
+        <tt:span style="textYellow">dann gibt es Spezialverfahren</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">in der Praxis.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub248" style="textCenter" region="bottom" begin="00:15:35.520" end="00:15:39.000">
+        <tt:span style="textYellow">Die Ihnen möglicherweise</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">besser weiterhelfen als das,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub249" style="textCenter" region="bottom" begin="00:15:39.080" end="00:15:41.680">
+        <tt:span style="textYellow">was man als Kosmetikprodukt</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">kaufen kann.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub250" style="textCenter" region="bottom" begin="00:15:41.760" end="00:15:43.240">
+        <tt:span style="textWhite">Die gute Nachricht:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub251" style="textCenter" region="bottom" begin="00:15:43.320" end="00:15:47.000">
+        <tt:span style="textWhite">Keine der drei Cremes enthielt</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">zu viel Bleichmittel-Chemie.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub252" style="textCenter" region="bottom" begin="00:15:47.080" end="00:15:51.160">
+        <tt:span style="textWhite">Aber den Aufpreis fürs &quot;Weißmachen&quot;,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">den kann man sich sparen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub253" style="textCenter" region="bottom" begin="00:15:53.320" end="00:15:56.920">
+        <tt:span style="textWhite">Von Natur aus sind Zähne übrigens</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nicht unbedingt weiß,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub254" style="textCenter" region="bottom" begin="00:15:57.000" end="00:15:58.480">
+        <tt:span style="textWhite">wie diese Skala zeigt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub255" style="textCenter" region="bottom" begin="00:15:58.560" end="00:16:03.280">
+        <tt:span style="textWhite">In Europa ist Schneeweiß eher selten,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wir kommen eher mit &quot;A3&quot; zur Welt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub256" style="textCenter" region="bottom" begin="00:16:04.680" end="00:16:06.600">
+        <tt:span style="textWhite">Etwa im Mittelfeld der Skala.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub257" style="textCenter" region="bottom" begin="00:16:07.040" end="00:16:10.520">
+        <tt:span style="textWhite">Zahnpasta allein kann diesen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">natürlichen Farbton &quot;A3&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub258" style="textCenter" region="bottom" begin="00:16:10.600" end="00:16:12.080">
+        <tt:span style="textWhite">kaum verbessern.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub259" style="textCenter" region="bottom" begin="00:16:12.160" end="00:16:16.480">
+        <tt:span style="textWhite">Doch wer auf Kaffee, Tee und Nikotin</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">verzichtet, hilft wenigstens,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub260" style="textCenter" region="bottom" begin="00:16:16.560" end="00:16:18.040">
+        <tt:span style="textWhite">ihn zu erhalten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub261" style="textCenter" region="bottom" begin="00:16:18.680" end="00:16:22.400">
+        <tt:span style="textWhite">Im zweiten Teil unseres Tests</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">geht es um den Zahnschmelz.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub262" style="textCenter" region="bottom" begin="00:16:22.480" end="00:16:25.680">
+        <tt:span style="textWhite">Ist der kaputt, drohen Karies,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Schmerz und Bohrer.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub263" style="textCenter" region="bottom" begin="00:16:31.720" end="00:16:34.320">
+        <tt:span style="textWhite">Diese beiden Zahncremes</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wecken Hoffnung:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub264" style="textCenter" region="bottom" begin="00:16:34.400" end="00:16:36.880">
+        <tt:span style="textWhite">Apacare mit &quot;flüssigem Zahnschmelz&quot;.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub265" style="textCenter" region="bottom" begin="00:16:37.000" end="00:16:39.880">
+        <tt:span style="textWhite">Und Biorepair mit</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">&quot;künstlichem Zahnschmelz&quot;.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub266" style="textCenter" region="bottom" begin="00:16:41.080" end="00:16:44.880">
+        <tt:span style="textWhite">Im Schnitt kosten sie etwa fünf Euro.</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Nicht gerade billig.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub267" style="textCenter" region="bottom" begin="00:16:45.000" end="00:16:46.480">
+        <tt:span style="textWhite">Aber wenn&apos;s hilft.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub268" style="textCenter" region="bottom" begin="00:16:49.040" end="00:16:52.920">
+        <tt:span style="textWhite">Was beide gemeinsam haben</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">ist der Wirkstoff Hydroxylapatit.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub269" style="textCenter" region="bottom" begin="00:16:56.600" end="00:17:00.400">
+        <tt:span style="textYellow">Hydroxylapatit ist das Mineral,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">aus dem unser Zahnschmelz ist.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub270" style="textCenter" region="bottom" begin="00:17:00.480" end="00:17:04.000">
+        <tt:span style="textYellow">Das ist sehr dicht gepackt</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">und sehr regelmäßig strukturiert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub271" style="textCenter" region="bottom" begin="00:17:04.080" end="00:17:07.960">
+        <tt:span style="textYellow">Daher sind unsere Zähne sehr</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">widerstandsfähig gegen Abrieb.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub272" style="textCenter" region="bottom" begin="00:17:08.080" end="00:17:12.080">
+        <tt:span style="textWhite">Unsere Zähne sind innerlich ein</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">komplexes und empfindliches System.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub273" style="textCenter" region="bottom" begin="00:17:12.160" end="00:17:15.560">
+        <tt:span style="textWhite">Einziger Schutz: die knallharte</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Zahnschmelz-Schicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub274" style="textCenter" region="bottom" begin="00:17:15.640" end="00:17:18.560">
+        <tt:span style="textWhite">Über Jahrzehnte reibt sie sich</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">beim Kauen ab.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub275" style="textCenter" region="bottom" begin="00:17:18.640" end="00:17:21.120">
+        <tt:span style="textWhite">Wird von Säuren im Essen angegriffen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub276" style="textCenter" region="bottom" begin="00:17:21.200" end="00:17:23.480">
+        <tt:span style="textWhite">Irgendwann ist der Zahn in Gefahr.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub277" style="textCenter" region="bottom" begin="00:17:30.720" end="00:17:33.040">
+        <tt:span style="textWhite">Denn Zahnschmelz wächst nicht nach.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub278" style="textCenter" region="bottom" begin="00:17:33.120" end="00:17:37.840">
+        <tt:span style="textWhite">Ihn künstlich wiederherzustellen wie</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Biorepair und Apacare versprechen,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub279" style="textCenter" region="bottom" begin="00:17:37.920" end="00:17:39.800">
+        <tt:span style="textWhite">das wäre ein genialer Trick.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub280" style="textCenter" region="bottom" begin="00:17:43.880" end="00:17:46.680">
+        <tt:span style="textWhite">Wieder bitten wir Wissenschaftler</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">um Hilfe.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub281" style="textCenter" region="bottom" begin="00:17:46.760" end="00:17:49.560">
+        <tt:span style="textWhite">Im Test:</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Ausgiebig strapazierte Zahnproben.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub282" style="textCenter" region="bottom" begin="00:17:49.640" end="00:17:52.040">
+        <tt:span style="textWhite">Funktioniert die Reparatur wirklich?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub283" style="textCenter" region="bottom" begin="00:17:52.920" end="00:17:55.440">
+        <tt:span style="textYellow">Wir haben noch</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">eine Übersichtsaufnahme.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub284" style="textCenter" region="bottom" begin="00:17:55.520" end="00:17:59.800">
+        <tt:span style="textYellow">Damit wir es genauer sehen können,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">müssen wir etwas hineinzoomen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub285" style="textCenter" region="bottom" begin="00:17:59.880" end="00:18:03.280">
+        <tt:span style="textYellow">Da sind wir bei der Vergrößerung</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">von etwa 4000-Fach.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub286" style="textCenter" region="bottom" begin="00:18:03.920" end="00:18:08.200">
+        <tt:span style="textWhite">Macht Hydroxylapatit diesen rauen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Zahnschmelz nach zweimal Putzen</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub287" style="textCenter" region="bottom" begin="00:18:08.280" end="00:18:09.800">
+        <tt:span style="textWhite">schon sichtbar glatter?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub288" style="textCenter" region="bottom" begin="00:18:10.840" end="00:18:14.160">
+        <tt:span style="textYellow">Wir haben die Zahnprobe,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">die wir vorbereitet haben,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub289" style="textCenter" region="bottom" begin="00:18:14.240" end="00:18:16.120">
+        <tt:span style="textYellow">in der Hälfte durchgetrennt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub290" style="textCenter" region="bottom" begin="00:18:16.200" end="00:18:19.200">
+        <tt:span style="textYellow">Haben die eine Hälfte</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">im Labor zurückbehalten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub291" style="textCenter" region="bottom" begin="00:18:19.280" end="00:18:21.760">
+        <tt:span style="textYellow">Dann wurde das</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">einen Tag lang getragen</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub292" style="textCenter" region="bottom" begin="00:18:21.840" end="00:18:23.960">
+        <tt:span style="textYellow">und mit Hydroxylapatit</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">behandelt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub293" style="textCenter" region="bottom" begin="00:18:24.080" end="00:18:27.480">
+        <tt:span style="textYellow">Und was wir jetzt sehen können</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">auf dieser Probe ist,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub294" style="textCenter" region="bottom" begin="00:18:27.560" end="00:18:29.960">
+        <tt:span style="textYellow">dass wir einzelne Partikel erkennen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub295" style="textCenter" region="bottom" begin="00:18:30.080" end="00:18:33.600">
+        <tt:span style="textYellow">Die Rückstände oder Reste</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">dieses Hydroxylapatits sind.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub296" style="textCenter" region="bottom" begin="00:18:34.880" end="00:18:39.120">
+        <tt:span style="textYellow">Wir sehen auch nach der Behandlung</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">mit dem Hydroxylapatit-Produkt</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub297" style="textCenter" region="bottom" begin="00:18:39.200" end="00:18:41.720">
+        <tt:span style="textYellow">im Mund keine Auffüllung</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">dieser Defekte.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub298" style="textCenter" region="bottom" begin="00:18:41.800" end="00:18:46.280">
+        <tt:span style="textYellow">Man sollte vielleicht erwarten,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">dass das jetzt ganz glatt erscheint.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub299" style="textCenter" region="bottom" begin="00:18:46.360" end="00:18:49.160">
+        <tt:span style="textYellow">Dass diese Berge und Täler</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">aufgefüllt wären</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub300" style="textCenter" region="bottom" begin="00:18:49.240" end="00:18:51.440">
+        <tt:span style="textYellow">mit dem &quot;künstlichen Zahnschmelz&quot;.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub301" style="textCenter" region="bottom" begin="00:18:51.520" end="00:18:54.320">
+        <tt:span style="textWhite">Doch der Ersatzstoff</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">füllt hier nichts auf.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub302" style="textCenter" region="bottom" begin="00:18:54.400" end="00:18:57.720">
+        <tt:span style="textWhite">Zum Vergleich echter Zahnschmelz,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wie er sein soll.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub303" style="textCenter" region="bottom" begin="00:18:59.280" end="00:19:02.200">
+        <tt:span style="textWhite">Was sagen die Hersteller</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">zu unserem Ergebnis?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub304" style="textCenter" region="bottom" begin="00:19:02.280" end="00:19:04.400">
+        <tt:span style="textWhite">Von Biorepair heißt es schlicht:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub305" style="textCenter" region="bottom" begin="00:19:13.800" end="00:19:15.280">
+        <tt:span style="textWhite">Apacare räumt ein:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub306" style="textCenter" region="bottom" begin="00:19:32.960" end="00:19:37.560">
+        <tt:span style="textWhite">In unserem Test konnten die teuren</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Repair-Zahncremes nicht überzeugen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub307" style="textCenter" region="bottom" begin="00:19:37.640" end="00:19:41.360">
+        <tt:span style="textWhite">Und das deckt sich mit anderen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Untersuchungs-Ergebnissen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub308" style="textCenter" region="bottom" begin="00:19:41.440" end="00:19:44.040">
+        <tt:span style="textWhite">Z.B. von Stiftung Warentest</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">und Ökotest.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub309" style="textCenter" region="bottom" begin="00:19:50.680" end="00:19:53.680">
+        <tt:span style="textWhite">Sommer an der Isar: eine Wonne.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub310" style="textCenter" region="bottom" begin="00:19:57.640" end="00:20:01.360">
+        <tt:span style="textWhite">Doch in der kalten Jahreszeit</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">bleibt der Himmel oft grau.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub311" style="textCenter" region="bottom" begin="00:20:01.440" end="00:20:04.360">
+        <tt:span style="textWhite">Und wir kommen eh</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">viel zu selten an die Luft.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub312" style="textCenter" region="bottom" begin="00:20:04.800" end="00:20:07.520">
+        <tt:span style="textWhite">Müssen wir deshalb</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">käsebleich herumlaufen?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub313" style="textCenter" region="bottom" begin="00:20:10.920" end="00:20:15.320">
+        <tt:span style="textWhite">Im nächsten Test geht es um die</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">flüssige Alternative zum Sonnenbad:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub314" style="textCenter" region="bottom" begin="00:20:15.400" end="00:20:16.880">
+        <tt:span style="textWhite">Selbstbräuner.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub315" style="textCenter" region="bottom" begin="00:20:17.320" end="00:20:20.400">
+        <tt:span style="textWhite">Was taugen sie?</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Und sind sie wirklich gesünder?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub316" style="textCenter" region="bottom" begin="00:20:22.280" end="00:20:27.000">
+        <tt:span style="textWhite">Erst aber die Frage: Ist braune Haut</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">überhaupt noch ein Schönheitsideal?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub317" style="textCenter" region="bottom" begin="00:20:27.080" end="00:20:29.800">
+        <tt:span style="textWhite">Dafür haben wir 30 Probanden</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">fotografiert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub318" style="textCenter" region="bottom" begin="00:20:29.880" end="00:20:32.600">
+        <tt:span style="textWhite">Anhand der Bilder</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wollen wir herausfinden,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub319" style="textCenter" region="bottom" begin="00:20:32.680" end="00:20:35.480">
+        <tt:span style="textWhite">ob Sonnenbräune</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die Attraktivität steigert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub320" style="textCenter" region="bottom" begin="00:20:37.800" end="00:20:41.280">
+        <tt:span style="textWhite">In einer Bar lassen wir 30 Gäste</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die Bilder bewerten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub321" style="textCenter" region="bottom" begin="00:20:42.280" end="00:20:43.960">
+        <tt:span style="textWhite">Wen finden sie attraktiv?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub322" style="textCenter" region="bottom" begin="00:20:47.800" end="00:20:52.400">
+        <tt:span style="textWhite">Was die Testpersonen nicht wissen:</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Von jedem Model gibt es zwei Fotos.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub323" style="textCenter" region="bottom" begin="00:20:52.480" end="00:20:56.080">
+        <tt:span style="textWhite">Auf einem davon ist die Haut</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nachträglich braun getönt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub324" style="textCenter" region="bottom" begin="00:20:56.320" end="00:20:57.800">
+        <tt:span style="textWhite">So können wir sehen,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub325" style="textCenter" region="bottom" begin="00:20:57.880" end="00:21:02.360">
+        <tt:span style="textWhite">ob das gleiche Gesicht in blass</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">oder gebräunt attraktiver erscheint.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub326" style="textCenter" region="bottom" begin="00:21:03.080" end="00:21:04.880">
+        <tt:span style="textWhite">Wie würden Sie entscheiden?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub327" style="textCenter" region="bottom" begin="00:21:08.440" end="00:21:10.840">
+        <tt:span style="textWhite">Die Skala reicht von eins bis sechs:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub328" style="textCenter" region="bottom" begin="00:21:11.640" end="00:21:16.080">
+        <tt:span style="textWhite">Von nicht attraktiv</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">bis sehr attraktiv</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub329" style="textCenter" region="bottom" begin="00:21:18.320" end="00:21:20.720">
+        <tt:span style="textYellow">Das ist mir egal,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">ob hell oder braun.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub330" style="textCenter" region="bottom" begin="00:21:20.800" end="00:21:24.000">
+        <tt:span style="textYellow">Aber Gebräunte gefallen mir mehr.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Auf jeden Fall.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub331" style="textCenter" region="bottom" begin="00:21:24.080" end="00:21:25.600">
+        <tt:span style="textYellow">Zu braun mag ich nicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub332" style="textCenter" region="bottom" begin="00:21:25.680" end="00:21:30.360">
+        <tt:span style="textYellow">Ich finde so ein Mittelding, alles,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">was nicht unnatürlich aussieht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub333" style="textCenter" region="bottom" begin="00:21:30.440" end="00:21:34.120">
+        <tt:span style="textYellow">Ich spreche aus eigener Erfahrung.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Ich bin selber blass.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub334" style="textCenter" region="bottom" begin="00:21:34.200" end="00:21:38.600">
+        <tt:span style="textYellow">Ich finde, dass gebräunte Haut immer</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">gesünder und schöner aussieht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub335" style="textCenter" region="bottom" begin="00:21:38.680" end="00:21:42.680">
+        <tt:span style="textYellow">Es ist mehr, das zeigt mehr</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Lebensfreude, wenn man braun ist.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub336" style="textCenter" region="bottom" begin="00:21:42.760" end="00:21:45.680">
+        <tt:span style="textYellow">Auch wenn&apos;s vielleicht</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">nicht ganz gesund ist.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub337" style="textCenter" region="bottom" begin="00:21:45.760" end="00:21:47.560">
+        <tt:span style="textWhite">Zusätzlich zum Kneipen-Test</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub338" style="textCenter" region="bottom" begin="00:21:47.640" end="00:21:50.760">
+        <tt:span style="textWhite">haben wir die Umfrage</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">auch noch online gestellt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub339" style="textCenter" region="bottom" begin="00:21:50.840" end="00:21:54.720">
+        <tt:span style="textWhite">Insgesamt 176 Juroren haben</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">abgestimmt. Und was kommt raus?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub340" style="textCenter" region="bottom" begin="00:21:59.880" end="00:22:03.080">
+        <tt:span style="textWhite">Braune Haut erhöht tatsächlich</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die Attraktivität.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub341" style="textCenter" region="bottom" begin="00:22:04.160" end="00:22:06.480">
+        <tt:span style="textWhite">Zumindest in einem geringen Ausmaß.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub342" style="textCenter" region="bottom" begin="00:22:08.160" end="00:22:10.040">
+        <tt:span style="textWhite">Aber war das schon immer so?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub343" style="textCenter" region="bottom" begin="00:22:14.040" end="00:22:18.640">
+        <tt:span style="textWhite">Um 1850 gilt die weiße Hautfarbe noch</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">als Zeichen eines hohen Standes.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub344" style="textCenter" region="bottom" begin="00:22:20.280" end="00:22:23.200">
+        <tt:span style="textWhite">Die Landarbeiter schuften</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">unter freiem Himmel</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub345" style="textCenter" region="bottom" begin="00:22:23.280" end="00:22:25.600">
+        <tt:span style="textWhite">und haben eine sonnengegerbte Haut.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub346" style="textCenter" region="bottom" begin="00:22:25.800" end="00:22:28.480">
+        <tt:span style="textWhite">Die &quot;vornehme Blässe&quot;</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">zeigt also Reichtum</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub347" style="textCenter" region="bottom" begin="00:22:28.560" end="00:22:30.440">
+        <tt:span style="textWhite">und ist das Schönheitsideal.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub348" style="textCenter" region="bottom" begin="00:22:32.520" end="00:22:34.800">
+        <tt:span style="textWhite">Um 1900 kehrt sich dieses Bild um.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub349" style="textCenter" region="bottom" begin="00:22:35.360" end="00:22:39.040">
+        <tt:span style="textWhite">Die arbeitende Bevölkerung</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">zieht in die großen Fabriken.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub350" style="textCenter" region="bottom" begin="00:22:39.120" end="00:22:43.840">
+        <tt:span style="textWhite">Dort kommen sie selten ans Tageslicht</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">und sind demnach immer sehr blass.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub351" style="textCenter" region="bottom" begin="00:22:44.840" end="00:22:47.520">
+        <tt:span style="textWhite">Die Wohlhabenden dagegen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">können verreisen</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub352" style="textCenter" region="bottom" begin="00:22:47.600" end="00:22:50.320">
+        <tt:span style="textWhite">und zeigen dies</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">mit ihrer gebräunten Haut.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub353" style="textCenter" region="bottom" begin="00:22:51.560" end="00:22:54.760">
+        <tt:span style="textWhite">1923 liegt schließlich</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Ganzkörperbräune im Trend.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub354" style="textCenter" region="bottom" begin="00:22:56.520" end="00:23:00.320">
+        <tt:span style="textWhite">Verantwortlich dafür: Coco Chanel,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">damals eine Stil-Ikone.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub355" style="textCenter" region="bottom" begin="00:23:01.000" end="00:23:04.680">
+        <tt:span style="textWhite">Die Modeschöpferin taucht</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nach dem Urlaub an der Riviera</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub356" style="textCenter" region="bottom" begin="00:23:04.760" end="00:23:07.840">
+        <tt:span style="textWhite">braungebrannt wieder</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">in der Öffentlichkeit auf.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub357" style="textCenter" region="bottom" begin="00:23:07.920" end="00:23:10.800">
+        <tt:span style="textWhite">Und setzt damit</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">einen neuen Schönheitstrend.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub358" style="textCenter" region="bottom" begin="00:23:12.800" end="00:23:15.520">
+        <tt:span style="textWhite">Mit den 1960er-Jahren</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">werden Urlaubsreisen</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub359" style="textCenter" region="bottom" begin="00:23:15.600" end="00:23:18.080">
+        <tt:span style="textWhite">für immer mehr Normalos</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">erschwinglich.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub360" style="textCenter" region="bottom" begin="00:23:18.480" end="00:23:22.880">
+        <tt:span style="textWhite">Schnappschüsse auf Farbfilm zeigen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">knackiges Braun in West und Ost.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub361" style="textCenter" region="bottom" begin="00:23:27.440" end="00:23:30.760">
+        <tt:span style="textWhite">Das gilt bis heute</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">als sportliches Schönheitsideal.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub362" style="textCenter" region="bottom" begin="00:23:32.120" end="00:23:34.960">
+        <tt:span style="textWhite">Was aber tun,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">um ohne Sonne braun zu werden?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub363" style="textCenter" region="bottom" begin="00:23:35.880" end="00:23:38.080">
+        <tt:span style="textWhite">Die Kosmetikindustrie hat da was:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub364" style="textCenter" region="bottom" begin="00:23:38.920" end="00:23:42.040">
+        <tt:span style="textWhite">Selbstbräuner.</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Eine echte Alternative zur Sonne?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub365" style="textCenter" region="bottom" begin="00:23:45.120" end="00:23:48.000">
+        <tt:span style="textWhite">Im Internet jede Menge Fails,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Missgeschicke:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub366" style="textCenter" region="bottom" begin="00:23:48.800" end="00:23:52.600">
+        <tt:span style="textWhite">Zu braun fürs Date, komische Flecken</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nach dem Einschlafen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub367" style="textCenter" region="bottom" begin="00:23:54.720" end="00:23:56.920">
+        <tt:span style="textWhite">Weinkrampf nach dem Studiobesuch.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub368" style="textCenter" region="bottom" begin="00:23:58.640" end="00:24:02.920">
+        <tt:span style="textWhite">Das Baby nach dem Stillen, oder</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">der Abdruck des Hosenherstellers.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub369" style="textCenter" region="bottom" begin="00:24:04.800" end="00:24:07.080">
+        <tt:span style="textWhite">Es kann also einiges schieflaufen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub370" style="textCenter" region="bottom" begin="00:24:07.800" end="00:24:10.680">
+        <tt:span style="textWhite">Deshalb lassen wir</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die Selbstbräuner testen:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub371" style="textCenter" region="bottom" begin="00:24:10.760" end="00:24:14.240">
+        <tt:span style="textWhite">Von Lehrerin Silvie und</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">den Studenten Ben und Regina.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub372" style="textCenter" region="bottom" begin="00:24:16.480" end="00:24:20.720">
+        <tt:span style="textWhite">Wir checken eine professionelle</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Bräunungsdusche für über 30 Euro.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub373" style="textCenter" region="bottom" begin="00:24:23.160" end="00:24:26.880">
+        <tt:span style="textWhite">Die Selbstbräunungscreme vom</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Drogeriemarkt für 1,58 Euro.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub374" style="textCenter" region="bottom" begin="00:24:27.400" end="00:24:31.680">
+        <tt:span style="textWhite">Und das Markenprodukt von St. Tropez</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">für im Schnitt fast 17 Euro.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub375" style="textCenter" region="bottom" begin="00:24:32.680" end="00:24:36.760">
+        <tt:span style="textWhite">Silvie testet die Bräunungsdusche</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">mit persönlicher Einweisung.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub376" style="textCenter" region="bottom" begin="00:24:38.160" end="00:24:42.000">
+        <tt:span style="textYellow">Bei uns ist es so, dass die Bräune</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sieben bis zehn Tage hält.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub377" style="textCenter" region="bottom" begin="00:24:42.080" end="00:24:45.600">
+        <tt:span style="textYellow">Erst nach sechs Stunden siehst du</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">die tatsächliche Bräune.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub378" style="textCenter" region="bottom" begin="00:24:46.000" end="00:24:49.200">
+        <tt:span style="textWhite">Und was ist mit den beiden</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Selbstbräunungscremes?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub379" style="textCenter" region="bottom" begin="00:24:49.280" end="00:24:52.160">
+        <tt:span style="textWhite">Ben bekommt die Creme</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">aus dem Drogeriemarkt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub380" style="textCenter" region="bottom" begin="00:24:52.240" end="00:24:53.920">
+        <tt:span style="textWhite">Regina das Markenprodukt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub381" style="textCenter" region="bottom" begin="00:24:54.040" end="00:24:57.720">
+        <tt:span style="textWhite">Zuerst müssen sie sich die</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Packungsanleitung durchlesen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub382" style="textCenter" region="bottom" begin="00:24:58.400" end="00:24:59.880">
+        <tt:span style="textWhite">Und los geht&apos;s.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub383" style="textCenter" region="bottom" begin="00:25:00.240" end="00:25:01.960">
+        <tt:span style="textYellow">Es hat so einen Grünstich.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub384" style="textCenter" region="bottom" begin="00:25:02.840" end="00:25:05.520">
+        <tt:span style="textYellow">Aber sobald es</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">auf der Haut ist, geht es.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub385" style="textCenter" region="bottom" begin="00:25:09.040" end="00:25:11.320">
+        <tt:span style="textYellow">Fühlt sich sogar ganz angenehm an.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub386" style="textCenter" region="bottom" begin="00:25:11.400" end="00:25:13.960">
+        <tt:span style="textYellow">So als würde ich</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Bodymilk benutzen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub387" style="textCenter" region="bottom" begin="00:25:14.040" end="00:25:16.120">
+        <tt:span style="textWhite">Silvie braucht nichts zu lesen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub388" style="textCenter" region="bottom" begin="00:25:16.200" end="00:25:20.200">
+        <tt:span style="textWhite">Die Maschine wird auf ihren</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">persönlichen Hautton eingestellt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub389" style="textCenter" region="bottom" begin="00:25:21.600" end="00:25:23.400">
+        <tt:span style="textWhite">Und Bräunungsdusche marsch.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub390" style="textCenter" region="bottom" begin="00:25:27.320" end="00:25:30.440">
+        <tt:span style="textYellow">&quot;Ihre Ganzkörpervorbehandlung</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">beginnt in Kürze.&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub391" style="textCenter" region="bottom" begin="00:25:38.880" end="00:25:42.240">
+        <tt:span style="textWhite">Sieben Minuten lang</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wird Silvie rundum eingesprüht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub392" style="textCenter" region="bottom" begin="00:25:42.440" end="00:25:44.760">
+        <tt:span style="textWhite">Etwas über 30 Euro kostet der Spaß.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub393" style="textCenter" region="bottom" begin="00:25:47.240" end="00:25:49.520">
+        <tt:span style="textYellow">&quot;Ihre Behandlung ist nun beendet.&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub394" style="textCenter" region="bottom" begin="00:25:49.760" end="00:25:54.160">
+        <tt:span style="textYellow">Schon ein bisschen komisch. Aber man</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">bekommt ja genaue Anweisungen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub395" style="textCenter" region="bottom" begin="00:25:54.240" end="00:25:55.720">
+        <tt:span style="textYellow">Und der Föhn ist warm.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub396" style="textCenter" region="bottom" begin="00:25:55.800" end="00:25:59.000">
+        <tt:span style="textYellow">Und dieses Spray, was man</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">da aufgesprüht bekommt,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub397" style="textCenter" region="bottom" begin="00:25:59.080" end="00:26:00.600">
+        <tt:span style="textYellow">ist leicht erfrischend.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub398" style="textCenter" region="bottom" begin="00:26:00.800" end="00:26:02.880">
+        <tt:span style="textYellow">Aber es ist definitiv angenehm.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub399" style="textCenter" region="bottom" begin="00:26:02.960" end="00:26:05.880">
+        <tt:span style="textYellow">Es zieht total schnell ein,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">trocknet schnell.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub400" style="textCenter" region="bottom" begin="00:26:05.960" end="00:26:08.680">
+        <tt:span style="textYellow">Es ist nur die Farbe,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">die halt abschreckt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub401" style="textCenter" region="bottom" begin="00:26:08.760" end="00:26:12.360">
+        <tt:span style="textYellow">Und die jetzt in den Händen hängt.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Die sind echt krass.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub402" style="textCenter" region="bottom" begin="00:26:12.440" end="00:26:16.640">
+        <tt:span style="textYellow">Was mir negativ aufgefallen ist:</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Dass es so klumpt auf der Haut.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub403" style="textCenter" region="bottom" begin="00:26:16.720" end="00:26:19.440">
+        <tt:span style="textYellow">An manchen Stellen.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Dass es extrem fettet.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub404" style="textCenter" region="bottom" begin="00:26:19.520" end="00:26:22.120">
+        <tt:span style="textWhite">Zwischenfazit direkt</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nach der Behandlung:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub405" style="textCenter" region="bottom" begin="00:26:22.200" end="00:26:24.920">
+        <tt:span style="textWhite">Reginas Hände und Ellbogen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">sind auffällig.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub406" style="textCenter" region="bottom" begin="00:26:25.040" end="00:26:27.520">
+        <tt:span style="textWhite">Bens Drogeriemarkt-Creme</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">fettet etwas.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub407" style="textCenter" region="bottom" begin="00:26:27.600" end="00:26:29.320">
+        <tt:span style="textWhite">Und braun ist noch keiner.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub408" style="textCenter" region="bottom" begin="00:26:30.360" end="00:26:33.240">
+        <tt:span style="textWhite">Am Chemischen und</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Veterinär-Untersuchungsamt</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub409" style="textCenter" region="bottom" begin="00:26:33.320" end="00:26:36.200">
+        <tt:span style="textWhite">in Karlsruhe erfahren wir,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">warum das so ist.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub410" style="textCenter" region="bottom" begin="00:26:39.200" end="00:26:41.120">
+        <tt:span style="textYellow">Das ist ein Bräunungsprozess.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub411" style="textCenter" region="bottom" begin="00:26:41.200" end="00:26:44.280">
+        <tt:span style="textYellow">Der dauert seine Zeit,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">bis es dann gewirkt hat.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub412" style="textCenter" region="bottom" begin="00:26:44.560" end="00:26:47.640">
+        <tt:span style="textYellow">Bis die &quot;Reaktionspartner&quot;</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sich gefunden haben.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub413" style="textCenter" region="bottom" begin="00:26:47.800" end="00:26:50.720">
+        <tt:span style="textYellow">Und die Reaktion</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">stattgefunden hat dann auch.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub414" style="textCenter" region="bottom" begin="00:26:51.080" end="00:26:54.600">
+        <tt:span style="textWhite">Der chemische Wirkstoff,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">der in Selbstbräunern steckt,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub415" style="textCenter" region="bottom" begin="00:26:54.680" end="00:26:58.760">
+        <tt:span style="textWhite">egal, ob aus der Tube oder</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">aufgesprüht, heißt Dihydroxyacetone.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub416" style="textCenter" region="bottom" begin="00:26:58.840" end="00:27:00.320">
+        <tt:span style="textWhite">Kurz DHA.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub417" style="textCenter" region="bottom" begin="00:27:01.520" end="00:27:04.360">
+        <tt:span style="textWhite">Entdeckt wurde DHA 1920</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">bei einem Experiment</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub418" style="textCenter" region="bottom" begin="00:27:04.440" end="00:27:07.000">
+        <tt:span style="textWhite">zum Test von Diabetiker-Süßstoffen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub419" style="textCenter" region="bottom" begin="00:27:07.960" end="00:27:10.040">
+        <tt:span style="textWhite">Denn DHA ist ein Zuckermolekül.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub420" style="textCenter" region="bottom" begin="00:27:11.040" end="00:27:13.440">
+        <tt:span style="textWhite">Nur als Süßstoff leider unbrauchbar.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub421" style="textCenter" region="bottom" begin="00:27:15.720" end="00:27:20.040">
+        <tt:span style="textWhite">Als aber den Kindern im Test zufällig</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Speichel über die Haut lief,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub422" style="textCenter" region="bottom" begin="00:27:20.120" end="00:27:23.000">
+        <tt:span style="textWhite">entdeckte man</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die bräunende Wirkung von DHA.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub423" style="textCenter" region="bottom" begin="00:27:26.560" end="00:27:30.760">
+        <tt:span style="textWhite">Die Hautverfärbung kommt durch</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die &quot;Maillard-Reaktion&quot; zustande.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub424" style="textCenter" region="bottom" begin="00:27:31.320" end="00:27:36.040">
+        <tt:span style="textWhite">Die gleiche Reaktion übrigens, die</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">auch Steaks und Grillhähnchen bräunt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub425" style="textCenter" region="bottom" begin="00:27:39.680" end="00:27:42.560">
+        <tt:span style="textWhite">Ist das wirklich gesünder</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">als ein Sonnenbad?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub426" style="textCenter" region="bottom" begin="00:27:45.800" end="00:27:49.600">
+        <tt:span style="textYellow">Wir würden jetzt nicht sagen,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">das ist eine gesunde Alternative.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub427" style="textCenter" region="bottom" begin="00:27:49.680" end="00:27:53.800">
+        <tt:span style="textYellow">Sondern dass keine Gesundheitsgefahr</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">von diesen Produkten ausgeht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub428" style="textCenter" region="bottom" begin="00:27:53.880" end="00:27:57.000">
+        <tt:span style="textYellow">Im Vergleich zu einer</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">natürlichen Bräune ist es so,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub429" style="textCenter" region="bottom" begin="00:27:57.080" end="00:28:00.320">
+        <tt:span style="textYellow">dass die Selbstbräuner</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">keinerlei Sonnenschutz bieten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub430" style="textCenter" region="bottom" begin="00:28:00.400" end="00:28:04.000">
+        <tt:span style="textYellow">Wenn man braun wird, ist es ja so,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">dass man, wenn man schon</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub431" style="textCenter" region="bottom" begin="00:28:04.080" end="00:28:08.160">
+        <tt:span style="textYellow">eine gewisse Bräune hat, nicht so</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">schnell einen Sonnenbrand bekommt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub432" style="textCenter" region="bottom" begin="00:28:08.240" end="00:28:11.640">
+        <tt:span style="textYellow">Das ist nicht der Fall, wenn man</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Selbstbräuner verwendet.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub433" style="textCenter" region="bottom" begin="00:28:11.720" end="00:28:14.800">
+        <tt:span style="textYellow">Das steht auch als Warnhinweis</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">auf allen Produkten,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub434" style="textCenter" region="bottom" begin="00:28:14.880" end="00:28:16.560">
+        <tt:span style="textYellow">die wir untersucht haben.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub435" style="textCenter" region="bottom" begin="00:28:16.640" end="00:28:20.360">
+        <tt:span style="textWhite">Am nächsten Tag treffen wir</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">unsere drei Probanden wieder.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub436" style="textCenter" region="bottom" begin="00:28:20.440" end="00:28:22.040">
+        <tt:span style="textWhite">Und alle drei sehen aus,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub437" style="textCenter" region="bottom" begin="00:28:22.120" end="00:28:25.600">
+        <tt:span style="textWhite">als hätten sie den Nachmittag</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">in der Sonne verbracht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub438" style="textCenter" region="bottom" begin="00:28:27.320" end="00:28:31.520">
+        <tt:span style="textYellow">Einmal musste man so mit leicht</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">gebeugten Knien und so dastehen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub439" style="textCenter" region="bottom" begin="00:28:33.040" end="00:28:35.840">
+        <tt:span style="textWhite">Jede Bräunung verlief</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">ganz unterschiedlich.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub440" style="textCenter" region="bottom" begin="00:28:36.560" end="00:28:39.680">
+        <tt:span style="textYellow">Ich saß im Biergarten</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">mit meinem Verlobten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub441" style="textCenter" region="bottom" begin="00:28:39.760" end="00:28:41.240">
+        <tt:span style="textYellow">Er hat dann gemeint:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub442" style="textCenter" region="bottom" begin="00:28:41.320" end="00:28:44.040">
+        <tt:span style="textYellow">Irgendwie wirst du</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">ganz braun um die Nase.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub443" style="textCenter" region="bottom" begin="00:28:44.120" end="00:28:45.600">
+        <tt:span style="textYellow">Kreisrund im Gesicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub444" style="textCenter" region="bottom" begin="00:28:45.760" end="00:28:49.400">
+        <tt:span style="textYellow">Aber es ist dann ganz schnell</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">auch gleichmäßig übergegangen</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub445" style="textCenter" region="bottom" begin="00:28:49.480" end="00:28:50.960">
+        <tt:span style="textYellow">auf den ganzen Körper.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub446" style="textCenter" region="bottom" begin="00:28:51.040" end="00:28:54.840">
+        <tt:span style="textYellow">Es ging dann gegen Abend</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">zu so einem salzigen Geruch über.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub447" style="textCenter" region="bottom" begin="00:28:54.920" end="00:28:58.120">
+        <tt:span style="textYellow">Eher unangenehm. Und die Bräune</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">wurde intensiver.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub448" style="textCenter" region="bottom" begin="00:28:59.320" end="00:29:01.800">
+        <tt:span style="textYellow">Aber irgendwann,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">kurz vor Mitternacht,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub449" style="textCenter" region="bottom" begin="00:29:01.880" end="00:29:05.080">
+        <tt:span style="textYellow">hat&apos;s dann auch aufgehört</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">mit dem brauner werden.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub450" style="textCenter" region="bottom" begin="00:29:05.600" end="00:29:09.000">
+        <tt:span style="textYellow">Es sieht nicht schön aus.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Auf der Handfläche zum Beispiel.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub451" style="textCenter" region="bottom" begin="00:29:09.080" end="00:29:11.880">
+        <tt:span style="textYellow">Weil ich da total orange bin,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">auch fleckig.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub452" style="textCenter" region="bottom" begin="00:29:11.960" end="00:29:14.800">
+        <tt:span style="textYellow">Und die Farbe ist</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">so ein bisschen orangefarben.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub453" style="textCenter" region="bottom" begin="00:29:14.880" end="00:29:16.480">
+        <tt:span style="textWhite">Der Moment der Wahrheit:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub454" style="textCenter" region="bottom" begin="00:29:17.120" end="00:29:20.320">
+        <tt:span style="textWhite">Ben hat die Creme aus dem</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Drogeriemarkt getestet.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub455" style="textCenter" region="bottom" begin="00:29:20.400" end="00:29:22.880">
+        <tt:span style="textWhite">Seinen Hautton findet er unnatürlich.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub456" style="textCenter" region="bottom" begin="00:29:23.000" end="00:29:26.200">
+        <tt:span style="textWhite">Und die Creme hinterlässt Flecken</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">auf den Händen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub457" style="textCenter" region="bottom" begin="00:29:28.120" end="00:29:29.800">
+        <tt:span style="textWhite">Regina findet ihre Bräune</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub458" style="textCenter" region="bottom" begin="00:29:29.880" end="00:29:32.960">
+        <tt:span style="textWhite">mit der Markencreme von St. Tropez</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">natürlicher.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub459" style="textCenter" region="bottom" begin="00:29:33.080" end="00:29:37.000">
+        <tt:span style="textWhite">Nur sind ihre Ellbogen und Hände,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">trotz vorherigem Peelings</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub460" style="textCenter" region="bottom" begin="00:29:37.080" end="00:29:38.560">
+        <tt:span style="textWhite">ziemlich fleckig.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub461" style="textCenter" region="bottom" begin="00:29:40.600" end="00:29:44.800">
+        <tt:span style="textWhite">Einzig Silvie ist mit ihrem teuren</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Premiumlook rundum zufrieden.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub462" style="textCenter" region="bottom" begin="00:29:46.200" end="00:29:50.600">
+        <tt:span style="textWhite">Entsprechend unterschiedlich fällt</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">das Fazit unserer Probanden aus.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub463" style="textCenter" region="bottom" begin="00:29:50.680" end="00:29:52.800">
+        <tt:span style="textYellow">Ich würde es nicht noch mal machen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub464" style="textCenter" region="bottom" begin="00:29:52.880" end="00:29:54.960">
+        <tt:span style="textYellow">Ich würde mich</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">eher in die Sonne legen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub465" style="textCenter" region="bottom" begin="00:29:55.280" end="00:29:57.200">
+        <tt:span style="textYellow">Das Ergebnis ist super-schön.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub466" style="textCenter" region="bottom" begin="00:29:57.280" end="00:29:59.560">
+        <tt:span style="textYellow">Selbst wenn ich in die Sonne gehe,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub467" style="textCenter" region="bottom" begin="00:29:59.640" end="00:30:02.760">
+        <tt:span style="textYellow">nach einer Woche Urlaub</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">werde ich nicht bräuner.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub468" style="textCenter" region="bottom" begin="00:30:03.720" end="00:30:06.400">
+        <tt:span style="textYellow">Nur im Notfall würde ich</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">zu so was greifen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub469" style="textCenter" region="bottom" begin="00:30:06.480" end="00:30:09.000">
+        <tt:span style="textYellow">Für mich ist es</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">keine Produktempfehlung.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub470" style="textCenter" region="bottom" begin="00:30:09.080" end="00:30:12.080">
+        <tt:span style="textWhite">Sonnenbräune</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">ohne krebserregende UV-Strahlung.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub471" style="textCenter" region="bottom" begin="00:30:12.160" end="00:30:15.160">
+        <tt:span style="textWhite">Hier zumindest kann</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">der Wirkstoff DHA punkten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub472" style="textCenter" region="bottom" begin="00:30:16.200" end="00:30:20.320">
+        <tt:span style="textWhite">Wem es der braune Teint wert ist,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">der bekommt für knapp 32 Euro</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub473" style="textCenter" region="bottom" begin="00:30:20.400" end="00:30:24.600">
+        <tt:span style="textWhite">pro Behandlung in der Bräunungsdusche</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">ein ordentliches Ergebnis.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub474" style="textCenter" region="bottom" begin="00:30:24.680" end="00:30:26.680">
+        <tt:span style="textWhite">Und das hält bis zu zehn Tage.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub475" style="textCenter" region="bottom" begin="00:30:30.840" end="00:30:34.400">
+        <tt:span style="textWhite">Die Alternativen aus der Tube</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">sind deutlich günstiger.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub476" style="textCenter" region="bottom" begin="00:30:34.480" end="00:30:38.000">
+        <tt:span style="textWhite">Die Bräune aus dem Drogeriemarkt</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">hält circa drei Tage.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub477" style="textCenter" region="bottom" begin="00:30:41.720" end="00:30:44.520">
+        <tt:span style="textWhite">Das Markenprodukt</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">schafft knapp eine Woche.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub478" style="textCenter" region="bottom" begin="00:30:44.920" end="00:30:47.400">
+        <tt:span style="textWhite">Unser Tipp:</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Selbstbräuner kühl lagern.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub479" style="textCenter" region="bottom" begin="00:30:47.480" end="00:30:51.000">
+        <tt:span style="textWhite">Denn bei unsachgemäßer Lagerung</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">zerfällt der Wirkstoff</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub480" style="textCenter" region="bottom" begin="00:30:51.080" end="00:30:53.600">
+        <tt:span style="textWhite">und setzt schädliches</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Formaldehyd frei.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub481" style="textCenter" region="bottom" begin="00:30:53.680" end="00:30:56.760">
+        <tt:span style="textWhite">Und bei der Anwendung</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">besser Handschuhe tragen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub482" style="textCenter" region="bottom" begin="00:30:59.960" end="00:31:03.760">
+        <tt:span style="textWhite">Ein Dauerbrenner der</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Kosmetikindustrie: Antifalten-Cremes.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub483" style="textCenter" region="bottom" begin="00:31:05.680" end="00:31:08.480">
+        <tt:span style="textWhite">Die Produkte werben</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">mit sofortiger Wirkung.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub484" style="textCenter" region="bottom" begin="00:31:10.360" end="00:31:11.840">
+        <tt:span style="textWhite">Verjüngung der Haut.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub485" style="textCenter" region="bottom" begin="00:31:12.000" end="00:31:14.320">
+        <tt:span style="textWhite">Einsatz von Nobelpreis-Technologie.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub486" style="textCenter" region="bottom" begin="00:31:15.520" end="00:31:19.640">
+        <tt:span style="textWhite">Wir wollen wissen:; Helfen solche</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Cremes wirklich gegen Falten?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub487" style="textCenter" region="bottom" begin="00:31:22.800" end="00:31:26.480">
+        <tt:span style="textWhite">Im schönen Augsburg sprechen wir</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Frauen jeden Alters an.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub488" style="textCenter" region="bottom" begin="00:31:26.560" end="00:31:30.360">
+        <tt:span style="textWhite">Was halten sie von den Versprechen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">der Kosmetikhersteller?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub489" style="textCenter" region="bottom" begin="00:31:32.640" end="00:31:34.560">
+        <tt:span style="textYellow">Die Falten</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">macht es nicht weg.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub490" style="textCenter" region="bottom" begin="00:31:34.640" end="00:31:38.000">
+        <tt:span style="textYellow">Es hilft was für die Einstellung.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Man fühlt sich besser.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub491" style="textCenter" region="bottom" begin="00:31:38.080" end="00:31:42.000">
+        <tt:span style="textYellow">Aber ich glaub, der Prozess lässt</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sich dadurch nicht aufhalten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub492" style="textCenter" region="bottom" begin="00:31:42.080" end="00:31:46.200">
+        <tt:span style="textYellow">Wenn man liest: Anti-Falten-Creme.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Denkt man: Das machst du doch mal.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub493" style="textCenter" region="bottom" begin="00:31:46.280" end="00:31:48.560">
+        <tt:span style="textYellow">Falten können Sie nicht wegmachen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub494" style="textCenter" region="bottom" begin="00:31:48.640" end="00:31:51.520">
+        <tt:span style="textYellow">Wie und ob das funktioniert,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">weiß ich nicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub495" style="textCenter" region="bottom" begin="00:31:51.600" end="00:31:54.680">
+        <tt:span style="textWhite">Laut Stiftung Warentest</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">glaubt jede zweite Frau</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub496" style="textCenter" region="bottom" begin="00:31:54.760" end="00:31:59.040">
+        <tt:span style="textWhite">an eine sichtbare Verringerung</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">von Falten durch Antifaltencremes.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub497" style="textCenter" region="bottom" begin="00:32:02.000" end="00:32:06.400">
+        <tt:span style="textWhite">Wie groß der Effekt tatsächlich ist,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">das testen wir an vier Cremes:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub498" style="textCenter" region="bottom" begin="00:32:07.880" end="00:32:11.600">
+        <tt:span style="textWhite">Die günstigste: Balea Beauty Effect</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">für knapp sechs Euro.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub499" style="textCenter" region="bottom" begin="00:32:12.320" end="00:32:15.440">
+        <tt:span style="textWhite">Die teuerste mit gut 80 Euro</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Durchschnittspreis:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub500" style="textCenter" region="bottom" begin="00:32:15.520" end="00:32:17.920">
+        <tt:span style="textWhite">Advanced Time Zone von Estée Lauder.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub501" style="textCenter" region="bottom" begin="00:32:18.320" end="00:32:22.600">
+        <tt:span style="textWhite">Dazu die Diadermine Age Supreme</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Regeneration für knapp acht Euro.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub502" style="textCenter" region="bottom" begin="00:32:22.800" end="00:32:26.920">
+        <tt:span style="textWhite">Und die Eucerin Q10 Active aus</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">der Apotheke für um die 25 Euro.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub503" style="textCenter" region="bottom" begin="00:32:28.600" end="00:32:31.600">
+        <tt:span style="textWhite">Ohne englische Namen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">geht offenbar gar nichts.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub504" style="textCenter" region="bottom" begin="00:32:32.800" end="00:32:35.920">
+        <tt:span style="textYellow">&quot;Auf Fotos ist es immer leicht,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">gut auszusehen.&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub505" style="textCenter" region="bottom" begin="00:32:36.000" end="00:32:40.120">
+        <tt:span style="textWhite">Diadermine Age Supreme bringt</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">sogar einen Nobelpreis ins Spiel.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub506" style="textCenter" region="bottom" begin="00:32:40.560" end="00:32:43.200">
+        <tt:span style="textYellow">&quot;Mit Nobelpreis</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">ausgezeichneter Technologie.&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub507" style="textCenter" region="bottom" begin="00:32:43.280" end="00:32:46.400">
+        <tt:span style="textYellow">&quot;Repariert durch UV-Strahlung</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">entstanden Zellschäden.&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub508" style="textCenter" region="bottom" begin="00:32:46.480" end="00:32:50.080">
+        <tt:span style="textYellow">&quot;Und wirkt gegen alle wesentlichen</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Zeichen der Hautalterung.&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub509" style="textCenter" region="bottom" begin="00:32:50.160" end="00:32:52.960">
+        <tt:span style="textWhite">Wow. Eine Creme,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die DNA-Schäden repariert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub510" style="textCenter" region="bottom" begin="00:32:53.080" end="00:32:55.160">
+        <tt:span style="textWhite">Hightech-Kosmetik fürs Gesicht?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub511" style="textCenter" region="bottom" begin="00:32:55.240" end="00:32:57.920">
+        <tt:span style="textWhite">Der Sache wollen wir</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">auf den Grund gehen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub512" style="textCenter" region="bottom" begin="00:32:59.720" end="00:33:02.240">
+        <tt:span style="textWhite">Dafür müssen wir</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nicht in die Apotheke.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub513" style="textCenter" region="bottom" begin="00:33:02.320" end="00:33:04.320">
+        <tt:span style="textWhite">Der Drogeriemarkt tut&apos;s auch.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub514" style="textCenter" region="bottom" begin="00:33:07.680" end="00:33:09.160">
+        <tt:span style="textWhite">Zu Hause am Computer.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub515" style="textCenter" region="bottom" begin="00:33:09.720" end="00:33:12.320">
+        <tt:span style="textWhite">Auf seiner Homepage</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wirbt der Hersteller</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub516" style="textCenter" region="bottom" begin="00:33:12.400" end="00:33:14.320">
+        <tt:span style="textWhite">ebenfalls mit dem Nobelpreis.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub517" style="textCenter" region="bottom" begin="00:33:14.400" end="00:33:16.880">
+        <tt:span style="textWhite">Doch wie genau</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">soll das funktionieren?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub518" style="textCenter" region="bottom" begin="00:33:17.000" end="00:33:18.480">
+        <tt:span style="textWhite">Dazu keine Infos.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub519" style="textCenter" region="bottom" begin="00:33:20.880" end="00:33:24.600">
+        <tt:span style="textWhite">Als Wirkstoff wird &quot;Rejuvinol&quot;</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">genannt. Ein Kunstbegriff.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub520" style="textCenter" region="bottom" begin="00:33:25.720" end="00:33:30.440">
+        <tt:span style="textWhite">Die Internetsuche führt wieder nur</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">zum Hersteller. Den schreiben wir an.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub521" style="textCenter" region="bottom" begin="00:33:31.320" end="00:33:32.840">
+        <tt:span style="textWhite">Die Pressestelle hilft:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub522" style="textCenter" region="bottom" begin="00:33:44.000" end="00:33:48.400">
+        <tt:span style="textWhite">Photolyase. Der Genetiker Aziz Sancar</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">entdeckte schon 1983,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub523" style="textCenter" region="bottom" begin="00:33:48.480" end="00:33:53.000">
+        <tt:span style="textWhite">wie das besagte Enzym</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">beschädigte DNA repariert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub524" style="textCenter" region="bottom" begin="00:33:53.600" end="00:33:57.520">
+        <tt:span style="textWhite">Und das Beste: Das passiert in</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">unseren Zellen von Natur aus.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub525" style="textCenter" region="bottom" begin="00:33:58.440" end="00:33:59.920">
+        <tt:span style="textWhite">Ganz ohne Creme.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub526" style="textCenter" region="bottom" begin="00:34:03.360" end="00:34:06.960">
+        <tt:span style="textWhite">2015 bekommt Sancar für</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">seine Forschung den Nobelpreis.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub527" style="textCenter" region="bottom" begin="00:34:07.720" end="00:34:10.720">
+        <tt:span style="textWhite">Aber was hat die Antifaltencreme</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">damit zu tun?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub528" style="textCenter" region="bottom" begin="00:34:13.000" end="00:34:16.120">
+        <tt:span style="textWhite">Der Hersteller antwortet uns</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wieder schriftlich:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub529" style="textCenter" region="bottom" begin="00:34:34.120" end="00:34:36.640">
+        <tt:span style="textWhite">Der Stoff wird also</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">aus Algen gewonnen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub530" style="textCenter" region="bottom" begin="00:34:36.720" end="00:34:40.320">
+        <tt:span style="textWhite">Und deren Zellen enthalten</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wie alle lebenden Organismen</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub531" style="textCenter" region="bottom" begin="00:34:40.400" end="00:34:41.880">
+        <tt:span style="textWhite">das Reparaturenzym.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub532" style="textCenter" region="bottom" begin="00:34:41.960" end="00:34:45.160">
+        <tt:span style="textWhite">Unklar bleibt, wie genau</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">der Wirkstoff Falten bekämpft.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub533" style="textCenter" region="bottom" begin="00:34:45.240" end="00:34:48.000">
+        <tt:span style="textWhite">Stattdessen gibt&apos;s</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wissenschaftliche Literatur</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub534" style="textCenter" region="bottom" begin="00:34:48.080" end="00:34:51.000">
+        <tt:span style="textWhite">ohne erkennbaren Zusammenhang</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">zu unserer Frage.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub535" style="textCenter" region="bottom" begin="00:34:51.080" end="00:34:55.000">
+        <tt:span style="textYellow">Das Problem: Die Studien müssen</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">nicht öffentlich gemacht werden.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub536" style="textCenter" region="bottom" begin="00:34:55.080" end="00:34:59.000">
+        <tt:span style="textYellow">Oder ich als Verbraucher keinen</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Anspruch habe darauf, zu sagen:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub537" style="textCenter" region="bottom" begin="00:34:59.080" end="00:35:03.080">
+        <tt:span style="textYellow">&quot;Lieber Hersteller, wenn du damit</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">wirbst, wie beweist du das denn?&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub538" style="textCenter" region="bottom" begin="00:35:03.160" end="00:35:06.080">
+        <tt:span style="textYellow">&quot;Ich möchte mal gucken,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">ob dieser Beweis für mich</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub539" style="textCenter" region="bottom" begin="00:35:06.160" end="00:35:07.640">
+        <tt:span style="textYellow">auch schlüssig ist.&quot;</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub540" style="textCenter" region="bottom" begin="00:35:07.720" end="00:35:09.200">
+        <tt:span style="textYellow">Ich daraus sehen kann:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub541" style="textCenter" region="bottom" begin="00:35:09.280" end="00:35:12.400">
+        <tt:span style="textYellow">Dieses Produkt funktioniert so,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">wie ich das erwarte.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub542" style="textCenter" region="bottom" begin="00:35:12.480" end="00:35:15.000">
+        <tt:span style="textYellow">Diesen Anspruch</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">hat der Verbraucher nicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub543" style="textCenter" region="bottom" begin="00:35:15.080" end="00:35:19.200">
+        <tt:span style="textWhite">Fazit: Wie der Hersteller denn nun</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">genau die Nobelpreis-würdige</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub544" style="textCenter" region="bottom" begin="00:35:19.280" end="00:35:23.560">
+        <tt:span style="textWhite">Grundlagenforschung in seiner</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Antifaltencreme zum Einsatz bringt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub545" style="textCenter" region="bottom" begin="00:35:23.640" end="00:35:27.720">
+        <tt:span style="textWhite">Das konnten wir auch nach mehrmaligem</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Nachfragen nicht klären.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub546" style="textCenter" region="bottom" begin="00:35:29.520" end="00:35:33.000">
+        <tt:span style="textWhite">Aber wirkt die Creme</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">denn wenigstens wie versprochen?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub547" style="textCenter" region="bottom" begin="00:35:33.080" end="00:35:37.760">
+        <tt:span style="textWhite">Das Institut Dermatest in Münster</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">und 15 Freiwillige sollen das testen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub548" style="textCenter" region="bottom" begin="00:35:40.040" end="00:35:44.040">
+        <tt:span style="textYellow">In meinen Alter, so ab 40, 50</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">probieren wir gern mal was aus.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub549" style="textCenter" region="bottom" begin="00:35:45.280" end="00:35:47.080">
+        <tt:span style="textYellow">Faltencreme oder Handcreme.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub550" style="textCenter" region="bottom" begin="00:35:47.160" end="00:35:51.400">
+        <tt:span style="textYellow">Ich bin im Einzelhandel tätig, da</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">ist gutes Aussehen schon wichtig.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub551" style="textCenter" region="bottom" begin="00:35:52.600" end="00:35:54.080">
+        <tt:span style="textYellow">Kommen Sie mit durch?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub552" style="textCenter" region="bottom" begin="00:35:54.760" end="00:35:56.680">
+        <tt:span style="textYellow">Wir gehen rechts in den Raum.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub553" style="textCenter" region="bottom" begin="00:36:00.600" end="00:36:03.400">
+        <tt:span style="textYellow">Ich erwarte, dass die Haut</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sich verbessert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub554" style="textCenter" region="bottom" begin="00:36:03.480" end="00:36:05.880">
+        <tt:span style="textYellow">Dass die Faltentiefe</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sich verringert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub555" style="textCenter" region="bottom" begin="00:36:05.960" end="00:36:07.440">
+        <tt:span style="textYellow">Wir Frauen sind eitel.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub556" style="textCenter" region="bottom" begin="00:36:07.520" end="00:36:11.000">
+        <tt:span style="textYellow">Wir werden nicht jünger,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">wir müssen mit der Zeit mitgehen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub557" style="textCenter" region="bottom" begin="00:36:11.080" end="00:36:13.000">
+        <tt:span style="textYellow">Die Konkurrenz schläft nicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub558" style="textCenter" region="bottom" begin="00:36:13.080" end="00:36:16.560">
+        <tt:span style="textWhite">Aber jetzt zählt erst mal</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die ungeschminkte Wahrheit:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub559" style="textCenter" region="bottom" begin="00:36:16.640" end="00:36:20.360">
+        <tt:span style="textWhite">Mittels digitaler Messtechnik</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wird die Hautbeschaffenheit</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub560" style="textCenter" region="bottom" begin="00:36:20.440" end="00:36:22.360">
+        <tt:span style="textWhite">der Testerinnen dokumentiert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub561" style="textCenter" region="bottom" begin="00:36:22.440" end="00:36:25.320">
+        <tt:span style="textWhite">Wie tief sind die Falten</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">vor dem Creme-Test?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub562" style="textCenter" region="bottom" begin="00:36:25.400" end="00:36:28.520">
+        <tt:span style="textWhite">Am Lidrand im Bereich</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">der klassischen Krähenfüße</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub563" style="textCenter" region="bottom" begin="00:36:28.600" end="00:36:31.800">
+        <tt:span style="textWhite">wird die Haut auf den Mikrometer</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">genau vermessen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub564" style="textCenter" region="bottom" begin="00:36:31.880" end="00:36:34.400">
+        <tt:span style="textWhite">Außerdem wichtig:</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die Hautfeuchtigkeit.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub565" style="textCenter" region="bottom" begin="00:36:34.480" end="00:36:37.360">
+        <tt:span style="textWhite">Denn eine gute Creme</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">sollte auch diesen Wert</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub566" style="textCenter" region="bottom" begin="00:36:37.440" end="00:36:39.640">
+        <tt:span style="textWhite">über den Testzeitraum verbessern.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub567" style="textCenter" region="bottom" begin="00:36:41.040" end="00:36:42.760">
+        <tt:span style="textYellow">Hier habe ich Ihr Produkt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub568" style="textCenter" region="bottom" begin="00:36:43.680" end="00:36:45.280">
+        <tt:span style="textWhite">Die Tiegel sind neutral.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub569" style="textCenter" region="bottom" begin="00:36:45.360" end="00:36:48.960">
+        <tt:span style="textWhite">Keine Testerin weiß, ob sie</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">in den nächsten vier Wochen</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub570" style="textCenter" region="bottom" begin="00:36:49.080" end="00:36:52.600">
+        <tt:span style="textWhite">eine der vier Spezial-</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Antifaltencremes benutzen wird.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub571" style="textCenter" region="bottom" begin="00:36:52.680" end="00:36:55.160">
+        <tt:span style="textWhite">Oder eine einfache</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Feuchtigkeitscreme.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub572" style="textCenter" region="bottom" begin="00:36:55.400" end="00:36:56.880">
+        <tt:span style="textYellow">Ich freue mich.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub573" style="textCenter" region="bottom" begin="00:36:56.960" end="00:36:59.640">
+        <tt:span style="textYellow">Schönen Tag Ihnen noch.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Bis zum nächsten Mal.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub574" style="textCenter" region="bottom" begin="00:37:00.400" end="00:37:03.680">
+        <tt:span style="textWhite">In der Zwischenzeit widmen wir uns</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">dem Zauberwort,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub575" style="textCenter" region="bottom" begin="00:37:03.760" end="00:37:07.480">
+        <tt:span style="textWhite">mit dem Kosmetik-Produkte</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">auffällig oft werben: Hyaluron.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub576" style="textCenter" region="bottom" begin="00:37:10.040" end="00:37:14.560">
+        <tt:span style="textWhite">Dabei handelt es sich um einen ganz</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">natürlichen Baustein des Körpers.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub577" style="textCenter" region="bottom" begin="00:37:14.640" end="00:37:18.320">
+        <tt:span style="textWhite">Er kommt in der Tränenflüssigkeit,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">in Knorpeln, Gelenken</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub578" style="textCenter" region="bottom" begin="00:37:18.400" end="00:37:20.000">
+        <tt:span style="textWhite">und in unserer Haut vor.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub579" style="textCenter" region="bottom" begin="00:37:22.560" end="00:37:26.560">
+        <tt:span style="textWhite">Hyaluron-Moleküle speichern</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">sehr viel Wasser im Körpergewebe.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub580" style="textCenter" region="bottom" begin="00:37:27.320" end="00:37:28.800">
+        <tt:span style="textWhite">Aber klappt das auch,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub581" style="textCenter" region="bottom" begin="00:37:28.880" end="00:37:32.000">
+        <tt:span style="textWhite">wenn sie künstlich in Cremes</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">aufgetragen werden?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub582" style="textCenter" region="bottom" begin="00:37:37.440" end="00:37:39.840">
+        <tt:span style="textWhite">Wir fragen nach bei Joachim Kresken.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub583" style="textCenter" region="bottom" begin="00:37:40.400" end="00:37:44.800">
+        <tt:span style="textWhite">Der unabhängige Pharmazeut hat</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Antifaltencremes eingehend studiert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub584" style="textCenter" region="bottom" begin="00:37:47.560" end="00:37:51.160">
+        <tt:span style="textYellow">Hyaluronsäure ist ein extrem</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">guter Feuchthalte-Komplex.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub585" style="textCenter" region="bottom" begin="00:37:52.600" end="00:37:56.520">
+        <tt:span style="textYellow">Hyaluronsäure kann etwa das</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Tausendfache ihres Eigengewichts</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub586" style="textCenter" region="bottom" begin="00:37:56.600" end="00:37:58.320">
+        <tt:span style="textYellow">an Feuchtigkeit speichern.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub587" style="textCenter" region="bottom" begin="00:37:58.400" end="00:38:01.800">
+        <tt:span style="textYellow">Allerdings ist die Hyaluronsäure</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">ein großes Molekül.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub588" style="textCenter" region="bottom" begin="00:38:01.880" end="00:38:05.200">
+        <tt:span style="textYellow">Viel zu groß, um durch die Haut</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">hindurch zu kommen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub589" style="textCenter" region="bottom" begin="00:38:05.280" end="00:38:08.640">
+        <tt:span style="textWhite">Große Hyaluron-Moleküle</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">bestehen aus langen Ketten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub590" style="textCenter" region="bottom" begin="00:38:08.720" end="00:38:12.520">
+        <tt:span style="textWhite">Forscher der Uni München haben</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">in einer Studie untersucht,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub591" style="textCenter" region="bottom" begin="00:38:12.600" end="00:38:16.400">
+        <tt:span style="textWhite">ob kurze oder lange Molekül-Ketten</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">unterschiedlich wirken.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub592" style="textCenter" region="bottom" begin="00:38:16.480" end="00:38:17.960">
+        <tt:span style="textWhite">Das Ergebnis:</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub593" style="textCenter" region="bottom" begin="00:38:18.080" end="00:38:22.560">
+        <tt:span style="textWhite">Feuchtigkeit und Haut-Elastizität</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nahmen bei allen gleichermaßen zu.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub594" style="textCenter" region="bottom" begin="00:38:23.560" end="00:38:26.960">
+        <tt:span style="textWhite">Doch die Faltentiefe</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">ging nur bei den Frauen zurück,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub595" style="textCenter" region="bottom" begin="00:38:27.080" end="00:38:31.000">
+        <tt:span style="textWhite">die überwiegend kurze Hyaluron-Ketten</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">in ihrer Creme hatten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub596" style="textCenter" region="bottom" begin="00:38:31.320" end="00:38:33.800">
+        <tt:span style="textWhite">Nur die dringen tief in die Haut vor.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub597" style="textCenter" region="bottom" begin="00:38:38.680" end="00:38:42.480">
+        <tt:span style="textWhite">Leider aber sucht man auf</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Kosmetik-Verpackungen vergeblich</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub598" style="textCenter" region="bottom" begin="00:38:42.560" end="00:38:45.440">
+        <tt:span style="textWhite">nach Angaben</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">zur verwendeten Hyaluron-Sorte.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub599" style="textCenter" region="bottom" begin="00:38:47.800" end="00:38:50.080">
+        <tt:span style="textYellow">Wenn Sie beim Hersteller nachfragen,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub600" style="textCenter" region="bottom" begin="00:38:50.160" end="00:38:54.000">
+        <tt:span style="textYellow">wissen die selber nicht, welche</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Hyaluronsäure verwendet wurde.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub601" style="textCenter" region="bottom" begin="00:38:54.080" end="00:38:58.000">
+        <tt:span style="textYellow">Das ist auch für uns Fachkreise</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">schwierig, das herauszufinden.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub602" style="textCenter" region="bottom" begin="00:38:58.080" end="00:39:01.400">
+        <tt:span style="textYellow">Die bloße Anwesenheit von</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">fragmentierter Hyaluronsäure</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub603" style="textCenter" region="bottom" begin="00:39:01.480" end="00:39:05.400">
+        <tt:span style="textYellow">in einer Creme bedeutet noch nicht,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">dass das Produkt wirksam ist.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub604" style="textCenter" region="bottom" begin="00:39:05.480" end="00:39:09.280">
+        <tt:span style="textWhite">Schade, denn genau dafür</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">geben die Kundinnen ihr Geld aus.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub605" style="textCenter" region="bottom" begin="00:39:09.360" end="00:39:11.640">
+        <tt:span style="textWhite">Zurück zu unseren vier Testcremes.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub606" style="textCenter" region="bottom" begin="00:39:11.720" end="00:39:17.520">
+        <tt:span style="textWhite">Auch Balea und Estée Lauder enthalten</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Hyaluron. Macht sich das bezahlt?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub607" style="textCenter" region="bottom" begin="00:39:19.840" end="00:39:23.960">
+        <tt:span style="textWhite">Bei Dermatest in Münster treffen wir</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">unsere Testerinnen wieder.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub608" style="textCenter" region="bottom" begin="00:39:24.040" end="00:39:25.720">
+        <tt:span style="textWhite">Vier Wochen sind vergangen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub609" style="textCenter" region="bottom" begin="00:39:25.800" end="00:39:28.680">
+        <tt:span style="textWhite">Nun wird akribisch gemessen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">und ausgewertet.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub610" style="textCenter" region="bottom" begin="00:39:29.120" end="00:39:33.040">
+        <tt:span style="textWhite">Keine der 15 Testerinnen weiß,</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">welche Creme sie benutzt hat.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub611" style="textCenter" region="bottom" begin="00:39:33.320" end="00:39:35.000">
+        <tt:span style="textWhite">Und wie war ihr Eindruck?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub612" style="textCenter" region="bottom" begin="00:39:37.720" end="00:39:41.000">
+        <tt:span style="textYellow">Die Creme lässt sich gut verteilen,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">gut auftragen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub613" style="textCenter" region="bottom" begin="00:39:41.080" end="00:39:44.480">
+        <tt:span style="textYellow">Ich habe das Gefühl,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">dass es praller ist im Gesicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub614" style="textCenter" region="bottom" begin="00:39:44.560" end="00:39:47.080">
+        <tt:span style="textYellow">Die Haut sich praller,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">weicher anfühlt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub615" style="textCenter" region="bottom" begin="00:39:47.160" end="00:39:51.280">
+        <tt:span style="textYellow">Meine Haut fühlt sich gepflegt an.</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Die Creme zieht schnell ein.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub616" style="textCenter" region="bottom" begin="00:39:51.360" end="00:39:55.440">
+        <tt:span style="textYellow">Wobei für mich immer das Ergebnis,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sichtbare Faltenreduzierung,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub617" style="textCenter" region="bottom" begin="00:39:55.520" end="00:39:57.120">
+        <tt:span style="textYellow">ich nicht erkennen kann.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub618" style="textCenter" region="bottom" begin="00:39:57.200" end="00:40:00.000">
+        <tt:span style="textYellow">Die war sehr frisch</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">und ließ sich gut auftragen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub619" style="textCenter" region="bottom" begin="00:40:00.080" end="00:40:03.800">
+        <tt:span style="textYellow">Ich hatte das Gefühl über Nacht:</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Die Haut konnte noch atmen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub620" style="textCenter" region="bottom" begin="00:40:03.880" end="00:40:07.480">
+        <tt:span style="textWhite">Ob sich das gute Gefühl</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">auch objektiv bestätigen lässt?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub621" style="textCenter" region="bottom" begin="00:40:07.560" end="00:40:09.760">
+        <tt:span style="textWhite">Testleiterin Liane Bolke sagt ja.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub622" style="textCenter" region="bottom" begin="00:40:11.520" end="00:40:15.800">
+        <tt:span style="textYellow">Hier kann man schön sehen, dass es</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">da eine Anti-Falten-Wirkung gibt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub623" style="textCenter" region="bottom" begin="00:40:15.880" end="00:40:19.600">
+        <tt:span style="textYellow">Die Falten sind vorher stärker da,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sind nachher abgeschwächt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub624" style="textCenter" region="bottom" begin="00:40:19.680" end="00:40:23.080">
+        <tt:span style="textYellow">Um jetzt von diesen Fotos</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">wegzukommen zu realen Zahlen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub625" style="textCenter" region="bottom" begin="00:40:23.160" end="00:40:25.800">
+        <tt:span style="textYellow">In schwarz dargestellt</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">die Vorher-Situation,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub626" style="textCenter" region="bottom" begin="00:40:25.880" end="00:40:27.360">
+        <tt:span style="textYellow">in blau die nachher.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub627" style="textCenter" region="bottom" begin="00:40:27.440" end="00:40:31.600">
+        <tt:span style="textYellow">Da sieht man wirklich, dass sich</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">die Einzelfalte um ein ganzes Stück</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub628" style="textCenter" region="bottom" begin="00:40:31.680" end="00:40:35.000">
+        <tt:span style="textYellow">hat reduzieren lassen</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">durch die Anwendung des Produktes.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub629" style="textCenter" region="bottom" begin="00:40:35.240" end="00:40:38.320">
+        <tt:span style="textYellow">Wir sehen eine Verbesserung</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">von gut 28 Prozent,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub630" style="textCenter" region="bottom" begin="00:40:38.400" end="00:40:40.800">
+        <tt:span style="textYellow">was die Einzelfaltentiefen betrifft.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub631" style="textCenter" region="bottom" begin="00:40:41.000" end="00:40:45.280">
+        <tt:span style="textYellow">Viel mehr kann man von einem</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">kosmetischen Produkt nicht erwarten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub632" style="textCenter" region="bottom" begin="00:40:45.360" end="00:40:48.600">
+        <tt:span style="textWhite">In unserer Stichprobe</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">konnten alle Antifaltencremes</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub633" style="textCenter" region="bottom" begin="00:40:48.680" end="00:40:51.000">
+        <tt:span style="textWhite">die Faltentiefe messbar reduzieren.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub634" style="textCenter" region="bottom" begin="00:40:51.640" end="00:40:53.320">
+        <tt:span style="textWhite">Im Schnitt um 20 Prozent.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub635" style="textCenter" region="bottom" begin="00:40:53.400" end="00:40:57.200">
+        <tt:span style="textWhite">Deutlich mehr als die einfache</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Feuchtigkeitscreme im Test.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub636" style="textCenter" region="bottom" begin="00:40:58.560" end="00:41:01.720">
+        <tt:span style="textWhite">Doch heißt messbar auch sichtbar?</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub637" style="textCenter" region="bottom" begin="00:41:02.280" end="00:41:04.680">
+        <tt:span style="textYellow">Wir haben hier eine</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Vorher-Situation,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub638" style="textCenter" region="bottom" begin="00:41:04.760" end="00:41:08.040">
+        <tt:span style="textYellow">wo die Haut gerötet,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">ein bisschen gestresst wirkt.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub639" style="textCenter" region="bottom" begin="00:41:08.120" end="00:41:11.840">
+        <tt:span style="textYellow">Und nach vier Wochen ist</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">das Gesamtbild ein ganz anderes.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub640" style="textCenter" region="bottom" begin="00:41:11.920" end="00:41:14.640">
+        <tt:span style="textYellow">Wir haben eine</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">deutlich entspanntere Haut.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub641" style="textCenter" region="bottom" begin="00:41:14.720" end="00:41:18.800">
+        <tt:span style="textYellow">Auch die Augenfältchen in genau</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">diesem Bereich sind reduziert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub642" style="textCenter" region="bottom" begin="00:41:20.680" end="00:41:25.360">
+        <tt:span style="textWhite">Das Beispiel Estée Lauder zeigt, was</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">eine Antifaltencreme leisten kann.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub643" style="textCenter" region="bottom" begin="00:41:25.440" end="00:41:29.240">
+        <tt:span style="textWhite">Das Gesamtbild hat sich</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">nach vier Wochen stark verbessert.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub644" style="textCenter" region="bottom" begin="00:41:29.320" end="00:41:32.920">
+        <tt:span style="textWhite">Doch nicht bei allen Anwenderinnen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">war das so deutlich.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub645" style="textCenter" region="bottom" begin="00:41:33.040" end="00:41:36.240">
+        <tt:span style="textWhite">Der persönliche Hauttyp</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">trug in unserem Vergleich</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub646" style="textCenter" region="bottom" begin="00:41:36.320" end="00:41:39.440">
+        <tt:span style="textWhite">mindestens so sehr zum Erfolg bei</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">wie die Marke.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub647" style="textCenter" region="bottom" begin="00:41:39.520" end="00:41:42.200">
+        <tt:span style="textWhite">Eine Positiv-Wirkung</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">zeigten alle Frauen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub648" style="textCenter" region="bottom" begin="00:41:42.720" end="00:41:46.000">
+        <tt:span style="textWhite">Ein echter Wow-Effekt aber</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">kam nicht so recht auf.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub649" style="textCenter" region="bottom" begin="00:41:50.520" end="00:41:55.800">
+        <tt:span style="textWhite">Fazit: Alle Cremes in unserem Test</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">haben ähnlich abgeschnitten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub650" style="textCenter" region="bottom" begin="00:41:56.520" end="00:42:01.040">
+        <tt:span style="textWhite">Ob sie nun mit Nobelpreis-Technologie</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">werben oder Hyaluron enthalten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub651" style="textCenter" region="bottom" begin="00:42:06.240" end="00:42:10.320">
+        <tt:span style="textWhite">Ob teuer oder günstig. Eine gute</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Creme muss nicht viel kosten.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub652" style="textCenter" region="bottom" begin="00:42:12.160" end="00:42:14.240">
+        <tt:span style="textWhite">Da lohnt sich das Ausprobieren.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub653" style="textCenter" region="bottom" begin="00:42:14.400" end="00:42:17.400">
+        <tt:span style="textYellow">Die Haut reagiert individuell</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sehr unterschiedlich.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub654" style="textCenter" region="bottom" begin="00:42:17.480" end="00:42:21.400">
+        <tt:span style="textYellow">Sowohl was den Wirkeffekt als auch</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">die Verträglichkeit betrifft.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub655" style="textCenter" region="bottom" begin="00:42:21.480" end="00:42:25.000">
+        <tt:span style="textYellow">Deswegen ist ein individuelles</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">Ausprobieren immer sinnhaft.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub656" style="textCenter" region="bottom" begin="00:42:25.080" end="00:42:27.400">
+        <tt:span style="textYellow">Einen eventuellen Anti-Falten-Effekt</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub657" style="textCenter" region="bottom" begin="00:42:27.480" end="00:42:30.400">
+        <tt:span style="textYellow">sehen Sie aber in der Regel</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">erst nach vier Wochen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub658" style="textCenter" region="bottom" begin="00:42:30.480" end="00:42:32.800">
+        <tt:span style="textYellow">Oder erst nach</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sechs oder acht Wochen.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub659" style="textCenter" region="bottom" begin="00:42:32.880" end="00:42:35.800">
+        <tt:span style="textYellow">Einen glättenden Effekt</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">kann man schon nach ein,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub660" style="textCenter" region="bottom" begin="00:42:35.880" end="00:42:37.480">
+        <tt:span style="textYellow">zwei Anwendungen spüren.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub661" style="textCenter" region="bottom" begin="00:42:37.560" end="00:42:40.400">
+        <tt:span style="textYellow">Und sagen: Das Produkt</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">sagt mir zu oder nicht.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub662" style="textCenter" region="bottom" begin="00:42:40.480" end="00:42:42.560">
+        <tt:span style="textWhite">Und erwarten Sie nicht zu viel.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub663" style="textCenter" region="bottom" begin="00:42:42.640" end="00:42:46.320">
+        <tt:span style="textWhite">Schon gar nicht von kompliziert</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">klingenden Superformeln.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub664" style="textCenter" region="bottom" begin="00:42:46.400" end="00:42:49.600">
+        <tt:span style="textWhite">Die Tricks der Kosmetikindustrie</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">sind vielfältig.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub665" style="textCenter" region="bottom" begin="00:42:49.680" end="00:42:52.400">
+        <tt:span style="textWhite">Manche clevere Ideen</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">gehen unter die Haut.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub666" style="textCenter" region="bottom" begin="00:42:52.480" end="00:42:55.480">
+        <tt:span style="textWhite">Anderswo ist eher</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">die PR-Strategie trickreich.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub667" style="textCenter" region="bottom" begin="00:42:55.560" end="00:42:59.960">
+        <tt:span style="textWhite">Ein Wundermittel für Schönheit und</tt:span>
+        <tt:br />
+        <tt:span style="textWhite">Jugend gibt es wohl nur für den,</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub668" style="textCenter" region="bottom" begin="00:43:00.080" end="00:43:01.560">
+        <tt:span style="textWhite">der daran glauben mag.</tt:span>
+      </tt:p>
+      <tt:p xml:id="sub669" style="textCenter" region="bottom" begin="00:43:05.320" end="00:43:07.600">
+        <tt:span style="textYellow">Untertitel im Auftrag des ZDF,</tt:span>
+        <tt:br />
+        <tt:span style="textYellow">2018</tt:span>
+      </tt:p>
+    </tt:div>
+  </tt:body>
+</tt:tt>

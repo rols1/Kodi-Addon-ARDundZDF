@@ -1,0 +1,68 @@
+# Radio-Podcast Favoriten - für Podcast-Seiten der einzelnen ARD-Radio-Sender, einschließich www.ardmediathek.de/radio
+# 	
+#	gehört zu: 	Plex-Plugin-ARDMediathek2016 (Ressourcenverzeichnis)
+# 	Name: 		podcast-favorits.txt 
+# 
+# 	Bei Verwendung einer persönlichen Datei (siehe Einstellungen im Plugin) muss
+#  	der Name podcast-favorits.txt beibehalten werden!
+#
+# 	Zeilen, die mit # beginnen, bleiben unbeachtet.
+#
+# 	Format: 2-teilig, getrennt durch |, Muster:
+#		Titel | HTTP-Link
+#   -------------------------------------------------
+#	Unterstützte Seiten/Sender - weitere Auswahl dort:	
+#			
+#		www.ardmediathek.de/radio	http://www.ardmediathek.de/radio
+#		www.ardmediathek.de/suche?	https://www.ardmediathek.de/suche?source=radio&sort=date&searchText=Suchtext
+#		www.br-online.de		http://www.br-online.de/podcast/index.shtml
+#		www.br.de/mediathek/podcast	https://www.br.de/mediathek/podcast/podcasts/..
+#		www.swr3.de/mehr/podcasts	https://www.swr3.de/mehr/podcasts/-/id=279178/1hsl7ys/index.html
+#		www.deutschlandfunk.de		http://www.deutschlandfunk.de/podcasts.2516.de.html?drpp%3Ahash=displayAllBroadcasts
+#		mediathek.rbb-online.de		http://mediathek.rbb-online.de/radio (Seitendene: NEUESTE CLIPS, MEISTABGERUFEN)
+#		www1.wdr.de/mediathek/podcast	http://www1.wdr.de/mediathek/podcast  (Achtung: in "WDR Fernsehen Podcasts" nur Videos)
+#		www1.wdr.de/mediathek/audio	http://www1.wdr.de/mediathek/audio
+#		www.ndr.de/radio/podcasts	http://www.ndr.de/radio/podcasts/   (nur: NDR2)
+#		Podcast-Suche: 			Suchbegriff (sucht in www.ardmediathek.de/radio, Beispiel siehe "WDR 5 Quarks")
+#
+#	
+#	-------------------------------------------------
+#  Gewünschte Seiten und Fehler hierhin melden (bitte vorher die Seite mittels Webbrowser testen):
+#			https://forums.plex.tv/discussion/213947/plex-plugin-ardmediathek2016#latest
+#-------------------------------------------------------------------------------------------------------------------------------------
+ 
+## Magazine          
+Dossier Politik - Bayern 2  			| https://www.br.de/mediathek/podcast/podcasts/dossier-politik/archiv/684
+IQ - Wissenschaft und Forschung - Bayern 2  	| https://www.br.de/mediathek/podcast/podcasts/iq-wissenschaft-und-forschung/archiv/651
+radioWissen - Bayern 2  			| https://www.br.de/mediathek/podcast/podcasts/radiowissen/archiv/488
+Das Campusmagazin - B5 aktuell  		| https://www.br.de/mediathek/podcast/podcasts/das-campusmagazin/archiv/634
+Das Computermagazin - B5 aktuell  		| https://www.br.de/mediathek/podcast/podcasts/das-computermagazin/archiv/576
+Das Gesundheitsmagazin - B5 aktuell 		| https://www.br.de/mediathek/podcast/podcasts/das-gesundheitsmagazin/archiv/628
+Das Verbrauchermagazin - B5 aktuell 		| https://www.br.de/mediathek/podcast/podcasts/das-verbrauchermagazin/archiv/489
+Magazin für Wirtschaft und Soziales - B5 aktuell| https://www.br.de/mediathek/podcast/podcasts/magazin-fuer-wirtschaft-und-soziales/archiv/498
+Aus Wissenschaft und Technik - B5 aktuell 	| 
+
+WDR 5 Leonardo Service Computer			| http://www1.wdr.de/mediathek/audio/wdr5/wdr5-leonardo-service-computer/service_computer100.podcast         
+WDR 5 Quarks - Wissenschaft und mehr		| Podcast-Suche: Quarks - Wissenschaft und mehr        
+
+Computer und Kommunikation			| http://www.deutschlandfunk.de/podcast-computer-und-kommunikation-beitraege.685.de.podcast
+Dossier Politik- Deutschlandfunk		| http://www.deutschlandfunk.de/podcast-der-politik-podcast.3292.de.podcast
+Forschung Aktuell - Deutschlandfunk		| http://www.deutschlandfunk.de/podcast-forschung-aktuell.677.de.podcast.xml
+
+## Kabarett / Humor
+Tatort mit Til Schweiger				| https://www.swr3.de/podcasts/Tatort-mit-Til/-/id=279178/did=1442354/1p9bh1o/index.html
+ARD Radio Kabarett & Comedy				| http://www.ardmediathek.de/radio/Kabarett-Comedy/mehr?documentId=37915182
+Wir sind die Freeses					| http://www.ndr.de/ndr2/wir_sind_die_freeses/podcast4250_page-1.html
+
+## Aktuelles / Neueste Clips
+FritzAktuell - Radio Fritz				| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906530&mcontent=page.1
+Inforadio - Neueste Clips				| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906554&mcontent=page.1
+Antenne Brandenburg - Neueste Clips		| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906492&mcontent=page.1
+Kulturradio - Neueste Clips				| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906576&mcontent=page.1
+RadioBERLIN 88,8 - Neueste Clips		| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906606&mcontent=page.1
+radioeins - Neueste Clips				| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906660&mcontent=page.1
+Stimmt's? - NDR2						| http://www.ndr.de/ndr2/programm/podcast2958_page-1.html
+
+## Hörspiele
+KiRaKa - Kinderhörspiele im WDR			| http://www1.wdr.de/mediathek/audio/kiraka/kiraka-kinderhoerspiel/kinderhoerspiel-podcast-100.podcast
+hr-iNFO Cybercrime						| http://www.ardmediathek.de/radio/hr-iNFO-Cybercrime/Sendung?documentId=42913980&bcastId=42913980

@@ -1,0 +1,33 @@
+#EXTM3U
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=184000,RESOLUTION=320x180,CODECS="avc1.66.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_1_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=184000,RESOLUTION=320x180,CODECS="avc1.66.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_1_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=320000,RESOLUTION=480x270,CODECS="avc1.66.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_2_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=312000,RESOLUTION=480x270,CODECS="avc1.66.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_2_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=608000,RESOLUTION=512x288,CODECS="avc1.77.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_3_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=576000,RESOLUTION=512x288,CODECS="avc1.77.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_3_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1152000,RESOLUTION=640x360,CODECS="avc1.77.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_4_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1088000,RESOLUTION=640x360,CODECS="avc1.77.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_4_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1928000,RESOLUTION=960x540,CODECS="avc1.77.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_5_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1864000,RESOLUTION=960x540,CODECS="avc1.77.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_5_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=2628000,RESOLUTION=960x540,CODECS="avc1.77.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_6_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=2564000,RESOLUTION=960x540,CODECS="avc1.77.30, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_6_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3712000,RESOLUTION=1280x720,CODECS="avc1.64001f, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_7_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3648000,RESOLUTION=1280x720,CODECS="avc1.64001f, mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_7_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=56000,CODECS="mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_1_a-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=56000,CODECS="mp4a.40.2"
+http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_1_a-b.m3u8?sd=10&rebase=on

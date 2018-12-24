@@ -1,0 +1,24 @@
+<plist version="1.0" encoding="UTF-8">
+  <dict>
+	  <key>CFBundleIdentifier</key>
+	  	<string>com.plexapp.plugins.ardundzdf</string>
+	  <key>PlexClientPlatforms</key>
+	  	<string>*</string>
+	  <key>PlexFrameworkVersion</key>
+	  	<string>2</string>
+	  <key>PlexPluginDevMode</key>
+	  	<string>1</string>
+	  <key>PlexPluginDebug</key>
+	  	<string>1</string>
+	  <key>PlexPluginConsoleLogging</key>
+	  	<string>0</string>   
+	  <key>PlexPluginClass</key>
+	  	<string>Content</string>
+	  <key>PlexPluginRegions</key>
+	  	<array>
+	  		<string>DE</string>
+	  	</array>
+	  <key>PlexPluginCodePolicy</key>
+	  	<string>Elevated</string>
+  </dict>
+</plist>

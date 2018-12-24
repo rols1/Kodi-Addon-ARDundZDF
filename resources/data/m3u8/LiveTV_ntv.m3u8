@@ -1,0 +1,20 @@
+#EXTM3U
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=314000,RESOLUTION=256x144,CODECS="avc1.66.30, mp4a.40.2"
+http://ntvlivehls-lh.akamaihd.net/i/ntvlivehls_1@409250/index_250_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=314000,RESOLUTION=256x144,CODECS="avc1.66.30, mp4a.40.2"
+http://ntvlivehls-lh.akamaihd.net/i/ntvlivehls_1@409250/index_250_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=596000,RESOLUTION=400x224,CODECS="avc1.66.30, mp4a.40.2"
+http://ntvlivehls-lh.akamaihd.net/i/ntvlivehls_1@409250/index_500_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=596000,RESOLUTION=400x224,CODECS="avc1.66.30, mp4a.40.2"
+http://ntvlivehls-lh.akamaihd.net/i/ntvlivehls_1@409250/index_500_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=928000,RESOLUTION=640x360,CODECS="avc1.66.30, mp4a.40.2"
+http://ntvlivehls-lh.akamaihd.net/i/ntvlivehls_1@409250/index_800_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1628000,RESOLUTION=960x540,CODECS="avc1.66.30, mp4a.40.2"
+http://ntvlivehls-lh.akamaihd.net/i/ntvlivehls_1@409250/index_1500_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1628000,RESOLUTION=960x540,CODECS="avc1.66.30, mp4a.40.2"
+http://ntvlivehls-lh.akamaihd.net/i/ntvlivehls_1@409250/index_1500_av-b.m3u8?sd=10&rebase=on
+
+# rols 04.01.2018 Austausch - die vorherige Adresse http://p.live.fra.n-tv.de/ntvlive
+#	ist nicht mehr erreichbar.
+#	Hier https auf http geändert.
+#	28.8.2018 Eintrag index_1500_av-p.m3u8 entfernt (nicht mehr verfügbar)

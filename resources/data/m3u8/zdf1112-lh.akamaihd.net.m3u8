@@ -1,0 +1,29 @@
+#EXTM3U
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=229000,RESOLUTION=320x176,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_229_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=229000,RESOLUTION=320x176,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_229_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=476000,RESOLUTION=480x272,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_476_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=476000,RESOLUTION=480x272,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_476_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=776000,RESOLUTION=640x360,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_776_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=776000,RESOLUTION=640x360,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_776_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1496000,RESOLUTION=852x480,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_1496_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1496000,RESOLUTION=852x480,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_1496_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=2296000,RESOLUTION=1024x576,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_2296_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=2296000,RESOLUTION=1024x576,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_2296_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3096000,RESOLUTION=1280x720,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_3096_av-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3096000,RESOLUTION=1280x720,CODECS="avc1.77.30, mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_3096_av-b.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=96000,CODECS="mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_229_a-p.m3u8?sd=10&rebase=on
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=96000,CODECS="mp4a.40.2"
+http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/index_229_a-b.m3u8?sd=10&rebase=on
