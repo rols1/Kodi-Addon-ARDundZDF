@@ -60,7 +60,6 @@ def get_latest_version():
 ################################################################################
 def update_available(VERSION):
 	PLog('update_available:')
-#	xbmcgui.Dialog().ok(ADDON_NAME, 'Kodi-Repo fehlt ', 'Github-Pfade anpassen', '')
 
 	try:
 		title, summ, tag = get_latest_version()
@@ -82,16 +81,11 @@ def update_available(VERSION):
 
 ################################################################################
 def update(url, ver):
-	PLog('update:')
-# todo: Nutzung erst mit Kodi-Repo für das Plugin
-#	Github-Pfade anpassen.
-	xbmcgui.Dialog().ok(ADDON_NAME, 'Kodi-Repo fehlt ', 'Github-Pfade anpassen', '')
-	return
-	
+	PLog('update:')	
 	
 	if ver:
 		msg1 = 'Plugin Update auf  Version {0}'.format(ver)
-		msg2 = 'Update erfolgreich - Plugin bitte neu starten'
+		msg2 = 'Update erfolgreich - weiter zum aktuellen Plugin'  # Kodi: kein Neustart notw.
 		try:
 			r 			= requests.get(url, stream=True)
 			zip_data	= zipfile.ZipFile(StringIO.StringIO(r.content))
@@ -118,9 +112,13 @@ def cleanSummary(summary):
 	summary = summary.replace('/li','')
 	summary = summary.replace('/ul','')
 	summary = summary.replace('li','')
-#	summary = summary.replace('\n',' ')
 	summary = summary.replace('&amp;','&')
 	summary = summary.replace('&gt;','')
 	summary = summary.replace('&lt;','')
 	summary = summary.replace('&lt;','')
+
+	# summary = summary.replace('\n',' ')
+	summary = summary.replace('ul','')
+	summary = summary.replace('/h3','')
+	
 	return summary.lstrip()
