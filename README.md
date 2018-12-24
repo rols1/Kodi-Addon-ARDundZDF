@@ -14,7 +14,7 @@ Das Plugin löst die Vorgänger Plex-Plugin-ARDMediathek2015 und Plex-Plugin-ARD
 ab. Der Relaunch des ZDF-Mediathek-Internetangebots vom 28.10.2016 ist eingearbeitet. 
 
 #### Rückmeldungen willkommen:
-Im Forum: wird nachgereicht
+Im Forum: wird nachgereicht, 
 direkt: rols1@gmx.de 
   
 Funktionen ab Version 2.2.0: 
