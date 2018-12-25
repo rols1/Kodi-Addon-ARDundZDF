@@ -82,6 +82,7 @@ INSTALLATION:
 - Im Kodi-Menü Addons/Addon-Browser anklicken: aus Repository installieren
 - Heruntergeladene zip-Datei im Browser auswählen.
 - Addon öffen und Addon-Einstellungen anpassen.
+[Anleitung mit Bildern (englisch)](https://kodi.wiki/view/HOW-TO:Install_add-ons_from_zip_files)
 
 Credits:
 ===================  
