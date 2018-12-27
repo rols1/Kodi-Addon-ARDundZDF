@@ -3,6 +3,10 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 --------------		Nachfolger von Plex-Plugin-ARDMediathek2016
 --------------	
 
+27.12.2018 	0.5.5	Windows-Anpassung: requests (kein Python-built-in-Modul) wieder ersetzt 
+			durch urllib2.urlopen (Module util, updater). 
+			get_formitaeten: header-Anpassung für json-Requests via urllib2.urlopen.
+			ARD_Bildgalerie (Hub): doppelten urlretrieve-call entfernt.			
 23.12.2018 	0.5.4	Github-Repo Kodi-Addon-ARDundZDF angelegt.
 			Info-Button entfernt (bis 1. Posting im Kodi-Forum)
 not on Github	0.5.3	MakeDetailText (Downloads): Beschreibung2 unterdrücken falls mit 1 identisch.

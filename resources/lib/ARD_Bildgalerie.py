@@ -158,8 +158,6 @@ def Hub(title, path):
 			
 			thumb = ''
 			local_path = os.path.abspath(local_path)
-			urllib.urlretrieve(href, local_path)
-			local_path = os.path.abspath(local_path)
 			if os.path.isfile(local_path) == False:			# schon vorhanden?
 				try:
 					urllib.urlretrieve(href, local_path)

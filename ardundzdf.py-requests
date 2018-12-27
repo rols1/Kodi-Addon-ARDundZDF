@@ -7,10 +7,13 @@ import xbmcgui
 
 # Python
 import string
+import random			# Zufallswerte für rating_key
 import urllib			# urllib.quote()
 from urlparse import parse_qsl
 from urllib import urlencode
 import urllib2			# urllib2.Request
+import requests			# urllib2.Request: bei kodi manchmal errno(0) (https)
+import ssl				# HTTPS-Handshake
 import os, subprocess 	# u.a. Behandlung von Pfadnamen
 import shlex			# Parameter-Expansion für subprocess.Popen (os != windows)
 import sys				# Plattformerkennung
@@ -18,6 +21,7 @@ import shutil			# Dateioperationen
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
 import datetime, time
 import json				# json -> Textstrings
+import pickle			# persistente Variablen/Objekte
 
 # Pluginmodule + Funktionsziele
 import resources.lib.util as util
@@ -41,8 +45,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Plugin Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '0.5.6'		 
-VDATE = '27.12.2018'
+VERSION =  '0.5.4'		 
+VDATE = '23.12.2018'
 
 # 
 #	
@@ -345,9 +349,7 @@ def Main_ARD(name, sender=''):
 		
 	if sender == '':
 		sender = ARDSender[0]	
-	sender = UtfToStr(sender)	
 	PLog('sender: ' + sender); 
-	
 	sendername, sender, kanal, img = sender.split(':')	# gewählter Sender für ARDStart Startbutton
 	title = 'Start | Sender: %s' % sendername	
 	fparams="&fparams={'title': '%s'}" % (urllib2.quote(title))
@@ -376,7 +378,7 @@ def Main_ARD(name, sender=''):
 	#	thumb=R('ard-bilderserien.png'), fparams=fparams)
 
 	title 	= 'Wählen Sie Ihren Sender | aktuell: %s' % sendername				# Senderwahl
-	fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
+	fparams='&fparams=title=%s' % title
 	addDir(li=li, label=title, action="dirList", dirID="Senderwahl", fanart=R(ICON_MAIN_ARD), 
 		thumb=R('tv-regional.png'), fparams=fparams) 
 
@@ -632,7 +634,6 @@ def img_via_id(href_id, page):
 # Auflistung einer Rubrik aus ARDStart - title (ohne unescape) ist eindeutige Referenz 
 def ARDStartRubrik(path, title, img, ID=''): 
 	PLog('ARDStartRubrik: %s' % ID); PLog(title)
-	title = UtfToStr(title)
 	title_org 	= title 								# title ist Referenz zur Rubrik
 		
 	li = xbmcgui.ListItem()
@@ -960,7 +961,7 @@ def ARDnew_Sendungen(title, path, img): 	# Seite mit mehreren Sendungen
 		return li	
 		
 	CB = 'ARDStartSingle'
-	li = ARDnew_Content(li=li, Blocklist=sendungen, CB=CB, page=page)
+	li = ARDnew_Content(li=li, Blocklist=sendungen, CB=CB)
 	
 	return li
 #---------------------------------------------------------------------------------------------------
@@ -2934,7 +2935,6 @@ def SenderLiveListe(title, listname, fanart, offset=0):
 	#	-> CreateVideoStreamObject 
 	PLog('SenderLiveListe:')
 	PLog(title); PLog(listname)
-	title = UtfToStr(title); listname = UtfToStr(listname)
 			
 	title2 = 'Live-Sender ' + title
 	title2 = title2
@@ -4256,20 +4256,16 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	#	mittels chrome)	ab 08.10.2017 für ZDF in GetZDFVideoSources ermittelt + als Dict gespeichert + 
 	#	hier injiziert (s.u.)
 	# Header Api-Auth + Host reichen manchmal, aber nicht immer - gesetzt in get_page.
-	# 15.10.2018 Abrufe ausgelagert nach get_page. 
+	# 15.10.2018 Requests ausgelagert nach get_page. 
 	# Kodi-Version: Wegen Problemen mit dem Parameterhandling von Listen und Dicts wird hier
 	#	 nur der Api-Auth Key übergeben (Rest in get_page). 
 	#	
 	if ID == 'NEO':
-		# header = {'Api-Auth': "Bearer d90ed9b6540ef5282ba3ca540ada57a1a81d670a",'Host':"api.zdf.de", 'Accept-Encoding':"gzip, deflate, sdch, br", \
-		#	'Accept':"application/vnd.de.zdf.v1.0+json"}
-		header = "{'Api-Auth': 'Bearer d90ed9b6540ef5282ba3ca540ada57a1a81d670a','Host': 'api.zdf.de'}"
+		header = {'Api-Auth': "Bearer d90ed9b6540ef5282ba3ca540ada57a1a81d670a",'Host':"api.zdf.de", 'Accept-Encoding':"gzip, deflate, sdch, br", 'Accept':"application/vnd.de.zdf.v1.0+json"}
 	else:
 		PLog(apiToken1)									# s. GetZDFVideoSources
-		# kompl. Header für Modul requests, für urllib2.urlopen reichen Api-Auth + Host
-		# header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de', 'Accept-Encoding': 'gzip, deflate, sdch, br', \
-		#	'Accept':'application/vnd.de.zdf.v1.0+json'}" % apiToken1
-		header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken1
+		header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de', 'Accept-Encoding': 'gzip, deflate, sdch, br', \
+			'Accept':'application/vnd.de.zdf.v1.0+json'}" % apiToken1
 	
 	page, msg	= get_page(path=profile_url, header=header, JsonPage=True)	
 	PLog("page_json: " + page[:40])
@@ -4289,10 +4285,8 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	PLog('videodat_url: ' + videodat_url)	
 
 	# apiToken2 aus GetZDFVideoSources. header ohne quotes in get_page leer 
-	# kompl. Header für Modul requests, für urllib2.urlopen reichen Api-Auth + Host
-	#header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de', 'Accept-Encoding': 'gzip, deflate, sdch, br', \
-	#	'Accept':'application/vnd.de.zdf.v1.0+json'}" % apiToken2
-	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken2
+	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de', 'Accept-Encoding': 'gzip, deflate, sdch, br', \
+		'Accept':'application/vnd.de.zdf.v1.0+json'}" % apiToken2
 	page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
 	PLog("request_json: " + page[:40])
 
@@ -4698,15 +4692,7 @@ def router(paramstring):
 				# func_pars = urllib.unquote_plus(func_pars)		# quotierte url auspacken - entf.
 				PLog(' router func_pars unquote_plus: ' + str(func_pars))
 				try:
-					# Problem (spez. Windows): Parameter mit Escapezeichen (Windows-Pfade) müssen mit \\
-					#	behandelt werden und werden dadurch zu unicode-Strings. Diese benötigen in den
-					#	Funktionen eine UtfToStr-Behandlung.
 					func_pars = func_pars.replace("'", "\"")		# json.loads-kompatible string-Rahmen
-					func_pars = func_pars.replace('\\', '\\\\')		# json.loads-kompatible Windows-Pfade
-					func_pars = func_pars.decode(encoding="utf-8")  
-					
-					
-					
 					PLog("json.loads func_pars: " + func_pars)
 					PLog('json.loads func_pars type: ' + str(type(func_pars)))
 					# func_pars = func_pars.encode("utf-8")			# entf.

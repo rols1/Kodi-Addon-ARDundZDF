@@ -2,7 +2,7 @@
 ################################################################################
 import re, os, sys
 import shutil						# Dir's löschen
-import requests, zipfile, StringIO
+import urllib2, zipfile, StringIO
 
 import xbmc, xbmcgui, xbmcaddon
 
@@ -38,9 +38,9 @@ def get_latest_version():
 		# releases.atom liefert Releases-Übersicht als xml-Datei 
 		release_feed_url = ('https://github.com/{0}/releases.atom'.format(GITHUB_REPOSITORY))
 		PLog(release_feed_url)
-		
-		r = requests.get(release_feed_url, stream=True)
-		page = r.content	
+			
+		r = urllib2.urlopen(release_feed_url)
+		page = r.read()					
 		PLog(len(page))
 		# PLog(page[:800])
 
@@ -87,17 +87,18 @@ def update(url, ver):
 		msg1 = 'Plugin Update auf  Version {0}'.format(ver)
 		msg2 = 'Update erfolgreich - weiter zum aktuellen Plugin'  # Kodi: kein Neustart notw.
 		try:
-			r 			= requests.get(url, stream=True)
-			zip_data	= zipfile.ZipFile(StringIO.StringIO(r.content))
 			dest_path 	= xbmc.translatePath("special://home/addons/")
+			r 			= urllib2.urlopen(url)
+			zip_data	= zipfile.ZipFile(StringIO.StringIO(r.read()))
+			
 			PLog(dest_path)
 			PLog(ADDON_PATH)
-			shutil.rmtree(ADDON_PATH)		# hier Verzicht auf ignore_errors=True
+			shutil.rmtree(ADDON_PATH)		# remove addon, Verzicht auf ignore_errors=True
 			zip_data.extractall(dest_path)	
 		except Exception as exception:
 			msg1 = 'Update fehlgeschlagen'
-			msg2 = 'Error: ' + str(exception)		
-					
+			msg2 = 'Error: ' + str(exception)
+												
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 	else:
 		return ObjectContainer(header='Update fehlgeschlagen', message='Version ' + ver + 'nicht gefunden!')

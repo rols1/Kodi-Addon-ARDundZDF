@@ -4,7 +4,7 @@
 
 import os, sys, glob, time
 import urllib, urllib2, ssl
-import requests					# urllib2.Request: bei kodi manchmal errno(0) (https)
+# import requests		# kein Python-built-in-Modul, urllib2 verwenden
 from urlparse import parse_qsl
 import json				# json -> Textstrings
 import pickle			# persistente Variablen/Objekte
@@ -253,7 +253,10 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 #	bei urllib2.Requests manchmal errno(0) (https) - Verwend. installierter Zertifikate erfolglos
 # 07.11.2018 erweitert um Header-Anfrage GetOnlyRedirect zur Auswertung von Redirects (http error 302).
 # Format header dict im String: "{'key': 'value'}" - Bsp. Search(), get_formitaeten()
+# 23.12.2018 requests-call vorübergehend auskommentiert, da kein Python-built-in-Modul (bemerkt beim 
+#	Test in Windows7
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=None):	
+
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
 	if header:									# dict auspacken
 		header = urllib2.unquote(header);  
@@ -263,7 +266,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		
 	msg = ''; page = ''	
 	UrlopenTimeout = 10
-	
+	'''
 	try:																# 1. Versuch mit requests 
 		PLog("get_page1:")
 		if GetOnlyRedirect:					# nur Redirect anfordern
@@ -283,16 +286,24 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		msg = str(exception)
 		msg = msg.decode(encoding="utf-8")
 		PLog(msg)	
-	
+	'''
 	if page == '':
 		try:															# 2. Versuch ohne SSLContext 
 			PLog("get_page2:")
+			if GetOnlyRedirect:						# nur Redirect anfordern
+				# bei Bedarf HttpLib2 mit follow_all_redirects=True verwenden
+				PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
+				r = urllib2.urlopen(path)
+				page = r.geturl()
+				PLog(page)			# Url
+				return page, msg					
+
 			if header:
 				req = urllib2.Request(path, headers=header)	
 			else:
 				req = urllib2.Request(path)										
 			r = urllib2.urlopen(req)
-			PLog("headers: " + str(r.headers))		
+			# PLog("headers: " + str(r.headers))		
 			page = r.read()
 			r.close()
 			PLog(len(page))
@@ -315,7 +326,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 			# gcontext.verify_mode = ssl.CERT_REQUIRED
 			r = urllib2.urlopen(req, context=gcontext, timeout=UrlopenTimeout)
 			# r = urllib2.urlopen(req)
-			# PLog("headers: " + str(r.headers))		
+			# PLog("headers: " + str(r.headers))
 			page = r.read()
 			PLog('Mark3')
 			r.close()
@@ -400,10 +411,13 @@ def R(fname, abs_path=False):
 	else:
 		if fname.endswith('png'):	# Icons im Unterordner images
 			fname = '%s/resources/images/%s' % (ADDON_PATH, fname)
+			fname = os.path.abspath(fname)
 			# PLog("fname: " + fname)
 			return os.path.join(fname)
 		else:
-			return  "%s/resources/%s" % (ADDON_NAME, fname)
+			fname = "%s/resources/%s" % (ADDON_NAME, fname)
+			fname = os.path.abspath(fname)
+			return fname 
 #----------------------------------------------------------------  		
 def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex 
 	PLog('RLoad: %s' % str(fname))
