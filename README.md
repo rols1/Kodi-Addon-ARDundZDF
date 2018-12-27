@@ -83,6 +83,8 @@ INSTALLATION:
 - Heruntergeladene zip-Datei im Browser auswählen.
 - Addon öffen und Addon-Einstellungen anpassen.
 
+[Anleitung mit Bildern (englisch)](https://kodi.wiki/view/HOW-TO:Install_add-ons_from_zip_files)
+
 Credits:
 ===================  
 - Credits to [coder-alpha] https://forums.plex.tv/discussion/166602/rel-ccloudtv-channel-iptv/p1): (Channel updater, based on Channel updater by sharkone/BitTorrent.bundle)

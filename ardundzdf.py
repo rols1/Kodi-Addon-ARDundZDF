@@ -41,7 +41,7 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Plugin Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '0.5.6'		 
+VERSION =  '0.5.5'		 
 VDATE = '27.12.2018'
 
 # 
