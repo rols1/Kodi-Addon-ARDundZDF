@@ -41,8 +41,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Plugin Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '0.5.5'		 
-VDATE = '27.12.2018'
+VERSION =  '0.5.7'		 
+VDATE = '29.12.2018'
 
 # 
 #	
@@ -882,7 +882,6 @@ def ARDStartVideoMP4(title, path, summ, img, geoblock):
 
 		download_title = "%s | %s" % (quality, title)	# download_list stellt "Download Video" voran 
 		download_list.append(download_title + '#' + href)	
-
 		
 		fparams="&fparams={'url': '%s', 'title': '%s'}" % (urllib.quote_plus(href), urllib.quote_plus(title_org))
 		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams) 
@@ -967,14 +966,19 @@ def ARDnew_Sendungen(title, path, img): 	# Seite mit mehreren Sendungen
 # Extrahiert Sendungen aus Block in DirectoryObjects (zunächst nur für SendungenAZ_ARDnew).
 # Nicht geeignet für die Start-Inhalte.
 # 05.11.2018 Webseite geändert: redakt. Inhalt im json-Format - siehe SendungenAZ
+# 29.12.2018 Blocklist aus ARDnew_Sendungen (CB=ARDStartSingle) noch aus dem 
+#	HTML-Bereich. img wird aber wie bei SendungenAZ_ARDnew (CB=ARDnew_Sendungen) im
+#	json-Bereich ermittelt.
 def ARDnew_Content(li, Blocklist, CB, page): 		
 	PLog('ARDnew_Content:')
 	PLog('CB: ' + CB)
 	
-	if CB == 'ARDStartSingle':
+	if CB == 'ARDStartSingle':		# Aufruf ARDnew_Sendungen
 		for sendung in Blocklist:
 			href 		= BETA_BASE_URL + stringextract('href="', '"', sendung)
-			img 		= stringextract('src="', '"', sendung)
+			sid 	= href.split('/')[5]
+			img		= img_via_id(sid, page)
+			
 			duration 	= stringextract('class="duration">', '</', sendung)
 			headline 	= stringextract('class="headline', '</', sendung)
 			headline = UtfToStr(headline)
@@ -999,8 +1003,11 @@ def ARDnew_Content(li, Blocklist, CB, page):
 				% (urllib2.quote(href), urllib2.quote(headline), duration)
 			addDir(li=li, label=headline, action="dirList", dirID="ARDStartSingle", fanart=img, thumb=img, 
 				fparams=fparams, summary=summary)
+			if 'Aeda und Bassam aus Syrien' in headline:
+				PLog(sendung)
+
 						
-	if CB == 'ARDnew_Sendungen':
+	if CB == 'ARDnew_Sendungen':		# Aufruf SendungenAZ_ARDnew
 		for sendung in Blocklist:
 			headline = stringextract('mediumTitle":', ',', sendung)
 			headline = headline.replace('"', '').strip()
@@ -2093,7 +2100,7 @@ def DownloadsTools():
 
 	dlpath =  SETTINGS.getSetting('pref_curl_download_path')# Einstellungen: Pfad Downloaderz.
 	title = 'Downloadverzeichnis festlegen/aendern: (%s)' % dlpath			
-	tagline = 'Das Downloadverzeichnis muss für Plex beschreibbar sein.'
+	tagline = 'Das Downloadverzeichnis muss für den Addon-Nutzer beschreibbar sein.'
 	# summary =    # s.o.
 	fparams='&fparams=settingKey=pref_curl_download_path, mytype=0, heading=%s, path=%s' % (title, dlpath)
 	addDir(li=li, label=title, action="dirList", dirID="DirectoryNavigator", fanart=R(ICON_DOWNL_DIR), 
@@ -2830,9 +2837,10 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 		sname = UtfToStr(sname)
 		sname = unescape(sname)
 		title=sname
-#		title = UtfToStr(title)
 		summ = UtfToStr(summ)
 		summ = unescape(summ)
+		if 'JETZT' in title:			# JETZT-Markierung unter icon platzieren
+			summ = "LAUFENDE SENDUNG!\n\n%s" % summ
 		PLog("title: " + title)
 		tagline = 'Zeit: ' + vonbis
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}" % (urllib2.quote(stream_url), 
@@ -2978,7 +2986,7 @@ def SenderLiveListe(title, listname, fanart, offset=0):
 		epg_date=''; epg_title=''; epg_text=''; summary=''; tagline='' 
 		# PLog(SETTINGS.getSetting('pref_use_epg')) 	# Voreinstellung: EPG nutzen? - nur mit Schema nutzbar
 		PLog('setting: ' + str(SETTINGS.getSetting('pref_use_epg')))
-		if SETTINGS.getSetting('pref_use_epg'):
+		if SETTINGS.getSetting('pref_use_epg') == 'true':
 			# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis:
 			EPG_ID = stringextract('<EPG_ID>', '</EPG_ID>', element)
 			PLog(EPG_ID); PLog(EPG_ID_old);
@@ -3031,9 +3039,8 @@ def SenderLiveListe(title, listname, fanart, offset=0):
 		# Link zu master.m3u8 erst auf Folgeseite? - SenderLiveResolution reicht an  Parseplaylist durch
 		fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s'}" % (urllib.quote_plus(link), 
 			img, urllib.quote_plus(title))
-		
 		util.addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=fanart, thumb=img, 
-			fparams=fparams)		
+			fparams=fparams, summary=summary, tagline=tagline)		
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
@@ -3219,7 +3226,8 @@ def PlayAudio(url, title, header=None,**kwargs):
 # todo: Abruf der https-Sender (geht nicht z.B. NJoy, od. dauert) 
 #	Versuch mit lokaler ffmpeg-Installation
 	
-	page, msg = get_page(path=url, GetOnlyRedirect=True)  # Weiterleitung - Wiederherstellung https!
+	# Weiterleitung? - Wiederherstellung https! Vorheriger Replace mit http sinnlos.
+	page, msg = get_page(path=url, GetOnlyRedirect=True)  
 	PLog('PlayAudio Redirect_Url:' + page)
 	if page:
 		url = page
@@ -3413,7 +3421,7 @@ def RadioAnstalten(path, title, sender, fanart):
 				
 				# slink = slink.replace('https', 'http')		# nicht i.V.m. https.replace in PlayAudio
 				headline = headline.replace('"', '')			# json-komp. für func_pars in router()
-				# Kodi Header: als Referer slink injiziert
+				# Kodi Header: als Referer slink injiziert				
 				header='Accept-Encoding=identity;q=1, *;q=0&Accept-Language=de,en;q=0.9,fr;q=0.8,de-DE;q=0.7,da;q=0.6,it;q=0.5,pl;q=0.4,uk;q=0.3,en-US;q=0.2&User-Agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36&Accept=*/*&Referer=%s&Connection=keep-alive&Range=bytes=0-' % slink
 				# header=''
 				fparams="&fparams={'url': '%s', 'title': '%s', 'header': '%s'}" % (urllib.quote_plus(slink), 
@@ -3435,8 +3443,7 @@ def RadioAnstalten(path, title, sender, fanart):
 		line3 = '%s' % (path)
 		xbmcgui.Dialog().ok(ADDON_NAME, line1, line2, line3)
 		return li			
-								
-				
+										
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 
@@ -4571,6 +4578,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, **kwargs):	# master.m3u8 auswer
 #  4. Besonderheit: manche Playlists enthalten zusätzlich abgeschaltete Links, gekennzeichnet mit #. Fehler Webplayer:
 #		 crossdomain access denied. Keine Probleme mit OpenPHT und VLC
 #  10.08.2017 Filter für Video-Sofort-Format - wieder entfernt 17.02.2018
+
+	if SETTINGS.getSetting('pref_show_resolution') == 'false':
+		return li
 
 	PLog ('Parseplaylist: ' + url_m3u8)
 	playlist = ''

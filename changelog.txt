@@ -3,6 +3,13 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 --------------		Nachfolger von Plex-Plugin-ARDMediathek2016
 --------------	
 
+29.12.2018 	0.5.7	addDir: Austausch der zusätzlichen Info-Buttons für summary + tagline gegen infoLabels
+			(Darstellung links unter Icon).
+not on Github	0.5.6	Einstellungen: Auflistung aller Auflösungen abschaltbar (Umsetzung in Parseplaylist).
+			SenderLiveListe: summary + tagline hinzugefügt.			
+			SenderLiveListe: Fix Auswertung Settings pref_use_epg.
+			DownloadsTools: Fix Info in Button "Pfad curl/wget festlegen/aendern".
+			ARDnew_Content (CB=ARDStartSingle): Fix Ermittlung img. 
 27.12.2018 	0.5.5	Windows-Anpassung: requests (kein Python-built-in-Modul) wieder ersetzt 
 			durch urllib2.urlopen (Module util, updater). 
 			Windows-Anpassung in Funktion router: Escape-Zeichen-Behandlung für Windows-Pfade.

@@ -195,19 +195,12 @@ def UtfToStr(line):
 	else:
 		return line	
 #----------------------------------------------------------------  
-#util.addDir(label='ARD Mediathek', action='dirList', dirID='Main_ARD', fanart=icon, thumb=icon, 
-#	params='&fparams=name='ARD Mediathek', sender='ARDSender[0]'
 # In Kodi fehlen die summary- und tagline-Zeilen von Plex. Diese ersetzen wir
-#	hier einfach durch zusätzliche items, die summary und tagline jeweils als lable 
-#	emthalten.
+#	hier einfach durch infoLabels['Plot'], wobei summary und tagline durch 
+#	2 Leerzeilen getrennt werden (Anzeige links unter icon).
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', **kwargs):
 	PLog('addDir:')
-	# PLog('Listitem li: ' + str(li)); 
-	# PLog('label: ' + label); 
-	# PLog('fparams: ' + fparams); 
 	PLog('addDir - label: %s, action: %s, dirID: %s' % (label, action, dirID))
-	#label= label.decode(encoding="utf-8")   # Umlautprobleme mit addDirectoryItem
-	#label = label.encode("utf-8")
 	
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
 	if dirID == "PlayVideo": 	# bei "PlayAudio": skipping unplayable item
@@ -219,27 +212,25 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		li.setProperty('IsPlayable', 'false')
 		isFolder = True	
 	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
-	# if label2:					# nicht verfügbar	
-	#	label2 = UtfToStr(label2)												
-	#	li.setLabel2(label2)
 	xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
 	PLog('PLUGIN_URL: ' + PLUGIN_URL)
 	PLog('HANDLE: ' + str(HANDLE))
 	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+urllib.quote_plus(fparams)
 	PLog("addDir_url: " + urllib.unquote_plus(url))
-	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
+		
+	ilabels = {'Plot': ''}
 	if summary:								# nicht bei isFolder=False
 		summary = UtfToStr(summary)
-		summary = "_____ %s" % summary
-		PLog('summary: ' + summary)
-		li.setLabel(summary)
-		xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
+		ilabels['Plot'] = summary
 	if tagline:								# nicht bei isFolder=False
 		tagline = UtfToStr(tagline)
-		tagline = "_____ %s" % tagline 
-		PLog('tagline: ' + tagline)
-		li.setLabel(tagline)
-		xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
+		ilabels['Plot'] = "%s\n\n%s" % (ilabels['Plot'], tagline)
+			
+	if ilabels['Plot']:
+		PLog('ilabels: ' + str(ilabels['Plot']))
+		li.setInfo(type="video", infoLabels=ilabels)	
+		
+	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
 	PLog('addDir_End')		
 	return	
 	
@@ -607,7 +598,9 @@ def unescape(line):	# HTML-Escapezeichen in Text entfernen, bei Bedarf erweitern
 		.replace("&#39;", "'").replace("&#039;", "'").replace("&quot;", '"').replace("&#x27;", "'")
 		.replace("&ouml;", "ö").replace("&auml;", "ä").replace("&uuml;", "ü").replace("&szlig;", "ß")
 		.replace("&Ouml;", "Ö").replace("&Auml;", "Ä").replace("&Uuml;", "Ü").replace("&apos;", "'"))
-		
+	# Spezialfälle:
+	#	https://stackoverflow.com/questions/20329896/python-2-7-character-u2013
+	line_ret = line.replace("–", "-")	
 	# PLog(line_ret)		# bei Bedarf
 	return line_ret	
 #----------------------------------------------------------------  	
