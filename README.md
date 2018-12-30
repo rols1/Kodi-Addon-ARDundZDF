@@ -14,7 +14,7 @@ Das Plugin löst die Vorgänger Plex-Plugin-ARDMediathek2015 und Plex-Plugin-ARD
 ab. Der Relaunch des ZDF-Mediathek-Internetangebots vom 28.10.2016 ist eingearbeitet. 
 
 #### Rückmeldungen willkommen:
-Im Forum: wird nachgereicht, 
+Im Forum: https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/  
 direkt: rols1@gmx.de 
   
 Funktionen ab Version 2.2.0: 
@@ -90,31 +90,51 @@ Credits:
 
 Hauptmenü:
 ===================  
-![img](https://us.v-cdn.net/6025034/uploads/editor/t4/xrwomsb0zpaq.png)
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Hauptmenue.png)
 
-Suche in ZDF Mediathek:
+Hauptmenü ARD:
 ===================  
-![img](https://us.v-cdn.net/6025034/uploads/editor/d5/lsawdl1xybzq.png)
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Hauptmenue_ARD.png)
 
-Videoformate ZDF Mediathek:
+Hauptmenü ZDF:
 ===================  
-![img](https://us.v-cdn.net/6025034/uploads/editor/pm/8y069jf7ad38.png)
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Hauptmenue_ZDF.png)
+
+Sucheingabe:
+===================  
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Suche_Eingabe.png)
+
+Suchergebnis:
+===================  
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Suche_Ergebnis.png)
+
+Videoformate ZDF Mediathek 1:
+===================  
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Videoformate_ZDF_Mediathek-1.png)
+
+Videoformate ZDF Mediathek 2:
+===================  
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Videoformate_ZDF_Mediathek-2.png)
 
 TV Livesender Vorauswahl:
 ===================  
-![img](https://us.v-cdn.net/6025034/uploads/editor/i5/vo1g066f7n9n.jpg)
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV_Livesender_Vorauswahl.png)
 
 Radio Livesender:
 ===================  
-![img](https://us.v-cdn.net/6025034/uploads/editor/m7/qibbk5zksgkj.png)
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Radio_Livesender.png)
+
+Radio Livesender BR:
+===================  
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Radio_Livesender_BR.png)
 
 Podcast-Menü:
 ===================  
-![img](https://us.v-cdn.net/6025034/uploads/editor/mx/pgmo59s3layj.png)
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Podcast_Menue.png)
 
 Podcast-Favoriten:
 ===================  
-![img](https://us.v-cdn.net/6025034/uploads/editor/as/s2ogw2bx2s5h.png)
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Podcast-Favoriten.png)
 
 
 
