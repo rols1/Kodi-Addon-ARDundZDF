@@ -110,16 +110,10 @@ def update(url, ver):
 	
 # clean tag names based on your release naming convention
 def cleanSummary(summary):
-	summary = summary.replace('/li','')
-	summary = summary.replace('/ul','')
-	summary = summary.replace('li','')
-	summary = summary.replace('&amp;','&')
-	summary = summary.replace('&gt;','')
-	summary = summary.replace('&lt;','')
-	summary = summary.replace('&lt;','')
-
-	# summary = summary.replace('\n',' ')
-	summary = summary.replace('ul','')
-	summary = summary.replace('/h3','')
 	
+	summary = (summary.replace('&lt;','').replace('&gt;','').replace('/ul','')
+		.replace('/li','').replace('\n', ' | '))
+	summary =  (summary.replace('| ul |', ' | ').replace('/h3', '')
+		.replace('&quot;', '"').replace('| li', '| '))
+		
 	return summary.lstrip()

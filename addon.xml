@@ -5,7 +5,7 @@
    <import addon="script.module.simplecache" version="1.0.0"/>
  </requires>
   <extension point="xbmc.python.pluginsource" library="ardundzdf.py">
-        <provides>video audio</provides>
+        <provides>video</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
 	<summary lang="de">ARD- und ZDF-Mediathek</summary>
@@ -21,12 +21,12 @@
              <icon>icon.png</icon>
             <fanart>fanart.png</fanart>
 	    <screenshot>resources/screenshots/DownloadsShowAll.png</screenshot>
-	    <screenshot>resources/screenshots/EPG-Update.png</screenshot>
+	    <screenshot>resources/screenshots/EPG-Menue.png</screenshot>
 	    <screenshot>resources/screenshots/Podcast-Download.png</screenshot>    
 	    <screenshot>resources/screenshots/Podcastmenue.png</screenshot>    
 	    <screenshot>resources/screenshots/Startbuttons_RecordingTV-Live.png</screenshot>    
 	    <screenshot>resources/screenshots/ZDFmobile_im_Hauptmenue.png</screenshot>    
-	    <screenshot>resources/screenshots/ZDF_Zusaetze.png</screenshot>    
+	    <screenshot>resources/screenshots/ZDF_Menue.png</screenshot>    
            
      </assets>
    </extension>

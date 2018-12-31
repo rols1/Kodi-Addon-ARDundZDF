@@ -41,8 +41,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Plugin Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '0.5.7'		 
-VDATE = '29.12.2018'
+VERSION =  '0.5.9'		 
+VDATE = '31.12.2018'
 
 # 
 #	
@@ -267,21 +267,21 @@ def Main():
 		addDir(li=li, label="ZDFmobile", action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
 			fanart=R(FANART), thumb=R(ICON_MAIN_ZDFMOBILE), fparams=fparams)
 	else:
-		fparams='&fparams=name="ZDF Mediathek"'
+		fparams='&fparams=name=ZDF Mediathek'
 		addDir(li=li, label="ZDF Mediathek", action="dirList", dirID="Main_ZDF", fanart=R(FANART), 
 			thumb=R(ICON_MAIN_ZDF), fparams=fparams)
 																																			
-	fparams='&fparams=title="TV-Livestreams"'
+	fparams='&fparams=title=TV-Livestreams'
 	addDir(li=li, label='TV-Livestreams', action="dirList", dirID="SenderLiveListePre", 
 		fanart=R(FANART), thumb=R(ICON_MAIN_TVLIVE), fparams=fparams)
 	
-	fparams='&fparams=path=ARD_RadioAll, title="Radio-Livestreams"'
+	fparams='&fparams=path=ARD_RadioAll, title=Radio-Livestreams'
 	addDir(li=li, label='Radio-Livestreams', action="dirList", dirID="RadioLiveListe", 
 		fanart=R(FANART), thumb=R(ICON_MAIN_RADIOLIVE), fparams=fparams)
 		
 	if SETTINGS.getSetting('pref_use_podcast') ==  'true':	# ARD-Radio-Podcasts
 		summary = 'ARD-Radio-Podcasts suchen, hören und herunterladen'
-		fparams='&fparams=name="PODCAST"'
+		fparams='&fparams=name=PODCAST'
 		addDir(li=li, label='Radio-Podcasts', action="dirList", dirID="Main_POD", fanart=R(FANART), 
 			thumb=R(ICON_MAIN_POD), fparams=fparams)								
 	if SETTINGS.getSetting('pref_use_downloads') ==  'true':	# Download-Tools. zeigen
@@ -2620,25 +2620,25 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 			thumb=img, fparams=fparams)
 
 	title = 'EPG Alle JETZT'; summary='elektronischer Programmfuehrer'
+	tagline = 'zeige die laufende Sendung für jeden Sender'
 	fparams='&fparams=title=%s' % title
 	util.addDir(li=li, label=title, action="dirList", dirID="EPG_ShowAll", fanart=R('tv-EPG-all.png'), 
-		thumb=R('tv-EPG-all.png'), fparams=fparams)
+		thumb=R('tv-EPG-all.png'), fparams=fparams, summary=summary, tagline=tagline)
 							
 	title = 'EPG Sender einzeln'; summary='elektronischer Programmfuehrer'
-	tagline = 'Sendungen für ausgewaehlten Sender'									# EPG-Button Einzeln anhängen
+	tagline = 'Sendungen für Sender nach Wahl'								# EPG-Button Einzeln anhängen
 	fparams='&fparams=title=%s' % title
-	util.addDir(li=li, label=title, tagline=tagline, action="dirList", dirID="EPG_Sender", fanart=R(ICON_MAIN_TVLIVE), 
-		thumb=R('tv-EPG-single.png'), fparams=fparams)	
+	util.addDir(li=li, label=title, action="dirList", dirID="EPG_Sender", fanart=R(ICON_MAIN_TVLIVE), 
+		thumb=R('tv-EPG-single.png'), fparams=fparams, summary=summary, tagline=tagline)	
 		
 	PLog(str(SETTINGS.getSetting('pref_LiveRecord')))
 	if SETTINGS.getSetting('pref_LiveRecord'):		
 		title = 'Recording TV-Live'													# TVLiveRecord-Button anhängen
-		duration = SETTINGS.getSetting('pref_LiveRecord_duration')
-		duration, laenge = duration.split('=')
-		tagline = SETTINGS.getSetting('pref_curl_download_path') 				
+		summary = 'Sender wählen und aufnehmen.\nDauer: %s' % SETTINGS.getSetting('pref_LiveRecord_duration')
+		tagline = 'Downloadpfad: %s' 	 % SETTINGS.getSetting('pref_curl_download_path') 				
 		fparams='&fparams=title=%s' % title
 		util.addDir(li=li, label=title, action="dirList", dirID="TVLiveRecordSender", fanart=R(ICON_MAIN_TVLIVE), 
-			thumb=R('icon-record.png'), fparams=fparams, properties={'Dauer': duration, 'Downloadpfad': tagline})
+			thumb=R('icon-record.png'), fparams=fparams, summary=summary, tagline=tagline)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
@@ -3220,26 +3220,51 @@ def PlayVideo(url, title, **kwargs):
 # SSL-Probleme in Kodi mit https-Code 302 (Adresse verlagert) - Lösung:
 #	 Redirect-Abfrage vor Abgabe an Kodi-Player
 # Kommt vor: Kodi kann lokale Audiodatei nicht laden - Kodi-Neustart ausreichend.
-# OK: BR, Bremen, SR, Deutschlandfunk
-def PlayAudio(url, title, header=None,**kwargs):
+# 30.12.2018  Radio-Live-Sender: bei den SSL-Links kommt der Kodi-Audio-Player auch bei der 
+#	weiter geleiteten Url lediglich mit  BR, Bremen, SR, Deutschlandfunk klar. Abhilfe:
+#	Wir ersetzen den https-Anteil im Link durch den http-Anteil, der auch bei tunein 
+#	verwendet wird. Der Link wird bei addradio.de getrennt und mit dem http-template
+#	verbunden. Der Sendername wird aus dem abgetrennten Teil ermittelt und im template
+#	eingefügt.
+# 	Bsp. (Sender=ndr):
+#		template: 		dg-%s-http-fra-dtag-cdn.cast.addradio.de'	# %s -> sender	
+#		redirect-Url: 	dg-ndr-https-dus-dtag-cdn.sslcast.addradio.de/ndr/ndr1niedersachsen/..
+#		replaced-Url: 	dg-ndr-http-dus-dtag-cdn.cast.addradio.de/ndr/ndr1niedersachsen/..
+# url_template gesetzt von RadioAnstalten (Radio-Live-Sender)
+def PlayAudio(url, title, header=None, url_template=None, **kwargs):
 	PLog('PlayAudio:'); PLog(title)
-# todo: Abruf der https-Sender (geht nicht z.B. NJoy, od. dauert) 
-#	Versuch mit lokaler ffmpeg-Installation
-	
+
 	# Weiterleitung? - Wiederherstellung https! Vorheriger Replace mit http sinnlos.
-	page, msg = get_page(path=url, GetOnlyRedirect=True)  
-	PLog('PlayAudio Redirect_Url:' + page)
-	if page:
-		url = page
+	page, msg = get_page(path=url, GetOnlyRedirect=True)
+	url = page  
+	PLog('PlayAudio Redirect_Url: ' + url)
 
-	if header:
-		# PLog(header)
-		url = '%s|%s' % (url, header) 
-
+	# Kodi Header: als Referer url injiziert - z.Z nicht benötigt			
+	#header='Accept-Encoding=identity;q=1, *;q=0&User-Agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36&Accept=*/*&Referer=%s&Connection=keep-alive&Range=bytes=0-' % url
+	
 	if url.startswith('http') == False:		# lokale Datei
 		url = os.path.abspath(url)
-	PLog('PlayAudio Player_Url: ' + url)
+		
+	# für Radio-Live-Sender, ersetzt https- durch http-Links. template
+	#	ist für alle Radio-Live-Sender der Öffis gleich
+	#	Bei Fehlschlag erhält der Player die urspr. Url 
+	#	Nicht erforderlich falls Link bereits http-Link.
+	if url_template and url.startswith('https'):							
+		p1 = 'dg-%s-http-fra-dtag-cdn.cast.addradio.de'	# %s -> sender
+		try:
+			p2 = url.split('.de')[1]				# ..addradio.de/hr/youfm/live..
+			s = re.search('/(.*?)/', p2).group(1)	# sender z.B. hr
+			url = 'http://' + p1 %s + p2
+		except Exception as exception:
+			PLog(str(exception))			
+		
+	#if header:							
+	#	Kodi Header: als Referer url injiziert - z.Z nicht benötigt	
+	# 	header='Accept-Encoding=identity;q=1, *;q=0&User-Agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36&Accept=*/*&Referer=%s&Connection=keep-alive&Range=bytes=0-' % slink	
+	#	# PLog(header)
+	#	url = '%s|%s' % (url, header) 
 	
+	PLog('PlayAudio Player_Url: ' + url)
 	li = xbmcgui.ListItem(path=url)		# ListItem + Player reicht für BR
 	li.setContentLookup(False)
 	xbmc.Player().play(url, li, False)	# Player nicht mehr spezifizieren (0,1,2 - deprecated)
@@ -3266,7 +3291,7 @@ def RadioLiveListe(path, title):
 	#		angelegt (Sendername:Icon).
 	#		Ohne Treffer beim  Abgleich wird ein Ersatz-Icon verwendet (im Watchdog-PRG führt dies zur Fehleranzeige). 
 	#		Die frühere Icon-Liste in <thumblist> entfällt.
-	#	Nach Auswahl einer Station wird in RadioLiveSender der Audiostream-Link ermittelt.
+	#	Nach Auswahl einer Station wird in RadioAnstalten der Audiostream-Link ermittelt.
 
 	for s in liste:
 		# PLog(s)					# bei Bedarf
@@ -3406,9 +3431,9 @@ def RadioAnstalten(path, title, sender, fanart):
 				headline = headline_org + ' (64 KByte)'
 			if mark == '1' or mark == '2':					
 				headline = headline_org + ' (128 KByte)'
-			if mark == '1' or mark == '2':					
-				subtitle = unescape(subtitle)
 			headline = "%s | %s" % (headline, subtitle)			# für kodi subtitle -> label
+			headline = unescape(headline)
+			headline = headline.replace('&quot;', '"')			# unescape erfolglos?
 				
 			if slink:						# normaler Link oder Link über .m3u ermittelt
 				# msg = ', Stream ' + str(i + 1) + ': OK'		# Log in parseLinks_Mp4_Rtmp ausreichend
@@ -3419,14 +3444,11 @@ def RadioAnstalten(path, title, sender, fanart):
 				else:							# Bildquelle lokal
 					thumb=R(img_src)
 				
-				# slink = slink.replace('https', 'http')		# nicht i.V.m. https.replace in PlayAudio
+				# slink = slink.replace('https', 'http')		# hier sinnlos bei üblichen Redirects
+				# url_template: ersetzt in PlayAudio https- durch http-Links 
 				headline = headline.replace('"', '')			# json-komp. für func_pars in router()
-				# Kodi Header: als Referer slink injiziert				
-				header='Accept-Encoding=identity;q=1, *;q=0&Accept-Language=de,en;q=0.9,fr;q=0.8,de-DE;q=0.7,da;q=0.6,it;q=0.5,pl;q=0.4,uk;q=0.3,en-US;q=0.2&User-Agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36&Accept=*/*&Referer=%s&Connection=keep-alive&Range=bytes=0-' % slink
-				# header=''
-				fparams="&fparams={'url': '%s', 'title': '%s', 'header': '%s'}" % (urllib.quote_plus(slink), 
-					urllib.quote_plus(headline), urllib.quote_plus(header))
-				 # Alternativer Zusatz: 'is_playable': %s} % True
+				fparams="&fparams={'url': '%s', 'title': '%s', 'url_template': '1'}" % (urllib.quote_plus(slink), 
+					urllib.quote_plus(headline))
 				PLog('fparams RadioAnstalten: ' + fparams)
 				addDir(li=li, label=headline, action="dirList", dirID="PlayAudio", fanart=fanart, thumb=img_src, 
 					fparams=fparams)	
