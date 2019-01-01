@@ -455,14 +455,6 @@ def GetAttribute(text, attribute, delimiter1 = '=', delimiter2 = ','):
 		return ''
 
 #----------------------------------------------------------------  
-def NotFound(msg):
-	msg = msg.decode(encoding="utf-8", errors="ignore")
-	return ObjectContainer(
-		header=u'%s' % 'Error',
-		message=u'%s' % (msg)
-	)
-
-#----------------------------------------------------------------  
 def teilstring(zeile, startmarker, endmarker):  		# rfind: endmarker=letzte Fundstelle, return '' bei Fehlschlag
   # die übergebenen Marker bleiben Bestandteile der Rückgabe (werden nicht abgeschnitten)
   pos2 = zeile.find(endmarker, 0)
@@ -593,14 +585,15 @@ def decode_url(line):	# in URL kodierte Umlaute und & wandeln, Bsp. f%C3%BCr -> 
 def unescape(line):	# HTML-Escapezeichen in Text entfernen, bei Bedarf erweitern. ARD auch &#039; statt richtig &#39;
 #					# s.a.  ../Framework/api/utilkit.py
 #					# Ev. erforderliches Encoding vorher durchführen 
-	line =  UtfToStr(line)
+#	line =  UtfToStr(line)
 	line_ret = (line.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
 		.replace("&#39;", "'").replace("&#039;", "'").replace("&quot;", '"').replace("&#x27;", "'")
 		.replace("&ouml;", "ö").replace("&auml;", "ä").replace("&uuml;", "ü").replace("&szlig;", "ß")
 		.replace("&Ouml;", "Ö").replace("&Auml;", "Ä").replace("&Uuml;", "Ü").replace("&apos;", "'"))
 	# Spezialfälle:
 	#	https://stackoverflow.com/questions/20329896/python-2-7-character-u2013
-	line_ret = line.replace("–", "-")	
+	line_ret = line.replace("–", "-")
+	line_ret = line_ret.replace("&#x27;", "'")		# "sächsischer Genetiv", Bsp. Scott's
 	# PLog(line_ret)		# bei Bedarf
 	return line_ret	
 #----------------------------------------------------------------  	

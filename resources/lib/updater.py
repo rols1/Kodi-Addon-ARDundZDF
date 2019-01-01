@@ -101,7 +101,6 @@ def update(url, ver):
 												
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 	else:
-		return ObjectContainer(header='Update fehlgeschlagen', message='Version ' + ver + 'nicht gefunden!')
 		msg1 = 'Update fehlgeschlagen'
 		msg2 =  'Version ' + ver + 'nicht gefunden!'
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
@@ -114,6 +113,6 @@ def cleanSummary(summary):
 	summary = (summary.replace('&lt;','').replace('&gt;','').replace('/ul','')
 		.replace('/li','').replace('\n', ' | '))
 	summary =  (summary.replace('| ul |', ' | ').replace('/h3', '')
-		.replace('&quot;', '"').replace('| li', '| '))
+		.replace('&quot;', '"').replace('| li', '| ').replace('-&amp;gt;', '->'))
 		
 	return summary.lstrip()

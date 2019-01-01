@@ -24,7 +24,7 @@ import resources.lib.util as util
 PLog=util.PLog;  home=util.home;  Dict=util.Dict;  name=util.name; 
 UtfToStr=util.UtfToStr;  addDir=util.addDir;  get_page=util.get_page; 
 img_urlScheme=util.img_urlScheme;  R=util.R;  RLoad=util.RLoad;  RSave=util.RSave; 
-GetAttribute=util.GetAttribute;  NotFound=util.NotFound;  CalculateDuration=util.CalculateDuration;  
+GetAttribute=util.GetAttribute;  CalculateDuration=util.CalculateDuration;  
 teilstring=util.teilstring; repl_dop=util.repl_dop;  repl_char=util.repl_char;  mystrip=util.mystrip; 
 DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract;  blockextract=util.blockextract; 
 teilstring=util.teilstring;  repl_dop=util.repl_dop; cleanhtml=util.cleanhtml;  decode_url=util.decode_url;  
@@ -39,10 +39,10 @@ import resources.lib.EPG				as EPG
 import resources.lib.Podcontent 		as Podcontent
 # import resources.lib.ARD_Bildgalerie 	as ARD_Bildgalerie	# 10.12.2018 nicht mehr verfügbar
 
-# +++++ ARDundZDF - Plugin Kodi-Version, migriert von der Plexmediaserver-Version +++++
+# +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '0.5.9'		 
-VDATE = '31.12.2018'
+VERSION =  '0.6.0'		 
+VDATE = '01.01.2019'
 
 # 
 #	
@@ -54,7 +54,7 @@ VDATE = '31.12.2018'
 # 	Licensed under MIT License (MIT)
 # 	(previously licensed under GPL 3.0)
 # 	A copy of the License you find here:
-#		https://github.com/rols1/Plex-Plugin-ARDMediathek2016/blob/master/LICENSE.md
+#		https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master/LICENSE.txt
 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
 # INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
@@ -70,7 +70,7 @@ PREFIX 			= '/video/ardundzdf'
 												
 PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
 PLAYLIST_Radio  = 'livesenderRadio.xml'		# Liste der RadioAnstalten. Einzelne Sender und Links werden 
-											# 	vom Plugin ermittelt
+											# 	vom Addon ermittelt
 											# Radio-Sender-Logos erstellt von: Arauco (Plex-Forum). 
 FAVORITS_Pod 	= 'podcast-favorits.txt' 	# Lesezeichen für Podcast-Erweiterung 
 FANART					= 'fanart.png'		# ARD + ZDF - breit
@@ -198,7 +198,7 @@ myhost			 	= 'http://127.0.0.1:32400'
 
 
 
-PLog('Plugin: lade Code')
+PLog('Addon: lade Code')
 PluginAbsPath = os.path.dirname(os.path.abspath(__file__))				# abs. Pfad für Dateioperationen
 DICTSTORE 		= os.path.join("%s/resources/data/Dict") % PluginAbsPath
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -314,18 +314,28 @@ def Main():
 		tagline='Bezugsquelle: ' + repo_url			
 		fparams='&fparams=title="Plugin-Update"'
 		addDir(li=li, label=title, action="dirList", dirID="SearchUpdate", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_UPDATER), fparams=fparams) # summary=summary, tagline=tagline)
+			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summary, tagline=tagline)
 
 	# Menü Einstellungen (obsolet) ersetzt durch Info-Button
 	#	freischalten nach Posting im Kodi-Forum
-	#summary = 'Störungsmeldungen an Forum oder rols1@gmx.de'
-	#tagline = 'Forum: https://forums.plex.tv/t/rel-ardundzdf/309751'
-	#fparams='&fparams=""'
-	#addDir(li=li, label='Info', action="dirList", dirID="Main", fanart=R(FANART), thumb=R(ICON_INFO), 
-	#	fparams=fparams, summary=summary, tagline=tagline)
+	summary = 'Störungsmeldungen an Forum oder rols1@gmx.de'
+	tagline = 'für weitere Infos (changelog.txt) klicken'
+	path = os.path.join(ADDON_PATH, "changelog.txt") 
+	title = "Änderungsliste (changelog.txt)"
+	fparams="&fparams={'path': '%s', 'title': '%s'}" % (urllib2.quote(path), urllib2.quote(title))
+	addDir(li=li, label='Info', action="dirList", dirID="ShowText", fanart=R(FANART), thumb=R(ICON_INFO), 
+		fparams=fparams, summary=summary, tagline=tagline)
 					
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
+#----------------------------------------------------------------
+def ShowText(path, title):
+	PLog('ShowText:'); 
+	page = RLoad(path, abs_path=True)
+	page = page.replace('\t', ' ')		# ersetze Tab's durch Blanks
+	dialog = xbmcgui.Dialog()
+	dialog.textviewer(title, page)
+	return
 #----------------------------------------------------------------
 # sender neu belegt in Senderwahl
 def Main_ARD(name, sender=''):
@@ -539,8 +549,8 @@ def SearchUpdate(title):
 		summ = summ.splitlines()[0]		# nur 1. Zeile changelog
 		tagline = "%s | Mehr in changelog.txt" % summ
 		thumb = R(ICON_OK)
-		fparams='&fparams=title=Update Plugin'
-		addDir(li=li, label=title, action="dirList", dirID="updater.menu", fanart=R(ICON_OK), 
+		fparams='&fparams=""'
+		addDir(li=li, label=title, action="dirList", dirID="Main", fanart=R(ICON_OK), 
 			thumb=R(ICON_OK), fparams=fparams, summary=summary, tagline=tagline)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
@@ -1498,9 +1508,9 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 		PLog('PageControl: Einzelseite, keine Folgeseiten'); PLog(cbKey); PLog(path); PLog(title)
 		li = SinglePage(title=title, path=path, next_cbKey='SingleSendung', mode=mode, ID=ID) # wir springen direkt 
 		if len(oc) == 1:								# 1 = Home
-			msgH = 'Error'; msg = 'Keine Inhalte gefunden.'		
-			return ObjectContainer(header=msgH, message=msg)		
-		return oc																				
+			msg1 = 'Keine Inhalte gefunden.'		
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		return li																				
 
 	# pagenr_path =  re.findall("&mresults{0,1}=page.(\d+)", page) # lange Form funktioniert nicht
 	pagenr_path =  re.findall("=page.(\d+)", page) # 
@@ -1896,6 +1906,13 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 
 	PLog(SETTINGS.getSetting('pref_use_downloads')) 	# Voreinstellung: False 
 	if SETTINGS.getSetting('pref_use_downloads') == 'true' and SETTINGS.getSetting('pref_curl_path'):
+		dest_path = SETTINGS.getSetting('pref_curl_download_path')
+		if  os.path.isdir(dest_path) == False:
+			msg1	= 'test_downloads'
+			msg2 	= 'Downloadverzeichnis existiert nicht:'
+			msg3 	= dest_path
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			return li				
 		# PLog(SETTINGS.getSetting('pref_show_qualities'))
 		if SETTINGS.getSetting('pref_show_qualities') == 'false':	# nur 1 (höchste) Qualität verwenden
 			download_items = []
@@ -2068,13 +2085,13 @@ def DownloadsTools():
 	PLog(path)
 	dirlist = []
 	if os.path.isdir(path) == False:
+		msg1='Hinweis:'
 		if path == '':		
-			msg1='Downloadverzeichnis noch nicht festgelegt.'
+			msg2='Downloadverzeichnis noch nicht festgelegt.'
 		else:
-			msg1='Downloadverzeichnis nicht gefunden: '
-		msg2=path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
-		return li
+			msg2='Downloadverzeichnis nicht gefunden: '
+		msg3=path
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 	else:
 		dirlist = os.listdir(path)						# Größe Inhalt? 		
 			
@@ -2166,11 +2183,15 @@ def DownloadsList():
 	
 	dirlist = []
 	if path == None or path == '':									# Existenz Verz. prüfen, falls vorbelegt
-		title1 = 'Downloadverzeichnis noch nicht festgelegt'
+		msg1 = 'Downloadverzeichnis noch nicht festgelegt'
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		return
 	else:
 		if os.path.isdir(path)	== False:			
-			msg='Downloadverzeichnis nicht gefunden: ' + path
-			return ObjectContainer(header='Error', message=msg)
+			msg1 =  'Downloadverzeichnis nicht gefunden: ' 
+			msg2 =  path
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			return
 		else:
 			dirlist = os.listdir(path)						# Größe Inhalt? 		
 	dlpath = path
@@ -2186,9 +2207,10 @@ def DownloadsList():
 	title1 = 'Downloadverzeichnis: %s Download(s), %s MBytes' % (mpcnt, str(vidsize))
 	
 	if mpcnt == 0:
-		msg='Kein Download vorhanden | Pfad: %s' % (dlpath)
-		return ObjectContainer(header='Error', message=msg)
-		
+		msg1 = 'Kein Download vorhanden | Pfad:' 
+		msg2 = dlpath
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		return		
 		
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
@@ -2736,10 +2758,16 @@ def LiveRecord(url, title, duration, laenge):
 	li = home(li, ID=NAME)					# Home-Button
 	
 	dest_path = SETTINGS.getSetting('pref_curl_download_path')
+	msg1	= 'LiveRecord:'
 	if  dest_path == None or dest_path.strip() == '':
-		msg1	= 'LiveRecord:'
 		msg2 	= 'Downloadverzeichnis fehlt in Einstellungen'
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		return li
+	PLog(os.path.isdir(dest_path))			
+	if  os.path.isdir(dest_path) == False:
+		msg2 	= 'Downloadverzeichnis existiert nicht:'
+		msg3	= dest_path
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li			
 		
 	dest_path = dest_path  							# Downloadverzeichnis fuer curl/wget verwenden
@@ -4046,7 +4074,7 @@ def ZDF_get_content(li, page, ref_path, offset=0, ID=None):
 		title = href_title 
 		if title == '':
 			title = plusbar_title
-		if Bilderserie == True:
+		if Bilderserie == True and pic_cnt:
 			title = title + " | %s"   % pic_cnt
 		if title.startswith(' |'):
 			title = title[2:]				# Korrektur

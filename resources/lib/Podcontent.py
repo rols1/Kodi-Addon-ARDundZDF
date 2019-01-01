@@ -20,7 +20,7 @@ import resources.lib.util as util
 PLog=util.PLog;  home=util.home;  Dict=util.Dict;  name=util.name; 
 UtfToStr=util.UtfToStr;  addDir=util.addDir;  get_page=util.get_page; 
 img_urlScheme=util.img_urlScheme;  R=util.R;  RLoad=util.RLoad;  RSave=util.RSave; 
-GetAttribute=util.GetAttribute;  NotFound=util.NotFound;  CalculateDuration=util.CalculateDuration;  
+GetAttribute=util.GetAttribute; CalculateDuration=util.CalculateDuration;  
 teilstring=util.teilstring; repl_dop=util.repl_dop;  repl_char=util.repl_char;  mystrip=util.mystrip; 
 DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract;  blockextract=util.blockextract; 
 teilstring=util.teilstring;  repl_dop=util.repl_dop; cleanhtml=util.cleanhtml;  decode_url=util.decode_url;  

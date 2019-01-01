@@ -26,7 +26,7 @@
   	<setting label="curl/wget-Downloads: alle verfuegbaren Video-Qualitaeten anbieten" type="bool" id="pref_show_qualities" default="false"/>
  	<setting label="curl/wget-Downloads: Dateinamen aus dem Titel erzeugen (statt Download_{Datum}_{Uhrzeit})" type="bool" id="pref_generate_filenames" default="false"/>
 	<setting label="Pfad zum Downloadprogramm curl/wget" type="text" id="pref_curl_path" default=""/>
-	<setting label="Downloadverzeichnis fuer curl/wget" type="text" id="pref_curl_download_path" default=""/>
+	<setting label="Downloadverzeichnis fuer curl/wget und Recording TV-Live" type="text" id="pref_curl_download_path" default=""/>
 	<setting label="Downloads verschieben in dieses Verzeichnis" type="text" id="pref_VideoDest_path" default=""/>
 </category>
  

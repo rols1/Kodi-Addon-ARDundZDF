@@ -1,70 +1,112 @@
 CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver)
---------------		Releases: https://github.com/rols1/ARDundZDF/releases/latest
+--------------		Releases: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
 --------------		Nachfolger von Plex-Plugin-ARDMediathek2016
---------------	
+			Kodi-Forum, Support:
+			https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF
+			Plex-Foren:
+			https://forums.plex.tv/t/rel-ardundzdf/309751
+			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
+
+
+01.12.2018 	0.6.0	Updater (cleanSummary): Ersetzung '-&amp;gt;'durch '->'.
+			Downloads + Recording: Test aus existierendes Downloadverzeichnis.
+			ZDF_get_content: Fix Titelergänzung (if Bilderserie == True and pic_cnt).
+			DownloadsList, PageControl, Updater (update): Austausch "return ObjectContainer" 
+			-> xbmcgui.Dialog.
+			NotFound entfernt (unnötig). 
+			Modul util (unescape) ergänzt.
+			Einstellungen: "Recording TV-Live" ergänzt bei Downloadverzeichnis.
+			SearchUpdate: Fix Callback dirID (Rücksprung Main bei akt. Plugin).  
 
 31.12.2018 	0.5.9	Radio-Live-Sender: Ersatz des https-Anteils im Link durch http-template.
 			RadioAnstalten: Fix headline (unescape).
 			SenderLiveListePre: summary + tagline ergänzt.
 			addon.xml (<provides>): Eintrag audio entfernt (nicht benötigt). 
 			addon.xml: Screenshots aktualisiert.	
+
 not on Github 	0.5.8	Fix Homebuttons: Main -> Main_ZDF + ZDF_Verpasst, Main -> SenderLiveListePre,
 			Main -> RadioLiveListe, Main -> Main_POD.
 			Updater (cleanSummary): MarkUp-Ersetzungen angepasst.
+
 29.12.2018 	0.5.7	addDir: Austausch der zusätzlichen Info-Buttons für summary + tagline gegen infoLabels
 			(Darstellung links unter Icon).
+
 not on Github	0.5.6	Einstellungen: Auflistung aller Auflösungen abschaltbar (Umsetzung in Parseplaylist).
 			SenderLiveListe: summary + tagline hinzugefügt.			
 			SenderLiveListe: Fix Auswertung Settings pref_use_epg.
 			DownloadsTools: Fix Info in Button "Pfad curl/wget festlegen/aendern".
 			ARDnew_Content (CB=ARDStartSingle): Fix Ermittlung img. 
+
 27.12.2018 	0.5.5	Windows-Anpassung: requests (kein Python-built-in-Modul) wieder ersetzt 
 			durch urllib2.urlopen (Module util, updater). 
 			Windows-Anpassung in Funktion router: Escape-Zeichen-Behandlung für Windows-Pfade.
 			get_formitaeten: header-Anpassung für json-Requests via urllib2.urlopen.
 			ARD_Bildgalerie (Hub): doppelten urlretrieve-call entfernt.			
+
 23.12.2018 	0.5.4	Github-Repo Kodi-Addon-ARDundZDF angelegt.
 			Info-Button entfernt (bis 1. Posting im Kodi-Forum)
+
 not on Github	0.5.3	MakeDetailText (Downloads): Beschreibung2 unterdrücken falls mit 1 identisch.
 			Podcontent/Scheme_ndr: strip summary.	
+
 not on Github	0.5.2	Funktion ZDF-BarriereArm erweitert: Hörfassungen, Videos mit Untertitel, 
 			heute-journal-Videos mit Gebärdensprache.	
+
 not on Github	0.5.1	ARDStartRubrik: Ermittlung Live-Sender angepasst.
 			ARDStart: Fix Logo für Live-Sender.
+
 not on Github 	0.5.0	Impl. ZDF-Untertitle mit Unterverz. subtitles (einschl. Cachefunktion).		
+
 not on Github 	0.4.9	Encoding/Decoding: decode-Statements für Umlaute entfernt, Funktion UtfToStr impl.,
 			Parameterübergabe angepasst mittels urllib2.quote.
 			Funktion ZDFarabic: für die korrekte Darstellung muss "Arial-basiert" für Schriften
 			in Kodis Benutzeroberfläche eingestellt werden.	
+
 not on Github 	0.4.8	Ersatz der Error-Ausgaben durch xbmcgui.Dialog
+
 not on Github 	0.4.7	Ersatz für Plex-Funktionen HTTP.Request + JSON.ObjectFromURL: Ausbau Funktion get_page
 			einschl. Header-Nutzung, Redirect-Option + json-Behandlung.	
+
 not on Github 	0.4.6	Anpassung Funktionen PlayVideo + PlayAudio, Entfernung CreateVideoStreamObject,
 			CreateVideoClipObject.	
+
 not on Github 	0.4.5	Anpassung home-Funktion, Einschränkungen für Client 'Plex Home Theater' entfernt.  	
+
 not on Github 	0.4.4	Konvertierung Modul ARD_Bildgalerie + updater. Slidefunktion für Bildgalerien (ARD + ZDF)
 			einschl. Cache in Verz. slides. 
+
 not on Github 	0.4.3	Ersatz für Plex-Zeilen summary + tagline: jeweils zusätzl. Listitem (eingerückter
 			Text, identische Parameter + Zielfunktion. 	
+
 not on Github 	0.4.2	Suchfunktionen umgestellt auf Keyboard-Eingabe, Funktion get_keyboard_input.	
+
 not on Github 	0.4.1	Impl. Clear-Funktion ClearUp für Cache Dict + weitere Subdirs in resources/data,
 			einschl. Hilfsfunktion seconds_translate.
+
 not on Github 	0.4.0	Impl. Plugin-Cache (Funktion Dict, Python-Funktion pickle).	
+
 not on Github 	0.3.9	Konvertierung Modul zdfmobile.	
+
 not on Github 	0.3.8	Konvertierung Modul Podcontent.	
+
 not on Github 	0.3.7	Konvertierung Modul EPG.	
+
 not on Github 	0.3.6	Verlagerung Hilfsfunktionen -> Modul util. Konvertierung DefaultPrefs.json -> settings.xml.
 			Neue Log-Funktion PLog.	
+
 not on Github 	0.3.5	Routerfunktion für Modulaufrufe mittels getattr mit Parameterübergabe (einschl. json-Behandlung). 
+
 not on Github 	0.3.4	Standardkonvertierung auf Basis XBM-Module xbmc, xbmcaddon, xbmcplugin, xbmcgui
 			(Austausch DirectoryObjects -> Listitems).
 			Entfernung @route-Statements, decode(encoding)-Statements.
 			Pluginstruktur an Kodi angepasst, addon.xml erstellt, zusätzl. Verzeichnisse
 			data mit Subdirs Dict, m3u8, slides, subtitles.	
 not on Github 	0.3.3	Konvertierung auf Basis xbmcswift2: Abbruch wg. mangelnder Debug-Tools.	
+
 =================================================================================================================
 ===============================================	  Kodi-Migration   ==============================================
 =================================================================================================================
+
 08.12.2018 	0.3.2	Search: HTTP-Header 'User-Agent' + 'Accept' hinzugefügt (ohne Seiten unvollständig).
 			test_fault (ARD-spezif. Error-Test) entfernt - nicht mehr anwendbar.	
 01.12.2018 	0.3.1	Änderung der BASE_URL von www.ardmediathek.de zu classic.ardmediathek.de.
