@@ -33,7 +33,7 @@ Funktionen ab Version 2.2.0:
 - Neueste Videos
 - am besten bewertet
 - Barrierearm (Hörfassung)
-- Bilderserien
+- Bilderserien - 04.01.2019 stellt die ARD nicht mehr zur Verfügung
 
 #### ZDF Mediathek: 
 - Suche nach Sendungen
