@@ -41,8 +41,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '0.6.0'		 
-VDATE = '01.01.2019'
+VERSION =  '0.6.2'		 
+VDATE = '03.01.2019'
 
 # 
 #	
@@ -228,13 +228,16 @@ OS_RELEASE = release()
 OS_VERSION = version()
 OS_DETECT = OS_SYSTEM + '-' + OS_ARCH_BIT + '-' + OS_ARCH_LINK
 OS_DETECT += ' | host: [%s][%s][%s]' %(OS_MACHINE, OS_RELEASE, OS_VERSION)
+PLog(OS_DETECT)
 
-#Dict['ARDSender'] 	= ARDSender[0]	# 1. Element in ARDSender
+
 # Dict: Simpler Ersatz für Dict-Modul aus Plex-Framework
 Dict('ClearUp', '3')			# Dictstore bereinigen (Dateien älter als 3 Tage)	
-Dict_ARDSender 		= ARDSender
-Dict('store', "Dict_ARDSender", Dict_ARDSender)
-Dict_CurSender 		= Dict_ARDSender[0]
+Dict_CurSender = Dict('load', "Dict_CurSender")
+if Dict_CurSender == False:
+	Dict_CurSender 	= ARDSender[0]	# Default 1. Element ARD-Alle
+PLog("Dict_CurSender: " + Dict_CurSender)
+
 days = int(SETTINGS.getSetting('pref_UT_store_days'))
 ClearUp(SUBTITLESTORE, days*86400)	# SUBTITLESTORE bereinigen	
 days = int(SETTINGS.getSetting('pref_SLIDES_store_days'))
@@ -341,16 +344,21 @@ def ShowText(path, title):
 def Main_ARD(name, sender=''):
 	PLog('Main_ARD:'); 
 	PLog(name); PLog(sender)
-	Dict_CurSender = sender				# neu belegen nach Senderwahl
-	Dict('store', "Dict_CurSender", Dict_CurSender)
-		
+	if sender == '':					# leer: neu laden
+		sender = Dict('load', "Dict_CurSender")
+		if sender == False:
+			sender 	= ARDSender[0]	# Default 1. Element ARD-Alle
+	else:
+		Dict('store', "Dict_CurSender", sender)
+	Dict_CurSender = sender				# global übernehmen nach Senderwahl
+	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	PLog("li:" + str(li))						
 			
 	title="Suche in ARD-Mediathek"
-	fparams='&fparams=channel=ARD, query='', title=%s' % title
-	addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MAIN_ARD), 
+	fparams='&fparams=title=%s, channel=ARD' % urllib2.quote(title)
+	addDir(li=li, label=title, action="dirList", dirID="get_query", fanart=R(ICON_MAIN_ARD), 
 		thumb=R(ICON_SEARCH), fparams=fparams)
 		
 	if sender == '':
@@ -378,7 +386,7 @@ def Main_ARD(name, sender=''):
 	addDir(li=li, label="Barrierearm", action="dirList", dirID="BarriereArmARD", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_BARRIEREARM), fparams=fparams)
 
-	# 10.12.2018 nicht mehr verfügbar:
+	# 10.12.2018 nicht mehr verfügbar, 02.01.2018 Code in Search entfernt:
 	#	www.ard.de/home/ard/23116/index.html?q=Bildergalerie
 	#title = 'Bilderserien'	
 	#fparams='&fparams=query=%s, channel=ARD, s_type=%s, title=%s' % (title,title,title)
@@ -449,9 +457,9 @@ def Main_POD(name):
 
 		
 	title="Suche Podcasts in ARD-Mediathek"
-	fparams='&fparams=channel=PODCAST, query='', title=%s' % title
-	addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MAIN_POD), 
-		thumb=R(ICON_SEARCH), fparams=fparams)	
+	fparams='&fparams=channel=PODCAST, title=%s' % title
+	addDir(li=li, label=title, action="dirList", dirID="get_query", fanart=R(ICON_MAIN_ARD), 
+		thumb=R(ICON_SEARCH), fparams=fparams)
 
 	title = 'Sendungen A-Z'
 	fparams='&fparams=name=%s, ID=PODCAST'	% title
@@ -489,7 +497,7 @@ def Main_POD(name):
 		fparams=fparams)
 
 	title="Refugee-Radio"; query='Refugee Radio'	# z.Z. Refugee Radio via Suche
-	fparams='&fparams=query=%s, channel=PODCAST' % query
+	fparams='&fparams=title=%s, query=%s, channel=PODCAST' % (query, query)
 	addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_REFUGEE), 
 		fparams=fparams)
 
@@ -906,6 +914,7 @@ def ARDStartVideoMP4(title, path, summ, img, geoblock):
 	
 ####################################################################################################
 # Auflistung der A-Z-Buttons bereits in SendungenAZ
+# geladene Seite enthält sämtl. Sendungen A-Z
 def SendungenAZ_ARDnew(title, path, button): 
 	PLog('SendungenAZ_ARDnew:'); 
 	PLog('button: ' + button)
@@ -930,18 +939,18 @@ def SendungenAZ_ARDnew(title, path, button):
 	for grid in gridlist:			
 		mediumTitle = stringextract('"mediumTitle":', ',', grid)
 		mediumTitle = mediumTitle.replace('"', '').strip()
-		# PLog(mediumTitle)
+		PLog(mediumTitle)
 		if mediumTitle[0:1] == button:				# Match: Anfangbuchstabe mit Button
 			cnt_item = cnt_item +1
 			# PLog('button: %s, cnt_item: %s' % (button,cnt_item))
 			sendungen.append(grid)
 	
 	PLog(len(sendungen))
-	PLog(sendungen[0])
-	if len(sendungen) == 0:	
-		msg1 = "SendungenAZ_ARDnew: Keine Sendungen gefunden."
-		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+	if len(sendungen) == 0:
+		msg1 = title
+		msg2 = "SendungenAZ_ARDnew: Keine Sendungen gefunden."
+		PLog(msg2)
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li	
 	
 	CB = 'ARDnew_Sendungen'							# page: img's außerhalb der Blöcke
@@ -1061,10 +1070,16 @@ def get_playlist_img(hrefsender):
 def SendungenAZ(name, ID):		
 	PLog('SendungenAZ: ' + name)
 	PLog(ID)
-	
-	sendername, sender, kanal, img = Dict_CurSender.split(':')
-	PLog(sender)	
+
+	Dict_CurSender = Dict('load', "Dict_CurSender")
+	if Dict_CurSender == False:
+		Dict_CurSender 	= ARDSender[0]	# Default 1. Element ARD-Alle
+	sendername, sender, kanal, img = Dict_CurSender.split(':')	
 	title2 = name + ' | aktuell: %s' % sendername
+	PLog("title2: " + title2)	
+	sendername = UtfToStr(sendername)
+	sender = UtfToStr(sender)
+	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=ID)								# Home-Button
 		
@@ -1107,36 +1122,48 @@ def SendungenAZ(name, ID):
 										
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #-----------------------
+# Vorstufe von Search - fragt Suchwort(e) ab.
+#	
+def get_query(title, channel='ARD'):
+	PLog('get_query:')
+	query = get_keyboard_input() 
+	if query:					# None bei Abbruch
+		if '|' in query:		# wir brauchen | als Parameter-Trenner in SinglePage
+			msg1 = 'unerlaubtes Zeichen in Suchwort: |'
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+				
+		query = query.strip()
+		query = query.replace(' ', '+')			# Leer-Trennung = UND-Verknüpfung bei Podcast-Suche 
+		query = urllib.quote_plus(query)
+		Search(title=title, query=query, channel=channel)											
+
+	return				
+# todo: Button  voranstellen: "zurück zu den Suchergebnissen" mit den Parametern.
+#				der ..-Button von xbmcgui.ListItem führt zurück zur Suche statt zur Liste deer Ergebnisseiten
+#		oder Rückgabe li in PageControl
 
 ####################################################################################################
 	# Suche - Verarbeitung der Eingabe
 	# Vorgabe UND-Verknüpfung (auch Podcast)
 	# offset: verwendet nur bei Bilderserien (Funktionen s. ARD_Bildgalerie.py)
-def Search(title='Suche', query='', s_type='', channel='ARD', offset=0, path=None):
+	# Kodi-Problem ..-Button s.u.
+def Search(title, query='', s_type='', channel='ARD', offset=0, path=None):
 	PLog('Search:'); PLog(query); PLog(channel); PLog(str(offset))
-	if query == '':
-		query = get_keyboard_input() 
-		query = query.replace(' ', '+')			# Leer-Trennung = UND-Verknüpfung bei Podcast-Suche 
-		# query = urllib2.quote(query, "utf-8")
-		PLog(query)
-
+			
+	PLog(query)
 	name = 'Suchergebnis zu: ' + urllib2.unquote(query)
-	li = xbmcgui.ListItem()
+		
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 			
 	if channel == 'ARD':
-		if s_type == 'Bilderserien':
-			# 10.12.2018 nicht mehr verfügbar
-			if path == None:			# path belegt bei offset > 0
-				path = 'http://www.ard.de/home/ard/23116/index.html?q=Bildergalerie'
-		else:
-			path =  BASE_URL +  ARD_Suche 
-			path = path % query
+		path =  BASE_URL +  ARD_Suche 
+		path = path % query
 		ID='ARD'
 	if channel == 'PODCAST':	
 		path =  BASE_URL  + POD_SEARCH
 		path = path % query
 		ID=channel
+	li = xbmcgui.ListItem()
 		
 	PLog(path)
 	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
@@ -1154,53 +1181,39 @@ def Search(title='Suche', query='', s_type='', channel='ARD', offset=0, path=Non
 		msg1 = 'Leider kein Treffer.'
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		return li
-	else:
-		if s_type == 'Bilderserien':
-			li = home(li, ID='ARD')										# Home-Button
-			entries = blockextract('class="entry">',  page)
-			if offset:		# 5 Seiten aus vorheriger Liste abziehen
-				entries = entries[4:]
-			PLog(len(entries))
-			if len(entries) == 0:
-				msg1 = 'keine weitere Bilderserie gefunden'
-				xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-				return li
-						
-			page_high = re.findall('ctype="nav.page">(\d+)', page)[-1]	# letzte NR der nächsten Seiten
-			PLog(page_high)
-			href_high = blockextract('class="entry">',  page)[-1]		# letzter Pfad der nächsten Seiten
-			href_high = 'http://www.ard.de' + stringextract('href="', '"', href_high)
-			PLog(href_high)
-			
-			if offset == 0:
-				title = "Weiter zu Seite 1"						# 1. Link fehlt in entries
-				fparams="&fparams={'name': '%s', 'path': '%s', 'offset': '0'}" % (urllib2.quote(title), urllib2.quote(href_high))			
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARD_Bildgalerie.page", fanart=R(ICON_NEXT), 
-					thumb=R(ICON_NEXT), fparams=fparams)
-					
-			for rec in entries:
-				href =  'http://www.ard.de' + stringextract('href="', '"', rec)
-				PLog(href[:60])
-				pagenr = re.search('ctype="nav.page">(\d+)', rec).group(1)
-				title = "Weiter zu Seite %s" % pagenr
-				title2 = name="Seite: %s " %(pagenr)
-				fparams="&fparams={'name': '%s', 'path': '%s', 'offset': '0'}" % (urllib2.quote(title2), urllib2.quote(href))			
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARD_Bildgalerie.page", fanart=R(ICON_NEXT), 
-					thumb=R(ICON_NEXT), fparams=fparams)
-					
-			# Mehr Seiten Bilderserien anzeigen:
-			#	Ablauf im Web (Klick auf die höchste Seite): Paging zeigt 4 vorige und 5 nächste Seiten, 
-			#	Bsp. Seite 10: 6 -9, 11 - 15
-			#	Hier zeigen wir nur die nächsten 5, um Wiederholungen zu vermeiden
-			PLog('page_high: ' + page_high)
-			title = 'Mehr Bilderserien'						
-			fparams='&fparams=query=%s, channel=ARD, offset=%s, path=%s' % (query, page_high, href_high)
-			fparams="&fparams={'query': '%s', 'channel': 'ARD', 'offset': '%s', 'path': '%s'}" \
-				% (urllib2.quote(query), urllib2.quote(page_high),  urllib2.quote(href_high))			
-			addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), fparams=fparams)
-		else:	
-			li = PageControl(title=name, path=path, cbKey=next_cbKey, mode='Suche', ID=ID) 	# wir springen direkt
-	 
+
+	# Kodi-Problem: Direktsprung n.m., da der ..-Button von xbmcgui.ListItem  zurück 
+	#	zu get_query führt statt zur Liste der Ergebnisseiten. Leider muss der entspr. Code 
+	#	aus PageControl hier nochmal verwemdet werden. Dafür verzichten wir hier auf den
+	#	Offset und geben die Übersicht komplett aus.
+	#	Mit mode='Suche|Query|Channel' stellt SinglePage einen Button voran, der Search mit den
+	#   akt. Parametern ansteuert und damit die Übersicht erneut ausgibt.
+	
+	pagenr_suche = re.findall("mresults=page", page)
+	pagenr_path =  re.findall("=page.(\d+)", page) # 
+	# PLog(pagenr_path)
+	if pagenr_path:
+		# pagenr_path = repl_dop(pagenr_path) 	# Doppel entfernen (ohne offset immer 2)
+		del pagenr_path[-1]						# letzten Eintrag entfernen - OK
+	pagenr_path.insert(0, '1')					# Seite 1 einfügen
+	PLog(pagenr_path)
+	
+	if 	pagenr_suche:							# Ergebnisse mit mehreren Seiten
+		li = home(li, ID=ID)					# Home-Button nur für mehrere Seiten
+		next_cbKey = 'SingleSendung'
+		for pagenr in pagenr_path:
+			mode = 'Suche|%s|%s'	% (query, channel) # abgefangen in get_query: |
+			href = path + '&mresults=page.%s' %  pagenr
+			# PLog(href)
+			title = 'Weiter zu Seite %s' %  pagenr
+			fparams="&fparams={'title': '%s', 'path': '%s', 'next_cbKey': '%s', 'mode': '%s', 'ID': '%s'}" \
+				% (urllib2.quote(name), urllib2.quote(href), next_cbKey,  mode, ID)	
+			addDir(li=li, label=title, action="dirList", dirID="SinglePage", fanart=R(ICON_NEXT), 				
+				thumb=R(ICON_MAIN_ARD), fparams=fparams)
+
+ 	else:										# Ergebnisse mit 1 Seite, wir springen direkt:
+		SinglePage(title=title, path=path, next_cbKey='SingleSendung', mode='Suche', ID=ID)
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
 ####################################################################################################
@@ -1209,7 +1222,7 @@ def Search(title='Suche', query='', s_type='', channel='ARD', offset=0, path=Non
 	#		2. PageControl: Liste der Rubriken des gewählten Tages
 	#		3. SinglePage: Sendungen der ausgewählten Rubrik mit Bildern (mehrere Sendungen pro Rubrik möglich)
 	#		4. Parseplaylist: Auswertung m3u8-Datei (verschiedene Auflösungen)
-	#		5. CreateVideoClipObject: einzelnes Video-Objekt erzeugen mit Bild + Laufzeit + Beschreibung
+	#		5. in Plex CreateVideoClipObject, in Kodi PlayVideo
 	# Funktion VerpasstWoche bisher in beta.ardmediathek nicht vorhanden, aber Senderwahl bisher via kanal 
 	#	im Pfad möglich (umstellen ab Integration Verpasst in neue Mediathek).
 	#
@@ -1219,7 +1232,11 @@ def Search(title='Suche', query='', s_type='', channel='ARD', offset=0, path=Non
 def VerpasstWoche(name, title):		# Wochenliste zeigen, name: ARD, ZDF Mediathek
 	PLog('VerpasstWoche:')
 	PLog(name);PLog(title);  
+	Dict_CurSender = Dict('load', "Dict_CurSender")
+	if Dict_CurSender == False:
+		Dict_CurSender 	= ARDSender[0]	# Default 1. Element ARD-Alle
 	sendername, sender, kanal, img = Dict_CurSender.split(':')	
+	sendername = UtfToStr(sendername)
 	title_org = '%s | aktuell: %s'	% (title, sendername)
 	PLog("title_org: " + title_org)
 	
@@ -1247,15 +1264,15 @@ def VerpasstWoche(name, title):		# Wochenliste zeigen, name: ARD, ZDF Mediathek
 			iWeekday = 'Gestern'	
 		iWeekday = transl_wtag(iWeekday)
 		PLog(iPath); PLog(iDate); PLog(iWeekday);
-		#title = ("%10s ..... %10s"% (iWeekday, iDate))	 # Formatierung in Plex ohne Wirkung
+		#title = ("%10s ..... %10s"% (iWeekday, iDate))	 # Formatierung in Plex ohne Wirkung		
 		title =	"%s | %s" % (iDate, iWeekday)
 		cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
-		if name.find('ARD') == 0 :
+		if name == 'ARD':
 			summ = 'Gezeigt wird der Inhalt für %s' % sendername
 			if kanal == '' and sendername != 'ARD-Alle': # Sender noch ohne Kanalnummer? 
 				summ = 'Gezeigt wird der Inhalt für %s - Seite für %s fehlt!' % ('ARD-Alle', sendername)
 			fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': 'SinglePage', 'mode': 'Verpasst', 'ID': 'ARD'}" \
-				% (title,  urllib2.quote(iPath))
+				% (urllib2.quote(title),  urllib2.quote(iPath))
 			addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_VERP), 
 				thumb=R(ICON_ARD_VERP), fparams=fparams, summary=summ)
 
@@ -1283,6 +1300,8 @@ def transl_wtag(tag):	# Wochentage engl./deutsch wg. Problemen mit locale-Settin
 #	Für ARDnew gilt die Sender-Wahl für alle Inhalte, sonst nur für Verpasst.
 #	Für ARDnew  verzichten wir auf die mehrfachen Regionalsender (wie beta.ardmediathek.de)
 #	Bei Verpasst wird kanal Bestandteil der Url - entfällt bei ARDnew.
+#	Gespeichert wird die Auswahl in Main_ARD.
+#
 #	Falls die Kanäle sich ändern, von
 #	Verpasst-Seite (BASE_URL + ARD_VERPASST) neu holen (1. Block class="entryGroup").
 # 	ARDnew: Bremen ohne Kanal, tagesschau24 n.v.
@@ -1428,8 +1447,8 @@ def PodFavoritenListe(title, offset=0):
 		if path == '':						# ohne Link kein verwertbarer Favorit
 			continue
 		
+		title=title.replace('\'', '')		# z.B. "Stimmt's? - NDR2"
 		PLog(title); PLog(path)
-		title=title
 		title = UtfToStr(title)
 		summary='Favoriten: ' + title
 		fparams="&fparams={'title': '%s', 'path': '%s', 'offset': '0'}" % \
@@ -1507,9 +1526,9 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 	else:												# keine Folgeseiten -> SinglePage
 		PLog('PageControl: Einzelseite, keine Folgeseiten'); PLog(cbKey); PLog(path); PLog(title)
 		li = SinglePage(title=title, path=path, next_cbKey='SingleSendung', mode=mode, ID=ID) # wir springen direkt 
-		if len(oc) == 1:								# 1 = Home
-			msg1 = 'Keine Inhalte gefunden.'		
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		#if len(li) == 1:								# 1 = Home, len(li) bei Kodi n.v.
+		#	msg1 = 'Keine Inhalte gefunden.'		
+		#	xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		return li																				
 
 	# pagenr_path =  re.findall("&mresults{0,1}=page.(\d+)", page) # lange Form funktioniert nicht
@@ -1553,12 +1572,15 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 		next_cbKey = 'SingleSendung'
 			
 		PLog(first_site); PLog(path_page1); PLog(next_cbKey)
+		path_page1 = UtfToStr(path_page1)
 		fparams="&fparams={'title': '%s', 'path': '%s', 'next_cbKey': 'SingleSendung', 'mode': '%s', 'ID': '%s'}" \
 			% (urllib2.quote(title), urllib2.quote(path_page1), mode, ID)	
 		addDir(li=li, label=title, action="dirList", dirID="SinglePage", fanart=ICON, thumb=ICON, fparams=fparams)
+	
 	else:	# Folgeseite einer Mehrfachseite - keine Liste mehr notwendig
-		PLog(first_site)													# wir springen wieder direkt:
-		li = SinglePage(title=title, path=path, next_cbKey='SingleSendung', mode=mode, ID=ID)
+		PLog(first_site)										# wir springen wieder direkt:
+		SinglePage(title=title, path=path, next_cbKey='SingleSendung', mode=mode, ID=ID)
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)	# und  springen wieder zurück	
 		
 	for element in list:	# [@class='entry'] 
 		pagenr_suche = ''; pagenr_andere = ''; title = ''; href = ''
@@ -1586,7 +1608,7 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 			% (urllib2.quote(title), urllib2.quote(href), next_cbKey, mode, ID)	
 		addDir(li=li, label=title, action="dirList", dirID="SinglePage", fanart=R(ICON_NEXT), 
 			thumb=R(ICON_NEXT), fparams=fparams)
-	    
+ 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
   
 ####################################################################################################
@@ -1624,6 +1646,17 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 	if len(sendungen) == 0:								# Fallback 	
 		sendungen = blockextract('class="entry"', page) 				
 		PLog('sendungen, Fallback: ' + str(len(sendungen)))
+	
+	# mode = 'Suche|Query|Channel': mit Suchbegriff Button für Seitenübersicht 
+	if '|' in mode:					# voranstellen - s. Search	
+		dummy, query, channel = mode.split('|')
+		PLog(dummy); PLog(query); PLog(channel); 
+		title = 'Suchergebnis zu: %s'  % query
+		label = 'Zurück zur Seitenübersicht'
+		fparams="&fparams={'title': '%s', 'query': '%s',  'channel': '%s'}" % (urllib2.quote(title), \
+			urllib2.quote(query), channel)
+		addDir(li=li, label=label, action="dirList", dirID="Search", fanart=R('icon-pages.png'), 
+			thumb=R('icon-pages.png'), fparams=fparams)			
 	
 	send_arr = get_sendungen(li, sendungen, ID, mode)	# send_arr enthält pro Satz 9 Listen 
 	# Rückgabe send_arr = (send_path, send_headline, send_img_src, send_millsec_duration)
@@ -2484,7 +2517,7 @@ def get_sendungen(li, sendungen, ID, mode): # Sendungen ausgeschnitten mit class
 	#	nur linklist fehlt )
 	# Die Rückgabe-Liste send_arr nimmt die Datensätze auf (path, headline usw.)
 	# ab 02.04.2017: ID=PODCAST	- bei Sendereihen enthält der 1. Satz Bild + Teasertext
-	PLog('get_sendungen'); PLog(ID); PLog(mode); 
+	PLog('get_sendungen:'); PLog(ID); PLog(mode); 
 
 	img_src_header=''; img_alt_header=''; teasertext_header=''; teasertext=''
 	if ID == 'PODCAST' and mode == 'Sendereihen':							# PODCAST: Bild + teasertext nur im Kopf vorhanden
@@ -2533,11 +2566,14 @@ def get_sendungen(li, sendungen, ID, mode): # Sendungen ausgeschnitten mit class
 				continue
 			if s.find('subtitle') >= 0:	# nicht in ARDThemen
 				subtitle = re.search("<p class=\"subtitle\">(.*?)</p>\s+?", s)	# Bsp. <p class="subtitle">25 Min.</p>
-				subtitle = subtitle.group(1)
-				subtitle = subtitle.replace('<br>', ' | ')				
-				subtitle = UtfToStr(subtitle)
+				if subtitle:
+					subtitle = subtitle.group(1)
+					subtitle = subtitle.replace('<br>', ' | ')				
+					subtitle = UtfToStr(subtitle)
+				else:
+					subtitle = ""
 			else:
-				subtitle =""
+				subtitle = ""
 								
 			PLog(headline)
 			
@@ -3487,7 +3523,7 @@ def RadioAnstalten(path, title, sender, fanart):
 	
 	PLog('Anzahl: ' + str(item_cnt))
 	if item_cnt < 1:	      		# keine Radiostreams gefunden		
-		PLog('oc = 0, keine Radiostreams gefunden') 		 
+		PLog('item_cnt = 0, keine Radiostreams gefunden') 		 
 		line1 = '%s: keine Radiostreams gefunden / verfuegbar' % title
 		line2 = 'URL:'
 		line3 = '%s' % (path)
@@ -3502,7 +3538,7 @@ def RadioAnstalten(path, title, sender, fanart):
 #
 # 	Voreinstellungen: alle ZDF-Sender, ganze Sendungen, sortiert nach Datum
 #	Anzahl Suchergebnisse: 25 - nicht beeinflussbar
-# def ZDF_Search(query=None, title=L('Search'), s_type=None, pagenr='', **kwargs):
+#
 def ZDF_Search(query=None, title='Search', s_type=None, pagenr='', **kwargs):
 	if query == '':
 		query = get_keyboard_input() 

@@ -61,7 +61,6 @@ Antenne Brandenburg - Neueste Clips		| http://mediathek.rbb-online.de/radio/Neue
 Kulturradio - Neueste Clips				| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906576&mcontent=page.1
 RadioBERLIN 88,8 - Neueste Clips		| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906606&mcontent=page.1
 radioeins - Neueste Clips				| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906660&mcontent=page.1
-Stimmt's? - NDR2						| http://www.ndr.de/ndr2/programm/podcast2958_page-1.html
 
 ## Hörspiele
 KiRaKa - Kinderhörspiele im WDR			| http://www1.wdr.de/mediathek/audio/kiraka/kiraka-kinderhoerspiel/kinderhoerspiel-podcast-100.podcast

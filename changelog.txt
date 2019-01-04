@@ -8,6 +8,21 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+03.12.2018 	0.6.2	unescape: Funktion gegen Lösung mit Wiederholungsersetzung ausgetauscht.
+			Suchfunktion ARD (Search) erneuert: Seitenaufbau hier statt in PageControl.
+			SinglePage: Button für Seitenübersicht vorangestellt (neues Icon icon-pages.png).
+			Main_POD: Parameter Search angepasst.
+			Fix ARD-Senderwahl:  übersteht Addon-Neustart. Berücksichtigung in VerpasstWoche +
+			SendungenAZ.
+			SendungenAZ_ARDnew: mehr Info bei Fehlschlag. 
+			get_page: Umlautbehandlung Pfad.
+			
+not on Github 	0.6.1	Modul Podcontent: Scheme_swr3 aktualisiert (neues Webformat).
+			podcast-favorits.txt: Eintrag "Stimmt's? - NDR2" entfernt (wie Webseite).
+			Modul util (unescape): Ersetzung für "&#xD;" (Carriage Return).
+			Search: Austausch thumb (ICON -> ICON_MAIN_ARD).
+			
+
 01.12.2018 	0.6.0	Updater (cleanSummary): Ersetzung '-&amp;gt;'durch '->'.
 			Downloads + Recording: Test aus existierendes Downloadverzeichnis.
 			ZDF_get_content: Fix Titelergänzung (if Bilderserie == True and pic_cnt).
@@ -109,67 +124,107 @@ not on Github 	0.3.3	Konvertierung auf Basis xbmcswift2: Abbruch wg. mangelnder 
 
 08.12.2018 	0.3.2	Search: HTTP-Header 'User-Agent' + 'Accept' hinzugefügt (ohne Seiten unvollständig).
 			test_fault (ARD-spezif. Error-Test) entfernt - nicht mehr anwendbar.	
+
 01.12.2018 	0.3.1	Änderung der BASE_URL von www.ardmediathek.de zu classic.ardmediathek.de.
 			Extraktionsmerkmal geändert (shortTitle -> mediumTitle) in SendungenAZ_ARDnew und
 			ARDnew_Content.
+
 14.11.2018	0.3.0	Anpassungen an Änderungen der Webseite (Bildquellen): ARDStart, ARDnew_Sendungen,
 			ARDnew_Content, ARDStartRubrik.
 			ARDStart + ARDStartRubrik: Zuordnung Senderlogos geändert.
+
 06.11.2018	0.2.9	Anpassungen an Änderungen der Webseiten (Details s. SendungenAZ): SendungenAZ,
 			ARDnew_Content, SendungenAZ_ARDnew, ARDStartVideoStreams, ARDStartVideoMP4.
 			Abschaltbares Plugin-Logging: neue Funktion PLog, Einstellungen ergänzt. 
+
 01.11.2018	0.2.8	ARDStartRubrik: Extrakt-Fixes (grid, title, img).
 			livesenderTV.xml: Aktualisierung Link bei DAF (m3u8 statt rtmp).
+
 03.10.2018	0.2.7	Main_ZDF: Parameter in Callback VerpasstWoche entfernt (kanal, sender).	
+
 23.09.2018	0.2.6	Modul ARD_Bildgalerie: PREFIX korrigiert.
 			Main: Info-Button aktualisiert.
+
 not on github	0.2.5	ARDStart, ARDStartRubrik: Wechsel der Rubrik-Referenz zum Titel (ohne unescape),
 			(auch img nicht eindeutig)				
+
 not on github	0.2.4	livesenderTV.xml: Aktualisierung der m3u8-Links bei den Regionalsendern.
 			livesenderTV.xml: info-Tag eingefügt, Hinw. gemeinsame EPG-Quelle für SWR + SR. 
 			get_page: wg. langer Ladezeiten der ARD-Beta UrlopenTimeout=10 sec.
+
 not on github	0.2.3	ARDStartRubrik: bei Livestreams Nutzung der Icons in livesenderTV.xml (zunächst
 			nicht in ARDStartSingle).
 			ARDStart: dto. für ersten Livestream-Datensatz.			
+
 not on github	0.2.2	TV-Livestreams: Korrektur livesenderTV.xml (Hamburg -> Bremen).
 			Korrektur livesenderTV.xml: Zeichen < in Titel-Endtag bei SR Fernsehen ergänzt. 
 			TVLiveRecordSender: title2 geändert -> 'Aufnahme starten'.
 			ARDStart: Titel-Ergänzung, falls keine Inhalte vorhanden.
+
 18.09.2018	0.2.1	überflüssige Backup-Dateien im Code-Ordner entfernt.
+
 17.09.2018	0.2.0	PREFIXe in Modulen angepasst: zdfmobile,Pod_content, update_single.
 			ARDStart: Titel-Auswertung erweitert, Livestream-Erkennung verbessert.
 			Anpassungen für PHT (Leerparameter): ARDStartSingle, ARDStartVideoStreams, ARDStartVideoMP4.  	
+
 not on github	0.1.9	Podcasts: Anpassungen ARDMore (jetzt PODMore), Anpassung Main_POD.	
+
 not on github	0.1.8	ARDStart, ARDStartRubrik, ARDStartSingle: interne Markierung von Livestreams mittels
 			ID geändert (Titel und json-Inhalte nicht eindeutig).	
+
 not on github	0.1.7	ARDStart und ARDStartRubrik: Auswertung der Higlights (Wischercontainer am Anfang).	
+
 not on github	0.1.6	ARDStartVideoMP4: Behandlung der MP4-Formate.
 			Erstellung von Downloadliste + Downloadbuttons (test_downloads).
+
 not on github	0.1.5	ARDStartVideoStreams: Behandlung der m3u8-Url's (Streaming), einschl. Auflistung 
 			der einzelnen Auflösungen.
+
 not on github	0.1.4	ARDStartSingle: Erkennung Livestream-Seite + Abzweig zu SenderLiveResolution.
+
 not on github	0.1.3	ARDStartSingle: Auswertung Geoblock-Hinweis, Abfangen fehlender Videoquellen.	
+
 not on github	0.1.2	ARDStartSingle: Auswertung der Videoquellen, Aufteilung Stream- + MP4-Formate. 	
+
 not on github	0.1.1	ARDStartSingle: Wiedergabe eines Videos aus ARDStart - Analyse der json-Daten
 			(APOLLO_STATE, PRELOADED_STATE, s. Archiv/ARDundZDF).	
+
 not on github	0.1.0	ARDStartRubrik: Wechsel zum img als eindeutige Referenz (title nicht geeignet).
+
 not on github	0.0.9	ARDStartRubrik: Auflistung einer Rubrik aus ARDStart.	
+
 not on github	0.0.8	ARDStart (Startseite), Berücksichtigung des ausgewählten Senders.
+
 not on github	0.0.7	Anpassung VerpasstWoche (bisher nicht in beta.ardmediathek unterstützt, Verwendung kanal statt
 			sender).
+
 not on github	0.0.6	Einführung Dict['ARDSender'] für globale Verwendung aus Senderwahl. Ausstattung ObjectContainer 
 			in nutzenden Funktionen mit "no_cache=True" (für lokale sofortige Nutzung erforderlich). 
+
 not on github	0.0.5	Neuordnung ARD-Menü, Entfernung Untermenüs einschl. Code (Filme, Dokus, Themen usw.),
 			zunächst beibehalten: Barrieream, Bilderserien, alte Suchfunktion.
 			Neues Senderlogo für Radio Bremen. 	
+
 not on github	0.0.4	Neukodierung Senderwahl (vorher Kanalwahl), globale Liste ARDSender (Name, Pfadname, Kanal, Icon).	
+
 not on github	0.0.3	Anpassung SendungenAZ (Pfade, Auswertung inaktive Buchstaben)	
+
 not on github	0.0.2	neue Funktionen: SendungenAZ_ARDnew, ARDnew_Content, ARDnew_Sendungen, ARDnew_SingleSendung	
+
 not on github	0.0.1	Plugincopy von ARDMediathek2016 -> ARDundZDF.
 			Anpassung NAME + PREFIX in init.py  + Info.plist
+
 06.09.2018		Sichtung Betaversion https://beta.ardmediathek.de/ard/
 			Sichtung Pressebeiträge + Terminplanung. Laut ARD Start der finalen
 			Version ab Herbst 2018.
 			Ziel laut ARD: einheitlicher Zugriff auf die Inhalte aller Landesanstalten
 			und Unterstützung unterschiedlicher Endgeräte und Plattformen.
+			
+--------------
+Start
+--------------
+			
+			
+			
+			
 			

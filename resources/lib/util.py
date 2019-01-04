@@ -247,14 +247,14 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 # 23.12.2018 requests-call vorübergehend auskommentiert, da kein Python-built-in-Modul (bemerkt beim 
 #	Test in Windows7
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=None):	
-
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
 	if header:									# dict auspacken
 		header = urllib2.unquote(header);  
 		header = header.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 		header = json.loads(header)
 		PLog("header: " + str(header)[:80]); 
-		
+	
+	path = transl_umlaute(path)					# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
 	msg = ''; page = ''	
 	UrlopenTimeout = 10
 	'''
@@ -582,20 +582,25 @@ def decode_url(line):	# in URL kodierte Umlaute und & wandeln, Bsp. f%C3%BCr -> 
 	line = line.replace('&amp;', '&')
 	return line
 #----------------------------------------------------------------  	
-def unescape(line):	# HTML-Escapezeichen in Text entfernen, bei Bedarf erweitern. ARD auch &#039; statt richtig &#39;
+def unescape(line):
+# HTML-Escapezeichen in Text entfernen, bei Bedarf erweitern. ARD auch &#039; statt richtig &#39;	
 #					# s.a.  ../Framework/api/utilkit.py
 #					# Ev. erforderliches Encoding vorher durchführen 
 #	line =  UtfToStr(line)
-	line_ret = (line.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
-		.replace("&#39;", "'").replace("&#039;", "'").replace("&quot;", '"').replace("&#x27;", "'")
-		.replace("&ouml;", "ö").replace("&auml;", "ä").replace("&uuml;", "ü").replace("&szlig;", "ß")
-		.replace("&Ouml;", "Ö").replace("&Auml;", "Ä").replace("&Uuml;", "Ü").replace("&apos;", "'"))
-	# Spezialfälle:
-	#	https://stackoverflow.com/questions/20329896/python-2-7-character-u2013
-	line_ret = line.replace("–", "-")
-	line_ret = line_ret.replace("&#x27;", "'")		# "sächsischer Genetiv", Bsp. Scott's
-	# PLog(line_ret)		# bei Bedarf
-	return line_ret	
+		
+	for r in	(("&amp;", "&"), ("&lt;", "<"), ("&gt;", ">")
+		, ("&#39;", "'"), ("&#039;", "'"), ("&quot;", '"'), ("&#x27;", "'")
+		, ("&ouml;", "ö"), ("&auml;", "ä"), ("&uuml;", "ü"), ("&szlig;", "ß")
+		, ("&Ouml;", "Ö"), ("&Auml;", "Ä"), ("&Uuml;", "Ü"), ("&apos;", "'"),
+		# Spezialfälle:
+		#	https://stackoverflow.com/questions/20329896/python-2-7-character-u2013
+		#	"sächsischer Genetiv", Bsp. Scott's
+		#	Carriage Return (Cr)
+		("–", "-"), ("&#x27;", "'"), ("&#xD;", "")):
+			
+		line = line.replace(*r)
+	return line
+		
 #----------------------------------------------------------------  	
 def mystrip(line):	# eigene strip-Funktion, die auch Zeilenumbrüche innerhalb des Strings entfernt
 	line_ret = line	

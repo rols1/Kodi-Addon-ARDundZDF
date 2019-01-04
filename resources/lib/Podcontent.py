@@ -119,6 +119,8 @@ def PodFavoriten(title, path, offset=0):
 			continue
 		if  url.endswith('.mp3') == False:			# Sammel-Downloads abschalten, falls Mehrfachseiten folgen
 			DLMultiple = False
+			
+		title = UtfToStr(title)
 		title = unescape(title)
 		url_list.append(url)
 		img = R(ICON_NOTE)	
@@ -285,7 +287,7 @@ def DownloadMultiple(key_url_list, key_POD_rec):						# Sammeldownloads
 def get_pod_content(url, rec_per_page, baseurl, offset):
 	PLog('get_pod_content:'); PLog(rec_per_page); PLog(baseurl); PLog(offset);
 
-	if baseurl.startswith('Podcast-Suche:'):		# Kurzform Podcast-Suche -> Link erzeugen
+	if baseurl.startswith('Podcast-Suche:'):	# Kurzform Podcast-Suche -> Link erzeugen
 		query = url.split(':')[1]
 		query = query.strip()
 		query = query.replace(' ', '+')			# Leer-Trennung = UND-Verknüpfung bei Podcast-Suche 
@@ -295,6 +297,7 @@ def get_pod_content(url, rec_per_page, baseurl, offset):
 		url = path % query
 		baseurl = BASE_URL						# 'http://www.ardmediathek.de'
 		
+	url = UtfToStr(url)
 	url = unescape(url)							# einige url enthalten html-escapezeichen
 	if baseurl == 'https://www.br.de':			# Umlenkung auf API-Seite beim
 		if int(offset) == 0:					# 	ersten Aufruf - Erzeugung Seiten-Urls in Scheme_br_online
@@ -419,7 +422,7 @@ def Scheme_br_online(page, rec_per_page, offset, page_href=None):	# Schema www.b
 # ------------------------
 def Scheme_swr3(page, rec_per_page, offset):	# Schema SWR
 	PLog('Scheme_swr3')
-	sendungen = blockextract('<li id=\"audio-', page)
+	sendungen = blockextract('class="audio-list-item', page)
 	max_len = len(sendungen)					# Gesamtzahl gefundener Sätze
 	PLog(max_len)
 	tagline = ''; pagecontrol= '';
@@ -435,14 +438,15 @@ def Scheme_swr3(page, rec_per_page, offset):	# Schema SWR
 		s = sendungen[cnt]
 		
 		single_rec = []		# Datensatz einzeln (2. Dim.)
-		title_org = stringextract('data-title="', '\"', s) 
-		title = title_org.strip()
-		url = stringextract('data-mp3="', '"', s) 
-		img =  stringextract('data-src="', '"', s) 						# Index-Bild
+		title_org = stringextract('content="', '"', s)
+		title = title_org 
+		url = stringextract('<source src="', '"', s) 
+		img =  stringextract('contentUrl" href="', '"', s) 				# contentUrl" href="https://static..
+		PLog("contentUrl: " + img)
 		img_alt =  stringextract('alt="', '"', s) 						# Bildbeschr. - nicht verwendet
 		
 		datum = stringextract('datePublished">', '</time>', s) 			# im Titel ev. bereits vorhanden
-		dauer = stringextract('duration" content=', '/div>', s) 		# "P0Y0M0DT0H0M34.000S">0:34</div>
+		dauer = stringextract('<time datetime=', '/time>', s) 			# "P0Y0M0DT0H0M34.000S">0:34</div>
 		dauer = stringextract('>', '<', dauer) 
 		groesse = stringextract('data-ati-size="', '"', s)
 		groesse = float(int(groesse)) / 1000000						# Konvert. nach MB, auf 2 Stellen gerundet
@@ -451,7 +455,7 @@ def Scheme_swr3(page, rec_per_page, offset):	# Schema SWR
 		title = ' %s | %s' % (title, datum)
 		summ = ' Dauer %s | Größe %s' % (dauer, groesse)
 		
-		PLog(title); PLog(summ); PLog(url); 
+		PLog(title); PLog(summ); PLog(img); PLog(url); 
 		
 		# Indices: 	0. Gesamtzahl, 1. Url, 2. Originaltitel, 3. Summary, 4. Datum,
 		#			5. Dauer, 6. Größe, 7. Titel (zusammengesetzt), 8. Bild, 9. Tagline
