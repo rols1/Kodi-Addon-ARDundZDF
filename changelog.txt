@@ -8,6 +8,32 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+09.12.2018 	0.6.5	ZDF_get_content: Code für vorgezogene Bilderserien-Auswertung entfernt.
+			ZDF_get_content:json-Behandlung für fparams (multi==True).
+			ZDF_get_content: Prüfung auf Einzelvideo auf Mehrfachseiten.
+			ZDF_Bildgalerie: UtfToStr(title_org).
+			Einstellungen: "Maximale Anzahl von ZDF-Inhalten pro Seite" entfernt (nicht 
+			rekursionsfähig in Kodi).
+			ZDF_Search: Mehr-Funktion an ZDF-Loader-Funktion angepasst.
+			
+not on Github 	0.6.4	ARD-Bereich: BETA_BASE_URL beta.ardmediathek.de  ausgetauscht gegen www.ardmediathek.de.
+			get_sendungen (ARD-Bereich): Auswertung Teasertext ergänzt + Priorität vor Teasertext
+			im Seitenheader.
+			ARDStartRubrik: Auswertung subline ergänzt.
+			ARDnew_Content, img_via_id: Auswertung Sender (publicationService) ergänzt.
+			img_via_id: Rückgabe Info-Bild, falls leere Sender-ID übergeben wird.
+			ZDF_get_content: tagline "Folgeseiten" hinzugefügt.
+			addDir: isFolder für dirID==PlayVideo entfernt (n.b.).
+			ParseMasterM3u + Parseplaylist: Parameter tagline ergänzt. 
+
+
+not on Github 	0.6.3	Modul EPG: Funktionen transl_wtag, stringextract, blockextract, transl_wtag
+			entfernt (bereits in Modul util enthalten).
+			ardundzdf.py: transl_wtag ins Modul util verlagert.
+			Videolisten (Bandbreiten/Auflösungen), Podcast-Listen: Austausch 
+			Verz- gegen Listen-Symbol via InfoLabel mediatype (mediatype=video bzw. music).
+				
+
 03.12.2018 	0.6.2	unescape: Funktion gegen Lösung mit Wiederholungsersetzung ausgetauscht.
 			Suchfunktion ARD (Search) erneuert: Seitenaufbau hier statt in PageControl.
 			SinglePage: Button für Seitenübersicht vorangestellt (neues Icon icon-pages.png).
@@ -21,7 +47,6 @@ not on Github 	0.6.1	Modul Podcontent: Scheme_swr3 aktualisiert (neues Webformat
 			podcast-favorits.txt: Eintrag "Stimmt's? - NDR2" entfernt (wie Webseite).
 			Modul util (unescape): Ersetzung für "&#xD;" (Carriage Return).
 			Search: Austausch thumb (ICON -> ICON_MAIN_ARD).
-			
 
 01.12.2018 	0.6.0	Updater (cleanSummary): Ersetzung '-&amp;gt;'durch '->'.
 			Downloads + Recording: Test aus existierendes Downloadverzeichnis.

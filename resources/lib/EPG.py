@@ -17,8 +17,8 @@ from datetime import date
 import resources.lib.util as util
 R=util.R; RLoad=util.RLoad; RSave=util.RSave;Dict=util.Dict; PLog=util.PLog; 
 addDir=util.addDir; UtfToStr=util.UtfToStr; get_page=util.get_page;
-stringextract=util.stringextract; cleanhtml=util.cleanhtml;
-home=util.home
+stringextract=util.stringextract; blockextract=util.blockextract; 
+transl_wtag=util.transl_wtag; cleanhtml=util.cleanhtml; home=util.home
 
 EPG_BASE =  "http://www.tvtoday.de"
 
@@ -162,58 +162,6 @@ def get_unixtime(day_offset=None):
 	# nextday_str = nextday.strftime("%Y%m%d")	# nächster Tag, Format 20170331
 		
 	return now,today,today_5Uhr,nextday,nextday_5Uhr
-#----------------------------------------------------------------  
-def transl_wtag(tag):	# Wochentage engl./deutsch wg. Problemen mit locale-Setting 
-	wt_engl = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-	wt_deutsch = ["MONTAG", "DIENSTAG", "MITTWOCH", "DONNERSTAG", "FREITAG", "SAMSTAG", "SONNTAG"]
-	
-	wt_ret = tag
-	for i in range (len(wt_engl)):
-		el = wt_engl[i]
-		if el == tag:
-			wt_ret = wt_deutsch[i]
-			break
-	return wt_ret
-#----------------------------------------------------------------  
-def stringextract(mFirstChar, mSecondChar, mString):  	# extrahiert Zeichenkette zwischen 1. + 2. Zeichenkette
-	pos1 = mString.find(mFirstChar)						# return '' bei Fehlschlag
-	ind = len(mFirstChar)
-	#pos2 = mString.find(mSecondChar, pos1 + ind+1)		
-	pos2 = mString.find(mSecondChar, pos1 + ind)		# ind+1 beginnt bei Leerstring um 1 Pos. zu weit
-	rString = ''
-
-	if pos1 >= 0 and pos2 >= 0:
-		rString = mString[pos1+ind:pos2]	# extrahieren 
-		
-	#PLog(mString); PLog(mFirstChar); PLog(mSecondChar); 	# bei Bedarf
-	#PLog(pos1); PLog(ind); PLog(pos2);  PLog(rString); 
-	return rString
-#----------------------------------------------------------------  
-def blockextract(blockmark, mString):  	# extrahiert Blöcke aus mString, begrenzt durch blockmark 
-	#	blockmark bleibt Bestandteil der Rückgabe
-	#	Rückgabe in Liste. Letzter Block reicht bis Ende mString (undefinierte Länge)
-	#	Verwendung, wenn xpath nicht funktioniert (Bsp. Tabelle EPG-Daten www.dw.com/de/media-center/live-tv/s-100817)
-	rlist = []				
-	if 	blockmark == '' or 	mString == '':
-		PLog('blockextract: blockmark or mString leer')
-		return rlist
-	
-	pos = mString.find(blockmark)
-	if 	mString.find(blockmark) == -1:
-		PLog('blockextract: blockmark nicht in mString enthalten')
-		# PLog(pos); PLog(blockmark);PLog(len(mString));PLog(len(blockmark));
-		return rlist
-	pos2 = 1
-	while pos2 > 0:
-		pos1 = mString.find(blockmark)						
-		ind = len(blockmark)
-		pos2 = mString.find(blockmark, pos1 + ind)		
-	
-		block = mString[pos1:pos2]	# extrahieren einschl.  1. blockmark
-		rlist.append(block)
-		# reststring bilden:
-		mString = mString[pos2:]	# Rest von mString, Block entfernt	
-	return rlist  
 #----------------------------------------------------------------  
 
 		

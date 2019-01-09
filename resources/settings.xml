@@ -6,7 +6,6 @@
     	<setting label="Mobile Version der ZDF Mediathek verwenden" type="bool" id="pref_use_zdfmobile" default="false"/>
          <setting type="sep"/>
    	<setting label="EPG-Daten in den TV-Live-Menüs (Überregional, Regional, Privat) verwenden - dauert etwas länger" type="bool" id="pref_use_epg" default="false"/>
-	<setting label="Maximale Anzahl von ZDF-Inhalten pro Seite (0=unbegrenzt). ARD-Inhalte und ZFD-Suchresultate kommen bereits seitenweise vom Sender." type="labelenum" values="0|15|25|50|100|150|200" id="pref_maxZDFContent" default="50"/> 
 	<setting type="sep"/>
 	<setting label="Verfügbare Video-Bandbreiten und -auflösungen anzeigen" type="bool" id="pref_show_resolution" default="true"/>
 	<setting label="Untertitel: auf vorhandene Untertitel hinweisen" type="bool" id="pref_UT_Info" default="true"/>

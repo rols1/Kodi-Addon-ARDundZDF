@@ -35,6 +35,11 @@ ICON_MAIN_ZDFMOBILE		= 'zdf-mobile.png'
 
 ###################################################################################################
 #									Hilfsfunktionen Kodiversion
+#	Modulnutzung: 
+#					import resources.lib.util as util
+#					PLog=util.PLog;  home=util.home; ...  (manuell od.. script-generiert)
+#
+#	convert_util_imports.py generiert aus util.py die Zuordnungen PLog=util.PLog; ...
 ####################################################################################################
 #----------------------------------------------------------------  
 def PLog(msg, loglevel=xbmc.LOGDEBUG):
@@ -198,19 +203,20 @@ def UtfToStr(line):
 # In Kodi fehlen die summary- und tagline-Zeilen von Plex. Diese ersetzen wir
 #	hier einfach durch infoLabels['Plot'], wobei summary und tagline durch 
 #	2 Leerzeilen getrennt werden (Anzeige links unter icon).
-def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', **kwargs):
+def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', **kwargs):
 	PLog('addDir:')
 	PLog('addDir - label: %s, action: %s, dirID: %s' % (label, action, dirID))
 	
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
+	isFolder = True					
 	if dirID == "PlayVideo": 	# bei "PlayAudio": skipping unplayable item
 		li.setProperty('IsPlayable', 'true')
 		li.setInfo('video', {'title': label,
 							'mediatype': 'video'})
-		isFolder = False					
+		isFolder = False		# zwingend für Aktivierung Player					
 	else:
 		li.setProperty('IsPlayable', 'false')
-		isFolder = True	
+		
 	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
 	xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
 	PLog('PLUGIN_URL: ' + PLUGIN_URL)
@@ -218,17 +224,19 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+urllib.quote_plus(fparams)
 	PLog("addDir_url: " + urllib.unquote_plus(url))
 		
-	ilabels = {'Plot': ''}
-	if summary:								# nicht bei isFolder=False
+	# PLog('summary, tagline: %s, %s' % (summary, tagline))
+	ilabels = {'Plot': ''}								# ilabels - Zusätze		
+	if summary:									
 		summary = UtfToStr(summary)
 		ilabels['Plot'] = summary
-	if tagline:								# nicht bei isFolder=False
+	if tagline:								
 		tagline = UtfToStr(tagline)
 		ilabels['Plot'] = "%s\n\n%s" % (ilabels['Plot'], tagline)
-			
-	if ilabels['Plot']:
-		PLog('ilabels: ' + str(ilabels['Plot']))
-		li.setInfo(type="video", infoLabels=ilabels)	
+	if mediatype:							# "video", "music" setzen List- statt Dir-Symbol
+		ilabels.update({'mediatype': '%s' % mediatype})
+		
+	PLog('ilabels: ' + str(ilabels))
+	li.setInfo(type="video", infoLabels=ilabels)						
 		
 	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
 	PLog('addDir_End')		
@@ -716,5 +724,19 @@ def get_keyboard_input():
 		return
 	inp = kb.getText() # User Eingabe
 	return inp	
+#----------------------------------------------------------------  
+# Wochentage engl./deutsch wg. Problemen mit locale-Setting 
+#	für VerpasstWoche, EPG	
+def transl_wtag(tag):	
+	wt_engl = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+	wt_deutsch = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+	
+	wt_ret = tag
+	for i in range (len(wt_engl)):
+		el = wt_engl[i]
+		if el == tag:
+			wt_ret = wt_deutsch[i]
+			break
+	return wt_ret
 #----------------------------------------------------------------  	
     
