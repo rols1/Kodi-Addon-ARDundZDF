@@ -147,7 +147,7 @@ def PodFavoriten(title, path, offset=0):
 			fparams="&fparams={'title': '%s', 'path': '%s', 'offset': '%s'}" % \
 				(urllib2.quote(title), urllib2.quote(url), pagenr)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodFavoriten", 
-			fanart=R(ICON_STAR), thumb=R(ICON_STAR), fparams=fparams, summary=summ, tagline=path)
+			fanart=R(ICON_STAR), thumb=R(ICON_STAR), fparams=fparams, summary=path, tagline=summ)
 		else:
 			# nicht direkt zum TrackObject, sondern zu SingleSendung, um Downloadfunktion zu nutzen
 			# oc.add(CreateTrackObject(url=url, title=title, summary=summ, fmt='mp3', thumb=img))

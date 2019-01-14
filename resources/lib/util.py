@@ -5,6 +5,8 @@
 import os, sys, glob, time
 import urllib, urllib2, ssl
 # import requests		# kein Python-built-in-Modul, urllib2 verwenden
+from StringIO import StringIO
+import gzip
 from urlparse import parse_qsl
 import json				# json -> Textstrings
 import pickle			# persistente Variablen/Objekte
@@ -124,7 +126,7 @@ def home(li, ID):
 
 def Dict(mode, Dict_name='', value=''):
 	PLog('Dict: ' + mode)
-	PLog('Dict: ' + Dict_name)
+	PLog('Dict: ' + str(Dict_name))
 	PLog('Dict: ' + str(type(value)))
 	# DICTSTORE = "/tmp/Dict"			# global
 	dictfile = "%s/%s" % (DICTSTORE, Dict_name)
@@ -210,10 +212,10 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
 	isFolder = True					
 	if dirID == "PlayVideo": 	# bei "PlayAudio": skipping unplayable item
-		li.setProperty('IsPlayable', 'true')
+		# li.setProperty('IsPlayable', 'true') # nicht bei direktem Player-Aufruf
 		li.setInfo('video', {'title': label,
 							'mediatype': 'video'})
-		isFolder = False		# zwingend für Aktivierung Player					
+		# isFolder = False		# Aktivierung Player (nicht bei direktem Aufruf)					
 	else:
 		li.setProperty('IsPlayable', 'false')
 		
@@ -225,13 +227,13 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	PLog("addDir_url: " + urllib.unquote_plus(url))
 		
 	# PLog('summary, tagline: %s, %s' % (summary, tagline))
-	ilabels = {'Plot': ''}								# ilabels - Zusätze		
-	if summary:									
-		summary = UtfToStr(summary)
-		ilabels['Plot'] = summary
+	ilabels = {'Plot': ''}								# ilabels (Plot: long, Plotoutline: short)	
 	if tagline:								
 		tagline = UtfToStr(tagline)
-		ilabels['Plot'] = "%s\n\n%s" % (ilabels['Plot'], tagline)
+		ilabels['Plot'] = tagline
+	if summary:									
+		summary = UtfToStr(summary)
+		ilabels['Plot'] = "%s\n\n%s" % (ilabels['Plot'], summary)
 	if mediatype:							# "video", "music" setzen List- statt Dir-Symbol
 		ilabels.update({'mediatype': '%s' % mediatype})
 		
@@ -254,6 +256,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 # Format header dict im String: "{'key': 'value'}" - Bsp. Search(), get_formitaeten()
 # 23.12.2018 requests-call vorübergehend auskommentiert, da kein Python-built-in-Modul (bemerkt beim 
 #	Test in Windows7
+# 13.01.2019 erweitert für compressed-content (get_page2)
+#
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=None):	
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
 	if header:									# dict auspacken
@@ -265,8 +269,9 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 	path = transl_umlaute(path)					# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
 	msg = ''; page = ''	
 	UrlopenTimeout = 10
+	
 	'''
-	try:																# 1. Versuch mit requests 
+	try:																# 1. Versuch mit requests
 		PLog("get_page1:")
 		if GetOnlyRedirect:					# nur Redirect anfordern
 			PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
@@ -286,6 +291,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		msg = msg.decode(encoding="utf-8")
 		PLog(msg)	
 	'''
+	
 	if page == '':
 		try:															# 2. Versuch ohne SSLContext 
 			PLog("get_page2:")
@@ -301,11 +307,22 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 				req = urllib2.Request(path, headers=header)	
 			else:
 				req = urllib2.Request(path)										
+				req.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36')
+				req.add_header('Accept', 'text/html,application/xhtml xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8')
+				req.add_header('Accept-Encoding','gzip, deflate, br')
 			r = urllib2.urlopen(req)
-			# PLog("headers: " + str(r.headers))		
+			# PLog("headers: " + str(r.headers))
+			
+			compressed = r.info().get('Content-Encoding') == 'gzip'
+			PLog("compressed: " + str(compressed))
 			page = r.read()
-			r.close()
 			PLog(len(page))
+			if compressed:
+				buf = StringIO(page)
+				f = gzip.GzipFile(fileobj=buf)
+				page = f.read()
+				PLog(len(page))
+			r.close()
 			PLog(page[:100])
 		except Exception as exception:
 			msg = str(exception)

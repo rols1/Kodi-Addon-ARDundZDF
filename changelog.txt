@@ -8,9 +8,41 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+14.12.2018 	0.7.0	ARD-Sendungen A-Z: Rückbau auf Classic-Version (neue Seite wird unvollständig geladen).
+			get_page (Modul util): Ladevariante get_page2 um Standardheader + gzip-
+			Entpacker ergänzt (Inhalt von www.ardmediathek.de/ard/shows nur unvollständig geladen).
+			
+not on Github 	0.6.9	Integration Sofortstart ARD: ARDStartVideoStreams, ARDStartVideoMP4, SingleSendung,
+			SenderLiveResolution.
+			Integration Sofortstart ZDF: GetZDFVideoSources (Vorentscheidung), show_formitaeten.			 
+
+not on Github 	0.6.8	Settings: neue Kategorie Addon-Cache.
+			Settings: Eintrag Inhaltstexte (Aufbewahrungsdauer) eingefügt.
+			Settings (Aufbewahrungsdauer): default-Einstellung auf 30 Tage geändert, 
+			100 ergänzt. 
+			Settings: "Sofortstart für TV-Live und Videos".
+			PlayVideo: direkter Aufruf xbmc.Player für Sofortstart, Verwendung thumb + 
+			Anpassung aller PlayVideo-Aufrufe. 
+			PlayAudio: title + thumb im ListItem ergänzt + Anpassung aller
+			PlayAudio-Aufrufe.
+			
+not on Github 	0.6.7	Option "Inhaltstext  zu Videos im Voraus laden": Eintrag Settings, neue Funktion
+			get_summary_pre, Abzweige in ZDF_get_content, ARDStartRubrik, ARDnew_Content.
+			get_sendungen: Sendungstitel aus Ref-Link ergänzt,falls nur headline im Block.
+			ARDnew_Content: sender + subline in tagline zusammengefasst.
+			SendungenAZ_ARDnew: PLog(mediumTitle) auskommentiert.
+			Zusätzl. Addon-Unterverzeichnis Inhaltstexte.
+not on Github 	0.6.6	addDir (Modul util): tagline + summary getauscht (große summary's verdeckten
+			taglines). Anpassung VerpasstWoche, PodFavoritenListe, PodFavoriten.
+			get_sendungen (PODCAST): Löschung 1. Satz entfernt (Webseite geändert).
+			SinglePage (ARD, PODCAST): Doppler subtitle durch Bildtext ersetzt.
+			ARDStartRubrik: unescape für subline, Aufn. in summary nur mit Inhalt.
+			Einstellungen: Eintrag EPG-Daten gekürzt (Lesbarkeit).
+
 09.12.2018 	0.6.5	ZDF_get_content: Code für vorgezogene Bilderserien-Auswertung entfernt.
 			ZDF_get_content:json-Behandlung für fparams (multi==True).
 			ZDF_get_content: Prüfung auf Einzelvideo auf Mehrfachseiten.
+			ZDF_get_content: json-komp. Behandlung für title, summary + tagline.
 			ZDF_Bildgalerie: UtfToStr(title_org).
 			Einstellungen: "Maximale Anzahl von ZDF-Inhalten pro Seite" entfernt (nicht 
 			rekursionsfähig in Kodi).
