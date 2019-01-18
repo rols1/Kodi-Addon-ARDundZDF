@@ -7,6 +7,37 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+			
+18.01.2019 	0.7.5	ZDF Mobile (ShowVideo): fehlende Parameter für PlayVideo ergänzt(Videos starten wieder),
+			Videotitel für Parseplaylist durchgeleitet, Fix Coding title_org, subTitle, descr.
+			ZDF Mobile (Parseplaylist): Plex-Direktiven oc.add, Plugin.Identifier entfernt 
+			(machte Funktion unwirksam).
+			ZDF Mobile: Module urllib,re ergänzt, PlayVideo-Funktion für Sofortstart ergänzt,
+			Fix Log-Statment in Parseplaylist.
+			ZDF Mobile (Verpasst): Fixes für Parameter (Verpasst_load). 
+			ZDF Mobile (Verpasst_load): Fix für Dict-ID (Pfadende statt kompl Pfad). 
+			
+not on Github 	0.7.4	PlayVideo: infoLabels mit Plot ergänzt (Anzeige der Medieninfo), Anpassung aller 
+			PlayVideo-Aufrufe. 
+			PlayAudio: infoLabels mit Plot ergänzt (Anzeige der Medieninfo), Anpassung aller 
+			PlayAudio-Aufrufe.
+			Parseplaylist: descr ergänzt (erlaubt getrennte Behandlung von tagline, summary).			
+			EPG (Alle, Einzeln): fehlende Parameter für SenderLiveResolution ergänzt.
+			
+not on Github 	0.7.3 	SenderLiveListe, RadioAnstalten, ARDStartRubrik: Home-Button bei Live-Sendern entfernt - 
+			SinglePage (ARDClassic): "Inhaltstext Voraus laden" ergänzt.
+			get_summary_pre: Auswertung für ARDClassic ergänzt (A-Z, VERPASST),  
+			leeres Ergebnis abgefangen.
+			livesenderTV.xml: Hinweis "Einzelauflösung wählen" für Arte entfernt.			
+						
+not on Github 	0.7.2	SenderLiveListe, RadioAnstalten, ARDStartRubrik: Home-Button bei Live-Sendern entfernt - 
+			für Widget-geeignetere Darstellung.		
+			ARDStartRubrik:  List- statt Dir-Symbol	(mediatype=video).
+			ARDStartRubrik: leeren subline-Anteil in tagline entfernt.
+			Caching der Webseite in ARDStart - Fallback für ARDStart + Default für ARDStartRubrik.
+			
+not on Github 	0.7.1	Updater: erweitert mit Backup-Funktion für Addon-Cache.
+			
 
 14.12.2018 	0.7.0	ARD-Sendungen A-Z: Rückbau auf Classic-Version (neue Seite wird unvollständig geladen).
 			get_page (Modul util): Ladevariante get_page2 um Standardheader + gzip-
@@ -32,6 +63,7 @@ not on Github 	0.6.7	Option "Inhaltstext  zu Videos im Voraus laden": Eintrag Se
 			ARDnew_Content: sender + subline in tagline zusammengefasst.
 			SendungenAZ_ARDnew: PLog(mediumTitle) auskommentiert.
 			Zusätzl. Addon-Unterverzeichnis Inhaltstexte.
+			
 not on Github 	0.6.6	addDir (Modul util): tagline + summary getauscht (große summary's verdeckten
 			taglines). Anpassung VerpasstWoche, PodFavoritenListe, PodFavoriten.
 			get_sendungen (PODCAST): Löschung 1. Satz entfernt (Webseite geändert).

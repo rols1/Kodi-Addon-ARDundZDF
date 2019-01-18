@@ -452,7 +452,7 @@ def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex
 #	Dateisystem. PluginAbsPath muss in fname enthalten sein,
 #	falls im Pluginverz. gespeichert werden soll   
 def RSave(fname, page): 
-	PLog('RSave:')
+	PLog('RSave: %s' % str(fname))
 	path = os.path.join(fname) # abs. Pfad
 	msg = ''					# Rückgabe leer falls OK
 	try:

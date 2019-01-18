@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 ################################################################################
+#			updater.py - Part of ARDundZDF-Plugin Kodi-Version
+#
+################################################################################
+#	16.01.2019 erweitert mit Backup-Funktion für Addon-Cache.
+#
+################################################################################
 import re, os, sys
 import shutil						# Dir's löschen
 import urllib2, zipfile, StringIO
@@ -28,6 +34,11 @@ FEED_URL = 'https://github.com/{0}/releases.atom'
 TITLE = 'ARD und ZDF'
 REPO_NAME		 	= 'Kodi-Addon-ARDundZDF'
 GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
+
+BACKPUP_DIR			= "data"		# Cache: zu sichern vor Update / zu restaurieren nach Update
+RESSOURCES_DIR		= os.path.join("%s/resources") % ADDON_PATH
+
+TEMP_ADDON			= xbmc.translatePath("special://temp")
 ################################################################################
 
 # This gets the release name
@@ -61,6 +72,10 @@ def get_latest_version():
 def update_available(VERSION):
 	PLog('update_available:')
 
+	# save_restore('save')					# Test-Session save_restore
+	# save_restore('restore')
+	# return (False, '', '', '', '', '')
+	
 	try:
 		title, summ, tag = get_latest_version()
 		PLog(tag); 	# PLog(latest_version_str); PLog(summ);
@@ -78,23 +93,26 @@ def update_available(VERSION):
 	except:
 		pass
 	return (False, '', '', '', '', '')
-
+            
 ################################################################################
 def update(url, ver):
 	PLog('update:')	
 	
-	if ver:
+	if ver:		
 		msg1 = 'Plugin Update auf  Version {0}'.format(ver)
-		msg2 = 'Update erfolgreich - weiter zum aktuellen Plugin'  # Kodi: kein Neustart notw.
+		msg2 = 'Update erfolgreich - weiter zum aktuellen Plugin'  	# Kodi: kein Neustart notw.
 		try:
 			dest_path 	= xbmc.translatePath("special://home/addons/")
 			r 			= urllib2.urlopen(url)
 			zip_data	= zipfile.ZipFile(StringIO.StringIO(r.read()))
+			save_restore('save')									# Cache sichern
 			
 			PLog(dest_path)
 			PLog(ADDON_PATH)
 			shutil.rmtree(ADDON_PATH)		# remove addon, Verzicht auf ignore_errors=True
 			zip_data.extractall(dest_path)	
+			
+			save_restore('restore')										# Cache sichern
 		except Exception as exception:
 			msg1 = 'Update fehlgeschlagen'
 			msg2 = 'Error: ' + str(exception)
@@ -106,7 +124,49 @@ def update(url, ver):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 
 ################################################################################
+def save_restore(mode):							# Cache sichern/restore
+	PLog('save_restore:')	
 	
+	os.chdir(RESSOURCES_DIR)					# Arbeitsverzeichnis für save + restore
+	PLog(RESSOURCES_DIR)						
+	fname 	= "%s.zip" % BACKPUP_DIR			# data.zip
+	PLog(fname)
+	PLog(RESSOURCES_DIR)
+	PLog(TEMP_ADDON)
+		
+	if mode == 'save':							# BACKPUP_DIR in zip sichern
+		PLog('save:')	
+		try:
+			zipf = zipfile.ZipFile(fname, 'w', zipfile.ZIP_DEFLATED)						
+			PLog(zipf)
+			getDirZipped(BACKPUP_DIR, zipf)
+			zipf.close()
+			shutil.move(os.path.join(RESSOURCES_DIR, fname), os.path.join(TEMP_ADDON, fname)) 	# -> ../kodi/temp
+			PLog("%s/%s verschoben nach %s"  % (RESSOURCES_DIR, fname, TEMP_ADDON))
+		except Exception as exception:
+			PLog("Fehlschlag Backup: " + str(exception))
+
+	if mode == 'restore':						# BACKPUP_DIR von zip wiederherstellen
+		PLog('restore:')
+		try:
+			shutil.move(os.path.join(TEMP_ADDON, fname), os.path.join(RESSOURCES_DIR, fname)) 	# -> ../data
+			PLog("%s/%s verschoben nach %s"  % (TEMP_ADDON, fname, RESSOURCES_DIR))
+		
+			with zipfile.ZipFile(fname, "r") as ziphandle:
+				ziphandle.extractall(RESSOURCES_DIR)					# ../plugin.video.ardundzdf/resources/
+			os.remove(fname)											# zip entfernen
+			PLog("%s entpackt + geloescht" % (fname))
+		except Exception as exception:
+			PLog("Fehlschlag Restore: " + str(exception))
+	return
+#---------------------------
+def getDirZipped(path, zipf):
+	PLog('getDirZipped:')	
+	for root, dirs, files in os.walk(path):
+		for file in files:
+			zipf.write(os.path.join(root, file))
+	
+################################################################################
 # clean tag names based on your release naming convention
 def cleanSummary(summary):
 	

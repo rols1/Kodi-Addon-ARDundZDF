@@ -9,10 +9,11 @@
 
 import  json		
 import os, sys
-import urllib2
+import urllib, urllib2
 import ssl
 import ctypes
 import datetime, time
+import re				# u.a. Reguläre Ausdrücke
 
 import xbmc, xbmcgui, xbmcaddon, xbmcplugin
 
@@ -26,6 +27,7 @@ DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract;  b
 teilstring=util.teilstring;  repl_dop=util.repl_dop; cleanhtml=util.cleanhtml;  decode_url=util.decode_url;  
 unescape=util.unescape;  mystrip=util.mystrip; make_filenames=util.make_filenames;  transl_umlaute=util.transl_umlaute;  
 humanbytes=util.humanbytes;  time_translate=util.time_translate; get_keyboard_input=util.get_keyboard_input; 
+transl_wtag=util.transl_wtag;
 
 # Globals
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -46,6 +48,7 @@ DICTSTORE 		= os.path.join("%s/resources/data/Dict") % ADDON_PATH
 ICON 					= 'icon.png'		# ARD + ZDF
 ICON_MAIN_ZDFMOBILE		= 'zdf-mobile.png'			
 ICON_DIR_FOLDER			= "Dir-folder.png"
+ICON_SPEAKER 			= "icon-speaker.png"
 imgWidth		= 840			# max. Breite Teaserbild
 imgWidthLive	= 1280			# breiter für Videoobjekt
 NAME			= 'ARD und ZDF'
@@ -149,7 +152,7 @@ def Verpasst(DictID):					# Wochenliste
 	PLog('Verpasst')
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID=ZDFNAME)				# Home-Button
+	# li = home(li, ID=ZDFNAME)				# Home-Button - s. Hub
 		
 	wlist = range(0,7)
 	now = datetime.datetime.now()
@@ -166,8 +169,8 @@ def Verpasst(DictID):					# Wochenliste
 		iWeekday = transl_wtag(iWeekday)		# -> ARD Mediathek
 		path = 'https://zdf-cdn.live.cellular.de/mediathekV2/broadcast-missed/%s' % iDate
 		title =	"%s | %s" % (display_date, iWeekday)
-		PLog(title)
-		fparams='&fparams=path=path,datum=display_date'
+		PLog(title); PLog(path);
+		fparams='&fparams=path=%s,datum=%s' % (path, display_date)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Verpasst_load", fanart=R(ICON_MAIN_ZDFMOBILE), 
 			thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 	xbmcplugin.endOfDirectory(HANDLE)
@@ -182,6 +185,9 @@ def Verpasst_load(path, datum):		# 5 Tages-Abschnitte in 1 Datei, path -> DictID
 		xbmcgui.Dialog().ok(ADDON_NAME, 'Fehler beim Abruf von:', path, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	PLog(len(page))
+	
+	jsonObject = json.loads(page)
+	path = path.split('/')[-1]			# Pfadende -> Dict-ID
 	v = path
 	vars()[path] = jsonObject
 	Dict("store", v, vars()[v])
@@ -291,6 +297,9 @@ def Get_content(stageObject, maxWidth):
 	else:
 		now = datetime.datetime.now()
 		date = now.strftime("%d.%m.%Y %H:%M")
+		
+	title=UtfToStr(title); subTitle=UtfToStr(subTitle); descr=UtfToStr(descr); 
+	img=UtfToStr(img);	date=UtfToStr(date); dauer=UtfToStr(dauer);
 	PLog('Get_content: %s |%s | %s | %s | %s | %s' % (title,subTitle,descr,img,date,dauer) )		
 	return title,subTitle,descr,img,date,dauer
 # ----------------------------------------------------------------------			
@@ -355,12 +364,12 @@ def GetJsonByPath(path, jsonObject):
 # ----------------------------------------------------------------------			
 def ShowVideo(path, DictID):
 	PLog('ShowVideo:'); PLog(path); PLog(DictID)
-#	DictID = DictID.encode("utf-8")
-#	PLog(Dict("load", DictID))	
 	
 	jsonObject = Dict("load", DictID)
 	videoObject = GetJsonByPath(path,jsonObject)
 	title,subTitle,descr,img,date,dauer = Get_content(videoObject,imgWidthLive)
+	title = UtfToStr(title); subTitle = UtfToStr(subTitle); descr = UtfToStr(descr);
+
 	if subTitle:
 		title = '%s | %s' % (title,subTitle)
 	if date:
@@ -368,6 +377,8 @@ def ShowVideo(path, DictID):
 			title = '%s | %s' % (title,date)
 	if dauer:
 		title = '%s |  %s' % (title, dauer)
+	title_org = UtfToStr(title)	
+	PLog(title_org)	
 		
 	li = xbmcgui.ListItem()
 	li = home(li, ID=ZDFNAME)				# Home-Button
@@ -399,7 +410,6 @@ def ShowVideo(path, DictID):
 			li = videoObjects=PageMenu(li,jsonObject,DictID=DictID)	# Rubrik o.ä.	
 			return li
 
-	# CreateVideoStreamObject + CreateVideoClipObject -> ARD Mediathek
 	i=0
 	for detail in formitaeten:	
 		PLog("Mark4")
@@ -414,16 +424,23 @@ def ShowVideo(path, DictID):
 				bandbreite = url.split('_')[-2]		# Bsp. ../4/170703_despot1_inf_1496k_p13v13.mp4
 			except:
 				bandbreite = ''
-			
-		PLog("url: " + url)
+		
+		PLog("url: " + url)	
+		if SETTINGS.getSetting('pref_video_direct') == 'true':	     # Sofortstart
+			if SETTINGS.getSetting('pref_show_resolution') == 'false':
+				PLog('Sofortstart: ZDF Mobile (ShowVideo)')
+				PlayVideo(url=url, title=title_org, thumb=img, Plot=descr)
+				return
+	
 		if url.find('master.m3u8') > 0:		# 
 			if 'auto' in quality:			# speichern für ShowSingleBandwidth
 				url_auto = url
 			title=str(i) + '. ' + quality + ' [m3u8]'
 			PLog("title: " + title)
 			tagline = 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' [m3u8-Streaming]'
-			fparams="&fparams={'url': '%s', 'title': '%s'}" % (urllib2.quote(url), title)	
-			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
+				urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr))	
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.PlayVideo", fanart=img, 
 				thumb=img, fparams=fparams, summary=descr, tagline=tagline)	
 		else:
 			title=str(i) + '. %s [%s]'  % (quality, typ)
@@ -431,13 +448,15 @@ def ShowVideo(path, DictID):
 			tagline = 'Qualitaet: ' + quality + ' | Typ: ' + typ
 			if bandbreite:
 				tagline = '%s | %s'	% (tagline, bandbreite)
-			fparams="&fparams={'url': '%s', 'title': '%s'}" % (urllib2.quote(url), title)	
-			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
+				urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr))	
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.PlayVideo", fanart=img, 
 				thumb=img, fparams=fparams, summary=descr, tagline=tagline)	
 	
 	# einzelne Auflösungen anbieten:
-	title = 'einzelne Bandbreiten/Aufloesungen zu auto [m3u8]'	
-	fparams="&fparams={'title': '%s', 'url_m3u8': '%s', 'thumb': '%s'}" % (title, urllib2.quote(url_auto), img)	
+	title = 'einzelne Bandbreiten/Aufloesungen zu auto [m3u8]'
+	fparams="&fparams={'title': '%s', 'url_m3u8': '%s', 'thumb': '%s', 'descr': '%s'}" % (urllib2.quote(title_org), 
+		urllib2.quote(url_auto), urllib2.quote(img), urllib.quote_plus(descr))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowSingleBandwidth", fanart=img, 
 		thumb=img, fparams=fparams, summary=descr)
 
@@ -461,23 +480,25 @@ def get_formitaeten(jsonObject):
 	return forms		
 
 # ----------------------------------------------------------------------
-def ShowSingleBandwidth(title,url_m3u8,thumb):	# .m3u8 -> einzelne Auflösungen
-	PLog('ShowSingleBandwidth')
+def ShowSingleBandwidth(title,url_m3u8,thumb, descr):	# .m3u8 -> einzelne Auflösungen
+	PLog('ShowSingleBandwidth:')
 	
 	playlist = loadPage(url_m3u8)
 	if playlist.startswith('Fehler'):
-		xbmcgui.Dialog().ok(ADDON_NAME, 'Fehler', page, '')
+		xbmcgui.Dialog().ok(ADDON_NAME, playlist, url_m3u8, '')
 		
 	li = xbmcgui.ListItem()
-	li =  Parseplaylist(li, playlist=playlist, title=title, thumb=thumb)		
+	li =  Parseplaylist(li, playlist=playlist, title=title, thumb=thumb, descr=descr)		
 	
-	return li
+	xbmcplugin.endOfDirectory(HANDLE)
 
 ####################################################################################################
 #									Hilfsfunktionen
 ####################################################################################################
-def Parseplaylist(li, playlist, title, thumb):		# playlist (m3u8, ZDF-Format) -> einzelne Auflösungen
-	Log ('Parseplaylist')
+def Parseplaylist(li, playlist, title, thumb, descr):	# playlist (m3u8, ZDF-Format) -> einzelne Auflösungen
+	PLog ('Parseplaylist:')
+	PLog(title)
+	title = UtfToStr(title)
 	title_org = title
   
 	lines = playlist.splitlines()
@@ -501,16 +522,15 @@ def Parseplaylist(li, playlist, title, thumb):		# playlist (m3u8, ZDF-Format) ->
 			Resolution = re.search('RESOLUTION=(\S+),CODECS', inf).group(1)
 		Codecs = re.search(r'"(.*)"', inf).group(1)	# Zeichen zw. Hochkommata
 		
-		descr= 'Bandbreite: %s' % Bandwith 
+		summ= 'Bandbreite: %s' % Bandwith 
 		if Resolution:
-			descr= 'Bandbreite %s | Auflösung: %s' % (Bandwith, Resolution)
+			summ= 'Bandbreite %s | Auflösung: %s' % (Bandwith, Resolution)
 		if Codecs:
-			descr= '%s | Codecs: %s' % (descr, Codecs)
-		descr = descr.replace('"', '')	# Bereinigung Codecs
+			summ= '%s | Codecs: %s' % (descr, Codecs)
+		summ = summ.replace('"', '')	# Bereinigung Codecs
 			
 		PLog(Bandwith); PLog(Resolution); PLog(Codecs); 		
 		tagline='m3u8-Streaming'
-		meta = Plugin.Identifier + str(i)
 		title = '%s. %s' 	% (str(i), title_org)
 		if 	Bandwith_old == Bandwith:
 			title = '%s. %s | 2. Alternative' 	% (str(i), title_org)
@@ -518,12 +538,11 @@ def Parseplaylist(li, playlist, title, thumb):		# playlist (m3u8, ZDF-Format) ->
 		if int(Bandwith) <=  100000: 		# Audio - PMS-Transcoder: Stream map '0:V:0' matches no streams 
 			tagline = '%s | nur Audio'	% tagline
 			thumb=R(ICON_SPEAKER)
-			
-		oc.add(CreateVideoStreamObject(url=url, title=title, rtmp_live='nein', summary=descr, 
-			tagline=tagline, meta=meta, thumb=thumb, resolution=Resolution))	
-		fparams="&fparams=url=%s, title=%s" % (urllib.quote_plus(url), title)	
+		
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib.quote_plus(url), 
+			urllib.quote_plus(title_org), urllib.quote_plus(thumb), urllib.quote_plus(descr))			
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.PlayVideo", fanart=thumb, 
-			thumb=thumb, fparams=fparams, summary=descr, tagline=tagline)	
+			thumb=thumb, fparams=fparams, summary=summ, tagline=tagline)	
 
 	return li
 	
@@ -554,6 +573,22 @@ def loadPage(url, maxTimeout = None):
 		PLog(msg)
 		return msg
 #----------------------------------------------------------------  
+# Kopie von ardundzdf.py - für Sofortstart erforderlich (Showvideo))
+#
+def PlayVideo(url, title, thumb, Plot):	
+	PLog('PlayVideo:'); PLog(url); PLog(title)		
+	
+	# # SSL-Problem bei Kodi V17.6:  ERROR: CCurlFile::Stat - Failed: SSL connect error(35)
+	url = url.replace('https', 'http')  
+
+	li = xbmcgui.ListItem(path=url)		
+	li.setArt({'thumb': thumb, 'icon': thumb})
+	ilabels = ({'Title': title})
+	ilabels.update({'Plot': '%s' % Plot})
+
+	li.setInfo(type="video", infoLabels=ilabels)							
+	li.setContentLookup(False)
+	xbmc.Player().play(url, li, False)
 	
 
 
