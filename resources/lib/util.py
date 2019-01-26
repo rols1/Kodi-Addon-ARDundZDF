@@ -33,7 +33,9 @@ ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 DICTSTORE 		= os.path.join("%s/resources/data/Dict") % ADDON_PATH
 
 ICON_MAIN_POD	= 'radio-podcasts.png'
-ICON_MAIN_ZDFMOBILE		= 'zdf-mobile.png'			
+ICON_MAIN_ZDFMOBILE		= 'zdf-mobile.png'
+			
+BASE_URL 		= 'https://classic.ardmediathek.de'
 
 ###################################################################################################
 #									Hilfsfunktionen Kodiversion
@@ -122,9 +124,10 @@ def home(li, ID):
 #			Wert in:		Dict_name
 #	Bsp. für Laden:
 #		Dict_CurSender = Dict("load", "Dict_CurSender")
+#   Bsp. für CacheTime: 5*60 (5min) - Verwendung bei "load", Prüfung mtime 
 #	ev. ergänzen: OS-Verträglichkeit des Dateinamens
 
-def Dict(mode, Dict_name='', value=''):
+def Dict(mode, Dict_name='', value='', CacheTime=None):
 	PLog('Dict: ' + mode)
 	PLog('Dict: ' + str(Dict_name))
 	PLog('Dict: ' + str(type(value)))
@@ -151,9 +154,20 @@ def Dict(mode, Dict_name='', value=''):
 		if os.path.exists(dictfile) == False:
 			PLog('Dict: %s nicht gefunden' % dictfile)
 			return False
+		if CacheTime:
+			mtime = os.path.getmtime(dictfile)	# modified-time
+			now	= time.time()
+			CacheLimit = now - CacheTime		# 
+			# PLog("now %d, mtime %d, CacheLimit: %d" % (now, mtime, CacheLimit))
+			if CacheLimit > mtime:
+				PLog('Cache miss: CacheLimit > mtime')
+				return False
+			else:
+				PLog('Cache hit: load')	
 		try:			
 			with open(dictfile, 'rb')  as f: data = pickle.load(f)
 			f.close
+			PLog('load from Cache')
 			return data
 		# Exception  ausführlicher: s.o.
 		except Exception as e:	
@@ -175,18 +189,22 @@ def ClearUp(directory, seconds):
 	PLog('ClearUp: %s, sec: %s' % (directory, seconds))	
 	PLog('älter als: ' + seconds_translate(seconds))
 	now = time.time()
+	cnt_files=0; cnt_dirs=0
 	try:
 		globFiles = '%s/*' % directory
 		files = glob.glob(globFiles) 
-		PLog("ClearUp globFiles: " + str(len(files)))
+		PLog("ClearUp: globFiles " + str(len(files)))
 		# PLog(" globFiles: " + str(files))
 		for f in files:
 			# PLog(os.stat(f).st_mtime)
 			if os.stat(f).st_mtime < (now - seconds):
 				os.remove(f)
+				cnt_files = cnt_files + 1
 			if os.path.isdir(f):		# Leerverz. entfernen
 				if not os.listdir(f):
 					os.rmdir(f)
+					cnt_dirs = cnt_dirs + 1
+		PLog("ClearUp: entfernte Dateien %s, entfernte Ordner %s" % (str(cnt_files), str(cnt_dirs)))	
 		return True
 	except:	
 		return False
@@ -257,6 +275,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 # 23.12.2018 requests-call vorübergehend auskommentiert, da kein Python-built-in-Modul (bemerkt beim 
 #	Test in Windows7
 # 13.01.2019 erweitert für compressed-content (get_page2)
+# 25.01.2019 Hinweis auf Redirects (get_page2)
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=None):	
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
@@ -271,7 +290,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 	UrlopenTimeout = 10
 	
 	'''
-	try:																# 1. Versuch mit requests
+	try:
+		import requests															# 1. Versuch mit requests
 		PLog("get_page1:")
 		if GetOnlyRedirect:					# nur Redirect anfordern
 			PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
@@ -296,6 +316,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		try:															# 2. Versuch ohne SSLContext 
 			PLog("get_page2:")
 			if GetOnlyRedirect:						# nur Redirect anfordern
+				# Alt. hier : new_url = r.geturl()
 				# bei Bedarf HttpLib2 mit follow_all_redirects=True verwenden
 				PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
 				r = urllib2.urlopen(path)
@@ -307,10 +328,12 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 				req = urllib2.Request(path, headers=header)	
 			else:
 				req = urllib2.Request(path)										
-				req.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36')
-				req.add_header('Accept', 'text/html,application/xhtml xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8')
-				req.add_header('Accept-Encoding','gzip, deflate, br')
+				#req.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36')
+				#req.add_header('Accept', 'text/html,application/xhtml xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8')
+				#req.add_header('Accept-Encoding','gzip, deflate, br')
 			r = urllib2.urlopen(req)
+			new_url = r.geturl()											# follow redirects
+			PLog("new_url: " + new_url)
 			# PLog("headers: " + str(r.headers))
 			
 			compressed = r.info().get('Content-Encoding') == 'gzip'
@@ -375,27 +398,25 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 	return page, msg	
 #---------------------------------------------------------------- 
 # img_urlScheme: img-Url ermitteln für get_sendungen, ARDRubriken. text = string, dim = Dimension
-def img_urlScheme(text, dim, ID):
+def img_urlScheme(text, dim, ID=''):
 	PLog('img_urlScheme: ' + text[0:60])
 	PLog(dim)
 	
-	pos = 	text.find('class=\"mediaCon\">')			# img erst danach
+	pos = 	text.find('class="mediaCon">')			# img erst danach
 	if pos >= 0:
 		text = text[pos:]
-		img_src = stringextract("urlScheme':'", '##width', text)
-	else:
-		img_src = stringextract(':&#039;', '##width', text)
+	img_src = stringextract('img.ardmediathek.de', '##width', text)
 		
-	img_alt = stringextract('title=\"', '\"', text)
+	img_alt = stringextract('title="', '"', text)
 	if img_alt == '':
-		img_alt = stringextract('alt=\"', '\"', text)
+		img_alt = stringextract('alt="', '"', text)
 	img_alt = img_alt.replace('- Standbild', '')
 	img_alt = 'Bild: ' + img_alt
 	
 		
 	if img_src and img_alt:
-		if img_src.startswith('http') == False:			# Base ergänzen, auch https möglich
-			img_src = BASE_URL + img_src 
+		if img_src.startswith('http') == False:			#
+			img_src = 'https://img.ardmediathek.de' + img_src 
 		img_src = img_src + str(dim)					# dim getestet: 160,265,320,640
 		if ID == 'PODCAST':								# Format Quadrat klappt nur bei PODCAST,
 			img_src = img_src.replace('16x9', '16x16')	# Sender liefert Ersatz, falls n.v.
@@ -621,7 +642,7 @@ def unescape(line):
 		#	https://stackoverflow.com/questions/20329896/python-2-7-character-u2013
 		#	"sächsischer Genetiv", Bsp. Scott's
 		#	Carriage Return (Cr)
-		("–", "-"), ("&#x27;", "'"), ("&#xD;", "")):
+		("–", "-"), ("&#x27;", "'"), ("&#xD;", ""), ("\xc2\xb7", "-")):
 			
 		line = line.replace(*r)
 	return line

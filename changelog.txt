@@ -8,6 +8,47 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 			
+26.01.2019 	0.8.3	ARDStartSingle: Rücksprung zu ARDStartRubrikSingle bei Rubrikseiten, 
+			ARDStartSingle: Fallback zu Classic-Version-Url bei http-error 404 und 
+			Verzweigung zu PageControl.
+	
+not on Github 	0.8.2	ARD Iconscraping (img_urlScheme): Anpassung an Änderung der Startseite.
+			ARD Startseite: Behandlung subline (Ergänzung "\xc2\xb7" in unescape).
+			SenderLiveResolution: Fix msg -> msg1.
+			Hauptmenü ARD: Senderwahl deaktiviert, Label "verpasst" aktualisiert. 
+	
+not on Github 	0.8.1	ARD Startseite: nach Änderung der Webseite (Scrollfunktion) Rückbau auf Classic-Version,
+			Neukodierung ARDStart, ARDStartRubrik, ARDStartRubrikSingle, ARDStartSingle.
+			ARD Startseite: Verwendung von Url's derNeu-Version (wo möglich) - Umsetzung in
+			ARDStartSingle. 
+			ARD Startseite: zusätzl. Cachefunktion (minuten-orientiert) eingeführt.
+		
+not on Github 	0.8.0	Kodierung (Fix Eingangsparameter UtfToStr): VideoTools, DownloadsMove, DownloadsDelete,
+			Parseplaylist. 
+			Fixes für json.loads in router: get_sendungen (dachzeile, headline, subtitle,
+			teasertext), RadioAnstalten (headline),	ZDF_get_content (title,summary, tagline),
+			ARDStartRubrik (title,subline, tagline, summ).	
+			
+not on Github 	0.7.9	Untertitel (ZDF): Verwendung Url + optional lokale Datei (Cache).
+			Umbenennung: GetZDFVideoSources -> ZDF_getVideoSources (Debug).
+			GetZDFVideoSources: Anpassung Userinfo (Hinweis Pluginverzeichnis entfernt + 	
+			verlagert nach PlayVideo.
+			Settings: "Untertitel EIN" hinzugefügt.
+			PlayVideo: Übergabe Untertitel via setSubtitles.
+			
+not on Github 	0.7.8	Addon-Start: Bereinigung TEXTSTORE (Inhaltstexte) hinzugefügt.
+			Modul util (ClearUp): Anzeige Anzahl Löschungen hinzugefügt.
+			BarriereArm, BarriereArmSingle: Cache für Seite ZDF_BARRIEREARM.			  
+			
+not on Github 	0.7.7	ZDF-Bereich (Weitere Seiten laden): Umstellung von offset auf Seitenzähler page_cnt			  				(kompatibel zur loader-Funktion im Web).
+			ZDF_get_content: in loader-Funktion href-Link für ZDF-Suche extrahiert.	
+			ZDF-Bereich: überflüssigen offset-Code entfernt. 	
+			
+not on Github 	0.7.6	Settings: 'Tage' bei Löschfristen ergänzt.
+			ZDF_get_content:Fix Textbeschreibung (Austausch summary gegen tagline), Fix 
+			title + summary (double quotes entfernt).
+			Umbenennung: SendungenAZList -> ZDFSendungenAZList (Debug).			  
+			
 18.01.2019 	0.7.5	ZDF Mobile (ShowVideo): fehlende Parameter für PlayVideo ergänzt(Videos starten wieder),
 			Videotitel für Parseplaylist durchgeleitet, Fix Coding title_org, subTitle, descr.
 			ZDF Mobile (Parseplaylist): Plex-Direktiven oc.add, Plugin.Identifier entfernt 

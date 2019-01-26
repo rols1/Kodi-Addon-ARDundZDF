@@ -11,7 +11,8 @@
 	<setting label="Video-Bandbreiten und -auflösungen anzeigen (Sofortstart entfällt)" type="bool" id="pref_show_resolution" default="true"/>
 	<setting label="Sofortstart für TV-Live und Videos (Downloads-Buttons entfallen)" type="bool" id="pref_video_direct" default="false"/>
 	<setting label="Untertitel: auf vorhandene Untertitel hinweisen" type="bool" id="pref_UT_Info" default="true"/>
-   </category>
+ 	<setting label="Untertitel: falls vorhanden, im Player einschalten" type="bool" id="pref_UT_ON" default="true"/>
+  </category>
 
  <category label="Radio-Podcast Einstellungen">
   	<setting label="Radio-Podcast-Erweiterung verwenden" type="bool" id="pref_use_podcast" default="true"/>
@@ -33,7 +34,7 @@
 	<setting label="Recording TV-Live: ffmpeg-Parameter. Das Plugin ersetzt 3 x %s durch Url, Aufnahmedauer, Dateiname." type="text" id="pref_LiveRecord_ffmpegCall" default="/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin"/>
 </category> 
 
- <category label="Addon-Cache: Löschfristen">
+ <category label="Addon-Cache: Löschfristen (Tage)">
 	<setting label="Dict (div. Variablen): " type="labelenum" values="1|10|30|100" default="30"
 		id="pref_DICT_store_days"/>
 	<setting label="Untertitel" type="labelenum" values="1|10|30|100" default="30"

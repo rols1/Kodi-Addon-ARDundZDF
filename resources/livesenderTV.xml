@@ -48,8 +48,8 @@
 		<geoblock>ja</geoblock>
 	</item>
 	<item>
-		<title>Arte deutsch</title>
-		<hrefsender>arte</hrefsender>
+		<title>Arte</title>
+		<hrefsender>ARTE</hrefsender>
 		<link>https://artelive-lh.akamaihd.net/i/artelive_de@393591/master.m3u8</link>
 		<link1>LiveTV_Arte.m3u8</link1>link1>
 		<info>Web: http://www.ardmediathek.de/tv/live?kanal=5880</info>
@@ -136,7 +136,7 @@
 	</item>
 	<item>
 		<title>Deutsche Welle</title>
-		<hrefsender>fehlt</hrefsender>
+		<hrefsender>Deutsche Welle</hrefsender>
 		<link>http://dwstream6-lh.akamaihd.net/i/dwstream6_live@124409/master.m3u8</link>
 		<thumbnail>tv-deutsche-welle.png</thumbnail>
 		<genre>TV</genre>
@@ -164,7 +164,7 @@
 	</item>
 	<item>
 		<title>BR Fernsehen-Süd</title>
-		<hrefsender>BR</hrefsender>
+		<hrefsender>BR Fernsehen Süd</hrefsender>
 		<link>https://brlive-lh.akamaihd.net/i/bfssued_germany@119890/master.m3u8</link>
 		<thumbnail>tv-br.png</thumbnail>
 		<genre>TV</genre>
