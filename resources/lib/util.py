@@ -2,11 +2,12 @@
 # util.py
 #	
 
-import os, sys, glob, time
+import os, sys, glob, shutil, time
+import datetime as dt	# für xml2srt
 import urllib, urllib2, ssl
 # import requests		# kein Python-built-in-Modul, urllib2 verwenden
 from StringIO import StringIO
-import gzip
+import gzip, zipfile
 from urlparse import parse_qsl
 import json				# json -> Textstrings
 import pickle			# persistente Variablen/Objekte
@@ -776,5 +777,54 @@ def transl_wtag(tag):
 			wt_ret = wt_deutsch[i]
 			break
 	return wt_ret
-#----------------------------------------------------------------  	
-    
+#----------------------------------------------------------------  
+# simpler XML-SRT-Konverter für ARD-Untertitel
+#	pathname = os.path.abspath. 
+#	vorh. Datei wird überschrieben
+# 	Rückgabe outfile bei Erfolg, '' bei Fehlschlag
+# https://knowledge.kaltura.com/troubleshooting-srt-files
+# Wegen des strptime-Problems unter Kodi verzicht wir auf auf
+#	korrekte Zeitübersetzung und ersetzen lediglich
+#		1. den Zeitoffset 10 durch 00
+#		2. das Sekundenformat 02.000 durch 02,00 (Verzicht auf die letzte Stelle)
+# Problem mit dt.datetime.strptime (Kodi: attribute of type 'NoneType' is not callable):
+# 	https://forum.kodi.tv/showthread.php?tid=112916
+#
+def xml2srt(infile):
+	PLog("xml2srt: " + infile)
+	outfile = '%s.srt' % infile
+
+	with open(infile) as fin:
+		text = fin.read()
+		text = text.replace('-1:', '00:') 		# xml-Fehler
+		# 10-Std.-Offset simpel beseitigen (2 Std. müssten reichen):
+		text = (text.replace('"10:', '"00:').replace('"11:', '"01:').replace('"12:', '"02:'))
+		ps = blockextract('<tt:p', text)
+		
+	try:
+		with open(outfile, 'w') as fout:
+			for i, p in enumerate(ps):
+				begin 	= stringextract('begin="', '"', p)		# "10:00:07.400"
+				end 	= stringextract('end="', '"', p)		# "10:00:10.920"			
+				ptext	=  blockextract('tt:span style=', p)
+				
+				begin	= begin[:8] + ',' + begin[9:11]			# ""10:00:07,40"			
+				end		= end[:8] + ',' + end[9:11]				# "10:00:10,92"
+
+				print >>fout, i+1
+				print >>fout, '%s --> %s' % (begin, end)
+				# print >>fout, p.text
+				for textline in ptext:
+					text = stringextract('>', '<', textline) # style="S3">Willkommen zum großen</tt:span>
+					print >>fout, text
+				print >>fout
+		os.remove(infile)										# Quelldatei entfernen
+	except Exception as exception:
+		PLog(str(exception))
+		outfile = ''
+			
+	return outfile
+#----------------------------------------------------------------  
+
+
+   

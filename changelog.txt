@@ -7,8 +7,29 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+
+30.01.2019 	0.8.8	Updater (Probleme unter Windows): Rücksprung -> Home nach Backup.
+	
+not on Github 	0.8.7	Untertitel (ARD): Scraping in parseLinks_Mp4_Rtmp (ARD-Classic) + ARDStartSingle
+			(ARD-Neu).
+			Untertitel (ARD): zusätzl. Konverter-Funktion xml2srt (Modul util). 
+			xml2srt: wegen Kodiproblem mit strptime simple string-Lösung ohne Zeitfunktionen.
+			Untertitel (ARD, ZDF): Verlagerung User-Info nach PlayVideo. 	
+
+not on Github 	0.8.6	PlayAudio: Fix für Fehlschlag bei Prüfung auf Redirect (urspr. Url ging verloren).	
+
+not on Github 	0.8.5	ARD: summary, tagline, Plot (Beschreibung, Datum+Uhrzeit-Sender) durchgereicht von
+			1. Auswertung bis PlayVideo, einschl. "Inhaltstext im Voraus laden", Funktionen: SinglePage,
+			SingleSendung, Parseplaylist, ARDStartRubrik, ARDStartSingle, ARDStartVideoMP4,
+			ARDStartVideoStreams, ParseMasterM3u, PlayVideo, einschl. json-komp. Kodierung "\n" -> "||".
+			ZDF: summary, tagline, Plot durchgereicht (wie ARD), Funktionen: ZDF_get_content,
+			get_summary_pre. Einschl. Anzeige UT (get_summary_pre).
+			ZDF (show_formitaeten): Doppler in Plot unterdrückt.
+							
+not on Github 	0.8.4	SinglePage: Fix Auswertung Datum+ Uhrzeit, einschl. "Inhaltstexte im Voraus".
+			ZDF (get_formitaeten): Fix return-Parameter bei Fehlschlag. 
 			
-26.01.2019 	0.8.3	ARDStartSingle: Rücksprung zu ARDStartRubrikSingle bei Rubrikseiten, 
+26.01.2019 	0.8.3	ARDStartSingle: Rücksprung zu ARDStartRubrikSingle bei Rubrikseiten. 
 			ARDStartSingle: Fallback zu Classic-Version-Url bei http-error 404 und 
 			Verzweigung zu PageControl.
 	

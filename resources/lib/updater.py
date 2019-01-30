@@ -105,14 +105,16 @@ def update(url, ver):
 			dest_path 	= xbmc.translatePath("special://home/addons/")
 			r 			= urllib2.urlopen(url)
 			zip_data	= zipfile.ZipFile(StringIO.StringIO(r.read()))
+			
 			save_restore('save')									# Cache sichern
 			
 			PLog(dest_path)
 			PLog(ADDON_PATH)
 			shutil.rmtree(ADDON_PATH)		# remove addon, Verzicht auf ignore_errors=True
-			zip_data.extractall(dest_path)	
-			
-			save_restore('restore')										# Cache sichern
+			zip_data.extractall(dest_path)
+				
+			save_restore('restore')										# Cache sichern	
+					
 		except Exception as exception:
 			msg1 = 'Update fehlgeschlagen'
 			msg2 = 'Error: ' + str(exception)
@@ -124,14 +126,24 @@ def update(url, ver):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 
 ################################################################################
+# save_restore:  Cache sichern / wieder herstellen
+#	funktioniert nicht unter Windows im updater-Modul - daher hierher verlagert
+#	Aufrufer update (vor + nach Austausch)
+# Windows-Problem: ohne Dir-Wechsel aus RESSOURCES_DIR Error 32 (belegter Prozess)
+#
 def save_restore(mode):							# Cache sichern/restore
-	PLog('save_restore:')	
+	PLog('save_restore: ' + mode)	
+	
+	# Problem : RESSOURCES_DIR nicht als globale Vars erkannt
+	ADDON_PATH    		= SETTINGS.getAddonInfo('path').decode('utf-8')
+	RESSOURCES_DIR		= os.path.join("%s/resources") % ADDON_PATH
+	BACKPUP_DIR			= "data"
+	TEMP_ADDON			= xbmc.translatePath("special://temp")	
 	
 	os.chdir(RESSOURCES_DIR)					# Arbeitsverzeichnis für save + restore
 	PLog(RESSOURCES_DIR)						
 	fname 	= "%s.zip" % BACKPUP_DIR			# data.zip
 	PLog(fname)
-	PLog(RESSOURCES_DIR)
 	PLog(TEMP_ADDON)
 		
 	if mode == 'save':							# BACKPUP_DIR in zip sichern
@@ -145,6 +157,7 @@ def save_restore(mode):							# Cache sichern/restore
 			PLog("%s/%s verschoben nach %s"  % (RESSOURCES_DIR, fname, TEMP_ADDON))
 		except Exception as exception:
 			PLog("Fehlschlag Backup: " + str(exception))
+		os.chdir(os.path.expanduser("~"))		# -> Home, unter Windows sonst Error 32
 
 	if mode == 'restore':						# BACKPUP_DIR von zip wiederherstellen
 		PLog('restore:')
@@ -158,6 +171,8 @@ def save_restore(mode):							# Cache sichern/restore
 			PLog("%s entpackt + geloescht" % (fname))
 		except Exception as exception:
 			PLog("Fehlschlag Restore: " + str(exception))
+		os.chdir(os.path.expanduser("~"))		# -> Home, unter Windows sonst Error 32
+		
 	return
 #---------------------------
 def getDirZipped(path, zipf):
@@ -166,8 +181,7 @@ def getDirZipped(path, zipf):
 		for file in files:
 			zipf.write(os.path.join(root, file))
 	
-################################################################################
-# clean tag names based on your release naming convention
+################################################################################# clean tag names based on your release naming convention
 def cleanSummary(summary):
 	
 	summary = (summary.replace('&lt;','').replace('&gt;','').replace('/ul','')
