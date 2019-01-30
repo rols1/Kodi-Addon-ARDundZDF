@@ -8,6 +8,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+30.01.2019 	0.8.9	Radio-Livestreams (RadioAnstalten, parseLinks_Mp4_Rtmp): vergessenen Parameter sub_path
+			ergänzt.
+
 30.01.2019 	0.8.8	Updater (Probleme unter Windows): Rücksprung -> Home nach Backup.
 	
 not on Github 	0.8.7	Untertitel (ARD): Scraping in parseLinks_Mp4_Rtmp (ARD-Classic) + ARDStartSingle

@@ -42,7 +42,7 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '0.8.8'		 
+VERSION =  '0.8.9'		 
 VDATE = '30.01.2019'
 
 # 
@@ -2730,7 +2730,7 @@ def parseLinks_Mp4_Rtmp(page):
 					s2 = 'http:' + s2
 				if 'master.m3u8' in s1:
 					m3u8_master = s2
-			PLog(s2); PLog(len(s2))				# nur bei Bedarf
+			PLog(s2); PLog(len(s2))				
 				
 							
 			if len(s2) > 9:						# schon url gefunden? Dann Markierung ermitteln
@@ -2748,7 +2748,6 @@ def parseLinks_Mp4_Rtmp(page):
 	link_path = list(set(link_path))			# Doppel entfernen (gesehen: 0, 1, 2 doppelt)
 	link_path.sort()							# Sortierung - Original Bsp.: 0,1,2,0,1,2,3
 	PLog(link_path); PLog(len(link_path))					
-		
 	return link_path, link_img, m3u8_master, geoblock, sub_path				 		
 		
 ####################################################################################################
@@ -3751,7 +3750,7 @@ def RadioAnstalten(path, title, sender, fanart):
 		PLog(path_content[0:80])			# enthält nochmal Bildquelle + Auflistung Streams (_quality)
 										# Streamlinks mit .m3u-Ext. führen zu weiterer Textdatei - Auswert. folgt 
 		#slink = stringextract('_stream\":\"', '\"}', path_content) 		# nur 1 Streamlink? nicht mehr aktuell
-		link_path,link_img, m3u8_master, geoblock = parseLinks_Mp4_Rtmp(path_content)	# mehrere Streamlinks auswerten,
+		link_path,link_img, m3u8_master, geoblock, sub_path = parseLinks_Mp4_Rtmp(path_content)	# mehrere Streamlinks auswerten,
 																						# geoblock hier nicht verwendet
 		
 		if headline:						# Zuordnung zu lokalen Icons, Quelle livesenderRadio.xml
