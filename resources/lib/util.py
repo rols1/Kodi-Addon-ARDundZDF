@@ -456,7 +456,9 @@ def R(fname, abs_path=False):
 			fname = "%s/resources/%s" % (ADDON_NAME, fname)
 			fname = os.path.abspath(fname)
 			return fname 
-#----------------------------------------------------------------  		
+#----------------------------------------------------------------  
+# ersetzt Resource.Load von Plex 
+# abs_path s.o.	R()	
 def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex 
 	PLog('RLoad: %s' % str(fname))
 	if abs_path == False:
@@ -818,13 +820,22 @@ def xml2srt(infile):
 					text = stringextract('>', '<', textline) # style="S3">Willkommen zum großen</tt:span>
 					print >>fout, text
 				print >>fout
-		os.remove(infile)										# Quelldatei entfernen
+		os.remove(infile)									# Quelldatei entfernen
 	except Exception as exception:
 		PLog(str(exception))
 		outfile = ''
 			
 	return outfile
+
 #----------------------------------------------------------------  
 
-
+   
+   
+   
+   
+   
+   
+   
+   
+   
    

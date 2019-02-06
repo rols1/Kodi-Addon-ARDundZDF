@@ -19,7 +19,7 @@ import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
 import datetime, time
 import json				# json -> Textstrings
 
-# Pluginmodule + Funktionsziele
+# Addonmodule + Funktionsziele
 import resources.lib.util as util
 PLog=util.PLog;  home=util.home;  Dict=util.Dict;  name=util.name; 
 UtfToStr=util.UtfToStr;  addDir=util.addDir;  get_page=util.get_page; 
@@ -42,8 +42,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '0.8.9'		 
-VDATE = '30.01.2019'
+VERSION =  '0.9.1'		 
+VDATE = '06.02.2019'
 
 # 
 #	
@@ -233,6 +233,7 @@ OS_DETECT += ' | host: [%s][%s][%s]' %(OS_MACHINE, OS_RELEASE, OS_VERSION)
 PLog(OS_DETECT)
 
 
+PLog('Addon: ClearUp')
 # Dict: Simpler Ersatz für Dict-Modul aus Plex-Framework
 ARDStartCacheTime = 300						# 5 Min.	
  
@@ -254,9 +255,9 @@ ClearUp(TEXTSTORE, days*86400)		# TEXTSTORE bereinigen
 																	
 def Main():
 	PLog('Main:'); 
-	PLog('Plugin-Version: ' + VERSION); PLog('Plugin-Datum: ' + VDATE)	
+	PLog('Addon-Version: ' + VERSION); PLog('Addon-Datum: ' + VDATE)	
 	PLog(OS_DETECT)	
-	PLog('Plugin-Python-Version: %s'  % sys.version)
+	PLog('Addon-Python-Version: %s'  % sys.version)
 			
 	PLog(PluginAbsPath)	
 	PLog(Dict_CurSender)	
@@ -302,7 +303,7 @@ def Main():
 								
 	repo_url = 'https://github.com/{0}/releases/'.format(GITHUB_REPOSITORY)
 	call_update = False
-	if SETTINGS.getSetting('pref_info_update') == 'true': # Updatehinweis beim Start des Plugins 
+	if SETTINGS.getSetting('pref_info_update') == 'true': # Updatehinweis beim Start des Addons 
 		ret = updater.update_available(VERSION)
 		int_lv = ret[0]			# Version Github
 		int_lc = ret[1]			# Version aktuell
@@ -311,7 +312,7 @@ def Main():
 		if int_lv > int_lc:								# Update-Button "installieren" zeigen
 			call_update = True
 			title = 'neues Update vorhanden - jetzt installieren'
-			summary = 'Plugin aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
+			summary = 'Addon aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
 			# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
 			url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
 			fparams="&fparams={'url': '%s', 'ver': '%s'}" % (urllib.quote_plus(url), latest_version) 
@@ -319,10 +320,10 @@ def Main():
 				thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary)
 			
 	if call_update == False:							# Update-Button "Suche" zeigen	
-		title = 'Plugin-Update | akt. Version: ' + VERSION + ' vom ' + VDATE	
+		title = 'Addon-Update | akt. Version: ' + VERSION + ' vom ' + VDATE	
 		summary='Suche nach neuen Updates starten'
 		tagline='Bezugsquelle: ' + repo_url			
-		fparams='&fparams=title="Plugin-Update"'
+		fparams='&fparams=title="Addon-Update"'
 		addDir(li=li, label=title, action="dirList", dirID="SearchUpdate", fanart=R(FANART), 
 			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summary, tagline=tagline)
 
@@ -549,9 +550,9 @@ def SearchUpdate(title):
 
 	PLog(int_lv); PLog(int_lc); PLog(latest_version); PLog(summ);  PLog(url);
 	
-	if int_lv > int_lc:		# zum Testen drehen (akt. Plugin vorher sichern!)			
+	if int_lv > int_lc:		# zum Testen drehen (akt. Addon vorher sichern!)			
 		title = 'Update vorhanden - jetzt installieren'
-		summary = 'Plugin aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
+		summary = 'Addon aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
 		tagline = cleanhtml(summ)
 		thumb = R(ICON_UPDATER_NEW)
 		fparams="&fparams={'url': '%s', 'ver': '%s'}" % (urllib.quote_plus(url), latest_version) 
@@ -560,14 +561,14 @@ def SearchUpdate(title):
 			tagline=cleanhtml(summ))
 			
 		title = 'Update abbrechen'
-		summary = 'weiter im aktuellen Plugin'
+		summary = 'weiter im aktuellen Addon'
 		thumb = R(ICON_UPDATER_NEW)
 		fparams='&fparams=""'
 		addDir(li=li, label=title, action="dirList", dirID="Main", fanart=R(ICON_UPDATER_NEW), 
 			thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary)
 	else:	
-		title = 'Plugin ist aktuell | weiter zum aktuellen Plugin'
-		summary = 'Plugin Version ' + VERSION + ' ist aktuell (kein Update vorhanden)'
+		title = 'Addon ist aktuell | weiter zum aktuellen Addon'
+		summary = 'Addon Version ' + VERSION + ' ist aktuell (kein Update vorhanden)'
 		summ = summ.splitlines()[0]		# nur 1. Zeile changelog
 		tagline = "%s | Mehr in changelog.txt" % summ
 		thumb = R(ICON_OK)
@@ -951,14 +952,14 @@ def ARDStartSingle(path, title, tagline, ID=''):
 	
 	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s'}" \
 		% (urllib2.quote(path), urllib2.quote(title), urllib2.quote(summ), urllib2.quote(tagline), urllib2.quote(img), 
-			geoblock, urllib2.quote(sub_path))
+			urllib2.quote(geoblock), urllib2.quote(sub_path))
 	addDir(li=li, label=title_new, action="dirList", dirID="ARDStartVideoStreams", fanart=img, thumb=img, 
 		fparams=fparams, summary=summ, tagline=tagline, mediatype='video')		
 					
 	title_new = "MP4-Formate und Downloads | %s" % title	
 	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s',  'img': '%s', 'geoblock': '%s',  'sub_path': '%s'}" \
 		% (urllib2.quote(path), urllib2.quote(title), urllib2.quote(summ), urllib2.quote(tagline), urllib2.quote(img), 
-			geoblock, urllib2.quote(sub_path))
+			urllib2.quote(geoblock), urllib2.quote(sub_path))
 	addDir(li=li, label=title_new, action="dirList", dirID="ARDStartVideoMP4", fanart=img, thumb=img, 
 		fparams=fparams, summary=summ, tagline=tagline, mediatype='video')		
 					
@@ -1042,7 +1043,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='')
 def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path=''): 
 	PLog('ARDStartVideoMP4:'); 
 	title_org=title; summary_org=summ; thumb=img; tagline_org=tagline	# Backup 
-	geoblock = UtfToStr(geoblock)
+	geoblock = UtfToStr(geoblock)	
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')									# Home-Button
@@ -1059,11 +1060,61 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path=''):
 	Plugin1	= Plugins[0]							
 	VideoUrls = blockextract('_quality', Plugin1)
 	PLog(len(VideoUrls))
+
+	# Format Downloadliste "Qualität: niedrige | Titel#https://pdvideosdaserste.."
+	download_list = ARDStartVideoMP4get(title,VideoUrls)	# holt Downloadliste mit mp4-videos
+	PLog(len(download_list))
+	PLog(download_list[:1])									# 1. Element
 	
+	title 	= UtfToStr(title); title_org = UtfToStr(title_org); summary_org= UtfToStr(summary_org)
+	tagline= UtfToStr(tagline); img = UtfToStr(img)
+
+	# Sofortstart mit letzter=höchster Qualität	
+	Plot = "%s||||%s" % (tagline, summary_org)		# || Code für LF (\n scheitert in router)
+	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart
+		if SETTINGS.getSetting('pref_show_resolution') == 'false':
+			PLog('Sofortstart: ARDStartVideoMP4')
+			video = download_list[-1]				# letztes Element = höchste Qualität
+			meta, href = video.split('#')
+			PLog(meta); PLog(href);
+			quality 	= meta.split('|')[0]		# "Qualität: sehr hohe | Titel.."
+			PLog(quality);
+			PlayVideo(url=href, title=title, thumb=img, Plot=Plot)
+			return
+		
+	for video in  download_list:
+		PLog(video);
+		meta, href = video.split('#')
+		quality 	= meta.split('|')[0]
+		lable = quality	+ geoblock;	
+		lable = UtfToStr(lable)
+		PLog(href); PLog(quality); PLog(tagline); PLog(summary_org); 
+		
+		Plot = "%s||||%s" % (tagline, summary_org)				# || Code für LF (\n scheitert in router)
+		sub_path=''# fehlt noch bei ARD
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+			(urllib.quote_plus(href), urllib.quote_plus(title_org), urllib.quote_plus(img), 
+			urllib.quote_plus(Plot), urllib.quote_plus(sub_path))
+		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+			mediatype='video', tagline=tagline, summary=summary_org) 
+		
+	if 	download_list:	
+		title = " | %s"				
+		PLog(title);PLog(summary_org);PLog(tagline);PLog(thumb);
+		li = test_downloads(li,download_list,title_org,summary_org,tagline,thumb,high=-1)  # Downloadbutton(s)		
+	
+	xbmcplugin.endOfDirectory(HANDLE)
+
+#----------------------------------------------------------------
+def ARDStartVideoMP4get(title, VideoUrls):	# holt Downloadliste mit mp4-videos für ARDStartVideoMP4
+	PLog('ARDStartVideoMP4get:'); 
+	title= UtfToStr(title)
+			
 	href = ''
 	download_list = []		# 2-teilige Liste für Download: 'title # url'
 	Format = 'Video-Format: MP4'
 	for video in  VideoUrls:
+		video= UtfToStr(video)
 		href = stringextract('json":["', '"', video)	# Video-Url
 		if href == '' or href.endswith('mp4') == False:
 			continue
@@ -1078,42 +1129,12 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path=''):
 			quality = 'Qualität: hohe'
 		if q == '3':
 			quality = 'Qualität: sehr hohe'
-			
-		lable 	= quality	+ geoblock
-		lable 	= UtfToStr(lable)
-		title 	= UtfToStr(title)
-		title_org = UtfToStr(title_org)
-		summary_org= UtfToStr(summary_org)
-		tagline= UtfToStr(tagline)
-		img 	= UtfToStr(img)
-
-		href = stringextract('json":["', '"', video)	# Video-Url
-		href 	= UtfToStr(href)
-		Plot = "%s||||%s" % (tagline, summary_org)		# || Code für LF (\n scheitert in router)
-		if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart
-			if SETTINGS.getSetting('pref_show_resolution') == 'false':
-				PLog('Sofortstart: ARDStartVideoMP4')
-				PlayVideo(url=href, title=title, thumb=img, Plot=Plot)
-				return
-
+		
+		PLog(quality)
+		quality= UtfToStr(quality); href= UtfToStr(href);
 		download_title = "%s | %s" % (quality, title)	# download_list stellt "Download Video" voran 
 		download_list.append(download_title + '#' + href)	
-				
-		Plot = "%s||||%s" % (tagline, summary_org)				# || Code für LF (\n scheitert in router)
-		sub_path=''# fehlt noch bei ARD
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
-			(urllib.quote_plus(href), urllib.quote_plus(title_org), urllib.quote_plus(img), 
-			urllib.quote_plus(Plot), urllib.quote_plus(sub_path))
-		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-			mediatype='video', tagline=tagline, summary=summary_org) 
-		
-	PLog(download_list[:80])
-	if 	download_list:	
-		title = " | %s"				
-		PLog(title);PLog(summary_org);PLog(tagline);PLog(thumb);
-		li = test_downloads(li,download_list,title_org,summary_org,tagline,thumb,high=-1)  # Downloadbutton(s)		
-	
-	xbmcplugin.endOfDirectory(HANDLE)
+	return download_list			
 	
 ####################################################################################################
 def ARDnew_Sendungen(title, path, img): 	# Seite mit mehreren Sendungen
@@ -1586,7 +1607,7 @@ def PodFavoritenListe(title, offset=0):
 		Inhalt = RLoad(FAVORITS_Pod)		# Default-Datei
 	else:										
 		try:
-			Inhalt = RLoad(fnameabs_path=True)	# pers. Datei verwenden (Name ebenfalls podcast-favorits.txt)	
+			Inhalt = RLoad(fname,abs_path=True)	# pers. Datei verwenden (Name ebenfalls podcast-favorits.txt)	
 		except:
 			Inhalt = ''
 		
@@ -3545,8 +3566,8 @@ def N24LastServer(url_m3u8):
 #							SingleSendung, SenderLiveResolution
 #	Format sub_path s. https://alwinesch.github.io/group__python__xbmcgui__listitem.html#ga24a6b65440083e83e67e5d0fb3379369
 #	Die XML-Untertitel der ARD werden gespeichert + nach SRT konvertiert (einschl. minus 10-Std.-Offset)
-def PlayVideo(url, title, thumb, Plot, sub_path=None):	
-	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot); PLog(sub_path);		
+def PlayVideo(url, title, thumb, Plot, sub_path=None, FavCall=''):	
+	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot); PLog(sub_path); PLog(FavCall); 		
 	
 	# # SSL-Problem bei Kodi V17.6:  ERROR: CCurlFile::Stat - Failed: SSL connect error(35)
 	url = url.replace('https', 'http')  
@@ -3585,6 +3606,11 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None):
 			xbmc.Player().showSubtitles(True)
 	li.setContentLookup(False)
 	xbmc.Player().play(url, li, False)
+	
+	# -> zurück zum Menü Favoriten, ohne: Rücksprung ins Bibl.-Menü
+	if FavCall == 'true':
+		PLog('Call_from_Favourite')
+		xbmc.executebuiltin('ActivateWindow(10134)')  
 		
 #---------------------------------------------------------------- 
 # SSL-Probleme in Kodi mit https-Code 302 (Adresse verlagert) - Lösung:
@@ -3602,8 +3628,8 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None):
 #		replaced-Url: 	dg-ndr-http-dus-dtag-cdn.cast.addradio.de/ndr/ndr1niedersachsen/..
 # url_template gesetzt von RadioAnstalten (Radio-Live-Sender)
 #
-def PlayAudio(url, title, thumb, Plot, header=None, url_template=None):
-	PLog('PlayAudio:'); PLog(title)
+def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall=''):
+	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
 
 	# Weiterleitung? - Wiederherstellung https! Vorheriger Replace mit http sinnlos.
 	page, msg = get_page(path=url, GetOnlyRedirect=True)
@@ -3637,16 +3663,22 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None):
 	#	url = '%s|%s' % (url, header) 
 	
 	PLog('PlayAudio Player_Url: ' + url)
+
 	li = xbmcgui.ListItem(path=url)				# ListItem + Player reicht für BR
 	li.setArt({'thumb': thumb, 'icon': thumb})
 	ilabels = ({'Title': title})
 	ilabels.update({'Comment': '%s' % Plot})	# Plot im MusicPlayer nicht verfügbar
 	li.setInfo(type="music", infoLabels=ilabels)							
 	li.setContentLookup(False)
+	
+	 	
 	xbmc.Player().play(url, li, False)			# Player nicht mehr spezifizieren (0,1,2 - deprecated)
 
-
-   
+	# -> zurück zum Menü Favoriten, ohne: Rücksprung ins Bibl.-Menü
+	if FavCall == 'true':
+		PLog('Call_from_Favourite')
+		xbmc.executebuiltin('ActivateWindow(10134)')
+  
 ####################################################################################################
 # path = ARD_RadioAll = https://classic.ardmediathek.de/radio/live?genre=Alle+Genres&kanal=Alle
 #	Bei Änderungen der Sender Datei livesenderRadio.xml anpassen (Sendernamen, Icons)
@@ -5212,7 +5244,7 @@ def router(paramstring):
 		# Plugin-Aufruf ohne Parameter
 		Main()
 #---------------------------------------------------------------- 
-PLog('PLUGIN_URL: ' + PLUGIN_URL)		# sys.argv[0], plugin://plugin.video.ardundzdf/
+PLog('Addon_URL: ' + PLUGIN_URL)		# sys.argv[0], plugin://plugin.video.ardundzdf/
 PLog('ADDON_ID: ' + ADDON_ID); PLog(SETTINGS); PLog(ADDON_NAME);PLog(SETTINGS_LOC);
 PLog(ADDON_PATH);PLog(ADDON_VERSION);
 PLog('HANDLE: ' + str(HANDLE))
@@ -5221,7 +5253,7 @@ PLog('HANDLE: ' + str(HANDLE))
 PluginAbsPath = os.path.dirname(os.path.abspath(__file__))
 PLog('PluginAbsPath: ' + PluginAbsPath)
 
-PLog('Start_Plugin')
+PLog('Addon: Start')
 if __name__ == '__main__':
 	try:
 		router(sys.argv[2])
@@ -5229,7 +5261,6 @@ if __name__ == '__main__':
 		msg = str(e)
 		PLog('network_error: ' + msg)
 		# xbmcgui.Dialog().ok(ADDON_NAME, 'network_error', msg)
-#		Main()			
 
 
 

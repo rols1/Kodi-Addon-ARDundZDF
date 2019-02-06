@@ -8,6 +8,15 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+06.02.2019	0.9.1	ARDStartVideoMP4: Video-Sofortstart mit höchster Qualität (Liste in
+			neuer Funktion ARDStartVideoMP4get). 
+			Experimentelle Funktion CheckFavourites wieder entfernt (nur in PlayAudio OK).
+
+not on Github	0.9.0	PlayVideo, PlayAudio: experimentelle Funktion CheckFavourites (Rücksprung zum 
+			Fav-Menü), Auswertung in PlayVideo + PlayAudio.
+			Haupt-PRG, Updater: Austausch Bezeichner Plugin -> Addon.
+			PodFavoritenListe: Fix vergessenes Komma in RLoad(fname,abs_path=True).
+
 30.01.2019 	0.8.9	Radio-Livestreams (RadioAnstalten, parseLinks_Mp4_Rtmp): vergessenen Parameter sub_path
 			ergänzt.
 
