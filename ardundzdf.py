@@ -31,7 +31,7 @@ teilstring=util.teilstring;  repl_dop=util.repl_dop; cleanhtml=util.cleanhtml;  
 unescape=util.unescape;  mystrip=util.mystrip; make_filenames=util.make_filenames;  transl_umlaute=util.transl_umlaute;  
 humanbytes=util.humanbytes;  time_translate=util.time_translate; get_keyboard_input=util.get_keyboard_input; 
 ClearUp=util.ClearUp; repl_json_chars=util.repl_json_chars; seconds_translate=util.seconds_translate;
-transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; 
+transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; CheckFavourites=util.CheckFavourites;
 
 
 import resources.lib.updater 			as updater		
@@ -42,8 +42,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '0.9.1'		 
-VDATE = '06.02.2019'
+VERSION =  '0.9.2'		 
+VDATE = '08.02.2019'
 
 # 
 #	
@@ -300,6 +300,11 @@ def Main():
 		fparams='&fparams=""'
 		addDir(li=li, label='Download-Tools', action="dirList", dirID="DownloadsTools", 
 			fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), fparams=fparams)		
+	if SETTINGS.getSetting('pref_showFavs') ==  'true':			# Favoriten einblenden
+		summary = 'Favoriten: ARDundZDF-Favoriten zeigen und aufrufen'
+		fparams='&fparams=""'
+		addDir(li=li, label='Favoriten', action="dirList", dirID="ShowFavs", 
+			fanart=R(FANART), thumb=R(ICON_DIR_FAVORITS), fparams=fparams)		
 								
 	repo_url = 'https://github.com/{0}/releases/'.format(GITHUB_REPOSITORY)
 	call_update = False
@@ -859,7 +864,7 @@ def ARDStartRubrikSingle(path, title, img, ID=''):
 			if SETTINGS.getSetting('pref_load_summary') == 'true':
 				summ_txt = get_summary_pre(href, 'ARDnew')
 				if 	summ_txt:
-					summ = txt
+					summ = summ_txt
 
 		fparams='&fparams=path=%s, title=%s, tagline=%s, ID=%s' \
 			% (urllib2.quote(href), urllib2.quote(title), tagline, ID)
@@ -2710,6 +2715,104 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 		return li
 		
 ####################################################################################################
+# Aufruf Main
+#	Einlesen in CheckFavourites (Modul util) jeweils vor Addon-Start
+#	Probleme:  	Kodi's Fav-Funktion übernimmt nicht summary, tagline, mediatype aus addDir-Call
+#				Keine Begleitinfos, falls  summary, tagline od. Plot im addDir-Call fehlen.
+#				List- / Dir-Symbole nicht abwechselnd möglich
+#
+def ShowFavs():							# Favoriten einblenden
+	PLog('ShowFavs:')
+	my_favs = CheckFavourites()			# Addon-Favs einlesen
+	
+	if len(my_favs) == 0:
+		return
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)									# Home-Button
+															
+															
+	tagline = "Anzahl Addon-Favoriten: %s" % str(len(my_favs)) 	# Info-Button
+	s1 		= "Hier werden die ARDundZDF-Favoriten aus Kodi's Favoriten-Menü eingeblendet."
+	s2		= 'Favoriten enthalten nicht in allen Fällen Begleitinfos zu Inhalt, Länge usw.'
+	s3		= "Favoriten entfernen: im Kodi's Favoriten-Menü oder am Ursprungsort im Addon (nicht hier!)."
+	summary	= "%s\n\n%s\n\n%s"		% (s1, s3, s2)
+	fparams='&fparams=""'
+	addDir(li=li, label='Infos zum Menü Favoriten', action="dirList", dirID="ShowFavs", 
+		fanart=R(ICON_DIR_FAVORITS), thumb=R(ICON_INFO), fparams=fparams,
+		summary=summary, tagline=tagline)		
+	
+	for fav in my_favs:
+		name=''; thumb=''; dirPars=''; fparams='';			
+		name 	= re.search('<favourite name="(.*?)"', fav) # 1. alle Parameter einsammeln
+		thumb 	= re.search(' thumb="(.*?)">(.*?)<', fav)
+		dirPars	= re.search('action=(.*?)&fparams',fav)		# dirList&dirID=PlayAudio&fanart..
+		fparams = re.search('&fparams=\{(.*?)\}',fav)
+		
+		if name: 	name 	= name.group(1)
+		if thumb:	thumb 	= thumb.group(1)
+		if dirPars:	dirPars = dirPars.group(1)
+		if fparams:	fparams = fparams.group(1)
+		
+		dirPars = unescape(dirPars); fparams = urllib2.unquote(fparams) 	
+		PLog(name); PLog(thumb); PLog(dirPars); PLog('fparams: ' + fparams);
+		
+		# Begleitinfos aus fparams holen - Achtung Quotes!		# 2. fparams auswerten
+		fpar_tag = stringextract("tagline': '", "'", fparams) 
+		fpar_summ = stringextract("summ': '", "'", fparams)
+		if fpar_summ == '':
+			fpar_summ = stringextract("summary': '", "'", fparams)
+		fpar_plot= stringextract("Plot': '", "'", fparams) 
+		fpar_path= stringextract("path': '", "'", fparams) # PodFavoriten
+		
+		action=''; dirID=''; summary=''; tagline='';
+		Plot='';
+		dirPars = dirPars.split('&')						# 3. addDir-Parameter auswerten
+		action	= dirPars[0] # = dirList 					#	ohne fparams, name + thumb s.o.
+		del dirPars[0]
+		for dirPar in dirPars:
+			if 	dirPar.startswith('dirID'):		# dirID=PlayAudio
+				dirID = dirPar.split('=')[1]
+			if 	dirPar.startswith('fanart'):		
+				fanart = dirPar[7:]				# '=' ev. in Link enthalten 
+			if 	dirPar.startswith('thumb'):		# s.o. - hier aktualisieren
+				thumb = dirPar[6:]				# '=' ev. in Link enthalten 
+			if 	dirPar.startswith('summary'):		
+				summary = dirPar.split('=')[1]
+			if 	dirPar.startswith('tagline'):		
+				tagline = dirPar.split('=')[1]
+			if 	dirPar.startswith('Plot'):		
+				Plot = dirPar.split('=')[1]
+			#if 	dirPar.startswith('mediatype'):		# fehlt in Kodi's Fav-Funktion 	
+			#	mediatype = dirPar.split('=')[1]
+				
+		PLog('dirPars:'); PLog(action); PLog(dirID); PLog(fanart); PLog(thumb);
+		if summary == '':								# Begleitinfos aus fparams verwenden
+			summary = fpar_summ
+		if tagline == '':	
+			tagline = fpar_tag
+		if Plot == '':	
+			Plot = fpar_plot		# fparams-Plot
+		if Plot == '':	
+			Plot = fpar_path		# PodFavoriten
+		Plot = Plot.replace('||', '\n')					# s. PlayVideo
+		Plot = Plot.replace('+|+', '')	
+		if summary == '':							
+			summary = Plot
+		summary = summary.replace('+', ' ')	
+			
+		PLog('summary: ' + summary); PLog('tagline: ' + tagline); PLog('Plot: ' + Plot)
+		if SETTINGS.getSetting('pref_FavsInfo') ==  'false':	# keine Begleitinfos 
+			summary='';  tagline=''
+			
+		PLog('fanart: ' + fanart); PLog('thumb: ' + thumb);
+		fparams ="&fparams={%s}" % urllib2.quote(fparams)			
+		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=thumb,
+			fparams=fparams, summary=summary, tagline=tagline)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	
+####################################################################################################
 # extrahiert aus Mediendatei (json) .mp3-, .mp4-, rtmp-Links + Untertitel (Aufrufer 
 # SingleSendung). Bsp.: http://www.ardmediathek.de/play/media/35771780
 #
@@ -4535,7 +4638,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 #	ID: ARD, ZDF - Podcasts entspr. ARD
 # Es wird nur die Webseite ausgewertet, nicht die json-Inhalte der Ladekette.
 # Cache: 
-#		Text wird in esources/data/Dict gespeichert, Dateiname aus path generiert.
+#		Text wird in ../resources/data/Dict gespeichert, Dateiname aus path generiert.
 #
 # Aufrufer: ZDF: 	ZDF_get_content (für alle ZDF-Rubriken)
 #			ARD: 	ARDStart	-> ARDStartRubrik 

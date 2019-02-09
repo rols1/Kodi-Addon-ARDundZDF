@@ -44,6 +44,11 @@
 	<setting label="Inhaltstexte (im Voraus geladen): " type="labelenum" values="1|10|30|100" default="30"
 		id="pref_TEXTE_store_days"/>
 </category> 
+
+ <category label="Favoriten">
+ 	<setting label="ARDundZDF-Favoriten im Hauptmenü einblenden" type="bool" id="pref_showFavs" default="true"/>
+	<setting label="Begleitinfos verwenden - falls verfügbar" type="bool" id="pref_FavsInfo" default="true"/>
+ </category> 
 </settings>
 
 

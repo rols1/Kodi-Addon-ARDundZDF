@@ -227,6 +227,7 @@ def UtfToStr(line):
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', **kwargs):
 	PLog('addDir:')
 	PLog('addDir - label: %s, action: %s, dirID: %s' % (label, action, dirID))
+	PLog('addDir - summary: %s, tagline: %s, mediatype: %s' % (summary, tagline, mediatype))
 	
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
 	isFolder = True					
@@ -253,7 +254,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	if summary:									
 		summary = UtfToStr(summary)
 		ilabels['Plot'] = "%s\n\n%s" % (ilabels['Plot'], summary)
-	if mediatype:							# "video", "music" setzen List- statt Dir-Symbol
+	if mediatype:							# "video", "music" setzen: List- statt Dir-Symbol
 		ilabels.update({'mediatype': '%s' % mediatype})
 		
 	PLog('ilabels: ' + str(ilabels))
@@ -827,6 +828,25 @@ def xml2srt(infile):
 			
 	return outfile
 
+#----------------------------------------------------------------
+#	Einlesen der Favs dieses Addons  
+#	Aufrufer Haupt-PRG vor Main 
+#
+def CheckFavourites():	
+	PLog('CheckFavourites:')
+	fname = xbmc.translatePath('special://profile/favourites.xml')	
+	page = RLoad(fname,abs_path=True)
+	page = urllib2.unquote(page)		
+	favs = re.findall("<favourite.*?</favourite>", page)
+	# PLog(favs)
+	my_favs = []; fav_cnt=0;
+	for fav in favs:
+		if ADDON_ID not in fav: 						# skip fremde Addons 	
+			continue
+		my_favs.append(fav) 
+		
+	# PLog(my_favs)
+	return my_favs
 #----------------------------------------------------------------  
 
    

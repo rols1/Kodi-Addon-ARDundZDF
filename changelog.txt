@@ -8,6 +8,11 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+09.02.2019	0.9.2	Einblenden der ARDundZDF-Favoriten im Hauptmenü: Funktion ShowFavs (Hapt-Prg) und
+			Funktion CheckFavourites (Modul util). 
+			Wiedergewinnnung von Begleitinfos aus Funktionsparametern (fparam).
+			ARDStartRubrikSingle: Fix txt -> summ_txt.
+			
 06.02.2019	0.9.1	ARDStartVideoMP4: Video-Sofortstart mit höchster Qualität (Liste in
 			neuer Funktion ARDStartVideoMP4get). 
 			Experimentelle Funktion CheckFavourites wieder entfernt (nur in PlayAudio OK).
