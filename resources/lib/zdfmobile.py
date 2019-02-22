@@ -62,28 +62,28 @@ def Main_ZDFmobile():
 	
 	# Suche bleibt abgeschaltet - bisher keine Suchfunktion bei zdf-cdn.live.cellular.de gefunden.
 	# Web-Player: folgendes DirectoryObject ist Deko für das nicht sichtbare InputDirectoryObject dahinter:
-	#fparams='&fparams=name=%s' % name
+	#fparams="&fparams={'name': '%s'}" % name
 	#addDir(li=li, label='Suche: im Suchfeld eingeben', action="dirList", dirID="Main_ZDFmobile", 
 	#	fanart=R(ICON_SEARCH), thumb=R(ICON_SEARCH), fparams=fparams)
 		
 	title = 'Startseite'
-	fparams='&fparams=ID=%s' % title
+	fparams="&fparams={'ID': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Hub", fanart=R(ICON_MAIN_ZDFMOBILE), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 
-	fparams='&fparams=ID=Kategorien'
+	fparams="&fparams={'ID': 'Kategorien'}"
 	addDir(li=li, label="Kategorien", action="dirList", dirID="resources.lib.zdfmobile.Hub", fanart=R(ICON_MAIN_ZDFMOBILE), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 
-	fparams='&fparams=ID=Sendungen A-Z'
+	fparams="&fparams={'ID': 'Sendungen A-Z'}"
 	addDir(li=li, label="Sendungen A-Z", action="dirList", dirID="resources.lib.zdfmobile.Hub", fanart=R(ICON_MAIN_ZDFMOBILE), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 
-	fparams='&fparams=ID=Sendung verpasst'
+	fparams="&fparams={'ID': 'Sendung verpasst'}"
 	addDir(li=li, label="Sendung verpasst", action="dirList", dirID="resources.lib.zdfmobile.Hub", fanart=R(ICON_MAIN_ZDFMOBILE), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 
-	fparams='&fparams=ID=Live TV'
+	fparams="&fparams={'ID': 'Live TV'}"
 	addDir(li=li, label='Live TV', action="dirList", dirID="resources.lib.zdfmobile.Hub", fanart=R(ICON_MAIN_ZDFMOBILE), 
 	thumb=R(ICON_DIR_FOLDER), fparams=fparams, summary='nur in Deutschland zu empfangen!')
 
@@ -170,7 +170,7 @@ def Verpasst(DictID):					# Wochenliste
 		path = 'https://zdf-cdn.live.cellular.de/mediathekV2/broadcast-missed/%s' % iDate
 		title =	"%s | %s" % (display_date, iWeekday)
 		PLog(title); PLog(path);
-		fparams='&fparams=path=%s,datum=%s' % (path, display_date)
+		fparams="&fparams={'path': '%s', 'datum': '%s'}" % (path, display_date)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Verpasst_load", fanart=R(ICON_MAIN_ZDFMOBILE), 
 			thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 	xbmcplugin.endOfDirectory(HANDLE)
@@ -250,7 +250,7 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				title = clusterObject["name"]
 				title = title.encode("utf-8")
 				path = path.encode("utf-8")
-				fparams='&fparams=path=%s,title=%s,DictID=%s' % (path, title, DictID)
+				fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s'}" % (path, title, DictID)
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.SingleRubrik", 
 				fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 								
@@ -331,7 +331,8 @@ def SingleRubrik(path, title, DictID):
 		if entry["type"] == "video" or entry["type"] == "brand":
 			title,subTitle,descr,img,date,dauer = Get_content(entry,imgWidth)
 			if subTitle: 
-				title = '%s | %s' % (title,subTitle)
+				# title = '%s | %s' % (title,subTitle)
+				title = '%s | %s' % (subTitle, title ) 	# subTitle = Sendungstitel
 			if date:
 				title = '%s | %s' % (title,date)
 			if dauer:

@@ -84,7 +84,7 @@ def page(name, path, offset):
 		tag = UtfToStr(tag)
 		
 		PLog(title); PLog(summ); PLog(tag) 
-		fparams='&fparams=title=%s, path=%s' % (urllib2.unquote(title), urllib2.unquote(href))
+		fparams="&fparams={'title': '%s', 'path': '%s'}" % (urllib2.unquote(title), urllib2.unquote(href))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARD_Bildgalerie.Hub", 
 			fanart=R('ard-bilderserien.png'), thumb=R('ard-bilderserien.png'), fparams=fparams, summary=summ, tagline=tag)
 

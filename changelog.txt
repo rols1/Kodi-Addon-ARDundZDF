@@ -8,9 +8,30 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+19.02.2019	0.9.7	Erweiterung: Merkliste - Anzeige integriert in ShowFavs, Laden in ReadFavourites
+			Erweiterung: Kontextmenü - umgesetzt in addDir (Modul util), genutzt für Merkliste.
+			Umbenennung CheckFavourites -> ReadFavourites.	
+			unescape (Modul util): Behandlung leer + None.
+			
+not on Github	0.9.6	DownloadsList: Ergänzung Titel bei Downloads ohne Textdatei, mit Textdatei:
+			tagline + quality zusammengefügt. 
+			TVLiveRecordSender: Test auf Pfad zu ffmpeg, Hinw. auf Einstellungen.	
+			
+not on Github	0.9.5	EPG_ShowSingle: Kennzeichnung laufende Sendung (title + summ: red, bold).
+			ZDF Mobile (SingleRubrik): Austausch subTitle, title (besser geeignet für A-Z).		
+			
+not on Github	0.9.4	Umstellung aller fparams-String-Parameter auf Dict (notwendig für Favs + Merkliste).
+			EPG_ShowSingle: Kennzeichnung laufende Sendung (title + summ: red, bold).
+
+not on Github	0.9.3	DownloadMultiple (Modul Podcontent): Fix url + title aus POD_rec (UtfToStr).
+			PodFavoritenListe: Fix title.replace('&', 'plus') - router-kompatibel.
+			PodFavoriten (Modul Podcontent): Fix title.replace('"', '*').
+			Modul Podcontent: fehlende BASE_URL ergänzt (nötig in get_pod_content).
+			ShowFavs: json-Pfad in Plot-Parmeter bei Favs von zdfMobile gelöscht (nichtssagend). 
+
 09.02.2019	0.9.2	Einblenden der ARDundZDF-Favoriten im Hauptmenü: Funktion ShowFavs (Hapt-Prg) und
-			Funktion CheckFavourites (Modul util). 
-			Wiedergewinnnung von Begleitinfos aus Funktionsparametern (fparam).
+			Funktion CheckFavourites (Modul util). Wiedergewinnnung von Begleitinfos aus 
+			Funktionsparametern (fparam).
 			ARDStartRubrikSingle: Fix txt -> summ_txt.
 			
 06.02.2019	0.9.1	ARDStartVideoMP4: Video-Sofortstart mit höchster Qualität (Liste in

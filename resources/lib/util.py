@@ -9,6 +9,7 @@ import urllib, urllib2, ssl
 from StringIO import StringIO
 import gzip, zipfile
 from urlparse import parse_qsl
+import base64 			# url-Kodierung für Kontextmenüs
 import json				# json -> Textstrings
 import pickle			# persistente Variablen/Objekte
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
@@ -32,6 +33,7 @@ DEBUG			= SETTINGS.getSetting('pref_info_debug')
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 DICTSTORE 		= os.path.join("%s/resources/data/Dict") % ADDON_PATH
+WATCHFILE		= os.path.join("%s/resources/data/merkliste.xml") % ADDON_PATH
 
 ICON_MAIN_POD	= 'radio-podcasts.png'
 ICON_MAIN_ZDFMOBILE		= 'zdf-mobile.png'
@@ -67,32 +69,32 @@ def home(li, ID):
 	
 	if ID == NAME:		# 'ARD und ZDF'
 		name = 'Home : ' + NAME
-		fparams='&fparams=""'
+		fparams="&fparams={}"
 		addDir(li=li, label=name, action="dirList", dirID="Main", fanart=R('home.png'), 
 			thumb=R('home.png'), fparams=fparams)
 			
 	if ID == 'ARD':
 		name = 'Home: ' + "ARD Mediathek"
 		Dict_CurSender = Dict("load", "Dict_CurSender")
-		fparams='&fparams=name=%s, sender=%s'	% (urllib2.quote(name), Dict_CurSender)
+		fparams="&fparams={'name': '%s', 'sender': '%s'}"	% (urllib2.quote(name), Dict_CurSender)
 		addDir(li=li, label=title, action="dirList", dirID="Main_ARD", fanart=R('home-ard.png'), 
 			thumb=R('home-ard.png'), fparams=fparams)
 			
 	if ID == 'ZDF':
 		name = 'Home: ' + "ZDF Mediathek"
-		fparams='&fparams=name=%s' % urllib2.quote(name)
+		fparams="&fparams={'name': '%s'}" % urllib2.quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_ZDF", fanart=R('home-zdf.png'), 
 			thumb=R('home-zdf.png'), fparams=fparams)
 		
 	if ID == 'ZDFmobile':
 		name = 'Home :' + "ZDFmobile"
-		fparams='&fparams=""' 
+		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
 			fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_MAIN_ZDFMOBILE), fparams=fparams)
 			
 	if ID == 'PODCAST':
 		name = 'Home :' + "Radio-Podcasts"
-		fparams='&fparams=name=%s' % urllib2.quote(name)
+		fparams="&fparams={'name': '%s'}" % urllib2.quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_POD", fanart=R(ICON_MAIN_POD), 
 			thumb=R(ICON_MAIN_POD), fparams=fparams)
 
@@ -224,11 +226,17 @@ def UtfToStr(line):
 # In Kodi fehlen die summary- und tagline-Zeilen von Plex. Diese ersetzen wir
 #	hier einfach durch infoLabels['Plot'], wobei summary und tagline durch 
 #	2 Leerzeilen getrennt werden (Anzeige links unter icon).
-def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', **kwargs):
+#
+#	Kontextmenüs (Par. cmenu): base64-Kodierung benötigt für url-Parameter (nötig für router)
+
+def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True, **kwargs):
 	PLog('addDir:')
 	PLog('addDir - label: %s, action: %s, dirID: %s' % (label, action, dirID))
-	PLog('addDir - summary: %s, tagline: %s, mediatype: %s' % (summary, tagline, mediatype))
+	PLog('addDir - summary: %s, tagline: %s, mediatype: %s, cmenu: %s' % (summary, tagline, mediatype, cmenu))
 	
+	label	=UtfToStr(label); thumb		=UtfToStr(thumb); fanart	=UtfToStr(fanart); 
+	summary	=UtfToStr(summary); tagline	=UtfToStr(tagline); fparams	=UtfToStr(fparams);
+
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
 	isFolder = True					
 	if dirID == "PlayVideo": 	# bei "PlayAudio": skipping unplayable item
@@ -249,21 +257,44 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	# PLog('summary, tagline: %s, %s' % (summary, tagline))
 	ilabels = {'Plot': ''}								# ilabels (Plot: long, Plotoutline: short)	
 	if tagline:								
-		tagline = UtfToStr(tagline)
 		ilabels['Plot'] = tagline
 	if summary:									
-		summary = UtfToStr(summary)
 		ilabels['Plot'] = "%s\n\n%s" % (ilabels['Plot'], summary)
 	if mediatype:							# "video", "music" setzen: List- statt Dir-Symbol
 		ilabels.update({'mediatype': '%s' % mediatype})
 		
 	PLog('ilabels: ' + str(ilabels))
 	li.setInfo(type="video", infoLabels=ilabels)						
+	
+	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
+		if cmenu:											# Kontextmenüs Merkliste hinzufügen	
+			Plot = ilabels['Plot']
+			Plot = Plot.replace('\n', '||')		# || Code für LF (\n scheitert in router)
+			# PLog('Plot: ' + Plot)
+			fparams_add = "&fparams={'action': 'add', 'name': '%s', 'thumb': '%s', 'Plot': '%s', 'url': '%s'}" \
+				%   (label, thumb,  urllib.quote_plus(Plot), urllib.quote_plus(url))
+				# %   (label, thumb,  base64.b64encode(url))#möglich: 'Incorrect padding' error 
+			fparams_add = urllib.quote_plus(fparams_add)
+
+			fparams_del = "&fparams={'action': 'del', 'name': '%s'}" \
+				%   (label)									# name reicht für del
+				# %   (label, thumb,  base64.b64encode(url))
+			fparams_del = urllib.quote_plus(fparams_del)	
+
+			li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
+				% (ADDON_ID, fparams_add)), ('Aus Merkliste entfernen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
+				% (ADDON_ID, fparams_del))])
+		else:
+			pass											# Kontextmenü entfernen klappt so nicht
+			#li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=dummy)' \
+			#	% (ADDON_ID))], replaceItems=True)
+
 		
 	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
+	
 	PLog('addDir_End')		
 	return	
-	
+
 #---------------------------------------------------------------- 
 # holt kontrolliert raw-Content, cTimeout für cacheTime
 # 02.09.2018	erweitert um 2. Alternative mit urllib2.Request +  ssl.SSLContext
@@ -636,8 +667,9 @@ def unescape(line):
 # HTML-Escapezeichen in Text entfernen, bei Bedarf erweitern. ARD auch &#039; statt richtig &#39;	
 #					# s.a.  ../Framework/api/utilkit.py
 #					# Ev. erforderliches Encoding vorher durchführen 
-#	line =  UtfToStr(line)
-		
+#	
+	if line == None or line == '':
+		return ''	
 	for r in	(("&amp;", "&"), ("&lt;", "<"), ("&gt;", ">")
 		, ("&#39;", "'"), ("&#039;", "'"), ("&quot;", '"'), ("&#x27;", "'")
 		, ("&ouml;", "ö"), ("&auml;", "ä"), ("&uuml;", "ü"), ("&szlig;", "ß")
@@ -829,15 +861,21 @@ def xml2srt(infile):
 	return outfile
 
 #----------------------------------------------------------------
-#	Einlesen der Favs dieses Addons  
-#	Aufrufer Haupt-PRG vor Main 
+#	Favs / Merkliste dieses Addons einlesen
 #
-def CheckFavourites():	
-	PLog('CheckFavourites:')
-	fname = xbmc.translatePath('special://profile/favourites.xml')	
+def ReadFavourites(mode):	
+	PLog('ReadFavourites:')
+	if mode == 'Favs':
+		fname = xbmc.translatePath('special://profile/favourites.xml')
+	else:
+		fname = WATCHFILE
+		
 	page = RLoad(fname,abs_path=True)
-	page = urllib2.unquote(page)		
-	favs = re.findall("<favourite.*?</favourite>", page)
+			
+	if mode == 'Favs':
+		favs = re.findall("<favourite.*?</favourite>", page)
+	else:
+		favs = re.findall("<merk.*?</merk>", page)
 	# PLog(favs)
 	my_favs = []; fav_cnt=0;
 	for fav in favs:

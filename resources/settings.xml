@@ -45,9 +45,10 @@
 		id="pref_TEXTE_store_days"/>
 </category> 
 
- <category label="Favoriten">
- 	<setting label="ARDundZDF-Favoriten im Hauptmenü einblenden" type="bool" id="pref_showFavs" default="true"/>
-	<setting label="Begleitinfos verwenden - falls verfügbar" type="bool" id="pref_FavsInfo" default="true"/>
+ <category label="Favoriten / Merkliste">
+ 	<setting label="ARDundZDF-Favoriten im Hauptmenü einblenden" type="bool" id="pref_showFavs" default="false"/>
+ 	<setting label="ARDundZDF-Merkliste verwenden (getrennt von Favoriten)" type="bool" id="pref_watchlist" default="true"/>
+	<setting label="Begleitinfos für Favoriten und Merkliste verwenden - falls verfügbar" type="bool" id="pref_FavsInfo" default="true"/>
  </category> 
 </settings>
 

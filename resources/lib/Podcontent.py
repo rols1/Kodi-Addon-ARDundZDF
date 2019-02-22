@@ -49,7 +49,7 @@ ICON_DOWNL 				= "icon-downl.png"
 ICON_NOTE 				= "icon-note.png"
 ICON_STAR 				= "icon-star.png"
 
-
+BASE_URL				= 'https://classic.ardmediathek.de'
 ####################################################################################################
 Podcast_Scheme_List = [		# Liste vorhandener Auswertungs-Schemata
 # fehlendes http / https wird in Auswertungsschemata ersetzt
@@ -121,6 +121,7 @@ def PodFavoriten(title, path, offset=0):
 			DLMultiple = False
 			
 		title = UtfToStr(title)
+		title = title.replace('"', '*')		# "-Zeichen verhindert json.loads in router
 		title = unescape(title)
 		url_list.append(url)
 		img = R(ICON_NOTE)	
@@ -217,9 +218,11 @@ def DownloadMultiple(key_url_list, key_POD_rec):						# Sammeldownloads
 	li = home(li, ID='PODCAST')								# Home-Button
 	
 	rec_len = len(POD_rec)
-	AppPath = SETTINGS.getSetting('pref_curl_path') 
+	AppPath = SETTINGS.getSetting('pref_curl_path')
+	AppPath = UtfToStr(AppPath) 
 	AppPath = os.path.abspath(AppPath)
 	dest_path = SETTINGS.getSetting('pref_curl_download_path')
+	dest_path = UtfToStr(dest_path)
 	curl_param_list = '-k '									# schaltet curl's certificate-verification ab
 
 	PLog(AppPath)
@@ -237,6 +240,7 @@ def DownloadMultiple(key_url_list, key_POD_rec):						# Sammeldownloads
 		#if  i > 2:											# reduz. Testlauf
 		#	break
 		url = rec[1]; title = rec[7]
+		title = UtfToStr(title); url = UtfToStr(url)
 		title = unescape(title)								# schon in PodFavoriten, hier erneut nötig 
 		if 	SETTINGS.getSetting('pref_generate_filenames'):	# Dateiname aus Titel generieren
 			dfname = make_filenames(title) + '.mp3'
@@ -248,6 +252,7 @@ def DownloadMultiple(key_url_list, key_POD_rec):						# Sammeldownloads
 		# Parameter-Format: -o Zieldatei_kompletter_Pfad Podcast-Url -o Zieldatei_kompletter_Pfad Podcast-Url ..
 		curl_fullpath = os.path.join(dest_path, dfname)		 
 		curl_fullpath = os.path.abspath(curl_fullpath)		# os-spezischer Pfad
+		PLog("Mark3")
 		curl_param_list = curl_param_list + ' -o '  + curl_fullpath + ' ' + url
 		
 	cmd = AppPath + ' ' + curl_param_list
