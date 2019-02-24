@@ -43,8 +43,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '0.9.7'		 
-VDATE = '22.02.2019'
+VERSION =  '0.9.8'		 
+VDATE = '24.02.2019'
 
 # 
 #	
@@ -2825,21 +2825,25 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		else:
 			Plot = Plot_org
 
-		if Plot:
-			if tagline in Plot:
-				tagline = ''
-			Plot=unescape(Plot)
-			Plot = Plot.replace('||', '\n')			# s. PlayVideo
-			Plot = Plot.replace('+|+', '')	
-			if Plot.strip().startswith('stage|'):	# zdfMobile: nichtssagenden json-Pfad löschen
-				Plot = 'Beitrag aus zdfMobile' 
-		
-		if summary == '' or summary == None:		# Plot -> summary					
-			summary = Plot
-		summary = summary.replace('+', ' ')	
-		
+		if Plot:									# Merkliste: Plot im Kontextmenü (addDir)
+			if mode == 'Favs':						# Fav's: Plot ev. in fparams enthalten (s.o.)
+				if tagline in Plot:
+					tagline = ''
+				if summary == '' or summary == None:# Plot -> summary					
+					summary = Plot
+			else:
+				tagline = '' 						# falls Verwendung von tagline+summary aus fparams:
+				summary = Plot						#	non-ascii-chars entfernen!
+						
 		summary = urllib.unquote_plus(summary); tagline = urllib.unquote_plus(tagline); 
 		Plot = urllib.unquote_plus(Plot)
+		summary = summary.replace('+', ' ')
+		summary = summary.replace('&quot;', '"')
+		Plot=unescape(Plot)
+		Plot = Plot.replace('||', '\n')			# s. PlayVideo
+		Plot = Plot.replace('+|+', '')	
+		if Plot.strip().startswith('stage|'):	# zdfMobile: nichtssagenden json-Pfad löschen
+			Plot = 'Beitrag aus zdfMobile' 
 		PLog('summary: ' + summary); PLog('tagline: ' + tagline); PLog('Plot: ' + Plot)
 		
 		if SETTINGS.getSetting('pref_FavsInfo') ==  'false':	# keine Begleitinfos 
@@ -2855,7 +2859,9 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 			fanart = R(ICON_DIR_FAVORITS)
 		else:
 			fanart = R(ICON_DIR_WATCH)														
-						
+		
+		summary = summary.replace('||', '\n')		# wie Plot	
+		tagline = tagline.replace('||', '\n')			
 		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=thumb,
 			summary=summary, tagline=tagline, fparams=fparams)
 

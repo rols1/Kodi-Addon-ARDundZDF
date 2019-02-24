@@ -8,6 +8,10 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+24.02.2019	0.9.8	Merkliste (Umlauteproblem in Begleitinfos): getrennte Behandlung von Plot/summary/tagline
+			für Favs und Merkliste.
+			Settings: Default für Plugin-Logging aus AUS gesetzt.  	
+
 22.02.2019	0.9.7	Erweiterung: Merkliste - Anzeige integriert in ShowFavs, Laden in ReadFavourites
 			Erweiterung: Kontextmenü - umgesetzt in addDir (Modul util), genutzt für Merkliste.
 			Umbenennung CheckFavourites -> ReadFavourites.	
@@ -21,7 +25,6 @@ not on Github	0.9.5	EPG_ShowSingle: Kennzeichnung laufende Sendung (title + summ
 			ZDF Mobile (SingleRubrik): Austausch subTitle, title (besser geeignet für A-Z).		
 			
 not on Github	0.9.4	Umstellung aller fparams-String-Parameter auf Dict (notwendig für Favs + Merkliste).
-			EPG_ShowSingle: Kennzeichnung laufende Sendung (title + summ: red, bold).
 
 not on Github	0.9.3	DownloadMultiple (Modul Podcontent): Fix url + title aus POD_rec (UtfToStr).
 			PodFavoritenListe: Fix title.replace('&', 'plus') - router-kompatibel.
