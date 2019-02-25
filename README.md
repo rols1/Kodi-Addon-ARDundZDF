@@ -2,7 +2,7 @@ Kodi-Addon-ARDundZDF
 ===================
 
 Addon für Kodi / XBMC (Kodi-Version von [Plex-Plugin ARDundZDF](https://github.com/rols1/ARDundZDF)).
-Mit Inhalten der Mediatheken von ARD und ZDF, 
+Mit Inhalten der Mediatheken von ARD und ZDF,
 einschließlich Live-TV mit Aufnahmefunktion, Live-Radio, Podcasts
 
 Für die ZDF Mediathek kann wahlweise die kompakte Version ZDFmobile genutzt werden. 
