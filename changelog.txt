@@ -8,6 +8,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+25.02.2019	0.9.9	Github-Repo: Webhook für Lore's Webhook zum Kodinerd-Repo eingerichtet + addon.xml
+			aktualisiert. Keine Änderungen im Quelltext!
+
 24.02.2019	0.9.8	Merkliste (Umlauteproblem in Begleitinfos): getrennte Behandlung von Plot/summary/tagline
 			für Favs und Merkliste.
 			Settings: Default für Plugin-Logging aus AUS gesetzt.  	
