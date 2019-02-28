@@ -7,6 +7,8 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+28.02.2019	1.0.0	Umlauteproblem in Begleitinfos: zusätzl. Funktion transl_doubleUTF8 - Einsatz in
+			PlayAudio + PlayVideo.
 
 25.02.2019	0.9.9	Github-Repo: Webhook für Lore's Webhook zum Kodinerd-Repo eingerichtet + addon.xml
 			aktualisiert. Keine Änderungen im Quelltext!

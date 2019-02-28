@@ -33,18 +33,19 @@ unescape=util.unescape;  mystrip=util.mystrip; make_filenames=util.make_filename
 humanbytes=util.humanbytes;  time_translate=util.time_translate; get_keyboard_input=util.get_keyboard_input; 
 ClearUp=util.ClearUp; repl_json_chars=util.repl_json_chars; seconds_translate=util.seconds_translate;
 transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; ReadFavourites=util.ReadFavourites;
+transl_doubleUTF8=util.transl_doubleUTF8;
 
 
 import resources.lib.updater 			as updater		
 import resources.lib.zdfmobile
 import resources.lib.EPG				as EPG	
 import resources.lib.Podcontent 		as Podcontent
-# import resources.lib.ARD_Bildgalerie 	as ARD_Bildgalerie	# 10.12.2018 nicht mehr verfügbar
+# import resources.lib.ARD_Bildgalerie 	as ARD_Bildgalerie	# 10.12.2018 ARD-Link nicht mehr verfügbar
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '0.9.9'		 
-VDATE = '25.02.2019'
+VERSION =  '1.0.0'		 
+VDATE = '28.02.2019'
 
 # 
 #	
@@ -1038,11 +1039,13 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='')
 			PlayVideo(url=href, title=title, thumb=img, Plot=Plot)
 			return
 	sub_path=''		# fehlt noch bei ARD
+		
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
 		(urllib.quote_plus(href), urllib.quote_plus(title_org), urllib.quote_plus(img), urllib.quote_plus(Plot), 
 		urllib.quote_plus(sub_path))
 	addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 		mediatype='video', tagline=tagline, summary=summ) 
+	
 	
 	li = Parseplaylist(li, href, img, geoblock, tagline=tagline, descr=summ)	# einzelne Auflösungen 		
 			
@@ -2023,8 +2026,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0):
 	PLog('SingleSendung:')						
 	PLog('path: ' + path)			
 	PLog('ID: ' + str(ID))
-	PLog(thumb)
-	
+	PLog(thumb); PLog(summary); PLog(tagline);
 	
 	title = urllib2.unquote(title)
 	title = UtfToStr(title); summary = UtfToStr(summary); tagline = UtfToStr(tagline)
@@ -2861,7 +2863,8 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 			fanart = R(ICON_DIR_WATCH)														
 		
 		summary = summary.replace('||', '\n')		# wie Plot	
-		tagline = tagline.replace('||', '\n')			
+		tagline = tagline.replace('||', '\n')
+		
 		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=thumb,
 			summary=summary, tagline=tagline, fparams=fparams)
 
@@ -2878,12 +2881,13 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 #
 def Watch(action, name, thumb='', Plot='', url=''):		
 	PLog('Watch: ' + action)
+	
 	url = urllib.unquote_plus(url)	
-	url = urllib.unquote_plus(url)	# url in fparams zusätzlich quotiert
-	PLog(url)
+	PLog(urllib.unquote_plus(url))  # url in fparams zusätzlich quotiert
 	PLog(name); PLog(thumb); PLog(Plot);
 	name = UtfToStr(name); thumb = UtfToStr(thumb); 
-	Plot = UtfToStr(Plot); url = UtfToStr(url)	
+	Plot = UtfToStr(Plot); 
+	url = UtfToStr(url)	
 
 	fname = WATCHFILE		
 	item_cnt = 0; 
@@ -3818,7 +3822,8 @@ def N24LastServer(url_m3u8):
 #	Format sub_path s. https://alwinesch.github.io/group__python__xbmcgui__listitem.html#ga24a6b65440083e83e67e5d0fb3379369
 #	Die XML-Untertitel der ARD werden gespeichert + nach SRT konvertiert (einschl. minus 10-Std.-Offset)
 def PlayVideo(url, title, thumb, Plot, sub_path=None, FavCall=''):	
-	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot); PLog(sub_path); PLog(FavCall); 		
+	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot); PLog(sub_path); PLog(FavCall); 
+	Plot=transl_doubleUTF8(Plot)
 	
 	# # SSL-Problem bei Kodi V17.6:  ERROR: CCurlFile::Stat - Failed: SSL connect error(35)
 	url = url.replace('https', 'http')  
@@ -3844,7 +3849,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, FavCall=''):
 				local_path = ''
 			if 	local_path:
 				sub_path = xml2srt(local_path)	# leer bei Fehlschlag
-				
+
 	PLog('sub_path: ' + str(sub_path));		
 	if sub_path:							# Untertitel aktivieren, falls vorh.	
 		if SETTINGS.getSetting('pref_UT_Info') == 'true':
@@ -3881,7 +3886,8 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, FavCall=''):
 #
 def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall=''):
 	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
-
+	Plot=transl_doubleUTF8(Plot)
+	
 	# Weiterleitung? - Wiederherstellung https! Vorheriger Replace mit http sinnlos.
 	page, msg = get_page(path=url, GetOnlyRedirect=True)
 	if page:
@@ -5474,7 +5480,7 @@ def router(paramstring):
 					
 					PLog("json.loads func_pars: " + func_pars)
 					PLog('json.loads func_pars type: ' + str(type(func_pars)))
-					# func_pars = func_pars.encode("utf-8")			# entf.
+					func_pars = func_pars.encode("utf-8")			# entf.
 					mydict = json.loads(func_pars)
 					PLog("mydict: " + str(mydict)); PLog(type(mydict))
 				except:

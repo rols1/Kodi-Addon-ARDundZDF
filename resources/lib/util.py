@@ -229,13 +229,14 @@ def UtfToStr(line):
 #
 #	Kontextmenüs (Par. cmenu): base64-Kodierung benötigt für url-Parameter (nötig für router)
 
-def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True, **kwargs):
+def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True):
 	PLog('addDir:')
 	PLog('addDir - label: %s, action: %s, dirID: %s' % (label, action, dirID))
 	PLog('addDir - summary: %s, tagline: %s, mediatype: %s, cmenu: %s' % (summary, tagline, mediatype, cmenu))
 	
-	label	=UtfToStr(label); thumb		=UtfToStr(thumb); fanart	=UtfToStr(fanart); 
-	summary	=UtfToStr(summary); tagline	=UtfToStr(tagline); fparams	=UtfToStr(fparams);
+	label=UtfToStr(label); thumb=UtfToStr(thumb); fanart=UtfToStr(fanart); 
+	summary=UtfToStr(summary); tagline=UtfToStr(tagline); 
+	fparams=UtfToStr(fparams);
 
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
 	isFolder = True					
@@ -319,6 +320,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		PLog("header: " + str(header)[:80]); 
 	
 	path = transl_umlaute(path)					# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
+	path = urllib2.unquote(path)				# z.B. https%3A//classic.ardmediathek.de
 	msg = ''; page = ''	
 	UrlopenTimeout = 10
 	
@@ -682,7 +684,17 @@ def unescape(line):
 			
 		line = line.replace(*r)
 	return line
-		
+#----------------------------------------------------------------  
+def transl_doubleUTF8(line):	# rückgängig: doppelt kodiertes UTF-8 
+	# Vorkommen: Merkliste (Plot)
+	# bisher nicht benötigt: ('Ã<U+009F>', 'ß'), ('ÃŸ', 'ß')
+	line = UtfToStr(line)
+	for r in (('Ã¤', "ä"), ('Ã„', "Ä"), ('Ã¶', "ö")
+		, ('Ã–', "Ö"), ('Ã¼', "ü"), ('Ãœ', 'Ü')
+		, ('Ã', 'ß')):
+
+		line = line.replace(*r)
+	return line	
 #----------------------------------------------------------------  	
 def mystrip(line):	# eigene strip-Funktion, die auch Zeilenumbrüche innerhalb des Strings entfernt
 	line_ret = line	
