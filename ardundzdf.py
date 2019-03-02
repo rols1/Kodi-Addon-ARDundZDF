@@ -44,8 +44,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.0.0'		 
-VDATE = '28.02.2019'
+VERSION =  '1.0.1'		 
+VDATE = '02.03.2019'
 
 # 
 #	
@@ -644,9 +644,9 @@ def ARDStart(title):
 	PLog(len(gridlist))
 	for grid in gridlist:
 		href = ''
-		if 'Stage' in grid:								# Higlights im Wischermodus
+		if 'Stage' in grid:								# Highlights im Wischermodus
 			ID = 'Swiper'								# Abgleich in ARDStartRubrik
-			title 	= 'Higlights'
+			title 	= 'Highlights'
 			img, img_alt = img_urlScheme(grid, 320, 'Sendereihen') 		
 
 		elif 'Livestreams' in grid and 'Das-Erste/live?kanal=208' in grid:			
@@ -725,7 +725,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 	PLog(len(page))
 	
 	found = False; grid = ''
-	if ID == 'Swiper':												# vorangestellte Higlights
+	if ID == 'Swiper':												# vorangestellte Highlights
 		gridlist = stringextract('<h2 class="modHeadline hidden', '<h2 class="modHeadline">', page)
 		found = True
 	else:
@@ -819,7 +819,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 			
 #---------------------------------------------------------------------------------------------------
 # Auflistung der Beiträge einer Rubrik aus ARDStart	- ARDStartSingle springt hierher,
-#	falls dortkeine Videoquelle gefunden wird.			
+#	falls dort keine Videoquelle gefunden wird.			
 # 	Nur die Dauer-Rubriken >Neueste Videos< und >Am besten bewertet< erhalten eine
 #		Url der Classic-Version, die übrigen eine Neu-Version-Url.
 #	ARDStartSingle führt bei http-Error 404 einen Fallback auf die Classic-Version durch 
@@ -930,7 +930,7 @@ def ARDStartSingle(path, title, tagline, ID=''):
 		return li
 	PLog(len(VideoUrls))	
 	
-	summ 		= stringextract('synopsis":"', '"', page)
+	summ 		= stringextract('synopsis":', '",', page)		# Achtung: kann " enthalten
 	img 		= stringextract('_previewImage":"', '"', page)
 	geoblock 	= stringextract('geoblocked":', ',', page)
 	sub_path 	= stringextract('_subtitleUrl":"', '"', page)	# Url wie parseLinks_Mp4_Rtmp (Rest anders)
@@ -956,10 +956,13 @@ def ARDStartSingle(path, title, tagline, ID=''):
 		return SenderLiveResolution(path=href, title=title, thumb=img)	
 	
 	summ = repl_json_chars(summ)
+	PLog(tagline)
+	tagline=transl_doubleUTF8(tagline)		# Bsp. â<U+0088><U+0099> (a mit Circumflex)
+
 	title=UtfToStr(title); summ=UtfToStr(summ); tagline=UtfToStr(tagline); 
 	path=UtfToStr(path);		# Path kann Umlaute enthalten
 	
-	PLog(title); PLog(summ[:60]); PLog(img); PLog(path); 
+	PLog(title); PLog(summ[:60]); PLog(tagline); PLog(img); PLog(path); 
 	title_new 	= "Streaming-Formate | %s" % title
 	
 	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s'}" \
@@ -1333,7 +1336,7 @@ def SendungenAZ(name, ID):
 			char = stringextract('<a>', '</a>', element)
 			char = char.strip()
 			inactive_char =  inactive_char + char
-	PLog(inactive_char)							# z.B. XY
+	PLog('inactive_char: ' + inactive_char)							# z.B. XY
 	
 	for element in azlist:	
 		# Log(element)
@@ -1344,10 +1347,11 @@ def SendungenAZ(name, ID):
 		button = element
 		title = "Sendungen mit " + button
 		PLog(title)
-		if inactive_char.find(button) >= 0:		# inaktiver Buchstabe?
+		PLog(button in inactive_char)
+		if button in inactive_char:					# inaktiver Buchstabe?
 			title = "Sendungen mit " + button + ': keine gefunden'
 			fparams="&fparams={'name': 'Sendungen A-Z', 'ID': 'ARD'}"
-			addDir(li=li, label='Sendungen A-Z', action="dirList", dirID="SendungenAZ", 
+			addDir(li=li, label=title, action="dirList", dirID="SendungenAZ", 
 				fanart=R(ICON_ARD_AZ), thumb=R(ICON_ARD_AZ), fparams=fparams)
 		else:
 			mode = 'Sendereihen'
@@ -2325,7 +2329,7 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels cu
 		PLog(AppPath); PLog(i)
 		if AppPath == '' or i == False:
 			msg1='Pfad zu curl/wget fehlt oder curl/wget nicht gefunden'
-			PLog(msg)
+			PLog(msg1)
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 			return li
 			

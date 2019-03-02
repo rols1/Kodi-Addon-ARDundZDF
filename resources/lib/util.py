@@ -689,9 +689,10 @@ def transl_doubleUTF8(line):	# rückgängig: doppelt kodiertes UTF-8
 	# Vorkommen: Merkliste (Plot)
 	# bisher nicht benötigt: ('Ã<U+009F>', 'ß'), ('ÃŸ', 'ß')
 	line = UtfToStr(line)
-	for r in (('Ã¤', "ä"), ('Ã„', "Ä"), ('Ã¶', "ö")
+	for r in (('Ã¤', "ä"), ('Ã„', "Ä"), ('Ã¶', "ö")		# Umlaute + ß
 		, ('Ã–', "Ö"), ('Ã¼', "ü"), ('Ãœ', 'Ü')
-		, ('Ã', 'ß')):
+		, ('Ã', 'ß')
+		, ('\xc3\xa2', '*')):	# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
 
 		line = line.replace(*r)
 	return line	
