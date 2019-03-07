@@ -76,9 +76,9 @@
 		<title>SWR</title>
 		<link>https://www.ardmediathek.de/radio/live?genre=Alle+Genres&kanal=728</link>
 		<thumbnail>radio-swr.png</thumbnail>
-		<sender>DASDING:radio-dasding.png|SWR Aktuell:radio-swr-info.png|SWR1 Baden-Württemberg:radio-swr1.png|
-			SWR1 Rheinland-Pfalz:radio-swr1.png|SWR2:radio-swr2.png|SWR3:radio-swr3.png|
-			SWR4 Baden-Württemberg:radio-swr4.png|SWR4 Rheinland-Pfalz:radio-swr4.png</sender>
+		<sender>DASDING:radio-dasding.png|SWR Aktuell:radio-swr-info.png|SWR1:radio-swr1.png|
+			SWR1:radio-swr1.png|SWR2:radio-swr2.png|SWR3:radio-swr3.png|
+			SWR4:radio-swr4.png|SWR4 Rheinland-Pfalz:radio-swr4.png</sender>
 		<thumblist></thumblist>
 	</item>
 	<item>

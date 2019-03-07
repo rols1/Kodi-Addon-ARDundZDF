@@ -8,6 +8,12 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+07.03.2019	1.0.2	ARDStartRubrik: Fix title json-komp. (& -> und).
+			RadioLive (RadioAnstalten,livesenderRadio.xml): Anpassung an Änderungen im Web.
+			RadioLive: UtfToStr für headline + sname (Sendernamen mit Umlauten).
+			Sender SWR1 + SWR4, besserer Abgleich Senderliste mit Web.
+			addon.xml: Abhängigkeit zu script.module.simplecache entfernt (nicht benötigt).	
+
 02.03.2019	1.0.1	Merkliste, Funktion transl_doubleUTF8: Ersatz a mit Circumflex -> * 
 			SendungenAZ: Fix Erkennung/Kennzeichnung inaktive Buchstaben. 
 			ARDStartSingle: Fix synopsis (scheiterte bei enthaltenen Doublequotes).  

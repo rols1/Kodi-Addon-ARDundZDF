@@ -44,8 +44,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.0.1'		 
-VDATE = '02.03.2019'
+VERSION =  '1.0.2'		 
+VDATE = '07.03.2019'
 
 # 
 #	
@@ -792,6 +792,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 		title=UtfToStr(title); tagline=UtfToStr(tagline); subline=UtfToStr(subline);
 		title=unescape(title); 	
 		title=title.replace('"', '') 		# json-komp. für func_pars in router()
+		title=title.replace('&', 'und') 	# json-komp. für func_pars in router()
 		tagline=tagline.replace('"', '') 	# dto.
 		summ=summ.replace('"', '') 			# dto.
 		subline=subline.replace('"', '') 	# dto.
@@ -4057,14 +4058,16 @@ def RadioAnstalten(path, title, sender, fanart):
 					sname 	= pair[0].strip()
 					img 	= pair[1].strip()
 				except:
-					break								# dann bleibt es bei img_src (Fallback)
+					break	
+				headline = UtfToStr(headline)		
+				sname 	 = UtfToStr(sname)
 				PLog('headline: ' + headline.upper()); PLog(sname.upper());
-				if sname.upper() == headline.upper():	# lokaler Sendername in  <sender> muss Sendernahme aus headline entspr.
-					img = R(img)
+				if sname.upper() in headline.upper():	# lokaler Name in <sender> muss in headline enthalten sein
+					img = R(img)					# lokales Icon
 					if os.path.exists(img):
 						img_src = img
 					else:
-						img_src = link_img	# Fallback aus parseLinks_Mp4_Rtmp, ev. nur Mediathek-Symbol
+						img_src = link_img			# Fallback aus parseLinks_Mp4_Rtmp, ev. nur Mediathek-Symbol
 					PLog("img_src: " + img_src)
 					break
 
