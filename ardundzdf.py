@@ -44,8 +44,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.0.2'		 
-VDATE = '07.03.2019'
+VERSION =  '1.0.4'		 
+VDATE = '16.03.2019'
 
 # 
 #	
@@ -348,9 +348,8 @@ def Main():
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (urllib2.quote(path), urllib2.quote(title))
 	addDir(li=li, label='Info', action="dirList", dirID="ShowText", fanart=R(FANART), thumb=R(ICON_INFO), 
 		fparams=fparams, summary=summary, tagline=tagline)
-					
+		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
-	
 #----------------------------------------------------------------
 def ShowText(path, title):
 	PLog('ShowText:'); 
@@ -603,7 +602,9 @@ def SearchUpdate(title):
 # 	Bilder werden über die sid im player-Pfad ermittelt. Dieser fehlt bei Staffeln + Serien -
 #		img_via_id gibt dann ein Info-Bild zurück.
 #	Die Startseite wird im Cache für ARDStartRubrik abgelegt und dient gleichzeitig als Fallback 
-#	23.01.2019  neue Seite wird unvollständig geladen (wie SendungenAZ) - Rückbau auf Classic-Version
+#	23.01.2019  neue Seite wird unvollständig geladen (wie SendungenAZ) - java-script-gesteuerter
+#		Scroll-Mechanismus.
+#		Rückbau auf Classic-Version.
 #		Da die meisten Beiträge in der Neu-Version verfügbar sind, erfolgt beim Abruf häufig der
 #		Fehler 301 Moved Permanently.
 #
@@ -1986,6 +1987,7 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 				PLog('Medien-Url: ' + path)			
 				PLog(img_src)
 				summ_par=summary.replace('\n', '||')		# || Code für LF (\n scheitert in router)
+				headline=headline.replace('&', 'und')		# json-komp.
 				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
 					% (urllib2.quote(path), urllib2.quote(headline), urllib2.quote(img_src), 
 					millsec_duration, urllib2.quote(summ_par),  urllib2.quote(subtitle), ID, offset)				
@@ -2787,9 +2789,12 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		if name: 	name 	= name.group(1)
 		if thumb:	thumb 	= thumb.group(1)
 		if dirPars:	dirPars = dirPars.group(1)
+		mediatype=''										# Kennz. Videos im Listing
+		if 'PlayVideo&' in dirPars or 'zdfmobile.ShowVideo'  in dirPars:
+			 mediatype='video'
 		
 		dirPars = unescape(dirPars); 
-		PLog(name); PLog(thumb); PLog(Plot_org); PLog(dirPars); 
+		PLog(name); PLog(thumb); PLog(Plot_org); PLog(dirPars);  PLog(mediatype);
 		PLog('fparams2: ' + fparams);
 			
 		# Begleitinfos aus fparams holen - Achtung Quotes!		# 2. fparams auswerten
@@ -2871,7 +2876,7 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		tagline = tagline.replace('||', '\n')
 		
 		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=thumb,
-			summary=summary, tagline=tagline, fparams=fparams)
+			summary=summary, tagline=tagline, fparams=fparams,mediatype=mediatype)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
@@ -3826,10 +3831,12 @@ def N24LastServer(url_m3u8):
 #							SingleSendung, SenderLiveResolution
 #	Format sub_path s. https://alwinesch.github.io/group__python__xbmcgui__listitem.html#ga24a6b65440083e83e67e5d0fb3379369
 #	Die XML-Untertitel der ARD werden gespeichert + nach SRT konvertiert (einschl. minus 10-Std.-Offset)
+#	Resume-Funktion: Kodi-intern -  DB MyVideos107.db, Tab files (idFile, playCount, lastPlayed) + (via key idFile)
+#		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
 def PlayVideo(url, title, thumb, Plot, sub_path=None, FavCall=''):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot); PLog(sub_path); PLog(FavCall); 
 	Plot=transl_doubleUTF8(Plot)
-	
+		
 	# # SSL-Problem bei Kodi V17.6:  ERROR: CCurlFile::Stat - Failed: SSL connect error(35)
 	url = url.replace('https', 'http')  
 	
@@ -3840,6 +3847,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, FavCall=''):
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
 	ilabels.update({'Plot': '%s' % Plot})
 	li.setInfo(type="video", infoLabels=ilabels)
+	li.setContentLookup(False)
 	
 	# Info aus GetZDFVideoSources hierher verlagert - wurde von Kodi nach Videostart 
 	#	erneut gezeigt - dto. für ARD (parseLinks_Mp4_Rtmp, ARDStartSingle)
@@ -3865,13 +3873,12 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, FavCall=''):
 			sub_path = 	sub_path.split('|')											
 			li.setSubtitles(sub_path)
 			xbmc.Player().showSubtitles(True)
-	li.setContentLookup(False)
-	xbmc.Player().play(url, li, False)
-	
-	# -> zurück zum Menü Favoriten, ohne: Rücksprung ins Bibl.-Menü
-	if FavCall == 'true':
-		PLog('Call_from_Favourite')
-		xbmc.executebuiltin('ActivateWindow(10134)')  
+			
+		
+	xbmc.Player().play(url, li, False)				# direkter Aufruf verhindert Resume-Funktion
+	# listitem = xbmcgui.ListItem(title, path=url)  # i.V.m. direktem Aufruf
+	#xbmcplugin.setResolvedUrl(HANDLE, True, li)	# indirekt
+
 		
 #---------------------------------------------------------------- 
 # SSL-Probleme in Kodi mit https-Code 302 (Adresse verlagert) - Lösung:

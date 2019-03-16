@@ -19,7 +19,7 @@ import xbmc, xbmcgui, xbmcaddon, xbmcplugin
 
 import resources.lib.util as util
 PLog=util.PLog;  home=util.home;  Dict=util.Dict;  name=util.name; 
-UtfToStr=util.UtfToStr;  addDir=util.addDir;  get_page=util.get_page;
+UtfToStr=util.UtfToStr;   get_page=util.get_page;					# addDir=util.addDir; 
 img_urlScheme=util.img_urlScheme;  R=util.R;  RLoad=util.RLoad;  RSave=util.RSave; 
 GetAttribute=util.GetAttribute; CalculateDuration=util.CalculateDuration;  
 teilstring=util.teilstring; repl_dop=util.repl_dop;  repl_char=util.repl_char;  mystrip=util.mystrip; 
@@ -205,6 +205,12 @@ def ZDFmSearch(query, title='Suche', offset=0):
 def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 	PLog('PageMenu, DictID: ' + DictID)
 		
+	mediatype=''													# Kennz. Videos im Listing
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		if SETTINGS.getSetting('pref_show_resolution') == 'false':
+			mediatype='video'
+	PLog('mediatype: ' + mediatype); 
+			
 	if("stage" in jsonObject):
 		i=0
 		for stageObject in jsonObject["stage"]:
@@ -225,7 +231,7 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				PLog(path)
 				fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (path, DictID)	
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowVideo", fanart=img, thumb=img, 
-					fparams=fparams, summary=descr, tagline=date)
+					fparams=fparams, summary=descr, tagline=date, mediatype=mediatype)
 						
 			i=i+1							
 	if("cluster" in jsonObject):
@@ -243,7 +249,7 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.SingleRubrik", 				
 					fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 								
-	if("broadcastCluster" in jsonObject):
+	if("broadcastCluster" in jsonObject):								# 
 		for counter, clusterObject in enumerate(jsonObject["broadcastCluster"]):
 			if clusterObject["type"].startswith("teaser") and "name" in clusterObject:
 				path = "broadcastCluster|%d|teaser" % counter
@@ -255,7 +261,7 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 								
 	if("epgCluster" in jsonObject):
-		for counter, epgObject in enumerate(jsonObject["epgCluster"]):
+		for counter, epgObject in enumerate(jsonObject["epgCluster"]):	# Livestreams
 			if("liveStream" in epgObject and len(epgObject["liveStream"]) >= 0):
 				path = "epgCluster|%d|liveStream" % counter
 				title = epgObject["name"] + ' Live'
@@ -263,13 +269,15 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				path = path.encode("utf-8")
 				fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (urllib2.quote(path), DictID)	
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowVideo", 
-					fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
+					fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams, mediatype=mediatype)
 					
 	xbmcplugin.endOfDirectory(HANDLE)				
 				
 # ----------------------------------------------------------------------	
 def Get_content(stageObject, maxWidth):
 	PLog('Get_content:')
+	# PLog(str(stageObject))
+	
 	title=stageObject["headline"]
 	subTitle=stageObject["titel"]
 
@@ -295,8 +303,9 @@ def Get_content(stageObject, maxWidth):
 	if("visibleFrom" in stageObject):
 		date = stageObject["visibleFrom"]
 	else:
-		now = datetime.datetime.now()
-		date = now.strftime("%d.%m.%Y %H:%M")
+		date = stageObject["date"]
+		#now = datetime.datetime.now()
+		#date = now.strftime("%d.%m.%Y %H:%M")
 		
 	title=UtfToStr(title); subTitle=UtfToStr(subTitle); descr=UtfToStr(descr); 
 	img=UtfToStr(img);	date=UtfToStr(date); dauer=UtfToStr(dauer);
@@ -321,6 +330,11 @@ def SingleRubrik(path, title, DictID):
 		date=''; title=''; descr=''; img=''
 		PLog('entry-type: %s' % entry["type"])
 		# PLog(entry)
+		mediatype=''
+		if entry["type"] == 'video':		# Kennz. Video nur bei Sofortstart in ShowVideo
+			if SETTINGS.getSetting('pref_video_direct') == 'true':
+				if SETTINGS.getSetting('pref_show_resolution') == 'false':
+					mediatype='video'
 		
 		# alle anderen entry-types werden übersprungen, da sie keine 
 		# verwendbaren Videos enthalten - Bsp.:
@@ -342,7 +356,7 @@ def SingleRubrik(path, title, DictID):
 			fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (path, DictID)
 			PLog("fparams: " + fparams)	
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowVideo", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=date)
+				thumb=img, fparams=fparams, summary=descr, tagline=date, mediatype=mediatype)
 		i=i+1
 		# break		# Test Einzelsatz
 	xbmcplugin.endOfDirectory(HANDLE)
@@ -425,42 +439,51 @@ def ShowVideo(path, DictID):
 				bandbreite = url.split('_')[-2]		# Bsp. ../4/170703_despot1_inf_1496k_p13v13.mp4
 			except:
 				bandbreite = ''
-		
+				
+		title_org=UtfToStr(title_org);
+		title_org=unescape(title_org); 	
+		title_org=title_org.replace('"', '') 		# json-komp. für func_pars in router()
+		title_org=title_org.replace('&', 'und') 	# json-komp. für func_pars in router()
+		descr=descr.replace('"', '') 				# dto.
+					
 		PLog("url: " + url)	
-		if SETTINGS.getSetting('pref_video_direct') == 'true':	     # Sofortstart
-			if SETTINGS.getSetting('pref_show_resolution') == 'false':
-				PLog('Sofortstart: ZDF Mobile (ShowVideo)')
-				PlayVideo(url=url, title=title_org, thumb=img, Plot=descr)
-				return
 	
 		if url.find('master.m3u8') > 0:		# 
 			if 'auto' in quality:			# speichern für ShowSingleBandwidth
+				if SETTINGS.getSetting('pref_video_direct') == 'true':	     # Sofortstart
+					if SETTINGS.getSetting('pref_show_resolution') == 'false':
+						PLog('Sofortstart: ZDF Mobile (ShowVideo)')
+						PlayVideo(url=url, title=title_org, thumb=img, Plot=descr)
+						return
 				url_auto = url
 			title=str(i) + '. ' + quality + ' [m3u8]'
 			PLog("title: " + title)
 			tagline = 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' [m3u8-Streaming]'
+			tagline = UtfToStr(tagline);
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
 				urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr))	
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.PlayVideo", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tagline)	
+				thumb=img, fparams=fparams, summary=descr, tagline=tagline, mediatype='video')	
 		else:
 			title=str(i) + '. %s [%s]'  % (quality, typ)
 			PLog("title: " + title)
 			tagline = 'Qualitaet: ' + quality + ' | Typ: ' + typ
 			if bandbreite:
-				tagline = '%s | %s'	% (tagline, bandbreite)
+				tagline = '%s | %s'	% (tagline, bandbreite)		
+			tagline = UtfToStr(tagline);
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
 				urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr))	
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.PlayVideo", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tagline)	
+				thumb=img, fparams=fparams, summary=descr, tagline=tagline, mediatype='video')	
 	
-	# einzelne Auflösungen anbieten:
+	'''
+	# einzelne Auflösungen anbieten:	# bei zdfMobile überflüssig - Varianten von low - veryhigh vorh.
 	title = 'einzelne Bandbreiten/Aufloesungen zu auto [m3u8]'
 	fparams="&fparams={'title': '%s', 'url_m3u8': '%s', 'thumb': '%s', 'descr': '%s'}" % (urllib2.quote(title_org), 
 		urllib2.quote(url_auto), urllib2.quote(img), urllib.quote_plus(descr))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowSingleBandwidth", fanart=img, 
-		thumb=img, fparams=fparams, summary=descr)
-
+		thumb=img, fparams=fparams, summary=descr, mediatype='')
+	'''
 	xbmcplugin.endOfDirectory(HANDLE)
 				
 # ----------------------------------------------------------------------
@@ -530,7 +553,7 @@ def Parseplaylist(li, playlist, title, thumb, descr):	# playlist (m3u8, ZDF-Form
 			summ= '%s | Codecs: %s' % (descr, Codecs)
 		summ = summ.replace('"', '')	# Bereinigung Codecs
 			
-		PLog(Bandwith); PLog(Resolution); PLog(Codecs); 		
+		PLog(Bandwith); PLog(Resolution); PLog(Codecs); 
 		tagline='m3u8-Streaming'
 		title = '%s. %s' 	% (str(i), title_org)
 		if 	Bandwith_old == Bandwith:
@@ -540,12 +563,14 @@ def Parseplaylist(li, playlist, title, thumb, descr):	# playlist (m3u8, ZDF-Form
 			tagline = '%s | nur Audio'	% tagline
 			thumb=R(ICON_SPEAKER)
 		
+		descr = UtfToStr(descr)		
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib.quote_plus(url), 
 			urllib.quote_plus(title_org), urllib.quote_plus(thumb), urllib.quote_plus(descr))			
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.PlayVideo", fanart=thumb, 
-			thumb=thumb, fparams=fparams, summary=summ, tagline=tagline)	
+			thumb=thumb, fparams=fparams, summary=summ, tagline=tagline, mediatype='video')	
 
 	return li
+	
 	
 #----------------------------------------------------------------  			
 def loadPage(url, maxTimeout = None):
@@ -575,23 +600,96 @@ def loadPage(url, maxTimeout = None):
 		return msg
 #----------------------------------------------------------------  
 # Kopie von ardundzdf.py - für Sofortstart erforderlich (Showvideo))
-#
+# Details s. PlayVideo im Hauptprg 
+# sub_path hier nicht unterstützt
 def PlayVideo(url, title, thumb, Plot):	
-	PLog('PlayVideo:'); PLog(url); PLog(title)		
-	
+	PLog('zdfMobile_PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot); 
+	# Plot=transl_doubleUTF8(Plot)				# hier n.b.
+		
 	# # SSL-Problem bei Kodi V17.6:  ERROR: CCurlFile::Stat - Failed: SSL connect error(35)
 	url = url.replace('https', 'http')  
-
+	
 	li = xbmcgui.ListItem(path=url)		
 	li.setArt({'thumb': thumb, 'icon': thumb})
 	ilabels = ({'Title': title})
-	ilabels.update({'Plot': '%s' % Plot})
-
-	li.setInfo(type="video", infoLabels=ilabels)							
-	li.setContentLookup(False)
-	xbmc.Player().play(url, li, False)
 	
+	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
+	ilabels.update({'Plot': '%s' % Plot})
+	li.setInfo(type="video", infoLabels=ilabels)
+	li.setContentLookup(False)				
+		
+	#xbmc.Player().play(url, li, False)			# direkter Aufruf verhindert Resume-Funktion
+	xbmcplugin.setResolvedUrl(HANDLE, True, li)		# indirekt
 
+#----------------------------------------------------------------  
+# addDir hier zeitweise zusätzl. wg. Test Resumefunktion 
+def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True):
+	PLog('addDir:')
+	PLog('addDir - label: %s, action: %s, dirID: %s' % (label, action, dirID))
+	PLog('addDir - summary: %s, tagline: %s, mediatype: %s, cmenu: %s' % (summary, tagline, mediatype, cmenu))
+	
+	label=UtfToStr(label); thumb=UtfToStr(thumb); fanart=UtfToStr(fanart); 
+	summary=UtfToStr(summary); tagline=UtfToStr(tagline); 
+	fparams=UtfToStr(fparams);
+
+	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
+	if mediatype == 'video': 	# s.o.
+		li.setInfo('video', {'title': label, 'mediatype': 'video'})
+		isFolder = False		# nicht bei direktem Player-Aufruf - OK mit setResolvedUrl
+		li.setProperty('IsPlayable', 'true')					
+	else:
+		li.setProperty('IsPlayable', 'false')
+		isFolder = True	
+	
+	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
+	xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
+	PLog('PLUGIN_URL: ' + PLUGIN_URL)
+	PLog('HANDLE: ' + str(HANDLE))
+	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+urllib.quote_plus(fparams)
+	PLog("addDir_url: " + urllib.unquote_plus(url))
+		
+	# PLog('summary, tagline: %s, %s' % (summary, tagline))
+	ilabels = {'Plot': ''}								# ilabels (Plot: long, Plotoutline: short)	
+	if tagline:								
+		ilabels['Plot'] = tagline
+	if summary:									
+		ilabels['Plot'] = "%s\n\n%s" % (ilabels['Plot'], summary)
+	if mediatype:							# "video", "music" setzen: List- statt Dir-Symbol
+		ilabels.update({'mediatype': '%s' % mediatype})
+		
+	PLog('ilabels: ' + str(ilabels))
+	li.setInfo(type="video", infoLabels=ilabels)						
+	
+	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
+		if cmenu:											# Kontextmenüs Merkliste hinzufügen	
+			Plot = ilabels['Plot']
+			Plot = Plot.replace('\n', '||')		# || Code für LF (\n scheitert in router)
+			# PLog('Plot: ' + Plot)
+			fparams_add = "&fparams={'action': 'add', 'name': '%s', 'thumb': '%s', 'Plot': '%s', 'url': '%s'}" \
+				%   (label, thumb,  urllib.quote_plus(Plot), urllib.quote_plus(url))
+				# %   (label, thumb,  base64.b64encode(url))#möglich: 'Incorrect padding' error 
+			fparams_add = urllib.quote_plus(fparams_add)
+
+			fparams_del = "&fparams={'action': 'del', 'name': '%s'}" \
+				%   (label)									# name reicht für del
+				# %   (label, thumb,  base64.b64encode(url))
+			fparams_del = urllib.quote_plus(fparams_del)	
+
+			li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
+				% (ADDON_ID, fparams_add)), ('Aus Merkliste entfernen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
+				% (ADDON_ID, fparams_del))])
+		else:
+			pass											# Kontextmenü entfernen klappt so nicht
+			#li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=dummy)' \
+			#	% (ADDON_ID))], replaceItems=True)
+
+		
+	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
+	
+	PLog('addDir_End')		
+	return	
+
+#---------------------------------------------------------------- 
 
 
 

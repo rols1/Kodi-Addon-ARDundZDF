@@ -213,7 +213,7 @@ def ClearUp(directory, seconds):
 		return False
 
 #----------------------------------------------------------------  
-# Listitems verlagen encodierte Strings auch bei Umlauten. Einige Quellen liegen in unicode 
+# Listitems verlangen encodierte Strings auch bei Umlauten. Einige Quellen liegen in unicode 
 #	vor (s. json-Auswertung in get_page) und müssen rückkonvertiert  werden.
 # Hinw.: Teilstrings in unicode machen str-Strings zu unicode-Strings.
 def UtfToStr(line):
@@ -227,6 +227,10 @@ def UtfToStr(line):
 #	hier einfach durch infoLabels['Plot'], wobei summary und tagline durch 
 #	2 Leerzeilen getrennt werden (Anzeige links unter icon).
 #
+#	isFolder: True=Dir-Symbol, False=Listsymbol - Mischung in Kodi17 n.m. (erste Def. gilt),
+#		in Kodi18 ist Mischen möglich.
+# 	mediatype steuert die Videokennz. im Listing (neben dirID=PlayVideo) - notwendig für
+#		den Aufruf von Funktionen, die PlayVideo direkt anspringen.
 #	Kontextmenüs (Par. cmenu): base64-Kodierung benötigt für url-Parameter (nötig für router)
 
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True):
@@ -247,7 +251,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		# isFolder = False		# Aktivierung Player (nicht bei direktem Aufruf)					
 	else:
 		li.setProperty('IsPlayable', 'false')
-		
+	
 	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
 	xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
 	PLog('PLUGIN_URL: ' + PLUGIN_URL)
