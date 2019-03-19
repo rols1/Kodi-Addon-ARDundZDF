@@ -7,10 +7,14 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+19.03.2019	1.0.5	ZDFMobile (PlayVideo): Unterscheidung Kodi V17 / V18 - V17 zusätzlich 
+			setResolvedUrl + endOfDirectory nach PlayMedia-Call erforderlich für
+			Videostarts aus Merkliste + Listings.
+			Get_content: Fix title + descr json-komp (" -> Blank). 
 			
 16.03.2019	1.0.4	Modul ZDFMobile - Resumefunktion zu Testzwecken:
 			Funktionen PlayVideo + addDir aus Hauptprg geklont.
-			addDir: Steuerung Listing-Verhalten via Param. mediatype
+			addDir: Steuerung Listing-Verhalten via Param. mediatype.
 			Funktion Get_content: altern. Sendedatum "date", falls visibleFrom fehlt.
 			Funktion ShowVideo + Parseplaylist: mediatype ergänzt.
 			Funktion SingleRubrik + PageMenu: mediatype ergänzt (Kennz. Videos) in
@@ -20,7 +24,8 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			
 not on Github	1.0.3	Modul ZDFMobile (ShowVideo): UtfToStr für tagline (Kodierungsproblem),
 			json-komp. Behandlung für title_org + descr.
-			Modul ZDFMobile (Parseplaylist): UtfToStr für descr.			 
+			Modul ZDFMobile (Parseplaylist): UtfToStr für descr.
+			SinglePage: headline.replace('&', 'und')			 
 	
 07.03.2019	1.0.2	ARDStartRubrik: Fix title json-komp. (& -> und).
 			RadioLive (RadioAnstalten,livesenderRadio.xml): Anpassung an Änderungen im Web.

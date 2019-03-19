@@ -30,6 +30,7 @@ humanbytes=util.humanbytes;  time_translate=util.time_translate; get_keyboard_in
 transl_wtag=util.transl_wtag;
 
 # Globals
+KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
@@ -307,6 +308,11 @@ def Get_content(stageObject, maxWidth):
 		#now = datetime.datetime.now()
 		#date = now.strftime("%d.%m.%Y %H:%M")
 		
+	descr=descr.replace('"', '') 		# json-komp. für func_pars in router()
+	descr=descr.replace('&', 'und') 	# json-komp. für func_pars in router()
+	title=title.replace('"', '') 		# json-komp. für func_pars in router()
+	title=title.replace('&', 'und') 	# json-komp. für func_pars in router()
+	
 	title=UtfToStr(title); subTitle=UtfToStr(subTitle); descr=UtfToStr(descr); 
 	img=UtfToStr(img);	date=UtfToStr(date); dauer=UtfToStr(dauer);
 	PLog('Get_content: %s |%s | %s | %s | %s | %s' % (title,subTitle,descr,img,date,dauer) )		
@@ -453,7 +459,7 @@ def ShowVideo(path, DictID):
 				if SETTINGS.getSetting('pref_video_direct') == 'true':	     # Sofortstart
 					if SETTINGS.getSetting('pref_show_resolution') == 'false':
 						PLog('Sofortstart: ZDF Mobile (ShowVideo)')
-						PlayVideo(url=url, title=title_org, thumb=img, Plot=descr)
+						PlayVideo(url=url, title=title_org, thumb=img, Plot=descr, direkt=True)
 						return
 				url_auto = url
 			title=str(i) + '. ' + quality + ' [m3u8]'
@@ -602,8 +608,8 @@ def loadPage(url, maxTimeout = None):
 # Kopie von ardundzdf.py - für Sofortstart erforderlich (Showvideo))
 # Details s. PlayVideo im Hauptprg 
 # sub_path hier nicht unterstützt
-def PlayVideo(url, title, thumb, Plot):	
-	PLog('zdfMobile_PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot); 
+def PlayVideo(url, title, thumb, Plot, direkt=False):	
+	PLog('zdfMobile_PlayVideo:'); PLog(url); PLog(title); PLog(Plot); PLog(direkt);
 	# Plot=transl_doubleUTF8(Plot)				# hier n.b.
 		
 	# # SSL-Problem bei Kodi V17.6:  ERROR: CCurlFile::Stat - Failed: SSL connect error(35)
@@ -616,10 +622,30 @@ def PlayVideo(url, title, thumb, Plot):
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
 	ilabels.update({'Plot': '%s' % Plot})
 	li.setInfo(type="video", infoLabels=ilabels)
-	li.setContentLookup(False)				
+	# li.setContentLookup(False)				# Kodi V17: ückfall in Listing kurz nach Videostart
+	
 		
-	#xbmc.Player().play(url, li, False)			# direkter Aufruf verhindert Resume-Funktion
-	xbmcplugin.setResolvedUrl(HANDLE, True, li)		# indirekt
+	# xbmc.Player().play(url, li, False)					# direkter Aufruf verhindert Resume-Funktion
+	# Kodi V17 startet PlayMedia kurz und öffnet wieder akt. Listing
+	# Kodi V17: setResolvedUrl verwenden, für V18 PlayMedia + return OK:
+	kodi_version = re.search('(\d+)', KODI_VERSION).group(0) # Major-Version reicht hier	
+	if int(kodi_version) >= 18: 
+		xbmc.executebuiltin('PlayMedia(%s)' % url)
+		return
+	else:
+		# Kodi V17: xbmc.executebuiltin bietet zwar Kontextmenü, springt aber bei "fortsetzen" ins Listing -
+		#	dies wird durch endOfDirectory unterdrückt, das Video kann starten
+		#	Kontextmenü-Probleme:
+		#		Nach Videoende wird das Kontextmenü (fortsetzen/(Anfang) erneut gezeigt, lässt sich aber 
+		#		wegklicken (Aufruf Merkliste)
+		#		Aufruf Listing: Kontextmenü kann nacheinander zwei Startzeiten anzeigen, wenn das Video 
+		#			aus der Merkliste aufgerufen wurde.
+		#	gelegentliche Abstürze bei den Tests.
+		xbmc.executebuiltin('PlayMedia(%s)' % url)	# Merkliste OK, aber script Listing nach kurz. Videostart
+		# xbmc.Player().play(url, li, False)		# verhindert Resume-Funktion
+		# return
+		xbmcplugin.setResolvedUrl(HANDLE, True, li)		# indirekt
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False) # verhindert Rücksprung ins Listing beim Videostart
 
 #----------------------------------------------------------------  
 # addDir hier zeitweise zusätzl. wg. Test Resumefunktion 

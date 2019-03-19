@@ -44,8 +44,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.0.4'		 
-VDATE = '16.03.2019'
+VERSION =  '1.0.5'		 
+VDATE = '19.03.2019'
 
 # 
 #	
@@ -232,8 +232,7 @@ OS_RELEASE = release()
 OS_VERSION = version()
 OS_DETECT = OS_SYSTEM + '-' + OS_ARCH_BIT + '-' + OS_ARCH_LINK
 OS_DETECT += ' | host: [%s][%s][%s]' %(OS_MACHINE, OS_RELEASE, OS_VERSION)
-PLog(OS_DETECT)
-
+KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
 
 PLog('Addon: ClearUp')
 # Dict: Simpler Ersatz für Dict-Modul aus Plex-Framework
@@ -260,6 +259,7 @@ def Main():
 	PLog('Addon-Version: ' + VERSION); PLog('Addon-Datum: ' + VDATE)	
 	PLog(OS_DETECT)	
 	PLog('Addon-Python-Version: %s'  % sys.version)
+	PLog('Kodi-Version: %s'  % KODI_VERSION)
 			
 	PLog(PluginAbsPath)	
 	PLog(Dict_CurSender)	
@@ -2775,9 +2775,11 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 	
 	for fav in my_items:
 		fav = urllib.unquote_plus(fav)						# urllib2.unquote erzeugt + aus Blanks! 
+		fav_org = fav										# für ShowFavsExec
+		# PLog('fav_org: ' + fav_org)
 		fav = fav.replace('&quot;', '"')					# " am Ende fparams
 		fav = fav.replace('&amp;', '&')						# Verbinder &
-		PLog(fav)
+		# PLog(fav)
 		name=''; thumb=''; dirPars=''; fparams='';			
 		name 	= re.search(' name="(.*?)"', fav) 			# 1. alle Parameter einsammeln
 		thumb 	= re.search(' thumb="(.*?)">(.*?)<', fav)
@@ -2879,7 +2881,8 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 			summary=summary, tagline=tagline, fparams=fparams,mediatype=mediatype)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
-	
+
+		
 ####################################################################################################
 # Addon-interne Merkliste : Hinzufügen / Löschen
 #	unabhängig von der Favoritenverwaltung
