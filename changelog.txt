@@ -7,6 +7,28 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+24.03.2019	1.1.0	Ausdehnung Resumefunktion auf Hauptprg - Anpassung der Listings an Sofortstart:
+			ARDStartRubrik, SinglePage (Ausnahme Podcasts), SingleSendung, SenderLiveListe. 
+
+not on Github	1.0.9	Überarbeitung PlayVideo nach Tests mit div. Playervarianten (s. interne
+			Doku). Unterscheidung Kodi V18/V17 nicht mehr erforderlich, direkter und
+			indirekter Aufruf möglich. Logging Kodi-Version verbleibt im Code (Debug).
+
+not on Github	1.0.8	Verlagerung Module PlayVideo, PlayAudio nach Modul util.
+			Modul ZDFMobile: Nutzung addDir + PlayVideo in Modul util.
+			ZDFMobile (PlayVideo-Call): Param. direkt für Sofortstart entfernt (entfällt).
+			PlayVideo: Param. FavCall entfernt (entfällt). 
+	
+not on Github	1.0.7	addDir (Modul util): zusätzliche Base64-Kodierung für url-String in 
+			Kontextmenü.
+			ShowFavs: Base64-Dekodierung in Merklisteneinträgen, einschl. Fehlerbehandlung.
+			convBase64: Funktion Base64-Dekodierung für ShowFavs. 
+			ShowFavs: Ausgabe Anzahl Einträge.
+			
+not on Github	1.0.6	Get_content: Fix title, subTitle + descr json-komp: ()-><>, '->Blank.
+			repl_json_chars: Erweiterung um json-komp-Zeichen für Get_content,
+			Umstellung auf Schleifen-replace wie in unescape.  			
+
 19.03.2019	1.0.5	ZDFMobile (PlayVideo): Unterscheidung Kodi V17 / V18 - V17 zusätzlich 
 			setResolvedUrl + endOfDirectory nach PlayMedia-Call erforderlich für
 			Videostarts aus Merkliste + Listings.

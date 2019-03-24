@@ -18,6 +18,7 @@ import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 
 # Globals
 NAME			= 'ARD und ZDF'
+KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -34,6 +35,7 @@ FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 DICTSTORE 		= os.path.join("%s/resources/data/Dict") % ADDON_PATH
 WATCHFILE		= os.path.join("%s/resources/data/merkliste.xml") % ADDON_PATH
+SUBTITLESTORE 	= os.path.join("%s/resources/data/subtitles") % ADDON_PATH
 
 ICON_MAIN_POD	= 'radio-podcasts.png'
 ICON_MAIN_ZDFMOBILE		= 'zdf-mobile.png'
@@ -223,15 +225,19 @@ def UtfToStr(line):
 	else:
 		return line	
 #----------------------------------------------------------------  
-# In Kodi fehlen die summary- und tagline-Zeilen von Plex. Diese ersetzen wir
+# In Kodi fehlen die summary- und tagline-Zeilen der Plexversion. Diese ersetzen wir
 #	hier einfach durch infoLabels['Plot'], wobei summary und tagline durch 
 #	2 Leerzeilen getrennt werden (Anzeige links unter icon).
 #
-#	isFolder: True=Dir-Symbol, False=Listsymbol - Mischung in Kodi17 n.m. (erste Def. gilt),
-#		in Kodi18 ist Mischen möglich.
-# 	mediatype steuert die Videokennz. im Listing (neben dirID=PlayVideo) - notwendig für
-#		den Aufruf von Funktionen, die PlayVideo direkt anspringen.
+#	Sofortstart + Resumefunktion, einschl. Anzeige der Medieninfo:
+#		nur problemlos, wenn das gewählte Listitem als Video (Playable) gekennzeichnet ist.
+# 		mediatype steuert die Videokennz. im Listing - abhängig von Settings (Sofortstart /
+#		Einzelauflösungen).
+#		Mehr s. PlayVideo
+#
 #	Kontextmenüs (Par. cmenu): base64-Kodierung benötigt für url-Parameter (nötig für router)
+#		und als Prophylaxe gegen durch doppelte utf-8-Kodierung erzeugte Sonderzeichen.
+#		Dekodierung erfolgt in ShowFavs.
 
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True):
 	PLog('addDir:')
@@ -243,41 +249,37 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	fparams=UtfToStr(fparams);
 
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
-	isFolder = True					
-	if dirID == "PlayVideo": 	# bei "PlayAudio": skipping unplayable item
-		# li.setProperty('IsPlayable', 'true') # nicht bei direktem Player-Aufruf
-		li.setInfo('video', {'title': label,
-							'mediatype': 'video'})
-		# isFolder = False		# Aktivierung Player (nicht bei direktem Aufruf)					
+	# PLog('summary, tagline: %s, %s' % (summary, tagline))
+	Plot = ''
+	if tagline:								
+		Plot = tagline
+	if summary:									
+		Plot = "%s\n\n%s" % (Plot, summary)
+		
+	if mediatype == 'video': 	# "video", "music" setzen: List- statt Dir-Symbol
+		li.setInfo(type="video", infoLabels={"Title": label, "Plot": Plot, "mediatype": "video"})	
+		isFolder = False		# nicht bei direktem Player-Aufruf - OK mit setResolvedUrl
+		li.setProperty('IsPlayable', 'true')					
 	else:
+		li.setInfo(type="video", infoLabels={"Title": label, "Plot": Plot})	
 		li.setProperty('IsPlayable', 'false')
+		isFolder = True	
 	
 	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
 	xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
-	PLog('PLUGIN_URL: ' + PLUGIN_URL)
+	PLog('PLUGIN_URL: ' + PLUGIN_URL)	# plugin://plugin.video.ardundzdf/
 	PLog('HANDLE: ' + str(HANDLE))
 	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+urllib.quote_plus(fparams)
 	PLog("addDir_url: " + urllib.unquote_plus(url))
 		
-	# PLog('summary, tagline: %s, %s' % (summary, tagline))
-	ilabels = {'Plot': ''}								# ilabels (Plot: long, Plotoutline: short)	
-	if tagline:								
-		ilabels['Plot'] = tagline
-	if summary:									
-		ilabels['Plot'] = "%s\n\n%s" % (ilabels['Plot'], summary)
-	if mediatype:							# "video", "music" setzen: List- statt Dir-Symbol
-		ilabels.update({'mediatype': '%s' % mediatype})
-		
-	PLog('ilabels: ' + str(ilabels))
-	li.setInfo(type="video", infoLabels=ilabels)						
 	
 	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
 		if cmenu:											# Kontextmenüs Merkliste hinzufügen	
-			Plot = ilabels['Plot']
 			Plot = Plot.replace('\n', '||')		# || Code für LF (\n scheitert in router)
 			# PLog('Plot: ' + Plot)
 			fparams_add = "&fparams={'action': 'add', 'name': '%s', 'thumb': '%s', 'Plot': '%s', 'url': '%s'}" \
-				%   (label, thumb,  urllib.quote_plus(Plot), urllib.quote_plus(url))
+				%   (label, thumb,  urllib.quote_plus(Plot), base64.b64encode(urllib.quote_plus(url)))
+				#%   (label, thumb,  urllib.quote_plus(Plot), urllib.quote_plus(url))
 				# %   (label, thumb,  base64.b64encode(url))#möglich: 'Incorrect padding' error 
 			fparams_add = urllib.quote_plus(fparams_add)
 
@@ -570,10 +572,16 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 		pos = line_ret.find(cut_char)
 		#PLog(cut_char); PLog(pos); PLog(line_l); PLog(line_r); PLog(line_ret)	# bei Bedarf	
 	return line_ret
-#----------------------------------------------------------------  
+#----------------------------------------------------------------
+#	doppelte utf-8-Enkodierung führt an manchen Stellen zu Sonderzeichen
+#
 def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
 	line_ret = line
-	line_ret = (line_ret.replace(':', ' ').replace('"', '').replace('\\', '').replace('\'', ''))
+#	line_ret = (line_ret.replace(':', ' ').replace('"', '').replace('\\', '').replace('\'', ''))
+	for r in	((':', ' '), ('"', ''), ('\\', ''), ('\'', '')
+		, ('&', 'und'), ('(', '<'), (')', '>')):			
+		line_ret = line_ret.replace(*r)
+	
 	return line_ret
 #---------------------------------------------------------------- 
 def mystrip(line):	# eigene strip-Funktion, die auch Zeilenumbrüche innerhalb des Strings entfernt
@@ -884,7 +892,7 @@ def ReadFavourites(mode):
 	PLog('ReadFavourites:')
 	if mode == 'Favs':
 		fname = xbmc.translatePath('special://profile/favourites.xml')
-	else:
+	else:	# 'Merk'
 		fname = WATCHFILE
 		
 	page = RLoad(fname,abs_path=True)
@@ -896,13 +904,161 @@ def ReadFavourites(mode):
 	# PLog(favs)
 	my_favs = []; fav_cnt=0;
 	for fav in favs:
-		if ADDON_ID not in fav: 						# skip fremde Addons 	
-			continue
+		if mode ==  'Favs':
+			if ADDON_ID not in fav: 	# skip fremde Addons, ID's in merk's wegen 	
+				continue				# 	Base64-Kodierung nicht lesbar
 		my_favs.append(fav) 
 		
 	# PLog(my_favs)
 	return my_favs
 #----------------------------------------------------------------  
+####################################################################################################
+# PlayVideo aktuell 23.03.2019: 
+#	Sofortstart + Resumefunktion, einschl. Anzeige der Medieninfo:
+#		nur problemlos, wenn das gewählte Listitem als Video (Playable) gekennzeichnet ist.
+# 		mediatype steuert die Videokennz. im Listing - abhängig von Settings (Sofortstart /
+#		Einzelauflösungen).
+#		Dasselbe gilt für TV-Livestreams.
+#
+# 	Aufruf indirekt (Kennz. Playable): 	
+#		ARDStartRubrik, ARDStartSingle, SinglePage (Ausnahme Podcasts),
+#		SingleSendung (außer m3u8_master), SenderLiveListe, 
+#		ZDF_get_content, 
+#		Modul zdfMobile: PageMenu, SingleRubrik
+#							
+#	Aufruf direkt: 
+#		ARDStartVideoStreams, ARDStartVideoMP4,
+#		SingleSendung (m3u8_master), SenderLiveResolution 
+#		show_formitaeten (ZDF),
+#		Modul zdfMobile: ShowVideo
+#
+#	Format sub_path s. https://alwinesch.github.io/group__python__xbmcgui__listitem.html#ga24a6b65440083e83e67e5d0fb3379369
+#	Die XML-Untertitel der ARD werden gespeichert + nach SRT konvertiert (einschl. minus 10-Std.-Offset)
+#	Resume-Funktion Kodi-intern  DB MyVideos107.db, Tab files (idFile, playCount, lastPlayed) + (via key idFile),
+#		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
+#
+def PlayVideo(url, title, thumb, Plot, sub_path=None):	
+	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot); PLog(sub_path);
+	Plot=transl_doubleUTF8(Plot)
+			
+	li = xbmcgui.ListItem(path=url)		
+	li.setArt({'thumb': thumb, 'icon': thumb})
+	
+	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
+	li.setInfo(type="video", infoLabels={"Title": title, "Plot": Plot, "mediatype": "video"})
+	
+	# Info aus GetZDFVideoSources hierher verlagert - wurde von Kodi nach Videostart 
+	#	erneut gezeigt - dto. für ARD (parseLinks_Mp4_Rtmp, ARDStartSingle)
+	if sub_path:							# Vorbehandlung ARD-Untertitel
+		if 'ardmediathek.de' in sub_path:	# ARD-Untertitel speichern + Endung -> .sub
+			local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
+			local_path = os.path.abspath(local_path)
+			try:
+					urllib.urlretrieve(sub_path, local_path)
+			except Exception as exception:
+				PLog(str(exception))
+				local_path = ''
+			if 	local_path:
+				sub_path = xml2srt(local_path)	# leer bei Fehlschlag
+
+	PLog('sub_path: ' + str(sub_path));		
+	if sub_path:							# Untertitel aktivieren, falls vorh.	
+		if SETTINGS.getSetting('pref_UT_Info') == 'true':
+			msg1 = 'Info: für dieses Video stehen Untertitel zur Verfügung.' 
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			
+		if SETTINGS.getSetting('pref_UT_ON') == 'true':
+			sub_path = 	sub_path.split('|')											
+			li.setSubtitles(sub_path)
+			xbmc.Player().showSubtitles(True)		
+		
+	# Abfrage: ist gewählter Eintrag als Video deklariert? - Falls ja,	# IsPlayable-Test
+	#	erfolgt der Aufruf indirekt (setResolvedUrl). Falls nein,
+	#	wird der Player direkt aufgerufen. Direkter Aufruf ohne IsPlayable-Eigenschaft 
+	#	verhindert Resume-Funktion.
+	# Mit xbmc.Player() ist  die Unterscheidung Kodi V18/V17 nicht mehr erforderlich,
+	#	xbmc.Player().updateInfoTag bei Kodi V18 entfällt. 
+	# Die Player-Varianten PlayMedia + XBMC.PlayMedia scheitern bei Kommas in Url.	
+	# 
+	IsPlayable = xbmc.getInfoLabel('ListItem.Property(IsPlayable)') # 'true' / 'false'
+	PLog("IsPlayable: " + str(IsPlayable))
+	PLog("kodi_version: " + KODI_VERSION)							# Debug
+	# kodi_version = re.search('(\d+)', KODI_VERSION).group(0) # Major-Version reicht hier - entfällt
+			
+	if IsPlayable == 'true':								# true
+		xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
+	else:													# false, None od. Blank
+		xbmc.Player().play(url, li, windowed=False) 		# direkter Start
+	return				
+
+#---------------------------------------------------------------- 
+# SSL-Probleme in Kodi mit https-Code 302 (Adresse verlagert) - Lösung:
+#	 Redirect-Abfrage vor Abgabe an Kodi-Player
+# Kommt vor: Kodi kann lokale Audiodatei nicht laden - Kodi-Neustart ausreichend.
+# 30.12.2018  Radio-Live-Sender: bei den SSL-Links kommt der Kodi-Audio-Player auch bei der 
+#	weiter geleiteten Url lediglich mit  BR, Bremen, SR, Deutschlandfunk klar. Abhilfe:
+#	Wir ersetzen den https-Anteil im Link durch den http-Anteil, der auch bei tunein 
+#	verwendet wird. Der Link wird bei addradio.de getrennt und mit dem http-template
+#	verbunden. Der Sendername wird aus dem abgetrennten Teil ermittelt und im template
+#	eingefügt.
+# 	Bsp. (Sender=ndr):
+#		template: 		dg-%s-http-fra-dtag-cdn.cast.addradio.de'	# %s -> sender	
+#		redirect-Url: 	dg-ndr-https-dus-dtag-cdn.sslcast.addradio.de/ndr/ndr1niedersachsen/..
+#		replaced-Url: 	dg-ndr-http-dus-dtag-cdn.cast.addradio.de/ndr/ndr1niedersachsen/..
+# url_template gesetzt von RadioAnstalten (Radio-Live-Sender)
+#
+def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall=''):
+	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
+	Plot=transl_doubleUTF8(Plot)
+	
+	# Weiterleitung? - Wiederherstellung https! Vorheriger Replace mit http sinnlos.
+	page, msg = get_page(path=url, GetOnlyRedirect=True)
+	if page:
+		url = page  
+		PLog('PlayAudio Redirect_Url: ' + url)
+
+	# Kodi Header: als Referer url injiziert - z.Z nicht benötigt			
+	#header='Accept-Encoding=identity;q=1, *;q=0&User-Agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36&Accept=*/*&Referer=%s&Connection=keep-alive&Range=bytes=0-' % url
+	
+	if url.startswith('http') == False:		# lokale Datei
+		url = os.path.abspath(url)
+		
+	# für Radio-Live-Sender, ersetzt https- durch http-Links. template
+	#	ist für alle Radio-Live-Sender der Öffis gleich
+	#	Bei Fehlschlag erhält der Player die urspr. Url 
+	#	Nicht erforderlich falls Link bereits http-Link.
+	if url_template and url.startswith('https'):							
+		p1 = 'dg-%s-http-fra-dtag-cdn.cast.addradio.de'	# %s -> sender
+		try:
+			p2 = url.split('.de')[1]				# ..addradio.de/hr/youfm/live..
+			s = re.search('/(.*?)/', p2).group(1)	# sender z.B. hr
+			url = 'http://' + p1 %s + p2
+		except Exception as exception:
+			PLog(str(exception))			
+		
+	#if header:							
+	#	Kodi Header: als Referer url injiziert - z.Z nicht benötigt	
+	# 	header='Accept-Encoding=identity;q=1, *;q=0&User-Agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36&Accept=*/*&Referer=%s&Connection=keep-alive&Range=bytes=0-' % slink	
+	#	# PLog(header)
+	#	url = '%s|%s' % (url, header) 
+	
+	PLog('PlayAudio Player_Url: ' + url)
+
+	li = xbmcgui.ListItem(path=url)				# ListItem + Player reicht für BR
+	li.setArt({'thumb': thumb, 'icon': thumb})
+	ilabels = ({'Title': title})
+	ilabels.update({'Comment': '%s' % Plot})	# Plot im MusicPlayer nicht verfügbar
+	li.setInfo(type="music", infoLabels=ilabels)							
+	li.setContentLookup(False)
+	
+	 	
+	xbmc.Player().play(url, li, False)			# Player nicht mehr spezifizieren (0,1,2 - deprecated)
+
+	# -> zurück zum Menü Favoriten, ohne: Rücksprung ins Bibl.-Menü
+	if FavCall == 'true':
+		PLog('Call_from_Favourite')
+		xbmc.executebuiltin('ActivateWindow(10134)')
+####################################################################################################
 
    
    

@@ -19,7 +19,7 @@ import xbmc, xbmcgui, xbmcaddon, xbmcplugin
 
 import resources.lib.util as util
 PLog=util.PLog;  home=util.home;  Dict=util.Dict;  name=util.name; 
-UtfToStr=util.UtfToStr;   get_page=util.get_page;					# addDir=util.addDir; 
+UtfToStr=util.UtfToStr;   get_page=util.get_page; addDir=util.addDir; 
 img_urlScheme=util.img_urlScheme;  R=util.R;  RLoad=util.RLoad;  RSave=util.RSave; 
 GetAttribute=util.GetAttribute; CalculateDuration=util.CalculateDuration;  
 teilstring=util.teilstring; repl_dop=util.repl_dop;  repl_char=util.repl_char;  mystrip=util.mystrip; 
@@ -27,10 +27,9 @@ DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract;  b
 teilstring=util.teilstring;  repl_dop=util.repl_dop; cleanhtml=util.cleanhtml;  decode_url=util.decode_url;  
 unescape=util.unescape;  mystrip=util.mystrip; make_filenames=util.make_filenames;  transl_umlaute=util.transl_umlaute;  
 humanbytes=util.humanbytes;  time_translate=util.time_translate; get_keyboard_input=util.get_keyboard_input; 
-transl_wtag=util.transl_wtag;
+transl_wtag=util.transl_wtag; PlayVideo=util.PlayVideo; repl_json_chars=util.repl_json_chars;
 
 # Globals
-KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
@@ -308,10 +307,9 @@ def Get_content(stageObject, maxWidth):
 		#now = datetime.datetime.now()
 		#date = now.strftime("%d.%m.%Y %H:%M")
 		
-	descr=descr.replace('"', '') 		# json-komp. für func_pars in router()
-	descr=descr.replace('&', 'und') 	# json-komp. für func_pars in router()
-	title=title.replace('"', '') 		# json-komp. für func_pars in router()
-	title=title.replace('&', 'und') 	# json-komp. für func_pars in router()
+	title=repl_json_chars(title) 		# json-komp. für func_pars in router()
+	subTitle=repl_json_chars(subTitle) 	# dto
+	descr=repl_json_chars(descr) 		# dto
 	
 	title=UtfToStr(title); subTitle=UtfToStr(subTitle); descr=UtfToStr(descr); 
 	img=UtfToStr(img);	date=UtfToStr(date); dauer=UtfToStr(dauer);
@@ -459,7 +457,7 @@ def ShowVideo(path, DictID):
 				if SETTINGS.getSetting('pref_video_direct') == 'true':	     # Sofortstart
 					if SETTINGS.getSetting('pref_show_resolution') == 'false':
 						PLog('Sofortstart: ZDF Mobile (ShowVideo)')
-						PlayVideo(url=url, title=title_org, thumb=img, Plot=descr, direkt=True)
+						PlayVideo(url=url, title=title_org, thumb=img, Plot=descr)
 						return
 				url_auto = url
 			title=str(i) + '. ' + quality + ' [m3u8]'
@@ -576,8 +574,7 @@ def Parseplaylist(li, playlist, title, thumb, descr):	# playlist (m3u8, ZDF-Form
 			thumb=thumb, fparams=fparams, summary=summ, tagline=tagline, mediatype='video')	
 
 	return li
-	
-	
+		
 #----------------------------------------------------------------  			
 def loadPage(url, maxTimeout = None):
 	try:
@@ -604,116 +601,6 @@ def loadPage(url, maxTimeout = None):
 		msg =  msg
 		PLog(msg)
 		return msg
-#----------------------------------------------------------------  
-# Kopie von ardundzdf.py - für Sofortstart erforderlich (Showvideo))
-# Details s. PlayVideo im Hauptprg 
-# sub_path hier nicht unterstützt
-def PlayVideo(url, title, thumb, Plot, direkt=False):	
-	PLog('zdfMobile_PlayVideo:'); PLog(url); PLog(title); PLog(Plot); PLog(direkt);
-	# Plot=transl_doubleUTF8(Plot)				# hier n.b.
-		
-	# # SSL-Problem bei Kodi V17.6:  ERROR: CCurlFile::Stat - Failed: SSL connect error(35)
-	url = url.replace('https', 'http')  
-	
-	li = xbmcgui.ListItem(path=url)		
-	li.setArt({'thumb': thumb, 'icon': thumb})
-	ilabels = ({'Title': title})
-	
-	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
-	ilabels.update({'Plot': '%s' % Plot})
-	li.setInfo(type="video", infoLabels=ilabels)
-	# li.setContentLookup(False)				# Kodi V17: ückfall in Listing kurz nach Videostart
-	
-		
-	# xbmc.Player().play(url, li, False)					# direkter Aufruf verhindert Resume-Funktion
-	# Kodi V17 startet PlayMedia kurz und öffnet wieder akt. Listing
-	# Kodi V17: setResolvedUrl verwenden, für V18 PlayMedia + return OK:
-	kodi_version = re.search('(\d+)', KODI_VERSION).group(0) # Major-Version reicht hier	
-	if int(kodi_version) >= 18: 
-		xbmc.executebuiltin('PlayMedia(%s)' % url)
-		return
-	else:
-		# Kodi V17: xbmc.executebuiltin bietet zwar Kontextmenü, springt aber bei "fortsetzen" ins Listing -
-		#	dies wird durch endOfDirectory unterdrückt, das Video kann starten
-		#	Kontextmenü-Probleme:
-		#		Nach Videoende wird das Kontextmenü (fortsetzen/(Anfang) erneut gezeigt, lässt sich aber 
-		#		wegklicken (Aufruf Merkliste)
-		#		Aufruf Listing: Kontextmenü kann nacheinander zwei Startzeiten anzeigen, wenn das Video 
-		#			aus der Merkliste aufgerufen wurde.
-		#	gelegentliche Abstürze bei den Tests.
-		xbmc.executebuiltin('PlayMedia(%s)' % url)	# Merkliste OK, aber script Listing nach kurz. Videostart
-		# xbmc.Player().play(url, li, False)		# verhindert Resume-Funktion
-		# return
-		xbmcplugin.setResolvedUrl(HANDLE, True, li)		# indirekt
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False) # verhindert Rücksprung ins Listing beim Videostart
-
-#----------------------------------------------------------------  
-# addDir hier zeitweise zusätzl. wg. Test Resumefunktion 
-def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True):
-	PLog('addDir:')
-	PLog('addDir - label: %s, action: %s, dirID: %s' % (label, action, dirID))
-	PLog('addDir - summary: %s, tagline: %s, mediatype: %s, cmenu: %s' % (summary, tagline, mediatype, cmenu))
-	
-	label=UtfToStr(label); thumb=UtfToStr(thumb); fanart=UtfToStr(fanart); 
-	summary=UtfToStr(summary); tagline=UtfToStr(tagline); 
-	fparams=UtfToStr(fparams);
-
-	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
-	if mediatype == 'video': 	# s.o.
-		li.setInfo('video', {'title': label, 'mediatype': 'video'})
-		isFolder = False		# nicht bei direktem Player-Aufruf - OK mit setResolvedUrl
-		li.setProperty('IsPlayable', 'true')					
-	else:
-		li.setProperty('IsPlayable', 'false')
-		isFolder = True	
-	
-	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
-	xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
-	PLog('PLUGIN_URL: ' + PLUGIN_URL)
-	PLog('HANDLE: ' + str(HANDLE))
-	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+urllib.quote_plus(fparams)
-	PLog("addDir_url: " + urllib.unquote_plus(url))
-		
-	# PLog('summary, tagline: %s, %s' % (summary, tagline))
-	ilabels = {'Plot': ''}								# ilabels (Plot: long, Plotoutline: short)	
-	if tagline:								
-		ilabels['Plot'] = tagline
-	if summary:									
-		ilabels['Plot'] = "%s\n\n%s" % (ilabels['Plot'], summary)
-	if mediatype:							# "video", "music" setzen: List- statt Dir-Symbol
-		ilabels.update({'mediatype': '%s' % mediatype})
-		
-	PLog('ilabels: ' + str(ilabels))
-	li.setInfo(type="video", infoLabels=ilabels)						
-	
-	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
-		if cmenu:											# Kontextmenüs Merkliste hinzufügen	
-			Plot = ilabels['Plot']
-			Plot = Plot.replace('\n', '||')		# || Code für LF (\n scheitert in router)
-			# PLog('Plot: ' + Plot)
-			fparams_add = "&fparams={'action': 'add', 'name': '%s', 'thumb': '%s', 'Plot': '%s', 'url': '%s'}" \
-				%   (label, thumb,  urllib.quote_plus(Plot), urllib.quote_plus(url))
-				# %   (label, thumb,  base64.b64encode(url))#möglich: 'Incorrect padding' error 
-			fparams_add = urllib.quote_plus(fparams_add)
-
-			fparams_del = "&fparams={'action': 'del', 'name': '%s'}" \
-				%   (label)									# name reicht für del
-				# %   (label, thumb,  base64.b64encode(url))
-			fparams_del = urllib.quote_plus(fparams_del)	
-
-			li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
-				% (ADDON_ID, fparams_add)), ('Aus Merkliste entfernen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
-				% (ADDON_ID, fparams_del))])
-		else:
-			pass											# Kontextmenü entfernen klappt so nicht
-			#li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=dummy)' \
-			#	% (ADDON_ID))], replaceItems=True)
-
-		
-	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
-	
-	PLog('addDir_End')		
-	return	
 
 #---------------------------------------------------------------- 
 
