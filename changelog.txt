@@ -7,6 +7,26 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+
+27.03.2019	1.1.3	ShowFavs: diverse Anpassungen an Formatänderung des Merklisteneintrags.
+			ShowFavs: Fix Auswertung thumb.
+			Funktionen mit Param. Merk erweitert: PlayVideo, ZDF_getVideoSources +
+			show_formitaeten, zdfmobile.ShowVideo, SingleSendung, ARDStartVideoStreams, 
+			ARDStartVideoMP4.
+			Direkte Sofortstarts erweitert mit Param. Merk in Funktionen: show_formitaeten,
+			zdfmobile.ShowVideo, ARDStartVideoStreams, ARDStartVideoMP4, SingleSendung,
+			SenderLiveResolution
+			getVideoSources + show_formitaeten: Fix return-Parameter nach Sofortstart. 			
+
+not on Github	1.1.2	Watch: Einfügen des Param. Merk in die Plugin-Url der Merklisteneinträge,
+			einschl. Dekodierung + Kodierung der Url (quote,base64).
+			ShowVideo (ZDFmobile): Ergänzung Titel in tagline (Videoinfo) bei den 
+			Einzelauflösungen. 
+			PlayVideo: Unterscheidung zwischen direkten + indirekten Video-Calls.  	
+
+not on Github	1.1.1	Get_SinglePage: Fix headline, subtitle + summary json-kompatibel.
+			RadioAnstalten: Fix headline, subtitle json-kompatibel. 	
+
 24.03.2019	1.1.0	Ausdehnung Resumefunktion auf Hauptprg - Anpassung der Listings an Sofortstart:
 			ARDStartRubrik, SinglePage (Ausnahme Podcasts), SingleSendung, SenderLiveListe. 
 

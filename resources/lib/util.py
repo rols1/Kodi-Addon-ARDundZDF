@@ -919,6 +919,7 @@ def ReadFavourites(mode):
 # 		mediatype steuert die Videokennz. im Listing - abhängig von Settings (Sofortstart /
 #		Einzelauflösungen).
 #		Dasselbe gilt für TV-Livestreams.
+#		Param. Merk (added in Watch): True=Video aus Merkliste  
 #
 # 	Aufruf indirekt (Kennz. Playable): 	
 #		ARDStartRubrik, ARDStartSingle, SinglePage (Ausnahme Podcasts),
@@ -937,14 +938,17 @@ def ReadFavourites(mode):
 #	Resume-Funktion Kodi-intern  DB MyVideos107.db, Tab files (idFile, playCount, lastPlayed) + (via key idFile),
 #		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
 #
-def PlayVideo(url, title, thumb, Plot, sub_path=None):	
-	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot); PLog(sub_path);
+def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):	
+	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot); 
+	PLog(sub_path);
+	
 	Plot=transl_doubleUTF8(Plot)
 			
 	li = xbmcgui.ListItem(path=url)		
 	li.setArt({'thumb': thumb, 'icon': thumb})
 	
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
+	# li.setProperty('IsPlayable', 'true')		# hier unwirksam
 	li.setInfo(type="video", infoLabels={"Title": title, "Plot": Plot, "mediatype": "video"})
 	
 	# Info aus GetZDFVideoSources hierher verlagert - wurde von Kodi nach Videostart 
@@ -981,10 +985,14 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None):
 	# Die Player-Varianten PlayMedia + XBMC.PlayMedia scheitern bei Kommas in Url.	
 	# 
 	IsPlayable = xbmc.getInfoLabel('ListItem.Property(IsPlayable)') # 'true' / 'false'
-	PLog("IsPlayable: " + str(IsPlayable))
+	PLog("IsPlayable: %s, Merk: %s" % (IsPlayable, Merk))
 	PLog("kodi_version: " + KODI_VERSION)							# Debug
 	# kodi_version = re.search('(\d+)', KODI_VERSION).group(0) # Major-Version reicht hier - entfällt
 			
+	#if Merk == 'true':										# entfällt bisher - erfordert
+	#	xbmc.Player().play(url, li, windowed=False) 		# eigene Resumeverwaltung
+	#	return
+	
 	if IsPlayable == 'true':								# true
 		xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
 	else:													# false, None od. Blank

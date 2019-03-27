@@ -44,8 +44,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.1.0'		 
-VDATE = '24.03.2019'
+VERSION =  '1.1.3'		 
+VDATE = '27.03.2019'
 
 # 
 #	
@@ -348,7 +348,7 @@ def Main():
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (urllib2.quote(path), urllib2.quote(title))
 	addDir(li=li, label='Info', action="dirList", dirID="ShowText", fanart=R(FANART), thumb=R(ICON_INFO), 
 		fparams=fparams, summary=summary, tagline=tagline)
-		
+				
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #----------------------------------------------------------------
 def ShowText(path, title):
@@ -993,7 +993,7 @@ def ARDStartSingle(path, title, tagline, ID=''):
 #	Wiedergabe eines Videos aus ARDStart, hier Streaming-Formate
 #	Die Live-Funktion ist völlig getrennt von der Funktion TV-Livestreams - ohne EPG, ohne Private..
 #	HTML-Seite mit json-Inhalt
-def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path=''): 
+def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='', Merk='false'): 
 	PLog('ARDStartVideoStreams:'); 
 	
 	title_org = title	
@@ -1045,16 +1045,16 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='')
 	tagline	= UtfToStr(tagline)
 	
 	Plot = "%s||||%s" % (tagline, summ)					# || Code für LF (\n scheitert in router)
-	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
+	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true':	# Sofortstart
+		if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
 			PLog('Sofortstart: ARDStartVideoStreams')
-			PlayVideo(url=href, title=title, thumb=img, Plot=Plot)
+			PlayVideo(url=href, title=title, thumb=img, Plot=Plot, Merk=Merk)
 			return
 	sub_path=''		# fehlt noch bei ARD
 		
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
 		(urllib.quote_plus(href), urllib.quote_plus(title_org), urllib.quote_plus(img), urllib.quote_plus(Plot), 
-		urllib.quote_plus(sub_path))
+		urllib.quote_plus(sub_path), Merk)
 	addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 		mediatype='video', tagline=tagline, summary=summ) 
 	
@@ -1066,7 +1066,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='')
 #@route(PREFIX + '/ARDStartVideoMP4')	
 #	Wiedergabe eines Videos aus ARDStart, hier MP4-Formate
 #	Die Live-Funktion ist völlig getrennt von der Funktion TV-Livestreams - ohne EPG, ohne Private..
-def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path=''): 
+def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Merk='false'): 
 	PLog('ARDStartVideoMP4:'); 
 	title_org=title; summary_org=summ; thumb=img; tagline_org=tagline	# Backup 
 	geoblock = UtfToStr(geoblock)	
@@ -1962,12 +1962,11 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 						summary = "%s | %s\n\n%s" % (dachzeile, subtitle, txt)
 		
 		if subtitle in summary:				# Doppler subtitle durch Bildtext ersetzen
-			subtitle = img_alt
+			subtitle = img_alt			
 			
-			
-		subtitle=subtitle.replace('"', '*')		# "-Zeichen verhindert json.loads in route
-		summary=summary.replace('"', '*')		# dto.
-		summary=unescape(summary)
+		headline=repl_json_chars(headline)			# json-komp.
+		subtitle=repl_json_chars(subtitle)			# dto.
+		summary=repl_json_chars(summary)			# dto.
 		
 		PLog('neuer Satz'); PLog('path: ' + path); PLog(title); PLog(img_src); PLog(millsec_duration);
 		PLog('next_cbKey: ' + next_cbKey); PLog('summary: ' + summary);
@@ -2000,7 +1999,6 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 				PLog('Medien-Url: ' + path)			
 				PLog(img_src)
 				summ_par=summary.replace('\n', '||')		# || Code für LF (\n scheitert in router)
-				headline=headline.replace('&', 'und')		# json-komp.
 				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
 					% (urllib2.quote(path), urllib2.quote(headline), urllib2.quote(img_src), 
 					millsec_duration, urllib2.quote(summ_par),  urllib2.quote(subtitle), ID, offset)				
@@ -2042,7 +2040,7 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 #	18.04.2017 die Podcasts von PodFavoriten enthalten in path bereits mp3-Links, parseLinks_Mp4_Rtmp entfällt
 #
 # path: z.B. https://classic.ardmediathek.de/play/media/11177770
-def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0):	
+def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, Merk='false'):	
 	PLog('SingleSendung:')						
 	PLog('path: ' + path)			
 	PLog('ID: ' + str(ID))
@@ -2098,8 +2096,8 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0):
 	# *.m3u8-Datei vorhanden -> auswerten, falls ladefähig. die Alternative 'Client wählt selbst' (master.m3u8)
 	# stellen wir voran (WDTV-Live OK, VLC-Player auf Nexus7 'schwerwiegenden Fehler'), MXPlayer läuft dagegen
 	if m3u8_master:	 		 		  								# nicht bei rtmp-Links (ohne master wie m3u8)
-		if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart - direkt, falls Listing nicht Playable
-			if SETTINGS.getSetting('pref_show_resolution') == 'false':
+		if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': # Sofortstart - direkt, falls Listing nicht Playable
+			if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
 				PLog('Sofortstart: SingleSendung')
 				PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
 				sub_path=''	# fehlt bei ARD 
@@ -2108,9 +2106,9 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0):
 			
 		title = '1. Bandbreite und Auflösung automatisch' + geoblock			# master.m3u8
 		m3u8_master = m3u8_master.replace('https', 'http')	# 26.06.2017: nun auch ARD mit https
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
 			(urllib.quote_plus(m3u8_master), urllib.quote_plus(title_org), urllib.quote_plus(thumb), 
-			urllib.quote_plus(summary_org), urllib.quote_plus(sub_path))
+			urllib.quote_plus(summary_org), urllib.quote_plus(sub_path), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 			mediatype=mediatype, tagline=tagline, summary=summary) 
 						
@@ -2176,9 +2174,9 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0):
 			if url.find('rtmp://') >= 0:	# 2. rtmp-Links:	
 				summary = Format + 'RTMP-Stream'	
 				lable = "%s | %s" % (title, summary)
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
 					(urllib.quote_plus(url), urllib.quote_plus(title_org), urllib.quote_plus(thumb), 
-					urllib.quote_plus(summary_org), urllib.quote_plus(sub_path))
+					urllib.quote_plus(summary_org), urllib.quote_plus(sub_path), Merk)
 				addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 					 mediatype=mediatype, tagline=tagline, summary=summary)
 									
@@ -2196,9 +2194,9 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0):
 					url = url.replace('https', 'http')	
 					lable = "%s. %s | %s" % (str(li_cnt), title, Format+geoblock)
 					summary = "%s\n%s" % (title_org, summary_org)
-					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
 						(urllib.quote_plus(url), urllib.quote_plus(title_org), urllib.quote_plus(thumb), 
-						urllib.quote_plus(summary_org), urllib.quote_plus(sub_path))
+						urllib.quote_plus(summary_org), urllib.quote_plus(sub_path), Merk)
 					addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 						mediatype=mediatype, tagline=tagline, summary=summary) 
 			li_cnt=li_cnt+1
@@ -2772,6 +2770,9 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 															
 	my_items = ReadFavourites(mode)						# Addon-Favs / Merkliste einlesen
 	PLog(len(my_items))
+	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.ShowVideo",
+						"resources.lib.zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
+						"ARDStartVideoMP4", ]	# ohne "SenderLiveResolution" (Resume aus)	
 
 	if mode == 'Favs':														
 		tagline = "Anzahl Addon-Favoriten: %s" % str(len(my_items)) 	# Info-Button
@@ -2797,19 +2798,22 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 	for fav in my_items:
 		fav = urllib.unquote_plus(fav)						# urllib2.unquote erzeugt + aus Blanks! 
 		fav_org = fav										# für ShowFavsExec
-		# PLog('fav_org: ' + fav_org)
+		#PLog('fav_org: ' + fav_org)
 		name=''; thumb=''; dirPars=''; fparams='';			
 		name 	= re.search(' name="(.*?)"', fav) 			# name, thumb,Plot zuerst
-		thumb 	= re.search(' thumb="(.*?)">(.*?)<', fav)
-		Plot_org= stringextract(' Plot="', '"',fav) 		# ilabels['Plot']
+		thumb 	= stringextract(' thumb="', '"',fav) 
+		Plot_org = stringextract(' Plot="', '"',fav) 		# ilabels['Plot']
+		Plot_org = Plot_org.replace(' Plot="', ' Plot=""')  # leer
 		if name: 	name 	= name.group(1)
-		if thumb:	thumb 	= thumb.group(1)
 			
-		if mode == 'Merk' and ADDON_ID not in fav:			# Base64-kodierte Plugin-Url						
-			p1, p2 	= fav.split('&quot;,return)</merk>')	# Endstück p2: &quot;,return)</merk>
+		if mode == 'Merk' and 'plugin://plugin' not in fav:	# Base64-kodierte Plugin-Url
+			PLog('base64_fav')
+			fav = fav.replace('10025,&quot;', '10025,"')	# Quotierung Anfang entfernen
+			fav = fav.replace('&quot;,return', '",return')	# Quotierung Ende entfernen					
+			p1, p2 	= fav.split('",return)</merk>')	# Endstück p2: &quot;,return)</merk>
 			#PLog('p1: ' + p1)							
 			#PLog('p2: ' + p2)
-			p3, b64	=  p1.split('10025,&quot;')				# p1=Startstück, b64=kodierter string
+			p3, b64	=  p1.split('10025,"')					# p1=Startstück, b64=kodierter string
 			#PLog('p3: ' + p3)
 			#PLog('b64: ' + b64)
 			b64_clean= convBase64(b64)						# Dekodierung mit oder ohne padding am Ende
@@ -2822,20 +2826,26 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 			b64_clean=urllib.unquote_plus(b64_clean)		# unquote aus addDir-Call
 			b64_clean=urllib.unquote_plus(b64_clean)		# unquote aus Kontextmenü
 			#PLog(b64_clean)
-			fav		= p3 + '10025,&quot;' + b64_clean + p2 
+			fav		= p3 + '10025,"' + b64_clean + p2 
 
 		fav = fav.replace('&quot;', '"')					# " am Ende fparams
 		fav = fav.replace('&amp;', '&')						# Verbinder &
-		# PLog(fav)
+		PLog('fav_b64_clean: ' + fav)
 		dirPars	= re.search('action=(.*?)&fparams',fav)		# dirList&dirID=PlayAudio&fanart..
 		fparams = stringextract('&fparams={', '}',fav)
 		fparams = urllib.unquote_plus(fparams)				# Parameter sind zusätl. quotiert
 		PLog('fparams1: ' + fparams);
 		
-		if dirPars:	dirPars = dirPars.group(1)
+		try:
+			dirPars = dirPars.group(1)
+		except:
+			dirPars = ''
+		PLog('dirPars: ' + dirPars);
 		mediatype=''										# Kennz. Videos im Listing
-		if 'PlayVideo&' in dirPars or 'zdfmobile.ShowVideo'  in dirPars:
-			 mediatype='video'
+		CallFunction = stringextract("&dirID=", "&", dirPars) 
+		PLog('CallFunction: ' + CallFunction)
+		if CallFunction in CallFunctions:			# Parameter Merk='true' anhängen
+			mediatype='video'
 		
 		dirPars = unescape(dirPars); 
 		PLog(name); PLog(thumb); PLog(Plot_org); PLog(dirPars);  PLog(mediatype);
@@ -2940,17 +2950,25 @@ def convBase64(s):
 # Addon-interne Merkliste : Hinzufügen / Löschen
 #	unabhängig von der Favoritenverwaltung
 #	base64-Kodierung benötigt für url-Parameter (nötig für router)
-# 17.02.2019 Wechsel von base64- zu urllib-Kodierung (wg. 'Incorrect padding' error)
+# 23.03.2019 zusätzliche base64- zu urllib-Kodierung (in Kombi ohne padding-Error) - s. addDir
 # Ungelöstes Problem:
 #	bisher kein Verbleib im akt. Verz. möglich (wie bei Favoriten). Nach add oder del wird Watch 
 #	wiederholt aufgerufen - Lösung: Aufruf von ShowFavs.
 #
 def Watch(action, name, thumb='', Plot='', url=''):		
 	PLog('Watch: ' + action)
+	# CallFunctions: Funktionen, die Videos direkt oder indirekt (isPlayable) aufrufen.
+	#	Ist eine der Funktionen in der Plugin-Url enthalten, wird der Parameter Merk='true'
+	#	für PlayVideo bzw. zum Durchreichen angehängt
+	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.ShowVideo",
+						"resources.lib.zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
+						"ARDStartVideoMP4", "SenderLiveResolution"
+					]
 	
 	url = urllib.unquote_plus(url)	
-	PLog(urllib.unquote_plus(url))  # url in fparams zusätzlich quotiert
+	PLog(urllib.unquote_plus(url)[100:])  			# url in fparams zusätzlich quotiert
 	PLog(name); PLog(thumb); PLog(Plot);
+	
 	name = UtfToStr(name); thumb = UtfToStr(thumb); 
 	Plot = UtfToStr(Plot); 
 	url = UtfToStr(url)	
@@ -2961,17 +2979,31 @@ def Watch(action, name, thumb='', Plot='', url=''):
 	doppler = False
 	
 	if action == 'add':
+		if 'plugin://plugin' not in url:				# Base64-kodierte Plugin-Url in ActivateWindow
+			b64_clean= convBase64(url)					# Dekodierung mit oder ohne padding am Ende	
+			b64_clean=urllib.unquote_plus(b64_clean)	# unquote aus addDir-Call
+			b64_clean=urllib.unquote_plus(b64_clean)	# unquote aus Kontextmenü
+			#PLog(b64_clean)
+			CallFunction = stringextract("&dirID=", "&", b64_clean) 
+			PLog('CallFunction: ' + CallFunction)
+			if CallFunction in CallFunctions:			# Parameter Merk='true' anhängen
+				new_url = b64_clean[:-1]				# cut } am Ende fparams
+				new_url = "%s, 'Merk': 'true'}" % new_url
+				PLog("CallFunction_new_url: " + new_url)
+				url = urllib.quote_plus(new_url)
+				url = base64.b64encode(url)			
+			
 		url = url.replace('&', '&amp;') # Anpassung an Favorit-Schema
 		merk = '<merk name="%s" thumb="%s" Plot="%s">ActivateWindow(10025,&quot;%s&quot;,return)</merk>'  \
 			% (name, thumb, Plot, url)
 		PLog('merk: ' + merk)
 		my_items = ReadFavourites('Merk')
 		merkliste = ''
-		for item in my_items:				# Liste -> String
+		for item in my_items:						# Liste -> String
 			item = UtfToStr(item)	
 			iname = stringextract('name="', '"', item) 
 			# PLog('iname:' + iname)
-			if iname == name:				# Doppler vermeiden
+			if iname == name:						# Doppler vermeiden
 				doppler = True
 				PLog('Doppler')
 				break
@@ -2982,34 +3014,34 @@ def Watch(action, name, thumb='', Plot='', url=''):
 			merkliste = merkliste + merk + "\n"
 			item_cnt = item_cnt + 1			
 			merkliste = "<merkliste>\n%s</merkliste>"	% merkliste
-			err_msg = RSave(fname, merkliste)			# Merkliste speichern
+			err_msg = RSave(fname, merkliste)		# Merkliste speichern
 			
 		
 	if action == 'del':
 		my_items = ReadFavourites('Merk')
 		merkliste = ''
 		deleted = False
-		for item in my_items:				# Liste -> String
+		for item in my_items:						# Liste -> String
 			item = UtfToStr(item)	
 			iname = stringextract('name="', '"', item) 
 			# PLog('Name: %s, IName: %s' % (name, iname))
-			if iname == name:				# skip Satz = löschen 
+			if iname == name:						# skip Satz = löschen 
 				deleted = True
 				continue
 			item_cnt = item_cnt + 1
 			merkliste = merkliste + item + "\n"
 		if deleted:
 			PLog("Eintrag >%s< gelöscht" % name)
-			err_msg = RSave(fname, merkliste)			# Merkliste speichern
+			err_msg = RSave(fname, merkliste)		# Merkliste speichern
 		else:
 			msg1 = "Eintrag >%s< nicht gefunden." % name
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, "", "") 
 							
-	if err_msg:											# Info nur bei Save-Problem
+	if err_msg:										# Info nur bei Save-Problem
 		msg2 = 'Problem beim Speichern der Merkliste:'
 		msg3 = err_msg
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3) 
-	else:												# Liste wird anschl. geöffnet
+	else:											# Liste wird anschl. geöffnet
 		PLog("Anzahl der Einträge: %s" % str(item_cnt))		
 	
 	# Aufruf Merkliste - kein Verbleib im akt. Verz. möglich (s.o.)
@@ -3723,17 +3755,17 @@ def SenderLiveListe(title, listname, fanart, offset=0):
 ###################################################################################################
 # Auswahl der Auflösungstufen des Livesenders - Aufruf: SenderLiveListe + ARDStartRubrik
 #	descr: tagline | summary
-def SenderLiveResolution(path, title, thumb, descr):
+def SenderLiveResolution(path, title, thumb, descr, Merk='false'):
 	PLog('SenderLiveResolution:')
 	PLog(SETTINGS.getSetting('pref_video_direct'))
 	PLog(SETTINGS.getSetting('pref_show_resolution'))
 
 	# direkter Sprung hier erforderlich, da sonst der Player mit dem Verz. SenderLiveResolution
 	#	startet + fehlschlägt.
-	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
+	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true':	# Sofortstart
+		if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
 			PLog('Sofortstart: SenderLiveResolution')
-			PlayVideo(url=path, title=title, thumb=thumb, Plot=descr)
+			PlayVideo(url=path, title=title, thumb=thumb, Plot=descr, Merk=Merk)
 			return
 	
 	title = UtfToStr(title); descr = UtfToStr(descr)
@@ -4062,7 +4094,9 @@ def RadioAnstalten(path, title, sender, fanart):
 				
 				# slink = slink.replace('https', 'http')		# hier sinnlos bei üblichen Redirects
 				# url_template: ersetzt in PlayAudio https- durch http-Links 
-				headline = headline.replace('"', '')			# json-komp. für func_pars in router()
+				headline=repl_json_chars(headline)			# json-komp. für func_pars in router()
+				subtitle=repl_json_chars(subtitle)			# dto.
+				
 				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'url_template': '1', 'Plot': '%s'}" % \
 					(urllib.quote_plus(slink), urllib.quote_plus(headline), urllib.quote_plus(img_src), 
 					urllib.quote_plus(subtitle))
@@ -4693,13 +4727,14 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		
 		title = title.strip()
 		title = unescape(title)	
-		title = (title.replace('\'', '').replace('"', ''))	# json-komp. für func_pars in router()
 		summary = unescape(summary)
 		summary = cleanhtml(summary)		
-		summary = summary.replace('\'', '')					# dto.
 		tagline = unescape(tagline)
 		tagline = cleanhtml(tagline)
-		tagline = tagline.replace('\'', '')					# dto.
+		
+		title=repl_json_chars(title)						# json-komp. für func_pars in router()
+		summary=repl_json_chars(summary)					# dto.
+		tagline=repl_json_chars(tagline)					# dto.
 		
 		title = UtfToStr(title); summary = UtfToStr(summary); tagline = UtfToStr(tagline);
 			
@@ -4720,8 +4755,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 					if 	summ_txt:
 						summary = summ_txt	
 			
-			title = title.replace('"', '')			# json-komp. für func_pars in router()
-			summary = summary.replace('"', '')		# dto.		
+			summary=repl_json_chars(summary)		# json-komp. für func_pars in router()	
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (urllib2.quote(path),
 				urllib2.quote(title), thumb, urllib2.quote(summary))	
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=thumb, thumb=thumb, 
@@ -4815,7 +4849,7 @@ def get_summary_pre(path, ID='ZDF'):
 #	bekannt, diese in Plex-Plugins einzubinden. Umsetzung in Kodi-Version OK (s. get_formitaeten).
 # Ladekette für Videoquellen s. get_formitaeten
 # 
-def ZDF_getVideoSources(url, title, thumb, tagline, segment_start=None, segment_end=None):
+def ZDF_getVideoSources(url, title, thumb, tagline, segment_start=None, segment_end=None, Merk='false'):
 	PLog('ZDF_getVideoSources:'); PLog(url); PLog(tagline); 
 	PLog(title)
 				
@@ -4876,7 +4910,9 @@ def ZDF_getVideoSources(url, title, thumb, tagline, segment_start=None, segment_
 	# Sofortstart: Behandlung in show_formitaeten
 	only_list = ["h264_aac_ts_http_m3u8_http"]					# Video-Items erstellen: m3u8-Formate
 	li, download_list = show_formitaeten(li=li, title_call=title, formitaeten=formitaeten, tagline=tagline,
-		thumb=thumb, only_list=only_list,geoblock=geoblock, sub_path=sub_path)		  
+		thumb=thumb, only_list=only_list,geoblock=geoblock, sub_path=sub_path, Merk=Merk)
+	if 	download_list == '':	# Sofortstart erfolgt, raus
+		return	  
 		
 	title_oc='weitere Video-Formate'							# Video-Items erstellen: weitere Formate
 	if SETTINGS.getSetting('pref_use_downloads'):	
@@ -5062,7 +5098,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 #-------------------------
 # 	Ausgabe der Videoformate
 #	
-def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geoblock, sub_path):	
+def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geoblock, sub_path, Merk='false'):	
 	PLog('show_formitaeten:')
 	PLog(only_list); PLog(title_call)
 	# PLog(formitaeten)		# bei Bedarf
@@ -5100,11 +5136,11 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 				i = i +1
 				if url:		
 					if url.find('master.m3u8') > 0:			# m3u8 enthält alle Auflösungen
-						if SETTINGS.getSetting('pref_video_direct') == 'true':				# Sofortstart
-							if SETTINGS.getSetting('pref_show_resolution') == 'false':
+						if SETTINGS.getSetting('pref_video_direct') == 'true'or Merk == 'true':	# Sofortstart
+							if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
 								PLog('Sofortstart: show_formitaeten')
-								PlayVideo(url=url, title=title_call, thumb=thumb, Plot=Plot_par, sub_path=sub_path)
-								return
+								PlayVideo(url=url, title=title_call, thumb=thumb, Plot=Plot_par, sub_path=sub_path, Merk=Merk)
+								return li, ''	# sauber raus in ZDF_getVideoSources
 						
 						title = '%s. %s [m3u8] Bandbreite und Aufloesung automatisch | %s' % (str(i), quality, title_call)
 						title = UtfToStr(title)
@@ -5117,9 +5153,9 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 						title = '%s. Qualitaet: %s | Typ: %s %s' % (str(i), quality, typ, facets)
 						title = UtfToStr(title)
 						download_list.append(title + '#' + url)					# Download-Liste füllen	
-						fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+						fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
 							(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(thumb), 
-							urllib.quote_plus(Plot_par), urllib.quote_plus(sub_path))	
+							urllib.quote_plus(Plot_par), urllib.quote_plus(sub_path), Merk)	
 						addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 							mediatype='video', tagline=Plot) 
 													

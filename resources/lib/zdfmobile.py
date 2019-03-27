@@ -381,8 +381,9 @@ def GetJsonByPath(path, jsonObject):
 	# PLog(jsonObject)
 	return jsonObject	
 # ----------------------------------------------------------------------			
-def ShowVideo(path, DictID):
+def ShowVideo(path, DictID, Merk='false'):
 	PLog('ShowVideo:'); PLog(path); PLog(DictID)
+	PLog(Merk)
 	
 	jsonObject = Dict("load", DictID)
 	videoObject = GetJsonByPath(path,jsonObject)
@@ -449,34 +450,40 @@ def ShowVideo(path, DictID):
 		title_org=title_org.replace('"', '') 		# json-komp. für func_pars in router()
 		title_org=title_org.replace('&', 'und') 	# json-komp. für func_pars in router()
 		descr=descr.replace('"', '') 				# dto.
+		quality=UtfToStr(quality); typ=UtfToStr(typ); 
 					
 		PLog("url: " + url)	
+		if Merk == 'true':
+			PLog('Sofortstart Merk: ZDF Mobile (ShowVideo)')
+			PlayVideo(url=url, title=title_org, thumb=img, Plot=descr, Merk=Merk)
+			return
 	
 		if url.find('master.m3u8') > 0:		# 
 			if 'auto' in quality:			# speichern für ShowSingleBandwidth
 				if SETTINGS.getSetting('pref_video_direct') == 'true':	     # Sofortstart
 					if SETTINGS.getSetting('pref_show_resolution') == 'false':
 						PLog('Sofortstart: ZDF Mobile (ShowVideo)')
-						PlayVideo(url=url, title=title_org, thumb=img, Plot=descr)
+						PlayVideo(url=url, title=title_org, thumb=img, Plot=descr, Merk=Merk)
 						return
 				url_auto = url
-			title=str(i) + '. ' + quality + ' [m3u8]'
+			title=str(i) + '. ' + quality + ' [m3u8]'						# Einzelauflösungen
 			PLog("title: " + title)
-			tagline = 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' [m3u8-Streaming]'
+			tagline = '%s\n\n' % title_org + 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' [m3u8-Streaming]'	
 			tagline = UtfToStr(tagline);
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
-				urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr))	
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
+				(urllib2.quote(url), urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr), Merk)	
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.PlayVideo", fanart=img, 
 				thumb=img, fparams=fparams, summary=descr, tagline=tagline, mediatype='video')	
 		else:
 			title=str(i) + '. %s [%s]'  % (quality, typ)
 			PLog("title: " + title)
-			tagline = 'Qualitaet: ' + quality + ' | Typ: ' + typ
+			tagline = '%s\n\n' % title_org + 'Qualitaet: ' + quality + ' | Typ: ' + typ
 			if bandbreite:
+				bandbreite=UtfToStr(bandbreite);
 				tagline = '%s | %s'	% (tagline, bandbreite)		
 			tagline = UtfToStr(tagline);
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
-				urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr))	
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
+				(urllib2.quote(url), urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr), Merk)	
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.PlayVideo", fanart=img, 
 				thumb=img, fparams=fparams, summary=descr, tagline=tagline, mediatype='video')	
 	
