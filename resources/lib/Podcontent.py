@@ -50,6 +50,7 @@ ICON_NOTE 				= "icon-note.png"
 ICON_STAR 				= "icon-star.png"
 
 BASE_URL				= 'https://classic.ardmediathek.de'
+POD_SEARCH 				= '/suche?source=radio&sort=date&searchText=%s&pod=on&playtime=all&words=and&to=all='
 ####################################################################################################
 Podcast_Scheme_List = [		# Liste vorhandener Auswertungs-Schemata
 # fehlendes http / https wird in Auswertungsschemata ersetzt
@@ -333,9 +334,9 @@ def get_pod_content(url, rec_per_page, baseurl, offset):
 	if baseurl == 'http://www.ndr.de':
 		return Scheme_ndr(page, rec_per_page, offset)
 		
-	if '//www.ardmediathek.de' in baseurl:
+	if '//classic.ardmediathek.de' in baseurl:	# vor Mediathek-Neu www.ardmediathek.de
 		return Scheme_ARD(page, rec_per_page, offset, baseurl)
-		
+	
 #------------------------
 def Scheme_br_online(page, rec_per_page, offset, page_href=None):	# Schema www.br-online.de, ab Mai 2018 json-format
 # 	Aufruf von get_pod_content - Umsetzung auf API-Call dort

@@ -8,6 +8,11 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+29.03.2019	1.1.4	ARDStartRubrikSingle: Links der Classicversion aktivieren(wie ARDStartSingle),
+			Code für Neuversion ausgelagert (focusable.txt).
+			ARD A-Z: Titel um Sender erweitert (SinglePage).
+			Modul Podcontent: Fix BASE_URL (classic.ardmediathek.de).
+
 27.03.2019	1.1.3	ShowFavs: diverse Anpassungen an Formatänderung des Merklisteneintrags.
 			ShowFavs: Fix Auswertung thumb.
 			Funktionen mit Param. Merk erweitert: PlayVideo, ZDF_getVideoSources +
@@ -15,7 +20,7 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			ARDStartVideoMP4.
 			Direkte Sofortstarts erweitert mit Param. Merk in Funktionen: show_formitaeten,
 			zdfmobile.ShowVideo, ARDStartVideoStreams, ARDStartVideoMP4, SingleSendung,
-			SenderLiveResolution
+			SenderLiveResolution.
 			getVideoSources + show_formitaeten: Fix return-Parameter nach Sofortstart. 			
 
 not on Github	1.1.2	Watch: Einfügen des Param. Merk in die Plugin-Url der Merklisteneinträge,

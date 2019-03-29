@@ -44,8 +44,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.1.3'		 
-VDATE = '27.03.2019'
+VERSION =  '1.1.4'		 
+VDATE = '29.03.2019'
 
 # 
 #	
@@ -825,7 +825,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 # Auflistung der Beiträge einer Rubrik aus ARDStart	- ARDStartSingle springt hierher,
 #	falls dort keine Videoquelle gefunden wird.			
 # 	Nur die Dauer-Rubriken >Neueste Videos< und >Am besten bewertet< erhalten eine
-#		Url der Classic-Version, die übrigen eine Neu-Version-Url.
+#		Url der Classic-Version, die übrigen eine Neu-Version-Url. 
 #	ARDStartSingle führt bei http-Error 404 einen Fallback auf die Classic-Version durch 
 #		und verzweigt bei Erfolg zu PageControl. 
 def ARDStartRubrikSingle(path, title, img, ID=''): 
@@ -837,50 +837,26 @@ def ARDStartRubrikSingle(path, title, img, ID=''):
 	if 'Livestream' in title == False:					# Livestreams ohne Home-Button
 		li = home(li, ID='ARD')							# Home-Button
 				
-	page, msg = get_page(path=path)						# kleine Seiten, Verzicht auf Cache
-	if page == '':	
-		msg1 = "Fehler in ARDStartRubrikSingle: %s"	% title
-		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
-		return li
-	PLog(len(page))
-	
-	sendungen = blockextract('class="_focusable', page)
-	PLog(len(sendungen))
-	for s in sendungen:
-		tagline=''; summ=''
-		href 	= BETA_BASE_URL + stringextract('href="', '"', s)
-		title 	= stringextract('title="', '"', s)
-		title	= unescape(title)
-		subline =  stringextract('subline">', '<', s)
-		subline = cleanhtml(subline.strip())
-		subline	= unescape(subline)
-		href_id =  stringextract('/player/', '/', s) # Bild via id 
-		img, sender = img_via_id(href_id, page) 
-			
-		duration= stringextract('duration">', '</div>', s)
-		if duration:
-			tagline = "%s | %s"	% (duration, subline)
+	# Links der Classic-version aktivieren
+	if 'documentId=' or 'bcastId=' in path:					# Classic-Version laden 
+		path = path.replace('www.ardmediathek', 'classic.ardmediathek')
+		page, msg = get_page(path)
+		if page:
+			if 'data-ctrl-layoutable' in page:				# Mehrere Sendungen ohne Seitenkontrolle
+				cbKey='SingleSendung'; mode='Sendereihen'; ID='ARD'
+				SinglePage(title=title, path=path, next_cbKey='SingleSendung', mode=mode, ID=ID)
+				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)	# und  springen wieder zurück
+			else:
+				cbKey='SinglePage'; mode='Sendereihen'; ID='ARD'
+				PageControl(cbKey, title, path, mode, ID) # Auswertung Sendereihe, 1 od. mehr Seiten
+				xbmcplugin.endOfDirectory(HANDLE)
 		else:
-			tagline = subline
-		if tagline.endswith('| '):
-			tagline = tagline.replace('| ', '')
-							
-		headline=UtfToStr(title); duration=UtfToStr(duration);	
-		PLog("title: " + title); PLog("headline: " + headline); 
-		PLog(tagline);	PLog(href)			
-														# summary (Inhaltstext) im Voraus holen falls 
-														#	 leer oder identisch mit title :	
-		if summ == '' or summ == title:	
-			if SETTINGS.getSetting('pref_load_summary') == 'true':
-				summ_txt = get_summary_pre(href, 'ARDnew')
-				if 	summ_txt:
-					summ = summ_txt
-
-		fparams="&fparams={'path': '%s', 'title': '%s', 'tagline': '%s', 'ID': '%s'}" \
-			% (urllib2.quote(href), urllib2.quote(title), tagline, ID)
-		addDir(li=li, label=headline, action="dirList", dirID="ARDStartSingle", fanart=img, thumb=img, 
-			fparams=fparams, summary=summ, tagline=tagline)
+			msg1 = "Fehler in ARDStartRubrikSingle: %s"	% title
+			msg2 = msg
+			msg3 = 'ARD-Neu und ARD-Classic ohne Ergebnis'
+			li = xbmcgui.ListItem()
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
+			return li
 			
 	xbmcplugin.endOfDirectory(HANDLE)
 						
@@ -916,15 +892,12 @@ def ARDStartSingle(path, title, tagline, ID=''):
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 			return li
 							
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD')									# Home-Button
-
 	PLog(len(page))
 	VideoUrls = blockextract('_quality', page)					# Videoquellen vorhanden?
 	if len(VideoUrls) == 0:	
 		gridlist = blockextract('class="gridlist"', page)		# Test auf Rubriken
 		if len(gridlist) > 0:									# -> ARDStartRubrikSingle
-			PLog('%s Rubrik(en) -> ARDStartRubrik' % len(gridlist))
+			PLog('%s Rubrik(en) -> ARDStartRubrikSingle' % len(gridlist))
 			return ARDStartRubrikSingle(path, title, img='', ID='ARDStartSingle')		
 		
 		msg1 = 'keine Videoquelle gefunden - Abbruch. Seite: ' + path
@@ -944,6 +917,9 @@ def ARDStartSingle(path, title, tagline, ID=''):
 	else:
 		geoblock = ' | Geoblock: nein'
 	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')									# Home-Button
+
 	# Livestream-Abzweig, Bsp. tagesschau24:	
 	# 	Kennzeichnung Livestream: 'class="day">Live</p>' in ARDStartRubrik.
 	if ID	== 'Livestream':									# entfällt hier bei Classic-Version 	
@@ -1910,12 +1886,14 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 	#PLog(send_path); #PLog(send_arr)
 	PLog('Sätze: ' + str(len(send_path)));
 	for i in range(len(send_path)):					# Anzahl in allen send_... gleich
-		#PLog(send_headline[i]); PLog(send_subtitle[i]); PLog(send_img_alt[i]); PLog(send_dachzeile[i]); 
-		#PLog(send_teasertext[i]);
+		PLog(send_headline[i]); PLog(send_subtitle[i]); PLog(send_img_alt[i]); PLog(send_dachzeile[i]); 
+		PLog(send_teasertext[i]);
 		path = send_path[i]
 		headline = send_headline[i]					# UtfToStr, unescape, "-Ersatz in get_sendungen
 		subtitle = send_subtitle[i]
 		subtitle = UtfToStr(subtitle)
+		if next_cbKey == 'PageControl' and subtitle:	# A-Z: subtitle enthält Sender
+			headline = "%s | %s" % (headline, subtitle)
 		img_src = send_img_src[i]
 		img_alt = send_img_alt[i]
 		img_alt = UtfToStr(img_alt)
