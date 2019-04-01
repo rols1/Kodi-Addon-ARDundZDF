@@ -44,7 +44,7 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.1.5'		 
+VERSION =  '1.1.7'		 
 VDATE = '01.04.2019'
 
 # 
@@ -2119,7 +2119,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 			if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
 				PLog('Sofortstart: SingleSendung')
 				PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
-				sub_path=''	# fehlt bei ARD 
+				# sub_path=''	# fehlt bei ARD - entf. ab 1.4.2019
 				PlayVideo(url=m3u8_master, title=title_org, thumb=thumb, Plot=summary, sub_path=sub_path)
 				return
 			
