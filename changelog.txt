@@ -8,7 +8,22 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
-29.03.2019	1.1.4	ARDStartRubrikSingle: Links der Classicversion aktivieren(wie ARDStartSingle),
+01.04.2019	1.1.6	ARD-Startseite: Liste aller Livestreams (bisher nur Ausschnitt).
+			ARD-Startseite: Ergänzung "ALLE ZEIGEN" wie Originalseite.
+			SinglePage: Fix Austausch next_cbKey, falls eine Folgeseite weitere Folgeseiten
+			enthält (Bsp. ARD Rubriken).
+			ARD-Startseite: Ausnahme für Livestreams "Inhaltstexte im Voraus" (EPG-Daten
+			bereits in Seite enthalten).
+
+not on Github	1.1.5	BarriereArmARD: Tagesschau mit Gebärdensprache hinzugefügt. 
+			BarriereArmARD: Untertitel (ARD-Suche) hinzugefügt.
+			ARDStartVideoStreams + ARDStartVideoMP4: sub_path für Untertitel an  
+			PlayVideo + Parseplaylist durchgereicht.
+			get_page (Modul util): Ersatz unquote(path) durch replace - unquote
+			scheiterte bei quotierten Umlauten (ARD-Hörfassungen nicht mehr gefunden). 
+			ARDStartRubrikSingle: Aktualisierung Kopfdoku.						
+	
+29.03.2019	1.1.4	ARDStartRubrikSingle: Links der Classicversion aktivieren (wie ARDStartSingle),
 			Code für Neuversion ausgelagert (focusable.txt).
 			ARD A-Z: Titel um Sender erweitert (SinglePage).
 			Modul Podcontent: Fix BASE_URL (classic.ardmediathek.de).

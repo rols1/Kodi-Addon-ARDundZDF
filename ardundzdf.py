@@ -44,8 +44,8 @@ import resources.lib.Podcontent 		as Podcontent
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.1.4'		 
-VDATE = '29.03.2019'
+VERSION =  '1.1.5'		 
+VDATE = '01.04.2019'
 
 # 
 #	
@@ -593,9 +593,10 @@ def SearchUpdate(title):
 #							beta.ardmediathek.de / www.ardmediathek.de
 #
 #					zusätzliche Funktionen für die Betaphase ab Sept. 2018
+#					ab Jan 2019 wg. Scrollfunktion haupts. Nutzung der Classic-Version
 #
 #  	Funktion VerpasstWoche (weiter verwendet) bisher in www.ardmediathek nicht vorhanden. 
-#	Funktion 
+#	
 ####################################################################################################
 
 # Startseite der Mediathek - passend zum ausgewählten Sender.
@@ -623,7 +624,7 @@ def ARDStart(title):
 
 	path = BASE_URL + "/tv" 
 	# Seite aus Cache laden
-	page = Dict("load", 'ARDStart_%s' % sendername, CacheTime=ARDStartCacheTime) 
+	page = Dict("load", 'ARDStart_%s' % sendername, CacheTime=ARDStartCacheTime)					
 	if page == False:											# nicht vorhanden oder zu alt
 		page, msg = get_page(path=path)							# vom Sender holen
 	
@@ -644,37 +645,39 @@ def ARDStart(title):
 	gridlist = blockextract('class="section onlyWithJs sectionA">', page)		# Rubriken
 	PLog(len(gridlist))
 	for grid in gridlist:
-		href = ''
+		href = BASE_URL + "/tv" 
+
 		if 'Stage' in grid:								# Highlights im Wischermodus
 			ID = 'Swiper'								# Abgleich in ARDStartRubrik
 			title 	= 'Highlights'
-			img, img_alt = img_urlScheme(grid, 320, 'Sendereihen') 		
+			img, img_alt = img_urlScheme(grid, 320, 'Sendereihen')
 
 		elif 'Livestreams' in grid and 'Das-Erste/live?kanal=208' in grid:			
 			ID = 'Livestreams'
 			title 	= 'Livestreams'
 			img = R(ICON_MAIN_TVLIVE)					# eigenes Icon für Livestreams
+														# alle Live-Sender neu laden (PRG-Info):
+			href = 'https://classic.ardmediathek.de/tv/live' 		
 
 		else:
 			ID = 'ARDStart'	
 			title 	= stringextract('modHeadline">', '<span', grid)		# Zeile unter modHeadline
-			title 	= title.strip()							# title ist Referenz für ARDStartRubrik
+			title 	= title.strip()						# title ist Referenz für ARDStartRubrik
 			img, img_alt = img_urlScheme(grid, 320) 
 		
 		if title == '':									# s.u.  Neueste Videos, Am besten bewertet
 			continue
-						
-						
+											
 		PLog(title); PLog(ID);  PLog(img); PLog(href); 
 		title = UtfToStr(title);  
 
-		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'sendername': '%s', 'ID': '%s'}" % (urllib2.quote(path), 
+		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'sendername': '%s', 'ID': '%s'}" % (urllib2.quote(href), 
 			urllib2.quote(title), urllib2.quote(img), sendername, ID)
 		addDir(li=li, label=title, action="dirList", dirID="ARDStartRubrik", fanart=img, thumb=img, 
 			fparams=fparams)
 			
 	# anfügen + nach PageControl verteilen:	
-	#	s.a. Verzweigung in ARDStartSingle (Vorprüfung 1)
+	#	s.a. Verzweigung in ARDStartSingle (Vorprüfung 1)	
 	if '>Neueste Videos<' in page:
 		title 	= 'Neueste Videos'
 		href =  BASE_URL + "/tv/Neueste-Videos/mehr?documentId=21282466"
@@ -712,7 +715,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 		
 	page = False
 	if 	ID == 'ARDStart':								# Startseite laden	
-		page = Dict("load", 'ARDStart_%s', CacheTime=ARDStartCacheTime)	# Seite aus Cache laden
+		page = Dict("load", 'ARDStart_%s', CacheTime=ARDStartCacheTime)	# Seite aus Cache laden		
 
 	if page == False:									# keine Startseite od. Cache miss								
 		page, msg = get_page(path=path, GetOnlyRedirect=True)
@@ -735,12 +738,13 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 			found = True
 		else:
 			gridlist = blockextract('<h2 class="modHeadline">', page)	# Rubriken
+			PLog('gridlist: ' + str(len(gridlist)))
 			for grid in gridlist:
 				title 	= stringextract('modHeadline">', '<span', grid)	# Zeile unter modHeadline
 				title 	= title.strip()		
 				PLog(title); PLog(title_org); 
-				if title == title_org:							# Referenz-Rubrik gefunden
-					gridlist = grid
+				if title == title_org or ID == 'Livestreams':			# Referenz-Rubrik gefunden,
+					gridlist = grid										#	bei Livestreams immer
 					found = True
 					break
 	PLog('gridlist: ' + str(len(gridlist)))
@@ -754,7 +758,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 	sendungen = blockextract('class="teaser"', gridlist)
 	PLog(len(sendungen))
 	for s in sendungen:
-		# PLog(s)
+		PLog(s)
 		tagline=''; summ=''; mediatype=''
 		# Achtung: gleichz. Vorkommen von 'bcastId=' + 'documentId=' kein Indiz für einz. Sendung.
 		href 	= BETA_BASE_URL + stringextract('href="', '"', s) # OK häufig auch bei Classic-Version
@@ -764,14 +768,20 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 		subline =  stringextract('class="subtitle">', '<', s)
 		img, img_alt = img_urlScheme(s, 320, 'Sendereihen') 
 													# summary (Inhaltstext) im Voraus holen falls 
-													#	 leer oder identisch mit title :	
-		if summ == '':	
-			if SETTINGS.getSetting('pref_load_summary') == 'true':
-				summ_txt = get_summary_pre(href, 'ARDnew')
-				if 	summ_txt:
-					summ = summ_txt	
+													#	 leer oder identisch mit title
+		more_path = ''
+		more	= stringextract('class="more', '<span', s)		# Link zu "ALLE ZEIGEN"
+		if 'mehr?documentId=' in more:							# außer Livestreams (Alle bereits in path)
+			more_path = BASE_URL + stringextract('href="', '"', more)
 					
-		if	ID == 'Livestreams':
+		if summ == '':											# summary (Inhaltstext) im Voraus holen,
+			if ID != 'Livestreams':								#	Seite Livestreams enthält bereits EPG
+				if SETTINGS.getSetting('pref_load_summary') == 'true':
+					summ_txt = get_summary_pre(href, 'ARDnew')
+					if 	summ_txt:
+						summ = summ_txt	
+					
+		if	ID == 'Livestreams':						
 			if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 				if SETTINGS.getSetting('pref_show_resolution') == 'false':
 					mediatype='video'
@@ -801,13 +811,6 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 		subline=subline.replace('"', '') 	# dto.
 		
 		PLog("title: " + title);  PLog(tagline); PLog(href); PLog(multi);		
-												# summary (Inhaltstext) im Voraus holen falls Standard-
-												# tagline. Summary i.d.R nur bei kompl. Staffeln 	
-		#if len(tagline) < 80:					# Standard: >10.01.2019 | 44 Min. | UT | SWR Fernsehen<
-			#if SETTINGS.getSetting('pref_load_summary') == 'true':	# anpassen!
-			#	summ_txt = get_summary_pre(href, 'ARDnew')
-			#	if 	summ_txt:
-			#		summ = summ_txt	
 			
 		if	ID == 'Livestreams':	# -> SenderLiveResolution wie SenderLiveListe aus Hauptmenü
 			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s'}" % (href, title, img, subline)
@@ -818,18 +821,30 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 				% (urllib2.quote(href), urllib2.quote(title), tagline)
 			addDir(li=li, label=title, action="dirList", dirID="ARDStartSingle", fanart=img, thumb=img, 
 				fparams=fparams, summary=summ, tagline=tagline, mediatype=mediatype)
+				
+		if more_path:				# Button "ALLE ZEIGEN"		
+			img 	= R(ICON_MEHR)
+			title 	= "ALLE ZEIGEN"
+			tagline	= "%s zu >%s<" % (title, title_org)
+			next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
+			fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
+				% (urllib2.quote(title), urllib2.quote(more_path), next_cbKey)
+			addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
+				thumb=img, fparams=fparams, tagline=tagline)
 
 	xbmcplugin.endOfDirectory(HANDLE)
 			
 #---------------------------------------------------------------------------------------------------
 # Auflistung der Beiträge einer Rubrik aus ARDStart	- ARDStartSingle springt hierher,
-#	falls dort keine Videoquelle gefunden wird.			
-# 	Nur die Dauer-Rubriken >Neueste Videos< und >Am besten bewertet< erhalten eine
-#		Url der Classic-Version, die übrigen eine Neu-Version-Url. 
+#	falls dort keine Videoquelle gefunden wird, aber Inhalte der Classic-Version
+#	gefunden werden (class="gridlist").		
+# 	Die Dauer-Rubriken >Neueste Videos< und >Am besten bewertet< erhalten bereits in
+#		ARDStart eine Url der Classic-Version mit Ziel PageControl. 
 #	ARDStartSingle führt bei http-Error 404 einen Fallback auf die Classic-Version durch 
 #		und verzweigt bei Erfolg zu PageControl. 
 def ARDStartRubrikSingle(path, title, img, ID=''): 
 	PLog('ARDStartRubrikSingle: %s' % path)
+	PLog(ID)
 	title = UtfToStr(title)
 	title_org 	= title 								# title ist Referenz zur Rubrik
 		
@@ -873,11 +888,13 @@ def ARDStartRubrikSingle(path, title, img, ID=''):
 #	vorkommt.
 # Parameter duration (müsste sonst aus json-Daten neu ermittelt werden), Bsp. _duration":5318.
 # Parameter tagline: erforderlich - hier fehlen UT + Sender 
+#
 def ARDStartSingle(path, title, tagline, ID=''): 
 	PLog('ARDStartSingle: %s' % ID);
 	title_org 	= title 
 	PLog(tagline)
 
+	li = xbmcgui.ListItem()
 	page, msg = get_page(path)	
 	if page == '':										# falls leer: Classic-version testen 
 		path = path.replace('www.ardmediathek', 'classic.ardmediathek')
@@ -888,7 +905,6 @@ def ARDStartSingle(path, title, tagline, ID=''):
 		else:
 			msg1 = "Fehler in ARDStartSingle: %s"	% title
 			msg2 = msg
-			li = xbmcgui.ListItem()
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 			return li
 							
@@ -899,12 +915,12 @@ def ARDStartSingle(path, title, tagline, ID=''):
 		if len(gridlist) > 0:									# -> ARDStartRubrikSingle
 			PLog('%s Rubrik(en) -> ARDStartRubrikSingle' % len(gridlist))
 			return ARDStartRubrikSingle(path, title, img='', ID='ARDStartSingle')		
-		
-		msg1 = 'keine Videoquelle gefunden - Abbruch. Seite: ' + path
-		PLog(msg1)
-		msg2 = path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
-		return li
+		else:
+			msg1 = 'keine Videoquelle gefunden - Abbruch. Seite: '
+			PLog(msg1)
+			msg2 = path
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+			return #li
 	PLog(len(VideoUrls))	
 	
 	summ 		= stringextract('synopsis":', '",', page)		# Achtung: kann " enthalten
@@ -947,7 +963,7 @@ def ARDStartSingle(path, title, tagline, ID=''):
 	title=UtfToStr(title); summ=UtfToStr(summ); tagline=UtfToStr(tagline); 
 	path=UtfToStr(path);		# Path kann Umlaute enthalten
 	
-	PLog(title); PLog(summ[:60]); PLog(tagline); PLog(img); PLog(path); 
+	PLog(title); PLog(summ[:60]); PLog(tagline); PLog(img); PLog(path); PLog(sub_path);
 	title_new 	= "Streaming-Formate | %s" % title
 	
 	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s'}" \
@@ -957,7 +973,7 @@ def ARDStartSingle(path, title, tagline, ID=''):
 		fparams=fparams, summary=summ, tagline=tagline, mediatype=mediatype)		
 					
 	title_new = "MP4-Formate und Downloads | %s" % title	
-	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s',  'img': '%s', 'geoblock': '%s',  'sub_path': '%s'}" \
+	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s',  'img': '%s', 'geoblock': '%s', 'sub_path': '%s'}" \
 		% (urllib2.quote(path), urllib2.quote(title), urllib2.quote(summ), urllib2.quote(tagline), urllib2.quote(img), 
 			urllib2.quote(geoblock), urllib2.quote(sub_path))
 	addDir(li=li, label=title_new, action="dirList", dirID="ARDStartVideoMP4", fanart=img, thumb=img, 
@@ -1024,9 +1040,8 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true':	# Sofortstart
 		if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
 			PLog('Sofortstart: ARDStartVideoStreams')
-			PlayVideo(url=href, title=title, thumb=img, Plot=Plot, Merk=Merk)
+			PlayVideo(url=href, title=title, thumb=img, Plot=Plot, sub_path=sub_path, Merk=Merk)
 			return
-	sub_path=''		# fehlt noch bei ARD
 		
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
 		(urllib.quote_plus(href), urllib.quote_plus(title_org), urllib.quote_plus(img), urllib.quote_plus(Plot), 
@@ -1035,7 +1050,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 		mediatype='video', tagline=tagline, summary=summ) 
 	
 	
-	li = Parseplaylist(li, href, img, geoblock, tagline=tagline, descr=summ)	# einzelne Auflösungen 		
+	li = Parseplaylist(li, href, img, geoblock, tagline=tagline, descr=summ, sub_path=sub_path)	# einzelne Auflösungen 		
 			
 	xbmcplugin.endOfDirectory(HANDLE)
 #---------------------------------------------------------------------------------------------------
@@ -1081,7 +1096,7 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 			PLog(meta); PLog(href);
 			quality 	= meta.split('|')[0]		# "Qualität: sehr hohe | Titel.."
 			PLog(quality);
-			PlayVideo(url=href, title=title, thumb=img, Plot=Plot)
+			PlayVideo(url=href, title=title, thumb=img, Plot=Plot, sub_path=sub_path, Merk=Merk)
 			return
 		
 	for video in  download_list:
@@ -1692,17 +1707,38 @@ def BarriereArmARD(name):		#
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')										# Home-Button
 
-	title = 'Hörfassungen'
-	title = UtfToStr(title)
+	title = 'Hörfassungen (ARD-Suche)'							# ARD-Suche nach Hörfassungen
+	title = UtfToStr(title)										#	mode=Suche
 	query = urllib2.quote(title, "utf-8")
-	path = BASE_URL + ARD_Suche	%  query	
-	
+	path = BASE_URL + ARD_Suche	%   urllib2.quote('Hörfassungen', "utf-8")
 	
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 	fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Suche', 'ID': 'ARD'}" \
 		% (urllib2.quote(title), urllib2.quote(path), next_cbKey)
-	addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_HOERFASSUNGEN), 
+	addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_BARRIEREARM), 
 		thumb=R(ICON_ARD_HOERFASSUNGEN), fparams=fparams)
+
+	title = 'Tagesschau mit Gebärdensprache'					# Tagesschau-mit-Gebärdensprache
+	title = UtfToStr(title)										#	mode=Sendereihen
+	query = urllib2.quote(title, "utf-8")
+	path =  BASE_URL + '/tv/Tagesschau-mit-Geb%C3%A4rdensprache/Sendung?documentId=12722002&bcastId=12722002'
+	
+	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
+	fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
+		% (urllib2.quote(title), urllib2.quote(path), next_cbKey)
+	addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_BARRIEREARM), 
+		thumb=R(ICON_ARD_BARRIEREARM), fparams=fparams)
+
+	title = 'Untertitel (ARD-Suche)'							# ARD-Suche nach Untertiteln
+	title = UtfToStr(title)										#	mode=Suche
+	query = urllib2.quote(title, "utf-8")
+	path = BASE_URL + ARD_Suche	%  'Untertitel'
+	
+	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
+	fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Suche', 'ID': 'ARD'}" \
+		% (urllib2.quote(title), urllib2.quote(path), next_cbKey)
+	addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_BARRIEREARM), 
+		thumb=R(ICON_ARD_BARRIEREARM), fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
@@ -1720,7 +1756,10 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 	
 	li = xbmcgui.ListItem()		
 	
-	page, msg = get_page(path=path)	
+	#headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+	#	'Accept': '*/*', 'Host': 'classic.ardmediathek.de'}"
+	#headers=urllib2.quote(headers)					# headers ohne quotes in get_page leer 
+	page, msg = get_page(path=path, header='')		# z.Z. nicht erf.
 	if page == '':
 		msg1 = 'PageControl: Beiträge können nicht geladen werden.'
 		msg2 = 'Fehler: %s'	% msg
@@ -1948,9 +1987,11 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 		
 		PLog('neuer Satz'); PLog('path: ' + path); PLog(title); PLog(img_src); PLog(millsec_duration);
 		PLog('next_cbKey: ' + next_cbKey); PLog('summary: ' + summary);
+		if next_cbKey == 'SingleSendung' and 'Weiter zu Seite' in title: 	# Seite nochmal -> PageControl 				
+			next_cbKey = 'PageControl'										# Bsp. ARD Rubriken
 		if next_cbKey == 'SingleSendung':		# Callback verweigert den Funktionsnamen als Variable
 			PLog('path: ' + path); PLog('func_path: ' + func_path); PLog('subtitle: ' + subtitle); PLog(sid)
-			PLog(ID)				
+			PLog(ID)
 			if ID == 'PODCAST' and img_src == '':	# Icon für Podcast
 				img_src = R(ICON_NOTE)					     
 			if func_path == BASE_URL + path: 	# überspringen - in ThemenARD erscheint der Dachdatensatz nochmal
@@ -3030,8 +3071,8 @@ def Watch(action, name, thumb='', Plot='', url=''):
 				
 ####################################################################################################
 # extrahiert aus Mediendatei (json) .mp3-, .mp4-, rtmp-Links + Untertitel (Aufrufer 
-# SingleSendung). Bsp.: http://www.ardmediathek.de/play/media/35771780
-#
+# 	SingleSendung). Bsp.: http://www.ardmediathek.de/play/media/35771780
+# Untertitel in ARD-Neu gefunden siehe ARDStartSingle
 def parseLinks_Mp4_Rtmp(page):		
 	PLog('parseLinks_Mp4_Rtmp:')
 	# PLog(page)	# Quellen im json-Format	
@@ -3084,10 +3125,9 @@ def parseLinks_Mp4_Rtmp(page):
 				link_path.append(link)
 				PLog(mark); PLog(s2); PLog(link); # PLog(link_path)
 			
-	#PLog(link_path)				
 	link_path = list(set(link_path))			# Doppel entfernen (gesehen: 0, 1, 2 doppelt)
 	link_path.sort()							# Sortierung - Original Bsp.: 0,1,2,0,1,2,3
-	PLog(link_path); PLog(len(link_path))					
+	PLog(link_path); PLog(len(link_path)); PLog(sub_path)				
 	return link_path, link_img, m3u8_master, geoblock, sub_path				 		
 		
 ####################################################################################################
@@ -3586,7 +3626,9 @@ def EPG_ShowAll(title, offset=0):
 				href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6]
 				if img.find('http') == -1:	# Werbebilder today.de hier ohne http://, Ersatzbild einfügen
 					img = R('icon-bild-fehlt.png')
-				sname = sname.replace('JETZT', title_playlist)			# JETZT durch Sender ersetzen
+				sname 	= sname.replace('JETZT', title_playlist)		# JETZT durch Sender ersetzen
+				# sctime 	= "[COLOR red] %s [/COLOR]" % stime			# Darstellung verschlechtert
+				# sname 	= sname.replace(stime, sctime)
 				tagline = 'Zeit: ' + vonbis
 				
 		title = UtfToStr(sname)

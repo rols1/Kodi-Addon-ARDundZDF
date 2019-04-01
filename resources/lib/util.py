@@ -323,10 +323,12 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		header = urllib2.unquote(header);  
 		header = header.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 		header = json.loads(header)
-		PLog("header: " + str(header)[:80]); 
+		PLog("header: " + str(header)[:80]);
+		 
 	
 	path = transl_umlaute(path)					# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
-	path = urllib2.unquote(path)				# z.B. https%3A//classic.ardmediathek.de
+	# path = urllib2.unquote(path)				# scheitert bei quotierten Umlauten, Ersatz replace				
+	path = path.replace('https%3A//','https://')# z.B. https%3A//classic.ardmediathek.de
 	msg = ''; page = ''	
 	UrlopenTimeout = 10
 	
@@ -369,7 +371,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 				req = urllib2.Request(path, headers=header)	
 			else:
 				req = urllib2.Request(path)										
-				#req.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36')
+				#req.add_header('User-Agent', 'Chrome/72.0.3626.96, Safari/537.36')
 				#req.add_header('Accept', 'text/html,application/xhtml xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8')
 				#req.add_header('Accept-Encoding','gzip, deflate, br')
 			r = urllib2.urlopen(req)
