@@ -45,7 +45,7 @@ import resources.lib.Podcontent 		as Podcontent
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 VERSION =  '1.1.7'		 
-VDATE = '01.04.2019'
+VDATE = '04.04.2019'
 
 # 
 #	
@@ -671,14 +671,24 @@ def ARDStart(title):
 		PLog(title); PLog(ID);  PLog(img); PLog(href); 
 		title = UtfToStr(title);  
 
-		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'sendername': '%s', 'ID': '%s'}" % (urllib2.quote(href), 
-			urllib2.quote(title), urllib2.quote(img), sendername, ID)
-		addDir(li=li, label=title, action="dirList", dirID="ARDStartRubrik", fanart=img, thumb=img, 
-			fparams=fparams)
+		# Rubriken -> PageControl (Konflikt mit "Alle zeigen"). In PageControl wird cbKey 
+		#	bei 2. Durchlauf (Weiter zu) von SingleSendung in PageControl getauscht.
+		if title == 'Rubriken':							# Rubriken
+			href = 'https://classic.ardmediathek.de/tv/Rubriken/mehr?documentId=21282550'
+			img = R(ICON_ARD_RUBRIKEN)
+			fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': 'SinglePage', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
+				% (urllib2.quote(title),  urllib2.quote(href))
+			addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
+				thumb=img, fparams=fparams)
+		else:	
+			fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'sendername': '%s', 'ID': '%s'}" % (urllib2.quote(href), 
+				urllib2.quote(title), urllib2.quote(img), sendername, ID)
+			addDir(li=li, label=title, action="dirList", dirID="ARDStartRubrik", fanart=img, thumb=img, 
+				fparams=fparams)
 			
 	# anfügen + nach PageControl verteilen:	
 	#	s.a. Verzweigung in ARDStartSingle (Vorprüfung 1)	
-	if '>Neueste Videos<' in page:
+	if '>Neueste Videos<' in page:						# Neueste Videos
 		title 	= 'Neueste Videos'
 		href =  BASE_URL + "/tv/Neueste-Videos/mehr?documentId=21282466"
 		img = R(ICON_ARD_NEUESTE)			
@@ -687,7 +697,7 @@ def ARDStart(title):
 		addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
 			thumb=img, fparams=fparams)
 			
-	if '>Am besten bewertet<' in page:
+	if '>Am besten bewertet<' in page:					# Am besten bewertet
 		title 	= 'Am besten bewertet'
 		href =  BASE_URL + "/tv/Am-besten-bewertet/mehr?documentId=21282468"
 		img = R(ICON_ARD_BEST)
@@ -758,7 +768,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 	sendungen = blockextract('class="teaser"', gridlist)
 	PLog(len(sendungen))
 	for s in sendungen:
-		PLog(s)
+		# PLog(s)		# Debug
 		tagline=''; summ=''; mediatype=''
 		# Achtung: gleichz. Vorkommen von 'bcastId=' + 'documentId=' kein Indiz für einz. Sendung.
 		href 	= BETA_BASE_URL + stringextract('href="', '"', s) # OK häufig auch bei Classic-Version
@@ -822,11 +832,12 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 			addDir(li=li, label=title, action="dirList", dirID="ARDStartSingle", fanart=img, thumb=img, 
 				fparams=fparams, summary=summ, tagline=tagline, mediatype=mediatype)
 				
-		if more_path:				# Button "ALLE ZEIGEN"		
+		if more_path:				# Button "ALLE ZEIGEN"	
+			PLog("more_path more: " + more_path)	
 			img 	= R(ICON_MEHR)
 			title 	= "ALLE ZEIGEN"
 			tagline	= "%s zu >%s<" % (title, title_org)
-			next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
+			next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl  SinglePage
 			fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
 				% (urllib2.quote(title), urllib2.quote(more_path), next_cbKey)
 			addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
@@ -1987,8 +1998,8 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 		
 		PLog('neuer Satz'); PLog('path: ' + path); PLog(title); PLog(img_src); PLog(millsec_duration);
 		PLog('next_cbKey: ' + next_cbKey); PLog('summary: ' + summary);
-		if next_cbKey == 'SingleSendung' and 'Weiter zu Seite' in title: 	# Seite nochmal -> PageControl 				
-			next_cbKey = 'PageControl'										# Bsp. ARD Rubriken
+		if '/tv/Rubriken/mehr' in func_path:		# Sonderfall: Austausch next_cbKey für Rubriken, da
+			next_cbKey = 'PageControl'				#	nochmal Seiten mit Seitenkontrolle folgen - s. ARDStart
 		if next_cbKey == 'SingleSendung':		# Callback verweigert den Funktionsnamen als Variable
 			PLog('path: ' + path); PLog('func_path: ' + func_path); PLog('subtitle: ' + subtitle); PLog(sid)
 			PLog(ID)
