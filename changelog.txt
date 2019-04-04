@@ -7,11 +7,12 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
-
-04.04.2019	1.1.7	SingleSendung: Fix sub_path (Untertitel wurden hier gelöscht).
-			ARDStart: eigener Button für Rubriken wg. Konflikt mit "Alle zeigen", Austausch
+	
+04.04.2019	1.1.8	ARDStart: eigener Button für Rubriken wg. Konflikt mit "Alle zeigen", Austausch
 			thumb (ICON_ARD_RUBRIKEN).
 			ARDStartRubrik: Logausgabe s entfernt (umfangreich, Debug nur lokal).
+
+02.04.2019	1.1.7	SingleSendung: Fix sub_path (Untertitel wurden hier gelöscht).
 	
 01.04.2019	1.1.6	ARD-Startseite: Liste aller Livestreams (bisher nur Ausschnitt).
 			ARD-Startseite: Ergänzung "ALLE ZEIGEN" wie Originalseite.
