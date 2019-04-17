@@ -46,7 +46,7 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.2.4'		 
+VERSION =  '1.2.5'		 
 VDATE = '17.04.2019'
 
 # 
@@ -376,8 +376,8 @@ def Main_ARD(name, sender=''):
 	addDir(li=li, label=title, action="dirList", dirID="get_query", fanart=R(ICON_MAIN_ARD), 
 		thumb=R(ICON_SEARCH), fparams=fparams)
 		
-	
-	title = 'Start | Sender: %s' % sendername	
+	img = 'ard-mediathek.png'
+	title = 'Start | Sender: alle Sender' 
 	fparams="&fparams={'title': '%s'}" % (urllib2.quote(title))
 	addDir(li=li, label=title, action="dirList", dirID="ARDStart", fanart=R(ICON_MAIN_ARD), thumb=R(img), 
 		fparams=fparams)

@@ -1075,7 +1075,7 @@ def ARDVerpasstContent(title, path, CurSender):
 		href = BETA_BASE_URL + stringextract('href="', '"', s)		
 		if href == '':											# skip
 			continue
-		href_id = stringextract('/ard/player/', '/', href)	 	# href_id hier in href
+		href_id = stringextract('/player/', '/', href)	 	# href_id hier in href
 
 		title = stringextract('headline">', '<', s) 			
 		# title = stringextract('title="', '"', s) 				# enthält Zeit - 2 Std.

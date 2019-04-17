@@ -7,6 +7,8 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+
+17.04.2019	1.2.5	Main_ARD (ARD-Classic): Fix für Titel und Vorschaubild.
 				
 17.04.2019	1.2.4	TV-Live: Integration ZDFSportschau Livestream in Sender "Überregional", Aktualisierung
 			livesenderTV.xml. 	
@@ -14,6 +16,7 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			in der geöffneten Liste.
 			VideoTools (DownloadsTools): Info, falls angewählte Datei fehlt. 
 			ARDVerpasstContent: unescape für Titel.
+			ARDVerpasstContent: Fix Gewinnung href_id (ab "/player/" nicht ab "/ard/player/").
 	
 not on Github	1.2.3	Neue Funktion ARDVerpasst: Liste der Wochentage, Anzeige gewählter Sender, Erzeugung
 			Pfade für ARD-Neu.
