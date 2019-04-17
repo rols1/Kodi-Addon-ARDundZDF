@@ -36,7 +36,9 @@ ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 DICTSTORE 		= os.path.join("%s/resources/data/Dict") % ADDON_PATH
 WATCHFILE		= os.path.join("%s/resources/data/merkliste.xml") % ADDON_PATH
 SUBTITLESTORE 	= os.path.join("%s/resources/data/subtitles") % ADDON_PATH
+TEXTSTORE 		= os.path.join("%s/resources/data/Inhaltstexte") % ADDON_PATH
 
+PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
 ICON_MAIN_POD	= 'radio-podcasts.png'
 ICON_MAIN_ZDFMOBILE		= 'zdf-mobile.png'
 			
@@ -69,6 +71,10 @@ def home(li, ID):
 	title = 'Zurück zum Hauptmenü ' + str(ID)
 	summary = title
 	
+	CurSender = Dict("load", 'CurSender')		
+	CurSender = UtfToStr(CurSender)
+	PLog(CurSender)	
+	
 	if ID == NAME:		# 'ARD und ZDF'
 		name = 'Home : ' + NAME
 		fparams="&fparams={}"
@@ -76,11 +82,18 @@ def home(li, ID):
 			thumb=R('home.png'), fparams=fparams)
 			
 	if ID == 'ARD':
+		name = 'Home: ' + "ARD Mediathek Classic"
+		# CurSender = Dict("load", "CurSender")	# entf.  bei Classic
+		fparams="&fparams={'name': '%s', 'sender': '%s'}"	% (urllib2.quote(name), '')
+		addDir(li=li, label=title, action="dirList", dirID="Main_ARD", fanart=R('home-ard-classic.png'), 
+			thumb=R('home-ard-classic.png'), fparams=fparams)
+		
+	if ID == 'ARD Neu':
 		name = 'Home: ' + "ARD Mediathek"
-		Dict_CurSender = Dict("load", "Dict_CurSender")
-		fparams="&fparams={'name': '%s', 'sender': '%s'}"	% (urllib2.quote(name), Dict_CurSender)
-		addDir(li=li, label=title, action="dirList", dirID="Main_ARD", fanart=R('home-ard.png'), 
-			thumb=R('home-ard.png'), fparams=fparams)
+		CurSender = Dict("load", "CurSender")
+		fparams="&fparams={'name': '%s', 'CurSender': '%s'}"	% (urllib2.quote(name), urllib2.quote(CurSender))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", 
+			fanart=R('home-ard.png'), thumb=R('home-ard.png'), fparams=fparams)
 			
 	if ID == 'ZDF':
 		name = 'Home: ' + "ZDF Mediathek"
@@ -128,7 +141,7 @@ def home(li, ID):
 #			Dateiname: 		"Dict_name"
 #			Wert in:		Dict_name
 #	Bsp. für Laden:
-#		Dict_CurSender = Dict("load", "Dict_CurSender")
+#		CurSender = Dict("load", "CurSender")
 #   Bsp. für CacheTime: 5*60 (5min) - Verwendung bei "load", Prüfung mtime 
 #	ev. ergänzen: OS-Verträglichkeit des Dateinamens
 
@@ -502,10 +515,10 @@ def R(fname, abs_path=False):
 # ersetzt Resource.Load von Plex 
 # abs_path s.o.	R()	
 def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex 
-	PLog('RLoad: %s' % str(fname))
 	if abs_path == False:
 		fname = '%s/resources/%s' % (ADDON_PATH, fname)
 	path = os.path.join(fname) # abs. Pfad
+	PLog('RLoad: %s' % str(fname))
 	try:
 		with open(path,'r') as f:
 			page = f.read()		
@@ -576,12 +589,11 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 	return line_ret
 #----------------------------------------------------------------
 #	doppelte utf-8-Enkodierung führt an manchen Stellen zu Sonderzeichen
-#
+#  	14.04.2019 entfernt: (':', ' ')
 def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
 	line_ret = line
-#	line_ret = (line_ret.replace(':', ' ').replace('"', '').replace('\\', '').replace('\'', ''))
-	for r in	((':', ' '), ('"', ''), ('\\', ''), ('\'', '')
-		, ('&', 'und'), ('(', '<'), (')', '>')):			
+	for r in	(('"', ''), ('\\', ''), ('\'', '')
+		, ('&', 'und'), ('(', '<'), (')', '>'),  ('∙', '|')):			
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret
@@ -807,6 +819,10 @@ def time_translate(timecode):
 # Format seconds	86400	(String, Int, Float)
 # Rückgabe:  		1d, 0h, 0m, 0s	
 def seconds_translate(seconds):
+	if seconds == '' or seconds == 0:
+		return ''
+	if int(seconds) < 60:
+		return "%s sec" % seconds
 	seconds = float(seconds)
 	day = seconds / (24 * 3600)
 	time = seconds % (24 * 3600)
@@ -815,7 +831,8 @@ def seconds_translate(seconds):
 	minutes = time / 60
 	time %= 60
 	seconds = time
-	return "%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds)		
+	# return "%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds)
+	return  "%d:%02d" % (hour, minutes)		
 #---------------------------------------------------------------- 	
 # Holt User-Eingabe für Suche ab
 def get_keyboard_input():
@@ -913,7 +930,99 @@ def ReadFavourites(mode):
 		
 	# PLog(my_favs)
 	return my_favs
-#----------------------------------------------------------------  
+
+#----------------------------------------------------------------
+# holt summary (Inhaltstext) für eine Sendung, abhängig von SETTINGS('pref_load_summary'). 
+#	SETTINGS durch Aufrufer geprüft
+#	ID: ARD, ZDF - Podcasts entspr. ARD
+# Es wird nur die Webseite ausgewertet, nicht die json-Inhalte der Ladekette.
+# Cache: 
+#		Text wird in ../resources/data/Dict gespeichert, Dateiname aus path generiert.
+#
+# Aufrufer: ZDF: 	ZDF_get_content (für alle ZDF-Rubriken)
+#			ARD: 	ARDStart	-> ARDStartRubrik 
+#					SendungenAZ	-> ARDnew_Content
+#				
+#	Aufruf erfolgt, wenn für eine Sendung kein summary (teasertext, descr, ..) gefunden wird.
+#
+# Nicht benötigt in ARD-Suche (Search -> SinglePage -> get_sendungen): Ergebnisse 
+#	enthalten einen 'teasertext' bzw. 'dachzeile'. Dto. Sendung Verpasst
+# 
+# Nicht benötigt in ZDF-Suche (ZDF_Search -> ZDF_get_content): Ergebnisse enthalten
+#	einen verkürzten 'teaser-text'.
+#
+def get_summary_pre(path, ID='ZDF'):	
+	PLog('get_summary_pre: ' + ID)
+	
+	if 'Video?bcastId' in path:					# ARDClassic
+		fname = path.split('=')[-1]				# ../&documentId=31984002
+		fname = "ID_%s" % fname
+	else:	
+		fname = path.split('/')[-1]
+		fname.replace('.html', '')				# .html bei ZDF-Links abschneiden
+		
+	fpath = os.path.join(TEXTSTORE, fname)
+	PLog('fpath: ' + fpath)
+	
+	summ = ''
+	if os.path.exists(fpath):		# Text laden + zurückgeben
+		PLog('lade lokal:') 
+		summ =  RLoad(fpath, abs_path=True)
+		return summ					# ev. leer, falls in der Liste eine Serie angezeigt wird 
+	
+	page, msg = get_page(path)
+	if page == '':
+		return ''
+	
+	if 	ID == 'ZDF':
+		summ = stringextract('description" content="', '"', page)
+		summ = mystrip(summ)
+		#if 'title="Untertitel">UT</abbr>' in page:	# stimmt nicht mit get_formitaeten überein
+		#	summ = "UT | " + summ
+		
+	if 	ID == 'ARDnew':
+		if '/ard/player/' in path:				# json-Inhalt
+			summ = stringextract('synopsis":"', '","', page)
+		else:									# HTML-Inhalt
+			summ = stringextract('synopsis":"', '"', page)
+		summ = repl_json_chars(summ)
+		
+	if 	ID == 'ARDClassic':
+		summ = stringextract('description" content="', '"', page)
+		
+		 	
+	summ = unescape(summ)			# Text speichern
+	summ = cleanhtml(summ)	
+	summ = repl_json_chars(summ)
+	# PLog('summ:' + summ)
+	if summ:
+		msg = RSave(fpath, summ)
+	# PLog(msg)
+	return summ
+	
+#---------------------------------------------------------------------------------------------------
+# Icon aus livesenderTV.xml holen
+# 24.01.2019 erweitert um link
+# Bei Bedarf erweitern für EPG (s. SenderLiveListe)
+def get_playlist_img(hrefsender):
+	PLog('get_playlist_img: ' + hrefsender); 
+	playlist_img=''; link='';
+	playlist = RLoad(PLAYLIST)		
+	playlist = blockextract('<item>', playlist)
+	for p in playlist:
+		s = stringextract('hrefsender>', '</hrefsender', p) 
+		#s = stringextract('title>', '</title', p)	# Classic-Version
+		PLog(hrefsender); PLog(s); 
+		if s:									# skip Leerstrings
+			if s.upper() in hrefsender.upper():
+				playlist_img = stringextract('thumbnail>', '</thumbnail', p)
+				playlist_img = R(playlist_img)
+				link =  stringextract('link>', '</link', p)
+				break
+	PLog(playlist_img); PLog(link); 
+	return playlist_img, link
+
+	
 ####################################################################################################
 # PlayVideo aktuell 23.03.2019: 
 #	Sofortstart + Resumefunktion, einschl. Anzeige der Medieninfo:

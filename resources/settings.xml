@@ -3,6 +3,7 @@
     <category label="Allgemeine Einstellungen">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
     	<setting label="neues Update beim Start des Plugins anzeigen" type="bool" id="pref_info_update" default="false"/>
+    	<setting label="Classic-Version der ARD Mediathek verwenden" type="bool" id="pref_use_classic" default="true"/>
     	<setting label="Mobile Version der ZDF Mediathek verwenden" type="bool" id="pref_use_zdfmobile" default="false"/>
          <setting type="sep"/>
    	<setting label="EPG-Daten für TV-Live-Sender zeigen - dauert etwas länger" type="bool" id="pref_use_epg" default="false"/>

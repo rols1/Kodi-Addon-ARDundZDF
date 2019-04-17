@@ -103,6 +103,17 @@
 		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
+	<item>			
+		<title>ZDFSportschau Livestream</title>
+		<hrefsender></hrefsender>
+		<link>https://ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/master.m3u8</link>
+		<thumbnail>tv-zdf-sportschau.png</thumbnail>
+		<genre>TV</genre>
+		<EPG_ID></EPG_ID>
+		<date>16.04.2019</date>
+		<epg_url></epg_url>
+		<geoblock>ja</geoblock>
+	</item>
 	<item>
 		<title>ARD-alpha</title>
 		<hrefsender>ARD-alpha</hrefsender>

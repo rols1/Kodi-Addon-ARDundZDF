@@ -7,7 +7,44 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+				
+17.04.2019	1.2.4	TV-Live: Integration ZDFSportschau Livestream in Sender "Überregional", Aktualisierung
+			livesenderTV.xml. 	
+			Merkliste: Info "nicht gefunden" nach Löschen unterdrückt - stört bei weiteren Aktionen
+			in der geöffneten Liste.
+			VideoTools (DownloadsTools): Info, falls angewählte Datei fehlt. 
+			ARDVerpasstContent: unescape für Titel.
 	
+not on Github	1.2.3	Neue Funktion ARDVerpasst: Liste der Wochentage, Anzeige gewählter Sender, Erzeugung
+			Pfade für ARD-Neu.
+			Neue Funktion ARDVerpasstContent: Auswertung Seite für gewählten Tag + Sender.
+			Anpassung Uhrzeit mit Offset 2 Std. (neue Funktion addHour).	
+			
+not on Github	1.2.2	Neue Funktion: ARDSearch (json-Inhalt nicht mit ARDStartRubrik / SendungenAZ_ARDnew
+			kompatibel).				 
+	
+not on Github	1.2.1	Variable Dict_CurSender umbenannt in CurSender (alte Liste ARDSender inkompatibel). 
+			home: Auswertung CurSender für Rücksprung zu Main_NEW.
+			seconds_translate: Rückgabe an Werte < 60 sec angepasst.	
+	
+not on Github	1.2.0	ARDStart: msg2 + msg3 vorbelegt für ev. Cache-Load/Cache-miss. 
+			ARDStartRubrik (ARDnew): Vorbelegung mediatype für Livestreams, UtfToStr für title,
+			href, duration, ID.
+			ARDnew: import ardundzdf für Direktsprünge ins Haupt-PRG (SenderLiveResolution, Parseplaylist,
+			test_downloads).
+			ARDStartRubrik: Auswertung für compilation-Url hinzugefügt (erforderlich 
+			für Filme nach Rubriken).
+			ARDStartRubrik: Inhaltstext im Voraus holen hinzugefügt (Swiper + restl. Beiträge).
+			Liste ARDSender erweitert um A-Z-Namen für Abgleich in  SendungenAZ_ARDnew.
+	
+not on Github	1.1.9	Konzept ARD: konsequente Umstellung der akt. Hybrid-Version auf Classic + neues
+			Modul für die Neu-Version ARDnew.
+			ARDnew: Übernahme Main_ARD -> Main_NEW (teilweise)
+			ARDnew - verschoben aus Haupt-PRG: Senderwahl, ARDStartVideoStreams, ARDStartVideoMP4, 
+			ARDStartVideoMP4get.
+			ARDnew - Funktionen aus ARDundZDF (Plex) übernommen: ARDStart, img_via_id, 
+			ARDStartRubrik, ARDStartSingle, SendungenAZ, SendungenAZ_ARDnew, get_api_call			
+
 04.04.2019	1.1.8	ARDStart: eigener Button für Rubriken wg. Konflikt mit "Alle zeigen", Austausch
 			thumb (ICON_ARD_RUBRIKEN).
 			ARDStartRubrik: Logausgabe s entfernt (umfangreich, Debug nur lokal).

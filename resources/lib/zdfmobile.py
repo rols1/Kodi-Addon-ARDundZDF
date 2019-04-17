@@ -27,7 +27,9 @@ DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract;  b
 teilstring=util.teilstring;  repl_dop=util.repl_dop; cleanhtml=util.cleanhtml;  decode_url=util.decode_url;  
 unescape=util.unescape;  mystrip=util.mystrip; make_filenames=util.make_filenames;  transl_umlaute=util.transl_umlaute;  
 humanbytes=util.humanbytes;  time_translate=util.time_translate; get_keyboard_input=util.get_keyboard_input; 
-transl_wtag=util.transl_wtag; PlayVideo=util.PlayVideo; repl_json_chars=util.repl_json_chars;
+transl_wtag=util.transl_wtag; PlayVideo=util.PlayVideo; repl_json_chars=util.repl_json_chars; 
+
+
 
 # Globals
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -199,8 +201,8 @@ def Verpasst_load(path, datum):		# 5 Tages-Abschnitte in 1 Datei, path -> DictID
 def ZDFmSearch(query, title='Suche', offset=0):
 	PLog('ZDFmSearch')
 	PLog('query: %s' % query)
-	li = xbmcgui.ListItem()	
-	return oc		
+	li = xbmcgui.ListItem()
+	xbmcplugin.endOfDirectory(HANDLE)
 # ----------------------------------------------------------------------			
 def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 	PLog('PageMenu, DictID: ' + DictID)
