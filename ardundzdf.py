@@ -46,8 +46,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.2.5'		 
-VDATE = '17.04.2019'
+VERSION =  '1.2.6'		 
+VDATE = '21.04.2019'
 
 # 
 #	
@@ -438,6 +438,10 @@ def Main_ZDF(name):
 	fparams="&fparams={'name': 'Neu in der Mediathek'}"
 	addDir(li=li, label="Neu in der Mediathek", action="dirList", dirID="NeuInMediathek", 
 		fanart=R(ICON_ZDF_NEWCONTENT), thumb=R(ICON_ZDF_NEWCONTENT), fparams=fparams)
+		
+	fparams="&fparams={'title': 'Sport Live im ZDF'}"
+	addDir(li=li, label="Sport Live im ZDF", action="dirList", dirID="ZDFSportLive", 
+		fanart=R("zdf-sportlive.png"), thumb=R("zdf-sportlive.png"), fparams=fparams)
 		
 	fparams="&fparams={'title': 'Barrierearm'}"
 	addDir(li=li, label="Barrierearm", action="dirList", dirID="BarriereArm", fanart=R(ICON_ZDF_BARRIEREARM), 
@@ -4002,6 +4006,31 @@ def BarriereArmSingle(path, title):
 			
 	xbmcplugin.endOfDirectory(HANDLE)
 			
+####################################################################################################
+def ZDFSportLive(title):
+	PLog('ZDFSportLive:'); 
+	title_org = title
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ZDF')						# Home-Button
+	
+	path = 'https://www.zdf.de/sport/sport-im-zdf-livestream-live-100.html'		
+	page, msg = get_page(path=path)		
+	if page == '':
+		msg1 = 'Seite kann nicht geladen werden.'
+		msg2, msg3 = msg.split('|')
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		return li 
+	PLog(len(page))
+	page = UtfToStr(page)
+	 			
+	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID='DEFAULT')
+	
+	PLog(page_cnt)
+	# if offset:	Code entfernt, in Kodi nicht nutzbar
+			
+	xbmcplugin.endOfDirectory(HANDLE)
+	
 ####################################################################################################
 def International(title):
 	PLog('International:'); 

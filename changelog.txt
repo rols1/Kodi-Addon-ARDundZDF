@@ -7,8 +7,12 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+21.04.2019	1.2.6	ZDF-Bereich: neues Menü 
+			TV-Live: Titel + Bild für "ZDFSportschau Livestream" korrigiert -> 
+			"ARDSportschau Livestream" + tv-ard-sportschau.png.	
 
 17.04.2019	1.2.5	Main_ARD (ARD-Classic): Fix für Titel und Vorschaubild.
+			Main_NEW (ARD_NEW): Fix Var. sender für ARDSearch.
 				
 17.04.2019	1.2.4	TV-Live: Integration ZDFSportschau Livestream in Sender "Überregional", Aktualisierung
 			livesenderTV.xml. 	

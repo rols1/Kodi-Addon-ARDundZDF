@@ -92,7 +92,7 @@ def Main_NEW(name, CurSender=''):
 	PLog("li:" + str(li))						
 			
 	title="Suche in ARD-Mediathek"
-	fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
+	fparams="&fparams={'title': '%s', 'sender': '%s' }" % (urllib2.quote(title), sender)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearch", fanart=R(ICON_MAIN_ARD), 
 		thumb=R(ICON_SEARCH), fparams=fparams)
 		
