@@ -62,7 +62,7 @@ Podcast_Scheme_List = [		# Liste vorhandener Auswertungs-Schemata
 
 #------------------------	
 def PodFavoriten(title, path, offset=0):
-	PLog('PodFavoriten:'); PLog(offset)
+	PLog('PodFavoriten:'); PLog(path); PLog(offset)
 			
 	rec_per_page = 24							# Anzahl pro Seite (www.br.de 24, ndr 10)
 	title_org = title
@@ -70,13 +70,13 @@ def PodFavoriten(title, path, offset=0):
 	Scheme = ''
 	for s in Podcast_Scheme_List:				# Prüfung: Schema für path vorhanden?
 		PLog(s); PLog(path[:80])
-		if path.find(s) >= 0:
+		if path.find(s) >= 0 or s == 'Podcast-Suche:':
 			Scheme = s
 			PLog(Scheme)
 			break			
 	if Scheme == '':			
 		msg1='Auswertungs-Schema fehlt für Url'
-		PLog(msg)
+		PLog(msg1)
 		msg2=path
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		
@@ -84,6 +84,11 @@ def PodFavoriten(title, path, offset=0):
 	#			5. Dauer, 6. Größe, 7. Titel (zusammengesetzt), 8. Bild	, 9. Tagline
 	#			10. PageControl
 	POD_rec = get_pod_content(url=path, rec_per_page=rec_per_page, baseurl=Scheme, offset=offset)
+	if POD_rec == None:
+		msg1 = 'Auswertung fehlgeschlagen:'
+		msg2 = path
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		
 	PLog(len(POD_rec))
 	if len(POD_rec) == 0:					# z.B. Fehlschlag bei Podcast-Suche 
 		msg1='Leider kein Treffer.'	
@@ -291,17 +296,19 @@ def DownloadMultiple(key_url_list, key_POD_rec):						# Sammeldownloads
 
 #------------------------	
 def get_pod_content(url, rec_per_page, baseurl, offset):
-	PLog('get_pod_content:'); PLog(rec_per_page); PLog(baseurl); PLog(offset);
+	PLog('get_pod_content:'); PLog(url); PLog(rec_per_page); PLog(baseurl); PLog(offset);
 
-	if baseurl.startswith('Podcast-Suche:'):	# Kurzform Podcast-Suche -> Link erzeugen
-		query = url.split(':')[1]
-		query = query.strip()
-		query = query.replace(' ', '+')			# Leer-Trennung = UND-Verknüpfung bei Podcast-Suche 
-		query = urllib2.quote(query, "utf-8")
-		PLog('query: %s' %  query)
-		path =  BASE_URL  + POD_SEARCH
-		url = path % query
-		baseurl = BASE_URL						# 'http://www.ardmediathek.de'
+	if int(offset) == 0:
+		if 'Podcast-Suche:' in baseurl:				# Kurzform Podcast-Suche -> Link erzeugen
+			query = url.split(':')[1]				# Bsp. Podcast-Suche: Quarks-Wissenschaft-und-mehr
+			query = query.strip()
+			query = query.replace(' ', '+')			# Leer-Trennung = UND-Verknüpfung bei Podcast-Suche 
+			query = urllib2.quote(query, "utf-8")
+			PLog('query: %s' %  query)
+			path =  BASE_URL  + POD_SEARCH % query
+			url = path
+			PLog(url)
+			baseurl = BASE_URL						# 'http://www.ardmediathek.de'
 		
 	url = UtfToStr(url)
 	url = unescape(url)							# einige url enthalten html-escapezeichen
@@ -333,8 +340,11 @@ def get_pod_content(url, rec_per_page, baseurl, offset):
 		return Scheme_wdr(page, rec_per_page, offset)
 	if baseurl == 'http://www.ndr.de':
 		return Scheme_ndr(page, rec_per_page, offset)
-		
-	if '//classic.ardmediathek.de' in baseurl:	# vor Mediathek-Neu www.ardmediathek.de
+	
+	# vor Mediathek-Neu www.ardmediathek.de	
+	if '//classic.ardmediathek.de' in baseurl or 'Podcast-Suche:' in baseurl:
+		if 'Podcast-Suche:' in baseurl:
+			baseurl = BASE_URL
 		return Scheme_ARD(page, rec_per_page, offset, baseurl)
 	
 #------------------------

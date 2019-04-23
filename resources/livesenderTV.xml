@@ -6,7 +6,7 @@
   <thumbnail></thumbnail>
    <date>20.12.2018 rols1</date>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
-  <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ view:Alle Sender</info>
+  <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ Button:Alle Sender</info>
   <info2>hrefsender enthält Sendernamen aus beta.ardmediathek.de</info2>
  </channels_info>
  
@@ -204,6 +204,16 @@
 		<epg_url></epg_url>
 	</item>
 	<item>
+		<title>MDR+ Eventlivestreams & SocialTV</title>
+		<hrefsender></hrefsender>
+		<link>https://mdrevent2hls-lh.akamaihd.net/i/livetvmdrevent2_ww@513991/master.m3u8</link>
+		<thumbnail>tv-mdr-sachsen.png</thumbnail>
+		<genre>TV</genre>
+		<EPG_ID></EPG_ID>
+		<date>22.04.2019</date>
+		<epg_url></epg_url>
+	</item>
+	<item>
 		<title>Radio Bremen</title>
 		<hrefsender>Radio Bremen</hrefsender>
 		<link>https://rbfs-lh.akamaihd.net/i/rb_fs@438960/master.m3u8</link>
@@ -294,6 +304,16 @@
 		<genre>TV</genre>
 		<EPG_ID>WDR</EPG_ID>
 		<date>07.09.2018</date>
+		<epg_url></epg_url>
+	</item>
+	<item>
+		<title>WDR/ARD Event Sportschau</title>
+		<hrefsender></hrefsender>
+		<link>https://wdrardevent1-lh.akamaihd.net/i/ardevent1_weltweit@566648/master.m3u8</link>
+		<thumbnail>https://www.sportschau.de/resources/img/sportschau/banner/logo_base.png</thumbnail>
+		<genre>TV</genre>
+		<EPG_ID></EPG_ID>
+		<date>22.04.2019</date>
 		<epg_url></epg_url>
 	</item>
 </items>

@@ -46,8 +46,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.2.6'		 
-VDATE = '21.04.2019'
+VERSION =  '1.3.1'		 
+VDATE = '23.04.2019'
 
 # 
 #	
@@ -3421,6 +3421,7 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 		# Alternative: m3u8-lokal starten:
 		# 	fparams="&fparams=url=%s, title=%s, is_playable=%s" % (sname + ".m3u8", title, True)
 		# descr -> Plot	
+		tagline	 = tagline.replace('||','\n')				# s. tagline in ZDF_get_content
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
 			(urllib.quote_plus(url_m3u8), urllib.quote_plus(title), urllib.quote_plus(thumb), 
 			urllib.quote_plus(descr), urllib.quote_plus(sub_path))	
@@ -3764,7 +3765,7 @@ def ZDFSendungenAZ(name):						# name = "Sendungen A-Z"
 
 ####################################################################################################
 # Hier zeigt das ZDF die Sendereihen ohne offset
-def ZDFSendungenAZList(title, element):			# ZDF-Sendereiehn zm gewählten Buchstaben
+def ZDFSendungenAZList(title, element):			# ZDF-Sendereihen zum gewählten Buchstaben
 	PLog('ZDFSendungenAZList:')
 	PLog(title)
 	title_org = title
@@ -3818,6 +3819,9 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0):
 	if page_cnt == 0:	# Fehlerbutton bereits in ZDF_get_content
 		return li
 				
+	if ID == 'ZDFSportLive':					# ohne zusätzliche Suche 
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+		
 	# if offset:	Code entfernt, in Kodi nicht nutzbar
 	title = UtfToStr(title)
 	label = "Alle Beiträge zu >%s< suchen"  % title
@@ -4007,6 +4011,9 @@ def BarriereArmSingle(path, title):
 	xbmcplugin.endOfDirectory(HANDLE)
 			
 ####################################################################################################
+# Leitseite zdf-sportreportage - enthält Vorschau mit Links zu den Reportageseiten - Auswertung in
+#	ZDFSportLiveSingle. 
+#	Angefügt: Button für zurückliegende Sendungen der ZDF-Sportreportage.
 def ZDFSportLive(title):
 	PLog('ZDFSportLive:'); 
 	title_org = title
@@ -4014,7 +4021,7 @@ def ZDFSportLive(title):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')						# Home-Button
 	
-	path = 'https://www.zdf.de/sport/sport-im-zdf-livestream-live-100.html'		
+	path = 'https://www.zdf.de/sport/sport-im-zdf-livestream-live-100.html'	 # Leitseite		
 	page, msg = get_page(path=path)		
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
@@ -4024,13 +4031,99 @@ def ZDFSportLive(title):
 	PLog(len(page))
 	page = UtfToStr(page)
 	 			
-	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID='DEFAULT')
-	
-	PLog(page_cnt)
-	# if offset:	Code entfernt, in Kodi nicht nutzbar
+	content =  blockextract('class="artdirect">', page)
+	PLog('content: ' + str(len(content)))	
+	for rec in content:			
+		href 	= stringextract('href="', '"', rec)
+		href 	= ZDF_BASE + href
+		
+		img 	= stringextract('data-src="', '"', rec)
+		title	= stringextract('title="', '"', rec)
+		descr	= stringextract('teaser-text" >', '</p>', rec)
+		descr	= mystrip(descr); descr=unescape(descr); descr=repl_json_chars(descr);
+		video	= stringextract('icon-301_clock icon">', '</dl>', rec)
+		video	= mystrip(video); video=cleanhtml(video)
+		if video:
+			descr = "%s | %s" % (descr, video)
+		
+		if '#skiplinks' in href or href == 'https://www.zdf.de/':
+			continue
+		PLog('Satz:')
+		PLog(href); PLog(title); PLog(descr); PLog(video);
+		fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (urllib2.quote(title), 
+			urllib2.quote(href), urllib2.quote(img))
+		addDir(li=li, label=title, action="dirList", dirID="ZDFSportLiveSingle", fanart=img, 
+			thumb=img, fparams=fparams, tagline=descr )
 			
+	title = 'zurückliegende Sendungen'
+	url = 'https://www.zdf.de/sport/zdf-sportreportage'
+	ID = 'ZDFSportLive'
+	thumb=R("zdf-sportlive.png")
+	fparams="&fparams={'url': '%s', 'title': '%s', 'ID': '%s'}" % (urllib2.quote(url), 
+		urllib2.quote(title), ID)
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=thumb, 
+		thumb=thumb, fparams=fparams)
+		
 	xbmcplugin.endOfDirectory(HANDLE)
+
+#-------------------------
+# holt von der aufgerufenen Seite den Titelbeitrag. Die restl. Videos der Seite
+#	(Mehr Videos aus der Sendung) werden von ZDF_get_content ermittelt.
+#	Abbruch, falls Titelbeitrag noch nicht verfügbar. 
+def ZDFSportLiveSingle(title, path, img):
+	PLog('ZDFSportLiveSingle:'); 
+	title_org = title
+	ref_path = path
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ZDF')						# Home-Button
 	
+	page, msg = get_page(path=path)		
+	if page == '':
+		msg1 = 'Seite kann nicht geladen werden.'
+		msg2, msg3 = msg.split('|')
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		return li 
+	PLog(len(page))
+	page = UtfToStr(page)
+	
+	videomodul = stringextract('class="b-video-module">', '</article>', page)
+	if 'Beitragslänge:' not in videomodul:							# Titelvideo fehlt 
+		msg1 = 'Leider (noch) kein Video verfügbar zu:'	
+		msg2 = title
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		return li 
+
+	descr = stringextract('item-description" >', '</p>', videomodul) 
+	descr = cleanhtml(descr); descr = mystrip(descr)
+	# Bsp.: datetime="2017-11-15T20:15:00.000+01:00">15.11.2017</time>
+	datum_line =  stringextract('<time datetime="', '/time>', videomodul) 
+	video_datum =  stringextract('">', '<', datum_line)
+	video_time = datum_line.split('T')[1]
+	video_time = video_time[:5]
+	
+	if video_datum and video_time:
+		descr = "%s, %s Uhr \n\n%s" % (video_datum, video_time, descr)		
+	descr = repl_json_chars(descr)
+	
+	PLog('Satz:')
+	PLog(path); PLog(title); PLog(descr); PLog(video_time);
+	
+	# 1. Titelbeitrag holen
+	mediatype=''
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		if SETTINGS.getSetting('pref_show_resolution') == 'false':
+			mediatype='video'
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (urllib2.quote(path),
+		urllib2.quote(title), img, urllib2.quote(descr))	
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
+		fparams=fparams, tagline=descr, mediatype=mediatype)
+		
+	# 2. restl. Videos holen (class="artdirect")
+	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=ref_path, ID='ZDFSportLive')	
+	
+	xbmcplugin.endOfDirectory(HANDLE)
+	 			
 ####################################################################################################
 def International(title):
 	PLog('International:'); 
@@ -4319,13 +4412,15 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 				if SETTINGS.getSetting('pref_load_summary') == 'true':
 					summ_txt = get_summary_pre(path, 'ZDF')
 					if 	summ_txt:
-						summary = summ_txt	
+						summary = "%s\n\n%s" % (tagline, summ_txt)	# ->Anzeige
+						tagline = "%s||||%s" % (tagline, summ_txt)	# -> ZDF_getVideoSources
 			
-			summary=repl_json_chars(summary)		# json-komp. für func_pars in router()	
+			tagline = UtfToStr(tagline)
+			tagline=repl_json_chars(tagline)		# json-komp. für func_pars in router()	
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (urllib2.quote(path),
-				urllib2.quote(title), thumb, urllib2.quote(summary))	
+				urllib2.quote(title), thumb, urllib2.quote(tagline))	
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=thumb, thumb=thumb, 
-				fparams=fparams, tagline=tagline, summary=summary, mediatype=mediatype)
+				fparams=fparams, summary=summary,  mediatype=mediatype)
 				
 		items_cnt = items_cnt+1
 	
@@ -4604,7 +4699,7 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 
 	title_call = urllib2.unquote(title_call)
 	title_call = UtfToStr(title_call); tagline = UtfToStr(tagline); geoblock = UtfToStr(geoblock)
-	if 	title_call != tagline:	
+	if 	title_call != tagline:		
 		Plot	 = "%s\n\n%s" % (title_call, tagline)
 		Plot_par = "%s||||%s" % (title_call, tagline)		# || Code für LF (\n scheitert in router)
 	else:
@@ -4651,12 +4746,13 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 						title = 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' ' + facets 
 						title = '%s. Qualitaet: %s | Typ: %s %s' % (str(i), quality, typ, facets)
 						title = UtfToStr(title)
-						download_list.append(title + '#' + url)					# Download-Liste füllen	
+						download_list.append(title + '#' + url)				# Download-Liste füllen	
+						tagline	 = tagline.replace('||','\n')				# s. tagline in ZDF_get_content
 						fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
 							(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(thumb), 
 							urllib.quote_plus(Plot_par), urllib.quote_plus(sub_path), Merk)	
 						addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-							mediatype='video', tagline=Plot) 
+							mediatype='video', tagline=tagline) 
 													
 	return li, download_list
 #-------------------------

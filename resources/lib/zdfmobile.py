@@ -309,11 +309,11 @@ def Get_content(stageObject, maxWidth):
 		#now = datetime.datetime.now()
 		#date = now.strftime("%d.%m.%Y %H:%M")
 		
+	title=UtfToStr(title); subTitle=UtfToStr(subTitle); descr=UtfToStr(descr); 
 	title=repl_json_chars(title) 		# json-komp. für func_pars in router()
 	subTitle=repl_json_chars(subTitle) 	# dto
 	descr=repl_json_chars(descr) 		# dto
 	
-	title=UtfToStr(title); subTitle=UtfToStr(subTitle); descr=UtfToStr(descr); 
 	img=UtfToStr(img);	date=UtfToStr(date); dauer=UtfToStr(dauer);
 	PLog('Get_content: %s |%s | %s | %s | %s | %s' % (title,subTitle,descr,img,date,dauer) )		
 	return title,subTitle,descr,img,date,dauer

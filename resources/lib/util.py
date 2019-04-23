@@ -598,13 +598,14 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	
 	return line_ret
 #---------------------------------------------------------------- 
-def mystrip(line):	# eigene strip-Funktion, die auch Zeilenumbrüche innerhalb des Strings entfernt
+# strip-Funktion, die auch Zeilenumbrüche innerhalb des Strings entfernt
+#	\s [ \t\n\r\f\v - s. https://docs.python.org/3/library/re.html
+def mystrip(line):	
 	line_ret = line	
-	line_ret = line.replace('\t', '').replace('\n', '').replace('\r', '')
-	line_ret = line_ret.strip()	
+	line_ret = re.sub(r"\s+", " ", line)	# Alternative für strip + replace
 	# PLog(line_ret)		# bei Bedarf
 	return line_ret
-#---------------------------------------------------------------- 
+#----------------------------------------------------------------  	
 # DirectoryNavigator - Nutzung des Kodi-builtin, der Code der PMS-Version kann entfallen
 # S. http://mirrors.kodi.tv/docs/python-docs/13.0-gotham/xbmcgui.html
 # mytype: 	0 : ShowAndGetDirectory, 1 : ShowAndGetFile, 2
@@ -722,13 +723,6 @@ def transl_doubleUTF8(line):	# rückgängig: doppelt kodiertes UTF-8
 
 		line = line.replace(*r)
 	return line	
-#----------------------------------------------------------------  	
-def mystrip(line):	# eigene strip-Funktion, die auch Zeilenumbrüche innerhalb des Strings entfernt
-	line_ret = line	
-	line_ret = line.replace('\t', '').replace('\n', '').replace('\r', '')
-	line_ret = line_ret.strip()	
-	# Log(line_ret)		# bei Bedarf
-	return line_ret
 #----------------------------------------------------------------  
 def make_filenames(title):
 	# erzeugt - hoffentlich - sichere Dateinamen (ohne Extension)
@@ -988,8 +982,8 @@ def get_summary_pre(path, ID='ZDF'):
 		summ = repl_json_chars(summ)
 		
 	if 	ID == 'ARDClassic':
-		summ = stringextract('description" content="', '"', page)
-		
+		# summ = stringextract('description" content="', '"', page)		# geändert 23.04.2019
+		summ = stringextract('itemprop="description">', '<', page)
 		 	
 	summ = unescape(summ)			# Text speichern
 	summ = cleanhtml(summ)	
