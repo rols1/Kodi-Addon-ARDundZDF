@@ -29,7 +29,7 @@ GetAttribute=util.GetAttribute;  CalculateDuration=util.CalculateDuration;
 teilstring=util.teilstring; repl_dop=util.repl_dop;  repl_char=util.repl_char;  mystrip=util.mystrip; 
 DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract;  blockextract=util.blockextract; 
 teilstring=util.teilstring;  repl_dop=util.repl_dop; cleanhtml=util.cleanhtml;  decode_url=util.decode_url;  
-unescape=util.unescape;  mystrip=util.mystrip; make_filenames=util.make_filenames;  transl_umlaute=util.transl_umlaute;  
+unescape=util.unescape; make_filenames=util.make_filenames; transl_umlaute=util.transl_umlaute;  
 humanbytes=util.humanbytes;  time_translate=util.time_translate; get_keyboard_input=util.get_keyboard_input; 
 ClearUp=util.ClearUp; repl_json_chars=util.repl_json_chars; seconds_translate=util.seconds_translate;
 transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; ReadFavourites=util.ReadFavourites; 
@@ -46,8 +46,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.3.1'		 
-VDATE = '23.04.2019'
+VERSION =  '1.3.5'		 
+VDATE = '27.04.2019'
 
 # 
 #	
@@ -813,15 +813,17 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 				thumb=img, fparams=fparams, summary=subline, mediatype=mediatype)					
 		else:	
 			if ID == 'Swiper':				# nur Einzelbeiräge zeigen (weitere Beiträge via PageControl möglich)
+				Plot=summ					# für Einzelauflösungen/summary in SingleSendung
 				sid = href.split('documentId=')[1]
 				path = BASE_URL + '/play/media/' + sid			# -> *.mp4 (Quali.-Stufen) + master.m3u8-Datei (Textform)
 				PLog('Medien-Url: ' + path)			
 				if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 					if SETTINGS.getSetting('pref_show_resolution') == 'false':
 						mediatype='video'
+						Plot = "%s||||%s" % (subline, summ)		# für Sofortstart/Plot in SingleSendung
 				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
 					% (urllib2.quote(path), urllib2.quote(title), urllib2.quote(img), 
-					duration, urllib2.quote(summ),  urllib2.quote(subline), 'ARD', '0')				
+					duration, urllib2.quote(Plot),  urllib2.quote(subline), 'ARD', '0')				
 				addDir(li=li, label=title, action="dirList", dirID="SingleSendung", fanart=img, thumb=img, 
 					fparams=fparams, summary=summ, tagline=subline, mediatype=mediatype)			
 			else:
@@ -1629,6 +1631,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
   
 	# *.m3u8-Datei vorhanden -> auswerten, falls ladefähig. die Alternative 'Client wählt selbst' (master.m3u8)
 	# stellen wir voran (WDTV-Live OK, VLC-Player auf Nexus7 'schwerwiegenden Fehler'), MXPlayer läuft dagegen
+	summary=summary.replace('||', '\n')		
 	if m3u8_master:	 		 		  								# nicht bei rtmp-Links (ohne master wie m3u8)
 		if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': # Sofortstart - direkt, falls Listing nicht Playable
 			if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
@@ -1698,7 +1701,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 			download_list.append(title + '#' + url)
 			
 
-		PLog('title: ' + title); PLog('url: ' + url); 
+		PLog('title: ' + title); PLog('url: ' + url);  PLog(summary)
 		if url:
 			if '.m3u8' in url:				# master.m3u8 überspringen, oben bereits abgehandelt
 				continue
@@ -1727,12 +1730,12 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 					#	mit http, während bei m3u8-Url https durch http ersetzt werden MUSS. 
 					url = url.replace('https', 'http')	
 					lable = "%s. %s | %s" % (str(li_cnt), title, Format+geoblock)
-					summary = "%s\n%s" % (title_org, summary_org)
+					summary_org=summary_org.replace('||', '\n')	
 					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
 						(urllib.quote_plus(url), urllib.quote_plus(title_org), urllib.quote_plus(thumb), 
 						urllib.quote_plus(summary_org), urllib.quote_plus(sub_path), Merk)
 					addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-						mediatype=mediatype, tagline=tagline, summary=summary) 
+						mediatype=mediatype, summary=summary_org) 
 			li_cnt=li_cnt+1
 						
 	PLog(download_list)
@@ -2880,7 +2883,8 @@ def EPG_Sender(title):
 		if ID == '':				# ohne EPG_ID
 			title = title + ': ohne EPG' 
 			summ = 'weiter zum Livestream'
-			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}" % (link, title, R(rec[2]))
+			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': ''}" %\
+				(urllib2.quote(link), urllib2.quote(title), urllib2.quote(R(rec[2])))
 			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
 				thumb=R(rec[2]), fparams=fparams, summary=summ)
 		else:
@@ -3023,7 +3027,7 @@ def LiveRecord(url, title, duration, laenge):
 		
 #-----------------------------
 def get_sort_playlist():						# sortierte Playliste der TV-Livesender
-	PLog('get_sort_playlist')
+	PLog('get_sort_playlist:')
 	playlist = RLoad(PLAYLIST)					# lokale XML-Datei (Pluginverz./Resources)
 	stringextract('<channel>', '</channel>', playlist)	# ohne Header
 	playlist = blockextract('<item>', playlist)
@@ -3031,6 +3035,7 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 	for item in playlist:   
 		rec = []
 		title = stringextract('<title>', '</title>', item)
+		# PLog(title)
 		title = title.upper()										# lower-/upper-case für sort() relevant
 		EPG_ID = stringextract('<EPG_ID>', '</EPG_ID>', item)
 		img = 	stringextract('<thumbnail>', '</thumbnail>', item)
@@ -3040,7 +3045,7 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 		sort_playlist.append(rec)									# Liste Gesamt
 	
 	# Zeilen-Index: title=rec[0]; EPG_ID=rec[1]; img=rec[2]; link=rec[3];	
-	sort_playlist.sort()	
+	sort_playlist = sorted(sort_playlist,key=lambda x: x[0])		# Array-sort statt sort()
 	return sort_playlist
 	
 #-----------------------------------------------------------------------------------------------------
@@ -3097,9 +3102,10 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #-----------------------------------------------------------------------------------------------------
 # EPG: aktuelle Sendungen aller Sender mode='allnow'
+#	26.04.2019 Anzahl pro Seite auf 20 erhöht (Timeout bei Kodi kein Problem wie bei Plex)  
 
 def EPG_ShowAll(title, offset=0):
-	PLog('EPG_ShowAll:')
+	PLog('EPG_ShowAll:'); PLog(offset) 
 	title = urllib2.unquote(title)
 	title_org = title
 	title2='Aktuelle Sendungen'
@@ -3110,8 +3116,9 @@ def EPG_ShowAll(title, offset=0):
 	# Zeilen-Index: title=rec[0]; EPG_ID=rec[1]; img=rec[2]; link=rec[3];	
 	sort_playlist = get_sort_playlist()	
 	PLog(len(sort_playlist))
+	PLog(sort_playlist)
 	
-	rec_per_page = 10								# Anzahl pro Seite (Timeout ab 15 beobachtet)
+	rec_per_page = 20								# Anzahl pro Seite (Plex: Timeout ab 15 beobachtet)
 	max_len = len(sort_playlist)					# Anzahl Sätze gesamt
 	start_cnt = int(offset) 						# Startzahl diese Seite
 	end_cnt = int(start_cnt) + int(rec_per_page)	# Endzahl diese Seite
@@ -3124,35 +3131,37 @@ def EPG_ShowAll(title, offset=0):
 		if i >= rec_per_page:				# Anzahl pro Seite überschritten?
 			break
 		rec = sort_playlist[cnt]
+		# PLog(rec)							# Satz ['ARTE', 'ARTE', 'tv-arte.png', ..
 
 		title_playlist = rec[0]
 		m3u8link = rec[3]
 		img_playlist = R(rec[2])
 		ID = rec[1]
+		tagline = ''; summ = ''
+		
 		if ID == '':									# ohne EPG_ID
-			title = title_playlist + ': ohne EPG | weiter zum Livestream'
-			tagline = ''
+			tagline = 'weiter zum Livestream'
+			title = title_playlist + ': ohne EPG | %s' % tagline
 			img = img_playlist
 			PLog("img: " + img)
 		else:
 			# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis: 
 			rec = EPG.EPG(ID=ID, mode='OnlyNow')		# Daten holen - nur aktuelle Sendung
 			# PLog(rec)	# bei Bedarf
-			if len(rec) == 0:							# Satz leer?
+			if len(rec) == 0:							# EPG-Satz leer?
 				title = title_playlist + ': ohne EPG'
-				summ = 'weiter zum Livestream'
-				tagline = ''
+				tagline = 'weiter zum Livestream'
 				img = img_playlist			
 			else:	
 				href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6]
 				if img.find('http') == -1:	# Werbebilder today.de hier ohne http://, Ersatzbild einfügen
 					img = R('icon-bild-fehlt.png')
-				sname 	= sname.replace('JETZT', title_playlist)		# JETZT durch Sender ersetzen
+				title 	= sname.replace('JETZT', title_playlist)		# JETZT durch Sender ersetzen
 				# sctime 	= "[COLOR red] %s [/COLOR]" % stime			# Darstellung verschlechtert
 				# sname 	= sname.replace(stime, sctime)
 				tagline = 'Zeit: ' + vonbis
 				
-		title = UtfToStr(sname)
+		title = UtfToStr(title)
 		title = unescape(title)
 		PLog("title: " + title)
 					
@@ -3375,7 +3384,7 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 	PLog(type(title))	
 	
 	sname = url_m3u8.split('/')[2]				# Filename: Servername.m3u8
-	msg1 = "Datei konnte nicht "					# Vorgaben xbmcgui.Dialog
+	msg1 = "Datei konnte nicht "				# Vorgaben xbmcgui.Dialog
 	msg2 = sname + ".m3u8"
 	msg3 = "Details siehe Logdatei"
 	
@@ -3446,7 +3455,6 @@ def N24LastServer(url_m3u8):
 		url_new = "".join(url_list)
 		# PLog(url_new)
 		try:
-			# playlist = HTTP.Request(url).content   # wird abgewiesen
 			req = urllib2.Request(url_new)
 			r = urllib2.urlopen(req)
 			playlist = r.read()			
@@ -3837,7 +3845,7 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0):
   
 ####################################################################################################
 def Rubriken(name):								# ZDF-Bereich, Liste der Rubriken
-	PLog('Rubriken')
+	PLog('Rubriken:')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')						# Home-Button
 
@@ -4014,13 +4022,16 @@ def BarriereArmSingle(path, title):
 # Leitseite zdf-sportreportage - enthält Vorschau mit Links zu den Reportageseiten - Auswertung in
 #	ZDFSportLiveSingle. 
 #	Angefügt: Button für zurückliegende Sendungen der ZDF-Sportreportage.
+# Bei aktivem Livestream wird der Link vorangestellt (Titel: rot/bold),
+# Stream am 27.04.2019: 
+#	http://zdf0304-lh.akamaihd.net/i/de03_v1@392855/master.m3u8?b=0-776&set-segment-duration=quality
 def ZDFSportLive(title):
 	PLog('ZDFSportLive:'); 
 	title_org = title
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')						# Home-Button
-	
+
 	path = 'https://www.zdf.de/sport/sport-im-zdf-livestream-live-100.html'	 # Leitseite		
 	page, msg = get_page(path=path)		
 	if page == '':
@@ -4030,10 +4041,33 @@ def ZDFSportLive(title):
 		return li 
 	PLog(len(page))
 	page = UtfToStr(page)
-	 			
+	 	
+	if '<strong>Jetzt live</strong>' in page:						# LIVESTREAM läuft!
+		mediatype='' 		
+		if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+			if SETTINGS.getSetting('pref_show_resolution') == 'false':
+				mediatype='video'
+		rec = stringextract('class="big-headline">Derzeit live</h2>', 'data-tracking="', page)
+		href 	= stringextract('data-plusbar-url="', '"', rec)
+		imgset 	= stringextract('data-zdfplayer-teaser-image=', '</div', rec)
+		img		=  stringextract('www.zdf.de', '?', imgset)
+		img		= 'https://www.zdf.de' + img.replace('\\', '')
+		title	= "Jetzt live: " + stringextract('title="', '"', rec)
+		title	= '[COLOR red][B]%s[/B][/COLOR]' % title
+		descr = stringextract('item-description">', '</p>', rec) 
+		descr = cleanhtml(descr); descr = mystrip(descr)
+		PLog('Satz_Live:')
+		PLog(href); PLog(img); PLog(title); PLog(descr); 
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (urllib2.quote(href),
+			urllib2.quote(title), img, urllib2.quote(descr))	
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
+			fparams=fparams, summary=descr,  mediatype=mediatype)
+		
 	content =  blockextract('class="artdirect">', page)
 	PLog('content: ' + str(len(content)))	
-	for rec in content:			
+	
+	mediatype='' 		
+	for rec in content:						
 		href 	= stringextract('href="', '"', rec)
 		href 	= ZDF_BASE + href
 		
@@ -4089,13 +4123,14 @@ def ZDFSportLiveSingle(title, path, img):
 	
 	videomodul = stringextract('class="b-video-module">', '</article>', page)
 	if 'Beitragslänge:' not in videomodul:							# Titelvideo fehlt 
-		msg1 = 'Leider (noch) kein Video verfügbar zu:'	
+		msg1 = 'Leider kein Video verfügbar zu:'	
 		msg2 = title
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 
 	descr = stringextract('item-description" >', '</p>', videomodul) 
 	descr = cleanhtml(descr); descr = mystrip(descr)
+	descr = repl_json_chars(descr); 
 	# Bsp.: datetime="2017-11-15T20:15:00.000+01:00">15.11.2017</time>
 	datum_line =  stringextract('<time datetime="', '/time>', videomodul) 
 	video_datum =  stringextract('">', '<', datum_line)
@@ -4103,8 +4138,8 @@ def ZDFSportLiveSingle(title, path, img):
 	video_time = video_time[:5]
 	
 	if video_datum and video_time:
-		descr = "%s, %s Uhr \n\n%s" % (video_datum, video_time, descr)		
-	descr = repl_json_chars(descr)
+		descr_display 	= "%s, %s Uhr \n\n%s" % (video_datum, video_time, descr)		
+		descr 			= "%s, %s Uhr||||%s" % (video_datum, video_time, descr)		
 	
 	PLog('Satz:')
 	PLog(path); PLog(title); PLog(descr); PLog(video_time);
@@ -4117,7 +4152,7 @@ def ZDFSportLiveSingle(title, path, img):
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (urllib2.quote(path),
 		urllib2.quote(title), img, urllib2.quote(descr))	
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
-		fparams=fparams, tagline=descr, mediatype=mediatype)
+		fparams=fparams, tagline=descr_display, mediatype=mediatype)
 		
 	# 2. restl. Videos holen (class="artdirect")
 	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=ref_path, ID='ZDFSportLive')	
@@ -4989,6 +5024,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, tagline='', summary='', 
 			# quote für url erforderlich wg. url-Inhalt "..sd=10&rebase=on.." - das & erzeugt in router
 			#	neuen Parameter bei dict(parse_qsl(paramstring)
 			Plot="%s||||%s" % (tagline, descr)
+			descr=summary.replace('||', '\n')		
+			if descr.strip() == '|':			# ohne EPG: EPG-Verbinder entfernen
+				descr=''
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
 				(urllib.quote_plus(url), title, urllib.quote_plus(thumb), urllib.quote_plus(Plot), 
 				urllib.quote_plus(sub_path))

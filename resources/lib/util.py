@@ -674,13 +674,6 @@ def teilstring(zeile, startmarker, endmarker):  		# rfind: endmarker=letzte Fund
   #PLog(pos1) PLog(pos2) 
   return teils 
 #----------------------------------------------------------------  
-def repl_dop(liste):	# Doppler entfernen, im Python-Script OK, Problem in Plex - s. PageControl
-	mylist=liste
-	myset=set(mylist)
-	mylist=list(myset)
-	mylist.sort()
-	return mylist
-#----------------------------------------------------------------  
 def cleanhtml(line): # ersetzt alle HTML-Tags zwischen < und >  mit 1 Leerzeichen
 	cleantext = line
 	cleanre = re.compile('<.*?>')
@@ -1173,13 +1166,3 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 		xbmc.executebuiltin('ActivateWindow(10134)')
 ####################################################################################################
 
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   

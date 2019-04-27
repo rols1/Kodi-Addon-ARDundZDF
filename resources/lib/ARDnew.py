@@ -311,9 +311,10 @@ def ARDStartRubrik(path, title, widgetID='', ID=''):
 			sender	= repl_json_chars(sender)
 				
 			duration= stringextract('duration">', '</div>', s)
-			duration = '%s | %s' % (sender, duration)
+			if sender:
+				duration = '%s | %s' % (sender, duration)
 			if duration == '':
-				duration = '%s | Dauer unbekannt'
+				duration = 'Dauer unbekannt' 
 			summ = ''	
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen,
 				summ = get_summary_pre(href, 'ARDnew')
@@ -324,7 +325,8 @@ def ARDStartRubrik(path, title, widgetID='', ID=''):
 				summ = duration
 			PLog(title); PLog(href)	
 						
-			title = UtfToStr(title); summ = UtfToStr(summ); 
+			title = UtfToStr(title); summ = UtfToStr(summ); href = UtfToStr(href);
+			duration = UtfToStr(duration); ID = UtfToStr(ID);
 			title = repl_json_chars(title); summ = repl_json_chars(summ); 
 			fparams="&fparams={'path': '%s', 'title': '%s', 'duration': '%s', 'ID': '%s'}" %\
 				(urllib2.quote(href), urllib2.quote(title), duration, ID)
@@ -344,9 +346,12 @@ def ARDStartRubrik(path, title, widgetID='', ID=''):
 		#	('"images":') - z.Z. nicht berücksichtigt. Falls doch geplant, müssten sie
 		#	unterhalb der Buttons Streaming-Formate +  MP4-Formate gelistet werden.
 		#	Bsp.: BR/Serienhighlights (jew. 1 Video, mehrere Beitrag-Links).
-		gridlist = blockextract('"availableTo"', page)		# Sendungen, json-key "teasers"	
+		if 'target":{"id":"' in page:
+			gridlist = blockextract('"availableTo"', page)	# Sendungen, json-key "teasers"	
+		else:
+			gridlist = blockextract('id":"Link:', page)		# deckt auch Serien in Swiper ab	
 	if len(gridlist) == 0:	
-		gridlist = blockextract( '"images":', page) # weitere Rubriken?				
+		gridlist = blockextract( '"images":', page) 		# Fallback, ev. fehlt 1 Beitrag 			
 		if len(gridlist) > 0:
 			mehrfach = True
 			PLog('weitere Rubriken')		
@@ -361,8 +366,13 @@ def ARDStartRubrik(path, title, widgetID='', ID=''):
 		title_pre = stringextract('"title":"', '"', page)
 		
 	for s  in gridlist:
-		targetID= stringextract('target":{"id":"', '"', s)	 	# targetID
-		PLog(targetID)
+		targetID=''
+		if 'target":{"id":"' in s:
+			targetID= stringextract('target":{"id":"', '"', s)	 	# targetID
+		else:
+			targetID= stringextract('id":"Link:', '"', s)			# Serie in Swiper via ARDStartSingle 
+		
+		PLog('targetID: ' + targetID)
 		if targetID == '':										# keine Videos, skip
 			continue
 		href 	= 'https://www.ardmediathek.de/%s/live/%s' % (sender, targetID)

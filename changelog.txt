@@ -7,6 +7,35 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+27.04.2019	1.3.5	ZDFSportLive: aktuellen Livestream verfügbar gemacht (Ausw. Chrome-Dev-Tools). 		
+
+not on Github	1.3.4	ARDStartRubrik, SingleSendung, Parseplaylist: Fix Weitergabe Beschreibung 
+			(summary) einschl. router-komp. Behandlung('||', '\n').
+			ZDFmobile, Funktion ShowVideo: Fix title_org (replace -> repl_json_chars).
+			ZDFmobile, Funktion SingleRubrik + ShowVideo: Datum + Dauer zur Beschreibung 
+			(tagline) verlagert (bisher im Titel).
+			ZDFmobile, Funktion ShowVideo: lokale Beschreibung für Listing-konforme
+			Darst. erstellt (descr_local). 
+			ZDFmobile, Funktion PageMenu, Livesender: Titel in tagline wiederholt.
+			ZDFmobile, Funktion PageMenu: Datum + Dauer aus Titel entfernt (zu lang, 
+			in tagline vorhanden).
+			
+not on Github	1.3.3	Menü EGP-Sender einzeln: fehlenden Parameter "Merk" für SenderLiveResolution
+			ergänzt (Menü war nicht mehr aktivierbar).
+			Modul util: Funktions-Doppel repl_dop entfernt.
+			get_sort_playlist (Modul util): sort() ersetzt durch Array-sort.
+			EPG_ShowAll: Anzahl pro Seite auf 20 erhöht (Timeout bei Kodi kein Problem 
+			wie bei Plex). 
+			EPG_ShowAll: Fix Titel bei Treffern mit EPG (sname -> title), Anpassung
+			tagline bei Treffern ohne EPG.
+			Parseplaylist: EPG-Verbinder | entfernt, falls TV-Sender ohne EPG.
+			
+not on Github	1.3.2	ARDStartRubrik (ARDnew): Fix duration, falls sender leer, UtfToStr für
+			alle Swiper-Params.
+			ARDStartRubrik (ARDnew): alternative Blockvariante für Serien in Swiper 
+			(Swiper-Serien wurden nicht gefunden).
+			TV-Livestreams / Privat: Sender DAF entfernt (Zugriff blockiert), Datei
+			livesenderTV.xml aktualisiert.
 
 23.04.2019	1.3.1	ZDF_get_content: Weiterreichen von tagline -> ZDF_getVideoSources.
 			ParseMasterM3u: tagline-Behandlung ('||' -> '\n') für korr. Darstellung in

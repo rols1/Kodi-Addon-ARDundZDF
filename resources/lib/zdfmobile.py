@@ -211,7 +211,7 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		if SETTINGS.getSetting('pref_show_resolution') == 'false':
 			mediatype='video'
-	PLog('mediatype: ' + mediatype); 
+	PLog('mediatype: ' + mediatype); 	
 			
 	if("stage" in jsonObject):
 		i=0
@@ -221,12 +221,6 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 
 				if subTitle:
 					title = '%s | %s' % (title,subTitle)
-
-				if date:
-					title = '%s | %s' % (title,date)
-
-				if dauer:
-					title = '%s |  %s' % (title, dauer)
 
 				date = '%s |  Laenge: %s' % (date, dauer)
 				path = 'stage|%d' % i
@@ -271,7 +265,8 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				path = path.encode("utf-8")
 				fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (urllib2.quote(path), DictID)	
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowVideo", 
-					fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams, mediatype=mediatype)
+					fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams, 
+					tagline=title, mediatype=mediatype)
 					
 	xbmcplugin.endOfDirectory(HANDLE)				
 				
@@ -320,7 +315,7 @@ def Get_content(stageObject, maxWidth):
 # ----------------------------------------------------------------------			
 # einzelne Rubrik mit Videobeiträgen, alles andere wird ausgefiltert	
 def SingleRubrik(path, title, DictID):		
-	PLog('SingleRubrik: %s' % path)
+	PLog('SingleRubrik: %s' % path); PLog(DictID)
 	
 	path_org = path
 	
@@ -353,16 +348,17 @@ def SingleRubrik(path, title, DictID):
 			if subTitle: 
 				# title = '%s | %s' % (title,subTitle)
 				title = '%s | %s' % (subTitle, title ) 	# subTitle = Sendungstitel
+			tagline=''
 			if date:
-				title = '%s | %s' % (title,date)
-			if dauer:
-				title = '%s |  %s' % (title, dauer)
-				date = '%s |  Laenge: %s' % (date, dauer)
+				tagline = '%s' % (date)
+				if tagline and dauer:
+					tagline = '%s |  %s' % (tagline, dauer)
+				
 			# PLog('video-content: %s |  %s |  %s |  %s | ' % (title,subTitle,descr,img))	
 			fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (path, DictID)
 			PLog("fparams: " + fparams)	
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowVideo", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=date, mediatype=mediatype)
+				thumb=img, fparams=fparams, summary=descr, tagline=tagline, mediatype=mediatype)
 		i=i+1
 		# break		# Test Einzelsatz
 	xbmcplugin.endOfDirectory(HANDLE)
@@ -394,11 +390,6 @@ def ShowVideo(path, DictID, Merk='false'):
 
 	if subTitle:
 		title = '%s | %s' % (title,subTitle)
-	if date:
-		if DictID <> 'Live':				# kein Datum bei Livestreams 
-			title = '%s | %s' % (title,date)
-	if dauer:
-		title = '%s |  %s' % (title, dauer)
 	title_org = UtfToStr(title)	
 	PLog(title_org)	
 		
@@ -432,6 +423,12 @@ def ShowVideo(path, DictID, Merk='false'):
 			li = videoObjects=PageMenu(li,jsonObject,DictID=DictID)	# Rubrik o.ä.	
 			return li
 
+	descr_local=''										# Beschreibung suammensetzen
+	if date and dauer:
+		descr_local = "%s | %s\n\n%s" % (date, dauer, descr) # Anzeige Listing 
+		descr 		= "%s | %s||||%s" % (date, dauer, descr) # -> PlayVideo
+	descr=repl_json_chars(descr) 				# json-komp. für func_pars in router()
+
 	i=0
 	for detail in formitaeten:	
 		PLog("Mark4")
@@ -449,9 +446,8 @@ def ShowVideo(path, DictID, Merk='false'):
 				
 		title_org=UtfToStr(title_org);
 		title_org=unescape(title_org); 	
-		title_org=title_org.replace('"', '') 		# json-komp. für func_pars in router()
-		title_org=title_org.replace('&', 'und') 	# json-komp. für func_pars in router()
-		descr=descr.replace('"', '') 				# dto.
+		title_org=repl_json_chars(title_org) 		# json-komp. für func_pars in router()
+		
 		quality=UtfToStr(quality); typ=UtfToStr(typ); 
 					
 		PLog("url: " + url)	
@@ -475,7 +471,7 @@ def ShowVideo(path, DictID, Merk='false'):
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
 				(urllib2.quote(url), urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr), Merk)	
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.PlayVideo", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tagline, mediatype='video')	
+				thumb=img, fparams=fparams, summary=descr_local, tagline=tagline, mediatype='video')	
 		else:
 			title=str(i) + '. %s [%s]'  % (quality, typ)
 			PLog("title: " + title)
@@ -487,7 +483,7 @@ def ShowVideo(path, DictID, Merk='false'):
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
 				(urllib2.quote(url), urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr), Merk)	
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.PlayVideo", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tagline, mediatype='video')	
+				thumb=img, fparams=fparams, summary=descr_local, tagline=tagline, mediatype='video')	
 	
 	'''
 	# einzelne Auflösungen anbieten:	# bei zdfMobile überflüssig - Varianten von low - veryhigh vorh.
