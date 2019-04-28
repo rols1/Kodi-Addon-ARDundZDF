@@ -7,6 +7,13 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+
+28.04.2019	1.3.6	ZDFSportLive: Button für Sprung zum Livestream angehängt (via SenderLiveListe).
+			SenderLiveListe: erweitert um Option, nur 1 bestimmten Sender zu platzieren.		
+			ZDFSportLive: künftige Beiträge mit "kommend" gekennzeichnet, Beschreibung optisch
+			verbessert (Newline statt |).
+			ZDFSportLiveSingle: Dialog "kein Video verfügbar" um Vorabinfo erweitert.	
+
 27.04.2019	1.3.5	ZDFSportLive: aktuellen Livestream verfügbar gemacht (Ausw. Chrome-Dev-Tools). 		
 
 not on Github	1.3.4	ARDStartRubrik, SingleSendung, Parseplaylist: Fix Weitergabe Beschreibung 

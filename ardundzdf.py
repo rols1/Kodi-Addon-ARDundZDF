@@ -46,8 +46,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.3.5'		 
-VDATE = '27.04.2019'
+VERSION =  '1.3.6'		 
+VDATE = '28.04.2019'
 
 # 
 #	
@@ -392,6 +392,11 @@ def Main_ARD(name, sender=''):
 	fparams="&fparams={'name': 'Sendungen A-Z', 'ID': 'ARD'}"
 	addDir(li=li, label=title, action="dirList", dirID="SendungenAZ", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), fparams=fparams)
+						
+	#title = 'ARD Sportschau'
+	#fparams="&fparams={'name': '%s'}"	% title
+	#addDir(li=li, label=title, action="dirList", dirID="ARDSport", 
+	#	fanart=R("tv-ard-sportschau.png"), thumb=R("tv-ard-sportschau.png"), fparams=fparams)
 						
 	fparams="&fparams={'name': 'Barrierearm'}"
 	addDir(li=li, label="Barrierearm", action="dirList", dirID="BarriereArmARD", 
@@ -3183,7 +3188,9 @@ def EPG_ShowAll(title, offset=0):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #-----------------------------------------------------------------------------------------------------
 # TV LiveListe - verwendet lokale Playlist livesenderTV.xml
-def SenderLiveListe(title, listname, fanart, offset=0):			
+# onlySender: Button nur für diesen Sender (z.B. ZDFSportschau Livestream für Menü
+#	ZDFSportLive)
+def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):			
 	# SenderLiveListe -> SenderLiveResolution (reicht nur durch) -> Parseplaylist (Ausw. m3u8)
 	#	-> CreateVideoStreamObject 
 	PLog('SenderLiveListe:')
@@ -3232,6 +3239,10 @@ def SenderLiveListe(title, listname, fanart, offset=0):
 		# EPG: ab 10.03.2017 einheitlich über Modul EPG.py (vorher direkt bei den Sendern, mehrere Schemata)
 									
 		title = stringextract('<title>', '</title>', element)
+		if onlySender:									# Button nur für diesen Sender
+			if title != onlySender:
+				continue
+			
 		epg_schema=''; epg_url=''
 		epg_date=''; epg_title=''; epg_text=''; summary=''; tagline='' 
 		# PLog(SETTINGS.getSetting('pref_use_epg')) 	# Voreinstellung: EPG nutzen? - nur mit Schema nutzbar
@@ -4022,9 +4033,12 @@ def BarriereArmSingle(path, title):
 # Leitseite zdf-sportreportage - enthält Vorschau mit Links zu den Reportageseiten - Auswertung in
 #	ZDFSportLiveSingle. 
 #	Angefügt: Button für zurückliegende Sendungen der ZDF-Sportreportage.
+#	Angefügt: Button für Sprung zum Livestream (unabhängig vom Inhalt)
 # Bei aktivem Livestream wird der Link vorangestellt (Titel: rot/bold),
 # Stream am 27.04.2019: 
-#	http://zdf0304-lh.akamaihd.net/i/de03_v1@392855/master.m3u8?b=0-776&set-segment-duration=quality
+#	http://zdf0304-lh.akamaihd.net/i/de03_v1@392855/master.m3u8
+#		ohne Zusatz (Web-Url) ?b=0-776&set-segment-duration=quality
+#
 def ZDFSportLive(title):
 	PLog('ZDFSportLive:'); 
 	title_org = title
@@ -4042,7 +4056,7 @@ def ZDFSportLive(title):
 	PLog(len(page))
 	page = UtfToStr(page)
 	 	
-	if '<strong>Jetzt live</strong>' in page:						# LIVESTREAM läuft!
+	if '<strong>Jetzt live</strong>' in page:						# 1. LIVESTREAM läuft!
 		mediatype='' 		
 		if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 			if SETTINGS.getSetting('pref_show_resolution') == 'false':
@@ -4067,18 +4081,19 @@ def ZDFSportLive(title):
 	PLog('content: ' + str(len(content)))	
 	
 	mediatype='' 		
-	for rec in content:						
+	for rec in content:												# 2. redak. Beiträge (Vorschau)			
 		href 	= stringextract('href="', '"', rec)
 		href 	= ZDF_BASE + href
 		
 		img 	= stringextract('data-src="', '"', rec)
 		title	= stringextract('title="', '"', rec)
+		title	= "kommend: " + title
 		descr	= stringextract('teaser-text" >', '</p>', rec)
 		descr	= mystrip(descr); descr=unescape(descr); descr=repl_json_chars(descr);
 		video	= stringextract('icon-301_clock icon">', '</dl>', rec)
 		video	= mystrip(video); video=cleanhtml(video)
 		if video:
-			descr = "%s | %s" % (descr, video)
+			descr = "%s\n\n%s" % (descr, video)
 		
 		if '#skiplinks' in href or href == 'https://www.zdf.de/':
 			continue
@@ -4089,7 +4104,7 @@ def ZDFSportLive(title):
 		addDir(li=li, label=title, action="dirList", dirID="ZDFSportLiveSingle", fanart=img, 
 			thumb=img, fparams=fparams, tagline=descr )
 			
-	title = 'zurückliegende Sendungen'
+	title = 'zurückliegende Sendungen'								# 3. weitere Sendungen
 	url = 'https://www.zdf.de/sport/zdf-sportreportage'
 	ID = 'ZDFSportLive'
 	thumb=R("zdf-sportlive.png")
@@ -4097,6 +4112,11 @@ def ZDFSportLive(title):
 		urllib2.quote(title), ID)
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=thumb, 
 		thumb=thumb, fparams=fparams)
+	
+	channel = 'Überregional'										# 4. zum Livestream
+	onlySender = 'ZDFSportschau Livestream'	
+	img = R("zdf-sportlive.png")	
+	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
 		
 	xbmcplugin.endOfDirectory(HANDLE)
 
@@ -4106,6 +4126,7 @@ def ZDFSportLive(title):
 #	Abbruch, falls Titelbeitrag noch nicht verfügbar. 
 def ZDFSportLiveSingle(title, path, img):
 	PLog('ZDFSportLiveSingle:'); 
+	title = UtfToStr(title)
 	title_org = title
 	ref_path = path
 
@@ -4123,9 +4144,12 @@ def ZDFSportLiveSingle(title, path, img):
 	
 	videomodul = stringextract('class="b-video-module">', '</article>', page)
 	if 'Beitragslänge:' not in videomodul:							# Titelvideo fehlt 
-		msg1 = 'Leider kein Video verfügbar zu:'	
-		msg2 = title
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		descr = stringextract('"description": "', '"', page) 		# json-Abschnitt
+		descr = unescape(descr)
+		msg1 = 'Leider noch kein Video verfügbar. Vorabinfo:'
+		msg2 = descr
+		msg3 = ''
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
 
 	descr = stringextract('item-description" >', '</p>', videomodul) 

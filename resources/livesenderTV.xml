@@ -104,6 +104,16 @@
 		<geoblock>ja</geoblock>
 	</item>
 	<item>			
+		<title>ZDFSportschau Livestream</title>
+		<hrefsender></hrefsender>
+		<link>http://zdf0304-lh.akamaihd.net/i/de03_v1@392855/master.m3u8</link>
+		<thumbnail>zdf-sportlive.png</thumbnail>
+		<genre>TV</genre>
+		<EPG_ID></EPG_ID>
+		<date>27.04.2019</date>
+		<epg_url></epg_url>
+		<geoblock>ja</geoblock>
+	<item>			
 		<title>ARDSportschau Livestream</title>
 		<hrefsender></hrefsender>
 		<link>https://ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/master.m3u8</link>
@@ -113,6 +123,7 @@
 		<date>16.04.2019</date>
 		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
+	</item>
 	</item>
 	<item>
 		<title>ARD-alpha</title>
