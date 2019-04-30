@@ -45,7 +45,7 @@ TEMP_ADDON			= xbmc.translatePath("special://temp")
 def get_latest_version():
 	PLog('get_latest_version:')
 	try:
-		# https://github.com/rols1/ARDundZDF/releases.atom
+		# https://github.com/rols1/Kodi-Addon-ARDundZDF/releases.atom
 		# releases.atom liefert Releases-Übersicht als xml-Datei 
 		release_feed_url = ('https://github.com/{0}/releases.atom'.format(GITHUB_REPOSITORY))
 		PLog(release_feed_url)

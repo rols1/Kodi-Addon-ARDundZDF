@@ -26,7 +26,7 @@ PLog=util.PLog;  home=util.home;  Dict=util.Dict;  name=util.name;
 UtfToStr=util.UtfToStr;  addDir=util.addDir;  get_page=util.get_page; 
 img_urlScheme=util.img_urlScheme;  R=util.R;  RLoad=util.RLoad;  RSave=util.RSave; 
 GetAttribute=util.GetAttribute;  CalculateDuration=util.CalculateDuration;  
-teilstring=util.teilstring; repl_dop=util.repl_dop;  repl_char=util.repl_char;  mystrip=util.mystrip; 
+teilstring=util.teilstring; repl_char=util.repl_char;  mystrip=util.mystrip; 
 DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract;  blockextract=util.blockextract; 
 teilstring=util.teilstring;  repl_dop=util.repl_dop; cleanhtml=util.cleanhtml;  decode_url=util.decode_url;  
 unescape=util.unescape; make_filenames=util.make_filenames; transl_umlaute=util.transl_umlaute;  
@@ -46,8 +46,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.3.6'		 
-VDATE = '28.04.2019'
+VERSION =  '1.3.9'		 
+VDATE = '30.04.2019'
 
 # 
 #	
@@ -393,10 +393,10 @@ def Main_ARD(name, sender=''):
 	addDir(li=li, label=title, action="dirList", dirID="SendungenAZ", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), fparams=fparams)
 						
-	#title = 'ARD Sportschau'
-	#fparams="&fparams={'name': '%s'}"	% title
-	#addDir(li=li, label=title, action="dirList", dirID="ARDSport", 
-	#	fanart=R("tv-ard-sportschau.png"), thumb=R("tv-ard-sportschau.png"), fparams=fparams)
+	title = 'ARD Sportschau'
+	fparams="&fparams={'title': '%s'}"	% title
+	addDir(li=li, label=title, action="dirList", dirID="ARDSport", 
+		fanart=R("tv-ard-sportschau.png"), thumb=R("tv-ard-sportschau.png"), fparams=fparams)
 						
 	fparams="&fparams={'name': 'Barrierearm'}"
 	addDir(li=li, label="Barrierearm", action="dirList", dirID="BarriereArmARD", 
@@ -525,8 +525,281 @@ def Main_POD(name):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
-################################################################
+####################################################################################################
+def ARDSport(title):
+	PLog('ARDSport:'); 
+	title_org = title
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+
+	SBASE = 'https://www.sportschau.de'
+	path = 'https://www.sportschau.de/index.html'	 		# Leitseite		
+	page, msg = get_page(path=path)		
+	if page == '':
+		msg1 = 'Seite kann nicht geladen werden.'
+		msg2, msg3 = msg.split('|')
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		return li 
+	PLog(len(page))
+	page = UtfToStr(page)
 	
+	tabpanel = stringextract('<ul id="gseafooterlinks116-panel"', '</ul>', page) 
+	tabpanel = blockextract('<li>', tabpanel)
+	img = R(ICON_DIR_FOLDER)
+	i=0	
+	for tab in tabpanel:									# Panel Kopfbereich
+		if i == 0:											# Tab Startseite
+			href = path
+			title = 'Startseite'
+		else:		
+			href = stringextract('href="', '"', tab)
+			title = stringextract('">', '</a>', tab)
+		i=i+1
+		if 'Ergebnisse' in title:							# Switch zu Hintergrund, 
+			href = SBASE + '/hintergrund/index.html'		# Ergebnisse ohne Videos
+			title = 'Hintergrund'
+		
+		PLog(href); PLog(title); 
+		fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (urllib2.quote(title), 
+			urllib2.quote(href), urllib2.quote(img))
+		addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
+			thumb=img, fparams=fparams)			
+	 	
+	title = "Moderatoren"									# Zusatz: Moderatoren 
+	href = 'https://www.sportschau.de/sendung/index.html'
+	img =  'https://www1.wdr.de/unternehmen/der-wdr/unternehmen/bundesliga-sportschau-jessy-wellmer-100~_v-gseaclassicxl.jpg'
+	tagline = 'Bilder von Moderatoren, Slideshow'
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (urllib2.quote(title), 
+		urllib2.quote(href), urllib2.quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportBilder", fanart=img, 
+		thumb=img, tagline=tagline, fparams=fparams)			
+
+	channel = 'Überregional'								# Zusatz: zum Livestream
+	onlySender = 'ARDSportschau Livestream'	
+	img = R("tv-ard-sportschau.png")	
+	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
+		
+	xbmcplugin.endOfDirectory(HANDLE)
+	
+#--------------------------------------------------------------------------------------------------
+def ARDSportPanel(title, path, img):
+	PLog('ARDSportPanel:'); 
+	title_org = title
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+
+	page, msg = get_page(path=path)		
+	if page == '':
+		msg1 = 'Seite kann nicht geladen werden.'
+		msg2, msg3 = msg.split('|')
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		return li 
+	PLog(len(page))
+	page = UtfToStr(page)
+	
+	sendungen = blockextract('class="teaser"', page)	
+	PLog(len(sendungen))
+	
+	mediatype=''
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		if SETTINGS.getSetting('pref_show_resolution') == 'false':
+			mediatype='video'
+			
+	SBASE = 'https://www.sportschau.de'
+	for s in sendungen:
+		pos = s.find('<!-- googleon: all -->')	# "Javascript-Fehler" entfernen
+		if pos > 0:
+			s = s[pos:]
+		if 'media mediaA video' not in s and 'media mediaA audio  video' not in s:			
+			continue												# Video im Beitrag?
+		path 		= stringextract('href="', '"', s)	
+		if path.startswith('http')	== False:
+			path 		= SBASE + stringextract('href="', '"', s)		
+		img			= stringextract('srcset="', '"', s)				# erste = größtes Bild
+		if img.startswith('//'):									# //www1.wdr.de/..
+			img	= 'https:' + img
+		else:														# /sendung/moderatoren/
+			img	= SBASE + img
+		title		= stringextract('class="headline">', '</h', s)
+		summ		= stringextract('teasertext">', '<strong>', s)
+		title		= mystrip(title); title = cleanhtml(title)
+		title		= repl_json_chars(title)
+		summ		= unescape(summ); summ = mystrip(summ)
+		summ		= cleanhtml(summ); summ=repl_json_chars(summ)
+		title=title.strip(); summ=summ.strip();						# zusätzl. erf.
+		
+		PLog('Satz:')
+		path=UtfToStr(path); img=UtfToStr(img); title=UtfToStr(title); summ=UtfToStr(summ);  
+		PLog(path); PLog(img); PLog(title); PLog(summ); 
+
+		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
+			(urllib2.quote(path), urllib2.quote(title), urllib2.quote(img), urllib2.quote(summ))				
+		addDir(li=li, label=title, action="dirList", dirID="ARDSportVideo", fanart=img, thumb=img, 
+			fparams=fparams, summary=summ, mediatype=mediatype)		 
+
+	xbmcplugin.endOfDirectory(HANDLE)
+	
+#--------------------------------------------------------------------------------------------------
+# Bilder für ARD Sportschau, z.B. Moderatoren
+# Slideshow: ZDFSlideShow
+def ARDSportBilder(title, path, img):
+	PLog('ARDSportBilder:'); 
+	title_org = title
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+
+	page, msg = get_page(path=path)		
+	if page == '':
+		msg1 = 'Seite kann nicht geladen werden.'
+		msg2, msg3 = msg.split('|')
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		return li 
+	PLog(len(page))
+	page = UtfToStr(page)
+	
+	content = blockextract('class="teaser"', page)	
+	PLog(len(content))
+	if len(content) == 0:										
+		msg1 = 'Keine Bilder gefunden.'
+		PLog(msg1)
+		msg2 = 'Seite:'
+		msg3 = path
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		return li
+				
+	fname = make_filenames(title)			# Ablage: Titel + Bildnr
+	fpath = '%s/%s' % (SLIDESTORE, fname)
+	PLog(fpath)
+	if os.path.isdir(fpath) == False:
+		try:  
+			os.mkdir(fpath)
+		except OSError:  
+			msg1 = 'Bildverzeichnis konnte nicht erzeugt werden:'
+			msg2 = "../resources/data/slides/%s" % fname
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			return li	
+				
+	SBASE = 'https://www.sportschau.de'
+	image = 0
+	for rec in content:
+		pos = rec.find('<!-- googleon: all -->')	# "Javascript-Fehler" entfernen
+		if pos > 0:
+			rec = rec[pos:]
+		if 'media mediaA gallery gallery' not in rec:					# Gallery im Beitrag?
+			continue												
+		path 		= SBASE + stringextract('href="', '"', rec)			# nicht genutzt		
+		img_src		= stringextract('srcset="', '"', rec)				# erste = größtes Bild
+		if img_src.startswith('//'):									# //www1.wdr.de/..
+			img_src	= 'https:' + img_src
+		else:															# /sendung/moderatoren/
+			img_src	= SBASE + img_src
+			
+		headline	= stringextract('Fotostrecke:</span>', '</', rec)	# z.B. Name
+		headline	= mystrip(headline); headline = unescape(headline)
+		summ		= stringextract('teasertext">', '<strong>', rec)
+		summ		= mystrip(summ); summ = unescape(summ); summ = cleanhtml(summ)
+		summ		= repl_json_chars(summ)
+		title=summ.strip()
+		
+		if img_src:
+			#  Kodi braucht Endung für SildeShow; akzeptiert auch Endungen, die 
+			#	nicht zum Imageformat passen
+			pic_name 	= 'Bild_%04d.jpg' % (image+1)		# Bildname
+			local_path 	= "%s/%s" % (fpath, pic_name)
+			PLog("local_path: " + local_path)
+			title = "Bild %03d" % (image+1)
+			PLog("Bildtitel: " + title)
+			title = UtfToStr(title)
+			title = unescape(title)
+			lable = "%s: %s" % (title, headline)			# Listing-Titel
+			
+			thumb = ''
+			local_path = os.path.abspath(local_path)
+			if os.path.isfile(local_path) == False:			# schon vorhanden?
+				try:
+					urllib.urlretrieve(img_src, local_path)
+					thumb = local_path
+				except Exception as exception:
+					PLog(str(exception))	
+			else:		
+				thumb = local_path
+				
+			tagline = headline
+			summ = unescape(summ)
+			PLog('Satz:');PLog(title);PLog(img_src);PLog(thumb);PLog(summ[0:40]);
+			if thumb:
+				fparams="&fparams={'path': '%s', 'single': 'True'}" % urllib2.quote(local_path)
+				addDir(li=li, label=lable, action="dirList", dirID="ZDFSlideShow", 
+					fanart=thumb, thumb=thumb, fparams=fparams, summary=summ)
+
+			image += 1
+			
+	if image > 0:		
+		fparams="&fparams={'path': '%s'}" % urllib2.quote(fpath) 	# fpath: SLIDESTORE/fname
+		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDFSlideShow", 
+			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
+		
+
+	xbmcplugin.endOfDirectory(HANDLE)
+	
+#--------------------------------------------------------------------------------------------------
+# Die Videoquellen des WDR sind in SingleSendung nicht erreichbar. Wir laden
+#	die Quelle (2 vorh.) über die Datei ..deviceids-medp-id1.wdr.de..js und
+#	übergeben an PlayVideo.
+def ARDSportVideo(path, title, img, summ, Merk='false'):
+	PLog('ARDSportVideo:'); 
+	
+	page, msg = get_page(path=path)		
+	page = UtfToStr(page)
+
+	# Bsp. video_src: "url":"http://deviceids-medp.wdr.de/ondemand/167/1673848.js"}
+	video_src = stringextract('deviceids-medp.wdr.de', '"', page)
+	video_src = 'http://deviceids-medp.wdr.de' + video_src
+	
+	page, msg = get_page(path=video_src)		
+	if page == '':
+		msg1 = 'Videoquellen können nicht geladen werden.'
+		msg2 = "Eventuell eingebettetes Twitter-Video?. Seite:"
+		msg3 = path
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		return li 
+	PLog(len(page))
+	
+	url = stringextract('"videoURL":"', '"', page)	# bei Bedarf zweite altern. Url laden
+	if url == '':									# ev. nur Audio verfügbar
+		url = stringextract('"audioURL":"', '"', page)		
+	url = 'http:' + url								# //wdradaptiv-vh.akamaihd.net/..
+	PLog ("url: " + url) 	 										
+	
+	mediatype = 'video'
+	if url.endswith('.mp3'):
+		mediatype = 'audio'
+		title = "Audio: %s"  % title
+	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': # Sofortstart - direkt, falls Listing nicht Playable
+		if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
+			PLog('Sofortstart: ARDSportPanel')
+			PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
+			PlayVideo(url=url, title=title, thumb=img, Plot=summ, sub_path="")
+			return
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	
+	summ=UtfToStr(summ); summ=UtfToStr(summ); title=UtfToStr(title); 
+	if url.endswith('master.m3u8'):
+		li = Parseplaylist(li=li, url_m3u8=url, thumb=img, geoblock='', descr=summ, summary=summ)
+	else:
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
+		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+			mediatype=mediatype, summary=summ) 
+			
+	xbmcplugin.endOfDirectory(HANDLE)
+
 ####################################################################################################
 def SearchUpdate(title):		
 	PLog('SearchUpdate:')
@@ -916,6 +1189,8 @@ def SendungenAZ(name, ID):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
+####################################################################################################
+
 ####################################################################################################
 	# Suche - Verarbeitung der Eingabe
 	# Vorgabe UND-Verknüpfung (auch Podcast)
@@ -2860,7 +3135,10 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 	PLog(str(SETTINGS.getSetting('pref_LiveRecord')))
 	if SETTINGS.getSetting('pref_LiveRecord'):		
 		title = 'Recording TV-Live'													# TVLiveRecord-Button anhängen
-		summary = 'Sender wählen und aufnehmen.\nDauer: %s' % SETTINGS.getSetting('pref_LiveRecord_duration')
+		laenge = SETTINGS.getSetting('pref_LiveRecord_duration')
+		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
+			laenge = "wird manuell eingegeben"
+		summary = 'Sender wählen und aufnehmen.\nDauer: %s' % laenge
 		tagline = 'Downloadpfad: %s' 	 % SETTINGS.getSetting('pref_curl_download_path') 				
 		fparams="&fparams={'title': '%s'}" % title
 		util.addDir(li=li, label=title, action="dirList", dirID="TVLiveRecordSender", fanart=R(ICON_MAIN_TVLIVE), 
@@ -2932,6 +3210,8 @@ def TVLiveRecordSender(title):
 		title 	= rec[0]
 		link 	= rec[3]
 		title1 	= title + ': Aufnahme starten' 
+		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
+			laenge = "wird manuell eingegeben"
 		summ 	= 'Aufnahmedauer: %s' 	% laenge
 		tag		= 'Zielverzeichnis: %s' % SETTINGS.getSetting('pref_curl_download_path')
 		fparams="&fparams={'url': '%s', 'title': '%s', 'duration': '%s', 'laenge': '%s'}" \
@@ -2964,6 +3244,7 @@ def TVLiveRecordSender(title):
 #
 # 20.12.2018 Plex-Probleme "autom. Wiedereintritt" in Kodi nicht beobachtet (Plex-Sandbox Phänomen?) - Code
 #	entfernt.
+# 29.04.0219 Erweiterung manuelle Eingabe der Aufnahmedauer
 
 def LiveRecord(url, title, duration, laenge):
 	PLog('LiveRecord:')
@@ -2984,7 +3265,21 @@ def LiveRecord(url, title, duration, laenge):
 		msg2 	= 'Downloadverzeichnis existiert nicht:'
 		msg3	= dest_path
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
-		return li			
+		return li		
+		
+	if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':	# Aufnahmedauer manuell
+		duration = duration[:5]									# 01:00:00, für Dialog kürzen
+		dialog = xbmcgui.Dialog()
+		duration = dialog.input('Aufnahmedauer eingeben (HH:MM)', duration, type=xbmcgui.INPUT_TIME)
+		PLog(duration)
+		if duration == '' or duration == ' 0:00':
+			msg1 = "Aufnahmedauer fehlt - Abbruch"
+			PLog(msg1)
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			return li	
+		duration = "%s:00" % duration							# für ffmpeg wieder auffüllen
+		laenge = "%s (Stunden:Minuten)" % duration[:5]			# Info nach Start, s.u.
+		PLog('manuell_duration: %s, laenge: %s' % (duration, laenge))
 		
 	dest_path = dest_path  							# Downloadverzeichnis fuer curl/wget verwenden
 	now = datetime.datetime.now()
@@ -3017,8 +3312,9 @@ def LiveRecord(url, title, duration, laenge):
 			Dict('store', 'PIDffmpeg', PIDffmpeg)
 			msg1 = 'Aufnahme gestartet:'
 			msg2 = dfname
+			msg3 = "Aufnahmedauer: %s" % laenge
 			PLog('Aufnahme gestartet: %s' % dfname)	
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 			return li			
 				
 	
@@ -4038,7 +4334,7 @@ def BarriereArmSingle(path, title):
 # Stream am 27.04.2019: 
 #	http://zdf0304-lh.akamaihd.net/i/de03_v1@392855/master.m3u8
 #		ohne Zusatz (Web-Url) ?b=0-776&set-segment-duration=quality
-#
+#  29.04.2019 Button für Livestream wieder entfernt (Streams wechseln), dto. Eintrag livesenderTV.xml
 def ZDFSportLive(title):
 	PLog('ZDFSportLive:'); 
 	title_org = title
@@ -4113,10 +4409,10 @@ def ZDFSportLive(title):
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=thumb, 
 		thumb=thumb, fparams=fparams)
 	
-	channel = 'Überregional'										# 4. zum Livestream
-	onlySender = 'ZDFSportschau Livestream'	
-	img = R("zdf-sportlive.png")	
-	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
+	#channel = 'Überregional'										# 4. zum Livestream - s.o.
+	#onlySender = 'ZDFSportschau Livestream'	
+	#img = R("zdf-sportlive.png")	
+	#SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
 		
 	xbmcplugin.endOfDirectory(HANDLE)
 

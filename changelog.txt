@@ -8,6 +8,21 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+30.04.2019	1.3.9	Menü "ARD Sportschau": Fertigstellung der Tab-Seiten, Ergänzung vorh. 
+			Audioquellen in ARDSportVideo.
+			Menü "ARD Sportschau": Erweiterung um Slideshow in Funktion ARDSportBilder 
+			(zunächst für Moderatoren/Reporter).
+
+not on Github	1.3.8	LiveRecord: Erweiterung manuelle Eingabe der Aufnahmedauer, Anpassung Code
+			und settings.xml.
+			ZDFSportLive: Button für Sprung zum Livestream wieder entfernt 
+			(Streams wechseln), dto. Eintrag livesenderTV.xml.
+			
+not on Github	1.3.7	ARD-Classic: neues Menü "ARD Sportschau", Funktionen ARDSport + ARDSportPanel.
+			unescape(Modul util): "&nbsp;|&nbsp;" und "&nbsp;" für ARDSportPanel hinzugefügt.
+			Haupt-PRG + Module: doppelte Funktions-Zuweisungen im Kopf entfernt. 
+			Modul util: doppelte Funktion teilstring entfernt.
+  			
 28.04.2019	1.3.6	ZDFSportLive: Button für Sprung zum Livestream angehängt (via SenderLiveListe).
 			SenderLiveListe: erweitert um Option, nur 1 bestimmten Sender zu platzieren.		
 			ZDFSportLive: künftige Beiträge mit "kommend" gekennzeichnet, Beschreibung optisch

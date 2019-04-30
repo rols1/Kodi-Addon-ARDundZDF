@@ -18,11 +18,11 @@ import re				# u.a. Reguläre Ausdrücke
 import xbmc, xbmcgui, xbmcaddon, xbmcplugin
 
 import resources.lib.util as util
-PLog=util.PLog;  home=util.home;  Dict=util.Dict;  name=util.name; 
+PLog=util.PLog;  home=util.home;  Dict=util.Dict; 
 UtfToStr=util.UtfToStr;   get_page=util.get_page; addDir=util.addDir; 
 img_urlScheme=util.img_urlScheme;  R=util.R;  RLoad=util.RLoad;  RSave=util.RSave; 
 GetAttribute=util.GetAttribute; CalculateDuration=util.CalculateDuration;  
-teilstring=util.teilstring; repl_dop=util.repl_dop;  repl_char=util.repl_char;  mystrip=util.mystrip; 
+teilstring=util.teilstring; repl_char=util.repl_char;  mystrip=util.mystrip; 
 DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract;  blockextract=util.blockextract; 
 teilstring=util.teilstring;  repl_dop=util.repl_dop; cleanhtml=util.cleanhtml;  decode_url=util.decode_url;  
 unescape=util.unescape;  mystrip=util.mystrip; make_filenames=util.make_filenames;  transl_umlaute=util.transl_umlaute;  

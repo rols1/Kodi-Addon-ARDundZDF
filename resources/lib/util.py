@@ -194,7 +194,7 @@ def Dict(mode, Dict_name='', value='', CacheTime=None):
 
 #-------------------------
 # Zusatzfunktion für Dict - gibt Variablennamen als String zurück
-# Aufruf: name(var=var)
+# Aufruf: name(var=var) - z.Z. nicht genutzt
 def name(**variables):				
 	s = [x for x in variables]
 	return s[0]
@@ -557,18 +557,6 @@ def GetAttribute(text, attribute, delimiter1 = '=', delimiter2 = ','):
 		return text[y:z].strip()
 	else:
 		return ''
-
-#----------------------------------------------------------------  
-def teilstring(zeile, startmarker, endmarker):  		# rfind: endmarker=letzte Fundstelle, return '' bei Fehlschlag
-  # die übergebenen Marker bleiben Bestandteile der Rückgabe (werden nicht abgeschnitten)
-  pos2 = zeile.find(endmarker, 0)
-  pos1 = zeile.rfind(startmarker, 0, pos2)
-  if pos1 & pos2:
-    teils = zeile[pos1:pos2+len(endmarker)]	# 
-  else:
-    teils = ''
-  #PLog(pos1) PLog(pos2) 
-  return teils 
 #----------------------------------------------------------------  
 def repl_dop(liste):	# Doppler entfernen, im Python-Script OK, Problem in Plex - s. PageControl
 	mylist=liste
@@ -695,7 +683,8 @@ def unescape(line):
 	for r in	(("&amp;", "&"), ("&lt;", "<"), ("&gt;", ">")
 		, ("&#39;", "'"), ("&#039;", "'"), ("&quot;", '"'), ("&#x27;", "'")
 		, ("&ouml;", "ö"), ("&auml;", "ä"), ("&uuml;", "ü"), ("&szlig;", "ß")
-		, ("&Ouml;", "Ö"), ("&Auml;", "Ä"), ("&Uuml;", "Ü"), ("&apos;", "'"),
+		, ("&Ouml;", "Ö"), ("&Auml;", "Ä"), ("&Uuml;", "Ü"), ("&apos;", "'")
+		, ("&nbsp;|&nbsp;", ""), ("&nbsp;", ""),
 		# Spezialfälle:
 		#	https://stackoverflow.com/questions/20329896/python-2-7-character-u2013
 		#	"sächsischer Genetiv", Bsp. Scott's
