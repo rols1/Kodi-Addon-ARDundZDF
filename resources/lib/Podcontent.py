@@ -41,7 +41,9 @@ DEBUG			= SETTINGS.getSetting('pref_info_debug')
 
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
-DICTSTORE 		= os.path.join("%s/resources/data/Dict") % ADDON_PATH
+USERDATA		= xbmc.translatePath("special://userdata")
+ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
+DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
 
 ICON_MAIN_POD			= 'radio-podcasts.png'
 ICON_MEHR 				= "icon-mehr.png"

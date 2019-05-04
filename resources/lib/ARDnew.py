@@ -63,10 +63,12 @@ ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 PLog("ICON: " + ICON)
 
 ARDStartCacheTime = 300						# 5 Min.	
-DICTSTORE 		= os.path.join("%s/resources/data/Dict") % ADDON_PATH
-SLIDESTORE 		= os.path.join("%s/resources/data/slides") % ADDON_PATH
-SUBTITLESTORE 	= os.path.join("%s/resources/data/subtitles") % ADDON_PATH
-TEXTSTORE 		= os.path.join("%s/resources/data/Inhaltstexte") % ADDON_PATH
+USERDATA		= xbmc.translatePath("special://userdata")
+ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
+DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA			# hier nur DICTSTORE genutzt
+SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
+SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
+TEXTSTORE 		= os.path.join("%s/Inhaltstexte") % ADDON_DATA
 
 DEBUG			= SETTINGS.getSetting('pref_info_debug')
 NAME			= 'ARD und ZDF'

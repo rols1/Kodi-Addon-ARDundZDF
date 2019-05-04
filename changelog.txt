@@ -7,6 +7,11 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+04.05.2019	1.4.0	Modul util, neue Funktion check_DataStores: Check /Initialisierung / Migration. 
+			Update-Modul: Aufrufe save_restore in Funktion update entfernt.
+			Haupt-PRG + Modul util: Pfade für data-Verzeichnis + Unterverzeichnisse 
+			neu gesetzt (Basis: ../userdata/ardundzdf_data), dto. Module ARD_Bildgalerie
+			zdfmobile, Podcontent, ARDnew.
 
 30.04.2019	1.3.9	Menü "ARD Sportschau": Fertigstellung der Tab-Seiten, Ergänzung vorh. 
 			Audioquellen in ARDSportVideo.

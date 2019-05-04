@@ -34,7 +34,8 @@ humanbytes=util.humanbytes;  time_translate=util.time_translate; get_keyboard_in
 ClearUp=util.ClearUp; repl_json_chars=util.repl_json_chars; seconds_translate=util.seconds_translate;
 transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; ReadFavourites=util.ReadFavourites; 
 transl_doubleUTF8=util.transl_doubleUTF8; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio;
-get_summary_pre=util.get_summary_pre; get_playlist_img=util.get_playlist_img
+get_summary_pre=util.get_summary_pre; get_playlist_img=util.get_playlist_img;
+check_DataStores=util.check_DataStores;
 
 
 import resources.lib.updater 			as updater		
@@ -46,8 +47,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.3.9'		 
-VDATE = '30.04.2019'
+VERSION =  '1.4.0'		 
+VDATE = '04.05.2019'
 
 # 
 #	
@@ -198,7 +199,6 @@ GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
 
 PLog('Addon: lade Code')
 PluginAbsPath = os.path.dirname(os.path.abspath(__file__))				# abs. Pfad für Dateioperationen
-DICTSTORE 		= os.path.join("%s/resources/data/Dict") % PluginAbsPath
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
@@ -208,15 +208,21 @@ ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]
 HANDLE			= int(sys.argv[1])
 
-#FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
-#ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
-#FANART = R(FANART)
 ICON = R(ICON)
 PLog("ICON: " + ICON)
-SLIDESTORE 		= os.path.join("%s/resources/data/slides") % ADDON_PATH
-SUBTITLESTORE 	= os.path.join("%s/resources/data/subtitles") % ADDON_PATH
-TEXTSTORE 		= os.path.join("%s/resources/data/Inhaltstexte") % ADDON_PATH
-WATCHFILE		= os.path.join("%s/resources/data/merkliste.xml") % ADDON_PATH
+TEMP_ADDON		= xbmc.translatePath("special://temp")
+USERDATA		= xbmc.translatePath("special://userdata")
+ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
+PLog(ADDON_DATA)
+
+DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
+SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
+SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
+TEXTSTORE 		= os.path.join("%s/Inhaltstexte") % ADDON_DATA
+WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
+PLog(SLIDESTORE); PLog(WATCHFILE); 
+check 			= check_DataStores()	# Check /Initialisierung / Migration 
+PLog('check: ' + str(check))
 
 from platform import system, architecture, machine, release, version	# Debug
 OS_SYSTEM = system()

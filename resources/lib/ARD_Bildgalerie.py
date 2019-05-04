@@ -35,8 +35,11 @@ DEBUG			= SETTINGS.getSetting('pref_info_debug')
 
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
-DICTSTORE 		= os.path.join("%s/resources/data/Dict") % ADDON_PATH
-SLIDESTORE 		= os.path.join("%s/resources/data/slides") % ADDON_PATH
+
+USERDATA		= xbmc.translatePath("special://userdata")
+ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
+DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
+SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
 ClearUp(SLIDESTORE, 86400)	# Files + Verz. im SLIDESTORE älter als 1 Tag löschen
 
 # ----------------------------------------------------------------------

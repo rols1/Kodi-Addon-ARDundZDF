@@ -4,6 +4,8 @@
 #
 ################################################################################
 #	16.01.2019 erweitert mit Backup-Funktion für Addon-Cache.
+#	03.05.2019 Backup-Funktion wieder entfernt, data-Verzeichnis ab
+#		V1.4.0 im Kodi-Verzeichnis .kodi/userdata/addon_data/ardundzdf_data
 #
 ################################################################################
 import re, os, sys
@@ -38,7 +40,6 @@ GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
 BACKPUP_DIR			= "data"		# Cache: zu sichern vor Update / zu restaurieren nach Update
 RESSOURCES_DIR		= os.path.join("%s/resources") % ADDON_PATH
 
-TEMP_ADDON			= xbmc.translatePath("special://temp")
 ################################################################################
 
 # This gets the release name
@@ -106,14 +107,14 @@ def update(url, ver):
 			r 			= urllib2.urlopen(url)
 			zip_data	= zipfile.ZipFile(StringIO.StringIO(r.read()))
 			
-			save_restore('save')									# Cache sichern
+			# save_restore('save')									# Cache sichern - entfällt, s.o.
 			
 			PLog(dest_path)
 			PLog(ADDON_PATH)
 			shutil.rmtree(ADDON_PATH)		# remove addon, Verzicht auf ignore_errors=True
 			zip_data.extractall(dest_path)
 				
-			save_restore('restore')										# Cache sichern	
+			# save_restore('restore')								# Cache sichern	 - entfällt, s.o.
 					
 		except Exception as exception:
 			msg1 = 'Update fehlgeschlagen'
@@ -130,56 +131,8 @@ def update(url, ver):
 #	funktioniert nicht unter Windows im updater-Modul - daher hierher verlagert
 #	Aufrufer update (vor + nach Austausch)
 # Windows-Problem: ohne Dir-Wechsel aus RESSOURCES_DIR Error 32 (belegter Prozess)
-#
-def save_restore(mode):							# Cache sichern/restore
-	PLog('save_restore: ' + mode)	
-	
-	# Problem : RESSOURCES_DIR nicht als globale Vars erkannt
-	ADDON_PATH    		= SETTINGS.getAddonInfo('path').decode('utf-8')
-	RESSOURCES_DIR		= os.path.join("%s/resources") % ADDON_PATH
-	BACKPUP_DIR			= "data"
-	TEMP_ADDON			= xbmc.translatePath("special://temp")	
-	
-	os.chdir(RESSOURCES_DIR)					# Arbeitsverzeichnis für save + restore
-	PLog(RESSOURCES_DIR)						
-	fname 	= "%s.zip" % BACKPUP_DIR			# data.zip
-	PLog(fname)
-	PLog(TEMP_ADDON)
-		
-	if mode == 'save':							# BACKPUP_DIR in zip sichern
-		PLog('save:')	
-		try:
-			zipf = zipfile.ZipFile(fname, 'w', zipfile.ZIP_DEFLATED)						
-			PLog(zipf)
-			getDirZipped(BACKPUP_DIR, zipf)
-			zipf.close()
-			shutil.move(os.path.join(RESSOURCES_DIR, fname), os.path.join(TEMP_ADDON, fname)) 	# -> ../kodi/temp
-			PLog("%s/%s verschoben nach %s"  % (RESSOURCES_DIR, fname, TEMP_ADDON))
-		except Exception as exception:
-			PLog("Fehlschlag Backup: " + str(exception))
-		os.chdir(os.path.expanduser("~"))		# -> Home, unter Windows sonst Error 32
+# 03.05.2019 Funktion wieder entfernt - s.o.
 
-	if mode == 'restore':						# BACKPUP_DIR von zip wiederherstellen
-		PLog('restore:')
-		try:
-			shutil.move(os.path.join(TEMP_ADDON, fname), os.path.join(RESSOURCES_DIR, fname)) 	# -> ../data
-			PLog("%s/%s verschoben nach %s"  % (TEMP_ADDON, fname, RESSOURCES_DIR))
-		
-			with zipfile.ZipFile(fname, "r") as ziphandle:
-				ziphandle.extractall(RESSOURCES_DIR)					# ../plugin.video.ardundzdf/resources/
-			os.remove(fname)											# zip entfernen
-			PLog("%s entpackt + geloescht" % (fname))
-		except Exception as exception:
-			PLog("Fehlschlag Restore: " + str(exception))
-		os.chdir(os.path.expanduser("~"))		# -> Home, unter Windows sonst Error 32
-		
-	return
-#---------------------------
-def getDirZipped(path, zipf):
-	PLog('getDirZipped:')	
-	for root, dirs, files in os.walk(path):
-		for file in files:
-			zipf.write(os.path.join(root, file))
 	
 ################################################################################# clean tag names based on your release naming convention
 def cleanSummary(summary):

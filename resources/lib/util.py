@@ -33,10 +33,15 @@ DEBUG			= SETTINGS.getSetting('pref_info_debug')
 
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
-DICTSTORE 		= os.path.join("%s/resources/data/Dict") % ADDON_PATH
-WATCHFILE		= os.path.join("%s/resources/data/merkliste.xml") % ADDON_PATH
-SUBTITLESTORE 	= os.path.join("%s/resources/data/subtitles") % ADDON_PATH
-TEXTSTORE 		= os.path.join("%s/resources/data/Inhaltstexte") % ADDON_PATH
+
+USERDATA		= xbmc.translatePath("special://userdata")
+ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
+DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
+SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
+SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
+TEXTSTORE 		= os.path.join("%s/Inhaltstexte") % ADDON_DATA
+WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
+TEMP_ADDON		= xbmc.translatePath("special://temp")			# Backups
 
 PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
 ICON_MAIN_POD	= 'radio-podcasts.png'
@@ -115,6 +120,144 @@ def home(li, ID):
 
 	return li
 	 
+#---------------------------------------------------------------- 
+#	03.04.2019 data-Verzeichnis des Addons:
+#  		Check /Initialisierung / Migration
+#	Die Funktion checkt bei jedem Aufruf des Addons das data-Verzeichnis
+#		auf Existenz. Bis Version 1.3.9  befand sich das data-Verzeichnis
+#		innerhalb des Addons., das neue außerhalb in: 
+#		../plugin.video.ardundzdf/resources/data
+#	Existiert das data-Verzeichnis beim Check nicht, wird das alte data-
+#		Verzeichnis migriert. Ein Backup wird im "special://temp"-Ordner 
+#		angelegt (data.zip).
+#		Existiert kein altes data-Verzeichnis, wird ein leeres neues
+#		angelegt.
+#	Bereinigung nach Migration:
+#		Für das alte  data-Verzeichnis ist ein Löschen im Rahmen der 
+#		Addon-Updates vorgesehen (git rm resources/data).
+#		Für das Backup data.zip ist kein Löschen vorgesehen.
+#	 
+def check_DataStores():
+	PLog('check_DataStores:')
+	OLDSTORE 		= os.path.join("%s/resources/data") % ADDON_PATH
+	OLDPATH 		= os.path.join("%s/resources") % ADDON_PATH
+				
+	#	Check / Ankündigung Migration
+	#			ohne altes data-Verzeichnis: leeres neues
+	#			data-Verzeichnis anlegen
+	#	
+	if os.path.isdir(ADDON_DATA) == False:		# Umzug durchführen
+		if os.path.isdir(OLDSTORE) == True:		# nur wenn altes Verz. existiert
+			msg1 = 'Das data-Verzeichnis des Addons muss umziehen.'
+			msg2 = 'Der Umzug erfolgt in zwei Schritten (Backup, Umzug).'
+			msg3 = '1. Schritt Backup' 
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		else:									# altes Verz. fehlt (sollte nicht vork.)
+			ret = make_newDataDir()				# neues leeres Verz. anlegen
+			if ret == True:						# ohne Dialog
+				PLog('neues leeres Datenverzeichnis erfolgreich angelegt')
+			else:
+				msg1 = "Fehler: %s" % ret
+				msg2 = 'Bitte Datenverzeichnis manuell kopieren / erzeugen'
+				msg3 = 'oder Kontakt zum Entwickler aufnehmen'
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
+	else:
+		return 'OK %s '	% ADDON_DATA			# Verz. existiert - OK
+		
+	#	Backkup 
+	#	
+	if os.path.isdir(OLDSTORE) == True:			# Test auf altes Verz. / migrieren
+		try:									# 1. Backup altes Verz. 
+			os.chdir(OLDPATH)					# Verz. resources
+			fname 	= "data.zip"
+			zipf = zipfile.ZipFile(fname, 'w', zipfile.ZIP_DEFLATED)						
+			PLog(zipf)
+			getDirZipped('data', zipf)			# Verz. data in resources wird gezippt
+			zipf.close()
+			# 'data.zip' im 2. Arg. wird für overwrite benötigt (vorsorgl.)
+			shutil.move(os.path.join(fname), os.path.join(TEMP_ADDON, 'data.zip')) 	# -> ../kodi/temp
+			PLog("%s verschoben nach %s"  % (fname, TEMP_ADDON))
+			ok=True
+		except Exception as exception:
+			ok=False
+			PLog("Fehlschlag Backup: " + str(exception))
+		
+		if ok == True:
+			msg1 = 'Backup erfolgreich - angelegt in:'
+			msg2 = 	os.path.join(TEMP_ADDON, 'data.zip')
+			msg3 = '2. Schritt Umzug'
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		else:
+			msg1 = 'Backup fehlgeschlagen - Umzug wird trotzdem  fortgesetzt.'
+			msg3 = '2. Schritt Umzug'
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')									
+		
+	#	Migration
+	#	
+		try:															# 2. Umzug alt -> neu
+			# Backup-zip entpacken geht fixer als copytree
+			shutil.copy(os.path.join(TEMP_ADDON, 'data.zip'), os.path.join(USERDATA, 'data.zip'))
+			os.chdir(USERDATA)
+			fname = 'data.zip'
+			with zipfile.ZipFile(fname, "r") as ziphandle:
+				ziphandle.extractall(USERDATA)			# entpackt in -> ../userdata/data
+			os.rename(os.path.join(USERDATA, 'data'), ADDON_DATA)  # 	data -> ardundzdf_data
+			os.remove('data.zip')				# wird nicht mehr gebraucht		
+			ok=True							
+		except Exception as exception:
+			ok=False
+			PLog("Entpacken data.zip fehlgeschlagen: " + str(exception))				
+				
+		if ok == True:
+			msg1 = 'Umzug erfolgreich - neues data-Verzeichnis in:'
+			msg2 = 	ADDON_DATA
+			msg3 = 'Lösche altes data-Verzeichnis erst beim nächsten Update.'
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			PLog(msg1); PLog(msg2);	
+		else:
+			msg1 = 'Umzug fehlgeschlagen'
+			msg2 = 'Addon erzeugt neues leeres Datenverzeichnis'
+			msg3 = 'Bitte eventuelle Fehlermeldung beachten.'
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)				
+			ret = make_newDataDir()					# Fallback: neues leeres Verz. anlegen
+			if ret == True:
+				msg1 = 'neues leeres Datenverzeichnis erfolgreich angelegt'
+				msg2 = ''; msg3 = '' 
+			else:
+				msg1 = "Fehler: %s" % ret
+				msg2 = 'Bitte Datenverzeichnis manuell kopieren / erzeugen'
+				msg3 = 'oder Kontakt zum Entwickler aufnehmen'
+			PLog(msg1); PLog(msg2);	
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
+		
+	return 'Ende Initialisierung'
+#---------------------------
+# erzeugt (einmalig) neues Datenverzeichnis (ab Version 1.4.0) 
+def  make_newDataDir():
+	PLog('make_newDataDir:')
+	store_Dirs = ["Dict", "slides", "subtitles", "Inhaltstexte", 
+				"merkliste"]
+	ok=True
+	for Dir in store_Dirs:
+		Dir_path = os.path.join("%s/%s") % (ADDON_DATA, Dir)	
+		try:  
+			os.mkdir(Dir_path)
+		except Exception as exception:
+			ok=False
+			PLog(str(exception))
+			break
+	if ok:
+		return True
+	else:
+		return str(exception)
+		
+#---------------------------
+# sichert Verz. für check_DataStores
+def getDirZipped(path, zipf):
+	PLog('getDirZipped:')	
+	for root, dirs, files in os.walk(path):
+		for file in files:
+			zipf.write(os.path.join(root, file)) 
 #----------------------------------------------------------------  
 # Die Funktion Dict speichert + lädt Python-Objekte mittels Pickle.
 #	Um uns das Handling mit keys zu ersparen, erzeugt die Funktion
@@ -149,7 +292,6 @@ def Dict(mode, Dict_name='', value='', CacheTime=None):
 	PLog('Dict: ' + mode)
 	PLog('Dict: ' + str(Dict_name))
 	PLog('Dict: ' + str(type(value)))
-	# DICTSTORE = "/tmp/Dict"			# global
 	dictfile = "%s/%s" % (DICTSTORE, Dict_name)
 	PLog("dictfile: " + dictfile)
 	
@@ -224,7 +366,8 @@ def ClearUp(directory, seconds):
 					cnt_dirs = cnt_dirs + 1
 		PLog("ClearUp: entfernte Dateien %s, entfernte Ordner %s" % (str(cnt_files), str(cnt_dirs)))	
 		return True
-	except:	
+	except Exception as exception:	
+		PLog(str(exception))
 		return False
 
 #----------------------------------------------------------------  
