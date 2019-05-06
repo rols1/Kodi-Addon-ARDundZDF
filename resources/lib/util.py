@@ -479,8 +479,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		header = urllib2.unquote(header);  
 		header = header.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 		header = json.loads(header)
-		PLog("header: " + str(header)[:80]);
-		 
+		PLog("header: " + str(header)[:80]);		 
 	
 	path = transl_umlaute(path)					# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
 	# path = urllib2.unquote(path)				# scheitert bei quotierten Umlauten, Ersatz replace				

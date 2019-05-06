@@ -7,11 +7,25 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+	
+06.05.2019	1.4.1	ZDF RubrikSingle: neue ZDF-Struktur berücksichtigt (Cluster, Sendereihe,
+			Sendungen).
+			ZDF_Sendungen: Anpassung an RubrikSingle (Vorprüfung auf einz. Videobeitrag,
+			Durchreichen von tagline + thumb an ZDF_getVideoSources).	
+			ZDFSportLive: Aufruf der Seite mit Header ('Pragma': 'no-cache'), um aktuellen
+			Inhalt zu erzwingen. Zusätzl. cacheToDisc=False für endOfDirectory-Call.
+			ZDF_get_content: Abtrennung class="content-box" entfernt (blendet in 
+			aktuellen Seiten Videobeträge aus).
+			ZDF RubrikSingle: Auswertung Nachladebeiträge (class="loader", escaped).
+			Neue Funktion ZDF_get_rubrikpath: ermittelt html-Pfad in json-Listen für 
+			RubrikSingle.
+
 04.05.2019	1.4.0	Modul util, neue Funktion check_DataStores: Check /Initialisierung / Migration. 
 			Update-Modul: Aufrufe save_restore in Funktion update entfernt.
 			Haupt-PRG + Modul util: Pfade für data-Verzeichnis + Unterverzeichnisse 
-			neu gesetzt (Basis: ../userdata/ardundzdf_data), dto. Module ARD_Bildgalerie
+			neu gesetzt (Basis: ../userdata/ardundzdf_data), dto. Module ARD_Bildgalerie,
 			zdfmobile, Podcontent, ARDnew.
+			
 
 30.04.2019	1.3.9	Menü "ARD Sportschau": Fertigstellung der Tab-Seiten, Ergänzung vorh. 
 			Audioquellen in ARDSportVideo.
