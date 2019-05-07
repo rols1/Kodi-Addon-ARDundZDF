@@ -47,8 +47,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.4.1'		 
-VDATE = '06.05.2019'
+VERSION =  '1.4.2'		 
+VDATE = '07.05.2019'
 
 # 
 #	
@@ -215,6 +215,7 @@ USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 PLog(ADDON_DATA)
 
+M3U8STORE 		= os.path.join("%s/m3u8") % ADDON_DATA
 DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
 SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
 SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
@@ -684,7 +685,8 @@ def ARDSportBilder(title, path, img):
 			os.mkdir(fpath)
 		except OSError:  
 			msg1 = 'Bildverzeichnis konnte nicht erzeugt werden:'
-			msg2 = "../resources/data/slides/%s" % fname
+			msg2 = "%s/%s" % (SLIDESTORE, fname)
+			PLog(msg1); PLog(msg2); 
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li	
 				
@@ -2580,7 +2582,7 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 # mode = 'Favs' für Favoriten  oder 'Merk' für Merkliste
 # 	Datenbasen (Einlesen in ReadFavourites (Modul util) :
 #		Favoriten: special://profile/favourites.xml 
-#		Merkliste: ../resources/data/merkliste.xml (WATCHFILE)
+#		Merkliste: ADDON_DATA/merkliste.xml (WATCHFILE)
 # 	Verarbeitung:
 #		Favoriten: Kodi's Favoriten-Menü, im Addon_listing
 #		Merkliste: zusätzl. Kontextmenmü (s. addDir Modul util) -> Watch
@@ -3732,11 +3734,12 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 	PLog('page: ' + page[:100])
 
 	fname = sname + ".m3u8"
-	fpath = fname = '%s/resources/data/m3u8/%s' % (PluginAbsPath, fname)
+	fpath = os.path.join("%s/%s") % (M3U8STORE, fname)
 	PLog('fpath: ' + fpath)
 	msg = RSave(fpath, page)			# 3.  Inhalt speichern -> resources/m3u/
 	if 'Errno' in msg:
 		msg1 = msg1 + " gespeichert werden." # msg1 s.o.
+		PLog(msg1); PLog(msg2)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li
 	else:				
@@ -4252,8 +4255,6 @@ def RubrikSingle(title, path, clus_title=''):
 				descr = "%s | %s:\n\n%s" % (clustertitle, title, descr)
 
 			else:
-#				if 'icon-502_play' not in rec:
-#					continue	
 				img_src =  stringextract('data-srcset="', ' ', rec)	
 				href = 	stringextract('<a href', '</a>', rec)	   # href + Titel	
 				path = stringextract('="', '"', href)
@@ -5265,7 +5266,8 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 			os.mkdir(fpath)
 		except OSError:  
 			msg1 = 'Bildverzeichnis konnte nicht erzeugt werden:'
-			msg2 = "../resources/data/slides/%s" % fname
+			msg2 = "%s/%s" % (SLIDESTORE, fname)
+			PLog(msg1); PLog(msg2)
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li	
 
@@ -5361,9 +5363,9 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  # ohne Cache, um Neuladen zu verhindern
 	
 #-----------------------
-#  PhotoObject fehlt in kodi - wir speichern die Bilder in resources/data/slides und
+#  PhotoObject fehlt in kodi - wir speichern die Bilder in SLIDESTORE und
 #	übergeben an xbmc.executebuiltin('SlideShow..
-#  ClearUp in resources/data/slides s. Modulkopf
+#  ClearUp in SLIDESTORE s. Modulkopf
 #  S.a. ARD_Bildgalerie/Hub + SlideShow
 def ZDFSlideShow(path, single=None):
 	PLog('SlideShow: ' + path)

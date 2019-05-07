@@ -8,6 +8,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 	
+07.05.2019	1.4.2	Haupt-PRG, Module util + ARD_Bildgalerie: Aktualisierung Verweise auf
+			Addon-Datenverzeichnis, dto. Doku im Addon. 	
+	
 06.05.2019	1.4.1	ZDF RubrikSingle: neue ZDF-Struktur berücksichtigt (Cluster, Sendereihe,
 			Sendungen).
 			ZDF_Sendungen: Anpassung an RubrikSingle (Vorprüfung auf einz. Videobeitrag,

@@ -479,7 +479,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		header = urllib2.unquote(header);  
 		header = header.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 		header = json.loads(header)
-		PLog("header: " + str(header)[:80]);		 
+		PLog("header: " + str(header)[:80]);
+		 
 	
 	path = transl_umlaute(path)					# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
 	# path = urllib2.unquote(path)				# scheitert bei quotierten Umlauten, Ersatz replace				
@@ -1055,7 +1056,7 @@ def ReadFavourites(mode):
 #	ID: ARD, ZDF - Podcasts entspr. ARD
 # Es wird nur die Webseite ausgewertet, nicht die json-Inhalte der Ladekette.
 # Cache: 
-#		Text wird in ../resources/data/Dict gespeichert, Dateiname aus path generiert.
+#		Text wird in TEXTSTORE gespeichert, Dateiname aus path generiert.
 #
 # Aufrufer: ZDF: 	ZDF_get_content (für alle ZDF-Rubriken)
 #			ARD: 	ARDStart	-> ARDStartRubrik 

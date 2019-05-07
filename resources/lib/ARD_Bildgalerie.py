@@ -96,9 +96,9 @@ def page(name, path, offset):
 #-----------------------
 # 02.09.2018 SSL-Fehler mit HTTP.Request - Umstellung auf get_page mit urllib2.Request.
 #	Dafür get_page um Alternative mit urllib2.Request + SSLContext erweitert.
-#  PhotoObject fehlt in kodi - wir speichern die Bilder in resources/data/slides und
+#  PhotoObject fehlt in kodi - wir speichern die Bilder in SLIDESTORE und
 #	übergeben an xbmc.executebuiltin('SlideShow..
-#  ClearUp in resources/data/slides s. Modulkopf
+#  ClearUp in SLIDESTORE s. Modulkopf
 def Hub(title, path):		
 	PLog('Hub: %s' % path)
 	li = xbmcgui.ListItem()
@@ -141,7 +141,8 @@ def Hub(title, path):
 			os.mkdir(fpath)
 		except OSError:  
 			msg1 = 'Bildverzeichnis konnte nicht erzeugt werden:'
-			msg2 = "../resources/data/slides/%s" % fname
+			msg2 = "%s/%s" % (SLIDESTORE, fname)
+			PLog(msg1); PLog(msg2); 
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li	
 		
