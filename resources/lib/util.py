@@ -87,6 +87,10 @@ def home(li, ID):
 			thumb=R('home.png'), fparams=fparams)
 			
 	if ID == 'ARD':
+		if SETTINGS.getSetting('pref_use_classic') == 'false':	# Umlabeln ür ARD-Suche (Classic)
+			ID ='ARD Neu'
+					
+	if ID == 'ARD':
 		name = 'Home: ' + "ARD Mediathek Classic"
 		# CurSender = Dict("load", "CurSender")	# entf.  bei Classic
 		fparams="&fparams={'name': '%s', 'sender': '%s'}"	% (urllib2.quote(name), '')
@@ -152,7 +156,7 @@ def check_DataStores():
 			msg2 = 'Der Umzug erfolgt in zwei Schritten (Backup, Umzug).'
 			msg3 = '1. Schritt Backup' 
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
-		else:									# altes Verz. fehlt (sollte nicht vork.)
+		else:									# altes Verz. fehlt (ab V1.4.1 OK, gelöscht)
 			ret = make_newDataDir()				# neues leeres Verz. anlegen
 			if ret == True:						# ohne Dialog
 				PLog('neues leeres Datenverzeichnis erfolgreich angelegt')
@@ -160,7 +164,8 @@ def check_DataStores():
 				msg1 = "Fehler: %s" % ret
 				msg2 = 'Bitte Datenverzeichnis manuell kopieren / erzeugen'
 				msg3 = 'oder Kontakt zum Entwickler aufnehmen'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			return 	'OK - Datenverzeichnis neu angelegt (leer)'
 	else:
 		return 'OK %s '	% ADDON_DATA			# Verz. existiert - OK
 		
@@ -954,11 +959,12 @@ def seconds_translate(seconds):
 	return  "%d:%02d" % (hour, minutes)		
 #---------------------------------------------------------------- 	
 # Holt User-Eingabe für Suche ab
+#	s.a. get_query (für Search , ZDF_Search)
 def get_keyboard_input():
 	kb = xbmc.Keyboard('', 'Bitte Suchwort(e) eingeben')
 	kb.doModal() # Onscreen keyboard
 	if kb.isConfirmed() == False:
-		return
+		return ""
 	inp = kb.getText() # User Eingabe
 	return inp	
 #----------------------------------------------------------------  

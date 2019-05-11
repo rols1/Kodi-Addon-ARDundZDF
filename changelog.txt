@@ -7,6 +7,27 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+
+11.05.2019	1.4.5	Neue Suchfunktion SearchARDundZDF: Anpassung get_query für ZDF, Anpassung
+			Main_ARD (Search-Call statt query).
+			Anpassung Search (ARD) + ZDF_Search, einschl. UtfToStr-Behandl. in den 
+			Funktionsketten.
+			Funktion home: Umlabeln der ID 'ARD' in 'ARD Neu' für ARD-Suche (Classic).
+			ZDF_Search: Pfad ZDF_Search_PATH -> global
+			ZDF_get_content: Trailer-Erkennung eingefügt (bei Beiträgen ohne 
+			Video-Icon).
+			ZDF_get_content: Code für Ausschneiden verwertbarer Inhalte entfernt
+			(obsolet). 
+			ZDF_Search: Austausch Button-Titel "Mehr Suchergebnisse" ->
+			"Mehr Ergebnisse suchen" 
+
+not on Github	1.4.4	VideoTools: "return li" nach xbmcgui.Dialog ersetzt durch endOfDirectory
+			(führte zum Absturz).
+			ZDF RubrikSingle: Formatierung lable bei Folgen/Staffeln.
+			ZDF RubrikSingle: Fix teaserHeadline (',' statt '"') - sonst fehlten Titel.
+			ZDF RubrikSingle: unescape(lable).
+			
+07.05.2019	1.4.3	Uploadtest für Nerdsrepo - keine inhalt. Änderung.				
 	
 07.05.2019	1.4.2	Haupt-PRG, Module util + ARD_Bildgalerie: Aktualisierung Verweise auf
 			Addon-Datenverzeichnis, dto. Doku im Addon. 	

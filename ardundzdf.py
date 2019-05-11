@@ -47,8 +47,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.4.2'		 
-VDATE = '07.05.2019'
+VERSION =  '1.4.5'		 
+VDATE = '11.05.2019'
 
 # 
 #	
@@ -187,7 +187,8 @@ POD_REFUGEE = 'https://www1.wdr.de/radio/cosmo/programm/refugee-radio/refugee-ra
 
 # Relaunch der Mediathek beim ZDF ab 28.10.2016: xml-Service abgeschaltet
 ZDF_BASE				= 'https://www.zdf.de'
-# ZDF_Search_PATH: siehe ZDF_Search, ganze Sendungen, sortiert nach Datum, bei Bilderserien ohne ganze Sendungen
+# ZDF_Search_PATH: ganze Sendungen, sortiert nach Datum, bei Bilderserien ohne ganze Sendungen (ZDF_Search)
+#	s. ZDF_Search + SearchARDundZDF 
 ZDF_SENDUNG_VERPASST 	= 'https://www.zdf.de/sendung-verpasst?airtimeDate=%s'  # Datumformat 2016-10-31
 ZDF_SENDUNGEN_AZ		= 'https://www.zdf.de/sendungen-a-z?group=%s'			# group-Format: a,b, ... 0-9: group=0+-+9
 ZDF_WISSEN				= 'https://www.zdf.de/doku-wissen'						# Basis für Ermittlung der Rubriken
@@ -267,6 +268,12 @@ def Main():
 	label 		= NAME
 	li = xbmcgui.ListItem("ARD und ZDF")
 	
+	title="Suche in ARD und ZDF"
+	fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
+	addDir(li=li, label=title, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
+		thumb=R('suche_ardundzdf.png'), fparams=fparams)
+		
+
 	if SETTINGS.getSetting('pref_use_classic') == 'true':	# Classic-Version der ARD-Mediathek
 		PLog('classic_set: ')
 		title = "ARD Mediathek Classic"
@@ -378,9 +385,9 @@ def Main_ARD(name, sender=''):
 	li = home(li, ID=NAME)				# Home-Button
 	PLog("li:" + str(li))						
 			
-	title="Suche in ARD-Mediathek"
-	fparams="&fparams={'title': '%s', 'channel': 'ARD'}" % urllib2.quote(title)
-	addDir(li=li, label=title, action="dirList", dirID="get_query", fanart=R(ICON_MAIN_ARD), 
+	title="Suche in ARD-Mediathek"		# ARD-New verwendet die Classic-Suche
+	fparams="&fparams={'title': '%s', 'query': '', 'channel': 'ARD'}" % urllib2.quote(title)
+	addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MAIN_ARD), 
 		thumb=R(ICON_SEARCH), fparams=fparams)
 		
 	img = 'ard-mediathek.png'
@@ -482,7 +489,7 @@ def Main_POD(name):
 		
 	title="Suche Podcasts in ARD-Mediathek"
 	fparams="&fparams={'channel': 'PODCAST', 'title': '%s'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="get_query", fanart=R(ICON_MAIN_ARD), 
+	addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MAIN_ARD), 
 		thumb=R(ICON_SEARCH), fparams=fparams)
 
 	title = 'Sendungen A-Z'
@@ -1198,30 +1205,116 @@ def SendungenAZ(name, ID):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 ####################################################################################################
+# Suche in beiden Mediatheken
+#	Abruf jeweils der 1. Ergebnisseite
+#	Ohne Ergebnis -> Button mit Rücksprung hierher
+#	Ergebnis ZDF: -> ZDF_Search (erneuter Aufruf Seite 1, weitere Seiten dort rekursiv)
+#		Ablage in Dict nicht erf., Kodi-Cache ausreichend.
+#	Umlaute in Suche erzeugen unicode-Strings - UtfToStr-Behandl. jeweils in den Funktions-
+#		ketten.
+#
+def SearchARDundZDF(title, query='', pagenr=''):
+	PLog('SearchARDundZDF:');
+	
+	if query == '':
+		query = get_query(channel='ARDundZDF') 
+	if  query == None or query.strip() == '':
+		return ""
+		
+	PLog(query)
+	query_ard = query.split('|')[0]
+	query_zdf = query.split('|')[1]
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)												# Home-Button
+	tag_negativ ='neue Suche in ARD und ZDF starten'					# ohne Treffer
+	tag_positiv ='gefundene Beiträge zeigen'							# mit Treffer
+	
+	
+	#------------------------------------------------------------------	# Suche ARD
+	path =  BASE_URL +  ARD_Suche 
+	path_ard = path % urllib2.quote(query_ard)
+	page, msg = get_page(path=path_ard)	
+	channel='ARD'
 
+	query_lable = query_ard.replace('+', ' ')
+	
+	if '<strong>keine Treffer</strong' in page:
+		title="Suche in ARD und ZDF"
+		label = "ARD | nichts gefunden zu: %s | neue Suche" % query_lable
+		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
+		addDir(li=li, label=label, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
+			thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
+	else:	
+		hits = re.findall("mresults=page", page)	# ['mresults=page', ..
+		PLog(len(hits))								# '' bei 1 Seite
+		cnt = len(hits)
+		if cnt == 0:
+			cnt = 1
+			
+		title = "ARD: %s Seite(n) | %s" % (str(cnt), query_lable)
+		PLog(query_ard)
+		fparams="&fparams={'title': '%s', 'query': '%s', 'channel': '%s'}" %\
+			(title, urllib.quote_plus(query_ard), channel)
+		addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R('suche_ardundzdf.png'), 
+			thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
+		
+	#------------------------------------------------------------------	# Suche ZDF
+	ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&contentTypes=episode&sortBy=date&page=%s'
+	if pagenr == '':		# erster Aufruf muss '' sein
+		pagenr = 1
+	path_zdf = ZDF_Search_PATH % (urllib2.quote(query_zdf), pagenr) 
+	page, msg = get_page(path=path_zdf)	
+	searchResult = stringextract('data-loadmore-result-count="', '"', page)	# Anzahl Ergebnisse
+	PLog(searchResult);
+	
+	query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
+	query_lable = urllib2.unquote(query_lable)
+	if searchResult == '0' or 'class="artdirect"' not in page:			# Sprung hierher
+		label = "ZDF | nichts gefunden zu: %s | neue Suche" % query_lable
+		title="Suche in ARD und ZDF"
+		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
+		addDir(li=li, label=label, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
+			thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
+	else:	
+		title = "ZDF: %s Video(s)  | %s" % (searchResult, query_lable)
+		fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (urllib.quote_plus(query_zdf), 
+			title, pagenr)
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R('suche_ardundzdf.png'), 
+			thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
+				
+	xbmcplugin.endOfDirectory(HANDLE)
+	
 ####################################################################################################
 	# Suche - Verarbeitung der Eingabe
 	# Vorgabe UND-Verknüpfung (auch Podcast)
-	# offset: verwendet nur bei Bilderserien (Funktionen s. ARD_Bildgalerie.py)
 	# Kodi-Problem ..-Button s.u.
-def Search(title, query='', s_type='', channel='ARD', offset=0, path=None):
-	PLog('Search:'); PLog(query); PLog(channel); PLog(str(offset))
+	# Bei ARD-Neu findet trotzdem eine Classic-Suche statt (ergiebiger), in home wird die ID
+	#	umgelabelt.
+def Search(title, query='', channel='ARD'):
+	PLog('Search:'); PLog(query); PLog(channel); 
 			
+	if 	query == '':	
+		query = get_query(channel='ARD')
 	PLog(query)
+	if  query == None or query.strip() == '':
+		return ""
+	
+	query = UtfToStr(query)	
 	name = 'Suchergebnis zu: ' + urllib2.unquote(query)
 		
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 			
 	if channel == 'ARD':
 		path =  BASE_URL +  ARD_Suche 
-		path = path % query
+		path = path % urllib2.quote(query)
 		ID='ARD'
 	if channel == 'PODCAST':	
 		path =  BASE_URL  + POD_SEARCH
-		path = path % query
+		path = path % urllib2.quote(query)
 		ID=channel
-	li = xbmcgui.ListItem()
 		
+	li = xbmcgui.ListItem()		
 	PLog(path)
 	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 		'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'}"
@@ -1258,11 +1351,13 @@ def Search(title, query='', s_type='', channel='ARD', offset=0, path=None):
 	if 	pagenr_suche:							# Ergebnisse mit mehreren Seiten -> Seitenübersicht
 		li = home(li, ID=ID)					# Home-Button nur für mehrere Seiten
 		next_cbKey = 'SingleSendung'
+		query=UtfToStr(query); channel=UtfToStr(channel);
 		for pagenr in pagenr_path:
 			mode = 'Suche|%s|%s'	% (query, channel) # abgefangen in get_query: |
 			href = path + '&mresults=page.%s' %  pagenr
 			# PLog(href)
 			title = 'Weiter zu Seite %s' %  pagenr
+			href=UtfToStr(href); mode=UtfToStr(mode);
 			fparams="&fparams={'title': '%s', 'path': '%s', 'next_cbKey': '%s', 'mode': '%s', 'ID': '%s'}" \
 				% (urllib2.quote(name), urllib2.quote(href), next_cbKey,  mode, ID)	
 			addDir(li=li, label=title, action="dirList", dirID="SinglePage", fanart=R(ICON_NEXT), 				
@@ -1277,20 +1372,34 @@ def Search(title, query='', s_type='', channel='ARD', offset=0, path=None):
 # Vorstufe von Search - nur in Kodi-Version.
 #	blendet Tastatur ein und fragt Suchwort(e) ab.
 #	
-def get_query(title, channel='ARD'):
+def get_query(channel='ARD'):
 	PLog('get_query:')
-	query = get_keyboard_input() 
-	if query:					# None bei Abbruch
+	query = get_keyboard_input()			# Modul util
+	if  query == None or query.strip() == '':
+		return ""
+	
+	if channel == 'ARD' or channel == 'ARDundZDF':				
 		if '|' in query:		# wir brauchen | als Parameter-Trenner in SinglePage
 			msg1 = 'unerlaubtes Zeichen in Suchwort: |'
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			return ""
 				
-		query = query.strip()
-		query = query.replace(' ', '+')			# Leer-Trennung = UND-Verknüpfung bei Podcast-Suche 
-		query = urllib.quote_plus(query)
-		Search(title=title, query=query, channel=channel)											
+		query_ard = query.strip()
+		query_ard = query_ard.replace(' ', '+')	# Leer-Trennung = UND-Verknüpfung bei Podcast-Suche 
+		
+	if channel == 'ZDF' or channel == 'ARDundZDF':				
+		query_zdf =query.strip()					# ZDF-Suche
+		query_zdf = query_zdf.replace(' ', '+')		# Leer-Trennung bei ZDF-Suche mit +
+		
+	if channel == 'ARD':	
+		return 	query_ard
+	if channel == 'ZDF':	
+		return 	query_zdf
+	if channel == 'ARDundZDF':				# beide queries zusammengesetzt				
+		query = "%s|%s" % (query_ard, query_zdf)							
+		PLog('query_ARDundZDF: %s' % query);
+		return	query		
 
-	return				
 ####################################################################################################
 # Liste der Wochentage
 	# Ablauf (ARD): 	
@@ -1702,9 +1811,10 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 	if len(sendungen) == 0:								# Fallback 	
 		sendungen = blockextract('class="entry"', page) 				
 		PLog('sendungen, Fallback: ' + str(len(sendungen)))
-	
+
 	# mode = 'Suche|Query|Channel': mit Suchbegriff Button für Seitenübersicht 
 	if '|' in mode:					# voranstellen - s. Search	
+		mode=UtfToStr(mode);
 		dummy, query, channel = mode.split('|')
 		PLog(dummy); PLog(query); PLog(channel); 
 		title = 'Suchergebnis zu: %s'  % query
@@ -1840,7 +1950,7 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 			else:
 				fparams="&fparams={'path': '%s', 'title': '%s', 'next_cbKey': 'SingleSendung', 'mode': '%s', 'ID': '%s'}" \
 					% (urllib2.quote(path), urllib2.quote(headline), mode, ID)	
-				addDir(li=li, label=headline, action="dirList", dirID="SinglePage", fanart=img_src, thumb=Rimg_src, 
+				addDir(li=li, label=headline, action="dirList", dirID="SinglePage", fanart=img_src, thumb=img_src, 
 					fparams=fparams, summary=summary, tagline=subtitle)
 		if next_cbKey == 'PageControl':		
 			path = BASE_URL + path
@@ -2432,7 +2542,6 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 	title = UtfToStr(title)
 	
 	sub_path=''# fehlt noch bei ARD
-
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	
@@ -2441,14 +2550,18 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 	if  os.access(dest_path, os.R_OK) == False:
 		msg1 = 'Downloadverzeichnis oder Leserecht  fehlt'
 		msg2 = dest_path
+		PLog(msg1); PLog(msg2)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
-		return li	
+		xbmcplugin.endOfDirectory(HANDLE)
+	
 	if os.path.exists(fulldest_path) == False:	# inzw. gelöscht?
 		msg1 = 'Datei nicht vorhanden:'
 		msg2 = fulldest_path
+		PLog(msg1); PLog(msg2)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
-		return li							
+		xbmcplugin.endOfDirectory(HANDLE)
 		
+
 	if fulldest_path.endswith('mp4') or fulldest_path.endswith('webm'):# 1. Ansehen
 		title = title_org 
 		lable = "Ansehen | %s" % (title_org)
@@ -3988,18 +4101,21 @@ def RadioAnstalten(path, title, sender, fanart):
 
 ###################################################################################################
 #									ZDF-Funktionen
-#
+###################################################################################################
+# ZDF-Suche:
 # 	Voreinstellungen: alle ZDF-Sender, ganze Sendungen, sortiert nach Datum
 #	Anzahl Suchergebnisse: 25 - nicht beeinflussbar
 #	Format Datum (bisher nicht verwendet)
 #		..&from=2012-12-01T00:00:00.000Z&to=2019-01-19T00:00:00.000Z&..
-def ZDF_Search(query=None, title='Search', s_type=None, pagenr='', **kwargs):
-	if query == '':
-		query = get_keyboard_input() 
+#	ZDF_Search_PATH steht bei Rekursion nicht als glob. Variable zur Verfügung
 
-	query = query.strip()
-	query = query.replace(' ', '+')		# Leer-Trennung bei ZDF-Suche mit +
-	# query = urllib2.quote(query, "utf-8")
+def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
+	if 	query == '':	
+		query = get_query(channel='ZDF')
+	PLog(query)
+	if  query == None or query.strip() == '':
+		return ""
+	name = 'Suchergebnis zu: ' + urllib2.unquote(query)
 
 	PLog('ZDF_Search:'); PLog(query); PLog(pagenr); PLog(s_type)
 
@@ -4028,7 +4144,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr='', **kwargs):
 	# Der Loader in ZDF-Suche liefert weitere hrefs, auch wenn weitere Ergebnisse fehlen
 	if searchResult == '0' or 'class="artdirect"' not in page:
 		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
-		msg1 = 'Kein Ergebnis zu: %s' % query  
+		msg1 = 'Keine Ergebnisse (mehr) zu: %s' % query  
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		return li	
 				
@@ -4040,9 +4156,10 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr='', **kwargs):
 	if page_cnt == 'next':							# mehr Seiten (Loader erreicht)
 		pagenr = int(pagenr) + 1
 		query = query.replace('%252B', '+')				# # quotierten Suchbegriff korrigieren
+		query = UtfToStr(query)
 		path = ZDF_Search_PATH % (query, pagenr)
 		PLog(pagenr); PLog(path)
-		title = "Mehr Suchergebnisse zu: %s"  % query.replace('+', ' ')	
+		title = "Mehr Ergebnisse suchen zu: %s"  % query.replace('+', ' ')	
 		fparams="&fparams={'query': '%s', 's_type': '%s', 'pagenr': '%s'}" % (urllib2.quote(query), s_type, pagenr)
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_MEHR), 
 			thumb=R(ICON_MEHR), fparams=fparams)
@@ -4244,7 +4361,8 @@ def RubrikSingle(title, path, clus_title=''):
 				else:		
 					img_src = 'https://www.zdf.de/assets/' + img_src +	'~384x216'
 				# Pfadbestandteile Auswertung chrome:
-				title 	= stringextract('teaserHeadline":"', '"', rec)	
+				title 	= stringextract('teaserHeadline":"', ',', rec)	# kann " enthalten
+				title 	= title.replace('"', '')
 				sophId 	= stringextract('"sophoraId":"', '"', rec)
 				path 	= ZDF_get_rubrikpath(page, sophId)		# in json-Listen suchen
 				if path == '':
@@ -4273,10 +4391,14 @@ def RubrikSingle(title, path, clus_title=''):
 			if lable == '':
 				lable = title
 			else:
-				lable = "%s | %s" % (title, lable)
-			
-			descr = unescape(descr)
+				
+				if 'Folgen' in lable or 'Staffeln' in lable:		# Formatierung
+					lable = lable.ljust(11) + "| %s" % title
+				else:
+					lable = "%s | %s" % (title, lable)
 			title = repl_json_chars(title)
+			lable = unescape(lable)
+			descr = unescape(descr)
 			descr = repl_json_chars(descr)
 			descr_par = descr.replace('\n', '||')
 			
@@ -4657,12 +4779,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		msg_notfound = 'Leider kein Video verfügbar'		# z.B. Ausblick auf Sendung
 		if page_title:
 			msg_notfound = 'Leider kein Video verfügbar zu: ' + page_title
-		
-#	pos = page.find('class="content-box"')					# ab hier verwertbare Inhalte 
-#	PLog('pos: ' + str(pos))
-#	if pos >= 0:
-#		page = page[pos:]
-				
+						
 	content =  blockextract('class="artdirect"', page)
 	if ID == 'NeuInMediathek':									# letztes Element entfernen (Verweis Sendung verpasst)
 		content.pop()	
@@ -4723,9 +4840,10 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		# PLog(rec)  # bei Bedarf
 			
 		if ID <> 'DEFAULT':					 			# DEFAULT: Übersichtsseite ohne Videos, Bsp. Sendungen A-Z
-			if 'title-icon icon-502_play' not in rec :  	# Videobeitrag? auch ohne Icon möglich
+			if 'title-icon icon-502_play' not in rec :  # Videobeitrag? auch ohne Icon möglich
 				if '>Videolänge:<' not in rec : 
-					continue		
+					if '>Trailer<' not in rec : 		# Trailer o. Video-icon-502
+						continue		
 		multi = False			# steuert Mehrfachergebnisse 
 		
 		meta_image = stringextract('<meta itemprop=\"image\"', '>', rec)
