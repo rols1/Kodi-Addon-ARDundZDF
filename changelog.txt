@@ -8,6 +8,10 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+12.05.2019	1.4.6	ARDSportVideo (ARD Sportschau): manifest.f4m-Url's bei den Videoquellen überspringen.
+			TV-Livestreams: Link für "Das Erste" aktualisiert.
+			Addon-Gesamtgröße verringern: Screenshots verkleinert, Logo ARD-Sportschau ausgetauscht.		
+
 11.05.2019	1.4.5	Neue Suchfunktion SearchARDundZDF: Anpassung get_query für ZDF, Anpassung
 			Main_ARD (Search-Call statt query).
 			Anpassung Search (ARD) + ZDF_Search, einschl. UtfToStr-Behandl. in den 

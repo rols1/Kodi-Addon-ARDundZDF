@@ -47,8 +47,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.4.5'		 
-VDATE = '11.05.2019'
+VERSION =  '1.4.6'		 
+VDATE = '12.05.2019'
 
 # 
 #	
@@ -783,7 +783,13 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		return li 
 	PLog(len(page))
 	
-	url = stringextract('"videoURL":"', '"', page)	# bei Bedarf zweite altern. Url laden
+	content = blockextract('"videoURL":"', page)
+	url=''
+	for rec in content:
+		url = stringextract('"videoURL":"', '"', rec)	# bei Bedarf zweite altern. Url laden
+		PLog(url)
+		if 'manifest.f4m' in url:					#  manifest.f4m überspringen
+			continue
 	if url == '':									# ev. nur Audio verfügbar
 		url = stringextract('"audioURL":"', '"', page)		
 	url = 'http:' + url								# //wdradaptiv-vh.akamaihd.net/..

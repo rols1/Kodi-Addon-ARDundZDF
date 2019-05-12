@@ -18,11 +18,11 @@
 	<item>
 		<title>Das Erste</title>
 		<hrefsender>Das Erste</hrefsender>
-		<link>https://daserstehdde-lh.akamaihd.net/i/daserstehd_de@629196/master.m3u8</link>
+		<link>https://mcdn.daserste.de/daserste/de/master.m3u8</link>
 		<thumbnail>tv-das-erste.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>ARD</EPG_ID>
-		<date>07.09.2018</date>
+		<date>11.05.2019</date>
 		<epg_url></epg_url>
 	</item>
 	<item>

@@ -104,8 +104,11 @@ def update(url, ver):
 		msg2 = 'Update erfolgreich - weiter zum aktuellen Addon'  	# Kodi: kein Neustart notw.
 		try:
 			dest_path 	= xbmc.translatePath("special://home/addons/")
+			PLog('Mark1')
 			r 			= urllib2.urlopen(url)
+			PLog('Mark2')
 			zip_data	= zipfile.ZipFile(StringIO.StringIO(r.read()))
+			PLog('Mark3')
 			
 			# save_restore('save')									# Cache sichern - entfällt, s.o.
 			
