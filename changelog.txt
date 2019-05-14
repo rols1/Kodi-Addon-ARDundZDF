@@ -8,9 +8,25 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+14.05.2019	1.4.8	Settings - Umstellung "Text input" auf "Browser dialog": Pfade, Verzeichnisse,
+			Curl-/Wget-PRG.
+			Beitrags-Filter: Option in Settings hinzugefügt (Hörfassungen).
+			Beitrags-Filter, Code-Anpassungen: SinglePage, ARDStartRubrik, ARDSportPanel,
+			ZDF_get_content, BarriereArm (ZDF), ARDStartRubrik (ARD-Neu).
+			
+not on Github	1.4.7	get_summary_pre (Vorausladen von Inhaltstexten): zusätzl. Auswertung 
+			"Verfügbar bis" für ZDF, ARD-Classic + ARD-Neu (get_summary_pre, Modul util).
+			ZDF_get_content: summ_txt angepasst für "Verfügbar bis" (replace('\n', '||'),
+			dto. summary_org in SingleSendung (ARD), dto. fparams in ShowFavs.
+			ARDStartSingle: ergänzt mit "Verfügbar bis".
+			ARDStartSingle (ARD-Neu): fehlende Beiträge abgefangen.
+			ARDStartVideoStreams + ARDStartVideoMP4: fehlende Videoquellen abgefangen 
+			(verm. Jugendschutz). 
+
 12.05.2019	1.4.6	ARDSportVideo (ARD Sportschau): manifest.f4m-Url's bei den Videoquellen überspringen.
 			TV-Livestreams: Link für "Das Erste" aktualisiert.
-			Addon-Gesamtgröße verringern: Screenshots verkleinert, Logo ARD-Sportschau ausgetauscht.		
+			Addon-Gesamtgröße verringert: Screenshots verkleinert, Logo ARD-Sportschau
+			ausgetauscht.		
 
 11.05.2019	1.4.5	Neue Suchfunktion SearchARDundZDF: Anpassung get_query für ZDF, Anpassung
 			Main_ARD (Search-Call statt query).

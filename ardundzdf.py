@@ -47,8 +47,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.4.6'		 
-VDATE = '12.05.2019'
+VERSION =  '1.4.8'		 
+VDATE = '14.05.2019'
 
 # 
 #	
@@ -644,6 +644,10 @@ def ARDSportPanel(title, path, img):
 		summ		= cleanhtml(summ); summ=repl_json_chars(summ)
 		title=title.strip(); summ=summ.strip();						# zusätzl. erf.
 		
+		if 'Hörfassung' in title:									# Filter
+			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+				continue		
+		
 		PLog('Satz:')
 		path=UtfToStr(path); img=UtfToStr(img); title=UtfToStr(title); summ=UtfToStr(summ);  
 		PLog(path); PLog(img); PLog(title); PLog(summ); 
@@ -1060,9 +1064,8 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 		href 	= 	path = decode_url(href)
 		title 	= stringextract('class="headline">', '<', s)
 		subline =  stringextract('class="subtitle">', '<', s)
-		img, img_alt = img_urlScheme(s, 320, 'Sendereihen') 
-													# summary (Inhaltstext) im Voraus holen falls 
-													#	 leer oder identisch mit title
+		img, img_alt = img_urlScheme(s, 320, 'Sendereihen') 										
+													
 		more_path = ''
 		more	= stringextract('class="more', '<span', s)		# Link zu "ALLE ZEIGEN"
 		if 'mehr?documentId=' in more:							# außer Livestreams (Alle bereits in path)
@@ -1115,11 +1118,17 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 				Plot=summ					# für Einzelauflösungen/summary in SingleSendung
 				sid = href.split('documentId=')[1]
 				path = BASE_URL + '/play/media/' + sid			# -> *.mp4 (Quali.-Stufen) + master.m3u8-Datei (Textform)
-				PLog('Medien-Url: ' + path)			
+				PLog('Medien-Url: ' + path)	
+						
 				if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 					if SETTINGS.getSetting('pref_show_resolution') == 'false':
 						mediatype='video'
-						Plot = "%s||||%s" % (subline, summ)		# für Sofortstart/Plot in SingleSendung
+						Plot = "%s||||%s" % (subline, summ)				# für Sofortstart/Plot in SingleSendung
+						
+				if 'Hörfassung' in title or 'Hörfassung' in subline:# Filter
+					if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+						continue				
+						
 				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
 					% (urllib2.quote(path), urllib2.quote(title), urllib2.quote(img), 
 					duration, urllib2.quote(Plot),  urllib2.quote(subline), 'ARD', '0')				
@@ -1632,6 +1641,11 @@ def BarriereArmARD(name):		#
 	query = urllib2.quote(title, "utf-8")
 	path = BASE_URL + ARD_Suche	%   urllib2.quote('Hörfassungen', "utf-8")
 	
+	if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+		msg1 = 'Hinweis:'
+		msg2 = 'Filter für Hörfassungen ist eingeschaltet!'
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")
+	
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 	fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Suche', 'ID': 'ARD'}" \
 		% (urllib2.quote(title), urllib2.quote(path), next_cbKey)
@@ -1852,6 +1866,11 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 		headline = send_headline[i]					# UtfToStr, unescape, "-Ersatz in get_sendungen
 		subtitle = send_subtitle[i]
 		subtitle = UtfToStr(subtitle)
+		
+		if 'Hörfassung' in headline or 'Hörfassung' in subtitle:		# Filter
+			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+				continue
+			
 		if next_cbKey == 'PageControl' and subtitle:	# A-Z: subtitle enthält Sender
 			headline = "%s | %s" % (headline, subtitle)
 		img_src = send_img_src[i]
@@ -1885,7 +1904,7 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 		subtitle = UtfToStr(subtitle)
 		dachzeile = UtfToStr(dachzeile)
 		PLog(headline); PLog(subtitle); PLog(dachzeile)
-		
+				
 		path = UtfToStr(path)				# Pfade können Umlaute enthalten
 		img_src = UtfToStr(img_src)
 		func_path = UtfToStr(func_path)
@@ -2036,6 +2055,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 	# *.m3u8-Datei vorhanden -> auswerten, falls ladefähig. die Alternative 'Client wählt selbst' (master.m3u8)
 	# stellen wir voran (WDTV-Live OK, VLC-Player auf Nexus7 'schwerwiegenden Fehler'), MXPlayer läuft dagegen
 	summary=summary.replace('||', '\n')		
+	summary_org = summary_org.replace('\n', '||')
 	if m3u8_master:	 		 		  								# nicht bei rtmp-Links (ohne master wie m3u8)
 		if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': # Sofortstart - direkt, falls Listing nicht Playable
 			if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
@@ -2053,6 +2073,8 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 			mediatype=mediatype, tagline=tagline, summary=summary) 
 						
+		summary_org = summary_org.replace('\n', '||')
+		summary = summary.replace('\n', '||')
 		li = Parseplaylist(li, m3u8_master, thumb, geoblock='', tagline=tagline, summary=summary_org, descr=summary, 
 			sub_path=sub_path)
 		#del link_path[0]								# master.m3u8 entfernen, Rest bei m3u8_master: mp4-Links
@@ -2114,7 +2136,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 						
 			if url.find('rtmp://') >= 0:	# 2. rtmp-Links:	
 				summary = Format + 'RTMP-Stream'	
-				lable = "%s | %s" % (title, summary)
+				lable = "%s | %s" % (title, summary)				
 				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
 					(urllib.quote_plus(url), urllib.quote_plus(title_org), urllib.quote_plus(thumb), 
 					urllib.quote_plus(summary_org), urllib.quote_plus(sub_path), Merk)
@@ -2134,12 +2156,14 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 					#	mit http, während bei m3u8-Url https durch http ersetzt werden MUSS. 
 					url = url.replace('https', 'http')	
 					lable = "%s. %s | %s" % (str(li_cnt), title, Format+geoblock)
-					summary_org=summary_org.replace('||', '\n')	
+					summ_lable=summary_org.replace('||', '\n')	
+					summary_org = summary_org.replace('\n', '||')
+					
 					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
 						(urllib.quote_plus(url), urllib.quote_plus(title_org), urllib.quote_plus(thumb), 
 						urllib.quote_plus(summary_org), urllib.quote_plus(sub_path), Merk)
 					addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-						mediatype=mediatype, summary=summary_org) 
+						mediatype=mediatype, summary=summ_lable) 
 			li_cnt=li_cnt+1
 						
 	PLog(download_list)
@@ -2865,6 +2889,7 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 			summary='';  tagline=''
 			
 		PLog('fanart: ' + fanart); PLog('thumb: ' + thumb);
+		fparams = fparams.replace('\n', '||')				# json-komp. für func_pars in router()
 		if mode == 'Favs':									# bereits quotiert
 			fparams ="&fparams={%s}" % fparams	
 		else:
@@ -4529,6 +4554,12 @@ def BarriereArm(title):
 		title = title.strip()
 		title = (title.replace('>', '').replace('<', ''))
 		PLog(title)
+		if 'Hörfassung' in title:					# Filter
+			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+				msg1 = 'Hinweis:'
+				msg2 = 'Filter für Hörfassungen ist eingeschaltet!'
+				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")		
+		
 		fparams="&fparams={'path': '%s', 'title': '%s'}" % (urllib2.quote(path), urllib2.quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="BarriereArmSingle", fanart=R(ICON_ZDF_BARRIEREARM), 
 			thumb=R(ICON_ZDF_BARRIEREARM), fparams=fparams)
@@ -4994,6 +5025,9 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		tagline=repl_json_chars(tagline)					# dto.
 		
 		title = UtfToStr(title); summary = UtfToStr(summary); tagline = UtfToStr(tagline);
+		if 'Hörfassung' in title:							# Filter
+			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+				continue
 			
 		PLog('neuer Satz')
 		PLog(thumb);PLog(path);PLog(title);PLog(summary);PLog(tagline); PLog(multi);
@@ -5011,6 +5045,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 					summ_txt = get_summary_pre(path, 'ZDF')
 					if 	summ_txt:
 						summary = "%s\n\n%s" % (tagline, summ_txt)	# ->Anzeige
+						summ_txt = summ_txt.replace('\n', '||')
 						tagline = "%s||||%s" % (tagline, summ_txt)	# -> ZDF_getVideoSources
 			
 			tagline = UtfToStr(tagline)
@@ -5589,8 +5624,10 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, tagline='', summary='', 
 			#	neuen Parameter bei dict(parse_qsl(paramstring)
 			Plot="%s||||%s" % (tagline, descr)
 			descr=summary.replace('||', '\n')		
+		
 			if descr.strip() == '|':			# ohne EPG: EPG-Verbinder entfernen
 				descr=''
+			
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
 				(urllib.quote_plus(url), title, urllib.quote_plus(thumb), urllib.quote_plus(Plot), 
 				urllib.quote_plus(sub_path))

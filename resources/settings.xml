@@ -17,16 +17,16 @@
 
  <category label="Radio-Podcast Einstellungen">
   	<setting label="Radio-Podcast-Erweiterung verwenden" type="bool" id="pref_use_podcast" default="true"/>
-	<setting label="Pfad zur Podcast-Favoritenliste (ohne Pfad: Ressourcenverzeichnis)" type="text" id="pref_podcast_favorits" default="podcast-favorits.txt"/>
+	<setting label="Pfad zur Podcast-Favoritenliste (ohne Pfad: Ressourcenverzeichnis)" type="file" id="pref_podcast_favorits" default="podcast-favorits.txt"/>
  </category>
  
  <category label="Download Einstellungen">
  	<setting label="curl/wget-Downloads freischalten" type="bool" id="pref_use_downloads" default="false"/>
   	<setting label="curl/wget-Downloads: alle verfuegbaren Video-Qualitaeten anbieten" type="bool" id="pref_show_qualities" default="false"/>
  	<setting label="curl/wget-Downloads: Dateinamen aus dem Titel erzeugen (statt Download_{Datum}_{Uhrzeit})" type="bool" id="pref_generate_filenames" default="false"/>
-	<setting label="Pfad zum Downloadprogramm curl/wget" type="text" id="pref_curl_path" default=""/>
-	<setting label="Downloadverzeichnis fuer curl/wget und Recording TV-Live" type="text" id="pref_curl_download_path" default=""/>
-	<setting label="Downloads verschieben in dieses Verzeichnis" type="text" id="pref_VideoDest_path" default=""/>
+	<setting label="Pfad zum Downloadprogramm curl/wget" type="executable" id="pref_curl_path" default=""/>
+	<setting label="Downloadverzeichnis fuer curl/wget und Recording TV-Live" type="folder" option="writeable" source="" id="pref_curl_download_path" default=""/>
+	<setting label="Downloads verschieben in dieses Verzeichnis" type="folder" option="writeable" source="" id="pref_VideoDest_path" default=""/>
 </category>
  
  <category label="Recording TV-Live verwenden">
@@ -52,6 +52,10 @@
  	<setting label="ARDundZDF-Merkliste verwenden (getrennt von Favoriten)" type="bool" id="pref_watchlist" default="true"/>
 	<setting label="Begleitinfos für Favoriten und Merkliste verwenden - falls verfügbar" type="bool" id="pref_FavsInfo" default="true"/>
  </category> 
+
+ <category label=" Beiträge filtern">
+  	<setting label="Titel enthält >Hörfassungen<" type="bool" id="pref_filter_hoerfassung" default="false"/>
+ </category>
 </settings>
 
 

@@ -408,7 +408,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	label=UtfToStr(label); thumb=UtfToStr(thumb); fanart=UtfToStr(fanart); 
 	summary=UtfToStr(summary); tagline=UtfToStr(tagline); 
 	fparams=UtfToStr(fparams);
-
+	
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
 	# PLog('summary, tagline: %s, %s' % (summary, tagline))
 	Plot = ''
@@ -943,7 +943,7 @@ def time_translate(timecode):
 # Format seconds	86400	(String, Int, Float)
 # Rückgabe:  		1d, 0h, 0m, 0s	
 def seconds_translate(seconds):
-	if seconds == '' or seconds == 0:
+	if seconds == '' or seconds == 0  or seconds == 'null':
 		return ''
 	if int(seconds) < 60:
 		return "%s sec" % seconds
@@ -1090,20 +1090,25 @@ def get_summary_pre(path, ID='ZDF'):
 	PLog('fpath: ' + fpath)
 	
 	summ = ''
-	if os.path.exists(fpath):		# Text laden + zurückgeben
+	if os.path.exists(fpath):		# Text lokal laden + zurückgeben
 		PLog('lade lokal:') 
 		summ =  RLoad(fpath, abs_path=True)
 		return summ					# ev. leer, falls in der Liste eine Serie angezeigt wird 
 	
-	page, msg = get_page(path)
-	if page == '':
+	page, msg = get_page(path)		# extern laden
+	if page == '' or 'APOLLO_STATE__ = {}' in page:
 		return ''
 	
+	verf=''	
 	if 	ID == 'ZDF':
 		summ = stringextract('description" content="', '"', page)
 		summ = mystrip(summ)
 		#if 'title="Untertitel">UT</abbr>' in page:	# stimmt nicht mit get_formitaeten überein
 		#	summ = "UT | " + summ
+		if 'erfügbar bis' in page:										# enth. Uhrzeit									
+			verf = stringextract('erfügbar bis ', '<', page)			# Blank bis <
+		if verf:														# Verfügbar voraanstellen
+			summ = "[B]Verfügbar bis %s[/B]\n\n%s\n" % (verf, summ)
 		
 	if 	ID == 'ARDnew':
 		if '/ard/player/' in path:				# json-Inhalt
@@ -1111,10 +1116,20 @@ def get_summary_pre(path, ID='ZDF'):
 		else:									# HTML-Inhalt
 			summ = stringextract('synopsis":"', '"', page)
 		summ = repl_json_chars(summ)
+		if 'verfügbar bis:' in page:										# html mit Uhrzeit									
+			verf = stringextract('verfügbar bis:', '</p>', page)			# 
+			verf = cleanhtml(verf)
+		if verf:														# Verfügbar voraanstellen
+			summ = "[B]Verfügbar bis %s[/B]\n\n%s" % (verf, summ)
+		
 		
 	if 	ID == 'ARDClassic':
 		# summ = stringextract('description" content="', '"', page)		# geändert 23.04.2019
 		summ = stringextract('itemprop="description">', '<', page)
+		if 'Verfügbar bis' in page:										
+			verf = stringextract('Verfügbar bis ', ' ', page)			# Blank bis Blank
+		if len(verf) == 10:												# Verfügbar voraanstellen
+			summ = "[B]Verfügbar bis %s[/B]\n\n%s" % (verf, summ)
 		 	
 	summ = unescape(summ)			# Text speichern
 	summ = cleanhtml(summ)	
