@@ -35,7 +35,7 @@ ClearUp=util.ClearUp; repl_json_chars=util.repl_json_chars; seconds_translate=ut
 transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; ReadFavourites=util.ReadFavourites; 
 transl_doubleUTF8=util.transl_doubleUTF8; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio;
 get_summary_pre=util.get_summary_pre; get_playlist_img=util.get_playlist_img;
-check_DataStores=util.check_DataStores;
+check_DataStores=util.check_DataStores; get_startsender=util.get_startsender
 
 
 import resources.lib.updater 			as updater		
@@ -47,8 +47,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.4.8'		 
-VDATE = '14.05.2019'
+VERSION =  '1.5.0'		 
+VDATE = '17.05.2019'
 
 # 
 #	
@@ -1086,7 +1086,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 			subline = cleanhtml(subline); subline = unescape(subline);
 			subline=subline.replace('&', '+') 
 			sender = (title.replace('Livestream', '').replace('im', '')).strip()
-			playlist_img, href = get_playlist_img(hrefsender=sender) # Icon, link aus livesenderTV.xml holen
+			playlist_img, href = get_playlist_img(hrefsender=sender) # Icon, link aus livesenderTV.xml holen			
 			
 		tagline = stringextract('class="dachzeile">', '<', s)	
 		duration= stringextract('duration">', '</div>', s)
@@ -1108,9 +1108,12 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 		subline=repl_json_chars(subline) 	# dto.
 		
 		PLog("title: " + title);  PLog(tagline); PLog(href); PLog(multi);		
-			
-		if	ID == 'Livestreams':	# -> SenderLiveResolution wie SenderLiveListe aus Hauptmenü
-			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s'}" % (href, title, img, subline)
+		
+		# -> SenderLiveResolution wie SenderLiveListe aus Hauptmenü, Fallback zum Classic-Senderlink
+		#		bei Fehlschlag	
+		if	ID == 'Livestreams':	
+			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Startsender': 'true'}" %\
+				(href, title, img, subline)
 			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
 				thumb=img, fparams=fparams, summary=subline, mediatype=mediatype)					
 		else:	
@@ -1285,7 +1288,7 @@ def SearchARDundZDF(title, query='', pagenr=''):
 	
 	query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
 	query_lable = urllib2.unquote(query_lable)
-	if searchResult == '0' or 'class="artdirect"' not in page:			# Sprung hierher
+	if searchResult == '0' or 'class="artdirect " >' not in page:		# Sprung hierher
 		label = "ZDF | nichts gefunden zu: %s | neue Suche" % query_lable
 		title="Suche in ARD und ZDF"
 		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
@@ -3763,11 +3766,54 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			
 ###################################################################################################
 # Auswahl der Auflösungstufen des Livesenders - Aufruf: SenderLiveListe + ARDStartRubrik
+#	Herkunft Links: livesenderTV.xml (dto. bei Aufruf durch ARDStartRubrik).
 #	descr: tagline | summary
-def SenderLiveResolution(path, title, thumb, descr, Merk='false'):
+#	Startsender ('' oder true): Aufrufer ARDStartRubrik, ARDStartSingle (ARD-Neu)
+# 16.05.2019 Fallback hinzugefügt: Link zum Classic-Sender auf Webseite
+#	mögl. Alternative: Senderlinks aus ARD-Neu (s. Watchdog_TV-Live.py).	
+#	
+def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''):
 	PLog('SenderLiveResolution:')
 	PLog(SETTINGS.getSetting('pref_video_direct'))
 	PLog(SETTINGS.getSetting('pref_show_resolution'))
+	PLog(title)
+	title = UtfToStr(title)
+
+	page, msg = get_page(path=path)					# Verfügbarkeit des Streams testen
+	if page == '':									# Fallback zum Classic-Sendername in Startsender
+		PLog('Fallback Streams ARD-Start')
+		path = 'https://classic.ardmediathek.de/tv/live'
+		page, msg = get_page(path=path)	
+		content = blockextract('class="teaser"', page)
+		if len(content) > 0:
+			playlist = RLoad(PLAYLIST)
+			xml_sender = blockextract('<item>', playlist)	# Blöcke Sender	
+			sender_url=''; classicsender=''
+			for sender in xml_sender:						# Classic-Sendername ermitteln
+				if Startsender:
+					title_sender = stringextract('<hrefsender>', '</hrefsender>', sender)
+					title_sender = title_sender.strip()
+				else:
+					title_sender = stringextract('<title>', '</title>', sender)
+				# PLog('title: %s, title_sender: %s'  % (title, title_sender))
+				# Bsp. title: Deutsche Welle <DW> - Die mediale Stimme Deutschlands
+				if title_sender:
+					if title_sender.upper() in title.upper():	# Classic-Sendername aus Playlist
+						classicsender = stringextract('<hrefsender>', '</hrefsender>', sender)
+						PLog('classicsender: ' + classicsender)
+						break			
+											
+			for cont in content:							# Abgleich mit Classic-TV-Live
+				startsender = stringextract('headline">', '</', cont)
+				if classicsender in startsender:				# Classic-Sendername in Startsender?
+					sender_url = BASE_URL + stringextract('href="', '"', cont)
+					PLog('sender_url: ' + sender_url)			# Link des Classic-Senders
+					break
+
+			if sender_url:		# z.B. //classic.ardmediathek.de/tv/Deutsche-Welle/live?kanal=5876
+				path = get_startsender(hrefsender=sender_url)	# Modul util	
+				PLog('path: ' + path)				
+		
 
 	# direkter Sprung hier erforderlich, da sonst der Player mit dem Verz. SenderLiveResolution
 	#	startet + fehlschlägt.
@@ -3849,7 +3895,7 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 	
 	page, msg = get_page(path=url_m3u8)			# 1. Inhalt m3u8 laden	
 	PLog(len(page))
-	if page == '':
+	if page == '':								# Fehlschlag
 		msg1 = msg1 + "geladen werden." 
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li
@@ -4173,7 +4219,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	li = home(li, ID='ZDF')										# Home-Button
 
 	# Der Loader in ZDF-Suche liefert weitere hrefs, auch wenn weitere Ergebnisse fehlen
-	if searchResult == '0' or 'class="artdirect"' not in page:
+	if searchResult == '0' or 'class="artdirect " >' not in page:
 		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
 		msg1 = 'Keine Ergebnisse (mehr) zu: %s' % query  
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
@@ -4287,7 +4333,7 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
 
-	if 	'class="artdirect"' not in page:		# Vorprüfung auf einz. Videobeitrag	
+	if 	'class="artdirect " >' not in page:		# Vorprüfung auf einz. Videobeitrag	
 		if page.find('class="b-playerbox') > 0 and page.find('class="item-caption') > 0:
 			ZDF_getVideoSources(url=url, title=title, thumb=thumb, tagline=tagline)
 		else:
@@ -4650,7 +4696,7 @@ def ZDFSportLive(title):
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
 			fparams=fparams, summary=descr,  mediatype=mediatype)
 		
-	content =  blockextract('class="artdirect">', page)
+	content =  blockextract('class="artdirect " >', page)
 	PLog('content: ' + str(len(content)))	
 	
 	mediatype='' 		
@@ -4751,7 +4797,7 @@ def ZDFSportLiveSingle(title, path, img):
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
 		fparams=fparams, tagline=descr_display, mediatype=mediatype)
 		
-	# 2. restl. Videos holen (class="artdirect")
+	# 2. restl. Videos holen (class="artdirect " >)
 	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=ref_path, ID='ZDFSportLive')	
 	
 	xbmcplugin.endOfDirectory(HANDLE)
@@ -4790,7 +4836,7 @@ def International(title):
 #	 
 # 	ID='Search' od. 'VERPASST' - Abweichungen zu Rubriken + A-Z
 #	Seiten mit Einzelvideos werden hier nicht erfasst - ev. vor
-#		Aufruf Vorprüfung 'class="artdirect"' durchführen
+#		Aufruf Vorprüfung 'class="artdirect " >' durchführen
 
 def ZDF_get_content(li, page, ref_path, ID=None):	
 	PLog('ZDF_get_content:'); PLog(ID); PLog(ref_path)					
@@ -4812,12 +4858,12 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 	page_title = UtfToStr(page_title)
 	page_title = page_title.strip()
 	msg_notfound = ''
-	if 'Leider kein Video verf' in page:					# Verfügbarkeit vor class="artdirect"
+	if 'Leider kein Video verf' in page:					# Verfügbarkeit vor class="artdirect " >
 		msg_notfound = 'Leider kein Video verfügbar'		# z.B. Ausblick auf Sendung
 		if page_title:
 			msg_notfound = 'Leider kein Video verfügbar zu: ' + page_title
 						
-	content =  blockextract('class="artdirect"', page)
+	content =  blockextract('class="artdirect " >', page)
 	if ID == 'NeuInMediathek':									# letztes Element entfernen (Verweis Sendung verpasst)
 		content.pop()	
 	page_cnt = len(content)

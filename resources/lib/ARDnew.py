@@ -519,7 +519,7 @@ def ARDStartSingle(path, title, duration, ID=''):
 		#if playlist_img:
 		#	img = playlist_img
 		#	PLog(title); PLog(hrefsender); PLog(img)
-		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summ)
+		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summ, Startsender='true')
 	
 	mediatype='							'# Kennz. Video für Sofortstart 
 	if SETTINGS.getSetting('pref_video_direct') == 'true':

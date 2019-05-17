@@ -1162,6 +1162,20 @@ def get_playlist_img(hrefsender):
 	PLog(playlist_img); PLog(link); 
 	return playlist_img, link
 
+#---------------------------------------------------------------------------------------------------
+# Link für TV-Livesender aus ARD-Start holen - z.Z. nur Classic
+#	Aufrufer: ARDStartRubrik, SenderLiveResolution (Fallback für
+#		 Link in livesenderTV.xml)
+def get_startsender(hrefsender):
+	PLog('get_startsender: ' + hrefsender); 
+	page, msg = get_page(path=hrefsender)	
+	config_id =  stringextract('/play/config/', '&', page)
+	# Altern.: /play/media/35283076?devicetype=phone&features=hls (weniger Inhalt)
+	json_url = BASE_URL + '/play/config/%s?devicetype=phone' % config_id
+	
+	page, msg = get_page(path=json_url)
+	href = 'https:' + stringextract('clipUrl":"', '"', page)	
+	return href
 	
 ####################################################################################################
 # PlayVideo aktuell 23.03.2019: 

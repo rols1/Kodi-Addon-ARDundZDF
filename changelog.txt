@@ -8,6 +8,19 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+17.05.2019	1.5.0	ZDF (ZDF_Sendungen, ZDF_get_content, ZDF_Search, SearchARDundZDF, SportLive): 
+			Anpassung nach Änderung der Webseite (Blockbildung via 'class="artdirect " >' 
+			statt 'class="artdirect">').
+	
+not on Github	1.4.9	SenderLiveResolution (TV-Livesender): Fallback zum Classic-Senderlink in 
+			Startsender bei Ausfall	des Links in livesenderTV.xml.
+			livesenderTV.xml: Austausch Link "Das Erste" gegen Classic-Senderlink.
+			Neue Funktion get_startsender (Modul util): ermittelt Link für 
+			Classic-Sendername.
+			SenderLiveResolution: zusätzl. Param. "Startsender" für Aufruf aus ARDStartRubrik
+			und ARDStartSingle (ARD-Neu).
+			Lokal: zusätzl. Watchdog "Watchdog_TV-Live.py" für Senderlinks (1 x tägl.).  
+
 14.05.2019	1.4.8	Settings - Umstellung "Text input" auf "Browser dialog": Pfade, Verzeichnisse,
 			Curl-/Wget-PRG.
 			Beitrags-Filter: Option in Settings hinzugefügt (Hörfassungen).

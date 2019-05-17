@@ -4,7 +4,7 @@
   <genre>TV</genre>
   <description>Livestreams http://www.ardmediathek.de/tv/live</description>
   <thumbnail></thumbnail>
-   <date>26.04.2019 rols1</date>
+   <date>16.05.2019 rols1</date>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
   <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ Button:Alle Sender</info>
   <info2>hrefsender enthält Sendernamen passend zu www.ardmediathek.de (ARD-Neu)</info2>
@@ -18,7 +18,7 @@
 	<item>
 		<title>Das Erste</title>
 		<hrefsender>Das Erste</hrefsender>
-		<link>https://mcdn.daserste.de/daserste/de/master.m3u8</link>
+		<link>https://daserstehdut-lh.akamaihd.net/i/daserstehd_ut_de@629193/master.m3u8</link>
 		<thumbnail>tv-das-erste.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>ARD</EPG_ID>
@@ -149,7 +149,7 @@
 	<item>
 		<title>Deutsche Welle</title>
 		<hrefsender>Deutsche Welle</hrefsender>
-		<link>http://dwstream6-lh.akamaihd.net/i/dwstream6_live@124409/master.m3u8</link>
+		<link>https://dwstream72-lh.akamaihd.net/i/dwstream72_live@123556/master.m3u8</link>
 		<thumbnail>tv-deutsche-welle.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>DWTV</EPG_ID>
@@ -166,7 +166,7 @@
 <items>
 	<item>
 		<title>BR Fernsehen-Nord</title>
-		<hrefsender>BR</hrefsender>
+		<hrefsender>BR Fernsehen Nord</hrefsender>
 		<link>http://brlive-lh.akamaihd.net/i/bfsnord_germany@119898/master.m3u8</link>
 		<thumbnail>tv-br.png</thumbnail>
 		<genre>TV</genre>
