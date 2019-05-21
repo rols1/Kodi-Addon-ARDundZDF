@@ -8,8 +8,33 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+21.05.2019	1.5.3	ZDFStart: Auslagerung Cluster Rubriken (wg. zusätzl. Clusterung).
+			Menü ZDF + Funktion NeuInMediathek: Code entfernt - in ZDFStart enthalten.
+			ZDFStart: 'Alles auf einen Blick' umgebogen auf ZDF-Livestreams (ZDFStartLive),
+			restl. Inhalte weitgehend außerhalb abgedeckt (A-Z, Verpasst,..).
+			Neue Funktion ZDFStartLive: Auswertung der Seite https://www.zdf.de/live-tv.
+			Neue Funktion ZDFStartLiveSingle: Auswertung einzelner Livestream.
+			ZDF_get_content: Anpassung summary + tagline (Doppler-Behandlung).
+			Main_ARD (Classic): zusätzl. Menü Rubriken (wie ZDF). 
+			Umbenennung Rubriken -> ZDFRubriken, RubrikSingle -> ZDFRubrikSingle.
+
+not on Github	1.5.2	Neue Funktion ZDFStart (Startseite ZDF): Liste der Highlights hier, Liste der
+			Cluster-Beiträge in RubrikSingle.
+			ZDF_get_content: Satz-Begrenzung </article> abhängig gemacht von Abwesenheit eines
+			plusbar-Bereichs.
+			ZDF_get_content: Auswertung duration angepasst für ZDFStart.
+			ZDF_get_content: Alternativen für img-Auswertung entfernt (inzw. obsolet).
+			RubrikSingle: Ergänzung der Kopf-Doku.
+
+not on Github	1.5.1	ARDSport: Tab Live hinzugefügt (Seite https://www.sportschau.de/ticker/index.html).
+			ARDSport: Livestreams MDR+ und WDR/ARD Event hinzugefügt.
+			ARDSportVideo: Fix Url-Handling (mit/ohne führendes http).
+			ARDSportPanel: Berücksichtigung von nur-Audio-Beiträgen.
+			SenderLiveListe: endOfDirectory bei Einzelaufruf unterdrückt (sonst 
+			invalid handle beim Listing).
+				
 17.05.2019	1.5.0	ZDF (ZDF_Sendungen, ZDF_get_content, ZDF_Search, SearchARDundZDF, SportLive): 
-			Anpassung nach Änderung der Webseite (Blockbildung via 'class="artdirect " >' 
+			Anpassung nach Änderung der Webseite (Blockbildung via 'class="teaser-cat ">' 
 			statt 'class="artdirect">').
 	
 not on Github	1.4.9	SenderLiveResolution (TV-Livesender): Fallback zum Classic-Senderlink in 

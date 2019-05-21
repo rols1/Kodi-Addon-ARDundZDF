@@ -60,7 +60,6 @@ PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
-PLog("ICON: " + ICON)
 
 ARDStartCacheTime = 300						# 5 Min.	
 USERDATA		= xbmc.translatePath("special://userdata")
