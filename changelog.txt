@@ -7,7 +7,10 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
-
+24.05.2019	1.5.4	ZDF Rubriken (ZDFRubrikSingle): Pfad-Auswertung in Nachlade-Beiträge  
+			unabhängig gemacht von json-Listen außerhalb des Datensatzes 
+			(Pfad: ZDF_BASE+NodePath+sophId). 
+			
 21.05.2019	1.5.3	ZDFStart: Auslagerung Cluster Rubriken (wg. zusätzl. Clusterung).
 			Menü ZDF + Funktion NeuInMediathek: Code entfernt - in ZDFStart enthalten.
 			ZDFStart: 'Alles auf einen Blick' umgebogen auf ZDF-Livestreams (ZDFStartLive),

@@ -47,8 +47,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.3'		 
-VDATE = '21.05.2019'
+VERSION =  '1.5.4'		 
+VDATE = '24.05.2019'
 
 # 
 #	
@@ -4593,7 +4593,7 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 		msg2, msg3 = msg.split('|')
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
-	
+
 	cluster =  blockextract('class="cluster-title"', page)
 	PLog(len(cluster))
 	if clus_title:								# Beiträge zu gesuchtem Cluster auswerten
@@ -4617,17 +4617,23 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 				title 	= stringextract('teaserHeadline":"', ',', rec)	# kann " enthalten
 				title 	= title.replace('"', '')
 				sophId 	= stringextract('"sophoraId":"', '"', rec)
-				path 	= ZDF_get_rubrikpath(page, sophId)		# in json-Listen suchen
+				
+				# ZDF_get_rubrikpath z.Z. nicht benötigt - NodePath + sophId reicht 
+				# path 	= ZDF_get_rubrikpath(page, sophId)		# in json-Listen außerhalb suchen
+				NodePath =  stringextract('"contextStructureNodePath":"', '"', rec)
+				PLog("NodePath: " + NodePath); PLog(sophId)
 				if path == '':
 					continue
+				path	= "https://www.zdf.de%s/%s.html" % (NodePath, sophId)
 		
 				lable 	= stringextract('manualLabel":"', '"', rec)	
 				descr 	= stringextract('teasertext":"', '"', rec)	
 				descr = "%s | %s:\n\n%s" % (clustertitle, title, descr)
-
+								
 			else:
 				img_src =  stringextract('data-srcset="', ' ', rec)	
 				href = 	stringextract('<a href', '</a>', rec)	   # href + Titel	
+				PLog("href: " + href)
 				path = stringextract('="', '"', href)
 				if path == '' or 'skiplinks' in path:
 					continue
@@ -4650,6 +4656,11 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 					lable = lable.ljust(11) + "| %s" % title
 				else:
 					lable = "%s | %s" % (title, lable)
+				
+					
+			descr=UtfToStr(descr); clustertitle=UtfToStr(clustertitle); title=UtfToStr(title);	
+			lable=UtfToStr(lable);
+			 		
 			title = repl_json_chars(title)
 			lable = unescape(lable)
 			descr = unescape(descr)
@@ -4683,9 +4694,9 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 
 #-------------------------
 # ermittelt html-Pfad in json-Listen für ZDFRubrikSingle
-#	 sophId s.o. 
+#	 z.Z. nicht benötigt s.o. (ZDF_BASE+NodePath+sophId)
 def ZDF_get_rubrikpath(page, sophId):
-	PLog('ZDF_get_rubrikpath:')
+	PLog('ZDF_get_rubrikpath: ' + sophId)
 	path=''
 	if sophId == '':	# Sicherung
 		return path
@@ -4696,7 +4707,7 @@ def ZDF_get_rubrikpath(page, sophId):
 		if sophId in path:
 			PLog("path: " + path)
 			return path	
-	return	path 
+	return	'' 
 ####################################################################################################
 def MeistGesehen(name):							# ZDF-Bereich, Beiträge unbegrenzt
 	PLog('MeistGesehen'); 
