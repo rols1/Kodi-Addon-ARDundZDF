@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+27.05.2019	1.5.5	make_newDataDir (Modul util): das Datenverzeichnis wird angelegt, auch wenn
+			das alte interne Datenverzeichnis fehlt.
+				
 24.05.2019	1.5.4	ZDF Rubriken (ZDFRubrikSingle): Pfad-Auswertung in Nachlade-Beiträgen  
 			unabhängig gemacht von json-Listen außerhalb des Datensatzes 
 			(Pfad: ZDF_BASE+NodePath+sophId). 

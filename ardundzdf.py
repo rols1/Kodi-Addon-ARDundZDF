@@ -47,8 +47,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.4'		 
-VDATE = '24.05.2019'
+VERSION =  '1.5.5'		 
+VDATE = '27.05.2019'
 
 # 
 #	
@@ -4691,6 +4691,7 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 
 	#if offset:	Code entfernt, in Kodi nicht nutzbar
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+
 
 #-------------------------
 # ermittelt html-Pfad in json-Listen für ZDFRubrikSingle

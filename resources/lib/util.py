@@ -159,7 +159,9 @@ def check_DataStores():
 		else:									# altes Verz. fehlt (ab V1.4.1 OK, gelöscht)
 			ret = make_newDataDir()				# neues leeres Verz. anlegen
 			if ret == True:						# ohne Dialog
-				PLog('neues leeres Datenverzeichnis erfolgreich angelegt')
+				msg1 = 'neues leeres Datenverzeichnis erfolgreich angelegt'
+				msg2=''; msg3=''
+				PLog(msg1)
 			else:
 				msg1 = "Fehler: %s" % ret
 				msg2 = 'Bitte Datenverzeichnis manuell kopieren / erzeugen'
@@ -242,8 +244,17 @@ def  make_newDataDir():
 	PLog('make_newDataDir:')
 	store_Dirs = ["Dict", "slides", "subtitles", "Inhaltstexte", 
 				"merkliste"]
+				
+	if os.path.isdir(ADDON_DATA) == False:		# erzeugen, falls noch nicht vorh.
+		try:  
+			os.mkdir(ADDON_DATA)
+		except Exception as exception:
+			ok=False
+			PLog(str(exception))
+			return str(exception)		
+				
 	ok=True
-	for Dir in store_Dirs:
+	for Dir in store_Dirs:						# Unterverz. erzeugen
 		Dir_path = os.path.join("%s/%s") % (ADDON_DATA, Dir)	
 		try:  
 			os.mkdir(Dir_path)
