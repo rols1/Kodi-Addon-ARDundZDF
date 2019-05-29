@@ -18,7 +18,7 @@
 	<item>
 		<title>Das Erste</title>
 		<hrefsender>Das Erste</hrefsender>
-		<link>https://daserstehdut-lh.akamaihd.net/i/daserstehd_ut_de@629193/master.m3u8</link>
+		<link>https://mcdn.daserste.de/daserste/de/master.m3u8</link>
 		<thumbnail>tv-das-erste.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>ARD</EPG_ID>

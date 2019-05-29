@@ -35,7 +35,7 @@ ClearUp=util.ClearUp; repl_json_chars=util.repl_json_chars; seconds_translate=ut
 transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; ReadFavourites=util.ReadFavourites; 
 transl_doubleUTF8=util.transl_doubleUTF8; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio;
 get_summary_pre=util.get_summary_pre; get_playlist_img=util.get_playlist_img;
-check_DataStores=util.check_DataStores; get_startsender=util.get_startsender
+check_DataStores=util.check_DataStores; get_startsender=util.get_startsender; transl_json=util.transl_json;
 
 
 import resources.lib.updater 			as updater		
@@ -47,8 +47,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.5'		 
-VDATE = '27.05.2019'
+VERSION =  '1.5.8'		 
+VDATE = '29.05.2019'
 
 # 
 #	
@@ -678,8 +678,10 @@ def ARDSportPanel(title, path, img):
 		if title == '':
 			continue
 		
-		if 'Hörfassung' in title:									# Filter
+		if 'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
 			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+				continue		
+			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
 				continue		
 		
 		PLog('Satz:')
@@ -1163,9 +1165,11 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 						mediatype='video'
 						Plot = "%s||||%s" % (subline, summ)				# für Sofortstart/Plot in SingleSendung
 						
-				if 'Hörfassung' in title or 'Hörfassung' in subline:# Filter
+				if 'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
 					if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
-						continue				
+						continue		
+					if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
+						continue		
 						
 				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
 					% (urllib2.quote(path), urllib2.quote(title), urllib2.quote(img), 
@@ -1679,10 +1683,11 @@ def BarriereArmARD(name):		#
 	query = urllib2.quote(title, "utf-8")
 	path = BASE_URL + ARD_Suche	%   urllib2.quote('Hörfassungen', "utf-8")
 	
-	if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+	if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true' or \
+		SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
 		msg1 = 'Hinweis:'
-		msg2 = 'Filter für Hörfassungen ist eingeschaltet!'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")
+		msg2 = 'Filter für Hörfassungen oder  Audiodeskription ist eingeschaltet!'
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")		
 	
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 	fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Suche', 'ID': 'ARD'}" \
@@ -1905,8 +1910,11 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 		subtitle = send_subtitle[i]
 		subtitle = UtfToStr(subtitle)
 		
-		if 'Hörfassung' in headline or 'Hörfassung' in subtitle:		# Filter
+		if 'Hörfassung' in headline or 'Hörfassung' in subtitle:			# Filter
 			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+				continue
+		if 'Audiodeskription' in headline or 'Audiodeskription' in subtitle:# Filter
+			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
 				continue
 			
 		if next_cbKey == 'PageControl' and subtitle:	# A-Z: subtitle enthält Sender
@@ -4235,6 +4243,7 @@ def ZDFStart(title, show_stage=''):
 	stage = stringextract('class="sb-page">', 'data-module="clustersort"', page) # cut Stage 
 	
 	# 2. Durchlauf: Stage listen
+	#	Inhaltstext im Voraus laden" in ZDF_get_content
 	if show_stage:												# Liste Highlights / 
 		li, page_cnt = ZDF_get_content(li=li, page=stage, ref_path=path, ID='ZDFStage')	
 		xbmcplugin.endOfDirectory(HANDLE)						# Ende 2. Durchlauf	
@@ -4257,7 +4266,7 @@ def ZDFStart(title, show_stage=''):
 		PLog(href); PLog(title); PLog(thumb); 
 
 		# "Inhaltstext im Voraus laden" in ZDF_get_content (via ZDFRubrikSingle ->
-		#	ZDF_Sendungen)
+		#	ZDF_Sendungen) - 
 		if title == 'Rubriken':
 			fparams="&fparams={'name': 'Rubriken'}"
 			addDir(li=li, label="Rubriken", action="dirList", dirID="ZDFRubriken", fanart=R(ICON_ZDF_RUBRIKEN), 
@@ -4578,6 +4587,9 @@ def ZDFRubriken(name):								# ZDF-Bereich, Liste der Rubriken
 # 	ZDF_Sendungen macht eine Vorprüfung auf Einzelvideos vor Aufruf von
 #		ZDF_get_content. Einzelvideos -> ZDF_getVideoSources
 #
+#	Hinw.: "Verfügbar bis" bisher nicht in Rubrikseiten gefunden (wie
+#		teaserElement, s. get_teaserElement)
+#
 def ZDFRubrikSingle(title, path, clus_title=''):							
 	PLog('ZDFRubrikSingle:'); PLog(title); PLog(clus_title)
 	path_org = path
@@ -4604,32 +4616,20 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 				break
 		content =  blockextract('class="b-cluster-teaser', clus) # Beiträge des Clusters
 		for rec in content:	
+			title='';  clustertitle=''; lable=''
 			if 'class="loader"' in rec:							# Nachlade-Beiträge, escaped
 				rec = unescape(rec)
 				PLog('loader_Beitrag')
 				# PLog(rec); 	# bei Bedarf
-				img_src = stringextract('teaserImageId":"', '"', rec) # kann leer sein
-				if img_src == '':
-					img_src = R('icon-bild-fehlt.png')
-				else:		
-					img_src = 'https://www.zdf.de/assets/' + img_src +	'~384x216'
-				# Pfadbestandteile Auswertung chrome:
-				title 	= stringextract('teaserHeadline":"', ',', rec)	# kann " enthalten
-				title 	= title.replace('"', '')
-				sophId 	= stringextract('"sophoraId":"', '"', rec)
+				#	Auswertung + Rückgabe aller  Bestandteile
+				sophId,path,title,descr,img_src,dauer,tag,NodePath = get_teaserElement(rec)
+				lable = title
 				
-				# ZDF_get_rubrikpath z.Z. nicht benötigt - NodePath + sophId reicht 
-				# path 	= ZDF_get_rubrikpath(page, sophId)		# in json-Listen außerhalb suchen
-				NodePath =  stringextract('"contextStructureNodePath":"', '"', rec)
-				PLog("NodePath: " + NodePath); PLog(sophId)
+				if img_src == '':									# Fallback
+					img_src = R('icon-bild-fehlt.png')
 				if path == '':
-					continue
-				path	= "https://www.zdf.de%s/%s.html" % (NodePath, sophId)
-		
-				lable 	= stringextract('manualLabel":"', '"', rec)	
-				descr 	= stringextract('teasertext":"', '"', rec)	
-				descr = "%s | %s:\n\n%s" % (clustertitle, title, descr)
-								
+					path	= "https://www.zdf.de%s/%s.html" % (NodePath, sophId)	
+			
 			else:
 				img_src =  stringextract('data-srcset="', ' ', rec)	
 				href = 	stringextract('<a href', '</a>', rec)	   # href + Titel	
@@ -4642,22 +4642,25 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 				title = stringextract('title="', '"', href)
 				title = unescape(title)
 				
-				descr = stringextract('teaser-text" >', '</', rec)
-				descr = "%s | %s:\n\n%s" % (clustertitle, title, descr)
-				
 				lable = stringextract('teaser-label">', '</div>', rec)
 				lable = cleanhtml(lable)							# Bsp. <strong>2 Staffeln</strong>
-				
-			if lable == '':
-				lable = title
-			else:
-				
-				if 'Folgen' in lable or 'Staffeln' in lable:		# Formatierung
-					lable = lable.ljust(11) + "| %s" % title
+				if lable == '':										# label nicht in Nachlade-Beiträgen
+					lable = title
 				else:
-					lable = "%s | %s" % (title, lable)
+					if 'Folgen' in lable or 'Staffeln' in lable:		# Formatierung
+						lable = lable.ljust(11) + "| %s" % title
+					else:
+						lable = "%s | %s" % (title, lable)
+						
+				dauer	= stringextract('teaser-info">', '<', page)	
+				descr = stringextract('teaser-text" >', '</', rec)	# -> tagline + Param.
 				
-					
+			if descr and dauer:
+				descr = "%s | %s:\n\n%s" % (title, dauer, descr)
+				if clustertitle:
+					descr = "%s | %s" % (clustertitle, descr)
+				
+							
 			descr=UtfToStr(descr); clustertitle=UtfToStr(clustertitle); title=UtfToStr(title);	
 			lable=UtfToStr(lable);
 			 		
@@ -4668,13 +4671,14 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 			descr_par = ''					# n.b. in ZDF_Sendungen
 			
 			PLog('Satz:')
-			PLog(title);PLog(path);PLog(img_src);PLog(descr);
+			PLog(title);PLog(path);PLog(img_src);PLog(descr);PLog(dauer);
 			fparams="&fparams={'title': '%s', 'url': '%s', 'ID': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
 				(urllib2.quote(title),  urllib2.quote(path), 'VERPASST', urllib2.quote(descr_par),
 				urllib2.quote(img_src))
 			addDir(li=li, label=lable, action="dirList", dirID="ZDF_Sendungen", fanart=img_src, 
 				thumb=img_src, tagline=descr, fparams=fparams)
-		
+				
+
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 			
@@ -4693,6 +4697,74 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
 
+#-------------------------
+# Ersatz für javascript: Ermittlung Icon + Sendedauer
+#	die html-Seite des get_teaserElements wird aus TEXTSTORE 
+#	geladen bzw. bei www.zdf.de/teaserElement abgerufen und
+#	dann in TEXTSTORE gespeichert.
+#	Hinw.: "Verfügbar bis" nicht im teaserElement enthalten
+def get_teaserElement(rec):
+	PLog('get_teaserElement:')
+	# Reihenfolge Ersetzung: sophoraId, teaserHeadline, teasertext, filterReferenceId, 
+	#		contextStructureNodePath
+	#	vorbelegt (nicht ausgewertet):
+	#		style, mostwatched, recommended, newest, reloadTeaser, mainContent, 
+	#		sourceModuleType, highlight
+	# PLog(rec)	
+	sophoraId = stringextract('"sophoraId":"', '",', rec)
+												
+	teaserHeadline = stringextract('teaserHeadline":"', '",', rec)
+	teaserHeadline = teaserHeadline.replace('"', '')
+	teasertext = stringextract('"teasertext":"', '",', rec)
+	filterReferenceId = stringextract('filterReferenceId":"', '",', rec)
+	contextStructureNodePath = stringextract('contextStructureNodePath":"', '",', rec)
+	
+	mostwatched = stringextract('"mostwatched":"', '",', rec)
+	recommended = stringextract('"recommended":"', '",', rec)
+	newest = stringextract('"newest":"', '",', rec)
+	
+	teaserHeadline = transl_json(teaserHeadline); teasertext = transl_json(teasertext); 
+	sophId = sophoraId; title = teaserHeadline; descr = teasertext;  	# Fallback-Rückgaben
+	NodePath = contextStructureNodePath; 
+	
+	# urllib.quote_plus für Pfadslash / erf. in contextStructureNodePath
+	sophoraId = urllib.quote_plus(sophoraId); teaserHeadline = urllib.quote_plus(teaserHeadline);
+	teasertext = urllib.quote_plus(teasertext); contextStructureNodePath = urllib.quote_plus(contextStructureNodePath);
+		
+	path = "https://www.zdf.de/teaserElement?sophoraId=%s&style=m2&teaserHeadline=%s&teasertext=%s&reloadTeaser=true&filterReferenceId=%s&mainContent=false&sourceModuleType=cluster-s&highlight=false&contextStructureNodePath=%s&mostwatched=%s&recommended=%s&newest=%s" \
+	% (sophoraId, teaserHeadline,teasertext,filterReferenceId,contextStructureNodePath,mostwatched,recommended,newest)
+
+	fpath = os.path.join(TEXTSTORE, sophoraId)		# 1. teaserElement abrufen
+	PLog('fpath: ' + fpath)
+	if os.path.exists(fpath):						# Element lokal laden
+		PLog('lade lokal:') 
+		page =  RLoad(fpath, abs_path=True)	
+	else:											#  von www.zdf.de/teaserElement laden
+		page, msg = get_page(path=path)			
+		if page:									# 	und in TEXTSTORE speichern
+			msg = RSave(fpath, page)
+		
+	PLog(page[:100])
+	if page:										# 2. teaserElement auswerten
+		img_src =  stringextract('data-srcset="', ' ', page)
+		title	= stringextract('plusbar-title="', '"', page)
+		ctitle1 = stringextract('teaser-cat-category">', '<', page)  		# Bsp. Show | Bares für Rares
+		ctitle2 = stringextract('teaser-cat-brand">', '<', page)  		# 
+		tag 	= ctitle1.strip()										# -> tag
+		if ctitle2:
+			tag = "%s | %s" % (tag, ctitle2.strip())
+		path	= stringextract('plusbar-url="', '"', page)
+		if path.startswith('http') == False:
+			path = ZDF_BASE + path
+		dauer	= stringextract('teaser-info">', '<', page)	
+		desrc	= stringextract('teaser-text" >', '<', page)
+		
+		# sophId s.o.
+		return sophId, path, title, descr, img_src, dauer, tag, NodePath	
+	else:									#  Fallback-Rückgaben, Bild + Dauer leer
+		img_src=''; dauer=''; tag=''; NodePath=''
+		return sophId, path, title, descr, img_src, dauer, tag, NodePath
+	
 #-------------------------
 # ermittelt html-Pfad in json-Listen für ZDFRubrikSingle
 #	 z.Z. nicht benötigt s.o. (ZDF_BASE+NodePath+sophId)
@@ -4762,10 +4834,11 @@ def BarriereArm(title):
 		title = title.strip()
 		title = (title.replace('>', '').replace('<', ''))
 		PLog(title)
-		if 'Hörfassung' in title:					# Filter
-			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+		if 'Hörfassung' in title or 'Audiodeskription' in title:			# Filter
+			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true' or \
+				SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
 				msg1 = 'Hinweis:'
-				msg2 = 'Filter für Hörfassungen ist eingeschaltet!'
+				msg2 = 'Filter für Hörfassungen oder  Audiodeskription ist eingeschaltet!'
 				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")		
 		
 		fparams="&fparams={'path': '%s', 'title': '%s'}" % (urllib2.quote(path), urllib2.quote(title))
@@ -5224,9 +5297,11 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		tagline=repl_json_chars(tagline)					# dto.
 		
 		title = UtfToStr(title); summary = UtfToStr(summary); tagline = UtfToStr(tagline);
-		if 'Hörfassung' in title:							# Filter
+		if 'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
 			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
-				continue
+				continue		
+			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
+				continue		
 			
 		PLog('neuer Satz')
 		PLog(thumb);PLog(path);PLog(title);PLog(summary);PLog(tagline); PLog(multi);

@@ -127,123 +127,53 @@ def home(li, ID):
 #---------------------------------------------------------------- 
 #	03.04.2019 data-Verzeichnis des Addons:
 #  		Check /Initialisierung / Migration
-#	Die Funktion checkt bei jedem Aufruf des Addons das data-Verzeichnis
-#		auf Existenz. Bis Version 1.3.9  befand sich das data-Verzeichnis
-#		innerhalb des Addons., das neue außerhalb in: 
-#		../plugin.video.ardundzdf/resources/data
-#	Existiert das data-Verzeichnis beim Check nicht, wird das alte data-
-#		Verzeichnis migriert. Ein Backup wird im "special://temp"-Ordner 
-#		angelegt (data.zip).
-#		Existiert kein altes data-Verzeichnis, wird ein leeres neues
-#		angelegt.
-#	Bereinigung nach Migration:
-#		Für das alte  data-Verzeichnis ist ein Löschen im Rahmen der 
-#		Addon-Updates vorgesehen (git rm resources/data).
-#		Für das Backup data.zip ist kein Löschen vorgesehen.
+# 	27.05.2019 nur noch Check (s. Forum:
+#		www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?pageNo=23#post528768
+#	Die Funktion checkt bei jedem Aufruf des Addons data-Verzeichnis einschl. Unterverzeichnisse 
+#		auf Existenz und bei Bedarf neu an. User-Info nur noch bei Fehlern (Anzeige beschnittener 
+#		Verzeichnispfade im Kodi-Dialog nur verwirend).
 #	 
 def check_DataStores():
 	PLog('check_DataStores:')
-	OLDSTORE 		= os.path.join("%s/resources/data") % ADDON_PATH
-	OLDPATH 		= os.path.join("%s/resources") % ADDON_PATH
-				
-	#	Check / Ankündigung Migration
-	#			ohne altes data-Verzeichnis: leeres neues
-	#			data-Verzeichnis anlegen
-	#	
-	if os.path.isdir(ADDON_DATA) == False:		# Umzug durchführen
-		if os.path.isdir(OLDSTORE) == True:		# nur wenn altes Verz. existiert
-			msg1 = 'Das data-Verzeichnis des Addons muss umziehen.'
-			msg2 = 'Der Umzug erfolgt in zwei Schritten (Backup, Umzug).'
-			msg3 = '1. Schritt Backup' 
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
-		else:									# altes Verz. fehlt (ab V1.4.1 OK, gelöscht)
-			ret = make_newDataDir()				# neues leeres Verz. anlegen
-			if ret == True:						# ohne Dialog
-				msg1 = 'neues leeres Datenverzeichnis erfolgreich angelegt'
-				msg2=''; msg3=''
-				PLog(msg1)
-			else:
-				msg1 = "Fehler: %s" % ret
-				msg2 = 'Bitte Datenverzeichnis manuell kopieren / erzeugen'
-				msg3 = 'oder Kontakt zum Entwickler aufnehmen'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
-			return 	'OK - Datenverzeichnis neu angelegt (leer)'
-	else:
-		return 'OK %s '	% ADDON_DATA			# Verz. existiert - OK
-		
-	#	Backkup 
-	#	
-	if os.path.isdir(OLDSTORE) == True:			# Test auf altes Verz. / migrieren
-		try:									# 1. Backup altes Verz. 
-			os.chdir(OLDPATH)					# Verz. resources
-			fname 	= "data.zip"
-			zipf = zipfile.ZipFile(fname, 'w', zipfile.ZIP_DEFLATED)						
-			PLog(zipf)
-			getDirZipped('data', zipf)			# Verz. data in resources wird gezippt
-			zipf.close()
-			# 'data.zip' im 2. Arg. wird für overwrite benötigt (vorsorgl.)
-			shutil.move(os.path.join(fname), os.path.join(TEMP_ADDON, 'data.zip')) 	# -> ../kodi/temp
-			PLog("%s verschoben nach %s"  % (fname, TEMP_ADDON))
-			ok=True
-		except Exception as exception:
-			ok=False
-			PLog("Fehlschlag Backup: " + str(exception))
-		
-		if ok == True:
-			msg1 = 'Backup erfolgreich - angelegt in:'
-			msg2 = 	os.path.join(TEMP_ADDON, 'data.zip')
-			msg3 = '2. Schritt Umzug'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
-		else:
-			msg1 = 'Backup fehlgeschlagen - Umzug wird trotzdem  fortgesetzt.'
-			msg3 = '2. Schritt Umzug'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')									
-		
-	#	Migration
-	#	
-		try:															# 2. Umzug alt -> neu
-			# Backup-zip entpacken geht fixer als copytree
-			shutil.copy(os.path.join(TEMP_ADDON, 'data.zip'), os.path.join(USERDATA, 'data.zip'))
-			os.chdir(USERDATA)
-			fname = 'data.zip'
-			with zipfile.ZipFile(fname, "r") as ziphandle:
-				ziphandle.extractall(USERDATA)			# entpackt in -> ../userdata/data
-			os.rename(os.path.join(USERDATA, 'data'), ADDON_DATA)  # 	data -> ardundzdf_data
-			os.remove('data.zip')				# wird nicht mehr gebraucht		
-			ok=True							
-		except Exception as exception:
-			ok=False
-			PLog("Entpacken data.zip fehlgeschlagen: " + str(exception))				
-				
-		if ok == True:
-			msg1 = 'Umzug erfolgreich - neues data-Verzeichnis in:'
-			msg2 = 	ADDON_DATA
-			msg3 = 'Lösche altes data-Verzeichnis erst beim nächsten Update.'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
-			PLog(msg1); PLog(msg2);	
-		else:
-			msg1 = 'Umzug fehlgeschlagen'
-			msg2 = 'Addon erzeugt neues leeres Datenverzeichnis'
-			msg3 = 'Bitte eventuelle Fehlermeldung beachten.'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)				
-			ret = make_newDataDir()					# Fallback: neues leeres Verz. anlegen
-			if ret == True:
-				msg1 = 'neues leeres Datenverzeichnis erfolgreich angelegt'
-				msg2 = ''; msg3 = '' 
-			else:
-				msg1 = "Fehler: %s" % ret
-				msg2 = 'Bitte Datenverzeichnis manuell kopieren / erzeugen'
-				msg3 = 'oder Kontakt zum Entwickler aufnehmen'
-			PLog(msg1); PLog(msg2);	
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
-		
-	return 'Ende Initialisierung'
-#---------------------------
-# erzeugt (einmalig) neues Datenverzeichnis (ab Version 1.4.0) 
-def  make_newDataDir():
-	PLog('make_newDataDir:')
 	store_Dirs = ["Dict", "slides", "subtitles", "Inhaltstexte", 
-				"merkliste"]
+				"merkliste", "m3u8"]
+				
+	# Check 
+	#	falls ein Unterverz. fehlt, erzeugt make_newDataDir alle
+	#	Datenverz. oder einzelne fehlende Verz. neu.
+	ok=True	
+	for Dir in store_Dirs:						# Check Unterverzeichnisse
+		Dir_path = os.path.join("%s/%s") % (ADDON_DATA, Dir)
+		if os.path.isdir(Dir_path) == False:	
+			PLog('Datenverzeichnis fehlt: %s' % Dir_path)
+			ok = False
+			break
+	
+	if ok:
+		return 'OK %s '	% ADDON_DATA			# Verz. existiert - OK
+	else:
+		# neues leeres Verz. mit Unterverz. anlegen / einzelnes fehlendes 
+		#	Unterverz. anlegen 
+		ret = make_newDataDir(store_Dirs)	
+		if ret == True:						# ohne Dialog
+			msg1 = 'Datenverzeichnis angelegt - Details siehe Log'
+			msg2=''; msg3=''
+			PLog(msg1)
+			# xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)  # OK ohne User-Info
+			return 	'OK - %s' % msg1
+		else:
+			msg1 = "Fehler beim Anlegen des Datenverzeichnisses:" 
+			msg2 = ret
+			msg3 = 'Bitte Kontakt zum Entwickler aufnehmen'
+			PLog("%s\n%s" % (msg2, msg3))	# Ausgabe msg1 als exception in make_newDataDir
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			return 	'Fehler: Datenverzeichnis konnte nicht angelegt werden'
+				
+#---------------------------
+# ab Version 1.5.6
+# 	erzeugt neues leeres Datenverzeichnis oder fehlende Unterverzeichnisse
+def  make_newDataDir(store_Dirs):
+	PLog('make_newDataDir:')
 				
 	if os.path.isdir(ADDON_DATA) == False:		# erzeugen, falls noch nicht vorh.
 		try:  
@@ -256,12 +186,13 @@ def  make_newDataDir():
 	ok=True
 	for Dir in store_Dirs:						# Unterverz. erzeugen
 		Dir_path = os.path.join("%s/%s") % (ADDON_DATA, Dir)	
-		try:  
-			os.mkdir(Dir_path)
-		except Exception as exception:
-			ok=False
-			PLog(str(exception))
-			break
+		if os.path.isdir(Dir_path) == False:	
+			try:  
+				os.mkdir(Dir_path)
+			except Exception as exception:
+				ok=False
+				PLog(str(exception))
+				break
 	if ok:
 		return True
 	else:
@@ -898,6 +829,20 @@ def transl_umlaute(line):	# Umlaute übersetzen, wenn decode nicht funktioniert
 	line_ret = line_ret.replace("ö", "oe", len(line_ret))
 	line_ret = line_ret.replace("ß", "ss", len(line_ret))	
 	return line_ret
+#----------------------------------------------------------------  
+def transl_json(line):	# json-Umlaute übersetzen
+	# Vorkommen: Loader-Beiträge ZDF/3Sat (ausgewertet als Strings)
+	# Recherche Bsp.: https://www.compart.com/de/unicode/U+00BA
+	# 
+#	line = UtfToStr(line)
+	for r in (('\\u00E4', "ä"), ('\\u00C4', "Ä"), ('\u00F6', "ö")		
+		, ('\\u00C6', "Ö"), ('\\u00FC', "ü"), ('\\u00DC', 'Ü')
+		, ('\\u00DF', 'ß'), ('\\u0026', '&'), ('\\u00AB', '"')
+		, ('\\u00BB', '"')
+		, ('\xc3\xa2', '*')):	# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
+
+		line = line.replace(*r)
+	return line	
 #----------------------------------------------------------------  
 def humanbytes(B):
 	'Return the given bytes as a human friendly KB, MB, GB, or TB string'

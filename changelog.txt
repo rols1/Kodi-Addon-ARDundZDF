@@ -7,6 +7,22 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+29.05.2019	1.5.8	Beitrags-Filter: Option in Settings hinzugefügt (Audiodeskription).
+			Beitrags-Filter, Code-Anpassungen: SinglePage, ARDStartRubrik, ARDSportPanel,
+			ZDF_get_content, BarriereArm (ZDF), ARDStartRubrik (ARD-Neu).
+			TV-Livestreams: Austausch Untertitel-Stream "Das Erste" in livesenderTV.xml.
+
+not on Github	1.5.7	ZDFRubrikSingle + get_teaserElement: Nachlade-Beiträgen verfügbar gemacht
+			(Ersatz für javascript-Funktion zur Ermittlung von Icon + Sendedauer)
+			get_teaserElement: Speichern / Laden der Nachlade-Beiträgen im TEXTSTORE.
+			 	
+not on Github	1.5.6	check_DataStores (Modul util): Code für Migration entfernt (wg. Problemen mit 
+			data.zip). Funktion beschränkt auf Check + Anlegen des data-Verzeichnisses
+			(einschl. Unterverzeichnisse).
+			DataStores: OK-Meldung nur noch im Log, Fehler-Meldung auf Entwickler-Kontakt
+			beschränkt (Anzeige beschnittener Verzeichnispfade nur verwirend). 
+			make_newDataDir: fehlendes Unterverz. m3u8 hinzugefügt.
+	
 27.05.2019	1.5.5	make_newDataDir (Modul util): das Datenverzeichnis wird angelegt, auch wenn
 			das alte interne Datenverzeichnis fehlt.
 				

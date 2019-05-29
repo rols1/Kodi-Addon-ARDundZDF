@@ -422,9 +422,11 @@ def ARDStartRubrik(path, title, widgetID='', ID=''):
 				duration = "Sender: %s" % (pubServ)
 				
 		title=UtfToStr(title); 
-		if 'Hörfassung' in title:						# Filter
+		if 'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
 			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
-				continue
+				continue		
+			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
+				continue		
 
 		if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
 			summ = get_summary_pre(href, 'ARDnew')

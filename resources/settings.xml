@@ -55,6 +55,7 @@
 
  <category label=" Beiträge filtern">
   	<setting label="Titel enthält >Hörfassungen<" type="bool" id="pref_filter_hoerfassung" default="false"/>
+  	<setting label="Titel enthält >Audiodeskription<" type="bool" id="pref_filter_audiodeskription" default="false"/>
  </category>
 </settings>
 
