@@ -288,7 +288,7 @@
 	<item>
 		<title>SWR Fernsehen Baden-Württemberg</title>
 		<hrefsender>SWR</hrefsender>
-		<link>https://swrbw-lh.akamaihd.net/i/swrbw_live@196738/master.m3u8</link>
+		<link>https://swrbwhls-i.akamaihd.net/hls/live/667638/swrbwd/master.m3u8</link>
 		<thumbnail>tv-swr.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>SWR</EPG_ID>

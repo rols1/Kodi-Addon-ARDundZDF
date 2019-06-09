@@ -20,22 +20,21 @@ import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
 import datetime, time
 import json				# json -> Textstrings
 
-# Addonmodule + Funktionsziele
+# Addonmodule + Funktionsziele (util_imports.py)
 import resources.lib.util as util
-PLog=util.PLog;  home=util.home;  Dict=util.Dict;  name=util.name; 
-UtfToStr=util.UtfToStr;  addDir=util.addDir;  get_page=util.get_page; 
-img_urlScheme=util.img_urlScheme;  R=util.R;  RLoad=util.RLoad;  RSave=util.RSave; 
-GetAttribute=util.GetAttribute;  CalculateDuration=util.CalculateDuration;  
-teilstring=util.teilstring; repl_char=util.repl_char;  mystrip=util.mystrip; 
-DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract;  blockextract=util.blockextract; 
-teilstring=util.teilstring;  repl_dop=util.repl_dop; cleanhtml=util.cleanhtml;  decode_url=util.decode_url;  
-unescape=util.unescape; make_filenames=util.make_filenames; transl_umlaute=util.transl_umlaute;  
-humanbytes=util.humanbytes;  time_translate=util.time_translate; get_keyboard_input=util.get_keyboard_input; 
-ClearUp=util.ClearUp; repl_json_chars=util.repl_json_chars; seconds_translate=util.seconds_translate;
-transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; ReadFavourites=util.ReadFavourites; 
-transl_doubleUTF8=util.transl_doubleUTF8; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio;
-get_summary_pre=util.get_summary_pre; get_playlist_img=util.get_playlist_img;
-check_DataStores=util.check_DataStores; get_startsender=util.get_startsender; transl_json=util.transl_json;
+PLog=util.PLog; home=util.home; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir; 
+getDirZipped=util.getDirZipped; Dict=util.Dict; name=util.name; ClearUp=util.ClearUp; 
+UtfToStr=util.UtfToStr; addDir=util.addDir; get_page=util.get_page; img_urlScheme=util.img_urlScheme; 
+R=util.R; RLoad=util.RLoad; RSave=util.RSave; GetAttribute=util.GetAttribute; repl_dop=util.repl_dop; 
+repl_char=util.repl_char; repl_json_chars=util.repl_json_chars; mystrip=util.mystrip; 
+DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract; blockextract=util.blockextract; 
+teilstring=util.teilstring; cleanhtml=util.cleanhtml; decode_url=util.decode_url; 
+unescape=util.unescape; transl_doubleUTF8=util.transl_doubleUTF8; make_filenames=util.make_filenames; 
+transl_umlaute=util.transl_umlaute; transl_json=util.transl_json; humanbytes=util.humanbytes; 
+CalculateDuration=util.CalculateDuration; time_translate=util.time_translate; seconds_translate=util.seconds_translate; 
+get_keyboard_input=util.get_keyboard_input; transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; 
+ReadFavourites=util.ReadFavourites; get_summary_pre=util.get_summary_pre; get_playlist_img=util.get_playlist_img; 
+get_startsender=util.get_startsender; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio; 
 
 
 import resources.lib.updater 			as updater		
@@ -47,8 +46,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.8'		 
-VDATE = '29.05.2019'
+VERSION =  '1.6.1'		 
+VDATE = '08.06.2019'
 
 # 
 #	
@@ -5226,7 +5225,9 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		if duration == '':
 			PLog("Videolänge:")
 			duration = stringextract('Videolänge:', 'min', rec) 	# Länge - 2. Variante bzw. fehlend
-			duration = "%s min" % mystrip(duration) 		
+			duration = "%s min" % mystrip(duration) 
+		if 	'<strong>Livestream</strong>' in rec:
+			duration = '[COLOR red]Livestream[/COLOR]'	
 		PLog('duration: ' + duration);
 		
 		pic_cnt = stringextract('Anzahl Bilder:', '<dt class', rec)	# Bilderzahl bei Bilderserien
@@ -5848,8 +5849,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, tagline='', summary='', 
 			line3 = 'Fehler: %s'	% (msg)
 			xbmcgui.Dialog().ok(ADDON_NAME, line1, line2, line3)
 			return li			
-	else:																	# lokale Datei								
-		playlist = RLoad('/m3u8/%s' % url_m3u8) 
+	else:																	# lokale Datei	
+		fname =  os.path.join(M3U8STORE, url_m3u8) 
+		playlist = RLoad(fname, abs_path=True)					
 	 
 	PLog('playlist: ' + playlist[:100])		# bei Bedarf
 	lines = playlist.splitlines()

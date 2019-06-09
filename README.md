@@ -20,19 +20,21 @@ direkt: rols1@gmx.de
 Funktionen: 
 ===================
 
-#### ARD Mediathek:  
+#### ARD Mediathek (Classic-Version):  
 - Suche nach Sendungen
-- Sendung Verpasst (Sendungen der letzten 7 Tage)
+- Startseite (wie Webseite)
+- Sendung Verpasst 
 - Sendungen A-Z
-- Filme
-- Dokus
-- Serien
-- Themen
 - Rubriken
-- MeistGesehen
-- Neueste Videos
-- am besten bewertet
-- Barrierearm (Hörfassung)
+- ARD Sportschau
+- Barrierearm
+
+#### ARD Mediathek (neue Version):  
+- Suche nach Sendungen
+- Startseite (wie Webseite)
+- Sendung Verpasst
+- Sendungen A-Z
+- Senderwahl
 
 #### ZDF Mediathek: 
 - Suche nach Sendungen

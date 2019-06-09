@@ -7,13 +7,35 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+08.06.2019	1.6.1	ARDnew - Auswertung ARD-Konzept AutoCompilationWidget (Rubriken der Startseite):
+			neue Funktionen ARDCompilation + get_comp_content (Seite), get_compilation
+			(Compilation-Parameter).
+			ARDnew: import re für timeline ARDVerpasstContent.
+			ARDnew: Vorschaltung Senderwahl bei Voreinstellung “ARD-Alle”, Icon "Bild fehlt"
+			ersetzt durch Icon DIR_FOLDER (keine Bilder auf Website).
+			Parseplaylist: Fix Laden lokaler m3u8-Datei (M3U8STORE statt Addon-Pfad).	
+
+not on Github	1.6.0	ARDStartSingle: erweitert um Auswertung  zusätzl. Videos zur Sendung
+			("Mehr zur Sendung"), rote Markierung für die Streaming- und MP4-Buttons,
+			Neue Funktion get_ardsingle_more: Auswertung für  zusätzl. Videos in
+			ARDStartSingle.
+			ARDSearchnew: Fix sender (UtfToStr), tagline mit sender + duration hinzugefügt.
+			ZDF_get_content: Livestream-Erkennung hinzugefügt.
+			ARDStartVideoStreams: Fix Auswertung master.m3u8-Quelle.
+
+not on Github	1.5.9	livesenderTV.xml: Streamlink für "SWR Fernsehen Baden-Württemberg" 
+			aktualisiert.
+			Modul ARDnew: ARDSearchnew mit api-Call + Mehr-Funktion erweitert.
+			Modul ARDnew: get_api_call: Call-Zusammensetzung für SearchARDnew und 
+			Einzelbeitrag (statt player-Url) erweitert.
+
 29.05.2019	1.5.8	Beitrags-Filter: Option in Settings hinzugefügt (Audiodeskription).
 			Beitrags-Filter, Code-Anpassungen: SinglePage, ARDStartRubrik, ARDSportPanel,
 			ZDF_get_content, BarriereArm (ZDF), ARDStartRubrik (ARD-Neu).
 			TV-Livestreams: Austausch Untertitel-Stream "Das Erste" in livesenderTV.xml.
 
 not on Github	1.5.7	ZDFRubrikSingle + get_teaserElement: Nachlade-Beiträgen verfügbar gemacht
-			(Ersatz für javascript-Funktion zur Ermittlung von Icon + Sendedauer)
+			(Ersatz für javascript-Funktion zur Ermittlung von Icon + Sendedauer).
 			get_teaserElement: Speichern / Laden der Nachlade-Beiträgen im TEXTSTORE.
 			 	
 not on Github	1.5.6	check_DataStores (Modul util): Code für Migration entfernt (wg. Problemen mit 

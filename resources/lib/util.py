@@ -457,7 +457,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		msg = msg.decode(encoding="utf-8")
 		PLog(msg)	
 	'''
-	
+
 	if page == '':
 		try:															# 2. Versuch ohne SSLContext 
 			PLog("get_page2:")
@@ -496,8 +496,9 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		except Exception as exception:
 			msg = str(exception)
 			msg = msg.decode(encoding="utf-8")
-			PLog(msg)	
-
+			PLog(msg)
+				
+	
 	if page == '':
 		try:
 			PLog("get_page3:")											# 3. Versuch mit SSLContext
@@ -522,7 +523,12 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 			PLog(msg)						
 			
 	if page == '':
-		error_txt = 'Seite nicht erreichbar oder nicht mehr vorhanden'			 			 	 
+		error_txt = 'Seite nicht erreichbar oder nicht mehr vorhanden'
+		if 'classic.ardmediathek.de' in path:
+			msg1 = 'Die ARD-Classic-Mediathek ist vermutlich nicht mehr verfügbar.'	
+			msg2 = 'Bitte in den Einstellungen abschalten, um das Modul'
+			msg3 = 'ARD-Neu zu aktivieren.'
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)		 			 	 
 		msg = error_txt + ' | Seite: ' + path
 		PLog(msg)
 		return page, msg
