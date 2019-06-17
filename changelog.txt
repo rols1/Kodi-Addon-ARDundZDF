@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+17.06.2019	1.7.0	ARDSportVideo: Fix Ermittlung Videoquelle, falls im Beitrag eine ARD-Player-Url
+			gefunden wird (Ermittlung der Videoquelle via image-ID + json-Datei.
+
 17.06.2019	1.6.9	ARD Sportschau / Behelfslösung für Frauen-Fußball-WM: zusätzl. Buttons für 
 			aktuellen Streamlink im Menü ARD Sportschau und in Funktion ARDSportVideo 
 			(vom Titel getriggert).

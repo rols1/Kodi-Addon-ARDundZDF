@@ -1640,7 +1640,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	#	s. Forum https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF Post 472ff
 	# Button ist Behelfslösung für Frauen-Fußball-WM - url via chrome-developer-tools ermittelt
 	# Button ist zusätzl. dauerhaft im Menü ARD Sportschau platziert.
-	if "/frankreich2019/live" in url:
+	if "/frankreich2019/live" in path:
 		url = "https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8"
 		summ = 'Falls der Streamlink nicht mehr funktioniert, bitte Addon-Entwickler informieren.'
 		mediatype = 'video'
@@ -1655,9 +1655,45 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	#	-> 	//ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/master.m3u8
 	#	derselbe Streamlink wie Direktlink + Hauptmenü
 	# 16.06.2019 nicht für die Livestreams geeignet.
-	video_src = stringextract('deviceids-medp.wdr.de', '"', page)
-	video_src = 'http://deviceids-medp.wdr.de' + video_src
-	
+	if 'deviceids-medp.wdr.de' in page:								# häufigste Quelle
+		video_src = stringextract('deviceids-medp.wdr.de', '"', page)
+		video_src = 'http://deviceids-medp.wdr.de' + video_src
+	else:
+		PLog('hole playerurl:')
+		playerurl = stringextract('webkitAllowFullScreen', '</iframe>', page)
+		playerurl = stringextract('src="', '"', playerurl)
+		base = 'https://' + path.split('/')[2]						# Bsp. fifafrauenwm.sportschau.de
+		video_src = base + playerurl
+		PLog(video_src)
+
+	if '-ardplayer_image-' in video_src:							# Bsp. Frauen-Fußball-WM
+		# Debug-Url's:
+		#https://fifafrauenwm.sportschau.de/frankreich2019/nachrichten/fifafrauenwm2102-ardplayer_image-dd204edd-de3d-4f55-8ae1-73dab0ab4734_theme-sportevents.html		
+		#https://fifafrauenwm.sportschau.de/frankreich2019/nachrichten/fifafrauenwm2102-ardjson_image-dd204edd-de3d-4f55-8ae1-73dab0ab4734.json	
+
+		page, msg = get_page(video_src)									# Player-Seite laden, enthält image-ID
+		image = stringextract('image = "', '"', page) 
+		PLog(image)
+		path = video_src.split('-ardplayer_image-')[0]
+		PLog(path)
+		path = path + '-ardjson_image-' + image + '.json'
+		PLog(path)
+		page, msg = get_page(path)							# json mit videoquellen laden
+		
+		auto 	= stringextract('plugin": 1', 'cdn"', page) # master.m3u8 an 1. Stelle
+		m3u8_url= stringextract('stream": "', '"', auto)
+		PLog(m3u8_url)
+		title=UtfToStr(title); m3u8_url=UtfToStr(m3u8_url); img=UtfToStr(img);
+		summ=UtfToStr(summ);Merk=UtfToStr(Merk);
+		
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
+			(urllib.quote_plus(m3u8_url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
+		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+			summary=summ) 
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+		
+		
 	page, msg = get_page(path=video_src)		
 	if page == '':
 		msg1 = 'Videoquellen können nicht geladen werden.'
@@ -1666,6 +1702,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
 	PLog(len(page))
+			
 	
 	content = blockextract('"videoURL":"', page)
 	url=''
