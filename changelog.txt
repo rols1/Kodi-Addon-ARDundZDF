@@ -7,6 +7,8 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+17.06.2019	1.7.2	ARDSportVideo: Fix UtfToStr für title, img, summ.
+
 17.06.2019	1.7.1	ARDSportVideo: Berücksichtigung Settings (Autostart) - sonst startet Video nicht
 			in Android und Libreelec.
 				

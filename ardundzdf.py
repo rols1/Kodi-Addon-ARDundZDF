@@ -47,7 +47,7 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.1'		 
+VERSION =  '1.7.2'		 
 VDATE = '17.06.2019'
 
 # 
@@ -1425,6 +1425,11 @@ def ARDSport(title):
 	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
 	PLog(onlySender)
 		
+	mediatype=''	
+	if SETTINGS.getSetting('pref_video_direct') == 'true': 
+		if SETTINGS.getSetting('pref_show_resolution') == 'false':
+			mediatype='video'
+			
 	title = "ARDSportschau Livestream FIFA FRAUEN WM 2019"
 	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8"
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
@@ -1434,7 +1439,7 @@ def ARDSport(title):
 		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
 		urllib.quote_plus(summ), Merk)
 	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-		summary=summ) 		
+		mediatype=mediatype, summary=summ) 		
 
 	channel = 'Regional'									# zum Livestream: MDR+ Eventlivestreams
 	onlySender = 'MDR+ Eventlivestreams & SocialTV'	
@@ -1631,6 +1636,9 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	PLog('ARDSportVideo:'); 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
+	title = UtfToStr(title); img = UtfToStr(img); summ = UtfToStr(summ);
+	Merk = UtfToStr(Merk);
+	title_org = title
 		
 	page, msg = get_page(path=path)		
 	page = UtfToStr(page)
@@ -1684,14 +1692,14 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		auto 	= stringextract('"auto"', 'cdn"', plugin) 	# master.m3u8 an 1. Stelle		
 		m3u8_url= stringextract('stream": "', '"', auto)
 		PLog(m3u8_url)
-		title = "m3u8 auto | %s" % title
+		title = "m3u8 auto | %s" % title_org
 		title=UtfToStr(title); m3u8_url=UtfToStr(m3u8_url); img=UtfToStr(img);
-		summ=UtfToStr(summ);Merk=UtfToStr(Merk);
+		title_org=UtfToStr(title_org); summ=UtfToStr(summ);Merk=UtfToStr(Merk);
 		
 		# Sofortstart - direkt, falls Listing nicht Playable
 		if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': 
 			if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
-				PLog('Sofortstart: ARDSportPanel')
+				PLog('Sofortstart: ARDSportVideo')
 				PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
 				PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
 				return
@@ -1705,7 +1713,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		mp4 	= stringextract('quality": 3', 'cdn"', page)	# mp4-HD-Quality
 		mp4_url= stringextract('stream": "', '"', mp4)
 		PLog(m3u8_url)
-		title = "MP4 HD | %s" % title
+		title = "MP4 HD | %s" % title_org
 		
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
 			(urllib.quote_plus(m3u8_url), urllib.quote_plus(title), urllib.quote_plus(img), 
@@ -1715,7 +1723,10 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 			
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		
-		
+	# Website enthält Button: Ich bin damit einverstanden, dass mir Bilder/Videos von Twitter 
+	#	angezeigt werden. Nach Bestätigung (syndication.twitter.com/settings) wird das Twitter-
+	#	Video in einem Frame  eingeblendet (Bsp. widget_iframe.d753e00c3e838c1b2558149bd3f6ecb8.html).
+	# Umsetzung lohnt sich m.E. nicht.
 	page, msg = get_page(path=video_src)		
 	if page == '':
 		msg1 = 'Videoquellen können nicht geladen werden.'
