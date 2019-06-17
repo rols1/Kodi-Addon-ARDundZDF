@@ -7,6 +7,44 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+17.06.2019	1.6.9	ARD Sportschau / Behelfslösung für Frauen-Fußball-WM: zusätzl. Buttons für 
+			aktuellen Streamlink im Menü ARD Sportschau und in Funktion ARDSportVideo 
+			(vom Titel getriggert).
+			ARDSportPanel: Fix Bildauswertung (https nur bei Fehlen ergänzt).
+
+not on Github	1.6.8	Audiothek: Integration Downloads. Neue Funktion AudioPlayMP3. Anpassungen AudioSingle,
+			Audio_get_sendungen, AudioContentJSON, AudioContentXML.
+			AudioContentJSON: Fix title (UtfToStr) in Mehr-Button.	
+
+not on Github	1.6.7	Neue Funktionen: AudioStart_AZ + AudioStart_AZ_content.
+			AudioStart_AZ_content: Abgleich Beiträge durch Ascii-Filter für 1. Buchstaben des
+			Titels, Sonderbehandlung für # (s. Doku Funktionskopf).
+			Struktur: AudioStart wird Hauptmenü für Audiothek. Main_Audio wieder entfernt, 
+			Verlagerung Suche nach AudioStart.
+			ARDSportPanel, ARDSportVideo: "cacheToDisc=False" für das Listitem, um "Live-Echos" 
+			zu vermeiden.
+
+not on Github	1.6.6	Neue Funktion: AudioStartLive (Livestreams web.ard.de/radio/radionet).	
+			Neue Icons: ard-audio-live.png, ard-audio-az.png
+
+not on Github	1.6.5	AudioContentJSON: Fallback Blockbildung für Einzelbeiträge(podcast_id statt episode),
+			Fix quotemarks, Fallback Mehr-Button (entfällt bei Fehler).
+			Neue Funktion: AudioStartThemen (Themen der Startseite).
+			AudioStartRubrik: erweitert für Auswertungssteuerung ausgewählter Themen. 
+
+not on Github	1.6.4	Neue Funktionen: AudioSingle, img_via_audio_href.
+			Funktionssplit AudioContent: AudioContentJSON + AudioContentXML.
+			Audio_get_rubrik: Umstellung auf api-Call zum Nachladen, Auswertung in
+			AudioContentJSON.
+			AudioContentJSON, AudioContentXML, Audio_get_rubriken, Audio_get_sendungen:
+			Fix title + descr (unescape, repl_json_chars).	
+
+not on Github	1.6.3	Neue Funktionen: AudioStart, AudioStartRubrik, Audio_get_rubrik.	
+
+not on Github	1.6.2	Start Auswertung neue ARD Audiothek:
+			Neue Funktionen: Main_ARDaudio, AudioSearch, AudioContent.
+			Search: cacheToDisc in endOfDirectory entfernt (führt zur Rücksprung in get_query).	
+
 08.06.2019	1.6.1	ARDnew - Auswertung ARD-Konzept AutoCompilationWidget (Rubriken der Startseite):
 			neue Funktionen ARDCompilation + get_comp_content (Seite), get_compilation
 			(Compilation-Parameter).
@@ -16,7 +54,7 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			Parseplaylist: Fix Laden lokaler m3u8-Datei (M3U8STORE statt Addon-Pfad).	
 
 not on Github	1.6.0	ARDStartSingle: erweitert um Auswertung  zusätzl. Videos zur Sendung
-			("Mehr zur Sendung"), rote Markierung für die Streaming- und MP4-Buttons,
+			("Mehr zur Sendung"), rote Markierung für die Streaming- und MP4-Buttons.
 			Neue Funktion get_ardsingle_more: Auswertung für  zusätzl. Videos in
 			ARDStartSingle.
 			ARDSearchnew: Fix sender (UtfToStr), tagline mit sender + duration hinzugefügt.

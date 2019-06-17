@@ -4,6 +4,7 @@
 
 import os, sys, glob, shutil, time
 import datetime as dt	# für xml2srt
+from datetime import datetime	# für transl_pubDate  
 import urllib, urllib2, ssl
 # import requests		# kein Python-built-in-Modul, urllib2 verwenden
 from StringIO import StringIO
@@ -45,7 +46,8 @@ TEMP_ADDON		= xbmc.translatePath("special://temp")			# Backups
 
 PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
 ICON_MAIN_POD	= 'radio-podcasts.png'
-ICON_MAIN_ZDFMOBILE		= 'zdf-mobile.png'
+ICON_MAIN_AUDIO	= 'ard-audiothek.png'
+ICON_MAIN_ZDFMOBILE	= 'zdf-mobile.png'
 			
 BASE_URL 		= 'https://classic.ardmediathek.de'
 
@@ -121,6 +123,14 @@ def home(li, ID):
 		fparams="&fparams={'name': '%s'}" % urllib2.quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_POD", fanart=R(ICON_MAIN_POD), 
 			thumb=R(ICON_MAIN_POD), fparams=fparams)
+			
+	if ID == 'ARDaudio':
+		name = 'Home :' + "ARD Audiothek"
+		fparams="&fparams={'title': '%s'}" % urllib2.quote(name)
+		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=R(ICON_MAIN_AUDIO), 
+			thumb=R(ICON_MAIN_AUDIO), fparams=fparams)
+			
+			
 
 	return li
 	 
@@ -474,9 +484,6 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 				req = urllib2.Request(path, headers=header)	
 			else:
 				req = urllib2.Request(path)										
-				#req.add_header('User-Agent', 'Chrome/72.0.3626.96, Safari/537.36')
-				#req.add_header('Accept', 'text/html,application/xhtml xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8')
-				#req.add_header('Accept-Encoding','gzip, deflate, br')
 			r = urllib2.urlopen(req)
 			new_url = r.geturl()											# follow redirects
 			PLog("new_url: " + new_url)
@@ -780,12 +787,13 @@ def unescape(line):
 		, ("&#39;", "'"), ("&#039;", "'"), ("&quot;", '"'), ("&#x27;", "'")
 		, ("&ouml;", "ö"), ("&auml;", "ä"), ("&uuml;", "ü"), ("&szlig;", "ß")
 		, ("&Ouml;", "Ö"), ("&Auml;", "Ä"), ("&Uuml;", "Ü"), ("&apos;", "'")
-		, ("&nbsp;|&nbsp;", ""), ("&nbsp;", ""),
+		, ("&nbsp;|&nbsp;", ""), ("&nbsp;", ""), 
 		# Spezialfälle:
 		#	https://stackoverflow.com/questions/20329896/python-2-7-character-u2013
 		#	"sächsischer Genetiv", Bsp. Scott's
 		#	Carriage Return (Cr)
-		("–", "-"), ("&#x27;", "'"), ("&#xD;", ""), ("\xc2\xb7", "-")):
+		("–", "-"), ("&#x27;", "'"), ("&#xD;", ""), ("\xc2\xb7", "-"),
+		('undoacute;', 'o')):
 			
 		line = line.replace(*r)
 	return line
@@ -919,6 +927,32 @@ def seconds_translate(seconds):
 	seconds = time
 	# return "%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds)
 	return  "%d:%02d" % (hour, minutes)		
+#---------------------------------------------------------------- 
+# Format timecode 	Fri, 06 Jul 2018 06:58:00 GMT (ARD Audiothek , xml-Ausgaben)
+# Rückgabe:			06.07.2018, 06:58 Uhr   (Sekunden entfallen)
+# funktioniert nicht in Kodi, auch nicht der Workaround in
+#	https://forum.kodi.tv/showthread.php?tid=112916 bzw.
+#	https://www.kodinerds.net/index.php/Thread/50284-Python-Problem-mit-strptime
+def transl_pubDate(pubDate):
+	PLog('transl_pubDate:')	
+	pubDate_org = pubDate		
+	if pubDate == '':
+		return ''
+		
+	if ',' in pubDate:
+		pubDate = pubDate.split(',')[1]		# W-Tag abschneiden
+	pubDate = pubDate.replace('GMT', '')	# GMT entf.
+	pubDate = pubDate.strip()
+	PLog(pubDate)
+	try:
+		datetime_object = datetime.strptime(pubDate, '%d %b %Y %H:%M:%S')		
+		PLog(datetime_object)
+		new_date = datetime_object.strftime("%d.%m.%Y %H:%M")
+		PLog(new_date)
+	except Exception as exception:			# attribute of type 'NoneType' is not callable
+		PLog(str(exception))
+		new_date = pubDate_org				# unverändert zurück
+	return new_date	
 #---------------------------------------------------------------- 	
 # Holt User-Eingabe für Suche ab
 #	s.a. get_query (für Search , ZDF_Search)

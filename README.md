@@ -1,9 +1,6 @@
 Kodi-Addon-ARDundZDF
 ===================
 
-#### 30.05.2019 bitte den ARD-Hinweis zur Abschaltung beachten. Nach der Abschaltung wird der Classic-Code entfernt und durch das Modul ARD-Neu ersetzt.
-![Abschaltung ](https://aws1.discourse-cdn.com/plex/optimized/3X/4/d/4d01bb24fae46529c0ec120ec35479278022416d_2_690x327.png)
-
 Addon für Kodi / XBMC (Kodi-Version von [Plex-Plugin ARDundZDF](https://github.com/rols1/ARDundZDF)).
 Mit Inhalten der Mediatheken von ARD und ZDF,
 einschließlich Live-TV mit Aufnahmefunktion, Live-Radio, Podcasts
@@ -12,7 +9,6 @@ Für die ZDF Mediathek kann wahlweise die kompakte Version ZDFmobile genutzt wer
 
 Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-ARDundZDF/total.svg "Downloads")
-
 
 Das Plugin löst die Vorgänger Plex-Plugin-ARDMediathek2015 und Plex-Plugin-ARDMediathek2016
 ab. Der Relaunch des ZDF-Mediathek-Internetangebots vom 28.10.2016 ist eingearbeitet. 

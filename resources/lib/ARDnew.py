@@ -1276,8 +1276,7 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 	fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '%s'}" %\
 		(urllib2.quote(query), urllib2.quote(title), sender, str(offset))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", fanart=R(ICON_MEHR), 
-		thumb=R(ICON_MEHR), fparams=fparams)	
-																				
+		thumb=R(ICON_MEHR), fparams=fparams)																	
 	
 	xbmcplugin.endOfDirectory(HANDLE)
 
