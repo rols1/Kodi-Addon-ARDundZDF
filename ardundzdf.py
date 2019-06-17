@@ -47,7 +47,7 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.6.9'		 
+VERSION =  '1.7.1'		 
 VDATE = '17.06.2019'
 
 # 
@@ -1680,17 +1680,39 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		PLog(path)
 		page, msg = get_page(path)							# json mit videoquellen laden
 		
-		auto 	= stringextract('plugin": 1', 'cdn"', page) # master.m3u8 an 1. Stelle
+		plugin 	= stringextract('plugin": 1', '_duration"', page) 
+		auto 	= stringextract('"auto"', 'cdn"', plugin) 	# master.m3u8 an 1. Stelle		
 		m3u8_url= stringextract('stream": "', '"', auto)
 		PLog(m3u8_url)
+		title = "m3u8 auto | %s" % title
 		title=UtfToStr(title); m3u8_url=UtfToStr(m3u8_url); img=UtfToStr(img);
 		summ=UtfToStr(summ);Merk=UtfToStr(Merk);
+		
+		# Sofortstart - direkt, falls Listing nicht Playable
+		if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': 
+			if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
+				PLog('Sofortstart: ARDSportPanel')
+				PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
+				PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
+				return
 		
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
 			(urllib.quote_plus(m3u8_url), urllib.quote_plus(title), urllib.quote_plus(img), 
 			urllib.quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			summary=summ) 
+			
+		mp4 	= stringextract('quality": 3', 'cdn"', page)	# mp4-HD-Quality
+		mp4_url= stringextract('stream": "', '"', mp4)
+		PLog(m3u8_url)
+		title = "MP4 HD | %s" % title
+		
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
+			(urllib.quote_plus(m3u8_url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
+		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+			summary=summ) 
+			
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		
 		
