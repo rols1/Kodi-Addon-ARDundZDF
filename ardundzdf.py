@@ -47,8 +47,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.2'		 
-VDATE = '17.06.2019'
+VERSION =  '1.7.3'		 
+VDATE = '18.06.2019'
 
 # 
 #	
@@ -684,7 +684,6 @@ def AudioStart_AZ(title):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li			
 	PLog(len(page))
-	# RSave('/tmp/Austausch/page.txt', page)		# Debug
 	
 	page = stringextract('Alle Sendungen von A bis Z durchsuchen', '<!---->', page)
 	gridlist = blockextract('aria-label=', page) 
@@ -1430,17 +1429,42 @@ def ARDSport(title):
 		if SETTINGS.getSetting('pref_show_resolution') == 'false':
 			mediatype='video'
 			
-	title = "ARDSportschau Livestream FIFA FRAUEN WM 2019"
-	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8"
+	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3666-ardjson.json		
+	title = "ARDSportschau FIFA FRAUEN WM 2019 Livestream 1"
+	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_1@430235/master.m3u8"
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
 	Merk = 'false'
-	summ = 'Falls der Streamlink nicht mehr funktioniert, bitte Addon-Entwickler informieren.'
+	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nciht funktioniert'
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
 		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
 		urllib.quote_plus(summ), Merk)
 	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 		mediatype=mediatype, summary=summ) 		
 
+	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3670-ardjson.json
+	title = "ARDSportschau FIFA FRAUEN WM 2019 Livestream 2"
+	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_2@430236/master.m3u8"   
+	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
+	Merk = 'false'
+	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nciht funktioniert'
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
+		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+		urllib.quote_plus(summ), Merk)
+	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+		mediatype=mediatype, summary=summ) 		
+
+	#
+	title = "ARDSportschau FIFA FRAUEN WM 2019 Livestream 3"
+	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8"
+	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
+	Merk = 'false'
+	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nciht funktioniert'
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
+		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+		urllib.quote_plus(summ), Merk)
+	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+		mediatype=mediatype, summary=summ) 	
+			
 	channel = 'Regional'									# zum Livestream: MDR+ Eventlivestreams
 	onlySender = 'MDR+ Eventlivestreams & SocialTV'	
 	img = R("tv-mdr-sachsen.png")	
@@ -5131,7 +5155,7 @@ def RadioAnstalten(path, title, sender, fanart):
 		xbmcgui.Dialog().ok(ADDON_NAME, line1, line2, line3)
 		return li			
 										
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 ###################################################################################################
 #									ZDF-Funktionen

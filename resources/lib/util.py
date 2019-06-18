@@ -1275,36 +1275,17 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 #		redirect-Url: 	dg-ndr-https-dus-dtag-cdn.sslcast.addradio.de/ndr/ndr1niedersachsen/..
 #		replaced-Url: 	dg-ndr-http-dus-dtag-cdn.cast.addradio.de/ndr/ndr1niedersachsen/..
 # url_template gesetzt von RadioAnstalten (Radio-Live-Sender)
-#
+# 18.06.2019 Kodi 17.6:  die template-Lösung funktioniert nicht mehr - dto. Redirect - 
+#				Code für beides entfernt. Hilft ab er nur bei wenigen Sendern.
+#				Neue Kodivers. ansch. nicht betroffen, Kodi 18.2. OK
+#			
 def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall=''):
 	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
 	Plot=transl_doubleUTF8(Plot)
-	
-	# Weiterleitung? - Wiederherstellung https! Vorheriger Replace mit http sinnlos.
-	page, msg = get_page(path=url, GetOnlyRedirect=True)
-	if page:
-		url = page  
-		PLog('PlayAudio Redirect_Url: ' + url)
-
-	# Kodi Header: als Referer url injiziert - z.Z nicht benötigt			
-	#header='Accept-Encoding=identity;q=1, *;q=0&User-Agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36&Accept=*/*&Referer=%s&Connection=keep-alive&Range=bytes=0-' % url
-	
+				
 	if url.startswith('http') == False:		# lokale Datei
 		url = os.path.abspath(url)
-		
-	# für Radio-Live-Sender, ersetzt https- durch http-Links. template
-	#	ist für alle Radio-Live-Sender der Öffis gleich
-	#	Bei Fehlschlag erhält der Player die urspr. Url 
-	#	Nicht erforderlich falls Link bereits http-Link.
-	if url_template and url.startswith('https'):							
-		p1 = 'dg-%s-http-fra-dtag-cdn.cast.addradio.de'	# %s -> sender
-		try:
-			p2 = url.split('.de')[1]				# ..addradio.de/hr/youfm/live..
-			s = re.search('/(.*?)/', p2).group(1)	# sender z.B. hr
-			url = 'http://' + p1 %s + p2
-		except Exception as exception:
-			PLog(str(exception))			
-		
+				
 	#if header:							
 	#	Kodi Header: als Referer url injiziert - z.Z nicht benötigt	
 	# 	header='Accept-Encoding=identity;q=1, *;q=0&User-Agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36&Accept=*/*&Referer=%s&Connection=keep-alive&Range=bytes=0-' % slink	
@@ -1319,7 +1300,6 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 	ilabels.update({'Comment': '%s' % Plot})	# Plot im MusicPlayer nicht verfügbar
 	li.setInfo(type="music", infoLabels=ilabels)							
 	li.setContentLookup(False)
-	
 	 	
 	xbmc.Player().play(url, li, False)			# Player nicht mehr spezifizieren (0,1,2 - deprecated)
 
