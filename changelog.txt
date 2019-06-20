@@ -7,6 +7,15 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+18.06.2019	1.7.4	AudioStartLive: vergessene Radioanstalt HR ergänzt.
+			Umstellung PodFavoriten auf neue ARD-Audiothek: Aktualisierungen in Liste
+			podcast-favorits.txt und Funktionen im Modul Podcontent.
+			PodFavoriten: im Menü Main_POD entfernt, in AudioStart hinzugefügt.
+			PodFavoritenListe: Params an erneuertes Modul Podcontent angepasst.
+			Icons ard-audiothek + ard-audio-live an Classic-Icon-Design angepasst.
+			Modul ARD Mediathek Neu: Integration ARD Sportschau.
+			ARDSport: Fix Schreibf. in Streambuttons + Berücksichtigung leerer mp4_url
+			(Button entfällt).
 
 17.06.2019	1.7.3	PlayAudio: redirect- und template-Lösung (für Kodi <= 17.6) entfernt, da nicht
 			mehr funktionsfähig. 

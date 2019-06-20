@@ -115,6 +115,11 @@ def Main_NEW(name, CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), fparams=fparams)
 						
+	title = 'ARD Sportschau'
+	fparams="&fparams={'title': '%s'}"	% title
+	addDir(li=li, label=title, action="dirList", dirID="ARDSport", 
+		fanart=R("tv-ard-sportschau.png"), thumb=R("tv-ard-sportschau.png"), fparams=fparams)
+						
 
 	title 	= 'Wählen Sie Ihren Sender | aktuell: %s' % sendername				# Senderwahl
 	fparams="&fparams={'title': '%s'}" % urllib2.quote(title)

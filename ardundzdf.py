@@ -47,8 +47,8 @@ import resources.lib.ARDnew
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.3'		 
-VDATE = '18.06.2019'
+VERSION =  '1.7.4'		 
+VDATE = '20.06.2019'
 
 # 
 #	
@@ -556,11 +556,6 @@ def Main_POD(name):
 	addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_REFUGEE), 
 		fparams=fparams)
 
-	title="Podcast-Favoriten"; 
-	fparams="&fparams={'title': '%s'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="PodFavoritenListe", fanart=R(ICON_MAIN_POD), 
-		thumb=R(ICON_POD_FAVORITEN), fparams=fparams)
-
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
 #----------------------------------------------------------------
@@ -610,6 +605,12 @@ def AudioStart(title):
 	addDir(li=li, label=title, action="dirList", dirID="AudioStart_AZ", fanart=R(ICON_MAIN_AUDIO), 
 		thumb=R(ICON_AUDIO_AZ), fparams=fparams)
 	
+	# Button für Podcast-Favoriten anhängen 						# Podcast-Favoriten
+	title="Podcast-Favoriten"; 
+	fparams="&fparams={'title': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="PodFavoritenListe", fanart=R(ICON_MAIN_POD), 
+		thumb=R(ICON_POD_FAVORITEN), fparams=fparams)
+
 	# Button für Livestreams anhängen (eigenes ListItem)		# Livestreams
 	title = 'Livestreams'	
 	fparams="&fparams={'title': '%s'}" % (title)	
@@ -819,7 +820,7 @@ def AudioStartLive(title, sender=''):			# Sender / Livestreams
 	page= page.replace('\u002F', '/')			# Pfadbehandlung gesamte Seite
 
 	# Senderliste = Blockersatz
-	senderliste = ['br','dlf','mdr','ndr','"radio-bremen"','rbb','sr','swr','wdr']
+	senderliste = ['br','dlf','hr','mdr','ndr','"radio-bremen"','rbb','sr','swr','wdr']
 	if sender == '':							# . Durchlauf: Senderliste
 		for sender in senderliste:
 			# Bsp. title: data-v-f66b06a0>Theater, Film
@@ -857,6 +858,7 @@ def AudioStartLive(title, sender=''):			# Sender / Livestreams
 			url 	= "%s/%s/%s" % (path, my_sender, title)	# nicht website_url verwenden
 			url		= url.lower()
 			url= url.replace(' ', '-')			# Webseiten-URL: Blanks -> -
+			url= url.replace(',', '-')			# dto Komma -> -
 			
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)	
@@ -1434,7 +1436,7 @@ def ARDSport(title):
 	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_1@430235/master.m3u8"
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
 	Merk = 'false'
-	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nciht funktioniert'
+	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
 		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
 		urllib.quote_plus(summ), Merk)
@@ -1446,7 +1448,7 @@ def ARDSport(title):
 	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_2@430236/master.m3u8"   
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
 	Merk = 'false'
-	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nciht funktioniert'
+	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
 		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
 		urllib.quote_plus(summ), Merk)
@@ -1458,7 +1460,7 @@ def ARDSport(title):
 	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8"
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
 	Merk = 'false'
-	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nciht funktioniert'
+	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
 		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
 		urllib.quote_plus(summ), Merk)
@@ -1674,7 +1676,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	# Button ist zusätzl. dauerhaft im Menü ARD Sportschau platziert.
 	if "/frankreich2019/live" in path:
 		url = "https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8"
-		summ = 'Falls der Streamlink nicht mehr funktioniert, bitte Addon-Entwickler informieren.'
+		summ = 'bitte die FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
 		mediatype = 'video'
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
 			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
@@ -1734,16 +1736,19 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			summary=summ) 
 			
-		mp4 	= stringextract('quality": 3', 'cdn"', page)	# mp4-HD-Quality
+		mp4 	= stringextract('quality": 3', 'cdn"', page)	# mp4-HD-Quality od. mp3
 		mp4_url= stringextract('stream": "', '"', mp4)
-		PLog(m3u8_url)
-		title = "MP4 HD | %s" % title_org
-		
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-			(urllib.quote_plus(m3u8_url), urllib.quote_plus(title), urllib.quote_plus(img), 
-			urllib.quote_plus(summ), Merk)
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-			summary=summ) 
+		PLog(mp4_url)
+		if mp4_url:
+			title = "MP4 HD | %s" % title_org
+			if mp4_url.endswith('.mp3'):
+				title = "Audio MP3 | %s" % title_org
+			
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
+				(urllib.quote_plus(m3u8_url), urllib.quote_plus(title), urllib.quote_plus(img), 
+				urllib.quote_plus(summ), Merk)
+			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+				summary=summ) 
 			
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		
@@ -2135,7 +2140,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 ####################################################################################################
 # 	Auflistung 0-9 (1 Eintrag), A-Z (einzeln) 
 #	ID = PODCAST, ARD
-#	14.01.2019 Rückbau auf Classic-Version (neue Seite wird unvollständig geladen)
+#	
 def SendungenAZ(name, ID):		
 	PLog('SendungenAZ: ' + name)
 	PLog(ID)
@@ -2281,8 +2286,7 @@ def SearchARDundZDF(title, query='', pagenr=''):
 	# Suche - Verarbeitung der Eingabe
 	# Vorgabe UND-Verknüpfung (auch Podcast)
 	# Kodi-Problem ..-Button s.u.
-	# Bei ARD-Neu findet trotzdem eine Classic-Suche statt (ergiebiger), in home wird die ID
-	#	umgelabelt.
+	#
 def Search(title, query='', channel='ARD'):
 	PLog('Search:'); PLog(query); PLog(channel); 
 			
@@ -2462,8 +2466,7 @@ def VerpasstWoche(name, title):		# Wochenliste zeigen, name: ARD, ZDF Mediathek
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)		
 	
 ####################################################################################################
-# Dachfunktion für 'Ausgewählte Filme' .. 'am besten bewertet' bis einschl. 'Rubriken'
-# ab 06.04.2017 auch Podcasts: 'Rubriken' .. 'Meist abgerufen'
+# Dachfunktion für Podcasts: 'Rubriken' .. 'Refugee-Radio'
 #
 # next_cbKey: Vorgabe für nächsten Callback in SinglePage
 # mode: 'Sendereihen', 'Suche' 	- steuert Ausschnitt in SinglePage + bei Podcast Kopfauswertung 1.Satz
@@ -2527,7 +2530,7 @@ def PodFavoritenListe(title, offset=0):
 	title_org = title
 	# Default fname: podcast-favorits.txt im Ressourcenverz.
 	#	Alternative: Pfad zur persönlichen Datei 
-	fname =  SETTINGS.getSetting('pref_pref_podcast_favorits')
+	fname =  SETTINGS.getSetting('pref_podcast_favorits')
 	PLog(fname)
 	if os.path.isfile(fname) == False:
 		PLog('persoenliche Datei %s nicht gefunden' % fname)					
@@ -2561,7 +2564,7 @@ def PodFavoritenListe(title, offset=0):
 				
 	title2 = 'Favoriten %s - %s (%s)' % (start_cnt+1, min(end_cnt,max_len) , max_len)
 	li = xbmcgui.ListItem()
-	li = home(li,ID='PODCAST')				# Home-Button
+	li = home(li,ID='ARDaudio')				# Home-Button
 
 	for i in range(len(bookmarks)):
 		cnt = int(i) + int(offset)
@@ -2587,13 +2590,12 @@ def PodFavoritenListe(title, offset=0):
 		PLog(title); PLog(path)
 		title = UtfToStr(title)
 		summary='Favoriten: ' + title
-		fparams="&fparams={'title': '%s', 'path': '%s', 'offset': '0'}" % \
+		fparams="&fparams={'title': '%s', 'path': '%s'}" % \
 			(urllib2.quote(title), urllib2.quote(path))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodFavoriten", 
 			fanart=R(ICON_STAR), thumb=R(ICON_STAR), fparams=fparams, summary=path, 
 			tagline=summary)
-				
-	
+					
 	# Mehr Seiten anzeigen:
 	PLog(offset); PLog(cnt); PLog(max_len);
 	if (int(cnt) +1) < int(max_len): 						# Gesamtzahl noch nicht ereicht?

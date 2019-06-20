@@ -1,6 +1,7 @@
-# Radio-Podcast Favoriten - für Podcast-Seiten der einzelnen ARD-Radio-Sender, einschließich www.ardmediathek.de/radio
+# Radio-Podcast Favoriten - für Podcast-Seiten der ARD-Audiothek
+#	(vor dem 19.06.2019: einzelne ARD-Radio-Sender, www.ardmediathek.de/radio)
 # 	
-#	gehört zu: 	Plex-Plugin-ARDMediathek2016 (Ressourcenverzeichnis)
+#	gehört zu: 	Kodi-Addon-ARDundZDF (Ressourcenverzeichnis)
 # 	Name: 		podcast-favorits.txt 
 # 
 # 	Bei Verwendung einer persönlichen Datei (siehe Einstellungen im Plugin) muss
@@ -11,57 +12,48 @@
 # 	Format: 2-teilig, getrennt durch |, Muster:
 #		Titel | HTTP-Link
 #   -------------------------------------------------
-#	Unterstützte Seiten/Sender - weitere Auswahl dort:	
-#			
-#		www.ardmediathek.de/radio	http://www.ardmediathek.de/radio
-#		www.ardmediathek.de/suche?	https://www.ardmediathek.de/suche?source=radio&sort=date&searchText=Suchtext
-#		www.br-online.de		http://www.br-online.de/podcast/index.shtml
-#		www.br.de/mediathek/podcast	https://www.br.de/mediathek/podcast/podcasts/..
-#		www.swr3.de/mehr/podcasts	https://www.swr3.de/mehr/podcasts/-/id=279178/1hsl7ys/index.html
-#		www.deutschlandfunk.de		http://www.deutschlandfunk.de/podcasts.2516.de.html?drpp%3Ahash=displayAllBroadcasts
-#		mediathek.rbb-online.de		http://mediathek.rbb-online.de/radio (Seitendene: NEUESTE CLIPS, MEISTABGERUFEN)
-#		www1.wdr.de/mediathek/podcast	http://www1.wdr.de/mediathek/podcast  (Achtung: in "WDR Fernsehen Podcasts" nur Videos)
-#		www1.wdr.de/mediathek/audio	http://www1.wdr.de/mediathek/audio
-#		www.ndr.de/radio/podcasts	http://www.ndr.de/radio/podcasts/   (nur: NDR2)
-#		Podcast-Suche: 			Suchbegriff (sucht in www.ardmediathek.de/radio, Beispiel siehe "WDR 5 Quarks")
-#
 #	
-#	-------------------------------------------------
-#  Gewünschte Seiten und Fehler hierhin melden (bitte vorher die Seite mittels Webbrowser testen):
-#			https://forums.plex.tv/discussion/213947/plex-plugin-ardmediathek2016#latest
+#  Gewünschte Sendungen und Fehler hierhin melden (bitte vorher die Seite mittels Webbrowser testen):
+#			https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF
 #-------------------------------------------------------------------------------------------------------------------------------------
  
 ## Magazine          
-Dossier Politik - Bayern 2  			| https://www.br.de/mediathek/podcast/podcasts/dossier-politik/archiv/684
-IQ - Wissenschaft und Forschung - Bayern 2  	| https://www.br.de/mediathek/podcast/podcasts/iq-wissenschaft-und-forschung/archiv/651
-radioWissen - Bayern 2  			| https://www.br.de/mediathek/podcast/podcasts/radiowissen/archiv/488
-Das Campusmagazin - B5 aktuell  		| https://www.br.de/mediathek/podcast/podcasts/das-campusmagazin/archiv/634
-Das Computermagazin - B5 aktuell  		| https://www.br.de/mediathek/podcast/podcasts/das-computermagazin/archiv/576
-Das Gesundheitsmagazin - B5 aktuell 		| https://www.br.de/mediathek/podcast/podcasts/das-gesundheitsmagazin/archiv/628
-Das Verbrauchermagazin - B5 aktuell 		| https://www.br.de/mediathek/podcast/podcasts/das-verbrauchermagazin/archiv/489
-Magazin für Wirtschaft und Soziales - B5 aktuell| https://www.br.de/mediathek/podcast/podcasts/magazin-fuer-wirtschaft-und-soziales/archiv/498
-Aus Wissenschaft und Technik - B5 aktuell 	| 
+Dossier Politik - Bayern 2  				| https://www.ardaudiothek.de/dossier-politik/7260328
+IQ - Wissenschaft und Forschung - Bayern 2  | https://www.ardaudiothek.de/iq-wissenschaft-und-forschung/5941402
+radioWissen - Bayern 2  					| https://www.ardaudiothek.de/radiowissen/5945518
+Das Campusmagazin - B5 aktuell  			| https://www.ardaudiothek.de/das-campusmagazin/5921928
+Das Verbrauchermagazin - B5 aktuell 		| https://www.ardaudiothek.de/das-verbrauchermagazin/5927628
+Magazin für Wirtschaft und Soz. - B5 aktuell| https://www.ardaudiothek.de/wirtschaft-und-soziales/53609460
+Aus Wissenschaft und Technik - B5 aktuell 	| https://www.ardaudiothek.de/wissenschaft-und-technik/53609516
 
-WDR 5 Leonardo Service Computer			| http://www1.wdr.de/mediathek/audio/wdr5/wdr5-leonardo-service-computer/service_computer100.podcast         
-WDR 5 Quarks - Wissenschaft und mehr		| Podcast-Suche: Quarks-Wissenschaft-und-mehr        
+Quarks - Wissenschaft und mehr				| https://www.ardaudiothek.de/quarks-wissenschaft-und-mehr/33674778 
+Quarks - Topthemen aus der Wissenschaft     | https://www.ardaudiothek.de/quarks-topthemen-aus-der-wissenschaft/53095256
+Quarks - Kleine Anfrage						| https://www.ardaudiothek.de/quarks-kleine-anfrage/53095232
+Quarks - Digital Leben						| https://www.ardaudiothek.de/quarks-digital-leben/53590536
+Quarks - Hintergrund						| https://www.ardaudiothek.de/quarks-hintergrund/53095244
 
-Computer und Kommunikation			| http://www.deutschlandfunk.de/podcast-computer-und-kommunikation-beitraege.685.de.podcast
-Dossier Politik- Deutschlandfunk		| http://www.deutschlandfunk.de/podcast-der-politik-podcast.3292.de.podcast
-Forschung Aktuell - Deutschlandfunk		| http://www.deutschlandfunk.de/podcast-forschung-aktuell.677.de.podcast.xml
+Computer und Kommunikation					| https://www.ardaudiothek.de/computer-kommunikation/21553946
+Das Computermagazin - B 5  					| https://www.ardaudiothek.de/das-computermagazin/7257376
+Visite - Das Gesundheitsmagazin - NDR 1  	| https://www.ardaudiothek.de/visite-das-gesundheitsmagazin/7853020
+
+Dossier Politik- Deutschlandfunk			| https://www.ardaudiothek.de/dossier-politik/7260328
+Forschung Aktuell - Deutschlandfunk			| https://www.ardaudiothek.de/forschung-aktuell/21676038
 
 ## Kabarett / Humor
-Tatort mit Til Schweiger				| https://www.swr3.de/podcasts/Tatort-mit-Til/-/id=279178/did=1442354/1p9bh1o/index.html
-ARD Radio Kabarett & Comedy				| http://www.ardmediathek.de/radio/Kabarett-Comedy/mehr?documentId=37915182
-Wir sind die Freeses					| http://www.ndr.de/ndr2/wir_sind_die_freeses/podcast4250_page-1.html
+Tatort mit Til Schweiger					| https://www.ardaudiothek.de/tatort-mit-til/42035224
+Kabarett WDR 2								| https://www.ardaudiothek.de/kabarett/36244764
+KabarettPost SR 2							| https://www.ardaudiothek.de/kabarettpost/63575972
+ARD Radiofestival 2018: Kabarett NDR		| https://www.ardaudiothek.de/ard-radiofestival-2018-kabarett/54002088
+Lach matt - Bayerns beste Kabarettisten BR 1| https://www.ardaudiothek.de/lach-matt-bayerns-beste-kabarettisten/33819834
+radioSpitzen BR 2							| https://www.ardaudiothek.de/radiospitzen/5962920
+Unterhaltung am Wochenende WDR 5			| https://www.ardaudiothek.de/unterhaltung-am-wochenende/33607722
+Schroeders Dienstag hr1						| https://www.ardaudiothek.de/schroeders-dienstag/24233270
+Wir sind die Freeses						| https://www.ardaudiothek.de/wir-sind-die-freeses/27893148
 
 ## Aktuelles / Neueste Clips
-FritzAktuell - Radio Fritz				| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906530&mcontent=page.1
-Inforadio - Neueste Clips				| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906554&mcontent=page.1
-Antenne Brandenburg - Neueste Clips		| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906492&mcontent=page.1
-Kulturradio - Neueste Clips				| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906576&mcontent=page.1
-RadioBERLIN 88,8 - Neueste Clips		| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906606&mcontent=page.1
-radioeins - Neueste Clips				| http://mediathek.rbb-online.de/radio/Neueste-Clips/mehr?documentId=24906660&mcontent=page.1
+Inforadio - Wissenswerte RBB				| https://www.ardaudiothek.de/wissenswerte/48143414
+Antenne Brandenburg - Interviews			| https://www.ardaudiothek.de/interviews/23667072
 
 ## Hörspiele
-KiRaKa - Kinderhörspiele im WDR			| http://www1.wdr.de/mediathek/audio/kiraka/kiraka-kinderhoerspiel/kinderhoerspiel-podcast-100.podcast
-hr-iNFO Cybercrime						| http://www.ardmediathek.de/radio/hr-iNFO-Cybercrime/Sendung?documentId=42913980&bcastId=42913980
+KiRaKa - Kinderhörspiele im WDR				| https://www.ardaudiothek.de/kinderhoerspiel-im-wdr/36244846
+hr-iNFO Cybercrime							| https://www.ardaudiothek.de/cybercrime/42913980
