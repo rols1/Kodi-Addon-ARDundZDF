@@ -7,6 +7,17 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+23.06.2019	1.7.5	3Sat-Integration - Übernahme relevanter Funktionen aus Plex-Plugin-3Sat_Mediathek
+			in neues Modul my3Sat.
+			Modul my3Sat: Migration Code (Directory-Object -> Listitem, Video_Object ->
+			PlayVideo, Eingabe Suchtext -> get_keyboard_input, Anpassung Variablen (type) und
+			Parameterübergabe.
+			SingleBeitrag (Modul my3Sat): Anpassung für Sofortstart, Merkliste und Download-Option.
+			Settings: Option für Modul my3Sat in Settings hinzugefügt.
+			Modul my3Sat: EPG-Anzeige zusätzl. im Hauptmenü Main_3Sat, EPG-Anzeige unabhängig
+			von  EPG-Settings (nur geringe Laufzeitbelastung).
+			Hauptmenü: Infozeilen zu den Untermenüs ergänzt.
+
 18.06.2019	1.7.4	AudioStartLive: vergessene Radioanstalt HR ergänzt.
 			Umstellung PodFavoriten auf neue ARD-Audiothek: Aktualisierungen in Liste
 			podcast-favorits.txt und Funktionen im Modul Podcontent.

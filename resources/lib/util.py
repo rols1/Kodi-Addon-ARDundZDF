@@ -130,6 +130,11 @@ def home(li, ID):
 		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=R(ICON_MAIN_AUDIO), 
 			thumb=R(ICON_MAIN_AUDIO), fparams=fparams)
 			
+	if ID == '3Sat':
+		name = 'Home :' + "3Sat"
+		fparams="&fparams={'name': '%s'}" % urllib2.quote(name)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", fanart=R('3sat.png'), 
+			thumb=R('3sat.png'), fparams=fparams)
 			
 
 	return li
@@ -483,8 +488,9 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 			if header:
 				req = urllib2.Request(path, headers=header)	
 			else:
-				req = urllib2.Request(path)										
-			r = urllib2.urlopen(req)
+				req = urllib2.Request(path)
+								
+			r = urllib2.urlopen(req)	
 			new_url = r.geturl()											# follow redirects
 			PLog("new_url: " + new_url)
 			# PLog("headers: " + str(r.headers))
@@ -793,7 +799,7 @@ def unescape(line):
 		#	"sächsischer Genetiv", Bsp. Scott's
 		#	Carriage Return (Cr)
 		("–", "-"), ("&#x27;", "'"), ("&#xD;", ""), ("\xc2\xb7", "-"),
-		('undoacute;', 'o')):
+		('undoacute;', 'o'), ('&eacute;', 'e')):
 			
 		line = line.replace(*r)
 	return line
@@ -850,7 +856,7 @@ def transl_json(line):	# json-Umlaute übersetzen
 	# 
 #	line = UtfToStr(line)
 	for r in (('\\u00E4', "ä"), ('\\u00C4', "Ä"), ('\u00F6', "ö")		
-		, ('\\u00C6', "Ö"), ('\\u00FC', "ü"), ('\\u00DC', 'Ü')
+		, ('\\u00C6', "Ö"), ('\\u00D6', "Ö"),('\\u00FC', "ü"), ('\\u00DC', 'Ü')
 		, ('\\u00DF', 'ß'), ('\\u0026', '&'), ('\\u00AB', '"')
 		, ('\\u00BB', '"')
 		, ('\xc3\xa2', '*')):	# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
@@ -878,24 +884,41 @@ def humanbytes(B):
 	elif TB <= B:
 	  return '{0:.2f} TB'.format(B/TB)
 #----------------------------------------------------------------  
-def CalculateDuration(timecode):
+def CalculateDuration(timecode):				# 3 verschiedene Formate (s.u.)
+	PLog("CalculateDuration:")
+	timecode = timecode.upper()	# Min -> min
 	milliseconds = 0
 	hours        = 0
 	minutes      = 0
 	seconds      = 0
-	d = re.search('([0-9]{1,2}) min', timecode)
-	if(None != d):
-		minutes = int( d.group(1) )
-	else:
+
+	if timecode.find('P0Y0M0D') >= 0:			# 1. Format: 'P0Y0M0DT5H50M0.000S', T=hours, H=min, M=sec
+		d = re.search('T([0-9]{1,2})H([0-9]{1,2})M([0-9]{1,2}).([0-9]{1,3})S', timecode)
+		if(None != d):
+			hours = int ( d.group(1) )
+			minutes = int ( d.group(2) )
+			seconds = int ( d.group(3) )
+			milliseconds = int ( d.group(4) )
+					
+	if len(timecode) == 9:						# Formate: '00:30 min'	
+		d = re.search('([0-9]{1,2}):([0-9]{1,2}) MIN', timecode)	# 2. Format: '00:30 min' 	
+		if(None != d):
+			hours = int( d.group(1) )
+			minutes = int( d.group(2) )
+			Log(minutes)
+						
+	if len(timecode) == 11:											# 3. Format: '1:50:30.000'
 		d = re.search('([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2}).([0-9]{1,3})', timecode)
 		if(None != d):
 			hours = int ( d.group(1) )
 			minutes = int ( d.group(2) )
 			seconds = int ( d.group(3) )
 			milliseconds = int ( d.group(4) )
+	
 	milliseconds += hours * 60 * 60 * 1000
 	milliseconds += minutes * 60 * 1000
 	milliseconds += seconds * 1000
+	
 	return milliseconds
 #----------------------------------------------------------------  	
 # Format timecode 	2018-11-28T23:00:00Z

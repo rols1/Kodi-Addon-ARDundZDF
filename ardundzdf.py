@@ -37,18 +37,15 @@ ReadFavourites=util.ReadFavourites; get_summary_pre=util.get_summary_pre; get_pl
 get_startsender=util.get_startsender; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio;
 transl_pubDate=util.transl_pubDate; 
 
-
 import resources.lib.updater 			as updater		
-import resources.lib.EPG				as EPG	
-import resources.lib.Podcontent 		as Podcontent
-import resources.lib.zdfmobile
-import resources.lib.ARDnew
+import resources.lib.EPG				as EPG		
+
 # import resources.lib.ARD_Bildgalerie 	as ARD_Bildgalerie	# 10.12.2018 ARD-Link nicht mehr verfügbar
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.4'		 
-VDATE = '20.06.2019'
+VERSION =  '1.7.5'		 
+VDATE = '23.06.2019'
 
 # 
 #	
@@ -215,6 +212,17 @@ ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]
 HANDLE			= int(sys.argv[1])
+																		# Modul-Importe je nach Setting,
+																		#	EPG + updater s.o.
+if SETTINGS.getSetting('pref_use_podcast') ==  'true':					# ARD-Radio-Podcasts
+	import resources.lib.Podcontent 		as Podcontent
+if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':					# ZDFmobile					
+	import resources.lib.zdfmobile
+if SETTINGS.getSetting('pref_use_classic') == 'false':					# ARD Neu
+	import resources.lib.ARDnew
+if SETTINGS.getSetting('pref_use_3sat') == 'true':						# 3Sat
+	import resources.lib.my3Sat
+																		
 
 ICON = R(ICON)
 PLog("ICON: " + ICON)
@@ -276,9 +284,10 @@ def Main():
 	li = xbmcgui.ListItem("ARD und ZDF")
 	
 	title="Suche in ARD und ZDF"
+	tagline = 'bei der ARD-Suche wird zur Zeit noch die Classic-Version genutzt. '
 	fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
-		thumb=R('suche_ardundzdf.png'), fparams=fparams)
+		thumb=R('suche_ardundzdf.png'), tagline=tagline, fparams=fparams)
 		
 
 	if SETTINGS.getSetting('pref_use_classic') == 'true':	# Classic-Version der ARD-Mediathek
@@ -287,60 +296,76 @@ def Main():
 		fparams="&fparams={'name': '%s', 'sender': '%s'}" % (title, '')
 		PLog(fparams)	
 		addDir(li=li, label=title, action="dirList", dirID="Main_ARD", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_ARD_Classic), fparams=fparams)
+			thumb=R(ICON_MAIN_ARD_Classic), tagline=tagline, fparams=fparams)
 	else:
 		title = "ARD Mediathek Neu"
+		tagline = 'in den Settings sind ARD Mediathek Neu und ARD Mediathek Classic austauschbar'
 		fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, '')
 		PLog(fparams)	
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_ARD), fparams=fparams)
+			thumb=R(ICON_MAIN_ARD), tagline=tagline, fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':
 		PLog('zdfmobile_set: ')
+		tagline = 'in den Settings sind ZDF Mediathek und ZDFmobileaustauschbar'
 		fparams="&fparams={}"
 		addDir(li=li, label="ZDFmobile", action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
 			fanart=R(FANART), thumb=R(ICON_MAIN_ZDFMOBILE), fparams=fparams)
 	else:
+		tagline = 'in den Settings sind ZDF Mediathek und ZDFmobile austauschbar'
 		fparams="&fparams={'name': 'ZDF Mediathek'}"
 		addDir(li=li, label="ZDF Mediathek", action="dirList", dirID="Main_ZDF", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_ZDF), fparams=fparams)
-																																			
+			thumb=R(ICON_MAIN_ZDF), tagline=tagline, fparams=fparams)
+			
+	if SETTINGS.getSetting('pref_use_3sat') == 'true':
+		tagline = 'in den Settings kann das Modul 3Sat ein- und ausgeschaltet werden'
+		fparams="&fparams={'name': '3Sat'}"									# 3Sat-Modul
+		addDir(li=li, label="3Sat Mediathek", action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", 
+			fanart=R('3sat.png'), thumb=R('3sat.png'), tagline=tagline, fparams=fparams)
+			
+	tagline = 'TV-Livestreams stehen auch in ARD Mediathek Neu zur Verfügung'																																	
 	fparams="&fparams={'title': 'TV-Livestreams'}"
 	addDir(li=li, label='TV-Livestreams', action="dirList", dirID="SenderLiveListePre", 
-		fanart=R(FANART), thumb=R(ICON_MAIN_TVLIVE), fparams=fparams)
+		fanart=R(FANART), thumb=R(ICON_MAIN_TVLIVE), tagline=tagline, fparams=fparams)
 	
+	tagline = 'Radio-Livestreams stehen auch in der neuen ARD Audiothek zur Verfügung'
 	fparams="&fparams={'path': 'ARD_RadioAll', 'title': 'Radio-Livestreams'}"
 	addDir(li=li, label='Radio-Livestreams', action="dirList", dirID="RadioLiveListe", 
-		fanart=R(FANART), thumb=R(ICON_MAIN_RADIOLIVE), fparams=fparams)
+		fanart=R(FANART), thumb=R(ICON_MAIN_RADIOLIVE), tagline=tagline, fparams=fparams)
 		
-	if SETTINGS.getSetting('pref_use_podcast') ==  'true':	# ARD-Radio-Podcasts
-		summary = 'ARD-Radio-Podcasts suchen, hören und herunterladen'
-		fparams="&fparams={'name': 'PODCAST'}"
-		label = 'Radio-Podcasts Classic'
-		addDir(li=li, label=label, action="dirList", dirID="Main_POD", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_POD), fparams=fparams)
+	if SETTINGS.getSetting('pref_use_podcast') ==  'true':		# Podcasts / Audiothek
+		if SETTINGS.getSetting('pref_use_audio') ==  'true':	# Audiothek
+			tagline	= 'ARD Audiothek - Entdecken, Themen, Livestreams'
+			summary = 'in den Settings sind Audiothek und Podcasts Classic austauschbar'
+			fparams="&fparams={'title': 'ARD Audiothek'}"
+			label = 'ARD Audiothek - NEU'
+			addDir(li=li, label=label, action="dirList", dirID="AudioStart", fanart=R(FANART), 
+				thumb=R(ICON_MAIN_AUDIO), summary=summary, tagline=tagline, fparams=fparams)
+		else:													# Podcasts
+			tagline	= 'ARD-Radio-Podcasts suchen, hören und herunterladen'
+			summary = 'in den Settings sind Audiothek und Podcasts Classic austauschbar'
+			fparams="&fparams={'name': 'PODCAST'}"
+			label = 'Radio-Podcasts Classic'
+			addDir(li=li, label=label, action="dirList", dirID="Main_POD", fanart=R(FANART), 
+				thumb=R(ICON_MAIN_POD), summary=summary, tagline=tagline, fparams=fparams)
 						
-		summary = 'ARD Audiothek - Entdecken, Themen, Livestreams'
-		fparams="&fparams={'title': 'ARD Audiothek'}"
-		label = 'ARD Audiothek - NEU'
-		addDir(li=li, label=label, action="dirList", dirID="AudioStart", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_AUDIO), fparams=fparams)
-											
 	if SETTINGS.getSetting('pref_use_downloads') ==  'true':	# Download-Tools. zeigen
-		summary = 'Download-Tools: Verschieben, Loeschen, Ansehen, Verzeichnisse bearbeiten'
+		tagline = 'Download-Tools: Verschieben, Loeschen, Ansehen, Verzeichnisse bearbeiten'
 		fparams="&fparams={}"
 		addDir(li=li, label='Download-Tools', action="dirList", dirID="DownloadsTools", 
-			fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), fparams=fparams)		
+			fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)	
+				
 	if SETTINGS.getSetting('pref_showFavs') ==  'true':			# Favoriten einblenden
-		summary = 'Favoriten: ARDundZDF-Favoriten zeigen und aufrufen'
+		tagline = "Kodi's ARDundZDF-Favoriten zeigen und aufrufen"
 		fparams="&fparams={'mode': 'Favs'}"
 		addDir(li=li, label='Favoriten', action="dirList", dirID="ShowFavs", 
-			fanart=R(FANART), thumb=R(ICON_DIR_FAVORITS), fparams=fparams)		
+			fanart=R(FANART), thumb=R(ICON_DIR_FAVORITS), tagline=tagline, fparams=fparams)	
+				
 	if SETTINGS.getSetting('pref_watchlist') ==  'true':		# Merkliste einblenden
-		summary = 'Merkliste: ARDundZDF-Merkliste zeigen'
+		tagline = 'interne Merkliste des Addons'
 		fparams="&fparams={'mode': 'Merk'}"
 		addDir(li=li, label='Merkliste', action="dirList", dirID="ShowFavs", 
-			fanart=R(FANART), thumb=R(ICON_DIR_WATCH), fparams=fparams)		
+			fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tagline, fparams=fparams)		
 								
 	repo_url = 'https://github.com/{0}/releases/'.format(GITHUB_REPOSITORY)
 	call_update = False
@@ -607,9 +632,10 @@ def AudioStart(title):
 	
 	# Button für Podcast-Favoriten anhängen 						# Podcast-Favoriten
 	title="Podcast-Favoriten"; 
+	tagline = 'konfigurierbar mit der Datei podcast-favorits.txt im Addon-Verzeichnis resources'
 	fparams="&fparams={'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="PodFavoritenListe", fanart=R(ICON_MAIN_POD), 
-		thumb=R(ICON_POD_FAVORITEN), fparams=fparams)
+		thumb=R(ICON_POD_FAVORITEN), tagline=tagline, fparams=fparams)
 
 	# Button für Livestreams anhängen (eigenes ListItem)		# Livestreams
 	title = 'Livestreams'	
@@ -1673,7 +1699,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	# todo: nach WM entfernen
 	#	s. Forum https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF Post 472ff
 	# Button ist Behelfslösung für Frauen-Fußball-WM - url via chrome-developer-tools ermittelt
-	# Button ist zusätzl. dauerhaft im Menü ARD Sportschau platziert.
+	# Button ist zusätzl. dauerhaft im Menü ARD Sportschau (Livestream 3) platziert.
 	if "/frankreich2019/live" in path:
 		url = "https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8"
 		summ = 'bitte die FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
@@ -4860,7 +4886,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 		
 		
 #-----------------------------
-# Download + Ablage master.m3u8, einschl. Behandlung relativer Links
+# Ablage master.m3u8, einschl. Behandlung relativer Links
 #	Button für "Bandbreite und Aufloesung automatisch" (master.m3u8)
 #	Die Ablage dient zur Auswertung der Einzelauflösungen, kann aber bei Kodi auch
 #	zum Videostart verwendet werden. 
@@ -6590,7 +6616,7 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 						title = '%s. %s [m3u8] Bandbreite und Aufloesung automatisch | %s' % (str(i), quality, title_call)
 						title = UtfToStr(title)
 
-						#  Download + Ablage master.m3u8:
+						#   "auto"-Button + Ablage master.m3u8:
 						li = ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, tagline=tagline, descr=Plot_par,
 							sub_path=sub_path)	
 					else:									# m3u8 enthält Auflösungen high + med
