@@ -335,7 +335,7 @@ def SendungenDatum(SendDate, title):
 		sendung	= stringextract('level-6', '</', rec)
 		sendung	= sendung.replace('">', ''); sendung = sendung.strip()
 		descr	= stringextract('teaser-epg-text">', '</p>', rec)		# mehrere Zeilen
-		descr	= (descr.replace('</b>', ' ').replace('\n\n', '\n')) 
+		#descr	= (descr.replace('</b>', ' ').replace('\n\n', '\n')) 
 		descr	= cleanhtml(descr); descr = unescape(descr)
 		zeit	= stringextract('class="time">', '</', rec)
 		dauer	= stringextract('class="label">', '</', rec)
@@ -585,7 +585,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		PLog(img_src); PLog(rubrik); PLog(title);  PLog(href); PLog(descr);
 		
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s', 'duration': '%s'}" %\
-			(urllib2.quote(title), urllib2.quote(path), urllib2.quote(img_src), descr_par, dauer, duration)
+			(urllib2.quote(title), urllib2.quote(href), urllib2.quote(img_src), descr_par, dauer, duration)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams)
 
@@ -851,16 +851,26 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 	page = page.replace('\\', '')
 	PLog(page[:100])
 
-	videodat_url = stringextract('ptmd-template":"', '"', page) # 3. neue Video-ID ermitteln
-	PLog(videodat_url)
 	try:
+		videodat	= blockextract('ptmd-template":"',page)		# mehrfach möglich
+		videodat	= videodat[-1]								# letzte ist relevant
+		videodat_url= stringextract('ptmd-template":"', '"', videodat)
 		video_ID = videodat_url.split('/')[-1]					#  ID z.B. 190521_sendung_nano
 		videodat_url = 'https://api.3sat.de/tmd/2/ngplayer_2_3/vod/ptmd/3sat/' + video_ID
+		PLog("videodat_url: " + videodat_url)
 		page = get_page3sat(path=videodat_url, apiToken=apiToken)
 	except Exception as exception:
 		PLog(str(exception))
 		page = ""
-	
+		
+	if page == '':											# Alternative mediathek statt 3sat
+		videodat_url = 'https://api.3sat.de/tmd/2/ngplayer_2_3/vod/ptmd/mediathek/' + video_ID
+		try:
+			page = get_page3sat(path=videodat_url, apiToken=apiToken)
+		except Exception as exception:
+			PLog(str(exception))
+			page = ""
+		
 	if 	'formitaeten' not in page:
 		msg1 = "keine Videoquelle gefunden. Seite:\n%s" % path
 		PLog(msg1)

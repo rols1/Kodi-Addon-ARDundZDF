@@ -7,6 +7,13 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+23.06.2019	1.7.6	SingleBeitrag (Modul my3Sat): Ermittlung der videodat_url aus letzter statt
+			erster Fundstelle (erste kann zu falschem Video führen).
+			Sendereihe_Sendungen: Fix Param. path (Inhalt href statt Inhalt path) - der
+			Beitrag wurde nicht gefunden.
+			SingleBeitrag (Modul my3Sat): alternative videodat_url (Verwendung von
+			../ptmd/mediathek/ statt ../ptmd/3Sat/) - kommt vereinzelt vor.
+
 23.06.2019	1.7.5	3Sat-Integration - Übernahme relevanter Funktionen aus Plex-Plugin-3Sat_Mediathek
 			in neues Modul my3Sat.
 			Modul my3Sat: Migration Code (Directory-Object -> Listitem, Video_Object ->

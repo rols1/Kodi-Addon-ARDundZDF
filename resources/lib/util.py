@@ -799,7 +799,7 @@ def unescape(line):
 		#	"sächsischer Genetiv", Bsp. Scott's
 		#	Carriage Return (Cr)
 		("–", "-"), ("&#x27;", "'"), ("&#xD;", ""), ("\xc2\xb7", "-"),
-		('undoacute;', 'o'), ('&eacute;', 'e')):
+		('undoacute;', 'o'), ('&eacute;', 'e'), ('&egrave;', 'e')):
 			
 		line = line.replace(*r)
 	return line
