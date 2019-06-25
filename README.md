@@ -13,6 +13,8 @@ Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/release
 Das Plugin löst die Vorgänger Plex-Plugin-ARDMediathek2015 und Plex-Plugin-ARDMediathek2016
 ab. Der Relaunch des ZDF-Mediathek-Internetangebots vom 28.10.2016 ist eingearbeitet. 
 
+Die ARD kündigt seit einigen Wochen die Einstellung der Classic-Funktionen an. Bis zur Umsetzung verbleiben der entsprechende Code im Addon (ARD Mediathek Classic, Radio-Podcasts).
+
 #### Rückmeldungen willkommen:
 Im Forum: https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/  
 direkt: rols1@gmx.de 
@@ -34,6 +36,7 @@ Funktionen:
 - Startseite (wie Webseite)
 - Sendung Verpasst
 - Sendungen A-Z
+- ARD Sportschau
 - Senderwahl
 
 #### ZDF Mediathek: 
@@ -43,10 +46,17 @@ Funktionen:
 - Rubriken
 - MeistGesehen
 - Neu in der Mediathek
-- Barrierearm (Hörfassunge, Untertitel, Gebärdensprache)
+- Barrierearm (Hörfassungen, Untertitel, Gebärdensprache)
 - ZDFenglish
 - ZDFarabic
 - Bilderserien
+
+#### 3Sat Mediathek:
+- Suche nach Sendungen
+- 3Sat-Livestream
+- Sendung Verpasst (Sendungen der letzten 30 Tage
+- Sendungen A-Z
+- Rubriken
 
 #### Radio-Podcasts:
 - Sendungen A-Z
@@ -56,7 +66,17 @@ Funktionen:
 - Neueste Audios
 - Meist abgerufen
 - Refugee-Radio
+
+#### ARD-Audiothek Neu:
+- Highlights
+- Unsere Favoriten
+- Sammlungen
+- Meistgehört
+- Ausgewählte Sendungen
+- Themen
+- Sendungen A-Z (alle Radiosender)
 - Podcast-Favoriten (manuell erweiterbar)
+- Livestreams
 
 #### TV-Live-Streams (30.08.2018: 33 Sender), Aufnahmefunktion: 
 - ARD- und ZDF-Sender überregional und regional, einige ausgewählte Privatsender
