@@ -12,8 +12,7 @@
    	<setting label="EPG-Daten für TV-Live-Sender zeigen - dauert etwas länger" type="bool" id="pref_use_epg" default="false"/>
    	<setting label="Inhaltstext zu Video im Voraus laden - kann sehr lange dauern!" type="bool" id="pref_load_summary" default="false"/>
 	<setting type="sep"/>
-	<setting label="Video-Bandbreiten und -auflösungen anzeigen (Sofortstart entfällt)" type="bool" id="pref_show_resolution" default="true"/>
-	<setting label="Sofortstart für TV-Live und Videos (Downloads-Buttons entfallen)" type="bool" id="pref_video_direct" default="false"/>
+	<setting label="TV-Live / Videos: Sofortstart statt Auflösungen und Download" type="bool" id="pref_video_direct" default="false"/>
 	<setting label="Untertitel: auf vorhandene Untertitel hinweisen" type="bool" id="pref_UT_Info" default="true"/>
  	<setting label="Untertitel: falls vorhanden, im Player einschalten" type="bool" id="pref_UT_ON" default="true"/>
   </category>

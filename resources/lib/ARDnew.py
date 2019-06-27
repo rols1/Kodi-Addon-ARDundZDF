@@ -349,8 +349,7 @@ def ARDStartRubrik(path, title, widgetID='', ID=''):
 	if 'Livestream' in ID:
 		gridlist = blockextract('"broadcastedOn"', page)
 		if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-			if SETTINGS.getSetting('pref_show_resolution') == 'false':
-				mediatype='video'
+			mediatype='video'
 	else:
 		# die Seiten mit Videolinks (availableTo) können zusätzl. Beiträge enthalten
 		#	('"images":') - z.Z. nicht berücksichtigt. Falls doch geplant, müssten sie
@@ -673,8 +672,7 @@ def ARDStartSingle(path, title, duration, ID=''):
 	
 	mediatype='							'# Kennz. Video für Sofortstart 
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
-			mediatype='video'
+		mediatype='video'
 	
 	summ = repl_json_chars(summ)
 	summ_lable = summ
@@ -811,10 +809,9 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 	
 	Plot = "%s||||%s" % (tagline, summ)					# || Code für LF (\n scheitert in router)
 	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true':	# Sofortstart
-		if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
-			PLog('Sofortstart: ARDStartVideoStreams')
-			PlayVideo(url=href, title=title, thumb=img, Plot=Plot, sub_path=sub_path, Merk=Merk)
-			return
+		PLog('Sofortstart: ARDStartVideoStreams')
+		PlayVideo(url=href, title=title, thumb=img, Plot=Plot, sub_path=sub_path, Merk=Merk)
+		return
 		
 	title=repl_json_chars(title); title_org=repl_json_chars(title_org); lable=repl_json_chars(lable); 
 	summ=repl_json_chars(summ); tagline=repl_json_chars(tagline); 
@@ -870,15 +867,14 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 	# Sofortstart mit letzter=höchster Qualität	
 	Plot = "%s||||%s" % (tagline, summary_org)		# || Code für LF (\n scheitert in router)
 	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
-			PLog('Sofortstart: ARDStartVideoMP4')
-			video = download_list[-1]				# letztes Element = höchste Qualität
-			meta, href = video.split('#')
-			PLog(meta); PLog(href);
-			quality 	= meta.split('|')[0]		# "Qualität: sehr hohe | Titel.."
-			PLog(quality);
-			PlayVideo(url=href, title=title, thumb=img, Plot=Plot, sub_path=sub_path, Merk=Merk)
-			return
+		PLog('Sofortstart: ARDStartVideoMP4')
+		video = download_list[-1]				# letztes Element = höchste Qualität
+		meta, href = video.split('#')
+		PLog(meta); PLog(href);
+		quality 	= meta.split('|')[0]		# "Qualität: sehr hohe | Titel.."
+		PLog(quality);
+		PlayVideo(url=href, title=title, thumb=img, Plot=Plot, sub_path=sub_path, Merk=Merk)
+		return
 		
 	for video in  download_list:
 		PLog(video);

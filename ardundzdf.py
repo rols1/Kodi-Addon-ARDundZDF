@@ -44,8 +44,8 @@ import resources.lib.EPG				as EPG
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.6'		 
-VDATE = '23.06.2019'
+VERSION =  '1.7.7'		 
+VDATE = '27.06.2019'
 
 # 
 #	
@@ -1454,8 +1454,7 @@ def ARDSport(title):
 		
 	mediatype=''	
 	if SETTINGS.getSetting('pref_video_direct') == 'true': 
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
-			mediatype='video'
+		mediatype='video'
 			
 	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3666-ardjson.json		
 	title = "ARDSportschau FIFA FRAUEN WM 2019 Livestream 1"
@@ -1463,11 +1462,18 @@ def ARDSport(title):
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
 	Merk = 'false'
 	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
-		urllib.quote_plus(summ), Merk)
-	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-		mediatype=mediatype, summary=summ) 		
+	if not mediatype:										# Einzelauflösungen
+		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ))
+		addDir(li=li, label=title, action="dirList", dirID="show_single_bandwith", fanart=img, thumb=img, fparams=fparams, 
+			summary=summ) 		
+	else:
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
+		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+			mediatype=mediatype, summary=summ) 		
 
 	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3670-ardjson.json
 	title = "ARDSportschau FIFA FRAUEN WM 2019 Livestream 2"
@@ -1475,11 +1481,18 @@ def ARDSport(title):
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
 	Merk = 'false'
 	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
-		urllib.quote_plus(summ), Merk)
-	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-		mediatype=mediatype, summary=summ) 		
+	if not mediatype:										# Einzelauflösungen
+		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ))
+		addDir(li=li, label=title, action="dirList", dirID="show_single_bandwith", fanart=img, thumb=img, fparams=fparams, 
+			summary=summ) 		
+	else:
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
+		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+			mediatype=mediatype, summary=summ) 		
 
 	#
 	title = "ARDSportschau FIFA FRAUEN WM 2019 Livestream 3"
@@ -1487,11 +1500,18 @@ def ARDSport(title):
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
 	Merk = 'false'
 	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
-		urllib.quote_plus(summ), Merk)
-	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-		mediatype=mediatype, summary=summ) 	
+	if not mediatype:										# Einzelauflösungen
+		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ))
+		addDir(li=li, label=title, action="dirList", dirID="show_single_bandwith", fanart=img, thumb=img, fparams=fparams, 
+			summary=summ) 		
+	else:
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
+		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+			mediatype=mediatype, summary=summ) 	
 			
 	channel = 'Regional'									# zum Livestream: MDR+ Eventlivestreams
 	onlySender = 'MDR+ Eventlivestreams & SocialTV'	
@@ -1529,8 +1549,7 @@ def ARDSportPanel(title, path, img):
 	
 	mediatype=''
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
-			mediatype='video'
+		mediatype='video'
 			
 	SBASE = 'https://www.sportschau.de'
 	for s in sendungen:
@@ -1750,11 +1769,10 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		
 		# Sofortstart - direkt, falls Listing nicht Playable
 		if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': 
-			if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
-				PLog('Sofortstart: ARDSportVideo')
-				PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
-				PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
-				return
+			PLog('Sofortstart: ARDSportVideo')
+			PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
+			PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
+			return
 		
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
 			(urllib.quote_plus(m3u8_url), urllib.quote_plus(title), urllib.quote_plus(img), 
@@ -1809,12 +1827,13 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	if url.endswith('.mp3'):
 		mediatype = 'audio'
 		title = "Audio: %s"  % title
-	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': # Sofortstart - direkt, falls Listing nicht Playable
-		if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
-			PLog('Sofortstart: ARDSportPanel')
-			PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
-			PlayVideo(url=url, title=title, thumb=img, Plot=summ, sub_path="")
-			return
+		
+	# Sofortstart - direkt, falls Listing nicht Playable:
+	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': 
+		PLog('Sofortstart: ARDSportPanel')
+		PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
+		PlayVideo(url=url, title=title, thumb=img, Plot=summ, sub_path="")
+		return
 	
 	summ=UtfToStr(summ); summ=UtfToStr(summ); title=UtfToStr(title); 
 	if url.endswith('master.m3u8'):
@@ -2083,8 +2102,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 					
 		if	ID == 'Livestreams':						
 			if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-				if SETTINGS.getSetting('pref_show_resolution') == 'false':
-					mediatype='video'
+				mediatype='video'
 			subline =  stringextract('class="subtitle">', '</p>', s) # Uhrzeit + Sendung
 			subline = cleanhtml(subline); subline = unescape(subline);
 			subline=subline.replace('&', '+') 
@@ -2127,9 +2145,8 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 				PLog('Medien-Url: ' + path)	
 						
 				if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-					if SETTINGS.getSetting('pref_show_resolution') == 'false':
-						mediatype='video'
-						Plot = "%s||||%s" % (subline, summ)				# für Sofortstart/Plot in SingleSendung
+					mediatype='video'
+					Plot = "%s||||%s" % (subline, summ)				# für Sofortstart/Plot in SingleSendung
 						
 				if 'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
 					if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
@@ -2856,8 +2873,7 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 	mediatype=''							# Kennz. Video für Sofortstart, hier für dirID="SingleSendung"
 	if ID != 'PODCAST':						# nicht bei Podcasts
 		if SETTINGS.getSetting('pref_video_direct') == 'true':
-			if SETTINGS.getSetting('pref_show_resolution') == 'false':
-				mediatype='video'
+			mediatype='video'
 	
 	send_arr = get_sendungen(li, sendungen, ID, mode)	# send_arr enthält pro Satz 9 Listen 
 	# Rückgabe send_arr = (send_path, send_headline, send_img_src, send_millsec_duration)
@@ -3032,8 +3048,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 		
 	mediatype=''						# Kennz. Video für Sofortstart, hier für dirID="SingleSendung"
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
-			mediatype='video'
+		mediatype='video'
 
 	# Bei Podcasts enthält path i.d.R. 1 Link zur Seite mit einer mp3-Datei, bei Podcasts von PodFavoriten 
 	# wird der mp3-Link	direkt in path übergeben.
@@ -3069,13 +3084,13 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 	summary=summary.replace('||', '\n')		
 	summary_org = summary_org.replace('\n', '||')
 	if m3u8_master:	 		 		  								# nicht bei rtmp-Links (ohne master wie m3u8)
-		if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': # Sofortstart - direkt, falls Listing nicht Playable
-			if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
-				PLog('Sofortstart: SingleSendung')
-				PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
-				# sub_path=''	# fehlt bei ARD - entf. ab 1.4.2019
-				PlayVideo(url=m3u8_master, title=title_org, thumb=thumb, Plot=summary, sub_path=sub_path)
-				return
+		# Sofortstart - direkt, falls Listing nicht Playable:
+		if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': 
+			PLog('Sofortstart: SingleSendung')
+			PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
+			# sub_path=''	# fehlt bei ARD - entf. ab 1.4.2019
+			PlayVideo(url=m3u8_master, title=title_org, thumb=thumb, Plot=summary, sub_path=sub_path)
+			return
 			
 		title = '1. Bandbreite und Auflösung automatisch' + geoblock			# master.m3u8
 		m3u8_master = m3u8_master.replace('https', 'http')	# 26.06.2017: nun auch ARD mit https
@@ -4678,8 +4693,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	
 	mediatype='' 						# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
-			mediatype='video'
+		mediatype='video'
 
 	liste = blockextract('<item>', mylist)				# Details eines Senders
 	PLog(len(liste));
@@ -4785,7 +4799,6 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''):
 	PLog('SenderLiveResolution:')
 	PLog(SETTINGS.getSetting('pref_video_direct'))
-	PLog(SETTINGS.getSetting('pref_show_resolution'))
 	PLog(title)
 	title = UtfToStr(title)
 
@@ -4828,10 +4841,9 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 	# direkter Sprung hier erforderlich, da sonst der Player mit dem Verz. SenderLiveResolution
 	#	startet + fehlschlägt.
 	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true':	# Sofortstart
-		if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
-			PLog('Sofortstart: SenderLiveResolution')
-			PlayVideo(url=path, title=title, thumb=thumb, Plot=descr, Merk=Merk)
-			return
+		PLog('Sofortstart: SenderLiveResolution')
+		PlayVideo(url=path, title=title, thumb=thumb, Plot=descr, Merk=Merk)
+		return
 	
 	title = UtfToStr(title); descr = UtfToStr(descr)
 	url_m3u8 = path
@@ -4885,6 +4897,19 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		
 		
+#--------------------------------------------------------------------------------------------------
+# Button für Einzelauflösungen für Streamlink url_m3u8
+#	ID: Kennung für home
+def show_single_bandwith(url_m3u8, thumb, title, descr, ID):
+	PLog('show_single_bandwith:'); 
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID=ID)						# Home-Button
+	
+	li = Parseplaylist(li, url_m3u8, thumb, geoblock='', tagline=title, descr=descr)	
+	
+	xbmcplugin.endOfDirectory(HANDLE)
+
 #-----------------------------
 # Ablage master.m3u8, einschl. Behandlung relativer Links
 #	Button für "Bandbreite und Aufloesung automatisch" (master.m3u8)
@@ -5265,8 +5290,7 @@ def ZDFStartLive(title): 										# ZDF-Livestreams von ZDFStart
 		
 	mediatype=''									# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
-			mediatype='video'
+		mediatype='video'
 
 	content = blockextract('js-livetv-scroller-cell', page)		# Playerdaten einschl. apiToken
 	for rec in content:
@@ -5879,8 +5903,7 @@ def ZDFSportLive(title):
 	if '<strong>Jetzt live</strong>' in page:						# 1. LIVESTREAM läuft!
 		mediatype='' 		
 		if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-			if SETTINGS.getSetting('pref_show_resolution') == 'false':
-				mediatype='video'
+			mediatype='video'
 		rec = stringextract('class="big-headline">Derzeit live</h2>', 'data-tracking="', page)
 		href 	= stringextract('data-plusbar-url="', '"', rec)
 		imgset 	= stringextract('data-zdfplayer-teaser-image=', '</div', rec)
@@ -5991,8 +6014,7 @@ def ZDFSportLiveSingle(title, path, img):
 	# 1. Titelbeitrag holen
 	mediatype=''
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
-			mediatype='video'
+		mediatype='video'
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (urllib2.quote(path),
 		urllib2.quote(title), img, urllib2.quote(descr))	
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
@@ -6105,8 +6127,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 
 	mediatype=''									# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
-			mediatype='video'
+		mediatype='video'
 			
 	items_cnt=0									# listitemzähler
 	for rec in content:	
@@ -6393,7 +6414,7 @@ def ZDF_getVideoSources(url, title, thumb, tagline, segment_start=None, segment_
 	PLog(title); PLog(title_oc); PLog(tagline); PLog(sid); 
 	title = UtfToStr(title); tagline = UtfToStr(tagline); 
 		
-	if SETTINGS.getSetting('pref_show_resolution') == 'true':	# ZDFotherSources nicht bei Sofortstart zeigen
+	if SETTINGS.getSetting('pref_video_direct') == 'false':	# ZDFotherSources nicht bei Sofortstart zeigen
 		# li = Parseplaylist(li, videoURL, thumb)	# hier nicht benötigt - das ZDF bietet bereits 3 Auflösungsbereiche
 		fparams="&fparams={'title': '%s', 'tagline': '%s', 'thumb': '%s', 'sid': '%s', 'apiToken1': '%s', 'apiToken2': '%s'}" \
 			% (urllib2.quote(title), urllib2.quote(tagline), urllib2.quote(thumb), sid, apiToken1, apiToken2)
@@ -6608,10 +6629,9 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 				if url:		
 					if url.find('master.m3u8') > 0:			# m3u8 enthält alle Auflösungen
 						if SETTINGS.getSetting('pref_video_direct') == 'true'or Merk == 'true':	# Sofortstart
-							if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
-								PLog('Sofortstart: show_formitaeten')
-								PlayVideo(url=url, title=title_call, thumb=thumb, Plot=Plot_par, sub_path=sub_path, Merk=Merk)
-								return li, ''	# sauber raus in ZDF_getVideoSources
+							PLog('Sofortstart: show_formitaeten')
+							PlayVideo(url=url, title=title_call, thumb=thumb, Plot=Plot_par, sub_path=sub_path, Merk=Merk)
+							return li, ''	# sauber raus in ZDF_getVideoSources
 						
 						title = '%s. %s [m3u8] Bandbreite und Aufloesung automatisch | %s' % (str(i), quality, title_call)
 						title = UtfToStr(title)
@@ -6798,14 +6818,15 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, tagline='', summary='', 
 #  2. Besonderheit: fast identische URL's zu einer Auflösung (...av-p.m3u8, ...av-b.m3u8) Unterschied n.b.
 #  3. Besonderheit: für manche Sendungen nur 1 Qual.-Stufe verfügbar (Bsp. Abendschau RBB)
 #  4. Besonderheit: manche Playlists enthalten zusätzlich abgeschaltete Links, gekennzeichnet mit #. Fehler Webplayer:
-#		 crossdomain access denied. Keine Probleme mit OpenPHT und VLC
+#		 crossdomain access denied. Keine Probleme mit OpenPHT und VLC - betr. nur Plex.
 #  10.08.2017 Filter für Video-Sofort-Format - wieder entfernt 17.02.2018
+#
+	PLog ('Parseplaylist: ' + url_m3u8)
 
-	if SETTINGS.getSetting('pref_show_resolution') == 'false':
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		return li
 
 	tagline=UtfToStr(tagline); summary=UtfToStr(summary); descr=UtfToStr(descr);
-	PLog ('Parseplaylist: ' + url_m3u8)
 	playlist = ''
 	# seit ZDF-Relaunch 28.10.2016 dort nur noch https
 	if url_m3u8.find('http://') == 0 or url_m3u8.find('https://') == 0:		# URL oder lokale Datei?			

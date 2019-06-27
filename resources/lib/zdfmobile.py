@@ -215,8 +215,7 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 		
 	mediatype=''													# Kennz. Videos im Listing
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		if SETTINGS.getSetting('pref_show_resolution') == 'false':
-			mediatype='video'
+		mediatype='video'
 	PLog('mediatype: ' + mediatype); 	
 			
 	if("stage" in jsonObject):
@@ -340,8 +339,7 @@ def SingleRubrik(path, title, DictID):
 		mediatype=''
 		if entry["type"] == 'video':		# Kennz. Video nur bei Sofortstart in ShowVideo
 			if SETTINGS.getSetting('pref_video_direct') == 'true':
-				if SETTINGS.getSetting('pref_show_resolution') == 'false':
-					mediatype='video'
+				mediatype='video'
 		
 		# alle anderen entry-types werden übersprungen, da sie keine 
 		# verwendbaren Videos enthalten - Bsp.:
@@ -465,10 +463,9 @@ def ShowVideo(path, DictID, Merk='false'):
 		if url.find('master.m3u8') > 0:		# 
 			if 'auto' in quality:			# speichern für ShowSingleBandwidth
 				if SETTINGS.getSetting('pref_video_direct') == 'true':	     # Sofortstart
-					if SETTINGS.getSetting('pref_show_resolution') == 'false':
-						PLog('Sofortstart: ZDF Mobile (ShowVideo)')
-						PlayVideo(url=url, title=title_org, thumb=img, Plot=descr, Merk=Merk)
-						return
+					PLog('Sofortstart: ZDF Mobile (ShowVideo)')
+					PlayVideo(url=url, title=title_org, thumb=img, Plot=descr, Merk=Merk)
+					return
 				url_auto = url
 			title=str(i) + '. ' + quality + ' [m3u8]'						# Einzelauflösungen
 			PLog("title: " + title)

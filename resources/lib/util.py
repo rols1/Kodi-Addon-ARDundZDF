@@ -1076,7 +1076,8 @@ def ReadFavourites(mode):
 	return my_favs
 
 #----------------------------------------------------------------
-# holt summary (Inhaltstext) für eine Sendung, abhängig von SETTINGS('pref_load_summary'). 
+# holt summary (Inhaltstext) für eine Sendung, abhängig von SETTINGS('pref_load_summary')
+#	- Inhaltstext zu Video im Voraus laden. 
 #	SETTINGS durch Aufrufer geprüft
 #	ID: ARD, ZDF - Podcasts entspr. ARD
 # Es wird nur die Webseite ausgewertet, nicht die json-Inhalte der Ladekette.

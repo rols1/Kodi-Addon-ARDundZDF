@@ -7,6 +7,14 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+27.06.2019	1.7.7	get_teaserElement (Modul my3Sat): Speichern / Laden der Nachlade-Beiträgen
+			im TEXTSTORE (wie in ZDFRubrikSingle).
+			ZDFRubrikSingle: Logging fpath in teaserElement entfernt (Performance).
+			Settings: Wegfall der Einstellung "Video-Bandbreiten und -auflösungen anzeigen",
+			Steuerung allein über die Einstellung "Sofortstart statt Auflösungen und Download".
+			ARDSport: Button für Einzelauflösungen der WM-Livestreams eingefügt (abhängig
+			von Settings).
+
 23.06.2019	1.7.6	SingleBeitrag (Modul my3Sat): Ermittlung der videodat_url aus letzter statt
 			erster Fundstelle (erste kann zu falschem Video führen).
 			Sendereihe_Sendungen: Fix Param. path (Inhalt href statt Inhalt path) - der

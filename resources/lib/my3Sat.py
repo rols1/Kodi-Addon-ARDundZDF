@@ -658,7 +658,10 @@ def get_lazyload(li, page, ref_path):
 	
 #------------
 # Ersatz für javascript: Ermittlung Icon + Sendedauer
-#	rec durch unescaped
+#	rec hier bereits unescaped durch get_lazyload
+# Aus Performancegründen (Anzahl der Elemente manchmal 
+#	> 30) werden die Elemente in TEXTSTORE gecached, 
+#	unabhängig von SETTINGS('pref_load_summary').
 def get_teaserElement(rec):
 	PLog('get_teaserElement:')
 	# Reihenfolge Ersetzung: sophoraId, teaserHeadline, teasertext, clusterTitle
@@ -681,8 +684,14 @@ def get_teaserElement(rec):
 	path = "https://www.3sat.de/teaserElement?sophoraId=%s&style=m2&moduleId=mod-2&teaserHeadline=%s&teasertext=%s&clusterTitle=%s&clusterType=Cluster_S&sourceModuleType=cluster-s" % (sophoraId, teaserHeadline,teasertext,clusterTitle)
 	PLog(path)
 	
-	page, msg = get_page(path)				# teaserElement holen
-
+	fpath = os.path.join(TEXTSTORE, sophoraId)
+	PLog('fpath: ' + fpath)
+	if os.path.exists(fpath):				# teaserElement lokal laden
+		page =  RLoad(fpath, abs_path=True)
+	else:
+		page, msg = get_page(path)			# teaserElement holen
+		if page:							# 	und in TEXTSTORE speichern
+			msg = RSave(fpath, page)
 	PLog(page[:100])
 	
 	if page:								# 2. teaserElement auswerten
@@ -911,12 +920,11 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 					title = UtfToStr(title)
 					# Sofortstart - direkt, falls Listing nicht Playable			
 					if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': 
-						if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
-							PLog('Sofortstart: SingleBeitrag')
-							PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
-							# sub_path=''	# fehlt bei ARD - entf. ab 1.4.2019
-							PlayVideo(url=url, title=title_org, thumb=thumb, Plot=Plot_par, sub_path='')
-							return									
+						PLog('Sofortstart: SingleBeitrag')
+						PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
+						# sub_path=''	# fehlt bei ARD - entf. ab 1.4.2019
+						PlayVideo(url=url, title=title_org, thumb=thumb, Plot=Plot_par, sub_path='')
+						return									
 
 					#  "auto"-Button + Ablage master.m3u8:
 					# Da 3Sat 2 versch. m3u8-Qualitäten zeigt,verzichten wir (wie bei ZDF_getVideoSources)
@@ -969,10 +977,9 @@ def Live(name, epg='', Merk='false'):
 	summ = epg
 
 	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true':	# Sofortstart
-		if SETTINGS.getSetting('pref_show_resolution') == 'false' or Merk == 'true':
-			PLog('Sofortstart: SenderLiveResolution')
-			PlayVideo(url=url, title='3Sat Live TV', thumb=img, Plot=summ, Merk=Merk)
-			return	
+		PLog('Sofortstart: SenderLiveResolution')
+		PlayVideo(url=url, title='3Sat Live TV', thumb=img, Plot=summ, Merk=Merk)
+		return	
 							
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': 'false'}" %\
 		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
