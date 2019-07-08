@@ -1169,7 +1169,86 @@ def get_api_call(function, sender, myhash, pageNumber='', text='', clipId='', de
 	url_api 	= "%s?variables=%s&extensions=%s"  % (url_api, variables, extensions)
 	PLog('url_api %s: %s' % (function, url_api))
 	return url_api
-
+	
+#---------------------------------------------------------------- 
+# Suche in beiden Mediatheken
+#	Abruf jeweils der 1. Ergebnisseite
+#	Ohne Ergebnis -> Button mit Rücksprung hierher
+#	Ergebnis ZDF: -> ZDF_Search (erneuter Aufruf Seite 1, weitere Seiten dort rekursiv)
+#		Ablage in Dict nicht erf., Kodi-Cache ausreichend.
+#	Umlaute in Suche erzeugen unicode-Strings - UtfToStr-Behandl. jeweils in den Funktions-
+#		ketten.
+#
+def SearchARDundZDFnew(title, query='', pagenr=''):
+	PLog('SearchARDundZDFnew:');
+	
+	if query == '':
+		query = ardundzdf.get_query(channel='ARDundZDF') 
+	if  query == None or query.strip() == '':
+		# return li														# getting plugin Error
+		return ardundzdf.Main()
+		
+	PLog(query)
+	query_ard = query.split('|')[0]
+	query_zdf = query.split('|')[1]
+	
+	tag_negativ ='neue Suche in ARD und ZDF starten'					# ohne Treffer
+	tag_positiv ='gefundene Beiträge zeigen'							# mit Treffer
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)												# Home-Button
+	
+	#------------------------------------------------------------------	# Suche ARD
+	sendername, sender, kanal, img, az_sender = ARDSender[0].split(':') # in allen Sendern
+	pageNumber = 1
+	myhash = 'ebd79f9a91c559ec31363f2b6448fb489ddf4742c1ca911d3c16391e72d6bb18'  # Chrome-Dev.-Tools		
+	url_api	= get_api_call('ARDSearchnew', 'ard', myhash, pageNumber, text=query_ard) 
+	
+	query_lable = query_ard.replace('+', ' ')
+	page, msg = get_page(path=url_api)	
+		
+	vodTotal	= stringextract('"vodTotal":', ',', page)		# Beiträge?
+	gridlist = blockextract( '"mediumTitle":', page) 			# Sicherung?
+	if len(gridlist) == 0 or vodTotal == '0':				
+		label = "ARD | nichts gefunden zu: %s | neue Suche" % query_lable
+		title="Suche in ARD und ZDF"
+		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
+		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
+			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
+	else:	
+		title = "ARD: %s Video(s)  | %s" % (vodTotal, query_lable)
+		PLog(query_ard)
+		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '0'}" %\
+			(urllib2.quote(query_ard), urllib2.quote(title), sender)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
+			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
+		
+	#------------------------------------------------------------------	# Suche ZDF
+	ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&contentTypes=episode&sortBy=date&page=%s'
+	if pagenr == '':		# erster Aufruf muss '' sein
+		pagenr = 1
+	path_zdf = ZDF_Search_PATH % (urllib2.quote(query_zdf), pagenr) 
+	page, msg = get_page(path=path_zdf)	
+	searchResult = stringextract('data-loadmore-result-count="', '"', page)	# Anzahl Ergebnisse
+	PLog(searchResult);
+	
+	query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
+	query_lable = urllib2.unquote(query_lable)
+	if searchResult == '0' or 'class="artdirect " >' not in page:		# Sprung hierher
+		label = "ZDF | nichts gefunden zu: %s | neue Suche" % query_lable
+		title="Suche in ARD und ZDF"
+		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
+		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
+			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
+	else:	
+		title = "ZDF: %s Video(s)  | %s" % (searchResult, query_lable)
+		fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (urllib.quote_plus(query_zdf), 
+			title, pagenr)
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R('suche_ardundzdf.png'), 
+			thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
+				
+	xbmcplugin.endOfDirectory(HANDLE)
+	
 #---------------------------------------------------------------- 
 # Suche in Mediathek Neu 
 # Statt des api-Calls funktioniert auch https://www.ardmediathek.de/ard/search/%s

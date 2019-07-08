@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+08.07.2019	1.7.8	ARD-Sportschau: Livestream-Buttons der Frauen-Fußball-WM umbenannt in
+			"ARDSportschau Event-Livestream" (1 bis 3).
+			
 27.06.2019	1.7.7	get_teaserElement (Modul my3Sat): Speichern / Laden der Nachlade-Beiträgen
 			im TEXTSTORE (wie in ZDFRubrikSingle).
 			ZDFRubrikSingle: Logging fpath in teaserElement entfernt (Performance).

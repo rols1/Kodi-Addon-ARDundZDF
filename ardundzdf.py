@@ -44,8 +44,8 @@ import resources.lib.EPG				as EPG
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.7'		 
-VDATE = '27.06.2019'
+VERSION =  '1.7.8'		 
+VDATE = '08.07.2019'
 
 # 
 #	
@@ -281,13 +281,19 @@ def Main():
 
 	icon = R(ICON_MAIN_ARD)
 	label 		= NAME
-	li = xbmcgui.ListItem("ARD und ZDF")
 	
+	li = xbmcgui.ListItem("ARD und ZDF")
 	title="Suche in ARD und ZDF"
-	tagline = 'bei der ARD-Suche wird zur Zeit noch die Classic-Version genutzt. '
-	fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
-	addDir(li=li, label=title, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
-		thumb=R('suche_ardundzdf.png'), tagline=tagline, fparams=fparams)
+	if SETTINGS.getSetting('pref_use_classic') == 'true':
+		tagline = 'bei der ARD-Suche wird zur Zeit noch die Classic-Version genutzt. '
+		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
+		addDir(li=li, label=title, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
+			thumb=R('suche_ardundzdf.png'), tagline=tagline, fparams=fparams)
+	else:
+		tagline = 'gesucht wird in ARD  Mediathek Neu und in der ZDF Mediathek'
+		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
+			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tagline, fparams=fparams)
 		
 
 	if SETTINGS.getSetting('pref_use_classic') == 'true':	# Classic-Version der ARD-Mediathek
@@ -1457,11 +1463,11 @@ def ARDSport(title):
 		mediatype='video'
 			
 	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3666-ardjson.json		
-	title = "ARDSportschau FIFA FRAUEN WM 2019 Livestream 1"
+	title = "ARDSportschau Event-Livestream 1"
 	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_1@430235/master.m3u8"
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
 	Merk = 'false'
-	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
+	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
 	if not mediatype:										# Einzelauflösungen
 		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
 			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
@@ -1476,11 +1482,11 @@ def ARDSport(title):
 			mediatype=mediatype, summary=summ) 		
 
 	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3670-ardjson.json
-	title = "ARDSportschau FIFA FRAUEN WM 2019 Livestream 2"
+	title = "ARDSportschau Event-Livestream 2"
 	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_2@430236/master.m3u8"   
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
 	Merk = 'false'
-	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
+	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
 	if not mediatype:										# Einzelauflösungen
 		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
 			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
@@ -1495,11 +1501,11 @@ def ARDSport(title):
 			mediatype=mediatype, summary=summ) 		
 
 	#
-	title = "ARDSportschau FIFA FRAUEN WM 2019 Livestream 3"
+	title = "ARDSportschau Event-Livestream 3"
 	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8"
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
 	Merk = 'false'
-	summ = 'bitte die anderen FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
+	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
 	if not mediatype:										# Einzelauflösungen
 		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
 			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
