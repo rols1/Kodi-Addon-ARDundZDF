@@ -625,6 +625,7 @@ def ARDStartSingle(path, title, duration, ID=''):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		return li
 	PLog(len(page))
+	page= page.replace('\u002F', '/')						# 25.07.2019: Slahes neuerdings quotiert
 	
 	elements = blockextract('availableTo":', page)			# möglich: Mehrfachbeiträge? 
 	if len(elements) > 1:
@@ -685,7 +686,7 @@ def ARDStartSingle(path, title, duration, ID=''):
 	# tagline=transl_doubleUTF8(tagline)		# Bsp. â<U+0088><U+0099> (a mit Circumflex)
 
 	title=UtfToStr(title); summ=UtfToStr(summ); tagline=UtfToStr(tagline); 
-	path=UtfToStr(path);		# Path kann Umlaute enthalten
+	path=UtfToStr(path);						# Path kann Umlaute enthalten
 	
 	PLog(title); PLog(summ[:60]); PLog(tagline); PLog(img); PLog(path); PLog(sub_path);
 	title_new 	= "[COLOR blue]Streaming-Formate[/COLOR] | %s" % title
@@ -771,6 +772,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		return li
 	PLog(len(page))
+	page= page.replace('\u002F', '/')						# 25.07.2019: Slahes neuerdings quotiert
 	
 	href = ''; VideoUrls = []
 	Plugins = blockextract('_plugin', page)	# wir verwenden nur Plugin1 (s.o.)
@@ -844,6 +846,7 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		return li
 	PLog(len(page))
+	page= page.replace('\u002F', '/')			# 25.07.2019: Slahes neuerdings quotiert
 	
 	Plugins = blockextract('_plugin', page)	# wir verwenden nur Plugin1 (s.o.)
 	if len(Plugins) == 0:
@@ -1019,7 +1022,7 @@ def SendungenAZ(name, ID):
 def SendungenAZ_ARDnew(title, button, api_call): 
 	PLog('SendungenAZ_ARDnew:')
 	PLog('button: ' + button); 
-	title = title.decode(encoding="utf-8")	
+	title = title	
 	title_org = title
 	url_api_org	= api_call	# speichern für Fehlschlag
 		
@@ -1080,6 +1083,7 @@ def SendungenAZ_ARDnew(title, button, api_call):
 		msg = stringextract('message":"', '"', page)		# 	A-Z-Seite des Senders Daten enthält
 		msg = "ARD Server-Error: %s" % msg
 		PLog(msg)
+		
 	gridlist = blockextract( '"mediumTitle":', page) 		# Beiträge?
 	PLog('gridlist: ' + str(len(gridlist)))			
 	if len(gridlist) == 0:				
@@ -1091,23 +1095,26 @@ def SendungenAZ_ARDnew(title, button, api_call):
 		if len(glinks) == 0:
 			msg = 'Keine Beiträge gefunden zu %s' % button		# auch Fallback gescheitert
 			xbmcgui.Dialog().ok(ADDON_NAME, msg, '', '')	
+			
 		i=0
+		sender=UtfToStr(sender); button=UtfToStr(button); 
 		for glink in glinks:									# Fallback-Listing
 			i=i+1
 			targetID = stringextract('id":"', '"', glink)
-			href = href = 'http://page.ardmediathek.de/page-gateway/pages/%s/grouping/%s'  % (sender, targetID)			
-			PLog(glink); PLog(href);
+			href 	= 'http://page.ardmediathek.de/page-gateway/pages/%s/grouping/%s'  % (sender, targetID)	
 			label 	= '%s. Gruppe Beiträge zu %s' % ( str(i), button)
-			label 	= label.decode(encoding="utf-8")	
 			summ 	= 'Gezeigt wird der Inhalt für %s' % sendername
-			summ 	= summ.decode(encoding="utf-8")
-			tag	 	= 'lokale Beiträge (keine auf Alle-Seite gefunden)'.decode(encoding="utf-8")
+			tag	 	= 'lokale Beiträge (keine auf Alle-Seite gefunden)'
 			img		= R(ICON_ARD_AZ)
-			# Kennzeichnung ID='A-Z' für ARDStartRubrik,
+			
+			# Kennzeichnung ID='A-Z' für ARDStartRubrik
+			PLog("Satz_glink:")
+			href=UtfToStr(href); label=UtfToStr(label); 
+			PLog(glink); PLog(href); PLog(label);
 			fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s'}" %\
 				(urllib2.quote(href), urllib2.quote(label), 'A-Z')
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-				fparams=fparams)													
+				fparams=fparams, summary=summ, tagline=tag)													
 							
 		xbmcplugin.endOfDirectory(HANDLE)							# Ende Fallback	
 			

@@ -44,8 +44,8 @@ import resources.lib.EPG				as EPG
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.8'		 
-VDATE = '08.07.2019'
+VERSION =  '1.7.9'		 
+VDATE = '25.07.2019'
 
 # 
 #	
@@ -5068,6 +5068,7 @@ def RadioAnstalten(path, title, sender, fanart):
 	entry_path = path	# sichern
 	
 	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
 	
 	errmsg1 = 'RadioAnstalten | %s' % title			# Fehlermeldung xbmcgui.Dialog
 	errmsg2 = 'Seite kann nicht geladen werden, Url:'
@@ -7004,7 +7005,6 @@ PLog('Addon_URL: ' + PLUGIN_URL)		# sys.argv[0], plugin://plugin.video.ardundzdf
 PLog('ADDON_ID: ' + ADDON_ID); PLog(SETTINGS); PLog(ADDON_NAME);PLog(SETTINGS_LOC);
 PLog(ADDON_PATH);PLog(ADDON_VERSION);
 PLog('HANDLE: ' + str(HANDLE))
-
 
 PluginAbsPath = os.path.dirname(os.path.abspath(__file__))
 PLog('PluginAbsPath: ' + PluginAbsPath)

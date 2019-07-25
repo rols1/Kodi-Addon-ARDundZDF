@@ -7,6 +7,12 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+25.07.2019	1.7.9	ARDStartSingle, ARDStartVideoStreams, ARDStartVideoMP4: Fix quotierte Slahes
+			in Url's ('\u002F' -> '/'). 
+			SendungenAZ_ARDnew: Fix ascii-code-Error in Fallback-Routine.
+			RadioAnstalten: Home-Button wieder installiert (entfernt: V0.7.3) -1 Nutzer 
+			konnte die Liste nicht verlassen).	
+
 08.07.2019	1.7.8	ARD-Sportschau: Livestream-Buttons der Frauen-Fußball-WM umbenannt in
 			"ARDSportschau Event-Livestream" (1 bis 3).
 			
