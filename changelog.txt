@@ -7,7 +7,12 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
-25.07.2019	1.7.9	ARDStartSingle, ARDStartVideoStreams, ARDStartVideoMP4: Fix quotierte Slahes
+
+26.07.2019	1.8.0	ARDStartSingle, get_ardsingle_more: fix mediatype in Mehr-Beiträgen ('video'
+			lässt Kodi-Player Addon starten, falls Sofortstart auf EIN).
+			ARDStartRubrik: fehlendes Home-Menü ergänzt. 
+
+25.07.2019	1.7.9	ARDStartSingle, ARDStartVideoStreams, ARDStartVideoMP4: Fix quotierte Slashes
 			in Url's ('\u002F' -> '/'). 
 			SendungenAZ_ARDnew: Fix ascii-code-Error in Fallback-Routine.
 			RadioAnstalten: Home-Button wieder installiert (entfernt: V0.7.3) -1 Nutzer 

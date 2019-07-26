@@ -44,8 +44,8 @@ import resources.lib.EPG				as EPG
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.9'		 
-VDATE = '25.07.2019'
+VERSION =  '1.8.0'		 
+VDATE = '26.07.2019'
 
 # 
 #	
@@ -2034,7 +2034,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 	title_org 	= title 								# title ist Referenz zur Rubrik
 		
 	li = xbmcgui.ListItem()
-	if 'Livestream' in title == False:					# Livestreams ohne Home-Button
+	if 'Livestream' not in title:						# Livestreams ohne Home-Button
 		li = home(li, ID='ARD')							# Home-Button
 		
 	if sendername == '':

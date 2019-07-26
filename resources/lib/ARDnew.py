@@ -285,6 +285,7 @@ def ARDStartRubrik(path, title, widgetID='', ID=''):
 	PLog(sender)	
 		
 	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Neu')								# Home-Button
 
 	page = False
 	if 	ID == 'ARDStart':								# Startseite laden	
@@ -625,7 +626,7 @@ def ARDStartSingle(path, title, duration, ID=''):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		return li
 	PLog(len(page))
-	page= page.replace('\u002F', '/')						# 25.07.2019: Slahes neuerdings quotiert
+	page= page.replace('\u002F', '/')						# 25.07.2019: Slashes neuerdings quotiert
 	
 	elements = blockextract('availableTo":', page)			# möglich: Mehrfachbeiträge? 
 	if len(elements) > 1:
@@ -634,7 +635,8 @@ def ARDStartSingle(path, title, duration, ID=''):
 	if len(elements) == 0:									# möglich: keine Video (dto. Web)
 		msg1 = 'keine Beiträge zu %s gefunden'  % title
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		xbmcplugin.endOfDirectory(HANDLE)	
 	PLog('elements: ' + str(len(elements)))	
 		
 	summ 		= stringextract('synopsis":"', '"', page)		# mit verfügbar wie	get_summary_pre
@@ -714,13 +716,15 @@ def ARDStartSingle(path, title, duration, ID=''):
 		gridlist = blockextract( 'class="button _focusable"', page)	# Alternative - meist identisch
 	if len(gridlist) > 0:
 	 	PLog('gridlist_more: ' + str(len(gridlist)))	
-		li = get_ardsingle_more(li,gridlist,page, mediatype)	# Mehr zur Sendung			
-			
+		li = get_ardsingle_more(li,gridlist,page)				# mediatype=video hier vermeiden			
 					
 	xbmcplugin.endOfDirectory(HANDLE)
 #----------------------------------------------------------------
 # 										Mehr zur Sendung (Inhalte der Programmseite ARD-Neu)
-def get_ardsingle_more(li, gridlist, page, mediatype):				
+#	Aufruf: ARDStartSingle
+#	25.07.2019 mediatype hier nicht mit 'video' belegen (ARDStartSingle startet Player mit 
+#		Addon-Url, falls Sofortstart EIN).
+def get_ardsingle_more(li, gridlist, page, mediatype=''):				
 	PLog('get_ardsingle_more:')
 			
 	for s  in gridlist:
@@ -772,7 +776,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		return li
 	PLog(len(page))
-	page= page.replace('\u002F', '/')						# 25.07.2019: Slahes neuerdings quotiert
+	page= page.replace('\u002F', '/')						# 25.07.2019: Slashes neuerdings quotiert
 	
 	href = ''; VideoUrls = []
 	Plugins = blockextract('_plugin', page)	# wir verwenden nur Plugin1 (s.o.)
@@ -846,7 +850,7 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		return li
 	PLog(len(page))
-	page= page.replace('\u002F', '/')			# 25.07.2019: Slahes neuerdings quotiert
+	page= page.replace('\u002F', '/')			# 25.07.2019: Slashes neuerdings quotiert
 	
 	Plugins = blockextract('_plugin', page)	# wir verwenden nur Plugin1 (s.o.)
 	if len(Plugins) == 0:
