@@ -162,7 +162,7 @@ def Verpasst(DictID):					# Wochenliste
 	li = xbmcgui.ListItem()
 	# li = home(li, ID=ZDFNAME)				# Home-Button - s. Hub
 		
-	wlist = range(0,7)
+	wlist = list(range(0,7))
 	now = datetime.datetime.now()
 
 	for nr in wlist:
@@ -298,7 +298,7 @@ def Get_content(stageObject, maxWidth):
 		
 	img="";
 	if("teaserBild" in stageObject):
-		for width,imageObject in stageObject["teaserBild"].iteritems():
+		for width,imageObject in list(stageObject["teaserBild"].items()):
 			if int(width) <= maxWidth:
 				img=imageObject["url"];
 
@@ -542,7 +542,8 @@ def Parseplaylist(li, playlist, title, thumb, descr):	# playlist (m3u8, ZDF-Form
 	lines.pop(0)		# 1. Zeile entfernen (#EXTM3U)
 	
 	line_inf=[]; line_url=[]
-	for i in xrange(0, len(lines),2):
+#	for i in xrange(0, len(lines),2):
+	for i in range(0, len(lines),2):
 		line_inf.append(lines[i])
 		line_url.append(lines[i+1])
 	# PLog(line_inf); PLog(line_url); 	

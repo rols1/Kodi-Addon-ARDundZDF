@@ -6,7 +6,6 @@
            <setting type="sep"/>
    	<setting label="Classic-Version der ARD Mediathek verwenden" type="bool" id="pref_use_classic" default="true"/>
     	<setting label="Mobile Version der ZDF Mediathek verwenden" type="bool" id="pref_use_zdfmobile" default="true"/>
-    	<setting label="ARD Audiothek statt Podcasts Classic verwenden" type="bool" id="pref_use_audio" default="true"/>
     	<setting label="3Sat Mediathek verwenden" type="bool" id="pref_use_3sat" default="false"/>
         <setting type="sep"/>
    	<setting label="EPG-Daten für TV-Live-Sender zeigen - dauert etwas länger" type="bool" id="pref_use_epg" default="false"/>
@@ -19,34 +18,32 @@
 
  <category label="Radio-Podcast Einstellungen">
   	<setting label="Podcast-/Audiothek-Erweiterung verwenden" type="bool" id="pref_use_podcast" default="true"/>
+    	<setting label="ARD Audiothek statt Podcasts Classic verwenden" type="bool" id="pref_use_audio" default="true"/>
 	<setting label="Pfad zur Podcast-Favoritenliste (ohne Pfad: Ressourcenverzeichnis)" type="file" id="pref_podcast_favorits" default="podcast-favorits.txt"/>
+	<setting label="Info: die ARD Audiothek enthält die Podcast-Favoriten" type="text" id="podinfo" enable="false"/>  
  </category>
  
  <category label="Download Einstellungen">
  	<setting label="curl/wget-Downloads freischalten" type="bool" id="pref_use_downloads" default="false"/>
-  	<setting label="curl/wget-Downloads: alle verfuegbaren Video-Qualitaeten anbieten" type="bool" id="pref_show_qualities" default="false"/>
- 	<setting label="curl/wget-Downloads: Dateinamen aus dem Titel erzeugen (statt Download_{Datum}_{Uhrzeit})" type="bool" id="pref_generate_filenames" default="false"/>
+  	<setting label="alle verfuegbaren Video-Qualitaeten anbieten" type="bool" id="pref_show_qualities" default="false"/>
+ 	<setting label="Dateinamen aus dem Titel erzeugen (statt Download_{Datum}_{Uhrzeit})" type="bool" id="pref_generate_filenames" default="false"/>
 	<setting label="Pfad zum Downloadprogramm curl/wget" type="executable" id="pref_curl_path" default=""/>
 	<setting label="Downloadverzeichnis fuer curl/wget und Recording TV-Live" type="folder" option="writeable" source="" id="pref_curl_download_path" default=""/>
 	<setting label="Downloads verschieben in dieses Verzeichnis" type="folder" option="writeable" source="" id="pref_VideoDest_path" default=""/>
 </category>
  
  <category label="Recording TV-Live verwenden">
- 	<setting label="Recording TV-Live verwenden" type="bool" id="pref_LiveRecord" default="true"/>
- 	<setting label="Recording TV-Live: Dauer der Aufnahme manuell eingeben" type="bool" id="pref_LiveRecord_input" default="false"/>
-	<setting label="Recording TV-Live: Dauer der Aufnahme" type="labelenum" values="00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten|01:00:00 = 1 Stunde|01:30:00 = 1:30 Stunden|01:45:00 = 1:45 Stunden|02:00:00 = 2 Stunden|04:00:00 = 4 Stunden|12:00:00 = 12 Stunden|00:00:05 = 5 Sekunden" default="01:00:00 = 1 Stunde" id="pref_LiveRecord_duration"/> 
-	<setting label="Recording TV-Live: ffmpeg-Parameter. Das Plugin ersetzt 3 x %s durch Url, Aufnahmedauer, Dateiname." type="text" id="pref_LiveRecord_ffmpegCall" default="/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin"/>
+ 	<setting label="Recording TV-Live verwenden (ffmpeg erforderlich)" type="bool" id="pref_LiveRecord" default="true"/>
+ 	<setting label="Dauer der Aufnahme manuell eingeben" type="bool" id="pref_LiveRecord_input" default="false"/>
+	<setting label="Dauer der Aufnahme" type="labelenum" values="00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten|01:00:00 = 1 Stunde|01:30:00 = 1:30 Stunden|01:45:00 = 1:45 Stunden|02:00:00 = 2 Stunden|04:00:00 = 4 Stunden|12:00:00 = 12 Stunden|00:00:05 = 5 Sekunden" default="01:00:00 = 1 Stunde" id="pref_LiveRecord_duration"/> 
+	<setting label="ffmpeg-Parameter (3x %s: Url, Aufnahmedauer, Dateiname)" type="text" id="pref_LiveRecord_ffmpegCall" default="/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin"/>
 </category> 
 
  <category label="Addon-Cache: Löschfristen (Tage)">
-	<setting label="Dict (div. Variablen): " type="labelenum" values="1|10|30|100" default="30"
-		id="pref_DICT_store_days"/>
-	<setting label="Untertitel" type="labelenum" values="1|10|30|100" default="30"
-		id="pref_UT_store_days"/>
-	<setting label="Bildersammlungen (Slide Shows):" type="labelenum" values="1|10|30|100" default="30"
-		id="pref_SLIDES_store_days"/>
-	<setting label="Inhaltstexte (im Voraus geladen): " type="labelenum" values="1|10|30|100" default="30"
-		id="pref_TEXTE_store_days"/>
+	<setting label="Dict (div. Variablen): " type="labelenum" values="1|10|30|100" default="30" id="pref_DICT_store_days"/>
+	<setting label="Untertitel" type="labelenum" values="1|10|30|100" default="30" id="pref_UT_store_days"/>
+	<setting label="Bildersammlungen (Slide Shows):" type="labelenum" values="1|10|30|100" default="30" id="pref_SLIDES_store_days"/>
+	<setting label="Inhaltstexte (im Voraus geladen): " type="labelenum" values="1|10|30|100" default="30" id="pref_TEXTE_store_days"/>
 </category> 
 
  <category label="Favoriten / Merkliste">
@@ -56,8 +53,8 @@
  </category> 
 
  <category label=" Beiträge filtern">
-  	<setting label="Titel enthält >Hörfassungen<" type="bool" id="pref_filter_hoerfassung" default="false"/>
-  	<setting label="Titel enthält >Audiodeskription<" type="bool" id="pref_filter_audiodeskription" default="false"/>
+  	<setting label="Titel enthält *Hörfassungen*" type="bool" id="pref_filter_hoerfassung" default="false"/>
+  	<setting label="Titel enthält *Audiodeskription*" type="bool" id="pref_filter_audiodeskription" default="false"/>
  </category>
 </settings>
 

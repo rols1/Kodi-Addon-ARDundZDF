@@ -1383,7 +1383,7 @@ def ARDVerpasst(title, CurSender):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')								# Home-Button
 
-	wlist = range(0,7)
+	wlist = list(range(0,7))
 	now = datetime.datetime.now()
 
 	for nr in wlist:

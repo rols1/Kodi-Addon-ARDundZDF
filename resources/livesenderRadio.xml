@@ -4,7 +4,8 @@
   <link>https://www.ardmediathek.de/radio/live?genre=Alle+Genres&amp;kanal=Alle</link>
   <thumbnail>Icon-ARDRadio.png</thumbnail>
   <date>07.05.2018</date>
-  <note>ab 11.10.2017 Ermittlung der Sendernamen via Web ("headline") - Plugin sucht hier das passende Icon</note>
+  <info>ab 11.10.2017 Ermittlung der Sendernamen via Web ("headline") - Plugin sucht hier das passende Icon</info>
+  <info2>das &-Zeichen verstößt zwar gegen den xml-Standard, ist aber kompatibel mit den String-Funktionen im PRG</info2>
  </channels_info>
  
 <channel>

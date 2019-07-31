@@ -8,6 +8,28 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+31.07.2019	1.8.3	Gimp-Icons reduziert: Farbverläufe ersetzt durch eine Farbe (Einsparung ca. 
+			2 MByte). 
+			livesenderTV.xml: Streamlink für "BR Fernsehen-Süd" aktualisiert.
+			Refugee Radio (Podcasts Classic): neue Funktion Search_refugee eingefügt
+			(bisheriger Link via Suche nicht mehr verfügbar).
+			settings.xml: überlange Einträge gekürzt.
+			
+not on Github	1.8.2	Hauptmenü: Aktualisierung Info-Text zur "Suche in ARD und ZDF".
+			settings.xml: Verlagerung "ARD Audiothek ..verwenden" von "Allgemein" zu
+			"Radio-Podcast Einstellungen".
+			settings.xml: Info zum Ort der Podcast-Favoriten eingefügt.
+						 
+not on Github	1.8.1	nachfolgende Fixes nach Lauf kodi-addon-checker:
+			addon.xml: Link auf Shoutcast entfernt (Kopierleiche).
+			Get_content (Modul zdfmobile): stageObject["teaserBild"].items() ->
+			list(stageObject["teaserBild"].items())
+			Get_content (Modul zdfmobile): range(0,7) -> list(range(0,7)).
+			Get_Verpasst (Modul my3Sat): range(0,7) -> list(range(0,7)).
+			VerpasstWoche: range(0,7) -> list(range(0,7)).
+			Syntax-Fixes in settings.xml. 
+			Info zu Syntax-Abweichungen in livesenderTV.xml, livesenderRadio.xml.
+			
 26.07.2019	1.8.0	ARDStartSingle, get_ardsingle_more: fix mediatype in Mehr-Beiträgen ('video'
 			lässt Kodi-Player Addon starten, falls Sofortstart auf EIN).
 			ARDStartRubrik: fehlendes Home-Menü ergänzt. 
@@ -500,9 +522,9 @@ not on Github	0.9.3	DownloadMultiple (Modul Podcontent): Fix url + title aus POD
 			Modul Podcontent: fehlende BASE_URL ergänzt (nötig in get_pod_content).
 			ShowFavs: json-Pfad in Plot-Parmeter bei Favs von zdfMobile gelöscht (nichtssagend). 
 
-09.02.2019	0.9.2	Einblenden der ARDundZDF-Favoriten im Hauptmenü: Funktion ShowFavs (Hapt-Prg) und
-			Funktion CheckFavourites (Modul util). Wiedergewinnnung von Begleitinfos aus 
-			Funktionsparametern (fparam).
+09.02.2019	0.9.2	Einblenden der ARDundZDF-Favoriten im Hauptmenü: Funktion ShowFavs (Haupt-Prg) 
+			und Funktion CheckFavourites (Modul util). Wiedergewinnnung von Begleitinfos   
+			aus Funktionsparametern (fparam).
 			ARDStartRubrikSingle: Fix txt -> summ_txt.
 			
 06.02.2019	0.9.1	ARDStartVideoMP4: Video-Sofortstart mit höchster Qualität (Liste in

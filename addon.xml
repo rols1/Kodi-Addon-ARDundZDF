@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.ardundzdf" name="ARD und ZDF" version="1.8.0" provider-name="rols1 (rols1@gmx.de)">
+<addon id="plugin.video.ardundzdf" name="ARD und ZDF" version="1.8.3" provider-name="rols1 (rols1@gmx.de)">
   <requires>
    <import addon="xbmc.python" version="2.25.0"/>
  </requires>
@@ -10,8 +10,7 @@
 	<summary lang="de">ARD- und ZDF-Mediathek</summary>
 	<description lang="de">ARD- und ZDF-Mediathek, einschließlich Live-TV mit Aufnahmefunktion, Merkliste, Live-Radio, Podcasts</description>
 	<platform>all</platform>
-         <website>http://www.shoutcast.com/</website>
-        <source>https://github.com/rols1/Kodi-Addon-ARDundZDF</source>
+         <source>https://github.com/rols1/Kodi-Addon-ARDundZDF</source>
         <forum>https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/</forum>
 	<license>The MIT License (MIT)</license>
 	<language>"de_DE"</language>

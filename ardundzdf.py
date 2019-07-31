@@ -44,8 +44,8 @@ import resources.lib.EPG				as EPG
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.8.0'		 
-VDATE = '26.07.2019'
+VERSION =  '1.8.3'		 
+VDATE = '31.07.2019'
 
 # 
 #	
@@ -184,7 +184,8 @@ POD_FEATURE = 'https://classic.ardmediathek.de/radio/das-ARD-radiofeature/Sendun
 POD_TATORT 	= 'https://classic.ardmediathek.de/radio/ARD-Radio-Tatort/Sendung?documentId=1998988&bcastId=1998988'
 POD_NEU 	= 'https://classic.ardmediathek.de/radio/Neueste-Audios/mehr?documentId=23644358'
 POD_MEIST 	= 'https://classic.ardmediathek.de/radio/Meistabgerufene-Audios/mehr?documentId=23644364'
-POD_REFUGEE = 'https://www1.wdr.de/radio/cosmo/programm/refugee-radio/refugee-radio-112.html'	# z.Z. Refugee Radio via Suche
+POD_REFUGEE = 'https://www1.wdr.de/mediathek/audio/cosmo/refugee-radio/index.html'	# geändert 28.07.2019
+
 
 # ARD Audiothek
 ARD_AUDIO_BASE = 'https://www.ardaudiothek.de'
@@ -285,7 +286,7 @@ def Main():
 	li = xbmcgui.ListItem("ARD und ZDF")
 	title="Suche in ARD und ZDF"
 	if SETTINGS.getSetting('pref_use_classic') == 'true':
-		tagline = 'bei der ARD-Suche wird zur Zeit noch die Classic-Version genutzt. '
+		tagline = 'gesucht wird in ARD  Mediathek Classic und in der ZDF Mediathek '
 		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
 		addDir(li=li, label=title, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
 			thumb=R('suche_ardundzdf.png'), tagline=tagline, fparams=fparams)
@@ -583,9 +584,11 @@ def Main_POD(name):
 		fparams=fparams)
 
 	title="Refugee-Radio"; query='Refugee Radio'	# z.Z. Refugee Radio via Suche
+	tag = "Quelle Cosmo WDR:"
+	summ = "www1.wdr.de/mediathek/audio/cosmo"
 	fparams="&fparams={'title': '%s', 'query': '%s', 'channel': 'PODCAST'}" % (query, query)
 	addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_REFUGEE), 
-		fparams=fparams)
+		fparams=fparams, tagline=tag, summary=summ)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
@@ -2348,6 +2351,7 @@ def Search(title, query='', channel='ARD'):
 	query = UtfToStr(query)	
 	name = 'Suchergebnis zu: ' + urllib2.unquote(query)
 		
+	li = xbmcgui.ListItem()		
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 			
 	if channel == 'ARD':
@@ -2357,9 +2361,10 @@ def Search(title, query='', channel='ARD'):
 	if channel == 'PODCAST':	
 		path =  BASE_URL  + POD_SEARCH
 		path = path % urllib2.quote(query)
-		ID=channel
+		if query == "Refugee Radio":				# 28.07.2019 direkt - Suche führt nicht mehr zu POD_REFUGEE
+			Search_refugee()
+			return li	
 		
-	li = xbmcgui.ListItem()		
 	PLog(path)
 	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 		'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'}"
@@ -2371,7 +2376,7 @@ def Search(title, query='', channel='ARD'):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li
 	PLog(len(page))
-			
+				
 	if page.find('<strong>keine Treffer</strong') >= 0:
 		msg1 = 'Leider kein Treffer.'
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
@@ -2447,6 +2452,78 @@ def get_query(channel='ARD'):
 	if channel == 'ARDaudio':				# nur strip, quoting durch Aufrufer
 		return 	query.strip()
 			
+#---------------------------------------------------------------- 
+#  Search_refugee - erforderlich für Refugee Radion (WDR)
+def Search_refugee(path=''):
+	PLog('Search_refugee:')
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	base = 'https://www1.wdr.de'
+	
+	if path == '':								# Erstaufruf: 1. Seite für Seitenliste laden
+		path = POD_REFUGEE
+		
+	page, msg = get_page(path=path)	
+	if page == '':						
+		msg1 = 'Fehler in Suche: %s' % title
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		return li
+	PLog(len(page))
+	
+	img =  base + stringextract('source srcset="', '"', page)
+	PLog(img)
+
+	if path == POD_REFUGEE:						# Erstaufruf: Seitenliste ausgeben
+		entries = blockextract('class="entry', page)
+		PLog(len(entries))
+		i=1
+		for entry in entries:
+			url 	= base + stringextract("url':'", "'", entry)
+			label 	= "Weiter zu Seite %d" % i
+			title	= "Refugee-Radio, %s" % label
+			PLog(url)
+			fparams="&fparams={'path': '%s'}" % urllib2.quote(url)	
+			addDir(li=li, label=label, action="dirList", dirID="Search_refugee", fanart=img, 				
+				thumb=img, fparams=fparams)
+			i=i+1
+				
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
+				
+												# Einzelseite auswerten
+	records = blockextract('class="infotext', page)
+	PLog(len(records))
+	for rec in records:
+		PLog('Mark0')
+		mediaTitle 		= stringextract('mediaTitle">', '</', rec)
+		mediaSerial 	= stringextract('mediaSerial">', '</', rec)
+		mediaDate 		= stringextract('mediaDate">', '</', rec)
+		mediaDuration 	= stringextract('mediaDuration">', '</', rec)
+		mediaDuration	= cleanhtml(mediaDuration)
+		mediaStation	= stringextract('mediaStation">', '</', rec)
+											
+		mp3_url 		= stringextract('href="', '"', rec)
+		if mp3_url.startswith('http') == False:
+			mp3_url = 'https:' + mp3_url
+		descr			= stringextract('class="text">', '</', rec)
+		descr = descr.strip(); descr = unescape(descr)
+		summ 	= descr
+		
+		label 	= "%s | %s | %s" % (mediaTitle, mediaDate, mediaDuration)
+		tag 	= "%s | %s" % (mediaDate, mediaDuration)
+		Plot	= "%s||||%s" % (label, descr)
+		Plot	= repl_json_chars(Plot)
+		
+		PLog("Satz_ref:")
+		PLog(label); PLog(tag); PLog(summ); PLog(mp3_url); PLog(Plot);
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+			(urllib2.quote(mp3_url), urllib2.quote(label), urllib2.quote(img), urllib.quote_plus(Plot))
+		addDir(li=li, label=label, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
+			summary=summ, tagline=tag)		
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 ####################################################################################################
 # Liste der Wochentage
@@ -2477,7 +2554,7 @@ def VerpasstWoche(name, title):		# Wochenliste zeigen, name: ARD, ZDF Mediathek
 	else:	
 		li = home(li, ID='ARD')						# Home-Button
 		
-	wlist = range(0,7)
+	wlist = list(range(0,7))
 	now = datetime.datetime.now()
 
 	for nr in wlist:
@@ -6151,9 +6228,9 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 			pos = rec.find('</article>')		   	# Satz begrenzen - bis nächsten Satz nicht verwertbare 
 			if pos > 0:								# 	Inhalte möglich
 				rec = rec[0:pos]
-			# PLog(rec)  # bei Bedarf
+				# PLog(rec)  # bei Bedarf
 			
-		if ID <> 'DEFAULT':					 			# DEFAULT: Übersichtsseite ohne Videos, Bsp. Sendungen A-Z
+		if ID != 'DEFAULT':					 			# DEFAULT: Übersichtsseite ohne Videos, Bsp. Sendungen A-Z
 			if 'title-icon icon-502_play' not in rec :  # Videobeitrag? auch ohne Icon möglich
 				if '>Videolänge:<' not in rec : 
 					if '>Trailer<' not in rec : 		# Trailer o. Video-icon-502

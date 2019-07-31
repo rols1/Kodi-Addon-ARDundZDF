@@ -7,7 +7,8 @@
    <date>16.05.2019 rols1</date>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
   <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ Button:Alle Sender</info>
-  <info2>hrefsender enthält Sendernamen passend zu www.ardmediathek.de (ARD-Neu)</info2>
+  <info2>das &-Zeichen verstößt zwar gegen den xml-Standard, ist aber kompatibel mit den String-Funktionen im PRG</info2>
+  <info3>hrefsender enthält Sendernamen passend zu www.ardmediathek.de (ARD-Neu)</info3>
  </channels_info>
  
 <channel>
@@ -176,7 +177,7 @@
 	<item>
 		<title>BR Fernsehen-Süd</title>
 		<hrefsender>BR Fernsehen Süd</hrefsender>
-		<link>https://brlive-lh.akamaihd.net/i/bfssued_germany@119890/master.m3u8</link>
+		<link>https://mcdn.br.de/bfs_sued/de/master.m3u8</link>
 		<thumbnail>tv-br.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>BR</EPG_ID>
@@ -204,7 +205,7 @@
 		<epg_url></epg_url>
 	</item>
 	<item>
-		<title>MDR+ Eventlivestreams & SocialTV</title>
+		<title>MDR+ Eventlivestreams + SocialTV</title>
 		<hrefsender></hrefsender>
 		<link>https://mdrevent2hls-lh.akamaihd.net/i/livetvmdrevent2_ww@513991/master.m3u8</link>
 		<thumbnail>tv-mdr-sachsen.png</thumbnail>
@@ -260,7 +261,7 @@
 		<thumbnail>tv-ndr-hamburg.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>N3</EPG_ID>
-		</date>21.09.2018</date>
+		<date>21.09.2018</date>
 		<epg_url></epg_url>
 	</item>
 	<item>

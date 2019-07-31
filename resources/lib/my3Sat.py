@@ -280,7 +280,7 @@ def Verpasst(title):	# je 1 Tag - passend zum Webdesign
 	li = xbmcgui.ListItem()
 	li = home(li, ID='3Sat')										# Home-Button
 		
-	wlist = range(0,30)			# Abstand 1 Tage
+	wlist = list(range(0,30))					# Abstand 1 Tage
 	now = datetime.datetime.now()
 	for nr in wlist:
 		rdate = now - datetime.timedelta(days = nr)
