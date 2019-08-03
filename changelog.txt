@@ -8,6 +8,18 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+03.08.2019	1.8.4	ARD Neu (ARDStart, ARDStartRubrik): Fix Bilder für Highlights (html-
+			statt json-Auswertung)
+			Laden aller Module bei Addon-Start, um Probleme mit Merkliste oder
+			Modul-Abwahl während Modul-Nutzung zu vermeiden.
+			Merkliste: Kennzeichnung von Beiträgen aus Modulen (rot/fett).
+			ARDStartRubrik: Fix Doppler (Dauer) in tagline/summary.
+			ShowFavs: Infotext der Merkliste um Hinweis auf Modul erweitert. 
+			ARDStartRubrik (Classic): Fix Plot ('\n' -> '||')  - Videos starteten nicht
+			bei Einstellung Sofortstart. 
+			SingleSendung (Classic): doppelte tagline in Inhaltstext entfernt.
+			SingleSendung (Classic): summary angepasst.
+
 31.07.2019	1.8.3	Gimp-Icons reduziert: Farbverläufe ersetzt durch eine Farbe (Einsparung ca. 
 			2 MByte). 
 			livesenderTV.xml: Streamlink für "BR Fernsehen-Süd" aktualisiert.

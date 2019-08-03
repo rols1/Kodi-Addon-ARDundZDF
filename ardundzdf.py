@@ -39,13 +39,13 @@ transl_pubDate=util.transl_pubDate;
 
 import resources.lib.updater 			as updater		
 import resources.lib.EPG				as EPG		
-
 # import resources.lib.ARD_Bildgalerie 	as ARD_Bildgalerie	# 10.12.2018 ARD-Link nicht mehr verfügbar
+
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.8.3'		 
-VDATE = '31.07.2019'
+VERSION =  '1.8.4'		 
+VDATE = '03.08.2019'
 
 # 
 #	
@@ -213,16 +213,19 @@ ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]
 HANDLE			= int(sys.argv[1])
-																		# Modul-Importe je nach Setting,
-																		#	EPG + updater s.o.
-if SETTINGS.getSetting('pref_use_podcast') ==  'true':					# ARD-Radio-Podcasts
-	import resources.lib.Podcontent 		as Podcontent
-if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':					# ZDFmobile					
-	import resources.lib.zdfmobile
-if SETTINGS.getSetting('pref_use_classic') == 'false':					# ARD Neu
-	import resources.lib.ARDnew
-if SETTINGS.getSetting('pref_use_3sat') == 'true':						# 3Sat
-	import resources.lib.my3Sat
+
+# Modul-Importe unabhängig vom Setting ständig laden - sonst
+#	müsste das Nachladen in router und ShowFavs einzeln ge-
+#	regelt werden. 
+# Module EPG + updater s.o.
+#if SETTINGS.getSetting('pref_use_podcast') ==  'true':					# ARD-Radio-Podcasts
+import resources.lib.Podcontent 		as Podcontent
+#if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':				# ZDFmobile					
+import resources.lib.zdfmobile
+#if SETTINGS.getSetting('pref_use_classic') == 'false':					# ARD Neu
+import resources.lib.ARDnew
+#if SETTINGS.getSetting('pref_use_3sat') == 'true':						# 3Sat
+import resources.lib.my3Sat
 																		
 
 ICON = R(ICON)
@@ -300,6 +303,7 @@ def Main():
 	if SETTINGS.getSetting('pref_use_classic') == 'true':	# Classic-Version der ARD-Mediathek
 		PLog('classic_set: ')
 		title = "ARD Mediathek Classic"
+		tagline = 'in den Settings sind ARD Mediathek Neu und ARD Mediathek Classic austauschbar'
 		fparams="&fparams={'name': '%s', 'sender': '%s'}" % (title, '')
 		PLog(fparams)	
 		addDir(li=li, label=title, action="dirList", dirID="Main_ARD", fanart=R(FANART), 
@@ -357,7 +361,7 @@ def Main():
 				thumb=R(ICON_MAIN_POD), summary=summary, tagline=tagline, fparams=fparams)
 						
 	if SETTINGS.getSetting('pref_use_downloads') ==  'true':	# Download-Tools. zeigen
-		tagline = 'Download-Tools: Verschieben, Loeschen, Ansehen, Verzeichnisse bearbeiten'
+		tagline = 'Download-Tools: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
 		fparams="&fparams={}"
 		addDir(li=li, label='Download-Tools', action="dirList", dirID="DownloadsTools", 
 			fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)	
@@ -2155,14 +2159,18 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 						
 				if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 					mediatype='video'
-					Plot = "%s||||%s" % (subline, summ)				# für Sofortstart/Plot in SingleSendung
-						
+	
+				Plot = "%s||||%s" % (subline, summ)			# für Sofortstart/Plot in SingleSendung
+				Plot = Plot.replace('\n', '||')				# \n aus summ -> ||
+				
 				if 'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
 					if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
 						continue		
 					if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
-						continue		
-						
+						continue	
+							
+				PLog("Satz_Swiper:") 
+				PLog(path); PLog(title); 		
 				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
 					% (urllib2.quote(path), urllib2.quote(title), urllib2.quote(img), 
 					duration, urllib2.quote(Plot),  urllib2.quote(subline), 'ARD', '0')				
@@ -3116,6 +3124,11 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 	PLog('ID: ' + str(ID))
 	PLog(thumb); PLog(summary); PLog(tagline);
 	
+	if tagline in summary:								# vermeidet Doppler in Inhaltstext
+		tagline = tagline.strip()
+		summary = summary.replace(tagline, '')
+		summary = summary.replace('||||[B]', '||[B]')	# 1 Leerz. entf.
+	
 	title = urllib2.unquote(title)
 	title = UtfToStr(title); summary = UtfToStr(summary); tagline = UtfToStr(tagline)
 	title_org=title; summary_org=summary; tagline_org=tagline	# Backup 
@@ -3185,6 +3198,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 						
 		summary_org = summary_org.replace('\n', '||')
 		summary = summary.replace('\n', '||')
+
 		li = Parseplaylist(li, m3u8_master, thumb, geoblock='', tagline=tagline, summary=summary_org, descr=summary, 
 			sub_path=sub_path)
 		#del link_path[0]								# master.m3u8 entfernen, Rest bei m3u8_master: mp4-Links
@@ -3255,18 +3269,18 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 									
 			else:
 				summary = "%s\n%s" % (title, Format)		# 3. Podcasts mp3-Links, mp4-Links
+				summ_lable=summary_org.replace('||', '\n')	
 				if ID == 'PODCAST':			# (noch) keine Header benötigt
 					lable = "%s. %s | %s" % (str(li_cnt), title, summary)
 					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
 						urllib2.quote(title_org), urllib2.quote(thumb), urllib.quote_plus(summary_org))
 					addDir(li=li, label=lable, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
-						tagline=tagline, summary=summary, mediatype='music')
+						tagline=tagline, summary=summ_lable, mediatype='music')
 				else:
 					# 26.06.2017: nun auch ARD mit https - aber: bei den mp4-Videos liefern die Server auch
 					#	mit http, während bei m3u8-Url https durch http ersetzt werden MUSS. 
 					url = url.replace('https', 'http')	
 					lable = "%s. %s | %s" % (str(li_cnt), title, Format+geoblock)
-					summ_lable=summary_org.replace('||', '\n')	
 					summary_org = summary_org.replace('\n', '||')
 					
 					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
@@ -3304,8 +3318,8 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 		dest_path = SETTINGS.getSetting('pref_curl_download_path')
 		if  os.path.isdir(dest_path) == False:
 			msg1	= 'test_downloads'
-			msg2 	= 'Downloadverzeichnis existiert nicht:'
-			msg3 	= dest_path
+			msg2 	= 'Downloadverzeichnis existiert nicht'
+			msg3 	= "Settings: " + dest_path
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 			return li				
 		# PLog(SETTINGS.getSetting('pref_show_qualities'))
@@ -3870,7 +3884,8 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		s2		= "Einträge entfernen: via Kontextmenü hier oder am am Ursprungsort im Addon."
 		s3		= "Die Merkliste wird nach hinzufügen/entfernen erneut aufgerufen."
 		s4		= 'Einträge enthalten nicht in allen Fällen Begleitinfos zu Inhalt, Länge usw.'
-		summary	= "%s\n\n%s\n\n%s"		% (s1, s2, s3)
+		s5		= 'Stammt der Eintrag aus einem Modul, muss vor Wiedergabe das Modul geladen werden.'
+		summary	= "%s\n\n%s\n\n%s\n\n%s\n\n%s"		% (s1, s2, s3, s4, s5)
 		label	= 'Infos zum Menü Merkliste'
 	
 	fparams="&fparams={'mode': '%s'}"	% mode						# Info-Menü
@@ -3930,8 +3945,12 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		if CallFunction in CallFunctions:			# Parameter Merk='true' anhängen
 			mediatype='video'
 		
+		modul = "ardundzdf"
 		dirPars = unescape(dirPars); 
-		PLog(name); PLog(thumb); PLog(Plot_org); PLog(dirPars);  PLog(mediatype);
+		if 'resources.lib.' in dirPars:
+			modul = stringextract('resources.lib.', ".", dirPars) 
+		
+		PLog(name); PLog(thumb); PLog(Plot_org); PLog(dirPars); PLog(modul); PLog(mediatype);
 		PLog('fparams2: ' + fparams);
 			
 		# Begleitinfos aus fparams holen - Achtung Quotes!		# 2. fparams auswerten
@@ -4012,6 +4031,9 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		
 		summary = summary.replace('||', '\n')		# wie Plot	
 		tagline = tagline.replace('||', '\n')
+		
+		if modul <> "ardundzdf":					# Hinweis Modul
+			tagline = "[B][COLOR red]Modul %s[/COLOR][/B]%s" % (modul, tagline)
 		
 		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=thumb,
 			summary=summary, tagline=tagline, fparams=fparams,mediatype=mediatype)
@@ -4524,8 +4546,8 @@ def LiveRecord(url, title, duration, laenge):
 		return li
 	PLog(os.path.isdir(dest_path))			
 	if  os.path.isdir(dest_path) == False:
-		msg2 	= 'Downloadverzeichnis existiert nicht:'
-		msg3	= dest_path
+		msg2 	= 'Downloadverzeichnis existiert nicht'
+		msg3	= "Settings: " + dest_path
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li		
 		
@@ -7035,11 +7057,22 @@ def router(paramstring):
 				dest_modul = '.'.join(l[:-1])
 				PLog(' router dest_modul: ' + str(dest_modul))
 				PLog(' router newfunc: ' + str(newfunc))
-			
-				func = getattr(sys.modules[dest_modul], newfunc)		
+				try:
+					func = getattr(sys.modules[dest_modul], newfunc)
+				except Exception as exception:
+					PLog(str(exception))
+					func = ''
+				if func == '':						# Modul nicht geladen - sollte nicht
+					li = xbmcgui.ListItem()			# 	vorkommen - s. Addon-Start
+					msg1 = "Modul %s ist nicht geladen" % dest_modul
+					msg2 = "Ursache unbekannt."
+					PLog(msg1)
+					xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+					xbmcplugin.endOfDirectory(HANDLE)
+
 			else:
 				func = getattr(sys.modules[__name__], newfunc)	# Funktion im Haupt-PRG OK		
-
+			
 			PLog(' router func_getattr: ' + str(func))		
 			if func_pars != '""':		# leer, ohne Parameter?	
 				# PLog(' router func_pars: Ruf mit func_pars')

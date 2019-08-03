@@ -136,22 +136,22 @@ def Hub(ID):
 		v = 'Startpage' 		# speichern
 		vars()[v] = jsonObject
 		Dict('store', v, vars()[v])
-		li = videoObjects=PageMenu(li,jsonObject,DictID='Startpage')		
+		li = PageMenu(li,jsonObject,DictID='Startpage')		
 	if ID=='Kategorien':
 		v = 'Kategorien'
 		vars()['Kategorien'] = jsonObject
 		Dict("store", v, vars()[v])
-		li = videoObjects=PageMenu(li,jsonObject,DictID='Kategorien')		
+		li = PageMenu(li,jsonObject,DictID='Kategorien')		
 	if ID=='Sendungen A-Z':
 		v = 'A_Z'
 		vars()['A_Z'] = jsonObject
 		Dict("store", v, vars()[v])
-		li = videoObjects=PageMenu(li,jsonObject,DictID='A_Z')		
+		li = PageMenu(li,jsonObject,DictID='A_Z')		
 	if ID=='Live TV':
 		v = 'Live'
 		vars()['Live'] = jsonObject
 		Dict("store", v, vars()[v])
-		li = videoObjects=PageMenu(li,jsonObject,DictID='Live')	
+		li = PageMenu(li,jsonObject,DictID='Live')	
 
 	return li
 
@@ -424,7 +424,7 @@ def ShowVideo(path, DictID, Merk='false'):
 			PLog('DictID: ' + DictID)	
 			vars()[DictID] = jsonObject					# speichern
 			Dict("store", DictID, vars()[DictID])
-			li = videoObjects=PageMenu(li,jsonObject,DictID=DictID)	# Rubrik o.ä.	
+			li = PageMenu(li,jsonObject,DictID=DictID)	# Rubrik o.ä.	
 			return li
 
 	descr_local=''										# Beschreibung suammensetzen

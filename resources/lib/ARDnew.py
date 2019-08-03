@@ -174,14 +174,17 @@ def ARDStart(title, sender, widgetID=''):
 	PLog(len(page))
 	
 	# möglich: 	swiper-stage, swiper-container, swiper-wrapper, swiper-slide								
-	if 'class="swiper-' in page:						# Higlights im Wischermodus
-		swiper 	= stringextract('class="swiper-', 'gridlist', page)
-		title 	= 'Higlights'
+	if 'class="swiper-' in page:						# Highlights im Wischermodus
+		swiper 	= stringextract('>Stage ARD<', 'gridlist', page)
+		title 	= 'Highlights'
 		# 14.11.2018 Bild vom 1. Beitrag befindet sich im json-Abschnitt,
 		#	wird mittels href_id ermittelt:
-		href_id =  stringextract('/player/', '/', swiper) # Bild vom 1. Beitrag wie Higlights
-		img, sender = img_via_id(href_id, page)
-		summ = 'Higlights' 
+		# 	href_id =  stringextract('/player/', '/', swiper) # Bild vom 1. Beitrag wie Highlights
+		# 	img, sender = img_via_id(href_id, page)
+		# 02.08.2019 href_id klappt für stage-Bilder nicht mehr - wieder im html-Abschnitt
+		#	ermitteln (dto. in ARDStartRubrik):
+		img		= stringextract('<img src="', '"', swiper) 
+		summ = 'Highlights' 
 		
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
 			(urllib2.quote(path), urllib2.quote(title), 'Swiper')
@@ -274,7 +277,7 @@ def img_via_id(href_id, page):
 #		Verzicht auf Vertikales Scrolling: wir laden den kompl. Inhalt - die Anzahl der Beiträge entnehmen
 #		wir der Variablen pageSize (stimmt leider nicht mit der tats. Anzahl überein, ist immer größer).
 
-def ARDStartRubrik(path, title, widgetID='', ID=''): 
+def ARDStartRubrik(path, title, widgetID='', ID='', img=''): 
 	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path)	
 	title = UtfToStr(title)
 	title_org = title
@@ -303,8 +306,8 @@ def ARDStartRubrik(path, title, widgetID='', ID=''):
 	PLog(len(page))
 	page = page.replace('\\"', '*')							# quotiere Marks entf.
 
-	# Auswertung der Einzelbeiträge aus Higlights: Startseite ohne zusätzl. json-Seiten 
-	if ID == 'Swiper':										# vorangestellte Higlights
+	# Auswertung der Einzelbeiträge aus Highlights: Startseite ohne zusätzl. json-Seiten 
+	if ID == 'Swiper':										# vorangestellte Highlights
 		grid = stringextract('class="swiper-stage"', 'gridlist', page)
 		sendungen = blockextract('class="_focusable', grid)
 		for s in sendungen:
@@ -315,8 +318,11 @@ def ARDStartRubrik(path, title, widgetID='', ID=''):
 			title 	= stringextract('title="', '"', s)
 			title	= unescape(title)
 			title 	= title.decode(encoding="utf-8")
-			href_id =  stringextract('/player/', '/', s) # Bild via id 
-			img, sender = img_via_id(href_id, page)		 # Sender hier unteranderer ID
+			# href_id =  stringextract('/player/', '/', s) # Bild via id 
+			# img, sender = img_via_id(href_id, page)		 # Sender hier unteranderer ID
+			# 02.08.2019 Swiper-img aus html-bereich (s. ARDStart) 
+			img		= stringextract('<img src="', '"', s) 
+
 			sender	= stringextract('subline">', '</h4>', s)
 			sender	= unescape(sender) ;sender	= cleanhtml(sender)
 			sender	= repl_json_chars(sender)
@@ -456,11 +462,14 @@ def ARDStartRubrik(path, title, widgetID='', ID=''):
 			fparams="&fparams={'path': '%s', 'title': '%s'}" % (urllib2.quote(href), urllib2.quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
 				fparams=fparams, summary=summ, mediatype=mediatype)																			
-		else:	
+		else:
+			tag = ''
+			if duration not in summ:	# Doppler vermeiden
+				tag = duration
 			fparams="&fparams={'path': '%s', 'title': '%s', 'duration': '%s', 'ID': '%s'}" %\
 				(urllib2.quote(href), urllib2.quote(title), duration, ID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
-				fparams=fparams, tagline=duration, summary=summ)	
+				fparams=fparams, tagline=tag, summary=summ)	
 		cnt=cnt+1																		
 	
 	if 	'AutoCompilationWidget'	in page:				# z.B. Scroll-Beiträge zu Rubriken
