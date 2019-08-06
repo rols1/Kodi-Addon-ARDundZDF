@@ -1280,7 +1280,7 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 	
 	if query == '':
 		query = get_keyboard_input() 
-		if query == None:					# None bei Abbruch
+		if query == None or query.strip() == '': # None bei Abbruch
 			return
 	query = query.strip()
 	

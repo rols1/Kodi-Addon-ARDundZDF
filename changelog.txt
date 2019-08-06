@@ -7,6 +7,22 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+06.08.2019	1.8.6	Überarbeitung EPG:
+			EPG_ShowSingle (EPG  einzeln): Fix descr ('\n' -> '||') - Videos mit
+			Markierung "JETZT" starteten nicht. 
+			EPG_ShowAll ('EPG Alle JETZT'): Sender ohne EPG rot gekennzeichnet.
+			ShowSingle + ShowAll: Directory-Cache auf EIN gesetzt (Rückwärtsblättern 
+			wird gecached).
+			SenderLiveListePre: Hinweistext verbessert.
+				
+not on Github	1.8.5	Merkliste: Sofortstart nur noch abhängig von Settings und nicht von Markierung 
+			als Merklisten-Eintrag: Fixes in SenderLiveResolution, ARDSportVideo,
+			SingleSendung, show_formitaeten. 
+			ShowFavs: Fix Fav-Titel (&lt; und &gt; -> <>).
+			ARDSearchnew (ARD Neu): Fix Abbruch in Sucheingabe (Info "keine
+			Suchergebnisse" war falsch).
+			ParseMasterM3u (Einzelauflösungen): 1. Eintrag (master.m3u9) mit "autom." 
+			gekennzeichnet. 
 
 03.08.2019	1.8.4	ARD Neu (ARDStart, ARDStartRubrik): Fix Bilder für Highlights (html-
 			statt json-Auswertung)

@@ -44,8 +44,8 @@ import resources.lib.EPG				as EPG
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.8.4'		 
-VDATE = '03.08.2019'
+VERSION =  '1.8.6'		 
+VDATE = '06.08.2019'
 
 # 
 #	
@@ -1781,7 +1781,9 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		title_org=UtfToStr(title_org); summ=UtfToStr(summ);Merk=UtfToStr(Merk);
 		
 		# Sofortstart - direkt, falls Listing nicht Playable
-		if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': 
+		# 04.08.2019 Sofortstart nur noch abhängig von Settings und nicht zusätzlich von  
+		#	Param. Merk.
+		if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true': # Sofortstart
 			PLog('Sofortstart: ARDSportVideo')
 			PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
 			PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
@@ -1842,7 +1844,9 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		title = "Audio: %s"  % title
 		
 	# Sofortstart - direkt, falls Listing nicht Playable:
-	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': 
+	# 04.08.2019 Sofortstart nur noch abhängig von Settings und nicht zusätzlich von  
+	#	Param. Merk.
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true': 	# Sofortstart
 		PLog('Sofortstart: ARDSportPanel')
 		PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
 		PlayVideo(url=url, title=title, thumb=img, Plot=summ, sub_path="")
@@ -2343,7 +2347,7 @@ def SearchARDundZDF(title, query='', pagenr=''):
 	xbmcplugin.endOfDirectory(HANDLE)
 	
 ####################################################################################################
-	# Suche - Verarbeitung der Eingabe
+	# Suche ARD Classic + Podcast Classic 
 	# Vorgabe UND-Verknüpfung (auch Podcast)
 	# Kodi-Problem ..-Button s.u.
 	#
@@ -3108,7 +3112,7 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 ####################################################################################################
-# ARD - einzelne Sendung, path in neuer Mediathekführt zur 
+# ARD - einzelne Sendung, path in neuer Mediathek führt zur 
 # Quellenseite (verschiedene Formate -> 
 #	1. Text-Seite mit Verweis auf .m3u8-Datei und / oder href_quality_ Angaben zu mp4-videos -
 #		im Listenformat, nicht m3u8-Format, die verlinkte master.m3u8 ist aber im 3u8-Format
@@ -3181,7 +3185,9 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 	summary_org = summary_org.replace('\n', '||')
 	if m3u8_master:	 		 		  								# nicht bei rtmp-Links (ohne master wie m3u8)
 		# Sofortstart - direkt, falls Listing nicht Playable:
-		if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': 
+		# 04.08.2019 Sofortstart nur noch abhängig von Settings und nicht zusätzlich von  
+		#	Param. Merk. (wie SenderLiveResolution)
+		if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true': 
 			PLog('Sofortstart: SingleSendung')
 			PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
 			# sub_path=''	# fehlt bei ARD - entf. ab 1.4.2019
@@ -3867,9 +3873,11 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 															
 	my_items = ReadFavourites(mode)						# Addon-Favs / Merkliste einlesen
 	PLog(len(my_items))
+	# Dir-Items für diese Funktionen erhalten mediatype=viceo:
 	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.ShowVideo",
 						"resources.lib.zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
-						"ARDStartVideoMP4", ]	# ohne "SenderLiveResolution" (Resume aus)	
+						"ARDStartVideoMP4", "util.PlayVideo", "resources.lib.my3Sat.SingleBeitrag",
+						"SenderLiveResolution"]	
 
 	if mode == 'Favs':														
 		tagline = "Anzahl Addon-Favoriten: %s" % str(len(my_items)) 	# Info-Button
@@ -3883,8 +3891,8 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		s1 		= "Merkliste von ARDundZDF."
 		s2		= "Einträge entfernen: via Kontextmenü hier oder am am Ursprungsort im Addon."
 		s3		= "Die Merkliste wird nach hinzufügen/entfernen erneut aufgerufen."
-		s4		= 'Einträge enthalten nicht in allen Fällen Begleitinfos zu Inhalt, Länge usw.'
-		s5		= 'Stammt der Eintrag aus einem Modul, muss vor Wiedergabe das Modul geladen werden.'
+		s4		= 'Stammt der Eintrag aus einem abgewählten Modul, wird es bis zum Aufruf des Hauptmenüs reaktiviert.'
+		s5		= 'Einträge enthalten nicht in allen Fällen Begleitinfos zu Inhalt, Länge usw.'
 		summary	= "%s\n\n%s\n\n%s\n\n%s\n\n%s"		% (s1, s2, s3, s4, s5)
 		label	= 'Infos zum Menü Merkliste'
 	
@@ -3902,7 +3910,9 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		thumb 	= stringextract(' thumb="', '"',fav) 
 		Plot_org = stringextract(' Plot="', '"',fav) 		# ilabels['Plot']
 		Plot_org = Plot_org.replace(' Plot="', ' Plot=""')  # leer
-		if name: 	name 	= name.group(1)
+		if name: 	
+			name 	= name.group(1)
+			name 	= unescape(name)
 			
 		if mode == 'Merk' and 'plugin://plugin' not in fav:	# Base64-kodierte Plugin-Url
 			PLog('base64_fav')
@@ -3943,7 +3953,9 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		CallFunction = stringextract("&dirID=", "&", dirPars) 
 		PLog('CallFunction: ' + CallFunction)
 		if CallFunction in CallFunctions:			# Parameter Merk='true' anhängen
-			mediatype='video'
+			if SETTINGS.getSetting('pref_video_direct') == 'true':
+				mediatype='video'		
+		PLog('mediatype: ' + mediatype)
 		
 		modul = "ardundzdf"
 		dirPars = unescape(dirPars); 
@@ -4404,21 +4416,21 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 		util.addDir(li=li, label=name, action="dirList", dirID="SenderLiveListe", fanart=R(ICON_MAIN_TVLIVE), 
 			thumb=img, fparams=fparams)
 
-	title = 'EPG Alle JETZT'; summary='elektronischer Programmfuehrer'
+	title = 'EPG Alle JETZT'; summary ='elektronischer Programmfuehrer'
 	tagline = 'zeige die laufende Sendung für jeden Sender'
 	fparams="&fparams={'title': '%s'}" % title
 	util.addDir(li=li, label=title, action="dirList", dirID="EPG_ShowAll", fanart=R('tv-EPG-all.png'), 
 		thumb=R('tv-EPG-all.png'), fparams=fparams, summary=summary, tagline=tagline)
 							
 	title = 'EPG Sender einzeln'; summary='elektronischer Programmfuehrer'
-	tagline = 'Sendungen für Sender nach Wahl'								# EPG-Button Einzeln anhängen
+	tagline = 'zeige die Sendungen für einen Sender nach Wahl'				# EPG-Button Einzeln anhängen
 	fparams="&fparams={'title': '%s'}" % title
 	util.addDir(li=li, label=title, action="dirList", dirID="EPG_Sender", fanart=R(ICON_MAIN_TVLIVE), 
 		thumb=R('tv-EPG-single.png'), fparams=fparams, summary=summary, tagline=tagline)	
 		
 	PLog(str(SETTINGS.getSetting('pref_LiveRecord')))
 	if SETTINGS.getSetting('pref_LiveRecord'):		
-		title = 'Recording TV-Live'													# TVLiveRecord-Button anhängen
+		title = 'Recording TV-Live'												# TVLiveRecord-Button anhängen
 		laenge = SETTINGS.getSetting('pref_LiveRecord_duration')
 		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
 			laenge = "wird manuell eingegeben"
@@ -4432,8 +4444,14 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 
 	
 #-----------------------------------------------------------------------------------------------------
-# EPG SenderListe , EPG-Daten holen in Modul EPG.py, Anzeige in EPG_Show
-def EPG_Sender(title):
+# EPG SenderListe - Liste aus livesenderTV.xml sortiert
+# Zeilen-Index: title=rec[0]; EPG_ID=rec[1]; img=rec[2]; link=rec[3];	
+# 	EPG-Daten:  -> EPG_ShowSingle ("EPG Sender einzeln")
+#	ohne EPG:	-> SenderLiveResolution
+# Aufrufer SenderLiveListePre
+# 
+#
+def EPG_Sender(title, Merk='false'):
 	PLog('EPG_Sender:')
 	
 	li = xbmcgui.ListItem()
@@ -4450,8 +4468,8 @@ def EPG_Sender(title):
 		if ID == '':				# ohne EPG_ID
 			title = title + ': ohne EPG' 
 			summ = 'weiter zum Livestream'
-			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': ''}" %\
-				(urllib2.quote(link), urllib2.quote(title), urllib2.quote(R(rec[2])))
+			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '', 'Merk': '%s'}" %\
+				(urllib2.quote(link), urllib2.quote(title), urllib2.quote(R(rec[2])), Merk)
 			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
 				thumb=R(rec[2]), fparams=fparams, summary=summ)
 		else:
@@ -4461,7 +4479,7 @@ def EPG_Sender(title):
 			addDir(li=li, label=title, action="dirList", dirID="EPG_ShowSingle", fanart=R('tv-EPG-single.png'), thumb=R(rec[2]), 
 				fparams=fparams, summary=summ)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #-----------------------------
 #	Liste aller TV-Sender wie EPG_Sender, hier mit Aufnahme-Button
 def TVLiveRecordSender(title):
@@ -4503,7 +4521,7 @@ def TVLiveRecordSender(title):
 		addDir(li=li, label=title, action="dirList", dirID="LiveRecord", fanart=R(rec[2]), thumb=R(rec[2]), 
 			fparams=fparams, summary=summ, tagline=tag)
 	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------
 # 30.08.2018 Start Recording TV-Live
@@ -4634,12 +4652,16 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 	return sort_playlist
 	
 #-----------------------------------------------------------------------------------------------------
-# EPG: Daten holen in Modul EPG.py, Anzeige hier, Klick zum Livestream
+# Aufrufer EPG_Sender (falls EPG verfügbar)
+# 	EPG-Daten holen in Modul EPG  (1 Woche), Listing hier jew. 1 Tag, 
+#	JETZT-Markierung für laufende Sendung
+# Klick zum Livestream -> SenderLiveResolution 
+# 	Aufrufer EPG_Sender
 def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 	PLog('EPG_ShowSingle:'); 
 #	ID = urllib2.unquote(ID); name = urllib2.unquote(name); stream_url = urllib2.unquote(stream_url);
-	# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis, 7=today_human: 
-	# Link zur Einzelanzeige href=rec[1] hier nicht verwendet - wenig zusätzl. Infos
+#	Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis, 7=today_human: 
+#	Link zur Einzelanzeige href=rec[1] hier nicht verwendet - wenig zusätzl. Infos
 	EPG_rec = EPG.EPG(ID=ID, day_offset=pagenr)		# Daten holen
 	PLog(len(EPG_rec))
 	
@@ -4669,8 +4691,9 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 			title='[COLOR red][B]%s[/B][/COLOR]' % sname
 		PLog("title: " + title)
 		tagline = 'Zeit: ' + vonbis
+		descr = summ.replace('\n', '||')		# \n aus summ -> ||
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s'}" % (urllib2.quote(stream_url), 
-			urllib2.quote(title), urllib.quote_plus(img), urllib.quote_plus(summ))
+			urllib2.quote(title), urllib.quote_plus(img), urllib.quote_plus(descr))
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
 			thumb=img, fparams=fparams, summary=summ, tagline=tagline)
 			
@@ -4684,12 +4707,13 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 		addDir(li=li, label=summ, action="dirList", dirID="EPG_ShowSingle", fanart=R('tv-EPG-single.png'), 
 		thumb=R(ICON_MEHR), fparams=fparams, summary=summ)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #-----------------------------------------------------------------------------------------------------
 # EPG: aktuelle Sendungen aller Sender mode='allnow'
+# Aufrufer SenderLiveListePre ('EPG Alle JETZT')
 #	26.04.2019 Anzahl pro Seite auf 20 erhöht (Timeout bei Kodi kein Problem wie bei Plex)  
 
-def EPG_ShowAll(title, offset=0):
+def EPG_ShowAll(title, offset=0, Merk='false'):
 	PLog('EPG_ShowAll:'); PLog(offset) 
 	title = urllib2.unquote(title)
 	title_org = title
@@ -4726,7 +4750,7 @@ def EPG_ShowAll(title, offset=0):
 		
 		if ID == '':									# ohne EPG_ID
 			tagline = 'weiter zum Livestream'
-			title = title_playlist + ': ohne EPG | %s' % tagline
+			title = title_playlist + ': [COLOR red][B]ohne EPG[/B][/COLOR] | %s' % tagline
 			img = img_playlist
 			PLog("img: " + img)
 		else:
@@ -4748,10 +4772,10 @@ def EPG_ShowAll(title, offset=0):
 				
 		title = UtfToStr(title)
 		title = unescape(title)
-		PLog("title: " + title)
+		PLog("title: " + title); PLog(summ)
 					
-		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s'}" % (urllib2.quote(m3u8link), 
-			urllib2.quote(title), urllib2.quote(img), urllib.quote_plus(summ))
+		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Merk': '%s'}" %\
+			(urllib2.quote(m3u8link), urllib2.quote(title), urllib2.quote(img), urllib.quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-all.png'), 
 			thumb=img, fparams=fparams, summary=summ, tagline=tagline)
 
@@ -4765,7 +4789,7 @@ def EPG_ShowAll(title, offset=0):
 		addDir(li=li, label=summ, action="dirList", dirID="EPG_ShowAll", fanart=R('tv-EPG-all.png'), 
 			thumb=R(ICON_MEHR), fparams=fparams, summary=summ, tagline=title2)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #-----------------------------------------------------------------------------------------------------
 # TV LiveListe - verwendet lokale Playlist livesenderTV.xml
 # onlySender: Button nur für diesen Sender (z.B. ZDFSportschau Livestream für Menü
@@ -4945,7 +4969,9 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 
 	# direkter Sprung hier erforderlich, da sonst der Player mit dem Verz. SenderLiveResolution
 	#	startet + fehlschlägt.
-	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true':	# Sofortstart
+	# 04.08.2019 Sofortstart nur noch abhängig von Settings und nicht zusätzlich von  
+	#	Param. Merk.
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true':	# Sofortstart
 		PLog('Sofortstart: SenderLiveResolution')
 		PlayVideo(url=path, title=title, thumb=thumb, Plot=descr, Merk=Merk)
 		return
@@ -5077,6 +5103,8 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 		# 	fparams="&fparams=url=%s, title=%s, is_playable=%s" % (sname + ".m3u8", title, True)
 		# descr -> Plot	
 		tagline	 = tagline.replace('||','\n')				# s. tagline in ZDF_get_content
+		title = "autom. | %s" % title
+
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
 			(urllib.quote_plus(url_m3u8), urllib.quote_plus(title), urllib.quote_plus(thumb), 
 			urllib.quote_plus(descr), urllib.quote_plus(sub_path))	
@@ -6734,7 +6762,9 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 				i = i +1
 				if url:		
 					if url.find('master.m3u8') > 0:			# m3u8 enthält alle Auflösungen
-						if SETTINGS.getSetting('pref_video_direct') == 'true'or Merk == 'true':	# Sofortstart
+						# 04.08.2019 Sofortstart nur noch abhängig von Settings und nicht zusätzlich von  
+						#	Param. Merk.
+						if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true':	# Sofortstart
 							PLog('Sofortstart: show_formitaeten')
 							PlayVideo(url=url, title=title_call, thumb=thumb, Plot=Plot_par, sub_path=sub_path, Merk=Merk)
 							return li, ''	# sauber raus in ZDF_getVideoSources
@@ -6907,7 +6937,7 @@ def ZDFSlideShow(path, single=None):
 	 
 ####################################################################################################
 def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, tagline='', summary='', sub_path=''):	
-#	# master.m3u8 auswerten, Url muss komplett sein. container muss nicht leer ein (siehe SingleSendung)
+#	# master.m3u8 auswerten, Url muss komplett sein. 
 #  1. Besonderheit: in manchen *.m3u8-Dateien sind die Pfade nicht vollständig,
 #	sondern nur als Ergänzung zum Pfadrumpf (ohne Namen + Extension) angegeben, Bsp. (Arte):
 #	delive/delive_925.m3u8, url_m3u8 = http://delive.artestras.cshls.lldns.net/artestras/contrib/delive.m3u8
@@ -7031,7 +7061,11 @@ def router(paramstring):
 	paramstring = urllib.unquote_plus(paramstring)
 	PLog(' router_params1: ' + paramstring)
 		
-	if paramstring:		
+	if paramstring:	
+		# Problem (unbehandelt): Zeichen & in Parametern, z.B. 'path': 'https:// .. flamme&words=and&source..', 
+		#	Vorkommen in Suchpfaden ARD-Classic - Auswirkung: Fav scheitert in Merkliste, da parse_qsl das
+		#	erste & als neuen Param. interpretiert. 
+		#	
 		params = dict(parse_qsl(paramstring[1:]))
 		PLog(' router_params_dict: ' + str(params))
 		try:
