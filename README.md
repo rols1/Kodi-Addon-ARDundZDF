@@ -18,6 +18,8 @@ Die ARD kündigt seit einigen Wochen die Einstellung der Classic-Funktionen an. 
 #### Rückmeldungen willkommen:
 Im Forum: https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/  
 direkt: rols1@gmx.de 
+
+#### statt Handbuch: (Einstellungen (Settings) des Addons)[https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki]
   
 Funktionen: 
 ===================
