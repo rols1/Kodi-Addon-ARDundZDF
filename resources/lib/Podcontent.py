@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-# Podcontent.py	- Aufruf durch __init__.py/PodFavoritenListe 
+# Podcontent.py	- Aufruf durch PodFavoritenListe 
 #
 # Die Funktionen dienen der Auswertung von Radio-Podcasts der Regionalsender. 
 # Ab 19.06.2019 Umstellung auf die zentrale ARD-Audiothek
 #
-#	Die Sammlung der Ergebnisse in 2-dim-Record entfällt (war aufgrund der
-#	versch. Schemata erforderlich).
+#	Die Sammlung der Ergebnisse in 2-dim-Record entfällt (war vorher aufgrund der
+#	versch. Sender-Schemata erforderlich).
 #
 # Die angezeigten Dateien stehen für Downloads zur Verfügung (einzeln und gesamte Liste)
 #
@@ -208,7 +208,9 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	AppPath = os.path.abspath(AppPath)
 	dest_path = SETTINGS.getSetting('pref_curl_download_path')
 	dest_path = UtfToStr(dest_path)
-	curl_param_list = '-k '									# schaltet curl's certificate-verification ab
+	
+	# -k schaltet curl's certificate-verification ab, -L folgt einem ev. Redirect
+	curl_param_list = '-k -L '									
 
 	PLog(AppPath)
 	if os.path.exists(AppPath)	== False:					# Existenz Curl prüfen

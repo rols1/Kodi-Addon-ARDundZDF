@@ -859,7 +859,10 @@ def transl_json(line):	# json-Umlaute übersetzen
 		, ('\\u00C6', "Ö"), ('\\u00D6', "Ö"),('\\u00FC', "ü"), ('\\u00DC', 'Ü')
 		, ('\\u00DF', 'ß'), ('\\u0026', '&'), ('\\u00AB', '"')
 		, ('\\u00BB', '"')
-		, ('\xc3\xa2', '*')):	# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
+		, ('\xc3\xa2', '*')			# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
+		, ('u00B0', ' Grad')		# u00BA -> Grad (3Sat, 37 Grad)	
+		, ('u00EA', 'e')			# 3Sat: Fête 
+		, ('u00E9', 'e')):			# 3Sat: Fabergé
 
 		line = line.replace(*r)
 	return line	
