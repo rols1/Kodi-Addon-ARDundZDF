@@ -114,7 +114,7 @@ def Main_3Sat(name):
 		fanart=R('3sat.png'), thumb=R('zdf-rubriken.png'), summary=summ, fparams=fparams)
 
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		 		
 ####################################################################################################
 # Hinweis: wir suchen in 3Sat_XML_FULL = alle Mediathekinhalte
@@ -173,7 +173,7 @@ def Search(first, path, query=''):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Search", fanart=R('3sat.png'), 
 			thumb=R(ICON_MEHR), summary='Mehr...', fparams=fparams)
 		
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 #------------ 
 # A-Z Liste der Buchstaben (mit Markierung 'ohne Beiträge')
@@ -210,7 +210,7 @@ def SendungenAZlist(name, path):				#
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SendungenAZ", 
 				fanart=R('3sat.png'), thumb=R('Dir-folder.png'), fparams=fparams)			
 			
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #------------ 
 # A-Z Liste der Beiträge
@@ -258,7 +258,7 @@ def SendungenAZ(name, path):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
 			fanart=R('3sat.png'), thumb=img_src, summary=descr, tagline=tag, fparams=fparams)
 	
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
 #------------
 # 25.05.2019 more-Links nicht mehr verfügbar (javascript-generiert) -
@@ -484,41 +484,46 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 	# Auswertung weiterer Inhalte (page = rec)				
-
-	if name == 'Mehr' or name == 'ZUM STöBERN': 			# Zusätze Mehr oder ZUM STöBERN
+	# Kennzeichnungen: Mehr, MEHR, ZUM STöBERN
+	# Blockmerkmal'<picture class=""> entscheidet über Ziel:
+	#	mit 	-> Rubrik_Single (nur 'ZUM STöBERN', Bsp. Kultur) oder Sendereihe_Sendungen
+	#	ohne 	-> Sendereihe_Sendungen ('is-medium lazyload'), Bsp. Rubrik Wissen
+	if name.upper() == 'MEHR' or name == 'ZUM STöBERN': 	# Zusätze Mehr/MEHR oder ZUM STöBERN
 		rubriken =  blockextract('<picture class="">', page)
 		PLog(len(rubriken))
-		for rec in rubriken:
-			img_src =  stringextract('data-srcset="', ' ', rec)	
-			title	= stringextract('clickarea-link">', '</p>', rec)
-			href	= stringextract('href="', '"', rec)
-			if href.startswith('http') == False:
-				href	= DreiSat_BASE + href
-			descr	= stringextract('clickarea-link" >', '<', rec)
-			
-			title = UtfToStr(title); descr = UtfToStr(descr)	
-			title = repl_json_chars(title); descr = repl_json_chars(descr); 
-								
-			PLog('Satz:')
-			PLog(img_src); PLog(title);  PLog(href); PLog(descr);
-			
-			if name == 'ZUM STöBERN':					# ähnlich mehr, aber Auswertung als Rubrik
-				fparams="&fparams={'name': '%s', 'path': '%s'}" % (urllib2.quote(title),
-					 urllib2.quote(href))
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubrik_Single", 
-					fanart=R('3sat.png'), thumb=img_src, summary='Folgeseiten', fparams=fparams)
-
-			else:										# Mehr: Sendereihen -> Rubrik_Single									
-				fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (urllib2.quote(title),
-					 urllib2.quote(href), urllib2.quote(img_src))
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
-					fanart=R('3sat.png'), thumb=img_src, summary=descr, params=fparams)
+		if len(rubriken) > 0:
+			for rec in rubriken:
+				img_src =  stringextract('data-srcset="', ' ', rec)	
+				title	= stringextract('clickarea-link">', '</p>', rec)
+				href	= stringextract('href="', '"', rec)
+				if href.startswith('http') == False:
+					href	= DreiSat_BASE + href
+				descr	= stringextract('clickarea-link" >', '<', rec)
 				
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
+				title = UtfToStr(title); descr = UtfToStr(descr)	
+				title = repl_json_chars(title); descr = repl_json_chars(descr); 
+									
+				PLog('Satz:')
+				PLog(img_src); PLog(title);  PLog(href); PLog(descr);
+				
+				if name == 'ZUM STöBERN':					# ähnlich mehr, aber Auswertung als Rubrik
+					fparams="&fparams={'name': '%s', 'path': '%s'}" % (urllib2.quote(title),
+						 urllib2.quote(href))
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubrik_Single", 
+						fanart=R('3sat.png'), thumb=img_src, summary='Folgeseiten', fparams=fparams)
+
+				else:										# Mehr: Sendereihen -> Sendereihe_Sendungen"									
+					fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (urllib2.quote(title),
+						 urllib2.quote(href), urllib2.quote(img_src))
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
+						fanart=R('3sat.png'), thumb=img_src, summary=descr, fparams=fparams)
+				
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 				
 	# Übergabe Seitenausschnitt rec in page, Reihenfolge in Sendereihe_Sendungen:
-	#	 <picture class="">, 'is-medium lazyload'
+	#	 <picture class=""> (hier nicht enthalten), 'is-medium lazyload'
 	PLog(len(page))
+
 	li = Sendereihe_Sendungen(li, path, title, page=page)
 				
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -526,6 +531,8 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 # Aufrufer: SendungenAZ mit path aber ohne Listitem, Rubrik_Single mit 
 #	page (Seitenausschnitt)
 #	Search + Rubrik_Single jew. mit Listitem
+#	rekursiv möglich - s. is-clickarea-action (keine Rubriken, aber
+#		weiterführender Link.
 #
 # Achtung: hier wird (nochmal) auf video-carousel-item	+ o--stage-brand
 #	geprüft - page ev. vorher begrenzen.
@@ -534,6 +541,9 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 	PLog('Sendereihe_Sendungen: ' + path)
 	PLog(len(page))
 	title_org = title
+	got_page = False
+	if page:
+		got_page = True
 	
 	ret = False									# Default Return  o. endOfDirectory
 	if not li:
@@ -564,6 +574,26 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 	PLog('Sendereihe_Sendungen2:')	
 	rubriken =  blockextract('<picture class="">', page)
 	PLog(len(rubriken))
+	
+	 									# kein Einzelbeitrag, weiterführender Link?
+	# Bsp.: Rubriken/Kabarett/35 JAHRE 3SAT - JUBILÄUMSPROGRAMM
+	#	-> rekursiv
+	if len(rubriken) == 0 and got_page == True:		
+		if 'class="is-clickarea-action' in page:
+			PLog('is-clickarea-action:')
+			img_src = stringextract('data-srcset="', ' ', page)	
+			title 	= stringextract('title="', '"', page)	
+			title	= unescape(title)
+			href	= stringextract('href="', '"', page)
+			if href.startswith('http') == False:
+				href	= DreiSat_BASE + href
+			descr	= stringextract('paragraph-large ">', '</p>', page)
+			
+			fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (urllib2.quote(title),
+				 urllib2.quote(href), urllib2.quote(img_src))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
+				fanart=R('3sat.png'), thumb=img_src, summary=descr, fparams=fparams)
+
 								
 	for rec in rubriken:
 		if 'data-playlist-toggle' not in rec:

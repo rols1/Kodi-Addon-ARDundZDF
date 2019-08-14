@@ -7,11 +7,21 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+
+14.08.2019	1.8.8	Modul 3Sat (Sendereihe_Sendungen): Auswertung weiterführender Links, falls die
+			Seite keinen Beitrag enthält (Bsp. Rubriken/Kabarett/35 JAHRE 3SAT - JUBILÄUMSPROGRAMM).
+			Modul 3Sat: weitere cacheToDisc-Statements (=True) in Main_3Sat, Search,
+			SendungenAZlist + SendungenAZ.
+			Modul 3Sat (Rubrik_Single): Auswertung zusätzliche differenziert nach Blöcken
+			'<picture class="">' - Unterschiede in Rubriken Kultur und Wissen.
+
 13.08.2019	1.8.7	DownloadMultiple (Podcast-Favoriten, Modul Podcast/Audiothek): curl-Parameter mit
 			-L für Redirects erweitert.
+			Modul 3Sat (Rubrik_Single): Auswertung 'ZUM STöBERN' in Rubriken ergänzt. 
 			Modul 3Sat (get_teaserElement): Fix title (transl_json), z.B. Fête.
 			Modul 3Sat: cacheToDisc-Statements (=True) eingefügt in Sendereihe_Sendungen, 
-			Rubriken, Rubrik_Single (alle Listings), Verpasst, SendungenDatum.	
+			Rubriken, Rubrik_Single (alle Listings), Verpasst, SendungenDatum.
+			Repo Github: Fertigstellung Wicki (Settings)	
 
 06.08.2019	1.8.6	Überarbeitung EPG:
 			EPG_ShowSingle (EPG  einzeln): Fix descr ('\n' -> '||') - Videos mit
