@@ -8,12 +8,51 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+28.08.2019	1.9.2	ARDVerpasstContent(ARD Neu): Ermittlung timeline_sender an ARD-Änderung angepasst
+			(nur noch auf ardmediathek.de/ard/program/, nicht auf den Datumsseiten).
+			ARDVerpasstContent(ARD Neu): Code zum Vorausladen der Inhaltstexte hinzugefügt. 
+			get_summary_pre (Modul util): Anpassungen für get_page_content (Quotierung
+			entfernt, skip-Param. für 'verfügbar bis' hinzugefügt).
+			Main_NEW (ARD Neu): akt. Sender rot markiert und in tagline verlagert.
+			SendungenAZ_ARDnew: fehlenden sha256Hash-Wert für X ermittelt + ergänzt.
+
+not on Github	1.9.1	get_page_content (ARD Neu): Mitnutzung/Anpassung für ARDSearchnew.
+			get_page_content (ARD Neu): Farbmarkierung für Suchbegriffe im Titel, neue
+			Funktion make_mark (Modul util).
+			get_page_content (ARD Neu): UtfToStr-Behandl. für title_org + ID.
+
+not on Github	1.9.0	ARDStartRubrik (ARD Neu): Erweiterung Mehr-Auswertung auf alle Seiten mit
+			pagination-Element (bisher nur Seiten mit Kennzeichnung AutoCompilationWidget).
+			get_compilation: für Scrolling Hauptmerkmal pagination eingeführt, Differenzierung
+			nach AutoCompilationWidget.
+			compilation: Ermittlung Basispfad für Scrolling ab Merkmal pagination, Abtrennung
+			der Parameter im Pfad + Neubildung mit inkrementierter pageNumber .
+			get_compilation: Seitenberechnung mit Aufrundung mittels math.ceil.
+			ARD Neu: Umbenennung ARDCompilation -> ARDPagination, get_compilation ->
+			get_pagination.	
+			ARDStartRubrik (ARD Neu): Button-rel. A-Z-Titel entfernt - überflüssig.
+			ARD Neu: Umbenennung get_comp_content -> get_page_content, Mitnutzung durch
+			ARDStartRubrik.
+			time_translate (Modul util): nicht funktionierenden python-Call datetime.strptime 
+			ersetzt durch Lösung von BJ1 (mehr s. Verweis in Funktion).
+
+not on Github	1.8.9	ARDSearchnew: neuen sha256Hash ermittelt und eingesetzt (von ARD geändert).
+			ARDSearchnew: erste pageNumber von 0 auf 1 korrigiert (von ARD geändert).
+			ARDSearchnew: Erkennung + Behandl. von Sendereihen im Suchergebnis (Mehrfachbeiträge).
+			ARDSearchnew: Mehr-Button um Anzeige der Seiten + Beiträge erweitert.
+			get_api_call (ARD Neu): Reihenfolge pageNumber, text getauscht (von ARD geändert). 
+			get_page (Modul util): Pfad in error_txt ersetzt durch "siehe Logdatei" (Pfad ging
+			verloren).
+			ARD Classic (SinglePage, PageControl): Directory-Cache auf EIN gesetzt (Rückwärtsblättern 
+			wird gecached).
+			make_filenames (Modul util): Zeichen < und > entfernt (für ARD Audiothek erforderlich).
+
 14.08.2019	1.8.8	Modul 3Sat (Sendereihe_Sendungen): Auswertung weiterführender Links, falls die
 			Seite keinen Beitrag enthält (Bsp. Rubriken/Kabarett/35 JAHRE 3SAT - JUBILÄUMSPROGRAMM).
 			Modul 3Sat: weitere cacheToDisc-Statements (=True) in Main_3Sat, Search,
 			SendungenAZlist + SendungenAZ.
-			Modul 3Sat (Rubrik_Single): Auswertung zusätzliche differenziert nach Blöcken
-			'<picture class="">' - Unterschiede in Rubriken Kultur und Wissen.
+			Modul 3Sat (Rubrik_Single): Auswertung zusätzlich differenziert nach Blöcken 
+			('<picture class="">') wg. Unterschieden in Rubriken Kultur und Wissen.
 
 13.08.2019	1.8.7	DownloadMultiple (Podcast-Favoriten, Modul Podcast/Audiothek): curl-Parameter mit
 			-L für Redirects erweitert.

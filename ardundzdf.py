@@ -44,8 +44,8 @@ import resources.lib.EPG				as EPG
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.8.8'		 
-VDATE = '14.08.2019'
+VERSION =  '1.9.2'		 
+VDATE = '28.08.2019'
 
 # 
 #	
@@ -294,10 +294,12 @@ def Main():
 		addDir(li=li, label=title, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
 			thumb=R('suche_ardundzdf.png'), tagline=tagline, fparams=fparams)
 	else:
-		tagline = 'gesucht wird in ARD  Mediathek Neu und in der ZDF Mediathek'
+		tagline = 'gesucht wird in ARD  Mediathek Neu und in der ZDF Mediathek.'
+		summ	= 'Gesucht wird nur nach Einzelbeiträgen - Sendereihen bleiben unberücksichtigt.'
 		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
-			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tagline, fparams=fparams)
+			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tagline, 
+			summary=summ, fparams=fparams)
 		
 
 	if SETTINGS.getSetting('pref_use_classic') == 'true':	# Classic-Version der ARD-Mediathek
@@ -2915,7 +2917,7 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 		addDir(li=li, label=title, action="dirList", dirID="SinglePage", fanart=R(ICON_NEXT), 
 			thumb=R(ICON_NEXT), fparams=fparams)
  
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
   
 ####################################################################################################
 # Liste der Sendungen eines Tages / einer Suche 
@@ -3110,7 +3112,7 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 			addDir(li=li, label=headline, action="dirList", dirID="PageControl", fanart=img_src, thumb=img_src, 
 				fparams=fparams, summary=summary, tagline=subtitle)						
 		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 ####################################################################################################
 # ARD - einzelne Sendung, path in neuer Mediathek führt zur 
 # Quellenseite (verschiedene Formate -> 

@@ -4,7 +4,10 @@
 
 import os, sys, glob, shutil, time
 import datetime as dt	# für xml2srt
-from datetime import datetime	# für transl_pubDate  
+import time, datetime
+# import datetime, time, timedelta
+#from datetime import datetime, time, datetime, timedelta # transl_pubDate, time_translate
+
 import urllib, urllib2, ssl
 # import requests		# kein Python-built-in-Modul, urllib2 verwenden
 from StringIO import StringIO
@@ -542,7 +545,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 			msg2 = 'Bitte in den Einstellungen abschalten, um das Modul'
 			msg3 = 'ARD-Neu zu aktivieren.'
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)		 			 	 
-		msg = error_txt + ' | Seite: ' + path
+		msg = error_txt + ' | siehe Logdatei'
 		PLog(msg)
 		return page, msg
 		
@@ -771,6 +774,27 @@ def teilstring(zeile, startmarker, endmarker):  		# rfind: endmarker=letzte Fund
   #PLog(pos1) PLog(pos2) 
   return teils 
 #----------------------------------------------------------------  
+# make_mark: farbige Markierung plus fett (optional	
+# Groß-/Kleinschreibung egal
+# bei Fehlschlag mString unverändert zurück
+#
+# title=' Aussteiger: *Identitäre* wollen Bürgerkrieg gegen'
+def make_mark(mark, mString, color='red', bold=''):	
+	PLog("make_mark:")	
+	mS = mString.lower(); ma = mark.lower()
+	if ma in mS or mark == mString:
+		pos1 = mS.find(ma)
+		pos2 = pos1 + len(ma)		
+		ms = mString[pos1:pos2]		# Mittelstück mark unverändert
+		s1 = mString[:pos1]; s2 = mString[pos2:];
+		if bold:
+			rString= "%s[COLOR %s][B]%s[/B][/COLOR]%s"	% (s1, color, ms, s2)
+		else:
+			rString= "%s[COLOR %s]%s[/COLOR]%s"	% (s1, color, ms, s2)
+		return rString
+	else:
+		return mString		# Markierung fehlt, mString unverändert zurück	
+#----------------------------------------------------------------  
 def cleanhtml(line): # ersetzt alle HTML-Tags zwischen < und >  mit 1 Leerzeichen
 	cleantext = line
 	cleanre = re.compile('<.*?>')
@@ -824,12 +848,14 @@ def make_filenames(title):
 	fname = transl_umlaute(title)		# Umlaute
 	# Ersatz: 	Leerz., Pipe, mehrf. Unterstriche -> 1 Unterstrich, Doppelp. -> Bindestrich	
 	#			+ /  -> Bindestrich	
-	# Entferne: Frage-, Ausrufez., Hochkomma, Komma und #@!%^&*()
+	# Entferne: Frage-, Ausrufez., Hochkomma, Komma und #@!%^&*(), für ARD Audiothek
+	#	ab 16.08.2019 auch < und >
 	fname = (fname.replace(' ','_').replace('|','_').replace('___','_').replace('.','_')) 
 	fname = (fname.replace('__','_').replace(':','-'))
 	fname = (fname.replace('?','').replace('!','').replace('"','').replace('#','')
 		.replace('*','').replace('@','').replace('%','').replace('^','').replace('&','')
-		.replace('(','').replace(')','').replace(',','').replace('+','-').replace('/','-'))	
+		.replace('(','').replace(')','').replace(',','').replace('+','-').replace('/','-')
+		.replace('<','').replace('>',''))	
 	
 	# Die Variante .join entfällt leider, da die Titel hier bereits
 	# in Unicode ankommen -	Plex code/sandbox.py:  
@@ -923,18 +949,6 @@ def CalculateDuration(timecode):				# 3 verschiedene Formate (s.u.)
 	milliseconds += seconds * 1000
 	
 	return milliseconds
-#----------------------------------------------------------------  	
-# Format timecode 	2018-11-28T23:00:00Z
-# Rückgabe:			28.11.2018, 23:00 Uhr   (Sekunden entfallen)
-def time_translate(timecode):	
-	if timecode[10] == 'T' and timecode[-1] == 'Z':  # Format OK?
-		year 	= timecode[:4]
-		month 	= timecode[5:7]
-		day 	= timecode[8:10]		
-		hour 	= timecode[11:16]
-		return "%s.%s.%s, %s Uhr" % (day, month, year, hour)
-	else:
-		return timecode
 #---------------------------------------------------------------- 
 # Format seconds	86400	(String, Int, Float)
 # Rückgabe:  		1d, 0h, 0m, 0s	
@@ -953,6 +967,42 @@ def seconds_translate(seconds):
 	seconds = time
 	# return "%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds)
 	return  "%d:%02d" % (hour, minutes)		
+#----------------------------------------------------------------  	
+# Format timecode 	2018-11-28T23:00:00Z (ARD Neu, broadcastedOn)
+#					y-m-dTh:m:sZ 	ISO8601 date
+# Rückgabe:			28.11.2018, 23:00 Uhr   (Sekunden entfallen)
+#					bzw. '' bei Fehlschlag
+# funktioniert in Kodi nur 1 x nach Neustart - s. transl_pubDate
+# 26.08.2019 OK mit Lösung von BJ1 aus
+#		https://www.kodinerds.net/index.php/Thread/50284-Python-Problem-mit-strptime/?postID=284746#post284746
+#
+# stackoverflow.com/questions/214777/how-do-you-convert-yyyy-mm-ddthhmmss-000z-time-format-to-mm-dd-yyyy-time-format
+# stackoverflow.com/questions/7999935/python-datetime-to-string-without-microsecond-component
+# stackoverflow.com/questions/13685201/how-to-add-hours-to-current-time-in-python
+#
+# ARD-Zeit + 2 Stunden
+# s.a. addHour (ARDnew) - Stringroutine für ARDVerpasstContent
+#
+def time_translate(timecode, add_hour=2):
+	PLog("time_translate:")
+
+	if timecode.strip() == '':
+		return ''
+	if timecode[10] == 'T' and timecode[-1] == 'Z':  # Format OK?
+		try:
+			date_format = "%Y-%m-%dT%H:%M:%SZ"
+			# ts = datetime.strptime(timecode, date_format)  # None beim 2. Durchlauf       
+			ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
+			# PLog(ts)
+			new_ts = ts + datetime.timedelta(hours=add_hour)	
+			ret_ts = new_ts.strftime("%d.%m.%Y %H:%M")
+			return ret_ts
+		except Exception as exception:
+			PLog(str(exception))
+			return ''
+	else:
+		return ''
+		
 #---------------------------------------------------------------- 
 # Format timecode 	Fri, 06 Jul 2018 06:58:00 GMT (ARD Audiothek , xml-Ausgaben)
 # Rückgabe:			06.07.2018, 06:58 Uhr   (Sekunden entfallen)
@@ -1089,7 +1139,10 @@ def ReadFavourites(mode):
 #
 # Aufrufer: ZDF: 	ZDF_get_content (für alle ZDF-Rubriken)
 #			ARD: 	ARDStart	-> ARDStartRubrik 
-#					SendungenAZ	-> ARDnew_Content
+#					SendungenAZ, ARDSearchnew, 	ARDStartRubrik,
+#					ARDPagination -> get_page_content
+#					ARDStartRubrik (Swiper) 
+#					ARDVerpasstContent
 #				
 #	Aufruf erfolgt, wenn für eine Sendung kein summary (teasertext, descr, ..) gefunden wird.
 #
@@ -1099,7 +1152,7 @@ def ReadFavourites(mode):
 # Nicht benötigt in ZDF-Suche (ZDF_Search -> ZDF_get_content): Ergebnisse enthalten
 #	einen verkürzten 'teaser-text'.
 #
-def get_summary_pre(path, ID='ZDF'):	
+def get_summary_pre(path, ID='ZDF', skip_verf=False):	
 	PLog('get_summary_pre: ' + ID)
 	
 	if 'Video?bcastId' in path:					# ARDClassic
@@ -1134,16 +1187,18 @@ def get_summary_pre(path, ID='ZDF'):
 			summ = "[B]Verfügbar bis %s[/B]\n\n%s\n" % (verf, summ)
 		
 	if 	ID == 'ARDnew':
-		if '/ard/player/' in path:				# json-Inhalt
+		page = page.replace('\\"', '*')									# Quotierung vor " entfernen, Bsp. \"query\"
+		if '/ard/player/' in path or '/ard/live/' in path:				# json-Inhalt
 			summ = stringextract('synopsis":"', '","', page)
 		else:									# HTML-Inhalt
 			summ = stringextract('synopsis":"', '"', page)
 		summ = repl_json_chars(summ)
-		if 'verfügbar bis:' in page:										# html mit Uhrzeit									
-			verf = stringextract('verfügbar bis:', '</p>', page)			# 
-			verf = cleanhtml(verf)
-		if verf:														# Verfügbar voraanstellen
-			summ = "[B]Verfügbar bis %s[/B]\n\n%s" % (verf, summ)
+		if skip_verf == False:
+			if 'verfügbar bis:' in page:								# html mit Uhrzeit									
+				verf = stringextract('verfügbar bis:', '</p>', page)	# 
+				verf = cleanhtml(verf)
+			if verf:													# Verfügbar voraanstellen
+				summ = "[B]Verfügbar bis %s[/B]\n\n%s" % (verf, summ)
 		
 		
 	if 	ID == 'ARDClassic':
