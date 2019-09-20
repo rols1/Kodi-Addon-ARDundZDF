@@ -85,7 +85,7 @@
 	<item>			
 		<title>ZDFneo</title>
 		<hrefsender>ZDFneo</hrefsender>
-		<link>http://zdf1314-lh.akamaihd.net/i/de13_v1@392877/master.m3u8</link>
+		<link>https://zdf-hls-02.akamaized.net/hls/live/2002461/de/high/master.m3u8</link>
 		<thumbnail>tv-zdf-neo.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>2NEO</EPG_ID>
@@ -96,7 +96,7 @@
 	<item>			
 		<title>ZDFinfo</title>
 		<hrefsender>ZDFinfo</hrefsender>
-		<link>http://zdf1112-lh.akamaihd.net/i/de12_v1@392882/master.m3u8</link>
+		<link>https://zdfhls17-i.akamaihd.net/hls/live/744750/de/high/master.m3u8</link>
 		<thumbnail>tv-zdf-info.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>ZINFO</EPG_ID>
@@ -128,7 +128,7 @@
 	<item>
 		<title>phoenix</title>
 		<hrefsender>phoenix</hrefsender>
-		<link>http://zdf0910-lh.akamaihd.net/i/de09_v1@392871/master.m3u8</link>
+		<link>https://zdfhls19-i.akamaihd.net/hls/live/744752/de/high/master.m3u8</link>
 		<thumbnail>tv-phoenix.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>PHOEN</EPG_ID>
@@ -327,7 +327,7 @@
 <items>
 	<item>
 		<title>ServusTV</title>
-		<link>https://liveservustv-i.akamaihd.net/hls/live/271000/ServusTV_DE/master.m3u8</link>
+		<link>https://rbmn-live.akamaized.net/hls/live/2002830/geoSTVDEweb/master.m3u8</link>
 		<thumbnail>tv-servus.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>SERVU</EPG_ID>

@@ -8,6 +8,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+20.09.2019	1.9.4	livesenderTV.xml: Streamlinks für ZDFNeo, ZDFInfo, Phoenix und Servus
+			aktualisiert.	
+
 20.09.2019	1.9.3	get_page_content (ARD Neu): Anpassungen an ARD-Änderungen (nur Einzelsendungen,
 			Rubriken fehlten)
 			livesenderTV.xml: Streamlink für "3Sat" aktualisiert.
