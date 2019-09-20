@@ -14,6 +14,7 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			Main_3Sat (Modul 3Sat): Streamlink für "3Sat" aktualisiert.
 			ARDStartVideoStreams (ARD Neu):	Directory-Cache auf EIN gesetzt (erspart
 			Durchlauf von Parseplaylist beim Rückblättern).
+			livesenderTV.xml: Streamlink ZDF aktualisiert.
 
 28.08.2019	1.9.2	ARDVerpasstContent(ARD Neu): Ermittlung timeline_sender an ARD-Änderung angepasst
 			(nur noch auf ardmediathek.de/ard/program/, nicht auf den Datumsseiten).
