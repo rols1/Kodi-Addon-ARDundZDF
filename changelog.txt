@@ -8,6 +8,13 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+20.09.2019	1.9.3	get_page_content (ARD Neu): Anpassungen an ARD-Änderungen (nur Einzelsendungen,
+			Rubriken fehlten)
+			livesenderTV.xml: Streamlink für "3Sat" aktualisiert.
+			Main_3Sat (Modul 3Sat): Streamlink für "3Sat" aktualisiert.
+			ARDStartVideoStreams (ARD Neu):	Directory-Cache auf EIN gesetzt (erspart
+			Durchlauf von Parseplaylist beim Rückblättern).
+
 28.08.2019	1.9.2	ARDVerpasstContent(ARD Neu): Ermittlung timeline_sender an ARD-Änderung angepasst
 			(nur noch auf ardmediathek.de/ard/program/, nicht auf den Datumsseiten).
 			ARDVerpasstContent(ARD Neu): Code zum Vorausladen der Inhaltstexte hinzugefügt. 
@@ -25,7 +32,7 @@ not on Github	1.9.0	ARDStartRubrik (ARD Neu): Erweiterung Mehr-Auswertung auf al
 			pagination-Element (bisher nur Seiten mit Kennzeichnung AutoCompilationWidget).
 			get_compilation: für Scrolling Hauptmerkmal pagination eingeführt, Differenzierung
 			nach AutoCompilationWidget.
-			compilation: Ermittlung Basispfad für Scrolling ab Merkmal pagination, Abtrennung
+			get_compilation: Ermittlung Basispfad für Scrolling ab Merkmal pagination, Abtrennung
 			der Parameter im Pfad + Neubildung mit inkrementierter pageNumber .
 			get_compilation: Seitenberechnung mit Aufrundung mittels math.ceil.
 			ARD Neu: Umbenennung ARDCompilation -> ARDPagination, get_compilation ->

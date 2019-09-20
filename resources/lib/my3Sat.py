@@ -1005,7 +1005,7 @@ def Live(name, epg='', Merk='false'):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='3Sat')						# Home-Button
 	
-	url = 'http://zdf0910-lh.akamaihd.net/i/dach10_v1@392872/master.m3u8'
+	url = 'https://zdfhls18-i.akamaihd.net/hls/live/744751/dach/high/master.m3u8'
 	# epg_url = 'https://programm.ard.de/TV/ARD-Mediathek/Programmkalender/?sender=28007'	# entf. 
 	epgname = 'ARD'; listname = '3sat'
 	summary = 'automatische Auflösung';				

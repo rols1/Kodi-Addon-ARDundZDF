@@ -296,8 +296,8 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	li = home(li, ID='ARD Neu')							# Home-Button
 
 	page = False
-	if 	ID == 'ARDStart':								# Startseite laden	
-		page = Dict("load", 'ARDStartNEW_%s', CacheTime=ARDStartCacheTime)	# Seite aus Cache laden		
+	if 	'/editorials/' in path == False:				# nur kompl. Startseite aus Cache laden (nicht Rubriken) 	
+		page = Dict("load", 'ARDStartNEW_%s' % sendername, CacheTime=ARDStartCacheTime)	# Seite aus Cache laden		
 
 	if page == False:									# keine Startseite od. Cache miss								
 		page, msg = get_page(path=path, GetOnlyRedirect=True)
@@ -402,7 +402,6 @@ def get_pagination(page):
 
 	pagination	= stringextract('pagination":', '"type"', page)
 	pageNumber 	= stringextract('pageNumber":', ',"', pagination)
-	PLog(pageNumber)
 	pageSize 	= stringextract('pageSize":', ',"', pagination)
 	totalElements 	= stringextract('totalElements":', '},', pagination)
 	href 		= stringextract('href":"', '"', pagination)	# akt. Pfad mit widgetID
@@ -417,6 +416,9 @@ def get_pagination(page):
 		PLog(widget);PLog(widgetID)
 		
 	PLog('href_akt: %s' % href)
+	PLog('pageNumber: %s, pageSize: %s, totalElements:%s ' % (pageNumber, pageSize, totalElements))
+	if pageSize == '' or totalElements == '':				# Sicherung 
+		return "", "", "", "", ""
 	
 	next_path=''; pN=''
 	pages = float(totalElements) / float(pageSize)
@@ -480,7 +482,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark, mediatype=''):
 #	Mehrfach- und Einzelsätze
 # mark: farbige Markierung in title (z.B. query aus ARDSearchnew) 
 # Seiten sind hier bereits senderspezifisch.
-#
+#	
 def get_page_content(li, page, ID, mediatype='', mark=''): 
 	PLog('get_page_content: ' + ID); PLog(mark)
 	
@@ -506,8 +508,8 @@ def get_page_content(li, page, ID, mediatype='', mark=''):
 		else:
 			gridlist = blockextract('id":"Link:', page)			# deckt auch Serien in Swiper ab	
 		if len(gridlist) == 0:	
-			#gridlist = blockextract( '"images":', page) 		# Fallback, ev. fehlt 1 Beitrag 			
-			gridlist = blockextract( '"ondemand"', page) 					
+			gridlist = blockextract( '"images":', page) 		# geändert 20.09.2019 				
+			# gridlist = blockextract( '"ondemand"', page)				
 			if len(gridlist) > 0:
 				if  ID != 'Search_api':							# Search_api immer Einzelbeiträge
 					mehrfach = True
@@ -852,7 +854,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 	
 	li = ardundzdf.Parseplaylist(li, href, img, geoblock, tagline=tagline, descr=summ, sub_path=sub_path)	# einzelne Auflösungen 		
 			
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #---------------------------------------------------------------------------------------------------
 #	Wiedergabe eines Videos aus ARDStart, hier MP4-Formate
 #	Die Live-Funktion ist völlig getrennt von der Funktion TV-Livestreams - ohne EPG, ohne Private..

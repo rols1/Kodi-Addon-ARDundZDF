@@ -230,8 +230,8 @@ def getDirZipped(path, zipf):
 #	persistenter Speicher. Der Name Dict lehnt sich an die
 #	allerdings wesentlich komfortablere Dict-Funktion in Plex an.
 #
-#	Den Dict-Vorteil, dass beliebige Strings als Kennzeichnung ver-
-#	wendet werden können, können wir bei Bedarf außerhalb von Dict
+#	Den Dict-Vorteil, beliebige Strings als Kennzeichnung zu ver-
+#	wenden, können wir bei Bedarf außerhalb von Dict
 #	mit der vars()-Funktion ausgleichen (siehe Zuweisungen). 
 #
 #	Falls (außerhalb von Dict) nötig, kann mit der Zusatzfunktion 

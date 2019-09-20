@@ -74,7 +74,7 @@
 	<item>
 		<title>3sat</title>
 		<hrefsender>3sat</hrefsender>
-		<link>http://zdf0910-lh.akamaihd.net/i/dach10_v1@392872/master.m3u8</link>
+		<link>https://zdfhls18-i.akamaihd.net/hls/live/744751/dach/high/master.m3u8</link>
 		<thumbnail>tv-3sat.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>3SAT</EPG_ID>
