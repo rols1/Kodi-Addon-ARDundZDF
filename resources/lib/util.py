@@ -1286,10 +1286,10 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 	PLog(sub_path);
 	
 	Plot=transl_doubleUTF8(Plot)
-			
+		
 	li = xbmcgui.ListItem(path=url)		
 	li.setArt({'thumb': thumb, 'icon': thumb})
-	
+		
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
 	# li.setProperty('IsPlayable', 'true')		# hier unwirksam
 	li.setInfo(type="video", infoLabels={"Title": title, "Plot": Plot, "mediatype": "video"})

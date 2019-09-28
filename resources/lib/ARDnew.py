@@ -498,22 +498,23 @@ def get_page_content(li, page, ID, mediatype='', mark=''):
 	page = page.replace('\\', '')								# Quotierung vor " entfernen, Bsp. \"query\"
 	
 	
+	mehrfach = True												# Default weitere Rubriken
 	if 'Livestream' in ID:
 		gridlist = blockextract('"broadcastedOn"', page)
 		if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Kennz. Video für Sofortstart 
 			mediatype='video'
 	else:
-		if 'target":{"id":"' in page:
-			gridlist = blockextract('"availableTo"', page)		# Sendungen, json-key "teasers"	
+		if  ID == 'Search_api':									# Search_api immer Einzelbeiträge
+			mehrfach = False
+			gridlist = blockextract( '"ondemand"', page)				
 		else:
-			gridlist = blockextract('id":"Link:', page)			# deckt auch Serien in Swiper ab	
-		if len(gridlist) == 0:	
+			if 'target":{"id":"' in page:
+				gridlist = blockextract('"availableTo"', page)	# Sendungen, json-key "teasers"	
+			else:
+				gridlist = blockextract('id":"Link:', page)		# deckt auch Serien in Swiper ab
+					
+		if len(gridlist) == 0:									# Fallback (außer Livestreams)
 			gridlist = blockextract( '"images":', page) 		# geändert 20.09.2019 				
-			# gridlist = blockextract( '"ondemand"', page)				
-			if len(gridlist) > 0:
-				if  ID != 'Search_api':							# Search_api immer Einzelbeiträge
-					mehrfach = True
-					PLog('weitere Rubriken')		
 		
 	if len(gridlist) == 0:				
 		msg1 = 'keine Beiträge gefunden'
@@ -531,9 +532,12 @@ def get_page_content(li, page, ID, mediatype='', mark=''):
 			target 	= stringextract('target":{"href":"', '"', s)
 			targetID = target.split('/')[-1]
 		PLog(targetID)
-		if targetID == '':													# keine Video
+		if targetID == '':										# kein Video
 			continue
-			
+		
+		if '"availableTo":"' in s or 'Livestream' in ID:		# Einzelbeträge
+			mehrfach = False
+					
 		# Alternative: "%s/ard/player/%s"  % (BETA_BASE_URL,targetID), wenn
 		#	auf Filterung der Sender verzichtet werden soll (s. pubServ)
 		href = '%s/%s/live/%s' % (BETA_BASE_URL, sender, targetID)
@@ -723,7 +727,10 @@ def ARDStartSingle(path, title, duration, ID=''):
 	addDir(li=li, label=title_new, action="dirList", dirID="resources.lib.ARDnew.ARDStartVideoStreams", fanart=img, thumb=img, 
 		fparams=fparams, summary=summ_lable, tagline=tagline, mediatype=mediatype)		
 					
-	title_new = "[COLOR blue]MP4-Formate und Downloads[/COLOR] | %s" % title	
+	if SETTINGS.getSetting('pref_use_downloads'):	
+		title_new = "[COLOR blue]MP4-Formate und Downloads[/COLOR] | %s" % title
+	else:	
+		title_new = "[COLOR blue]MP4-Formate[/COLOR] | %s" % title
 	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s',  'img': '%s', 'geoblock': '%s', 'sub_path': '%s'}" \
 		% (urllib2.quote(path), urllib2.quote(title), urllib2.quote(summ), urllib2.quote(tagline), urllib2.quote(img), 
 			urllib2.quote(geoblock), urllib2.quote(sub_path))
@@ -1297,9 +1304,10 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 # 	(Auswertung anpassen).
 # Scrollbeiträge hier leicht abweichend von ARDStartRubrik (s.u. Mehr-Button).
 # 22.08.2019 myhash (sha256Hash) und erste pageNumber geändert durch ARD (0, vorher 1)
-#	Suche im Web vorangestellt (Webcheck): Check auf Sendungen Auswertung in ARDStartRubrik,
-#		 einschl. Scroll-Beiträge
-# Webcheck: abgeschaltet bei SearchARDundZDFnew
+#	Suche im Web vorangestellt (Webcheck): Check auf Sendungen /Mehrfachbeiträge) - Auswertung 
+#		 in ARDStartRubrik, einschl. Scroll-Beiträge 
+# Webcheck: abgeschaltet bei SearchARDundZDFnew (nur Einzelbeiträge, wie ZDF-Suche)
+# Die Suchfunktion arbeitet nur mit Einzelworten, Zusammensetzung möglich z.B. G7-Gipfel
 #
 def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
 	PLog('ARDSearchnew:');	

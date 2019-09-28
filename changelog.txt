@@ -8,7 +8,27 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
-20.09.2019	1.9.4	livesenderTV.xml: Streamlinks für ZDFNeo, ZDFInfo, Phoenix und Servus
+28.09.2019	1.9.6	ZDF - Anpassungen an ZDF-Änderungen in der Startseite
+			ZDFStart: Ausschnitt Highlights angepasst.
+			ZDFStart: Ausschnitt Livestreams angepasst.
+			ZDFRubrikSingle: Auswertung Details angepasst (Blockbildung, Nachladebeiträge, Links).
+			ZDF_Sendungen: Unterscheidung Einzel-/Mehrfachbeiträge verlagert nach ZDFRubrikSingle.
+			ZDF_Sendungen, ZDF_Search: Suche nach weiteren Beiträgen erweitert auf alle Beiträge
+			(Standard-Suche: begrenzt auf ganze Sendungen, ohne Minutenbeiträge). 
+			ZDF_getVideoSources: erweitert mit Suche nach weiteren Beiträgen
+			Directory-Cache auf EIN gesetzt (Performance): ZDF_Sendungen, ZDFotherSources,
+			ZDFSportLiveSingle
+		
+not on Github	1.9.5	get_page_content (ARD Neu): Fix Blockbildung für Suche (Bild/Beitrag stimmte 
+			in Einzelfällen nicht überein.
+			get_page_content (ARD Neu): zusätzl. Unterscheidung von Einzel-/Mehrfach-
+			beiträgen ("availableTo")
+			DownloadsDelete: Verzeichnislöschen verlagert nach ClearUp (Modul util) +
+			Fehlerbehandlung, xbmcgui.ListItem entfernt (überflüssig).
+			ARDSportVideo (Menü ARD Sportschau/Live): Fehlermeldung bei fehlenden Videolinks zu
+			künftigen Beiträgen.			
+			
+20.09.2019	1.9.4	livesenderTV.xml: Streamlinks für ZDFNeo, ZDFInfo, Phoenix und ServusTV
 			aktualisiert.	
 
 20.09.2019	1.9.3	get_page_content (ARD Neu): Anpassungen an ARD-Änderungen (nur Einzelsendungen,
