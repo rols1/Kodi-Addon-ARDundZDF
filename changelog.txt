@@ -8,7 +8,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
-28.09.2019	1.9.6	ZDF - Anpassungen an ZDF-Änderungen in der Startseite
+28.09.2019	1.9.7	ZDFSportLive: Auswertung Videoquelle "jetzt live" an ZDF-Änderung angepasst.
+
+28.09.2019	1.9.6	ZDF - Anpassungen an ZDF-Änderungen in der Startseite:
 			ZDFStart: Ausschnitt Highlights angepasst.
 			ZDFStart: Ausschnitt Livestreams angepasst.
 			ZDFRubrikSingle: Auswertung Details angepasst (Blockbildung, Nachladebeiträge, Links).

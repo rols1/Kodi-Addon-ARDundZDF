@@ -44,7 +44,7 @@ import resources.lib.EPG				as EPG
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.9.6'		 
+VERSION =  '1.9.7'		 
 VDATE = '28.09.2019'
 
 # 
@@ -6062,14 +6062,14 @@ def ZDFSportLive(title):
 	page = UtfToStr(page)
 	 	
 	if '<strong>Jetzt live</strong>' in page:						# 1. LIVESTREAM läuft!
+		img = R(ICON_DIR_FOLDER)									# Quelle im Web unsicher
 		mediatype='' 		
 		if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 			mediatype='video'
-		rec = stringextract('class="big-headline">Derzeit live</h2>', 'data-tracking="', page)
+		rec = stringextract('<strong>Jetzt live</strong>', 'data-tracking="', page)
 		href 	= stringextract('data-plusbar-url="', '"', rec)
-		imgset 	= stringextract('data-zdfplayer-teaser-image=', '</div', rec)
-		img		=  stringextract('www.zdf.de', '?', imgset)
-		img		= 'https://www.zdf.de' + img.replace('\\', '')
+		if href == '':
+			href 	= stringextract('data-plusbar-path="', '"', rec)
 		title	= "Jetzt live: " + stringextract('title="', '"', rec)
 		title	= '[COLOR red][B]%s[/B][/COLOR]' % title
 		descr = stringextract('item-description">', '</p>', rec) 
