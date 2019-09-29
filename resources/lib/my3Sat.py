@@ -880,16 +880,16 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 	profile_url= stringextract('content": "', '"', content)		# profile_url
 	PLog(appId); PLog(profile_url); PLog("apiToken: " + apiToken); 
 	
-	if 	apiToken == '':
+	if 	apiToken == '' or profile_url == '':
 		if '<time datetime="' in page:
 			termin = stringextract('<time datetime="', '"', page)
-			msg1 = "(noch) kein Video, Sendetermin: %s" % termin
+			msg1 = "(noch) kein Video gefunden, Sendetermin: %s" % termin
 		else:
 			msg1 = "keine Videoquelle gefunden. Seite:\n%s" % path
 			PLog(msg1)
 			PLog(apiToken)		# zur Kontrolle
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-			return li	
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		return li	
 	
 	headers = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken 
 	try:

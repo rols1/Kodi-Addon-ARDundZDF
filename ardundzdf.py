@@ -341,10 +341,19 @@ def Main():
 	addDir(li=li, label='TV-Livestreams', action="dirList", dirID="SenderLiveListePre", 
 		fanart=R(FANART), thumb=R(ICON_MAIN_TVLIVE), tagline=tagline, fparams=fparams)
 	
+	# 29.09.2019 Umstellung Livestreams auf ARD Audiothek
+	#	tagline = 'Radio-Livestreams stehen auch in der neuen ARD Audiothek zur Verfügung'
+	#	fparams="&fparams={'path': 'ARD_RadioAll', 'title': 'Radio-Livestreams'}"
+	#	addDir(li=li, label='Radio-Livestreams', action="dirList", dirID="RadioLiveListe", 
+	#		fanart=R(FANART), thumb=R(ICON_MAIN_RADIOLIVE), tagline=tagline, fparams=fparams)
+		
+	# Button für Livestreams anhängen (eigenes ListItem)		# Radio-Livestreams
 	tagline = 'Radio-Livestreams stehen auch in der neuen ARD Audiothek zur Verfügung'
-	fparams="&fparams={'path': 'ARD_RadioAll', 'title': 'Radio-Livestreams'}"
-	addDir(li=li, label='Radio-Livestreams', action="dirList", dirID="RadioLiveListe", 
-		fanart=R(FANART), thumb=R(ICON_MAIN_RADIOLIVE), tagline=tagline, fparams=fparams)
+	title = 'Radio-Livestreams'	
+	fparams="&fparams={'title': '%s', 'myhome': '%s'}" % (title, NAME)	
+	addDir(li=li, label=title, action="dirList", dirID="AudioStartLive", fanart=R(FANART), 
+		thumb=R(ICON_MAIN_RADIOLIVE), tagline=tagline, fparams=fparams)
+		
 		
 	if SETTINGS.getSetting('pref_use_podcast') ==  'true':		# Podcasts / Audiothek
 		if SETTINGS.getSetting('pref_use_audio') ==  'true':	# Audiothek
@@ -841,10 +850,16 @@ def AudioStart_AZ_content(button):
 # Problem: der Streamlink muss von einer zusätzl. Seite der Audiothek ge-
 #	holt werden. Der Link zu dieser Seite ist script-generiert  und muss
 #	hier nachgebildet werden (Blanks -> -).
-def AudioStartLive(title, sender=''):			# Sender / Livestreams 
+#  29.09.2019 Umstellung Hauptmenü: Nutzung AudioStartLive (Codebereinigung -
+#		s. Hinw. Hauptmenü + changelog.txt)
+#
+def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams 
 	PLog('AudioStartLive: ' + sender)
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARDaudio')				# Home-Button
+	if home:
+		li = home(li, ID=myhome)
+	else:	
+		li = home(li, ID='ARDaudio')			# Home-Button
 	sender = UtfToStr(sender)
 
 	path = ARD_AUDIO_BASE + '/sender'
@@ -892,7 +907,9 @@ def AudioStartLive(title, sender=''):			# Sender / Livestreams
 		gridlist = blockextract('image_16x9:"https', grid)	
 		PLog(len(gridlist))
 		for rec in gridlist:
-			title 	= stringextract('title:"', '"', rec)	# Anfang Satz	
+			title 	= stringextract('title:"', '"', rec)	# Anfang Satz
+			if title == '':
+				continue	
 			img 	= stringextract('image_16x9:"', '"', rec)		
 			img		= img.replace('{width}', '640')	
 			descr 	= stringextract('synopsis:"', '",', rec)	
@@ -1470,8 +1487,10 @@ def ARDSport(title):
 	mediatype=''	
 	if SETTINGS.getSetting('pref_video_direct') == 'true': 
 		mediatype='video'
-			
-	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3666-ardjson.json		
+		
+	# Quellen für Event-Livestreams (Chrome-Dev.-Tools):	
+	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3666-ardjson.json
+	# https://lawm.sportschau.de/doha2019/live/livestreams170-extappjson.json		
 	title = "ARDSportschau Event-Livestream 1"
 	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_1@430235/master.m3u8"
 	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
@@ -2800,7 +2819,7 @@ def BarriereArmARD(name):		#
 	addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_BARRIEREARM), 
 		thumb=R(ICON_ARD_BARRIEREARM), fparams=fparams)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ####################################################################################################
 	# kontrolliert auf Folgeseiten. Mehrfache Verwendung.
@@ -5145,207 +5164,10 @@ def N24LastServer(url_m3u8):
 	return url_m3u8		# keine playlist gefunden, weiter mit Original-url
 				  
 ####################################################################################################
-# path = ARD_RadioAll = https://classic.ardmediathek.de/radio/live?genre=Alle+Genres&kanal=Alle
-#	Bei Änderungen der Sender Datei livesenderRadio.xml anpassen (Sendernamen, Icons)
-# 
-def RadioLiveListe(path, title):
-	PLog('RadioLiveListe:');
-	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)				# Home-Button
-	
-	playlist = RLoad(PLAYLIST_Radio) 
-	#PLog(playlist)					
-	
-	liste = blockextract('<item>', playlist)
-	PLog(len(liste))
-	
-	# Unterschied zur TV-Playlist livesenderTV.xml: Liste  der Radioanstalten mit Links zu den Webseiten.
-	#	Ab 11.10.2917: die Liste + Reihenfolge der Sender wird in der jew. Webseite ermittelt. Die Sender-Liste
-	#		wird aus LivesenderRadio.xml geladen und gegen die Sendernamen abgeglichen. Die Einträge sind paarweise
-	#		angelegt (Sendername:Icon).
-	#		Ohne Treffer beim  Abgleich wird ein Ersatz-Icon verwendet (im Watchdog-PRG führt dies zur Fehleranzeige). 
-	#		Die frühere Icon-Liste in <thumblist> entfällt.
-	#	Nach Auswahl einer Station wird in RadioAnstalten der Audiostream-Link ermittelt.
-
-	for s in liste:
-		# PLog(s)					# bei Bedarf
-		title = stringextract('<title>', '</title>', s)
-		link = stringextract('<link>', '</link>', s) 	
-		link = link.strip()							# Leerz. am Ende entfernen
-		img = stringextract('<thumbnail>', '</thumbnail>', s) 
-		if img.find('://') == -1:	# Logo lokal? -> wird aus Resources geladen, Unterverz. leider n.m.
-			img = R(img)
-		else:
-			img = img
-		PLog("img: " + img);
-			
-		sender = stringextract('<sender>', '</sender>', s)			# Auswertung sender + thumbs in RadioAnstalten
-		sender = (sender.replace('\n', '').replace('\t', ''))
-		PLog("sender: " + sender);
-			
-		PLog(title); PLog(link); PLog(img); 
-		fparams="&fparams={'path': '%s', 'title': '%s', 'sender': '%s', 'fanart': '%s'}" % (urllib2.quote(link), 
-		urllib2.quote(title),  urllib2.quote(sender), img)		# fanart = Logo des Hauptsenders
-		PLog('fparams RadioLiveListe: ' + fparams)
-		addDir(li=li, label=title, action="dirList", dirID="RadioAnstalten", fanart=R(ICON_MAIN_RADIOLIVE), thumb=img, 
-			fparams=fparams)
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
-#-----------------------------
-def RadioAnstalten(path, title, sender, fanart):
-	PLog('RadioAnstalten: ' + path); 
-	# PLog(sender)
-	entry_path = path	# sichern
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)				# Home-Button
-	
-	errmsg1 = 'RadioAnstalten | %s' % title			# Fehlermeldung xbmcgui.Dialog
-	errmsg2 = 'Seite kann nicht geladen werden, Url:'
-	errmsg3 = '%s' % (path)
-		
-	# header: chrome-dev-tools(curl-statements)	
-	header = "{'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', \
-		'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
-		'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8', \
-		'Accept-Language': 'de,en;q=0.9,fr;q=0.8,de-DE;q=0.7,da;q=0.6,it;q=0.5,pl;q=0.4,uk;q=0.3,en-US;q=0.2'}"	
-	page, msg = get_page(path=path, header=header)				
-	entries = blockextract('class="teaser"', page)
-	if page == '' or len(entries) == 0:
-		xbmcgui.Dialog().ok(ADDON_NAME, errmsg1, errmsg2, errmsg3)
-		return li
-	
-	del entries[0:2]								# "Javascript-Fehler" überspringen (2 Elemente)
-	PLog(len(entries))
-
-	item_cnt = 0
-	for element in entries:
-		pos = element.find('class=\"socialMedia\"')			# begrenzen
-		if pos >= 0:
-			element = element[0:pos]
-		# PLog(element[0:80])						#  nur bei Bedarf)	
-		
-		img_src = ""						
-			
-		headline = ''; subtitle = ''				# nicht immer beide enthalten
-		if element.find('headline') >= 0:			# h4 class="headline" enthält den Sendernamen
-			headline = stringextract('\"headline\">', '</h4>', element)
-		if element.find('subtitle') >= 0:	
-			subtitle = stringextract('\"subtitle\">', '</p>', element)
-		PLog(headline); PLog(subtitle);				
-			
-		href = stringextract('<a href=\"', '\"', element)
-		sid = href.split('documentId=')[1]
-		
-		path = BASE_URL + '/play/media/' + sid + '?devicetype=pc&features=flash'	# -> Textdatei mit Streamlink
-		PLog('Streamlink: ' + path)
-		path_content, msg = get_page(path)	
-		if path_content == '':
-			errmsg2 = 'Streamlink kann nicht geladen werden, Url:'
-			xbmcgui.Dialog().ok(ADDON_NAME, errmsg1, errmsg2, path)
-			return li			
-		
-		PLog(path_content[0:80])			# enthält nochmal Bildquelle + Auflistung Streams (_quality)
-										# Streamlinks mit .m3u-Ext. führen zu weiterer Textdatei - Auswert. folgt 
-		#slink = stringextract('_stream\":\"', '\"}', path_content) 		# nur 1 Streamlink? nicht mehr aktuell
-		link_path,link_img, m3u8_master, geoblock, sub_path = parseLinks_Mp4_Rtmp(path_content)	# mehrere Streamlinks auswerten,
-																						# geoblock hier nicht verwendet
-		
-		if headline:						# Zuordnung zu lokalen Icons, Quelle livesenderRadio.xml
-			senderlist = sender.split('|')
-			PLog("senderlist: " + str(senderlist)); 		# bei Bedarf
-			for i in range (len(senderlist)):
-				sname = ''; img = ''
-				try:								# try gegen Schreibfehler in  livesenderRadio.xml
-					pair =  mystrip(senderlist[i]) 	# mystrip wg. Zeilenumbrüchen in livesenderRadio.xml
-					pair = pair.split(':')			# Paarweise, Bsp.: B5 aktuell:radio-b5-aktuell.png
-					sname 	= pair[0].strip()
-					img 	= pair[1].strip()
-				except:
-					break	
-				headline = UtfToStr(headline)		
-				sname 	 = UtfToStr(sname)
-				PLog('headline: ' + headline.upper()); PLog(sname.upper());
-				if sname.upper() in headline.upper():	# lokaler Name in <sender> muss in headline enthalten sein
-					img = R(img)					# lokales Icon
-					if os.path.exists(img):
-						img_src = img
-					else:
-						img_src = link_img			# Fallback aus parseLinks_Mp4_Rtmp, ev. nur Mediathek-Symbol
-					PLog("img_src: " + img_src)
-					break
-
-		PLog(link_path); PLog(link_img); PLog(img_src);PLog(m3u8_master); 
-		headline_org =  headline	# sichern		
-		for i in range(len(link_path)):
-			s = link_path[i]
-			PLog(s)
-			mark = s[0]
-			slink = s[2:]
-			PLog(s); PLog(mark); PLog(slink); 
-			PLog("m3u_Test:");
-			if slink.find('.m3u') > 9:		# der .m3u-Link führt zu weiterer Textdatei, die den Streamlink enthält
-				try:						# Request kann fehlschlagen, z.B. bei RBB, SR, SWR
-					slink_content, msg = get_page(path=path)	
-					if slink_content == '':
-						errmsg1 = 'RadioAnstalten | %s' % headline		
-						errmsg2 = '.m3u-Link kann nicht geladen werden, Url:'
-						xbmcgui.Dialog().ok(ADDON_NAME, errmsg1, errmsg2, slink)
-						return li
-					z = slink_content.split()
-					PLog(z)
-					slink = z[-1]				# Link in letzter Zeile
-				except:
-					slink = ""
-			
-			PLog(img_src); PLog(headline); PLog(subtitle); PLog(sid); PLog(slink);	# Bildquelle: z.Z. verwenden wir nur img_src
-			headline=UtfToStr(headline); subtitle=UtfToStr(subtitle); headline_org=UtfToStr(headline_org); 
-			
-			if subtitle == '':		
-				subtitle = headline
-			if mark == '0':						#  Titel kennz. (0=64kb, 1=128kb, 2=128kb), bisher nur diese gesehen
-				headline = headline_org + ' (64 KByte)'
-			if mark == '1' or mark == '2':					
-				headline = headline_org + ' (128 KByte)'
-			headline = "%s | %s" % (headline, subtitle)			# für kodi subtitle -> label
-			headline = unescape(headline)
-			headline = headline.replace('&quot;', '"')			# unescape erfolglos?
-				
-			if slink:						# normaler Link oder Link über .m3u ermittelt
-				# msg = ', Stream ' + str(i + 1) + ': OK'		# Log in parseLinks_Mp4_Rtmp ausreichend
-				msg = ''
-				if img_src.find('http') >= 0:	# Bildquelle Web
-					img_src = img_src.replace('https', 'http')	# Kodi: SSL-Problem bei Abruf
-					thumb=img_src
-				else:							# Bildquelle lokal
-					thumb=R(img_src)
-				
-				# slink = slink.replace('https', 'http')		# hier sinnlos bei üblichen Redirects
-				# url_template: ersetzt in PlayAudio https- durch http-Links 
-				headline=repl_json_chars(headline)			# json-komp. für func_pars in router()
-				subtitle=repl_json_chars(subtitle)			# dto.
-				
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'url_template': '1', 'Plot': '%s'}" % \
-					(urllib.quote_plus(slink), urllib.quote_plus(headline), urllib.quote_plus(img_src), 
-					urllib.quote_plus(subtitle))
-				PLog('fparams RadioAnstalten: ' + fparams)
-				addDir(li=li, label=headline, action="dirList", dirID="PlayAudio", fanart=fanart, thumb=img_src, 
-					fparams=fparams, mediatype='music')	
-												 	
-			else:
-				msg = ' Stream ' + str(i + 1) + ': nicht verfügbar'	# einzelnen nicht zeigen - verwirrt nur
-			item_cnt = item_cnt +1
-	
-	PLog('Anzahl: ' + str(item_cnt))
-	if item_cnt < 1:	      		# keine Radiostreams gefunden		
-		PLog('item_cnt = 0, keine Radiostreams gefunden') 		 
-		line1 = '%s: keine Radiostreams gefunden / verfuegbar' % title
-		line2 = 'URL:'
-		line3 = '%s' % (path)
-		xbmcgui.Dialog().ok(ADDON_NAME, line1, line2, line3)
-		return li			
-										
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+# 29.09.2019 Umstellung Livestreams auf ARD Audiothek
+#	Codebereinigung - gelöscht: 
+#		RadioLiveListe, RadioAnstalten, livesenderRadio.xml, 77 Radio-Icons (Autor: Arauco)
+#
 
 ###################################################################################################
 #									ZDF-Funktionen
@@ -5982,8 +5804,8 @@ def BarriereArm(title):
 	PLog(len(content))
 	for rec in content:	
 		title = stringextract('<h2 class="title"', '</h2>', rec)
-		title = title.strip()
-		title = (title.replace('>', '').replace('<', ''))
+		title = title.replace('\n', ''); 
+		title = (title.replace('>', '').replace('<', '')); title = title.strip()
 		PLog(title)
 		if 'Hörfassung' in title or 'Audiodeskription' in title:			# Filter
 			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true' or \
@@ -6740,6 +6562,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	PLog(duration)	
 	if duration:
 		duration = (int(duration) / 1000) / 60			# Rundung auf volle Minuten reicht hier 
+		duration = max(1, duration)						# 1 zeigen bei Werten < 1
 		duration = str(duration) + " min"	
 	PLog('duration: ' + duration)
 	PLog('page_formitaeten: ' + page[:100])		

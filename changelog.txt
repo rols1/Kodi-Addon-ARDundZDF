@@ -7,6 +7,14 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+29.09.2019	1.9.8	ZDF-Menü Barrierearm: Anpassung Auswertung Beitragstitel an ZDF-Änderung (Aufruf
+			BarriereArmSingle scheiterte am Linefeed im Titel). 
+			BarriereArmARD: Directory-Cache auf EIN gesetzt (Performance.
+			get_formitaeten (ZDF): Dauer "1 min" anzeigen bei Werten < 1 min (vorher 0).
+			SingleBeitrag (Modul 3Sat): Fix Position xbmcgui.Dialog (falsch eingerückt).
+			Radio-Livestreams (Hauptmenü): künftige Nutzung der ARD Audiothek (AudioStartLive).
+			Codebereinigung - gelöscht: RadioLiveListe, RadioAnstalten, livesenderRadio.xml,
+			77 Radio-Icons (Autor: Arauco). Angepasst (lokal): Watchdog_Plex.py.
 
 28.09.2019	1.9.7	ZDFSportLive: Auswertung Videoquelle "jetzt live" an ZDF-Änderung angepasst.
 
