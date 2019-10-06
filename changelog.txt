@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+06.10.2019	1.9.9	ZDF_get_content: zusätzl. Variante für Infotext ausgewertet (teaser-text).
+			Audio_get_rubriken (Audiothek): unescape title (Quotes im Titel entfernen).
+
 29.09.2019	1.9.8	ZDF-Menü Barrierearm: Anpassung Auswertung Beitragstitel an ZDF-Änderung (Aufruf
 			BarriereArmSingle scheiterte am Linefeed im Titel). 
 			BarriereArmARD: Directory-Cache auf EIN gesetzt (Performance.
