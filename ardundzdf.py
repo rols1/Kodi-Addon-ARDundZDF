@@ -45,8 +45,8 @@ import resources.lib.EPG				as EPG
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml
-VERSION =  '1.9.9'		 
-VDATE = '06.10.2019'
+VERSION =  '2.0.0'		 
+VDATE = '11.10.2019'
 
 # 
 #	
@@ -6280,6 +6280,8 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 			
 		PLog('neuer Satz')
 		PLog(thumb);PLog(path);PLog(title);PLog(summary);PLog(tagline); PLog(multi);
+		# if ID == 'zdfmobile':		# HTML-Auswertung für Modul zdfmobile - nicht genutzt
+			# return title,teaser_label,summary,thumb,tagline,duration
 		 
 		if multi == True:
 			fparams="&fparams={'url': '%s', 'title': '%s', 'ID': '%s'}" % (urllib2.quote(path), 

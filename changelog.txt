@@ -7,6 +7,19 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+11.10.2019	2.0.0	Aktualisierung Modul zdfmobile:
+			Ladefunktion loadPage: SSLContext abgeschaltet (klemmt häufig).
+			formitaeten (json-Auswertung Videoquellen): Funktion für neue Quellenvariante 
+			erweitert.
+			get_formitaeten2 (Stringauswertung Videoquellen): Funktion für Quellenvariante 
+			mit json-Index-Problemen erweitert.
+			Stringauswertung ZDF_get_content für HTML-Auswertung genutzt.
+			ShowVideo: Parameter "bandbreite" leer vorbelegt (verhinderte Arte-Live).	
+			Get_content: leeren Parameter date abgefangen.
+			PlayVideo-Aufrufe korrigiert (Modul zdfmobile -> Modul util).
+			PlayVideo (Modul util): infoLabels ergänzt (sorttitle, tvshowtitle,
+			tagline).
+
 06.10.2019	1.9.9	ZDF_get_content: zusätzl. Variante für Infotext ausgewertet (teaser-text).
 			Audio_get_rubriken (Audiothek): unescape title (Quotes im Titel entfernen).
 

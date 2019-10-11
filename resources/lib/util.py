@@ -1288,11 +1288,23 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 	Plot=transl_doubleUTF8(Plot)
 		
 	li = xbmcgui.ListItem(path=url)		
-	li.setArt({'thumb': thumb, 'icon': thumb})
-		
+	# li.setArt({'thumb': thumb, 'icon': thumb})
+	li.setArt({'poster': thumb, 'banner': thumb, 'thumb': thumb, 'icon': thumb, 'fanart': thumb})	
+	
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
 	# li.setProperty('IsPlayable', 'true')		# hier unwirksam
-	li.setInfo(type="video", infoLabels={"Title": title, "Plot": Plot, "mediatype": "video"})
+	# li.setInfo(type="video", infoLabels={"Title": title, "Plot": Plot, "mediatype": "video"}) # s.u.
+
+	infoLabels = {}
+	infoLabels['title'] = title
+	infoLabels['sorttitle'] = title
+	#infoLabels['genre'] = genre
+	#infoLabels['plot'] = Plot
+	#infoLabels['plotoutline'] = Plot
+	infoLabels['tvshowtitle'] = Plot
+	infoLabels['tagline'] = Plot
+	infoLabels['mediatype'] = 'video'
+	li.setInfo(type="Video", infoLabels=infoLabels)
 	
 	# Info aus GetZDFVideoSources hierher verlagert - wurde von Kodi nach Videostart 
 	#	erneut gezeigt - dto. für ARD (parseLinks_Mp4_Rtmp, ARDStartSingle)
