@@ -45,8 +45,8 @@ import resources.lib.EPG				as EPG
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml
-VERSION =  '2.0.0'		 
-VDATE = '11.10.2019'
+VERSION =  '2.0.1'		 
+VDATE = '12.10.2019'
 
 # 
 #	
@@ -324,7 +324,7 @@ def Main():
 		tagline = 'in den Settings sind ZDF Mediathek und ZDFmobileaustauschbar'
 		fparams="&fparams={}"
 		addDir(li=li, label="ZDFmobile", action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
-			fanart=R(FANART), thumb=R(ICON_MAIN_ZDFMOBILE), fparams=fparams)
+			fanart=R(FANART), thumb=R(ICON_MAIN_ZDFMOBILE), tagline=tagline, fparams=fparams)
 	else:
 		tagline = 'in den Settings sind ZDF Mediathek und ZDFmobile austauschbar'
 		fparams="&fparams={'name': 'ZDF Mediathek'}"

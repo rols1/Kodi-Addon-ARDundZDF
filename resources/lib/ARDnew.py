@@ -53,7 +53,9 @@ ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle', 'Das Erste:daserste:208
 	'NDR:ndr:5898:tv-ndr-niedersachsen.png:NDR Fernsehen', 'Radio Bremen:radiobremen::tv-bremen.png:Radio Bremen TV', 
 	'RBB:rbb:5874:tv-rbb-brandenburg.png:rbb Fernsehen', 'SR:sr:5870:tv-sr.png:SR Fernsehen', 
 	'SWR:swr:5310:tv-swr.png:SWR Fernsehen', 'WDR:wdr:5902:tv-wdr.png:WDR Fernsehen',
-	'ONE:one:673348:tv-one.png:ONE', 'ARD-alpha:alpha:5868:tv-alpha.png:ARD-alpha', 'KiKA::::KiKA']
+	'ONE:one:673348:tv-one.png:ONE', 'ARD-alpha:alpha:5868:tv-alpha.png:ARD-alpha', 
+	'tagesschau24:tagesschau24::tv-tagesschau24.png:tagesschau24', 'phoenix:phoenix::tv-phoenix.png:phoenix', 
+	'KiKA::::KiKA']
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -152,7 +154,9 @@ def ARDStart(title, sender, widgetID=''):
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)	
 	title2 = "Sender: %s" % sendername
-	title2 = title2.decode(encoding="utf-8")		
+	title2 = title2.decode(encoding="utf-8")	
+	tagline = 'Mediathek des Senders [COLOR red] %s [/COLOR]' % sendername
+		
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')								# Home-Button
 
@@ -195,7 +199,7 @@ def ARDStart(title, sender, widgetID=''):
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
 			(urllib2.quote(path), urllib2.quote(title), 'Swiper')
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-			fparams=fparams)													
+			tagline=tagline, fparams=fparams)													
 
 	widget_range= stringextract('APOLLO_STATE__', '"tracking"', page)	# Bereich WidgetID's ausschneiden 
 	widget_list	= blockextract ('"id":"Widget:', widget_range)
@@ -229,7 +233,7 @@ def ARDStart(title, sender, widgetID=''):
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
 			(urllib2.quote(path), urllib2.quote(title), ID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-			fparams=fparams)													
+			tagline=tagline, fparams=fparams)													
 
 	xbmcplugin.endOfDirectory(HANDLE)
 
@@ -317,6 +321,8 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 		sendungen = blockextract('class="_focusable', grid)
 		for s in sendungen:
 			href 	= stringextract('href="', '"', s) 
+			if href == '':
+				continue
 			if href.startswith('http') == False:
 				href = BETA_BASE_URL + href
 			
@@ -351,6 +357,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			title = UtfToStr(title); summ = UtfToStr(summ); href = UtfToStr(href);
 			duration = UtfToStr(duration); ID = UtfToStr(ID);
 			title = repl_json_chars(title); summ = repl_json_chars(summ); 
+						
 			fparams="&fparams={'path': '%s', 'title': '%s', 'duration': '%s', 'ID': '%s'}" %\
 				(urllib2.quote(href), urllib2.quote(title), duration, ID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
@@ -1601,12 +1608,13 @@ def Senderwahl(title):
 			continue
 		sendername, sender, kanal, img, az_sender = entry.split(':')
 		PLog(entry)
+		tagline = 'Mediathek des Senders [COLOR red] %s [/COLOR]' % sendername
 		PLog('sendername: %s, sender: %s, kanal: %s, img: %s, az_sender: %s'	% (sendername, sender, kanal, img, az_sender))
 		title = 'Sender: %s' % sendername
 			
 		fparams="&fparams={'name': 'ARD Mediathek', 'CurSender': '%s'}" % urllib2.quote(entry)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(img), thumb=R(img), 
-			fparams=fparams)
+			tagline=tagline, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		
