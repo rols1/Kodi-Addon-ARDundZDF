@@ -7,7 +7,7 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
-??.10.2019	2.0.3	Integration funk.net:
+16.10.2019	2.0.3	Integration funk.net:
 			icon erstellt, Modulrumpf funk erstellt + in ardundzdf importiert +
 			Menü in Main / Menü in home erstellt.
 			time_translate (Modul util): angepasst für funk's timecode-Format, Rückgabe 
