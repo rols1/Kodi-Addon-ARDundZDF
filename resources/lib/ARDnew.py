@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-#				ARD_NEW.py -	Part of Kodi-Addon-ARDundZD
+#				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,

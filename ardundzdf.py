@@ -45,8 +45,8 @@ import resources.lib.EPG				as EPG
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml
-VERSION =  '2.0.1'		 
-VDATE = '12.10.2019'
+VERSION =  '2.0.2'		 
+VDATE = '16.10.2019'
 
 # 
 #	
@@ -219,14 +219,11 @@ HANDLE			= int(sys.argv[1])
 #	müsste das Nachladen in router und ShowFavs einzeln ge-
 #	regelt werden. 
 # Module EPG + updater s.o.
-#if SETTINGS.getSetting('pref_use_podcast') ==  'true':					# ARD-Radio-Podcasts
-import resources.lib.Podcontent 		as Podcontent
-#if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':				# ZDFmobile					
-import resources.lib.zdfmobile
-#if SETTINGS.getSetting('pref_use_classic') == 'false':					# ARD Neu
-import resources.lib.ARDnew
-#if SETTINGS.getSetting('pref_use_3sat') == 'true':						# 3Sat
-import resources.lib.my3Sat
+import resources.lib.Podcontent 		as Podcontent					# ARD-Radio-Podcasts
+import resources.lib.zdfmobile											# ZDFmobile		
+import resources.lib.ARDnew												# ARD Neu
+import resources.lib.my3Sat												# 3Sat
+import resources.lib.funk												# funk
 																		
 
 ICON = R(ICON)
@@ -336,6 +333,13 @@ def Main():
 		fparams="&fparams={'name': '3Sat'}"									# 3Sat-Modul
 		addDir(li=li, label="3Sat Mediathek", action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", 
 			fanart=R('3sat.png'), thumb=R('3sat.png'), tagline=tagline, fparams=fparams)
+			
+	if SETTINGS.getSetting('pref_use_funk') == 'true':
+		tagline = 'in den Settings kann das Modul FUNK ein- und ausgeschaltet werden'
+		fparams="&fparams={}"													# funk-Modul
+		addDir(li=li, label="FUNK", action="dirList", dirID="resources.lib.funk.Main_funk", 
+			fanart=R('funk.png'), thumb=R('funk.png'), tagline=tagline, fparams=fparams)
+			
 			
 	tagline = 'TV-Livestreams stehen auch in ARD Mediathek Neu zur Verfügung'																																	
 	fparams="&fparams={'title': 'TV-Livestreams'}"
@@ -5429,7 +5433,7 @@ def ZDFSendungenAZList(title, element):			# ZDF-Sendereihen zum gewählten Buchs
 	PLog('ZDFSendungenAZList:')
 	PLog(title)
 	title_org = title
-	li = xbmcgui.ListItem()
+	li = xbmcgui.ListItem()	
 	li = home(li, ID='ZDF')						# Home-Button
 
 	group = element	
@@ -5449,7 +5453,6 @@ def ZDFSendungenAZList(title, element):			# ZDF-Sendereihen zum gewählten Buchs
 		return li		
 		
 	# if offset: 	Code entfernt, in Kodi nicht nutzbar
-		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ####################################################################################################
@@ -6036,7 +6039,7 @@ def International(title):
 	PLog(page_cnt)
 	# if offset:	Code entfernt, in Kodi nicht nutzbar
 			
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ####################################################################################################
 # Auswertung aller ZDF-Seiten
@@ -6114,6 +6117,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		mediatype='video'
 			
 	items_cnt=0									# listitemzähler
+	teaser_nr=''
 	for rec in content:	
 		# loader:  enthält bei Suche Links auch wenn weiterer Inhalt fehlt. 
 		#			Bei Verpasst u.a. enthält er keinen Link
@@ -6145,6 +6149,8 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 						
 		teaser_label = stringextract('class="teaser-label"', '</div>', rec)
 		teaser_typ =  stringextract('<strong>', '</strong>', teaser_label)
+		if "teaser-episode-number" in rec:
+			teaser_nr = stringextract('teaser-episode-number">', '</', rec)
 		if teaser_typ == 'Beiträge':		# Mehrfachergebnisse ohne Datum + Uhrzeit
 			multi = True
 			summary = dt1 + teaser_typ 		# Anzahl Beiträge
@@ -6240,7 +6246,9 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		descr = mystrip(descr)
 		PLog('descr:' + descr)		# UnicodeDecodeError möglich
 		if descr:
-			summary = descr
+			if teaser_nr:
+				teaser_nr = "Episode %s | " % teaser_nr
+			summary = teaser_nr + descr
 		else:
 			summary = href_title
 			

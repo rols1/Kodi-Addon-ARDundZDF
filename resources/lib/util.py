@@ -139,6 +139,11 @@ def home(li, ID):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", fanart=R('3sat.png'), 
 			thumb=R('3sat.png'), fparams=fparams)
 			
+	if ID == 'FUNK':
+		name = 'Home :' + "FUNK"
+		fparams="&fparams={}"
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Main_funk", fanart=R('funk.png'), 
+			thumb=R('funk.png'), fparams=fparams)
 
 	return li
 	 
@@ -693,7 +698,8 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
 	line_ret = line
 	for r in	(('"', ''), ('\\', ''), ('\'', '')
-		, ('&', 'und'), ('(', '<'), (')', '>'),  ('∙', '|')):			
+		, ('&', 'und'), ('(', '<'), (')', '>'),  ('∙', '|')
+		, ('“', '<'), ('”', '>')):			
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret
@@ -982,26 +988,32 @@ def seconds_translate(seconds):
 #
 # ARD-Zeit + 2 Stunden
 # s.a. addHour (ARDnew) - Stringroutine für ARDVerpasstContent
+# Rückgabe timecode im Fehlerfall
 #
 def time_translate(timecode, add_hour=2):
 	PLog("time_translate:")
 
 	if timecode.strip() == '':
 		return ''
+	if '.000' in timecode:					# Besp. Funk: 2019-09-30T12:59:27.000+0000
+		timecode = timecode.split('.000')[0]
+		timecode = timecode + "Z"
+	PLog(timecode)
+	
 	if timecode[10] == 'T' and timecode[-1] == 'Z':  # Format OK?
 		try:
 			date_format = "%Y-%m-%dT%H:%M:%SZ"
 			# ts = datetime.strptime(timecode, date_format)  # None beim 2. Durchlauf       
 			ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
-			# PLog(ts)
+			PLog(ts)
 			new_ts = ts + datetime.timedelta(hours=add_hour)	
 			ret_ts = new_ts.strftime("%d.%m.%Y %H:%M")
 			return ret_ts
 		except Exception as exception:
 			PLog(str(exception))
-			return ''
+			return timecode
 	else:
-		return ''
+		return timecode
 		
 #---------------------------------------------------------------- 
 # Format timecode 	Fri, 06 Jul 2018 06:58:00 GMT (ARD Audiothek , xml-Ausgaben)

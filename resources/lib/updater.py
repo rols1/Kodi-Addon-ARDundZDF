@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-#			updater.py - Part of ARDundZDF-Plugin Kodi-Version
+#			updater.py - Teil von Kodi-Addon-ARDundZDF
 #
 ################################################################################
 #	16.01.2019 erweitert mit Backup-Funktion für Addon-Cache.

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-#			ARD_Bildgalerie.py - Part of ARDundZDF - Plugin Kodi-Version
+#			ARD_Bildgalerie.py - Teil von Kodi-Addon-ARDundZDF
 #
 ################################################################################
 	

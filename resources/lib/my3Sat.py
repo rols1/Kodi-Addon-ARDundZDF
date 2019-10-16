@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-#				3Sat.py -	Part of Kodi-Addon-ARDundZD
+#				3Sat.py - Teil von Kodi-Addon-ARDundZDF
 #							Start Juni 2019
 #			Migriert von Plex-Plugin-3Sat_Mediathek, V0.5.9
 ################################################################################

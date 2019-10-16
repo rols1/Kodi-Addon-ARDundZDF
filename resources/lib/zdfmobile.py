@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-#				zdfmobile.py - Part of Plex-Plugin-ARDMediathek2016
-#							mobile Version der ZDF Mediathek
+#				zdfmobile.py -  - Teil von Kodi-Addon-ARDundZDF
+#						mobile Version der ZDF Mediathek
 ################################################################################
 # 	dieses Modul nutzt nicht die Webseiten der Mediathek ab https://www.zdf.de/,
 #	sondern die Seiten ab https://zdf-cdn.live.cellular.de/mediathekV2 - diese
@@ -11,7 +11,6 @@ import  json
 import os, sys
 import urllib, urllib2
 import ssl
-import ctypes
 import datetime, time
 import re				# u.a. Reguläre Ausdrücke
 
@@ -295,10 +294,14 @@ def Get_content(stageObject, maxWidth):
 	if(len(title)==0):
 		title = subTitle
 		subTitle = ""
+		
+	teaser_nr=''			# wie Serien in ZDF_get_content
+	if ("episodeNumber" in stageObject):	
+		teaser_nr = "Episode %s | " % stageObject["episodeNumber"]
 	descr=''	
 	if("beschreibung" in stageObject):
-		descr = stageObject["beschreibung"]
-		
+		descr = teaser_nr + stageObject["beschreibung"]
+			
 	typ=''	
 	if("type" in stageObject):
 		typ = stageObject["type"]
@@ -345,7 +348,7 @@ def SingleRubrik(path, title, DictID):
 		
 	PLog('jsonObjects: ' + str(len(jsonObject)))	
 	# Debug:
-	RSave("/tmp/x_SingleRubrik.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
+	# RSave("/tmp/x_SingleRubrik.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID=ZDFNAME)				# Home-Button

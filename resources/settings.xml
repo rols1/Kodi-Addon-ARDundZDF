@@ -7,7 +7,8 @@
    	<setting label="Classic-Version der ARD Mediathek verwenden" type="bool" id="pref_use_classic" default="true"/>
     	<setting label="Mobile Version der ZDF Mediathek verwenden" type="bool" id="pref_use_zdfmobile" default="true"/>
     	<setting label="3Sat Mediathek verwenden" type="bool" id="pref_use_3sat" default="false"/>
-        <setting type="sep"/>
+    	<setting label="FUNK verwenden (experimentell)" type="bool" id="pref_use_funk" default="false"/>
+       <setting type="sep"/>
    	<setting label="EPG-Daten für TV-Live-Sender zeigen - dauert etwas länger" type="bool" id="pref_use_epg" default="false"/>
    	<setting label="Inhaltstext zu Video im Voraus laden - kann sehr lange dauern!" type="bool" id="pref_load_summary" default="false"/>
 	<setting type="sep"/>

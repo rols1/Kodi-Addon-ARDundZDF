@@ -7,6 +7,20 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+??.10.2019	2.0.3	Integration funk.net:
+			icon erstellt, Modulrumpf funk erstellt + in ardundzdf importiert +
+			Menü in Main / Menü in home erstellt.
+			time_translate (Modul util): angepasst für funk's timecode-Format, Rückgabe 
+			timecode im Fehlerfall.
+			Neue Funktionen: Channel, ChannelSingle, extract_channels, extract_videos,
+			ShowVideo.
+
+not on Github	2.0.2	ZDF_get_content: teaser-episode-number ausgewertet + der Beschreibung (summ)
+			vorangestellt.
+			Get_content (Modul ZDFmobile): episodeNumber im json-Quelle ausgewertet und
+			der Beschreibung (descr) vorangestellt.
+			International (ZDF): cacheToDisc-Statements =True
+
 12.10.2019	2.0.1	Modul ARD Neu: Senderliste um tagesschau24 + phoenix erweitert, Sender-Icons
 			ergänzt.
 			Senderwahl (Modul ARD Neu): tagline ergänzt (Mediathek des Senders ..)
