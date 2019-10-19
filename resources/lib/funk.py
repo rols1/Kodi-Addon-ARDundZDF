@@ -4,7 +4,7 @@
 #				Kanäle und Serien von https://www.funk.net/
 ################################################################################
 # 	Credits: cemrich (github) für die wichtigsten api-Calls
-#	
+#	Stand: 18.10.2019
 #	
 
 import  json		
@@ -55,13 +55,13 @@ ICON 			= 'icon.png'		# ARD + ZDF
 ICON_FUNK		= 'funk.png'			
 ICON_DIR_FOLDER	= "Dir-folder.png"
 ICON_SPEAKER 	= "icon-speaker.png"
+ICON_SEARCH 	= 'ard-suche.png'						
 ICON_MEHR 		= "icon-mehr.png"
 NAME			= 'ARD und ZDF'
 MNAME			= "FUNK"
 
 FUNKCacheTime = 300
-AUTH = "authorization, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnROYW1lIjoid2ViYXBwLXYzMSIsInNjb3BlIjoic3RhdGljLWNvbnRlbnQtYXBpLGN1cmF0aW9uLWFwaSxuZXh4LWNvbnRlbnQtYXBpLXYzMSx3ZWJhcHAtYXBpIn0.mbuG9wS9Yf5q6PqgR4fiaRFIagiHk9JhwoKES7ksVX4"
-
+MAXLINES = 50
 
 def Main_funk():
 	PLog('Main_funk:')
@@ -69,73 +69,219 @@ def Main_funk():
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)			# Home-Button
 	
-	# todo: Suche, playlists, Caching
-	title = 'CHANNELS'
-	fparams="&fparams={'title': '%s'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Channels", fanart=R(ICON_FUNK), 
+	title = "Suche VIDEOS"
+	fparams="&fparams={'title': '%s' }" % title
+	tag = "Suche Videos"
+	summ= "gesucht wird in Titel und Beschreibung"
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Search", fanart=R(ICON_FUNK), 
+		thumb=R(ICON_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+		
+	title = "Suche KANÄLE und SERIEN"
+	fparams="&fparams={'title': '%s' }" % title
+	tag = "Suche [COLOR red]KANÄLE[/COLOR], [COLOR green]WEITERERE KANÄLE[/COLOR] und [COLOR darkgoldenrod]SERIEN[/COLOR]"
+	summ= "gesucht wird in Titel und Beschreibung"
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Search", fanart=R(ICON_FUNK), 
+		thumb=R(ICON_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+		
+	title = "Suche PLAYLISTS"	
+	fparams="&fparams={'title': '%s' }" % title
+	tag = "Suche [COLOR blue]PLAYLISTS[/COLOR]"
+	summ= "gesucht wird in Titel und Beschreibung"
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Search", fanart=R(ICON_FUNK), 
+		thumb=R(ICON_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+	#---------------------------------------------
+	
+	fparams="&fparams={'title': '%s'}" % "KANÄLE"
+	addDir(li=li, label= "KANÄLE", action="dirList", dirID="resources.lib.funk.Channels", fanart=R(ICON_FUNK), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 		
-	#title = 'PLAYLISTS'
-	#fparams="&fparams={'title': '%s'}" % title
-	#addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Channels", fanart=R(ICON_FUNK), 
-	#	thumb=R(ICON_DIR_FOLDER), fparams=fparams)
+	fparams="&fparams={'title': '%s'}" % "SERIEN"
+	addDir(li=li, label= "SERIEN", action="dirList", dirID="resources.lib.funk.Channels", fanart=R(ICON_FUNK), 
+		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
+
+	fparams="&fparams={'title': '%s'}" % "PLAYLISTS"
+	addDir(li=li, label= "PLAYLISTS", action="dirList", dirID="resources.lib.funk.Channels", fanart=R(ICON_FUNK), 
+		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
+
+	fparams="&fparams={'title': '%s'}" % "WEITERE KANÄLE"
+	addDir(li=li, label= "WEITERE KANÄLE", action="dirList", dirID="resources.lib.funk.Channels", fanart=R(ICON_FUNK), 
+		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
+
+	fparams="&fparams={'title': '%s', 'typ': '', 'entityId': ''}"  % "NEUESTE VIDEOS"
+	addDir(li=li, label= "NEUESTE VIDEOS", action="dirList", dirID="resources.lib.funk.ChannelSingle", fanart=R(ICON_FUNK), 
+		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE)
 		
 # ----------------------------------------------------------------------			
-# alle Channels: https://www.funk.net/api/v4.0/channels/ - s. Search
+# Channelformat: Playlists, KANÄLEN und SERIE
+# Videosuche: static/search?=%s
+#
+def Search(title):
+	PLog('Search:')
+	li = xbmcgui.ListItem()
+	li = home(li, ID=MNAME)			# Home-Button	
+
+	query = get_keyboard_input() 
+	if query == None or query.strip() == '': # None bei Abbruch
+		return
+	query = query.strip();
+	query_org = query
+	query = query.lower()
+
+	if 'PLAY' in title:	
+		path = "https://www.funk.net/api/v4.0/playlists/"		# Playlists
+	if 'SERIEN' in title:										# KANÄLEN und SERIEN
+		path = "https://www.funk.net/data/static/channels"		# Gesamtliste mit Kurzbeschreibungen
+	if 'VIDEOS' in title:										# VIDEOS
+		path = "https://www.funk.net/data/search?q=%s"  % urllib2.quote(query_org)
+		
+	page = loadPage(path)
+	if len(page) == 0:
+		xbmcgui.Dialog().ok(ADDON_NAME, 'Suche: Fehler beim Abruf von:', next_path, '')
+		xbmcplugin.endOfDirectory(HANDLE)
+	jsonObject = json.loads(page)
+	
+	i=0	# Zähler Listitems
+	is_channel = True
+	if("list" in jsonObject):											# Gesamtliste
+		listObject = jsonObject["list"]
+	if ("_embedded" in jsonObject):										# Playlist
+		listObject = jsonObject["_embedded"]["playlistDTOList"]
+	if("videos" in jsonObject):											# Videos
+		is_channel = False
+		listObject = jsonObject["videos"]["list"]
+		for stageObject in listObject:
+			title,alias,descr,img,date,dur,cr,entityId = extract_videos(stageObject['value'])
+			date = time_translate(date)
+			dur = seconds_translate(dur)
+			tag = "%s | %s" % (date, dur)
+			if alias:			# hier channelAlias
+				tag = '%s | %s' % (alias,tag)
+			if cr:
+				tag = "%s | Copyright: %s" % (tag, cr)
+			# Probleme mit zahlreichen /r/n
+			descr_par = descr.replace('\n', '||'); descr_par = descr_par.replace('\r', '')  # \r\n\r\n
+			descr_par = repl_json_chars(descr_par); 
+			title = repl_json_chars(title)
+			fparams="&fparams={'title': '%s', 'img': '%s', 'descr': '%s', 'entityId': '%s'}"  %\
+				(urllib2.quote(title), urllib2.quote(img), urllib2.quote(descr_par), entityId)
+			PLog(title); PLog(entityId); 
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ShowVideo", 				
+				fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)					
+			i=i+1
+		PLog('Search videos: ' + str(i))
+	
+	if is_channel:
+		for stageObject in listObject:
+			typ,title,alias,descr,img,date,entityGroup,entityId = extract_channels(stageObject) 
+			if typ =='':					# Sicherung
+				continue
+			if title == 'Neueste Videos':	# skip - funktioniert nicht in ChannelSingle, 
+				continue					#	eigenes Menü in Main_funk
+			if query in title.lower() or  query in descr.lower():
+				title = repl_json_chars(title)
+				tag=''											# typ farbig markieren
+				isPlaylist=''
+				if typ == "format":			# KANÄLE
+					tag = "[COLOR red]KANAL[/COLOR]" 
+				if typ == "series":			# SERIEN
+					tag = "[COLOR darkgoldenrod]SERIE[/COLOR]"
+				if typ == "archiveformat":	# WEITERE KANÄLE
+					tag = "[COLOR green]WEITERER KANAL[/COLOR]" 
+				if typ == "default":		# PLAYLISTS	-> Channel 
+					isPlaylist = 'True'
+					next_path = "https://www.funk.net/api/v4.0/playlists/%s" % entityId
+					tag = "[COLOR darkgoldenrod]PLAYLIST[/COLOR]"
+					fparams="&fparams={'title': '%s','next_path': '%s'}" % (urllib2.quote(title), urllib2.quote(next_path))
+					addDir(li=li, label= title, action="dirList", dirID="resources.lib.funk.Channels", 
+						fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)
+					
+				else:
+					fparams="&fparams={'title': '%s', 'typ': '%s', 'entityId': '%s', 'isPlaylist': '%s'}"  %\
+						(title, typ, entityId, isPlaylist)
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ChannelSingle", 				
+						fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)
+				i=i+1
+		PLog('Search channels: ' + str(i))
+			
+	if i == 0:
+		msg1 = 'Suche nach <%s>:' % query_org
+		msg2 = 'leider nichts gefunden'
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		xbmcplugin.endOfDirectory(HANDLE)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+# ----------------------------------------------------------------------			
 #
 def Channels(title, next_path=''):
 	PLog('Channels:')
 	PLog(next_path)
 	title_org = title
 	li = xbmcgui.ListItem()
-	li = home(li, ID=MNAME)			# Home-Button
-	
-	
-	
-	pagenr = stringextract('page=', '&', next_path)		
-	if title == 'CHANNELS': 	# CHANNELS
-		jsonKey = "channelDTOList"
-		if next_path == '':
-			next_path = 'https://www.funk.net/api/v4.0/channels/?size=50' 
-			pagenr 		= "0"
-	else:						# PLAYLISTS
-		jsonKey = "playlistDTOList"
-		if next_path == '':
-			next_path = 'https://www.funk.net/api/v4.0/playlists/?size=50'
-			pagenr 		= "0"	
-		
-	storeId = 'channels_page%s' % pagenr
-	# page = Dict("load", storeId, CacheTime=FUNKCacheTime)					
-	# if page == False:											# nicht vorhanden oder zu alt
-	page = loadPage(next_path, AUTH)
+	li = home(li, ID=MNAME)			# Home-Button	
 
-	if len(page) == 0 or str(page).startswith('Fehler'):
+	if next_path =='':	
+		next_path = "https://www.funk.net/data/static/channels"		# Gesamtliste mit Kurzbeschreibungen
+		if title_org.startswith("PLAY"):							# Playlists nicht in Gesamtliste
+			next_path = "https://www.funk.net/api/v4.0/playlists/?size=%s" % MAXLINES
+	page = loadPage(next_path)
+	if len(page) == 0:
 		xbmcgui.Dialog().ok(ADDON_NAME, 'Fehler beim Abruf von:', next_path, '')
 		xbmcplugin.endOfDirectory(HANDLE)
-		
 	jsonObject = json.loads(page)
-	# Debug:
-	#RSave("/tmp/x_channels.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
-	#Dict('store', 'channels', jsonObject)
-	#jsonObject = Dict('load', storeId)
 
-	if("_embedded" in jsonObject):
-		PLog('channels jsonKey')
-		for stageObject in jsonObject["_embedded"][jsonKey]:
-			typ,title,alias,descr,img,date,entityGroup,entityId = extract_channels(stageObject) 
-			if typ =='':		# Sicherung
-				continue
-			if alias:			# Subtitel
-				title = '%s | %s' % (title,alias)
-			date = time_translate(date)
+	
+	if("list" in jsonObject):											# Gesamtliste
+		listObject = jsonObject["list"]
+	if ("_embedded" in jsonObject):										# Playlists
+		listObject = jsonObject["_embedded"]["playlistDTOList"]
+	
+	try:
+		# todo: Direktaufruf (noch 2 Klicks erforderlich) Bsp. Trend
+		if jsonObject['type'] == "default":								# einz. Playlist direkt
+			listObject = [0]
+			listObject[0] = jsonObject
+	except Exception as exception:
+		PLog(str(exception))
+				
+		
+	for stageObject in listObject:
+		typ,title,alias,descr,img,date,entityGroup,entityId = extract_channels(stageObject) 
+		if typ =='':		# Sicherung
+			continue
+		if title == 'Neueste Videos':	# skip - funktioniert nicht in ChannelSingle, 
+			continue					#	eigenes Menü in Main_funk
+			
+		date = time_translate(date)
+		tag = date
+		if alias:			# zusätzl.  Kennung (byChannelAlias, byChannelId)
+			tag = '%s | %s' % (alias, date)
 
-			# path = 'stage|%d' % i
-			fparams="&fparams={'title': '%s', 'jsonKey': '%s', 'entityId': '%s'}"  % (title, jsonKey, entityId)
-			PLog(title); PLog(entityId); 
+		if title_org.startswith("KAN") and typ == "format":			# KANÄLE
+			fparams="&fparams={'title': '%s', 'typ': '%s', 'entityId': '%s'}"  % (title, typ, entityId)
+			tag = "[COLOR red]KANAL[/COLOR] %s" % tag
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ChannelSingle", 				
-				fanart=R(ICON_FUNK), thumb=img, tagline=descr, summary=date, fparams=fparams)					
+				fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)
+		if title_org.startswith("SER") and typ == "series":			# SERIEN
+			fparams="&fparams={'title': '%s', 'typ': '%s', 'entityId': '%s'}"  % (title, typ, entityId)
+			tag = "[COLOR darkgoldenrod]SERIE[/COLOR] %s" % tag
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ChannelSingle", 				
+				fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)
+				
+		if  typ == "default":							# PLAYLISTS
+			fparams="&fparams={'title': '%s', 'typ': '%s', 'entityId': '%s', 'isPlaylist': '%s'}"  %\
+				(title, typ, entityId, 'True')
+			tag = "[COLOR blue]PLAYLIST[/COLOR] %s" % tag
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ChannelSingle", 				
+				fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)
+		if title_org.startswith("WEI") and typ == "archiveformat":	# WEITERE KANÄLE
+			fparams="&fparams={'title': '%s', 'typ': '%s', 'entityId': '%s'}"  % (title, typ, entityId)
+			tag = "[COLOR green]WEITERER KANAL[/COLOR] %s" % tag
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ChannelSingle", 				
+				fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)
+							
 		
 	pN,pageSize,totalPages,totalElements,next_path = get_pagination(jsonObject)	# Mehr?		
 	if next_path:	
@@ -150,59 +296,64 @@ def Channels(title, next_path=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------			
-# zeigt alle Videos eines Channels
+# zeigt alle Videos eines Channels, einr Playlist
 #	Alternative: byChannelAlias
-def ChannelSingle(title, jsonKey, entityId):
-	PLog('ChannelSingle: ' + jsonKey)
-	PLog(entityId)
-	jsonKey = UtfToStr(jsonKey)
-	title_org = title
+def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
+	PLog('ChannelSingle: ' + title)
+	PLog(entityId); PLog(typ); 
+	title_org=title; entityId_org=entityId
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=MNAME)				# Home-Button
 		
-	store_id = 'channel_%s' % entityId
-	path = "https://www.funk.net/api/v4.0/videos/byChannelId/%s" % entityId
-	if 'playlist' in jsonKey:
-		path = "https://www.funk.net/api/v4.0/playlists/%s" % entityId
-		store_id = 'playlist%s' % entityId
-		
-	page = loadPage(path, AUTH)
+	if next_path =='':	
+		if title == "NEUESTE VIDEOS":						# Aufruf: Hauptmenü 
+			next_path = "https://www.funk.net/data/static/latestVideos"
+		else:												#  Aufruf: Channels
+			next_path = "https://www.funk.net/api/v4.0/videos/byChannelId/%s?size=%s" % (entityId, MAXLINES)
+		if isPlaylist == 'True':
+			next_path = "https://www.funk.net/api/v4.0/videos/byPlaylistId/%s?size=%s" % (entityId, MAXLINES)		
+	page = loadPage(next_path)
 	jsonObject = json.loads(page)
 	
 	#Dict('store',store_id , jsonObject)
 	# Debug:
 	# RSave("/tmp/x_%s.json" % store_id, json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
 
-	if("_embedded" in jsonObject):
-		PLog('channels %s' % jsonKey)
-		for stageObject in jsonObject["_embedded"]["videoDTOList"]:
-			title,alias,descr,img,date,dur,cr,entityId = extract_videos(stageObject) 
-			if alias:			# hier channelAlias
-				title = '%s | %s' % (alias, title)
-			date = time_translate(date)
-			dur = seconds_translate(dur)
-			tag = "%s | %s" % (date, dur)
-			if cr:
-				tag = "%s | %s | Copyright: %s" % (date, dur, cr)
-			# Probleme mit zahlreichen /r/n
-			descr_par = descr.replace('\n', '||'); descr_par = descr_par.replace('\r', '')  # \r\n\r\n
-			descr_par = repl_json_chars(descr_par); 
-			title = repl_json_chars(title)
+	if("list" in jsonObject):								# Gesamtliste, latestVideos
+		videoObject = jsonObject["list"]
+	if("_embedded" in jsonObject):							# Standard-Videoliste
+		videoObject = jsonObject["_embedded"]["videoDTOList"]
+	PLog('channel %s' % title) 
+	
+	for stageObject in videoObject:
+		title,alias,descr,img,date,dur,cr,entityId = extract_videos(stageObject) 
+		date = time_translate(date)
+		dur = seconds_translate(dur)
+		tag = "%s | %s" % (date, dur)
+		if alias:			# hier channelAlias
+			tag = '%s | %s' % (alias,tag)
+		if cr:
+			tag = "%s | Copyright: %s" % (tag, cr)
+		# Probleme mit zahlreichen /r/n
+		descr_par = descr.replace('\n', '||'); descr_par = descr_par.replace('\r', '')  # \r\n\r\n
+		descr_par = repl_json_chars(descr_par); 
+		title = repl_json_chars(title)
 
-			fparams="&fparams={'title': '%s', 'img': '%s', 'descr': '%s', 'entityId': '%s'}"  %\
-				(urllib2.quote(title), urllib2.quote(img), urllib2.quote(descr_par), entityId)
-			PLog(title); PLog(entityId); 
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ShowVideo", 				
-				fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)					
+		fparams="&fparams={'title': '%s', 'img': '%s', 'descr': '%s', 'entityId': '%s'}"  %\
+			(urllib2.quote(title), urllib2.quote(img), urllib2.quote(descr_par), entityId)
+		PLog(title); PLog(entityId); 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ShowVideo", 				
+			fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)					
 	
 	pN,pageSize,totalPages,totalElements,next_path = get_pagination(jsonObject)	# Mehr?		
 	if next_path:	
 		summ = "insgesamt: %s Seite(n) , %s Beiträge" % (totalPages, totalElements)
 		pN = int(pN)								# nächste pageNumber, Basis 0
 		tag = "weiter zu Seite %s" % str(pN)
-		fparams="&fparams={'next_path': '%s'}" % (urllib2.quote(next_path))
-		addDir(li=li, label=title_org, action="dirList", dirID="resources.lib.funk.Channels", 
+		fparams="&fparams={'title': '%s', 'typ': '%s', 'entityId': '%s','next_path': '%s'}" %\
+			(title_org, typ, entityId_org, urllib2.quote(next_path))
+		addDir(li=li, label=title_org, action="dirList", dirID="resources.lib.funk.ChannelSingle", 
 			fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)	
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -245,12 +396,12 @@ def get_pagination(jsonObject):
 #	Rückgabe: typ,title,alias,descr,img,date,entityGroup,entityId = Get_content(stageObject) 
 def extract_channels(stageObject):
 	PLog('extract_channels:')
+	base = "https://www.funk.net/api/v4.0/thumbnails/"
 	# PLog(str(stageObject))
 
 	title=stageObject["title"]						# konstante Details 
 	alias=stageObject["alias"]
 	entityId = stageObject["entityId"]
-	PLog(entityId)
 			
 	descr=''										# variable Details 
 	if("description" in stageObject):
@@ -263,13 +414,25 @@ def extract_channels(stageObject):
 	if("type" in stageObject):
 		typ = stageObject["type"]
 		
+	# ohne "Url" im key nur 5d8b99a78e80cc0001d70f9f (Bsp)
 	img="";	# weitere: imageUrlLandscape, imageUrlOrigin
-			#	imageUrlSquare
+			#	imageUrlSquare 
 	if("imageUrlSquare" in stageObject):
 		img = stageObject["imageUrlSquare"]
 	if img == '':
 		if "imageUrlLandscape" in stageObject:
 			img = stageObject["imageUrlLandscape"]
+	if img == '':
+		if "imageUrlPortrait" in stageObject:
+			img = stageObject["imageUrlPortrait"]
+	if img == '':
+		if "imageSquare" in stageObject:  # ohne Url
+			img = stageObject["imageSquare"]
+		if img == '':
+			if "imageLandscape" in stageObject:
+				img = stageObject["imageLandscape"]
+		if img:
+			img = base + img
 	if img == '':		# Falback
 		img = R(ICON_DIR_FOLDER) 
 
@@ -284,11 +447,13 @@ def extract_channels(stageObject):
 	if("entityGroup" in stageObject):
 		entityGroup = stageObject["entityGroup"]
 		
-	title=title.encode("utf-8"); alias=alias.encode("utf-8"); descr=descr.encode("utf-8");
 	entityGroup=str(entityGroup); entityId=str(entityId); 
-	entityGroup=entityGroup.encode("utf-8"); entityId=entityId.encode("utf-8");
-	date=date.encode("utf-8"); typ=typ.encode("utf-8"); img=img.encode("utf-8"); 
+	typ=UtfToStr(typ); title=UtfToStr(title); alias=UtfToStr(alias); 
+	descr=UtfToStr(descr); img=UtfToStr(img); date=UtfToStr(date); 
+	entityGroup=UtfToStr(entityGroup); entityId=UtfToStr(entityId);
 	
+	date=date; typ=typ; img=img; 
+
 	title=repl_json_chars(title) 		# json-komp. für func_pars in router()
 	alias=repl_json_chars(alias) 		# dto
 	descr=repl_json_chars(descr) 		# dto
@@ -300,20 +465,28 @@ def extract_channels(stageObject):
 #	Rückgabe: title,alias,descr,img,date,dur,cr,genre,entityId = Get_content(stageObject) 
 def extract_videos(stageObject):
 	PLog('extract_videos:')
-	# PLog(str(stageObject))
+	base = "https://www.funk.net/api/v4.0/thumbnails/"
+	# PLog(stageObject)
 											# konstante Details 
 	title=stageObject["title"]
+	PLog(title)
 	alias=stageObject["channelAlias"]		# statt alias (ähnlich title)
-	myhash = stageObject["hash"]	
 
 	entityId = stageObject["entityId"]		# int
 	channelId = stageObject["channelId"]	# int
 	dur = stageObject["duration"]			# int
 						
 											# variable Details 
-	img=""; date=''; entityGroup=''; cr=''; genre=''; descr=''
+	img=''; date=''; entityGroup=''; cr=''; genre=''; descr='';
+	myhash='';
+	if "hash" in stageObject:		
+		myhash = stageObject["hash"]	
 	if("description" in stageObject):
-		descr = stageObject["description"]	
+		descr = stageObject["description"]
+	if descr == '':	
+		if "shortDescription" in stageObject:
+			descr = stageObject["shortDescription"]	
+		
 	if("copyright" in stageObject):
 		cr = stageObject["copyright"]
 	if("genre" in stageObject):
@@ -328,6 +501,17 @@ def extract_videos(stageObject):
 	if img == '':
 		if "imageUrlLandscape" in stageObject:
 			img = stageObject["imageUrlLandscape"]
+	if img == '':
+		if "imageUrlPortrait" in stageObject:
+			img = stageObject["imageUrlPortrait"]
+	if img == '':
+		if "imageSquare" in stageObject:  # ohne Url
+			img = stageObject["imageSquare"]
+		if img == '':
+			if "imageLandscape" in stageObject:
+				img = stageObject["imageLandscape"]
+		if img:
+			img = base + img
 	if img == '':		# Falback
 		img = R(ICON_DIR_FOLDER) 
 		
@@ -340,11 +524,11 @@ def extract_videos(stageObject):
 	if("entityGroup" in stageObject):
 		entityGroup = stageObject["entityGroup"]
 		
-	title=title.encode("utf-8"); alias=alias.encode("utf-8"); descr=descr.encode("utf-8");
 	dur=str(dur); entityId=str(entityId); channelId=str(channelId); 
-	entityGroup=entityGroup.encode("utf-8"); entityId=entityId.encode("utf-8");
-	date=date.encode("utf-8"); img=img.encode("utf-8");
-	dur=UtfToStr(dur); cr=UtfToStr(cr);genre=UtfToStr(genre);
+	entityGroup=str(entityGroup); entityId=str(entityId); 
+	title=UtfToStr(title); alias=UtfToStr(alias); 
+	descr=UtfToStr(descr); img=UtfToStr(img); date=UtfToStr(date); 
+	dur=UtfToStr(dur); cr=UtfToStr(cr); genre=UtfToStr(genre); entityId=UtfToStr(entityId);
 	
 	title=repl_json_chars(title) 		# json-komp. für func_pars in router()
 	alias=repl_json_chars(alias) 		# dto
@@ -361,11 +545,12 @@ def extract_videos(stageObject):
 # todo: Videoobjekt aus Videoliste in ChannelSingle extrahieren	
 #		loadPageCalls absichern
 #
-def ShowVideo(title, img, descr, entityId):
+def ShowVideo(title, img, descr, entityId, Merk='false'):
 	PLog('ShowVideo:'); PLog(title); PLog(entityId)
+	title=UtfToStr(title)
 	
 	path = "https://www.funk.net/api/v4.0/videos/%s" % entityId
-	page = loadPage(path, AUTH)
+	page = loadPage(path)
 	jsonObject = json.loads(page)
 	
 	store_id = 'video_%s' % entityId
@@ -396,11 +581,20 @@ def ShowVideo(title, img, descr, entityId):
 	jsonObject = json.loads(page)	
 														# 3. Stream-Url 
 	server = jsonObject["result"]["streamdata"]["cdnShieldProgHTTPS"]
+	if server == '':	# i.d.R. funk-01dd.akamaized.net
+		# access-error für nx-t09.akamaized.net			
+		server = jsonObject["result"]["streamdata"]["cdnShieldHTTPS"]
+		# server = "funk-01dd.akamaized.net"
+		if 'funk' not in server:						# Info: kein Zugang
+			msg1 = 'Vermutlich geschützter Inhalt: %s ' % title
+			msg2 = 'Server: %s' % server
+			msg3 = 'Alle Videoformate voraussichtlich nicht abspielbar'
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		
+	PLog("server: "+ server)
 	locator = jsonObject["result"]["streamdata"]["azureLocator"]	
 	distrib  = jsonObject["result"]["streamdata"]["azureFileDistribution"]
 	
-	server = jsonObject["result"]["streamdata"]["cdnShieldProgHTTPS"]
-	locator = jsonObject["result"]["streamdata"]["azureLocator"]	
 	stream_url = "https://%s/%s/%s_src.ism/Manifest(format=mpd-time-cmaf)"	% (server,locator,entityId)
 	PLog("stream_url: "+ stream_url)
 															# Video-Details
@@ -421,35 +615,30 @@ def ShowVideo(title, img, descr, entityId):
 	title = repl_json_chars(title)
 	title_org = title
 	
-	PLog('Mark1')
-	Merk='false'
 	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart
 		PLog('Sofortstart: funk (ShowVideo)')
 		PlayVideo(url=stream_url, title=title_org, thumb=img, Plot=descr, Merk=Merk)
 		return
 		
-	PLog('Mark2')
 	stream_url=UtfToStr(stream_url); img=UtfToStr(img);  descr=UtfToStr(descr); 
 	Merk=UtfToStr(Merk); tag=UtfToStr(tag);
 	descr_par = descr
 	descr = descr_par.replace('||', '\n')
 	descr_par=UtfToStr(descr_par);
 	
-	PLog('Mark3')
 	title = "STREAM | %s" % title_org	
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
 		(urllib2.quote(stream_url), urllib2.quote(title), urllib.quote_plus(img), urllib.quote_plus(descr_par), Merk)	
 	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
 		thumb=img, fparams=fparams, tagline=tag, summary=descr, mediatype='video')	
 	
-	PLog('Mark4')
 	title = "MP4 | %s" % title_org							# einzelne MP4-Url
 	for form in forms:
  		tag 	= "MP4 | %s" % form
+		# https://funk-01.akamaized.net/59536be8-46cc-4d1e-83b7-d7bab4b3eb5d/1633982_src_1920x1080_6000.mp4
 		mp4_url = "https://%s/%s/%s_src_%s.mp4"	% (server,locator,entityId,form)
 		mp4_url=UtfToStr(mp4_url); tag=UtfToStr(tag);
 		PLog("mp4_url: "+ mp4_url)
-		# https://funk-01.akamaized.net/59536be8-46cc-4d1e-83b7-d7bab4b3eb5d/1633982_src_1920x1080_6000.mp4
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
 			(urllib2.quote(mp4_url), urllib2.quote(title), urllib.quote_plus(img), urllib.quote_plus(descr_par), Merk)	
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
@@ -479,6 +668,7 @@ def get_forms(distrib):
 ####################################################################################################
 #									Hilfsfunktionen
 ####################################################################################################
+# 17.10.2019 auth nicht mehr benötigt
 #----------------------------------------------------------------  			
 def loadPage(url, auth='', x_cid='', x_token='', data='', maxTimeout = None):
 	try:
@@ -495,7 +685,7 @@ def loadPage(url, auth='', x_cid='', x_token='', data='', maxTimeout = None):
 		# hier nicht verwenden: 'Accept-Charset', 'utf-8' | 'Accept-Encoding', 'gzip, deflate, br'
 		if auth:
 			PLog(auth)
-			aname, avalue = auth.split(',')	# Liste auth: "Name, Wert"
+			aname, avalue = auth.split(',')		# Liste auth: "Name, Wert"
 			req.add_header(aname, avalue) 	
 		if x_cid:
 			PLog(x_cid)

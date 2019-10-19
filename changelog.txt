@@ -7,6 +7,26 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+19.10.2019	2.0.5	Überarbeitung Modul funk:
+			Hauptmenü funk erweitert: "Suche KANÄLE und SERIEN", "Suche PLAYLISTS",
+			"Suche VIDEOS".
+			neue Funktion Search: api-Url für Playlists, Web-Url für Channel. 
+			Differenzierung des json-Objekts + Farbmarkierung (tagline) je nach Ergebnistyp.
+			Hinweis für ergebnislose  Suche.
+			Auswertung Bildquellen ohne Pfad (Bsp. json-key imageSquare).
+			seconds_translate (Modul util): Differzierung Ausgabe mit/ohne Tage.
+			ClearUp (Modul util): Fix Entfernung Verzeichnisse.
+			ClearUp (Haupt-PRG): Bereinigung M3U8STORE ergänzt.
+	 
+not on Github	2.0.4	AUTH-Parameter entfernt (obsolet).
+			Hauptmenü funk erweitert: KANÄLE, SERIEN, WEITERE KANÄLE.
+			Funktion Channels: Wechsel der Quelle für channel-Liste (funk.net statt api-call),
+			Auswertung erweitert auf die drei Formate in channel-Liste.
+			Anpassungen in Funktionen ChannelSingle, extract_channels, extract_videos.
+			Funktion ShowVideo: Verwendung für Merkliste angepasst.
+			Funktion ShowVideo: User-Info bei geschützten Inhalten.
+			channel-alias vom Titel nach summary verlagert (komb. mit date)			 	
+
 16.10.2019	2.0.3	Integration funk.net:
 			icon erstellt, Modulrumpf funk erstellt + in ardundzdf importiert +
 			Menü in Main / Menü in home erstellt.

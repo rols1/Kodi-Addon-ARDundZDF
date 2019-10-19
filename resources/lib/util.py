@@ -317,7 +317,7 @@ def name(**variables):
 # leere Ordner werden entfernt
 def ClearUp(directory, seconds):	
 	PLog('ClearUp: %s, sec: %s' % (directory, seconds))	
-	PLog('älter als: ' + seconds_translate(seconds))
+	PLog('älter als: ' + seconds_translate(seconds, days=True))
 	now = time.time()
 	cnt_files=0; cnt_dirs=0
 	try:
@@ -326,13 +326,16 @@ def ClearUp(directory, seconds):
 		PLog("ClearUp: globFiles " + str(len(files)))
 		# PLog(" globFiles: " + str(files))
 		for f in files:
-			# PLog(os.stat(f).st_mtime)
+			#PLog(os.stat(f).st_mtime)
+			#PLog(now - seconds)
 			if os.stat(f).st_mtime < (now - seconds):
-				os.remove(f)
-				cnt_files = cnt_files + 1
-			if os.path.isdir(f):		# Leerverz. entfernen
-				if not os.listdir(f):
-					os.rmdir(f)
+				if os.path.isfile(f):	
+					PLog('entfernte Datei: ' + f)
+					os.remove(f)
+					cnt_files = cnt_files + 1
+				if os.path.isdir(f):		# Verz. ohne Leertest entf.
+					PLog('entferntes Verz.: ' + f)
+					shutil.rmtree(f, ignore_errors=True)
 					cnt_dirs = cnt_dirs + 1
 		PLog("ClearUp: entfernte Dateien %s, entfernte Ordner %s" % (str(cnt_files), str(cnt_dirs)))	
 		return True
@@ -957,8 +960,9 @@ def CalculateDuration(timecode):				# 3 verschiedene Formate (s.u.)
 	return milliseconds
 #---------------------------------------------------------------- 
 # Format seconds	86400	(String, Int, Float)
-# Rückgabe:  		1d, 0h, 0m, 0s	
-def seconds_translate(seconds):
+# Rückgabe:  		1d, 0h, 0m, 0s	(days=True)
+#		oder:		0h, 0d				
+def seconds_translate(seconds, days=False):
 	if seconds == '' or seconds == 0  or seconds == 'null':
 		return ''
 	if int(seconds) < 60:
@@ -971,8 +975,10 @@ def seconds_translate(seconds):
 	minutes = time / 60
 	time %= 60
 	seconds = time
-	# return "%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds)
-	return  "%d:%02d" % (hour, minutes)		
+	if days:
+		return "%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds)
+	else:
+		return  "%d:%02d" % (hour, minutes)		
 #----------------------------------------------------------------  	
 # Format timecode 	2018-11-28T23:00:00Z (ARD Neu, broadcastedOn)
 #					y-m-dTh:m:sZ 	ISO8601 date
@@ -991,7 +997,7 @@ def seconds_translate(seconds):
 # Rückgabe timecode im Fehlerfall
 #
 def time_translate(timecode, add_hour=2):
-	PLog("time_translate:")
+	PLog("time_translate: " + timecode)
 
 	if timecode.strip() == '':
 		return ''
