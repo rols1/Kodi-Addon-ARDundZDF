@@ -578,24 +578,34 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	path = "https://api.nexx.cloud/v3/741/videos/byid/%s" % entityId
 	page = loadPage(path, x_cid=x_cid, x_token=x_token, data=data)
 	PLog(page[:80]) 
-	jsonObject = json.loads(page)	
-														# 3. Stream-Url 
+	jsonObject = json.loads(page)
+	RSave("/tmp/x_videometa_protec.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
+	
+	protected=False; tokenHLS=''; tokenDASH=''			# 3. Stream-Url 
 	server = jsonObject["result"]["streamdata"]["cdnShieldProgHTTPS"]
 	if server == '':	# i.d.R. funk-01dd.akamaized.net
-		# access-error für nx-t09.akamaized.net			
+		# 				# protected: nx-t09.akamaized.net	
+		# token-Lösung von realvito (kodinerds, s. Post vom 20.10.2019)		
 		server = jsonObject["result"]["streamdata"]["cdnShieldHTTPS"]
-		# server = "funk-01dd.akamaized.net"
-		if 'funk' not in server:						# Info: kein Zugang
-			msg1 = 'Vermutlich geschützter Inhalt: %s ' % title
-			msg2 = 'Server: %s' % server
-			msg3 = 'Alle Videoformate voraussichtlich nicht abspielbar'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		tokenHLS = jsonObject["result"]["protectiondata"]["tokenHLS"]
+		tokenDASH= jsonObject["result"]["protectiondata"]["tokenDASH"]
+		protected = True
+		
+		#if 'funk' not in server:						# Info: kein Zugang
+		#	msg1 = 'Vermutlich geschützter Inhalt: %s ' % title
+		#	msg2 = 'Server: %s' % server
+		#	msg3 = 'Alle Videoformate voraussichtlich nicht abspielbar'
+		#	xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		
 	PLog("server: "+ server)
-	locator = jsonObject["result"]["streamdata"]["azureLocator"]	
+	PLog("tokenHLS: "+ tokenHLS); PLog("tokenDASH: "+ tokenDASH);
+	locator	 = jsonObject["result"]["streamdata"]["azureLocator"]	
 	distrib  = jsonObject["result"]["streamdata"]["azureFileDistribution"]
 	
-	stream_url = "https://%s/%s/%s_src.ism/Manifest(format=mpd-time-cmaf)"	% (server,locator,entityId)
+	if protected:
+		stream_url = "https://%s/%s/%s_src.ism/Manifest(format=mpd-time-cmaf)?hdnts=%s"	% (server,locator,entityId, tokenHLS)
+	else:
+		stream_url = "https://%s/%s/%s_src.ism/Manifest(format=mpd-time-cmaf)"	% (server,locator,entityId)
 	PLog("stream_url: "+ stream_url)
 															# Video-Details
 	title 	= jsonObject["result"]["general"]["title"]
@@ -636,7 +646,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	for form in forms:
  		tag 	= "MP4 | %s" % form
 		# https://funk-01.akamaized.net/59536be8-46cc-4d1e-83b7-d7bab4b3eb5d/1633982_src_1920x1080_6000.mp4
-		mp4_url = "https://%s/%s/%s_src_%s.mp4"	% (server,locator,entityId,form)
+		mp4_url = "https://%s/%s/%s_src_%s.mp4?hdnts=%s"	% (server,locator,entityId,form,tokenDASH)
 		mp4_url=UtfToStr(mp4_url); tag=UtfToStr(tag);
 		PLog("mp4_url: "+ mp4_url)
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
