@@ -4,7 +4,7 @@
 #				Kanäle und Serien von https://www.funk.net/
 ################################################################################
 # 	Credits: cemrich (github) für die wichtigsten api-Calls
-#	Stand: 18.10.2019
+#	Stand: 22.10.2019
 #	
 
 import  json		
@@ -542,8 +542,13 @@ def extract_videos(stageObject):
 #	und baut 1 Stream-Url und die verfügbaren MP4-Url's.
 #	Bei Einstellung Sofortstart wird PlayVideo direkt aufgerufen,
 #	sonst werden die Buttons für Stream- und MP$-Url's gelistet. 	
-# todo: Videoobjekt aus Videoliste in ChannelSingle extrahieren	
-#		loadPageCalls absichern
+# Problem geschützte Videos: die Streamurl's funktionierten am
+#		20.10.2019 einige Stunden, dann nicht mehr (Player-Error:
+#		missing root node - Abhilfe bisher nicht möglich - aus-
+#		kommentiert.
+# Sofortstart: i.Z.m. den geschützte Videos und auch häufigem 
+#	"Stottern" bei ungeschützten Streams wird im Modul das größte
+#		MP4-Video verwendet (Vorgabe in Settings)
 #
 def ShowVideo(title, img, descr, entityId, Merk='false'):
 	PLog('ShowVideo:'); PLog(title); PLog(entityId)
@@ -579,14 +584,14 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	page = loadPage(path, x_cid=x_cid, x_token=x_token, data=data)
 	PLog(page[:80]) 
 	jsonObject = json.loads(page)
-	RSave("/tmp/x_videometa_protec.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
+	# RSave("/tmp/x_videometa_protec.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
 	
 	protected=False; tokenHLS=''; tokenDASH=''			# 3. Stream-Url 
 	server = jsonObject["result"]["streamdata"]["cdnShieldProgHTTPS"]
 	if server == '':	# i.d.R. funk-01dd.akamaized.net
 		# 				# protected: nx-t09.akamaized.net	
 		# token-Lösung von realvito (kodinerds, s. Post vom 20.10.2019)		
-		server = jsonObject["result"]["streamdata"]["cdnShieldHTTPS"]
+		server = jsonObject["result"]["streamdata"]["cdnShieldHTTPS"]	# endet mit /
 		tokenHLS = jsonObject["result"]["protectiondata"]["tokenHLS"]
 		tokenDASH= jsonObject["result"]["protectiondata"]["tokenDASH"]
 		protected = True
@@ -603,9 +608,13 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	distrib  = jsonObject["result"]["streamdata"]["azureFileDistribution"]
 	
 	if protected:
-		stream_url = "https://%s/%s/%s_src.ism/Manifest(format=mpd-time-cmaf)?hdnts=%s"	% (server,locator,entityId, tokenHLS)
+		stream_url = "https://%s%s/%s_src.ism/Manifest(format=mpd-time-cmaf)?hdnts=%s"	% (server,locator,entityId, tokenHLS)
+		# Header Referer von  Kodi nicht verwendet/erkannt - weiterhin Player-Error (s.o.)
+		#h1='cors'
+		#h2='https://www.funk.net/channel/doctor-who-1164/boeser-wolf-133317/doctor-who-staffel-1-1290'
+		#stream_url = "%s|Sec-Fetch-Mode=%s&Referer=%s" % (stream_url, urllib2.quote(h1), urllib2.quote(h2))
 	else:
-		stream_url = "https://%s/%s/%s_src.ism/Manifest(format=mpd-time-cmaf)"	% (server,locator,entityId)
+		stream_url = "https://%s%s/%s_src.ism/Manifest(format=mpd-time-cmaf)"	% (server,locator,entityId)
 	PLog("stream_url: "+ stream_url)
 															# Video-Details
 	title 	= jsonObject["result"]["general"]["title"]
@@ -619,36 +628,60 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	orientation	= jsonObject["result"]["features"]["orientation"]
 	
 	forms = get_forms(distrib)								# Details für mp4_url's 
-	tag = "%s x %s | fps %s | %s | %s" % (width, height, fps, aspect, orientation)
+	mp4_urls = []
+	for form in forms:
+		# leerer hdnts-Zusatz bei nicht geschützten Videos stört nicht.
+ 		# https://funk-01.akamaized.net/59536be8-46cc-4d1e-83b7-d7bab4b3eb5d/1633982_src_1920x1080_6000.mp4
+		mp4_urls.append("https://%s%s/%s_src_%s.mp4?hdnts=%s"	% (server,locator,entityId,form,tokenDASH))
+	PLog("mp4_urls: "+ str(mp4_urls))
+	
 	
 	title=UtfToStr(title);
 	title = repl_json_chars(title)
 	title_org = title
+	descr=UtfToStr(descr); 
 	
-	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart MP4 (s.o.)
 		PLog('Sofortstart: funk (ShowVideo)')
-		PlayVideo(url=stream_url, title=title_org, thumb=img, Plot=descr, Merk=Merk)
+		prev_bandw = SETTINGS.getSetting('pref_funk_bandw')
+		prev_bandw = prev_bandw.split(':')[0]			# 400:320x180	
+		myform = get_forms(distrib,prev_bandw )			# passende form-Bandweite suchen 
+		if  len(myform) == 0:							# Sicherung: kleinste 
+			mp4_url = mp4_urls[0]
+		else:											# tokenDASH leer falls Server funk-01.akamaized
+			mp4_url = "https://%s%s/%s_src_%s.mp4?hdnts=%s"	% (server,locator,entityId,myform,tokenDASH)
+		mp4_url=UtfToStr(mp4_url);	
+		tag_add = ''
+		if protected:
+			tag_add = "geschützt"
+			tag_add=UtfToStr(tag_add); 
+		tag = "MP4 %s | %s" % (tag_add, re.search("_src_(.*?).mp4", mp4_url).group(1))	# 1920x1080_6000
+		tag=UtfToStr(tag); 
+		descr_par = "%s||||%s" % (tag, descr)
+		descr=UtfToStr(descr); 
+		PlayVideo(url=mp4_url, title=title_org, thumb=img, Plot=descr_par, Merk=Merk)
 		return
 		
 	stream_url=UtfToStr(stream_url); img=UtfToStr(img);  descr=UtfToStr(descr); 
-	Merk=UtfToStr(Merk); tag=UtfToStr(tag);
+	Merk=UtfToStr(Merk);
 	descr_par = descr
 	descr = descr_par.replace('||', '\n')
 	descr_par=UtfToStr(descr_par);
-	
-	title = "STREAM | %s" % title_org	
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
-		(urllib2.quote(stream_url), urllib2.quote(title), urllib.quote_plus(img), urllib.quote_plus(descr_par), Merk)	
-	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
-		thumb=img, fparams=fparams, tagline=tag, summary=descr, mediatype='video')	
+		
+	if protected == False:								# nicht funktionierenden Stream ausblenden
+		title = "STREAM | %s" % title_org	
+		tag = "STREAM %s x %s | fps %s | %s | %s" % (width, height, fps, aspect, orientation)
+		tag=UtfToStr(tag);
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
+			(urllib2.quote(stream_url), urllib2.quote(title), urllib.quote_plus(img), urllib.quote_plus(descr_par), Merk)	
+		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
+			thumb=img, fparams=fparams, tagline=tag, summary=descr, mediatype='video')	
 	
 	title = "MP4 | %s" % title_org							# einzelne MP4-Url
-	for form in forms:
- 		tag 	= "MP4 | %s" % form
-		# https://funk-01.akamaized.net/59536be8-46cc-4d1e-83b7-d7bab4b3eb5d/1633982_src_1920x1080_6000.mp4
-		mp4_url = "https://%s/%s/%s_src_%s.mp4?hdnts=%s"	% (server,locator,entityId,form,tokenDASH)
+	for mp4_url in mp4_urls:
+ 		tag 	= "MP4 | %s" % re.search("_src_(.*?).mp4", mp4_url).group(1)	# 1920x1080_6000
 		mp4_url=UtfToStr(mp4_url); tag=UtfToStr(tag);
-		PLog("mp4_url: "+ mp4_url)
+		# PLog("mp4_url: "+ mp4_url)  s.o.
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
 			(urllib2.quote(mp4_url), urllib2.quote(title), urllib.quote_plus(img), urllib.quote_plus(descr_par), Merk)	
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
@@ -661,17 +694,30 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 #	Auflösungen, passend für die Video-Url's
 #	Bsp. 0400:320x180,0700:640x360,1500:1024x576,2500:1280x720,6000:1920x1080
 #
-def get_forms(distrib):
+def get_forms(distrib, prev_bandw=''):
 	PLog('get_forms: ' + distrib)
 	forms=[]
 	
 	records = distrib.split(',')
+	records = sorted(records, reverse=True)		# absteigend
+	bandw_old = '0'
 	for rec in records:
 		bandw, res = rec.split(':')		# 0400:320x180
 		if bandw.startswith('0'):
 			bandw = bandw[1:]	
 		form = "%s_%s" % (res, bandw)	# 320x180_400
+		if prev_bandw:					# Abgleich mit Settings
+			#PLog(form); PLog(prev_bandw);  PLog(bandw);  PLog(bandw_old);
+			#PLog(forms)
+			if (int(prev_bandw) > int(bandw)) and (int(prev_bandw) <= int(bandw_old)):
+				PLog(forms[-1])
+				return forms[-1]
+				
 		forms.append(form)
+		bandw_old = bandw
+		
+	if prev_bandw:						# Sicherung 	
+		forms=[]	
 	PLog('forms: ' + str(forms))
 	return forms		
 

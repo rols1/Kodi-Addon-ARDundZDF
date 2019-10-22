@@ -7,6 +7,12 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+22.10.2019	2.0.7	Änderung Sofortstart (Modul funk): MP4- statt Stream-Url, Auswahl in Settings.
+			Settings: zusätzl. Option Modul-Einstellungen und Liste MP4-formate für funk.
+			ShowVideo (Modul funk): Anpassungen für MP4-Sofortstart, Ausblendung Stream-Format
+			bei geschützten (nicht funktionierenden) Inhalten.
+			ShowVideo (Modul funk): doppelten Slash in stream_url + mp4_url entfernt.
+
 20.10.2019	2.0.6	ShowVideo (Modul funk): Url-Ergänzung mit tokenHLS/tokenDASH für die
 			Wiedergabe geschützter Inhalte. 
 

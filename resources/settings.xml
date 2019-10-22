@@ -53,9 +53,13 @@
 	<setting label="Begleitinfos für Favoriten und Merkliste verwenden - falls verfügbar" type="bool" id="pref_FavsInfo" default="true"/>
  </category> 
 
- <category label=" Beiträge filtern">
-  	<setting label="Titel enthält *Hörfassungen*" type="bool" id="pref_filter_hoerfassung" default="false"/>
+ <category label="Beiträge filtern">
+  	<<setting label="Dauer der Aufnahme" type="labelenum" values="00:05:00 = 5 Minuten|00:15:00 = 15 Minuten"/>
   	<setting label="Titel enthält *Audiodeskription*" type="bool" id="pref_filter_audiodeskription" default="false"/>
+ </category>
+ <category label="Modul-Einstellungen">
+  	<setting label="Modul FUNK: Videoeinstellung für MP4-Sofortstart" type="select" id="pref_funk_bandw" default="1500:960x540"
+  		values="400:320x180|650:640x360|900:720x404|1500:960x540|2500:1280x720|4000:1920x108|6000:1920x1080" />
  </category>
 </settings>
 
