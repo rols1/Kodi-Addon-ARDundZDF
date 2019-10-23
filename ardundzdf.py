@@ -45,8 +45,8 @@ import resources.lib.EPG				as EPG
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml
-VERSION =  '2.0.7'		 
-VDATE = '22.10.2019'
+VERSION =  '2.0.9'		 
+VDATE = '23.10.2019'
 
 # 
 #	
@@ -2126,7 +2126,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 	sendungen = blockextract('class="teaser"', gridlist)
 	PLog(len(sendungen))
 	for s in sendungen:
-		# PLog(s)		# Debug
+		PLog(s)		# Debug
 		tagline=''; summ=''; mediatype=''
 		# Achtung: gleichz. Vorkommen von 'bcastId=' + 'documentId=' kein Indiz für einz. Sendung.
 		href 	= BASE_URL + stringextract('href="', '"', s) # OK häufig auch bei Classic-Version
@@ -2217,7 +2217,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 					% (urllib2.quote(title), urllib2.quote(href), next_cbKey)
 				addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
 					thumb=img, fparams=fparams, tagline=tagline)
-				
+	
 		if more_path:				# Button "ALLE ZEIGEN"	
 			PLog("more_path more: " + more_path)	
 			img 	= R(ICON_MEHR)
@@ -3203,7 +3203,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 		if geoblock == 'true':			# Info-Anhang für summary 
 			geoblock = ' | Geoblock!'
 		else:
-			geoblock = ''
+			geoblock = ' | ohne Geoblock'
 	else:
 		m3u8_master = False
 		# Nachbildung link_path, falls path == mp3-Link:
@@ -3235,7 +3235,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 		summary_org = summary_org.replace('\n', '||')
 		summary = summary.replace('\n', '||')
 
-		li = Parseplaylist(li, m3u8_master, thumb, geoblock='', tagline=tagline, summary=summary_org, descr=summary, 
+		li = Parseplaylist(li, m3u8_master, thumb, geoblock=geoblock, tagline=tagline, summary=summary_org, descr=summary, 
 			sub_path=sub_path)
 		#del link_path[0]								# master.m3u8 entfernen, Rest bei m3u8_master: mp4-Links
 		PLog(li)  										
@@ -3306,17 +3306,18 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 			else:
 				summary = "%s\n%s" % (title, Format)		# 3. Podcasts mp3-Links, mp4-Links
 				summ_lable=summary_org.replace('||', '\n')	
+				summ_lable = "%s\n%s" % (tagline, Format)
 				if ID == 'PODCAST':			# (noch) keine Header benötigt
 					lable = "%s. %s | %s" % (str(li_cnt), title, summary)
 					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
 						urllib2.quote(title_org), urllib2.quote(thumb), urllib.quote_plus(summary_org))
 					addDir(li=li, label=lable, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
-						tagline=tagline, summary=summ_lable, mediatype='music')
+						summary=summ_lable, mediatype='music')
 				else:
 					# 26.06.2017: nun auch ARD mit https - aber: bei den mp4-Videos liefern die Server auch
 					#	mit http, während bei m3u8-Url https durch http ersetzt werden MUSS. 
 					url = url.replace('https', 'http')	
-					lable = "%s. %s | %s" % (str(li_cnt), title, Format+geoblock)
+					lable = "%s. %s | %s" % (str(li_cnt), title, Format + geoblock)
 					summary_org = summary_org.replace('\n', '||')
 					
 					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
@@ -6586,14 +6587,14 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 				
 	geoblock =  stringextract('geoLocation',  '}', page) 
 	geoblock =  stringextract('"value": "',  '"', geoblock).strip()
-	PLog('geoblock: ' + geoblock)
-	if 	geoblock:								# i.d.R. "none", sonst "de" - wie bei ARD verwenden
+	PLog('geoblock: ' + geoblock);
+	if 	geoblock == 'none':								# i.d.R. "none", sonst "de" - wie bei ARD verwenden
+		geoblock = ' | ohne Geoblock'
+	else:
 		if geoblock == 'de':			# Info-Anhang für summary 
 			geoblock = ' | Geoblock DE!'
 		if geoblock == 'dach':			# Info-Anhang für summary 
 			geoblock = ' | Geoblock DACH!'
-	else:
-		geoblock == ''
 
 	PLog('Ende get_formitaeten:')
 	return formitaeten, duration, geoblock, sub_path  
@@ -6609,11 +6610,12 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 	title_call = urllib2.unquote(title_call)
 	title_call = UtfToStr(title_call); tagline = UtfToStr(tagline); geoblock = UtfToStr(geoblock)
 	if 	title_call != tagline:		
-		Plot	 = "%s\n\n%s" % (title_call, tagline)
-		Plot_par = "%s||||%s" % (title_call, tagline)		# || Code für LF (\n scheitert in router)
+		Plot	 = "%s\n\n%s" % (title_call, tagline + geoblock)
+		Plot_par = "%s||||%s" % (title_call, tagline + geoblock)	# || Code für LF (\n scheitert in router)
 	else:
 		Plot	 = title_call
 		Plot_par = title_call
+	tagline = tagline + geoblock
 	
 	i = 0 	# Titel-Zähler für mehrere Objekte mit dem selben Titel (manche Clients verwerfen solche)
 	download_list = []		# 2-teilige Liste für Download: 'summary # url'	

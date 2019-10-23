@@ -574,8 +574,12 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	PLog(page[:80]) 	
 	jsonObject = json.loads(page)
 	x_cid 	= jsonObject["result"]["general"]["cid"]
+	geo 	= jsonObject["result"]["general"]["geocode"]
 	# x-request-token nicht im jsonObject
-	PLog("cid: " + x_cid)	
+	PLog("cid: " + x_cid); PLog("geo: " + geo); 
+	geoblock=''
+	if geo:
+		geoblock =  " | Geoblock: %s"	% geo
 														# 2. Video-Metadaten
 	x_cid	= "x-request-cid,%s" % x_cid							# x-request-cid
 	x_token = "x-request-token,f058a27469d8b709c3b9db648cae47c2"	# x-request-token
@@ -656,6 +660,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 			tag_add = "geschützt"
 			tag_add=UtfToStr(tag_add); 
 		tag = "MP4 %s | %s" % (tag_add, re.search("_src_(.*?).mp4", mp4_url).group(1))	# 1920x1080_6000
+		tag = tag + geoblock
 		tag=UtfToStr(tag); 
 		descr_par = "%s||||%s" % (tag, descr)
 		descr=UtfToStr(descr); 
@@ -671,6 +676,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	if protected == False:								# nicht funktionierenden Stream ausblenden
 		title = "STREAM | %s" % title_org	
 		tag = "STREAM %s x %s | fps %s | %s | %s" % (width, height, fps, aspect, orientation)
+		tag = tag + geoblock
 		tag=UtfToStr(tag);
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
 			(urllib2.quote(stream_url), urllib2.quote(title), urllib.quote_plus(img), urllib.quote_plus(descr_par), Merk)	
@@ -680,6 +686,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	title = "MP4 | %s" % title_org							# einzelne MP4-Url
 	for mp4_url in mp4_urls:
  		tag 	= "MP4 | %s" % re.search("_src_(.*?).mp4", mp4_url).group(1)	# 1920x1080_6000
+		tag = tag + geoblock
 		mp4_url=UtfToStr(mp4_url); tag=UtfToStr(tag);
 		# PLog("mp4_url: "+ mp4_url)  s.o.
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \

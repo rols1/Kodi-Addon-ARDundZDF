@@ -38,6 +38,7 @@ DEBUG			= SETTINGS.getSetting('pref_info_debug')
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 
+ARDStartCacheTime = 300						# 5 Min.	
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
@@ -446,7 +447,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 # 13.01.2019 erweitert für compressed-content (get_page2)
 # 25.01.2019 Hinweis auf Redirects (get_page2)
 #
-def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=None):	
+def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False):	
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
 	if header:									# dict auspacken
 		header = urllib2.unquote(header);  
@@ -454,7 +455,6 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		header = json.loads(header)
 		PLog("header: " + str(header)[:80]);
 		 
-	
 	path = transl_umlaute(path)					# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
 	# path = urllib2.unquote(path)				# scheitert bei quotierten Umlauten, Ersatz replace				
 	path = path.replace('https%3A//','https://')# z.B. https%3A//classic.ardmediathek.de
@@ -483,7 +483,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 		msg = msg.decode(encoding="utf-8")
 		PLog(msg)	
 	'''
-
+	
 	if page == '':
 		try:															# 2. Versuch ohne SSLContext 
 			PLog("get_page2:")
@@ -517,7 +517,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 				PLog(len(page))
 			r.close()
 			PLog(page[:100])
-		except Exception as exception:
+		except urllib2.URLError as exception:
 			msg = str(exception)
 			msg = msg.decode(encoding="utf-8")
 			PLog(msg)
@@ -541,7 +541,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 			PLog('Mark3')
 			r.close()
 			PLog(len(page))
-		except Exception as exception:
+		except urllib2.URLError as exception:
 			msg = str(exception)
 			msg = msg.decode(encoding="utf-8")
 			PLog(msg)						
@@ -553,7 +553,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Non
 			msg2 = 'Bitte in den Einstellungen abschalten, um das Modul'
 			msg3 = 'ARD-Neu zu aktivieren.'
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)		 			 	 
-		msg = error_txt + ' | siehe Logdatei'
+		msg = error_txt + ' | %s' % msg
 		PLog(msg)
 		return page, msg
 		
@@ -1304,6 +1304,12 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 	PLog(sub_path);
 	
 	Plot=transl_doubleUTF8(Plot)
+	if url_check(url, caller='PlayVideo') == False:
+		if IsPlayable == 'true':								# true
+			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
+		else:													# false, None od. Blank
+			xbmc.Player().play(url, li, windowed=False) 		# direkter Start
+		return				
 		
 	li = xbmcgui.ListItem(path=url)		
 	# li.setArt({'thumb': thumb, 'icon': thumb})
@@ -1419,5 +1425,27 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 	if FavCall == 'true':
 		PLog('Call_from_Favourite')
 		xbmc.executebuiltin('ActivateWindow(10134)')
+#---------------------------------------------------------------- 
+def url_check(url, caller=''):
+	PLog('url_check:')
+	
+	UrlopenTimeout = 3
+	# Tests:
+	# url='http://104.250.149.122:8012'	# Debug: HTTP Error 401: Unauthorized
+	# url='http://feeds.soundcloud.com/x'	# HTTP Error 400: Bad Request
+	
+	req = urllib2.Request(url)
+	try:
+		r = urllib2.urlopen(req, timeout=UrlopenTimeout)
+		PLog('Status: ' + str(r.getcode()))
+		return True
+	except urllib2.URLError as exception:
+		err = repr(exception)
+		msg1= '%s: Seite nicht erreichbar - Url:' % caller
+		msg2 = url
+		msg3 = 'Fehler: %s' % err
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)		 			 	 
+		return False
+	
 ####################################################################################################
 

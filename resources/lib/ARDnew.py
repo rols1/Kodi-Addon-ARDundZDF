@@ -175,7 +175,7 @@ def ARDStart(title, sender, widgetID=''):
 			msg3=''
 			if page:
 				msg2 = "Seite wurde aus dem Addon-Cache geladen."
-				msg3 = "Seite ist älter als %s Minuten (CacheTime)" % str(CacheTime/60)
+				msg3 = "Seite ist älter als %s Minuten (CacheTime)" % str(ARDStartCacheTime/60)
 			else:
 				msg2='Startseite nicht im Cache verfuegbar.'
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
@@ -326,7 +326,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			if href.startswith('http') == False:
 				href = BETA_BASE_URL + href
 			
-			title 	= stringextract('title="', '"', s)
+			title 	= stringextract('aria-label="', '"', s)
 			title	= unescape(title)
 			title 	= title.decode(encoding="utf-8")
 			# href_id =  stringextract('/player/', '/', s) # Bild via id 
@@ -775,7 +775,7 @@ def get_ardsingle_more(li, gridlist, page, mediatype=''):
 			continue
 		href_id = stringextract('/player/', '/', href)	 	# href_id in player-Link
 
-		title = stringextract('title="', '"', s) 			
+		title = stringextract('aria-label="', '"', s) 			
 		title	= "Mehr: %s" % unescape(title)
 		tag = stringextract('class="subline">', '</h4>', s)
 		tag = cleanhtml(tag) 		        

@@ -7,6 +7,19 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+23.10.2019	2.0.9	Präsentation Geoblock-Info im Addon:
+			Geoblock-Info Modul funk: Anpassungen in ShowVideo.
+			Geoblock-Info Modul ZDFmobile: Anpassungen in ShowVideo, get_formitaeten,
+			get_formitaeten2.
+			Geoblock-Info Modul ARD Neu: Anpassungen in ARDStartSingle.
+			Geoblock-Info Modul ARD Classic: Anpassungen in parseLinks_Mp4_Rtmp.
+			Geoblock-Info ZDF: Anpassungen in get_formitaeten und show_formitaeten.
+
+not on Github	2.0.8	ARDStartRubrik (Modul ARD Neu): Fix Titel (title -> aria-label).
+			get_ardsingle_more (Modul ARD Neu): Fix Titel (title -> aria-label).
+			get_page (Modul util): Auswertung URLError + Rückgabe in User-Info.
+			neue Funktion url_check (Modul util): prüft Url auf Erreichbarkeit (Statuscode).
+
 22.10.2019	2.0.7	Änderung Sofortstart (Modul funk): MP4- statt Stream-Url, Auswahl in Settings.
 			Settings: zusätzl. Option Modul-Einstellungen und Liste MP4-formate für funk.
 			ShowVideo (Modul funk): Anpassungen für MP4-Sofortstart, Ausblendung Stream-Format

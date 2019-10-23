@@ -516,6 +516,13 @@ def ShowVideo(path, DictID, Merk='false'):
 		url = url.replace('https', 'http')
 		typ = detail[3]
 		codec = detail[4]
+		geo = detail[5]
+		PLog(geo)
+		geoblock =  "mit Geoblock"
+		if geo == 'none':
+			geoblock = "ohne Geoblock"
+		else:
+			geoblock =  "mit Geoblock %s" % geo
 		if url.endswith('mp4'):
 			try:
 				bandbreite = url.split('_')[-2]		# Bsp. ../4/170703_despot1_inf_1496k_p13v13.mp4
@@ -542,7 +549,7 @@ def ShowVideo(path, DictID, Merk='false'):
 					PlayVideo(url=url, title=title_org, thumb=img, Plot=descr, Merk=Merk)
 					return
 				url_auto = url
-			title=str(i) + '. ' + quality + ' [m3u8]'						# Einzelauflösungen
+			title=str(i) + '. ' + quality + ' [m3u8]' + ' | ' + geoblock	# Einzelauflösungen
 			PLog("title: " + title)
 			tagline = '%s\n\n' % title_org + 'Qualitaet: %s | Typ: %s' % (quality, '[m3u8-Streaming]')
 			tagline = UtfToStr(tagline);
@@ -551,7 +558,7 @@ def ShowVideo(path, DictID, Merk='false'):
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
 				thumb=img, fparams=fparams, tagline=descr_local, summary =tagline, mediatype='video')	
 		else:
-			title=str(i) + '. %s [%s]'  % (quality, hd)
+			title=str(i) + '. %s [%s] | %s'  % (quality, hd, geoblock)
 			PLog("title: " + title)
 			tagline = '%s\n\n' % title_org + 'Qualitaet: %s | Typ: %s | Codec: %s' % (quality, typ, codec)
 			if bandbreite:
@@ -613,15 +620,23 @@ def get_video_urls(videoObject):
 def get_formitaeten(jsonObject):
 	PLog('get_formitaeten:')
 	forms=[]
-	
+	# Debug
+	# RSave("/tmp/x_forms.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
+
 	try:
 		formObject = jsonObject["document"]["formitaeten"]
 		single = True
 	except Exception as exception:
 		PLog(repr(exception))
 		single = False
+	PLog(single)
 	
-	if single:										
+	geoblock=''; fsk=''
+	if single:	
+		if 	"geoLocation" in formObject:
+			geoblock = formObject["geoLocation"]								
+		if 	"fsk" in formObject:				# z.Z n. verw.
+			fsk = formObject["fsk"]								
 		for formitaet in formObject:
 			detail=[]
 			url = formitaet["url"];
@@ -631,11 +646,16 @@ def get_formitaeten(jsonObject):
 			codec = formitaet["mimeType"]
 			PLog("quality:%s hd:%s url:%s" % (quality,hd,url))
 			detail.append(quality); detail.append(hd); 
-			detail.append(url); detail.append(typ); detail.append(codec); 
+			detail.append(url); detail.append(typ); detail.append(codec);
+			detail.append(geoblock); 
 			forms.append(detail)
 		return forms	
 	
-	# single=True
+	# single=False
+	if 	"geoLocation" in jsonObject:
+		geoblock = jsonObject["geoLocation"]								
+	if 	"fsk" in jsonObject:				# z.Z n. verw.
+		geoblock = jsonObject["fsk"]								
 	for formitaet in jsonObject["formitaeten"]:	
 		detail=[]
 		url = formitaet["url"];
@@ -650,6 +670,7 @@ def get_formitaeten(jsonObject):
 		PLog("quality:%s hd:%s url:%s" % (quality,hd,url))
 		detail.append(quality); detail.append(hd); 
 		detail.append(url); detail.append(typ); detail.append(codec); 
+		detail.append(geoblock); 
 		forms.append(detail)
 	# PLog('forms: ' + str(forms))
 	return forms		
@@ -661,6 +682,12 @@ def get_formitaeten2(page):
 	forms=[]
 	records = blockextract('"formitaeten"', page)
 	PLog(len(records))
+	
+	geoblock = stringextract('"geoLocation"', '},', page)
+	geoblock = stringextract('"value" : "', '"', geoblock)
+	fsk 	 = stringextract('"fsk"', '},', page)	# z.Z n. verw.
+	fsk	 	 = stringextract('"value" : "', '"', fsk)
+	
 	for rec in records:
 		detail=[]
 		url 	= stringextract('"uri" : "', '"', rec)
@@ -670,7 +697,8 @@ def get_formitaeten2(page):
 		codec	= stringextract('"mimeCodec" : "', '"', rec)
 		PLog("quality: %s, hd: %s, typ: %s, codec: %s, url: %s" % (quality,hd,typ,codec,url))
 		detail.append(quality); detail.append(hd); 
-		detail.append(url); detail.append(typ);  detail.append(codec); 
+		detail.append(url); detail.append(typ);  detail.append(codec);
+		detail.append(geoblock); 		 
 		forms.append(detail)
 	# PLog('forms: ' + str(forms))
 	return forms		
