@@ -7,6 +7,12 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+24.10.2019	2.1.0	url_check (Modul util): Austausch repr(exception) -> str(exception) - mit repr
+			fehlt der Fehlercode.
+			SingleBeitrag (Modul 3Sat): Geoblock-Info ergänzt (tagline), Plot-Info ergänzt,
+			Konvertierung des Sendetermins bei Userinfo "noch kein Video gefunden".
+			repl_json_chars (Modul util): Konvertierung '„' nach '>' (für Modul funk).	
+
 23.10.2019	2.0.9	Präsentation Geoblock-Info im Addon:
 			Geoblock-Info Modul funk: Anpassungen in ShowVideo.
 			Geoblock-Info Modul ZDFmobile: Anpassungen in ShowVideo, get_formitaeten,

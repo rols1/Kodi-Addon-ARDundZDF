@@ -45,8 +45,8 @@ import resources.lib.EPG				as EPG
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml
-VERSION =  '2.0.9'		 
-VDATE = '23.10.2019'
+VERSION =  '2.1.0'		 
+VDATE = '24.10.2019'
 
 # 
 #	
@@ -5132,13 +5132,14 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 		# 	fparams="&fparams=url=%s, title=%s, is_playable=%s" % (sname + ".m3u8", title, True)
 		# descr -> Plot	
 		tagline	 = tagline.replace('||','\n')				# s. tagline in ZDF_get_content
+		descr	 = descr.replace('||','\n')					# s. descr in ZDF_get_content
 		title = "autom. | %s" % title
 
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
 			(urllib.quote_plus(url_m3u8), urllib.quote_plus(title), urllib.quote_plus(thumb), 
 			urllib.quote_plus(descr), urllib.quote_plus(sub_path))	
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-			mediatype='video', tagline=tagline) 
+			mediatype='video', tagline=tagline, summary=descr) 
 
 	return li
 #-----------------------------
@@ -6652,7 +6653,7 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 						title = UtfToStr(title)
 
 						#   "auto"-Button + Ablage master.m3u8:
-						li = ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, tagline=tagline, descr=Plot_par,
+						li = ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, tagline='', descr=Plot,
 							sub_path=sub_path)	
 					else:									# m3u8 enthält Auflösungen high + med
 						title = 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' ' + facets 

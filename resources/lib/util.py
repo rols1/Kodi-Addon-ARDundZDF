@@ -702,7 +702,7 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	line_ret = line
 	for r in	(('"', ''), ('\\', ''), ('\'', '')
 		, ('&', 'und'), ('(', '<'), (')', '>'),  ('∙', '|')
-		, ('“', '<'), ('”', '>')):			
+		, ('„', '>'), ('“', '<'), ('”', '>')):			
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret
@@ -1440,7 +1440,7 @@ def url_check(url, caller=''):
 		PLog('Status: ' + str(r.getcode()))
 		return True
 	except urllib2.URLError as exception:
-		err = repr(exception)
+		err = str(exception)
 		msg1= '%s: Seite nicht erreichbar - Url:' % caller
 		msg2 = url
 		msg3 = 'Fehler: %s' % err

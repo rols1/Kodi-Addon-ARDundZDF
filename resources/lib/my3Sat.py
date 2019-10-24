@@ -853,7 +853,7 @@ def get_zdfplayer_content(li, content):
 #	hier auch m3u8-Videos verfügbar. 
 def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 	PLog('Funktion SingleBeitrag: ' + title)
-	PLog(dauer);PLog(duration); PLog(path)
+	PLog(dauer);PLog(duration);PLog(summ);PLog(path)
 	
 	Plot	 = title
 	Plot_par = summ										# -> PlayVideo
@@ -883,6 +883,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 	if 	apiToken == '' or profile_url == '':
 		if '<time datetime="' in page:
 			termin = stringextract('<time datetime="', '"', page)
+			termin = time_translate(termin)
 			msg1 = "(noch) kein Video gefunden, Sendetermin: %s" % termin
 		else:
 			msg1 = "keine Videoquelle gefunden. Seite:\n%s" % path
@@ -919,7 +920,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 		except Exception as exception:
 			PLog(str(exception))
 			page = ""
-		
+	
 	if 	'formitaeten' not in page:
 		msg1 = "keine Videoquelle gefunden. Seite:\n%s" % path
 		PLog(msg1)
@@ -929,9 +930,21 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 
 	if page:
 		formitaeten = blockextract('formitaeten', page)		# 4. einzelne Video-URL's ermitteln 
+		geoblock =  stringextract('geoLocation',  '}', page) 
+		geoblock =  stringextract('"value" : "',  '"', geoblock).strip()
+		PLog('geoblock: ' + geoblock);
+		if 	geoblock == 'none':								# i.d.R. "none", sonst "de" - wie bei ARD verwenden
+			geoblock = ' | ohne Geoblock'
+		else:
+			if geoblock == 'de':			# Info-Anhang für summary 
+				geoblock = ' | Geoblock DE!'
+			if geoblock == 'dach':			# Info-Anhang für summary 
+				geoblock = ' | Geoblock DACH!'
 			
 	download_list = []
-	tagline = "%s | %s " % (title, dauer)
+	tagline = "%s | %s %s" % (title, dauer, geoblock)
+	Plot_par = "%s||||%s"  % (tagline, Plot_par)
+	
 	thumb=img_src
 	for rec in formitaeten:									# Datensätze gesamt
 		# PLog(rec)		# bei Bedarf
@@ -971,7 +984,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 					#	auf Einzelauflösungen via Parseplaylist
 					#	
 					li = ardundzdf.ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, tagline=tagline, 
-						descr=tagline)
+						descr=summ)
 			
 				else:									# m3u8 enthält Auflösungen high + med
 					title = 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' ' + facets 
@@ -985,7 +998,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 						(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(thumb), 
 						urllib.quote_plus(Plot_par))	
 					addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-						mediatype='video', tagline=tagline) 
+						mediatype='video', tagline=tagline, summary=summ) 
 												
 	if SETTINGS.getSetting('pref_use_downloads'):
 		# high=0: 	1. Video bisher höchste Qualität:  [progressive] veryhigh
