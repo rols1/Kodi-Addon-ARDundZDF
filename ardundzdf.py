@@ -45,8 +45,8 @@ import resources.lib.EPG				as EPG
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml
-VERSION =  '2.1.0'		 
-VDATE = '24.10.2019'
+VERSION =  '2.1.1'		 
+VDATE = '25.10.2019'
 
 # 
 #	
@@ -1636,6 +1636,7 @@ def ARDSportPanel(title, path, img):
 	
 #--------------------------------------------------------------------------------------------------
 # Bilder für ARD Sportschau, z.B. Moderatoren
+# Einzelnes Listitem in Video-Addon nicht möglich - s.u.
 # Slideshow: ZDFSlideShow
 def ARDSportBilder(title, path, img):
 	PLog('ARDSportBilder:'); 
@@ -1724,12 +1725,16 @@ def ARDSportBilder(title, path, img):
 			tagline = headline
 			summ = unescape(summ)
 			PLog('Satz:');PLog(title);PLog(img_src);PLog(thumb);PLog(summ[0:40]);
-			if thumb:
+			title=UtfToStr(title);thumb=UtfToStr(thumb);
+			# Lösung mit einzelnem Listitem wie in ShowPhotoObject (FlickrExplorer) hier
+			#	nicht möglich (Playlist Player: ListItem type must be audio or video) -
+			#	Die li-Eigenschaft type='image' wird von Kodi nicht akzeptiert, wenn
+			#	addon.xml im provides-Feld video enthält
+			if thumb:										
 				fparams="&fparams={'path': '%s', 'single': 'True'}" % urllib2.quote(local_path)
 				addDir(li=li, label=lable, action="dirList", dirID="ZDFSlideShow", 
 					fanart=thumb, thumb=thumb, fparams=fparams, summary=summ)
-
-			image += 1
+				image += 1
 			
 	if image > 0:		
 		fparams="&fparams={'path': '%s'}" % urllib2.quote(fpath) 	# fpath: SLIDESTORE/fname
@@ -1737,7 +1742,7 @@ def ARDSportBilder(title, path, img):
 			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
 		
 
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #--------------------------------------------------------------------------------------------------
 # Die Videoquellen des WDR sind in SingleSendung nicht erreichbar. Wir laden
@@ -5132,12 +5137,13 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 		# 	fparams="&fparams=url=%s, title=%s, is_playable=%s" % (sname + ".m3u8", title, True)
 		# descr -> Plot	
 		tagline	 = tagline.replace('||','\n')				# s. tagline in ZDF_get_content
+		descr_par= descr
 		descr	 = descr.replace('||','\n')					# s. descr in ZDF_get_content
 		title = "autom. | %s" % title
 
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
 			(urllib.quote_plus(url_m3u8), urllib.quote_plus(title), urllib.quote_plus(thumb), 
-			urllib.quote_plus(descr), urllib.quote_plus(sub_path))	
+			urllib.quote_plus(descr_par), urllib.quote_plus(sub_path))	
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 			mediatype='video', tagline=tagline, summary=descr) 
 
@@ -6653,7 +6659,7 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 						title = UtfToStr(title)
 
 						#   "auto"-Button + Ablage master.m3u8:
-						li = ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, tagline='', descr=Plot,
+						li = ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, tagline='', descr=Plot_par,
 							sub_path=sub_path)	
 					else:									# m3u8 enthält Auflösungen high + med
 						title = 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' ' + facets 
@@ -6669,6 +6675,11 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 													
 	return li, download_list
 #-------------------------
+# Lösung mit einzelnem Listitem wie in ShowPhotoObject (FlickrExplorer) hier
+#	nicht möglich (Playlist Player: ListItem type must be audio or video) -
+#	Die li-Eigenschaft type='image' wird von Kodi nicht akzeptiert, wenn
+#	addon.xml im provides-Feld video enthält
+
 def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher Inhalt
 	PLog('ZDF_Bildgalerie:'); PLog(mode); PLog(title)
 	title_org = title

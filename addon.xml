@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.ardundzdf" name="ARD und ZDF" version="2.1.0" provider-name="rols1 (rols1@gmx.de)">
+<addon id="plugin.video.ardundzdf" name="ARD und ZDF" version="2.1.1" provider-name="rols1 (rols1@gmx.de)">
   <requires>
    <import addon="xbmc.python" version="2.25.0"/>
  </requires>
   <extension point="xbmc.python.pluginsource" library="ardundzdf.py">
-        <provides>video</provides>
+        <provides>video audio</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
 	<summary lang="de">ARD- und ZDF-Mediathek</summary>
