@@ -21,7 +21,7 @@
   	<setting label="Podcast-/Audiothek-Erweiterung verwenden" type="bool" id="pref_use_podcast" default="true"/>
     	<setting label="ARD Audiothek statt Podcasts Classic verwenden" type="bool" id="pref_use_audio" default="true"/>
 	<setting label="Pfad zur Podcast-Favoritenliste (ohne Pfad: Ressourcenverzeichnis)" type="file" id="pref_podcast_favorits" default="podcast-favorits.txt"/>
-	<setting label="Info: die ARD Audiothek enthält die Podcast-Favoriten" type="text" id="podinfo" enable="false"/>  
+	<setting label="Info: die Podcast-Favoriten befinden sich in der ARD Audiothek" type="text" id="podinfo" enable="false"/>  
  </category>
  
  <category label="Download Einstellungen">
@@ -57,7 +57,7 @@
   	<<setting label="Dauer der Aufnahme" type="labelenum" values="00:05:00 = 5 Minuten|00:15:00 = 15 Minuten"/>
   	<setting label="Titel enthält *Audiodeskription*" type="bool" id="pref_filter_audiodeskription" default="false"/>
  </category>
- <category label="Modul-Einstellungen">
+ <category label="Modul-Einstellungen" >
   	<setting label="Modul FUNK: Videoeinstellung für MP4-Sofortstart" type="select" id="pref_funk_bandw" default="1500:960x540"
   		values="400:320x180|650:640x360|900:720x404|1500:960x540|2500:1280x720|4000:1920x108|6000:1920x1080" />
  </category>

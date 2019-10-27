@@ -4,7 +4,7 @@
 #				Kanäle und Serien von https://www.funk.net/
 ################################################################################
 # 	Credits: cemrich (github) für die wichtigsten api-Calls
-#	Stand: 22.10.2019
+#	Stand: 27.10.2019
 #	
 
 import  json		
@@ -580,6 +580,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	geoblock=''
 	if geo:
 		geoblock =  " | Geoblock: %s"	% geo
+	geoblock=UtfToStr(geoblock)	
 														# 2. Video-Metadaten
 	x_cid	= "x-request-cid,%s" % x_cid							# x-request-cid
 	x_token = "x-request-token,f058a27469d8b709c3b9db648cae47c2"	# x-request-token
@@ -599,12 +600,6 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 		tokenHLS = jsonObject["result"]["protectiondata"]["tokenHLS"]
 		tokenDASH= jsonObject["result"]["protectiondata"]["tokenDASH"]
 		protected = True
-		
-		#if 'funk' not in server:						# Info: kein Zugang
-		#	msg1 = 'Vermutlich geschützter Inhalt: %s ' % title
-		#	msg2 = 'Server: %s' % server
-		#	msg3 = 'Alle Videoformate voraussichtlich nicht abspielbar'
-		#	xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		
 	PLog("server: "+ server)
 	PLog("tokenHLS: "+ tokenHLS); PLog("tokenDASH: "+ tokenDASH);
@@ -637,8 +632,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 		# leerer hdnts-Zusatz bei nicht geschützten Videos stört nicht.
  		# https://funk-01.akamaized.net/59536be8-46cc-4d1e-83b7-d7bab4b3eb5d/1633982_src_1920x1080_6000.mp4
 		mp4_urls.append("https://%s%s/%s_src_%s.mp4?hdnts=%s"	% (server,locator,entityId,form,tokenDASH))
-	PLog("mp4_urls: "+ str(mp4_urls))
-	
+	PLog("mp4_urls: "+ str(mp4_urls))	
 	
 	title=UtfToStr(title);
 	title = repl_json_chars(title)

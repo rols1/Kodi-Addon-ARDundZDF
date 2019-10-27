@@ -8,6 +8,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+27.10.2019	2.1.2	Modul funk: Fix ascii-Error (geoblock) - verhinderte Sofortstarts.
+			Modul funk: Info "geschützter Inhalt" entfernt - obsolet.	
+
 25.10.2019	2.1.1	ParseMasterM3u, show_formitaeten: Fix Plot ('\n' -> '||') (ZDF-Streams-Videos 
 			starteten nicht).
 			addon.xml: provides-Feld erweitert (video audio).
