@@ -137,7 +137,6 @@ def Main_NEW(name, CurSender=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		 		
 #---------------------------------------------------------------- 
-
 # Startseite der Mediathek - passend zum ausgewählten Sender -
 #		Hier wird die HTML-Seite geladen. Sie enthält Highlights + die ersten beiden Rubriken. 
 #		Der untere json-Abschnitt enthält die WidgetID's mit Links zu den restlichen Rubriken
@@ -146,6 +145,9 @@ def Main_NEW(name, CurSender=''):
 #	
 #		Um horizontales Scrolling (Nachladen innerhalb einer Rubrik) zu vermeiden, fordern
 #			wir via pageSize am path-Ende alle verfügbaren Beiträge an.
+# 27.10.2019 Laden aus Cache nur noch bei Senderausfall - vorheriges Laden mit ARDStartCacheTime
+#	als 1. Stufe störte beim Debugging
+#
 def ARDStart(title, sender, widgetID=''): 
 	PLog('ARDStart:'); 
 	
@@ -160,28 +162,23 @@ def ARDStart(title, sender, widgetID=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')								# Home-Button
 
-	# RSave('/tmp/x.html', page) 							# Debug
-
 	path = BETA_BASE_URL + "/%s/" % sender
-	# Seite aus Cache laden
-	page = Dict("load", 'ARDStartNEW_%s' % sendername, CacheTime=ARDStartCacheTime)					
-	if page == False:											# nicht vorhanden oder zu alt
-		page, msg = get_page(path=path)							# vom Sender holen
-	
-		if 'APOLLO_STATE__' not in page:						# Fallback: Cache ohne CacheTime
-			page = Dict("load", 'ARDStartNEW_%s' % sendername)					
-			msg1 = "Startseite nicht im Web verfuegbar."
-			PLog(msg1)
-			msg3=''
-			if page:
-				msg2 = "Seite wurde aus dem Addon-Cache geladen."
-				msg3 = "Seite ist älter als %s Minuten (CacheTime)" % str(ARDStartCacheTime/60)
-			else:
-				msg2='Startseite nicht im Cache verfuegbar.'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
-		else:	
-			Dict("store", 'ARDStartNEW_%s' % sendername, page) 	# Seite -> Cache: aktualisieren	
+	page, msg = get_page(path=path)							# vom Sender holen
+	if 'APOLLO_STATE__' not in page:						# Fallback: Cache ohne CacheTime
+		page = Dict("load", 'ARDStartNEW_%s' % sendername)					
+		msg1 = "Startseite nicht im Web verfuegbar."
+		PLog(msg1)
+		msg3=''
+		if page:
+			msg2 = "Seite wurde aus dem Addon-Cache geladen."
+			msg3 = "Seite ist älter als %s Minuten (CacheTime)" % str(ARDStartCacheTime/60)
+		else:
+			msg2='Startseite nicht im Cache verfuegbar.'
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
+	else:	
+		Dict("store", 'ARDStartNEW_%s' % sendername, page) 	# Seite -> Cache: aktualisieren	
 	PLog(len(page))
+	# RSave('/tmp/x.html', page) 							# Debug
 	
 	# möglich: 	swiper-stage, swiper-container, swiper-wrapper, swiper-slide								
 	if 'class="swiper-' in page:						# Highlights im Wischermodus
@@ -420,7 +417,7 @@ def get_pagination(page):
 		widget 	= stringextract('AutoCompilationWidget', '"type"', page)
 		widgetID= stringextract('Widget:', '"', widget)
 		href = href.replace('pages/ard', 'widgets/ard')		# leicht verändert!
-		PLog(widget);PLog(widgetID)
+		PLog(widget[:100]);PLog(widgetID)
 		
 	PLog('href_akt: %s' % href)
 	PLog('pageNumber: %s, pageSize: %s, totalElements:%s ' % (pageNumber, pageSize, totalElements))
@@ -541,8 +538,8 @@ def get_page_content(li, page, ID, mediatype='', mark=''):
 		PLog(targetID)
 		if targetID == '':										# kein Video
 			continue
-		
-		if '"availableTo":"' in s or 'Livestream' in ID:		# Einzelbeträge
+																# Einzelbeträge:
+		if '"availableTo":"' in s or '"duration":' in s or 'Livestream' in ID:		
 			mehrfach = False
 					
 		# Alternative: "%s/ard/player/%s"  % (BETA_BASE_URL,targetID), wenn
@@ -560,6 +557,7 @@ def get_page_content(li, page, ID, mediatype='', mark=''):
 					if '/compilation/' in h:
 						href = stringextract('"href":"', '"', h)
 						break
+						
 		title=''	
 		if 'longTitle":"' in s:
 			title 	= stringextract('longTitle":"', '"', s)
@@ -574,7 +572,8 @@ def get_page_content(li, page, ID, mediatype='', mark=''):
 			title = make_mark(mark, title, "red")	# farbige Markierung
 	
 		img 	= stringextract('src":"', '"', s)	
-		img 	= img.replace('{width}', '640')
+		img 	= img.replace('{width}', '640'); 
+		img= img.replace('u002F', '/')
 		summ 	= stringextract('synopsis":"', '"', s)	
 		summ 	= summ.decode(encoding="utf-8")
 			
@@ -650,22 +649,20 @@ def ARDStartSingle(path, title, duration, ID=''):
 	title = UtfToStr(title);  
 	title_org 	= title 
 	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
-
-	page, msg = get_page(path)					
+	page, msg = get_page(path)
 	if page == '':	
 		msg1 = "Fehler in ARDStartRubrik: %s"	% title
 		msg2=msg
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
-		return li
+		xbmcplugin.endOfDirectory(HANDLE)
 	PLog(len(page))
 	page= page.replace('\u002F', '/')						# 25.07.2019: Slashes neuerdings quotiert
 	
 	elements = blockextract('availableTo":', page)			# möglich: Mehrfachbeiträge? 
 	if len(elements) > 1:
 		PLog('%s Elemente -> ARDStartRubrik' % str(len(elements)))
-		return ARDStartRubrik(path,title)
+		return ARDStartRubrik(path,title,ID='ARDStartSingle')
+			
 	if len(elements) == 0:									# möglich: keine Video (dto. Web)
 		msg1 = 'keine Beiträge zu %s gefunden'  % title
 		PLog(msg1)
@@ -673,6 +670,9 @@ def ARDStartSingle(path, title, duration, ID=''):
 		xbmcplugin.endOfDirectory(HANDLE)	
 	PLog('elements: ' + str(len(elements)))	
 		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Neu')								# Home-Button
+
 	summ 		= stringextract('synopsis":"', '"', page)		# mit verfügbar wie	get_summary_pre
 	verf=''
 	if 'verfügbar bis:' in page:								# html mit Uhrzeit									
@@ -743,19 +743,20 @@ def ARDStartSingle(path, title, duration, ID=''):
 			urllib2.quote(geoblock), urllib2.quote(sub_path))
 	addDir(li=li, label=title_new, action="dirList", dirID="resources.lib.ARDnew.ARDStartVideoMP4", fanart=img, thumb=img, 
 		fparams=fparams, summary=summ_lable, tagline=tagline, mediatype=mediatype)	
-		
+	
+	gridlist=''	
 	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten).
 	if 	ID == 'mehrzS':											# nicht nochmal "mehr" zeigen
 		xbmcplugin.endOfDirectory(HANDLE)	
 	if 	'>Mehr aus der Sendung<' in page: 						# z.B. in Verpasst-Seiten
 		gridlist = blockextract( 'class="_focusable', page) 	# HTML-Bereich
-	if len(gridlist) == 0:
-		gridlist = blockextract( 'class="button _focusable"', page)	# Alternative - meist identisch
+	#if len(gridlist) == 0:										# Alternative - meist identisch,
+	#	gridlist = blockextract( 'class="button _focusable"', page)	# kann aber Senderlsite enthalten 
 	if len(gridlist) > 0:
 	 	PLog('gridlist_more: ' + str(len(gridlist)))	
 		li = get_ardsingle_more(li,gridlist,page)				# mediatype=video hier vermeiden			
 					
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #----------------------------------------------------------------
 # 										Mehr zur Sendung (Inhalte der Programmseite ARD-Neu)
 #	Aufruf: ARDStartSingle
@@ -866,7 +867,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 	addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 		mediatype='video', tagline=tagline, summary=summ_lable) 
 	
-	li = ardundzdf.Parseplaylist(li, href, img, geoblock, tagline=tagline, descr=summ, sub_path=sub_path)	# einzelne Auflösungen 		
+	li = ardundzdf.Parseplaylist(li, href, img, geoblock, descr=Plot, sub_path=sub_path)	# einzelne Auflösungen 		
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #---------------------------------------------------------------------------------------------------

@@ -45,8 +45,8 @@ import resources.lib.EPG				as EPG
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml
-VERSION =  '2.1.2'		 
-VDATE = '27.10.2019'
+VERSION =  '2.1.3'		 
+VDATE = '28.10.2019'
 
 # 
 #	
@@ -1889,7 +1889,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	
 	summ=UtfToStr(summ); summ=UtfToStr(summ); title=UtfToStr(title); 
 	if url.endswith('master.m3u8'):
-		li = Parseplaylist(li=li, url_m3u8=url, thumb=img, geoblock='', descr=summ, summary=summ)
+		li = Parseplaylist(li=li, url_m3u8=url, thumb=img, geoblock='', descr=summ)
 	else:
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
 			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
@@ -3237,10 +3237,10 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 			mediatype=mediatype, tagline=tagline, summary=summary) 
 						
-		summary_org = summary_org.replace('\n', '||')
-		summary = summary.replace('\n', '||')
+		if tagline:
+			descr = "%s\n\n%s" % (tagline, summary)
 
-		li = Parseplaylist(li, m3u8_master, thumb, geoblock=geoblock, tagline=tagline, summary=summary_org, descr=summary, 
+		li = Parseplaylist(li, m3u8_master, thumb, geoblock=geoblock, descr=descr, 
 			sub_path=sub_path)
 		#del link_path[0]								# master.m3u8 entfernen, Rest bei m3u8_master: mp4-Links
 		PLog(li)  										
@@ -3310,8 +3310,9 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 									
 			else:
 				summary = "%s\n%s" % (title, Format)		# 3. Podcasts mp3-Links, mp4-Links
-				summ_lable=summary_org.replace('||', '\n')	
-				summ_lable = "%s\n%s" % (tagline, Format)
+				summ_lable=summary_org.replace('||', '\n')
+				if tagline:	
+					summ_lable = "%s\n%s" % (tagline, summ_lable)
 				if ID == 'PODCAST':			# (noch) keine Header benötigt
 					lable = "%s. %s | %s" % (str(li_cnt), title, summary)
 					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
@@ -4928,14 +4929,16 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		geo = stringextract('<geoblock>', '</geoblock>', element)
 		PLog('geo: ' + geo)
 		if geo:
-			tagline = 'Livestream nur in Deutschland zu empfangen! %s'	% tagline
+			tagline = 'Livestream nur in Deutschland zu empfangen!'
 			
 		PLog(title); PLog(link); PLog(img); PLog(summary); PLog(tagline[0:80]);
 		Resolution = ""; Codecs = ""; duration = ""
 	
 		# if link.find('rtmp') == 0:				# rtmp-Streaming s. CreateVideoStreamObject
 		# Link zu master.m3u8 erst auf Folgeseite? - SenderLiveResolution reicht an  Parseplaylist durch
-		descr = "%s | %s" % (tagline, summary)		# -> Plot (PlayVideo) 
+		descr = summary
+		if tagline:
+			descr = "%s %s" % (tagline, descr)		# -> Plot (PlayVideo) 
 		fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s', 'descr': '%s'}" % (urllib.quote_plus(link), 
 			img, urllib.quote_plus(title), urllib.quote_plus(descr))
 		util.addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=fanart, thumb=img, 
@@ -4962,7 +4965,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''):
 	PLog('SenderLiveResolution:')
 	PLog(SETTINGS.getSetting('pref_video_direct'))
-	PLog(title)
+	PLog(title); PLog(descr)
 	title = UtfToStr(title)
 
 	page, msg = get_page(path=path)					# Verfügbarkeit des Streams testen
@@ -5051,7 +5054,10 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 		# jeweils 1 item mit http-Link für jede Auflösung.
 		
 		# Parseplaylist -> CreateVideoStreamObject pro Auflösungstufe
-		li = Parseplaylist(li, url_m3u8, thumb, geoblock='', tagline=title, descr=descr)	
+		PLog("title: " + title)
+		descr = "%s\n\n%s" % (title, descr)
+		PLog("descr: " + descr)
+		li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr)	
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)					
 	else:	# keine oder unbekannte Extension - Format unbekannt
 		msg1 = 'SenderLiveResolution: unbekanntes Format. Url:'
@@ -5598,7 +5604,7 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 				# PLog(rec); 	# bei Bedarf
 				#	Auswertung + Rückgabe aller  Bestandteile
 				sophId,path,title,descr,img_src,dauer,tag,NodePath,isvideo = get_teaserElement(rec)
-				lable = title
+				lable = title; clustertitle=tag
 				
 				if img_src == '':									# Fallback
 					img_src = R('icon-bild-fehlt.png')
@@ -5632,8 +5638,8 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 				descr = stringextract('teaser-text" >', '</', rec)	# -> tagline + Param.
 				
 			if descr and dauer:
-				descr = "%s | %s:\n\n%s" % (title, dauer, descr)
-				if clustertitle:
+				descr = "%s\n\n%s" % (dauer, descr)
+			if clustertitle:
 					descr = "%s | %s" % (clustertitle, descr)
 			if 'class="icon-502_play' in rec:
 				 isvideo=True	
@@ -5644,7 +5650,8 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 			title = repl_json_chars(title);
 			lable = unescape(lable); descr = unescape(descr)
 			descr = repl_json_chars(descr)
-			descr_par = ''					# n.b. in ZDF_Sendungen
+			# descr_par = ''					# n.b. in ZDF_Sendungen
+			descr_par = descr.replace('\n', '||')
 			
 			PLog('Satz:')
 			PLog(title);PLog(path);PLog(img_src);PLog(descr);PLog(dauer); PLog(isvideo);
@@ -5654,7 +5661,7 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 					urllib2.quote(img_src))
 				addDir(li=li, label=lable, action="dirList", dirID="ZDF_Sendungen", fanart=img_src, 
 					thumb=img_src, tagline=descr, fparams=fparams)
-			else:							# Einzelbeitrag direkt - anders als A-Z (ZDF_get_content)
+			else:							# Einzelbeitrag direkt - anders als A-Z (ZDF_get_content)				
 				fparams="&fparams={'title': '%s', 'url': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
 					(urllib2.quote(title),  urllib2.quote(path), urllib2.quote(descr_par),
 					urllib2.quote(img_src))
@@ -6308,7 +6315,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		else:											# Einzelseite	
 														# summary (Inhaltstext) im Voraus holen falls 
 														#	 leer oder identisch mit title:	
-			tag_par= "%s||||%s" % (tagline, summary)	# # -> ZDF_getVideoSources ohne Voraustext								
+			tag_par= "%s||||%s" % (tagline, summary)	# # -> ZDF_getVideoSources ohne Voraustext	
 			if summary == '' or summary == title:	
 				if SETTINGS.getSetting('pref_load_summary') == 'true':
 					summ_txt = get_summary_pre(path, 'ZDF')
@@ -6317,11 +6324,10 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 						tag_par = tag_par.replace('\n', '||')
 						summary = summ_txt			
 			
-			PLog("summary: " + summary); PLog("tagline: " + tagline)
 			tagline = UtfToStr(tagline)
 			tagline=repl_json_chars(tagline)		# json-komp. für func_pars in router()	
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (urllib2.quote(path),
-				urllib2.quote(title), thumb, urllib2.quote(tag_par))	
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" %\
+				(urllib2.quote(path), urllib2.quote(title), thumb, urllib2.quote(tag_par))	
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=thumb, thumb=thumb, 
 				fparams=fparams, summary=summary,  tagline=tagline, mediatype=mediatype)
 				
@@ -6345,6 +6351,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 # Subtitles: im Kopf der videodat-Datei enthalten (Endung .vtt). Leider z.Z. keine Möglichkeit
 #	bekannt, diese in Plex-Plugins einzubinden. Umsetzung in Kodi-Version OK (s. get_formitaeten).
 # Ladekette für Videoquellen s. get_formitaeten
+# tagline enthält hier tagline + summary (tag_par von ZDF_get_content)
 # 
 def ZDF_getVideoSources(url, title, thumb, tagline, segment_start=None, segment_end=None, Merk='false'):
 	PLog('ZDF_getVideoSources:'); PLog(url); PLog(tagline); 
@@ -6623,7 +6630,8 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 		Plot	 = title_call
 		Plot_par = title_call
 	tagline = tagline + geoblock
-	
+	PLog("Plot_par: " + Plot_par)
+
 	i = 0 	# Titel-Zähler für mehrere Objekte mit dem selben Titel (manche Clients verwerfen solche)
 	download_list = []		# 2-teilige Liste für Download: 'summary # url'	
 	for rec in formitaeten:									# Datensätze gesamt, Achtung unicode!
@@ -6652,6 +6660,7 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 						#	Param. Merk.
 						if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true':	# Sofortstart
 							PLog('Sofortstart: show_formitaeten')
+							PLog("Plot_par: " + Plot_par)
 							PlayVideo(url=url, title=title_call, thumb=thumb, Plot=Plot_par, sub_path=sub_path, Merk=Merk)
 							return li, ''	# sauber raus in ZDF_getVideoSources
 						
@@ -6666,7 +6675,7 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 						title = '%s. Qualitaet: %s | Typ: %s %s' % (str(i), quality, typ, facets)
 						title = UtfToStr(title)
 						download_list.append(title + '#' + url)				# Download-Liste füllen	
-						tagline	 = tagline.replace('||','\n')				# s. tagline in ZDF_get_content
+						tagline	 = Plot_par.replace('||','\n')				# wie m3u8-Formate
 						fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
 							(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(thumb), 
 							urllib.quote_plus(Plot_par), urllib.quote_plus(sub_path), Merk)	
@@ -6915,8 +6924,13 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, tagline='', summary='', 
 			
 			# quote für url erforderlich wg. url-Inhalt "..sd=10&rebase=on.." - das & erzeugt in router
 			#	neuen Parameter bei dict(parse_qsl(paramstring)
-			Plot="%s||||%s" % (tagline, descr)
-			descr=summary.replace('||', '\n')		
+			Plot = descr
+			if tagline:
+				Plot="%s||||%s" % (tagline, Plot)
+			if summary:
+				Plot="%s||||%s" % (summary, Plot)
+			Plot = Plot.replace('\n', '||')	
+			descr = Plot.replace('||', '\n')		
 		
 			if descr.strip() == '|':			# ohne EPG: EPG-Verbinder entfernen
 				descr=''

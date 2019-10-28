@@ -347,13 +347,14 @@ def SendungenDatum(SendDate, title):
 					
 		title = UtfToStr(title); descr = UtfToStr(descr)	
 		title = repl_json_chars(title); descr = repl_json_chars(descr); 
+		sendung = repl_json_chars(sendung)
 		descr_par =	descr.replace('\n', '||')	
 
-		PLog('Satz:')
+		PLog('Satz1:')
 		PLog(img_src);  PLog(href); PLog(sendung); PLog(tagline); PLog(descr);
 			 
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s', 'duration': ''}" %\
-			(urllib2.quote(sendung), urllib2.quote(href), urllib2.quote(img_src), descr_par, dauer)
+			(urllib2.quote(sendung), urllib2.quote(href), urllib2.quote(img_src), urllib2.quote(descr_par), dauer)
 		addDir(li=li, label=sendung, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 			thumb=img_src, summary=descr, tagline=dauer, fparams=fparams)
 			 					 	

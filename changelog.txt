@@ -8,8 +8,23 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+28.10.2019	2.1.3	get_page_content (Modul ARD Neu): Zusatz duration für die Erkennung von
+			Einzelbeträgen (relevant bei einigen Mehr-Sendungen in ARDStartSingle.
+			ARDStart (Modul ARD Neu): Laden aus Cache nur noch bei Senderausfall.
+			ZDFRubrikSingle: title aus descr entfernt (Doppler in show_formitaeten).
+			show_formitaeten: tagline mp4- an m3u8-Formate angepasst.
+			ARDStartVideoStreams (Modul ARD Neu) + Parseplaylist (Haupt-PRG): Plot
+			an Sofortstart angepasst.
+			ARDSportVideo: summary bei Parseplaylist-Aufruf entfernt (Doppler).
+			icon-speaker.png geändert: Hintergrund schwarz, Symbol weiß (transp.
+			Icon war auf schwarzem Hintergrund nicht sichtbar). 
+			SenderLiveListe: überflüssiges "|" in descr entfernt.
+			SendungenDatum (Modul 3Sat): router-kompatible Behandl. für sendung
+			und descr_par.
+
 27.10.2019	2.1.2	Modul funk: Fix ascii-Error (geoblock) - verhinderte Sofortstarts.
-			Modul funk: Info "geschützter Inhalt" entfernt - obsolet.	
+			Modul funk: Info "geschützter Inhalt" entfernt - obsolet.
+			addon.xml: provides-Feld wieder auf video reduziert (Abstürze).	
 
 25.10.2019	2.1.1	ParseMasterM3u, show_formitaeten: Fix Plot ('\n' -> '||') (ZDF-Streams-Videos 
 			starteten nicht).

@@ -702,7 +702,7 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	line_ret = line
 	for r in	(('"', ''), ('\\', ''), ('\'', '')
 		, ('&', 'und'), ('(', '<'), (')', '>'),  ('∙', '|')
-		, ('„', '>'), ('“', '<'), ('”', '>')):			
+		, ('„', '>'), ('“', '<'), ('”', '>'),('°', ' Grad')):			
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret
@@ -1304,6 +1304,8 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 	PLog(sub_path);
 	
 	Plot=transl_doubleUTF8(Plot)
+	Plot=(Plot.replace('[B]', '').replace('[/B]', ''))	# Kodi-Problem: [/B] wird am Info-Ende platziert
+	
 	if url_check(url, caller='PlayVideo') == False:
 		if IsPlayable == 'true':								# true
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
