@@ -79,6 +79,9 @@ def PLog(msg, loglevel=xbmc.LOGDEBUG):
 #	Liste item von Aufrufer erzeugt
 def home(li, ID):												
 	PLog('home: ' + str(ID))	
+	if SETTINGS.getSetting('pref_nohome') == 'true':	# keine Homebuttons
+		return li
+
 	title = 'Zurück zum Hauptmenü ' + str(ID)
 	summary = title
 	

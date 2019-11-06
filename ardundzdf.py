@@ -45,8 +45,8 @@ import resources.lib.EPG				as EPG
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml
-VERSION =  '2.1.3'		 
-VDATE = '28.10.2019'
+VERSION =  '2.1.4'		 
+VDATE = '06.11.2019'
 
 # 
 #	
