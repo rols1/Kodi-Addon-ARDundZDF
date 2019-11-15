@@ -10,8 +10,6 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #		
  
-from builtins import str
-from builtins import range
 import time
 import datetime
 from datetime import date
@@ -54,7 +52,6 @@ def EPG(ID, mode=None, day_offset=None):
 	today_human = datetime.datetime.fromtimestamp(int(today_5Uhr))
 	today_human =  today_human.strftime("%d.%m.%Y, %H:%M Uhr")			# deutsches Format mit Offset (Datumanzeige ab ...)
 	
-	PLog('EPGSatz:')
 	PLog(now); PLog(now_human); PLog(today_human);
 	# PLog(today); PLog(today_5Uhr); PLog(nextday); PLog(nextday_5Uhr)	# bei Bedarf
 
@@ -101,7 +98,6 @@ def EPG(ID, mode=None, day_offset=None):
 			if mode == 'OnlyNow':				# aus EPG_ShowAll - nur aktuelle Sendung
 				rec = [starttime,href,img,sname,stime,summ,vonbis]  # Index wie EPG_rec
 				# PLog(rec)
-				PLog('EPG_EndOnlyNow')
 				return rec						# Rest verwerfen - Ende		
 		
 		iWeekday = transl_wtag(s_startday)
@@ -114,7 +110,7 @@ def EPG(ID, mode=None, day_offset=None):
 		EPG_rec.append(rec)											# Liste Gesamt (2-Dim-Liste)
 	
 	EPG_rec.sort()						# Sortierung	
-	PLog(len(EPG_rec)); PLog('EPG_End')
+	PLog(len(EPG_rec))
 	return EPG_rec
 #-----------------------
 def get_summ(block):		# Beschreibung holen

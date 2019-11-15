@@ -1,13 +1,4 @@
 # -*- coding: utf-8 -*-
-
-# Python3-Kompatibilität:
-from __future__ import division
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from past.utils import old_div
-
 # XBM
 import xbmc	
 import xbmcaddon
@@ -16,12 +7,11 @@ import xbmcgui
 
 # Python
 import string
-import urllib.request, urllib.parse, urllib.error			
-from urllib.parse import parse_qsl, urlencode
-from urllib.parse import quote, unquote, quote_plus, unquote_plus	# save space
-
+import urllib			# urllib.quote()
+from urlparse import parse_qsl
+from urllib import urlencode
 import base64 			# url-Kodierung für Kontextmenüs 
-import urllib.request, urllib.error, urllib.parse			# urllib2.Request
+import urllib2			# urllib2.Request
 import os, subprocess 	# u.a. Behandlung von Pfadnamen
 import shlex			# Parameter-Expansion für subprocess.Popen (os != windows)
 import sys				# Plattformerkennung
@@ -45,24 +35,17 @@ CalculateDuration=util.CalculateDuration; time_translate=util.time_translate; se
 get_keyboard_input=util.get_keyboard_input; transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; 
 ReadFavourites=util.ReadFavourites; get_summary_pre=util.get_summary_pre; get_playlist_img=util.get_playlist_img; 
 get_startsender=util.get_startsender; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio;
-transl_pubDate=util.transl_pubDate; BytesToUnicode=util.BytesToUnicode;
+transl_pubDate=util.transl_pubDate; 
 
 import resources.lib.updater 			as updater		
 import resources.lib.EPG				as EPG		
-# Modul-Importe unabhängig vom Setting ständig laden - sonst
-#	müsste das Nachladen in router und ShowFavs einzeln ge-
-#	regelt werden. 
-import resources.lib.Podcontent 		as Podcontent					# ARD-Radio-Podcasts
-import resources.lib.zdfmobile											# ZDFmobile		
-import resources.lib.ARDnew												# ARD Neu
-import resources.lib.my3Sat												# 3Sat
-import resources.lib.funk												# funk
-																		
+# import resources.lib.ARD_Bildgalerie 	as ARD_Bildgalerie	# 10.12.2018 ARD-Link nicht mehr verfügbar
+
 
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml
-VERSION =  '2.2.0'		 
+VERSION =  '2.2.1'		 
 VDATE = '15.11.2019'
 
 # 
@@ -227,11 +210,21 @@ ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path')
+ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]
 HANDLE			= int(sys.argv[1])
 
+# Modul-Importe unabhängig vom Setting ständig laden - sonst
+#	müsste das Nachladen in router und ShowFavs einzeln ge-
+#	regelt werden. 
+# Module EPG + updater s.o.
+import resources.lib.Podcontent 		as Podcontent					# ARD-Radio-Podcasts
+import resources.lib.zdfmobile											# ZDFmobile		
+import resources.lib.ARDnew												# ARD Neu
+import resources.lib.my3Sat												# 3Sat
+import resources.lib.funk												# funk
+																		
 
 ICON = R(ICON)
 PLog("ICON: " + ICON)
@@ -296,13 +289,13 @@ def Main():
 	title="Suche in ARD und ZDF"
 	if SETTINGS.getSetting('pref_use_classic') == 'true':
 		tagline = 'gesucht wird in ARD  Mediathek Classic und in der ZDF Mediathek '
-		fparams="&fparams={'title': '%s'}" % quote(title)
+		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
 		addDir(li=li, label=title, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
 			thumb=R('suche_ardundzdf.png'), tagline=tagline, fparams=fparams)
 	else:
 		tagline = 'gesucht wird in ARD  Mediathek Neu und in der ZDF Mediathek.'
 		summ	= 'Gesucht wird nur nach Einzelbeiträgen - Sendereihen bleiben unberücksichtigt.'
-		fparams="&fparams={'title': '%s'}" % quote(title)
+		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tagline, 
 			summary=summ, fparams=fparams)
@@ -416,7 +409,7 @@ def Main():
 			summary = 'Addon aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
 			# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
 			url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
-			fparams="&fparams={'url': '%s', 'ver': '%s'}" % (quote_plus(url), latest_version) 
+			fparams="&fparams={'url': '%s', 'ver': '%s'}" % (urllib.quote_plus(url), latest_version) 
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.updater.update", fanart=R(FANART), 
 				thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary)
 			
@@ -433,8 +426,8 @@ def Main():
 	summary = 'Störungsmeldungen an Forum oder rols1@gmx.de'
 	tagline = 'für weitere Infos (changelog.txt) klicken'
 	path = os.path.join(ADDON_PATH, "changelog.txt") 
-	title = u"Änderungsliste (changelog.txt)"
-	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))
+	title = "Änderungsliste (changelog.txt)"
+	fparams="&fparams={'path': '%s', 'title': '%s'}" % (urllib2.quote(path), urllib2.quote(title))
 	addDir(li=li, label='Info', action="dirList", dirID="ShowText", fanart=R(FANART), thumb=R(ICON_INFO), 
 		fparams=fparams, summary=summary, tagline=tagline)
 				
@@ -461,13 +454,13 @@ def Main_ARD(name, sender=''):
 	PLog("li:" + str(li))						
 			
 	title="Suche in ARD-Mediathek"		# ARD-New verwendet die Classic-Suche
-	fparams="&fparams={'title': '%s', 'query': '', 'channel': 'ARD'}" % quote(title)
+	fparams="&fparams={'title': '%s', 'query': '', 'channel': 'ARD'}" % urllib2.quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MAIN_ARD), 
 		thumb=R(ICON_SEARCH), fparams=fparams)
 		
 	img = R(ICON_MAIN_ARD_Classic)
 	title = 'Start | Sender: alle Sender' 
-	fparams="&fparams={'title': '%s'}" % (quote(title))
+	fparams="&fparams={'title': '%s'}" % (urllib2.quote(title))
 	addDir(li=li, label=title, action="dirList", dirID="ARDStart", fanart=img, thumb=img, 
 		fparams=fparams)
 
@@ -486,7 +479,7 @@ def Main_ARD(name, sender=''):
 	next_cbKey = 'SinglePage'	
 	url = BASE_URL + '/tv/Rubriken/mehr?documentId=21282550'
 	fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
-		% (quote(title), quote(url), next_cbKey)
+		% (urllib2.quote(title), urllib2.quote(url), next_cbKey)
 	addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_RUBRIKEN) , 
 		thumb=R(ICON_ARD_RUBRIKEN) , fparams=fparams)
 				
@@ -522,7 +515,7 @@ def Main_ZDF(name):
 		thumb=R(ICON_ZDF_SEARCH), fparams=fparams)
 
 	title = 'Startseite' 
-	fparams="&fparams={'title': '%s'}" % (quote(title))
+	fparams="&fparams={'title': '%s'}" % (urllib2.quote(title))
 	addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=R(ICON_MAIN_ZDF), thumb=R(ICON_MAIN_ZDF), 
 		fparams=fparams)
 
@@ -583,31 +576,31 @@ def Main_POD(name):
 
 	title = 'Rubriken'	
 	fparams="&fparams={'title': '%s', 'morepath': '%s', 'next_cbKey': 'SinglePage', 'ID': 'PODCAST', 'mode': 'Sendereihen'}" \
-		% (title,quote(POD_RUBRIK))
+		% (title,urllib2.quote(POD_RUBRIK))
 	addDir(li=li, label=title, action="dirList", dirID="PODMore", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_RUBRIK), 
 		fparams=fparams)
 
 	title="Radio-Feature"	 
 	fparams="&fparams={'title': '%s', 'morepath': '%s', 'next_cbKey': 'SingleSendung', 'ID': 'PODCAST', 'mode': 'Sendereihen'}" \
-		% (title,quote(POD_FEATURE))
+		% (title,urllib2.quote(POD_FEATURE))
 	addDir(li=li, label=title, action="dirList", dirID="PODMore", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_FEATURE), 
 		fparams=fparams)
 
 	title="Radio-Tatort"
 	fparams="&fparams={'title': '%s', 'morepath': '%s', 'next_cbKey': 'SingleSendung', 'ID': 'PODCAST', 'mode': 'Sendereihen'}" \
-		% (title,quote(POD_TATORT))
+		% (title,urllib2.quote(POD_TATORT))
 	addDir(li=li, label=title, action="dirList", dirID="PODMore", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_TATORT), 
 	fparams=fparams)
 		 
 	title="Neueste Audios"	 
 	fparams="&fparams={'title': '%s', 'morepath': '%s', 'next_cbKey': 'SingleSendung', 'ID': 'PODCAST', 'mode': 'Sendereihen'}" \
-		% (title,quote(POD_NEU))
+		% (title,urllib2.quote(POD_NEU))
 	addDir(li=li, label=title, action="dirList", dirID="PODMore", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_NEU), 
 		fparams=fparams)
 
 	title="Meist abgerufen"	 
 	fparams="&fparams={'title': '%s', 'morepath': '%s', 'next_cbKey': 'SingleSendung', 'ID': 'PODCAST', 'mode': 'Sendereihen'}" \
-		% (title,quote(POD_MEIST))
+		% (title,urllib2.quote(POD_MEIST))
 	addDir(li=li, label=title, action="dirList", dirID="PODMore", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_MEIST), 
 		fparams=fparams)
 
@@ -618,7 +611,7 @@ def Main_POD(name):
 	addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_REFUGEE), 
 		fparams=fparams, tagline=tag, summary=summ)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
 #----------------------------------------------------------------
 # Liste der Rubriken - Hub: AudioStartRubrik -> Audio_get_rubrik
@@ -650,15 +643,13 @@ def AudioStart(title):
 		title_list.append('Unsere Favoriten')
 	if "Sendungsauswahl Sammlungen" in page:
 		title_list.append('Sammlungen')
-	if u'aria-label="Meistgehört"' in page:
-		title_list.append(u'Meistgehört')
-	if u'Sendungsauswahl Ausgewählte Sendungen' in page:
-		title_list.append(u'Ausgewählte Sendungen')
+	if 'aria-label="Meistgehört"' in page:
+		title_list.append('Meistgehört')
+	if "Sendungsauswahl Ausgewählte Sendungen" in page:
+		title_list.append('Ausgewählte Sendungen')
 	title_list.append('Themen');
 	
 	for title in title_list:
-		PLog(title)
-		title=UtfToStr(title);
 		fparams="&fparams={'title': '%s', 'ID': '%s'}" % (title, title)	
 		addDir(li=li, label=title, action="dirList", dirID="AudioStartRubrik", fanart=R(ICON_MAIN_AUDIO), 
 			thumb=R(ICON_DIR_FOLDER), fparams=fparams)
@@ -682,7 +673,7 @@ def AudioStart(title):
 	addDir(li=li, label=title, action="dirList", dirID="AudioStartLive", fanart=R(ICON_MAIN_AUDIO), 
 		thumb=R(ICON_AUDIO_LIVE), fparams=fparams)
 	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 #----------------------------------------------------------------
 # Die Startseite liefert html/json gemischt. mp3-Url wird im html-Bereich
@@ -721,11 +712,11 @@ def AudioStartRubrik(title, ID, path=''):
 		gridlist = blockextract('class="swiper-slide"', stage)
 		li = Audio_get_rubriken(li, gridlist, page, ID)
 	if ID == 'Meistgehört':			# Einzelbeiträge
-		stage = stringextract(u'aria-label="Meistgehört"', u'Sendungsauswahl Ausgewählte Sendungen', page)
+		stage = stringextract('aria-label="Meistgehört"', 'Sendungsauswahl Ausgewählte Sendungen', page)
 		gridlist = blockextract('label="Episode abspielen"', stage)  # skip 1. Label
 		li = Audio_get_sendungen(li, gridlist, page, ID)
 	if ID == 'Ausgewählte Sendungen':
-		stage = stringextract(u'Sendungsauswahl Ausgewählte Sendungen', 'id="footer"', page)
+		stage = stringextract('Sendungsauswahl Ausgewählte Sendungen', 'id="footer"', page)
 		gridlist = blockextract('class="swiper-slide"', stage)
 		li = Audio_get_rubriken(li, gridlist, page, ID)
 		
@@ -735,7 +726,7 @@ def AudioStartRubrik(title, ID, path=''):
 		gridlist = blockextract('label="Episode abspielen"', page)  # wie Meistgehört
 		li = Audio_get_sendungen(li, gridlist, page, ID)  # page s.o.
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #----------------------------------------------------------------
 def AudioStart_AZ(title):		
 	PLog('AudioStart_AZ:')
@@ -768,7 +759,7 @@ def AudioStart_AZ(title):
 		
 		PLog('Satz:');
 		PLog(button); PLog(href); 
-		title=UtfToStr(title);
+		 
 		fparams="&fparams={'button': '%s'}" % button
 		addDir(li=li, label=title, action="dirList", dirID="AudioStart_AZ_content", fanart=R(ICON_MAIN_AUDIO), 
 			thumb=img, fparams=fparams)													
@@ -841,10 +832,9 @@ def AudioStart_AZ_content(button):
 		
 		PLog('Satz:');
 		PLog(title); PLog(img); PLog(url); PLog(feed_url); 
-		title=UtfToStr(title);
- 
+		 
 		fparams="&fparams={'path': '%s', 'title': '%s'}" %\
-			(quote(feed_url), quote(title))
+			(urllib2.quote(feed_url), urllib2.quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="AudioContentXML", 
 			fanart=R(ICON_MAIN_AUDIO), thumb=img, fparams=fparams)													
 		
@@ -925,19 +915,14 @@ def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams
 		for rec in gridlist:
 			title 	= stringextract('title:"', '"', rec)	# Anfang Satz
 			if title == '':
-				continue
-			
+				continue	
 			img 	= stringextract('image_16x9:"', '"', rec)		
 			img		= img.replace('{width}', '640')	
 			descr 	= stringextract('synopsis:"', '",', rec)	
-			
-			PLog(title); PLog(type(path));PLog(type(my_sender));PLog(type(title));
-	
-			url 	= "{0}/{1}/{2}".format(path, my_sender, title)	# nicht website_url verwenden
+			url 	= "%s/%s/%s" % (path, my_sender, title)	# nicht website_url verwenden
 			url		= url.lower()
 			url= url.replace(' ', '-')			# Webseiten-URL: Blanks -> -
 			url= url.replace(',', '-')			# dto Komma -> -
-			url= (url.replace("b'", '').replace("'", ''))   # Byte-Mark entfernen
 			
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)	
@@ -945,9 +930,8 @@ def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams
 						
 			PLog('Satz:');
 			PLog(title); PLog(img); PLog(url); PLog(descr);
-			descr=UtfToStr(descr);
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
-				quote(title), quote(img), quote_plus(summ_par))
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
+				urllib2.quote(title), urllib2.quote(img), urllib.quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="AudioLiveSingle", fanart=img, thumb=img, 
 				fparams=fparams, summary=descr, mediatype='music')	
 					
@@ -1016,9 +1000,8 @@ def AudioStartThemen(li):							# Themen der Startseite (/kategorie)
 			
 		PLog('Satz:');
 		PLog(title); PLog(img); PLog(href);  PLog(descr);
-		title=UtfToStr(title);	descr=UtfToStr(descr);	
 		fparams="&fparams={'title': '%s', 'ID': '%s', 'path': '%s'}" %\
-			(quote(title), 'Themen-Single', quote(href))	
+			(title, 'Themen-Single', urllib2.quote(href))	
 		addDir(li=li, label=title, action="dirList", dirID="AudioStartRubrik", fanart=img, 
 			thumb=img, summary=descr, fparams=fparams)
 	
@@ -1048,8 +1031,7 @@ def Audio_get_rubriken(li, gridlist, page, ID):		# extrahiert Rubriken
 				
 		PLog('Satz:');
 		PLog(title); PLog(img); PLog(href);  PLog(descr);
-		title=UtfToStr(title); descr=UtfToStr(descr);
-		fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
+		fparams="&fparams={'url': '%s', 'title': '%s'}" % (urllib2.quote(href), urllib2.quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="Audio_get_rubrik", fanart=img, thumb=img, fparams=fparams, 
 			summary=descr)	
 		cnt=cnt+1
@@ -1123,15 +1105,14 @@ def Audio_get_sendungen(li, gridlist, page, ID):	# extrahiert Einzelbeiträge
 			
 		PLog('Satz:');
 		PLog(title); PLog(img); PLog(href);  PLog(mp3_url);
-		title=UtfToStr(title); summ_par=UtfToStr(summ_par); descr=UtfToStr(descr);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
-			quote(title), quote(img), quote_plus(summ_par))
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(mp3_url), 
+			urllib2.quote(title), urllib2.quote(img), urllib.quote_plus(summ_par))
 		if mp3_url:
 			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, fparams=fparams, 
 				summary=descr)
 		else:
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(href), 
-				quote(title), quote(img), quote_plus(summ_par))
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(href), 
+				urllib2.quote(title), urllib2.quote(img), urllib.quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="AudioSingle", fanart=img, thumb=img, fparams=fparams, 
 				summary=descr, mediatype='music')
 			
@@ -1218,11 +1199,9 @@ def AudioSearch(title, query=''):
 	PLog(query)
 	if  query == None or query.strip() == '':
 		return ""
-	query = query.strip()
-	query_org = query	
-	query=BytesToUnicode(query)		# decode, falls erf. (1. Aufruf)
 	
-	path = base  % quote(query)
+	query = UtfToStr(query)	
+	path = base  % urllib2.quote(query)
 	page, msg = get_page(path=path)	
 	if page == '':	
 		msg1 = "Fehler in AudioSearch:"
@@ -1232,7 +1211,7 @@ def AudioSearch(title, query=''):
 	PLog(len(page))				
 	page = page.replace('\\"', '*')							# quotiere Marks entf.
 	
-	name = 'Suchergebnis zu: ' + unquote(query)
+	name = 'Suchergebnis zu: ' + urllib2.unquote(query)
 	AudioContentJSON(query, page, pagenr='1')				# kehrt nicht zurück
 		
 	return		
@@ -1277,7 +1256,7 @@ def AudioContentJSON(title, page, pagenr=''):
 		title=UtfToStr(title); descr=UtfToStr(descr); rubrik=UtfToStr(rubrik); 
 		PLog(rubrik); PLog(title); PLog(img); PLog(href)
 		fparams="&fparams={'path': '%s', 'title': '%s'}" %\
-			(quote(url_xml), quote(title))
+			(urllib2.quote(url_xml), urllib2.quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="AudioContentXML", fanart=img, thumb=img, 
 			fparams=fparams, summary=descr)													
 		cnt=cnt+1
@@ -1312,8 +1291,8 @@ def AudioContentJSON(title, page, pagenr=''):
 		PLog('Satz:');
 		title=UtfToStr(title); descr=UtfToStr(descr); rubrik=UtfToStr(rubrik); 
 		PLog(dauer); PLog(rubrik); PLog(title); PLog(img); PLog(url)
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
-			quote(title), quote(img), quote_plus(summ_par))
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
+			urllib2.quote(title), urllib2.quote(img), urllib.quote_plus(summ_par))
 		addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, fparams=fparams, 
 			summary=descr)
 		cnt=cnt+1
@@ -1340,8 +1319,8 @@ def AudioContentJSON(title, page, pagenr=''):
 		tag = "weiter zu Seite %d" % page_next
 		PLog(tag)
 		title = UtfToStr(title)
-		fparams="&fparams={'url': '%s', 'title': '%s', 'pagenr': '%d'}" % (quote(href), 
-			quote(title), page_next)
+		fparams="&fparams={'url': '%s', 'title': '%s', 'pagenr': '%d'}" % (urllib2.quote(href), 
+			urllib2.quote(title), page_next)
 		PLog('Merk0')
 		addDir(li=li, label=title, action="dirList", dirID="Audio_get_rubrik", fanart=img, thumb=img, fparams=fparams, 
 			tagline=tag)	
@@ -1395,8 +1374,8 @@ def AudioContentXML(title, path):
 		PLog('Satz:');
 		title=UtfToStr(title); descr=UtfToStr(descr);  
 		PLog(title); PLog(url); PLog(link); PLog(datum);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
-			quote(title), quote(img), quote_plus(summ_par))
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
+			urllib2.quote(title), urllib2.quote(img), urllib.quote_plus(summ_par))
 		addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, fparams=fparams, 
 			summary=descr)
 		cnt=cnt+1
@@ -1429,8 +1408,8 @@ def AudioPlayMP3(url, title, thumb, Plot):
 	summary = Plot.replace('||', '\n')			# Display
 	 
 	PLog(title); PLog(url); PLog(Plot);
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
-		quote(title), quote(thumb), quote_plus(Plot))
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
+		urllib2.quote(title), urllib2.quote(thumb), urllib.quote_plus(Plot))
 	addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
 		summary=summary, mediatype='music')
 	
@@ -1460,15 +1439,16 @@ def ARDSport(title):
 		msg2, msg3 = msg.split('|')
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
-	PLog(len(page))	
+	PLog(len(page))
+	page = UtfToStr(page)
 	
 	title = "Live"								# Zusatz: Live (fehlt in tabpanel)
 	href = 'https://www.sportschau.de/ticker/index.html'
 	img = R(ICON_DIR_FOLDER)
 	# summ = "Livestreams nur hier im Menü [B]Live[/B] oder unten bei den Direktlinks unterhalb der Moderatoren"
 	tagline = 'aktuelle Liveberichte (Video, Audio)'
-	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
-		quote(href), quote(img))
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (urllib2.quote(title), 
+		urllib2.quote(href), urllib2.quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, fparams=fparams)			
 
@@ -1488,11 +1468,9 @@ def ARDSport(title):
 			href = SBASE + '/hintergrund/index.html'		# Ergebnisse ohne Videos
 			title = 'Hintergrund'
 		
-		PLog('Satz:'); 
-		PLog(href); PLog(title);		
-		title=UtfToStr(title); 	
-		fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
-			quote(href), quote(img))
+		PLog('Satz:'); PLog(href); PLog(title); 
+		fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (urllib2.quote(title), 
+			urllib2.quote(href), urllib2.quote(img))
 		addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
 			thumb=img, fparams=fparams)			
 	 	
@@ -1500,8 +1478,8 @@ def ARDSport(title):
 	href = 'https://www.sportschau.de/sendung/index.html'
 	img =  'https://www1.wdr.de/unternehmen/der-wdr/unternehmen/bundesliga-sportschau-jessy-wellmer-100~_v-gseaclassicxl.jpg'
 	tagline = 'Bilder von Moderatoren, Slideshow'
-	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
-		quote(href), quote(img))
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (urllib2.quote(title), 
+		urllib2.quote(href), urllib2.quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportBilder", fanart=img, 
 		thumb=img, tagline=tagline, fparams=fparams)			
 
@@ -1526,14 +1504,14 @@ def ARDSport(title):
 	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
 	if not mediatype:										# Einzelauflösungen
 		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ))
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ))
 		addDir(li=li, label=title, action="dirList", dirID="show_single_bandwith", fanart=img, thumb=img, fparams=fparams, 
 			summary=summ) 		
 	else:
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ), Merk)
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			mediatype=mediatype, summary=summ) 		
 
@@ -1545,14 +1523,14 @@ def ARDSport(title):
 	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
 	if not mediatype:										# Einzelauflösungen
 		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ))
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ))
 		addDir(li=li, label=title, action="dirList", dirID="show_single_bandwith", fanart=img, thumb=img, fparams=fparams, 
 			summary=summ) 		
 	else:
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ), Merk)
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			mediatype=mediatype, summary=summ) 		
 
@@ -1564,14 +1542,14 @@ def ARDSport(title):
 	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
 	if not mediatype:										# Einzelauflösungen
 		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ))
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ))
 		addDir(li=li, label=title, action="dirList", dirID="show_single_bandwith", fanart=img, thumb=img, fparams=fparams, 
 			summary=summ) 		
 	else:
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ), Merk)
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			mediatype=mediatype, summary=summ) 	
 			
@@ -1597,15 +1575,6 @@ def ARDSportPanel(title, path, img):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 
-	SBASE = 'https://www.sportschau.de'
-	pre_sendungen = ''; tdm_seite=False
-	# Seite "TOR DES MONATS" voranstellen, Folgeseite Retro-Inhalt
-	if path.endswith('sendung/tdm/index.html'): 
-		pre_path = SBASE + '/sendung/tdm/abstimmung/tordesmonatsvideos104.html'
-		page, msg = get_page(path=pre_path)	
-		pre_sendungen = blockextract('class="teaser ', page)
-		PLog(len(pre_sendungen))	
-	
 	page, msg = get_page(path=path)		
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
@@ -1613,33 +1582,25 @@ def ARDSportPanel(title, path, img):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
 	PLog(len(page))
+	page = UtfToStr(page)
 	
-	if path.endswith('/video/index.html'):			# Struktur abweichend
-		sendungen = blockextract('<a href="', page)
-	else:
-		sendungen = blockextract('class="teaser"', page)
-		PLog(len(sendungen))
-		if pre_sendungen:							# Seite "TOR DES MONATS"
-			pre_sendungen.extend(sendungen)	
-			sendungen = pre_sendungen
-			tdm_seite=True
+	sendungen = blockextract('class="teaser"', page)	
 	PLog(len(sendungen))
 	
 	mediatype=''
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 			
+	SBASE = 'https://www.sportschau.de'
 	for s in sendungen:
-		myclass = stringextract('div class="media mediaA ', '>', s)
-		PLog("myclass: " + myclass)
-		if "video" not in myclass and "audio" not in myclass:
-			continue
-		duration=''
-		if 'uration"' in s:
-			duration = 	stringextract('duration">', '<', s)			# Video im Beitrag?
+		pos = s.find('<!-- googleon: all -->')	# "Javascript-Fehler" entfernen
+		if pos > 0:
+			s = s[pos:]
+		if 'media mediaA video' not in s and 'media mediaA audio  video' not in s  and 'media mediaA audio' not in s:			
+			continue												# Video im Beitrag?
 		path 		= stringextract('href="', '"', s)	
-		if path.startswith('http')	== False:						# http://www.ard.de/ ?
-				path = SBASE + stringextract('href="', '"', s)		
+		if path.startswith('http')	== False:
+			path 	= SBASE + stringextract('href="', '"', s)		
 		img			= stringextract('srcset="', '"', s)				# erste = größtes Bild
 		if img.startswith('//'):									# //www1.wdr.de/..
 			img	= 'https:' + img
@@ -1647,36 +1608,27 @@ def ARDSportPanel(title, path, img):
 			if img.startswith('http') == False:						# /sendung/moderatoren/
 				img	= SBASE + img
 		title		= stringextract('class="headline">', '</h', s)
-		if title == '':
-			title = stringextract('<span>', '</strong>', s)			# Videosseite: Kleinbeiträge unten
-		if title == '':
-			title = stringextract('title="', '"', s)				# ev. als Bildtitel
 		summ		= stringextract('teasertext">', '<strong>', s)
-		if summ:
-			if duration:
-				summ = summ + " | " + "Dauer " + duration
-		else:
-			summ = "Dauer " + duration
-		
 		title		= mystrip(title); title = cleanhtml(title)
 		title		= repl_json_chars(title)
 		summ		= unescape(summ); summ = mystrip(summ)
 		summ		= cleanhtml(summ); summ=repl_json_chars(summ)
 		title=title.strip(); summ=summ.strip();						# zusätzl. erf.
-		if title == '' or path == '':
+		if title == '':
 			continue
 		
-		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
+		if 'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
 			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
 				continue		
 			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
 				continue		
 		
 		PLog('Satz:')
-		title=UtfToStr(title); summ=UtfToStr(summ); img=UtfToStr(img);  path=UtfToStr(path);
+		path=UtfToStr(path); img=UtfToStr(img); title=UtfToStr(title); summ=UtfToStr(summ);  
 		PLog(path); PLog(img); PLog(title); PLog(summ); 
+
 		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
-			(quote(path), quote(title), quote(img), quote(summ))				
+			(urllib2.quote(path), urllib2.quote(title), urllib2.quote(img), urllib2.quote(summ))				
 		addDir(li=li, label=title, action="dirList", dirID="ARDSportVideo", fanart=img, thumb=img, 
 			fparams=fparams, summary=summ, mediatype=mediatype)		 
 
@@ -1700,6 +1652,7 @@ def ARDSportBilder(title, path, img):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
 	PLog(len(page))
+	page = UtfToStr(page)
 	
 	content = blockextract('class="teaser"', page)	
 	PLog(len(content))
@@ -1762,7 +1715,7 @@ def ARDSportBilder(title, path, img):
 			local_path = os.path.abspath(local_path)
 			if os.path.isfile(local_path) == False:			# schon vorhanden?
 				try:
-					urllib.request.urlretrieve(img_src, local_path)
+					urllib.urlretrieve(img_src, local_path)
 					thumb = local_path
 				except Exception as exception:
 					PLog(str(exception))	
@@ -1772,19 +1725,19 @@ def ARDSportBilder(title, path, img):
 			tagline = headline
 			summ = unescape(summ)
 			PLog('Satz:');PLog(title);PLog(img_src);PLog(thumb);PLog(summ[0:40]);
-			lable=UtfToStr(lable); summ=UtfToStr(summ);
+			title=UtfToStr(title);thumb=UtfToStr(thumb);
 			# Lösung mit einzelnem Listitem wie in ShowPhotoObject (FlickrExplorer) hier
 			#	nicht möglich (Playlist Player: ListItem type must be audio or video) -
 			#	Die li-Eigenschaft type='image' wird von Kodi nicht akzeptiert, wenn
 			#	addon.xml im provides-Feld video enthält
 			if thumb:										
-				fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
+				fparams="&fparams={'path': '%s', 'single': 'True'}" % urllib2.quote(local_path)
 				addDir(li=li, label=lable, action="dirList", dirID="ZDFSlideShow", 
 					fanart=thumb, thumb=thumb, fparams=fparams, summary=summ)
 				image += 1
 			
 	if image > 0:		
-		fparams="&fparams={'path': '%s'}" % quote(fpath) 	# fpath: SLIDESTORE/fname
+		fparams="&fparams={'path': '%s'}" % urllib2.quote(fpath) 	# fpath: SLIDESTORE/fname
 		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDFSlideShow", 
 			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
 		
@@ -1797,15 +1750,17 @@ def ARDSportBilder(title, path, img):
 #	übergeben an PlayVideo.
 def ARDSportVideo(path, title, img, summ, Merk='false'):
 	PLog('ARDSportVideo:'); 
-
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
 	title = UtfToStr(title); img = UtfToStr(img); summ = UtfToStr(summ);
 	Merk = UtfToStr(Merk);
 	title_org = title
 		
 	page, msg = get_page(path=path)		
+	page = UtfToStr(page)
 
 	# Livestream-Problematik 
-	# todo: für nächstes Großereignis anpassen
+	# todo: nach WM entfernen
 	#	s. Forum https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF Post 472ff
 	# Button ist Behelfslösung für Frauen-Fußball-WM - url via chrome-developer-tools ermittelt
 	# Button ist zusätzl. dauerhaft im Menü ARD Sportschau (Livestream 3) platziert.
@@ -1814,8 +1769,8 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		summ = 'bitte die FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
 		mediatype = 'video'
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ), Merk)
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			mediatype=mediatype, summary=summ) 
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)	
@@ -1836,16 +1791,6 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 			base = 'https://' + path.split('/')[2]						# Bsp. fifafrauenwm.sportschau.de
 			video_src = base + playerurl
 		PLog(video_src)
-	
-	if video_src == '':
-		msg1 = 'Leider kein Video gefunden. Seite:'
-		msg2 = path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
-	
-		
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD')						# Home-Button
 
 	if '-ardplayer_image-' in video_src:							# Bsp. Frauen-Fußball-WM
 		# Debug-Url's:
@@ -1879,8 +1824,8 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 			return
 		
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-			(quote_plus(m3u8_url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ), Merk)
+			(urllib.quote_plus(m3u8_url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			summary=summ) 
 			
@@ -1893,8 +1838,8 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 				title = "Audio MP3 | %s" % title_org
 			
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-				(quote_plus(m3u8_url), quote_plus(title), quote_plus(img), 
-				quote_plus(summ), Merk)
+				(urllib.quote_plus(m3u8_url), urllib.quote_plus(title), urllib.quote_plus(img), 
+				urllib.quote_plus(summ), Merk)
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 				summary=summ) 
 			
@@ -1947,15 +1892,14 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		li = Parseplaylist(li=li, url_m3u8=url, thumb=img, geoblock='', descr=summ)
 	else:
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ), Merk)
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
+			urllib.quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			mediatype=mediatype, summary=summ) 
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
 ####################################################################################################
-# 
 def SearchUpdate(title):		
 	PLog('SearchUpdate:')
 	li = xbmcgui.ListItem()
@@ -1972,25 +1916,23 @@ def SearchUpdate(title):
 	int_lv = ret[0]			# Version Github
 	int_lc = ret[1]			# Version aktuell
 	latest_version = ret[2]	# Version Github, Format 1.4.1
-	
 	summ = ret[3]			# Changes
 	tag = ret[4]			# tag, Bsp. 029
 	
 	# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
 	url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
+
 	PLog(int_lv); PLog(int_lc); PLog(latest_version); PLog(summ);  PLog(url);
 	
 	if int_lv > int_lc:		# zum Testen drehen (akt. Addon vorher sichern!)			
 		title = 'Update vorhanden - jetzt installieren'
 		summary = 'Addon aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
-		PLog(type(summary));PLog(type(latest_version));
-
 		tagline = cleanhtml(summ)
 		thumb = R(ICON_UPDATER_NEW)
-		fparams="&fparams={'url': '%s', 'ver': '%s'}" % (quote_plus(url), latest_version) 
+		fparams="&fparams={'url': '%s', 'ver': '%s'}" % (urllib.quote_plus(url), latest_version) 
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.updater.update", 
 			fanart=R(ICON_UPDATER_NEW), thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary, 
-			tagline=summ)
+			tagline=cleanhtml(summ))
 			
 		title = 'Update abbrechen'
 		summary = 'weiter im aktuellen Addon'
@@ -2053,7 +1995,7 @@ def ARDStart(title):
 			msg3=''
 			if page:
 				msg2 = "Seite wurde aus dem Addon-Cache geladen."
-				msg3 = "Seite ist älter als %s Minuten (CacheTime)" % str(old_div(CacheTime,60))
+				msg3 = "Seite ist älter als %s Minuten (CacheTime)" % str(CacheTime/60)
 			else:
 				msg2='Startseite nicht im Cache verfuegbar.'
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
@@ -2098,12 +2040,12 @@ def ARDStart(title):
 			href = 'https://classic.ardmediathek.de/tv/Rubriken/mehr?documentId=21282550'
 			img = R(ICON_ARD_RUBRIKEN)
 			fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': 'SinglePage', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
-				% (quote(title),  quote(href))
+				% (urllib2.quote(title),  urllib2.quote(href))
 			addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
 				thumb=img, fparams=fparams)
 		else:	
-			fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'sendername': '%s', 'ID': '%s'}" % (quote(href), 
-				quote(title), quote(img), sendername, ID)
+			fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'sendername': '%s', 'ID': '%s'}" % (urllib2.quote(href), 
+				urllib2.quote(title), urllib2.quote(img), sendername, ID)
 			addDir(li=li, label=title, action="dirList", dirID="ARDStartRubrik", fanart=img, thumb=img, 
 				fparams=fparams)
 		
@@ -2114,7 +2056,7 @@ def ARDStart(title):
 		href =  BASE_URL + "/tv/Neueste-Videos/mehr?documentId=21282466"
 		img = R(ICON_ARD_NEUESTE)			
 		fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': 'SinglePage', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
-			% (quote(title),  quote(href))
+			% (urllib2.quote(title),  urllib2.quote(href))
 		addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
 			thumb=img, fparams=fparams)
 			
@@ -2123,11 +2065,11 @@ def ARDStart(title):
 		href =  BASE_URL + "/tv/Am-besten-bewertet/mehr?documentId=21282468"
 		img = R(ICON_ARD_BEST)
 		fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': 'SinglePage', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
-			% (quote(title),  quote(href))
+			% (urllib2.quote(title),  urllib2.quote(href))
 		addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
 			thumb=img, fparams=fparams)
 	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE)
 #---------------------------------------------------------------------------------------------------
 	
 # Auflistung einer Rubrik aus ARDStart - title (ohne unescape) ist eindeutige Referenz 
@@ -2189,7 +2131,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 	sendungen = blockextract('class="teaser"', gridlist)
 	PLog(len(sendungen))
 	for s in sendungen:
-		# PLog(s)		# Debug
+		PLog(s)		# Debug
 		tagline=''; summ=''; mediatype=''
 		# Achtung: gleichz. Vorkommen von 'bcastId=' + 'documentId=' kein Indiz für einz. Sendung.
 		href 	= BASE_URL + stringextract('href="', '"', s) # OK häufig auch bei Classic-Version
@@ -2230,6 +2172,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 			
 		if 	title == '':
 			continue
+		title=UtfToStr(title); tagline=UtfToStr(tagline); subline=UtfToStr(subline);
 		title=unescape(title); 	
 		title=repl_json_chars(title) 		# dto.
 		tagline=repl_json_chars(tagline) 	# dto.
@@ -2241,10 +2184,9 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 		
 		# -> SenderLiveResolution wie SenderLiveListe aus Hauptmenü, Fallback zum Classic-Senderlink
 		#		bei Fehlschlag	
-		if	ID == 'Livestreams':
-			title=UtfToStr(title); subline=UtfToStr(subline); 		
+		if	ID == 'Livestreams':	
 			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Startsender': 'true'}" %\
-				(quote(href), quote(title), quote(img), quote(subline))
+				(href, title, img, subline)
 			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
 				thumb=img, fparams=fparams, summary=subline, mediatype=mediatype)					
 		else:	
@@ -2260,26 +2202,24 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 				Plot = "%s||||%s" % (subline, summ)			# für Sofortstart/Plot in SingleSendung
 				Plot = Plot.replace('\n', '||')				# \n aus summ -> ||
 				
-				if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
+				if 'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
 					if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
 						continue		
 					if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
 						continue	
 							
 				PLog("Satz_Swiper:") 
-				PLog(path); PLog(title); 
-				title=UtfToStr(title); summ=UtfToStr(summ); subline=UtfToStr(subline); 		
+				PLog(path); PLog(title); 		
 				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
-					% (quote(path), quote(title), quote(img), 
-					duration, quote(Plot),  quote(subline), 'ARD', '0')				
+					% (urllib2.quote(path), urllib2.quote(title), urllib2.quote(img), 
+					duration, urllib2.quote(Plot),  urllib2.quote(subline), 'ARD', '0')				
 				addDir(li=li, label=title, action="dirList", dirID="SingleSendung", fanart=img, thumb=img, 
 					fparams=fparams, summary=summ, tagline=subline, mediatype=mediatype)			
 			else:
 			
 				next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl  SinglePage
-				title=UtfToStr(title); tagline=UtfToStr(tagline); 	
 				fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
-					% (quote(title), quote(href), quote(next_cbKey))
+					% (urllib2.quote(title), urllib2.quote(href), next_cbKey)
 				addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
 					thumb=img, fparams=fparams, tagline=tagline)
 	
@@ -2289,13 +2229,12 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 			title 	= "ALLE ZEIGEN"
 			tagline	= "%s zu >%s<" % (title, title_org)
 			next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl  SinglePage
-			title=UtfToStr(title); tagline=UtfToStr(tagline); 	
 			fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
-				% (quote(title), quote(more_path), quote(next_cbKey))
+				% (urllib2.quote(title), urllib2.quote(more_path), next_cbKey)
 			addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
 				thumb=img, fparams=fparams, tagline=tagline)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE)
 			
 ####################################################################################################
 # 	Auflistung 0-9 (1 Eintrag), A-Z (einzeln) 
@@ -2355,11 +2294,11 @@ def SendungenAZ(name, ID):
 		else:
 			mode = 'Sendereihen'
 			fparams="&fparams={'title': '%s', 'path': '%s', 'next_cbKey': '%s', 'mode': '%s', 'ID': '%s'}" \
-				% (quote(title), quote(azPath), next_cbKey, mode, ID)
+				% (urllib2.quote(title), urllib2.quote(azPath), next_cbKey, mode, ID)
 			addDir(li=li, label=title, action="dirList", dirID="SinglePage", fanart=R(ICON_ARD_AZ), 
 				thumb=R(ICON_ARD_AZ), fparams=fparams)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 ####################################################################################################
 # Suche in beiden Mediatheken
@@ -2378,24 +2317,19 @@ def SearchARDundZDF(title, query='', pagenr=''):
 	if  query == None or query.strip() == '':
 		return ""
 		
-	query=BytesToUnicode(query)		# decode, falls erf. (1. Aufruf)
 	PLog(query)
 	query_ard = query.split('|')[0]
 	query_zdf = query.split('|')[1]
 	
-	PLog('Mark0')
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)												# Home-Button
-	PLog('Mark0.0')
-	tag_negativ =u'neue Suche in ARD und ZDF starten'					# ohne Treffer
-	tag_positiv =u'gefundene Beiträge zeigen'							# mit Treffer
+	tag_negativ ='neue Suche in ARD und ZDF starten'					# ohne Treffer
+	tag_positiv ='gefundene Beiträge zeigen'							# mit Treffer
 	
 	
 	#------------------------------------------------------------------	# Suche ARD
-	PLog('Mark1')
 	path =  BASE_URL +  ARD_Suche 
-	path_ard = path % quote(query_ard)
-	PLog('Mark2')
+	path_ard = path % urllib2.quote(query_ard)
 	page, msg = get_page(path=path_ard)	
 	channel='ARD'
 
@@ -2404,7 +2338,7 @@ def SearchARDundZDF(title, query='', pagenr=''):
 	if '<strong>keine Treffer</strong' in page:
 		title="Suche in ARD und ZDF"
 		label = "ARD | nichts gefunden zu: %s | neue Suche" % query_lable
-		fparams="&fparams={'title': '%s'}" % quote(title)
+		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
 		addDir(li=li, label=label, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
 			thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
 	else:	
@@ -2416,9 +2350,8 @@ def SearchARDundZDF(title, query='', pagenr=''):
 			
 		title = "ARD: %s Seite(n) | %s" % (str(cnt), query_lable)
 		PLog(query_ard)
-		title=UtfToStr(title); tag_positiv=UtfToStr(tag_positiv); 
 		fparams="&fparams={'title': '%s', 'query': '%s', 'channel': '%s'}" %\
-			(quote(title), quote(query_ard), channel)
+			(title, urllib.quote_plus(query_ard), channel)
 		addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R('suche_ardundzdf.png'), 
 			thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
 		
@@ -2426,22 +2359,22 @@ def SearchARDundZDF(title, query='', pagenr=''):
 	ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&contentTypes=episode&sortBy=date&page=%s'
 	if pagenr == '':		# erster Aufruf muss '' sein
 		pagenr = 1
-	path_zdf = ZDF_Search_PATH % (quote(query_zdf), pagenr) 
+	path_zdf = ZDF_Search_PATH % (urllib2.quote(query_zdf), pagenr) 
 	page, msg = get_page(path=path_zdf)	
 	searchResult = stringextract('data-loadmore-result-count="', '"', page)	# Anzahl Ergebnisse
 	PLog(searchResult);
 	
 	query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
-	query_lable = unquote(query_lable)
+	query_lable = urllib2.unquote(query_lable)
 	if searchResult == '0' or 'class="artdirect " >' not in page:		# Sprung hierher
 		label = "ZDF | nichts gefunden zu: %s | neue Suche" % query_lable
 		title="Suche in ARD und ZDF"
-		fparams="&fparams={'title': '%s'}" % quote(title)
+		fparams="&fparams={'title': '%s'}" % urllib2.quote(title)
 		addDir(li=li, label=label, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
 			thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
 	else:	
 		title = "ZDF: %s Video(s)  | %s" % (searchResult, query_lable)
-		fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (quote_plus(query_zdf), 
+		fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (urllib.quote_plus(query_zdf), 
 			title, pagenr)
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R('suche_ardundzdf.png'), 
 			thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
@@ -2461,22 +2394,20 @@ def Search(title, query='', channel='ARD'):
 	PLog(query)
 	if  query == None or query.strip() == '':
 		return ""
-	query_org = query	
-	query=BytesToUnicode(query)		# decode, falls erf. (1. Aufruf)
 	
-	name = 'Suchergebnis zu: ' + unquote(query)
+	query = UtfToStr(query)	
+	name = 'Suchergebnis zu: ' + urllib2.unquote(query)
 		
 	li = xbmcgui.ListItem()		
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 			
 	if channel == 'ARD':
 		path =  BASE_URL +  ARD_Suche 
-		path = path % quote(query)
+		path = path % urllib2.quote(query)
 		ID='ARD'
-	if channel == 'PODCAST':
-		ID = channel	
+	if channel == 'PODCAST':	
 		path =  BASE_URL  + POD_SEARCH
-		path = path % quote(query)
+		path = path % urllib2.quote(query)
 		if query == "Refugee Radio":				# 28.07.2019 direkt - Suche führt nicht mehr zu POD_REFUGEE
 			Search_refugee()
 			return li	
@@ -2484,7 +2415,7 @@ def Search(title, query='', channel='ARD'):
 	PLog(path)
 	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 		'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'}"
-	headers=quote(headers)					# headers ohne quotes in get_page leer 
+	headers=urllib2.quote(headers)					# headers ohne quotes in get_page leer 
 	page, msg = get_page(path=path, header=headers)	
 	if page == '':						
 		msg1 = 'Fehler in Suche: %s' % title
@@ -2517,18 +2448,19 @@ def Search(title, query='', channel='ARD'):
 	if 	pagenr_suche:							# Ergebnisse mit mehreren Seiten -> Seitenübersicht
 		li = home(li, ID=ID)					# Home-Button nur für mehrere Seiten
 		next_cbKey = 'SingleSendung'
+		query=UtfToStr(query); channel=UtfToStr(channel);
 		for pagenr in pagenr_path:
 			mode = 'Suche|%s|%s'	% (query, channel) # abgefangen in get_query: |
 			href = path + '&mresults=page.%s' %  pagenr
 			# PLog(href)
 			title = 'Weiter zu Seite %s' %  pagenr
-			title=UtfToStr(title); 
+			href=UtfToStr(href); mode=UtfToStr(mode);
 			fparams="&fparams={'title': '%s', 'path': '%s', 'next_cbKey': '%s', 'mode': '%s', 'ID': '%s'}" \
-				% (quote(name), quote(href), next_cbKey,  mode, ID)	
+				% (urllib2.quote(name), urllib2.quote(href), next_cbKey,  mode, ID)	
 			addDir(li=li, label=title, action="dirList", dirID="SinglePage", fanart=R(ICON_NEXT), 				
 				thumb=R(ICON_MAIN_ARD), fparams=fparams)
 
-	else:										# Ergebnisse mit 1 Seite, wir springen direkt:
+ 	else:										# Ergebnisse mit 1 Seite, wir springen direkt:
 		SinglePage(title=title, path=path, next_cbKey='SingleSendung', mode='Suche', ID=ID)
 
 	xbmcplugin.endOfDirectory(HANDLE)			# cacheToDisc nicht verwenden - so.o.AudioSearch
@@ -2538,7 +2470,7 @@ def Search(title, query='', channel='ARD'):
 #	blendet Tastatur ein und fragt Suchwort(e) ab.
 #	
 def get_query(channel='ARD'):
-	PLog('get_query:'); PLog(channel)
+	PLog('get_query:')
 	query = get_keyboard_input()			# Modul util
 	if  query == None or query.strip() == '':
 		return ""
@@ -2599,7 +2531,7 @@ def Search_refugee(path=''):
 			label 	= "Weiter zu Seite %d" % i
 			title	= "Refugee-Radio, %s" % label
 			PLog(url)
-			fparams="&fparams={'path': '%s'}" % quote(url)	
+			fparams="&fparams={'path': '%s'}" % urllib2.quote(url)	
 			addDir(li=li, label=label, action="dirList", dirID="Search_refugee", fanart=img, 				
 				thumb=img, fparams=fparams)
 			i=i+1
@@ -2634,7 +2566,7 @@ def Search_refugee(path=''):
 		PLog("Satz_ref:")
 		PLog(label); PLog(tag); PLog(summ); PLog(mp3_url); PLog(Plot);
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
-			(quote(mp3_url), quote(label), quote(img), quote_plus(Plot))
+			(urllib2.quote(mp3_url), urllib2.quote(label), urllib2.quote(img), urllib.quote_plus(Plot))
 		addDir(li=li, label=label, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
 			summary=summ, tagline=tag)		
 
@@ -2695,12 +2627,12 @@ def VerpasstWoche(name, title):		# Wochenliste zeigen, name: ARD, ZDF Mediathek
 			if kanal == '' and sendername != 'ARD-Alle': # Sender noch ohne Kanalnummer? 
 				summ = 'Gezeigt wird der Inhalt für %s - Seite für %s fehlt!' % ('ARD-Alle', sendername)
 			fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': 'SinglePage', 'mode': 'Verpasst', 'ID': 'ARD'}" \
-				% (quote(title),  quote(iPath))
+				% (urllib2.quote(title),  urllib2.quote(iPath))
 			addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_VERP), 
 				thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=summ)
 
 		else:
-			fparams="&fparams={'title': '%s', 'zdfDate': '%s'}" % (title, quote(zdfDate))
+			fparams="&fparams={'title': '%s', 'zdfDate': '%s'}" % (title, urllib2.quote(zdfDate))
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=R(ICON_ZDF_VERP), 
 				thumb=R(ICON_ZDF_VERP), fparams=fparams)
 
@@ -2746,7 +2678,7 @@ def PODMore(title, morepath, next_cbKey, ID, mode):
 		path = morepath + '&' + prefix + '1' # 1. Seite, morepath würde auch reichen
 		PLog(path)
 		fparams="&fparams={'path': '%s', 'title': '%s', 'next_cbKey':'%s', 'mode': '%s', 'ID': '%s'}"  \
-			% (quote_plus(path), title, next_cbKey, mode, ID)
+			% (urllib.quote_plus(path), title, next_cbKey, mode, ID)
 		addDir(li=li, label=title, action="dirList", dirID="SinglePage", fanart=R(ICON_NEXT), thumb=R(ICON_NEXT), 
 			fparams=fparams)
 		
@@ -2755,7 +2687,7 @@ def PODMore(title, morepath, next_cbKey, ID, mode):
 			title = 'Weiter zu Seite ' + page_nr
 			PLog(path)
 			fparams="&fparams={'path': '%s', 'title': '%s', 'next_cbKey': '%s', 'mode': '%s', 'ID': '%s'}"  \
-				% (quote_plus(path),title, next_cbKey, mode, ID)
+				% (urllib.quote_plus(path),title, next_cbKey, mode, ID)
 			addDir(li=li, label=title, action="dirList", dirID="SinglePage", fanart=R(ICON_NEXT), thumb=R(ICON_NEXT), 
 				fparams=fparams)
 	else:										# bei nur 1 Seite springen wir direkt, z.Z. bei Rubriken
@@ -2832,7 +2764,7 @@ def PodFavoritenListe(title, offset=0):
 		title = UtfToStr(title)
 		summary='Favoriten: ' + title
 		fparams="&fparams={'title': '%s', 'path': '%s'}" % \
-			(quote(title), quote(path))
+			(urllib2.quote(title), urllib2.quote(path))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodFavoriten", 
 			fanart=R(ICON_STAR), thumb=R(ICON_STAR), fparams=fparams, summary=path, 
 			tagline=summary)
@@ -2843,11 +2775,11 @@ def PodFavoritenListe(title, offset=0):
 		new_offset = cnt + int(offset)
 		PLog(new_offset)
 		summ = 'Mehr (insgesamt ' + str(max_len) + ' Favoriten)'
-		fparams="&fparams={'title': '%s', 'offset': '%s'}" % (quote(title_org), new_offset)
+		fparams="&fparams={'title': '%s', 'offset': '%s'}" % (urllib2.quote(title_org), new_offset)
 		addDir(li=li, label=summ, action="dirList", dirID="PodFavoritenListe", fanart=R(ICON_MEHR), 
 			thumb=R(ICON_MEHR), fparams=fparams, summary=title_org, tagline='Favoriten')
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 ####################################################################################################
 # z.Z. nur Hörfassungen - siehe ZDF (BarriereArm)	
@@ -2861,8 +2793,8 @@ def BarriereArmARD(name):		#
 
 	title = 'Hörfassungen (ARD-Suche)'							# ARD-Suche nach Hörfassungen
 	title = UtfToStr(title)										#	mode=Suche
-	query = quote(title, "utf-8")
-	path = BASE_URL + ARD_Suche	%   quote('Hörfassungen', "utf-8")
+	query = urllib2.quote(title, "utf-8")
+	path = BASE_URL + ARD_Suche	%   urllib2.quote('Hörfassungen', "utf-8")
 	
 	if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true' or \
 		SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
@@ -2872,29 +2804,29 @@ def BarriereArmARD(name):		#
 	
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 	fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Suche', 'ID': 'ARD'}" \
-		% (quote(title), quote(path), next_cbKey)
+		% (urllib2.quote(title), urllib2.quote(path), next_cbKey)
 	addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_BARRIEREARM), 
 		thumb=R(ICON_ARD_HOERFASSUNGEN), fparams=fparams)
 
 	title = 'Tagesschau mit Gebärdensprache'					# Tagesschau-mit-Gebärdensprache
 	title = UtfToStr(title)										#	mode=Sendereihen
-	query = quote(title, "utf-8")
+	query = urllib2.quote(title, "utf-8")
 	path =  BASE_URL + '/tv/Tagesschau-mit-Geb%C3%A4rdensprache/Sendung?documentId=12722002&bcastId=12722002'
 	
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 	fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
-		% (quote(title), quote(path), next_cbKey)
+		% (urllib2.quote(title), urllib2.quote(path), next_cbKey)
 	addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_BARRIEREARM), 
 		thumb=R(ICON_ARD_BARRIEREARM), fparams=fparams)
 
 	title = 'Untertitel (ARD-Suche)'							# ARD-Suche nach Untertiteln
 	title = UtfToStr(title)										#	mode=Suche
-	query = quote(title, "utf-8")
+	query = urllib2.quote(title, "utf-8")
 	path = BASE_URL + ARD_Suche	%  'Untertitel'
 	
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 	fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Suche', 'ID': 'ARD'}" \
-		% (quote(title), quote(path), next_cbKey)
+		% (urllib2.quote(title), urllib2.quote(path), next_cbKey)
 	addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_BARRIEREARM), 
 		thumb=R(ICON_ARD_BARRIEREARM), fparams=fparams)
 
@@ -2974,16 +2906,16 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 	else:
 		first_site = False
 		
-	PLog("first_site: " + str(first_site))
+	PLog(first_site)
 	if  first_site == True:										
 		path_page1 = path
 		title = 'Weiter zu Seite 1'
 		next_cbKey = 'SingleSendung'
 			
 		PLog(first_site); PLog(path_page1); PLog(next_cbKey)
-		title =UtfToStr(title)
+		path_page1 = UtfToStr(path_page1)
 		fparams="&fparams={'title': '%s', 'path': '%s', 'next_cbKey': 'SingleSendung', 'mode': '%s', 'ID': '%s'}" \
-			% (quote(title), quote(path_page1), quote(mode), ID)	
+			% (urllib2.quote(title), urllib2.quote(path_page1), mode, ID)	
 		addDir(li=li, label=title, action="dirList", dirID="SinglePage", fanart=ICON, thumb=ICON, fparams=fparams)
 	
 	else:	# Folgeseite einer Mehrfachseite - keine Liste mehr notwendig
@@ -3013,9 +2945,8 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 			
 		PLog('href: ' + href); PLog('title: ' + title)
 		next_cbKey = 'SingleSendung'
-		title =UtfToStr(title)
 		fparams="&fparams={'title': '%s', 'path': '%s', 'next_cbKey': '%s', 'mode': '%s', 'ID': '%s'}" \
-			% (quote(title), quote(href), quote(next_cbKey), quote(mode), ID)	
+			% (urllib2.quote(title), urllib2.quote(href), next_cbKey, mode, ID)	
 		addDir(li=li, label=title, action="dirList", dirID="SinglePage", fanart=R(ICON_NEXT), 
 			thumb=R(ICON_NEXT), fparams=fparams)
  
@@ -3026,7 +2957,7 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 # durchgehend angezeigt (im Original collapsed)
 def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 	PLog('SinglePage: ' + path)
-	PLog('mode: ' + mode); PLog('next_cbKey: ' + next_cbKey); PLog('ID: ' + ID)
+	PLog('mode: ' + mode); PLog('next_cbKey: ' + next_cbKey); PLog('ID: ' + str(ID))
 	li = xbmcgui.ListItem()
 	li = home(li, ID=ID)							# Home-Button
 	
@@ -3064,8 +2995,8 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 		PLog(dummy); PLog(query); PLog(channel); 
 		title = 'Suchergebnis zu: %s'  % query
 		label = 'Zurück zur Seitenübersicht'
-		fparams="&fparams={'title': '%s', 'query': '%s',  'channel': '%s'}" % (quote(title), \
-			quote(query), channel)
+		fparams="&fparams={'title': '%s', 'query': '%s',  'channel': '%s'}" % (urllib2.quote(title), \
+			urllib2.quote(query), channel)
 		addDir(li=li, label=label, action="dirList", dirID="Search", fanart=R('icon-pages.png'), 
 			thumb=R('icon-pages.png'), fparams=fparams)			
 	
@@ -3082,20 +3013,16 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 	send_dachzeile = send_arr[6]; send_sid = send_arr[7]; send_teasertext = send_arr[8]
 
 	#PLog(send_path); #PLog(send_arr)
-	PLog(u'Sätze: ' + str(len(send_path)));
+	PLog('Sätze: ' + str(len(send_path)));
 	for i in range(len(send_path)):					# Anzahl in allen send_... gleich
 		PLog(send_headline[i]); PLog(send_subtitle[i]); PLog(send_img_alt[i]); PLog(send_dachzeile[i]); 
 		PLog(send_teasertext[i]);
 		path = send_path[i]
-		headline = send_headline[i]			
+		headline = send_headline[i]					# UtfToStr, unescape, "-Ersatz in get_sendungen
 		subtitle = send_subtitle[i]
+		subtitle = UtfToStr(subtitle)
 		
-		PLog(type(headline)); PLog(type(subtitle)); PLog(type(send_teasertext[i]));PLog(type(send_dachzeile[i]));
-		PLog(subtitle)
-		subtitle = subtitle.decode('utf-8')
-		
-		PLog(type(headline)); PLog(type(subtitle))
-		if u'Hörfassung' in headline or u'Hörfassung' in subtitle:			# Filter
+		if 'Hörfassung' in headline or 'Hörfassung' in subtitle:			# Filter
 			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
 				continue
 		if 'Audiodeskription' in headline or 'Audiodeskription' in subtitle:# Filter
@@ -3106,10 +3033,13 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 			headline = "%s | %s" % (headline, subtitle)
 		img_src = send_img_src[i]
 		img_alt = send_img_alt[i]
+		img_alt = UtfToStr(img_alt)
+		img_alt = unescape(img_alt)
 		millsec_duration = send_millsec_duration[i]
 		if not millsec_duration:
 			millsec_duration = "leer"
 		dachzeile = send_dachzeile[i]
+		dachzeile = UtfToStr(dachzeile)
 		PLog(dachzeile)
 		sid = send_sid[i]
 		teasertext = send_teasertext[i]
@@ -3125,11 +3055,17 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 				if  dachzeile != "":
 					summary = dachzeile + ' | ' + subtitle
 					
+		summary = UtfToStr(summary)
 		summary = unescape(summary)
 		summary = cleanhtml(summary)
 		subtitle = cleanhtml(subtitle)
+		subtitle = UtfToStr(subtitle)
+		dachzeile = UtfToStr(dachzeile)
 		PLog(headline); PLog(subtitle); PLog(dachzeile)
 				
+		path = UtfToStr(path)				# Pfade können Umlaute enthalten
+		img_src = UtfToStr(img_src)
+		func_path = UtfToStr(func_path)
 														# teasertext (Inhaltstext) im Voraus holen falls 
 														#	 leer:	
 		if teasertext == '':	
@@ -3144,16 +3080,11 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 			subtitle = img_alt			
 			
 		headline=repl_json_chars(headline)			# json-komp.
-		subtitle = BytesToUnicode(subtitle)			# ev. bereits unicode
-		PLog(type(subtitle))
-		
 		subtitle=repl_json_chars(subtitle)			# dto.
 		summary=repl_json_chars(summary)			# dto.
 		
 		PLog('neuer Satz'); PLog('path: ' + path); PLog(title); PLog(img_src); PLog(millsec_duration);
 		PLog('next_cbKey: ' + next_cbKey); PLog('summary: ' + summary);
-		headline=UtfToStr(headline); summary=UtfToStr(summary); subtitle=UtfToStr(subtitle);
-
 		if '/tv/Rubriken/mehr' in func_path:		# Sonderfall: Austausch next_cbKey für Rubriken, da
 			next_cbKey = 'PageControl'				#	nochmal Seiten mit Seitenkontrolle folgen - s. ARDStart
 		if next_cbKey == 'SingleSendung':		# Callback verweigert den Funktionsnamen als Variable
@@ -3177,7 +3108,7 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 				if path.startswith('http') == False:	# Bsp. /tv/Film-im-rbb/Sendung?documentId=10009780&bcastId=10009780
 					path = BASE_URL + path
 				fparams="&fparams={'path': '%s', 'title': '%s', 'cbKey': 'SinglePage', 'mode': 'Sendereihen', 'ID': '%s'}" \
-					% (quote(path), quote(headline), ID)	
+					% (urllib2.quote(path), urllib2.quote(headline), ID)	
 				addDir(li=li, label=headline, action="dirList", dirID="PageControl", fanart=img_src, thumb=img_src, 
 					fparams=fparams, summary='Folgeseiten', tagline=subtitle)
 			else:								# normale Einzelsendung, Bsp. für sid: 48545158
@@ -3186,8 +3117,8 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 				PLog(img_src)
 				summ_par=summary.replace('\n', '||')		# || Code für LF (\n scheitert in router)
 				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
-					% (quote(path), quote(headline), quote(img_src), 
-					millsec_duration, quote(summ_par),  quote(subtitle), ID, offset)				
+					% (urllib2.quote(path), urllib2.quote(headline), urllib2.quote(img_src), 
+					millsec_duration, urllib2.quote(summ_par),  urllib2.quote(subtitle), ID, offset)				
 				addDir(li=li, label=headline, action="dirList", dirID="SingleSendung", fanart=img_src, thumb=img_src, 
 					fparams=fparams, summary=summary, tagline=subtitle, mediatype=mediatype)
 		if next_cbKey == 'SinglePage':						# mit neuem path nochmal durchlaufen
@@ -3196,20 +3127,21 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 			PLog('path: ' + path);
 			if mode == 'Sendereihen':			# Seitenkontrolle erforderlich, dto. Rubriken in Podcasts
 				fparams="&fparams={'path': '%s', 'title': '%s', 'cbKey': 'SinglePage', 'mode': 'Sendereihen', 'ID': '%s'}" \
-					% (quote(path), quote(headline), ID)	
+					% (urllib2.quote(path), urllib2.quote(headline), ID)	
 				addDir(li=li, label=headline, action="dirList", dirID="PageControl", fanart=img_src, thumb=img_src, 
 					fparams=fparams, summary='Folgeseiten', tagline=subtitle)
 			else:
 				fparams="&fparams={'path': '%s', 'title': '%s', 'next_cbKey': 'SingleSendung', 'mode': '%s', 'ID': '%s'}" \
-					% (quote(path), quote(headline), mode, ID)	
+					% (urllib2.quote(path), urllib2.quote(headline), mode, ID)	
 				addDir(li=li, label=headline, action="dirList", dirID="SinglePage", fanart=img_src, thumb=img_src, 
 					fparams=fparams, summary=summary, tagline=subtitle)
 		if next_cbKey == 'PageControl':		
 			path = BASE_URL + path
 			PLog('path: ' + path);
-			PLog('next_cbKey: PageControl in SinglePage')			
+			PLog('next_cbKey: PageControl in SinglePage')
+			
 			fparams="&fparams={'path': '%s', 'title': '%s', 'cbKey': 'SingleSendung', 'mode': 'Sendereihen', 'ID': '%s'}" \
-				% (quote(path), quote(headline), ID)	
+				% (urllib2.quote(path), urllib2.quote(headline), ID)	
 			addDir(li=li, label=headline, action="dirList", dirID="PageControl", fanart=img_src, thumb=img_src, 
 				fparams=fparams, summary=summary, tagline=subtitle)						
 		
@@ -3236,7 +3168,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 		summary = summary.replace(tagline, '')
 		summary = summary.replace('||||[B]', '||[B]')	# 1 Leerz. entf.
 	
-	title = unquote(title)
+	title = urllib2.unquote(title)
 	title = UtfToStr(title); summary = UtfToStr(summary); tagline = UtfToStr(tagline)
 	title_org=title; summary_org=summary; tagline_org=tagline	# Backup 
 	
@@ -3300,8 +3232,8 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 		title = '1. Bandbreite und Auflösung automatisch' + geoblock			# master.m3u8
 		m3u8_master = m3u8_master.replace('https', 'http')	# 26.06.2017: nun auch ARD mit https
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
-			(quote_plus(m3u8_master), quote_plus(title_org), quote_plus(thumb), 
-			quote_plus(summary_org), quote_plus(sub_path), Merk)
+			(urllib.quote_plus(m3u8_master), urllib.quote_plus(title_org), urllib.quote_plus(thumb), 
+			urllib.quote_plus(summary_org), urllib.quote_plus(sub_path), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 			mediatype=mediatype, tagline=tagline, summary=summary) 
 						
@@ -3371,8 +3303,8 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 				summary = Format + 'RTMP-Stream'	
 				lable = "%s | %s" % (title, summary)				
 				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
-					(quote_plus(url), quote_plus(title_org), quote_plus(thumb), 
-					quote_plus(summary_org), quote_plus(sub_path), Merk)
+					(urllib.quote_plus(url), urllib.quote_plus(title_org), urllib.quote_plus(thumb), 
+					urllib.quote_plus(summary_org), urllib.quote_plus(sub_path), Merk)
 				addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 					 mediatype=mediatype, tagline=tagline, summary=summary)
 									
@@ -3383,8 +3315,8 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 					summ_lable = "%s\n%s" % (tagline, summ_lable)
 				if ID == 'PODCAST':			# (noch) keine Header benötigt
 					lable = "%s. %s | %s" % (str(li_cnt), title, summary)
-					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
-						quote(title_org), quote(thumb), quote_plus(summary_org))
+					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(url), 
+						urllib2.quote(title_org), urllib2.quote(thumb), urllib.quote_plus(summary_org))
 					addDir(li=li, label=lable, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
 						summary=summ_lable, mediatype='music')
 				else:
@@ -3395,8 +3327,8 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 					summary_org = summary_org.replace('\n', '||')
 					
 					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
-						(quote_plus(url), quote_plus(title_org), quote_plus(thumb), 
-						quote_plus(summary_org), quote_plus(sub_path), Merk)
+						(urllib.quote_plus(url), urllib.quote_plus(title_org), urllib.quote_plus(thumb), 
+						urllib.quote_plus(summary_org), urllib.quote_plus(sub_path), Merk)
 					addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 						mediatype=mediatype, summary=summ_lable) 
 			li_cnt=li_cnt+1
@@ -3463,13 +3395,13 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 					Format = 'Podcast ' 			
 				else:	
 					Format = 'Video '			# .mp4 oder .webm  (ARD nur .mp4)
-				lable = 'Download ' + Format + ' | ' + quality
+				lable = 'Download %s | %s' % (Format, quality)
 				dest_path = SETTINGS.getSetting('pref_curl_download_path')
 				tagline = Format + 'wird in ' + dest_path + ' gespeichert' 									
-				summary = 'Sendung: ' + title_org
+				summary = 'Sendung: %s' % title_org
 				key_detailtxt='detailtxt'+str(i)
 				fparams="&fparams={'url': '%s', 'title': '%s', 'dest_path': '%s', 'key_detailtxt': '%s'}" % \
-					(quote(url), quote(title_org), dest_path, key_detailtxt)
+					(urllib2.quote(url), urllib2.quote(title_org), dest_path, key_detailtxt)
 				addDir(li=li, label=lable, action="dirList", dirID="DownloadExtern", fanart=R(ICON_DOWNL), 
 					thumb=R(ICON_DOWNL), fparams=fparams, summary=summary, tagline=tagline, mediatype='')
 				i=i+1					# Dict-key-Zähler
@@ -3534,16 +3466,15 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels cu
 	pathtextfile = os.path.join(dest_path, textfile)	# kompl. Speicherpfad für Textfile
 	PLog(pathtextfile)
 	detailtxt = Dict("load", key_detailtxt)				# detailtxt0, detailtxt1, ..
+	detailtxt = UtfToStr(detailtxt)	
 	PLog(detailtxt[:60])
 	
-	PLog('convert_storetxt:')
-	dtyp=BytesToUnicode(dtyp); dfname=BytesToUnicode(dfname); detailtxt=BytesToUnicode(detailtxt)
-	storetxt = 'Details zum ' + dtyp +  dfname + ':\r\n\r\n' + detailtxt
+	storetxt = 'Details zum ' + dtyp +  dfname + ':\r\n\r\n' + str(detailtxt)	
 			
 	PLog(sys.platform)
 	try:
 		PIDcurl = ''
-		RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
+		RSave(pathtextfile, storetxt)			# Text speichern
 		
 		AppPath = SETTINGS.getSetting('pref_curl_path')
 		i = os.path.exists(AppPath)					# Existenz curl/wget prüfen
@@ -3625,7 +3556,7 @@ def DownloadsTools():
 			mpcnt = mpcnt + 1	
 			fname = os.path.join(path, entry)					
 			vidsize = vidsize + os.path.getsize(fname) 
-	vidsize	= old_div(vidsize, 1000000)
+	vidsize	= vidsize / 1000000
 	title1 = 'Downloadverzeichnis: %s Download(s), %s MBytes' % (mpcnt, str(vidsize))
 		
 	li = xbmcgui.ListItem()
@@ -3727,7 +3658,7 @@ def DownloadsList():
 			mpcnt = mpcnt + 1	
 			fname = os.path.join(path, entry)					
 			vidsize = vidsize + os.path.getsize(fname) 
-	vidsize	= old_div(vidsize, 1000000)
+	vidsize	= vidsize / 1000000
 	title1 = 'Downloadverzeichnis: %s Download(s), %s MBytes' % (mpcnt, str(vidsize))
 	
 	if mpcnt == 0:
@@ -3786,8 +3717,8 @@ def DownloadsList():
 
 			oc_title = UtfToStr(oc_title); summary = UtfToStr(summary); tagline = UtfToStr(tagline);
 			fparams="&fparams={'httpurl': '%s', 'path': '%s', 'dlpath': '%s', 'txtpath': '%s', 'title': '%s','summary': '%s', \
-				'thumb': '%s', 'tagline': '%s'}" % (quote(httpurl), quote(localpath), quote(dlpath), 
-				txtpath, quote(title), quote(summary), quote(thumb), quote(tagline))
+				'thumb': '%s', 'tagline': '%s'}" % (urllib2.quote(httpurl), urllib2.quote(localpath), urllib2.quote(dlpath), 
+				txtpath, urllib2.quote(title), urllib2.quote(summary), urllib2.quote(thumb), urllib2.quote(tagline))
 			addDir(li=li, label=oc_title, action="dirList", dirID="VideoTools", fanart=thumb, 
 				thumb=thumb, fparams=fparams, summary=summary, tagline=tagline)
 			
@@ -3833,8 +3764,8 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		lable = "Ansehen | %s" % (title_org)
 		fulldest_path = UtfToStr(fulldest_path)		
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
-			(quote_plus(fulldest_path), quote_plus(title), quote_plus(thumb), 
-			quote_plus(summary), quote_plus(sub_path))
+			(urllib.quote_plus(fulldest_path), urllib.quote_plus(title), urllib.quote_plus(thumb), 
+			urllib.quote_plus(summary), urllib.quote_plus(sub_path))
 		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams,
 			mediatype='video')
 		
@@ -3842,14 +3773,14 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		if fulldest_path.endswith('mp3'):		# Dateiname bei fehl. Beschreibung, z.B. Sammeldownloads
 			title = title_org 											# 1. Anhören
 			lable = "Anhören | %s" % (title_org)
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(fulldest_path), 
-				title, quote(thumb), quote_plus(summary))
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(fulldest_path), 
+				title, urllib2.quote(thumb), urllib.quote_plus(summary))
 			addDir(li=li, label=lable, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, 
 				fparams=fparams, mediatype='music') 
 	
 	lable = "Loeschen ohne Rückfrage | %s" % title_org 					# 2. Löschen
 	tagline = 'Datei: ' + path 
-	fparams="&fparams={'dlpath': '%s', 'single': 'True'}" % quote(fulldest_path)
+	fparams="&fparams={'dlpath': '%s', 'single': 'True'}" % urllib2.quote(fulldest_path)
 	addDir(li=li, label=lable, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DELETE), 
 		thumb=R(ICON_DELETE), fparams=fparams, summary=summary, tagline=tagline)
 	
@@ -3860,7 +3791,7 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		summary = "Ziel: %s" % VideoDest_path
 		tagline = 'Das Zielverzeichnis kann im Menü Download-Tools geaendert werden'
 		fparams="&fparams={'dfname': '%s', 'textname': '%s', 'dlpath': '%s', 'destpath': '%s', 'single': 'True'}" \
-			% (quote(path), quote(textname), quote(dlpath), quote(VideoDest_path))
+			% (urllib2.quote(path), urllib2.quote(textname), urllib2.quote(dlpath), urllib2.quote(VideoDest_path))
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadsMove", fanart=R(ICON_DIR_MOVE_SINGLE), 
 			thumb=R(ICON_DIR_MOVE_SINGLE), fparams=fparams, summary=summary, tagline=tagline)
 
@@ -3956,7 +3887,6 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 		
 ####################################################################################################
 # Aufruf Main, Favoriten oder Merkliste anzeigen + auswählen
-#	Hinzufügen / Löschen in Watch
 # mode = 'Favs' für Favoriten  oder 'Merk' für Merkliste
 # 	Datenbasen (Einlesen in ReadFavourites (Modul util) :
 #		Favoriten: special://profile/favourites.xml 
@@ -3985,30 +3915,29 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 						"SenderLiveResolution"]	
 
 	if mode == 'Favs':														
-		tagline = u"Anzahl Addon-Favoriten: %s" % str(len(my_items)) 	# Info-Button
-		s1 		= u"Hier werden die ARDundZDF-Favoriten aus Kodi's Favoriten-Menü eingeblendet."
-		s2		= u"Favoriten entfernen: im Kodi's Favoriten-Menü oder am Ursprungsort im Addon (nicht hier!)."
-		s3		= u'Favoriten enthalten nicht in allen Fällen Begleitinfos zu Inhalt, Länge usw.'
-		summary	= u"%s\n\n%s\n\n%s"		% (s1, s2, s3)
-		label	= u'Infos zum Menü Favoriten'
+		tagline = "Anzahl Addon-Favoriten: %s" % str(len(my_items)) 	# Info-Button
+		s1 		= "Hier werden die ARDundZDF-Favoriten aus Kodi's Favoriten-Menü eingeblendet."
+		s2		= "Favoriten entfernen: im Kodi's Favoriten-Menü oder am Ursprungsort im Addon (nicht hier!)."
+		s3		= 'Favoriten enthalten nicht in allen Fällen Begleitinfos zu Inhalt, Länge usw.'
+		summary	= "%s\n\n%s\n\n%s"		% (s1, s2, s3)
+		label	= 'Infos zum Menü Favoriten'
 	else:
-		tagline = u"Anzahl Merklisteneinträge: %s" % str(len(my_items)) 	# Info-Button
-		s1 		= u"Merkliste von ARDundZDF."
-		s2		= u"Einträge entfernen: via Kontextmenü hier oder am am Ursprungsort im Addon."
-		s3		= u"Die Merkliste wird nach hinzufügen/entfernen erneut aufgerufen."
-		s4		= u'Stammt der Eintrag aus einem abgewählten Modul, wird es bis zum Aufruf des Hauptmenüs reaktiviert.'
-		s5		= u'Einträge enthalten nicht in allen Fällen Begleitinfos zu Inhalt, Länge usw.'
-		summary	= u"%s\n\n%s\n\n%s\n\n%s\n\n%s"		% (s1, s2, s3, s4, s5)
-		label	= u'Infos zum Menü Merkliste'
+		tagline = "Anzahl Merklisteneinträge: %s" % str(len(my_items)) 	# Info-Button
+		s1 		= "Merkliste von ARDundZDF."
+		s2		= "Einträge entfernen: via Kontextmenü hier oder am am Ursprungsort im Addon."
+		s3		= "Die Merkliste wird nach hinzufügen/entfernen erneut aufgerufen."
+		s4		= 'Stammt der Eintrag aus einem abgewählten Modul, wird es bis zum Aufruf des Hauptmenüs reaktiviert.'
+		s5		= 'Einträge enthalten nicht in allen Fällen Begleitinfos zu Inhalt, Länge usw.'
+		summary	= "%s\n\n%s\n\n%s\n\n%s\n\n%s"		% (s1, s2, s3, s4, s5)
+		label	= 'Infos zum Menü Merkliste'
 	
 	fparams="&fparams={'mode': '%s'}"	% mode						# Info-Menü
-	label=UtfToStr(label); summary=UtfToStr(summary); tagline=UtfToStr(tagline);
-	addDir(li=li, label=label, action="dirList", dirID="ShowFavs",
+	addDir(li=li, label=label, action="dirList", dirID="ShowFavs", 
 		fanart=R(ICON_DIR_FAVORITS), thumb=R(ICON_INFO), fparams=fparams,
 		summary=summary, tagline=tagline, cmenu=False) 	# ohne Kontextmenü)	
 	
 	for fav in my_items:
-		fav = unquote_plus(fav)						# urllib2.unquote erzeugt + aus Blanks! 
+		fav = urllib.unquote_plus(fav)						# urllib2.unquote erzeugt + aus Blanks! 
 		fav_org = fav										# für ShowFavsExec
 		#PLog('fav_org: ' + fav_org)
 		name=''; thumb=''; dirPars=''; fparams='';			
@@ -4037,8 +3966,8 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "") 
 				continue
 				
-			b64_clean=unquote_plus(b64_clean)		# unquote aus addDir-Call
-			b64_clean=unquote_plus(b64_clean)		# unquote aus Kontextmenü
+			b64_clean=urllib.unquote_plus(b64_clean)		# unquote aus addDir-Call
+			b64_clean=urllib.unquote_plus(b64_clean)		# unquote aus Kontextmenü
 			#PLog(b64_clean)
 			fav		= p3 + '10025,"' + b64_clean + p2 
 
@@ -4047,7 +3976,7 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		PLog('fav_b64_clean: ' + fav)
 		dirPars	= re.search('action=(.*?)&fparams',fav)		# dirList&dirID=PlayAudio&fanart..
 		fparams = stringextract('&fparams={', '}',fav)
-		fparams = unquote_plus(fparams)				# Parameter sind zusätl. quotiert
+		fparams = urllib.unquote_plus(fparams)				# Parameter sind zusätl. quotiert
 		PLog('fparams1: ' + fparams);
 		
 		try:
@@ -4121,8 +4050,8 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 				tagline = '' 						# falls Verwendung von tagline+summary aus fparams:
 				summary = Plot						#	non-ascii-chars entfernen!
 						
-		summary = unquote_plus(summary); tagline = unquote_plus(tagline); 
-		Plot = unquote_plus(Plot)
+		summary = urllib.unquote_plus(summary); tagline = urllib.unquote_plus(tagline); 
+		Plot = urllib.unquote_plus(Plot)
 		summary = summary.replace('+', ' ')
 		summary = summary.replace('&quot;', '"')
 		Plot=unescape(Plot)
@@ -4140,7 +4069,7 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		if mode == 'Favs':									# bereits quotiert
 			fparams ="&fparams={%s}" % fparams	
 		else:
-			fparams ="&fparams={%s}" % quote_plus(fparams)			
+			fparams ="&fparams={%s}" % urllib.quote_plus(fparams)			
 		PLog('fparams3: ' + fparams)
 		if mode == 'Favs':
 			fanart = R(ICON_DIR_FAVORITS)
@@ -4150,12 +4079,11 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		summary = summary.replace('||', '\n')		# wie Plot	
 		tagline = tagline.replace('||', '\n')
 		
-		if modul != "ardundzdf":					# Hinweis Modul
+		if modul <> "ardundzdf":					# Hinweis Modul
 			tagline = "[B][COLOR red]Modul %s[/COLOR][/B]%s" % (modul, tagline)
 		
-		name=UtfToStr(name); summary=UtfToStr(summary); tagline=UtfToStr(tagline);
 		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=thumb,
-			summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype)
+			summary=summary, tagline=tagline, fparams=fparams,mediatype=mediatype)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #-------------------------------------------------------
@@ -4173,15 +4101,12 @@ def convBase64(s):
 			
 ####################################################################################################
 # Addon-interne Merkliste : Hinzufügen / Löschen
-#	Anzeige in ShowFavs
 #	unabhängig von der Favoritenverwaltung
 #	base64-Kodierung benötigt für url-Parameter (nötig für router)
 # 23.03.2019 zusätzliche base64- zu urllib-Kodierung (in Kombi ohne padding-Error) - s. addDir
 # Ungelöstes Problem:
 #	bisher kein Verbleib im akt. Verz. möglich (wie bei Favoriten). Nach add oder del wird Watch 
 #	wiederholt aufgerufen - Lösung: Aufruf von ShowFavs.
-# Hinweis (unproblematisch): Kodi verhindert das unmittelbar wiederholte Hinzufügen/Löschen des 
-#	selben Eintrags, falls das endOfDirectoryStatement auf cacheToDisc=True gesetzt ist.
 #
 def Watch(action, name, thumb='', Plot='', url=''):		
 	PLog('Watch: ' + action)
@@ -4193,10 +4118,14 @@ def Watch(action, name, thumb='', Plot='', url=''):
 						"ARDStartVideoMP4", "SenderLiveResolution"
 					]
 	
-	url = unquote_plus(url)	
-	PLog(unquote_plus(url)[100:])  			# url in fparams zusätzlich quotiert
+	url = urllib.unquote_plus(url)	
+	PLog(urllib.unquote_plus(url)[100:])  			# url in fparams zusätzlich quotiert
 	PLog(name); PLog(thumb); PLog(Plot);
 	
+	name = UtfToStr(name); thumb = UtfToStr(thumb); 
+	Plot = UtfToStr(Plot); 
+	url = UtfToStr(url)	
+
 	fname = WATCHFILE		
 	item_cnt = 0; 
 	err_msg	= ''
@@ -4205,8 +4134,8 @@ def Watch(action, name, thumb='', Plot='', url=''):
 	if action == 'add':
 		if 'plugin://plugin' not in url:				# Base64-kodierte Plugin-Url in ActivateWindow
 			b64_clean= convBase64(url)					# Dekodierung mit oder ohne padding am Ende	
-			b64_clean=unquote_plus(b64_clean)	# unquote aus addDir-Call
-			b64_clean=unquote_plus(b64_clean)	# unquote aus Kontextmenü
+			b64_clean=urllib.unquote_plus(b64_clean)	# unquote aus addDir-Call
+			b64_clean=urllib.unquote_plus(b64_clean)	# unquote aus Kontextmenü
 			#PLog(b64_clean)
 			CallFunction = stringextract("&dirID=", "&", b64_clean) 
 			PLog('CallFunction: ' + CallFunction)
@@ -4214,20 +4143,19 @@ def Watch(action, name, thumb='', Plot='', url=''):
 				new_url = b64_clean[:-1]				# cut } am Ende fparams
 				new_url = "%s, 'Merk': 'true'}" % new_url
 				PLog("CallFunction_new_url: " + new_url)
-				url = quote_plus(new_url)
+				url = urllib.quote_plus(new_url)
 				url = base64.b64encode(url)			
 			
 		url = url.replace('&', '&amp;') # Anpassung an Favorit-Schema
 		merk = '<merk name="%s" thumb="%s" Plot="%s">ActivateWindow(10025,&quot;%s&quot;,return)</merk>'  \
 			% (name, thumb, Plot, url)
 		PLog('merk: ' + merk)
-		my_items = ReadFavourites('Merk')			# 'utf-8'-Decoding in ReadFavourites
-		PLog('my_items: ' + my_items[0])
+		my_items = ReadFavourites('Merk')
 		merkliste = ''
 		for item in my_items:						# Liste -> String
+			item = UtfToStr(item)	
 			iname = stringextract('name="', '"', item) 
 			# PLog('iname:' + iname)
-			PLog(type(item)); PLog(type(iname));
 			if iname == name:						# Doppler vermeiden
 				doppler = True
 				PLog('Doppler')
@@ -4235,30 +4163,29 @@ def Watch(action, name, thumb='', Plot='', url=''):
 			merkliste = merkliste + item + "\n"
 			item_cnt = item_cnt + 1
 		if doppler == False:
-			msg1 = u"Eintrag >%s< hinzugefügt" % name
+			msg1 = "Eintrag >%s< hinzugefügt" % name
 			merkliste = merkliste + merk + "\n"
 			item_cnt = item_cnt + 1			
 			merkliste = "<merkliste>\n%s</merkliste>"	% merkliste
-			err_msg = RSave(fname, merkliste, withcodec=True)		# Merkliste speichern
+			err_msg = RSave(fname, merkliste)		# Merkliste speichern
 			
 		
 	if action == 'del':
-		my_items = ReadFavourites('Merk')			# 'utf-8'-Decoding in ReadFavourites
-		PLog('my_items: ' + my_items[0])
+		my_items = ReadFavourites('Merk')
 		merkliste = ''
 		deleted = False
 		for item in my_items:						# Liste -> String
+			item = UtfToStr(item)	
 			iname = stringextract('name="', '"', item) 
 			# PLog('Name: %s, IName: %s' % (name, iname))
-			PLog(type(item)); PLog(type(iname));
 			if iname == name:						# skip Satz = löschen 
 				deleted = True
 				continue
 			item_cnt = item_cnt + 1
 			merkliste = merkliste + item + "\n"
 		if deleted:
-			PLog(u"Eintrag >%s< gelöscht" % name)
-			err_msg = RSave(fname, merkliste, withcodec=True)		# Merkliste speichern
+			PLog("Eintrag >%s< gelöscht" % name)
+			err_msg = RSave(fname, merkliste)		# Merkliste speichern
 		else:
 			msg1 = "Eintrag >%s< nicht gefunden." % name
 			PLog(msg1)
@@ -4269,7 +4196,7 @@ def Watch(action, name, thumb='', Plot='', url=''):
 		msg3 = err_msg
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3) 
 	else:											# Liste wird anschl. geöffnet
-		PLog(u"Anzahl der Einträge: %s" % str(item_cnt))		
+		PLog("Anzahl der Einträge: %s" % str(item_cnt))		
 	
 	# Aufruf Merkliste - kein Verbleib im akt. Verz. möglich (s.o.)
 	# Alternative: Sprung zum gewählten Verz. mittels getattr-Verfahren
@@ -4391,6 +4318,7 @@ def get_sendungen(li, sendungen, ID, mode): # Sendungen ausgeschnitten mit class
 
 			headline = stringextract('<h4 class=\"headline\">', '</h4>', s)	
 			# PLog("title: " + title); PLog("headline: " + headline)				
+			headline = UtfToStr(headline)
 			headline = unescape(headline)				# HTML-Escapezeichen  im Titel	
 			headline=headline.replace('"', '*')			# "-Zeichen verhindert json.loads in router			
 			if headline == '':
@@ -4401,16 +4329,17 @@ def get_sendungen(li, sendungen, ID, mode): # Sendungen ausgeschnitten mit class
 		
 			#if headline.find('- Hörfassung') >= 0:			# nicht unterdrücken - keine reine Hörfassung gesehen 
 			#	continue
-			if headline.find(u'Diese Seite benötigt') >= 0:	# Vorspann - irrelevant
+			if headline.find('Diese Seite benötigt') >= 0:	# Vorspann - irrelevant
 				continue
 			hupper = headline.upper()
-			if hupper.find(str.upper(u'Livestream')) >= 0:			# Livestream hier unterdrücken (mehrfach in Rubriken)
+			if hupper.find(str.upper('Livestream')) >= 0:			# Livestream hier unterdrücken (mehrfach in Rubriken)
 				continue
 			if s.find('subtitle') >= 0:	# nicht in ARDThemen
 				subtitle = re.search("<p class=\"subtitle\">(.*?)</p>\s+?", s)	# Bsp. <p class="subtitle">25 Min.</p>
 				if subtitle:
 					subtitle = subtitle.group(1)
 					subtitle = subtitle.replace('<br>', ' | ')				
+					subtitle = UtfToStr(subtitle)
 				else:
 					subtitle = ""
 			else:
@@ -4487,7 +4416,7 @@ def get_sendungen(li, sendungen, ID, mode): # Sendungen ausgeschnitten mit class
 			send_sid.append(sid)	
 			send_teasertext.append(teasertext)	
 			# break		# Debug 1 Satz					
-											# dann der komplette Listen-Satz ins Array	
+											# dann der komplette Listen-Satz ins Array		
 	send_arr = [send_path, send_headline, send_subtitle, send_img_src, send_img_alt, send_millsec_duration, 
 		send_dachzeile, send_sid, send_teasertext]
 	PLog(len(send_path))	 # Anzahl send_path = Anzahl Sätze		
@@ -4497,7 +4426,7 @@ def get_sendungen(li, sendungen, ID, mode): # Sendungen ausgeschnitten mit class
 # LiveListe Vorauswahl - verwendet lokale Playlist
 # 
 def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, Privat
-	title = unquote(title)
+	title = urllib2.unquote(title)
 	PLog('SenderLiveListePre:')
 	PLog('title: ' + title)
 	playlist = RLoad(PLAYLIST)	# lokale XML-Datei (Pluginverz./Resources)
@@ -4518,7 +4447,7 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 			img = img
 		PLog(name); PLog(img); # PLog(element);  # nur bei Bedarf
 		
-		fparams="&fparams={'title': '%s', 'listname': '%s', 'fanart': '%s'}" % (quote(name), quote(name), img)
+		fparams="&fparams={'title': '%s', 'listname': '%s', 'fanart': '%s'}" % (urllib2.quote(name), urllib2.quote(name), img)
 		util.addDir(li=li, label=name, action="dirList", dirID="SenderLiveListe", fanart=R(ICON_MAIN_TVLIVE), 
 			thumb=img, fparams=fparams)
 
@@ -4571,18 +4500,17 @@ def EPG_Sender(title, Merk='false'):
 		title = UtfToStr(title)
 		link = rec[3]
 		ID = rec[1]
-		PLog('title: %s, ID: %s' % (title, ID))
 		if ID == '':				# ohne EPG_ID
 			title = title + ': ohne EPG' 
 			summ = 'weiter zum Livestream'
 			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '', 'Merk': '%s'}" %\
-				(quote(link), quote(title), quote(R(rec[2])), Merk)
+				(urllib2.quote(link), urllib2.quote(title), urllib2.quote(R(rec[2])), Merk)
 			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
 				thumb=R(rec[2]), fparams=fparams, summary=summ)
 		else:
 			summ = 'EPG verfuegbar'
-			fparams="&fparams={'ID': '%s', 'name': '%s', 'stream_url': '%s', 'pagenr': %s}" % (ID, quote(title), 
-				quote(link), '0')
+			fparams="&fparams={'ID': '%s', 'name': '%s', 'stream_url': '%s', 'pagenr': %s}" % (ID, title, 
+				urllib2.quote(link), '0')
 			addDir(li=li, label=title, action="dirList", dirID="EPG_ShowSingle", fanart=R('tv-EPG-single.png'), thumb=R(rec[2]), 
 				fparams=fparams, summary=summ)
 
@@ -4590,7 +4518,7 @@ def EPG_Sender(title, Merk='false'):
 #-----------------------------
 #	Liste aller TV-Sender wie EPG_Sender, hier mit Aufnahme-Button
 def TVLiveRecordSender(title):
-	title = unquote(title)
+	title = urllib2.unquote(title)
 	PLog('TVLiveRecordSender')
 	PLog(SETTINGS.getSetting('pref_LiveRecord_ffmpegCall'))
 	# PLog('PID-Liste: %s' % Dict['PID'])		# PID-Liste, Initialisierung in Main
@@ -4624,7 +4552,7 @@ def TVLiveRecordSender(title):
 		summ 	= 'Aufnahmedauer: %s' 	% laenge
 		tag		= 'Zielverzeichnis: %s' % SETTINGS.getSetting('pref_curl_download_path')
 		fparams="&fparams={'url': '%s', 'title': '%s', 'duration': '%s', 'laenge': '%s'}" \
-			% (quote(link), quote(title), duration, laenge)
+			% (urllib2.quote(link), urllib2.quote(title), duration, laenge)
 		addDir(li=li, label=title, action="dirList", dirID="LiveRecord", fanart=R(rec[2]), thumb=R(rec[2]), 
 			fparams=fparams, summary=summ, tagline=tag)
 	
@@ -4788,8 +4716,10 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 		# PLog(img)
 		if img.find('http') == -1:	# Werbebilder today.de hier ohne http://, Ersatzbild einfügen
 			img = R('icon-bild-fehlt.png')
+		sname = UtfToStr(sname)
 		sname = unescape(sname)
 		title = sname
+		summ = UtfToStr(summ)
 		summ = unescape(summ)
 		if 'JETZT' in title:			# JETZT-Markierung unter icon platzieren
 			summ = "[COLOR red][B]LAUFENDE SENDUNG![/B][/COLOR]\n\n%s" % summ
@@ -4797,10 +4727,8 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 		PLog("title: " + title)
 		tagline = 'Zeit: ' + vonbis
 		descr = summ.replace('\n', '||')		# \n aus summ -> ||
-		title=UtfToStr(title); summ=UtfToStr(summ); tagline=UtfToStr(tagline); 		
-		
-		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s'}" % (quote(stream_url), 
-			quote(title), quote_plus(img), quote_plus(descr))
+		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s'}" % (urllib2.quote(stream_url), 
+			urllib2.quote(title), urllib.quote_plus(img), urllib.quote_plus(descr))
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
 			thumb=img, fparams=fparams, summary=summ, tagline=tagline)
 			
@@ -4808,10 +4736,9 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 	max = 12
 	pagenr = int(pagenr) + 1
 	if pagenr < max: 
-		summ = u'nächster Tag'
-		summ=UtfToStr(summ);
-		fparams="&fparams={'ID': '%s', 'name': '%s', 'stream_url': '%s', 'pagenr': %s}" % (ID, quote(name),
-			quote(stream_url), pagenr)
+		summ = 'naechster Tag'
+		fparams="&fparams={'ID': '%s', 'name': '%s', 'stream_url': '%s', 'pagenr': %s}" % (ID, urllib2.quote(name),
+			urllib2.quote(stream_url), pagenr)
 		addDir(li=li, label=summ, action="dirList", dirID="EPG_ShowSingle", fanart=R('tv-EPG-single.png'), 
 		thumb=R(ICON_MEHR), fparams=fparams, summary=summ)
 
@@ -4823,7 +4750,7 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 
 def EPG_ShowAll(title, offset=0, Merk='false'):
 	PLog('EPG_ShowAll:'); PLog(offset) 
-	title = unquote(title)
+	title = urllib2.unquote(title)
 	title_org = title
 	title2='Aktuelle Sendungen'
 		
@@ -4833,7 +4760,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 	# Zeilen-Index: title=rec[0]; EPG_ID=rec[1]; img=rec[2]; link=rec[3];	
 	sort_playlist = get_sort_playlist()	
 	PLog(len(sort_playlist))
-	# PLog(sort_playlist)
+	PLog(sort_playlist)
 	
 	rec_per_page = 20								# Anzahl pro Seite (Plex: Timeout ab 15 beobachtet)
 	max_len = len(sort_playlist)					# Anzahl Sätze gesamt
@@ -4873,18 +4800,17 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 				href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6]
 				if img.find('http') == -1:	# Werbebilder today.de hier ohne http://, Ersatzbild einfügen
 					img = R('icon-bild-fehlt.png')
-				title_playlist=title_playlist.decode('utf-8')
 				title 	= sname.replace('JETZT', title_playlist)		# JETZT durch Sender ersetzen
 				# sctime 	= "[COLOR red] %s [/COLOR]" % stime			# Darstellung verschlechtert
 				# sname 	= sname.replace(stime, sctime)
 				tagline = 'Zeit: ' + vonbis
 				
+		title = UtfToStr(title)
 		title = unescape(title)
 		PLog("title: " + title); PLog(summ)
-		title=UtfToStr(title); summ=UtfToStr(summ); tagline=UtfToStr(tagline); 
 					
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Merk': '%s'}" %\
-			(quote(m3u8link), quote(title), quote(img), quote_plus(summ), Merk)
+			(urllib2.quote(m3u8link), urllib2.quote(title), urllib2.quote(img), urllib.quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-all.png'), 
 			thumb=img, fparams=fparams, summary=summ, tagline=tagline)
 
@@ -5013,10 +4939,8 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		descr = summary
 		if tagline:
 			descr = "%s %s" % (tagline, descr)		# -> Plot (PlayVideo) 
-			
-		title=UtfToStr(title); summary=UtfToStr(summary); tagline=UtfToStr(tagline); 
-		fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s', 'descr': '%s'}" % (quote_plus(link), 
-			quote_plus(img), quote_plus(title), quote_plus(descr))
+		fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s', 'descr': '%s'}" % (urllib.quote_plus(link), 
+			img, urllib.quote_plus(title), urllib.quote_plus(descr))
 		util.addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=fanart, thumb=img, 
 			fparams=fparams, summary=summary, tagline=tagline, mediatype=mediatype)		
 	
@@ -5105,15 +5029,15 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 			url_m3u8 = url_m3u8.split('?sd=')[0]	
 		PLog(url_m3u8)
 		summary = 'Bandbreite unbekannt'
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote_plus(url_m3u8), 
-			quote_plus(title), quote_plus(thumb), quote_plus(descr))	
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib.quote_plus(url_m3u8), 
+			urllib.quote_plus(title), urllib.quote_plus(thumb), urllib.quote_plus(descr))	
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 			summary=summary, tagline=title, mediatype='video')	
 		
 	if url_m3u8.find('rtmp') == 0:		# rtmp, nur 1 Videoobjekt
 		summary = 'rtmp-Stream'
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote_plus(url_m3u8), 
-			quote_plus(title), quote_plus(thumb), quote_plus(descr))	
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib.quote_plus(url_m3u8), 
+			urllib.quote_plus(title), urllib.quote_plus(thumb), urllib.quote_plus(descr))	
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 			summary=summary, tagline=title, mediatype='video')	
 		
@@ -5153,8 +5077,7 @@ def show_single_bandwith(url_m3u8, thumb, title, descr, ID):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=ID)						# Home-Button
 	
-	descr = title + "\n\n" + descr
-	li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr)	
+	li = Parseplaylist(li, url_m3u8, thumb, geoblock='', tagline=title, descr=descr)	
 	
 	xbmcplugin.endOfDirectory(HANDLE)
 
@@ -5169,13 +5092,13 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 	PLog(title); PLog(url_m3u8); PLog(thumb); PLog(tagline);
 	 
 	title = UtfToStr(title); descr = UtfToStr(descr); tagline = UtfToStr(tagline); 
-	PLog(type(title)); 	PLog(type(url_m3u8))
+	PLog(type(title))	
 	
 	sname = url_m3u8.split('/')[2]				# Filename: Servername.m3u8
 	msg1 = "Datei konnte nicht "				# Vorgaben xbmcgui.Dialog
 	msg2 = sname + ".m3u8"
 	msg3 = "Details siehe Logdatei"
-			
+	
 	page, msg = get_page(path=url_m3u8)			# 1. Inhalt m3u8 laden	
 	PLog(len(page))
 	if page == '':								# Fehlschlag
@@ -5222,11 +5145,11 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 		tagline	 = tagline.replace('||','\n')				# s. tagline in ZDF_get_content
 		descr_par= descr
 		descr	 = descr.replace('||','\n')					# s. descr in ZDF_get_content
-		title = "autom. | " + title
+		title = "autom. | %s" % title
 
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
-			(quote_plus(url_m3u8), quote_plus(title), quote_plus(thumb), 
-			quote_plus(descr_par), quote_plus(sub_path))	
+			(urllib.quote_plus(url_m3u8), urllib.quote_plus(title), urllib.quote_plus(thumb), 
+			urllib.quote_plus(descr_par), urllib.quote_plus(sub_path))	
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 			mediatype='video', tagline=tagline, summary=descr) 
 
@@ -5248,8 +5171,8 @@ def N24LastServer(url_m3u8):
 		url_new = "".join(url_list)
 		# PLog(url_new)
 		try:
-			req = urllib.request.Request(url_new)
-			r = urllib.request.urlopen(req)
+			req = urllib2.Request(url_new)
+			r = urllib2.urlopen(req)
 			playlist = r.read()			
 		except:
 			playlist = ''
@@ -5299,7 +5222,7 @@ def ZDFStart(title, show_stage=''):
 	title = 'Highlights'
 	href	= stringextract('href="', '"', stage)
 	thumb	= stringextract('data-src="', '"', stage)			# img vom 1. Beitrag zeigen
-	fparams="&fparams={'title': '%s', 'show_stage': 'true'}" % quote(title)
+	fparams="&fparams={'title': '%s', 'show_stage': 'true'}" % urllib2.quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=thumb, 
 		thumb=thumb, fparams=fparams)
 		
@@ -5336,8 +5259,8 @@ def ZDFStart(title, show_stage=''):
 			continue	
 				
 		else:												# restl. Cluster	
-			fparams="&fparams={'title': '%s', 'path': '%s',  'clus_title': '%s'}"	% (quote(title), 
-				quote(path), quote(title))
+			fparams="&fparams={'title': '%s', 'path': '%s',  'clus_title': '%s'}"	% (urllib2.quote(title), 
+				urllib2.quote(path), urllib2.quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="ZDFRubrikSingle", fanart=thumb, 
 				thumb=thumb, fparams=fparams)	
 	
@@ -5377,7 +5300,7 @@ def ZDFStartLive(title): 										# ZDF-Livestreams von ZDFStart
 		PLog(title); PLog(apiToken); PLog(href);  PLog(thumb);
 		
 		fparams="&fparams={'url': '%s', 'title': '%s', 'apiToken': '%s', 'thumb': '%s', 'tagline': '%s'}" %\
-			(quote(href), quote(title), apiToken, thumb, quote(tagline))	
+			(urllib2.quote(href), urllib2.quote(title), apiToken, thumb, urllib2.quote(tagline))	
 		addDir(li=li, label=title, action="dirList", dirID="ZDFStartLiveSingle", fanart=thumb, thumb=thumb, 
 			fparams=fparams, tagline=tagline, mediatype=mediatype)
 		
@@ -5422,14 +5345,12 @@ def ZDFStartLiveSingle(url, title, apiToken, thumb, tagline, Merk='false'): 	# e
 #	ZDF_Search_PATH steht bei Rekursion nicht als glob. Variable zur Verfügung
 
 def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
-	PLog("ZDF_Search:")
 	if 	query == '':	
 		query = get_query(channel='ZDF')
 	PLog(query)
 	if  query == None or query.strip() == '':
 		return ""
-	query_org = query	
-	query=BytesToUnicode(query)		# decode, falls erf. (1. Aufruf)
+	name = 'Suchergebnis zu: ' + urllib2.unquote(query)
 
 	PLog('ZDF_Search:'); PLog(query); PLog(pagenr); PLog(s_type)
 
@@ -5453,7 +5374,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	
 	# PLog(page)	# bei Bedarf		
 	NAME = 'ZDF Mediathek'
-	name = 'Suchergebnisse zu: %s (Gesamt: %s), Seite %s'  % (quote(query), searchResult, pagenr)
+	name = 'Suchergebnisse zu: %s (Gesamt: %s), Seite %s'  % (urllib.unquote(query), searchResult, pagenr)
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')										# Home-Button
@@ -5472,14 +5393,12 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	
 	if page_cnt == 'next':							# mehr Seiten (Loader erreicht)
 		pagenr = int(pagenr) + 1
-		PLog('Mark0')
-		query = query_org.replace('+', ' ')
-		path = ZDF_Search_PATH % (query, pagenr)	# Debug
+		query = query.replace('%252B', '+')				# # quotierten Suchbegriff korrigieren
+		query = UtfToStr(query)
+		path = ZDF_Search_PATH % (query, pagenr)
 		PLog(pagenr); PLog(path)
-		title = "Mehr Ergebnisse suchen zu: >%s<"  % query
-		title=UtfToStr(title); 
-		fparams="&fparams={'query': '%s', 's_type': '%s', 'pagenr': '%s'}" %\
-			(quote(query_org), s_type, pagenr)
+		title = "Mehr Ergebnisse suchen zu: >%s<"  % query.replace('+', ' ')	
+		fparams="&fparams={'query': '%s', 's_type': '%s', 'pagenr': '%s'}" % (urllib2.quote(query), s_type, pagenr)
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_MEHR), 
 			thumb=R(ICON_MEHR), fparams=fparams)
 
@@ -5592,7 +5511,7 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 	tagline = "zusätzliche Suche starten"
 	summ 	= "suche alle Beiträge, die sich auf >%s< beziehen" % title
 	s_type	= 'MEHR_Suche'						# Suche alle Beiträge (auch Minutenbeiträge)
-	fparams="&fparams={'query': '%s', 's_type': '%s'}" % (quote(query), s_type)
+	fparams="&fparams={'query': '%s', 's_type': '%s'}" % (urllib2.quote(query), s_type)
 	addDir(li=li, label=label, action="dirList", dirID="ZDF_Search", fanart=R(ICON_MEHR), 
 		thumb=R(ICON_MEHR), fparams=fparams, tagline=tagline, summary=summ)
 		
@@ -5624,7 +5543,7 @@ def ZDFRubriken(name):								# ZDF-Bereich, Liste der Rubriken
 		title = mystrip(title)
 		if title == "Sendungen A-Z":	# Rest nicht mehr relevant
 			break
-		fparams="&fparams={'title': '%s', 'path': '%s'}"	% (quote(title), quote(path))
+		fparams="&fparams={'title': '%s', 'path': '%s'}"	% (urllib2.quote(title), urllib2.quote(path))
 		addDir(li=li, label=title, action="dirList", dirID="ZDFRubrikSingle", fanart=R(ICON_ZDF_RUBRIKEN), 
 			thumb=R(ICON_ZDF_RUBRIKEN), fparams=fparams)
 	
@@ -5738,14 +5657,14 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 			PLog(title);PLog(path);PLog(img_src);PLog(descr);PLog(dauer); PLog(isvideo);
 			if isvideo == False:			#  Mehrfachbeiträge
 				fparams="&fparams={'title': '%s', 'url': '%s', 'ID': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
-					(quote(title),  quote(path), 'VERPASST', quote(descr_par),
-					quote(img_src))
+					(urllib2.quote(title),  urllib2.quote(path), 'VERPASST', urllib2.quote(descr_par),
+					urllib2.quote(img_src))
 				addDir(li=li, label=lable, action="dirList", dirID="ZDF_Sendungen", fanart=img_src, 
 					thumb=img_src, tagline=descr, fparams=fparams)
 			else:							# Einzelbeitrag direkt - anders als A-Z (ZDF_get_content)				
 				fparams="&fparams={'title': '%s', 'url': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
-					(quote(title),  quote(path), quote(descr_par),
-					quote(img_src))
+					(urllib2.quote(title),  urllib2.quote(path), urllib2.quote(descr_par),
+					urllib2.quote(img_src))
 				addDir(li=li, label=lable, action="dirList", dirID="ZDF_getVideoSources", fanart=img_src, 
 					thumb=img_src, tagline=descr, fparams=fparams)
 				
@@ -5759,8 +5678,8 @@ def ZDFRubrikSingle(title, path, clus_title=''):
 			PLog(clustertitle);
 			clustertitle = UtfToStr(clustertitle); title = UtfToStr(title)
 			img_src = R(ICON_DIR_FOLDER)
-			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s'}" % (quote(clustertitle),
-				quote(path), quote(clustertitle))
+			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s'}" % (urllib2.quote(clustertitle),
+				urllib2.quote(path), urllib2.quote(clustertitle))
 			addDir(li=li, label=clustertitle, action="dirList", dirID="ZDFRubrikSingle", fanart=img_src, 
 				thumb=img_src, fparams=fparams)				
 
@@ -5799,8 +5718,8 @@ def get_teaserElement(rec):
 	NodePath = contextStructureNodePath; 
 	
 	# urllib.quote_plus für Pfadslash / erf. in contextStructureNodePath
-	sophoraId = quote_plus(sophoraId); teaserHeadline = quote_plus(teaserHeadline);
-	teasertext = quote_plus(teasertext); contextStructureNodePath = quote_plus(contextStructureNodePath);
+	sophoraId = urllib.quote_plus(sophoraId); teaserHeadline = urllib.quote_plus(teaserHeadline);
+	teasertext = urllib.quote_plus(teasertext); contextStructureNodePath = urllib.quote_plus(contextStructureNodePath);
 		
 	path = "https://www.zdf.de/teaserElement?sophoraId=%s&style=m2&teaserHeadline=%s&teasertext=%s&reloadTeaser=true&filterReferenceId=%s&mainContent=false&sourceModuleType=cluster-s&highlight=false&contextStructureNodePath=%s&mostwatched=%s&recommended=%s&newest=%s" \
 	% (sophoraId, teaserHeadline,teasertext,filterReferenceId,contextStructureNodePath,mostwatched,recommended,newest)
@@ -5894,28 +5813,28 @@ def BarriereArm(title):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
 	PLog(len(page))
+	page = UtfToStr(page)
 	
 	Dict("store", 'BarriereArm', page)				# -> Cache für BarriereArmSingle
 	
 	# z.Z. 	>Die neuesten  Hörfassungen<
 	#		>Die neuesten Videos mit Untertitel<
 	#		>Die neuesten heute-journal-Videos mit Gebärdensprache<
-	content = blockextract('b-content-teaser-list', page)
+	content = blockextract('class="b-content-teaser-list">', page)
 	PLog(len(content))
 	for rec in content:	
 		title = stringextract('<h2 class="title"', '</h2>', rec)
 		title = title.replace('\n', ''); 
 		title = (title.replace('>', '').replace('<', '')); title = title.strip()
 		PLog(title)
-		if u'Hörfassung' in title or 'Audiodeskription' in title:			# Filter
+		if 'Hörfassung' in title or 'Audiodeskription' in title:			# Filter
 			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true' or \
 				SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
-				msg1 = u'Hinweis:'
-				msg2 = u'Filter für Hörfassungen oder  Audiodeskription ist eingeschaltet!'
-				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")	
-				
-		title=UtfToStr(title);
-		fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))
+				msg1 = 'Hinweis:'
+				msg2 = 'Filter für Hörfassungen oder  Audiodeskription ist eingeschaltet!'
+				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")		
+		
+		fparams="&fparams={'path': '%s', 'title': '%s'}" % (urllib2.quote(path), urllib2.quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="BarriereArmSingle", fanart=R(ICON_ZDF_BARRIEREARM), 
 			thumb=R(ICON_ZDF_BARRIEREARM), fparams=fparams)
 			
@@ -5942,6 +5861,7 @@ def BarriereArmSingle(path, title):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
 	PLog(len(page))
+	page = UtfToStr(page)
 	
 	content = blockextract('class="b-content-teaser-list">', page)
 	PLog(len(content))
@@ -5981,6 +5901,7 @@ def ZDFSportLive(title):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
 	PLog(len(page))
+	page = UtfToStr(page)
 	 	
 	if '<strong>Jetzt live</strong>' in page:						# 1. LIVESTREAM läuft!
 		img = R(ICON_DIR_FOLDER)									# Quelle im Web unsicher
@@ -5997,8 +5918,8 @@ def ZDFSportLive(title):
 		descr = cleanhtml(descr); descr = mystrip(descr)
 		PLog('Satz_Live:')
 		PLog(href); PLog(img); PLog(title); PLog(descr); 
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (quote(href),
-			quote(title), img, quote(descr))	
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (urllib2.quote(href),
+			urllib2.quote(title), img, urllib2.quote(descr))	
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
 			fparams=fparams, summary=descr,  mediatype=mediatype)
 		
@@ -6024,8 +5945,8 @@ def ZDFSportLive(title):
 			continue
 		PLog('Satz:')
 		PLog(href); PLog(title); PLog(descr); PLog(video);
-		fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
-			quote(href), quote(img))
+		fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (urllib2.quote(title), 
+			urllib2.quote(href), urllib2.quote(img))
 		addDir(li=li, label=title, action="dirList", dirID="ZDFSportLiveSingle", fanart=img, 
 			thumb=img, fparams=fparams, tagline=descr )
 			
@@ -6033,8 +5954,8 @@ def ZDFSportLive(title):
 	url = 'https://www.zdf.de/sport/zdf-sportreportage'
 	ID = 'ZDFSportLive'
 	thumb=R("zdf-sportlive.png")
-	fparams="&fparams={'url': '%s', 'title': '%s', 'ID': '%s'}" % (quote(url), 
-		quote(title), ID)
+	fparams="&fparams={'url': '%s', 'title': '%s', 'ID': '%s'}" % (urllib2.quote(url), 
+		urllib2.quote(title), ID)
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=thumb, 
 		thumb=thumb, fparams=fparams)
 	
@@ -6065,6 +5986,7 @@ def ZDFSportLiveSingle(title, path, img):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
 	PLog(len(page))
+	page = UtfToStr(page)
 	
 	videomodul = stringextract('class="b-video-module">', '</article>', page)
 	if 'Beitragslänge:' not in videomodul:	 						# Titelvideo fehlt 
@@ -6096,8 +6018,8 @@ def ZDFSportLiveSingle(title, path, img):
 	mediatype=''
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (quote(path),
-		quote(title), img, quote(descr))	
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (urllib2.quote(path),
+		urllib2.quote(title), img, urllib2.quote(descr))	
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
 		fparams=fparams, tagline=descr_display, mediatype=mediatype)
 		
@@ -6126,6 +6048,7 @@ def International(title):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
 	PLog(len(page))
+	page = UtfToStr(page)
 	 			
 	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID='International')
 	
@@ -6149,6 +6072,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 	# max_count = int(SETTINGS.getSetting('pref_maxZDFContent')) # max. Anzahl Elemente 
 	max_count = 0
 	PLog(max_count)
+	page = UtfToStr(page)										# für Suche mit Umlauten
 	
 	Bilderserie = False	
 	if ID == 'Bilderserien':									# Aufruf: ZDF_Search
@@ -6158,6 +6082,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 	img_alt = teilstring(page, 'class=\"m-desktop', '</picture>') # Bildsätze für b-playerbox
 		
 	page_title = stringextract('<title>', '</title>', page)  # Seitentitel
+	page_title = UtfToStr(page_title)
 	page_title = page_title.strip()
 	msg_notfound = ''
 	if 'Leider kein Video verf' in page:					# Verfügbarkeit vor class="artdirect " >
@@ -6170,6 +6095,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		content.pop()	
 	page_cnt = len(content)
 	PLog('content_Blocks: ' + str(page_cnt));			
+
 	
 	if page_cnt == 0:											# kein Ergebnis oder allg. Fehler
 		if 'class="b-playerbox' not in page and 'class="item-caption' not in page: # Einzelvideo?
@@ -6200,6 +6126,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		# GNNPLog(content[0]) # bei Bedarf
 
 	PLog(len(content))
+	PLog("Mark1")
 
 	mediatype=''									# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
@@ -6211,8 +6138,8 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		# loader:  enthält bei Suche Links auch wenn weiterer Inhalt fehlt. 
 		#			Bei Verpasst u.a. enthält er keinen Link
 		if 'class="loader"></span>Weitere laden' in rec: # Loader erreicht=Ende 
-			href = stringextract(u'load-more-container">', u'class="loader">', rec)
-			href = stringextract(u'href="', u'"', href)
+			href = stringextract('load-more-container">', 'class="loader">', rec)
+			href = stringextract('href="', '"', href)
 			PLog('href_loader:' + href)
 			if href:
 				return li, 'next'
@@ -6225,7 +6152,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 			
 		if ID != 'DEFAULT':					 			# DEFAULT: Übersichtsseite ohne Videos, Bsp. Sendungen A-Z
 			if 'title-icon icon-502_play' not in rec :  # Videobeitrag? auch ohne Icon möglich
-				if u'>Videolänge:<' not in rec : 
+				if '>Videolänge:<' not in rec : 
 					if '>Trailer<' not in rec : 		# Trailer o. Video-icon-502
 						continue		
 		multi = False			# steuert Mehrfachergebnisse 
@@ -6287,16 +6214,14 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 				video_datum=''; video_time=''			
 		PLog(video_datum); PLog(video_time);
 							
-		duration = stringextract(u'Videolänge:', 'Datum', rec) 		# Länge - 1. Variante 
+		duration = stringextract('Videolänge:', 'Datum', rec) 		# Länge - 1. Variante 
 		duration = stringextract('m-border">', '</', duration)		# Ende </dd> od. </dt>
 		if duration == '':
 			PLog("Videolänge:")
-			duration = stringextract(u'Videolänge:', 'min', rec) 	# Länge - 2. Variante bzw. fehlend
-			if duration:
-				duration = duration.strip()
-				duration = "%s min" % cleanhtml(duration) 
+			duration = stringextract('Videolänge:', 'min', rec) 	# Länge - 2. Variante bzw. fehlend
+			duration = "%s min" % mystrip(duration) 
 		if 	'<strong>Livestream</strong>' in rec:
-			duration = u'[COLOR red]Livestream[/COLOR]'	
+			duration = '[COLOR red]Livestream[/COLOR]'	
 		PLog('duration: ' + duration);
 		
 		pic_cnt = stringextract('Anzahl Bilder:', '<dt class', rec)	# Bilderzahl bei Bilderserien
@@ -6312,7 +6237,6 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 			title = title[2:]				# Korrektur
 			
 		category = stringextract('teaser-cat-category">', '</span>', rec)
-		PLog(category)
 		category = mystrip(category)
 		brand = stringextract('teaser-cat-brand">', '</span>', rec)
 		brand = mystrip(brand)	
@@ -6338,9 +6262,9 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		descr = mystrip(descr)
 		PLog('descr:' + descr)		# UnicodeDecodeError möglich
 		if descr:
-			summary = descr
 			if teaser_nr:
-				summary = "Episode %s | %s" % (teaser_nr, summary )
+				teaser_nr = "Episode %s | " % teaser_nr
+			summary = teaser_nr + descr
 		else:
 			summary = href_title
 			
@@ -6360,19 +6284,19 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		if multi == True:			
 			tagline = 'Folgeseiten'
 		
-		title=title.decode('utf-8')
 		title = title.strip()
 		title = unescape(title)	
 		summary = unescape(summary)
 		summary = cleanhtml(summary)		
-		tagline = unescape(tagline); tagline = tagline.strip()
+		tagline = unescape(tagline)
 		tagline = cleanhtml(tagline)
 		
 		title=repl_json_chars(title)						# json-komp. für func_pars in router()
 		summary=repl_json_chars(summary)					# dto.
 		tagline=repl_json_chars(tagline)					# dto.
 		
-		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
+		title = UtfToStr(title); summary = UtfToStr(summary); tagline = UtfToStr(tagline);
+		if 'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
 			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
 				continue		
 			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
@@ -6380,11 +6304,12 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 			
 		PLog('neuer Satz')
 		PLog(thumb);PLog(path);PLog(title);PLog(summary);PLog(tagline); PLog(multi);
+		# if ID == 'zdfmobile':		# HTML-Auswertung für Modul zdfmobile - nicht genutzt
+			# return title,teaser_label,summary,thumb,tagline,duration
 		 
 		if multi == True:
-			title=UtfToStr(title); tagline=UtfToStr(tagline); summary=UtfToStr(summary);
-			fparams="&fparams={'url': '%s', 'title': '%s', 'ID': '%s'}" % (quote(path), 
-				quote(title), ID)
+			fparams="&fparams={'url': '%s', 'title': '%s', 'ID': '%s'}" % (urllib2.quote(path), 
+				urllib2.quote(title), ID)
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=thumb, 
 				thumb=thumb, fparams=fparams, summary=summary, tagline=tagline)
 		else:											# Einzelseite	
@@ -6399,10 +6324,10 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 						tag_par = tag_par.replace('\n', '||')
 						summary = summ_txt			
 			
+			tagline = UtfToStr(tagline)
 			tagline=repl_json_chars(tagline)		# json-komp. für func_pars in router()	
-			title=UtfToStr(title); tagline=UtfToStr(tagline); summary=UtfToStr(summary);
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" %\
-				(quote(path), quote(title), quote(thumb), quote(tag_par))	
+				(urllib2.quote(path), urllib2.quote(title), thumb, urllib2.quote(tag_par))	
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=thumb, thumb=thumb, 
 				fparams=fparams, summary=summary,  tagline=tagline, mediatype=mediatype)
 				
@@ -6476,7 +6401,7 @@ def ZDF_getVideoSources(url, title, thumb, tagline, segment_start=None, segment_
 
 	if formitaeten == '':										# Nachprüfung auf Videos
 		msg1 = 'Video nicht vorhanden / verfügbar.'
-		msg2 = 'Titel: %s' % unquote(title)
+		msg2 = 'Titel: %s' % urllib2.unquote(title)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")
 		return li
 				
@@ -6496,26 +6421,26 @@ def ZDF_getVideoSources(url, title, thumb, tagline, segment_start=None, segment_
 	if SETTINGS.getSetting('pref_use_downloads'):				# Video-Items erstellen: weitere Formate
 		title_oc = "[COLOR blue]weitere Video-Formate und Downloads[/COLOR] | %s" % title
 	else:	
-		title_oc = u"[COLOR blue]weitere Video-Formate[/COLOR] | %s" % title
+		title_oc = "[COLOR blue]weitere Video-Formate[/COLOR] | %s" % title
 	PLog("title_oc: " + title_oc)
 		
 	PLog(title); PLog(title_oc); PLog(tagline); PLog(sid); 
-	title_oc=UtfToStr(title_oc); 
+	title = UtfToStr(title); tagline = UtfToStr(tagline); 
 		
 	if SETTINGS.getSetting('pref_video_direct') == 'false':	# ZDFotherSources nicht bei Sofortstart zeigen
 		# li = Parseplaylist(li, videoURL, thumb)	# hier nicht benötigt - das ZDF bietet bereits 3 Auflösungsbereiche
 		fparams="&fparams={'title': '%s', 'tagline': '%s', 'thumb': '%s', 'sid': '%s', 'apiToken1': '%s', 'apiToken2': '%s'}" \
-			% (quote(title), quote(tagline), quote(thumb), sid, apiToken1, apiToken2)
+			% (urllib2.quote(title), urllib2.quote(tagline), urllib2.quote(thumb), sid, apiToken1, apiToken2)
 		addDir(li=li, label=title_oc, action="dirList", dirID="ZDFotherSources", fanart=thumb, thumb=thumb, fparams=fparams)
 
 	# MEHR_Suche (wie ZDF_Sendungen):
-	label = u"Alle Beiträge zu >%s< suchen"  % title
+	title = UtfToStr(title)
+	label = "Alle Beiträge zu >%s< suchen"  % title
 	query = title.replace(' ', '+')	
-	tagline = u"zusätzliche Suche starten"
-	summ 	= u"suche alle Beiträge, die sich auf >%s< beziehen" % title
+	tagline = "zusätzliche Suche starten"
+	summ 	= "suche alle Beiträge, die sich auf >%s< beziehen" % title
 	s_type	= 'MEHR_Suche'						# Suche alle Beiträge (auch Minutenbeiträge)
-	label=UtfToStr(label); tagline=UtfToStr(tagline); summ=UtfToStr(summ); 
-	fparams="&fparams={'query': '%s', 's_type': '%s'}" % (quote(query), s_type)
+	fparams="&fparams={'query': '%s', 's_type': '%s'}" % (urllib2.quote(query), s_type)
 	addDir(li=li, label=label, action="dirList", dirID="ZDF_Search", fanart=R(ICON_MEHR), 
 		thumb=R(ICON_MEHR), fparams=fparams, tagline=tagline, summary=summ)
 		
@@ -6654,7 +6579,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 		local_path = os.path.abspath(local_path)
 		try:
 			if os.path.isfile(local_path) == False:					# schon vorhanden?
-				urllib.request.urlretrieve(sub_vtt_path, local_path)
+				urllib.urlretrieve(sub_vtt_path, local_path)
 		except Exception as exception:
 			local_path = ''
 			PLog(str(exception))
@@ -6665,7 +6590,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	duration = stringextract('"value":',  '}', duration).strip()
 	PLog(duration)	
 	if duration:
-		duration = old_div((old_div(int(duration), 1000)), 60)			# Rundung auf volle Minuten reicht hier 
+		duration = (int(duration) / 1000) / 60			# Rundung auf volle Minuten reicht hier 
 		duration = max(1, duration)						# 1 zeigen bei Werten < 1
 		duration = str(duration) + " min"	
 	PLog('duration: ' + duration)
@@ -6696,7 +6621,8 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 	PLog(only_list); PLog(title_call); PLog(tagline)
 	# PLog(formitaeten)		# bei Bedarf
 
-	title_call = unquote(title_call)
+	title_call = urllib2.unquote(title_call)
+	title_call = UtfToStr(title_call); tagline = UtfToStr(tagline); geoblock = UtfToStr(geoblock)
 	if 	title_call != tagline:		
 		Plot	 = "%s\n\n%s" % (title_call, tagline + geoblock)
 		Plot_par = "%s||||%s" % (title_call, tagline + geoblock)	# || Code für LF (\n scheitert in router)
@@ -6724,6 +6650,7 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 				url = stringextract('"uri": "',  '"', audiorec)			# URL
 				url = url.replace('https', 'http')
 				quality = stringextract('"quality": "',  '"', audiorec)
+				quality = UtfToStr(quality)
 				PLog(url); PLog(quality)
 				
 				i = i +1
@@ -6736,22 +6663,22 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 							PLog("Plot_par: " + Plot_par)
 							PlayVideo(url=url, title=title_call, thumb=thumb, Plot=Plot_par, sub_path=sub_path, Merk=Merk)
 							return li, ''	# sauber raus in ZDF_getVideoSources
-							
-						title = u'%s. %s [m3u8] Bandbreite und Auflösung automatisch | %s' % (str(i), quality, title_call)
+						
+						title = '%s. %s [m3u8] Bandbreite und Aufloesung automatisch | %s' % (str(i), quality, title_call)
+						title = UtfToStr(title)
 
 						#   "auto"-Button + Ablage master.m3u8:
 						li = ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, tagline='', descr=Plot_par,
 							sub_path=sub_path)	
 					else:									# m3u8 enthält Auflösungen high + med
-						title = u'Qualität: ' + quality + ' | Typ: ' + typ + ' ' + facets 
-						title = u'%s. Qualität: %s | Typ: %s %s' % (str(i), quality, typ, facets)
+						title = 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' ' + facets 
+						title = '%s. Qualitaet: %s | Typ: %s %s' % (str(i), quality, typ, facets)
+						title = UtfToStr(title)
 						download_list.append(title + '#' + url)				# Download-Liste füllen	
 						tagline	 = Plot_par.replace('||','\n')				# wie m3u8-Formate
-						title=UtfToStr(title); tagline=UtfToStr(tagline);
-
 						fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
-							(quote_plus(url), quote_plus(title), quote_plus(thumb), 
-							quote_plus(Plot_par), quote_plus(sub_path), Merk)	
+							(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(thumb), 
+							urllib.quote_plus(Plot_par), urllib.quote_plus(sub_path), Merk)	
 						addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 							mediatype='video', tagline=tagline) 
 													
@@ -6765,6 +6692,7 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher Inhalt
 	PLog('ZDF_Bildgalerie:'); PLog(mode); PLog(title)
 	title_org = title
+	page = UtfToStr(page)
 	
 	# neue Listitems
 	li = xbmcgui.ListItem()
@@ -6868,7 +6796,7 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 			local_path = os.path.abspath(local_path)
 			if os.path.isfile(local_path) == False:			# schon vorhanden?
 				try:
-					urllib.request.urlretrieve(img_src, local_path)
+					urllib.urlretrieve(img_src, local_path)
 					thumb = local_path
 				except Exception as exception:
 					PLog(str(exception))	
@@ -6880,14 +6808,14 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 			summ = unescape(summ)
 			PLog('neu:');PLog(title);PLog(thumb);PLog(summ[0:40]);
 			if thumb:
-				fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
+				fparams="&fparams={'path': '%s', 'single': 'True'}" % urllib2.quote(local_path)
 				addDir(li=li, label=title, action="dirList", dirID="ZDFSlideShow", 
 					fanart=thumb, thumb=thumb, fparams=fparams, summary=summ, tagline=tagline)
 
 			image += 1
 			
 	if image > 0:		
-		fparams="&fparams={'path': '%s'}" % quote(fpath) 	# fpath: SLIDESTORE/fname
+		fparams="&fparams={'path': '%s'}" % urllib2.quote(fpath) 	# fpath: SLIDESTORE/fname
 		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDFSlideShow", 
 			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
 			
@@ -6908,7 +6836,7 @@ def ZDFSlideShow(path, single=None):
 		return xbmc.executebuiltin('SlideShow(%s, %s)' % (local_path, 'notrandom'))
 	 
 ####################################################################################################
-def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):	
+def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, tagline='', summary='', sub_path=''):	
 #	# master.m3u8 auswerten, Url muss komplett sein. 
 #  1. Besonderheit: in manchen *.m3u8-Dateien sind die Pfade nicht vollständig,
 #	sondern nur als Ergänzung zum Pfadrumpf (ohne Namen + Extension) angegeben, Bsp. (Arte):
@@ -6934,6 +6862,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		return li
 
+	tagline=UtfToStr(tagline); summary=UtfToStr(summary); descr=UtfToStr(descr);
 	playlist = ''
 	# seit ZDF-Relaunch 28.10.2016 dort nur noch https
 	if url_m3u8.find('http://') == 0 or url_m3u8.find('https://') == 0:		# URL oder lokale Datei?			
@@ -6950,10 +6879,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 	 
 	PLog('playlist: ' + playlist[:100])		# bei Bedarf
 	lines = playlist.splitlines()
-	lines.pop(0)					# 1. Zeile entfernen (#EXTM3U)
-	BandwithOld 	= ''			# für Zwilling -Test (manchmal 2 URL für 1 Bandbreite + Auflösung) 
-	thumb_org=thumb; descr_org=descr 	# sichern
-	
+	lines.pop(0)		# 1. Zeile entfernen (#EXTM3U)
+	BandwithOld 	= ''	# für Zwilling -Test (manchmal 2 URL für 1 Bandbreite + Auflösung) 
+	thumb_org		= thumb # sichern
 	i = 0; li_cnt = 1
 	#for line in lines[1::2]:	# Start 1. Element, step 2
 	for line in lines:	
@@ -6969,9 +6897,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 			except:
 				BandwithInt = 0
 			if Resolution:	# fehlt manchmal (bei kleinsten Bandbreiten)
-				Resolution = u'Auflösung ' + Resolution
+				Resolution = 'Aufloesung ' + Resolution
 			else:
-				Resolution = u'Auflösung unbekannt'	# verm. nur Ton? CODECS="mp4a.40.2"
+				Resolution = 'Aufloesung unbekannt'	# verm. nur Ton? CODECS="mp4a.40.2"
 			Codecs = GetAttribute(line, 'CODECS')
 			# als Titel wird die  < angezeigt (Sender ist als thumb erkennbar)
 			title='Bandbreite ' + Bandwith
@@ -6982,32 +6910,36 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 				url = url_m3u8[0:pos+1] + url 			# Basispfad + relativer Pfad
 			if Bandwith == BandwithOld:	# Zwilling -Test
 				title = 'Bandbreite ' + Bandwith + ' (2. Alternative)'
-			thumb=thumb_org
-			
+				
 			PLog(thumb); PLog(Resolution); PLog(BandwithInt); 
+			Resolution=UtfToStr(Resolution); geoblock=UtfToStr(geoblock);
+			thumb=thumb_org
 			if BandwithInt and BandwithInt <=  100000: 		# vermutl. nur Audio (Bsp. ntv 48000, ZDF 96000)
 				Resolution = Resolution + ' (vermutlich nur Audio)'
 				thumb=R(ICON_SPEAKER)
-			lable = Resolution+geoblock
-			lable = "%s" % li_cnt + ". " + title + " | " + lable
-						
+				
+			lable = Resolution+geoblock						# Kodi: statt summary + tagline in Plex
+			title =  UtfToStr(title)
+			lable = "%s. %s | %s" % (str(li_cnt), title, lable)
+			
 			# quote für url erforderlich wg. url-Inhalt "..sd=10&rebase=on.." - das & erzeugt in router
 			#	neuen Parameter bei dict(parse_qsl(paramstring)
-			Plot = descr_org
+			Plot = descr
+			if tagline:
+				Plot="%s||||%s" % (tagline, Plot)
+			if summary:
+				Plot="%s||||%s" % (summary, Plot)
 			Plot = Plot.replace('\n', '||')	
 			descr = Plot.replace('||', '\n')		
 		
 			if descr.strip() == '|':			# ohne EPG: EPG-Verbinder entfernen
 				descr=''
 			
-			descr=UtfToStr(descr); title=UtfToStr(title) ;lable=UtfToStr(lable)
-			PLog('Satz:')
-			PLog(title); PLog(lable); PLog(url); PLog(thumb); PLog(Plot); PLog(descr); 
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
-				(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot), 
-				quote_plus(sub_path))
+				(urllib.quote_plus(url), title, urllib.quote_plus(thumb), urllib.quote_plus(Plot), 
+				urllib.quote_plus(sub_path))
 			addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-				mediatype='video', tagline=descr) 
+				mediatype='video', tagline=tagline, summary=descr) 
 							
 			BandwithOld = Bandwith												
 		i = i + 1				# Index für URL
@@ -7031,7 +6963,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 def router(paramstring):
 	# paramstring: Dictionary mit
 	# {<parameter>: <value>} Elementen
-	paramstring = unquote_plus(paramstring)
+	paramstring = urllib.unquote_plus(paramstring)
 	PLog(' router_params1: ' + paramstring)
 		
 	if paramstring:	
@@ -7083,7 +7015,7 @@ def router(paramstring):
 			PLog(' router func_getattr: ' + str(func))		
 			if func_pars != '""':		# leer, ohne Parameter?	
 				# PLog(' router func_pars: Ruf mit func_pars')
-				# func_pars = unquote_plus(func_pars)		# quotierte url auspacken - entf.
+				# func_pars = urllib.unquote_plus(func_pars)		# quotierte url auspacken - entf.
 				PLog(' router func_pars unquote_plus: ' + str(func_pars))
 				try:
 					# Problem (spez. Windows): Parameter mit Escapezeichen (Windows-Pfade) müssen mit \\
@@ -7092,14 +7024,14 @@ def router(paramstring):
 					# Keine /n verwenden (json.loads: need more than 1 value to unpack)
 					func_pars = func_pars.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 					func_pars = func_pars.replace('\\', '\\\\')		# json.loads-kompatible Windows-Pfade
-					# func_pars = func_pars.decode(encoding="utf-8")# doppeltes decoding möglich!  
+					func_pars = func_pars.decode(encoding="utf-8")  
 					
 					PLog("json.loads func_pars: " + func_pars)
 					PLog('json.loads func_pars type: ' + str(type(func_pars)))
+					func_pars = func_pars.encode("utf-8")			# entf.
 					mydict = json.loads(func_pars)
 					PLog("mydict: " + str(mydict)); PLog(type(mydict))
-				except Exception as exception:
-					PLog('router_exception: {0}'.format(str(exception)))
+				except:
 					mydict = ''
 				
 				# PLog(' router func_pars: ' + str(type(mydict)))

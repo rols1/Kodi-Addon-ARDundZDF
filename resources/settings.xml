@@ -62,7 +62,6 @@
    	<setting label="gesamtes Addon: Verzicht auf Homebuttons" type="bool" id="pref_nohome" default="false"/>
 	<setting label="Modul FUNK: Videoeinstellung für MP4-Sofortstart" type="select" id="pref_funk_bandw" default="1500:960x540"
   		values="400:320x180|650:640x360|900:720x404|1500:960x540|2500:1280x720|4000:1920x108|6000:1920x1080" />
-  	<setting label="Modul ARD Neu, Senderwahl: im Titel >Sender:< entfernen" type="bool" id="pref_disable_sender" default="false"/>
  </category>
 </settings>
 

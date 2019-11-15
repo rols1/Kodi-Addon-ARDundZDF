@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.ardundzdf" name="ARD und ZDF" version="2.2.0" provider-name="rols1 (rols1@gmx.de)">
+<addon id="plugin.video.ardundzdf" name="ARD und ZDF" version="2.2.1" provider-name="rols1 (rols1@gmx.de)">
   <requires>
    <import addon="xbmc.python" version="2.25.0"/>
-   <import addon="script.module.future" version="0.0.1"/>
  </requires>
   <extension point="xbmc.python.pluginsource" library="ardundzdf.py">
         <provides>video</provides>

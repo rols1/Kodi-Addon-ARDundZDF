@@ -6,39 +6,28 @@
 #	16.01.2019 erweitert mit Backup-Funktion für Addon-Cache.
 #	03.05.2019 Backup-Funktion wieder entfernt, data-Verzeichnis ab
 #		V1.4.0 im Kodi-Verzeichnis .kodi/userdata/addon_data/ardundzdf_data
-#	31.10.2019 Migration Python3
+#
 ################################################################################
-
-# Python3-Kompatibilität:
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-
-# Standard:
 import re, os, sys
 import shutil						# Dir's löschen
-import urllib.request, urllib.error, urllib.parse
-import zipfile
-import io 							# Python2+3 -> update() io.BytesIO für Zipfile
+import urllib2, zipfile, StringIO
 
-# Kodi:
 import xbmc, xbmcgui, xbmcaddon
 
-# Addonmodule + Funktionsziele (util_imports.py):
 import resources.lib.util as util
 PLog=util.PLog; get_page=util.get_page; stringextract=util.stringextract;
-cleanhtml=util.cleanhtml; UtfToStr=util.UtfToStr; BytesToUnicode=util.BytesToUnicode;
+cleanhtml=util.cleanhtml;
  
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path')
+ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')
 
 ICON_OK = "icon-ok.png"				# gtk themes / Adwaita checkbox-checked-symbolic.symbolic.png
 ICON_WARNING = "icon-warning.png"	# gtk themes / Adwaita dialog-warning-symbolic.symbolic.png
 ICON_ERROR = "icon-error.png"		# gtk themes / Adwaita dialog-error.png
 ICON_UPDATER = "icon-updater.png"	# gtk themes / Adwaita system-software-update.png
-ICON_RELEASES = "icoimportn-releases.png"	# gtk themes / Adwaita view-list-symbolic.symbolic.png
+ICON_RELEASES = "icon-releases.png"	# gtk themes / Adwaita view-list-symbolic.symbolic.png
 ICON_NEXT = "icon-next.png"			# gtk themes / Adwaita go-next-symbolic.symbolic.png 
 
 FEED_URL = 'https://github.com/{0}/releases.atom'
@@ -62,7 +51,7 @@ def get_latest_version():
 		release_feed_url = ('https://github.com/{0}/releases.atom'.format(GITHUB_REPOSITORY))
 		PLog(release_feed_url)
 			
-		r = urllib.request.urlopen(release_feed_url)
+		r = urllib2.urlopen(release_feed_url)
 		page = r.read()					
 		PLog(len(page))
 		# PLog(page[:800])
@@ -77,11 +66,10 @@ def get_latest_version():
 		# PLog(link); PLog(title); PLog(summary); PLog(tag);  
 		return (title, summary, tag)
 	except Exception as exception:
-		PLog('Suche nach neuen Versionen fehlgeschlagen: {0}'.format(str(exception)))
+		Log.Error('Suche nach neuen Versionen fehlgeschlagen: {0}'.format(repr(exception)))
 		return ('', '', '')
 
 ################################################################################
-# decode latest_version (hier bytestring) erforderlich für Pfad-Bau in 
 def update_available(VERSION):
 	PLog('update_available:')
 
@@ -97,16 +85,14 @@ def update_available(VERSION):
 			# wir verwenden auf Github die Versionierung nicht im Plugin-Namen
 			# latest_version  = title 
 			latest_version  = tag		# Format hier: '1.4.1'
-			latest_version = BytesToUnicode(latest_version)		# Python2+3
-
 			current_version = VERSION
 			int_lv = tag.replace('.','')
 			int_cv = current_version.replace('.','')
 			PLog('Github: ' + latest_version); PLog('lokal: ' + current_version); 
 			# PLog(int_lv); PLog(int_cv)
 			return (int_lv, int_cv, latest_version, summ, tag)
-	except Exception as exception:	
-		PLog(str(exception))
+	except:
+		pass
 	return (False, '', '', '', '', '')
             
 ################################################################################
@@ -119,9 +105,9 @@ def update(url, ver):
 		try:
 			dest_path 	= xbmc.translatePath("special://home/addons/")
 			PLog('Mark1')
-			r 			= urllib.request.urlopen(url)
+			r 			= urllib2.urlopen(url)
 			PLog('Mark2')
-			zip_data	= zipfile.ZipFile(io.BytesIO(r.read()))
+			zip_data	= zipfile.ZipFile(StringIO.StringIO(r.read()))
 			PLog('Mark3')
 			
 			# save_restore('save')									# Cache sichern - entfällt, s.o.
