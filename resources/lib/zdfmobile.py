@@ -7,9 +7,16 @@
 #	sondern die Seiten ab https://zdf-cdn.live.cellular.de/mediathekV2 - diese
 #	Seiten werden im json-Format ausgeliefert
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
 import  json		
 import os, sys
-import urllib, urllib2
+import urllib.request, urllib.parse, urllib.error			
+from urllib.parse import parse_qsl, urlencode
+from urllib.parse import quote, unquote, quote_plus, unquote_plus	# save space
+
 import ssl
 import datetime, time
 import re				# u.a. Reguläre Ausdrücke
@@ -39,7 +46,7 @@ ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')	# Basis-Pfad Addon
+ADDON_PATH    	= SETTINGS.getAddonInfo('path')	# Basis-Pfad Addon
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
@@ -179,6 +186,7 @@ def Verpasst(DictID):					# Wochenliste
 		path = 'https://zdf-cdn.live.cellular.de/mediathekV2/broadcast-missed/%s' % iDate
 		title =	"%s | %s" % (display_date, iWeekday)
 		PLog(title); PLog(path);
+		title=UtfToStr(title);
 		fparams="&fparams={'path': '%s', 'datum': '%s'}" % (path, display_date)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Verpasst_load", fanart=R(ICON_MAIN_ZDFMOBILE), 
 			thumb=R(ICON_DIR_FOLDER), fparams=fparams)
@@ -234,6 +242,8 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				date = '%s |  Laenge: %s' % (date, dauer)
 				path = 'stage|%d' % i
 				PLog(path)
+				
+				title=UtfToStr(title); descr=UtfToStr(descr); date=UtfToStr(date);
 				fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (path, DictID)	
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowVideo", fanart=img, thumb=img, 
 					fparams=fparams, summary=descr, tagline=date, mediatype=mediatype)
@@ -247,12 +257,10 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				title = clusterObject["name"]
 				if title == '':
 					title = 'ohne Titel'
-				title = title.encode("utf-8")
-				path = path.encode("utf-8")
-				PLog('Mark1')
 				title = repl_json_chars(title)
+				PLog(title); PLog(path);  
+				title=UtfToStr(title); 
 				fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s'}"  % (path, title, DictID)
-				PLog(title); PLog(path);  PLog(fparams); 
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.SingleRubrik", 				
 					fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 								
@@ -262,8 +270,7 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 			if clusterObject["type"].startswith("teaser") and "name" in clusterObject:
 				path = "broadcastCluster|%d|teaser" % counter
 				title = clusterObject["name"]
-				title = title.encode("utf-8")
-				path = path.encode("utf-8")
+				title=UtfToStr(title); 
 				fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s'}" % (path, title, DictID)
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.SingleRubrik", 
 				fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
@@ -274,9 +281,8 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 			if("liveStream" in epgObject and len(epgObject["liveStream"]) >= 0):
 				path = "epgCluster|%d|liveStream" % counter
 				title = epgObject["name"] + ' Live'
-				title = title.encode("utf-8")
-				path = path.encode("utf-8")
-				fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (urllib2.quote(path), DictID)	
+				title=UtfToStr(title); 
+				fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (quote(path), DictID)	
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowVideo", 
 					fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams, 
 					tagline=title, mediatype=mediatype)
@@ -326,12 +332,10 @@ def Get_content(stageObject, maxWidth):
 			#now = datetime.datetime.now()
 			#date = now.strftime("%d.%m.%Y %H:%M")
 		
-	typ=UtfToStr(typ); title=UtfToStr(title); subTitle=UtfToStr(subTitle); descr=UtfToStr(descr); 
 	title=repl_json_chars(title) 		# json-komp. für func_pars in router()
 	subTitle=repl_json_chars(subTitle) 	# dto
 	descr=repl_json_chars(descr) 		# dto
 	
-	img=UtfToStr(img);	date=UtfToStr(date); dauer=UtfToStr(dauer);
 	PLog('Get_content: %s | %s |%s | %s | %s | %s | %s' % (typ, title,subTitle,descr,img,date,dauer) )		
 	return typ,title,subTitle,descr,img,date,dauer
 # ----------------------------------------------------------------------	
@@ -381,6 +385,7 @@ def SingleRubrik(path, title, DictID):
 			title = repl_json_chars(title)
 			# PLog('video-content: %s |  %s |  %s |  %s | ' % (title,subTitle,descr,img))
 			
+			title=UtfToStr(title); descr=UtfToStr(descr); tagline=UtfToStr(tagline);
 			fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (path, DictID)
 			PLog("fparams: " + fparams)	
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowVideo", fanart=img, 
@@ -449,10 +454,9 @@ def ShowVideo(path, DictID, Merk='false'):
 	
 	PLog('Einzelbeitrag')								# Einzelbeitrag
 	typ,title,subTitle,descr,img,date,dauer = Get_content(videoObject,imgWidthLive)
-	typ=UtfToStr(typ); title=UtfToStr(title); subTitle=UtfToStr(subTitle); descr=UtfToStr(descr);
 	if subTitle:
 		title = '%s | %s' % (title,subTitle)
-	title_org = UtfToStr(title)	
+	title_org = title
 	PLog(title_org)	
 
 	streamApiUrl, jsonurl, htmlurl = get_video_urls(videoObject)		# json- und html-Quellen bestimmen
@@ -500,6 +504,7 @@ def ShowVideo(path, DictID, Merk='false'):
 				formitaeten = get_formitaeten2(page) 		# String-Ausw. Formitäten
 
 	descr_local=''										# Beschreibung zusammensetzen
+	PLog(type(date)); PLog(type(dauer)); PLog(type(descr));
 	if date and dauer:
 		descr_local = "%s | %s\n\n%s" % (date, dauer, descr) # Anzeige Listing 
 		descr 		= "%s | %s||||%s" % (date, dauer, descr) # -> PlayVideo
@@ -507,7 +512,6 @@ def ShowVideo(path, DictID, Merk='false'):
 
 	i=0
 	for detail in formitaeten:	
-		PLog("Mark4")
 		i = i + 1
 		quality = detail[0]				# Bsp. auto [m3u8]
 		hd = 'HD: ' + str(detail[1])	# False bei mp4-Dateien, s.u.
@@ -552,11 +556,11 @@ def ShowVideo(path, DictID, Merk='false'):
 			title=str(i) + '. ' + quality + ' [m3u8]' + ' | ' + geoblock	# Einzelauflösungen
 			PLog("title: " + title)
 			tagline = '%s\n\n' % title_org + 'Qualitaet: %s | Typ: %s' % (quality, '[m3u8-Streaming]')
-			tagline = UtfToStr(tagline);
+			title=UtfToStr(title); tagline=UtfToStr(tagline); descr_local=UtfToStr(descr_local);
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
-				(urllib2.quote(url), urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr), Merk)	
+				(quote(url), quote(title_org), quote_plus(img), quote_plus(descr), Merk)	
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
-				thumb=img, fparams=fparams, tagline=descr_local, summary =tagline, mediatype='video')	
+				thumb=img, fparams=fparams, tagline=descr_local, summary=tagline, mediatype='video')	
 		else:
 			title=str(i) + '. %s [%s] | %s'  % (quality, hd, geoblock)
 			PLog("title: " + title)
@@ -564,11 +568,11 @@ def ShowVideo(path, DictID, Merk='false'):
 			if bandbreite:
 				bandbreite=UtfToStr(bandbreite);
 				tagline = '%s | %s'	% (tagline, bandbreite)		
-			tagline = UtfToStr(tagline);
+			title=UtfToStr(title); tagline = UtfToStr(tagline); descr_local=UtfToStr(descr_local);
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
-				(urllib2.quote(url), urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr), Merk)	
+				(quote(url), quote(title_org), quote_plus(img), quote_plus(descr), Merk)	
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
-				thumb=img, fparams=fparams, tagline=descr_local, summary =tagline, mediatype='video')	
+				thumb=img, fparams=fparams, tagline=descr_local, summary=tagline, mediatype='video')	
 	
 	'''
 	# einzelne Auflösungen anbieten:	# bei zdfMobile überflüssig - Varianten von low - veryhigh vorh.
@@ -762,9 +766,9 @@ def Parseplaylist(li, playlist, title, thumb, descr):	# playlist (m3u8, ZDF-Form
 			tagline = '%s | nur Audio'	% tagline
 			thumb=R(ICON_SPEAKER)
 		
-		descr = UtfToStr(descr)		
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib.quote_plus(url), 
-			urllib.quote_plus(title_org), urllib.quote_plus(thumb), urllib.quote_plus(descr))			
+		title=UtfToStr(title); summ=UtfToStr(summ); tagline=UtfToStr(tagline);		
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote_plus(url), 
+			quote_plus(title_org), quote_plus(thumb), quote_plus(descr))			
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, 
 			thumb=thumb, fparams=fparams, summary=summ, tagline=tagline, mediatype='video')	
 
@@ -776,7 +780,7 @@ def loadPage(url, apiToken='', maxTimeout = None):
 		safe_url = url.replace( " ", "%20" ).replace("&amp;","&")
 		PLog("loadPage: " + safe_url); 
 
-		req = urllib2.Request(safe_url)
+		req = urllib.request.Request(safe_url)
 		# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)		# 07.10.2019: Abruf mit SSLContext klemmt häufig - bei
 		# 	Bedarf mit Prüfung auf >'_create_unverified_context' in dir(ssl)< nachrüsten:
 
@@ -793,12 +797,10 @@ def loadPage(url, apiToken='', maxTimeout = None):
 		if maxTimeout == None:
 			maxTimeout = 60;
 		# r = urllib2.urlopen(req, timeout=maxTimeout, context=gcontext) # s.o.
-		r = urllib2.urlopen(req, timeout=maxTimeout)
+		r = urllib.request.urlopen(req, timeout=maxTimeout)
 		# PLog("headers: " + str(r.headers))
 		doc = r.read()
 		PLog(len(doc))	
-		if '<!DOCTYPE html>' not in doc:	# Webseite mit apiToken nicht encoden (code-error möglich)
-			doc = doc.encode('utf-8')		
 		return doc
 		
 	except Exception as exception:

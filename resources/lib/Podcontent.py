@@ -14,11 +14,21 @@
 # 	- siehe nachfolgende Liste Podcast_Scheme_List
 #
 
+# Python3-Kompatibilität:
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+
+# XBMC
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 
-import sys, os, subprocess, urllib2, datetime, time
+# Python
+import sys, os, subprocess 
 import json, re
+import urllib.request, urllib.error, urllib.parse, datetime, time
+from urllib.parse import quote, unquote, quote_plus, unquote_plus	# save space
 
+# Addonmodule + Funktionsziele (util_imports.py)
 import resources.lib.util as util
 PLog=util.PLog;  home=util.home;  Dict=util.Dict;  name=util.name; 
 UtfToStr=util.UtfToStr;  addDir=util.addDir;  get_page=util.get_page; 
@@ -36,7 +46,7 @@ ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')	# Basis-Pfad Addon
+ADDON_PATH    	= SETTINGS.getAddonInfo('path')	# Basis-Pfad Addon
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
@@ -84,7 +94,7 @@ def PodFavoriten(title, path, pagenr='1'):
 		msg2 = msg
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		return li
-	PLog(len(page))				
+	PLog(len(page))	
 	
 	cnt=0
 	gridlist = blockextract('"duration"', page)		# Sendungen 
@@ -96,7 +106,7 @@ def PodFavoriten(title, path, pagenr='1'):
 		descr_l	=  blockextract('"summary"', rec)			# 2 x 
 		
 		dauer 	= stringextract('duration":"', '"', rec) 
-		rubrik 	= stringextract('category":"', '"', rec) 
+		rubrik 	= stringextract('category":"', '"', rec) 		
 		category= stringextract('category":"', '"', rec)
 		cat_descr=  stringextract('summary":"', '"', descr_l[0])	# nicht gebraucht
 		
@@ -113,26 +123,24 @@ def PodFavoriten(title, path, pagenr='1'):
 		img 	=  stringextract('image_16x9":"', '"', rec)
 		img		= img.replace('{width}', '640')
 		
-		title	= "%s | %s" % (rubrik, title)
-		
-		descr	= "%s | Dauer %s | %s\n\n%s" % (sender, dauer, pub_date, descr) 		
-		title = repl_json_chars(title)
-		descr = repl_json_chars(descr)
+		title = rubrik + ' | ' + title
+		descr	= "" + sender + ' | ' + dauer + ' | ' + pub_date + '\n\n' + descr 
 		summ_par= descr.replace('\n', '||')
 	
 		PLog('Satz:');
-		# title=UtfToStr(title); descr=UtfToStr(descr); rubrik=UtfToStr(rubrik); 
+		title=UtfToStr(title); descr=UtfToStr(descr); 
+		rubrik=UtfToStr(rubrik); downl_url=UtfToStr(downl_url); 
 		PLog(dauer); PLog(title); PLog(img); PLog(downl_url); PLog(play_url);
 		PLog(descr); 						
 		
 		# AudioPlayMP3: 2 Buttons (Abspielen + Download)
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib2.quote(downl_url), 
-			urllib2.quote(title), urllib2.quote(img), urllib2.quote(summ_par))
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(downl_url), 
+			quote(title), quote(img), quote(summ_par))
 		addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, fparams=fparams, 
 			summary=descr)
-			
-		downl_list.append(title + '#' + downl_url)	
-		cnt=cnt+1
+		
+		downl_list.append(title + '#' + downl_url)
+		cnt=cnt+1		
 
 	if cnt == 0:
 		msg1 = 'nichts gefunden zu >%s<' % title_org
@@ -143,10 +151,11 @@ def PodFavoriten(title, path, pagenr='1'):
 	if SETTINGS.getSetting('pref_use_downloads') == 'true' and len(downl_list) > 1:
 		# Sammel-Downloads - alle angezeigten Favoriten-Podcasts downloaden?
 		#	für "normale" Podcasts erfolgt die Abfrage in SinglePage
-		title='Download! Alle angezeigten [B]%d[/B] Podcasts ohne Rückfrage speichern?' % cnt
-		summ = 'Download von insgesamt %s Podcasts' % len(downl_list)	
+		title=u'Download! Alle angezeigten [B]%d[/B] Podcasts ohne Rückfrage speichern?' % cnt
+		summ = u'Download von insgesamt %s Podcasts' % len(downl_list)	
 		Dict("store", 'downl_list', downl_list) 
-		Dict("store", 'URL_rec', downl_list) 	
+		Dict("store", 'URL_rec', downl_list) 
+		title=UtfToStr(title); summ=UtfToStr(summ);	
 		fparams="&fparams={'key_downl_list': 'downl_list', 'key_URL_rec': 'downl_list'}" 
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
 			fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
@@ -166,10 +175,9 @@ def PodFavoriten(title, path, pagenr='1'):
 		img = R(ICON_MEHR) 
 		tag = "weiter zu Seite %d" % page_next
 		PLog(tag)
-		title = UtfToStr(title)
-		fparams="&fparams={'path': '%s', 'title': '%s', 'pagenr': '%d'}" % (urllib2.quote(path_org), 
-			urllib2.quote(title), page_next)
-		PLog('Merk0')
+		title=UtfToStr(title); tag=UtfToStr(tag);
+		fparams="&fparams={'path': '%s', 'title': '%s', 'pagenr': '%d'}" % (quote(path_org), 
+			quote(title), page_next)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodFavoriten", \
 			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
 	
@@ -239,7 +247,6 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 		# Parameter-Format: -o Zieldatei_kompletter_Pfad Podcast-Url -o Zieldatei_kompletter_Pfad Podcast-Url ..
 		curl_fullpath = os.path.join(dest_path, dfname)		 
 		curl_fullpath = os.path.abspath(curl_fullpath)		# os-spezischer Pfad
-		PLog("Mark3")
 		curl_param_list = curl_param_list + ' -o '  + curl_fullpath + ' ' + url
 		
 	cmd = AppPath + ' ' + curl_param_list

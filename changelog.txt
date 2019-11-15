@@ -7,10 +7,46 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+15.11.2019	2.2.0	python3-Migration: Kodierungs-Anpassungen in Merkliste (Watch, ShowFavs).
+			python3-Migration: Kodierungs-Anpassungen in Modul util (RSave mit
+			codecs-Import, RLoad, ReadFavourites, cleanhtml, decode_url, unescape,
+			transl_doubleUTF8, make_filenames, transl_umlaute, transl_json.  
 
+not on Github	2.1.9	python3-Migration: Modul ARD Neu - wie Haupt-PRG.
+			Settings: Option "Modul ARD Neu, Senderwahl: im Titel >Sender:< entfernen" in 
+			ARD Neu, Anpassung Funktion Senderwahl (Modul ARDnew).
+			addon.xml: Import-Modul future festgelegt (Kompatibilität Python2/3).
+			SendungenAZ: Verzicht auf Abgleich Button/Webseite (lange Ladezeit).
+			ARD-Sportschauseite (Haupt-PRG + ARD Neu): Anpassung an Webseitenänderungen 
+			(www.sportschau.de/video/index.html), Seite "Tor des Monats": Retro-Inhalte
+			verknüpft mit Videos der Abstimmungsseite.
+
+not on Github	2.1.8	python3-Migration: Modul 3Sat -  wie Haupt-PRG.
+			SendungenDatum (Modul 3Sat): Tausch Uhrzeit/Sendung im Titel, Erweiterung
+			Beschreibung.
+			python3-Migration: Pocast-Favoriten (Modul Podcontent) -  wie Haupt-PRG.
+
+not on Github	2.1.7	python3-Migration: Haupt-PRG - Anpassungen ähnlich Module util + updater.
+			Parseplaylist: Param. tagline + summary entfernt (descr/Plot reicht) - Anpassung
+			im Haupt-PRG + im Modul 3Sat. 	
+
+not on Github	2.1.6	python3-Migration addDir (Modul util): Austausch %s-Ersetzung -> ".format",
+			fparams Merkliste ohne Ersetzungen belegt.
+			python3-Migration: Austausch Stringvergleiche "<>" -> "!=". 
+			python3-Migration: Finish Modul util (futurize)
+			AudioStartLive: fix Param. home -> myhome.
+			Modul ARD_Bildgalerie entfernt (seit 12/2018 nicht genutzt).
+
+not on Github	2.1.5	python3-Migration Modul util: Ersatz StringIO durch BytesIO (Verwendung:
+			get_page()).
+			python3-Migration Modul util: neue Funktion BytesToUnicode.
+			python3-Migration Modul updater: Ersatz StringIO durch BytesIO (Verwendung:
+			update()), Austausch urllib2.urlopen -> urllib.request.urlopen, latest_version
+			-> BytesToUnicode.
+			
 06.11.2019	2.1.4	Settings: Option "Verzicht auf Homebuttons" im gesamten Addon, Anpassung
 			Funktion home (Modul util).
-
+				
 28.10.2019	2.1.3	get_page_content (Modul ARD Neu): Zusatz duration für die Erkennung von
 			Einzelbeträgen (relevant bei einigen Mehr-Sendungen in ARDStartSingle.
 			ARDStart (Modul ARD Neu): Laden aus Cache nur noch bei Senderausfall.

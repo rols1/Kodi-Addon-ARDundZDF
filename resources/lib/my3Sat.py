@@ -6,17 +6,28 @@
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.3sat.de,
 #	Seiten werden im html-format, teils. json ausgeliefert
+#	04.11.2019 Migration Python3
 
+# Python3-Kompatibilität:
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+
+# Python
 import string, re
 import  json		
 import os, sys
-import urllib, urllib2, ssl
 import datetime, time
 
+import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse, ssl
+from urllib.parse import quote, unquote, quote_plus, unquote_plus	# save space
+
+# XBMC
 import xbmc, xbmcgui, xbmcaddon, xbmcplugin
 
+# Addonmodule + Funktionsziele (util_imports.py)
 import ardundzdf					# -> SenderLiveResolution, Parseplaylist
-
 import resources.lib.util as util	# (util_imports.py)
 PLog=util.PLog; home=util.home; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir; 
 getDirZipped=util.getDirZipped; Dict=util.Dict; name=util.name; ClearUp=util.ClearUp; 
@@ -31,6 +42,7 @@ CalculateDuration=util.CalculateDuration; time_translate=util.time_translate; se
 get_keyboard_input=util.get_keyboard_input; transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; 
 ReadFavourites=util.ReadFavourites; get_summary_pre=util.get_summary_pre; get_playlist_img=util.get_playlist_img; 
 get_startsender=util.get_startsender; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio; 
+BytesToUnicode=util.BytesToUnicode
 
 
 # Globals
@@ -52,7 +64,7 @@ ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')	# Basis-Pfad Addon
+ADDON_PATH    	= SETTINGS.getAddonInfo('path')	# Basis-Pfad Addon
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
@@ -88,9 +100,10 @@ def Main_3Sat(name):
 			
 	epg = get_epg()
 	if epg:
-		epg = 'Jetzt in 3sat: %s' % epg
+		epg = 'Jetzt in 3sat: ' + epg
+	epg = UtfToStr(epg)
 	title = '3Sat-Livestream'
-	fparams="&fparams={'name': '%s', 'epg': '%s'}" % (title, epg)
+	fparams="&fparams={'name': '%s', 'epg': '%s'}" % (quote(title), quote(epg))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Live", 
 		fanart=R('3sat.png'), thumb=R(ICON_MAIN_TVLIVE), tagline=epg, fparams=fparams)
 	
@@ -102,14 +115,14 @@ def Main_3Sat(name):
 	
 	title = "Sendungen A-Z | 0-9"	
 	summ = "Sendereihen - alphabetisch geordnet"	
-	fparams="&fparams={'name': '%s', 'path': '%s'}"	% (title, DreiSat_AZ)
+	fparams="&fparams={'name': '%s', 'path': '%s'}"	% (quote(title), quote(DreiSat_AZ))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SendungenAZlist", 
 		fanart=R('3sat.png'), thumb=R('zdf-sendungen-az.png'), fparams=fparams)
 												
 	title = "Rubriken"
 	path = 'https://www.3sat.de/themen'
 	summ = "Sendereihen - alphabetisch geordnet"
-	fparams="&fparams={'name': '%s', 'path': '%s'}"	% (title, path)
+	fparams="&fparams={'name': '%s', 'path': '%s'}"	% (quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubriken", 
 		fanart=R('3sat.png'), thumb=R('zdf-rubriken.png'), summary=summ, fparams=fparams)
 
@@ -126,13 +139,16 @@ def Search(first, path, query=''):
 	PLog('Search:'); PLog(first);	
 	if 	query == '':	
 		query = ardundzdf.get_query(channel='ZDF')
-	PLog(query)
 	if  query == None or query.strip() == '':
 		return ""
-	name = 'Suchergebnis zu: ' + urllib2.unquote(query)
+		
+	query=BytesToUnicode(query)		# decode, falls erf. (1. Aufruf)
+	PLog(query)
+
+	name = 'Suchergebnis zu: ' + unquote(query)
 		
 	if first == 'True':								# query nur beim 1. Aufruf injizieren, nicht bei 'mehr' 
-		path =  DreiSat_Suche % urllib2.quote(query)
+		path =  DreiSat_Suche % quote(query)
 		path = path + "&page=1"
 	PLog(path); 										# Bsp. https://www.3sat.de/suche?q=brexit&synth=true&attrs=&page=2
 	page, msg = get_page(path=path)	
@@ -151,7 +167,7 @@ def Search(first, path, query=''):
 
 	query_unqoute = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
 	if len(rubriken) == 0 or cnt == '':						# kein Treffer
-		msg1 = 'Leider kein Treffer (mehr) zu %s'  % urllib2.unquote(query)
+		msg1 = 'Leider kein Treffer (mehr) zu '  + unquote(query)
 		PLog(msg1)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		return li	
@@ -164,12 +180,13 @@ def Search(first, path, query=''):
 		plist = path.split('&page=')
 		pagenr = int(plist[-1])
 		new_path = plist[0] + '&page=' + str(pagenr + 1)
-		title = "Mehr zu: %s" %  urllib2.unquote(query)
+		title = "Mehr zu: %s" %  unquote(query)
+		summary='Mehr...'
 		PLog(new_path)
-		new_path = UtfToStr(new_path);  query = UtfToStr(query)		
 		
-		fparams="&fparams={'first': 'False', 'path': '%s', 'query': '%s'}" % (urllib.quote_plus(new_path), 
-			urllib.quote_plus(query))
+		title=UtfToStr(title); summary=UtfToStr(summary);
+		fparams="&fparams={'first': 'False', 'path': '%s', 'query': '%s'}" % (quote(new_path), 
+			quote(query))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Search", fanart=R('3sat.png'), 
 			thumb=R(ICON_MEHR), summary='Mehr...', fparams=fparams)
 		
@@ -199,14 +216,17 @@ def SendungenAZlist(name, path):				#
 		title	= stringextract('title="', '"', rec)
 		href	= stringextract('href="', '"', rec)
 		href	= DreiSat_BASE + href
+		PLog(title)
 		if 'link is-disabled' in rec:							# Button inaktiv
 			letter = stringextract('true">', '<', rec)
-			title= "Sendungen mit %s | %s" % (letter, 'ohne Beiträge')
-			fparams="&fparams={'name': '%s', 'path': '%s'}"	% (title, DreiSat_AZ)
+			title= "Sendungen mit " + letter + ' | ' + u'ohne Beiträge'
+			title=UtfToStr(title);
+			fparams="&fparams={'name': '%s', 'path': '%s'}"	% (quote(title), quote(DreiSat_AZ))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SendungenAZlist", 
 				fanart=R('3sat.png'), thumb=R('zdf-sendungen-az.png'), fparams=fparams)			
-		else:	
-			fparams="&fparams={'name': '%s', 'path': '%s'}"	% (urllib2.quote(title), urllib2.quote(href))
+		else:
+			title=UtfToStr(title);	
+			fparams="&fparams={'name': '%s', 'path': '%s'}"	% (quote(title), quote(href))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SendungenAZ", 
 				fanart=R('3sat.png'), thumb=R('Dir-folder.png'), fparams=fparams)			
 			
@@ -245,7 +265,6 @@ def SendungenAZ(name, path):
 			tag = "%s | %s" % (tag, sub_rubrik)
 		tag = cleanhtml(tag)
 
-		title = UtfToStr(title); descr = UtfToStr(descr)	
 		title = repl_json_chars(title); descr = repl_json_chars(descr); 
 		descr_par =	descr.replace('\n', '||')	
 		
@@ -253,8 +272,9 @@ def SendungenAZ(name, path):
 		PLog(img_src); PLog(rubrik); PLog(title);  PLog(href); PLog(descr);
 			
 		# Aufruf Sendereihe_Sendungen hier ohne Listitem					
-		fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (urllib2.quote(title),
-			 urllib2.quote(href), urllib2.quote(img_src))
+		title=UtfToStr(title); descr=UtfToStr(descr); tag=UtfToStr(tag);
+		fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title),
+			 quote(href), quote(img_src))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
 			fanart=R('3sat.png'), thumb=img_src, summary=descr, tagline=tag, fparams=fparams)
 	
@@ -297,9 +317,12 @@ def Verpasst(title):	# je 1 Tag - passend zum Webdesign
 
 		# PLog(iPath); PLog(iDate); PLog(iWeekday);
 		title =	"%s | %s" % (iDate, iWeekday)
-		PLog(title)	
-
-		fparams="&fparams={'SendDate': '%s', 'title': '%s'}" % (SendDate, urllib2.quote(title))
+		title =	iDate + ' | ' + iWeekday
+		
+		PLog('Satz:')	
+		PLog(SendDate); PLog(title); 
+		title=UtfToStr(title);
+		fparams="&fparams={'SendDate': '%s', 'title': '%s'}" % (SendDate, quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SendungenDatum", 
 			fanart=R('3sat.png'), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 		
@@ -310,6 +333,7 @@ def Verpasst(title):	# je 1 Tag - passend zum Webdesign
 # Liste Sendungen gewählter Tag
 def SendungenDatum(SendDate, title):	
 	PLog('SendungenDatum: ' + SendDate)
+	title_org = UtfToStr(title)
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='3Sat')										# Home-Button
@@ -321,7 +345,7 @@ def SendungenDatum(SendDate, title):
 	PLog(len(content))
 			
 	if len(content) == 0:			
-		msg1 = 'leider kein Treffer im ausgewählten Zeitraum'
+		msg1 = u'leider kein Treffer im ausgewählten Zeitraum'
 		PLog(msg1)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		return li	
@@ -335,28 +359,30 @@ def SendungenDatum(SendDate, title):
 		sendung	= stringextract('level-6', '</', rec)
 		sendung	= sendung.replace('">', ''); sendung = sendung.strip()
 		descr	= stringextract('teaser-epg-text">', '</p>', rec)		# mehrere Zeilen
-		#descr	= (descr.replace('</b>', ' ').replace('\n\n', '\n')) 
-		descr	= cleanhtml(descr); descr = unescape(descr)
+		PLog(descr)
+		descr	= cleanhtml(descr); 
 		zeit	= stringextract('class="time">', '</', rec)
 		dauer	= stringextract('class="label">', '</', rec)
 		
-		sendung = "%s | %s Uhr" % (sendung, zeit)
-		tagline = "%s Uhr" % zeit
+		sendung = zeit  + ' | ' + sendung
+		tagline = title_org +  ' | ' + zeit
 		if dauer:
-			tagline = "%s | %s" % (tagline, dauer)	# 06:20 Uhr | 28 min
+			tagline = tagline + ' | ' + dauer
 					
-		title = UtfToStr(title); descr = UtfToStr(descr)	
-		title = repl_json_chars(title); descr = repl_json_chars(descr); 
+		title = repl_json_chars(title);
 		sendung = repl_json_chars(sendung)
+		descr	= unescape(descr);  
+		descr = repl_json_chars(descr); 
 		descr_par =	descr.replace('\n', '||')	
 
-		PLog('Satz1:')
-		PLog(img_src);  PLog(href); PLog(sendung); PLog(tagline); PLog(descr);
+		PLog('Satz:')
+		PLog(img_src);  PLog(href); PLog(sendung); PLog(tagline); PLog(descr); PLog(dauer);
 			 
+		sendung=UtfToStr(sendung); descr=UtfToStr(descr); tagline=UtfToStr(tagline)	
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s', 'duration': ''}" %\
-			(urllib2.quote(sendung), urllib2.quote(href), urllib2.quote(img_src), urllib2.quote(descr_par), dauer)
+			(quote(sendung), quote(href), quote(img_src), quote(descr_par), quote(dauer))
 		addDir(li=li, label=sendung, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
-			thumb=img_src, summary=descr, tagline=dauer, fparams=fparams)
+			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams)
 			 					 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
@@ -399,7 +425,7 @@ def Rubriken(name, path):
 		if 'A-Z' in title:
 			continue
 		href	= DreiSat_BASE + stringextract('href="', '"', rec)
-		line 	= "%s|%s" % (title, href)	
+		line 	= title + "|" + href	
 		rubrik.append(line)
 		i=i+1
 	
@@ -407,9 +433,8 @@ def Rubriken(name, path):
 	img_src = R('Dir-folder.png')
 	for rec in rubrik:
 		title, href = rec.split('|')
-						
-		fparams="&fparams={'name': '%s', 'path': '%s'}" % (urllib2.quote(title),
-			 urllib2.quote(href))
+		title=UtfToStr(title);				
+		fparams="&fparams={'name': '%s', 'path': '%s'}" % (quote(title), quote(href))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubrik_Single", 
 			fanart=R('3sat.png'), thumb=img_src, summary='Folgeseiten', fparams=fparams)
 
@@ -423,7 +448,6 @@ def Rubriken(name, path):
 def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Sendereihen
 	PLog('Rubrik_Single: '+ name)
 	PLog("thema: " + thema)
-	name = UtfToStr(name); thema = UtfToStr(thema); 
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='3Sat')										# Home-Button		
@@ -454,11 +478,12 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 			summ = "Folgeseiten"
 			if 'VIDEOTIPP' in title:
 				summ = 'Videotipp(s) der Redaktion'
-			title 	= UtfToStr(title); title = repl_json_chars(title)			
+			title = repl_json_chars(title)			
 			PLog('Satz: %s' % title)
-					
-			fparams="&fparams={'name': '%s', 'path': '%s', 'thema': '%s'}" % (urllib2.quote(title),
-				 urllib2.quote(path), urllib2.quote(title))
+			
+			title =UtfToStr(title); summ =UtfToStr(summ);  		
+			fparams="&fparams={'name': '%s', 'path': '%s', 'thema': '%s'}" % (quote(title),
+				 quote(path), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubrik_Single", 
 				fanart=R('3sat.png'), thumb=img_src, summary=summ, fparams=fparams)
 				
@@ -501,21 +526,19 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 					href	= DreiSat_BASE + href
 				descr	= stringextract('clickarea-link" >', '<', rec)
 				
-				title = UtfToStr(title); descr = UtfToStr(descr)	
-				title = repl_json_chars(title); descr = repl_json_chars(descr); 
-									
+				title = repl_json_chars(title); descr = repl_json_chars(descr); 					
 				PLog('Satz:')
 				PLog(img_src); PLog(title);  PLog(href); PLog(descr);
 				
+				title = UtfToStr(title); descr = UtfToStr(descr)					
 				if name == 'ZUM STöBERN':					# ähnlich mehr, aber Auswertung als Rubrik
-					fparams="&fparams={'name': '%s', 'path': '%s'}" % (urllib2.quote(title),
-						 urllib2.quote(href))
+					fparams="&fparams={'name': '%s', 'path': '%s'}" % (quote(title), quote(href))
 					addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubrik_Single", 
 						fanart=R('3sat.png'), thumb=img_src, summary='Folgeseiten', fparams=fparams)
 
 				else:										# Mehr: Sendereihen -> Sendereihe_Sendungen"									
-					fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (urllib2.quote(title),
-						 urllib2.quote(href), urllib2.quote(img_src))
+					fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title),
+						 quote(href), quote(img_src))
 					addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
 						fanart=R('3sat.png'), thumb=img_src, summary=descr, fparams=fparams)
 				
@@ -590,8 +613,9 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 				href	= DreiSat_BASE + href
 			descr	= stringextract('paragraph-large ">', '</p>', page)
 			
-			fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (urllib2.quote(title),
-				 urllib2.quote(href), urllib2.quote(img_src))
+			title=UtfToStr(title); descr=UtfToStr(descr);
+			fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title),
+				 quote(href), quote(img_src))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
 				fanart=R('3sat.png'), thumb=img_src, summary=descr, fparams=fparams)
 
@@ -610,21 +634,22 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		if href.startswith('http') == False:
 			href	= DreiSat_BASE + href
 		descr	= stringextract('clickarea-link" >', '<', rec)
-		tagline = "%s | %s" % (rubrik, sub_rubrik)
+		tagline = rubrik + ' | ' +sub_rubrik
 		dauer	= stringextract('class="label">', '<', rec)		# label">2 min</span>
 		if dauer:
-			tagline = "%s | %s" % (tagline, dauer)
-		duration = ' '		
-				
-		title = UtfToStr(title); descr = UtfToStr(descr)	
+			tagline = tagline + ' | ' + dauer
+		duration = ' '				
+			
 		title = repl_json_chars(title); descr = repl_json_chars(descr); 
 		descr_par =	descr.replace('\n', '||')	
 				
 		PLog('Satz:')
-		PLog(img_src); PLog(rubrik); PLog(title);  PLog(href); PLog(descr);
-		
+		PLog(img_src); PLog(rubrik); PLog(title);  PLog(href); PLog(tagline); PLog(descr);
+		PLog(dauer); PLog(duration);
+				
+		title=UtfToStr(title); descr=UtfToStr(descr); tagline=UtfToStr(tagline); 
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s', 'duration': '%s'}" %\
-			(urllib2.quote(title), urllib2.quote(href), urllib2.quote(img_src), descr_par, dauer, duration)
+			(quote(title), quote(href), quote(img_src), quote(descr_par), quote(dauer), quote(duration))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams)
 
@@ -674,7 +699,6 @@ def get_lazyload(li, page, ref_path):
 		if tag:
 			descr = "%s\n\n%s"   % (tag, descr)
 				
-		title = UtfToStr(title); descr = UtfToStr(descr)	
 		title = repl_json_chars(title); descr = repl_json_chars(descr); 
 		descr_par =	descr.replace('\n', '||')	
 		
@@ -682,14 +706,15 @@ def get_lazyload(li, page, ref_path):
 		PLog('Satz: %d' % cnt)
 		PLog(sophId); PLog(path); PLog(title);PLog(descr); PLog(img_src); PLog(dauer); PLog(tag); 
 		
+		title=UtfToStr(title); descr=UtfToStr(descr); dauer=UtfToStr(dauer);	
 		if isvideo == 'true':											#  page enthält data-playlist
 			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s', 'duration': ''}" %\
-				(urllib2.quote(title), urllib2.quote(path), urllib2.quote(img_src), urllib2.quote(descr_par), dauer)
+				(quote(title), quote(path), quote(img_src), quote(descr_par), quote(dauer))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 				thumb=img_src, summary=descr, tagline=dauer, fparams=fparams)
 		else:
-			fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (urllib2.quote(title),
-				 urllib2.quote(path), urllib2.quote(img_src))
+			fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title),
+				 quote(path), quote(img_src))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
 				fanart=R('3sat.png'), thumb=img_src, summary=descr, fparams=fparams)
 
@@ -717,8 +742,8 @@ def get_teaserElement(rec):
 	sophId = sophoraId; title = teaserHeadline; ctitle = clusterTitle;  # Fallback-Rückgaben
 	descr = teasertext; isvideo=''	
 	
-	sophoraId = urllib2.quote(sophoraId); teaserHeadline = urllib2.quote(teaserHeadline);
-	teasertext = urllib2.quote(teasertext); clusterTitle = urllib2.quote(clusterTitle);
+	sophoraId = quote(sophoraId); teaserHeadline = quote(teaserHeadline);
+	teasertext = quote(teasertext); clusterTitle = quote(clusterTitle);
 	
 	path = "https://www.3sat.de/teaserElement?sophoraId=%s&style=m2&moduleId=mod-2&teaserHeadline=%s&teasertext=%s&clusterTitle=%s&clusterType=Cluster_S&sourceModuleType=cluster-s" % (sophoraId, teaserHeadline,teasertext,clusterTitle)
 	PLog(path)
@@ -746,7 +771,7 @@ def get_teaserElement(rec):
 			path = DreiSat_BASE + path
 		descr	= stringextract('clickarea-link" >', '<', page)
 		if ctitle:
-			tag = "%s | %s" % (tag, ctitle)
+			tag = tag + " | " + ctitle
 			
 		tag = cleanhtml(tag); descr = unescape(descr)
 		if "data-playlist" in page:			# Videobeitrag? - Folgeseiten möglich
@@ -792,9 +817,9 @@ def get_video_carousel(li, page):
 		descr = transl_json(descr); 
 		PLog('Satz:')
 		PLog(img_src); PLog(title); PLog(dauer); PLog(path); 
-					 
+		title=UtfToStr(title); tagline=UtfToStr(tagline);			 
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s', 'duration': ''}" %\
-			(urllib2.quote(title), urllib2.quote(path), urllib2.quote(img_src), dauer)
+			(quote(title), quote(path), quote(img_src), quote(dauer))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 			thumb=img_src, tagline=tagline, fparams=fparams)			 
 			 
@@ -819,14 +844,15 @@ def get_zdfplayer_content(li, content):
 
 		dauer 	= stringextract('duration": "', '"', videoinfos)	# Bsp. 2 min
 		path	= stringextract('embed_content": "', '"', rec)
-		path 	= "%s%s.html" % (DreiSat_BASE, path)
+		path 	= DreiSat_BASE + path + ".html"
 		img_src	= stringextract('data-srcset="', '"', rec)			
 		img_src	= img_src.split(' ')[0]								# kann mit Blank enden
 		
 		tagline = dauer
 		subtitle	= stringextract('brand-subtitle">', '<', rec)
 		if subtitle:
-			tag = "%s | %s" % (dauer, subtitle)
+			tag = dauer + ' | ' + subtitle
+
 		descr 	= stringextract('paragraph-large ">', '<', rec)
 		descr 	= unescape(descr)
 		descr = transl_json(descr); 
@@ -834,15 +860,15 @@ def get_zdfplayer_content(li, content):
 	
 		PLog('Satz:')
 		PLog(img_src); PLog(title); PLog(path); 
-					 
+		title=UtfToStr(title); descr=UtfToStr(descr);			 
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s', 'duration': ''}" %\
-			(urllib2.quote(title), urllib2.quote(path), urllib2.quote(img_src), dauer)
+			(quote(title), quote(path), quote(img_src), quote(dauer))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 			thumb=img_src, summary=descr, fparams=fparams)
 			 	
 		cnt=cnt+1
 
-	PLog("Anzahl Beiträge: " + str(cnt))
+	PLog("Anzahl Beiträge: %s" % cnt)
 	return li, cnt
 
 #------------
@@ -861,17 +887,18 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 	if Plot_par == '':			
 		Plot_par = title
 	tag_org = dauer
-	thumb	= img_src; title_org =  title
+	thumb	= img_src; title_org = title
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='3Sat')							# Home-Button
 			
 	page, msg = get_page(path=path)						# 1. Basisdaten von Webpage holen
 	if page == '':			
-		msg1 = "Fehler in SingleBeitrag"
+		msg1 = "SingleBeitrag1: Abruf fehlgeschlagen"
 		msg2 = msg
+		msg3=path
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li	
 	
 	content = stringextract('window.zdfsite', 'tracking', page)  			
@@ -885,34 +912,38 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 		if '<time datetime="' in page:
 			termin = stringextract('<time datetime="', '"', page)
 			termin = time_translate(termin)
-			msg1 = "(noch) kein Video gefunden, Sendetermin: %s" % termin
+			msg1 = "(noch) kein Video gefunden, Sendetermin: " + termin
 		else:
-			msg1 = "keine Videoquelle gefunden. Seite:\n%s" % path
+			msg1 = "keine Videoquelle gefunden. Seite:\n" + path
 			PLog(msg1)
 			PLog(apiToken)		# zur Kontrolle
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		return li	
 	
 	headers = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken 
-	try:
-		page = get_page3sat(path=profile_url, apiToken=apiToken)	# 2. Playerdaten mit neuer Video-ID	
-	except Exception as exception:
-		PLog(str(exception))
-		page = ""
+	page,msg = get_page3sat(path=profile_url, apiToken=apiToken)	# 2. Playerdaten mit neuer Video-ID	
+	if page == '':			
+		msg1 = "SingleBeitrag2: Abruf fehlgeschlagen"
+		msg2 = msg
+		msg3=path
+		PLog(msg1)
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		return li	
+	
 	page = page.replace('\\', '')
 	PLog(page[:100])
 
-	try:
-		videodat	= blockextract('ptmd-template":"',page)		# mehrfach möglich
-		videodat	= videodat[-1]								# letzte ist relevant
-		videodat_url= stringextract('ptmd-template":"', '"', videodat)
-		video_ID = videodat_url.split('/')[-1]					#  ID z.B. 190521_sendung_nano
-		videodat_url = 'https://api.3sat.de/tmd/2/ngplayer_2_3/vod/ptmd/3sat/' + video_ID
-		PLog("videodat_url: " + videodat_url)
-		page = get_page3sat(path=videodat_url, apiToken=apiToken)
-	except Exception as exception:
-		PLog(str(exception))
-		page = ""
+	videodat	= blockextract('ptmd-template":"',page)		# mehrfach möglich
+	videodat	= videodat[-1]								# letzte ist relevant
+	videodat_url= stringextract('ptmd-template":"', '"', videodat)
+	video_ID = videodat_url.split('/')[-1]					#  ID z.B. 190521_sendung_nano
+	videodat_url = 'https://api.3sat.de/tmd/2/ngplayer_2_3/vod/ptmd/3sat/' + video_ID
+	PLog("videodat_url: " + videodat_url)
+	page,msg = get_page3sat(path=videodat_url, apiToken=apiToken)
+	if page == '':			
+		msg1 = "SingleBeitrag3: Abruf fehlgeschlagen"
+		PLog(msg1); PLog(msg)
+		msg2 = msg
 		
 	if page == '':											# Alternative mediathek statt 3sat
 		videodat_url = 'https://api.3sat.de/tmd/2/ngplayer_2_3/vod/ptmd/mediathek/' + video_ID
@@ -923,7 +954,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 			page = ""
 	
 	if 	'formitaeten' not in page:
-		msg1 = "keine Videoquelle gefunden. Seite:\n%s" % path
+		msg1 = "keine Videoquelle gefunden. Seite:\n" + path
 		PLog(msg1)
 		PLog(videodat_url)		# zur Kontrolle
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
@@ -943,8 +974,8 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 				geoblock = ' | Geoblock DACH!'
 			
 	download_list = []
-	tagline = "%s | %s %s" % (title, dauer, geoblock)
-	Plot_par = "%s||||%s"  % (tagline, Plot_par)
+	tagline = title + " | " + dauer + " " + geoblock
+	Plot_par = tagline + "||||" + Plot_par
 	
 	thumb=img_src
 	for rec in formitaeten:									# Datensätze gesamt
@@ -960,18 +991,17 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 		
 		for audiorec in audio:					
 			url = stringextract('\"uri\" : \"',  '\"', audiorec)			# URL
-			url = url.replace('https', 'http')				# im Plugin kein Zugang mit https!
 			quality = stringextract('\"quality\" : \"',  '\"', audiorec)
 			if quality == 'high':							# high bisher identisch mit auto 
 				continue
+			quality=UtfToStr(quality);
 			PLog(url); PLog(quality); 
-			quality = UtfToStr(quality)
-			PLog('Mark0')
+			Plot_par=UtfToStr(Plot_par);
 			
+			PLog('Mark0')
 			if url:		
 				if url.find('master.m3u8') > 0:			# m3u8 enthält alle Auflösungen					
-					title = '%s [m3u8]' % (quality)
-					title = UtfToStr(title)
+					title = quality + ' [m3u8]'
 					# Sofortstart - direkt, falls Listing nicht Playable			
 					if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': 
 						PLog('Sofortstart: SingleBeitrag')
@@ -984,27 +1014,27 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 					# Da 3Sat 2 versch. m3u8-Qualitäten zeigt,verzichten wir (wie bei ZDF_getVideoSources)
 					#	auf Einzelauflösungen via Parseplaylist
 					#	
-					li = ardundzdf.ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, tagline=tagline, 
-						descr=summ)
+					li = ardundzdf.ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, descr=Plot_par)
 			
 				else:									# m3u8 enthält Auflösungen high + med
 					title = 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' ' + facets 
-					title = 'Qualitaet: %s | Typ: %s %s' % (quality, typ, facets)
-					title = UtfToStr(title)
+
 					download_list.append(title + '#' + url)			# Download-Liste füllen	
-					tagline	 = tagline.replace('||','\n')			# s. tagline in ZDF_get_content				
-					Plot_par=UtfToStr(Plot_par)
-									
+					tagline	= tagline.replace('||','\n')			# s. tagline in ZDF_get_content				
+					summ	= summ.replace('||','\n')				# 
+					summ=UtfToStr(summ);tagline=UtfToStr(tagline); 	
+					tag	= 	tagline + '\n\n' + summ	
+					
+					title=UtfToStr(title); tag=UtfToStr(tag);
 					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': ''}" %\
-						(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(thumb), 
-						urllib.quote_plus(Plot_par))	
+						(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot_par))	
 					addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-						mediatype='video', tagline=tagline, summary=summ) 
+						mediatype='video', tagline=tag) # summary=summ) 
 												
 	if SETTINGS.getSetting('pref_use_downloads'):
 		# high=0: 	1. Video bisher höchste Qualität:  [progressive] veryhigh
 		tagline=tag_org
-		li = ardundzdf.test_downloads(li,download_list,title_org,Plot_par,tagline,thumb,high=0)  # Downloadbutton(s)
+		li = ardundzdf.test_downloads(li,download_list,title_org,Plot_par,tag,thumb,high=0)  # Downloadbutton(s)
 					
 	xbmcplugin.endOfDirectory(HANDLE)
 
@@ -1014,7 +1044,6 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 def Live(name, epg='', Merk='false'):	
 	PLog('Live: ' + name)
 	title2 = name
-	epg = UtfToStr(epg)
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='3Sat')						# Home-Button
@@ -1022,26 +1051,28 @@ def Live(name, epg='', Merk='false'):
 	url = 'https://zdfhls18-i.akamaihd.net/hls/live/744751/dach/high/master.m3u8'
 	# epg_url = 'https://programm.ard.de/TV/ARD-Mediathek/Programmkalender/?sender=28007'	# entf. 
 	epgname = 'ARD'; listname = '3sat'
-	summary = 'automatische Auflösung';				
+	summary = u'automatische Auflösung';				
 	title = 'Bandbreite und Auflösung automatisch'
 	img	= R(ICON_TV3Sat)
 	
 	if not epg:
 		epg = get_epg()
-	summ = epg
 
 	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true':	# Sofortstart
 		PLog('Sofortstart: SenderLiveResolution')
-		PlayVideo(url=url, title='3Sat Live TV', thumb=img, Plot=summ, Merk=Merk)
+		Plot	 = 'Live: ' + name + '\n\n' + epg + '\n\n' + summary
+		PlayVideo(url=url, title='3Sat Live TV', thumb=img, Plot=Plot, Merk=Merk)
 		return	
 							
+	Plot	 = 'Live: ' + name + '\n\n' + epg
+	Plot_par = Plot.replace('\n', '||')
+	title=UtfToStr(title); Plot=UtfToStr(Plot);
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': 'false'}" %\
-		(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(img), 
-		urllib.quote_plus(summ))
+		(quote_plus(url), quote_plus(title), quote_plus(img), quote_plus(Plot_par))
 	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-		mediatype='video', tagline=epg) 		
+		mediatype='video', tagline=Plot) 		
 	
-	li =  ardundzdf.Parseplaylist(li, url, img, geoblock='', tagline=epg, descr=summ)	
+	li =  ardundzdf.Parseplaylist(li, url, img, geoblock='', descr=Plot)	
 	
 	xbmcplugin.endOfDirectory(HANDLE)
 	
@@ -1129,18 +1160,23 @@ def HourToMinutes(timecode):
 # nur für Anford. Videodaten mittels apiToken 	
 def get_page3sat(path, apiToken):
 	PLog("get_page3sat: " + path) 
-	
+	msg=''
 	try:
-		req = urllib2.Request(path)
-		req.add_header('Api-Auth', 'Bearer %s' % apiToken)
+		PLog(type(path))	
+		path = BytesToUnicode(path) 
+		PLog(type(path))	
+		req = urllib.request.Request(path)
+		req.add_header('Api-Auth', 'Bearer ' + apiToken)
 		gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)  
 		gcontext.check_hostname = False	# bzw. False
-		r = urllib2.urlopen(req, context=gcontext)
+		r = urllib.request.urlopen(req, context=gcontext)
 		page = r.read()
+		PLog(page[:100])
 	except Exception as exception:
 		page = ''
-		PLog(str(exception))
+		msg = str(exception)
+		PLog(msg)
 	PLog(len(page))
-	return page
+	return page, msg
 
 
