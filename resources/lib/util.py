@@ -1,26 +1,46 @@
 # -*- coding: utf-8 -*-
 # util.py
-#	
+#	02.11.2019 Migration Python3 Modul future
+#	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
+# 	
 
-import os, sys, glob, shutil, time
+# Python3-Kompatibilität:
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
+# o. Auswirkung auf die unicode-Strings in PYTHON3:
+from kodi_six.utils import py2_encode, py2_decode
+
+# Standard:
+import os, sys
+PYTHON2 = sys.version_info.major == 2
+PYTHON3 = sys.version_info.major == 3
+if PYTHON2:					
+	from urllib import quote, unquote, quote_plus, unquote_plus, urlencode, urlretrieve 
+	from urllib2 import Request, urlopen, URLError 
+	from urlparse import urljoin, urlparse, urlunparse , urlsplit, parse_qs 
+elif PYTHON3:				
+	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs  
+	from urllib.request import Request, urlopen, urlretrieve
+	from urllib.error import URLError
+	
+# import requests		# kein Python-built-in-Modul, urllib2 verwenden
 import datetime as dt	# für xml2srt
 import time, datetime
-# import datetime, time, timedelta
-#from datetime import datetime, time, datetime, timedelta # transl_pubDate, time_translate
-
-import urllib, urllib2, ssl
-# import requests		# kein Python-built-in-Modul, urllib2 verwenden
-from StringIO import StringIO
+import glob, shutil
+from io import BytesIO	# Python2+3 -> get_page (compressed Content)
 import gzip, zipfile
-from urlparse import parse_qsl
 import base64 			# url-Kodierung für Kontextmenüs
 import json				# json -> Textstrings
 import pickle			# persistente Variablen/Objekte
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
+import string
 	
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
-
 # Globals
+PYTHON2 = sys.version_info.major == 2	# Stammhalter Pythonversion 
+PYTHON3 = sys.version_info.major == 3
+
 NAME			= 'ARD und ZDF'
 KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
 
@@ -28,7 +48,7 @@ ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')	# Basis-Pfad Addon
+ADDON_PATH    	= SETTINGS.getAddonInfo('path')	# Basis-Pfad Addon
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
@@ -67,28 +87,28 @@ BASE_URL 		= 'https://classic.ardmediathek.de'
 def PLog(msg, loglevel=xbmc.LOGDEBUG):
 	if DEBUG == 'false':
 		return
-	if isinstance(msg, unicode):
-		msg = msg.encode('utf-8')
+	#if isinstance(msg, str):		# entf. mit six
+	#	msg = msg.encode('utf-8')
+		
 	loglevel = xbmc.LOGNOTICE
 	# PLog('loglevel: ' + str(loglevel))
 	if loglevel >= 2:
-		xbmc.log("%s --> %s" % ('ARDundZDF', msg), level=loglevel)
+		xbmc.log("%s --> %s" % ('ARDundZDF2_3', msg), level=loglevel)
 #---------------------------------------------------------------- 
 
 # Home-Button, Aufruf: item = home(item=item, ID=NAME)
 #	Liste item von Aufrufer erzeugt
 def home(li, ID):												
-	PLog('home: ' + str(ID))	
+	PLog('home: ' + ID)	
 	if SETTINGS.getSetting('pref_nohome') == 'true':	# keine Homebuttons
 		return li
-
-	title = 'Zurück zum Hauptmenü ' + str(ID)
+		
+	title = u'Zurück zum Hauptmenü %s' % ID
 	summary = title
 	
 	CurSender = Dict("load", 'CurSender')		
-	CurSender = UtfToStr(CurSender)
 	PLog(CurSender)	
-	
+
 	if ID == NAME:		# 'ARD und ZDF'
 		name = 'Home : ' + NAME
 		fparams="&fparams={}"
@@ -102,20 +122,20 @@ def home(li, ID):
 	if ID == 'ARD':
 		name = 'Home: ' + "ARD Mediathek Classic"
 		# CurSender = Dict("load", "CurSender")	# entf.  bei Classic
-		fparams="&fparams={'name': '%s', 'sender': '%s'}"	% (urllib2.quote(name), '')
+		fparams="&fparams={'name': '%s', 'sender': '%s'}"	% (quote(name), '')
 		addDir(li=li, label=title, action="dirList", dirID="Main_ARD", fanart=R('home-ard-classic.png'), 
 			thumb=R('home-ard-classic.png'), fparams=fparams)
 		
 	if ID == 'ARD Neu':
 		name = 'Home: ' + "ARD Mediathek"
 		CurSender = Dict("load", "CurSender")
-		fparams="&fparams={'name': '%s', 'CurSender': '%s'}"	% (urllib2.quote(name), urllib2.quote(CurSender))
+		fparams="&fparams={'name': '%s', 'CurSender': '%s'}"	% (quote(name), quote(CurSender))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", 
 			fanart=R('home-ard.png'), thumb=R('home-ard.png'), fparams=fparams)
 			
 	if ID == 'ZDF':
 		name = 'Home: ' + "ZDF Mediathek"
-		fparams="&fparams={'name': '%s'}" % urllib2.quote(name)
+		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_ZDF", fanart=R('home-zdf.png'), 
 			thumb=R('home-zdf.png'), fparams=fparams)
 		
@@ -127,19 +147,19 @@ def home(li, ID):
 			
 	if ID == 'PODCAST':
 		name = 'Home :' + "Radio-Podcasts"
-		fparams="&fparams={'name': '%s'}" % urllib2.quote(name)
+		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_POD", fanart=R(ICON_MAIN_POD), 
 			thumb=R(ICON_MAIN_POD), fparams=fparams)
 			
 	if ID == 'ARDaudio':
 		name = 'Home :' + "ARD Audiothek"
-		fparams="&fparams={'title': '%s'}" % urllib2.quote(name)
+		fparams="&fparams={'title': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=R(ICON_MAIN_AUDIO), 
 			thumb=R(ICON_MAIN_AUDIO), fparams=fparams)
 			
 	if ID == '3Sat':
 		name = 'Home :' + "3Sat"
-		fparams="&fparams={'name': '%s'}" % urllib2.quote(name)
+		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", fanart=R('3sat.png'), 
 			thumb=R('3sat.png'), fparams=fparams)
 			
@@ -152,6 +172,7 @@ def home(li, ID):
 	return li
 	 
 #---------------------------------------------------------------- 
+#   data-Verzeichnis liegt 2 Ebenen zu hoch, funktioniert aber.
 #	03.04.2019 data-Verzeichnis des Addons:
 #  		Check /Initialisierung / Migration
 # 	27.05.2019 nur noch Check (s. Forum:
@@ -351,12 +372,27 @@ def ClearUp(directory, seconds):
 # Listitems verlangen encodierte Strings auch bei Umlauten. Einige Quellen liegen in unicode 
 #	vor (s. json-Auswertung in get_page) und müssen rückkonvertiert  werden.
 # Hinw.: Teilstrings in unicode machen str-Strings zu unicode-Strings.
+# für Python2	
+# 19.11.2019 abgelöst durch py2_encode aus Kodi-six
 def UtfToStr(line):
-	if type(line) == unicode:
-		line =  line.encode('utf-8')
-		return line
-	else:
-		return line	
+	PLog('UtfToStr:')
+	return py2_encode(line)			# wirkt nur in Python2: Unicode -> str
+		
+# def BytesToUnicode(line) - ersetzt durch py2_decode
+	
+def up_low(line, mode='up'):
+	try:
+		if PYTHON2:	
+			if isinstance(line, unicode):
+				line = line.encode('utf-8')
+		if mode == 'up':
+			return line.upper()
+		else:
+			return line.lower()
+	except Exception as exception:	
+		PLog('up_low: ' + str(exception))
+	return up_low
+
 #----------------------------------------------------------------  
 # In Kodi fehlen die summary- und tagline-Zeilen der Plexversion. Diese ersetzen wir
 #	hier einfach durch infoLabels['Plot'], wobei summary und tagline durch 
@@ -371,23 +407,25 @@ def UtfToStr(line):
 #	Kontextmenüs (Par. cmenu): base64-Kodierung benötigt für url-Parameter (nötig für router)
 #		und als Prophylaxe gegen durch doppelte utf-8-Kodierung erzeugte Sonderzeichen.
 #		Dekodierung erfolgt in ShowFavs.
+#	
 
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True):
 	PLog('addDir:')
-	PLog('addDir - label: %s, action: %s, dirID: %s' % (label, action, dirID))
-	PLog('addDir - summary: %s, tagline: %s, mediatype: %s, cmenu: %s' % (summary, tagline, mediatype, cmenu))
-	
-	label=UtfToStr(label); thumb=UtfToStr(thumb); fanart=UtfToStr(fanart); 
-	summary=UtfToStr(summary); tagline=UtfToStr(tagline); 
-	fparams=UtfToStr(fparams);
-	
+	PLog(type(label))
+	label=py2_encode(label)
+	PLog('addDir - label: {0}, action: {1}, dirID: {2}'.format(label, action, dirID))
+	PLog(type(summary)); PLog(type(tagline));
+	summary=py2_encode(summary); tagline=py2_encode(tagline); 
+	fparams=py2_encode(fparams); fanart=py2_encode(fanart); thumb=py2_encode(thumb);
+	PLog('addDir - summary: {0}, tagline: {1}, mediatype: {2}, cmenu: {3}'.format(summary, tagline, mediatype, cmenu))
+		
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
-	# PLog('summary, tagline: %s, %s' % (summary, tagline))
+	# PLog('summary, tagline: {0}, {1}'.format(summary, tagline))
 	Plot = ''
 	if tagline:								
 		Plot = tagline
-	if summary:									
-		Plot = "%s\n\n%s" % (Plot, summary)
+	if summary:	
+		Plot = Plot +"\n\n" + summary
 		
 	if mediatype == 'video': 	# "video", "music" setzen: List- statt Dir-Symbol
 		li.setInfo(type="video", infoLabels={"Title": label, "Plot": Plot, "mediatype": "video"})	
@@ -401,25 +439,28 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
 	xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
 	PLog('PLUGIN_URL: ' + PLUGIN_URL)	# plugin://plugin.video.ardundzdf/
-	PLog('HANDLE: ' + str(HANDLE))
-	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+urllib.quote_plus(fparams)
-	PLog("addDir_url: " + urllib.unquote_plus(url))
-		
+	PLog('HANDLE: %s' % HANDLE)
+	
+	PLog(fparams)
+	if thumb == None:
+		thumb = ''
+	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+quote(fparams)
+	PLog("addDir_url: " + unquote(url))		
 	
 	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
-		if cmenu:											# Kontextmenüs Merkliste hinzufügen	
+		if cmenu:											# Kontextmenüs Merkliste hinzufügen
 			Plot = Plot.replace('\n', '||')		# || Code für LF (\n scheitert in router)
 			# PLog('Plot: ' + Plot)
-			fparams_add = "&fparams={'action': 'add', 'name': '%s', 'thumb': '%s', 'Plot': '%s', 'url': '%s'}" \
-				%   (label, thumb,  urllib.quote_plus(Plot), base64.b64encode(urllib.quote_plus(url)))
-				#%   (label, thumb,  urllib.quote_plus(Plot), urllib.quote_plus(url))
-				# %   (label, thumb,  base64.b64encode(url))#möglich: 'Incorrect padding' error 
-			fparams_add = urllib.quote_plus(fparams_add)
+			fp = {'action': 'add', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
+				'Plot': quote_plus(Plot),'url': quote_plus(url)}	
+			fparams_add = "&fparams={0}".format(fp)
+			PLog("fparams_add: " + fparams_add)
+			fparams_add = quote_plus(fparams_add)
 
-			fparams_del = "&fparams={'action': 'del', 'name': '%s'}" \
-				%   (label)									# name reicht für del
-				# %   (label, thumb,  base64.b64encode(url))
-			fparams_del = urllib.quote_plus(fparams_del)	
+			fp = {'action': 'del', 'name': quote_plus(label)}	# name reicht für del
+			fparams_del = "&fparams={0}".format(fp)
+			PLog("fparams_del: " + fparams_del)
+			fparams_del = quote_plus(fparams_del)	
 
 			li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
 				% (ADDON_ID, fparams_add)), ('Aus Merkliste entfernen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
@@ -428,7 +469,6 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			pass											# Kontextmenü entfernen klappt so nicht
 			#li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=dummy)' \
 			#	% (ADDON_ID))], replaceItems=True)
-
 		
 	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
 	
@@ -452,14 +492,15 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False):	
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
+
 	if header:									# dict auspacken
-		header = urllib2.unquote(header);  
+		header = unquote(header);  
 		header = header.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 		header = json.loads(header)
 		PLog("header: " + str(header)[:80]);
-		 
+
 	path = transl_umlaute(path)					# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
-	# path = urllib2.unquote(path)				# scheitert bei quotierten Umlauten, Ersatz replace				
+	# path = unquote(path)						# scheitert bei quotierten Umlauten, Ersatz replace				
 	path = path.replace('https%3A//','https://')# z.B. https%3A//classic.ardmediathek.de
 	msg = ''; page = ''	
 	UrlopenTimeout = 10
@@ -468,23 +509,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	try:
 		import requests															# 1. Versuch mit requests
 		PLog("get_page1:")
-		if GetOnlyRedirect:					# nur Redirect anfordern
-			PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
-			r = requests.get(path,  stream=True, allow_redirects=True)
-			page = r.url
-			return page, msg					
-		if header:							
-			r = requests.get(path, headers=header)
-		else:
-			r = requests.get(path)
-		PLog(r.status_code)
-		page = r.text
-		PLog(len(page))
-		PLog(page[:100])
-	except Exception as exception:
-		msg = str(exception)
-		msg = msg.decode(encoding="utf-8")
-		PLog(msg)	
+		...
 	'''
 	
 	if page == '':
@@ -494,17 +519,17 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				# Alt. hier : new_url = r.geturl()
 				# bei Bedarf HttpLib2 mit follow_all_redirects=True verwenden
 				PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
-				r = urllib2.urlopen(path)
+				r = urlopen(path)
 				page = r.geturl()
 				PLog(page)			# Url
 				return page, msg					
 
 			if header:
-				req = urllib2.Request(path, headers=header)	
+				req = Request(path, headers=header)	
 			else:
-				req = urllib2.Request(path)
+				req = Request(path)
 								
-			r = urllib2.urlopen(req)	
+			r = urlopen(req)	
 			new_url = r.geturl()											# follow redirects
 			PLog("new_url: " + new_url)
 			# PLog("headers: " + str(r.headers))
@@ -514,39 +539,38 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			page = r.read()
 			PLog(len(page))
 			if compressed:
-				buf = StringIO(page)
+				buf = BytesIO(page)
 				f = gzip.GzipFile(fileobj=buf)
 				page = f.read()
 				PLog(len(page))
 			r.close()
 			PLog(page[:100])
-		except urllib2.URLError as exception:
+		except URLError as exception:
 			msg = str(exception)
-			msg = msg.decode(encoding="utf-8")
 			PLog(msg)
 				
 	
 	if page == '':
+		import ssl
 		try:
 			PLog("get_page3:")											# 3. Versuch mit SSLContext
 			if header:
-				req = urllib2.Request(path, headers=header)	
+				req = Request(path, headers=header)	
 			else:
-				req = urllib2.Request(path)														
+				req = Request(path)														
 			# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 			gcontext = ssl.create_default_context()
 			gcontext.check_hostname = False
 			# gcontext.verify_mode = ssl.CERT_REQUIRED
-			r = urllib2.urlopen(req, context=gcontext, timeout=UrlopenTimeout)
+			r = urlopen(req, context=gcontext, timeout=UrlopenTimeout)
 			# r = urllib2.urlopen(req)
 			# PLog("headers: " + str(r.headers))
 			page = r.read()
 			PLog('Mark3')
 			r.close()
 			PLog(len(page))
-		except urllib2.URLError as exception:
+		except URLError as exception:
 			msg = str(exception)
-			msg = msg.decode(encoding="utf-8")
 			PLog(msg)						
 			
 	if page == '':
@@ -566,14 +590,13 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		try:
 			request = json.loads(page)
 			request = json.dumps(request, sort_keys=True, indent=2, separators=(',', ': '))  # sortierte Ausgabe
-			request = str(request)				# json=dict erlaubt keine Stringsuche, json.dumps klappt hier nicht
 			page = request.decode('utf-8', 'ignore') # -> unicode 
 			PLog("jsonpage: " + page[:100]);# PLog("msg: " + msg)		# bei Bedarf, ev. reicht nachfolg. mainVideoContent
 		except Exception as exception:
 			msg = str(exception)
-			msg = msg.decode(encoding="utf-8")
-			PLog(msg)		
+			PLog(msg)
 
+	page = page.decode('utf-8')
 	return page, msg	
 #---------------------------------------------------------------- 
 # img_urlScheme: img-Url ermitteln für get_sendungen, ARDRubriken. text = string, dim = Dimension
@@ -643,8 +666,12 @@ def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex
 	path = os.path.join(fname) # abs. Pfad
 	PLog('RLoad: %s' % str(fname))
 	try:
-		with open(path,'r') as f:
-			page = f.read()		
+		if PYTHON2:
+			with open(path,'r') as f:
+				page = f.read()		
+		else:
+			with open(path,'r', encoding="utf8") as f:
+				page = f.read()		
 	except Exception as exception:
 		PLog(str(exception))
 		page = ''
@@ -652,19 +679,33 @@ def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex
 #----------------------------------------------------------------
 # Gegenstück zu RLoad - speichert Inhalt page in Datei fname im  
 #	Dateisystem. PluginAbsPath muss in fname enthalten sein,
-#	falls im Pluginverz. gespeichert werden soll   
-def RSave(fname, page): 
+#	falls im Pluginverz. gespeichert werden soll 
+#  Migration Python3: immer utf8
+# 
+def RSave(fname, page, withcodec=False): 
 	PLog('RSave: %s' % str(fname))
+	PLog(withcodec)
 	path = os.path.join(fname) # abs. Pfad
 	msg = ''					# Rückgabe leer falls OK
 	try:
-		with open(path,'w') as f:
-			f.write(page)		
+		if PYTHON2:
+			if withcodec:		# 14.11.0219 Kompat.-Maßnahme
+				import codecs	#	für DownloadExtern
+				with codecs.open(path,'w', encoding='utf-8') as f:
+					f.write(page)	
+			else:
+				with open(path,'w') as f:
+					f.write(page)		
+		else:
+			with open(path,'w', encoding="utf8") as f:
+				f.write(page)
+		
 	except Exception as exception:
 		msg = str(exception)
 		PLog(msg)
 	return msg
 #----------------------------------------------------------------  
+# Holt Bandwith, Codecs + Resolution aus m3u8-Datei
 # Bsp.: #EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=61000,CODECS="mp4a.40.2"
 def GetAttribute(text, attribute, delimiter1 = '=', delimiter2 = ','):
 	PLog('GetAttribute:')
@@ -701,11 +742,14 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 #----------------------------------------------------------------
 #	doppelte utf-8-Enkodierung führt an manchen Stellen zu Sonderzeichen
 #  	14.04.2019 entfernt: (':', ' ')
+# 	todo: decode('utf-8') hier  wie unescape ff.
 def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
 	line_ret = line
-	for r in	(('"', ''), ('\\', ''), ('\'', '')
-		, ('&', 'und'), ('(', '<'), (')', '>'),  ('∙', '|')
-		, ('„', '>'), ('“', '<'), ('”', '>'),('°', ' Grad')):			
+	#PLog(type(line_ret))
+	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
+		, (u'&', u'und'), ('(u', u'<'), (u')', u'>'),  (u'∙', u'|')
+		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad')
+		, (u'\r', u'')):			
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret
@@ -793,116 +837,127 @@ def teilstring(zeile, startmarker, endmarker):  		# rfind: endmarker=letzte Fund
 # title=' Aussteiger: *Identitäre* wollen Bürgerkrieg gegen'
 def make_mark(mark, mString, color='red', bold=''):	
 	PLog("make_mark:")	
-	mS = mString.lower(); ma = mark.lower()
+	mark=py2_decode(mark); mString=py2_decode(mString)
+	mS = up_low(mString, mode='low'); ma = up_low(mark, mode='low')
+	PLog('Mark0.0')
 	if ma in mS or mark == mString:
 		pos1 = mS.find(ma)
 		pos2 = pos1 + len(ma)		
 		ms = mString[pos1:pos2]		# Mittelstück mark unverändert
 		s1 = mString[:pos1]; s2 = mString[pos2:];
+		PLog('Mark1')
 		if bold:
-			rString= "%s[COLOR %s][B]%s[/B][/COLOR]%s"	% (s1, color, ms, s2)
+			rString= u"%s[COLOR %s][B]%s[/B][/COLOR]%s"	% (s1, color, ms, s2)
 		else:
-			rString= "%s[COLOR %s]%s[/COLOR]%s"	% (s1, color, ms, s2)
+			rString= u"%s[COLOR %s]%s[/COLOR]%s"	% (s1, color, ms, s2)
+		PLog('Mark2')
 		return rString
 	else:
 		return mString		# Markierung fehlt, mString unverändert zurück	
 #----------------------------------------------------------------  
+# Migration PY2/PY3: py2_decode aus kodi-six
 def cleanhtml(line): # ersetzt alle HTML-Tags zwischen < und >  mit 1 Leerzeichen
-	cleantext = line
+	# PLog(type(line))
+	cleantext = py2_decode(line)
 	cleanre = re.compile('<.*?>')
 	cleantext = re.sub(cleanre, ' ', line)
 	return cleantext
 #----------------------------------------------------------------  	
+# Migration PY2/PY3: py2_decode aus kodi-six
 def decode_url(line):	# in URL kodierte Umlaute und & wandeln, Bsp. f%C3%BCr -> für, 	&amp; -> &
-	urllib.unquote(line)
-	line = line.replace('&amp;', '&')
+	line = py2_decode(line)
+	unquote(line)
+	line = line.replace(u'&amp;', u'&')
 	return line
 #----------------------------------------------------------------  	
+# Migration PY2/PY3: py2_decode aus kodi-six
 def unescape(line):
 # HTML-Escapezeichen in Text entfernen, bei Bedarf erweitern. ARD auch &#039; statt richtig &#39;	
 #					# s.a.  ../Framework/api/utilkit.py
-#					# Ev. erforderliches Encoding vorher durchführen 
-#	
+#					# Ev. erforderliches Encoding vorher durchführen - Achtung in Kodis 
+#					#	Python-Version v2.26.0 'ascii'-codec-Error bei mehrfachem decode
+#
+	# PLog(type(line))
 	if line == None or line == '':
 		return ''	
-	for r in	(("&amp;", "&"), ("&lt;", "<"), ("&gt;", ">")
-		, ("&#39;", "'"), ("&#039;", "'"), ("&quot;", '"'), ("&#x27;", "'")
-		, ("&ouml;", "ö"), ("&auml;", "ä"), ("&uuml;", "ü"), ("&szlig;", "ß")
-		, ("&Ouml;", "Ö"), ("&Auml;", "Ä"), ("&Uuml;", "Ü"), ("&apos;", "'")
-		, ("&nbsp;|&nbsp;", ""), ("&nbsp;", ""), 
+	line = py2_decode(line)
+	for r in	((u"&amp;", u"&"), (u"&lt;", u"<"), (u"&gt;", u">")
+		, (u"&#39;", u"'"), (u"&#039;", u"'"), (u"&quot;", u'"'), (u"&#x27;", u"'")
+		, (u"&ouml;", u"ö"), (u"&auml;", u"ä"), (u"&uuml;", u"ü"), (u"&szlig;", u"ß")
+		, (u"&Ouml;", u"Ö"), (u"&Auml;", u"Ä"), (u"&Uuml;", u"Ü"), (u"&apos;", u"'")
+		, (u"&nbsp;|&nbsp;", u""), (u"&nbsp;", u""), 
 		# Spezialfälle:
 		#	https://stackoverflow.com/questions/20329896/python-2-7-character-u2013
 		#	"sächsischer Genetiv", Bsp. Scott's
 		#	Carriage Return (Cr)
-		("–", "-"), ("&#x27;", "'"), ("&#xD;", ""), ("\xc2\xb7", "-"),
-		('undoacute;', 'o'), ('&eacute;', 'e'), ('&egrave;', 'e')):
-			
+		(u"–", u"-"), (u"&#x27;", u"'"), (u"&#xD;", u""), (u"\xc2\xb7", u"-"),
+		(u'undoacute;', u'o'), (u'&eacute;', u'e'), (u'&egrave;', u'e'),
+		(u'&atilde;', u'a')):
 		line = line.replace(*r)
 	return line
 #----------------------------------------------------------------  
+# Migration PY2/PY3: py2_decode aus kodi-six
 def transl_doubleUTF8(line):	# rückgängig: doppelt kodiertes UTF-8 
 	# Vorkommen: Merkliste (Plot)
 	# bisher nicht benötigt: ('Ã<U+009F>', 'ß'), ('ÃŸ', 'ß')
-	line = UtfToStr(line)
-	for r in (('Ã¤', "ä"), ('Ã„', "Ä"), ('Ã¶', "ö")		# Umlaute + ß
-		, ('Ã–', "Ö"), ('Ã¼', "ü"), ('Ãœ', 'Ü')
-		, ('Ã', 'ß')
-		, ('\xc3\xa2', '*')):	# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
+
+	line = py2_decode(line)
+	for r in ((u'Ã¤', u"ä"), (u'Ã„', u"Ä"), (u'Ã¶', u"ö")		# Umlaute + ß
+		, (u'Ã–', u"Ö"), (u'Ã¼', u"ü"), (u'Ãœ', u'Ü')
+		, (u'Ã', u'ß')
+		, (u'\xc3\xa2', u'*')):	# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
 
 		line = line.replace(*r)
 	return line	
 #----------------------------------------------------------------  
+# Migration PY2/PY3: py2_decode aus kodi-six
 def make_filenames(title):
+	PLog('make_filenames:')
 	# erzeugt - hoffentlich - sichere Dateinamen (ohne Extension)
 	# zugeschnitten auf Titelerzeugung in meinen Plugins 
 	
-	title = UtfToStr(title)				# in Kodi-Version erforderlich
-	fname = transl_umlaute(title)		# Umlaute
-	# Ersatz: 	Leerz., Pipe, mehrf. Unterstriche -> 1 Unterstrich, Doppelp. -> Bindestrich	
-	#			+ /  -> Bindestrich	
-	# Entferne: Frage-, Ausrufez., Hochkomma, Komma und #@!%^&*(), für ARD Audiothek
-	#	ab 16.08.2019 auch < und >
-	fname = (fname.replace(' ','_').replace('|','_').replace('___','_').replace('.','_')) 
-	fname = (fname.replace('__','_').replace(':','-'))
-	fname = (fname.replace('?','').replace('!','').replace('"','').replace('#','')
-		.replace('*','').replace('@','').replace('%','').replace('^','').replace('&','')
-		.replace('(','').replace(')','').replace(',','').replace('+','-').replace('/','-')
-		.replace('<','').replace('>',''))	
+	title = py2_decode(title)
+	fname = transl_umlaute(title)		# Umlaute	
 	
-	# Die Variante .join entfällt leider, da die Titel hier bereits
-	# in Unicode ankommen -	Plex code/sandbox.py:  
-	# 		'str' object has no attribute '__iter__': 
-	# valid_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
-	# fname = ''.join(c for c in fname if c in valid_chars)
+	valid_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
+	fname = ''.join(c for c in fname if c in valid_chars)
+	fname = fname.replace(u' ', u'_')
+
 	return fname
 #----------------------------------------------------------------  
-def transl_umlaute(line):	# Umlaute übersetzen, wenn decode nicht funktioniert
-	line = UtfToStr(line)				# in Kodi-Version erforderlich
+# Umlaute übersetzen, wenn decode nicht funktioniert
+# Migration PY2/PY3: py2_decode aus kodi-six
+def transl_umlaute(line):	
+	line= py2_decode(line)	
 	line_ret = line
-	line_ret = line_ret.replace("Ä", "Ae", len(line_ret))
-	line_ret = line_ret.replace("ä", "ae", len(line_ret))
-	line_ret = line_ret.replace("Ü", "Ue", len(line_ret))
-	line_ret = line_ret.replace('ü', 'ue', len(line_ret))
-	line_ret = line_ret.replace("Ö", "Oe", len(line_ret))
-	line_ret = line_ret.replace("ö", "oe", len(line_ret))
-	line_ret = line_ret.replace("ß", "ss", len(line_ret))	
+	line_ret = line_ret.replace(u"Ä", u"Ae", len(line_ret))
+	line_ret = line_ret.replace(u"ä", u"ae", len(line_ret))
+	line_ret = line_ret.replace(u"Ü", u"Ue", len(line_ret))
+	line_ret = line_ret.replace(u'ü', u'ue', len(line_ret))
+	line_ret = line_ret.replace(u"Ö", u"Oe", len(line_ret))
+	line_ret = line_ret.replace(u"ö", u"oe", len(line_ret))
+	line_ret = line_ret.replace(u"ß", u"ss", len(line_ret))	
 	return line_ret
 #----------------------------------------------------------------  
+# Migration PY2/PY3: py2_decode aus kodi-six
 def transl_json(line):	# json-Umlaute übersetzen
 	# Vorkommen: Loader-Beiträge ZDF/3Sat (ausgewertet als Strings)
 	# Recherche Bsp.: https://www.compart.com/de/unicode/U+00BA
 	# 
-#	line = UtfToStr(line)
-	for r in (('\\u00E4', "ä"), ('\\u00C4', "Ä"), ('\u00F6', "ö")		
-		, ('\\u00C6', "Ö"), ('\\u00D6', "Ö"),('\\u00FC', "ü"), ('\\u00DC', 'Ü')
-		, ('\\u00DF', 'ß'), ('\\u0026', '&'), ('\\u00AB', '"')
-		, ('\\u00BB', '"')
-		, ('\xc3\xa2', '*')			# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
-		, ('u00B0', ' Grad')		# u00BA -> Grad (3Sat, 37 Grad)	
-		, ('u00EA', 'e')			# 3Sat: Fête 
-		, ('u00E9', 'e')):			# 3Sat: Fabergé
+	line= py2_decode(line)	
+	#PLog(line)
+	for r in ((u'\\u00E4', u"ä"), (u'\\u00C4', u"Ä"), (u'\\u00F6', u"ö")		
+		, (u'\\u00C6', u"Ö"), (u'\\u00D6', u"Ö"),(u'\\u00FC', u"ü"), (u'\\u00DC', u'Ü')
+		, (u'\\u00DF', u'ß'), (u'\\u0026', u'&'), (u'\\u00AB', u'"')
+		, (u'\\u00BB', u'"')
+		, (u'\xc3\xa2', u'*')			# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
+		, (u'u00B0', u' Grad')		# u00BA -> Grad (3Sat, 37 Grad)	
+		, (u'u00EA', u'e')			# 3Sat: Fête 
+		, (u'u00E9', u'e')			# 3Sat: Fabergé
+		, (u'u00E6', u'ae')):			# 3Sat: Kjaerstad
 
 		line = line.replace(*r)
+	#PLog(line)
 	return line	
 #----------------------------------------------------------------  
 def humanbytes(B):
@@ -927,7 +982,7 @@ def humanbytes(B):
 #----------------------------------------------------------------  
 def CalculateDuration(timecode):				# 3 verschiedene Formate (s.u.)
 	PLog("CalculateDuration:")
-	timecode = timecode.upper()	# Min -> min
+	timecode = up_low(timecode)	# Min -> min
 	milliseconds = 0
 	hours        = 0
 	minutes      = 0
@@ -966,12 +1021,14 @@ def CalculateDuration(timecode):				# 3 verschiedene Formate (s.u.)
 # Rückgabe:  		1d, 0h, 0m, 0s	(days=True)
 #		oder:		0h, 0d				
 def seconds_translate(seconds, days=False):
+	#PLog('seconds_translate:')
+	#PLog(seconds)
 	if seconds == '' or seconds == 0  or seconds == 'null':
 		return ''
 	if int(seconds) < 60:
 		return "%s sec" % seconds
 	seconds = float(seconds)
-	day = seconds / (24 * 3600)
+	day = seconds / (24 * 3600)	
 	time = seconds % (24 * 3600)
 	hour = time / 3600
 	time %= 3600
@@ -979,8 +1036,10 @@ def seconds_translate(seconds, days=False):
 	time %= 60
 	seconds = time
 	if days:
+		#PLog("%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds))
 		return "%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds)
 	else:
+		#PLog("%d:%02d" % (hour, minutes))
 		return  "%d:%02d" % (hour, minutes)		
 #----------------------------------------------------------------  	
 # Format timecode 	2018-11-28T23:00:00Z (ARD Neu, broadcastedOn)
@@ -1086,6 +1145,7 @@ def transl_wtag(tag):
 #		2. das Sekundenformat 02.000 durch 02,00 (Verzicht auf die letzte Stelle)
 # Problem mit dt.datetime.strptime (Kodi: attribute of type 'NoneType' is not callable):
 # 	https://forum.kodi.tv/showthread.php?tid=112916
+# Migration Python3: s. from __future__ import print_function
 #
 def xml2srt(infile):
 	PLog("xml2srt: " + infile)
@@ -1108,13 +1168,13 @@ def xml2srt(infile):
 				begin	= begin[:8] + ',' + begin[9:11]			# ""10:00:07,40"			
 				end		= end[:8] + ',' + end[9:11]				# "10:00:10,92"
 
-				print >>fout, i+1
-				print >>fout, '%s --> %s' % (begin, end)
+				print(i+1, file=fout)
+				print('%s --> %s' % (begin, end), file=fout)
 				# print >>fout, p.text
 				for textline in ptext:
 					text = stringextract('>', '<', textline) # style="S3">Willkommen zum großen</tt:span>
-					print >>fout, text
-				print >>fout
+					print(text, file=fout)
+				print(file=fout)
 		os.remove(infile)									# Quelldatei entfernen
 	except Exception as exception:
 		PLog(str(exception))
@@ -1131,9 +1191,12 @@ def ReadFavourites(mode):
 		fname = xbmc.translatePath('special://profile/favourites.xml')
 	else:	# 'Merk'
 		fname = WATCHFILE
-		
-	page = RLoad(fname,abs_path=True)
-			
+	try:
+		page = RLoad(fname,abs_path=True)
+	except Exception as exception:
+		PLog(str(exception))
+		return []
+				
 	if mode == 'Favs':
 		favs = re.findall("<favourite.*?</favourite>", page)
 	else:
@@ -1202,10 +1265,10 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False):
 		summ = mystrip(summ)
 		#if 'title="Untertitel">UT</abbr>' in page:	# stimmt nicht mit get_formitaeten überein
 		#	summ = "UT | " + summ
-		if 'erfügbar bis' in page:										# enth. Uhrzeit									
-			verf = stringextract('erfügbar bis ', '<', page)			# Blank bis <
+		if u'erfügbar bis' in page:										# enth. Uhrzeit									
+			verf = stringextract(u'erfügbar bis ', '<', page)			# Blank bis <
 		if verf:														# Verfügbar voraanstellen
-			summ = "[B]Verfügbar bis %s[/B]\n\n%s\n" % (verf, summ)
+			summ = u"[B]Verfügbar bis %s[/B]\n\n%s\n" % (verf, summ)
 		
 	if 	ID == 'ARDnew':
 		page = page.replace('\\"', '*')									# Quotierung vor " entfernen, Bsp. \"query\"
@@ -1215,20 +1278,19 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False):
 			summ = stringextract('synopsis":"', '"', page)
 		summ = repl_json_chars(summ)
 		if skip_verf == False:
-			if 'verfügbar bis:' in page:								# html mit Uhrzeit									
-				verf = stringextract('verfügbar bis:', '</p>', page)	# 
+			if u'verfügbar bis:' in page:								# html mit Uhrzeit									
+				verf = stringextract(u'verfügbar bis:', '</p>', page)	# 
 				verf = cleanhtml(verf)
-			if verf:													# Verfügbar voraanstellen
-				summ = "[B]Verfügbar bis %s[/B]\n\n%s" % (verf, summ)
-		
-		
+			if verf:													# Verfügbar voranstellen
+				summ = u"[B]Verfügbar bis %s[/B]\n\n%s" % (verf, summ)
+			
 	if 	ID == 'ARDClassic':
 		# summ = stringextract('description" content="', '"', page)		# geändert 23.04.2019
 		summ = stringextract('itemprop="description">', '<', page)
-		if 'Verfügbar bis' in page:										
-			verf = stringextract('Verfügbar bis ', ' ', page)			# Blank bis Blank
+		if u'Verfügbar bis' in page:										
+			verf = stringextract(u'Verfügbar bis ', ' ', page)			# Blank bis Blank
 		if len(verf) == 10:												# Verfügbar voraanstellen
-			summ = "[B]Verfügbar bis %s[/B]\n\n%s" % (verf, summ)
+			summ = u"[B]Verfügbar bis %s[/B]\n\n%s" % (verf, summ)
 		 	
 	summ = unescape(summ)			# Text speichern
 	summ = cleanhtml(summ)	
@@ -1253,7 +1315,8 @@ def get_playlist_img(hrefsender):
 		#s = stringextract('title>', '</title', p)	# Classic-Version
 		PLog(hrefsender); PLog(s); 
 		if s:									# skip Leerstrings
-			if s.upper() in hrefsender.upper():
+			PLog(type(s)); PLog(type(hrefsender));
+			if up_low(s) in up_low(hrefsender):
 				playlist_img = stringextract('thumbnail>', '</thumbnail', p)
 				playlist_img = R(playlist_img)
 				link =  stringextract('link>', '</link', p)
@@ -1342,7 +1405,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 			local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
 			local_path = os.path.abspath(local_path)
 			try:
-					urllib.urlretrieve(sub_path, local_path)
+					urlretrieve(sub_path, local_path)
 			except Exception as exception:
 				PLog(str(exception))
 				local_path = ''
@@ -1431,20 +1494,23 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 		PLog('Call_from_Favourite')
 		xbmc.executebuiltin('ActivateWindow(10134)')
 #---------------------------------------------------------------- 
+# Aufruf: PlayVideo
 def url_check(url, caller=''):
 	PLog('url_check:')
-	
+	if url.startswith('http') == False:		# lokale Datei - kein Check
+		return True
+		
 	UrlopenTimeout = 3
 	# Tests:
 	# url='http://104.250.149.122:8012'	# Debug: HTTP Error 401: Unauthorized
 	# url='http://feeds.soundcloud.com/x'	# HTTP Error 400: Bad Request
 	
-	req = urllib2.Request(url)
+	req = Request(url)
 	try:
-		r = urllib2.urlopen(req, timeout=UrlopenTimeout)
+		r = urlopen(req, timeout=UrlopenTimeout)
 		PLog('Status: ' + str(r.getcode()))
 		return True
-	except urllib2.URLError as exception:
+	except Exception as exception:
 		err = str(exception)
 		msg1= '%s: Seite nicht erreichbar - Url:' % caller
 		msg2 = url

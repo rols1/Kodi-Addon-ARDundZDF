@@ -6,28 +6,50 @@
 #	16.01.2019 erweitert mit Backup-Funktion für Addon-Cache.
 #	03.05.2019 Backup-Funktion wieder entfernt, data-Verzeichnis ab
 #		V1.4.0 im Kodi-Verzeichnis .kodi/userdata/addon_data/ardundzdf_data
-#
+#	31.10.2019 Migration Python3 Modul future
+#	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
-import re, os, sys
+
+# Python3-Kompatibilität:
+from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
+from __future__ import division				# // -> int, / -> float
+from __future__ import print_function		# PYTHON2-Statement -> Funktion
+from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
+# o. Auswirkung auf die unicode-Strings in PYTHON3:
+from kodi_six.utils import py2_encode, py2_decode
+
+import os, sys
+PYTHON2 = sys.version_info.major == 2
+PYTHON3 = sys.version_info.major == 3
+if PYTHON2:					
+	from urllib import quote, unquote, quote_plus, unquote_plus, urlencode, urlretrieve 
+	from urllib2 import Request, urlopen, URLError 
+	from urlparse import urljoin, urlparse, urlunparse , urlsplit, parse_qs 
+elif PYTHON3:				
+	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs  
+	from urllib.request import Request, urlopen, urlretrieve
+	from urllib.error import URLError
+
+# Standard:
 import shutil						# Dir's löschen
-import urllib2, zipfile, StringIO
+import zipfile, re
+import io 							# Python2+3 -> update() io.BytesIO für Zipfile
 
-import xbmc, xbmcgui, xbmcaddon
-
+# Addonmodule + Funktionsziele (util_imports.py):
 import resources.lib.util as util
 PLog=util.PLog; get_page=util.get_page; stringextract=util.stringextract;
-cleanhtml=util.cleanhtml;
+cleanhtml=util.cleanhtml; 
  
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')
+ADDON_PATH    	= SETTINGS.getAddonInfo('path')
 
 ICON_OK = "icon-ok.png"				# gtk themes / Adwaita checkbox-checked-symbolic.symbolic.png
 ICON_WARNING = "icon-warning.png"	# gtk themes / Adwaita dialog-warning-symbolic.symbolic.png
 ICON_ERROR = "icon-error.png"		# gtk themes / Adwaita dialog-error.png
 ICON_UPDATER = "icon-updater.png"	# gtk themes / Adwaita system-software-update.png
-ICON_RELEASES = "icon-releases.png"	# gtk themes / Adwaita view-list-symbolic.symbolic.png
+ICON_RELEASES = "icoimportn-releases.png"	# gtk themes / Adwaita view-list-symbolic.symbolic.png
 ICON_NEXT = "icon-next.png"			# gtk themes / Adwaita go-next-symbolic.symbolic.png 
 
 FEED_URL = 'https://github.com/{0}/releases.atom'
@@ -51,7 +73,7 @@ def get_latest_version():
 		release_feed_url = ('https://github.com/{0}/releases.atom'.format(GITHUB_REPOSITORY))
 		PLog(release_feed_url)
 			
-		r = urllib2.urlopen(release_feed_url)
+		r = urlopen(release_feed_url)
 		page = r.read()					
 		PLog(len(page))
 		# PLog(page[:800])
@@ -66,10 +88,11 @@ def get_latest_version():
 		# PLog(link); PLog(title); PLog(summary); PLog(tag);  
 		return (title, summary, tag)
 	except Exception as exception:
-		Log.Error('Suche nach neuen Versionen fehlgeschlagen: {0}'.format(repr(exception)))
+		PLog('Suche nach neuen Versionen fehlgeschlagen: {0}'.format(str(exception)))
 		return ('', '', '')
 
 ################################################################################
+# decode latest_version (hier bytestring) erforderlich für Pfad-Bau in 
 def update_available(VERSION):
 	PLog('update_available:')
 
@@ -85,14 +108,15 @@ def update_available(VERSION):
 			# wir verwenden auf Github die Versionierung nicht im Plugin-Namen
 			# latest_version  = title 
 			latest_version  = tag		# Format hier: '1.4.1'
+
 			current_version = VERSION
 			int_lv = tag.replace('.','')
 			int_cv = current_version.replace('.','')
 			PLog('Github: ' + latest_version); PLog('lokal: ' + current_version); 
 			# PLog(int_lv); PLog(int_cv)
 			return (int_lv, int_cv, latest_version, summ, tag)
-	except:
-		pass
+	except Exception as exception:	
+		PLog(str(exception))
 	return (False, '', '', '', '', '')
             
 ################################################################################
@@ -105,9 +129,9 @@ def update(url, ver):
 		try:
 			dest_path 	= xbmc.translatePath("special://home/addons/")
 			PLog('Mark1')
-			r 			= urllib2.urlopen(url)
+			r 			= urlopen(url)
 			PLog('Mark2')
-			zip_data	= zipfile.ZipFile(StringIO.StringIO(r.read()))
+			zip_data	= zipfile.ZipFile(io.BytesIO(r.read()))
 			PLog('Mark3')
 			
 			# save_restore('save')									# Cache sichern - entfällt, s.o.

@@ -6,21 +6,40 @@
 # 	dieses Modul nutzt nicht die Webseiten der Mediathek ab https://www.zdf.de/,
 #	sondern die Seiten ab https://zdf-cdn.live.cellular.de/mediathekV2 - diese
 #	Seiten werden im json-Format ausgeliefert
+#	22.11.2019 Migration Python3 Modul six + manuelle Anpassungen
 
-import  json		
-import os, sys
-import urllib, urllib2
+# Python3-Kompatibilität:
+from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
+from __future__ import division				# // -> int, / -> float
+from __future__ import print_function		# PYTHON2-Statement -> Funktion
+from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
+
+# o. Auswirkung auf die unicode-Strings in PYTHON3:
+from kodi_six.utils import py2_encode, py2_decode
+
+import os, sys, subprocess
+PYTHON2 = sys.version_info.major == 2
+PYTHON3 = sys.version_info.major == 3
+if PYTHON2:
+	from urllib import quote, unquote, quote_plus, unquote_plus, urlencode, urlretrieve
+	from urllib2 import Request, urlopen, URLError 
+	from urlparse import urljoin, urlparse, urlunparse, urlsplit, parse_qs
+elif PYTHON3:
+	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs
+	from urllib.request import Request, urlopen, urlretrieve
+	from urllib.error import URLError
+
+# Python
 import ssl
 import datetime, time
-import re				# u.a. Reguläre Ausdrücke
+import re, json				# u.a. Reguläre Ausdrücke
 
-import xbmc, xbmcgui, xbmcaddon, xbmcplugin
 
 # import ardundzdf					# -> ZDF_get_content - nicht genutzt
 import resources.lib.util as util	# (util_imports.py)
 PLog=util.PLog; home=util.home; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir; 
 getDirZipped=util.getDirZipped; Dict=util.Dict; name=util.name; ClearUp=util.ClearUp; 
-UtfToStr=util.UtfToStr; addDir=util.addDir; get_page=util.get_page; img_urlScheme=util.img_urlScheme; 
+addDir=util.addDir; get_page=util.get_page; img_urlScheme=util.img_urlScheme; 
 R=util.R; RLoad=util.RLoad; RSave=util.RSave; GetAttribute=util.GetAttribute; repl_dop=util.repl_dop; 
 repl_char=util.repl_char; repl_json_chars=util.repl_json_chars; mystrip=util.mystrip; 
 DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract; blockextract=util.blockextract; 
@@ -39,7 +58,7 @@ ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')	# Basis-Pfad Addon
+ADDON_PATH    	= SETTINGS.getAddonInfo('path')	# Basis-Pfad Addon
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
@@ -234,6 +253,7 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				date = '%s |  Laenge: %s' % (date, dauer)
 				path = 'stage|%d' % i
 				PLog(path)
+				
 				fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (path, DictID)	
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowVideo", fanart=img, thumb=img, 
 					fparams=fparams, summary=descr, tagline=date, mediatype=mediatype)
@@ -247,12 +267,9 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				title = clusterObject["name"]
 				if title == '':
 					title = 'ohne Titel'
-				title = title.encode("utf-8")
-				path = path.encode("utf-8")
-				PLog('Mark1')
 				title = repl_json_chars(title)
+				PLog(title); PLog(path);  
 				fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s'}"  % (path, title, DictID)
-				PLog(title); PLog(path);  PLog(fparams); 
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.SingleRubrik", 				
 					fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 								
@@ -262,8 +279,6 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 			if clusterObject["type"].startswith("teaser") and "name" in clusterObject:
 				path = "broadcastCluster|%d|teaser" % counter
 				title = clusterObject["name"]
-				title = title.encode("utf-8")
-				path = path.encode("utf-8")
 				fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s'}" % (path, title, DictID)
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.SingleRubrik", 
 				fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
@@ -274,9 +289,8 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 			if("liveStream" in epgObject and len(epgObject["liveStream"]) >= 0):
 				path = "epgCluster|%d|liveStream" % counter
 				title = epgObject["name"] + ' Live'
-				title = title.encode("utf-8")
-				path = path.encode("utf-8")
-				fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (urllib2.quote(path), DictID)	
+				path=py2_encode(path) 
+				fparams="&fparams={'path': '%s', 'DictID': '%s'}" % (quote(path), DictID)	
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowVideo", 
 					fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams, 
 					tagline=title, mediatype=mediatype)
@@ -326,12 +340,10 @@ def Get_content(stageObject, maxWidth):
 			#now = datetime.datetime.now()
 			#date = now.strftime("%d.%m.%Y %H:%M")
 		
-	typ=UtfToStr(typ); title=UtfToStr(title); subTitle=UtfToStr(subTitle); descr=UtfToStr(descr); 
 	title=repl_json_chars(title) 		# json-komp. für func_pars in router()
 	subTitle=repl_json_chars(subTitle) 	# dto
 	descr=repl_json_chars(descr) 		# dto
 	
-	img=UtfToStr(img);	date=UtfToStr(date); dauer=UtfToStr(dauer);
 	PLog('Get_content: %s | %s |%s | %s | %s | %s | %s' % (typ, title,subTitle,descr,img,date,dauer) )		
 	return typ,title,subTitle,descr,img,date,dauer
 # ----------------------------------------------------------------------	
@@ -449,10 +461,9 @@ def ShowVideo(path, DictID, Merk='false'):
 	
 	PLog('Einzelbeitrag')								# Einzelbeitrag
 	typ,title,subTitle,descr,img,date,dauer = Get_content(videoObject,imgWidthLive)
-	typ=UtfToStr(typ); title=UtfToStr(title); subTitle=UtfToStr(subTitle); descr=UtfToStr(descr);
 	if subTitle:
 		title = '%s | %s' % (title,subTitle)
-	title_org = UtfToStr(title)	
+	title_org = title
 	PLog(title_org)	
 
 	streamApiUrl, jsonurl, htmlurl = get_video_urls(videoObject)		# json- und html-Quellen bestimmen
@@ -500,6 +511,7 @@ def ShowVideo(path, DictID, Merk='false'):
 				formitaeten = get_formitaeten2(page) 		# String-Ausw. Formitäten
 
 	descr_local=''										# Beschreibung zusammensetzen
+	PLog(type(date)); PLog(type(dauer)); PLog(type(descr));
 	if date and dauer:
 		descr_local = "%s | %s\n\n%s" % (date, dauer, descr) # Anzeige Listing 
 		descr 		= "%s | %s||||%s" % (date, dauer, descr) # -> PlayVideo
@@ -507,7 +519,6 @@ def ShowVideo(path, DictID, Merk='false'):
 
 	i=0
 	for detail in formitaeten:	
-		PLog("Mark4")
 		i = i + 1
 		quality = detail[0]				# Bsp. auto [m3u8]
 		hd = 'HD: ' + str(detail[1])	# False bei mp4-Dateien, s.u.
@@ -530,12 +541,9 @@ def ShowVideo(path, DictID, Merk='false'):
 			except:
 				bandbreite = ''
 				
-		title_org=UtfToStr(title_org);
 		title_org=unescape(title_org); 	
 		title_org=repl_json_chars(title_org) 		# json-komp. für func_pars in router()
 		
-		quality=UtfToStr(quality); typ=UtfToStr(typ); codec=UtfToStr(codec);
-					
 		PLog("url: " + url)	
 		if Merk == 'true':
 			PLog('Sofortstart Merk: ZDF Mobile (ShowVideo)')
@@ -552,32 +560,25 @@ def ShowVideo(path, DictID, Merk='false'):
 			title=str(i) + '. ' + quality + ' [m3u8]' + ' | ' + geoblock	# Einzelauflösungen
 			PLog("title: " + title)
 			tagline = '%s\n\n' % title_org + 'Qualitaet: %s | Typ: %s' % (quality, '[m3u8-Streaming]')
-			tagline = UtfToStr(tagline);
+			url=py2_encode(url); title_org=py2_encode(title_org); 
+			img=py2_encode(img); descr=py2_encode(descr); 
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
-				(urllib2.quote(url), urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr), Merk)	
+				(quote(url), quote(title_org), quote_plus(img), quote_plus(descr), Merk)	
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
-				thumb=img, fparams=fparams, tagline=descr_local, summary =tagline, mediatype='video')	
+				thumb=img, fparams=fparams, tagline=descr_local, summary=tagline, mediatype='video')	
 		else:
 			title=str(i) + '. %s [%s] | %s'  % (quality, hd, geoblock)
 			PLog("title: " + title)
 			tagline = '%s\n\n' % title_org + 'Qualitaet: %s | Typ: %s | Codec: %s' % (quality, typ, codec)
 			if bandbreite:
-				bandbreite=UtfToStr(bandbreite);
 				tagline = '%s | %s'	% (tagline, bandbreite)		
-			tagline = UtfToStr(tagline);
+			url=py2_encode(url); title_org=py2_encode(title_org); 
+			img=py2_encode(img); descr=py2_encode(descr); 
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
-				(urllib2.quote(url), urllib2.quote(title_org), urllib.quote_plus(img), urllib.quote_plus(descr), Merk)	
+				(quote(url), quote(title_org), quote_plus(img), quote_plus(descr), Merk)	
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
-				thumb=img, fparams=fparams, tagline=descr_local, summary =tagline, mediatype='video')	
+				thumb=img, fparams=fparams, tagline=descr_local, summary=tagline, mediatype='video')	
 	
-	'''
-	# einzelne Auflösungen anbieten:	# bei zdfMobile überflüssig - Varianten von low - veryhigh vorh.
-	title = 'einzelne Bandbreiten/Aufloesungen zu auto [m3u8]'
-	fparams="&fparams={'title': '%s', 'url_m3u8': '%s', 'thumb': '%s', 'descr': '%s'}" % (urllib2.quote(title_org), 
-		urllib2.quote(url_auto), urllib2.quote(img), urllib.quote_plus(descr))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.ShowSingleBandwidth", fanart=img, 
-		thumb=img, fparams=fparams, summary=descr, mediatype='')
-	'''
 	xbmcplugin.endOfDirectory(HANDLE)
 				
 # ----------------------------------------------------------------------
@@ -721,7 +722,6 @@ def ShowSingleBandwidth(title,url_m3u8,thumb, descr):	# .m3u8 -> einzelne Auflö
 def Parseplaylist(li, playlist, title, thumb, descr):	# playlist (m3u8, ZDF-Format) -> einzelne Auflösungen
 	PLog ('Parseplaylist:')
 	PLog(title)
-	title = UtfToStr(title)
 	title_org = title
   
 	lines = playlist.splitlines()
@@ -762,9 +762,10 @@ def Parseplaylist(li, playlist, title, thumb, descr):	# playlist (m3u8, ZDF-Form
 			tagline = '%s | nur Audio'	% tagline
 			thumb=R(ICON_SPEAKER)
 		
-		descr = UtfToStr(descr)		
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (urllib.quote_plus(url), 
-			urllib.quote_plus(title_org), urllib.quote_plus(thumb), urllib.quote_plus(descr))			
+		url=py2_encode(url); title_org=py2_encode(title_org); 
+		thumb=py2_encode(thumb); descr=py2_encode(descr); 
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote_plus(url), 
+			quote_plus(title_org), quote_plus(thumb), quote_plus(descr))			
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, 
 			thumb=thumb, fparams=fparams, summary=summ, tagline=tagline, mediatype='video')	
 
@@ -776,7 +777,7 @@ def loadPage(url, apiToken='', maxTimeout = None):
 		safe_url = url.replace( " ", "%20" ).replace("&amp;","&")
 		PLog("loadPage: " + safe_url); 
 
-		req = urllib2.Request(safe_url)
+		req = Request(safe_url)
 		# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)		# 07.10.2019: Abruf mit SSLContext klemmt häufig - bei
 		# 	Bedarf mit Prüfung auf >'_create_unverified_context' in dir(ssl)< nachrüsten:
 
@@ -792,13 +793,11 @@ def loadPage(url, apiToken='', maxTimeout = None):
 
 		if maxTimeout == None:
 			maxTimeout = 60;
-		# r = urllib2.urlopen(req, timeout=maxTimeout, context=gcontext) # s.o.
-		r = urllib2.urlopen(req, timeout=maxTimeout)
+		# r = urlopen(req, timeout=maxTimeout, context=gcontext) # s.o.
+		r = urlopen(req, timeout=maxTimeout)
 		# PLog("headers: " + str(r.headers))
 		doc = r.read()
 		PLog(len(doc))	
-		if '<!DOCTYPE html>' not in doc:	# Webseite mit apiToken nicht encoden (code-error möglich)
-			doc = doc.encode('utf-8')		
 		return doc
 		
 	except Exception as exception:

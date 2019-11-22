@@ -8,6 +8,8 @@
 #		Container: tv-show-container js-tv-show-container
 #		Blöcke: <a href=" .. </a>
 #		Sendezeit: data-start-time="", data-end-time=""
+#
+#	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #		
  
 import time
@@ -16,7 +18,7 @@ from datetime import date
 
 import resources.lib.util as util
 R=util.R; RLoad=util.RLoad; RSave=util.RSave;Dict=util.Dict; PLog=util.PLog; 
-addDir=util.addDir; UtfToStr=util.UtfToStr; get_page=util.get_page;
+addDir=util.addDir; get_page=util.get_page;
 stringextract=util.stringextract; blockextract=util.blockextract; 
 transl_wtag=util.transl_wtag; cleanhtml=util.cleanhtml; home=util.home
 
@@ -52,6 +54,7 @@ def EPG(ID, mode=None, day_offset=None):
 	today_human = datetime.datetime.fromtimestamp(int(today_5Uhr))
 	today_human =  today_human.strftime("%d.%m.%Y, %H:%M Uhr")			# deutsches Format mit Offset (Datumanzeige ab ...)
 	
+	PLog('EPGSatz:')
 	PLog(now); PLog(now_human); PLog(today_human);
 	# PLog(today); PLog(today_5Uhr); PLog(nextday); PLog(nextday_5Uhr)	# bei Bedarf
 
@@ -67,7 +70,9 @@ def EPG(ID, mode=None, day_offset=None):
 			break
 		endtime = stringextract('data-end-time=\"', '\"', liste[i])	 	# Format wie starttime
 		href = stringextract('href=\"', '\"', liste[i])					# wenig zusätzl. Infos
-		img = stringextract('data-lazy-load-src=\"', '\"', liste[i])
+		img = stringextract('srcset="', '"', liste[i])
+		img = img.replace('159.', '640.')								# Format ändern "..4415_159.webp"
+		
 		sname = stringextract('class=\"h7 name\">', '</p>', liste[i])
 		stime = stringextract('class=\"h7 time\">', '</p>', liste[i])   # Format: 06:00
 		stime = stime.strip()
@@ -98,6 +103,7 @@ def EPG(ID, mode=None, day_offset=None):
 			if mode == 'OnlyNow':				# aus EPG_ShowAll - nur aktuelle Sendung
 				rec = [starttime,href,img,sname,stime,summ,vonbis]  # Index wie EPG_rec
 				# PLog(rec)
+				PLog('EPG_EndOnlyNow')
 				return rec						# Rest verwerfen - Ende		
 		
 		iWeekday = transl_wtag(s_startday)
@@ -110,7 +116,7 @@ def EPG(ID, mode=None, day_offset=None):
 		EPG_rec.append(rec)											# Liste Gesamt (2-Dim-Liste)
 	
 	EPG_rec.sort()						# Sortierung	
-	PLog(len(EPG_rec))
+	PLog(len(EPG_rec)); PLog('EPG_End')
 	return EPG_rec
 #-----------------------
 def get_summ(block):		# Beschreibung holen
