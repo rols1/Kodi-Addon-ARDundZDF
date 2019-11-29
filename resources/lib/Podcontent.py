@@ -253,7 +253,7 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 		title, url = rec.split('#')
 		title = unescape(title)								# schon in PodFavoriten, hier erneut nötig 
 		if 	SETTINGS.getSetting('pref_generate_filenames'):	# Dateiname aus Titel generieren
-			dfname = make_filenames(py2_encode(title) + '.mp3')
+			dfname = make_filenames(py2_encode(title)) + '.mp3'
 		else:												# Bsp.: Download_2016-12-18_09-15-00.mp4  oder ...mp3
 			now = datetime.datetime.now()
 			mydate = now.strftime("%Y-%m-%d_%H-%M-%S")	
@@ -272,9 +272,9 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 		args = cmd
 	else:
 		args = shlex.split(cmd)								# ValueError: No closing quotation (1 x, Ursache n.b.)
-	PLog(len(args))											# hier Ende Log-Ausgabe bei Plugin-Timeout, Download
+	PLog(len(args))											
 	# PLog(args)
-															#	läuft aber weiter.
+												
 	try:
 		PIDcurlPOD = ''
 		sp = subprocess.Popen(args, shell=False)			# shell=True entf. hier nach shlex-Nutzung	

@@ -797,7 +797,8 @@ def loadPage(url, apiToken='', maxTimeout = None):
 		r = urlopen(req, timeout=maxTimeout)
 		# PLog("headers: " + str(r.headers))
 		doc = r.read()
-		PLog(len(doc))	
+		PLog(len(doc))
+		doc = doc.decode('utf-8')	
 		return doc
 		
 	except Exception as exception:

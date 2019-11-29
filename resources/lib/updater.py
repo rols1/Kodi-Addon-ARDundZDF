@@ -75,6 +75,7 @@ def get_latest_version():
 			
 		r = urlopen(release_feed_url)
 		page = r.read()					
+		page=page.decode('utf-8')				
 		PLog(len(page))
 		# PLog(page[:800])
 
@@ -88,7 +89,7 @@ def get_latest_version():
 		# PLog(link); PLog(title); PLog(summary); PLog(tag);  
 		return (title, summary, tag)
 	except Exception as exception:
-		PLog('Suche nach neuen Versionen fehlgeschlagen: {0}'.format(str(exception)))
+		PLog(str(exception))
 		return ('', '', '')
 
 ################################################################################
@@ -161,7 +162,8 @@ def update(url, ver):
 # 03.05.2019 Funktion wieder entfernt - s.o.
 
 	
-################################################################################# clean tag names based on your release naming convention
+################################################################################# 
+# clean tag names based on your release naming convention
 def cleanSummary(summary):
 	
 	summary = (summary.replace('&lt;','').replace('&gt;','').replace('/ul','')

@@ -8,7 +8,24 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
-22.11.2019	2.2.4	python3-Migration: Modul ARD Neu - wie Haupt-PRG, Fix Sendezeit in Verpasst 
+27.11.2019	2.2.5	Anpassung Kodi Matrix: 
+			PlayVideo (Modul util): Fix json-Url ('\\u002F' -> '/') als last resort.
+			get_page (Modul util): page.decode('utf-8') vor json-Auswertung gelegt, 
+			Ersetzung in Seite '\\/' -> '/' (ohne Ausw. in Python2), Blanks vor und  
+			hinter separator : entfernt (json.dumps), Anpassung in get_formitaeten (extract 
+			videodat_url) und show_formitaeten. 
+			Modul 3Sat: page.decode('utf-8') am Ende von get_page3sat.
+			Modul ARD Neu: Fix json-Url ('\\u002F' -> '/') in ARDSearchnew,
+			ARDStartSingle, AARDStartVideoStreams, ARDStartVideoMP4.
+			DownloadsList: py2_decode(txt) für Beschreibung, Korrektur falscher Textformate
+			(repl_json_chars, replace LF, replace '|  |').
+			loadPage (Modul ZDFmobile): doc.decode('utf-8') für geladene Seite.
+			DownloadMultiple (Modul Podcontent): Fix Dateiendung 'mp3' -> '.mp3'.
+			Modul updater: page.decode('utf-8')
+			Main: Fix Reaktion auf Github-Problem (Interpretation des Updater-Returns war falsch). 
+			PageControl (ARD Classic): py2_encode für pagenr[0] (bei Seiten-Endmontage).
+
+22.11.2019	2.2.4	Kodi-Matrix-Anpassungen: Modul ARD Neu - wie Haupt-PRG, Fix Sendezeit in Verpasst 
 			(Änderung Webseite), Erkennung Mehrfachsätze in Startseite/Highlights.
 			ZDFStart: Funktion  wg. Änderung der Webseite erneuert.
 			ZDFRubrikSingle, get_teaserElement: an Änderungen der Webseite angepasst.
@@ -16,10 +33,14 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			BarriereArmSingle (ZDF): Blockbildung an Änderung der Webseite angepasst.
 			Modul Podcontent: Fix fehlende download_url (Ersatz: playback_url).
 			make_filenames (Modul util): Umstellung auf sichere ascii-Variante. 
+			Modul funk: Verwendung bisheriger POST-Daten als GET-Daten in Url (POST-Daten
+			mit/ohne urlencode funktionieren nicht in Kodi Matrix).
+			Modul funk: Fehlermeldungen für Requests vereinheitlicht + mit Url gefüllt.
+			
 
 not on Github	2.2.3	python3-Migration Modul EPG: wie Haupt-PRG, Auswertung Bilder an geänderte
 			Webseite tvtoday.de angepasst.	
-			python3-Migration Modul EPG: wie Haupt-PRG,  Status experimentell aufgehoben.
+			python3-Migration Modul funk: wie Haupt-PRG,  Status experimentell aufgehoben.
 			python3-Migration Modul 3Sat: wie Haupt-PRG, Fix Pfad für get_teaserElement,
 			Fix Button-Texte A-Z, Rubriken (Hauptmenü).
 			Modul util: Fix transl_json ('\\u00F6' -> "ö").

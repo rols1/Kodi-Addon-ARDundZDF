@@ -29,7 +29,7 @@ elif PYTHON3:
 import datetime as dt	# für xml2srt
 import time, datetime
 import glob, shutil
-from io import BytesIO	# Python2+3 -> get_page (compressed Content)
+from io import BytesIO	# Python2+3 -> get_page (compressed Content), Ersatz für StringIO
 import gzip, zipfile
 import base64 			# url-Kodierung für Kontextmenüs
 import json				# json -> Textstrings
@@ -584,19 +584,23 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		PLog(msg)
 		return page, msg
 		
+	if page:				
+		page = page.decode('utf-8')	
 	if JsonPage:
 		PLog('json_load: ' + str(JsonPage))
 		PLog(len(page))
+		page = page.replace('\\/', '/')									# für Python3 erf.
 		try:
 			request = json.loads(page)
-			request = json.dumps(request, sort_keys=True, indent=2, separators=(',', ': '))  # sortierte Ausgabe
-			page = request.decode('utf-8', 'ignore') # -> unicode 
-			PLog("jsonpage: " + page[:100]);# PLog("msg: " + msg)		# bei Bedarf, ev. reicht nachfolg. mainVideoContent
+			# 23.11.2019: Blank hinter separator : entfernt - wird in Python nicht beachtet.
+			#	Auswirkung in get_formitaeten (extract videodat_url)
+			request = json.dumps(request, sort_keys=True, indent=2, separators=(',', ':'))  # sortierte Ausgabe
+			page = (page.replace('" : "', '":"').replace('" :', '":'))	# für Python3 erf.
+			PLog("jsonpage: " + page[:100]);
 		except Exception as exception:
 			msg = str(exception)
 			PLog(msg)
 
-	page = page.decode('utf-8')
 	return page, msg	
 #---------------------------------------------------------------- 
 # img_urlScheme: img-Url ermitteln für get_sendungen, ARDRubriken. text = string, dim = Dimension
@@ -1371,6 +1375,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 	
 	Plot=transl_doubleUTF8(Plot)
 	Plot=(Plot.replace('[B]', '').replace('[/B]', ''))	# Kodi-Problem: [/B] wird am Info-Ende platziert
+	url=url.replace('\\u002F', '/')						# json-Pfad noch unbehandelt
 	
 	if url_check(url, caller='PlayVideo') == False:
 		if IsPlayable == 'true':								# true

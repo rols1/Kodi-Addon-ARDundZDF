@@ -683,8 +683,8 @@ def ARDStartSingle(path, title, duration, ID=''):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		xbmcplugin.endOfDirectory(HANDLE)
 	PLog(len(page))
-	page= page.replace('\u002F', '/')						# 25.07.2019: Slashes neuerdings quotiert
-	
+	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
+
 	elements = blockextract('availableTo":', page)			# möglich: Mehrfachbeiträge? 
 	if len(elements) > 1:
 		PLog('%s Elemente -> ARDStartRubrik' % str(len(elements)))
@@ -744,7 +744,6 @@ def ARDStartSingle(path, title, duration, ID=''):
 
 	if duration == None or duration.strip() == '':
 		duration = stringextract('_duration":', ',', page)	# Sekunden
-#		duration = 'Dauer %s Std.' % seconds_translate(duration)	
 		duration = 'Dauer %s' % seconds_translate(duration)	
 	tagline = duration
 	# tagline=transl_doubleUTF8(tagline)		# Bsp. â<U+0088><U+0099> (a mit Circumflex)
@@ -845,7 +844,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		return li
 	PLog(len(page))
-	page= page.replace('\u002F', '/')						# 25.07.2019: Slashes neuerdings quotiert
+	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
 	
 	href = ''; VideoUrls = []
 	Plugins = blockextract('_plugin', page)	# wir verwenden nur Plugin1 (s.o.)
@@ -918,7 +917,7 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		return li
 	PLog(len(page))
-	page= page.replace('\u002F', '/')			# 25.07.2019: Slashes neuerdings quotiert
+	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
 	
 	Plugins = blockextract('_plugin', page)	# wir verwenden nur Plugin1 (s.o.)
 	if len(Plugins) == 0:
@@ -1370,7 +1369,8 @@ def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
 					title	= unescape(title)
 					href_id =  stringextract('/shows/', '/', s) # Bild via id 
 					img, pubServ = img_via_id(href_id, page)	# pubServ sollte sender entsprechen
-					img= img.replace('\u002F', '/')
+					img=img.replace('\\u002F', '/')				# 23.11.2019: Ersetzung für Pyton3 geändert
+					
 					if pubServ:
 						summ = "Sendungen | %s" % pubServ
 					# grouping-path wie SendungenAZ_ARDnew

@@ -64,8 +64,8 @@ import resources.lib.funk				# funk
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml, Bytecodes löschen
-VERSION = '2.2.4'
-VDATE = '22.11.2019'
+VERSION = '2.2.5'
+VDATE = '29.11.2019'
 
 #
 #
@@ -253,15 +253,19 @@ PLog(SLIDESTORE); PLog(WATCHFILE);
 check 			= check_DataStores()	# Check /Initialisierung / Migration 
 PLog('check: ' + str(check))
 
-from platform import system, architecture, machine, release, version	# Debug
-OS_SYSTEM = system()
-OS_ARCH_BIT = architecture()[0]
-OS_ARCH_LINK = architecture()[1]
-OS_MACHINE = machine()
-OS_RELEASE = release()
-OS_VERSION = version()
-OS_DETECT = OS_SYSTEM + '-' + OS_ARCH_BIT + '-' + OS_ARCH_LINK
-OS_DETECT += ' | host: [%s][%s][%s]' %(OS_MACHINE, OS_RELEASE, OS_VERSION)
+try:	# 28.11.2019 exceptions.IOError möglich, Bsp. iOS ARM (Thumb) 32-bit
+	from platform import system, architecture, machine, release, version	# Debug
+	OS_SYSTEM = system()
+	OS_ARCH_BIT = architecture()[0]
+	OS_ARCH_LINK = architecture()[1]
+	OS_MACHINE = machine()
+	OS_RELEASE = release()
+	OS_VERSION = version()
+	OS_DETECT = OS_SYSTEM + '-' + OS_ARCH_BIT + '-' + OS_ARCH_LINK
+	OS_DETECT += ' | host: [%s][%s][%s]' %(OS_MACHINE, OS_RELEASE, OS_VERSION)
+except:
+	OS_DETECT =''
+	
 KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
 
 PLog('Addon: ClearUp')
@@ -409,19 +413,25 @@ def Main():
 	call_update = False
 	if SETTINGS.getSetting('pref_info_update') == 'true': # Updatehinweis beim Start des Addons 
 		ret = updater.update_available(VERSION)
-		int_lv = ret[0]			# Version Github
-		int_lc = ret[1]			# Version aktuell
-		latest_version = ret[2]	# Version Github, Format 1.4.1
-		
-		if int_lv > int_lc:								# Update-Button "installieren" zeigen
-			call_update = True
-			title = 'neues Update vorhanden - jetzt installieren'
-			summary = 'Addon aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
-			# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
-			url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
-			fparams="&fparams={'url': '%s', 'ver': '%s'}" % (quote_plus(url), latest_version) 
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.updater.update", fanart=R(FANART), 
-				thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary)
+		if ret[0] == False:		
+			msg1 = L("Github ist nicht errreichbar")
+			msg2 = 'update_available: False'
+			PLog("%s | %s" % (msg1, msg2))
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		else:	
+			int_lv = ret[0]			# Version Github
+			int_lc = ret[1]			# Version aktuell
+			latest_version = ret[2]	# Version Github, Format 1.4.1
+			
+			if int_lv > int_lc:								# Update-Button "installieren" zeigen
+				call_update = True
+				title = 'neues Update vorhanden - jetzt installieren'
+				summary = 'Addon aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
+				# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
+				url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
+				fparams="&fparams={'url': '%s', 'ver': '%s'}" % (quote_plus(url), latest_version) 
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.updater.update", fanart=R(FANART), 
+					thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary)
 			
 	if call_update == False:							# Update-Button "Suche" zeigen	
 		title = 'Addon-Update | akt. Version: ' + VERSION + ' vom ' + VDATE	
@@ -3016,14 +3026,19 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 		pagenr =  re.findall("=page.(\d+)", element) 	# einzelne Nummer aus dem Pfad s ziehen	
 		PLog(pagenr); 
 					
+		PLog('Mark0')
 		if (pagenr):							# fehlt manchmal, z.B. bei Suche
 			if href.find('=page.') >=0:			# Endmontage
 				title = 'Weiter zu Seite ' + pagenr[0]
-				href =  path_page1 + path_end + pagenr[0]
+				PLog('Mark1')
+				PLog(type(path_page1)); PLog(type(path_end)); PLog(type(pagenr[0]));
+				href =  path_page1 + path_end + py2_encode(pagenr[0])
+				PLog('Mark2')
 			else:				
 				continue						# Satz verwerfen
 		else:
 			continue							# Satz verwerfen
+		PLog('Mark3')
 			
 		PLog('href: ' + href); PLog('title: ' + title)
 		next_cbKey = 'SingleSendung'
@@ -3778,6 +3793,7 @@ def DownloadsList():
 			PLog('txtpath: ' + txtpath)
 			if os.path.exists(txtpath):
 				txt = RLoad(txtpath, abs_path=True)		# Beschreibung laden - fehlt bei Sammeldownload
+				txt = py2_decode(txt)
 			else:
 				txt = None
 			if txt != None:			
@@ -3790,6 +3806,11 @@ def DownloadsList():
 				
 				if tagline and quality:
 					tagline = "%s | %s" % (tagline, quality)
+					
+				# Falsche Formate korrigieren:
+				summary=repl_json_chars(summary); tagline=repl_json_chars(tagline); 
+				summary=summary.replace('\n', ' | '); tagline=tagline.replace('\n', ' | ')
+				summary=summary.replace('|  |', ' | '); tagline=tagline.replace('|  |', ' | ')
 
 			else:										# ohne Beschreibung
 				# pass									# Plex brauchte hier die Web-Url	aus der Beschreibung
@@ -5466,7 +5487,7 @@ def ZDFStartLiveSingle(url, title, apiToken, thumb, tagline, Merk='false'): 	# e
 	PLog(page)
 	
 	ptmd_player = 'ngplayer_2_3'											# aus get_formitaeten							
-	videodat_url = stringextract('ptmd-template": "', '",', page)
+	videodat_url = stringextract('ptmd-template":"', '",', page)
 	videodat_url = videodat_url.replace('{playerId}', ptmd_player) 			# ptmd_player injiziert 
 	videodat_url = 'https://api.zdf.de' + videodat_url
 	PLog('videodat_url: ' + videodat_url)
@@ -6696,9 +6717,10 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	# neu ab 20.1.2016: uurl-Pfad statt ptmd-Pfad ( ptmd-Pfad fehlt bei Teilvideos)
 	# neu ab 19.04.2018: Videos ab heute auch ohne uurl-Pfad möglich, Code einschl. Abbruch entfernt - s.a. KIKA_und_tivi.
 	# 18.10.2018: Code für old_videodat_url entfernt (../streams/ptmd":).
+	# 23.11.2019: extract videodat_url ohne Blank hinter separator : (s. json.loads in get_page)
 	
 	ptmd_player = 'ngplayer_2_3'							
-	videodat_url = stringextract('ptmd-template": "', '",', page_part)
+	videodat_url = stringextract('ptmd-template":"', '",', page_part)			# "mainVideoContent":{"http://
 	videodat_url = videodat_url.replace('{playerId}', ptmd_player) 				# ptmd_player injiziert 
 	videodat_url = 'https://api.zdf.de' + videodat_url
 	# videodat_url = 'https://api.zdf.de/tmd/2/portal/vod/ptmd/mediathek/'  	# unzuverlässig
@@ -6759,7 +6781,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	PLog('page_formitaeten: ' + page[:100])		
 	formitaeten = blockextract('formitaeten', page)		# Video-URL's ermitteln
 	PLog('formitaeten: ' + str(len(formitaeten)))
-	# PLog(formitaeten[0])								# bei Bedarf
+	PLog(formitaeten[0])								# bei Bedarf
 				
 	geoblock =  stringextract('geoLocation',  '}', page) 
 	geoblock =  stringextract('"value": "',  '"', geoblock).strip()
@@ -6797,7 +6819,7 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 	download_list = []		# 2-teilige Liste für Download: 'summary # url'	
 	for rec in formitaeten:									# Datensätze gesamt, Achtung unicode!
 		# PLog(rec)		# bei Bedarf
-		typ = stringextract('"type": "', '"', rec)
+		typ = stringextract('"type":"', '"', rec)
 		typ = typ.replace('[]', '').strip()
 		facets = stringextract('"facets": ', ',', rec)	# Bsp.: "facets": ["progressive"]
 		facets = facets.replace('"', '').replace('\n', '').replace(' ', '') 
@@ -6808,9 +6830,9 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 			audio = blockextract('"audio":', rec)			# Datensätze je Typ
 			# PLog(audio)	# bei Bedarf
 			for audiorec in audio:					
-				url = stringextract('"uri": "',  '"', audiorec)			# URL
+				url = stringextract('"uri":"',  '"', audiorec)			# URL
 				url = url.replace('https', 'http')
-				quality = stringextract('"quality": "',  '"', audiorec)
+				quality = stringextract('"quality":"',  '"', audiorec)
 				PLog(url); PLog(quality)
 				
 				i = i +1

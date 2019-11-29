@@ -1162,6 +1162,8 @@ def get_page3sat(path, apiToken):
 		msg = str(exception)
 		PLog(msg)
 	PLog(len(page))
+	
+	page = page.decode('utf-8')	
 	return page, msg
 
 

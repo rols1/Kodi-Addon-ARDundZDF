@@ -158,8 +158,10 @@ def Search(title):
 		path = "https://www.funk.net/data/search?q=%s"  % quote(py2_encode(query_org))
 		
 	page = loadPage(path)
-	if len(page) == 0:
-		xbmcgui.Dialog().ok(ADDON_NAME, 'Suche: Fehler beim Abruf von:', next_path, '')
+	if page.startswith('Fehler'):
+		msg1 = 'Verbindungsproblem'
+		msg2 = page
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	jsonObject = json.loads(page)
 	
@@ -255,8 +257,10 @@ def Channels(title, next_path=''):
 		if title_org.startswith("PLAY"):							# Playlists nicht in Gesamtliste
 			next_path = "https://www.funk.net/api/v4.0/playlists/?size=%s" % MAXLINES
 	page = loadPage(next_path)
-	if len(page) == 0:
-		xbmcgui.Dialog().ok(ADDON_NAME, 'Fehler beim Abruf von:', next_path, '')
+	if page.startswith('Fehler'):
+		msg1 = 'Verbindungsproblem'
+		msg2 = page
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	jsonObject = json.loads(page)
 
@@ -350,6 +354,11 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 		if isPlaylist == 'True':
 			next_path = "https://www.funk.net/api/v4.0/videos/byPlaylistId/%s?size=%s" % (entityId, MAXLINES)		
 	page = loadPage(next_path)
+	if page.startswith('Fehler'):
+		msg1 = 'Verbindungsproblem'
+		msg2 = page
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		xbmcplugin.endOfDirectory(HANDLE)
 	jsonObject = json.loads(page)
 	
 	#Dict('store',store_id , jsonObject)
@@ -481,7 +490,7 @@ def extract_channels(stageObject):
 	else:
 		if("updateDate" in stageObject):
 			date = stageObject["updateDate"]
-
+	
 	entityGroup='';
 	if("entityGroup" in stageObject):
 		entityGroup = stageObject["entityGroup"]
@@ -588,6 +597,11 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	
 	path = "https://www.funk.net/api/v4.0/videos/%s" % entityId
 	page = loadPage(path)
+	if page.startswith('Fehler'):
+		msg1 = 'Verbindungsproblem'
+		msg2 = page
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		xbmcplugin.endOfDirectory(HANDLE)
 	jsonObject = json.loads(page)
 	
 	store_id = 'video_%s' % entityId
@@ -603,7 +617,13 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	path = "https://api.nexx.cloud/v3/741/session/init" # init-Session
 	data = 'nxp_devh=4"%"3A1500496747"%"3A178989'		# Post request
 	page = loadPage(path, data=data)
-	PLog(page[:80]) 	
+	PLog(page[:80]) 
+	if page.startswith('Fehler'):
+		msg1 = 'Verbindungsproblem'
+		msg2 = page
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		xbmcplugin.endOfDirectory(HANDLE)
+		
 	jsonObject = json.loads(page)
 	x_cid 	= jsonObject["result"]["general"]["cid"]
 	geo 	= jsonObject["result"]["general"]["geocode"]
@@ -755,9 +775,12 @@ def get_forms(distrib, prev_bandw=''):
 def loadPage(url, auth='', x_cid='', x_token='', data='', maxTimeout = None):
 	try:
 		safe_url = url.replace( " ", "%20" ).replace("&amp;","&")
-		PLog("loadPage: " + safe_url); 
+		if data:
+			safe_url="%s?%s" % (safe_url, data)
+		PLog("loadPage: " + safe_url);
 
 		req = Request(safe_url)
+		
 		# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)		# 07.10.2019: Abruf mit SSLContext klemmt häufig - bei
 		# 	Bedarf mit Prüfung auf >'_create_unverified_context' in dir(ssl)< nachrüsten:
 
@@ -778,8 +801,15 @@ def loadPage(url, auth='', x_cid='', x_token='', data='', maxTimeout = None):
 			aname, avalue = x_token.split(',')	# Liste x_token: "Name, Wert"
 			req.add_header(aname, avalue) 	
 
+		''' 25.11.2019 POST-data funktionieren hier nicht, Schwenk zu GET - s.o. 
 		if data:
-			req.add_data(data)
+			data = urlencode(data)
+			data = data.encode("utf-8")
+			json.dumps(data).encode('utf8')
+			PLog(data)
+			req.data(data)						# ab Python 3.4
+			req.add_data(data)					# Python 2.7 - 3.3
+		'''
 			
 		if maxTimeout == None:
 			maxTimeout = 60;
@@ -788,14 +818,12 @@ def loadPage(url, auth='', x_cid='', x_token='', data='', maxTimeout = None):
 		# PLog("headers: " + str(r.headers))
 		doc = r.read()
 		PLog(len(doc))	
-		#if '<!DOCTYPE html>' not in doc:	# Webseite nicht encoden (code-error möglich)
-		#	doc = doc.encode('utf-8')		
+		doc = doc.decode('utf-8')		
 		return doc
 		
 	except Exception as exception:
 		msg = 'Fehler: ' + str(exception)
-		msg = msg + '\r\n' + safe_url			 			 	 
-		msg =  msg
+		msg = msg + ': ' + safe_url			 			 	 
 		PLog(msg)
 		return msg
 
