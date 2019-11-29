@@ -1,7 +1,7 @@
 Kodi-Addon-ARDundZDF
 ===================
 
-Addon für Kodi / XBMC (Kodi-Version von [Plex-Plugin ARDundZDF](https://github.com/rols1/ARDundZDF)).
+Addon für Kodi / XBMC (Kodi-Version von [Plex-Plugin ARDundZDF](https://github.com/rols1/ARDundZDF)).<br>
 Ab Version 2.2.5 für Kodi Matrix vorbereitet (Python2- / Python3-kompatibel).
 Mit Inhalten der Mediatheken von ARD und ZDF, 3Sat, funk,
 einschließlich Live-TV mit Aufnahmefunktion, Live-Radio, Podcasts
