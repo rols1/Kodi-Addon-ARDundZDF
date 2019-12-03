@@ -107,8 +107,8 @@ Funktionen:
 INSTALLATION:
 ===================  
 - Download der zip-Datei hier: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
-- Im Kodi-Menü Addons/Addon-Browser anklicken: aus ZIP-Datei installieren
-- Heruntergeladene zip-Datei im Browser auswählen.
+- Download script.module.kodi-six.zip hier https://github.com/romanvm/kodi.six/releases
+- Beide zip-Dateien mittels Kodi-Menü Addons/Addon-Browser installieren
 - Addon öffen und Addon-Einstellungen anpassen.
 - [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
 
