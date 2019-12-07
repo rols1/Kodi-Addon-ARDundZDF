@@ -8,6 +8,13 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+07.12.2019	2.2.6	ShowVideo, GetJsonByPath (Modul ZDFmobile): Abfangen nicht verfügbarer
+			Beiträge + Infoausgabe.	
+			Menü Barrierearm (ZDF): Anpassungen an die Änderungen der Webseite
+			erfolgt, Cache-Nutzung für die Seitenausschnitte, ICON_ZDF_HOERFASSUNGEN
+			entfernt (nicht genutzt).
+			get_formitaeten (ZDF): Fix Auswertung sub_vtt_path (Untertitel).
+
 27.11.2019	2.2.5	Anpassung Kodi Matrix: 
 			PlayVideo (Modul util): Fix json-Url ('\\u002F' -> '/') als last resort.
 			get_page (Modul util): page.decode('utf-8') vor json-Auswertung gelegt, 
@@ -16,7 +23,7 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			videodat_url) und show_formitaeten. 
 			Modul 3Sat: page.decode('utf-8') am Ende von get_page3sat.
 			Modul ARD Neu: Fix json-Url ('\\u002F' -> '/') in ARDSearchnew,
-			ARDStartSingle, AARDStartVideoStreams, ARDStartVideoMP4.
+			ARDStartSingle, ARDStartVideoStreams, ARDStartVideoMP4.
 			DownloadsList: py2_decode(txt) für Beschreibung, Korrektur falscher Textformate
 			(repl_json_chars, replace LF, replace '|  |').
 			loadPage (Modul ZDFmobile): doc.decode('utf-8') für geladene Seite.
@@ -24,6 +31,8 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			Modul updater: page.decode('utf-8')
 			Main: Fix Reaktion auf Github-Problem (Interpretation des Updater-Returns war falsch). 
 			PageControl (ARD Classic): py2_encode für pagenr[0] (bei Seiten-Endmontage).
+			try/except für Zusammenbau OS_DETECT-String (IOError möglich auf iOS ARM 32-bit).
+			
 
 22.11.2019	2.2.4	Kodi-Matrix-Anpassungen: Modul ARD Neu - wie Haupt-PRG, Fix Sendezeit in Verpasst 
 			(Änderung Webseite), Erkennung Mehrfachsätze in Startseite/Highlights.

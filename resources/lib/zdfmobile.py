@@ -406,23 +406,25 @@ def SingleRubrik(path, title, DictID):
 # ----------------------------------------------------------------------
 # iteriert durch das Objekt	und liefert Restobjekt ab path
 # bei leerem Pfad wird jsonObject unverändert zurückgegeben
+# index error möglich bei veralteten Indices z.B. aus
+#	Merkliste (Startpage wird aus Cache geladen).
 def GetJsonByPath(path, jsonObject):		
 	PLog('GetJsonByPath: '+ path)
 	if path == '':
 		return jsonObject
 	path = path.split('|')
 	i = 0
-	while(i < len(path)):
-		if(isinstance(jsonObject,list)):
-			index = int(path.pop(0))
-		else:
-			index = path.pop(0)
-		PLog('i=%s, index=%s' % (i,index))
-		try:							# index error möglich
+	try:									# index error möglich
+		while(i < len(path)):
+			if(isinstance(jsonObject,list)):
+				index = int(path.pop(0))
+			else:
+				index = path.pop(0)
+			PLog('i=%s, index=%s' % (i,index))
 			jsonObject = jsonObject[index]
-		except Exception as exception:
-			PLog(repr(exception))
-			return ''			# Aufrufer muss beenden
+	except Exception as exception:
+		PLog(str(exception))
+		return ''			# Aufrufer muss beenden
 	#PLog(jsonObject)
 	return jsonObject	
 # ----------------------------------------------------------------------
@@ -437,6 +439,12 @@ def ShowVideo(path, DictID, Merk='false'):
 	videoObject = GetJsonByPath(path,jsonObject)
 	# Debug:
 	# RSave("/tmp/x_ShowVideo.json", json.dumps(videoObject, sort_keys=True, indent=2, separators=(',', ': ')))
+	if videoObject == '':		
+		msg1 = 'ShowVideo:'
+		msg2 = "Beitrag leider nicht (mehr) verfügbar"
+		PLog("%s | %s" % (msg1, msg2))
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		xbmcplugin.endOfDirectory(HANDLE)
 	
 		
 	li = xbmcgui.ListItem()

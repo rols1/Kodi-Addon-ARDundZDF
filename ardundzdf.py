@@ -133,7 +133,6 @@ ICON_ZDF_RUBRIKEN 		= 'zdf-rubriken.png'
 ICON_ZDF_Themen 		= 'zdf-themen.png'
 ICON_ZDF_MEIST 			= 'zdf-meist-gesehen.png'
 ICON_ZDF_BARRIEREARM 	= 'zdf-barrierearm.png'
-ICON_ZDF_HOERFASSUNGEN	= 'zdf-hoerfassungen.png'
 ICON_ZDF_UNTERTITEL 	= 'zdf-untertitel.png'
 ICON_ZDF_INFOS 			= 'zdf-infos.png'
 ICON_ZDF_BILDERSERIEN 	= 'zdf-bilderserien.png'
@@ -5356,7 +5355,8 @@ def ZDFStart(title, show_cluster=''):
 		if  title == "Highlights":								# Liste Highlights 
 			li = home(li, ID='ZDF')										# Home-Button
 			stage = stringextract('class="sb-page">', 'class="cluster-title"', page) 
-			li, page_cnt = ZDF_get_content(li=li, page=stage, ref_path=path, ID='ZDFStage')
+			# ID='DEFAULT': ermöglicht Auswertung Mehrfachseiten in ZDF_get_content
+			li, page_cnt = ZDF_get_content(li=li, page=stage, ref_path=path, ID='DEFAULT')
 			xbmcplugin.endOfDirectory(HANDLE)
 		else:													#Home-Button in ZDFRubrikSingle
 			# Cluster ermitteln:
@@ -5984,7 +5984,7 @@ def MeistGesehen(name):							# ZDF-Bereich, Beiträge unbegrenzt
 		
 ####################################################################################################
 # ZDF Barrierefreie Angebote - Vorauswahl
-# todo: Icons für UT + Gebärdensprache, vorhanden: ICON_ZDF_HOERFASSUNGEN
+# 
 def BarriereArm(title):				
 	PLog('BarriereArm:')
 	li = xbmcgui.ListItem()
@@ -6012,6 +6012,9 @@ def BarriereArm(title):
 		title = title.replace('\n', ''); 
 		title = (title.replace('>', '').replace('<', '')); title = title.strip()
 		PLog(title)
+		if u'Livestreams' in title:				# nur EPG, kein Video
+			PLog('skip: '  + title)
+			continue
 		if u'Hörfassung' in title or 'Audiodeskription' in title:			# Filter
 			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true' or \
 				SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
@@ -6029,8 +6032,8 @@ def BarriereArm(title):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #-------------------------
-# Aufrufer: BarriereArm,	ZDF Barrierefreie Angebote
-#	path in BarriereArm geladen, wir laden  erneut
+# Aufrufer: BarriereArm, ZDF Barrierefreie Angebote
+#	Ausschnitt (ID) der Seite wird aus dem Addon-Cache geladen 
 def BarriereArmSingle(path, title, ID):
 	PLog('BarriereArmSingle: ' + title)
 	
@@ -6040,27 +6043,19 @@ def BarriereArmSingle(path, title, ID):
 	
 	page = Dict("load", ID)						# Satz aus Cache laden
 	
-	if page == False:							# Seite fehlt im Cache - path anfordern
+	if page == False:							# Seite fehlt im Cache
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2, msg3 = msg.split('|')
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li 
 	PLog(len(page))
+	# RSave('/tmp/xb.html', py2_encode(page))	# Debug
 	
-	# RSave('/tmp/x.html', py2_encode(page))
-	content = blockextract('class="b-content-teaser-list"', page)
-	PLog(len(content))
-	for rec in content:	
-		if title in rec:
-			break
 	page_cnt=0		
-	if len(content) > 0:
-		li, page_cnt  = ZDF_get_content(li=li, page=rec, ref_path=path, ID='BARRIEREARM')
-	
+	li, page_cnt  = ZDF_get_content(li=li, page=page, ref_path=path, ID='BARRIEREARM')
 	PLog(page_cnt)
-	# if offset:	Code entfernt, in Kodi nicht nutzbar
 			
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
 ####################################################################################################
 # Leitseite zdf-sportreportage - enthält Vorschau mit Links zu den Reportageseiten - Auswertung in
@@ -6325,6 +6320,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 			href = stringextract('href="', '"', href)
 			PLog('href_loader:' + href)
 			if href:
+				PLog('exit_next')
 				return li, 'next'
 		
 		if 'data-module="plusbar"' not in rec:	
@@ -6752,8 +6748,8 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 		# sub_xml = subtitles[0]									# xml-Format für Kodi ungeeignet
 		sub_vtt = subtitles[1]	
 		# PLog(sub_vtt)
-		# sub_xml_path = stringextract('\"uri\": \"', '\"', sub_xml)# xml-Format
-		sub_vtt_path = stringextract('\"uri\": \"', '\"', sub_vtt)	
+		#sub_xml_path = stringextract('"uri": "', '"', sub_xml)# xml-Format
+		sub_vtt_path = stringextract('"uri":"', '"', sub_vtt)	
 		# PLog('Untertitel xml:'); PLog(sub_xml_path)
 		PLog('Untertitel vtt:'); PLog(sub_vtt_path)
 		
@@ -7151,7 +7147,6 @@ def router(paramstring):
 	paramstring = unquote_plus(paramstring)
 	PLog(' router_params1: ' + paramstring)
 	PLog(type(paramstring));
-#	paramstring=py2_decode(paramstring)
 		
 	if paramstring:	
 		params = dict(parse_qs(paramstring[1:]))
