@@ -2,6 +2,7 @@
 ################################################################################
 #				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
+#	Stand 07.12.2019
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
 #	Seiten werden im json-Format, teilweise html + json ausgeliefert
@@ -298,7 +299,7 @@ def img_via_id(href_id, page):
 #			 mehrfach=True
 #
 # Aufrufe: Rubriken aus ARDStart, Sendereihen aus A-Z-Seiten, Mehrfachbeiträge aus ARDSearchnew
-# Auswertung hier nur für Swiper, Rest in get_page_content
+# Auswertung hier nur für Swiper, Rest in get_page_content (dto. ID=SwiperMehrfach)
 #		
 def ARDStartRubrik(path, title, widgetID='', ID='', img=''): 
 	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path)	
@@ -334,19 +335,24 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 		PLog(len(sendungen))
 		for s in sendungen:
 			# Mehrfachbeiträge von Einzelbeiträgen separieren:
+			mehrfach=False
 			href 	= stringextract('href="', '"', s) 
 			PLog('href: ' + href)
 			if '/player/' not in href:					# player = Einzelbeitrag
-				if '/ard/' in href:						# nur ARD, Rest ohne grouping
-					# Bsp.: /ard/shows/href_id/bonusfamilie,
-					#	/br/more/../href_id/helena..
+				mehrfach = True
+				# Bsp.: /ard/shows/href_id/bonusfamilie -> grouping-href
+					#	/br/more/../href_id/helena..	-> href unverändert
+				if '/shows/' in href:
 					try:
-						href_id = href.split('/')[-2]
-						href = "http://page.ardmediathek.de/page-gateway/pages/%s/grouping/%s" % (sender, href_id)
+						href_id = stringextract('/shows/', '/', href) 
+						if href_id == '':
+							href_id = stringextract('/shows/', '/', href) 
+						PLog('href_id: ' + href_id); PLog(sender)
+						href = "https://page.ardmediathek.de/page-gateway/pages/%s/grouping/%s" % (sender, href_id)
 						PLog('mehrfach_href: ' + href)
-					except Exception as exception:			# Forts. mit Mehrf.-Seite
+					except Exception as exception:	
 						PLog(str(exception))
-					
+				
 			if href == '':
 				continue
 			if href.startswith('http') == False:
@@ -359,15 +365,17 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			# 02.08.2019 Swiper-img aus html-bereich (s. ARDStart) 
 			img		= stringextract('<img src="', '"', s) 
 
-			sender	= stringextract('subline">', '</h4>', s)
-			sender	= unescape(sender) ;sender	= cleanhtml(sender)
-			sender	= repl_json_chars(sender)
+			station	= stringextract('subline">', '</h4>', s)
+			station	= unescape(station) ;station = cleanhtml(station)
+			station	= repl_json_chars(station)
+			if station == '':
+				station = "Sender unbekannt"
 				
 			duration= stringextract('duration">', '</div>', s)
-			if sender:
-				duration = '%s | %s' % (sender, duration)
 			if duration == '':
 				duration = 'Dauer unbekannt' 
+			if sender:
+				duration = '%s | %s' % (station, duration)
 			summ = ''	
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen,
 				summ = get_summary_pre(href, 'ARDnew')
@@ -377,15 +385,20 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			else:
 				summ = duration
 				
-			PLog('Satz:')	
+			PLog('SwiperSatz:')	
 			PLog(title); PLog(href); PLog(summ)		
 			title = repl_json_chars(title); summ = repl_json_chars(summ); 
-			
 			href=py2_encode(href); title=py2_encode(title); duration=py2_encode(duration);
-			fparams="&fparams={'path': '%s', 'title': '%s', 'duration': '%s', 'ID': '%s'}" %\
-				(quote(href), quote(title), quote(duration), ID)
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
-				fparams=fparams, summary=summ)																										
+			if mehrfach == False:
+				fparams="&fparams={'path': '%s', 'title': '%s', 'duration': '%s', 'ID': '%s'}" %\
+					(quote(href), quote(title), quote(duration), ID)
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
+					fparams=fparams, summary=summ)	
+			else:
+				fparams="&fparams={'path': '%s', 'title': '%s', 'ID': 'SwiperMehrfach'}" % (quote(href), quote(title))
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
+					fparams=fparams, summary=summ)	
+																													
 		xbmcplugin.endOfDirectory(HANDLE)						# Ende Swiper
 
 	mehrfach=False; mediatype=''
@@ -397,7 +410,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	mark=''
 	if ID == 'Search_Webcheck':
 		mark = title
-	li = get_page_content(li, page, ID, mediatype, mark)																	
+	li = get_page_content(li, page, ID, mediatype, mark)		# Auswertung Rubriken																	
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
 	#	pagination mit Basispfad immer vorhanden, Mehr-Button abhängig von Anz. der Beiträge
@@ -518,6 +531,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark, mediatype=''):
 #	Mehrfach- und Einzelsätze
 # mark: farbige Markierung in title (z.B. query aus ARDSearchnew) 
 # Seiten sind hier bereits senderspezifisch.
+# Aufrufe Direktsprünge
 #	
 def get_page_content(li, page, ID, mediatype='', mark=''): 
 	PLog('get_page_content: ' + ID); PLog(mark)
@@ -526,7 +540,7 @@ def get_page_content(li, page, ID, mediatype='', mark=''):
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)												#-> href
 	
-	mehrfach=False; mediatype=''; pagetitle=''
+	mediatype=''; pagetitle=''
 	pagination	= stringextract('pagination":', '"type"', page)
 	pagetitle 	= stringextract('title":"', '"', pagination)
 	PLog(pagetitle)
@@ -595,6 +609,10 @@ def get_page_content(li, page, ID, mediatype='', mark=''):
 				title 	= stringextract('mediumTitle":"', '"', s)
 		if title == '':
 				title 	= stringextract('shortTitle":"', '"', s)
+		title = transl_json(title)					# <1u002F2> =  <1/2>
+		title = unescape(title); 
+		title = repl_json_chars(title)		
+
 		if mark:
 			PLog(title); PLog(mark)
 			title = title.strip() 

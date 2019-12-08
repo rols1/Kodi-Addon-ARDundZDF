@@ -751,7 +751,7 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	line_ret = line
 	#PLog(type(line_ret))
 	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
-		, (u'&', u'und'), ('(u', u'<'), (u')', u'>'),  (u'∙', u'|')
+		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad')
 		, (u'\r', u'')):			
 		line_ret = line_ret.replace(*r)
@@ -950,7 +950,7 @@ def transl_json(line):	# json-Umlaute übersetzen
 	# 
 	line= py2_decode(line)	
 	#PLog(line)
-	for r in ((u'\\u00E4', u"ä"), (u'\\u00C4', u"Ä"), (u'\\u00F6', u"ö")		
+	for r in ((u'\\u00E4', u"ä"), (u'\\u00C4', u"Ä"), (u'\\u00F6', u"ö"), (u'u002F', u"/")		
 		, (u'\\u00C6', u"Ö"), (u'\\u00D6', u"Ö"),(u'\\u00FC', u"ü"), (u'\\u00DC', u'Ü')
 		, (u'\\u00DF', u'ß'), (u'\\u0026', u'&'), (u'\\u00AB', u'"')
 		, (u'\\u00BB', u'"')

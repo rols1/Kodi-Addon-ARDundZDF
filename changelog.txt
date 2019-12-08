@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+??.12.2019	2.2.7	ARDStartRubrik (Modul ARD Neu): Erkennung von Mehrfach-Beiträgen in
+			Highlights, Konvertierung "/shows/"-Pfade in grouping-Pfade (API).  
+			repl_json_chars (Modul util): () ersetzt durch >.<
 
 07.12.2019	2.2.6	ShowVideo, GetJsonByPath (Modul ZDFmobile): Abfangen nicht verfügbarer
 			Beiträge + Infoausgabe.	
