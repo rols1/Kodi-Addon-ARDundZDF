@@ -65,7 +65,7 @@ import resources.lib.funk				# funk
 
 # VERSION -> addon.xml, Bytecodes löschen
 VERSION = '2.2.7'
-VDATE = '07.12.2019'
+VDATE = '08.12.2019'
 
 #
 #
