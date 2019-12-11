@@ -34,7 +34,8 @@ import string
 import importlib		# dyn. Laden zur Laufzeit, s. router
 
 # Addonmodule + Funktionsziele (util_imports.py)
-import resources.lib.util as util
+import resources.lib.updater	as updater
+import resources.lib.util 		as util
 PLog=util.PLog; home=util.home; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir;
 getDirZipped=util.getDirZipped; Dict=util.Dict; name=util.name; ClearUp=util.ClearUp;
 addDir=util.addDir; get_page=util.get_page; img_urlScheme=util.img_urlScheme;
@@ -55,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml, Bytecodes löschen
-VERSION = '2.2.7'
-VDATE = '08.12.2019'
+VERSION = '2.3.0'
+VDATE = '11.12.2019'
 
 #
 #
