@@ -8,13 +8,14 @@
     	<setting label="Mobile Version der ZDF Mediathek verwenden" type="bool" id="pref_use_zdfmobile" default="true"/>
     	<setting label="3Sat Mediathek verwenden" type="bool" id="pref_use_3sat" default="false"/>
     	<setting label="FUNK verwenden" type="bool" id="pref_use_funk" default="false"/>
-       <setting type="sep"/>
+    	<setting label="Kinderprogramme verwenden" type="bool" id="pref_use_childprg" default="false"/>
+      <setting type="sep"/>
    	<setting label="EPG-Daten für TV-Live-Sender zeigen - dauert etwas länger" type="bool" id="pref_use_epg" default="false"/>
    	<setting label="Inhaltstext zu Video im Voraus laden - kann sehr lange dauern!" type="bool" id="pref_load_summary" default="false"/>
 	<setting type="sep"/>
 	<setting label="TV-Live / Videos: Sofortstart statt Auflösungen und Download" type="bool" id="pref_video_direct" default="false"/>
-	<setting label="Untertitel: auf vorhandene Untertitel hinweisen" type="bool" id="pref_UT_Info" default="true"/>
- 	<setting label="Untertitel: falls vorhanden, im Player einschalten" type="bool" id="pref_UT_ON" default="true"/>
+	<setting label="Untertitel: auf vorhandene Untertitel hinweisen" type="bool" id="pref_UT_Info" default="false"/>
+ 	<setting label="Untertitel: falls vorhanden, im Player einschalten" type="bool" id="pref_UT_ON" default="false"/>
   </category>
 
  <category label="Radio-Podcast Einstellungen">

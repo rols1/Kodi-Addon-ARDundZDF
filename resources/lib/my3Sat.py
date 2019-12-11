@@ -37,7 +37,7 @@ import  json, ssl
 import datetime, time
 
 # Addonmodule + Funktionsziele (util_imports.py)
-import ardundzdf					# -> SenderLiveResolution, Parseplaylist
+import ardundzdf					# -> get_query, ParseMasterM3u, test_downloads, Parseplaylist
 import resources.lib.util as util	# (util_imports.py)
 PLog=util.PLog; home=util.home; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir; 
 getDirZipped=util.getDirZipped; Dict=util.Dict; name=util.name; ClearUp=util.ClearUp; 
@@ -1081,7 +1081,7 @@ def Live(name, epg='', Merk='false'):
 		epg = get_epg()
 
 	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true':	# Sofortstart
-		PLog('Sofortstart: SenderLiveResolution')
+		PLog('Sofortstart: Live')
 		Plot	 = 'Live: ' + name + '\n\n' + epg + '\n\n' + summary
 		PlayVideo(url=url, title='3Sat Live TV', thumb=img, Plot=Plot, Merk=Merk)
 		return	

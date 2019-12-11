@@ -168,6 +168,12 @@ def home(li, ID):
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Main_funk", fanart=R('funk.png'), 
 			thumb=R('funk.png'), fparams=fparams)
+			
+	if ID == 'Kinderprogramme':
+		name = 'Home :' + ID
+		fparams="&fparams={}"
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Main_childs", fanart=R('childs.png'), 
+			thumb=R('childs.png'), fparams=fparams)
 
 	return li
 	 

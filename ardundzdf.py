@@ -9,7 +9,7 @@ from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
 # o. Auswirkung auf die unicode-Strings in PYTHON3:
 from kodi_six.utils import py2_encode, py2_decode
 
-import os, sys, subprocess
+import os, sys, subprocess 
 PYTHON2 = sys.version_info.major == 2
 PYTHON3 = sys.version_info.major == 3
 if PYTHON2:
@@ -31,6 +31,7 @@ import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
 import datetime, time
 import json				# json -> Textstrings
 import string
+import importlib		# dyn. Laden zur Laufzeit, s. router
 
 # Addonmodule + Funktionsziele (util_imports.py)
 import resources.lib.util as util
@@ -49,16 +50,6 @@ ReadFavourites=util.ReadFavourites; get_summary_pre=util.get_summary_pre; get_pl
 get_startsender=util.get_startsender; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio;
 transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 
-import resources.lib.updater 			as updater		
-import resources.lib.EPG				as EPG		
-# Modul-Importe unabhängig vom Setting ständig laden - sonst
-#	müsste das Nachladen in router und ShowFavs einzeln ge-
-#	regelt werden. 
-import resources.lib.Podcontent 		# ARD-Radio-Podcasts
-import resources.lib.zdfmobile			# ZDFmobile		
-import resources.lib.ARDnew				# ARD Neu
-import resources.lib.my3Sat				# 3Sat
-import resources.lib.funk				# funk
 																		
 																		
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
@@ -353,6 +344,12 @@ def Main():
 		fparams="&fparams={}"													# funk-Modul
 		addDir(li=li, label="FUNK", action="dirList", dirID="resources.lib.funk.Main_funk", 
 			fanart=R('funk.png'), thumb=R('funk.png'), tagline=tagline, fparams=fparams)
+			
+	if SETTINGS.getSetting('pref_use_childprg') == 'true':
+		tagline = 'in den Settings kann das Modul Kinderprogramme ein- und ausgeschaltet werden'
+		fparams="&fparams={}"													# Kinder-Modul
+		addDir(li=li, label="Kinderprogramme", action="dirList", dirID="resources.lib.childs.Main_childs", 
+			fanart=R('childs.png'), thumb=R('childs.png'), tagline=tagline, fparams=fparams)
 			
 			
 	tagline = 'TV-Livestreams stehen auch in ARD Mediathek Neu zur Verfügung'																																	
@@ -4027,7 +4024,7 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 															
 	my_items = ReadFavourites(mode)						# Addon-Favs / Merkliste einlesen
 	PLog(len(my_items))
-	# Dir-Items für diese Funktionen erhalten mediatype=viceo:
+	# Dir-Items für diese Funktionen erhalten mediatype=video:
 	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.ShowVideo",
 						"resources.lib.zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
 						"ARDStartVideoMP4", "util.PlayVideo", "resources.lib.my3Sat.SingleBeitrag",
@@ -4240,7 +4237,7 @@ def Watch(action, name, thumb='', Plot='', url=''):
 	#	für PlayVideo bzw. zum Durchreichen angehängt
 	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.ShowVideo",
 						"resources.lib.zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
-						"ARDStartVideoMP4", "SenderLiveResolution"
+						"ARDStartVideoMP4", "SenderLiveResolution", 
 					]
 	
 	url = unquote_plus(url)	
@@ -5357,7 +5354,7 @@ def ZDFStart(title, show_cluster=''):
 			stage = stringextract('class="sb-page">', 'class="cluster-title"', page) 
 			# ID='DEFAULT': ermöglicht Auswertung Mehrfachseiten in ZDF_get_content
 			li, page_cnt = ZDF_get_content(li=li, page=stage, ref_path=path, ID='DEFAULT')
-			xbmcplugin.endOfDirectory(HANDLE)
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		else:													#Home-Button in ZDFRubrikSingle
 			# Cluster ermitteln:
 			content =  blockextract('class="cluster-title"', page)			
@@ -5374,7 +5371,7 @@ def ZDFStart(title, show_cluster=''):
 					break  
 					
 			ZDFRubrikSingle(title, path, clus_title=title, page=rec)	# einschl. Loader-Beiträge
-			return 		
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 	# 1. Durchlauf: Buttons Stage + Cluster 
 	li = home(li, ID='ZDF')										# Home-Button
@@ -5434,7 +5431,7 @@ def ZDFStart(title, show_cluster=''):
 				thumb=thumb, fparams=fparams)
 		
 	
-	xbmcplugin.endOfDirectory(HANDLE)	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 #---------------------------------------------------------------------------------------------------
 def ZDFStartLive(title): 										# ZDF-Livestreams von ZDFStart
 	PLog('ZDFStartLive:'); 
@@ -5692,7 +5689,11 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
   
 ####################################################################################################
-def ZDFRubriken(name):								# ZDF-Bereich, Liste der Rubriken
+# ZDF-Bereich, Liste der Rubriken
+#	Auswertung der Einzelbeiträge (nur solche) in ZDFRubrikSingle (Abgleich 
+#		Cluster-Titel wird übersprungen - s. clus_title)
+#
+def ZDFRubriken(name):								
 	PLog('ZDFRubriken:')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')						# Home-Button
@@ -5717,9 +5718,11 @@ def ZDFRubriken(name):								# ZDF-Bereich, Liste der Rubriken
 		if title == "Sendungen A-Z":	# Rest nicht mehr relevant
 			break
 		title=py2_encode(title); path=py2_encode(path); 	
-		fparams="&fparams={'title': '%s', 'path': '%s'}"	% (quote(title), quote(path))
+		fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s'}"	%\
+			(quote(title), quote(path), quote('XYZXYZXYZXYZ'))						# skip Abgleich Cluster-Titel
 		addDir(li=li, label=title, action="dirList", dirID="ZDFRubrikSingle", fanart=R(ICON_ZDF_RUBRIKEN), 
 			thumb=R(ICON_ZDF_RUBRIKEN), fparams=fparams)
+
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #-------------------------
@@ -5738,6 +5741,8 @@ def ZDFRubriken(name):								# ZDF-Bereich, Liste der Rubriken
 #
 # 27.09.2019 ZDF-Änderungen bei den Abgrenzungen der Cluster (s.u. Blockbildung)
 # 22.11.2019 Nutzung bereits geladener Seite / Seitenausschnitt (page)
+# 10.12.2019 ZDFRubriken: Abgleich Cluster-Titel wird mittels spez. clus_title 
+#	übersprungen )
 #
 def ZDFRubrikSingle(title, path, clus_title='', page=''):							
 	PLog('ZDFRubrikSingle:'); PLog(title); PLog(clus_title)
@@ -5757,7 +5762,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 
 	cluster =  blockextract('class="cluster-title"', page)
 	PLog(len(cluster))
-	if clus_title:								# Beiträge zu gesuchtem Cluster auswerten
+	if clus_title:								# Beiträge zu gesuchtem Cluster auswerten - s.o.
 		for clus in cluster:								
 			clustertitle = stringextract('cluster-title" >', '</', clus)
 			if clustertitle in clus_title:		# Cluster gefunden
@@ -5780,6 +5785,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 				pos  = rec.find('class="loader"')				# Satz begrenzen (Kennz. steht
 				rec = rec[:pos]									#	am Ende
 				rec = unescape(rec)
+				rec = rec.replace('": "', '":"')				# 10.12.2019 wieder mal Blank nach Trenner
 				PLog('loader_Beitrag')
 				# PLog(rec); 	# bei Bedarf
 				#	Auswertung + Rückgabe aller  Bestandteile
@@ -5792,6 +5798,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 					path	= "https://www.zdf.de%s/%s.html" % (NodePath, sophId)	
 			
 			else:
+				clustertitle=''
 				img_src =  stringextract('data-srcset="', ' ', rec)	
 				if img_src == '':
 					img_src =  stringextract('srcset="', ' ', rec)	
@@ -5800,8 +5807,6 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 					path = 	stringextract('plusbar-url="', '"', rec) # Zusatz 22.11.2019
 				if path == '' or 'skiplinks' in path:
 					continue
-				if path.startswith('http') == False:
-					path = ZDF_BASE + path	
 				if path.startswith('http') == False:		
 					path = ZDF_BASE + path	
 				PLog("path: " + path)
@@ -5821,9 +5826,10 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 						if 'class="icon-502_play' in rec:
 							 isvideo=True	
 						
-				dauer	= stringextract('teaser-info">', '<', page)	
-				descr = stringextract('teaser-text" >', '</', rec)	# -> tagline + Param.
-				
+				dauer	= stringextract('teaser-info">', '<', rec)	
+				descr = stringextract('teaser-text"', '</', rec)	# -> tagline + Param., ev. Blank vor
+				descr = descr.replace('>', '')						# folgendem >
+
 			if descr and dauer:
 				descr = "%s\n\n%s" % (dauer, descr)
 			if clustertitle:
@@ -6269,8 +6275,13 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		msg_notfound = 'Leider kein Video verfügbar'		# z.B. Ausblick auf Sendung
 		if page_title:
 			msg_notfound = 'Leider kein Video verfügbar zu: ' + page_title
-						
+				
 	content =  blockextract('class="artdirect " >', page)
+	if len(content) == 0:
+		content =  blockextract('class="stage-image', page) 	# 10.12.2019 ZDF Highlights
+	if len(content) == 0:
+		msg_notfound = 'Leider kein Video verfügbar'
+	
 	if ID == 'NeuInMediathek':									# letztes Element entfernen (Verweis Sendung verpasst)
 		content.pop()	
 	page_cnt = len(content)
@@ -6287,12 +6298,6 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 					msg_notfound = 'Leider keine Inhalte gefunden zu: ' + page_title
 				
 			PLog('msg_notfound: ' + str(page_cnt))
-			# kann entfallen - Blockbildung mit class="content-box" inzw. möglich. Modul zdfneo.py entfernt.
-			#	Zeilen hier ab 1.1.2018 löschen:
-			#if ref_path.startswith('https://www.zdf.de/comedy/neo-magazin-mit-jan-boehmermann'): # neue ZDF-Seite
-			#	import zdfneo
-			#	items = zdfneo.neo_content(path=ref_path, ID=ID)		# Abschluss dort
-			#	return li, page_cnt 		
 	
 	if msg_notfound:											# gesamte Seite nicht brauchbar		
 		msg1 = msg_notfound
@@ -6512,18 +6517,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 				fparams=fparams, summary=summary,  tagline=tagline, mediatype=mediatype)
 				
 		items_cnt = items_cnt+1
-	
-		'''' 09.01.2019 bis auf Weiteres enfernt (Probleme mit Rekursion)  - s.o.
-		# Zahl der Seitenelemente nicht mehr berücksichtigt - nicht alle sind listenfähig
-		if max_count:					# summary + tagline werden als Info-Items nicht mitgezählt
-			# Mehr Seiten anzeigen:		# 'Mehr...'-Callback durch Aufrufer	
-			PLog("items_cnt: "  + str(items_cnt))
-			if items_cnt  >= max_count or items_cnt > len(content):	# Mehr, wenn max_count erreicht
-				offset = offset + max_count-1
-				break					# Schleife beenden
-		''' 
-		# break # Test 1. Satz
-		
+			
 	return li, page_cnt 
 	
 #-------------
@@ -6777,7 +6771,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	PLog('page_formitaeten: ' + page[:100])		
 	formitaeten = blockextract('formitaeten', page)		# Video-URL's ermitteln
 	PLog('formitaeten: ' + str(len(formitaeten)))
-	PLog(formitaeten[0])								# bei Bedarf
+	# PLog(formitaeten[0])								# bei Bedarf
 				
 	geoblock =  stringextract('geoLocation',  '}', page) 
 	geoblock =  stringextract('"value": "',  '"', geoblock).strip()
@@ -6812,7 +6806,7 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 	PLog("Plot_par: " + Plot_par)
 
 	i = 0 	# Titel-Zähler für mehrere Objekte mit dem selben Titel (manche Clients verwerfen solche)
-	download_list = []		# 2-teilige Liste für Download: 'summary # url'	
+	download_list = []		# 2-teilige Liste für Download: 'Titel # url'	
 	for rec in formitaeten:									# Datensätze gesamt, Achtung unicode!
 		# PLog(rec)		# bei Bedarf
 		typ = stringextract('"type":"', '"', rec)
@@ -7168,15 +7162,21 @@ def router(paramstring):
 			# Funktionsaufrufe + Parameterübergabe via Var's 
 			#	s. 00_Migration_PLEXtoKodi.txt
 			# Modulpfad immer ab resources - nicht verkürzen.
-			if '.' in newfunc:						# Funktion im Modul, Bsp.:
+			if '.' in newfunc:						# Funktion im Modul, Bsp.:				
 				l = newfunc.split('.')				# Bsp. resources.lib.updater.update
 				PLog(l)
 				newfunc =  l[-1:][0]				# Bsp. updater
 				dest_modul = '.'.join(l[:-1])
+				
 				PLog(' router dest_modul: ' + str(dest_modul))
 				PLog(' router newfunc: ' + str(newfunc))
+				
+				dest_modul = importlib.import_module(dest_modul )
+				PLog('loaded: ' + str(dest_modul))
+				
 				try:
-					func = getattr(sys.modules[dest_modul], newfunc)
+					# func = getattr(sys.modules[dest_modul], newfunc)  # falls beim Start geladen
+					func = getattr(dest_modul, newfunc)					# geladen via importlib
 				except Exception as exception:
 					PLog(str(exception))
 					func = ''
