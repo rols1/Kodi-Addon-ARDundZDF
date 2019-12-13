@@ -104,6 +104,14 @@ Funktionen:
 #### Update-Modul
 - nach der Erst-Installation können weitere Updates durch das Plugin installiert werden
 
+#### weitere Module
+- ZDFmobile
+- ARD-Audiothek - NEU
+- funk
+- Kinderprogramme (z.Z. KIKA und ZDFtivi)
+
+
+
 INSTALLATION:
 ===================  
 - Download der zip-Datei hier: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
