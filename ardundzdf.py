@@ -5144,7 +5144,10 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 	PLog(title); PLog(url_m3u8);
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)				# Home-Button
+	if "kikade-" in path:
+		li = home(li, ID='Kinderprogramme')			# Home-Button
+	else:
+		li = home(li, ID=NAME)				# Home-Button
 										
 	# Spezialbehandlung für N24 - Test auf Verfügbarkeit der Lastserver (1-4),
 	#	  m3u8-Datei für Parseplaylist inkompatibel, nur 1 Videoobjekt
