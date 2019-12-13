@@ -106,7 +106,6 @@ Funktionen:
 
 #### weitere Module
 - ZDFmobile
-- ARD-Audiothek - NEU
 - funk
 - Kinderprogramme (z.Z. KIKA und ZDFtivi)
 
