@@ -3,7 +3,7 @@
 #				childs.py - Teil von Kodi-Addon-ARDundZDF
 #		Rahmenmodul für Kinderprg div. Regionalsender von ARD und ZDF
 ################################################################################
-#	Stand: 10.11.2019
+#	Stand: 13.12.2019
 #
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -73,16 +73,34 @@ ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA			# hier nur DICTSTORE genutzt
 
 NAME			= 'ARD und ZDF'
-ICON 			= 'icon.png'		# ARD + ZDF
-ICON_CHILDS		= 'childs.png'			
-ICON_DIR_FOLDER	= "Dir-folder.png"
-ICON_MEHR 		= "icon-mehr.png"
 
 BASE_ZDF		= 'http://www.zdf.de'
 BASE_KIKA 		= 'http://www.kika.de'
 BASE_TIVI 		= 'https://www.zdf.de/kinder'
 
+# Icons
+ICON 			= 'icon.png'		# ARD + ZDF
+ICON_CHILDS		= 'childs.png'			
+ICON_DIR_FOLDER	= "Dir-folder.png"
+ICON_MAIN_TVLIVE= 'tv-livestreams.png'
+ICON_MEHR 		= "icon-mehr.png"
+# Github-Icons
+GIT_KIKA		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kika.png?raw=true"
+GIT_AZ			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-AZ.png?raw=true"
+				# Einzelbuchstaben s. Tivi_AZ
+GIT_CAL			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-calendar.png?raw=true"
+GIT_VIDEO		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaVideo.png?raw=true"
+GIT_RADIO		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/radio-kiraka.png?raw=true"
+GIT_KANINCHEN	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaninchen.png?raw=true"
+GIT_KANINVIDEOS	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaninchenVideos.png?raw=true"
+GIT_KRAMLIEDER	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaninchenKramLieder.png?raw=true"
+GIT_KRAMSCHNIPP	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaninchenKramSchnipsel.png?raw=true"
+GIT_ZDFTIVI		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-zdftivi.png?raw=true"
+GIT_TIVIHOME	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/zdftivi-home.png?raw=true"
 
+
+
+# ----------------------------------------------------------------------			
 def Main_childs():
 	PLog('Main_childs:')
 	
@@ -90,12 +108,12 @@ def Main_childs():
 	li = home(li, ID=NAME)			# Home-Button
 		
 	fparams="&fparams={'title': '%s'}" % "KIKA"
-	addDir(li=li, label= "KIKA", action="dirList", dirID="resources.lib.childs.Main_KIKA", fanart=R('tv-kika.png'), 
-		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
+	addDir(li=li, label= "KIKA", action="dirList", dirID="resources.lib.childs.Main_KIKA", fanart=R(ICON_CHILDS), 
+		thumb=GIT_KIKA, fparams=fparams)
 		
 	fparams="&fparams={'title': '%s'}" % "tivi"
 	addDir(li=li, label= "tivi", action="dirList", dirID="resources.lib.childs.Main_TIVI", fanart=R(ICON_CHILDS), 
-		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
+		thumb=GIT_ZDFTIVI, fparams=fparams)
 
 
 	xbmcplugin.endOfDirectory(HANDLE)
@@ -109,23 +127,23 @@ def Main_KIKA(title):
 		
 	title='KIKA Live gucken'
 	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Live", fanart=R('tv-kika.png'),
-		thumb=R(ICON_DIR_FOLDER), tagline='KIKA TV-Live', fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Live", fanart=GIT_KIKA,
+		thumb=R(ICON_MAIN_TVLIVE), tagline='KIKA TV-Live', fparams=fparams)
 	
 	title='KiRaKa Live hören'
 	fparams="&fparams={}" 
-	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.Kiraka_Live", fanart=R('tv-kika.png'),
-		thumb=R(ICON_DIR_FOLDER), tagline=title, fparams=fparams)
+	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.Kiraka_Live", fanart=GIT_KIKA,
+		thumb=GIT_RADIO, tagline=title, fparams=fparams)
 		
 	title='Videos und Bilder'
 	fparams="&fparams={}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_VideosBuendel", fanart=R('tv-kika.png'),
-		thumb=R(ICON_DIR_FOLDER), tagline=title, fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_VideosBuendel", fanart=GIT_KIKA,
+		thumb=GIT_VIDEO, tagline=title, fparams=fparams)
 		
 	title='KiKANiNCHEN'	
 	fparams="&fparams={}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Menu", fanart=R('tv-kika.png'),
-		thumb=R(ICON_DIR_FOLDER), tagline='für Kinder 3-6 Jahre', fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Menu", fanart=GIT_KIKA,
+		thumb=GIT_KANINCHEN, tagline='für Kinder 3-6 Jahre', fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
@@ -136,20 +154,21 @@ def Main_TIVI(title):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 			
+			
+	title='Startseite'
+	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(BASE_TIVI), title)
+	addDir(li=li, label=title , action="dirList", dirID="ardundzdf.ZDFStart", fanart=GIT_ZDFTIVI, 
+		thumb=GIT_TIVIHOME, tagline=title, fparams=fparams)
+		
 	title='Sendungen der letzten 7 Tage'
 	fparams="&fparams={}" 
-	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.Tivi_Woche", fanart=R(ICON_CHILDS), 
-		thumb=R(ICON_DIR_FOLDER), tagline=title, fparams=fparams)
+	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.Tivi_Woche", fanart=GIT_ZDFTIVI, 
+		thumb=GIT_CAL, tagline=title, fparams=fparams)
 		
-	title='Sendungen 0-9 | A-Z'
+	title='Sendungen A-Z | 0-9'
 	fparams="&fparams={}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_AZ", fanart=R(ICON_CHILDS), 
-		thumb=R(ICON_DIR_FOLDER), tagline=title, fparams=fparams)
-
-	#title='tivi-Tipps'
-	#fparams="&fparams={'name': 'tivi-Tipps'}"
-	#addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.TiviTip", fanart=R(ICON_CHILDS), 
-	#	thumb=R(ICON_DIR_FOLDER), tagline=title, fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_AZ", fanart=GIT_ZDFTIVI, 
+		thumb=GIT_AZ, tagline=title, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -161,16 +180,16 @@ def Kikaninchen_Menu():
 	
 	title='Kikaninchen Videos'
 	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videoseite", fanart=R(ICON_CHILDS), 
-		thumb=R(ICON_DIR_FOLDER), tagline='für Kinder 3-6 Jahre', fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videoseite", fanart=GIT_KANINCHEN, 
+		thumb=GIT_KANINVIDEOS, tagline='für Kinder 3-6 Jahre', fparams=fparams)
 	title='Kikaninchen Singen und Tanzen'
 	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KikaninchenLieder", fanart=R(ICON_CHILDS), 
-		thumb=R(ICON_DIR_FOLDER), tagline='für Kinder 3-6 Jahre', fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KikaninchenLieder", fanart=GIT_KANINCHEN, 
+		thumb=GIT_KRAMLIEDER, tagline='für Kinder 3-6 Jahre', fparams=fparams)
 	title='Kikaninchen Tonschnipsel'
 	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tonschnipsel", fanart=R(ICON_CHILDS), 
-		thumb=R(ICON_DIR_FOLDER), tagline='für Kinder 3-6 Jahre', fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tonschnipsel", fanart=GIT_KANINCHEN, 
+		thumb=GIT_KRAMSCHNIPP, tagline='für Kinder 3-6 Jahre', fparams=fparams)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -525,7 +544,9 @@ def SingleBeitragKika(path, title, thumb, summ, duration):
 		li = ardundzdf.ParseMasterM3u(li=li, url_m3u8=url_m3u8, thumb=thumb, title=title, tagline='', descr=Plot_par,
 			sub_path='')	
 	
-	download_list = []		# 2-teilige Liste für Download: 'Titel # url'	
+	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
+	oldbitrate=0
+	cnt=0
 	for s in assets:
 		# Log(s)			# bei Bedarf
 		frameWidth = stringextract('<frameWidth>', '</frameWidth>', s)	
@@ -534,6 +555,10 @@ def SingleBeitragKika(path, title, thumb, summ, duration):
 		bitrate =  stringextract('<bitrateVideo>', '</', s)	
 		profil =  stringextract('<profileName>', '</', s)	
 		resolution = frameWidth + 'x' + frameHeight
+		
+		if int(bitrate) > oldbitrate:
+			oldbitrate = int(bitrate)
+			high = cnt										# Qualitäts-Index Downloads 
 									
 		title = profil 
 		download_list.append(title + '#' + url_mp4)			# Download-Liste füllen	
@@ -549,9 +574,20 @@ def SingleBeitragKika(path, title, thumb, summ, duration):
 			quote_plus(Plot_par), quote_plus(sub_path))	
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 			mediatype='video', tagline=summ) 
+		cnt = cnt + 1
+			
+	if 	download_list:										# Downloadbutton(s)	
+		# Qualitäts-Index high: hier Basis Bitrate (s.o.)
+		title_org = title_call	
+		summary_org = summ;
+		tagline_org = ''
+		PLog(summary_org);PLog(tagline_org);PLog(thumb);
+		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=high)  
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+# ----------------------------------------------------------------------			
+#								tivi
 # ----------------------------------------------------------------------			
 def Tivi_Woche():
 	PLog('Tivi_Woche')
@@ -587,8 +623,6 @@ def Tivi_Woche():
 # ----------------------------------------------------------------------			
 def Tivi_Woche_Sendungen(day, title):
 	PLog('Tivi_Woche_Sendungen: ' + day)
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
 		
 	path = 'https://www.zdf.de/kinder/sendung-verpasst' 	# kompl. Woche						
 	page, msg = get_page(path)	
@@ -596,64 +630,11 @@ def Tivi_Woche_Sendungen(day, title):
 		msg1 = "Fehler in Tivi_Woche_Sendungen:"
 		msg2 = msg
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
-		return li
+		return
 		
-	page = stringextract('data-plusbar-title="Sendungen der letzten 7 Tage"', '>Direkt zu ...</h2>', page)
-	PLog(len(page))
-	day_area = blockextract('class="cluster-title-wrap">', page)	# Sendungsblöcke nach Tagen
-	PLog(len(day_area))
-	
-	for singleday in day_area:			
-		# PLog(s)  # bei Bedarf
-		page_day =  stringextract('cluster-title"', '</h2>', singleday) # Blank vor leading '>' möglich
-		page_day = cleanhtml(page_day)
-		page_day = (page_day.replace('(heute)', '').replace('(gestern)', ''))
-		page_day = page_day.strip()	
-		page_day = page_day.replace('>', '')
-		PLog(page_day); #PLog(day);	
-		if page_day == day:									# Abgleich Tag
-			PLog('found: ' + page_day)
-			sendungen = blockextract('class="b-cluster-teaser', singleday)
-			PLog(len(sendungen))		
-			li = get_tivi_details(li, sendungen, path)	# Sendungsdetails holen				
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-# ----------------------------------------------------------------------
-# Themen- und Sendungstipps von der Leitseite. 
-#	14.09.2017: die Tipp-Rubriken verändern sich. Daher nur 1 Button ('tivi-Tipps') im Hauptmenü, der Rest 
-#		wird hier dynamisch generiert
-#	03.02.2018: Teaser-Videos vorangestellt	
-#	11.12.2019 nur noch Einzelvideos auf BASE_TIVI gefunden, key und ID entfallen
-
-#TODO BASE_TIVI behandeln wie ZDF Startseite
-def TiviTip(name):					
-	PLog('TiviTip: ' + name)		
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-
-	path = BASE_TIVI			
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in TiviTip:"
-		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
-		return li
-	PLog(len(page))
-	
-	records =  blockextract('class="artdirect">', page)
-	if len(records) == 0:	
-		msg1 = "Leider kein Video gefunden zu:"
-		msg2 = name
-		msg3 = path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
-		return li
-	
-	PLog(len(records))
-	li = get_tivi_details(li, sendungen=records, path=BASE_TIVI)		
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	# Home-Button in ZDFRubrikSingle
+	ardundzdf.ZDFRubrikSingle(title, path, clus_title=day, page=page)				
+	return
 
 # ----------------------------------------------------------------------
 # Auflistung 0-9 (1 Eintrag), A-Z (einzeln) 			
@@ -663,24 +644,28 @@ def Tivi_AZ():
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
 	azlist = list(string.ascii_uppercase)
-	azlist.insert(0, '0-9')
+	# azlist.insert(0, '0-9')
+	azlist.append('0-9')
 
 	for element in azlist:	
 		# PLog(element)
 		button = element
 		title = "Sendungen mit " + button
+		#img_src = R(ICON_DIR_FOLDER)
 		#img_src = "Buchstabe_%s.png"  % button
-		img_src = R(ICON_DIR_FOLDER)
+		img_src = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % button
+		
 		PLog(img_src)
 		button=py2_encode(button); title=py2_encode(title);		
 		fparams="&fparams={'name': '%s', 'char': '%s'}" % (quote(title), quote(button))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_AZ_Sendungen", fanart=img_src, 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_AZ_Sendungen", fanart=R(ICON_DIR_FOLDER), 
 			thumb=img_src, fparams=fparams, tagline=title)
  
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------			
 # Alle Sendungen, char steuert Auswahl 0-9, A-Z
+# 12.12.2019 Nutzung ZDF_get_content statt get_tivi_details
 def Tivi_AZ_Sendungen(name, char=None):	
 	PLog('Tivi_AZ_Sendungen'); PLog(char)
 	li = xbmcgui.ListItem()
@@ -708,192 +693,26 @@ def Tivi_AZ_Sendungen(name, char=None):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
 		return li
 	
-	li = get_tivi_details(li, sendungen, path)	# Sendungsdetails holen				
+	# Sendungsdetails holen, ID: Einzelvideos auswerten
+	li = ardundzdf.ZDF_get_content(li, page, ref_path=path, ID='DEFAULT')				
 							
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
-# ----------------------------------------------------------------------			
-# ermittelt Sendungsdetails wie href, title, img_src usw.
-#	für Tivi_AZ_Sendungen,  Tivi_SinglePage, Tivi_Woche_Sendungen
-#	Blocktrenner i.d.R. class="artdirect">
-# Kodiversion ohne Beschränkung der Satzzahl
-def get_tivi_details(li, sendungen, path):			# path für Abgleich Quelle/Ziel
-	PLog('get_tivi_details'); 
-	PLog(len(sendungen))
-	send_path =  path	# sichern
-	
-	for s in sendungen:
-		multi = True				# steuert Mehrfachergebnisse 
-		duration=''; cnt=''; 
-			
-		if "icon-502_play" in s:	# Kamerasymbol
-			multi = False
-			duration = stringextract('m-border">', '</dd>', s)	# Bsp. m-border">24 min</dd>
-			
-		plusbar_url = stringextract('data-plusbar-url="', '"', s)
-		plusbar_url  = plusbar_url.replace('https', 'http')   # variert
-		path  = send_path.replace('https', 'http')
-		PLog(path);PLog(plusbar_url)
-		if plusbar_url == '' or plusbar_url == path: # leeren oder rekursiven Satz verwerfen
-			continue
-		
-		img_src = stringextract('data-srcset="', ' ', s)		# 1. Bild
-		if img_src.startswith('/'):
-			img_src = BASE_ZDF + img_src						# insbes. Fallbackimage ohne Base
-		img_alt = 'Bild: ' + stringextract('alt="', '"', s)		# wird tag
-		category = stringextract('cat-category">', '</span>', s)
-		brand = stringextract('cat-brand">', '</span>', s)
-		category = category.strip(); brand = brand.strip(); 	
-		
-		if u'Beiträge</dd>'	in s:
-			cnt = stringextract('teaser-info  m-border">', ' ', s) # nur Zahl holen
-
-		href = BASE_ZDF + stringextract('href="', '"', s)	
-		stitle = stringextract('title="', '"', s)
-		if category:
-			if "ZDFtivi" not in category:
-				stitle = "%s | %s"  % (category, stitle)
-		if brand:
-			stitle = "%s | %s"  % (brand, stitle)
-			
-		summ = stringextract('itemprop="description">', '<', s)
-		if summ == '':
-			summ = stringextract('data-plusbar-title="', '"', s)
-		summ = summ.strip(); summ = unescape(summ)
-		stitle = cleanhtml(stitle)
-		stitle = unescape(stitle); stitle = stitle.strip()
-		
-		PLog('neu:');PLog(multi);PLog(duration);PLog(img_alt);PLog(category);PLog(brand)
-		PLog(cnt);PLog(stitle);PLog(summ);PLog(href);PLog(img_src)
-		
-		if multi:	# Mehrfachseite - wieder hierher
-			if cnt:
-				stitle = ' %s Beiträge | %s' % (cnt, stitle)
-			summ = 'Folgeseiten'				
-		
-			stitle=py2_encode(stitle); href=py2_encode(href)
-			fparams="&fparams={'path': '%s', 'title': '%s'}" %\
-				(quote(href), quote(stitle))
-			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Tivi_SinglePage", fanart=img_src,  
-				thumb=img_src, fparams=fparams, summary=summ, tagline=img_alt)					
-									
-		else:		# direkt zum Beitrag
-			if duration:
-				stitle = stitle + ' | ' + duration
-			stitle=py2_encode(stitle); href=py2_encode(href); 
-			img_alt=py2_encode(img_alt); img_src=py2_encode(img_src);	
-			fparams="&fparams={'path': '%s', 'title': '%s', 'tagline': '%s', 'thumb': '%s'}" %\
-				(quote(href), quote(stitle), quote(img_alt), quote(img_src))
-			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.SingleBeitragTivi", fanart=img_src, 
-				thumb=img_src, fparams=fparams, summary=summ, tagline=img_alt)					
-					
-								
-	return li
+# ----------------------------------------------------------------------
+# 12.12.2019 get_tivi_details entfernt  (Nutzung in Plex-Version:
+#	Tivi_AZ_Sendungen, Tivi_Woche_Sendungen, TiviTip, 
+#	Tivi_SinglePage)
+# def get_tivi_details(li, sendungen, path):			
+# ----------------------------------------------------------------------
+# 12.12.2019 Tivi_SinglePage entfernt - Auswertung durch ZDFRubrikSingle
+#	in Tivi_Woche_Sendungen
+# def Tivi_SinglePage(title, path, ID=None, key=None):
+# ----------------------------------------------------------------------
+# 12.12.2019 SingleBeitragTivi entfernt - Auswertung durch durch
+#	ZDF_getVideoSources im Verlauf von ZDF_get_content,  ZDFStart,
+#	ZDFRubrikSingle.
 
 # ----------------------------------------------------------------------
-# 1 oder mehrere Videos / Fotoalben (letztere leider hier nicht gekennzeichnet) 
-#	07.09.2017 völlig neu	
-# 	ID + key: aus TiviTip, ID='TiviTip', key='tip' (enthält Sendungen-Ausschnitt)
-# Kodiversion ohne Beschränkung der Satzzahl
-#
-def Tivi_SinglePage(title, path, ID=None, key=None):	
-	PLog('Funktion Tivi_SinglePage: ' + path); PLog(str(ID)); PLog(key)
-
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-		
-	if ID == 'TiviTip':
-		records = Dict("load", ID)				# records laden
-		page = records[int(key)]				# Ausschnitt. Bei Bedarf mit 'data-tracking=' begrenzen
-		PLog(page[0:80])	
-	else:			
-		page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Tivi_SinglePage:"
-		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
-		return li
-		 
-	PLog(len(page))
-					
-	# class="artdirect">: 1 oder mehrere Sendungen, Videos + Folgeseiten				
-	items = blockextract('class="artdirect', page)
-	PLog(len(items))
-	sendungen = []
-	for item in items:
-		if "icon-502_play" in item:				# Videobeiträge filtern
-			sendungen.append(item)
-	PLog("sendungen: %s " % len(sendungen))
-	li = get_tivi_details(li, sendungen, path)	# Sendungsdetails holen				
-							
-	PLog(len(sendungen))
-	if len(sendungen) == 0:	# keine Sendung / kein Ausschnitt vorhanden
-		msg1 = 'Oh, ein Problem - kann keine Sendung zu >%s< finden.' % (title)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-			
-# ----------------------------------------------------------------------			
-# ######################################################################			
-# Einzelbeitrag mit Url zu den Midianquellen + apiToken (ZDF-entsprechend)
-def SingleBeitragTivi(path, title, tagline, thumb):
-	PLog('SingleBeitragTivi: ' + path)
-	title_call = title
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-	
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in SingleBeitragKika:"
-		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
-		return li
-		
-	stitle = title											
-	summ = stringextract('description" content="', '"', page)	
-	img_src = stringextract('image" content="', '"', page)		
-	duration =  stringextract('teaser-info m-border">', '</dd>', page)			
-	PLog(img_src);PLog(duration)
-
-	profile_url = stringextract('"content": "', '"', page)
-	apiToken1 = stringextract('apiToken: \'', '\'', page) 
-	apiToken2 = stringextract('"apiToken": "', '"', page)
-	sid = stringextract("docId: \'", "\'", page)				# Bereich window.zdfsite
-	PLog("profile_url: " + profile_url); 
-	PLog('apiToken1: ' + apiToken1); 
-	PLog('apiToken2: ' + apiToken2)
-	PLog(sid)
-	
-	# Video-URL's ermitteln -> ZDF-Funktionen im Haupt-PRG:
-	formitaeten,duration,geoblock, sub_path = ardundzdf.get_formitaeten(sid, apiToken1, apiToken2)	
-	if formitaeten == '':				# get_formitaeten: if videodat == ''		
-		msg1 = 'Oh, ein Problem - kann kein Video zu >%s< finden.' % (title)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
-		return li
-
-	only_list = ["h264_aac_ts_http_m3u8_http"]
-	li, download_list = ardundzdf.show_formitaeten(li=li, title_call=title_call, formitaeten=formitaeten, tagline=tagline,
-		thumb=thumb, only_list=only_list, geoblock=geoblock, sub_path=sub_path)			  
-	if 	download_list == '':	# Sofortstart erfolgt, raus
-		return	  
-		
-	if SETTINGS.getSetting('pref_use_downloads'):				# Video-Items erstellen: weitere Formate
-		title_oc = "[COLOR blue]weitere Video-Formate und Downloads[/COLOR] | %s" % title
-	else:	
-		title_oc = u"[COLOR blue]weitere Video-Formate[/COLOR] | %s" % title
-	PLog("title_oc: " + title_oc)
-		
-	PLog(title); PLog(title_oc);  
-	if SETTINGS.getSetting('pref_video_direct') == 'false':	# ZDFotherSources nicht bei Sofortstart zeigen
-		# li = Parseplaylist(li, videoURL, thumb)	# hier nicht benötigt - das ZDF bietet bereits 3 Auflösungsbereiche
-		title=py2_encode(title); tagline=py2_encode(tagline); thumb=py2_encode(thumb);
-		fparams="&fparams={'title': '%s', 'tagline': '%s', 'thumb': '%s', 'sid': '%s', 'apiToken1': '%s', 'apiToken2': '%s'}" \
-			% (quote(title), quote(tagline), quote(thumb), sid, apiToken1, apiToken2)
-		addDir(li=li, label=title_oc, action="dirList", dirID="ZDFotherSources", fanart=thumb, thumb=thumb, fparams=fparams)
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
 
 
 

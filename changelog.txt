@@ -8,7 +8,28 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
-11.12.2019	2.3.0	neues Modul childs (Kinderprogramme): Anpassung Settings + Haupt-PRG,
+13.12.2019	2.3.3	Modul childs - Icons, weitere Anpassungen im Haupt-PRG:
+			Github-Repo PluginPictures: Aktualisierung KIKA- und tivi-Icons.
+			Main_KIKA, Main_TIVI, Kikaninchen_Menu, Tivi_AZ: Nutzung der Icons
+			aus Github-Repo PluginPictures.  
+			Weitere Anpassungen Home-Button: ZDF_Sendungen, ZDFRubrikSingle,
+			ZDF_getVideoSources, ZDFotherSources.
+			SingleBeitragKika: Downloads ermöglicht	
+
+not on Github	2.3.2	ZDFtivi (Modul childs): Nutzung von ZDF-Funktionen im Haupt-PRG:
+			ZDFStart: Anpassung BASE-Pfad und Home-Button zur Laufzeit (ZDF_BASE, 
+			BASE_TIVI), zusätzl. Param. path für ZDFStart, Überspringen nicht
+			auswertbarer Cluster (Direkt zu ..., weiterschauen).
+			Weitere Anpassungen Home-Button: ZDF_Sendungen, ZDFRubrikSingle,
+			ZDF_getVideoSources, ZDFotherSources. 
+			Zusatz "im ZDF" für Button "zusätzliche Suche starten" in ZDF_Sendungen,
+			ZDF_getVideoSources, ZDF_Search.
+			ZDFRubrikSingle: Anpassung Abgleich clustertitle für ZDFtivi.		
+
+11.12.2019	2.3.1	Haupt-PRG: Import des Updater-Moduls wieder an den Addon-Start verlagert
+			(das Nachladen aus der router-Funktion schlägt fehl).
+
+not on Github	2.3.0	neues Modul childs (Kinderprogramme): Anpassung Settings + Haupt-PRG,
 			Portierung der meisten python-Funktionen von Plex-Plugin-KIKA_und_tivi. 
 			Aus Platzgründen Verzicht auf die meisten Icons.
 			
