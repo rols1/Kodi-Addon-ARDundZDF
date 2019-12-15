@@ -407,10 +407,12 @@ def up_low(line, mode='up'):
 #	Sofortstart + Resumefunktion, einschl. Anzeige der Medieninfo:
 #		nur problemlos, wenn das gewählte Listitem als Video (Playable) gekennzeichnet ist.
 # 		mediatype steuert die Videokennz. im Listing - abhängig von Settings (Sofortstart /
-#		Einzelauflösungen).
+#		Einzelauflösungen) - hier erfolgt die Umsetzung li.setInfo(type="video").
+#		Die Kontextmenü-Einträge zum Video (z.B.: bei .. fortsetzen) übernimmt dann Kodi mit
+#		Eintrag in die Datenbank MyVideos116.db (Tabs u.a. bookmark, files).s
 #		Mehr s. PlayVideo
 #
-#	Kontextmenüs (Par. cmenu): base64-Kodierung benötigt für url-Parameter (nötig für router)
+#	Kontextmenüs (Par. cmenu): base64-Kodierung wird benötigt für url-Parameter (nötig für router)
 #		und als Prophylaxe gegen durch doppelte utf-8-Kodierung erzeugte Sonderzeichen.
 #		Dekodierung erfolgt in ShowFavs.
 #	
@@ -902,7 +904,7 @@ def unescape(line):
 		#	Carriage Return (Cr)
 		(u"–", u"-"), (u"&#x27;", u"'"), (u"&#xD;", u""), (u"\xc2\xb7", u"-"),
 		(u'undoacute;', u'o'), (u'&eacute;', u'e'), (u'&egrave;', u'e'),
-		(u'&atilde;', u'a')):
+		(u'&atilde;', u'a'), (u'quot;', u' ')):
 		line = line.replace(*r)
 	return line
 #----------------------------------------------------------------  
@@ -1511,7 +1513,7 @@ def url_check(url, caller=''):
 	if url.startswith('http') == False:		# lokale Datei - kein Check
 		return True
 		
-	UrlopenTimeout = 3
+	UrlopenTimeout = 6
 	# Tests:
 	# url='http://104.250.149.122:8012'	# Debug: HTTP Error 401: Unauthorized
 	# url='http://feeds.soundcloud.com/x'	# HTTP Error 400: Bad Request

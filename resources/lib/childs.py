@@ -194,7 +194,6 @@ def Kikaninchen_Menu():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------			
-
 def Kika_Live():
 	PLog('Kika_Live')
 	li = xbmcgui.ListItem()
@@ -222,13 +221,13 @@ def Kika_Live():
 		# sname 	= sname.replace(stime, sctime)
 		tagline = 'Zeit: ' + vonbis
 				
-	title = unescape(title)
+	title = unescape(title); title = repl_json_chars(title)
 	PLog("title: " + title); PLog(summ)
 	title=py2_encode(title); m3u8link=py2_encode(m3u8link);
 	img=py2_encode(img); summ=py2_encode(summ);			
 	fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Merk': '%s'}" %\
 		(quote(m3u8link), quote(title), quote(img), quote_plus(summ), Merk)
-	addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-all.png'), 
+	addDir(li=li, label=title, action="dirList", dirID="ardundzdf.SenderLiveResolution", fanart=R('tv-EPG-all.png'), 
 		thumb=img, fparams=fparams, summary=summ, tagline=tagline)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -318,6 +317,9 @@ def Kika_Videos(path, title, thumb):
 		
 	videos = blockextract('class="av-playerContainer"', page)
 	PLog(len(videos))
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'
 	for s in videos:					
 		href = ref = stringextract('dataURL:\'', '\'}', s)					# Link Videodetails  (..avCustom.xml)
 		# PLog(href);   # PLog(s);   # Bei Bedarf
@@ -342,7 +344,7 @@ def Kika_Videos(path, title, thumb):
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'summ': '%s', 'duration': '%s'}" %\
 			(quote(href), quote(stitle), quote(img_src), quote(img_alt), quote(duration))
 		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.SingleBeitragKika", fanart=img_src, 
-			thumb=img_src, fparams=fparams, tagline=img_alt)
+			thumb=img_src, fparams=fparams, tagline=img_alt, mediatype=mediatype)
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 					
@@ -400,6 +402,9 @@ def Kikaninchen_Videos(path):
 		
 	videos =  blockextract('class="av-playerContainer"', page)	# 16 pro Seite
 	PLog(len(videos))
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'
 	
 	for s in videos:					 # stringextract('', '', s)
 		href = ref = stringextract('dataURL:\'', '\'}', s)					# Link Videodetails  (..avCustom.xml)
@@ -421,7 +426,7 @@ def Kikaninchen_Videos(path):
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'summ': '%s', 'duration': '%s'}" %\
 			(quote(href), quote(stitle), quote(img_src), quote(img_alt), quote(duration))
 		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.SingleBeitragKika", fanart=img_src, 
-			thumb=img_src, fparams=fparams, tagline=tagline)
+			thumb=img_src, fparams=fparams, tagline=tagline, mediatype=mediatype)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 # ----------------------------------------------------------------------			
@@ -443,6 +448,9 @@ def KikaninchenLieder():
 	records = page.split('documentCanvasId')
 	PLog(len(records))						
 	
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'
 	for rec in records:
 		href = stringextract('avCustomUrl":"', '"', rec)
 		if href == '':
@@ -464,7 +472,7 @@ def KikaninchenLieder():
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'summ': '%s', 'duration': ''}" %\
 			(quote(href), quote(title), quote(img_src), quote(summ))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.SingleBeitragKika", fanart=img_src, 
-			thumb=img_src, fparams=fparams, tagline=summ)
+			thumb=img_src, fparams=fparams, tagline=summ, mediatype=mediatype)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -711,7 +719,7 @@ def Tivi_AZ_Sendungen(name, char=None):
 # 12.12.2019 SingleBeitragTivi entfernt - Auswertung durch durch
 #	ZDF_getVideoSources im Verlauf von ZDF_get_content,  ZDFStart,
 #	ZDFRubrikSingle.
-
+# def SingleBeitragTivi(path, title):
 # ----------------------------------------------------------------------
 
 

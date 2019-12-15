@@ -2,7 +2,7 @@
 ################################################################################
 #				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
-#	Stand 07.12.2019
+#	Stand 15.12.2019
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
 #	Seiten werden im json-Format, teilweise html + json ausgeliefert
@@ -53,7 +53,7 @@ CalculateDuration=util.CalculateDuration; time_translate=util.time_translate; se
 get_keyboard_input=util.get_keyboard_input; transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; 
 ReadFavourites=util.ReadFavourites; get_summary_pre=util.get_summary_pre; get_playlist_img=util.get_playlist_img; 
 get_startsender=util.get_startsender; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio; make_mark=util.make_mark;
-
+up_low=util.up_low;
 
 
 # Globals
@@ -404,13 +404,11 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	mehrfach=False; mediatype=''
 	if 'Livestream' in ID:
 		gridlist = blockextract('"broadcastedOn"', page)
-		if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Kennz. Video für Sofortstart 
-			mediatype='video'
 			
 	mark=''
 	if ID == 'Search_Webcheck':
 		mark = title
-	li = get_page_content(li, page, ID, mediatype, mark)		# Auswertung Rubriken																	
+	li = get_page_content(li, page, ID, mark)					# Auswertung Rubriken																	
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
 	#	pagination mit Basispfad immer vorhanden, Mehr-Button abhängig von Anz. der Beiträge
@@ -486,7 +484,7 @@ def get_pagination(page):
 #	http://page.ardmediathek.de/page-gateway/widgets/ard/compilation/3lCyQCGpIIkaos2EQqIu6q?pageNumber=0&pageSize=24
 # Alternative: api-Call via get_api_call (für compilationId vorbereitet,
 #	 myhash=0aa6f77b1d2400b94b9f92e6dbd0fabf652903ecf7c9e74d1367458d079f0810).
-def ARDPagination(title, path, pageNumber, pageSize, ID, mark, mediatype=''): 
+def ARDPagination(title, path, pageNumber, pageSize, ID, mark): 
 	PLog('ARDPagination: ' + ID)
 	PLog(path)
 	
@@ -505,7 +503,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark, mediatype=''):
 	page = page.replace('\\"', '*')							# quotiere Marks entf.
 	
 	
-	li = get_page_content(li, page, ID, mediatype, mark)
+	li = get_page_content(li, page, ID, mark)
 	
 	if 	'"pagination":'	in page:				# z.B. Scroll-Beiträge zu Rubriken
 		title = "Mehr zu >%s<" % title_org		# Mehr-Button	 # ohne Pfad
@@ -533,7 +531,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark, mediatype=''):
 # Seiten sind hier bereits senderspezifisch.
 # Aufrufe Direktsprünge
 #	
-def get_page_content(li, page, ID, mediatype='', mark=''): 
+def get_page_content(li, page, ID, mark=''): 
 	PLog('get_page_content: ' + ID); PLog(mark)
 	
 	CurSender = Dict("load", 'CurSender')					# Debug, Seite bereits senderspez.
@@ -550,8 +548,6 @@ def get_page_content(li, page, ID, mediatype='', mark=''):
 	mehrfach = True												# Default weitere Rubriken
 	if 'Livestream' in ID:
 		gridlist = blockextract('"broadcastedOn"', page)
-		if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Kennz. Video für Sofortstart 
-			mediatype='video'
 	else:
 		if  ID == 'Search_api':									# Search_api immer Einzelbeiträge
 			mehrfach = False
@@ -1432,8 +1428,8 @@ def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
 		xbmcplugin.endOfDirectory(HANDLE)		
 	PLog('gridlist: ' + str(len(gridlist)))	
 	
-	mediatype=''; ID='Search_api' 	# mark für farbige Markierung
-	li = get_page_content(li, page, ID, mediatype, mark=unquote(query))																	
+	ID='Search_api' 	# mark für farbige Markierung
+	li = get_page_content(li, page, ID, mark=unquote(query))																	
 	
 	# Mehr-Button - Scroll-Beiträge nicht vergleichbar mit ARDStartRubrik, keine
 	#	pagination- oder AutoCompilationWidget-Markierung:
@@ -1517,7 +1513,9 @@ def ARDVerpasstContent(title, path, CurSender, timeline_sender='', label_sender=
 	path_org  = path							# sichern
 	title_org = title	
 	if 'ardmediathek.de/ard/' in path:			# ARD-Alle: erst Senderliste zeigen
-		path = "%s/%s/program/" % (BETA_BASE_URL, sender)	
+		path = "%s/%s/program/" % (BETA_BASE_URL, sender)
+		
+	path = path + "?devicetype=pc"				# ohne Zusatz fehlen bei daserste html-Inhalte
 	page, msg = get_page(path)
 	if page == '':	
 		msg1 = 'Fehler in ARDVerpasstContent'
@@ -1535,7 +1533,8 @@ def ARDVerpasstContent(title, path, CurSender, timeline_sender='', label_sender=
 			PLog("timelines: " + str(slist))
 			if slist:
 				for s in slist:
-					label = "Sender: %s" % s.upper()
+					label = "Sender: %s" % up_low(s)
+					if s == 'ardalpha':	s = 'alpha' 	# bisher einzige Korrektur	
 					new_path = path_org.replace('/ard/', '/%s/' % s)
 					PLog(label); PLog(new_path);
 					new_path=py2_encode(new_path); CurSender=py2_encode(CurSender); 

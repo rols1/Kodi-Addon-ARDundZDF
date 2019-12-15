@@ -8,13 +8,33 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+15.12.2019	2.3.5	ARDVerpasstContent (ARD Neu): Url mit "?devicetype=pc" ergänzt (Inhalte
+			fehlten bei DASERSTE/Heute), Senderbez. ardalpha in alpha geändert
+			(HTTP-Error).
+			url_check (Modul util): Timeout von 3 auf 6 sec geändert (3 sec für einige
+			Beiträge zu kurz).
+			ZDF_get_content: Ausleitung Einzelbeitrag ohne Videokennzeichnung zu
+			ZDF_getVideoSources, falls die Seite "b-playerbox" enthält.
+			ZDF_getVideoSources: unescape title (kann hier quotes enthalten).
+			TV-Livestreams/Regional (livesenderTV.xml): weiteren MDR+ Eventlivestream 
+			hinzugefügt.
+			SenderLiveResolution: Fix Fehlermeldung für Fallback auf 
+			classic.ardmediathek.de/tv/live (bei fehlendem hrefsender in livesenderTV.xml).
+			
+not on Github	2.3.4	Sofortstart + Resumefunktion überprüft/nachgebessert: Module childs,
+			ARD Neu, funk, ZDFmobile, 3Sat sowie Haupt-PRG mit ZDF und ARD Classic. 
+			ShowVideo (Modul ZDFmobile): Fehlermeldung für ev. Jugendschutz-Blockade.
+			Modul funk: unescape(title) in Search + ChannelSingle. 	
+			SenderLiveResolution: Fix Fehlermeldung für Fallback auf 
+			classic.ardmediathek.de/tv/live (bei fehlendem hrefsender in livesenderTV.xml).
+
 13.12.2019	2.3.3	Modul childs - Icons, weitere Anpassungen im Haupt-PRG:
 			Github-Repo PluginPictures: Aktualisierung KIKA- und tivi-Icons.
 			Main_KIKA, Main_TIVI, Kikaninchen_Menu, Tivi_AZ: Nutzung der Icons
 			aus Github-Repo PluginPictures.  
 			Weitere Anpassungen Home-Button: ZDF_Sendungen, ZDFRubrikSingle,
-			ZDF_getVideoSources, ZDFotherSources.
-			SingleBeitragKika: Downloads ermöglicht	
+			ZDF_getVideoSources, ZDFotherSources, SenderLiveResolution.
+			SingleBeitragKika: Downloads ermöglicht.	
 
 not on Github	2.3.2	ZDFtivi (Modul childs): Nutzung von ZDF-Funktionen im Haupt-PRG:
 			ZDFStart: Anpassung BASE-Pfad und Home-Button zur Laufzeit (ZDF_BASE, 

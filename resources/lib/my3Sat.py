@@ -6,6 +6,8 @@
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.3sat.de,
 #	Seiten werden im html-format, teils. json ausgeliefert
+#	Stand: 15.12.2019
+#
 #	04.11.2019 Migration Python3  Python3 Modul future
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
@@ -364,6 +366,10 @@ def SendungenDatum(SendDate, title):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		return li	
 		
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'
+
 	for rec in content:
 		img_src =  stringextract('data-srcset="', ' ', rec)	
 		href	= stringextract('href="', '"', rec)
@@ -397,7 +403,7 @@ def SendungenDatum(SendDate, title):
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s', 'duration': ''}" %\
 			(quote(sendung), quote(href), quote(img_src), quote(descr_par), quote(dauer))
 		addDir(li=li, label=sendung, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
-			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams)
+			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams, mediatype=mediatype)
 			 					 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
@@ -634,6 +640,9 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
 				fanart=R('3sat.png'), thumb=img_src, summary=descr, fparams=fparams)
 
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'
 								
 	for rec in rubriken:
 		if 'data-playlist-toggle' not in rec:
@@ -667,7 +676,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s', 'duration': '%s'}" %\
 			(quote(title), quote(href), quote(img_src), quote(descr_par), quote(dauer), quote(duration))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
-			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams)
+			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams, mediatype=mediatype)
 
 	if 'is-medium lazyload' in page:							# Test auf Loader-Beiträge, escaped
 		li, cnt = get_lazyload(li=li, page=page, ref_path=path)
@@ -693,6 +702,10 @@ def get_lazyload(li, page, ref_path):
 	img_pre = stringextract('data-srcset="', ' ', page)		# dto.
 	PLog("dauer %s, img_pre: %s " % (dauer, img_pre))	
 	
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'
+
 	cnt=0
 	for rec in content:	
 		rec = unescape(rec)
@@ -728,7 +741,7 @@ def get_lazyload(li, page, ref_path):
 			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s', 'duration': ''}" %\
 				(quote(title), quote(path), quote(img_src), quote(descr_par), quote(dauer))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
-				thumb=img_src, summary=descr, tagline=dauer, fparams=fparams)
+				thumb=img_src, summary=descr, tagline=dauer, fparams=fparams, mediatype=mediatype)
 		else:
 			title=py2_encode(title); path=py2_encode(path);	img_src=py2_encode(img_src);
 			fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title),
@@ -811,7 +824,12 @@ def get_video_carousel(li, page):
 	PLog('get_video_carousel:')
 	content =  blockextract('video-carousel-item">', page)
 	PLog(len(content))
+	
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'
 	cnt=0
+
 	for rec in content:	
 		if 'data-module="zdfplayer"' not in rec:		# redakt. Beitrag o. Video
 			continue
@@ -844,7 +862,7 @@ def get_video_carousel(li, page):
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s', 'duration': ''}" %\
 			(quote(title), quote(path), quote(img_src), quote(dauer))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
-			thumb=img_src, tagline=tagline, fparams=fparams)			 
+			thumb=img_src, tagline=tagline, fparams=fparams, mediatype=mediatype)			 
 			 
 		cnt=cnt+1
 	return li, cnt
@@ -855,6 +873,10 @@ def get_video_carousel(li, page):
 def get_zdfplayer_content(li, content):
 	PLog('get_zdfplayer_content:')
 	
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'
+
 	cnt=0
 	for rec in content:	
 		tag=''; 
@@ -888,7 +910,7 @@ def get_zdfplayer_content(li, content):
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s', 'duration': ''}" %\
 			(quote(title), quote(path), quote(img_src), quote(dauer))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
-			thumb=img_src, summary=descr, fparams=fparams)
+			thumb=img_src, summary=descr, fparams=fparams, mediatype=mediatype)
 			 	
 		cnt=cnt+1
 
@@ -1025,7 +1047,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 				if url.find('master.m3u8') > 0:			# m3u8 enthält alle Auflösungen					
 					title = quality + ' [m3u8]'
 					# Sofortstart - direkt, falls Listing nicht Playable			
-					if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true': 
+					if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'
 						PLog('Sofortstart: SingleBeitrag')
 						PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
 						# sub_path=''	# fehlt bei ARD - entf. ab 1.4.2019
@@ -1080,7 +1102,7 @@ def Live(name, epg='', Merk='false'):
 	if not epg:
 		epg = get_epg()
 
-	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true':	# Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
 		PLog('Sofortstart: Live')
 		Plot	 = 'Live: ' + name + '\n\n' + epg + '\n\n' + summary
 		PlayVideo(url=url, title='3Sat Live TV', thumb=img, Plot=Plot, Merk=Merk)

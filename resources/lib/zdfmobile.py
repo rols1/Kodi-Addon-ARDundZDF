@@ -508,15 +508,22 @@ def ShowVideo(path, DictID, Merk='false'):
 			apiToken = stringextract('apiToken": "', '"', page) # apiToken: Webseite
 			PLog("apiToken: " + apiToken)
 			PLog('url2: ' + streamApiUrl)
-			page = loadPage(streamApiUrl, apiToken=apiToken)	
-			# Debug:
-			# RSave("/tmp/x_cco.json", page)		# Debug	
+			if streamApiUrl == '':						# nicht verfügbar, Bsp. Jugenschutz vor 22h
+				msg1 = 'ShowVideo:'
+				msg2 = "Beitrag leider nicht verfügbar (Jugendschutz?)"
+				PLog("%s | %s" % (msg1, msg2))
+				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+				return li
+			else:
+				page = loadPage(streamApiUrl, apiToken=apiToken)	
+				# Debug:
+				# RSave("/tmp/x_cco.json", page)		# Debug	
 
-			# neue Auswertung (Webseite kann von jsonObject abweichen) - 
-			#	Bsp. countdown-copenhagen-102 / countdown-copenhagen-118.html							
-			if '"attributes"' in page and '"formitaeten"' in page:
-				PLog('lade formitaeten attr')				# Videoquellen
-				formitaeten = get_formitaeten2(page) 		# String-Ausw. Formitäten
+				# neue Auswertung (Webseite kann von jsonObject abweichen) - 
+				#	Bsp. countdown-copenhagen-102 / countdown-copenhagen-118.html							
+				if '"attributes"' in page and '"formitaeten"' in page:
+					PLog('lade formitaeten attr')				# Videoquellen
+					formitaeten = get_formitaeten2(page) 		# String-Ausw. Formitäten
 
 	descr_local=''										# Beschreibung zusammensetzen
 	PLog(type(date)); PLog(type(dauer)); PLog(type(descr));
@@ -553,7 +560,7 @@ def ShowVideo(path, DictID, Merk='false'):
 		title_org=repl_json_chars(title_org) 		# json-komp. für func_pars in router()
 		
 		PLog("url: " + url)	
-		if Merk == 'true':
+		if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true': # Sofortstart
 			PLog('Sofortstart Merk: ZDF Mobile (ShowVideo)')
 			PlayVideo(url=url, title=title_org, thumb=img, Plot=descr, Merk=Merk)
 			return
@@ -595,31 +602,28 @@ def ShowVideo(path, DictID, Merk='false'):
 #	"url": "https://zdf-cdn.live.cellular.de/mediathekV2/document/callin-mr-brain-130"
 #	"sharingUrl": "https://www.zdf.de/wissen/callin-mr-brain/callin-mr-brain-130.html"
 #	Stringsuche bei htmlurl unischer
+# 15.12.2019 re.search-Auswertung (unsicher) umgestellt auf stringextract
 #
 def get_video_urls(videoObject):
 	PLog("get_video_urls:")
-	v = json.dumps(videoObject, sort_keys=True, indent=2, separators=(',', ': '))
+	v = json.dumps(videoObject, sort_keys=True, indent=2, separators=(',', ':'))
+	# RSave('/tmp/x.json', py2_encode(v))	# Debug
 	
-	try:
-		streamApiUrl = re.search('api.zdf.de/tmd/2/android_native_1(\S+)cco"', v).group(1)
-	except:
-		streamApiUrl=''
-	if streamApiUrl:
-		streamApiUrl = 'https://api.zdf.de/tmd/2/android_native_1' + streamApiUrl + 'cco'
+	streamApiUrl = stringextract('streamApiUrlAndroid":"', '"', v)	
+	PLog("streamApiUrl: " + streamApiUrl)
 
-	try:
-		jsonurl = re.search('https://zdf-cdn.live.cellular.de(\S+)"', v).group(1)
-	except:
-		jsonurl=''
-	if jsonurl:
-		jsonurl = 'https://zdf-cdn.live.cellular.de' + jsonurl 
+	meta = stringextract('meta":', '}', v)	
+	jsonurl = stringextract('url":"', '"', meta)
+	if 	jsonurl == '':
+		records = blockextract('"url"', v)
+		for rec in records:
+			jsonurl = stringextract('url":"', '"', rec)
+			if "zdf-cdn.live.cellular.de" in jsonurl:
+				break	
+	PLog("jsonurl: " + jsonurl)
 
-	try:
-		htmlurl = re.search('https:(\S+).html"', v).group(1)
-	except:
-		htmlurl=''
-	if htmlurl:
-		htmlurl = 'https:' + htmlurl + '.html'
+	htmlurl = stringextract('sharingUrl":"', '"', v)	
+	PLog("htmlurl: " + htmlurl)
 	
 	return streamApiUrl, jsonurl, htmlurl
 # ----------------------------------------------------------------------

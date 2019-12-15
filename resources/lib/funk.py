@@ -4,7 +4,7 @@
 #				Kanäle und Serien von https://www.funk.net/
 ################################################################################
 # 	Credits: cemrich (github) für die wichtigsten api-Calls
-#	Stand: 27.10.2019
+#	Stand: 15.12.2019
 #
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -165,6 +165,10 @@ def Search(title):
 		xbmcplugin.endOfDirectory(HANDLE)
 	jsonObject = json.loads(page)
 	
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'
+
 	i=0	# Zähler Listitems
 	is_channel = True
 	if("list" in jsonObject):											# Gesamtliste
@@ -187,13 +191,14 @@ def Search(title):
 			descr_par = descr.replace('\n', '||'); descr_par = descr_par.replace('\r', '')  # \r\n\r\n
 			descr_par = repl_json_chars(descr_par); 
 			title = repl_json_chars(title)
+			title = unescape(title)
 			
 			PLog(title); PLog(entityId); 
 			title=py2_encode(title); img=py2_encode(img); descr_par=py2_encode(descr_par);
 			fparams="&fparams={'title': '%s', 'img': '%s', 'descr': '%s', 'entityId': '%s'}"  %\
 				(quote(title), quote(img), quote(descr_par), entityId)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ShowVideo", 				
-				fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)					
+				fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams, mediatype=mediatype)					
 			i=i+1
 		PLog('Search videos: ' + str(i))
 	
@@ -207,6 +212,7 @@ def Search(title):
 			PLog(type(query)); PLog(type(title)); PLog(type(descr));
 			if query in title.lower() or  query in descr.lower():
 				title = repl_json_chars(title)
+				title = unescape(title)
 				tag=''											# typ farbig markieren
 				isPlaylist=''
 				if typ == "format":			# KANÄLE
@@ -371,6 +377,9 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 		videoObject = jsonObject["_embedded"]["videoDTOList"]
 	PLog('channel %s' % title) 
 	
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'
+
 	for stageObject in videoObject:
 		title,alias,descr,img,date,dur,cr,entityId = extract_videos(stageObject) 
 		date = time_translate(date)
@@ -384,13 +393,14 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 		descr_par = descr.replace('\n', '||'); descr_par = descr_par.replace('\r', '')  # \r\n\r\n
 		descr_par = repl_json_chars(descr_par); 
 		title = repl_json_chars(title)
+		title = unescape(title)
 
 		PLog(title); PLog(entityId); 
 		title=py2_encode(title); img=py2_encode(img); descr_par=py2_encode(descr_par);
 		fparams="&fparams={'title': '%s', 'img': '%s', 'descr': '%s', 'entityId': '%s'}"  %\
 			(quote(title), quote(img), quote(descr_par), entityId)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ShowVideo", 				
-			fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)					
+			fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams, mediatype=mediatype)					
 	
 	pN,pageSize,totalPages,totalElements,next_path = get_pagination(jsonObject)	# Mehr?		
 	if next_path:	

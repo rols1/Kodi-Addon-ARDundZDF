@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml, Bytecodes löschen
-VERSION = '2.3.3'
-VDATE = '13.12.2019'
+VERSION = '2.3.5'
+VDATE = '15.12.2019'
 
 #
 #
@@ -4235,10 +4235,11 @@ def Watch(action, name, thumb='', Plot='', url=''):
 	PLog('Watch: ' + action)
 	# CallFunctions: Funktionen, die Videos direkt oder indirekt (isPlayable) aufrufen.
 	#	Ist eine der Funktionen in der Plugin-Url enthalten, wird der Parameter Merk='true'
-	#	für PlayVideo bzw. zum Durchreichen angehängt
+	#	für PlayVideo bzw. zum Durchreichen angehängt.
+	#	Funktioniert nicht mit Modul funk
 	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.ShowVideo",
 						"resources.lib.zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
-						"ARDStartVideoMP4", "SenderLiveResolution", 
+						"ARDStartVideoMP4", "SenderLiveResolution"
 					]
 	
 	url = unquote_plus(url)	
@@ -4297,14 +4298,17 @@ def Watch(action, name, thumb='', Plot='', url=''):
 	if action == 'del':
 		my_items = ReadFavourites('Merk')			# 'utf-8'-Decoding in ReadFavourites
 		if len(my_items):
-			PLog('my_items: ' + my_items[0])
+			PLog('my_items: ' + my_items[-1])
+		PLog(type(name));
 		merkliste = ''
 		deleted = False
 		for item in my_items:						# Liste -> String
-			iname = stringextract('name="', '"', item) 
-			PLog('Name: %s, IName: %s' % (py2_decode(name), py2_decode(iname)))
-			if py2_decode(iname) == py2_decode(name):						# skip Satz = löschen 
-				deleted = True
+			iname = stringextract('name="', '"', item) # unicode
+			iname = py2_decode(iname)
+			name = py2_decode(name)		
+			PLog('Name: %s, IName: %s' % (name, iname))		
+			if name == iname:
+				deleted = True						# skip Satz = löschen 
 				continue
 			item_cnt = item_cnt + 1
 			merkliste = py2_decode(merkliste) + py2_decode(item) + "\n"
@@ -5094,9 +5098,11 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 	PLog('SenderLiveResolution:')
 	PLog(SETTINGS.getSetting('pref_video_direct'))
 	PLog(title); PLog(descr)
+	path_org = path
 
 	page, msg = get_page(path=path)					# Verfügbarkeit des Streams testen
 	if page == '':									# Fallback zum Classic-Sendername in Startsender
+		sender_url=''								
 		PLog('Fallback Streams ARD-Start')
 		path = 'https://classic.ardmediathek.de/tv/live'
 		page, msg = get_page(path=path)	
@@ -5116,20 +5122,27 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 				if title_sender:
 					if up_low(title_sender) in up_low(title):	# Classic-Sendername aus Playlist
 						classicsender = stringextract('<hrefsender>', '</hrefsender>', sender)
-						PLog('classicsender: ' + classicsender)
-						break			
-											
-			for cont in content:							# Abgleich mit Classic-TV-Live
-				startsender = stringextract('headline">', '</', cont)
-				if classicsender in startsender:				# Classic-Sendername in Startsender?
-					sender_url = BASE_URL + stringextract('href="', '"', cont)
-					PLog('sender_url: ' + sender_url)			# Link des Classic-Senders
-					break
+						PLog('classicsender: %s, title_sender: %s ' % (classicsender, title_sender))
+						break
+										
+			if classicsender:								# kann fehlen, z.B Event-TV - kein Abgleich
+				for cont in content:						# Abgleich mit classic.ardmediathek.de/tv/live
+					startsender = stringextract('class="headline">', '</', cont)
+					if classicsender in startsender:				# Classic-Sendername in Startsender?
+						if classicsender:							# kann leer sein, Bsp. Event-TV
+							sender_url = BASE_URL + stringextract('href="', '"', cont)
+							PLog('sender_url: ' + sender_url)			# Link des Classic-Senders
+							break
 
-			if sender_url:		# z.B. //classic.ardmediathek.de/tv/Deutsche-Welle/live?kanal=5876
-				path = get_startsender(hrefsender=sender_url)	# Modul util	
-				PLog('path: ' + path)				
-		
+		if sender_url:		# z.B. //classic.ardmediathek.de/tv/Deutsche-Welle/live?kanal=5876
+			path = get_startsender(hrefsender=sender_url)	# Modul util	
+			PLog('path: ' + path)
+		else:				
+			msg1 = 'SenderLiveResolution - Url nicht gefunden: %s' % path_org
+			msg2 = 'Fallback auf %s fehlgeschlagen' % path
+			PLog(msg1)
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False) # Fehlschlag Fallback - raus
 
 	# direkter Sprung hier erforderlich, da sonst der Player mit dem Verz. SenderLiveResolution
 	#	startet + fehlschlägt.
@@ -6297,15 +6310,29 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 	page_title = page_title.strip()
 	msg_notfound = ''
 	if 'Leider kein Video verf' in page:					# Verfügbarkeit vor class="artdirect " >
-		msg_notfound = 'Leider kein Video verfügbar'		# z.B. Ausblick auf Sendung
+		msg_notfound = u'Leider kein Video verfügbar'		# z.B. Ausblick auf Sendung
 		if page_title:
-			msg_notfound = 'Leider kein Video verfügbar zu: ' + page_title
+			msg_notfound = u'Leider kein Video verfügbar zu: ' + page_title
 				
 	content =  blockextract('class="artdirect " >', page)
 	if len(content) == 0:
 		content =  blockextract('class="stage-image', page) 	# 10.12.2019 ZDF Highlights
 	if len(content) == 0:
-		msg_notfound = 'Leider kein Video verfügbar'
+		msg_notfound = 'Video ist leider nicht mehr oder noch nicht verfügbar'
+		
+	if len(content) == 0:										# Ausleitung Einzelbeiträge ohne icon-502 
+		if 'class="b-playerbox' in page:						# 	oder icon-301, Kennung mediatype für
+			PLog('Ausleitung Einzelbeitrag')					#	Sofortstart hier nicht mher möglich
+			title = stringextract('class="big-headline" >', '</', page)
+			if title: title = title.strip()
+			dauer = stringextract('teaser-info">', '<', page)
+			thumb =  stringextract('data-src="', '"', page)
+			if dauer: dauer = "Dauer %s" % dauer
+			descr =  stringextract('item-description" >', '</', page)
+			descr = descr.strip(); descr = cleanhtml(descr); 
+			descr = unescape(descr); descr = repl_json_chars(descr);	
+			ZDF_getVideoSources(url=ref_path, title=title, thumb=thumb, tagline=descr)
+			return li, 0
 	
 	if ID == 'NeuInMediathek':									# letztes Element entfernen (Verweis Sendung verpasst)
 		content.pop()	
@@ -6557,6 +6584,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 def ZDF_getVideoSources(url, title, thumb, tagline, segment_start=None, segment_end=None, Merk='false'):
 	PLog('ZDF_getVideoSources:'); PLog(url); PLog(tagline); 
 	PLog(title)
+	title = unescape(title);
 				
 	li = xbmcgui.ListItem()
 	urlSource = url 		# für ZDFotherSources
@@ -6627,7 +6655,7 @@ def ZDF_getVideoSources(url, title, thumb, tagline, segment_start=None, segment_
 	else:	
 		title_oc = u"[COLOR blue]weitere Video-Formate[/COLOR] | %s" % title
 	PLog("title_oc: " + title_oc)
-		
+
 	PLog(title); PLog(title_oc); PLog(tagline); PLog(sid); 
 		
 	if SETTINGS.getSetting('pref_video_direct') == 'false':	# ZDFotherSources nicht bei Sofortstart zeigen

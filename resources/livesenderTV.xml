@@ -205,7 +205,17 @@
 		<epg_url></epg_url>
 	</item>
 	<item>
-		<title>MDR+ Eventlivestreams + SocialTV</title>
+		<title>MDR+ Eventlivestreams + SocialTV - 1</title>
+		<hrefsender></hrefsender>
+		<link>https://mdrevent1hls-lh.akamaihd.net/i/livetvmdrevent1_ww@513989/master.m3u8</link>
+		<thumbnail>tv-mdr-sachsen.png</thumbnail>
+		<genre>TV</genre>
+		<EPG_ID></EPG_ID>
+		<date>15.12.2019</date>
+		<epg_url></epg_url>
+	</item>
+	<item>
+		<title>MDR+ Eventlivestreams + SocialTV - 2</title>
 		<hrefsender></hrefsender>
 		<link>https://mdrevent2hls-lh.akamaihd.net/i/livetvmdrevent2_ww@513991/master.m3u8</link>
 		<thumbnail>tv-mdr-sachsen.png</thumbnail>
