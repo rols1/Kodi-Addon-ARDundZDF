@@ -377,6 +377,7 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 		videoObject = jsonObject["_embedded"]["videoDTOList"]
 	PLog('channel %s' % title) 
 	
+#	mediatype=''
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 		mediatype='video'
 

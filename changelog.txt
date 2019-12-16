@@ -8,6 +8,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+16.12.2019	2.3.7	ChannelSingle (Modul funk): Param. mediatype vorbelegt (Einzelvideos fehlten,
+			nur Rubriken wurden gezeigt).
+
 16.12.2019	2.3.6	SingleBeitragKika (Modul childs): endOfDirectory ausgetauscht gegen return
 			(Sofortstart führte zur Dauerschleife).
 			Modul childs - repl_json_chars für Titel und Beschreibung in Kika_Live,
