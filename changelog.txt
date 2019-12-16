@@ -8,6 +8,11 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+16.12.2019	2.3.6	SingleBeitragKika (Modul childs): endOfDirectory ausgetauscht gegen return
+			(Sofortstart führte zur Dauerschleife).
+			Modul childs - repl_json_chars für Titel und Beschreibung in Kika_Live,
+			Kika_VideosBuendel, Kika_Videos und Kikaninchen_Videos.	
+
 15.12.2019	2.3.5	ARDVerpasstContent (ARD Neu): Url mit "?devicetype=pc" ergänzt (Inhalte
 			fehlten bei DASERSTE/Heute), Senderbez. ardalpha in alpha geändert
 			(HTTP-Error).

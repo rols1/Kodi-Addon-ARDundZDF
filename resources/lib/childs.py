@@ -3,7 +3,7 @@
 #				childs.py - Teil von Kodi-Addon-ARDundZDF
 #		Rahmenmodul für Kinderprg div. Regionalsender von ARD und ZDF
 ################################################################################
-#	Stand: 13.12.2019
+#	Stand: 16.12.2019
 #
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -222,6 +222,7 @@ def Kika_Live():
 		tagline = 'Zeit: ' + vonbis
 				
 	title = unescape(title); title = repl_json_chars(title)
+	summ = unescape(summ); summ = repl_json_chars(summ)
 	PLog("title: " + title); PLog(summ)
 	title=py2_encode(title); m3u8link=py2_encode(m3u8link);
 	img=py2_encode(img); summ=py2_encode(summ);			
@@ -335,7 +336,7 @@ def Kika_Videos(path, title, thumb):
 		tagline = duration + ' Minuten'	
 		
 		stitle = unescape(stitle); stitle = repl_json_chars(stitle)	
-		img_alt = unescape(img_alt); 	
+		img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt);	
 			
 		PLog('Satz:')		
 		PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src);
@@ -419,6 +420,9 @@ def Kikaninchen_Videos(path):
 		stitle = unescape(stitle)	
 		duration = stringextract('icon-duration">', '</span>', s)	
 		tagline = duration + ' Minuten'	
+		
+		stitle = repl_json_chars(stitle)
+		img_alt = repl_json_chars(img_alt);
 		
 		PLog(href); PLog(stitle); PLog(img_src); PLog(img_alt)
 		href=py2_encode(href); 		
@@ -545,7 +549,7 @@ def SingleBeitragKika(path, title, thumb, summ, duration):
 			PLog('Sofortstart: SingleBeitragKika')
 			PLog("Plot_par: " + Plot_par)
 			PlayVideo(url=url_m3u8, title=title_call, thumb=thumb, Plot=Plot_par, sub_path=sub_path)
-			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			return
 			
 		title = u'[m3u8] Bandbreite und Auflösung automatisch'
 		#   "auto"-Button + Ablage master.m3u8:
