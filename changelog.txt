@@ -8,6 +8,8 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+16.12.2019	2.3.8	Test-Update ohne Änderungen	
+
 16.12.2019	2.3.7	ChannelSingle (Modul funk): Param. mediatype vorbelegt (Einzelvideos fehlten,
 			nur Rubriken wurden gezeigt).
 
