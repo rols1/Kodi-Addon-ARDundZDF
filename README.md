@@ -14,7 +14,7 @@ Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/release
 Das Plugin löst die Vorgänger Plex-Plugin-ARDMediathek2015 und Plex-Plugin-ARDMediathek2016
 ab. Der Relaunch des ZDF-Mediathek-Internetangebots vom 28.10.2016 ist eingearbeitet. 
 
-Die ARD kündigt seit einigen Monaten die Einstellung der Classic-Funktionen an. Bis zur Umsetzung verbleibt der entsprechende Code im Addon (ARD Mediathek Classic, Radio-Podcasts).
+Die ARD kündigt seit einigen Monaten die Einstellung der Classic-Funktionen an. Bis zur Umsetzung verbleibt der Classic-Code im Addon.
 
 #### Rückmeldungen willkommen:
 Im Forum: https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/  
@@ -94,6 +94,7 @@ Funktionen:
 #### Downloadoption (cURL oder wget eforderlich)
 - Download von Videos im ARD-Bereich
 - Download von Videos im ZDF-Bereich
+- Download von Videos in den Modulen 3Sat, funk, Kinderprogramme
 - Download von Podcasts - bei Podcast-Favoriten zusätzlich Sammeldownloads 
 - Tools zum Bearbeiten des Download-Verzeichnisses (Verzeichnisse festlegen, Verschieben, Löschen)
 
@@ -106,6 +107,7 @@ Funktionen:
 
 #### weitere Module
 - ZDFmobile
+- 3Sat
 - funk
 - Kinderprogramme (z.Z. KIKA und ZDFtivi)
 
