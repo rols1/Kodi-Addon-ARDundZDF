@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml, Bytecodes löschen
-VERSION = '2.3.8'
-VDATE = '16.12.2019'
+VERSION = '2.4.0'
+VDATE = '20.12.2019'
 
 #
 #
@@ -3553,18 +3553,26 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels cu
 		mydate = now.strftime("%Y-%m-%d_%H-%M-%S")	
 		dfname = 'Download_' + mydate 
 	
+	suffix=''
 	if url.endswith('.mp3'):
 		suffix = '.mp3'		
 		dtyp = 'Podcast '
 	else:												# .mp4 oder .webm	
 		dtyp = 'Video '
-		if url.endswith('.mp4'):				
+		if url.endswith('.mp4') or '.mp4' in url:		# funk: ..920x1080_6000.mp4?hdnts=				
 			suffix = '.mp4'		
 		if url.endswith('.webm'):				
 			suffix = '.webm'		
 		
+	if suffix == '':
+		msg1='DownloadExtern: Problem mit Dateiname. Video: %s' % title
+		PLog(msg1)
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		return li
+
 	title = dtyp + 'curl/wget-Download: ' + title
 	textfile = dfname + '.txt'
+	
 	dfname = dfname + suffix							# suffix: '.mp4', '.webm', oder '.mp3'
 	
 	pathtextfile = os.path.join(dest_path, textfile)	# kompl. Speicherpfad für Textfile
@@ -3813,7 +3821,7 @@ def DownloadsList():
 				# pass									# Plex brauchte hier die Web-Url	aus der Beschreibung
 				title = fname
 				httpurl = fname							# Berücksichtigung in VideoTools - nicht abspielbar
-				summary = 'Download / Aufnahme ohne Beschreibung'
+				summary = 'Download ohne Beschreibung'
 				#tagline = 'Beschreibung fehlt - Beschreibung gelöscht, Sammeldownload oder TVLive-Video'
 				
 			tag_par= tagline.replace('\n', '||')	
@@ -4016,6 +4024,9 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 #				Keine Begleitinfos, falls  summary, tagline od. Plot im addDir-Call fehlen.
 #				gelöst mit Base64-kodierter Plugin-Url: 
 #					Sonderzeichen nach doppelter utf-8-Kodierung
+# 				Sofortstart/Resumefunktion: funktioniert nicht immer - Bsp. KIKA-Videos.
+#					Bei Abschaltung Sofortstart funktioniert aber die Resumefunktion bei den
+#					Einzelauflösungen.
 #
 def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 	PLog('ShowFavs: ' + mode)				# 'Favs', 'Merk'
@@ -7060,6 +7071,7 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 #	übergeben an xbmc.executebuiltin('SlideShow..
 #  ClearUp in SLIDESTORE s. Modulkopf
 #  S.a. ARD_Bildgalerie/Hub + SlideShow
+#  Aufrufer: ZDF_Bildgalerie
 def ZDFSlideShow(path, single=None):
 	PLog('SlideShow: ' + path)
 	local_path = os.path.abspath(path)

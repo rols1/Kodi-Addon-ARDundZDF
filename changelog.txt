@@ -7,6 +7,20 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+20.12.2019	2.4.0	Modul childs: neue Funktion Tivi_Search (Suche in ZDFtivi, Nutzung ZDF_get_content).
+			Modul childs: neue Funktion Kika_VideosBuendelAZ, bisherige Funktion Kika_VideosBuendel
+			unbenannt in Kika_VideosBeliebt.
+			Modul childs: neue Funktion Kika_Search - Abgleich Titel mit Sendungen aus VideosBuendelAZ,
+			1-Tag-Cache für A-Z-Seiten.
+			Kikaninchen_Videoseite: Verwendung A-Z-Großbuchstaben wie in Tivi_AZ (statt 
+			ICON_DIR_FOLDER).
+
+not on Github	2.3.9	Modul funk: Downloads ermöglicht. Anpassung in ShowVideo und DownloadExtern
+			(Haupt-PRG).
+			Modul childs: Funktion SingleBeitragKika unbenannt in Kika_SingleBeitrag
+			(Übersichtlichkeit).
+			get_zdfplayer_content (Modul 3Sat): repl_json_chars für Titel, alternative
+			Quelle für Bild (teaser-image statt data-srcset). 
 
 16.12.2019	2.3.8	Test-Update ohne Änderungen	
 

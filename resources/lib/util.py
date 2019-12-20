@@ -934,7 +934,6 @@ def make_filenames(title):
 	valid_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
 	fname = ''.join(c for c in fname if c in valid_chars)
 	fname = fname.replace(u' ', u'_')
-
 	return fname
 #----------------------------------------------------------------  
 # Umlaute übersetzen, wenn decode nicht funktioniert

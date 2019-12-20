@@ -892,6 +892,12 @@ def get_zdfplayer_content(li, content):
 		path 	= DreiSat_BASE + path + ".html"
 		img_src	= stringextract('data-srcset="', '"', rec)			
 		img_src	= img_src.split(' ')[0]								# kann mit Blank enden
+		if img_src == '':
+			img_src = stringextract('teaser-image="', 'auto', rec)	# Bsp. Wissen/#Erklärt
+			PLog(img_src)
+			img_src =stringextract('https:', '&', img_src)
+			PLog(img_src)
+			img_src = 'https:' + img_src.replace('\\/', '/')	 
 		
 		tagline = dauer
 		subtitle	= stringextract('brand-subtitle">', '<', rec)
@@ -901,7 +907,7 @@ def get_zdfplayer_content(li, content):
 		descr 	= stringextract('paragraph-large ">', '<', rec)
 		descr 	= unescape(descr)
 		descr = transl_json(descr); 
-		title = transl_json(title); 
+		title = transl_json(title); title = repl_json_chars(title);
 	
 		PLog('Satz:')
 		PLog(img_src); PLog(title); PLog(path); 

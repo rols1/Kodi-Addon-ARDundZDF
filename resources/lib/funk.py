@@ -4,7 +4,7 @@
 #				Kanäle und Serien von https://www.funk.net/
 ################################################################################
 # 	Credits: cemrich (github) für die wichtigsten api-Calls
-#	Stand: 15.12.2019
+#	Stand: 18.12.2019
 #
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -37,7 +37,7 @@ import ssl
 import datetime, time
 import re				# u.a. Reguläre Ausdrücke
 
-# import ardundzdf					# -> ZDF_get_content - nicht genutzt
+import ardundzdf					# -> test_downloads
 import resources.lib.util as util	# (util_imports.py)
 PLog=util.PLog; home=util.home; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir; 
 getDirZipped=util.getDirZipped; Dict=util.Dict; name=util.name; ClearUp=util.ClearUp; 
@@ -732,17 +732,31 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
 			thumb=img, fparams=fparams, tagline=tag, summary=descr, mediatype='video')	
 	
+	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
 	title = "MP4 | %s" % title_org							# einzelne MP4-Url
 	for mp4_url in mp4_urls:
 		tag 	= "MP4 | %s" % re.search("_src_(.*?).mp4", mp4_url).group(1)	# 1920x1080_6000
 		tag = tag + geoblock
-		# PLog("mp4_url: "+ mp4_url)  s.o.
+		
 		title=py2_encode(title); mp4_url=py2_encode(mp4_url);
 		img=py2_encode(img); descr_par=py2_encode(descr_par);
+		
+		PLog("mp4_url: "+ mp4_url) 
+		# hier tag (mit Auflösungen) statt title
+		download_list.append(tag + '#' + mp4_url)			# Download-Liste füllen	
+		
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'Merk': '%s'}" % \
 			(quote(mp4_url), quote(title), quote_plus(img), quote_plus(descr_par), Merk)	
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
-			thumb=img, fparams=fparams, tagline=tag, summary=descr, mediatype='video')	
+			thumb=img, fparams=fparams, tagline=tag, summary=descr, mediatype='video')			
+	
+	if 	download_list:	# Downloadbutton(s), high=0: 1. Video = höchste Qualität	
+		# Qualitäts-Index high: hier Basis Bitrate (s.o.)
+		summary_org = repl_json_chars(descr)
+		tagline_org = repl_json_chars(tag)
+		thumb = img
+		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
+		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
 
 	xbmcplugin.endOfDirectory(HANDLE)
 				

@@ -223,7 +223,7 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	import shlex											# Parameter-Expansion
 	
 	downl_list =  Dict("load", "downl_list")
-	PLog('downl_list: %s' % downl_list)
+	# PLog('downl_list: %s' % downl_list)
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='PODCAST')								# Home-Button
@@ -254,6 +254,7 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 		title = unescape(title)								# schon in PodFavoriten, hier erneut nötig 
 		if 	SETTINGS.getSetting('pref_generate_filenames'):	# Dateiname aus Titel generieren
 			dfname = make_filenames(py2_encode(title)) + '.mp3'
+			PLog(dfname)
 		else:												# Bsp.: Download_2016-12-18_09-15-00.mp4  oder ...mp3
 			now = datetime.datetime.now()
 			mydate = now.strftime("%Y-%m-%d_%H-%M-%S")	

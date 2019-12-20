@@ -1436,7 +1436,7 @@ def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
 	# Bsp.: völklingen (69 Beiträge)
 	title = "Mehr zu >%s<" % unquote(query)		
 	offset = int(offset) +1
-	# die Werte in vodTotal + vodPageSize stimmen nicht mit Anzal der
+	# die Werte in vodTotal + vodPageSize stimmen nicht mit Anzahl der
 	#	Beiträge überein.
 	vodTotal	= stringextract('"vodTotal":', ',', page)
 	vodPageSize = stringextract('"vodPageSize":', ',', page)
