@@ -176,4 +176,4 @@ Podcast-Favoriten:
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Podcast-Favoriten.png)
 
 
-
+#### weitere Screenshots: https://github.com/rols1/PluginPictures/tree/master/Kodi/ARDundZDF
