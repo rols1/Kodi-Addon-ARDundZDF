@@ -7,6 +7,15 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+27.12.2019	2.4.1	neues Modul TagesschauXL: Anpassung Settings, Haupt-PRG, Modul util,
+			Portierung der meisten python-Funktionen von Plex-Plugin-TagesschauXL.
+			Livestream mit EPG + intern. Link ergänzt, Bildgalerie für Kodi angepasst. 
+			Weitere Ergänzungen: Downloadfunktion, Farbmarkierung in Suche, Archivauszug
+			für Bericht aus Berlin. 
+			Aus Platzgründen Verlagerung der meisten Icons auf Github-Repo PluginPictures.
+			addon.xml / Ordner Screenshots: aus Platzgründen alle Bilder auf Github-Repo
+			verlagert.  
+
 20.12.2019	2.4.0	Modul childs: neue Funktion Tivi_Search (Suche in ZDFtivi, Nutzung ZDF_get_content).
 			Modul childs: neue Funktion Kika_VideosBuendelAZ, bisherige Funktion Kika_VideosBuendel
 			unbenannt in Kika_VideosBeliebt.

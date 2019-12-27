@@ -72,6 +72,8 @@ PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Fo
 ICON_MAIN_POD	= 'radio-podcasts.png'
 ICON_MAIN_AUDIO	= 'ard-audiothek.png'
 ICON_MAIN_ZDFMOBILE	= 'zdf-mobile.png'
+# Github-Icons zum Nachladen aus Platzgründen
+ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
 			
 BASE_URL 		= 'https://classic.ardmediathek.de'
 
@@ -174,6 +176,12 @@ def home(li, ID):
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Main_childs", fanart=R('childs.png'), 
 			thumb=R('childs.png'), fparams=fparams)
+
+	if ID == 'TagesschauXL':
+		name = 'Home :' + ID
+		fparams="&fparams={}"
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", fanart=ICON_MAINXL, 
+			thumb=ICON_MAINXL, fparams=fparams)
 
 	return li
 	 
@@ -841,7 +849,29 @@ def teilstring(zeile, startmarker, endmarker):  		# rfind: endmarker=letzte Fund
     teils = ''
   #PLog(pos1) PLog(pos2) 
   return teils 
-#----------------------------------------------------------------  
+# ----------------------------------------------------------------------
+def my_rfind(left_pattern, start_pattern, line):  # sucht ab start_pattern rückwärts + erweitert 
+#	start_pattern nach links bis left_pattern.
+#	Rückgabe: Position von left_pattern und String ab left_pattern bis einschl. start_pattern	
+#	Mit Python's rfind-Funktion nicht möglich
+
+	# PLog(left_pattern); PLog(start_pattern); 
+	if left_pattern == '' or start_pattern == '' or line.find(start_pattern) == -1:
+		return -1, ''
+	startpos = line.find(start_pattern)
+	# Log(startpos); Log(line[startpos-10:startpos+len(start_pattern)]); 
+	i = 1; pos = startpos
+	while pos >= 0:
+		newline = line[pos-i:startpos+len(start_pattern)]	# newline um 1 Zeichen nach links erweitern
+		# Log(newline)
+		if newline.find(left_pattern) >= 0:
+			leftpos = pos						# Position left_pattern in line
+			leftstring = newline
+			# Log(leftpos);Log(newline)
+			return leftpos, leftstring
+		i = i+1				
+	return -1, ''								# Fehler, wenn Anfang line erreicht
+#----------------------------------------------------------------  	
 # make_mark: farbige Markierung plus fett (optional	
 # Groß-/Kleinschreibung egal
 # bei Fehlschlag mString unverändert zurück
@@ -850,22 +880,19 @@ def teilstring(zeile, startmarker, endmarker):  		# rfind: endmarker=letzte Fund
 def make_mark(mark, mString, color='red', bold=''):	
 	PLog("make_mark:")	
 	mark=py2_decode(mark); mString=py2_decode(mString)
-	mS = up_low(mString, mode='low'); ma = up_low(mark, mode='low')
-	PLog('Mark0.0')
+	mS = up_low(mString); ma = up_low(mark)
 	if ma in mS or mark == mString:
 		pos1 = mS.find(ma)
 		pos2 = pos1 + len(ma)		
 		ms = mString[pos1:pos2]		# Mittelstück mark unverändert
 		s1 = mString[:pos1]; s2 = mString[pos2:];
-		PLog('Mark1')
 		if bold:
 			rString= u"%s[COLOR %s][B]%s[/B][/COLOR]%s"	% (s1, color, ms, s2)
 		else:
 			rString= u"%s[COLOR %s]%s[/COLOR]%s"	% (s1, color, ms, s2)
-		PLog('Mark2')
 		return rString
 	else:
-		return mString		# Markierung fehlt, mString unverändert zurück	
+		return mString		# Markierung fehlt, mString unverändert zurück
 #----------------------------------------------------------------  
 # Migration PY2/PY3: py2_decode aus kodi-six
 def cleanhtml(line): # ersetzt alle HTML-Tags zwischen < und >  mit 1 Leerzeichen
@@ -904,7 +931,8 @@ def unescape(line):
 		#	Carriage Return (Cr)
 		(u"–", u"-"), (u"&#x27;", u"'"), (u"&#xD;", u""), (u"\xc2\xb7", u"-"),
 		(u'undoacute;', u'o'), (u'&eacute;', u'e'), (u'&egrave;', u'e'),
-		(u'&atilde;', u'a'), (u'quot;', u' ')):
+		(u'&atilde;', u'a'), (u'quot;', u' '), (u'&#10;', u'\n'),
+		(u'&#8222;', u' '), (u'&#8220;', u' ')):
 		line = line.replace(*r)
 	return line
 #----------------------------------------------------------------  

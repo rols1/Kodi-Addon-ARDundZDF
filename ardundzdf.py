@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml, Bytecodes löschen
-VERSION = '2.4.0'
-VDATE = '20.12.2019'
+VERSION = '2.4.1'
+VDATE = '27.12.2019'
 
 #
 #
@@ -175,6 +175,10 @@ ICON_MOVEDIR_DIR 		= "Dir-moveDir.png"
 ICON_DIR_FAVORITS		= "Dir-favorits.png"
 
 ICON_DIR_WATCH			= "Dir-watch.png"
+
+# Github-Icons zum Nachladen aus Platzgründen
+ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
+
 
 # 01.12.2018 	Änderung der BASE_URL von www.ardmediathek.de zu classic.ardmediathek.de
 # 06.12.2018 	Änderung der BETA_BASE_URL von  beta.ardmediathek.de zu www.ardmediathek.de
@@ -351,6 +355,12 @@ def Main():
 		fparams="&fparams={}"													# Kinder-Modul
 		addDir(li=li, label="Kinderprogramme", action="dirList", dirID="resources.lib.childs.Main_childs", 
 			fanart=R('childs.png'), thumb=R('childs.png'), tagline=tagline, fparams=fparams)
+			
+	if SETTINGS.getSetting('pref_use_XL') == 'true':
+		tagline = 'in den Settings kann das Modul TagesschauXL ein- und ausgeschaltet werden'
+		fparams="&fparams={}"													# TagesschauXL-Modul
+		addDir(li=li, label="TagesschauXL", action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", 
+			fanart=ICON_MAINXL, thumb=ICON_MAINXL, tagline=tagline, fparams=fparams)
 			
 			
 	tagline = 'TV-Livestreams stehen auch in ARD Mediathek Neu zur Verfügung'																																	
@@ -6158,7 +6168,7 @@ def ZDFSportLive(title):
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (quote(href),
 			quote(title), img, quote(descr))	
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
-			fparams=fparams, summary=descr,  mediatype=mediatype)
+			fparams=fparams, summary=descr, mediatype=mediatype)
 		
 	title = 'zurückliegende Sendungen'								# 3. weitere Sendungen
 	url = 'https://www.zdf.de/sport/zdf-sportreportage'
