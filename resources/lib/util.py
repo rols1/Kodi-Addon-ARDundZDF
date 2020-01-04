@@ -3,6 +3,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
+#	Stand 29.12.2019
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -72,9 +73,10 @@ PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Fo
 ICON_MAIN_POD	= 'radio-podcasts.png'
 ICON_MAIN_AUDIO	= 'ard-audiothek.png'
 ICON_MAIN_ZDFMOBILE	= 'zdf-mobile.png'
+ICON_PHOENIX	= 'phoenix.png'			
+
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
-			
 BASE_URL 		= 'https://classic.ardmediathek.de'
 
 ###################################################################################################
@@ -173,15 +175,23 @@ def home(li, ID):
 			
 	if ID == 'Kinderprogramme':
 		name = 'Home :' + ID
+		thumb = R('childs.png')
 		fparams="&fparams={}"
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Main_childs", fanart=R('childs.png'), 
-			thumb=R('childs.png'), fparams=fparams)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Main_childs", fanart=thumb, 
+			thumb=thumb, fparams=fparams)
 
 	if ID == 'TagesschauXL':
 		name = 'Home :' + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", fanart=ICON_MAINXL, 
 			thumb=ICON_MAINXL, fparams=fparams)
+			
+	if ID == 'phoenix':
+		name = 'Home :' + ID
+		thumb = R(ICON_PHOENIX)
+		fparams="&fparams={}"
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.Main_phoenix", fanart=thumb, 
+			thumb=thumb, fparams=fparams)
 
 	return li
 	 
@@ -722,7 +732,7 @@ def RSave(fname, page, withcodec=False):
 		
 	except Exception as exception:
 		msg = str(exception)
-		PLog(msg)
+		PLog('RSave_Exception: ' + msg)
 	return msg
 #----------------------------------------------------------------  
 # Holt Bandwith, Codecs + Resolution aus m3u8-Datei
@@ -983,7 +993,7 @@ def transl_json(line):	# json-Umlaute übersetzen
 	# Vorkommen: Loader-Beiträge ZDF/3Sat (ausgewertet als Strings)
 	# Recherche Bsp.: https://www.compart.com/de/unicode/U+00BA
 	# 
-	line= py2_decode(line)	
+	line=py2_decode(line)
 	#PLog(line)
 	for r in ((u'\\u00E4', u"ä"), (u'\\u00C4', u"Ä"), (u'\\u00F6', u"ö"), (u'u002F', u"/")		
 		, (u'\\u00C6', u"Ö"), (u'\\u00D6', u"Ö"),(u'\\u00FC', u"ü"), (u'\\u00DC', u'Ü')
@@ -1081,7 +1091,7 @@ def seconds_translate(seconds, days=False):
 		#PLog("%d:%02d" % (hour, minutes))
 		return  "%d:%02d" % (hour, minutes)		
 #----------------------------------------------------------------  	
-# Format timecode 	2018-11-28T23:00:00Z (ARD Neu, broadcastedOn)
+# Format timecode 	2018-11-28T23:00:00Z (ARDNew, broadcastedOn)
 #					y-m-dTh:m:sZ 	ISO8601 date
 # Rückgabe:			28.11.2018, 23:00 Uhr   (Sekunden entfallen)
 #					bzw. '' bei Fehlschlag
@@ -1102,8 +1112,11 @@ def time_translate(timecode, add_hour=2):
 
 	if timecode.strip() == '':
 		return ''
-	if '.000' in timecode:					# Besp. Funk: 2019-09-30T12:59:27.000+0000
-		timecode = timecode.split('.000')[0]
+		
+	# Bsp.: Funk: 			2019-09-30T12:59:27.000+0000,
+	# 		ARDNew Live: 	2019-12-12T06:16:04.413Z
+	if timecode.find('.') == 19:			# Zielformat 2018-11-28T23:00:00Z			
+		timecode = timecode.split('.')[0]
 		timecode = timecode + "Z"
 	PLog(timecode)
 	
@@ -1555,6 +1568,7 @@ def url_check(url, caller=''):
 		msg1= '%s: Seite nicht erreichbar - Url:' % caller
 		msg2 = url
 		msg3 = 'Fehler: %s' % err
+		PLog(msg3)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)		 			 	 
 		return False
 	

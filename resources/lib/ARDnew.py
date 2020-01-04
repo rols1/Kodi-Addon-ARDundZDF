@@ -2,7 +2,7 @@
 ################################################################################
 #				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
-#	Stand 15.12.2019
+#	Stand 29.12.2019
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
 #	Seiten werden im json-Format, teilweise html + json ausgeliefert
@@ -637,7 +637,7 @@ def get_page_content(li, page, ID, mark=''):
 		
 		broadcast = stringextract('"broadcastedOn":"', '"', s)	# Sendedatum
 		PLog(broadcast)
-		if broadcast:
+		if broadcast and ID != 'Livestream':					# enth. unsinnige Werte
 			broadcast = time_translate(broadcast)				#  + 2 Std.
 			tag = u"%s\nSendedatum: %s Uhr" % (tag, broadcast)
 			

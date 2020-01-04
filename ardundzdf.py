@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml, Bytecodes löschen
-VERSION = '2.4.1'
-VDATE = '27.12.2019'
+VERSION = '2.4.2'
+VDATE = '31.12.2019'
 
 #
 #
@@ -175,6 +175,7 @@ ICON_MOVEDIR_DIR 		= "Dir-moveDir.png"
 ICON_DIR_FAVORITS		= "Dir-favorits.png"
 
 ICON_DIR_WATCH			= "Dir-watch.png"
+ICON_PHOENIX			= 'phoenix.png'			
 
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
@@ -362,6 +363,11 @@ def Main():
 		addDir(li=li, label="TagesschauXL", action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", 
 			fanart=ICON_MAINXL, thumb=ICON_MAINXL, tagline=tagline, fparams=fparams)
 			
+#	if SETTINGS.getSetting('pref_use_phoenix') == 'true':
+#		tagline = 'in den Settings kann das Modul phoenix ein- und ausgeschaltet werden'
+#		fparams="&fparams={}"													# Phoenix-Modul
+#		addDir(li=li, label="phoenix", action="dirList", dirID="resources.lib.phoenix.Main_phoenix", 
+#			fanart=R(ICON_PHOENIX), thumb=R(ICON_PHOENIX), tagline=tagline, fparams=fparams)
 			
 	tagline = 'TV-Livestreams stehen auch in ARD Mediathek Neu zur Verfügung'																																	
 	fparams="&fparams={'title': 'TV-Livestreams'}"
@@ -2587,11 +2593,11 @@ def get_query(channel='ARD'):
 		return 	query_ard
 	if channel == 'ZDF':	
 		return 	query_zdf
-	if channel == 'ARDundZDF':				# beide queries zusammengesetzt				
+	if channel == 'ARDundZDF':						# beide queries zusammengesetzt				
 		query = "%s|%s" % (query_ard, query_zdf)							
 		PLog('query_ARDundZDF: %s' % query);
 		return	query
-	if channel == 'ARDaudio':				# nur strip, quoting durch Aufrufer
+	if channel=='ARDaudio' or channel=='phoenix':	# nur strip, quoting durch Aufrufer
 		return 	query.strip()
 			
 #---------------------------------------------------------------- 
@@ -4069,10 +4075,11 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		summary	= u"%s\n\n%s\n\n%s\n\n%s\n\n%s"		% (s1, s2, s3, s4, s5)
 		label	= u'Infos zum Menü Merkliste'
 	
-	fparams="&fparams={'mode': '%s'}"	% mode						# Info-Menü
-	addDir(li=li, label=label, action="dirList", dirID="ShowFavs",
-		fanart=R(ICON_DIR_FAVORITS), thumb=R(ICON_INFO), fparams=fparams,
-		summary=summary, tagline=tagline, cmenu=False) 	# ohne Kontextmenü)	
+	if SETTINGS.getSetting('pref_FavsInfoMenueButton') == 'false':		# ausblenden falls true	
+		fparams="&fparams={'mode': '%s'}"	% mode						# Info-Menü
+		addDir(li=li, label=label, action="dirList", dirID="ShowFavs",
+			fanart=R(ICON_DIR_FAVORITS), thumb=R(ICON_INFO), fparams=fparams,
+			summary=summary, tagline=tagline, cmenu=False) 	# ohne Kontextmenü)	
 	
 	for fav in my_items:
 		fav = unquote_plus(fav)						# urllib2.unquote erzeugt + aus Blanks!		
@@ -5974,15 +5981,18 @@ def get_teaserElement(rec):
 	% (sophoraId, filterReferenceId, contextStructureNodePath)
 
 
-	fpath = os.path.join(TEXTSTORE, sophoraId)		# 1. teaserElement abrufen
+	fpath = os.path.join(TEXTSTORE, sophoraId)		# 1. Cache für teaserElement
 	PLog('fpath: ' + fpath)
+	if os.path.exists(fpath) and os.stat(fpath).st_size == 0: # leer? = fehlerhaft -> entfernen 
+		PLog('fpath_leer: %s' % fpath)
+		os.remove(fpath)
 	if os.path.exists(fpath):						# Element lokal laden
 		PLog('lade_lokal:') 
 		page =  RLoad(fpath, abs_path=True)	
-	else:											#  von www.zdf.de/teaserElement laden
+	else:											# von www.zdf.de/teaserElement laden
 		page, msg = get_page(path=path)			
-		if page:									# 	und in TEXTSTORE speichern
-			msg = RSave(fpath, py2_encode(page))
+		if page:									# und in TEXTSTORE speichern - bei Bedarf
+			msg = RSave(fpath, py2_encode(page))	#	withcodec verwenden (s. my3Sat)
 		
 	PLog(page[:100])
 	isvideo = False
@@ -7195,10 +7205,10 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 				quote_plus(sub_path))
 			addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 				mediatype='video', tagline=descr) 
-							
+				
+			li_cnt = li_cnt + 1  	# Listitemzähler
 			BandwithOld = Bandwith												
 		i = i + 1				# Index für URL
-		li_cnt = li_cnt + 1  	# Listitemzähler
   	
 	if i == 0:	# Fehler
 		line1 = 'Kennung #EXT-X-STREAM-INF fehlt oder'

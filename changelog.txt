@@ -7,6 +7,18 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+
+04.01.2020	2.4.2	Settings: Option "Info-Menue-Button ausblenden", Anpassung settings.xml und
+			Funktion ShowFavs.
+			Parseplaylist (Haupt-PRG): Fix Zähler für Listitems (Indices im Titel hatten
+			Sprungweite 2 statt 1).
+			Speichern von TeaserElementen im Modul 3sat: Nutzung des Python-
+			Moduls codes in Funktion RSave (Modul util), um leere Dateien zu verhindern.
+			Modul 3sat: Löschen leerer Dateien mit TeaserElementen (Bilder und Infos fehlen 
+			im Listing).
+			Modul util: Anpassung an zusätzl. Timecode (broadcast) im Moduls ARDnew.
+			Modul ARDnew: Unterdrückung Auswertung Timecode bei Livesendern (unsinnige Werte).	
+
 27.12.2019	2.4.1	neues Modul TagesschauXL: Anpassung Settings, Haupt-PRG, Modul util,
 			Portierung der meisten python-Funktionen von Plex-Plugin-TagesschauXL.
 			Livestream mit EPG + intern. Link ergänzt, Bildgalerie für Kodi angepasst. 
@@ -32,7 +44,7 @@ not on Github	2.3.9	Modul funk: Downloads ermöglicht. Anpassung in ShowVideo un
 			Quelle für Bild (teaser-image statt data-srcset). 
 
 16.12.2019	2.3.8	Test-Update ohne Änderungen	
-
+neues Modul
 16.12.2019	2.3.7	ChannelSingle (Modul funk): Param. mediatype vorbelegt (Einzelvideos fehlten,
 			nur Rubriken wurden gezeigt).
 

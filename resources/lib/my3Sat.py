@@ -785,12 +785,16 @@ def get_teaserElement(rec):
 	
 	fpath = os.path.join(TEXTSTORE, sophoraId)
 	PLog('fpath: ' + fpath)
+	if os.path.exists(fpath) and os.stat(fpath).st_size == 0: # leer? = fehlerhaft -> entfernen 
+		PLog('fpath_leer: %s' % fpath)
+		os.remove(fpath)
 	if os.path.exists(fpath):				# teaserElement lokal laden
+		PLog('lade_lokal:') 
 		page =  RLoad(fpath, abs_path=True)
 	else:
 		page, msg = get_page(path)			# teaserElement holen
 		if page:							# 	und in TEXTSTORE speichern
-			msg = RSave(fpath, page)
+			msg = RSave(fpath, page, withcodec=True)
 	PLog(page[:100])
 	
 	if page:								# 2. teaserElement auswerten
