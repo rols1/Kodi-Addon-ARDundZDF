@@ -961,7 +961,7 @@ def transl_doubleUTF8(line):	# rückgängig: doppelt kodiertes UTF-8
 	return line	
 #----------------------------------------------------------------  
 # Migration PY2/PY3: py2_decode aus kodi-six
-def make_filenames(title):
+def make_filenames(title, max_length=255):
 	PLog('make_filenames:')
 	# erzeugt - hoffentlich - sichere Dateinamen (ohne Extension)
 	# zugeschnitten auf Titelerzeugung in meinen Plugins 
@@ -972,7 +972,7 @@ def make_filenames(title):
 	valid_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
 	fname = ''.join(c for c in fname if c in valid_chars)
 	fname = fname.replace(u' ', u'_')
-	return fname
+	return fname[:max_length]
 #----------------------------------------------------------------  
 # Umlaute übersetzen, wenn decode nicht funktioniert
 # Migration PY2/PY3: py2_decode aus kodi-six

@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml, Bytecodes löschen
-VERSION = '2.4.2'
-VDATE = '31.12.2019'
+VERSION = '2.4.3'
+VDATE = '05.01.2020'
 
 #
 #
@@ -363,11 +363,11 @@ def Main():
 		addDir(li=li, label="TagesschauXL", action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", 
 			fanart=ICON_MAINXL, thumb=ICON_MAINXL, tagline=tagline, fparams=fparams)
 			
-#	if SETTINGS.getSetting('pref_use_phoenix') == 'true':
-#		tagline = 'in den Settings kann das Modul phoenix ein- und ausgeschaltet werden'
-#		fparams="&fparams={}"													# Phoenix-Modul
-#		addDir(li=li, label="phoenix", action="dirList", dirID="resources.lib.phoenix.Main_phoenix", 
-#			fanart=R(ICON_PHOENIX), thumb=R(ICON_PHOENIX), tagline=tagline, fparams=fparams)
+	if SETTINGS.getSetting('pref_use_phoenix') == 'true':
+		tagline = 'in den Settings kann das Modul phoenix ein- und ausgeschaltet werden'
+		fparams="&fparams={}"													# Phoenix-Modul
+		addDir(li=li, label="phoenix", action="dirList", dirID="resources.lib.phoenix.Main_phoenix", 
+			fanart=R(ICON_PHOENIX), thumb=R(ICON_PHOENIX), tagline=tagline, fparams=fparams)
 			
 	tagline = 'TV-Livestreams stehen auch in ARD Mediathek Neu zur Verfügung'																																	
 	fparams="&fparams={'title': 'TV-Livestreams'}"
@@ -3575,6 +3575,8 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels cu
 		dtyp = 'Podcast '
 	else:												# .mp4 oder .webm	
 		dtyp = 'Video '
+		if '.googlevideo.com/' in url:					# Youtube-Url ist  ohne Endung (pytube-Ausgabe)
+			suffix = '.mp4'	
 		if url.endswith('.mp4') or '.mp4' in url:		# funk: ..920x1080_6000.mp4?hdnts=				
 			suffix = '.mp4'		
 		if url.endswith('.webm'):				

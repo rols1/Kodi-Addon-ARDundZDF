@@ -10,7 +10,8 @@
     	<setting label="FUNK verwenden" type="bool" id="pref_use_funk" default="false"/>
     	<setting label="Kinderprogramme verwenden" type="bool" id="pref_use_childprg" default="false"/>
      	<setting label="TagesschauXL verwenden" type="bool" id="pref_use_XL" default="false"/>
-     <setting type="sep"/>
+      	<setting label="Phoenix verwenden" type="bool" id="pref_use_phoenix" default="false"/>
+    <setting type="sep"/>
    	<setting label="EPG-Daten für TV-Live-Sender zeigen - dauert etwas länger" type="bool" id="pref_use_epg" default="false"/>
    	<setting label="Inhaltstext zu Video im Voraus laden - kann sehr lange dauern!" type="bool" id="pref_load_summary" default="false"/>
 	<setting type="sep"/>
@@ -66,7 +67,7 @@
 	<setting label="Modul FUNK: Videoeinstellung für MP4-Sofortstart" type="select" id="pref_funk_bandw" default="1500:960x540"
   		values="400:320x180|650:640x360|900:720x404|1500:960x540|2500:1280x720|4000:1920x108|6000:1920x1080" />
   	<setting label="Modul ARD Neu, Senderwahl: im Titel >Sender:< entfernen" type="bool" id="pref_disable_sender" default="false"/>
-
+  	<setting label="Modul phoenix: nur Beiträge mit Videos, keine Sendungshinweise" type="bool" id="pref_only_phoenix_videos" default="false"/>
 </category>
 </settings>
 

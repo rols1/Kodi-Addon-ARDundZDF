@@ -7,11 +7,16 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
-
-04.01.2020	2.4.2	Settings: Option "Info-Menue-Button ausblenden", Anpassung settings.xml und
+07.01.2020	2.4.3	neues Modul phoenix: Icons, Anpassungen im Haupt-PRG und Github-Repo PluginPictures.
+			Migration von Funktionen aus Plex-Plugin-Phoenix_Mediathek.
+			Erweiterungen: Bestimmung Zeitstatus (time_state: Vergangenheit, Gegenwart, Zukunft)
+			+ entspr.Kennzeichnung der Sendezeit.
+			Für Youtube-Videos Integration pytube-Modul von Nick Ficano, Anpassung an Addon,
+			Github-Fix Issue #536 integriert. 
+			make_filenames (Modul util): Begrenzung auf 255 Zeichen (Kompat. div. Filesysteme).
+			
+not on Github	2.4.2	Settings: Option "Info-Menue-Button ausblenden", Anpassung settings.xml und
 			Funktion ShowFavs.
-			Parseplaylist (Haupt-PRG): Fix Zähler für Listitems (Indices im Titel hatten
-			Sprungweite 2 statt 1).
 			Speichern von TeaserElementen im Modul 3sat: Nutzung des Python-
 			Moduls codes in Funktion RSave (Modul util), um leere Dateien zu verhindern.
 			Modul 3sat: Löschen leerer Dateien mit TeaserElementen (Bilder und Infos fehlen 

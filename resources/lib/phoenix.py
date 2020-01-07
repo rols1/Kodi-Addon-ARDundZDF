@@ -4,7 +4,7 @@
 #				benötigt Modul yt.py (Youtube-Videos)
 #		Video der Phoenix_Mediathek auf https://www.phoenix.de/ 
 ################################################################################
-#	Stand: 03.01.2020
+#	Stand: 07.01.2020
 #
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
@@ -30,14 +30,14 @@ elif PYTHON3:
 	from urllib.request import Request, urlopen, urlretrieve
 	from urllib.error import URLError
 
-import  json		
+import json		
 import os, sys
 import ssl
 import datetime, time
 import re				# u.a. Reguläre Ausdrücke
 import string
 
-import ardundzdf					# -> ParseMasterM3u, transl_wtag, get_query
+import ardundzdf					# -> ParseMasterM3u, transl_wtag, get_query,test_downloads 
 import resources.lib.util as util	# (util_imports.py)
 PLog=util.PLog; home=util.home; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir; 
 getDirZipped=util.getDirZipped; Dict=util.Dict; name=util.name; ClearUp=util.ClearUp; 
@@ -311,7 +311,6 @@ def GetContent(li, items, base_img=None):
 		if not single or 'Zukunft' in online:	# skip Beiträge ohne Videos, künftige Videos
 			if SETTINGS.getSetting('pref_only_phoenix_videos') == 'true': 
 				continue
-
 		
 		if subtitel:		
 			summ = subtitel	
@@ -522,9 +521,9 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 			vid		= stringextract('id":"', '"', item)
 			PLog('youtube vid:' + vid)
 			if vid:
-				# Import beim Pluginstart stellt nicht alle Funktionen zur Verfügung
-				import resources.lib.yt	as yt		# internes Youtubemodul
-				li = yt.yt(li=li, url=url, vid=vid, width='dummy', height='dummy', thumb=thumb)
+				# Import beim Pluginstart stellt nicht alle Funktionen zur Verfügung			
+				import resources.lib.yt	as yt		# Rahmen für pytube
+				li =  yt.yt(li=li, url=url, vid=vid, title=title, tag=tagline, summ=summary, thumb=thumb)
 			else:
 				PLog('SingleBeitrag: vid nicht gefunden')	
 		if typ == "video-smubl":
