@@ -4,7 +4,7 @@
 #				benötigt Modul yt.py (Youtube-Videos)
 #		Video der Phoenix_Mediathek auf https://www.phoenix.de/ 
 ################################################################################
-#	Stand: 07.01.2020
+#	Stand: 09.01.2020
 #
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
@@ -236,7 +236,8 @@ def phoenix_Search(query='', nexturl=''):
 # ----------------------------------------------------------------------
 # GetContent: Auswertung der json-Datensätzen in items
 #	base_img = Kopfbild
-def GetContent(li, items, base_img=None):
+# turn_title: veranlasst Tausch Titel/Subtitel
+def GetContent(li, items, base_img=None, turn_title=True ):
 	PLog('GetContent:')
 
 	mediatype=''	
@@ -280,6 +281,7 @@ def GetContent(li, items, base_img=None):
 		else:
 			continue
 		
+		subtitel=''
 		title 	= item["titel"]
 		if "subtitel" in item:
 			subtitel= item["subtitel"]
@@ -311,6 +313,10 @@ def GetContent(li, items, base_img=None):
 		if not single or 'Zukunft' in online:	# skip Beiträge ohne Videos, künftige Videos
 			if SETTINGS.getSetting('pref_only_phoenix_videos') == 'true': 
 				continue
+				
+		if turn_title and subtitel:
+			t = title
+			title = subtitel; subtitel = t
 		
 		if subtitel:		
 			summ = subtitel	
@@ -369,7 +375,7 @@ def BeitragsListe(path, html_url, title, skip_sid=False):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='phoenix')			# Home-Button
 		
-	li = GetContent(li, items)	
+	li = GetContent(li, items, turn_title=True)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
@@ -450,7 +456,7 @@ def ThemenListe(title, ID, path):				# Liste zu einzelnem Untermenü
 	li = xbmcgui.ListItem()
 	li = home(li, ID='phoenix')			# Home-Button
 		
-	li = GetContent(li, items, base_img=base_img)	
+	li = GetContent(li, items, base_img=base_img, turn_title=True)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -463,7 +469,8 @@ def ThemenListe(title, ID, path):				# Liste zu einzelnem Untermenü
 #		entfallen.
 #
 def SingleBeitrag(title, path, html_url, summary, tagline, thumb):	
-	PLog('SingleBeitrag: ' + title); 
+	PLog('SingleBeitrag: ' + title);
+	PLog(summary); PLog(tagline); 
 	
 	# ev. für sid split-Variante aus phoenix_Search verwenden
 	sid 	= re.search(u'-(\d+)\.html', path).group(1)
@@ -538,71 +545,6 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------
-# Wir mixen hier die Beiträge "typ" "bild-multi", "typ": "bild", '"typ":"fliesstext-bild".
-#	Test auf '"typ":"bild' und '"typ":"fliesstext-bild"' in SingleBeitrag
-#	
-def Bildgalerie(li, page, title):
-	PLog('Bildgalerie')
-		
-	items = blockextract('"titel"', '},', page)
-	# items = blockextract('"bild_l"', '},', page)
-	PLog(len(items))
-	if 	len(items) == 0:		
-		msg1 = '%s | Seite ohne Video, ohne Bilder' % (title)
-		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
-		return li
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='phoenix')			# Home-Button
-	
-	head_title = stringextract('titel":', '",', page)	# 1. gefundener Titel
-	head_title = head_title.replace('"', '').strip()
-	PLog("head_title: " + head_title)
-	cnt = 0; pre_img = ''
-	for item in items:
-		item = item.replace('\\', '')					# Verzicht auf json-Konv.
-		# PLog(item)	
-		img = stringextract('bild_l":', ',', item)
-		img = img.replace('"', '').strip()
-		# PLog(img)
-		if img == '' or 'placeholder' in img:
-			PLog('skip .svg oder leer')
-			continue
-		if img == pre_img:											# skip Doppler 
-			continue
-		pre_img = img
-		if img.startswith('http') == False:
-			img = BASE_PHOENIX + img
-		try:														# probl. Zeichen
-			title = re.search(u'titel": "(.*)\",', item).group(1)
-		except:
-			title = ''
-		if 	title == '':
-			title = stringextract('unterschrift":"', '"', item)		# ohne Blank nach :		
-		if 	title == '':
-			title = head_title
-		
-		summ = stringextract('unterschrift":"', '"', item)
-		if summ == '':
-			summ = stringextract('subtitel": "', '"', item)			# mit Blank nach :					
-		
-		PLog('neu');PLog(title);PLog(img);PLog(summ[0:40]);
-		oc.add(PhotoObject(
-			key=img,
-			rating_key='%s.%s' % (Plugin.Identifier, 'Bild ' + str(cnt)),	# rating_key = eindeutige ID
-			summary=summ,
-			title=title,
-			thumb = img
-			))
-		cnt += 1
-		
-	if cnt == 0: 
-		msg = '%s | keine verwertbaren Bilder gefunden' % (title)
-		return ObjectContainer(header=L('Info'), message=msg)
-	
-	return oc
-# ----------------------------------------------------------------------
 # beitrags_details 	-> xml-format
 # ngplayer_2_3		-> json-Format
 def get_formitaeten(li,content_id,title,tagline,thumb):
@@ -646,7 +588,8 @@ def get_formitaeten(li,content_id,title,tagline,thumb):
 			
 	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
 	title_call = title
-	Plot_par = tagline
+	tagline = "%s\n\nSendung: %s"	% (tagline, title_call)
+	Plot_par = tagline.replace('\n', '||')
 	for rec in formitaeten:									# Datensätze gesamt
 		# PLog(rec)		# bei Bedarf
 		typ = stringextract('"type" : "', '"', rec)

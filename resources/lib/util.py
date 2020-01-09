@@ -3,7 +3,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 29.12.2019
+#	Stand 09.01.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -430,9 +430,10 @@ def up_low(line, mode='up'):
 #		Eintrag in die Datenbank MyVideos116.db (Tabs u.a. bookmark, files).s
 #		Mehr s. PlayVideo
 #
-#	Kontextmenüs (Par. cmenu): base64-Kodierung wird benötigt für url-Parameter (nötig für router)
-#		und als Prophylaxe gegen durch doppelte utf-8-Kodierung erzeugte Sonderzeichen.
-#		Dekodierung erfolgt in ShowFavs.
+#	Kontextmenüs (Par. cmenu): base64-Kodierung wurde 2019 benötigt für url-Parameter (nötig für
+#		router) und als Prophylaxe gegen durch doppelte utf-8-Kodierung erzeugte Sonderzeichen.
+#		Dekodierung erfolgt in Watch + ShowFavs. Nicht mehr benötigt, falls nochmal: s. Commit
+#		9137781 on 16 Oct 2019.
 #	
 
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True):
@@ -488,9 +489,12 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			PLog("fparams_del: " + fparams_del)
 			fparams_del = quote_plus(fparams_del)	
 
-			li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
-				% (ADDON_ID, fparams_add)), ('Aus Merkliste entfernen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
-				% (ADDON_ID, fparams_del))])
+			# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
+			MERK_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID) )
+			li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MERK_SCRIPT, HANDLE, fparams_add)),
+				 ('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MERK_SCRIPT, HANDLE, fparams_del))])
 		else:
 			pass											# Kontextmenü entfernen klappt so nicht
 			#li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=dummy)' \

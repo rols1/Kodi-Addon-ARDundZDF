@@ -1,4 +1,3 @@
-#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 ################################################################################
 #				yt.py - Teil von Kodi-Addon-ARDundZDF
@@ -11,7 +10,7 @@
 ################################################################################
 #	Stand: 07.01.2020
 #
-#	03.01.2020Kompatibilität Python2/Python3: Modul future, Modul kodi-six
+#	03.01.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 
 from __future__ import absolute_import
@@ -64,7 +63,7 @@ PLog('pytube geladen - V%s | %s | %s' %\
 def yt(li, url, vid, title, tag, summ, thumb):
 	PLog('yt_embed_url: ' + url)
 	watch_url = 'https://www.youtube.com/watch?v=' + vid
-	PLog('yt_neue_url: ' + watch_url)
+	PLog('yt_watch_url: ' + watch_url)
 	PLog(tag); PLog(summ);PLog(thumb);
 	title_org = title
 	
@@ -77,10 +76,12 @@ def yt(li, url, vid, title, tag, summ, thumb):
 		PLog('Sofortstart: yt')
 		#  <Stream: itag="22" mime_type="video/mp4" res="720p" fps="30fps" 
 		#	vcodec="avc1.64001F" acodec="mp4a.40.2">:
-		stream = yt.streams.get_by_itag(22) 		 
+		stream = yt.streams.get_by_itag(22) 
+		res,fps,vcodec,acodec = get_stream_details(str(stream))	 
 		yt_url = stream.download(only_url=True)	
 		if summ == '':
 			summ = tag
+		summ="%s\n\n%s" % (summ, 'Youtube-Video: %s | %s | %s | %s'	% (res, fps, vcodec, acodec))	
 		PlayVideo(url=yt_url, title=title, thumb=thumb, Plot=summ, sub_path="")
 		return
 		
@@ -89,11 +90,8 @@ def yt(li, url, vid, title, tag, summ, thumb):
 	for video in Videos:
 		v = str(video)
 		itag 		= stringextract('itag="', '"', v)	
-		mime_type 	= stringextract('mime_type="', '"', v)				
-		res			= stringextract('res="', '"', v)				
-		fps 		= stringextract('fps="', '"', v)				
-		vcodec 		= stringextract('vcodec="', '"', v)				
-		acodec 		= stringextract('acodec="', '"', v)				
+		mime_type 	= stringextract('mime_type="', '"', v)
+		res,fps,vcodec,acodec = get_stream_details(v)	 			
 		PLog(video); PLog('itag: ' + itag)
 		PLog(res); PLog(fps); PLog(vcodec); PLog(acodec);
 
@@ -142,6 +140,31 @@ def yt(li, url, vid, title, tag, summ, thumb):
 		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
 
 	return li
+# ----------------------------------------------------------------------
+#  str(stream) durch Aufrufer
+def get_stream_details(stream):	
+	PLog('get_stream_details:') 
+	v = str(stream)
+	res			= stringextract('res="', '"', v)				
+	fps 		= stringextract('fps="', '"', v)				
+	vcodec 		= stringextract('vcodec="', '"', v)				
+	acodec 		= stringextract('acodec="', '"', v)				
 
+	return 	res,fps,vcodec,acodec
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 

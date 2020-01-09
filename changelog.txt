@@ -7,6 +7,19 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+09.01.2020	2.4.5	Merkliste, Haupt-PRG: Codeverlagerung für add/delete in Script merkliste.py 
+			(ermöglicht Verbleib im Listing), Anpassungen in ShowFavs (Haupt-PRG), addDir
+			(Modul util) und Wicki.	
+
+not on Github	2.4.4	Modul phoenix: Austausch Titel/Subtitel in GetContent (Titel meistens identisch +
+			erschwert Download + Merkliste).
+			Modul phoenix: Funktion Bildgalerie entfernt (nicht genutzt).
+			get_formitaeten (Modul phoenix): Titel ergänzt in tagline (eigentl. Titelzeile 
+			enthält Video-Qualitäten).
+			yt (Modul phoenix): Videoinfos bei Sofortstart hinzugefügt, Auslesen Videoinfos
+			nach get_stream_details ausgelagert.
+			router (Haupt-PRG): Fehlermeldung bei Modul-Ladeproblem ergänzt.	
+
 07.01.2020	2.4.3	neues Modul phoenix: Icons, Anpassungen im Haupt-PRG und Github-Repo PluginPictures.
 			Migration von Funktionen aus Plex-Plugin-Phoenix_Mediathek.
 			Erweiterungen: Bestimmung Zeitstatus (time_state: Vergangenheit, Gegenwart, Zukunft)

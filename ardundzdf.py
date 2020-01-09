@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml, Bytecodes löschen
-VERSION = '2.4.3'
-VDATE = '05.01.2020'
+VERSION = '2.4.5'
+VDATE = '09.01.2020'
 
 #
 #
@@ -4029,19 +4029,21 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 		
 ####################################################################################################
 # Aufruf Main, Favoriten oder Merkliste anzeigen + auswählen
-#	Hinzufügen / Löschen in Watch
+#	Hinzufügen / Löschen in Watch (Script merkliste.py)
 # mode = 'Favs' für Favoriten  oder 'Merk' für Merkliste
 # 	Datenbasen (Einlesen in ReadFavourites (Modul util) :
 #		Favoriten: special://profile/favourites.xml 
 #		Merkliste: ADDON_DATA/merkliste.xml (WATCHFILE)
 # 	Verarbeitung:
-#		Favoriten: Kodi's Favoriten-Menü, im Addon_listing
-#		Merkliste: zusätzl. Kontextmenmü (s. addDir Modul util) -> Watch
+#		Favoriten: Kodi's Favoriten-Menü, im Addon_Listing
+#		Merkliste: zusätzl. Kontextmenmü (s. addDir Modul util) -> Script merkliste.py
 #	
 #	Probleme:  	Kodi's Fav-Funktion übernimmt nicht summary, tagline, mediatype aus addDir-Call
 #				Keine Begleitinfos, falls  summary, tagline od. Plot im addDir-Call fehlen.
 #				gelöst mit Base64-kodierter Plugin-Url: 
 #					Sonderzeichen nach doppelter utf-8-Kodierung
+#				07.01.2020 Base64 in addDir wieder entfernt - hier Verbleib zum Dekodieren
+#					alter Einträge
 # 				Sofortstart/Resumefunktion: funktioniert nicht immer - Bsp. KIKA-Videos.
 #					Bei Abschaltung Sofortstart funktioniert aber die Resumefunktion bei den
 #					Einzelauflösungen.
@@ -4071,8 +4073,8 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		tagline = u"Anzahl Merklisteneinträge: %s" % str(len(my_items)) 	# Info-Button
 		s1 		= u"Merkliste von ARDundZDF."
 		s2		= u"Einträge entfernen: via Kontextmenü hier oder am am Ursprungsort im Addon."
-		s3		= u"Die Merkliste wird nach hinzufügen/entfernen erneut aufgerufen."
-		s4		= u'Stammt der Eintrag aus einem abgewählten Modul, wird es bis zum Aufruf des Hauptmenüs reaktiviert.'
+		s3		= u"Nach Entfernen erfolgt die Aktualisierung erst beim erneuten Aufruf der Liste."
+		s4		= u'Stammt ein Eintrag aus einem abgewählten Modul, wird es bis zum Aufruf des Hauptmenüs reaktiviert.'
 		s5		= u'Einträge enthalten nicht in allen Fällen Begleitinfos zu Inhalt, Länge usw.'
 		summary	= u"%s\n\n%s\n\n%s\n\n%s\n\n%s"		% (s1, s2, s3, s4, s5)
 		label	= u'Infos zum Menü Merkliste'
@@ -4101,11 +4103,7 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 			fav = fav.replace('10025,&quot;', '10025,"')	# Quotierung Anfang entfernen
 			fav = fav.replace('&quot;,return', '",return')	# Quotierung Ende entfernen					
 			p1, p2 	= fav.split('",return)</merk>')	# Endstück p2: &quot;,return)</merk>
-			#PLog('p1: ' + p1)							
-			#PLog('p2: ' + p2)
 			p3, b64	=  p1.split('10025,"')					# p1=Startstück, b64=kodierter string
-			#PLog('p3: ' + p3)
-			#PLog('b64: ' + b64)
 			b64_clean = convBase64(b64)						# Dekodierung mit oder ohne padding am Ende
 			if b64_clean == False:							# skip fav
 				msg1 = "Problem bei Base64-Dekodierung. Eintrag  nicht verwertbar."
@@ -4251,118 +4249,10 @@ def convBase64(s):
 			
 ####################################################################################################
 # Addon-interne Merkliste : Hinzufügen / Löschen
-#	Anzeige in ShowFavs
-#	unabhängig von der Favoritenverwaltung
-#	base64-Kodierung benötigt für url-Parameter (nötig für router)
-# 23.03.2019 zusätzliche base64- zu urllib-Kodierung (in Kombi ohne padding-Error) - s. addDir
-# Ungelöstes Problem:
-#	bisher kein Verbleib im akt. Verz. möglich (wie bei Favoriten). Nach add oder del wird Watch 
-#	wiederholt aufgerufen - Lösung: Aufruf von ShowFavs.
-# Hinweis (unproblematisch): Kodi verhindert das unmittelbar wiederholte Hinzufügen/Löschen des 
-#	selben Eintrags, falls das endOfDirectoryStatement auf cacheToDisc=True gesetzt ist.
-#
-def Watch(action, name, thumb='', Plot='', url=''):		
-	PLog('Watch: ' + action)
-	# CallFunctions: Funktionen, die Videos direkt oder indirekt (isPlayable) aufrufen.
-	#	Ist eine der Funktionen in der Plugin-Url enthalten, wird der Parameter Merk='true'
-	#	für PlayVideo bzw. zum Durchreichen angehängt.
-	#	Funktioniert nicht mit Modul funk
-	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.ShowVideo",
-						"resources.lib.zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
-						"ARDStartVideoMP4", "SenderLiveResolution"
-					]
-	
-	url = unquote_plus(url)	
-	PLog(unquote_plus(url)[100:])  			# url in fparams zusätzlich quotiert
-	PLog(name); PLog(thumb); PLog(Plot);
-	
-	fname = WATCHFILE		
-	item_cnt = 0; 
-	err_msg	= ''
-	doppler = False
-	
-	if action == 'add':
-		if 'plugin://plugin' not in url:				# Base64-kodierte Plugin-Url in ActivateWindow
-			b64_clean= convBase64(url)					# Dekodierung mit oder ohne padding am Ende	
-			b64_clean=unquote_plus(b64_clean)	# unquote aus addDir-Call
-			b64_clean=unquote_plus(b64_clean)	# unquote aus Kontextmenü
-			#PLog(b64_clean)
-			CallFunction = stringextract("&dirID=", "&", b64_clean) 
-			PLog('CallFunction: ' + CallFunction)
-			if CallFunction in CallFunctions:			# Parameter Merk='true' anhängen
-				new_url = b64_clean[:-1]				# cut } am Ende fparams
-				new_url = "%s, 'Merk': 'true'}" % new_url
-				PLog("CallFunction_new_url: " + new_url)
-				url = quote_plus(new_url)
-				url = base64.b64encode(url)			
-			
-		url = url.replace('&', '&amp;') # Anpassung an Favorit-Schema
-		merk = '<merk name="%s" thumb="%s" Plot="%s">ActivateWindow(10025,&quot;%s&quot;,return)</merk>'  \
-			% (name, thumb, Plot, url)
-		PLog('merk: ' + merk)
-		my_items = ReadFavourites('Merk')				# 'utf-8'-Decoding in ReadFavourites
-		merkliste = ''
-		if len(my_items):
-			PLog('my_items: ' + my_items[0])
-			for item in my_items:						# Liste -> String
-				iname = stringextract('name="', '"', item) 
-				PLog('Name: %s, IName: %s' % (py2_decode(name), py2_decode(iname)))
-				if py2_decode(iname) == py2_decode(name):# Doppler vermeiden
-					doppler = True
-					PLog('Doppler')
-					break
-				merkliste = merkliste + item + "\n"
-				item_cnt = item_cnt + 1
-		else:											# 1. Eintrag
-			pass
-			
-		if doppler == False:
-			msg1 = u"Eintrag >%s< hinzugefügt" % name
-			PLog(type(merkliste)); PLog(type(merk));
-			merkliste = py2_decode(merkliste) + merk + "\n"
-			item_cnt = item_cnt + 1			
-			merkliste = "<merkliste>\n%s</merkliste>"	% merkliste
-			err_msg = RSave(fname, merkliste, withcodec=True)		# Merkliste speichern
-			
-		
-	if action == 'del':
-		my_items = ReadFavourites('Merk')			# 'utf-8'-Decoding in ReadFavourites
-		if len(my_items):
-			PLog('my_items: ' + my_items[-1])
-		PLog(type(name));
-		merkliste = ''
-		deleted = False
-		for item in my_items:						# Liste -> String
-			iname = stringextract('name="', '"', item) # unicode
-			iname = py2_decode(iname)
-			name = py2_decode(name)		
-			PLog('Name: %s, IName: %s' % (name, iname))		
-			if name == iname:
-				deleted = True						# skip Satz = löschen 
-				continue
-			item_cnt = item_cnt + 1
-			merkliste = py2_decode(merkliste) + py2_decode(item) + "\n"
-		if deleted:
-			PLog(u"Eintrag >%s< gelöscht" % name)
-			err_msg = RSave(fname, merkliste, withcodec=True)		# Merkliste speichern
-		else:
-			msg1 = "Eintrag >%s< nicht gefunden." % name
-			PLog(msg1)
-			# xbmcgui.Dialog().ok(ADDON_NAME, msg1, "", "") # ohne Info - stört bei Rücksprung hierher
-							
-	if err_msg:										# Info nur bei Save-Problem
-		msg2 = 'Problem beim Speichern der Merkliste:'
-		msg3 = err_msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3) 
-	else:											# Liste wird anschl. geöffnet
-		PLog(u"Anzahl der Einträge: %s" % str(item_cnt))		
-	
-	# Aufruf Merkliste - kein Verbleib im akt. Verz. möglich (s.o.)
-	# Alternative: Sprung zum gewählten Verz. mittels getattr-Verfahren
-	#	(s. func_pars_router-Call.txt)
-	ShowFavs('Merk')
-	xbmcplugin.endOfDirectory(HANDLE, succeeded=True, updateListing=True, cacheToDisc=False)
-				
+#	verlagert nach resources/lib/merkliste.py - Grund: bei Verabeitung hier war kein
+#	ein Verbleib im akt. Verz. möglich.
+#def Watch(action, name, thumb='', Plot='', url=''):
+#				
 ####################################################################################################
 # extrahiert aus Mediendatei (json) .mp3-, .mp4-, rtmp-Links + Untertitel (Aufrufer 
 # 	SingleSendung). Bsp.: http://www.ardmediathek.de/play/media/35771780
@@ -7278,9 +7168,10 @@ def router(paramstring):
 				if func == '':						# Modul nicht geladen - sollte nicht
 					li = xbmcgui.ListItem()			# 	vorkommen - s. Addon-Start
 					msg1 = "Modul %s ist nicht geladen" % dest_modul
-					msg2 = "Ursache unbekannt."
+					msg2 = "oder Funktion %s wurde nicht gefunden." % newfunc
+					msg3 = "Ursache unbekannt."
 					PLog(msg1)
-					xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+					xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 					xbmcplugin.endOfDirectory(HANDLE)
 
 			else:
