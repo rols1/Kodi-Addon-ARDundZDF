@@ -2,7 +2,7 @@
 ################################################################################
 #				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
-#	Stand 29.12.2019
+#	Stand 11.01.2020
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
 #	Seiten werden im json-Format, teilweise html + json ausgeliefert
@@ -151,7 +151,7 @@ def Main_NEW(name, CurSender=''):
 		fanart=R("tv-ard-sportschau.png"), thumb=R("tv-ard-sportschau.png"), fparams=fparams)
 						
 
-	title 	= u'Wählen Sie Ihren Sender | aktuell: %s' % sendername				# Senderwahl
+	title 	= u'Wählen Sie Ihren Sender | aktuell: [COLOR red]%s[/COLOR]' % sendername	# Senderwahl
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
@@ -1288,8 +1288,9 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 		
 	vodTotal	= stringextract('"vodTotal":', ',', page)		# Beiträge?
 	gridlist = blockextract( '"mediumTitle":', page) 			# Sicherung
+	vodTotal=py2_encode(vodTotal); query_lable=py2_encode(query_lable);
 	PLog(query_ard)
-	if len(gridlist) == 0 or vodTotal == '0':				
+	if len(gridlist) == 0 or vodTotal == '0':
 		label = "ARD | nichts gefunden zu: %s | neue Suche" % query_lable
 		title="Suche in ARD und ZDF"
 		title=py2_encode(title); 
@@ -1297,7 +1298,8 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
 	else:	
-		title = u"ARD: %s Video(s)  | %s" % (vodTotal, query_lable)
+		PLog(type(vodTotal)); 	PLog(type(query_lable)); 			
+		title = "ARD: %s Video(s)  | %s" % (vodTotal, query_lable)
 		query_ard=py2_encode(query_ard); title=py2_encode(title); 
 		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '0', 'Webcheck': 'False'}" %\
 			(quote(query_ard), quote(title), sender)
@@ -1312,9 +1314,9 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	page, msg = get_page(path=path_zdf)	
 	searchResult = stringextract('data-loadmore-result-count="', '"', page)	# Anzahl Ergebnisse
 	PLog(searchResult);
-	
 	query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
 	query_lable = unquote(query_lable)
+	query_lable=py2_encode(query_lable); searchResult=py2_encode(searchResult);
 	
 	if searchResult == '0' or 'class="artdirect " >' not in page:		# Sprung hierher
 		label = "ZDF | nichts gefunden zu: %s | neue Suche" % query_lable
@@ -1324,7 +1326,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
 	else:	
-		title = u"ZDF: %s Video(s)  | %s" % (searchResult, query_lable)
+		title = "ZDF: %s Video(s)  | %s" % (searchResult, query_lable)
 		query_zdf=py2_encode(query_zdf); title=py2_encode(title);
 		fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (quote(query_zdf), 
 			quote(title), pagenr)
@@ -1357,6 +1359,7 @@ def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
 		if query == None or query.strip() == '': # None bei Abbruch
 			return
 	query = query.strip()
+	query = query.replace(' ', '+')	# Aufruf aus Merkliste unbehandelt	
 	query_org = query	
 	query=py2_decode(query)		# decode, falls erf. (1. Aufruf)
 	
@@ -1407,7 +1410,6 @@ def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
 	myhash = '21f3cba7082cc35a5b7ce1c7901e46dbe7092c8c11d1e1a11d932fab55705fc1'  		# Chrome-Dev.-Tools
 	# url_api	= get_api_call('ARDSearchnew', 'ard', myhash, pageNumber, text=query) 	# alle Sender
 	url_api	= get_api_call('ARDSearchnew', sender, myhash, pageNumber, text=query) 		# gewählter Sender
-	PLog('Mark3')
 
 	page, msg = get_page(url_api)					
 	page = page.replace('\\"', '*')							# quotiere Marks entf.

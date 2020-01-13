@@ -7,6 +7,22 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+??.01.2020	2.4.7	Neue Funktion: ZDF_Verpasst_Datum, zusätzl. Button für  Eingabedialog.
+			ZDF_get_content: Auswertung Uhrzeit hinzugefügt ("special-info" -> Titel),
+			Auswertung Sendestation hinzugefügt ("data-station" -> tagline).
+			Neue Funktion: ZDF_Verpasst_Filter, zusätzl. Button für  Eingabedialog,
+			Filterung in ZDF_get_content, Anpassung Params in ZDF_get_content,
+			VerpasstWoche und ZDF_Verpasst_Datum.
+			Senderwahl-Button ARD-Neu + ZDF-Verpasst: rote Kennzeichung der akt. Wahl.
+			Main_ZDF: Fix title für "Sendung verpasst"-Aufruf.
+
+not on Github	2.4.6	get_teaserElement (<- ZDFRubrikSingle): strip ctitle2 (\n wurde als Text 
+			behandelt).
+			ZDF_Search + ARDSearchnew: Blanks in mehrteiligem Suchbegriff durch '+'  
+			ersetzt (ist bei Aufruf aus Merkliste unbehandelt).
+			phoenix_Search: Encoding-Behandl. für Suchbegriff + Button "Weitere Beiträge".
+			SingleBeitrag (Modul phoenix): Fehlerdialog bei Seite ohne Video.	
+
 09.01.2020	2.4.5	Merkliste, Haupt-PRG: Codeverlagerung für add/delete in Script merkliste.py 
 			(ermöglicht Verbleib im Listing), Anpassungen in ShowFavs (Haupt-PRG), addDir
 			(Modul util) und Wicki.	

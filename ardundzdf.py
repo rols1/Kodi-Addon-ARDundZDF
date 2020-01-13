@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml, Bytecodes löschen
-VERSION = '2.4.5'
-VDATE = '09.01.2020'
+VERSION = '2.4.7'
+VDATE = '13.01.2020'
 
 #
 #
@@ -93,6 +93,7 @@ ART 					= 'art.png'			# ARD + ZDF
 ICON 					= 'icon.png'		# ARD + ZDF
 ICON_SEARCH 			= 'ard-suche.png'
 ICON_ZDF_SEARCH 		= 'zdf-suche.png'				
+ICON_FILTER				= 'icon-filter.png'	
 
 ICON_MAIN_ARD 			= 'ard-mediathek.png'
 ICON_MAIN_ARD_Classic	= 'ard-mediathek-classic.png'
@@ -179,6 +180,7 @@ ICON_PHOENIX			= 'phoenix.png'
 
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
+GIT_CAL			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-calendar.png?raw=true"
 
 
 # 01.12.2018 	Änderung der BASE_URL von www.ardmediathek.de zu classic.ardmediathek.de
@@ -554,7 +556,7 @@ def Main_ZDF(name):
 	addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=R(ICON_MAIN_ZDF), thumb=R(ICON_MAIN_ZDF), 
 		fparams=fparams)
 
-	fparams="&fparams={'name': '%s', 'title': 'Sendung verpasst'}" % name
+	fparams="&fparams={'name': 'ZDF-Mediathek', 'title': 'Sendung verpasst'}" 
 	addDir(li=li, label='Sendung verpasst', action="dirList", dirID="VerpasstWoche", fanart=R(ICON_ZDF_VERP), 
 		thumb=R(ICON_ZDF_VERP), fparams=fparams)	
 
@@ -2676,7 +2678,7 @@ def Search_refugee(path=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 ####################################################################################################
-# Liste der Wochentage
+# Liste der Wochentage ARD + ZDF
 	# Ablauf (ARD): 	
 	#		2. PageControl: Liste der Rubriken des gewählten Tages
 	#		3. SinglePage: Sendungen der ausgewählten Rubrik mit Bildern (mehrere Sendungen pro Rubrik möglich)
@@ -2687,18 +2689,17 @@ def Search_refugee(path=''):
 	# ZDF:
 	#	Wochentag-Buttons -> ZDF_Verpasst
 	#
-def VerpasstWoche(name, title):		# Wochenliste zeigen, name: ARD, ZDF Mediathek
+def VerpasstWoche(name, title, sfilter='Alle ZDF-Sender'):		# Wochenliste zeigen, name: ARD, ZDF Mediathek
 	PLog('VerpasstWoche:')
 	PLog(name);PLog(title); 
+	title_org = title
 	 
 	# Senderwahl deaktivert		
 	CurSender 	= ARDSender[0]	# Default 1. Element ARD-Alle
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')	
-	title_org = '%s | aktuell: %s'	% (title, sendername)
-	PLog("title_org: " + title_org)
 	
 	li = xbmcgui.ListItem()
-	if name == 'ZDF Mediathek':
+	if name == 'ZDF-Mediathek':
 		li = home(li, ID='ZDF')						# Home-Button
 	else:	
 		li = home(li, ID='ARD')						# Home-Button
@@ -2736,12 +2737,43 @@ def VerpasstWoche(name, title):		# Wochenliste zeigen, name: ARD, ZDF Mediathek
 
 		else:
 			title=py2_encode(title); zdfDate=py2_encode(zdfDate);
-			fparams="&fparams={'title': '%s', 'zdfDate': '%s'}" % (quote(title), quote(zdfDate))
+			fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=R(ICON_ZDF_VERP), 
 				thumb=R(ICON_ZDF_VERP), fparams=fparams)
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)		
 	
+	if name == 'ZDF-Mediathek':								# Button für Datumeingabe anhängen
+		label = "Datum eingeben"
+		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
+		addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Datum", fanart=R(ICON_ZDF_VERP), 
+			thumb=GIT_CAL, fparams=fparams)
+
+															# Button für Stationsfilter
+		label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [COLOR red]%s[/COLOR]" % sfilter
+		tag = "Auswahl: Alle ZDF-Sender, zdf, zdfneo oder zdfinfo" 
+		fparams="&fparams={'name': '%s', 'title': 'ZDF-Mediathek', 'sfilter': '%s'}" % (quote(name), sfilter)
+		addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Filter", fanart=R(ICON_ZDF_VERP), 
+			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)
+		
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# True, sonst Rückspr. nach ZDF_Verpasst_Filter
+	
+#-------------------------
+# Auswahl der ZDF-Sender für VerpasstWoche
+# bei Abbruch bleibt sfilter unverändert								
+def ZDF_Verpasst_Filter(name, title, sfilter):
+	PLog('ZDF_Verpasst_Filter:'); PLog(sfilter); 
+	
+	stations = ['Alle ZDF-Sender', 'zdf', 'zdfneo', 'zdfinfo']
+	i = stations.index(sfilter)
+	dialog = xbmcgui.Dialog()
+	d = dialog.select('ZDF-Sendestation wählen', stations, preselect=i)
+	if d == -1:						# Fallback Alle
+		d = 0
+	sfilter = stations[d]
+	PLog("Auswahl: %d. %s" % (d, sfilter))
+	
+	return VerpasstWoche(name, title, sfilter)
+
 ####################################################################################################
 # Dachfunktion für Podcasts: 'Rubriken' .. 'Refugee-Radio'
 #
@@ -5466,8 +5498,9 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	PLog(query)
 	if  query == None or query.strip() == '':
 		return ""
+	query = query.replace(' ', '+')	# Aufruf aus Merkliste unbehandelt	
 	query_org = query	
-	query=py2_decode(query)		# decode, falls erf. (1. Aufruf)
+	query=py2_decode(query)			# decode, falls erf. (1. Aufruf)
 
 	PLog('ZDF_Search:'); PLog(query); PLog(pagenr); PLog(s_type)
 
@@ -5523,7 +5556,37 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	xbmcplugin.endOfDirectory(HANDLE)
 	
 #-------------------------
-def ZDF_Verpasst(title, zdfDate):
+# Aufruf VerpasstWoche (Button "Datum eingeben")
+# xbmcgui.INPUT_DATE gibt akt. Datum vor
+# 11.01.2020: Ausgabe noch für 1.1.2016, nicht mehr für 1.1.2015
+# sfilter wieder zurück an VerpasstWoche
+#
+def ZDF_Verpasst_Datum(title, zdfDate, sfilter):
+	PLog('ZDF_Verpasst_Datum:')
+	
+	dialog = xbmcgui.Dialog()
+	inp = dialog.input("Eingabeformat: Tag/Monat/Jahr (4-stellig)", type=xbmcgui.INPUT_DATE)
+	PLog(inp)
+	if inp == '':
+		return						# Listitem-Error, aber Verbleib im Listing
+	d,m,y = inp.split('/')
+	d=d.strip(); m=m.strip(); y=y.strip();
+	if len(d) == 1: d="0%s" % d	
+	if len(m) == 1: m="0%s" % m	
+	if len(y) != 4:
+		xbmcgui.Dialog().ok(ADDON_NAME, 'Jahr bitte 4-stellig eingeben', '', '')	
+		return
+	
+	zdfDate = "%s-%s-%s" % (y,m,d)	# "%Y-%m-%d"
+	PLog(zdfDate)
+	
+	# zurück zu VerpasstWoche:
+	ZDF_Verpasst(title='Datum manuell eingegeben', zdfDate=zdfDate, sfilter=sfilter)
+	return
+#-------------------------
+# Aufruf: VerpasstWoche, ZDF_Verpasst_Datum
+# Abruf Webseite, Auswertung -> ZDF_get_content
+def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender'):
 	PLog('ZDF_Verpasst:'); PLog(title); PLog(zdfDate);
 
 	li = xbmcgui.ListItem()
@@ -5537,10 +5600,10 @@ def ZDF_Verpasst(title, zdfDate):
 		return li 
 	PLog(path);	PLog(len(page))
 
-	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID='VERPASST')
+	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID='VERPASST', sfilter=sfilter)
 	PLog("page_cnt: " + str(page_cnt))
 		
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ####################################################################################################
 def ZDFSendungenAZ(name):						# name = "Sendungen A-Z"
@@ -5892,8 +5955,9 @@ def get_teaserElement(rec):
 		img_src =  stringextract('data-srcset="', ' ', page)
 		title	= stringextract('plusbar-title="', '"', page)
 		ctitle1 = stringextract('teaser-cat-category">', '<', page)  		# Bsp. Show | Bares für Rares
-		ctitle2 = stringextract('teaser-cat-brand">', '<', page)  		# 
-		tag 	= ctitle1.strip()										# -> tag
+		ctitle2 = stringextract('teaser-cat-brand">', '<', page)
+		ctitle2 = ctitle2.strip() 
+		tag 	= ctitle1.strip()											# -> tag
 		if ctitle2:
 			tag = "%s | %s" % (tag, ctitle2.strip())
 		path	= stringextract('plusbar-url="', '"', page)
@@ -6214,8 +6278,8 @@ def International(title):
 #		Aufruf Vorprüfung 'class="artdirect " >' durchführen
 #	enthält "Inhaltstext im Voraus laden"
 
-def ZDF_get_content(li, page, ref_path, ID=None):	
-	PLog('ZDF_get_content:'); PLog(ID); PLog(ref_path)					
+def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):	
+	PLog('ZDF_get_content:'); PLog(ref_path); PLog(ID);  PLog(sfilter)				
 	PLog(len(page));
 	# 09.01.2019 bis auf Weiteres enfernt (Probleme mit Rekursion):			
 	# max_count = int(SETTINGS.getSetting('pref_maxZDFContent')) # max. Anzahl Elemente 
@@ -6291,7 +6355,7 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 		mediatype='video'
 			
 	items_cnt=0									# listitemzähler
-	teaser_nr=''
+	teaser_nr=''; 
 	for rec in content:	
 		# loader:  enthält bei Suche Links auch wenn weiterer Inhalt fehlt. 
 		#			Bei Verpasst u.a. enthält er keinen Link
@@ -6380,10 +6444,11 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 			PLog("Videolänge:")
 			duration = stringextract(u'Videolänge:', 'min', rec) 	# Länge - 2. Variante bzw. fehlend
 			if duration:
-				duration = duration.strip()
 				duration = "%s min" % cleanhtml(duration) 
+			
 		if 	'<strong>Livestream</strong>' in rec:
 			duration = u'[COLOR red]Livestream[/COLOR]'	
+		duration = duration.strip()
 		PLog('duration: ' + duration);
 		
 		pic_cnt = stringextract('Anzahl Bilder:', '<dt class', rec)	# Bilderzahl bei Bilderserien
@@ -6397,6 +6462,19 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 			title = title + " | %s"   % pic_cnt
 		if title.startswith(' |'):
 			title = title[2:]				# Korrektur
+			
+		station=''
+		if ID == 'VERPASST':
+			if 'class="special-info">' in rec:						
+				sendtime = stringextract('class="special-info">', '</', rec)
+				title = "%s | %s" % (sendtime, title)				# Sendezeit | Titel
+			station = stringextract('data-station="', '"', rec)
+			station = station.strip()
+			PLog("sfilter: " + sfilter); PLog(station); 
+			if sfilter != "Alle ZDF-Sender":						# Filterung
+				if sfilter != station:
+					if station != "undefined":						# station undefined = alle
+						continue
 			
 		category = stringextract('teaser-cat-category">', '</span>', rec)
 		PLog(category)
@@ -6416,6 +6494,8 @@ def ZDF_get_content(li, page, ref_path, ID=None):
 			tagline = tagline + ' | ' + brand
 		if tagline.startswith(' |'):
 			tagline = tagline[2:]			# Korrektur
+		if station:
+			tagline = "%s | Sender: [COLOR red]%s[/COLOR]" % (tagline, station)
 			
 		descr = stringextract('description">', '<', rec)
 		if descr == '':

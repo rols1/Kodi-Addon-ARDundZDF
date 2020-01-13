@@ -4,7 +4,7 @@
 #				benötigt Modul yt.py (Youtube-Videos)
 #		Video der Phoenix_Mediathek auf https://www.phoenix.de/ 
 ################################################################################
-#	Stand: 09.01.2020
+#	Stand: 11.01.2020
 #
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
@@ -191,10 +191,13 @@ def phoenix_Search(query='', nexturl=''):
 	PLog(query)
 	if  query == None or query == '':
 		return ""
+		
+	query=py2_encode(query);
 	if nexturl == '':
 		path = 'https://www.phoenix.de/response/template/suche_select_json/term/%s/sort/online' % quote(query)
 	else:
 		path = nexturl
+	PLog('Mark1')
 	PLog(path)
 	page, msg = get_page(path=path)	
 	if page == '':						
@@ -226,6 +229,7 @@ def phoenix_Search(query='', nexturl=''):
 		title = u"Weitere Beiträge"
 		tag = u"Beiträge gezeigt: %s, gesamt: %s" % (len(items), search_cnt)
 
+		nexturl=py2_encode(nexturl); query=py2_encode(query); 
 		fparams="&fparams={'nexturl': '%s', 'query': '%s'}" %\
 			(quote(nexturl), quote(query))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.phoenix_Search", fanart=img, 
@@ -518,6 +522,10 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 	# if online:
 	#	tagline = getSendezeit(online)
 	items = blockextract('typ":"video-',  page)						# kann fehlen z.B. bei Phoenix_Suche 
+	if len(items) == 0:
+		xbmcgui.Dialog().ok(ADDON_NAME, 'kein Video gefunden', '', '')
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 	PLog(len(items))
 	for item in items:
 		# PLog(item)		# bei Bedarf
