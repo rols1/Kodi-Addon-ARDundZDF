@@ -2,9 +2,9 @@
 ################################################################################
 #				Phoenix.py - Teil von Kodi-Addon-ARDundZDF
 #				benötigt Modul yt.py (Youtube-Videos)
-#		Video der Phoenix_Mediathek auf https://www.phoenix.de/ 
+#		Videos der Phoenix_Mediathek auf https://www.phoenix.de/ 
 ################################################################################
-#	Stand: 11.01.2020
+#	Stand: 17.01.2020
 #
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
@@ -37,7 +37,7 @@ import datetime, time
 import re				# u.a. Reguläre Ausdrücke
 import string
 
-import ardundzdf					# -> ParseMasterM3u, transl_wtag, get_query,test_downloads 
+import ardundzdf					# -> get_query,test_downloads,get_zdf_search 
 import resources.lib.util as util	# (util_imports.py)
 PLog=util.PLog; home=util.home; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir; 
 getDirZipped=util.getDirZipped; Dict=util.Dict; name=util.name; ClearUp=util.ClearUp; 
@@ -81,6 +81,7 @@ ICON 			= 'icon.png'				# ARD + ZDF
 ICON_PHOENIX	= 'phoenix.png'			
 ICON_DIR_FOLDER	= "Dir-folder.png"
 ICON_MEHR 		= "icon-mehr.png"
+ICON_ZDF_SEARCH = 'zdf-suche.png'				
 				
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_DISKUSS	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/Phoenix/phoenix.png?raw=true'			
@@ -145,11 +146,11 @@ def Main_phoenix():
 # ----------------------------------------------------------------------
 # die json-Seite enthält ca. 4 Tage EPG - 1. Beitrag=aktuell
 def get_live_data():
-	PLog('get_live_epg:')
+	PLog('get_live_data:')
 	path = "https://www.phoenix.de/response/template/livestream_json"
 	page, msg = get_page(path=path)			
 	if page == '':	
-		msg1 = "get_live_epg:"
+		msg1 = "get_live_data:"
 		msg2 = msg
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		return 
@@ -159,7 +160,7 @@ def get_live_data():
 	#	"typ":"","vorspann":""}
 	if '":"' in page:					# möglich: '":"', '": "'
 		page = page.replace('":"', '": "')
-	PLog(page)
+	PLog(page[:80])
 	title 	= stringextract('"titel": "', '"', page)
 	PLog(title);
 	subtitle= stringextract('"subtitel": "', '"', page)
@@ -303,8 +304,10 @@ def GetContent(li, items, base_img=None, turn_title=True ):
 				online = getOnline(datestamp)	
 		if online == '':						# vorh. bei Suche, nicht in response-Beiträgen
 			online = "Sendezeit fehlt"
+			# trotz Sendezeit kann Video fehlen - Nachprüfung in SingleBeitrag
 		else:
-			single = True
+			if "inhalt_video" in item:			# trotz Sendezeit kann Video fehlen
+				single = True
 		PLog("typ: %s, %s" % (typ, online))
 		PLog('single: ' + str(single))	
 		
@@ -314,8 +317,13 @@ def GetContent(li, items, base_img=None, turn_title=True ):
 			tag = "VIDEO | %s" % online
 		else:
 			tag = "%s | Folgeseiten | %s"	% (typ, html_ref)
-		if not single or 'Zukunft' in online:	# skip Beiträge ohne Videos, künftige Videos
-			if SETTINGS.getSetting('pref_only_phoenix_videos') == 'true': 
+			
+		if SETTINGS.getSetting('pref_only_phoenix_videos') == 'true': 
+			vinhalt = item["inhalt_video"] 			# false, wenn z.Z. kein phoenix-Video vorhanden 
+			PLog('vinhalt: ' + str(vinhalt))
+			if vinhalt == False:
+				continue		
+			if not single or 'Zukunft' in online:	# skip Beiträge ohne Videos, künftige Videos
 				continue
 				
 		if turn_title and subtitel:
@@ -370,6 +378,7 @@ def BeitragsListe(path, html_url, title, skip_sid=False):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li
 	PLog(len(page))
+	
 	
 	jsonObject = json.loads(page)
 	# search_cnt = jsonObject["content"]['hits']# fehlt hier	
@@ -490,17 +499,11 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return 
 	PLog(len(page))
-
-	# Bilder? 
-	#	'"typ":"bild' oder '"typ":"fliesstext-bild"'	-> Bildgalerie
-	#if '"typ":"bild' in page or '"typ":"fliesstext-bild"' in page:			
-	#	oc = Bildgalerie(oc=oc, page=page, title=title)
-	#	return oc
-	#msg = '%s | Seite ohne Video, ohne Bilder:\n%s' % (title, path)
-	#PLog(msg)
-	#return ObjectContainer(header='Error', message=msg)
-	
+		
 	# Nachprüfung auf Mehrfachbeiträge - s. GetContent
+	# 17.01.2020 abgeschaltet - wirkt bei fehlenden Videos
+	#	wie Rekursion
+	'''
 	items=[]
 	try:
 		jsonObject = json.loads(page)
@@ -512,20 +515,27 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 	if len(items) >= 1:
 		if 'typ":"video-' not in page:
 			PLog('Weiterleitung -> BeitragsListe')
-			return BeitragsListe(path=url, html_url=html_url, title=title, skip_sid=True)		
-	
+			return BeitragsListe(path=url, html_url=html_url, title=title, skip_sid=True)
+	'''	
+		
 	li = xbmcgui.ListItem()
 	li = home(li, ID='phoenix')			# Home-Button
 	
-	# online nicht Sendezeit!
-	# online = stringextract('online":"', '"', page)				# "2017-02-26 21:45:00"
-	# if online:
-	#	tagline = getSendezeit(online)
 	items = blockextract('typ":"video-',  page)						# kann fehlen z.B. bei Phoenix_Suche 
 	if len(items) == 0:
-		xbmcgui.Dialog().ok(ADDON_NAME, 'kein Video gefunden', '', '')
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
+		if 'text":"<div><strong>' in page or 'text":"<p><strong>':	# Suchtexte
+			t = u"Kein phoenix-Video zu >%s< gefunden.\nFundstellen beim Partnersender ZDF möglich.\nDort suchen?" % title
+			dialog = xbmcgui.Dialog()
+			ret = dialog.yesno('Weiterleitung?', t)
+			PLog(ret)
+			if ret:
+				get_zdf_search(li,page,title)
+		else:
+			msg1 = 'Kein phoenix-Video zu >%s< gefunden.' % title
+			msg2 = 'Ursache unbekannt'
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
+		
 	PLog(len(items))
 	for item in items:
 		# PLog(item)		# bei Bedarf
@@ -552,6 +562,62 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 								
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+# ----------------------------------------------------------------------
+# Quersuche beim ZDF - Aufrufer SingleBeitrag
+# Dokus: Suche mit title
+# phoenix history: Suchbuttons erstellen mit Titeln aus 1. Satz der Beschreibung
+#
+def get_zdf_search(li, page, title):
+	PLog('get_zdf_search:')
+	PLog(title)
+	title_call = title
+	
+	pos = page.find('"related"')		# Hinw. relevante Beiträge abschneiden
+	page = page[:pos]
+	page = page.replace('\\/', '/')	
+	PLog(page[:100])
+
+	title = stringextract('titel": "', '"', page)  		# hier mit Blank
+	stitle = stringextract('subtitel": "', '"', page)	# hier mit Blank
+	
+	if "phoenix history" not in title: 					# Dokus nur mit Titel suchen 
+		query = title_call
+		title = "Suche phoenix-Beitrag: %s" % title_call		
+		query=py2_encode(query); title=py2_encode(title);
+		return ardundzdf.ZDF_Search(query=query, title=title)
+	else:
+		items = blockextract('text":"<div><strong>',  page)	
+		if len(items) == 0:
+			items = blockextract('text":"<p><strong>',  page)		
+		PLog(len(items))
+		title_old=''
+		for item in items:
+			PLog(item[:100])
+			query_lable = stringextract('text":"<div><strong>', '</strong>', item)
+			if query_lable == '':
+				query_lable = stringextract('text":"<p><strong>', '</strong>', item)
+			query_lable = query_lable[:100]				# begrenzen
+			query_lable = cleanhtml(query_lable); query_lable = unescape(query_lable)
+			query = query_lable.replace('+', ' ')
+			title = "ZDFSuche: %s" % query_lable.strip()
+			if title == title_old:			# Doppel vermeiden (hier ev. Extrakt erweitern)
+				continue
+			title_old = title
+			
+			tag = "Suche phoenix-Beitrag auf Partnersender ZDF"
+			summ = stringextract('text":"', '"}', item)
+			summ = summ.replace('\\r\\n', ' ')
+			summ = cleanhtml(summ); summ = unescape(summ);
+			summ = repl_json_chars(summ) 
+			PLog("Satz:"); PLog(title); PLog(stitle);PLog(query); PLog(summ[:80]); 
+			
+			query=py2_encode(query); title=py2_encode(title);
+			fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_SEARCH), 
+				thumb=R(ICON_ZDF_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		
 # ----------------------------------------------------------------------
 # beitrags_details 	-> xml-format
 # ngplayer_2_3		-> json-Format

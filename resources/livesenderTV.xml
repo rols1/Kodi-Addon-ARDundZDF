@@ -353,7 +353,7 @@
 	</item>
 	<item-out>
 		<title>n-tv</title>
-		<link>LiveTV_ntv.m3u8</link>
+		<link-out>LiveTV_ntv.m3u8</link-out>
 		<thumbnail>tv-ntv.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>NTV</EPG_ID>

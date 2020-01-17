@@ -7,7 +7,23 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
-??.01.2020	2.4.7	Neue Funktion: ZDF_Verpasst_Datum, zusätzl. Button für  Eingabedialog.
+16.01.2020	2.4.9	Modul phoenix: optionale Suche beim Partnersender ZDF (Austausch gegen
+			Nachprüfung auf Mehrfachbeiträge), neue Funktion get_zdf_search, 
+			Anpassungen in SingleBeitrag, GetContent und unescape. 
+			get_live_data (Modul phoenix): Logausgabe gekürztauf 80 Zeichen.
+			unescape (Modul util): Behandlung von "&bdquo;" und "&ldquo;".
+
+not on Github	2.4.8	Verpasst (ARD-Classic): Vorschaltung Sender-Filter wie in ARD-Neu (Classic-
+			Webseite zeigt Inhalte ebenfalls nur noch gefiltert).
+			SinglePage, get_sendungen (ARD-Classic): Fix Auswertung Uhrzeit bei "Verpasst".
+			EPG_ShowSingle, SenderLiveListe: Fix import EPG (fehlte für Direktsprünge
+			nach import-Verlagerung zur router-Funktion).
+			EPG_ShowAll: Info 'weiter zum Livestream' einheitlich von Titel zur tagline 
+			verlagert.
+			get_teaserElement (Modul 3sat): altern. Auswertung für Titel + Beschreibung
+			(wenn leer: title, descr).
+
+13.01.2020	2.4.7	Neue Funktion: ZDF_Verpasst_Datum, zusätzl. Button für  Eingabedialog.
 			ZDF_get_content: Auswertung Uhrzeit hinzugefügt ("special-info" -> Titel),
 			Auswertung Sendestation hinzugefügt ("data-station" -> tagline).
 			Neue Funktion: ZDF_Verpasst_Filter, zusätzl. Button für  Eingabedialog,

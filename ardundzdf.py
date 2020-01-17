@@ -33,7 +33,7 @@ import json				# json -> Textstrings
 import string
 import importlib		# dyn. Laden zur Laufzeit, s. router
 
-# Addonmodule + Funktionsziele (util_imports.py)
+# Addonmodule + Funktionsziele (util_imports.py) - Rest dyn. in router
 import resources.lib.updater	as updater
 import resources.lib.util 		as util
 PLog=util.PLog; home=util.home; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir;
@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml, Bytecodes löschen
-VERSION = '2.4.7'
-VDATE = '13.01.2020'
+VERSION = '2.4.9'
+VDATE = '17.01.2020'
 
 #
 #
@@ -193,8 +193,6 @@ ARD_AZ 			= '/tv/sendungen-a-z?buchstabe='							# ARD-Classic ergänzt mit 0-9,
 ARD_Suche 		= '/tv/suche?searchText=%s&words=and&source=tv&sort=date'	# Vorgabe UND-Verknüpfung
 ARD_Live 		= '/tv/live'
 
-# Aktualisierung der ARD-ID's in Update_ARD_Path
-ARD_RadioAll 	= 'https://classic.ardmediathek.de/radio/live?genre=Alle+Genres&kanal=Alle'
 
 # ARD-Podcasts
 POD_SEARCH  = '/suche?source=radio&sort=date&searchText=%s&pod=on&playtime=all&words=and&to=all='
@@ -377,10 +375,6 @@ def Main():
 		fanart=R(FANART), thumb=R(ICON_MAIN_TVLIVE), tagline=tagline, fparams=fparams)
 	
 	# 29.09.2019 Umstellung Livestreams auf ARD Audiothek
-	#	tagline = 'Radio-Livestreams stehen auch in der neuen ARD Audiothek zur Verfügung'
-	#	fparams="&fparams={'path': 'ARD_RadioAll', 'title': 'Radio-Livestreams'}"
-	#	addDir(li=li, label='Radio-Livestreams', action="dirList", dirID="RadioLiveListe", 
-	#		fanart=R(FANART), thumb=R(ICON_MAIN_RADIOLIVE), tagline=tagline, fparams=fparams)
 		
 	# Button für Livestreams anhängen (eigenes ListItem)		# Radio-Livestreams
 	tagline = 'Radio-Livestreams stehen auch in der neuen ARD Audiothek zur Verfügung'
@@ -2695,8 +2689,9 @@ def VerpasstWoche(name, title, sfilter='Alle ZDF-Sender'):		# Wochenliste zeigen
 	title_org = title
 	 
 	# Senderwahl deaktivert		
-	CurSender 	= ARDSender[0]	# Default 1. Element ARD-Alle
-	sendername, sender, kanal, img, az_sender = CurSender.split(':')	
+#	CurSender 	= ARDSender[0]	# Default 1. Element ARD-Alle
+#	sendername, sender, kanal, img, az_sender = CurSender.split(':')
+	sendername = "Das Erste"						# Default wie Web	
 	
 	li = xbmcgui.ListItem()
 	if name == 'ZDF-Mediathek':
@@ -2709,8 +2704,6 @@ def VerpasstWoche(name, title, sfilter='Alle ZDF-Sender'):		# Wochenliste zeigen
 
 	for nr in wlist:
 		iPath = BASE_URL + ARD_VERPASST + str(nr)	# classic.ardmediathek.de'
-		if kanal:
-			iPath = '%s&kanal=%s' % (iPath, kanal)
 		rdate = now - datetime.timedelta(days = nr)
 		iDate = rdate.strftime("%d.%m.%Y")		# Formate s. man strftime (3)
 		zdfDate = rdate.strftime("%Y-%m-%d")		
@@ -2724,15 +2717,11 @@ def VerpasstWoche(name, title, sfilter='Alle ZDF-Sender'):		# Wochenliste zeigen
 		PLog(iPath); PLog(iDate); PLog(iWeekday);
 		#title = ("%10s ..... %10s"% (iWeekday, iDate))	 # Formatierung in Plex ohne Wirkung		
 		title =	"%s | %s" % (iDate, iWeekday)
-		cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 		if name == 'ARD':
-			summ = 'Gezeigt wird der Inhalt für %s' % sendername
-			if kanal == '' and sendername != 'ARD-Alle': # Sender noch ohne Kanalnummer? 
-				summ = 'Gezeigt wird der Inhalt für %s - Seite für %s fehlt!' % ('ARD-Alle', sendername)
+			summ = 'Auswahl für Sender folgt'
 			title=py2_encode(title); iPath=py2_encode(iPath);
-			fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': 'SinglePage', 'mode': 'Verpasst', 'ID': 'ARD'}" \
-				% (quote(title),  quote(iPath))
-			addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_VERP), 
+			fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(title),  quote(iPath))
+			addDir(li=li, label=title, action="dirList", dirID="ARD_Verpasst_Filter", fanart=R(ICON_ARD_VERP), 
 				thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=summ)
 
 		else:
@@ -2757,6 +2746,56 @@ def VerpasstWoche(name, title, sfilter='Alle ZDF-Sender'):		# Wochenliste zeigen
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# True, sonst Rückspr. nach ZDF_Verpasst_Filter
 	
+#-------------------------
+# Auswahl der ARD-Sender für VerpasstWoche
+# wie ARDVerpasstContent (ARD-Neu) - hier 
+# mit Auswahl-Button zu PageControl
+# sfilter=kanal (Default 208=Das Erste, wie Web)
+# cbKey = 'SinglePage' -> PageControl	
+#								
+def ARD_Verpasst_Filter(title, path, sfilter='208'):
+	PLog('ARD_Verpasst_Filter:'); PLog(sfilter); 
+	title_call = title
+	
+	page, msg = get_page(path=path)
+	if page == '':	
+		msg1 = 'Fehler in ARD_Verpasst_Filter'
+		msg2=msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, path)	
+		return li
+	PLog(len(page))
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')							# Home-Button
+	
+	senderlist = stringextract('"controls paging"', 'class="boxCon">', page)
+	senderlist = blockextract('class="entry', senderlist)	# nicht nur Sender
+	PLog(len(senderlist))
+	for s in senderlist:
+		if 'href="' not in s:
+			continue
+		title = stringextract('href="', '</a>', s)
+		try:
+			title = title.split('">')[1]			# ..kanal=2224"> BR
+			title = re.sub(r"\s+", " ", title)
+		except Exception as exception:	
+			PLog(str(exception))
+			continue
+		kanal = stringextract('kanal=', '"', s)
+		if kanal == '': kanal = '208'
+		iPath = path + '&kanal=%s' % kanal 
+		PLog("iPath: " + iPath); PLog(title);  PLog(kanal); 
+		
+		title=py2_encode(title); iPath=py2_encode(iPath);
+		PLog(type(title))
+		tag = 'Gezeigt wird der Inhalt für %s' % title
+		fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': 'SinglePage', 'mode': 'Verpasst', 'ID': 'ARD'}" \
+			% (quote(title),  quote(iPath))
+		addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=R(ICON_ARD_VERP), 
+			thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=tag, summary=title_call)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# True, sonst Rückspr. nach ZDF_Verpasst_Filter
+
 #-------------------------
 # Auswahl der ZDF-Sender für VerpasstWoche
 # bei Abbruch bleibt sfilter unverändert								
@@ -3122,11 +3161,17 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 	if mode == 'Sendereihen':	
 		if ID == 'PODCAST':						       # auch A-Z 
 			# Filter nach next_cbKey (PageControl, 	SinglePage, SingleSendung) hier nicht erforderlich	
+			# Sendungsblöcke in PODCAST: 1. teaser=Sendungskopf, 
+			#	Rest Beiträge - Auswertung in get_sendungen	
 			page = stringextract('class=\"section onlyWithJs sectionA\">', '<!-- content -->', page)
 		else:
-			page = stringextract('data-ctrl-layoutable', '<!-- **** END **** -->', page)	
-	sendungen = blockextract('class="teaser"', page)	# Sendungsblöcke in PODCAST: 1. teaser=Sendungskopf, 
-	PLog('sendungen: ' + str(len(sendungen)))			#   Rest Beiträge - Auswertung in get_sendungen	
+			page = stringextract('data-ctrl-layoutable', '<!-- **** END **** -->', page)
+
+	if mode == 'Verpasst':								# collapse-Block vor class teaser - enthält Uhrzeit
+		sendungen = blockextract('<span class="date"', page)
+	else:
+		sendungen = blockextract('class="teaser"', page)	
+	PLog('sendungen: ' + str(len(sendungen)))
 	PLog(len(page));													
 	if len(sendungen) == 0:								# Fallback 	
 		sendungen = blockextract('class="entry"', page) 				
@@ -4348,7 +4393,7 @@ def parseLinks_Mp4_Rtmp(page):
 		
 ####################################################################################################
 # Aufrufer SinglePage
-def get_sendungen(li, sendungen, ID, mode): # Sendungen ausgeschnitten mit class='teaser', aus Verpasst + A-Z,
+def get_sendungen(li, sendungen, ID, mode): # Sendungen ausgeschnitten mit class="teaser", aus Verpasst + A-Z,
 	# 										Suche, Einslike
 	# Headline + subtitle sind nicht via xpath erreichbar, daher Stringsuche:
 	# ohne linklist + subtitle weiter (teaser Seitenfang od. Verweis auf Serie, bei A-Z teaser-Satz fast identisch,
@@ -4424,12 +4469,10 @@ def get_sendungen(li, sendungen, ID, mode): # Sendungen ausgeschnitten mit class
 					subtitle = ""
 			else:
 				subtitle = ""
-											
 			subtitle = subtitle.replace('"', '*')			# "-Zeichen verhindert json.loads in router			
 			send_duration = subtitle						
-			send_date = stringextract('class=\"date\">', '</span>', s) # auch Uhrzeit möglich
+			send_date = stringextract('class="date">', '<', s) # auch Uhrzeit möglich (Verpasst)
 			PLog(subtitle)
-			PLog(send_date)
 			if send_date and subtitle:
 				subtitle = send_date + ' Uhr | ' + subtitle				
 				
@@ -4779,6 +4822,7 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 	PLog('EPG_ShowSingle:'); 
 
+	import resources.lib.EPG as EPG
 	EPG_rec = EPG.EPG(ID=ID, day_offset=pagenr)		# Daten holen
 	PLog(len(EPG_rec))
 	
@@ -4836,7 +4880,9 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 	title = unquote(title)
 	title_org = title
 	title2='Aktuelle Sendungen'
-		
+	
+	import resources.lib.EPG as EPG
+	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 
@@ -4864,11 +4910,11 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 		m3u8link = rec[3]
 		img_playlist = R(rec[2])
 		ID = rec[1]
-		tagline = ''; summ = ''
+		summ = ''
 		
+		tagline = 'weiter zum Livestream'
 		if ID == '':									# ohne EPG_ID
-			tagline = 'weiter zum Livestream'
-			title = title_playlist + ': [COLOR red][B]ohne EPG[/B][/COLOR] | %s' % tagline
+			title = title_playlist + ': [COLOR red][B]ohne EPG[/B][/COLOR]' 
 			img = img_playlist
 			PLog("img: " + img)
 		else:
@@ -4877,7 +4923,6 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 			# PLog(rec)	# bei Bedarf
 			if len(rec) == 0:							# EPG-Satz leer?
 				title = title_playlist + ': ohne EPG'
-				tagline = 'weiter zum Livestream'
 				img = img_playlist			
 			else:	
 				href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6]
@@ -4887,7 +4932,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 				title 	= sname.replace('JETZT', title_playlist)		# JETZT durch Sender ersetzen
 				# sctime 	= "[COLOR red] %s [/COLOR]" % stime			# Darstellung verschlechtert
 				# sname 	= sname.replace(stime, sctime)
-				tagline = 'Zeit: ' + vonbis
+				tagline = '%s | Zeit: %s' % (tagline, vonbis)
 				
 		title = unescape(title)
 		PLog("title: " + title); PLog(summ)
@@ -4919,6 +4964,8 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	#	-> CreateVideoStreamObject 
 	PLog('SenderLiveListe:')
 	PLog(title); PLog(listname)
+	
+	import resources.lib.EPG as EPG
 			
 	title2 = 'Live-Sender ' + title
 	title2 = title2
@@ -5502,7 +5549,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	query_org = query	
 	query=py2_decode(query)			# decode, falls erf. (1. Aufruf)
 
-	PLog('ZDF_Search:'); PLog(query); PLog(pagenr); PLog(s_type)
+	PLog(query); PLog(pagenr); PLog(s_type)
 
 	ID='Search'
 	ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&contentTypes=episode&sortBy=date&page=%s'
@@ -5902,7 +5949,8 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 #	die html-Seite des get_teaserElements wird aus TEXTSTORE 
 #	geladen bzw. bei www.zdf.de/teaserElement abgerufen und
 #	dann in TEXTSTORE gespeichert.
-#	Hinw.: "Verfügbar bis" nicht im teaserElement enthalten
+#	Hinw.1: "Verfügbar bis" nicht im teaserElement enthalten
+#   Hinw.2: Änderungen ev. auch in my3Sat erforderlich.
 def get_teaserElement(rec):
 	PLog('get_teaserElement:')
 	# Reihenfolge Ersetzung: sophoraId, teaserHeadline, teasertext, filterReferenceId, 

@@ -3,7 +3,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 09.01.2020
+#	Stand 17.01.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -938,7 +938,7 @@ def unescape(line):
 		, (u"&#39;", u"'"), (u"&#039;", u"'"), (u"&quot;", u'"'), (u"&#x27;", u"'")
 		, (u"&ouml;", u"ö"), (u"&auml;", u"ä"), (u"&uuml;", u"ü"), (u"&szlig;", u"ß")
 		, (u"&Ouml;", u"Ö"), (u"&Auml;", u"Ä"), (u"&Uuml;", u"Ü"), (u"&apos;", u"'")
-		, (u"&nbsp;|&nbsp;", u""), (u"&nbsp;", u""), 
+		, (u"&nbsp;|&nbsp;", u""), (u"&nbsp;", u""), (u"&bdquo;", u""),	(u"&ldquo;", u""),
 		# Spezialfälle:
 		#	https://stackoverflow.com/questions/20329896/python-2-7-character-u2013
 		#	"sächsischer Genetiv", Bsp. Scott's

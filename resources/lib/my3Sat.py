@@ -6,7 +6,7 @@
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.3sat.de,
 #	Seiten werden im html-format, teils. json ausgeliefert
-#	Stand: 15.12.2019
+#	Stand: 16.01.2020
 #
 #	04.11.2019 Migration Python3  Python3 Modul future
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -715,7 +715,7 @@ def get_lazyload(li, page, ref_path):
 		# Ersatz für javascript: Auswertung + Rückgabe aller  
 		#	Bestandteile:
 		sophId,path,title,descr,img_src,dauer,tag,isvideo = get_teaserElement(rec)
-		
+		PLog(descr)
 		if img_src == '':										
 			if img_pre:
 				img_src = img_pre								# Fallback 1: Rubrikbild
@@ -759,6 +759,7 @@ def get_lazyload(li, page, ref_path):
 #	unabhängig von SETTINGS('pref_load_summary').
 # 20.11.2019 Einsetzungselement sophoraId ausreichend für path 
 #	(teaserHeadline,teasertext,clusterTitle entfallen)
+# Hinweis: Änderungen ev. auch in ardundzdf erforderlich.
 #
 def get_teaserElement(rec):
 	PLog('get_teaserElement:')
@@ -800,15 +801,21 @@ def get_teaserElement(rec):
 	if page:								# 2. teaserElement auswerten
 		img_src =  stringextract('data-srcset="', ' ', page)	
 		title	= stringextract('clickarea-link">', '</p>', page)
+		if title == '':
+			title = stringextract('title="', '"', page)			# Ersatz: Titel hinter href-Url
 		title	= unescape(title); 
 		title	= transl_json(title); 
-		ctitle = stringextract('ellipsis" >', '<', page)  		# -> tag
+		ctitle = stringextract('ellipsis" >', '<', page)  		# -> tag (subheadline)
 		tag 	= stringextract('<span>', '</span>', page)
 		dauer	= stringextract('class="label">', '</', page)
 		path	= stringextract('href="', '"', page)
 		if path.startswith('http') == False:
 			path = DreiSat_BASE + path
 		descr	= stringextract('clickarea-link" >', '<', page)
+		if descr == '':											# 1. Ersatz: 
+			descr	= stringextract('teaser-text" >', '<', page)# wie ardundzdf
+		if descr == '':											# 2. Ersatz (Bild-Beschr.): 
+			descr	= stringextract('alt="', '"', page)
 		if ctitle:
 			tag = tag + " | " + ctitle
 			
