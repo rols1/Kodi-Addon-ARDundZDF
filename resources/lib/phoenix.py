@@ -4,7 +4,7 @@
 #				benötigt Modul yt.py (Youtube-Videos)
 #		Videos der Phoenix_Mediathek auf https://www.phoenix.de/ 
 ################################################################################
-#	Stand: 17.01.2020
+#	Stand: 22.01.2020
 #
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
@@ -112,12 +112,14 @@ def Main_phoenix():
 		title = 'Live: %s' % title_epg
 	if subtitle:
 		title = '%s | %s' % (title, subtitle)
-
-	tag = "%s | %s\n\n%s" % (subtitle, vorspann, descr)
-	if vorspann:
-		tag = vorspann
-	if descr:
-		tag = "%s\n\n%s" % (tag, descr)
+	
+	tag=''
+	if vorspann and descr: 
+		tag = "%s | %s\n\n%s" % (subtitle, vorspann, descr)
+		if vorspann:
+			tag = vorspann
+		if descr:
+			tag = "%s\n\n%s" % (tag, descr)
 		
 	title=py2_encode(title); href=py2_encode(href); tag=py2_encode(tag);
 	PLog(title); PLog(subtitle); PLog(vorspann); PLog(descr); PLog(href)
@@ -141,7 +143,7 @@ def Main_phoenix():
 		thumb=ICON_SENDUNGEN, fparams=fparams)
 	
 
-	xbmcplugin.endOfDirectory(HANDLE)		# ohne Cache wg. EPG
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 			
 # ----------------------------------------------------------------------
 # die json-Seite enthält ca. 4 Tage EPG - 1. Beitrag=aktuell
@@ -153,22 +155,23 @@ def get_live_data():
 		msg1 = "get_live_data:"
 		msg2 = msg
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
-		return 
 	PLog(len(page))			
 	
-	# Kurzf. möglich: {"title":"tagesschau","subtitel":"mit Geb\u00e4rdensprache",
-	#	"typ":"","vorspann":""}
-	if '":"' in page:					# möglich: '":"', '": "'
-		page = page.replace('":"', '": "')
-	PLog(page[:80])
-	title 	= stringextract('"titel": "', '"', page)
-	PLog(title);
-	subtitle= stringextract('"subtitel": "', '"', page)
-	vorspann= stringextract('"vorspann": "', '"', page)
-	descr	= stringextract('"text":"', '"', page)
-	title=transl_json(title)
-	subtitle=transl_json(subtitle); vorspann=transl_json(vorspann);
-	descr=cleanhtml(descr); descr=unescape(descr);
+	title='';subtitle='';vorspann='';descr='';href=''
+	if page:
+		# Kurzf. möglich: {"title":"tagesschau","subtitel":"mit Geb\u00e4rdensprache",
+		#	"typ":"","vorspann":""}
+		if '":"' in page:					# möglich: '":"', '": "'
+			page = page.replace('":"', '": "')
+		PLog(page[:80])
+		title 	= stringextract('"titel": "', '"', page)
+		PLog(title);
+		subtitle= stringextract('"subtitel": "', '"', page)
+		vorspann= stringextract('"vorspann": "', '"', page)
+		descr	= stringextract('"text":"', '"', page)
+		title=transl_json(title)
+		subtitle=transl_json(subtitle); vorspann=transl_json(vorspann);
+		descr=cleanhtml(descr); descr=unescape(descr);
 	
 	playlist = RLoad(PLAYLIST)	# lokale XML-Datei (Pluginverz./Resources)
 	liste = blockextract('<channel>', playlist)

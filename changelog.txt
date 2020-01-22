@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+23.01.2020	2.5.2	Main_phoenix (Modul phoenix): Blockierung bei Ausfall der Seite livestream_json
+			aufgehoben, Anpassung in get_live_data, Hinweis beibehalten.	
+
 22.01.2020	2.5.1	zusätzl. interne Download-Funktion: neue Funktion thread_getfile, Anpassungen
 			in settings.xml, DownloadExtern, LiveRecord, PodFavoriten, DownloadMultiple,
 			DownloadsList.

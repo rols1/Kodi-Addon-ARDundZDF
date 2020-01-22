@@ -56,7 +56,7 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.5.1'
+VERSION = '2.5.2'
 VDATE = '22.01.2020'
 
 #

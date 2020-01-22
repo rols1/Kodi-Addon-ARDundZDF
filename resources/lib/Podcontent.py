@@ -217,7 +217,7 @@ def PodFavoriten(title, path, pagenr='1'):
 #	bis ca. 4 KByte getestet) 
 #
 # Rücksprung-Problem: unter Kodi keine wie unter Plex beoachtet.
-# Bei internem Download wird mit path_url_list thread_getfile verzweigt.
+# Bei internem Download wird mit path_url_list zu thread_getfile verzweigt.
 #----------------------------------------------------------------  
 	
 def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
