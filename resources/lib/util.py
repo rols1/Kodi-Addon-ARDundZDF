@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
-# util.py
+###################################################################################################
+#							 util.py - Hilfsfunktionen Kodiversion
+#	Modulnutzung: 
+#					import resources.lib.util as util
+#					PLog=util.PLog;  home=util.home; ...  (manuell od.. script-generiert)
+#
+#	convert_util_imports.py generiert aus util.py die Zuordnungen PLog=util.PLog; ...
+####################################################################################################
+# 
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
@@ -79,14 +87,6 @@ ICON_PHOENIX	= 'phoenix.png'
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
 BASE_URL 		= 'https://classic.ardmediathek.de'
 
-###################################################################################################
-#									Hilfsfunktionen Kodiversion
-#	Modulnutzung: 
-#					import resources.lib.util as util
-#					PLog=util.PLog;  home=util.home; ...  (manuell od.. script-generiert)
-#
-#	convert_util_imports.py generiert aus util.py die Zuordnungen PLog=util.PLog; ...
-####################################################################################################
 #----------------------------------------------------------------  
 def PLog(msg, loglevel=xbmc.LOGDEBUG):
 	if DEBUG == 'false':
@@ -806,7 +806,8 @@ def DirectoryNavigator(settingKey, mytype, heading, shares='files', useThumbs=Fa
 	PLog(settingKey); PLog(mytype); PLog(heading); PLog(path);
 	
 	dialog = xbmcgui.Dialog()
-	d_ret = dialog.browseSingle(int(mytype), heading, 'files', '', False, False, path)	
+#	d_ret = dialog.browseSingle(int(mytype), heading, 'files', '', False, False, path)	
+	d_ret = dialog.browseSingle(int(mytype), heading, shares, '', False, False, path)	
 	PLog('d_ret: ' + d_ret)
 	
 	SETTINGS.setSetting(settingKey, d_ret)	

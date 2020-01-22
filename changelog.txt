@@ -7,7 +7,26 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
-16.01.2020	2.4.9	Modul phoenix: optionale Suche beim Partnersender ZDF (Austausch gegen
+22.01.2020	2.5.1	zusätzl. interne Download-Funktion: neue Funktion thread_getfile, Anpassungen
+			in settings.xml, DownloadExtern, LiveRecord, PodFavoriten, DownloadMultiple,
+			DownloadsList.
+			ShowText (Menü Info): Textviewer auf monospace-Font geschaltet für bessere 
+			Lesbarkeit.
+			DirectoryNavigator (Modul util): Shares-Auswahl ermöglicht für Verschiebeverzeichnis
+			in DownloadsTools (Haupt-PRG).
+			settings.xml (Verschiebeverzeichnis): Auswahl Shares ermöglicht (source="",
+			option="writeable" entfernt).  
+			settings.xml (Downloadverzeichnis): Parameter source='' entfernt (Share für 
+			curl/wget nicht nutzbar).
+			DownloadsMove (Haupt-PRG): Codeanpassungen für Verschieben in Shares via xbmcvfs.copy
+			und xbmcvfs.delete.
+
+not on Github	2.5.0	Modul pytube: Ersatz Leerzeichen -> Tabs (Kompatibilität Python2/3).
+			get_zdf_search (Modul phoenix): zusätzl. Suchbutton für Subtitel (nicht für
+			history-Beiträge).
+			VerpasstWoche: Info-Zusatz für ZDF-Button "Datum eingeben".
+
+17.01.2020	2.4.9	Modul phoenix: optionale Suche beim Partnersender ZDF (Austausch gegen
 			Nachprüfung auf Mehrfachbeiträge), neue Funktion get_zdf_search, 
 			Anpassungen in SingleBeitrag, GetContent und unescape. 
 			get_live_data (Modul phoenix): Logausgabe gekürztauf 80 Zeichen.

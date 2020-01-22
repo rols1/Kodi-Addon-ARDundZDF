@@ -15,7 +15,7 @@
 #
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-#
+#	Stand:  20.01.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -42,7 +42,8 @@ elif PYTHON3:
 import sys, os, subprocess 
 import json, re
 
-# Addonmodule + Funktionsziele (util_imports.py)
+# Addonmodule + Funktionsziele 
+import ardundzdf					# -> thread_getfile 
 import resources.lib.util as util
 PLog=util.PLog;  home=util.home;  Dict=util.Dict;  name=util.name; 
 addDir=util.addDir;  get_page=util.get_page; 
@@ -166,18 +167,19 @@ def PodFavoriten(title, path, pagenr='1'):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 											
 	#																			# Download-Button?				
-	if SETTINGS.getSetting('pref_use_downloads') == 'true' and len(downl_list) > 1:
-		# Sammel-Downloads - alle angezeigten Favoriten-Podcasts downloaden?
-		#	für "normale" Podcasts erfolgt die Abfrage in SinglePage
-		title=u'Download! Alle angezeigten [B]%d[/B] Podcasts ohne Rückfrage speichern?' % cnt
-		summ = u'Download von insgesamt %s Podcasts' % len(downl_list)	
-		Dict("store", 'downl_list', downl_list) 
-		Dict("store", 'URL_rec', downl_list) 
+	if SETTINGS.getSetting('pref_use_downloads') == 'true' or SETTINGS.getSetting('pref_download_intern') == 'true':
+		if len(downl_list) > 1:
+			# Sammel-Downloads - alle angezeigten Favoriten-Podcasts downloaden?
+			#	für "normale" Podcasts erfolgt die Abfrage in SinglePage
+			title=u'Download! Alle angezeigten [B]%d[/B] Podcasts ohne Rückfrage speichern?' % cnt
+			summ = u'Download von insgesamt %s Podcasts' % len(downl_list)	
+			Dict("store", 'downl_list', downl_list) 
+			Dict("store", 'URL_rec', downl_list) 
 
-		fparams="&fparams={'key_downl_list': 'downl_list', 'key_URL_rec': 'downl_list'}" 
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
-			fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
-	
+			fparams="&fparams={'key_downl_list': 'downl_list', 'key_URL_rec': 'downl_list'}" 
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
+				fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
+		
 	try:  																		# Mehr-Button?
 		items_per_page =  int(stringextract('items_per_page":', ',', page))
 		total 			= int(stringextract('total":', '}', page)) 
@@ -198,7 +200,7 @@ def PodFavoriten(title, path, pagenr='1'):
 			quote(title), page_next)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodFavoriten", \
 			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
-	
+		
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
@@ -215,7 +217,7 @@ def PodFavoriten(title, path, pagenr='1'):
 #	bis ca. 4 KByte getestet) 
 #
 # Rücksprung-Problem: unter Kodi keine wie unter Plex beoachtet.
-#
+# Bei internem Download wird mit path_url_list thread_getfile verzweigt.
 #----------------------------------------------------------------  
 	
 def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
@@ -232,18 +234,22 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	AppPath = SETTINGS.getSetting('pref_curl_path')
 	AppPath = os.path.abspath(AppPath)
 	dest_path = SETTINGS.getSetting('pref_curl_download_path')
-	
+			
 	# -k schaltet curl's certificate-verification ab, -L folgt einem ev. Redirect
-	curl_param_list = '-k -L '									
+	curl_param_list = '-k -L '
+	path_url_list = []									# für int. Download									
 
 	PLog(AppPath)
-	if os.path.exists(AppPath)	== False:					# Existenz Curl prüfen
-		msg1='curl nicht gefunden'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')		
-	if os.path.isdir(dest_path)	== False:			
-		msg1='Downloadverzeichnis nicht gefunden:'	# Downloadverzeichnis prüfen
+	if SETTINGS.getSetting('pref_download_intern') == 'false':
+		if os.path.exists(AppPath)	== False:			# Existenz Curl prüfen
+			msg1='curl nicht gefunden'
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			return li		
+	if os.path.isdir(dest_path)	== False:				# Downloadverzeichnis prüfen		
+		msg1='Downloadverzeichnis nicht gefunden:'	
 		msg2=path
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')		
+		return li		
 	
 	i = 0
 	for rec in downl_list:									# Parameter-Liste für Curl erzeugen
@@ -261,14 +267,24 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 			dfname = 'Download_' + mydate + '.mp3'
 
 		# Parameter-Format: -o Zieldatei_kompletter_Pfad Podcast-Url -o Zieldatei_kompletter_Pfad Podcast-Url ..
-		curl_fullpath = os.path.join(dest_path, dfname)		 
+		# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Podcast, Zieldatei_kompletter_Pfad|Podcast ..
+		curl_fullpath = os.path.join(dest_path, dfname)
 		curl_fullpath = os.path.abspath(curl_fullpath)		# os-spezischer Pfad
 		curl_param_list = curl_param_list + ' -o '  + curl_fullpath + ' ' + url
+		path_url_list.append('%s|%s' % (curl_fullpath, url))
 		
+	PLog(sys.platform)
+	if SETTINGS.getSetting('pref_download_intern') == 'true':	# interner Download
+		from threading import Thread	# thread_getfile
+		textfile='';pathtextfile='';storetxt='';url='';fulldestpath=''
+		background_thread = Thread(target=ardundzdf.thread_getfile,
+			args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list))
+		background_thread.start()
+		return li						# wir nehmen GetDirectory-Error in Kauf, bleiben dafür im Listing			
+		# xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 	cmd = AppPath + ' ' + curl_param_list
 	PLog(len(cmd))
-	
-	PLog(sys.platform)
 	if sys.platform == 'win32':								# s. Funktionskopf
 		args = cmd
 	else:
@@ -281,8 +297,8 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 		sp = subprocess.Popen(args, shell=False)			# shell=True entf. hier nach shlex-Nutzung	
 		output,error = sp.communicate()						#  output,error = None falls Aufruf OK
 		PLog('call = ' + str(sp))	
-		if str(sp).find('object at') > 0:  				# Bsp.: <subprocess.Popen object at 0x7fb78361a210>
-			PIDcurlPOD = sp.pid							# PID zum Abgleich gegen Wiederholung sichern
+		if str(sp).find('object at') > 0:  					# Bsp.: <subprocess.Popen object at 0x7fb78361a210>
+			PIDcurlPOD = sp.pid								# PID zum Abgleich gegen Wiederholung sichern
 			PLog('PIDcurlPOD neu: %s' % PIDcurlPOD)
 			msg1 = 'curl: Download erfolgreich gestartet'
 			msg2 = 'Anzahl der Podcast: %s' % rec_len

@@ -17,59 +17,59 @@ from pytube.exceptions import LiveStreamError
 
 
 def apply_signature(config_args, fmt, js):
-    """Apply the decrypted signature to the stream manifest.
+	"""Apply the decrypted signature to the stream manifest.
 
-    :param dict config_args:
-        Details of the media streams available.
-    :param str fmt:
-        Key in stream manifests (``ytplayer_config``) containing progressive
-        download or adaptive streams (e.g.: ``url_encoded_fmt_stream_map`` or
-        ``adaptive_fmts``).
-    :param str js:
-        The contents of the base.js asset file.
+	:param dict config_args:
+		Details of the media streams available.
+	:param str fmt:
+		Key in stream manifests (``ytplayer_config``) containing progressive
+		download or adaptive streams (e.g.: ``url_encoded_fmt_stream_map`` or
+		``adaptive_fmts``).
+	:param str js:
+		The contents of the base.js asset file.
 
-    """
-    stream_manifest = config_args[fmt]
-    live_stream = json.loads(config_args['player_response']).get(
-        'playabilityStatus', {},
-    ).get('liveStreamability')
-    for i, stream in enumerate(stream_manifest):
-        if 'url' in stream:
-            url = stream['url']
-        elif live_stream:
-            raise LiveStreamError('Video is currently being streamed live')
-        # 403 Forbidden fix.
-        if (
-            'signature' in url or (
-                's' not in stream and (
-                    '&sig=' in url or '&lsig=' in url
-                )
-            )
-        ):
-            # For certain videos, YouTube will just provide them pre-signed, in
-            # which case there's no real magic to download them and we can skip
-            # the whole signature descrambling entirely.
-            PLog('mixins: signature found, skip decipher')
-            continue
+	"""
+	stream_manifest = config_args[fmt]
+	live_stream = json.loads(config_args['player_response']).get(
+		'playabilityStatus', {},
+	).get('liveStreamability')
+	for i, stream in enumerate(stream_manifest):
+		if 'url' in stream:
+			url = stream['url']
+		elif live_stream:
+			raise LiveStreamError('Video is currently being streamed live')
+		# 403 Forbidden fix.
+		if (
+			'signature' in url or (
+				's' not in stream and (
+					'&sig=' in url or '&lsig=' in url
+				)
+			)
+		):
+			# For certain videos, YouTube will just provide them pre-signed, in
+			# which case there's no real magic to download them and we can skip
+			# the whole signature descrambling entirely.
+			PLog('mixins: signature found, skip decipher')
+			continue
 
-        if js is not None:
-            signature = cipher.get_signature(js, stream['s'])
-        else:
-            # signature not present in url (line 33), need js to descramble
-            # TypeError caught in __main__
-            raise TypeError('JS is None')
+		if js is not None:
+			signature = cipher.get_signature(js, stream['s'])
+		else:
+			# signature not present in url (line 33), need js to descramble
+			# TypeError caught in __main__
+			raise TypeError('JS is None')
 
-        PLog(
-            'mixins: finished descrambling signature for itag=%s\n%s',
-            stream['itag'], pprint.pformat(
-                {
-                    's': stream['s'],
-                    'signature': signature,
-                }, indent=2,
-            ),
-        )
-        # 403 forbidden fix
-        stream_manifest[i]['url'] = url + '&sig=' + signature; PLog("apply_signature_url: " + url)
+		PLog(
+			'mixins: finished descrambling signature for itag=%s\n%s',
+			stream['itag'], pprint.pformat(
+				{
+					's': stream['s'],
+					'signature': signature,
+				}, indent=2,
+			),
+		)
+		# 403 forbidden fix
+		stream_manifest[i]['url'] = url + '&sig=' + signature; PLog("apply_signature_url: " + url)
 
 
 def apply_descrambler(stream_data, key):

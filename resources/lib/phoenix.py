@@ -564,9 +564,10 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 
 # ----------------------------------------------------------------------
 # Quersuche beim ZDF - Aufrufer SingleBeitrag
-# Dokus: Suche mit title
+# Dokus: Suche mit Title und Subtitel (Achtung: gedreht in GetContent
+#	für Download + Merkliste)
 # phoenix history: Suchbuttons erstellen mit Titeln aus 1. Satz der Beschreibung
-#
+# 
 def get_zdf_search(li, page, title):
 	PLog('get_zdf_search:')
 	PLog(title)
@@ -577,14 +578,34 @@ def get_zdf_search(li, page, title):
 	page = page.replace('\\/', '/')	
 	PLog(page[:100])
 
-	title = stringextract('titel": "', '"', page)  		# hier mit Blank
-	stitle = stringextract('subtitel": "', '"', page)	# hier mit Blank
+	title_org = stringextract('titel": "', '"', page)  		# hier mit Blank
+	stitle_org = stringextract('subtitel": "', '"', page)	# hier mit Blank
+	tag = "Suche phoenix-Beitrag auf Partnersender ZDF"
 	
-	if "phoenix history" not in title: 					# Dokus nur mit Titel suchen 
-		query = title_call
-		title = "Suche phoenix-Beitrag: %s" % title_call		
+	if "phoenix history" not in title: 					# Dokus mit Titel + Subtitel suchen 
+		query = stitle_org
+		title = "1. ZDFSuche (Titel): %s" % query	
+		tag = tag + " | Suche mit Titel des Beitrags"	
+		summ = stringextract('text":"', '"}', page)
+		summ = summ.replace('\\r\\n', ' ')
+		summ = cleanhtml(summ); summ = unescape(summ);
+		summ = repl_json_chars(summ) 
+		PLog("Satz:"); PLog(title); PLog(stitle_org);PLog(query); PLog(summ[:80]); 
 		query=py2_encode(query); title=py2_encode(title);
-		return ardundzdf.ZDF_Search(query=query, title=title)
+		# return ardundzdf.ZDF_Search(query=query, title=title)	# Altern.: Direktsprung nur mit Subtitel
+		query=py2_encode(query); title=py2_encode(title); 	# Suche mit Titel
+		fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_SEARCH), 
+			thumb=R(ICON_ZDF_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+		
+		query = title_org
+		title = "2. ZDFSuche (Subtitel): %s" % query	 	# Suche mit Subtitel
+		tag = tag.replace('Titel', 'Subtitel')	
+		query=py2_encode(query); title=py2_encode(title);
+		fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_SEARCH), 
+			thumb=R(ICON_ZDF_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+
 	else:
 		items = blockextract('text":"<div><strong>',  page)	
 		if len(items) == 0:
@@ -604,7 +625,6 @@ def get_zdf_search(li, page, title):
 				continue
 			title_old = title
 			
-			tag = "Suche phoenix-Beitrag auf Partnersender ZDF"
 			summ = stringextract('text":"', '"}', item)
 			summ = summ.replace('\\r\\n', ' ')
 			summ = cleanhtml(summ); summ = unescape(summ);

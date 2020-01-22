@@ -55,9 +55,9 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 																		
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-# VERSION -> addon.xml, Bytecodes löschen
-VERSION = '2.4.9'
-VDATE = '17.01.2020'
+# VERSION -> addon.xml aktualisieren
+VERSION = '2.5.1'
+VDATE = '22.01.2020'
 
 #
 #
@@ -400,7 +400,8 @@ def Main():
 			addDir(li=li, label=label, action="dirList", dirID="Main_POD", fanart=R(FANART), 
 				thumb=R(ICON_MAIN_POD), summary=summary, tagline=tagline, fparams=fparams)
 						
-	if SETTINGS.getSetting('pref_use_downloads') ==  'true':	# Download-Tools. zeigen
+																# Download-Tools. zeigen
+	if SETTINGS.getSetting('pref_use_downloads') ==  'true' or SETTINGS.getSetting('pref_download_intern') == 'true':	
 		tagline = 'Download-Tools: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
 		fparams="&fparams={}"
 		addDir(li=li, label='Download-Tools', action="dirList", dirID="DownloadsTools", 
@@ -464,13 +465,16 @@ def Main():
 				
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #----------------------------------------------------------------
+# 20.01.2020 usemono für textviewer (ab Kodi v18)
 def ShowText(path, title):
-	PLog('ShowText:'); 
+	PLog('ShowText:'); 	
+
 	page = RLoad(path, abs_path=True)
 	page = page.replace('\t', ' ')		# ersetze Tab's durch Blanks
 	dialog = xbmcgui.Dialog()
-	dialog.textviewer(title, page)
+	dialog.textviewer(title, page,usemono=True)
 	return
+	
 #----------------------------------------------------------------
 # sender neu belegt in Senderwahl (Classic: deaktiviert) 
 def Main_ARD(name, sender=''):
@@ -1435,7 +1439,7 @@ def AudioContentXML(title, path):
 def AudioPlayMP3(url, title, thumb, Plot):
 	PLog('AudioPlayMP3: ' + title)
 	
-	if SETTINGS.getSetting('pref_use_downloads') == 'false':
+	if SETTINGS.getSetting('pref_use_downloads') == 'false' and SETTINGS.getSetting('pref_download_intern') == 'false':
 		PLog('starte PlayAudio direkt')
 		PlayAudio(url, title, thumb, Plot)  # PlayAudio	direkt
 		return
@@ -2732,9 +2736,10 @@ def VerpasstWoche(name, title, sfilter='Alle ZDF-Sender'):		# Wochenliste zeigen
 	
 	if name == 'ZDF-Mediathek':								# Button für Datumeingabe anhängen
 		label = "Datum eingeben"
+		tag = u"teilweise sind bis zu 4 Jahre alte Beiträge abrufbar"
 		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
 		addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Datum", fanart=R(ICON_ZDF_VERP), 
-			thumb=GIT_CAL, fparams=fparams)
+			thumb=GIT_CAL, fparams=fparams, tagline=tag)
 
 															# Button für Stationsfilter
 		label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [COLOR red]%s[/COLOR]" % sfilter
@@ -3556,7 +3561,10 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 	PLog('tagline_org: ' + tagline_org)
 
 	PLog(SETTINGS.getSetting('pref_use_downloads')) 	# Voreinstellung: False 
-	if SETTINGS.getSetting('pref_use_downloads') == 'true' and SETTINGS.getSetting('pref_curl_path'):
+	PLog(SETTINGS.getSetting('pref_download_intern'))	# dto.
+	
+	# Test auf Existenz curl/wget in DownloadExtern
+	if SETTINGS.getSetting('pref_use_downloads') == 'true' or SETTINGS.getSetting('pref_download_intern') == 'true':
 		dest_path = SETTINGS.getSetting('pref_curl_download_path')
 		if  os.path.isdir(dest_path) == False:
 			msg1	= 'test_downloads'
@@ -3565,39 +3573,40 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 			return li				
 		# PLog(SETTINGS.getSetting('pref_show_qualities'))
-		if SETTINGS.getSetting('pref_show_qualities') == 'false':	# nur 1 (höchste) Qualität verwenden
-			download_items = []
-			download_items.append(download_list.pop(high))									 
-		else:	
-			download_items = download_list						# ganze Liste verwenden
-		PLog(download_items)
 		
-		i=0
-		for item in download_items:
-			quality,url = item.split('#')
-			PLog(url); PLog(quality); PLog(title_org)
-			if url.find('.m3u8') == -1 and url.find('rtmp://') == -1:
-				# detailtxt =  Begleitdatei mit Textinfos zum Video / Podcast:				
-				detailtxt = MakeDetailText(title=title_org,thumb=thumb,quality=quality,
-					summary=summary_org,tagline=tagline_org,url=url)
-				v = 'detailtxt'+str(i)
-				vars()[v] = detailtxt
-				Dict('store', v, vars()[v])		# detailtxt speichern 
-				if url.endswith('.mp3'):
-					Format = 'Podcast ' 			
-				else:	
-					Format = 'Video '			# .mp4 oder .webm  (ARD nur .mp4)
-				lable = 'Download ' + Format + ' | ' + quality
-				dest_path = SETTINGS.getSetting('pref_curl_download_path')
-				tagline = Format + 'wird in ' + dest_path + ' gespeichert' 									
-				summary = 'Sendung: ' + title_org
-				key_detailtxt='detailtxt'+str(i)
-				url=py2_encode(url); title_org=py2_encode(title_org);
-				fparams="&fparams={'url': '%s', 'title': '%s', 'dest_path': '%s', 'key_detailtxt': '%s'}" % \
-					(quote(url), quote(title_org), dest_path, key_detailtxt)
-				addDir(li=li, label=lable, action="dirList", dirID="DownloadExtern", fanart=R(ICON_DOWNL), 
-					thumb=R(ICON_DOWNL), fparams=fparams, summary=summary, tagline=tagline, mediatype='')
-				i=i+1					# Dict-key-Zähler
+	if SETTINGS.getSetting('pref_show_qualities') == 'false':	# nur 1 (höchste) Qualität verwenden
+		download_items = []
+		download_items.append(download_list.pop(high))									 
+	else:	
+		download_items = download_list						# ganze Liste verwenden
+	PLog(download_items)
+		
+	i=0
+	for item in download_items:
+		quality,url = item.split('#')
+		PLog(url); PLog(quality); PLog(title_org)
+		if url.find('.m3u8') == -1 and url.find('rtmp://') == -1:
+			# detailtxt =  Begleitdatei mit Textinfos zum Video / Podcast:				
+			detailtxt = MakeDetailText(title=title_org,thumb=thumb,quality=quality,
+				summary=summary_org,tagline=tagline_org,url=url)
+			v = 'detailtxt'+str(i)
+			vars()[v] = detailtxt
+			Dict('store', v, vars()[v])		# detailtxt speichern 
+			if url.endswith('.mp3'):
+				Format = 'Podcast ' 			
+			else:	
+				Format = 'Video '			# .mp4 oder .webm  (ARD nur .mp4)
+			lable = 'Download ' + Format + ' | ' + quality
+			dest_path = SETTINGS.getSetting('pref_curl_download_path')
+			tagline = Format + 'wird in ' + dest_path + ' gespeichert' 									
+			summary = 'Sendung: ' + title_org
+			key_detailtxt='detailtxt'+str(i)
+			url=py2_encode(url); title_org=py2_encode(title_org);
+			fparams="&fparams={'url': '%s', 'title': '%s', 'dest_path': '%s', 'key_detailtxt': '%s'}" % \
+				(quote(url), quote(title_org), dest_path, key_detailtxt)
+			addDir(li=li, label=lable, action="dirList", dirID="DownloadExtern", fanart=R(ICON_DOWNL), 
+				thumb=R(ICON_DOWNL), fparams=fparams, summary=summary, tagline=tagline, mediatype='')
+			i=i+1					# Dict-key-Zähler
 	
 	return li
 	
@@ -3628,6 +3637,7 @@ def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für D
 # 30.08.2018:
 # Zum Problemen "autom. Wiedereintritt" - auch bei PHT siehe Doku in LiveRecord.
 # 20.12.2018 Problem "autom. Wiedereintritt" in Kodi nicht relevant.
+# 20.01.2020 der Thread zum internen Download wird hier ebenfalls aufgerufen 
 
 def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels curl/wget
 	PLog('DownloadExtern: ' + title)
@@ -3678,11 +3688,18 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels cu
 	PLog('convert_storetxt:')
 	dtyp=py2_decode(dtyp); dfname=py2_decode(dfname); detailtxt=py2_decode(detailtxt)
 	storetxt = 'Details zum ' + dtyp +  dfname + ':\r\n\r\n' + detailtxt
+	
+	if SETTINGS.getSetting('pref_download_intern') == 'true':	# interner Download
+		from threading import Thread	# thread_getfile
+		fulldestpath = os.path.join(dest_path, dfname)	# wie curl_fullpath s.u.
+		background_thread = Thread(target=thread_getfile, args=(textfile, pathtextfile, storetxt, url, fulldestpath))
+		background_thread.start()
+		return li						# wir nehmen GetDirectory-Error in Kauf, bleiben dafür im Listing			
+		# xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
 	PLog(sys.platform)
 	try:
 		PIDcurl = ''
-		RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
 		
 		AppPath = SETTINGS.getSetting('pref_curl_path')
 		i = os.path.exists(AppPath)					# Existenz curl/wget prüfen
@@ -3739,6 +3756,42 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels cu
 		return li					
 	
 #---------------------------
+# interne Download-Routine
+#	bei Bedarf ssl.SSLContext verwenden - s.
+#	https://docs.python.org/2/library/urllib.html
+# vorh. Dateien werden überschrieben (wie bei curl/wget).
+# Aufrufer: DownloadExtern, DownloadMultiple (mit path_url_list)
+# 
+def thread_getfile(textfile, pathtextfile, storetxt, url, fulldestpath, path_url_list=''):
+	PLog("thread_getfile:")
+	PLog(url); PLog(fulldestpath) ;PLog(len(path_url_list));
+
+	try:
+		if path_url_list:
+			i=1
+			for item in path_url_list:
+				PLog(item)
+				path, url = item.split('|')
+				urlretrieve(url, path)
+				i=i+1
+			msg2 = 'Anzahl der Podcast: %s' % i
+			msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_curl_download_path')
+		else:
+			msg2 = 'Zusatz-Infos in Textdatei gespeichert: %s' % textfile
+			msg3 = 'Ablage: ' + fulldestpath	
+		RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
+		urlretrieve(url, fulldestpath)
+		msg1 = 'Download im Hintergrund gestartet'		
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+	except Exception as exception:
+		PLog("thread_getfile:" + str(exception))
+		msg1 = 'Download fehlgeschlagen'
+		msg2 = 'Fehler: %s' % str(exception)		
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+
+	return
+	
+#---------------------------
 # Tools: Einstellungen,  Bearbeiten, Verschieben, Löschen
 def DownloadsTools():
 	PLog('DownloadsTools:');
@@ -3792,13 +3845,14 @@ def DownloadsTools():
 		# movie_path = xbmc.translatePath('library://video/')
 		# PLog(movie_path)
 				
-	if os.path.isdir(movie_path)	== False:			# Sicherung gegen Fehleinträge
-		movie_path = ''									# wird ROOT_DIRECTORY in DirectoryNavigator
+	#if os.path.isdir(movie_path)	== False:			# Sicherung gegen Fehleinträge - in Kodi nicht benötigt
+	#	movie_path = ''									# wird ROOT_DIRECTORY in DirectoryNavigator
 	PLog(movie_path)	
 	title = 'Zielverzeichnis zum Verschieben festlegen/aendern (%s)' % (movie_path)	
 	tagline = 'Zum Beispiel das Medienverzeichnis.'
 	# summary =    # s.o.
-	fparams="&fparams={'settingKey': 'pref_VideoDest_path', 'mytype': '0', 'heading': '%s', 'path': '%s'}" % (title, movie_path)
+	fparams="&fparams={'settingKey': 'pref_VideoDest_path', 'mytype': '0', 'heading': '%s', 'shares': '%s', 'path': '%s'}" %\
+		(title, '', movie_path)
 	addDir(li=li, label=title, action="dirList", dirID="DirectoryNavigator", fanart=R(ICON_DOWNL_DIR), 
 		thumb=R(ICON_DIR_MOVE), fparams=fparams, tagline=tagline)
 
@@ -3891,11 +3945,12 @@ def DownloadsList():
 			txtpath = os.path.join(path, txtfile)   # kompl. Pfad
 			PLog('entry: ' + entry)
 			PLog('txtpath: ' + txtpath)
+			PLog('Mark0')
 			if os.path.exists(txtpath):
 				txt = RLoad(txtpath, abs_path=True)		# Beschreibung laden - fehlt bei Sammeldownload
-				txt = py2_decode(txt)
 			else:
 				txt = None
+				title = entry						# Titel = Dateiname, falls Beschreibung fehlt
 			if txt != None:			
 				title = stringextract("Titel: '", "'", txt)
 				tagline = stringextract("ung1: '", "'", txt)
@@ -3908,6 +3963,7 @@ def DownloadsList():
 					tagline = "%s | %s" % (tagline, quality)
 					
 				# Falsche Formate korrigieren:
+				summary=py2_decode(summary); tagline=py2_decode(tagline);
 				summary=repl_json_chars(summary); tagline=repl_json_chars(tagline); 
 				summary=summary.replace('\n', ' | '); tagline=tagline.replace('\n', ' | ')
 				summary=summary.replace('|  |', ' | '); tagline=tagline.replace('|  |', ' | ')
@@ -3935,7 +3991,7 @@ def DownloadsList():
 			tag_par=py2_encode(tag_par); 
 			fparams="&fparams={'httpurl': '%s', 'path': '%s', 'dlpath': '%s', 'txtpath': '%s', 'title': '%s','summary': '%s', \
 				'thumb': '%s', 'tagline': '%s'}" % (quote(httpurl), quote(localpath), quote(dlpath), 
-				txtpath, quote(title), quote(summary), quote(thumb), quote(tag_par))
+				quote(txtpath), quote(title), quote(summary), quote(thumb), quote(tag_par))
 			addDir(li=li, label=oc_title, action="dirList", dirID="VideoTools", fanart=thumb, 
 				thumb=thumb, fparams=fparams, summary=summary, tagline=tagline)
 			
@@ -4059,37 +4115,60 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 	li = xbmcgui.ListItem()
 
 	if  os.access(destpath, os.W_OK) == False:
-		msg1 = 'Download fehlgeschlagen'
-		msg2 = 'Kein Schreibrecht im Zielverzeichnis'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
-		return li	
+		if '//' not in destpath:				# Test entfällt bei Shares
+			msg1 = 'Download fehlgeschlagen'
+			msg2 = 'Kein Schreibrecht im Zielverzeichnis'
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			return li	
 
 	try:
 		cnt = 0
-		if single == 'False':				# kompl. Verzeichnis
+		if single == 'False':				# Verzeichnisinhalt verschieben
 			for i in os.listdir(dlpath):
 				src = os.path.join(dlpath, i)
-				dest = os.path.join(destpath, i)							
+				if '//' not in destpath:
+					dest = os.path.join(destpath, i)
+				else:
+					dest = destpath + i		#  smb://myShare/myVideos/video1.mp4							
 				PLog(src); PLog(dest); 
 				
-				if os.path.isfile(src) == True:							
-					shutil.copy(src, destpath)	# Datei kopieren	
-					os.remove(src)				# Datei löschen
+				if os.path.isfile(src) == True:	   # Quelle testen
+					if '//' not in destpath:						
+						shutil.copy(src, destpath)	# Datei kopieren	
+						os.remove(src)				# Datei löschen
+					else:
+						xbmcvfs.copy(src, destpath)
+						xbmcvfs.delete(src)
 					cnt = cnt + 1
 			error_txt = '%s Dateien verschoben nach: %s' % (cnt, destpath)		 			 	 
-		else:
+		else:								# Einzeldatei verschieben
 			textsrc = os.path.join(dlpath, textname)
-			textdest = os.path.join(destpath, textname)	
 			videosrc = os.path.join(dlpath, dfname)
-			videodest = os.path.join(destpath, dfname)		
+			if '//' not in destpath:						
+				textdest = os.path.join(destpath, textname)	
+				videodest = os.path.join(destpath, dfname)
+			else:		
+				textdest = destpath + textname	
+				videodest = destpath + dfname
 			PLog(videosrc); PLog(videodest);
 					
-			if os.path.isfile(textsrc) == True:	# Quelldatei testen						
-				shutil.copy(textsrc, textdest)		
-				os.remove(textsrc)				# Textdatei löschen
-			if os.path.isfile(videosrc) == True:							
-				shutil.copy(videosrc, videodest)				
-				os.remove(videosrc)				# Videodatei dto.
+			if '//' not in destpath:						
+				if os.path.isfile(textsrc) == True:	# Quelldatei testen						
+					shutil.copy(textsrc, textdest)		
+					os.remove(textsrc)				# Textdatei löschen
+				if os.path.isfile(videosrc) == True:							
+					shutil.copy(videosrc, videodest)				
+					os.remove(videosrc)				# Videodatei dto.
+			else:
+				ret1=xbmcvfs.copy(textsrc, textdest)
+				ret2=xbmcvfs.copy(videosrc, videodest)
+				if xbmcvfs.exists(textdest):
+					xbmcvfs.delete(textdest)
+				if xbmcvfs.exists(videodest):
+					xbmcvfs.delete(videosrc)
+				else:
+					raise Exception('Kopieren auf Share %s fehlgeschlagen' % destpath)
+				
 			error_txt = 'Video + Textdatei verschoben: ' + 	dfname				 			 	 
 		PLog(error_txt)			 			 	 		
 		msg1 = 'Verschieben erfolgreich'
@@ -4700,7 +4779,7 @@ def TVLiveRecordSender(title):
 #		wird nach TVLiveRecordSender (Senderliste) zurück gesprungen und Dict['PIDffmpeg'] geleert.
 #		Beim nächsten manuellen Aufruf wird LiveRecord wieder frei gegeben ("Türsteherfunktion").
 #
-#	PHT-Problem: wie in TuneIn2017 (streamripper-Aufruf) sprint PHT bereits vor dem Ergebnis-Buttons (DirectoryObject)
+#	PHT-Problem: wie in TuneIn2017 (streamripper-Aufruf) sprignt PHT bereits vor dem Ergebnis-Buttons (DirectoryObject)
 #		in LiveRecord zurück.
 #		Lösung: Ersatz des Ergebnis-Buttons durch return ObjectContainer. PHT steigt allerdings danach mit 
 #			"GetDirectory failed" aus (keine Abhilfe bisher). Der ungewollte Wiedereintritt findet trotzdem
