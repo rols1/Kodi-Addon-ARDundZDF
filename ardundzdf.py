@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.5.2'
-VDATE = '22.01.2020'
+VERSION = '2.5.3'
+VDATE = '23.01.2020'
 
 #
 #
@@ -5656,7 +5656,8 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	li = home(li, ID='ZDF')										# Home-Button
 
 	# Der Loader in ZDF-Suche liefert weitere hrefs, auch wenn weitere Ergebnisse fehlen
-	if searchResult == '0' or 'class="artdirect " >' not in page:
+	# 22.01.2020 Webänderung 'class="artdirect " >' -> 'class="artdirect"'
+	if searchResult == '0' or 'class="artdirect"' not in page:
 		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
 		msg1 = 'Keine Ergebnisse (mehr) zu: %s' % query  
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
@@ -6427,8 +6428,11 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		msg_notfound = u'Leider kein Video verfügbar'		# z.B. Ausblick auf Sendung
 		if page_title:
 			msg_notfound = u'Leider kein Video verfügbar zu: ' + page_title
-				
-	content =  blockextract('class="artdirect " >', page)
+	
+	if 'class="artdirect " >' in page:			
+		content =  blockextract('class="artdirect " >', page)
+	else:
+		content =  blockextract('class="artdirect"', page)
 	if len(content) == 0:
 		content =  blockextract('class="stage-image', page) 	# 10.12.2019 ZDF Highlights
 	if len(content) == 0:
@@ -6529,12 +6533,17 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		if subscription == 'true':						
 			multi = True
 			teaser_count = stringextract('</span>', '<strong>', teaser_label)	# bei Beiträgen
-			stage_title = stringextract('class=\"stage-title\"', '</h1>', rec)  
+			stage_title = stringextract('class="stage-title"', '</h1>', rec)  
 			summary = teaser_count + ' ' + teaser_typ 
 
 		# Titel	
 		href_title = stringextract('<a href="', '>', rec)		# href-link hinter teaser-cat kann Titel enthalten
 		href_title = stringextract('title="', '"', href_title)
+		if href_title == '' and "Context:Suchergebnisse" in rec:# ID Search
+			href_title = stringextract('Context:Suchergebnisse', '</h3>', rec)
+			href_title = stringextract('>', '</a>', href_title) 
+			href_title = mystrip(href_title)
+			
 		href_title = unescape(href_title)
 		PLog('href_title: ' + href_title)
 		if 	href_title == 'ZDF Livestream' or href_title == 'Sendung verpasst':
@@ -6542,7 +6551,6 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			
 		# Pfad				
 		plusbar_title = stringextract('plusbar-title="', '"', rec)	# Bereichs-, nicht Einzeltitel, nachrangig
-		# plusbar_path = stringextract('plusbar-path=\"', '\"', rec)    # path ohne http(s)
 		path =  stringextract('plusbar-url="', '"', rec)				# plusbar nicht vorh.? - sollte nicht vorkommen
 		PLog('path: ' + path); PLog('ref_path: %s' % ref_path)	
 		

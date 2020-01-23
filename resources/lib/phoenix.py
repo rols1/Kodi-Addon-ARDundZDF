@@ -4,7 +4,7 @@
 #				benötigt Modul yt.py (Youtube-Videos)
 #		Videos der Phoenix_Mediathek auf https://www.phoenix.de/ 
 ################################################################################
-#	Stand: 22.01.2020
+#	Stand: 23.01.2020
 #
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
@@ -154,7 +154,8 @@ def get_live_data():
 	if page == '':	
 		msg1 = "get_live_data:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		# xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		PLog("%s | %s" % (msg1, msg2))	
 	PLog(len(page))			
 	
 	title='';subtitle='';vorspann='';descr='';href=''

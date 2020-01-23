@@ -7,7 +7,12 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
-23.01.2020	2.5.2	Main_phoenix (Modul phoenix): Blockierung bei Ausfall der Seite livestream_json
+23.01.2020	2.5.3	ZDF_get_content: Anpassung an Änderung der Webseiten bei "Sendung verpasst",
+			"Sendungen A-Z" und Suche.
+			get_live_data (Modul phoenix): Hinw. auf Ausfall livestream_json abgeschaltet
+			(Störung scheint anzudauern).
+
+22.01.2020	2.5.2	Main_phoenix (Modul phoenix): Blockierung bei Ausfall der Seite livestream_json
 			aufgehoben, Anpassung in get_live_data, Hinweis beibehalten.	
 
 22.01.2020	2.5.1	zusätzl. interne Download-Funktion: neue Funktion thread_getfile, Anpassungen
