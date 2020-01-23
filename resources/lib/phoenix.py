@@ -583,10 +583,11 @@ def get_zdf_search(li, page, title):
 	PLog(page[:100])
 
 	title_org = stringextract('titel": "', '"', page)  		# hier mit Blank
+	PLog(title_org)
 	stitle_org = stringextract('subtitel": "', '"', page)	# hier mit Blank
 	tag = "Suche phoenix-Beitrag auf Partnersender ZDF"
 	
-	if "phoenix history" not in title: 					# Dokus mit Titel + Subtitel suchen 
+	if "phoenix history" not in title_org: 					# Dokus mit Titel + Subtitel suchen 
 		query = stitle_org
 		title = "1. ZDFSuche (Titel): %s" % query	
 		tag = tag + " | Suche mit Titel des Beitrags"	
@@ -633,7 +634,7 @@ def get_zdf_search(li, page, title):
 			summ = summ.replace('\\r\\n', ' ')
 			summ = cleanhtml(summ); summ = unescape(summ);
 			summ = repl_json_chars(summ) 
-			PLog("Satz:"); PLog(title); PLog(stitle);PLog(query); PLog(summ[:80]); 
+			PLog("Satz:"); PLog(title); PLog(query); PLog(summ[:80]); 
 			
 			query=py2_encode(query); title=py2_encode(title);
 			fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))

@@ -56,7 +56,7 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.5.3'
+VERSION = '2.5.4'
 VDATE = '23.01.2020'
 
 #
@@ -3693,9 +3693,10 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels cu
 		from threading import Thread	# thread_getfile
 		fulldestpath = os.path.join(dest_path, dfname)	# wie curl_fullpath s.u.
 		background_thread = Thread(target=thread_getfile, args=(textfile, pathtextfile, storetxt, url, fulldestpath))
-		background_thread.start()
-		return li						# wir nehmen GetDirectory-Error in Kauf, bleiben dafür im Listing			
-		# xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		background_thread.start()		
+		# return li						# Kodi-Problem: wartet bis Ende Thread			
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return							# hier trotz endOfDirectory erforderlich
 			
 	PLog(sys.platform)
 	try:
@@ -3765,24 +3766,28 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels cu
 def thread_getfile(textfile, pathtextfile, storetxt, url, fulldestpath, path_url_list=''):
 	PLog("thread_getfile:")
 	PLog(url); PLog(fulldestpath) ;PLog(len(path_url_list));
+	# from time import sleep								# Debug
 
 	try:
 		if path_url_list:
+			msg1 = 'Starte Download im Hintergrund'		
+			msg2 = 'Anzahl der Podcast: %s' % len(path_url_list)
+			msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_curl_download_path')
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 			i=1
 			for item in path_url_list:
 				PLog(item)
 				path, url = item.split('|')
 				urlretrieve(url, path)
+				# sleep(3)									# Debug
 				i=i+1
-			msg2 = 'Anzahl der Podcast: %s' % i
-			msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_curl_download_path')
 		else:
-			msg2 = 'Zusatz-Infos in Textdatei gespeichert: %s' % textfile
+			msg1 = 'Starte Download im Hintergrund'		
+			msg2 = 'Speichere Zusatz-Infos in Textdatei: %s' % textfile
 			msg3 = 'Ablage: ' + fulldestpath	
-		RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
-		urlretrieve(url, fulldestpath)
-		msg1 = 'Download im Hintergrund gestartet'		
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
+			urlretrieve(url, fulldestpath)
 	except Exception as exception:
 		PLog("thread_getfile:" + str(exception))
 		msg1 = 'Download fehlgeschlagen'
@@ -4150,6 +4155,7 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 			else:		
 				textdest = destpath + textname	
 				videodest = destpath + dfname
+			PLog(textsrc); PLog(textdest);
 			PLog(videosrc); PLog(videodest);
 					
 			if '//' not in destpath:						
@@ -4163,7 +4169,7 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 				ret1=xbmcvfs.copy(textsrc, textdest)
 				ret2=xbmcvfs.copy(videosrc, videodest)
 				if xbmcvfs.exists(textdest):
-					xbmcvfs.delete(textdest)
+					xbmcvfs.delete(textsrc)
 				if xbmcvfs.exists(videodest):
 					xbmcvfs.delete(videosrc)
 				else:

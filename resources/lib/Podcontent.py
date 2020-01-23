@@ -228,7 +228,7 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	# PLog('downl_list: %s' % downl_list)
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='PODCAST')								# Home-Button
+	li = home(li, ID='ARDaudio')							# Home-Button
 	
 	rec_len = len(downl_list)
 	AppPath = SETTINGS.getSetting('pref_curl_path')
@@ -280,8 +280,9 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 		background_thread = Thread(target=ardundzdf.thread_getfile,
 			args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list))
 		background_thread.start()
-		return li						# wir nehmen GetDirectory-Error in Kauf, bleiben dafür im Listing			
-		# xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		# return li						# Kodi-Problem: wartet bis Ende Thread			
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return							# hier trotz endOfDirectory erforderlich
 	
 	cmd = AppPath + ' ' + curl_param_list
 	PLog(len(cmd))

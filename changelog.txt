@@ -7,6 +7,14 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+23.01.2020	2.5.4	Rückkehrfunktion interner Download: Verwendung endOfDirectory vor return
+			(verhindert, dass Kodi das Ende von thread_getfile abwartet), Anpassung
+			DownloadExtern, DownloadMultiple (Modul Podcontent) sowie Dialog in thread_getfile.
+			interner Download: Fix delete(textsrc) in DownloadsMove (vorher wurde die 
+			Zieldatei gelöscht).
+			get_zdf_search (Modul phoenix): Fix Erkennung "phoenix history"-Seiten
+			(title_org statt title).	
+
 23.01.2020	2.5.3	ZDF_get_content: Anpassung an Änderung der Webseiten bei "Sendung verpasst",
 			"Sendungen A-Z" und Suche.
 			get_live_data (Modul phoenix): Hinw. auf Ausfall livestream_json abgeschaltet
