@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+25.01.2020	2.5.5	DownloadsMove (interner Download, Verzeichnisinhalt verschieben): Code
+			erneuert, einschl. Fehlerbehandlung. 	
+
 23.01.2020	2.5.4	Rückkehrfunktion interner Download: Verwendung endOfDirectory vor return
 			(verhindert, dass Kodi das Ende von thread_getfile abwartet), Anpassung
 			DownloadExtern, DownloadMultiple (Modul Podcontent) sowie Dialog in thread_getfile.

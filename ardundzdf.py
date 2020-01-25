@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.5.4'
-VDATE = '23.01.2020'
+VERSION = '2.5.5'
+VDATE = '25.01.2020'
 
 #
 #
@@ -3829,14 +3829,14 @@ def DownloadsTools():
 	li = home(li, ID=NAME)								# Home-Button
 	
 	path = SETTINGS.getSetting('pref_curl_path')			# Einstellungen: Pfad curl/wget
-	title = 'Pfad zum Downloadprogramm curl/wget festlegen/aendern (%s)' % path
+	title = u'Pfad zum Downloadprogramm curl/wget festlegen/ändern (%s)' % path
 	tagline = 'Hier wird der Pfad zum Downloadprogramm curl/wget eingestellt.'
 	fparams="&fparams={'settingKey': 'pref_curl_path', 'mytype': '1', 'heading': '%s', 'path': '%s'}" % (title, path)
 	addDir(li=li, label=title, action="dirList", dirID="DirectoryNavigator", fanart=R(ICON_DOWNL_DIR), 
 		thumb=R(ICON_DIR_CURLWGET), fparams=fparams, tagline=tagline)
 
 	dlpath =  SETTINGS.getSetting('pref_curl_download_path')# Einstellungen: Pfad Downloaderz.
-	title = 'Downloadverzeichnis festlegen/aendern: (%s)' % dlpath			
+	title = u'Downloadverzeichnis festlegen/ändern: (%s)' % dlpath			
 	tagline = 'Das Downloadverzeichnis muss für den Addon-Nutzer beschreibbar sein.'
 	# summary =    # s.o.
 	fparams="&fparams={'settingKey': 'pref_curl_download_path', 'mytype': '0', 'heading': '%s', 'path': '%s'}" % (title, dlpath)
@@ -3853,17 +3853,18 @@ def DownloadsTools():
 	#if os.path.isdir(movie_path)	== False:			# Sicherung gegen Fehleinträge - in Kodi nicht benötigt
 	#	movie_path = ''									# wird ROOT_DIRECTORY in DirectoryNavigator
 	PLog(movie_path)	
-	title = 'Zielverzeichnis zum Verschieben festlegen/aendern (%s)' % (movie_path)	
+	title = u'Zielverzeichnis zum Verschieben festlegen/ändern (%s)' % (movie_path)	
 	tagline = 'Zum Beispiel das Medienverzeichnis.'
+	summ = u'Hier kann auch ein Netzwerkverzeichnis, z.B. eine SMB-Share, ausgewählt werden.'
 	# summary =    # s.o.
 	fparams="&fparams={'settingKey': 'pref_VideoDest_path', 'mytype': '0', 'heading': '%s', 'shares': '%s', 'path': '%s'}" %\
 		(title, '', movie_path)
 	addDir(li=li, label=title, action="dirList", dirID="DirectoryNavigator", fanart=R(ICON_DOWNL_DIR), 
-		thumb=R(ICON_DIR_MOVE), fparams=fparams, tagline=tagline)
+		thumb=R(ICON_DIR_MOVE), fparams=fparams, tagline=tagline, summary=summ)
 
 	PLog(SETTINGS.getSetting('pref_podcast_favorits'))					# Pfad zur persoenlichen Podcast-Favoritenliste
 	path =  SETTINGS.getSetting('pref_podcast_favorits')							
-	title = 'Persoenliche Podcast-Favoritenliste festlegen/aendern (%s)' % path			
+	title = u'Persoenliche Podcast-Favoritenliste festlegen/ändern (%s)' % path			
 	tagline = 'Format siehe podcast-favorits.txt (Ressourcenverzeichnis)'
 	# summary =    # s.o.
 	fparams="&fparams={'settingKey': 'pref_podcast_favorits', 'mytype': '1', 'heading': '%s', 'path': '%s'}" % (title, path)
@@ -4070,7 +4071,7 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		textname = os.path.basename(txtpath)
 		lable = "Verschieben | %s" % title_org									
 		summary = "Ziel: %s" % VideoDest_path
-		tagline = 'Das Zielverzeichnis kann im Menü Download-Tools geaendert werden'
+		tagline = u'Das Zielverzeichnis kann im Menü Download-Tools oder in den Addon-Settings geändert werden'
 		path=py2_encode(path); textname=py2_encode(textname);
 		dlpath=py2_encode(dlpath); VideoDest_path=py2_encode(VideoDest_path);
 		fparams="&fparams={'dfname': '%s', 'textname': '%s', 'dlpath': '%s', 'destpath': '%s', 'single': 'True'}" \
@@ -4120,32 +4121,47 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 	li = xbmcgui.ListItem()
 
 	if  os.access(destpath, os.W_OK) == False:
-		if '//' not in destpath:				# Test entfällt bei Shares
+		if '//' not in destpath:					# Test entfällt bei Shares
 			msg1 = 'Download fehlgeschlagen'
 			msg2 = 'Kein Schreibrecht im Zielverzeichnis'
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li	
 
 	try:
-		cnt = 0
-		if single == 'False':				# Verzeichnisinhalt verschieben
-			for i in os.listdir(dlpath):
-				src = os.path.join(dlpath, i)
+		cnt=0; err_cnt=0
+		if single == 'False':						# Verzeichnisinhalt verschieben
+			dlpath_list = next(os.walk(dlpath))[2]	# skip .. + dirs		
+			ges_cnt = len(dlpath_list)				# Anzahl Dateien
+			for fname in dlpath_list:
+				src = os.path.join(dlpath, fname)
 				if '//' not in destpath:
-					dest = os.path.join(destpath, i)
+					dest = os.path.join(destpath, fname)
 				else:
-					dest = destpath + i		#  smb://myShare/myVideos/video1.mp4							
+					dest = destpath + fname			#  smb://myShare/myVideos/video1.mp4							
 				PLog(src); PLog(dest); 
 				
-				if os.path.isfile(src) == True:	   # Quelle testen
+				if os.path.isfile(src) == True:	   	# Quelle testen
 					if '//' not in destpath:						
-						shutil.copy(src, destpath)	# Datei kopieren	
-						os.remove(src)				# Datei löschen
+						shutil.copy(src, dest)		# konv. kopieren	
 					else:
-						xbmcvfs.copy(src, destpath)
+						xbmcvfs.copy(src, dest)		# zu Share kopieren
+						
+					if xbmcvfs.exists(dest):
 						xbmcvfs.delete(src)
-					cnt = cnt + 1
-			error_txt = '%s Dateien verschoben nach: %s' % (cnt, destpath)		 			 	 
+						cnt = cnt + 1
+
+			if cnt == ges_cnt:
+				msg1 = 'Verschieben erfolgreich'
+				msg2 = '%s von %s Dateien verschoben nach: %s' % (cnt, ges_cnt, destpath)
+				msg3 = ''
+			else:
+				msg1 = 'Problem beim Verschieben - Ursache nicht bekannt'
+				msg2 = 'verschobene Dateien: %s von %s.' % (cnt, ges_cnt)
+				msg3 = 'Vielleicht hilft es, Dateien einzeln zu verschieben (Menü >Downloads bearbeiten<)'
+			PLog(msg2)	
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			return li
+				 			 	 
 		else:								# Einzeldatei verschieben
 			textsrc = os.path.join(dlpath, textname)
 			videosrc = os.path.join(dlpath, dfname)
@@ -4175,10 +4191,9 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 				else:
 					raise Exception('Kopieren auf Share %s fehlgeschlagen' % destpath)
 				
-			error_txt = 'Video + Textdatei verschoben: ' + 	dfname				 			 	 
-		PLog(error_txt)			 			 	 		
 		msg1 = 'Verschieben erfolgreich'
-		msg2 = error_txt
+		msg2 = 'Video + Textdatei verschoben: ' + 	dfname
+		PLog(msg2)	
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li
 
