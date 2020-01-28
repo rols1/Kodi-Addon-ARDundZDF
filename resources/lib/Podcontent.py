@@ -41,6 +41,7 @@ elif PYTHON3:
 # Python
 import sys, os, subprocess 
 import json, re
+import datetime, time
 
 # Addonmodule + Funktionsziele 
 import ardundzdf					# -> thread_getfile 
@@ -143,7 +144,9 @@ def PodFavoriten(title, path, pagenr='1'):
 		img		= img.replace('{width}', '640')
 		
 		title = rubrik + ' | ' + title
+		title = repl_json_chars(title)
 		descr	= "" + sender + ' | ' + dauer + ' | ' + pub_date + '\n\n' + descr 
+		descr = repl_json_chars(descr)
 		summ_par= descr.replace('\n', '||')
 	
 		PLog('Satz:');
@@ -277,8 +280,10 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	if SETTINGS.getSetting('pref_download_intern') == 'true':	# interner Download
 		from threading import Thread	# thread_getfile
 		textfile='';pathtextfile='';storetxt='';url='';fulldestpath=''
+		now = datetime.datetime.now()
+		timemark = now.strftime("%Y-%m-%d_%H-%M-%S")
 		background_thread = Thread(target=ardundzdf.thread_getfile,
-			args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list))
+			args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark))
 		background_thread.start()
 		# return li						# Kodi-Problem: wartet bis Ende Thread			
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)

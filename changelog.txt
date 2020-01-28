@@ -7,6 +7,24 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+28.01.2020	2.5.7	Aktualisierung podcast-favorits.txt: 
+			Austausch "Wirtschaft und Soz. B5" gegen "Wirtschaft hrINFO",
+			"ARD Radiofestival 2018" entfernt,
+			Austausch "Antenne Brandenburg - Interviews" gegen Interviews -Inforadio RBB,
+			Austausch "Tatort mit Til Schweiger" gegen "ARD Radio Tatort",
+			Austausch "Das Campusmagazin" gegen "zukunftschule".	
+			PodFavoriten (Modul Podcontent): repl_json_chars(title),epl_json_chars(descr).
+			SingleSendung (ARD Classic): py2_encode(summ_lable).
+			ZDFSportLive und SearchARDundZDF: Anpassung an Änderung der Webseiten (wie V.2.5.3).
+			home-ID (Haupt-PRG): Austausch "ARDaudio" gegen "ARD Audiothek".	
+				
+not on Github	2.5.6	thread_getfile: Info-Dialog nach Abschluss Download (mit Dateiname, bei
+			Podcast-Sammeldownloads mit Zeitstempel).
+			DownloadMultiple (Modul Podcontent): Aufruf thread mit Zeitstempel.
+			Dialog bei leerer Seite.
+			get_page-Aufruf (gesamtes Addon, wo sinnvoll): Info-Dialog mit URLError bei
+			Ladefehler (get_page) ergänzt.
+
 25.01.2020	2.5.5	DownloadsMove (interner Download, Verzeichnisinhalt verschieben): Code
 			erneuert, einschl. Fehlerbehandlung. 	
 

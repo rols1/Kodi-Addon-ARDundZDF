@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.5.5'
-VDATE = '25.01.2020'
+VERSION = '2.5.7'
+VDATE = '28.01.2020'
 
 #
 #
@@ -721,7 +721,7 @@ def AudioStart(title):
 def AudioStartRubrik(title, ID, path=''):
 	PLog('AudioStartRubrik: ' + ID)
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARDaudio')				# Home-Button
+	li = home(li, ID='ARD Audiothek')				# Home-Button
 	
 	if not path:
 		path = ARD_AUDIO_BASE					# Default				
@@ -765,7 +765,7 @@ def AudioStartRubrik(title, ID, path=''):
 def AudioStart_AZ(title):		
 	PLog('AudioStart_AZ:')
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARDaudio')					# Home-Button
+	li = home(li, ID='ARD Audiothek')					# Home-Button
 
 	path = ARD_AUDIO_BASE + '/alphabetisch?al=a'	# A-Z-Seite laden für Prüfung auf inaktive Buchstaben
 	page, msg = get_page(path)		
@@ -815,7 +815,7 @@ def AudioStart_AZ(title):
 def AudioStart_AZ_content(button):		
 	PLog('AudioStart_AZ_content: ' + button)
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARDaudio')					# Home-Button
+	li = home(li, ID='ARD Audiothek')					# Home-Button
 
 	path = ARD_AUDIO_BASE + '/alphabetisch?al=a'	# A-Z-Seite laden für Prüfung auf inaktive Buchstaben
 	page, msg = get_page(path)		
@@ -894,7 +894,7 @@ def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams
 	if myhome:
 		li = home(li, ID=myhome)
 	else:	
-		li = home(li, ID='ARDaudio')			# Home-Button
+		li = home(li, ID='ARD Audiothek')			# Home-Button
 
 	path = ARD_AUDIO_BASE + '/sender'
 	page, msg = get_page(path=path)	
@@ -1234,7 +1234,7 @@ def AudioSearch(title, query=''):
 	base = u'https://www.ardaudiothek.de/api/search/%s?items_per_page=24&page=1'  
 
 	if 	query == '':	
-		query = get_query(channel='ARDaudio')
+		query = get_query(channel='ARD Audiothek')
 	PLog(query)
 	if  query == None or query.strip() == '':
 		return ""
@@ -1268,7 +1268,7 @@ def AudioContentJSON(title, page, pagenr=''):
 	title_org = title
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARDaudio')		# Home-Button
+	li = home(li, ID='ARD Audiothek')		# Home-Button
 
 	cnt=0
 	gridlist = blockextract('podcast":{"category', page)		# Sendungen / Rubriken
@@ -1381,7 +1381,7 @@ def AudioContentXML(title, path):
 	title_org = title
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARDaudio')		# Home-Button
+	li = home(li, ID='ARD Audiothek')		# Home-Button
 	
 	page, msg = get_page(path=path)	
 	if page == '':
@@ -1445,7 +1445,7 @@ def AudioPlayMP3(url, title, thumb, Plot):
 		return
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARDaudio')		# Home-Button
+	li = home(li, ID='ARD Audiothek')		# Home-Button
 		
 	summary = Plot.replace('||', '\n')			# Display
 	 
@@ -1479,8 +1479,8 @@ def ARDSport(title):
 	page, msg = get_page(path=path)		
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 	PLog(len(page))	
 	
@@ -1640,8 +1640,8 @@ def ARDSportPanel(title, path, img):
 	page, msg = get_page(path=path)		
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	
@@ -1727,8 +1727,8 @@ def ARDSportBilder(title, path, img):
 	page, msg = get_page(path=path)		
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	
@@ -2459,7 +2459,7 @@ def SearchARDundZDF(title, query='', pagenr=''):
 	
 	query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
 	query_lable = unquote(query_lable)
-	if searchResult == '0' or 'class="artdirect " >' not in page:		# Sprung hierher
+	if searchResult == '0' or 'class="artdirect"' not in page:		# Sprung hierher
 		label = "ZDF | nichts gefunden zu: %s | neue Suche" % query_lable
 		title="Suche in ARD und ZDF"
 		title=py2_encode(title);
@@ -2597,7 +2597,7 @@ def get_query(channel='ARD'):
 		query = "%s|%s" % (query_ard, query_zdf)							
 		PLog('query_ARDundZDF: %s' % query);
 		return	query
-	if channel=='ARDaudio' or channel=='phoenix':	# nur strip, quoting durch Aufrufer
+	if channel=='ARD Audiothek' or channel=='phoenix':	# nur strip, quoting durch Aufrufer
 		return 	query.strip()
 			
 #---------------------------------------------------------------- 
@@ -2919,7 +2919,7 @@ def PodFavoritenListe(title, offset=0):
 				
 	title2 = 'Favoriten %s - %s (%s)' % (start_cnt+1, min(end_cnt,max_len) , max_len)
 	li = xbmcgui.ListItem()
-	li = home(li,ID='ARDaudio')				# Home-Button
+	li = home(li,ID='ARD Audiothek')				# Home-Button
 
 	for i in range(len(bookmarks)):
 		cnt = int(i) + int(offset)
@@ -3152,7 +3152,7 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 	func_path = path								# für Vergleich sichern					
 	page, msg = get_page(path=path)
 	if page == '':
-		msg1 = 'Fehler:'
+		msg1 = 'Fehler SinglePage'
 		msg2 = msg
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li
@@ -3386,7 +3386,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 	if path.endswith('.mp3') == False:
 		page, msg = get_page(path=path)				# Absicherung gegen Connect-Probleme. Page=Textformat
 		if page == '':
-			msg1 = 'Fehler:'
+			msg1 = 'Fehler SingleSendung:'
 			msg2 = msg
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li
@@ -3510,8 +3510,10 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 									
 			else:
 				title=py2_encode(title); Format=py2_encode(Format); tagline=py2_encode(tagline); 
+				summary=py2_encode(summary);
 				summary = "%s\n%s" % (title, Format)		# 3. Podcasts mp3-Links, mp4-Links
 				summ_lable=summary_org.replace('||', '\n')
+				summ_lable=py2_encode(summ_lable);
 				if tagline:	
 					summ_lable = "%s\n%s" % (tagline, summ_lable)
 				if ID == 'PODCAST':			# (noch) keine Header benötigt
@@ -3567,7 +3569,7 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 	if SETTINGS.getSetting('pref_use_downloads') == 'true' or SETTINGS.getSetting('pref_download_intern') == 'true':
 		dest_path = SETTINGS.getSetting('pref_curl_download_path')
 		if  os.path.isdir(dest_path) == False:
-			msg1	= 'test_downloads'
+			msg1	= u'test_downloads: Downloads nicht möglich'
 			msg2 	= 'Downloadverzeichnis existiert nicht'
 			msg3 	= "Settings: " + dest_path
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
@@ -3757,19 +3759,22 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels cu
 		return li					
 	
 #---------------------------
-# interne Download-Routine
+# interne Download-Routine mittels urlretrieve 
 #	bei Bedarf ssl.SSLContext verwenden - s.
 #	https://docs.python.org/2/library/urllib.html
 # vorh. Dateien werden überschrieben (wie bei curl/wget).
-# Aufrufer: DownloadExtern, DownloadMultiple (mit path_url_list)
-# 
-def thread_getfile(textfile, pathtextfile, storetxt, url, fulldestpath, path_url_list=''):
+# Aufrufer: DownloadExtern, DownloadMultiple (mit 
+#	path_url_list + timemark).
+# Alternativen für urlretrieve (legacy): wget-Modul, 
+#	Request (stackoverflow: alternative-of-urllib-urlretrieve-in-python-3-5)
+#
+def thread_getfile(textfile, pathtextfile, storetxt, url, fulldestpath, path_url_list='', timemark=''):
 	PLog("thread_getfile:")
-	PLog(url); PLog(fulldestpath) ;PLog(len(path_url_list));
+	PLog(url); PLog(fulldestpath); PLog(len(path_url_list)); PLog(timemark); 
 	# from time import sleep								# Debug
 
 	try:
-		if path_url_list:
+		if path_url_list:									# Podcast-Sammeldownloads
 			msg1 = 'Starte Download im Hintergrund'		
 			msg2 = 'Anzahl der Podcast: %s' % len(path_url_list)
 			msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_curl_download_path')
@@ -3779,8 +3784,11 @@ def thread_getfile(textfile, pathtextfile, storetxt, url, fulldestpath, path_url
 				PLog(item)
 				path, url = item.split('|')
 				urlretrieve(url, path)
-				# sleep(3)									# Debug
+				# sleep(2)									# Debug
 				i=i+1
+			msg1 = 'Download abgeschlossen'
+			msg2 = 'gestartet: %s' % timemark				# Zeitstempel 
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	# Fertig-Info
 		else:
 			msg1 = 'Starte Download im Hintergrund'		
 			msg2 = 'Speichere Zusatz-Infos in Textdatei: %s' % textfile
@@ -3788,6 +3796,10 @@ def thread_getfile(textfile, pathtextfile, storetxt, url, fulldestpath, path_url
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 			RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
 			urlretrieve(url, fulldestpath)
+			# sleep(20)										# Debug
+			msg1 = 'Download abgeschlossen'
+			msg2 = '%s gespeichert' % os.path.basename(fulldestpath)
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	# Fertig-Info
 	except Exception as exception:
 		PLog("thread_getfile:" + str(exception))
 		msg1 = 'Download fehlgeschlagen'
@@ -5465,9 +5477,10 @@ def ZDFStart(title, show_cluster='', path=''):
 		
 	page, msg = get_page(path=BASE)
 	if page == '':
-		msg1 = "%s-Startseite nicht im Web verfügbar." % logo
-		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
+		msg1 = "%s-Startseite nicht im Web verfügbar." % Logo
+		msg2 = msg
+		PLog(msg1); PLog(msg2);
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		
 	# 2. Durchlauf: 
 	if show_cluster:											
@@ -5679,9 +5692,10 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	# Der Loader in ZDF-Suche liefert weitere hrefs, auch wenn weitere Ergebnisse fehlen
 	# 22.01.2020 Webänderung 'class="artdirect " >' -> 'class="artdirect"'
 	if searchResult == '0' or 'class="artdirect"' not in page:
-		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
+		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen
+		msg2 = msg 
 		msg1 = 'Keine Ergebnisse (mehr) zu: %s' % query  
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li	
 				
 	# anders als bei den übrigen ZDF-'Mehr'-Optionen gibt der Sender Suchergebnisse bereits
@@ -5788,8 +5802,8 @@ def ZDFSendungenAZList(title, element):			# ZDF-Sendereihen zum gewählten Buchs
 	page, msg = get_page(path=azPath)	
 	if page == '':
 		msg1 = 'AZ-Beiträge können nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li
 	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=azPath, ID='DEFAULT')
 	PLog(page_cnt)  
@@ -5819,8 +5833,8 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 	page, msg = get_page(path=url)	
 	if page == '':
 		msg1 = 'Beitrag kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 						
 	if "www.zdf.de/kinder" in url:
@@ -5866,8 +5880,8 @@ def ZDFRubriken(name):
 	page, msg = get_page(path=path)	
 	if page == '':
 		msg1 = 'Beitrag kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 						
 
 	listblock =  stringextract('<li class=\"dropdown-block x-left\">', 'link js-track-click icon-104_live-tv', page)
@@ -5922,8 +5936,8 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 		page, msg = get_page(path=path)	
 	if page == '':
 		msg1 = 'Beitrag kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li
 
 	cluster =  blockextract('class="cluster-title"', page)
@@ -6150,8 +6164,8 @@ def MeistGesehen(name):							# ZDF-Bereich, Beiträge unbegrenzt
 	page, msg = get_page(path=path)	
 	if page == '':
 		msg1 = 'Beitrag kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 		
 	# unbegrenzt (anders als A-Z Beiträge):
@@ -6174,8 +6188,8 @@ def BarriereArm(title):
 	page, msg = get_page(path=path)	
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	
@@ -6225,8 +6239,8 @@ def BarriereArmSingle(path, title, ID):
 	
 	if page == False:							# Seite fehlt im Cache
 		msg1 = 'Seite kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	# RSave('/tmp/xb.html', py2_encode(page))	# Debug
@@ -6258,8 +6272,8 @@ def ZDFSportLive(title):
 	page, msg = get_page(path=path, header="{'Pragma': 'no-cache'}")		
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	 	
@@ -6295,7 +6309,7 @@ def ZDFSportLive(title):
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=thumb, 
 		thumb=thumb, fparams=fparams)
 
-	content =  blockextract('class="artdirect " >', page)
+	content =  blockextract('class="artdirect"', page)				
 	PLog('content: ' + str(len(content)))	
 	
 	mediatype='' 		
@@ -6345,8 +6359,8 @@ def ZDFSportLiveSingle(title, path, img):
 	page, msg = get_page(path=path)		
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	
@@ -6407,8 +6421,8 @@ def International(title):
 	page, msg = get_page(path=path)		
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
-		msg2, msg3 = msg.split('|')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	 			
@@ -6445,7 +6459,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 	page_title = stringextract('<title>', '</title>', page)  # Seitentitel
 	page_title = page_title.strip()
 	msg_notfound = ''
-	if 'Leider kein Video verf' in page:					# Verfügbarkeit vor class="artdirect " >
+	if 'Leider kein Video verf' in page:					# Verfügbarkeit vor class="artdirect"
 		msg_notfound = u'Leider kein Video verfügbar'		# z.B. Ausblick auf Sendung
 		if page_title:
 			msg_notfound = u'Leider kein Video verfügbar zu: ' + page_title
@@ -7454,8 +7468,6 @@ PLog('Addon_URL: ' + PLUGIN_URL)		# sys.argv[0], plugin://plugin.video.ardundzdf
 PLog('ADDON_ID: ' + ADDON_ID); PLog(SETTINGS); PLog(ADDON_NAME);PLog(SETTINGS_LOC);
 PLog(ADDON_PATH);PLog(ADDON_VERSION);
 PLog('HANDLE: ' + str(HANDLE))
-
-PluginAbsPath = os.path.dirname(os.path.abspath(__file__))
 PLog('PluginAbsPath: ' + PluginAbsPath)
 
 PLog('Addon: Start')

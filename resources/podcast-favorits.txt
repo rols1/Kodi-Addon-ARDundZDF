@@ -21,9 +21,9 @@
 Dossier Politik - Bayern 2  				| https://www.ardaudiothek.de/dossier-politik/7260328
 IQ - Wissenschaft und Forschung - Bayern 2  | https://www.ardaudiothek.de/iq-wissenschaft-und-forschung/5941402
 radioWissen - Bayern 2  					| https://www.ardaudiothek.de/radiowissen/5945518
-Das Campusmagazin - B5 aktuell  			| https://www.ardaudiothek.de/das-campusmagazin/5921928
+zukunftschule - B5 aktuell  				| https://www.ardaudiothek.de/das-campusmagazin/67259824
 Das Verbrauchermagazin - B5 aktuell 		| https://www.ardaudiothek.de/das-verbrauchermagazin/5927628
-Magazin für Wirtschaft und Soz. - B5 aktuell| https://www.ardaudiothek.de/wirtschaft-und-soziales/53609460
+Wirtschaft - hrINFO | 				https://www.ardaudiothek.de/wirtschaft/467742
 Aus Wissenschaft und Technik - B5 aktuell 	| https://www.ardaudiothek.de/wissenschaft-und-technik/53609516
 
 Quarks - Wissenschaft und mehr				| https://www.ardaudiothek.de/quarks-wissenschaft-und-mehr/33674778 
@@ -36,14 +36,12 @@ Computer und Kommunikation					| https://www.ardaudiothek.de/computer-kommunikat
 Das Computermagazin - B 5  					| https://www.ardaudiothek.de/das-computermagazin/7257376
 Visite - Das Gesundheitsmagazin - NDR 1  	| https://www.ardaudiothek.de/visite-das-gesundheitsmagazin/7853020
 
-Dossier Politik- Deutschlandfunk			| https://www.ardaudiothek.de/dossier-politik/7260328
 Forschung Aktuell - Deutschlandfunk			| https://www.ardaudiothek.de/forschung-aktuell/21676038
 
 ## Kabarett / Humor
-Tatort mit Til Schweiger					| https://www.ardaudiothek.de/tatort-mit-til/42035224
 Kabarett WDR 2								| https://www.ardaudiothek.de/kabarett/36244764
+Unterhaltung am Wochenende WDR5				|https://www.ardaudiothek.de/unterhaltung-am-wochenende/33607722
 KabarettPost SR 2							| https://www.ardaudiothek.de/kabarettpost/63575972
-ARD Radiofestival 2018: Kabarett NDR		| https://www.ardaudiothek.de/ard-radiofestival-2018-kabarett/54002088
 Lach matt - Bayerns beste Kabarettisten BR 1| https://www.ardaudiothek.de/lach-matt-bayerns-beste-kabarettisten/33819834
 radioSpitzen BR 2							| https://www.ardaudiothek.de/radiospitzen/5962920
 Unterhaltung am Wochenende WDR 5			| https://www.ardaudiothek.de/unterhaltung-am-wochenende/33607722
@@ -52,8 +50,12 @@ Wir sind die Freeses						| https://www.ardaudiothek.de/wir-sind-die-freeses/278
 
 ## Aktuelles / Neueste Clips
 Inforadio - Wissenswerte RBB				| https://www.ardaudiothek.de/wissenswerte/48143414
-Antenne Brandenburg - Interviews			| https://www.ardaudiothek.de/interviews/23667072
+Interviews -Inforadio RBB					| https://www.ardaudiothek.de/interviews/46474024
 
 ## Hörspiele
 KiRaKa - Kinderhörspiele im WDR				| https://www.ardaudiothek.de/kinderhoerspiel-im-wdr/36244846
 hr-iNFO Cybercrime							| https://www.ardaudiothek.de/cybercrime/42913980
+ARD Radio Tatort							| https://www.ardaudiothek.de/ard-radio-tatort/1998988
+
+
+

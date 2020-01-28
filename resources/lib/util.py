@@ -155,7 +155,7 @@ def home(li, ID):
 		addDir(li=li, label=title, action="dirList", dirID="Main_POD", fanart=R(ICON_MAIN_POD), 
 			thumb=R(ICON_MAIN_POD), fparams=fparams)
 			
-	if ID == 'ARDaudio':
+	if ID == 'ARD Audiothek':
 		name = 'Home :' + "ARD Audiothek"
 		fparams="&fparams={'title': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=R(ICON_MAIN_AUDIO), 
@@ -604,7 +604,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			PLog(msg)						
 			
 	if page == '':
-		error_txt = 'Seite nicht erreichbar oder nicht mehr vorhanden'
+		# error_txt = 'Seite nicht erreichbar oder nicht mehr vorhanden'
+		error_txt = msg
 		if 'classic.ardmediathek.de' in path:
 			msg1 = 'Die ARD-Classic-Mediathek ist vermutlich nicht mehr verfügbar.'	
 			msg2 = 'Bitte in den Einstellungen abschalten, um das Modul'
@@ -783,7 +784,7 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
 		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad')
-		, (u'\r', u'')):			
+		, (u'\r', u''), (u'#', u'*')):			
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret
