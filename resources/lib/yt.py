@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ################################################################################
 #				yt.py - Teil von Kodi-Addon-ARDundZDF
-#	Basiert wesentlich auf die pytube-library von Nick Ficano (nficano)
+#	Basiert wesentlich auf der pytube-library von Nick Ficano (nficano)
 # 	Quelle: https://github.com/nficano/pytube, Lizens siehe Verzeichnis
 #	../resources/lib/pytube/LICENSE (MIT License).
 #	Die Library wurde für die Verwendung im Kodi-Addon leicht modifiziert,
@@ -58,7 +58,7 @@ from resources.lib.pytube.streams import Stream
 PLog('pytube geladen - V%s | %s | %s' %\
 	('9.5.3', 'MIT License', 'Copyright 2019 Nick Ficano'))
 
-
+# Aufrufer: SingleBeitrag (Modul phoenix)
 # Bsp.: https://www.youtube.com/watch?v=9xfBbAZtcA0 OK
 def yt(li, url, vid, title, tag, summ, thumb):
 	PLog('yt_embed_url: ' + url)
@@ -130,8 +130,9 @@ def yt(li, url, vid, title, tag, summ, thumb):
 			thumb=thumb, fparams=fparams, tagline=tag, summary=summ, mediatype='video')			
 			
 		i=i+1
-		
-	if 	download_list:	# Downloadbutton(s), high=0: 1. Video = höchste Qualität	
+
+	if 	download_list:	# Downloadbutton(s), high=0: 1. Video = höchste Qualität
+		PLog(len(download_list))	
 		# Qualitäts-Index high: hier Basis Bitrate (s.o.)
 		title_org = title_org
 		summary_org = ''
@@ -139,7 +140,8 @@ def yt(li, url, vid, title, tag, summ, thumb):
 		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
 		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
 
-	return li
+	# return li		# kann yt mehrfach aufrufen (trotz endOfDirectory in SingleBeitrag
+	xbmcplugin.endOfDirectory(HANDLE)
 # ----------------------------------------------------------------------
 #  str(stream) durch Aufrufer
 def get_stream_details(stream):	

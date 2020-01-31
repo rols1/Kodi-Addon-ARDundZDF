@@ -43,7 +43,7 @@ def regex_search(pattern, string, groups=False, group=None, flags=0):
 				)
 			else:
 				PLog(
-					'helpers: finished regex search: %s',
+					'helpers: finished regex search1: %s',
 					pprint.pformat(
 						{
 							'pattern': p,
@@ -67,7 +67,7 @@ def regex_search(pattern, string, groups=False, group=None, flags=0):
 			)
 		else:
 			PLog(
-				'helpers: finished regex search: %s',
+				'helpers: finished regex search2: %s',
 				pprint.pformat(
 					{
 						'pattern': pattern,

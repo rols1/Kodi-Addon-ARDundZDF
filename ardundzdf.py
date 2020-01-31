@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.5.7'
-VDATE = '28.01.2020'
+VERSION = '2.6.0'
+VDATE = '31.01.2020'
 
 #
 #
@@ -2530,7 +2530,7 @@ def Search(title, query='', channel='ARD'):
 
 	# Kodi-Problem: Direktsprung n.m., da der ..-Button von xbmcgui.ListItem  zurück 
 	#	zu get_query führt statt zur Liste der Ergebnisseiten. Leider muss der entspr. Code 
-	#	aus PageControl hier nochmal verwemdet werden. Dafür verzichten wir hier auf den
+	#	aus PageControl hier nochmal verwendet werden. Dafür verzichten wir hier auf den
 	#	Offset und geben die Übersicht komplett aus.
 	#	Mit mode='Suche|Query|Channel' stellt SinglePage einen Button voran, der Search mit den
 	#   akt. Parametern ansteuert und damit die Übersicht erneut ausgibt.
@@ -3574,7 +3574,9 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 			msg3 	= "Settings: " + dest_path
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 			return li				
-		# PLog(SETTINGS.getSetting('pref_show_qualities'))
+	else:
+		return li
+		
 		
 	if SETTINGS.getSetting('pref_show_qualities') == 'false':	# nur 1 (höchste) Qualität verwenden
 		download_items = []
@@ -3592,8 +3594,7 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 			detailtxt = MakeDetailText(title=title_org,thumb=thumb,quality=quality,
 				summary=summary_org,tagline=tagline_org,url=url)
 			v = 'detailtxt'+str(i)
-			vars()[v] = detailtxt
-			Dict('store', v, vars()[v])		# detailtxt speichern 
+			Dict('store', v, detailtxt)		# detailtxt speichern 
 			if url.endswith('.mp3'):
 				Format = 'Podcast ' 			
 			else:	
@@ -6838,7 +6839,9 @@ def ZDF_getVideoSources(url, title, thumb, tagline, segment_start=None, segment_
 			% (quote(title), quote(tagline), quote(thumb), sid, apiToken1, apiToken2, quote(urlSource))
 		addDir(li=li, label=title_oc, action="dirList", dirID="ZDFotherSources", fanart=thumb, thumb=thumb, fparams=fparams)
 
-	# MEHR_Suche (wie ZDF_Sendungen):
+	# MEHR_Suche (wie ZDF_Sendungen) - bei Verpasst-Beiträge Uhrzeit abschneiden:
+	if '|' in title:							# Bsp. Verpasst:  "04:20 Uhr | Abenteuer Winter.."
+		title = title.split('|')[1].strip()
 	label = "Alle Beiträge im ZDF zu >%s< suchen"  % title
 	query = title.replace(' ', '+')	
 	tagline = u"zusätzliche Suche starten"

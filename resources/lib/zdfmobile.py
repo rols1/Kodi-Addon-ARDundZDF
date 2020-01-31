@@ -7,6 +7,7 @@
 #	sondern die Seiten ab https://zdf-cdn.live.cellular.de/mediathekV2 - diese
 #	Seiten werden im json-Format ausgeliefert
 #	22.11.2019 Migration Python3 Modul six + manuelle Anpassungen
+# Stand: 31.01.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -154,23 +155,19 @@ def Hub(ID):
 	
 	if ID=='Startseite':
 		v = 'Startpage' 		# speichern
-		vars()[v] = jsonObject
-		Dict('store', v, vars()[v])
+		Dict('store', v, jsonObject)
 		li = PageMenu(li,jsonObject,DictID='Startpage')		
 	if ID=='Kategorien':
 		v = 'Kategorien'
-		vars()['Kategorien'] = jsonObject
-		Dict("store", v, vars()[v])
+		Dict("store", v, jsonObject)
 		li = PageMenu(li,jsonObject,DictID='Kategorien')		
 	if ID=='Sendungen A-Z':
 		v = 'A_Z'
-		vars()['A_Z'] = jsonObject
-		Dict("store", v, vars()[v])
+		Dict("store", v, jsonObject)
 		li = PageMenu(li,jsonObject,DictID='A_Z')		
 	if ID=='Live TV':
 		v = 'Live'
-		vars()['Live'] = jsonObject
-		Dict("store", v, vars()[v])
+		Dict("store", v, jsonObject)
 		li = PageMenu(li,jsonObject,DictID='Live')	
 
 	return li
@@ -217,8 +214,7 @@ def Verpasst_load(path, datum):		# 5 Tages-Abschnitte in 1 Datei, path -> DictID
 	jsonObject = json.loads(page)
 	path = path.split('/')[-1]			# Pfadende -> Dict-ID
 	v = path
-	vars()[path] = jsonObject
-	Dict("store", v, vars()[v])
+	Dict("store", v, jsonObject)
 	li = PageMenu(li,jsonObject,DictID=path)
 	xbmcplugin.endOfDirectory(HANDLE)
 				
@@ -250,7 +246,8 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				if subTitle:
 					title = '%s | %s' % (title,subTitle)
 
-				date = '%s |  Laenge: %s' % (date, dauer)
+				if dauer:
+					date = u'%s | Länge: %s' % (date, dauer)
 				path = 'stage|%d' % i
 				PLog(path)
 				
@@ -339,6 +336,10 @@ def Get_content(stageObject, maxWidth):
 			date = stageObject["date"]
 			#now = datetime.datetime.now()
 			#date = now.strftime("%d.%m.%Y %H:%M")
+	if date == '':						# id=date-Ersatz: ..-sendung-vom-..
+		if("id" in stageObject):
+			date = "ID: >" + stageObject["id"] + "<"
+			date = date.replace('-', ' ')
 		
 	title=repl_json_chars(title) 		# json-komp. für func_pars in router()
 	subTitle=repl_json_chars(subTitle) 	# dto

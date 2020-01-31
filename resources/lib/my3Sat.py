@@ -6,7 +6,7 @@
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.3sat.de,
 #	Seiten werden im html-format, teils. json ausgeliefert
-#	Stand: 16.01.2020
+#	Stand: 30.01.2020
 #
 #	04.11.2019 Migration Python3  Python3 Modul future
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -520,6 +520,11 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 			PLog('Thema gefunden: %s' % name)
 			page = rec
 			PLog(len(rec))
+			if 'TV-SENDETERMINE' in name:
+				msg1 = 'TV-SENDETERMINE'
+				msg2 = u'Bitte das Menü Verpasst verwenden'
+				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 			break											# -> Sendereihe_Sendungen	
 	
 	if up_low("Videotipp") in title:						# 1 oder mehrere Videos am Kopf
@@ -904,7 +909,7 @@ def get_zdfplayer_content(li, content):
 		img_src	= stringextract('data-srcset="', '"', rec)			
 		img_src	= img_src.split(' ')[0]								# kann mit Blank enden
 		if img_src == '':
-			img_src = stringextract('teaser-image="', 'auto', rec)	# Bsp. Wissen/#Erklärt
+			img_src = stringextract('teaser-image-overwrite', 'quot;}', rec)	# Bsp. Wissen/#Erklärt
 			PLog(img_src)
 			img_src =stringextract('https:', '&', img_src)
 			PLog(img_src)

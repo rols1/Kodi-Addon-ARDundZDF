@@ -786,7 +786,8 @@ def ARDStartSingle(path, title, duration, ID=''):
 		fparams=fparams, summary=summ_lable, tagline=tagline, mediatype=mediatype)	
 	
 	gridlist=''	
-	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten).
+	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten). gridlist enthält 
+	#	die Links zu den Sendungen
 	if 	ID == 'mehrzS':											# nicht nochmal "mehr" zeigen
 		xbmcplugin.endOfDirectory(HANDLE)	
 	if 	'>Mehr aus der Sendung<' in page: 						# z.B. in Verpasst-Seiten

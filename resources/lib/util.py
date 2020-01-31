@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 17.01.2020
+#	Stand 31.01.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -37,6 +37,8 @@ elif PYTHON3:
 # import requests		# kein Python-built-in-Modul, urllib2 verwenden
 import datetime as dt	# für xml2srt
 import time, datetime
+from time import sleep  # PlayVideo
+
 import glob, shutil
 from io import BytesIO	# Python2+3 -> get_page (compressed Content), Ersatz für StringIO
 import gzip, zipfile
@@ -51,7 +53,7 @@ PYTHON2 = sys.version_info.major == 2	# Stammhalter Pythonversion
 PYTHON3 = sys.version_info.major == 3
 
 NAME			= 'ARD und ZDF'
-KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
+KODI_VERSION 	= xbmc.getInfoLabel('System.BuildVersion')
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -284,10 +286,6 @@ def getDirZipped(path, zipf):
 #	persistenter Speicher. Der Name Dict lehnt sich an die
 #	allerdings wesentlich komfortablere Dict-Funktion in Plex an.
 #
-#	Den Dict-Vorteil, beliebige Strings als Kennzeichnung zu ver-
-#	wenden, können wir bei Bedarf außerhalb von Dict
-#	mit der vars()-Funktion ausgleichen (siehe Zuweisungen). 
-#
 #	Falls (außerhalb von Dict) nötig, kann mit der Zusatzfunktion 
 #	name() ein Variablenname als String zurück gegeben werden.
 #	
@@ -296,14 +294,13 @@ def getDirZipped(path, zipf):
 #	keine Bedingung).
 #
 # Zuweisungen: 
-#	Dictname=value 			- z.B. Dict_sender = 'ARD-Alpha'
-#	vars('Dictname')=value 	- 'Dict_name': _name ist beliebig (prg-generiert)
 #	Bsp. für Speichern:
-#		 Dict('store', "Dict_name", Dict_name)
+#		 Dict('store', "Dict_name", value)
 #			Dateiname: 		"Dict_name"
-#			Wert in:		Dict_name
+#			Wert in:		value
 #	Bsp. für Laden:
 #		CurSender = Dict("load", "CurSender")
+#
 #   Bsp. für CacheTime: 5*60 (5min) - Verwendung bei "load", Prüfung mtime 
 #	ev. ergänzen: OS-Verträglichkeit des Dateinamens
 
@@ -1431,13 +1428,6 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 	Plot=(Plot.replace('[B]', '').replace('[/B]', ''))	# Kodi-Problem: [/B] wird am Info-Ende platziert
 	url=url.replace('\\u002F', '/')						# json-Pfad noch unbehandelt
 	
-	if url_check(url, caller='PlayVideo') == False:
-		if IsPlayable == 'true':								# true
-			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
-		else:													# false, None od. Blank
-			xbmc.Player().play(url, li, windowed=False) 		# direkter Start
-		return				
-		
 	li = xbmcgui.ListItem(path=url)		
 	# li.setArt({'thumb': thumb, 'icon': thumb})
 	li.setArt({'poster': thumb, 'banner': thumb, 'thumb': thumb, 'icon': thumb, 'fanart': thumb})	
@@ -1464,7 +1454,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 			local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
 			local_path = os.path.abspath(local_path)
 			try:
-					urlretrieve(sub_path, local_path)
+				urlretrieve(sub_path, local_path)
 			except Exception as exception:
 				PLog(str(exception))
 				local_path = ''
@@ -1482,28 +1472,29 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 			li.setSubtitles(sub_path)
 			xbmc.Player().showSubtitles(True)		
 		
-	# Abfrage: ist gewählter Eintrag als Video deklariert? - Falls ja,	# IsPlayable-Test
+	# Abfrage: ist gewähltes ListItem als Video deklariert? - Falls ja,	
 	#	erfolgt der Aufruf indirekt (setResolvedUrl). Falls nein,
 	#	wird der Player direkt aufgerufen. Direkter Aufruf ohne IsPlayable-Eigenschaft 
 	#	verhindert Resume-Funktion.
 	# Mit xbmc.Player() ist  die Unterscheidung Kodi V18/V17 nicht mehr erforderlich,
 	#	xbmc.Player().updateInfoTag bei Kodi V18 entfällt. 
 	# Die Player-Varianten PlayMedia + XBMC.PlayMedia scheitern bei Kommas in Url.	
-	# 
+	# 29.01.2020 sleep verhindert selbständige Restarts nach Stop - Bsp. phoenix/
+	#	Sendungen/"Armes Deutschland? Deine Kinder" 
 	IsPlayable = xbmc.getInfoLabel('ListItem.Property(IsPlayable)') # 'true' / 'false'
 	PLog("IsPlayable: %s, Merk: %s" % (IsPlayable, Merk))
 	PLog("kodi_version: " + KODI_VERSION)							# Debug
 	# kodi_version = re.search('(\d+)', KODI_VERSION).group(0) # Major-Version reicht hier - entfällt
-			
-	#if Merk == 'true':										# entfällt bisher - erfordert
-	#	xbmc.Player().play(url, li, windowed=False) 		# eigene Resumeverwaltung
-	#	return
 	
-	if IsPlayable == 'true':								# true
-		xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
-	else:													# false, None od. Blank
-		xbmc.Player().play(url, li, windowed=False) 		# direkter Start
-	return				
+	if url_check(url, caller='PlayVideo'):
+		if IsPlayable == 'true':								# true - Call via listitem
+			PLog('PlayVideo_Start: listitem')
+			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
+		else:													# false, None od. Blank
+			PLog('PlayVideo_Start: direkt')
+			xbmc.Player().play(url, li, windowed=False) 		# direkter Start
+			sleep(50 / 100)
+			return
 
 #---------------------------------------------------------------- 
 # SSL-Probleme in Kodi mit https-Code 302 (Adresse verlagert) - Lösung:

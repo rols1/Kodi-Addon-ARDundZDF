@@ -246,6 +246,8 @@ def phoenix_Search(query='', nexturl=''):
 # GetContent: Auswertung der json-Datensätzen in items
 #	base_img = Kopfbild
 # turn_title: veranlasst Tausch Titel/Subtitel
+# 29.01.2020 mediatype=video: Video lässt sich beim Autostart
+#	nicht mehr abschalten - auf '' gesetzt
 def GetContent(li, items, base_img=None, turn_title=True ):
 	PLog('GetContent:')
 
@@ -350,19 +352,19 @@ def GetContent(li, items, base_img=None, turn_title=True ):
 			fparams="&fparams={'title': '%s', 'path': '%s', 'html_url': '%s', 'tagline': '%s', 'summary': '%s', 'thumb': '%s'}" %\
 				(quote(title), quote(url), quote(url), quote(tag), quote(summ_par), quote(img))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.SingleBeitrag", fanart=img, 
-				thumb=img, fparams=fparams, summary=summ, tagline=tag)				
+				thumb=img, fparams=fparams, summary=summ, tagline=tag, mediatype=mediatype)				
 		else:
 			fparams="&fparams={'path': '%s', 'html_url': '%s', 'title': '%s'}" %\
 				(quote(url), quote(url), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.BeitragsListe", fanart=img, 
-				thumb=img, fparams=fparams, summary=summ, tagline=tag, mediatype=mediatype)
+				thumb=img, fparams=fparams, summary=summ, tagline=tag, mediatype='')
 
 	return li
 
 # ----------------------------------------------------------------------
 # BeitragsListe: Liste der json-Datensätzen in url
-#	Aufrufer: GetContent, SingleBeitrag (recursiv) 
-#	bisher nicht benötigt
+#	Aufrufer: GetContent
+#
 def BeitragsListe(path, html_url, title, skip_sid=False):
 	PLog('BeitragsListe:')
 	
@@ -473,7 +475,7 @@ def ThemenListe(title, ID, path):				# Liste zu einzelnem Untermenü
 	li = xbmcgui.ListItem()
 	li = home(li, ID='phoenix')			# Home-Button
 		
-	li = GetContent(li, items, base_img=base_img, turn_title=True)	
+	li = GetContent(li, items, base_img=base_img, turn_title=True)		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -712,8 +714,9 @@ def get_formitaeten(li,content_id,title,tagline,thumb):
 			PLog(url); PLog(quality); PLog(tagline); 
 			if url:
 				if url.endswith('master.m3u8'):
-					if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true':	# Sofortstart
+					if SETTINGS.getSetting('pref_video_direct') == 'true': 	# or Merk == 'true':	# Sofortstart
 						PLog('Sofortstart: phoenix get_formitaeten')
+						li.setProperty('IsPlayable', 'false')				# verhindert wiederh. Starten nach Stop
 						PlayVideo(url=url, title=title_call, thumb=thumb, Plot=Plot_par)
 						return
 				

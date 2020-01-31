@@ -310,7 +310,8 @@
 	<item>
 		<title>WDR Fernsehen im Livestream</title>
 		<hrefsender>WDR</hrefsender>
-		<link>https://wdrfsgeo-lh.akamaihd.net/i/wdrfs_geogeblockt@530016/master.m3u8</link>
+		<link>https://wdrfs247.akamaized.net/hls/live/681509/wdr_msl4_fs247/master.m3u8</link>
+		<link-old>https://wdrfsgeo-lh.akamaihd.net/i/wdrfs_geogeblockt@530016/master.m3u8</link-old>
 		<thumbnail>tv-wdr.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>WDR</EPG_ID>

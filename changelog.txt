@@ -7,6 +7,25 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+31.01.2020	2.6.0	PlayVideo(Modul util): 0.5 sec Pause nach Player-Call - verhindert selbständige 
+			Restarts nach Videostop.
+			Repo: update_single_files entfernt (Einzelupdates nicht mehr im Code).
+			livesenderTV.xml: Streamlink für "WDR" aktualisiert (Watchdog-TV-Live).
+			
+not on Github	2.5.9	ZDF_getVideoSources: für ZDF-Suche bei Verpasst-Beiträgen Uhrzeit abschneiden.
+			get_zdfplayer_content (Modul 3sat): altern. img-Quelle, falls data-srcset fehlt.
+			Rubrik_Single (Modul 3sat): Dialog-Verweis auf Menü Verpasst bei Rubriken/
+			Film/TV-SENDETERMINE (Liste hier leer).
+			yt (Steuermodul für pytube): return ausgetauscht gegen endOfDirectory (verhindert
+			hier Rekursion).
+			
+not on Github	2.5.8	test_downloads (Haupt-PRG): Return, falls Download in Setting nicht gesetzt,
+			detailtxt speichern ohne vars()-Funktion.
+			Dict (Modul util): vars()-Funktion aus Kopfdoku enfernt (nicht mehr genutzt).
+			Modul ZDFmobile: vars()-Funktion in Dict-Aufrufen durch jew. Wert ersetzt.
+			Get_content (Modul ZDFmobile): fehlendes Datum durch ID ersetzt (relevant für 
+			stage-Beiträge).
+				
 28.01.2020	2.5.7	Aktualisierung podcast-favorits.txt: 
 			Austausch "Wirtschaft und Soz. B5" gegen "Wirtschaft hrINFO",
 			"ARD Radiofestival 2018" entfernt,
@@ -21,7 +40,6 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 not on Github	2.5.6	thread_getfile: Info-Dialog nach Abschluss Download (mit Dateiname, bei
 			Podcast-Sammeldownloads mit Zeitstempel).
 			DownloadMultiple (Modul Podcontent): Aufruf thread mit Zeitstempel.
-			Dialog bei leerer Seite.
 			get_page-Aufruf (gesamtes Addon, wo sinnvoll): Info-Dialog mit URLError bei
 			Ladefehler (get_page) ergänzt.
 
