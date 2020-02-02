@@ -2,7 +2,7 @@
 ################################################################################
 #				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
-#	Stand 11.01.2020
+#	Stand 02.02.2020
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
 #	Seiten werden im json-Format, teilweise html + json ausgeliefert
@@ -1319,7 +1319,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	query_lable = unquote(query_lable)
 	query_lable=py2_encode(query_lable); searchResult=py2_encode(searchResult);
 	
-	if searchResult == '0' or 'class="artdirect " >' not in page:		# Sprung hierher
+	if searchResult == '0' or 'class="artdirect"' not in page:		# Sprung hierher
 		label = "ZDF | nichts gefunden zu: %s | neue Suche" % query_lable
 		title="Suche in ARD und ZDF"
 		title=py2_encode(title);

@@ -6,7 +6,7 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-#	Stand: 09.01.2020
+#	Stand: 01.02.2020
 
 from __future__ import absolute_import
 
@@ -34,7 +34,9 @@ USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
 
-from util import PLog, stringextract, ReadFavourites, RSave
+ICON 			= 'icon.png'		# ARD + ZDF
+ICON_DIR_WATCH	= "Dir-watch.png"
+from util import PLog, stringextract, ReadFavourites, RSave, R
 
 PLog('Script merkliste.py geladen')
 # ----------------------------------------------------------------------
@@ -99,16 +101,15 @@ def Watch(action, name, thumb='', Plot='', url=''):
 		
 		item_cnt = item_cnt + 1		
 		if doppler == False:
-			msg1 = u"Eintrag >%s< hinzugefügt" % name
+			msg1 = u"Eintrag hinzugefügt" 
 			PLog(type(merkliste)); PLog(type(merk));
 			merkliste = py2_decode(merkliste) + merk + "\n"
 			#item_cnt = item_cnt + 1			
 			merkliste = "<merkliste>\n%s</merkliste>"	% merkliste
 			err_msg = RSave(fname, merkliste, withcodec=True)		# Merkliste speichern
 		else:
-			msg1 = u"Eintrag >%s< ist bereits vorhanden" % name
-		
-		
+			msg1 = u"Eintrag schon vorhanden"
+							 
 	if action == 'del':
 		my_items = ReadFavourites('Merk')			# 'utf-8'-Decoding in ReadFavourites
 		if len(my_items):
@@ -128,12 +129,11 @@ def Watch(action, name, thumb='', Plot='', url=''):
 			merkliste = py2_decode(merkliste) + py2_decode(item) + "\n"
 		if deleted:
 			err_msg = RSave(fname, merkliste, withcodec=True)		# Merkliste speichern
-			msg1 = u"Eintrag >%s< gelöscht" % name
-			err_msg = u"Aktualisierung der Merkliste beim nächsten Aufruf"
+			msg1 = u"Eintrag gelöscht"
 			PLog(msg1)
 		else:
-			msg1 = "Eintrag >%s< nicht gefunden." % name
-			err_msg = "Merkliste unverändert."
+			msg1 = "Eintrag nicht gefunden." 
+			err_msg = u"Merkliste unverändert."
 			PLog(msg1)	
 							
 	return msg1, err_msg, str(item_cnt)	
@@ -186,9 +186,11 @@ PLog(action); PLog(name); PLog(thumb); PLog(Plot); PLog(url);
 
 msg1, err_msg, item_cnt = Watch(action,name,thumb,Plot,url)
 msg2 = err_msg
-msg3 = ''
 if item_cnt:
-	msg3 = u"Anzahl der Einträge: %s" % item_cnt
-xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+	msg2 = "%s\n%s" % (msg2, u"Einträge: %s" % item_cnt)
+
+# 01.02.2029 Dialog ersetzt durchnotification 
+icon = R(ICON_DIR_WATCH)
+xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
 exit()
 

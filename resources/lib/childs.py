@@ -3,7 +3,7 @@
 #				childs.py - Teil von Kodi-Addon-ARDundZDF
 #		Rahmenmodul für Kinderprg div. Regionalsender von ARD und ZDF
 ################################################################################
-#	Stand: 20.12.2019
+#	Stand: 02.02.2020
 #
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -801,7 +801,7 @@ def Tivi_Search(query=None, title='Search', pagenr=''):
 
 	# Der Loader in ZDF-Suche liefert weitere hrefs, auch wenn weitere Ergebnisse fehlen -
 	#	dto ZDFtivi
-	if searchResult == '0' or 'class="artdirect " >' not in page:
+	if searchResult == '0' or 'class="artdirect"' not in page:
 		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
 		msg1 = 'Keine Ergebnisse (mehr) zu: %s' % query  
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')

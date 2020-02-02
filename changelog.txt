@@ -7,6 +7,15 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+02.02.2020	2.6.1	Merkliste (Script merkliste.py): Austausch xbmcgui-Dialog gegen 
+			xbmcgui-notification, Anpassung Info-Texte an Box-Maße.
+			ZDF_get_content: zusätzl. Auswertung teaser-cat-brand-ellipsis für Serien-
+			Kennzeichnung.
+			ZDFRubrikSingle: "Titel | Label" gedreht -> "Label | Titel" (Layout).
+			Merkliste (Script merkliste.py): Unicode-Behandlung für "Merkliste unverändert.". 
+			"Suche in ARD und ZDF", Tivi_Search (Modul childs): Ergebnisabfrage angepasst 
+			an Webänderung ZDF (wie V2.5.3).   	
+
 31.01.2020	2.6.0	PlayVideo(Modul util): 0.5 sec Pause nach Player-Call - verhindert selbständige 
 			Restarts nach Videostop.
 			Repo: update_single_files entfernt (Einzelupdates nicht mehr im Code).

@@ -56,8 +56,8 @@ transl_pubDate=util.transl_pubDate; up_low=util.up_low;
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.6.0'
-VDATE = '31.01.2020'
+VERSION = '2.6.1'
+VDATE = '02.02.2020'
 
 #
 #
@@ -2391,7 +2391,8 @@ def SendungenAZ(name, ID):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ####################################################################################################
-# Suche in beiden Mediatheken
+# Suche in beiden Mediatheken: ARD Classic + ZDF
+#	Falls ARD Neu geladen ist wird die Funktion SearchARDundZDFnew verwendet	
 #	Abruf jeweils der 1. Ergebnisseite
 #	Ohne Ergebnis -> Button mit Rücksprung hierher
 #	Ergebnis ZDF: -> ZDF_Search (erneuter Aufruf Seite 1, weitere Seiten dort rekursiv)
@@ -2459,7 +2460,7 @@ def SearchARDundZDF(title, query='', pagenr=''):
 	
 	query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
 	query_lable = unquote(query_lable)
-	if searchResult == '0' or 'class="artdirect"' not in page:		# Sprung hierher
+	if searchResult == '0'  'class="artdirect"' not in page:		# Sprung hierher
 		label = "ZDF | nichts gefunden zu: %s | neue Suche" % query_lable
 		title="Suche in ARD und ZDF"
 		title=py2_encode(title);
@@ -5667,6 +5668,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 
 	ID='Search'
 	ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&contentTypes=episode&sortBy=date&page=%s'
+
 	if s_type == 'MEHR_Suche':		# ZDF_Sendungen: Suche alle Beiträge (auch Minutenbeiträge)
 		ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&sortBy=date&page=%s'
 		
@@ -6004,9 +6006,9 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 				else:												# Formatierung
 					if 'Folgen' in lable or 'Staffeln' in lable or 'Teile' in lable:		
 						lable = lable.ljust(11) + "| %s" % title
-						# Einzelvideo bei Folgen ausgeblenden, um Folge auszuwerten  
+						# Einzelvideo bei Folgen ausgeblenden, um Folge auszuwerten 
 					else:
-						lable = "%s | %s" % (title, lable)
+						lable = "%s | %s" % (lable, title)
 						if 'class="icon-502_play' in rec:
 							 isvideo=True	
 						
@@ -6441,6 +6443,8 @@ def International(title):
 #	Seiten mit Einzelvideos werden hier nicht erfasst - ev. vor
 #		Aufruf Vorprüfung 'class="artdirect " >' durchführen
 #	enthält "Inhaltstext im Voraus laden"
+#	Änderungen Webseite nachziehen: SearchARDundZDF, SearchARDundZDFnew,
+#		ZDF_Search, ZDFSportLive, Tivi_Search (Modul childs).
 
 def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):	
 	PLog('ZDF_get_content:'); PLog(ref_path); PLog(ID);  PLog(sfilter)				
@@ -6465,7 +6469,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		if page_title:
 			msg_notfound = u'Leider kein Video verfügbar zu: ' + page_title
 	
-	if 'class="artdirect " >' in page:			
+	if 'class="artdirect " >' in page:						# bis V2.5.3 relevant
 		content =  blockextract('class="artdirect " >', page)
 	else:
 		content =  blockextract('class="artdirect"', page)
@@ -6522,8 +6526,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		mediatype='video'
 			
 	items_cnt=0									# listitemzähler
-	teaser_nr=''; 
 	for rec in content:	
+		teaser_nr=''; teaser_brand=''
 		# loader:  enthält bei Suche Links auch wenn weiterer Inhalt fehlt. 
 		#			Bei Verpasst u.a. enthält er keinen Link
 		if 'class="loader"></span>Weitere laden' in rec: # Loader erreicht=Ende 
@@ -6556,13 +6560,18 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 				thumb = ZDF_BASE + thumb[1:] # 	Fallback-Image  ohne Host
 		PLog('thumb: ' + thumb)
 						
-		teaser_label = stringextract('class="teaser-label"', '</div>', rec)
+		teaser_label = stringextract('class="teaser-label"', '</div>', rec) # auch möglich: noch 7 Stunden
 		teaser_typ =  stringextract('<strong>', '</strong>', teaser_label)
 		if u"teaser-episode-number" in rec:
 			teaser_nr = stringextract('teaser-episode-number">', '</', rec)
 		if teaser_typ == u'Beiträge':		# Mehrfachergebnisse ohne Datum + Uhrzeit
 			multi = True
 			summary = dt1 + teaser_typ 		# Anzahl Beiträge
+			
+		# teaser_brand bei Staffeln (vor Titel s.u.):
+		teaser_brand = stringextract('class="teaser-cat-brand-ellipsis">', '<a href', rec)
+		teaser_brand = cleanhtml(teaser_brand); teaser_brand = mystrip(teaser_brand)
+		PLog('teaser_brand: ' + teaser_brand)
 			
 		subscription = stringextract('is-subscription="', '"', rec)	# aus plusbar-Block	
 		PLog(subscription)
@@ -6579,6 +6588,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			href_title = stringextract('Context:Suchergebnisse', '</h3>', rec)
 			href_title = stringextract('>', '</a>', href_title) 
 			href_title = mystrip(href_title)
+		if teaser_brand:						# bei Staffeln, Bsp. Der Pass , St. 01 - Finsternis
+			href_title = "%s %s" % (teaser_brand, href_title)
 			
 		href_title = unescape(href_title)
 		PLog('href_title: ' + href_title)
@@ -7397,9 +7408,10 @@ def router(paramstring):
 			newfunc = params['dirID'][0]
 			func_pars = params['fparams'][0]
 
-			# Funktionsaufrufe + Parameterübergabe via Var's 
+			# Modul laden, Funktionsaufrufe + Parameterübergabe via Var's 
 			#	s. 00_Migration_PLEXtoKodi.txt
 			# Modulpfad immer ab resources - nicht verkürzen.
+			# Direktsprünge: Modul wird vor Sprung in Funktion geladen.
 			if '.' in newfunc:						# Funktion im Modul, Bsp.:				
 				l = newfunc.split('.')				# Bsp. resources.lib.updater.update
 				PLog(l)
@@ -7409,7 +7421,7 @@ def router(paramstring):
 				PLog(' router dest_modul: ' + str(dest_modul))
 				PLog(' router newfunc: ' + str(newfunc))
 				
-				dest_modul = importlib.import_module(dest_modul )
+				dest_modul = importlib.import_module(dest_modul )		# Modul laden
 				PLog('loaded: ' + str(dest_modul))
 				
 				try:
