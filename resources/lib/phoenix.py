@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-#				Phoenix.py - Teil von Kodi-Addon-ARDundZDF
+#				phoenix.py - Teil von Kodi-Addon-ARDundZDF
 #				benötigt Modul yt.py (Youtube-Videos)
 #		Videos der Phoenix_Mediathek auf https://www.phoenix.de/ 
 ################################################################################
-#	Stand: 23.01.2020
+#	Stand: 06.02.2020
 #
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
@@ -38,20 +38,7 @@ import re				# u.a. Reguläre Ausdrücke
 import string
 
 import ardundzdf					# -> get_query,test_downloads,get_zdf_search 
-import resources.lib.util as util	# (util_imports.py)
-PLog=util.PLog; home=util.home; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir; 
-getDirZipped=util.getDirZipped; Dict=util.Dict; name=util.name; ClearUp=util.ClearUp; 
-addDir=util.addDir; get_page=util.get_page; img_urlScheme=util.img_urlScheme; 
-R=util.R; RLoad=util.RLoad; RSave=util.RSave; GetAttribute=util.GetAttribute; repl_dop=util.repl_dop; 
-repl_char=util.repl_char; repl_json_chars=util.repl_json_chars; mystrip=util.mystrip; 
-DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract; blockextract=util.blockextract; 
-teilstring=util.teilstring; cleanhtml=util.cleanhtml; decode_url=util.decode_url; 
-unescape=util.unescape; transl_doubleUTF8=util.transl_doubleUTF8; make_filenames=util.make_filenames; 
-transl_umlaute=util.transl_umlaute; transl_json=util.transl_json; humanbytes=util.humanbytes; 
-CalculateDuration=util.CalculateDuration; time_translate=util.time_translate; seconds_translate=util.seconds_translate; 
-get_keyboard_input=util.get_keyboard_input; transl_wtag=util.transl_wtag; xml2srt=util.xml2srt; 
-ReadFavourites=util.ReadFavourites; get_summary_pre=util.get_summary_pre; get_playlist_img=util.get_playlist_img; 
-get_startsender=util.get_startsender; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio; up_low=util.up_low; 
+from resources.lib.util import *
 
 
 # Globals
@@ -464,7 +451,7 @@ def ThemenListe(title, ID, path):				# Liste zu einzelnem Untermenü
 	PLog(len(page))
 	
 	jsonObject = json.loads(page)
-	# search_cnt = jsonObject["content"]['hits']
+	# search_cnt = jsonObject["content"]['hits']	
 	items = jsonObject["content"]['items']		
 	PLog(len(items))						
 	
@@ -771,60 +758,6 @@ def phoenix_Live(href, title, Plot):
 		
 					
 	return oc
-
-# ----------------------------------------------------------------------
-def get_epg_ARD(epg_url, listname):					# EPG-Daten ermitteln für SenderLiveListe, ARD
-	PLog('get_epg_ARD: ' + listname)
-	epg_date = ''; epg_title=''; epg_text=''
-
-	page = HTTP.Request(epg_url, cacheTime=1, timeout=float(3)).content # ohne xpath, Cache max. 3 sec
-	# PLog(page)		# nur bei Bedarf		
-	liste = blockextract('class=\"sendungslink\"', '', page)  
-	PLog(len(liste));	# bei Bedarf
-	if len(liste) == 0: # Sicherung
-		return 'weiter zum Live-Stream','Keine EPG-Daten gefunden','Keine EPG-Daten gefunden'
-	
-	now = datetime.datetime.now()		# akt. Zeit
-	nowtime = now.strftime("%H:%M")		# ARD: <span class="date"> \r 00:15 \r <div class="icons">
-	
-	for i in range (len(liste)):		# ältere Sendungen enthalten - daher Schleife + Zeitabgleich	
-		starttime = stringextract('<span class=\"date\">', '<', liste[i]) # aktuelle Sendezeit
-		starttime = mystrip(starttime)
-		try:
-			endtime = stringextract('<span class=\"date\">', '<', liste[i+1])		# nächste Sendezeit		
-			endtime = mystrip(endtime)
-		except:
-			endtime = '23:59'			# Listenende
-
-		#PLog('starttime ' + starttime); PLog('endtime ' + endtime); PLog('nowtime ' + nowtime);	# bei Bedarf
-		epg_date = ''
-		if nowtime >= starttime and nowtime < endtime:
-			epg_date = stringextract('<span class=\"date\">', '<', liste[i])
-			epg_date = mystrip(epg_date) + ' - ' + endtime
-			
-			epg_title = stringextract('<span class=\"titel\">', '<',  liste[i])
-			epg_title = mystrip(epg_title)
-			epg_title = unescape(epg_title)			
-					
-			epg_text = stringextract('<span class=\"subtitel\">', '<',  liste[i])
-			epg_text = mystrip(epg_text)
-			epg_text = unescape(epg_text)
-			
-			# weitere Details via eventid z.Z. nicht verfügbar - beim Abruf klemmt Plex ohne Fehlermeldung:
-			#eventid = stringextract('data-eventid=\"', '\"', liste[i])	# Bsp. 	2872518888223822
-			#details_url = "http://programm.ard.de/?sendung=" + eventid
-			#page = HTTP.Request(details_url, cacheTime=1, timeout=float(10)).content # ohne xpath, Cache max. 1 sec
-			#epg_details = stringextract('name=\"description\" content="', '\" />', page)
-			#epg_text = unescape(epg_text[0:80])
-			
-			break
-	
-	if epg_date == '':					# Sicherung
-		return '','','Problem mit EPG-Daten'	
-			
-	epg_text = epg_text.decode(encoding="utf-8", errors="ignore") # möglich: UnicodeDecodeError: 'utf8' codec can't decode byte 0xc3 ...
-	PLog(epg_date); PLog(epg_title); PLog(epg_text[0:80]); 	
-	return epg_date, epg_title, epg_text
 
 # ----------------------------------------------------------------------
 # getOnline: 1. Ausstrahlung

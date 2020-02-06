@@ -7,6 +7,19 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+06.02.2020	2.6.2	Modul phoenix: Funktion get_epg_ARD entfernt (ersetzt durch get_live_data).
+			Aktualisierung Watchdog_Plex-2: phoenix_Search, phoenix_Rubriken,
+			phoenix_Dossiers,phoenix_Sendungen.
+			Modul childs: Url für Radiokanal Kiraka aktualisiert. 	
+			DIR-Icons: Urhebervermerk ergänzt (verlorengegangen bei Migration).
+			ZDF_Bildgalerie, ARDSportBilder: Nutzung internen Download (thread_getfile).
+			thread_getfile: Anpassung für Bildgalerien (Trigger notice, Param. destdir),
+			Austausch Dialog gegen Notification bei Download-Abschluss.
+			DownloadsDelete: Austausch Dialog gegen Notification.
+			Modul ARD_Bildgalerie: gelöscht (nicht mehr genutzt).
+			Import-Statement für Modul util gekürzt: Haupt-PRG, ARD_NEW, childs, funk,
+			my3Sat, phoenix, TagesschauXL.  
+
 02.02.2020	2.6.1	Merkliste (Script merkliste.py): Austausch xbmcgui-Dialog gegen 
 			xbmcgui-notification, Anpassung Info-Texte an Box-Maße.
 			ZDF_get_content: zusätzl. Auswertung teaser-cat-brand-ellipsis für Serien-
@@ -19,7 +32,7 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 31.01.2020	2.6.0	PlayVideo(Modul util): 0.5 sec Pause nach Player-Call - verhindert selbständige 
 			Restarts nach Videostop.
 			Repo: update_single_files entfernt (Einzelupdates nicht mehr im Code).
-			livesenderTV.xml: Streamlink für "WDR" aktualisiert (Watchdog-TV-Live).
+			livesenderTV.xml: Streamlink für "WDR" aktualisiert (dto. Watchdog-TV-Live).
 			
 not on Github	2.5.9	ZDF_getVideoSources: für ZDF-Suche bei Verpasst-Beiträgen Uhrzeit abschneiden.
 			get_zdfplayer_content (Modul 3sat): altern. img-Quelle, falls data-srcset fehlt.
@@ -784,7 +797,7 @@ not on Github	1.4.9	SenderLiveResolution (TV-Livesender): Fallback zum Classic-S
 			Classic-Sendername.
 			SenderLiveResolution: zusätzl. Param. "Startsender" für Aufruf aus ARDStartRubrik
 			und ARDStartSingle (ARD-Neu).
-			Lokal: zusätzl. Watchdog "Watchdog_TV-Live.py" für Senderlinks (1 x tägl.).  
+			Lokal: zusätzl. Watchdog "Watchdog_TV-Live.py" für Senderlinks (2 x tägl.).  
 
 14.05.2019	1.4.8	Settings - Umstellung "Text input" auf "Browser dialog": Pfade, Verzeichnisse,
 			Curl-/Wget-PRG.

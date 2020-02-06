@@ -189,7 +189,7 @@ msg2 = err_msg
 if item_cnt:
 	msg2 = "%s\n%s" % (msg2, u"Einträge: %s" % item_cnt)
 
-# 01.02.2029 Dialog ersetzt durchnotification 
+# 01.02.2029 Dialog ersetzt durch notification 
 icon = R(ICON_DIR_WATCH)
 xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
 exit()

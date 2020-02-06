@@ -35,29 +35,13 @@ import importlib		# dyn. Laden zur Laufzeit, s. router
 
 # Addonmodule + Funktionsziele (util_imports.py) - Rest dyn. in router
 import resources.lib.updater	as updater
-import resources.lib.util 		as util
-PLog=util.PLog; home=util.home; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir;
-getDirZipped=util.getDirZipped; Dict=util.Dict; name=util.name; ClearUp=util.ClearUp;
-addDir=util.addDir; get_page=util.get_page; img_urlScheme=util.img_urlScheme;
-R=util.R; RLoad=util.RLoad; RSave=util.RSave; GetAttribute=util.GetAttribute; repl_dop=util.repl_dop;
-repl_char=util.repl_char; repl_json_chars=util.repl_json_chars; mystrip=util.mystrip;
-DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract; blockextract=util.blockextract;
-teilstring=util.teilstring; cleanhtml=util.cleanhtml; decode_url=util.decode_url;
-unescape=util.unescape; transl_doubleUTF8=util.transl_doubleUTF8; make_filenames=util.make_filenames;
-transl_umlaute=util.transl_umlaute; transl_json=util.transl_json; humanbytes=util.humanbytes;
-CalculateDuration=util.CalculateDuration; time_translate=util.time_translate; seconds_translate=util.seconds_translate;
-get_keyboard_input=util.get_keyboard_input; transl_wtag=util.transl_wtag; xml2srt=util.xml2srt;
-ReadFavourites=util.ReadFavourites; get_summary_pre=util.get_summary_pre; get_playlist_img=util.get_playlist_img;
-get_startsender=util.get_startsender; PlayVideo=util.PlayVideo; PlayAudio=util.PlayAudio;
-transl_pubDate=util.transl_pubDate; up_low=util.up_low;
-
-																		
+from resources.lib.util import *
 																		
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.6.1'
-VDATE = '02.02.2020'
+VERSION = '2.6.2'
+VDATE = '06.02.2020'
 
 #
 #
@@ -159,6 +143,7 @@ ICON_STAR 				= "icon-star.png"
 ICON_NOTE 				= "icon-note.png"
 ICON_SPEAKER 			= "icon-speaker.png"								# Breit-Format
 
+# Basis DIR-Icons: Tango/folder.png s. Wikipedia Tango_Desktop_Project
 ICON_DIR_CURLWGET 		= "Dir-curl-wget.png"
 ICON_DIR_FOLDER			= "Dir-folder.png"
 ICON_DIR_PRG 			= "Dir-prg.png"
@@ -1741,7 +1726,7 @@ def ARDSportBilder(title, path, img):
 		msg3 = path
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 		return li
-				
+		
 	fname = make_filenames(title)			# Ablage: Titel + Bildnr
 	fpath = '%s/%s' % (SLIDESTORE, fname)
 	PLog(fpath)
@@ -1756,7 +1741,7 @@ def ARDSportBilder(title, path, img):
 			return li	
 				
 	SBASE = 'https://www.sportschau.de'
-	image = 0
+	image = 0; background=False; path_url_list=[]
 	for rec in content:
 		pos = rec.find('<!-- googleon: all -->')	# "Javascript-Fehler" entfernen
 		if pos > 0:
@@ -1790,14 +1775,13 @@ def ARDSportBilder(title, path, img):
 			
 			thumb = ''
 			local_path = os.path.abspath(local_path)
+			thumb = local_path
 			if os.path.isfile(local_path) == False:			# schon vorhanden?
-				try:
-					urlretrieve(img_src, local_path)
-					thumb = local_path
-				except Exception as exception:
-					PLog(str(exception))	
-			else:		
-				thumb = local_path
+				# urlretrieve(img_src, local_path)			# umgestellt auf Thread	s.u.		
+				# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Podcast, 
+				#	Zieldatei_kompletter_Pfad|Podcast ..
+				path_url_list.append('%s|%s' % (local_path, img_src))	
+				background	= True						
 				
 			tagline = headline
 			summ = unescape(summ)
@@ -1812,6 +1796,16 @@ def ARDSportBilder(title, path, img):
 				addDir(li=li, label=lable, action="dirList", dirID="ZDFSlideShow", 
 					fanart=thumb, thumb=thumb, fparams=fparams, summary=summ)
 				image += 1
+			
+	if background and len(path_url_list) > 0:				# Übergabe Url-Liste an Thread
+		from threading import Thread	# thread_getfile
+		textfile=''; pathtextfile=''; storetxt=''; url=img_src; 
+		fulldestpath=local_path; notice=True; destdir="Slide-Show-Cache"
+		now = datetime.datetime.now()
+		timemark = now.strftime("%Y-%m-%d_%H-%M-%S")
+		background_thread = Thread(target=thread_getfile,
+			args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark,notice,destdir))
+		background_thread.start()
 			
 	if image > 0:		
 		fpath=py2_encode(fpath);
@@ -3766,19 +3760,23 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels cu
 #	https://docs.python.org/2/library/urllib.html
 # vorh. Dateien werden überschrieben (wie bei curl/wget).
 # Aufrufer: DownloadExtern, DownloadMultiple (mit 
-#	path_url_list + timemark).
+#	path_url_list + timemark), ZDF_Bildgalerie + 
+#	ARDSportBilder (notice=False)
+# 	notice triggert die Dialog-Ausgabe.
+# 	destdir: Alternative für msg3 beim Sammeldownload (Bsp. "Slide-Show-Cache")
 # Alternativen für urlretrieve (legacy): wget-Modul, 
 #	Request (stackoverflow: alternative-of-urllib-urlretrieve-in-python-3-5)
 #
-def thread_getfile(textfile, pathtextfile, storetxt, url, fulldestpath, path_url_list='', timemark=''):
+def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list='',timemark='',notice=True, destdir=''):
 	PLog("thread_getfile:")
-	PLog(url); PLog(fulldestpath); PLog(len(path_url_list)); PLog(timemark); 
+	PLog(url); PLog(fulldestpath); PLog(len(path_url_list)); PLog(timemark); PLog(notice); PLog(destdir);
 	# from time import sleep								# Debug
 
+	icon = R('icon-downl-dir.png')
 	try:
-		if path_url_list:									# Podcast-Sammeldownloads
+		if path_url_list:									# Sammeldownloads (Podcast, Bilder)
 			msg1 = 'Starte Download im Hintergrund'		
-			msg2 = 'Anzahl der Podcast: %s' % len(path_url_list)
+			msg2 = 'Anzahl der Dateien: %s' % len(path_url_list)
 			msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_curl_download_path')
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 			i=1
@@ -3788,25 +3786,34 @@ def thread_getfile(textfile, pathtextfile, storetxt, url, fulldestpath, path_url
 				urlretrieve(url, path)
 				# sleep(2)									# Debug
 				i=i+1
-			msg1 = 'Download abgeschlossen'
+			msg1 = 'Download erledigt'
 			msg2 = 'gestartet: %s' % timemark				# Zeitstempel 
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	# Fertig-Info
+			if notice:
+				xbmcgui.Dialog().notification(msg1,msg2,icon,5000)	# Fertig-Info
+
 		else:
 			msg1 = 'Starte Download im Hintergrund'		
 			msg2 = 'Speichere Zusatz-Infos in Textdatei: %s' % textfile
 			msg3 = 'Ablage: ' + fulldestpath	
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
-			RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
+			if notice:
+				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			if pathtextfile:
+				RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
 			urlretrieve(url, fulldestpath)
-			# sleep(20)										# Debug
-			msg1 = 'Download abgeschlossen'
-			msg2 = '%s gespeichert' % os.path.basename(fulldestpath)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	# Fertig-Info
+			# sleep(20)											# Debug
+			msg1 = 'Download abgeschlossen:'
+			if destdir:
+				msg2 = os.path.basename(destdir)		# "Slide-Show-Cache"	
+			else:
+				msg2 = os.path.basename(fulldestpath) 	# heute_Xpress.mp4
+			if notice:
+				xbmcgui.Dialog().notification(msg1,msg2,icon,5000)	# Fertig-Info
 	except Exception as exception:
 		PLog("thread_getfile:" + str(exception))
 		msg1 = 'Download fehlgeschlagen'
 		msg2 = 'Fehler: %s' % str(exception)		
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		if notice:
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 
 	return
 	
@@ -4104,7 +4111,7 @@ def DownloadsDelete(dlpath, single):
 	try:
 		if single == 'False':
 			if ClearUp(os.path.abspath(dlpath), 1) == True:
-				error_txt = 'Downloadverzeichnis geleert'
+				error_txt = 'Verzeichnis geleert'
 			else:
 				raise NameError('Ursache siehe Logdatei')
 		else:
@@ -4117,7 +4124,7 @@ def DownloadsDelete(dlpath, single):
 		PLog(error_txt)			 			 	 
 		msg1 = u'Löschen erfolgreich'
 		msg2 = error_txt
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		xbmcgui.Dialog().notification(msg1,msg2,R(ICON_DELETE),5000)
 	except Exception as exception:
 		PLog(str(exception))
 		msg1 = u'Fehler | Löschen fehlgeschlagen'
@@ -7109,7 +7116,11 @@ def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geo
 # Lösung mit einzelnem Listitem wie in ShowPhotoObject (FlickrExplorer) hier
 #	nicht möglich (Playlist Player: ListItem type must be audio or video) -
 #	Die li-Eigenschaft type='image' wird von Kodi nicht akzeptiert, wenn
-#	addon.xml im provides-Feld video enthält
+#	addon.xml im provides-Feld video enthält. Daher müssen die Bilder hier
+#	im Voraus geladen werden.
+# Ablage im SLIDESTORE, Bildverz. wird aus Titel erzeugt. Falls ein Bild
+#	nicht existiert, wird es via urlretrieve geladen.
+# 04.02.2020 Umstellung Bildladen auf Thread (thread_getfile).
 
 def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher Inhalt
 	PLog('ZDF_Bildgalerie:'); PLog(mode); PLog(title)
@@ -7151,7 +7162,7 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li	
 
-	image = 0
+	image=0; background=False; path_url_list=[]
 	for rec in content:
 		# PLog(rec)  # bei Bedarf
 		summ = ''; 
@@ -7199,8 +7210,7 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 			summ = cleanhtml(summ)
 			
 		if img_src == '':									# Sicherung			
-			msg1 = 'Problem in Bildgalerie: Bild nicht gefunden'
-			PLog(msg1)
+			PLog('Problem in Bildgalerie: Bild nicht gefunden')
 					
 		if img_src:
 			#  Kodi braucht Endung für SildeShow; akzeptiert auch Endungen, die 
@@ -7214,14 +7224,13 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 			
 			thumb = ''
 			local_path = os.path.abspath(local_path)
+			thumb = local_path
 			if os.path.isfile(local_path) == False:			# schon vorhanden?
-				try:
-					urlretrieve(img_src, local_path)
-					thumb = local_path
-				except Exception as exception:
-					PLog(str(exception))	
-			else:		
-				thumb = local_path
+				# urlretrieve(img_src, local_path)			# umgestellt auf Thread	s.u.		
+				# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Podcast, 
+				#	Zieldatei_kompletter_Pfad|Podcast ..
+				path_url_list.append('%s|%s' % (local_path, img_src))	
+				background	= True						
 				
 			tagline = unescape(title_org); tagline = cleanhtml(tagline)
 			summ = unescape(summ)
@@ -7233,6 +7242,16 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 					fanart=thumb, thumb=thumb, fparams=fparams, summary=summ, tagline=tagline)
 
 			image += 1
+	
+	if background and len(path_url_list) > 0:				# Übergabe Url-Liste an Thread
+		from threading import Thread	# thread_getfile
+		textfile=''; pathtextfile=''; storetxt=''; url=img_src; 
+		fulldestpath=local_path; notice=True; destdir="Slide-Show-Cache"
+		now = datetime.datetime.now()
+		timemark = now.strftime("%Y-%m-%d_%H-%M-%S")
+		background_thread = Thread(target=thread_getfile,
+			args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark,notice,destdir))
+		background_thread.start()
 			
 	if image > 0:	
 		fpath=py2_encode(fpath);	
@@ -7246,7 +7265,6 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 #  PhotoObject fehlt in kodi - wir speichern die Bilder in SLIDESTORE und
 #	übergeben an xbmc.executebuiltin('SlideShow..
 #  ClearUp in SLIDESTORE s. Modulkopf
-#  S.a. ARD_Bildgalerie/Hub + SlideShow
 #  Aufrufer: ZDF_Bildgalerie
 def ZDFSlideShow(path, single=None):
 	PLog('SlideShow: ' + path)
