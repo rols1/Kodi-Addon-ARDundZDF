@@ -40,7 +40,7 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.6.2'
+VERSION = '2.6.3'
 VDATE = '06.02.2020'
 
 #
@@ -1701,7 +1701,7 @@ def ARDSportPanel(title, path, img):
 #--------------------------------------------------------------------------------------------------
 # Bilder für ARD Sportschau, z.B. Moderatoren
 # Einzelnes Listitem in Video-Addon nicht möglich - s.u.
-# Slideshow: ZDFSlideShow
+# Slideshow: ZDF_SlideShow
 def ARDSportBilder(title, path, img):
 	PLog('ARDSportBilder:'); 
 	title_org = title
@@ -1793,7 +1793,7 @@ def ARDSportBilder(title, path, img):
 			if thumb:										
 				local_path=py2_encode(local_path);
 				fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
-				addDir(li=li, label=lable, action="dirList", dirID="ZDFSlideShow", 
+				addDir(li=li, label=lable, action="dirList", dirID="ZDF_SlideShow", 
 					fanart=thumb, thumb=thumb, fparams=fparams, summary=summ)
 				image += 1
 			
@@ -1810,7 +1810,7 @@ def ARDSportBilder(title, path, img):
 	if image > 0:		
 		fpath=py2_encode(fpath);
 		fparams="&fparams={'path': '%s'}" % quote(fpath) 	# fpath: SLIDESTORE/fname
-		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDFSlideShow", 
+		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDF_SlideShow", 
 			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
 		
 
@@ -4257,7 +4257,7 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 	# Dir-Items für diese Funktionen erhalten mediatype=video:
 	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.ShowVideo",
 						"resources.lib.zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
-						"ARDStartVideoMP4", "util.PlayVideo", "resources.lib.my3Sat.SingleBeitrag",
+						"ARDStartVideoMP4", "PlayVideo", "resources.lib.my3Sat.SingleBeitrag",
 						"SenderLiveResolution"]	
 
 	if mode == 'Favs':														
@@ -4691,20 +4691,20 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 		
 		name=py2_encode(name); 
 		fparams="&fparams={'title': '%s', 'listname': '%s', 'fanart': '%s'}" % (quote(name), quote(name), img)
-		util.addDir(li=li, label=name, action="dirList", dirID="SenderLiveListe", fanart=R(ICON_MAIN_TVLIVE), 
+		addDir(li=li, label=name, action="dirList", dirID="SenderLiveListe", fanart=R(ICON_MAIN_TVLIVE), 
 			thumb=img, fparams=fparams)
 
 	title = 'EPG Alle JETZT'; summary ='elektronischer Programmfuehrer'
 	tagline = 'zeige die laufende Sendung für jeden Sender'
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s'}" % title
-	util.addDir(li=li, label=title, action="dirList", dirID="EPG_ShowAll", fanart=R('tv-EPG-all.png'), 
+	addDir(li=li, label=title, action="dirList", dirID="EPG_ShowAll", fanart=R('tv-EPG-all.png'), 
 		thumb=R('tv-EPG-all.png'), fparams=fparams, summary=summary, tagline=tagline)
 							
 	title = 'EPG Sender einzeln'; summary='elektronischer Programmfuehrer'
 	tagline = 'zeige die Sendungen für einen Sender nach Wahl'				# EPG-Button Einzeln anhängen
 	fparams="&fparams={'title': '%s'}" % title
-	util.addDir(li=li, label=title, action="dirList", dirID="EPG_Sender", fanart=R(ICON_MAIN_TVLIVE), 
+	addDir(li=li, label=title, action="dirList", dirID="EPG_Sender", fanart=R(ICON_MAIN_TVLIVE), 
 		thumb=R('tv-EPG-single.png'), fparams=fparams, summary=summary, tagline=tagline)	
 		
 	PLog(str(SETTINGS.getSetting('pref_LiveRecord')))
@@ -4716,7 +4716,7 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 		summary = u'Sender wählen und aufnehmen.\nDauer: %s' % laenge
 		tagline = 'Downloadpfad: %s' 	 % SETTINGS.getSetting('pref_curl_download_path') 				
 		fparams="&fparams={'title': '%s'}" % title
-		util.addDir(li=li, label=title, action="dirList", dirID="TVLiveRecordSender", fanart=R(ICON_MAIN_TVLIVE), 
+		addDir(li=li, label=title, action="dirList", dirID="TVLiveRecordSender", fanart=R(ICON_MAIN_TVLIVE), 
 			thumb=R('icon-record.png'), fparams=fparams, summary=summary, tagline=tagline)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
@@ -5193,7 +5193,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		img=py2_encode(img); descr=py2_encode(descr);	
 		fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s', 'descr': '%s'}" % (quote_plus(link), 
 			quote_plus(img), quote_plus(title), quote_plus(descr))
-		util.addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=fanart, thumb=img, 
+		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=fanart, thumb=img, 
 			fparams=fparams, summary=summary, tagline=tagline, mediatype=mediatype)		
 	
 	if onlySender== '':		
@@ -7238,7 +7238,7 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 			if thumb:
 				local_path=py2_encode(local_path);
 				fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
-				addDir(li=li, label=title, action="dirList", dirID="ZDFSlideShow", 
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_SlideShow", 
 					fanart=thumb, thumb=thumb, fparams=fparams, summary=summ, tagline=tagline)
 
 			image += 1
@@ -7256,7 +7256,7 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 	if image > 0:	
 		fpath=py2_encode(fpath);	
 		fparams="&fparams={'path': '%s'}" % quote(fpath) 	# fpath: SLIDESTORE/fname
-		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDFSlideShow", 
+		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDF_SlideShow", 
 			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  # ohne Cache, um Neuladen zu verhindern
@@ -7266,11 +7266,20 @@ def ZDF_Bildgalerie(li, page, mode, title):	# keine Bildgalerie, aber ähnlicher
 #	übergeben an xbmc.executebuiltin('SlideShow..
 #  ClearUp in SLIDESTORE s. Modulkopf
 #  Aufrufer: ZDF_Bildgalerie
-def ZDFSlideShow(path, single=None):
-	PLog('SlideShow: ' + path)
+def ZDF_SlideShow(path, single=None):
+	PLog('ZDF_SlideShow: ' + path)
 	local_path = os.path.abspath(path)
-	if single:							# Einzelbild	
-		return xbmc.executebuiltin('ShowPicture(%s)' % local_path)
+	if single:							# Einzelbild
+		'''
+		ext =  os.path.splitext(path)[1]
+		textdest = path.replace(ext, '.txt')
+		win_id = "12007"	
+#		return xbmc.executebuiltin('ShowPicture(%s)' % local_path)
+		xbmc.executebuiltin('ShowPicture(%s)' % local_path)
+		msg1= u'Blickpunkte - Bilder des Tages'
+		msg2= u'Kein Taktstock, kein Frack und keine Partitur: Alter 3, ein Roboter mit menschlichem Gesicht, dirigiert die Oper "Scary Beauty" des japanischen Komponisten Keiichiro Shibuya.'
+		'''
+		xbmcgui.Dialog().notification(msg1,msg2,R("icon-info.png"),15000)	# Fertig-Info	
 	else:
 		PLog(local_path)
 		return xbmc.executebuiltin('SlideShow(%s, %s)' % (local_path, 'notrandom'))

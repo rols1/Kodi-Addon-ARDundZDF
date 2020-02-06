@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+06.02.2020	2.6.3	Umbenennung: ZDFSlideShow -> ZDF_SlideShow (HauptPRG, Modul TagesschauXL).
+			SenderLiveListePre, ARD Sportschau: verbliebene util-Calls entfernt.	
+
 06.02.2020	2.6.2	Modul phoenix: Funktion get_epg_ARD entfernt (ersetzt durch get_live_data).
 			Aktualisierung Watchdog_Plex-2: phoenix_Search, phoenix_Rubriken,
 			phoenix_Dossiers,phoenix_Sendungen.

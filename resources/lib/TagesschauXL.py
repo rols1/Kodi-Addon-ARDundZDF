@@ -37,7 +37,7 @@ import datetime, time
 import re							# u.a. Reguläre Ausdrücke
 import string
 
-import ardundzdf					# transl_wtag, get_query, ZDFSlideShow, Parseplaylist, test_downloads
+import ardundzdf					# transl_wtag, get_query, ZDF_SlideShow, Parseplaylist, test_downloads
 from resources.lib.util import *
 
 
@@ -608,7 +608,7 @@ def XL_Bildgalerie(path, title):
 			if thumb:
 				local_path=py2_encode(local_path);
 				fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
-				addDir(li=li, label=label, action="dirList", dirID="ardundzdf.ZDFSlideShow", 
+				addDir(li=li, label=label, action="dirList", dirID="ardundzdf.ZDF_SlideShow", 
 					fanart=thumb, thumb=thumb, fparams=fparams, summary=summ, tagline=tagline)
 
 			image += 1
@@ -617,7 +617,7 @@ def XL_Bildgalerie(path, title):
 		fpath=py2_encode(fpath);
 		label = "SlideShow: %s"	% title_org
 		fparams="&fparams={'path': '%s'}" % quote(fpath) 	# fpath: SLIDESTORE/fname
-		addDir(li=li, label=label, action="dirList", dirID="ardundzdf.ZDFSlideShow", 
+		addDir(li=li, label=label, action="dirList", dirID="ardundzdf.ZDF_SlideShow", 
 			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
 
 		
