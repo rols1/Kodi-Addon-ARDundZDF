@@ -69,6 +69,9 @@
   		values="400:320x180|650:640x360|900:720x404|1500:960x540|2500:1280x720|4000:1920x108|6000:1920x1080" />
   	<setting label="Modul ARD Neu, Senderwahl: im Titel >Sender:< entfernen" type="bool" id="pref_disable_sender" default="false"/>
   	<setting label="Modul phoenix: nur Beiträge mit Videos, keine Sendungshinweise" type="bool" id="pref_only_phoenix_videos" default="false"/>
+   	<setting label="Bildersammlungen: Bildinfos als Wasserzeichen" type="bool" id="pref_watermarks" default="false"/>
+   	<setting label="Bildersammlungen: Fontgröße Wasserzeichen" type="select" id="pref_fontsize" default="auto"
+   		values="auto|10|12|13|14|15|16|17|18|19|20|30|40"/>
 </category>
 </settings>
 

@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 06.02.2020
+#	Stand: 15.02.2020
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -37,7 +37,9 @@ import datetime, time
 import re							# u.a. Reguläre Ausdrücke
 import string
 
-import ardundzdf					# transl_wtag, get_query, ZDF_SlideShow, Parseplaylist, test_downloads
+# import ardundzdf reicht nicht für thread_getpic
+from ardundzdf import *					# transl_wtag, get_query, thread_getpic, 
+										# ZDF_SlideShow, Parseplaylist, test_downloads
 from resources.lib.util import *
 
 
@@ -82,6 +84,8 @@ ICON_DIR_FOLDER	= "Dir-folder.png"
 ICON_MAIN_TVLIVE= 'tv-livestreams.png'
 ICON_MEHR 		= "icon-mehr.png"
 ICON_SEARCH 	= 'ard-suche.png'
+ICON_DELETE 			= "icon-delete.png"
+
 # Github-Icons zum Nachladen aus Platzgründen
 GIT_CAL			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-calendar.png?raw=true"
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
@@ -290,7 +294,7 @@ def Archiv(path, ID, img):	# 30 Tage - ähnlich Verpasst
 			iWeekday = 'Heute'	
 		if nr == 1:
 			iWeekday = 'Gestern'	
-		iWeekday = ardundzdf.transl_wtag(iWeekday)
+		iWeekday = transl_wtag(iWeekday)
 		
 		ipath =  BASE_URL + '/multimedia/video/videoarchiv2~_date-%s.htm' % (SendDate)
 		PLog(ipath); PLog(iDate); PLog(iWeekday);
@@ -311,7 +315,7 @@ def Archiv(path, ID, img):	# 30 Tage - ähnlich Verpasst
 def XL_Search(query='', search=None, pagenr=''):
 	PLog("XL_Search:")
 	if 	query == '':	
-		query = ardundzdf.get_query(channel='ARD')
+		query = get_query(channel='ARD')
 	PLog(query)
 	if  query == None or query.strip() == '':
 		return ""
@@ -564,7 +568,7 @@ def XL_Bildgalerie(path, title):
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li	
 
-	image = 1
+	image=0; background=False; path_url_list=[]; text_list=[]
 	for rec in content:
 		# Hinw.: letzter Satz ist durch section sectionA begrenzt
 		# PLog(rec)  # bei Bedarf
@@ -580,6 +584,7 @@ def XL_Bildgalerie(path, title):
 		else:							
 			title = stringextract('<img alt="', '"', rec)
 			summ = stringextract('teasertext colCnt\">', '</p>', rec)
+			tag=''
 							
 			#  Kodi braucht Endung für SildeShow; akzeptiert auch Endungen, die 
 			#	nicht zum Imageformat passen
@@ -587,49 +592,63 @@ def XL_Bildgalerie(path, title):
 			local_path 	= "%s/%s" % (fpath, pic_name)
 			PLog("local_path: " + local_path)
 			title = "Bild %03d" % (image+1)
-			label = "%s - %s" % (title, title_org)
+			label = title
 			PLog("Bildtitel: " + title)
 			title = unescape(title)
 			
-			thumb = ''
-			local_path = os.path.abspath(local_path)
-			if os.path.isfile(local_path) == False:			# schon vorhanden?
-				try:
-					urlretrieve(img_src, local_path)
-					thumb = local_path
-				except Exception as exception:
-					PLog(str(exception))	
-			else:		
-				thumb = local_path
-				
-			tagline = unescape(title_org); tagline = cleanhtml(tagline)
-			summ = unescape(summ)
-			PLog('neu:');PLog(title);PLog(thumb);PLog(summ[0:40]);
-			if thumb:
-				local_path=py2_encode(local_path);
-				fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
-				addDir(li=li, label=label, action="dirList", dirID="ardundzdf.ZDF_SlideShow", 
-					fanart=thumb, thumb=thumb, fparams=fparams, summary=summ, tagline=tagline)
+		local_path 	= os.path.abspath(local_path)
+		thumb = local_path
+		if os.path.isfile(local_path) == False:			# schon vorhanden?
+			# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Bild-Url, 
+			#	Zieldatei_kompletter_Pfad|Bild-Url ..
+			path_url_list.append('%s|%s' % (local_path, img_src))
+
+			if SETTINGS.getSetting('pref_watermarks') == 'true':
+				txt = "%s\n%s\n%s\n%s\n" % (fname,title,tag,summ)
+				text_list.append(txt)	
+			background	= True											
+								
+		title=repl_json_chars(title); summ=repl_json_chars(summ)
+		PLog('neu:');PLog(title);PLog(thumb);PLog(summ[0:40]);
+		if thumb:	
+			local_path=py2_encode(local_path);
+			fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_SlideShow", 
+				fanart=thumb, thumb=local_path, fparams=fparams, summary=summ, tagline=tag)
 
 			image += 1
 			
+	if background and len(path_url_list) > 0:				# Thread-Call mit Url- und Textliste
+		PLog("background: " + str(background))
+		from threading import Thread						# thread_getpic
+		folder = fname 
+		background_thread = Thread(target=thread_getpic,
+			args=(path_url_list, text_list, folder))
+		background_thread.start()
+
+	PLog("image: " + str(image))
 	if image > 0:	
 		fpath=py2_encode(fpath);
-		label = "SlideShow: %s"	% title_org
+		label = "SlideShow"	
 		fparams="&fparams={'path': '%s'}" % quote(fpath) 	# fpath: SLIDESTORE/fname
 		addDir(li=li, label=label, action="dirList", dirID="ardundzdf.ZDF_SlideShow", 
 			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
+	
+		lable = u"Alle Bilder löschen"									# 2. Löschen
+		tag = 'Bildverzeichnis: ' + fname 
+		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  neu einlesen'
+		fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % quote(fpath)
+		addDir(li=li, label=lable, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DELETE), 
+			thumb=R(ICON_DELETE), fparams=fparams, summary=summ, tagline=tag)
 
-		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
-
 # ----------------------------------------------------------------------
 def XL_Live(ID=''):	
 	PLog('XL_Live:')
 	title = 'TagesschauXL Live'
 	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')										# Home-Button
+	li = home(li, ID='TagesschauXL')									# Home-Button
 		
 	# json-Seiten ermittelt mit chrome-dev-tools von 
 	# 	tagesschau.de/multimedia/livestreams/index.htm,
@@ -669,7 +688,7 @@ def XL_Live(ID=''):
 		PlayVideo(url=url_m3u8, title=title, thumb=thumb, Plot=title)
 		return
 	
-	li = ardundzdf.Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=title,  sub_path='')	
+	li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=title,  sub_path='')	
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
@@ -857,7 +876,7 @@ def XLGetVideoSources(path, title, summary, tagline, thumb):
 		tagline_org = repl_json_chars(tagline_org)
 		thumb = img
 		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
-		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
+		li = test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
 	 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 

@@ -1,11 +1,31 @@
 CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver)
 --------------		Releases: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
+
 --------------		Nachfolger von Plex-Plugin-ARDMediathek2016
 			Kodi-Forum, Support:
 			https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF
 			Plex-Foren:
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
+
+15.02.2020	2.6.4	Modernisierung + Ausbau der Bildgalerien:
+			Auswertung Bildgalerien ZDF geändert: Code in ZDF_get_content und ZDF_getVideoSources 
+			entfernt (Grund: Rekursion ZDF_Bildgalerie -> ZDF_getVideoSources), Umbenennung
+			Bildgalerie -> ZDF_BildgalerieSingle, neue Funktion ZDF_Bildgalerien.
+			Neue Funktion thread_getpic: Download-Routine (urlretrieve) für Bildgalerien,  
+			einschl. Erzeugung von Wasserzeichen (python-Modul PIL), Listing-Refresh nach
+			Bilderdownload, RGBA->RGB-Konvertierung für LibreElec.
+			settings.xml: neue Option für die Nutzung von Wasserzeichen, zusätzlich
+			Auswahl der Fontgröße.
+			Neue Funktionen BilderDasErste, BilderDasErsteSingle (Auswertung Bildgalerien
+			Sender Das Erste), Anpassung Menüs (Main_ARD, Main_NEW).
+			Anpassung an Download + Wasserzeichen: BildgalerieSingle, 
+			XL_Bildgalerie, ARDSportBilder.
+			Modul 3sat: Bildgalerie hinzugefügt (Funktionen Bilder3sat + Bilder3satSingle). 
+			thread_getfile + thread_getpic: Abbruchoption für Startdialog ergänzt.
+			DownloadsDelete: Abbruch-Option ergänzt - Buttontext in allen aufrufenden 
+			Funktionen geändert ("ohne Rückfrage" entfernt). 
+			Modul util: wrap-Funktion erneuert (reduce lambda ersetzt duch textwrap).
 
 06.02.2020	2.6.3	Umbenennung: ZDFSlideShow -> ZDF_SlideShow (HauptPRG, Modul TagesschauXL).
 			SenderLiveListePre, ARD Sportschau: verbliebene util-Calls entfernt.	

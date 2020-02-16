@@ -6,7 +6,7 @@
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.3sat.de,
 #	Seiten werden im html-format, teils. json ausgeliefert
-#	Stand: 06.02.2020
+#	Stand: 15.02.2020
 #
 #	04.11.2019 Migration Python3  Python3 Modul future
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -39,7 +39,9 @@ import  json, ssl
 import datetime, time
 
 # Addonmodule + Funktionsziele (util_imports.py)
-import ardundzdf					# -> get_query, ParseMasterM3u, test_downloads, Parseplaylist
+# import ardundzdf reicht nicht für thread_getpic
+from ardundzdf import *					# -> get_query, ParseMasterM3u, test_downloads, Parseplaylist, 
+										# thread_getpic, ZDF_SlideShow
 from resources.lib.util import *
 
 
@@ -127,6 +129,10 @@ def Main_3Sat(name):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubriken", 
 		fanart=R('3sat.png'), thumb=R('zdf-rubriken.png'), summary=summ, fparams=fparams)
 
+	title = 'Bildgalerien 3sat'	
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Bilder3sat",
+		fanart=R('3sat.png'), thumb=R('zdf-bilderserien.png'), fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		 		
@@ -1130,7 +1136,7 @@ def Live(name, epg='', Merk='false'):
 	
 #-----------------------------
 def get_epg():		# akt. PRG-Hinweis von 3Sat-Startseite holen
-	PLog('get_epg')
+	PLog('get_epg:')
 	# 03.08-2017: get_epg_ARD entfällt - akt. PRG-Hinweis auf DreiSat_BASE eingeblendet
 	# epg_date, epg_title, epg_text = get_epg_ARD(epg_url, listname)
 	page, msg = get_page(path=DreiSat_BASE)	
@@ -1147,6 +1153,189 @@ def get_epg():		# akt. PRG-Hinweis von 3Sat-Startseite holen
 	PLog(epg)
 	return epg
 	
+####################################################################################################
+# 3Sat - Bild-Galerien/-Serien
+#	Übersichtsseiten - 3sat zeigt 12 Beiträge pro Seite
+#		path für weitere Seiten: class="load-more-container"
+#
+def Bilder3sat(path=''):
+	PLog('Bilder3sat:')
+	if path == '':
+		path="https://www.3sat.de/suche?q=bilderserie&synth=true&attrs=&page=1"
+	
+	page, msg = get_page(path)	
+	if page == '':
+		msg1 = 'Bilder3sat: Seite kann nicht geladen werden.'
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		return
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='3Sat')						# Home-Button
+
+	content = blockextract('class="is-clickarea panel">', page)
+	PLog("content: " + str(len(content)))
+	if len(content) == 0:										
+		msg1 = 'Bilder3sat: keine Bilder (mehr) gefunden.'
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		return li
+		
+	for rec in content:
+		if 'class="icon-gallery"' not in rec:					# Bildsymbol 
+			continue
+		
+		img_set = stringextract('data-srcset="', '"', rec) # Format 16-9
+		img_list= img_set.split(',')
+		img = img_list[-1]										# 384x216
+		PLog(img)
+		img_src = 'https:' + stringextract('https:', ' ', img)
+		if img == '':
+			continue
+		
+		href = 'https://www.3sat.de' + stringextract('href="', '"', rec)
+		
+		headline = stringextract('medium-6   ">', '</h3>', rec)		# headline + Subtitel -> Tagline
+		title = stringextract('clickarea-link">', '</p>', headline) # Titel -> Ordnername
+		title = cleanhtml(title); title = mystrip(title)
+		headline = cleanhtml(headline); headline = mystrip(headline)
+		stitle= stringextract('ellipsis" >', '</', rec)
+		stitle = cleanhtml(stitle); stitle = mystrip(stitle)
+		tag = "%s | %s" % (headline, stitle)
+		
+		summ = stringextract('class="label">', '</', rec)
+		
+		PLog('Satz:')
+		PLog(img_src); PLog(title); PLog(tag);  		
+			
+		href=py2_encode(href); title=py2_encode(title);
+		fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Bilder3satSingle", 
+			fanart=img_src, thumb=img_src, fparams=fparams, tagline=tag, summary=summ)
+			
+	if 'class="load-more-container">' in page:
+		href = stringextract('class="load-more-container">', '</div>', page)
+		href = stringextract('href="', '"', href)
+		if href:
+			title = u'weitere Bilderserien laden'
+			href = 'https://www.3sat.de' + href
+			PLog('more_url: ' + href)
+			href = decode_url(href); href=py2_encode(href); 	# ..&amp;attrs=&amp;page=2
+			fparams="&fparams={'path': '%s'}" % (quote(href))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Bilder3sat", 
+				fanart=R('zdf-bilderserien.png'), thumb=R(ICON_MEHR), tagline='Mehr...', fparams=fparams)	
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  # ohne Cache, um Neuladen zu verhindern
+		
+####################################################################################################
+def Bilder3satSingle(title, path):
+	PLog('Bilder3satSingle:')
+	
+	page, msg = get_page(path)	
+	if page == '':
+		msg1 = 'Bilder3satSingle: Seite kann nicht geladen werden.'
+		msg2 = msg
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		return
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='3Sat')						# Home-Button
+
+	content = blockextract('class="img-container">', page)
+	PLog("content: " + str(len(content)))
+	if len(content) == 0:										
+		msg1 = 'Bilder3satSingle: keine Bilder gefunden.'
+		msg2 = title
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		return li
+	
+	fname = make_filenames(title)			# Ordnername: Titel 
+	fpath = '%s/%s' % (SLIDESTORE, fname)
+	PLog(fpath)
+	if os.path.isdir(fpath) == False:
+		try:  
+			os.mkdir(fpath)
+		except OSError:  
+			msg1 = 'Bildverzeichnis konnte nicht erzeugt werden:'
+			msg2 = "%s/%s" % (SLIDESTORE, fname)
+			PLog(msg1); PLog(msg2)
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			return li	
+	
+	image=0; background=False; path_url_list=[]; text_list=[]
+	for rec in content:
+		img_src =  stringextract('data-srcset="', ' ', rec)	
+		img_src = img_src.replace('384x216', '1280x720')			
+		title 	= stringextract('level-3   ">', '</h2>', rec) 
+		stitle 	= stringextract('level-2">', '</span>', rec)
+		title=cleanhtml(title); title=mystrip(title);  
+		stitle=cleanhtml(stitle); stitle=mystrip(stitle.strip()); 
+		
+		descr 	= stringextract('paragraph-large ">', '</p', rec) 	# Bildtext
+		urh	= stringextract('teaser-info is-small">', '</dd', rec)	# Urheber
+		urh=mystrip(urh.strip()); 
+		
+		tag = "%s | %s" % (stitle, title)
+		summ = "%s\n%s" % (descr, urh)
+		
+		PLog('Satz:')
+		PLog(img_src); PLog(tag[:60]); PLog(summ[:60]);	
+		tag=repl_json_chars(tag) 
+		title=repl_json_chars(title); summ=repl_json_chars(summ); 		
+			
+		#  Kodi braucht Endung für SildeShow; akzeptiert auch Endungen, die 
+		#	nicht zum Imageformat passen
+		pic_name 	= 'Bild_%04d.jpg' % (image+1)		# Bildname
+		local_path 	= "%s/%s" % (fpath, pic_name)
+		PLog("local_path: " + local_path)
+		title = "Bild %03d" % (image+1)
+		PLog("Bildtitel: " + title)
+		
+		local_path 	= os.path.abspath(local_path)
+		thumb = local_path
+		if os.path.isfile(local_path) == False:			# schon vorhanden?
+			# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Bild-Url, 
+			#	Zieldatei_kompletter_Pfad|Bild-Url ..
+			path_url_list.append('%s|%s' % (local_path, img_src))
+
+			if SETTINGS.getSetting('pref_watermarks') == 'true':
+				lable=''
+				txt = "%s\n%s\n%s\n%s\n%s\n" % (fname,title,lable,tag,summ)
+				text_list.append(txt)	
+			background	= True											
+								
+		title=repl_json_chars(title); summ=repl_json_chars(summ)
+		PLog('neu:');PLog(title);PLog(thumb);PLog(summ[0:40]);
+		if thumb:	
+			local_path=py2_encode(local_path);
+			fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_SlideShow", 
+				fanart=thumb, thumb=local_path, fparams=fparams, summary=summ, tagline=tag)
+
+		image += 1
+			
+	if background and len(path_url_list) > 0:				# Thread-Call mit Url- und Textliste
+		PLog("background: " + str(background))
+		from threading import Thread						# thread_getpic
+		folder = fname 
+		background_thread = Thread(target=thread_getpic,
+			args=(path_url_list, text_list, folder))
+		background_thread.start()
+
+	PLog("image: " + str(image))
+	if image > 0:	
+		fpath=py2_encode(fpath);	
+		fparams="&fparams={'path': '%s'}" % quote(fpath) 	# fpath: SLIDESTORE/fname
+		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDF_SlideShow", 
+			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
+				
+		lable = u"Alle Bilder löschen"						# 2. Löschen
+		tag = 'Bildverzeichnis: ' + fname 
+		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  neu einlesen'
+		fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % quote(fpath)
+		addDir(li=li, label=lable, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DELETE), 
+			thumb=R(ICON_DELETE), fparams=fparams, summary=summ, tagline=tag)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  # ohne Cache, um Neuladen zu verhindern
 
 ####################################################################################################
 #	Hilfsfunktionen

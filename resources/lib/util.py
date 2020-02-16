@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 31.01.2020
+#	Stand '16.02.2020'
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -46,7 +46,7 @@ import base64 			# url-Kodierung für Kontextmenüs
 import json				# json -> Textstrings
 import pickle			# persistente Variablen/Objekte
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
-import string
+import string, textwrap
 	
 # Globals
 PYTHON2 = sys.version_info.major == 2	# Stammhalter Pythonversion 
@@ -804,7 +804,6 @@ def DirectoryNavigator(settingKey, mytype, heading, shares='files', useThumbs=Fa
 	PLog(settingKey); PLog(mytype); PLog(heading); PLog(path);
 	
 	dialog = xbmcgui.Dialog()
-#	d_ret = dialog.browseSingle(int(mytype), heading, 'files', '', False, False, path)	
 	d_ret = dialog.browseSingle(int(mytype), heading, shares, '', False, False, path)	
 	PLog('d_ret: ' + d_ret)
 	
@@ -937,7 +936,7 @@ def unescape(line):
 		, (u"&#39;", u"'"), (u"&#039;", u"'"), (u"&quot;", u'"'), (u"&#x27;", u"'")
 		, (u"&ouml;", u"ö"), (u"&auml;", u"ä"), (u"&uuml;", u"ü"), (u"&szlig;", u"ß")
 		, (u"&Ouml;", u"Ö"), (u"&Auml;", u"Ä"), (u"&Uuml;", u"Ü"), (u"&apos;", u"'")
-		, (u"&nbsp;|&nbsp;", u""), (u"&nbsp;", u""), (u"&bdquo;", u""),	(u"&ldquo;", u""),
+		, (u"&nbsp;|&nbsp;", u""), (u"&nbsp;", u" "), (u"&bdquo;", u""), (u"&ldquo;", u""),
 		# Spezialfälle:
 		#	https://stackoverflow.com/questions/20329896/python-2-7-character-u2013
 		#	"sächsischer Genetiv", Bsp. Scott's
@@ -945,7 +944,7 @@ def unescape(line):
 		(u"–", u"-"), (u"&#x27;", u"'"), (u"&#xD;", u""), (u"\xc2\xb7", u"-"),
 		(u'undoacute;', u'o'), (u'&eacute;', u'e'), (u'&egrave;', u'e'),
 		(u'&atilde;', u'a'), (u'quot;', u' '), (u'&#10;', u'\n'),
-		(u'&#8222;', u' '), (u'&#8220;', u' ')):
+		(u'&#8222;', u' '), (u'&#8220;', u' '), (u'&#034;', u' ')):
 		line = line.replace(*r)
 	return line
 #----------------------------------------------------------------  
@@ -990,7 +989,31 @@ def transl_umlaute(line):
 	line_ret = line_ret.replace(u"ö", u"oe", len(line_ret))
 	line_ret = line_ret.replace(u"ß", u"ss", len(line_ret))	
 	return line_ret
-#----------------------------------------------------------------  
+#---------------------------------------------------------------- 
+# Zeilenumbrüche bei Erhalt von Newlines
+# Pythons textwrap kümmert sich nicht um \n
+# http://code.activestate.com/recipes/148061-one-liner-word-wrap-function/
+# reduce wurde in python3 nach functools verlagert
+def wrap_old(text, width):		# 15.02.2020 abgelöst durch wrap s.u.
+    return reduce(lambda line, word, width=width: '%s%s%s' %
+                  (line,
+                   ' \n'[(len(line)-line.rfind('\n')-1
+                         + len(word.split('\n',1)[0]
+                              ) >= width)],
+                   word),
+                  text.split(' ')
+                 )
+#  wrap-Funktion ohne reduce:                
+def wrap(text, width):
+	lines = text.splitlines()
+	newtxt = []
+	for line in lines:
+		newline = textwrap.fill(line, width)
+		newline = newline.strip()
+		newtxt.append(newline)
+		
+	return "\n".join(newtxt)
+#----------------------------------------------------------------   
 # Migration PY2/PY3: py2_decode aus kodi-six
 def transl_json(line):	# json-Umlaute übersetzen
 	# Vorkommen: Loader-Beiträge ZDF/3Sat (ausgewertet als Strings)

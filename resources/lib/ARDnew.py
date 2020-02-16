@@ -38,7 +38,7 @@ import math							# für math.ceil (aufrunden)
 
 
 # Addonmodule + Funktionsziele (util_imports.py)
-import ardundzdf					# -> SenderLiveResolution, Parseplaylist
+import ardundzdf					# -> SenderLiveResolution, Parseplaylist, BilderDasErste, BilderDasErsteSingle
 from resources.lib.util import *
 
 
@@ -136,6 +136,10 @@ def Main_NEW(name, CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="ARDSport", 
 		fanart=R("tv-ard-sportschau.png"), thumb=R("tv-ard-sportschau.png"), fparams=fparams)
 						
+	title = 'Bildgalerien Das Erste'	
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="BilderDasErste", fanart=R(ICON_MAIN_ARD),
+		thumb=R('ard-bilderserien.png'), fparams=fparams)
 
 	title 	= u'Wählen Sie Ihren Sender | aktuell: [COLOR red]%s[/COLOR]' % sendername	# Senderwahl
 	title=py2_encode(title);
