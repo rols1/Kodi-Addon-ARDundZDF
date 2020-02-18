@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.6.4'
-VDATE = '16.02.2020'
+VERSION = '2.6.5'
+VDATE = '18.02.2020'
 
 #
 #
@@ -3905,12 +3905,27 @@ def thread_getpic(path_url_list,text_list,folder=''):
 				PLog("Bildbreite, -höhe: %d, %d" % (width, height))
 				# 0 = 100% Deckung für helle Flächen
 				txtimg = Image.new('RGBA', base.size, (255,255,255,0))
-				mytxt_col = 60							# Zeilenbreite 
-				if width > 1000:
-					mytxt_col = 80
+				fz = SETTINGS.getSetting('pref_fontsize')
+				if fz == 'auto':
+					mytxt_col = 80						# Zeilenbreite 
+				else:
+					mytxt_col = 100 - int(fz)			# Bsp. 100-20				
+				
 				mytxt = text_list[i]
 				mytxt = wrap(mytxt,mytxt_col)			# Zeilenumbruch
+				PLog(mytxt)
 				
+				try:	
+					# für Windows7 Multi- -> Single-Line:	
+					import platform						# IOError möglich
+					PLog('Plattform: ' + platform.release())
+					if platform.release() == "7":
+						PLog("Windows7: entferne LFs")	
+						mytxt = mytxt.replace('\n', ' | ')
+						mytxt = textwrap.fill(mytxt, mytxt_col)
+				except Exception as exception:
+					PLog("Plattform_Error: " + str(exception))				
+								
 				if SETTINGS.getSetting('pref_fontsize') == 'auto':
 					# fontsize abhängig von Bildgröße:
 					while font.getsize(mytxt)[0] < img_fraction*base.size[0]:		
@@ -3926,9 +3941,12 @@ def thread_getpic(path_url_list,text_list,folder=''):
 				# txtsz = draw.multiline_textsize(mytxt, font)	# exeption Windows7
 				# PLog("Größe Bildtext: " + str(txtsz))
 				
-				x=10; 									# Pos. am besten unten links
-				cnt = len(mytxt.split('\n')) + 1		# Bildhöhe - (Anz. Zeilen x fontsize+1) + 10
-				y= height - (cnt * (fontsize+1)) + 10
+				w,h = draw.textsize(mytxt, font=font)
+				W,H = base.size
+				# x,y = 0.5*(W-w),0.90*H-h		# zentriert
+				# x,y = W-w,0.90*H-h			# rechts
+				x,y = 0.05*(W-w),0.96*(H-h)		# u. links
+				PLog("x,y: %d, %d" % (x,y))
 
 				# outlined Text - für helle Flächen erforderlich, aus stackoverflow.com/
 				# /questions/41556771/is-there-a-way-to-outline-text-with-a-dark-line-in-pil 
@@ -3936,26 +3954,18 @@ def thread_getpic(path_url_list,text_list,folder=''):
 				try:
 					outlineAmount = 2
 					shadowColor = 'black'
-					for adj in range(outlineAmount):
-						#move right
-						draw.text((x-adj, y), mytxt, font=font, fill=shadowColor)
-						#move left
-						draw.text((x+adj, y), mytxt, font=font, fill=shadowColor)
-						#move up
-						draw.text((x, y+adj), mytxt, font=font, fill=shadowColor)
-						#move down
-						draw.text((x, y-adj), mytxt, font=font, fill=shadowColor)
-						#diagnal left up
-						draw.text((x-adj, y+adj), mytxt, font=font, fill=shadowColor)
-						#diagnal right up
-						draw.text((x+adj, y+adj), mytxt, font=font, fill=shadowColor)
-						#diagnal left down
-						draw.text((x-adj, y-adj), mytxt, font=font, fill=shadowColor)
-						#diagnal right down
-						draw.text((x+adj, y-adj), mytxt, font=font, fill=shadowColor)
+					for adj in range(outlineAmount):					
+						draw.text((x-adj, y), mytxt, font=font, fill=shadowColor)	#move right						
+						draw.text((x+adj, y), mytxt, font=font, fill=shadowColor)	#move left					
+						draw.text((x, y+adj), mytxt, font=font, fill=shadowColor)	#move up					
+						draw.text((x, y-adj), mytxt, font=font, fill=shadowColor)	#move down						
+						draw.text((x-adj, y+adj), mytxt, font=font, fill=shadowColor)#diagonal left up
+						draw.text((x+adj, y+adj), mytxt, font=font, fill=shadowColor)#diagonal right up
+						draw.text((x-adj, y-adj), mytxt, font=font, fill=shadowColor)#diagonal left down
+						draw.text((x+adj, y-adj), mytxt, font=font, fill=shadowColor)#diagonal right down
 
 					# fill: color, letz. Param: Deckung:
-						draw.text((x,y), mytxt, font=font, fill=(255,255,255,255))
+					draw.text((x,y), mytxt, font=font, fill=(255,255,255,255))
 				except Exception as exception:
 					PLog("thread_getpic3: " + str(exception))
 					PLog('draw.text fehlgeschlagen')
@@ -5693,7 +5703,6 @@ def BilderDasErste(path=''):
 def BilderDasErsteSingle(title, path):					  
 	PLog("BilderDasErsteSingle:")
 	PLog(title)
-	base = 'https://www.daserste.de'
 	
 	li = xbmcgui.ListItem()
 	
@@ -5727,18 +5736,23 @@ def BilderDasErsteSingle(title, path):
 			return li	
 	
 	image=0; background=False; path_url_list=[]; text_list=[]
+	base = 'https://' + urlparse(path).hostname
 	for rec in content:
 		# headline, title, dach fehlen
-		href =  stringextract('class="img"', '</a>', rec)		# Bilddaten
-		img_src = stringextract('src="', '"', href)				# Format small
+		#	xl ohne v-vars									# json-Bilddaten
+		imgs = stringextract('data-ctrl-attributeswap=', 'class="img"', rec)		
+		img_src = stringextract("l': {'src':'", "'", imgs)	# Blank vor {	
+		if img_src == '':
+			img_src = stringextract("m':{'src':'", "'", imgs)		
 		if img_src == '':
 			continue
 		
 		img_src = base + img_src	
-		img_src = img_src.replace('v-vars', 'v-varxl')			# ev. attributeswap auswerten 
-		alt = stringextract('alt="', '"', href)	
+		img_src = img_src.replace('v-varxs', 'v-varxl')			# ev. attributeswap auswerten 
+		
+		alt = stringextract('alt="', '"', rec)	
 		alt=unescape(alt); 
-		title = stringextract('title="', '"', href)	
+		title = stringextract('title="', '"', rec)	
 		# tag = "%s | %s" % (alt, title)
 		tag = alt
 		lable = title
@@ -5767,7 +5781,7 @@ def BilderDasErsteSingle(title, path):
 			path_url_list.append('%s|%s' % (local_path, img_src))
 
 			if SETTINGS.getSetting('pref_watermarks') == 'true':
-				txt = "%s\n%s\n%s\n%s\n%s\n" % (fname,title,lable,tag,summ)
+				txt = "%s\n%s\n%s\n%s\n%s" % (fname,title,lable,tag,summ)
 				text_list.append(txt)	
 			background	= True											
 								
@@ -7588,7 +7602,8 @@ def ZDF_BildgalerieSingle(path, title):
 		lable = title				# Titel in Textdatei	
 				
 		
-		tag = stringextract('"teaser-info">', '<', rec)		# Anzahl Bilder
+		tag = stringextract('"teaser-info">', '</dd>', rec)		# Quelle
+		tag = cleanhtml(tag); tag = mystrip(tag)
 		airtime = stringextract('class="air-time" ', '</time>', rec)
 		airtime = stringextract('">', '</time>', airtime)
 		if airtime:

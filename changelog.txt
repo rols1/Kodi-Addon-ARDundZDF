@@ -8,7 +8,13 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
-15.02.2020	2.6.4	Modernisierung + Ausbau der Bildgalerien:
+18.02.2020	2.6.5	thread_getpic (Bildgalerien): Fix für Windows7 (Multi-Line verhindert
+			Absturz im Modul PIL), detailliertere Berechnung von Textbreite und -position.
+			BilderDasErsteSingle: Auswertung Bildquelle an weitere Hosts angepasst
+			(checkeins.de).
+			ZDF_BildgalerieSingle: Fix Auswertung Copyright.	
+
+15.02.2020	2.6.4	Ausbau der Bildgalerien:
 			Auswertung Bildgalerien ZDF geändert: Code in ZDF_get_content und ZDF_getVideoSources 
 			entfernt (Grund: Rekursion ZDF_Bildgalerie -> ZDF_getVideoSources), Umbenennung
 			Bildgalerie -> ZDF_BildgalerieSingle, neue Funktion ZDF_Bildgalerien.

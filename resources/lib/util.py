@@ -1005,6 +1005,7 @@ def wrap_old(text, width):		# 15.02.2020 abgelöst durch wrap s.u.
                  )
 #  wrap-Funktion ohne reduce:                
 def wrap(text, width):
+	text = text.strip()
 	lines = text.splitlines()
 	newtxt = []
 	for line in lines:
@@ -1013,6 +1014,7 @@ def wrap(text, width):
 		newtxt.append(newline)
 		
 	return "\n".join(newtxt)
+
 #----------------------------------------------------------------   
 # Migration PY2/PY3: py2_decode aus kodi-six
 def transl_json(line):	# json-Umlaute übersetzen
