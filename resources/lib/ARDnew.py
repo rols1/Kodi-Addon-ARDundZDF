@@ -2,7 +2,7 @@
 ################################################################################
 #				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
-#	Stand 06.02.2020
+#	Stand 23.02.2020
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
 #	Seiten werden im json-Format, teilweise html + json ausgeliefert
@@ -328,7 +328,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			mehrfach=False
 			href 	= stringextract('href="', '"', s) 
 			PLog('href: ' + href)
-			if '/player/' not in href:					# player = Einzelbeitrag
+			if '/player/' not in href and '/live/' not in href:		# player = Einzelbeitrag
 				mehrfach = True
 				# Bsp.: /ard/shows/href_id/bonusfamilie -> grouping-href
 					#	/br/more/../href_id/helena..	-> href unverändert

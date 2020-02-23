@@ -41,7 +41,7 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.6.6'
+VERSION = '2.6.7'
 VDATE = '23.02.2020'
 
 #
@@ -5536,8 +5536,8 @@ def show_single_bandwith(url_m3u8, thumb, title, descr, ID):
 #-----------------------------
 # Ablage master.m3u8, einschl. Behandlung relativer Links
 #	Button für "Bandbreite und Aufloesung automatisch" (master.m3u8)
-#	Die Ablage dient zur Auswertung der Einzelauflösungen, kann aber bei Kodi auch
-#	zum Videostart verwendet werden. 
+#	Die Dateiablage dient zur Auswertung der Einzelauflösungen, kann aber 
+#	bei Kodi auch zum Videostart verwendet werden. 
 #   descr = Plot, wird zu PlayVideo durchgereicht.
 def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):	
 	PLog('ParseMasterM3u:'); 
@@ -7746,11 +7746,13 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 	thumb_org=thumb; descr_org=descr 	# sichern
 	
 	i = 0; li_cnt = 1; url=''
-	for line in lines:	
+	for i, line in enumerate(lines):
+		thumb=thumb_org
 		res_geo=''; lable=''
-		if line.strip() == '':
+		# Abgrenzung zu ts-Dateien (Bsp. Welt24): #EXT-X-MEDIA-SEQUENCE: 9773324
+		if line.startswith('#EXT-X-MEDIA:') == False and line.startswith('#EXT-X-STREAM-INF') == False:
 			continue
-		#PLog("line: " + line)		# bei Bedarf
+		PLog("line: " + line)		# bei Bedarf
 		if '#EXT-X-MEDIA' in playlist:				# getrennte ZDF-Audiostreams, 1-zeilig
 			if line.startswith('#EXT-X-MEDIA'):			# 
 				NAME = stringextract('NAME="', '"', line)
@@ -7767,6 +7769,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 		else:											# konventionelle Audio-/Videostreams
 			if line.startswith('#EXT-X-STREAM-INF'):# tatsächlich m3u8-Datei?
 				url = lines[i + 1]						# URL in nächster Zeile
+				PLog("url: " + url)
 				Bandwith = GetAttribute(line, 'BANDWIDTH')
 				Resolution = GetAttribute(line, 'RESOLUTION')
 				try:
@@ -7777,6 +7780,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 					Resolution = u'Auflösung ' + Resolution
 				else:
 					Resolution = u'Auflösung unbekannt'	# verm. nur Ton? CODECS="mp4a.40.2"
+					thumb=R(ICON_SPEAKER)
 				Codecs = GetAttribute(line, 'CODECS')
 				# als Titel wird die  < angezeigt (Sender ist als thumb erkennbar)
 				title='Bandbreite ' + Bandwith
@@ -7801,7 +7805,6 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 		lable = "%s" % li_cnt + ". " + title
 		if res_geo:
 			lable = "%s | %s" % (lable, res_geo)
-		thumb=thumb_org
 						
 		# quote für url erforderlich wg. url-Inhalt "..sd=10&rebase=on.." - das & erzeugt in router
 		#	neuen Parameter bei dict(parse_qs(paramstring)
@@ -7823,9 +7826,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 			quote_plus(sub_path))
 		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 			mediatype='video', tagline=descr) 
-			
+		
 		li_cnt = li_cnt + 1  	# Listitemzähler												
-		i = i + 1				# Index für URL
+#		i = i + 1					# Index für URL
   	
 	if i == 0:	# Fehler
 		line1 = 'Kennung #EXT-X-STREAM-INF / #EXT-X-MEDIA fehlt'

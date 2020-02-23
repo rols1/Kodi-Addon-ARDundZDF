@@ -8,6 +8,11 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+23.02.2020	2.6.7	Parseplaylist: Fix index-Problem bei Auswertung m3u8-Dateien (bei ZDF Medien-Info
+			und Link in einer Zeile, sonst 2-zeilig).
+			ARDStartRubrik: Berücksichtigung von Live-Sendungen in Highlights (Swiper-
+			Bereich).	
+
 23.02.2020	2.6.6	PlayAudio (Modul util): optionale Slideshow, Anpassung Addon-Settings in
 			settings.xml.
 			Parseplaylist: Anpassung an geänderte master.m3u8-Dateien der ZDF-Sender
