@@ -99,7 +99,7 @@ def PLog(msg, loglevel=xbmc.LOGDEBUG):
 	loglevel = xbmc.LOGNOTICE
 	# PLog('loglevel: ' + str(loglevel))
 	if loglevel >= 2:
-		xbmc.log("%s --> %s" % ('ARDundZDF2_3', msg), level=loglevel)
+		xbmc.log("%s --> %s" % ('ARDundZDF', msg), level=loglevel)
 #---------------------------------------------------------------- 
 
 # Home-Button, Aufruf: item = home(item=item, ID=NAME)
@@ -1561,13 +1561,21 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 	ilabels.update({'Comment': '%s' % Plot})	# Plot im MusicPlayer nicht verfügbar
 	li.setInfo(type="music", infoLabels=ilabels)							
 	li.setContentLookup(False)
-	 	
+
+	if SETTINGS.getSetting('pref_musicslideshow') == 'true':	# Slideshow
+		path = SETTINGS.getSetting('pref_slideshow_path')
+		if os.path.exists(path):			
+			xbmc.executebuiltin('SlideShow(%s)' % path)
+			PLog('Starte Screensaver: %s' % path)
+			# Konfig: Kodi Player-Einstellungen / Bilder
+			xbmc.sleep(200)
+		#else:													# library bisher nicht verfügbar
+		#	PLog(xbmc.translatePath("library://pictures/"))
+		#	PLog('Starte Screensaver')
+		#	xbmc.executebuiltin('SlideShow("notrandom")')
+			
 	xbmc.Player().play(url, li, False)			# Player nicht mehr spezifizieren (0,1,2 - deprecated)
 
-	# -> zurück zum Menü Favoriten, ohne: Rücksprung ins Bibl.-Menü
-	if FavCall == 'true':
-		PLog('Call_from_Favourite')
-		xbmc.executebuiltin('ActivateWindow(10134)')
 #---------------------------------------------------------------- 
 # Aufruf: PlayVideo
 def url_check(url, caller=''):

@@ -8,6 +8,15 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+23.02.2020	2.6.6	PlayAudio (Modul util): optionale Slideshow, Anpassung Addon-Settings in
+			settings.xml.
+			Parseplaylist: Anpassung an geänderte master.m3u8-Dateien der ZDF-Sender
+			ZDF, ZDFneo und ZDFinfo (getrennte Video- und Audiostreams). Bei 3sat + phoenix
+			HTTP-Error 403 bei den Einzelauflösungen.
+			livesenderTV.xml aktualisiert (ZDF-Sender).
+			Modul 3sat: Anpassungen an geänderten Import des Haupt-PRG's (prefix ardundzdf
+			bei den Funktions-Calls entfernt). 	
+
 18.02.2020	2.6.5	thread_getpic (Bildgalerien): Fix für Windows7 (Multi-Line verhindert
 			Absturz im Modul PIL), detailliertere Berechnung von Textbreite und -position.
 			BilderDasErsteSingle: Auswertung Bildquelle an weitere Hosts angepasst

@@ -6,7 +6,7 @@
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.3sat.de,
 #	Seiten werden im html-format, teils. json ausgeliefert
-#	Stand: 15.02.2020
+#	Stand: 23.02.2020
 #
 #	04.11.2019 Migration Python3  Python3 Modul future
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -145,7 +145,7 @@ def Main_3Sat(name):
 def Search(first, path, query=''):
 	PLog('Search:'); PLog(first);	
 	if 	query == '':	
-		query = ardundzdf.get_query(channel='ZDF')
+		query = get_query(channel='ZDF')
 	if  query == None or query.strip() == '':
 		return ""
 		
@@ -1071,7 +1071,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 					# Da 3Sat 2 versch. m3u8-Qualitäten zeigt,verzichten wir (wie bei ZDF_getVideoSources)
 					#	auf Einzelauflösungen via Parseplaylist
 					#	
-					li = ardundzdf.ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, descr=Plot_par)
+					li = ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, descr=Plot_par)
 			
 				else:									# m3u8 enthält Auflösungen high + med
 					title = 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' ' + facets 
@@ -1091,7 +1091,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 	if SETTINGS.getSetting('pref_use_downloads'):
 		# high=0: 	1. Video bisher höchste Qualität:  [progressive] veryhigh
 		tagline=tag_org
-		li = ardundzdf.test_downloads(li,download_list,title_org,Plot_par,tag,thumb,high=0)  # Downloadbutton(s)
+		li = test_downloads(li,download_list,title_org,Plot_par,tag,thumb,high=0)  # Downloadbutton(s)
 					
 	xbmcplugin.endOfDirectory(HANDLE)
 
@@ -1130,7 +1130,7 @@ def Live(name, epg='', Merk='false'):
 	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 		mediatype='video', tagline=Plot) 		
 	
-	li =  ardundzdf.Parseplaylist(li, url, img, geoblock='', descr=Plot)	
+	li = Parseplaylist(li, url, img, geoblock='', descr=Plot)	
 	
 	xbmcplugin.endOfDirectory(HANDLE)
 	

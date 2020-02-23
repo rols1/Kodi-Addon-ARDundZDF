@@ -72,6 +72,8 @@
    	<setting label="Bildersammlungen: Bildinfos als Wasserzeichen" type="bool" id="pref_watermarks" default="false"/>
    	<setting label="Bildersammlungen: Fontgröße Wasserzeichen" type="select" id="pref_fontsize" default="auto"
    		values="auto|10|12|13|14|15|16|17|18|19|20|30|40"/>
+   	<setting label="Musik und Podcasts: Slideshow starten" type="bool" id="pref_musicslideshow" default="false"/>
+	<setting label="Musik und Podcasts: Slideshow-Verzeichnis wählen" type="folder" source="" id="pref_slideshow_path" default=""/>
 </category>
 </settings>
 

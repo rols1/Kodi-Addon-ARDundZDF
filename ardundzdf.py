@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.6.5'
-VDATE = '18.02.2020'
+VERSION = '2.6.6'
+VDATE = '23.02.2020'
 
 #
 #
@@ -7698,7 +7698,7 @@ def ZDF_SlideShow(path, single=None):
 ####################################################################################################
 def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):	
 #	# master.m3u8 auswerten, Url muss komplett sein. 
-#  1. Besonderheit: in manchen *.m3u8-Dateien sind die Pfade nicht vollständig,
+#  	1. Besonderheit: in manchen *.m3u8-Dateien sind die Pfade nicht vollständig,
 #	sondern nur als Ergänzung zum Pfadrumpf (ohne Namen + Extension) angegeben, Bsp. (Arte):
 #	delive/delive_925.m3u8, url_m3u8 = http://delive.artestras.cshls.lldns.net/artestras/contrib/delive.m3u8
 #	Ein Zusammensetzen verbietet sich aber, da auch in der ts-Datei (z.B. delive_64.m3u8) nur relative 
@@ -7711,11 +7711,13 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 #		Laden der master.m3u8 erforderlich (s.u.). Zusätzlich werden in	CreateVideoStreamObject die https-Links durch 
 #		http ersetzt (die Streaming-Links funktionieren auch mit http).	
 #		SSL-Handshake für ARTE ist außerhalb von Plex nicht notwendig!
-#  2. Besonderheit: fast identische URL's zu einer Auflösung (...av-p.m3u8, ...av-b.m3u8) Unterschied n.b.
-#  3. Besonderheit: für manche Sendungen nur 1 Qual.-Stufe verfügbar (Bsp. Abendschau RBB)
-#  4. Besonderheit: manche Playlists enthalten zusätzlich abgeschaltete Links, gekennzeichnet mit #. Fehler Webplayer:
+#  	2. Besonderheit: fast identische URL's zu einer Auflösung (...av-p.m3u8, ...av-b.m3u8) Unterschied n.b.
+#  	3. Besonderheit: für manche Sendungen nur 1 Qual.-Stufe verfügbar (Bsp. Abendschau RBB)
+#  	4. Besonderheit: manche Playlists enthalten zusätzlich abgeschaltete Links, gekennzeichnet mit #. Fehler Webplayer:
 #		 crossdomain access denied. Keine Probleme mit OpenPHT und VLC - betr. nur Plex.
-#  10.08.2017 Filter für Video-Sofort-Format - wieder entfernt 17.02.2018
+#  	10.08.2017 Filter für Video-Sofort-Format - wieder entfernt 17.02.2018
+#	23.02.2020 getrennte Video- und Audiostreams bei den ZDF-Sendern (ZDF, ZDFneo, ZDFinfo - nicht bei 3sat +phoenix)
+#		 - hier nur Auflistung der Audiostreams 
 #
 	PLog ('Parseplaylist: ' + url_m3u8)
 
@@ -7738,75 +7740,96 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 	 
 	PLog('playlist: ' + playlist[:100])		# bei Bedarf
 	lines = playlist.splitlines()
-	lines.pop(0)					# 1. Zeile entfernen (#EXTM3U)
+	PLog(lines)
 	BandwithOld 	= ''			# für Zwilling -Test (manchmal 2 URL für 1 Bandbreite + Auflösung) 
+	NameOld 		= []			# für Zwilling -Test bei ZDF-Streams (nicht hintereinander)
 	thumb_org=thumb; descr_org=descr 	# sichern
 	
-	i = 0; li_cnt = 1
-	#for line in lines[1::2]:	# Start 1. Element, step 2
+	i = 0; li_cnt = 1; url=''
 	for line in lines:	
-		line = lines[i].strip()
-		# PLog(line)		# bei Bedarf
-		if line.startswith('#EXT-X-STREAM-INF'):# tatsächlich m3u8-Datei?
-			url = lines[i + 1].strip()	# URL in nächster Zeile
-			PLog(url)
-			Bandwith = GetAttribute(line, 'BANDWIDTH')
-			Resolution = GetAttribute(line, 'RESOLUTION')
-			try:
-				BandwithInt	= int(Bandwith)
-			except:
-				BandwithInt = 0
-			if Resolution:	# fehlt manchmal (bei kleinsten Bandbreiten)
-				Resolution = u'Auflösung ' + Resolution
-			else:
-				Resolution = u'Auflösung unbekannt'	# verm. nur Ton? CODECS="mp4a.40.2"
-			Codecs = GetAttribute(line, 'CODECS')
-			# als Titel wird die  < angezeigt (Sender ist als thumb erkennbar)
-			title='Bandbreite ' + Bandwith
-			if url.find('#') >= 0:	# Bsp. SR = Saarl. Rundf.: Kennzeichnung für abgeschalteten Link
-				Resolution = 'zur Zeit nicht verfügbar!'
-			if url.startswith('http') == False:   		# relativer Pfad? 
-				pos = url_m3u8.rfind('/')				# m3u8-Dateinamen abschneiden
-				url = url_m3u8[0:pos+1] + url 			# Basispfad + relativer Pfad
-			if Bandwith == BandwithOld:	# Zwilling -Test
-				title = 'Bandbreite ' + Bandwith + ' (2. Alternative)'
-			thumb=thumb_org
+		res_geo=''; lable=''
+		if line.strip() == '':
+			continue
+		#PLog("line: " + line)		# bei Bedarf
+		if '#EXT-X-MEDIA' in playlist:				# getrennte ZDF-Audiostreams, 1-zeilig
+			if line.startswith('#EXT-X-MEDIA'):			# 
+				NAME = stringextract('NAME="', '"', line)
+				LANGUAGE = stringextract('LANGUAGE="', '"', line)
+				url = stringextract('URI="', '"', line)
+				title='Audio:  %s | Sprache %s' % (NAME, LANGUAGE)
+				PLog(NAME); PLog(NameOld); 
+				if NAME in NameOld:
+					title='Audio:  %s | Sprache %s %s' % (NAME, LANGUAGE, '(2. Alternative)')
+				NameOld.append(NAME)
+			else:										# skip Videostreams ohne Ton	
+				continue	
 			
-			PLog(thumb); PLog(Resolution); PLog(BandwithInt); 
-			if BandwithInt and BandwithInt <=  100000: 		# vermutl. nur Audio (Bsp. ntv 48000, ZDF 96000)
-				Resolution = Resolution + ' (vermutlich nur Audio)'
-				thumb=R(ICON_SPEAKER)
-			lable = Resolution+geoblock
-			lable = "%s" % li_cnt + ". " + title + " | " + lable
-						
-			# quote für url erforderlich wg. url-Inhalt "..sd=10&rebase=on.." - das & erzeugt in router
-			#	neuen Parameter bei dict(parse_qs(paramstring)
-			Plot = descr_org
-			Plot = Plot.replace('\n', '||')	
-			descr = Plot.replace('||', '\n')		
-		
-			if descr.strip() == '|':			# ohne EPG: EPG-Verbinder entfernen
-				descr=''
-			
-			PLog('Satz:')
-			PLog(title); PLog(lable); PLog(url); PLog(thumb); PLog(Plot); PLog(descr); 
-			
-			title=py2_encode(title); url=py2_encode(url);
-			thumb=py2_encode(thumb); Plot=py2_encode(Plot); 
-			sub_path=py2_encode(sub_path);
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
-				(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot), 
-				quote_plus(sub_path))
-			addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-				mediatype='video', tagline=descr) 
+		else:											# konventionelle Audio-/Videostreams
+			if line.startswith('#EXT-X-STREAM-INF'):# tatsächlich m3u8-Datei?
+				url = lines[i + 1]						# URL in nächster Zeile
+				Bandwith = GetAttribute(line, 'BANDWIDTH')
+				Resolution = GetAttribute(line, 'RESOLUTION')
+				try:
+					BandwithInt	= int(Bandwith)
+				except:
+					BandwithInt = 0
+				if Resolution:	# fehlt manchmal (bei kleinsten Bandbreiten)
+					Resolution = u'Auflösung ' + Resolution
+				else:
+					Resolution = u'Auflösung unbekannt'	# verm. nur Ton? CODECS="mp4a.40.2"
+				Codecs = GetAttribute(line, 'CODECS')
+				# als Titel wird die  < angezeigt (Sender ist als thumb erkennbar)
+				title='Bandbreite ' + Bandwith
+				if url.find('#') >= 0:	# Bsp. SR = Saarl. Rundf.: Kennzeichnung für abgeschalteten Link
+					Resolution = u'zur Zeit nicht verfügbar!'
+				if url.startswith('http') == False:   		# relativer Pfad? 
+					pos = url_m3u8.rfind('/')				# m3u8-Dateinamen abschneiden
+					url = url_m3u8[0:pos+1] + url 			# Basispfad + relativer Pfad
+				if Bandwith == BandwithOld:	# Zwilling -Test
+					title = 'Bandbreite ' + Bandwith + ' (2. Alternative)'
 				
-			li_cnt = li_cnt + 1  	# Listitemzähler
-			BandwithOld = Bandwith												
+				PLog(Resolution); PLog(BandwithInt); 
+				# nur Audio (Bsp. ntv 48000, ZDF 96000), 
+				if BandwithInt and BandwithInt <=  100000: 		
+					Resolution = Resolution + ' (nur Audio)'
+					thumb=R(ICON_SPEAKER)
+				res_geo = Resolution+geoblock
+				BandwithOld = Bandwith
+			else:
+				continue
+
+		lable = "%s" % li_cnt + ". " + title
+		if res_geo:
+			lable = "%s | %s" % (lable, res_geo)
+		thumb=thumb_org
+						
+		# quote für url erforderlich wg. url-Inhalt "..sd=10&rebase=on.." - das & erzeugt in router
+		#	neuen Parameter bei dict(parse_qs(paramstring)
+		Plot = descr_org
+		Plot = Plot.replace('\n', '||')	
+		descr = Plot.replace('||', '\n')		
+	
+		if descr.strip() == '|':			# ohne EPG: EPG-Verbinder entfernen
+			descr=''
+		
+		PLog('Satz:')
+		PLog(title); PLog(lable); PLog(url); PLog(thumb); PLog(Plot); PLog(descr); 
+		
+		title=py2_encode(title); url=py2_encode(url);
+		thumb=py2_encode(thumb); Plot=py2_encode(Plot); 
+		sub_path=py2_encode(sub_path);
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+			(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot), 
+			quote_plus(sub_path))
+		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
+			mediatype='video', tagline=descr) 
+			
+		li_cnt = li_cnt + 1  	# Listitemzähler												
 		i = i + 1				# Index für URL
   	
 	if i == 0:	# Fehler
-		line1 = 'Kennung #EXT-X-STREAM-INF fehlt oder'
-		line2 = 'den Pfaden fehlt http / https'
+		line1 = 'Kennung #EXT-X-STREAM-INF / #EXT-X-MEDIA fehlt'
+		line2 = 'oder den Streamlinks fehlt http / https'
 		xbmcgui.Dialog().ok(ADDON_NAME, line1, line2)			
 	
 	return li

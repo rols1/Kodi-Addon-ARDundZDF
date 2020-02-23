@@ -4,7 +4,7 @@
   <genre>TV</genre>
   <description>Livestreams http://www.ardmediathek.de/tv/live</description>
   <thumbnail></thumbnail>
-   <date>16.05.2019 rols1</date>
+   <date>23.02.2020 rols1</date>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
   <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ Button:Alle Sender</info>
   <info2>das &-Zeichen verstößt zwar gegen den xml-Standard, ist aber kompatibel mit den String-Funktionen im PRG</info2>
@@ -29,11 +29,11 @@
 	<item>
 		<title>ZDF</title>
 		<hrefsender>ZDF</hrefsender>
-		<link>https://zdf-hls-01.akamaized.net/hls/live/2002460/de/high/master.m3u8</link>
+		<link>https://zdf-hls-01.akamaized.net/hls/live/2002460/de/veryhigh/master.m3u8</link>	  
 		<thumbnail>tv-zdf.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>ZDF</EPG_ID>
-		<date>11.06.2016</date>
+		<date>23.02.2020</date>
 		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
@@ -74,29 +74,29 @@
 	<item>
 		<title>3sat</title>
 		<hrefsender>3sat</hrefsender>
-		<link>https://zdfhls18-i.akamaihd.net/hls/live/744751/dach/high/master.m3u8</link>
+		<link>https://zdfhls18-i.akamaihd.net/hls/live/744751/dach/veryhigh/master.m3u8</link>
 		<thumbnail>tv-3sat.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>3SAT</EPG_ID>
-		<date>07.09.2018</date>
+		<date>23.02.2020</date>
 		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
 	<item>			
 		<title>ZDFneo</title>
 		<hrefsender>ZDFneo</hrefsender>
-		<link>https://zdf-hls-02.akamaized.net/hls/live/2002461/de/high/master.m3u8</link>
+		<link>https://zdf-hls-02.akamaized.net/hls/live/2002461/de/veryhigh/master.m3u8</link>
 		<thumbnail>tv-zdf-neo.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>2NEO</EPG_ID>
-		<date>11.06.2016</date>
+		<date>23.02.2020</date>
 		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
 	<item>			
 		<title>ZDFinfo</title>
 		<hrefsender>ZDFinfo</hrefsender>
-		<link>https://zdfhls17-i.akamaihd.net/hls/live/744750/de/high/master.m3u8</link>
+		<link>https://zdfhls17-i.akamaihd.net/hls/live/744750/de/veryhigh/master.m3u8</link>
 		<thumbnail>tv-zdf-info.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>ZINFO</EPG_ID>
@@ -128,11 +128,11 @@
 	<item>
 		<title>phoenix</title>
 		<hrefsender>phoenix</hrefsender>
-		<link>https://zdfhls19-i.akamaihd.net/hls/live/744752/de/high/master.m3u8</link>
+		<link>https://zdfhls19-i.akamaihd.net/hls/live/744752/de/veryhigh/master.m3u8</link>
 		<thumbnail>tv-phoenix.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>PHOEN</EPG_ID>
-		<date>07.09.2018</date>
+		<date>23.02.2020</date>
 		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
