@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand '16.02.2020'
+#	Stand '27.02.2020'
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -55,7 +55,8 @@ PYTHON3 = sys.version_info.major == 3
 NAME			= 'ARD und ZDF'
 KODI_VERSION 	= xbmc.getInfoLabel('System.BuildVersion')
 
-ADDON_ID      	= 'plugin.video.ardundzdf'
+ADDON    		= xbmcaddon.Addon()
+ADDON_ID      	= ADDON.getAddonInfo('id')	# plugin.video.ardundzdf
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
@@ -1553,7 +1554,7 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 	#	# PLog(header)
 	#	url = '%s|%s' % (url, header) 
 	
-	PLog('PlayAudio Player_Url: ' + url)
+	PLog('Player_Url: ' + url)
 
 	li = xbmcgui.ListItem(path=url)				# ListItem + Player reicht für BR
 	li.setArt({'thumb': thumb, 'icon': thumb})
@@ -1561,20 +1562,41 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 	ilabels.update({'Comment': '%s' % Plot})	# Plot im MusicPlayer nicht verfügbar
 	li.setInfo(type="music", infoLabels=ilabels)							
 	li.setContentLookup(False)
-
-	if SETTINGS.getSetting('pref_musicslideshow') == 'true':	# Slideshow
-		path = SETTINGS.getSetting('pref_slideshow_path')
-		if os.path.exists(path):			
-			xbmc.executebuiltin('SlideShow(%s)' % path)
-			PLog('Starte Screensaver: %s' % path)
-			# Konfig: Kodi Player-Einstellungen / Bilder
-			xbmc.sleep(200)
-		#else:													# library bisher nicht verfügbar
-		#	PLog(xbmc.translatePath("library://pictures/"))
-		#	PLog('Starte Screensaver')
-		#	xbmc.executebuiltin('SlideShow("notrandom")')
-			
-	xbmc.Player().play(url, li, False)			# Player nicht mehr spezifizieren (0,1,2 - deprecated)
+	
+	# optionale Slideshow starten 
+	path = SETTINGS.getSetting('pref_slides_path')
+	PLog(path)
+	slide_mode = SETTINGS.getSetting('pref_musicslideshow') 
+	if "Kodi" in slide_mode:
+		slide_mode = "Kodi"
+	if "Addon" in slide_mode:				
+		slide_mode = "Addon"
+		
+	if slide_mode != "Keine":
+		if xbmcvfs.exists(path) == False:
+			msg1 = 'Slideshow: %s' % slide_mode
+			msg2 = 'Slideshow-Verzeichnis fehlt'
+			xbmcgui.Dialog().notification(msg1,msg2,R('icon-stream.png'),4000)
+		else:	
+			if slide_mode == "Kodi":								# Slideshow Kodi
+				xbmc.executebuiltin('SlideShow(%s, "recursive")' % path)
+				PLog('Starte Screensaver1: %s' % path)
+				# Konfig: Kodi Player-Einstellungen / Bilder
+				xbmc.sleep(200)
+				xbmc.Player().play(url, li, False)
+				return
+			if slide_mode == "Addon":								# Slideshow Addon
+				xbmc.Player().play(url, li, False)					# vor modaler Slideshow			
+				import resources.lib.slides as slides
+				PLog('Starte Screensaver2: %s' % path)
+				CWD = ADDON.getAddonInfo('path').decode("utf-8") # working dir
+				screensaver_gui = slides.Slideshow('script-python-slideshow.xml', CWD, 'default')
+				screensaver_gui.doModal()
+				xbmc.Player().stop()					
+				del screensaver_gui
+				return
+	else:			
+		xbmc.Player().play(url, li, False)						# ohne Slideshow 
 
 #---------------------------------------------------------------- 
 # Aufruf: PlayVideo

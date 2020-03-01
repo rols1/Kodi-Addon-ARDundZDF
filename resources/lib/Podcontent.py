@@ -15,7 +15,7 @@
 #
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-#	Stand:  04.02.2020
+#	Stand:  27.02.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -170,7 +170,7 @@ def PodFavoriten(title, path, pagenr='1'):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 											
 	#																			# Download-Button?				
-	if SETTINGS.getSetting('pref_use_downloads') == 'true' or SETTINGS.getSetting('pref_download_intern') == 'true':
+	if SETTINGS.getSetting('pref_use_downloads') == 'true':
 		if len(downl_list) > 1:
 			# Sammel-Downloads - alle angezeigten Favoriten-Podcasts downloaden?
 			#	für "normale" Podcasts erfolgt die Abfrage in SinglePage
@@ -221,6 +221,8 @@ def PodFavoriten(title, path, pagenr='1'):
 #
 # Rücksprung-Problem: unter Kodi keine wie unter Plex beoachtet.
 # Bei internem Download wird mit path_url_list zu thread_getfile verzweigt.
+# 27.02.2020 Code für curl/wget-Download entfernt
+
 #----------------------------------------------------------------  
 	
 def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
@@ -234,20 +236,10 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	li = home(li, ID='ARDaudio')							# Home-Button
 	
 	rec_len = len(downl_list)
-	AppPath = SETTINGS.getSetting('pref_curl_path')
-	AppPath = os.path.abspath(AppPath)
-	dest_path = SETTINGS.getSetting('pref_curl_download_path')
+	dest_path = SETTINGS.getSetting('pref_download_path')
 			
-	# -k schaltet curl's certificate-verification ab, -L folgt einem ev. Redirect
-	curl_param_list = '-k -L '
 	path_url_list = []									# für int. Download									
 
-	PLog(AppPath)
-	if SETTINGS.getSetting('pref_download_intern') == 'false':
-		if os.path.exists(AppPath)	== False:			# Existenz Curl prüfen
-			msg1='curl nicht gefunden'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-			return li		
 	if os.path.isdir(dest_path)	== False:				# Downloadverzeichnis prüfen		
 		msg1='Downloadverzeichnis nicht gefunden:'	
 		msg2=path
@@ -255,7 +247,7 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 		return li		
 	
 	i = 0
-	for rec in downl_list:									# Parameter-Liste für Curl erzeugen
+	for rec in downl_list:									# Parameter-Liste erzeugen
 		i = i + 1
 		#if  i > 2:											# reduz. Testlauf
 		#	break
@@ -271,53 +263,19 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 
 		# Parameter-Format: -o Zieldatei_kompletter_Pfad Podcast-Url -o Zieldatei_kompletter_Pfad Podcast-Url ..
 		# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Podcast, Zieldatei_kompletter_Pfad|Podcast ..
-		curl_fullpath = os.path.join(dest_path, dfname)
-		curl_fullpath = os.path.abspath(curl_fullpath)		# os-spezischer Pfad
-		curl_param_list = curl_param_list + ' -o '  + curl_fullpath + ' ' + url
-		path_url_list.append('%s|%s' % (curl_fullpath, url))
+		fullpath = os.path.join(dest_path, dfname)
+		fullpath = os.path.abspath(fullpath)		# os-spezischer Pfad
+		path_url_list.append('%s|%s' % (fullpath, url))
 		
 	PLog(sys.platform)
-	if SETTINGS.getSetting('pref_download_intern') == 'true':	# interner Download
-		from threading import Thread	# thread_getfile
-		textfile='';pathtextfile='';storetxt='';url='';fulldestpath=''
-		now = datetime.datetime.now()
-		timemark = now.strftime("%Y-%m-%d_%H-%M-%S")
-		background_thread = Thread(target=ardundzdf.thread_getfile,
-			args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark))
-		background_thread.start()
-		# return li						# Kodi-Problem: wartet bis Ende Thread			
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		return							# hier trotz endOfDirectory erforderlich
-	
-	cmd = AppPath + ' ' + curl_param_list
-	PLog(len(cmd))
-	if sys.platform == 'win32':								# s. Funktionskopf
-		args = cmd
-	else:
-		args = shlex.split(cmd)								# ValueError: No closing quotation (1 x, Ursache n.b.)
-	PLog(len(args))											
-	# PLog(args)
-												
-	try:
-		PIDcurlPOD = ''
-		sp = subprocess.Popen(args, shell=False)			# shell=True entf. hier nach shlex-Nutzung	
-		output,error = sp.communicate()						#  output,error = None falls Aufruf OK
-		PLog('call = ' + str(sp))	
-		if str(sp).find('object at') > 0:  					# Bsp.: <subprocess.Popen object at 0x7fb78361a210>
-			PIDcurlPOD = sp.pid								# PID zum Abgleich gegen Wiederholung sichern
-			PLog('PIDcurlPOD neu: %s' % PIDcurlPOD)
-			msg1 = 'curl: Download erfolgreich gestartet'
-			msg2 = 'Anzahl der Podcast: %s' % rec_len
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
-			return li				
-		else:
-			raise Exception('Start von curl fehlgeschlagen')			
-	except Exception as exception:
-		PLog(str(exception))		
-		msg1='Download fehlgeschlagen'
-		msg2 = str(exception)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
-		return li				
-		
+	from threading import Thread	# thread_getfile
+	textfile='';pathtextfile='';storetxt='';url='';fulldestpath=''
+	now = datetime.datetime.now()
+	timemark = now.strftime("%Y-%m-%d_%H-%M-%S")
+	background_thread = Thread(target=ardundzdf.thread_getfile,
+		args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark))
+	background_thread.start()
+	# return li						# Kodi-Problem: wartet bis Ende Thread			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	return							# hier trotz endOfDirectory erforderlich
 

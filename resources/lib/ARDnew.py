@@ -972,9 +972,8 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			mediatype='video', tagline=tagline, summary=summ_lable) 
 		
-	if 	download_list:	
-		title = " | %s"				
-		PLog(title);PLog(summary_org);PLog(tagline);PLog(thumb);
+	if download_list:	
+		PLog(title_org);PLog(summary_org);PLog(tagline);PLog(thumb);
 		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline,thumb,high=-1)  # Downloadbutton(s)		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)

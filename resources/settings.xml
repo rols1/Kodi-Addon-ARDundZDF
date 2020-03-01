@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<settings>
+<settings> 
     <category label="Allgemeine Einstellungen">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
    	<setting label="neues Update beim Start des Plugins anzeigen" type="bool" id="pref_info_update" default="false"/>
@@ -28,13 +28,11 @@
  </category>
  
  <category label="Download Einstellungen">
- 	<setting label="curl/wget-Downloads freischalten" type="bool" id="pref_use_downloads" default="false"/>
+ 	<setting label="Downloads freischalten" type="bool" id="pref_use_downloads" default="false"/>
   	<setting label="alle verfuegbaren Video-Qualitaeten anbieten" type="bool" id="pref_show_qualities" default="false"/>
  	<setting label="Dateinamen aus dem Titel erzeugen (statt Download_{Datum}_{Uhrzeit})" type="bool" id="pref_generate_filenames" default="false"/>
-	<setting label="Pfad zum Downloadprogramm curl/wget" type="executable" id="pref_curl_path" default=""/>
-	<setting label="Downloadverzeichnis (auch für Recording TV-Live)" type="folder" option="writeable" id="pref_curl_download_path" default=""/>
+	<setting label="Downloadverzeichnis (auch für Recording TV-Live)" type="folder" option="writeable" id="pref_download_path" default=""/>
 	<setting label="Downloads verschieben in dieses Verzeichnis" type="folder" source="" id="pref_VideoDest_path" default=""/>
- 	<setting label="internen Download verwenden statt curl/wget (experimentell)" type="bool" id="pref_download_intern" default="false"/>
 </category>
  
  <category label="Recording TV-Live verwenden">
@@ -72,9 +70,10 @@
    	<setting label="Bildersammlungen: Bildinfos als Wasserzeichen" type="bool" id="pref_watermarks" default="false"/>
    	<setting label="Bildersammlungen: Fontgröße Wasserzeichen" type="select" id="pref_fontsize" default="auto"
    		values="auto|10|12|13|14|15|16|17|18|19|20|30|40"/>
-   	<setting label="Musik und Podcasts: Slideshow starten" type="bool" id="pref_musicslideshow" default="false"/>
-	<setting label="Musik und Podcasts: Slideshow-Verzeichnis wählen" type="folder" source="" id="pref_slideshow_path" default=""/>
-</category>
+   	<setting label="Slideshow für Musik-Player: " type="select" id="pref_musicslideshow" default="Keine"
+   		values="Keine|Kodi <Bild-Steuerung>|Addon <Player-Steuerung und Musikinfos>"/>
+	<setting label="Slideshow für Musik-Player: Verzeichnis wählen" type="folder" source="" id="pref_slides_path" default=""/>
+	<setting label="Slideshow für Musik-Player: Anzeigedauer in Sekunden" type="select" id="pref_slides_time" default="10" values="5|10|15|20|30|60|120|240|600"/></category>
 </settings>
 
 

@@ -8,6 +8,16 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+01.03.2020	2.6.8	neues Modul slides: Slideshow mit Musik-infos für Kodi-Musik-Player ergänzend
+			zur Kodi-Slideshow, einschl. Tastatur-Steuerung, Dialog-Skin-Datei, Cacheverwaltung 
+			+ Player-Ende-Erkennung.
+			Beide Slideshow-Varianten: rekursives Bildladen hinzugefügt. 
+			Anpassung Addon-Settings in settings.xml und PlayAudio (Modul util).
+			curl-/wget-Download entfernt: Anpassungen settings.xml, DownloadsTools,
+			DownloadExtern, DownloadsList, test_downloads, Modul Podcontent.
+			Radio-Livestreams (Hauptmenü): Fix Homebutton (Rücksprung erfolgte bei den 
+			Einzelsendern zur Audiothek statt zum Hauptmenü).
+
 23.02.2020	2.6.7	Parseplaylist: Fix index-Problem bei Auswertung m3u8-Dateien (bei ZDF Medien-Info
 			und Link in einer Zeile, sonst 2-zeilig).
 			ARDStartRubrik: Berücksichtigung von Live-Sendungen in Highlights (Swiper-

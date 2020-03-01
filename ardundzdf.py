@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.6.7'
-VDATE = '23.02.2020'
+VERSION = '2.6.8'
+VDATE = '01.03.2020'
 
 #
 #
@@ -387,7 +387,7 @@ def Main():
 				thumb=R(ICON_MAIN_POD), summary=summary, tagline=tagline, fparams=fparams)
 						
 																# Download-Tools. zeigen
-	if SETTINGS.getSetting('pref_use_downloads') ==  'true' or SETTINGS.getSetting('pref_download_intern') == 'true':	
+	if SETTINGS.getSetting('pref_use_downloads') ==  'true':	
 		tagline = 'Download-Tools: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
 		fparams="&fparams={}"
 		addDir(li=li, label='Download-Tools', action="dirList", dirID="DownloadsTools", 
@@ -914,7 +914,8 @@ def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams
 			PLog('Satz:');
 			PLog(title); PLog(img);
 			title=py2_encode(title); sender=py2_encode(sender);
-			fparams="&fparams={'title': '%s', 'sender': '%s'}" % (quote(title), quote(sender))	
+			fparams="&fparams={'title': '%s', 'sender': '%s', 'myhome': '%s'}" % (quote(title), 
+				quote(sender), myhome)	
 			addDir(li=li, label=title, action="dirList", dirID="AudioStartLive", fanart=img, 
 				thumb=img, fparams=fparams)
 	
@@ -1426,7 +1427,7 @@ def AudioContentXML(title, path):
 def AudioPlayMP3(url, title, thumb, Plot):
 	PLog('AudioPlayMP3: ' + title)
 	
-	if SETTINGS.getSetting('pref_use_downloads') == 'false' and SETTINGS.getSetting('pref_download_intern') == 'false':
+	if SETTINGS.getSetting('pref_use_downloads') == 'false':
 		PLog('starte PlayAudio direkt')
 		PlayAudio(url, title, thumb, Plot)  # PlayAudio	direkt
 		return
@@ -3570,11 +3571,10 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 	PLog('tagline_org: ' + tagline_org)
 
 	PLog(SETTINGS.getSetting('pref_use_downloads')) 	# Voreinstellung: False 
-	PLog(SETTINGS.getSetting('pref_download_intern'))	# dto.
 	
 	# Test auf Existenz curl/wget in DownloadExtern
-	if SETTINGS.getSetting('pref_use_downloads') == 'true' or SETTINGS.getSetting('pref_download_intern') == 'true':
-		dest_path = SETTINGS.getSetting('pref_curl_download_path')
+	if SETTINGS.getSetting('pref_use_downloads') == 'true':
+		dest_path = SETTINGS.getSetting('pref_download_path')
 		if  os.path.isdir(dest_path) == False:
 			msg1	= u'test_downloads: Downloads nicht möglich'
 			msg2 	= 'Downloadverzeichnis existiert nicht'
@@ -3607,7 +3607,7 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 			else:	
 				Format = 'Video '			# .mp4 oder .webm  (ARD nur .mp4)
 			lable = 'Download ' + Format + ' | ' + quality
-			dest_path = SETTINGS.getSetting('pref_curl_download_path')
+			dest_path = SETTINGS.getSetting('pref_download_path')
 			tagline = Format + 'wird in ' + dest_path + ' gespeichert' 									
 			summary = 'Sendung: ' + title_org
 			key_detailtxt='detailtxt'+str(i)
@@ -3648,8 +3648,9 @@ def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für D
 # Zum Problemen "autom. Wiedereintritt" - auch bei PHT siehe Doku in LiveRecord.
 # 20.12.2018 Problem "autom. Wiedereintritt" in Kodi nicht relevant.
 # 20.01.2020 der Thread zum internen Download wird hier ebenfalls aufgerufen 
+# 27.02.2020 Code für curl/wget-Download entfernt
 
-def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels curl/wget
+def DownloadExtern(url, title, dest_path, key_detailtxt):  
 	PLog('DownloadExtern: ' + title)
 	PLog(url); PLog(dest_path); PLog(key_detailtxt)
 	
@@ -3699,72 +3700,15 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):  # Download mittels cu
 	dtyp=py2_decode(dtyp); dfname=py2_decode(dfname); detailtxt=py2_decode(detailtxt)
 	storetxt = 'Details zum ' + dtyp +  dfname + ':\r\n\r\n' + detailtxt
 	
-	if SETTINGS.getSetting('pref_download_intern') == 'true':	# interner Download
-		from threading import Thread	# thread_getfile
-		fulldestpath = os.path.join(dest_path, dfname)	# wie curl_fullpath s.u.
-		background_thread = Thread(target=thread_getfile, args=(textfile, pathtextfile, storetxt, url, fulldestpath))
-		background_thread.start()		
-		# return li						# Kodi-Problem: wartet bis Ende Thread			
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		return							# hier trotz endOfDirectory erforderlich
-			
 	PLog(sys.platform)
-	try:
-		PIDcurl = ''
-		
-		AppPath = SETTINGS.getSetting('pref_curl_path')
-		i = os.path.exists(AppPath)					# Existenz curl/wget prüfen
-		PLog(AppPath); PLog(i)
-		if AppPath == '' or i == False:
-			msg1='Pfad zu curl/wget fehlt oder curl/wget nicht gefunden'
-			PLog(msg1)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-			return li
-			
-		# i = os.access(curl_dest_path, os.W_OK)		# Zielverz. prüfen - nicht relevant für curl/wget
-														# 	Anwender muss Schreibrecht sicherstellen
-		curl_fullpath = os.path.join(dest_path, dfname)	# kompl. Speicherpfad für Video/Podcast
-		PLog(curl_fullpath)
-
-		# 08.06.2017 wget-Alternative wg. curl-Problem auf Debian-System (Forum: 
-		#	https://forums.plex.tv/discussion/comment/1454827/#Comment_1454827
-		# 25.06.2018 Parameter -k (keine Zertifikateprüfung) erforderlich wg. curl-Problem
-		#	mit dem Systemzertifikat auf manchen Systemen.
-		# wartet nicht (ohne p.communicate())
-		# 11.12.2018  Parameter -L follow redirects
-		# Debug curl: --trace file anhängen. 
-		#
-		# http://stackoverflow.com/questions/3516007/run-process-and-dont-wait
-		#	creationflags=DETACHED_PROCESS nur unter Windows
-		if AppPath.find('curl') > 0:									# curl-Call
-			PLog('%s %s %s %s %s %s' % (AppPath, url, "-o", curl_fullpath, "-k", "-L"))	
-			sp = subprocess.Popen([AppPath, url, "-o", curl_fullpath, "-k", "-L"])	
-			# sp = subprocess.Popen([AppPath, url, "-N", "-o", curl_fullpath])	# Buffering für curl abgeschaltet
-		else:															# wget-Call
-			PLog('%s %s %s %s %s %s' % (AppPath, "--no-use-server-timestamps", "-q", "-O", curl_fullpath, url))	
-			sp = subprocess.Popen([AppPath, "--no-check-certificate", "--no-use-server-timestamps", "-q", "-O", curl_fullpath, url])
-			
-		PLog('sp = ' + str(sp))
+	from threading import Thread	# thread_getfile
+	fulldestpath = os.path.join(dest_path, dfname)	# wie curl_fullpath s.u.
+	background_thread = Thread(target=thread_getfile, args=(textfile, pathtextfile, storetxt, url, fulldestpath))
+	background_thread.start()		
+	# return li						# Kodi-Problem: wartet bis Ende Thread			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
-		if str(sp).find('object at') > 0:  				# subprocess.Popen object OK
-			PIDcurl = sp.pid							# PID speichern
-			PLog('PIDcurl neu: %s' % PIDcurl)
-			Dict('store', 'PIDcurl', PIDcurl)
-			msg1 = 'curl/wget: Download erfolgreich gestartet'
-			msg2 = 'PID: %s | Zusatz-Infos in Textdatei gespeichert: %s' % 	(str(PIDcurl), textfile)		
-			msg3 = 'Ablage: ' + curl_fullpath
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
-			return li			
-			
-		else:
-			raise Exception('Start von curl/wget fehlgeschlagen')
-			
-	except Exception as exception:
-		PLog(str(exception))		
-		msg1 ='Download fehlgeschlagen'
-		msg2 = str(exception)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
-		return li					
+	return										
 	
 #---------------------------
 # interne Download-Routine für MP4, MP3 u.a. mittels urlretrieve 
@@ -3787,7 +3731,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 		if path_url_list:									# Sammeldownloads (Podcast)
 			msg1 = 'Starte Download im Hintergrund'		
 			msg2 = 'Anzahl der Dateien: %s' % len(path_url_list)
-			msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_curl_download_path')
+			msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_download_path')
 			ret=xbmcgui.Dialog().yesno(ADDON_NAME, msg1, msg2, msg3, 'Abbruch', 'OK')
 			if ret  == False:
 				return
@@ -4002,7 +3946,7 @@ def thread_getpic(path_url_list,text_list,folder=''):
 def DownloadsTools():
 	PLog('DownloadsTools:');
 
-	path = SETTINGS.getSetting('pref_curl_download_path')
+	path = SETTINGS.getSetting('pref_download_path')
 	PLog(path)
 	dirlist = []
 	if os.path.isdir(path) == False:
@@ -4029,18 +3973,11 @@ def DownloadsTools():
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)								# Home-Button
 	
-	path = SETTINGS.getSetting('pref_curl_path')			# Einstellungen: Pfad curl/wget
-	title = u'Pfad zum Downloadprogramm curl/wget festlegen/ändern (%s)' % path
-	tagline = 'Hier wird der Pfad zum Downloadprogramm curl/wget eingestellt.'
-	fparams="&fparams={'settingKey': 'pref_curl_path', 'mytype': '1', 'heading': '%s', 'path': '%s'}" % (title, path)
-	addDir(li=li, label=title, action="dirList", dirID="DirectoryNavigator", fanart=R(ICON_DOWNL_DIR), 
-		thumb=R(ICON_DIR_CURLWGET), fparams=fparams, tagline=tagline)
-
-	dlpath =  SETTINGS.getSetting('pref_curl_download_path')# Einstellungen: Pfad Downloaderz.
+	dlpath =  SETTINGS.getSetting('pref_download_path')# Einstellungen: Pfad Downloaderz.
 	title = u'Downloadverzeichnis festlegen/ändern: (%s)' % dlpath			
 	tagline = 'Das Downloadverzeichnis muss für den Addon-Nutzer beschreibbar sein.'
 	# summary =    # s.o.
-	fparams="&fparams={'settingKey': 'pref_curl_download_path', 'mytype': '0', 'heading': '%s', 'path': '%s'}" % (title, dlpath)
+	fparams="&fparams={'settingKey': 'pref_download_path', 'mytype': '0', 'heading': '%s', 'path': '%s'}" % (title, dlpath)
 	addDir(li=li, label=title, action="dirList", dirID="DirectoryNavigator", fanart=R(ICON_DOWNL_DIR), 
 		thumb=R(ICON_DOWNL_DIR), fparams=fparams, tagline=tagline)
 
@@ -4080,7 +4017,7 @@ def DownloadsTools():
 			thumb=R(ICON_DIR_WORK), fparams=fparams, summary=summary)
 
 		if dirlist:
-			dest_path = SETTINGS.getSetting('pref_curl_download_path') 
+			dest_path = SETTINGS.getSetting('pref_download_path') 
 			if path and movie_path:												# Button Verschieben (alle)
 				title = 'ohne Rückfrage! alle (%s) Downloads verschieben' % (mpcnt)	
 				tagline = 'Verschieben erfolgt ohne Rueckfrage!' 
@@ -4102,7 +4039,7 @@ def DownloadsTools():
 # Downloads im Downloadverzeichnis zur Bearbeitung listen	 	
 def DownloadsList():			
 	PLog('DownloadsList:')	
-	path = SETTINGS.getSetting('pref_curl_download_path')
+	path = SETTINGS.getSetting('pref_download_path')
 	
 	dirlist = []
 	if path == None or path == '':									# Existenz Verz. prüfen, falls vorbelegt
@@ -4219,7 +4156,7 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	
-	dest_path = SETTINGS.getSetting('pref_curl_download_path')
+	dest_path = SETTINGS.getSetting('pref_download_path')
 	fulldest_path = os.path.join(dest_path, path)
 	if  os.access(dest_path, os.R_OK) == False:
 		msg1 = 'Downloadverzeichnis oder Leserecht  fehlt'
@@ -4899,7 +4836,7 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
 			laenge = "wird manuell eingegeben"
 		summary = u'Sender wählen und aufnehmen.\nDauer: %s' % laenge
-		tagline = 'Downloadpfad: %s' 	 % SETTINGS.getSetting('pref_curl_download_path') 				
+		tagline = 'Downloadpfad: %s' 	 % SETTINGS.getSetting('pref_download_path') 				
 		fparams="&fparams={'title': '%s'}" % title
 		addDir(li=li, label=title, action="dirList", dirID="TVLiveRecordSender", fanart=R(ICON_MAIN_TVLIVE), 
 			thumb=R('icon-record.png'), fparams=fparams, summary=summary, tagline=tagline)
@@ -4982,7 +4919,7 @@ def TVLiveRecordSender(title):
 		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
 			laenge = "wird manuell eingegeben"
 		summ 	= 'Aufnahmedauer: %s' 	% laenge
-		tag		= 'Zielverzeichnis: %s' % SETTINGS.getSetting('pref_curl_download_path')
+		tag		= 'Zielverzeichnis: %s' % SETTINGS.getSetting('pref_download_path')
 		title=py2_encode(title); link=py2_encode(link);
 		fparams="&fparams={'url': '%s', 'title': '%s', 'duration': '%s', 'laenge': '%s'}" \
 			% (quote(link), quote(title), duration, laenge)
@@ -5024,7 +4961,7 @@ def LiveRecord(url, title, duration, laenge):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)					# Home-Button
 	
-	dest_path = SETTINGS.getSetting('pref_curl_download_path')
+	dest_path = SETTINGS.getSetting('pref_download_path')
 	msg1	= 'LiveRecord:'
 	if  dest_path == None or dest_path.strip() == '':
 		msg2 	= 'Downloadverzeichnis fehlt in Einstellungen'
@@ -7740,7 +7677,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 	 
 	PLog('playlist: ' + playlist[:100])		# bei Bedarf
 	lines = playlist.splitlines()
-	PLog(lines)
+	# PLog(lines)
 	BandwithOld 	= ''			# für Zwilling -Test (manchmal 2 URL für 1 Bandbreite + Auflösung) 
 	NameOld 		= []			# für Zwilling -Test bei ZDF-Streams (nicht hintereinander)
 	thumb_org=thumb; descr_org=descr 	# sichern
