@@ -49,9 +49,7 @@ IMAGE_TYPES = ('.jpg', '.jpeg', '.png', '.tif', '.tiff', '.gif', '.pcx', '.bmp',
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
-STOPFILE 		= os.path.join(DICTSTORE, 'stop_slides')
-if os.path.exists(STOPFILE):					# Stopdatei entfernen	
-	os.remove(STOPFILE)
+STOPFILE 		= os.path.join(DICTSTORE, 'stop_slides') # s.a. PlayAudio
 
 
 #----------------------------------------------------------------  
@@ -208,6 +206,7 @@ class Slideshow(xbmcgui.WindowXMLDialog):
 		self._clear_prop('Splash')
 		self.close()
 		del self
+		PLog("_exit_done")
 
 
 class img_update(threading.Thread):					# Bildverz. aktualisieren
@@ -308,6 +307,7 @@ class KeyListener(xbmcgui.WindowXMLDialog):
 # Bilder laden, Cache
 #----------------------------------------------------------------  
 def checksum(path):
+	path = path.encode('utf-8')				# py_encode wirkt hier nicht in Matrix
 	return hashlib.md5(path).hexdigest()
 
 def create_cache(path, hexfile):

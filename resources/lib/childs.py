@@ -3,7 +3,7 @@
 #				childs.py - Teil von Kodi-Addon-ARDundZDF
 #		Rahmenmodul für Kinderprg div. Regionalsender von ARD und ZDF
 ################################################################################
-#	Stand: 06.02.2020
+#	Stand: 02.03.2020
 #
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -346,6 +346,8 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False):
 	PLog(len(page)); PLog(first)
 	
 	if first == True:							# 1. Aufruf: A-Z-Liste
+		# begrenzen - Wiederholung A-Z-Liste am Fuß:
+		page = stringextract('top navigation -->', 'class="media mediaA"', page)
 		HrefList = []
 		pageItems = blockextract('class="bundleNaviItem ">', page)
 		blockA = stringextract('bundleNaviWrapper"', '</div>', page) # A fehlt in pageItems

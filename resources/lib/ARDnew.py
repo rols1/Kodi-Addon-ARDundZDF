@@ -2,7 +2,7 @@
 ################################################################################
 #				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
-#	Stand 23.02.2020
+#	Stand 02.03.2020
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
 #	Seiten werden im json-Format, teilweise html + json ausgeliefert
@@ -1495,6 +1495,8 @@ def ARDVerpasst(title, CurSender):
 #			2. Einzelsender (Aufruf mit timeline_sender)
 # 28.08.2019 timeline_sender nicht mehr auf den Datumsseiten verfügbar,
 #	nur noch auf der Einstiegsseite ../ard/program/
+# 02.03.2020 wieder leere html-Seite bei Zusatz ?devicetype=pc (nur Heute),
+#	geändert in ?devicetype=mobile. Header hier ohne Auswirkung 
 def ARDVerpasstContent(title, path, CurSender, timeline_sender='', label_sender=''):
 	PLog('ARDVerpasstContent:');
 	PLog(title);  PLog(path); PLog(timeline_sender); 
@@ -1507,8 +1509,13 @@ def ARDVerpasstContent(title, path, CurSender, timeline_sender='', label_sender=
 	if 'ardmediathek.de/ard/' in path:			# ARD-Alle: erst Senderliste zeigen
 		path = "%s/%s/program/" % (BETA_BASE_URL, sender)
 		
-	path = path + "?devicetype=pc"				# ohne Zusatz fehlen bei daserste html-Inhalte
+	#headers="{'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Mobile Safari/537.36',\
+	# 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',\
+	# 'authority': 'www.ardmediathek.de'}"
+	#headers=quote(headers)					# headers ohne quotes in get_page leer 
+	path = path + "?devicetype=mobile"		# s.o.
 	page, msg = get_page(path)
+	#page, msg = get_page(path, header=headers)
 	if page == '':	
 		msg1 = 'Fehler in ARDVerpasstContent'
 		msg2=msg
@@ -1537,7 +1544,7 @@ def ARDVerpasstContent(title, path, CurSender, timeline_sender='', label_sender=
 						fanart=R(ICON_DIR_FOLDER), thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=title)
 			xbmcplugin.endOfDirectory(HANDLE)
 	else:
-		timeline_sender	= stringextract('ardmediathek.de/', '/', path)		
+		timeline_sender	= stringextract('ardmediathek.de/', '/', path)	# z.B. daserste
 	
 	if timeline_sender:										# timeline auch in einz. Senderseite 
 		gridlist = blockextract('id="timeline-', page)	

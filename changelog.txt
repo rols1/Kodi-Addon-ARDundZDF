@@ -8,6 +8,16 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+02.03.2020	2.6.9	PlayAudio (Modul util):	Fix Decoding-Error (Kodi-Matrix) für ADDON.getAddonInfo.
+			Addon-Slideshow: Absicherung gegen Rekursion nach GetDirectory_Error in PlayAudio
+			(Return falls STOPFILE jünger als 4 sec). 
+			ARDVerpasstContent: Url-Zusatz devicetype in mobile geändert (leere html-Seite
+			bei Datum=Heute).
+			Kika_VideosBuendelAZ (Modul childs): A-Z-Liste begrenzt (wurde am Fuß der HTML-
+			Seite wiederholt).
+			get_page (modul util): Abschalthinweis für fehlende Beiträge in Classic-Version
+			auskommentiert (sind noch möglich).
+
 01.03.2020	2.6.8	neues Modul slides: Slideshow mit Musik-infos für Kodi-Musik-Player ergänzend
 			zur Kodi-Slideshow, einschl. Tastatur-Steuerung, Dialog-Skin-Datei, Cacheverwaltung 
 			+ Player-Ende-Erkennung.

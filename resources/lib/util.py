@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand '27.02.2020'
+#	Stand '02.03.2020'
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -602,13 +602,15 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			PLog(msg)						
 			
 	if page == '':
-		# error_txt = 'Seite nicht erreichbar oder nicht mehr vorhanden'
-		error_txt = msg
-		if 'classic.ardmediathek.de' in path:
-			msg1 = 'Die ARD-Classic-Mediathek ist vermutlich nicht mehr verfügbar.'	
-			msg2 = 'Bitte in den Einstellungen abschalten, um das Modul'
-			msg3 = 'ARD-Neu zu aktivieren.'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)		 			 	 
+		# Abschalthinweis verfrüht - fehlende Beiträge in Classic-
+		#	Version immer noch möglich (02.03.2020)
+		error_txt = 'Seite nicht erreichbar oder nicht mehr vorhanden'
+		#error_txt = msg
+		#if 'classic.ardmediathek.de' in path:
+		#	msg1 = 'Die ARD-Classic-Mediathek ist vermutlich nicht mehr verfügbar.'	
+		#	msg2 = 'Bitte in den Einstellungen abschalten, um das Modul'
+		#	msg3 = 'ARD-Neu zu aktivieren.'
+		#	xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)		 			 	 
 		msg = error_txt + ' | %s' % msg
 		PLog(msg)
 		return page, msg
@@ -1580,20 +1582,34 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 		else:	
 			if slide_mode == "Kodi":								# Slideshow Kodi
 				xbmc.executebuiltin('SlideShow(%s, "recursive")' % path)
-				PLog('Starte Screensaver1: %s' % path)
+				PLog('Starte_SlideShow1: %s' % path)
 				# Konfig: Kodi Player-Einstellungen / Bilder
 				xbmc.sleep(200)
 				xbmc.Player().play(url, li, False)
 				return
 			if slide_mode == "Addon":								# Slideshow Addon
-				xbmc.Player().play(url, li, False)					# vor modaler Slideshow			
+				# Absicherung gegen Rekursion nach GetDirectory_Error 
+				#	nach exit in SlideShow2 - exit falls STOPFILE 
+				#	jünger als 4 sec:
+				STOPFILE = os.path.join(DICTSTORE, 'stop_slides')
+				if os.path.exists(STOPFILE):							
+					now = time.time()
+					PLog(now - os.stat(STOPFILE).st_mtime)
+					if now - os.stat(STOPFILE).st_mtime < 4:	
+						PLog("GetDirectory_Error_Rekursion")
+						xbmc.executebuiltin("PreviousMenu")
+						return
+					else:
+						os.remove(STOPFILE)							# Stopdatei entfernen	
+				xbmc.Player().play(url, li, False)					# Start vor modaler Slideshow			
 				import resources.lib.slides as slides
-				PLog('Starte Screensaver2: %s' % path)
-				CWD = ADDON.getAddonInfo('path').decode("utf-8") # working dir
-				screensaver_gui = slides.Slideshow('script-python-slideshow.xml', CWD, 'default')
-				screensaver_gui.doModal()
+				PLog('Starte_SlideShow2: %s' % path)
+				CWD = ADDON.getAddonInfo('path') 					# working dir
+				DialogSlides = slides.Slideshow('script-python-slideshow.xml', CWD, 'default')
+				DialogSlides.doModal()
 				xbmc.Player().stop()					
 				del screensaver_gui
+				PLog("del_DialogSlides")
 				return
 	else:			
 		xbmc.Player().play(url, li, False)						# ohne Slideshow 
