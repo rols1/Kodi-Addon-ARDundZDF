@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.6.9'
-VDATE = '02.03.2020'
+VERSION = '2.7.0'
+VDATE = '03.03.2020'
 
 #
 #
@@ -2947,17 +2947,28 @@ def PodFavoritenListe(title, offset=0):
 		PLog(title); PLog(path)
 		if path == '':						# ohne Link kein verwertbarer Favorit
 			continue
+			
 		
 		title=title.replace('\'', '')		# z.B. "Stimmt's? - NDR2"
 		title=title.replace('&', 'plus')	# &=Trenner für Parameter in router
 		PLog(title); PLog(path)
-		summary='Favoriten: ' + title
 		title=py2_encode(title); path=py2_encode(path);
-		fparams="&fparams={'title': '%s', 'path': '%s'}" % \
-			(quote(title), quote(path))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodFavoriten", 
-			fanart=R(ICON_STAR), thumb=R(ICON_STAR), fparams=fparams, summary=path, 
-			tagline=summary)
+		
+		if path.startswith('http'):			# Server-Url
+			summary='Favoriten: ' + title
+			fparams="&fparams={'title': '%s', 'path': '%s'}" % \
+				(quote(title), quote(path))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodFavoriten", 
+				fanart=R(ICON_STAR), thumb=R(ICON_STAR), fparams=fparams, summary=path, 
+				tagline=summary)
+		else:								# lokales Verz./Share?
+			summary='Verzeichnis: ' + title
+			fparams="&fparams={'title': '%s', 'path': '%s'}" % \
+				(quote(title), quote(path))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodFolder", 
+				fanart=R(ICON_NOTE), thumb=R(ICON_NOTE), fparams=fparams, summary=path, 
+				tagline=summary)		
+			
 					
 	# Mehr Seiten anzeigen:
 	PLog(offset); PLog(cnt); PLog(max_len);

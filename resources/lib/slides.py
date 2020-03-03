@@ -13,7 +13,7 @@
 # 	Scan Keys + rechte Maustaste s. KeyListener
 #	Auswertung Keys s. img_update
 ################################################################################
-#	Stand: 01.03.2020
+#	Stand: 03.03.2020
 
 
 # Python3-Kompatibilität:
@@ -33,14 +33,18 @@ from threading import Timer
 from resources.lib.util import *
 PLog('lade_Modul_slides:')
 
-ADDON    	= xbmcaddon.Addon()
-ADDON_ID  	= ADDON.getAddonInfo('id')
-CWD  		= ADDON.getAddonInfo('path')		# working dir
+ADDON_ID     = 'plugin.video.ardundzdf'
+SETTINGS    	= xbmcaddon.Addon(id=ADDON_ID)
+PLog(SETTINGS)
+PLog(ADDON_ID)
+
+CWD  		= SETTINGS.getAddonInfo('path')		# working dir
 SKINDIR  	= xbmc.getSkinDir()
 PLog("CWD: " + CWD)
 PLog("SKINDIR: " + SKINDIR)
 
-CACHEFOLDER = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
+#CACHEFOLDER = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
+CACHEFOLDER = xbmc.translatePath(SETTINGS.getAddonInfo('profile'))
 CACHEFILE   = os.path.join(CACHEFOLDER, '%s')
 POS_FILE  	= os.path.join(CACHEFOLDER, 'position')
 ASFILE      = xbmc.translatePath('special://profile/advancedsettings.xml')
@@ -84,9 +88,9 @@ class Slideshow(xbmcgui.WindowXMLDialog):
 		PLog('_get_settings')
 		# read addon settings
 		self.slides_type   = '2'
-		self.slides_path   = ADDON.getSetting('pref_slides_path')
+		self.slides_path   = SETTINGS.getSetting('pref_slides_path')
 		PLog(self.slides_path)
-		self.slides_time   = int(ADDON.getSetting('pref_slides_time'))
+		self.slides_time   = int(SETTINGS.getSetting('pref_slides_time'))
 		PLog("slideshow_time: %d sec" % self.slides_time)								
 		self.slides_name 	= '0'				# Anzeige Bildname/Ordner
 		self.slides_music	= 'true'			# Player: Logo, Musik, Artist
@@ -359,6 +363,7 @@ def walk(path):
 		if xbmcvfs.exists(xbmc.translatePath(folder)):
 			# get all files and subfolders
 			dirs,files = xbmcvfs.listdir(folder)
+			# PLog(dirs)
 			PLog('dirs: %s, files: %s' % (len(dirs), len(files)))
 			# natural sort
 			convert = lambda text: int(text) if text.isdigit() else text
@@ -391,7 +396,7 @@ def walk(path):
 				if not dirskip:
 					images += walk(os.path.join(folder,item,'')) # make sure paths end with a slash
 		else:
-			PLog('folder does not exist')
+			PLog('Verz. %s nicht gefunden' % folder)
 	return images
 		
 		

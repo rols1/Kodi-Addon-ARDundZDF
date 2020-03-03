@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand '02.03.2020'
+#	Stand '03.03.2020'
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -55,8 +55,7 @@ PYTHON3 = sys.version_info.major == 3
 NAME			= 'ARD und ZDF'
 KODI_VERSION 	= xbmc.getInfoLabel('System.BuildVersion')
 
-ADDON    		= xbmcaddon.Addon()
-ADDON_ID      	= ADDON.getAddonInfo('id')	# plugin.video.ardundzdf
+ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
@@ -1604,11 +1603,11 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 				xbmc.Player().play(url, li, False)					# Start vor modaler Slideshow			
 				import resources.lib.slides as slides
 				PLog('Starte_SlideShow2: %s' % path)
-				CWD = ADDON.getAddonInfo('path') 					# working dir
+				CWD = SETTINGS.getAddonInfo('path') 					# working dir
 				DialogSlides = slides.Slideshow('script-python-slideshow.xml', CWD, 'default')
 				DialogSlides.doModal()
 				xbmc.Player().stop()					
-				del screensaver_gui
+				del DialogSlides
 				PLog("del_DialogSlides")
 				return
 	else:			

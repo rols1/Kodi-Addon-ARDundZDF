@@ -57,5 +57,8 @@ KiRaKa - Kinderhörspiele im WDR				| https://www.ardaudiothek.de/kinderhoerspie
 hr-iNFO Cybercrime							| https://www.ardaudiothek.de/cybercrime/42913980
 ARD Radio Tatort							| https://www.ardaudiothek.de/ard-radio-tatort/1998988
 
+## lokale Audioverzeichnisse/Shares (experimentell)
+Sounddateien						| /Video_Sound/2_Sounddateien/
+
 
 

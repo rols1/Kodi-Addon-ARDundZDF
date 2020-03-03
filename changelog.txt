@@ -8,6 +8,12 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+03.03.2020	2.7.0	Module util, slides, merkliste: einheitliche Variablenbezeichner für ADDON_ID
+			und Settings (Merkliste funktionierte nicht mehr).
+			Modul Podcontent: experimentelle Funktion (PodFolder) zum Abspielen lokaler
+			Audiodateien, Eintrag in podcast-favorits.txt - bisher nur Linux-Systeme
+			unterstützt.
+
 02.03.2020	2.6.9	PlayAudio (Modul util):	Fix Decoding-Error (Kodi-Matrix) für ADDON.getAddonInfo.
 			Addon-Slideshow: Absicherung gegen Rekursion nach GetDirectory_Error in PlayAudio
 			(Return falls STOPFILE jünger als 4 sec). 

@@ -15,7 +15,7 @@
 #
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-#	Stand:  27.02.2020
+#	Stand:  03.03.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -223,8 +223,7 @@ def PodFavoriten(title, path, pagenr='1'):
 # Bei internem Download wird mit path_url_list zu thread_getfile verzweigt.
 # 27.02.2020 Code für curl/wget-Download entfernt
 
-#----------------------------------------------------------------  
-	
+#----------------------------------------------------------------  	
 def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	PLog('DownloadMultiple:'); 
 	import shlex											# Parameter-Expansion
@@ -278,4 +277,68 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	# return li						# Kodi-Problem: wartet bis Ende Thread			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	return							# hier trotz endOfDirectory erforderlich
+
+#---------------------------------------------------------------- 
+#  lokale Dateiverzeichnisse /Shares in	podcast-favorits.txt
+#		Audiodateien im Verz. mit Abspielbutton listen 
+#		Browser zeigen, falls keine Dateien im Verz.
+ 
+def PodFolder(title, path):
+	PLog('PodFolder:'); PLog(path);
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARDaudio')							# Home-Button
+
+	path = xbmc.translatePath(path)
+	PLog(path);
+	if not xbmcvfs.exists(path):
+		msg1='Verzeichnis nicht gefunden:'	
+		msg2=path
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')		
+		return li		
+	
+	dirs, files = xbmcvfs.listdir(path)
+	PLog('dirs: %s, files: %s' % (len(dirs), len(files)))
+	if '.mp3' not in files:					# 2: . und ..
+		dialog = xbmcgui.Dialog()
+		mytype=0; heading='Audioverzeichnis wählen'
+		d_ret = dialog.browseSingle(mytype, heading, '', '', False, False, path)	
+		PLog('d_ret: ' + d_ret)
+		dirs, files = xbmcvfs.listdir(d_ret)
+		PLog(dirs);PLog(files);
+
+		fstring = '\t'.join(files)							# schnelle Teilstringsuche in Liste
+		if '.mp3' not in fstring:	
+			msg1='keine Audiodateien gefunden. Verzeichnis:'	
+			msg2=d_ret
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')		
+			return li
+			
+			
+		for audio in files:
+			audio_path = os.path.join(d_ret, audio)
+			PLog(audio_path)
+			tag 	= title
+			summ 	= d_ret
+			title=py2_encode(title); tag=py2_encode(tag);
+			summ=py2_encode(summ); 
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+				(quote(audio_path), quote(title), R(ICON_NOTE), audio)
+			addDir(li=li, label=audio, action="dirList", dirID="PlayAudio", fanart=R(ICON_NOTE), 
+				thumb=R(ICON_NOTE), fparams=fparams, summary=summ, tagline=tag, mediatype='music')
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			
+		
+
+
+
+
+
+
+
+
+
+
+
 
