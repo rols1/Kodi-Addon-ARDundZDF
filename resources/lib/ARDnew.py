@@ -376,7 +376,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 				summ = duration
 				
 			PLog('SwiperSatz:')	
-			PLog(title); PLog(href); PLog(summ)		
+			PLog(mehrfach); PLog(title); PLog(href); PLog(summ)		
 			title = repl_json_chars(title); summ = repl_json_chars(summ); 
 			href=py2_encode(href); title=py2_encode(title); duration=py2_encode(duration);
 			if mehrfach == False:
@@ -387,7 +387,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			else:
 				fparams="&fparams={'path': '%s', 'title': '%s', 'ID': 'SwiperMehrfach'}" % (quote(href), quote(title))
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-					fparams=fparams, summary=summ)	
+					fparams=fparams, summary=summ, tagline="Folgeseiten")	
 																													
 		xbmcplugin.endOfDirectory(HANDLE)						# Ende Swiper
 
@@ -535,7 +535,6 @@ def get_page_content(li, page, ID, mark=''):
 	page = page.replace('\\', '')								# Quotierung vor " entfernen, Bsp. \"query\"
 	
 	
-	mehrfach = True												# Default weitere Rubriken
 	if 'Livestream' in ID:
 		gridlist = blockextract('"broadcastedOn"', page)
 	else:
@@ -558,6 +557,7 @@ def get_page_content(li, page, ID, mark=''):
 	PLog('gridlist: ' + str(len(gridlist)))	
 
 	for s  in gridlist:
+		mehrfach = True											# Default weitere Rubriken
 		if 'target":{"id":"' in s:
 			targetID= stringextract('target":{"id":"', '"', s)	# targetID
 		else:
@@ -568,9 +568,12 @@ def get_page_content(li, page, ID, mark=''):
 		PLog(targetID)
 		if targetID == '':										# kein Video
 			continue
+				
 																# Einzelbeträge:
-		if '"availableTo":"' in s or '"duration":' in s or 'Livestream' in ID:		
-			mehrfach = False
+		PLog('"availableTo":null' in s)	
+		if '"availableTo":"' in s or '"duration":' in s or 'Livestream' in ID:
+			if not '"availableTo":null' in s:					# u.a. Bsp. "show":null 
+				mehrfach = False	
 					
 		# Alternative: "%s/ard/player/%s"  % (BETA_BASE_URL,targetID), wenn
 		#	auf Filterung der Sender verzichtet werden soll (s. pubServ)
@@ -647,10 +650,11 @@ def get_page_content(li, page, ID, mark=''):
 		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ); PLog(duration); PLog(ID)
 		
 		if mehrfach:
+			summ = "Folgeseiten"
 			href=py2_encode(href); title=py2_encode(title); 
 			fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-				fparams=fparams, summary=summ,  mediatype=mediatype)																							
+				fparams=fparams, summary=summ, mediatype='')																							
 		else:
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
 				summ_new = get_summary_pre(path=href, ID='ARDnew', skip_verf=True) # skip availableTo (hier in tag)
@@ -661,7 +665,7 @@ def get_page_content(li, page, ID, mark=''):
 			fparams="&fparams={'path': '%s', 'title': '%s', 'duration': '%s', 'ID': '%s'}" %\
 				(quote(href), quote(title), duration, ID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag, summary=summ)	
+				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)	
 	
 	return li	
 		

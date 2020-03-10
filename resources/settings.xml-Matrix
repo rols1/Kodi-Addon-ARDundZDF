@@ -1,0 +1,421 @@
+<?xml version="1.0" ?>
+<settings version="1">
+	<section id="plugin.video.ardundzdf">
+		<category help="" id="default" label="30200">
+			<group id="1">
+				<setting help="" id="pref_info_debug" label="Debug: Plugin-Logging einschalten" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_info_update" label="neues Update beim Start des Plugins anzeigen" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+			<group id="2">
+				<setting help="" id="pref_use_classic" label="Classic-Version der ARD Mediathek verwenden" type="boolean">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_use_zdfmobile" label="Mobile Version der ZDF Mediathek verwenden" type="boolean">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_use_3sat" label="3Sat Mediathek verwenden" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_use_funk" label="FUNK verwenden" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_use_childprg" label="Kinderprogramme verwenden" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_use_XL" label="TagesschauXL verwenden" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_use_phoenix" label="Phoenix verwenden" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+			<group id="3">
+				<setting help="" id="pref_use_epg" label="EPG-Daten für TV-Live-Sender zeigen - dauert etwas länger" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_load_summary" label="Inhaltstext zu Video im Voraus laden - kann sehr lange dauern!" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+			<group id="4">
+				<setting help="" id="pref_video_direct" label="TV-Live / Videos: Sofortstart statt Auflösungen und Download" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_UT_Info" label="Untertitel: auf vorhandene Untertitel hinweisen" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_UT_ON" label="Untertitel: falls vorhanden, im Player einschalten" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+		</category>
+		<category help="" id="default" label="30300">
+			<group id="1">
+				<setting help="" id="pref_use_podcast" label="Podcast-/Audiothek-Erweiterung verwenden" type="boolean">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_use_audio" label="ARD Audiothek statt Podcasts Classic verwenden" type="boolean">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_podcast_favorits" label="Pfad zur Podcast-Favoritenliste (ohne Pfad: Ressourcenverzeichnis)" type="path">
+					<level>0</level>
+					<default>podcast-favorits.txt</default>
+					<constraints>
+						<writable>false</writable>
+						<masking/>
+					</constraints>
+					<control format="file" type="button">
+						<heading>Pfad zur Podcast-Favoritenliste (ohne Pfad: Ressourcenverzeichnis)</heading>
+					</control>
+				</setting>
+				<setting help="" id="podinfo" label="Info: die Podcast-Favoriten befinden sich in der ARD Audiothek" type="string">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<dependencies>
+						<dependency type="enable">
+							<condition name="InfoBool" on="property">false</condition>
+						</dependency>
+					</dependencies>
+					<control format="string" type="edit">
+						<heading>Info: die Podcast-Favoriten befinden sich in der ARD Audiothek</heading>
+					</control>
+				</setting>
+			</group>
+		</category>
+		<category help="" id="default" label="30400">
+			<group id="1">
+				<setting help="" id="pref_use_downloads" label="Downloads freischalten" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_show_qualities" label="alle verfuegbaren Video-Qualitaeten anbieten" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_generate_filenames" label="Dateinamen aus dem Titel erzeugen (statt Download_{Datum}_{Uhrzeit})" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_download_path" label="Downloadverzeichnis (auch für Recording TV-Live)" type="path">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control format="path" type="button">
+						<heading>Downloadverzeichnis (auch für Recording TV-Live)</heading>
+					</control>
+				</setting>
+				<setting help="" id="pref_VideoDest_path" label="Downloads verschieben in dieses Verzeichnis" type="path">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<sources>
+							<source/>
+						</sources>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control format="path" type="button">
+						<heading>Downloads verschieben in dieses Verzeichnis</heading>
+					</control>
+				</setting>
+			</group>
+		</category>
+		<category help="" id="default" label="30500">
+			<group id="1">
+				<setting help="" id="pref_LiveRecord" label="Recording TV-Live verwenden (ffmpeg erforderlich)" type="boolean">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_LiveRecord_input" label="Dauer der Aufnahme manuell eingeben" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_LiveRecord_duration" label="Dauer der Aufnahme" type="string">
+					<level>0</level>
+					<default>01:00:00 = 1 Stunde</default>
+					<constraints>
+						<options>
+							<option label="00:05:00 = 5 Minuten">00:05:00 = 5 Minuten</option>
+							<option label="00:15:00 = 15 Minuten">00:15:00 = 15 Minuten</option>
+							<option label="00:30:00 = 30 Minuten">00:30:00 = 30 Minuten</option>
+							<option label="01:00:00 = 1 Stunde">01:00:00 = 1 Stunde</option>
+							<option label="01:30:00 = 1:30 Stunden">01:30:00 = 1:30 Stunden</option>
+							<option label="01:45:00 = 1:45 Stunden">01:45:00 = 1:45 Stunden</option>
+							<option label="02:00:00 = 2 Stunden">02:00:00 = 2 Stunden</option>
+							<option label="04:00:00 = 4 Stunden">04:00:00 = 4 Stunden</option>
+							<option label="12:00:00 = 12 Stunden">12:00:00 = 12 Stunden</option>
+							<option label="00:00:05 = 5 Sekunden">00:00:05 = 5 Sekunden</option>
+						</options>
+					</constraints>
+					<control format="string" type="spinner"/>
+				</setting>
+				<setting help="" id="pref_LiveRecord_ffmpegCall" label="ffmpeg-Parameter (3x %s: Url, Aufnahmedauer, Dateiname)" type="string">
+					<level>0</level>
+					<default>/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin</default>
+					<control format="string" type="edit">
+						<heading>ffmpeg-Parameter (3x %s: Url, Aufnahmedauer, Dateiname)</heading>
+					</control>
+				</setting>
+			</group>
+		</category>
+		<category help="" id="default" label="30600">
+			<group id="1">
+				<setting help="" id="pref_DICT_store_days" label="Dict (div. Variablen): " type="string">
+					<level>0</level>
+					<default>30</default>
+					<constraints>
+						<options>
+							<option label="1">1</option>
+							<option label="10">10</option>
+							<option label="30">30</option>
+							<option label="100">100</option>
+						</options>
+					</constraints>
+					<control format="string" type="spinner"/>
+				</setting>
+				<setting help="" id="pref_UT_store_days" label="Untertitel" type="string">
+					<level>0</level>
+					<default>30</default>
+					<constraints>
+						<options>
+							<option label="1">1</option>
+							<option label="10">10</option>
+							<option label="30">30</option>
+							<option label="100">100</option>
+						</options>
+					</constraints>
+					<control format="string" type="spinner"/>
+				</setting>
+				<setting help="" id="pref_SLIDES_store_days" label="Bildersammlungen (Slide Shows):" type="string">
+					<level>0</level>
+					<default>30</default>
+					<constraints>
+						<options>
+							<option label="1">1</option>
+							<option label="10">10</option>
+							<option label="30">30</option>
+							<option label="100">100</option>
+						</options>
+					</constraints>
+					<control format="string" type="spinner"/>
+				</setting>
+				<setting help="" id="pref_TEXTE_store_days" label="Inhaltstexte (im Voraus geladen): " type="string">
+					<level>0</level>
+					<default>30</default>
+					<constraints>
+						<options>
+							<option label="1">1</option>
+							<option label="10">10</option>
+							<option label="30">30</option>
+							<option label="100">100</option>
+						</options>
+					</constraints>
+					<control format="string" type="spinner"/>
+				</setting>
+			</group>
+		</category>
+		<category help="" id="default" label="30700">
+			<group id="1">
+				<setting help="" id="pref_showFavs" label="ARDundZDF-Favoriten im Hauptmenü einblenden" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_watchlist" label="ARDundZDF-Merkliste verwenden (getrennt von Favoriten)" type="boolean">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_FavsInfo" label="Begleitinfos für Favoriten und Merkliste verwenden - falls verfügbar" type="boolean">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_FavsInfoMenueButton" label="Info-Menue-Button ausblenden" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+		</category>
+		<category help="" id="default" label="30800">
+			<group id="1">
+				<setting help="" id="nwsuhzuewxbcgwupdtvgljjcmpomcrfx" label="Dauer der Aufnahme" type="string">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<options>
+							<option label="00:05:00 = 5 Minuten">00:05:00 = 5 Minuten</option>
+							<option label="00:15:00 = 15 Minuten">00:15:00 = 15 Minuten</option>
+						</options>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control format="string" type="spinner"/>
+				</setting>
+				<setting help="" id="pref_filter_audiodeskription" label="Titel enthält *Audiodeskription*" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+			</group>
+		</category>
+		<category help="" id="default" label="30900">
+			<group id="1">
+				<setting help="" id="pref_nohome" label="gesamtes Addon: Verzicht auf Homebuttons" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_funk_bandw" label="Modul FUNK: Videoeinstellung für MP4-Sofortstart" type="string">
+					<level>0</level>
+					<default>1500:960x540</default>
+					<constraints>
+						<options>
+							<option label="400:320x180">0</option>
+							<option label="650:640x360">1</option>
+							<option label="900:720x404">2</option>
+							<option label="1500:960x540">3</option>
+							<option label="2500:1280x720">4</option>
+							<option label="4000:1920x108">5</option>
+							<option label="6000:1920x1080">6</option>
+						</options>
+					</constraints>
+					<control format="string" type="list">
+						<heading>Modul FUNK: Videoeinstellung für MP4-Sofortstart</heading>
+					</control>
+				</setting>
+				<setting help="" id="pref_disable_sender" label="Modul ARD Neu, Senderwahl: im Titel &quot;Sender:&quot; entfernen" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_only_phoenix_videos" label="Modul phoenix: nur Beiträge mit Videos, keine Sendungshinweise" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_watermarks" label="Bildersammlungen: Bildinfos als Wasserzeichen" type="boolean">
+					<level>0</level>
+					<default>false</default>
+					<control type="toggle"/>
+				</setting>
+				<setting help="" id="pref_fontsize" label="Bildersammlungen: Fontgröße Wasserzeichen" type="string">
+					<level>0</level>
+					<default>auto</default>
+					<constraints>
+						<options>
+							<option label="auto">0</option>
+							<option label="10">1</option>
+							<option label="12">2</option>
+							<option label="13">3</option>
+							<option label="14">4</option>
+							<option label="15">5</option>
+							<option label="16">6</option>
+							<option label="17">7</option>
+							<option label="18">8</option>
+							<option label="19">9</option>
+							<option label="20">10</option>
+							<option label="30">11</option>
+							<option label="40">12</option>
+						</options>
+					</constraints>
+					<control format="string" type="list">
+						<heading>Bildersammlungen: Fontgröße Wasserzeichen</heading>
+					</control>
+				</setting>
+				<setting help="" id="pref_musicslideshow" label="Slideshow für Musik-Player: " type="string">
+					<level>0</level>
+					<default>Keine</default>
+					<constraints>
+						<options>
+							<option label="Keine">0</option>
+							<option label="Kodi (Bild-Steuerung)">1</option>
+							<option label="Addon (Player-Steuerung und Musikinfos)">2</option>
+						</options>
+					</constraints>
+					<control format="string" type="list">
+						<heading>Slideshow für Musik-Player: </heading>
+					</control>
+				</setting>
+				<setting help="" id="pref_slides_path" label="Slideshow für Musik-Player: Verzeichnis wählen" type="path">
+					<level>0</level>
+					<default/>
+					<constraints>
+						<sources>
+							<source/>
+						</sources>
+						<writable>false</writable>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control format="path" type="button">
+						<heading>Slideshow für Musik-Player: Verzeichnis wählen</heading>
+					</control>
+				</setting>
+				<setting help="" id="pref_slides_time" label="Slideshow für Musik-Player: Anzeigedauer in Sekunden" type="string">
+					<level>0</level>
+					<default>10</default>
+					<constraints>
+						<options>
+							<option label="5">0</option>
+							<option label="10">1</option>
+							<option label="15">2</option>
+							<option label="20">3</option>
+							<option label="30">4</option>
+							<option label="60">5</option>
+							<option label="120">6</option>
+							<option label="240">7</option>
+							<option label="600">8</option>
+						</options>
+					</constraints>
+					<control format="string" type="list">
+						<heading>Slideshow für Musik-Player: Anzeigedauer in Sekunden</heading>
+					</control>
+				</setting>
+			</group>
+		</category>

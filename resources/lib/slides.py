@@ -13,7 +13,7 @@
 # 	Scan Keys + rechte Maustaste s. KeyListener
 #	Auswertung Keys s. img_update
 ################################################################################
-#	Stand: 03.03.2020
+#	Stand: 06.03.2020
 
 
 # Python3-Kompatibilität:
@@ -98,9 +98,8 @@ class Slideshow(xbmcgui.WindowXMLDialog):
 		# select image controls from the xml
 		# 	hier ohne Skalierung
 		self.image1 = self.getControl(1)
-		self.getControl(99).setVisible(False) # ohne bg
-		self.datelabel = self.getControl(100)
-		self.textbox = self.getControl(101)
+		self.getControl(99).setVisible(True) # mit Ordner-/Dateiname
+		self.namelabel = self.getControl(99)	
 		# Player: Logo, Musik, Artist
 		if self.slides_music == 'true':
 			self._set_prop('Music', 'show')
@@ -125,6 +124,13 @@ class Slideshow(xbmcgui.WindowXMLDialog):
 					continue
 				# add image to gui
 				cur_img.setImage(img[0],texturecache)
+				
+				ROOT, FOLDER = os.path.split(os.path.dirname(img[0]))
+				# PLog("ROOT, FOLDER: %s, %s" % (ROOT, FOLDER))			# Debug
+				FILE, EXT = os.path.splitext(os.path.basename(img[0]))
+				NAME = FOLDER + ' | ' + FILE
+				self.namelabel.setLabel(NAME)
+                    
 				# give xbmc some time to load the image
 				xbmc.sleep(200) 
 								

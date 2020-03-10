@@ -8,6 +8,31 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/t/rel-ardundzdf/309751
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
+
+10.03.2020	2.7.2	ARD Audiothek: Anpassungen an Webseite 
+			Auswertung Themen und Rubriken getrennt.
+			Überarbeitete Funktionen: AudioStart, AudioStartThemen, AudioStartRubrik,
+			Audio_get_rubriken, Audio_get_rubrik, Audio_get_sendungen, AudioContentJSON,
+			AudioContentXML, AudioContentXML.
+			AudioContentXML: Seitensteuerung für große Listen (100/Seite). 
+
+not on Github	2.7.1	ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung der Mehrfachbeiträge bei 
+			Highlights mit "Folgeseiten".
+			Modul slides: Anzeige Verzeichnis|Dateiname hinzugefügt, Anpassung Skindatei
+			(Anzeige oben rechts).
+			ZDF_get_content: Fix Erkennung von Mehrfachbeiträgen (icon-502_play, icon-301_clock),
+			dto. für zdf-sportreportage-Seiten ()
+			ZDF_get_content: "Verfügbar bis.." zusätzl. ausgewertet.
+			get_teaserElement (Nachlade-Beiträge ZDF): "Verfügbar bis.." zusätzl. ausgewertet.
+			time_translate (Modul util): Code für ZDF-Datum-/Zeit-format erweitert.
+			ZDFRubriken: Aufruf ZDFRubrikSingle nur noch mit Abgleich Cluster-Titel (Überspringen
+			nicht mehr erforderlich).
+			ZDFRubrikSingle: Blank vor > bei clustertitle berücksichtigt, Datensatz begrenzt
+			auf '</article>'
+			PodFolder (Modul Podcontent): Zugriff auf Netzwerkverz. hinzugefügt, Eintrag in
+			podcast-favorits.txt hinzugefügt (Sounddateien Raspi-Share), Anpassung in
+			PlayAudio (Modul util).
+			 
 03.03.2020	2.7.0	Module util, slides, merkliste: einheitliche Variablenbezeichner für ADDON_ID
 			und Settings (Merkliste funktionierte nicht mehr).
 			Modul Podcontent: experimentelle Funktion (PodFolder) zum Abspielen lokaler

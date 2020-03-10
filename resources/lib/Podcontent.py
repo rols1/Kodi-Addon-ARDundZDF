@@ -45,17 +45,8 @@ import datetime, time
 
 # Addonmodule + Funktionsziele 
 import ardundzdf					# -> thread_getfile 
-import resources.lib.util as util
-PLog=util.PLog;  home=util.home;  Dict=util.Dict;  name=util.name; 
-addDir=util.addDir;  get_page=util.get_page; 
-img_urlScheme=util.img_urlScheme;  R=util.R;  RLoad=util.RLoad;  RSave=util.RSave; 
-GetAttribute=util.GetAttribute; CalculateDuration=util.CalculateDuration;  
-teilstring=util.teilstring; repl_char=util.repl_char;  mystrip=util.mystrip; 
-DirectoryNavigator=util.DirectoryNavigator; stringextract=util.stringextract;  blockextract=util.blockextract; 
-teilstring=util.teilstring;  repl_dop=util.repl_dop; cleanhtml=util.cleanhtml;  decode_url=util.decode_url;  
-unescape=util.unescape;  mystrip=util.mystrip; make_filenames=util.make_filenames;  transl_umlaute=util.transl_umlaute;  
-humanbytes=util.humanbytes;  time_translate=util.time_translate; get_keyboard_input=util.get_keyboard_input; 
-repl_json_chars=util.repl_json_chars; 
+from resources.lib.util import *
+ 
 
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -279,15 +270,28 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	return							# hier trotz endOfDirectory erforderlich
 
 #---------------------------------------------------------------- 
-#  lokale Dateiverzeichnisse /Shares in	podcast-favorits.txt
+#	lokale Dateiverzeichnisse /Shares in	podcast-favorits.txt
 #		Audiodateien im Verz. mit Abspielbutton listen 
 #		Browser zeigen, falls keine Dateien im Verz.
+# 	library://music/ funktioniert nicht - Kodi-Player kann die
+#		Dateiquelle zur Browserausgabe nicht auflösen (Bsp.:
+#		 audio_path: musicdb://sources/1/788/931/?albumartistsonly=
+#			false&artistid=788&sourceid=1/4393.mp3
  
 def PodFolder(title, path):
 	PLog('PodFolder:'); PLog(path);
+	allow = [".MIDI", ".AIFF", ".WAV", ".WAVE", ".AIFF", ".MP2", ".MP3", ".AAC", 
+				".AAC", ".VORBIS", ".AC3", ".DTS", ".ALAC", ".AMR", ".FLAC"
+			]
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARDaudio')							# Home-Button
+
+	if 'library://music/' in path:							# Sound-Bibliothek
+		msg1=u'Sound-Bibliothek nicht verfügbar:'	
+		msg2=path
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')		
+		return li		
 
 	path = xbmc.translatePath(path)
 	PLog(path);
@@ -299,33 +303,41 @@ def PodFolder(title, path):
 	
 	dirs, files = xbmcvfs.listdir(path)
 	PLog('dirs: %s, files: %s' % (len(dirs), len(files)))
-	if '.mp3' not in files:					# 2: . und ..
-		dialog = xbmcgui.Dialog()
-		mytype=0; heading='Audioverzeichnis wählen'
-		d_ret = dialog.browseSingle(mytype, heading, '', '', False, False, path)	
-		PLog('d_ret: ' + d_ret)
-		dirs, files = xbmcvfs.listdir(d_ret)
-		PLog(dirs);PLog(files);
 
-		fstring = '\t'.join(files)							# schnelle Teilstringsuche in Liste
-		if '.mp3' not in fstring:	
-			msg1='keine Audiodateien gefunden. Verzeichnis:'	
-			msg2=d_ret
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')		
-			return li
+	dialog = xbmcgui.Dialog()
+	mytype=0; heading='Audioverzeichnis wählen'
+	d_ret = dialog.browseSingle(mytype, heading, 'music', '', False, False, path)	
+	PLog('d_ret: ' + d_ret)
+	dirs, files = xbmcvfs.listdir(d_ret)
+	PLog(dirs);PLog(files[:3]);
+
+	fstring = '\t'.join(files)							# schnelle Teilstringsuche in Liste
+	# if '.mp3' not in fstring: return li
+		
+	cnt=0
+	summ = d_ret
+	PLog('title: %s, summ: %s' % (title, summ))		
+	for audio in files:
+		d_ret=py2_encode(d_ret)
+		audio_path = os.path.join(d_ret, audio)
+		PLog("audio_path: " + audio_path)
+		ext = os.path.splitext(audio_path)[-1]
+		if up_low(ext) not in allow:
+			continue	
 			
+		title=py2_encode(title); audio=py2_encode(audio);
+		summ=py2_encode(summ); audio_path=py2_encode(audio_path);
+		thumb = R(ICON_NOTE)
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+			(quote(audio_path), quote(title),  quote(thumb), quote(audio))
+		addDir(li=li, label=audio, action="dirList", dirID="PlayAudio", fanart=R(ICON_NOTE), 
+			thumb=R(ICON_NOTE), fparams=fparams, summary=summ, tagline=title, mediatype='music')
+		cnt=cnt+1
 			
-		for audio in files:
-			audio_path = os.path.join(d_ret, audio)
-			PLog(audio_path)
-			tag 	= title
-			summ 	= d_ret
-			title=py2_encode(title); tag=py2_encode(tag);
-			summ=py2_encode(summ); 
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
-				(quote(audio_path), quote(title), R(ICON_NOTE), audio)
-			addDir(li=li, label=audio, action="dirList", dirID="PlayAudio", fanart=R(ICON_NOTE), 
-				thumb=R(ICON_NOTE), fparams=fparams, summary=summ, tagline=tag, mediatype='music')
+	if cnt == 0:
+		msg1='keine Audiodateien gefunden. Verzeichnis:'	
+		msg2=d_ret
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')		
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			

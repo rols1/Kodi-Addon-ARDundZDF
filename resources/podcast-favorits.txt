@@ -58,7 +58,9 @@ hr-iNFO Cybercrime							| https://www.ardaudiothek.de/cybercrime/42913980
 ARD Radio Tatort							| https://www.ardaudiothek.de/ard-radio-tatort/1998988
 
 ## lokale Audioverzeichnisse/Shares (experimentell)
-Sounddateien						| /Video_Sound/2_Sounddateien/
-
+##	library://music/ nicht unterstützt
+Sounddateien lokal					| /Video_Sound/2_Sounddateien/
+Sounddateien Raspi-Share				| smb://192.168.0.147:445/Downloads/
+Sounddateien Windows10					| C:\Users\rols1\ARD_ZDF_Downloads\
 
 

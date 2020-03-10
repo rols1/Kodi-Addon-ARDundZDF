@@ -2,17 +2,17 @@ Kodi-Addon-ARDundZDF
 ===================
 
 Addon für Kodi / XBMC (Kodi-Version von [Plex-Plugin ARDundZDF](https://github.com/rols1/ARDundZDF)).<br>
-Ab Version 2.2.5 für Kodi Matrix vorbereitet (Python2- / Python3-kompatibel).
-Mit Inhalten der Mediatheken von ARD und ZDF, 3Sat, funk,
-einschließlich Live-TV mit Aufnahmefunktion, Live-Radio, Podcasts
+Ab Version 2.2.5 für Kodi Matrix vorbereitet (Python2- / Python3-kompatibel).<br>
+Mit Inhalten der Mediatheken von ARD und ZDF, 3Sat, funk, phoenix, KIKA und ZDFtivi,
+einschließlich Live-TV mit Aufnahmefunktion, Live-Radio, Podcasts.<br>
+Der Relaunch des ZDF-Mediathek-Internetangebots vom 28.10.2016 ist eingearbeitet.<br>
 
 Für die ZDF Mediathek kann wahlweise die kompakte Version ZDFmobile genutzt werden. 
 
 Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-ARDundZDF/total.svg "Downloads")
 
-Das Plugin löst die Vorgänger Plex-Plugin-ARDMediathek2015 und Plex-Plugin-ARDMediathek2016
-ab. Der Relaunch des ZDF-Mediathek-Internetangebots vom 28.10.2016 ist eingearbeitet. 
+Die Plex-Versionen [Plex-Plugin-ARDMediathek2016](https://github.com/rols1/Plex-Plugin-ARDMediathek2016) und [ARDundZDF](https://github.com/rols1/ARDundZDF) werden nicht mehr gepflegt - Plex hat die Unterstützung für Plugins in seinen Client-Softwarepaketen eingestellt.
 
 Die ARD kündigt seit einigen Monaten die Einstellung der Classic-Funktionen an. Bis zur Umsetzung verbleibt der Classic-Code im Addon.
 
@@ -91,7 +91,7 @@ Funktionen:
 - Videostreams: Auflistung der verfügbaren Angebote an Bandbreiten + Auflösungen (falls verfügbar: Audio ohne Video)
 - Videoclips: Auflistung der verfügbaren Angebote an Qualitätstufen sowie zusätzlich verfügbarer Videoformate (Ausnahme HDS + SMIL) 
 
-#### Downloadoption (cURL oder wget eforderlich)
+#### Downloadoption (ab Version 2.6.8 ohne cURL/wget)
 - Download von Videos im ARD-Bereich
 - Download von Videos im ZDF-Bereich
 - Download von Videos in den Modulen 3Sat, funk, Kinderprogramme

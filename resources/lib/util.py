@@ -1142,13 +1142,23 @@ def time_translate(timecode, add_hour=2):
 
 	if timecode.strip() == '':
 		return ''
+	timecode = py2_encode(timecode)
 		
 	# Bsp.: Funk: 			2019-09-30T12:59:27.000+0000,
 	# 		ARDNew Live: 	2019-12-12T06:16:04.413Z
+	#		ZDF:			2021-03-03T17:20:00+01:00	mit Korr.-Faktor 1 Std.
 	if timecode.find('.') == 19:			# Zielformat 2018-11-28T23:00:00Z			
 		timecode = timecode.split('.')[0]
 		timecode = timecode + "Z"
-	PLog(timecode)
+	if timecode.find('+') == 19:			# ZDF mit Korr.-Faktor s.o.			
+		timecode, add_hour = timecode.split('+')
+		timecode = timecode + "Z"
+		try:
+			add_hour = re.search('(\d+)',add_hour).group(1)
+			add_hour = int(add_hour)
+		except:
+			add_hour = 0
+	PLog(timecode);  PLog(add_hour)
 	
 	if timecode[10] == 'T' and timecode[-1] == 'Z':  # Format OK?
 		try:
@@ -1349,7 +1359,10 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False):
 		#	summ = "UT | " + summ
 		if u'erfügbar bis' in page:										# enth. Uhrzeit									
 			verf = stringextract(u'erfügbar bis ', '<', page)			# Blank bis <
-		if verf:														# Verfügbar voraanstellen
+		if verf == '':
+			verf = stringextract('plusbar-end-date="', '"', page)
+			verf = time_translate(verf, add_hour=0)
+		if verf:														# Verfügbar voranstellen
 			summ = u"[B]Verfügbar bis %s[/B]\n\n%s\n" % (verf, summ)
 		
 	if 	ID == 'ARDnew':
@@ -1546,14 +1559,9 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
 	Plot=transl_doubleUTF8(Plot)
 				
-	if url.startswith('http') == False:		# lokale Datei
-		url = os.path.abspath(url)
-				
-	#if header:							
-	#	Kodi Header: als Referer url injiziert - z.Z nicht benötigt	
-	# 	header='Accept-Encoding=identity;q=1, *;q=0&User-Agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36&Accept=*/*&Referer=%s&Connection=keep-alive&Range=bytes=0-' % slink	
-	#	# PLog(header)
-	#	url = '%s|%s' % (url, header) 
+	if url.startswith('http') == False:			# lokale Datei
+		if url.startswith('smb://') == False:	# keine Share
+			url = os.path.abspath(url)
 	
 	PLog('Player_Url: ' + url)
 
@@ -1604,7 +1612,7 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 				import resources.lib.slides as slides
 				PLog('Starte_SlideShow2: %s' % path)
 				CWD = SETTINGS.getAddonInfo('path') 					# working dir
-				DialogSlides = slides.Slideshow('script-python-slideshow.xml', CWD, 'default')
+				DialogSlides = slides.Slideshow('slides.xml', CWD, 'default')
 				DialogSlides.doModal()
 				xbmc.Player().stop()					
 				del DialogSlides
