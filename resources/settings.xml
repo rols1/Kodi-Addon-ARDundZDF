@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings> 
-    <category label="30200">
+    <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
    	<setting label="neues Update beim Start des Plugins anzeigen" type="bool" id="pref_info_update" default="false"/>
            <setting type="sep"/>

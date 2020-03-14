@@ -64,6 +64,9 @@ FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
+
+if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
 
 ICON_MAIN_POD			= 'radio-podcasts.png'

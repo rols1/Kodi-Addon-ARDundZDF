@@ -69,9 +69,31 @@ DEBUG			= SETTINGS.getSetting('pref_info_debug')
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 
-ARDStartCacheTime = 300						# 5 Min.	
+ARDStartCacheTime = 300						# 5 Min.
+
+#---------------------------------------------------------------- 
+# prüft addon.xml auf mark - Rückgabe True, False
+#	benötigt u.a. für Check der python-Version - falls
+#	3.0.0 wird global ADDON_DATA (Modul-Kopf) neu
+#	gesetzt - s. check_DataStores
+# Aufruf von allen Modulen.Köpfen einschl. Haupt-PRG
+#
+def check_AddonXml(mark):
+	ADDON_XML		= os.path.join(ADDON_PATH, "addon.xml")
+	with open(ADDON_XML, 'r') as f:
+		xml_content	= f.read()
+	if mark in xml_content:
+		ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
+		return True
+	else:
+		return False
+	
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
+
+if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
+
 DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
 SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
 SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
@@ -206,7 +228,10 @@ def home(li, ID):
 #	Die Funktion checkt bei jedem Aufruf des Addons data-Verzeichnis einschl. Unterverzeichnisse 
 #		auf Existenz und bei Bedarf neu an. User-Info nur noch bei Fehlern (Anzeige beschnittener 
 #		Verzeichnispfade im Kodi-Dialog nur verwirend).
-#	 
+#	13.03.2020 abhängig von check_AddonXml wird bei der Matrix-Version des Addons
+#		das data-Verzeichnis für Kodi korrekt angelegt im Verz.:
+#		../.kodi/userdata/addon_data/plugin.video.ardundzdf/
+#
 def check_DataStores():
 	PLog('check_DataStores:')
 	store_Dirs = ["Dict", "slides", "subtitles", "Inhaltstexte", 
@@ -431,9 +456,11 @@ def up_low(line, mode='up'):
 #		router) und als Prophylaxe gegen durch doppelte utf-8-Kodierung erzeugte Sonderzeichen.
 #		Dekodierung erfolgt in Watch + ShowFavs. Nicht mehr benötigt, falls nochmal: s. Commit
 #		9137781 on 16 Oct 2019.
-#	
+#
+#	Sortierung: i.d.R. unsortiert (Reihenfolge wie Web), erford. für A-Z-Seiten (api/podcasts)
+#		Hinw.: bei Sortierung auf Homebutton verzichten 	
 
-def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True):
+def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True, sortlabel=''):
 	PLog('addDir:')
 	PLog(type(label))
 	label=py2_encode(label)
@@ -461,7 +488,10 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		isFolder = True	
 	
 	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
-	xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
+	if sortlabel:
+		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL)
+	else:
+		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
 	PLog('PLUGIN_URL: ' + PLUGIN_URL)	# plugin://plugin.video.ardundzdf/
 	PLog('HANDLE: %s' % HANDLE)
 	

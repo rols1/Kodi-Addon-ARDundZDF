@@ -55,6 +55,9 @@ HANDLE			= int(sys.argv[1])
 
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
+
+if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+	ADDON_DATA		= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
 
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')

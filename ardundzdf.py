@@ -35,14 +35,14 @@ import importlib		# dyn. Laden zur Laufzeit, s. router
 
 
 # Addonmodule + Funktionsziele (util_imports.py) - Rest dyn. in router
-import resources.lib.updater	as updater
+import resources.lib.updater	as updater		# deaktiviert in Testversion Kodi-Matrix-ARDundZDF-exp1.zip
 from resources.lib.util import *
 																		
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.7.2'
-VDATE = '10.03.2020'
+VERSION = '2.7.4'
+VDATE = '14.03.2020'
 
 #
 #
@@ -225,7 +225,11 @@ PLog("ICON: " + ICON)
 TEMP_ADDON		= xbmc.translatePath("special://temp")
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
-PLog(ADDON_DATA)
+
+if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+	PLog('Matrix-Version')
+	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
+PLog("ADDON_DATA: " + ADDON_DATA)
 
 M3U8STORE 		= os.path.join("%s/m3u8") % ADDON_DATA
 DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
@@ -637,6 +641,7 @@ def Main_POD(name):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------------------------
+# Aufruf: Main
 # Buttons für Highlights, Unsere Favoriten, Sammlungen, Ausgewählte 
 #	Sendungen, Meistgehört - zusätzlich Themen + LIVESTREAMS.
 # Rubriken: getrennte Auswertung  in AudioStartRubriken 
@@ -793,21 +798,25 @@ def AudioStart_AZ(title):
 #----------------------------------------------------------------
 # Auswertung A-Z
 # Besonderheit: der Quelltext der Leiteite enthält sämtliche Beiträge.  
-#	Im Web sorgen java-scripts für die Auswahl zum gewählten Buchstaben.
-# Der Quelltext enthält im html-Teil die Beiträge zum Buchstaben plus,
-#	im json-Teil den Rest.
+#	Im Web sorgen java-scripts für die Auswahl zum gewählten Buchstaben
+#	(Button "WEITERE LADEN").
+# Der Quelltext enthält im html-Teil die Beiträge bis zum Nachlade-Button -
+#	hier unbeachtet.
 # Die Sätze im json-Teil sind inkompatibel  mit  den Sätzen in AudioContentJSON.
 #	Nachladebutton (java-script, ohne api-Call).
-# Auswahl der Sätze: Vergleich des 1. Buchstaben des Ttitels mit dem Button, 
+# Auswahl der Sätze: Vergleich des 1. Buchstaben des Titels mit dem Button, 
 #	Sonderbehandlung für Button # (Ascii-Wert 35 (#), 34 (") oder 48-57 (0-9).
 #		 Außerdem werden führende " durch # ersetzt (Match mit Ascii 35).
+# 11.03.2020 ab Version 2.7.3 Umstellung auf Seite ../api/podcasts und 
+#	Auswertung in AudioContentJSON (Leitseite ohne Begleitinfos). Nach-
+#	teil: keine alph. Sortierung.
+#	Bei Ausfall der api-Seite Rückfall zur Leitseite möglich.
 #
 def AudioStart_AZ_content(button):		
 	PLog('AudioStart_AZ_content: ' + button)
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Audiothek')					# Home-Button
 
-	path = ARD_AUDIO_BASE + '/alphabetisch?al=a'	# A-Z-Seite laden für Prüfung auf inaktive Buchstaben
+	# path = ARD_AUDIO_BASE + '/alphabetisch?al=a'		# Leitseite entf., s.o.
+	path = ARD_AUDIO_BASE + '/api/podcasts?limit=300' 	# enthält alle A-Z (wie Leitseite)	
 	page, msg = get_page(path)		
 	if page == '':
 		msg1 = "Fehler in AudioStart_AZ_content"
@@ -816,48 +825,8 @@ def AudioStart_AZ_content(button):
 		return li			
 	PLog(len(page))
 	
-	pos = page.find(',podcasts:{allPodcasts:')		# Start Podcasts im json-Teil
-	page = page[pos:]
-	page= page.replace('\\u002F', '/')				# Pfadbehandlung gesamte Seite
-	gridlist = blockextract(',feed_url:', page) 
-	PLog(len(gridlist))
-	
-	button = up_low(button)
-	for grid in gridlist:			
-		title 	= stringextract(',title:"', '",', grid) # kann \" enthalten	
-		title = title.replace('\\"', '#')				# "  soll mit # matchen
-					
-		# title = title.replace('\\', '')			# " ist Stilmittel
-		label = title.replace('\\', '')
-		label = title
-		if not title:								# kann leer sein
-			continue
-		if title.startswith('ARD Audiothek\u002F'): # ?
-			continue
-		b = up_low(title[0])
-		if button == '#':							# Abgleich: #, 0-9 
-			b_val = ord(b)							# Werte / Zeichen s.o.
-			if (b_val < 48 or b_val > 57) and b_val != 35:
-				continue
-		else:
-			if b != button:
-				continue
-		
-		img 	=  stringextract('image_16x9:"', '"', grid)
-		img		= img.replace('{width}', '640')
-		url		= stringextract('sharing_url:"', '"', grid) 
-		feed_url= stringextract('feed_url:"', '"', grid) 
-		
-		PLog('Satz:');
-		PLog(title); PLog(img); PLog(url); PLog(feed_url); 
-		
-		title=py2_encode(title); feed_url=py2_encode(feed_url);
-		fparams="&fparams={'path': '%s', 'title': '%s'}" %\
-			(quote(feed_url), quote(title))
-		addDir(li=li, label=title, action="dirList", dirID="AudioContentXML", 
-			fanart=R(ICON_MAIN_AUDIO), thumb=img, fparams=fparams)													
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	title='A-Z -Button %s' % button
+	return AudioContentJSON(title, page, AZ_button=button)	
 
 #----------------------------------------------------------------
 # Website: http://web.ard.de/radio/radionet/liste.php?ressort=alle&channel=
@@ -1305,8 +1274,8 @@ def AudioSearch(title, query=''):
 	query_org = query	
 	
 	path = base  % quote(query)
-	AudioContentJSON(title=query, path=path)		# kehrt nicht zurück		
-	return		
+	return AudioContentJSON(title=query, path=path)		# kehrt nicht zurück		
+			
 	
 #----------------------------------------------------------------
 # listet Sendungen mit Folgebeiträgen (zuerst) und / oder Einzelbeiträge 
@@ -1316,15 +1285,22 @@ def AudioSearch(title, query=''):
 # Aufrufer sorgt  für page im json-format (Bsp. api-call in AudioSearch)
 #	oder sendet nur den api-call in path.
 # pagenr bleibt hier unbeachtet, da in json-Ausgabe fehlend oder falsch.
+# 11.03.2020 zusätzl. Auswertung der A-Z-Seiten, einschl. Sotierung
+#	(Kodi sortiert Umlaute richtig, Web falsch), 
+#	Blöcke '"category":', Aufruf: AudioStart_AZ_content
 # 
-def AudioContentJSON(title, page='', path=''):				
+def AudioContentJSON(title, page='', path='', AZ_button=''):				
 	PLog('AudioContentJSON: ' + title)
 	title_org = title
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Audiothek')		# Home-Button
+	if AZ_button:								
+		sortlabel='1'							#  Sortierung erford.	
+	else:
+		li = home(li, ID='ARD Audiothek')		# Home-Button
+		sortlabel=''							# Default: keine Sortierung	
 		
-	if path:								# s. Mehr-Button
+	if path:									# s. Mehr-Button
 		headers=AUDIO_HEADERS  % ARD_AUDIO_BASE
 		page, msg = get_page(path=path, header=headers)	
 		if page == '':	
@@ -1338,7 +1314,7 @@ def AudioContentJSON(title, page='', path=''):
 	cnt=0
 	gridlist = blockextract('podcast":{"category":', page)		# Sendungen / Rubriken
 	if len(gridlist) == 0:
-		gridlist = blockextract('"category":', page)			# echte Rubriken, z.B. Hörspiel	
+		gridlist = blockextract('"category":', page)			# echte Rubriken, A-Z Podcasts	
 	PLog(len(gridlist))
 	
 	href_pre=''
@@ -1359,15 +1335,38 @@ def AudioContentJSON(title, page='', path=''):
 		img 	=  stringextract('image_16x9":"', '"', rec)
 		img		= img.replace('{width}', '640')
 		
-		if title == rubrik: 									# häufig doppelt
-			title	= "%s  | %s" % (rubrik, sender)
-		else:
-			title	= "%s  | %s | %s" % (rubrik, sender, title)
-		descr	= u"[B]Folgeseiten[/B] | %s Episoden | %s\n\n%s" % (anzahl, sender, descr)
-		if clip:												# Teaser anhängen
-			descr	= u"%s\n\n[B]Teaser:[/B] %s" % (descr, clip)		
-		title = repl_json_chars(title)
-		descr = repl_json_chars(descr)
+		# Aufruf AudioStart_AZ_content:
+		if AZ_button:											# Abgleich Button A-Z und #,0-9	
+			b = up_low(title)[0]
+			if AZ_button == '#':								# Abgleich: #,0-9 
+				try:
+					b_val = ord(b)								# Werte / Zeichen s.o.
+					#PLog("b_val: %d" % b_val)
+					#PLog("title: %s" % title)
+				except:
+					PLog("title: %s" % title)
+					PLog("title[0]: %s" % title[0])
+					b_val = 0
+				# 195: 	Ü, Ö, Ä (bei Unicode identisch für den 1. des 2-Byte-Wertes)
+				# 64:	@ (z.B. @mediasres)
+				if (b_val < 48 or b_val > 57) and b_val != 35 and b_val != 195 and b_val != 64:
+					continue
+			else:
+				AZ_button = py2_encode(AZ_button)
+				if b != up_low(AZ_button):
+					continue			
+			descr	= u"[B]Folgeseiten[/B] | %s Episoden | %s\n\n%s" % (anzahl, sender, descr)	
+								
+		else:														# Titel/descr <> A-Z										
+			if title == rubrik: 									# häufig doppelt
+				title	= "%s  | %s" % (rubrik, sender)
+			else:
+				title	= "%s  | %s | %s" % (rubrik, sender, title)
+			descr	= u"[B]Folgeseiten[/B] | %s Episoden | %s\n\n%s" % (anzahl, sender, descr)
+			if clip:												# Teaser anhängen
+				descr	= u"%s\n\n[B]Teaser:[/B] %s" % (descr, clip)		
+			title = repl_json_chars(title)
+			descr = repl_json_chars(descr)
 	
 		PLog('Satz:');
 		PLog(rubrik); PLog(title); PLog(img); PLog(href)
@@ -1375,7 +1374,7 @@ def AudioContentJSON(title, page='', path=''):
 		fparams="&fparams={'path': '%s', 'title': '%s'}" %\
 			(quote(url_xml), quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="AudioContentXML", fanart=img, thumb=img, 
-			fparams=fparams, summary=descr)													
+			fparams=fparams, summary=descr, sortlabel=sortlabel)													
 		cnt=cnt+1
 
 	gridlist = blockextract('"episode":{', page)			# Einzelbeiträge
@@ -1419,7 +1418,7 @@ def AudioContentJSON(title, page='', path=''):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		xbmcplugin.endOfDirectory(HANDLE)
 									
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #----------------------------------------------------------------
 # listet Sendungen  und / oder Einzelbeiträge im xml-format
@@ -1502,8 +1501,9 @@ def AudioContentXML(title, path, offset=''):
 	PLog(cnt)	
 	if cnt == 0:
 		msg1 = 'keine Audios gefunden zu >%s<' % title
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
-	xbmcplugin.endOfDirectory(HANDLE)
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #----------------------------------------------------------------
 # Ausgabe Audiobeitrag
@@ -2497,7 +2497,20 @@ def SendungenAZ(name, ID):
 #
 def SearchARDundZDF(title, query='', pagenr=''):
 	PLog('SearchARDundZDF:');
+	query_file 	= os.path.join("%s/search_ardundzdf") % ADDON_DATA
 	
+	if query == '':														# Liste letzte Sucheingaben
+		query_recent= RLoad(query_file, abs_path=True)
+		if query_recent.strip():
+			search_list = ['neue Suche']
+			query_recent= query_recent.strip().splitlines()
+			query_recent.sort()
+			search_list = search_list + query_recent
+			ret = xbmcgui.Dialog().select('Sucheingabe', search_list, preselect=0)
+			if ret > 0:
+				query = search_list[ret]
+				query = "%s|%s" % (query,query)							# doppeln
+		
 	if query == '':
 		query = get_query(channel='ARDundZDF') 
 	if  query == None or query.strip() == '':
@@ -2512,11 +2525,11 @@ def SearchARDundZDF(title, query='', pagenr=''):
 	li = home(li, ID=NAME)												# Home-Button
 	tag_negativ =u'neue Suche in ARD und ZDF starten'					# ohne Treffer
 	tag_positiv =u'gefundene Beiträge zeigen'							# mit Treffer
-	
+	store_recents = False												# Sucheingabe nicht speichern
 	
 	#------------------------------------------------------------------	# Suche ARD
 	path =  BASE_URL +  ARD_Suche 
-	path_ard = path % quote(query_ard)
+	path_ard = path % quote(py2_encode(query_ard))
 	page, msg = get_page(path=path_ard)	
 	channel='ARD'
 
@@ -2535,6 +2548,7 @@ def SearchARDundZDF(title, query='', pagenr=''):
 		cnt = len(hits)
 		if cnt == 0:
 			cnt = 1
+		store_recents = True											# Sucheingabe speichern
 			
 		title = "ARD: %s Seite(n) | %s" % (str(cnt), query_lable)
 		PLog(query_ard)
@@ -2548,6 +2562,7 @@ def SearchARDundZDF(title, query='', pagenr=''):
 	ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&contentTypes=episode&sortBy=date&page=%s'
 	if pagenr == '':		# erster Aufruf muss '' sein
 		pagenr = 1
+	query_zdf = py2_encode(query_zdf)
 	path_zdf = ZDF_Search_PATH % (quote(query_zdf), pagenr) 
 	page, msg = get_page(path=path_zdf)	
 	searchResult = stringextract('data-loadmore-result-count="', '"', page)	# Anzahl Ergebnisse
@@ -2555,7 +2570,9 @@ def SearchARDundZDF(title, query='', pagenr=''):
 	
 	query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
 	query_lable = unquote(query_lable)
-	if searchResult == '0'  'class="artdirect"' not in page:		# Sprung hierher
+	query_lable=py2_encode(query_lable)
+	searchResult=py2_encode(searchResult)
+	if searchResult == '0' or 'class="artdirect"' not in page:		# Sprung hierher
 		label = "ZDF | nichts gefunden zu: %s | neue Suche" % query_lable
 		title="Suche in ARD und ZDF"
 		title=py2_encode(title);
@@ -2563,13 +2580,24 @@ def SearchARDundZDF(title, query='', pagenr=''):
 		addDir(li=li, label=label, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
 			thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
 	else:	
+		store_recents = True											# Sucheingabe speichern
 		title = "ZDF: %s Video(s)  | %s" % (searchResult, query_lable)
 		query_zdf=py2_encode(query_zdf);
 		fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (quote_plus(query_zdf), 
 			title, pagenr)
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R('suche_ardundzdf.png'), 
 			thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
-				
+		
+	if 	store_recents:													# Sucheingabe speichern
+		query_recent= RLoad(query_file, abs_path=True)
+		query_recent= query_recent.strip().splitlines()
+		if len(query_recent) >= 24:										# 1. Eintrag löschen (ältester)
+			del query_recent[0]
+		if query_ard not in query_recent:								# query_ard + query_zdf ident.
+			query_recent.append(query_ard)
+			query_recent = "\n".join(query_recent)
+			RSave(query_file, query_recent)								# withcodec: code-error
+			
 	xbmcplugin.endOfDirectory(HANDLE)
 	
 ####################################################################################################

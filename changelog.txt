@@ -9,6 +9,28 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+14.03.2020	2.7.4	SearchARDundZDF: Auswahl/Ablage der letzten 25 Sucheingaben.
+			data-Verzeichnis des Addons: für Matrix-Version (abhängig von addon-xml)
+			verlagert in Kodi-komp. userdata-Verzeichnis. Check-Funktion im Modul util,
+			Abfrage + Setzen von ADDON_DATA in den Modulköpfen (Ausnahmen: yt,
+			updater, EPG)
+
+not on Github	2.7.3	AudioStart_AZ_content (Audiothek Neu, A-Z): Fix Unicode-Problem bei Umlauten
+			im Titel bei Button "#,0-9".
+			Umstellung A-Z auf Seite ../api/podcasts und Auswertung in AudioContentJSON
+			(Leitseite ohne Begleitinfos).
+			addDir (Modul util): Sortiermöglichkeit ergänzt (erford. für unsortierte 
+			api-Podcasts).
+			ARD Audiothek: alle endOfDirectory-Calls gecached (cacheToDisc=True). 
+			ARDStart (ARD Neu): Pfad aus Widget-Links ermittelt (vorher manuell zusammen-
+			gesetzt), Caching für endOfDirectory-Call.
+			settings.xml: Kategorie "30200" ausgetauscht gegen "Allgemein" ("30200" diente 
+			Testzwecken). 
+			get_page_content (ARD Neu): zusätzl. Auswertungsmerkmal "decor" (ergänzt fehlende
+			Beiträge in "Hier & Jetzt" am Beginn der Liste).
+			get_page_content (ARD Neu): Pfad-Auswertung für Mehrfachbeiträge aus vorh. Url's
+			(vorher manuell mittels targetID zusammengesetzt). 	
+
 10.03.2020	2.7.2	ARD Audiothek: Anpassungen an Webseite 
 			Auswertung Themen und Rubriken getrennt.
 			Überarbeitete Funktionen: AudioStart, AudioStartThemen, AudioStartRubrik,
@@ -21,7 +43,7 @@ not on Github	2.7.1	ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung de
 			Modul slides: Anzeige Verzeichnis|Dateiname hinzugefügt, Anpassung Skindatei
 			(Anzeige oben rechts).
 			ZDF_get_content: Fix Erkennung von Mehrfachbeiträgen (icon-502_play, icon-301_clock),
-			dto. für zdf-sportreportage-Seiten ()
+			dto. für zdf-sportreportage-Seiten.
 			ZDF_get_content: "Verfügbar bis.." zusätzl. ausgewertet.
 			get_teaserElement (Nachlade-Beiträge ZDF): "Verfügbar bis.." zusätzl. ausgewertet.
 			time_translate (Modul util): Code für ZDF-Datum-/Zeit-format erweitert.

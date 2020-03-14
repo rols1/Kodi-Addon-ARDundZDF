@@ -26,6 +26,7 @@ if PYTHON2:
 elif PYTHON3:
 	from urllib.parse import quote, unquote, quote_plus, unquote_plus, parse_qs
 
+from util import PLog, stringextract, ReadFavourites, RSave, R, check_AddonXml
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -33,11 +34,13 @@ ADDON_PATH    	= SETTINGS.getAddonInfo('path')
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
+
+if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
 
 ICON 			= 'icon.png'		# ARD + ZDF
 ICON_DIR_WATCH	= "Dir-watch.png"
-from util import PLog, stringextract, ReadFavourites, RSave, R
 PLog('Script merkliste.py geladen')
 
 # ----------------------------------------------------------------------

@@ -56,6 +56,10 @@ ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
+
+if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
+WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
 DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA			# hier nur DICTSTORE genutzt
 
 NAME			= 'ARD und ZDF'
