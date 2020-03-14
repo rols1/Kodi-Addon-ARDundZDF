@@ -2,7 +2,7 @@
 ################################################################################
 #				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
-#	Stand 02.03.2020
+#	Stand 14.03.2020
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
 #	Seiten werden im json-Format, teilweise html + json ausgeliefert
@@ -597,6 +597,7 @@ def get_page_content(li, page, ID, mark=''):
 						href = stringextract('"href":"', '"', h)
 						break					
 								
+		title=''	
 		if 'longTitle":"' in s:
 			title 	= stringextract('longTitle":"', '"', s)
 		if title == '':
@@ -1256,6 +1257,19 @@ def get_api_call(function, sender, myhash, pageNumber='', text='', clipId='', de
 #
 def SearchARDundZDFnew(title, query='', pagenr=''):
 	PLog('SearchARDundZDFnew:');
+	query_file 	= os.path.join("%s/search_ardundzdf") % ADDON_DATA
+	
+	if query == '':														# Liste letzte Sucheingaben
+		query_recent= RLoad(query_file, abs_path=True)
+		if query_recent.strip():
+			search_list = ['neue Suche']
+			query_recent= query_recent.strip().splitlines()
+			query_recent.sort()
+			search_list = search_list + query_recent
+			ret = xbmcgui.Dialog().select('Sucheingabe', search_list, preselect=0)
+			if ret > 0:
+				query = search_list[ret]
+				query = "%s|%s" % (query,query)							# doppeln
 	
 	if query == '':
 		query = ardundzdf.get_query(channel='ARDundZDF') 
@@ -1270,6 +1284,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	
 	tag_negativ =u'neue Suche in ARD und ZDF starten'					# ohne Treffer
 	tag_positiv =u'gefundene Beiträge zeigen'							# mit Treffer
+	store_recents = False												# Sucheingabe nicht speichern
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)												# Home-Button
@@ -1297,6 +1312,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
 	else:	
+		store_recents = True											# Sucheingabe speichern
 		PLog(type(vodTotal)); 	PLog(type(query_lable)); 			
 		title = "ARD: %s Video(s)  | %s" % (vodTotal, query_lable)
 		query_ard=py2_encode(query_ard); title=py2_encode(title); 
@@ -1325,13 +1341,24 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
 	else:	
+		store_recents = True											# Sucheingabe speichern
 		title = "ZDF: %s Video(s)  | %s" % (searchResult, query_lable)
 		query_zdf=py2_encode(query_zdf); title=py2_encode(title);
 		fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (quote(query_zdf), 
 			quote(title), pagenr)
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R('suche_ardundzdf.png'), 
 			thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
-				
+					
+	if 	store_recents:													# Sucheingabe speichern
+		query_recent= RLoad(query_file, abs_path=True)
+		query_recent= query_recent.strip().splitlines()
+		if len(query_recent) >= 24:										# 1. Eintrag löschen (ältester)
+			del query_recent[0]
+		if query_ard not in query_recent:								# query_ard + query_zdf ident.
+			query_recent.append(query_ard)
+			query_recent = "\n".join(query_recent)
+			RSave(query_file, query_recent)								# withcodec: code-error
+			
 	xbmcplugin.endOfDirectory(HANDLE)
 	
 #---------------------------------------------------------------- 
