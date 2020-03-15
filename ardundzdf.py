@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.7.4'
-VDATE = '14.03.2020'
+VERSION = '2.7.5'
+VDATE = '15.03.2020'
 
 #
 #
@@ -7020,7 +7020,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			summary = dt1 + teaser_typ 		# Anzahl Beiträge
 			
 		# teaser_brand bei Staffeln (vor Titel s.u.):
-		teaser_brand = stringextract('class="teaser-cat-brand-ellipsis">', '<a href', rec)
+		teaser_brand = stringextract('class="teaser-cat-brand-ellipsis">', '</span>', rec) # "<a href" n. eindeutig
 		teaser_brand = cleanhtml(teaser_brand); teaser_brand = mystrip(teaser_brand)
 		PLog('teaser_brand: ' + teaser_brand)
 			
@@ -7039,8 +7039,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			href_title = stringextract('Context:Suchergebnisse', '</h3>', rec)
 			href_title = stringextract('>', '</a>', href_title) 
 			href_title = mystrip(href_title)
-		if teaser_brand:						# bei Staffeln, Bsp. Der Pass , St. 01 - Finsternis
-			href_title = "%s %s" % (teaser_brand, href_title)
+		if teaser_brand and href_title:							# bei Staffeln, Bsp. Der Pass , St. 01 - Finsternis
+			href_title = "%s: %s" % (teaser_brand, href_title)
 			
 		href_title = unescape(href_title)
 		PLog('href_title: ' + href_title)
@@ -7173,7 +7173,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
 				continue		
 			
-		PLog('neuer Satz')
+		PLog('neuer_Satz:')
 		PLog(thumb);PLog(plusbar_path);PLog(title);PLog(summary);PLog(tagline); PLog(multi);
 		 
 		if multi == True:
@@ -7185,22 +7185,26 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		else:											# Einzelseite	
 														# summary (Inhaltstext) im Voraus holen falls 
 														#	 leer oder identisch mit title:	
-			tag_par= "%s||||%s" % (tagline, summary)	# # -> ZDF_getVideoSources ohne Voraustext	
+									
+			tag_par = tagline					
+			tag_par = "%s||||%s" % (tag_par, summary)	
 			if summary == '' or summary == title:	
-				if SETTINGS.getSetting('pref_load_summary') == 'true':
+				if SETTINGS.getSetting('pref_load_summary') == 'true':	# Voraustext gefragt?
 					summ_txt = get_summary_pre(plusbar_path, 'ZDF')
 					if 	summ_txt:
 						tag_par= "%s\n\n%s" % (tagline, summ_txt)
 						tag_par = tag_par.replace('\n', '||')
-						summary = summ_txt			
-			
+						summary = summ_txt	
+						
+			tag = tag_par.replace('||', '\n')		# Tag-Label
+			tag_par = tag_par.replace('\n', '||')	# json-komp. für func_pars in router()					
 			tagline=repl_json_chars(tagline)		# json-komp. für func_pars in router()	
 			plusbar_path=py2_encode(plusbar_path); title=py2_encode(title);
 			thumb=py2_encode(thumb); tag_par=py2_encode(tag_par);			
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" %\
 				(quote(plusbar_path), quote(title), quote(thumb), quote(tag_par))	
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=thumb, thumb=thumb, 
-				fparams=fparams, summary=summary,  tagline=tagline, mediatype=mediatype)
+				fparams=fparams, tagline=tag, mediatype=mediatype)
 				
 		items_cnt = items_cnt+1
 			

@@ -57,7 +57,7 @@
 </category> 
 
  <category label="Beiträge filtern">
-  	<setting label="Dauer der Aufnahme" type="labelenum" values="00:05:00 = 5 Minuten|00:15:00 = 15 Minuten"/>
+  	<setting label="Titel enthält *Hörfassung*" type="bool" id="pref_filter_hoerfassung" default="false"/>
   	<setting label="Titel enthält *Audiodeskription*" type="bool" id="pref_filter_audiodeskription" default="false"/>
  </category>
  

@@ -9,6 +9,17 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+15.03.2020	2.7.5	SearchARDundZDF: Sortierung der Sucheingaben für Groß-Kleinschreibung erweitert
+			sorted(query_recent, key=str.lower).
+			Settings: Filter Hörfassung wiederhergestellt (war verschwunden).
+			ARD Neu: Filter Hörfassung + Audiodeskription eingesetzt in SendungenAZ_ARDnew,
+			get_page_content, get_ardsingle_more, ARDVerpasstContent.
+			Modul 3Sat: Caching für endOfDirectory-Call in Live.	
+			ZDF_get_content: teaser_brand besser begrenzt - unterschiedl. Link-Tag des ZDF
+			("href=.." statt "<a href=", neue Begr.: "</span>").
+			ZDF_get_content: Begleitinfos (tag_par) json-komp. für router() gemacht, Doppler 
+			in Begleitinfos entfernt.
+
 14.03.2020	2.7.4	SearchARDundZDF: Auswahl/Ablage der letzten 25 Sucheingaben.
 			data-Verzeichnis des Addons: für Matrix-Version (abhängig von addon-xml)
 			verlagert in Kodi-komp. userdata-Verzeichnis. Check-Funktion im Modul util,
@@ -36,7 +47,7 @@ not on Github	2.7.3	AudioStart_AZ_content (Audiothek Neu, A-Z): Fix Unicode-Prob
 			Überarbeitete Funktionen: AudioStart, AudioStartThemen, AudioStartRubrik,
 			Audio_get_rubriken, Audio_get_rubrik, Audio_get_sendungen, AudioContentJSON,
 			AudioContentXML, AudioContentXML.
-			AudioContentXML: Seitensteuerung für große Listen (100/Seite). 
+			AudioContentXML: Seitensteuerung für große Listen (100/Seite).
 
 not on Github	2.7.1	ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung der Mehrfachbeiträge bei 
 			Highlights mit "Folgeseiten".

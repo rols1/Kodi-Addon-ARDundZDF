@@ -2,7 +2,7 @@
 ################################################################################
 #				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
-#	Stand 14.03.2020
+#	Stand 15.03.2020
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
 #	Seiten werden im json-Format, teilweise html + json ausgeliefert
@@ -655,6 +655,12 @@ def get_page_content(li, page, ID, mark=''):
 		PLog('Satz:');
 		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ); PLog(duration); PLog(ID)
 		
+		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
+			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+				continue		
+			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
+				continue		
+		
 		if mehrfach:
 			summ = "Folgeseiten"
 			href=py2_encode(href); title=py2_encode(title); 
@@ -832,6 +838,12 @@ def get_ardsingle_more(li, gridlist, page, mediatype=''):
 
 		PLog('Satz:');
 		PLog(title); PLog(href); PLog(img); PLog(summ); 
+
+		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
+			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+				continue		
+			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
+				continue		
 		 								 
 		href=py2_encode(href); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s', 'duration': ' ', 'ID': 'mehrzS'}" %\
@@ -1209,6 +1221,12 @@ def SendungenAZ_ARDnew(title, button, api_call):
 		if sender != 'ard':								# Alle (ard) oder filtern
 			if az_sender != pubServ:
 				continue
+				
+		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
+			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+				continue		
+			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
+				continue				
 
 		PLog('Satz:');
 		PLog(title); PLog(href); PLog(img); PLog(summ); PLog(tagline);
@@ -1264,7 +1282,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 		if query_recent.strip():
 			search_list = ['neue Suche']
 			query_recent= query_recent.strip().splitlines()
-			query_recent.sort()
+			query_recent=sorted(query_recent, key=str.lower)
 			search_list = search_list + query_recent
 			ret = xbmcgui.Dialog().select('Sucheingabe', search_list, preselect=0)
 			if ret > 0:
@@ -1636,8 +1654,14 @@ def ARDVerpasstContent(title, path, CurSender, timeline_sender='', label_sender=
 
 		PLog('Satz:');
 		PLog(title); PLog(href); PLog(img); PLog(summ); PLog(zeit); 
-		title = repl_json_chars(title); summ = repl_json_chars(summ);
-		 
+		
+		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
+			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+				continue		
+			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
+				continue				
+		
+		title = repl_json_chars(title); summ = repl_json_chars(summ);	 
 		href=py2_encode(href); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s', 'duration': '%s', 'ID': '%s'}" %\
 			(quote(href), quote(title), '', ID)
