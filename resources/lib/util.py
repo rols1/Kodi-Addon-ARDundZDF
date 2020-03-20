@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand '03.03.2020'
+#	Stand '14.03.2020'
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -76,6 +76,10 @@ ARDStartCacheTime = 300						# 5 Min.
 #	benötigt u.a. für Check der python-Version - falls
 #	3.0.0 wird global ADDON_DATA (Modul-Kopf) neu
 #	gesetzt - s. check_DataStores
+# ADDON_DATA 3.0.0 (Kodi 19 Matrix):
+#	../.kodi/userdata/addon_data/plugin.video.ardundzdf
+# ADDON_DATA 2.25.0 (Kodi 18 Leia):
+#	../.kodi/userdata/ardundzdf_data
 # Aufruf von allen Modulen.Köpfen einschl. Haupt-PRG
 #
 def check_AddonXml(mark):
@@ -87,6 +91,7 @@ def check_AddonXml(mark):
 		return True
 	else:
 		return False
+#---------------------------------------------------------------- 
 	
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
@@ -718,7 +723,7 @@ def R(fname, abs_path=False):
 			# PLog("fname: " + fname)
 			return os.path.join(fname)
 		else:
-			fname = "%s/resources/%s" % (ADDON_NAME, fname)
+			fname = "%s/resources/%s" % (ADDON_PATH, fname)
 			fname = os.path.abspath(fname)
 			return fname 
 #----------------------------------------------------------------  

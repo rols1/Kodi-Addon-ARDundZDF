@@ -2,7 +2,7 @@
 ################################################################################
 #				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
-#	Stand 15.03.2020
+#	Stand 17.03.2020
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
 #	Seiten werden im json-Format, teilweise html + json ausgeliefert
@@ -1285,9 +1285,14 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 			query_recent=sorted(query_recent, key=str.lower)
 			search_list = search_list + query_recent
 			ret = xbmcgui.Dialog().select('Sucheingabe', search_list, preselect=0)
-			if ret > 0:
+			if ret == -1:
+				PLog("Liste Sucheingabe abgebrochen")
+				return ardundzdf.Main()
+			elif ret == 0:
+				query = ''
+			else:
 				query = search_list[ret]
-				query = "%s|%s" % (query,query)							# doppeln
+				query = "%s|%s" % (query,query)							# doppeln			
 	
 	if query == '':
 		query = ardundzdf.get_query(channel='ARDundZDF') 
@@ -1372,9 +1377,11 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 		query_recent= query_recent.strip().splitlines()
 		if len(query_recent) >= 24:										# 1. Eintrag löschen (ältester)
 			del query_recent[0]
+		query_ard=py2_encode(query_ard)
 		if query_ard not in query_recent:								# query_ard + query_zdf ident.
 			query_recent.append(query_ard)
 			query_recent = "\n".join(query_recent)
+			query_recent = py2_encode(query_recent)
 			RSave(query_file, query_recent)								# withcodec: code-error
 			
 	xbmcplugin.endOfDirectory(HANDLE)

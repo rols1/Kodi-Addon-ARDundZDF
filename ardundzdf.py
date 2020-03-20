@@ -34,15 +34,15 @@ import string
 import importlib		# dyn. Laden zur Laufzeit, s. router
 
 
-# Addonmodule + Funktionsziele (util_imports.py) - Rest dyn. in router
-import resources.lib.updater	as updater		# deaktiviert in Testversion Kodi-Matrix-ARDundZDF-exp1.zip
+# ständige Addonmodule - Rest dyn. in router
+import resources.lib.updater	as updater	
 from resources.lib.util import *
 																		
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.7.5'
-VDATE = '15.03.2020'
+VERSION = '2.7.7'
+VDATE = '18.03.2020'
 
 #
 #
@@ -226,7 +226,7 @@ TEMP_ADDON		= xbmc.translatePath("special://temp")
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
-if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+if 	check_AddonXml('"xbmc.python" version="3.0.0"'):					# ADDON_DATA-Verzeichnis anpasen
 	PLog('Matrix-Version')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 PLog("ADDON_DATA: " + ADDON_DATA)
@@ -387,6 +387,7 @@ def Main():
 		else:													# Podcasts
 			tagline	= 'ARD-Radio-Podcasts suchen, hören und herunterladen'
 			summary = 'in den Settings sind Audiothek und Podcasts Classic austauschbar'
+			summary = "%s\n\n%s" % (summary, 'Podcast-Favoriten befinden sich in der ARD Audiothek')
 			fparams="&fparams={'name': 'PODCAST'}"
 			label = 'Radio-Podcasts Classic'
 			addDir(li=li, label=label, action="dirList", dirID="Main_POD", fanart=R(FANART), 
@@ -459,7 +460,7 @@ def Main():
 #----------------------------------------------------------------
 # 20.01.2020 usemono für textviewer (ab Kodi v18)
 def ShowText(path, title):
-	PLog('ShowText:'); 	
+	PLog('ShowText:'); 
 
 	page = RLoad(path, abs_path=True)
 	page = page.replace('\t', ' ')		# ersetze Tab's durch Blanks
@@ -1260,7 +1261,7 @@ def img_via_audio_href(href, page):
 # 
 def AudioSearch(title, query=''):
 	PLog('AudioSearch:')
-	# Default items_per_page: 8, hier 24
+	# Default items_per_page: 8, hier 24 - bisher ohne Wirkung
 	base = u'https://www.ardaudiothek.de/api/search/%s?items_per_page=24&page=1'  
 
 	if 	query == '':	
@@ -1274,7 +1275,7 @@ def AudioSearch(title, query=''):
 	query_org = query	
 	
 	path = base  % quote(query)
-	return AudioContentJSON(title=query, path=path)		# kehrt nicht zurück		
+	return AudioContentJSON(title=query, path=path, ID='AudioSearch|%s' % query_org)		# kehrt nicht zurück		
 			
 	
 #----------------------------------------------------------------
@@ -1289,8 +1290,8 @@ def AudioSearch(title, query=''):
 #	(Kodi sortiert Umlaute richtig, Web falsch), 
 #	Blöcke '"category":', Aufruf: AudioStart_AZ_content
 # 
-def AudioContentJSON(title, page='', path='', AZ_button=''):				
-	PLog('AudioContentJSON: ' + title)
+def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):				
+	PLog('AudioContentJSON: ' + title); PLog(ID)
 	title_org = title
 	
 	li = xbmcgui.ListItem()
@@ -1308,7 +1309,8 @@ def AudioContentJSON(title, page='', path='', AZ_button=''):
 			msg2 = msg
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 			return li
-		PLog(len(page))				
+		PLog(len(page))
+		path_org = 	path			
 		page = page.replace('\\"', '*')							# quotiere Marks entf.
 
 	cnt=0
@@ -1317,7 +1319,7 @@ def AudioContentJSON(title, page='', path='', AZ_button=''):
 		gridlist = blockextract('"category":', page)			# echte Rubriken, A-Z Podcasts	
 	PLog(len(gridlist))
 	
-	href_pre=''
+	href_pre=''; mehrfach=0
 	for rec in gridlist:
 		rec		= rec.replace('\\"', '')
 		rubrik 	= stringextract('category":"', '"', rec) 
@@ -1376,6 +1378,7 @@ def AudioContentJSON(title, page='', path='', AZ_button=''):
 		addDir(li=li, label=title, action="dirList", dirID="AudioContentXML", fanart=img, thumb=img, 
 			fparams=fparams, summary=descr, sortlabel=sortlabel)													
 		cnt=cnt+1
+		mehrfach=mehrfach+1
 
 	gridlist = blockextract('"episode":{', page)			# Einzelbeiträge
 	if len(gridlist) == 0:
@@ -1413,10 +1416,34 @@ def AudioContentJSON(title, page='', path='', AZ_button=''):
 		cnt=cnt+1
 
 	PLog(cnt)	
-	if cnt == 0:
+	if cnt == 0:												# ohne Ergebnis raus
 		msg1 = 'nichts gefunden zu >%s<' % title_org
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		xbmcplugin.endOfDirectory(HANDLE)
+
+																# Button bei Suche anhängen
+	fav_path =  SETTINGS.getSetting('pref_podcast_favorits')
+	if fav_path == 'podcast-favorits.txt' or fav_path == '':	# im Verz. resources
+		fav_path = R(fav_path)
+		fname = os.path.basename(fav_path)
+	else:
+		fav_path = os.path.abspath(fav_path)
+		fname = "%s..%s" % (os.path.dirname(fav_path[:10]), os.path.basename(fav_path))
+	PLog("fav_path: " + fav_path)
+	PLog(os.path.isfile(fav_path)); PLog('AudioSearch' in ID)
+	
+	if os.path.isfile(fav_path) and 'AudioSearch' in ID:	# Button zum Anfügen in podcast-favorits.txt
+		# pagenr 	= path.split('=')[-1]					# page-nr in path - n.b.
+		query 	= ID.split('|')[1]							# Sucheingabe		
+		query	= "Suchergebnis: %s" % query
+		title 	= u"Suchergebnis den Podcast-Favoriten hinzufügen"
+		tag 	= query
+		summ 	= "Ablage: %s" % fname
+		fparams="&fparams={'title': '%s', 'path': '%s', 'fav_path': '%s', 'mehrfach': '%s'}" % \
+			(quote(query), quote(path_org), quote(fav_path), mehrfach)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodAddFavs", 
+			fanart=R(ICON_STAR), thumb=R(ICON_STAR), fparams=fparams, summary=summ, 
+			tagline=tag)	
 									
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -2504,12 +2531,18 @@ def SearchARDundZDF(title, query='', pagenr=''):
 		if query_recent.strip():
 			search_list = ['neue Suche']
 			query_recent= query_recent.strip().splitlines()
-			query_recent.sort()
+			query_recent=sorted(query_recent, key=str.lower)
 			search_list = search_list + query_recent
 			ret = xbmcgui.Dialog().select('Sucheingabe', search_list, preselect=0)
-			if ret > 0:
+			PLog(ret)
+			if ret == -1:
+				PLog("Liste Sucheingabe abgebrochen")
+				return ardundzdf.Main()
+			elif ret == 0:
+				query = ''
+			else:
 				query = search_list[ret]
-				query = "%s|%s" % (query,query)							# doppeln
+				query = "%s|%s" % (query,query)							# doppeln			
 		
 	if query == '':
 		query = get_query(channel='ARDundZDF') 
@@ -2593,9 +2626,11 @@ def SearchARDundZDF(title, query='', pagenr=''):
 		query_recent= query_recent.strip().splitlines()
 		if len(query_recent) >= 24:										# 1. Eintrag löschen (ältester)
 			del query_recent[0]
+		query_ard=py2_encode(query_ard)
 		if query_ard not in query_recent:								# query_ard + query_zdf ident.
 			query_recent.append(query_ard)
 			query_recent = "\n".join(query_recent)
+			query_recent = py2_encode(query_recent)
 			RSave(query_file, query_recent)								# withcodec: code-error
 			
 	xbmcplugin.endOfDirectory(HANDLE)
@@ -3020,8 +3055,8 @@ def PodFavoritenListe(title, offset=0):
 		except:
 			Inhalt = ''
 		
-	if  Inhalt is None or Inhalt == '':				
-		msg1='Datei podcast-favorits.txt nicht gefunden oder nicht lesbar.'
+	if  Inhalt is None or Inhalt == '' or 'podcast-favorits.txt' not in Inhalt:				
+		msg1='Datei podcast-favorits.txt nicht gefunden, nicht lesbar oder falsche Datei.'
 		msg2='Bitte Einstellungen prüfen.'
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return

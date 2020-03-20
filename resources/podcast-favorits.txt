@@ -1,8 +1,8 @@
-# Radio-Podcast Favoriten - für Podcast-Seiten der ARD-Audiothek
+# Radio-Podcast Favoriten - für Podcast-Seiten der ARD-Audiothek, https://www.ardaudiothek.de/
 #	(vor dem 19.06.2019: einzelne ARD-Radio-Sender, www.ardmediathek.de/radio)
 # 	
 #	gehört zu: 	Kodi-Addon-ARDundZDF (Ressourcenverzeichnis)
-# 	Name: 		podcast-favorits.txt 
+# 	Name: 		podcast-favorits.txt
 # 
 # 	Bei Verwendung einer persönlichen Datei (siehe Einstellungen im Plugin) muss
 #  	der Name podcast-favorits.txt beibehalten werden!
@@ -12,9 +12,13 @@
 # 	Format: 2-teilig, getrennt durch |, Muster:
 #		Titel | HTTP-Link
 #   -------------------------------------------------
-#	
+#  Die HTTP-Links lassen sich der Adresszeile eines Internetbrowsers nach Aufruf einer Rubrik oder
+#	A-Z-Seite (ALLE SENDUNGEN) entnehmen. Sie muss mit einer Zahl enden, z.B.:
+#	https://www.ardaudiothek.de/ab-21/50763770
+#	Ab Addon-Version 2.7.6 lassen sich Sucherergebnisse der Audiothek via Button dieser Datei
+#	hinzufügen.	
 #  Gewünschte Sendungen und Fehler hierhin melden (bitte vorher die Seite mittels Webbrowser testen):
-#			https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF
+#	https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF
 #-------------------------------------------------------------------------------------------------------------------------------------
  
 ## Magazine          
@@ -56,11 +60,8 @@ Interviews -Inforadio RBB					| https://www.ardaudiothek.de/interviews/46474024
 KiRaKa - Kinderhörspiele im WDR				| https://www.ardaudiothek.de/kinderhoerspiel-im-wdr/36244846
 hr-iNFO Cybercrime							| https://www.ardaudiothek.de/cybercrime/42913980
 ARD Radio Tatort							| https://www.ardaudiothek.de/ard-radio-tatort/1998988
-
-## lokale Audioverzeichnisse/Shares (experimentell)
-##	library://music/ nicht unterstützt
-Sounddateien lokal					| /Video_Sound/2_Sounddateien/
-Sounddateien Raspi-Share				| smb://192.168.0.147:445/Downloads/
-Sounddateien Windows10					| C:\Users\rols1\ARD_ZDF_Downloads\
+NDR Coronavirus Update					| https://www.ardaudiothek.de/api/search/coronavirus%20update?items_per_page=24&page=1
 
 
+Suchergebnis: corona		| https://www.ardaudiothek.de/api/search/corona?items_per_page=24&page=1
+Suchergebnis: reißverschluss		| https://www.ardaudiothek.de/api/search/rei%C3%9Fverschluss?items_per_page=24&page=1

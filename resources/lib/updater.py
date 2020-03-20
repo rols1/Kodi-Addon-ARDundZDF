@@ -8,6 +8,7 @@
 #		V1.4.0 im Kodi-Verzeichnis .kodi/userdata/addon_data/ardundzdf_data
 #	31.10.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
+# 	18.03.2020 adjust_AddonXml: Anpassung python-Version an Kodi-Version
 ################################################################################
 
 # Python3-Kompatibilität:
@@ -35,22 +36,15 @@ import shutil						# Dir's löschen
 import zipfile, re
 import io 							# Python2+3 -> update() io.BytesIO für Zipfile
 
-# Addonmodule + Funktionsziele (util_imports.py):
+# Addonmodule + Funktionsziele (Script util_imports.py):
 import resources.lib.util as util
 PLog=util.PLog; get_page=util.get_page; stringextract=util.stringextract;
-cleanhtml=util.cleanhtml; 
+cleanhtml=util.cleanhtml; RLoad=util.RLoad; RSave=util.RSave; 
  
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 ADDON_PATH    	= SETTINGS.getAddonInfo('path')
-
-ICON_OK = "icon-ok.png"				# gtk themes / Adwaita checkbox-checked-symbolic.symbolic.png
-ICON_WARNING = "icon-warning.png"	# gtk themes / Adwaita dialog-warning-symbolic.symbolic.png
-ICON_ERROR = "icon-error.png"		# gtk themes / Adwaita dialog-error.png
-ICON_UPDATER = "icon-updater.png"	# gtk themes / Adwaita system-software-update.png
-ICON_RELEASES = "icoimportn-releases.png"	# gtk themes / Adwaita view-list-symbolic.symbolic.png
-ICON_NEXT = "icon-next.png"			# gtk themes / Adwaita go-next-symbolic.symbolic.png 
 
 FEED_URL = 'https://github.com/{0}/releases.atom'
 
@@ -129,20 +123,22 @@ def update(url, ver):
 		msg2 = 'Update erfolgreich - weiter zum aktuellen Addon'  	# Kodi: kein Neustart notw.
 		try:
 			dest_path 	= xbmc.translatePath("special://home/addons/")
-			PLog('Mark1')
 			r 			= urlopen(url)
-			PLog('Mark2')
+			PLog('Mark1')
 			zip_data	= zipfile.ZipFile(io.BytesIO(r.read()))
-			PLog('Mark3')
+			PLog('Mark2')
 			
 			# save_restore('save')									# Cache sichern - entfällt, s.o.
 			
 			PLog(dest_path)
 			PLog(ADDON_PATH)
 			shutil.rmtree(ADDON_PATH)		# remove addon, Verzicht auf ignore_errors=True
+			PLog('Mark3')
 			zip_data.extractall(dest_path)
 				
 			# save_restore('restore')								# Cache sichern	 - entfällt, s.o.
+			PLog('Mark4')
+			adjust_AddonXml()										# addon.xml an Kodi-Verson anpassen
 					
 		except Exception as exception:
 			msg1 = 'Update fehlgeschlagen'
@@ -155,12 +151,51 @@ def update(url, ver):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 
 ################################################################################
+# adjust_AddonXml:  Anpassung der python-Version in der neu installierten 
+#	addon.xml an die akt. Kodi-Version. Passende addon.xml bleibt unver-
+#	ändert. Da Kodi die addon.xml erst bei Neustart od. Addon-Installation
+#	prüft, muss die Änderung nicht bereits vor dem Speichern erfolgen.
+# 
+# Voraussetzung für replace: die Einträge in addon.xml entsprechen exakt 
+#	den Marken repl_leia + repl_matrix
+# 
+# Nach Beendigung des Updates wird bei jedem Laden des Moduls util
+#	in check_AddonXml das Verzeichnis ADDON_DATA angepasst (s. dort)
+#
+def adjust_AddonXml():
+	PLog('adjust_AddonXml:')
+	repl_leia 	= 'addon="xbmc.python" version="2.25.0"'
+	repl_matrix = 'addon="xbmc.python" version="3.0.0"'
+	KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
+	path = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/addon.xml')
+	PLog(KODI_VERSION); PLog(path)
+	
+	page = RLoad(path, abs_path=True)
+	change = False
+	if KODI_VERSION.startswith('19.'):					# Kodi Matrix
+		if repl_leia in page:
+			page = page.replace(repl_leia, repl_matrix)
+			page = py2_encode(page)
+			PLog('adjust_AddonXml: ersetze %s durch %s' % (repl_leia, repl_matrix))
+			RSave(path, page)
+			change = True	
+	else:												# Kodi <= Leia
+		if repl_matrix in page:
+			page = page.replace(repl_matrix, repl_leia)
+			page = py2_encode(page)
+			PLog('adjust_AddonXml: ersetze %s durch %s' % (repl_matrix, repl_leia))
+			RSave(path, page)		
+			change = True	
+	if change == False:
+		PLog(u'adjust_AddonXml: addon.xml unverändert')
+	return	
+
+################################################################################
 # save_restore:  Cache sichern / wieder herstellen
 #	funktioniert nicht unter Windows im updater-Modul - daher hierher verlagert
 #	Aufrufer update (vor + nach Austausch)
 # Windows-Problem: ohne Dir-Wechsel aus RESSOURCES_DIR Error 32 (belegter Prozess)
 # 03.05.2019 Funktion wieder entfernt - s.o.
-
 	
 ################################################################################# 
 # clean tag names based on your release naming convention

@@ -15,7 +15,7 @@
 #
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-#	Stand:  03.03.2020
+#	Stand: 18.03.2020 
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -95,9 +95,10 @@ def PodFavoriten(title, path, pagenr='1'):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARDaudio')					# Home-Button
 
-	url_id 	= path.split('/')[-1]
-	pagenr = int(pagenr)
-	path = ARD_AUDIO_BASE + "/api/podcasts/%s/episodes?items_per_page=24&page=%d" % (url_id, pagenr)				
+	if '/api/search/' not in path:					# Suchergebnisse, ohne url_id
+		url_id 	= path.split('/')[-1]
+		pagenr = int(pagenr)
+		path = ARD_AUDIO_BASE + "/api/podcasts/%s/episodes?items_per_page=24&page=%d" % (url_id, pagenr)				
 	page, msg = get_page(path)	
 	if page == '':	
 		msg1 = "Fehler in PodFavoriten:"
@@ -105,7 +106,7 @@ def PodFavoriten(title, path, pagenr='1'):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 		return li
 	PLog(len(page))	
-	
+		
 	cnt=0
 	gridlist = blockextract('"duration"', page)		# Sendungen 
 	PLog(len(gridlist))
@@ -121,7 +122,11 @@ def PodFavoriten(title, path, pagenr='1'):
 		cat_descr=  stringextract('summary":"', '"', descr_l[0])	# nicht gebraucht
 		
 		downl_url= stringextract('download_url":"', '"', rec) 		# möglich: null
+		if downl_url.startswith('//'):
+			downl_url = 'https:' + downl_url
 		play_url= stringextract('playback_url":"', '"', rec) 
+		if play_url.startswith('//'):
+			play_url = 'https:' + play_url
 		if downl_url == '':
 			downl_url = play_url
 		if downl_url == '':
@@ -161,6 +166,8 @@ def PodFavoriten(title, path, pagenr='1'):
 	if cnt == 0:
 		msg1 = 'nichts gefunden zu >%s<' % title_org
 		msg2 = path
+		if '/api/search/' in path:
+			msg2 = u'Vielleicht Suchergebniss ohne Einzelbeiträge?'
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 											
 	#																			# Download-Button?				
@@ -344,9 +351,65 @@ def PodFolder(title, path):
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
+#---------------------------------------------------------------- 
+#	Fügt Audiothek-Suchergebnis der Datei podcast-favorits.txt
+#		hinzu
+#	Aufruf: AudioSearch -> AudioContentJSON
+#	Mehrfachsätze (Folgebeiträge) werden abgelehnt
+# 
+def PodAddFavs(title, path, fav_path, mehrfach=''):
+	PLog('PodAddFavs:')
+	PLog(title); PLog(path); PLog(fav_path); 
+	
+	if int(mehrfach) > 0:						# Vorab-Test auf Mehrfach-Sätze
+		msg1=u'Nur Einzelbeiträge erlaubt! Folgebeiträge: %s' % mehrfach
+		msg2=u'Verweise auf Folgebeiträge werden verworfen.' 
+		msg3=u'Trotzdem übernehmen?'
+		ret=xbmcgui.Dialog().yesno(ADDON_NAME, msg1, msg2, msg3, 'Abbruch', 'JA')
+		if ret  == False:
+			return
 		
+	try:										# Vorab-Test auf korr. Datei
+		Inhalt = RLoad(fav_path,abs_path=True)	# podcast-favorits.txt laden
+	except:
+		Inhalt = ''
+	if  Inhalt is None or Inhalt == '' or 'podcast-favorits.txt' not in Inhalt:				
+		msg1=u'Datei podcast-favorits.txt nicht gefunden, nicht lesbar oder falsche Datei.'
+		msg2=u'Bitte Einstellungen prüfen.'
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		return
 
+	title=py2_encode(title); path=py2_encode(path);	
+	PLog(type(title)); PLog(type(Inhalt));
 
+	if title in Inhalt:
+		msg1 = ">%s< ist bereits enthalten" % title
+		msg2 = "Trotzdem übernehmen?"
+		ret=xbmcgui.Dialog().yesno(ADDON_NAME, msg1, msg2, '', 'Abbruch', 'JA')
+		if ret  == False:
+			return
+		
+	if ADDON_ID in fav_path:
+		msg1=u'Diese Datei podcast-favorits.txt wird beim nächsten Update überschrieben!'
+		msg2=u'Bitte eine Kopie außerhalb des Addons anlegen und in den Settings den Dateipfad anpassen.'
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+	
+	line = "%s\t\t| %s\n" % (title, path)					# neue Zeile
+	msg1 = 'podcast-favorits.txt'
+	icon = R(ICON_STAR)
+	try:
+		f = open(fav_path, 'a')								# nur anhängen
+		f.write(line)	
+		f.close()
+		msg2 = u'Eintrag hinzugefügt'
+		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)	# Fertig-Info
+
+	except Exception as exception:
+		msg2 = str(exception) 
+		PLog(msg2)
+		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)	# Fehler-Hinweis
+	
+	return
 
 
 

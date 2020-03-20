@@ -9,6 +9,22 @@ CHANGE HISTORY 	Kodi-Addon-ARDundZDF -  (vormals Plugin für den Plexmediaserver
 			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016	
 
 
+18.03.2020	2.7.7	AudioContentJSON: Button bei Suchergebnissen der Audiothek hinzugefügt zur
+			Übernahme in podcast-favorits.txt.
+			PodAddFavs (Modul Podcontent): Übernahme von Suchergebnissen in 
+			podcast-favorits.txt, einschl. Fehlerbehandlung (nur Einzelbeiträge,
+			existierende Datei podcast-favorits.txt, Doppler
+			PodFavoriten (Modul Podcontent): Anpassung Code an Suchergebnisse (api-Pfad,
+			Ergänzung 'https:' bei downl_url + play_url. 
+			R (Modul util): Fix Pfad für resources-Dateien bei Aufruf ohne abs_path).		
+
+not on Github	2.7.6	SearchARDundZDF: bei Abbruch der Sucheingabenliste Rückkehr zum Hauptmenü.
+			SearchARDundZDFnew: Sortierung der Sucheingabe ergänzt (Groß-Kleinschreibung).
+			Updater: ICON-Defs entfernt(obsolet).
+			Updater: neue Funktion adjust_AddonXml - Anpassung der python-Version in der
+			neu installierten addon.xml an die akt. Kodi-Version.
+			update (Modul Updater): Log-Marken aktualisiert ('Mark4' vor adjust_AddonXml). 
+
 15.03.2020	2.7.5	SearchARDundZDF: Sortierung der Sucheingaben für Groß-Kleinschreibung erweitert
 			sorted(query_recent, key=str.lower).
 			Settings: Filter Hörfassung wiederhergestellt (war verschwunden).
