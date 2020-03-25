@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.7.7'
-VDATE = '18.03.2020'
+VERSION = '2.7.9'
+VDATE = '25.03.2020'
 
 #
 #
@@ -1296,7 +1296,7 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 	
 	li = xbmcgui.ListItem()
 	if AZ_button:								
-		sortlabel='1'							#  Sortierung erford.	
+		sortlabel='1'							# Sortierung erford.	
 	else:
 		li = home(li, ID='ARD Audiothek')		# Home-Button
 		sortlabel=''							# Default: keine Sortierung	
@@ -3910,9 +3910,13 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				xbmc.executebuiltin('Container.NextSortMethod') # OK s.o.
 
 		else:
-			msg1 = 'Starte Download im Hintergrund'		
-			msg2 = 'Speichere Zusatz-Infos in Textdatei: %s' % textfile
-			msg3 = 'Ablage: ' + fulldestpath	
+			vsize=''
+			clen = get_content_length(url)
+			if clen:
+				vsize = " (%s):" % humanbytes(clen)
+			msg1 = 'Starte Download im Hintergrund'	+ vsize	
+			msg2 = fulldestpath	
+			msg3 = 'Begleit-Infos in: %s' % textfile
 			if notice:
 				ret=xbmcgui.Dialog().yesno(ADDON_NAME, msg1, msg2, msg3, 'Abbruch', 'OK')
 				if ret  == False:
@@ -3934,6 +3938,27 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 
 	return
 
+#---------------------------
+# ermittelt Dateilänge für Downloads
+# Aufrufer: thread_getfile
+#
+def get_content_length(url):
+	PLog('get_content_length:')
+	UrlopenTimeout = 3
+	try:
+		req = Request(url)	
+		r = urlopen(req)
+		h = r.headers.dict
+		# PLog(h)
+		clen = h['content-length']
+	except Exception as exception:
+		err = str(exception)
+		PLog(err)
+		clen = ''
+	
+	PLog(clen)
+	return clen
+	
 #---------------------------
 # Download-Routine mittels urlretrieve ähnlich thread_getfile
 #	hier für Bilder + Erzeugung von Wasserzeichen (text_list: Titel, tagline,
@@ -4533,7 +4558,11 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 	PLog('ShowFavs: ' + mode)				# 'Favs', 'Merk'
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)									# Home-Button
+	if SETTINGS.getSetting('pref_watchsort') == 'false':# Sortierung?
+		li = home(li, ID=NAME)							# Home-Button
+		sortlabel=''									# Default: keine Sortierung	
+	else:
+		sortlabel='1'									# Sortierung erford.	
 															
 	my_items = ReadFavourites(mode)						# Addon-Favs / Merkliste einlesen
 	PLog(len(my_items))
@@ -4560,7 +4589,8 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		summary	= u"%s\n\n%s\n\n%s\n\n%s\n\n%s"		% (s1, s2, s3, s4, s5)
 		label	= u'Infos zum Menü Merkliste'
 	
-	if SETTINGS.getSetting('pref_FavsInfoMenueButton') == 'false':		# ausblenden falls true	
+	# Info-Button ausblenden falls Setting true oder bei Sortierung	
+	if SETTINGS.getSetting('pref_FavsInfoMenueButton') == 'false' and sortlabel == '':		
 		fparams="&fparams={'mode': '%s'}"	% mode						# Info-Menü
 		addDir(li=li, label=label, action="dirList", dirID="ShowFavs",
 			fanart=R(ICON_DIR_FAVORITS), thumb=R(ICON_INFO), fparams=fparams,
@@ -4708,7 +4738,7 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 			tagline = "[B][COLOR red]Modul %s[/COLOR][/B]%s" % (modul, tagline)
 		
 		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=thumb,
-			summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype)
+			summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype, sortlabel=sortlabel)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #-------------------------------------------------------
@@ -6088,7 +6118,7 @@ def ZDFStartLive(title): 										# ZDF-Livestreams von ZDFStart
 		addDir(li=li, label=title, action="dirList", dirID="ZDFStartLiveSingle", fanart=thumb, thumb=thumb, 
 			fparams=fparams, tagline=tagline, mediatype=mediatype)
 		
-	xbmcplugin.endOfDirectory(HANDLE)		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 #---------------------------------------------------------------------------------------------------
 def ZDFStartLiveSingle(url, title, apiToken, thumb, tagline, Merk='false'): 	# einzelner ZDF-Livestream
 	PLog('ZDFStartLiveSingle:'); 
@@ -6119,7 +6149,7 @@ def ZDFStartLiveSingle(url, title, apiToken, thumb, tagline, Merk='false'): 	# e
 	li, download_list = show_formitaeten(li=li, title_call=title, formitaeten=formitaeten, tagline=tagline,
 		thumb=thumb, only_list=only_list,geoblock=geoblock, sub_path=sub_path, Merk=Merk)		
 
-	xbmcplugin.endOfDirectory(HANDLE)		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 ####################################################################################################
 # ZDF-Suche:
 # 	Voreinstellungen: alle ZDF-Sender, ganze Sendungen, sortiert nach Datum

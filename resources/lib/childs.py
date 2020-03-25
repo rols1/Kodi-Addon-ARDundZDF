@@ -384,9 +384,9 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False):
 	
 	for s in pageItems:			
 		# PLog(s[0:40])		# bei Bedarf
-		href =  BASE_KIKA + stringextract('href=\"', '\"', s)
+		href =  BASE_KIKA + stringextract('href="', '"', s)
 		img = stringextract('<noscript>', '</noscript>', s).strip()		# Bildinfo separieren
-		img_alt = stringextract('alt=\"', '\"', img)	
+		img_alt = stringextract('alt="', '"', img)	
 		img_src = stringextract('src="', '"', img)
 		if img_src.startswith('http') == False:
 			img_src = BASE_KIKA + img_src
@@ -398,7 +398,7 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False):
 		img_alt = unescape(img_alt); 	
 		
 		PLog('Satz:')
-		PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src)
+		PLog(href);PLog(stitle);PLog(img_title);PLog(img_alt);PLog(img_src)
 		href=py2_encode(href); stitle=py2_encode(stitle); img_src=py2_encode(img_src);
 		
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}" %\
@@ -438,6 +438,9 @@ def Kika_VideosBeliebt():
 		dachzeile = stringextract('<h4 class=\"headline\">', '</h4>', s)		
 		headline = stringextract('page=artikel\">', '</a>', dachzeile).strip()	
 		stitle = headline
+		img_title = stringextract('img title="', '"', s)
+		if stitle == '':
+			stitle = img_title
 		
 		stitle = unescape(stitle); stitle = repl_json_chars(stitle)	
 		img_alt = unescape(img_alt); 	

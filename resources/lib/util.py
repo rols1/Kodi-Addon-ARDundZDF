@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand '14.03.2020'
+#	Stand 22.03.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -463,14 +463,20 @@ def up_low(line, mode='up'):
 #		9137781 on 16 Oct 2019.
 #
 #	Sortierung: i.d.R. unsortiert (Reihenfolge wie Web), erford. für A-Z-Seiten (api/podcasts)
-#		Hinw.: bei Sortierung auf Homebutton verzichten 	
+#		Hinw.: bei Sortierung auf Homebutton verzichten 
+#
+#	21.03.2020 Coding-Phänomen Merkliste: Param action + dirID mutieren zu unicode, wenn in thumb-url 
+#		ein unbekanntes Zeichen auftritt - Bsp. persÃ¶nlich, Ursache: fehlerhaftes unquote_plus
+#		unter python2. Workaround: py2_encode für action + dirID (addDir OK, aber falsche thumb-url)
+#		und Erweiterung von decode_url
 
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True, sortlabel=''):
-	PLog('addDir:')
+	PLog('addDir:');
 	PLog(type(label))
 	label=py2_encode(label)
 	PLog('addDir - label: {0}, action: {1}, dirID: {2}'.format(label, action, dirID))
-	PLog(type(summary)); PLog(type(tagline));
+	PLog(type(summary)); PLog(type(tagline)); PLog(type(action)); PLog(type(dirID)); 
+	action=py2_encode(action); dirID=py2_encode(dirID); 
 	summary=py2_encode(summary); tagline=py2_encode(tagline); 
 	fparams=py2_encode(fparams); fanart=py2_encode(fanart); thumb=py2_encode(thumb);
 	PLog('addDir - summary: {0}, tagline: {1}, mediatype: {2}, cmenu: {3}'.format(summary, tagline, mediatype, cmenu))
@@ -503,6 +509,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	PLog(fparams)
 	if thumb == None:
 		thumb = ''
+		
 	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+quote(fparams)
 	PLog("addDir_url: " + unquote(url))		
 	
@@ -950,12 +957,23 @@ def cleanhtml(line): # ersetzt alle HTML-Tags zwischen < und >  mit 1 Leerzeiche
 	cleanre = re.compile('<.*?>')
 	cleantext = re.sub(cleanre, ' ', line)
 	return cleantext
-#----------------------------------------------------------------  	
+#---------------------------------------------------------------- 
+# in URL kodierte Umlaute und & wandeln, Bsp. f%C3%BCr -> für, 	&amp; -> & 	
 # Migration PY2/PY3: py2_decode aus kodi-six
-def decode_url(line):	# in URL kodierte Umlaute und & wandeln, Bsp. f%C3%BCr -> für, 	&amp; -> &
+# Einzelersetzung deutsche Umlaute unter python2
+#	Bsp. python2:  unquote('%C3%BC') -> '\xc3\x9f' statt 'ü'
+def decode_url(line):	
 	line = py2_decode(line)
-	unquote(line)
+	unquote_plus(line)
 	line = line.replace(u'&amp;', u'&')
+	if PYTHON2:	
+		line = line.replace(u'%C3%BC', u'ü')
+		line = line.replace(u'%C3%B6', u'ö')
+		line = line.replace(u'%C3%A4', u'ä')
+		line = line.replace(u'%C3%9F', u'ß')
+		line = line.replace(u'%C3%9C', u'Ü')
+		line = line.replace(u'%C3%96', u'Ö')
+		line = line.replace(u'%C3%84', u'Ä')
 	return line
 #----------------------------------------------------------------  	
 # Migration PY2/PY3: py2_decode aus kodi-six
@@ -1062,7 +1080,9 @@ def transl_json(line):	# json-Umlaute übersetzen
 	#PLog(line)
 	for r in ((u'\\u00E4', u"ä"), (u'\\u00C4', u"Ä"), (u'\\u00F6', u"ö"), (u'u002F', u"/")		
 		, (u'\\u00C6', u"Ö"), (u'\\u00D6', u"Ö"),(u'\\u00FC', u"ü"), (u'\\u00DC', u'Ü')
-		, (u'\\u00DF', u'ß'), (u'\\u0026', u'&'), (u'\\u00AB', u'"')
+		, (u'\\u00e4', u"ä"), (u'\\u00c4', u"Ä"), (u'\\u00f6', u"ö"), (u'u002f', u"/")	
+		, (u'\\u00c6', u"Ö"), (u'\\u00d6', u"Ö"),(u'\\u00fc', u"ü"), (u'\\u00dc', u'Ü')
+		, (u'\\u00DF', u'ß'), (u'\\u00df', u'ß'), (u'\\u0026', u'&'), (u'\\u00AB', u'"')
 		, (u'\\u00BB', u'"')
 		, (u'\xc3\xa2', u'*')			# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
 		, (u'u00B0', u' Grad')		# u00BA -> Grad (3Sat, 37 Grad)	

@@ -4,7 +4,7 @@
 #				benötigt Modul yt.py (Youtube-Videos)
 #		Videos der Phoenix_Mediathek auf https://www.phoenix.de/ 
 ################################################################################
-#	Stand: 06.02.2020
+#	Stand: 22.02.2020
 #
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
@@ -97,26 +97,21 @@ def Main_phoenix():
 		thumb=ICON_SEARCH, fparams=fparams, tagline=tag)
 	# ------------------------------------------------------
 			
-	title='Phoenix Livestream'
-	title_epg,subtitle,vorspann,descr,href = get_live_data()
-	if title_epg:
-		title = 'Live: %s' % title_epg
-	if subtitle:
-		title = '%s | %s' % (title, subtitle)
+	tag='[B][COLOR red]Phoenix Livestream[/COLOR][/B]'
+	title,subtitle,vorspann,descr,href = get_live_data()
+	title = '[B][COLOR red]LIVE: %s[/COLOR][/B]' % title
 	
-	tag=''
-	if vorspann and descr: 
-		tag = "%s | %s\n\n%s" % (subtitle, vorspann, descr)
-		if vorspann:
-			tag = vorspann
-		if descr:
-			tag = "%s\n\n%s" % (tag, descr)
+	summ = descr
+	if subtitle:
+		summ = '%s\n%s' % (subtitle, summ)
+	if vorspann:
+		summ = '%s\n%s' % (vorspann, summ)
 		
 	title=py2_encode(title); href=py2_encode(href); tag=py2_encode(tag);
 	PLog(title); PLog(subtitle); PLog(vorspann); PLog(descr); PLog(href)
 	fparams="&fparams={'href': '%s', 'title': '%s', 'Plot': '%s'}" % (quote(href), quote(title), quote(tag))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.phoenix_Live", fanart=R(ICON_PHOENIX),
-		thumb=ICON_TVLIVE, fparams=fparams, tagline=tag)
+		thumb=ICON_TVLIVE, fparams=fparams, tagline=tag, summary=summ)
 	# ------------------------------------------------------
 	title="Themen: Rubriken (alle)"
 	fparams="&fparams={'ID': 'Rubriken'}" 
@@ -156,14 +151,15 @@ def get_live_data():
 		if '":"' in page:					# möglich: '":"', '": "'
 			page = page.replace('":"', '": "')
 		PLog(page[:80])
-		title 	= stringextract('"titel": "', '"', page)
-		PLog(title);
+		title 	= stringextract('"titel": "', '"', page)		# titel!
 		subtitle= stringextract('"subtitel": "', '"', page)
 		vorspann= stringextract('"vorspann": "', '"', page)
 		descr	= stringextract('"text":"', '"', page)
-		title=transl_json(title)
-		subtitle=transl_json(subtitle); vorspann=transl_json(vorspann);
-		descr=cleanhtml(descr); descr=unescape(descr);
+
+		title=transl_json(title); subtitle=transl_json(subtitle); 
+		vorspann=transl_json(vorspann); 
+		descr=cleanhtml(descr);
+		descr=unescape(descr);
 	
 	playlist = RLoad(PLAYLIST)	# lokale XML-Datei (Pluginverz./Resources)
 	liste = blockextract('<channel>', playlist)
@@ -206,7 +202,7 @@ def phoenix_Search(query='', nexturl=''):
 	if page.find('hits":0,') >= 0:
 		msg1 = 'Leider kein Treffer.'
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-		return li
+		return
 		
 	jsonObject = json.loads(page)
 	search_cnt = jsonObject["content"]['hits']
@@ -270,6 +266,10 @@ def GetContent(li, items, base_img=None, turn_title=True ):
 		else:
 			if img.startswith('http') == False:
 				img = BASE_PHOENIX + img
+		if '%' in img:								# Dekodierung  quotierte img-url's
+			img = decode_url(img)
+			PLog("decode_img: " + img)
+				
 			
 		# "inhalt_video":true muss nicht stimmen, Bsp.: 
 		#	https://www.phoenix.de/response/template/suche_select_json/term/dialog/sort/score
@@ -353,8 +353,8 @@ def GetContent(li, items, base_img=None, turn_title=True ):
 	return li
 
 # ----------------------------------------------------------------------
-# BeitragsListe: Liste der json-Datensätzen in url
-#	Aufrufer: GetContent
+# BeitragsListe: Liste der json-Datensätze in url
+#	Aufrufer: GetContent (Mehrfach-Beiträge)
 #
 def BeitragsListe(path, html_url, title, skip_sid=False):
 	PLog('BeitragsListe:')
@@ -378,8 +378,12 @@ def BeitragsListe(path, html_url, title, skip_sid=False):
 	
 	
 	jsonObject = json.loads(page)
-	# search_cnt = jsonObject["content"]['hits']# fehlt hier	
-	items = jsonObject["related"]['sendungen']
+	items=''
+	# search_cnt = jsonObject["content"]['hits']# fehlt hier
+	if "related" in jsonObject: 	
+		items = jsonObject["related"]["sendungen"]
+	if "content" in jsonObject: 					# phoenix_Search Folgeseiten 
+		items = jsonObject["content"]["items"]
 	PLog(len(items))
 	
 	li = xbmcgui.ListItem()
@@ -426,6 +430,7 @@ def Themen(ID):							# Untermenüs zu ID
 		typ		= item["typ"]
 		
 		title = cleanhtml(title)
+		title = repl_json_chars(title)
 	
 		PLog('Satz:')
 		PLog(url); PLog(img); PLog(title)

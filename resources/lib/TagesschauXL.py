@@ -149,47 +149,48 @@ def Main_XL():
 		
 	title = 'Livestream'
 	tag = teasertext
-	summ = u"Livestream mit Sport (nur für Deutschland)"
+	summ = u"[B][COLOR green]Livestream mit Sport (nur für Deutschland)[/COLOR][/B]"
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Live", fanart=ICON_MAINXL, 
 		thumb=ICON_LIVE, fparams=fparams, summary=summ, tagline=tag, mediatype=mediatype)
 	title = 'Livestream (diesen im Ausland verwenden)'
-	summ = "internationaler Livestream"
+	summ = "[B][COLOR green]internationaler Livestream[/COLOR][/B]"
 	fparams="&fparams={'ID': 'international'}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Live", fanart=ICON_MAINXL, 
 		thumb=ICON_LIVE, fparams=fparams, summary=summ, tagline=tag, mediatype=mediatype)
 
-	# ---------------------------------							# in menu_hub Direktsprung zu XLGetVideoSources:		
+	# ---------------------------------							# in menu_hub Direktsprung zu XLGetVideoSources:
+	tag = "[B][COLOR red]Letzte Sendung[/COLOR][/B]"		
 	title = 'Tagesschau'
 	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
 		(quote(title), quote(ARD_Last), 'ARD_Last', quote(ICON_LAST))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_LAST, fparams=fparams, tagline='Letzte Sendung', mediatype=mediatype)
+		thumb=ICON_LAST, fparams=fparams, tagline=tag, mediatype=mediatype)
 	title = 'Tagesschau in 100 Sekunden' 
 	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
 		(quote(title), quote(ARD_100), 'ARD_100', quote(ICON_100sec))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_100sec, fparams=fparams, tagline='Letzte Sendung', mediatype=mediatype)
+		thumb=ICON_100sec, fparams=fparams, tagline=tag, mediatype=mediatype)
 	title = 'Tagesschau 20 Uhr'
 	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
 		(quote(title), quote(ARD_20Uhr), 'ARD_20Uhr', quote(ICON_20))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_20, fparams=fparams, tagline='Letzte Sendung', mediatype=mediatype)
+		thumb=ICON_20, fparams=fparams, tagline=tag, mediatype=mediatype)
 	title = 'Tagesschau 20 Uhr (Gebärdensprache)'
 	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
 		(quote(title), ARD_Gest, 'ARD_Gest', quote(ICON_100sec))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_20GEST, fparams=fparams, tagline='Letzte Sendung', mediatype=mediatype)
+		thumb=ICON_20GEST, fparams=fparams, tagline=tag, mediatype=mediatype)
 	title = 'Tagesthemen'
 	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
 		(quote(title), quote(ARD_tthemen), 'ARD_tthemen', quote(ICON_TTHEMEN))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_TTHEMEN, fparams=fparams, tagline='Letzte Sendung', mediatype=mediatype)
+		thumb=ICON_TTHEMEN, fparams=fparams, tagline=tag, mediatype=mediatype)
 	title = 'Nachtmagazin'
 	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
 		(quote(title), quote(ARD_Nacht), 'ARD_Nacht', quote(ICON_NACHT))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_NACHT, fparams=fparams, tagline='Letzte Sendung', mediatype=mediatype)
+		thumb=ICON_NACHT, fparams=fparams, tagline=tag, mediatype=mediatype)
 		
 	# ---------------------------------							# in menu_hub Direktsprung zu get_content:	
 	title = 'Bericht aus Berlin'

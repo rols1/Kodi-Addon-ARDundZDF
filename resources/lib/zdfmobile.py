@@ -7,7 +7,7 @@
 #	sondern die Seiten ab https://zdf-cdn.live.cellular.de/mediathekV2 - diese
 #	Seiten werden im json-Format ausgeliefert
 #	22.11.2019 Migration Python3 Modul six + manuelle Anpassungen
-# Stand: 06.02.2020
+# Stand: 24.03.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -229,8 +229,8 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 		i=0
 		for stageObject in jsonObject["stage"]:
 			if(stageObject["type"]=="video"):							# Videos am Seitenkopf
-				typ,title,subTitle,descr,img,date,dauer = Get_content(stageObject,imgWidth) 
-
+				typ,title,subTitle,descr,img,date,dauer = Get_content(stageObject,imgWidth)
+				
 				if subTitle:
 					title = '%s | %s' % (title,subTitle)
 
@@ -250,6 +250,11 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 			if "teaser" in clusterObject and "name" in clusterObject:
 				path = "cluster|%d|teaser" % counter
 				title = clusterObject["name"]
+				
+				# keine personalisierten Inhalte
+				if 'Weiterschauen' in title or u'Das könnte Dich' in title or 'Derzeit beliebt' in title:							
+					continue 
+
 				if title == '':
 					title = 'ohne Titel'
 				title = repl_json_chars(title)

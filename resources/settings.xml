@@ -54,6 +54,7 @@
  	<setting label="ARDundZDF-Merkliste verwenden (getrennt von Favoriten)" type="bool" id="pref_watchlist" default="true"/>
 	<setting label="Begleitinfos für Favoriten und Merkliste verwenden - falls verfügbar" type="bool" id="pref_FavsInfo" default="true"/>
  	<setting label="Info-Menue-Button ausblenden" type="bool" id="pref_FavsInfoMenueButton" default="false"/>
+   	<setting label="Beiträge sortieren (Info- und Homebutton entfallen)" type="bool" id="pref_watchsort" default="false"/>
 </category> 
 
  <category label="Beiträge filtern">
