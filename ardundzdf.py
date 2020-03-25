@@ -41,7 +41,7 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.7.9'
+VERSION = '2.8.0'
 VDATE = '25.03.2020'
 
 #
@@ -6008,6 +6008,7 @@ def ZDFStart(title, show_cluster='', path=''):
 				title 	= stringextract('cluster-title"', '<', rec)		# Ref. für ZDFRubrik
 				title	= title.replace('>', '')						# title"> od. title" >
 				title 	= title.strip()
+				PLog('Mark10'); PLog(title); PLog(title_org)
 				if title_org in title:
 					PLog('Cluster_gefunden: %s' % title_org)
 					break  
@@ -6033,7 +6034,9 @@ def ZDFStart(title, show_cluster='', path=''):
 			href = BASE + href
 		title 	= stringextract('cluster-title"', '<', rec)		# Ref. für ZDFRubrik
 		title	= title.replace('>', '')						# title"> od. title" >
-		title 	= title.strip(); title = unescape(title)
+		title 	= title.strip(); 
+		title_raw=title											# zum Vergleich im 2. Durchlauf 
+		title = unescape(title)
 		
 		thumb	= stringextract('data-src="', ' ', rec)			# img vom 1. Beitrag zeigen
 		if thumb == '':
@@ -6072,8 +6075,8 @@ def ZDFStart(title, show_cluster='', path=''):
 			continue	
 				
 		else:												# restl. Cluster -> 2. Durchlauf	
-			title=py2_encode(title);
-			fparams="&fparams={'title': '%s', 'show_cluster': 'true','path': '%s'}" % (quote(title), quote(BASE))
+			title_raw=py2_encode(title_raw);
+			fparams="&fparams={'title': '%s', 'show_cluster': 'true','path': '%s'}" % (quote(title_raw), quote(BASE))
 			addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=thumb, 
 				thumb=thumb, fparams=fparams)
 		

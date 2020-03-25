@@ -12,6 +12,9 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+25.03.2020	2.8.0	ZDFStart: Fix Auswertung Cluster-Titel (HTML-Escape-Zeichen, Bsp. &amp;)
+			berücksichtigt.	
+
 25.03.2020	2.7.9	ShowFavs (Merkliste, Favoriten): optionale Sortierung, Settings angepasst,
 			Github-Wicki aktualisiert.
 			Kika_VideosBeliebt (Modul childs): stitle bei Fehlen ersetzt durch img_title.
