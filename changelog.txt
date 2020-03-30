@@ -12,10 +12,24 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-25.03.2020	2.8.0	ZDFStart: Fix Auswertung Cluster-Titel (HTML-Escape-Zeichen, Bsp. &amp;)
+30.03.2020	2.8.1	
+			ZDF_get_content: Auswertung Hochkant-Videos hinzugefügt (neues ZDF-
+			Nachrichtenformat).
+			ZDFRubrikSingle: weiteres Blockmerkmal hinzugefügt ('header-title ellipsis"') -
+			erford. für Rubrik heute-Nachrichten.
+			ZDFRubrikSingle: vom Addon nicht erreichbare Links aussortiert (Direkt zu,
+			Weiterschauen - in zdf.de/kinder), endOfDirectory-Call gecached. 
+			blockextract (Modul util): Blockendmarke hinzugefügt (erf. für ZDFRubrikSingle). 
+			ZDF_getVideoSources: Auswertung Kurzvideos hinzugefügt (vorw. in heute-Nachrichten).
+			neue Funktion ZDF_getKurzVideoDetails: Auswertung Details Kurzvideos, Anpassung
+			in ZDF_getVideoSources, ZDFSportLiveSingle, ZDF_Sendungen. 	
+
+25.03.2020	2.8.0	
+			ZDFStart: Fix Auswertung Cluster-Titel (HTML-Escape-Zeichen, Bsp. &amp;)
 			berücksichtigt.	
 
-25.03.2020	2.7.9	ShowFavs (Merkliste, Favoriten): optionale Sortierung, Settings angepasst,
+25.03.2020	2.7.9	
+			ShowFavs (Merkliste, Favoriten): optionale Sortierung, Settings angepasst,
 			Github-Wicki aktualisiert.
 			Kika_VideosBeliebt (Modul childs): stitle bei Fehlen ersetzt durch img_title.
 			Main_XL (Modul TagesschauXL): Streams in summary farbig markiert (Live:grün,
@@ -27,9 +41,9 @@ CHANGE HISTORY
 			Main_phoenix (Modul phoenix): Livestream rot markiert, Begleitinfos -> tagline +
 			summary.
 
-not on Github	2.7.8	thread_getfile + neue Funktion get_content_length: Ermittlung 
-			Dateilänge für Downloads (Header-Abfrage), lesbare Konvert., Startdialog Download 
-			angepasst.
+not on Github	2.7.8	
+			thread_getfile + neue Funktion get_content_length: Ermittlung Dateilänge für 
+			Downloads (Header-Abfrage), lesbare Konvert., Startdialog Download angepasst.
 			GetContent (Modul phoenix): Dekodierung für quotierte img-url's (Verhinderung
 			Doppelquotierung in addDir für Merkliste).
 			decode_url (Modul util): Erweiterung für deutsche Umlaute unter python2 (relevant
@@ -43,7 +57,8 @@ not on Github	2.7.8	thread_getfile + neue Funktion get_content_length: Ermittlun
 			transl_json (Modul util): lowercase für escaped Umlaute (Bsp. '\u00E4' und '\u00e4'
 			für 'ä').
 
-18.03.2020	2.7.7	AudioContentJSON: Button bei Suchergebnissen der Audiothek hinzugefügt zur
+18.03.2020	2.7.7
+			AudioContentJSON: Button bei Suchergebnissen der Audiothek hinzugefügt zur
 			Übernahme in podcast-favorits.txt.
 			PodAddFavs (Modul Podcontent): Übernahme von Suchergebnissen in 
 			podcast-favorits.txt, einschl. Fehlerbehandlung (nur Einzelbeiträge,
@@ -52,15 +67,16 @@ not on Github	2.7.8	thread_getfile + neue Funktion get_content_length: Ermittlun
 			Ergänzung 'https:' bei downl_url + play_url. 
 			R (Modul util): Fix Pfad für resources-Dateien bei Aufruf ohne abs_path).		
 
-not on Github	2.7.6	SearchARDundZDF: bei Abbruch der Sucheingabenliste Rückkehr zum 
-			Hauptmenü.
+not on Github	2.7.6	
+			SearchARDundZDF: bei Abbruch der Sucheingabenliste Rückkehr zum Hauptmenü.
 			SearchARDundZDFnew: Sortierung der Sucheingabe ergänzt (Groß-Kleinschreibung).
 			Updater: ICON-Defs entfernt(obsolet).
 			Updater: neue Funktion adjust_AddonXml - Anpassung der python-Version in der
 			neu installierten addon.xml an die akt. Kodi-Version.
 			update (Modul Updater): Log-Marken aktualisiert ('Mark4' vor adjust_AddonXml). 
 
-15.03.2020	2.7.5	SearchARDundZDF: Sortierung der Sucheingaben für Groß-Kleinschreibung 
+15.03.2020	2.7.5	
+			SearchARDundZDF: Sortierung der Sucheingaben für Groß-Kleinschreibung 
 			erweitert sorted(query_recent, key=str.lower).
 			Settings: Filter Hörfassung wiederhergestellt (war verschwunden).
 			ARD Neu: Filter Hörfassung + Audiodeskription eingesetzt in SendungenAZ_ARDnew,
@@ -71,13 +87,15 @@ not on Github	2.7.6	SearchARDundZDF: bei Abbruch der Sucheingabenliste Rückkehr
 			ZDF_get_content: Begleitinfos (tag_par) json-komp. für router() gemacht, Doppler 
 			in Begleitinfos entfernt.
 
-14.03.2020	2.7.4	SearchARDundZDF: Auswahl/Ablage der letzten 25 Sucheingaben.
+14.03.2020	2.7.4	
+			SearchARDundZDF: Auswahl/Ablage der letzten 25 Sucheingaben.
 			data-Verzeichnis des Addons: für Matrix-Version (abhängig von addon-xml)
 			verlagert in Kodi-komp. userdata-Verzeichnis. Check-Funktion im Modul util,
 			Abfrage + Setzen von ADDON_DATA in den Modulköpfen (Ausnahmen: yt,
 			updater, EPG)
 
-not on Github	2.7.3	AudioStart_AZ_content (Audiothek Neu, A-Z): Fix Unicode-Problem bei 
+not on Github	2.7.3	
+			AudioStart_AZ_content (Audiothek Neu, A-Z): Fix Unicode-Problem bei 
 			Umlauten im Titel bei Button "#,0-9".
 			Umstellung A-Z auf Seite ../api/podcasts und Auswertung in AudioContentJSON
 			(Leitseite ohne Begleitinfos).
@@ -93,14 +111,16 @@ not on Github	2.7.3	AudioStart_AZ_content (Audiothek Neu, A-Z): Fix Unicode-Prob
 			get_page_content (ARD Neu): Pfad-Auswertung für Mehrfachbeiträge aus vorh. Url's
 			(vorher manuell mittels targetID zusammengesetzt). 	
 
-10.03.2020	2.7.2	ARD Audiothek: Anpassungen an Webseite 
+10.03.2020	2.7.2	
+			ARD Audiothek: Anpassungen an Webseite 
 			Auswertung Themen und Rubriken getrennt.
 			Überarbeitete Funktionen: AudioStart, AudioStartThemen, AudioStartRubrik,
 			Audio_get_rubriken, Audio_get_rubrik, Audio_get_sendungen, AudioContentJSON,
 			AudioContentXML, AudioContentXML.
 			AudioContentXML: Seitensteuerung für große Listen (100/Seite).
 
-not on Github	2.7.1	ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung der Mehrfachbei-
+not on Github	2.7.1	
+			ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung der Mehrfachbei-
 			träge bei Highlights mit "Folgeseiten".
 			Modul slides: Anzeige Verzeichnis|Dateiname hinzugefügt, Anpassung Skindatei
 			(Anzeige oben rechts).
@@ -117,14 +137,15 @@ not on Github	2.7.1	ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung de
 			podcast-favorits.txt hinzugefügt (Sounddateien Raspi-Share), Anpassung in
 			PlayAudio (Modul util).
 			 
-03.03.2020	2.7.0	Module util, slides, merkliste: einheitliche Variablenbezeichner für ADDON_ID
+03.03.2020	2.7.0	
+			Module util, slides, merkliste: einheitliche Variablenbezeichner für ADDON_ID
 			und Settings (Merkliste funktionierte nicht mehr).
 			Modul Podcontent: experimentelle Funktion (PodFolder) zum Abspielen lokaler
 			Audiodateien, Eintrag in podcast-favorits.txt - bisher nur Linux-Systeme
 			unterstützt.
 
-02.03.2020	2.6.9	PlayAudio (Modul util):	Fix Decoding-Error (Kodi-Matrix) für 
-			ADDON.getAddonInfo.
+02.03.2020	2.6.9	
+			PlayAudio (Modul util):	Fix Decoding-Error (Kodi-Matrix) für ADDON.getAddonInfo.
 			Addon-Slideshow: Absicherung gegen Rekursion nach GetDirectory_Error in PlayAudio
 			(Return falls STOPFILE jünger als 4 sec). 
 			ARDVerpasstContent: Url-Zusatz devicetype in mobile geändert (leere html-Seite
@@ -134,7 +155,8 @@ not on Github	2.7.1	ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung de
 			get_page (modul util): Abschalthinweis für fehlende Beiträge in Classic-Version
 			auskommentiert (sind noch möglich).
 
-01.03.2020	2.6.8	neues Modul slides: Slideshow mit Musik-infos für Kodi-Musik-Player ergänzend
+01.03.2020	2.6.8	
+			neues Modul slides: Slideshow mit Musik-infos für Kodi-Musik-Player ergänzend
 			zur Kodi-Slideshow, einschl. Tastatur-Steuerung, Dialog-Skin-Datei, Cacheverwaltung 
 			+ Player-Ende-Erkennung.
 			Beide Slideshow-Varianten: rekursives Bildladen hinzugefügt. 
@@ -144,12 +166,14 @@ not on Github	2.7.1	ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung de
 			Radio-Livestreams (Hauptmenü): Fix Homebutton (Rücksprung erfolgte bei den 
 			Einzelsendern zur Audiothek statt zum Hauptmenü).
 
-23.02.2020	2.6.7	Parseplaylist: Fix index-Problem bei Auswertung m3u8-Dateien 
+23.02.2020	2.6.7	
+			Parseplaylist: Fix index-Problem bei Auswertung m3u8-Dateien 
 			(bei ZDF Medien-Info und Link in einer Zeile, sonst 2-zeilig).
 			ARDStartRubrik: Berücksichtigung von Live-Sendungen in Highlights (Swiper-
 			Bereich).	
 
-23.02.2020	2.6.6	PlayAudio (Modul util): optionale Slideshow, Anpassung Addon-Settings in
+23.02.2020	2.6.6	
+			PlayAudio (Modul util): optionale Slideshow, Anpassung Addon-Settings in
 			settings.xml.
 			Parseplaylist: Anpassung an geänderte master.m3u8-Dateien der ZDF-Sender
 			ZDF, ZDFneo und ZDFinfo (getrennte Video- und Audiostreams). Bei 3sat + phoenix
@@ -158,13 +182,15 @@ not on Github	2.7.1	ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung de
 			Modul 3sat: Anpassungen an geänderten Import des Haupt-PRG's (prefix ardundzdf
 			bei den Funktions-Calls entfernt). 	
 
-18.02.2020	2.6.5	thread_getpic (Bildgalerien): Fix für Windows7 (Multi-Line verhindert
+18.02.2020	2.6.5	
+			thread_getpic (Bildgalerien): Fix für Windows7 (Multi-Line verhindert
 			Absturz im Modul PIL), detailliertere Berechnung von Textbreite und -position.
 			BilderDasErsteSingle: Auswertung Bildquelle an weitere Hosts angepasst
 			(checkeins.de).
 			ZDF_BildgalerieSingle: Fix Auswertung Copyright.	
 
-15.02.2020	2.6.4	Ausbau der Bildgalerien:
+15.02.2020	2.6.4	
+			Ausbau der Bildgalerien:
 			Auswertung Bildgalerien ZDF geändert: Code in ZDF_get_content und ZDF_getVideoSources 
 			entfernt (Grund: Rekursion ZDF_Bildgalerie -> ZDF_getVideoSources), Umbenennung
 			Bildgalerie -> ZDF_BildgalerieSingle, neue Funktion ZDF_Bildgalerien.
@@ -183,10 +209,12 @@ not on Github	2.7.1	ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung de
 			Funktionen geändert ("ohne Rückfrage" entfernt). 
 			Modul util: wrap-Funktion erneuert (reduce lambda ersetzt duch textwrap).
 
-06.02.2020	2.6.3	Umbenennung: ZDFSlideShow -> ZDF_SlideShow (HauptPRG, Modul TagesschauXL).
+06.02.2020	2.6.3	
+			Umbenennung: ZDFSlideShow -> ZDF_SlideShow (HauptPRG, Modul TagesschauXL).
 			SenderLiveListePre, ARD Sportschau: verbliebene util-Calls entfernt.	
 
-06.02.2020	2.6.2	Modul phoenix: Funktion get_epg_ARD entfernt (ersetzt durch get_live_data).
+06.02.2020	2.6.2	
+			Modul phoenix: Funktion get_epg_ARD entfernt (ersetzt durch get_live_data).
 			Aktualisierung Watchdog_Plex-2: phoenix_Search, phoenix_Rubriken,
 			phoenix_Dossiers,phoenix_Sendungen.
 			Modul childs: Url für Radiokanal Kiraka aktualisiert. 	
@@ -199,7 +227,8 @@ not on Github	2.7.1	ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung de
 			Import-Statement für Modul util gekürzt: Haupt-PRG, ARD_NEW, childs, funk,
 			my3Sat, phoenix, TagesschauXL.  
 
-02.02.2020	2.6.1	Merkliste (Script merkliste.py): Austausch xbmcgui-Dialog gegen 
+02.02.2020	2.6.1	
+			Merkliste (Script merkliste.py): Austausch xbmcgui-Dialog gegen 
 			xbmcgui-notification, Anpassung Info-Texte an Box-Maße.
 			ZDF_get_content: zusätzl. Auswertung teaser-cat-brand-ellipsis für Serien-
 			Kennzeichnung.
@@ -208,7 +237,8 @@ not on Github	2.7.1	ARDStartRubrik (ARD Neu), get_page_content: Kennzeichnung de
 			"Suche in ARD und ZDF", Tivi_Search (Modul childs): Ergebnisabfrage angepasst 
 			an Webänderung ZDF (wie V2.5.3).   	
 
-31.01.2020	2.6.0	PlayVideo(Modul util): 0.5 sec Pause nach Player-Call - verhindert 
+31.01.2020	2.6.0	
+			PlayVideo(Modul util): 0.5 sec Pause nach Player-Call - verhindert 
 			selbständige Restarts nach Videostop.
 			Repo: update_single_files entfernt (Einzelupdates nicht mehr im Code).
 			livesenderTV.xml: Streamlink für "WDR" aktualisiert (dto. Watchdog-TV-Live).

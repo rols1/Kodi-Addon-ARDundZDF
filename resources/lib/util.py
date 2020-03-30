@@ -868,8 +868,10 @@ def stringextract(mFirstChar, mSecondChar, mString):  	# extrahiert Zeichenkette
 	#PLog(pos1); PLog(ind); PLog(pos2);  PLog(rString); 
 	return rString
 #---------------------------------------------------------------- 
-def blockextract(blockmark, mString):  	# extrahiert Blöcke begrenzt durch blockmark aus mString
+# extrahiert Blöcke aus mString: Startmarke=blockmark, Endmarke=blockendmark 
+def blockextract(blockmark, mString, blockendmark=''):  	
 	#	blockmark bleibt Bestandteil der Rückgabe - im Unterschied zu split()
+	#	Block wird durch blockendmark begrenzt, falls belegt 
 	#	Rückgabe in Liste. Letzter Block reicht bis Ende mString (undefinierte Länge),
 	#		Variante mit definierter Länge siehe Plex-Plugin-TagesschauXL (extra Parameter blockendmark)
 	#	Verwendung, wenn xpath nicht funktioniert (Bsp. Tabelle EPG-Daten www.dw.com/de/media-center/live-tv/s-100817)
@@ -883,16 +885,23 @@ def blockextract(blockmark, mString):  	# extrahiert Blöcke begrenzt durch bloc
 		PLog('blockextract: blockmark <%s> nicht in mString enthalten' % blockmark)
 		# PLog(pos); PLog(blockmark);PLog(len(mString));PLog(len(blockmark));
 		return rlist
+		
 	pos2 = 1
 	while pos2 > 0:
 		pos1 = mString.find(blockmark)						
 		ind = len(blockmark)
 		pos2 = mString.find(blockmark, pos1 + ind)		
-	
-		block = mString[pos1:pos2]	# extrahieren einschl.  1. blockmark
+		
+		if blockendmark:
+			pos3 = mString.find(blockendmark, pos1 + ind)
+			ind_end = len(blockendmark)
+			block = mString[pos1:pos3+ind_end]	# extrahieren einschl.  blockmark + blockendmark
+			# PLog(block)			
+		else:
+			block = mString[pos1:pos2]			# extrahieren einschl.  blockmark
+			# PLog(block)		
+		mString = mString[pos2:]	# Rest von mString, Block entfernt
 		rlist.append(block)
-		# reststring bilden:
-		mString = mString[pos2:]	# Rest von mString, Block entfernt	
 	return rlist  
 #----------------------------------------------------------------  
 def teilstring(zeile, startmarker, endmarker):  		# rfind: endmarker=letzte Fundstelle, return '' bei Fehlschlag
