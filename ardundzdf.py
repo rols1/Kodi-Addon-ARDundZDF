@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.8.0'
-VDATE = '25.03.2020'
+VERSION = '2.8.1'
+VDATE = '30.03.2020'
 
 #
 #
