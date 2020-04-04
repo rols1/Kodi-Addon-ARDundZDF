@@ -55,6 +55,10 @@
 	<setting label="Begleitinfos für Favoriten und Merkliste verwenden - falls verfügbar" type="bool" id="pref_FavsInfo" default="true"/>
  	<setting label="Info-Menue-Button ausblenden" type="bool" id="pref_FavsInfoMenueButton" default="false"/>
    	<setting label="Beiträge sortieren (Info- und Homebutton entfallen)" type="bool" id="pref_watchsort" default="false"/>
+   	<setting label="Audio-Beiträge im Titel kennzeichnen" type="bool" id="pref_WatchAudioInTitle" default="false"/>
+  	<setting label="externe (zentrale) Merkliste verwenden" type="bool" id="pref_merkextern" default="false"/>
+	<setting label="Pfad zur externen Merkliste" type="file" source="" id="pref_MerkDest_path" default=""/>
+  	<setting label="interne Merkliste mit externer synchronisieren" type="bool" id="pref_merksync" default="false"/>
 </category> 
 
  <category label="Beiträge filtern">

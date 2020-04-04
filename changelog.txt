@@ -12,6 +12,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+04.03.2020	2.8.3
+			Erweiterung Merkliste um externe Dateiablage Anpassung in Settings 
+			"Favoriten / Merkliste", ReadFavourites (Modul util).
+			Script merkliste: Python3-Anpassung (file-write mit Bytearray).
+			check_DataStores (Modul util): Verzeichnis "merkliste" entfernt -
+			obsolet.
+			Audio-Kennzeichnung in Merkliste: Codeerweiterung in ShowFavs, Anpassung
+			in Settings "Favoriten / Merkliste" und addDir (Modul util).
+			ZDF_Search: Fix 'ascii'-codec-Error für '-' in query.
+			convBase64: base64-Dekodierung für PYTHON3 geändert.
+
+not on Github	2.8.2
+			Aktualisierung ARD Audiothek:
+			Audio_get_sendungen: Auswertung für Titel + Subtitel unabhängig von Zahl-
+			Marken (Bsp. data-v-86b6a788) - relevant für Highlights + Meistgehört.
+			AudioStartRubrik: Code an veränderte Startmarke der Rubriken-Liste
+			angepasst.
+			AudioContentJSON: Reihenfolge clipTitle/description gedreht (Verlust 
+			clipTitle bei Überlänge description).
+			Neue Funktion img_via_web: holt Bild von Ziel-Webseite, falls lokal nicht 
+			verfügbar (relevant für 'Meistgehört' in ARD Audiothek), einschl. Cache.
+			
 30.03.2020	2.8.1	
 			ZDF_get_content: Auswertung Hochkant-Videos hinzugefügt (neues ZDF-
 			Nachrichtenformat).

@@ -586,7 +586,7 @@ def get_zdf_search(li, page, title):
 	tag = "Suche phoenix-Beitrag auf Partnersender ZDF"
 	
 	if "phoenix history" not in title_org: 					# Dokus mit Titel + Subtitel suchen 
-		query = stitle_org
+		query = stitle_org				
 		title = "1. ZDFSuche (Titel): %s" % query	
 		tag = tag + " | Suche mit Titel des Beitrags"	
 		summ = stringextract('text":"', '"}', page)

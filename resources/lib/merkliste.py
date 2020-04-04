@@ -6,7 +6,7 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-#	Stand: 01.02.2020
+#	Stand: 03.04.2020
 
 from __future__ import absolute_import
 
@@ -44,7 +44,10 @@ ICON_DIR_WATCH	= "Dir-watch.png"
 PLog('Script merkliste.py geladen')
 
 # ----------------------------------------------------------------------
-# 			
+# 02.04.2020 erweitert für Share-Zugriffe - hier Schreiben via 
+#	xbmcvfs.File (für Python3 mittels Bytearray).
+#	Lesen der Merkliste in ReadFavourites (Modul util).
+#			
 def Watch(action, name, thumb='', Plot='', url=''):		
 	PLog('Watch: ' + action)
 
@@ -61,10 +64,18 @@ def Watch(action, name, thumb='', Plot='', url=''):
 	PLog(unquote_plus(url)[100:])  			# url in fparams zusätzlich quotiert
 	PLog(name); PLog(thumb); PLog(Plot);
 	
-	fname = WATCHFILE		
 	item_cnt = 0; 
 	err_msg	= ''
 	doppler = False
+
+	fname = WATCHFILE		
+	if SETTINGS.getSetting('pref_merkextern') == 'true':	# externe Merkliste gewählt?
+		fname = SETTINGS.getSetting('pref_MerkDest_path')
+		if fname == '' or xbmcvfs.exists(fname) == False:
+			PLog("merkextern: %s, %d" % (fname, xbmcvfs.exists(fname)))
+			msg1 = u"Merkliste nicht gefunden"
+			err_msg = u"Bitte Settings überprüfen"
+			return msg1, err_msg, str(item_cnt)	
 	
 	if action == 'add':
 		# Base64-Kodierung wird nicht mehr verwendet (addDir in Modul util), Code verbleibt 
@@ -90,7 +101,7 @@ def Watch(action, name, thumb='', Plot='', url=''):
 		my_items = ReadFavourites('Merk')				# 'utf-8'-Decoding in ReadFavourites
 		merkliste = ''
 		if len(my_items):
-			PLog('my_items: ' + my_items[0])
+			PLog('my_items: ' + my_items[0])			# 1. Eintrag
 			for item in my_items:						# Liste -> String
 				iname = stringextract('name="', '"', item) 
 				PLog('Name: %s, IName: %s' % (py2_decode(name), py2_decode(iname)))
@@ -100,7 +111,7 @@ def Watch(action, name, thumb='', Plot='', url=''):
 					break
 				merkliste = merkliste + item + "\n"
 				item_cnt = item_cnt + 1
-		else:											# 1. Eintrag
+		else:	
 			pass
 		
 		item_cnt = item_cnt + 1		
@@ -110,7 +121,27 @@ def Watch(action, name, thumb='', Plot='', url=''):
 			merkliste = py2_decode(merkliste) + merk + "\n"
 			#item_cnt = item_cnt + 1			
 			merkliste = "<merkliste>\n%s</merkliste>"	% merkliste
-			err_msg = RSave(fname, merkliste, withcodec=True)		# Merkliste speichern
+			try:
+				if '//' not in fname:
+					err_msg = RSave(fname, merkliste, withcodec=True)	# Merkliste speichern
+				else:
+					PLog("xbmcvfs_fname: " + fname)
+					f = xbmcvfs.File(fname, 'w')						# extern - Share		
+					if PYTHON2:
+						f = xbmcvfs.File(fname, 'w')
+						ret=f.write(merkliste); f.close()			
+					else:												# Python3: Bytearray
+						buf = bytearray()
+						buf.extend(merkliste.encode())
+						ret=f.write(buf); f.close()			
+					PLog("xbmcvfs_ret: " + str(ret))
+					if ret:
+						sync_list_intern(src_file=fname, dest_file=WATCHFILE)# Synchronisation
+			except Exception as exception:
+				PLog(str(exception))
+				msg1 = u"Problem Merkliste"
+				err_msg = str(exception)
+				return msg1, err_msg, str(item_cnt)		
 		else:
 			msg1 = u"Eintrag schon vorhanden"
 							 
@@ -132,9 +163,27 @@ def Watch(action, name, thumb='', Plot='', url=''):
 			item_cnt = item_cnt + 1
 			merkliste = py2_decode(merkliste) + py2_decode(item) + "\n"
 		if deleted:
-			err_msg = RSave(fname, merkliste, withcodec=True)		# Merkliste speichern
-			msg1 = u"Eintrag gelöscht"
-			PLog(msg1)
+			try:
+				msg1 = u"Eintrag gelöscht"
+				if '//' not in fname:
+					err_msg = RSave(fname, merkliste, withcodec=True)	# Merkliste speichern
+					PLog(msg1)
+					if err_msg:
+						ret = False
+					else:
+						ret = True
+				else:
+					PLog("xbmcvfs_fname: " + fname)
+					f = xbmcvfs.File(fname, 'w')						# extern - Share		
+					ret = f.write(merkliste); f.close()			
+					PLog("xbmcvfs_ret: " + str(ret))
+				if ret:
+					sync_list_intern(src_file=fname, dest_file=WATCHFILE)# Synchronisation
+			except Exception as exception:
+				PLog(str(exception))
+				msg1 = u"Problem Merkliste"
+				err_msg = str(exception)
+				return msg1, err_msg, str(item_cnt)	
 		else:
 			msg1 = "Eintrag nicht gefunden." 
 			err_msg = u"Merkliste unverändert."
@@ -142,6 +191,37 @@ def Watch(action, name, thumb='', Plot='', url=''):
 							
 	return msg1, err_msg, str(item_cnt)	
 
+# ----------------------------------------------------------------------
+# synchronisiert die interne Merkliste durch Überschreiben mit der
+#	der externen Merkliste - Abbruch bei Abwahl von Synchronisieren 
+#	oder externer Merkliste.
+#
+def sync_list_intern(src_file, dest_file):
+	PLog('sync_list_intern:')
+	
+	# Vorprüfung Setting Sync / externe Merkliste
+	if SETTINGS.getSetting('pref_merksync') == 'false' or SETTINGS.getSetting('pref_merkextern') == 'false':	
+		PLog("Sync_OFF")
+		return
+	
+	f = xbmcvfs.File(src_file)
+	s1 = f.size(); f.close()
+	if s1 > 100:							# Mindestbreite bis dirID=, Eintrag immer größer
+		ret1 = xbmcvfs.delete(dest_file)
+		PLog('xbmcvfs.delete: ' + str(ret1))
+		ret2 = xbmcvfs.copy(src_file, dest_file)
+		PLog('xbmcvfs.copy: ' + str(ret2))
+		f = xbmcvfs.File(dest_file)
+		s2 = f.size(); f.close()			# Größenvergleich
+		PLog("s1: %d, s2: %d" % (s1, s2))
+		
+	
+	if ret1 and ret2 and s2 == s1:
+		PLog("Sync_OK")
+	else:
+		PLog("Sync_Error")
+	return
+	
 # ----------------------------------------------------------------------			
 # argv-Verarbeitung wie in router (Haupt-PRG)
 # Beim Menü Favoriten (add) endet json.loads in exception
@@ -196,5 +276,5 @@ if item_cnt:
 # 01.02.2029 Dialog ersetzt durch notification 
 icon = R(ICON_DIR_WATCH)
 xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
-exit()
+# exit()		# thread.lock-Error in Kodi-Matrix
 

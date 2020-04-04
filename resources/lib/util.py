@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 22.03.2020
+#	Stand 01.04.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -240,7 +240,7 @@ def home(li, ID):
 def check_DataStores():
 	PLog('check_DataStores:')
 	store_Dirs = ["Dict", "slides", "subtitles", "Inhaltstexte", 
-				"merkliste", "m3u8"]
+				"m3u8"]
 				
 	# Check 
 	#	falls ein Unterverz. fehlt, erzeugt make_newDataDir alle
@@ -470,7 +470,10 @@ def up_low(line, mode='up'):
 #		unter python2. Workaround: py2_encode für action + dirID (addDir OK, aber falsche thumb-url)
 #		und Erweiterung von decode_url
 
-def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True, sortlabel=''):
+# 	31.03.2020 merkname ersetzt label im Kontextmenü Merkliste (label kann Filter-Prefix enthalten). 
+
+def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='',\
+		cmenu=True, sortlabel='', merkname=''):
 	PLog('addDir:');
 	PLog(type(label))
 	label=py2_encode(label)
@@ -479,7 +482,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	action=py2_encode(action); dirID=py2_encode(dirID); 
 	summary=py2_encode(summary); tagline=py2_encode(tagline); 
 	fparams=py2_encode(fparams); fanart=py2_encode(fanart); thumb=py2_encode(thumb);
+	merkname=py2_encode(merkname);
 	PLog('addDir - summary: {0}, tagline: {1}, mediatype: {2}, cmenu: {3}'.format(summary, tagline, mediatype, cmenu))
+
 		
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
 	# PLog('summary, tagline: {0}, {1}'.format(summary, tagline))
@@ -515,12 +520,14 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	
 	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
 		if cmenu:											# Kontextmenüs Merkliste hinzufügen
+			if merkname:
+				label = merkname
 			Plot = Plot.replace('\n', '||')		# || Code für LF (\n scheitert in router)
 			# PLog('Plot: ' + Plot)
 			fp = {'action': 'add', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
 				'Plot': quote_plus(Plot),'url': quote_plus(url)}	
 			fparams_add = "&fparams={0}".format(fp)
-			PLog("fparams_add: " + fparams_add)
+			PLog("fparams_add: " + fparams_add[:100])
 			fparams_add = quote_plus(fparams_add)
 
 			fp = {'action': 'del', 'name': quote_plus(label)}	# name reicht für del
@@ -1340,6 +1347,7 @@ def xml2srt(infile):
 
 #----------------------------------------------------------------
 #	Favs / Merkliste dieses Addons einlesen
+#	01.04.2020 Erweiterung ext. Merkliste (Netzwerk-Share).
 #
 def ReadFavourites(mode):	
 	PLog('ReadFavourites:')
@@ -1347,8 +1355,22 @@ def ReadFavourites(mode):
 		fname = xbmc.translatePath('special://profile/favourites.xml')
 	else:	# 'Merk'
 		fname = WATCHFILE
+		if SETTINGS.getSetting('pref_merkextern') == 'true':	# externe Merkliste gewählt?
+			fname = SETTINGS.getSetting('pref_MerkDest_path')
+			if fname == '' or xbmcvfs.exists(fname) == False:
+				msg1 = u"externe Merkliste ist eingeschaltet, aber Dateipfad fehlt oder"
+				msg2 = "Datei nicht gefunden"
+				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+				return []
+			
 	try:
-		page = RLoad(fname,abs_path=True)
+		if '//' not in fname:
+			page = RLoad(fname,abs_path=True)
+		else:
+			PLog("xbmcvfs_fname: " + fname)
+			f = xbmcvfs.File(fname)		# extern - Share		
+			page = f.read(); f.close()
+			page = py2_encode(page)		# für externe Datei erf.
 	except Exception as exception:
 		PLog(str(exception))
 		return []
