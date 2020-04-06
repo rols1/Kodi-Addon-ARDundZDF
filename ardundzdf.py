@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.8.1'
-VDATE = '02.04.2020'
+VERSION = '2.8.4'
+VDATE = '06.04.2020'
 
 #
 #
@@ -6807,7 +6807,8 @@ def MeistGesehen(name):							# ZDF-Bereich, Beiträge unbegrenzt
 		
 ####################################################################################################
 # ZDF Barrierefreie Angebote - Vorauswahl
-# 
+# 06.04.2020 aktualisiert (Webseite geändert)
+
 def BarriereArm(title):				
 	PLog('BarriereArm:')
 	li = xbmcgui.ListItem()
@@ -6823,18 +6824,21 @@ def BarriereArm(title):
 	PLog(len(page))
 	
 	
-	# z.Z. 	>Die neuesten  Hörfassungen<
-	#		>Die neuesten Videos mit Untertitel<
-	#		>Die neuesten heute-journal-Videos mit Gebärdensprache<
-	content = blockextract('b-content-teaser-list', page)
+	# z.Z. 	>Gebärdensprache<
+	#		>Untertitel<
+	#		>Hörfilmee<
+	content = blockextract('<section class="b-content-teaser-list"', page)
 	PLog(len(content))
+	content = blockextract('class="teaser-text">', content[0])	# 2. Block: Service
+	
 	i=0
 	for rec in content:	
 		i=i+1
-		title = stringextract('<h2 class="title"', '</h2>', rec)
+		title = stringextract('class="teaser-text">', '</p>', rec)
 		title = title.replace('\n', ''); 
 		title = (title.replace('>', '').replace('<', '')); title = title.strip()
-		PLog(title)
+		path = stringextract('data-plusbar-url="', '"', rec)
+		PLog(title); PLog(path)
 		if u'Livestreams' in title:				# nur EPG, kein Video
 			PLog('skip: '  + title)
 			continue
@@ -6856,16 +6860,12 @@ def BarriereArm(title):
 	
 #-------------------------
 # Aufrufer: BarriereArm, ZDF Barrierefreie Angebote
-#	Ausschnitt (ID) der Seite wird aus dem Addon-Cache geladen 
+#	 
 def BarriereArmSingle(path, title, ID):
 	PLog('BarriereArmSingle: ' + title)
 	
-	title_org = title
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')						# Home-Button
-	
-	page = Dict("load", ID)						# Satz aus Cache laden
-	
+	li = xbmcgui.ListItem()	
+	page, msg = get_page(path=path)	
 	if page == False:							# Seite fehlt im Cache
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
@@ -6874,9 +6874,10 @@ def BarriereArmSingle(path, title, ID):
 	PLog(len(page))
 	# RSave('/tmp/xb.html', py2_encode(page))	# Debug
 	
-	page_cnt=0		
-	li, page_cnt  = ZDF_get_content(li=li, page=page, ref_path=path, ID='BARRIEREARM')
-	PLog(page_cnt)
+	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID='DEFAULT')
+	PLog(page_cnt)  
+	if page_cnt == 0:	# Fehlerbutton bereits in ZDF_get_content
+		return li		
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
@@ -7238,6 +7239,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		href_title = unescape(href_title)
 		PLog('href_title: ' + href_title)
 		if 	href_title == 'ZDF Livestream' or href_title == 'Sendung verpasst':
+			continue
+		if 	'<strong>Livestream</strong>' in rec:				# Livestreammarkierung, z.B. Send. m. Gebärdenspr.
 			continue
 			
 		# Pfad, Enddatum			

@@ -12,6 +12,13 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+04.03.2020	2.8.4
+			ZDF BarriereArm + BarriereArmSingle: Neufassung nach Änderungen der Webseite,
+			Caching entfällt (Inhalte befinden sich jetzt auf Folgeseiten), Anpassung in
+			ZDF_get_content.
+			Kika_VideosBuendelAZ (Modul childs): return nach 1. Durchlauf eingefügt 
+			(endOfDirectory nicht mehr ausreichend), Button '...' in Liste entfernt.
+			
 04.03.2020	2.8.3
 			Erweiterung Merkliste um externe Dateiablage Anpassung in Settings 
 			"Favoriten / Merkliste", ReadFavourites (Modul util).

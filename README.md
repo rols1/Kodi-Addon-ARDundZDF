@@ -121,6 +121,7 @@ INSTALLATION:
 - Beide zip-Dateien mittels Kodi-Menü Addons/Addon-Browser installieren
 - Addon öffen und Addon-Einstellungen anpassen.
 - [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
+- Testversion für Kodi-Matrix: [Kodi-Matrix-ARDundZDF.zip](https://c.gmx.net/@327723216099344844/cASZJUNuQpqlEImIS62dmA). Bitte dazu das LIESMICH im gmx-Ordner beachten.
 
 Credits:
 ===================  

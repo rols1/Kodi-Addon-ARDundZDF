@@ -3,7 +3,7 @@
 #				childs.py - Teil von Kodi-Addon-ARDundZDF
 #		Rahmenmodul für Kinderprg div. Regionalsender von ARD und ZDF
 ################################################################################
-#	Stand: 02.03.2020
+#	Stand: 06.04.2020
 #
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -326,13 +326,13 @@ def Kiraka_Live():
 #	Auswertung in Kika_VideosBeliebt
 # getHrefList: nur hrefs der Bündelgruppen sammeln für Kika_Search
 #	
-def Kika_VideosBuendelAZ(path='', getHrefList=False): 
-	PLog('Kika_VideosBuendelAZ: ' + path)
+def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''): 
+	PLog('Kika_VideosBuendelAZ: ' + path); PLog(button)
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
 	first=False; fname=''
-	if path == '':								# A-Z-Liste laden
+	if button == '':								# A-Z-Liste laden
 		path = 'https://www.kika.de/videos/allevideos/allevideos-buendelgruppen100.html'
 		first=True
 	else:
@@ -348,7 +348,7 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False):
 		return li
 	PLog(len(page)); PLog(first)
 	
-	if first == True:							# 1. Aufruf: A-Z-Liste
+	if first:							# 1. Aufruf: A-Z-Liste
 		# begrenzen - Wiederholung A-Z-Liste am Fuß:
 		page = stringextract('top navigation -->', 'class="media mediaA"', page)
 		HrefList = []
@@ -363,19 +363,22 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False):
 				HrefList.append(href)
 			else:
 				button = stringextract('title="">', '<', item)
+				if '...' in button:					# Ende Liste
+					break
 				img_src = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % button
-				PLog("button: " + button)
+				PLog("button: " + button); PLog("href: " + href)
 				title = "Sendungen mit " + button
-				fparams="&fparams={'path': '%s'}" % quote(href)
+				fparams="&fparams={'path': '%s', 'button': '%s'}" % (quote(href), button)
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_VideosBuendelAZ", fanart=GIT_KIKA,
 					thumb=img_src, tagline=title, fparams=fparams)
 				
 		if getHrefList:							# nur hrefs return
 			return li, HrefList	
-		else:	
-			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True); 
+		return
 			
 	# 2. Aufruf: Liste einer Gruppe 
+	PLog("button: " + button);  PLog(first)
 	pos = page.find("The bottom navigation")		# begrenzen, es folgen A-Z + meist geklickt
 	page = page[:pos]
 	PLog(len(page))
@@ -398,7 +401,7 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False):
 		img_alt = unescape(img_alt); 	
 		
 		PLog('Satz:')
-		PLog(href);PLog(stitle);PLog(img_title);PLog(img_alt);PLog(img_src)
+		PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src)
 		href=py2_encode(href); stitle=py2_encode(stitle); img_src=py2_encode(img_src);
 		
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}" %\

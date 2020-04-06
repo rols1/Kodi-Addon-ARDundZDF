@@ -82,8 +82,8 @@ def Watch(action, name, thumb='', Plot='', url=''):
 		#	hier bis auf Weiteres
 		if 'plugin://plugin' not in url:				# Base64-kodierte Plugin-Url in ActivateWindow
 			b64_clean= convBase64(url)					# Dekodierung mit oder ohne padding am Ende	
-			b64_clean=unquote_plus(b64_clean)	# unquote aus addDir-Call
-			b64_clean=unquote_plus(b64_clean)	# unquote aus Kontextmenü
+			b64_clean=unquote_plus(b64_clean)			# unquote aus addDir-Call
+			b64_clean=unquote_plus(b64_clean)			# unquote aus Kontextmenü
 			#PLog(b64_clean)
 			CallFunction = stringextract("&dirID=", "&", b64_clean) 
 			PLog('CallFunction: ' + CallFunction)
