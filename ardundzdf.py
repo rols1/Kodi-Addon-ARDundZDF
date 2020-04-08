@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.8.4'
-VDATE = '06.04.2020'
+VERSION = '2.8.5'
+VDATE = '08.04.2020'
 
 #
 #
@@ -6807,14 +6807,16 @@ def MeistGesehen(name):							# ZDF-Bereich, Beiträge unbegrenzt
 		
 ####################################################################################################
 # ZDF Barrierefreie Angebote - Vorauswahl
-# 06.04.2020 aktualisiert (Webseite geändert)
+# 06.04.2020 aktualisiert: Webseite geändert, nur kleine Übersicht, die 3
+#	Folgeseiten enthalten jeweils das kompl. Videoangebot
 
 def BarriereArm(title):				
 	PLog('BarriereArm:')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')							# Home-Button
-
-	path = ZDF_BARRIEREARM
+	
+	# kleine Übersicht, Cache n.  erf.
+	path = ZDF_BARRIEREARM							# www.zdf.de/barrierefreiheit-im-zdf/
 	page, msg = get_page(path=path)	
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
@@ -6822,7 +6824,6 @@ def BarriereArm(title):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
 	PLog(len(page))
-	
 	
 	# z.Z. 	>Gebärdensprache<
 	#		>Untertitel<
@@ -6834,6 +6835,7 @@ def BarriereArm(title):
 	i=0
 	for rec in content:	
 		i=i+1
+		ID = "ID_%d" % i						# Titel n. als iD geeignet
 		title = stringextract('class="teaser-text">', '</p>', rec)
 		title = title.replace('\n', ''); 
 		title = (title.replace('>', '').replace('<', '')); title = title.strip()
@@ -6850,7 +6852,6 @@ def BarriereArm(title):
 				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")	
 				
 		ID = 'BarriereArm_%s' % str(i)		
-		Dict("store", ID, rec)				# Satz speichern		
 		path=py2_encode(path); title=py2_encode(title);	
 		fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s'}" % (quote(path), quote(title), ID)
 		addDir(li=li, label=title, action="dirList", dirID="BarriereArmSingle", fanart=R(ICON_ZDF_BARRIEREARM), 
@@ -6860,26 +6861,74 @@ def BarriereArm(title):
 	
 #-------------------------
 # Aufrufer: BarriereArm, ZDF Barrierefreie Angebote
+#	ähnlich ZDFRubrikSingle, aber mit '<h2 class="title"'
+#		statt 'class="cluster-title"' (fehlen hier) und
+#		Sprung -> ZDF_get_content statt ZDF_Sendungen.
+#	2-facher Aufruf - Unterscheidung nach Titeln (class="title"):
+#		1. Übersichtseite (Titel)			- Rücksprung hierher
+#		2. Zielseite (z.B. einzelne Serie) 	- Sprung -> ZDF_get_content
 #	 
-def BarriereArmSingle(path, title, ID):
+def BarriereArmSingle(path, title, clus_title='', ID=''):
 	PLog('BarriereArmSingle: ' + title)
-	
+	CacheTime = 6000								# 1 Std.
+			
 	li = xbmcgui.ListItem()	
-	page, msg = get_page(path=path)	
-	if page == False:							# Seite fehlt im Cache
+	li = home(li, ID='ZDF')							# Home-Button
+
+	page = Dict("load", ID, CacheTime=CacheTime)					
+	if page == False:								# Cache miss - vom Sender holen
+		page, msg = get_page(path=path)
+		Dict("store", ID, page) 					# Seite -> Cache: aktualisieren	
+	if page == '':							
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 		return li 
+		
 	PLog(len(page))
 	# RSave('/tmp/xb.html', py2_encode(page))	# Debug
 	
-	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID='DEFAULT')
-	PLog(page_cnt)  
-	if page_cnt == 0:	# Fehlerbutton bereits in ZDF_get_content
-		return li		
+	cluster =  blockextract('<h2 class="title"', page, '')
+	PLog(len(cluster))
+	if clus_title:								# 2. Aufruf: Beiträge zu gesuchtem Titel auswerten
+		for clus in cluster:
+			clustertitle = stringextract('<h2 class="title"', '</', clus)
+			clustertitle = clustertitle.replace('>', '')
+			# PLog(clus_title); PLog(clustertitle);	 # Debug
+			if clus_title in clustertitle:		# Cluster gefunden
+				PLog('gefunden: clus_title=%s, clustertitle=%s, len_cluster: %d' %\
+					(clus_title, clustertitle, len(clus)))
+				
+				li, page_cnt = ZDF_get_content(li=li, page=clus, ref_path=path, ID='DEFAULT')
+				PLog(page_cnt)  
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+							
+	else:										# 1. Aufruf: nur Titel + Bild listen 
+		for clus in cluster:
+			clustertitle = stringextract('<h2 class="title"', '</', clus)
+			clustertitle = clustertitle.replace('>', '')
+			if 'Livestream' in clustertitle:
+				continue
+			
+			img_src =  stringextract('class="m-16-9"', '</picture>', clus)
+			img_src =  blockextract('https://', img_src, ' ')
+			for img in img_src:
+				if '720' in img or '1080' in img:
+					break
+			
+			content = blockextract('class="artdirect"', clus)	# Anzahl pro Cluster
+			tag = "%d Beiträge" % len(content)
+			PLog('Satz:')
+			PLog(clustertitle); PLog(img)
+		 
+			clustertitle=py2_encode(clustertitle); path=py2_encode(path); 
+			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s', 'ID': '%s'}" %\
+				(quote(clustertitle), quote(path), quote(clustertitle), ID)
+			addDir(li=li, label=clustertitle, action="dirList", dirID="BarriereArmSingle", fanart=img, 
+				thumb=img, fparams=fparams, tagline=tag)	
+								
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
 ####################################################################################################
 # Leitseite zdf-sportreportage - enthält Vorschau mit Links zu den Reportageseiten - Auswertung in

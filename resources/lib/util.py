@@ -364,7 +364,7 @@ def Dict(mode, Dict_name='', value='', CacheTime=None):
 			mtime = os.path.getmtime(dictfile)	# modified-time
 			now	= time.time()
 			CacheLimit = now - CacheTime		# 
-			# PLog("now %d, mtime %d, CacheLimit: %d" % (now, mtime, CacheLimit))
+			PLog("now %d, mtime %d, CacheLimit: %d, CacheTime: %d" % (now, mtime, CacheLimit, CacheTime))
 			if CacheLimit > mtime:
 				PLog('Cache miss: CacheLimit > mtime')
 				return False

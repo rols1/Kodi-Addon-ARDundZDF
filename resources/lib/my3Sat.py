@@ -6,7 +6,7 @@
 ################################################################################
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.3sat.de,
 #	Seiten werden im html-format, teils. json ausgeliefert
-#	Stand: 15.03.2020
+#	Stand: 08.04.2020
 #
 #	04.11.2019 Migration Python3  Python3 Modul future
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
@@ -1201,7 +1201,7 @@ def Bilder3sat(path=''):
 		
 		headline = stringextract('medium-6   ">', '</h3>', rec)		# headline + Subtitel -> Tagline
 		title = stringextract('clickarea-link">', '</p>', headline) # Titel -> Ordnername
-		title = cleanhtml(title); title = mystrip(title)
+		title = cleanhtml(title); title = mystrip(title); title = repl_json_chars(title);
 		headline = cleanhtml(headline); headline = mystrip(headline)
 		stitle= stringextract('ellipsis" >', '</', rec)
 		stitle = cleanhtml(stitle); stitle = mystrip(stitle)

@@ -12,7 +12,12 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-04.03.2020	2.8.4
+08.03.2020	2.8.5
+			ZDF BarriereArm + BarriereArmSingle: Caching für Folgeseiten (Untertitel-Videos
+			> 500), Liste mit Themen der Folgeseite vorgeschaltet.
+			Bilder3sat (Modul 3sat): repl_json_chars für title.
+
+06.03.2020	2.8.4
 			ZDF BarriereArm + BarriereArmSingle: Neufassung nach Änderungen der Webseite,
 			Caching entfällt (Inhalte befinden sich jetzt auf Folgeseiten), Anpassung in
 			ZDF_get_content.
