@@ -3,11 +3,11 @@
 #				phoenix.py - Teil von Kodi-Addon-ARDundZDF
 #				benötigt Modul yt.py (Youtube-Videos)
 #		Videos der Phoenix_Mediathek auf https://www.phoenix.de/ 
-################################################################################
-#	Stand: 22.02.2020
 #
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
+################################################################################
+#	Stand: 09.04.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -140,7 +140,7 @@ def get_live_data():
 	if page == '':	
 		msg1 = "get_live_data:"
 		msg2 = msg
-		# xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		# MyDialog(msg1, msg2, '')
 		PLog("%s | %s" % (msg1, msg2))	
 	PLog(len(page))			
 	
@@ -195,13 +195,13 @@ def phoenix_Search(query='', nexturl=''):
 	if page == '':						
 		msg1 = 'Fehler in Suche: %s' % title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	PLog(len(page))
 				
 	if page.find('hits":0,') >= 0:
 		msg1 = 'Leider kein Treffer.'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return
 		
 	jsonObject = json.loads(page)
@@ -372,7 +372,7 @@ def BeitragsListe(path, html_url, title, skip_sid=False):
 	if page == '':						
 		msg1 = 'Fehler in BeitragsListe: %s' % title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	PLog(len(page))
 	
@@ -410,7 +410,7 @@ def Themen(ID):							# Untermenüs zu ID
 	if page == '':						
 		msg1 = 'Fehler in Themen: %s' % ID
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return 
 	PLog(len(page))
 	
@@ -429,7 +429,7 @@ def Themen(ID):							# Untermenüs zu ID
 		title 	= item["titel"]
 		typ		= item["typ"]
 		
-		title = cleanhtml(title)
+		title = cleanhtml(title); title = mystrip(title);
 		title = repl_json_chars(title)
 	
 		PLog('Satz:')
@@ -455,7 +455,7 @@ def ThemenListe(title, ID, path):				# Liste zu einzelnem Untermenü
 	if page == '':						
 		msg1 = 'Fehler in ThemenListe: %s' % title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return 
 	PLog(len(page))
 	
@@ -498,7 +498,7 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 	if page == '':						
 		msg1 = 'Fehler in SingleBeitrag: %s' % title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return 
 	PLog(len(page))
 		
@@ -526,16 +526,15 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 	items = blockextract('typ":"video-',  page)						# kann fehlen z.B. bei Phoenix_Suche 
 	if len(items) == 0:
 		if 'text":"<div><strong>' in page or 'text":"<p><strong>':	# Suchtexte
-			t = u"Kein phoenix-Video zu >%s< gefunden.\nFundstellen beim Partnersender ZDF möglich.\nDort suchen?" % title
-			dialog = xbmcgui.Dialog()
-			ret = dialog.yesno('Weiterleitung?', t)
+			msg1 = u"Kein phoenix-Video zu >%s< gefunden.\nFundstellen beim Partnersender ZDF möglich.\nDort suchen?" % title
+			ret=MyDialog(msg1, '', '', ok=False, yes='OK', heading='Weiterleitung?')
 			PLog(ret)
 			if ret:
 				get_zdf_search(li,page,title)
 		else:
 			msg1 = 'Kein phoenix-Video zu >%s< gefunden.' % title
 			msg2 = 'Ursache unbekannt'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 		
 	PLog(len(items))
@@ -648,8 +647,8 @@ def get_formitaeten(li,content_id,title,tagline,thumb):
 	PLog('get_formitaeten')
 	PLog('content_id: ' + content_id)
 	if content_id == '':							# sollte nicht vorkommen
-		msg = '%s | content_id fehlt' % title
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		msg1 = '%s | content_id fehlt' % title
+		MyDialog(msg1, '', '')
 		return li
 	
 	url = 'https://www.phoenix.de/php/mediaplayer/data/beitrags_details.php?ak=web&ptmd=true&id=' + content_id
@@ -657,7 +656,7 @@ def get_formitaeten(li,content_id,title,tagline,thumb):
 	if page == '':						
 		msg1 = 'Fehler in get_formitaeten: %s' % title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	PLog(len(page))
 	
@@ -669,7 +668,7 @@ def get_formitaeten(li,content_id,title,tagline,thumb):
 	if page == '':						
 		msg1 = 'Fehler in get_formitaeten: %s' % title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	PLog(len(page))
 	

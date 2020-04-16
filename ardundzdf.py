@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.8.5'
-VDATE = '08.04.2020'
+VERSION = '2.8.7'
+VDATE = '16.04.2020'
 
 #
 #
@@ -417,10 +417,10 @@ def Main():
 	if SETTINGS.getSetting('pref_info_update') == 'true': # Updatehinweis beim Start des Addons 
 		ret = updater.update_available(VERSION)
 		if ret[0] == False:		
-			msg1 = L("Github ist nicht errreichbar")
+			msg1 = "Github ist nicht erreichbar"
 			msg2 = 'update_available: False'
 			PLog("%s | %s" % (msg1, msg2))
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 		else:	
 			int_lv = ret[0]			# Version Github
 			int_lc = ret[1]			# Version aktuell
@@ -461,7 +461,7 @@ def Main():
 # 20.01.2020 usemono für textviewer (ab Kodi v18)
 def ShowText(path, title):
 	PLog('ShowText:'); 
-
+	
 	page = RLoad(path, abs_path=True)
 	page = page.replace('\t', ' ')		# ersetze Tab's durch Blanks
 	dialog = xbmcgui.Dialog()
@@ -657,7 +657,7 @@ def AudioStart(title):
 	if page == '':	
 		msg1 = "Fehler in AudioStart:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))	
 					
@@ -731,7 +731,7 @@ def AudioStartThemen(title, ID, page='', path=''):	# Entdecken, Unsere Favoriten
 	if page == '':	
 		msg1 = "Fehler in AudioStartThemen:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))	
 	
@@ -765,7 +765,7 @@ def AudioStart_AZ(title):
 	if page == '':
 		msg1 = "Fehler in AudioStart_AZ"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li			
 	PLog(len(page))
 	
@@ -819,7 +819,7 @@ def AudioStart_AZ_content(button):
 	if page == '':
 		msg1 = "Fehler in AudioStart_AZ_content"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li			
 	PLog(len(page))
 	
@@ -858,7 +858,7 @@ def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams
 	if page == '':	
 		msg1 = "Fehler in AudioStartLive:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))	
 	
@@ -942,7 +942,7 @@ def AudioLiveSingle(url, title, thumb, Plot):		# startet einzelnen Livestream f�
 	if page == '':	
 		msg1 = "Fehler in AudioLiveSingle:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))	
 	
@@ -971,7 +971,7 @@ def AudioStartRubrik(path=''):
 	if page == '':	
 		msg1 = "Fehler in AudioStartRubrik:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))	
 	
@@ -1030,7 +1030,7 @@ def Audio_get_rubriken(page='', ID='', path=''):				# extrahiert Rubriken (Webse
 		if page == '':	
 			msg1 = "Fehler in Audio_get_rubriken:"
 			msg2 = msg
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+			MyDialog(msg1, msg2, '')	
 			return li
 		
 			
@@ -1086,7 +1086,7 @@ def Audio_get_rubrik(url, title, usetitle='', ID=''):			# extrahiert Einzelbeitr
 	if page == '':	
 		msg1 = "Fehler in Audio_get_rubrik:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	
 	if 'button title="Weitere Laden"' in page or usetitle:		# "Weitere laden" detektieren -> API-Call
@@ -1207,7 +1207,7 @@ def AudioSingle(url, title, thumb, Plot):
 	if page == '':	
 		msg1 = "Fehler in AudioSingle:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return
 	PLog(len(page))	
 	
@@ -1344,7 +1344,7 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 		if page == '':	
 			msg1 = "Fehler in AudioContentJSON:"
 			msg2 = msg
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+			MyDialog(msg1, msg2, '')	
 			return li
 		PLog(len(page))
 		path_org = 	path			
@@ -1456,7 +1456,7 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 	PLog(cnt)	
 	if cnt == 0:												# ohne Ergebnis raus
 		msg1 = 'nichts gefunden zu >%s<' % title_org
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		xbmcplugin.endOfDirectory(HANDLE)
 
 																# Button bei Suche anhängen
@@ -1513,7 +1513,7 @@ def AudioContentXML(title, path, offset=''):
 	if page == '':
 		msg1 = "Fehler in AudioContentXML:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))				
 	
@@ -1566,7 +1566,7 @@ def AudioContentXML(title, path, offset=''):
 	PLog(cnt)	
 	if cnt == 0:
 		msg1 = 'keine Audios gefunden zu >%s<' % title
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -1621,7 +1621,7 @@ def ARDSport(title):
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 
 	PLog(len(page))	
 	
@@ -1782,7 +1782,7 @@ def ARDSportPanel(title, path, img):
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	
@@ -1869,7 +1869,7 @@ def ARDSportBilder(title, path, img):
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	
@@ -1880,7 +1880,7 @@ def ARDSportBilder(title, path, img):
 		PLog(msg1)
 		msg2 = 'Seite:'
 		msg3 = path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 		return li
 		
 	fname = make_filenames(title)			# Ablage: Titel + Bildnr
@@ -1893,7 +1893,7 @@ def ARDSportBilder(title, path, img):
 			msg1 = 'Bildverzeichnis konnte nicht erzeugt werden:'
 			msg2 = "%s/%s" % (SLIDESTORE, fname)
 			PLog(msg1); PLog(msg2); 
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return li	
 				
 	SBASE = 'https://www.sportschau.de'
@@ -2029,7 +2029,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	if video_src == '':
 		msg1 = 'Leider kein Video gefunden. Seite:'
 		msg2 = path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 		
@@ -2097,7 +2097,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		msg1 = 'Videoquellen können (noch) nicht geladen werden.'
 		msg2 = "Eventuell eingebettetes Twitter-Video?. Seite:"
 		msg3 = path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 		return li 
 	PLog(len(page))
 			
@@ -2152,7 +2152,7 @@ def SearchUpdate(title):
 		msg1 = 'Updater: Github-Problem'
 		msg2 = 'update_available: False'
 		PLog("%s | %s" % (msg1, msg2))
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li			
 
 	int_lv = ret[0]			# Version Github
@@ -2204,8 +2204,6 @@ def SearchUpdate(title):
 #					ab Jan 2019 wg. Scrollfunktion haupts. Nutzung der Classic-Version
 #					ab April 2019 hier allein Classic-Version - Neu-Version als Modul
 #
-#  	Funktion VerpasstWoche weiter als Classic-Version (fehlt in Neu-Version). 
-#	
 ####################################################################################################
 
 # Startseite der Mediathek - passend zum ausgewählten Sender.
@@ -2243,7 +2241,7 @@ def ARDStart(title):
 				msg3 = "Seite ist älter als %s Minuten (CacheTime)" % str(CacheTime/60)
 			else:
 				msg2='Startseite nicht im Cache verfuegbar.'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
+			MyDialog(msg1, msg2, msg3)	
 		else:	
 			Dict("store", 'ARDStart_%s' % sendername, page) 	# Seite -> Cache: aktualisieren	
 		
@@ -2344,7 +2342,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 	if page == '':	
 		msg1 = "Fehler in ARDStartRubrik: %s"	% title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))
 	
@@ -2371,7 +2369,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 	PLog('gridlist: ' + str(len(gridlist)))
 	if found == False:	
 		msg1 = "Rubrik >%s< nicht gefunden" % title_org
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
+		MyDialog(msg1, '', '')	
 		return li
 	
 	multi = False											# steuert Einzel-/Mehrfachbeiträge	
@@ -2507,7 +2505,7 @@ def SendungenAZ(name, ID):
 		msg1 = "Fehler in SendungenAZ"
 		msg2 = msg
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li	
 		
 	PLog(len(page))
@@ -2716,13 +2714,13 @@ def Search(title, query='', channel='ARD'):
 	if page == '':						
 		msg1 = 'Fehler in Suche: %s' % title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	PLog(len(page))
 				
 	if page.find('<strong>keine Treffer</strong') >= 0:
 		msg1 = 'Leider kein Treffer.'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li
 
 	# Kodi-Problem: Direktsprung n.m., da der ..-Button von xbmcgui.ListItem  zurück 
@@ -2776,7 +2774,7 @@ def get_query(channel='ARD'):
 	if channel == 'ARD' or channel == 'ARDundZDF':				
 		if '|' in query:		# wir brauchen | als Parameter-Trenner in SinglePage
 			msg1 = 'unerlaubtes Zeichen in Suchwort: |'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			MyDialog(msg1, '', '')
 			return ""
 				
 		query_ard = query.strip()
@@ -2813,7 +2811,7 @@ def Search_refugee(path=''):
 	if page == '':						
 		msg1 = 'Fehler in Search_refugee: %s' % path
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	PLog(len(page))
 	
@@ -2963,7 +2961,7 @@ def ARD_Verpasst_Filter(title, path, sfilter='208'):
 	if page == '':	
 		msg1 = 'Fehler in ARD_Verpasst_Filter'
 		msg2=msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, path)	
+		MyDialog(msg1, msg2, path)	
 		return li
 	PLog(len(page))
 	
@@ -3032,7 +3030,7 @@ def PODMore(title, morepath, next_cbKey, ID, mode):
 	if page == '':							# ARD-spezif. Error-Test: 'Leider liegt eine..'
 		msg1 = 'Fehler: %s' % title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 					
 	PLog(len(page))					
@@ -3096,7 +3094,7 @@ def PodFavoritenListe(title, offset=0):
 	if  Inhalt is None or Inhalt == '' or 'podcast-favorits.txt' not in Inhalt:				
 		msg1='Datei podcast-favorits.txt nicht gefunden, nicht lesbar oder falsche Datei.'
 		msg2='Bitte Einstellungen prüfen.'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return
 							
 	# PLog(Inhalt) 
@@ -3188,7 +3186,7 @@ def BarriereArmARD(name):		#
 		SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
 		msg1 = 'Hinweis:'
 		msg2 = 'Filter für Hörfassungen oder  Audiodeskription ist eingeschaltet!'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")		
+		MyDialog(msg1, msg2, '')	
 	
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 	title=py2_encode(title); path=py2_encode(path);
@@ -3241,7 +3239,7 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 	if page == '':
 		msg1 = 'PageControl: Beiträge können nicht geladen werden.'
 		msg2 = 'Fehler: %s'	% msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li			
 	PLog(len(page))
 	path_page1 = path							# Pfad der ersten Seite sichern, sonst gehts mit Seite 2 weiter	
@@ -3257,7 +3255,7 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 		li = SinglePage(title=title, path=path, next_cbKey='SingleSendung', mode=mode, ID=ID) # wir springen direkt 
 		#if len(li) == 1:								# 1 = Home, len(li) bei Kodi n.v.
 		#	msg1 = 'Keine Inhalte gefunden.'		
-		#	xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		#	MyDialog(msg1, '', '')
 		return li																				
 
 	# pagenr_path =  re.findall("&mresults{0,1}=page.(\d+)", page) # lange Form funktioniert nicht
@@ -3361,7 +3359,7 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 	if page == '':
 		msg1 = 'Fehler SinglePage'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	
 	sendungen = ''
@@ -3595,7 +3593,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 		if page == '':
 			msg1 = 'Fehler SingleSendung:'
 			msg2 = msg
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return li
 		link_path,link_img, m3u8_master, geoblock, sub_path = parseLinks_Mp4_Rtmp(page) # link_img kommt bereits mit thumb, außer Podcasts						
 		PLog('m3u8_master: ' + m3u8_master); PLog(link_img); PLog(link_path); PLog(sub_path);
@@ -3606,7 +3604,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 			PLog('link_path == []') 		 
 			msg1 = 'keine Videoquelle gefunden. Seite:'
 			msg2 = path
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 		PLog('geoblock: ' + geoblock)
 		if geoblock == 'true':			# Info-Anhang für summary 
 			geoblock = ' | Geoblock!'
@@ -3778,7 +3776,7 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 			msg1	= u'test_downloads: Downloads nicht möglich'
 			msg2 	= 'Downloadverzeichnis existiert nicht'
 			msg3 	= "Settings: " + dest_path
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			MyDialog(msg1, msg2, msg3)
 			return li				
 	else:
 		return li
@@ -3882,7 +3880,7 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):
 	if suffix == '':
 		msg1='DownloadExtern: Problem mit Dateiname. Video: %s' % title
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li
 
 	title = dtyp + 'curl/wget-Download: ' + title
@@ -3931,7 +3929,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 			msg1 = 'Starte Download im Hintergrund'		
 			msg2 = 'Anzahl der Dateien: %s' % len(path_url_list)
 			msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_download_path')
-			ret=xbmcgui.Dialog().yesno(ADDON_NAME, msg1, msg2, msg3, 'Abbruch', 'OK')
+			ret=MyDialog(msg1, msg2, msg3, ok=False, yes='OK')
 			if ret  == False:
 				return
 
@@ -3956,7 +3954,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 			msg2 = fulldestpath	
 			msg3 = 'Begleit-Infos in: %s' % textfile
 			if notice:
-				ret=xbmcgui.Dialog().yesno(ADDON_NAME, msg1, msg2, msg3, 'Abbruch', 'OK')
+				ret=MyDialog(msg1, msg2, msg3, ok=False, yes='OK')
 				if ret  == False:
 					return
 			if pathtextfile:
@@ -3972,7 +3970,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 		msg1 = 'Download fehlgeschlagen'
 		msg2 = 'Fehler: %s' % str(exception)		
 		if notice:
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 
 	return
 
@@ -4026,7 +4024,7 @@ def thread_getpic(path_url_list,text_list,folder=''):
 		if os.path.exists(myfont) == False:				# Font vorhanden?
 			msg1 = 'Kodi Font Arial nicht gefunden.'
 			msg2 = 'Bitte den Font Arial installieren oder die Option Wasserzeichen in den Settings abschalten.'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 		else:	
 			try:										# PIL auf Android nicht verfügbar
 				from PIL import Image, ImageDraw, ImageFont
@@ -4042,7 +4040,7 @@ def thread_getpic(path_url_list,text_list,folder=''):
 	msg1 = 'Starte Download im Hintergrund'		
 	msg2 = 'Anzahl der Bilder: %s, Wasserzeichen: %s' % (len(path_url_list), ok)
 	msg3 = 'Ordner (Bildersammlungen): ' + folder
-	ret=xbmcgui.Dialog().yesno(ADDON_NAME, msg1, msg2, msg3, 'Abbruch', 'OK')
+	ret=MyDialog(msg1, msg2, msg3, ok=False, yes='OK')
 	if ret  == False:
 		return
 		
@@ -4160,7 +4158,7 @@ def thread_getpic(path_url_list,text_list,folder=''):
 			msg3 = u'Fehler: %s Bild(er) nicht verfügbar' % err_url
 		else:
 			msg3 = u'Fehler: %s Wasserzeichen fehlgeschlagen' % err_PIL
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 	else:	
 		xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	# Fertig-Info
 	xbmc.executebuiltin('Container.NextSortMethod') # OK (s.o.)
@@ -4180,7 +4178,7 @@ def DownloadsTools():
 		else:
 			msg2='Downloadverzeichnis nicht gefunden: '
 		msg3=path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 	else:
 		dirlist = os.listdir(path)						# Größe Inhalt? 		
 			
@@ -4268,13 +4266,13 @@ def DownloadsList():
 	dirlist = []
 	if path == None or path == '':									# Existenz Verz. prüfen, falls vorbelegt
 		msg1 = 'Downloadverzeichnis noch nicht festgelegt'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return
 	else:
 		if os.path.isdir(path)	== False:			
 			msg1 =  'Downloadverzeichnis nicht gefunden: ' 
 			msg2 =  path
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return
 		else:
 			dirlist = os.listdir(path)						# Größe Inhalt? 		
@@ -4293,7 +4291,7 @@ def DownloadsList():
 	if mpcnt == 0:
 		msg1 = 'Kein Download vorhanden | Pfad:' 
 		msg2 = dlpath
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return		
 		
 	li = xbmcgui.ListItem()
@@ -4386,14 +4384,14 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		msg1 = 'Downloadverzeichnis oder Leserecht  fehlt'
 		msg2 = dest_path
 		PLog(msg1); PLog(msg2)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	
 	if os.path.exists(fulldest_path) == False:	# inzw. gelöscht?
 		msg1 = 'Datei nicht vorhanden:'
 		msg2 = fulldest_path
 		PLog(msg1); PLog(msg2)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 		
 	fulldest_path=py2_encode(fulldest_path); 
@@ -4450,7 +4448,7 @@ def DownloadsDelete(dlpath, single):
 	
 	msg1 = u'Rückgängig nicht möglich!'
 	msg2 = u'Wirklich löschen?'		
-	ret=xbmcgui.Dialog().yesno(ADDON_NAME, msg1, msg2, '', 'Abbruch', 'Löschen')
+	ret=MyDialog(msg1, msg2, msg3='', ok=False, yes='Löschen')
 	if ret  == False:
 		return
 	
@@ -4475,7 +4473,7 @@ def DownloadsDelete(dlpath, single):
 		PLog(str(exception))
 		msg1 = u'Fehler | Löschen fehlgeschlagen'
 		msg2 = str(exception)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 	
 	return
 #---------------------------
@@ -4491,7 +4489,7 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 		if '//' not in destpath:					# Test entfällt bei Shares
 			msg1 = 'Download fehlgeschlagen'
 			msg2 = 'Kein Schreibrecht im Zielverzeichnis'
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return li	
 
 	try:
@@ -4526,7 +4524,7 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 				msg2 = 'verschobene Dateien: %s von %s.' % (cnt, ges_cnt)
 				msg3 = 'Vielleicht hilft es, Dateien einzeln zu verschieben (Menü >Downloads bearbeiten<)'
 			PLog(msg2)	
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			MyDialog(msg1, msg2, msg3)
 			return li
 				 			 	 
 		else:								# Einzeldatei verschieben
@@ -4561,14 +4559,14 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 		msg1 = 'Verschieben erfolgreich'
 		msg2 = 'Video + Textdatei verschoben: ' + 	dfname
 		PLog(msg2)	
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 
 	except Exception as exception:
 		PLog(str(exception))
 		msg1 = 'Verschieben fehlgeschlagen'
 		msg2 = str(exception)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 		
 ####################################################################################################
@@ -4595,7 +4593,11 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 	PLog('ShowFavs: ' + mode)				# 'Favs', 'Merk'
 	
-	li = xbmcgui.ListItem()
+	if mode == 'Merk':
+		li = xbmcgui.ListItem('ShowFavs')	# Kennz. für Aktualisierung in Modul merkliste
+	else:
+		li = xbmcgui.ListItem()
+		
 	if SETTINGS.getSetting('pref_watchsort') == 'false':# Sortierung?
 		li = home(li, ID=NAME)							# Home-Button
 		sortlabel=''									# Default: keine Sortierung	
@@ -4657,7 +4659,7 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 			if b64_clean == False:							# skip fav
 				msg1 = "Problem bei Base64-Dekodierung. Eintrag  nicht verwertbar."
 				msg2 = "Eintrag: %s" % name
-				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "") 
+				MyDialog(msg1, msg2, '')
 				continue
 				
 			b64_clean=unquote_plus(b64_clean)		# unquote aus addDir-Call
@@ -5137,12 +5139,12 @@ def TVLiveRecordSender(title):
 	cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	
 	if cmd.strip() == '':
 		msg1 = 'ffmpeg-Parameter fehlen in den Einstellungen!'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 	if os.path.exists(cmd.split()[0]) == False:
 		msg1 = 'Pfad zu ffmpeg nicht gefunden.'
 		msg2 = 'Bitte ffmpeg-Parameter in den Einstellungen prüfen, aktuell:'
 		msg3 = 	SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)					# Home-Button
 	
@@ -5205,13 +5207,13 @@ def LiveRecord(url, title, duration, laenge):
 	msg1	= 'LiveRecord:'
 	if  dest_path == None or dest_path.strip() == '':
 		msg2 	= 'Downloadverzeichnis fehlt in Einstellungen'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	PLog(os.path.isdir(dest_path))			
 	if  os.path.isdir(dest_path) == False:
 		msg2 	= 'Downloadverzeichnis existiert nicht'
 		msg3	= "Settings: " + dest_path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 		return li		
 		
 	if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':	# Aufnahmedauer manuell
@@ -5222,7 +5224,7 @@ def LiveRecord(url, title, duration, laenge):
 		if duration == '' or duration == ' 0:00':
 			msg1 = "Aufnahmedauer fehlt - Abbruch"
 			PLog(msg1)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			MyDialog(msg1, '', '')
 			return li	
 		duration = "%s:00" % duration							# für ffmpeg wieder auffüllen
 		laenge = "%s (Stunden:Minuten)" % duration[:5]			# Info nach Start, s.u.
@@ -5261,7 +5263,7 @@ def LiveRecord(url, title, duration, laenge):
 			msg2 = dfname
 			msg3 = "Aufnahmedauer: %s" % laenge
 			PLog('Aufnahme gestartet: %s' % dfname)	
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			MyDialog(msg1, msg2, msg3)
 			return li			
 				
 	
@@ -5270,7 +5272,7 @@ def LiveRecord(url, title, duration, laenge):
 		PLog(msg)		
 		msg1 = "Fehler: %s" % msg
 		msg2 ='Aufnahme fehlgeschlagen'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li			
 		
 #-----------------------------
@@ -5315,7 +5317,7 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 	if len(EPG_rec) == 0:			# kann vorkommen, Bsp. SR
 		msg1 = 'Sender %s:' % name 
 		msg2 = 'keine EPG-Daten gefunden'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 		
 	today_human = 'ab ' + EPG_rec[0][7]
@@ -5623,7 +5625,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 			msg1 = 'SenderLiveResolution - Url nicht gefunden: %s' % path_org
 			msg2 = 'Fallback auf %s fehlgeschlagen' % path
 			PLog(msg1)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False) # Fehlschlag Fallback - raus
 
 	# direkter Sprung hier erforderlich, da sonst der Player mit dem Verz. SenderLiveResolution
@@ -5691,7 +5693,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 		msg1 = 'SenderLiveResolution: unbekanntes Format. Url:'
 		msg2 = url_m3u8
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		
@@ -5731,7 +5733,7 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 	PLog(len(page))
 	if page == '':								# Fehlschlag
 		msg1 = msg1 + "geladen werden." 
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 		return li
 		
 	lines = page.splitlines()					# 2. rel. Links korrigieren 
@@ -5764,7 +5766,7 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 	if 'Errno' in msg:
 		msg1 = msg1 + " gespeichert werden." # msg1 s.o.
 		PLog(msg1); PLog(msg2)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 		return li
 	else:				
 		# Alternative: m3u8-lokal starten:
@@ -5828,7 +5830,7 @@ def BilderDasErste(path=''):
 		if page == '':
 			msg1 = ' Übersicht kann nicht geladen werden.'
 			msg2 = msg
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return
 	
 		pages = blockextract('class="entry page', page)
@@ -5847,7 +5849,7 @@ def BilderDasErste(path=''):
 		if page == '':
 			msg1 = ' %s kann nicht geladen werden.' % title
 			msg2 = msg
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return
 		
 		entries = blockextract('class="teaser">', page)
@@ -5887,7 +5889,7 @@ def BilderDasErsteSingle(title, path):
 	if page == '':
 		msg1 = ' %s kann nicht geladen werden.' % title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return
 		
 	li = home(li, ID=NAME)				# Home-Button
@@ -5896,7 +5898,7 @@ def BilderDasErsteSingle(title, path):
 	if len(content) == 0:										
 		msg1 = 'BilderDasErsteSingle: keine Bilder gefunden.'
 		msg2 = title
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	
 	fname = make_filenames(title)			# Ordnername: Titel 
@@ -5909,7 +5911,7 @@ def BilderDasErsteSingle(title, path):
 			msg1 = 'Bildverzeichnis konnte nicht erzeugt werden:'
 			msg2 = "%s/%s" % (SLIDESTORE, fname)
 			PLog(msg1); PLog(msg2)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return li	
 	
 	image=0; background=False; path_url_list=[]; text_list=[]
@@ -6036,7 +6038,7 @@ def ZDFStart(title, show_cluster='', path=''):
 		msg1 = "%s-Startseite nicht im Web verfügbar." % Logo
 		msg2 = msg
 		PLog(msg1); PLog(msg2);
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		
 	# 2. Durchlauf: 
 	if show_cluster:											
@@ -6257,7 +6259,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen
 		msg2 = msg 
 		msg1 = 'Keine Ergebnisse (mehr) zu: %s' % query  
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li	
 				
 	# anders als bei den übrigen ZDF-'Mehr'-Optionen gibt der Sender Suchergebnisse bereits
@@ -6302,7 +6304,8 @@ def ZDF_Verpasst_Datum(title, zdfDate, sfilter):
 	if len(d) == 1: d="0%s" % d	
 	if len(m) == 1: m="0%s" % m	
 	if len(y) != 4:
-		xbmcgui.Dialog().ok(ADDON_NAME, 'Jahr bitte 4-stellig eingeben', '', '')	
+		msg1 = 'Jahr bitte 4-stellig eingeben'
+		MyDialog(msg1, '', '')
 		return
 	
 	zdfDate = "%s-%s-%s" % (y,m,d)	# "%Y-%m-%d"
@@ -6324,7 +6327,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender'):
 	page, msg = get_page(path)
 	if page == '':
 		msg1 = "Abruf fehlgeschlagen | %s" % title
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg, '')
+		MyDialog(msg1, msg, '')
 		return li 
 	PLog(path);	PLog(len(page))
 
@@ -6369,7 +6372,7 @@ def ZDFSendungenAZList(title, element):			# ZDF-Sendereihen zum gewählten Buchs
 	if page == '':
 		msg1 = 'AZ-Beiträge können nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=azPath, ID='DEFAULT')
 	PLog(page_cnt)  
@@ -6400,7 +6403,7 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 	if page == '':
 		msg1 = 'Beitrag kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 
 						
 	if "www.zdf.de/kinder" in url:
@@ -6460,7 +6463,7 @@ def ZDFRubriken(name):
 	if page == '':
 		msg1 = 'Beitrag kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 						
 
 	listblock =  stringextract('<li class="dropdown-block x-left">', 'link js-track-click icon-104_live-tv', page)
@@ -6517,7 +6520,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 	if page == '':
 		msg1 = 'Beitrag kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 
 	# cluster-title + section-header-title, einschl. Blockbegrenzung:
@@ -6794,7 +6797,7 @@ def MeistGesehen(name):							# ZDF-Bereich, Beiträge unbegrenzt
 	if page == '':
 		msg1 = 'Beitrag kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 
 		
 	# unbegrenzt (anders als A-Z Beiträge):
@@ -6821,7 +6824,7 @@ def BarriereArm(title):
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	
@@ -6849,7 +6852,7 @@ def BarriereArm(title):
 				SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
 				msg1 = u'Hinweis:'
 				msg2 = u'Filter für Hörfassungen oder  Audiodeskription ist eingeschaltet!'
-				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")	
+				MyDialog(msg1, msg2, '')
 				
 		ID = 'BarriereArm_%s' % str(i)		
 		path=py2_encode(path); title=py2_encode(title);	
@@ -6882,7 +6885,7 @@ def BarriereArmSingle(path, title, clus_title='', ID=''):
 	if page == '':							
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 
 		
 	PLog(len(page))
@@ -6952,7 +6955,7 @@ def ZDFSportLive(title):
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	 	
@@ -7039,7 +7042,7 @@ def ZDFSportLiveSingle(title, path, img):
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	
@@ -7050,7 +7053,7 @@ def ZDFSportLiveSingle(title, path, img):
 		msg1 = 'Leider noch kein Video verfügbar. Vorabinfo:'
 		msg2 = descr
 		msg3 = ''
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 		return li 
 
 	# Details für Titelbeitrag - wie bei Kurzvideos (apiToken, sid hier nicht benötigt):
@@ -7090,7 +7093,7 @@ def International(title):
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 
 	PLog(len(page))
 	 			
@@ -7189,7 +7192,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 	
 	if msg_notfound:											# gesamte Seite nicht brauchbar		
 		msg1 = msg_notfound
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li, 0
 							
 	if page.find('class="b-playerbox') > 0 and page.find('class="item-caption') > 0:  # mehrspaltig: Video gesamte Sendung?
@@ -7485,7 +7488,7 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 		if page == '':
 			msg1 = 'ZDF_getVideoSources: Problem beim Abruf der Videoquellen.'
 			msg2 = msg
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return li
 
 		apiToken1 = stringextract('apiToken: \'', '\'', page) 
@@ -7506,7 +7509,7 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 	if formitaeten == '':										# Nachprüfung auf Videos
 		msg1 = 'Video nicht vorhanden / verfügbar.'
 		msg2 = 'Titel: %s' % unquote(title)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")
+		MyDialog(msg1, msg2, '')
 		return li
 				
 	if tagline:
@@ -7612,7 +7615,7 @@ def ZDFotherSources(title, tagline, thumb, sid, apiToken1, apiToken2, ref_path='
 	if formitaeten == '':							# Nachprüfung auf Videos
 		msg1 = 'Video nicht vorhanden / verfügbar'
 		msg2 = 'Video: %s' % title
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, "")
+		MyDialog(msg1, msg2, '')
 		return li
 
 	if tagline:
@@ -7915,7 +7918,7 @@ def ZDF_BildgalerieSingle(path, title):
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li 
 
 	li = home(li, ID="ZDF")						# Home-Button
@@ -7928,7 +7931,7 @@ def ZDF_BildgalerieSingle(path, title):
 	if len(content) == 0:										
 		msg1 = 'ZDF_BildgalerieSingle: keine Bilder gefunden.'
 		msg2 = title
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	
 	fname = make_filenames(title)			# Ordnername: Titel 
@@ -7941,7 +7944,7 @@ def ZDF_BildgalerieSingle(path, title):
 			msg1 = 'Bildverzeichnis konnte nicht erzeugt werden:'
 			msg2 = "%s/%s" % (SLIDESTORE, fname)
 			PLog(msg1); PLog(msg2)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return li	
 
 	image=0; background=False; path_url_list=[]; text_list=[]
@@ -8106,7 +8109,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 			line1 = 'Playlist kann nicht geladen werden.'
 			line2 = 'URL: %s '	% (url_m3u8)
 			line3 = 'Fehler: %s'	% (msg)
-			xbmcgui.Dialog().ok(ADDON_NAME, line1, line2, line3)
+			MyDialog(line1, line3, line3)
 			return li			
 	else:																	# lokale Datei	
 		fname =  os.path.join(M3U8STORE, url_m3u8) 
@@ -8207,7 +8210,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 	if i == 0:	# Fehler
 		line1 = 'Kennung #EXT-X-STREAM-INF / #EXT-X-MEDIA fehlt'
 		line2 = 'oder den Streamlinks fehlt http / https'
-		xbmcgui.Dialog().ok(ADDON_NAME, line1, line2)			
+		MyDialog(line1, line2, '')
 	
 	return li
 		    
@@ -8274,7 +8277,7 @@ def router(paramstring):
 					msg2 = "oder Funktion %s wurde nicht gefunden." % newfunc
 					msg3 = "Ursache unbekannt."
 					PLog(msg1)
-					xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+					MyDialog(msg1, msg2, msg3)
 					xbmcplugin.endOfDirectory(HANDLE)
 
 			else:
@@ -8330,7 +8333,6 @@ if __name__ == '__main__':
 	except Exception as e: 
 		msg = str(e)
 		PLog('network_error: ' + msg)
-		# xbmcgui.Dialog().ok(ADDON_NAME, 'network_error', msg)
 
 
 

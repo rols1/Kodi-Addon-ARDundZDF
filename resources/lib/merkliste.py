@@ -6,7 +6,7 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-#	Stand: 03.04.2020
+#	Stand: 16.04.2020
 
 from __future__ import absolute_import
 
@@ -179,6 +179,7 @@ def Watch(action, name, thumb='', Plot='', url=''):
 					PLog("xbmcvfs_ret: " + str(ret))
 				if ret:
 					sync_list_intern(src_file=fname, dest_file=WATCHFILE)# Synchronisation
+
 			except Exception as exception:
 				PLog(str(exception))
 				msg1 = u"Problem Merkliste"
@@ -253,7 +254,7 @@ except Exception as exception:						# Bsp. Hinzufügen von Favoriten
 		msg3 = "Eintrag >%s<" % name
 	msg1 = "dieser Eintrag kann nicht verarbeitet werden."
 	msg2 = "Fehler: %s" % err_msg
-	xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+	MyDialog(msg1, msg2, msg3)
 	exit()
 	
 
@@ -269,10 +270,13 @@ if 'url' in mydict:
 PLog(action); PLog(name); PLog(thumb); PLog(Plot); PLog(url); 
 
 msg1, err_msg, item_cnt = Watch(action,name,thumb,Plot,url)
+
 msg2 = err_msg
 if item_cnt:
 	msg2 = "%s\n%s" % (msg2, u"Einträge: %s" % item_cnt)
-
+	if action == 'del':								# Refresh Liste nach Löschen
+		xbmc.executebuiltin('Container.Refresh')
+		
 # 01.02.2029 Dialog ersetzt durch notification 
 icon = R(ICON_DIR_WATCH)
 xbmcgui.Dialog().notification(msg1,msg2,icon,5000)

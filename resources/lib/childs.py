@@ -2,12 +2,12 @@
 ################################################################################
 #				childs.py - Teil von Kodi-Addon-ARDundZDF
 #		Rahmenmodul für Kinderprg div. Regionalsender von ARD und ZDF
-################################################################################
-#	Stand: 06.04.2020
 #
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
+################################################################################
 #	
+#	Stand: 09.04.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -344,7 +344,7 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''):
 	if page == '':	
 		msg1 = "Fehler in Kika_VideosBuendelAZ:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page)); PLog(first)
 	
@@ -423,7 +423,7 @@ def Kika_VideosBeliebt():
 	if page == '':	
 		msg1 = "Fehler in Kika_VideosBeliebt:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))	
 	buendel = blockextract('teaser teaserIdent', page)	
@@ -474,13 +474,13 @@ def Kika_Videos(path, title, thumb):
 	if page == '':	
 		msg1 = "Fehler in Kika_VideosAZ:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 		
 	if page.find('dataURL:') < 0:		  # ohne 'dataURL:' - ohne kein Link zu xml-Seite, also keine Videos.
 		msg1 = "Leider kein Video gefunden zu:"
 		msg2 = title
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 		
 	videos = blockextract('class="av-playerContainer"', page)
@@ -529,7 +529,7 @@ def Kikaninchen_Videoseite():
 	if page == '':	
 		msg1 = "Fehler in Kikaninchen_Videoseite:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 		
 	items = stringextract('class="bundleNaviItem active"', '</span>', page) # Buchstabenblock
@@ -567,7 +567,7 @@ def Kikaninchen_Videos(path):
 	if page == '':	
 		msg1 = "Fehler in Kikaninchen_Videos:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 		
 	videos =  blockextract('class="av-playerContainer"', page)	# 16 pro Seite
@@ -615,7 +615,7 @@ def KikaninchenLieder():
 	if page == '':	
 		msg1 = "Fehler in Kikaninchen_Videos:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 			
 	records = page.split('documentCanvasId')
@@ -700,7 +700,7 @@ def Kika_SingleBeitrag(path, title, thumb, summ, duration):
 	if page == '':	
 		msg1 = "Fehler in Kika_SingleBeitrag:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 		
 	summ1 = stringextract('<broadcastDescription>', '</', page)
@@ -801,7 +801,7 @@ def Tivi_Search(query=None, title='Search', pagenr=''):
 	if searchResult == '0' or 'class="artdirect"' not in page:
 		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
 		msg1 = 'Keine Ergebnisse (mehr) zu: %s' % query  
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li	
 				
 	# anders als bei den übrigen ZDF-'Mehr'-Optionen gibt der Sender Suchergebnisse bereits
@@ -865,7 +865,7 @@ def Tivi_Woche_Sendungen(day, title):
 	if page == '':	
 		msg1 = "Fehler in Tivi_Woche_Sendungen:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return
 		
 	# Home-Button in ZDFRubrikSingle
@@ -915,7 +915,7 @@ def Tivi_AZ_Sendungen(name, char=None):
 	if page == '':	
 		msg1 = "Fehler in Tivi_AZ_Sendungen:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 		
 	page = stringextract('class="b-content-teaser-list"', '>Direkt zu ...</h2>', page)
@@ -926,7 +926,7 @@ def Tivi_AZ_Sendungen(name, char=None):
 		msg1 = "Leider kein Video gefunden zu:"
 		msg2 = name
 		msg3 = path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
+		MyDialog(msg1, msg2, msg3)	
 		return li
 	
 	# Sendungsdetails holen, ID: Einzelvideos auswerten

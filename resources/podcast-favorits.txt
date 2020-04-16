@@ -64,4 +64,3 @@ NDR Coronavirus Update					| https://www.ardaudiothek.de/api/search/coronavirus%
 
 
 Suchergebnis: corona		| https://www.ardaudiothek.de/api/search/corona?items_per_page=24&page=1
-Suchergebnis: reißverschluss		| https://www.ardaudiothek.de/api/search/rei%C3%9Fverschluss?items_per_page=24&page=1

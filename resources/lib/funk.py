@@ -2,13 +2,14 @@
 ################################################################################
 #				funk.py - Teil von Kodi-Addon-ARDundZDF
 #				Kanäle und Serien von https://www.funk.net/
-################################################################################
+#
 # 	Credits: cemrich (github) für die wichtigsten api-Calls
-#	Stand: 06.02.2020
 #
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
+################################################################################
+#	Stand: 09.04.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -150,7 +151,7 @@ def Search(title):
 	if page.startswith('Fehler'):
 		msg1 = 'Verbindungsproblem'
 		msg2 = page
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	jsonObject = json.loads(page)
 	
@@ -232,7 +233,7 @@ def Search(title):
 	if i == 0:
 		msg1 = 'Suche nach <%s>:' % query_org
 		msg2 = 'leider nichts gefunden'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -255,7 +256,7 @@ def Channels(title, next_path=''):
 	if page.startswith('Fehler'):
 		msg1 = 'Verbindungsproblem'
 		msg2 = page
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	jsonObject = json.loads(page)
 
@@ -352,7 +353,7 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 	if page.startswith('Fehler'):
 		msg1 = 'Verbindungsproblem'
 		msg2 = page
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	jsonObject = json.loads(page)
 	
@@ -600,7 +601,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	if page.startswith('Fehler'):
 		msg1 = 'Verbindungsproblem'
 		msg2 = page
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	jsonObject = json.loads(page)
 	
@@ -621,7 +622,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	if page.startswith('Fehler'):
 		msg1 = 'Verbindungsproblem'
 		msg2 = page
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 		
 	jsonObject = json.loads(page)

@@ -15,7 +15,7 @@
 #
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-#	Stand: 18.03.2020 
+#	Stand: 09.04.2020 
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -103,7 +103,7 @@ def PodFavoriten(title, path, pagenr='1'):
 	if page == '':	
 		msg1 = "Fehler in PodFavoriten:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))	
 		
@@ -167,8 +167,8 @@ def PodFavoriten(title, path, pagenr='1'):
 		msg1 = 'nichts gefunden zu >%s<' % title_org
 		msg2 = path
 		if '/api/search/' in path:
-			msg2 = u'Vielleicht Suchergebniss ohne Einzelbeiträge?'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			msg2 = u'Vielleicht Suchergebnis ohne Einzelbeiträge?'
+		MyDialog(msg1, msg2, '')
 											
 	#																			# Download-Button?				
 	if SETTINGS.getSetting('pref_use_downloads') == 'true':
@@ -243,7 +243,7 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	if os.path.isdir(dest_path)	== False:				# Downloadverzeichnis prüfen		
 		msg1='Downloadverzeichnis nicht gefunden:'	
 		msg2=path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')		
+		MyDialog(msg1, msg2, '')		
 		return li		
 	
 	i = 0
@@ -300,7 +300,7 @@ def PodFolder(title, path):
 	if 'library://music/' in path:							# Sound-Bibliothek
 		msg1=u'Sound-Bibliothek nicht verfügbar:'	
 		msg2=path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')		
+		MyDialog(msg1, msg2, '')		
 		return li		
 
 	path = xbmc.translatePath(path)
@@ -308,7 +308,7 @@ def PodFolder(title, path):
 	if not xbmcvfs.exists(path):
 		msg1='Verzeichnis nicht gefunden:'	
 		msg2=path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')		
+		MyDialog(msg1, msg2, '')	
 		return li		
 	
 	dirs, files = xbmcvfs.listdir(path)
@@ -347,7 +347,7 @@ def PodFolder(title, path):
 	if cnt == 0:
 		msg1='keine Audiodateien gefunden. Verzeichnis:'	
 		msg2=d_ret
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')		
+		MyDialog(msg1, msg2, '')	
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
@@ -365,7 +365,7 @@ def PodAddFavs(title, path, fav_path, mehrfach=''):
 		msg1=u'Nur Einzelbeiträge erlaubt! Folgebeiträge: %s' % mehrfach
 		msg2=u'Verweise auf Folgebeiträge werden verworfen.' 
 		msg3=u'Trotzdem übernehmen?'
-		ret=xbmcgui.Dialog().yesno(ADDON_NAME, msg1, msg2, msg3, 'Abbruch', 'JA')
+		ret=MyDialog(msg1, msg2, msg3, ok=False)
 		if ret  == False:
 			return
 		
@@ -376,7 +376,7 @@ def PodAddFavs(title, path, fav_path, mehrfach=''):
 	if  Inhalt is None or Inhalt == '' or 'podcast-favorits.txt' not in Inhalt:				
 		msg1=u'Datei podcast-favorits.txt nicht gefunden, nicht lesbar oder falsche Datei.'
 		msg2=u'Bitte Einstellungen prüfen.'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return
 
 	title=py2_encode(title); path=py2_encode(path);	
@@ -385,14 +385,14 @@ def PodAddFavs(title, path, fav_path, mehrfach=''):
 	if title in Inhalt:
 		msg1 = ">%s< ist bereits enthalten" % title
 		msg2 = "Trotzdem übernehmen?"
-		ret=xbmcgui.Dialog().yesno(ADDON_NAME, msg1, msg2, '', 'Abbruch', 'JA')
+		ret=MyDialog(msg1, msg2, '', ok=False)
 		if ret  == False:
 			return
 		
 	if ADDON_ID in fav_path:
 		msg1=u'Diese Datei podcast-favorits.txt wird beim nächsten Update überschrieben!'
 		msg2=u'Bitte eine Kopie außerhalb des Addons anlegen und in den Settings den Dateipfad anpassen.'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 	
 	line = "%s\t\t| %s\n" % (title, path)					# neue Zeile
 	msg1 = 'podcast-favorits.txt'

@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 15.02.2020
+#	Stand: 09.04.2020
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -141,7 +141,7 @@ def Main_XL():
 	if page == '':	
 		msg1 = "Fehler in Main_XL:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return 
 	PLog(len(page))			
 	teasertext = stringextract('class="teasertext">', '</p>', page)
@@ -240,7 +240,7 @@ def menu_hub(title, path, ID, img):
 	if page == '':	
 		msg1 = "Fehler in menu_hub:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return 		
 	
 	# Direktsprünge zu Url der Sendungseite - der Rest der Seiten enthält vorwiegend gleiche Inhalte 
@@ -338,13 +338,13 @@ def XL_Search(query='', search=None, pagenr=''):
 	if page == '':	
 		msg1 = "Fehler in XL_Search:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return 
 	
 	if u'leider erfolglos. Bitte überprüfen Sie Ihre Eingabe' in page:
 		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
 		msg1 = u'Keine Beiträge zu: %s' % query  
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return 	
 
 	searchBox 	= stringextract('Suchergebnis</h2>', '</p>', page)	
@@ -399,10 +399,11 @@ def get_content(li, page, ID, mark=''):
 	
 	if len(content) == 0:										# kein Ergebnis oder allg. Fehler
 		msg1 = 'Leider keine Inhalte' 							# z.B. bei A-Z für best. Buchstaben 
-		s = 'Es ist leider ein Fehler aufgetreten.'				# ZDF-Meldung Server-Problem
+		msg2 = 'Es ist leider ein Fehler aufgetreten.'				# ZDF-Meldung Server-Problem
+		msg3 = ''
 		if page.find('"title">' + s) >= 0:
-			msg = s + u' Bitte versuchen Sie es später noch einmal.'					
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
+			msg3 = u'Bitte versuchen Sie es später noch einmal.'					
+		MyDialog(msg1, msg2, msg3)	
 		return
 		
 	mediatype='' 		
@@ -545,7 +546,7 @@ def XL_Bildgalerie(path, title):
 	if page == '':	
 		msg1 = "Fehler in XL_Bildgalerie:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return 
 		
 	segment =  stringextract('class="mod modA modGallery">', 'class=\"section sectionA">', page)	
@@ -569,7 +570,7 @@ def XL_Bildgalerie(path, title):
 			msg1 = 'Bildverzeichnis konnte nicht erzeugt werden:'
 			msg2 = "%s/%s" % (SLIDESTORE, fname)
 			PLog(msg1); PLog(msg2)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return li	
 
 	image=0; background=False; path_url_list=[]; text_list=[]
@@ -667,7 +668,7 @@ def XL_Live(ID=''):
 		msg1 = "Fehler in XL_Live:"
 		msg2 = msg
 		msg3 = "Fallback zu ARD_m3u8 (s. Log)" 
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 		PLog(msg3)
 		url_m3u8=''
 	else:
@@ -707,7 +708,7 @@ def Videoblogs(title, path):					# Videoblogs
 	if page == '':	
 		msg1 = "Fehler in Videoblogs:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return 
 	
 	content =  blockextract('class="teaser" >',  page)
@@ -715,7 +716,7 @@ def Videoblogs(title, path):					# Videoblogs
 	if len(content) == 0:										# kein Ergebnis oder allg. Fehler
 		msg1 = 'Videoblog-Seite leer. URL:'
 		msg2 = path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return 
 		
 	for rec in content:	
@@ -774,7 +775,7 @@ def XLGetVideoSources(path, title, summary, tagline, thumb):
 	if page == '':	
 		msg1 = "Fehler in XLGetVideoSources:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return 
 	PLog(len(page))			
 	
@@ -799,7 +800,7 @@ def XLGetVideoSources(path, title, summary, tagline, thumb):
 			return
 		else:												
 			msg1 = u'Das Video steht nicht (mehr) zur Verfügung.'	# weder Videos noch Einzelbilder - Abbruch	 			 	 
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			MyDialog(msg1, '', '')
 			return	
 		
 	li = xbmcgui.ListItem()

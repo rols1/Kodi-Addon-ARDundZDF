@@ -12,19 +12,33 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-08.03.2020	2.8.5
+16.04.2020	2.8.7	
+			Main: Fix msg1 "Github ist nicht erreichbar" (L-Call entfernt, hier obsolet).
+			Themen (Modul phoenix): Newlines in mehrz. Titeln entfernt.
+			Updater-Modul: Aktualisierung adjust_AddonXml - Berücksichtigung Änderungen
+			in addon.xml durch Addon-fremde Tools (Positionsänderung von Feldern).
+			Modul merkliste: Aktualisierung der Liste nach Löschen von Einträgen.
+
+not on Github	2.8.6
+			Anpassung für Kodi Matrix - Dialoge (Zeilen 2 + 3 entfallen):
+			neue Funktion MyDialog (Modul util): Konvertierung Zeilen in Multiline.
+			Austausch xbmcgui.Dialog().ok -> MyDialog(): Haupt-PRG, Module updater,
+			phoenix, childs, TagesschauXL, ARDnew, funk, merkliste.
+			Austausch xbmcgui.Dialog().yesno -> MyDialog(): Haupt-PRG, Modul Podcontent.
+
+08.04.2020	2.8.5
 			ZDF BarriereArm + BarriereArmSingle: Caching für Folgeseiten (Untertitel-Videos
 			> 500), Liste mit Themen der Folgeseite vorgeschaltet.
 			Bilder3sat (Modul 3sat): repl_json_chars für title.
 
-06.03.2020	2.8.4
+06.04.2020	2.8.4
 			ZDF BarriereArm + BarriereArmSingle: Neufassung nach Änderungen der Webseite,
 			Caching entfällt (Inhalte befinden sich jetzt auf Folgeseiten), Anpassung in
 			ZDF_get_content.
 			Kika_VideosBuendelAZ (Modul childs): return nach 1. Durchlauf eingefügt 
 			(endOfDirectory nicht mehr ausreichend), Button '...' in Liste entfernt.
 			
-04.03.2020	2.8.3
+04.04.2020	2.8.3
 			Erweiterung Merkliste um externe Dateiablage Anpassung in Settings 
 			"Favoriten / Merkliste", ReadFavourites (Modul util).
 			Script merkliste: Python3-Anpassung (file-write mit Bytearray).

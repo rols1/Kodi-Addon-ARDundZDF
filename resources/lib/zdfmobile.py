@@ -2,12 +2,14 @@
 ################################################################################
 #				zdfmobile.py -  - Teil von Kodi-Addon-ARDundZDF
 #						mobile Version der ZDF Mediathek
-################################################################################
+#
 # 	dieses Modul nutzt nicht die Webseiten der Mediathek ab https://www.zdf.de/,
 #	sondern die Seiten ab https://zdf-cdn.live.cellular.de/mediathekV2 - diese
 #	Seiten werden im json-Format ausgeliefert
 #	22.11.2019 Migration Python3 Modul six + manuelle Anpassungen
-# Stand: 24.03.2020
+################################################################################
+#
+# Stand: 09.04.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -136,7 +138,9 @@ def Hub(ID):
 	page = loadPage(path)
 
 	if len(page) == 0 or str(page).startswith('Fehler'):
-		xbmcgui.Dialog().ok(ADDON_NAME, 'Fehler beim Abruf von:', path, '')
+		msg1 = 'Fehler beim Abruf von:'
+		msg2 = path
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 		
 	jsonObject = json.loads(page)	
@@ -195,7 +199,9 @@ def Verpasst_load(path, datum):		# 5 Tages-Abschnitte in 1 Datei, path -> DictID
 	
 	page = loadPage(path)		
 	if page.startswith('Fehler') or page == '':
-		xbmcgui.Dialog().ok(ADDON_NAME, 'Fehler beim Abruf von:', path, '')
+		msg1 = 'Fehler beim Abruf von:'
+		msg2 = path
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	PLog(len(page))
 	
@@ -437,7 +443,7 @@ def ShowVideo(path, DictID, Merk='false'):
 		msg1 = 'ShowVideo:'
 		msg2 = "Beitrag leider nicht (mehr) verfügbar"
 		PLog("%s | %s" % (msg1, msg2))
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	
 		
@@ -451,7 +457,9 @@ def ShowVideo(path, DictID, Merk='false'):
 		
 		page = loadPage(jsonurl)
 		if len(page) == 0 or str(page).startswith('Fehler'):
-			xbmcgui.Dialog().ok(ADDON_NAME, 'Fehler beim Abruf von:', url, '')
+			msg1 = 'Fehler beim Abruf von:'
+			msg2 = url
+			MyDialog(msg1, msg2, '')
 			xbmcplugin.endOfDirectory(HANDLE)
 		jsonObject = json.loads(page)							# neues json-Objekt 
 		
@@ -506,7 +514,7 @@ def ShowVideo(path, DictID, Merk='false'):
 				msg1 = 'ShowVideo:'
 				msg2 = "Beitrag leider nicht verfügbar (Jugendschutz?)"
 				PLog("%s | %s" % (msg1, msg2))
-				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+				MyDialog(msg1, msg2, '')
 				return li
 			else:
 				page = loadPage(streamApiUrl, apiToken=apiToken)	
@@ -715,7 +723,9 @@ def ShowSingleBandwidth(title,url_m3u8,thumb, descr):	# .m3u8 -> einzelne Auflö
 	
 	playlist = loadPage(url_m3u8)
 	if playlist.startswith('Fehler'):
-		xbmcgui.Dialog().ok(ADDON_NAME, playlist, url_m3u8, '')
+		msg1 = playlist
+		msg2 = url_m3u8
+		MyDialog(msg1, msg2, '')
 		
 	li = xbmcgui.ListItem()
 	li =  Parseplaylist(li, playlist=playlist, title=title, thumb=thumb, descr=descr)		

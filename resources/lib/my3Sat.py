@@ -3,14 +3,15 @@
 #				my3Sat.py - Teil von Kodi-Addon-ARDundZDF
 #							Start Juni 2019
 #			Migriert von Plex-Plugin-3Sat_Mediathek, V0.5.9
-################################################################################
+#
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.3sat.de,
 #	Seiten werden im html-format, teils. json ausgeliefert
-#	Stand: 08.04.2020
 #
 #	04.11.2019 Migration Python3  Python3 Modul future
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
+################################################################################
+#	Stand: 09.04.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -167,7 +168,7 @@ def Search(first, path, query=''):
 		msg1 = "Fehler in Search"
 		msg2 = msg
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li	
 		
 	rubriken =  blockextract('<picture class="">', page)	
@@ -180,7 +181,7 @@ def Search(first, path, query=''):
 	if len(rubriken) == 0 or cnt == '':						# kein Treffer
 		msg1 = 'Leider kein Treffer (mehr) zu '  + unquote(query)
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li	
 	
 	new_title = "%s Treffer zu >%s<" % (cnt, query)
@@ -212,12 +213,12 @@ def SendungenAZlist(name, path):				#
 	li = xbmcgui.ListItem()
 	li = home(li, ID='3Sat')										# Home-Button
 
-	page, msg = get_page(path)						
+	page, msg = get_page(path)
 	if page == '':			
 		msg1 = "Fehler in SendungenAZlist"
 		msg2 = msg
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li	
 	
 	liste = blockextract('<ul class="letter-list"', page)  # 1 x
@@ -258,7 +259,7 @@ def SendungenAZ(name, path):
 		msg1 = "Fehler in SendungenAZ"
 		msg2 = msg
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li	
 		
 	content = blockextract('<picture class="">', page)
@@ -359,7 +360,7 @@ def SendungenDatum(SendDate, title):
 	if len(content) == 0:			
 		msg1 = u'leider kein Treffer im ausgewählten Zeitraum'
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li	
 		
 	mediatype='' 		
@@ -430,7 +431,7 @@ def Rubriken(name, path):
 		msg1 = "Fehler in Rubriken"
 		msg2 = msg
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li	
 		
 	rubriken =  blockextract('class="dropdown-link js-rb-click js-track-click"', page)
@@ -474,7 +475,7 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 		msg1 = "Fehler in Rubrik_Single"
 		msg2 = msg
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li	
 		
 	themen =  blockextract('is-uppercase ">', page)	
@@ -519,7 +520,7 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 			if 'TV-SENDETERMINE' in name:
 				msg1 = 'TV-SENDETERMINE'
 				msg2 = u'Bitte das Menü Verpasst verwenden'
-				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+				MyDialog(msg1, msg2, '')
 				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 			break											# -> Sendereihe_Sendungen	
 	
@@ -962,7 +963,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 		msg2 = msg
 		msg3=path
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 		return li	
 	
 	content = stringextract('window.zdfsite', 'tracking', page)  			
@@ -981,7 +982,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 			msg1 = "keine Videoquelle gefunden. Seite:\n" + path
 			PLog(msg1)
 			PLog(apiToken)		# zur Kontrolle
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li	
 	
 	headers = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken 
@@ -992,7 +993,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 		msg2 = msg
 		msg3=path
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 		return li	
 	
 	page = page.replace('\\', '')
@@ -1021,7 +1022,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 		msg1 = "keine Videoquelle gefunden. Seite:\n" + path
 		PLog(msg1)
 		PLog(videodat_url)		# zur Kontrolle
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li	
 
 	if page:
@@ -1148,7 +1149,7 @@ def get_epg():		# akt. PRG-Hinweis von 3Sat-Startseite holen
 	if page == '':	
 		msg1 = "Fehler in get_epg:"
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return ''
 	
 	epg = stringextract('>Jetzt live<', '</div>', page)
@@ -1172,7 +1173,7 @@ def Bilder3sat(path=''):
 	if page == '':
 		msg1 = 'Bilder3sat: Seite kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return
 	
 	li = xbmcgui.ListItem()
@@ -1182,7 +1183,7 @@ def Bilder3sat(path=''):
 	PLog("content: " + str(len(content)))
 	if len(content) == 0:										
 		msg1 = 'Bilder3sat: keine Bilder (mehr) gefunden.'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li
 		
 	for rec in content:
@@ -1239,7 +1240,7 @@ def Bilder3satSingle(title, path):
 	if page == '':
 		msg1 = 'Bilder3satSingle: Seite kann nicht geladen werden.'
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return
 	
 	li = xbmcgui.ListItem()
@@ -1250,7 +1251,7 @@ def Bilder3satSingle(title, path):
 	if len(content) == 0:										
 		msg1 = 'Bilder3satSingle: keine Bilder gefunden.'
 		msg2 = title
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 	
 	fname = make_filenames(title)			# Ordnername: Titel 
@@ -1263,7 +1264,7 @@ def Bilder3satSingle(title, path):
 			msg1 = 'Bildverzeichnis konnte nicht erzeugt werden:'
 			msg2 = "%s/%s" % (SLIDESTORE, fname)
 			PLog(msg1); PLog(msg2)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return li	
 	
 	image=0; background=False; path_url_list=[]; text_list=[]

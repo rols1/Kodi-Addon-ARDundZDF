@@ -2,12 +2,14 @@
 ################################################################################
 #				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
-#	Stand 17.03.2020
-################################################################################
+#
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
 #	Seiten werden im json-Format, teilweise html + json ausgeliefert
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
+#
+################################################################################
+#	Stand 09.04.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -191,7 +193,7 @@ def ARDStart(title, sender, widgetID=''):
 			msg3 = "Seite ist älter als %s Minuten (CacheTime)" % str(old_div(ARDStartCacheTime,60))
 		else:
 			msg2='Startseite nicht im Cache verfuegbar.'
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)	
+		MyDialog(msg1, msg2, msg3)	
 	else:	
 		Dict("store", 'ARDStartNEW_%s' % sendername, page) 	# Seite -> Cache: aktualisieren	
 	PLog(len(page))
@@ -315,7 +317,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	if page == '':	
 		msg1 = "Fehler in ARDStartRubrik: %s"	% title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))
 	page = page.replace('\\"', '*')							# quotiere Marks entf.
@@ -489,7 +491,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark):
 	if page == '':	
 		msg1 = "Fehler in ARDPagination: %s"	% title
 		msg2=msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))	
 	page = page.replace('\\"', '*')							# quotiere Marks entf.
@@ -561,7 +563,7 @@ def get_page_content(li, page, ID, mark=''):
 	if len(gridlist) == 0:				
 		msg1 = 'keine Beiträge gefunden'
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
+		MyDialog(msg1, '', '')	
 	PLog('gridlist: ' + str(len(gridlist)))	
 
 	for s  in gridlist:
@@ -700,7 +702,7 @@ def ARDStartSingle(path, title, duration, ID=''):
 	if page == '':	
 		msg1 = "Fehler in ARDStartRubrik: %s"	% title
 		msg2=msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		xbmcplugin.endOfDirectory(HANDLE)
 	PLog(len(page))
 	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
@@ -713,7 +715,7 @@ def ARDStartSingle(path, title, duration, ID=''):
 	if len(elements) == 0:									# möglich: keine Video (dto. Web)
 		msg1 = 'keine Beiträge zu %s gefunden'  % title
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		xbmcplugin.endOfDirectory(HANDLE)	
 	PLog('elements: ' + str(len(elements)))	
 		
@@ -868,7 +870,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 	if page == '':	
 		msg1 = "Fehler in ARDStartVideoStreams: %s"	% title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))
 	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
@@ -896,7 +898,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 		msg = 'keine Streamingquelle gefunden - Abbruch' 	# auch möglich: nur .mp3-Quelle
 		PLog(msg)
 		msg1 = "keine Streamingquelle gefunden: %s"	% title
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
+		MyDialog(msg1, '', '')	
 		return li
 	if href.startswith('http') == False:
 		href = 'http:' + href
@@ -941,7 +943,7 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 	if page == '':	
 		msg1 = "Fehler in ARDStartVideoMP4: %s"	% title
 		msg2 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))
 	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
@@ -949,7 +951,7 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 	Plugins = blockextract('_plugin', page)	# wir verwenden nur Plugin1 (s.o.)
 	if len(Plugins) == 0:
 		msg1 = "keine .mp4-Quelle gefunden zu: %s" % title_org
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
+		MyDialog(msg1, '', '')	
 		return li
 	Plugin1	= Plugins[0]							
 	VideoUrls = blockextract('_quality', Plugin1)
@@ -1173,8 +1175,8 @@ def SendungenAZ_ARDnew(title, button, api_call):
 		links = stringextract('"shows%s"' % button, 'hows', page) # 'hows' schließt auch Z bei "ShowsPage"ab
 		glinks = blockextract('"id":',  links)
 		if len(glinks) == 0:
-			msg = 'Keine Beiträge gefunden zu %s' % button		# auch Fallback gescheitert
-			xbmcgui.Dialog().ok(ADDON_NAME, msg, '', '')	
+			msg1 = 'Keine Beiträge gefunden zu %s' % button		# auch Fallback gescheitert
+			MyDialog(msg1, '', '')	
 			
 		i=0
 		for glink in glinks:									# Fallback-Listing
@@ -1468,7 +1470,7 @@ def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
 	if page == '':	
 		msg1 = "Fehler in ARDSearchnew, Suche: %s"	% query
 		msg2=msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))
 	
@@ -1477,7 +1479,7 @@ def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
 	if len(gridlist) == 0:				
 		msg1 = u'keine Beiträge gefunden zu: %s'  % query
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		xbmcplugin.endOfDirectory(HANDLE)		
 	PLog('gridlist: ' + str(len(gridlist)))	
 	
@@ -1580,7 +1582,8 @@ def ARDVerpasstContent(title, path, CurSender, timeline_sender='', label_sender=
 	if page == '':	
 		msg1 = 'Fehler in ARDVerpasstContent'
 		msg2=msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, path)	
+		msg3=path
+		MyDialog(msg1, msg2, msg3)	
 		return li
 	PLog(len(page))
 	
@@ -1620,7 +1623,7 @@ def ARDVerpasstContent(title, path, CurSender, timeline_sender='', label_sender=
 		msg1 = u'keine Beiträge gefunden zu:'
 		msg2 = '%s | %s'  % (title, label_sender)
 		PLog("%s | %s" % (msg1, msg2))
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+		MyDialog(msg1, msg2, '')	
 	PLog('gridlist: ' + str(len(gridlist)))	
 	
 	mediatype=''; ID='ARDVerpasst'
