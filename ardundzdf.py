@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.8.7'
-VDATE = '16.04.2020'
+VERSION = '2.8.8'
+VDATE = '21.04.2020'
 
 #
 #
@@ -240,6 +240,10 @@ WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
 PLog(SLIDESTORE); PLog(WATCHFILE); 
 check 			= check_DataStores()	# Check /Initialisierung / Migration 
 PLog('check: ' + str(check))
+MERKACTIVE = os.path.join(DICTSTORE, 'MerkActive') # Marker Merkliste
+if os.path.exists(MERKACTIVE):
+	os.remove(MERKACTIVE)
+MERKFILTER 		= os.path.join(DICTSTORE, 'Merkfilter') 
 
 try:	# 28.11.2019 exceptions.IOError möglich, Bsp. iOS ARM (Thumb) 32-bit
 	from platform import system, architecture, machine, release, version	# Debug
@@ -4590,13 +4594,17 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 #					Bei Abschaltung Sofortstart funktioniert aber die Resumefunktion bei den
 #					Einzelauflösungen.
 #
-def ShowFavs(mode):							# Favoriten / Merkliste einblenden
+def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 	PLog('ShowFavs: ' + mode)				# 'Favs', 'Merk'
 	
+	myfilter=''
 	if mode == 'Merk':
-		li = xbmcgui.ListItem('ShowFavs')	# Kennz. für Aktualisierung in Modul merkliste
-	else:
-		li = xbmcgui.ListItem()
+		with open(MERKACTIVE, 'w'):			# Marker aktivieren (Refresh in merkliste)
+			pass
+		if os.path.exists(MERKFILTER) == True:	
+			myfilter = RLoad(MERKFILTER,abs_path=True)
+			PLog('myfilter: ' + myfilter)
+	li = xbmcgui.ListItem()
 		
 	if SETTINGS.getSetting('pref_watchsort') == 'false':# Sortierung?
 		li = home(li, ID=NAME)							# Home-Button
@@ -4604,7 +4612,7 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 	else:
 		sortlabel='1'									# Sortierung erford.	
 															
-	my_items = ReadFavourites(mode)						# Addon-Favs / Merkliste einlesen
+	my_items, my_ordner= ReadFavourites(mode)			# Addon-Favs / Merkliste einlesen
 	PLog(len(my_items))
 	# Dir-Items für diese Funktionen erhalten mediatype=video:
 	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.ShowVideo",
@@ -4616,17 +4624,18 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		tagline = u"Anzahl Addon-Favoriten: %s" % str(len(my_items)) 	# Info-Button
 		s1 		= u"Hier werden die ARDundZDF-Favoriten aus Kodi's Favoriten-Menü eingeblendet."
 		s2		= u"Favoriten entfernen: im Kodi's Favoriten-Menü oder am Ursprungsort im Addon (nicht hier!)."
-		s3		= u'Favoriten enthalten nicht in allen Fällen Begleitinfos zu Inhalt, Länge usw.'
-		summary	= u"%s\n\n%s\n\n%s"		% (s1, s2, s3)
+		summary	= u"%s\n\n%s"		% (s1, s2)
 		label	= u'Infos zum Menü Favoriten'
 	else:
 		tagline = u"Anzahl Merklisteneinträge: %s" % str(len(my_items)) 	# Info-Button
-		s1 		= u"Merkliste von ARDundZDF."
-		s2		= u"Einträge entfernen: via Kontextmenü hier oder am am Ursprungsort im Addon."
-		s3		= u"Nach Entfernen erfolgt die Aktualisierung erst beim erneuten Aufruf der Liste."
-		s4		= u'Stammt ein Eintrag aus einem abgewählten Modul, wird es bis zum Aufruf des Hauptmenüs reaktiviert.'
-		s5		= u'Einträge enthalten nicht in allen Fällen Begleitinfos zu Inhalt, Länge usw.'
-		summary	= u"%s\n\n%s\n\n%s\n\n%s\n\n%s"		% (s1, s2, s3, s4, s5)
+		s1		= u"Einträge entfernen: via Kontextmenü hier oder am am Ursprungsort im Addon."
+		s2		= u"Merkliste filtern: via Kontextmenü hier.\nAktueller Filter: [COLOR blue]%s[/COLOR]" % myfilter
+		s3		= u"Ordner für Einträge lassen sich in den Settings ein-/ausschalten"
+		if SETTINGS.getSetting('pref_merkordner') == 'true':
+			s3 = s3 + u"[COLOR blue] (eingeschaltet)[/COLOR]"
+		else:
+			s3 = s3 + " (ausgeschaltet)"
+		summary	= u"%s\n\n%s\n\n%s"		% (s1, s2, s3)
 		label	= u'Infos zum Menü Merkliste'
 	
 	# Info-Button ausblenden falls Setting true oder bei Sortierung	
@@ -4636,18 +4645,28 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 			fanart=R(ICON_DIR_FAVORITS), thumb=R(ICON_INFO), fparams=fparams,
 			summary=summary, tagline=tagline, cmenu=False) 	# ohne Kontextmenü)	
 	
+	item_cnt = 0
 	for fav in my_items:
 		fav = unquote_plus(fav)						# urllib2.unquote erzeugt + aus Blanks!		
 		fav_org = fav										# für ShowFavsExec
-		#PLog('fav_org: ' + fav_org)
-		name=''; merkname=''; thumb=''; dirPars=''; fparams='';			
+		# PLog('fav_org: ' + fav_org)
+		name=''; merkname=''; thumb=''; dirPars=''; fparams='';	ordner=''		
 		name 	= re.search(' name="(.*?)"', fav) 			# name, thumb,Plot zuerst
+		ordner 	= stringextract(' ordner="', '"',fav) 
 		thumb 	= stringextract(' thumb="', '"',fav) 
 		Plot_org = stringextract(' Plot="', '"',fav) 		# ilabels['Plot']
 		Plot_org = Plot_org.replace(' Plot="', ' Plot=""')  # leer
 		if name: 	
 			name 	= name.group(1)
 			name 	= unescape(name)
+			
+		if myfilter:
+			if 'ohne Zuordnung' in myfilter:				# merkliste.xml: ordner=""
+				if ordner:
+					continue
+			else:
+				if ordner != myfilter: 						# ausfiltern
+						continue
 			
 		if mode == 'Merk' and 'plugin://plugin' not in fav:	# Base64-kodierte Plugin-Url
 			PLog('base64_fav')
@@ -4750,6 +4769,7 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		Plot = unquote_plus(Plot)
 		summary = summary.replace('+', ' ')
 		summary = summary.replace('&quot;', '"')
+			
 		Plot=unescape(Plot)
 		Plot = Plot.replace('||', '\n')			# s. PlayVideo
 		Plot = Plot.replace('+|+', '')	
@@ -4775,17 +4795,34 @@ def ShowFavs(mode):							# Favoriten / Merkliste einblenden
 		tagline = tagline.replace('||', '\n')
 		
 		if modul != "ardundzdf":					# Hinweis Modul
-			tagline = "[B][COLOR red]Modul %s[/COLOR][/B]%s" % (modul, tagline)	
+			tagline = "[B][COLOR red]Modul: %s[/COLOR][/B]%s" % (modul, tagline)
+		if SETTINGS.getSetting('pref_merkordner') == 'true':	
+			merkname = name								# für Kontextmenü Ordner in addDir
+			if ordner:									# Hinweis Ordner
+				if 'COLOR red' in tagline:				# bei Modul plus LF
+					tagline = "[B][COLOR blue]Ordner: %s[/COLOR][/B]\n%s" % (ordner, tagline)
+				else:
+					tagline = "[B][COLOR blue]Ordner: %s[/COLOR][/B]%s" % (ordner, tagline)
 				
-		if SETTINGS.getSetting('pref_WatchAudioInTitle') ==  'true':	# Kennz. Audio
-			PLog("fparams: " + fparams)
-			if 'www.ardaudiothek.de' in fparams or '/Audio-Podcast?' in fparams or '.mp3' in fparams: 
-				merkname = name						# für Kontextmenü in addDir
-				name = "Audio | %s" % name
+			if SETTINGS.getSetting('pref_WatchFolderInTitle') ==  'true':	# Kennz. Ordner
+				if ordner: 
+					name = "[COLOR blue]%s[/COLOR] | %s" % (ordner, name)
 			
 		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=thumb,
 			summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype, 
 			sortlabel=sortlabel, merkname=merkname)
+		item_cnt = item_cnt + 1
+		
+	if item_cnt == 0 and myfilter:					# Ordnerliste zeigen, sonst hier Deadlock
+		#  watch_filter()								# Modul util
+		msg1 = u'Leere Merkliste mit dem Filter: %s' % myfilter
+		msg2 = u'Der Filter wird nun gelöscht; die Merkliste wird ohne Filter geladen.'
+		msg3 = u'Wählen Sie dann im Kontextmenü einen anderen Filter.'
+		MyDialog(msg1,msg2,msg3)
+		if os.path.exists(MERKFILTER):
+			os.remove(MERKFILTER)
+		ShowFavs('Merk')
+		
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #-------------------------------------------------------

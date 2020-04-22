@@ -550,10 +550,22 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	
 	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
 		if cmenu:											# Kontextmenüs Merkliste hinzufügen
-			if merkname:
-				label = merkname
-			Plot = Plot.replace('\n', '||')		# || Code für LF (\n scheitert in router)
+			Plot = Plot.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 			# PLog('Plot: ' + Plot)
+			fparams_folder=''
+			if merkname:									# Aufrufer ShowFavs (Settings: Ordner)
+				# Param name reicht für folder + filter		# Ordner ändern / Filtern
+				label = merkname
+				fp = {'action': 'folder', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
+					'Plot': quote_plus(Plot),'url': quote_plus(url)}	
+				fparams_folder = "&fparams={0}".format(fp)
+				PLog("fparams_folder: " + fparams_folder[:100])
+				fparams_folder = quote_plus(fparams_folder)		#  Ordner ändern
+				
+				fp = {'action': 'filter', 'name': quote_plus(label)} 
+				fparams_filter = "&fparams={0}".format(fp)
+				fparams_filter = quote_plus(fparams_filter)		# Filtern
+				
 			fp = {'action': 'add', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
 				'Plot': quote_plus(Plot),'url': quote_plus(url)}	
 			fparams_add = "&fparams={0}".format(fp)
@@ -563,18 +575,23 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			fp = {'action': 'del', 'name': quote_plus(label)}	# name reicht für del
 			fparams_del = "&fparams={0}".format(fp)
 			PLog("fparams_del: " + fparams_del)
-			fparams_del = quote_plus(fparams_del)	
-
+			fparams_del = quote_plus(fparams_del)
+			
 			# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
-			MERK_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID) )
-			li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-					% (MERK_SCRIPT, HANDLE, fparams_add)),
-				 ('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-					% (MERK_SCRIPT, HANDLE, fparams_del))])
-		else:
-			pass											# Kontextmenü entfernen klappt so nicht
-			#li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=dummy)' \
-			#	% (ADDON_ID))], replaceItems=True)
+			MERK_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID))
+			commands = []
+			commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MERK_SCRIPT, HANDLE, fparams_add)))
+			commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MERK_SCRIPT, HANDLE, fparams_del)))			
+			if fparams_folder:									# Aufrufer ShowFavs s.o.
+				PLog('set_folder_context: ' + merkname)
+				commands.append(('Merklisten-Eintrag zuordnen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MERK_SCRIPT, HANDLE, fparams_folder)))
+				commands.append(('Merkliste filtern', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MERK_SCRIPT, HANDLE, fparams_filter)))
+
+			li.addContextMenuItems(commands)				
 		
 	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
 	
@@ -908,10 +925,10 @@ def stringextract(mFirstChar, mSecondChar, mString):  	# extrahiert Zeichenkette
 # extrahiert Blöcke aus mString: Startmarke=blockmark, Endmarke=blockendmark 
 def blockextract(blockmark, mString, blockendmark=''):  	
 	#	blockmark bleibt Bestandteil der Rückgabe - im Unterschied zu split()
-	#	Block wird durch blockendmark begrenzt, falls belegt 
-	#	Rückgabe in Liste. Letzter Block reicht bis Ende mString (undefinierte Länge),
-	#		Variante mit definierter Länge siehe Plex-Plugin-TagesschauXL (extra Parameter blockendmark)
-	#	Verwendung, wenn xpath nicht funktioniert (Bsp. Tabelle EPG-Daten www.dw.com/de/media-center/live-tv/s-100817)
+	#	Block wird durch blockendmark begrenzt, falls belegt, sonst reicht 
+	#		 letzter Block reicht bis Ende mString (undefinierte Länge). 
+	#	Rückgabe in Liste.
+	#	Verwendung, wenn xpath nicht funktioniert 
 	rlist = []				
 	if 	blockmark == '' or 	mString == '':
 		PLog('blockextract: blockmark or mString leer')
@@ -1378,6 +1395,7 @@ def xml2srt(infile):
 #----------------------------------------------------------------
 #	Favs / Merkliste dieses Addons einlesen
 #	01.04.2020 Erweiterung ext. Merkliste (Netzwerk-Share).
+#	18.04.2020 Erweiterung Ordner
 #
 def ReadFavourites(mode):	
 	PLog('ReadFavourites:')
@@ -1410,15 +1428,21 @@ def ReadFavourites(mode):
 	else:
 		favs = re.findall("<merk.*?</merk>", page)
 	# PLog(favs)
-	my_favs = []; fav_cnt=0;
+	my_favs = []
 	for fav in favs:
 		if mode ==  'Favs':
 			if ADDON_ID not in fav: 	# skip fremde Addons, ID's in merk's wegen 	
 				continue				# 	Base64-Kodierung nicht lesbar
 		my_favs.append(fav) 
 		
+	my_ordner = []						# Ordner einlesen
+	items = stringextract('<ordnerliste>', '</ordnerliste>', page)
+	items =  items.split()
+	for item in items:
+		my_ordner.append(item.strip())
+			
 	# PLog(my_favs)
-	return my_favs
+	return my_favs, my_ordner
 
 #----------------------------------------------------------------
 # holt summary (Inhaltstext) für eine Sendung, abhängig von SETTINGS('pref_load_summary')

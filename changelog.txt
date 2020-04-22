@@ -12,6 +12,15 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+21.04.2020	2.8.8 	Modul merkliste: Aktualisierung abhängig von geöffneter Liste, Steuerung:
+			Datei MerkActive im Dict-Verz.	
+			Erweiterung merkliste: Ordnerverwaltung - Anpassungen merkliste, ShowFavs
+			(Haupt-PRG), ReadFavourites + addDir (Modul util), Settings (Option "Audio-
+			Beiträge im Titel kennzeichnen" geändert (Audio-Beiträge -> Ordner),
+			Funktion Watch umbenannt in Watch_items.
+			ShowFavs (Haupt-PRG): Einträge im Info-Menü gekürzt + aktualisiert.
+			Wicki (Github): Texte + Bilder für Erweiterung merkliste aktualisiert.   
+
 16.04.2020	2.8.7	
 			Main: Fix msg1 "Github ist nicht erreichbar" (L-Call entfernt, hier obsolet).
 			Themen (Modul phoenix): Newlines in mehrz. Titeln entfernt.
