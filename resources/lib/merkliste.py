@@ -6,7 +6,7 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-#	Stand: 21.04.2020
+#	Stand: 24.04.2020
 
 from __future__ import absolute_import
 
@@ -56,7 +56,7 @@ ORDNER			= ["Audio", "Bilderserien", "Comedy/Show", "Doku/Wissen", "Filme", "Ges
 					"Nachrichten", "Kinder/ZDFtivi", "Krimi", "Kultur",  
 					"Politik/Gesellschaft", "Serien", "Sport",  "Talk", "Verbraucher"]
 ORDNER_INFO		= [u"# die folgende Ordnerliste kann mit einem Editor geändert werden.",
-					u'Nutzung: in Settings "Ordner für Merkliste verwenden wählen."',
+					u'# Nutzung: in Settings "Ordner für Merkliste verwenden wählen."',
 					u"# Regeln:", 
 					u"# Sie darf keine Kommentarzeichen (#) enthalten.", 
 					u"# Die einzelnen Begriffe sind mit einem Leerzeichen zu trennen.", 
@@ -98,7 +98,8 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 	#------------------
 	if action == 'add':
 		url = get_plugin_url(url)									# url aus ev. Base64-Kodierung
-		my_items, my_ordner = ReadFavourites('Merk')				# 'utf-8'-Decoding in ReadFavourites			
+		my_items, my_ordner = ReadFavourites('Merk')				# 'utf-8'-Decoding in ReadFavourites
+		my_ordner = check_ordner(my_ordner)			
 		merkliste = ''
 		if len(my_items):
 			PLog('my_items: ' + my_items[0])			# 1. Eintrag
@@ -112,21 +113,21 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 				merkliste = merkliste + item + "\n"
 				item_cnt = item_cnt + 1
 		else:	
-			pass
+			item = ''
 		
 		ordner=''
 		if SETTINGS.getSetting('pref_merkordner') == 'true':		# Ordner-Auswahl
 			if doppler == False:
-				oldordner = stringextract('ordner="', '"', item) 
 				if len(my_ordner) == 0:								# leer: Initialisierung
 					my_ordner = ORDNER
-				my_ordner=sorted(my_ordner, key=str.lower)
+				my_ordner.insert(0, u"*ohne Zuordnung*")
+				
 				ret = xbmcgui.Dialog().select(u'Ordner wählen', my_ordner, preselect=0)
-				if ret >= 0:
+				if ret > 0:
 					ordner = my_ordner[ret]
 				else:
-					ordner = oldordner
-				PLog("ordner: " + ordner)
+					ordner = ''										# ohne Zuordnung=leer
+				del my_ordner[0]
 		
 		# Neuer Eintrag:		
 		url = url.replace('&', '&amp;') 							# Anpassung an Favorit-Schema
@@ -137,7 +138,6 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 		item_cnt = item_cnt + 1		
 		if doppler == False:
 			msg1 = u"Eintrag hinzugefügt" 
-			PLog(type(merkliste)); PLog(type(merk));
 			merkliste = py2_decode(merkliste) + merk + "\n"
 			#item_cnt = item_cnt + 1
 			
@@ -175,6 +175,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 	#------------------
 	if action == 'del':
 		my_items, my_ordner = ReadFavourites('Merk')					# 'utf-8'-Decoding in ReadFavourites
+		my_ordner = check_ordner(my_ordner)
 		if len(my_items):
 			PLog('my_items: ' + my_items[-1])
 		merkliste = ''
@@ -226,8 +227,10 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			PLog(msg1)	
 							
 	#------------------
-	if action == 'folder':												# Ordner wählen / ändern
+	if action == 'folder':												# Ordner ändern
 		my_items, my_ordner = ReadFavourites('Merk')					# 'utf-8'-Decoding in ReadFavourites
+		my_ordner = check_ordner(my_ordner)
+		
 		merkliste = ''
 		ret = True
 		for item in my_items:						# Liste -> String
@@ -235,22 +238,26 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			iname = py2_decode(iname); name = py2_decode(name)		
 			PLog('Name: %s, IName: %s' % (name, iname))		
 			if name == iname:
-				if SETTINGS.getSetting('pref_merkordner') == 'true':	# Ordner-Auswahl
+				if SETTINGS.getSetting('pref_merkordner') == 'true':	# Ordner eingeschaltet?
 					oldordner = stringextract('ordner="', '"', item) 
 					if len(my_ordner) == 0:								# leer: Initialisierung
 						my_ordner = ORDNER
-					my_ordner=sorted(my_ordner, key=str.lower)
+					my_ordner.insert(0, u"*ohne Zuordnung*")
+
 					ret = xbmcgui.Dialog().select(u'Ordner wählen', my_ordner, preselect=0)
 					ordner=oldordner									# Fallback: vorh. Ordner
 					if ret >= 0:
 						ordner = my_ordner[ret]
-					PLog("ordner: " + ordner)
+						if ret == 0:									# ohne Zuordnung=leer
+							ordner = ''; oldordner = 'dummy'			# dummy ->  ''
+					PLog("ordner: %s, oldordner: %s" % (ordner, oldordner))
+					del my_ordner[0]									# "ohne Zuordnung" löschen
 					
 					if ordner != oldordner:
 						# Ordner im Eintrag aktualisieren:
-						PLog("url: " + url)
+						PLog("url: " + url[:100])
 						url = get_plugin_url(url)						# url aus ev. Base64-Kodierung		
-						PLog("url: " + url)
+						PLog("url: " + url[:100])
 						url = url.replace('&', '&amp;') 				# Anpassung an Favorit-Schema
 						merk = '<merk name="%s" ordner="%s" thumb="%s" Plot="%s">ActivateWindow(10025,&quot;%s&quot;,return)</merk>'  \
 							% (name, ordner, thumb, Plot, url)
@@ -380,19 +387,39 @@ def save_merkliste(fname, merkliste, my_ordner):
 		err_msg = str(exception)
 		return ret, err_msg	
 	
-# ----------------------------------------------------------------------			
-# Aufruf Merkliste mit Ordner als Filter
+# ----------------------------------------------------------------------
+# Aufrufer Kontextmenü	
+# Aufruf ohne Param delete:		
+# 	Aufruf Merkliste mit Ordner als Filter
 #	Merkliste bleibt unverändert
 #	Filter wird in MERKFILTER dauerhaft gespeichert
+# Aufruf mit Param delete: 
+#	Löschen der Filterdatei MERKFILTER
 #			
-def watch_filter():
+def watch_filter(delete=''):
 	PLog("watch_filter:")
+	
+	if delete:
+		icon = R(ICON_DIR_WATCH)
+		PLog('watch_filter: entferne_Filter')
+		msg1 = 'Filter entfernen:'
+		if os.path.isfile(MERKFILTER):		
+			os.remove(MERKFILTER)
+			if os.path.isfile(MERKACTIVE) == True:		# Merkliste aktiv?
+				xbmc.executebuiltin('Container.Refresh')
+			msg2 = "Filter wurde entfernt"	
+		else:
+			msg2 = "kein Filter gefunden"
+			
+		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
+		return
+		
 	my_items, my_ordner = ReadFavourites('Merk')	# Ordnerliste holen	
-	my_ordner=sorted(my_ordner, key=str.lower)
+	my_ordner = check_ordner(my_ordner)
 	my_ordner.insert(0, u"*ohne Zuordnung*")
 	
 	preselect = 0									# Vorauswahl
-	if os.path.exists(MERKFILTER) == True:	
+	if os.path.isfile(MERKFILTER) == True:	
 		myfilter = RLoad(MERKFILTER,abs_path=True)
 		PLog('myfilter: ' + myfilter)
 		if myfilter:								# leer möglich
@@ -410,13 +437,35 @@ def watch_filter():
 	xbmc.executebuiltin('Container.Refresh')
 
 # ----------------------------------------------------------------------
-# Markierungen "Ordner:" + "Modul:" aus akt. Anzeige entfernen
-#	die Markierungen gehören nicht zum Datensatz des Eintrags
+# gibt die Basis-Ordner-Liste sortiert zurück, falls my_ordner leer od. 
+#	fehlerh. (geladen mit ReadFavourites)
+# Check entfällt, falls Ordner abgewählt
+#	
+def check_ordner(my_ordner):
+	PLog("check_ordner: %d" % len(my_ordner))
+	PLog(my_ordner)
+	
+	if SETTINGS.getSetting('pref_merkordner') == 'true':
+		if len(my_ordner)  == 0:
+			heading = "Problem mit der Ordnerliste"
+			msg1 = "Die Ordnerliste ist leer oder fehlerhaft."
+			msg2 = "Es wird die Basis-Ordner-Liste verwendet."
+			msg3 = u"Die Ordnerliste wird nach Einfügen oder Löschen erneuert."
+			MyDialog(msg1, msg2, msg3, heading=heading)
+			my_ordner = ORDNER
+			my_ordner=sorted(my_ordner, key=str.lower)
+	return my_ordner
+			
+# ----------------------------------------------------------------------
+# Markierungen "Ordner:" + "Modul:" aus tagline + summary der akt. 
+#	Anzeige entfernen. Die Markierungen gehören nicht zum Datensatz 
+#	des Eintrags
+# ähnlich make_filenames (dort fett+farbig getrennt).
 # 			
 def clean_Plot(Plot):
 	PLog("clean_Plot:")
 	# PLog(Plot)	# Debug
-	if '[COLOR' in Plot:				# Mark. immer farbig
+	if '[COLOR' in Plot:				# Mark. hier immer fett+farbig
 		items = blockextract('[B]', Plot, '[/B]')
 		for item in items:
 			if 'Ordner: ' in item or 'Modul: ' in item:
@@ -473,8 +522,11 @@ if 'url' in mydict:
 	url = mydict['url']
 PLog(action); PLog(name); PLog(thumb); PLog(Plot); PLog(url); 
 
-if action == 'filter':													# Aufrufer ShowFavs (Settings: Ordner)
-	watch_filter()														# Einträge unbearbeitet
+if 'filter' in action:
+	if action == 'filter':												# Aufrufer ShowFavs (Settings: Ordner)
+		watch_filter()													# Filter setzen
+	if action == 'filter_delete':
+		watch_filter(delete=True)										# Filter (MERKFILTER) löschen
 else:
 	# Markierungen "Ordner:" + "Modul:" aus akt. Anzeige entfernen
 	#	Altern.: Merkliste einlesen + Satz suchen (zeitaufwändiger)
@@ -486,7 +538,7 @@ else:
 		if action == 'del' or action == 'folder':							# Refresh Liste nach Löschen
 			# MERKACTIVE ersetzt hier Ermitteln von Window + Control
 			# bei Verzicht würde jede Liste refresht (stört bei großen Listen)
-			if os.path.exists(MERKACTIVE) == True:		# Merkliste aktiv?
+			if os.path.isfile(MERKACTIVE) == True:		# Merkliste aktiv?
 				xbmc.executebuiltin('Container.Refresh')
 
 	# 01.02.2029 Dialog ersetzt durch notification 

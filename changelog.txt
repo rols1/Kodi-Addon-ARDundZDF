@@ -12,6 +12,19 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+24.04.2020	2.8.9 	
+			ShowFavs (Haupt-PRG): Löschen des Filters der Merkliste, falls Ordner abgewählt,
+			Austausch os.path.ispath(MERKFILTER) -> os.path.isfile(MERKFILTER).
+			watch_filter (Modul merkliste): Verwendung der Basis-Ordnerliste, falls Ordner-
+			liste fehlt oder fehlerhaft.
+			Kontextmenü Merkliste: Option "ohne Zuordnung" für Eintrag - Anpassung in 
+			Modul merkliste (Watch_items "folder").
+			Watch_items (Modul merkliste): item leer vorbelegt beim Hinzufügen in leerer Liste. 
+			Modul merkliste: Austausch os.path.ispath(MERKFILTER) -> os.path.isfile(MERKFILTER).
+			make_filenames (Modul util): Entfernung von Farb- und Fettmarkierungen (relevant
+			für Downloads aus Suchbeiträgen).
+			PLog (Modul util): Anpassung für Kodi Matrix (xbmc.LOGNOTICE -> xbmc.LOGINFO).
+
 21.04.2020	2.8.8 	Modul merkliste: Aktualisierung abhängig von geöffneter Liste, Steuerung:
 			Datei MerkActive im Dict-Verz.	
 			Erweiterung merkliste: Ordnerverwaltung - Anpassungen merkliste, ShowFavs

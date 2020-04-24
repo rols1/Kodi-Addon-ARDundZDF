@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 09.04.2020
+#	Stand 24.04.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -116,14 +116,18 @@ ICON_PHOENIX	= 'phoenix.png'
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
 BASE_URL 		= 'https://classic.ardmediathek.de'
 
-#----------------------------------------------------------------  
+#----------------------------------------------------------------
+# Kodi Matrix: Wechsel   xbmc.LOGNOTICE -> xbmc.LOGINFO - siehe
+#	https://forum.kodi.tv/showthread.php?tid=353818&pid=2943669#pid2943669,
+#	https://github.com/xbmc/xbmc/compare/master@%7B1day%7D...master
 def PLog(msg, loglevel=xbmc.LOGDEBUG):
 	if DEBUG == 'false':
 		return
-	#if isinstance(msg, str):		# entf. mit six
-	#	msg = msg.encode('utf-8')
-		
-	loglevel = xbmc.LOGNOTICE
+	
+	if PYTHON3:
+		loglevel = xbmc.LOGINFO
+	else:
+		loglevel = xbmc.LOGNOTICE   # Rekurs.!
 	# PLog('loglevel: ' + str(loglevel))
 	if loglevel >= 2:
 		xbmc.log("%s --> %s" % ('ARDundZDF', msg), level=loglevel)
@@ -560,11 +564,15 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					'Plot': quote_plus(Plot),'url': quote_plus(url)}	
 				fparams_folder = "&fparams={0}".format(fp)
 				PLog("fparams_folder: " + fparams_folder[:100])
-				fparams_folder = quote_plus(fparams_folder)		#  Ordner ändern
+				fparams_folder = quote_plus(fparams_folder)			#  Ordner ändern
 				
 				fp = {'action': 'filter', 'name': quote_plus(label)} 
 				fparams_filter = "&fparams={0}".format(fp)
-				fparams_filter = quote_plus(fparams_filter)		# Filtern
+				fparams_filter = quote_plus(fparams_filter)			# Filtern
+
+				fp = {'action': 'filter_delete', 'name': quote_plus('label')} 
+				fparams_delete = "&fparams={0}".format(fp)
+				fparams_delete = quote_plus(fparams_delete) 		# Filter entfernen
 				
 			fp = {'action': 'add', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
 				'Plot': quote_plus(Plot),'url': quote_plus(url)}	
@@ -572,7 +580,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			PLog("fparams_add: " + fparams_add[:100])
 			fparams_add = quote_plus(fparams_add)
 
-			fp = {'action': 'del', 'name': quote_plus(label)}	# name reicht für del
+			fp = {'action': 'del', 'name': quote_plus(label)}		# name reicht für del
 			fparams_del = "&fparams={0}".format(fp)
 			PLog("fparams_del: " + fparams_del)
 			fparams_del = quote_plus(fparams_del)
@@ -584,12 +592,14 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					% (MERK_SCRIPT, HANDLE, fparams_add)))
 			commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
 					% (MERK_SCRIPT, HANDLE, fparams_del)))			
-			if fparams_folder:									# Aufrufer ShowFavs s.o.
+			if fparams_folder:										# Aufrufer ShowFavs s.o.
 				PLog('set_folder_context: ' + merkname)
 				commands.append(('Merklisten-Eintrag zuordnen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
 					% (MERK_SCRIPT, HANDLE, fparams_folder)))
 				commands.append(('Merkliste filtern', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
 					% (MERK_SCRIPT, HANDLE, fparams_filter)))
+				commands.append(('Filter der  Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MERK_SCRIPT, HANDLE, fparams_delete)))
 
 			li.addContextMenuItems(commands)				
 		
@@ -689,7 +699,6 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			# r = urllib2.urlopen(req)
 			# PLog("headers: " + str(r.headers))
 			page = r.read()
-			PLog('Mark3')
 			r.close()
 			PLog(len(page))
 		except URLError as exception:
@@ -1080,14 +1089,26 @@ def transl_doubleUTF8(line):	# rückgängig: doppelt kodiertes UTF-8
 		line = line.replace(*r)
 	return line	
 #----------------------------------------------------------------  
+# erzeugt - hoffentlich - sichere Dateinamen (ohne Extension)
+# zugeschnitten auf Titelerzeugung in meinen Plugins 
 # Migration PY2/PY3: py2_decode aus kodi-six
+# 24.04.2020 Entf. von Farb- und Fettmarkierungen (z.B. 
+#	Downloads aus Suchbeiträgen) - ähnlich clean_Plot (merkliste)
+# 
 def make_filenames(title, max_length=255):
 	PLog('make_filenames:')
-	# erzeugt - hoffentlich - sichere Dateinamen (ohne Extension)
-	# zugeschnitten auf Titelerzeugung in meinen Plugins 
 	
 	title = py2_decode(title)
-	fname = transl_umlaute(title)		# Umlaute	
+	
+	if '[COLOR ' in title:								# farbige Mark.
+		color = stringextract('[COLOR ', ']', title)
+		color = '[COLOR %s]' % color
+	title = title.replace(color, '')	
+	title = title.replace('[/COLOR]', '')			
+	title = title.replace('[B]', '') 					# fett
+	title = title.replace('[/B]', '') 
+	
+	fname = transl_umlaute(title)						# Umlaute	
 	
 	valid_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
 	fname = ''.join(c for c in fname if c in valid_chars)
@@ -1441,7 +1462,7 @@ def ReadFavourites(mode):
 	for item in items:
 		my_ordner.append(item.strip())
 			
-	# PLog(my_favs)
+	PLog(len(my_favs)); PLog(len(my_ordner)); 
 	return my_favs, my_ordner
 
 #----------------------------------------------------------------

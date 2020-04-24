@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.8.8'
-VDATE = '21.04.2020'
+VERSION = '2.8.9'
+VDATE = '24.04.2020'
 
 #
 #
@@ -3324,19 +3324,16 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 		pagenr =  re.findall("=page.(\d+)", element) 	# einzelne Nummer aus dem Pfad s ziehen	
 		PLog(pagenr); 
 					
-		PLog('Mark0')
 		if (pagenr):							# fehlt manchmal, z.B. bei Suche
 			if href.find('=page.') >=0:			# Endmontage
 				title = 'Weiter zu Seite ' + pagenr[0]
-				PLog('Mark1')
 				PLog(type(path_page1)); PLog(type(path_end)); PLog(type(pagenr[0]));
 				href =  path_page1 + path_end + py2_encode(pagenr[0])
-				PLog('Mark2')
 			else:				
 				continue						# Satz verwerfen
 		else:
 			continue							# Satz verwerfen
-		PLog('Mark3')
+		PLog('Mark0')
 			
 		PLog('href: ' + href); PLog('title: ' + title)
 		next_cbKey = 'SingleSendung'
@@ -4314,7 +4311,6 @@ def DownloadsList():
 			txtpath = os.path.join(path, txtfile)   # kompl. Pfad
 			PLog('entry: ' + entry)
 			PLog('txtpath: ' + txtpath)
-			PLog('Mark0')
 			if os.path.exists(txtpath):
 				txt = RLoad(txtpath, abs_path=True)		# Beschreibung laden - fehlt bei Sammeldownload
 			else:
@@ -4594,16 +4590,26 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 #					Bei Abschaltung Sofortstart funktioniert aber die Resumefunktion bei den
 #					Einzelauflösungen.
 #
+# Ordnerverwaltung + Filter s. Wicki
+#	Filter-Deadlock-Sicherungen: 
+#		1. ShowFavs bei leerer Liste	2. Kontextmenü -> watch_filter
+#		3. Settings (Ordner abschalten)
+#
 def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 	PLog('ShowFavs: ' + mode)				# 'Favs', 'Merk'
 	
 	myfilter=''
 	if mode == 'Merk':
-		with open(MERKACTIVE, 'w'):			# Marker aktivieren (Refresh in merkliste)
-			pass
-		if os.path.exists(MERKFILTER) == True:	
-			myfilter = RLoad(MERKFILTER,abs_path=True)
-			PLog('myfilter: ' + myfilter)
+		if SETTINGS.getSetting('pref_merkordner') == 'true':
+			with open(MERKACTIVE, 'w'):			# Marker aktivieren (Refresh in merkliste)
+				pass
+			if os.path.isfile(MERKFILTER):	
+				myfilter = RLoad(MERKFILTER,abs_path=True)
+		else:									# Filter entfernen, falls Ordner abgewählt
+			if os.path.isfile(MERKFILTER):		# Altern.: siehe Kontextmenü -> watch_filter
+				os.remove(MERKFILTER)
+				
+	PLog('myfilter: ' + myfilter)
 	li = xbmcgui.ListItem()
 		
 	if SETTINGS.getSetting('pref_watchsort') == 'false':# Sortierung?
@@ -4813,16 +4819,21 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 			sortlabel=sortlabel, merkname=merkname)
 		item_cnt = item_cnt + 1
 		
-	if item_cnt == 0 and myfilter:					# Ordnerliste zeigen, sonst hier Deadlock
-		#  watch_filter()								# Modul util
-		msg1 = u'Leere Merkliste mit dem Filter: %s' % myfilter
-		msg2 = u'Der Filter wird nun gelöscht; die Merkliste wird ohne Filter geladen.'
-		msg3 = u'Wählen Sie dann im Kontextmenü einen anderen Filter.'
-		MyDialog(msg1,msg2,msg3)
-		if os.path.exists(MERKFILTER):
-			os.remove(MERKFILTER)
-		ShowFavs('Merk')
-		
+	if item_cnt == 0:								# Ordnerliste leer?
+		if myfilter:								# Deadlock
+			heading = u'Leere Merkliste mit dem Filter: %s' % myfilter
+			msg1 = u'Der Filter wird nun gelöscht; die Merkliste wird ohne Filter geladen.'
+			msg2 = u'Wählen Sie dann im Kontextmenü einen anderen Filter.'
+			MyDialog(msg1,msg2,heading=heading)
+			if os.path.exists(MERKFILTER):
+				os.remove(MERKFILTER)
+			# ShowFavs('Merk')						# verdoppelt Home- + Infobutton
+			xbmc.executebuiltin('Container.Refresh')
+		else:
+			heading = u'Leere Merkliste'
+			msg1 = 'Diese Merkliste ist noch leer.'
+			msg2 = u'Einträge werden über das Kontextmenü hinzugefügt'
+			MyDialog(msg1,msg2,heading=heading)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #-------------------------------------------------------
@@ -6096,7 +6107,7 @@ def ZDFStart(title, show_cluster='', path=''):
 				title 	= stringextract('cluster-title"', '<', rec)		# Ref. für ZDFRubrik
 				title	= title.replace('>', '')						# title"> od. title" >
 				title 	= title.strip()
-				PLog('Mark10'); PLog(title); PLog(title_org)
+				PLog('Mark0'); PLog(title); PLog(title_org)
 				if title_org in title:
 					PLog('Cluster_gefunden: %s' % title_org)
 					break  
