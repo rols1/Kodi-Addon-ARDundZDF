@@ -12,6 +12,9 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+26.04.2020	2.9.0 	
+			fanart.png konvertiert zu fanart.jpg (Wurzelverz., addon.xml angepasst).
+
 24.04.2020	2.8.9 	
 			ShowFavs (Haupt-PRG): Löschen des Filters der Merkliste, falls Ordner abgewählt,
 			Austausch os.path.ispath(MERKFILTER) -> os.path.isfile(MERKFILTER).
