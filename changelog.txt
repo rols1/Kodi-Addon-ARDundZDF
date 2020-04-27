@@ -12,6 +12,13 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+27.04.2020	2.9.1 
+			ARDSportPanel: Info falls keine Beiträge gefunden werden.
+			make_filenames (Modul util): fehlende leere Var. color ergänzt.
+			Sendereihe_Sendungen (Modul 3sat): zusätzl. Auswertungsmerkmal für 
+			Einzelbeitrag berücksichtigt ("video-module-video").
+			get_lazyload (Modul 3sat): Fixes codec-Errors (descr, tag).
+
 26.04.2020	2.9.0 	
 			fanart.png konvertiert zu fanart.jpg (Wurzelverz., addon.xml angepasst).
 

@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 24.04.2020
+#	Stand 27.04.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1099,7 +1099,7 @@ def make_filenames(title, max_length=255):
 	PLog('make_filenames:')
 	
 	title = py2_decode(title)
-	
+	color = ''
 	if '[COLOR ' in title:								# farbige Mark.
 		color = stringextract('[COLOR ', ']', title)
 		color = '[COLOR %s]' % color

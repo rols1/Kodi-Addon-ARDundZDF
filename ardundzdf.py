@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.9.0'
-VDATE = '26.04.2020'
+VERSION = '2.9.1'
+VDATE = '27.04.2020'
 
 #
 #
@@ -1800,8 +1800,8 @@ def ARDSportPanel(title, path, img):
 			sendungen = pre_sendungen
 			tdm_seite=True
 	PLog(len(sendungen))
-	
-	mediatype=''
+		
+	mediatype=''; item_cnt=0
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 			
@@ -1854,8 +1854,15 @@ def ARDSportPanel(title, path, img):
 		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
 			(quote(path), quote(title), quote(img), quote(summ))				
 		addDir(li=li, label=title, action="dirList", dirID="ARDSportVideo", fanart=img, thumb=img, 
-			fparams=fparams, summary=summ, mediatype=mediatype)		 
+			fparams=fparams, summary=summ, mediatype=mediatype)	
+		item_cnt = item_cnt +1	 
 
+	if item_cnt == 0:
+		msg1 = title_org
+		msg2 = 'keine Beiträge gefunden'
+		icon = R(ICON_DIR_FOLDER)
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
+	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 #--------------------------------------------------------------------------------------------------

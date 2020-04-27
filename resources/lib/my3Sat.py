@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 09.04.2020
+#	Stand: 27.04.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -620,8 +620,19 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 	# 2. Strukturen nach Seitenanfang (1 Video doppelt möglich)
 	PLog('Sendereihe_Sendungen2:')	
 	rubriken =  blockextract('<picture class="">', page)
+	if len(rubriken) == 0:				# Einzelbeitrag mit Abspielbutton 
+		# get_video_carousel od. get_zdfplayer_content nicht geeignet
+		# Seite kürzen, da 2 x duration 
+		if 'class="video-module-video b-ratiobox"' in page:
+			summ = stringextract('paragraph-large ">', '<', page)
+			summ = unescape(summ); summ = repl_json_chars(summ)
+			content = stringextract('class="video-module-video b-ratiobox"', '</button>', page)
+			img_src = stringextract('teaser-image="[', ',', content)
+			duration = stringextract('duration": "', '"', content)
+			SingleBeitrag(title, path, img_src, summ, dauer='', duration=duration)
+			return 
+			
 	PLog(len(rubriken))
-	
 	 									# kein Einzelbeitrag, weiterführender Link?
 	# Bsp.: Rubriken/Kabarett/35 JAHRE 3SAT - JUBILÄUMSPROGRAMM
 	#	-> rekursiv
@@ -727,10 +738,12 @@ def get_lazyload(li, page, ref_path):
 			path	= "%s/%s.html" % (DreiSat_BASE, sophId)		# Zielpfad bauen
 			
 		tag = tag.strip()
+		descr=py2_decode(descr); tag=py2_decode(tag) 
 		if tag:
 			descr = "%s\n\n%s"   % (tag, descr)
 				
-		title = repl_json_chars(title); descr = repl_json_chars(descr); 
+		title = repl_json_chars(title); 
+		descr = repl_json_chars(descr); 
 		descr_par =	descr.replace('\n', '||')	
 		
 		cnt = cnt+1	
@@ -836,6 +849,8 @@ def get_teaserElement(rec):
 def get_video_carousel(li, page):
 	PLog('get_video_carousel:')
 	content =  blockextract('video-carousel-item">', page)
+	if len(content) == 0:
+		content =  blockextract('class="video-module-video b-ratiobox"', page)
 	PLog(len(content))
 	
 	mediatype='' 		
