@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 27.04.2020
+#	Stand 28.04.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -68,6 +68,8 @@ DEBUG			= SETTINGS.getSetting('pref_info_debug')
 
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
+# Github-Icons zum Nachladen aus Platzgründen
+ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
 
 ARDStartCacheTime = 300						# 5 Min.
 
@@ -179,82 +181,92 @@ def home(li, ID):
 	if ID == NAME:		# 'ARD und ZDF'
 		name = 'Home : ' + NAME
 		fparams="&fparams={}"
-		addDir(li=li, label=name, action="dirList", dirID="Main", fanart=R('home.png'), 
-			thumb=R('home.png'), fparams=fparams)
+		img = R('icon.png') 
+		addDir(li=li, label=name, action="dirList", dirID="Main", fanart=img, 
+			thumb=img, fparams=fparams)
 			
 	if ID == 'ARD':
-		if SETTINGS.getSetting('pref_use_classic') == 'false':	# Umlabeln ür ARD-Suche (Classic)
+		if SETTINGS.getSetting('pref_use_classic') == 'false':	# Umlabeln für ARD-Suche (Classic)
 			ID ='ARD Neu'
 					
 	if ID == 'ARD':
+		img = R('home-ard-classic.png')
 		name = 'Home: ' + "ARD Mediathek Classic"
 		# CurSender = Dict("load", "CurSender")	# entf.  bei Classic
 		fparams="&fparams={'name': '%s', 'sender': '%s'}"	% (quote(name), '')
-		addDir(li=li, label=title, action="dirList", dirID="Main_ARD", fanart=R('home-ard-classic.png'), 
-			thumb=R('home-ard-classic.png'), fparams=fparams)
+		addDir(li=li, label=title, action="dirList", dirID="Main_ARD", fanart=img, 
+			thumb=img, fparams=fparams)
 		
-	if ID == 'ARD Neu':
+	if ID == 'ARD Neu':			
+		img = R('ard-mediathek.png') 
 		name = 'Home: ' + "ARD Mediathek"
 		CurSender = Dict("load", "CurSender")
 		fparams="&fparams={'name': '%s', 'CurSender': '%s'}"	% (quote(name), quote(CurSender))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", 
-			fanart=R('home-ard.png'), thumb=R('home-ard.png'), fparams=fparams)
+			fanart=img, thumb=img, fparams=fparams)
 			
 	if ID == 'ZDF':
+		img = R('zdf-mediathek.png')
 		name = 'Home: ' + "ZDF Mediathek"
 		fparams="&fparams={'name': '%s'}" % quote(name)
-		addDir(li=li, label=title, action="dirList", dirID="Main_ZDF", fanart=R('home-zdf.png'), 
-			thumb=R('home-zdf.png'), fparams=fparams)
+		addDir(li=li, label=title, action="dirList", dirID="Main_ZDF", fanart=img, 
+			thumb=img, fparams=fparams)
 		
 	if ID == 'ZDFmobile':
+		img = R('zdf-mobile.png')
 		name = 'Home :' + "ZDFmobile"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
-			fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_MAIN_ZDFMOBILE), fparams=fparams)
+			fanart=img, thumb=img, fparams=fparams)
 			
 	if ID == 'PODCAST':
+		img = R(ICON_MAIN_POD)
 		name = 'Home :' + "Radio-Podcasts"
 		fparams="&fparams={'name': '%s'}" % quote(name)
-		addDir(li=li, label=title, action="dirList", dirID="Main_POD", fanart=R(ICON_MAIN_POD), 
-			thumb=R(ICON_MAIN_POD), fparams=fparams)
+		addDir(li=li, label=title, action="dirList", dirID="Main_POD", fanart=img, 
+			thumb=img, fparams=fparams)
 			
 	if ID == 'ARD Audiothek':
+		img = R(ICON_MAIN_AUDIO)
 		name = 'Home :' + "ARD Audiothek"
 		fparams="&fparams={'title': '%s'}" % quote(name)
-		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=R(ICON_MAIN_AUDIO), 
-			thumb=R(ICON_MAIN_AUDIO), fparams=fparams)
+		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=img, 
+			thumb=img, fparams=fparams)
 			
 	if ID == '3Sat':
+		img = R('3sat.png')
 		name = 'Home :' + "3Sat"
 		fparams="&fparams={'name': '%s'}" % quote(name)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", fanart=R('3sat.png'), 
-			thumb=R('3sat.png'), fparams=fparams)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", fanart=img, 
+			thumb=img, fparams=fparams)
 			
 	if ID == 'FUNK':
+		img = R('funk.png')
 		name = 'Home :' + "FUNK"
 		fparams="&fparams={}"
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Main_funk", fanart=R('funk.png'), 
-			thumb=R('funk.png'), fparams=fparams)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Main_funk", fanart=img, 
+			thumb=img, fparams=fparams)
 			
 	if ID == 'Kinderprogramme':
+		img = R('childs.png')
 		name = 'Home :' + ID
-		thumb = R('childs.png')
 		fparams="&fparams={}"
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Main_childs", fanart=thumb, 
-			thumb=thumb, fparams=fparams)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Main_childs", fanart=img, 
+			thumb=img, fparams=fparams)
 
 	if ID == 'TagesschauXL':
+		img = ICON_MAINXL		# github
 		name = 'Home :' + ID
 		fparams="&fparams={}"
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", fanart=ICON_MAINXL, 
-			thumb=ICON_MAINXL, fparams=fparams)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", fanart=img, 
+			thumb=img, fparams=fparams)
 			
 	if ID == 'phoenix':
+		img = R(ICON_PHOENIX)
 		name = 'Home :' + ID
-		thumb = R(ICON_PHOENIX)
 		fparams="&fparams={}"
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.Main_phoenix", fanart=thumb, 
-			thumb=thumb, fparams=fparams)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.Main_phoenix", fanart=img, 
+			thumb=img, fparams=fparams)
 
 	return li
 	 
@@ -663,8 +675,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				req = Request(path)
 								
 			r = urlopen(req)	
-			new_url = r.geturl()											# follow redirects
-			PLog("new_url: " + new_url)
+			new_url = r.geturl()										# follow redirects
+			PLog("new_url: " + new_url)									# -> msg
 			# PLog("headers: " + str(r.headers))
 			
 			compressed = r.info().get('Content-Encoding') == 'gzip'
@@ -678,6 +690,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				PLog(len(page))
 			r.close()
 			PLog(page[:100])
+			msg = new_url
 		except URLError as exception:
 			msg = str(exception)
 			PLog(msg)
@@ -1071,7 +1084,8 @@ def unescape(line):
 		(u"–", u"-"), (u"&#x27;", u"'"), (u"&#xD;", u""), (u"\xc2\xb7", u"-"),
 		(u'undoacute;', u'o'), (u'&eacute;', u'e'), (u'&egrave;', u'e'),
 		(u'&atilde;', u'a'), (u'quot;', u' '), (u'&#10;', u'\n'),
-		(u'&#8222;', u' '), (u'&#8220;', u' '), (u'&#034;', u' ')):
+		(u'&#8222;', u' '), (u'&#8220;', u' '), (u'&#034;', u' '),
+		(u'&copy;', u' | ')):
 		line = line.replace(*r)
 	return line
 #----------------------------------------------------------------  
@@ -1088,7 +1102,8 @@ def transl_doubleUTF8(line):	# rückgängig: doppelt kodiertes UTF-8
 
 		line = line.replace(*r)
 	return line	
-#----------------------------------------------------------------  
+#---------------------------------------------------------------- 
+# Dateinamen für Downloads + Bilderserien 
 # erzeugt - hoffentlich - sichere Dateinamen (ohne Extension)
 # zugeschnitten auf Titelerzeugung in meinen Plugins 
 # Migration PY2/PY3: py2_decode aus kodi-six

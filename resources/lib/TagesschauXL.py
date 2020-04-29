@@ -258,7 +258,7 @@ def menu_hub(title, path, ID, img):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')			# Home-Button
 	
-	li = get_content(li, page, ID=ID)
+	li = get_content(li, page, ID=ID, path=path)
 	
 	# Archiv 'Bericht aus Berlin': enthält weitere Beiträge eines Monats (java-script -
 	#	hier nicht zugänglich, s. id="monthselect") 
@@ -380,7 +380,7 @@ def XL_Search(query='', search=None, pagenr=''):
 # ----------------------------------------------------------------------
 # mark dient der Farbmarkierung bei ID='Search' 
 #
-def get_content(li, page, ID, mark=''):	
+def get_content(li, page, ID, mark='', path=''):	
 	PLog('get_content:')
 	PLog(len(page)); PLog(ID);
 	
@@ -393,19 +393,22 @@ def get_content(li, page, ID, mark=''):
 		base_url = BASE_FAKT
 	if ID=='ARD_PolitikRadio':
 		content =  blockextract('class="teaser"', page)
-		
-	base_url = BASE_URL						
-	PLog(len(page)); PLog(len(content));
+		more = stringextract('>Weitere Audios<', 'googleon: index', page)
+		more_list = blockextract('<a href=', more)
+		content = content + more_list			# Weitere Audios anhängen
 	
+
+	PLog(len(page)); PLog(len(content));
 	if len(content) == 0:										# kein Ergebnis oder allg. Fehler
-		msg1 = 'Leider keine Inhalte' 							# z.B. bei A-Z für best. Buchstaben 
-		msg2 = 'Es ist leider ein Fehler aufgetreten.'				# ZDF-Meldung Server-Problem
-		msg3 = ''
-		if page.find('"title">' + s) >= 0:
+		msg1 = 'Keine Inhalte gefunden.' 						# 
+		msg2 = u'Bitte die Seite im Web überprüfen.'		
+		msg3 = path
+		if page.find('"title">' + msg2) >= 0:
 			msg3 = u'Bitte versuchen Sie es später noch einmal.'					
 		MyDialog(msg1, msg2, msg3)	
 		return
 		
+	base_url = BASE_URL
 	mediatype='' 		
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 		mediatype='video'
@@ -485,6 +488,16 @@ def get_content(li, page, ID, mark=''):
 				headline = stringextract('<h2 class="headline">', '</h2>', page) # außerhalb akt. Satz! 
 			teasertext = stringextract('class="teasertext">', '</p>', rec)	# Autor + Sendeanstalt					
 			tagline = teasertext.strip()
+			if headline == '':												# zusätzl. Liste "Weitere Audios"
+				teasertext = "Weitere Audios"
+				headline = stringextract('<a', '</li>', rec)				
+				teaser_url = stringextract('<a href="', '"', rec)
+				headline = headline.replace(teaser_url,'')
+				headline = cleanhtml(headline); 
+				headline = headline.replace('href="">','')
+				teaser_url = BASE_URL + teaser_url
+				teaser_img = R(ICON_MAIN_POD)
+			
 		if ID=='ARD_Archiv_Day':
 			headlineclass = stringextract('headline">', '</h4>', rec)			# Headline mit url + Kurztext
 			headline = stringextract('html">', '</a>', headlineclass)

@@ -12,6 +12,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+29.04.2020	2.9.2
+			get_content (Modul TagesschauXL): Fix Var msg2 (falsch: s) für MyDialog,
+			Ausfall-Info mit Web-Url ergänzt. 
+			TagesschauXL: Webanfrage Redaktion wg. fehlender Inhalte zu #kurzerklärt
+			(Wiederherstellung nach ca. Std.).
+			TagesschauXL / Menü Politik im Radio: Auswertung "Weitere Audios" in
+			get_content.
+			home (Modul util): Austausch der klassischen Home-Icons gegen Sender-Logos.
+			ZDFSportLiveSingle: Fix Codec für msg1 in MyDialog.
+			ARDSportPanel (ARD Neu): abweichendes Seitenformat berücksichtigt - relevant
+			für https://tokio.sportschau.de/tokio2020/.
+			get_page (Modul util): Rückgabe verschobener Url (Redirect) an aufrufene
+			Funktion (relevant für https://tokio.sportschau.de/tokio2020/. 
+			unescape (Modul util): Konvertierung '&copy;' ->' | '.
+			
 27.04.2020	2.9.1 
 			ARDSportPanel: Info falls keine Beiträge gefunden werden.
 			make_filenames (Modul util): fehlende leere Var. color ergänzt.

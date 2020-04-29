@@ -1763,9 +1763,11 @@ def ARDSport(title):
 	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
 	PLog(onlySender)
 			
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #--------------------------------------------------------------------------------------------------
+# 28.04.2020 redirected Url (s. Modul util) verwendet für https://tokio.sportschau.de/tokio2020/
+#	s.u.
 def ARDSportPanel(title, path, img):
 	PLog('ARDSportPanel:'); 
 	title_org = title
@@ -1782,12 +1784,14 @@ def ARDSportPanel(title, path, img):
 		pre_sendungen = blockextract('class="teaser ', page)
 		PLog(len(pre_sendungen))	
 	
-	page, msg = get_page(path=path)		
+	page, msg = get_page(path=path)	
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li 
+	path_org = msg										# ev. redirected
+	PLog(path_org)
 	PLog(len(page))
 	
 	if path.endswith('/video/index.html'):			# Struktur abweichend
@@ -1804,38 +1808,56 @@ def ARDSportPanel(title, path, img):
 	mediatype=''; item_cnt=0
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
-			
+		
+	
 	for s in sendungen:
 		myclass = stringextract('div class="media mediaA ', '>', s)
-		PLog("myclass: " + myclass)
-		if "video" not in myclass and "audio" not in myclass:
-			continue
-		duration=''
-		if 'uration"' in s:
-			duration = 	stringextract('duration">', '<', s)			# Video im Beitrag?
-		path 		= stringextract('href="', '"', s)	
-		if path.startswith('http')	== False:						# http://www.ard.de/ ?
+		PLog("myclass1: " + myclass)
+		
+		duration=''; summ=''; title=''; path=''
+		if myclass == '':
+			# abweichende Struktur, Bsp. https://tokio.sportschau.de/tokio2020/:
+			if 'class="icon icon_video"' in s or 'class="icon icon_audio"' in s:
+				base  = 'https://%s/' % path_org.split('/')[2]
+				img	= stringextract('img src="', '"', s)
+				if img.startswith('http') == False:
+					img	= base + img
+				path = base + stringextract('href="', '"', s)
+				if path.startswith('http') == False:
+					path = base + path
+				title = stringextract('title="', '"', s)
+				summ = stringextract('alt="', '"', s)		
+		else:			
+			PLog("myclass2: " + myclass)
+			if "video" not in myclass and "audio" not in myclass:
+				continue
+			path = stringextract('href="', '"', s)	
+			if path.startswith('http') == False:						# http://www.ard.de/ ?
 				path = SBASE + stringextract('href="', '"', s)		
-		img			= stringextract('srcset="', '"', s)				# erste = größtes Bild
-		if img.startswith('//'):									# //www1.wdr.de/..
-			img	= 'https:' + img
-		else:
-			if img.startswith('http') == False:						# /sendung/moderatoren/
-				img	= SBASE + img
-		title		= stringextract('class="headline">', '</h', s)
-		if title == '':
-			title = stringextract('<span>', '</strong>', s)			# Videosseite: Kleinbeiträge unten
-		if title == '':
-			title = stringextract('title="', '"', s)				# ev. als Bildtitel
-		summ		= stringextract('teasertext">', '<strong>', s)
+			if 'uration"' in s:
+				duration = 	stringextract('duration">', '<', s)			# Video im Beitrag?
+			img	= stringextract('srcset="', '"', s)				# erste = größtes Bild
+			if img.startswith('//'):									# //www1.wdr.de/..
+				img	= 'https:' + img
+			else:
+				if img.startswith('http') == False:						# /sendung/moderatoren/
+					img	= SBASE + img
+			title = stringextract('class="headline">', '</h', s)
+			if title == '':
+				title = stringextract('<span>', '</strong>', s)			# Videosseite: Kleinbeiträge unten
+			if title == '':
+				title = stringextract('title="', '"', s)				# ev. als Bildtitel
+			summ = stringextract('teasertext">', '<strong>', s)
+
 		if summ:
 			if duration:
 				summ = summ + " | " + "Dauer " + duration
 		else:
 			summ = "Dauer " + duration
 		
-		title		= mystrip(title); title = cleanhtml(title)
-		title		= repl_json_chars(title)
+		title = mystrip(title); title = unescape(title); 
+		title = cleanhtml(title); title = repl_json_chars(title)
+		
 		summ		= unescape(summ); summ = mystrip(summ)
 		summ		= cleanhtml(summ); summ=repl_json_chars(summ)
 		title=title.strip(); summ=summ.strip();						# zusätzl. erf.
@@ -1863,7 +1885,7 @@ def ARDSportPanel(title, path, img):
 		icon = R(ICON_DIR_FOLDER)
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
 	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #--------------------------------------------------------------------------------------------------
 # Bilder für ARD Sportschau, z.B. Moderatoren
@@ -2001,7 +2023,6 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	PLog('ARDSportVideo:'); 
 
 	title_org = title
-		
 	page, msg = get_page(path=path)		
 
 	# Livestream-Problematik 
@@ -2018,7 +2039,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 			(quote_plus(url), quote_plus(title), quote_plus(img), quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			mediatype=mediatype, summary=summ) 
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)	
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 	# Bsp. video_src: "url":"http://deviceids-medp.wdr.de/ondemand/167/1673848.js"}
 	#	-> 	//ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/master.m3u8
@@ -2096,7 +2117,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 				summary=summ) 
 			
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 	# Website enthält ev. Button: Ich bin damit einverstanden, dass mir Bilder/Videos von Twitter 
 	#	angezeigt werden. Nach Bestätigung (syndication.twitter.com/settings) wird das Twitter-
@@ -2149,7 +2170,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			mediatype=mediatype, summary=summ) 
 			
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 ####################################################################################################
 # 
@@ -7093,7 +7114,7 @@ def ZDFSportLiveSingle(title, path, img):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')						# Home-Button
 	
-	page, msg = get_page(path=path)		
+	page, msg = get_page(path=path)	
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
@@ -7105,7 +7126,7 @@ def ZDFSportLiveSingle(title, path, img):
 	if 'Beitragslänge:' not in videomodul:	 						# Titelvideo fehlt 
 		descr = stringextract('"description": "', '"', page) 		# json-Abschnitt
 		descr = unescape(descr)
-		msg1 = 'Leider noch kein Video verfügbar. Vorabinfo:'
+		msg1 = u'Leider noch kein Video verfügbar. Vorabinfo:'
 		msg2 = descr
 		msg3 = ''
 		MyDialog(msg1, msg2, msg3)

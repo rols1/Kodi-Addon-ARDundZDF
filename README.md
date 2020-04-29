@@ -102,8 +102,8 @@ Funktionen:
 - Kodi-Favoriten lassen sich einblenden und im Addon aufrufen
 - interne Merkliste
 
-#### Update-Modul
-- nach der Erst-Installation können weitere Updates durch das Plugin installiert werden
+#### Updates
+- entweder mit dem integrierten <b>Updatemodul</b> oder via <b>kodinerds-Repo</b>
 
 #### weitere Module
 - ZDFmobile
@@ -121,7 +121,7 @@ INSTALLATION:
 - Beide zip-Dateien mittels Kodi-Menü Addons/Addon-Browser installieren
 - Addon öffen und Addon-Einstellungen anpassen.
 - [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
-- Testversion für Kodi-Matrix: [Kodi-Matrix-ARDundZDF.zip](https://c.gmx.net/@327723216099344844/cASZJUNuQpqlEImIS62dmA). Bitte dazu das LIESMICH im gmx-Ordner beachten.
+- Testversion für Kodi-Matrix: [plugin.video.ardundzdf-x.x.x+matrix.zip](https://c.gmx.net/@327723216099344844/cASZJUNuQpqlEImIS62dmA). Bitte dazu das LIESMICH im gmx-Ordner beachten.
 
 Credits:
 ===================  
