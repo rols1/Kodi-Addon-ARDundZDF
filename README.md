@@ -103,7 +103,7 @@ Funktionen:
 - interne Merkliste
 
 #### Updates
-- entweder mit dem integrierten <b>Updatemodul</b> oder via <b>kodinerds-Repo</b>
+- entweder mit dem integrierten <b>Updatemodul (autom. Anpassung an Kodi-Version)</b> oder via <b>kodinerds-Repo</b>
 
 #### weitere Module
 - ZDFmobile
@@ -116,12 +116,11 @@ Funktionen:
 
 INSTALLATION:
 ===================  
-- Download der zip-Datei hier: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
+- Download der zip-Datei: [aktuelle Release, Leia-Version](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) oder [Repo Kodinerds-Repo, Leia- und Matrix-Version](https://repo.kodinerds.net)
 - Download script.module.kodi-six.zip hier https://github.com/romanvm/kodi.six/releases
 - Beide zip-Dateien mittels Kodi-Menü Addons/Addon-Browser installieren
 - Addon öffen und Addon-Einstellungen anpassen.
 - [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
-- Testversion für Kodi-Matrix: [plugin.video.ardundzdf-x.x.x+matrix.zip](https://c.gmx.net/@327723216099344844/cASZJUNuQpqlEImIS62dmA). Bitte dazu das LIESMICH im gmx-Ordner beachten.
 
 Credits:
 ===================  
