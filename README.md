@@ -116,7 +116,7 @@ Funktionen:
 
 INSTALLATION:
 ===================  
-- Download der zip-Datei: [aktuelle Release, Leia-Version](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) oder [Repo Kodinerds-Repo, Leia- und Matrix-Version](https://repo.kodinerds.net)
+- Download der zip-Datei: [aktuelle Release, Leia-Version](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) oder [kodinerds-Repo, Leia- und Matrix-Version](https://repo.kodinerds.net)
 - Download script.module.kodi-six.zip hier https://github.com/romanvm/kodi.six/releases
 - Beide zip-Dateien mittels Kodi-Menü Addons/Addon-Browser installieren
 - Addon öffen und Addon-Einstellungen anpassen.
