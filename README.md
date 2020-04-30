@@ -110,6 +110,7 @@ Funktionen:
 - 3Sat
 - funk
 - Kinderprogramme (z.Z. KIKA und ZDFtivi)
+- TagesschauXL (https://www.tagesschau.de/)
 - phoenix (https://www.phoenix.de/)
 
 
