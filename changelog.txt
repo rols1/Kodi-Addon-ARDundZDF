@@ -12,11 +12,24 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+??.05.2020	2.9.3
+			ShowFavs: Anpassung thumb-Pfad an lokales Addon bei externer Merkliste.
+			Main (Menü "Suche in ARD und ZDF"): Anpassung Info-Text zu Einzelbeiträgen +
+			Sendreihen.
+			Cache für endOfDirectory-Call: Main, Main_ARD, Main_ZDF, Main_NEW (ARD Neu),
+			Main_childs, Main_XL (TagesschauXL), Main_ZDFmobile. 
+			Audiothek (Menü "Unsere Favoriten"): in Audio_get_sendungen Default-Auswertung
+			für ID=Audio_get_rubrik hinzugefügt (Titel fehlten), Doppler in descr entfernt.
+			ARDVerpasstContent (Modul ARD Neu): HTTP-Header mit cache-control hinzugefügt 
+			(mehrf. leere Seiten).
+			ARDSport, ARDSportPanel: Pfadbasis bei den Tab-Links ergänzt + alte http-Links
+			durch https-Links ersetzt (mehrf. Klemmer).
+
 29.04.2020	2.9.2
 			get_content (Modul TagesschauXL): Fix Var msg2 (falsch: s) für MyDialog,
 			Ausfall-Info mit Web-Url ergänzt. 
 			TagesschauXL: Webanfrage Redaktion wg. fehlender Inhalte zu #kurzerklärt
-			(Wiederherstellung nach ca. Std.).
+			(Wiederherstellung nach ca. 3 Std.).
 			TagesschauXL / Menü Politik im Radio: Auswertung "Weitere Audios" in
 			get_content.
 			home (Modul util): Austausch der klassischen Home-Icons gegen Sender-Logos.

@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.9.1'
-VDATE = '27.04.2020'
+VERSION = '2.9.3'
+VDATE = '02.05.2020'
 
 #
 #
@@ -295,12 +295,13 @@ def Main():
 	title="Suche in ARD und ZDF"
 	if SETTINGS.getSetting('pref_use_classic') == 'true':
 		tagline = 'gesucht wird in ARD  Mediathek Classic und in der ZDF Mediathek '
+		summ	= 'gesucht wird nur nach Einzelbeiträgen - Sendereihen bleiben unberücksichtigt.'
 		fparams="&fparams={'title': '%s'}" % quote(title)
 		addDir(li=li, label=title, action="dirList", dirID="SearchARDundZDF", fanart=R('suche_ardundzdf.png'), 
-			thumb=R('suche_ardundzdf.png'), tagline=tagline, fparams=fparams)
+			thumb=R('suche_ardundzdf.png'), tagline=tagline, summary=summ, fparams=fparams)
 	else:
 		tagline = 'gesucht wird in ARD  Mediathek Neu und in der ZDF Mediathek.'
-		summ	= 'Gesucht wird nur nach Einzelbeiträgen - Sendereihen bleiben unberücksichtigt.'
+		summ	= 'beim ZDF wird nur nach Einzelbeiträgen gesucht, bei ARD Neu auch nach Sendereihen.'
 		fparams="&fparams={'title': '%s'}" % quote(title)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tagline, 
@@ -460,7 +461,7 @@ def Main():
 	addDir(li=li, label='Info', action="dirList", dirID="ShowText", fanart=R(FANART), thumb=R(ICON_INFO), 
 		fparams=fparams, summary=summary, tagline=tagline)
 				
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #----------------------------------------------------------------
 # 20.01.2020 usemono für textviewer (ab Kodi v18)
 def ShowText(path, title):
@@ -534,7 +535,7 @@ def Main_ARD(name, sender=''):
 
 	# 25.01.2019 Senderwahl hier deaktivert - s. Modul ARDnew
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		 		
 #---------------------------------------------------------------- 
 def Main_ZDF(name):
@@ -588,7 +589,7 @@ def Main_ZDF(name):
 	addDir(li=li, label="Bilderserien", action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_BILDERSERIEN), 
 		thumb=R(ICON_ZDF_BILDERSERIEN), fparams=fparams)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------------------------
 def Main_POD(name):
@@ -1132,6 +1133,13 @@ def Audio_get_sendungen(li, gridlist, page, ID):	# extrahiert Einzelbeiträge
 	for grid in gridlist:
 		# PLog(grid) # Debug
 		descr2	= ''; title='';	stitle=''										
+		title 	= stringextract('podcast-title"', '<', grid)	# Default ergänzt 01.05.2020
+		stitle 	= stringextract('episode-title"', '<', grid)
+		title = rm_datav(title); stitle = rm_datav(stitle);
+		descr = stitle											# Fallback descr
+		if stitle:
+			title = "%s | %s" % (title, stitle)
+		
 		label_list = blockextract('aria-label="', grid)			# title/stitle geändert 30.03.2020
 		if ID == 'Highlights':
 			title 	= stringextract('aria-label="', '"', label_list[1])
@@ -1141,12 +1149,16 @@ def Audio_get_sendungen(li, gridlist, page, ID):	# extrahiert Einzelbeiträge
 			stitle 	= stringextract('aria-label="', '"', label_list[1])
 		title 	= unescape(title); stitle = unescape(stitle)
 		
-		if ' | ' in title:										# Titel aufteilen, falls zu lang
-			if len(title) > 90:
-				title, descr2 = title.split(' | ')
+		PLog("title: " + title); 
+		if ' | ' in title:									# Titel aufteilen 
+			title = title.split('|')						# mehr als 1 | möglich
+			descr2 = title[-1]								# Fallback descr
+			title.remove(descr2)							# entf.
+			if len(title) > 0:
+				title = " | ".join(title)
 			else:
-				descr2 = title.split(' | ')[1]
-			
+				title = title[0]
+						
 		mp3_url	= stringextract('share-menu-button', 'aria-label', grid)	# teilw. ohne mp3-url
 		mp3_url	= stringextract('href="', '"', mp3_url)    		# mp3-File
 		href 	= stringextract('podcast-title"', 'aria-label', grid)				# Default
@@ -1165,14 +1177,16 @@ def Audio_get_sendungen(li, gridlist, page, ID):	# extrahiert Einzelbeiträge
 			descr = descr2
 		dauer	= stringextract('duration"', '</div>', grid)
 		dauer	= cleanhtml(dauer); dauer = mystrip(dauer)
-		pos		= dauer.find('>'); dauer = dauer[pos+1:]		# entfernen: data-v-7c906280>		
+		pos		= dauer.find('>'); dauer = dauer[pos+1:]	# entfernen: data-v-7c906280>		
+		
 		
 		if dauer:
 			descr	= "[B]Audiobeitrag[/B] | %s\n\n%s" % (dauer, descr)
 		else:
 			descr	= "[B]Audiobeitrag[/B]\n\n%s" % (descr)
 		if stitle:
-			descr	= "%s\n%s" % (stitle, descr)
+			if stitle.strip() in descr == False:			# Doppler vermeiden			
+				descr	= "%s\n%s" % (stitle, descr)
 			  
 		descr	= unescape(descr); descr = repl_json_chars(descr)
 		summ_par= descr.replace('\n', '||')
@@ -1198,6 +1212,16 @@ def Audio_get_sendungen(li, gridlist, page, ID):	# extrahiert Einzelbeiträge
 		cnt=cnt+1
 
 	return li	
+#-----------------------------
+# entfernt data-v-Markierung + LF in Titel und Subtitel,
+#	Bsp.: episode-title" data-v-132985da> ... </h3>
+def rm_datav(line):
+	PLog("rm_datav:")
+	pos	= line.find('>')
+	if pos >= 0:
+		line = line[pos+1:]
+		line = line.strip()
+	return line
 #----------------------------------------------------------------
 # AudioSingle gibt direkt das Thema-mp3 seiner Homepage wieder - die 
 # 	Funktion ist Fallback für Beiträge (Bsp. Startseite), für die
@@ -1654,8 +1678,10 @@ def ARDSport(title):
 			title = stringextract('">', '</a>', tab)
 		i=i+1
 		if 'Ergebnisse' in title:							# Switch zu Hintergrund, 
-			href = SBASE + '/hintergrund/index.html'		# Ergebnisse ohne Videos
-			title = 'Hintergrund'
+			title = 'Hintergrund'							# Ergebnisse ohne Videos
+		if href.startswith('http') == 'False':
+			href = SBASE + href
+		href = href.replace('http://', 'https://')			# alte Links im Quelltext
 		
 		PLog('Satz:'); 
 		PLog(href); PLog(title);
@@ -4777,7 +4803,16 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 					Plot = dirPar.split('=')[1]
 				#if 	dirPar.startswith('mediatype'):		# fehlt in Kodi's Fav-Funktion 	
 				#	mediatype = dirPar.split('=')[1]
-				
+		
+		# thumb-Pfad an lokales Addon anpassen (externe Merkliste):
+		if thumb and mode == 'Merk' and SETTINGS.getSetting('pref_merkextern') == 'true': 
+			if thumb.startswith('http') == False:	
+				if '/addons/' in thumb:
+					home_thumb, icon = thumb.split('/addons/')
+					myhome = xbmc.translatePath("special://home")
+					thumb = "%saddons/%s" % (myhome, icon)
+					PLog("home_thumb: %s, icon: %s" % (home_thumb, icon))
+			
 		PLog('dirPars:'); PLog(action); PLog(dirID); PLog(fanart); PLog(thumb);
 		PLog(Plot_org); PLog(fpar_plot); PLog(Plot);
 		if summary == '':								# Begleitinfos aus fparams verwenden

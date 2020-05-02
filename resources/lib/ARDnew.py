@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 09.04.2020
+#	Stand 01.05.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -154,7 +154,7 @@ def Main_NEW(name, CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
 		thumb=R('tv-regional.png'), fparams=fparams) 
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		 		
 #---------------------------------------------------------------- 
 # Startseite der Mediathek - passend zum ausgewählten Sender -
@@ -1513,6 +1513,8 @@ def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
 
 #---------------------------------------------------------------- 
 # Verpasst Mediathek Neu - Liste Wochentage
+# 	bei ausgewähltem Sender wird in ARDVerpasstContent die Sendungs-
+#	liste direkt angezeigt, andernfalls die Senderliste
 #
 def ARDVerpasst(title, CurSender):
 	PLog('ARDVerpasst:');
@@ -1554,12 +1556,14 @@ def ARDVerpasst(title, CurSender):
 #---------------------------------------------------------------- 
 # ARDVerpasstContent Mediathek Neu - Inhalt des gewählten Tages
 #	Seite html (Uhrzeit, Titel, Link) / json (Blöcke "shortTitle") 
-# Ablauf: 	1. Senderliste (Aufruf ohne timeline_sender)
+# Ablauf: 	1. Senderliste (Aufruf ohne timeline_sender od. /ard/ im Pfad)
 #			2. Einzelsender (Aufruf mit timeline_sender)
 # 28.08.2019 timeline_sender nicht mehr auf den Datumsseiten verfügbar,
 #	nur noch auf der Einstiegsseite ../ard/program/
 # 02.03.2020 wieder leere html-Seite bei Zusatz ?devicetype=pc (nur Heute),
-#	geändert in ?devicetype=mobile. Header hier ohne Auswirkung 
+#	geändert in ?devicetype=mobile. Header: vermutl. cache-control
+#	entscheident (nicht geklärt).
+# 
 def ARDVerpasstContent(title, path, CurSender, timeline_sender='', label_sender=''):
 	PLog('ARDVerpasstContent:');
 	PLog(title);  PLog(path); PLog(timeline_sender); 
@@ -1572,13 +1576,13 @@ def ARDVerpasstContent(title, path, CurSender, timeline_sender='', label_sender=
 	if 'ardmediathek.de/ard/' in path:			# ARD-Alle: erst Senderliste zeigen
 		path = "%s/%s/program/" % (BETA_BASE_URL, sender)
 		
-	#headers="{'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Mobile Safari/537.36',\
-	# 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',\
-	# 'authority': 'www.ardmediathek.de'}"
-	#headers=quote(headers)					# headers ohne quotes in get_page leer 
+	headers="{'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Mobile Safari/537.36',\
+	 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',\
+	 'authority': 'www.ardmediathek.de', 'cache-control': 'max-age=0'}"
+	headers=quote(headers)					# headers ohne quotes in get_page leer 
+
 	path = path + "?devicetype=mobile"		# s.o.
-	page, msg = get_page(path)
-	#page, msg = get_page(path, header=headers)
+	page, msg = get_page(path, header=headers)
 	if page == '':	
 		msg1 = 'Fehler in ARDVerpasstContent'
 		msg2=msg
