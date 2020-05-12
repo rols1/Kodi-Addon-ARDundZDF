@@ -35,14 +35,14 @@ import importlib		# dyn. Laden zur Laufzeit, s. router
 
 
 # ständige Addonmodule - Rest dyn. in router
-import resources.lib.updater	as updater	
+import resources.lib.updater as updater	
 from resources.lib.util import *
 																		
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.9.3'
-VDATE = '02.05.2020'
+VERSION = '2.9.6'
+VDATE = '12.05.2020'
 
 #
 #
@@ -92,29 +92,17 @@ ICON_UPDATER_NEW 		= 'plugin-update-new.png'
 ICON_ARD_AZ 			= 'ard-sendungen-az.png'
 ICON_ARD_VERP 			= 'ard-sendung-verpasst.png'
 ICON_ARD_RUBRIKEN 		= 'ard-rubriken.png'
-ICON_ARD_Themen 		= 'ard-themen.png'
-ICON_ARD_Filme 			= 'ard-ausgewaehlte-filme.png'
-ICON_ARD_FilmeAll 		= 'ard-alle-filme.png'
-ICON_ARD_Dokus 			= 'ard-ausgewaehlte-dokus.png'
-ICON_ARD_DokusAll 		= 'ard-alle-dokus.png'
-ICON_ARD_Serien 		= 'ard-serien.png'
-ICON_ARD_MEIST 			= 'ard-meist-gesehen.png'
 ICON_ARD_BARRIEREARM 	= 'ard-barrierearm.png'
 ICON_ARD_HOERFASSUNGEN	= 'ard-hoerfassungen.png'
-ICON_ARD_NEUESTE 		= 'ard-neueste-videos.png'
-ICON_ARD_BEST 			= 'ard-am-besten-bewertet.png'
 ICON_ARD_BILDERSERIEN 	= 'ard-bilderserien.png'
 
 ICON_ZDF_AZ 			= 'zdf-sendungen-az.png'
 ICON_ZDF_VERP 			= 'zdf-sendung-verpasst.png'
 ICON_ZDF_RUBRIKEN 		= 'zdf-rubriken.png'
-ICON_ZDF_Themen 		= 'zdf-themen.png'
 ICON_ZDF_MEIST 			= 'zdf-meist-gesehen.png'
 ICON_ZDF_BARRIEREARM 	= 'zdf-barrierearm.png'
 ICON_ZDF_UNTERTITEL 	= 'zdf-untertitel.png'
-ICON_ZDF_INFOS 			= 'zdf-infos.png'
 ICON_ZDF_BILDERSERIEN 	= 'zdf-bilderserien.png'
-ICON_ZDF_NEWCONTENT 	= 'zdf-newcontent.png'
 
 ICON_MAIN_POD			= 'radio-podcasts.png'
 ICON_POD_AZ				= 'pod-az.png'
@@ -130,7 +118,6 @@ ICON_MAIN_AUDIO			= 'ard-audiothek.png'
 ICON_AUDIO_LIVE			= 'ard-audio-live.png'
 ICON_AUDIO_AZ			= 'ard-audio-az.png'
 
-
 ICON_OK 				= "icon-ok.png"
 ICON_INFO 				= "icon-info.png"
 ICON_WARNING 			= "icon-warning.png"
@@ -143,6 +130,8 @@ ICON_DELETE 			= "icon-delete.png"
 ICON_STAR 				= "icon-star.png"
 ICON_NOTE 				= "icon-note.png"
 ICON_SPEAKER 			= "icon-speaker.png"								# Breit-Format
+ICON_TOOLS 				= "icon-tools.png"
+ICON_PREFS 				= "icon-preferences.png"
 
 # Basis DIR-Icons: Tango/folder.png s. Wikipedia Tango_Desktop_Project
 ICON_DIR_CURLWGET 		= "Dir-curl-wget.png"
@@ -238,12 +227,17 @@ SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
 TEXTSTORE 		= os.path.join("%s/Inhaltstexte") % ADDON_DATA
 WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
 PLog(SLIDESTORE); PLog(WATCHFILE); 
-check 			= check_DataStores()	# Check /Initialisierung / Migration 
+check 			= check_DataStores()					# Check /Initialisierung / Migration 
 PLog('check: ' + str(check))
-MERKACTIVE = os.path.join(DICTSTORE, 'MerkActive') # Marker Merkliste
+
+MERKACTIVE = os.path.join(DICTSTORE, 'MerkActive') 		# Marker aktive Merkliste
 if os.path.exists(MERKACTIVE):
 	os.remove(MERKACTIVE)
-MERKFILTER 		= os.path.join(DICTSTORE, 'Merkfilter') 
+MERKFILTER 	= os.path.join(DICTSTORE, 'Merkfilter') 
+# Ort FILTER_SET wie filterfile (check_DataStores):
+FILTER_SET 	= os.path.join("%s/filter_set") % ADDON_DATA
+AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
+AKT_FILTER	= AKT_FILTER.splitlines()					# gesetzte Filter initialiseren 
 
 try:	# 28.11.2019 exceptions.IOError möglich, Bsp. iOS ARM (Thumb) 32-bit
 	from platform import system, architecture, machine, release, version	# Debug
@@ -442,9 +436,9 @@ def Main():
 					thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary)
 			
 	if call_update == False:							# Update-Button "Suche" zeigen	
-		title = 'Addon-Update | akt. Version: ' + VERSION + ' vom ' + VDATE	
-		summary='Suche nach neuen Updates starten'
-		tagline='Bezugsquelle: ' + repo_url			
+		title  = 'Addon-Update | akt. Version: ' + VERSION + ' vom ' + VDATE	
+		summ='Suche nach neuen Updates starten'
+		tag ='Bezugsquelle: ' + repo_url			
 		fparams="&fparams={'title': 'Addon-Update'}"
 		addDir(li=li, label=title, action="dirList", dirID="SearchUpdate", fanart=R(FANART), 
 			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summary, tagline=tagline)
@@ -452,18 +446,300 @@ def Main():
 	# Menü Einstellungen (obsolet) ersetzt durch Info-Button
 	#	freischalten nach Posting im Kodi-Forum
 
-	summary = 'Störungsmeldungen an Forum oder rols1@gmx.de'
-	tagline = 'für weitere Infos (changelog.txt) klicken'
+	tag = 'Infos zu diesem Addon'					# Menü Info + Filter
+	summ= u'Ausschluss-Filter (nur für Beiträge von ARD und ZDF)'
+	fparams="&fparams={}" 
+	addDir(li=li, label='Info', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
+		fparams=fparams, summary=summ, tagline=tag)
+				
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+#----------------------------------------------------------------
+# Aufruf Main
+# div. Addon-Infos + Filter (Titel) setzen/anlegen/löschen
+# Filter-Button nur zeigen, wenn in Settings gewählt
+def InfoAndFilter():
+	PLog('InfoAndFilter:'); 
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
+														# Button changelog.txt
+	tag= u'Störungsmeldungen via Kodinerds-Forum, Github-Issue oder rols1@gmx.de'
+	summ = u'für weitere Infos (changelog.txt) klicken'
 	path = os.path.join(ADDON_PATH, "changelog.txt") 
 	title = "Änderungsliste (changelog.txt)"
 	title=py2_encode(title)
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))
-	addDir(li=li, label='Info', action="dirList", dirID="ShowText", fanart=R(FANART), thumb=R(ICON_INFO), 
-		fparams=fparams, summary=summary, tagline=tagline)
-				
+	addDir(li=li, label=title, action="dirList", dirID="ShowText", fanart=R(FANART), thumb=R(ICON_TOOLS), 
+		fparams=fparams, summary=summ, tagline=tag)		
+							
+	title = u"Addon-Infos"								# Button für Addon-Infos
+	tag = "Infos zu Version, Cache und Dateipfaden." 
+	summ = "Bei aktiviertem Debug-Log erfolgt die Ausgabe auch dort"
+	summ = "%s (nützlich zum Kopieren der Pfade)." % summ
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="AddonInfos", fanart=R(FANART), 
+		thumb=R(ICON_PREFS), tagline=tag, summary=summ, fparams=fparams)	
+			
+	if SETTINGS.getSetting('pref_usefilter') == 'true':											
+		title = u"Filter bearbeiten "					# Button für Filter
+		tag = "Ausschluss-Filter bearbeiten (nur für Beiträge von ARD und ZDF)" 
+		fparams="&fparams={}" 
+		addDir(li=li, label=title, action="dirList", dirID="FilterTools", fanart=R(FANART), 
+			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)		
+	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #----------------------------------------------------------------
+# Aufruf InfoAndFilter
+# Menüs für FilterToolsWork 
+def FilterTools():
+	PLog('FilterTools:'); 
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
+		
+	filterfile = os.path.join("%s/filter.txt") % ADDON_DATA		# init: check_DataStores
+	filter_page = RLoad(filterfile, abs_path=True)				# Filterliste laden
+
+	if filter_page == '' or len(filter_page) <= 20:
+		msg1 = "Problem Filterliste"
+		msg2 = 'Liste kann nicht geladen werden'				# -> nur Button Hinzufügen
+		PLog(msg2); PLog(filter_page)
+		filter_page=''											# fehlerhaft=leer
+		icon = R(ICON_FILTER)
+		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
+		
+	akt_filter=''; 
+	if os.path.isfile(FILTER_SET):
+		page = RLoad(FILTER_SET, abs_path=True)
+		page = page.strip()
+		akt_filter = page.splitlines()
+	PLog(akt_filter)
+												
+	summ = u"Ausschluss-Filter für Beiträge von ARD und ZDF."
+	summ = u"%s\n\nWirkung: Einzelbeiträge, die einen gesetzten Filter in Titel, Subtitel oder Beschreibung enthalten, werden aussortiert." % summ 
+	
+	if filter_page:
+		if akt_filter:
+			title = u"aktuell gesetzte(n) Filter zeigen (%d)" %  len(akt_filter)
+			fparams="&fparams={'action': 'show_set'}" 
+			addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
+				thumb=R(ICON_FILTER), summary=summ, fparams=fparams)		
+
+		title = u"alle Filterwörter zeigen" 
+		fparams="&fparams={'action': 'show_list'}" 
+		addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
+			thumb=R(ICON_FILTER), summary=summ, fparams=fparams)				
+	
+		title = u"Filter [COLOR blue]setzen (aktuell: %d)[/COLOR]" % len(akt_filter)
+		tag = u"ein oder mehrere Filterworte [COLOR blue]setzen[/COLOR]" 
+		fparams="&fparams={'action': 'set'}" 
+		addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
+			thumb=R(ICON_FILTER), tagline=tag, summary=summ, fparams=fparams)
+					
+		title = u"Filterwort [COLOR red]löschen[/COLOR]"
+		tag = u"ein Filterwort aus der Ausschluss-Liste [COLOR red]löschen[/COLOR]" 
+		fparams="&fparams={'action': 'delete'}" 
+		addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
+			thumb=R(ICON_FILTER), tagline=tag, summary=summ, fparams=fparams)		
+		
+	title = u"Filterwort [COLOR green]hinzufügen[/COLOR]"
+	tag = u"ein Filterwort der Ausschluss-Liste [COLOR green]hinzufügen[/COLOR]" 
+	fparams="&fparams={'action': 'add'}" 
+	addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
+		thumb=R(ICON_FILTER), tagline=tag, summary=summ, fparams=fparams)		
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+#----------------------------------------------------------------
+# Aufruf FilterTools
+# Ausschluss-Filter Anzeigen/Setzen/Hinzufügen/Löschen
+def FilterToolsWork(action):
+	PLog('FilterToolsWork: ' + action) 
+	dialog = xbmcgui.Dialog()
+
+	filter_pat = "<filter>\n%s\n</filter>\n" 					# Rahmen Filterliste
+	filterfile = os.path.join("%s/filter.txt") % ADDON_DATA		# init: check_DataStores
+	page = RLoad(filterfile, abs_path=True)						# Filterliste laden
+	filter_list = stringextract('<filter>', '</filter>', page)
+	filter_list = filter_list.splitlines()
+	filter_list.remove('')										# aus ev. Leerz.
+	filter_list=sorted(filter_list, key=str.lower)
+	PLog(filter_list)
+	
+	page = RLoad(FILTER_SET, abs_path=True)						# akt. Filter laden
+	akt_filter = page.splitlines()
+	akt_filter=sorted(akt_filter, key=str.lower)
+	PLog(akt_filter)	
+
+	if action == 'show_set':									# gesetzte Filter zeigen
+		title = u"aktuell gesetzte(r) Filter"
+		akt_filter = "\n".join(akt_filter)
+		dialog.textviewer(title, akt_filter,usemono=True)
+			
+	if action == 'set':
+		index_list = get_list_indices(akt_filter, filter_list)	# akt. Filter-Indices ermitteln
+		PLog(index_list); 
+		title = u"Filter setzen (grün: gesetzt)"
+		ret = dialog.multiselect(title, filter_list, preselect=index_list)
+		PLog(ret)												# ret hier Liste
+		if ret !=  None:										# None bei Abbruch
+			if len(ret) > 0:
+				items = get_items_from_list(ret, filter_list)	# Indices -> Filter-items
+				items = "\n".join(items) 
+			else:
+				items = ''
+			RSave(FILTER_SET, items)
+			msg1 = u"Filter setzen"
+			msg2 = u"gesetzte Filter: %d" % len(ret)
+			icon = R(ICON_FILTER)
+			xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
+			
+			
+	if action == 'add':
+		title = u'Filterwort hinzufügen (Groß/klein egal)'
+		ret = dialog.input(title, type=xbmcgui.INPUT_ALPHANUM)	# Eingabe Filterwort
+		PLog(ret)
+		if ret:
+			ret = py2_encode(up_low(ret, mode='low'))
+			if ret in filter_list:								# Check: vorhanden?
+				msg1 = "Filterliste"
+				msg2 = '%s existiert schon. Anzahl: %d' % (ret.strip(), len(filter_list))		
+				icon = R(ICON_FILTER)
+				xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
+			else:	
+				filter_list.append(ret.strip())					# Filterwort hinzufügen
+				if '' in filter_list:
+					filter_list.remove('')						# aus ev. Leerz.
+				items = "\n".join(filter_list)
+				items = py2_encode(items)
+				filter_pat = filter_pat % items					# Filter -> xml-Rahmen
+				PLog(filter_pat)
+				err_msg = RSave(filterfile, filter_pat)			# speichern
+				if err_msg:
+					msg1 = "Fehler beim Speichern der Filterliste" 
+					PLog(msg1)	
+					MyDialog(msg1, '', '')
+				else:
+					msg1 = "Filterliste"
+					msg2 = '%s hinzugefügt. Anzahl: %d' % (ret.strip(), len(filter_list))		
+					icon = R(ICON_FILTER)
+					xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
+	
+	if action == 'delete':
+		title = u"Filterwort löschen (ev. gesetzter Filter wird mitgelöscht)"
+		ret = dialog.select(title, filter_list)					# Auswahl Filterliste
+		PLog(ret)
+		if ret >= 0:
+			ret = filter_list[ret]								# Index -> item
+			item = py2_encode(ret)
+			PLog(item)
+			is_filter=False;
+			if item in akt_filter:								# auch gesetzter Filter?
+				is_filter=True
+			msg2 = "[COLOR red]%s[/COLOR] ist kein gesetzter Filter." % ret
+			if is_filter:	
+				msg2 = "gesetzter Filter [COLOR red]%s[/COLOR] wird mitgelöscht" % ret
+			msg1 = "Filterwort [COLOR red]%s[/COLOR] wirklich löschen?" % ret 
+
+			ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='JA', heading=title)
+			PLog(ret)
+			if ret == 1:
+				filter_list.remove(item)						# Filterwort entfernen
+				filter_len = len(filter_list)
+				items = "\n".join(filter_list)
+				items = py2_encode(items)
+				filter_pat = filter_pat % items					# Filter -> xml-Rahmen
+				PLog(filter_pat)
+				err_msg1 = RSave(filterfile, filter_pat)			# speichern
+				if is_filter:
+					akt_filter.remove(item)
+					items = "\n".join(akt_filter)
+					err_msg2 = RSave(FILTER_SET, items)	
+
+				if err_msg1 or err_msg2:
+					if err_msg1:
+						msg1 = "Fehler beim Speichern der Filterliste" 
+						PLog(msg1)	
+						MyDialog(msg1, '', '')
+					if err_msg2:
+						msg1 = "Fehler beim Speichern der aktuell gesetzten Filter" 
+						PLog(msg1)	
+						MyDialog(msg1, '', '')
+				else:
+					msg1 = "Filterliste"
+					PLog('Mark0')
+					msg2 = u'%s gelöscht. Anzahl: %d' % (item, filter_len)		
+					PLog('Mark1')
+					icon = R(ICON_FILTER)
+					xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
+				
+			
+	if action == 'show_list':									# Filterliste zeigen
+		title = u"Liste verfügbarer Filter"
+		filter_list = "\n".join(filter_list)
+		dialog.textviewer(title, filter_list,usemono=True)
+		
+	if action == 'state_change':								# aus Kontextmenü
+		if SETTINGS.getSetting('pref_usefilter') == 'true':
+			SETTINGS.setSetting('pref_usefilter','false')
+		else:											
+			SETTINGS.setSetting('pref_usefilter','true')
+		
+	
+	xbmc.executebuiltin('Container.Refresh')					# refresh Menü "Filter bearbeiten"
+
+#----------------------------------------------------------------
+# Aufruf InfoAndFilter
+# Addon-Infos (Pfade, Cache, ..)
+# einschl. Log-Ausgabe 
+def AddonInfos():
+	PLog('AddonInfos:'); 
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
+	dialog = xbmcgui.Dialog()
+	t = "     "		# Tab (5)
+
+	a = "[COLOR red]Addon:[/COLOR]"
+	b = "%s%s, Version %s vom %s" % (t, ADDON_ID, VERSION, VDATE)
+	c = "%sGithub-Releases https://github.com/%s/releases" % (t, GITHUB_REPOSITORY)
+	p1 = "%s\n%s\n%s\n" % (a,b,c)
+	
+	a = "[COLOR red]Cache:[/COLOR]"
+	b = "%s %s Dict" %  (t, get_dir_size(DICTSTORE))
+	c = "%s %s Inhaltstexte" %  (t, get_dir_size(TEXTSTORE))
+	d = "%s %s m3u8" %  (t, get_dir_size(M3U8STORE))
+	e = "%s %s Slides (Bilder)" %   (t, get_dir_size(SLIDESTORE))
+	f = "%s %s subtitles (Untertitel)" %   (t, get_dir_size(SUBTITLESTORE))
+	g = ''
+	path = SETTINGS.getSetting('pref_download_path')
+	PLog(path); PLog(os.path.isdir(path))
+	if path and os.path.isdir(path):
+		g = "%s %s Downloads\n" %   (t, get_dir_size(path))
+	p2 = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % (a,b,c,d,e,f,g)
+
+	a = "[COLOR red]Pfade:[/COLOR]"
+	b = "%s Addon-Home: %s" % (t, PluginAbsPath)
+	c = "%s Cache: %s" % (t,ADDON_DATA)
+	fname = WATCHFILE
+	if SETTINGS.getSetting('pref_merkextern') == 'true':	# externe Merkliste gewählt?
+		fname = SETTINGS.getSetting('pref_MerkDest_path')
+	d = "%s Merkliste: %s" % (t,fname)
+	e = "%s Downloadverzeichnis: %s" % (t,SETTINGS.getSetting('pref_download_path'))
+	f = "%s Verschiebeverzeichnis: %s" % (t,SETTINGS.getSetting('pref_VideoDest_path'))
+	filterfile = os.path.join("%s/filter.txt") % ADDON_DATA
+	g = "%s Filterliste: %s" %  (t,filterfile)
+	fname =  SETTINGS.getSetting('pref_podcast_favorits')
+	if os.path.isfile(fname) == False:
+		fname = os.path.join("%s/resources/podcast-favorits.txt") % PluginAbsPath
+	h = "%s Podcast-Favoriten: %s" %  (t,fname)
+	p3 = "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d,e,f,g,h)
+	
+	page = "%s\n%s\n%s" % (p1,p2,p3)
+	PLog(page)
+	dialog.textviewer("Addon-Infos", page,usemono=True)
+	
+#	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+#----------------------------------------------------------------
+# Aufruf Info_Filter
 # 20.01.2020 usemono für textviewer (ab Kodi v18)
+#
 def ShowText(path, title):
 	PLog('ShowText:'); 
 	
@@ -1051,8 +1327,8 @@ def Audio_get_rubriken(page='', ID='', path=''):				# extrahiert Rubriken (Webse
 		img= img_via_audio_href(href=href, page=page)	# img im json-Teil holen
 
 		anzahl 	= stringextract('class="station"', '</span>', grid)
-		anzahl	= cleanhtml(anzahl); anzahl = mystrip(anzahl)
-		pos		= anzahl.find('>'); anzahl = anzahl[pos+1:]		# entfernen: data-v-7c906280>
+		anzahl	= rm_datav(anzahl)
+		
 		descr	= "[B]Folgeseiten[/B] | %s" % (anzahl) 
 		descr = repl_json_chars(descr)
 		summ_par= descr
@@ -1217,6 +1493,8 @@ def Audio_get_sendungen(li, gridlist, page, ID):	# extrahiert Einzelbeiträge
 #	Bsp.: episode-title" data-v-132985da> ... </h3>
 def rm_datav(line):
 	PLog("rm_datav:")
+	
+	line=cleanhtml(line)
 	pos	= line.find('>')
 	if pos >= 0:
 		line = line[pos+1:]
@@ -1890,15 +2168,18 @@ def ARDSportPanel(title, path, img):
 		if title == '' or path == '':
 			continue
 		
-		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
-			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
-				continue		
-			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
+		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
+			filtered=False
+			for item in AKT_FILTER: 
+				if up_low(item) in py2_encode(up_low(s)):
+					filtered = True
+					continue		
+			if filtered:
 				continue		
 		
 		PLog('Satz:')
 		PLog(path); PLog(img); PLog(title); PLog(summ); 
-		title=py2_encode(title); path=py2_encode(path); img=py2_encode(img); summ=py2_encode(summ);
+		path=py2_encode(path); img=py2_encode(img); summ=py2_encode(summ);
 		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
 			(quote(path), quote(title), quote(img), quote(summ))				
 		addDir(li=li, label=title, action="dirList", dirID="ARDSportVideo", fanart=img, thumb=img, 
@@ -2505,15 +2786,18 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 				Plot = "%s||||%s" % (subline, summ)			# für Sofortstart/Plot in SingleSendung
 				Plot = Plot.replace('\n', '||')				# \n aus summ -> ||
 				
-				if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
-					if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+				if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
+					filtered=False
+					for item in AKT_FILTER: 
+						if up_low(item) in py2_encode(up_low(s)):
+							filtered = True
+							continue		
+					if filtered:
 						continue		
-					if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
-						continue	
 							
 				PLog("Satz_Swiper:") 
 				PLog(path); PLog(title); 
-				path=py2_encode(path); title=py2_encode(title); img=py2_encode(img);
+				path=py2_encode(path); img=py2_encode(img);
 				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
 					% (quote(path), quote(title), quote(img), 
 					duration, quote(Plot),  quote(subline), 'ARD', '0')				
@@ -3240,11 +3524,11 @@ def BarriereArmARD(name):		#
 	title = 'Hörfassungen (ARD-Suche)'							# ARD-Suche nach Hörfassungen
 	path = BASE_URL + ARD_Suche	%   quote('Hörfassungen', "utf-8")
 	
-	if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true' or \
-		SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
-		msg1 = 'Hinweis:'
-		msg2 = 'Filter für Hörfassungen oder  Audiodeskription ist eingeschaltet!'
-		MyDialog(msg1, msg2, '')	
+	if SETTINGS.getSetting('pref_usefilter') == 'true':
+		if 'Audiodeskription' or 'Hörfassung' or 'Gebärdensprache' or 'Untertitel' in AKT_FILTER:
+			msg1 = 'Hinweis:'
+			msg2 = 'Filter für Hörfassungen oder  Audiodeskription ist eingeschaltet!'
+			MyDialog(msg1, msg2, '')	
 	
 	next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl
 	title=py2_encode(title); path=py2_encode(path);
@@ -3474,17 +3758,21 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 		path = send_path[i]
 		headline = send_headline[i]			
 		subtitle = send_subtitle[i]
+		teasertext = send_teasertext[i]
 		
-		PLog(type(headline)); PLog(type(subtitle)); PLog(type(send_teasertext[i]));PLog(type(send_dachzeile[i]));
 		PLog(subtitle)
 		
-		PLog(type(headline)); PLog(type(subtitle))
-		if u'Hörfassung' in headline or u'Hörfassung' in subtitle:			# Filter
-			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
-				continue
-		if 'Audiodeskription' in headline or 'Audiodeskription' in subtitle:# Filter
-			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
-				continue
+		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
+			filtered=False
+			for item in AKT_FILTER: 
+				h = py2_encode(up_low(headline)); s = py2_encode(up_low(subtitle));
+				t = py2_encode(up_low(teasertext))
+				item = up_low(item)
+				if item in h or item in s or item in t:
+					filtered = True
+					continue
+			if filtered:
+				continue		
 			
 		if next_cbKey == 'PageControl' and subtitle:	# A-Z: subtitle enthält Sender
 			headline = "%s | %s" % (headline, subtitle)
@@ -3496,7 +3784,6 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 		dachzeile = send_dachzeile[i]
 		PLog(dachzeile)
 		sid = send_sid[i]
-		teasertext = send_teasertext[i]
 
 		summary = ''	
 		if teasertext != "":				# teasertext z.B. bei Podcast
@@ -3528,7 +3815,7 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 			subtitle = img_alt			
 			
 		headline=repl_json_chars(headline)			# json-komp.
-		subtitle = py2_decode(subtitle)			# ev. bereits unicode
+		subtitle = py2_decode(subtitle)				# ev. bereits unicode
 		PLog(type(subtitle))
 		
 		subtitle=repl_json_chars(subtitle)			# dto.
@@ -4245,7 +4532,7 @@ def DownloadsTools():
 			fname = os.path.join(path, entry)					
 			vidsize = vidsize + os.path.getsize(fname) 
 	vidsize	= vidsize / 1000000
-	title1 = 'Downloadverzeichnis: %s Download(s), %s MBytes' % (mpcnt, str(vidsize))
+	PLog('Downloadverzeichnis: %s Download(s), %s MBytes' % (mpcnt, str(vidsize)))
 		
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)								# Home-Button
@@ -4341,7 +4628,7 @@ def DownloadsList():
 			fname = os.path.join(path, entry)					
 			vidsize = vidsize + os.path.getsize(fname) 
 	vidsize	= vidsize/1000000
-	title1 = 'Downloadverzeichnis: %s Download(s), %s MBytes' % (mpcnt, str(vidsize))
+	PLog('Inhalt: %s Download(s), %s MBytes' % (mpcnt, str(vidsize)))
 	
 	if mpcnt == 0:
 		msg1 = 'Kein Download vorhanden | Pfad:' 
@@ -4719,6 +5006,18 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 		if name: 	
 			name 	= name.group(1)
 			name 	= unescape(name)
+
+		# thumb-Pfad an lokales Addon anpassen (externe Merkliste) -
+		# kein Test pref_merkextern (andere Gründe möglich, z.B. manuell
+		# kopiert):
+		if thumb and mode == 'Merk':  # and SETTINGS.getSetting('pref_merkextern') == 'true':
+			my_thumb = thumb
+			if thumb.startswith('http') == False:	
+				if '/addons/' in thumb:
+					home_thumb, icon = thumb.split('/addons/')
+					myhome = xbmc.translatePath("special://home")
+					my_thumb = "%saddons/%s" % (myhome, icon)
+					PLog("home_thumb: %s, my_thumb: %s" % (home_thumb, my_thumb))
 			
 		if myfilter:
 			if 'ohne Zuordnung' in myfilter:				# merkliste.xml: ordner=""
@@ -4804,14 +5103,6 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 				#if 	dirPar.startswith('mediatype'):		# fehlt in Kodi's Fav-Funktion 	
 				#	mediatype = dirPar.split('=')[1]
 		
-		# thumb-Pfad an lokales Addon anpassen (externe Merkliste):
-		if thumb and mode == 'Merk' and SETTINGS.getSetting('pref_merkextern') == 'true': 
-			if thumb.startswith('http') == False:	
-				if '/addons/' in thumb:
-					home_thumb, icon = thumb.split('/addons/')
-					myhome = xbmc.translatePath("special://home")
-					thumb = "%saddons/%s" % (myhome, icon)
-					PLog("home_thumb: %s, icon: %s" % (home_thumb, icon))
 			
 		PLog('dirPars:'); PLog(action); PLog(dirID); PLog(fanart); PLog(thumb);
 		PLog(Plot_org); PLog(fpar_plot); PLog(Plot);
@@ -4877,7 +5168,7 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 				if ordner: 
 					name = "[COLOR blue]%s[/COLOR] | %s" % (ordner, name)
 			
-		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=thumb,
+		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=my_thumb,
 			summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype, 
 			sortlabel=sortlabel, merkname=merkname)
 		item_cnt = item_cnt + 1
@@ -6527,13 +6818,9 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 	#	nicht als Video erkennbar. Mehrere Videos möglich, Verarbeitung
 	#	durch ZDF_getVideoSources fehlerhaft - Anpassung bzw. neue Funktion,
 	#	apiToken + Link zu json-Quellen in zdfplayer-Block vorhanden.
-	#	Aufruf: ZDFRubrikSingle, Direktsprung zu ZDF_getVideoSources
-	#	ähnlich Ausleitung Einzelbeitrag in ZDF_get_content
+	#	Aufruf: ZDFRubrikSingle, Ausleitung einz. Videobeiträge in
+	#	ZDF_get_content (Merkmal 'class="b-playerbox')
 	#	
-#	if 'data-module="zdfplayer"' in page:	# 
-#			PLog('Ausleitung Kurzvideos')			
-#			ZDF_getVideoSources(url=url, title=title, thumb=thumb, tagline=tagline)		
-#		return li
 
 	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=url, ID='VERPASST')
 	PLog(page_cnt)
@@ -6740,7 +7027,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 			if isvideo == False:			# Mehrfachbeiträge
 				title=py2_encode(title); path=py2_encode(path); 
 				descr_par=py2_encode(descr_par); img_src=py2_encode(img_src); 
-				if isgallery == False:		# keine Bildgalerie, Prüfung auf Kurzvideos in ZDF_Sendungen
+				if isgallery == False:		# keine Bildgalerie
 					fparams="&fparams={'title': '%s', 'url': '%s', 'ID': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
 						(quote(title),  quote(path), 'VERPASST', quote(descr_par), quote(img_src))
 					addDir(li=li, label=lable, action="dirList", dirID="ZDF_Sendungen", fanart=img_src, 
@@ -6752,6 +7039,16 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 					
 					
 			else:							# Einzelbeitrag direkt - anders als A-Z (ZDF_get_content)
+				if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
+					filtered=False
+					for item in AKT_FILTER: 
+						if up_low(item) in py2_encode(up_low(rec)):
+							filtered = True
+							continue		
+					if filtered:
+						# PLog('filtered: ' + title)
+						continue		
+				
 				title=py2_encode(title); path=py2_encode(path); 
 				descr_par=py2_encode(descr_par); img_src=py2_encode(img_src); 	
 				fparams="&fparams={'title': '%s', 'url': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
@@ -6941,10 +7238,16 @@ def BarriereArm(title):
 	
 	# z.Z. 	>Gebärdensprache<
 	#		>Untertitel<
-	#		>Hörfilmee<
+	#		>Hörfilme<
 	content = blockextract('<section class="b-content-teaser-list"', page)
 	PLog(len(content))
 	content = blockextract('class="teaser-text">', content[0])	# 2. Block: Service
+	
+	if SETTINGS.getSetting('pref_usefilter') == 'true':
+		if 'Audiodeskription' or 'Hörfassung' in AKT_FILTER:
+			msg1 = 'Hinweis:'
+			msg2 = 'Filter für Hörfassungen und/oder Audiodeskription ist eingeschaltet!'
+			MyDialog(msg1, msg2, '')	
 	
 	i=0
 	for rec in content:	
@@ -6958,12 +7261,6 @@ def BarriereArm(title):
 		if u'Livestreams' in title:				# nur EPG, kein Video
 			PLog('skip: '  + title)
 			continue
-		if u'Hörfassung' in title or 'Audiodeskription' in title:			# Filter
-			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true' or \
-				SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
-				msg1 = u'Hinweis:'
-				msg2 = u'Filter für Hörfassungen oder  Audiodeskription ist eingeschaltet!'
-				MyDialog(msg1, msg2, '')
 				
 		ID = 'BarriereArm_%s' % str(i)		
 		path=py2_encode(path); title=py2_encode(title);	
@@ -7323,7 +7620,17 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		teaser_nr=''; teaser_brand=''; poster=False
 		if rec.startswith('b-cluster-poster-teaser'):		# angehängte Sätze, z.B. Hochkant-Videos s.o.
 			poster=True
+			
 		if rec.startswith('data-module="zdfplayer"'):		# Kurzvideos s.o. - eigene Auswertung
+			if SETTINGS.getSetting('pref_usefilter') == 'true':	# Filter - s.a. neuer_Satz
+				filtered=False
+				for item in AKT_FILTER: 
+					if up_low(item) in py2_encode(up_low(rec)):
+						filtered = True
+						continue		
+				if filtered:
+					# PLog('filtered: ' + 'data-module="zdfplayer"')
+					continue		
 			apiToken,sid,descr_display,descr,title,img = ZDF_getKurzVideoDetails(rec) # Details holen
 			PLog('Satz_zdfplayer:')
 			PLog(title); PLog(img); PLog(sid); PLog(apiToken[:80]);
@@ -7528,10 +7835,13 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		summary=repl_json_chars(summary)					# dto.
 		tagline=repl_json_chars(tagline)					# dto.
 		
-		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
-			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
-				continue		
-			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
+		if SETTINGS.getSetting('pref_usefilter') == 'true':	# Filter
+			filtered=False
+			for item in AKT_FILTER: 
+				if up_low(item) in py2_encode(up_low(rec)):
+					filtered = True
+					continue		
+			if filtered:
 				continue		
 			
 		PLog('neuer_Satz:')

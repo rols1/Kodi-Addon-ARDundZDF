@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-#		
+# Stand: 12.05.2020	
  
 import time
 import datetime
@@ -36,15 +36,12 @@ def EPG(ID, mode=None, day_offset=None):
 
 	page, msg = get_page(path=url)				# Absicherung gegen Connect-Probleme
 	# PLog(page[:500])	# bei Bedarf
-	if msg:
-		return ''	# Verarbeitung in SenderLiveListe (rec = EPG.EPG..)
-	PLog(len(page))
 
 	pos = page.find('tv-show-container js-tv-show-container')	# ab hier relevanter Inhalt
 	page = page[pos:]
 	PLog(len(page))
 
-	liste = blockextract('href=\"', page)  
+	liste = blockextract('href="', page)  
 	PLog(len(liste));	
 
 	# today.de verwendet Unix-Format, Bsp. 1488830442
@@ -113,7 +110,8 @@ def EPG(ID, mode=None, day_offset=None):
 		# Link href zum einzelnen Satz hier nicht verwendet - wenig zusätzl. Infos
 		rec.append(starttime);rec.append(href); rec.append(img); rec.append(sname);	# Listen-Element
 		rec.append(stime); rec.append(summ); rec.append(vonbis); rec.append(today_human);
-		EPG_rec.append(rec)											# Liste Gesamt (2-Dim-Liste)
+		EPG_rec.append(rec)
+										# Liste Gesamt (2-Dim-Liste)
 	
 	EPG_rec.sort()						# Sortierung	
 	PLog(len(EPG_rec)); PLog('EPG_End')

@@ -38,15 +38,15 @@
  <category label="Recording TV-Live">
  	<setting label="Recording TV-Live verwenden (ffmpeg erforderlich)" type="bool" id="pref_LiveRecord" default="true"/>
  	<setting label="Dauer der Aufnahme manuell eingeben" type="bool" id="pref_LiveRecord_input" default="false"/>
-	<setting label="Dauer der Aufnahme" type="labelenum" values="00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten|01:00:00 = 1 Stunde|01:30:00 = 1:30 Stunden|01:45:00 = 1:45 Stunden|02:00:00 = 2 Stunden|04:00:00 = 4 Stunden|12:00:00 = 12 Stunden|00:00:05 = 5 Sekunden" default="01:00:00 = 1 Stunde" id="pref_LiveRecord_duration"/> 
+	<setting label="Dauer der Aufnahme" type="select" values="00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten|01:00:00 = 1 Stunde|01:30:00 = 1:30 Stunden|01:45:00 = 1:45 Stunden|02:00:00 = 2 Stunden|04:00:00 = 4 Stunden|12:00:00 = 12 Stunden|00:00:05 = 5 Sekunden" default="01:00:00 = 1 Stunde" id="pref_LiveRecord_duration"/> 
 	<setting label="ffmpeg-Parameter (3x %s: Url, Aufnahmedauer, Dateiname)" type="text" id="pref_LiveRecord_ffmpegCall" default="/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin"/>
 </category> 
 
  <category label="Addon-Cache: Löschfristen (Tage)">
-	<setting label="Dict (div. Variablen): " type="labelenum" values="1|10|30|100" default="30" id="pref_DICT_store_days"/>
-	<setting label="Untertitel" type="labelenum" values="1|10|30|100" default="30" id="pref_UT_store_days"/>
-	<setting label="Bildersammlungen (Slide Shows):" type="labelenum" values="1|10|30|100" default="30" id="pref_SLIDES_store_days"/>
-	<setting label="Inhaltstexte (im Voraus geladen): " type="labelenum" values="1|10|30|100" default="30" id="pref_TEXTE_store_days"/>
+	<setting label="Dict (div. Variablen): " type="select" values="1|10|30|100" default="30" id="pref_DICT_store_days"/>
+	<setting label="Untertitel" type="select" values="1|10|30|100" default="30" id="pref_UT_store_days"/>
+	<setting label="Bildersammlungen (Slide Shows):" type="select" values="1|10|30|100" default="30" id="pref_SLIDES_store_days"/>
+	<setting label="Inhaltstexte (im Voraus geladen): " type="select" values="1|10|30|100" default="30" id="pref_TEXTE_store_days"/>
 </category> 
 
  <category label="Favoriten / Merkliste">
@@ -63,8 +63,8 @@
 </category> 
 
  <category label="Beiträge filtern">
-  	<setting label="Titel enthält *Hörfassung*" type="bool" id="pref_filter_hoerfassung" default="false"/>
-  	<setting label="Titel enthält *Audiodeskription*" type="bool" id="pref_filter_audiodeskription" default="false"/>
+ 	<setting label="Ausschluss-Filter verwenden (Beiträge von ARD und ZDF)" type="bool" id="pref_usefilter" default="false"/>
+	<setting label="Info: die Filter-Einstellungen befinden sich im Menü Info" type="text" id="filterinfo" enable="false"/>  
  </category>
  
  <category label="Modul-Einstellungen" >

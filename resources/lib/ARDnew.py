@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 01.05.2020
+#	Stand 08.05.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -89,6 +89,11 @@ DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA			# hier nur DICTSTORE genutz
 SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
 SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
 TEXTSTORE 		= os.path.join("%s/Inhaltstexte") % ADDON_DATA
+
+# Ort FILTER_SET wie filterfile (check_DataStores):
+FILTER_SET 	= os.path.join("%s/filter_set") % ADDON_DATA
+AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
+AKT_FILTER	= AKT_FILTER.splitlines()					# gesetzte Filter initialiseren 
 
 DEBUG			= SETTINGS.getSetting('pref_info_debug')
 NAME			= 'ARD und ZDF'
@@ -657,10 +662,14 @@ def get_page_content(li, page, ID, mark=''):
 		PLog('Satz:');
 		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ); PLog(duration); PLog(ID)
 		
-		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
-			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
-				continue		
-			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
+		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
+			filtered=False
+			for item in AKT_FILTER: 
+				if up_low(item) in py2_encode(up_low(s)):
+					filtered = True
+					continue		
+			if filtered:
+				# PLog('filtered: ' + title)
 				continue		
 		
 		if mehrfach:
@@ -841,10 +850,14 @@ def get_ardsingle_more(li, gridlist, page, mediatype=''):
 		PLog('Satz:');
 		PLog(title); PLog(href); PLog(img); PLog(summ); 
 
-		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
-			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
-				continue		
-			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
+		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
+			filtered=False
+			for item in AKT_FILTER: 
+				if up_low(item) in py2_encode(up_low(s)):
+					filtered = True
+					continue		
+			if filtered:
+				# PLog('filtered: ' + title)
 				continue		
 		 								 
 		href=py2_encode(href); title=py2_encode(title); 
@@ -1224,11 +1237,15 @@ def SendungenAZ_ARDnew(title, button, api_call):
 			if az_sender != pubServ:
 				continue
 				
-		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
-			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
+			filtered=False
+			for item in AKT_FILTER: 
+				if up_low(item) in py2_encode(up_low(s)):
+					filtered = True
+					continue		
+			if filtered:
+				# PLog('filtered: ' + title)
 				continue		
-			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
-				continue				
 
 		PLog('Satz:');
 		PLog(title); PLog(href); PLog(img); PLog(summ); PLog(tagline);
@@ -1669,11 +1686,15 @@ def ARDVerpasstContent(title, path, CurSender, timeline_sender='', label_sender=
 		PLog('Satz:');
 		PLog(title); PLog(href); PLog(img); PLog(summ); PLog(zeit); 
 		
-		if u'Hörfassung' in title or 'Audiodeskription' in title:				# Filter
-			if SETTINGS.getSetting('pref_filter_hoerfassung') == 'true':
+		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
+			filtered=False
+			for item in AKT_FILTER: 
+				if up_low(item) in py2_encode(up_low(s)):
+					filtered = True
+					continue		
+			if filtered:
+				# PLog('filtered: ' + title)
 				continue		
-			if SETTINGS.getSetting('pref_filter_audiodeskription') == 'true':
-				continue				
 		
 		title = repl_json_chars(title); summ = repl_json_chars(summ);	 
 		href=py2_encode(href); title=py2_encode(title); 

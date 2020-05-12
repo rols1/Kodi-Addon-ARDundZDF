@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 28.04.2020
+#	Stand 11.05.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -122,17 +122,18 @@ BASE_URL 		= 'https://classic.ardmediathek.de'
 # Kodi Matrix: Wechsel   xbmc.LOGNOTICE -> xbmc.LOGINFO - siehe
 #	https://forum.kodi.tv/showthread.php?tid=353818&pid=2943669#pid2943669,
 #	https://github.com/xbmc/xbmc/compare/master@%7B1day%7D...master
-def PLog(msg, loglevel=xbmc.LOGDEBUG):
+#	https://github.com/i96751414/script.logviewer/blob/matrix/resources/lib/utils.py
+# 10.05.2020 Rückwechsel zu LOGNOTICE - LOGINFO klappt nicht mit akt. 
+#			Matrix-Build 
+def PLog(msg):
 	if DEBUG == 'false':
 		return
 	
-	if PYTHON3:
-		loglevel = xbmc.LOGINFO
-	else:
-		loglevel = xbmc.LOGNOTICE   # Rekurs.!
-	# PLog('loglevel: ' + str(loglevel))
-	if loglevel >= 2:
-		xbmc.log("%s --> %s" % ('ARDundZDF', msg), level=loglevel)
+#	if PYTHON3:
+#		xbmc.log("%s --> %s" % ('ARDundZDF', msg), xbmc.LOGINFO)	
+#	else:
+	xbmc.log("%s --> %s" % ('ARDundZDF', msg), xbmc.LOGNOTICE)
+		
 #---------------------------------------------------------------- 
 # 08.04.2020 Konvertierung 3-zeiliger Dialoge in message (Multiline)
 #  	Anlass: 23-03-2020 Removal of deprecated features (PR) - siehe:
@@ -164,16 +165,53 @@ def MyDialog(msg1, msg2='', msg3='', ok=True, cancel='Abbruch', yes='JA', headin
 			ret = xbmcgui.Dialog().yesno(heading=heading, message=msg, nolabel=cancel, yeslabel=yes)
 		return ret
 
+#----------------------------------------------------------------
+# get_list_indices: Umkehrung von get_items_from_list
+#	gleicht die Elemente my_items mit my_list ab
+#	und speichert den jew. Index in index_list
+#	Rückgabe: Liste der Indices od. []
+# Bsp. dialog.multiselect in FilterToolsWork
+#
+def get_list_indices(my_items, my_list):
+	PLog('get_list_indices:')
+	
+	index_list = []
+	for item in my_items:
+		if item in my_list:
+			index_list.append(my_list.index(item))
+	return index_list	
+#----------------------------------------------------------------
+# get_items_from_list: Umkehrung von get_list_indices
+#	ermittelt die items in my_list passend zum
+#	jew. Index
+#	Rückgabe: Liste der items od. []
+# Bsp. dialog.multiselect in FilterToolsWork
+#
+def get_items_from_list(my_indices, my_list):
+	PLog('get_items_from_list:')
+	
+	item_list = []
+	for i in my_indices:
+		try:
+			if my_list[i]:
+				item_list.append(my_list[i])
+		except:
+			pass
+	return item_list	
 #---------------------------------------------------------------- 
 # Home-Button, Aufruf: item = home(item=item, ID=NAME)
 #	Liste item von Aufrufer erzeugt
+# 	filterstatus='set' steuert Eintrag im Kontext-Menü
 def home(li, ID):												
 	PLog('home: ' + ID)	
 	if SETTINGS.getSetting('pref_nohome') == 'true':	# keine Homebuttons
 		return li
 		
 	title = u'Zurück zum Hauptmenü %s' % ID
-	summary = title
+	summary = title										# z.Z. n.w.
+	tag =  "Status Ausschluss-Filter: AUS"
+	if SETTINGS.getSetting('pref_usefilter') == 'true':	
+		tag = tag.replace('AUS','[COLOR blue]EIN[/COLOR]')										
 	
 	CurSender = Dict("load", 'CurSender')		
 	PLog(CurSender)	
@@ -183,7 +221,7 @@ def home(li, ID):
 		fparams="&fparams={}"
 		img = R('icon.png') 
 		addDir(li=li, label=name, action="dirList", dirID="Main", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 			
 	if ID == 'ARD':
 		if SETTINGS.getSetting('pref_use_classic') == 'false':	# Umlabeln für ARD-Suche (Classic)
@@ -195,7 +233,7 @@ def home(li, ID):
 		# CurSender = Dict("load", "CurSender")	# entf.  bei Classic
 		fparams="&fparams={'name': '%s', 'sender': '%s'}"	% (quote(name), '')
 		addDir(li=li, label=title, action="dirList", dirID="Main_ARD", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 		
 	if ID == 'ARD Neu':			
 		img = R('ard-mediathek.png') 
@@ -203,70 +241,70 @@ def home(li, ID):
 		CurSender = Dict("load", "CurSender")
 		fparams="&fparams={'name': '%s', 'CurSender': '%s'}"	% (quote(name), quote(CurSender))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", 
-			fanart=img, thumb=img, fparams=fparams)
+			fanart=img, thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 			
 	if ID == 'ZDF':
 		img = R('zdf-mediathek.png')
 		name = 'Home: ' + "ZDF Mediathek"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_ZDF", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 		
 	if ID == 'ZDFmobile':
 		img = R('zdf-mobile.png')
 		name = 'Home :' + "ZDFmobile"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
-			fanart=img, thumb=img, fparams=fparams)
+			fanart=img, thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 			
 	if ID == 'PODCAST':
 		img = R(ICON_MAIN_POD)
 		name = 'Home :' + "Radio-Podcasts"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_POD", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 			
 	if ID == 'ARD Audiothek':
 		img = R(ICON_MAIN_AUDIO)
 		name = 'Home :' + "ARD Audiothek"
 		fparams="&fparams={'title': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 			
 	if ID == '3Sat':
 		img = R('3sat.png')
 		name = 'Home :' + "3Sat"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 			
 	if ID == 'FUNK':
 		img = R('funk.png')
 		name = 'Home :' + "FUNK"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Main_funk", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 			
 	if ID == 'Kinderprogramme':
 		img = R('childs.png')
 		name = 'Home :' + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Main_childs", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 
 	if ID == 'TagesschauXL':
 		img = ICON_MAINXL		# github
 		name = 'Home :' + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 			
 	if ID == 'phoenix':
 		img = R(ICON_PHOENIX)
 		name = 'Home :' + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.Main_phoenix", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 
 	return li
 	 
@@ -282,11 +320,16 @@ def home(li, ID):
 #	13.03.2020 abhängig von check_AddonXml wird bei der Matrix-Version des Addons
 #		das data-Verzeichnis für Kodi korrekt angelegt im Verz.:
 #		../.kodi/userdata/addon_data/plugin.video.ardundzdf/
+#	05.05.2020 zusätzlich wird die Filterliste angelegt falls noch nicht existent 
+#				(mit den beiden bisher verwendeten Begriffen) - korresp. Datei:
+#				filter_set (FILTER_SET).  
 #
 def check_DataStores():
 	PLog('check_DataStores:')
 	store_Dirs = ["Dict", "slides", "subtitles", "Inhaltstexte", 
 				"m3u8"]
+	filterfile = os.path.join("%s/filter.txt") % ADDON_DATA
+	filter_pat =  "<filter>\nhörfassung\naudiodeskription\nuntertitel\ngebärdensprache\n</filter>\n"
 				
 	# Check 
 	#	falls ein Unterverz. fehlt, erzeugt make_newDataDir alle
@@ -299,12 +342,12 @@ def check_DataStores():
 			ok = False
 			break
 	
-	if ok:
-		return 'OK %s '	% ADDON_DATA			# Verz. existiert - OK
+	if ok and os.path.isfile(filterfile):
+		return 'OK %s '	% ADDON_DATA			# Verz. + Filterdatei existieren - OK
 	else:
 		# neues leeres Verz. mit Unterverz. anlegen / einzelnes fehlendes 
-		#	Unterverz. anlegen 
-		ret = make_newDataDir(store_Dirs)	
+		#	Unterverz. anlegen / Filterdatei anlegen
+		ret = make_newDataDir(store_Dirs, filterfile, filter_pat)	
 		if ret == True:						# ohne Dialog
 			msg1 = 'Datenverzeichnis angelegt - Details siehe Log'
 			msg2=''; msg3=''
@@ -322,7 +365,7 @@ def check_DataStores():
 #---------------------------
 # ab Version 1.5.6
 # 	erzeugt neues leeres Datenverzeichnis oder fehlende Unterverzeichnisse
-def  make_newDataDir(store_Dirs):
+def  make_newDataDir(store_Dirs, filterfile, filter_pat):
 	PLog('make_newDataDir:')
 				
 	if os.path.isdir(ADDON_DATA) == False:		# erzeugen, falls noch nicht vorh.
@@ -343,7 +386,11 @@ def  make_newDataDir(store_Dirs):
 				ok=False
 				PLog(str(exception))
 				break
-	if ok:
+	if ok:										# Abschluss: Filterliste speichern
+		if os.path.isfile(filterfile) == False:
+			err_msg = RSave(filterfile, filter_pat)
+			if err_msg == '':
+				PLog("Fehler beim Anlegen der Filterliste") # ohne Dialog	
 		return True
 	else:
 		return str(exception)
@@ -465,6 +512,20 @@ def ClearUp(directory, seconds):
 		PLog(str(exception))
 		return False
 
+#---------------------------------------------------------------- 
+# u.a. für AddonInfos
+def get_dir_size(directory):
+	PLog('get_dir_size:')
+	size=0
+
+	for dirpath, dirnames, filenames in os.walk(directory):
+		for f in filenames:
+			fp = os.path.join(dirpath, f)
+			# skip symbolic link
+			if not os.path.islink(fp):
+				size += os.path.getsize(fp)
+
+	return humanbytes(size)	
 #----------------------------------------------------------------  
 # Listitems verlangen encodierte Strings auch bei Umlauten. Einige Quellen liegen in unicode 
 #	vor (s. json-Auswertung in get_page) und müssen rückkonvertiert  werden.
@@ -519,7 +580,7 @@ def up_low(line, mode='up'):
 # 	31.03.2020 merkname ersetzt label im Kontextmenü Merkliste (label kann Filter-Prefix enthalten). 
 
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='',\
-		cmenu=True, sortlabel='', merkname=''):
+		cmenu=True, sortlabel='', merkname='', filterstatus=''):
 	PLog('addDir:');
 	PLog(type(label))
 	label=py2_encode(label)
@@ -568,7 +629,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		if cmenu:											# Kontextmenüs Merkliste hinzufügen
 			Plot = Plot.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 			# PLog('Plot: ' + Plot)
-			fparams_folder=''
+			fparams_folder=''; fparams_change=''
 			if merkname:									# Aufrufer ShowFavs (Settings: Ordner)
 				# Param name reicht für folder + filter		# Ordner ändern / Filtern
 				label = merkname
@@ -585,6 +646,11 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				fp = {'action': 'filter_delete', 'name': quote_plus('label')} 
 				fparams_delete = "&fparams={0}".format(fp)
 				fparams_delete = quote_plus(fparams_delete) 		# Filter entfernen
+			if filterstatus:								# Ausschluss-Filter EIN/AUS
+				fp = {'action': 'state_change'} 
+				fparams_change = "&fparams={0}".format(fp)
+				fparams_change = quote_plus(fparams_change)			# Filtern
+				
 				
 			fp = {'action': 'add', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
 				'Plot': quote_plus(Plot),'url': quote_plus(url)}	
@@ -599,6 +665,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			
 			# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
 			MERK_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID))
+			if fparams_change:										# Ausschluss-Filter EIN/AUS
+				MERK_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			commands = []
 			commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
 					% (MERK_SCRIPT, HANDLE, fparams_add)))
@@ -612,6 +680,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					% (MERK_SCRIPT, HANDLE, fparams_filter)))
 				commands.append(('Filter der  Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
 					% (MERK_SCRIPT, HANDLE, fparams_delete)))
+			if fparams_change:										# Aufrufer home s.o. -> FilterToolsWork
+				commands.append(('Ausschluss-Filter EIN/AUS', 'RunScript(%s, %s, ?action=dirList&dirID=FilterToolsWork%s)' \
+					% (MERK_SCRIPT, HANDLE, fparams_change)))
 
 			li.addContextMenuItems(commands)				
 		
@@ -623,7 +694,6 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 #---------------------------------------------------------------- 
 # holt kontrolliert raw-Content, cTimeout für cacheTime
 # 02.09.2018	erweitert um 2. Alternative mit urllib2.Request +  ssl.SSLContext
-#	Bei Bedarf get_page in EPG-Modul nachrüsten.
 #	s.a. loadPage in Modul zdfmobile.
 # 11.10.2018 HTTP.Request (Plex) ersetzt durch urllib2.Request
 # 	03.11.2018 requests-call vorangestellt wg. Kodi-Problem: 
@@ -633,7 +703,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 # 23.12.2018 requests-call vorübergehend auskommentiert, da kein Python-built-in-Modul (bemerkt beim 
 #	Test in Windows7
 # 13.01.2019 erweitert für compressed-content (get_page2)
-# 25.01.2019 Hinweis auf Redirects (get_page2)
+# 25.01.2019 Rückgabe Redirect-Url (get_page2) in msg
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False):	
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
@@ -652,7 +722,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	
 	'''
 	try:
-		import requests															# 1. Versuch mit requests
+		import requests							# 1. Versuch mit requests - s.o.
 		PLog("get_page1:")
 		...
 	'''
@@ -676,7 +746,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 								
 			r = urlopen(req)	
 			new_url = r.geturl()										# follow redirects
-			PLog("new_url: " + new_url)									# -> msg
+			PLog("new_url: " + new_url)									# -> msg s.u.
 			# PLog("headers: " + str(r.headers))
 			
 			compressed = r.info().get('Content-Encoding') == 'gzip'
@@ -813,6 +883,7 @@ def R(fname, abs_path=False):
 # ersetzt Resource.Load von Plex 
 # abs_path s.o.	R()	
 def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex 
+	PLog('RLoad: %s' % str(fname))
 	if abs_path == False:
 		fname = '%s/resources/%s' % (ADDON_PATH, fname)
 	path = os.path.join(fname) # abs. Pfad

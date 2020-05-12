@@ -12,18 +12,53 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-??.05.2020	2.9.3
+12.05.2020	2.9.6
+			Filterliste: Ablösung der Filter in Settings durch Konzept Filterliste, 
+			Initialisierung in check_DataStores/make_newDataDir, Bearbeitung im Menü Info.
+			Neue Funktionen (Haupt-PRG): InfoAndFilter, FilterTools, FilterToolsWork, 
+			AddonInfos. 
+			Neue Funktionen Modul util: get_list_indices + get_items_from_list.
+			Neues Menü Info mit Untermenüs: Änderungsliste, Addon-Infos, Filter bearbeiten.
+			Filter-Code-Anpassung in Haupt-PRG: ARDSportPanel, BarriereArmARD, SinglePage,
+			ZDFRubrikSingle, BarriereArm, ZDF_get_content (einschl. Kurzvideos).
+			Filter-Code-Anpassung in ARD Neu: get_page_content, get_ardsingle_more,
+			SendungenAZ_ARDnew, ARDVerpasstContent, ARDStartRubrik.
+			EIN-AUS-Schalter für Ausschluss-Filter im Kontext-Menü: Anpassungen im Modul 
+			util (Funktionen home, addDir).
+			
+not on Github	2.9.5
+			Settings: Typ-Umstellung labelum -> select (pref_DICT_store_days,
+			pref_UT_store_days, pref_SLIDES_store_days, pref_TEXTE_store_days, 
+			pref_LiveRecord_duration) - komfortablere Bedienung. 
+			ShowFavs (Merkliste): Anpassung thumb-Pfad ohne pref_merkextern (für manuell
+			kopierte Falsch-Pfade). Code zum loop-Beginn verlagert.
+			PLog (Modul util): Rückwechsel zu LOGNOTICE (LOGINFO klappt nicht mit
+			akt. Matrix-Build).
+			Modul EPG: Fix Rückgabe von msg (entfernt, enthält seit V2.9.2 Redirect-Url,
+			verhinderte die EPG-Auswertung).
+			
+not on Github	2.9.4
+			Entfernte Icons (obsolet): icon-warning.png, ard-meist-gesehen.png, 
+			ard-ausgewaehlte-filme.png, ard-alle-filme.png, ard-ausgewaehlte-dokus.png,
+			ard-alle-dokus.png, ard-serien.png, ard-meist-gesehen.png, tv-ntv.png,
+			zdf-untertitel.png.
+			ard-am-besten-bewertet.png, ard-themen.png, ard-neueste-videos.png,
+			zdf-infos.png, zdf-newcontent.png, zdf-themen.png, tv-daf.png
+			Audio_get_rubriken (Audiothek): Nutzung von rm_datav für anzahl.
+			rm_datav (Audiothek): cleanhtml ergänzt.
+
+02.05.2020	2.9.3
 			ShowFavs: Anpassung thumb-Pfad an lokales Addon bei externer Merkliste.
-			Main (Menü "Suche in ARD und ZDF"): Anpassung Info-Text zu Einzelbeiträgen +
-			Sendreihen.
-			Cache für endOfDirectory-Call: Main, Main_ARD, Main_ZDF, Main_NEW (ARD Neu),
-			Main_childs, Main_XL (TagesschauXL), Main_ZDFmobile. 
+			ARDSport, ARDSportPanel: Pfadbasis bei den Tab-Links ergänzt + alte http-Links
+			durch https-Links ersetzt (mehrf. Klemmer).
 			Audiothek (Menü "Unsere Favoriten"): in Audio_get_sendungen Default-Auswertung
 			für ID=Audio_get_rubrik hinzugefügt (Titel fehlten), Doppler in descr entfernt.
 			ARDVerpasstContent (Modul ARD Neu): HTTP-Header mit cache-control hinzugefügt 
 			(mehrf. leere Seiten).
-			ARDSport, ARDSportPanel: Pfadbasis bei den Tab-Links ergänzt + alte http-Links
-			durch https-Links ersetzt (mehrf. Klemmer).
+			Cache für endOfDirectory-Call: Main, Main_ARD, Main_ZDF, Main_NEW (ARD Neu),
+			Main_childs, Main_XL (TagesschauXL), Main_ZDFmobile (Performance). 
+			Main (Menü "Suche in ARD und ZDF"): Anpassung Info-Text zu Einzelbeiträgen +
+			Sendreihen.
 
 29.04.2020	2.9.2
 			get_content (Modul TagesschauXL): Fix Var msg2 (falsch: s) für MyDialog,
