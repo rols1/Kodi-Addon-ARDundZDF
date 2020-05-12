@@ -41,7 +41,7 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.9.6'
+VERSION = '2.9.7'
 VDATE = '12.05.2020'
 
 #
@@ -428,12 +428,12 @@ def Main():
 			if int_lv > int_lc:								# Update-Button "installieren" zeigen
 				call_update = True
 				title = 'neues Update vorhanden - jetzt installieren'
-				summary = 'Addon aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
+				summ = 'Addon aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
 				# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
 				url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
 				fparams="&fparams={'url': '%s', 'ver': '%s'}" % (quote_plus(url), latest_version) 
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.updater.update", fanart=R(FANART), 
-					thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary)
+					thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summ)
 			
 	if call_update == False:							# Update-Button "Suche" zeigen	
 		title  = 'Addon-Update | akt. Version: ' + VERSION + ' vom ' + VDATE	
@@ -441,7 +441,7 @@ def Main():
 		tag ='Bezugsquelle: ' + repo_url			
 		fparams="&fparams={'title': 'Addon-Update'}"
 		addDir(li=li, label=title, action="dirList", dirID="SearchUpdate", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summary, tagline=tagline)
+			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summ, tagline=tagline)
 
 	# Menü Einstellungen (obsolet) ersetzt durch Info-Button
 	#	freischalten nach Posting im Kodi-Forum
