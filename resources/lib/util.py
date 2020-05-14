@@ -125,7 +125,10 @@ BASE_URL 		= 'https://classic.ardmediathek.de'
 #	https://github.com/i96751414/script.logviewer/blob/matrix/resources/lib/utils.py
 # 10.05.2020 Rückwechsel zu LOGNOTICE - LOGINFO klappt nicht mit akt. 
 #			Matrix-Build 
-def PLog(msg):
+# 14.05.2020 dummy = fehlerhafter PLog-Call z.B. pytube-Modul (helpers.py, mixins.py,
+#			gefixt). dummy-Ausgabe vorerst belassen (Debug)
+#
+def PLog(msg, dummy=''):
 	if DEBUG == 'false':
 		return
 	
@@ -133,6 +136,8 @@ def PLog(msg):
 #		xbmc.log("%s --> %s" % ('ARDundZDF', msg), xbmc.LOGINFO)	
 #	else:
 	xbmc.log("%s --> %s" % ('ARDundZDF', msg), xbmc.LOGNOTICE)
+	if dummy:		# Debug (s.o.)
+		xbmc.log("%s --> %s" % ('PLog_dummy', dummy), xbmc.LOGNOTICE)
 		
 #---------------------------------------------------------------- 
 # 08.04.2020 Konvertierung 3-zeiliger Dialoge in message (Multiline)

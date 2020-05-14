@@ -12,6 +12,18 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+15.05.2020	2.9.8
+			FilterToolsWork: Container.Refresh' vor notification verlagert und cacheToDisc
+			auf False gesetzt (sonst wirkungslos bei LibreElec und Android). 
+			Main: Directory-Cache an Setting "neues Update anzeigen" angepasst (muss bei
+			EIN neu geladen werden, um die Github-Anfrage zu forcieren).
+			ARDSportPanel: Fix codec-Error (title).
+			PLog (Modul util): dummy-Parameter eingefügt für fehlerhafte PLog-Call (Bsp.
+			helpers.py, mixins.py aus pytube-Modul, betroffen:  YT-Videos aus phoenix wie 
+			z. Bsp. "Themen/Rubriken (alle)" / "Bundestag")- gefixt, für Debug-Zwecke 
+			belassen).
+			pytube-Modul: Fix fehlerhafte PLog-Call in helpers.py und mixins.py.
+			
 12.05.2020	2.9.7
 			Main (Haupt-PRG): Fix Initialisierung Var. summary im Update-Button.
 			

@@ -60,14 +60,15 @@ def apply_signature(config_args, fmt, js):
 			raise TypeError('JS is None')
 
 		PLog(
-			'mixins: finished descrambling signature for itag=%s\n%s',
-			stream['itag'], pprint.pformat(
-				{
-					's': stream['s'],
-					'signature': signature,
-				}, indent=2,
-			),
-		)
+			'mixins: finished descrambling signature for itag=%s\n%s')
+			# 14.05.2020 für Addon nicht benötigt:
+			#stream['itag'], pprint.pformat(
+			#	{
+			#		's': stream['s'],
+			#		'signature': signature,
+			#	}, indent=2,
+			#),
+
 		# 403 forbidden fix
 		stream_manifest[i]['url'] = url + '&sig=' + signature; PLog("apply_signature_url: " + url)
 
@@ -106,7 +107,8 @@ def apply_descrambler(stream_data, key):
 		]
 		
 	PLog(
-		'applying descrambler\n%s',
-		pprint.pformat(stream_data[key], indent=2),
-	)
+		'applying descrambler\n%s')
+		# 14.05.2020 für Addon nicht benötigt:
+		#pprint.pformat(stream_data[key], indent=2),
+
 

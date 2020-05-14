@@ -43,14 +43,15 @@ def regex_search(pattern, string, groups=False, group=None, flags=0):
 				)
 			else:
 				PLog(
-					'helpers: finished regex search1: %s',
-					pprint.pformat(
-						{
-							'pattern': p,
-							'results': results.group(0),
-						}, indent=2,
-					),
-				)
+					'helpers: finished regex search1: %s')
+					# 14.05.2020 für Addon nicht benötigt:
+					#pprint.pformat(
+					#	{
+					#		'pattern': p,
+					#		'results': results.group(0),
+					#	}, indent=2,
+					#),
+
 				if groups:
 					return results.groups()
 				elif group is not None:
@@ -67,14 +68,15 @@ def regex_search(pattern, string, groups=False, group=None, flags=0):
 			)
 		else:
 			PLog(
-				'helpers: finished regex search2: %s',
-				pprint.pformat(
-					{
-						'pattern': pattern,
-						'results': results.group(0),
-					}, indent=2,
-				),
-			)
+				'helpers: finished regex search2: %s')
+			# 14.05.2020 für Addon nicht benötigt:
+			#	pprint.pformat(
+			#		{
+			#			'pattern': pattern,
+			#			'results': results.group(0),
+			#		}, indent=2,
+			#	),
+
 			if groups:
 				return results.groups()
 			elif group is not None:

@@ -549,7 +549,7 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 			if vid:
 				# Import beim Pluginstart stellt nicht alle Funktionen zur Verfügung			
 				import resources.lib.yt	as yt		# Rahmen für pytube
-				li =  yt.yt(li=li, url=url, vid=vid, title=title, tag=tagline, summ=summary, thumb=thumb)
+				li =  yt.yt_get(li=li, url=url, vid=vid, title=title, tag=tagline, summ=summary, thumb=thumb)
 			else:
 				PLog('SingleBeitrag: vid nicht gefunden')	
 		if typ == "video-smubl":

@@ -59,24 +59,32 @@ PLog('pytube geladen - V%s | %s | %s' %\
 	('9.5.3', 'MIT License', 'Copyright 2019 Nick Ficano'))
 
 # Aufrufer: SingleBeitrag (Modul phoenix)
-# Bsp.: https://www.youtube.com/watch?v=9xfBbAZtcA0 OK
-def yt(li, url, vid, title, tag, summ, thumb):
+# Bsp.: https://www.youtube.com/watch?v=9xfBbAZtcA0 
+# 14.05.2020 mehrf. Aufruf immer noch möglich trotz 	
+#	endOfDirectory statt return li und Umbenennung
+#	yt -> yt_get und yt -> yt_init, daher None-Test 
+#	mit return 
+def yt_get(li, url, vid, title, tag, summ, thumb):
 	PLog('yt_embed_url: ' + url)
 	watch_url = 'https://www.youtube.com/watch?v=' + vid
 	PLog('yt_watch_url: ' + watch_url)
 	PLog(tag); PLog(summ);PLog(thumb);
 	title_org = title
 	
-	yt 		= YouTube(watch_url)
+	if li == None:		# mehrfacher  Aufruf mögl., s.o.
+		PLog('li==None: ' + str(li))
+		return
+	
+	yt_init = YouTube(watch_url)
 	# nur mp4-Videos laden
-	Videos 	= yt.streams.filter(file_extension='mp4').all()
+	Videos 	= yt_init.streams.filter(file_extension='mp4').all()
 	PLog(len(Videos)); PLog(str(Videos))
 	
 	if SETTINGS.getSetting('pref_video_direct') == 'true': 
-		PLog('Sofortstart: yt')
+		PLog('Sofortstart: yt_init')
 		#  <Stream: itag="22" mime_type="video/mp4" res="720p" fps="30fps" 
 		#	vcodec="avc1.64001F" acodec="mp4a.40.2">:
-		stream = yt.streams.get_by_itag(22) 
+		stream = yt_init.streams.get_by_itag(22) 
 		res,fps,vcodec,acodec = get_stream_details(str(stream))	 
 		yt_url = stream.download(only_url=True)	
 		if summ == '':
@@ -96,12 +104,12 @@ def yt(li, url, vid, title, tag, summ, thumb):
 		PLog(res); PLog(fps); PLog(vcodec); PLog(acodec);
 
 		try:									# Videolänge kann fehlen
-			duration	= yt.length()
+			duration	= yt_init.length()
 			duration = seconds_translate(sec)
 		except:
 			duration = ''
 
-		stream = yt.streams.get_by_itag(itag) 
+		stream = yt_init.streams.get_by_itag(itag) 
 		yt_url = stream.download(only_url=True)				
 		PLog('yt_url: ' + yt_url[:100])
 
@@ -140,7 +148,7 @@ def yt(li, url, vid, title, tag, summ, thumb):
 		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
 		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
 
-	# return li		# kann yt mehrfach aufrufen (trotz endOfDirectory in SingleBeitrag
+	# return li		# kann yt mehrfach aufrufen (trotz endOfDirectory in SingleBeitrag, s.o.)
 	xbmcplugin.endOfDirectory(HANDLE)
 # ----------------------------------------------------------------------
 #  str(stream) durch Aufrufer

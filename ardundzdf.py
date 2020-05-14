@@ -451,8 +451,12 @@ def Main():
 	fparams="&fparams={}" 
 	addDir(li=li, label='Info', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
 		fparams=fparams, summary=summ, tagline=tag)
-				
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+	# Updatehinweis wird beim Caching nicht aktualisiert
+	if SETTINGS.getSetting('pref_info_update') == 'true':
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	else:
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #----------------------------------------------------------------
 # Aufruf Main
 # div. Addon-Infos + Filter (Titel) setzen/anlegen/löschen
@@ -546,10 +550,13 @@ def FilterTools():
 	addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
 		thumb=R(ICON_FILTER), tagline=tag, summary=summ, fparams=fparams)		
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #----------------------------------------------------------------
 # Aufruf FilterTools
 # Ausschluss-Filter Anzeigen/Setzen/Hinzufügen/Löschen
+# 13.05.2020 'Container.Refresh' muss für LibreElec + Android vor 
+#	notification erfolgen und cacheToDisc=False - sonst wirkungslos.
+#
 def FilterToolsWork(action):
 	PLog('FilterToolsWork: ' + action) 
 	dialog = xbmcgui.Dialog()
@@ -589,9 +596,9 @@ def FilterToolsWork(action):
 			msg1 = u"Filter setzen"
 			msg2 = u"gesetzte Filter: %d" % len(ret)
 			icon = R(ICON_FILTER)
+			xbmc.executebuiltin('Container.Refresh')
 			xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
-			
-			
+		
 	if action == 'add':
 		title = u'Filterwort hinzufügen (Groß/klein egal)'
 		ret = dialog.input(title, type=xbmcgui.INPUT_ALPHANUM)	# Eingabe Filterwort
@@ -620,6 +627,7 @@ def FilterToolsWork(action):
 					msg1 = "Filterliste"
 					msg2 = '%s hinzugefügt. Anzahl: %d' % (ret.strip(), len(filter_list))		
 					icon = R(ICON_FILTER)
+					xbmc.executebuiltin('Container.Refresh')					
 					xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
 	
 	if action == 'delete':
@@ -668,8 +676,8 @@ def FilterToolsWork(action):
 					msg2 = u'%s gelöscht. Anzahl: %d' % (item, filter_len)		
 					PLog('Mark1')
 					icon = R(ICON_FILTER)
-					xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
-				
+					xbmc.executebuiltin('Container.Refresh')					
+					xbmcgui.Dialog().notification(msg1,msg2,icon,5000)		
 			
 	if action == 'show_list':									# Filterliste zeigen
 		title = u"Liste verfügbarer Filter"
@@ -681,9 +689,7 @@ def FilterToolsWork(action):
 			SETTINGS.setSetting('pref_usefilter','false')
 		else:											
 			SETTINGS.setSetting('pref_usefilter','true')
-		
-	
-	xbmc.executebuiltin('Container.Refresh')					# refresh Menü "Filter bearbeiten"
+		xbmc.executebuiltin('Container.Refresh')							
 
 #----------------------------------------------------------------
 # Aufruf InfoAndFilter
@@ -2179,6 +2185,7 @@ def ARDSportPanel(title, path, img):
 		
 		PLog('Satz:')
 		PLog(path); PLog(img); PLog(title); PLog(summ); 
+		title=py2_encode(title)
 		path=py2_encode(path); img=py2_encode(img); summ=py2_encode(summ);
 		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
 			(quote(path), quote(title), quote(img), quote(summ))				
