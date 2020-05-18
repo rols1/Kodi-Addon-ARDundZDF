@@ -6,7 +6,7 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-#	Stand: 24.04.2020
+#	Stand: 17.05.2020
 
 from __future__ import absolute_import
 
@@ -75,7 +75,9 @@ CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.Sh
 # 02.04.2020 erweitert für Share-Zugriffe - hier Schreiben via 
 #	xbmcvfs.File (für Python3 mittels Bytearray).
 #	Lesen der Merkliste in ReadFavourites (Modul util).
-#			
+# 16.05.2020 Code für add/del/folder vereinheitlicht (gemeinsame  
+#	Nutzung von save_merkliste)
+#	
 def Watch_items(action, name, thumb='', Plot='', url=''):		
 	PLog('Watch: ' + action)
 	
@@ -137,38 +139,15 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 				
 		item_cnt = item_cnt + 1		
 		if doppler == False:
-			msg1 = u"Eintrag hinzugefügt" 
 			merkliste = py2_decode(merkliste) + merk + "\n"
 			#item_cnt = item_cnt + 1
 			
 			# Merkliste + Ordnerinfo + Ordner + Ordnerwahl:	
-			my_ordner = " ".join(my_ordner)
-			if my_ordner == '':
-				my_ordner = ORDNER
-			ordner_info = "\n".join(ORDNER_INFO)	
-			merkliste = "<merkliste>\n%s</merkliste>\n\n%s\n\n<ordnerliste>%s</ordnerliste>\n"	%\
-				(merkliste, ordner_info, my_ordner)		
-			try:
-				if '//' not in fname:
-					err_msg = RSave(fname, merkliste, withcodec=True)	# Merkliste speichern
-				else:
-					PLog("xbmcvfs_fname: " + fname)
-					f = xbmcvfs.File(fname, 'w')						# extern - Share		
-					if PYTHON2:
-						f = xbmcvfs.File(fname, 'w')
-						ret=f.write(merkliste); f.close()			
-					else:												# Python3: Bytearray
-						buf = bytearray()
-						buf.extend(merkliste.encode())
-						ret=f.write(buf); f.close()			
-					PLog("xbmcvfs_ret: " + str(ret))
-					if ret:
-						sync_list_intern(src_file=fname, dest_file=WATCHFILE)# Synchronisation
-			except Exception as exception:
-				PLog(str(exception))
+			ret, err_msg = save_merkliste(fname, merkliste, my_ordner)
+			msg1 = u"Eintrag hinzugefügt" 
+			if ret == False:
+				PLog(err_msg)
 				msg1 = u"Problem Merkliste"
-				err_msg = str(exception)
-				return msg1, err_msg, str(item_cnt)		
 		else:
 			msg1 = u"Eintrag schon vorhanden"
 			
@@ -193,34 +172,11 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			
 		if deleted:
 			# Merkliste + Ordnerinfo + Ordner + Ordnerwahl:	
-			my_ordner = " ".join(my_ordner)
-			if my_ordner == '':
-				my_ordner = ORDNER
-			ordner_info = "\n".join(ORDNER_INFO)	
-			merkliste = "<merkliste>\n%s</merkliste>\n\n%s\n\n<ordnerliste>%s</ordnerliste>\n"	%\
-				(merkliste, ordner_info, my_ordner)		
-			try:
-				msg1 = u"Eintrag gelöscht"
-				if '//' not in fname:
-					err_msg = RSave(fname, merkliste, withcodec=True)	# Merkliste speichern
-					PLog(msg1)
-					if err_msg:
-						ret = False
-					else:
-						ret = True
-				else:
-					PLog("xbmcvfs_fname: " + fname)
-					f = xbmcvfs.File(fname, 'w')						# extern - Share		
-					ret = f.write(merkliste); f.close()			
-					PLog("xbmcvfs_ret: " + str(ret))
-				if ret:
-					sync_list_intern(src_file=fname, dest_file=WATCHFILE)# Synchronisation
-
-			except Exception as exception:
-				PLog(str(exception))
+			ret, err_msg = save_merkliste(fname, merkliste, my_ordner)
+			msg1 = u"Eintrag gelöscht"
+			if ret == False:
+				PLog(err_msg)
 				msg1 = u"Problem Merkliste"
-				err_msg = str(exception)
-				return msg1, err_msg, str(item_cnt)	
 		else:
 			msg1 = "Eintrag nicht gefunden." 
 			err_msg = u"Merkliste unverändert."
@@ -278,7 +234,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 		else:															# Problem beim Speichern
 			msg1 = "Problem Merkliste"									# err_msg s. save_merkliste
 	
-	return msg1, err_msg, str(item_cnt)	
+	return msg1, err_msg, str(item_cnt)
 
 # ----------------------------------------------------------------------
 # url aus ev. Base64-Kodierung ermitteln
@@ -328,14 +284,19 @@ def convBase64(s):
 def sync_list_intern(src_file, dest_file):
 	PLog('sync_list_intern:')
 	
-	# Vorprüfung Setting Sync / externe Merkliste
+	# 1. Vorprüfung: Setting Sync / externe Merkliste
 	if SETTINGS.getSetting('pref_merksync') == 'false' or SETTINGS.getSetting('pref_merkextern') == 'false':	
 		PLog("Sync_OFF")
+		return
+	# 2. Vorprüfung: externe Merkliste ist gleichzeitig interne Merkliste?
+	if src_file == WATCHFILE: 
+		PLog("Sync_Block_WATCHFILE")
 		return
 	
 	f = xbmcvfs.File(src_file)
 	s1 = f.size(); f.close()
-	if s1 > 100:							# Mindestbreite bis dirID=, Eintrag immer größer
+	ret1=False; ret2=False
+	if s1 > 100:							# Mindestbreite bis dirID=, Eintrag immer > 100 Zeichen
 		ret1 = xbmcvfs.delete(dest_file)
 		PLog('xbmcvfs.delete: ' + str(ret1))
 		ret2 = xbmcvfs.copy(src_file, dest_file)
@@ -347,7 +308,7 @@ def sync_list_intern(src_file, dest_file):
 	if ret1 and ret2 and s2 == s1:			# ohne Rückgabe
 		PLog("Sync_OK")
 	else:
-		PLog("Sync_Error")
+		PLog("Sync_Error, s1: %d" % s1)
 	return
 	
 # ----------------------------------------------------------------------
@@ -372,11 +333,16 @@ def save_merkliste(fname, merkliste, my_ordner):
 				ret = False
 			else:
 				ret = True
-		else:
+		else:		
 			PLog("xbmcvfs_fname: " + fname)
-			f = xbmcvfs.File(fname, 'w')						# extern - Share		
-			ret = f.write(merkliste); f.close()			
-			PLog("xbmcvfs_ret: " + str(ret))
+			f = xbmcvfs.File(fname, 'w')							
+			if PYTHON2:
+				ret=f.write(merkliste); f.close()			
+			else:												# Python3: Bytearray
+				buf = bytearray()
+				buf.extend(merkliste.encode())
+				ret=f.write(buf); f.close()			
+			PLog("xbmcvfs_ret: " + str(ret))										
 		if ret:
 			sync_list_intern(src_file=fname, dest_file=WATCHFILE)# Synchronisation
 		return ret, err_msg
@@ -389,12 +355,10 @@ def save_merkliste(fname, merkliste, my_ordner):
 	
 # ----------------------------------------------------------------------
 # Aufrufer Kontextmenü	
-# Aufruf ohne Param delete:		
-# 	Aufruf Merkliste mit Ordner als Filter
-#	Merkliste bleibt unverändert
+# ohne Param delete:	-> Merkliste mit Ordner als Filter	
 #	Filter wird in MERKFILTER dauerhaft gespeichert
-# Aufruf mit Param delete: 
-#	Löschen der Filterdatei MERKFILTER
+# mit Param delete: 	-> Löschen der Filterdatei MERKFILTER
+# merkliste.xml bleibt unverändert
 #			
 def watch_filter(delete=''):
 	PLog("watch_filter:")
@@ -475,7 +439,8 @@ def clean_Plot(Plot):
 	Plot = Plot.replace('||||||', '')	# LF-Ruinen entfernen (3 Zeilen-Mark.)		
 	# PLog(Plot)	# Debug
 	return Plot	
-# ----------------------------------------------------------------------			
+			
+######################################################################## 			
 # argv-Verarbeitung wie in router (Haupt-PRG)
 # Beim Menü Favoriten (add) endet json.loads in exception
 
@@ -510,7 +475,7 @@ except Exception as exception:						# Bsp. Hinzufügen von Favoriten
 	xbmcgui.Dialog().ok(heading, msg1, msg2, msg3)
 	exit()
 	
-
+# ----------------------------------------------------------------------
 action = mydict['action']	# action + name immmer vorh., Rest fehlt bei action=del
 name = mydict['name']
 thumb=''; Plot=''; url=''
@@ -522,23 +487,21 @@ if 'url' in mydict:
 	url = mydict['url']
 PLog(action); PLog(name); PLog(thumb); PLog(Plot); PLog(url); 
 
-if 'filter' in action:
+if 'filter' in action:													# Filter-Aktionen:
 	if action == 'filter':												# Aufrufer ShowFavs (Settings: Ordner)
 		watch_filter()													# Filter setzen
 	if action == 'filter_delete':
 		watch_filter(delete=True)										# Filter (MERKFILTER) löschen
-else:
-	# Markierungen "Ordner:" + "Modul:" aus akt. Anzeige entfernen
-	#	Altern.: Merkliste einlesen + Satz suchen (zeitaufwändiger)
+else:																	# Merklisten-Aktionen:
 	Plot = clean_Plot(Plot) 
 	msg1, err_msg, item_cnt = Watch_items(action,name,thumb,Plot,url)	# Einträge add / del / folder
 	msg2 = err_msg
 	if item_cnt:
 		msg2 = "%s\n%s" % (msg2, u"Einträge: %s" % item_cnt)
-		if action == 'del' or action == 'folder':							# Refresh Liste nach Löschen
+		if action == 'del' or action == 'folder':						# Refresh Liste nach Löschen
 			# MERKACTIVE ersetzt hier Ermitteln von Window + Control
 			# bei Verzicht würde jede Liste refresht (stört bei großen Listen)
-			if os.path.isfile(MERKACTIVE) == True:		# Merkliste aktiv?
+			if os.path.isfile(MERKACTIVE) == True:						# Merkliste aktiv?
 				xbmc.executebuiltin('Container.Refresh')
 
 	# 01.02.2029 Dialog ersetzt durch notification 

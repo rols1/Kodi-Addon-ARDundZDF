@@ -12,6 +12,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.05.2020	2.9.9
+			check_AddonXml (Modul util): Anpassung an Python3 - Austausch open/read 
+			gegen xbmcvfs.File/read (Codec-Error beim Einlesen in Matrix-Version).
+			RLoad (Modul util): Doppel Logausgabe entfernt. 
+			xml2srt (Modul util): Anpassung an Python3 (wie check_AddonXml), 
+			try-except-Block für Einlesen der UT-Datei - ARD-Videos nicht in Matrix
+			abspielbar.
+			PlayVideo (Modul util): Download der ARD-UT-Datei nur wenn beide Settings
+			gesetzt (Entkopplung).
+			Watch_items (Modul Merkliste): Code für add/del/folder vereinheitlicht (bei
+			Datei-OP's save_merkliste + sync_list_intern).
+			save_merkliste (Modul Merkliste): Verwendung Bytearray bei Python3.
+			sync_list_intern (Modul Merkliste): zusätzl. Größenangabe Quellfile bei 
+			Fehlschlag, Sync-Blocking falls externe gleichzeitig interne Merkliste.
+			AddonInfos, ergänzt: OS, Kodi-Version.
+
 15.05.2020	2.9.8
 			FilterToolsWork: Container.Refresh' vor notification verlagert und cacheToDisc
 			auf False gesetzt (sonst wirkungslos bei LibreElec und Android). 

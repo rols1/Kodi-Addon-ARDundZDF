@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 11.05.2020
+#	Stand 16.05.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -83,16 +83,21 @@ ARDStartCacheTime = 300						# 5 Min.
 # ADDON_DATA 2.25.0 (Kodi 18 Leia):
 #	../.kodi/userdata/ardundzdf_data
 # Aufruf von allen Modulen.Köpfen einschl. Haupt-PRG
-#
+# 15.05.2020 Codec-Error beim Einlesen in Matrix - Austausch
+#	open/read gegen xbmcvfs.File/read
+# 
 def check_AddonXml(mark):
 	ADDON_XML		= os.path.join(ADDON_PATH, "addon.xml")
-	with open(ADDON_XML, 'r') as f:
-		xml_content	= f.read()
-	if mark in xml_content:
+	xbmc.log("%s --> %s" % ('ARDundZDF', 'check_AddonXml'), xbmc.LOGNOTICE)
+	f = xbmcvfs.File(ADDON_XML)		# Byte-Puffer
+	xml_content	= f.readBytes()
+	f.close()
+	if mark in str(xml_content):
 		ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 		return True
 	else:
 		return False
+
 #---------------------------------------------------------------- 
 	
 USERDATA		= xbmc.translatePath("special://userdata")
@@ -127,6 +132,7 @@ BASE_URL 		= 'https://classic.ardmediathek.de'
 #			Matrix-Build 
 # 14.05.2020 dummy = fehlerhafter PLog-Call z.B. pytube-Modul (helpers.py, mixins.py,
 #			gefixt). dummy-Ausgabe vorerst belassen (Debug)
+# Bei Änderungen check_AddonXml berücksichtigen (xbmc.log direkt)
 #
 def PLog(msg, dummy=''):
 	if DEBUG == 'false':
@@ -888,7 +894,6 @@ def R(fname, abs_path=False):
 # ersetzt Resource.Load von Plex 
 # abs_path s.o.	R()	
 def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex 
-	PLog('RLoad: %s' % str(fname))
 	if abs_path == False:
 		fname = '%s/resources/%s' % (ADDON_PATH, fname)
 	path = os.path.join(fname) # abs. Pfad
@@ -908,7 +913,8 @@ def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex
 # Gegenstück zu RLoad - speichert Inhalt page in Datei fname im  
 #	Dateisystem. PluginAbsPath muss in fname enthalten sein,
 #	falls im Pluginverz. gespeichert werden soll 
-#  Migration Python3: immer utf8
+#  Migration Python3: immer utf8 - Alt.: xbmcvfs.File mit
+#		Bytearray (s. merkliste.py)
 # 
 def RSave(fname, page, withcodec=False): 
 	PLog('RSave: %s' % str(fname))
@@ -1468,17 +1474,23 @@ def transl_wtag(tag):
 # Problem mit dt.datetime.strptime (Kodi: attribute of type 'NoneType' is not callable):
 # 	https://forum.kodi.tv/showthread.php?tid=112916
 # Migration Python3: s. from __future__ import print_function
+# 16.05.2020 Anpassung an Python3, try-except-Block für Einlesen der UT-Datei
 #
 def xml2srt(infile):
 	PLog("xml2srt: " + infile)
 	outfile = '%s.srt' % infile
-
-	with open(infile) as fin:
-		text = fin.read()
-		text = text.replace('-1:', '00:') 		# xml-Fehler
+		
+	try:
+		f = xbmcvfs.File(infile)
+		page = f.readBytes()
+		f.close()
+		page = page.replace('-1:', '00:') 		# xml-Fehler
 		# 10-Std.-Offset simpel beseitigen (2 Std. müssten reichen):
-		text = (text.replace('"10:', '"00:').replace('"11:', '"01:').replace('"12:', '"02:'))
-		ps = blockextract('<tt:p', text)
+		page = (page.replace('"10:', '"00:').replace('"11:', '"01:').replace('"12:', '"02:'))
+		ps = blockextract('<tt:p', page)					
+	except Exception as exception:
+		PLog(str(exception))
+		return ''				
 		
 	try:
 		with open(outfile, 'w') as fout:
@@ -1741,17 +1753,18 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 	
 	# Info aus GetZDFVideoSources hierher verlagert - wurde von Kodi nach Videostart 
 	#	erneut gezeigt - dto. für ARD (parseLinks_Mp4_Rtmp, ARDStartSingle)
-	if sub_path:							# Vorbehandlung ARD-Untertitel
-		if 'ardmediathek.de' in sub_path:	# ARD-Untertitel speichern + Endung -> .sub
-			local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
-			local_path = os.path.abspath(local_path)
-			try:
-				urlretrieve(sub_path, local_path)
-			except Exception as exception:
-				PLog(str(exception))
-				local_path = ''
-			if 	local_path:
-				sub_path = xml2srt(local_path)	# leer bei Fehlschlag
+	if SETTINGS.getSetting('pref_UT_Info') == 'true' or SETTINGS.getSetting('pref_UT_ON') == 'true':
+		if sub_path:							# Vorbehandlung ARD-Untertitel
+			if 'ardmediathek.de' in sub_path:	# ARD-Untertitel speichern + Endung -> .sub
+				local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
+				local_path = os.path.abspath(local_path)
+				try:
+					urlretrieve(sub_path, local_path)
+				except Exception as exception:
+					PLog(str(exception))
+					local_path = ''
+				if 	local_path:
+					sub_path = xml2srt(local_path)	# Konvert. für Kodi leer bei Fehlschlag
 
 	PLog('sub_path: ' + str(sub_path));		
 	if sub_path:							# Untertitel aktivieren, falls vorh.	

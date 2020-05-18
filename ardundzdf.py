@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.9.8'
-VDATE = '15.05.2020'
+VERSION = '2.9.9'
+VDATE = '18.05.2020'
 
 #
 #
@@ -236,7 +236,9 @@ if os.path.exists(MERKACTIVE):
 MERKFILTER 	= os.path.join(DICTSTORE, 'Merkfilter') 
 # Ort FILTER_SET wie filterfile (check_DataStores):
 FILTER_SET 	= os.path.join("%s/filter_set") % ADDON_DATA
-AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
+AKT_FILTER	= ''
+if os.path.exists(FILTER_SET):	
+	AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
 AKT_FILTER	= AKT_FILTER.splitlines()					# gesetzte Filter initialiseren 
 
 try:	# 28.11.2019 exceptions.IOError möglich, Bsp. iOS ARM (Thumb) 32-bit
@@ -702,10 +704,12 @@ def AddonInfos():
 	dialog = xbmcgui.Dialog()
 	t = "     "		# Tab (5)
 
-	a = "[COLOR red]Addon:[/COLOR]"
+	a = "[COLOR red]Addon, System:[/COLOR]"
 	b = "%s%s, Version %s vom %s" % (t, ADDON_ID, VERSION, VDATE)
 	c = "%sGithub-Releases https://github.com/%s/releases" % (t, GITHUB_REPOSITORY)
-	p1 = "%s\n%s\n%s\n" % (a,b,c)
+	d = "%sOS: %s" % (t, OS_DETECT)
+	e = "%sKodi-Version: %s" % (t, KODI_VERSION)
+	p1 = "%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d,e)
 	
 	a = "[COLOR red]Cache:[/COLOR]"
 	b = "%s %s Dict" %  (t, get_dir_size(DICTSTORE))
@@ -724,9 +728,11 @@ def AddonInfos():
 	b = "%s Addon-Home: %s" % (t, PluginAbsPath)
 	c = "%s Cache: %s" % (t,ADDON_DATA)
 	fname = WATCHFILE
+	d1 = "%s Merkliste intern: %s" % (t, WATCHFILE)
+	d2 = "%s Merkliste extern: nicht aktiviert" % t
 	if SETTINGS.getSetting('pref_merkextern') == 'true':	# externe Merkliste gewählt?
 		fname = SETTINGS.getSetting('pref_MerkDest_path')
-	d = "%s Merkliste: %s" % (t,fname)
+		d2 = "%s Merkliste extern: %s" % (t,fname)
 	e = "%s Downloadverzeichnis: %s" % (t,SETTINGS.getSetting('pref_download_path'))
 	f = "%s Verschiebeverzeichnis: %s" % (t,SETTINGS.getSetting('pref_VideoDest_path'))
 	filterfile = os.path.join("%s/filter.txt") % ADDON_DATA
@@ -735,7 +741,7 @@ def AddonInfos():
 	if os.path.isfile(fname) == False:
 		fname = os.path.join("%s/resources/podcast-favorits.txt") % PluginAbsPath
 	h = "%s Podcast-Favoriten: %s" %  (t,fname)
-	p3 = "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d,e,f,g,h)
+	p3 = "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d1,d2,e,f,g,h)
 	
 	page = "%s\n%s\n%s" % (p1,p2,p3)
 	PLog(page)
