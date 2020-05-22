@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 16.05.2020
+#	Stand 18.05.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -595,7 +595,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	PLog('addDir:');
 	PLog(type(label))
 	label=py2_encode(label)
-	PLog('addDir - label: {0}, action: {1}, dirID: {2}'.format(label, action, dirID))
+	PLog('addDir_label: {0}, action: {1}, dirID: {2}'.format(label[:100], action, dirID))
 	PLog(type(summary)); PLog(type(tagline)); PLog(type(action)); PLog(type(dirID)); 
 	action=py2_encode(action); dirID=py2_encode(dirID); 
 	summary=py2_encode(summary); tagline=py2_encode(tagline); 
@@ -623,18 +623,19 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	
 	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
 	if sortlabel:
+		# kein Unterschied zw. SORT_METHOD_LABEL / SORT_METHOD_LABEL_IGNORE_THE
 		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL)
 	else:
 		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
 	PLog('PLUGIN_URL: ' + PLUGIN_URL)	# plugin://plugin.video.ardundzdf/
 	PLog('HANDLE: %s' % HANDLE)
 	
-	PLog(fparams)
+	PLog("fparams: " + unquote(fparams)[:200])
 	if thumb == None:
 		thumb = ''
 		
 	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+quote(fparams)
-	PLog("addDir_url: " + unquote(url))		
+	PLog("addDir_url: " + unquote(url)[:200])		
 	
 	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
 		if cmenu:											# Kontextmenüs Merkliste hinzufügen
@@ -671,7 +672,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 
 			fp = {'action': 'del', 'name': quote_plus(label)}		# name reicht für del
 			fparams_del = "&fparams={0}".format(fp)
-			PLog("fparams_del: " + fparams_del)
+			PLog("fparams_del: " + fparams_del[:100])
 			fparams_del = quote_plus(fparams_del)
 			
 			# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
@@ -1542,6 +1543,7 @@ def ReadFavourites(mode):
 			PLog("xbmcvfs_fname: " + fname)
 			f = xbmcvfs.File(fname)		# extern - Share		
 			page = f.read(); f.close()
+			PLog(len(page))				
 			page = py2_encode(page)		# für externe Datei erf.
 	except Exception as exception:
 		PLog(str(exception))

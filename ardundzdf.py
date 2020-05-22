@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '2.9.9'
-VDATE = '18.05.2020'
+VERSION = '3.0.0'
+VDATE = '22.05.2020'
 
 #
 #
@@ -7837,7 +7837,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		if multi == True:			
 			tagline = 'Folgeseiten'
 		
-		title = title.strip()
+		title = mystrip(title)
 		title = unescape(title)	
 		summary = unescape(summary)
 		summary = cleanhtml(summary)		

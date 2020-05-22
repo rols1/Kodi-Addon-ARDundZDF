@@ -7,7 +7,7 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-#	Stand: 09.04.2020
+#	Stand: 22.05.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -39,7 +39,7 @@ import string
 
 import ardundzdf					# -> get_query,test_downloads,get_zdf_search 
 from resources.lib.util import *
-
+import resources.lib.yt	as yt		# Rahmen für pytube
 
 # Globals
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -150,6 +150,7 @@ def get_live_data():
 		#	"typ":"","vorspann":""}
 		if '":"' in page:					# möglich: '":"', '": "'
 			page = page.replace('":"', '": "')
+		page = page.replace('\\"', '*')							# "-Zeichen ersetzen
 		PLog(page[:80])
 		title 	= stringextract('"titel": "', '"', page)		# titel!
 		subtitle= stringextract('"subtitel": "', '"', page)
@@ -237,10 +238,6 @@ def phoenix_Search(query='', nexturl=''):
 #	nicht mehr abschalten - auf '' gesetzt
 def GetContent(li, items, base_img=None, turn_title=True ):
 	PLog('GetContent:')
-
-	mediatype=''	
-	if SETTINGS.getSetting('pref_video_direct') == 'true': 
-		mediatype='video'
 
 	if not base_img:
 		base_img = R(ICON_PHOENIX)		# Ergebnisseite ohne Bilder, Phoenix-Bild verwenden
@@ -343,7 +340,7 @@ def GetContent(li, items, base_img=None, turn_title=True ):
 			fparams="&fparams={'title': '%s', 'path': '%s', 'html_url': '%s', 'tagline': '%s', 'summary': '%s', 'thumb': '%s'}" %\
 				(quote(title), quote(url), quote(url), quote(tag), quote(summ_par), quote(img))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.SingleBeitrag", fanart=img, 
-				thumb=img, fparams=fparams, summary=summ, tagline=tag, mediatype=mediatype)				
+				thumb=img, fparams=fparams, summary=summ, tagline=tag, mediatype='')				
 		else:
 			fparams="&fparams={'path': '%s', 'html_url': '%s', 'title': '%s'}" %\
 				(quote(url), quote(url), quote(title))
@@ -478,14 +475,18 @@ def ThemenListe(title, ID, path):				# Liste zu einzelnem Untermenü
 ####################################################################################################
 # Ermittlung der Videoquellen ähnlich ZDF-Mediathek:
 #	1. Die Url der Homepage der Sendung enthält am Ende die Sendungs-ID (../am-05062018-a-262217.html).
-#
 #	2. www.phoenix.de/response/id/xxx liefert die Youtube-ID + Infos zu relevanten Webseiten
 #		der Umweg über die frühere Ladekette  (../beitrags_details.php, ../vod/ptmd/phoenix) ist
 #		entfallen.
-#
+#	3. Erweiterung: Auswertung ev. weiterer vorh. Einzelbeiträge (Bsp. Bundestag/Plenarwoche,
+#		i.d.R. Beiträge für 2 Tage, Youtube-/Normal-Videos gemischt) - json-Seiten, Videoquellen
+#		fehlen hier. Auswertung: Schleife über die Beiträge, einz. Beitrag -> SingleBeitragVideo 
+#		Direktsprung bei nur 1 Video -> skip SingleBeitragVideo
+#		
 def SingleBeitrag(title, path, html_url, summary, tagline, thumb):	
 	PLog('SingleBeitrag: ' + title);
 	PLog(summary); PLog(tagline); 
+	title_org = title
 	
 	# ev. für sid split-Variante aus phoenix_Search verwenden
 	sid 	= re.search(u'-(\d+)\.html', path).group(1)
@@ -501,29 +502,13 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 		MyDialog(msg1, msg2, '')
 		return 
 	PLog(len(page))
-		
-	# Nachprüfung auf Mehrfachbeiträge - s. GetContent
-	# 17.01.2020 abgeschaltet - wirkt bei fehlenden Videos
-	#	wie Rekursion
-	'''
-	items=[]
-	try:
-		jsonObject = json.loads(page)
-		# search_cnt = jsonObject["content"]['hits']# fehlt hier	
-		items = jsonObject["related"]['sendungen']
-		PLog(len(items))
-	except Exception as exception:
-		PLog(str(exception))
-	if len(items) >= 1:
-		if 'typ":"video-' not in page:
-			PLog('Weiterleitung -> BeitragsListe')
-			return BeitragsListe(path=url, html_url=html_url, title=title, skip_sid=True)
-	'''	
+	page = page.replace('\\"', '*')									# "-Zeichen ersetzen
 		
 	li = xbmcgui.ListItem()
 	li = home(li, ID='phoenix')			# Home-Button
 	
 	items = blockextract('typ":"video-',  page)						# kann fehlen z.B. bei Phoenix_Suche 
+	PLog(len(items))
 	if len(items) == 0:
 		if 'text":"<div><strong>' in page or 'text":"<p><strong>':	# Suchtexte
 			msg1 = u"Kein phoenix-Video zu >%s< gefunden.\nFundstellen beim Partnersender ZDF möglich.\nDort suchen?" % title
@@ -531,38 +516,93 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 			PLog(ret)
 			if ret:
 				get_zdf_search(li,page,title)
+				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# endOfDirectory für get_zdf_search erford.
+			else:
+				return												# Directory-Error, erspart aber Klick  
 		else:
 			msg1 = 'Kein phoenix-Video zu >%s< gefunden.' % title
 			msg2 = 'Ursache unbekannt'
 			MyDialog(msg1, msg2, '')
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
+			return													# Directory-Error, erspart aber Klick  
+
 		
-	PLog(len(items))
+	PLog(len(items))		
+	s1 		= stringextract('titel": "', '"', page)				# Seiten-Titel + -Subtitel: Leitthema
+	s2 		= stringextract('subtitel": "', '"', page)
+	tag 	= "Leitthema: [COLOR red]%s | %s[/COLOR]" % (s1, s2)
+	
 	for item in items:
-		# PLog(item)		# bei Bedarf
+		#PLog(item)		# bei Bedarf
 		typ 	= stringextract('typ":"', '"', item)		
 		PLog("videotyp: " + typ)
-		vid=''
+		title 	= stringextract('titel":"', '"', item)	
+		img		= stringextract('"bild_l": "', '"', item)
+		if img == '':	
+			img	= stringextract('"bild_m": "', '"', item)
+		if img.startswith('http') == False:
+			img = BASE_PHOENIX + img
+		
+		vid=''; summ=''; 
+		# youtube: 	text -> Title (eigener Titel fehlt)
+		# smubl:	text entf. (ident. mit "titel")
 		if typ == "video-youtube":
-			vid		= stringextract('id":"', '"', item)
-			PLog('youtube vid:' + vid)
-			if vid:
-				# Import beim Pluginstart stellt nicht alle Funktionen zur Verfügung			
-				import resources.lib.yt	as yt		# Rahmen für pytube
-				li =  yt.yt_get(li=li, url=url, vid=vid, title=title, tag=tagline, summ=summary, thumb=thumb)
-			else:
-				PLog('SingleBeitrag: vid nicht gefunden')	
-		if typ == "video-smubl":
-			content_id = stringextract('basename": ', ',', item)		# Bsp. "basename": 253381, "bild_l":
-			PLog(content_id); PLog(title); PLog(tagline); PLog(thumb); 
-			vid=content_id; 
-			li = get_formitaeten(li,content_id,title,tagline,thumb)
-			if li == '':
-				msg1 = '%s | Problem beim Laden der Videodaten' % title
-				PLog(msg)
-								
+			vid	= stringextract('id":"', '"', item)
+			title 	= stringextract('text":"', '"', item)		# entspr. bei smubl dem Titel
+			if 'o:OfficeDocumentSettings' in title:				# Fliesstext enthält vorwiegend Formatierung
+				title = ''
+			title = cleanhtml(title);title = unescape(title); 
+			title = title.replace('\\r\\n', ''); title = title.strip()
+			if title == '':
+				title='ohne Titel'
+			summ = "Youtube-Video" 
+		else:	# typ "video-smubl"
+			vid = stringextract('basename": ', ',', item)		# Bsp. "basename": 253381, "bild_l":
+			summ = "phoenix-Video" 
+		PLog('typ %s, vid %s' % (typ, vid))
+		title = repl_json_chars(title)
+		if vid:
+			PLog('Satz:')
+			PLog(vid); PLog(title); PLog(url); PLog(tag[:80]); PLog(summ[:80]); PLog(img); 
+			title=py2_encode(title); url=py2_encode(url);
+			vid=py2_encode(vid); tag=py2_encode(tag);
+			img=py2_encode(img); summ=py2_encode(summ);
+			tag_par = summ.replace('\n', '||')					# || Code für LF (\n scheitert in router)
+		
+			if len(items) == 1:									# nur 1 Video -> skip SingleBeitragVideo
+				PLog('skip_SingleBeitragVideo')
+				if typ == "video-youtube":
+					li = yt.yt_get(li,  url, vid, title, tag, summ, thumb=img)
+				else:
+					li = get_formitaeten(li,content_id=vid,title=title,tagline=tag,thumb=img)				
+				return											# Directory-Error, erspart aber Klick  
+				
+			fparams="&fparams={'url': '%s', 'vid': '%s', 'title': '%s', 'summ': '%s', 'tag': '%s', 'thumb': '%s', 'typ': '%s'}" %\
+				(quote_plus(url), quote_plus(vid), quote_plus(title), quote_plus(summ), quote_plus(tag_par), 
+				quote_plus(img), typ)	
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.SingleBeitragVideo", 
+				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)		
+		else:
+			PLog('vid fehlt: %s' % title)
+	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+# ------------------------
+# Einzelvideo (Youtube, Normal) zu SingleBeitrag
+#
+def SingleBeitragVideo(url, vid, title, tag, summ, thumb, typ):
+	PLog('SingleBeitragVideo: ' + typ)
+	li = xbmcgui.ListItem()
+	
+	if typ == 'video-youtube':
+		li = yt.yt_get(li,  url, vid, title, tag, summ, thumb)
+	if typ == 'video-smubl':
+		li = get_formitaeten(li,content_id=vid,title=title,tagline=tag,thumb=thumb)
+	
+	# endOfDirectory od.return ohne li: Rekursion bei Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':  	
+		return li						
+	else:
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 # ----------------------------------------------------------------------
 # Quersuche beim ZDF - Aufrufer SingleBeitrag
 # Dokus: Suche mit Title und Subtitel (Achtung: gedreht in GetContent

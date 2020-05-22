@@ -12,6 +12,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.05.2020	3.0.0
+			SingleBeitrag (Modul phoenix): für ev. Mehrfachbeiträge erweitert (phoenix-
+			und Youtube-Videos), Übernahme Titel + Subtitel der Quelle als Leitthema in 
+			tagline.
+			Modul phoenix: neue Funktion SingleBeitragVideo (Verteilung phoenix-
+			und Youtube-Videos), Absicherung gegen Rekursion bei Sofortstart.
+			get_live_data (Modul phoenix): Hochkommata in json-Seite ersetzt
+			yt_get (Modul yt): li-Test auf None entfernt (obsolet).
+			addDir (Modul util): Logausgabe verkürzt für "fparams:" + "addDir_url:".
+			ZDF_get_content: mystrip(title) statt title.strip() - (strip reicht hier
+			nicht).
+			ReadFavourites (Modul util): log Seitenlänge nach xbmcvfs.File(read)
+			eingefügt (Debug).
+
 16.05.2020	2.9.9
 			check_AddonXml (Modul util): Anpassung an Python3 - Austausch open/read 
 			gegen xbmcvfs.File/read (Codec-Error beim Einlesen in Matrix-Version).

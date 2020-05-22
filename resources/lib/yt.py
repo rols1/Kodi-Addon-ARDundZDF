@@ -8,10 +8,10 @@
 #	nicht benötigte Teile wurden entfernt.
 #	Test-Videos: Augstein und Blome
 ################################################################################
-#	Stand: 07.01.2020
 #
 #	03.01.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
+#	Stand: 22.05.2020
 
 from __future__ import absolute_import
 
@@ -37,7 +37,7 @@ import resources.lib.util as util
 PLog=util.PLog; get_page=util.get_page; stringextract=util.stringextract;
 blockextract=util.blockextract; RSave=util.RSave; make_filenames=util.make_filenames;
 seconds_translate=util.seconds_translate; addDir=util.addDir; PlayVideo=util.PlayVideo;
-repl_json_chars=util.repl_json_chars;
+repl_json_chars=util.repl_json_chars; MyDialog=util.MyDialog
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -58,12 +58,11 @@ from resources.lib.pytube.streams import Stream
 PLog('pytube geladen - V%s | %s | %s' %\
 	('9.5.3', 'MIT License', 'Copyright 2019 Nick Ficano'))
 
-# Aufrufer: SingleBeitrag (Modul phoenix)
+# Aufrufer: SingleBeitragVideo (Modul phoenix)
 # Bsp.: https://www.youtube.com/watch?v=9xfBbAZtcA0 
-# 14.05.2020 mehrf. Aufruf immer noch möglich trotz 	
-#	endOfDirectory statt return li und Umbenennung
-#	yt -> yt_get und yt -> yt_init, daher None-Test 
-#	mit return 
+# 20.05.2020 Rekursion abgestellt durch 2 verschiedene
+# 	Ausgänge in SingleBeitragVideo 	
+#
 def yt_get(li, url, vid, title, tag, summ, thumb):
 	PLog('yt_embed_url: ' + url)
 	watch_url = 'https://www.youtube.com/watch?v=' + vid
@@ -71,11 +70,14 @@ def yt_get(li, url, vid, title, tag, summ, thumb):
 	PLog(tag); PLog(summ);PLog(thumb);
 	title_org = title
 	
-	if li == None:		# mehrfacher  Aufruf mögl., s.o.
-		PLog('li==None: ' + str(li))
-		return
-	
-	yt_init = YouTube(watch_url)
+	try:
+		yt_init = YouTube(watch_url)
+	except Exception as exception:
+		msg1 = u"Video ist nicht verfügbar"
+		msg2 = 'Fehler: %s' % str(exception)		
+		MyDialog(msg1, msg2, '')
+		return li
+		
 	# nur mp4-Videos laden
 	Videos 	= yt_init.streams.filter(file_extension='mp4').all()
 	PLog(len(Videos)); PLog(str(Videos))
@@ -148,8 +150,8 @@ def yt_get(li, url, vid, title, tag, summ, thumb):
 		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
 		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
 
-	# return li		# kann yt mehrfach aufrufen (trotz endOfDirectory in SingleBeitrag, s.o.)
-	xbmcplugin.endOfDirectory(HANDLE)
+	return li
+
 # ----------------------------------------------------------------------
 #  str(stream) durch Aufrufer
 def get_stream_details(stream):	
