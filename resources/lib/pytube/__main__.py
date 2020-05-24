@@ -15,9 +15,6 @@ PLog=util.PLog;
 
 import json
 import sys
-sys.path.append("/sdb2/home/scholz/.kodi/addons/plugin.video.ardundzdf/resources/lib/")
-#import pytube as pytube
-#from  pytube.captions import Caption
 
 from pytube import Caption
 from pytube import CaptionQuery

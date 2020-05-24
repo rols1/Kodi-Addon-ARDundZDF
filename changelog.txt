@@ -12,6 +12,14 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+24.05.2020	3.0.1
+			SingleBeitrag (Modul phoenix): bei Einzelvideos endOfDirectory statt
+			return (return verhindert Liste von Einzelauflösungen). 
+			Modul yt (pytube): Hinweis in Kopfdoku zu Import-Problemen bei gleich-
+			zeitiger pytube-Installation ußerhalb des Addons.
+			__main__.py (Modul pytube): sys.path.append entfernt (obsolet).
+			compat.py (Modul pytube): env-Statement entfernt (obsolet).
+
 22.05.2020	3.0.0
 			SingleBeitrag (Modul phoenix): für ev. Mehrfachbeiträge erweitert (phoenix-
 			und Youtube-Videos), Übernahme Titel + Subtitel der Quelle als Leitthema in 

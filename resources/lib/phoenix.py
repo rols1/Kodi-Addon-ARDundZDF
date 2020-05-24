@@ -7,7 +7,7 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-#	Stand: 22.05.2020
+#	Stand: 23.05.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -39,7 +39,7 @@ import string
 
 import ardundzdf					# -> get_query,test_downloads,get_zdf_search 
 from resources.lib.util import *
-import resources.lib.yt	as yt		# Rahmen für pytube
+import resources.lib.yt	as yt		# Rahmen für pytube, mögl. Dev.-Problem s. dort
 
 # Globals
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -573,8 +573,9 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 				if typ == "video-youtube":
 					li = yt.yt_get(li,  url, vid, title, tag, summ, thumb=img)
 				else:
-					li = get_formitaeten(li,content_id=vid,title=title,tagline=tag,thumb=img)				
-				return											# Directory-Error, erspart aber Klick  
+					li = get_formitaeten(li,content_id=vid,title=title,tagline=tag,thumb=img)
+				# return li	 # bricht aufgebaute Liste in yt_get od. get_formitaeten ab
+				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  
 				
 			fparams="&fparams={'url': '%s', 'vid': '%s', 'title': '%s', 'summ': '%s', 'tag': '%s', 'thumb': '%s', 'typ': '%s'}" %\
 				(quote_plus(url), quote_plus(vid), quote_plus(title), quote_plus(summ), quote_plus(tag_par), 

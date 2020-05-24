@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # flake8: noqa
 """Python 2/3 compatibility support."""

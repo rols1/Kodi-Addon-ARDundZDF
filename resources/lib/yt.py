@@ -7,11 +7,14 @@
 #	Die Library wurde für die Verwendung im Kodi-Addon leicht modifiziert,
 #	nicht benötigte Teile wurden entfernt.
 #	Test-Videos: Augstein und Blome
+#	Achtung: bei gleichzeitiger Installation von pytube außerhalb des Addons 
+#		können Import-Probleme innerhalb der pytube-Module des Addons auf-
+#		treten.
 ################################################################################
 #
 #	03.01.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-#	Stand: 22.05.2020
+#	Stand: 24.05.2020
 
 from __future__ import absolute_import
 
@@ -33,11 +36,8 @@ elif PYTHON3:
 
 
 import ardundzdf					# -> test_downloads 
-import resources.lib.util as util
-PLog=util.PLog; get_page=util.get_page; stringextract=util.stringextract;
-blockextract=util.blockextract; RSave=util.RSave; make_filenames=util.make_filenames;
-seconds_translate=util.seconds_translate; addDir=util.addDir; PlayVideo=util.PlayVideo;
-repl_json_chars=util.repl_json_chars; MyDialog=util.MyDialog
+from resources.lib.util import *
+
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -51,12 +51,13 @@ HANDLE			= int(sys.argv[1])
 
 # Enviroment anpassen zum Laden von pytube (Altern.: importlib):
 lib_path = os.path.join(ADDON_PATH,'resources','lib')
-PLog(lib_path)
+PLog("lib_path: " + lib_path)
 sys.path.append(lib_path)
-from pytube.__main__ import YouTube
+from resources.lib.pytube.__main__ import YouTube
 from resources.lib.pytube.streams import Stream
-PLog('pytube geladen - V%s | %s | %s' %\
-	('9.5.3', 'MIT License', 'Copyright 2019 Nick Ficano'))
+PLog('pytube geladen - V%s | %s | %s | %s' %\
+	('9.5.3', 'MIT License', 'Copyright 2019 Nick Ficano',
+	 'angepasst für Kodi-Addon-ARDundZDF - rols1'))
 
 # Aufrufer: SingleBeitragVideo (Modul phoenix)
 # Bsp.: https://www.youtube.com/watch?v=9xfBbAZtcA0 
