@@ -13,6 +13,9 @@ CHANGE HISTORY
 --------------
 
 27.05.2020	3.0.3
+			SingleBeitrag (Modul phoenix): Schleifenausgang bei Einzelvideos differenziert
+			nach Einstellung Soforstart (Erweiterung zu V3.0.1, soll Rekursion von 
+			YT-Videos verhindern).
 			img_urlScheme (Modul util): UtfToStr (obsolet) -> py2_encode.
 			ARDStart (Classic): '>Am besten bewertet<' auskommentiert (in Classic leer).
 			ARDStartRubrik (Classic): py2_encode für title (Codec-Error).
