@@ -7,7 +7,7 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-#	Stand: 23.05.2020
+#	Stand: 27.05.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -528,8 +528,10 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 		
 	PLog(len(items))		
 	s1 		= stringextract('titel": "', '"', page)				# Seiten-Titel + -Subtitel: Leitthema
-	s2 		= stringextract('subtitel": "', '"', page)
-	tag 	= "Leitthema: [COLOR red]%s | %s[/COLOR]" % (s1, s2)
+	s2 		= stringextract('subtitel": "', '"', page)			
+	tag 	= "Leitthema: [COLOR red]%s[/COLOR]" % (s1)
+	if s2:														# Subtitel kann fehlen
+		tag 	= "Leitthema: [COLOR red]%s | %s[/COLOR]" % (s1, s2)
 	
 	for item in items:
 		#PLog(item)		# bei Bedarf
@@ -550,15 +552,16 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 			title 	= stringextract('text":"', '"', item)		# entspr. bei smubl dem Titel
 			if 'o:OfficeDocumentSettings' in title:				# Fliesstext enthält vorwiegend Formatierung
 				title = ''
-			title = cleanhtml(title);title = unescape(title); 
+			title = cleanhtml(title);title = unescape(title);   # title kann fehlen - Ersatz s.u.
 			title = title.replace('\\r\\n', ''); title = title.strip()
-			if title == '':
-				title='ohne Titel'
 			summ = "Youtube-Video" 
 		else:	# typ "video-smubl"
 			vid = stringextract('basename": ', ',', item)		# Bsp. "basename": 253381, "bild_l":
 			summ = "phoenix-Video" 
+			
 		PLog('typ %s, vid %s' % (typ, vid))
+		if title == '':
+			title='%s | %s' % (s1, s2)							# Seiten-Titel + -Subtitel aus Leitthema (s.o.)
 		title = repl_json_chars(title)
 		if vid:
 			PLog('Satz:')
@@ -574,8 +577,11 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 					li = yt.yt_get(li,  url, vid, title, tag, summ, thumb=img)
 				else:
 					li = get_formitaeten(li,content_id=vid,title=title,tagline=tag,thumb=img)
-				# return li	 # bricht aufgebaute Liste in yt_get od. get_formitaeten ab
-				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  
+				# wg. Rekursion auf Amazon-Stick return nach Sofortstart
+				if SETTINGS.getSetting('pref_video_direct') == 'true': 		
+					return li	 # bricht aufgebaute Liste in yt_get od. get_formitaeten ab
+				else:
+					xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  
 				
 			fparams="&fparams={'url': '%s', 'vid': '%s', 'title': '%s', 'summ': '%s', 'tag': '%s', 'thumb': '%s', 'typ': '%s'}" %\
 				(quote_plus(url), quote_plus(vid), quote_plus(title), quote_plus(summ), quote_plus(tag_par), 
@@ -716,16 +722,31 @@ def get_formitaeten(li,content_id,title,tagline,thumb):
 	formitaeten = blockextract('"formitaeten"',  page)		# Video-URL's ermitteln - wie ZDF-Mediathek
 	# PLog(formitaeten)
 	geoblock =  stringextract('geoLocation',  '}', page) 
-	geoblock =  stringextract('"value": "',  '"', geoblock).strip()
+	geoblock =  stringextract('"value" : "',  '', geoblock).strip()
 	PLog('geoblock: ' + geoblock)						# i.d.R. "none", sonst "de"
 	if geoblock == 'de':			# Info-Anhang für summary 
 		geoblock = ' | Geoblock!'
 	else:
-		geoblock = ''		
+		geoblock = ''	
+
+	duration =  stringextract('duration',  '}', page) 
+	# PLog('duration: ' + duration)						
+	try:													# Bsp.: "value" : 4943000 
+		duration = re.search(u'value" : (\d+)', duration).group(1)
+	except:
+		duration = ''
+	if duration:											# wie yt_init.millisecs (yt_get) 
+		duration = seconds_translate(int(int(duration) / 1000))
+	PLog('duration: ' + duration)						
+			
 			
 	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
 	title_call = title
-	tagline = "%s\n\nSendung: %s"	% (tagline, title_call)
+	if duration:
+		tagline = "%s | %s\n\nSendung: %s"	% (duration, tagline, title_call)
+	else:
+		tagline = "%s\n\nSendung: %s"	% (tagline, title_call)
+
 	Plot_par = tagline.replace('\n', '||')
 	for rec in formitaeten:									# Datensätze gesamt
 		# PLog(rec)		# bei Bedarf

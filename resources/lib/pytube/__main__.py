@@ -13,7 +13,7 @@ from __future__ import absolute_import
 import resources.lib.util 		as util
 PLog=util.PLog; 
 
-import json
+import json, re
 import sys
 
 from pytube import Caption
@@ -161,6 +161,17 @@ class YouTube(object):
 
 		self.initialize_caption_objects()
 		PLog('init YouTube finished successfully')
+		
+		if 'approxDurationMs' in self.watch_html:			# da property length nicht klappt..
+			try:
+				pos = self.watch_html.find('approxDurationMs')
+				extr= self.watch_html[pos:pos+100]
+				extr = extr.replace('\\', '')
+				self.millisecs = re.search(u'Ms":"(\d+)"', extr).group(1)
+			except Exception as exception:
+				PLog(str(exception))
+				self.millisecs = ''
+		PLog("millisecs: " + self.millisecs)
 
 	def prefetch(self):
 		"""Eagerly download all necessary data.

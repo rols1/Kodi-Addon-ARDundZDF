@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.0.1'
-VDATE = '24.05.2020'
+VERSION = '3.0.3'
+VDATE = '27.05.2020'
 
 #
 #
@@ -2625,7 +2625,8 @@ def ARDStart(title):
 		
 		if title == '':									# s.u.  Neueste Videos, Am besten bewertet
 			continue
-											
+				
+		PLog('Satz:')							
 		PLog(title); PLog(ID);  PLog(img); PLog(href); 
 
 		# Rubriken -> PageControl (Konflikt mit "Alle zeigen"). In PageControl wird cbKey 
@@ -2650,23 +2651,23 @@ def ARDStart(title):
 	if '>Neueste Videos<' in page:						# Neueste Videos
 		title 	= 'Neueste Videos'
 		href =  BASE_URL + "/tv/Neueste-Videos/mehr?documentId=21282466"
-		img = R(ICON_ARD_NEUESTE)			
+		img = R("ard-neueste-videos.png")			
 		href=py2_encode(href); title=py2_encode(title); 
 		fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': 'SinglePage', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
 			% (quote(title),  quote(href))
 		addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
 			thumb=img, fparams=fparams)
-			
-	if '>Am besten bewertet<' in page:					# Am besten bewertet
+	'''	
+	if '>Am besten bewertet<' in page:					# Am besten bewertet - in Classic leer
 		title 	= 'Am besten bewertet'
 		href =  BASE_URL + "/tv/Am-besten-bewertet/mehr?documentId=21282468"
-		img = R(ICON_ARD_BEST)
+		img = R("ard-am-besten-bewertet.png")
 		href=py2_encode(href); title=py2_encode(title); 
 		fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': 'SinglePage', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
 			% (quote(title),  quote(href))
 		addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
 			thumb=img, fparams=fparams)
-	
+	'''
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #---------------------------------------------------------------------------------------------------
 	
@@ -2810,7 +2811,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 							
 				PLog("Satz_Swiper:") 
 				PLog(path); PLog(title); 
-				path=py2_encode(path); img=py2_encode(img);
+				path=py2_encode(path); img=py2_encode(img); title=py2_encode(title);
 				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
 					% (quote(path), quote(title), quote(img), 
 					duration, quote(Plot),  quote(subline), 'ARD', '0')				

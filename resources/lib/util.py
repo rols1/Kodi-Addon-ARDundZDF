@@ -859,7 +859,7 @@ def img_urlScheme(text, dim, ID=''):
 		if '?mandant=ard' in text:						# Anhang bei manchen Bildern
 			img_src =img_src + '?mandant=ard' 
 		PLog('img_urlScheme: ' + img_src)
-		img_alt = UtfToStr(img_alt)
+		img_alt = py2_encode(img_alt)
 		PLog('img_urlScheme: ' + img_alt[0:40])
 		return img_src, img_alt
 	else:

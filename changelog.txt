@@ -12,6 +12,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+27.05.2020	3.0.3
+			img_urlScheme (Modul util): UtfToStr (obsolet) -> py2_encode.
+			ARDStart (Classic): '>Am besten bewertet<' auskommentiert (in Classic leer).
+			ARDStartRubrik (Classic): py2_encode für title (Codec-Error).
+
+not on Github	3.0.2
+			Modul yt (pytube): Ermittlung Videodauer via Webseite (klappt nicht in pytube),
+			Erweiterung class Youtube (self.millisecs), bei Einzelauflösungen Orig.-Titel in
+			Plot ergänzt (da Titel hier Videoformat). 
+			get_formitaeten (Modul phoenix): Ermittlung Videodauer (json-Seite).
+			SingleBeitrag (Modul phoenix): Austausch "ohne Titel" gegen Leitthema (s1, s2),
+			Fix tag, falls Subtitel fehlt.
+			phoenix-Icons überarbeitet.
+
 24.05.2020	3.0.1
 			SingleBeitrag (Modul phoenix): bei Einzelvideos endOfDirectory statt
 			return (return verhindert Liste von Einzelauflösungen). 

@@ -69,10 +69,16 @@ def yt_get(li, url, vid, title, tag, summ, thumb):
 	watch_url = 'https://www.youtube.com/watch?v=' + vid
 	PLog('yt_watch_url: ' + watch_url)
 	PLog(tag); PLog(summ);PLog(thumb);
-	title_org = title
+	title_org=title; tag_org=tag; summ_org=summ
 	
 	try:
 		yt_init = YouTube(watch_url)
+		# page, msg = get_page(path=watch_url)		# entfällt vorerst (s. get_duration)
+		# if 'approxDurationMs' in page:			# Extrakt aus Webseite (id="player-api" ..)
+			# duration = get_duration(page)			# Bsp.: "1:06" oder leer
+		duration = yt_init.millisecs
+		duration = seconds_translate(int(int(duration) / 1000))
+		PLog(duration)
 	except Exception as exception:
 		msg1 = u"Video ist nicht verfügbar"
 		msg2 = 'Fehler: %s' % str(exception)		
@@ -92,6 +98,7 @@ def yt_get(li, url, vid, title, tag, summ, thumb):
 		yt_url = stream.download(only_url=True)	
 		if summ == '':
 			summ = tag
+
 		summ="%s\n\n%s" % (summ, 'Youtube-Video: %s | %s | %s | %s'	% (res, fps, vcodec, acodec))	
 		PlayVideo(url=yt_url, title=title, thumb=thumb, Plot=summ, sub_path="")
 		return
@@ -105,13 +112,15 @@ def yt_get(li, url, vid, title, tag, summ, thumb):
 		res,fps,vcodec,acodec = get_stream_details(v)	 			
 		PLog(video); PLog('itag: ' + itag)
 		PLog(res); PLog(fps); PLog(vcodec); PLog(acodec);
-
-		try:									# Videolänge kann fehlen
+		
+		'''
+		try:									# Videolänge funktioniert (noch) nicht - s.o.
 			duration	= yt_init.length()
 			duration = seconds_translate(sec)
 		except:
 			duration = ''
-
+		'''
+		
 		stream = yt_init.streams.get_by_itag(itag) 
 		yt_url = stream.download(only_url=True)				
 		PLog('yt_url: ' + yt_url[:100])
@@ -120,16 +129,16 @@ def yt_get(li, url, vid, title, tag, summ, thumb):
 			summ='%s. Youtube-Video (nur Audio): %s'	% (str(i), acodec)
 		else:
 			if acodec:	
-				summ='%s. Youtube-Video: %s | %s | %s | %s'	% (str(i), res, fps, vcodec, acodec)
+				summ='%s. Format: %s | %s | %s | %s'	% (str(i), res, fps, vcodec, acodec)
 			else:
-				summ='%s. Youtube-Video: %s | %s | %s'	% (str(i), res, fps, vcodec)
+				summ='%s. Format: %s | %s | %s'	% (str(i), res, fps, vcodec)
 		
 		download_list.append(summ + '#' + yt_url)	# Download-Liste füllen	(Qual.#Url)
 			
 		if duration:
-			tag = u"Dauer %s | %s" % (duration, tag)
+			tag = u"Dauer %s | %s" % (duration, tag_org)
 		
-		summ_par = "%s||||%s" % (tag, summ) 
+		summ_par = "%s||||%s||||%s" % (tag, summ, title_org) 
 		title = "%s. %s" % (str(i),title_org)	
 		PLog(title); PLog(tag); PLog(summ)		
 			
@@ -164,7 +173,26 @@ def get_stream_details(stream):
 	acodec 		= stringextract('acodec="', '"', v)				
 
 	return 	res,fps,vcodec,acodec
+# ----------------------------------------------------------------------
+# yt_init.length() klappt nicht, daher	
+# 	Extrakt aus Webseite (id="player-api" ..)
+#	# Bsp. : \"approxDurationMs\":\"4000055\"
+# Auf die Sekunden verzichten wir hier.
+# 25.05.2020 Anpassung class YouTube (self.millisecs),
+#	get_duration entfällt vorerst
+def get_duration(page):
+	PLog('get_duration:') 
 
+	millisecs = stringextract('"approxDuration', ',', page)
+	millisecs = millisecs.replace('\\', '')
+	try:
+		duration = re.search(u'Ms":"(\d+)"', millisecs).group(1)
+		duration = seconds_translate(int(int(duration) / 1000))
+	except Exception as exception:	
+		PLog(str(exception))
+		duration = ''			
+	
+	return duration
 	
 	
 	
