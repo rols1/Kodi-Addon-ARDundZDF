@@ -12,6 +12,14 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+??.05.2020	3.0.4
+			Modul ARD NEU nach ARD-Änderungen (Layout Startseite + mehr) überarbeitet. 
+			Betroffene Funktionen: ARDStart, ARDStartRubrik, ARDStartSingle, 
+			ARDStartVideoMP4, ARDStartVideoMP4get, ARDStartVideoMP4get, ARDVerpasst,
+			ARDVerpasstContent, SendungenAZ, SendungenAZ_ARDnew, get_page_content,
+			Senderwahl.
+			ARDStart (Neu): old_div entfernt (obsolet).
+
 27.05.2020	3.0.3
 			SingleBeitrag (Modul phoenix): Schleifenausgang bei Einzelvideos differenziert
 			nach Einstellung Soforstart (Erweiterung zu V3.0.1, soll Rekursion von 
