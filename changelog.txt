@@ -12,7 +12,7 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-??.05.2020	3.0.4
+29.05.2020	3.0.4
 			Modul ARD NEU nach ARD-Änderungen (Layout Startseite + mehr) überarbeitet. 
 			Betroffene Funktionen: ARDStart, ARDStartRubrik, ARDStartSingle, 
 			ARDStartVideoMP4, ARDStartVideoMP4get, ARDStartVideoMP4get, ARDVerpasst,
