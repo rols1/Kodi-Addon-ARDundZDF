@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 29.05.2020
+#	Stand 30.05.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -173,8 +173,9 @@ def Main_NEW(name, CurSender=''):
 #	Wir extrahieren in ARDStart die Container, jeweils mit den Bildern des 1. Beitrags.
 #	Weiterverarbeitung in ARDStartRubrik (path -> json-Seite)
 #	Frühere Kopf-Doku entfernt - siehe commits zu V<=3.0.3
+#	Problem Stringauswertung: die ersten 4 Container folgen doppelt (bei jedem Sender) - Abhilfe: 
+#		Abgleich mit Titelliste. Wg. Performance Verzicht auf json-/key-Auswertung.
 #
-
 def ARDStart(title, sender, widgetID=''): 
 	PLog('ARDStart:'); 
 	
@@ -203,25 +204,33 @@ def ARDStart(title, sender, widgetID=''):
 	else:	
 		Dict("store", 'ARDStartNEW_%s' % sendername, page) 	# Seite -> Cache: aktualisieren	
 	PLog(len(page))
-	# RSave('/tmp/x.html', page) 							# Debug
+	# RSave('/tmp/x.html', page, withcodec=True) 			# Debug
 	
-	container = blockextract ('compilationType":', page)  # Container json-Bereich (Swiper + Rest)
+	container = blockextract ('compilationType":', page)  	# Container json-Bereich (Swiper + Rest)
 	PLog(len(container))
+	title_list=[]											# für Doppel-Erkennung
 
 	for cont in container:
 		title 	= stringextract('"title":"', '"', cont)
+		if title in title_list:								# Doppel? - s.o.
+			break
+		title_list.append(title)
+		
 		ID	= stringextract('"id":"', '"', cont)
 		anz= stringextract('"totalElements":', '}', cont)
 		anz= mystrip(anz)
 		PLog("anz: " + anz)
-		tag = u"%s Beiträge" % anz
+		if anz == '1':
+			tag = u"%s Beitrag" % anz
+		else:
+			tag = u"%s Beiträge" % anz
 		img		= stringextract('"src":"', '"', cont)		# Bild 1. Beitrag, Bsp.: ..r.jpg?w={width}
 		img 	= img.replace('{width}', '720')
 		if img  == '':
 			img = R(ICON_DIR_FOLDER)
 		path 	= stringextract('"href":"', '"', cont)
 		
-		if 'Livestream' in title:
+		if 'Livestream' in title or up_low('Live') in up_low(title):
 			ID = 'Livestream'
 		else:
 			ID = 'ARDStart'			
@@ -234,8 +243,6 @@ def ARDStart(title, sender, widgetID=''):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
 			tagline=tag, fparams=fparams)
 			
-		if 'Livestream' in title:		# die ersten vier sind doppelt, Urs. unb.
-			break												
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 

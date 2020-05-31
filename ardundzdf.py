@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.0.4'
-VDATE = '29.05.2020'
+VERSION = '3.0.5'
+VDATE = '31.05.2020'
 
 #
 #
@@ -2294,7 +2294,7 @@ def ARDSportBilder(title, path, img):
 					
 				if SETTINGS.getSetting('pref_watermarks') == 'true':
 					txt = "%s\n%s\n%s\n%s\n" % (fname,lable,'',summ)
-				text_list.append(txt)	
+					text_list.append(txt)	
 				background	= True						
 				
 			PLog('Satz:');PLog(title);PLog(img_src);PLog(thumb);PLog(summ[0:40]);

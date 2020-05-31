@@ -12,6 +12,12 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+31.05.2020	3.0.5
+			ARDStart (Modul ARD NEU): Ausfilterung der Startseiten-Doppel (4) passend 
+			für alle ARD-Sender geändert. 
+			ARDSportBilder: Fix text_list.append (falsch eingerückt, network_error bei
+			Verzicht auf Wasserzeichen).
+
 29.05.2020	3.0.4
 			Modul ARD NEU nach ARD-Änderungen (Layout Startseite + mehr) überarbeitet. 
 			Betroffene Funktionen: ARDStart, ARDStartRubrik, ARDStartSingle, 
