@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 30.05.2020
+#	Stand 07.06.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -585,7 +585,7 @@ def get_page_content(li, page, ID, mark=''):
 		PLog(availableTo)
 		if availableTo:											# möglich: availableTo":null
 			availableTo = time_translate(availableTo)
-			tag = u"%s\n\n[B]Verfügbar bis: %s[/B]" % (tag, availableTo)
+			tag = u"%s\n\n[B]Verfügbar bis: [COLOR darkgoldenrod]%s[/COLOR][/B]" % (tag, availableTo)
 		
 		if pubServ:
 			tag = u"%s\nSender: %s" % (tag, pubServ)
@@ -671,8 +671,8 @@ def ARDStartSingle(path, title, duration, ID=''):
 	if u'verfügbar bis:' in page:								# html mit Uhrzeit									
 		verf = stringextract(u'verfügbar bis:', '</p>', page)	
 		verf = cleanhtml(verf)
-	if verf:													# Verfügbar voraanstellen
-		summ = u"[B]Verfügbar bis %s[/B]\n\n%s" % (verf, summ)
+	if verf:													# Verfügbar voranstellen
+		summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
 	img 		= stringextract('src":"', '"', page)
 	
 	img 		= img.replace('{width}', '640')

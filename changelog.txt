@@ -12,6 +12,27 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+08.05.2020	3.0.7
+			neues Modul Arte-Kategorien: 
+			Änderungen / Zusätze: icon icon-arte_kat.png, Home-Button in home (Modul util),
+			Menü-Button-Haupt-PRG.
+			Neue Funktionen Modul arte: Main_arte, get_live_data, arte_Live, arte_Search,
+			GetContent, Beitrag_Liste, SingleVideo, Kategorien, KatSub, KatSubConcert.
+			Cache: die von Addon geladenen Webseiten werden bis auf die relevanten json-Inhalte
+			gekürzt und im Addon-Cache für 12 Std. gespeichert (bei Bedarf Erw. der Settings).
+			time_state (Modul phoenix): für timestamp-Format in Arte erweitert.
+			Farbige Markierung "verfügbar bis": Arte, Haupt-PRG, Ard Neu.
+
+not on Github	3.0.6
+			Icons: fanart.png gelöscht (obsolet). icon.png wiederhergestellt (verlorenge-
+			gangen), FANART- und ICON-Def. in Modul phoenix gelöscht (obsolet). 
+			phoenix_Live (Modul phoenix): "return oc" gelöscht (obsolet). 
+			addDir (Modul util): Begrenzung Logging summary + tagline auf 80 Zeichen.
+			Cache für endOfDirectory-Call auf True: SenderLiveResolution, ARDSport,
+			ARDSportVideo, SingleSendung, VideoTools (Performance).
+			home (Modul util): für Module Ausschluss-Filter aus tagline und Kontextmenü
+			entfernt (irritierend - bei Modulen unwirksam).
+
 31.05.2020	3.0.5
 			ARDStart (Modul ARD NEU): Ausfilterung der Startseiten-Doppel (4) passend 
 			für alle ARD-Sender geändert. 

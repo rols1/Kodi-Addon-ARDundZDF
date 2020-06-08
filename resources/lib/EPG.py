@@ -96,7 +96,7 @@ def EPG(ID, mode=None, day_offset=None):
 		if now >= starttime and now < endtime:
 			# PLog(now); PLog(starttime); PLog(endtime)	# bei Bedarf
 			sname = "JETZT: " + sname
-			# PLog(sname); PLog(img)				# bei Bedarf
+			PLog(sname); PLog(img)				# bei Bedarf
 			if mode == 'OnlyNow':				# aus EPG_ShowAll - nur aktuelle Sendung
 				rec = [starttime,href,img,sname,stime,summ,vonbis]  # Index wie EPG_rec
 				# PLog(rec)

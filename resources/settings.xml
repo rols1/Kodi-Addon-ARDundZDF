@@ -11,6 +11,7 @@
     	<setting label="Kinderprogramme verwenden" type="bool" id="pref_use_childprg" default="false"/>
      	<setting label="TagesschauXL verwenden" type="bool" id="pref_use_XL" default="false"/>
       	<setting label="Phoenix verwenden" type="bool" id="pref_use_phoenix" default="false"/>
+      	<setting label="Arte-Kategorien verwenden" type="bool" id="pref_use_arte" default="false"/>
     <setting type="sep"/>
    	<setting label="EPG-Daten für TV-Live-Sender zeigen - dauert etwas länger" type="bool" id="pref_use_epg" default="false"/>
    	<setting label="Inhaltstext zu Video im Voraus laden - kann sehr lange dauern!" type="bool" id="pref_load_summary" default="false"/>

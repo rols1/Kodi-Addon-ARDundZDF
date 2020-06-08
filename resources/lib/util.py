@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 18.05.2020
+#	Stand 04.06.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -118,6 +118,7 @@ ICON_MAIN_POD	= 'radio-podcasts.png'
 ICON_MAIN_AUDIO	= 'ard-audiothek.png'
 ICON_MAIN_ZDFMOBILE	= 'zdf-mobile.png'
 ICON_PHOENIX	= 'phoenix.png'			
+ICON_ARTE		= 'icon-arte_kat.png'			
 
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
@@ -220,7 +221,7 @@ def home(li, ID):
 		
 	title = u'Zurück zum Hauptmenü %s' % ID
 	summary = title										# z.Z. n.w.
-	tag =  "Status Ausschluss-Filter: AUS"
+	tag =  "Status Ausschluss-Filter: AUS"				# nur ARD und ZDF, nicht Module
 	if SETTINGS.getSetting('pref_usefilter') == 'true':	
 		tag = tag.replace('AUS','[COLOR blue]EIN[/COLOR]')										
 	
@@ -252,70 +253,77 @@ def home(li, ID):
 		CurSender = Dict("load", "CurSender")
 		fparams="&fparams={'name': '%s', 'CurSender': '%s'}"	% (quote(name), quote(CurSender))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", 
-			fanart=img, thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			fanart=img, thumb=img, tagline=tag, filterstatus='', fparams=fparams)
 			
 	if ID == 'ZDF':
 		img = R('zdf-mediathek.png')
 		name = 'Home: ' + "ZDF Mediathek"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_ZDF", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='', fparams=fparams)
 		
 	if ID == 'ZDFmobile':
 		img = R('zdf-mobile.png')
 		name = 'Home :' + "ZDFmobile"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
-			fanart=img, thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			fanart=img, thumb=img, filterstatus='', fparams=fparams)
 			
 	if ID == 'PODCAST':
 		img = R(ICON_MAIN_POD)
 		name = 'Home :' + "Radio-Podcasts"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_POD", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			thumb=img, filterstatus='set', fparams=fparams)
 			
 	if ID == 'ARD Audiothek':
 		img = R(ICON_MAIN_AUDIO)
 		name = 'Home :' + "ARD Audiothek"
 		fparams="&fparams={'title': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='', fparams=fparams)
 			
 	if ID == '3Sat':
 		img = R('3sat.png')
 		name = 'Home :' + "3Sat"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			thumb=img, filterstatus='', fparams=fparams)
 			
 	if ID == 'FUNK':
 		img = R('funk.png')
 		name = 'Home :' + "FUNK"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Main_funk", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			thumb=img, filterstatus='set', fparams=fparams)
 			
 	if ID == 'Kinderprogramme':
 		img = R('childs.png')
 		name = 'Home :' + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Main_childs", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			thumb=img, filterstatus='', fparams=fparams)
 
 	if ID == 'TagesschauXL':
 		img = ICON_MAINXL		# github
 		name = 'Home :' + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			thumb=img, filterstatus='', fparams=fparams)
 			
 	if ID == 'phoenix':
 		img = R(ICON_PHOENIX)
 		name = 'Home :' + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.Main_phoenix", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			thumb=img, filterstatus='', fparams=fparams)
+
+	if ID == 'arte':
+		img = R(ICON_ARTE)
+		name = 'Home :' + ID
+		fparams="&fparams={}"
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Main_arte", fanart=img, 
+			thumb=img, filterstatus='', fparams=fparams)
 
 	return li
 	 
@@ -601,7 +609,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	summary=py2_encode(summary); tagline=py2_encode(tagline); 
 	fparams=py2_encode(fparams); fanart=py2_encode(fanart); thumb=py2_encode(thumb);
 	merkname=py2_encode(merkname);
-	PLog('addDir - summary: {0}, tagline: {1}, mediatype: {2}, cmenu: {3}'.format(summary, tagline, mediatype, cmenu))
+	PLog('addDir - summary: {0}, tagline: {1}, mediatype: {2}, cmenu: {3}'.format(summary[:80], tagline[:80], mediatype, cmenu))
 
 		
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
@@ -637,6 +645,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+quote(fparams)
 	PLog("addDir_url: " + unquote(url)[:200])		
 	
+	# todo: Ausschluss-Filter unabhängig machen von Setting Merkliste
 	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
 		if cmenu:											# Kontextmenüs Merkliste hinzufügen
 			Plot = Plot.replace('\n', '||')					# || Code für LF (\n scheitert in router)
@@ -742,7 +751,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	if page == '':
 		try:															# 2. Versuch ohne SSLContext 
 			PLog("get_page2:")
-			if GetOnlyRedirect:						# nur Redirect anfordern
+			if GetOnlyRedirect:											# nur Redirect anfordern
 				# Alt. hier : new_url = r.geturl()
 				# bei Bedarf HttpLib2 mit follow_all_redirects=True verwenden
 				PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
@@ -799,6 +808,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		except URLError as exception:
 			msg = str(exception)
 			PLog(msg)						
+
 			
 	if page == '':
 		# Abschalthinweis verfrüht - fehlende Beiträge in Classic-

@@ -7,7 +7,7 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-#	Stand: 27.05.2020
+#	Stand: 03.06.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -825,21 +825,22 @@ def phoenix_Live(href, title, Plot):
 	li =  ardundzdf.Parseplaylist(li, href, img, geoblock='', descr=Plot)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		
-					
-	return oc
 
 # ----------------------------------------------------------------------
 # getOnline: 1. Ausstrahlung
 # Format datestamp: "2017-02-26 21:45:00", 2018-05-24T16:50:00 19-stel.
+#	05.06.2020 hinzugefügt: 2018-05-24T16:50:00Z (Z wird hier entfernt)
 #	beim Menü Sendungen auch  2018-01-20 00:30 16 stel.
 # time_state checkt auf akt. Status, Zukunft und jetzt werden rot gekennzeichnet
-def getOnline(datestamp):
-	PLog("getSendezeit: " + datestamp)
+def getOnline(datestamp, onlycheck=False):
+	PLog("getOnline: " + datestamp)
 	PLog(len(datestamp))
 	if datestamp == '' or '/' in datestamp:
 		return '' 
 
+	if datestamp.endswith('Z'):							# s.o.
+		datestamp = datestamp[:len(datestamp)-1]
+		
 	online = ''
 	if len(datestamp) == 19 or len(datestamp) == 16:
 		senddate = datestamp[:10]
@@ -854,7 +855,11 @@ def getOnline(datestamp):
 			check_state = " (%s)" % check_state
 		
 		online = "Online%s: %s.%s.%s, %s Uhr"	% (check_state, day, month, year, sendtime)	
-	return online
+	
+	if onlycheck == True:
+		return check_state
+	else:
+		return online
 	
 # ----------------------------------------------------------------------
 # Prüft datestamp auf Vergangenheit, Gegenwart, Zukunft

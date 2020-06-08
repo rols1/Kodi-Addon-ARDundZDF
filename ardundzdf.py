@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.0.5'
-VDATE = '31.05.2020'
+VERSION = '3.0.7'
+VDATE = '08.06.2020'
 
 #
 #
@@ -361,6 +361,14 @@ def Main():
 		fparams="&fparams={}"													# Phoenix-Modul
 		addDir(li=li, label="phoenix", action="dirList", dirID="resources.lib.phoenix.Main_phoenix", 
 			fanart=R(ICON_PHOENIX), thumb=R(ICON_PHOENIX), tagline=tagline, fparams=fparams)
+			
+	if SETTINGS.getSetting('pref_use_arte') == 'true':
+		tagline = 'in den Settings kann das Modul Arte-Kategorien ein- und ausgeschaltet werden'
+		summ = 'Ein komplettes Arte-Addon befindet sich im Kodinerds-Repo (ARTE.TV)'
+		fparams="&fparams={}"													# arte-Modul
+		addDir(li=li, label="Arte-Kategorien", action="dirList", dirID="resources.lib.arte.Main_arte", 
+			fanart=R('icon-arte_kat.png'), thumb=R('icon-arte_kat.png'), tagline=tagline,
+			summary=summ, fparams=fparams)
 			
 	tagline = 'TV-Livestreams stehen auch in ARD Mediathek Neu zur Verfügung'																																	
 	fparams="&fparams={'title': 'TV-Livestreams'}"
@@ -4112,7 +4120,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 		PLog(title);PLog(summary_org);PLog(tagline_org);PLog(thumb);
 		li = test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=-1)  # Downloadbutton(s)
 		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------
 # test_downloads: prüft ob curl/wget-Downloads freigeschaltet sind + erstellt den Downloadbutton
@@ -4793,7 +4801,7 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadsMove", fanart=R(ICON_DIR_MOVE_SINGLE), 
 			thumb=R(ICON_DIR_MOVE_SINGLE), fparams=fparams, summary=summary, tagline=tagline)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #---------------------------
 # Downloadverzeichnis leeren (einzeln/komplett)
@@ -6111,7 +6119,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 		PLog(msg1)
 		MyDialog(msg1, msg2, '')
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 		
 #--------------------------------------------------------------------------------------------------
@@ -7181,7 +7189,7 @@ def get_teaserElement(rec):
 		
 		enddate=py2_decode(enddate); descr=py2_decode(descr)
 		if enddate:
-			descr = u"[B]Verfügbar bis %s[/B]\n\n%s\n" % (enddate, descr)
+			descr = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s\n" % (enddate, descr)
 		if 'class="icon-502_play' in page:
 			isvideo = True
 		
@@ -7807,7 +7815,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		if station:
 			tagline = "%s | Sender: [COLOR red]%s[/COLOR]" % (tagline, station)
 		if enddate:
-			tagline = u"%s\n\n[B]Verfügbar bis %s[/B]" % (tagline, enddate)
+			tagline = u"%s\n\n[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (tagline, enddate)
 			
 		descr = stringextract('description">', '<', rec)
 		if descr == '':
