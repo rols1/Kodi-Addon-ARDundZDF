@@ -12,6 +12,10 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+09.05.2020	3.0.8
+			Kategorien (Arte-Kategorien): Bebilderung der Subkategorien durch Prefetch der
+			Subkategorie aus Addon-Cache.
+
 08.05.2020	3.0.7
 			neues Modul Arte-Kategorien: 
 			Änderungen / Zusätze: icon icon-arte_kat.png, Home-Button in home (Modul util),
@@ -21,7 +25,7 @@ CHANGE HISTORY
 			Cache: die von Addon geladenen Webseiten werden bis auf die relevanten json-Inhalte
 			gekürzt und im Addon-Cache für 12 Std. gespeichert (bei Bedarf Erw. der Settings).
 			time_state (Modul phoenix): für timestamp-Format in Arte erweitert.
-			Farbige Markierung "verfügbar bis": Arte, Haupt-PRG, Ard Neu.
+			Farbige Markierung "verfügbar bis": Arte, Haupt-PRG, ARD Neu.
 
 not on Github	3.0.6
 			Icons: fanart.png gelöscht (obsolet). icon.png wiederhergestellt (verlorenge-

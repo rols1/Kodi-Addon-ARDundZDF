@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 08.06.2020
+#	Stand: 09.06.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -264,15 +264,7 @@ def GetContent(li, page, ID):
 		if subtitle:													# arte verbindet mit -
 			title  = "%s - %s" % (title, subtitle)
 		
-		images = stringextract('resolutions":[', '}],', item)
-		images = blockextract('url":', images)
-		img=''
-		for image in images:
-			if 'w":720' in image or 'w":940' in image or 'w":1920' in image:
-				img = stringextract('url":"', '",', image)
-				break
-		if img == '':
-			img = R(ICON_DIR_FOLDER)
+		img = get_img(item)			
 								
 		dur = stringextract('duration":', ',', item)					# 5869,
 		PLog('dur: ' + dur)
@@ -307,7 +299,8 @@ def GetContent(li, page, ID):
 				start_end = "%s:%s" % (start_end, upcoming)	
 		
 		# Beiträge mit 'id":"auch-interessant', 'code":"BONUS"' - im Web:
-		#	"Nächstes Video", "Auch interessant für Sie"
+		#	"Nächstes Video", "Auch interessant für Sie" - entfallen mit
+		#	Api-Calls
 		if ID == 'SINGLE_MORE':
 			title	= u"[COLOR blue]Mehr: %s[/COLOR]" % title
 		
@@ -348,6 +341,23 @@ def GetContent(li, page, ID):
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ,  mediatype=mediatype)		
 	
 	return li
+	
+# -------------------------------
+# holt Bild aus Datensatz
+#
+def get_img(item):
+	PLog("get_img:")
+	images = stringextract('resolutions":[', '}],', item)
+	images = blockextract('url":', images)
+	img=''
+	for image in images:
+		if 'w":720' in image or 'w":940' in image or 'w":1920' in image:
+			img = stringextract('url":"', '",', image)
+			break
+	if img == '':
+		img = R(ICON_DIR_FOLDER)
+	
+	return img
 	
 # ----------------------------------------------------------------------
 # Folgebeiträge aus GetContent
@@ -486,7 +496,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 #	verwendet -> GetContent (1. Stufe)
 # GetContent -> Kategorien mit Titel der Kategorie  (2. Stufe)
 # Hinw.: die Listen aller Subkats befinden sich sowohl in BASE_ARTE 
-#	als auch in den einz. SubKats
+#	als auch in den einz. SubKats - alle ohne Bilder
 #
 def Kategorien(title=''):
 	PLog("Kategorien: " + title)
@@ -524,7 +534,7 @@ def Kategorien(title=''):
 		
 	else:											# 2. Stufe: Subkats von title listen
 		PLog('Stufe2:')		
-		pos = page.find('"categories":')			# Listen Subkats am Seitenende	
+		pos = page.find('"categories":')			# Listen Subkats am Seitenende o. Bilder
 		PLog(pos)
 		page = page[pos:]
 		PLog(page[:100])
@@ -538,13 +548,28 @@ def Kategorien(title=''):
 			return 
 		
 		items = blockextract('{"id":"',  page)	
-		img = R(ICON_DIR_FOLDER)					# Subkats ohne img
+		
+		
 		for item in items:
 			title = stringextract('label":"', '"', item)
 			url = stringextract('url":"', '"', item)
 			summ = stringextract('escription":"', '"', item)
 			pid = stringextract('id":"', '"', item)
-			PLog('Satz:');  PLog(title);  PLog(url);
+			
+			# 1. Bild der Subkat aus dem Cache laden, o. Rücksicht auf 
+			#	Alter (Bild nur stellvertretend für gesamte Subkat)
+			#	bei Cache-miss ICON_DIR_FOLDER . Subkats-Listen ohne img.
+			#	Sonderfall arte-concert (mehrere Seiten möglich).
+			img = R(ICON_DIR_FOLDER)					# Default 
+			page = Dict("load", 'ArteKat_%s' % pid)  	# Normalfall
+			if page == False:
+				pid = pid.replace('_de', '')			# Special arte-concert
+				page = Dict("load", 'ArteConcert_%s_page_1' % pid) # Bild von 1. Seite
+				
+			if page:
+				img = get_img(item=page)			
+			
+			PLog('Satz:');  PLog(title);  PLog(pid); PLog(url);
 			
 			title=py2_encode(title); url=py2_encode(url);	
 			fparams="&fparams={'path': '%s','title':'%s', 'pid':'%s'}" % (quote(url), quote(title), pid)
