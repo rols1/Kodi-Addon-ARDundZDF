@@ -510,8 +510,8 @@ def Kategorien(title=''):
 		if page == '':						
 			msg1 = 'Fehler in Kategorien: %s' % title
 			msg2 = msg
-			msg2 = u"Startseite weder im Cache noch im Web verfügbar"
-			MyDialog(msg1, msg2, msg3)
+			msg2 = u"Seite weder im Cache noch im Web verfügbar"
+			MyDialog(msg1, msg2, '')
 			return li
 		else:
 			pos = page.find('__INITIAL_STATE__ ')	# json-Bereich
@@ -563,7 +563,10 @@ def Kategorien(title=''):
 			img = R(ICON_DIR_FOLDER)					# Default 
 			page = Dict("load", 'ArteKat_%s' % pid)  	# Normalfall
 			if page == False:
-				pid = pid.replace('_de', '')			# Special arte-concert
+				pid = pid.replace('_de', '')			# pid ohne de-Zusatz			
+				page = Dict("load", 'ArteKat_%s' % pid) 
+			if page == False:							# Special arte-concert
+				pid = pid.replace('_de', '')			
 				page = Dict("load", 'ArteConcert_%s_page_1' % pid) # Bild von 1. Seite
 				
 			if page:
@@ -589,7 +592,7 @@ def Kategorien(title=''):
 #
 def KatSub(path, title, pid):
 	PLog("KatSub: " + title)
-	PLog(pid)
+	PLog(pid); PLog(path)
 	
 	if '/arte-concert/' in path:					# SubKats aus Arte Concert ausleiten
 		PLog(path)									# api-Call in KatSubConcert
@@ -604,9 +607,15 @@ def KatSub(path, title, pid):
 		if page == '':						
 			msg1 = 'Fehler in Kategorien: %s' % title
 			msg2 = msg
-			msg2 = u"Startseite weder im Cache noch im Web verfügbar"
+			msg2 = u"Seite weder im Cache noch im Web verfügbar"
 			MyDialog(msg1, msg2, msg3)
 			return li
+		if 'id="no-content">' in page:				# no-content-Hinweis nur im html-Teil
+			msg2 = stringextract('id="no-content">', '</', page)
+			if msg2:
+				msg1 = 'Arte meldet:'
+				MyDialog(msg1, msg2, '')
+				return li
 		else:
 			pos = page.find('__INITIAL_STATE__ ')	# json-Bereich
 			page = page[pos:]
@@ -652,7 +661,7 @@ def KatSubConcert(title, pid, nextpage=''):
 		if page == '':						
 			msg1 = 'Fehler in Kategorien: %s' % title
 			msg2 = msg
-			msg2 = u"Startseite weder im Cache noch im Web verfügbar"
+			msg2 = u"Seite weder im Cache noch im Web verfügbar"
 			MyDialog(msg1, msg2, msg3)
 			return li
 		else:

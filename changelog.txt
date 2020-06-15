@@ -12,6 +12,18 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+15.05.2020	3.0.9
+			Modul 3sat: Auswertung Startseite hinzugefügt (www.3sat.de), Einbettung
+			Live + Verpasst
+			SendungenAZlist (Modul 3sat): rote Markierung für Titel 'ohne Beiträge'. 
+			SingleBeitrag (Modul 3sat):  Auswertung "Verfügbar bis" hinzugefügt, farbig
+			markiert (sichtbar bei Einzelauflösungen) + Wiedergabe+ mit Dauer kombiniert;  
+			Param. duration entfernt (obsolet).
+			KatSub (Arte-Kategorien): Auswertung no-content-Hinweis und Dialog (Bsp. 
+			SubKat Webserien).
+			Arte-Kategorien: Dialog-Fixes msg2,msg3 Kategorien, KatSub, KatSubConcert.
+			Live (Modul 3sat): get_epg() entfernt (bereits in Main_3Sat erledigt).
+			
 09.05.2020	3.0.8
 			Kategorien (Arte-Kategorien): Bebilderung der Subkategorien durch Prefetch der
 			Subkategorie aus Addon-Cache.

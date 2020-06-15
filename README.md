@@ -112,6 +112,7 @@ Funktionen:
 - Kinderprogramme (z.Z. KIKA und ZDFtivi)
 - TagesschauXL (https://www.tagesschau.de/)
 - phoenix (https://www.phoenix.de/)
+- Arte-Kategorien
 
 
 

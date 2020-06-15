@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 27.04.2020
+#	Stand: 15.06.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -99,7 +99,7 @@ def Main_3Sat(name):
 	li = home(li, ID=NAME)				# Home-Button
 	PLog("li:" + str(li))						
 			
-	title="Suche in 3Sat-Mediathek"		
+	title="Suche in 3sat-Mediathek"		
 	fparams="&fparams={'first': 'True','path': ''}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Search", fanart=R('3sat.png'), 
 		thumb=R('zdf-suche.png'), fparams=fparams)
@@ -107,12 +107,20 @@ def Main_3Sat(name):
 	epg = get_epg()
 	if epg:
 		epg = 'Jetzt in 3sat: ' + epg
-	title = '3Sat-Livestream'
+	title = '3sat-Livestream'
 	title=py2_encode(title); epg=py2_encode(epg);
 	fparams="&fparams={'name': '%s', 'epg': '%s'}" % (quote(title), quote(epg))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Live", 
 		fanart=R('3sat.png'), thumb=R(ICON_MAIN_TVLIVE), tagline=epg, fparams=fparams)
 	
+	title = "Startseite"
+	path = 'https://www.3sat.de'							
+	summ = "Startseite der 3sat-Mediathek"
+	title=py2_encode(title); path=py2_encode(path);
+	fparams="&fparams={'name': '%s', 'path': '%s'}"	% (quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Start", 
+		fanart=R('3sat.png'), thumb=R('3sat.png'), summary=summ, fparams=fparams)
+
 	title = 'Verpasst'
 	summ = 'aktuelle Beiträge eines Monats - nach Datum geordnet'
 	fparams="&fparams={'title': 'Sendung verpasst'}"
@@ -128,7 +136,7 @@ def Main_3Sat(name):
 		fanart=R('3sat.png'), thumb=R('zdf-sendungen-az.png'),  summary=summ, fparams=fparams)
 												
 	title = "Rubriken"
-	path = 'https://www.3sat.de/themen'
+	path = 'https://www.3sat.de/themen'								# auch Leitseite
 	summ = "Dokumentation, Film, Gesellschaft, Kabarett, Kultur, Wissen"
 	title=py2_encode(title); path=py2_encode(path);
 	fparams="&fparams={'name': '%s', 'path': '%s'}"	% (quote(title), quote(path))
@@ -232,7 +240,7 @@ def SendungenAZlist(name, path):				#
 		PLog(title)
 		if 'link is-disabled' in rec:							# Button inaktiv
 			letter = stringextract('true">', '<', rec)
-			title= "Sendungen mit " + letter + ' | ' + u'ohne Beiträge'
+			title= "[COLOR red]Sendungen mit " + letter + ' | ' + u'ohne Beiträge[/COLOR]'
 			title=py2_encode(title); DreiSat_AZ=py2_encode(DreiSat_AZ);
 			fparams="&fparams={'name': '%s', 'path': '%s'}"	% (quote(title), quote(DreiSat_AZ))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SendungenAZlist", 
@@ -397,7 +405,7 @@ def SendungenDatum(SendDate, title):
 			 
 		sendung=py2_encode(sendung); href=py2_encode(href);  img_src=py2_encode(img_src);
 		descr_par=py2_encode(descr_par); dauer=py2_encode(dauer)
-		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s', 'duration': ''}" %\
+		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
 			(quote(sendung), quote(href), quote(img_src), quote(descr_par), quote(dauer))
 		addDir(li=li, label=sendung, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams, mediatype=mediatype)
@@ -418,13 +426,146 @@ def transl_month(shortmonth):	# Monatsbez. (3-stellig) -> Zahl
 	return mval
 
 #------------
-# Aufrufer: Main_3Sat - Liste der 3Sat-Rubriken (wie Webseite)
+# Aufrufer: Main_3Sat, Start
+#	Startseite www.3sat.de (html + lazyload-Inhalte)
+#	1. Durchlauf mit Stage und Rubriken der Starttseite
+# 	2. Durchlauf: Rubrik-Ausschnitt erzeugen -> get_lazyload (die 
+#			meisten oder -> Rubrik_Single (zdfplayer-Inhalte)
+#
+def Start(name, path, rubrik=''):
+	PLog('Start:')
+	my3satCacheTime =  600					# 10 Min.: 10*60
+	PLog("rubrik: " + rubrik)
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='3Sat')				# Home-Button
+	
+	page = Dict("load", '3satStart', CacheTime=my3satCacheTime)	
+	if page == False:								# nicht vorhanden oder zu alt
+		page, msg = get_page(path)
+		if page == '':						
+			msg1 = 'Fehler in Start: %s' % name
+			msg2 = msg
+			msg2 = u"Seite weder im Cache noch im Web verfügbar"
+			MyDialog(msg1, msg2, '')
+			return li
+		else:
+			Dict("store", '3satStart', page) # Seite -> Cache: aktualisieren				
+	PLog(len(page))
+	
+	page, msg = get_page(path)	
+	if page == '':			
+		msg1 = "Fehler in Start"
+		msg2 = msg
+		PLog(msg1)
+		MyDialog(msg1, msg2, '')
+		return li	
+	
+	if rubrik == '':								# 1. Durchlauf: Stage + Rubrik-Liste
+		stage_home = stringextract('data-module="stage-home"', '</section', page)
+		content =  blockextract('class="artdirect">', stage_home)
+		i=1
+		for rec in content:
+			multi = False
+			img_src = stringextract('data-srcset="', ' ', rec)	
+			title 	= stringextract('title="', '"', rec)	
+			title	= "Top %d: %s" % (i, title)
+			title 	= unescape(title); title = repl_json_chars(title); 
+			i=i+1
+			href	= stringextract('href="', '"', rec)
+			if href.startswith('http') == False:
+				href	= DreiSat_BASE + href
+				
+			dauer 	= stringextract('class="label">', '</', rec)# 2 min
+			endDate = stringextract('-end-date="', '"', rec)	# 2020-07-15T04:00:00.000Z
+			endDate = time_translate(endDate)
+			
+			tag		= u"%s | [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, endDate)
+			PLog(tag)
+			descr	= stringextract('paragraph-large ">', '</', rec)
+			if descr == '':
+				descr	= stringextract('text show-for-large">', '</', rec)
+			descr 	= unescape(descr)
+			
+			if dauer == '':
+				multi = True
+				tag = "Folgeseiten"; # descr = ''		# vorh. descr beibehalten
+				
+			PLog('Satz:')
+			PLog(multi); PLog(title); PLog(href); PLog(tag); PLog(descr);
+			title=py2_encode(title); href=py2_encode(href);	 img_src=py2_encode(img_src);
+			descr=py2_encode(descr); 
+			if multi:							
+				fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title),
+					 quote(href), quote(img_src))
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
+					fanart=R('3sat.png'), thumb=img_src, tagline=tag, summary=descr, fparams=fparams)
+			else:
+				fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
+					(quote(title), quote(href), quote(img_src), quote(descr), dauer)
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", 
+					fanart=R('3sat.png'), thumb=img_src, tagline=tag, summary=descr, fparams=fparams)
+				
+
+													# restl. Rubriken der Leitseite listen
+		items =  blockextract('red is-uppercase ">', page)
+		img_src = R('Dir-folder.png')				# alles lazyload-Beiträge ohne Bilder + hrefs
+		for rec in items:						
+			title	= stringextract('is-uppercase ">', '</', rec)
+			title 	= repl_json_chars(title);			
+			if u'Das könnte Dich' in title:			# leer (java-script)
+				continue
+				
+			title=py2_encode(title); path=py2_encode(path); 
+			fparams="&fparams={'name': '%s', 'path': '%s', 'rubrik': '%s'}" %\
+				(quote(title), quote(path), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Start", 
+				fanart=R('3sat.png'), thumb=img_src, summary='Folgeseiten', fparams=fparams)
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+	else:											# 2. Durchlauf: Rubrik-Ausschnitt auswerten
+		items =  blockextract('red is-uppercase ">', page)
+		for rec in items:						
+			title	= stringextract('is-uppercase ">', '</', rec)
+			title 	= repl_json_chars(title);
+			rubrik=py2_encode(rubrik); title=py2_encode(title);
+			# PLog("title: %s, rubrik: %s" % (title, rubrik))
+			if rubrik in title:						# geklickte Rubrik (json-bereinigt) suchen
+				if 'ivestream' in title:			# Buttons Livestream + Verpasst
+					epg = get_epg()
+					if epg:
+						epg = 'Jetzt in 3sat: ' + epg
+					title = '3Sat-Livestream'
+					title=py2_encode(title); epg=py2_encode(epg);
+					fparams="&fparams={'name': '%s', 'epg': '%s'}" % (quote(title), quote(epg))
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Live", 
+						fanart=R('3sat.png'), thumb=R(ICON_MAIN_TVLIVE), tagline=epg, fparams=fparams)
+						
+					title = 'Verpasst'
+					summ = 'aktuelle Beiträge eines Monats - nach Datum geordnet'
+					fparams="&fparams={'title': 'Sendung verpasst'}"
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Verpasst", 
+						fanart=R('3sat.png'), thumb=R('zdf-sendung-verpasst.png'), summary=summ, fparams=fparams)
+					break	
+
+				else:								# alle  übrigen Rubriken auswerten
+					if 'is-medium lazyload' in rec:	# lazyload-Beiträge (die meisten)
+						li, cnt = get_lazyload(li=li, page=rec, ref_path=path) 
+					else: 							# -> Rubrik_Single als 2. Durchlauf mit thema
+						Rubrik_Single(name=title, path=path, thema=title) # nochmal laden
+					break
+		
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#------------
+# Aufrufer: Main_3Sat
+#	Liste der 3Sat-Rubriken (wie Webseite)
 # 	
 def Rubriken(name, path):
 	PLog('Rubriken:')
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')										# Home-Button		
+	li = home(li, ID='3Sat')				# Home-Button		
 	
 	page, msg = get_page(path)	
 	if page == '':			
@@ -433,7 +574,7 @@ def Rubriken(name, path):
 		PLog(msg1)
 		MyDialog(msg1, msg2, '')
 		return li	
-		
+	
 	rubriken =  blockextract('class="dropdown-link js-rb-click js-track-click"', page)
 	PLog(len(rubriken))
 	
@@ -512,7 +653,7 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 	for rec in content:										# 2. Durchlauf: Beiträge zu Thema thema		
 		title	= stringextract('is-uppercase ">', '<', rec)
 		title 	= repl_json_chars(py2_decode(title))		# dto. 1. Durchlauf
-		title	= up_low(title)
+		title	= up_low(title); name = up_low(name); 
 		if 	py2_decode(name) in py2_decode(title):			# Bsp. VIDEOTIPP "SEIDENSTRASSE"
 			PLog('Thema gefunden: %s' % name)
 			page = rec
@@ -629,7 +770,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 			content = stringextract('class="video-module-video b-ratiobox"', '</button>', page)
 			img_src = stringextract('teaser-image="[', ',', content)
 			duration = stringextract('duration": "', '"', content)
-			SingleBeitrag(title, path, img_src, summ, dauer='', duration=duration)
+			SingleBeitrag(title, path, img_src, summ, dauer=duration)
 			return 
 			
 	PLog(len(rubriken))
@@ -686,7 +827,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 				
 		title=py2_encode(title); href=py2_encode(href);	 img_src=py2_encode(img_src);
 		descr_par=py2_encode(descr_par); dauer=py2_encode(dauer); duration=py2_encode(duration);						
-		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s', 'duration': '%s'}" %\
+		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
 			(quote(title), quote(href), quote(img_src), quote(descr_par), quote(dauer), quote(duration))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams, mediatype=mediatype)
@@ -753,7 +894,7 @@ def get_lazyload(li, page, ref_path):
 		if isvideo == 'true':											#  page enthält data-playlist
 			title=py2_encode(title); path=py2_encode(path);	img_src=py2_encode(img_src);
 			descr_par=py2_encode(descr_par); dauer=py2_encode(dauer);					
-			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s', 'duration': ''}" %\
+			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
 				(quote(title), quote(path), quote(img_src), quote(descr_par), quote(dauer))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 				thumb=img_src, summary=descr, tagline=dauer, fparams=fparams, mediatype=mediatype)
@@ -887,7 +1028,7 @@ def get_video_carousel(li, page):
 		PLog(img_src); PLog(title); PLog(dauer); PLog(path); 
 		title=py2_encode(title); path=py2_encode(path);	 img_src=py2_encode(img_src);
 		dauer=py2_encode(dauer);
-		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s', 'duration': ''}" %\
+		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s'}" %\
 			(quote(title), quote(path), quote(img_src), quote(dauer))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 			thumb=img_src, tagline=tagline, fparams=fparams, mediatype=mediatype)			 
@@ -941,7 +1082,7 @@ def get_zdfplayer_content(li, content):
 		PLog(img_src); PLog(title); PLog(path); 
 		title=py2_encode(title); path=py2_encode(path);	img_src=py2_encode(img_src);
 		dauer=py2_encode(dauer);
-		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s', 'duration': ''}" %\
+		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s'}" %\
 			(quote(title), quote(path), quote(img_src), quote(dauer))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 			thumb=img_src, summary=descr, fparams=fparams, mediatype=mediatype)
@@ -958,9 +1099,9 @@ def get_zdfplayer_content(li, content):
 #
 # SingleBeitrag für Verpasst + A-Z
 #	hier auch m3u8-Videos verfügbar. 
-def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
+def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
 	PLog('Funktion SingleBeitrag: ' + title)
-	PLog(dauer);PLog(duration);PLog(summ);PLog(path)
+	PLog(dauer);PLog(summ);PLog(path)
 	
 	Plot	 = title
 	Plot_par = summ										# -> PlayVideo
@@ -981,6 +1122,8 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 		MyDialog(msg1, msg2, msg3)
 		return li	
 	
+	endDate = stringextract('list-desc">bis ', '</', page)		# Bsp. 12.09.2020
+
 	content = stringextract('window.zdfsite', 'tracking', page)  			
 	content = stringextract('data-module="zdfplayer"', 'teaser-image=', page)  			
 	appId	= stringextract('zdfplayer-id="', '"', content)
@@ -1054,6 +1197,8 @@ def SingleBeitrag(title, path, img_src, summ, dauer, duration, Merk='false'):
 				geoblock = ' | Geoblock DACH!'
 			
 	download_list = []
+	if endDate:
+		dauer = u"%s | [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, endDate)
 	tagline = title + " | " + dauer + " " + geoblock
 	Plot_par = tagline + "||||" + Plot_par
 	
@@ -1133,8 +1278,6 @@ def Live(name, epg='', Merk='false'):
 	title = 'Bandbreite und Auflösung automatisch'
 	img	= R(ICON_TV3Sat)
 	
-	if not epg:
-		epg = get_epg()
 
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
 		PLog('Sofortstart: Live')
