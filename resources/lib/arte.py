@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 09.06.2020
+#	Stand: 17.06.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -127,7 +127,11 @@ def get_live_data(name):
 		PLog("title: " + title); 
 		summ = "[B]LAUFENDE SENDUNG [COLOR red](%s Uhr)[/COLOR][/B]\n\n%s" % (vonbis, summ)
 		title='[COLOR red][B]%s[/B][/COLOR]' % sname
-		descr = summ.replace('\n', '||')		# \n aus summ -> ||
+		try:										# 'list' object in summ möglich - Urs. n.b.
+			descr = summ.replace('\n', '||')		# \n aus summ -> ||
+		except Exception as exception:	
+			PLog(str(exception))
+			descr = ''
 		PLog(title); PLog(img); PLog(sname); PLog(stime); PLog(vonbis); 
 
 	
@@ -320,6 +324,8 @@ def GetContent(li, page, ID):
 		pid=py2_encode(pid); tag_par=py2_encode(tag_par);
 		img=py2_encode(img); summ=py2_encode(summ);
 		
+		if mystrip(title) == '':							# Müll
+			continue
 			
 		if mehrfach:
 			if ID == 'KAT_START':							# mit Url + id zurück zu -> Kategorien

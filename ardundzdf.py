@@ -41,8 +41,8 @@ from resources.lib.util import *
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.0.9'
-VDATE = '15.06.2020'
+VERSION = '3.1.0'
+VDATE = '17.06.2020'
 
 #
 #
@@ -4984,10 +4984,12 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 	my_items, my_ordner= ReadFavourites(mode)			# Addon-Favs / Merkliste einlesen
 	PLog(len(my_items))
 	# Dir-Items für diese Funktionen erhalten mediatype=video:
-	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.ShowVideo",
-						"resources.lib.zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
-						"ARDStartVideoMP4", "PlayVideo", "resources.lib.my3Sat.SingleBeitrag",
-						"SenderLiveResolution"]	
+	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "zdfmobile.ShowVideo",
+						"zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
+						"ARDStartVideoMP4", "PlayVideo", "my3Sat.SingleBeitrag",
+						"SenderLiveResolution", "phoenix.get_formitaeten",
+						"phoenix.SingleBeitrag", "phoenix.yt.yt_get",
+						"arte.SingleVideo", "arte.GetContent"]	
 
 	if mode == 'Favs':														
 		tagline = u"Anzahl Addon-Favoriten: %s" % str(len(my_items)) 	# Info-Button
@@ -5083,9 +5085,11 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 		mediatype=''										# Kennz. Videos im Listing
 		CallFunction = stringextract("&dirID=", "&", dirPars) 
 		PLog('CallFunction: ' + CallFunction)
-		if CallFunction in CallFunctions:			# Parameter Merk='true' anhängen
-			if SETTINGS.getSetting('pref_video_direct') == 'true':
-				mediatype='video'		
+		for f in CallFunctions:								# Parameter Merk='true' anhängen
+			if f in CallFunction:			
+				if SETTINGS.getSetting('pref_video_direct') == 'true':
+					mediatype='video'
+					break		
 		PLog('mediatype: ' + mediatype)
 		
 		modul = "ardundzdf"

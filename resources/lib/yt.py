@@ -64,13 +64,16 @@ PLog('pytube geladen - V%s | %s | %s | %s' %\
 # 20.05.2020 Rekursion abgestellt durch 2 verschiedene
 # 	Ausgänge in SingleBeitragVideo 	
 #
-def yt_get(li, url, vid, title, tag, summ, thumb):
+def yt_get(url, vid, title, tag, summ, thumb):
 	PLog('yt_embed_url: ' + url)
 	watch_url = 'https://www.youtube.com/watch?v=' + vid
 	PLog('yt_watch_url: ' + watch_url)
 	PLog(tag); PLog(summ);PLog(thumb);
 	title_org=title; tag_org=tag; summ_org=summ
 	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='phoenix')			# Home-Button
+
 	try:
 		yt_init = YouTube(watch_url)
 		# page, msg = get_page(path=watch_url)		# entfällt vorerst (s. get_duration)
@@ -83,7 +86,7 @@ def yt_get(li, url, vid, title, tag, summ, thumb):
 		msg1 = u"Video ist nicht verfügbar"
 		msg2 = 'Fehler: %s' % str(exception)		
 		MyDialog(msg1, msg2, '')
-		return li
+		return
 		
 	# nur mp4-Videos laden
 	Videos 	= yt_init.streams.filter(file_extension='mp4').all()
@@ -160,7 +163,7 @@ def yt_get(li, url, vid, title, tag, summ, thumb):
 		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
 		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
 
-	return li
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------
 #  str(stream) durch Aufrufer

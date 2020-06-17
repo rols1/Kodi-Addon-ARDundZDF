@@ -7,7 +7,7 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-#	Stand: 03.06.2020
+#	Stand: 17.06.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -239,6 +239,8 @@ def phoenix_Search(query='', nexturl=''):
 def GetContent(li, items, base_img=None, turn_title=True ):
 	PLog('GetContent:')
 
+	mediatype=''			# Kennzeichn. als Playable hier zu unsicher (Bsp. Plenarwochen)		
+
 	if not base_img:
 		base_img = R(ICON_PHOENIX)		# Ergebnisseite ohne Bilder, Phoenix-Bild verwenden
 	
@@ -300,7 +302,7 @@ def GetContent(li, items, base_img=None, turn_title=True ):
 			online = "Sendezeit fehlt"
 			# trotz Sendezeit kann Video fehlen - Nachprüfung in SingleBeitrag
 		else:
-			if "inhalt_video" in item:			# trotz Sendezeit kann Video fehlen
+			if "inhalt_video" in item:			# trotz False Videos möglich (Bsp. Plenarwochen)
 				single = True
 		PLog("typ: %s, %s" % (typ, online))
 		PLog('single: ' + str(single))	
@@ -340,7 +342,7 @@ def GetContent(li, items, base_img=None, turn_title=True ):
 			fparams="&fparams={'title': '%s', 'path': '%s', 'html_url': '%s', 'tagline': '%s', 'summary': '%s', 'thumb': '%s'}" %\
 				(quote(title), quote(url), quote(url), quote(tag), quote(summ_par), quote(img))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.SingleBeitrag", fanart=img, 
-				thumb=img, fparams=fparams, summary=summ, tagline=tag, mediatype='')				
+				thumb=img, fparams=fparams, summary=summ, tagline=tag, mediatype=mediatype)				
 		else:
 			fparams="&fparams={'path': '%s', 'html_url': '%s', 'title': '%s'}" %\
 				(quote(url), quote(url), quote(title))
@@ -487,6 +489,8 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 	PLog('SingleBeitrag: ' + title);
 	PLog(summary); PLog(tagline); 
 	title_org = title
+	tag_org = tagline
+	summ_org = summary
 	
 	# ev. für sid split-Variante aus phoenix_Search verwenden
 	sid 	= re.search(u'-(\d+)\.html', path).group(1)
@@ -506,6 +510,10 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 		
 	li = xbmcgui.ListItem()
 	li = home(li, ID='phoenix')			# Home-Button
+	
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'	
 	
 	items = blockextract('typ":"video-',  page)						# kann fehlen z.B. bei Phoenix_Suche 
 	PLog(len(items))
@@ -570,46 +578,26 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 			vid=py2_encode(vid); tag=py2_encode(tag);
 			img=py2_encode(img); summ=py2_encode(summ);
 			tag_par = summ.replace('\n', '||')					# || Code für LF (\n scheitert in router)
-		
-			if len(items) == 1:									# nur 1 Video -> skip SingleBeitragVideo
-				PLog('skip_SingleBeitragVideo')
-				if typ == "video-youtube":
-					li = yt.yt_get(li,  url, vid, title, tag, summ, thumb=img)
-				else:
-					li = get_formitaeten(li,content_id=vid,title=title,tagline=tag,thumb=img)
-				# wg. Rekursion auf Amazon-Stick return nach Sofortstart
-				if SETTINGS.getSetting('pref_video_direct') == 'true': 		
-					return li	 # bricht aufgebaute Liste in yt_get od. get_formitaeten ab
-				else:
-					xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  
+
+			if 	typ == 'video-smubl':
+				fparams="&fparams={'content_id': '%s', 'title': '%s', 'tagline': '%s', 'thumb': '%s'}" %\
+					(quote_plus(vid), quote_plus(title), quote_plus(tag_org), quote_plus(img))	
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.get_formitaeten", 
+					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)	
+					
+			if typ == 'video-youtube':
+				fparams="&fparams={'url': '%s','vid': '%s', 'title': '%s', 'tag': '%s', 'summ': '%s', 'thumb': '%s'}" %\
+					(quote_plus(url), quote_plus(vid), quote_plus(title), quote_plus(tag_org), 
+					quote_plus(summ_org), quote_plus(img))	
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.yt_get", 
+					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)	
 				
-			fparams="&fparams={'url': '%s', 'vid': '%s', 'title': '%s', 'summ': '%s', 'tag': '%s', 'thumb': '%s', 'typ': '%s'}" %\
-				(quote_plus(url), quote_plus(vid), quote_plus(title), quote_plus(summ), quote_plus(tag_par), 
-				quote_plus(img), typ)	
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.SingleBeitragVideo", 
-				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)		
 		else:
 			PLog('vid fehlt: %s' % title)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-# ------------------------
-# Einzelvideo (Youtube, Normal) zu SingleBeitrag
-#
-def SingleBeitragVideo(url, vid, title, tag, summ, thumb, typ):
-	PLog('SingleBeitragVideo: ' + typ)
-	li = xbmcgui.ListItem()
-	
-	if typ == 'video-youtube':
-		li = yt.yt_get(li,  url, vid, title, tag, summ, thumb)
-	if typ == 'video-smubl':
-		li = get_formitaeten(li,content_id=vid,title=title,tagline=tag,thumb=thumb)
-	
-	# endOfDirectory od.return ohne li: Rekursion bei Sofortstart
-	if SETTINGS.getSetting('pref_video_direct') == 'true':  	
-		return li						
-	else:
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
 # ----------------------------------------------------------------------
 # Quersuche beim ZDF - Aufrufer SingleBeitrag
 # Dokus: Suche mit Title und Subtitel (Achtung: gedreht in GetContent
@@ -690,13 +678,16 @@ def get_zdf_search(li, page, title):
 # ----------------------------------------------------------------------
 # beitrags_details 	-> xml-format
 # ngplayer_2_3		-> json-Format
-def get_formitaeten(li,content_id,title,tagline,thumb):
+def get_formitaeten(content_id,title,tagline,thumb):
 	PLog('get_formitaeten')
 	PLog('content_id: ' + content_id)
 	if content_id == '':							# sollte nicht vorkommen
 		msg1 = '%s | content_id fehlt' % title
 		MyDialog(msg1, '', '')
 		return li
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='phoenix')			# Home-Button
 	
 	url = 'https://www.phoenix.de/php/mediaplayer/data/beitrags_details.php?ak=web&ptmd=true&id=' + content_id
 	page, msg = get_page(path=url)	
@@ -797,7 +788,7 @@ def get_formitaeten(li,content_id,title,tagline,thumb):
 		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
 		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
 			
-	return li
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ####################################################################################################
 # Phoenix - TV-Livestream mit EPG

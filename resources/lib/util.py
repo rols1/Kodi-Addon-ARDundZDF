@@ -1737,7 +1737,7 @@ def get_startsender(hrefsender):
 #		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
 #
 def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):	
-	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot); 
+	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
 	PLog(sub_path);
 	
 	Plot=transl_doubleUTF8(Plot)
@@ -1802,6 +1802,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 	PLog("IsPlayable: %s, Merk: %s" % (IsPlayable, Merk))
 	PLog("kodi_version: " + KODI_VERSION)							# Debug
 	# kodi_version = re.search('(\d+)', KODI_VERSION).group(0) # Major-Version reicht hier - entfällt
+	
 	
 	if url_check(url, caller='PlayVideo'):
 		if IsPlayable == 'true':								# true - Call via listitem

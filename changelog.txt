@@ -12,6 +12,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+17.05.2020	3.1.0
+			Modul phoenix: für Resumefunktion Direktsprünge in SingleBeitrag entfernt,
+			Param. mediatype gesetzt (abhängig von Setting Sofortstart), get_formitaeten
+			und yt_get (Modul yt) geändert für Resumefunktion (eigenständige Liste).
+			get_live_data (Modul arte): try-/except-Block für ev. list-object in summary 
+			(Ursache unbekannt).
+			GetContent (Modul arte): Datensätze ohne Titel überspringen (Müll).
+			PlayVideo (Modul util): Log-Ausgabe Plot auf 100 begrenzt (bei YT-Videos teilw. 
+			länger als 500 Zeichen).
+			ShowFavs (Merkzeichen): Erweiterung der Liste CallFunctions für die Resume-
+			funktion ("phoenix.get_formitaeten", "phoenix.SingleBeitrag", 
+			"phoenix.yt.yt_get", "arte.SingleVideo", "arte.GetContent"). 
+			ShowFavs (Merkzeichen): Verbesserung des CallFunctions-Abgleichs. 
+			 
 15.05.2020	3.0.9
 			Modul 3sat: Auswertung Startseite hinzugefügt (www.3sat.de), Einbettung
 			Live + Verpasst
