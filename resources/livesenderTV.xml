@@ -4,8 +4,10 @@
   <genre>TV</genre>
   <description>Livestreams http://www.ardmediathek.de/tv/live</description>
   <thumbnail></thumbnail>
-   <date>23.02.2020 rols1</date>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
+  <date>24.06.2020 rols1</date>
+  <ARDsource></ARDsource>
+  <ZDFsource>https://www.zdf.de/live-tv</ZDFsource>
   <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ Button:Alle Sender</info>
   <info2>das &-Zeichen verstößt zwar gegen den xml-Standard, ist aber kompatibel mit den String-Funktionen im PRG</info2>
   <info3>hrefsender enthält Sendernamen passend zu www.ardmediathek.de (ARD-Neu)</info3>
@@ -24,41 +26,36 @@
 		<genre>TV</genre>
 		<EPG_ID>ARD</EPG_ID>
 		<date>11.05.2019</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>ZDF</title>
-		<hrefsender>ZDF</hrefsender>
-		<link>https://zdf-hls-01.akamaized.net/hls/live/2002460/de/veryhigh/master.m3u8</link>	  
+		<hrefsender>ZDF </hrefsender>
+		<link>ZDFsource</link>	  
 		<thumbnail>tv-zdf.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>ZDF</EPG_ID>
 		<date>23.02.2020</date>
-		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
 	<item>
 		<title>KiKA</title>
-		<hrefsender>KiKA</hrefsender>
-		<link>https://kikade-lh.akamaihd.net/i/livetvkika_de@450035/master.m3u8</link>
+		<hrefsender>KiKA </hrefsender>
+		<link>ZDFsource</link>
 		<thumbnail>tv-kika.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>KIKA</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
 	<item>
 		<title>Arte</title>
-		<hrefsender>ARTE</hrefsender>
-		<link>https://artelive-lh.akamaihd.net/i/artelive_de@393591/master.m3u8</link>
-		<link1>LiveTV_Arte.m3u8</link1>link1>
+		<hrefsender>ARTE </hrefsender>
+		<link>ZDFsource</link>
 		<info>Web: http://www.ardmediathek.de/tv/live?kanal=5880</info>
 		<thumbnail>tv-arte.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>ARTE</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
 	<item>
@@ -69,39 +66,35 @@
 		<genre>TV</genre>
 		<EPG_ID>fes</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>3sat</title>
-		<hrefsender>3sat</hrefsender>
-		<link>https://zdfhls18-i.akamaihd.net/hls/live/744751/dach/veryhigh/master.m3u8</link>
+		<hrefsender>3sat </hrefsender>
+		<link>ZDFsource</link>
 		<thumbnail>tv-3sat.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>3SAT</EPG_ID>
 		<date>23.02.2020</date>
-		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
 	<item>			
 		<title>ZDFneo</title>
-		<hrefsender>ZDFneo</hrefsender>
-		<link>https://zdf-hls-02.akamaized.net/hls/live/2002461/de/veryhigh/master.m3u8</link>
+		<hrefsender>ZDFneo </hrefsender>
+		<link>ZDFsource</link>
 		<thumbnail>tv-zdf-neo.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>2NEO</EPG_ID>
 		<date>23.02.2020</date>
-		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
 	<item>			
 		<title>ZDFinfo</title>
-		<hrefsender>ZDFinfo</hrefsender>
-		<link>https://zdfhls17-i.akamaihd.net/hls/live/744750/de/veryhigh/master.m3u8</link>
+		<hrefsender>ZDFinfo </hrefsender>
+		<link>ZDFsource</link>
 		<thumbnail>tv-zdf-info.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>ZINFO</EPG_ID>
 		<date>11.06.2016</date>
-		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
 	<item>			
@@ -112,7 +105,6 @@
 		<genre>TV</genre>
 		<EPG_ID></EPG_ID>
 		<date>16.04.2019</date>
-		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
 	<item>
@@ -123,17 +115,15 @@
 		<genre>TV</genre>
 		<EPG_ID>ALPHA</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>phoenix</title>
-		<hrefsender>phoenix</hrefsender>
-		<link>https://zdfhls19-i.akamaihd.net/hls/live/744752/de/veryhigh/master.m3u8</link>
+		<hrefsender>Phoenix </hrefsender>
+		<link>ZDFsource</link>
 		<thumbnail>tv-phoenix.png</thumbnail>
 		<genre>TV</genre>
 		<EPG_ID>PHOEN</EPG_ID>
 		<date>23.02.2020</date>
-		<epg_url></epg_url>
 		<geoblock>ja</geoblock>
 	</item>
 	<item>
@@ -144,7 +134,6 @@
 		<genre>TV</genre>
 		<EPG_ID>TAG24</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>Deutsche Welle</title>
@@ -154,7 +143,6 @@
 		<genre>TV</genre>
 		<EPG_ID>DWTV</EPG_ID>
 		<date>19.06.2016</date>
-		<epg_url></epg_url>
 	</item>
 </items>
 </channel>
@@ -172,7 +160,6 @@
 		<genre>TV</genre>
 		<EPG_ID>BR</EPG_ID>
 		<date>21.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>BR Fernsehen-Süd</title>
@@ -182,7 +169,6 @@
 		<genre>TV</genre>
 		<EPG_ID>BR</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>hr-fernsehen</title>
@@ -192,7 +178,6 @@
 		<genre>TV</genre>
 		<EPG_ID>HR</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>MDR Sachsen</title>
@@ -202,7 +187,6 @@
 		<genre>TV</genre>
 		<EPG_ID>MDR</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>MDR+ Eventlivestreams + SocialTV - 1</title>
@@ -212,7 +196,6 @@
 		<genre>TV</genre>
 		<EPG_ID></EPG_ID>
 		<date>15.12.2019</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>MDR+ Eventlivestreams + SocialTV - 2</title>
@@ -222,7 +205,6 @@
 		<genre>TV</genre>
 		<EPG_ID></EPG_ID>
 		<date>22.04.2019</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>Radio Bremen</title>
@@ -232,7 +214,6 @@
 		<genre>TV</genre>
 		<EPG_ID>N3</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>NDR Niedersachsen</title>
@@ -242,7 +223,6 @@
 		<genre>TV</genre>
 		<EPG_ID>N3</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>NDR Schleswig-Holstein</title>
@@ -252,7 +232,6 @@
 		<genre>TV</genre>
 		<EPG_ID>N3</EPG_ID>
 		<date>21.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>NDR Mecklenburg-Vorpommern</title>
@@ -262,7 +241,6 @@
 		<genre>TV</genre>
 		<EPG_ID>N3</EPG_ID>
 		<date>21.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>NDR Hamburg</title>
@@ -272,7 +250,6 @@
 		<genre>TV</genre>
 		<EPG_ID>N3</EPG_ID>
 		<date>21.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>rbb Fernsehen Brandenburg</title>
@@ -282,7 +259,6 @@
 		<genre>TV</genre>
 		<EPG_ID>RBB</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>SR Fernsehen</title>
@@ -293,7 +269,6 @@
 		<EPG_ID>SWR</EPG_ID>
 		<date>21.09.2018</date>
 		<epg_schema>ARD</epg_schema>
-		<epg_url></epg_url>
 		<info>TVToday: SWR/SR gemeinsam</info>
 	</item>
 	<item>
@@ -304,7 +279,6 @@
 		<genre>TV</genre>
 		<EPG_ID>SWR</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 		<info>TVToday: SWR/SR gemeinsam</info>
 	</item>
 	<item>
@@ -316,7 +290,6 @@
 		<genre>TV</genre>
 		<EPG_ID>WDR</EPG_ID>
 		<date>07.09.2018</date>
-		<epg_url></epg_url>
 	</item>
 	<item>
 		<title>WDR/ARD Event Sportschau</title>
@@ -326,7 +299,6 @@
 		<genre>TV</genre>
 		<EPG_ID></EPG_ID>
 		<date>22.04.2019</date>
-		<epg_url></epg_url>
 	</item>
 </items>
 </channel>
@@ -383,6 +355,46 @@
 		<genre>TV</genre>
 		<EPG_ID>qvcp</EPG_ID>
 		<date>05.11.2017</date>
+	</item>
+	<item>
+		<title>BadenTV</title>
+		<link>https://cdn.icu.de/rtplive/smil:btv.smil/playlist.m3u8</link>
+		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-baden-tv.png?raw=true</thumbnail>
+		<genre>TV</genre>
+		<EPG_ID></EPG_ID>
+		<date>19.06.2020</date>
+	</item>
+	<item>
+		<title>münchen.tv</title>
+		<link>https://stream02.stream.welocal.world/stream/muc/ngrp:muc.stream_all/playlist.m3u8</link>
+		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-muenchen-tv.png?raw=true</thumbnail>
+		<genre>TV</genre>
+		<EPG_ID>TVM</EPG_ID>
+		<date>19.06.2020</date>
+	</item>
+	<item>
+		<title>Leipzig Fernsehen</title>
+		<link>https://leipzig.iptv-playoutcenter.de/leipzig/leipzigfernsehen.stream_1/playlist.m3u8</link>
+		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-leipzig-fernsehen.png?raw=true</thumbnail>
+		<genre>TV</genre>
+		<EPG_ID>LEITV</EPG_ID>
+		<date>19.06.2020</date>
+	</item>
+	<item>
+		<title>Rhein-Neckar Fernsehen</title>
+		<link>https://rnf.iptv-playoutcenter.de/rnf/rnf.stream_1/playlist.m3u8</link>
+		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-rhein-neckar.png?raw=true</thumbnail>
+		<genre>TV</genre>
+		<EPG_ID>RNF</EPG_ID>
+		<date>19.06.2020</date>
+	</item>
+	<item>
+		<title>Franken Fernsehen</title>
+		<link>https://stream03.stream.welocal.world/stream/frf/ngrp:frf.stream_all/playlist.m3u8</link>
+		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-franken-fernsehen.png?raw=true</thumbnail>
+		<genre>TV</genre>
+		<EPG_ID></EPG_ID>
+		<date>25.06.2020</date>
 	</item>
 </items>
 </channel>

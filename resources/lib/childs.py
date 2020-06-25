@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 01.05.2020
+#	Stand: 25.06.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -37,7 +37,7 @@ import datetime, time
 import re				# u.a. Reguläre Ausdrücke
 import string
 
-import ardundzdf					# -> ParseMasterM3u, transl_wtag, get_query
+import ardundzdf					# -> ParseMasterM3u, transl_wtag, get_query, get_ZDFstreamlinks
 from resources.lib.util import *
 
 
@@ -265,13 +265,23 @@ def Kika_Search(query=None, title='Search', pagenr=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------			
+# 25.06.2020 Nutzung neue Funktion get_ZDFstreamlinks
 def Kika_Live():
-	PLog('Kika_Live')
+	PLog('Kika_Live:')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
 	import resources.lib.EPG as EPG
-	m3u8link = 'https://kikade-lh.akamaihd.net/i/livetvkika_de@450035/master.m3u8'	# neu 07.12.2017
+	zdf_streamlinks = ardundzdf.get_ZDFstreamlinks()
+	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
+	for line in zdf_streamlinks:
+		webtitle, href, thumb, tagline = line.split('|')
+		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
+		if up_low('KiKA ') in up_low(webtitle): 	# Sender mit Blank!
+			m3u8link = href
+			break
+	if m3u8link == '':
+		PLog('%s: Streamlink fehlt' % 'KiKA ')
 	
 	ID = 'KIKA'
 	title = 'KIKA TV-Live'

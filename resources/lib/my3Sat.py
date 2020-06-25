@@ -42,7 +42,7 @@ import datetime, time
 # Addonmodule + Funktionsziele (util_imports.py)
 # import ardundzdf reicht nicht für thread_getpic
 from ardundzdf import *					# -> get_query, ParseMasterM3u, test_downloads, Parseplaylist, 
-										# thread_getpic, ZDF_SlideShow
+										# thread_getpic, ZDF_SlideShow, get_ZDFstreamlinks
 from resources.lib.util import *
 
 
@@ -807,6 +807,8 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		sub_rubrik = stringextract('ellipsis" >', '<', rec)
 		sub_rubrik = mystrip(sub_rubrik)
 		title	= stringextract('clickarea-link">', '</p>', rec)
+		if title == '':
+			title = stringextract('title="', '"', rec)
 		
 		href	= stringextract('href="', '"', rec)
 		if href.startswith('http') == False:
@@ -828,7 +830,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		title=py2_encode(title); href=py2_encode(href);	 img_src=py2_encode(img_src);
 		descr_par=py2_encode(descr_par); dauer=py2_encode(dauer); duration=py2_encode(duration);						
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
-			(quote(title), quote(href), quote(img_src), quote(descr_par), quote(dauer), quote(duration))
+			(quote(title), quote(href), quote(img_src), quote(descr_par), quote(dauer))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams, mediatype=mediatype)
 
@@ -1122,7 +1124,13 @@ def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
 		MyDialog(msg1, msg2, msg3)
 		return li	
 	
-	endDate = stringextract('list-desc">bis ', '</', page)		# Bsp. 12.09.2020
+	endDate = stringextract('list-desc">bis ', '</', page)			# Bsp. 12.09.2020
+	pubDate = stringextract('publicationDate" content="', '"', page)# Bsp. 2020-06-19T08:21:30.448Z
+	pubDate = time_translate(pubDate)
+	if pubDate:
+		pubDate = "Sendedatum: %s | " % pubDate
+	PLog(pubDate)
+	
 
 	content = stringextract('window.zdfsite', 'tracking', page)  			
 	content = stringextract('data-module="zdfplayer"', 'teaser-image=', page)  			
@@ -1198,7 +1206,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
 			
 	download_list = []
 	if endDate:
-		dauer = u"%s | [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, endDate)
+		dauer = u"%s | %s [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, pubDate, endDate)
 	tagline = title + " | " + dauer + " " + geoblock
 	Plot_par = tagline + "||||" + Plot_par
 	
@@ -1263,7 +1271,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
 
 ####################################################################################################
 # 3Sat - TV-Livestream mit EPG
-#	summ = epg (s. Main_3Sat)
+#
 def Live(name, epg='', Merk='false'):	
 	PLog('Live: ' + name)
 	title2 = name
@@ -1271,9 +1279,17 @@ def Live(name, epg='', Merk='false'):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='3Sat')						# Home-Button
 	
-	url = 'https://zdfhls18-i.akamaihd.net/hls/live/744751/dach/high/master.m3u8'
-	# epg_url = 'https://programm.ard.de/TV/ARD-Mediathek/Programmkalender/?sender=28007'	# entf. 
-	epgname = 'ARD'; listname = '3sat'
+	zdf_streamlinks = get_ZDFstreamlinks()
+	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
+	for line in zdf_streamlinks:
+		webtitle, href, thumb, tagline = line.split('|')
+		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
+		if up_low('3sat ') in up_low(webtitle): 	# Sender mit Blank!
+			m3u8link = href
+			break
+	if m3u8link == '':
+		PLog('%s: Streamlink fehlt' % '3sat ')
+
 	summary = u'automatische Auflösung';				
 	title = 'Bandbreite und Auflösung automatisch'
 	img	= R(ICON_TV3Sat)
@@ -1282,19 +1298,19 @@ def Live(name, epg='', Merk='false'):
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
 		PLog('Sofortstart: Live')
 		Plot	 = 'Live: ' + name + '\n\n' + epg + '\n\n' + summary
-		PlayVideo(url=url, title='3Sat Live TV', thumb=img, Plot=Plot, Merk=Merk)
+		PlayVideo(url=m3u8link, title='3Sat Live TV', thumb=img, Plot=Plot, Merk=Merk)
 		return	
 							
 	Plot	 = 'Live: ' + name + '\n\n' + epg
 	Plot_par = Plot.replace('\n', '||')
-	title=py2_encode(title); url=py2_encode(url); img=py2_encode(img);
+	title=py2_encode(title); m3u8link=py2_encode(m3u8link); img=py2_encode(img);
 	Plot_par=py2_encode(Plot_par);
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': 'false'}" %\
-		(quote_plus(url), quote_plus(title), quote_plus(img), quote_plus(Plot_par))
+		(quote_plus(m3u8link), quote_plus(title), quote_plus(img), quote_plus(Plot_par))
 	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 		mediatype='video', tagline=Plot) 		
 	
-	li = Parseplaylist(li, url, img, geoblock='', descr=Plot)	
+	li = Parseplaylist(li, m3u8link, img, geoblock='', descr=Plot)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	

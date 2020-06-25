@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 04.06.2020
+#	Stand 22.06.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -604,7 +604,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	PLog(type(label))
 	label=py2_encode(label)
 	PLog('addDir_label: {0}, action: {1}, dirID: {2}'.format(label[:100], action, dirID))
-	PLog(type(summary)); PLog(type(tagline)); PLog(type(action)); PLog(type(dirID)); 
+	PLog(mediatype);
 	action=py2_encode(action); dirID=py2_encode(dirID); 
 	summary=py2_encode(summary); tagline=py2_encode(tagline); 
 	fparams=py2_encode(fparams); fanart=py2_encode(fanart); thumb=py2_encode(thumb);
@@ -725,8 +725,10 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 #	Test in Windows7
 # 13.01.2019 erweitert für compressed-content (get_page2)
 # 25.01.2019 Rückgabe Redirect-Url (get_page2) in msg
+# 21.06.2020 urlencoding mit Param. safe für franz. Zeichen, Berücksicht. m3u8-Links,
+#	transl_umlaute(path) entfällt damit
 #
-def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False):	
+def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False):
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
 
 	if header:									# dict auspacken
@@ -735,9 +737,14 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		header = json.loads(header)
 		PLog("header: " + str(header)[:80]);
 
-	path = transl_umlaute(path)					# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
+	# path = transl_umlaute(path)				# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
 	# path = unquote(path)						# scheitert bei quotierten Umlauten, Ersatz replace				
 	path = path.replace('https%3A//','https://')# z.B. https%3A//classic.ardmediathek.de
+	
+	path = py2_encode(path)
+	path = quote(path, safe="@:?.,-_&=/")		# s.o. ('-_' in m3u8-Links)			
+	PLog("safe_path: " + path)		
+	 
 	msg = ''; page = ''	
 	UrlopenTimeout = 10
 	
@@ -1383,38 +1390,43 @@ def seconds_translate(seconds, days=False):
 # ARD-Zeit + 2 Stunden
 # s.a. addHour (ARDnew) - Stringroutine für ARDVerpasstContent
 # Rückgabe timecode im Fehlerfall
+# 22.06.2020 Anpassung an 29-stel. ZDF-Format
 #
 def time_translate(timecode, add_hour=2):
 	PLog("time_translate: " + timecode)
 
-	if timecode.strip() == '':
+	if timecode.strip() == '' or len(timecode) < 19 or timecode[10] != 'T':
 		return ''
 	timecode = py2_encode(timecode)
 		
-	# Bsp.: Funk: 			2019-09-30T12:59:27.000+0000,
+	# Bsp.: Funk: 			2019-09-30T12:59:27.000+0000 mit sec/1000 	+ Korr.-Faktor 0
 	# 		ARDNew Live: 	2019-12-12T06:16:04.413Z
-	#		ZDF:			2021-03-03T17:20:00+01:00	mit Korr.-Faktor 1 Std.
-	if timecode.find('.') == 19:			# Zielformat 2018-11-28T23:00:00Z			
-		timecode = timecode.split('.')[0]
-		timecode = timecode + "Z"
-	if timecode.find('+') == 19:			# ZDF mit Korr.-Faktor s.o.			
-		timecode, add_hour = timecode.split('+')
-		timecode = timecode + "Z"
+	#		ZDF:			2021-03-03T17:20:00+01:00					+ Korr.-Faktor 1 Std.
+	#		ZDF:			2020-06-15T22:51:28.328+02:00 mit sec/1000 	+ Korr.-Faktor 2 Std.
+
+	# Zielformat 2018-11-28T23:00:00Z
+	day, hour_info 	= timecode.split('T')			# Datum / Uhrzeit trennen
+	hour	 		= hour_info[:8]
+	
+	add_hour=0
+	if '+' in hour_info:							# mit Korr.-Faktor s.o.			
+		mil_sec, add_hour = hour_info.split('+')	# ev. add-Faktor ermitteln
 		try:
 			add_hour = re.search('(\d+)',add_hour).group(1)
 			add_hour = int(add_hour)
 		except:
 			add_hour = 0
-	PLog(timecode);  PLog(add_hour)
 	
+	timecode = "%sT%sZ" % (day, hour)	
+	PLog(timecode); PLog(add_hour);
 	if timecode[10] == 'T' and timecode[-1] == 'Z':  # Format OK?
 		try:
 			date_format = "%Y-%m-%dT%H:%M:%SZ"
 			# ts = datetime.strptime(timecode, date_format)  # None beim 2. Durchlauf       
 			ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
-			PLog(ts)
-			new_ts = ts + datetime.timedelta(hours=add_hour)	
+			new_ts = ts + datetime.timedelta(hours=add_hour) # add-Faktor addieren
 			ret_ts = new_ts.strftime("%d.%m.%Y %H:%M")
+			PLog(ret_ts)
 			return ret_ts
 		except Exception as exception:
 			PLog(str(exception))
@@ -1587,7 +1599,7 @@ def ReadFavourites(mode):
 #	ID: ARD, ZDF - Podcasts entspr. ARD
 # Es wird nur die Webseite ausgewertet, nicht die json-Inhalte der Ladekette.
 # Cache: 
-#		Text wird in TEXTSTORE gespeichert, Dateiname aus path generiert.
+#		html-Seite wird in TEXTSTORE gespeichert, Dateiname aus path generiert.
 #
 # Aufrufer: ZDF: 	ZDF_get_content (für alle ZDF-Rubriken)
 #			ARD: 	ARDStart	-> ARDStartRubrik 
@@ -1595,8 +1607,8 @@ def ReadFavourites(mode):
 #					ARDPagination -> get_page_content
 #					ARDStartRubrik (Swiper) 
 #					ARDVerpasstContent
-#				
-#	Aufruf erfolgt, wenn für eine Sendung kein summary (teasertext, descr, ..) gefunden wird.
+#			
+# Aufruf erfolgt, wenn für eine Sendung kein summary (teasertext, descr, ..) gefunden wird.
 #
 # Nicht benötigt in ARD-Suche (Search -> SinglePage -> get_sendungen): Ergebnisse 
 #	enthalten einen 'teasertext' bzw. 'dachzeile'. Dto. Sendung Verpasst
@@ -1604,8 +1616,12 @@ def ReadFavourites(mode):
 # Nicht benötigt in ZDF-Suche (ZDF_Search -> ZDF_get_content): Ergebnisse enthalten
 #	einen verkürzten 'teaser-text'.
 #
-def get_summary_pre(path, ID='ZDF', skip_verf=False):	
+# 21.06.2020 zusätzl. Sendedatum pubDate
+#	in TEXTSTORE gespeichert wird die ges. html-Seite (vorher nur Text summ)
+#
+def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):	
 	PLog('get_summary_pre: ' + ID)
+	PLog(skip_verf); PLog(skip_pubDate);
 	
 	if 'Video?bcastId' in path:					# ARDClassic
 		fname = path.split('=')[-1]				# ../&documentId=31984002
@@ -1617,29 +1633,46 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False):
 	fpath = os.path.join(TEXTSTORE, fname)
 	PLog('fpath: ' + fpath)
 	
-	summ = ''
+	summ=''; page=''; pubDate=''
 	if os.path.exists(fpath):		# Text lokal laden + zurückgeben
 		PLog('lade lokal:') 
-		summ =  RLoad(fpath, abs_path=True)
-		return summ					# ev. leer, falls in der Liste eine Serie angezeigt wird 
-	
-	page, msg = get_page(path)		# extern laden
+		page =  RLoad(fpath, abs_path=True)
+
+	save_new = False
+	if page == '' or '<!DOCTYPE html>' not in page: # Format vor 21.06.2020 (nur summ)
+		page, msg = get_page(path)	# extern laden
+		save_new = True
 	if page == '' or 'APOLLO_STATE__ = {}' in page:
-		return ''
+		return '', pubDate
 	
-	verf=''	
-	if 	ID == 'ZDF':
+	page = py2_encode(page)
+	verf='';
+	if 	ID == 'ZDF' or ID == '3sat':
 		summ = stringextract('description" content="', '"', page)
 		summ = mystrip(summ)
+		summ = repl_json_chars(summ)
 		#if 'title="Untertitel">UT</abbr>' in page:	# stimmt nicht mit get_formitaeten überein
 		#	summ = "UT | " + summ
-		if u'erfügbar bis' in page:										# enth. Uhrzeit									
-			verf = stringextract(u'erfügbar bis ', '<', page)			# Blank bis <
-		if verf == '':
-			verf = stringextract('plusbar-end-date="', '"', page)
-			verf = time_translate(verf, add_hour=0)
-		if verf:														# Verfügbar voranstellen
-			summ = u"[B]Verfügbar bis %s[/B]\n\n%s\n" % (verf, summ)
+		if skip_verf == False:
+			if 'erfügbar bis' in page:										# enth. Uhrzeit									
+				verf = stringextract('erfügbar bis ', '<', page)			# Blank bis <
+			if verf == '':
+				verf = stringextract('plusbar-end-date="', '"', page)
+				verf = time_translate(verf, add_hour=0)
+			if verf:														# Verfügbar voranstellen
+				summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s\n" % (verf, summ)
+		PLog(skip_pubDate)
+		if skip_pubDate == False:		
+			pubDate = stringextract('publicationDate" content="', '"', page)# Bsp. 2020-06-15T22:51:28.328+02:00
+			if pubDate == '':
+				pubDate = stringextract('<time datetime="', '"', page)		# Alternative wie oben
+			if pubDate:
+				pubDate = time_translate(pubDate)
+				pubDate = " | Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate	
+				if 'erfügbar bis' in summ:	
+					summ = summ.replace('\n\n', pubDate)					# zwischen Verfügbar + summ  einsetzen
+				else:
+					summ = "%s%s" % (pubDate[3:], summ)
 		
 	if 	ID == 'ARDnew':
 		page = page.replace('\\"', '*')									# Quotierung vor " entfernen, Bsp. \"query\"
@@ -1649,51 +1682,74 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False):
 			summ = stringextract('synopsis":"', '"', page)
 		summ = repl_json_chars(summ)
 		if skip_verf == False:
-			if u'verfügbar bis:' in page:								# html mit Uhrzeit									
-				verf = stringextract(u'verfügbar bis:', '</p>', page)	# 
+			if 'verfügbar bis:' in page:								# html mit Uhrzeit									
+				verf = stringextract('verfügbar bis:', '</p>', page)	# 
 				verf = cleanhtml(verf)
 			if verf:													# Verfügbar voranstellen
-				summ = u"[B]Verfügbar bis %s[/B]\n\n%s" % (verf, summ)
+				summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
+		if skip_pubDate == False:		
+			pubDate = stringextract('"broadcastedOn":"', '"', page)
+			if pubDate:
+				pubDate = " | Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate	# 
+				if 'erfügbar bis' in summ:	
+					summ = summ.replace('\n\n', pubDate)					# zwischen Verfügbar + summ  einsetzen
+				else:
+					summ = "%s%s" % (pubDate[3:], summ)
 			
 	if 	ID == 'ARDClassic':
 		# summ = stringextract('description" content="', '"', page)		# geändert 23.04.2019
 		summ = stringextract('itemprop="description">', '<', page)
-		if u'Verfügbar bis' in page:										
-			verf = stringextract(u'Verfügbar bis ', ' ', page)			# Blank bis Blank
-		if len(verf) == 10:												# Verfügbar voraanstellen
-			summ = u"[B]Verfügbar bis %s[/B]\n\n%s" % (verf, summ)
+		summ = unescape(summ)			
+		summ = cleanhtml(summ)	
+		summ = repl_json_chars(summ)
+		if skip_verf == False:
+			if 'verfügbar bis' in page:										
+				verf = stringextract('verfügbar bis ', '</', page)		# Blank bis </p>
+			if verf:													# Verfügbar voranstellen
+				summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
+		if skip_pubDate == False:		
+			pubDate = stringextract('Video der Sendung vom', '</', page)# pageHeadline hidden
+			if pubDate:
+				pubDate = " | Sendedatum: [COLOR blue]%s[/COLOR]\n\n" % pubDate	# "Uhr" in Quelle
+				if 'erfügbar bis' in summ:	
+					summ = summ.replace('\n\n', pubDate)					# zwischen Verfügbar + summ  einsetzen
+				else:
+					summ = "%s%s" % (pubDate[3:], summ)
+				
 		 	
-	summ = unescape(summ)			# Text speichern
-	summ = cleanhtml(summ)	
-	summ = repl_json_chars(summ)
-	# PLog('summ:' + summ)
-	if summ:
-		msg = RSave(fpath, summ)
+	PLog('summ:' + summ); PLog(verf)
+	if summ and save_new:
+		msg = RSave(fpath, page)
 	# PLog(msg)
 	return summ
 	
 #---------------------------------------------------------------------------------------------------
 # Icon aus livesenderTV.xml holen
 # 24.01.2019 erweitert um link
-# Bei Bedarf erweitern für EPG (s. SenderLiveListe)
+# 25.06.2020 für SenderLiveResolution um EPG_ID erweitert 
+#
 def get_playlist_img(hrefsender):
 	PLog('get_playlist_img: ' + hrefsender); 
-	playlist_img=''; link='';
+	playlist_img=''; link=''; EPG_ID=''
 	playlist = RLoad(PLAYLIST)		
 	playlist = blockextract('<item>', playlist)
 	for p in playlist:
-		s = stringextract('hrefsender>', '</hrefsender', p) 
-		#s = stringextract('title>', '</title', p)	# Classic-Version
-		PLog(hrefsender); PLog(s); 
+		#s = stringextract('hrefsender>', '</hrefsender', p) 
+		s = stringextract('title>', '</title', p)	# Classic-Version
 		if s:									# skip Leerstrings
-			PLog(type(s)); PLog(type(hrefsender));
+			# PLog(s); PLog(hrefsender);		# Debug
 			if up_low(s) in up_low(hrefsender):
+				PLog("Treffer:"); PLog(s); PLog(hrefsender);
 				playlist_img = stringextract('thumbnail>', '</thumbnail', p)
 				playlist_img = R(playlist_img)
 				link =  stringextract('link>', '</link', p)
+				EPG_ID =  stringextract('EPG_ID>', '</EPG_ID', p)
+				PLog("EPG_ID für %s: %s" % (s, EPG_ID))
 				break
+	if EPG_ID == '':
+		PLog("%s: EPG_ID nicht gefunden/vorhanden" % s)
 	PLog(playlist_img); PLog(link); 
-	return playlist_img, link
+	return playlist_img, link, EPG_ID
 
 #---------------------------------------------------------------------------------------------------
 # Link für TV-Livesender aus ARD-Start holen - z.Z. nur Classic
@@ -1707,7 +1763,9 @@ def get_startsender(hrefsender):
 	json_url = BASE_URL + '/play/config/%s?devicetype=phone' % config_id
 	
 	page, msg = get_page(path=json_url)
-	href = 'https:' + stringextract('clipUrl":"', '"', page)	
+	href = stringextract('clipUrl":"', '"', page)
+	if href.startswith('http') == False:
+		href = 'https:' + href	
 	return href
 	
 ####################################################################################################

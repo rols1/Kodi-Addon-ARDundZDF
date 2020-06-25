@@ -12,7 +12,52 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-17.05.2020	3.1.0
+
+25.06.2020	3.1.3
+			TV-Livestreams/Überregional: Umstellung für ZDF-Sender -Ermittlung
+			der Stream-Url's im Web statt in livesenderTV.xml hinterlegter Links.
+			Neue Funktion get_ZDFstreamlinks (Nutzung/Anpassung): SenderLiveListe,
+			ZDFStartLive, get_live_data (Arte), Live (3sat), Kika_Live. 
+			Anpassungen für get_ZDFstreamlinks: livesenderTV.xml, Watchdog_Plex + 
+			Watchdog_TV-Live.
+			TV-Livestreams/Privat neuer Sender: Franken Fernsehen.
+			SenderLiveResolution: erweitert mit Aktualisierung der EPG-Daten,
+			Fallback-Code für ARD-Sender entfernt (obsolet). 
+			SenderLiveListe: in descr LF's router-gerecht ersetzt.
+			get_playlist_img (Modul util): um EPG_ID erweitert. 
+			ARDnew: get_playlist_img-Aufruf entfernt (entfallen).
+			
+not on Github	3.1.2
+			livesenderTV.xml: Aufnahme weiterer privater Livestreams für Menü,
+			einschl. EPG_ID für tvtoday.de (BadenTV fehlt).
+			TV-Livestreams/Privat neue Sender (BadenTV, muenchen.tv, Leipzig Fernsehen, 
+			Rhein-Neckar Fernsehen).
+			TV-Livestreams/Privat: Logos der priv. Sender von Wickipedia auf Github
+			bereitgestellt (nach Bearbeitung für Kodi).
+			Laden ext. Bild-Links in livesenderTV.xml ermöglicht: EPG_Sender, 
+			TVLiveRecordSender,  EPG_ShowAll.
+			get_startsender (Modul util): Fix http-Zusatz von clipUrl (Doppler 
+			vermeiden)
+not on Github	3.1.1
+			Überarbeitung "Verfügbar bis", Ergänzung Sendedatum:
+			get_summary_pre (Modul util): farbige Markierung für "Verfügbar bis"
+			ergänzt, Sendedatum (pubDate) ergänzt, repl_json_chars(summ) vor farbige
+			Markierung verlagert, gesamte html-Seite in TEXTSTORE gespeichert, 
+			Schalter für Verzicht auf Auswertung der Datumswerte  (ev. bereits
+			ermittelt).
+			time_translate (Modul util): erweitert für weiteres ZDF-Format, 
+			verlässlichere Auswertung des add-Faktors.
+			SingleBeitrag (Modul 3sat): Auswertung Sendedatum (publicationDate) für
+			tagline.
+			Sendereihe_Sendungen (Modul 3sat): altern. Quelle für Titel (fehlte
+			u.a. bei Wissensrubriken).
+			get_page (Modul util): Urlencodierung mit Param. safe erweitert u.a. für
+			franz. Sonderzeichen + Berücksichtigung von m3u8-Links (safe=",-_&=:/").
+			ARDStartRubrik (Startpage Classic): Fix Codec-Error in Plot.
+			SinglePage (Classic): escape in subtitle entfernt, Filterung erst nach 
+			get_summary_pre.
+
+17.06.2020	3.1.0
 			Modul phoenix: für Resumefunktion Direktsprünge in SingleBeitrag entfernt,
 			Param. mediatype gesetzt (abhängig von Setting Sofortstart), get_formitaeten
 			und yt_get (Modul yt) geändert für Resumefunktion (eigenständige Liste).
@@ -26,7 +71,7 @@ CHANGE HISTORY
 			"phoenix.yt.yt_get", "arte.SingleVideo", "arte.GetContent"). 
 			ShowFavs (Merkzeichen): Verbesserung des CallFunctions-Abgleichs. 
 			 
-15.05.2020	3.0.9
+15.06.2020	3.0.9
 			Modul 3sat: Auswertung Startseite hinzugefügt (www.3sat.de), Einbettung
 			Live + Verpasst
 			SendungenAZlist (Modul 3sat): rote Markierung für Titel 'ohne Beiträge'. 
@@ -38,11 +83,11 @@ CHANGE HISTORY
 			Arte-Kategorien: Dialog-Fixes msg2,msg3 Kategorien, KatSub, KatSubConcert.
 			Live (Modul 3sat): get_epg() entfernt (bereits in Main_3Sat erledigt).
 			
-09.05.2020	3.0.8
+09.06.2020	3.0.8
 			Kategorien (Arte-Kategorien): Bebilderung der Subkategorien durch Prefetch der
 			Subkategorie aus Addon-Cache.
 
-08.05.2020	3.0.7
+08.06.2020	3.0.7
 			neues Modul Arte-Kategorien: 
 			Änderungen / Zusätze: icon icon-arte_kat.png, Home-Button in home (Modul util),
 			Menü-Button-Haupt-PRG.

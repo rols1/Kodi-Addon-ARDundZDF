@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 07.06.2020
+#	Stand 25.06.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -613,7 +613,8 @@ def get_page_content(li, page, ID, mark=''):
 				fparams=fparams, summary=summ, mediatype='')																							
 		else:
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
-				summ_new = get_summary_pre(path=href, ID='ARDnew', skip_verf=True) # skip availableTo (hier in tag)
+				# skip availableTo + (hier in tag)
+				summ_new = get_summary_pre(path=href, ID='ARDnew', skip_verf=True, skip_pubDate=True) 
 				if 	summ_new:
 					summ = summ_new
 			
@@ -700,11 +701,6 @@ def ARDStartSingle(path, title, duration, ID=''):
 		if href.startswith('//'):
 			href = 'http:' + href
 		PLog('Livestream_Abzweig: ' + href)
-		# bis auf weiteres Web-Icons verwenden (16:9-Format OK hier für Webplayer + PHT):
-		#playlist_img = get_playlist_img(hrefsender) # Icon aus livesenderTV.xml holen
-		#if playlist_img:
-		#	img = playlist_img
-		#	PLog(title); PLog(hrefsender); PLog(img)
 		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summ, Startsender='true')
 	
 	mediatype='							'# Kennz. Video für Sofortstart 
@@ -1460,7 +1456,7 @@ def ARDVerpasstContent(title, startDate, endDate, CurSender):
 
 	base = "https://page.ardmediathek.de/page-gateway/compilations/ard/pastbroadcasts"
 	base = base.replace('/ard/', '/%s/' % sender)
-	startDate = startDate.replace(':', '%3A'); endDate = endDate.replace(':', '%3A'); # quote ':'
+#	startDate = startDate.replace(':', '%3A'); endDate = endDate.replace(':', '%3A'); # quote ':'  # s. get_page
 	path = base + "?startDateTime=%s&endDateTime=%s&pageNumber=0&pageSize=100" % (startDate, endDate)		
 	
 	page, msg = get_page(path)

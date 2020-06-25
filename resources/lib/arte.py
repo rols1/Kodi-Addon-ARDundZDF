@@ -31,7 +31,7 @@ elif PYTHON3:
 	from urllib.error import URLError
 
 
-import ardundzdf					# -> get_query,test_downloads
+import ardundzdf					# -> get_query,test_downloads, get_ZDFstreamlinks
 from resources.lib.util import *
 from resources.lib.phoenix import getOnline
 
@@ -74,7 +74,7 @@ def Main_arte(title='', summ='', descr='',href=''):
 	PLog('Main_arte:')
 	
 	li = xbmcgui.ListItem()
-	liICON_TVLIVE = home(li, ID=NAME)			# Home-Button
+	li = home(li, ID=NAME)			# Home-Button
 
 	title="Suche in Arte-Kategorien"
 	fparams="&fparams={}" 
@@ -103,7 +103,8 @@ def Main_arte(title='', summ='', descr='',href=''):
 # ----------------------------------------------------------------------
 # Nutzung EPG-Modul, Daten von tvtoday		
 # die json-Seite enthält ca. 4 Tage EPG - 1. Beitrag=aktuell
-#	
+# 24.06.2020 Nutzung neue Funktion get_ZDFstreamlinks
+#
 def get_live_data(name):
 	PLog('get_live_data:')
 
@@ -117,7 +118,7 @@ def get_live_data(name):
 		MyDialog(msg1, msg2, '')
 		return li
 	
-	title=''; summ=''; descr=''; vonbis=''; img=''; href=''
+	title='Arte'; summ=''; descr=''; vonbis=''; img=''; href=''
 	if len(rec) > 0:
 		# href (PRG-Seite) hier n.b.
 		img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6];
@@ -134,19 +135,19 @@ def get_live_data(name):
 			descr = ''
 		PLog(title); PLog(img); PLog(sname); PLog(stime); PLog(vonbis); 
 
-	
-	playlist = RLoad(PLAYLIST)	# lokale XML-Datei (Pluginverz./Resources)
-	liste = blockextract('<channel>', playlist)
-	href = ''
-	for element in liste:
-		name = stringextract('<name>', '</name>', element)
-		if up_low(name) == up_low('arte'):
-			href = stringextract('<link>', '</link>', element)
+	zdf_streamlinks = ardundzdf.get_ZDFstreamlinks()
+	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
+	for line in zdf_streamlinks:
+		webtitle, href, thumb, tagline = line.split('|')
+		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
+		if up_low('Arte ') in up_low(webtitle): 	# Arte mit Blank!
+			href = href
 			break
-	if 	href == '':		# Fallback (livesenderTV.xml)
-		href = 'https://artelive-lh.akamaihd.net/i/artelive_de@393591/master.m3u8'	
-	if img == '':		# Fallback img
-		img = R(ICON_TVLIVE)		
+					
+	if href == '':
+		PLog('%s: Streamlink fehlt' % 'Arte ')
+	if img == '':
+		img = thumb									# Fallback Senderlogo (+ in Main_arte)				
 	
 	return title, summ, descr, vonbis, img, href
 
@@ -298,7 +299,7 @@ def GetContent(li, page, ID):
 		upcoming  = stringextract('upcomingDate":"', '"', item)			# null möglich -> ''
 		if upcoming:													# check Zukunft
 			upcoming = getOnline(upcoming, onlycheck=True)
-			PLog(upcoming)
+			PLog("upcoming: " + upcoming)
 			if 'Zukunft' in upcoming:
 				start_end = "%s:%s" % (start_end, upcoming)	
 		
