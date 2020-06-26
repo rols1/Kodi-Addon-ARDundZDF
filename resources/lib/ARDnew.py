@@ -701,7 +701,7 @@ def ARDStartSingle(path, title, duration, ID=''):
 		if href.startswith('//'):
 			href = 'http:' + href
 		PLog('Livestream_Abzweig: ' + href)
-		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summ, Startsender='true')
+		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summ)
 	
 	mediatype='							'# Kennz. Video für Sofortstart 
 	if SETTINGS.getSetting('pref_video_direct') == 'true':

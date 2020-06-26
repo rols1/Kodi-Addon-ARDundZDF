@@ -1279,7 +1279,7 @@ def Live(name, epg='', Merk='false'):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='3Sat')						# Home-Button
 	
-	zdf_streamlinks = get_ZDFstreamlinks()
+	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
 	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 	for line in zdf_streamlinks:
 		webtitle, href, thumb, tagline = line.split('|')

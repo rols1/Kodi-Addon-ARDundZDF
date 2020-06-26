@@ -53,7 +53,7 @@ PLog('Script merkliste.py geladen')
 # Basis-Ordner-Liste (wird in Merkliste eingefügt, falls noch ohne Ordnerliste,
 #	einschl. ORDNER_INFO - Quelle ZDF-Rubriken +Audio+Talk):
 ORDNER			= ["Audio", "Bilderserien", "Comedy/Show", "Doku/Wissen", "Filme", "Geschichte", 
-					"Nachrichten", "Kinder/ZDFtivi", "Krimi", "Kultur",  
+					"Nachrichten", "Kinder/ZDFtivi", "Krimi", "Kultur" "TV-Livestreams",  
 					"Politik/Gesellschaft", "Serien", "Sport",  "Talk", "Verbraucher"]
 ORDNER_INFO		= [u"# die folgende Ordnerliste kann mit einem Editor geändert werden.",
 					u'# Nutzung: in Settings "Ordner für Merkliste verwenden wählen."',

@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 22.06.2020
+#	Stand 26.06.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1645,17 +1645,19 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):
 	if page == '' or 'APOLLO_STATE__ = {}' in page:
 		return '', pubDate
 	
-	page = py2_encode(page)
+	# Decodierung plus bei Classic u-Kennz. vor Umlaut-strings (s.u.)
+	page = py2_decode(page)
 	verf='';
 	if 	ID == 'ZDF' or ID == '3sat':
 		summ = stringextract('description" content="', '"', page)
 		summ = mystrip(summ)
+		summ = unescape(summ)
 		summ = repl_json_chars(summ)
 		#if 'title="Untertitel">UT</abbr>' in page:	# stimmt nicht mit get_formitaeten überein
 		#	summ = "UT | " + summ
 		if skip_verf == False:
-			if 'erfügbar bis' in page:										# enth. Uhrzeit									
-				verf = stringextract('erfügbar bis ', '<', page)			# Blank bis <
+			if u'erfügbar bis' in page:										# enth. Uhrzeit									
+				verf = stringextract(u'erfügbar bis ', '<', page)			# Blank bis <
 			if verf == '':
 				verf = stringextract('plusbar-end-date="', '"', page)
 				verf = time_translate(verf, add_hour=0)
@@ -1669,7 +1671,7 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):
 			if pubDate:
 				pubDate = time_translate(pubDate)
 				pubDate = " | Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate	
-				if 'erfügbar bis' in summ:	
+				if u'erfügbar bis' in summ:	
 					summ = summ.replace('\n\n', pubDate)					# zwischen Verfügbar + summ  einsetzen
 				else:
 					summ = "%s%s" % (pubDate[3:], summ)
@@ -1696,25 +1698,30 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):
 				else:
 					summ = "%s%s" % (pubDate[3:], summ)
 			
+	# für Classic ist u-Kennz. vor Umlaut-strings erforderlich
 	if 	ID == 'ARDClassic':
+		PLog('Mark2')
 		# summ = stringextract('description" content="', '"', page)		# geändert 23.04.2019
 		summ = stringextract('itemprop="description">', '<', page)
 		summ = unescape(summ)			
 		summ = cleanhtml(summ)	
 		summ = repl_json_chars(summ)
+		PLog('Mark3')
 		if skip_verf == False:
-			if 'verfügbar bis' in page:										
-				verf = stringextract('verfügbar bis ', '</', page)		# Blank bis </p>
+			if u'verfügbar bis' in page:										
+				verf = stringextract(u'verfügbar bis ', '</', page)		# Blank bis </p>
 			if verf:													# Verfügbar voranstellen
 				summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
+		PLog('Mark4')
 		if skip_pubDate == False:		
 			pubDate = stringextract('Video der Sendung vom', '</', page)# pageHeadline hidden
 			if pubDate:
 				pubDate = " | Sendedatum: [COLOR blue]%s[/COLOR]\n\n" % pubDate	# "Uhr" in Quelle
-				if 'erfügbar bis' in summ:	
+				if u'erfügbar bis' in summ:	
 					summ = summ.replace('\n\n', pubDate)					# zwischen Verfügbar + summ  einsetzen
 				else:
 					summ = "%s%s" % (pubDate[3:], summ)
+			PLog('Mark5')
 				
 		 	
 	PLog('summ:' + summ); PLog(verf)
@@ -1723,10 +1730,92 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):
 	# PLog(msg)
 	return summ
 	
+#-----------------------------------------------
+# Aufrufer : SenderLiveListe, ZDFStartLive, get_live_data (Arte),
+#			Live (3sat), Kika_Live.
+# ermittelt master.m3u8 für die ZDF-Sender (Kennz. ZDFsource in
+#	livesenderTV.xml). Rückgabe Liste (Zeile: Sender|Url) -
+#	Reihenfolge wie Web (www.zdf.de/live-tv).
+# Cache 24 Stunden, Datei: zdf_streamlinks im Dict-Ordner - nur
+#	außerhalb der Cachezeit wird www.zdf.de/live-tv neu geladen.
+#
+# Beachte: Blank hinter title_sender zur Abgrenz. der ZDF-Sender.
+#	Abgleich kompl. Titel nicht sicher (Bsp. 2 Blanks bei Arte)
+# 26.06.2020 skip_log hinzugefügt (relevant für loop in 
+#	get_sort_playlist)
+#-----------------------------------------------
+def get_ZDFstreamlinks(skip_log=False):
+	PLog('get_ZDFstreamlinks:')
+	ZDFlinks_CacheTime	= 86400					# 24 Std.: (60*60)*24
+		
+	page = Dict("load", 'zdf_streamlinks', CacheTime=ZDFlinks_CacheTime)
+	if page:
+		if skip_log == False:
+			PLog(page)							# für IPTV-Interessenten
+		return page.splitlines()
+
+	page, msg = get_page(path='https://www.zdf.de/live-tv')			# Links neu holen
+	if page == '':
+		PLog('get_ZDFstreamlinks: leer')
+		return []
+
+	page = page.replace('content": "', '"content":"')
+	page = page.replace('apiToken": "', '"apiToken":"')
+	content = blockextract('js-livetv-scroller-cell', page)			# Playerdaten einschl. apiToken
+	PLog(len(content))
+	
+	zdf_streamlinks=[]
+	for rec in content:												# Schleife  Web-Sätze		
+		player2_url=''; assetid=''; videodat_url=''; apiToken=''; href=''
+		title = stringextract('visuallyhidden">', '<', rec)
+		PLog(title);
+		# Bsp.: api.zdf.de/../zdfinfo-live-beitrag-100.json?profile=player2:
+		player2_url = stringextract('"content":"', '"', rec)
+		apiToken = stringextract('"apiToken":"', '"', rec)
+
+		thumb 	= stringextract('data-src="', '"', rec)			# erstes img = größtes
+		geo		= stringextract('geolocation="', '"', rec)
+		if geo:
+			geo = "Geoblock: %s" % geo
+		fsk		= stringextract('-fsk="', '"', rec)
+		if fsk:
+			fsk = "FSK: %s" % fsk
+			fsk = fsk.replace('none', 'ohne')
+		tagline = "%s,  %s" % (geo, fsk)
+
+		PLog("player2_url: " + player2_url)
+		if player2_url:
+			page, msg = get_page(path=player2_url, JsonPage=True)
+			# Bsp.: 247onAir-203
+			assetid = stringextract('assetid":"', '"', page)
+			assetid = assetid.strip()
+			
+		PLog(assetid); 
+		if assetid:
+			videodat_url = "https://api.zdf.de/tmd/2/ngplayer_2_3/live/ptmd/%s" % assetid
+			header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken
+			page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
+			PLog("videodat: " + page[:40])
+		
+			href = stringextract('"https://',  'master.m3u8', page) 	# 1.: auto
+			if href:
+				href = 	"https://" + href + "master.m3u8"
+				# Zeile: "title_sender|href|thumb|tagline"
+				zdf_streamlinks.append("%s|%s|%s|%s" % (title, href,thumb,tagline))	
+	
+	PLog("zdf_streamlinks: %d" % len(zdf_streamlinks))
+	page = "\n".join(zdf_streamlinks)									# Ablage Cache
+	if skip_log == False:
+		PLog(page)														# für IPTV-Interessenten
+	Dict("store", 'zdf_streamlinks', page)
+	return zdf_streamlinks	
 #---------------------------------------------------------------------------------------------------
+# Aufruf: 
 # Icon aus livesenderTV.xml holen
 # 24.01.2019 erweitert um link
 # 25.06.2020 für SenderLiveResolution um EPG_ID erweitert 
+# 26.06.2020 Anpassung für ZDF-Sender (bei Classic-Livestreams: 
+#	Arte, KiKA, 3sat)
 #
 def get_playlist_img(hrefsender):
 	PLog('get_playlist_img: ' + hrefsender); 
@@ -1734,7 +1823,7 @@ def get_playlist_img(hrefsender):
 	playlist = RLoad(PLAYLIST)		
 	playlist = blockextract('<item>', playlist)
 	for p in playlist:
-		#s = stringextract('hrefsender>', '</hrefsender', p) 
+		title_sender = stringextract('hrefsender>', '</hrefsender', p) 
 		s = stringextract('title>', '</title', p)	# Classic-Version
 		if s:									# skip Leerstrings
 			# PLog(s); PLog(hrefsender);		# Debug
@@ -1743,6 +1832,18 @@ def get_playlist_img(hrefsender):
 				playlist_img = stringextract('thumbnail>', '</thumbnail', p)
 				playlist_img = R(playlist_img)
 				link =  stringextract('link>', '</link', p)
+				if "ZDFsource" in link:			# Anpassung für ZDF-Sender
+					zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
+					link=''	
+					# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
+					for line in zdf_streamlinks:
+						items = line.split('|')
+						# Bsp.: "ZDFneo " in "ZDFneo Livestream":
+						if up_low(title_sender) in up_low(items[0]): 
+							link = items[1]
+					if link == '':
+						PLog('%s: Streamlink fehlt' % title_sender)			
+					
 				EPG_ID =  stringextract('EPG_ID>', '</EPG_ID', p)
 				PLog("EPG_ID für %s: %s" % (s, EPG_ID))
 				break

@@ -42,8 +42,8 @@ import resources.lib.EPG as EPG
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.1.3'
-VDATE = '25.06.2020'
+VERSION = '3.1.4'
+VDATE = '26.06.2020'
 
 #
 #
@@ -2751,7 +2751,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 					if 	summ_txt:
 						summ = summ_txt	
 					
-		if	ID == 'Livestreams':						
+		if	ID == 'Livestreams':								# EPG in subline:					
 			if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 				mediatype='video'
 			subline =  stringextract('class="subtitle">', '</p>', s) # Uhrzeit + Sendung
@@ -2800,7 +2800,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 		#		bei Fehlschlag	
 		if	ID == 'Livestreams':
 			href=py2_encode(href); title=py2_encode(title); img=py2_encode(img); subline=py2_encode(subline);
-			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Startsender': 'true'}" %\
+			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s'}" %\
 				(quote(href), quote(title), quote(img), quote(subline))
 			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
 				thumb=img, fparams=fparams, summary=subline, mediatype=mediatype)					
@@ -5527,7 +5527,7 @@ def EPG_Sender(title, Merk='false'):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	
-	sort_playlist = get_sort_playlist()	
+	sort_playlist = get_sort_playlist()	# einschl. get_ZDFstreamlinks
 	# PLog(sort_playlist)
 	
 	for rec in sort_playlist:
@@ -5709,12 +5709,16 @@ def LiveRecord(url, title, duration, laenge):
 		return li			
 		
 #-----------------------------
+# Aufruf: EPG_Sender, TVLiveRecordSender
+#
 def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 	PLog('get_sort_playlist:')
 	playlist = RLoad(PLAYLIST)					# lokale XML-Datei (Pluginverz./Resources)
 	stringextract('<channel>', '</channel>', playlist)	# ohne Header
 	playlist = blockextract('<item>', playlist)
 	sort_playlist =  []
+	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
+	
 	for item in playlist:   
 		rec = []
 		title = stringextract('<title>', '</title>', item)
@@ -5723,6 +5727,19 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 		EPG_ID = stringextract('<EPG_ID>', '</EPG_ID>', item)
 		img = 	stringextract('<thumbnail>', '</thumbnail>', item)
 		link =  stringextract('<link>', '</link>', item)			# url für Livestreaming
+		
+		if 'ZDFsource' in link:
+			title_sender = stringextract('<hrefsender>', '</hrefsender>', item)	
+			link=''										# Reihenfolge an Playlist anpassen
+			# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
+			for line in zdf_streamlinks:
+				items = line.split('|')
+				# Bsp.: "ZDFneo " in "ZDFneo Livestream":
+				if up_low(title_sender) in up_low(items[0]): 
+					link = items[1]
+			if link == '':
+				PLog('%s: Streamlink fehlt' % title_sender)			
+		
 		rec.append(title); rec.append(EPG_ID);						# Listen-Element
 		rec.append(img); rec.append(link);
 		sort_playlist.append(rec)									# Liste Gesamt
@@ -5739,6 +5756,8 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 # 	Aufrufer EPG_Sender
 def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 	PLog('EPG_ShowSingle:'); 
+	Sender = name
+	PLog(Sender)
 
 	EPG_rec = EPG.EPG(ID=ID, day_offset=pagenr)		# Daten holen
 	PLog(len(EPG_rec))
@@ -5770,8 +5789,9 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 		descr = summ.replace('\n', '||')		# \n aus summ -> ||
 		title=py2_encode(title); stream_url=py2_encode(stream_url);
 		img=py2_encode(img); descr=py2_encode(descr);
-		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s'}" % (quote(stream_url), 
-			quote(title), quote_plus(img), quote_plus(descr))
+		Sender=py2_encode(Sender);
+		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Sender': '%s'}" %\
+			(quote(stream_url), quote(title), quote_plus(img), quote_plus(descr), quote_plus(Sender))
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
 			thumb=img, fparams=fparams, summary=summ, tagline=tagline)
 			
@@ -5920,11 +5940,12 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	EPG_ID_old = ''											# Doppler-Erkennung
 	sname_old=''; stime_old=''; summ_old=''; vonbis_old=''	# dto.
 	summary_old=''; tagline_old=''
-	for element in liste:								# EPG-Daten für einzelnen Sender holen 	
+	for element in liste:									# EPG-Daten für einzelnen Sender holen 	
+		element = py2_decode(element)	
 		link = stringextract('<link>', '</link>', element) 
 		link = unescape(link)	
 		title_sender = stringextract('<hrefsender>', '</hrefsender>', element)					
-		PLog('Sender: %s, link: %s' % (title_sender, link));
+		PLog(u'Sender: %s, link: %s' % (title_sender, link));
 
 		if 'ZDFsource' in link:							# Streamlink für ZDF-Sender holen,
 			link=''										# Reihenfolge an Playlist anpassen
@@ -5937,6 +5958,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
 		
+		PLog('Mark2')
 		# Spezialbehandlung für N24 in SenderLiveResolution - Test auf Verfügbarkeit der Lastserver (1-4)
 		# EPG: ab 10.03.2017 einheitlich über Modul EPG.py (vorher direkt bei den Sendern, mehrere Schemata)
 		# 								
@@ -6022,80 +6044,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 #		Funktionen: remoteVideo, Parseplaylist, SenderLiveListe, TestOpenPort
 #	14.12.2018 für Kodi wieder eingeführt (Kodi erlaubt direkten Playerstart).
 #-----------------------------------------------------------------------------------------------------
-# Aufrufer : SenderLiveListe, ZDFStartLive, get_live_data (Arte),
-#			Live (3sat), Kika_Live.
-# ermittelt master.m3u8 für die ZDF-Sender (Kennz. ZDFsource in
-#	livesenderTV.xml). Rückgabe Liste (Zeile: Sender|Url) -
-#	Reihenfolge wie Web (www.zdf.de/live-tv).
-# Cache 24 Stunden, Datei: zdf_streamlinks im Dict-Ordner - nur
-#	außerhalb der Cachezeit wird www.zdf.de/live-tv neu geladen.
-#
-# Beachte: Blank hinter title_sender zur Abgrenz. der ZDF-Sender.
-#	Abgleich kompl. Titel nicht sicher (Bsp. 2 Blanks bei Arte)
-#-----------------------------------------------
-def get_ZDFstreamlinks():
-	PLog('get_ZDFstreamlinks:')
-	ZDFlinks_CacheTime	= 86400					# 24 Std.: (60*60)*24
-		
-	page = Dict("load", 'zdf_streamlinks', CacheTime=ZDFlinks_CacheTime)
-	if page:
-		PLog(page)								# für IPTV-Interessenten
-		return page.splitlines()
 
-	page, msg = get_page(path='https://www.zdf.de/live-tv')			# Links neu holen
-	if page == '':
-		PLog('get_ZDFstreamlinks: leer')
-		return []
-
-	page = page.replace('content": "', '"content":"')
-	page = page.replace('apiToken": "', '"apiToken":"')
-	content = blockextract('js-livetv-scroller-cell', page)			# Playerdaten einschl. apiToken
-	PLog(len(content))
-	
-	zdf_streamlinks=[]
-	for rec in content:												# Schleife  Web-Sätze		
-		player2_url=''; assetid=''; videodat_url=''; apiToken=''; href=''
-		title = stringextract('visuallyhidden">', '<', rec)
-		PLog(title);
-		# Bsp.: api.zdf.de/../zdfinfo-live-beitrag-100.json?profile=player2:
-		player2_url = stringextract('"content":"', '"', rec)
-		apiToken = stringextract('"apiToken":"', '"', rec)
-
-		thumb 	= stringextract('data-src="', '"', rec)			# erstes img = größtes
-		geo		= stringextract('geolocation="', '"', rec)
-		if geo:
-			geo = "Geoblock: %s" % geo
-		fsk		= stringextract('-fsk="', '"', rec)
-		if fsk:
-			fsk = "FSK: %s" % fsk
-			fsk = fsk.replace('none', 'ohne')
-		tagline = "%s,  %s" % (geo, fsk)
-
-		PLog("player2_url: " + player2_url)
-		if player2_url:
-			page, msg = get_page(path=player2_url, JsonPage=True)
-			# Bsp.: 247onAir-203
-			assetid = stringextract('assetid":"', '"', page)
-			assetid = assetid.strip()
-			
-		PLog(assetid); 
-		if assetid:
-			videodat_url = "https://api.zdf.de/tmd/2/ngplayer_2_3/live/ptmd/%s" % assetid
-			header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken
-			page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
-			PLog("videodat: " + page[:40])
-		
-			href = stringextract('"https://',  'master.m3u8', page) 	# 1.: auto
-			if href:
-				href = 	"https://" + href + "master.m3u8"
-				# Zeile: "title_sender|href|thumb|tagline"
-				zdf_streamlinks.append("%s|%s|%s|%s" % (title, href,thumb,tagline))	
-	
-	PLog("zdf_streamlinks: %d" % len(zdf_streamlinks))
-	page = "\n".join(zdf_streamlinks)									# Ablage Cache
-	PLog(page)															# für IPTV-Interessenten
-	Dict("store", 'zdf_streamlinks', page)
-	return zdf_streamlinks	
 ###################################################################################################
 # Auswahl der Auflösungstufen des Livesenders - Aufruf: SenderLiveListe + ARDStartRubrik
 #	Herkunft Links: livesenderTV.xml (dto. bei Aufruf durch ARDStartRubrik).
@@ -6105,13 +6054,14 @@ def get_ZDFstreamlinks():
 #	mögl. Alternative: Senderlinks aus ARD-Neu (s. Watchdog_TV-Live.py).	
 # 25.06.2020 Fallback-Code (Stream auf classic.ardmediathek.de/tv/live ermitteln)
 #	wieder entfernt - nur für ARD-Sender + selten gebraucht.
-# 25.06.2020 Nutzung Param. Merk für Aktualisierung der EPG-Daten verwendet (ab-
-#	hängig von EPG-Setting) - relevant für Aufrufe aus Merkliste.
+# 26.06.2020 Aktualisierung der EPG-Daten (abhängig von EPG-Setting, außer bei 
+#	EPG_ShowSingle) - relevant für Aufrufe aus Merkliste.
+#	Sender: Sendername bei Aufrufen durch EPG_ShowSingle (title mit EPG-Daten
+#			belegt)
 #
-def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''):
+def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender=''):
 	PLog('SenderLiveResolution:')
-	PLog(SETTINGS.getSetting('pref_video_direct'))
-	PLog(title); PLog(descr)
+	PLog(title); PLog(descr); PLog(Sender);
 	path_org = path
 
 	page, msg = get_page(path=path)					# Verfügbarkeit des Streams testen
@@ -6124,8 +6074,10 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False) # Fehlschlag - raus
 		
 	# EPG aktualisieren? Der Titel mit ev. alten EPG-Daten wird durch Sendungstitel
-	#	ersetzt
-	if SETTINGS.getSetting('pref_use_epg') == 'true':
+	#	ersetzt. Setting unbeachtet, falls Aufruf mit Sender erfolgt (EPG_ShowSingle):
+	if Sender or SETTINGS.getSetting('pref_use_epg') == 'true':
+		if Sender:									# EPG_ShowSingle: title=EPG-Daten
+			title = Sender
 		playlist_img, link, EPG_ID= get_playlist_img(title)
 		if EPG_ID:
 			rec = EPG.EPG(ID=EPG_ID, mode='OnlyNow')
@@ -6134,7 +6086,6 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 				summ=py2_encode(rec[5]); vonbis=py2_encode(rec[6])	
 				PLog(summ); PLog(stime); PLog(vonbis)
 				if sname:								# Sendung ersetzt Titel
-					title=py2_encode(title); 
 					title = sname
 				if summ:
 					descr = summ
@@ -6148,6 +6099,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Startsender=''
 	#	startet + fehlschlägt.
 	# 04.08.2019 Sofortstart nur noch abhängig von Settings und nicht zusätzlich von  
 	#	Param. Merk.
+	PLog(SETTINGS.getSetting('pref_video_direct'))
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true':	# Sofortstart
 		PLog('Sofortstart: SenderLiveResolution')
 		PlayVideo(url=path, title=title, thumb=thumb, Plot=descr, Merk=Merk)
@@ -7975,12 +7927,14 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			tag_par = "%s||||%s" % (tag_par, summary)	
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# Voraustext gefragt?
 				skip_verf=False; skip_pubDate=False
-				if 'Verfügbar' in tagline:
+				if u'Verfügbar' in tagline:
 					skip_verf = True
 				summ_txt = get_summary_pre(plusbar_path, 'ZDF', skip_verf, skip_pubDate)
 				PLog(len(summary));PLog(len(summ_txt)); 
+				PLog('Mark3')
 				if 	summ_txt and len(summ_txt) > len(summary):
 					tag_par= "%s\n\n%s" % (tagline, summ_txt)
+					PLog('Mark4')
 					tag_par = tag_par.replace('\n', '||')
 					summary = summ_txt	
 						

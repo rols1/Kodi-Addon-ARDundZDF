@@ -12,6 +12,18 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+26.06.2020	3.1.4
+			SenderLiveResolution: Aktualisierung der EPG-Daten für EPG_ShowSingle
+			ergänzt (via Param. Sender).
+			get_sort_playlist: Einbettung get_ZDFstreamlinks für ZDF-Sender, Param.
+			skip_log für Log-Begrenzung in get_ZDFstreamlinks.
+			get_ZDFstreamlinks: Berücksichtung Begrenzung skip_log (relevant für Calls
+			aus loops).
+			get_playlist_img (Modul util): Anpassung für ZDF-Sender (bei Classic-
+			Livestreams: Arte, KiKA, 3sat) - bei Livestreams ARD Neu nicht erforderlich.
+			Modul EPG: Fix escape-Zeichen in Beschreibung (unescape summ). 
+			get_summary_pre (Modul util: Fix escape-Zeichen in Beschreibung (unescape summ).
+			Modul merkliste: Ordner "TV-Livestreams" in Basis-Ordner-Liste eingefügt.
 
 25.06.2020	3.1.3
 			TV-Livestreams/Überregional: Umstellung für ZDF-Sender -Ermittlung
@@ -26,7 +38,7 @@ CHANGE HISTORY
 			SenderLiveListe: in descr LF's router-gerecht ersetzt.
 			get_playlist_img (Modul util): um EPG_ID erweitert. 
 			ARDnew: get_playlist_img-Aufruf entfernt (entfallen).
-			
+
 not on Github	3.1.2
 			livesenderTV.xml: Aufnahme weiterer privater Livestreams für Menü,
 			einschl. EPG_ID für tvtoday.de (BadenTV fehlt).

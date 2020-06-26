@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# Stand: 12.05.2020	
+# Stand: 26.06.2020	
  
 import time
 import datetime
@@ -20,7 +20,8 @@ import resources.lib.util as util
 R=util.R; RLoad=util.RLoad; RSave=util.RSave;Dict=util.Dict; PLog=util.PLog; 
 addDir=util.addDir; get_page=util.get_page;
 stringextract=util.stringextract; blockextract=util.blockextract; 
-transl_wtag=util.transl_wtag; cleanhtml=util.cleanhtml; home=util.home
+transl_wtag=util.transl_wtag; cleanhtml=util.cleanhtml; home=util.home;
+unescape=util.unescape;
 
 EPG_BASE =  "http://www.tvtoday.de"
 
@@ -74,6 +75,7 @@ def EPG(ID, mode=None, day_offset=None):
 		stime = stringextract('class=\"h7 time\">', '</p>', liste[i])   # Format: 06:00
 		stime = stime.strip()
 		summ = get_summ(liste[i])								# Beschreibung holen
+		summ = unescape(summ)
 		
 		sname = stime + ' | ' + sname							# Titel: Bsp. 06:40 | Nachrichten
 

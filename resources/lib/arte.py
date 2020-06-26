@@ -135,7 +135,7 @@ def get_live_data(name):
 			descr = ''
 		PLog(title); PLog(img); PLog(sname); PLog(stime); PLog(vonbis); 
 
-	zdf_streamlinks = ardundzdf.get_ZDFstreamlinks()
+	zdf_streamlinks = ardundzdf.get_ZDFstreamlinks(skip_log=True)
 	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 	for line in zdf_streamlinks:
 		webtitle, href, thumb, tagline = line.split('|')
