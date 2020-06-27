@@ -12,6 +12,12 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+27.06.2020	3.1.5
+			ARD Neu: nach ARD-Änderungen Funktion ARDSearchnew erneuert, Anpassungen
+			in get_page_content, ARDStartRubrik und SearchARDundZDFnew.
+			ARD Neu: Funktion get_api_call entfernt (obsolet nach ARD-Änderungen).
+			SendungenAZ_ARDnew: Quotierung für # in Url entfernt (jetzt in get_page).
+
 26.06.2020	3.1.4
 			SenderLiveResolution: Aktualisierung der EPG-Daten für EPG_ShowSingle
 			ergänzt (via Param. Sender).

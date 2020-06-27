@@ -328,8 +328,6 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 		gridlist = blockextract('"broadcastedOn"', page)
 			
 	mark=''
-	if ID == 'Search_Webcheck':
-		mark = title
 	li = get_page_content(li, page, ID, mark)			# Auswertung Rubriken																	
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
@@ -404,8 +402,10 @@ def get_pagination(page):
 #	dann rekursiv (Mehr-Button) mit den ermittelten Werten pageNumber + pageSize
 # Neuer Pfad wird hier mit den ermittelten Werten pageNumber + pageSize zusammengesetzt, Bsp.: 
 #	http://page.ardmediathek.de/page-gateway/widgets/ard/compilation/3lCyQCGpIIkaos2EQqIu6q?pageNumber=0&pageSize=24
-# Alternative: api-Call via get_api_call (für compilationId vorbereitet,
-#	 myhash=0aa6f77b1d2400b94b9f92e6dbd0fabf652903ecf7c9e74d1367458d079f0810).
+# Alternative: api-Call via get_api_call 
+#	 27.06.2020 Alternative entfällt nach ARD-Änderungen - s. ARDSearchnew,
+#		get_api_call entfernt
+#
 def ARDPagination(title, path, pageNumber, pageSize, ID, mark): 
 	PLog('ARDPagination: ' + ID)
 	PLog(path)
@@ -462,7 +462,7 @@ def get_page_content(li, page, ID, mark=''):
 	
 	mediatype=''; pagetitle=''
 	pagination	= stringextract('pagination":', '"type"', page)
-	pagetitle 	= stringextract('title":"', '"', pagination)
+	pagetitle 	= stringextract('title":"', '"', pagination)	# bei Suche: SearchCompilationWidget:..
 	PLog(pagetitle)
 	page = page.replace('\\', '')								# Quotierung vor " entfernen, Bsp. \"query\"
 	
@@ -470,7 +470,7 @@ def get_page_content(li, page, ID, mark=''):
 	if 'Livestream' in ID or 'EPG' in ID:
 		gridlist = blockextract('"broadcastedOn"', page)
 	else:
-		if  ID == 'Search_api':									# Search_api immer Einzelbeiträge
+		if  ID == 'Search':										# Search immer Einzelbeiträge
 			mehrfach = False
 			gridlist = blockextract( '"ondemand"', page)				
 		else:
@@ -496,19 +496,16 @@ def get_page_content(li, page, ID, mark=''):
 
 	for s  in gridlist:
 		PLog("Mark10")
-		if 'EPG' not in ID:								# decor im 1. Drittel
+		if 'EPG' not in ID:										# decor im 1. Drittel
 			pos = s.find('"decor"',100)							# möglich: Block reicht in Folgeblock
 			if pos > 100:										# eigenes decor zw. broadcastedOn + duration
 				s = s[:pos]
 		
 		mehrfach = True											# Default weitere Rubriken
 		if 'target":{"id":"' in s:
-			targetID= stringextract('target":{"id":"', '"', s)	# targetID
+			targetID= stringextract('target":{"id":"', '"', s)	# targetID, auch Search
 		else:
 			targetID= stringextract('id":"Link:', '"', s)		# Serie in Swiper via ARDStartSingle 
-		if ID == 'Search_api':
-			target 	= stringextract('target":{"href":"', '"', s)
-			targetID = target.split('/')[-1]
 		PLog(targetID)
 		if targetID == '':										# kein Video
 			continue			
@@ -1045,7 +1042,7 @@ def SendungenAZ_ARDnew(title, button):
 	
 	base = "https://page.ardmediathek.de/page-gateway/compilations/%s/shows/" % sender
 	path = base + "%s?pageNumber=0&pageSize=200&embedded=true" % button
-	path = path.replace('#', '%23')						# quote
+	# path = path.replace('#', '%23')						# ab 21.06.2020 in get_page
 	page, msg = get_page(path)		
 	if page == '':	
 		msg1 = "Fehler in SendungenAZ_ARDnew: %s"	% title
@@ -1106,35 +1103,7 @@ def SendungenAZ_ARDnew(title, button):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
 			fparams=fparams, summary=summ)													
 
-	xbmcplugin.endOfDirectory(HANDLE)
-
-
-#-----------------------
-# get_api_call erstellt API-Call für ARD A-Z, ARDSearchnew + ev. weitere Funkt.
-#	Werte pageNumber, version als json-int einfügen.
-#	22.08.2019 Reihenfolge pageNumber + text durch ARD geändert
-def get_api_call(function, sender, myhash, pageNumber='', text='', clipId='', deviceType=''):
-	PLog('get_api_call:');
-
-	url_api 	= 'https://api.ardmediathek.de/public-gateway'
-	variables 	= '{"client":"%s"}'	% sender
-	
-	if text:													# ARDSearchnew
-		variables = '{"client":"%s","text":"%s","pageNumber":%s}'	% (sender, text, str(pageNumber))
-		
-	if clipId and deviceType:									# Einzelbeitrag (statt player-Url)
-		variables = '{"client":"%s", "clipId":"%s","deviceType":"%s"}'	% (sender, clipId, deviceType)
-			
-	extensions	= '{"persistedQuery":{"version":1,"sha256Hash":"%s"}}' % myhash
-	variables =  quote_plus(py2_encode(variables))                   	# & nicht codieren!
-	extensions =  quote_plus(py2_encode(extensions))                	# & nicht codieren!
-	url_api 	= "%s?variables=%s&extensions=%s"  % (url_api, variables, extensions)
-	PLog('url_api %s: %s' % (function, url_api))
-	PLog(variables)
-	PLog(extensions)
-
-	return url_api
-	
+	xbmcplugin.endOfDirectory(HANDLE)	
 #---------------------------------------------------------------- 
 # Suche in beiden Mediatheken
 #	Abruf jeweils der 1. Ergebnisseite
@@ -1142,6 +1111,7 @@ def get_api_call(function, sender, myhash, pageNumber='', text='', clipId='', de
 #	Ergebnis ZDF: -> ZDF_Search (erneuter Aufruf Seite 1, weitere Seiten dort rekursiv)
 #		Ablage in Dict nicht erf., Kodi-Cache ausreichend.
 # 22.08.2019 myhash und erste pageNumber geändert durch ARD (0, vorher 1) - dto. in ARDSearchnew
+# 27.06.2020 api-Codeanteile entfernt - s. SearchARDnew
 #
 def SearchARDundZDFnew(title, query='', pagenr=''):
 	PLog('SearchARDundZDFnew:');
@@ -1186,14 +1156,12 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	sendername, sender, kanal, img, az_sender = ARDSender[0].split(':') # in allen Sendern
 	sender = 'ard'
 	pageNumber = 0
-	# myhash vormals: ebd79f9a91c559ec31363f2b6448fb489ddf4742c1ca911d3c16391e72d6bb18
-	myhash = '21f3cba7082cc35a5b7ce1c7901e46dbe7092c8c11d1e1a11d932fab55705fc1'  	# Chrome-Dev.-Tools
-	url_api	= get_api_call('ARDSearchnew', 'ard', myhash, pageNumber, text=query_ard) 
 	
 	query_lable = query_ard.replace('+', ' ')
-	page, msg = get_page(path=url_api)	
+	path = 'https://page.ardmediathek.de/page-gateway/widgets/%s/search/vod?searchString=%s&pageNumber=%s' % (sender, query, pageNumber)
+	page, msg = get_page(path,JsonPage=True)					
 		
-	vodTotal	= stringextract('"vodTotal":', ',', page)		# Beiträge?
+	vodTotal =  stringextract('"totalElements":', '}', page)	# Beiträge?
 	gridlist = blockextract( '"mediumTitle":', page) 			# Sicherung
 	vodTotal=py2_encode(vodTotal); query_lable=py2_encode(query_lable);
 	PLog(query_ard)
@@ -1209,7 +1177,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 		PLog(type(vodTotal)); 	PLog(type(query_lable)); 			
 		title = "ARD: %s Video(s)  | %s" % (vodTotal, query_lable)
 		query_ard=py2_encode(query_ard); title=py2_encode(title); 
-		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '0', 'Webcheck': 'False'}" %\
+		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '0'}" %\
 			(quote(query_ard), quote(title), sender)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
 			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
@@ -1266,12 +1234,15 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 #		 in ARDStartRubrik, einschl. Scroll-Beiträge 
 # Webcheck: abgeschaltet bei SearchARDundZDFnew (nur Einzelbeiträge, wie ZDF-Suche)
 # Die Suchfunktion arbeitet nur mit Einzelworten, Zusammensetzung möglich z.B. G7-Gipfel
+# 27.06.2020 die Web-Url "www.ardmediathek.de/ard/suche/.." funktioniert nicht mehr -
+#	Webcheck entfällt, gesamte Suchfunktion jetzt script-gesteuert. api-Call ebenfalls 
+#	geändert - das Zusammensetzen mit extensions + variables entfällt.  
 #
-def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
+def ARDSearchnew(title, sender, offset=0, query=''):
 	PLog('ARDSearchnew:');	
-	PLog(sender); PLog(offset); PLog(query); PLog(Webcheck);
+	PLog(sender); PLog(offset); PLog(query);
 	
-	if sender == '':											# Vorwahl vorhanden?
+	if sender == '':											# Sender gewählt?
 		sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)
 	
@@ -1288,60 +1259,15 @@ def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
 	li = home(li, ID='ARD Neu')								# Home-Button
 	
 	# -----------------------------------------------------
-	# Check auf Sendereihe (Mehrfachbeiträge):
-	if Webcheck:													# abgeschaltet bei SearchARDundZDFnew
-		# path = BETA_BASE_URL + "/ard/search/%s" % query			# Suche im Web: alle Sender
-		path = BETA_BASE_URL + "/%s/search/%s" % (sender, query)	# Suche im Web: gewählter Sender
-		page, msg = get_page(path)					
-		PLog(len(page))
-		if page == '':											# ohne Dialog weiter mit api-Call
-			PLog("ARDSearchnew (Webcheck) %s: error  get_page" % query)
-		else:
-			gridlist = blockextract( 'class="_focusable', page) # Sendungen im html-Teil
-			if len(gridlist) > 0:
-				for s  in gridlist:
-					href  = stringextract('href="', '"', s)	
-					#if href.startswith('http') == False:		# entf. hier
-					#	href = BETA_BASE_URL + href
-					title 	= stringextract('aria-label="', '"', s)
-					title	= unescape(title)
-					href_id =  stringextract('/shows/', '/', s) # Bild via id 
-					img, pubServ = img_via_id(href_id, page)	# pubServ sollte sender entsprechen
-					img=img.replace('\\u002F', '/')				# 23.11.2019: Ersetzung für Pyton3 geändert
-					
-					if pubServ:
-						summ = "Sendungen | %s" % pubServ
-					# grouping-path wie SendungenAZ_ARDnew
-					href = 'http://page.ardmediathek.de/page-gateway/pages/%s/grouping/%s'  % (sender, href_id)
-							
-					PLog('Satz_Webcheck:')
-					PLog(title); PLog(href);
-					href=py2_encode(href); title=py2_encode(title); 
-					fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s'}" % (quote(href), 
-						quote(title), 'Search_Webcheck')	# ID  sorgt für farbige Markierung von title
-					addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-						fparams=fparams, summary=summ)																			
-				xbmcplugin.endOfDirectory(HANDLE)				# raus, Einzelbeiträge verwerfen
-			else:
-				PLog("ARDSearchnew (Webcheck) %s: nichts gefunden, api-Suche folgt" % query)	
-	
-	# -----------------------------------------------------	# Einzelbeiträge mit api-Call suchen	
-	pageNumber=str(offset)
-	# myhash vormals: ebd79f9a91c559ec31363f2b6448fb489ddf4742c1ca911d3c16391e72d6bb18
-	myhash = '21f3cba7082cc35a5b7ce1c7901e46dbe7092c8c11d1e1a11d932fab55705fc1'  		# Chrome-Dev.-Tools
-	# url_api	= get_api_call('ARDSearchnew', 'ard', myhash, pageNumber, text=query) 	# alle Sender
-	url_api	= get_api_call('ARDSearchnew', sender, myhash, pageNumber, text=query) 		# gewählter Sender
-
-	page, msg = get_page(url_api)					
-	page = page.replace('\\"', '*')							# quotiere Marks entf.
-	if page == '':	
+	path = 'https://page.ardmediathek.de/page-gateway/widgets/%s/search/vod?searchString=%s&pageNumber=%s' % (sender, query, offset)
+	page, msg = get_page(path,JsonPage=True)					
+	PLog(len(page))
+	if page == '':											
 		msg1 = "Fehler in ARDSearchnew, Suche: %s"	% query
-		msg2=msg
+		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
-	PLog(len(page))
 	
-
 	gridlist = blockextract( '"mediumTitle":', page) 		# Beiträge?
 	if len(gridlist) == 0:				
 		msg1 = u'keine Beiträge gefunden zu: %s'  % query
@@ -1350,18 +1276,14 @@ def ARDSearchnew(title, sender, offset=0, query='', Webcheck=True):
 		xbmcplugin.endOfDirectory(HANDLE)		
 	PLog('gridlist: ' + str(len(gridlist)))	
 	
-	ID='Search_api' 	# mark für farbige Markierung
+	ID='Search' 	# mark für farbige Markierung
 	li = get_page_content(li, page, ID, mark=unquote(query))																	
 	
-	# Mehr-Button - Scroll-Beiträge nicht vergleichbar mit ARDStartRubrik, keine
-	#	pagination- oder AutoCompilationWidget-Markierung:
-	# Bsp.: völklingen (69 Beiträge)
+															# Mehr-Button:
 	title = "Mehr zu >%s<" % unquote(query)		
 	offset = int(offset) +1
-	# die Werte in vodTotal + vodPageSize stimmen nicht mit Anzahl der
-	#	Beiträge überein.
-	vodTotal	= stringextract('"vodTotal":', ',', page)
-	vodPageSize = stringextract('"vodPageSize":', ',', page)
+	vodTotal	= stringextract('"totalElements":', '}', page)
+	vodPageSize = stringextract('"pageSize":', ',', page)
 	pages = float(vodTotal) / float(vodPageSize)
 	pages = int(math.ceil(pages))					# aufrunden für Seitenrest
 

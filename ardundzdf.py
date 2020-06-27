@@ -5582,7 +5582,7 @@ def TVLiveRecordSender(title):
 	duration, laenge = duration.split('=')
 	duration = duration.strip()
 
-	sort_playlist = get_sort_playlist()		# Senderliste
+	sort_playlist = get_sort_playlist()		# Senderliste, einschl. get_ZDFstreamlinks
 	PLog('Sender: ' + str(len(sort_playlist)))
 	for rec in sort_playlist:
 		title 	= rec[0]
@@ -5630,7 +5630,7 @@ def TVLiveRecordSender(title):
 
 def LiveRecord(url, title, duration, laenge):
 	PLog('LiveRecord:')
-	PLog(url); PLog(title); 
+	PLog(url); PLog(title); 	
 	PLog('duration: %s, laenge: %s' % (duration, laenge))
 
 	li = xbmcgui.ListItem()

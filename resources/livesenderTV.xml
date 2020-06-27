@@ -1,7 +1,7 @@
 <channels>
  <channels_info>
   <title>Deutsche Sender</title>
-  <genre>TV</genre>
+  <imgsource>Arauco</imgsource>
   <description>Livestreams http://www.ardmediathek.de/tv/live</description>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
@@ -23,7 +23,7 @@
 		<hrefsender>Das Erste</hrefsender>
 		<link>https://mcdn.daserste.de/daserste/de/master.m3u8</link>
 		<thumbnail>tv-das-erste.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>ARD</EPG_ID>
 		<date>11.05.2019</date>
 	</item>
@@ -32,7 +32,7 @@
 		<hrefsender>ZDF </hrefsender>
 		<link>ZDFsource</link>	  
 		<thumbnail>tv-zdf.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>ZDF</EPG_ID>
 		<date>23.02.2020</date>
 		<geoblock>ja</geoblock>
@@ -42,7 +42,7 @@
 		<hrefsender>KiKA </hrefsender>
 		<link>ZDFsource</link>
 		<thumbnail>tv-kika.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>KIKA</EPG_ID>
 		<date>07.09.2018</date>
 		<geoblock>ja</geoblock>
@@ -53,7 +53,7 @@
 		<link>ZDFsource</link>
 		<info>Web: http://www.ardmediathek.de/tv/live?kanal=5880</info>
 		<thumbnail>tv-arte.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>ARTE</EPG_ID>
 		<date>07.09.2018</date>
 		<geoblock>ja</geoblock>
@@ -63,7 +63,7 @@
 		<hrefsender>ONE</hrefsender>
 		<link>http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/master.m3u8</link>
 		<thumbnail>tv-one.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>fes</EPG_ID>
 		<date>07.09.2018</date>
 	</item>
@@ -72,7 +72,7 @@
 		<hrefsender>3sat </hrefsender>
 		<link>ZDFsource</link>
 		<thumbnail>tv-3sat.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>3SAT</EPG_ID>
 		<date>23.02.2020</date>
 		<geoblock>ja</geoblock>
@@ -82,7 +82,7 @@
 		<hrefsender>ZDFneo </hrefsender>
 		<link>ZDFsource</link>
 		<thumbnail>tv-zdf-neo.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>2NEO</EPG_ID>
 		<date>23.02.2020</date>
 		<geoblock>ja</geoblock>
@@ -92,7 +92,7 @@
 		<hrefsender>ZDFinfo </hrefsender>
 		<link>ZDFsource</link>
 		<thumbnail>tv-zdf-info.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>ZINFO</EPG_ID>
 		<date>11.06.2016</date>
 		<geoblock>ja</geoblock>
@@ -102,7 +102,7 @@
 		<hrefsender></hrefsender>
 		<link>https://ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/master.m3u8</link>
 		<thumbnail>tv-ard-sportschau.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID></EPG_ID>
 		<date>16.04.2019</date>
 		<geoblock>ja</geoblock>
@@ -112,7 +112,7 @@
 		<hrefsender>ARD-alpha</hrefsender>
 		<link>https://brlive-lh.akamaihd.net/i/bralpha_germany@119899/master.m3u8</link>
 		<thumbnail>tv-alpha.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>ALPHA</EPG_ID>
 		<date>07.09.2018</date>
 	</item>
@@ -121,7 +121,7 @@
 		<hrefsender>Phoenix </hrefsender>
 		<link>ZDFsource</link>
 		<thumbnail>tv-phoenix.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>PHOEN</EPG_ID>
 		<date>23.02.2020</date>
 		<geoblock>ja</geoblock>
@@ -131,7 +131,7 @@
 		<hrefsender>tagesschau24</hrefsender>
 		<link>http://tagesschau-lh.akamaihd.net/i/tagesschau_1@119231/master.m3u8</link>
 		<thumbnail>tv-tagesschau.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>TAG24</EPG_ID>
 		<date>07.09.2018</date>
 	</item>
@@ -140,7 +140,7 @@
 		<hrefsender>Deutsche Welle</hrefsender>
 		<link>https://dwstream72-lh.akamaihd.net/i/dwstream72_live@123556/master.m3u8</link>
 		<thumbnail>tv-deutsche-welle.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>DWTV</EPG_ID>
 		<date>19.06.2016</date>
 	</item>
@@ -157,7 +157,7 @@
 		<hrefsender>BR Fernsehen Nord</hrefsender>
 		<link>http://brlive-lh.akamaihd.net/i/bfsnord_germany@119898/master.m3u8</link>
 		<thumbnail>tv-br.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>BR</EPG_ID>
 		<date>21.09.2018</date>
 	</item>
@@ -166,7 +166,7 @@
 		<hrefsender>BR Fernsehen Süd</hrefsender>
 		<link>https://mcdn.br.de/bfs_sued/de/master.m3u8</link>
 		<thumbnail>tv-br.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>BR</EPG_ID>
 		<date>07.09.2018</date>
 	</item>
@@ -175,7 +175,7 @@
 		<hrefsender>hr-fernsehen</hrefsender>
 		<link>https://hrlive1-lh.akamaihd.net/i/hr_fernsehen@75910/master.m3u8</link>		  
 		<thumbnail>tv-hr.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>HR</EPG_ID>
 		<date>07.09.2018</date>
 	</item>
@@ -184,7 +184,7 @@
 		<hrefsender>MDR</hrefsender>
 		<link>https://mdrsnhls-lh.akamaihd.net/i/livetvmdrsachsen_de@513998/master.m3u8</link>
 		<thumbnail>tv-mdr-sachsen.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>MDR</EPG_ID>
 		<date>07.09.2018</date>
 	</item>
@@ -193,7 +193,7 @@
 		<hrefsender></hrefsender>
 		<link>https://mdrevent1hls-lh.akamaihd.net/i/livetvmdrevent1_ww@513989/master.m3u8</link>
 		<thumbnail>tv-mdr-sachsen.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID></EPG_ID>
 		<date>15.12.2019</date>
 	</item>
@@ -202,7 +202,7 @@
 		<hrefsender></hrefsender>
 		<link>https://mdrevent2hls-lh.akamaihd.net/i/livetvmdrevent2_ww@513991/master.m3u8</link>
 		<thumbnail>tv-mdr-sachsen.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID></EPG_ID>
 		<date>22.04.2019</date>
 	</item>
@@ -211,7 +211,7 @@
 		<hrefsender>Radio Bremen</hrefsender>
 		<link>https://rbfs-lh.akamaihd.net/i/rb_fs@438960/master.m3u8</link>
 		<thumbnail>tv-bremen.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>N3</EPG_ID>
 		<date>07.09.2018</date>
 	</item>
@@ -220,7 +220,7 @@
 		<hrefsender>NDR</hrefsender>
 		<link>https://ndrfs-lh.akamaihd.net/i/ndrfs_nds@430233/master.m3u8</link>
 		<thumbnail>tv-ndr-niedersachsen.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>N3</EPG_ID>
 		<date>07.09.2018</date>
 	</item>
@@ -229,7 +229,7 @@
 		<hrefsender>NDR</hrefsender>
 		<link>https://ndrfs-lh.akamaihd.net/i/ndrfs_sh@430234/master.m3u8</link>
 		<thumbnail>tv-ndr-schleswig-holstein.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>N3</EPG_ID>
 		<date>21.09.2018</date>
 	</item>
@@ -238,7 +238,7 @@
 		<hrefsender>NDR</hrefsender>
 		<link>https://ndrfs-lh.akamaihd.net/i/ndrfs_mv@430232/master.m3u8</link>
 		<thumbnail>tv-ndr-mecklenburg-vorpommern.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>N3</EPG_ID>
 		<date>21.09.2018</date>
 	</item>
@@ -247,7 +247,7 @@
 		<hrefsender>NDR</hrefsender>
 		<link>https://ndrfs-lh.akamaihd.net/i/ndrfs_hh@430231/master.m3u8</link>
 		<thumbnail>tv-ndr-hamburg.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>N3</EPG_ID>
 		<date>21.09.2018</date>
 	</item>
@@ -256,7 +256,7 @@
 		<hrefsender>rbb</hrefsender>
 		<link>https://rbblive-lh.akamaihd.net/i/rbb_brandenburg@349369/master.m3u8</link>
 		<thumbnail>tv-rbb-brandenburg.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>RBB</EPG_ID>
 		<date>07.09.2018</date>
 	</item>
@@ -265,7 +265,7 @@
 		<hrefsender>SR</hrefsender>
 		<link>https://srlive24-lh.akamaihd.net/i/sr_universal02@107595/master.m3u8</link>
 		<thumbnail>tv-sr.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>SWR</EPG_ID>
 		<date>21.09.2018</date>
 		<epg_schema>ARD</epg_schema>
@@ -276,7 +276,7 @@
 		<hrefsender>SWR</hrefsender>
 		<link>https://swrbwhls-i.akamaihd.net/hls/live/667638/swrbwd/master.m3u8</link>
 		<thumbnail>tv-swr.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>SWR</EPG_ID>
 		<date>07.09.2018</date>
 		<info>TVToday: SWR/SR gemeinsam</info>
@@ -287,7 +287,7 @@
 		<link>https://wdrfs247.akamaized.net/hls/live/681509/wdr_msl4_fs247/master.m3u8</link>
 		<link-old>https://wdrfsgeo-lh.akamaihd.net/i/wdrfs_geogeblockt@530016/master.m3u8</link-old>
 		<thumbnail>tv-wdr.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>WDR</EPG_ID>
 		<date>07.09.2018</date>
 	</item>
@@ -296,7 +296,7 @@
 		<hrefsender></hrefsender>
 		<link>https://wdrardevent1-lh.akamaihd.net/i/ardevent1_weltweit@566648/master.m3u8</link>
 		<thumbnail>https://www.sportschau.de/resources/img/sportschau/banner/logo_base.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID></EPG_ID>
 		<date>22.04.2019</date>
 	</item>
@@ -312,7 +312,7 @@
 		<title>ServusTV</title>
 		<link>https://rbmn-live.akamaized.net/hls/live/2002830/geoSTVDEweb/master.m3u8</link>
 		<thumbnail>tv-servus.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>SERVU</EPG_ID>
 		<date>11.12.2016</date>
 	</item>
@@ -320,7 +320,7 @@
 		<title>Welt / N24-Live</title>
 		<link>https://live2weltcms-lh.akamaihd.net/i/Live2WeltCMS_1@444563/index_3_av-b.m3u8?sd=10&dw=0&rebase=on</link>
 		<thumbnail>tv-n24.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>WELT</EPG_ID>
 		<date>12.10.2018</date>
 	</item>
@@ -328,7 +328,7 @@
 		<title>n-tv</title>
 		<link-out>LiveTV_ntv.m3u8</link-out>
 		<thumbnail>tv-ntv.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>NTV</EPG_ID>
 		<date>12.10.2018 - verschlüsselt, nicht mehr verfügbar</date>
 	</item-out>
@@ -336,7 +336,7 @@
 		<title>QVC</title>
 		<link>http://live.qvcde.simplestreamcdn.com/live/qvcde_main_clean/bitrate1.isml/live.m3u8</link>
 		<thumbnail>tv-qvc.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>QVC</EPG_ID>
 		<date>05.11.2017</date>
 	</item>
@@ -344,7 +344,7 @@
 		<title>QVC BEAUTY & STYLE</title>
 		<link>http://live.qvcde.simplestreamcdn.com/live/qvcde_beauty_clean/bitrate1.isml/live.m3u8</link>
 		<thumbnail>tv-qvc.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>qvcbs</EPG_ID>
 		<date>05.11.2017</date>
 	</item>
@@ -352,7 +352,7 @@
 		<title>QVC PLUS</title>
 		<link>http://live.qvcde.simplestreamcdn.com/live/qvcde_plus_clean/bitrate1.isml/live.m3u8</link>
 		<thumbnail>tv-qvc.png</thumbnail>
-		<genre>TV</genre>
+		<imgsource>Arauco</imgsource>
 		<EPG_ID>qvcp</EPG_ID>
 		<date>05.11.2017</date>
 	</item>
@@ -360,7 +360,7 @@
 		<title>BadenTV</title>
 		<link>https://cdn.icu.de/rtplive/smil:btv.smil/playlist.m3u8</link>
 		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-baden-tv.png?raw=true</thumbnail>
-		<genre>TV</genre>
+		<imgsource>https://commons.wikimedia.org/wiki/File:Baden_TV_Logo_Infobox.png</imgsource>
 		<EPG_ID></EPG_ID>
 		<date>19.06.2020</date>
 	</item>
@@ -368,7 +368,7 @@
 		<title>münchen.tv</title>
 		<link>https://stream02.stream.welocal.world/stream/muc/ngrp:muc.stream_all/playlist.m3u8</link>
 		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-muenchen-tv.png?raw=true</thumbnail>
-		<genre>TV</genre>
+		<imgsource>https://commons.wikimedia.org/wiki/File:TV_M%C3%BCnchen_Logo.svg</imgsource>
 		<EPG_ID>TVM</EPG_ID>
 		<date>19.06.2020</date>
 	</item>
@@ -376,7 +376,7 @@
 		<title>Leipzig Fernsehen</title>
 		<link>https://leipzig.iptv-playoutcenter.de/leipzig/leipzigfernsehen.stream_1/playlist.m3u8</link>
 		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-leipzig-fernsehen.png?raw=true</thumbnail>
-		<genre>TV</genre>
+		<imgsource>https://commons.wikimedia.org/wiki/File:LogoLeipzigFernsehen.png</imgsource>
 		<EPG_ID>LEITV</EPG_ID>
 		<date>19.06.2020</date>
 	</item>
@@ -384,7 +384,7 @@
 		<title>Rhein-Neckar Fernsehen</title>
 		<link>https://rnf.iptv-playoutcenter.de/rnf/rnf.stream_1/playlist.m3u8</link>
 		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-rhein-neckar.png?raw=true</thumbnail>
-		<genre>TV</genre>
+		<imgsource>https://commons.wikimedia.org/wiki/File:RNF_Logo.svg</imgsource>
 		<EPG_ID>RNF</EPG_ID>
 		<date>19.06.2020</date>
 	</item>
@@ -392,8 +392,8 @@
 		<title>Franken Fernsehen</title>
 		<link>https://stream03.stream.welocal.world/stream/frf/ngrp:frf.stream_all/playlist.m3u8</link>
 		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-franken-fernsehen.png?raw=true</thumbnail>
-		<genre>TV</genre>
-		<EPG_ID></EPG_ID>
+		<imgsource>https://commons.wikimedia.org/wiki/File:Franken_Fernsehen_Logo_2010.svg</imgsource>
+		<EPG_ID></>
 		<date>25.06.2020</date>
 	</item>
 </items>
