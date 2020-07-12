@@ -6,7 +6,7 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-#	Stand: 17.05.2020
+#	Stand: 29.06.2020
 
 from __future__ import absolute_import
 
@@ -124,7 +124,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 					my_ordner = ORDNER
 				my_ordner.insert(0, u"*ohne Zuordnung*")
 				
-				ret = xbmcgui.Dialog().select(u'Ordner wählen', my_ordner, preselect=0)
+				ret = xbmcgui.Dialog().select(u'Ordner wählen (Abbrechen: ohne Zuordnung)', my_ordner, preselect=0)
 				if ret > 0:
 					ordner = my_ordner[ret]
 				else:
@@ -241,22 +241,29 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 # url = Param. Watch_items
 def get_plugin_url(url):
 	PLog("get_plugin_url:")
-		
+	url_org = url
+
 	# Base64-Kodierung wird nicht mehr verwendet (addDir in Modul util), Code verbleibt 
 	#	hier bis auf Weiteres
 	if 'plugin://plugin' not in url:				# Base64-kodierte Plugin-Url in ActivateWindow
 		b64_clean= convBase64(url)					# Dekodierung mit oder ohne padding am Ende	
-		b64_clean=unquote_plus(b64_clean)			# unquote aus addDir-Call
-		b64_clean=unquote_plus(b64_clean)			# unquote aus Kontextmenü
-		#PLog(b64_clean)
-		CallFunction = stringextract("&dirID=", "&", b64_clean) 
-		PLog('CallFunction: ' + CallFunction)
-		if CallFunction in CallFunctions:			# Parameter Merk='true' anhängen
-			new_url = b64_clean[:-1]				# cut } am Ende fparams
-			new_url = "%s, 'Merk': 'true'}" % new_url
-			PLog("CallFunction_new_url: " + new_url)
-			url = quote_plus(new_url)
-			url = base64.b64encode(url)			
+		if b64_clean == False:						# Fehler, Orig.-Url zurück
+			return url
+		try:
+			b64_clean=unquote_plus(b64_clean)			# unquote aus addDir-Call
+			b64_clean=unquote_plus(b64_clean)			# unquote aus Kontextmenü
+			#PLog(b64_clean)
+			CallFunction = stringextract("&dirID=", "&", b64_clean) 
+			PLog('CallFunction: ' + CallFunction)
+			if CallFunction in CallFunctions:			# Parameter Merk='true' anhängen
+				new_url = b64_clean[:-1]				# cut } am Ende fparams
+				new_url = "%s, 'Merk': 'true'}" % new_url
+				PLog("CallFunction_new_url: " + new_url)
+				url = quote_plus(new_url)
+				url = base64.b64encode(url)	
+		except Exception as exception:
+			PLog(str(exception))
+			url = url_org	
 	return url
 # -------------------------
 # aus Haupt-PRG, hier nicht importierbar

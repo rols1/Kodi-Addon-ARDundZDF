@@ -41,13 +41,18 @@
  	<setting label="Dauer der Aufnahme manuell eingeben" type="bool" id="pref_LiveRecord_input" default="false"/>
 	<setting label="Dauer der Aufnahme" type="select" values="00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten|01:00:00 = 1 Stunde|01:30:00 = 1:30 Stunden|01:45:00 = 1:45 Stunden|02:00:00 = 2 Stunden|04:00:00 = 4 Stunden|12:00:00 = 12 Stunden|00:00:05 = 5 Sekunden" default="01:00:00 = 1 Stunde" id="pref_LiveRecord_duration"/> 
 	<setting label="ffmpeg-Parameter (3x %s: Url, Aufnahmedauer, Dateiname)" type="text" id="pref_LiveRecord_ffmpegCall" default="/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin"/>
+    <setting type="sep"/>
+ 	<setting label="Aufnehmen (Menü: EPG Sender einzeln)" type="bool" id="pref_epgRecord" default="false"/>
+	<setting label="Aufnehmen: Vorlauf" type="select" values="00:00:00 = 0 Minuten|00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten" default="00:00:00 = 0 Minuten" id="pref_pre_rec"/> 
+	<setting label="Aufnehmen: Nachlauf" type="select" values="00:00:00 = 0 Minuten|00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten" default="00:00:00 = 0 Minuten" id="pref_post_rec"/> 
+	<setting label="Aufnehmen: max. Größe der Aufnahmeliste" type="select" values="10|25|50|100" default="10" id="pref_max_reclist"/> 
 </category> 
 
  <category label="Addon-Cache: Löschfristen (Tage)">
 	<setting label="Dict (div. Variablen): " type="select" values="1|10|30|100" default="30" id="pref_DICT_store_days"/>
 	<setting label="Untertitel" type="select" values="1|10|30|100" default="30" id="pref_UT_store_days"/>
 	<setting label="Bildersammlungen (Slide Shows):" type="select" values="1|10|30|100" default="30" id="pref_SLIDES_store_days"/>
-	<setting label="Inhaltstexte (im Voraus geladen): " type="select" values="1|10|30|100" default="30" id="pref_TEXTE_store_days"/>
+	<setting label="Inhaltstexte (im Voraus geladen): " type="select" values="5|10|30|100" default="30" id="pref_TEXTE_store_days"/>
 </category> 
 
  <category label="Favoriten / Merkliste">
@@ -58,6 +63,7 @@
    	<setting label="Beiträge sortieren (Info- und Homebutton entfallen)" type="bool" id="pref_watchsort" default="false"/>
    	<setting label="Order für Merkliste verwenden" type="bool" id="pref_merkordner" default="false"/>
   	<setting label="Ordner im Titel kennzeichnen" type="bool" id="pref_WatchFolderInTitle" default="false"/>
+    <setting type="sep"/>
   	<setting label="externe (zentrale) Merkliste verwenden" type="bool" id="pref_merkextern" default="false"/>
 	<setting label="Pfad zur externen Merkliste" type="file" source="" id="pref_MerkDest_path" default=""/>
   	<setting label="interne Merkliste mit externer synchronisieren" type="bool" id="pref_merksync" default="false"/>
@@ -70,14 +76,17 @@
  
  <category label="Modul-Einstellungen" >
    	<setting label="gesamtes Addon: Verzicht auf Homebuttons" type="bool" id="pref_nohome" default="false"/>
+    <setting type="sep"/>
 	<setting label="Modul FUNK: Videoeinstellung für MP4-Sofortstart" type="select" id="pref_funk_bandw" default="1500:960x540"
   		values="400:320x180|650:640x360|900:720x404|1500:960x540|2500:1280x720|4000:1920x108|6000:1920x1080" />
   	<setting label="Modul ARD Neu, Senderwahl: im Titel >Sender:< entfernen" type="bool" id="pref_disable_sender" default="false"/>
   	<setting label="Modul phoenix: nur Beiträge mit Videos, keine Sendungshinweise" type="bool" id="pref_only_phoenix_videos" default="false"/>
+    <setting type="sep"/>
    	<setting label="Bildersammlungen: Bildinfos als Wasserzeichen" type="bool" id="pref_watermarks" default="false"/>
    	<setting label="Bildersammlungen: Fontgröße Wasserzeichen" type="select" id="pref_fontsize" default="auto"
    		values="auto|10|12|13|14|15|16|17|18|19|20|30|40"/>
-   	<setting label="Slideshow für Musik-Player: " type="select" id="pref_musicslideshow" default="Keine"
+    <setting type="sep"/>
+  	<setting label="Slideshow für Musik-Player: " type="select" id="pref_musicslideshow" default="Keine"
    		values="Keine|Kodi <Bild-Steuerung>|Addon <Player-Steuerung und Musikinfos>"/>
 	<setting label="Slideshow für Musik-Player: Verzeichnis wählen" type="folder" source="" id="pref_slides_path" default=""/>
 	<setting label="Slideshow für Musik-Player: Anzeigedauer in Sekunden" type="select" id="pref_slides_time" default="10" values="5|10|15|20|30|60|120|240|600"/></category>

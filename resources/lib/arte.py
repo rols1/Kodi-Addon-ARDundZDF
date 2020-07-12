@@ -127,7 +127,7 @@ def get_live_data(name):
 		summ = unescape(summ)
 		PLog("title: " + title); 
 		summ = "[B]LAUFENDE SENDUNG [COLOR red](%s Uhr)[/COLOR][/B]\n\n%s" % (vonbis, summ)
-		title='[COLOR red][B]%s[/B][/COLOR]' % sname
+		title= sname
 		try:										# 'list' object in summ möglich - Urs. n.b.
 			descr = summ.replace('\n', '||')		# \n aus summ -> ||
 		except Exception as exception:	

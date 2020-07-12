@@ -38,12 +38,13 @@ import importlib		# dyn. Laden zur Laufzeit, s. router
 import resources.lib.updater as updater	
 from resources.lib.util import *
 import resources.lib.EPG as EPG
+import resources.lib.epgRecord as epgRecord
 																		
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.1.5'
-VDATE = '27.06.2020'
+VERSION = '3.1.8'
+VDATE = '12.07.2020'
 
 #
 #
@@ -226,6 +227,8 @@ SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
 SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
 TEXTSTORE 		= os.path.join("%s/Inhaltstexte") % ADDON_DATA
 WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
+JOBFILE			= os.path.join("%s/jobliste.xml") % ADDON_DATA 			#Jobliste für epgRecord
+MONITOR_ALIVE 	= os.path.join("%s/monitor_alive") % ADDON_DATA			# Lebendsignal für JobMonitor
 PLog(SLIDESTORE); PLog(WATCHFILE); 
 check 			= check_DataStores()					# Check /Initialisierung / Migration 
 PLog('check: ' + str(check))
@@ -270,6 +273,9 @@ days = int(SETTINGS.getSetting('pref_SLIDES_store_days'))
 ClearUp(SLIDESTORE, days*86400)		# SLIDEESTORE bereinigen
 days = int(SETTINGS.getSetting('pref_TEXTE_store_days'))
 ClearUp(TEXTSTORE, days*86400)		# TEXTSTORE bereinigen
+
+if SETTINGS.getSetting('pref_epgRecord') == 'true':
+	epgRecord.JobMain(action='init')						# EPG_Record starten
 
 ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle']	# Rest in ARD_NEW
 
@@ -370,9 +376,12 @@ def Main():
 			fanart=R('icon-arte_kat.png'), thumb=R('icon-arte_kat.png'), tagline=tagline,
 			summary=summ, fparams=fparams)
 			
+	label = 'TV-Livestreams'
+	if SETTINGS.getSetting('pref_epgRecord') == 'true':		
+		label = 'TV-Livestreams | Sendungen aufnehmen'; 
 	tagline = 'TV-Livestreams stehen auch in ARD Mediathek Neu zur Verfügung'																																	
 	fparams="&fparams={'title': 'TV-Livestreams'}"
-	addDir(li=li, label='TV-Livestreams', action="dirList", dirID="SenderLiveListePre", 
+	addDir(li=li, label=label, action="dirList", dirID="SenderLiveListePre", 
 		fanart=R(FANART), thumb=R(ICON_MAIN_TVLIVE), tagline=tagline, fparams=fparams)
 	
 	# 29.09.2019 Umstellung Livestreams auf ARD Audiothek
@@ -402,11 +411,11 @@ def Main():
 			addDir(li=li, label=label, action="dirList", dirID="Main_POD", fanart=R(FANART), 
 				thumb=R(ICON_MAIN_POD), summary=summary, tagline=tagline, fparams=fparams)
 						
-																# Download-Tools. zeigen
-	if SETTINGS.getSetting('pref_use_downloads') ==  'true':	
-		tagline = 'Download-Tools: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
+																# Download-/Aufnahme-Tools. zeigen
+	if SETTINGS.getSetting('pref_use_downloads')=='true' or SETTINGS.getSetting('pref_epgRecord')=='true':	
+		tagline = 'Downloads und Aufnahmen: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
 		fparams="&fparams={}"
-		addDir(li=li, label='Download-Tools', action="dirList", dirID="DownloadsTools", 
+		addDir(li=li, label='Download- und Aufnahme-Tools', action="dirList", dirID="DownloadTools", 
 			fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)	
 				
 	if SETTINGS.getSetting('pref_showFavs') ==  'true':			# Favoriten einblenden
@@ -4130,20 +4139,9 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 	PLog('tagline_org: ' + tagline_org)
 
 	PLog(SETTINGS.getSetting('pref_use_downloads')) 	# Voreinstellung: False 
-	
-	# Test auf Existenz curl/wget in DownloadExtern
-	if SETTINGS.getSetting('pref_use_downloads') == 'true':
-		dest_path = SETTINGS.getSetting('pref_download_path')
-		if  os.path.isdir(dest_path) == False:
-			msg1	= u'test_downloads: Downloads nicht möglich'
-			msg2 	= 'Downloadverzeichnis existiert nicht'
-			msg3 	= "Settings: " + dest_path
-			MyDialog(msg1, msg2, msg3)
-			return li				
-	else:
-		return li
-		
-		
+	if check_Setting('pref_use_downloads') == False:	# einschl. Test Downloadverzeichnis
+		return
+			
 	if SETTINGS.getSetting('pref_show_qualities') == 'false':	# nur 1 (höchste) Qualität verwenden
 		download_items = []
 		download_items.append(download_list.pop(high))									 
@@ -4180,26 +4178,9 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 	return li
 	
 #-----------------------
-def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für Download-Video / -Podcast
-	PLog('MakeDetailText:')
-	title=py2_encode(title); summary=py2_encode(summary);
-	tagline=py2_encode(tagline); quality=py2_encode(quality);
-	thumb=py2_encode(thumb); url=py2_encode(url);
-	
-	summary=summary.replace('||', '\n'); tagline=tagline.replace('||', '\n');
-	PLog(type(title)); PLog(type(summary)); PLog(type(tagline));
-	detailtxt = ''
-	detailtxt = detailtxt + "%15s" % 'Titel: ' + "'"  + title + "'"  + '\r\n' 
-	detailtxt = detailtxt + "%15s" % 'Beschreibung1: ' + "'" + tagline + "'" + '\r\n' 
-
-	if summary != tagline: 
-		detailtxt = detailtxt + "%15s" % 'Beschreibung2: ' + "'" + summary + "'"  + '\r\n' 	
-	
-	detailtxt = detailtxt + "%15s" % 'Qualitaet: ' + "'" + quality + "'"  + '\r\n' 
-	detailtxt = detailtxt + "%15s" % 'Bildquelle: ' + "'" + thumb + "'"  + '\r\n' 
-	detailtxt = detailtxt + "%15s" % 'Adresse: ' + "'" + url + "'"  + '\r\n' 
-	
-	return detailtxt
+# Textdatei für Download-Video / -Podcast -
+# 05.07.2020 verlagert nach util:
+#def MakeDetailText(title, summary,tagline,quality,thumb,url):	
 	
 ####################################################################################################
 # Verwendung von curl/wget mittels Phytons subprocess-Funktionen
@@ -4208,6 +4189,7 @@ def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für D
 # 20.12.2018 Problem "autom. Wiedereintritt" in Kodi nicht relevant.
 # 20.01.2020 der Thread zum internen Download wird hier ebenfalls aufgerufen 
 # 27.02.2020 Code für curl/wget-Download entfernt
+# 30.06.2020 Angleichung Dateiname (Datum) an epgRecord (Bindestriche entf.)
 
 def DownloadExtern(url, title, dest_path, key_detailtxt):  
 	PLog('DownloadExtern: ' + title)
@@ -4221,9 +4203,9 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):
 	
 	if 	SETTINGS.getSetting('pref_generate_filenames') == 'true':	# Dateiname aus Titel generieren
 		dfname = make_filenames(title.strip()) 
-	else:												# Bsp.: Download_2016-12-18_09-15-00.mp4  oder ...mp3
+	else:												# Bsp.: Download_20161218_091500.mp4  oder ...mp3
 		now = datetime.datetime.now()
-		mydate = now.strftime("%Y-%m-%d_%H-%M-%S")	
+		mydate = now.strftime("%Y%m%d_%H%M%S")	
 		dfname = 'Download_' + mydate 
 	
 	suffix=''
@@ -4527,8 +4509,8 @@ def thread_getpic(path_url_list,text_list,folder=''):
 	return li	# ohne ListItem Rekursion möglich
 #---------------------------
 # Tools: Einstellungen,  Bearbeiten, Verschieben, Löschen
-def DownloadsTools():
-	PLog('DownloadsTools:');
+def DownloadTools():
+	PLog('DownloadTools:');
 
 	path = SETTINGS.getSetting('pref_download_path')
 	PLog(path)
@@ -4594,7 +4576,7 @@ def DownloadsTools():
 		thumb=R(ICON_DIR_FAVORITS), fparams=fparams, tagline=tagline)
 		
 	if mpcnt > 0:																# Videos / Podcasts?
-		title = 'Downloads bearbeiten: %s Download(s)' % (mpcnt)				# Button Bearbeiten
+		title = 'Downloads und Aufnahmen bearbeiten: %s Download(s)' % (mpcnt)	# Button Bearbeiten
 		summary = 'Downloads im Downloadverzeichnis ansehen, loeschen, verschieben'
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="DownloadsList", fanart=R(ICON_DOWNL_DIR), 
@@ -4616,7 +4598,38 @@ def DownloadsTools():
 			fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % dlpath
 			addDir(li=li, label=title, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DOWNL_DIR), 
 				thumb=R(ICON_DELETE), fparams=fparams, summary=summary)
-			
+	
+	# ------------------------------------------------------------------	
+	# Aufnahme-Tools			
+	if os.path.exists(JOBFILE):													# Jobliste vorhanden?
+		title = 'Aufnahme-Jobs verwalten'					
+		tag = u'Jobliste EPG-Menü-Aufnahmen: Liste, Job-Status, Jobs löschen'
+		fparams="&fparams={'action': 'listJobs'}" 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.epgRecord.JobMain", fanart=R(ICON_DOWNL_DIR),  
+			thumb=R("icon-record.png"), fparams=fparams, tagline=tag)
+
+	if os.path.exists(MONITOR_ALIVE):											# JobMonitor?
+		title = 'Aufnahme-Monitor stoppen'					
+		tag = u'stoppt das Monitoring für EPG-Aufnahmen'
+		summ = 'das Setting "Aufnehmen Menü: EPG Sender einzeln" wird ausgeschaltet'
+		summ = '%s\n\nZum Restart dieses Menü erneut aufrufen oder das Aufnehmen im Setting wieder einschalten' % summ
+		fparams="&fparams={'action': 'stop', 'setSetting': 'true'}" 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.epgRecord.JobMain", fanart=R(ICON_DOWNL_DIR), 
+			thumb=R("icon-stop.png"), fparams=fparams, tagline=tag, summary=summ)
+	else:
+		title = 'Aufnahme-Monitor starten'					
+		tag = u'startet das Monitoring für EPG-Aufnahmen'
+		summ = 'das Setting "Aufnehmen Menü: EPG Sender einzeln" wird eingeschaltet'
+		fparams="&fparams={'action': 'init', 'setSetting': 'true'}" 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.epgRecord.JobMain", fanart=R(ICON_DOWNL_DIR), 
+			thumb=R("icon-record.png"), fparams=fparams, tagline=tag, summary=summ)
+
+		'''
+		title = 'Testjobs starten'												# nur Debug 				
+		fparams="&fparams={'action': 'test_jobs'}" 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.epgRecord.JobMain", fanart=R("icon-record.png"), 
+			thumb=R("icon-record.png"), fparams=fparams)
+		'''	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 #---------------------------
@@ -4748,15 +4761,19 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	
+	fsize=''
 	if os.path.exists(fulldest_path) == False:	# inzw. gelöscht?
 		msg1 = 'Datei nicht vorhanden:'
 		msg2 = fulldest_path
 		PLog(msg1); PLog(msg2)
 		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
-		
+	else:
+		fsize = os.path.getsize(fulldest_path)
+			
 	fulldest_path=py2_encode(fulldest_path); 
 	PLog("fulldest_path: " + fulldest_path)
+	tagline = u'Größe: %s' % humanbytes(fsize)
 	if fulldest_path.endswith('mp4') or fulldest_path.endswith('webm'): # 1. Ansehen
 		title = title_org 
 		lable = "Ansehen | %s" % (title_org)
@@ -4765,8 +4782,8 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
 			(quote_plus(fulldest_path), quote_plus(title), quote_plus(thumb), 
 			quote_plus(summary), quote_plus(sub_path))
-		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams,
-			mediatype='video')
+		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, tagline=tagline,
+			thumb=thumb, fparams=fparams, mediatype='video')
 		
 	else:										# 'mp3' = Podcast
 		if fulldest_path.endswith('mp3'):		# Dateiname bei fehl. Beschreibung, z.B. Sammeldownloads
@@ -4780,7 +4797,7 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 				fparams=fparams, mediatype='music') 
 	
 	lable = "Löschen: %s" % title_org 									# 2. Löschen
-	tagline = 'Datei: ' + path 
+	tagline = 'Datei: %s..' % path[:28] 
 	fulldest_path=py2_encode(fulldest_path);	
 	fparams="&fparams={'dlpath': '%s', 'single': 'True'}" % quote(fulldest_path)
 	addDir(li=li, label=lable, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DELETE), 
@@ -5057,16 +5074,16 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 			p1, p2 	= fav.split('",return)</merk>')	# Endstück p2: &quot;,return)</merk>
 			p3, b64	=  p1.split('10025,"')					# p1=Startstück, b64=kodierter string
 			b64_clean = convBase64(b64)						# Dekodierung mit oder ohne padding am Ende
-			if b64_clean == False:							# skip fav
-				msg1 = "Problem bei Base64-Dekodierung. Eintrag  nicht verwertbar."
-				msg2 = "Eintrag: %s" % name
-				MyDialog(msg1, msg2, '')
-				continue
-				
-			b64_clean=unquote_plus(b64_clean)		# unquote aus addDir-Call
-			b64_clean=unquote_plus(b64_clean)		# unquote aus Kontextmenü
-			#PLog(b64_clean)
-			fav		= p3 + '10025,"' + b64_clean + p2 
+			if b64_clean == False:							# Fehler mögl. bei unkodierter Url
+				msg1 = "Problem bei Base64-Dekodierung: %s" % name
+				PLog(msg1)
+				#MyDialog(msg1, '', '')					# 30.06.2020: nicht mehr verwerfen			
+				#continue
+			else:	
+				b64_clean=unquote_plus(b64_clean)		# unquote aus addDir-Call
+				b64_clean=unquote_plus(b64_clean)		# unquote aus Kontextmenü
+				#PLog(b64_clean)
+				fav		= p3 + '10025,"' + b64_clean + p2 
 
 		fav = fav.replace('&quot;', '"')					# " am Ende fparams
 		fav = fav.replace('&amp;', '&')						# Verbinder &
@@ -5485,26 +5502,31 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 		addDir(li=li, label=name, action="dirList", dirID="SenderLiveListe", fanart=R(ICON_MAIN_TVLIVE), 
 			thumb=img, fparams=fparams)
 
-	title = 'EPG Alle JETZT'; summary ='elektronischer Programmfuehrer'
+	title = 'EPG Alle JETZT | Recording TV-Live'; 
+	summary ='elektronischer Programmfuehrer'
 	tagline = 'zeige die laufende Sendung für jeden Sender'
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="EPG_ShowAll", fanart=R('tv-EPG-all.png'), 
 		thumb=R('tv-EPG-all.png'), fparams=fparams, summary=summary, tagline=tagline)
 							
-	title = 'EPG Sender einzeln'; summary='elektronischer Programmfuehrer'
-	tagline = 'zeige die Sendungen für einen Sender nach Wahl'				# EPG-Button Einzeln anhängen
+	
+	title = 'EPG Sender einzeln'; 
+	if SETTINGS.getSetting('pref_epgRecord') == 'true':		
+		title = 'EPG Sender einzeln | Sendungen aufnehmen'; 
+	tagline = u'zeigt für den ausgewählten Sender ein 12-Tage-EPG'				# EPG-Button Einzeln anhängen
+	summary='je Seite: 24 Stunden (zwischen 05.00 und 05.00 Uhr des Folgetages)'
 	fparams="&fparams={'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="EPG_Sender", fanart=R(ICON_MAIN_TVLIVE), 
 		thumb=R('tv-EPG-single.png'), fparams=fparams, summary=summary, tagline=tagline)	
 		
 	PLog(str(SETTINGS.getSetting('pref_LiveRecord')))
-	if SETTINGS.getSetting('pref_LiveRecord'):		
+	if SETTINGS.getSetting('pref_LiveRecord') == 'true':		
 		title = 'Recording TV-Live'												# TVLiveRecord-Button anhängen
 		laenge = SETTINGS.getSetting('pref_LiveRecord_duration')
 		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
 			laenge = "wird manuell eingegeben"
-		summary = u'Sender wählen und aufnehmen.\nDauer: %s' % laenge
+		summary = u'Sender wählen und aufnehmen.\nDauer: %s (siehe Settings)' % laenge
 		tagline = 'Downloadpfad: %s' 	 % SETTINGS.getSetting('pref_download_path') 				
 		fparams="&fparams={'title': '%s'}" % title
 		addDir(li=li, label=title, action="dirList", dirID="TVLiveRecordSender", fanart=R(ICON_MAIN_TVLIVE), 
@@ -5529,6 +5551,7 @@ def EPG_Sender(title, Merk='false'):
 	
 	sort_playlist = get_sort_playlist()	# einschl. get_ZDFstreamlinks
 	# PLog(sort_playlist)
+	summ = u"für die Merkliste (Kontextmenü) sind die Einträge dieser Liste wegen des EPG gut geeignet."
 	
 	for rec in sort_playlist:
 		title = rec[0]
@@ -5541,40 +5564,28 @@ def EPG_Sender(title, Merk='false'):
 		PLog(img)
 		if ID == '':				# ohne EPG_ID
 			title = title + ': ohne EPG' 
-			summ = 'weiter zum Livestream'
 			title=py2_encode(title); link=py2_encode(link); img=py2_encode(img); 
 			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '', 'Merk': '%s'}" %\
 				(quote(link), quote(title), quote(img), Merk)
 			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
-				thumb=img, fparams=fparams, summary=summ)
+				thumb=img, fparams=fparams, tagline='weiter zum Livestream', summary=summ)
 		else:
-			summ = 'EPG verfuegbar'
 			title=py2_encode(title); link=py2_encode(link);
 			fparams="&fparams={'ID': '%s', 'name': '%s', 'stream_url': '%s', 'pagenr': %s}" % (ID, quote(title), 
 				quote(link), '0')
 			addDir(li=li, label=title, action="dirList", dirID="EPG_ShowSingle", fanart=R('tv-EPG-single.png'), thumb=img, 
-				fparams=fparams, summary=summ)
+				fparams=fparams, tagline='weiter zum EPG', summary=summ)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #-----------------------------
 #	Liste aller TV-Sender wie EPG_Sender, hier mit Aufnahme-Button
 def TVLiveRecordSender(title):
+	PLog('TVLiveRecordSender:')
 	title = unquote(title)
-	PLog('TVLiveRecordSender')
-	PLog(SETTINGS.getSetting('pref_LiveRecord_ffmpegCall'))
-	# PLog('PID-Liste: %s' % Dict['PID'])		# PID-Liste, Initialisierung in Main
 	
-	# Test: Pfadanteil executable? 
-	#	Bsp.: "/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin"
-	cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	
-	if cmd.strip() == '':
-		msg1 = 'ffmpeg-Parameter fehlen in den Einstellungen!'
-		MyDialog(msg1, '', '')
-	if os.path.exists(cmd.split()[0]) == False:
-		msg1 = 'Pfad zu ffmpeg nicht gefunden.'
-		msg2 = 'Bitte ffmpeg-Parameter in den Einstellungen prüfen, aktuell:'
-		msg3 = 	SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')
-		MyDialog(msg1, msg2, msg3)
+	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
+		return
+	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)					# Home-Button
 	
@@ -5604,6 +5615,57 @@ def TVLiveRecordSender(title):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------
+def check_Setting(ID):
+	PLog('check_Setting: ' + ID)
+	
+	if ID == 'pref_LiveRecord_ffmpegCall':
+		PLog(SETTINGS.getSetting('pref_LiveRecord_ffmpegCall'))
+		# Test: Pfadanteil executable? 
+		#	Bsp.: "/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin"
+		cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	
+		if cmd.strip() == '':
+			msg1 = 'ffmpeg-Parameter fehlen in den Einstellungen!'
+			MyDialog(msg1, '', '')
+			return False
+			
+		if os.path.exists(cmd.split()[0]) == False:
+			msg1 = 'Pfad zu ffmpeg nicht gefunden.'
+			msg2 = 'Bitte ffmpeg-Parameter in den Einstellungen prüfen, aktuell:'
+			msg3 = 	SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')
+			MyDialog(msg1, msg2, msg3)
+			return False
+		return True
+		
+	if ID == 'pref_download_path':
+		dest_path = SETTINGS.getSetting('pref_download_path')
+		msg1	= 'LiveRecord:'
+		if  dest_path == None or dest_path.strip() == '':
+			msg2 	= 'Downloadverzeichnis fehlt in den Einstellungen'
+			MyDialog(msg1, msg2, '')
+			return False
+		PLog(os.path.isdir(dest_path))
+					
+		if  os.path.isdir(dest_path) == False:
+			msg2 	= 'Downloadverzeichnis existiert nicht'
+			msg3	= "Settings: " + dest_path
+			MyDialog(msg1, msg2, msg3)
+			return False
+		return True		
+		
+	if ID == 'pref_use_downloads':
+		# Test auf Existenz curl/wget in DownloadExtern
+		if SETTINGS.getSetting('pref_use_downloads') == 'true':
+			dest_path = SETTINGS.getSetting('pref_download_path')
+			if  os.path.isdir(dest_path) == False:
+				msg1	= u'test_downloads: Downloads nicht möglich'
+				msg2 	= 'Downloadverzeichnis existiert nicht'
+				msg3 	= "Settings: " + dest_path
+				MyDialog(msg1, msg2, msg3)
+				return False				
+		else:
+			return False
+		return True
+#-----------------------------
 # 30.08.2018 Start Recording TV-Live
 #	Problem: autom. Wiedereintritt hier + erneuter Popen-call nach Rückkehr zu TVLiveRecordSender 
 #		(Ergebnis-Button nach subprocess.Popen, bei PHT vor Ausführung des Buttons)
@@ -5627,89 +5689,70 @@ def TVLiveRecordSender(title):
 # 20.12.2018 Plex-Probleme "autom. Wiedereintritt" in Kodi nicht beobachtet (Plex-Sandbox Phänomen?) - Code
 #	entfernt.
 # 29.04.0219 Erweiterung manuelle Eingabe der Aufnahmedauer
-
-def LiveRecord(url, title, duration, laenge):
-	PLog('LiveRecord:')
-	PLog(url); PLog(title); 	
-	PLog('duration: %s, laenge: %s' % (duration, laenge))
-
-	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)					# Home-Button
-	
-	dest_path = SETTINGS.getSetting('pref_download_path')
-	msg1	= 'LiveRecord:'
-	if  dest_path == None or dest_path.strip() == '':
-		msg2 	= 'Downloadverzeichnis fehlt in Einstellungen'
-		MyDialog(msg1, msg2, '')
-		return li
-	PLog(os.path.isdir(dest_path))			
-	if  os.path.isdir(dest_path) == False:
-		msg2 	= 'Downloadverzeichnis existiert nicht'
-		msg3	= "Settings: " + dest_path
-		MyDialog(msg1, msg2, msg3)
-		return li		
-		
-	if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':	# Aufnahmedauer manuell
-		duration = duration[:5]									# 01:00:00, für Dialog kürzen
-		dialog = xbmcgui.Dialog()
-		duration = dialog.input('Aufnahmedauer eingeben (HH:MM)', duration, type=xbmcgui.INPUT_TIME)
-		PLog(duration)
-		if duration == '' or duration == ' 0:00':
-			msg1 = "Aufnahmedauer fehlt - Abbruch"
-			PLog(msg1)
-			MyDialog(msg1, '', '')
-			return li	
-		duration = "%s:00" % duration							# für ffmpeg wieder auffüllen
-		laenge = "%s (Stunden:Minuten)" % duration[:5]			# Info nach Start, s.u.
-		PLog('manuell_duration: %s, laenge: %s' % (duration, laenge))
-		
-	dest_path = dest_path  							# Downloadverzeichnis fuer curl/wget verwenden
-	now = datetime.datetime.now()
-	mydate = now.strftime("%Y-%m-%d_%H-%M-%S")		# Zeitstempel
-	dfname = make_filenames(title)					# Dateiname aus Sendername generieren
-	dfname = "%s_%s.mp4" % (dfname, mydate) 	
-	dest_file = os.path.join(dest_path, dfname)
-	if url.startswith('http') == False:				# Pfad bilden für lokale m3u8-Datei
-		if url.startswith('rtmp') == False:
-			url 	= os.path.join(M3U8STORE, url)	# rtmp-Url's nicht lokal
-			url 	= '"%s"' % url					# Pfad enthält Leerz. - für ffmpeg in "" kleiden						
-	
-	cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	% (url, duration, dest_file)
-	PLog(cmd); 
-	
-	PLog(sys.platform)
-	if sys.platform == 'win32':							
-		args = cmd
-	else:
-		args = shlex.split(cmd)							
-	
-	try:
-		PIDffmpeg = ''
-		sp = subprocess.Popen(args, shell=False)
-		PLog('sp: ' + str(sp))
-
-		if str(sp).find('object at') > 0:  			# subprocess.Popen object OK
-			# PIDffmpeg = sp.pid					# PID speichern bei Bedarf
-			PLog('PIDffmpeg neu: %s' % PIDffmpeg)
-			Dict('store', 'PIDffmpeg', PIDffmpeg)
-			msg1 = 'Aufnahme gestartet:'
-			msg2 = dfname
-			msg3 = "Aufnahmedauer: %s" % laenge
-			PLog('Aufnahme gestartet: %s' % dfname)	
-			MyDialog(msg1, msg2, msg3)
-			return li			
-				
-	
-	except Exception as exception:
-		msg = str(exception)
-		PLog(msg)		
-		msg1 = "Fehler: %s" % msg
-		msg2 ='Aufnahme fehlgeschlagen'
-		MyDialog(msg1, msg2, '')
-		return li			
+#
+# Check auf ffmpeg-Settings bereits in TVLiveRecordSender, Check auf LiveRecord-Setting
+# 	bereits in SenderLiveListePre
+# 04.07.2020 angepasst für epgRecord (Eingabe Dauer entf., Dateiname mit Datumformat 
+#		geändert, Notification statt Dialog. epgJob enthält Aufnahmestart (Unixformat)
+# 		verlagert nach util (import aus  ardundzdf klappt nicht in epgRecord).
+# def LiveRecord(url, title, duration, laenge, epgJob=''):
 		
 #-----------------------------
+# 29.06.0219 Erweiterung Sendung aufnehmen, Call K-Menü <- EPG_ShowSingle
+# Check auf Setting pref_epgRecord in EPG_ShowSingle
+#
+def ProgramRecord(url, sender, title, descr, start_end):
+	PLog('ProgramRecord:')
+	PLog(url); PLog(sender); PLog(title); 
+	PLog(start_end);
+
+	now = EPG.get_unixtime(onlynow=True)
+	setDateUnix = now								# ID in Jobliste
+	
+	start, end = start_end.split('|')				# 1593627300|1593633300
+	s = datetime.datetime.fromtimestamp(int(start))
+	von = s.strftime("%d.%m.%Y, %H:%M")	
+	s = datetime.datetime.fromtimestamp(int(end))
+	bis = s.strftime("%d.%m.%Y, %H:%M")	
+	PLog("now %s, von %s, bis %s"% (now, von, bis))
+	
+	#----------------------------------------------				# Voraussetzungen prüfen
+	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	# Dialog dort
+		return			
+	if check_Setting('pref_download_path') == False:			# Dialog dort
+		return			
+	
+	if start == '' or end == '':					# sollte nicht vorkommen
+		msg1 = "%s: %s" % (sender, title)
+		msg2 = "Sendezeit fehlt - Abbruch"
+		MyDialog(msg1, msg2, '')
+		return
+	if end < now:
+		msg1 = "%s: %s\nSendungsende: %s" % (sender, title, bis)
+		msg2 = "diese Sendung ist bereits vorbei - Abbruch"
+		MyDialog(msg1, msg2, '')
+		return
+
+	#----------------------------------------------				# Aufnehmen
+	msg2 = "von [B]%s[/B] bis [I][B]%s[/B][/I]" % (von, bis) 	# Stil- statt Farbmarkierung 
+	msg3 = "Sendung aufnehmen?" 
+	if start < now and end > now:					# laufende Sendung
+		msg1 = u"läuft bereits: %s" % title
+	else:											# künftige Sendung
+		msg1 = u"Aufnehmen: %s" % title 		
+	ret = MyDialog(msg1=msg1, msg2=msg2, msg3=msg3, ok=False, cancel='Abbruch', yes='JA', heading='Sendung aufnehmen')
+	if ret == False:
+		return			
+		
+	action="setjob"
+	# action="test_jobs"	# Debug
+	epgRecord.JobMain(action, start_end, title, descr, sender, url)
+	return
+	
+#---------------------------------------------
 # Aufruf: EPG_Sender, TVLiveRecordSender
+# get_sort_playlist: Einbettung get_ZDFstreamlinks 
+#	für ZDF-Sender
 #
 def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 	PLog('get_sort_playlist:')
@@ -5717,7 +5760,7 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 	stringextract('<channel>', '</channel>', playlist)	# ohne Header
 	playlist = blockextract('<item>', playlist)
 	sort_playlist =  []
-	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
+	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)				# skip_log: Log-Begrenzung
 	
 	for item in playlist:   
 		rec = []
@@ -5753,7 +5796,9 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 # 	EPG-Daten holen in Modul EPG  (1 Woche), Listing hier jew. 1 Tag, 
 #	JETZT-Markierung für laufende Sendung
 # Klick zum Livestream -> SenderLiveResolution 
-# 	Aufrufer EPG_Sender
+# 29.06.2020 Erweiterung Kontextmenü "Sendung aufnehmen" (s. addDir), 
+#	Trigger start_end (EPG-Rekord mit endtime erweitert) -> ProgramRecord
+#
 def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 	PLog('EPG_ShowSingle:'); 
 	Sender = name
@@ -5775,25 +5820,30 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 			
 	for rec in EPG_rec:
 		href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6];
-		# PLog(img)
+		starttime=rec[0]; endtime=rec[8]; 
+		start_end = ''										# Trigger K-Menü
+		if SETTINGS.getSetting('pref_epgRecord') == 'true':	
+			start_end = "%s|%s" % (starttime, endtime)		# Unix-Format -> ProgramRecord
+
 		if img.find('http') == -1:	# Werbebilder today.de hier ohne http://, Ersatzbild einfügen
 			img = R('icon-bild-fehlt.png')
 		sname = unescape(sname)
 		title = sname
 		summ = unescape(summ)
 		if 'JETZT' in title:			# JETZT-Markierung unter icon platzieren
+			# Markierung für title bereits in EPG
 			summ = "[COLOR red][B]LAUFENDE SENDUNG![/B][/COLOR]\n\n%s" % summ
-			title='[COLOR red][B]%s[/B][/COLOR]' % sname
+			title = sname
 		PLog("title: " + title)
 		tagline = 'Zeit: ' + vonbis
 		descr = summ.replace('\n', '||')		# \n aus summ -> ||
 		title=py2_encode(title); stream_url=py2_encode(stream_url);
 		img=py2_encode(img); descr=py2_encode(descr);
 		Sender=py2_encode(Sender);
-		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Sender': '%s'}" %\
-			(quote(stream_url), quote(title), quote_plus(img), quote_plus(descr), quote_plus(Sender))
+		fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','descr': '%s','Sender': '%s'}" %\
+			(quote(stream_url), quote(title), quote(img), quote(descr), quote(Sender))
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
-			thumb=img, fparams=fparams, summary=summ, tagline=tagline)
+			thumb=img, fparams=fparams, summary=summ, tagline=tagline, start_end=start_end)
 			
 	# Mehr Seiten anzeigen:
 	max = 12
@@ -5853,7 +5903,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 		
 		tagline = 'weiter zum Livestream'
 		if ID == '':									# ohne EPG_ID
-			title = title_playlist + ': [COLOR red][B]ohne EPG[/B][/COLOR]' 
+			title = title_playlist + ': ohne EPG' 
 			img = img_playlist
 			PLog("img: " + img)
 		else:
@@ -5861,7 +5911,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 			rec = EPG.EPG(ID=ID, mode='OnlyNow')		# Daten holen - nur aktuelle Sendung
 			# PLog(rec)	# bei Bedarf
 			if len(rec) == 0:							# EPG-Satz leer?
-				title = title_playlist + ': ohne EPG'
+				title = title_playlist + '| ohne EPG'
 				img = img_playlist			
 			else:	
 				href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6]
@@ -5873,6 +5923,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 				# sname 	= sname.replace(stime, sctime)
 				tagline = '%s | Zeit: %s' % (tagline, vonbis)
 				
+		tagline	= "%s\n\n%s" % (tagline, u"Kontextmenü: Recording TV-Live")	
 		title = unescape(title)
 		PLog("title: " + title); PLog(summ)
 		title=py2_encode(title); m3u8link=py2_encode(m3u8link);
@@ -5880,7 +5931,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Merk': '%s'}" %\
 			(quote(m3u8link), quote(title), quote(img), quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-all.png'), 
-			thumb=img, fparams=fparams, summary=summ, tagline=tagline)
+			thumb=img, fparams=fparams, summary=summ, tagline=tagline, start_end="Recording TV-Live")
 
 	# Mehr Seiten anzeigen:
 	# PLog(offset); PLog(cnt); PLog(max_len);
@@ -6058,8 +6109,9 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 #	EPG_ShowSingle) - relevant für Aufrufe aus Merkliste.
 #	Sender: Sendername bei Aufrufen durch EPG_ShowSingle (title mit EPG-Daten
 #			belegt)
+#	start_end: EPG-Start-/Endzeit Unix-Format für Kontextmenü (EPG_ShowSingle <-)
 #
-def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender=''):
+def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', start_end=''):
 	PLog('SenderLiveResolution:')
 	PLog(title); PLog(descr); PLog(Sender);
 	path_org = path

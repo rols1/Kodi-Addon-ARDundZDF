@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# Stand: 26.06.2020	
+# Stand: 29.06.2020	
  
 import time
 import datetime
@@ -86,6 +86,7 @@ def EPG(ID, mode=None, day_offset=None):
 		bis = datetime.datetime.fromtimestamp(int(endtime))
 		bis = bis.strftime("%H:%M") 
 		vonbis = von + '-' + bis
+		# PLog("diff_%d: %s, %s-%s" % (i, now, starttime, endtime))			# bei Bedarf
 		
 		# Auslese - nur akt. Tag 05 Uhr (einschl. Offset in Tagen ) + Folgetag 05 Uhr:
 		if starttime < today_5Uhr:				# ältere verwerfen
@@ -94,10 +95,12 @@ def EPG(ID, mode=None, day_offset=None):
 		if starttime > nextday_5Uhr:			# jüngere verwerfen
 			# PLog(starttime); PLog(nextday_5Uhr)
 			continue
-						
+					
+		sname_org = sname	
 		if now >= starttime and now < endtime:
-			# PLog(now); PLog(starttime); PLog(endtime)	# bei Bedarf
-			sname = "JETZT: " + sname
+			# PLog("diffnow_%d: %s, %s-%s" % (i, now, starttime, endtime))	# bei Bedarf
+			# Farb-/Fettmarkierung bleiben im Kontextmenü erhalten (addDir):
+			sname = "[COLOR red][B]JETZT: %s[/B][/COLOR]" % sname_org	# JETZT: rot + fett
 			PLog(sname); PLog(img)				# bei Bedarf
 			if mode == 'OnlyNow':				# aus EPG_ShowAll - nur aktuelle Sendung
 				rec = [starttime,href,img,sname,stime,summ,vonbis]  # Index wie EPG_rec
@@ -107,11 +110,15 @@ def EPG(ID, mode=None, day_offset=None):
 		
 		iWeekday = transl_wtag(s_startday)
 		sname = iWeekday[0:2] + ' | ' + sname	# Wochentag voranstellen
+		if endtime < now:						# vergangenes: grau markieren
+			sname = "[COLOR grey][B]%s[/B][/COLOR]" % sname_org
 
-		# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis, 7=today_human:  
+		# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis, 
+		#			7=today_human, 8=endtime:  
 		# Link href zum einzelnen Satz hier nicht verwendet - wenig zusätzl. Infos
 		rec.append(starttime);rec.append(href); rec.append(img); rec.append(sname);	# Listen-Element
 		rec.append(stime); rec.append(summ); rec.append(vonbis); rec.append(today_human);
+		rec.append(endtime)
 		EPG_rec.append(rec)
 										# Liste Gesamt (2-Dim-Liste)
 	
@@ -144,9 +151,13 @@ def get_summ(block):		# Beschreibung holen
 #	tvtoday.de verwendet Unix-Format: data-start-time, data-end-time (beide ohne Sekunden)
 # 	day_offset:	1,2,3 ... Offset in Tagen
 #	Rückgabe today: today + Offset
-def get_unixtime(day_offset=None):		
+def get_unixtime(day_offset=None, onlynow=False):		
 	dt = datetime.datetime.now()								# Format 2017-03-09 22:04:19.044463
 	now = time.mktime(dt.timetuple())							# Unix-Format 1489094334.0
+	now = str(now).split('.')[0]								# .0 kappen (tvtoday.de ohne .0)
+	if onlynow:
+		return now
+	
 	dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)  # auf 0 Uhr setzen: 2017-03-09 00:00:00
 	today = time.mktime(dt.timetuple())							# Unix-Format 1489014000.0
 	# today = time.mktime(d.timetuple()) 						# Ergebnis wie oben
@@ -157,7 +168,6 @@ def get_unixtime(day_offset=None):
 	today_5Uhr = today + 18000									# today+Offset, 05 Uhr  (+ 18000 sec = 5 x 3600)
 	nextday_5Uhr = nextday + 18000								# nächster Tag, 05 Uhr 
 	
-	now = str(now).split('.')[0]								# .0 kappen (tvtoday.de ohne .0)
 	today = str(today).split('.')[0]
 	nextday = str(nextday).split('.')[0]
 	nextday_5Uhr = str(nextday_5Uhr).split('.')[0]

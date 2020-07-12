@@ -12,6 +12,47 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+11.06.2020	3.1.8
+			get_ZDFstreamlinks (Modul util): Verwendung apiToken geändert + für 
+			player2_url genutzt (ZDF-Streamlinks konnten fehlen).
+			VideoTools: Dateigröße im Button "Ansehen"in tagline hinzugefügt.
+			Modul epgRecord: Funktion JobRemove zum Stoppen  aktiver Aufnahmen hinzugefügt,
+			Jobliste um Prozess-ID (pid) erweitert.
+			LiveRecord (Modul util): um Rückgabe der Prozess-ID ergänzt.
+
+not on Github	3.1.7 Sendungen aufnehmen (DVR-Funktion) 
+			neues Modul epgRecord: Thread JobMonitor + vorgeschaltete Verwaltungs-
+			funktion JobMain
+			addDir (Modul util): Kontextmenüs für Merkliste, Filter und ProgramRecord 
+			unabhängig gemacht von Setting Merkliste + logisch getrennt.
+			addDir (Modul util): zusätzl. Kontextmenü "diese Sendung aufzeichnen"
+			für Menü "EPG_ShowSingle".
+			Modul EPG: zusätzliche Rückgabe endtime zum Aufzeichnen von Sendungen,
+			zurückliegende Sendungen grau markiert.
+			Settings: Optionen für Aufnahmefunktion hinzugefügt, einschl. Vorlauf,
+			Nachlauf + max. Größe der Jobliste.
+			Settings: inhaltliche Separatoren hinzugefügt.
+			DownloadExtern: Angleichung Dateiname (Datum) an epgRecord (Bindestriche 
+			entf., Bsp.: Download_20161218_091500.mp4).	
+			Neue Funktion check_Setting: Vereinheitlichung für Calls aus ProgramRecord,
+			LiveRecord, test_downloads, TVLiveRecordSender.
+			MakeDetailText + LiveRecord aus ardundzdf verlagert nach util (Modul-Import
+			in epgRecord schlägt fehl).
+			Neue Funktion ReadJobs (Modul util): einschl. Lock-Option für Modul epgRecord.
+			RSave (Modul util): erweitert für Lock-Nutzung (für Monitor in epgRecord)
+								
+not on Github	3.1.6
+			addDir (Modul util): zusätzl. Kontextmenü "Recording TV-Live" für 
+			Menü EPG_ShowAll, Farb-/Fettmarkierung entfernt. Menü "Recording TV-Live"
+			im Menü "TV-Livestreams" verbleibt als schnelle Alternative im Addon.
+			ProgramRecord: in Dialog Farb- durch Stilmarkierung ersetzt (Italic statt red/blue).
+			Funktion DownloadsTools geändert in DownloadTools.
+			TVLiveRecordSender: Menü abblocken bei falschem ffmpeg-Setting.
+			Modul merkliste: Abbruch-Info ergänzt ("Abbrechen: ohne Zuordnung"),
+			get_plugin_url abgesichert gegen Fehler in convBase64.
+			ShowFavs: Eintrag nicht mehr verwerfen bei Fehler in convBase64.			
+			EPG_Sender: Hinweis auf Eignung für Merkliste in summary hinzugefügt.
+
 27.06.2020	3.1.5
 			ARD Neu: nach ARD-Änderungen Funktion ARDSearchnew erneuert, Anpassungen
 			in get_page_content, ARDStartRubrik und SearchARDundZDFnew.

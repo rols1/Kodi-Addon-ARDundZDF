@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 26.06.2020
+#	Stand 08.07.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -22,7 +22,7 @@ from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
 from kodi_six.utils import py2_encode, py2_decode
 
 # Standard:
-import os, sys
+import os, sys, subprocess
 PYTHON2 = sys.version_info.major == 2
 PYTHON3 = sys.version_info.major == 3
 if PYTHON2:					
@@ -47,6 +47,8 @@ import json				# json -> Textstrings
 import pickle			# persistente Variablen/Objekte
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
 import string, textwrap
+
+import shlex			# Parameter-Expansion für subprocess.Popen (os != windows)
 	
 # Globals
 PYTHON2 = sys.version_info.major == 2	# Stammhalter Pythonversion 
@@ -88,7 +90,7 @@ ARDStartCacheTime = 300						# 5 Min.
 # 
 def check_AddonXml(mark):
 	ADDON_XML		= os.path.join(ADDON_PATH, "addon.xml")
-	xbmc.log("%s --> %s" % ('ARDundZDF', 'check_AddonXml'), xbmc.LOGNOTICE)
+	xbmc.log("%s --> %s" % ('ARDundZDF', 'check_AddonXml:'), xbmc.LOGNOTICE)
 	f = xbmcvfs.File(ADDON_XML)		# Byte-Puffer
 	xml_content	= f.readBytes()
 	f.close()
@@ -106,6 +108,7 @@ ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 
+M3U8STORE 		= os.path.join("%s/m3u8") % ADDON_DATA
 DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
 SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
 SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
@@ -545,6 +548,35 @@ def get_dir_size(directory):
 				size += os.path.getsize(fp)
 
 	return humanbytes(size)	
+#---------------------------------------------------------------- 
+# checkt Existenz + Größe Datei fpath
+# Rückgabe True falls > 2 Byte
+def check_file(fpath):
+	PLog('check_file:')
+	if os.path.exists(fpath):
+		s = os.path.getsize(fpath)
+		PLog(u"Länge: %d" % s)
+		if s > 2:				# min: \n\r
+			return True
+			
+	return False
+#---------------------------------------------------------------- 
+# liest Setting direkt aus setting.xml 
+# hier: .kodi/userdata/addon_data/plugin.video.ardundzdf/settings.xml
+# für Problemfälle (z.Z. Monitor in epgRecord)
+def get_Setting(ID):
+	PLog('get_Setting:')
+	USERDATA	= xbmc.translatePath("special://userdata")
+	SETTINGS_XML= os.path.join(USERDATA, "addon_data", ADDON_ID, "settings.xml")
+	
+	page = RLoad(SETTINGS_XML, abs_path=True)
+	lines = page.splitlines()
+	for line in lines:
+		if ID in line:
+			val = stringextract('>', '<', line)
+			return val
+			
+	return ''
 #----------------------------------------------------------------  
 # Listitems verlangen encodierte Strings auch bei Umlauten. Einige Quellen liegen in unicode 
 #	vor (s. json-Auswertung in get_page) und müssen rückkonvertiert  werden.
@@ -587,6 +619,8 @@ def up_low(line, mode='up'):
 #		router) und als Prophylaxe gegen durch doppelte utf-8-Kodierung erzeugte Sonderzeichen.
 #		Dekodierung erfolgt in Watch + ShowFavs. Nicht mehr benötigt, falls nochmal: s. Commit
 #		9137781 on 16 Oct 2019.
+#		cmenu triggert Kontextmenü, weitere Param. dessen Eigenschaften (Bsp. start_end für 
+#			K-Menü "Sendung aufnehmen" <- EPG_ShowSingle).
 #
 #	Sortierung: i.d.R. unsortiert (Reihenfolge wie Web), erford. für A-Z-Seiten (api/podcasts)
 #		Hinw.: bei Sortierung auf Homebutton verzichten 
@@ -595,11 +629,16 @@ def up_low(line, mode='up'):
 #		ein unbekanntes Zeichen auftritt - Bsp. persÃ¶nlich, Ursache: fehlerhaftes unquote_plus
 #		unter python2. Workaround: py2_encode für action + dirID (addDir OK, aber falsche thumb-url)
 #		und Erweiterung von decode_url
-
+#
 # 	31.03.2020 merkname ersetzt label im Kontextmenü Merkliste (label kann Filter-Prefix enthalten). 
-
+#	30.06.2020 Hinw.: im Kontextmenü für fparam verwendete Params müssen identisch encodiert sein,
+#		sonst schlägt die json-Dekodierung in router fehl.
+#
+# 	04.07.2020 Erweiterung Kontextmenüs "Sendung aufnehmen" (EPG_ShowSingle)
+# 	08.07.2020 Erweiterung Kontextmenüs "Recording TV-Live" (EPG_ShowAll)  
+#
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='',\
-		cmenu=True, sortlabel='', merkname='', filterstatus=''):
+		cmenu=True, sortlabel='', merkname='', filterstatus='', start_end=''):
 	PLog('addDir:');
 	PLog(type(label))
 	label=py2_encode(label)
@@ -608,8 +647,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	action=py2_encode(action); dirID=py2_encode(dirID); 
 	summary=py2_encode(summary); tagline=py2_encode(tagline); 
 	fparams=py2_encode(fparams); fanart=py2_encode(fanart); thumb=py2_encode(thumb);
-	merkname=py2_encode(merkname);
-	PLog('addDir - summary: {0}, tagline: {1}, mediatype: {2}, cmenu: {3}'.format(summary[:80], tagline[:80], mediatype, cmenu))
+	merkname=py2_encode(merkname); start_end=py2_encode(start_end);
+	PLog('addDir_summary: {0}, tagline: {1}, mediatype: {2}, cmenu: {3}'.format(summary[:80], tagline[:80], mediatype, cmenu))
 
 		
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
@@ -638,24 +677,25 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	PLog('PLUGIN_URL: ' + PLUGIN_URL)	# plugin://plugin.video.ardundzdf/
 	PLog('HANDLE: %s' % HANDLE)
 	
-	PLog("fparams: " + unquote(fparams)[:200])
+	PLog("fparams: " + unquote(fparams)[:200] + "..")
 	if thumb == None:
 		thumb = ''
 		
-	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+quote(fparams)
-	PLog("addDir_url: " + unquote(url)[:200])		
+	add_url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+quote(fparams)
+	PLog("addDir_url: " + unquote(add_url)[:200])		
 	
-	# todo: Ausschluss-Filter unabhängig machen von Setting Merkliste
-	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
-		if cmenu:											# Kontextmenüs Merkliste hinzufügen
-			Plot = Plot.replace('\n', '||')					# || Code für LF (\n scheitert in router)
-			# PLog('Plot: ' + Plot)
-			fparams_folder=''; fparams_change=''
-			if merkname:									# Aufrufer ShowFavs (Settings: Ordner)
-				# Param name reicht für folder + filter		# Ordner ändern / Filtern
+	# todo: Ausschluss-Filter 
+	if cmenu:														# Kontextmenüs Merkliste hinzufügen
+		Plot = Plot.replace('\n', '||')								# || Code für LF (\n scheitert in router)
+		# PLog('Plot: ' + Plot)
+		fparams_folder=''; fparams_filter=''; fparams_delete=''; 
+		fparams_change=''; fparams_record=''; fparams_recordLive='';
+		if merkname:												# Aufrufer ShowFavs (Settings: Ordner)
+			if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
+				# Param name reicht für folder + filter				# Ordner ändern / Filtern
 				label = merkname
 				fp = {'action': 'folder', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
-					'Plot': quote_plus(Plot),'url': quote_plus(url)}	
+					'Plot': quote_plus(Plot),'url': quote_plus(add_url)}	
 				fparams_folder = "&fparams={0}".format(fp)
 				PLog("fparams_folder: " + fparams_folder[:100])
 				fparams_folder = quote_plus(fparams_folder)			#  Ordner ändern
@@ -667,47 +707,90 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				fp = {'action': 'filter_delete', 'name': quote_plus('label')} 
 				fparams_delete = "&fparams={0}".format(fp)
 				fparams_delete = quote_plus(fparams_delete) 		# Filter entfernen
-			if filterstatus:								# Ausschluss-Filter EIN/AUS
-				fp = {'action': 'state_change'} 
-				fparams_change = "&fparams={0}".format(fp)
-				fparams_change = quote_plus(fparams_change)			# Filtern
 				
-				
-			fp = {'action': 'add', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
-				'Plot': quote_plus(Plot),'url': quote_plus(url)}	
-			fparams_add = "&fparams={0}".format(fp)
-			PLog("fparams_add: " + fparams_add[:100])
-			fparams_add = quote_plus(fparams_add)
-
-			fp = {'action': 'del', 'name': quote_plus(label)}		# name reicht für del
-			fparams_del = "&fparams={0}".format(fp)
-			PLog("fparams_del: " + fparams_del[:100])
-			fparams_del = quote_plus(fparams_del)
+		if filterstatus:											# Ausschluss-Filter EIN/AUS
+			fp = {'action': 'state_change'} 
+			fparams_change = "&fparams={0}".format(fp)
+			fparams_change = quote_plus(fparams_change)				# Filtern
 			
-			# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
-			MERK_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID))
-			if fparams_change:										# Ausschluss-Filter EIN/AUS
-				MERK_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
-			commands = []
-			commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-					% (MERK_SCRIPT, HANDLE, fparams_add)))
-			commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-					% (MERK_SCRIPT, HANDLE, fparams_del)))			
-			if fparams_folder:										# Aufrufer ShowFavs s.o.
-				PLog('set_folder_context: ' + merkname)
-				commands.append(('Merklisten-Eintrag zuordnen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-					% (MERK_SCRIPT, HANDLE, fparams_folder)))
-				commands.append(('Merkliste filtern', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-					% (MERK_SCRIPT, HANDLE, fparams_filter)))
-				commands.append(('Filter der  Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-					% (MERK_SCRIPT, HANDLE, fparams_delete)))
+		# unterschiedl. Parameterquellen: EPG_ShowSingle, EPG_ShowAll:
+		if start_end:												# Unix-Time-Format od. "Recording.."
+			PLog("start_end: " + start_end)
+			f = unquote(fparams)									# Param. extrahieren 
+			f = f.replace("': '", "':'")
+			# PLog(f)		# Debug
+			Sender = stringextract("Sender':'", "'", f) 			# Bsp. 'ARTE'
+			url = stringextract("path':'", "'", f) 					# Stream-Url
+			# title mit Markierung übernehmen
+			title = stringextract("title':'", "'", f) 				# Bsp. 'Mi | 01:45 | Dick und nun?'
+			PLog("title: " + title)
+			descr = "%s\n\n%s" % (tagline, summary)
+			descr = descr.replace('\n','||')
+			
+			if "Recording TV-Live" in start_end:				# K-Menü in EPG_ShowAll -> LiveRecord
+				Sender = cleanmark(title)
+				Sender = Sender.split("|")[0]						# "Sender | EPG"
+				duration = SETTINGS.getSetting('pref_LiveRecord_duration')
+				duration, laenge = duration.split('=')
+				duration = duration.strip()
+				if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
+					laenge = "wird manuell eingegeben"
+				duration=py2_encode(duration); laenge=py2_encode(laenge);
+				Sender=py2_encode(Sender); url=py2_encode(url);
+				fp = {'url': quote_plus(url), 'title': quote_plus(Sender),\
+					'duration': quote_plus(duration), 'laenge': quote_plus(laenge)} 
+				fparams_recordLive = "&fparams={0}".format(fp)
+				PLog("fparams_recordLive: " + fparams_recordLive[:100])
+				fparams_recordLive = quote_plus(fparams_recordLive)			
+			else:													# K-Menü in EPG_ShowSingle	
+				fp = {'url': quote_plus(url), 'sender': quote_plus(Sender),\
+					'title': quote_plus(title), 'descr': quote_plus(descr), 'start_end': start_end} 
+				fparams_record = "&fparams={0}".format(fp)
+				PLog("fparams_record: " + fparams_record[:100])
+				fparams_record = quote_plus(fparams_record)						
+			
+		fp = {'action': 'add', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
+			'Plot': quote_plus(Plot),'url': quote_plus(add_url)}	
+		fparams_add = "&fparams={0}".format(fp)
+		PLog("fparams_add: " + fparams_add[:100])
+		fparams_add = quote_plus(fparams_add)
+
+		fp = {'action': 'del', 'name': quote_plus(label)}			# name reicht für del
+		fparams_del = "&fparams={0}".format(fp)
+		PLog("fparams_del: " + fparams_del[:100])
+		fparams_del = quote_plus(fparams_del)
+		
+		# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
+		MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID))
+		commands = []
+		commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				% (MY_SCRIPT, HANDLE, fparams_add)))
+		commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				% (MY_SCRIPT, HANDLE, fparams_del)))			
+		if fparams_folder:											# Aufrufer ShowFavs s.o.
+			PLog('set_folder_context: ' + merkname)
+			commands.append(('Merklisten-Eintrag zuordnen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				% (MY_SCRIPT, HANDLE, fparams_folder)))
+			commands.append(('Merkliste filtern', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				% (MY_SCRIPT, HANDLE, fparams_filter)))
+			commands.append(('Filter der  Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				% (MY_SCRIPT, HANDLE, fparams_delete)))
+				
+		if fparams_change or fparams_record or fparams_recordLive:	# Ausschluss-Filter EIN/AUS, ProgramRecord
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			if fparams_change:										# Aufrufer home s.o. -> FilterToolsWork
 				commands.append(('Ausschluss-Filter EIN/AUS', 'RunScript(%s, %s, ?action=dirList&dirID=FilterToolsWork%s)' \
-					% (MERK_SCRIPT, HANDLE, fparams_change)))
+					% (MY_SCRIPT, HANDLE, fparams_change)))
+			if fparams_record:										# Aufrufer EPG_ShowSingle -> ProgramRecord
+				commands.append(('diese Sendung aufnehmen', 'RunScript(%s, %s, ?action=dirList&dirID=ProgramRecord%s)' \
+					% (MY_SCRIPT, HANDLE, fparams_record)))
+			if fparams_recordLive:										# Aufrufer EPG_ShowAll -> LiveRecord
+				commands.append(('Recording TV-Live', 'RunScript(%s, %s, ?action=dirList&dirID=LiveRecord%s)' \
+					% (MY_SCRIPT, HANDLE, fparams_recordLive)))
 
-			li.addContextMenuItems(commands)				
+		li.addContextMenuItems(commands)				
 		
-	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
+	xbmcplugin.addDirectoryItem(handle=HANDLE,url=add_url,listitem=li,isFolder=isFolder)
 	
 	PLog('addDir_End')		
 	return	
@@ -933,12 +1016,25 @@ def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex
 #	falls im Pluginverz. gespeichert werden soll 
 #  Migration Python3: immer utf8 - Alt.: xbmcvfs.File mit
 #		Bytearray (s. merkliste.py)
-# 
+#  05.07.2020 erweitert für Lock-Nutzung (für Monitor in epgRecord).
+#
 def RSave(fname, page, withcodec=False): 
 	PLog('RSave: %s' % str(fname))
 	PLog(withcodec)
 	path = os.path.join(fname) # abs. Pfad
 	msg = ''					# Rückgabe leer falls OK
+	maxLockloops	= 10		# 1 sec bei 10 x xbmc.sleep(100)	
+	
+	LOCK = fname + ".lck"
+	i=0
+	while os.path.exists(LOCK):	
+		i=i+1
+		if i >= maxLockloops:		# Lock brechen, vermutl. Ruine
+			os.remove(LOCK)
+			PLog("break " + LOCK)
+			break
+		xbmc.sleep(100)		
+	
 	try:
 		if PYTHON2:
 			if withcodec:		# 14.11.0219 Kompat.-Maßnahme
@@ -1135,6 +1231,13 @@ def make_mark(mark, mString, color='red', bold=''):
 	else:
 		return mString		# Markierung fehlt, mString unverändert zurück
 #----------------------------------------------------------------  
+def cleanmark(line): # entfernt Farb-/Fett-Markierungen
+	# PLog(type(line))
+	cleantext = py2_decode(line)
+	cleantext = re.sub(r"\[/?[BI]\]", '', cleantext, flags=re.I)
+	cleantext = re.sub(r"\[/?COLOR.*?\]", '', cleantext, flags=re.I)
+	return cleantext
+#----------------------------------------------------------------  
 # Migration PY2/PY3: py2_decode aus kodi-six
 def cleanhtml(line): # ersetzt alle HTML-Tags zwischen < und >  mit 1 Leerzeichen
 	# PLog(type(line))
@@ -1214,20 +1317,17 @@ def make_filenames(title, max_length=255):
 	PLog('make_filenames:')
 	
 	title = py2_decode(title)
-	color = ''
-	if '[COLOR ' in title:								# farbige Mark.
-		color = stringextract('[COLOR ', ']', title)
-		color = '[COLOR %s]' % color
-	title = title.replace(color, '')	
-	title = title.replace('[/COLOR]', '')			
-	title = title.replace('[B]', '') 					# fett
-	title = title.replace('[/B]', '') 
+	title = cleanmark(title)
+
+	title = title.replace(u'|', ' ') 
+	title = title.replace(u':', ' ')
 	
 	fname = transl_umlaute(title)						# Umlaute	
 	
 	valid_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
 	fname = ''.join(c for c in fname if c in valid_chars)
 	fname = fname.replace(u' ', u'_')
+	fname = fname.replace(u'___', u'_')
 	return fname[:max_length]
 #----------------------------------------------------------------  
 # Umlaute übersetzen, wenn decode nicht funktioniert
@@ -1593,6 +1693,39 @@ def ReadFavourites(mode):
 	return my_favs, my_ordner
 
 #----------------------------------------------------------------
+#	Jobliste für Modul epgRecord einlesen
+#
+def ReadJobs():	
+	PLog('ReadJobs:')
+
+	JOBFILE			= os.path.join("%s/jobliste.xml") % ADDON_DATA
+	JOBFILE_LOCK	= os.path.join("%s/jobliste.lck") % ADDON_DATA		# Lockfile für Jobliste
+	maxLockloops	= 10		# 1 sec bei 10 x xbmc.sleep(100)	
+		
+	i=0
+	while os.path.exists(JOBFILE_LOCK):	
+		i=i+1
+		if i >= maxLockloops:		# Lock brechen, vermutl. Ruine
+			os.remove(JOBFILE_LOCK)
+			PLog("break " + JOBFILE_LOCK)
+			break
+		xbmc.sleep(100)		
+			
+	try:
+		PLog("xbmcvfs_fname: " + JOBFILE)
+		f = xbmcvfs.File(JOBFILE)				
+		page = f.read(); f.close()
+		PLog(len(page))				
+		page = py2_encode(page)		# für externe Datei erf.
+	except Exception as exception:
+		PLog(str(exception))
+		return []
+				
+	jobs = re.findall("<job>(.*?)</job>", page)
+	PLog(len(jobs))		
+	return jobs
+
+#----------------------------------------------------------------
 # holt summary (Inhaltstext) für eine Sendung, abhängig von SETTINGS('pref_load_summary')
 #	- Inhaltstext zu Video im Voraus laden. 
 #	SETTINGS durch Aufrufer geprüft
@@ -1749,7 +1882,7 @@ def get_ZDFstreamlinks(skip_log=False):
 	ZDFlinks_CacheTime	= 86400					# 24 Std.: (60*60)*24
 		
 	page = Dict("load", 'zdf_streamlinks', CacheTime=ZDFlinks_CacheTime)
-	if page:
+	if len(str(page)) > 1000:					# bei Error nicht leer od. False von Dict
 		if skip_log == False:
 			PLog(page)							# für IPTV-Interessenten
 		return page.splitlines()
@@ -1762,7 +1895,10 @@ def get_ZDFstreamlinks(skip_log=False):
 	page = page.replace('content": "', '"content":"')
 	page = page.replace('apiToken": "', '"apiToken":"')
 	content = blockextract('js-livetv-scroller-cell', page)			# Playerdaten einschl. apiToken
-	PLog(len(content))
+	PLog("len_content: %d" % len(content))
+	apiToken = stringextract('"apiToken":"', '"', page)				# für alle identisch
+	PLog("apiToken: " + apiToken[:80] + "..")
+	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken
 	
 	zdf_streamlinks=[]
 	for rec in content:												# Schleife  Web-Sätze		
@@ -1771,7 +1907,6 @@ def get_ZDFstreamlinks(skip_log=False):
 		PLog(title);
 		# Bsp.: api.zdf.de/../zdfinfo-live-beitrag-100.json?profile=player2:
 		player2_url = stringextract('"content":"', '"', rec)
-		apiToken = stringextract('"apiToken":"', '"', rec)
 
 		thumb 	= stringextract('data-src="', '"', rec)			# erstes img = größtes
 		geo		= stringextract('geolocation="', '"', rec)
@@ -1785,7 +1920,7 @@ def get_ZDFstreamlinks(skip_log=False):
 
 		PLog("player2_url: " + player2_url)
 		if player2_url:
-			page, msg = get_page(path=player2_url, JsonPage=True)
+			page, msg = get_page(path=player2_url, header=header, JsonPage=True)
 			# Bsp.: 247onAir-203
 			assetid = stringextract('assetid":"', '"', page)
 			assetid = assetid.strip()
@@ -1793,7 +1928,6 @@ def get_ZDFstreamlinks(skip_log=False):
 		PLog(assetid); 
 		if assetid:
 			videodat_url = "https://api.zdf.de/tmd/2/ngplayer_2_3/live/ptmd/%s" % assetid
-			header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken
 			page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
 			PLog("videodat: " + page[:40])
 		
@@ -1869,6 +2003,138 @@ def get_startsender(hrefsender):
 		href = 'https:' + href	
 	return href
 	
+####################################################################################################
+def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für Download-Video / -Podcast
+	PLog('MakeDetailText:')
+	title=py2_encode(title); summary=py2_encode(summary);
+	tagline=py2_encode(tagline); quality=py2_encode(quality);
+	thumb=py2_encode(thumb); url=py2_encode(url);
+	
+	summary=summary.replace('||', '\n'); tagline=tagline.replace('||', '\n');
+	PLog(type(title)); PLog(type(summary)); PLog(type(tagline));
+	detailtxt = ''
+	detailtxt = detailtxt + "%15s" % 'Titel: ' + "'"  + title + "'"  + '\r\n' 
+	detailtxt = detailtxt + "%15s" % 'Beschreibung1: ' + "'" + tagline + "'" + '\r\n' 
+
+	if summary != tagline: 
+		detailtxt = detailtxt + "%15s" % 'Beschreibung2: ' + "'" + summary + "'"  + '\r\n' 	
+	
+	detailtxt = detailtxt + "%15s" % 'Qualitaet: ' + "'" + quality + "'"  + '\r\n' 
+	detailtxt = detailtxt + "%15s" % 'Bildquelle: ' + "'" + thumb + "'"  + '\r\n' 
+	detailtxt = detailtxt + "%15s" % 'Adresse: ' + "'" + url + "'"  + '\r\n' 
+	
+	return detailtxt
+		
+#---------------------------------------------------------------------------------------------------
+# 30.08.2018 Start Recording TV-Live
+#	Problem: autom. Wiedereintritt hier + erneuter Popen-call nach Rückkehr zu TVLiveRecordSender 
+#		(Ergebnis-Button nach subprocess.Popen, bei PHT vor Ausführung des Buttons)
+#		OS-übergreifender Abgleich der pid problematisch - siehe
+#		https://stackoverflow.com/questions/4084322/killing-a-process-created-with-pythons-subprocess-popen
+#		Der Wiedereintritt tritt sowohl unter Linux als auch Windows auf.
+#		Ursach n.b. - tritt in DownloadExtern mit curl/wget nicht auf.
+#	1. Lösung: Verwendung des psutil-Moduls (../Contents/Libraries/Shared/psutil ca. 400 KB)
+#		und pid-Abgleich Dict['PID'] gegen psutil.pid_exists(pid) - s.u.
+#		verworfen - Modul lässt sich unter Windows nicht laden. Linux OK
+#	2. Lösung: Dict['PIDffmpeg'] wird nach subprocess.Popen belegt. Beim ungewollten Wiedereintritt
+#		wird nach TVLiveRecordSender (Senderliste) zurück gesprungen und Dict['PIDffmpeg'] geleert.
+#		Beim nächsten manuellen Aufruf wird LiveRecord wieder frei gegeben ("Türsteherfunktion").
+#
+#	PHT-Problem: wie in TuneIn2017 (streamripper-Aufruf) sprignt PHT bereits vor dem Ergebnis-Buttons (DirectoryObject)
+#		in LiveRecord zurück.
+#		Lösung: Ersatz des Ergebnis-Buttons durch return ObjectContainer. PHT steigt allerdings danach mit 
+#			"GetDirectory failed" aus (keine Abhilfe bisher). Der ungewollte Wiedereintritt findet trotzdem
+#			statt.
+#
+# 20.12.2018 Plex-Probleme "autom. Wiedereintritt" in Kodi nicht beobachtet (Plex-Sandbox Phänomen?) - Code
+#	entfernt.
+# 29.04.0219 Erweiterung manuelle Eingabe der Aufnahmedauer
+#
+# Aufrufer: TVLiveRecordSender, JobMonitor (epgRecord), EPG_ShowAll via Kontextmenü
+# 	Check auf ffmpeg-Settings bereits in TVLiveRecordSender, Check auf LiveRecord-Setting
+# 		bereits in SenderLiveListePre
+# 04.07.2020 angepasst für epgRecord (Eingabe Dauer entf., Dateiname mit Datumformat 
+#		geändert, Notification statt Dialog. epgJob enthält mydate (bereits für
+#		detailtxt verwendet).
+#		duration-Format: Sekunden (statt "00:00:00")
+#  		verlagert nach util (import aus  ardundzdf klappt nicht in epgRecord).
+#
+def LiveRecord(url, title, duration, laenge, epgJob=''):
+	PLog('LiveRecord:')
+	PLog(url); PLog(title); 	
+	PLog('duration: %s, laenge: %s' % (duration, laenge))
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)					# Home-Button
+	
+	
+	if epgJob == '':								# epgRecord: o. Eingabe Dauer
+		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':	# Aufnahmedauer manuell
+			duration = duration[:5]									# 01:00:00, für Dialog kürzen
+			dialog = xbmcgui.Dialog()
+			duration = dialog.input('Aufnahmedauer eingeben (HH:MM)', duration, type=xbmcgui.INPUT_TIME)
+			PLog(duration)
+			if duration == '' or duration == ' 0:00':
+				msg1 = "Aufnahmedauer fehlt - Abbruch"
+				PLog(msg1)
+				MyDialog(msg1, '', '')
+				return li	
+			duration = "%s:00" % duration							# für ffmpeg wieder auffüllen
+			laenge = "%s (Stunden:Minuten)" % duration[:5]			# Info nach Start, s.u.
+			PLog('manuell_duration: %s, laenge: %s' % (duration, laenge))
+			
+	dest_path = SETTINGS.getSetting('pref_download_path')
+	dest_path = dest_path  							# Downloadverzeichnis fuer curl/wget verwenden
+	now = datetime.datetime.now()
+	mydate = now.strftime("%Y%m%d_%H%M%S")			# Zeitstempel
+	dfname = make_filenames(title)					# Dateiname aus Sendername generieren
+	if epgJob:
+		dfname = "%s_%s.mp4" % (epgJob, dfname)
+	else:
+		dfname = "%s_%s.mp4" % (mydate, dfname) 	
+	dest_file = os.path.join(dest_path, dfname)
+	if url.startswith('http') == False:				# Pfad bilden für lokale m3u8-Datei
+		if url.startswith('rtmp') == False:
+			url 	= os.path.join(M3U8STORE, url)	# rtmp-Url's nicht lokal
+			url 	= '"%s"' % url					# Pfad enthält Leerz. - für ffmpeg in "" kleiden						
+	
+	cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	% (url, duration, dest_file)
+	PLog("cmd: " + cmd); 
+	icon = R("icon-record.png")
+	
+	PLog(sys.platform)
+	if sys.platform == 'win32':							
+		args = cmd
+	else:
+		args = shlex.split(cmd)							
+	
+	try:
+		PIDffmpeg = ''
+		sp = subprocess.Popen(args, shell=False)
+		PLog('sp: ' + str(sp))
+
+		if str(sp).find('object at') > 0:  			# subprocess.Popen object OK
+			PIDffmpeg = sp.pid					# PID speichern bei Bedarf
+			PLog('PIDffmpeg neu: %s' % PIDffmpeg)
+			Dict('store', 'PIDffmpeg', PIDffmpeg)
+			msg1 = 'Aufnahme gestartet:'
+			msg2 = dfname
+			# msg3 = "Aufnahmedauer: %s" % laenge
+			PLog('Aufnahme gestartet: %s' % dfname)	
+			# MyDialog(msg1, msg2, msg3)
+			xbmcgui.Dialog().notification(msg1, msg2,icon,3000)
+			return PIDffmpeg			
+				
+	
+	except Exception as exception:
+		msg = str(exception)
+		PLog(msg)		
+		msg1 ='Aufnahme-Problem'
+		msg2 = dfname
+		# MyDialog(msg1, msg2, '')
+		xbmcgui.Dialog().notification(msg1, msg2,icon,3000)
+		return li	
+		
 ####################################################################################################
 # PlayVideo aktuell 23.03.2019: 
 #	Sofortstart + Resumefunktion, einschl. Anzeige der Medieninfo:
