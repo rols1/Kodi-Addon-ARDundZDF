@@ -22,10 +22,11 @@
 		<title>Das Erste</title>
 		<hrefsender>Das Erste</hrefsender>
 		<link>https://mcdn.daserste.de/daserste/de/master.m3u8</link>
+		<reclink>https://derste247livede.akamaized.net/hls/live/658317/daserste_de/profile1/1.m3u8</reclink>
 		<thumbnail>tv-das-erste.png</thumbnail>
 		<imgsource>Arauco</imgsource>
 		<EPG_ID>ARD</EPG_ID>
-		<date>11.05.2019</date>
+		<date>13.07.2020</date>
 	</item>
 	<item>
 		<title>ZDF</title>

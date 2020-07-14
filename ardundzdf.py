@@ -43,8 +43,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.1.8'
-VDATE = '12.07.2020'
+VERSION = '3.1.9'
+VDATE = '14.07.2020'
 
 #
 #
@@ -4533,15 +4533,17 @@ def DownloadTools():
 			mpcnt = mpcnt + 1	
 			fname = os.path.join(path, entry)					
 			vidsize = vidsize + os.path.getsize(fname) 
-	vidsize	= vidsize / 1000000
-	PLog('Downloadverzeichnis: %s Download(s), %s MBytes' % (mpcnt, str(vidsize)))
+	vidsize	= humanbytes(vidsize)
+	PLog('Downloadverzeichnis: %s Download(s), %s' % (str(mpcnt), vidsize))
 		
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)								# Home-Button
 	
-	dlpath =  SETTINGS.getSetting('pref_download_path')# Einstellungen: Pfad Downloaderz.
+	dlpath =  SETTINGS.getSetting('pref_download_path')# Einstellungen: Pfad Downloadverz.
 	title = u'Downloadverzeichnis festlegen/ändern: (%s)' % dlpath			
 	tagline = 'Das Downloadverzeichnis muss für den Addon-Nutzer beschreibbar sein.'
+	summ = ''; 
+		
 	# summary =    # s.o.
 	fparams="&fparams={'settingKey': 'pref_download_path', 'mytype': '0', 'heading': '%s', 'path': '%s'}" % (title, dlpath)
 	addDir(li=li, label=title, action="dirList", dirID="DirectoryNavigator", fanart=R(ICON_DOWNL_DIR), 
@@ -4576,11 +4578,15 @@ def DownloadTools():
 		thumb=R(ICON_DIR_FAVORITS), fparams=fparams, tagline=tagline)
 		
 	if mpcnt > 0:																# Videos / Podcasts?
+		dirsize=''
+		dirsize = get_dir_size(SETTINGS.getSetting('pref_download_path'))
+		summ = u"Größe Downloadverzeichnis: %s | Anzahl Downloads: %s | Größe Video-/Audiodateien: %s" %\
+			(dirsize, str(mpcnt), vidsize)		
 		title = 'Downloads und Aufnahmen bearbeiten: %s Download(s)' % (mpcnt)	# Button Bearbeiten
-		summary = 'Downloads im Downloadverzeichnis ansehen, loeschen, verschieben'
+		tag = 'Downloads im Downloadverzeichnis ansehen, loeschen, verschieben'
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="DownloadsList", fanart=R(ICON_DOWNL_DIR), 
-			thumb=R(ICON_DIR_WORK), fparams=fparams, summary=summary)
+			thumb=R(ICON_DIR_WORK), fparams=fparams, summary=summ, tagline=tag)
 
 		if dirlist:
 			dest_path = SETTINGS.getSetting('pref_download_path') 
@@ -5601,7 +5607,7 @@ def TVLiveRecordSender(title):
 		if u'://' not in img:	# Logo lokal? -> wird aus Resources geladen, Unterverz. leider n.m.
 			img = R(img)
 		link 	= rec[3]
-		title1 	= title + ': Aufnahme starten' 
+		title 	= "record: %s" % title 
 		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
 			laenge = "wird manuell eingegeben"
 		summ 	= 'Aufnahmedauer: %s' 	% laenge
@@ -5611,6 +5617,13 @@ def TVLiveRecordSender(title):
 			% (quote(link), quote(title), duration, laenge)
 		addDir(li=li, label=title, action="dirList", dirID="LiveRecord", fanart=R(rec[2]), thumb=img, 
 			fparams=fparams, summary=summ, tagline=tag)
+		
+	# Wechsel-Button zu den DownloadTools:	
+	tagline = 'Downloads und Aufnahmen: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
+	fparams="&fparams={}"
+	addDir(li=li, label='Download- und Aufnahme-Tools', action="dirList", dirID="DownloadTools", 
+		fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)	
+			
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -5770,6 +5783,8 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 		EPG_ID = stringextract('<EPG_ID>', '</EPG_ID>', item)
 		img = 	stringextract('<thumbnail>', '</thumbnail>', item)
 		link =  stringextract('<link>', '</link>', item)			# url für Livestreaming
+		if "<reclink>" in item:
+			link =  stringextract('<reclink>', '</reclink>', item)	# abw. Link, zum Aufnehmen geeignet
 		
 		if 'ZDFsource' in link:
 			title_sender = stringextract('<hrefsender>', '</hrefsender>', item)	
@@ -5855,6 +5870,13 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 			quote(stream_url), pagenr)
 		addDir(li=li, label=summ, action="dirList", dirID="EPG_ShowSingle", fanart=R('tv-EPG-single.png'), 
 		thumb=R(ICON_MEHR), fparams=fparams, summary=summ)
+		
+	# Wechsel-Button zu den DownloadTools:	
+	tagline = 'Downloads und Aufnahmen: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
+	fparams="&fparams={}"
+	addDir(li=li, label='Download- und Aufnahme-Tools', action="dirList", dirID="DownloadTools", 
+		fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)	
+		
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #-----------------------------------------------------------------------------------------------------
@@ -5915,8 +5937,10 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 				img = img_playlist			
 			else:	
 				href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6]
-				if img.find('http') == -1:	# Werbebilder today.de hier ohne http://, Ersatzbild einfügen
-					img = R('icon-bild-fehlt.png')
+				PLog("img: " + img)
+				if type(img) != list:			# Ursache Listobjekt n.b.
+					if img.find('http') == -1:	# Werbebilder today.de hier ohne http://, Ersatzbild einfügen
+						img = R('icon-bild-fehlt.png')
 				title=py2_decode(title); sname=py2_decode(sname); title_playlist=py2_decode(title_playlist);
 				title 	= sname.replace('JETZT', title_playlist)		# JETZT durch Sender ersetzen
 				# sctime 	= "[COLOR red] %s [/COLOR]" % stime			# Darstellung verschlechtert
@@ -5943,6 +5967,12 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 		fparams="&fparams={'title': '%s', 'offset': '%s'}"	% (quote(title_org), new_offset)
 		addDir(li=li, label=summ, action="dirList", dirID="EPG_ShowAll", fanart=R('tv-EPG-all.png'), 
 			thumb=R(ICON_MEHR), fparams=fparams, summary=summ, tagline=title2)
+
+	# Wechsel-Button zu den DownloadTools:	
+	tagline = 'Downloads und Aufnahmen: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
+	fparams="&fparams={}"
+	addDir(li=li, label='Download- und Aufnahme-Tools', action="dirList", dirID="DownloadTools", 
+		fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #-----------------------------------------------------------------------------------------------------

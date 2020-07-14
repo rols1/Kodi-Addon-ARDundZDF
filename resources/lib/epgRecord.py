@@ -32,6 +32,7 @@ elif PYTHON3:
 
 import time, datetime
 from threading import Thread	
+import random						# Zufallswerte für JobID
 
 from resources.lib.util import *
 import resources.lib.EPG as EPG
@@ -54,7 +55,7 @@ JOBFILE_LOCK	= os.path.join("%s/jobliste.lck") % ADDON_DATA		# Lockfile für Job
 JOB_STOP		= os.path.join("%s/job_stop") % ADDON_DATA			# Stopfile für JobMonitor
 MONITOR_ALIVE 	= os.path.join("%s/monitor_alive") % ADDON_DATA		# Lebendsignal für JobMonitor (leer, mtime-Abgleich)
 
-JOBLINE_TEMPL	= "<startend>%s</startend><title>%s</title><descr>%s</descr><sender>%s</sender><url>%s</url><status>%s</status><pid>%s</pid>"
+JOBLINE_TEMPL	= "<startend>%s</startend><title>%s</title><descr>%s</descr><sender>%s</sender><url>%s</url><status>%s</status><pid>%s</pid><JobID>%s</JobID>"
 JOB_TEMPL		= "<job>%s</job>"
 JOBLIST_TEMPL	= "<jobliste>\n%s\n</jobliste>"
 JOBDELAY 		= 60	# Sek.=1 Minute
@@ -299,7 +300,9 @@ def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSet
 		status = 'waiting'											# -> <status>,  JobMonitor aktualisiert 
 		title = cleanmark(title)									# Farbe/fett aus ProgramRecord
 		pid = ''									# nimmt im Monitor PIDffmpeg auf
-		job_line = JOBLINE_TEMPL % (start_end,title,descr,sender,url,status,pid)
+		block = '4Yp2C09aF1k5YC3d'
+		JobID = ''.join(random.choice(block) for i in range(len(block)))  # 16 stel. Job-ID
+		job_line = JOBLINE_TEMPL % (start_end,title,descr,sender,url,status,pid,JobID)
 		new_job = JOB_TEMPL % job_line
 		PLog(new_job[:80])
 		jobs = ReadJobs()											# s. util
@@ -364,7 +367,7 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 	PLog("JobListe:")
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)				# Home-Button
+	li = home(li, ID=NAME)											# Home-Button
 	
 	if os.path.exists(JOBFILE):	
 		jobs = ReadJobs()											# s. util
@@ -376,8 +379,8 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 	now = EPG.get_unixtime(onlynow=True)
 	now = int(now)
 	now_human = date_human("%d.%m.%Y, %H:%M", now='')
-	pre_rec  = SETTINGS.getSetting('pref_pre_rec')			# Vorlauf (Bsp. 00:15:00 = 15 Minuten)
-	post_rec = SETTINGS.getSetting('pref_post_rec')			# Nachlauf (dto.)
+	pre_rec  = SETTINGS.getSetting('pref_pre_rec')					# Vorlauf (Bsp. 00:15:00 = 15 Minuten)
+	post_rec = SETTINGS.getSetting('pref_post_rec')					# Nachlauf (dto.)
 	pre_rec = re.search('= (\d+) Min', pre_rec).group(1)
 	post_rec = re.search('= (\d+) Min', post_rec).group(1)
 	anz_jobs = len(jobs)
@@ -400,7 +403,8 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 			
 			pid = stringextract('<pid>', '</pid>', myjob)
 			title = stringextract('<title>', '</title>', myjob)
-			job_title = title										# für Abgleich in JobRemove
+			job_title = title										# Abgleich in JobRemove alt
+			JobID = stringextract('<JobID>', '</JobID>', myjob)		# Abgleich in JobRemove neu
 			sender = stringextract('<sender>', '</sender>', myjob)
 			dfname = "%s: %s" % (sender, title)						# Titel: Sender + Sendung (mit Mark.)
 			dfname = make_filenames(dfname.strip()) + ".mp4"		# Name aus Titel
@@ -432,15 +436,15 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 				status_real = "Aufnahme geplant: %s" % start_human
 				
 			label = u'Job löschen: %s'	% title 				
-			tag = u'Start: %s, Ende: %s' % (start_human, end_human)
+			tag = u'Start: [B]%s[/B], Ende: [I][B]%s[/B][/I]' % (start_human, end_human)
 			tag = u'%s\n%s' % (tag, status_real)
 			
 			max_reclist = SETTINGS.getSetting('pref_max_reclist')
 			summ = u'[B]Anzahl Jobs[/B] in der Aufnahmeliste: %s' % (anz_jobs)
 			summ = u"%s\n[B]Settings[/B]:\n[B]max. Größe der Aufnahmeliste:[/B] %s Jobs," % (summ, max_reclist)
 			summ = u"%s[B]Vorlauf:[/B] %s Min., [B]Nachlauf:[/B] %s Min." % (summ, pre_rec, post_rec)
-			fparams="&fparams={'sender':'%s','job_title':'%s','start_end':'%s','job_active':'%s','pid':'%s'}" %\
-				(sender, job_title, start_end, job_active, pid)
+			fparams="&fparams={'sender':'%s','job_title':'%s','start_end':'%s','job_active':'%s','pid':'%s','JobID':'%s'}" %\
+				(sender, job_title, start_end, job_active, pid, JobID)
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.epgRecord.JobRemove", fanart=R(ICON_DOWNL_DIR), 
 				thumb=img, fparams=fparams, tagline=tag, summary=summ)
 	
@@ -448,17 +452,25 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 	
 #----------------------------------------------------------------
 # Aufrufer: JobListe
+# Ablauf: Liste einlesen, Einträge in Schleife abgleichen, gefundenen
+#			Satz verwerfen, verkleinerte Liste mit Lock speichern
 # job_title: unbehandelt, mit ev. Mark.
-# title + start_end: eindeutige ID
+# title + start_end: als ID nur noch aus Kompat. verwenden(Kodier-
+#			Problem möglich)
+# 13.07.2020 JobID als eindeutige ID ergänzt
 #
-def JobRemove(sender, job_title, start_end, job_active, pid):
+def JobRemove(sender, job_title, start_end, job_active, pid, JobID):
 	PLog("JobRemove:")
-	
+	PLog(pid); PLog(JobID) 
+
 	msg1 = "%s: %s" % (sender, job_title)
 	heading = u"Job aus Aufnahmeliste löschen"
+	pidtxt=''
+	if pid:
+		pidtxt = " (PID %s) " % pid
 	if job_active == 'True':
-		msg2 = u"Job (PID %s) tatsächlich abbrechen und löschen?" % pid
-		heading = "aktiven (!) %s!" % heading
+		msg2 = u"Job %s tatsächlich abbrechen und löschen?" % pidtxt
+		heading = u"aktiven (!) %s!" % heading
 		icon = MSG_ICON
 	else:
 		msg2 = u"Job tatsächlich löschen?" 
@@ -469,17 +481,25 @@ def JobRemove(sender, job_title, start_end, job_active, pid):
 	if ret !=1:
 		return
 	
-	if job_active == 'True':
+	if job_active == 'True' and pid != '':
 		os.kill(int(pid), signal.SIGTERM)						# auch Windows10 OK (aber Teilvideo beschäd.)
 		PLog("kill_pid:  %s" % str(pid))
 	
 	jobs = ReadJobs()											# s. util
 	newjob_list = []; 											# newjob_list: Liste nach Änderungen
+	job_title=py2_encode(job_title); 							# type kann vom code-Format in jobs abweichen
 	for job in jobs:
 		my_start_end 	= stringextract('<startend>', '</startend>', job)
-		my_title 	= stringextract('<title>', '</title>', job)
-		if start_end == my_start_end and job_title == my_title: # skip=delete
-			continue
+		my_title 		= stringextract('<title>', '</title>', job)
+		my_JobID 		= stringextract('<JobID>', '</JobID>', job)
+		if JobID:												# neuer Abgleich
+			if JobID == my_JobID:
+				PLog('JobID_OK: %s' % JobID)
+				continue
+		else:													# alter Abgleich
+			if start_end == my_start_end and job_title == my_title: 
+				PLog('start_end_title_OK: %s' % start_end)
+				continue
 		newjob_list.append(JOB_TEMPL % job)						# job -> Marker
 		
 	PLog(len(jobs))			
@@ -587,8 +607,10 @@ def test_jobs():
 		descr = u"Debug: Jobliste mit ausgewählten Jobs, Startzeit: jetzt + 10 Sec., Aufnahmezeit 10 Sec. (Endzeit: Startzeit + 10 Sec.)"
 		status = "waiting"
 		pid = ''
+		block = '4Yp2C09aF1k5YC3d'
+		JobID = ''.join(random.choice(block) for i in range(len(block)))  # 16 stel. Job-ID
 		
-		job = JOBLINE_TEMPL % (start_end,title,descr,sender,url,status,pid)
+		job = JOBLINE_TEMPL % (start_end,title,descr,sender,url,status,pid,JobID)
 		job_list.append(JOB_TEMPL % job)					# job -> Marker
 	
 	jobs = "\n".join(job_list)	

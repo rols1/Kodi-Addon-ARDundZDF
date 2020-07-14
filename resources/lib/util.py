@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 08.07.2020
+#	Stand 14.07.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -641,6 +641,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		cmenu=True, sortlabel='', merkname='', filterstatus='', start_end=''):
 	PLog('addDir:');
 	PLog(type(label))
+	label_org=label				# s. 'Job löschen' in K-Menüs
 	label=py2_encode(label)
 	PLog('addDir_label: {0}, action: {1}, dirID: {2}'.format(label[:100], action, dirID))
 	PLog(mediatype);
@@ -713,7 +714,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			fparams_change = "&fparams={0}".format(fp)
 			fparams_change = quote_plus(fparams_change)				# Filtern
 			
-		# unterschiedl. Parameterquellen: EPG_ShowSingle, EPG_ShowAll:
+		# unterschiedl. Parameterquellen: EPG_ShowSingle, EPG_ShowAll - bei
+		#	title + descr sind hier die Codier.-Behandl. zu wiederholen:
 		if start_end:												# Unix-Time-Format od. "Recording.."
 			PLog("start_end: " + start_end)
 			f = unquote(fparams)									# Param. extrahieren 
@@ -723,9 +725,13 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			url = stringextract("path':'", "'", f) 					# Stream-Url
 			# title mit Markierung übernehmen
 			title = stringextract("title':'", "'", f) 				# Bsp. 'Mi | 01:45 | Dick und nun?'
+			title = py2_decode(title)
+			title = repl_json_chars(title)
 			PLog("title: " + title)
 			descr = "%s\n\n%s" % (tagline, summary)
 			descr = descr.replace('\n','||')
+			descr = py2_decode(descr)
+			descr = repl_json_chars(descr)
 			
 			if "Recording TV-Live" in start_end:				# K-Menü in EPG_ShowAll -> LiveRecord
 				Sender = cleanmark(title)
@@ -743,6 +749,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				PLog("fparams_recordLive: " + fparams_recordLive[:100])
 				fparams_recordLive = quote_plus(fparams_recordLive)			
 			else:													# K-Menü in EPG_ShowSingle	
+				title=py2_encode(title); descr=py2_encode(descr)
 				fp = {'url': quote_plus(url), 'sender': quote_plus(Sender),\
 					'title': quote_plus(title), 'descr': quote_plus(descr), 'start_end': start_end} 
 				fparams_record = "&fparams={0}".format(fp)
@@ -766,7 +773,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_add)))
 		commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-				% (MY_SCRIPT, HANDLE, fparams_del)))			
+				% (MY_SCRIPT, HANDLE, fparams_del)))
+	
 		if fparams_folder:											# Aufrufer ShowFavs s.o.
 			PLog('set_folder_context: ' + merkname)
 			commands.append(('Merklisten-Eintrag zuordnen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
