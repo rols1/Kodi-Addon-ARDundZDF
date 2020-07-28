@@ -12,7 +12,34 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-14.06.2020	3.1.9
+28.07.2020	3.2.1 experimentell: Modul m3u8 - ffmpeg-Ersatz für Recording/Aufnahmen
+			Neue Funktionen: get_m3u8_body, get_url_list, download_ts_file,
+			get_ts_startpos, download_ts, Main_m3u8.
+			LiveRecord (Modul util): Anpassung für Modul m3u8. 
+			CalculateDuration (Modul util): Erweiterung für Format aus xbmcgui.INPUT_TIME
+			(manuelle Zeiteingabe für Recording). 
+			JobMonitor (Modul epgRecord): Korrektur Dauer, falls Startzeit bereits über-
+			schritten.
+			SenderLiveListePre: Test auf ffmpeg-Setting für Live-Recording abgeschaltet
+			(beim m3u8-Verfahren).
+			Funktion check_Setting: verlegt ind Modul util (Mitnutzung durch LiveRecord). 
+
+not on Github	3.2.0
+			changelog.txt: Korektur Datum V3.1.8, V3.1.9
+			EPG_ShowAll: Hinw. auf Kontextmenü ans Ende von summary verlagert (passte
+			thematisch nicht).
+			AddonInfos: Pfad für Debug-Log hinzugefügt.
+			JobRemove (Modul epgRecord): Bez. geändert Aufnahmeliste -> Jobliste
+			LiveRecord: beim epgJob Austausch der Notification gegen Sprachdatei
+			(notification fehlt bei bei minimiertem Fenster).
+			TVLiveRecordSender: Info in summary: "Start ohne Rückfrage!".
+			JobListe (Modul epgRecord): bei Anzeige der Liste sortiert (Datum).
+			ARDSport + livesenderTV.xml: Änderung WDR/ARD Event Sportschau ->
+			WDR_ARD Event Sportschau (Kompat. Dateiname für Debug-Tools).
+			ZDFRubrikSingle: lable.strip() (Zeilenumbr. in lable entfernt), 
+			unescape clustertitle.
+
+14.07.2020	3.1.9
 			addDir (Modul util): Kodierungsbehandl. im Kontextmenü für  EPG_ShowSingle
 			und EPG_ShowAll (relevant für ID-Abgleich in JobRemove (epgRecord).
 			JobRemove (Modul epgRecord): leere pid abgefangen (leer bei künftigen Aufnahmen).
@@ -23,12 +50,12 @@ CHANGE HISTORY
 			EPG_ShowAll + EPG_ShowSingle: zusätzl. Wechselbutton für 'Download- und 
 			Aufnahme-Tools'.
 			DownloadTools: Infos zum Bearbeiten-Button: Anz. Dateien, Größe Verz. + Dateien.
-			EPG_ShowAll: Listobjekt für img in EPG-Rückgabe abgefangen (Ursache n.b.),
+			EPG_ShowAll: Listobjekt für img in EPG-Rückgabe abgefangen (Ursache n.b.).
 			Addon-Wicki (Github) aktualisiert.
 			livesenderTV.xml: alternative Streamurl für den Sender DasErste verwendet (An-
 			passung  in get_sort_playlist, relevant zum Aufnahmen).
 
-11.06.2020	3.1.8
+11.07.2020	3.1.8
 			get_ZDFstreamlinks (Modul util): Verwendung apiToken geändert + für 
 			player2_url genutzt (ZDF-Streamlinks konnten fehlen).
 			VideoTools: Dateigröße im Button "Ansehen"in tagline hinzugefügt.

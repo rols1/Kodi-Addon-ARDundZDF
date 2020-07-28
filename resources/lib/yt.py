@@ -81,11 +81,13 @@ def yt_get(url, vid, title, tag, summ, thumb):
 			# duration = get_duration(page)			# Bsp.: "1:06" oder leer
 		duration = yt_init.millisecs
 		duration = seconds_translate(int(int(duration) / 1000))
-		PLog(duration)
+		PLog("duration: %d" % duration)
 	except Exception as exception:
-		msg1 = u"Video ist nicht verfügbar"
-		msg2 = 'Fehler: %s' % str(exception)		
-		MyDialog(msg1, msg2, '')
+		PLog(str(exception))
+		msg1 = u"Youtube-Video nicht verfügbar."
+		msg2 = 'Fehler: %s' % str(exception)
+		msg3 = "Video-ID: watch?v=%s" %	vid	
+		MyDialog(msg1, msg2, msg3)
 		return
 		
 	# nur mp4-Videos laden

@@ -334,7 +334,8 @@ def Kiraka_Live():
 #	zweiter Aufruf: Liste einer Gruppe 
 # Info: die Blöcke 'teaser teaserIdent' enthaltenen die Meist geklickten,
 #	Auswertung in Kika_VideosBeliebt
-# getHrefList: nur hrefs der Bündelgruppen sammeln für Kika_Search
+# getHrefList: nur hrefs der Bündelgruppen sammeln für Kika_Search - dort
+#	-> Dict-Cache 
 #	
 def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''): 
 	PLog('Kika_VideosBuendelAZ: ' + path); PLog(button)
@@ -347,7 +348,7 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''):
 		first=True
 	else:
 		fname = stringextract('allevideos-buendelgruppen100_', '.htm', path)
-		
+
 	page = Dict("load", fname, CacheTime=KikaCacheTime)
 	if page == False:
 		page, msg = get_page(path)	

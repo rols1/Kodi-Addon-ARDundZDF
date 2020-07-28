@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 14.07.2020
+#	Stand 26.07.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1420,8 +1420,10 @@ def humanbytes(B):
 	  return '{0:.2f} GB'.format(B/GB)
 	elif TB <= B:
 	  return '{0:.2f} TB'.format(B/TB)
-#----------------------------------------------------------------  
-def CalculateDuration(timecode):				# 3 verschiedene Formate (s.u.)
+#---------------------------------------------------------------- 
+# 3 verschiedene Formate (s.u.) - Rückgabe in milliseconds
+#	  Eingaben aus xbmcgui.INPUT_TIME (Recording): Format '00:00:05'
+def CalculateDuration(timecode):				
 	PLog("CalculateDuration:")
 	timecode = up_low(timecode)	# Min -> min
 	milliseconds = 0
@@ -1437,12 +1439,21 @@ def CalculateDuration(timecode):				# 3 verschiedene Formate (s.u.)
 			seconds = int ( d.group(3) )
 			milliseconds = int ( d.group(4) )
 					
-	if len(timecode) == 9:						# Formate: '00:30 min'	
+	if len(timecode) == 8:						# Eingaben xbmcgui.INPUT_TIME
+		d = re.search('([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})', timecode)	# 2. Format: '00:00:05'	
+		if(None != d):
+			hours = int( d.group(1) )
+			minutes = int( d.group(2) )
+			seconds = int ( d.group(3) )
+			PLog(seconds)
+			
+						
+	if len(timecode) == 9:					
 		d = re.search('([0-9]{1,2}):([0-9]{1,2}) MIN', timecode)	# 2. Format: '00:30 min' 	
 		if(None != d):
 			hours = int( d.group(1) )
 			minutes = int( d.group(2) )
-			Log(minutes)
+			PLog(minutes)
 						
 	if len(timecode) == 11:											# 3. Format: '1:50:30.000'
 		d = re.search('([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2}).([0-9]{1,3})', timecode)
@@ -1882,11 +1893,12 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):
 #
 # Beachte: Blank hinter title_sender zur Abgrenz. der ZDF-Sender.
 #	Abgleich kompl. Titel nicht sicher (Bsp. 2 Blanks bei Arte)
-# 26.06.2020 skip_log hinzugefügt (relevant für loop in 
-#	get_sort_playlist)
+# 26.06.2020 skip_log hinzugefügt (True in get_sort_playlist
+#	loop, Ausgabe der Liste in  "Überregional")
 #-----------------------------------------------
 def get_ZDFstreamlinks(skip_log=False):
 	PLog('get_ZDFstreamlinks:')
+	PLog(skip_log)
 	ZDFlinks_CacheTime	= 86400					# 24 Std.: (60*60)*24
 		
 	page = Dict("load", 'zdf_streamlinks', CacheTime=ZDFlinks_CacheTime)
@@ -2035,45 +2047,34 @@ def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für D
 		
 #---------------------------------------------------------------------------------------------------
 # 30.08.2018 Start Recording TV-Live
-#	Problem: autom. Wiedereintritt hier + erneuter Popen-call nach Rückkehr zu TVLiveRecordSender 
-#		(Ergebnis-Button nach subprocess.Popen, bei PHT vor Ausführung des Buttons)
-#		OS-übergreifender Abgleich der pid problematisch - siehe
-#		https://stackoverflow.com/questions/4084322/killing-a-process-created-with-pythons-subprocess-popen
-#		Der Wiedereintritt tritt sowohl unter Linux als auch Windows auf.
-#		Ursach n.b. - tritt in DownloadExtern mit curl/wget nicht auf.
-#	1. Lösung: Verwendung des psutil-Moduls (../Contents/Libraries/Shared/psutil ca. 400 KB)
-#		und pid-Abgleich Dict['PID'] gegen psutil.pid_exists(pid) - s.u.
-#		verworfen - Modul lässt sich unter Windows nicht laden. Linux OK
-#	2. Lösung: Dict['PIDffmpeg'] wird nach subprocess.Popen belegt. Beim ungewollten Wiedereintritt
-#		wird nach TVLiveRecordSender (Senderliste) zurück gesprungen und Dict['PIDffmpeg'] geleert.
-#		Beim nächsten manuellen Aufruf wird LiveRecord wieder frei gegeben ("Türsteherfunktion").
-#
-#	PHT-Problem: wie in TuneIn2017 (streamripper-Aufruf) sprignt PHT bereits vor dem Ergebnis-Buttons (DirectoryObject)
-#		in LiveRecord zurück.
-#		Lösung: Ersatz des Ergebnis-Buttons durch return ObjectContainer. PHT steigt allerdings danach mit 
-#			"GetDirectory failed" aus (keine Abhilfe bisher). Der ungewollte Wiedereintritt findet trotzdem
-#			statt.
-#
-# 20.12.2018 Plex-Probleme "autom. Wiedereintritt" in Kodi nicht beobachtet (Plex-Sandbox Phänomen?) - Code
-#	entfernt.
-# 29.04.0219 Erweiterung manuelle Eingabe der Aufnahmedauer
+#	Kopfdoku + Code zu Plex-Problemen entfernt (bei Bedarf s. Github) -
+#	unter Kodi nicht relevant
 #
 # Aufrufer: TVLiveRecordSender, JobMonitor (epgRecord), EPG_ShowAll via Kontextmenü
 # 	Check auf ffmpeg-Settings bereits in TVLiveRecordSender, Check auf LiveRecord-Setting
 # 		bereits in SenderLiveListePre
+# Zur Arbeitsteilung JobMonitor / m3u8-Verfahren siehe Kopfdoku zu JobMonitor
+#	
+# 29.04.0219 Erweiterung manuelle Eingabe der Aufnahmedauer
 # 04.07.2020 angepasst für epgRecord (Eingabe Dauer entf., Dateiname mit Datumformat 
 #		geändert, Notification statt Dialog. epgJob enthält mydate (bereits für
 #		detailtxt verwendet).
-#		duration-Format: Sekunden (statt "00:00:00")
-#  		verlagert nach util (import aus  ardundzdf klappt nicht in epgRecord).
-#
-def LiveRecord(url, title, duration, laenge, epgJob=''):
+#		duration-Format: Sekunden (statt "00:00:00", für man. Eingaben konvertiert).
+#  		Verlagert nach util (import aus  ardundzdf klappt nicht in epgRecord).
+# 24.07.2020 Anpassung für Modul m3u8: JobID wird für KillFile verwendet, für
+#	LiveRecording wird neuer Aufnahme-Job erzeugt (via JobMain 'setjob')
+# 
+def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	PLog('LiveRecord:')
 	PLog(url); PLog(title); 	
 	PLog('duration: %s, laenge: %s' % (duration, laenge))
+	
+	import resources.lib.EPG as EPG					# -> now
+	import resources.lib.epgRecord as epgRecord		# setjob in epgRecord.JobMain
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)					# Home-Button
+	li = home(li, ID=NAME)							# Home-Button
+	icon = R("icon-record.png")
 	
 	
 	if epgJob == '':								# epgRecord: o. Eingabe Dauer
@@ -2091,6 +2092,10 @@ def LiveRecord(url, title, duration, laenge, epgJob=''):
 			laenge = "%s (Stunden:Minuten)" % duration[:5]			# Info nach Start, s.u.
 			PLog('manuell_duration: %s, laenge: %s' % (duration, laenge))
 			
+	if ':' in str(duration):					# manu. Eingabe (TARGETDURATION gilt, falls größer)
+		duration = CalculateDuration(duration)
+		duration = int(duration / 1000)			
+			
 	dest_path = SETTINGS.getSetting('pref_download_path')
 	dest_path = dest_path  							# Downloadverzeichnis fuer curl/wget verwenden
 	now = datetime.datetime.now()
@@ -2099,23 +2104,44 @@ def LiveRecord(url, title, duration, laenge, epgJob=''):
 	if epgJob:
 		dfname = "%s_%s.mp4" % (epgJob, dfname)
 	else:
-		dfname = "%s_%s.mp4" % (mydate, dfname) 	
+		dfname = "%s_%s.mp4" % (mydate, dfname)
+	PLog("dfname: %s" % dfname) 	
 	dest_file = os.path.join(dest_path, dfname)
 	if url.startswith('http') == False:				# Pfad bilden für lokale m3u8-Datei
 		if url.startswith('rtmp') == False:
 			url 	= os.path.join(M3U8STORE, url)	# rtmp-Url's nicht lokal
 			url 	= '"%s"' % url					# Pfad enthält Leerz. - für ffmpeg in "" kleiden						
 	
+	if SETTINGS.getSetting('pref_m3u8_get') == 'true':
+		from threading import Thread	
+		import resources.lib.m3u8 as m3u8
+
+		if epgJob:									# Job existiert bereits
+			play_url = R('ttsMP3_Monitor_Aufnahme_gestartet.mp3')	
+			PlayAudio(play_url, title='', thumb='', Plot='') # ersetzt notification, falls Fenster minimiert
+		else:										# Job für Recording erzeugen
+			action="setjob" 
+			now = EPG.get_unixtime(onlynow=True)
+			start_end = "%s|%d" % (now, (int(now) + int(duration)))
+			descr = "Recording Live ohne EPG"		# JobMain: <status> -> 'gestartet'
+			sender = ''
+			JobID = epgRecord.JobMain(action, start_end, title, descr, sender, url)
+			
+		xbmcgui.Dialog().notification('Aufnahme gestartet:', dfname,icon,3000)
+		m3u8.Main_m3u8(url, dest_file, duration, JobID)	# Thread-Start in Main_m3u8
+		return	
+	
+	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
+		return
 	cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	% (url, duration, dest_file)
 	PLog("cmd: " + cmd); 
-	icon = R("icon-record.png")
 	
 	PLog(sys.platform)
 	if sys.platform == 'win32':							
 		args = cmd
 	else:
 		args = shlex.split(cmd)							
-	
+
 	try:
 		PIDffmpeg = ''
 		sp = subprocess.Popen(args, shell=False)
@@ -2130,7 +2156,21 @@ def LiveRecord(url, title, duration, laenge, epgJob=''):
 			# msg3 = "Aufnahmedauer: %s" % laenge
 			PLog('Aufnahme gestartet: %s' % dfname)	
 			# MyDialog(msg1, msg2, msg3)
-			xbmcgui.Dialog().notification(msg1, msg2,icon,3000)
+			# Kodi unterlässt notification bei minimiertem Fenster, daher 
+			#	beim epgJob Austausch gegen Sprachdatei: "ARDundZDF informiert:
+			#	die Aufnahme einer Sendung wurde gestartet"
+			if epgJob:
+				url = R('ttsMP3_Monitor_Aufnahme_gestartet.mp3')
+				PlayAudio(url, title='', thumb='', Plot='')
+			else:										# Job für Recording erzeugen (wie m3u8-Verfahren)
+				action="setjob" 
+				now = EPG.get_unixtime(onlynow=True)
+				start_end = "%s|%d" % (now, (int(now) + int(duration)))
+				descr = "ffmpeg-recording"				# JobMain -> return ohne thread-Start
+				sender = ''; setSetting='';
+				JobID = epgRecord.JobMain(action, start_end, title, descr, sender, url, setSetting, PIDffmpeg)
+				
+				xbmcgui.Dialog().notification(msg1, msg2,icon,3000)
 			return PIDffmpeg			
 				
 	
@@ -2142,6 +2182,58 @@ def LiveRecord(url, title, duration, laenge, epgJob=''):
 		# MyDialog(msg1, msg2, '')
 		xbmcgui.Dialog().notification(msg1, msg2,icon,3000)
 		return li	
+		
+#---------------------------------------------------------------------------------------------------
+def check_Setting(ID):
+	PLog('check_Setting: ' + ID)
+	
+	if ID == 'pref_LiveRecord_ffmpegCall':
+		PLog(SETTINGS.getSetting('pref_LiveRecord_ffmpegCall'))
+		# Test: Pfadanteil executable? 
+		#	Bsp.: "/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin"
+		cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	
+		if cmd.strip() == '':
+			msg1 = 'ffmpeg-Parameter fehlen in den Einstellungen!'
+			MyDialog(msg1, '', '')
+			return False
+			
+		if os.path.exists(cmd.split()[0]) == False:
+			msg1 = 'Pfad zu ffmpeg nicht gefunden.'
+			msg2 = 'Bitte ffmpeg-Parameter in den Einstellungen prüfen, aktuell:'
+			msg3 = 	SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')
+			MyDialog(msg1, msg2, msg3)
+			return False
+		return True
+		
+	if ID == 'pref_download_path':
+		dest_path = SETTINGS.getSetting('pref_download_path')
+		msg1	= 'LiveRecord:'
+		if  dest_path == None or dest_path.strip() == '':
+			msg2 	= 'Downloadverzeichnis fehlt in den Einstellungen'
+			MyDialog(msg1, msg2, '')
+			return False
+		PLog(os.path.isdir(dest_path))
+					
+		if  os.path.isdir(dest_path) == False:
+			msg2 	= 'Downloadverzeichnis existiert nicht'
+			msg3	= "Settings: " + dest_path
+			MyDialog(msg1, msg2, msg3)
+			return False
+		return True		
+		
+	if ID == 'pref_use_downloads':
+		# Test auf Existenz curl/wget in DownloadExtern
+		if SETTINGS.getSetting('pref_use_downloads') == 'true':
+			dest_path = SETTINGS.getSetting('pref_download_path')
+			if  os.path.isdir(dest_path) == False:
+				msg1	= u'test_downloads: Downloads nicht möglich'
+				msg2 	= 'Downloadverzeichnis existiert nicht'
+				msg3 	= "Settings: " + dest_path
+				MyDialog(msg1, msg2, msg3)
+				return False				
+		else:
+			return False
+		return True
 		
 ####################################################################################################
 # PlayVideo aktuell 23.03.2019: 

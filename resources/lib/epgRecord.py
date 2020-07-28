@@ -7,7 +7,7 @@
 #
 ####################################################################################################
 #	01.07.2020 Start
-#	Stand 12.07.2020
+#	Stand 27.07.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -31,13 +31,12 @@ elif PYTHON3:
 	from urllib.error import URLError
 
 import time, datetime
+import glob
 from threading import Thread	
 import random						# Zufallswerte für JobID
 
 from resources.lib.util import *
 import resources.lib.EPG as EPG
-#from ardundzdf import MakeDetailText, LiveRecord
-
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -75,7 +74,17 @@ MSG_ICON 		= R("icon-record.png")
 #					2. Setting pref_epgRecord (direkt)						
 # Lock: wegen mögl. konkur. Zugriffe auf die Jobdatei wird eine Lock-
 #	datei verwendet (JobMain, Monitor)
+# Job-Bereich: Aufnahme-Jobs (ffmpeg, m3u8) - Erzeugung: K-Menü 
+#	EPG_ShowSingle -> ProgramRecord -> JobMain.
+# Aufnahmestart nach Zeitabgleich mit Call LiveRecord:
+#	ffmpeg-Verfahren: Ablage PIDffmpeg im Job
+#	m3u8-Verfahren: LiveRecord startet direkt m3u8.Main_m3u8, Ablage
+#		 Thread_JobID als PIDffmpeg im Job
+#	 
+# Verfahren Recording-TV-Live-Jobs: LiveRecord erzeugt Job via JobMain +
+#	startet direkt ffmpeg oder m3u8-Verfahren (je nach Setting) 
 #
+
 def JobMonitor():
 	PLog("JobMonitor:")
 	pre_rec  = SETTINGS.getSetting('pref_pre_rec')			# Vorlauf (Bsp. 00:15:00 = 15 Minuten)
@@ -116,6 +125,8 @@ def JobMonitor():
 				
 		if os.path.exists(JOBFILE):							# bei jedem Durchgang neu einlesen
 			jobs = ReadJobs()
+		else:
+			jobs = []
 			
 		now = EPG.get_unixtime(onlynow=True)
 		now = int(now)
@@ -137,7 +148,7 @@ def JobMonitor():
 			start_human = date_human("%Y.%m.%d_%H:%M:%S", now=start)
 			mydate = date_human("%Y%m%d_%H%M%S", now=start)			# Zeitstempel für titel in LiveRecord	
 			end_human= date_human("%Y.%m.%d_%H:%M:%S", now=end)			
-
+			
 			duration = end - start									# in Sekunden für ffmpeg
 			diff = start - now
 			vorz=''
@@ -145,14 +156,16 @@ def JobMonitor():
 				vorz = "minus "
 			diff = seconds_translate(diff)	
 			
-			laenge = ""												# entfällt hier
+			laenge = ""; PIDffmpeg=''								# laenge entfällt hier
 			# PLog("now %s, start %s, end %s" % (now, start, end))  # Debug
 			PLog("now %s, start %s, end %s, start-now: %s" % (now_human, start_human, end_human, diff))
 			
 			#---------------------------------------------------	# 1 Job -> Aufnahme		
 			if (now >= start and now <= end) and status == 'waiting':	# Job ist aufnahmereif
 				PLog("Job ready: " + start_end)	
+				duration = end - now								# Korrektur, falls start schon überschritten
 				url = stringextract('<url>', '</url>', myjob)
+				JobID = stringextract('<JobID>', '</JobID>', myjob)
 				sender = stringextract('<sender>', '</sender>', myjob)
 				title = stringextract('<title>', '</title>', myjob)
 				title = "%s: %s" % (sender, title)					# Titel: Sender + Sendung
@@ -182,12 +195,17 @@ def JobMonitor():
 				myjob = myjob.replace('<status>waiting', '<status>gestartet')
 				PLog("Job %d started" % cnt)
 				job_changed = True
-				PIDffmpeg = LiveRecord(url, title, duration, laenge='', epgJob=mydate) # Aufnehmen
+				
+				PIDffmpeg = LiveRecord(url, title, duration, laenge='', epgJob=mydate, JobID=JobID) # Aufnehmen
+				#  m3u8-Verfahren statt ffmpeg - LiveRecord startet direkt m3u8.Main_m3u8:
+				if SETTINGS.getSetting('pref_m3u8_get') == 'true':
+					PIDffmpeg = "Thread_%s" % JobID					# -> KillFile (JobRemove)
+												
 				myjob = myjob.replace('<pid></pid>', '<pid>%s</pid>' % PIDffmpeg)
 
 			#---------------------------------------------------	# Job zurück in Liste		
 			jobs[cnt] = JOB_TEMPL % myjob							# Job -> Listenelement
-			PLog("Job %d loopend: %s" % (cnt+1, jobs[cnt][:40]))
+			PLog("Job %d PIDffmpeg: %s" % (cnt+1, PIDffmpeg))
 			cnt=cnt+1												# und nächster Job
 			
 		#---------------------------------------------------		# Jobliste speichern, falls geändert	
@@ -199,6 +217,7 @@ def JobMonitor():
 			PLog(page[:80])
 			open(JOBFILE_LOCK, 'w').close()							# Lock ein				
 			err_msg = RSave(JOBFILE, page)							# Jobliste speichern
+			xbmc.sleep(500)
 			if os.path.exists(JOBFILE_LOCK):						# Lock aus
 				os.remove(JOBFILE_LOCK)	
 						
@@ -212,19 +231,19 @@ def JobMonitor():
 # Aufrufer:
 #	action init: bei jedem Start ardundzdf.py (bei Setting pref_epgRecord)
 # 	action stop: DownloadTools
-#	action setjob: ProgramRecord
+#	action setjob: ProgramRecord, LiveRecord (ohne EPG)
 # 
 # Checks auf ffmpegCall + download_path in ProgramRecord
 # Problem : bei Abstürzen (network error) kann das Lebendsignal
 #	MONITOR_ALIVE als Ruine stehenbleiben. Lösung: falls mtime
 #	mehr als JOBDELAY zurückliegt, gilt Monitor als tot - init ist 
 #	wieder möglich.
-# 	threading.enumerate() hier nicht geeignet (iefert nur MainThread)
+# 	threading.enumerate() hier nicht geeignet (liefert nur MainThread)
 #	
-def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSetting=''):
+def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSetting='', PIDffmpeg=''):
 	PLog("JobMain:")
 	PLog(action); PLog(sender); PLog(title);  
-	PLog(descr); PLog(start_end);	
+	PLog(descr); PLog(start_end); PLog(PIDffmpeg);	
 	
 	# mythreads = threading.enumerate()								# liefert in Kodi nur MainThread
 	status = os.path.exists(MONITOR_ALIVE)
@@ -277,7 +296,7 @@ def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSet
 			if int(start) > int(now):
 				job_active = True
 				break
-		PLog('Mark1')
+
 		if job_active:
 			title = 'Aufnahme-Monitor stoppen'					
 			msg1 = "Mindestens ein Aufnahmejob ist noch aktiv!"
@@ -295,13 +314,23 @@ def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSet
 		return
 		
 	#------------------------
+	# die für Recording Live (LiveRecord) erzeugten Jobs werden nicht im JobMonitor
+	# 	abgearbeitet, sondern direkt in m3u8.Main_m3u8 
 	if action == 'setjob':							# neuen Job an Aufnahmeliste anhängen + Bereinigung: Doppler
 													# 	verhindern, Einträge auf pref_max_reclist beschränken
-		status = 'waiting'											# -> <status>,  JobMonitor aktualisiert 
-		title = cleanmark(title)									# Farbe/fett aus ProgramRecord
-		pid = ''									# nimmt im Monitor PIDffmpeg auf
+		title = cleanmark(title)					# Farbe/fett aus ProgramRecord
 		block = '4Yp2C09aF1k5YC3d'
 		JobID = ''.join(random.choice(block) for i in range(len(block)))  # 16 stel. Job-ID
+		if "Recording Live" in descr:				# Aufruf: LiveRecord, Start ohne EPG
+			status = 'gestartet'					# -> <status>,  für JobMonitor tabu 
+			pid = "Thread_%s" % JobID				# -> KillFile (JobRemove) - wie JobMonitor
+		else:
+			status = 'waiting'	
+			if 	PIDffmpeg:							# Aufruf: LiveRecord via ffmpeg
+				status = 'gestartet'				# -> <status>,  für JobMonitor tabu 
+			pid = PIDffmpeg							# aus LiveRecord direkt oder via JobMonitor
+		
+		
 		job_line = JOBLINE_TEMPL % (start_end,title,descr,sender,url,status,pid,JobID)
 		new_job = JOB_TEMPL % job_line
 		PLog(new_job[:80])
@@ -340,11 +369,14 @@ def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSet
 			os.remove(JOBFILE_LOCK)	
 		
 		xbmcgui.Dialog().notification("Aufnahme-Monitor:", "Job hinzugefügt",MSG_ICON,3000)
-		
-		if os.path.exists(MONITOR_ALIVE) == False:					# JobMonitor läuft bereits?
-			bg_thread = Thread(target=JobMonitor,					# sonst Thread JobMonitor starten
-				args=())
-			bg_thread.start()
+		PLog("JobID: %s" % JobID)
+		if "Recording Live" or "ffmpeg-recording" in descr:			# LiveRecord ffmpeg oder -> m3u8.Main_m3u8 
+			return JobID											# 	mit JobID
+		else:			
+			if os.path.exists(MONITOR_ALIVE) == False:				# JobMonitor läuft bereits?
+				bg_thread = Thread(target=JobMonitor,				# sonst Thread JobMonitor starten
+					args=())
+				bg_thread.start()
 		return
 	#------------------------
 	if action == 'listJobs':										# Liste, Job-Status, Jobs löschen
@@ -363,6 +395,8 @@ def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSet
 
 ##################################################################
 #---------------------------------------------------------------- 
+# 26.07.2020 Bereinigung KillFile-Ruinen hinzugefügt
+# 
 def JobListe():														# Liste, Job-Status, Jobs löschen
 	PLog("JobListe:")
 	
@@ -374,16 +408,27 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 		if len(jobs) == 0:
 			xbmcgui.Dialog().notification("Jobliste:", "keine Aufnahme-Jobs vorhanden",MSG_ICON,3000)	
 	else:
-			xbmcgui.Dialog().notification("Jobliste:", "nicht gefunden",MSG_ICON,3000)	
-	
+			xbmcgui.Dialog().notification("Jobliste:", "nicht gefunden",MSG_ICON,3000)
+		
 	now = EPG.get_unixtime(onlynow=True)
 	now = int(now)
+
+	globFiles = "%s/ThreadKill_*" % ADDON_DATA						# KillFile-Ruinen löschen
+	files = glob.glob(globFiles) 
+	if len(files) > 0:
+		max_rec_time = 43200 										# 12 Std. = max. Setting pref_LiveRecord_duration
+		OldKillFile = files[0]  # 1 reicht, ev. Rest wird bei Folge-Calls abgeräumt
+		if os.stat(OldKillFile).st_mtime < (now - max_rec_time):	# falls älter als max_rec_time
+			PLog("entferne OldKillFile: %s" % OldKillFile)
+			os.remove(OldKillFile)			
+	
 	now_human = date_human("%d.%m.%Y, %H:%M", now='')
 	pre_rec  = SETTINGS.getSetting('pref_pre_rec')					# Vorlauf (Bsp. 00:15:00 = 15 Minuten)
 	post_rec = SETTINGS.getSetting('pref_post_rec')					# Nachlauf (dto.)
 	pre_rec = re.search('= (\d+) Min', pre_rec).group(1)
 	post_rec = re.search('= (\d+) Min', post_rec).group(1)
 	anz_jobs = len(jobs)
+	jobs.sort()
 	
 	for cnt in range(len(jobs)):
 			myjob = jobs[cnt]
@@ -394,9 +439,14 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 																		
 			start_end	= stringextract('<startend>', '</startend>', myjob)
 			start, end 	= start_end.split('|')						# 1593627300|1593633300	
-			start = int(start); end = int(end)				
-			start 		= int(start) - int(pre_rec) * 60			# Vorlauf (Min -> Sek) abziehen
-			end 		= int(end) + int(post_rec) * 60				# Nachlauf (Min -> Sek) aufschlagen 
+			start = int(start); end = int(end)	
+			descr = stringextract('<descr>', '</descr>', myjob)
+			PLog(descr)
+			if 	"Recording Live" in descr == False:					# Vor- und Nachlauf entfallen
+				pass
+			else:	
+				start 		= int(start) - int(pre_rec) * 60		# Vorlauf (Min -> Sek) abziehen
+				end 		= int(end) + int(post_rec) * 60			# Nachlauf (Min -> Sek) aufschlagen 
 			mydate = date_human("%Y%m%d_%H%M%S", now=start)			# Zeitstempel für titel in LiveRecord	
 			start_human = date_human("%d.%m.%Y, %H:%M", now=start)
 			end_human = date_human("%d.%m.%Y, %H:%M", now=end)
@@ -406,7 +456,9 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 			job_title = title										# Abgleich in JobRemove alt
 			JobID = stringextract('<JobID>', '</JobID>', myjob)		# Abgleich in JobRemove neu
 			sender = stringextract('<sender>', '</sender>', myjob)
-			dfname = "%s: %s" % (sender, title)						# Titel: Sender + Sendung (mit Mark.)
+			dfname = title.strip()											# Recording Live: ohne Sender
+			if sender:
+				dfname = "%s: %s" % (sender, title)					# Titel: Sender + Sendung (mit Mark.)
 			dfname = make_filenames(dfname.strip()) + ".mp4"		# Name aus Titel
 			dfname = "%s_%s" % (mydate, dfname)						# wie LiveRecord
 			dest_path = SETTINGS.getSetting('pref_download_path')
@@ -435,7 +487,9 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 				job_active = True
 				status_real = "Aufnahme geplant: %s" % start_human
 				
-			label = u'Job löschen: %s'	% title 				
+			label = u'Job löschen: %s'	% title 
+			if job_active:
+				label = u'Job stoppen / löschen: %s'	% title 				
 			tag = u'Start: [B]%s[/B], Ende: [I][B]%s[/B][/I]' % (start_human, end_human)
 			tag = u'%s\n%s' % (tag, status_real)
 			
@@ -447,7 +501,7 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 				(sender, job_title, start_end, job_active, pid, JobID)
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.epgRecord.JobRemove", fanart=R(ICON_DOWNL_DIR), 
 				thumb=img, fparams=fparams, tagline=tag, summary=summ)
-	
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 #----------------------------------------------------------------
@@ -461,9 +515,23 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 #
 def JobRemove(sender, job_title, start_end, job_active, pid, JobID):
 	PLog("JobRemove:")
-	PLog(pid); PLog(JobID) 
+	PLog(pid); PLog(JobID); PLog(job_active), PLog(start_end)
+		
+	if job_active == 'True':									# Abzweig Stoppen
+		heading	= u"Job stoppen / löschen"
+		msg1 	= "Job nur stoppen?"
+		msg2 	= "Job verbleibt in der Liste, kann aber nicht mehr gestartet werden"
+		ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel=u'Nein - löschen', 
+			yes='JA - nur stoppen', heading=heading)
+		if ret ==1:
+			JobStop(sender, job_title, start_end, job_active, pid, JobID)
+			return
+		
+	if sender:													# fehlt beim Recording
+		msg1 = "%s: %s" % (sender, job_title)
+	else:
+		msg1 = job_title
 
-	msg1 = "%s: %s" % (sender, job_title)
 	heading = u"Job aus Aufnahmeliste löschen"
 	pidtxt=''
 	if pid:
@@ -481,9 +549,15 @@ def JobRemove(sender, job_title, start_end, job_active, pid, JobID):
 	if ret !=1:
 		return
 	
+	KillFile = os.path.join("%s/ThreadKill_%s") % (ADDON_DATA, JobID)	# Stopfile, Ausführung download_ts
+	PLog("KillFile: %s, %s" % (KillFile, os.path.exists(KillFile)))	
 	if job_active == 'True' and pid != '':
-		os.kill(int(pid), signal.SIGTERM)						# auch Windows10 OK (aber Teilvideo beschäd.)
-		PLog("kill_pid:  %s" % str(pid))
+		if 'Thread_' in pid:									# in JobMonitor ergänzt mit JobID
+			PLog("setze: %s" % KillFile)
+			open(KillFile, 'w').close()							# KillFile anlegen
+		else:
+			PLog("kill_pid: %s" % str(pid))
+			os.kill(int(pid), signal.SIGTERM)					# auch Windows10 OK (aber Teilvideo beschäd.)
 	
 	jobs = ReadJobs()											# s. util
 	newjob_list = []; 											# newjob_list: Liste nach Änderungen
@@ -502,19 +576,73 @@ def JobRemove(sender, job_title, start_end, job_active, pid, JobID):
 				continue
 		newjob_list.append(JOB_TEMPL % job)						# job -> Marker
 		
+	save_Joblist(jobs, newjob_list, "Jobliste:", u"Job gelöscht")	
+	return
+	
+#----------------------------------------------------------------
+# wie JobRemove - nur stoppen, ohne Änderung der Jobliste
+# Aufruf: Kontextmenü Jobliste
+#
+def JobStop(sender, job_title, start_end, job_active, pid, JobID):
+	PLog("JobStop:")
+	PLog(pid); PLog(JobID); PLog(job_active), PLog(start_end)
+
+	if sender:													# fehlt beim Recording
+		msg1 = "%s: %s" % (sender, job_title)
+	else:
+		msg1 = job_title
+
+	KillFile = os.path.join("%s/ThreadKill_%s") % (ADDON_DATA, JobID)	# Stopfile, Ausführung download_ts
+	PLog("KillFile: %s, %s" % (KillFile, os.path.exists(KillFile)))	
+	if job_active == 'True' and pid != '':
+		if 'Thread_' in pid:									# in JobMonitor ergänzt mit JobID
+			PLog("setze: %s" % KillFile)
+			open(KillFile, 'w').close()							# KillFile anlegen
+		else:
+			PLog("kill_pid: %s" % str(pid))
+			os.kill(int(pid), signal.SIGTERM)					# auch Windows10 OK (aber Teilvideo beschäd.)
+
+	icon = MSG_ICON
+	xbmcgui.Dialog().notification("Jobliste:", u"Job wird gestoppt",icon,3000)
+
+	now = EPG.get_unixtime(onlynow=True)
+	jobs = ReadJobs()											# s. util
+	newjob_list = []; 											# newjob_list: Liste nach Änderungen
+	job_title=py2_encode(job_title); 							# type kann vom code-Format in jobs abweichen
+	for job in jobs:
+		my_JobID = stringextract('<JobID>', '</JobID>', job)
+		if JobID in my_JobID:									# sonst unverändert
+			my_start_end = stringextract('<startend>', '</startend>', job)
+			start, end = my_start_end.split('|')	
+			end = int(now)-1 									# end anpassen (Job abgelaufen)
+			new_start_end = "%s|%d"	% (start, end)
+			job = job.replace(my_start_end, new_start_end)		# job: <startend></startend> ändern
+			PLog(my_start_end); PLog(new_start_end);	
+				
+		newjob_list.append(JOB_TEMPL % job)						# job -> Marker
+		
+	save_Joblist(jobs, newjob_list, "Jobliste:", "")			# ohne notification
+	return
+#---------------------------------------------------------------- 
+def save_Joblist(jobs, newjob_list, header, msg):
+	PLog("save_Joblist")
+	
 	PLog(len(jobs))			
 	jobs = "\n".join(newjob_list)
 	page = JOBLIST_TEMPL % jobs									# Jobliste -> Marker
 	page = py2_encode(page)
 	if doLock(JOBFILE_LOCK):									
 		err_msg = RSave(JOBFILE, page)							# Jobliste speichern
+		xbmc.sleep(500)
 	doLock(JOBFILE_LOCK, remove=True)
 	if err_msg == '':
-		xbmcgui.Dialog().notification("Aufnahmeliste:",u"Job gelöscht",icon,3000) # Notification im Monitor
+		if msg:													# ohne notification bei Stoppen (msg='')
+			icon = R("icon-record-grey.png")
+			xbmcgui.Dialog().notification(header,msg,icon,3000)
 	else:
-		xbmcgui.Dialog().notification("Aufnahmeliste:",u"Problem beim Speichern",icon,3000) # Notification im Monitor
+		icon = MSG_ICON
+		xbmcgui.Dialog().notification(header,u"Problem beim Speichern",icon,3000)
 	return
-	
 #---------------------------------------------------------------- 
 # simpler Lock-Mechanismus
 #	Aufrufer: 	1. checkLock (remove=False)

@@ -43,8 +43,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.1.9'
-VDATE = '14.07.2020'
+VERSION = '3.2.1'
+VDATE = '28.07.2020'
 
 #
 #
@@ -484,6 +484,7 @@ def InfoAndFilter():
 	PLog('InfoAndFilter:'); 
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
+		
 														# Button changelog.txt
 	tag= u'Störungsmeldungen via Kodinerds-Forum, Github-Issue oder rols1@gmx.de'
 	summ = u'für weitere Infos (changelog.txt) klicken'
@@ -691,9 +692,7 @@ def FilterToolsWork(action):
 						MyDialog(msg1, '', '')
 				else:
 					msg1 = "Filterliste"
-					PLog('Mark0')
 					msg2 = u'%s gelöscht. Anzahl: %d' % (item, filter_len)		
-					PLog('Mark1')
 					icon = R(ICON_FILTER)
 					xbmc.executebuiltin('Container.Refresh')					
 					xbmcgui.Dialog().notification(msg1,msg2,icon,5000)		
@@ -757,9 +756,12 @@ def AddonInfos():
 	fname =  SETTINGS.getSetting('pref_podcast_favorits')
 	if os.path.isfile(fname) == False:
 		fname = os.path.join("%s/resources/podcast-favorits.txt") % PluginAbsPath
-	h = "%s Podcast-Favoriten: %s" %  (t,fname)
-	p3 = "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d1,d2,e,f,g,h)
+	h = "%s Podcast-Favoriten:\n%s%s" %  (t,t,fname)		# fname in 2. Zeile
+	log = xbmc.translatePath("special://logpath")
+	log = os.path.join("%s/kodi.log") % (log)	
+	i = "%s Debug-Log: %s" %  (t, log)
 	
+	p3 = "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d1,d2,e,f,g,h,i)
 	page = "%s\n%s\n%s" % (p1,p2,p3)
 	PLog(page)
 	dialog.textviewer("Addon-Infos", page,usemono=True)
@@ -2090,8 +2092,8 @@ def ARDSport(title):
 	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
 	PLog(onlySender)	
 		
-	channel = 'Regional'									# zum Livestream: WDR/ARD Event Sportschau
-	onlySender = 'WDR/ARD Event Sportschau'	
+	channel = 'Regional'									# zum Livestream: WDR_ARD Event Sportschau
+	onlySender = 'WDR_ARD Event Sportschau'	
 	img = "https://www.sportschau.de/resources/img/sportschau/banner/logo_base.png"
 	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
 	PLog(onlySender)
@@ -3711,7 +3713,6 @@ def PageControl(cbKey, title, path, mode, ID, offset=0):  # ID='ARD', 'POD', mod
 				continue						# Satz verwerfen
 		else:
 			continue							# Satz verwerfen
-		PLog('Mark0')
 			
 		PLog('href: ' + href); PLog('title: ' + title)
 		next_cbKey = 'SingleSendung'
@@ -4636,6 +4637,8 @@ def DownloadTools():
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.epgRecord.JobMain", fanart=R("icon-record.png"), 
 			thumb=R("icon-record.png"), fparams=fparams)
 		'''	
+		
+	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 #---------------------------
@@ -5526,8 +5529,8 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 	addDir(li=li, label=title, action="dirList", dirID="EPG_Sender", fanart=R(ICON_MAIN_TVLIVE), 
 		thumb=R('tv-EPG-single.png'), fparams=fparams, summary=summary, tagline=tagline)	
 		
-	PLog(str(SETTINGS.getSetting('pref_LiveRecord')))
-	if SETTINGS.getSetting('pref_LiveRecord') == 'true':		
+	PLog(str(SETTINGS.getSetting('pref_LiveRecord'))) 
+	if SETTINGS.getSetting('pref_LiveRecord') == 'true' or SETTINGS.getSetting('pref_m3u8_get') == 'true':		
 		title = 'Recording TV-Live'												# TVLiveRecord-Button anhängen
 		laenge = SETTINGS.getSetting('pref_LiveRecord_duration')
 		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
@@ -5589,8 +5592,9 @@ def TVLiveRecordSender(title):
 	PLog('TVLiveRecordSender:')
 	title = unquote(title)
 	
-	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
-		return
+	# nach Testphase ersetzen durch pref_m3u8_get:
+	#if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
+	#	return
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)					# Home-Button
@@ -5607,10 +5611,11 @@ def TVLiveRecordSender(title):
 		if u'://' not in img:	# Logo lokal? -> wird aus Resources geladen, Unterverz. leider n.m.
 			img = R(img)
 		link 	= rec[3]
-		title 	= "record: %s" % title 
+		title 	= "%s | ohne EPG" % title 
 		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
 			laenge = "wird manuell eingegeben"
 		summ 	= 'Aufnahmedauer: %s' 	% laenge
+		summ	= u"%s\n\nStart ohne Rückfrage!" % summ
 		tag		= 'Zielverzeichnis: %s' % SETTINGS.getSetting('pref_download_path')
 		title=py2_encode(title); link=py2_encode(link);
 		fparams="&fparams={'url': '%s', 'title': '%s', 'duration': '%s', 'laenge': '%s'}" \
@@ -5628,89 +5633,17 @@ def TVLiveRecordSender(title):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------
-def check_Setting(ID):
-	PLog('check_Setting: ' + ID)
-	
-	if ID == 'pref_LiveRecord_ffmpegCall':
-		PLog(SETTINGS.getSetting('pref_LiveRecord_ffmpegCall'))
-		# Test: Pfadanteil executable? 
-		#	Bsp.: "/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin"
-		cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	
-		if cmd.strip() == '':
-			msg1 = 'ffmpeg-Parameter fehlen in den Einstellungen!'
-			MyDialog(msg1, '', '')
-			return False
-			
-		if os.path.exists(cmd.split()[0]) == False:
-			msg1 = 'Pfad zu ffmpeg nicht gefunden.'
-			msg2 = 'Bitte ffmpeg-Parameter in den Einstellungen prüfen, aktuell:'
-			msg3 = 	SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')
-			MyDialog(msg1, msg2, msg3)
-			return False
-		return True
-		
-	if ID == 'pref_download_path':
-		dest_path = SETTINGS.getSetting('pref_download_path')
-		msg1	= 'LiveRecord:'
-		if  dest_path == None or dest_path.strip() == '':
-			msg2 	= 'Downloadverzeichnis fehlt in den Einstellungen'
-			MyDialog(msg1, msg2, '')
-			return False
-		PLog(os.path.isdir(dest_path))
-					
-		if  os.path.isdir(dest_path) == False:
-			msg2 	= 'Downloadverzeichnis existiert nicht'
-			msg3	= "Settings: " + dest_path
-			MyDialog(msg1, msg2, msg3)
-			return False
-		return True		
-		
-	if ID == 'pref_use_downloads':
-		# Test auf Existenz curl/wget in DownloadExtern
-		if SETTINGS.getSetting('pref_use_downloads') == 'true':
-			dest_path = SETTINGS.getSetting('pref_download_path')
-			if  os.path.isdir(dest_path) == False:
-				msg1	= u'test_downloads: Downloads nicht möglich'
-				msg2 	= 'Downloadverzeichnis existiert nicht'
-				msg3 	= "Settings: " + dest_path
-				MyDialog(msg1, msg2, msg3)
-				return False				
-		else:
-			return False
-		return True
-#-----------------------------
 # 30.08.2018 Start Recording TV-Live
-#	Problem: autom. Wiedereintritt hier + erneuter Popen-call nach Rückkehr zu TVLiveRecordSender 
-#		(Ergebnis-Button nach subprocess.Popen, bei PHT vor Ausführung des Buttons)
-#		OS-übergreifender Abgleich der pid problematisch - siehe
-#		https://stackoverflow.com/questions/4084322/killing-a-process-created-with-pythons-subprocess-popen
-#		Der Wiedereintritt tritt sowohl unter Linux als auch Windows auf.
-#		Ursach n.b. - tritt in DownloadExtern mit curl/wget nicht auf.
-#	1. Lösung: Verwendung des psutil-Moduls (../Contents/Libraries/Shared/psutil ca. 400 KB)
-#		und pid-Abgleich Dict['PID'] gegen psutil.pid_exists(pid) - s.u.
-#		verworfen - Modul lässt sich unter Windows nicht laden. Linux OK
-#	2. Lösung: Dict['PIDffmpeg'] wird nach subprocess.Popen belegt. Beim ungewollten Wiedereintritt
-#		wird nach TVLiveRecordSender (Senderliste) zurück gesprungen und Dict['PIDffmpeg'] geleert.
-#		Beim nächsten manuellen Aufruf wird LiveRecord wieder frei gegeben ("Türsteherfunktion").
+# Doku z. PHT-Problemen s. ältere Versionen
 #
-#	PHT-Problem: wie in TuneIn2017 (streamripper-Aufruf) sprignt PHT bereits vor dem Ergebnis-Buttons (DirectoryObject)
-#		in LiveRecord zurück.
-#		Lösung: Ersatz des Ergebnis-Buttons durch return ObjectContainer. PHT steigt allerdings danach mit 
-#			"GetDirectory failed" aus (keine Abhilfe bisher). Der ungewollte Wiedereintritt findet trotzdem
-#			statt.
-#
-# 20.12.2018 Plex-Probleme "autom. Wiedereintritt" in Kodi nicht beobachtet (Plex-Sandbox Phänomen?) - Code
-#	entfernt.
 # 29.04.0219 Erweiterung manuelle Eingabe der Aufnahmedauer
-#
 # Check auf ffmpeg-Settings bereits in TVLiveRecordSender, Check auf LiveRecord-Setting
 # 	bereits in SenderLiveListePre
 # 04.07.2020 angepasst für epgRecord (Eingabe Dauer entf., Dateiname mit Datumformat 
 #		geändert, Notification statt Dialog. epgJob enthält Aufnahmestart (Unixformat)
-# 		verlagert nach util (import aus  ardundzdf klappt nicht in epgRecord).
-# def LiveRecord(url, title, duration, laenge, epgJob=''):
-		
-#-----------------------------
+# 		LiveRecord verlagert nach util (import aus  ardundzdf klappt nicht in epgRecord,
+#		dto. MakeDetailText).
+#		
 # 29.06.0219 Erweiterung Sendung aufnehmen, Call K-Menü <- EPG_ShowSingle
 # Check auf Setting pref_epgRecord in EPG_ShowSingle
 #
@@ -5720,7 +5653,6 @@ def ProgramRecord(url, sender, title, descr, start_end):
 	PLog(start_end);
 
 	now = EPG.get_unixtime(onlynow=True)
-	setDateUnix = now								# ID in Jobliste
 	
 	start, end = start_end.split('|')				# 1593627300|1593633300
 	s = datetime.datetime.fromtimestamp(int(start))
@@ -5730,8 +5662,10 @@ def ProgramRecord(url, sender, title, descr, start_end):
 	PLog("now %s, von %s, bis %s"% (now, von, bis))
 	
 	#----------------------------------------------				# Voraussetzungen prüfen
-	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	# Dialog dort
-		return			
+	# nach Testphase ersetzen durch pref_m3u8_get:	
+	if SETTINGS.getSetting('pref_m3u8_get') == 'false':
+		if check_Setting('pref_LiveRecord_ffmpegCall') == False:	# Dialog dort
+			return			
 	if check_Setting('pref_download_path') == False:			# Dialog dort
 		return			
 	
@@ -5947,13 +5881,17 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 				# sname 	= sname.replace(stime, sctime)
 				tagline = '%s | Zeit: %s' % (tagline, vonbis)
 				
-		tagline	= "%s\n\n%s" % (tagline, u"Kontextmenü: Recording TV-Live")	
+		descr = summ.replace('\n', '||')
+		duration = SETTINGS.getSetting('pref_LiveRecord_duration')
+		duration, laenge = duration.split('=')
+		laenge = laenge.strip()
+		summ 	= "%s\n\n%s" % (summ, u"Kontextmenü: Recording TV-Live (Aufnahmedauer: %s)" % laenge)	
 		title = unescape(title)
 		PLog("title: " + title); PLog(summ)
 		title=py2_encode(title); m3u8link=py2_encode(m3u8link);
-		img=py2_encode(img); summ=py2_encode(summ);			
+		img=py2_encode(img); descr=py2_encode(descr); summ=py2_encode(summ);		
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Merk': '%s'}" %\
-			(quote(m3u8link), quote(title), quote(img), quote_plus(summ), Merk)
+			(quote(m3u8link), quote(title), quote(img), quote_plus(descr), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-all.png'), 
 			thumb=img, fparams=fparams, summary=summ, tagline=tagline, start_end="Recording TV-Live")
 
@@ -6266,8 +6204,10 @@ def show_single_bandwith(url_m3u8, thumb, title, descr, ID):
 #-----------------------------
 # Ablage master.m3u8, einschl. Behandlung relativer Links
 #	Button für "Bandbreite und Aufloesung automatisch" (master.m3u8)
-#	Die Dateiablage dient zur Auswertung der Einzelauflösungen, kann aber 
-#	bei Kodi auch zum Videostart verwendet werden. 
+#	Die Dateiablage dient zur Ablage der Einzelauflösungen, kann aber 
+#		bei Kodi auch zum Videostart verwendet werden. 
+#	Buttons für die Einzelauflösungen werden in Parseplaylist
+#		gefertigt.
 #   descr = Plot, wird zu PlayVideo durchgereicht.
 def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):	
 	PLog('ParseMasterM3u:'); 
@@ -6393,7 +6333,6 @@ def BilderDasErste(path=''):
 			fparams="&fparams={'path': '%s'}" % (quote(href))
 			addDir(li=li, label=title, action="dirList", dirID="BilderDasErste", fanart=R(ICON_MAIN_ARD),
 				thumb=R('ard-bilderserien.png'), fparams=fparams)
-		PLog('Mark0')
 		
 	else:	# -----------------------					# 10er-Seitenübersicht laden		
 		page, msg = get_page(path)	
@@ -7125,7 +7064,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 				title = unescape(title)
 				
 				lable = stringextract('teaser-label">', '</div>', rec)
-				lable = cleanhtml(lable)							# Bsp. <strong>2 Staffeln</strong>
+				lable = cleanhtml(lable.strip())					# Bsp. <strong>2 Staffeln</strong>
 				if lable == '':										# label nicht in Nachlade-Beiträgen
 					lable = title
 				else:	
@@ -7206,8 +7145,9 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 			clustertitle = stringextract('cluster-title"', '</', clus) # 07.03.2020 Blank nach Trenner
 			if clustertitle == '':
 				clustertitle = stringextract('header-title ellipsis"', '</', clus)
-			clustertitle = clustertitle.replace('>', '')	
-			PLog(clustertitle);				
+			clustertitle = clustertitle.replace('>', '')
+			label =	unescape(clustertitle)
+			PLog("clustertitle: " + clustertitle);				
 			if 'Direkt zu ...' in clustertitle: 		# in zdf.de/kinder, hier nicht erreichbar
 				continue
 			if '&quot; weiterschauen' in clustertitle: 	# dto. (Script-Link)
@@ -7219,7 +7159,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page=''):
 			clustertitle=py2_encode(clustertitle); path=py2_encode(path); 
 			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s'}" % (quote(clustertitle),
 				quote(path), quote(clustertitle))
-			addDir(li=li, label=clustertitle, action="dirList", dirID="ZDFRubrikSingle", fanart=img_src, 
+			addDir(li=li, label=label, action="dirList", dirID="ZDFRubrikSingle", fanart=img_src, 
 				thumb=img_src, fparams=fparams)	
 				
 	#if offset:	Code entfernt, in Kodi nicht nutzbar

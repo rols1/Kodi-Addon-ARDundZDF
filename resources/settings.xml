@@ -39,13 +39,16 @@
  <category label="Recording TV-Live">
  	<setting label="Recording TV-Live verwenden (ffmpeg erforderlich)" type="bool" id="pref_LiveRecord" default="true"/>
  	<setting label="Dauer der Aufnahme manuell eingeben" type="bool" id="pref_LiveRecord_input" default="false"/>
-	<setting label="Dauer der Aufnahme" type="select" values="00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten|01:00:00 = 1 Stunde|01:30:00 = 1:30 Stunden|01:45:00 = 1:45 Stunden|02:00:00 = 2 Stunden|04:00:00 = 4 Stunden|12:00:00 = 12 Stunden|00:00:05 = 5 Sekunden" default="01:00:00 = 1 Stunde" id="pref_LiveRecord_duration"/> 
+	<setting label="Dauer der Aufnahme" type="select" values="00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten|01:00:00 = 1 Stunde|01:30:00 = 1:30 Stunden|01:45:00 = 1:45 Stunden|02:00:00 = 2 Stunden|04:00:00 = 4 Stunden|12:00:00 = 12 Stunden|00:00:30 = 30 Sekunden" default="00:00:30 = 30 Sekunden" id="pref_LiveRecord_duration"/> 
 	<setting label="ffmpeg-Parameter (3x %s: Url, Aufnahmedauer, Dateiname)" type="text" id="pref_LiveRecord_ffmpegCall" default="/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin"/>
     <setting type="sep"/>
  	<setting label="Aufnehmen (Menü: EPG Sender einzeln)" type="bool" id="pref_epgRecord" default="false"/>
 	<setting label="Aufnehmen: Vorlauf" type="select" values="00:00:00 = 0 Minuten|00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten" default="00:00:00 = 0 Minuten" id="pref_pre_rec"/> 
 	<setting label="Aufnehmen: Nachlauf" type="select" values="00:00:00 = 0 Minuten|00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten" default="00:00:00 = 0 Minuten" id="pref_post_rec"/> 
 	<setting label="Aufnehmen: max. Größe der Aufnahmeliste" type="select" values="10|25|50|100" default="10" id="pref_max_reclist"/> 
+   <setting type="sep"/>
+  	<setting label="experimentell: Aufnehmen/Recording ohne ffmpeg" type="bool" id="pref_m3u8_get" default="false"/>
+   
 </category> 
 
  <category label="Addon-Cache: Löschfristen (Tage)">
