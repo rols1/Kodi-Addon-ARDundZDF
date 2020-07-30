@@ -12,6 +12,10 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+30.07.2020	3.2.2
+			Modul yt (pytube): relante Fixes aus nficanos pytube-Repo nachgeführt (main.py:
+			class YouTube, def prefetch), (cipher.py: get_initial_function_name).
+
 28.07.2020	3.2.1 experimentell: Modul m3u8 - ffmpeg-Ersatz für Recording/Aufnahmen
 			Neue Funktionen: get_m3u8_body, get_url_list, download_ts_file,
 			get_ts_startpos, download_ts, Main_m3u8.

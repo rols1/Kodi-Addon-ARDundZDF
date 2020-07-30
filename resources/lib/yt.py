@@ -6,7 +6,7 @@
 #	../resources/lib/pytube/LICENSE (MIT License).
 #	Die Library wurde für die Verwendung im Kodi-Addon leicht modifiziert,
 #	nicht benötigte Teile wurden entfernt.
-#	Test-Videos: Augstein und Blome
+#	Test-Videos: Augstein und Blome od. Rubriken/Bundestag
 #	Achtung: bei gleichzeitiger Installation von pytube außerhalb des Addons 
 #		können Import-Probleme innerhalb der pytube-Module des Addons auf-
 #		treten.
@@ -14,7 +14,7 @@
 #
 #	03.01.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-#	Stand: 24.05.2020
+#	Stand: 30.05.2020
 
 from __future__ import absolute_import
 
@@ -81,7 +81,7 @@ def yt_get(url, vid, title, tag, summ, thumb):
 			# duration = get_duration(page)			# Bsp.: "1:06" oder leer
 		duration = yt_init.millisecs
 		duration = seconds_translate(int(int(duration) / 1000))
-		PLog("duration: %d" % duration)
+		PLog("duration: %s" % duration)
 	except Exception as exception:
 		PLog(str(exception))
 		msg1 = u"Youtube-Video nicht verfügbar."

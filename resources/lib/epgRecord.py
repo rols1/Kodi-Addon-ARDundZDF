@@ -77,9 +77,9 @@ MSG_ICON 		= R("icon-record.png")
 # Job-Bereich: Aufnahme-Jobs (ffmpeg, m3u8) - Erzeugung: K-Menü 
 #	EPG_ShowSingle -> ProgramRecord -> JobMain.
 # Aufnahmestart nach Zeitabgleich mit Call LiveRecord:
-#	ffmpeg-Verfahren: Ablage PIDffmpeg im Job
-#	m3u8-Verfahren: LiveRecord startet direkt m3u8.Main_m3u8, Ablage
-#		 Thread_JobID als PIDffmpeg im Job
+#	1. ffmpeg-Verfahren via LiveRecord, hier Ablage PIDffmpeg im Job
+#	2. m3u8-Verfahren via LiveRecord (-> direkt m3u8.Main_m3u8, hier 
+#		 Ablage Thread_JobID als PIDffmpeg im Job)
 #	 
 # Verfahren Recording-TV-Live-Jobs: LiveRecord erzeugt Job via JobMain +
 #	startet direkt ffmpeg oder m3u8-Verfahren (je nach Setting) 
