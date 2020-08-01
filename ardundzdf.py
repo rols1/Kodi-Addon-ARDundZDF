@@ -43,8 +43,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.2.2'
-VDATE = '30.07.2020'
+VERSION = '3.2.3'
+VDATE = '01.08.2020'
 
 #
 #
@@ -321,14 +321,15 @@ def Main():
 	else:
 		title = "ARD Mediathek Neu"
 		tagline = 'in den Settings sind ARD Mediathek Neu und ARD Mediathek Classic austauschbar'
+		summ = u"das Menü BarriereArm ist zur Zeit nur in der Classic-Version verfügbar"
 		fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, '')
 		PLog(fparams)	
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_ARD), tagline=tagline, fparams=fparams)
+			thumb=R(ICON_MAIN_ARD), tagline=tagline, summary=summ, fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':
 		PLog('zdfmobile_set: ')
-		tagline = 'in den Settings sind ZDF Mediathek und ZDFmobileaustauschbar'
+		tagline = 'in den Settings sind ZDF Mediathek und ZDFmobile austauschbar'
 		fparams="&fparams={}"
 		addDir(li=li, label="ZDFmobile", action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
 			fanart=R(FANART), thumb=R(ICON_MAIN_ZDFMOBILE), tagline=tagline, fparams=fparams)
@@ -1347,15 +1348,23 @@ def Audio_get_rubriken(page='', ID='', path=''):				# extrahiert Rubriken (Webse
 		
 			
 	PLog(len(page))	
-	PLog(len(gridlist))		
+	PLog(len(gridlist))	
+	repl_list_title = ["Sendung: ", ", Sender: Sammlung"]
 			
 	cnt=0		
 	for grid in gridlist:												
-		title 	= stringextract('podcast-title" data-v-37450229>', '</h3>', grid)
+		title 	= stringextract('aria-label="', '"', grid)
+		for repl in repl_list_title:
+			title = title.replace(repl, '')
 		title 	= unescape(title.strip())
 		href		= ARD_AUDIO_BASE + stringextract('href="', '"', grid)  # Homepage Beiträge
 		
 		img= img_via_audio_href(href=href, page=page)	# img im json-Teil holen
+		img_alt = stringextract('<img', '>', grid)
+		img_alt = stringextract('title="', '"', img_alt)
+		tag=''
+		if img_alt:
+			tag = img_alt
 
 		anzahl 	= stringextract('class="station"', '</span>', grid)
 		anzahl	= rm_datav(anzahl)
@@ -1370,7 +1379,7 @@ def Audio_get_rubriken(page='', ID='', path=''):				# extrahiert Rubriken (Webse
 		title=py2_encode(title); href=py2_encode(href);
 		fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="Audio_get_rubrik", fanart=img, thumb=img, fparams=fparams, 
-			summary=descr)	
+			summary=descr, tagline=tag)	
 		cnt=cnt+1
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -1663,7 +1672,10 @@ def AudioSearch(title, query=''):
 # 11.03.2020 zusätzl. Auswertung der A-Z-Seiten, einschl. Sortierung
 #	(Kodi sortiert Umlaute richtig, Web falsch), 
 #	Blöcke '"category":', Aufruf: AudioStart_AZ_content
-# 
+# 31.07.2020 die feed_url zu xml-Inhalten funktioniert nicht mehr 
+#	(..synd_rss?offset..) - die Hostadresse ist falsch - Austausch 
+#	s. url_xml
+#
 def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):				
 	PLog('AudioContentJSON: ' + title); PLog(ID)
 	title_org = title
@@ -1697,7 +1709,6 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 	for rec in gridlist:
 		rec		= rec.replace('\\"', '')
 		rubrik 	= stringextract('category":"', '"', rec) 
-		rubrik 	= stringextract('category":"', '"', rec) 
 		descr 	= stringextract('description":"', '"', rec)
 		clip 	= stringextract('clipTitle":"', '"', rec)		# Teaser (nicht 1. Beitrag) für Folgeseiten 
 		href	= stringextract('link":"', '"', rec) 
@@ -1708,6 +1719,7 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 		sender	= stringextract('station":"', '"', rec) 
 		title	= stringextract('title":"', '"', rec) 
 		url_xml	= stringextract('url":"', '"', rec) 			
+		url_xml = url_xml.replace('api-origin.ardaudiothek', 'audiothek.ardmediathek') # s.o.
 		img 	=  stringextract('image_16x9":"', '"', rec)
 		img		= img.replace('{width}', '640')
 		
@@ -1740,14 +1752,14 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 				title	= "%s  | %s | %s" % (rubrik, sender, title)
 			descr	= u"[B]Folgeseiten[/B] | %s Episoden | %s\n\n%s" % (anzahl, sender, descr)
 			if clip:												# Teaser anhängen
-#				descr	= u"%s\n\n[B]Teaser:[/B] %s" % (descr, clip)		
 				descr	= u"[B]Teaser:[/B] %s\n\n%s" % (clip, descr)		
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)
 	
 		PLog('Satz:');
-		PLog(rubrik); PLog(title); PLog(img); PLog(href)
+		PLog(rubrik); PLog(title); PLog(img); PLog(href); PLog(url_xml);
 		title=py2_encode(title); url_xml=py2_encode(url_xml);
+
 		fparams="&fparams={'path': '%s', 'title': '%s'}" %\
 			(quote(url_xml), quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="AudioContentXML", fanart=img, thumb=img, 
@@ -2347,7 +2359,7 @@ def ARDSportBilder(title, path, img):
 		
 		lable = u"Alle Bilder löschen"						# 2. Löschen
 		tag = 'Bildverzeichnis: ' + fname 
-		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  neu einlesen'
+		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  Bilder neu einlesen'
 		fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % quote(fpath)
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DELETE), 
 			thumb=R(ICON_DELETE), fparams=fparams, summary=summ, tagline=tag)
@@ -3564,7 +3576,8 @@ def BarriereArmARD(name):		#
 	li = home(li, ID='ARD')										# Home-Button
 
 	title = 'Hörfassungen (ARD-Suche)'							# ARD-Suche nach Hörfassungen
-	path = BASE_URL + ARD_Suche	%   quote('Hörfassungen', "utf-8")
+	path = BASE_URL + ARD_Suche	%  u'Hörfassungen' 				# quote hier ohne Suchergebnis
+	path = path + "&sender=all"
 	
 	if SETTINGS.getSetting('pref_usefilter') == 'true':
 		if 'Audiodeskription' or 'Hörfassung' or 'Gebärdensprache' or 'Untertitel' in AKT_FILTER:
@@ -6481,7 +6494,7 @@ def BilderDasErsteSingle(title, path):
 				
 		lable = u"Alle Bilder löschen"						# 2. Löschen
 		tag = 'Bildverzeichnis: ' + fname 
-		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  neu einlesen'
+		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  Bilder neu einlesen'
 		fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % quote(fpath)
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DELETE), 
 			thumb=R(ICON_DELETE), fparams=fparams, summary=summ, tagline=tag)
@@ -7307,9 +7320,10 @@ def MeistGesehen(name):							# ZDF-Bereich, Beiträge unbegrenzt
 		
 ####################################################################################################
 # ZDF Barrierefreie Angebote - Vorauswahl
+#	ARD s. BarriereArmARD (Classic)
 # 06.04.2020 aktualisiert: Webseite geändert, nur kleine Übersicht, die 3
-#	Folgeseiten enthalten jeweils das kompl. Videoangebot
-
+#	Folgeseiten enthalten jeweils die neuestens Videos 
+#
 def BarriereArm(title):				
 	PLog('BarriereArm:')
 	li = xbmcgui.ListItem()
@@ -7346,6 +7360,7 @@ def BarriereArm(title):
 		title = title.replace('\n', ''); 
 		title = (title.replace('>', '').replace('<', '')); title = title.strip()
 		path = stringextract('data-plusbar-url="', '"', rec)
+		tag = u"Übersicht der neuesten Videos"
 		PLog(title); PLog(path)
 		if u'Livestreams' in title:				# nur EPG, kein Video
 			PLog('skip: '  + title)
@@ -7355,27 +7370,27 @@ def BarriereArm(title):
 		path=py2_encode(path); title=py2_encode(title);	
 		fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s'}" % (quote(path), quote(title), ID)
 		addDir(li=li, label=title, action="dirList", dirID="BarriereArmSingle", fanart=R(ICON_ZDF_BARRIEREARM), 
-			thumb=R(ICON_ZDF_BARRIEREARM), fparams=fparams)
+			thumb=R(ICON_ZDF_BARRIEREARM), fparams=fparams, tagline=tag)
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #-------------------------
-# Aufrufer: BarriereArm, ZDF Barrierefreie Angebote
-#	ähnlich ZDFRubrikSingle, aber mit '<h2 class="title"'
-#		statt 'class="cluster-title"' (fehlen hier) und
-#		Sprung -> ZDF_get_content statt ZDF_Sendungen.
+# Aufrufer: BarriereArm (ZDF Barrierefreie Angebote)
+#	ARD s. BarriereArmARD (Classic)
 #	2-facher Aufruf - Unterscheidung nach Titeln (class="title"):
 #		1. Übersichtseite (Titel)			- Rücksprung hierher
-#		2. Zielseite (z.B. einzelne Serie) 	- Sprung -> ZDF_get_content
+#		2. Zielseite (z.B. einzelne Serie) 	- Sprung -> ZDFRubrikSingle
+# 01.08.2020 Anpassungen an  Webänderungen, einschl. lazyload-Beiträge
 #	 
 def BarriereArmSingle(path, title, clus_title='', ID=''):
 	PLog('BarriereArmSingle: ' + title)
+	PLog(clus_title)
 	CacheTime = 6000								# 1 Std.
 			
 	li = xbmcgui.ListItem()	
 	li = home(li, ID='ZDF')							# Home-Button
 
-	page = Dict("load", ID, CacheTime=CacheTime)					
+	page = Dict("load", ID, CacheTime=CacheTime)
 	if page == False:								# Cache miss - vom Sender holen
 		page, msg = get_page(path=path)
 		Dict("store", ID, page) 					# Seite -> Cache: aktualisieren	
@@ -7386,41 +7401,40 @@ def BarriereArmSingle(path, title, clus_title='', ID=''):
 		return li 
 		
 	PLog(len(page))
-	# RSave('/tmp/xb.html', py2_encode(page))	# Debug
+	# RSave('/tmp/xb.html', py2_encode(page))	# Debug	
 	
-	cluster =  blockextract('<h2 class="title"', page, '')
-	PLog(len(cluster))
-	if clus_title:								# 2. Aufruf: Beiträge zu gesuchtem Titel auswerten
+	if clus_title:								# 2. Aufruf: Beiträge zu Cluster-Titel auswerten
+		cluster =  blockextract('class="cluster-title">', page, '')
+		PLog(len(cluster))
 		for clus in cluster:
-			clustertitle = stringextract('<h2 class="title"', '</', clus)
-			clustertitle = clustertitle.replace('>', '')
+			clustertitle = stringextract('class="cluster-title">', '</', clus)
 			# PLog(clus_title); PLog(clustertitle);	 # Debug
 			if clus_title in clustertitle:		# Cluster gefunden
 				PLog('gefunden: clus_title=%s, clustertitle=%s, len_cluster: %d' %\
 					(clus_title, clustertitle, len(clus)))
 				
-				li, page_cnt = ZDF_get_content(li=li, page=clus, ref_path=path, ID='DEFAULT')
-				PLog(page_cnt)  
+				ZDFRubrikSingle(title=title, path='', clus_title=clustertitle, page=page)
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
 							
-	else:										# 1. Aufruf: nur Titel + Bild listen 
+	else:										# 1. Aufruf: nur Cluster-Titel + Bild listen 
+		cluster =  blockextract('class="b-cluster">', page, '')
+		PLog(len(cluster))
 		for clus in cluster:
-			clustertitle = stringextract('<h2 class="title"', '</', clus)
-			clustertitle = clustertitle.replace('>', '')
+			clustertitle = stringextract('class="cluster-title">', '</', clus)
 			if 'Livestream' in clustertitle:
 				continue
-			
+			img=''
 			img_src =  stringextract('class="m-16-9"', '</picture>', clus)
 			img_src =  blockextract('https://', img_src, ' ')
 			for img in img_src:
 				if '720' in img or '1080' in img:
 					break
 			
-			content = blockextract('class="artdirect"', clus)	# Anzahl pro Cluster
-			tag = "%d Beiträge" % len(content)
+			content = blockextract('class="b-cluster-teaser', clus)	# Beiträge/Cluster einschl. lazyload
+			tag = u"%d Beiträge" % len(content)
 			PLog('Satz:')
-			PLog(clustertitle); PLog(img)
+			PLog(clustertitle); PLog(img); PLog(tag)
 		 
 			clustertitle=py2_encode(clustertitle); path=py2_encode(path); 
 			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s', 'ID': '%s'}" %\
@@ -8560,7 +8574,7 @@ def ZDF_BildgalerieSingle(path, title):
 		
 		lable = u"Alle Bilder löschen"						# 2. Löschen
 		tag = 'Bildverzeichnis: ' + fname 
-		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  neu einlesen'
+		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  Bilder neu einlesen'
 		fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % quote(fpath)
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DELETE), 
 			thumb=R(ICON_DELETE), fparams=fparams, summary=summ, tagline=tag)

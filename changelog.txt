@@ -12,6 +12,15 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+01.07.2020	3.2.3 
+			Audio_get_rubriken (Audiothek): Fix für Titel (fehlt im Menü "Unsere Favoriten"
+			nach Webänderung), neu: Bildtitel als tagline ausgewertet.
+			AudioContentJSON: die Hostadresse ist falsch + scheitert, Austausch 
+			'api-origin.ardaudiothek' -> 'audiothek.ardmediathek'.
+			BarriereArmSingle (ZDF): Anpassungen an  Webänderungen (Videos mit 
+			Audiodeskription, Gebärdensprache, Untertitel), einschl. lazyload-Beiträge.
+			Main: Hinw. "BarriereArm nur in Classic-Version" eingefügt.
+
 30.07.2020	3.2.2
 			Modul yt (pytube): relante Fixes aus nficanos pytube-Repo nachgeführt (main.py:
 			class YouTube, def prefetch), (cipher.py: get_initial_function_name).

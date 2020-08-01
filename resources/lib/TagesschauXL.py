@@ -654,7 +654,7 @@ def XL_Bildgalerie(path, title):
 	
 		lable = u"Alle Bilder löschen"									# 2. Löschen
 		tag = 'Bildverzeichnis: ' + fname 
-		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  neu einlesen'
+		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  Bilder neu einlesen'
 		fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % quote(fpath)
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DELETE), 
 			thumb=R(ICON_DELETE), fparams=fparams, summary=summ, tagline=tag)
