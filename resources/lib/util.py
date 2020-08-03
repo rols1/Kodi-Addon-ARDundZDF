@@ -659,7 +659,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		Plot = tagline
 	if summary:	
 		Plot = Plot +"\n\n" + summary
-		
+	
 	if mediatype == 'video': 	# "video", "music" setzen: List- statt Dir-Symbol
 		li.setInfo(type="video", infoLabels={"Title": label, "Plot": Plot, "mediatype": "video"})	
 		isFolder = False		# nicht bei direktem Player-Aufruf - OK mit setResolvedUrl
@@ -668,7 +668,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		li.setInfo(type="video", infoLabels={"Title": label, "Plot": Plot})	
 		li.setProperty('IsPlayable', 'false')
 		isFolder = True	
-	
+
 	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
 	if sortlabel:
 		# kein Unterschied zw. SORT_METHOD_LABEL / SORT_METHOD_LABEL_IGNORE_THE
@@ -797,7 +797,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					% (MY_SCRIPT, HANDLE, fparams_recordLive)))
 
 		li.addContextMenuItems(commands)				
-		
+	
 	xbmcplugin.addDirectoryItem(handle=HANDLE,url=add_url,listitem=li,isFolder=isFolder)
 	
 	PLog('addDir_End')		
@@ -2290,7 +2290,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 	
 	# Info aus GetZDFVideoSources hierher verlagert - wurde von Kodi nach Videostart 
 	#	erneut gezeigt - dto. für ARD (parseLinks_Mp4_Rtmp, ARDStartSingle)
-	if SETTINGS.getSetting('pref_UT_Info') == 'true' or SETTINGS.getSetting('pref_UT_ON') == 'true':
+	if SETTINGS.getSetting('pref_UT_ON') == 'true':
 		if sub_path:							# Vorbehandlung ARD-Untertitel
 			if 'ardmediathek.de' in sub_path:	# ARD-Untertitel speichern + Endung -> .sub
 				local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
@@ -2304,11 +2304,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 					sub_path = xml2srt(local_path)	# Konvert. für Kodi leer bei Fehlschlag
 
 	PLog('sub_path: ' + str(sub_path));		
-	if sub_path:							# Untertitel aktivieren, falls vorh.	
-		if SETTINGS.getSetting('pref_UT_Info') == 'true':
-			msg1 = 'Info: für dieses Video stehen Untertitel zur Verfügung.' 
-			MyDialog(msg1, '', '')
-			
+	if sub_path:							# Untertitel aktivieren, falls vorh.				
 		if SETTINGS.getSetting('pref_UT_ON') == 'true':
 			sub_path = 	sub_path.split('|')											
 			li.setSubtitles(sub_path)

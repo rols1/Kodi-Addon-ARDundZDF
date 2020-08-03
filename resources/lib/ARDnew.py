@@ -823,6 +823,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 		return li
 	PLog(len(page))
 	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
+	# RSave('/tmp/x.html', py2_encode(page))	# Debug	
 	
 	href = ''; VideoUrls = []
 	Plugins = blockextract('_plugin', page)	# wir verwenden nur Plugin1 (s.o.)

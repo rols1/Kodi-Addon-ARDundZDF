@@ -103,7 +103,6 @@ ICON_ZDF_VERP 			= 'zdf-sendung-verpasst.png'
 ICON_ZDF_RUBRIKEN 		= 'zdf-rubriken.png'
 ICON_ZDF_MEIST 			= 'zdf-meist-gesehen.png'
 ICON_ZDF_BARRIEREARM 	= 'zdf-barrierearm.png'
-ICON_ZDF_UNTERTITEL 	= 'zdf-untertitel.png'
 ICON_ZDF_BILDERSERIEN 	= 'zdf-bilderserien.png'
 
 ICON_MAIN_POD			= 'radio-podcasts.png'
@@ -277,6 +276,12 @@ ClearUp(TEXTSTORE, days*86400)		# TEXTSTORE bereinigen
 if SETTINGS.getSetting('pref_epgRecord') == 'true':
 	epgRecord.JobMain(action='init')						# EPG_Record starten
 
+# todo: Test Module
+skindir = xbmc.getSkinDir()
+PLog("skindir: %s" % skindir)
+if 'confluence' in skindir:									# zeigt Plot-Infos in Medienansicht
+	xbmcplugin.setContent(HANDLE, 'movies')	
+
 ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle']	# Rest in ARD_NEW
 
 #----------------------------------------------------------------  
@@ -321,7 +326,8 @@ def Main():
 	else:
 		title = "ARD Mediathek Neu"
 		tagline = 'in den Settings sind ARD Mediathek Neu und ARD Mediathek Classic austauschbar'
-		summ = u"das Menü BarriereArm ist zur Zeit nur in der Classic-Version verfügbar"
+		summ = u'Die barrierefreien Angebote befinden sich im Menü Start in "Mehr zum Thema | Rubriken".'
+		summ = summ + u'\nDas Menü "BarriereArm" ist zur Zeit nur in der Classic-Version verfügbar.'
 		fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, '')
 		PLog(fparams)	
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
@@ -6916,6 +6922,7 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		
 	# if offset:	Code entfernt, in Kodi nicht nutzbar
+	title = title.replace(u"Das ZDF ist für den verlinkten Inhalt nicht verantwortlich!", '')
 	label = u"Alle Beiträge im ZDF zu >%s< suchen"  % title
 	query = title.replace(' ', '+')	
 	tagline = u"zusätzliche Suche starten"
@@ -7320,7 +7327,7 @@ def MeistGesehen(name):							# ZDF-Bereich, Beiträge unbegrenzt
 		
 ####################################################################################################
 # ZDF Barrierefreie Angebote - Vorauswahl
-#	ARD s. BarriereArmARD (Classic)
+#	ARD siehe BarriereArmARD (Classic)
 # 06.04.2020 aktualisiert: Webseite geändert, nur kleine Übersicht, die 3
 #	Folgeseiten enthalten jeweils die neuestens Videos 
 #
@@ -7908,7 +7915,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		if descr:
 			summary = descr
 			if teaser_nr:
-				summary = "Episode %s | %s" % (teaser_nr, summary )
+				summary = "Episode %s | %s" % (teaser_nr, summary)
+				title = "[%2s] %s" % (teaser_nr, title)
 		else:
 			summary = href_title
 			
@@ -8022,7 +8030,7 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 		apiToken1 = stringextract('apiToken: \'', '\'', page) 
 		apiToken2 = stringextract('"apiToken": "', '"', page)
 		sid = stringextract("docId: \'", "\'", page)				# Bereich window.zdfsite
-	PLog('apiToken1: %s, apiToken2: %s, sid: %s' % (apiToken1, apiToken2, sid))
+	PLog('apiToken1: %s, apiToken2: %s, sid: %s' % (apiToken1[:80], apiToken2[:80], sid))
 					
 	# -- Ende Vorauswertungen
 			
@@ -8173,7 +8181,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	PLog(apiToken1)
 	PLog('sid/docId: ' + sid)
 	PLog('Client: '); PLog(OS_DETECT);						# s. Startbereich
-	PLog(apiToken1); PLog(apiToken2);
+	PLog(apiToken1[:80]); PLog(apiToken2[:80]);
 	
 	# bei Änderung profile_url neu ermitteln - ZDF: zdfplayer-Bereich, NEO: data-sophoraid
 	profile_url = 'https://api.zdf.de/content/documents/%s.json?profile=player'	% sid
@@ -8205,6 +8213,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 		PLog('profile_url: Laden fehlgeschlagen')
 		return '', '', '', ''
 	PLog("page_json: " + page[:40])
+	# RSave('/tmp/x.json', py2_encode(page))	# Debug	
 														# Videodaten ermitteln:
 	pos = page.rfind('mainVideoContent')				# 'mainVideoContent' am Ende suchen
 	page_part = page[pos:]
@@ -8213,14 +8222,21 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	# neu ab 19.04.2018: Videos ab heute auch ohne uurl-Pfad möglich, Code einschl. Abbruch entfernt - s.a. KIKA_und_tivi.
 	# 18.10.2018: Code für old_videodat_url entfernt (../streams/ptmd":).
 	# 23.11.2019: extract videodat_url ohne Blank hinter separator : (s. json.loads in get_page)
+	# 02.08.2020: extract DGS-Url (Gebärdensprache) abhängig vom Setting
 	
-	ptmd_player = 'ngplayer_2_3'							
-	videodat_url = stringextract('ptmd-template":"', '",', page_part)			# "mainVideoContent":{"http://
-	videodat_url = videodat_url.replace('{playerId}', ptmd_player) 				# ptmd_player injiziert 
+	ptmd_player = 'ngplayer_2_3'
+	videodat_url = ''
+	if SETTINGS.getSetting('pref_DGS_ON') == 'true':								# Link Gebärdensprache?
+		dgs_part = stringextract('label":"DGS"', '}}', page_part)
+		PLog("dgs_part: " + dgs_part)
+		videodat_url = stringextract('ptmd-template":"', '"', dgs_part)
+	if videodat_url == '':
+		videodat_url = stringextract(u'ptmd-template":"', '",', page_part)			# "mainVideoContent":{"http://
+		# videodat_url = 'https://api.zdf.de/tmd/2/portal/vod/ptmd/mediathek/'  	# unzuverlässig
+	videodat_url = videodat_url.replace('{playerId}', ptmd_player) 					# ptmd_player injiziert 
 	videodat_url = 'https://api.zdf.de' + videodat_url
-	# videodat_url = 'https://api.zdf.de/tmd/2/portal/vod/ptmd/mediathek/'  	# unzuverlässig
 	PLog('videodat_url: ' + videodat_url)	
-
+	
 	# apiToken2 aus ZDF_getVideoSources. header ohne quotes in get_page leer 
 	# kompl. Header für Modul requests, für urllib2.urlopen reichen Api-Auth + Host
 	#header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de', 'Accept-Encoding': 'gzip, deflate, sdch, br', \
@@ -8228,6 +8244,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken2
 	page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
 	PLog("request_json: " + page[:40])
+	# RSave('/tmp/x.json', py2_encode(page))	# Debug	
 
 	if page == '':	# Abbruch - ev. Alternative ngplayer_2_3 versuchen
 		PLog('videodat_url: Laden fehlgeschlagen')

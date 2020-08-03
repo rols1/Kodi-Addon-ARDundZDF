@@ -12,6 +12,19 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+
+03.08.2020	3.2.4 
+			get_formitaeten (ZDF): Link Gebärdensprache extrahiert - abh. von Setting.
+			settings.xml - Option eingefügt: "Gebärdensprache: Quelle verwenden falls 
+			vorhanden".
+			settings.xml - Option entfernt: "Untertitel: auf vorhandene Untertitel
+			hinweisen", Dialog in PlayVideo entfernt.
+			Def. ICON_ZDF_UNTERTITEL entfernt - obsolet.
+			Addon-Start: Abfrage auf Skin Confluence und xbmcplugin.setContent-Call für
+			Infos in Medienansicht.
+			ZDF_get_content: teaser_nr zusätzl. für Kennz. im Serientitel verwendet.
+			ZDF_Sendungen: Disclaimer im Titel zur Mehr-Suche entfernt.
+
 01.07.2020	3.2.3 
 			Audio_get_rubriken (Audiothek): Fix für Titel (fehlt im Menü "Unsere Favoriten"
 			nach Webänderung), neu: Bildtitel als tagline ausgewertet.
