@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 15.06.2020
+#	Stand: 04.08.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -231,8 +231,8 @@ def SendungenAZlist(name, path):				#
 	
 	liste = blockextract('<ul class="letter-list"', page)  # 1 x
 	content = blockextract('class="item', liste[0])
-	
 	PLog(len(content))
+	
 	for rec in content:
 		title	= stringextract('title="', '"', rec)
 		href	= stringextract('href="', '"', rec)
@@ -256,6 +256,8 @@ def SendungenAZlist(name, path):				#
 #------------ 
 # A-Z Liste der Beiträge
 #	-> Sendereihe_Sendungen -> get_zdfplayer_content
+# 04.08.2020 Anpassungen an Webänderungen (Rubrik, Titel)
+#
 def SendungenAZ(name, path): 
 	PLog('SendungenAZ: ' + name)
 
@@ -275,9 +277,11 @@ def SendungenAZ(name, path):
 	
 	for rec in content:
 		img_src =  stringextract('data-srcset="', ' ', rec)	
-		rubrik 	= stringextract('<span>', '</span>', rec)
+		rubrik 	= stringextract('a--preheadline level-4">', '<span class', rec)
+		rubrik 	= stringextract('<span>', '</span>', rubrik)
 		sub_rubrik = stringextract('ellipsis" >', '<', rec)
-		title	= stringextract('clickarea-link">', '</p>', rec)
+		title	= stringextract('clickarea-link js-teaser-title', '</h', rec)
+		title	= stringextract('headline">', '</', title)
 		href	= stringextract('href="', '"', rec)
 		href	= DreiSat_BASE + href
 		descr	= stringextract('clickarea-link" >', '<', rec)
@@ -352,6 +356,8 @@ def Verpasst(title):	# je 1 Tag - passend zum Webdesign
 #------------
 
 # Liste Sendungen gewählter Tag
+# 04.08.2020 Webänderung Sendung (label)
+#
 def SendungenDatum(SendDate, title):	
 	PLog('SendungenDatum: ' + SendDate)
 	
@@ -381,8 +387,7 @@ def SendungenDatum(SendDate, title):
 		if href == '' or '#skiplinks' in href:
 			continue
 		href	= DreiSat_BASE + href
-		sendung	= stringextract('level-6', '</', rec)
-		sendung	= sendung.replace('">', ''); sendung = sendung.strip()
+		sendung	= stringextract('data-module="headline">', '</', rec)
 		descr	= stringextract('teaser-epg-text">', '</p>', rec)		# mehrere Zeilen
 		PLog(descr)
 		descr	= cleanhtml(descr); 
@@ -431,6 +436,7 @@ def transl_month(shortmonth):	# Monatsbez. (3-stellig) -> Zahl
 #	1. Durchlauf mit Stage und Rubriken der Starttseite
 # 	2. Durchlauf: Rubrik-Ausschnitt erzeugen -> get_lazyload (die 
 #			meisten oder -> Rubrik_Single (zdfplayer-Inhalte)
+# 04.08.2020 Anpassungen an Webänderungen (Muster red is-uppercase)
 #
 def Start(name, path, rubrik=''):
 	PLog('Start:')
@@ -453,17 +459,10 @@ def Start(name, path, rubrik=''):
 			Dict("store", '3satStart', page) # Seite -> Cache: aktualisieren				
 	PLog(len(page))
 	
-	page, msg = get_page(path)	
-	if page == '':			
-		msg1 = "Fehler in Start"
-		msg2 = msg
-		PLog(msg1)
-		MyDialog(msg1, msg2, '')
-		return li	
-	
 	if rubrik == '':								# 1. Durchlauf: Stage + Rubrik-Liste
 		stage_home = stringextract('data-module="stage-home"', '</section', page)
 		content =  blockextract('class="artdirect">', stage_home)
+		PLog(len(content))
 		i=1
 		for rec in content:
 			multi = False
@@ -508,12 +507,15 @@ def Start(name, path, rubrik=''):
 				
 
 													# restl. Rubriken der Leitseite listen
-		items =  blockextract('red is-uppercase ">', page)
+		items =  blockextract('--red is-uppercase', page)
+		PLog(len(items))
 		img_src = R('Dir-folder.png')				# alles lazyload-Beiträge ohne Bilder + hrefs
 		for rec in items:						
-			title	= stringextract('is-uppercase ">', '</', rec)
+			title	= stringextract('headline">', '</', rec)
 			title 	= repl_json_chars(title);			
 			if u'Das könnte Dich' in title:			# leer (java-script)
+				continue
+			if u'Alle löschen' in title:			# Merkliste 3sat
 				continue
 				
 			title=py2_encode(title); path=py2_encode(path); 
@@ -524,13 +526,15 @@ def Start(name, path, rubrik=''):
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 	else:											# 2. Durchlauf: Rubrik-Ausschnitt auswerten
-		items =  blockextract('red is-uppercase ">', page)
+		items =  blockextract('--red is-uppercase', page)
+		PLog(len(items))
 		for rec in items:						
-			title	= stringextract('is-uppercase ">', '</', rec)
+			title	= stringextract('headline">', '</', rec)
 			title 	= repl_json_chars(title);
 			rubrik=py2_encode(rubrik); title=py2_encode(title);
 			# PLog("title: %s, rubrik: %s" % (title, rubrik))
 			if rubrik in title:						# geklickte Rubrik (json-bereinigt) suchen
+				PLog("gefunden: rubrik")
 				if 'ivestream' in title:			# Buttons Livestream + Verpasst
 					epg = get_epg()
 					if epg:
@@ -604,6 +608,8 @@ def Rubriken(name, path):
 # rekursiv: zweiter Durchlauf mit thema listet die Sendereihen dieser Rubrik
 #			dritter Durchlauf nach thema 'Mehr' (Sendereihe, keine Einzelbeiträge) -	
 #				Liste der Sendereihen beim 2. Durchlauf.
+# 04.08.2020 Anpassungen an Webänderungen (Rubrik, Titel)
+# 
 def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Sendereihen
 	PLog('Rubrik_Single: '+ name)
 	PLog("thema: " + thema)
@@ -619,19 +625,15 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 		MyDialog(msg1, msg2, '')
 		return li	
 		
-	themen =  blockextract('is-uppercase ">', page)	
+	themen =  blockextract('<h2  class="a--headline', page)	
 	PLog(len(themen))											
 	
 	if thema == '':									# 1. Durchlauf: Themen der Rubrik name	
 		PLog('1. Durchlauf, thema: %s' % thema)						
 		img_src = R('Dir-folder.png')			
 		for rec in themen:
-			title	= stringextract('is-uppercase ">', '<', rec)
+			title	= stringextract('data-module="headline">', '</', rec)
 			PLog(title)
-			# ausschließen: Ende Themen, Mehr, Rechtliches, ..
-			if title == '':
-				PLog('Ende Themen')
-				break
 				
 			title	= up_low(title)
 			summ = "Folgeseiten"
@@ -649,9 +651,9 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# Ende 1. Durchlauf
 	
 	PLog('2. Durchlauf, thema: %s' % thema)	
-	content =  blockextract('is-uppercase ">', page)	
+	content =  blockextract('<h2  class="a--headline', page)		
 	for rec in content:										# 2. Durchlauf: Beiträge zu Thema thema		
-		title	= stringextract('is-uppercase ">', '<', rec)
+		title	= stringextract('data-module="headline">', '</', rec)
 		title 	= repl_json_chars(py2_decode(title))		# dto. 1. Durchlauf
 		title	= up_low(title); name = up_low(name); 
 		if 	py2_decode(name) in py2_decode(title):			# Bsp. VIDEOTIPP "SEIDENSTRASSE"
@@ -866,7 +868,7 @@ def get_lazyload(li, page, ref_path):
 	for rec in content:	
 		rec = unescape(rec)
 		PLog('loader_Beitrag')
-		PLog(rec[:60]); 	
+		PLog(rec[:60]); 
 	
 		# Ersatz für javascript: Auswertung + Rückgabe aller  
 		#	Bestandteile:
@@ -965,7 +967,8 @@ def get_teaserElement(rec):
 		title	= transl_json(title); 
 		ctitle = stringextract('ellipsis" >', '<', page)  		# -> tag (subheadline)
 		tag 	= stringextract('<span>', '</span>', page)
-		dauer	= stringextract('class="label">', '</', page)
+		dauer	= stringextract('icon-opaque is-not-selected', '/span>', page)
+		dauer	= stringextract('class="label">', '<', dauer)	# label allein unsicher (Bsp. Vorab)
 		path	= stringextract('href="', '"', page)
 		if path.startswith('http') == False:
 			path = DreiSat_BASE + path
@@ -1337,6 +1340,7 @@ def get_epg():		# akt. PRG-Hinweis von 3Sat-Startseite holen
 # 3Sat - Bild-Galerien/-Serien
 #	Übersichtsseiten - 3sat zeigt 12 Beiträge pro Seite
 #		path für weitere Seiten: class="load-more-container"
+# 04.08.2020 Webänderungen Titel, Subtitel
 #
 def Bilder3sat(path=''):
 	PLog('Bilder3sat:')
@@ -1374,15 +1378,17 @@ def Bilder3sat(path=''):
 		
 		href = 'https://www.3sat.de' + stringextract('href="', '"', rec)
 		
-		headline = stringextract('medium-6   ">', '</h3>', rec)		# headline + Subtitel -> Tagline
-		title = stringextract('clickarea-link">', '</p>', headline) # Titel -> Ordnername
-		title = cleanhtml(title); title = mystrip(title); title = repl_json_chars(title);
-		headline = cleanhtml(headline); headline = mystrip(headline)
-		stitle= stringextract('ellipsis" >', '</', rec)
-		stitle = cleanhtml(stitle); stitle = mystrip(stitle)
-		tag = "%s | %s" % (headline, stitle)
+		headline = stringextract('clickarea-link js-teaser-title', '</h', rec)	# Klick-Titel
+		headline = stringextract('headline">', '</', headline)		
+		pre_head = stringextract('class="a--preheadline level-4">', '</span>', rec)	# SubTitel oben, Bsp. Kultur
+		pre_head = pre_head.replace('<span>', '').strip()	
+		sub_head = stringextract('class="a--subheadline', 'class', rec)				# SubTitel unten, Bsp. Musik
+		sub_head = stringextract('>', '<', sub_head)		
 		
-		summ = stringextract('class="label">', '</', rec)
+		title = headline
+		if pre_head and sub_head:
+			tag = "%s | %s" % (pre_head, sub_head)		
+		summ = stringextract('class="label">', '</', rec)				# Bsp. 5 Bilder
 		
 		PLog('Satz:')
 		PLog(img_src); PLog(title); PLog(tag);  		

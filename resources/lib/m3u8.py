@@ -266,6 +266,7 @@ def Main_m3u8(m3u8_url, dest_video, duration, JobID):
 	PLog("Main_m3u8:")
 	PLog(m3u8_url); PLog(dest_video);PLog(duration);
 
+	global SESSION_TS_URL 
 	body, new_url  = get_m3u8_body(m3u8_url)					# gesamte m3u8-Seite 
 	# PLog(body)
 	if '#EXT-X-TARGETDURATION' in body:							# reclink in livesenderTV.xml (DasErste)
@@ -280,11 +281,10 @@ def Main_m3u8(m3u8_url, dest_video, duration, JobID):
 		ts_url = ts_url_list[-1]								# 1. Qual. (Liste aufst. sortiert)
 		#   ts_url = ts_url_list[0]								# Debug kleinste Qual.
 		bw, ts_url = ts_url.split('|')
-		global SESSION_TS_URL 
-		SESSION_TS_URL= ts_url									# zum Nachladen ts_file in download_ts
 		PLog('Anzahl ts-Quellen: %d' % len(ts_url_list))
 		PLog("BANDWIDTH: %s, SESSION_TS_URL: %s" % (bw, SESSION_TS_URL))
 		ts_page = download_ts_file(ts_url)						# nur 1. Liste (höchste Qual.)
+	SESSION_TS_URL= ts_url										# zum Nachladen ts_file in download_ts
 
 	try:
 		ts_dur = re.search('TARGETDURATION:(\d+)', ts_page).group(1)

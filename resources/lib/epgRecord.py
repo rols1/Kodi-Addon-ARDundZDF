@@ -91,6 +91,8 @@ def JobMonitor():
 	post_rec = SETTINGS.getSetting('pref_post_rec')			# Nachlauf (dto.)
 	pre_rec = re.search('= (\d+) Min', pre_rec).group(1)
 	post_rec = re.search('= (\d+) Min', post_rec).group(1)
+	if pre_rec == '0':
+		pre_rec = JOBDELAY									# Ausgleich Intervall
 		
 	if os.path.exists(JOB_STOP):							# Ruine?		
 		os.remove(JOB_STOP)	

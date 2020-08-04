@@ -13,6 +13,20 @@ CHANGE HISTORY
 --------------
 
 
+04.08.2020	3.2.5
+			JobMonitor: Vorlauf auf JOBDELAY gesetzt, falls 0 (Ausgleich Intervall).
+			Main_m3u8 (Modul m3u8): SESSION_TS_URL für reclink-Url ergänzt (fehlt zum
+			Nachladen der TS-Datein für DasErste).
+			AudioStart_AZ + AudioStart_AZ_content: Cache-Nutzung für A-Z-Seiten (1 x html,
+			1 x json).
+			Bilder3sat (3sat): Anpassungen an Webänderungen (Titel, Subtitel).
+			SendungenDatum (3sat): Anpassungen an Webänderungen (Sendung).
+			Start (3sat): Anpassungen an Webänderungen (Muster red is-uppercase), Entrag
+			"Alle löschen" (Merkliste 3sat) entfernt.
+			get_teaserElement (3sat): eindeutigere Ermittlung Dauer.
+			SendungenAZ + Rubrik_Single (3sat): Anpassungen an Webänderungen (Rubrik, 
+			Titel).
+
 03.08.2020	3.2.4 
 			get_formitaeten (ZDF): Link Gebärdensprache extrahiert - abh. von Setting.
 			settings.xml - Option eingefügt: "Gebärdensprache: Quelle verwenden falls 

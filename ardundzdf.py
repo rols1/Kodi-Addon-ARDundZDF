@@ -43,8 +43,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.2.4'
-VDATE = '03.08.2020'
+VERSION = '3.2.5'
+VDATE = '04.08.2020'
 
 #
 #
@@ -279,7 +279,7 @@ if SETTINGS.getSetting('pref_epgRecord') == 'true':
 # todo: Test Module
 skindir = xbmc.getSkinDir()
 PLog("skindir: %s" % skindir)
-if 'confluence' in skindir:									# zeigt Plot-Infos in Medienansicht
+if 'confluence' in skindir:									# ermöglicht Plot-Infos in Medienansicht
 	xbmcplugin.setContent(HANDLE, 'movies')	
 
 ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle']	# Rest in ARD_NEW
@@ -1076,11 +1076,16 @@ def AudioStartThemen(title, ID, page='', path=''):	# Entdecken, Unsere Favoriten
 #----------------------------------------------------------------
 def AudioStart_AZ(title):		
 	PLog('AudioStart_AZ:')
+	CacheTime = 6000									# 1 Std.
+
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Audiothek')					# Home-Button
 
 	path = ARD_AUDIO_BASE + '/alphabetisch?al=a'	# A-Z-Seite laden für Prüfung auf inaktive Buchstaben
-	page, msg = get_page(path)		
+	page = Dict("load", "Audio_AZ", CacheTime=CacheTime)
+	if page == False:									# Cache miss - vom Sender holen
+		page, msg = get_page(path)		
+		Dict("store", "Audio_AZ", page) 				# Seite -> Cache: aktualisieren			
 	if page == '':
 		msg1 = "Fehler in AudioStart_AZ"
 		msg2 = msg
@@ -1131,10 +1136,14 @@ def AudioStart_AZ(title):
 #
 def AudioStart_AZ_content(button):		
 	PLog('AudioStart_AZ_content: ' + button)
+	CacheTime = 6000									# 1 Std.
 
 	# path = ARD_AUDIO_BASE + '/alphabetisch?al=a'		# Leitseite entf., s.o.
 	path = ARD_AUDIO_BASE + '/api/podcasts?limit=300' 	# enthält alle A-Z (wie Leitseite)	
-	page, msg = get_page(path)		
+	page = Dict("load", "Audio_AZ_json", CacheTime=CacheTime)
+	if page == False:									# Cache miss - vom Sender holen
+		page, msg = get_page(path)
+		Dict("store", "Audio_AZ_json", page) 			# Seite -> Cache: aktualisieren			
 	if page == '':
 		msg1 = "Fehler in AudioStart_AZ_content"
 		msg2 = msg
