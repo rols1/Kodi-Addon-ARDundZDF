@@ -178,5 +178,8 @@ Podcast-Favoriten:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Podcast-Favoriten.png)
 
+Aufnahmemöglichkeiten:
+===================  
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Settings/Menu_TV-Livestreams.png)
 
 #### weitere Screenshots: https://github.com/rols1/PluginPictures/tree/master/Kodi/ARDundZDF

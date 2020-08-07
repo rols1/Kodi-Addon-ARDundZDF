@@ -13,10 +13,17 @@ CHANGE HISTORY
 --------------
 
 
+07.08.2020	3.2.6
+			Sendereihe_Sendungen (3sat): unescape title.
+			Main_m3u8 (Modul m3u8): Logausgabe SESSION_TS_URL verlegt (Error
+			falls  '#EXT-X-TARGETDURATION' nicht in master.m3u8)
+			get_ts_startpos (Modul m3u8): zusätzl. Logausgabe für Index 0 in
+			neuer ts-Liste.
+
 04.08.2020	3.2.5
 			JobMonitor: Vorlauf auf JOBDELAY gesetzt, falls 0 (Ausgleich Intervall).
 			Main_m3u8 (Modul m3u8): SESSION_TS_URL für reclink-Url ergänzt (fehlt zum
-			Nachladen der TS-Datein für DasErste).
+			Nachladen der TS-Dateien für DasErste).
 			AudioStart_AZ + AudioStart_AZ_content: Cache-Nutzung für A-Z-Seiten (1 x html,
 			1 x json).
 			Bilder3sat (3sat): Anpassungen an Webänderungen (Titel, Subtitel).

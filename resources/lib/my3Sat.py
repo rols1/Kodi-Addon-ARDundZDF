@@ -811,6 +811,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		title	= stringextract('clickarea-link">', '</p>', rec)
 		if title == '':
 			title = stringextract('title="', '"', rec)
+		title = unescape(title)
 		
 		href	= stringextract('href="', '"', rec)
 		if href.startswith('http') == False:

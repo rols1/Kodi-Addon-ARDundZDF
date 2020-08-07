@@ -43,8 +43,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.2.5'
-VDATE = '04.08.2020'
+VERSION = '3.2.6'
+VDATE = '07.08.2020'
 
 #
 #
@@ -4645,7 +4645,7 @@ def DownloadTools():
 
 	if os.path.exists(MONITOR_ALIVE):											# JobMonitor?
 		title = 'Aufnahme-Monitor stoppen'					
-		tag = u'stoppt das Monitoring für EPG-Aufnahmen'
+		tag = u'stoppt das Monitoring für EPG-Aufnahmen (aber keine laufenden Aufnahmen)'
 		summ = 'das Setting "Aufnehmen Menü: EPG Sender einzeln" wird ausgeschaltet'
 		summ = '%s\n\nZum Restart dieses Menü erneut aufrufen oder das Aufnehmen im Setting wieder einschalten' % summ
 		fparams="&fparams={'action': 'stop', 'setSetting': 'true'}" 

@@ -8,7 +8,7 @@
 #
 ####################################################################################################
 #	Start 16.07.2020 
-#	Stand 27.07.2020
+#	Stand 06.08.2020
 
 
 # Python3-Kompatibilität:
@@ -46,7 +46,10 @@ if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
 
-
+# Hinw.: auch bei exakten ts-Reihenfolgen können im zusammengesetzten Video Zeitfehler
+#	auftauchen (Bsp.: AddData - messy timestamps, increasing interval for measuring 
+#	average error to 6000 ms). Kodi "glättet die Ausgabe, VLC 3.0.11 nicht.
+#
 #----------------------------------------------------------------  
 def get_m3u8_body(m3u8_url):											# Master m3u8
 	PLog('hole Inhalt m3u8-Datei: ' + m3u8_url)
@@ -134,6 +137,7 @@ def get_ts_startpos(ts_list, last_ts_path, ts_dur):			# neue Startpos. (von unte
 			cnt = cnt+1	
 		if found == False:									# neue Liste startet vermutl. direkt mit Folgepfad
 			PLog("last_ts_path fehlt in neuer ts-list: %s" % last_ts_path)
+			PLog("verwende Index 0: %s" % ts_list[0])
 			# PLog(ts_list)		# Debug
 			ts_startpos = 0								
 	return ts_startpos
@@ -256,7 +260,7 @@ def download_ts(host, ts_page, dest_video, duration, ts_dur, JobID):
 	return				
 #-----------------------------------------------------------------------
 # nur in Testumgebung (ohne ZDF-Sender) - holt die ts-Listen
-#	aller Sender in ../resources/livesenderTV.xml:
+#	aller Sender, Code in ../resources/livesenderTV.xml:
 # def get_all_tsfiles():									
 #-----------------------------------------------------------------------
 # threadID: "%Y%m%d_%H%M%S" aus LiveRecord - in download_ts
@@ -266,7 +270,9 @@ def Main_m3u8(m3u8_url, dest_video, duration, JobID):
 	PLog("Main_m3u8:")
 	PLog(m3u8_url); PLog(dest_video);PLog(duration);
 
-	global SESSION_TS_URL 
+	global SESSION_TS_URL
+	SESSION_TS_URL=''
+	 
 	body, new_url  = get_m3u8_body(m3u8_url)					# gesamte m3u8-Seite 
 	# PLog(body)
 	if '#EXT-X-TARGETDURATION' in body:							# reclink in livesenderTV.xml (DasErste)
@@ -282,7 +288,7 @@ def Main_m3u8(m3u8_url, dest_video, duration, JobID):
 		#   ts_url = ts_url_list[0]								# Debug kleinste Qual.
 		bw, ts_url = ts_url.split('|')
 		PLog('Anzahl ts-Quellen: %d' % len(ts_url_list))
-		PLog("BANDWIDTH: %s, SESSION_TS_URL: %s" % (bw, SESSION_TS_URL))
+		PLog("BANDWIDTH: %s" % bw)
 		ts_page = download_ts_file(ts_url)						# nur 1. Liste (höchste Qual.)
 	SESSION_TS_URL= ts_url										# zum Nachladen ts_file in download_ts
 
@@ -292,7 +298,7 @@ def Main_m3u8(m3u8_url, dest_video, duration, JobID):
 	except Exception as exception:	
 		PLog(str(exception))
 		ts_dur=4												# Default ARD & Co
-	PLog("TARGETDURATION: %s" % (ts_dur))
+	PLog("TARGETDURATION: %s, SESSION_TS_URL: %s" % (ts_dur, SESSION_TS_URL))
 	#with open("/tmp/ts_liste.txt",'w') as f:					# Debug
 	#	f.write(ts_page)
 	
