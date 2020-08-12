@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 26.07.2020
+#	Stand 11.08.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -70,6 +70,8 @@ DEBUG			= SETTINGS.getSetting('pref_info_debug')
 
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
+ICON_TOOLS 				= "icon-tools.png"
+
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
 
@@ -685,12 +687,31 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	add_url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+quote(fparams)
 	PLog("addDir_url: " + unquote(add_url)[:200])		
 	
-	# todo: Ausschluss-Filter 
-	if cmenu:														# Kontextmenüs Merkliste hinzufügen
+	
+	# -------------------------------								# Kontextmenüs
+	if cmenu:														# default: True
 		Plot = Plot.replace('\n', '||')								# || Code für LF (\n scheitert in router)
 		# PLog('Plot: ' + Plot)
 		fparams_folder=''; fparams_filter=''; fparams_delete=''; 
 		fparams_change=''; fparams_record=''; fparams_recordLive='';
+		fparams_setting_sofortstart=''								
+		
+		if filterstatus != 'set':									# Doppel im Hauptmenü vermeiden (s. home)
+			if SETTINGS.getSetting('pref_video_direct') == 'true':	# ständig: Umschalter Settings 
+				menu_entry = "Sofortstart AUS / Downl. EIN"
+				msg1 = "Video-Sofortstart AUS"
+				msg2 = "Downloads EIN"
+			else:
+				menu_entry = "Sofortstart EIN / Downl. AUS"
+				msg1 = "Video-Sofortstart EIN"
+				msg2 = "Downloads AUS"
+			icon = R(ICON_TOOLS)									# ständig: Umschalter Settings 
+			fp = {'ID': 'pref_video_direct', 'msg1': msg1,\
+				'msg2': msg2, 'icon': quote_plus(icon), 'delay': '3000'} 
+			fparams_setting_sofortstart = "&fparams={0}".format(fp)
+			PLog("fparams_setting_sofortstart: " + fparams_setting_sofortstart[:100])
+			fparams_setting_sofortstart = quote_plus(fparams_setting_sofortstart)			
+		
 		if merkname:												# Aufrufer ShowFavs (Settings: Ordner)
 			if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
 				# Param name reicht für folder + filter				# Ordner ändern / Filtern
@@ -795,6 +816,13 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			if fparams_recordLive:										# Aufrufer EPG_ShowAll -> LiveRecord
 				commands.append(('Recording TV-Live', 'RunScript(%s, %s, ?action=dirList&dirID=LiveRecord%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_recordLive)))
+		
+		if fparams_setting_sofortstart:
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
+			commands.append((menu_entry, 'RunScript(%s, %s, ?action=dirList&dirID=switch_Setting%s)' \
+				% (MY_SCRIPT, HANDLE, fparams_setting_sofortstart)))
+			PLog(MY_SCRIPT); PLog(fparams_setting_sofortstart)
+			
 
 		li.addContextMenuItems(commands)				
 	
@@ -2063,6 +2091,7 @@ def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für D
 #  		Verlagert nach util (import aus  ardundzdf klappt nicht in epgRecord).
 # 24.07.2020 Anpassung für Modul m3u8: JobID wird für KillFile verwendet, für
 #	LiveRecording wird neuer Aufnahme-Job erzeugt (via JobMain 'setjob')
+# Todo: bei Wegfall m3u8-Verfahren Mehrkanal-Check entf. - dto. in ProgramRecord
 # 
 def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	PLog('LiveRecord:')
@@ -2112,9 +2141,17 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 			url 	= os.path.join(M3U8STORE, url)	# rtmp-Url's nicht lokal
 			url 	= '"%s"' % url					# Pfad enthält Leerz. - für ffmpeg in "" kleiden						
 	
-	if SETTINGS.getSetting('pref_m3u8_get') == 'true':
+	if SETTINGS.getSetting('pref_m3u8_get') == 'true':		
 		from threading import Thread	
 		import resources.lib.m3u8 as m3u8
+		body, new_url = m3u8.get_m3u8_body(url)		# Check Mehrkanal-m3u8  vorschalten
+		if '#EXT-X-MEDIA:TYPE=AUDIO' in body:		# Mehrkanal-m3u8 -> Hinw. ffmpeg, Abbruch
+			msg1 = "Mehrkanalstream - ffmpeg erforderlich!"
+			msg2 = "Bitte in Settings <Recording TV-Live> die Option" 
+			msg3 = "<Aufnehmen/Recording ohne ffmpeg> ausschalten"
+			PLog(msg1)	
+			MyDialog(msg1, msg2, msg3)
+			return
 
 		if epgJob:									# Job existiert bereits
 			play_url = R('ttsMP3_Monitor_Aufnahme_gestartet.mp3')	
@@ -2235,6 +2272,23 @@ def check_Setting(ID):
 			return False
 		return True
 		
+#---------------------------------------------------------------------------------------------------
+# schaltet boolean-Setting ID um und gibt Notification aus
+# Aufrufer: Kontextmenü (Umschalter Downloads/Sofortstart)
+#
+def switch_Setting(ID, msg1,msg2,icon,delay):
+	PLog('switch_Setting:')
+	delay = int(delay)
+	
+	if SETTINGS.getSetting(ID) == 'true':
+		SETTINGS.setSetting(ID, 'false')
+	else:
+		SETTINGS.setSetting(ID, 'true')
+
+	xbmc.executebuiltin('Container.Refresh')
+	xbmcgui.Dialog().notification(msg1,msg2,icon,delay)
+	return	
+	
 ####################################################################################################
 # PlayVideo aktuell 23.03.2019: 
 #	Sofortstart + Resumefunktion, einschl. Anzeige der Medieninfo:

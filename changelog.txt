@@ -12,6 +12,13 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+12.08.2020	3.2.7
+			Abbruch von m3u8-Aufnahmen bei Mehrkanal-Streamlinks: Checks + Abbruch-Dialog
+			in LiveRecord (Modul util) + ProgramRecord.
+			Neues Kontextmenü "Umschalter Sofortstart/Downloads": Anpassung in addDir 
+			(util), zusätzliche Funktion switch_Setting (util).
+			get_formitaeten (ZDF): Rundung für duration-Werte ergänzt.
+			
 
 07.08.2020	3.2.6
 			Sendereihe_Sendungen (3sat): unescape title.

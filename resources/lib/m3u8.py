@@ -8,7 +8,7 @@
 #
 ####################################################################################################
 #	Start 16.07.2020 
-#	Stand 06.08.2020
+#	Stand 10.08.2020
 
 
 # Python3-Kompatibilität:
@@ -273,7 +273,7 @@ def Main_m3u8(m3u8_url, dest_video, duration, JobID):
 	global SESSION_TS_URL
 	SESSION_TS_URL=''
 	 
-	body, new_url  = get_m3u8_body(m3u8_url)					# gesamte m3u8-Seite 
+	body, new_url = get_m3u8_body(m3u8_url)					# gesamte m3u8-Seite 
 	# PLog(body)
 	if '#EXT-X-TARGETDURATION' in body:							# reclink in livesenderTV.xml (DasErste)
 		PLog('reclink, ohne master.m3u8')						#	master.m3u8 entfällt

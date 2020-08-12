@@ -43,8 +43,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.2.6'
-VDATE = '07.08.2020'
+VERSION = '3.2.7'
+VDATE = '12.08.2020'
 
 #
 #
@@ -5674,12 +5674,23 @@ def TVLiveRecordSender(title):
 #		
 # 29.06.0219 Erweiterung Sendung aufnehmen, Call K-Menü <- EPG_ShowSingle
 # Check auf Setting pref_epgRecord in EPG_ShowSingle
+# Todo: bei Wegfall m3u8-Verfahren Mehrkanal-Check entf. - dto. in LiveRecord
 #
 def ProgramRecord(url, sender, title, descr, start_end):
 	PLog('ProgramRecord:')
 	PLog(url); PLog(sender); PLog(title); 
 	PLog(start_end);
 
+	import resources.lib.m3u8 as m3u8
+	body, new_url = m3u8.get_m3u8_body(url)		# Check Mehrkanal-m3u8  vorschalten
+	if '#EXT-X-MEDIA:TYPE=AUDIO' in body:		# Mehrkanal-m3u8 -> Hinw. ffmpeg, Abbruch
+		msg1 = "Mehrkanalstream - ffmpeg erforderlich!"
+		msg2 = "Bitte in Settings <Recording TV-Live> die Option" 
+		msg3 = "<Aufnehmen/Recording ohne ffmpeg> ausschalten"
+		PLog(msg1)	
+		MyDialog(msg1, msg2, msg3)
+		return
+			
 	now = EPG.get_unixtime(onlynow=True)
 	
 	start, end = start_end.split('|')				# 1593627300|1593633300
@@ -8295,7 +8306,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	duration = stringextract('"value":',  '}', duration).strip()
 	PLog(duration)	
 	if duration:
-		duration = (int(duration) / 1000) / 60		# Rundung auf volle Minuten reicht hier 
+		duration = int((int(duration) / 1000) / 60)		# Rundung auf volle Minuten reicht hier 
 		duration = max(1, duration)						# 1 zeigen bei Werten < 1
 		duration = str(duration) + " min"	
 	PLog('duration: ' + duration)
