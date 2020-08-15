@@ -846,8 +846,10 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 # 25.01.2019 Rückgabe Redirect-Url (get_page2) in msg
 # 21.06.2020 urlencoding mit Param. safe für franz. Zeichen, Berücksicht. m3u8-Links,
 #	transl_umlaute(path) entfällt damit
+# 14.08.2020 do_safe-Param. triggert path-Quotierung, muss hier für Audiothek-Rubriken
+#	entfallen
 #
-def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False):
+def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
 
 	if header:									# dict auspacken
@@ -861,7 +863,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	path = path.replace('https%3A//','https://')# z.B. https%3A//classic.ardmediathek.de
 	
 	path = py2_encode(path)
-	path = quote(path, safe="@:?.,-_&=/")		# s.o. ('-_' in m3u8-Links)			
+	if do_safe:
+		path = quote(path, safe="@:?.,-_&=/")	# s.o. ('-_' in m3u8-Links)	
 	PLog("safe_path: " + path)		
 	 
 	msg = ''; page = ''	

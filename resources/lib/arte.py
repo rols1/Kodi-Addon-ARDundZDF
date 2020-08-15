@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 17.06.2020
+#	Stand: 13.08.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -396,6 +396,9 @@ def Beitrag_Liste(url, title):
 # ----------------------------------------------------------------------
 # holt die Videoquellen -> Sofortstart bzw. Liste der  Auflösungen 
 # tag hier || behandelt (s. GetContent)
+# 14.08.2020 Beschränkung auf deutsche + concert-Streams entfernt
+#	(Videos möglich mit ausschl. franz. Streams), master.m3u8 wird
+#	unverändert ausgewertet.
 #
 def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	PLog("SingleVideo: " + pid)
@@ -417,7 +420,8 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	
 	formitaeten = blockextract('"id":"H', page) # Bsp. "id":"HTTPS_MQ_1", "id":"HLS_XQ_1"
 	PLog(len(formitaeten))
-	form_arr = []
+	
+	form_arr = []; href_m3u8=''	
 	for rec in formitaeten:	
 		r = []
 		mediaType = stringextract('"mediaType":"',  '"', rec)
@@ -431,19 +435,16 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 		lang = transl_json(lang)
 		
 		# versch. Streams möglich (franz, UT, ..) - in Konzert-Streams
-		#	alle Streams erlauben, sonst nur Deutsch + Originalfassung:
-		if 'Deutsch' in lang or 'Originalfassung' in lang or '/concert/' in url:							
-			lang = lang.replace('Deutsch', '')					# aus Platzgr. entf.
-			r.append(mediaType); r.append(bitrate);
-			r.append(size); r.append(quality); 
-			r.append(url); r.append(lang);
-			form_arr.append(r)
-		else:
-			continue
-						
+		#	alle erlauben (s.o.):
+		r.append(mediaType); r.append(bitrate);
+		r.append(size); r.append(quality); 
+		r.append(url); r.append(lang);
+		form_arr.append(r)
+		
 		if 'master.m3u8' in rec:				# master.m3u8 für Sofortstart holen
 			href_m3u8 = stringextract('url":"', '"', rec)
 
+						
 	form_arr.sort()								# Sortieren
 	if len(form_arr) == 0:
 		msg1 = 'Fehler in SingleVideo: %s' % title
@@ -466,7 +467,6 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 		size = rec[2]; quality=rec[3]; 
 		url=rec[4]; lang=rec[5]
 		
-		PLog('Mark3')
 		if 'master.m3u8' in url:
 			quality = quality + ' (auto)'
 		title = u"Typ: %s, Bitrate: %s, %s, %s" % (up_low(mediaType), bitrate, size, quality)
@@ -663,7 +663,8 @@ def KatSubConcert(title, pid, nextpage=''):
 	path = path + '&subcategories=%s&videoType=MOST_RECENT&page=%s&limit=20' % (pid, nextpage)
 	
 	page = Dict("load", 'ArteConcert_%s_page_%s' % (pid, nextpage), CacheTime=ArteKatCacheTime)	
-	if page == False:								# nicht vorhanden oder zu alt
+	PLog(page)
+	if page == False or 'data":[]' in page:			# nicht vorhanden, zu alt od. json-Seite leer
 		page, msg = get_page(path)	
 		if page == '':						
 			msg1 = 'Fehler in Kategorien: %s' % title

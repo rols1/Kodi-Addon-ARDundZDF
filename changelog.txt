@@ -12,13 +12,32 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+15.08.2020 3.2.8
+			AudioContentXML: Ausleitung auf url_html, falls xml-Seite ohne Inhalt;
+			img leer vorbelegt (reference-error vermeiden).
+			AudioContentJSON: Dubletten-Abgleich mit Liste statt string (mehr als
+			1 Dublette möglich).
+			Audio_get_sendungen: Verwendung "Audio_get_rubrik" für eindeutige 
+			Zuordnung title + stitle (unvollständige Titel vermeiden); Call img_via_web
+			zu Zielseite (html/json) begrenzt auf Doppel-Check (fehlerhafte img-Zuordnung
+			in img_via_audio_href) - Performance.
+			SingleVideo (Modul arte): Beschränkung auf deutsche + concert-Streams entfernt
+			(Videos möglich mit ausschl. franz. Streams), master.m3u8 unverändert.
+			get_page (Modul util): path-Quotierung mittels Param. do_safe getriggert
+			(schlägt hier für Audiothek-Rubriken fehl, für franz. Zeichen im arte-Modul
+			aber erforderlich).
+			Audio_get_rubrik + AudioContentJSON: lokale path-Quotierung, get_page-Call mit
+			do_safe=False.
+			Audio_get_rubriken: img's bei 'Ausgewählte Sendungen' von der Zielseite holen
+			(lokal um 1 versetzt).
+			AudioStart: Info-Text zu Podcast-Favoriten erweitert (Suche, Downloads).
+
 12.08.2020	3.2.7
 			Abbruch von m3u8-Aufnahmen bei Mehrkanal-Streamlinks: Checks + Abbruch-Dialog
 			in LiveRecord (Modul util) + ProgramRecord.
 			Neues Kontextmenü "Umschalter Sofortstart/Downloads": Anpassung in addDir 
 			(util), zusätzliche Funktion switch_Setting (util).
-			get_formitaeten (ZDF): Rundung für duration-Werte ergänzt.
-			
+			get_formitaeten (ZDF): Rundung für duration-Werte ergänzt.		
 
 07.08.2020	3.2.6
 			Sendereihe_Sendungen (3sat): unescape title.

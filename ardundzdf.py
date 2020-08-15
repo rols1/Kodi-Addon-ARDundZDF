@@ -43,8 +43,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.2.7'
-VDATE = '12.08.2020'
+VERSION = '3.2.8'
+VDATE = '15.08.2020'
 
 #
 #
@@ -765,7 +765,7 @@ def AddonInfos():
 		fname = os.path.join("%s/resources/podcast-favorits.txt") % PluginAbsPath
 	h = "%s Podcast-Favoriten:\n%s%s" %  (t,t,fname)		# fname in 2. Zeile
 	log = xbmc.translatePath("special://logpath")
-	log = os.path.join("%s/kodi.log") % (log)	
+	log = os.path.join("%skodi.log") % (log)	
 	i = "%s Debug-Log: %s" %  (t, log)
 	
 	p3 = "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d1,d2,e,f,g,h,i)
@@ -1019,10 +1019,12 @@ def AudioStart(title):
 	
 	# Button für Podcast-Favoriten anhängen 					# Podcast-Favoriten
 	title="Podcast-Favoriten"; 
-	tagline = 'konfigurierbar mit der Datei podcast-favorits.txt im Addon-Verzeichnis resources'
+	tagline = u'konfigurierbar mit der Datei podcast-favorits.txt im Addon-Verzeichnis resources'
+	summ = u'Suchergebnisse der Audiothek lassen sich hinzufügen\n'
+	summ = "%s\nMehrfach-Downloads (komplette Liste) möglich" % summ
 	fparams="&fparams={'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="PodFavoritenListe", fanart=R(ICON_MAIN_POD), 
-		thumb=R(ICON_POD_FAVORITEN), tagline=tagline, fparams=fparams)
+		thumb=R(ICON_POD_FAVORITEN), tagline=tagline, summary=summ, fparams=fparams)
 
 	# Button für Livestreams anhängen (eigenes ListItem)		# Livestreams
 	title = 'Livestreams'	
@@ -1108,7 +1110,7 @@ def AudioStart_AZ(title):
 			title = "Sendungen mit #, 0-9" 
 		href	= ARD_AUDIO_BASE + stringextract('href="', '"', grid)
 		
-		PLog('Satz:');
+		PLog('1Satz:');
 		PLog(button); PLog(href); 
 		fparams="&fparams={'button': '%s'}" % button
 		addDir(li=li, label=title, action="dirList", dirID="AudioStart_AZ_content", fanart=R(ICON_MAIN_AUDIO), 
@@ -1209,7 +1211,7 @@ def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams
 			title = repl_json_chars(title)							# für "bremen" erf.
 			sender = repl_json_chars(sender)						# für "bremen" erf.
 			
-			PLog('Satz:');
+			PLog('2Satz:');
 			PLog(title); PLog(img);
 			title=py2_encode(title); sender=py2_encode(sender);
 			fparams="&fparams={'title': '%s', 'sender': '%s', 'myhome': '%s'}" % (quote(title), 
@@ -1246,7 +1248,7 @@ def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams
 			descr = repl_json_chars(descr)	
 			summ_par = descr	
 						
-			PLog('Satz:');
+			PLog('3Satz:');
 			PLog(title); PLog(img); PLog(url); PLog(descr);
 			title=py2_encode(title); summ_par=py2_encode(summ_par);
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
@@ -1325,7 +1327,7 @@ def AudioStartRubrik(path=''):
 		ID=title												# nur escaped für api-Call
 		title = repl_json_chars(title)
 			
-		PLog('Satz:');
+		PLog('4Satz:');
 		PLog(title); PLog(img); PLog(href);  PLog(descr);
 		title=py2_encode(title); href=py2_encode(href); ID=py2_encode(ID);
 		fparams="&fparams={'url': '%s', 'title': '%s', 'usetitle': 'true', 'ID': '%s'}" % \
@@ -1374,7 +1376,10 @@ def Audio_get_rubriken(page='', ID='', path=''):				# extrahiert Rubriken (Webse
 		title 	= unescape(title.strip())
 		href		= ARD_AUDIO_BASE + stringextract('href="', '"', grid)  # Homepage Beiträge
 		
-		img= img_via_audio_href(href=href, page=page)	# img im json-Teil holen
+		if ID == u'Ausgewählte Sendungen':					# img's hier in img_via_audio_href um 1 versetzt
+			img = img_via_web(href)	
+		else:
+			img= img_via_audio_href(href=href, page=page)	# img im json-Teil holen
 		img_alt = stringextract('<img', '>', grid)
 		img_alt = stringextract('title="', '"', img_alt)
 		tag=''
@@ -1389,7 +1394,7 @@ def Audio_get_rubriken(page='', ID='', path=''):				# extrahiert Rubriken (Webse
 		summ_par= descr
 		title = unescape(title); title = repl_json_chars(title)
 				
-		PLog('Satz:');
+		PLog('5Satz:');
 		PLog(title); PLog(img); PLog(href);  PLog(descr);
 		title=py2_encode(title); href=py2_encode(href);
 		fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
@@ -1424,13 +1429,15 @@ def Audio_get_rubrik(url, title, usetitle='', ID=''):			# extrahiert Einzelbeitr
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
-	
+
 	if 'button title="Weitere Laden"' in page or usetitle:		# "Weitere laden" detektieren -> API-Call
 		# Header für api-Call:
 		PLog('Rubrik_mit_api_call')
-		if usetitle:									# api-Call mit ID (Titel) statt url_id (echte Rubriken)
-			url_id=quote_plus(py2_encode(ID))			#	ohne pagenr! (falsche Ergebnisse), trotzdem komplett
-			PLog(ID)
+		if usetitle:									
+			url_id=quote(py2_encode(ID))						# Quotierung hier - skip in get_page via safe=False					
+			PLog("ID: %s, url_id: %s" % (ID, url_id))
+			# api-Call mit ID (Titel) statt url_id (echte Rubriken)
+			#	ohne pagenr! (falsche Ergebnisse), trotzdem komplett:
 			path = ARD_AUDIO_BASE + "/api/podcasts?category=%s" % (url_id)				
 		else:	
 			pagenr = 1
@@ -1453,14 +1460,16 @@ def Audio_get_rubrik(url, title, usetitle='', ID=''):			# extrahiert Einzelbeitr
 # gridlist: 	Blöcke aus page-Ausschnitt (Highlights + Meistgehört 
 #				der Startseite)
 # page:			kompl. Seite für die img-Suche (html/json gemischt)
+# 15.08.2020 Call zu Zielseite (json) wieder abgestellt - auch dort 
+#	stimmen die img's häufig nicht mit dem Web überein.
 #
 def Audio_get_sendungen(li, gridlist, page, ID):	# extrahiert Einzelbeiträge
 	PLog('Audio_get_sendungen: ' + ID)
 	PLog(len(gridlist))	
-	
+
 	li = home(li, ID='ARD Audiothek')				# Home-Button
 	
-	cnt=0		
+	cnt=0; img_list=[]								# img_list für Doppel-Check
 	for grid in gridlist:
 		# PLog(grid) # Debug
 		descr2	= ''; title='';	stitle=''										
@@ -1472,6 +1481,9 @@ def Audio_get_sendungen(li, gridlist, page, ID):	# extrahiert Einzelbeiträge
 			title = "%s | %s" % (title, stitle)
 		
 		label_list = blockextract('aria-label="', grid)			# title/stitle geändert 30.03.2020
+		if ID == u'Audio_get_rubrik':
+			stitle	= title
+			title 	= descr			
 		if ID == 'Highlights':
 			title 	= stringextract('aria-label="', '"', label_list[1])
 			stitle 	= stringextract('aria-label="', '"', label_list[0])
@@ -1498,12 +1510,15 @@ def Audio_get_sendungen(li, gridlist, page, ID):	# extrahiert Einzelbeiträge
 		href 	= stringextract('href="', '"', href)
 		href	= ARD_AUDIO_BASE + href
 		
-		if ID == u'Meistgehört':							# img. häufig falsch, von Zielseite holen
-			img = img_via_web(href)							# Fallback 'icon-bild-fehlt.png'
-		else:
-			img = img_via_audio_href(href=href, page=page)	# img im json-Teil holen, Fallback wie oben  
+		img=''
+		img = img_via_audio_href(href=href, page=page)	# img im json-Teil holen, Fehler mögl. (Abgr. fehlt)
+		if img in img_list:								# Doppel durch Fehler in img_via_audio_href?   
+			PLog("img_doppel_lade_Zielseite")
+			img = img_via_web(href)	
+		img_list.append(img)	
 
-		descr 	= stringextract('href"', '"', grid)
+		if not descr:
+			descr 	= stringextract('href"', '"', grid)
 		if not descr:
 			descr = descr2
 		dauer	= stringextract('duration"', '</div>', grid)
@@ -1523,7 +1538,7 @@ def Audio_get_sendungen(li, gridlist, page, ID):	# extrahiert Einzelbeiträge
 		summ_par= descr.replace('\n', '||')
 		title = repl_json_chars(title)
 			
-		PLog('Satz:');
+		PLog('6Satz:');
 		PLog(title); PLog(stitle); PLog(img); PLog(href);  PLog(mp3_url);
 		title=py2_encode(title); mp3_url=py2_encode(mp3_url);
 		img=py2_encode(img); summ_par=py2_encode(summ_par);	
@@ -1624,8 +1639,9 @@ def img_via_audio_href(href, page):
 	return img							
 
 #----------------------------------------------------------------
-# ermittelt img auf Webseite href
+# ermittelt img auf Webseite href (i.d.R. html/json gemischt)
 #	Fallback: 'icon-bild-fehlt.png'
+#	Achtung: abweichende img's auch auf Zielseite möglich. 
 #
 def img_via_web(href):
 	PLog('img_via_web:')
@@ -1704,7 +1720,7 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 		
 	if path:									# s. Mehr-Button
 		headers=AUDIO_HEADERS  % ARD_AUDIO_BASE
-		page, msg = get_page(path=path, header=headers)	
+		page, msg = get_page(path=path, header=headers, do_safe=False)	# skip Quotierung in get_page
 		if page == '':	
 			msg1 = "Fehler in AudioContentJSON:"
 			msg2 = msg
@@ -1720,23 +1736,27 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 		gridlist = blockextract('"category":', page)			# echte Rubriken, A-Z Podcasts	
 	PLog(len(gridlist))
 	
-	href_pre=''; mehrfach=0
+	href_pre=[]; mehrfach=0
 	for rec in gridlist:
 		rec		= rec.replace('\\"', '')
 		rubrik 	= stringextract('category":"', '"', rec) 
 		descr 	= stringextract('description":"', '"', rec)
 		clip 	= stringextract('clipTitle":"', '"', rec)		# Teaser (nicht 1. Beitrag) für Folgeseiten 
-		href	= stringextract('link":"', '"', rec) 
-		if href == href_pre:									# Dublette?
+		href	= stringextract('link":"', '"', rec)
+		if  href == '':
+			href	= stringextract('url":"', '"', rec)
+		if href in href_pre:									# Dublette?
 			continue
-		href_pre = href	
+		href_pre.append(href)	
+
 		anzahl	= stringextract('_elements":', ',', rec) 		# int
 		sender	= stringextract('station":"', '"', rec) 
 		title	= stringextract('title":"', '"', rec) 
-		url_xml	= stringextract('url":"', '"', rec) 			
+		url_xml	= stringextract('feed_url":"', '"', rec) 			
 		url_xml = url_xml.replace('api-origin.ardaudiothek', 'audiothek.ardmediathek') # s.o.
 		img 	=  stringextract('image_16x9":"', '"', rec)
 		img		= img.replace('{width}', '640')
+		
 		
 		# Aufruf AudioStart_AZ_content:
 		if AZ_button:											# Abgleich Button A-Z und #,0-9	
@@ -1771,12 +1791,12 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)
 	
-		PLog('Satz:');
+		PLog('7Satz:');
 		PLog(rubrik); PLog(title); PLog(img); PLog(href); PLog(url_xml);
-		title=py2_encode(title); url_xml=py2_encode(url_xml);
+		title=py2_encode(title); url_xml=py2_encode(href);
 
-		fparams="&fparams={'path': '%s', 'title': '%s'}" %\
-			(quote(url_xml), quote(title))
+		fparams="&fparams={'path': '%s', 'title': '%s',  'url_html': '%s'}" %\
+			(quote(url_xml), quote(title), quote(href))
 		addDir(li=li, label=title, action="dirList", dirID="AudioContentXML", fanart=img, thumb=img, 
 			fparams=fparams, summary=descr, sortlabel=sortlabel)													
 		cnt=cnt+1
@@ -1808,7 +1828,7 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 		descr	= u"[B]Audiobeitrag[/B] | Dauer %s | %s\n\n%s" % (dauer, sender, descr) 
 		summ_par= descr.replace('\n', '||')
 	
-		PLog('Satz:');
+		PLog('8Satz:');
 		PLog(dauer); PLog(rubrik); PLog(title); PLog(img); PLog(url)
 		title=py2_encode(title); img=py2_encode(img); summ_par=py2_encode(summ_par);
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
@@ -1859,8 +1879,9 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 #	Bsp. 	Hörspiel artmix.galerie 461, 
 #			Wissen radioWissen 2106, Wissen SWR2 2488
 #	Caching hier nicht erforderlich (xml, i.d.R. 1 Bild/Liste)
+# 13.08.2020 Ausleitung auf html-Seite (url_html), falls xml-Seite ohne Inhalt
 #
-def AudioContentXML(title, path, offset=''):				
+def AudioContentXML(title, path, offset='', url_html=''):				
 	PLog('AudioContentXML: ' + title)
 	title_org = title
 	max_len = 100							# 100 Beiträge / Seite
@@ -1871,7 +1892,6 @@ def AudioContentXML(title, path, offset=''):
 	PLog("offset: %d" % offset)
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Audiothek')		# Home-Button
 	
 	page, msg = get_page(path=path)	
 	if page == '':
@@ -1882,6 +1902,7 @@ def AudioContentXML(title, path, offset=''):
 	PLog(len(page))				
 	
 	img_list = blockextract('<image>', page)						# img Dachsatz
+	img=''
 	if len(img_list) == 1:	
 		img	= stringextract('<image>', '</width>', page)
 		img	= stringextract('<url>', '</url>', img)
@@ -1889,15 +1910,28 @@ def AudioContentXML(title, path, offset=''):
 	cnt=0
 	gridlist = blockextract('<item>', page)	
 	PLog(len(gridlist))
+	if len(gridlist) == 0:											# Fallback Ausleitung html-Seite
+		if url_html:
+			# todo: Audio_get_rubrik statt Audio_get_sendungen (sämtl. Beiträge holen)
+			PLog('Ausleitung_html-Seite')
+			path = "%s/alle" % path									# alle: max. 24 (bis "weitere laden") 
+			page, msg = get_page(path=path)	
+			gridlist = blockextract('class="podcast-title"', page)
+			if len(gridlist) > 0:
+				Audio_get_sendungen(li, gridlist, page, ID='Meistgehört')
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 	len_all = len(gridlist)
 	if offset and offset <= len(gridlist):
 		gridlist = gridlist[offset:]
 	PLog(len(gridlist))
 	
+	li = home(li, ID='ARD Audiothek')		# Home-Button, nach ev. Ausleitung (Doppel vermeiden)	
+	
 	for rec in gridlist:
 		title	= stringextract('<title>', '</title>', rec) 
 		url	= stringextract('url="', '"', rec) 						# mp3
-		link	= stringextract('<link>', '</link>', rec) 				# Website
+		link	= stringextract('<link>', '</link>', rec) 			# Website
 		descr	= stringextract('<description>', '</description>', rec) 
 		datum	= stringextract('<pubDate>', '</pubDate>', rec) 
 		# datum	= transl_pubDate(datum)								# s. transl_pubDate
@@ -1908,7 +1942,7 @@ def AudioContentXML(title, path, offset=''):
 		descr	= "Sender: %s | gesendet: %s\n\n%s" % (sender, datum, descr)	
 		summ_par= descr.replace('\n', '||')
 	
-		PLog('Satz:');
+		PLog('9Satz:');
 		PLog(title); PLog(url); PLog(link); PLog(datum);
 		title=py2_encode(title); url=py2_encode(url);img=py2_encode(img); 
 		summ_par=py2_encode(summ_par);
