@@ -43,8 +43,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.2.8'
-VDATE = '15.08.2020'
+VERSION = '3.2.9'
+VDATE = '16.08.2020'
 
 #
 #
@@ -1021,7 +1021,7 @@ def AudioStart(title):
 	title="Podcast-Favoriten"; 
 	tagline = u'konfigurierbar mit der Datei podcast-favorits.txt im Addon-Verzeichnis resources'
 	summ = u'Suchergebnisse der Audiothek lassen sich hinzufügen\n'
-	summ = "%s\nMehrfach-Downloads (komplette Liste) möglich" % summ
+	summ = u"%s\nMehrfach-Downloads (komplette Liste) möglich" % summ
 	fparams="&fparams={'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="PodFavoritenListe", fanart=R(ICON_MAIN_POD), 
 		thumb=R(ICON_POD_FAVORITEN), tagline=tagline, summary=summ, fparams=fparams)
@@ -6159,7 +6159,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 
 	page, msg = get_page(path=path)					# Verfügbarkeit des Streams testen
 	if page == '':									# Fallback zum Classic-Sendername in Startsender
-		msg1 = 'SenderLiveResolution: Stream nicht verfügbar'
+		msg1 = u'SenderLiveResolution: Stream nicht verfügbar'
 		msg2 = path[:50] + ".."
 		msg3 = msg
 		PLog(msg1)

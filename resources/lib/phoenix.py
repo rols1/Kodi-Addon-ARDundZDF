@@ -133,6 +133,8 @@ def Main_phoenix():
 			
 # ----------------------------------------------------------------------
 # die json-Seite enthält ca. 4 Tage EPG - 1. Beitrag=aktuell
+# 15.08.2020 Verwendung ZDFstreamlinks (util) für href (master.m3u8)
+#
 def get_live_data():
 	PLog('get_live_data:')
 	path = "https://www.phoenix.de/response/template/livestream_json"
@@ -161,18 +163,17 @@ def get_live_data():
 		vorspann=transl_json(vorspann); 
 		descr=cleanhtml(descr);
 		descr=unescape(descr);
-	
-	playlist = RLoad(PLAYLIST)	# lokale XML-Datei (Pluginverz./Resources)
-	liste = blockextract('<channel>', playlist)
+		
+	zdf_streamlinks = ardundzdf.get_ZDFstreamlinks(skip_log=True)
+	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 	href=''
-	for element in liste:
-		name = stringextract('<name>', '</name>', element)
-		if name == 'phoenix':
-			href = stringextract('<link>', '</link>', element)
-			break
-	if 	href == '':		# Fallback
-		href = 'https://zdfhls19-i.akamaihd.net/hls/live/744752/de/high/master.m3u8'			
-	
+	for line in zdf_streamlinks:
+		webtitle, href, thumb, tagline = line.split('|')
+		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
+		if up_low('phoenix ') in up_low(webtitle): 	# Arte mit Blank!
+			href = href
+			break	
+					
 	return title,subtitle,vorspann,descr,href
 # ----------------------------------------------------------------------
 # path via chrome-tools ermittelt. Ergebnisse im json-Format

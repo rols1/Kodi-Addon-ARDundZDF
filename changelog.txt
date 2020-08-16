@@ -12,6 +12,13 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.08.2020 3.2.9
+			get_live_data (phoenix): Verwendung ZDFstreamlinks (util) für master.m3u8
+			(Link in livesenderTV.xml funktioniert nicht mehr).
+			AudioStart: ascii-error in summary gefixt.
+			livesenderTV.xml: Streamlink für SR-Fernsehen aktualisiert (Classic +
+			TV-Lifestreams)
+			
 15.08.2020 3.2.8
 			AudioContentXML: Ausleitung auf url_html, falls xml-Seite ohne Inhalt;
 			img leer vorbelegt (reference-error vermeiden).
