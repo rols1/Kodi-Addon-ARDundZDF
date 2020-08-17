@@ -43,8 +43,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.2.9'
-VDATE = '16.08.2020'
+VERSION = '3.3.0'
+VDATE = '17.08.2020'
 
 #
 #
@@ -1343,6 +1343,7 @@ def AudioStartRubrik(path=''):
 #		Bsp. Unsere Favoriten 
 # Auswertung der Rubriken-Seite  erfolgt dagegen
 #	in AudioStartRubrik -> Audio_get_rubriken_api
+# 16.08.2020 "Anzahl Episoden"  wieder entfernt - Werte stimmen nicht.
 #
 def Audio_get_rubriken(page='', ID='', path=''):				# extrahiert Rubriken (Webseite o. Nachladen)
 	PLog('Audio_get_rubriken: ' + ID)
@@ -1386,10 +1387,10 @@ def Audio_get_rubriken(page='', ID='', path=''):				# extrahiert Rubriken (Webse
 		if img_alt:
 			tag = img_alt
 
-		anzahl 	= stringextract('class="station"', '</span>', grid)
-		anzahl	= rm_datav(anzahl)
+		#anzahl 	= stringextract('class="station"', '</span>', grid) # stimmen nicht s.o.
+		#anzahl	= rm_datav(anzahl)
 		
-		descr	= "[B]Folgeseiten[/B] | %s" % (anzahl) 
+		descr	= "[B]Folgeseiten[/B]"  
 		descr = repl_json_chars(descr)
 		summ_par= descr
 		title = unescape(title); title = repl_json_chars(title)
@@ -1689,7 +1690,7 @@ def AudioSearch(title, query=''):
 	query_org = query	
 	
 	path = base  % quote(query)
-	return AudioContentJSON(title=query, path=path, ID='AudioSearch|%s' % query_org)		# kehrt nicht zurück		
+	return AudioContentJSON(title=query, path=path, ID='AudioSearch|%s' % query_org)	# kehrt nicht zurück		
 			
 	
 #----------------------------------------------------------------
@@ -1705,10 +1706,13 @@ def AudioSearch(title, query=''):
 #	Blöcke '"category":', Aufruf: AudioStart_AZ_content
 # 31.07.2020 die feed_url zu xml-Inhalten funktioniert nicht mehr 
 #	(..synd_rss?offset..) - die Hostadresse ist falsch - Austausch 
-#	s. url_xml
+#	s. url_xml + Ausleitung_json-Seite in AudioContentXML
+# 16.08.2020 "Anzahl Episoden"  wieder entfernt - Werte stimmen nicht,
+#	(Außer Beiträge A-Z) dto. "total" für Mehr-Button. Aber auch im Web 
+#	kann "Weitere laden" ins Leere führen.
 #
-def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):				
-	PLog('AudioContentJSON: ' + title); PLog(ID)
+def AudioContentJSON(title, page='', path='', AZ_button='', ID='', skip_mehrf=''):				
+	PLog('AudioContentJSON: ' + title)
 	title_org = title
 	
 	li = xbmcgui.ListItem()
@@ -1717,7 +1721,8 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 	else:
 		li = home(li, ID='ARD Audiothek')		# Home-Button
 		sortlabel=''							# Default: keine Sortierung	
-		
+	
+	path_org=''
 	if path:									# s. Mehr-Button
 		headers=AUDIO_HEADERS  % ARD_AUDIO_BASE
 		page, msg = get_page(path=path, header=headers, do_safe=False)	# skip Quotierung in get_page
@@ -1733,7 +1738,9 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 	cnt=0
 	gridlist = blockextract('podcast":{"category":', page)		# 1. Sendungen / Rubriken
 	if len(gridlist) == 0:
-		gridlist = blockextract('"category":', page)			# echte Rubriken, A-Z Podcasts	
+		gridlist = blockextract('"category":', page)			# echte Rubriken, A-Z Podcasts
+	if skip_mehrf:												# skip_mehrf - Ausleitung AudioContentXML
+		gridlist = []
 	PLog(len(gridlist))
 	
 	href_pre=[]; mehrfach=0
@@ -1749,7 +1756,7 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 			continue
 		href_pre.append(href)	
 
-		anzahl	= stringextract('_elements":', ',', rec) 		# int
+		anzahl	= stringextract('_elements":', ',', rec) 	# int, Anzahl stimmt nicht (wie auch "total")
 		sender	= stringextract('station":"', '"', rec) 
 		title	= stringextract('title":"', '"', rec) 
 		url_xml	= stringextract('feed_url":"', '"', rec) 			
@@ -1785,7 +1792,7 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 				title	= "%s  | %s" % (rubrik, sender)
 			else:
 				title	= "%s  | %s | %s" % (rubrik, sender, title)
-			descr	= u"[B]Folgeseiten[/B] | %s Episoden | %s\n\n%s" % (anzahl, sender, descr)
+			descr	= u"[B]Folgeseiten[/B] | %s\n\n%s" % (sender, descr)
 			if clip:												# Teaser anhängen
 				descr	= u"[B]Teaser:[/B] %s\n\n%s" % (clip, descr)		
 			title = repl_json_chars(title)
@@ -1839,11 +1846,32 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 
 	PLog(cnt)	
 	if cnt == 0:												# ohne Ergebnis raus
-		msg1 = 'nichts gefunden zu >%s<' % title_org
+		msg1 = 'nichts (mehr) gefunden zu >%s<' % title_org
 		MyDialog(msg1, '', '')
 		xbmcplugin.endOfDirectory(HANDLE)
 
-																# Button bei Suche anhängen
+	# pages in der json-Seite bezieht sich auf den letzten Beitrag, nicht
+	#	auf das Thema dieser Seite! Auch "total" falsch - keine Seitensteuerung 
+	#	gefunden - Calls bis Leerseite
+	# api-Calls o. pagenr möglich: ../api/podcasts?category=Corona
+	if path_org and '&page=' in path_org:						# Mehr-Button
+		# pagenr = stringextract('current_page":', ',', rec) 	# Bsp. 1
+		PLog(path_org)
+		pagenr = re.search('&page=(.d?)', path_org).group(1)
+		pagenr = int(pagenr)
+		nextpage = pagenr + 1
+		PLog('nextpage: %d' % nextpage)
+		next_path = path_org.replace('&page=%d' % pagenr, '&page=%d' % nextpage)
+		PLog('nextpage: %d, next_path: %s' % (nextpage, next_path))	
+		tag = "weiter zu Seite %d" % nextpage
+		
+		title_org=py2_encode(title_org); next_path=py2_encode(next_path)
+		fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(title_org), quote(next_path))
+		addDir(li=li, label=title_org, action="dirList", dirID="AudioContentJSON", 
+			fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), tagline=tag, fparams=fparams)	
+			
+		
+	#-------------------										# Button bei Suche anhängen
 	fav_path =  SETTINGS.getSetting('pref_podcast_favorits')
 	if fav_path == 'podcast-favorits.txt' or fav_path == '':	# im Verz. resources
 		fav_path = R(fav_path)
@@ -1879,7 +1907,9 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID=''):
 #	Bsp. 	Hörspiel artmix.galerie 461, 
 #			Wissen radioWissen 2106, Wissen SWR2 2488
 #	Caching hier nicht erforderlich (xml, i.d.R. 1 Bild/Liste)
-# 13.08.2020 Ausleitung auf html-Seite (url_html), falls xml-Seite ohne Inhalt
+# 16.08.2020 Ausleitung auf json-Seite (url_html), falls xml-Seite ohne Inhalt,
+#	url_html -> api-Call mittels url_id, Mehrfach-Sätze überspringen in
+#	AudioContentJSON.	
 #
 def AudioContentXML(title, path, offset='', url_html=''):				
 	PLog('AudioContentXML: ' + title)
@@ -1910,16 +1940,15 @@ def AudioContentXML(title, path, offset='', url_html=''):
 	cnt=0
 	gridlist = blockextract('<item>', page)	
 	PLog(len(gridlist))
-	if len(gridlist) == 0:											# Fallback Ausleitung html-Seite
+	if len(gridlist) == 0:											# Fallback Ausleitung json-Seite
 		if url_html:
-			# todo: Audio_get_rubrik statt Audio_get_sendungen (sämtl. Beiträge holen)
-			PLog('Ausleitung_html-Seite')
-			path = "%s/alle" % path									# alle: max. 24 (bis "weitere laden") 
-			page, msg = get_page(path=path)	
-			gridlist = blockextract('class="podcast-title"', page)
-			if len(gridlist) > 0:
-				Audio_get_sendungen(li, gridlist, page, ID='Meistgehört')
+			PLog('Ausleitung_json_Seite')
+			pagenr = 1
+			url_id = url_html.split('/')[-1]
+			path = ARD_AUDIO_BASE + "/api/podcasts/%s/episodes?items_per_page=24&page=%d" % (url_id, pagenr)	
+			AudioContentJSON(title, page='', path=path, skip_mehrf=True)	# Mehrfach-Sätze  überspringen	
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			return
 	
 	len_all = len(gridlist)
 	if offset and offset <= len(gridlist):

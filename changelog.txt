@@ -12,9 +12,16 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+17.08.2020 3.3.0
+			AudioContentJSON + Audio_get_rubriken: "Anzahl Episoden"  wieder entfernt - Werte 
+			passen nicht zur Anzahl der Beiträge (Ausnahme: Beiträge A-Z in AudioContentJSON).
+			AudioContentXML: Ausleitung geändert - direkt zu AudioContentJSON mit skip_mehrf.
+			AudioContentJSON: Anpassung an geänderte Ausleitung (Mehrfach-Sätze + Rekursion
+			vermeiden).
+
 16.08.2020 3.2.9
 			get_live_data (phoenix): Verwendung ZDFstreamlinks (util) für master.m3u8
-			(Link in livesenderTV.xml funktioniert nicht mehr).
+			(phoenix-Link in livesenderTV.xml funktioniert nicht mehr).
 			AudioStart: ascii-error in summary gefixt.
 			livesenderTV.xml: Streamlink für SR-Fernsehen aktualisiert (Classic +
 			TV-Lifestreams)
