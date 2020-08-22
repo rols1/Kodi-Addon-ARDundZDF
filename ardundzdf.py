@@ -1942,7 +1942,7 @@ def AudioContentJSON(title, page='', path='', AZ_button='', ID='', skip=''):
 		cnt=cnt+1
 		mehrfach=mehrfach+1
 
-	gridlist = blockextract('"contentId":', page)			# 2. Einzelbeiträge
+	gridlist = blockextract('"duration":', page)			# 2. Einzelbeiträge
 	if skip == '2':											# skip single-Beiträge
 		PLog('skip_2_single')
 		gridlist = []
