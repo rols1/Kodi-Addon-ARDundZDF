@@ -12,6 +12,16 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.08.2020 3.3.1
+			Hintergrundroutine für Audiothek-Bilder, die von den Ziel-Webseiten 
+			im Voraus geladen werden müssen: neue Funktion thread_img_via_web,
+			Apassung img_via_web.   
+			get_page_content (ARD Neu): Anzeige Sendedauer unterdrückt, falls 0.
+			funk-Podcasts in Audiothek integriert (Button auf Startseite), neue Funktion
+			Audio_get_rubrik_funk + Button für Aufruf funk-Modul.
+			img_via_audio_href: anlässlich funk-Integration renoviert.
+			
+			
 17.08.2020 3.3.0
 			AudioContentJSON + Audio_get_rubriken: "Anzahl Episoden"  wieder entfernt - Werte 
 			passen nicht zur Anzahl der Beiträge (Ausnahme: Beiträge A-Z in AudioContentJSON).

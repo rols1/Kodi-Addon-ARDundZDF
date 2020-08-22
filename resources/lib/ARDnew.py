@@ -557,8 +557,10 @@ def get_page_content(li, page, ID, mark=''):
 		summ 	= stringextract('synopsis":"', '"', s)	
 			
 		duration = stringextract('"duration":', ',', s)			# Sekunden
-		duration = seconds_translate(duration)
-		if duration :						# für Staffeln nicht geeignet
+		if duration == '0':										# auch bei Einzelbeitrag möglich
+			duration=''
+		if duration:										
+			duration = seconds_translate(duration)
 			duration = 'Dauer %s' % duration
 		maturitytRating = stringextract('maturityContentRating":"', '"', page) # "FSK16"
 		PLog('maturitytRating: ' + maturitytRating)				# außerhalb Block!
@@ -574,7 +576,7 @@ def get_page_content(li, page, ID, mark=''):
 		
 		broadcast = stringextract('"broadcastedOn":"', '"', s)	# Sendedatum
 		PLog(broadcast)
-		if broadcast and ID != 'Livestream':					# enth. unsinnige Werte
+		if broadcast and ID != 'Livestream':					# Live enth. unsinnige Werte
 			broadcast = time_translate(broadcast)				#  + 2 Std.
 			tag = u"%s\nSendedatum: [COLOR blue]%s Uhr[/COLOR]" % (tag, broadcast)
 			
