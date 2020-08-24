@@ -121,6 +121,7 @@ INSTALLATION:
 - Download der zip-Datei: [aktuelle Release, Leia-Version](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) oder [kodinerds-Repo, Leia- und Matrix-Version](https://repo.kodinerds.net)
 - Download script.module.kodi-six.zip hier https://github.com/romanvm/kodi.six/releases
 - Beide zip-Dateien mittels Kodi-Menü Addons/Addon-Browser installieren
+- Download-Alternative (Leia- und Matrix-Version): https://repo.kodinerds.net
 - Addon öffen und Addon-Einstellungen anpassen.
 - [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
 
@@ -129,6 +130,7 @@ Credits:
 - Credits to [coder-alpha] https://forums.plex.tv/discussion/166602/rel-ccloudtv-channel-iptv/p1): (Channel updater, based on Channel updater by sharkone/BitTorrent.bundle)
 - Credits to [Arauco] (https://forums.plex.tv/profile/Arauco): processing of Logos and Icons (Plex-Plugin ARDundZDF)
 - Credits to [romanv](https://github.com/romanvm) for his script.module.kodi-six
+- Credits to all the members of Forum Kodinerds who help to make this addon better
 
 Hauptmenü:
 ===================  
