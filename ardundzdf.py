@@ -24,7 +24,6 @@ elif PYTHON3:
 
 # Python
 import base64 			# url-Kodierung für Kontextmenüs
-import shlex			# Parameter-Expansion für subprocess.Popen (os != windows)
 import sys				# Plattformerkennung
 import shutil			# Dateioperationen
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
@@ -43,8 +42,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.3.1'
-VDATE = '22.08.2020'
+VERSION = '3.3.3'
+VDATE = '30.08.2020'
 
 #
 #
@@ -226,7 +225,7 @@ SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
 SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
 TEXTSTORE 		= os.path.join("%s/Inhaltstexte") % ADDON_DATA
 WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
-JOBFILE			= os.path.join("%s/jobliste.xml") % ADDON_DATA 			#Jobliste für epgRecord
+JOBFILE			= os.path.join("%s/jobliste.xml") % ADDON_DATA 			# Jobliste für epgRecord
 MONITOR_ALIVE 	= os.path.join("%s/monitor_alive") % ADDON_DATA			# Lebendsignal für JobMonitor
 PLog(SLIDESTORE); PLog(WATCHFILE); 
 check 			= check_DataStores()					# Check /Initialisierung / Migration 
@@ -276,7 +275,7 @@ ClearUp(TEXTSTORE, days*86400)		# TEXTSTORE bereinigen
 if SETTINGS.getSetting('pref_epgRecord') == 'true':
 	epgRecord.JobMain(action='init')						# EPG_Record starten
 
-# todo: Test Module
+# Skin-Anpassung:
 skindir = xbmc.getSkinDir()
 PLog("skindir: %s" % skindir)
 if 'confluence' in skindir:									# ermöglicht Plot-Infos in Medienansicht
@@ -5762,7 +5761,7 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 		thumb=R('tv-EPG-single.png'), fparams=fparams, summary=summary, tagline=tagline)	
 		
 	PLog(str(SETTINGS.getSetting('pref_LiveRecord'))) 
-	if SETTINGS.getSetting('pref_LiveRecord') == 'true' or SETTINGS.getSetting('pref_m3u8_get') == 'true':		
+	if SETTINGS.getSetting('pref_LiveRecord') == 'true':		
 		title = 'Recording TV-Live'												# TVLiveRecord-Button anhängen
 		laenge = SETTINGS.getSetting('pref_LiveRecord_duration')
 		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
@@ -5824,9 +5823,8 @@ def TVLiveRecordSender(title):
 	PLog('TVLiveRecordSender:')
 	title = unquote(title)
 	
-	# nach Testphase ersetzen durch pref_m3u8_get:
-	#if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
-	#	return
+	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
+		return
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)					# Home-Button
@@ -5876,24 +5874,14 @@ def TVLiveRecordSender(title):
 # 		LiveRecord verlagert nach util (import aus  ardundzdf klappt nicht in epgRecord,
 #		dto. MakeDetailText).
 #		
-# 29.06.0219 Erweiterung Sendung aufnehmen, Call K-Menü <- EPG_ShowSingle
+# 29.06.0219 Erweiterung "Sendung aufnehmen", Call K-Menü <- EPG_ShowSingle
 # Check auf Setting pref_epgRecord in EPG_ShowSingle
-# Todo: bei Wegfall m3u8-Verfahren Mehrkanal-Check entf. - dto. in LiveRecord
+# 30.08.2020 Wegfall m3u8-Verfahren: Mehrkanal-Check entf. (dto. in LiveRecord)
 #
 def ProgramRecord(url, sender, title, descr, start_end):
 	PLog('ProgramRecord:')
 	PLog(url); PLog(sender); PLog(title); 
 	PLog(start_end);
-
-	import resources.lib.m3u8 as m3u8
-	body, new_url = m3u8.get_m3u8_body(url)		# Check Mehrkanal-m3u8  vorschalten
-	if '#EXT-X-MEDIA:TYPE=AUDIO' in body:		# Mehrkanal-m3u8 -> Hinw. ffmpeg, Abbruch
-		msg1 = "Mehrkanalstream - ffmpeg erforderlich!"
-		msg2 = "Bitte in Settings <Recording TV-Live> die Option" 
-		msg3 = "<Aufnehmen/Recording ohne ffmpeg> ausschalten"
-		PLog(msg1)	
-		MyDialog(msg1, msg2, msg3)
-		return
 			
 	now = EPG.get_unixtime(onlynow=True)
 	
@@ -5905,10 +5893,8 @@ def ProgramRecord(url, sender, title, descr, start_end):
 	PLog("now %s, von %s, bis %s"% (now, von, bis))
 	
 	#----------------------------------------------				# Voraussetzungen prüfen
-	# nach Testphase ersetzen durch pref_m3u8_get:	
-	if SETTINGS.getSetting('pref_m3u8_get') == 'false':
-		if check_Setting('pref_LiveRecord_ffmpegCall') == False:	# Dialog dort
-			return			
+	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	# Dialog dort
+		return			
 	if check_Setting('pref_download_path') == False:			# Dialog dort
 		return			
 	

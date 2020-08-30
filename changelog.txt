@@ -12,6 +12,30 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+30.08.2020 3.3.3 Einstellung m3u8-Aufnahmeverfahren
+			Setting "experimentell: Aufnehmen/Recording ohne ffmpeg" entfernt.
+			Anpassungen: SenderLiveListePre, ProgramRecord, LiveRecord (Modul util).
+			Modul m3u8: entfernt, Anpassung epgRecord.
+			Url-Korrektur https -> http für ünchen.tv, Leipzig Fernsehen, Rhein-Neckar 
+			Fernsehen, Franken Fernsehen - Funktion: url_correction (Modul util).
+			Kika_Videos (Modul childs): Folgeseiten-Auswertung hinzugefügt für Menü
+			"Videos und Bilder (A-Z)".
+			KikaninchenLieder (Modul childs): Fix Host-Adresse für img_src (Bilder fehlten).
+
+not on Github	3.3.2
+			Modul 3sat: Themen (www.3sat.de/themen) hinzugefügt, Anpassungen in Main_3Sat
+			und Rubriken
+			Icons hinzugefügt: zdf-themen.png (für 3sat-Themen).
+			Icons entfernt (obsolet): tv-zdf-kultur.png, tv-mdr-sachsen-anhalt.png,
+			tv-mdr-thueringen.png.
+			ardundzdf.py: shlex-import entfernt (Nutzung in Modulen util + Podcontent).
+			Kika_SingleBeitrag: Leerinhalte für Bitrate abgefangen (div. Video-Einzelauf-
+			lösungen nicht verfügbar), repl_json_chars für Param. summ.
+			Audiothek / Podcast-Favoriten: "KabarettPost SR 2" (weggefallen) ausgetauscht
+			gegen "Zugabe Pur - der Satire-Podcast WDR 2".
+			ttsMP3_Monitor_Aufnahme_gestartet.mp3: leicht-dB-verstärkt (war zu leise).
+
+
 22.08.2020 3.3.1
 			Hintergrundroutine für Audiothek-Bilder, die von den Ziel-Webseiten 
 			im Voraus geladen werden müssen: neue Funktion thread_img_via_web,

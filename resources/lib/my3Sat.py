@@ -5,13 +5,13 @@
 #			Migriert von Plex-Plugin-3Sat_Mediathek, V0.5.9
 #
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.3sat.de,
-#	Seiten werden im html-format, teils. json ausgeliefert
+#	Seiten werden im html-Format, teils. json ausgeliefert
 #
 #	04.11.2019 Migration Python3  Python3 Modul future
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 04.08.2020
+#	Stand: 26.08.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -135,6 +135,14 @@ def Main_3Sat(name):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SendungenAZlist", 
 		fanart=R('3sat.png'), thumb=R('zdf-sendungen-az.png'),  summary=summ, fparams=fparams)
 												
+	title = "Themen"
+	path = 'https://www.3sat.de/themen'								
+	summ = "Thementage, Themenwochen und 3sat-Themen"
+	title=py2_encode(title); path=py2_encode(path);
+	fparams="&fparams={'name': '%s', 'path': '%s', 'themen': 'ja'}"	% (quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubriken", 
+		fanart=R('3sat.png'), thumb=R('zdf-themen.png'), summary=summ, fparams=fparams)
+
 	title = "Rubriken"
 	path = 'https://www.3sat.de/themen'								# auch Leitseite
 	summ = "Dokumentation, Film, Gesellschaft, Kabarett, Kultur, Wissen"
@@ -563,10 +571,12 @@ def Start(name, path, rubrik=''):
 
 #------------
 # Aufrufer: Main_3Sat
-#	Liste der 3Sat-Rubriken (wie Webseite)
+#	Liste der 3sat-Rubriken (aus Dropdownmenü Webseite) 
+#	Liste der 3sat-Themen (themen=ja)
+# path (Rubriken + Themen): https://www.3sat.de/themen	
 # 	
-def Rubriken(name, path):
-	PLog('Rubriken:')
+def Rubriken(name, path, themen=''):
+	PLog('Rubriken: ' + themen)
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='3Sat')				# Home-Button		
@@ -579,20 +589,56 @@ def Rubriken(name, path):
 		MyDialog(msg1, msg2, '')
 		return li	
 	
-	rubriken =  blockextract('class="dropdown-link js-rb-click js-track-click"', page)
-	PLog(len(rubriken))
+	if themen:													# Themen
+		# Auswertung Blöcke + lazyload-Beiträge -> Sendereihe_Sendungen
+		# 	lazyload (>mehr Themen<) direkt mit page-Ausschnitt
+		# Rubrik_Single passt nicht, Blöcke weichen ab
+		# <picture class="">,  class="artdirect .., class="artdirect">
+		items = blockextract('picture class="', page) 		
+		for rec in items:							
+			title=''; 
+			rec = py2_encode(rec)
+			tlist = blockextract('data-module="headline">', rec)
+			for t in tlist:
+				title = stringextract('headline">', '<', t)
+				if len(title.strip()) > 0:
+					break
+			href =  stringextract('href="', '"', rec)
+			if href == '':
+				continue		
+			if href.startswith('http') == False:
+				href	= DreiSat_BASE + href
+			img_src =  stringextract('data-srcset="', ' ', rec)	
+			
+			PLog('Satz:')
+			PLog(title); PLog(href); PLog(img_src); 
+			title=py2_encode(title); href=py2_encode(href);  img_src=py2_encode(img_src);
+			fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title),
+				 quote(href), quote(img_src))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
+				fanart=R('3sat.png'), thumb=img_src, fparams=fparams)
+				
+		if '>mehr Themen<' in page:					# hier als lazyload-Beiträge
+			page = stringextract('>mehr Themen<', 'type="button"', page)
+			li = Sendereihe_Sendungen(li, path, title, page=page)		
+		
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# Ende Themen
+		
+	else:													# Rubriken 
+		rubriken =  blockextract('class="dropdown-link js-rb-click js-track-click"', page)
+		PLog(len(rubriken))
+		
+		i=0; rubrik=[]; 							
+		for rec in rubriken:								# Rubriken sammeln	
+			title	= stringextract('title="', '"', rec)
+			if 'A-Z' in title:
+				continue
+			href	= DreiSat_BASE + stringextract('href="', '"', rec)
+			line 	= title + "|" + href	
+			rubrik.append(line)
+			i=i+1
 	
-	i=0; rubrik=[]; 							
-	for rec in rubriken:					# Rubriken sammeln	
-		title	= stringextract('title="', '"', rec)
-		if 'A-Z' in title:
-			continue
-		href	= DreiSat_BASE + stringextract('href="', '"', rec)
-		line 	= title + "|" + href	
-		rubrik.append(line)
-		i=i+1
-	
-	rubrik.sort()							# Rubriken sortieren
+	rubrik.sort()											# Rubriken sortieren
 	img_src = R('Dir-folder.png')
 	for rec in rubrik:
 		title, href = rec.split('|')
@@ -718,8 +764,8 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 				
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #------------
-# Aufrufer: SendungenAZ mit path aber ohne Listitem, Rubrik_Single mit 
-#	page (Seitenausschnitt)
+# Aufrufer: SendungenAZ mit path aber ohne Listitem, Rubrik_Single + 
+#	Rubriken (Themen) mit page (Seitenausschnitt)
 #	Search + Rubrik_Single jew. mit Listitem
 #	rekursiv möglich - s. is-clickarea-action (keine Rubriken, aber
 #		weiterführender Link.
@@ -758,7 +804,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		content =   stringextract('o--stage-brand">', '</article>', page)	# ausschneiden
 		content =  blockextract('class="artdirect">', page)
 		PLog(len(content))
-		li, cnt = get_zdfplayer_content(li, content=content)		
+		li, cnt = get_zdfplayer_content(li, content=content)	
 	
 	# 2. Strukturen nach Seitenanfang (1 Video doppelt möglich)
 	PLog('Sendereihe_Sendungen2:')	

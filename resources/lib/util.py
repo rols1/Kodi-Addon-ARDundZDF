@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 11.08.2020
+#	Stand 29.08.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -333,14 +333,14 @@ def home(li, ID):
 	return li
 	 
 #---------------------------------------------------------------- 
-#   data-Verzeichnis liegt 2 Ebenen zu hoch, funktioniert aber.
+#   Leia-Version: data-Verzeichnis liegt 2 Ebenen zu hoch, funktioniert aber.
 #	03.04.2019 data-Verzeichnis des Addons:
 #  		Check /Initialisierung / Migration
 # 	27.05.2019 nur noch Check (s. Forum:
 #		www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?pageNo=23#post528768
 #	Die Funktion checkt bei jedem Aufruf des Addons data-Verzeichnis einschl. Unterverzeichnisse 
-#		auf Existenz und bei Bedarf neu an. User-Info nur noch bei Fehlern (Anzeige beschnittener 
-#		Verzeichnispfade im Kodi-Dialog nur verwirend).
+#		auf Existenz und legt bei Bedarf neu an. User-Info nur noch bei Fehlern (Anzeige  
+#		beschnittener Verzeichnispfade im Kodi-Dialog nur verwirrend).
 #	13.03.2020 abhängig von check_AddonXml wird bei der Matrix-Version des Addons
 #		das data-Verzeichnis für Kodi korrekt angelegt im Verz.:
 #		../.kodi/userdata/addon_data/plugin.video.ardundzdf/
@@ -523,7 +523,7 @@ def ClearUp(directory, seconds):
 			#PLog(now - seconds)
 			if os.stat(f).st_mtime < (now - seconds):
 				if os.path.isfile(f):	
-					PLog('entfernte Datei: ' + f)
+					PLog('entfernte_Datei: ' + f)
 					os.remove(f)
 					cnt_files = cnt_files + 1
 				if os.path.isdir(f):		# Verz. ohne Leertest entf.
@@ -2089,12 +2089,12 @@ def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für D
 # 29.04.0219 Erweiterung manuelle Eingabe der Aufnahmedauer
 # 04.07.2020 angepasst für epgRecord (Eingabe Dauer entf., Dateiname mit Datumformat 
 #		geändert, Notification statt Dialog. epgJob enthält mydate (bereits für
-#		detailtxt verwendet).
+#		detailtxt verwendet - Aufrufer: JobMonitor).
 #		duration-Format: Sekunden (statt "00:00:00", für man. Eingaben konvertiert).
 #  		Verlagert nach util (import aus  ardundzdf klappt nicht in epgRecord).
 # 24.07.2020 Anpassung für Modul m3u8: JobID wird für KillFile verwendet, für
 #	LiveRecording wird neuer Aufnahme-Job erzeugt (via JobMain 'setjob')
-# Todo: bei Wegfall m3u8-Verfahren Mehrkanal-Check entf. - dto. in ProgramRecord
+# 30.08.2020 experimentelles m3u8-Verfahren entf. - s. changelog.txt
 # 
 def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	PLog('LiveRecord:')
@@ -2144,32 +2144,7 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 			url 	= os.path.join(M3U8STORE, url)	# rtmp-Url's nicht lokal
 			url 	= '"%s"' % url					# Pfad enthält Leerz. - für ffmpeg in "" kleiden						
 	
-	if SETTINGS.getSetting('pref_m3u8_get') == 'true':		
-		from threading import Thread	
-		import resources.lib.m3u8 as m3u8
-		body, new_url = m3u8.get_m3u8_body(url)		# Check Mehrkanal-m3u8  vorschalten
-		if '#EXT-X-MEDIA:TYPE=AUDIO' in body:		# Mehrkanal-m3u8 -> Hinw. ffmpeg, Abbruch
-			msg1 = "Mehrkanalstream - ffmpeg erforderlich!"
-			msg2 = "Bitte in Settings <Recording TV-Live> die Option" 
-			msg3 = "<Aufnehmen/Recording ohne ffmpeg> ausschalten"
-			PLog(msg1)	
-			MyDialog(msg1, msg2, msg3)
-			return
-
-		if epgJob:									# Job existiert bereits
-			play_url = R('ttsMP3_Monitor_Aufnahme_gestartet.mp3')	
-			PlayAudio(play_url, title='', thumb='', Plot='') # ersetzt notification, falls Fenster minimiert
-		else:										# Job für Recording erzeugen
-			action="setjob" 
-			now = EPG.get_unixtime(onlynow=True)
-			start_end = "%s|%d" % (now, (int(now) + int(duration)))
-			descr = "Recording Live ohne EPG"		# JobMain: <status> -> 'gestartet'
-			sender = ''
-			JobID = epgRecord.JobMain(action, start_end, title, descr, sender, url)
-			
-		xbmcgui.Dialog().notification('Aufnahme gestartet:', dfname,icon,3000)
-		m3u8.Main_m3u8(url, dest_file, duration, JobID)	# Thread-Start in Main_m3u8
-		return	
+	url = url_correction(url)						# Url-Korrektur, z.B. für LEIPZIG_FERNSEHEN 
 	
 	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
 		return
@@ -2223,6 +2198,30 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 		xbmcgui.Dialog().notification(msg1, msg2,icon,3000)
 		return li	
 		
+#--------------------------------------------------
+# Url-Korrektur für Url vonNimble Streamer , z.B. für LEIPZIG_FERNSEHEN
+#	nur private Sender betroffen.
+# ffmpeg: Input/output error - Header-Test, manuelle Zuordnung des 
+#	ersten Streams, Veränd. ffmpeg-Param. o.Ergebnis.
+# Austausch https -> http OK
+# 
+def url_correction(url):
+	PLog('url_correction:')
+	if url.startswith('http') == False:				# lokale + rtmp unangetastet
+		return url
+	
+	# OK BadenTV
+	TV_Liste = ["münchen.tv|ngrp:muc.stream_all", "Leipzig Fernsehen|leipzigfernsehen.stream_1",
+				"Rhein-Neckar Fernsehen|rnf/rnf.stream_1", "Franken Fernsehen|frf/ngrp:frf.stream_all"]
+	new_url = url
+	for tv in TV_Liste:
+		sender, urlpart = tv.split("|")
+		if urlpart in url:
+			PLog("Url_Korrektur: %s" % sender)
+			new_url = url.replace('https:', 'http:')
+	
+	return new_url
+
 #---------------------------------------------------------------------------------------------------
 def check_Setting(ID):
 	PLog('check_Setting: ' + ID)

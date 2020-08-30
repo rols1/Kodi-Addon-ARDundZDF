@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 25.06.2020
+#	Stand: 30.08.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -474,10 +474,17 @@ def Kika_VideosBeliebt():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------
-# Kika-Videos eines Bündels aus Kika_VideosBuendelAZ oder Kika_VideosBeliebt - 
-#	enthält playerContainer() der Plex-Version
-def Kika_Videos(path, title, thumb):
+# Kika-Videos eines Bündels aus Kika_VideosBuendelAZ oder Kika_VideosBeliebt 
+# 30.08.2020 Folgeseiten-Auswertung hinzugefügt
+#	
+def Kika_Videos(path, title, thumb, pagenr=''):
 	PLog('Kika_Videos:')
+	if pagenr == '':
+		pagenr  =  1
+	pagenr = int(pagenr)
+	PLog(pagenr)
+	title_org = title; thumb_org = thumb
+	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
@@ -501,9 +508,9 @@ def Kika_Videos(path, title, thumb):
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 		mediatype='video'
 	for s in videos:					
-		href = ref = stringextract('dataURL:\'', '\'}', s)					# Link Videodetails  (..avCustom.xml)
+		href = ref = stringextract('dataURL:\'', '\'}', s)				# Link Videodetails  (..avCustom.xml)
 		# PLog(href);   # PLog(s);   # Bei Bedarf
-		img = stringextract('<noscript>', '</noscript>', s).strip()			# Bildinfo separieren
+		img = stringextract('<noscript>', '</noscript>', s).strip()		# Bildinfo separieren
 		img_alt = stringextract('alt=\"', '\"', img)	
 		img_alt = unescape(img_alt)	
 		img_src = stringextract('src="', '"', img)
@@ -525,6 +532,29 @@ def Kika_Videos(path, title, thumb):
 			(quote(href), quote(stitle), quote(img_src), quote(img_alt), quote(duration))
 		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag", fanart=img_src, 
 			thumb=img_src, fparams=fparams, tagline=img_alt, mediatype=mediatype)
+			
+	pos = page.find('<!--The bottom navigation')						# Seite auf Folgeseiten prüfen			
+	page = page[pos:]
+	if 'class="bundleNavi' in page:
+		pagelist = blockextract('class="bundleNaviItem', page)
+		next_pagenr = int(pagenr + 1)		
+		PLog('pagelist: %d, next_pagenr: %d' % (len(pagelist), next_pagenr))
+		href=''
+		if next_pagenr-1 < len(pagelist):								# Basis 0
+			for item in pagelist:
+				title = stringextract('title="">', '</a>', item)
+				PLog(title)
+				if title == str(next_pagenr):							# Basis 0
+					href = BASE_KIKA + stringextract('href="', '"', item)
+					break
+		if href:
+			tag = "weiter zu Seite %s" % str(next_pagenr) 
+			href=py2_encode(href); title_org=py2_encode(title_org); 
+			thumb_org=py2_encode(thumb_org); 
+			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'pagenr': '%d'}" %\
+				(quote(href), quote(title_org), quote(thumb_org), next_pagenr)
+			addDir(li=li, label="Mehr..", action="dirList", dirID="resources.lib.childs.Kika_Videos", 
+				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), fparams=fparams, tagline=tag)
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 					
@@ -641,7 +671,9 @@ def KikaninchenLieder():
 			continue					
 		img_src = stringextract('urlScheme":"', '**imageVariant**', rec)
 		PLog(img_src)
-		img_src = 'http://www.kikaninchen.de' + img_src + 'ident.jpg'		# ident = 800x800
+		if img_src.startswith('http') == False:
+			img_src = 'http://www.kikaninchen.de' + img_src
+		img_src = img_src + 'ident.jpg'						# ident = 800x800
 		title = stringextract('title":"', '"', rec)
 		altText =  stringextract('altText":"', '"', rec)
 		titleText =  stringextract('titleText":"', '"', rec)
@@ -717,6 +749,7 @@ def Kika_SingleBeitrag(path, title, thumb, summ, duration):
 	summ1 = stringextract('<broadcastDescription>', '</', page)
 	summ2 = stringextract('<topline>', '</', page)
 	summ = summ1 + ' ' + summ2
+	summ = repl_json_chars(summ)
 	Plot_par = summ
 	
 	assets = blockextract('<asset>', page)
@@ -738,13 +771,15 @@ def Kika_SingleBeitrag(path, title, thumb, summ, duration):
 	
 	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
 	oldbitrate=0
-	cnt=0
+	cnt=0; high=0
 	for s in assets:
 		# Log(s)			# bei Bedarf
 		frameWidth = stringextract('<frameWidth>', '</frameWidth>', s)	
 		frameHeight = stringextract('<frameHeight>', '</frameHeight>', s)
 		url_mp4 = stringextract('<progressiveDownloadUrl>', '</', s)
-		bitrate =  stringextract('<bitrateVideo>', '</', s)	
+		bitrate =  stringextract('<bitrateVideo>', '</', s)
+		if bitrate == '':
+			bitrate = '0'
 		profil =  stringextract('<profileName>', '</', s)	
 		resolution = frameWidth + 'x' + frameHeight
 		

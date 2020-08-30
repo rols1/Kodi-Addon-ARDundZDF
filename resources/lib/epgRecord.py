@@ -7,7 +7,7 @@
 #
 ####################################################################################################
 #	01.07.2020 Start
-#	Stand 27.07.2020
+#	Stand 30.08.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -83,7 +83,7 @@ MSG_ICON 		= R("icon-record.png")
 #	 
 # Verfahren Recording-TV-Live-Jobs: LiveRecord erzeugt Job via JobMain +
 #	startet direkt ffmpeg oder m3u8-Verfahren (je nach Setting) 
-#
+# 30.08.2020 experimentelles m3u8-Verfahren entf.
 
 def JobMonitor():
 	PLog("JobMonitor:")
@@ -141,7 +141,7 @@ def JobMonitor():
 			myjob = jobs[cnt]
 			PLog(myjob[:80])			
 			status 	= stringextract('<status>', '</status>', myjob)
-			PLog("Job %d status: %s" % (cnt+1, status))			
+			PLog("scan_Job %d status: %s" % (cnt+1, status))			
 												
 			start_end 	= stringextract('<startend>', '</startend>', myjob)
 			start, end = start_end.split('|')						# 1593627300|1593633300					
@@ -199,10 +199,6 @@ def JobMonitor():
 				job_changed = True
 				
 				PIDffmpeg = LiveRecord(url, title, duration, laenge='', epgJob=mydate, JobID=JobID) # Aufnehmen
-				#  m3u8-Verfahren statt ffmpeg - LiveRecord startet direkt m3u8.Main_m3u8:
-				if SETTINGS.getSetting('pref_m3u8_get') == 'true':
-					PIDffmpeg = "Thread_%s" % JobID					# -> KillFile (JobRemove)
-												
 				myjob = myjob.replace('<pid></pid>', '<pid>%s</pid>' % PIDffmpeg)
 
 			#---------------------------------------------------	# Job zurück in Liste		
@@ -317,7 +313,8 @@ def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSet
 		
 	#------------------------
 	# die für Recording Live (LiveRecord) erzeugten Jobs werden nicht im JobMonitor
-	# 	abgearbeitet, sondern direkt in m3u8.Main_m3u8 
+	# 	abgearbeitet, sondern direkt in m3u8.Main_m3u8 - entfallen mit Ende des 
+	#   experimentellen m3u8-Aufnahmeverfahrens 30.08.2020
 	if action == 'setjob':							# neuen Job an Aufnahmeliste anhängen + Bereinigung: Doppler
 													# 	verhindern, Einträge auf pref_max_reclist beschränken
 		title = cleanmark(title)					# Farbe/fett aus ProgramRecord
@@ -330,8 +327,7 @@ def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSet
 			status = 'waiting'	
 			if 	PIDffmpeg:							# Aufruf: LiveRecord via ffmpeg
 				status = 'gestartet'				# -> <status>,  für JobMonitor tabu 
-			pid = PIDffmpeg							# aus LiveRecord direkt oder via JobMonitor
-		
+			pid = PIDffmpeg							# aus LiveRecord direkt oder via JobMonitor	
 		
 		job_line = JOBLINE_TEMPL % (start_end,title,descr,sender,url,status,pid,JobID)
 		new_job = JOB_TEMPL % job_line
@@ -372,8 +368,8 @@ def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSet
 		
 		xbmcgui.Dialog().notification("Aufnahme-Monitor:", "Job hinzugefügt",MSG_ICON,3000)
 		PLog("JobID: %s" % JobID)
-		if "Recording Live" or "ffmpeg-recording" in descr:			# LiveRecord ffmpeg oder -> m3u8.Main_m3u8 
-			return JobID											# 	mit JobID
+		if "ffmpeg-recording" in descr:								# LiveRecord ffmpeg  
+			return JobID
 		else:			
 			if os.path.exists(MONITOR_ALIVE) == False:				# JobMonitor läuft bereits?
 				bg_thread = Thread(target=JobMonitor,				# sonst Thread JobMonitor starten
@@ -437,7 +433,7 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 			PLog(myjob[:80])			
 			status 	= stringextract('<status>', '</status>', myjob)
 			status_real = status									# wird aktualisiert s.u.
-			PLog("Job %d status: %s" % (cnt+1, status))			
+			PLog("JobListe_Job %d status: %s" % (cnt+1, status))			
 																		
 			start_end	= stringextract('<startend>', '</startend>', myjob)
 			start, end 	= start_end.split('|')						# 1593627300|1593633300	
@@ -551,15 +547,9 @@ def JobRemove(sender, job_title, start_end, job_active, pid, JobID):
 	if ret !=1:
 		return
 	
-	KillFile = os.path.join("%s/ThreadKill_%s") % (ADDON_DATA, JobID)	# Stopfile, Ausführung download_ts
-	PLog("KillFile: %s, %s" % (KillFile, os.path.exists(KillFile)))	
 	if job_active == 'True' and pid != '':
-		if 'Thread_' in pid:									# in JobMonitor ergänzt mit JobID
-			PLog("setze: %s" % KillFile)
-			open(KillFile, 'w').close()							# KillFile anlegen
-		else:
-			PLog("kill_pid: %s" % str(pid))
-			os.kill(int(pid), signal.SIGTERM)					# auch Windows10 OK (aber Teilvideo beschäd.)
+		PLog("kill_pid: %s" % str(pid))
+		os.kill(int(pid), signal.SIGTERM)						# auch Windows10 OK (aber Teilvideo beschäd.)
 	
 	jobs = ReadJobs()											# s. util
 	newjob_list = []; 											# newjob_list: Liste nach Änderungen
@@ -594,15 +584,8 @@ def JobStop(sender, job_title, start_end, job_active, pid, JobID):
 	else:
 		msg1 = job_title
 
-	KillFile = os.path.join("%s/ThreadKill_%s") % (ADDON_DATA, JobID)	# Stopfile, Ausführung download_ts
-	PLog("KillFile: %s, %s" % (KillFile, os.path.exists(KillFile)))	
-	if job_active == 'True' and pid != '':
-		if 'Thread_' in pid:									# in JobMonitor ergänzt mit JobID
-			PLog("setze: %s" % KillFile)
-			open(KillFile, 'w').close()							# KillFile anlegen
-		else:
-			PLog("kill_pid: %s" % str(pid))
-			os.kill(int(pid), signal.SIGTERM)					# auch Windows10 OK (aber Teilvideo beschäd.)
+	PLog("kill_pid: %s" % str(pid))
+	os.kill(int(pid), signal.SIGTERM)					# auch Windows10 OK (aber Teilvideo beschäd.)
 
 	icon = MSG_ICON
 	xbmcgui.Dialog().notification("Jobliste:", u"Job wird gestoppt",icon,3000)
