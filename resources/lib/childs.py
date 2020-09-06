@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 30.08.2020
+#	Stand: 02.09.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -214,6 +214,8 @@ def Kika_Search(query=None, title='Search', pagenr=''):
 	if 	query == '':	
 		query = ardundzdf.get_query(channel='ARD')
 	PLog(query)
+	query_org = unquote(query)
+	query_org = query_org.replace('+', ' ')					# für Vergleich entfernen
 	if  query == None or query.strip() == '':
 		return ""
 
@@ -239,7 +241,7 @@ def Kika_Search(query=None, title='Search', pagenr=''):
 		for s in pageItems:			
 			stitle = stringextract('class="linkAll" title="', '"', s)		
 			stitle = cleanhtml(stitle); stitle = unescape(stitle);
-			if up_low(query) in up_low(stitle):	
+			if up_low(query_org) in up_low(stitle):	
 				href =  BASE_KIKA + stringextract('href="', '\"', s)
 				if href in found_hrefs:				# Doppler vermeiden
 					continue

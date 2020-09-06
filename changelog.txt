@@ -12,6 +12,31 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+06.09.2020 3.3.4
+			Kategorien (Modul arte): "Meistgesehene Videos" abgeschnitten (folgen
+			z.Z. hinter den Kategorien).
+			check_Setting (Modul util): unicode-String für Dialogtexte mit Umlaut
+			(hier ffmpeg-Check).
+			get_page3sat (Modul 3sat): page.decode -> str(page) - decode scheitert 
+			in PY3 bei Sonderz. in json-Daten (Bsp. 37°).
+			SearchARDundZDF, Search (ARD Classic), SearchARDundZDFnew, Search (3sat),
+			Sendereihe_Sendungen (3sat), arte_Search: Aufruf get_page mit do_safe=False
+			(Unterdrückung zusätzl. Pfad-Quotierung).
+			Kika_Search: Fix query_org für Abgleich (Zeichen '+' hier falsch).
+			get_page (Modul util): leere Rückgabe bei PDF-Seiten.
+			ZDF_Sendungen: Abzweig zu ZDFRubrikSingle bei Cluster-Titeln (alle A-Z-
+			Seiten) - eindeutigere Diffenzierung der Cluster/Staffeln/Serien.
+			ZDFRubrikSingle, get_teaserElement: Anpassung an Auswertung Cluster-Titel.
+			ZDF_get_teaserDetails, ZDF_get_teaserbox, ZDF_get_img: neue Funktionen für 
+			Cluster-Auswertung (Loader-Beiträge + Normal-Seiten).
+			ZDF_MEHR_Suche zur mehrf. Verwendung ausgelagert in ZDF_search_button.
+			BarriereArmSingle: Home-Button entfernt bei  2. Aufruf (erl. in 
+			ZDFRubrikSingle).
+			ZDFStart + ZDFRubrikSingle: promo-teaser (abweichend zu Cluster-Titeln) 
+			ergänzt.
+			Startseite ZDF: script-generierte leere Inhalte übersprungen (Letzte Chance,
+			Empfehlungen für Sie, Das könnte Dich interessieren, weiterschauen). 
+
 30.08.2020 3.3.3 Einstellung m3u8-Aufnahmeverfahren
 			Setting "experimentell: Aufnehmen/Recording ohne ffmpeg" entfernt.
 			Anpassungen: SenderLiveListePre, ProgramRecord, LiveRecord (Modul util).

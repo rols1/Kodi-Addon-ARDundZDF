@@ -848,6 +848,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 #	transl_umlaute(path) entfällt damit
 # 14.08.2020 do_safe-Param. triggert path-Quotierung, muss hier für Audiothek-Rubriken
 #	entfallen
+# 02.09.2020 Rückgabe page='' bei PDF-Seiten
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
@@ -909,6 +910,11 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				page = f.read()
 				PLog(len(page))
 			r.close()
+			if page.startswith('%PDF-'):								# Bsp. Rezepte (Die Küchenschlacht)
+				msg1 = "PDF-Format nicht darstellbar"
+				msg2 = 'Inhalt verworfen'
+				msg = "%s,\n%s" % (msg1, msg2)
+				return '', msg
 			PLog(page[:100])
 			msg = new_url
 		except URLError as exception:
@@ -2238,7 +2244,7 @@ def check_Setting(ID):
 			
 		if os.path.exists(cmd.split()[0]) == False:
 			msg1 = 'Pfad zu ffmpeg nicht gefunden.'
-			msg2 = 'Bitte ffmpeg-Parameter in den Einstellungen prüfen, aktuell:'
+			msg2 = u'Bitte ffmpeg-Parameter in den Einstellungen prüfen, aktuell:'
 			msg3 = 	SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')
 			MyDialog(msg1, msg2, msg3)
 			return False

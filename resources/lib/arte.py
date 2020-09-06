@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 13.08.2020
+#	Stand: 02.09.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -190,6 +190,7 @@ def arte_Search(query='', nextpage=''):
 	if 	query == '':	
 		query = ardundzdf.get_query(channel='phoenix')	# unbehandelt
 	PLog(query)
+	query = py2_decode(query)
 	if  query == None or query == '':
 		return ""
 				
@@ -200,7 +201,7 @@ def arte_Search(query='', nextpage=''):
 	path = 'https://www.arte.tv/guide/api/emac/v3/de/web/data/SEARCH_LISTING/?imageFormats=landscape&mainZonePage=1&query=%s&page=%s&limit=20' %\
 		(quote(query), nextpage)
 
-	page, msg = get_page(path=path)	
+	page, msg = get_page(path=path, do_safe=False)		# ohne quote in get_page (api-Call)
 	if page == '':						
 		msg1 = 'Fehler in Suche: %s' % query
 		msg2 = msg
@@ -331,7 +332,7 @@ def GetContent(li, page, ID):
 		if mehrfach:
 			if ID == 'KAT_START':							# mit Url + id zurück zu -> Kategorien
 				pid = stringextract('id":"', '"', item) 	# programId hier null
-				cat = stringextract('label":"%s"' % title, '}]}', page) 	# Kategorie-Liste ausschneiden
+				cat = stringextract('label":"%s"' % title, '}]}', page) # Sub-Kategorien-Liste ausschneiden
 				tag = stringextract('description":"', '"', cat)
 
 				fparams="&fparams={'title':'%s'}" % (quote(title))
@@ -530,9 +531,12 @@ def Kategorien(title=''):
 	
 	if title == '':									# 1. Stufe: Kategorien listen
 		PLog('Stufe1:')	
-		pos = page.find(':"Alle Kategorien"')		
-		PLog(pos)
-		page = page[pos:]
+		pos1 = page.find(':"Alle Kategorien"')		# ausschneiden
+		pos2 = page.find('"Meistgesehene Videos"', pos1+1)	
+		PLog("pos1: %d, pos2: %d" % (pos1, pos2))
+		if pos2 == -1:								# Fallback ("Meistgesehene Videos" nicht sicher) 
+			pos2 = len(page)
+		page = page[pos1:pos2]
 		PLog(page[:100])
 		
 		# Kategorien listen

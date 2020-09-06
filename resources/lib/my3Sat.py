@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 26.08.2020
+#	Stand: 02.09.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -172,6 +172,7 @@ def Search(first, path, query=''):
 		return ""
 		
 	PLog(query)
+	query = py2_decode(query)
 
 	name = 'Suchergebnis zu: ' + unquote(query)
 		
@@ -179,7 +180,7 @@ def Search(first, path, query=''):
 		path =  DreiSat_Suche % quote(py2_encode(query))
 		path = path + "&page=1"
 	PLog(path); 										# Bsp. https://www.3sat.de/suche?q=brexit&synth=true&attrs=&page=2
-	page, msg = get_page(path=path)	
+	page, msg = get_page(path=path, do_safe=False)		# ohne quote in get_page, dto. in Sendereihe_Sendungen	
 	if page == '':			
 		msg1 = "Fehler in Search"
 		msg2 = msg
@@ -788,7 +789,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		li = home(li, ID='3Sat')										# Home-Button
 	
 	if page == '':								# Seitenausschnitt vom Aufrufer?
-		page, msg = get_page(path=path)	
+		page, msg = get_page(path=path, do_safe=False)	
 	
 	# 1. Strukturen am Seitenanfang (1 Video doppelt möglich):	
 	if 'video-carousel-item' in page:		# Bsp. www.3sat.de/kultur/kulturzeit
@@ -1614,7 +1615,8 @@ def get_page3sat(path, apiToken):
 		PLog(msg)
 	PLog(len(page))
 	
-	page = page.decode('utf-8')	
+	#page = page.decode('utf-8')			# scheitert in PY3 bei Sonderz. in json-Daten (Bsp. 37°)	
+	page = str(page)
 	return page, msg
 
 

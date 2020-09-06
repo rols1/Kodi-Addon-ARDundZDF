@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 27.06.2020
+#	Stand 02.09.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1190,7 +1190,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	if pagenr == '':		# erster Aufruf muss '' sein
 		pagenr = 1
 	path_zdf = ZDF_Search_PATH % (quote(query_zdf), pagenr) 
-	page, msg = get_page(path=path_zdf)	
+	page, msg = get_page(path=path_zdf, do_safe=False)	
 	searchResult = stringextract('data-loadmore-result-count="', '"', page)	# Anzahl Ergebnisse
 	PLog(searchResult);
 	query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
