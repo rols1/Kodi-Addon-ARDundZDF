@@ -12,6 +12,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+09.09.2020 3.3.5
+			get_page (Modul util): PDF-Check (b'%PDF-') für PY3 bytecodiert.
+			ZDF_get_teaserbox: teaser_brand (mögliche Staffelbez.) rot markiert.
+			time_translate (Modul util): Offset 2Std. aktivert (war versehentl. 
+			deaktiviert).
+			ChannelSingle (Modul funk): Sortierparameter in next_path ergänzt,
+			jsonObject nach key ["updateDate"] absteigend sortiert.
+			Settings (Kategorie Modul): Sortieroption für funk-Videolisten ergänzt.
+			Audiothek: Sendungen einzelner Sender ergänzt, neue Funktion AudioSenderPrograms,
+			Anpassungen AudioStart und AudioStartLive.
+			Matrix-Anpassung 9.0-alpha 2: Austausch xbmc.translatePath -> 
+			xbmcvfs.translatePath via try/except im Haupt-PRG und den Modulen ARDnew,
+			arte, childs, epgRecord, funk, merkliste, my3Sat, phoenix, Podcontent,
+			slides, TagesschauXL, updater, util.py, yt, zdfmobile.
+
 06.09.2020 3.3.4
 			Kategorien (Modul arte): "Meistgesehene Videos" abgeschnitten (folgen
 			z.Z. hinter den Kategorien).

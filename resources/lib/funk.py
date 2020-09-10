@@ -9,7 +9,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
 ################################################################################
-#	Stand: 09.04.2020
+#	Stand: 09.09.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -31,6 +31,10 @@ elif PYTHON3:
 	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs
 	from urllib.request import Request, urlopen, urlretrieve
 	from urllib.error import URLError
+	try:									# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
+		xbmc.translatePath = xbmcvfs.translatePath
+	except:
+		pass
 
 import  json		
 import os, sys
@@ -243,6 +247,7 @@ def Search(title):
 def Channels(title, next_path=''):
 	PLog('Channels:')
 	PLog(next_path)
+	PLog('Mark0')
 
 	title_org = title
 	li = xbmcgui.ListItem()
@@ -334,6 +339,9 @@ def Channels(title, next_path=''):
 # ----------------------------------------------------------------------			
 # zeigt alle Videos eines Channels, einr Playlist
 #	Alternative: byChannelAlias
+# 08.09.2020 absteigende Sortierung für die Standard-Videoliste (Url-
+#	Parameter reicht nicht aus, zusätzl. json-Sortierung erforderlich).
+#
 def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 	PLog('ChannelSingle: ' + title)
 	PLog(entityId); PLog(typ); 
@@ -342,13 +350,17 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=MNAME)				# Home-Button
 		
+	sortmode = "publicationDate,desc"
+	# sortmode = "updateDate,desc"							# Alternative (funk Default)
 	if next_path =='':	
 		if title == "NEUESTE VIDEOS":						# Aufruf: Hauptmenü 
-			next_path = "https://www.funk.net/data/static/latestVideos"
+			next_path = "https://www.funk.net/data/static/latestVideos"  # Sort. nicht akzeptiert (404-error)
 		else:												#  Aufruf: Channels
-			next_path = "https://www.funk.net/api/v4.0/videos/byChannelId/%s?size=%s" % (entityId, MAXLINES)
+			next_path = "https://www.funk.net/api/v4.0/videos/byChannelId/%s?size=%s&sort=%s" % (entityId, MAXLINES, sortmode)
 		if isPlaylist == 'True':
-			next_path = "https://www.funk.net/api/v4.0/videos/byPlaylistId/%s?size=%s" % (entityId, MAXLINES)		
+			next_path = "https://www.funk.net/api/v4.0/videos/byPlaylistId/%s?size=%s&sort=%s" % (entityId, MAXLINES, sortmode)
+
+
 	page = loadPage(next_path)
 	if page.startswith('Fehler'):
 		msg1 = 'Verbindungsproblem'
@@ -363,8 +375,13 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 
 	if("list" in jsonObject):								# Gesamtliste, latestVideos
 		videoObject = jsonObject["list"]
-	if("_embedded" in jsonObject):							# Standard-Videoliste
-		videoObject = jsonObject["_embedded"]["videoDTOList"]
+	if("_embedded" in jsonObject):							# Standard-Videoliste, ab 08.09.2020 abst. sortiert
+		if SETTINGS.getSetting('pref_sort_funk') == 'true':
+			videoObject = sorted(jsonObject["_embedded"]["videoDTOList"], key=lambda k: k["publicationDate"], reverse=True)
+			# Alternative Update-Datum:
+			#videoObject = sorted(jsonObject["_embedded"]["videoDTOList"], key=lambda k: k["updateDate"], reverse=True) 
+		else:
+			videoObject = jsonObject["_embedded"]["videoDTOList"] # unsortiert
 	PLog('channel %s' % title) 
 	
 	mediatype=''

@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 01.05.2020
+#	Stand: 09.09.2020
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -29,6 +29,10 @@ elif PYTHON3:
 	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs
 	from urllib.request import Request, urlopen, urlretrieve
 	from urllib.error import URLError
+	try:									# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
+		xbmc.translatePath = xbmcvfs.translatePath
+	except:
+		pass
 
 import json		
 import os, sys

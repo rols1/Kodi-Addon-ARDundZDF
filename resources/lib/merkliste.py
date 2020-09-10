@@ -6,7 +6,7 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-#	Stand: 29.06.2020
+#	Stand: 09.09.2020
 
 from __future__ import absolute_import
 
@@ -25,6 +25,10 @@ if PYTHON2:
 	from urlparse import parse_qs
 elif PYTHON3:
 	from urllib.parse import quote, unquote, quote_plus, unquote_plus, parse_qs
+	try:									# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
+		xbmc.translatePath = xbmcvfs.translatePath
+	except:
+		pass
 
 from util import PLog, stringextract, ReadFavourites, RSave, R, check_AddonXml,\
 					MyDialog, RLoad, blockextract

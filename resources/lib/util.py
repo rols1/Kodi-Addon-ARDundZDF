@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 29.08.2020
+#	Stand 09.09.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -33,6 +33,10 @@ elif PYTHON3:
 	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs  
 	from urllib.request import Request, urlopen, urlretrieve
 	from urllib.error import URLError
+	try:									# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
+		xbmc.translatePath = xbmcvfs.translatePath
+	except:
+		pass
 	
 # import requests		# kein Python-built-in-Modul, urllib2 verwenden
 import datetime as dt	# für xml2srt
@@ -867,7 +871,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	if do_safe:
 		path = quote(path, safe="@:?.,-_&=/")	# s.o. ('-_' in m3u8-Links)	
 	PLog("safe_path: " + path)		
-	 
+
 	msg = ''; page = ''	
 	UrlopenTimeout = 10
 	
@@ -910,8 +914,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				page = f.read()
 				PLog(len(page))
 			r.close()
-			if page.startswith('%PDF-'):								# Bsp. Rezepte (Die Küchenschlacht)
-				msg1 = "PDF-Format nicht darstellbar"
+			if page.startswith(b'%PDF-'):								# Bsp. Rezepte (Die Küchenschlacht)
+				msg1 = "PDF-Format nicht darstellbar"					#	# Bytecodierung für PY3 erford.
 				msg2 = 'Inhalt verworfen'
 				msg = "%s,\n%s" % (msg1, msg2)
 				return '', msg
@@ -1564,7 +1568,6 @@ def time_translate(timecode, add_hour=2):
 	day, hour_info 	= timecode.split('T')			# Datum / Uhrzeit trennen
 	hour	 		= hour_info[:8]
 	
-	add_hour=0
 	if '+' in hour_info:							# mit Korr.-Faktor s.o.			
 		mil_sec, add_hour = hour_info.split('+')	# ev. add-Faktor ermitteln
 		try:

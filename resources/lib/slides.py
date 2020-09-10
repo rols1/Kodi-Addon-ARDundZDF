@@ -13,7 +13,7 @@
 # 	Scan Keys + rechte Maustaste s. KeyListener
 #	Auswertung Keys s. img_update
 ################################################################################
-#	Stand: 06.03.2020
+#	Stand: 09.09.2020
 
 
 # Python3-Kompatibilität:
@@ -28,6 +28,15 @@ from kodi_six.utils import py2_encode, py2_decode
 import sys, os, hashlib
 import copy, threading
 from threading import Timer
+
+PYTHON2 = sys.version_info.major == 2		# bisher keine import-Anpassung erford.
+PYTHON3 = sys.version_info.major == 3
+if PYTHON3:
+	try:									# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
+		xbmc.translatePath = xbmcvfs.translatePath
+	except:
+		pass
+
 
 # Addonmodule 
 from resources.lib.util import *

@@ -20,6 +20,10 @@ elif PYTHON3:
 	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs
 	from urllib.request import Request, urlopen, urlretrieve
 	from urllib.error import URLError
+	try:									# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
+		xbmc.translatePath = xbmcvfs.translatePath
+	except:
+		pass
 
 
 # Python
@@ -42,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.3.4'
-VDATE = '06.09.2020'
+VERSION = '3.3.5'
+VDATE = '10.09.2020'
 
 #
 #
@@ -183,6 +187,7 @@ POD_REFUGEE = 'https://www1.wdr.de/mediathek/audio/cosmo/refugee-radio/index.htm
 ARD_AUDIO_BASE = 'https://www.ardaudiothek.de'
 AUDIO_HEADERS="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 	'Referer': '%s', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
+AUDIOSENDER = ['br','dlf','hr','mdr','ndr','"radio-bremen"','rbb','sr','swr','wdr']
 
 # Relaunch der Mediathek beim ZDF ab 28.10.2016: xml-Service abgeschaltet
 ZDF_BASE				= 'https://www.zdf.de'
@@ -1011,13 +1016,19 @@ def AudioStart(title):
 	addDir(li=li, label=title, action="dirList", dirID="AudioStartRubrik", fanart=R(ICON_MAIN_AUDIO), 
 		thumb=R(ICON_POD_RUBRIK), fparams=fparams)
 
-	# Button für A-Z anhängen (eigenes ListItem)				# A-Z
+	# Button für A-Z anhängen 									# A-Z alle Sender
 	title = 'Sendungen A-Z (alle Radiosender)'
 	fparams="&fparams={'title': '%s'}" % (title)	
 	addDir(li=li, label=title, action="dirList", dirID="AudioStart_AZ", fanart=R(ICON_MAIN_AUDIO), 
 		thumb=R(ICON_AUDIO_AZ), fparams=fparams)
 	
-	# Button für funk anhängen (eigenes ListItem)				# funk
+	# Button für Sender anhängen 								# Sender (via AudioStartLive)
+	title = 'Sender (Sendungen einzelner Radiosender)'
+	fparams="&fparams={'title': '%s', 'programs': 'yes'}" % (title)	
+	addDir(li=li, label=title, action="dirList", dirID="AudioStartLive", fanart=R(ICON_MAIN_AUDIO), 
+		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
+	
+	# Button für funk anhängen 									# funk
 	title = 'FUNK-Podcasts - Pop und Szene'
 	href = ARD_AUDIO_BASE + '/sender/funk'
 	fparams="&fparams={'url': '%s'}" % quote(href)	
@@ -1182,7 +1193,7 @@ def AudioStart_AZ_content(button):
 #  29.09.2019 Umstellung Hauptmenü: Nutzung AudioStartLive (Codebereinigung -
 #		s. Hinw. Hauptmenü + changelog.txt)
 #
-def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams 
+def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestreams 
 	PLog('AudioStartLive: ' + sender)
 	li = xbmcgui.ListItem()
 	if myhome:
@@ -1203,10 +1214,10 @@ def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams
 	page= page[pos:]							# 
 	page= page.replace('\\u002F', '/')			# Pfadbehandlung gesamte Seite
 
-	# Senderliste = Blockersatz
-	senderliste = ['br','dlf','hr','mdr','ndr','"radio-bremen"','rbb','sr','swr','wdr']
-	if sender == '':							# . Durchlauf: Senderliste
-		for sender in senderliste:
+	if programs == 'yes':						# Sendungen der Sender listen
+		AUDIOSENDER.append('funk')
+	if sender == '':
+		for sender in AUDIOSENDER:
 			# Bsp. title: data-v-f66b06a0>Theater, Film
 			pos1 = page.find('%s:' % sender)	# keine Blockbildung für sender möglich
 			pos2 = page.find('}},', pos1)
@@ -1221,8 +1232,8 @@ def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams
 			PLog('2Satz:');
 			PLog(title); PLog(img);
 			title=py2_encode(title); sender=py2_encode(sender);
-			fparams="&fparams={'title': '%s', 'sender': '%s', 'myhome': '%s'}" % (quote(title), 
-				quote(sender), myhome)	
+			fparams="&fparams={'title': '%s', 'sender': '%s', 'myhome': '%s', 'programs': '%s'}" %\
+				(quote(title), quote(sender), myhome, programs)	
 			addDir(li=li, label=title, action="dirList", dirID="AudioStartLive", fanart=img, 
 				thumb=img, fparams=fparams)
 	
@@ -1250,21 +1261,26 @@ def AudioStartLive(title, sender='', myhome=''):		# Sender / Livestreams
 			url= url.replace(' ', '-')			# Webseiten-URL: Blanks -> -
 			url= url.replace(',', '-')			# dto Komma -> -
 			url= (url.replace("b'", '').replace("'", ''))   # Byte-Mark entfernen
+			if my_sender == 'funk':
+				url = "https://www.ardaudiothek.de/sender/funk/funk"		# Korrektur  für funk
 			
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)	
 			summ_par = descr	
-						
+			
+			destDir = "AudioLiveSingle"		
+			if programs == 'yes':						# Sendungen der Sender listen
+				destDir = "AudioSenderPrograms"
 			PLog('3Satz:');
-			PLog(title); PLog(img); PLog(url); PLog(descr);
+			PLog(destDir); PLog(title); PLog(img); PLog(url); PLog(descr);
 			title=py2_encode(title); summ_par=py2_encode(summ_par);
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
 				quote(title), quote(img), quote(summ_par))
-			addDir(li=li, label=title, action="dirList", dirID="AudioLiveSingle", fanart=img, thumb=img, 
+			addDir(li=li, label=title, action="dirList", dirID="%s" % destDir, fanart=img, thumb=img, 
 				fparams=fparams, summary=descr, mediatype='music')	
 					
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-						
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)					
+		
 #----------------------------------------------------------------
 # hier wird der Streamlink von der Website der Audiothek im json-Teil
 #	ermitelt.
@@ -1286,6 +1302,52 @@ def AudioLiveSingle(url, title, thumb, Plot):		# startet einzelnen Livestream f�
 	PlayAudio(url, title, thumb, Plot, url_template='1')  # direkt	
 	
 	return	
+	
+#----------------------------------------------------------------
+# listet Sendungen einzelner Radiosender
+#	Sendungen sind bereits alph. sortiert
+#	Auswertung Sendung -> Audio_get_rubrik
+# 09.09.2020 img-Reihenfolge OK
+# 
+def AudioSenderPrograms(url, title, thumb, Plot):
+	PLog('AudioSenderPrograms:')
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Audiothek')		# Home-Button, nach ev. Ausleitung (Doppel vermeiden)	
+
+	page, msg = get_page(path=url)	
+	if page == '':	
+		msg1 = "Fehler in AudioSenderPrograms:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	PLog(len(page))	
+	
+	gridlist = blockextract('class="headlines">', page)
+	PLog(len(gridlist))
+	for grid in gridlist:
+		category = stringextract('category">', '</div>', grid)
+		category = mystrip(category); category = unescape(category)
+		anzahl = stringextract('episode-count">', '</div>', grid)
+		anzahl = mystrip(anzahl)
+		href = ARD_AUDIO_BASE + stringextract('href="', '"', grid)
+		title = stringextract('main-title">', '</', grid)
+		title = mystrip(title); title=unescape(title); title=repl_json_chars(title) 
+		descr = stringextract('podcast-summary">', '</div>', grid)
+		descr = mystrip(descr); descr = unescape(descr)
+		img = img_via_audio_href(href=href, page=page)			# img im json-Teil holen
+		
+		tag = category
+		tag = u"%s\n[B]Folgeseiten[/B] | %s"  % (tag, anzahl)		
+	
+		PLog('14Satz:');
+		PLog(title); PLog(img); PLog(href); PLog(descr); PLog(anzahl);
+		title=py2_encode(title); href=py2_encode(href);
+		fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
+		addDir(li=li, label=title, action="dirList", dirID="Audio_get_rubrik", fanart=img, thumb=img, fparams=fparams, 
+			summary=descr, tagline=tag)	
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 #----------------------------------------------------------------
 # Aufruf: AudioStart
@@ -3503,9 +3565,8 @@ def VerpasstWoche(name, title, sfilter='Alle ZDF-Sender'):		# Wochenliste zeigen
 	title_org = title
 	 
 	# Senderwahl deaktivert		
-#	CurSender 	= ARDSender[0]	# Default 1. Element ARD-Alle
-#	sendername, sender, kanal, img, az_sender = CurSender.split(':')
-	sendername = "Das Erste"						# Default wie Web	
+	#CurSender 	= ARDSender[0]	# Default 1. Element ARD-Alle
+	#sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	
 	li = xbmcgui.ListItem()
 	if name == 'ZDF-Mediathek':
@@ -7257,7 +7318,7 @@ def ZDFRubriken(name):
 # 03.09.2020 Nutzung für A-Z-Seiten mit Cluster-Titeln (Abzweig in ZDF_Sendungen)
 #	Auswertung für loader- und Normal-Seiten vereinheitlicht (get_teaserElement,
 #	ZDF_get_teaserDetails, ZDF_get_teaserbox)
-# 05.09.2020 promo-teaser in ZDFStart + hier ergänzt (bisher nur 1 x Seite gesichtet)
+# 05.09.2020 promo-teaser in ZDFStart + hier ergänzt (bisher nur 1 x je Seite gesichtet)
 #
 def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):							
 	PLog('ZDFRubrikSingle:'); PLog(title); 
@@ -7357,6 +7418,8 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 			if teaser_label:
 				tag = teaser_label
 			if teaser_brand:
+				teaser_brand = teaser_brand.replace(' - ', '')
+				teaser_brand = "[COLOR red]%s[/COLOR]" % teaser_brand
 				tag = teaser_brand
 				
 			if teaser_typ:
@@ -7366,7 +7429,6 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 				title = "[%s] %s" % (teaser_nr, title)
 			if tag.startswith(' | '):										# tag-Korr. leer Brand								
 				tag = tag.replace(' | ', '')
-			tag = tag.replace('  -  |', '|')								# weitere tag-Korr.
 			tag = tag.replace('  ,', ', ')
 								
 			if teaser_label == 'Bilderserie':
@@ -7646,9 +7708,10 @@ def ZDF_get_teaserbox(page):
 		if teaser_brand == '':
 			# teaser_brand = stringextract('cat-brand-ellipsis">', '</', page)  
 			teaser_brand =  stringextract('cat-brand-ellipsis">', '<a href=', page)	 # Bsp. Wilsberg, St. 07 -
-		teaser_brand = re.sub(r"\s+", '', teaser_brand)					# Blanks entf.
+		teaser_brand = cleanhtml(teaser_brand);
 		teaser_brand = mystrip(teaser_brand)
-		teaser_brand = cleanhtml(teaser_brand.strip()); 
+		teaser_brand = (teaser_brand.replace(" - ", "").replace(" , ", ", "))
+		
 		PLog('teaser_label: %s,teaser_typ: %s, teaser_nr: %s, teaser_brand: %s, teaser_count: %s, multi: %s' %\
 			(teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count, multi))
 		
