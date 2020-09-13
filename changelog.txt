@@ -12,6 +12,13 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+13.09.2020 3.3.6
+			Menü TV-Livestreams/Privat: Aktualisierung Streamlink münchen.tv
+			Audiothek (Aktualisierungen in podcast-favorits.txt):  Eintrag "NDR Coronavirus
+			Update", hr-iNFO Cybercrime -> Cybercrime, zukunftschule (entfernt)
+			Modul util: xbmc.LOGNOTICE/xbmc.LOGINFO in Abhängigkeit von PY2/PY3 gesetzt,
+			Anpassungen in Modulkopf, check_AddonXml und PLog.
+
 09.09.2020 3.3.5
 			get_page (Modul util): PDF-Check (b'%PDF-') für PY3 bytecodiert.
 			ZDF_get_teaserbox: teaser_brand (mögliche Staffelbez.) rot markiert.

@@ -4,7 +4,8 @@
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
 from __future__ import division				# // -> int, / -> float
 from __future__ import print_function		# PYTHON2-Statement -> Funktion
-from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
+#from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
+from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui
 
 # o. Auswirkung auf die unicode-Strings in PYTHON3:
 from kodi_six.utils import py2_encode, py2_decode
@@ -46,8 +47,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.3.5'
-VDATE = '10.09.2020'
+VERSION = '3.3.6'
+VDATE = '13.09.2020'
 
 #
 #

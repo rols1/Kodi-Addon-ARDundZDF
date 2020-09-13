@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 09.09.2020
+#	Stand 13.09.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -28,11 +28,13 @@ PYTHON3 = sys.version_info.major == 3
 if PYTHON2:					
 	from urllib import quote, unquote, quote_plus, unquote_plus, urlencode, urlretrieve 
 	from urllib2 import Request, urlopen, URLError 
-	from urlparse import urljoin, urlparse, urlunparse , urlsplit, parse_qs 
+	from urlparse import urljoin, urlparse, urlunparse , urlsplit, parse_qs
+	LOG_MSG = xbmc.LOGNOTICE 				# s. PLog
 elif PYTHON3:				
 	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs  
 	from urllib.request import Request, urlopen, urlretrieve
 	from urllib.error import URLError
+	LOG_MSG = xbmc.LOGINFO 					# s. PLog
 	try:									# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
 		xbmc.translatePath = xbmcvfs.translatePath
 	except:
@@ -93,10 +95,11 @@ ARDStartCacheTime = 300						# 5 Min.
 # Aufruf von allen Modulen.Köpfen einschl. Haupt-PRG
 # 15.05.2020 Codec-Error beim Einlesen in Matrix - Austausch
 #	open/read gegen xbmcvfs.File/read
-# 
+# LOG_MSG s. Modulkopf
+#
 def check_AddonXml(mark):
 	ADDON_XML		= os.path.join(ADDON_PATH, "addon.xml")
-	xbmc.log("%s --> %s" % ('ARDundZDF', 'check_AddonXml:'), xbmc.LOGNOTICE)
+	xbmc.log("%s --> %s" % ('ARDundZDF', 'check_AddonXml:'), LOG_MSG)
 	f = xbmcvfs.File(ADDON_XML)		# Byte-Puffer
 	xml_content	= f.readBytes()
 	f.close()
@@ -143,17 +146,17 @@ BASE_URL 		= 'https://classic.ardmediathek.de'
 # 14.05.2020 dummy = fehlerhafter PLog-Call z.B. pytube-Modul (helpers.py, mixins.py,
 #			gefixt). dummy-Ausgabe vorerst belassen (Debug)
 # Bei Änderungen check_AddonXml berücksichtigen (xbmc.log direkt)
+# 13.09.2020 LOGNOTICE/LOGINFO in  Abhängigkeit von PY2/PY3 gesetzt:
+#	https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=606035
+#	LOG_MSG - s. Modulkopf
 #
 def PLog(msg, dummy=''):
 	if DEBUG == 'false':
 		return
 	
-#	if PYTHON3:
-#		xbmc.log("%s --> %s" % ('ARDundZDF', msg), xbmc.LOGINFO)	
-#	else:
-	xbmc.log("%s --> %s" % ('ARDundZDF', msg), xbmc.LOGNOTICE)
+	xbmc.log("%s --> %s" % ('ARDundZDF', msg), LOG_MSG)
 	if dummy:		# Debug (s.o.)
-		xbmc.log("%s --> %s" % ('PLog_dummy', dummy), xbmc.LOGNOTICE)
+		xbmc.log("%s --> %s" % ('PLog_dummy', dummy), LOG_MSG)
 		
 #---------------------------------------------------------------- 
 # 08.04.2020 Konvertierung 3-zeiliger Dialoge in message (Multiline)

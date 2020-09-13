@@ -368,11 +368,11 @@
 	</item>
 	<item>
 		<title>münchen.tv</title>
-		<link>https://stream02.stream.welocal.world/stream/muc/ngrp:muc.stream_all/playlist.m3u8</link>
+		<link>https://stream02.stream.welocal.world/stream/fhd-muenchentv_365036/ngrp:stream_all/playlist.m3u8</link>
 		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-muenchen-tv.png?raw=true</thumbnail>
 		<imgsource>https://commons.wikimedia.org/wiki/File:TV_M%C3%BCnchen_Logo.svg</imgsource>
 		<EPG_ID>TVM</EPG_ID>
-		<date>19.06.2020</date>
+		<date>12.09.2020</date>
 	</item>
 	<item>
 		<title>Leipzig Fernsehen</title>

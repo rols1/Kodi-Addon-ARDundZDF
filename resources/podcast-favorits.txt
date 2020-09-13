@@ -25,7 +25,6 @@
 Dossier Politik - Bayern 2  				| https://www.ardaudiothek.de/dossier-politik/7260328
 IQ - Wissenschaft und Forschung - Bayern 2  | https://www.ardaudiothek.de/iq-wissenschaft-und-forschung/5941402
 radioWissen - Bayern 2  					| https://www.ardaudiothek.de/radiowissen/5945518
-zukunftschule - B5 aktuell  				| https://www.ardaudiothek.de/das-campusmagazin/67259824
 Das Verbrauchermagazin - B5 aktuell 		| https://www.ardaudiothek.de/das-verbrauchermagazin/5927628
 Wirtschaft - hrINFO | 				https://www.ardaudiothek.de/wirtschaft/467742
 Aus Wissenschaft und Technik - B5 aktuell 	| https://www.ardaudiothek.de/wissenschaft-und-technik/53609516
@@ -58,9 +57,9 @@ Interviews -Inforadio RBB					| https://www.ardaudiothek.de/interviews/46474024
 
 ## Hörspiele
 KiRaKa - Kinderhörspiele im WDR				| https://www.ardaudiothek.de/kinderhoerspiel-im-wdr/36244846
-hr-iNFO Cybercrime							| https://www.ardaudiothek.de/cybercrime/42913980
+Cybercrime									| https://www.ardaudiothek.de/api/search/Cybercrime?items_per_page=24&page=1
 ARD Radio Tatort							| https://www.ardaudiothek.de/ard-radio-tatort/1998988
-NDR Coronavirus Update					| https://www.ardaudiothek.de/api/search/coronavirus%20update?items_per_page=24&page=1
+NDR Coronavirus Update						| https://www.ardaudiothek.de/das-coronavirus-update/72451786
 
 
 Suchergebnis: corona		| https://www.ardaudiothek.de/api/search/corona?items_per_page=24&page=1
