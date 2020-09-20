@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 13.09.2020
+#	Stand 20.09.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -701,7 +701,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		# PLog('Plot: ' + Plot)
 		fparams_folder=''; fparams_filter=''; fparams_delete=''; 
 		fparams_change=''; fparams_record=''; fparams_recordLive='';
-		fparams_setting_sofortstart=''								
+		fparams_setting_sofortstart=''; fparams_do_folder=''								
 		
 		if filterstatus != 'set':									# Doppel im Hauptmenü vermeiden (s. home)
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# ständig: Umschalter Settings 
@@ -719,7 +719,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			PLog("fparams_setting_sofortstart: " + fparams_setting_sofortstart[:100])
 			fparams_setting_sofortstart = quote_plus(fparams_setting_sofortstart)			
 		
-		if merkname:												# Aufrufer ShowFavs (Settings: Ordner)
+		if merkname:												# Aufrufer ShowFavs (Settings: Ordner .. verwenden)
 			if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
 				# Param name reicht für folder + filter				# Ordner ändern / Filtern
 				label = merkname
@@ -727,15 +727,19 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					'Plot': quote_plus(Plot),'url': quote_plus(add_url)}	
 				fparams_folder = "&fparams={0}".format(fp)
 				PLog("fparams_folder: " + fparams_folder[:100])
-				fparams_folder = quote_plus(fparams_folder)			#  Ordner ändern
+				fparams_folder = quote_plus(fparams_folder)			# Ordner-Zuordnung ändern
 				
 				fp = {'action': 'filter', 'name': quote_plus(label)} 
 				fparams_filter = "&fparams={0}".format(fp)
 				fparams_filter = quote_plus(fparams_filter)			# Filtern
 
-				fp = {'action': 'filter_delete', 'name': quote_plus('label')} 
+				fp = {'action': 'filter_delete', 'name': quote_plus(label)} 
 				fparams_delete = "&fparams={0}".format(fp)
 				fparams_delete = quote_plus(fparams_delete) 		# Filter entfernen
+
+				fp = {'action': 'filter_folder', 'name': quote_plus(label)} 
+				fparams_do_folder = "&fparams={0}".format(fp)
+				fparams_do_folder = quote_plus(fparams_do_folder)	# Merklisten-Ordner bearbeiten (add/remove)
 				
 		if filterstatus:											# Ausschluss-Filter EIN/AUS
 			fp = {'action': 'state_change'} 
@@ -811,6 +815,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				% (MY_SCRIPT, HANDLE, fparams_filter)))
 			commands.append(('Filter der  Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_delete)))
+			commands.append(('Merklisten-Ordner bearbeiten', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				% (MY_SCRIPT, HANDLE, fparams_do_folder)))
 				
 		if fparams_change or fparams_record or fparams_recordLive:	# Ausschluss-Filter EIN/AUS, ProgramRecord
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
@@ -1625,8 +1631,8 @@ def transl_pubDate(pubDate):
 #---------------------------------------------------------------- 	
 # Holt User-Eingabe für Suche ab
 #	s.a. get_query (für Search , ZDF_Search)
-def get_keyboard_input():
-	kb = xbmc.Keyboard('', 'Bitte Suchwort(e) eingeben')
+def get_keyboard_input(head='Bitte Suchwort(e) eingeben'):
+	kb = xbmc.Keyboard('', head)
 	kb.doModal() # Onscreen keyboard
 	if kb.isConfirmed() == False:
 		return ""

@@ -47,8 +47,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.3.6'
-VDATE = '13.09.2020'
+VERSION = '3.3.7'
+VDATE = '20.09.2020'
 
 #
 #
@@ -75,9 +75,6 @@ NAME			= 'ARD und ZDF'
 PREFIX 			= '/video/ardundzdf'		#	
 												
 PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
-PLAYLIST_Radio  = 'livesenderRadio.xml'		# Liste der RadioAnstalten. Einzelne Sender und Links werden 
-											# 	vom Addon ermittelt
-											# Radio-Sender-Logos erstellt von: Arauco (Plex-Forum). 
 FAVORITS_Pod 	= 'podcast-favorits.txt' 	# Lesezeichen für Podcast-Erweiterung 
 FANART					= 'fanart.png'		# ARD + ZDF - breit
 ART 					= 'art.png'			# ARD + ZDF
@@ -134,7 +131,7 @@ ICON_DOWNL_DIR			= "icon-downl-dir.png"
 ICON_DELETE 			= "icon-delete.png"
 ICON_STAR 				= "icon-star.png"
 ICON_NOTE 				= "icon-note.png"
-ICON_SPEAKER 			= "icon-speaker.png"								# Breit-Format
+ICON_SPEAKER 			= "icon-speaker.png"
 ICON_TOOLS 				= "icon-tools.png"
 ICON_PREFS 				= "icon-preferences.png"
 
@@ -1023,7 +1020,7 @@ def AudioStart(title):
 	addDir(li=li, label=title, action="dirList", dirID="AudioStart_AZ", fanart=R(ICON_MAIN_AUDIO), 
 		thumb=R(ICON_AUDIO_AZ), fparams=fparams)
 	
-	# Button für Sender anhängen 								# Sender (via AudioStartLive)
+	# Button für Sender anhängen 								# Sender/Sendungen (via AudioStartLive)
 	title = 'Sender (Sendungen einzelner Radiosender)'
 	fparams="&fparams={'title': '%s', 'programs': 'yes'}" % (title)	
 	addDir(li=li, label=title, action="dirList", dirID="AudioStartLive", fanart=R(ICON_MAIN_AUDIO), 
@@ -1193,6 +1190,7 @@ def AudioStart_AZ_content(button):
 #	hier nachgebildet werden (Blanks -> -).
 #  29.09.2019 Umstellung Hauptmenü: Nutzung AudioStartLive (Codebereinigung -
 #		s. Hinw. Hauptmenü + changelog.txt)
+# 09.09.2020 Mitnutzung durch AudioSenderPrograms (programs=yes)
 #
 def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestreams 
 	PLog('AudioStartLive: ' + sender)
@@ -7669,6 +7667,7 @@ def ZDF_get_img(page):
 	if img== '':									# Fallback, Altern.: icon-bild-fehlt.png
 		img= R('Dir-folder.png')
 		return img
+	img = img.replace('"', '')						# solte nicht vorkommen
 	
 	if img.startswith('http') == False:
 		img = ZDF_BASE + img
@@ -8084,8 +8083,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 	
 	if 'class="artdirect " >' in page:						# bis V2.5.3 relevant
 		content = blockextract('class="artdirect " >', page)
-	else:
-		content = blockextract('class="artdirect"', page)
+	else:													# "<img class=.." m Block ausschließen
+		content = blockextract('<picture class="artdirect"', page) # tivi: doppelt  (is-tivi,is-not-tivi)
 				
 	if len(content) == 0:
 		content =  blockextract('class="stage-image', page) 	# 10.12.2019 ZDF Highlights falls 
@@ -8099,10 +8098,11 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		content = content + poster							# Blöcke an content anhängen
 		poster_title =  stringextract('cluster-title">', '</', page_segment)
 		
-	if 'data-module="zdfplayer"' in page:					# Kurzvideos		
-		zdfplayer = blockextract('data-module="zdfplayer"', page, '</article>')
-		PLog('zdfplayer: ' + str(len(zdfplayer)))		
-		content = content + zdfplayer						# Blöcke an content anhängen
+	if 'data-module="zdfplayer"' in page:					# Kurzvideos
+		if "www.zdf.de/kinder" not in ref_path:				# tivi: doppel vermeiden	
+			zdfplayer = blockextract('data-module="zdfplayer"', page, '</article>')
+			PLog('zdfplayer: ' + str(len(zdfplayer)))		
+			content = content + zdfplayer						# Blöcke an content anhängen
 	
 #---------------------------		
 	if len(content) == 0:
@@ -8157,7 +8157,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			
 	#---------------------------		
 	items_cnt=0									# listitemzähler
-	for rec in content:	
+	for rec in content:					
 		teaser_nr=''; teaser_brand=''; poster=False
 		if rec.startswith('b-cluster-poster-teaser'):		# angehängte Sätze, z.B. Hochkant-Videos s.o.
 			poster=True

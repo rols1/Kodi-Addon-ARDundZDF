@@ -12,6 +12,19 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+20.09.2020 3.3.7 Erweiterung: Merklisten-Ordner bearbeiten
+			check_ordner (Modul Merkliste): umbenannt in check_ordnerlist.
+			Modul Merkliste: erweitert mit Ordnerverwaltung (listen, hinzufügen, löschen, 
+			resetten), zusätzl. Kontextmenü in addDir (Modul util), neue Funktion do_folder 
+			(Modul Merkliste), Anpassungen in Watch_items + save_merkliste (Modul Merkliste). 
+			Watch_items (Modul Merkliste): Eintragtitel im Dialog für Ordnerauswahl  hinzu-
+			gefügt.
+			ZDF_get_content: eindeutigerer Blockparameter für tivi-Beiträge (Icons fehlten
+			in Highlights).
+			Codebereinigung: 77 Radio-Icons + livesenderRadio.xml erneut gelöscht (nach 
+			git-Problem erneut im Repo), Definiton PLAYLIST_Radio entfernt - obsolet.
+			Icons: icon-speaker.png bearbeitet (Farbpalette, Kanten).		
+
 13.09.2020 3.3.6
 			Menü TV-Livestreams/Privat: Aktualisierung Streamlink münchen.tv
 			Audiothek (Aktualisierungen in podcast-favorits.txt):  Eintrag "NDR Coronavirus

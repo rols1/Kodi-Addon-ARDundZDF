@@ -6,7 +6,7 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-#	Stand: 09.09.2020
+#	Stand: 20.09.2020
 
 from __future__ import absolute_import
 
@@ -31,7 +31,7 @@ elif PYTHON3:
 		pass
 
 from util import PLog, stringextract, ReadFavourites, RSave, R, check_AddonXml,\
-					MyDialog, RLoad, blockextract
+					MyDialog, RLoad, blockextract, get_keyboard_input
 
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -58,14 +58,21 @@ PLog('Script merkliste.py geladen')
 #	einschl. ORDNER_INFO - Quelle ZDF-Rubriken +Audio+Talk):
 ORDNER			= ["Audio", "Bilderserien", "Comedy/Show", "Doku/Wissen", "Filme", "Geschichte", 
 					"Nachrichten", "Kinder/ZDFtivi", "Krimi", "Kultur" "TV-Livestreams",  
-					"Politik/Gesellschaft", "Serien", "Sport",  "Talk", "Verbraucher"]
-ORDNER_INFO		= [u"# die folgende Ordnerliste kann mit einem Editor geändert werden.",
-					u'# Nutzung: in Settings "Ordner für Merkliste verwenden wählen."',
-					u"# Regeln:", 
-					u"# Sie darf keine Kommentarzeichen (#) enthalten.", 
-					u"# Die einzelnen Begriffe sind mit einem Leerzeichen zu trennen.", 
+					"Politik/Gesellschaft", "Serien", "Sport",  "Talk", "Verbraucher"
+					]
+ORDNER_INFO		= [	u'# Ordner dienen der Sortierung und Filterung der Merkliste.',
+					u'# Nutzung der Ordner:',
+					u'# in Settings "Ordner für Merkliste verwenden" wählen.',
+					u'#',
+					u'# Regeln:', 
+					u'# Ordnernamen dürfen keine Kommentarzeichen (#) enthalten. Auch Leerzeichen', 
+					u'# und die meisten Sonderzeichen sind nicht erlaubt.',
 					u'# Für zusammengesetzte Begriffe ist das "&"- oder "/"-Zeichen zu verwenden', 
-					u"# Zeilenumbrüche sind beim Eingeben möglich - sie werden vom Addon wieder entfernt"] 
+					u'#',
+					u'# Die Ordnerliste kann auch mit einem Editor geändert werden:',
+					u'# Die einzelnen Begriffe sind im Editor mit einem Leerzeichen zu trennen.', 
+					u'# Zeilenumbrüche sind beim Eingeben möglich - sie werden vom Addon wieder entfernt',
+					] 
 
 # CallFunctions: Funktionen, die Videos direkt oder indirekt (isPlayable) aufrufen.
 #	Ist eine der Funktionen in der Plugin-Url enthalten, wird der Parameter Merk='true'
@@ -93,6 +100,8 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 	err_msg	= ''
 	doppler = False
 
+	# Umschaltung intern/extern + Dateicheck auch in ReadFavourites + save_merkliste,
+	#	hier nur Dateicheck relevant:
 	fname = WATCHFILE		
 	if SETTINGS.getSetting('pref_merkextern') == 'true':	# externe Merkliste gewählt?
 		fname = SETTINGS.getSetting('pref_MerkDest_path')
@@ -105,7 +114,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 	if action == 'add':
 		url = get_plugin_url(url)									# url aus ev. Base64-Kodierung
 		my_items, my_ordner = ReadFavourites('Merk')				# 'utf-8'-Decoding in ReadFavourites
-		my_ordner = check_ordner(my_ordner)			
+		my_ordner = check_ordnerlist(my_ordner)			
 		merkliste = ''
 		if len(my_items):
 			PLog('my_items: ' + my_items[0])			# 1. Eintrag
@@ -147,7 +156,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			#item_cnt = item_cnt + 1
 			
 			# Merkliste + Ordnerinfo + Ordner + Ordnerwahl:	
-			ret, err_msg = save_merkliste(fname, merkliste, my_ordner)
+			ret, err_msg = save_merkliste(merkliste, my_ordner)
 			msg1 = u"Eintrag hinzugefügt" 
 			if ret == False:
 				PLog(err_msg)
@@ -158,7 +167,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 	#------------------
 	if action == 'del':
 		my_items, my_ordner = ReadFavourites('Merk')					# 'utf-8'-Decoding in ReadFavourites
-		my_ordner = check_ordner(my_ordner)
+		my_ordner = check_ordnerlist(my_ordner)
 		if len(my_items):
 			PLog('my_items: ' + my_items[-1])
 		merkliste = ''
@@ -176,7 +185,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			
 		if deleted:
 			# Merkliste + Ordnerinfo + Ordner + Ordnerwahl:	
-			ret, err_msg = save_merkliste(fname, merkliste, my_ordner)
+			ret, err_msg = save_merkliste(merkliste, my_ordner)
 			msg1 = u"Eintrag gelöscht"
 			if ret == False:
 				PLog(err_msg)
@@ -189,7 +198,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 	#------------------
 	if action == 'folder':												# Ordner ändern
 		my_items, my_ordner = ReadFavourites('Merk')					# 'utf-8'-Decoding in ReadFavourites
-		my_ordner = check_ordner(my_ordner)
+		my_ordner = check_ordnerlist(my_ordner)
 		
 		merkliste = ''
 		ret = True
@@ -203,8 +212,8 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 					if len(my_ordner) == 0:								# leer: Initialisierung
 						my_ordner = ORDNER
 					my_ordner.insert(0, u"*ohne Zuordnung*")
-
-					ret = xbmcgui.Dialog().select(u'Ordner wählen', my_ordner, preselect=0)
+					head = u'Ordner wählen für: %s' % (name)
+					ret = xbmcgui.Dialog().select(head, my_ordner, preselect=0)
 					ordner=oldordner									# Fallback: vorh. Ordner
 					if ret >= 0:
 						ordner = my_ordner[ret]
@@ -228,7 +237,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			merkliste = py2_decode(merkliste) + py2_decode(item) + "\n"
 		
 		if ordner != oldordner:
-			ret, err_msg = save_merkliste(fname, merkliste, my_ordner)
+			ret, err_msg = save_merkliste(merkliste, my_ordner)
 		if ret:															# Merkliste gespeichert
 			if ordner == oldordner:
 				msg1 = u"Ordner unverändert" 
@@ -324,17 +333,27 @@ def sync_list_intern(src_file, dest_file):
 	
 # ----------------------------------------------------------------------
 # Speichert die Merkliste, zusammen mit Ordnerinfo + Ordner 
-#	ordner: mit ReadFavourites eingelesene Ordner
-#
-def save_merkliste(fname, merkliste, my_ordner):
+#	merkliste, my_ordner: mit ReadFavourites eingelesen,
+#	 	Formate: merkliste=string, my_ordner=list
+#	
+def save_merkliste(merkliste, my_ordner):
 	PLog('save_merkliste:')
 	
+	fname = WATCHFILE		
+	if SETTINGS.getSetting('pref_merkextern') == 'true':	# externe Merkliste gewählt?
+		fname = SETTINGS.getSetting('pref_MerkDest_path')
+		if fname == '' or xbmcvfs.exists(fname) == False:
+			PLog("merkextern: %s, %d" % (fname, xbmcvfs.exists(fname)))
+			msg1 = u"Merkliste nicht gefunden\nBitte Settings überprüfen"
+			return False, err_msg	
+	PLog(fname)
+
 	# Merkliste + Ordnerinfo + Ordner:	
 	err_msg = ''												# gefüllt von Aufrufer 
-	my_ordner = " ".join(my_ordner)
-	if my_ordner == '':
+	if my_ordner == '' or my_ordner == []:						# Fallback Basis-Ordner-Liste
 		my_ordner = ORDNER
-	ordner_info = "\n".join(ORDNER_INFO)	
+	my_ordner = " ".join(my_ordner)
+	ordner_info = "\n".join(ORDNER_INFO)
 	merkliste = "<merkliste>\n%s</merkliste>\n\n%s\n\n<ordnerliste>%s</ordnerliste>\n"	%\
 		(merkliste, ordner_info, my_ordner)		
 	try:
@@ -390,7 +409,7 @@ def watch_filter(delete=''):
 		return
 		
 	my_items, my_ordner = ReadFavourites('Merk')	# Ordnerliste holen	
-	my_ordner = check_ordner(my_ordner)
+	my_ordner = check_ordnerlist(my_ordner)
 	my_ordner.insert(0, u"*ohne Zuordnung*")
 	
 	preselect = 0									# Vorauswahl
@@ -416,8 +435,8 @@ def watch_filter(delete=''):
 #	fehlerh. (geladen mit ReadFavourites)
 # Check entfällt, falls Ordner abgewählt
 #	
-def check_ordner(my_ordner):
-	PLog("check_ordner: %d" % len(my_ordner))
+def check_ordnerlist(my_ordner):
+	PLog("check_ordnerlist: %d" % len(my_ordner))
 	PLog(my_ordner)
 	
 	if SETTINGS.getSetting('pref_merkordner') == 'true':
@@ -450,7 +469,158 @@ def clean_Plot(Plot):
 	Plot = Plot.replace('||||||', '')	# LF-Ruinen entfernen (3 Zeilen-Mark.)		
 	# PLog(Plot)	# Debug
 	return Plot	
+
+# ----------------------------------------------------------------------
+# Verwaltung Merklisten-Ordner (Komfort-Lösung statt manuell via Editor)
+# 
+#
+def do_folder():
+	PLog("do_folder:")
+
+	dialog = xbmcgui.Dialog()
+	head = 'Merklisten-Ordner bearbeiten'
+	slist = [	u'INFO: aktuelle Liste der Merklisten-Ordner',
+				u'INFO: Regeln für neue Merklisten-Ordner',
+				u'Ordner entfernen (nur möglich, wenn nicht verknüpft)',
+				u'Neuen Ordner hinzufügen (bitte die Regeln beachten - s.o.)',
+				u'[COLOR red]RESET:[/COLOR] Basis-Ordnerliste wiederherstellen'] 
+	while 1:													# Dauerschleife bis Abbruch
+		ret = xbmcgui.Dialog().select(head, slist)
+		PLog("ret: %d" % ret)
+		if ret == -1 or ret == None:
+			break
 			
+		icon = R(ICON_DIR_WATCH)
+		my_items, my_ordner_list = ReadFavourites('Merk')		
+		my_ordner_list = check_ordnerlist(my_ordner_list)		# Fallback Basis-Ordner-Liste
+		my_ordner_list = sorted(my_ordner_list)
+		merkliste = " ".join(my_items)							# speichern als String
+		merkliste = py2_decode(merkliste) 
+		
+		#-----------------------------------------------------	# Ordner listen
+		if ret == 0:											
+			my_ordner_list = "\n".join(my_ordner_list)
+			ret1 = dialog.textviewer(slist[0], my_ordner_list)
+			if ret1 == None:							
+				continue
+			PLog("ret1: %d" % ret1)
+
+		#-----------------------------------------------------	# Regeln für neue Ordner listen
+		if ret == 1:											
+			my_info_list = "\n".join(ORDNER_INFO)
+			ret2 = dialog.textviewer(slist[1], my_info_list)
+			if ret2 == None:							
+				continue
+			PLog("ret2: %d" % ret2)
+
+		#-----------------------------------------------------	# Ordner entfernen
+		if ret == 2:	
+			ret3 = xbmcgui.Dialog().select(slist[2], my_ordner_list)
+			PLog("ret3: %d" % ret3)
+			if ret3 == -1:										# Abbruch, Esc
+				continue
+				
+			ordner=''
+			ordner = my_ordner_list[ret3]
+			PLog("ordner: " + ordner)
+			msg1 = u"Ordner [COLOR red]%s[/COLOR] wirklich löschen?" % ordner 
+			ret4 = MyDialog(msg1=msg1, msg2='', msg3='', ok=False, cancel='Abbruch', yes='JA', heading=slist[1])
+			PLog("ret4: %d" % ret4)
+			if ret4 == 1:
+				exist, link_cnt = check_ordner(ordner, my_ordner_list, my_items) # Abgleich Ordner mit Ordnerliste
+				if link_cnt > 0:
+					msg2=''; msg3=''
+					msg1 = u"Ordner [COLOR red]%s[/COLOR] ist bereits verknüpft." % ordner
+					if link_cnt:
+						msg2 = u"Anzahl der Verknüpfungen: %d" % link_cnt
+						msg3 = u"Ordner kann nicht  entfernt werden." 
+					MyDialog(msg1, msg2, msg3)
+				else:
+					my_ordner_list.remove(ordner)
+					ret, err_msg = save_merkliste(merkliste, my_ordner_list)
+					# PLog(my_ordner_list)	# Debug
+					msg1 = u'Merklisten-Ordner:'
+					msg2 = u"[COLOR red]%s[/COLOR] entfernt" % ordner 
+					if ret == False:
+						msg2 = err_msg
+					xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
+
+		#-----------------------------------------------------	# Ordner hinzufügen
+		if ret == 3:											
+			new = get_keyboard_input('Neuen Ordner hinzufügen')	# Modul util
+			if  new == None or new.strip() == '':
+				continue
+			new_org = py2_decode(new)	
+			PLog(new)
+			
+			# kein 100%iger Schutz erforderlich:
+			no_chars = [u'#',u' ',u'*',u'+',u'|',u',',u'!',u'"',u'$',u'%',u'(',u')',
+						u'?',u'\\',u'~',u'\'',u';',u':',u'.',u'^',u'°']
+			notsafe=False
+			for char in no_chars:
+				if char in new:
+					if char == ' ':
+						char = 'Leerzeichen'
+					notsafe=True
+					msg1 = u'unerlaubtes Zeichen: [COLOR red]%s[/COLOR]' % char
+					MyDialog(msg1, '', '')
+					break
+			if notsafe:	
+				continue
+					
+			my_ordner_list.append(new)
+			ret, err_msg = save_merkliste(merkliste, my_ordner_list)
+			#PLog(my_ordner_list)	# Debug
+			msg1 = u'Merklisten-Ordner:'
+			msg2 = u"[COLOR red]%s[/COLOR] hinzugefügt" % new 
+			if ret == False:
+				msg2 = err_msg
+			xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
+			
+		#-----------------------------------------------------	# Basis-Ordnerliste wiederherstellen
+		if ret == 4:											
+			msg1 = u"Basis-Ordnerliste wirklich wiederherstellen?"
+			msg2 = u"Eigene Ordner und das Filtern damit entfallen."
+			msg3 = u"Verknüpfungen mit diesen Ordnern bleiben aber erhalten."
+			ret5 = MyDialog(msg1, msg2, msg3, ok=False, cancel='Abbruch', yes='JA', heading=slist[4])
+			PLog("ret5: %d" % ret5)
+			
+			if ret5 == 1:
+				my_ordner_list=[]
+				ret, err_msg = save_merkliste(merkliste, my_ordner_list)
+				#PLog(my_ordner_list)	# Debug
+				msg1 = u'Merklisten-Ordner:'
+				msg2 = u"Basis-Ordnerliste wiederhergestellt"
+				if ret == False:
+					msg2 = err_msg
+				xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
+		
+	return
+				
+# ----------------------------------------------------------------------
+# Aufrufer: do_folder
+# checkt zu löschenden Ordner auf Existenz und Verknüpfungen mit
+#	Einträgen der Merkliste (my_items)
+# Rückabe: exist  (bool), link_cnt (int) - ev. mit Rückgabe
+#	link_list erweitern
+#
+def check_ordner(ordner, my_ordner_list, my_items):
+	PLog("check_ordner:")
+
+	exist=False; link_cnt=0
+	if ordner in my_ordner_list == False:		# Ordner ist nicht vorh. + nicht verknüpft
+		return exist, link_cnt
+	else:
+		exist=True; link_list=[]				# link_list bisher nicht genutzt
+		for item in my_items:
+			oname = stringextract('ordner="', '"', item)
+			if oname == ordner:
+				iname = stringextract('name="', '"', item)
+				link_cnt = link_cnt + 1
+				link_list.append(iname)
+		# PLog(link_list)	# Debug
+		return exist, link_cnt
+
 ######################################################################## 			
 # argv-Verarbeitung wie in router (Haupt-PRG)
 # Beim Menü Favoriten (add) endet json.loads in exception
@@ -479,9 +649,9 @@ except Exception as exception:						# Bsp. Hinzufügen von Favoriten
 	err_msg = str(exception)
 	msg3=''
 	if name:
-		msg3 = "Eintrag >%s<" % name
-	msg1 = "dieser Eintrag kann nicht verarbeitet werden."
-	msg2 = "Fehler: %s" % err_msg
+		msg3 = u"Eintrag >%s<" % name
+	msg1 = u"dieser Eintrag kann nicht verarbeitet werden."
+	msg2 = u"Fehler: %s" % err_msg
 	heading='Fehler Merkliste'
 	xbmcgui.Dialog().ok(heading, msg1, msg2, msg3)
 	exit()
@@ -503,7 +673,9 @@ if 'filter' in action:													# Filter-Aktionen:
 		watch_filter()													# Filter setzen
 	if action == 'filter_delete':
 		watch_filter(delete=True)										# Filter (MERKFILTER) löschen
-else:																	# Merklisten-Aktionen:
+	if action == 'filter_folder':										# Merklisten-Ordner bearbeiten (add/remove)
+		do_folder()
+else:																	# Merklisten-Aktionen:	
 	Plot = clean_Plot(Plot) 
 	msg1, err_msg, item_cnt = Watch_items(action,name,thumb,Plot,url)	# Einträge add / del / folder
 	msg2 = err_msg
