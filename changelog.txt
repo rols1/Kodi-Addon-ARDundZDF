@@ -12,6 +12,14 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.09.2020 3.3.8
+			AudioStartLive: Fix Umlaut bei Zusammensetzung der Streamlinks (Live-
+			Sender der Audiothek).
+			AudioLiveSingle: fehlenden Livestream abgefangen (Bsp.: MDR Wissen).
+			ARDSport: zusätzl. Livestream-Button für MDR-Sachsen Fußball-Livestream.
+			PlayAudio: erweitert für m3u-Link (Verwendung des 1. Streams in der m3u-
+			Playlist).
+
 20.09.2020 3.3.7 Erweiterung: Merklisten-Ordner bearbeiten
 			check_ordner (Modul Merkliste): umbenannt in check_ordnerlist.
 			Modul Merkliste: erweitert mit Ordnerverwaltung (listen, hinzufügen, löschen, 

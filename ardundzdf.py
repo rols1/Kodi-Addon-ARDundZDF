@@ -47,8 +47,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.3.7'
-VDATE = '20.09.2020'
+VERSION = '3.3.8'
+VDATE = '22.09.2020'
 
 #
 #
@@ -1254,12 +1254,16 @@ def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestr
 			img 	= stringextract('image_16x9:"', '"', rec)		
 			img		= img.replace('{width}', '640')	
 			descr 	= stringextract('synopsis:"', '",', rec)	
-				
-			url 	= "{0}/{1}/{2}".format(path, my_sender, title)	# nicht website_url verwenden
+			
+			title=py2_decode(title)
+			# Zusammensetzung Streamlink plus Entf. Sonderzeichen:
+			url 	= u"{0}/{1}/{2}".format(path, my_sender, title)	# nicht website_url verwenden
 			url		= url.lower()
 			url= url.replace(' ', '-')			# Webseiten-URL: Blanks -> -
 			url= url.replace(',', '-')			# dto Komma -> -
+			url= url.replace(u'ü', '-')			# MDR THÜRINGEN
 			url= (url.replace("b'", '').replace("'", ''))   # Byte-Mark entfernen
+			
 			if my_sender == 'funk':
 				url = "https://www.ardaudiothek.de/sender/funk/funk"		# Korrektur  für funk
 			
@@ -1298,6 +1302,11 @@ def AudioLiveSingle(url, title, thumb, Plot):		# startet einzelnen Livestream f�
 	url = stringextract('playback_url:"', '"', page)
 	url= url.replace('\\u002F', '/')
 	PLog(url)
+	if 'playback_url:"' not in url:					# Bsp.: MDR Wissen
+		msg1 = u"kein Livestream gefunden für: %s" % title
+		MyDialog(msg1, '', '')	
+		return li
+			
 	PlayAudio(url, title, thumb, Plot, url_template='1')  # direkt	
 	
 	return	
@@ -2388,6 +2397,19 @@ def ARDSport(title):
 	img = "https://www.sportschau.de/resources/img/sportschau/banner/logo_base.png"
 	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
 	PLog(onlySender)
+	
+	# Livestream: MDR-Sachsen Fußball-Livestream Audio (nicht in livesenderTV.xml)
+	title = 'MDR-Sachsen Fußball-Livestream Audio'	
+	PLog(title)
+	thumb = "https://www.sportschau.de/resources/img/sportschau/banner/logo_base.png"
+	url = "http://avw.mdr.de/streams/284281-0_mp3_high.m3u"
+	tag = "nur Audio"
+	summ = "3. Liga und DFB-Pokal"
+	title=py2_encode(title); url=py2_encode(url); thumb=py2_encode(thumb); 
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
+		quote(title), quote(thumb), quote_plus(title))
+	addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
+		tagline=tag, summary=summ, mediatype='music')
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -6273,6 +6295,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		# 								
 		title = stringextract('<title>', '</title>', element)
 		if onlySender:									# Button nur für diesen Sender
+			title=py2_encode(title); onlySender=py2_encode(onlySender) 
 			if title != onlySender:
 				continue
 			
@@ -6453,7 +6476,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 	# Für Kodi: m3u8-Links abrufen, speichern und die Datei dann übergeben - direkte
 	#	Übergabe der Url nicht abspielbar
 	# is_playable ist verzichtbar
-	if url_m3u8.find('.m3u8') >= 0:				# häufigstes Format
+	if url_m3u8.find('.m3u8') >= 0: # häufigstes Format
 		PLog(url_m3u8)
 		if url_m3u8.startswith('http'):			# URL extern? (lokal entfällt Eintrag "autom.")
 												# Einzelauflösungen + Ablage master.m3u8:

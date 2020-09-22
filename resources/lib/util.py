@@ -2436,6 +2436,16 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 		if url.startswith('smb://') == False:	# keine Share
 			url = os.path.abspath(url)
 	
+	# 1. Url einer Playlist auspacken, Bsp.: MDR-Sachsen Fußball-Livestream
+	#	bei Bedarf ausbauen (s. get_m3u Tunein2017)
+	if url.startswith('http') and url.endswith('.m3u'):  # Bsp.: avw.mdr.de/streams/284281-0_mp3_high.m3u
+		page, msg = get_page(path=url)	
+		if page:
+			lines =page.splitlines()	
+			for line in lines:
+				if line.startswith('http'):
+					url = line
+	
 	PLog('Player_Url: ' + url)
 
 	li = xbmcgui.ListItem(path=url)				# ListItem + Player reicht für BR
