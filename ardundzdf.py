@@ -47,7 +47,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.3.8'
+VERSION = '3.3.9'
 VDATE = '22.09.2020'
 
 #
@@ -1302,10 +1302,10 @@ def AudioLiveSingle(url, title, thumb, Plot):		# startet einzelnen Livestream f√
 	url = stringextract('playback_url:"', '"', page)
 	url= url.replace('\\u002F', '/')
 	PLog(url)
-	if 'playback_url:"' not in url:					# Bsp.: MDR Wissen
+	if 'playback_url:"' not in page:					# Bsp.: MDR Wissen
 		msg1 = u"kein Livestream gefunden f√ºr: %s" % title
 		MyDialog(msg1, '', '')	
-		return li
+		return
 			
 	PlayAudio(url, title, thumb, Plot, url_template='1')  # direkt	
 	

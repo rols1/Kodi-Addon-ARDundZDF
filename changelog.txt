@@ -12,6 +12,10 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.09.2020 3.3.9
+			AudioLiveSingle: Fix Schreibfehler url -> page (Livestreams angeblich nicht 
+			gefunden).
+
 22.09.2020 3.3.8
 			AudioStartLive: Fix Umlaut bei Zusammensetzung der Streamlinks (Live-
 			Sender der Audiothek).
