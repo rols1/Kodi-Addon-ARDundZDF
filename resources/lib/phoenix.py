@@ -7,7 +7,7 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-#	Stand: 09.09.2020
+#	Stand: 24.09.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -168,7 +168,7 @@ def get_live_data():
 		descr=cleanhtml(descr);
 		descr=unescape(descr);
 		
-	zdf_streamlinks = ardundzdf.get_ZDFstreamlinks(skip_log=True)
+	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
 	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 	href=''
 	for line in zdf_streamlinks:

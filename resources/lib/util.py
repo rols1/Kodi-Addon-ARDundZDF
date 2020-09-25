@@ -863,7 +863,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 #	entfallen
 # 02.09.2020 Rückgabe page='' bei PDF-Seiten
 #
-def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True):
+def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True, decode=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
 
 	if header:									# dict auspacken
@@ -972,8 +972,10 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		PLog(msg)
 		return page, msg
 		
-	if page:				
-		page = page.decode('utf-8')	
+	if page:
+		if decode:				
+			page = page.decode('utf-8')	
+		pass
 	if JsonPage:
 		PLog('json_load: ' + str(JsonPage))
 		PLog(len(page))
@@ -1343,7 +1345,7 @@ def unescape(line):
 		#	"sächsischer Genetiv", Bsp. Scott's
 		#	Carriage Return (Cr)
 		(u"–", u"-"), (u"&#x27;", u"'"), (u"&#xD;", u""), (u"\xc2\xb7", u"-"),
-		(u'undoacute;', u'o'), (u'&eacute;', u'e'), (u'&egrave;', u'e'),
+		(u'undoacute;', u'o'), (u'&eacute;', u'e'), (u'&oacute;', u'o'), (u'&egrave;', u'e'),
 		(u'&atilde;', u'a'), (u'quot;', u' '), (u'&#10;', u'\n'),
 		(u'&#8222;', u' '), (u'&#8220;', u' '), (u'&#034;', u' '),
 		(u'&copy;', u' | ')):

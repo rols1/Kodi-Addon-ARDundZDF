@@ -4,8 +4,7 @@
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
 from __future__ import division				# // -> int, / -> float
 from __future__ import print_function		# PYTHON2-Statement -> Funktion
-#from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
-from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui
+from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
 
 # o. Auswirkung auf die unicode-Strings in PYTHON3:
 from kodi_six.utils import py2_encode, py2_decode
@@ -396,10 +395,10 @@ def Main():
 	# 29.09.2019 Umstellung Livestreams auf ARD Audiothek
 		
 	# Button für Livestreams anhängen (eigenes ListItem)		# Radio-Livestreams
-	tagline = 'Radio-Livestreams stehen auch in der neuen ARD Audiothek zur Verfügung'
+	tagline = 'eine Auswahl von Radio-Livestreams steht auch in der neuen ARD Audiothek zur Verfügung'
 	title = 'Radio-Livestreams'	
-	fparams="&fparams={'title': '%s', 'myhome': '%s'}" % (title, NAME)	
-	addDir(li=li, label=title, action="dirList", dirID="AudioStartLive", fanart=R(FANART), 
+	fparams="&fparams={}" 	
+	addDir(li=li, label=title, action="dirList", dirID="AudioLiveAll", fanart=R(FANART), 
 		thumb=R(ICON_MAIN_RADIOLIVE), tagline=tagline, fparams=fparams)
 		
 		
@@ -1173,25 +1172,77 @@ def AudioStart_AZ_content(button):
 	return AudioContentJSON(title, page, AZ_button=button)	
 
 #----------------------------------------------------------------
-# Website: http://web.ard.de/radio/radionet/liste.php?ressort=alle&channel=
-# HTML-Seite, PHP-Steuerung - lt. Impressum Südwestrundfunk Mainz
-# Gesamtliste wie Website - Trennung nach Sendeanstalten nicht 
-# 	möglich, da url-Basis nicht immer gleich.
-# Die mp3_url kann nicht direkt verwendet werden - sie zeigt auf
-#	die Playerseite von web.ard.de. Der enthaltene Streamlink 
-#	wird von AudioLiveSingle ermittelt und an PlayAudio durch-
-#	gereicht.
-#   
-# 15.05.2019 Wechsel zur Website https://www.ardaudiothek.de/sender	-  Grund
-#	keine sinnvolle Gliederung der 128 Sender möglich, Liste unübersichtlich.
-# 1. Durchlauf: Senderliste		2. Durchlauf: einzelne Streams
-# Problem: der Streamlink muss von einer zusätzl. Seite der Audiothek ge-
-#	holt werden. Der Link zu dieser Seite ist script-generiert  und muss
-#	hier nachgebildet werden (Blanks -> -).
-#  29.09.2019 Umstellung Hauptmenü: Nutzung AudioStartLive (Codebereinigung -
-#		s. Hinw. Hauptmenü + changelog.txt)
-# 09.09.2020 Mitnutzung durch AudioSenderPrograms (programs=yes)
+# Radio-Live-Sender via Haupt-Menü "Radio-Livestreams"
+# 25.09.2020 wegen fehlender regionaler Sender in der Audiothek Nutzung 
+#	der Webseite web.ard.de/radio/radionet/index_infowellen.php - 
+#	Redaktion: SÜDWESTRUNDFUNK
 #
+def AudioLiveAll(anstalt=''):
+	PLog('AudioLiveAll: ' + anstalt)
+	
+	RSENDER = ['BR|radio-br.png','DLF|radio-dlf.png', 'HR|radio-hr.png','MDR|radio-mdr.png',
+			'NDR|radio-ndr.png','RB|radio-bremen.png','RBB|radio-rbb.png','SR|radio-sr.png',
+			'SWR|radio-swr.png','WDR|radio-wdr.png'
+			]
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)									# Home-Button
+
+	if anstalt == '':										# 1. Durchlauf: Sendeanstalten
+		for item in RSENDER:
+			title, img  = item.split('|')
+
+			fparams="&fparams={'anstalt': '%s'}" % title
+			addDir(li=li, label=title, action="dirList", dirID="AudioLiveAll", 
+				fanart=R(ICON_MAIN_RADIOLIVE), thumb=R(img), fparams=fparams)
+				
+		xbmcplugin.endOfDirectory(HANDLE)
+		return	 
+	#-------------------------------------------------------# 2. Durchlauf: Einzelsender	
+	base = "http://web.ard.de"
+	path = base + "/radio/radionet/liste.php?ressort=alle"
+	page, msg = get_page(path=path, decode=False)	
+	if page == '':	
+		msg1 = "Fehler in AudioStartLive:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	PLog(len(page))	
+
+	slist = blockextract('<div class="channelHolder">', page)
+	PLog(len(slist))	
+	
+	for rec in slist:
+		img = stringextract('img src="', '"', rec)
+		img = base + img
+		title = stringextract('?sender=', '&', rec)			# Bsp.: ..php?sender=1LIVE&stream=..
+		title = unquote(title); title = unescape(title)
+		url = stringextract('&stream=', '&player=mp3', rec)
+		url = unquote(url)
+		host = stringextract('//', '/', url)				# Abgleich mit anstalt
+		PLog(host)
+		mark = '%2F{0}%2F'.format(up_low(anstalt, mode='low'))	# Bsp.: ..addradio.de%2Fbr%2Fbrklassik.. 
+		if anstalt == 'SR':										# beim SR folgt direkt die Sendernr.
+			mark = '%2F{0}'.format(up_low(anstalt, mode='low'))	# Bsp.: ..%2Fsr3m.akacast.akamaistream..
+		if mark not in rec:
+			continue
+	
+		PLog(title); PLog(url);
+		title=py2_encode(title); url=py2_encode(url);
+		img=py2_encode(img); 
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': ''}" % (quote(url), 
+			quote(title), quote(img))
+		addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, 
+			fparams=fparams, mediatype='music')
+	
+	xbmcplugin.endOfDirectory(HANDLE)
+
+#----------------------------------------------------------------
+# Liste der Livestreams der Audiothek (nur Programmsender) - alle
+#	Radiosender der ARD in AudioStartLive (s.o.) via Haupt-Menü
+#	"Radio-Livestreams"
+# 09.09.2020 Mitnutzung durch AudioSenderPrograms (programs=yes)
+# 
 def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestreams 
 	PLog('AudioStartLive: ' + sender)
 	li = xbmcgui.ListItem()

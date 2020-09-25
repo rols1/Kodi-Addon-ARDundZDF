@@ -12,6 +12,19 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+
+25.09.2020 3.4.0 Neuordnung Radiosender für Haupt-Menü "Radio-Livestreams": Quelle
+			web.ard.de/radio/radionet (128 Sender), neue Funktion AudioLiveAll.
+			get_page (Modul util): Coding des Inhalts abhängig von Param. decode.
+			unescape (Modul util): '&oacute;' -> 'o' für spanisch.
+			Icons hinzugefügt: 10 Radioanstalten (minim. Farbpalette, > 40 KByte)
+			Livestream-Ermittlung in den Modulen arte, phoenix, childs: Importanweisung
+			korrigiert (ardundzdf.get_ZDFstreamlink -> get_ZDFstreamlink) - Funktion 
+			nun in Modul util.
+			SingleVideo (Modul arte): Auswahl master.m3u8 via Param. "versionShortLibelle"
+			("DE" oder "FR") - bisher erste gefundene master.m3u8. Mehrkanalige m3u8 in
+			den Quellen nicht vorhanden. Neue Funktion get_masterm3u8.	
+
 22.09.2020 3.3.9
 			AudioLiveSingle: Fix Schreibfehler url -> page (Livestreams angeblich nicht 
 			gefunden).

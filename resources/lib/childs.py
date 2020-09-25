@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 16.09.2020
+#	Stand: 24.09.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -41,7 +41,7 @@ import datetime, time
 import re				# u.a. Reguläre Ausdrücke
 import string
 
-import ardundzdf					# -> ParseMasterM3u, transl_wtag, get_query, get_ZDFstreamlinks
+import ardundzdf					# -> ParseMasterM3u, transl_wtag, get_query
 from resources.lib.util import *
 
 
@@ -278,7 +278,7 @@ def Kika_Live():
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
 	import resources.lib.EPG as EPG
-	zdf_streamlinks = ardundzdf.get_ZDFstreamlinks()
+	zdf_streamlinks = get_ZDFstreamlinks()
 	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 	for line in zdf_streamlinks:
 		webtitle, href, thumb, tagline = line.split('|')

@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 09.09.2020
+#	Stand: 24.09.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -139,7 +139,7 @@ def get_live_data(name):
 			descr = ''
 		PLog(title); PLog(img); PLog(sname); PLog(stime); PLog(vonbis); 
 
-	zdf_streamlinks = ardundzdf.get_ZDFstreamlinks(skip_log=True)
+	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
 	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 	for line in zdf_streamlinks:
 		webtitle, href, thumb, tagline = line.split('|')
@@ -404,6 +404,7 @@ def Beitrag_Liste(url, title):
 # 14.08.2020 Beschränkung auf deutsche + concert-Streams entfernt
 #	(Videos möglich mit ausschl. franz. Streams), master.m3u8 wird
 #	unverändert ausgewertet.
+# 24.09.2020 Filterung master.m3u8 nach "DE" oder "FR"
 #
 def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	PLog("SingleVideo: " + pid)
@@ -426,7 +427,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	formitaeten = blockextract('"id":"H', page) # Bsp. "id":"HTTPS_MQ_1", "id":"HLS_XQ_1"
 	PLog(len(formitaeten))
 	
-	form_arr = []; href_m3u8=''	
+	form_arr = []; rec_list=[]	
 	for rec in formitaeten:	
 		r = []
 		mediaType = stringextract('"mediaType":"',  '"', rec)
@@ -447,8 +448,14 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 		form_arr.append(r)
 		
 		if 'master.m3u8' in rec:				# master.m3u8 für Sofortstart holen
-			href_m3u8 = stringextract('url":"', '"', rec)
+			rec_list.append(rec)
 
+	href_m3u8 = get_masterm3u8(rec_list)		# passende master.m3u8 wählen, s.u.
+	if href_m3u8 == '':							# Fallback: 1. master-Url der Seite
+		hls = stringextract('mediaType":"hls"', '"versionProg"', page)
+		href_m3u8 = stringextract('url":"', '"', hls)
+		PLog('Fallback_href_m3u8: ' + href_m3u8)
+	PLog('href_m3u8: ' + href_m3u8)
 						
 	form_arr.sort()								# Sortieren
 	if len(form_arr) == 0:
@@ -462,6 +469,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 		Plot_par = "%s||||%s" % (tag, summ)
 	if SETTINGS.getSetting('pref_video_direct') == 'true': 	# or Merk == 'true':	# Sofortstart
 		PLog('Sofortstart: arte SingleVideo')
+		PLog('Bitrate: %s, %s' % (bitrate, size)
 		li.setProperty('IsPlayable', 'false')				# verhindert wiederh. Starten nach Stop
 		PlayVideo(url=href_m3u8, title=title, thumb=img, Plot=Plot_par)
 		return
@@ -503,6 +511,33 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+# ----------------------------------------------------------------------
+# Muster versionShortLibelle (Bsp.): "DE", FR", "UT (frz.)", 
+#	"OmU-ESP", "OmU-ITA"
+
+def get_masterm3u8(rec_list):					# passende master.m3u8 wählen
+	PLog("get_masterm3u8: ")
+	PLog(len(rec_list))
+	
+	FR_list=[]; DE_list=[]
+	for rec in rec_list:
+		if 'ShortLibelle":"FR"' in rec:
+			url = stringextract('url":"', '"', rec)
+			FR_list.append(url)
+		if 'ShortLibelle":"DE"' in rec:
+			url = stringextract('url":"', '"', rec)
+			DE_list.append(url)
+	
+	PLog(len(FR_list)); PLog('FR_list: ' + str(FR_list))
+	PLog(len(DE_list)); PLog('DE_list: ' + str(DE_list))
+	
+	if len(DE_list) > 0:						# Prio 1. Link DE
+		return DE_list[0]
+	if len(FR_list) > 0:						# 2. Link FR
+		return FR_list[0]
+	
+	return ''									# Fallback Aufrufer
+	
 # ----------------------------------------------------------------------
 # Cachezeit 12 Std. - Startseite wird nur zum Auslesen der Kategorien
 #	verwendet -> GetContent (1. Stufe)
