@@ -469,7 +469,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 		Plot_par = "%s||||%s" % (tag, summ)
 	if SETTINGS.getSetting('pref_video_direct') == 'true': 	# or Merk == 'true':	# Sofortstart
 		PLog('Sofortstart: arte SingleVideo')
-		PLog('Bitrate: %s, %s' % (bitrate, size)
+		PLog('Bitrate: %s, %s' % (bitrate, size))
 		li.setProperty('IsPlayable', 'false')				# verhindert wiederh. Starten nach Stop
 		PlayVideo(url=href_m3u8, title=title, thumb=img, Plot=Plot_par)
 		return
