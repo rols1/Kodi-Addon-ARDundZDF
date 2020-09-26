@@ -47,7 +47,7 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 VERSION = '3.4.0'
-VDATE = '25.09.2020'
+VDATE = '26.09.2020'
 
 #
 #
@@ -1176,13 +1176,28 @@ def AudioStart_AZ_content(button):
 # 25.09.2020 wegen fehlender regionaler Sender in der Audiothek Nutzung 
 #	der Webseite web.ard.de/radio/radionet/index_infowellen.php - 
 #	Redaktion: SÜDWESTRUNDFUNK
+# 
+# 26.09.2020 Anpassung für BR (neue Streamlinks),
+#	zusätzl. Param. sender für Ausgabe von Einzelsendern - Nutzung durch  
+#	ARDSportHoerfunkSingle
 #
-def AudioLiveAll(anstalt=''):
+def AudioLiveAll(anstalt='', sender=''):
 	PLog('AudioLiveAll: ' + anstalt)
+	PLog(sender)
+	CacheTime = 6000										# 1 Std.
 	
 	RSENDER = ['BR|radio-br.png','DLF|radio-dlf.png', 'HR|radio-hr.png','MDR|radio-mdr.png',
 			'NDR|radio-ndr.png','RB|radio-bremen.png','RBB|radio-rbb.png','SR|radio-sr.png',
 			'SWR|radio-swr.png','WDR|radio-wdr.png'
+			]
+			
+	# 26.09.2020 neue Adressen für BR
+	# https://www.br.de/unternehmen/inhalt/technik/nutzung-mp3-livestreams-100.html
+	BR_LIST = ['B5 aktuell|https://streams.br.de/b5aktuell_2.m3u', 'B 5 plus|https://streams.br.de/b5plus_2.m3u', 
+		'BAYERN 1|https://streams.br.de/bayern1fran_2.m3u', 'Bayern 2|https://streams.br.de/bayern2nord_2.m3u', 
+		'BAYERN 3|https://streams.br.de/bayern3_2.m3u', 'BR Heimat|https://streams.br.de/brheimat_2.m3u', 
+		'Bayern plus|https://streams.br.de/bayernplus_2.m3u', 'BR-Klassik|https://streams.br.de/br-klassik_3.m3u', 
+		'PULS|https://streams.br.de/puls_2.m3u'
 			]
 	
 	li = xbmcgui.ListItem()
@@ -1196,14 +1211,28 @@ def AudioLiveAll(anstalt=''):
 			addDir(li=li, label=title, action="dirList", dirID="AudioLiveAll", 
 				fanart=R(ICON_MAIN_RADIOLIVE), thumb=R(img), fparams=fparams)
 				
+		title = u"Die Fussball-Bundesliga im ARD-Hörfunk"		# Bundesliga ARD-Hörfunk wie ARDSportHoerfunkSingle
+		href = 'https://www.sportschau.de/sportimradio/bundesligaimradio102.html'
+		img = R("radio-livestreams.png")
+		tag = u'An Spieltagen der Fußball-Bundesliga übertragen die Landesrundanstalten ' 
+		tag = tag + u'im ARD-Hörfunk die Spiele live aus dem Stadion mit der berühmten ARD-Schlusskonferenz.'
+		title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+		fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
+			quote(href), quote(img))
+		addDir(li=li, label=title, action="dirList", dirID="ARDSportHoerfunk", fanart=img, 
+			thumb=img, tagline=tag, fparams=fparams)					
+				
 		xbmcplugin.endOfDirectory(HANDLE)
 		return	 
 	#-------------------------------------------------------# 2. Durchlauf: Einzelsender	
 	base = "http://web.ard.de"
 	path = base + "/radio/radionet/liste.php?ressort=alle"
-	page, msg = get_page(path=path, decode=False)	
+	page = Dict("load", "AudioLiveAll", CacheTime=CacheTime)
+	if page == False:									# Cache miss - vom Sender holen
+		page, msg = get_page(path=path, decode=False)	
+		Dict("store", "AudioLiveAll", page) 			# Seite -> Cache: aktualisieren			
 	if page == '':	
-		msg1 = "Fehler in AudioStartLive:"
+		msg1 = "Fehler in AudioLiveAll:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
@@ -1220,14 +1249,25 @@ def AudioLiveAll(anstalt=''):
 		url = stringextract('&stream=', '&player=mp3', rec)
 		url = unquote(url)
 		host = stringextract('//', '/', url)				# Abgleich mit anstalt
-		PLog(host)
+		# PLog(host)	# Debug
 		mark = '%2F{0}%2F'.format(up_low(anstalt, mode='low'))	# Bsp.: ..addradio.de%2Fbr%2Fbrklassik.. 
 		if anstalt == 'SR':										# beim SR folgt direkt die Sendernr.
 			mark = '%2F{0}'.format(up_low(anstalt, mode='low'))	# Bsp.: ..%2Fsr3m.akacast.akamaistream..
+		if anstalt == 'BR':										# 26.09.2020 neue Adressen	
+			for s in BR_LIST:
+				if title in s:
+					url = s.split('|')[1]
+					break
+		
+
+		if sender:											# nur Einzelsender ausgeben
+			PLog("sender: " + sender)
+			if sender != title:
+				continue	
 		if mark not in rec:
 			continue
 	
-		PLog(title); PLog(url);
+		PLog('13Satz:'); PLog(title); PLog(url);
 		title=py2_encode(title); url=py2_encode(url);
 		img=py2_encode(img); 
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': ''}" % (quote(url), 
@@ -1287,7 +1327,7 @@ def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestr
 			addDir(li=li, label=title, action="dirList", dirID="AudioStartLive", fanart=img, 
 				thumb=img, fparams=fparams)
 	
-		xbmcplugin.endOfDirectory(HANDLE)
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	else:										# 2. Durchlauf: einzelne Streams
 		my_sender = sender
 		sender = sender.replace('radio-bremen', '"radio-bremen"')	# Quotes für Bremen
@@ -2350,8 +2390,20 @@ def ARDSport(title):
 			quote(href), quote(img))
 		addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
 			thumb=img, fparams=fparams)			
+	
+	#-------------------------------------------------------# Zusätze
+	title = u"Die Fussball-Bundesliga im ARD-Hörfunk"		# Bundesliga ARD-Hörfunk 
+	href = 'https://www.sportschau.de/sportimradio/bundesligaimradio102.html'
+	img = R("radio-livestreams.png")
+	tag = u'An Spieltagen der Fußball-Bundesliga übertragen die Landesrundanstalten ' 
+	tag = tag + u'im ARD-Hörfunk die Spiele live aus dem Stadion mit der berühmten ARD-Schlusskonferenz.'
+	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
+		quote(href), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportHoerfunk", fanart=img, 
+		thumb=img, tagline=tag, fparams=fparams)					
 	 	
-	title = "Moderatoren"									# Zusatz: Moderatoren 
+	title = "Moderatoren"									# Moderatoren 
 	href = 'https://www.sportschau.de/sendung/index.html'
 	img =  'https://www1.wdr.de/unternehmen/der-wdr/unternehmen/bundesliga-sportschau-jessy-wellmer-100~_v-gseaclassicxl.jpg'
 	tagline = 'Bilder von Moderatoren, Slideshow'
@@ -2375,9 +2427,9 @@ def ARDSport(title):
 	# Quellen für Event-Livestreams (Chrome-Dev.-Tools):	
 	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3666-ardjson.json
 	# https://lawm.sportschau.de/doha2019/live/livestreams170-extappjson.json		
-	title = "ARDSportschau Event-Livestream 1"
+	title = "NDR_ARD Event-Livestream 1"
 	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_1@430235/master.m3u8"
-	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
+	img = R('radio-ndr.png')
 	Merk = 'false'
 	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
 	if not mediatype:										# Einzelauflösungen
@@ -2396,9 +2448,9 @@ def ARDSport(title):
 			mediatype=mediatype, summary=summ) 		
 
 	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3670-ardjson.json
-	title = "ARDSportschau Event-Livestream 2"
+	title = "NDR_ARD Event-Livestream 2"
 	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_2@430236/master.m3u8"   
-	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
+	img = R('radio-ndr.png')
 	Merk = 'false'
 	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
 	if not mediatype:										# Einzelauflösungen
@@ -2417,9 +2469,9 @@ def ARDSport(title):
 			mediatype=mediatype, summary=summ) 		
 
 	#
-	title = "ARDSportschau Event-Livestream 3"
+	title = "NDR_ARD Event-Livestream 3"
 	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8"
-	img = "https://img.ardmediathek.de/standard/00/63/58/44/30/-295433861/16x9/1920?mandant=ard"
+	img = R('radio-ndr.png')
 	Merk = 'false'
 	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
 	if not mediatype:										# Einzelauflösungen
@@ -2590,6 +2642,74 @@ def ARDSportPanel(title, path, img):
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
+#--------------------------------------------------------------------------------------------------
+# BUNDESLIGA IM ARD-HÖRFUNK
+# img: radio-livestreams.png
+#
+def ARDSportHoerfunk(title, path, img):
+	PLog('ARDSportHoerfunk:'); 
+	fanimg = img
+	base = "https://www.sportschau.de"
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+
+	page, msg = get_page(path=path)		
+	if page == '':
+		msg1 = 'Seite kann nicht geladen werden.'
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return li 
+	PLog(len(page))
+	
+	content = blockextract('class="teaser"', page)	
+	PLog(len(content))
+	for rec in content:
+		if '<a href=' not in rec:				# Info Javascript-Fehler
+			continue
+		href = stringextract('href="', '"', rec)
+		img = stringextract('srcset="', '"', rec)
+		if img.startswith('http') == False:
+			img = base + img
+		title = stringextract('Audio:</span>', '</h4>', rec)
+		title=cleanhtml(title); title=title.strip(); title=repl_json_chars(title); 
+		summ = stringextract('teasertext">', '<strong>', rec)
+		summ = summ.replace('&nbsp;|&nbsp;', ''); summ=mystrip(summ)
+		summ=repl_json_chars(summ);  
+			
+		PLog('Satz:');PLog(title);PLog(img);PLog(summ[0:40]);
+		title=py2_encode(title); path=py2_encode(path)
+		img=py2_encode(img); summ=py2_encode(summ);
+		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
+			(quote(path), quote(title), quote(img), quote(summ))				
+		addDir(li=li, label=title, action="dirList", dirID="ARDSportHoerfunkSingle", fanart=fanimg, 
+			thumb=img, fparams=fparams, summary=summ)	
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+						
+#--------------------------------------------------
+# Streamausgabe von ARDSportHoerfunk
+#
+def ARDSportHoerfunkSingle(title, path, img, summ):
+	PLog('ARDSportHoerfunkSingle:') 
+	if '-' in title:
+		title = title.split(' - ')[0]		# Blanks: Baden-Württemberg nicht trennen
+	title = title.strip()
+	PLog(title)
+	
+	# Titel-Format: "Sportschau|anstalt|radionet", Bsp.: 'Bayern 1|br|BAYERN 1'
+	SLIST = ['Bayern 1|BR|BAYERN 1', 'Bremen 1|RB|Bremen Eins', 'hr 1|HR|hr1', 'mdr aktuell|MDR|MDR AKTUELL', 
+		'NDR 2|NDR|NDR 2', 'rbb Inforadio|RBB|Inforadio', 'SR 3|SR|SR 3 Saarlandwelle', 
+		u'SWR 1 Baden-Württemberg|SWR|SWR1 Baden-Württemberg', 'WDR 2|WDR|WDR 2'
+	]
+
+	for s in SLIST:
+		stitle, sanstalt, ssender = s.split('|')
+		if title == stitle:
+			PLog(stitle); PLog(sanstalt); PLog(ssender); 
+			AudioLiveAll(anstalt=sanstalt, sender=ssender)	# direkt
+			break
+	return
 #--------------------------------------------------------------------------------------------------
 # Bilder für ARD Sportschau, z.B. Moderatoren
 # Einzelnes Listitem in Video-Addon nicht möglich - s.u.

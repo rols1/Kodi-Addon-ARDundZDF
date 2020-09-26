@@ -13,6 +13,15 @@ CHANGE HISTORY
 --------------
 
 
+26.09.2020 3.4.1
+			Erweiterung ARD-Sportschau: Zusatzbutton "Die Fussball-Bundesliga im 
+			ARD-Hörfunk", neue Funktionen ARDSportHoerfunk + ARDSportHoerfunkSingle,
+			Anpassung AudioLiveAll.
+			Menü "Radio-Livestreams": Nutzung des o.g. Zusatzbutton.
+			AudioLiveAll: Cache-Nutzung für Livestreams (1 Std.).
+			ARDSport (Sportschau): Umbenennung Livestreams 1-3 ARDSportschau ->
+			NDR_ARD + Austausch WM-Icon -> NRD-Icon. 
+
 25.09.2020 3.4.0 Neuordnung Radiosender für Haupt-Menü "Radio-Livestreams": Quelle
 			web.ard.de/radio/radionet (128 Sender), neue Funktion AudioLiveAll.
 			get_page (Modul util): Coding des Inhalts abhängig von Param. decode.
