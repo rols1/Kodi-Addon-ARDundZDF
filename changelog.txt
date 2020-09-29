@@ -12,6 +12,16 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+28.09.2020 3.4.2
+			AudioLiveAll (Radio-Livestreams): CacheTime von 1 Std. auf 12 Std. 
+			verlängert.
+			AudioLiveAll: page -> str(page) - die str-Kodierung der hier unkodierten
+			Webseite ist für PY3 erf. unschädlich für PY2.
+			PlayAudio (Modul util): Abfrage auf Slide-Verzeichnis für Bildershow
+			eingefügt.
+			Bildgalerien: Fix OS-kompatiblen Pfad ('%s/%s' % (SLIDESTORE, fname) ->
+			os.path.join(SLIDESTORE, fname)) in BilderDasErsteSingle, ARDSportBilder,
+			XL_Bildgalerie, Bilder3satSingle
 
 26.09.2020 3.4.1
 			Erweiterung ARD-Sportschau: Zusatzbutton "Die Fussball-Bundesliga im 

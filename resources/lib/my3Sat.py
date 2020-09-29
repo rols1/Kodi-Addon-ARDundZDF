@@ -1487,7 +1487,7 @@ def Bilder3satSingle(title, path):
 		return li
 	
 	fname = make_filenames(title)			# Ordnername: Titel 
-	fpath = '%s/%s' % (SLIDESTORE, fname)
+	fpath = os.path.join(SLIDESTORE, fname)
 	PLog(fpath)
 	if os.path.isdir(fpath) == False:
 		try:  

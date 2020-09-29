@@ -63,3 +63,4 @@ NDR Coronavirus Update						| https://www.ardaudiothek.de/das-coronavirus-update
 
 
 Suchergebnis: corona		| https://www.ardaudiothek.de/api/search/corona?items_per_page=24&page=1
+Suchergebnis: philosophie		| https://www.ardaudiothek.de/api/search/philosophie?items_per_page=24&page=1

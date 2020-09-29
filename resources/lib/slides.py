@@ -58,6 +58,7 @@ CACHEFILE   = os.path.join(CACHEFOLDER, '%s')
 POS_FILE  	= os.path.join(CACHEFOLDER, 'position')
 ASFILE      = xbmc.translatePath('special://profile/advancedsettings.xml')
 IMAGE_TYPES = ('.jpg', '.jpeg', '.png', '.tif', '.tiff', '.gif', '.pcx', '.bmp', '.tga', '.ico')
+PLog("POS_FILE: " + POS_FILE)
 
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
@@ -89,6 +90,8 @@ class Slideshow(xbmcgui.WindowXMLDialog):
 			self._set_prop('Splash', 'hide')
 			# start slideshow
 			self._start_show(copy.deepcopy(self.items))
+		else:
+			_exit()
 
 	def _get_vars(self):
 		PLog('_get_vars')

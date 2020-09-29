@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.4.1'
-VDATE = '26.09.2020'
+VERSION = '3.4.2'
+VDATE = '28.09.2020'
 
 #
 #
@@ -989,7 +989,7 @@ def AudioStart(title):
 
 	# Liste der Rubriken: Themen + Livestreams fest (am Ende), der Rest 
 	#	wird im Web geprüft:
-	title_list = ['Highlights']
+	title_list = ['Highlights']								# Web: Entdecken (5 Beiträge)
 	if "Sendungsauswahl Unsere Favoriten" in page:
 		title_list.append('Unsere Favoriten')
 	if "Sendungsauswahl Themen" in page:
@@ -1184,8 +1184,8 @@ def AudioStart_AZ_content(button):
 def AudioLiveAll(anstalt='', sender=''):
 	PLog('AudioLiveAll: ' + anstalt)
 	PLog(sender)
-	CacheTime = 6000										# 1 Std.
-	
+	CacheTime = 43200										# 12 Std.: (60*60)*12
+ 	
 	RSENDER = ['BR|radio-br.png','DLF|radio-dlf.png', 'HR|radio-hr.png','MDR|radio-mdr.png',
 			'NDR|radio-ndr.png','RB|radio-bremen.png','RBB|radio-rbb.png','SR|radio-sr.png',
 			'SWR|radio-swr.png','WDR|radio-wdr.png'
@@ -1229,7 +1229,7 @@ def AudioLiveAll(anstalt='', sender=''):
 	path = base + "/radio/radionet/liste.php?ressort=alle"
 	page = Dict("load", "AudioLiveAll", CacheTime=CacheTime)
 	if page == False:									# Cache miss - vom Sender holen
-		page, msg = get_page(path=path, decode=False)	
+		page, msg = get_page(path=path, decode=False)	# -> str(page) erf., s.u.	
 		Dict("store", "AudioLiveAll", page) 			# Seite -> Cache: aktualisieren			
 	if page == '':	
 		msg1 = "Fehler in AudioLiveAll:"
@@ -1237,6 +1237,7 @@ def AudioLiveAll(anstalt='', sender=''):
 		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))	
+	page=str(page)
 
 	slist = blockextract('<div class="channelHolder">', page)
 	PLog(len(slist))	
@@ -1253,21 +1254,20 @@ def AudioLiveAll(anstalt='', sender=''):
 		mark = '%2F{0}%2F'.format(up_low(anstalt, mode='low'))	# Bsp.: ..addradio.de%2Fbr%2Fbrklassik.. 
 		if anstalt == 'SR':										# beim SR folgt direkt die Sendernr.
 			mark = '%2F{0}'.format(up_low(anstalt, mode='low'))	# Bsp.: ..%2Fsr3m.akacast.akamaistream..
-		if anstalt == 'BR':										# 26.09.2020 neue Adressen	
+			
+		if anstalt == 'BR':										# 26.09.2020 neue Adressen, Abgleich BR_LIST	
 			for s in BR_LIST:
 				if title in s:
 					url = s.split('|')[1]
-					break
-		
+					break	
 
 		if sender:											# nur Einzelsender ausgeben
-			PLog("sender: " + sender)
-			if sender != title:
+			if sender != title:								# Aufrufer stellt Treffer sicher
 				continue	
 		if mark not in rec:
 			continue
 	
-		PLog('13Satz:'); PLog(title); PLog(url);
+		PLog('13Satz:'); PLog(title); PLog(url); PLog(sender)
 		title=py2_encode(title); url=py2_encode(url);
 		img=py2_encode(img); 
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': ''}" % (quote(url), 
@@ -2740,7 +2740,7 @@ def ARDSportBilder(title, path, img):
 		return li
 		
 	fname = make_filenames(title)			# Ablage: Titel + Bildnr
-	fpath = '%s/%s' % (SLIDESTORE, fname)
+	fpath = os.path.join(SLIDESTORE, fname)
 	PLog(fpath)
 	if os.path.isdir(fpath) == False:
 		try:  
@@ -6876,7 +6876,7 @@ def BilderDasErsteSingle(title, path):
 		return li
 	
 	fname = make_filenames(title)			# Ordnername: Titel 
-	fpath = '%s/%s' % (SLIDESTORE, fname)
+	fpath = os.path.join(SLIDESTORE, fname)
 	PLog(fpath)
 	if os.path.isdir(fpath) == False:
 		try:  
@@ -9106,7 +9106,7 @@ def ZDF_BildgalerieSingle(path, title):
 		return li
 	
 	fname = make_filenames(title)			# Ordnername: Titel 
-	fpath = '%s/%s' % (SLIDESTORE, fname)
+	fpath = os.path.join(SLIDESTORE, fname)
 	PLog(fpath)
 	if os.path.isdir(fpath) == False:
 		try:  

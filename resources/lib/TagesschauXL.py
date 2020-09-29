@@ -578,7 +578,7 @@ def XL_Bildgalerie(path, title):
 	li = home(li, ID='TagesschauXL')										# Home-Button
 	
 	fname = make_filenames(title)			# Ablage: Titel + Bildnr
-	fpath = '%s/%s' % (SLIDESTORE, fname)
+	fpath = os.path.join(SLIDESTORE, fname)
 	PLog(fpath)
 	if os.path.isdir(fpath) == False:
 		try:  

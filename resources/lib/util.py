@@ -2496,6 +2496,12 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 				xbmc.Player().play(url, li, False)					# Start vor modaler Slideshow			
 				import resources.lib.slides as slides
 				PLog('Starte_SlideShow2: %s' % path)
+				if len(os.listdir(SETTINGS.getSetting('pref_slides_path'))) == 0:
+					msg1 = u'Verzeichnis für Slideshow nicht gefunden.'
+					msg2 = u'Bitte in den Settings überprüfen / einstellen.'
+					MyDialog(msg1, msg2, '')
+					return
+									
 				CWD = SETTINGS.getAddonInfo('path') 					# working dir
 				DialogSlides = slides.Slideshow('slides.xml', CWD, 'default')
 				DialogSlides.doModal()
