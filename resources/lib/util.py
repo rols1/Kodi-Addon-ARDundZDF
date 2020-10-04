@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 20.09.2020
+#	Stand 05.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -701,7 +701,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		# PLog('Plot: ' + Plot)
 		fparams_folder=''; fparams_filter=''; fparams_delete=''; 
 		fparams_change=''; fparams_record=''; fparams_recordLive='';
-		fparams_setting_sofortstart=''; fparams_do_folder=''								
+		fparams_setting_sofortstart=''; fparams_do_folder='';
+		fparams_rename='';								
 		
 		if filterstatus != 'set':									# Doppel im Hauptmenü vermeiden (s. home)
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# ständig: Umschalter Settings 
@@ -721,8 +722,14 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		
 		if merkname:												# Aufrufer ShowFavs (Settings: Ordner .. verwenden)
 			if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
-				# Param name reicht für folder + filter				# Ordner ändern / Filtern
 				label = merkname
+				# Param name reicht für folder, filter, rename		
+				fp = {'action': 'rename', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
+					'Plot': quote_plus(Plot),'url': quote_plus(add_url)}	
+				fparams_rename = "&fparams={0}".format(fp)
+				PLog("fparams_rename: " + fparams_rename[:100])
+				fparams_rename = quote_plus(fparams_rename)			# Umbenennen				
+																	# Ordner ändern / Filtern:
 				fp = {'action': 'folder', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
 					'Plot': quote_plus(Plot),'url': quote_plus(add_url)}	
 				fparams_folder = "&fparams={0}".format(fp)
@@ -807,8 +814,10 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_del)))
 	
-		if fparams_folder:											# Aufrufer ShowFavs s.o.
+		if fparams_folder or fparams_rename:						# Aufrufer ShowFavs s.o.
 			PLog('set_folder_context: ' + merkname)
+			commands.append(('Merklisten-Eintrag umbenennen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				% (MY_SCRIPT, HANDLE, fparams_rename)))
 			commands.append(('Merklisten-Eintrag zuordnen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_folder)))
 			commands.append(('Merkliste filtern', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
@@ -1268,6 +1277,20 @@ def my_rfind(left_pattern, start_pattern, line):  # sucht ab start_pattern rück
 			return leftpos, leftstring
 		i = i+1				
 	return -1, ''								# Fehler, wenn Anfang line erreicht
+#----------------------------------------------------------------
+# prüft Vorkommen von String insert in Liste my_items
+# Rückgabe False/True
+#  	
+def exist_in_list(insert, my_items):
+	PLog("exist_in_list:")	
+	try:
+		for item in my_items:
+			if insert in item:
+				return True
+	except Exception as exception:
+		PLog(str(exception))
+		
+	return False		
 #----------------------------------------------------------------  	
 # make_mark: farbige Markierung plus fett (optional	
 # Groß-/Kleinschreibung egal
@@ -1633,8 +1656,8 @@ def transl_pubDate(pubDate):
 #---------------------------------------------------------------- 	
 # Holt User-Eingabe für Suche ab
 #	s.a. get_query (für Search , ZDF_Search)
-def get_keyboard_input(head='Bitte Suchwort(e) eingeben'):
-	kb = xbmc.Keyboard('', head)
+def get_keyboard_input(line='', head='Bitte Suchwort(e) eingeben'):
+	kb = xbmc.Keyboard(line, head)
 	kb.doModal() # Onscreen keyboard
 	if kb.isConfirmed() == False:
 		return ""
@@ -2496,8 +2519,13 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 				xbmc.Player().play(url, li, False)					# Start vor modaler Slideshow			
 				import resources.lib.slides as slides
 				PLog('Starte_SlideShow2: %s' % path)
-				if len(os.listdir(SETTINGS.getSetting('pref_slides_path'))) == 0:
-					msg1 = u'Verzeichnis für Slideshow nicht gefunden.'
+				
+				try:
+					cnt = len(os.listdir(SETTINGS.getSetting('pref_slides_path')))
+				except:
+					cnt = 0
+				if  cnt == 0:
+					msg1 = u'Verzeichnis für Slideshow nicht gefunden oder leer.'
 					msg2 = u'Bitte in den Settings überprüfen / einstellen.'
 					MyDialog(msg1, msg2, '')
 					return

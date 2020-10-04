@@ -100,7 +100,7 @@ Funktionen:
 
 #### Favoriten, Merkliste
 - Kodi-Favoriten lassen sich einblenden und im Addon aufrufen
-- interne Merkliste
+- interne Merkliste mit Ordnerverwaltung und Filterfunktion
 
 #### Updates
 - entweder mit dem integrierten <b>Updatemodul (autom. Anpassung an Kodi-Version)</b> oder via <b>kodinerds-Repo</b>
@@ -118,7 +118,7 @@ Funktionen:
 
 INSTALLATION:
 ===================  
-- Download der zip-Datei: [aktuelle Release, Leia-Version](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) oder [kodinerds-Repo, Leia- und Matrix-Version](https://repo.kodinerds.net)
+- Download der zip-Datei: [aktuelles Release, Leia-Version](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) oder [kodinerds-Repo, Leia- und Matrix-Version](https://repo.kodinerds.net)
 - Download script.module.kodi-six.zip hier https://github.com/romanvm/kodi.six/releases
 - Beide zip-Dateien mittels Kodi-Menü Addons/Addon-Browser installieren
 - Addon öffen und Addon-Einstellungen anpassen.

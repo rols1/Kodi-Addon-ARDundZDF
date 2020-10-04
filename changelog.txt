@@ -12,6 +12,16 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+04.09.2020 3.4.3
+			PlayAudio (Modul util): Fix Abfrage Slide-Verzeichnis (try/except). 
+			get_keyboard_input (Modul util): Eingabe-Vorbelegung ermöglicht (Param.
+			line).
+			AudioStartLive (Audiothek): User-Info in taglines ergänzt (abh. vom
+			Kontext Livestreams/Programme). 
+			Modul Merkliste: Option zum Umbenennen doppelter Einträge hinzugefügt,
+			Option zum nachträglichen Ändern via Kontextmenü hinzugefügt + Anpassung
+			in addDir + neue Funktion exist_in_list (Modul util).
+
 28.09.2020 3.4.2
 			AudioLiveAll (Radio-Livestreams): CacheTime von 1 Std. auf 12 Std. 
 			verlängert.

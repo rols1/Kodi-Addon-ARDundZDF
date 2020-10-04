@@ -6,7 +6,7 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-#	Stand: 20.09.2020
+#	Stand: 05.10.2020
 
 from __future__ import absolute_import
 
@@ -17,7 +17,9 @@ from kodi_six.utils import py2_encode, py2_decode
 import base64 			# url-Kodierung für Kontextmenüs
 import os, sys, subprocess 
 import re				
-import json		
+import json	
+import datetime, time
+	
 PYTHON2 = sys.version_info.major == 2
 PYTHON3 = sys.version_info.major == 3
 if PYTHON2:
@@ -31,7 +33,7 @@ elif PYTHON3:
 		pass
 
 from util import PLog, stringextract, ReadFavourites, RSave, R, check_AddonXml,\
-					MyDialog, RLoad, blockextract, get_keyboard_input
+					MyDialog, RLoad, blockextract, get_keyboard_input, exist_in_list
 
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -120,11 +122,23 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			PLog('my_items: ' + my_items[0])			# 1. Eintrag
 			for item in my_items:						# Liste -> String
 				iname = stringextract('name="', '"', item) 
-				PLog('Name: %s, IName: %s' % (py2_decode(name), py2_decode(iname)))
-				if py2_decode(iname) == py2_decode(name):# Doppler vermeiden
+				name = py2_decode(name); iname = py2_decode(iname)
+				PLog('Name: %s, IName: %s' % (name, iname))
+				if iname == name:# Doppler vermeiden
 					doppler = True
-					PLog('Doppler')
-					break
+					msg1 = u"Eintrag existiert bereits - neuen Eintrag umbenennen?"
+					msg2 = u"Info:\nin der Merkliste lassen sich alle Einträge via"
+					msg3 = u"Kontextmenü nachträglich umbenennen."
+					head = "Merkliste: neuer Eintrag"
+					ret = MyDialog(msg1=msg1, msg2=msg2, msg3=msg3, ok=False, cancel='Abbruch', yes='UMBENENNEN', heading=head)
+					if ret == 1:
+						new_name = get_new_name(iname, add='')	# <- neue Bez. oder iname
+						if new_name != iname:					# alte -> neue Bez. 
+							name = new_name
+							doppler = False
+					if doppler == True:
+						PLog('Doppler')
+						break
 				merkliste = merkliste + item + "\n"
 				item_cnt = item_cnt + 1
 		else:	
@@ -196,6 +210,44 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			PLog(msg1)	
 							
 	#------------------
+	if action == 'rename':
+		my_items, my_ordner = ReadFavourites('Merk')					# 'utf-8'-Decoding in ReadFavourites
+		my_ordner = check_ordnerlist(my_ordner)
+		if len(my_items):
+			PLog('my_items: ' + my_items[-1])
+		merkliste = ''
+		renamed = False
+		for item in my_items:						# Liste -> String
+			iname = stringextract('name="', '"', item) # unicode
+			iname = py2_decode(iname)
+			name = py2_decode(name)		
+			PLog('Name: %s, IName: %s' % (name, iname))		
+			if name == iname:
+				new_name = get_new_name(iname, add='')	# <- neue Bez. oder iname
+				if new_name != iname:
+					insert = 'name="%s"' % new_name
+					if exist_in_list(insert, my_items) == False:		 
+						item = item.replace('name="%s"' % iname, 'name="%s"' % new_name)
+						renamed = True
+					else:
+						msg1 = ">%s< existiert bereits - Abbruch" % new_name 				
+						MyDialog(msg1, '', '')
+			item_cnt = item_cnt + 1
+			merkliste = py2_decode(merkliste) + py2_decode(item) + "\n"
+			
+		if renamed:									# nur nach Ändern speichern
+			# Merkliste + Ordnerinfo + Ordner + Ordnerwahl:	
+			ret, err_msg = save_merkliste(merkliste, my_ordner)
+			msg1 = u"Eintrag umbenannt"
+			if ret == False:
+				PLog(err_msg)
+				msg1 = u"Problem Merkliste"
+		else:
+			msg1 = u"Eintrag nicht geändert." 
+			err_msg = u"Merkliste unverändert."
+			PLog(msg1)	
+							
+	#------------------
 	if action == 'folder':												# Ordner ändern
 		my_items, my_ordner = ReadFavourites('Merk')					# 'utf-8'-Decoding in ReadFavourites
 		my_ordner = check_ordnerlist(my_ordner)
@@ -249,6 +301,22 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 	
 	return msg1, err_msg, str(item_cnt)
 
+# ----------------------------------------------------------------------
+# neuen Merklisteneintrag abfragen, Vorlage: iname)
+#	Rückgabe new_name oder iname (Blank: iname) 
+#	add: z.B. _alt
+def get_new_name(iname, add=''):
+	PLog("get_new_name:")
+	
+	line = iname
+	if add:
+		line = iname + add
+	new_name = get_keyboard_input(line=line, head=u'Merklisten-Eintrag umbenennen')
+	if new_name.strip() != '':
+		return new_name
+	else:
+		return iname
+	
 # ----------------------------------------------------------------------
 # url aus ev. Base64-Kodierung ermitteln
 # url = Param. Watch_items
@@ -677,11 +745,11 @@ if 'filter' in action:													# Filter-Aktionen:
 		do_folder()
 else:																	# Merklisten-Aktionen:	
 	Plot = clean_Plot(Plot) 
-	msg1, err_msg, item_cnt = Watch_items(action,name,thumb,Plot,url)	# Einträge add / del / folder
+	msg1, err_msg, item_cnt = Watch_items(action,name,thumb,Plot,url)	# Einträge add / del / folder / rename
 	msg2 = err_msg
 	if item_cnt:
 		msg2 = "%s\n%s" % (msg2, u"Einträge: %s" % item_cnt)
-		if action == 'del' or action == 'folder':						# Refresh Liste nach Löschen
+		if action == 'del' or action == 'folder' or action == 'rename':	# Refresh Liste nach Löschen
 			# MERKACTIVE ersetzt hier Ermitteln von Window + Control
 			# bei Verzicht würde jede Liste refresht (stört bei großen Listen)
 			if os.path.isfile(MERKACTIVE) == True:						# Merkliste aktiv?

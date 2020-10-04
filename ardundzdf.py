@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.4.2'
-VDATE = '28.09.2020'
+VERSION = '3.4.3'
+VDATE = '05.10.2020'
 
 #
 #
@@ -1278,13 +1278,14 @@ def AudioLiveAll(anstalt='', sender=''):
 	xbmcplugin.endOfDirectory(HANDLE)
 
 #----------------------------------------------------------------
-# Liste der Livestreams der Audiothek (nur Programmsender) - alle
-#	Radiosender der ARD in AudioStartLive (s.o.) via Haupt-Menü
-#	"Radio-Livestreams"
+# Liste der Livestreams der Audiothek (nur Programmsender) - zu 
+#	allen Radiosendern der ARD siehe Haupt-Menü "Radio-Livestreams"
+#	
 # 09.09.2020 Mitnutzung durch AudioSenderPrograms (programs=yes)
 # 
 def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestreams 
 	PLog('AudioStartLive: ' + sender)
+
 	li = xbmcgui.ListItem()
 	if myhome:
 		li = home(li, ID=myhome)
@@ -1306,6 +1307,7 @@ def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestr
 
 	if programs == 'yes':						# Sendungen der Sender listen
 		AUDIOSENDER.append('funk')
+		
 	if sender == '':
 		for sender in AUDIOSENDER:
 			# Bsp. title: data-v-f66b06a0>Theater, Film
@@ -1319,13 +1321,19 @@ def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestr
 			title = repl_json_chars(title)							# für "bremen" erf.
 			sender = repl_json_chars(sender)						# für "bremen" erf.
 			
+			if programs == 'yes':						# Sendungen der Sender listen
+				add = "Programmen"
+			else:
+				add = "Livestreams"
+			tag = "Weiter zu den %s der Einzelsender von: %s" % (add, title)
+			
 			PLog('2Satz:');
 			PLog(title); PLog(img);
 			title=py2_encode(title); sender=py2_encode(sender);
 			fparams="&fparams={'title': '%s', 'sender': '%s', 'myhome': '%s', 'programs': '%s'}" %\
 				(quote(title), quote(sender), myhome, programs)	
 			addDir(li=li, label=title, action="dirList", dirID="AudioStartLive", fanart=img, 
-				thumb=img, fparams=fparams)
+				thumb=img, tagline=tag, fparams=fparams)
 	
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	else:										# 2. Durchlauf: einzelne Streams
@@ -1360,7 +1368,12 @@ def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestr
 			
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)	
-			summ_par = descr	
+			summ_par = descr
+			
+			if programs:
+				tag = "Weiter zu den Programmen von: %s" % title	
+			else:
+				tag = "Weiter zum Livestream von: %s" % title
 			
 			destDir = "AudioLiveSingle"		
 			if programs == 'yes':						# Sendungen der Sender listen
@@ -1371,7 +1384,7 @@ def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestr
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
 				quote(title), quote(img), quote(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="%s" % destDir, fanart=img, thumb=img, 
-				fparams=fparams, summary=descr, mediatype='music')	
+				fparams=fparams, tagline=tag, summary=descr, mediatype='music')	
 					
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)					
 		
