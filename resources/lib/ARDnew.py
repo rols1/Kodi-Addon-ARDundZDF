@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 09.09.2020
+#	Stand 08.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -89,15 +89,19 @@ if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
 	PLog('Matrix-Version')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 
-DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA			# hier nur DICTSTORE genutzt
-SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
-SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
-TEXTSTORE 		= os.path.join("%s/Inhaltstexte") % ADDON_DATA
+DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
+SLIDESTORE 		= os.path.join(ADDON_DATA, "slides") 
+SUBTITLESTORE 	= os.path.join(ADDON_DATA, "subtitles") 
+TEXTSTORE 		= os.path.join(ADDON_DATA, "Inhaltstexte")
 
 # Ort FILTER_SET wie filterfile (check_DataStores):
-FILTER_SET 	= os.path.join("%s/filter_set") % ADDON_DATA
+FILTER_SET 	= os.path.join(ADDON_DATA, "filter_set")
 AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
 AKT_FILTER	= AKT_FILTER.splitlines()					# gesetzte Filter initialiseren 
+
+fname = os.path.join(DICTSTORE, 'CurSender')			# init CurSender (aktueller Sender)
+if os.path.exists(fname) == False:						# kann fehlen (Aufruf Merkliste)
+	Dict('store', "CurSender", ARDSender[0])			# Default: ARD-Alle
 
 DEBUG			= SETTINGS.getSetting('pref_info_debug')
 NAME			= 'ARD und ZDF'
@@ -302,8 +306,8 @@ def img_via_id(href_id, page):
 def ARDStartRubrik(path, title, widgetID='', ID='', img=''): 
 	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path)	
 	title_org = title
-			
-	CurSender = Dict("load", 'CurSender')			
+	
+	CurSender = Dict("load", 'CurSender')				# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)	
 		
@@ -1122,7 +1126,7 @@ def SendungenAZ_ARDnew(title, button):
 #
 def SearchARDundZDFnew(title, query='', pagenr=''):
 	PLog('SearchARDundZDFnew:');
-	query_file 	= os.path.join("%s/search_ardundzdf") % ADDON_DATA
+	query_file 	= os.path.join(ADDON_DATA, "search_ardundzdf")
 	
 	if query == '':														# Liste letzte Sucheingaben
 		query_recent= RLoad(query_file, abs_path=True)

@@ -6,7 +6,7 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-#	Stand: 05.10.2020
+#	Stand: 07.10.2020
 
 from __future__ import absolute_import
 
@@ -45,8 +45,8 @@ ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
 if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
-WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
-DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
+WATCHFILE		= os.path.join(ADDON_DATA, "merkliste.xml") 
+DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
 # Marker: ShowFavs(Merkliste) ist aktiv, gesetzt in ShowFavs, 
 #	gelöscht bei jedem Start des Haupt-PRG's
 MERKACTIVE 		= os.path.join(DICTSTORE, 'MerkActive') 

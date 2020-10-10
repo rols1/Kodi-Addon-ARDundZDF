@@ -12,7 +12,34 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-04.09.2020 3.4.3
+10.10.2020 3.4.6 Renovierung "Recording TV-Live"-Bereich
+			Settings "Recording TV-Live": "Aufnehmen" -> "Aufnehmen mit EPG"  (bessere 
+			Abgrenzung zum sofortigen Recording), Bild Wicki geändert, Info-Texte in
+			SenderLiveListePre + EPG_Sender angepasst.
+			Modul EPG: Cache-Nutzung für die einzelnen tvtoday-Seiten (ca. 900KB/Seite).
+			Modul EPG: Erweiterung um Hintergrundfunktion thread_getepg
+			Haupt-PRG: Erweiterung um Aktivierungsroutine für thread_getepg
+			Settings: Option "EPG im Hintergrund laden (12 Std.-Intervall)" hinzugefügt.
+			Menü ARD-Sportschau + TV-Livestreams: MDR+ Eventlivestreams 3-5 hinzugefügt.
+			
+not on Github 3.4.5
+			AudioStartThemen (Audiothek): Umstellung auf json-Seite homescreen für
+			Entdecken (Highlights) + Meistgehört, um das Nachladen der Icons zu 
+			vermeiden - neue Funktion Audio_get_homejson. 
+			Search_refugee (Podcasts Classics): Icon refugee_cosmo.jpg lokal installiert
+			(Downloadproblem in Kodi).
+			get_page (Modul util): überflüssige safe-Zeichen aus Url-Quoting entfernt
+			(".-_").
+			
+not on Github	3.4.4
+			Modul ARD_NEW: Initialisierung Variable CurSender (akt. Sender) im Modulkopf
+			für direkte Funktionsaufrufe aus Merkliste.
+			Fix os.path.join-Statements ("/" im Pfad entfernt): Haupt-PRG, Module util,
+			ARD_NEW, arte, childs, epgRecord, funk, merkliste, 3sat, Podcontent, slides,
+			TagesschauXL, updater, zdfmobile.
+			Dict (Modul util): Dict_name -> str(Dict_name) in os.path.join-Statement.
+			
+04.10.2020 3.4.3
 			PlayAudio (Modul util): Fix Abfrage Slide-Verzeichnis (try/except). 
 			get_keyboard_input (Modul util): Eingabe-Vorbelegung ermöglicht (Param.
 			line).

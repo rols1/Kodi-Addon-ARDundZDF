@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 09.09.2020
+#	Stand: 07.10.2020
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -62,7 +62,7 @@ ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
 if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
 	ADDON_DATA		= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
-SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
+SLIDESTORE 		= os.path.join(ADDON_DATA, "slides") 
 
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')

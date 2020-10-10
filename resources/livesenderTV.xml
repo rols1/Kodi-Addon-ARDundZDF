@@ -209,6 +209,33 @@
 		<date>22.04.2019</date>
 	</item>
 	<item>
+		<title>MDR+ Eventlivestreams + SocialTV - 3</title>
+		<hrefsender></hrefsender>
+		<link>http://mdrevent2hls-lh.akamaihd.net/i/livetvmdrevent3_ww@513991/master.m3u8</link>
+		<thumbnail>tv-mdr-sachsen.png</thumbnail>
+		<imgsource>Arauco</imgsource>
+		<EPG_ID></EPG_ID>
+		<date>10.10.2020</date>
+	</item>
+	<item>
+		<title>MDR+ Eventlivestreams + SocialTV - 4</title>
+		<hrefsender></hrefsender>
+		<link>http://mdrevent4hls-lh.akamaihd.net/i/livetvmdrevent4_de@513995/master.m3u8</link>
+		<thumbnail>tv-mdr-sachsen.png</thumbnail>
+		<imgsource>Arauco</imgsource>
+		<EPG_ID></EPG_ID>
+		<date>10.10.2020</date>
+	</item>
+	<item>
+		<title>MDR+ Eventlivestreams + SocialTV - 5</title>
+		<hrefsender></hrefsender>
+		<link>http://mdrevent5hls-lh.akamaihd.net/i/livetvmdrevent5_ww@513996/master.m3u8</link>
+		<thumbnail>tv-mdr-sachsen.png</thumbnail>
+		<imgsource>Arauco</imgsource>
+		<EPG_ID></EPG_ID>
+		<date>10.10.2020</date>
+	</item>
+	<item>
 		<title>Radio Bremen</title>
 		<hrefsender>Radio Bremen</hrefsender>
 		<link>https://rbfs-lh.akamaihd.net/i/rb_fs@438960/master.m3u8</link>

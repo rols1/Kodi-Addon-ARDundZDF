@@ -117,12 +117,12 @@ ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 
-M3U8STORE 		= os.path.join("%s/m3u8") % ADDON_DATA
-DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
-SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
-SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
-TEXTSTORE 		= os.path.join("%s/Inhaltstexte") % ADDON_DATA
-WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
+M3U8STORE 		= os.path.join(ADDON_DATA, "m3u8") 
+DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
+SLIDESTORE 		= os.path.join(ADDON_DATA, "slides") 
+SUBTITLESTORE 	= os.path.join(ADDON_DATA, "subtitles") 
+TEXTSTORE 		= os.path.join(ADDON_DATA, "Inhaltstexte")
+WATCHFILE		= os.path.join(ADDON_DATA, "merkliste.xml") 
 TEMP_ADDON		= xbmc.translatePath("special://temp")			# Backups
 
 PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
@@ -359,7 +359,7 @@ def check_DataStores():
 	PLog('check_DataStores:')
 	store_Dirs = ["Dict", "slides", "subtitles", "Inhaltstexte", 
 				"m3u8"]
-	filterfile = os.path.join("%s/filter.txt") % ADDON_DATA
+	filterfile = os.path.join(ADDON_DATA, "filter.txt") 
 	filter_pat =  "<filter>\nhörfassung\naudiodeskription\nuntertitel\ngebärdensprache\n</filter>\n"
 				
 	# Check 
@@ -367,7 +367,7 @@ def check_DataStores():
 	#	Datenverz. oder einzelne fehlende Verz. neu.
 	ok=True	
 	for Dir in store_Dirs:						# Check Unterverzeichnisse
-		Dir_path = os.path.join("%s/%s") % (ADDON_DATA, Dir)
+		Dir_path = os.path.join(ADDON_DATA, Dir)
 		if os.path.isdir(Dir_path) == False:	
 			PLog('Datenverzeichnis fehlt: %s' % Dir_path)
 			ok = False
@@ -409,7 +409,7 @@ def  make_newDataDir(store_Dirs, filterfile, filter_pat):
 				
 	ok=True
 	for Dir in store_Dirs:						# Unterverz. erzeugen
-		Dir_path = os.path.join("%s/%s") % (ADDON_DATA, Dir)	
+		Dir_path = os.path.join(ADDON_DATA, Dir)	
 		if os.path.isdir(Dir_path) == False:	
 			try:  
 				os.mkdir(Dir_path)
@@ -462,7 +462,7 @@ def Dict(mode, Dict_name='', value='', CacheTime=None):
 	PLog('Dict: ' + mode)
 	PLog('Dict: ' + str(Dict_name))
 	PLog('Dict: ' + str(type(value)))
-	dictfile = "%s/%s" % (DICTSTORE, Dict_name)
+	dictfile = os.path.join(DICTSTORE, str(Dict_name))
 	PLog("dictfile: " + dictfile)
 	
 	if mode == 'store':	
@@ -886,8 +886,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	path = path.replace('https%3A//','https://')# z.B. https%3A//classic.ardmediathek.de
 	
 	path = py2_encode(path)
-	if do_safe:
-		path = quote(path, safe="@:?.,-_&=/")	# s.o. ('-_' in m3u8-Links)	
+	if do_safe:									# never quoted: Letters, digits, and the characters '_.-' 
+		path = quote(path, safe="@:?,&=/")		# s.o.
 	PLog("safe_path: " + path)		
 
 	msg = ''; page = ''	
@@ -1791,8 +1791,8 @@ def ReadFavourites(mode):
 def ReadJobs():	
 	PLog('ReadJobs:')
 
-	JOBFILE			= os.path.join("%s/jobliste.xml") % ADDON_DATA
-	JOBFILE_LOCK	= os.path.join("%s/jobliste.lck") % ADDON_DATA		# Lockfile für Jobliste
+	JOBFILE			= os.path.join(ADDON_DATA, "jobliste.xml") 
+	JOBFILE_LOCK	= os.path.join(ADDON_DATA, "jobliste.lck")  		# Lockfile für Jobliste
 	maxLockloops	= 10		# 1 sec bei 10 x xbmc.sleep(100)	
 		
 	i=0

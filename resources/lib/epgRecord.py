@@ -7,7 +7,7 @@
 #
 ####################################################################################################
 #	01.07.2020 Start
-#	Stand 09.09.2020
+#	Stand 07.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -51,12 +51,12 @@ ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
 if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
-DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
+DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
 
-JOBFILE			= os.path.join("%s/jobliste.xml") % ADDON_DATA
-JOBFILE_LOCK	= os.path.join("%s/jobliste.lck") % ADDON_DATA		# Lockfile für Jobliste
-JOB_STOP		= os.path.join("%s/job_stop") % ADDON_DATA			# Stopfile für JobMonitor
-MONITOR_ALIVE 	= os.path.join("%s/monitor_alive") % ADDON_DATA		# Lebendsignal für JobMonitor (leer, mtime-Abgleich)
+JOBFILE			= os.path.join(ADDON_DATA, "jobliste.xml") 		# Jobliste für epgRecord
+JOBFILE_LOCK	= os.path.join(ADDON_DATA, "jobliste.lck") 		# Lockfile für Jobliste
+JOB_STOP		= os.path.join(ADDON_DATA, "job_stop") 			# Stopfile für JobMonitor
+MONITOR_ALIVE 	= os.path.join(ADDON_DATA, "monitor_alive")		# Lebendsignal für JobMonitor (leer, mtime-Abgleich)
 
 JOBLINE_TEMPL	= "<startend>%s</startend><title>%s</title><descr>%s</descr><sender>%s</sender><url>%s</url><status>%s</status><pid>%s</pid><JobID>%s</JobID>"
 JOB_TEMPL		= "<job>%s</job>"

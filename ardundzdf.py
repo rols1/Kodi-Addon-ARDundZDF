@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.4.3'
-VDATE = '05.10.2020'
+VERSION = '3.4.6'
+VDATE = '10.10.2020'
 
 #
 #
@@ -221,24 +221,45 @@ if 	check_AddonXml('"xbmc.python" version="3.0.0"'):					# ADDON_DATA-Verzeichni
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 PLog("ADDON_DATA: " + ADDON_DATA)
 
-M3U8STORE 		= os.path.join("%s/m3u8") % ADDON_DATA
-DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
-SLIDESTORE 		= os.path.join("%s/slides") % ADDON_DATA
-SUBTITLESTORE 	= os.path.join("%s/subtitles") % ADDON_DATA
-TEXTSTORE 		= os.path.join("%s/Inhaltstexte") % ADDON_DATA
-WATCHFILE		= os.path.join("%s/merkliste.xml") % ADDON_DATA
-JOBFILE			= os.path.join("%s/jobliste.xml") % ADDON_DATA 			# Jobliste für epgRecord
-MONITOR_ALIVE 	= os.path.join("%s/monitor_alive") % ADDON_DATA			# Lebendsignal für JobMonitor
+M3U8STORE 		= os.path.join(ADDON_DATA, "m3u8") 
+DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
+SLIDESTORE 		= os.path.join(ADDON_DATA, "slides") 
+SUBTITLESTORE 	= os.path.join(ADDON_DATA, "subtitles") 
+TEXTSTORE 		= os.path.join(ADDON_DATA, "Inhaltstexte")
+WATCHFILE		= os.path.join(ADDON_DATA, "merkliste.xml") 
+JOBFILE			= os.path.join(ADDON_DATA, "jobliste.xml") 		# Jobliste für epgRecord
+MONITOR_ALIVE 	= os.path.join(ADDON_DATA, "monitor_alive") 		# Lebendsignal für JobMonitor
 PLog(SLIDESTORE); PLog(WATCHFILE); 
 check 			= check_DataStores()					# Check /Initialisierung / Migration 
 PLog('check: ' + str(check))
+
+# die tvtoday-Seiten decken 12 Tage ab, trotzdem EPG-Lauf alle 12 Stunden
+#	 (dto. Cachezeit für einz. EPG-Seite in EPG.EPG).
+if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden?
+	EPGACTIVE = os.path.join(DICTSTORE, 'EPGActive') 		# Marker thread_getepg aktiv
+	EPGCacheTime = 43200
+	is_activ=False
+	if os.path.exists(EPGACTIVE):							# gesetzt in thread_getepg 
+		is_activ=True
+		now = time.time()
+		mtime = os.stat(EPGACTIVE).st_mtime
+		diff = int(now) - mtime
+		PLog(diff)
+		if diff > EPGCacheTime:								# entf. wenn älter als 1 Tag	
+			os.remove(EPGACTIVE)
+			is_activ=False
+	if is_activ == False:									# EPG-Daten veraltet, neu holen
+		from threading import Thread
+		bg_thread = Thread(target=EPG.thread_getepg, args=(EPGACTIVE, DICTSTORE, PLAYLIST))
+		bg_thread.start()											
+		
 
 MERKACTIVE = os.path.join(DICTSTORE, 'MerkActive') 		# Marker aktive Merkliste
 if os.path.exists(MERKACTIVE):
 	os.remove(MERKACTIVE)
 MERKFILTER 	= os.path.join(DICTSTORE, 'Merkfilter') 
 # Ort FILTER_SET wie filterfile (check_DataStores):
-FILTER_SET 	= os.path.join("%s/filter_set") % ADDON_DATA
+FILTER_SET 	= os.path.join(ADDON_DATA, "filter_set")
 AKT_FILTER	= ''
 if os.path.exists(FILTER_SET):	
 	AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
@@ -527,7 +548,7 @@ def FilterTools():
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 		
-	filterfile = os.path.join("%s/filter.txt") % ADDON_DATA		# init: check_DataStores
+	filterfile = os.path.join(ADDON_DATA, "filter.txt") 		# init: check_DataStores
 	filter_page = RLoad(filterfile, abs_path=True)				# Filterliste laden
 
 	if filter_page == '' or len(filter_page) <= 20:
@@ -590,7 +611,7 @@ def FilterToolsWork(action):
 	dialog = xbmcgui.Dialog()
 
 	filter_pat = "<filter>\n%s\n</filter>\n" 					# Rahmen Filterliste
-	filterfile = os.path.join("%s/filter.txt") % ADDON_DATA		# init: check_DataStores
+	filterfile = os.path.join(ADDON_DATA, "filter.txt")			# init: check_DataStores
 	page = RLoad(filterfile, abs_path=True)						# Filterliste laden
 	filter_list = stringextract('<filter>', '</filter>', page)
 	filter_list = filter_list.splitlines()
@@ -759,14 +780,14 @@ def AddonInfos():
 		d2 = "%s Merkliste extern: %s" % (t,fname)
 	e = "%s Downloadverzeichnis: %s" % (t,SETTINGS.getSetting('pref_download_path'))
 	f = "%s Verschiebeverzeichnis: %s" % (t,SETTINGS.getSetting('pref_VideoDest_path'))
-	filterfile = os.path.join("%s/filter.txt") % ADDON_DATA
+	filterfile = os.path.join(ADDON_DATA, "filter.txt")
 	g = "%s Filterliste: %s" %  (t,filterfile)
 	fname =  SETTINGS.getSetting('pref_podcast_favorits')
 	if os.path.isfile(fname) == False:
-		fname = os.path.join("%s/resources/podcast-favorits.txt") % PluginAbsPath
+		fname = os.path.join(PluginAbsPath, "resources", "podcast-favorits.txt") 
 	h = "%s Podcast-Favoriten:\n%s%s" %  (t,t,fname)		# fname in 2. Zeile
 	log = xbmc.translatePath("special://logpath")
-	log = os.path.join("%skodi.log") % (log)	
+	log = os.path.join(log, "kodi.log") 	
 	i = "%s Debug-Log: %s" %  (t, log)
 	
 	p3 = "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d1,d2,e,f,g,h,i)
@@ -989,7 +1010,7 @@ def AudioStart(title):
 
 	# Liste der Rubriken: Themen + Livestreams fest (am Ende), der Rest 
 	#	wird im Web geprüft:
-	title_list = ['Highlights']								# Web: Entdecken (5 Beiträge)
+	title_list = ['Highlights']								# -> Audio_get_homejson
 	if "Sendungsauswahl Unsere Favoriten" in page:
 		title_list.append('Unsere Favoriten')
 	if "Sendungsauswahl Themen" in page:
@@ -997,7 +1018,7 @@ def AudioStart(title):
 	if "Sendungsauswahl Sammlungen" in page:
 		title_list.append('Sammlungen')
 	if u'aria-label="Meistgehört"' in page:
-		title_list.append(u'Meistgehört')
+		title_list.append(u'Meistgehört')					# -> Audio_get_homejson
 	if u'Sendungsauswahl Ausgewählte Sendungen' in page:
 		title_list.append(u'Ausgewählte Sendungen')
 	
@@ -1055,12 +1076,30 @@ def AudioStart(title):
 #	img wird im json-Bereich ermittelt - bei Fehlen "kein-Bild".
 # Hier wird zur ID der passende page-Ausschnitt ermittelt - Auswertung in 
 #	Audio_get_rubrik oder Audio_get_sendungen (Highlights, Meistgehört)
-# 
+#
+# 05.10.2020 für Entdecken (Highlights) + Meistgehört Wechsel der Auswertung
+#	von Homepage zu homescreen.json (Audio_get_homejson).
+#
 def AudioStartThemen(title, ID, page='', path=''):	# Entdecken, Unsere Favoriten, ..
 	PLog('AudioStartThemen: ' + ID)
 	li = xbmcgui.ListItem()
 	# li = home(li, ID='ARD Audiothek')				# Home-Button
 	
+	if ID == 'Highlights' or ID == 'Meistgehört':	# json-Auswertung (s.o.)
+		path = "https://audiothek.ardmediathek.de/homescreen"				
+		page, msg = get_page(path=path)	
+		if page == '':	
+			msg1 = "Fehler in AudioStartThemen:"
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return li
+		PLog(len(page))	
+		
+		li = home(li, ID='ARD Audiothek')				# Home-Button
+		Audio_get_homejson(page, ID)
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		
+	#--------------------------------------------------# Auswertung Homepage	
 	if not page:
 		path = ARD_AUDIO_BASE					# Default				
 		page, msg = get_page(path=path)	
@@ -1070,15 +1109,7 @@ def AudioStartThemen(title, ID, page='', path=''):	# Entdecken, Unsere Favoriten
 		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))	
-	
-	if ID == 'Highlights':			# Einzelbeiträge (Entdecken)
-		stage = stringextract('loading-spinner spinner-homepage', 'aria-label="Sendungsauswahl', page)
-		gridlist = blockextract('class="episode-teaser-big-wrapper"', stage)
-		li = Audio_get_sendungen(li, gridlist, page, ID)
-	if ID == u'Meistgehört':			# Einzelbeiträge Meistgehört
-		stage = stringextract(u'aria-label="Meistgehört"', u'Sendungsauswahl Ausgewählte Sendungen', page)
-		gridlist = blockextract('label="Episode abspielen"', stage)  # skip 1. Label
-		li = Audio_get_sendungen(li, gridlist, page, ID)
+
 	if ID == 'Unsere Favoriten':
 		Audio_get_rubriken(page, ID)
 	if ID == 'Themen':
@@ -1516,6 +1547,59 @@ def AudioStartRubrik(path=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #----------------------------------------------------------------
+# anstelle Homepage: Auswertung homescreen.json, aber nur für
+#	Entdecken (Highlights) + Meistgehört. Grund: Nachladen der
+#	Icons hier nicht  erforderlich + schneller.
+#	Alles Einzelbeiträge
+#
+def Audio_get_homejson(page, ID):
+	PLog('Audio_get_homejson: ' + ID)
+	
+	li = xbmcgui.ListItem()
+	jsonObject = json.loads(page)
+	if ID == 'Highlights':
+		vidObs = jsonObject["_embedded"]['mt:stageItems']['_embedded']['mt:items']
+	if ID == 'Meistgehört':
+		vidObs = jsonObject['_embedded']['mt:mostPlayed']['_embedded']['mt:items']
+	PLog(len(vidObs))
+		
+	for vO in vidObs:						# Video in Videoobjekten
+			try:
+				href = vO["_links"]["self"]["href"]
+				mp3_url	= vO["_links"]['mt:downloadUrl']['href']
+				img = vO["_links"]["mt:image"]["href"]
+				img = img.replace('{ratio}/{width}', '1x1/640')
+				title = vO["title"]
+				dauer = vO["duration"]
+				dauer = seconds_translate(dauer)
+				descr = vO["synopsis"]		
+				stitle	= vO["tracking"]["play"]["show"]
+				source	= vO["tracking"]["play"]["source"]
+				pubDate	= vO["tracking"]["play"]["publicationDate"]
+				pubDate = "%s.%s.%s" % (pubDate[6:8], pubDate[4:6], pubDate[0:4])
+				
+				descr	= "[B]Audiobeitrag[/B] | %s | %s | %s\n\n%s" % (dauer, pubDate, source, descr)
+				  
+				descr	= unescape(descr); descr = repl_json_chars(descr)
+				summ_par= descr.replace('\n', '||')
+				title = repl_json_chars(title)
+			
+				PLog('15Satz:');
+				PLog(title); PLog(stitle); PLog(img); PLog(href);  PLog(mp3_url);
+				title=py2_encode(title); mp3_url=py2_encode(mp3_url);
+				img=py2_encode(img); summ_par=py2_encode(summ_par);	
+				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+					quote(title), quote(img), quote_plus(summ_par))
+				addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+					fparams=fparams, summary=descr)
+				
+			except Exception as exception:
+				PLog("json-Fehler" + str(exception))
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+	
+#----------------------------------------------------------------
 # Aufruf aus AudioStartThemen (nicht von AudioStartRubrik)
 #	AudioStart extrahiert Rubriken zu Einzelthema der Leitseite, 
 #		Bsp. Unsere Favoriten 
@@ -1698,8 +1782,7 @@ def Audio_get_rubrik_funk(url):			# Übersicht der funk-Podcasts
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 #----------------------------------------------------------------
-# Aufrufer: AudioStartThemen (Highlights, Meistgehört) oder
-#	Audio_get_rubrik ('Rubrik_ohne_api_call')
+# Aufrufer: Audio_get_rubrik ('Rubrik_ohne_api_call')
 # gridlist: 	Blöcke aus page-Ausschnitt (Highlights + Meistgehört 
 #				der Startseite)
 # page:			kompl. Seite für die img-Suche (html/json gemischt)
@@ -2501,12 +2584,16 @@ def ARDSport(title):
 			quote_plus(summ), Merk)
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			mediatype=mediatype, summary=summ) 	
-			
-	channel = 'Regional'									# zum Livestream: MDR+ Eventlivestreams
-	onlySender = 'MDR+ Eventlivestreams & SocialTV'	
-	img = R("tv-mdr-sachsen.png")	
-	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
-	PLog(onlySender)	
+	
+	MDR_Streams = ['MDR+ Eventlivestreams + SocialTV - 1', 'MDR+ Eventlivestreams + SocialTV - 2',
+				'MDR+ Eventlivestreams + SocialTV - 3', 'MDR+ Eventlivestreams + SocialTV - 4',
+				'MDR+ Eventlivestreams + SocialTV - 5']
+	for sname in MDR_Streams:								# aus livesenderTV.xml: MDR+ Eventlivestreams	
+		channel = 'Regional'									
+		onlySender = sname
+		img = R("tv-mdr-sachsen.png")	
+		SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
+		PLog(onlySender)	
 		
 	channel = 'Regional'									# zum Livestream: WDR_ARD Event Sportschau
 	onlySender = 'WDR_ARD Event Sportschau'	
@@ -3194,7 +3281,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 		
 	page = False
 	if 	ID == 'ARDStart':								# Startseite laden	
-		page = Dict("load", 'ARDStart_%s', CacheTime=ARDStartCacheTime)	# Seite aus Cache laden		
+		page = Dict("load", 'ARDStart_%s' % sendername, CacheTime=ARDStartCacheTime)	# Seite aus Cache laden		
 
 	if page == False:									# keine Startseite od. Cache miss								
 		page, msg = get_page(path=path, GetOnlyRedirect=True)
@@ -3441,7 +3528,7 @@ def SendungenAZ(name, ID):
 #
 def SearchARDundZDF(title, query='', pagenr=''):
 	PLog('SearchARDundZDF:');
-	query_file 	= os.path.join("%s/search_ardundzdf") % ADDON_DATA
+	query_file 	= os.path.join(ADDON_DATA, "search_ardundzdf") 
 	
 	if query == '':														# Liste letzte Sucheingaben
 		query_recent= RLoad(query_file, abs_path=True)
@@ -3678,7 +3765,8 @@ def get_query(channel='ARD'):
 		return 	query.strip()
 			
 #---------------------------------------------------------------- 
-#  Search_refugee - erforderlich für Refugee Radion (WDR)
+#  Search_refugee - erforderlich für Refugee Radio (WDR) - nur
+#		Podcasts Classics
 def Search_refugee(path=''):
 	PLog('Search_refugee:')
 
@@ -3697,7 +3785,8 @@ def Search_refugee(path=''):
 		return li
 	PLog(len(page))
 	
-	img =  base + stringextract('source srcset="', '"', page)
+	# img =  base + stringextract('source srcset="', '"', page)  
+	img =  R("images/refugee_cosmo.jpg")				# wg. Ladeproblem lokal (7,6KB)
 	PLog(img)
 
 	if path == POD_REFUGEE:						# Erstaufruf: Seitenliste ausgeben
@@ -4863,7 +4952,7 @@ def thread_getpic(path_url_list,text_list,folder=''):
 	watermark=False; ok="nein"
 	if text_list:										# 
 		xbmc_base = xbmc.translatePath("special://xbmc")
-		myfont = os.path.join("%smedia/Fonts/arial.ttf") % xbmc_base
+		myfont = os.path.join(xbmc_base, "media", "Fonts", "arial.ttf") 
 		if os.path.exists(myfont) == False:				# Font vorhanden?
 			msg1 = 'Kodi Font Arial nicht gefunden.'
 			msg2 = 'Bitte den Font Arial installieren oder die Option Wasserzeichen in den Settings abschalten.'
@@ -5521,9 +5610,12 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 		summary	= u"%s\n\n%s"		% (s1, s2)
 		label	= u'Infos zum Menü Favoriten'
 	else:
+		mf = myfilter
+		if mf == '':
+			mf = "kein Filter gesetzt"
 		tagline = u"Anzahl Merklisteneinträge: %s" % str(len(my_items)) 	# Info-Button
 		s1		= u"Einträge entfernen: via Kontextmenü hier oder am am Ursprungsort im Addon."
-		s2		= u"Merkliste filtern: via Kontextmenü hier.\nAktueller Filter: [COLOR blue]%s[/COLOR]" % myfilter
+		s2		= u"Merkliste filtern: via Kontextmenü hier.\nAktueller Filter: [COLOR blue]%s[/COLOR]" % mf
 		s3		= u"Ordner für Einträge lassen sich in den Settings ein-/ausschalten"
 		if SETTINGS.getSetting('pref_merkordner') == 'true':
 			s3 = s3 + u"[COLOR blue] (eingeschaltet)[/COLOR]"
@@ -6009,18 +6101,21 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 		addDir(li=li, label=name, action="dirList", dirID="SenderLiveListe", fanart=R(ICON_MAIN_TVLIVE), 
 			thumb=img, fparams=fparams)
 
+	laenge = SETTINGS.getSetting('pref_LiveRecord_duration')
+	if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
+		laenge = "wird manuell eingegeben"
+
 	title = 'EPG Alle JETZT | Recording TV-Live'; 
-	summary ='elektronischer Programmfuehrer'
-	tagline = 'zeige die laufende Sendung für jeden Sender'
+	summary =u'elektronischer Programmführer\n\nAufnehmen via Kontexmenü, Dauer: %s (siehe Settings)' % laenge
+	tagline = 'zeigt die laufende Sendung für jeden Sender'
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="EPG_ShowAll", fanart=R('tv-EPG-all.png'), 
 		thumb=R('tv-EPG-all.png'), fparams=fparams, summary=summary, tagline=tagline)
 							
-	
 	title = 'EPG Sender einzeln'; 
 	if SETTINGS.getSetting('pref_epgRecord') == 'true':		
-		title = 'EPG Sender einzeln | Sendungen aufnehmen'; 
+		title = 'EPG Sender einzeln | Sendungen mit EPG aufnehmen'; 
 	tagline = u'zeigt für den ausgewählten Sender ein 12-Tage-EPG'				# EPG-Button Einzeln anhängen
 	summary='je Seite: 24 Stunden (zwischen 05.00 und 05.00 Uhr des Folgetages)'
 	fparams="&fparams={'title': '%s'}" % title
@@ -6030,10 +6125,7 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 	PLog(str(SETTINGS.getSetting('pref_LiveRecord'))) 
 	if SETTINGS.getSetting('pref_LiveRecord') == 'true':		
 		title = 'Recording TV-Live'												# TVLiveRecord-Button anhängen
-		laenge = SETTINGS.getSetting('pref_LiveRecord_duration')
-		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
-			laenge = "wird manuell eingegeben"
-		summary = u'Sender wählen und aufnehmen.\nDauer: %s (siehe Settings)' % laenge
+		summary = u'Sender wählen und direkt aufnehmen.\nDauer: %s (siehe Settings)' % laenge
 		tagline = 'Downloadpfad: %s' 	 % SETTINGS.getSetting('pref_download_path') 				
 		fparams="&fparams={'title': '%s'}" % title
 		addDir(li=li, label=title, action="dirList", dirID="TVLiveRecordSender", fanart=R(ICON_MAIN_TVLIVE), 
@@ -6058,7 +6150,9 @@ def EPG_Sender(title, Merk='false'):
 	
 	sort_playlist = get_sort_playlist()	# einschl. get_ZDFstreamlinks
 	# PLog(sort_playlist)
-	summ = u"für die Merkliste (Kontextmenü) sind die Einträge dieser Liste wegen des EPG gut geeignet."
+	
+	summ = u"für die Merkliste (Kontextmenü) sind die Einträge dieser Liste wegen des EPG besser geeignet"
+	summ = u"%s als die Menüs Überregional, Regional und Privat" % summ
 	
 	for rec in sort_playlist:
 		title = rec[0]
@@ -6077,11 +6171,14 @@ def EPG_Sender(title, Merk='false'):
 			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
 				thumb=img, fparams=fparams, tagline='weiter zum Livestream', summary=summ)
 		else:
+			add = ''
+			if SETTINGS.getSetting('pref_epgRecord') == 'true':
+				add = u" und zum Aufnehmen via Kontextmenü"
 			title=py2_encode(title); link=py2_encode(link);
 			fparams="&fparams={'ID': '%s', 'name': '%s', 'stream_url': '%s', 'pagenr': %s}" % (ID, quote(title), 
 				quote(link), '0')
 			addDir(li=li, label=title, action="dirList", dirID="EPG_ShowSingle", fanart=R('tv-EPG-single.png'), thumb=img, 
-				fparams=fparams, tagline='weiter zum EPG', summary=summ)
+				fparams=fparams, tagline='weiter zum EPG' + add, summary=summ)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #-----------------------------
@@ -6748,7 +6845,7 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):
 	PLog('page: ' + page[:100])
 
 	fname = sname + ".m3u8"
-	fpath = os.path.join("%s/%s") % (M3U8STORE, fname)
+	fpath = os.path.join(M3U8STORE, fname)
 	PLog('fpath: ' + fpath)
 	msg = RSave(fpath, page)			# 3.  Inhalt speichern -> resources/m3u/
 	if 'Errno' in msg:

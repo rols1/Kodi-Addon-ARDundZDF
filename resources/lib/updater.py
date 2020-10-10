@@ -11,7 +11,7 @@
 # 	18.03.2020 adjust_AddonXml: Anpassung python-Version an Kodi-Version
 #	13.04.2020 Aktualisierung adjust_AddonXml 
 ################################################################################
-# Stand 09.09.2020
+# Stand 07.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -43,9 +43,10 @@ import zipfile, re
 import io 							# Python2+3 -> update() io.BytesIO für Zipfile
 
 # Addonmodule + Funktionsziele (Script util_imports.py):
-import resources.lib.util as util
-PLog=util.PLog; get_page=util.get_page; stringextract=util.stringextract;
-cleanhtml=util.cleanhtml; RLoad=util.RLoad; RSave=util.RSave; MyDialog=util.MyDialog
+#import resources.lib.util as util
+from resources.lib.util import *
+#PLog=util.PLog; get_page=util.get_page; stringextract=util.stringextract;
+#cleanhtml=util.cleanhtml; RLoad=util.RLoad; RSave=util.RSave; MyDialog=util.MyDialog
  
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -60,7 +61,7 @@ REPO_NAME		 	= 'Kodi-Addon-ARDundZDF'
 GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
 
 BACKPUP_DIR			= "data"		# Cache: zu sichern vor Update / zu restaurieren nach Update
-RESSOURCES_DIR		= os.path.join("%s/resources") % ADDON_PATH
+RESSOURCES_DIR		= os.path.join(ADDON_PATH, "resources") 
 
 ################################################################################
 
