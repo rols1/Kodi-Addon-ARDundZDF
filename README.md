@@ -5,12 +5,12 @@ Addon für Kodi / XBMC (Kodi-Version von [Plex-Plugin ARDundZDF](https://github.
 Ab Version 2.2.5 für Kodi Matrix vorbereitet (Python2- / Python3-kompatibel).<br>
 Mit Inhalten der Mediatheken von ARD und ZDF, 3Sat, funk, phoenix, KIKA und ZDFtivi, tageschau.de, Arte-Kategorien,
 einschließlich Live-TV mit Aufnahmefunktion, Live-Radio, Podcasts.<br>
-Der Relaunch des ZDF-Mediathek-Internetangebots vom 28.10.2016 ist eingearbeitet.<br>
 
 Für die ZDF Mediathek kann wahlweise die kompakte Version ZDFmobile genutzt werden. 
 
 Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-ARDundZDF/total.svg "Downloads")
+oder [kodinerds-Repo](https://repo.kodinerds.net) - siehe INSTALLATION.
 
 Die Plex-Versionen [Plex-Plugin-ARDMediathek2016](https://github.com/rols1/Plex-Plugin-ARDMediathek2016) und [ARDundZDF](https://github.com/rols1/ARDundZDF) werden nicht mehr gepflegt - Plex hat die Unterstützung für Plugins in seinen Client-Softwarepaketen eingestellt.
 
@@ -83,6 +83,7 @@ Funktionen:
 
 #### TV-Live-Streams (30.08.2018: 33 Sender), Aufnahmefunktion: 
 - ARD- und ZDF-Sender überregional und regional, einige ausgewählte Privatsender
+- für die Aufnahmefunktion (mit oder ohne EPG) ist eine [ffmpeg-Installation](https://ffmpeg.org/download.html) erforderlich 
 
 #### Radio-Live-Streams der ARD:
 - alle Radiosender von Bayern, HR, mdr, NDR, Radio Bremen, RBB, SR, SWR, WDR, Deutschlandfunk. Insgesamt 10 Stationen, 63 Sender
@@ -135,9 +136,13 @@ Hauptmenü:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Hauptmenue.png)
 
-Hauptmenü ARD:
+Hauptmenü ARD Classic:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Hauptmenue_ARD.png)
+
+Hauptmenü ARD Neu:
+===================  
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Hauptmenue_ARD-Neu.png)
 
 Hauptmenü ZDF:
 ===================  
@@ -163,11 +168,15 @@ TV Livesender Vorauswahl:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV_Livesender_Vorauswahl.png)
 
-Radio Livesender:
+Audiothek:
+===================  
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Audiothek.png)
+
+Audiothek Livestreams:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Radio_Livesender.png)
 
-Radio Livesender BR:
+Audiothek Radio-Livestreams BR:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Radio_Livesender_BR.png)
 
