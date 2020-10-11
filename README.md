@@ -168,6 +168,10 @@ TV Livesender Vorauswahl:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV_Livesender_Vorauswahl.png)
 
+Merkliste (mit Filter):
+===================  
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Settings/Merkliste_Kontext_filtered.png)
+
 Audiothek:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Audiothek.png)
@@ -180,7 +184,7 @@ Audiothek Radio-Livestreams BR:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Radio_Livesender_BR.png)
 
-Podcast-Menü:
+Podcast-Menü (Classic):
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Podcast_Menue.png)
 
