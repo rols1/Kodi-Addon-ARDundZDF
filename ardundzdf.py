@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.4.6'
-VDATE = '10.10.2020'
+VERSION = '3.4.7'
+VDATE = '17.10.2020'
 
 #
 #
@@ -2595,13 +2595,8 @@ def ARDSport(title):
 		SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
 		PLog(onlySender)	
 		
-	channel = 'Regional'									# zum Livestream: WDR_ARD Event Sportschau
-	onlySender = 'WDR_ARD Event Sportschau'	
-	img = "https://www.sportschau.de/resources/img/sportschau/banner/logo_base.png"
-	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
-	PLog(onlySender)
-	
 	# Livestream: MDR-Sachsen Fußball-Livestream Audio (nicht in livesenderTV.xml)
+	#	Forum Weri 22.09.2020
 	title = 'MDR-Sachsen Fußball-Livestream Audio'	
 	PLog(title)
 	thumb = "https://www.sportschau.de/resources/img/sportschau/banner/logo_base.png"
@@ -2613,7 +2608,16 @@ def ARDSport(title):
 		quote(title), quote(thumb), quote_plus(title))
 	addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
 		tagline=tag, summary=summ, mediatype='music')
-			
+
+	# Livestreams WDR - s. Forum:
+	WDR_Streams = ['WDR_ARD Event 1', 'WDR_ARD Event 3']
+	for sname in WDR_Streams:								# aus livesenderTV.xml: WDR Eventlivestreams	
+		channel = 'Regional'									
+		onlySender = sname
+		img = R("tv-wdr.png")	
+		SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
+		PLog(onlySender)	
+				
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #--------------------------------------------------------------------------------------------------

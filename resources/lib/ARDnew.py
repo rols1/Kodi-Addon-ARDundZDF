@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 08.10.2020
+#	Stand 11.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -472,7 +472,7 @@ def get_page_content(li, page, ID, mark=''):
 	pagination	= stringextract('pagination":', '"type"', page)
 	pagetitle 	= stringextract('title":"', '"', pagination)	# bei Suche: SearchCompilationWidget:..
 	PLog(pagetitle)
-	page = page.replace('\\', '')								# Quotierung vor " entfernen, Bsp. \"query\"
+	page = page.replace('\\"', '*')								# quotiere Marks entf., Bsp. \"query\"
 	
 	
 	if 'Livestream' in ID or 'EPG' in ID:

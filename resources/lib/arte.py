@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 07.10.2020
+#	Stand: 17.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -360,7 +360,9 @@ def GetContent(li, page, ID):
 def get_img(item):
 	PLog("get_img:")
 	images = stringextract('resolutions":[', '}],', item)
+	#PLog(images)
 	images = blockextract('url":', images)
+	PLog(images[60:])
 	img=''
 	for image in images:
 		if 'w":720' in image or 'w":940' in image or 'w":1920' in image:
@@ -376,6 +378,9 @@ def get_img(item):
 #	-> GetContent -> SingleVideo
 def Beitrag_Liste(url, title):
 	PLog("Beitrag_Liste:")
+
+	if page == '':	
+		return li						
 
 	page, msg = get_page(path=url)	
 	if page == '':						
@@ -544,29 +549,19 @@ def get_masterm3u8(rec_list):					# passende master.m3u8 wählen
 # GetContent -> Kategorien mit Titel der Kategorie  (2. Stufe)
 # Hinw.: die Listen aller Subkats befinden sich sowohl in BASE_ARTE 
 #	als auch in den einz. SubKats - alle ohne Bilder
-#
+# 13.10.2020 Auswertung Adds hinzugefügt (Aktuelle Highlights, 
+#	Kollektionen, Sendungen)
 def Kategorien(title=''):
 	PLog("Kategorien: " + title)
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='arte')						# Home-Button
 	
-	page = Dict("load", 'ArteStart', CacheTime=ArteStartCacheTime)	
-	if page == False:								# nicht vorhanden oder zu alt
-		page, msg = get_page(path=BASE_ARTE+'/de/')	
-		if page == '':						
-			msg1 = 'Fehler in Kategorien: %s' % title
-			msg2 = msg
-			msg2 = u"Seite weder im Cache noch im Web verfügbar"
-			MyDialog(msg1, msg2, '')
-			return li
-		else:
-			pos = page.find('__INITIAL_STATE__ ')	# json-Bereich
-			page = page[pos:]
-			page = page.replace('\\u002F', '/')	
-			page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
-			Dict("store", 'ArteStart', page) 		# Seite -> Cache: aktualisieren				
-	PLog(len(page))
+	path = BASE_ARTE+'/de/'
+	page = get_ArtePage('Kategorien_1', title, Dict_ID='ArteStart', path=path)	
+	if page == '':	
+		return li	
+
 	
 	if title == '':									# 1. Stufe: Kategorien listen
 		PLog('Stufe1:')	
@@ -583,22 +578,58 @@ def Kategorien(title=''):
 		li = GetContent(li, page, ID='KAT_START') 	# eigenes ListItem
 		
 	else:											# 2. Stufe: Subkats von title listen
-		PLog('Stufe2:')		
+		PLog('Stufe2:')
 		pos = page.find('"categories":')			# Listen Subkats am Seitenende o. Bilder
 		PLog(pos)
 		page = page[pos:]
 		PLog(page[:100])
 		
-		# zum Titel passende Liste suchen:
-		page = stringextract('label":"%s"' % title, '}]}', page) 	# Liste ausschneiden
+		# zum Titel passende Liste suchen, dann die Seite
+		#	rückwärts ab "id" ausschneiden, um den Kat-pid
+		#	zu ermitteln (benötigt fü die Adds). 
+		pos = page.find('label":"%s"' % title)
+		if pos > 0:									# Liste ausschneiden, zurück bis:
+			page = page[pos-50:]					# 	"id":"CPO_de","code":"CPO","language":"de",
+				
+		page = stringextract('"id"', '}]}', page)
+		Kat_pid = stringextract('"code":"', '"', page)
+		PLog(Kat_pid)	
 		PLog(page[:100])
 		if page == '':						
 			msg1 = 'Kategorie nicht gefunden: %s' % title
 			MyDialog(msg1, '', '')
 			return 
+	
+		PLog('Mark0')									# Adds	
+		# Allgemeine Cluster voranstellen: Highlights, Kollektionen, Sendungen
+		#	Dafür Kat_url laden (Daten fehlen auf arte.tv/de, sind dort script-
+		#	generiert)
+		# Adds: 	fehlen komplett in Arte Concert
+		# 			Kollektionen + Sendungen: entgegen Webansicht in json auf jew. 
+		#			6 Beiträge beschränkt
+		#
+		Adds = [u"Aktuelle Highlights", u"Kollektionen", u"Sendungen"]
+		Kat_url = stringextract('url":"', '"', page)	# Bsp.: ../videos/kultur-und-pop/
+		Kat_page = get_ArtePage('Kategorien_2', title, Dict_ID='ArteKat_%s' % Kat_pid, path=Kat_url)
+		PLog("Kat_url: " + Kat_url)
 		
-		items = blockextract('{"id":"',  page)	
+		if Kat_page:
+			for title in Adds:
+				pos = Kat_page.find('title":"%s"' % title)
+				PLog(pos)
+				if pos > 0:
+					#img = R(ICON_DIR_FOLDER)			# Default 
+					img = get_img(item=Kat_page[pos:]) 
+					PLog('Satz_Adds:'); PLog(title); PLog(Kat_url);
+					title=py2_encode(title); Kat_url=py2_encode(Kat_url);	
+					fparams="&fparams={'path': '%s','title':'%s','pid':'%s','add':'true'}" % (quote(Kat_url), 
+						quote(title), Kat_pid)
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.KatSub", fanart=img, 
+						thumb=img, fparams=fparams)
 		
+
+		items = blockextract('{"id":"',  page)			# eigentliche SubKats
+		PLog(len(items))
 		
 		for item in items:
 			title = stringextract('label":"', '"', item)
@@ -606,31 +637,28 @@ def Kategorien(title=''):
 			summ = stringextract('escription":"', '"', item)
 			pid = stringextract('id":"', '"', item)
 			
-			# 1. Bild der Subkat aus dem Cache laden, o. Rücksicht auf 
+			# 1. Bild der Subkat laden 
 			#	Alter (Bild nur stellvertretend für gesamte Subkat)
 			#	bei Cache-miss ICON_DIR_FOLDER . Subkats-Listen ohne img.
 			#	Sonderfall arte-concert (mehrere Seiten möglich).
 			img = R(ICON_DIR_FOLDER)					# Default 
-			page = Dict("load", 'ArteKat_%s' % pid)  	# Normalfall
-			if page == False:
-				pid = pid.replace('_de', '')			# pid ohne de-Zusatz			
-				page = Dict("load", 'ArteKat_%s' % pid) 
-			if page == False:							# Special arte-concert
-				pid = pid.replace('_de', '')			
-				page = Dict("load", 'ArteConcert_%s_page_1' % pid) # Bild von 1. Seite
-				
-			if page:
-				img = get_img(item=page)			
-			
-			PLog('Satz:');  PLog(title);  PLog(pid); PLog(url);
+			pos = Kat_page.find('title":"%s"' % title)
+			PLog('pos: ' + str(pos))
+			if pos > 0:
+				page = Kat_page[pos:]
+				img = get_img(item=page)	
+						
+			endmark = '"categories":'
+			PLog('Satz_Subs:');  PLog(title);  PLog(pid); PLog(url); PLog(img); 
 			
 			title=py2_encode(title); url=py2_encode(url);	
-			fparams="&fparams={'path': '%s','title':'%s', 'pid':'%s'}" % (quote(url), quote(title), pid)
+			fparams="&fparams={'path': '%s','title':'%s', 'pid':'%s'}" % (quote(url), 
+				quote(title), pid)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.KatSub", fanart=img, 
 				thumb=img, summary=summ, fparams=fparams)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
+	
 # ----------------------------------------------------------------------
 # Cachezeit 12 Std. wie Startseite
 # listet einzelne Beiträge der Sub-Kategorie title in Datei path
@@ -639,11 +667,12 @@ def Kategorien(title=''):
 #		ergeben 401-errors. Daher leiten wir SubKats mit /arte-concert/
 #		hier aus + verwenden einen Api-Call ähnlich in arte_Search
 #		(ermit. in chrome-tools) -> KatSubConcert
+# add: Trigger für Zusätze (Aktuelle Highlights, Kollektionen, Sendungen)
 #
-def KatSub(path, title, pid):
+def KatSub(path, title, pid, add=''):
 	PLog("KatSub: " + title)
 	PLog(pid); PLog(path)
-	
+
 	if '/arte-concert/' in path:					# SubKats aus Arte Concert ausleiten
 		PLog(path)									# api-Call in KatSubConcert
 		return KatSubConcert(title, pid)
@@ -651,41 +680,51 @@ def KatSub(path, title, pid):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='arte')						# Home-Button
 	
-	page = Dict("load", 'ArteKat_%s' % pid, CacheTime=ArteKatCacheTime)	
-	if page == False:								# nicht vorhanden oder zu alt
-		page, msg = get_page(path)	
-		if page == '':						
-			msg1 = 'Fehler in Kategorien: %s' % title
-			msg2 = msg
-			msg2 = u"Seite weder im Cache noch im Web verfügbar"
-			MyDialog(msg1, msg2, msg3)
-			return li
-		if 'id="no-content">' in page:				# no-content-Hinweis nur im html-Teil
-			msg2 = stringextract('id="no-content">', '</', page)
-			if msg2:
-				msg1 = 'Arte meldet:'
-				MyDialog(msg1, msg2, '')
-				return li
-		else:
-			pos = page.find('__INITIAL_STATE__ ')	# json-Bereich
-			page = page[pos:]
-			page = page.replace('\\u002F', '/')	
-			page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
-			Dict("store", 'ArteKat_%s' % pid, page) # Seite -> Cache: aktualisieren				
-	PLog(len(page))
-	
+	pagenr = stringextract('&page=', '&', path)	
+	page = get_ArtePage('KatSub', title, Dict_ID='ArteSubKat_%s_page_%s' % (pid, pagenr), path=path)	
+	PLog(page[:100])	
+	if page == '':	
+		return li						
 													# Start Einzelbeiträge
 	# Einzelbeiträge enden bei der Kat-Liste (einschl. SubKats),
 	#	Ausnahme: Concert-Subs - hier werten wir alle enth.
 	#	Beiträge aus:
-	if 'title":"%s"' % title in page:
-		page = stringextract('title":"%s"' % title, '"categories":', page)
-	PLog(page[:100])
-	
+	Adds = ["Aktuelle Highlights", "Kollektionen", "Sendungen"]
+	PLog('Mark1')
+	if pagenr == '':								# api-Link-Inhalt: Ausschneiden entf. 
+		if title in Adds:
+			PLog('title_in_Adds')
+			if "Highlights" in title or "Kollektionen" in title:
+				page = stringextract('title":"%s"' % title, '"code":{', page)
+			else:
+				page = stringextract('title":"%s"' % title, '"categories":', page)
+		else:	
+			if 'title":"%s"' % title in page:
+				page = stringextract('title":"%s"' % title, '"categories":', page)
+	PLog(page[:100])	
+
 	# Kategorien listen
-	# GetContent: -> SingleVideo
+	# GetContent: -> SingleVideo	
 	li = GetContent(li, page, ID='KAT_SUB') # eigenes ListItem	
-	
+
+	if "nextPage" in page:								# Mehr-Button
+		# der api-internal Link in nextPage erzeugt http-403-Error - 
+		# 	nach ersetzen durch www.arte.tv/guide OK: 
+		path = stringextract('"nextPage":"', '"', page) 
+		if path != '' and 'null' not in path:
+			nextpage = stringextract('&page=', '&', path)
+			path = path.replace('api-internal.arte.tv', 'www.arte.tv/guide')
+			path = unquote(path)						# DE_FR%252CEUR_DE_FR%252CSAT%252CALL
+			
+			PLog(nextpage); PLog(path);
+			tag = "weiter zu Seite %s" % nextpage
+			
+			title=py2_encode(title); path=py2_encode(path)
+			fparams="&fparams={'title': '%s', 'path': '%s', 'pid': '%s', 'add': '%s'}" %\
+				(quote(title), quote(path), pid, add)
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.KatSub", 
+				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), tagline=tag, fparams=fparams)		
+			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------
@@ -705,8 +744,8 @@ def KatSubConcert(title, pid, nextpage=''):
 	path = 'https://www.arte.tv/guide/api/emac/v3/de/web/data/VIDEO_LISTING/?imageFormats=landscape&category=ARS'
 	path = path + '&subcategories=%s&videoType=MOST_RECENT&page=%s&limit=20' % (pid, nextpage)
 	
+	# Seite nicht für get_ArtePage geeignet
 	page = Dict("load", 'ArteConcert_%s_page_%s' % (pid, nextpage), CacheTime=ArteKatCacheTime)	
-	PLog(page)
 	if page == False or 'data":[]' in page:			# nicht vorhanden, zu alt od. json-Seite leer
 		page, msg = get_page(path)	
 		if page == '':						
@@ -745,5 +784,39 @@ def KatSubConcert(title, pid, nextpage=''):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+# ---------------------------------------------------------------------
+# lädt Arte-Seite aus Cache / Web
+# Rückgabe json-Teil der Webseite oder ''
+#
+def get_ArtePage(caller, title, Dict_ID, path, header=''):
+	PLog("get_ArtePage: " + Dict_ID)
+	PLog(caller)
+	
+	page = Dict("load", Dict_ID, CacheTime=ArteKatCacheTime)	
+	if page == False:								# nicht vorhanden oder zu alt
+		page, msg = get_page(path, header=header)	
+		if page == '':						
+			msg1 = 'Fehler in %s: %s' % (caller, title)
+			msg2 = msg
+			msg2 = u"Seite weder im Cache noch im Web verfügbar"
+			MyDialog(msg1, msg2, '')
+			return ''
+		if 'id="no-content">' in page:				# no-content-Hinweis nur im html-Teil
+			msg2 = stringextract('id="no-content">', '</', page)
+			if msg2:
+				msg1 = 'Arte meldet:'
+				MyDialog(msg1, msg2, '')
+				return ''
+		else:
+			pos = page.find('__INITIAL_STATE__ ')	# json-Bereich
+			if pos > 0:
+				page = page[pos:]
+			page = page.replace('\\u002F', '/')	
+			page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
+			Dict("store", Dict_ID, page) # Seite -> Cache: aktualisieren				
+	PLog(len(page))
+	#page = str(page)  # n.erf.
+	PLog(page[:100])
+	return page
 # ----------------------------------------------------------------------
 

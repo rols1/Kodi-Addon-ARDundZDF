@@ -220,7 +220,7 @@
 	<item>
 		<title>MDR+ Eventlivestreams + SocialTV - 4</title>
 		<hrefsender></hrefsender>
-		<link>http://mdrevent4hls-lh.akamaihd.net/i/livetvmdrevent4_de@513995/master.m3u8</link>
+		<link>http://mdrevent5hls-lh.akamaihd.net/i/livetvmdrevent4_ww@513996/master.m3u8</link>		  
 		<thumbnail>tv-mdr-sachsen.png</thumbnail>
 		<imgsource>Arauco</imgsource>
 		<EPG_ID></EPG_ID>
@@ -321,14 +321,24 @@
 		<date>07.09.2018</date>
 	</item>
 	<item>
-		<title>WDR_ARD Event Sportschau</title>
+		<title>WDR_ARD Event 1</title>
 		<hrefsender></hrefsender>
 		<link>https://wdrardevent1-lh.akamaihd.net/i/ardevent1_weltweit@566648/master.m3u8</link>
-		<thumbnail>https://www.sportschau.de/resources/img/sportschau/banner/logo_base.png</thumbnail>
+		<thumbnail>tv-wdr.png</thumbnail>
 		<imgsource></imgsource>
 		<EPG_ID></EPG_ID>
-		<date>18.07.2020</date>
+		<date>13.10.2020</date>
 	</item>
+	<item>
+		<title>WDR_ARD Event 3</title>
+		<hrefsender></hrefsender>
+		<link>https://wdrevent.akamaized.net/hls/live/2016698/wdr_msl4_wdrevent3/master.m3u8</link>
+		<thumbnail>tv-wdr.png</thumbnail>
+		<imgsource></imgsource>
+		<EPG_ID></EPG_ID>
+		<date>13.10.2020</date>
+	</item>
+
 </items>
 </channel>
 

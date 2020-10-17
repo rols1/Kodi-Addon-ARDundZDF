@@ -12,6 +12,15 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+17.10.2020 3.4.7
+			Modul arte: Auswertung der Zusätze Highlights, Kollektionen, Sendungen in
+			den Kategorien, Anpassungen Funktionen Kategorien + KatSub, neue Funktion
+			get_ArtePage.
+			get_page_content (Modul ARD-Neu): quotiere Marks entfernt via 
+			replace('\\"', '*').
+			livesenderTV.xml: Austausch MDR+ 4 Eventstream (Anlass: Forum @Weri).
+			livesenderTV.xml: WDR Eventstream 3 hinzugefügt(Anlass: Forum @HerrMagister).
+			
 10.10.2020 3.4.6 Renovierung "Recording TV-Live"-Bereich
 			Settings "Recording TV-Live": "Aufnehmen" -> "Aufnehmen mit EPG"  (bessere 
 			Abgrenzung zum sofortigen Recording), Bild Wicki geändert, Info-Texte in
