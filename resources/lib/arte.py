@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 17.10.2020
+#	Stand: 18.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -377,10 +377,7 @@ def get_img(item):
 # Folgebeiträge aus GetContent
 #	-> GetContent -> SingleVideo
 def Beitrag_Liste(url, title):
-	PLog("Beitrag_Liste:")
-
-	if page == '':	
-		return li						
+	PLog("Beitrag_Liste:")				
 
 	page, msg = get_page(path=url)	
 	if page == '':						

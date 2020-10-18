@@ -12,6 +12,9 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+18.10.2020 3.4.8 
+			Beitrag_Liste (Modul arte): Kopierrest am Funktionsstart entfernt.
+			
 17.10.2020 3.4.7
 			Modul arte: Auswertung der Zusätze Highlights, Kollektionen, Sendungen in
 			den Kategorien, Anpassungen Funktionen Kategorien + KatSub, neue Funktion
