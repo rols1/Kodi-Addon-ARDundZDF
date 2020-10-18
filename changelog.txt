@@ -12,6 +12,13 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+18.10.2020 3.4.9
+			get_page_content (Modul ARD-Neu): zusätzl. Url-Parameter '/editorial/'
+			für Mehrfachbeiträge hinzugefügt (nötig für "Mehr zum Thema | Rubriken").
+			ARDStart (Modul ARD-Neu): Url-Parameter '&embedded=false' in den weiter-
+			führenden Links entfernt (die Beiträge fehlen im json-Ergebnis).
+			Live-Konzerte separiert von Livestreams.
+
 18.10.2020 3.4.8 
 			Beitrag_Liste (Modul arte): Kopierrest am Funktionsstart entfernt.
 			

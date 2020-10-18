@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 11.10.2020
+#	Stand 17.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -237,9 +237,11 @@ def ARDStart(title, sender, widgetID=''):
 		if img  == '':
 			img = R(ICON_DIR_FOLDER)
 		path 	= stringextract('"href":"', '"', cont)
+		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
 		
 		if 'Livestream' in title or up_low('Live') in up_low(title):
-			ID = 'Livestream'
+			if 'Konzerte' not in title:						# Corona-Zeit: Live-Konzerte (keine Livestreams)
+				ID = 'Livestream'
 		else:
 			ID = 'ARDStart'			
 		
@@ -529,8 +531,9 @@ def get_page_content(li, page, ID, mark=''):
 					
 		
 		if mehrfach == True:									# Pfad für Mehrfachbeiträge ermitteln 						
-			url_parts = ['/grouping/', '/compilation/']
+			url_parts = ['/grouping/', '/compilation/', '/editorial/']
 			hreflist = blockextract('"href":"', s)
+			PLog("hreflist: " + str (hreflist))
 			for h in hreflist:
 				for u in url_parts:
 					if u in h:
@@ -833,7 +836,6 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 		return li
 	PLog(len(page))
 	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
-	# RSave('/tmp/x.html', py2_encode(page))	# Debug	
 	
 	href = ''; VideoUrls = []
 	Plugins = blockextract('_plugin', page)	# wir verwenden nur Plugin1 (s.o.)

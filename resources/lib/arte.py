@@ -587,7 +587,7 @@ def Kategorien(title=''):
 		pos = page.find('label":"%s"' % title)
 		if pos > 0:									# Liste ausschneiden, zurück bis:
 			page = page[pos-50:]					# 	"id":"CPO_de","code":"CPO","language":"de",
-				
+			
 		page = stringextract('"id"', '}]}', page)
 		Kat_pid = stringextract('"code":"', '"', page)
 		PLog(Kat_pid)	
@@ -609,7 +609,7 @@ def Kategorien(title=''):
 		Kat_url = stringextract('url":"', '"', page)	# Bsp.: ../videos/kultur-und-pop/
 		Kat_page = get_ArtePage('Kategorien_2', title, Dict_ID='ArteKat_%s' % Kat_pid, path=Kat_url)
 		PLog("Kat_url: " + Kat_url)
-		
+	
 		if Kat_page:
 			for title in Adds:
 				pos = Kat_page.find('title":"%s"' % title)

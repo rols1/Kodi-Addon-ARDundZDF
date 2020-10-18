@@ -46,7 +46,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.4.8'
+VERSION = '3.4.9'
 VDATE = '18.10.2020'
 
 #
@@ -8147,7 +8147,6 @@ def BarriereArmSingle(path, title, clus_title='', ID=''):
 		return li 
 		
 	PLog(len(page))
-	# RSave('/tmp/xb.html', py2_encode(page))	# Debug	
 	
 	if clus_title:								# 2. Aufruf: Beiträge zu Cluster-Titel auswerten
 		cluster =  blockextract('class="cluster-title">', page, '') 
@@ -8984,7 +8983,6 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken2
 	page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
 	PLog("request_json: " + page[:40])
-	# RSave('/tmp/x.json', py2_encode(page))	# Debug	
 
 	if page == '':	# Abbruch - ev. Alternative ngplayer_2_3 versuchen
 		PLog('videodat_url: Laden fehlgeschlagen')
