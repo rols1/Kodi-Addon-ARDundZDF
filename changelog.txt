@@ -12,12 +12,24 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+24.10.2020 3.5.0
+			Modul ARD-Neu: neue Funktion img_preload für Startpage-img's (Caching
+			im SlideStore), Anpassung ARDStart.
+			ARDStartSingle (Modul ARD-Neu): Anpassung für Mehr-Beiträge nach ARD-
+			Änderungen - Auswertung durch get_page_content (Funktion get_ardsingle_more
+			entfällt). 
+			SendungenAZ_ARDnew: Fix Kodierung von msg1 für MyDialog bei leerer Seite. 
+			GetContent (Modul arte): unescape title (drei-Byte-Bindestrich verhinderte
+			Löschen in Merkliste (Anlass: Forum @sus67). 
+			Modul arte: weitere Zusätze ausgewertet (insbes. Concert, Fernsehfilme und
+			Serien), Codebereinigung, KatSubConcert entfernt.
+
 18.10.2020 3.4.9
 			get_page_content (Modul ARD-Neu): zusätzl. Url-Parameter '/editorial/'
 			für Mehrfachbeiträge hinzugefügt (nötig für "Mehr zum Thema | Rubriken").
 			ARDStart (Modul ARD-Neu): Url-Parameter '&embedded=false' in den weiter-
-			führenden Links entfernt (die Beiträge fehlen im json-Ergebnis).
-			Live-Konzerte separiert von Livestreams.
+			führenden Links entfernt (die Beiträge fehlen im json-Ergebnis), Live-
+			Konzerte separiert von Livestreams.
 
 18.10.2020 3.4.8 
 			Beitrag_Liste (Modul arte): Kopierrest am Funktionsstart entfernt.

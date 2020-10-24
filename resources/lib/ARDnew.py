@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 17.10.2020
+#	Stand 22.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -231,13 +231,12 @@ def ARDStart(title, sender, widgetID=''):
 		if anz == '1':
 			tag = u"%s Beitrag" % anz
 		else:
+			if anz == "null": anz='mehrere'
 			tag = u"%s Beiträge" % anz
-		img		= stringextract('"src":"', '"', cont)		# Bild 1. Beitrag, Bsp.: ..r.jpg?w={width}
-		img 	= img.replace('{width}', '720')
-		if img  == '':
-			img = R(ICON_DIR_FOLDER)
+
 		path 	= stringextract('"href":"', '"', cont)
 		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
+		img = img_preload(ID, path, title, 'ARDStart')
 		
 		if 'Livestream' in title or up_low('Live') in up_low(title):
 			if 'Konzerte' not in title:						# Corona-Zeit: Live-Konzerte (keine Livestreams)
@@ -257,42 +256,46 @@ def ARDStart(title, sender, widgetID=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------------------------------
-# img_via_id: ermittelt im json-Teil (ARD-Neu) img + sender via href_id
-def img_via_id(href_id, page):
-	PLog("img_via_id: " + href_id)
-	if href_id == '':
-		img = R('icon-bild-fehlt.png')
-		return img, ''									# Fallback bei fehlender href_id
-		
-	#item	= stringextract('Link:%s' %  href_id,  'idth}', page)
-	item	= stringextract('%s.images.aspect16x9' %  href_id,  'idth}', page)
-	# PLog('item: ' + item)
-	
-	img = ''
-	if '16x9' in item:
-		img =  stringextract('src":"', '16x9', item)	# Endung ../16x9/{w.. oder  /16x9/
-	if '?w={w' in item:
-		img =  stringextract('src":"', '?', item)		# Endung ..16-9.jpg?w={w..
-		
-	if img == '':										# Fallback bei fehlendem Bild
-		img = R('icon-bild-fehlt.png')
+# 19.10.2020 Ablösung img_via_id durch img_preload nach Änderung 
+#	der ARD-Startseite: lädt das erste img ermittelt in geladener
+#	Seite oder ID.img aus dem Cache - Löschfrist: Setting Slide Shows)
+#
+def img_preload(ID, path, title, caller):
+	PLog("img_preload: " + title)
+	PLog(caller); PLog(path)
+
+	if caller == 'ARDStart':
+		leer_img = R(ICON_DIR_FOLDER)
 	else:
-		if img.endswith('.jpg') == False:
-			img = img + '16x9/640.jpg'		
+		leer_img = R(icon-bild-fehlt.png)
+
+	img=''
+	oname = os.path.join(SLIDESTORE, "ARDNeu_Startpage")
+	fname = os.path.join(oname, ID)
 	
-	# Y3JpZDovL2JyLmRlL3ZpZGVvL2YwMTIxM2RjLTAyYzgtNDZhYi1hZjEyLWM3YTFhYTRkMGVkOQ.publicationService":{"name":"
-	sender	= stringextract('%s.publicationService":{"name":"' %  href_id,  '"', page)
-	if sender == '':
-		pos = page.rfind(href_id)
-		PLog(pos)
-		pos = page.find('publicationService', pos)
-		PLog(pos)
-		item= page[pos:pos+100]
-		PLog(item)
-		sender = stringextract('name":"', '"', item)
-	PLog('img: ' + img)	
-	PLog('sender: ' + sender)	
-	return img, sender
+	if os.path.isdir(oname) == False:
+		try:  
+			os.mkdir(oname)
+		except OSError as exception:
+			msg = str(exception)
+			PLog(msg)
+			
+	if os.path.exists(fname):							# img aus Cache laden
+		return fname
+	else:
+		page, msg = get_page(path=path)					# ganze Seite von Sender laden	
+		if page=='':
+			return leer_img								# Fallback 
+	
+	img = stringextract('src":"', '"', page)			# Pfad zum 1. img
+	if img == '':
+		return leer_img									# Fallback 
+	
+	img = img.replace('{width}', '720')
+	urlretrieve(img, fname)								# img -> Cache
+		
+	PLog('img: ' + fname)	
+	return fname										# lokaler img-Pfad
 	
 #---------------------------------------------------------------------------------------------------
 # Auflistung einer Rubrik aus ARDStart - geladen wird das json-Segment für die Rubrik, z.B.
@@ -555,7 +558,10 @@ def get_page_content(li, page, ID, mark=''):
 				title 	= stringextract('shortTitle":"', '"', s)
 		title = transl_json(title)					# <1u002F2> =  <1/2>
 		title = unescape(title); 
-		title = repl_json_chars(title)		
+		title = repl_json_chars(title)	
+		
+		if ID == "mehrzS":
+			title = u"Mehr: %s" % title	
 
 		if mark:
 			PLog(title); PLog(mark)
@@ -647,6 +653,9 @@ def get_page_content(li, page, ID, mark=''):
 # Falls path auf eine Rubrik-Seite zeigt, wird zu ARDStartRubrik zurück verzweigt.
 # 02.05.2019 erweitert: zusätzl. Videos zur Sendung angehängt - s.u.
 # 28.05.2020 Stream-Bezeichner durch ARD geändert
+# 19.10.2020 Mehr-Auswertung an ARD-Änderungen angepasst: get_ardsingle_more entfällt,
+#	Auswertung durch get_page_content nach entfernung des 1. elements und 
+#	page="\n".join(gridlist). ID 'mehrzS' verhindert Rekursion.	
 #
 def ARDStartSingle(path, title, duration, ID=''): 
 	PLog('ARDStartSingle: %s' % ID);
@@ -661,7 +670,7 @@ def ARDStartSingle(path, title, duration, ID=''):
 	PLog(len(page))
 	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
 
-	elements = blockextract('availableTo":', page)			# möglich: Mehrfachbeiträge? z.B. + Hörfassung
+	elements = blockextract('"availableTo":', page)			# möglich: Mehrfachbeiträge? z.B. + Hörfassung
 	if len(elements) > 1:
 		if '_quality"' not in page:							# bei Streamlinks bleiben wir hier
 			PLog('%s Elemente -> ARDStartRubrik' % str(len(elements)))
@@ -750,72 +759,22 @@ def ARDStartSingle(path, title, duration, ID=''):
 	addDir(li=li, label=title_new, action="dirList", dirID="resources.lib.ARDnew.ARDStartVideoMP4", fanart=img, thumb=img, 
 		fparams=fparams, summary=summ_lable, tagline=tagline, mediatype=mediatype)	
 	
-	gridlist=''	
-	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten). gridlist enthält 
-	#	die Links zu den Sendungen
 	if 	ID == 'mehrzS':											# nicht nochmal "mehr" zeigen
 		xbmcplugin.endOfDirectory(HANDLE)	
-	if 	'>Mehr aus der Sendung<' in page: 						# z.B. in Verpasst-Seiten
-		gridlist = blockextract( 'class="_focusable', page) 	# HTML-Bereich
-	#if len(gridlist) == 0:										# Alternative - meist identisch,
-	#	gridlist = blockextract( 'class="button _focusable"', page)	# kann aber Senderlsite enthalten 
-	if len(gridlist) > 0:
+
+	PLog('Mehr_Test')
+	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten). element enthält 
+	#	Sendungen ab dem 2. Element (1. die Videodaten)
+	# 19.10.2020 Funktion get_ardsingle_more entfällt
+	if len(elements) > 1:
+		gridlist = elements[1:]									# hinter den Videodaten (1. Element)
 		PLog('gridlist_more: ' + str(len(gridlist)))	
-		li = get_ardsingle_more(li,gridlist,page)				# mediatype=video hier vermeiden			
+		page  = "\n".join(gridlist)								# passend für get_page_content 
+		PLog(page[:1000])
+		get_page_content(li, page, ID="mehrzS", mark='')		
 					
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-#----------------------------------------------------------------
-# 										Mehr zur Sendung (Inhalte der Programmseite ARD-Neu)
-#	Aufruf: ARDStartSingle
-#	25.07.2019 mediatype hier nicht mit 'video' belegen (ARDStartSingle startet Player mit 
-#		Addon-Url, falls Sofortstart EIN).
-def get_ardsingle_more(li, gridlist, page, mediatype=''):				
-	PLog('get_ardsingle_more:')
-			
-	for s  in gridlist:
-		# PLog(s)
-		if '/ard/player' in s == False:		# kein Beitrag
-			continue
-		summ = ''
-		# href-Bsp. /ard/player/Y3JpZDovL ... 0NDM4NQ/wir-in-bayern-oder-16-04-2019
-		href = BETA_BASE_URL + stringextract('href="', '"', s)		
-		if href == '':											# skip
-			continue
-		href_id = stringextract('/player/', '/', href)	 	# href_id in player-Link
-
-		title = stringextract('aria-label="', '"', s) 
-		title = unescape(title)	
-		title = repl_json_chars(title)		
-		title	= u"Mehr: " + title
-		
-		tag = stringextract('class="subline">', '</h4>', s)
-		tag = cleanhtml(tag) 		        
-		img, sender = img_via_id(href_id, page)
-		if 'duration' in s:
-			duration = stringextract('class="duration">', '<', s)
-			summ = 	"%s | Mehr aus der Sendung " % duration
-
-		PLog('Satz:');
-		PLog(title); PLog(href); PLog(img); PLog(summ); 
-
-		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
-			filtered=False
-			for item in AKT_FILTER: 
-				if up_low(item) in py2_encode(up_low(s)):
-					filtered = True
-					continue		
-			if filtered:
-				# PLog('filtered: ' + title)
-				continue		
-		 								 
-		href=py2_encode(href); title=py2_encode(title); 
-		fparams="&fparams={'path': '%s', 'title': '%s', 'duration': ' ', 'ID': 'mehrzS'}" %\
-			(quote(href), quote(title))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
-			fparams=fparams, summary=summ,  tagline=tag, mediatype=mediatype)	
-																			
-	return li
-		
+	
 #---------------------------------------------------------------------------------------------------
 #	Wiedergabe eines Videos aus ARDStart, hier Streaming-Formate
 #	Die Live-Funktion ist völlig getrennt von der Funktion TV-Livestreams - ohne EPG, ohne Private..
@@ -1058,7 +1017,7 @@ def SendungenAZ_ARDnew(title, button):
 	# path = path.replace('#', '%23')						# ab 21.06.2020 in get_page
 	page, msg = get_page(path)		
 	if page == '':	
-		msg1 = "Fehler in SendungenAZ_ARDnew: %s"	% title
+		msg1 = u"Fehler in SendungenAZ_ARDnew: %s"	% title
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
@@ -1066,7 +1025,7 @@ def SendungenAZ_ARDnew(title, button):
 	gridlist = blockextract( '"images":', page)			# Beiträge? 
 	PLog('gridlist: ' + str(len(gridlist)))			
 	if len(gridlist) == 0:				
-		msg1 = 'Keine Beiträge gefunden zu %s' % button	
+		msg1 = u'Keine Beiträge gefunden zu %s' % button	
 		MyDialog(msg1, '', '')					
 		return li
 			

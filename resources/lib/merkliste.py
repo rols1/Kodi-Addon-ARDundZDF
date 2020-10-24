@@ -177,7 +177,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 				msg1 = u"Problem Merkliste"
 		else:
 			msg1 = u"Eintrag schon vorhanden"
-			
+		
 	#------------------
 	if action == 'del':
 		my_items, my_ordner = ReadFavourites('Merk')					# 'utf-8'-Decoding in ReadFavourites
@@ -188,9 +188,9 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 		deleted = False
 		for item in my_items:						# Liste -> String
 			iname = stringextract('name="', '"', item) # unicode
-			iname = py2_decode(iname)
-			name = py2_decode(name)		
-			PLog('Name: %s, IName: %s' % (name, iname))		
+			iname = py2_encode(iname)
+			name = py2_encode(name)		
+			PLog('Name: %s, IName: %s' % (name, iname))
 			if name == iname:
 				deleted = True						# skip Satz = löschen 
 				continue
