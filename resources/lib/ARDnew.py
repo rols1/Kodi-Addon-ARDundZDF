@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 22.10.2020
+#	Stand 26.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -803,23 +803,22 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 		VideoUrls = blockextract('_quality', Plugin1)
 	PLog(len(VideoUrls))
 	
+															# auch möglich: nur .mp3-Quelle
 	if len(VideoUrls) > 0:									# nur 1 m3u8-Link möglich
-		for video in  VideoUrls:							#	bei Jugemdschutz ges.
+		for video in  VideoUrls:							#	bei Jugendschutz ges.
 			# PLog(video)
 			if '"auto"' in video:
 				href = stringextract('stream":"', '"', video)	# Video-Url
 				quality = u'Qualität: automatische'
 				PLog(quality); PLog(href)	 
 				break
-	else:
-		href = stringextract('assetid":"', '"', page)
-
-	if 'master.m3u8' not in href:							# möglich: ../master.m3u8?__b__=200
-		msg = 'keine Streamingquelle gefunden - Abbruch' 	# auch möglich: nur .mp3-Quelle
+	else:													# kein Abgleich mit 'master.m3u8' (fehlt in funk-
+		msg = 'keine Streamingquelle gefunden - Abbruch' 	#	Beiträgen
 		PLog(msg)
 		msg1 = "keine Streamingquelle gefunden: %s"	% title
 		MyDialog(msg1, '', '')	
 		return li
+		
 	if href.startswith('http') == False:
 		href = 'http:' + href
 	href = href.replace('https', 'http')					# Plex: https: crossdomain access denied
@@ -853,7 +852,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 #	Wiedergabe eines Videos aus ARDStart, hier MP4-Formate
 #	Die Live-Funktion ist völlig getrennt von der Funktion TV-Livestreams - ohne EPG, ohne Private..
 #	28.05.2020 nur noch json-Seite, Stream-Bezeichner durch ARD geändert (_plugin fehlt)
-#
+#	26.10.2020 dto (funk-Beiträge o. 'master' in href)
 def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Merk='false'): 
 	PLog('ARDStartVideoMP4:'); 
 	title_org=title; summary_org=summ; thumb=img; tagline_org=tagline	# Backup 
@@ -900,7 +899,7 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 		return
 		
 	for video in  download_list:
-		PLog(video);
+		PLog(video[:100]);
 		meta, href = video.split('#')
 		quality 	= meta.split('|')[0]
 		lable = quality	+ geoblock;	
@@ -926,22 +925,26 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 
 #----------------------------------------------------------------
 # 28.05.2020 json-Formate durch ARD geändert
-#
+# 26.10.2020 dto (funk-Beiträge, href-Liste/Qualität)
 def ARDStartVideoMP4get(title, VideoUrls):	# holt Downloadliste mit mp4-videos für ARDStartVideoMP4
 	PLog('ARDStartVideoMP4get:'); 
 			
-	href = ''
+	href=''; quality=''
 	download_list = []		# 2-teilige Liste für Download: 'title # url'
 	Format = 'Video-Format: MP4'
 	for video in  VideoUrls:
-		
-		PLog(video)
-		href = stringextract('stream":"', '"', video)	# Video-Url
-		if href == '' or href.endswith('mp4') == False:
+		PLog(video[:200])
+		if 'stream":["' in video:							# mögliche: 2 Url's in Liste, Unterschied n.b.
+			href = stringextract('stream":["', '"', video)
+		else:
+			href = stringextract('stream":"', '"', video)	# Video-Url
+		if href == '' or '"auto"' in href:		
+			continue
+		if '.mp4' not in href:							# funk-Beiträge: ..src_1024x576_1500.mp4?fv=1
 			continue
 		if href.startswith('http') == False:
 			href = 'http:' + href
-		q = stringextract('_quality":', ',', video)	# Qualität (Bez. wie Original)
+		q = stringextract('_quality":', ',', video)		# Qualität (Bez. wie Original)
 		if q == '0':
 			quality = u'Qualität: niedrige'
 		if q == '1':
@@ -950,10 +953,18 @@ def ARDStartVideoMP4get(title, VideoUrls):	# holt Downloadliste mit mp4-videos f
 			quality = u'Qualität: hohe'
 		if q == '3':
 			quality = u'Qualität: sehr hohe'
-		
-		PLog(quality)
-		download_title = "%s | %s" % (quality, title)	# download_list stellt "Download Video" voran 
-		download_list.append(download_title + '#' + href)	
+		if q == '4':
+			quality = u'Qualität: sehr hohe'
+			
+		if quality != '' and href != '':					# kein mp4-Format gefunden
+			w = stringextract('_width":', ',', video)
+			h = stringextract('_height":', ',', video)
+			if w and h:
+				quality = "%s (%s x %s)" % (quality, w, h)
+			
+			PLog(quality)
+			download_title = "%s | %s" % (quality, title)	# download_list stellt "Download Video" voran 
+			download_list.append(download_title + '#' + href)	
 	return download_list			
 	
 ####################################################################################################

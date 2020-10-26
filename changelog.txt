@@ -12,6 +12,15 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+26.10.2020 3.5.1
+			thread_getepg (Modul EPG): Update der Datei livesenderTV.xml hinzugefügt -
+			neue Funktion update_tvxml, import urlopen hinzugefügt.
+			ARDStartVideoMP4, ARDStartVideoMP4get (Modul ARD-Neu): Anpassung an 
+			funk-Änderungen ('master' fehlt in hls-Url, Zusatz hinter .mp4) + Url-Anzahl 
+			pro _quality (neu: 2 Url's in Liste). 
+			get_formitaeten (ZDF-videoquellen): Anpassungen für funk-Beiträge (json-
+			Format, Auswertung videodat_url).  			
+
 24.10.2020 3.5.0
 			Modul ARD-Neu: neue Funktion img_preload für Startpage-img's (Caching
 			im SlideStore), Anpassung ARDStart.
@@ -104,7 +113,7 @@ not on Github	3.4.4
 			web.ard.de/radio/radionet (128 Sender), neue Funktion AudioLiveAll.
 			get_page (Modul util): Coding des Inhalts abhängig von Param. decode.
 			unescape (Modul util): '&oacute;' -> 'o' für spanisch.
-			Icons hinzugefügt: 10 Radioanstalten (minim. Farbpalette, > 40 KByte)
+			Icons hinzugefügt: 10 Radioanstalten (minim. Farbpalette, > 40 KByte).
 			Livestream-Ermittlung in den Modulen arte, phoenix, childs: Importanweisung
 			korrigiert (ardundzdf.get_ZDFstreamlink -> get_ZDFstreamlink) - Funktion 
 			nun in Modul util.

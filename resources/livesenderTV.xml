@@ -1,8 +1,8 @@
 <channels>
  <channels_info>
-  <ctitle>Deutsche Sender</ctitle>
+  <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
   <imgsource>Arauco</imgsource>
-  <description>Livestreams http://www.ardmediathek.de/tv/live</description>
+  <nr>1</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
   <date>29.08.2020 rols1</date>

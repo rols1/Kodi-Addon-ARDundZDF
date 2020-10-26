@@ -10,14 +10,22 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# Stand: 09.10.02020	
+# Stand: 26.10.02020	
  
-from kodi_six import xbmc, xbmcgui
+from kodi_six import xbmc, xbmcgui, xbmcaddon
+from kodi_six.utils import py2_encode, py2_decode
  
-import os
+import os, sys
 import time
 import datetime
 from datetime import date
+
+PYTHON2 = sys.version_info.major == 2
+PYTHON3 = sys.version_info.major == 3
+if PYTHON2:
+	from urllib2 import urlopen
+elif PYTHON3:
+	from urllib.request import urlopen
 
 import resources.lib.util as util
 R=util.R; RLoad=util.RLoad; RSave=util.RSave;Dict=util.Dict; PLog=util.PLog; 
@@ -27,7 +35,12 @@ transl_wtag=util.transl_wtag; cleanhtml=util.cleanhtml; home=util.home;
 unescape=util.unescape; get_ZDFstreamlinks=util.get_ZDFstreamlinks;
 up_low=util.up_low;
 
-EPG_BASE =  "http://www.tvtoday.de"
+ADDON_ID 	= 'plugin.video.ardundzdf'
+SETTINGS 	= xbmcaddon.Addon(id=ADDON_ID)
+ADDON_PATH	= SETTINGS.getAddonInfo('path')
+EPG_BASE 	= "http://www.tvtoday.de"
+GIT_TVXML	= "https://github.com/rols1/PluginPictures/blob/master/livesenderTV.xml?raw=true"
+
 
 # EPG im Hintergrund laden - Aufruf Haupt-PRG abhängig von Setting 
 #	pref_epgpreload + Abwesenheit von EPGACTIVE
@@ -35,6 +48,8 @@ EPG_BASE =  "http://www.tvtoday.de"
 #	Aktiv-Signal wird nach 12 Std. von Haupt-PRG wieder
 #	entfernt.
 #	Dateilock nicht erf. - CacheTime hier und in EPG identisch
+# 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt
+#
 def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	PLog('thread_getepg:')
 	CacheTime = 43200								# 12 Std.: (60*60)*12 wie EPG s.u.
@@ -69,8 +84,47 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 		if os.path.exists(fname) == False:			# n.v. oder soeben entfernt
 			rec = EPG(ID=ID)						# Daten holen 
 		xbmc.sleep(1000)							# Systemlast verringern
-
+		
 	xbmcgui.Dialog().notification("EPG-Download", "abgeschlossen",icon,3000)
+	xbmc.sleep(6000)
+	update_tvxml(PLAYLIST)							# Update livesenderTV.xml
+	
+	return
+
+#-----------------------
+def update_tvxml(PLAYLIST):
+	PLog('update_tvxml:')
+	
+	lpage 	= RLoad(PLAYLIST)					# lokale XML-Datei (Pluginverz./Resources)
+	nr_local= stringextract('<nr>', '</nr>', lpage)	# nr = Dateiversion
+	updated	= False
+
+	try:
+		r = urlopen(GIT_TVXML)
+		page = r.read()					
+		page=py2_decode(page)
+		PLog(page[:80])
+
+		nr_remote	= stringextract('<nr>', '</nr>', page)
+		nr_local 	= py2_encode(nr_local)
+		PLog(type(nr_local)); PLog(type(nr_remote));
+		PLog("nr_local: %s, nr_remote: %s" % (nr_local, nr_remote))
+		if int(nr_remote) > int(nr_local):
+			page = py2_encode(page)
+			fname = os.path.join('%s/resources/%s') % (ADDON_PATH, PLAYLIST)
+			RSave(fname, page)
+			PLog("TV-Livestreams: aktualisiert")
+			updated	= True
+		else:
+			PLog("TV-Livestreams: sind aktuell")
+	except Exception as exception:	
+		PLog("TV-Livestreams: %s" % str(exception))
+		
+	if updated:
+		icon = R('tv-livestreams.png')
+		xbmcgui.Dialog().notification("TV-Livestreams", "aktualisiert",icon,3000)
+		xbmc.sleep(3000)
+
 	return
 
 #-----------------------

@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.5.0'
-VDATE = '24.10.2020'
+VERSION = '3.5.1'
+VDATE = '26.10.2020'
 
 #
 #
@@ -235,6 +235,7 @@ PLog('check: ' + str(check))
 
 # die tvtoday-Seiten decken 12 Tage ab, trotzdem EPG-Lauf alle 12 Stunden
 #	 (dto. Cachezeit für einz. EPG-Seite in EPG.EPG).
+# 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - s. thread_getepg
 if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden?
 	EPGACTIVE = os.path.join(DICTSTORE, 'EPGActive') 		# Marker thread_getepg aktiv
 	EPGCacheTime = 43200
@@ -8952,7 +8953,8 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 		PLog('profile_url: Laden fehlgeschlagen')
 		return '', '', '', ''
 	PLog("page_json: " + page[:40])
-	# RSave('/tmp/x.json', py2_encode(page))	# Debug	
+	page = page.replace('": "', '":"')					# für funk-Beiträge erforderlich
+	
 														# Videodaten ermitteln:
 	pos = page.rfind('mainVideoContent')				# 'mainVideoContent' am Ende suchen
 	page_part = page[pos:]
@@ -8970,10 +8972,11 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 		PLog("dgs_part: " + dgs_part)
 		videodat_url = stringextract('ptmd-template":"', '"', dgs_part)
 	if videodat_url == '':
-		videodat_url = stringextract(u'ptmd-template":"', '",', page_part)			# "mainVideoContent":{"http://
+		videodat_url = stringextract('ptmd-template":"', '"', page_part)			# Ende funk-Beiträge: ..profile=tmd"}}}
 		# videodat_url = 'https://api.zdf.de/tmd/2/portal/vod/ptmd/mediathek/'  	# unzuverlässig
 	videodat_url = videodat_url.replace('{playerId}', ptmd_player) 					# ptmd_player injiziert 
-	videodat_url = 'https://api.zdf.de' + videodat_url
+	if videodat_url:
+		videodat_url = 'https://api.zdf.de' + videodat_url
 	PLog('videodat_url: ' + videodat_url)	
 	
 	# apiToken2 aus ZDF_getVideoSources. header ohne quotes in get_page leer 
