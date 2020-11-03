@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 26.10.2020
+#	Stand 29.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -594,7 +594,9 @@ def get_page_content(li, page, ID, mark=''):
 		broadcast = stringextract('"broadcastedOn":"', '"', s)	# Sendedatum
 		PLog(broadcast)
 		if broadcast and ID != 'Livestream':					# Live enth. unsinnige Werte
+			uhr=''
 			broadcast = time_translate(broadcast)				#  + 2 Std.
+			uhr = u"[COLOR blue]%s[/COLOR]" % broadcast[11:]	# -> title (EPG)
 			tag = u"%s\nSendedatum: [COLOR blue]%s Uhr[/COLOR]" % (tag, broadcast)
 			
 		availableTo = stringextract('"availableTo":"', '"', s)	# availableTo
@@ -606,7 +608,9 @@ def get_page_content(li, page, ID, mark=''):
 		if pubServ:
 			tag = u"%s\nSender: %s" % (tag, pubServ)
 
-		title = repl_json_chars(title); summ = repl_json_chars(summ); 
+		title = repl_json_chars(title); summ = repl_json_chars(summ);
+		if ID == 'EPG' and uhr:									# Zeit im Titel, Langfass. tagline
+			title = "%s | %s" % (uhr, title) 
 		
 		PLog('Satz:');
 		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ); PLog(duration); PLog(ID)

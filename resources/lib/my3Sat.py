@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 07.10.2020
+#	Stand: 29.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -407,7 +407,7 @@ def SendungenDatum(SendDate, title):
 		zeit	= stringextract('class="time">', '</', rec)
 		dauer	= stringextract('class="label">', '</', rec)
 		
-		sendung = zeit  + ' | ' + sendung
+		sendung = u"[COLOR blue]%s[/COLOR] | %s" % (zeit, sendung)
 		tagline = title_org +  ' | ' + zeit
 		if dauer:
 			tagline = tagline + ' | ' + dauer

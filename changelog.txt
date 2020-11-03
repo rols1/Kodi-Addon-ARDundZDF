@@ -12,9 +12,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+02.11.2020 3.5.2
+			EPG_ShowAll: Anzahl pro Seite erhöht (20 -> 25, erspart 3. Seite).
+			EPG (Modul EPG): tvtoday-Seite bereits vor Ablage im Cache auf relevanten
+			Anteil reduziert, im Hintergrund nur Seite laden (keine Auswertung - 
+			Systemlast verringern).
+			get_page_content (Modul ARD-Neu): Uhrzeit im Titel bei Verpasst + blau markiert.
+			SendungenDatum (Modul 3sat): Uhrzeit im Titel bei Verpasst  blau markiert.
+			home (Modul util): Text Filter/Status getauscht (Verständl.).
+			get_page (Modul util): UrlopenTimeout in Stufe 2 ergänzt, Austausch URLError -> 
+			Exception (url-unspez. Errors können mit network-error zum Absturz führen).
+			AudioLiveAll: deaktiviert - web.ard.de/radio/radionet von ARD umgeleitet auf 
+			Audiothek, Anpassung im Addon im Haupt-Menü "Radio-Livestreams".
+			AudioStartLive: Button für ARDSportHoerfunk hinzugefügt.
+			ARDSportHoerfunkSingle: Anpassung Senderliste an Url-Zusätze der Audiothek,
+			Direktaufruf AudioLiveSingle.
+			
 26.10.2020 3.5.1
-			thread_getepg (Modul EPG): Update der Datei livesenderTV.xml hinzugefügt -
-			neue Funktion update_tvxml, import urlopen hinzugefügt.
+			thread_getepg (Modul EPG): Update der Datei livesenderTV.xml via Github 
+			hinzugefügt - neue Funktion update_tvxml, import urlopen hinzugefügt.
 			ARDStartVideoMP4, ARDStartVideoMP4get (Modul ARD-Neu): Anpassung an 
 			funk-Änderungen ('master' fehlt in hls-Url, Zusatz hinter .mp4) + Url-Anzahl 
 			pro _quality (neu: 2 Url's in Liste). 

@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 05.10.2020
+#	Stand 02.11.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -233,7 +233,7 @@ def home(li, ID):
 		
 	title = u'Zurück zum Hauptmenü %s' % ID
 	summary = title										# z.Z. n.w.
-	tag =  "Status Ausschluss-Filter: AUS"				# nur ARD und ZDF, nicht Module
+	tag =  "Ausschluss-Filter Status: AUS"				# nur ARD und ZDF, nicht Module
 	if SETTINGS.getSetting('pref_usefilter') == 'true':	
 		tag = tag.replace('AUS','[COLOR blue]EIN[/COLOR]')										
 	
@@ -871,6 +871,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 # 14.08.2020 do_safe-Param. triggert path-Quotierung, muss hier für Audiothek-Rubriken
 #	entfallen
 # 02.09.2020 Rückgabe page='' bei PDF-Seiten
+# 02.11.2020 URLError -> Exception, s. changelog.txt
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True, decode=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
@@ -888,7 +889,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	path = py2_encode(path)
 	if do_safe:									# never quoted: Letters, digits, and the characters '_.-' 
 		path = quote(path, safe="@:?,&=/")		# s.o.
-	PLog("safe_path: " + path)		
+	PLog("safe_path: " + path)
 
 	msg = ''; page = ''	
 	UrlopenTimeout = 10
@@ -916,8 +917,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				req = Request(path, headers=header)	
 			else:
 				req = Request(path)
-								
-			r = urlopen(req)	
+			
+			r = urlopen(req, timeout=UrlopenTimeout)					# float-Werte möglich	
 			new_url = r.geturl()										# follow redirects
 			PLog("new_url: " + new_url)									# -> msg s.u.
 			# PLog("headers: " + str(r.headers))
@@ -932,14 +933,14 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				page = f.read()
 				PLog(len(page))
 			r.close()
-			if page.startswith(b'%PDF-'):								# Bsp. Rezepte (Die Küchenschlacht)
-				msg1 = "PDF-Format nicht darstellbar"					#	# Bytecodierung für PY3 erford.
+			if page.startswith(b'%PDF-'):								# Bsp. Rezepte (Die Küchenschlacht),
+				msg1 = "PDF-Format nicht darstellbar"					#	Bytecodierung für PY3 erford.
 				msg2 = 'Inhalt verworfen'
 				msg = "%s,\n%s" % (msg1, msg2)
 				return '', msg
 			PLog(page[:100])
 			msg = new_url
-		except URLError as exception:
+		except Exception as exception:									# s.o.
 			msg = str(exception)
 			PLog(msg)
 				
@@ -962,7 +963,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			page = r.read()
 			r.close()
 			PLog(len(page))
-		except URLError as exception:
+		except Exception as exception:									# s.o.
 			msg = str(exception)
 			PLog(msg)						
 

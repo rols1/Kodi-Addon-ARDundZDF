@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# Stand: 26.10.02020	
+# Stand: 29.10.02020	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
 from kodi_six.utils import py2_encode, py2_decode
@@ -45,8 +45,8 @@ GIT_TVXML	= "https://github.com/rols1/PluginPictures/blob/master/livesenderTV.xm
 # EPG im Hintergrund laden - Aufruf Haupt-PRG abhängig von Setting 
 #	pref_epgpreload + Abwesenheit von EPGACTIVE
 #	Startverzögerung 10 sec, 2 sec-Ladeintervall 
-#	Aktiv-Signal wird nach 12 Std. von Haupt-PRG wieder
-#	entfernt.
+#	Aktiv-Signal EPGACTIVEwird nach 12 Std. von
+#	 Haupt-PRG wieder entfernt.
 #	Dateilock nicht erf. - CacheTime hier und in EPG identisch
 # 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt
 #
@@ -82,7 +82,7 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 				PLog("EPG_%s noch aktuell" % ID)
 			
 		if os.path.exists(fname) == False:			# n.v. oder soeben entfernt
-			rec = EPG(ID=ID)						# Daten holen 
+			rec = EPG(ID=ID, load_only=True)		# Seite laden
 		xbmc.sleep(1000)							# Systemlast verringern
 		
 	xbmcgui.Dialog().notification("EPG-Download", "abgeschlossen",icon,3000)
@@ -107,7 +107,6 @@ def update_tvxml(PLAYLIST):
 
 		nr_remote	= stringextract('<nr>', '</nr>', page)
 		nr_local 	= py2_encode(nr_local)
-		PLog(type(nr_local)); PLog(type(nr_remote));
 		PLog("nr_local: %s, nr_remote: %s" % (nr_local, nr_remote))
 		if int(nr_remote) > int(nr_local):
 			page = py2_encode(page)
@@ -130,7 +129,7 @@ def update_tvxml(PLAYLIST):
 #-----------------------
 # 	mode: 		falls 'OnlyNow' dann JETZT-Sendungen
 # 	day_offset:	1,2,3 ... Offset in Tagen (Verwendung zum Blättern in EPG_ShowSingle)
-def EPG(ID, mode=None, day_offset=None):
+def EPG(ID, mode=None, day_offset=None, load_only=False):
 	PLog('EPG ID: ' + ID)
 	PLog(mode)
 	CacheTime = 43200								# 12 Std.: (60*60)*12
@@ -141,12 +140,16 @@ def EPG(ID, mode=None, day_offset=None):
 	page = Dict("load", Dict_ID, CacheTime=CacheTime)
 	if page == False:								# Cache miss - vom Server holen
 		page, msg = get_page(path=url)				
+		pos = page.find('tv-show-container js-tv-show-container')	# ab hier relevanter Inhalt
+		page = page[pos:]
 		Dict("store", Dict_ID, page) 				# Seite -> Cache: aktualisieren			
 	# PLog(page[:500])	# bei Bedarf
 
 	pos = page.find('tv-show-container js-tv-show-container')	# ab hier relevanter Inhalt
 	page = page[pos:]
 	PLog(len(page))
+	if load_only:									
+		return ''
 
 	liste = blockextract('href="', page)  
 	PLog(len(liste));	
