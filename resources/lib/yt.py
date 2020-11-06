@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
 ################################################################################
 #				yt.py - Teil von Kodi-Addon-ARDundZDF
-#	Basiert wesentlich auf der pytube-library von Nick Ficano (nficano)
-# 	Quelle: https://github.com/nficano/pytube, Lizens siehe Verzeichnis
-#	../resources/lib/pytube/LICENSE (MIT License).
-#	Die Library wurde für die Verwendung im Kodi-Addon leicht modifiziert,
-#	nicht benötigte Teile wurden entfernt.
-#	Test-Videos: Augstein und Blome od. Rubriken/Bundestag
-#	Achtung: bei gleichzeitiger Installation von pytube außerhalb des Addons 
-#		können Import-Probleme innerhalb der pytube-Module des Addons auf-
-#		treten.
+#	vorherige pytube-library von Nick Ficano (nficano) wieder entfernt
+# 	(https://github.com/nficano/pytube) - für die frei zugänglichen
+#	phoenix-Videos entfällt die Dechiffrierung der Youtube-Signaturen.
+#	Damit entfallen auch Importprobleme und die laufende Anpassung an
+#	die pytube-library.
+#
+#	Test-Videos: Rubriken/Bundestag
 ################################################################################
 #
-#	03.01.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
+#	06.01.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-#	Stand: 09.09.2020
+#	Stand: 06.11.2020
 
 from __future__ import absolute_import
 
@@ -53,21 +51,6 @@ PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
 
 
-# Enviroment anpassen zum Laden von pytube (Altern.: importlib):
-lib_path = os.path.join(ADDON_PATH,'resources','lib')
-PLog("lib_path: " + lib_path)
-sys.path.append(lib_path)
-from resources.lib.pytube.__main__ import YouTube
-from resources.lib.pytube.streams import Stream
-PLog('pytube geladen - V%s | %s | %s | %s' %\
-	('9.5.3', 'MIT License', 'Copyright 2019 Nick Ficano',
-	 'angepasst für Kodi-Addon-ARDundZDF - rols1'))
-
-# Aufrufer: SingleBeitragVideo (Modul phoenix)
-# Bsp.: https://www.youtube.com/watch?v=9xfBbAZtcA0 
-# 20.05.2020 Rekursion abgestellt durch 2 verschiedene
-# 	Ausgänge in SingleBeitragVideo 	
-#
 def yt_get(url, vid, title, tag, summ, thumb):
 	PLog('yt_embed_url: ' + url)
 	watch_url = 'https://www.youtube.com/watch?v=' + vid
@@ -76,71 +59,71 @@ def yt_get(url, vid, title, tag, summ, thumb):
 	title_org=title; tag_org=tag; summ_org=summ
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='phoenix')			# Home-Button
+	li = home(li, ID='phoenix')				# Home-Button
 
-	try:
-		yt_init = YouTube(watch_url)
-		# page, msg = get_page(path=watch_url)		# entfällt vorerst (s. get_duration)
-		# if 'approxDurationMs' in page:			# Extrakt aus Webseite (id="player-api" ..)
-			# duration = get_duration(page)			# Bsp.: "1:06" oder leer
-		duration = yt_init.millisecs
-		duration = seconds_translate(int(int(duration) / 1000))
-		PLog("duration: %s" % duration)
-	except Exception as exception:
-		PLog(str(exception))
+	page, msg = get_page(path=watch_url)	
+	if page == '':
+		msg1 = 'Seite kann nicht geladen werden.'
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return li 
+
+	pos1 = page.find('ytplayer.config')
+	pos2 = page.find('ytplayer.config', pos1+1)
+	page = page[pos1:pos2]
+	
+	# String-Behandl. (Verzicht auf json-Funktionen)
+	page = page.replace('\\"', '"')
+	page = page.replace('\\u0026', '&')
+	page = page.replace('\\', '')
+	
+	duration=''
+	if 'approxDurationMs' in page:			# Extrakt aus Webseite 
+		duration = get_duration(page)			
+	PLog("duration: %s" % duration)
+	
+	Videos = blockextract('"itag":', page)
+	PLog(len(Videos))
+	if len(Videos) == 0:
 		msg1 = u"Youtube-Video nicht verfügbar."
-		msg2 = 'Fehler: %s' % str(exception)
+		msg2 = 'Muster "itag" nicht gefunden'
 		msg3 = "Video-ID: watch?v=%s" %	vid	
 		MyDialog(msg1, msg2, msg3)
-		return
-		
-	# nur mp4-Videos laden
-	Videos 	= yt_init.streams.filter(file_extension='mp4').all()
-	PLog(len(Videos)); PLog(str(Videos))
-	
+		# return li							# Absturz möglich
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			
 	if SETTINGS.getSetting('pref_video_direct') == 'true': 
-		PLog('Sofortstart: yt_init')
-		#  <Stream: itag="22" mime_type="video/mp4" res="720p" fps="30fps" 
-		#	vcodec="avc1.64001F" acodec="mp4a.40.2">:
-		stream = yt_init.streams.get_by_itag(22) 
-		res,fps,vcodec,acodec = get_stream_details(str(stream))	 
-		yt_url = stream.download(only_url=True)	
+		PLog('Sofortstart: yt_get')
+		# itag 22 i.d.R.: 1280x720, mime: video/mp4, codecs: avc1.64001F, mp4a.40.2
+		for stream in Videos:
+			yt_url, res,fps,bitrate,mime,codecs,itag = get_stream_details(stream)	 
+			if '22' in itag:
+				break
 		if summ == '':
 			summ = tag
 
-		summ="%s\n\n%s" % (summ, 'Youtube-Video: %s | %s | %s | %s'	% (res, fps, vcodec, acodec))	
+		summ="%s\n\n%s" % (summ, 'Youtube-Video: Format %s | fps: %s | bit: %s | %s | %s' %\
+			(res, fps, bitrate, mime, codecs))	
 		PlayVideo(url=yt_url, title=title, thumb=thumb, Plot=summ, sub_path="")
 		return
 		
 	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
 	i=1
-	for video in Videos:
-		v = str(video)
+	for v in Videos:
 		itag 		= stringextract('itag="', '"', v)	
-		mime_type 	= stringextract('mime_type="', '"', v)
-		res,fps,vcodec,acodec = get_stream_details(v)	 			
-		PLog(video); PLog('itag: ' + itag)
-		PLog(res); PLog(fps); PLog(vcodec); PLog(acodec);
+		yt_url,res,fps,bitrate,mime,codecs,itag = get_stream_details(v)
 		
-		'''
-		try:									# Videolänge funktioniert (noch) nicht - s.o.
-			duration	= yt_init.length()
-			duration = seconds_translate(sec)
-		except:
-			duration = ''
-		'''
-		
-		stream = yt_init.streams.get_by_itag(itag) 
-		yt_url = stream.download(only_url=True)				
+		# mime: video/mp4, codecs: avc1.64001F, mp4a.40.2 
+		if 'mp4' not in mime or 'mp4' not in codecs:			
+			continue
+		PLog('itag: ' + itag); 
 		PLog('yt_url: ' + yt_url[:100])
+		PLog(res); PLog(fps); PLog(bitrate); PLog(mime); PLog(codecs);
 
 		if res == '' and fps == '':
-			summ='%s. Youtube-Video (nur Audio): %s'	% (str(i), acodec)
+			summ='%s. Youtube-Video (nur Audio): %s'	% (str(i), codecs)
 		else:
-			if acodec:	
-				summ='%s. Format: %s | %s | %s | %s'	% (str(i), res, fps, vcodec, acodec)
-			else:
-				summ='%s. Format: %s | %s | %s'	% (str(i), res, fps, vcodec)
+			summ='%s. Format: %s | fps: %s | bit: %s | %s | %s'	% (str(i), res, fps, bitrate, mime, codecs)
 		
 		download_list.append(summ + '#' + yt_url)	# Download-Liste füllen	(Qual.#Url)
 			
@@ -148,7 +131,8 @@ def yt_get(url, vid, title, tag, summ, thumb):
 			tag = u"Dauer %s | %s" % (duration, tag_org)
 		
 		summ_par = "%s||||%s||||%s" % (tag, summ, title_org) 
-		title = "%s. %s" % (str(i),title_org)	
+		title = "%s. %s" % (str(i),title_org)
+		PLog("Satz:")	
 		PLog(title); PLog(tag); PLog(summ)		
 			
 		yt_url=py2_encode(yt_url); title=py2_encode(title); thumb=py2_encode(thumb)
@@ -175,13 +159,25 @@ def yt_get(url, vid, title, tag, summ, thumb):
 #  str(stream) durch Aufrufer
 def get_stream_details(stream):	
 	PLog('get_stream_details:') 
-	v = str(stream)
-	res			= stringextract('res="', '"', v)				
-	fps 		= stringextract('fps="', '"', v)				
-	vcodec 		= stringextract('vcodec="', '"', v)				
-	acodec 		= stringextract('acodec="', '"', v)				
-
-	return 	res,fps,vcodec,acodec
+	# PLog(stream)
+	
+	yt_url		= stringextract('url":"', '"', stream)
+	res	= ''
+	
+	width		= stringextract('width":', ',', stream)
+	height		= stringextract('height":', ',', stream)
+	if width and height:
+		res	= "%sx%s" % (width, height)
+	
+	fps 		= stringextract('fps":', ',', stream)				
+	bitrate		= stringextract('bitrate":', ',', stream)				
+	mime 		= stringextract('mimeType":"', ';', stream)
+	codecs 		= stringextract('codecs="', '"', stream)				
+	itag 		= stringextract('itag":', ',', stream)	
+	
+	PLog("yt_url: %s,res: %s,fps: %s,bitrate: %s,mime: %s,codecs: %s,itag: %s" %\
+		(yt_url,res,fps,bitrate,mime,codecs,itag))
+	return 	yt_url,res,fps,bitrate,mime,codecs,itag
 # ----------------------------------------------------------------------
 # yt_init.length() klappt nicht, daher	
 # 	Extrakt aus Webseite (id="player-api" ..)

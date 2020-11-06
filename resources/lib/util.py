@@ -869,7 +869,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 # 21.06.2020 urlencoding mit Param. safe für franz. Zeichen, Berücksicht. m3u8-Links,
 #	transl_umlaute(path) entfällt damit
 # 14.08.2020 do_safe-Param. triggert path-Quotierung, muss hier für Audiothek-Rubriken
-#	entfallen
+#	entfallen. Siehe auch Classic/SinglePage (do_safe von Umlaut abhängig machen - bei
+#	Bedarf hierher verlagern)
 # 02.09.2020 Rückgabe page='' bei PDF-Seiten
 # 02.11.2020 URLError -> Exception, s. changelog.txt
 #
@@ -1581,14 +1582,22 @@ def seconds_translate(seconds, days=False):
 # stackoverflow.com/questions/214777/how-do-you-convert-yyyy-mm-ddthhmmss-000z-time-format-to-mm-dd-yyyy-time-format
 # stackoverflow.com/questions/7999935/python-datetime-to-string-without-microsecond-component
 # stackoverflow.com/questions/13685201/how-to-add-hours-to-current-time-in-python
+# https://stackoverflow.com/questions/2150739/iso-time-iso-8601-in-python
 #
 # ARD-Zeit + 2 Stunden
 # s.a. addHour (ARDnew) - Stringroutine für ARDVerpasstContent
 # Rückgabe timecode im Fehlerfall
 # 22.06.2020 Anpassung an 29-stel. ZDF-Format
+# 06.11.2020 Berücksichtigung Sommerzeit für Timecodes ohne Korr.-Faktor
 #
-def time_translate(timecode, add_hour=2):
+def time_translate(timecode, add_hour=0):
 	PLog("time_translate: " + timecode)
+	
+	# summer_time aus www.ptb.de, konvertiert zum date_format (s.u.):
+	summer_time = [	"2019-03-31T02:00:00Z|2019-10-27T03:00:00Z",
+					"2020-03-29T02:00:00Z|2020-10-25T03:00:00Z",
+					"2021-03-28T02:00:00Z|2020-10-31T03:00:00Z",
+				]
 
 	if timecode.strip() == '' or len(timecode) < 19 or timecode[10] != 'T':
 		return ''
@@ -1603,19 +1612,38 @@ def time_translate(timecode, add_hour=2):
 	day, hour_info 	= timecode.split('T')			# Datum / Uhrzeit trennen
 	hour	 		= hour_info[:8]
 	
-	if '+' in hour_info:							# mit Korr.-Faktor s.o.			
+	if '+' in hour_info:							# Timecode mit Korr.-Faktor s.o.			
 		mil_sec, add_hour = hour_info.split('+')	# ev. add-Faktor ermitteln
 		try:
 			add_hour = re.search('(\d+)',add_hour).group(1)
 			add_hour = int(add_hour)
 		except:
-			add_hour = 0
+			add_hour = 0		
 	
 	timecode = "%sT%sZ" % (day, hour)	
 	PLog(timecode); PLog(add_hour);
-	if timecode[10] == 'T' and timecode[-1] == 'Z':  # Format OK?
+	if timecode[10] == 'T' and timecode[-1] == 'Z': # Format OK?
+		date_format = "%Y-%m-%dT%H:%M:%SZ"
+		if add_hour == 0:							# Abgleich mit Tab. summer_time
+			start=''
+			try:
+				for timerange in summer_time:
+					if timecode[:4] == timerange[:4]:
+						start,end = timerange.split('|')
+						PLog("summer: %s | %s" % (start,end))
+						break
+				if start:
+					start_ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(start, date_format)))	
+					end_ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(end, date_format)))	
+					ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
+					add_hour = 1						# Default
+					if ts > start_ts and ts < end_ts:	# Timecode in Sommerzeit
+						add_hour = 2
+			except Exception as exception:
+				PLog(str(exception))
+				return timecode
+
 		try:
-			date_format = "%Y-%m-%dT%H:%M:%SZ"
 			# ts = datetime.strptime(timecode, date_format)  # None beim 2. Durchlauf       
 			ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
 			new_ts = ts + datetime.timedelta(hours=add_hour) # add-Faktor addieren

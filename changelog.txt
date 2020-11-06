@@ -12,6 +12,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+06.11.2020 3.5.3 Wegfall der pytube-library von Nick Ficano
+			Modul yt: pytube-Code ersetzt durch eigene Auswertung, pytube-library
+			entfernt.
+			SinglePage: do_safe-Param. bei Umlauten in path auf True gesetzt (für
+			Url-Quotierung in get_page, relevant für z.B. ..-Die-jungen-Ärzte/..).
+			time_translate (Modul util): Berücksichtigung Sommerzeit für Timecodes 
+			ohne Korr.-Faktor (relevant für ARD Neu).
+			get_page_content (Modul ARD Neu): Aufruf time_translate ohne Korrekturfaktor.
+			get_page_content (Modul ARD Neu): Korrekturfaktor für time_translate um
+			1 Std. reduziert (Zeitangaben in Verpasst wichen um 1 Std. ab).
+
 02.11.2020 3.5.2
 			EPG_ShowAll: Anzahl pro Seite erhöht (20 -> 25, erspart 3. Seite).
 			EPG (Modul EPG): tvtoday-Seite bereits vor Ablage im Cache auf relevanten

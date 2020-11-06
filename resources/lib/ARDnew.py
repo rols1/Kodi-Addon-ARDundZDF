@@ -595,7 +595,7 @@ def get_page_content(li, page, ID, mark=''):
 		PLog(broadcast)
 		if broadcast and ID != 'Livestream':					# Live enth. unsinnige Werte
 			uhr=''
-			broadcast = time_translate(broadcast)				#  + 2 Std.
+			broadcast = time_translate(broadcast, add_hour=0)	# vor 06.11.2020 2 Std., s. time_translate
 			uhr = u"[COLOR blue]%s[/COLOR]" % broadcast[11:]	# -> title (EPG)
 			tag = u"%s\nSendedatum: [COLOR blue]%s Uhr[/COLOR]" % (tag, broadcast)
 			

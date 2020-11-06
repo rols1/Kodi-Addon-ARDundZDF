@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.5.2'
-VDATE = '02.11.2020'
+VERSION = '3.5.3'
+VDATE = '06.11.2020'
 
 #
 #
@@ -4253,8 +4253,14 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 	li = xbmcgui.ListItem()
 	li = home(li, ID=ID)							# Home-Button
 	
-	func_path = path								# für Vergleich sichern					
-	page, msg = get_page(path=path, do_safe=False)
+	func_path = path								# für Vergleich sichern	
+	do_safe = False									# do_safe von Umlaut abhängig machen
+	ulist = [u'ü',u'ö',u'ä',u'ß',u'Ü',u'Ö',u'Ä']
+	for u in ulist:
+		if u in path:
+			do_safe = True
+			break				
+	page, msg = get_page(path=path, do_safe=do_safe)
 	if page == '':
 		msg1 = 'Fehler SinglePage'
 		msg2 = msg
@@ -4667,7 +4673,7 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 		download_items.append(download_list.pop(high))									 
 	else:	
 		download_items = download_list						# ganze Liste verwenden
-	PLog(download_items)
+	# PLog(download_items)
 		
 	i=0
 	for item in download_items:
