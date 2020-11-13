@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# Stand: 29.10.02020	
+# Stand: 10.11.02020	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
 from kodi_six.utils import py2_encode, py2_decode
@@ -39,7 +39,7 @@ ADDON_ID 	= 'plugin.video.ardundzdf'
 SETTINGS 	= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_PATH	= SETTINGS.getAddonInfo('path')
 EPG_BASE 	= "http://www.tvtoday.de"
-GIT_TVXML	= "https://github.com/rols1/PluginPictures/blob/master/livesenderTV.xml?raw=true"
+GIT_TVXML	= "https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master/resources/livesenderTV.xml?raw=true"
 
 
 # EPG im Hintergrund laden - Aufruf Haupt-PRG abhängig von Setting 
@@ -100,6 +100,7 @@ def update_tvxml(PLAYLIST):
 	updated	= False
 
 	try:
+		PLog('lade %s' % GIT_TVXML) 
 		r = urlopen(GIT_TVXML)
 		page = r.read()					
 		page=py2_decode(page)

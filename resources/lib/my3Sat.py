@@ -492,7 +492,9 @@ def Start(name, path, rubrik=''):
 			endDate = stringextract('-end-date="', '"', rec)	# 2020-07-15T04:00:00.000Z
 			endDate = time_translate(endDate)
 			
-			tag		= u"%s | [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, endDate)
+			tag = dauer
+			if endDate:
+				tag		= u"%s | [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, endDate)
 			PLog(tag)
 			descr	= stringextract('paragraph-large ">', '</', rec)
 			if descr == '':

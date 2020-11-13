@@ -337,6 +337,7 @@ def GetContent(li, items, base_img=None, turn_title=True ):
 			summ = "%s\n\n" % (summ, vorspann)
 			summ_par = summ.replace('\n', '||')
 			
+		summ = repl_json_chars(summ);
 		title = cleanhtml(title); title = repl_json_chars(title);
 
 		PLog('Satz:')
@@ -447,6 +448,9 @@ def Themen(ID):							# Untermenüs zu ID
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 # ----------------------------------------------------------------------
+# 07.11.2020 Hinweis: Datumsangaben für "online" / "sendezeit" können 
+#	vor den Datumsangaben im "subtitel" liegen (Bsp. Rubriken/Bundestag,
+#	sowohl Web- als auch json-Quellen).
 def ThemenListe(title, ID, path):				# Liste zu einzelnem Untermenü
 	PLog('ThemenListe: ' + title)
 	PLog('ID: ' + ID)	

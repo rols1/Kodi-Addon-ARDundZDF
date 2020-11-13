@@ -12,6 +12,7 @@
   <info2>das &-Zeichen verstößt zwar gegen den xml-Standard, ist aber kompatibel mit den String-Funktionen im PRG</info2>
   <info3>hrefsender enthält Sendernamen passend zu www.ardmediathek.de (ARD-Neu)</info3>
   <info4>link: Kennung statt Streamurl möglich, z.B. ZDFsource -> get_ZDFstreamlinks</info4>
+  <info5>Datei livesenderTV.xml: autom. Update im Modul EPG, thread_getepg()</info5>
 </channels_info>
  
 <channel>
@@ -413,7 +414,7 @@
 	</item>
 	<item>
 		<title>Dresden Fernsehen</title>
-		<link>https://dresden.iptv-playoutcenter.de/dresden/dresdenfernsehen.stream_1/chunks.m3u8?nimblesessionid=40897529</link>
+		<link>https://dresden.iptv-playoutcenter.de/dresden/dresdenfernsehen.stream_1/playlist.m3u8</link>
 		<thumbnail>https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV/tv-dresden-fernsehen.png?raw=true</thumbnail>
 		<imgsource>https://commons.wikimedia.org/wiki/File:Logo_Dresden_Fernsehen.gif</imgsource>
 		<EPG_ID></EPG_ID>

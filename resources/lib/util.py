@@ -1571,10 +1571,16 @@ def seconds_translate(seconds, days=False):
 		#PLog("%d:%02d" % (hour, minutes))
 		return  "%d:%02d" % (hour, minutes)		
 #----------------------------------------------------------------  	
-# Format timecode 	2018-11-28T23:00:00Z (ARDNew, broadcastedOn)
-#					y-m-dTh:m:sZ 	ISO8601 date
-# Rückgabe:			28.11.2018, 23:00 Uhr   (Sekunden entfallen)
-#					bzw. '' bei Fehlschlag
+# Formate timecode 	ISO8601 date y-m-dTh:m:sZ 
+# Varianten:	ARDNew			2018-11-28T23:00:00Z
+#  				Funk: 			2019-09-30T12:59:27.000+0000  mit sec/1000 	UTC-Delta 0
+# 				ARDNew Live: 	2019-12-12T06:16:04.413Z					UTC-Delta 0
+#				ZDF:			2021-03-03T17:20:00+01:00					UTC-Delta + 1 Std.
+#				ZDF:			2020-06-15T22:51:28.328+02:00 mit sec/1000 	UTC-Delta + 2 Std.
+#				Audiothek:		2020-11-08T11:04:14.000+0100  z.Z. nicht genutzt (Verpasst fehlt)
+#					
+# Rückgabe:		28.11.2018, 23:00 Uhr   (Sekunden entfallen)
+#				bzw. timecode (unverändert) bei Fehlschlag
 # funktioniert in Kodi nur 1 x nach Neustart - s. transl_pubDate
 # 26.08.2019 OK mit Lösung von BJ1 aus
 #		https://www.kodinerds.net/index.php/Thread/50284-Python-Problem-mit-strptime/?postID=284746#post284746
@@ -1583,68 +1589,60 @@ def seconds_translate(seconds, days=False):
 # stackoverflow.com/questions/7999935/python-datetime-to-string-without-microsecond-component
 # stackoverflow.com/questions/13685201/how-to-add-hours-to-current-time-in-python
 # https://stackoverflow.com/questions/2150739/iso-time-iso-8601-in-python
+# https://de.wikipedia.org/wiki/ISO_8601#Zeitzonen
 #
-# ARD-Zeit + 2 Stunden
-# s.a. addHour (ARDnew) - Stringroutine für ARDVerpasstContent
-# Rückgabe timecode im Fehlerfall
+# s.a. convHour (ARDnew) - Auswertung für html-Quelle mit PM/AM
+# 
 # 22.06.2020 Anpassung an 29-stel. ZDF-Format
-# 06.11.2020 Berücksichtigung Sommerzeit für Timecodes ohne Korr.-Faktor
-#
-def time_translate(timecode, add_hour=0):
+# 06.11.2020 Berücksichtigung Sommerzeit für Timecodes ohne UTC-Delta
+# 10.11.2020 Anpassung Tab. summer_time an Hinweis schubeda (UTC: -1 für MEZ, -2 für MESZ):
+#	https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=613709#post613709
+#	Korr.-Faktor hour_info entfällt. add_hour jetzt Flag für Abgleich mit Tab. summer_time (False
+#	bei "Verfügbar bis..")
+#	
+def time_translate(timecode, add_hour=True):
 	PLog("time_translate: " + timecode)
 	
 	# summer_time aus www.ptb.de, konvertiert zum date_format (s.u.):
-	summer_time = [	"2019-03-31T02:00:00Z|2019-10-27T03:00:00Z",
-					"2020-03-29T02:00:00Z|2020-10-25T03:00:00Z",
-					"2021-03-28T02:00:00Z|2020-10-31T03:00:00Z",
+	summer_time = [	"2019-03-31T01:00:00Z|2019-10-27T01:00:00Z",
+					"2020-03-29T01:00:00Z|2020-10-25T01:00:00Z",
+					"2021-03-28T01:00:00Z|2021-10-31T01:00:00Z",
 				]
 
 	if timecode.strip() == '' or len(timecode) < 19 or timecode[10] != 'T':
 		return ''
 	timecode = py2_encode(timecode)
 		
-	# Bsp.: Funk: 			2019-09-30T12:59:27.000+0000 mit sec/1000 	+ Korr.-Faktor 0
-	# 		ARDNew Live: 	2019-12-12T06:16:04.413Z
-	#		ZDF:			2021-03-03T17:20:00+01:00					+ Korr.-Faktor 1 Std.
-	#		ZDF:			2020-06-15T22:51:28.328+02:00 mit sec/1000 	+ Korr.-Faktor 2 Std.
-
 	# Zielformat 2018-11-28T23:00:00Z
 	day, hour_info 	= timecode.split('T')			# Datum / Uhrzeit trennen
 	hour	 		= hour_info[:8]
-	
-	if '+' in hour_info:							# Timecode mit Korr.-Faktor s.o.			
-		mil_sec, add_hour = hour_info.split('+')	# ev. add-Faktor ermitteln
-		try:
-			add_hour = re.search('(\d+)',add_hour).group(1)
-			add_hour = int(add_hour)
-		except:
-			add_hour = 0		
 	
 	timecode = "%sT%sZ" % (day, hour)	
 	PLog(timecode); PLog(add_hour);
 	if timecode[10] == 'T' and timecode[-1] == 'Z': # Format OK?
 		date_format = "%Y-%m-%dT%H:%M:%SZ"
-		if add_hour == 0:							# Abgleich mit Tab. summer_time
+		if add_hour:								# Abgleich summer_time (nicht bei Verfügbar bis)
 			start=''
-			try:
+			try:									
 				for timerange in summer_time:
 					if timecode[:4] == timerange[:4]:
 						start,end = timerange.split('|')
-						PLog("summer: %s | %s" % (start,end))
+						PLog("summer_time: %s | %s" % (start,end))
 						break
 				if start:
 					start_ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(start, date_format)))	
 					end_ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(end, date_format)))	
 					ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
-					add_hour = 1						# Default
+					add_hour = 1					# Default
 					if ts > start_ts and ts < end_ts:	# Timecode in Sommerzeit
 						add_hour = 2
+					PLog("add_hour: %s" % add_hour)
 			except Exception as exception:
 				PLog(str(exception))
 				return timecode
 
 		try:
-			# ts = datetime.strptime(timecode, date_format)  # None beim 2. Durchlauf       
+			# ts = datetime.strptime(timecode, date_format)  # None beim 2. Durchlauf (s.o.)      
 			ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
 			new_ts = ts + datetime.timedelta(hours=add_hour) # add-Faktor addieren
 			ret_ts = new_ts.strftime("%d.%m.%Y %H:%M")
@@ -1655,7 +1653,7 @@ def time_translate(timecode, add_hour=0):
 			return timecode
 	else:
 		return timecode
-		
+
 #---------------------------------------------------------------- 
 # Format timecode 	Fri, 06 Jul 2018 06:58:00 GMT (ARD Audiothek , xml-Ausgaben)
 # Rückgabe:			06.07.2018, 06:58 Uhr   (Sekunden entfallen)
@@ -2416,8 +2414,6 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 	infoLabels['mediatype'] = 'video'
 	li.setInfo(type="Video", infoLabels=infoLabels)
 	
-	# Info aus GetZDFVideoSources hierher verlagert - wurde von Kodi nach Videostart 
-	#	erneut gezeigt - dto. für ARD (parseLinks_Mp4_Rtmp, ARDStartSingle)
 	if SETTINGS.getSetting('pref_UT_ON') == 'true':
 		if sub_path:							# Vorbehandlung ARD-Untertitel
 			if 'ardmediathek.de' in sub_path:	# ARD-Untertitel speichern + Endung -> .sub

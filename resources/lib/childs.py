@@ -257,7 +257,7 @@ def Kika_Search(query=None, title='Search', pagenr=''):
 					img_src = BASE_KIKA + img_src
 
 				stitle = repl_json_chars(stitle)	
-				img_alt = unescape(img_alt); 	
+				img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt) 	
 				
 				PLog('Satz:')
 				PLog(query);PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src)
@@ -406,7 +406,7 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''):
 		# PLog(s[0:40])		# bei Bedarf
 		href =  BASE_KIKA + stringextract('href="', '"', s)
 		img = stringextract('<noscript>', '</noscript>', s).strip()		# Bildinfo separieren
-		img_alt = stringextract('alt="', '"', img)	
+		img_alt = stringextract('alt="', '"', img)						# hier Infotext
 		img_src = stringextract('src="', '"', img)
 		if img_src.startswith('http') == False:
 			img_src = BASE_KIKA + img_src
@@ -415,7 +415,7 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''):
 		stitle = cleanhtml(stitle)
 		
 		stitle = unescape(stitle); stitle = repl_json_chars(stitle)	
-		img_alt = unescape(img_alt); 	
+		img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt)		
 		
 		PLog('Satz:')
 		PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src)
@@ -463,7 +463,7 @@ def Kika_VideosBeliebt():
 			stitle = img_title
 		
 		stitle = unescape(stitle); stitle = repl_json_chars(stitle)	
-		img_alt = unescape(img_alt); 	
+		img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt)		
 		
 		PLog('Satz:')
 		PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src)
@@ -683,12 +683,17 @@ def KikaninchenLieder():
 		title = stringextract('title":"', '"', rec)
 		altText =  stringextract('altText":"', '"', rec)
 		titleText =  stringextract('titleText":"', '"', rec)
+		
+		title = repl_json_chars(title)	
+		altText = repl_json_chars(altText)	
+		titleText = repl_json_chars(titleText)	
+		
 		summ = ''
 		if altText:
 			summ = altText
 		if summ == '':
 			summ = titleText
-							
+										
 		PLog(href); PLog(title); PLog(img_src); PLog(summ)
 		href=py2_encode(href); title=py2_encode(title); img_src=py2_encode(img_src); summ=py2_encode(summ);
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'summ': '%s', 'duration': ''}" %\

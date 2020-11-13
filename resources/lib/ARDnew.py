@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-#				ARD_NEW.py - Teil von Kodi-Addon-ARDundZDF
+#				ARDnew.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
 #
 # 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 29.10.2020
+#	Stand 13.11.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -317,7 +317,10 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	PLog(sender)	
 		
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')							# Home-Button
+	if ID == "ARDRetroStart":
+		li = home(li, ID=NAME)								# Home-Button -> Hauptmenü
+	else:
+		li = home(li, ID='ARD Neu')							# Home-Button
 
 	page = False
 	if 	'/editorials/' in path == False:				# nur kompl. Startseite aus Cache laden (nicht Rubriken) 
@@ -459,6 +462,71 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark):
 	
 	xbmcplugin.endOfDirectory(HANDLE)
 	
+####################################################################################################
+#							ARD Retro www.ardmediathek.de/ard/retro/
+#					vorerst Heimat im Modul ARDnew - bei Bedarf auslagern
+####################################################################################################
+def ARDRetro(): 
+	PLog('ARDRetro:'); 
+	
+	sendername = "ARD-Alle"
+	title2 = "Sender: ARD-Alle"
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)									# Home-Button -> Hauptmenü
+
+	path = "https://www.ardmediathek.de/ard/retro/" 
+	# Seite aus Cache laden
+	page = Dict("load", 'ARDRetro', CacheTime=ARDStartCacheTime)					
+	if page == False:										# nicht vorhanden oder zu alt
+		page, msg = get_page(path=path)						# vom Sender holen
+		if page == '':	
+			msg1 = "Fehler Startseite ARDRetro"
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return li
+		else:	
+			Dict("store", 'ARDRetro', page) 				# Seite -> Cache: aktualisieren		
+	PLog(len(page))		
+	
+	# json:
+	page = stringextract('FETCHED_CONTEXT__ = ', '</script>', page)
+	page = page[:-1]										# Ende: ';' entf.
+	# Rubriken: 
+	container = blockextract ('compilationType":', page)  	# Container json-Bereich (Swiper + Rest)
+	PLog(len(container))
+	title_list=[]											# für Doppel-Erkennung
+	for cont in container:
+		title 	= stringextract('"title":"', '"', cont)		
+		if title in title_list:								# Doppel? - s.o.
+			break
+		title_list.append(title)
+
+		ID	= stringextract('"id":"', '"', cont)
+		anz= stringextract('"totalElements":', '}', cont)
+		anz= mystrip(anz)
+		PLog("anz: " + anz)
+		if anz == '1':
+			tag = u"%s Beitrag" % anz
+		else:
+			if anz == "null": anz='mehrere'
+			tag = u"%s Beiträge" % anz
+
+		path 	= stringextract('"href":"', '"', cont)
+		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
+		img = img_preload(ID, path, title, 'ARDStart')
+
+		ID = 'ARDRetroStart'
+		PLog('Satz_cont:');
+		PLog(title); PLog(ID); PLog(anz); PLog(img); 
+		path=py2_encode(path); title=py2_encode(title); 
+		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
+			(quote(path), quote(title), ID)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
+			tagline=tag, fparams=fparams)
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
 #---------------------------------------------------------------------------------------------------
 # Auswertung für ARDStartRubrik + ARDPagination + ARDSearchnew 
 #	Mehrfach- und Einzelsätze
@@ -466,7 +534,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark):
 # Seiten sind hier bereits senderspezifisch.
 # Aufrufe Direktsprünge
 #	
-def get_page_content(li, page, ID, mark=''): 
+def get_page_content(li, page, ID, mark='', mehrzS=''): 
 	PLog('get_page_content: ' + ID); PLog(mark)
 	
 	CurSender = Dict("load", 'CurSender')					# Debug, Seite bereits senderspez.
@@ -560,7 +628,7 @@ def get_page_content(li, page, ID, mark=''):
 		title = unescape(title); 
 		title = repl_json_chars(title)	
 		
-		if ID == "mehrzS":
+		if mehrzS:
 			title = u"Mehr: %s" % title	
 
 		if mark:
@@ -595,14 +663,14 @@ def get_page_content(li, page, ID, mark=''):
 		PLog(broadcast)
 		if broadcast and ID != 'Livestream':					# Live enth. unsinnige Werte
 			uhr=''
-			broadcast = time_translate(broadcast, add_hour=0)	# vor 06.11.2020 2 Std., s. time_translate
+			broadcast = time_translate(broadcast)				# vor 06.11.2020 2 Std., s. time_translate
 			uhr = u"[COLOR blue]%s[/COLOR]" % broadcast[11:]	# -> title (EPG)
 			tag = u"%s\nSendedatum: [COLOR blue]%s Uhr[/COLOR]" % (tag, broadcast)
 			
 		availableTo = stringextract('"availableTo":"', '"', s)	# availableTo
 		PLog(availableTo)
 		if availableTo:											# möglich: availableTo":null
-			availableTo = time_translate(availableTo)
+			availableTo = time_translate(availableTo)			# hier ohne UTC-Zusatz
 			tag = u"%s\n\n[B]Verfügbar bis: [COLOR darkgoldenrod]%s[/COLOR][/B]" % (tag, availableTo)
 		
 		if pubServ:
@@ -659,9 +727,11 @@ def get_page_content(li, page, ID, mark=''):
 # 28.05.2020 Stream-Bezeichner durch ARD geändert
 # 19.10.2020 Mehr-Auswertung an ARD-Änderungen angepasst: get_ardsingle_more entfällt,
 #	Auswertung durch get_page_content nach entfernung des 1. elements und 
-#	page="\n".join(gridlist). ID 'mehrzS' verhindert Rekursion.	
+#	page="\n".join(gridlist). mehrzS verhindert Rekursion.	
+# 13.11.2020 Anpassung an ARDRetro: Switch Home-Button via ID=ARDRetroStart (dto. in
+#	ARDStartVideoStreams + ARDStartVideoMP4, Änderung mehrzS (ID -> Flag, Rekurs.-Stop)
 #
-def ARDStartSingle(path, title, duration, ID=''): 
+def ARDStartSingle(path, title, duration, ID='', mehrzS=''): 
 	PLog('ARDStartSingle: %s' % ID);
 	title_org 	= title 
 	
@@ -688,7 +758,10 @@ def ARDStartSingle(path, title, duration, ID=''):
 	PLog('elements: ' + str(len(elements)))	
 		
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
+	if ID == "ARDRetroStart":
+		li = home(li, ID=NAME)								# Home-Button -> Hauptmenü
+	else:
+		li = home(li, ID='ARD Neu')							# Home-Button
 
 	summ 		= stringextract('synopsis":"', '"', page)		# mit verfügbar wie	get_summary_pre
 	verf=''
@@ -747,8 +820,8 @@ def ARDStartSingle(path, title, duration, ID=''):
 		
 	path=py2_encode(path); title=py2_encode(title); summ=py2_encode(summ); tagline=py2_encode(tagline);
 	img=py2_encode(img); geoblock=py2_encode(geoblock); sub_path=py2_encode(sub_path);
-	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s'}" \
-		% (quote(path), quote(title), quote(summ), quote(tagline), quote(img), quote(geoblock), quote(sub_path))
+	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s', 'ID': '%s'}" \
+		% (quote(path), quote(title), quote(summ), quote(tagline), quote(img), quote(geoblock), quote(sub_path), ID)
 	addDir(li=li, label=title_new, action="dirList", dirID="resources.lib.ARDnew.ARDStartVideoStreams", fanart=img, thumb=img, 
 		fparams=fparams, summary=summ_lable, tagline=tagline, mediatype=mediatype)		
 					
@@ -758,12 +831,12 @@ def ARDStartSingle(path, title, duration, ID=''):
 		title_new = "[COLOR blue]MP4-Formate[/COLOR] | " + title
 	path=py2_encode(path); title=py2_encode(title); summ=py2_encode(summ); tagline=py2_encode(tagline);
 	img=py2_encode(img); geoblock=py2_encode(geoblock); sub_path=py2_encode(sub_path);
-	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s',  'img': '%s', 'geoblock': '%s', 'sub_path': '%s'}" \
-		% (quote(path), quote(title), quote(summ), quote(tagline), quote(img), quote(geoblock), quote(sub_path))
+	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s',  'img': '%s', 'geoblock': '%s', 'sub_path': '%s', 'ID': '%s'}" \
+		% (quote(path), quote(title), quote(summ), quote(tagline), quote(img), quote(geoblock), quote(sub_path), ID)
 	addDir(li=li, label=title_new, action="dirList", dirID="resources.lib.ARDnew.ARDStartVideoMP4", fanart=img, thumb=img, 
 		fparams=fparams, summary=summ_lable, tagline=tagline, mediatype=mediatype)	
 	
-	if 	ID == 'mehrzS':											# nicht nochmal "mehr" zeigen
+	if mehrzS:													# nicht nochmal "mehr" zeigen
 		xbmcplugin.endOfDirectory(HANDLE)	
 
 	PLog('Mehr_Test')
@@ -775,7 +848,7 @@ def ARDStartSingle(path, title, duration, ID=''):
 		PLog('gridlist_more: ' + str(len(gridlist)))	
 		page  = "\n".join(gridlist)								# passend für get_page_content 
 		PLog(page[:1000])
-		get_page_content(li, page, ID="mehrzS", mark='')		
+		get_page_content(li, page, ID=ID, mehrzS=True, mark='')		
 					
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -784,12 +857,15 @@ def ARDStartSingle(path, title, duration, ID=''):
 #	Die Live-Funktion ist völlig getrennt von der Funktion TV-Livestreams - ohne EPG, ohne Private..
 #	HTML-Seite mit json-Inhalt
 #	28.05.2020 nur noch json-Seite, Stream-Bezeichner durch ARD geändert
-def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='', Merk='false'): 
+def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='', Merk='false', ID=''): 
 	PLog('ARDStartVideoStreams:'); 
 	
 	title_org = title	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
+	if ID == "ARDRetroStart":
+		li = home(li, ID=NAME)								# Home-Button -> Hauptmenü
+	else:
+		li = home(li, ID='ARD Neu')							# Home-Button
 	
 	page, msg = get_page(path)					
 	if page == '':	
@@ -857,12 +933,15 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 #	Die Live-Funktion ist völlig getrennt von der Funktion TV-Livestreams - ohne EPG, ohne Private..
 #	28.05.2020 nur noch json-Seite, Stream-Bezeichner durch ARD geändert (_plugin fehlt)
 #	26.10.2020 dto (funk-Beiträge o. 'master' in href)
-def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Merk='false'): 
+def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Merk='false', ID=''): 
 	PLog('ARDStartVideoMP4:'); 
 	title_org=title; summary_org=summ; thumb=img; tagline_org=tagline	# Backup 
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
+	if ID == "ARDRetroStart":
+		li = home(li, ID=NAME)								# Home-Button -> Hauptmenü
+	else:
+		li = home(li, ID='ARD Neu')							# Home-Button
 	
 	page, msg = get_page(path)					
 	if page == '':	
@@ -1391,12 +1470,11 @@ def ARDVerpasstContent(title, startDate, endDate, CurSender):
 	xbmcplugin.endOfDirectory(HANDLE)
 	
 #----------------------------------------------------------------
-#	Offset für ARDVerpasstContent - aktuell 2 Stunden
+# convHour z.Z. nicht genutzt
 #	string zeit, int offset - Bsp. 15:00, 2
 # 	s.a. util.time_translate für ISO8601-Werte
 #	21.11.2019 entfallen, ersetzt durch convHour
 #		(Format durch ARD geändert)
-# def addHour(zeit, offset):
 # convHour - Format zeit: 2:10 PM od. 5:40 AM,
 #	ohne Zeitversatz
 def convHour(zeit):	

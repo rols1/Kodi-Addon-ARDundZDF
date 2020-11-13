@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.5.3'
-VDATE = '06.11.2020'
+VERSION = '3.5.5'
+VDATE = '13.11.2020'
 
 #
 #
@@ -238,7 +238,7 @@ PLog('check: ' + str(check))
 # 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - s. thread_getepg
 if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden?
 	EPGACTIVE = os.path.join(DICTSTORE, 'EPGActive') 		# Marker thread_getepg aktiv
-	EPGCacheTime = 43200
+	EPGCacheTime = 43200									# 12 STd.
 	is_activ=False
 	if os.path.exists(EPGACTIVE):							# gesetzt in thread_getepg 
 		is_activ=True
@@ -343,18 +343,26 @@ def Main():
 		title = "ARD Mediathek Classic"
 		tagline = 'in den Settings sind ARD Mediathek Neu und ARD Mediathek Classic austauschbar'
 		fparams="&fparams={'name': '%s', 'sender': '%s'}" % (title, '')
-		PLog(fparams)	
 		addDir(li=li, label=title, action="dirList", dirID="Main_ARD", fanart=R(FANART), 
 			thumb=R(ICON_MAIN_ARD_Classic), tagline=tagline, fparams=fparams)
 	else:
 		title = "ARD Mediathek Neu"
 		tagline = 'in den Settings sind ARD Mediathek Neu und ARD Mediathek Classic austauschbar'
-		summ = u'Die barrierefreien Angebote befinden sich im Menü Start in "Mehr zum Thema | Rubriken".'
-		summ = summ + u'\nDas Menü "BarriereArm" ist zur Zeit nur in der Classic-Version verfügbar.'
+		summ = u'Die barrierefreien Angebote befinden sich im Menü Start in <Mehr zum Thema | Rubriken>.'
+		summ = summ + u'\nDas Menü <BarriereArm> ist zur Zeit nur in der Classic-Version verfügbar.'
 		fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, '')
-		PLog(fparams)	
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
 			thumb=R(ICON_MAIN_ARD), tagline=tagline, summary=summ, fparams=fparams)
+	
+	# Retro-Version ab 12.11.2020, V3.5.4		
+	title = "ARD Mediathek RETRO"
+	erbe = u"[COLOR darkgoldenrod]%s[/COLOR]" % "UNESCO Welttag des Audiovisuellen Erbes"
+	tag = u'Die ARD Sender öffneten zum %s ihre Archive und stellen zunehmend zeitgeschichtlich relevante Videos frei zugänglich ins Netz' % erbe
+	tag = u"%s\n\nDeutsche Geschichte und Kultur nacherleben: Mit ARD Retro können Sie in die Zeit der 1950er und frühen 1960er Jahre eintauchen. Hier stoßen Sie auf spannende, informative und auch mal kuriose Sendungen aus den Anfängen der Fernsehgeschichte des öffentlich-rechtlichen Rundfunks." % tag
+	tag = u"%s\n\nMehr: NDR ardretro100.html" % tag
+	fparams="&fparams={}"
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDRetro", fanart=R(FANART), 
+		thumb=R('ard-mediathek-retro.png'), tagline=tag, fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':
 		PLog('zdfmobile_set: ')
@@ -4452,9 +4460,11 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 #		im Listenformat, nicht m3u8-Format, die verlinkte master.m3u8 ist aber im 3u8-Format
 #	2. Text-Seite mit rtmp-Streams (Listenformat ähnlich Zif. 1, rtmp-Pfade müssen zusammengesetzt
 #		werden
-#   ab 01.04.2017 mit Podcast-Erweiterung auch Verabeitung von Audio-Dateien
-#	18.04.2017 die Podcasts von PodFavoriten enthalten in path bereits mp3-Links, parseLinks_Mp4_Rtmp entfällt
-#
+#   ab 01.04.2017 mit Podcast-Erweiterung auch Verarbeitung von Audio-Dateien
+#	18.04.2017 die Podcasts von PodFavoriten enthalten in path bereits mp3-Links, 
+#		parseLinks_Mp4_Rtmp entfällt.
+#	07.11.2020 Verarbeitung PodFavoriten nur noch im Rahmen der neuen Audiothek - hier nur
+#		noch Classic-Podcasts.
 # path: z.B. https://classic.ardmediathek.de/play/media/11177770
 def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, Merk='false'):	
 	PLog('SingleSendung:')						
@@ -4485,6 +4495,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 
 	# Bei Podcasts enthält path i.d.R. 1 Link zur Seite mit einer mp3-Datei, bei Podcasts von PodFavoriten 
 	# wird der mp3-Link	direkt in path übergeben.
+	# 07.11.2020 bei Podcasts getrennte Auswertung in parseLinks_Mp4_Rtmp - s. dort
 	if path.endswith('.mp3') == False:
 		page, msg = get_page(path=path)				# Absicherung gegen Connect-Probleme. Page=Textformat
 		if page == '':
@@ -4492,7 +4503,8 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 			msg2 = msg
 			MyDialog(msg1, msg2, '')
 			return li
-		link_path,link_img, m3u8_master, geoblock, sub_path = parseLinks_Mp4_Rtmp(page) # link_img kommt bereits mit thumb, außer Podcasts						
+		# link_img kommt bereits mit thumb, außer Podcasts						
+		link_path,link_img, m3u8_master, geoblock, sub_path = parseLinks_Mp4_Rtmp(page, ID) 
 		PLog('m3u8_master: ' + m3u8_master); PLog(link_img); PLog(link_path); PLog(sub_path);
 		if thumb == None or thumb == '': 
 			thumb = link_img
@@ -5800,14 +5812,16 @@ def convBase64(s):
 # extrahiert aus Mediendatei (json) .mp3-, .mp4-, rtmp-Links + Untertitel (Aufrufer 
 # 	SingleSendung). Bsp.: http://www.ardmediathek.de/play/media/35771780
 # Untertitel in ARD-Neu gefunden siehe ARDStartSingle
-def parseLinks_Mp4_Rtmp(page):		
-	PLog('parseLinks_Mp4_Rtmp:')
+# 07.11.2020 wg. abweichender Formate getrennte Auswertung für Podcasts (ID)	 
+#	
+def parseLinks_Mp4_Rtmp(page, ID=''):		
+	PLog('parseLinks_Mp4_Rtmp: ' + ID)
 	# PLog(page)	# Quellen im json-Format	
 	
 	if page.find('_previewImage') >= 0:
 		#link_img = teilstring(page, 'http://www.ardmediathek.de/image', '\",\"_subtitleUrl')
 		#link_img = stringextract('_previewImage\":\"', '\",\"_subtitle', page)
-		link_img = stringextract('_previewImage\":\"', '\",', page) # ev. nur Mediatheksymbol
+		link_img = stringextract('_previewImage":"', '",', page) # ev. nur Mediatheksymbol
 	else:
 		link_img = ""
 
@@ -5816,9 +5830,20 @@ def parseLinks_Mp4_Rtmp(page):
 	geoblock =  stringextract('_geoblocked":', '}', page)	# Geoblock-Markierung ARD
 	sub_path = stringextract('_subtitleUrl":"', '"', page)
 	
-	if page.find('\"_quality\":') >= 0:
-		s = page.split('\"_quality\":')	
-		# PLog(s)							# nur bei Bedarf
+	if ID == 'PODCAST':						# getrennte Auswertung für Podcasts 
+		path = stringextract('_stream":["', '"', page) 		# Streamliste
+		if path == '':
+			path = stringextract('_stream":"', '"', page) 	# Einzelstream
+		if path:	
+			link_path.append('1|'  + path)
+		
+		PLog(link_path)	
+		return link_path, '', '', '', ''	# Dialog bei leerem link_path in SingleSendung
+
+		
+	if '"_quality":' in page:
+		s = page.split('"_quality":')	
+		PLog(len(s))						
 		del s[0]							# 1. Teil entfernen - enthält img-Quelle (s.o.)
 		
 		for i in range(len(s)):
@@ -7117,6 +7142,7 @@ def ZDFStart(title, show_cluster='', path=''):
 		if title == '':
 			title = stringextract('big-headline">', '<', rec)	# aus promo-teaser
 		title	= title.replace('>', '')						# title"> od. title" >
+		title	= title.replace('data-tracking-title="Vorab_in_der_Mediathek"', '')
 		title 	= title.strip(); 
 		title_raw=title											# zum Vergleich im 2. Durchlauf 
 		title = unescape(title)
@@ -8494,7 +8520,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		plusbar_title = stringextract('plusbar-title="', '"', rec)	# Bereichs-, nicht Einzeltitel, nachrangig
 		plusbar_path  =  stringextract('plusbar-url="', '"', rec)	# plusbar nicht vorh.? - sollte nicht vorkommen
 		enddate	= stringextract('plusbar-end-date="', '"', rec)		# kann leer sein
-		enddate = time_translate(enddate, add_hour=0)
+		enddate = time_translate(enddate, add_hour=False)			# ohne Abgleich summer_time
+		
 		PLog('plusbar_path: ' + plusbar_path); PLog('ref_path: %s' % ref_path); PLog('enddate: ' + enddate);	
 		if plusbar_path == '' or plusbar_path == ref_path:			# kein Pfad oder Selbstreferenz
 			continue
@@ -9469,7 +9496,7 @@ def router(paramstring):
 			func_pars = params['fparams'][0]
 
 			# Modul laden, Funktionsaufrufe + Parameterübergabe via Var's 
-			#	s. 00_Migration_PLEXtoKodi.txt
+			#	s. 00_Migration_ardundzdf.txt
 			# Modulpfad immer ab resources - nicht verkürzen.
 			# Direktsprünge: Modul wird vor Sprung in Funktion geladen.
 			if '.' in newfunc:						# Funktion im Modul, Bsp.:				

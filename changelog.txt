@@ -12,6 +12,32 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+13.11.2020 3.5.5 Integration ARD Retro (www.ardmediathek.de/ard/retro/) 
+			Aufrufbutton in Main, neues Icon ard-mediathek-retro.png, neue Funktion
+			ARDRetro (Modul ARD-Neu), Anpassungen get_page_content (Flag mehrzS),
+			ARDStartSingle, ARDStartVideoStreams, ARDStartVideoMP4.
+
+not on Github 3.5.4 
+			time_translate (Modul util): add_hour -> Flag statt Value  (False bei 
+			"Verfügbar bis..": kein Abgleich mit Tab. summer_time), Fix 2020 -> 2021 
+			in summer_time (letztes Element).
+			Podcasts Classic: Anpassung in SingleSendung + parseLinks_Mp4_Rtmp an
+			json-Seite mit mehr als einem mp3-Link (getrennte Auswertung für
+			ID=PODCAST.
+			Modul EPG: fehlerhaften Github-Link GIT_TVXML für livesenderTV.xml 
+			korrigiert (relevant für autom. Update der Datei), 
+			livesenderTV.xml: Dresden Fernsehen neu aufgenommen, Streamlink MDR Sachsen
+			aktualisiert.
+			Modul childs: Anführungszeichen in Infotext (hier img_alt) entfernt 
+			(verhinderte Aufnahme in Merkliste) - Funktionen: Kika_VideosBuendelAZ, 
+			Kika_VideosBeliebt, Kika_Search, KikaninchenLieder.
+			ThemenListe (Modul phoenix) + Hauptmenü: Anführungszeichen in Infotext 
+			entfernt - wie Modul childs.
+			GetContent (Modul arte): Unicode-Mark. für Umlaut-String (u'Verfügbar 
+			vom').
+			ZDFStart: html-Rest "data-tracking-title" in Titel entfernt (betroffen:
+			"Vorab_in_der_Mediathek").	
+
 06.11.2020 3.5.3 Wegfall der pytube-library von Nick Ficano
 			Modul yt: pytube-Code ersetzt durch eigene Auswertung, pytube-library
 			entfernt.
@@ -19,8 +45,8 @@ CHANGE HISTORY
 			Url-Quotierung in get_page, relevant für z.B. ..-Die-jungen-Ärzte/..).
 			time_translate (Modul util): Berücksichtigung Sommerzeit für Timecodes 
 			ohne Korr.-Faktor (relevant für ARD Neu).
-			get_page_content (Modul ARD Neu): Aufruf time_translate ohne Korrekturfaktor.
-			get_page_content (Modul ARD Neu): Korrekturfaktor für time_translate um
+			get_page_content (Modul ARD-Neu): Aufruf time_translate ohne Korrekturfaktor.
+			get_page_content (Modul ARD-Neu): Korrekturfaktor für time_translate um
 			1 Std. reduziert (Zeitangaben in Verpasst wichen um 1 Std. ab).
 
 02.11.2020 3.5.2

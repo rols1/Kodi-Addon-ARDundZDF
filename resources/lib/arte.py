@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 24.10.2020
+#	Stand: 11.11.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -286,19 +286,19 @@ def GetContent(li, page, ID):
 		geo = "Geoblock-Info: %s" % stringextract('code":"', '"', geo)	# "DE_FR", "ALL"
 		
 		start=''; end=''
-		start_end = stringextract('Verfügbar vom', '"', item)			# kann fehlen
+		start_end = stringextract(u'Verfügbar vom', '"', item)			# kann fehlen
 		if start_end:													# beide Zeiten bei Suche, o. Uhrzeit
-			# start_end = '[B]Verfügbar vom %s [/B]' % start_end		# Anzeige vereinheitlichen:
+			# start_end = u'[B]Verfügbar vom %s [/B]' % start_end		# Anzeige vereinheitlichen:
 			s = start_end.split()
 			if len(s) > 0:
 				start = s[0]; end = s[2];
 		else:															# Zeiten getrennt, mit Uhrzeit
-			start = stringextract('start":"', '"', item)	
-			end = stringextract('end":"', '"', item)
+			start = stringextract('start":"', '"', item)				# hier ohne UTC-Zusatz	
+			end = stringextract('end":"', '"', item)					# dto.
 			start=time_translate(start)
 			end=time_translate(end)
 		if start and end:
-			start_end = '[B]Verfügbar vom [COLOR green]%s[/COLOR] bis [COLOR darkgoldenrod]%s[/COLOR][/B]' % (start, end)	
+			start_end = u'[B]Verfügbar vom [COLOR green]%s[/COLOR] bis [COLOR darkgoldenrod]%s[/COLOR][/B]' % (start, end)	
 
 		upcoming  = stringextract('upcomingDate":"', '"', item)			# null möglich -> ''
 		if upcoming:													# check Zukunft
