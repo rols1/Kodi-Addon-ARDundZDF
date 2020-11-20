@@ -772,7 +772,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			descr = py2_decode(descr)
 			descr = repl_json_chars(descr)
 			
-			if "Recording TV-Live" in start_end:				# K-Menü in EPG_ShowAll -> LiveRecord
+			if "Recording TV-Live" in start_end:					# K-Menü in EPG_ShowAll -> LiveRecord
 				Sender = cleanmark(title)
 				Sender = Sender.split("|")[0]						# "Sender | EPG"
 				duration = SETTINGS.getSetting('pref_LiveRecord_duration')
@@ -843,8 +843,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			commands.append((menu_entry, 'RunScript(%s, %s, ?action=dirList&dirID=switch_Setting%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_setting_sofortstart)))
-			PLog(MY_SCRIPT); PLog(fparams_setting_sofortstart)
-			
+			PLog(MY_SCRIPT); PLog(fparams_setting_sofortstart)				
 
 		li.addContextMenuItems(commands)				
 	
@@ -889,7 +888,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	
 	path = py2_encode(path)
 	if do_safe:									# never quoted: Letters, digits, and the characters '_.-' 
-		path = quote(path, safe="@:?,&=/")		# s.o.
+		path = quote(path, safe="#@:?,&=/")		# s.o.
 	PLog("safe_path: " + path)
 
 	msg = ''; page = ''	

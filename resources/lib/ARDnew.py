@@ -964,6 +964,12 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 	# Format Downloadliste "Qualität: niedrige | Titel#https://pdvideosdaserste.."
 	download_list = ARDStartVideoMP4get(title,VideoUrls)	# holt Downloadliste mit mp4-videos
 	PLog(len(download_list))
+	if len(download_list) == 0:
+		msg1 = "keine .mp4-Quelle gefunden zu: %s" % title_org
+		msg2 = u"Abspielen und Download sind leider nicht möglich"
+		MyDialog(msg1, msg2, '')	
+		return li
+	Plugin1	= Plugins[0]							
 	PLog(download_list[:1])									# 1. Element
 	
 	title=repl_json_chars(title); title_org=repl_json_chars(title_org); summary_org=repl_json_chars(summary_org); 

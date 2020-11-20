@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 07.10.2020
+#	Stand: 19.11.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -913,7 +913,11 @@ def Tivi_Woche():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------
-# im Web fehlend: Uhrzeiten 			
+# tivi VERPASST
+# im Web fehlend: Uhrzeiten. Die Sendungen finden sich auch auf www.zdf.de/sendung-verpasst,
+#	dort auch mit Uhrzeiten, allerdings fehlt die Senderangabe ZDFtivi in data-station 
+#	sondern in teaser-cat-category.
+#			
 def Tivi_Woche_Sendungen(day, title):
 	PLog('Tivi_Woche_Sendungen: ' + day)
 		

@@ -12,6 +12,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+20.11.2020 3.5.6
+			ARDStartVideoMP4 (ARD Neu): Hinweis, falls mp4-Quelle fehlt ("Abspielen und 
+			neue Funktion ZDF_get_clustertitle: ermittelt Cluster-Titel von ZDF-
+			und ZDFtivi-Startseite, Ausfilterung "data-tracking-title" bei script-
+			generierten Inhalten.
+			ZDFStart, ZDFRubrikSingle, ZDF_Sendungen: Anpassung für ZDF_get_clustertitle.
+			Download nicht möglich".
+			ZDFStart: Code für Ausschluss von java-Inhalten zusammengefasst (Merkmal:
+			'data-tracking-title=') - @sus67.
+			ZDF_get_content: Blockbereich für VERPASST erweitert (Auswertung data-station
+			erfolgte vom Folgeblock), "undefined" -> "nicht eindeutig" - @thecook22.
+			ZDFRubrikSingle: ID für Call Sendungen geändert: 'VERPASST' -> 'ZDFRubrikSingle'
+			(Abgrenzung zu VERPASST-Beiträgen).
+			ZDF_Sendungen: ID für Call Sendungen geändert: 'VERPASST' -> 'ZDF_Sendungen'
+			(Abgrenzung zu VERPASST-Beiträgen).
+			ZDFSendungenAZList: element 0-9 an ZDF-Änderung angepasst ('0+-+9' -> '0 - 9').
+			Weitere funk-Integration in ZDF: Integration funk A-Z, Anpassung in 
+			ZDFRubrikSingle, ZDF_Sendungen, ZDFSendungenAZ, ZDFSendungenAZList, zusätzl.
+			Menü-Button in Main_ZDF.
+			get_page: safe-Parameter um '#' ergänzt (Videos in ZDF-BarriereArm scheiterten
+			am Url-Zusatz '#audioOption=ad' od. '#sourceVariant=dgs' mit HTTP Error 404).
+
 13.11.2020 3.5.5 Integration ARD Retro (www.ardmediathek.de/ard/retro/) 
 			Aufrufbutton in Main, neues Icon ard-mediathek-retro.png, neue Funktion
 			ARDRetro (Modul ARD-Neu), Anpassungen get_page_content (Flag mehrzS),
@@ -25,7 +47,7 @@ not on Github 3.5.4
 			json-Seite mit mehr als einem mp3-Link (getrennte Auswertung für
 			ID=PODCAST.
 			Modul EPG: fehlerhaften Github-Link GIT_TVXML für livesenderTV.xml 
-			korrigiert (relevant für autom. Update der Datei), 
+			korrigiert (relevant für autom. Update der Datei). 
 			livesenderTV.xml: Dresden Fernsehen neu aufgenommen, Streamlink MDR Sachsen
 			aktualisiert.
 			Modul childs: Anführungszeichen in Infotext (hier img_alt) entfernt 
