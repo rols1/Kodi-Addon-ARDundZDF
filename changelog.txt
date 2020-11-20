@@ -13,12 +13,11 @@ CHANGE HISTORY
 --------------
 
 20.11.2020 3.5.6
-			ARDStartVideoMP4 (ARD Neu): Hinweis, falls mp4-Quelle fehlt ("Abspielen und 
+			ARDStartVideoMP4 (ARD Neu): Hinweis, falls mp4-Quelle fehlt. 
 			neue Funktion ZDF_get_clustertitle: ermittelt Cluster-Titel von ZDF-
 			und ZDFtivi-Startseite, Ausfilterung "data-tracking-title" bei script-
 			generierten Inhalten.
 			ZDFStart, ZDFRubrikSingle, ZDF_Sendungen: Anpassung für ZDF_get_clustertitle.
-			Download nicht möglich".
 			ZDFStart: Code für Ausschluss von java-Inhalten zusammengefasst (Merkmal:
 			'data-tracking-title=') - @sus67.
 			ZDF_get_content: Blockbereich für VERPASST erweitert (Auswertung data-station
