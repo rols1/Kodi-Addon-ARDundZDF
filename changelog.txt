@@ -12,6 +12,16 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.11.2020 3.5.7
+			ZDFStart: funk-Startseite integriert (statt der Einzelbeiträge auf der
+			ZDF-Startseite), Bild des 1. Highlights ausgewertet (statt Ordner-Symbol).
+			home (Modul util): 'ZDFStart' ergänzt (relevant für funk-Startseite + ff.)
+			Kikaninchen_Videoseite (Modul childs): Buchstabe A ergänzt, Malfrosch
+			aus Tonschnipsel entfernt (n.m. vorh.).
+			Tivi_AZ, ZDFStart (Modul childs): Merkmal '0-9' an ZDF-Vorgabe angepasst 
+			(vormals '0 - 9'), in ZDFStart Button 'Direkt zu ...' entfernt (irrelevante
+			redaktionelle Seiten).
+
 20.11.2020 3.5.6
 			ARDStartVideoMP4 (ARD Neu): Hinweis, falls mp4-Quelle fehlt. 
 			neue Funktion ZDF_get_clustertitle: ermittelt Cluster-Titel von ZDF-

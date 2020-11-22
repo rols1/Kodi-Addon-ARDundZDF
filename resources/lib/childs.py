@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 19.11.2020
+#	Stand: 22.11.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -578,14 +578,17 @@ def Kikaninchen_Videoseite():
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
-		
-	items = stringextract('class="bundleNaviItem active"', '</span>', page) # Buchstabenblock
-	items = blockextract('bundleNaviItem ">', items)		# nur aktive Buchstaben
+														# Buchstabenblock (2 x vorh.):
+	items = stringextract('class="bundleNaviWrapper"', '"">...</a>', page)
+	items = blockextract('bundleNaviItem', items)		# nur aktive Buchstaben
+	PLog(len(items))
 	
 	for s in items:	
-		PLog(s)
+		# PLog(s)
 		seite =  stringextract('title="">', '</a>', s).strip()
-		# PLog(seite)
+		if "disabled" in s or seite == '':
+			continue 
+		PLog(seite)
 		title = 'Kikaninchen Videos: Seite ' + seite
 		tag = 'Sendungen mit ' + seite
 		# img_src = R(ICON_DIR_FOLDER)
@@ -715,7 +718,7 @@ def Tonschnipsel():
 		'Gitarre = http://www.kikaninchen.de/static_kkn/global/clickons/sounds/Gitarre_1.mp3',
 		'Trompetenaffe =  http://www.kikaninchen.de/static_kkn/global/clickons/sounds/Trompetenaffe.mp3',
 		'Frosch winkt = http://www.kikaninchen.de/static_kkn/global/clickons/sounds/Froschwinkt2_01.mp3?1493048916578',
-		'Malfrosch =  http://www.kikaninchen.de/static_kkn/global/clickons/sounds/malfrosch1.mp3?1493048916578',
+		# 'Malfrosch =  http://www.kikaninchen.de/static_kkn/global/clickons/sounds/malfrosch1.mp3?1493048916578',
 		'Grunz =  http://www.kikaninchen.de/static_kkn/global/clickons/sounds/grunz.mp3?1492871718285',
 		'Huhu = http://www.kikaninchen.de/static_kkn/global/clickons/sounds/huhu.mp3?1493022362691',
 		'Schnippel = http://www.kikaninchen.de/static_kkn/global/clickons/sounds/schnippel.mp3?1493022362691',
@@ -942,11 +945,13 @@ def Tivi_AZ():
 	
 	azlist = list(string.ascii_uppercase)
 	# azlist.insert(0, '0-9')
-	azlist.append('0-9')
+	azlist.append('0 - 9')						# ZDF-Vorgabe (vormals '0+-+9')
 
 	for element in azlist:	
 		# PLog(element)
 		button = element
+		if button == '0 - 9':
+			button = '0-9'						# für Icon anpassen
 		title = "Sendungen mit " + button
 		#img_src = R(ICON_DIR_FOLDER)
 		#img_src = "Buchstabe_%s.png"  % button

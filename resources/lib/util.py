@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 02.11.2020
+#	Stand 22.11.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -267,7 +267,7 @@ def home(li, ID):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", 
 			fanart=img, thumb=img, tagline=tag, filterstatus='', fparams=fparams)
 			
-	if ID == 'ZDF':
+	if ID == 'ZDF' or ID == 'ZDFStart':
 		img = R('zdf-mediathek.png')
 		name = 'Home: ' + "ZDF Mediathek"
 		fparams="&fparams={'name': '%s'}" % quote(name)

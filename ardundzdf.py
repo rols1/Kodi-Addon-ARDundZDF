@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.5.6'
-VDATE = '20.11.2020'
+VERSION = '3.5.7'
+VDATE = '22.11.2020'
 
 #
 #
@@ -383,10 +383,11 @@ def Main():
 			fanart=R('3sat.png'), thumb=R('3sat.png'), tagline=tagline, fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_funk') == 'true':
-		tagline = 'in den Settings kann das Modul FUNK ein- und ausgeschaltet werden'
+		tag = 'in den Settings kann das Modul FUNK ein- und ausgeschaltet werden'
+		tag = u"%s\n\ndie Beiträge sind auch in der ZDF Mediathek enthalten (siehe Startseite und A-Z)" % tag
 		fparams="&fparams={}"													# funk-Modul
 		addDir(li=li, label="FUNK", action="dirList", dirID="resources.lib.funk.Main_funk", 
-			fanart=R('funk.png'), thumb=R('funk.png'), tagline=tagline, fparams=fparams)
+			fanart=R('funk.png'), thumb=R('funk.png'), tagline=tag, fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_childprg') == 'true':
 		tagline = 'in den Settings kann das Modul Kinderprogramme ein- und ausgeschaltet werden'
@@ -7070,7 +7071,10 @@ def BilderDasErsteSingle(title, path):
 #	21.11.2019 Webseite geändert - Beiträge der Cluster werden beim 2. Durchlauf 
 #		ausgeschnitten + via ZDF_get_content geladen (wie Highlights, Ausnahmen siehe
 #		Getrennt behandeln).
-#
+# 21.11.2020 funk-Cluster "funk - Wissen, Liebe, Gaming" -> statt des 2. Durchlaufs mit 
+#	den einzelnen Beiträgen zeigen wir die funk-Startseite verlinkt im letzten Einzel-
+#	beitrag und verfahren wie beim 1. Durchlauf (Quell-Struktur mit ZDF-Startseite identisch).
+#	
 def ZDFStart(title, show_cluster='', path=''): 
 	PLog('ZDFStart: ' + show_cluster); 
 	PLog(title)
@@ -7078,7 +7082,10 @@ def ZDFStart(title, show_cluster='', path=''):
 	title_org = title
 	li = xbmcgui.ListItem()
 
-	BASE = ZDF_BASE
+	if '/funk/' in path:
+		BASE = ZDF_BASE + '/funk/'
+	else:
+		BASE = ZDF_BASE
 	Logo = 'ZDF'; ID = 'ZDFStart'
 	if "www.zdf.de/kinder" in path:
 		BASE 	= "https://www.zdf.de/kinder"							# BASE_TIVI
@@ -7092,8 +7099,10 @@ def ZDFStart(title, show_cluster='', path=''):
 		PLog(msg1); PLog(msg2);
 		MyDialog(msg1, msg2, '')	
 		
+	# ------------------------------------------------------------------
 	# 2. Durchlauf: 
 	if show_cluster:											
+		PLog("ZDFStart_2")
 		if  title == "Highlights":										# Liste Highlights 
 			li = home(li, ID=ID)										# Home-Button
 			stage = stringextract('class="sb-page">', 'class="cluster-title"', page) 
@@ -7120,11 +7129,15 @@ def ZDFStart(title, show_cluster='', path=''):
 			ZDFRubrikSingle(title, path, clus_title=title, page=rec)	# einschl. Loader-Beiträge
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+	# ------------------------------------------------------------------
 	# 1. Durchlauf: Buttons Stage + Cluster 
+	PLog("ZDFStart_1")
+	PLog("ID: " + ID)
 	li = home(li, ID=ID)						# Home-Button
 	
 	title = 'Highlights'										# Highlights voranstellen
-	thumb = R(ICON_DIR_FOLDER)
+	# thumb = R(ICON_DIR_FOLDER)
+	thumb = ZDF_get_img(page)									#  1. img der Highlights
 	fparams="&fparams={'title': '%s', 'show_cluster': 'true','path': '%s'}" % (quote(title), quote(BASE))
 	addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=thumb, 
 		thumb=thumb, fparams=fparams)
@@ -7155,6 +7168,8 @@ def ZDFStart(title, show_cluster='', path=''):
 		# skip: enthaltene Cluster A-Z, Barrierefrei, Verpasst getrennt im Hauptmenü:			
 		elif title == 'Alles auf einen Blick':					
 			continue
+		elif title.startswith('Direkt zu ...'):					
+			continue
 
 		# skip: javascript-erzeugte Inhalte, SCMS-ID's bisher nicht erreichbar,
 		#	Call data-clusterrecommendation-template="/broker/relay?plays=..,
@@ -7163,16 +7178,20 @@ def ZDFStart(title, show_cluster='', path=''):
 		elif 'data-tracking-title=' in rec:
 			continue
 		else:													# restl. Cluster -> 2. Durchlauf	
-			href	= stringextract('href="', '"', rec)
-			if href.startswith('http') == False:
-				href = BASE + href
-			thumb = ZDF_get_img(rec)
 			tag = "Folgeseiten"
+			href = BASE
+			show_cluster = "true"
+			if title.startswith('funk -'):						# funk -> 1. Durchlauf funk-Startseite, s.o.
+				href = href + '/funk/'	
+				show_cluster = ""
+				tag = "direkt zur funk-Startseite"
+			thumb = ZDF_get_img(rec)
 			
 			PLog('Satz:')
 			PLog(title); PLog(href); PLog(thumb); PLog(tag); 
 			title=py2_encode(title);
-			fparams="&fparams={'title': '%s', 'show_cluster': 'true','path': '%s'}" % (quote(title), quote(BASE))
+			fparams="&fparams={'title': '%s', 'show_cluster': '%s','path': '%s'}" %\
+				(quote(title), show_cluster, quote(href))
 			addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=thumb, 
 				thumb=thumb, tagline=tag, fparams=fparams)
 		
@@ -7488,6 +7507,14 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 		li = home(li, ID='Kinderprogramme')			# Home-Button
 	else:
 		li = home(li, ID='ZDF')						# Home-Button			
+
+# Abzweig funk "Alle Folgen" muss vor 'class="b-cluster">' erfolgen,
+#	sonst Liste weiterer funk-Sendungen und eigentl. Beiträge werden
+#	übersprungen. 
+#----------------------------------------------		# Abzweig funk "Alle Folgen" -> ZDF_get_content
+	if 'www.zdf.de/funk/' in url and '>Alle Folgen</h2>' in page:
+		li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=url, ID='ZDF_Sendungen')
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------		# Abzweig Cluster -> ZDFRubrikSingle
 
