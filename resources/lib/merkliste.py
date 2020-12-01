@@ -150,6 +150,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 				if len(my_ordner) == 0:								# leer: Initialisierung
 					my_ordner = ORDNER
 				my_ordner.insert(0, u"*ohne Zuordnung*")
+				my_ordner=sorted(my_ordner)
 				
 				ret = xbmcgui.Dialog().select(u'Ordner wählen (Abbrechen: ohne Zuordnung)', my_ordner, preselect=0)
 				if ret > 0:
@@ -479,6 +480,7 @@ def watch_filter(delete=''):
 	my_items, my_ordner = ReadFavourites('Merk')	# Ordnerliste holen	
 	my_ordner = check_ordnerlist(my_ordner)
 	my_ordner.insert(0, u"*ohne Zuordnung*")
+	my_ordner=sorted(my_ordner)
 	
 	preselect = 0									# Vorauswahl
 	if os.path.isfile(MERKFILTER) == True:	
@@ -615,7 +617,7 @@ def do_folder():
 
 		#-----------------------------------------------------	# Ordner hinzufügen
 		if ret == 3:											
-			new = get_keyboard_input('Neuen Ordner hinzufügen')	# Modul util
+			new = get_keyboard_input('', head='Neuer Ordner')	# Modul util
 			if  new == None or new.strip() == '':
 				continue
 			new_org = py2_decode(new)	
@@ -636,13 +638,16 @@ def do_folder():
 			if notsafe:	
 				continue
 					
-			my_ordner_list.append(new)
-			ret, err_msg = save_merkliste(merkliste, my_ordner_list)
-			#PLog(my_ordner_list)	# Debug
 			msg1 = u'Merklisten-Ordner:'
-			msg2 = u"[COLOR red]%s[/COLOR] hinzugefügt" % new 
-			if ret == False:
-				msg2 = err_msg
+			if exist_in_list(new, my_ordner_list) == False:		
+				my_ordner_list.append(new)
+				ret, err_msg = save_merkliste(merkliste, my_ordner_list)
+				#PLog(my_ordner_list)	# Debug
+				msg2 = u"[COLOR red]%s[/COLOR] hinzugefügt" % new 
+				if ret == False:
+					msg2 = err_msg
+			else:
+				msg2 = u"[COLOR red]%s[/COLOR] existiert bereits" % new 
 			xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
 			
 		#-----------------------------------------------------	# Basis-Ordnerliste wiederherstellen

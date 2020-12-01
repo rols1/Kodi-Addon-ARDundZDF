@@ -136,6 +136,8 @@ ICON_ARTE		= 'icon-arte_kat.png'
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
 BASE_URL 		= 'https://classic.ardmediathek.de'
 
+STARTLIST		= os.path.join(ADDON_DATA, "startlist") 
+
 #----------------------------------------------------------------
 # Kodi Matrix: Wechsel   xbmc.LOGNOTICE -> xbmc.LOGINFO - siehe
 #	https://forum.kodi.tv/showthread.php?tid=353818&pid=2943669#pid2943669,
@@ -165,7 +167,7 @@ def PLog(msg, dummy=''):
 #	https://github.com/xbmc/xbmc/blob/master/xbmc/interfaces/legacy/Dialog.h
 # ok triggert Modus: Dialog().ok, Dialog().yesno()
 #
-def MyDialog(msg1, msg2='', msg3='', ok=True, cancel='Abbruch', yes='JA', heading=''):
+def MyDialog(msg1, msg2='', msg3='', ok=True, cancel='Abbruch', yes='JA', heading='', autoclose=0):
 	PLog('MyDialog:')
 	
 	msg = msg1
@@ -184,9 +186,11 @@ def MyDialog(msg1, msg2='', msg3='', ok=True, cancel='Abbruch', yes='JA', headin
 
 	else:								# yesno-Dialog
 		if PYTHON2:
-			ret = xbmcgui.Dialog().yesno(heading=heading, line1=msg, nolabel=cancel, yeslabel=yes)
+			ret = xbmcgui.Dialog().yesno(heading=heading, line1=msg, nolabel=cancel, yeslabel=yes,\
+				autoclose=autoclose)
 		else:							# Matrix: line1 -> message
-			ret = xbmcgui.Dialog().yesno(heading=heading, message=msg, nolabel=cancel, yeslabel=yes)
+			ret = xbmcgui.Dialog().yesno(heading=heading, message=msg, nolabel=cancel, yeslabel=yes,\
+				autoclose=autoclose)
 		return ret
 
 #----------------------------------------------------------------
@@ -702,7 +706,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_folder=''; fparams_filter=''; fparams_delete=''; 
 		fparams_change=''; fparams_record=''; fparams_recordLive='';
 		fparams_setting_sofortstart=''; fparams_do_folder='';
-		fparams_rename='';								
+		fparams_rename=''; 
+		fparams_playlist_add=''; fparams_playlist_rm=''								
 		
 		if filterstatus != 'set':									# Doppel im Hauptmenü vermeiden (s. home)
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# ständig: Umschalter Settings 
@@ -793,7 +798,32 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					'title': quote_plus(title), 'descr': quote_plus(descr), 'start_end': start_end} 
 				fparams_record = "&fparams={0}".format(fp)
 				PLog("fparams_record: " + fparams_record[:100])
-				fparams_record = quote_plus(fparams_record)						
+				fparams_record = quote_plus(fparams_record)	
+									
+		# für PLAYLIST nur direkte PlayVideo-Calls relevant (ohne Setting Sofortstart):
+		if dirID == 'PlayVideo' and SETTINGS.getSetting('pref_playlist') == 'true':	# PLAYLIST gewählt?
+			PLog("start_end: " + start_end)
+			f = unquote(fparams)									# Param. extrahieren (s. PlayVideo)
+			f = f.replace("': '", "':'")
+			url = stringextract("url':'", "'", f) 					# Video-Url (eindeut. Mark.)
+			thumb = stringextract("thumb':'", "'", f)
+			title = stringextract("title':'", "'", f) 
+			Plot = Plot.replace('\n', '||')							# Plot hier : tagline+summary
+			
+			fp = {'action': 'playlist_rm', 'url': quote_plus(url)} 			# Url reicht
+			fparams_playlist_rm = "&fparams={0}".format(fp)
+			fparams_playlist_rm = quote_plus(fparams_playlist_rm) 			# Eintrag Playlist löschen
+					
+			# Verwendung fparams_playlist_add auch für Ziel	playlist_tools
+			fp = {'action': 'playlist_add', 'title': quote_plus(title), 'url': quote_plus(url),\
+				'thumb': quote_plus(thumb), 'Plot': quote_plus(Plot)} 
+			fparams_playlist_add = "&fparams={0}".format(fp)
+			fparams_playlist_add = quote_plus(fparams_playlist_add) 		# Eintrag Playlist hinzufügen
+			
+			fp = {'action': 'playlist_add', 'title': quote_plus(title), 'url': quote_plus(url),\
+				'thumb': quote_plus(thumb), 'Plot': quote_plus(Plot)} 
+			fparams_playlist_tools = "&fparams={0}".format(fp)
+			fparams_playlist_tools = quote_plus(fparams_playlist_tools) 	# Playlist-Tools
 			
 		fp = {'action': 'add', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
 			'Plot': quote_plus(Plot),'url': quote_plus(add_url)}	
@@ -805,6 +835,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_del = "&fparams={0}".format(fp)
 		PLog("fparams_del: " + fparams_del[:100])
 		fparams_del = quote_plus(fparams_del)
+		
 		
 		# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
 		MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID))
@@ -835,7 +866,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			if fparams_record:										# Aufrufer EPG_ShowSingle -> ProgramRecord
 				commands.append(('diese Sendung aufnehmen', 'RunScript(%s, %s, ?action=dirList&dirID=ProgramRecord%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_record)))
-			if fparams_recordLive:										# Aufrufer EPG_ShowAll -> LiveRecord
+			if fparams_recordLive:									# Aufrufer EPG_ShowAll -> LiveRecord
 				commands.append(('Recording TV-Live', 'RunScript(%s, %s, ?action=dirList&dirID=LiveRecord%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_recordLive)))
 		
@@ -843,7 +874,17 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			commands.append((menu_entry, 'RunScript(%s, %s, ?action=dirList&dirID=switch_Setting%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_setting_sofortstart)))
-			PLog(MY_SCRIPT); PLog(fparams_setting_sofortstart)				
+			
+		if fparams_playlist_rm or fparams_playlist_add or fparams_playlist_add:	# mode="video"
+			dirID = "resources.lib.playlist.items_add_rm"
+			commands.append(('Zur PLAYLIST hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
+					% (MY_SCRIPT, HANDLE, dirID, fparams_playlist_add)))
+			commands.append(('Aus PLAYLIST entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
+					% (MY_SCRIPT, HANDLE, dirID, fparams_playlist_rm)))
+			dirID = "resources.lib.playlist.playlist_tools"	# Parameter wie items_add_rm
+			commands.append(('PLAYLIST-Tools', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
+					% (MY_SCRIPT, HANDLE, dirID, fparams_playlist_add)))
+							
 
 		li.addContextMenuItems(commands)				
 	
@@ -1682,7 +1723,9 @@ def transl_pubDate(pubDate):
 #---------------------------------------------------------------- 	
 # Holt User-Eingabe für Suche ab
 #	s.a. get_query (für Search , ZDF_Search)
-def get_keyboard_input(line='', head='Bitte Suchwort(e) eingeben'):
+def get_keyboard_input(line='', head=''):
+	if head == '':
+		head = 'Bitte Suchwort(e) eingeben'
 	kb = xbmc.Keyboard(line, head)
 	kb.doModal() # Onscreen keyboard
 	if kb.isConfirmed() == False:
@@ -2361,7 +2404,7 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 	return	
 	
 ####################################################################################################
-# PlayVideo aktuell 23.03.2019: 
+# PlayVideo aktuell 28.11.2020: 
 #	Sofortstart + Resumefunktion, einschl. Anzeige der Medieninfo:
 #		nur problemlos, wenn das gewählte Listitem als Video (Playable) gekennzeichnet ist.
 # 		mediatype steuert die Videokennz. im Listing - abhängig von Settings (Sofortstart /
@@ -2380,13 +2423,14 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 #		SingleSendung (m3u8_master), SenderLiveResolution 
 #		show_formitaeten (ZDF),
 #		Modul zdfMobile: ShowVideo
+#		ab 28.11.2020: PlayMonitor (Modul Playlist, Param. playlist)
 #
 #	Format sub_path s. https://alwinesch.github.io/group__python__xbmcgui__listitem.html#ga24a6b65440083e83e67e5d0fb3379369
 #	Die XML-Untertitel der ARD werden gespeichert + nach SRT konvertiert (einschl. minus 10-Std.-Offset)
 #	Resume-Funktion Kodi-intern  DB MyVideos107.db, Tab files (idFile, playCount, lastPlayed) + (via key idFile),
 #		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
 #
-def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):	
+def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist=''):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
 	PLog(sub_path);
 	
@@ -2445,15 +2489,64 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false'):
 	IsPlayable = xbmc.getInfoLabel('ListItem.Property(IsPlayable)') # 'true' / 'false'
 	PLog("IsPlayable: %s, Merk: %s" % (IsPlayable, Merk))
 	PLog("kodi_version: " + KODI_VERSION)							# Debug
-	# kodi_version = re.search('(\d+)', KODI_VERSION).group(0) # Major-Version reicht hier - entfällt
+	# kodi_version = re.seplayer.playarch('(\d+)', KODI_VERSION).group(0) # Major-Version reicht hier - entfällt
 	
-	
-	if url_check(url, caller='PlayVideo'):
-		if IsPlayable == 'true':								# true - Call via listitem
+		
+	if url_check(url, caller='PlayVideo'):							# Url-Check
+		startlist = SETTINGS.getSetting('pref_startlist')
+		if  startlist == 'true' and playlist == '':					# Startliste  (skip bei playlist-Url)
+			PLog("STARTLIST: " + STARTLIST)
+			maxvideos = 100											# dto. AddonStartlist
+			startlist=''
+			if os.path.exists(STARTLIST):
+				startlist= RLoad(STARTLIST, abs_path=True)			# Video-Startliste ergänzen
+			if startlist:
+				startlist=py2_encode(startlist)
+				startlist= startlist.strip().splitlines()
+			else:
+				startlist=[]
+			PLog(len(startlist))
+			if len(startlist) >= maxvideos:							# 1. Eintrag löschen (ältester)
+				del startlist[0]
+			
+			dt = datetime.datetime.now()							# Format 2017-03-09 22:04:19.044463
+			now = time.mktime(dt.timetuple())						# Unix-Format 1489094334.0
+			Plot=Plot.replace('\n', '||')
+			if 'gestartet: [COLOR darkgoldenrod]' in Plot: 			# Video aus Startliste:
+				mark = '[/COLOR]||||'								# 	Datum/Zeit entfernen
+				pos = Plot.find(mark) + len(mark)
+				Plot = Plot[pos:]
+				
+			new_line = u"%s###%s###%s###%s###%s" % (now, title, url, thumb, Plot)
+			new_line = py2_encode(new_line)
+			PLog("new_line: " + new_line)
+			new_list=[]
+			new_list.append(new_line)
+			PLog(len(new_list))	
+			
+			for item in startlist:									# alte Einträge mit Url abgleichen 
+				item = py2_encode(item)								#	und umkopieren
+				PLog("new_line[12:]: %s, item[:12]: %s" % (new_line[12:], item[:12]))
+				old_url = stringextract('###http', '###', item)	
+				new_url = stringextract('###http', '###', new_line)	
+				PLog("old_url: %s, new_url: %s" % (old_url, new_url))
+				PLog(new_url in old_url)
+				if new_url not in old_url:							# Eintrag mit gleicher Url löschen (skip)
+					PLog("append:")
+					new_list.append(item)							# Eintrag -> new_list		
+
+			PLog(len(new_list))	
+			new_list.sort(reverse=True)
+			new_list = "\n".join(new_list)
+			RSave(STARTLIST, new_list)		
+		
+		#-------------------------------------------------------# Play
+		# playlist: Start aus Modul Playlist (s.o.)
+		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
 		else:													# false, None od. Blank
-			PLog('PlayVideo_Start: direkt')
+			PLog('PlayVideo_Start: direkt, playlist: '); PLog(playlist)
 			xbmc.Player().play(url, li, windowed=False) 		# direkter Start
 			sleep(50 / 100)
 			return

@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 13.11.2020
+#	Stand 23.11.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -742,7 +742,8 @@ def ARDStartSingle(path, title, duration, ID='', mehrzS=''):
 		MyDialog(msg1, msg2, '')	
 		xbmcplugin.endOfDirectory(HANDLE)
 	PLog(len(page))
-	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
+	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Python3 geändert
+	page= page.replace('+++\\n', '+++ ')					# Zeilentrenner ARD Neu
 
 	elements = blockextract('"availableTo":', page)			# möglich: Mehrfachbeiträge? z.B. + Hörfassung
 	if len(elements) > 1:
@@ -751,7 +752,7 @@ def ARDStartSingle(path, title, duration, ID='', mehrzS=''):
 			return ARDStartRubrik(path,title,ID='ARDStartSingle')
 			
 	if len(elements) == 0:									# möglich: keine Video (dto. Web)
-		msg1 = 'keine Beiträge zu %s gefunden'  % title
+		msg1 = u'keine Beiträge zu %s gefunden'  % title
 		PLog(msg1)
 		MyDialog(msg1, '', '')
 		xbmcplugin.endOfDirectory(HANDLE)	

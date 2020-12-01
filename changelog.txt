@@ -12,6 +12,34 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+29.11.2020 3.5.9
+			neues Modul playlist: Verwaltung einer addoninternen Playlist (nur
+			für direkte Stream-Url's).
+			Anpassungen für playlist im Modul util: Kontext-Menüs in AddDir, 
+			Param. autoclose ergänzt in MyDialog, zusätzl. Trigger playlist 
+			für Start ohne setResolvedUrl in PlayVideo.
+			get_keyboard_input: variable Titelzeile hinzugefügt (Anpassungen 
+			für playlist).
+			do_folder (Modul Merkliste): Vorbelegung geändert (Eingabe, Titel),
+			Check auf Existenz beim Hinzufügen eines Ordners. 
+			watch_filter (Modul Merkliste): Ordnerliste sortiert bei Setzen eines
+			Filters.
+
+not on Github 3.5.8
+			PlayVideo (ARD util): Liste gestarter Videos erzeugen/fortschreiben/
+			kappen (STARTLIST in ADDON_DATA/startlist).
+			AddonStartlist: Liste gestarter Videos zeigen + durchsuchen.
+			InfoAndFilter: Button "Video-Startliste" hinzugefügt.
+			Icon icon-tools.png konvertiert (minim. Farbpalette).
+			Icon icon-list.png hinzugefügt.
+			Settings (Modul-Einstellungen): pref_startlist + pref_playlist ergänzt.
+			ARDStartSingle (ARD Neu): Zeilentrenner in Info-Text geändert ('+++\\n' ->
+			'+++ ').
+			ARDStartSingle (ARD Neu): Fix msg1-Kodierung für MyDialog.
+			ZDF_get_content, ZDF_get_teaserDetails: Auswertung Videolänge an ZDF-
+			Änderung angepasst ('Videolänge' statt 'Videolänge:'), Auslesen 'teaser-info">'
+			voangestellt.
+
 22.11.2020 3.5.7
 			ZDFStart: funk-Startseite integriert (statt der Einzelbeiträge auf der
 			ZDF-Startseite), Bild des 1. Highlights ausgewertet (statt Ordner-Symbol).

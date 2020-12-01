@@ -46,11 +46,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.5.7'
-VDATE = '22.11.2020'
+VERSION = '3.5.9'
+VDATE = '30.11.2020'
 
-#
-#
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
 # 
@@ -255,7 +253,7 @@ if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden
 		bg_thread.start()											
 		
 
-MERKACTIVE = os.path.join(DICTSTORE, 'MerkActive') 		# Marker aktive Merkliste
+MERKACTIVE 	= os.path.join(DICTSTORE, 'MerkActive') 		# Marker aktive Merkliste
 if os.path.exists(MERKACTIVE):
 	os.remove(MERKACTIVE)
 MERKFILTER 	= os.path.join(DICTSTORE, 'Merkfilter') 
@@ -265,6 +263,7 @@ AKT_FILTER	= ''
 if os.path.exists(FILTER_SET):	
 	AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
 AKT_FILTER	= AKT_FILTER.splitlines()					# gesetzte Filter initialiseren 
+STARTLIST	= os.path.join(ADDON_DATA, "startlist") 	# Videoliste mit Datum
 
 try:	# 28.11.2019 exceptions.IOError möglich, Bsp. iOS ARM (Thumb) 32-bit
 	from platform import system, architecture, machine, release, version	# Debug
@@ -532,8 +531,8 @@ def InfoAndFilter():
 	title = "Änderungsliste (changelog.txt)"
 	title=py2_encode(title)
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))
-	addDir(li=li, label=title, action="dirList", dirID="ShowText", fanart=R(FANART), thumb=R(ICON_TOOLS), 
-		fparams=fparams, summary=summ, tagline=tag)		
+	addDir(li=li, label=title, action="dirList", dirID="ShowText", fanart=R(FANART), 
+		thumb=R(ICON_TOOLS), fparams=fparams, summary=summ, tagline=tag)		
 							
 	title = u"Addon-Infos"								# Button für Addon-Infos
 	tag = "Infos zu Version, Cache und Dateipfaden." 
@@ -543,6 +542,24 @@ def InfoAndFilter():
 	addDir(li=li, label=title, action="dirList", dirID="AddonInfos", fanart=R(FANART), 
 		thumb=R(ICON_PREFS), tagline=tag, summary=summ, fparams=fparams)	
 			
+	if SETTINGS.getSetting('pref_startlist') == 'true':		# Button für Video-Startliste	
+		title = u"Video-Startliste"	
+		tag = u"Liste der im Addon gestarteten Videos (max. 100 Einträge)." 
+		tag = u"%s\n\nSortierung absteigende (zuletzt gestartete Videos zuerst)" % tag
+		summ = u"Klick startet das Video (falls noch existent)"
+		fparams="&fparams={}" 
+		addDir(li=li, label=title, action="dirList", dirID="AddonStartlist", fanart=R(FANART), 
+			thumb=R("icon-list.png"), tagline=tag, summary=summ, fparams=fparams)	
+			
+	''' Problem beim Abspielen der Liste - s. PlayMonitor (Modul playlist)
+	if SETTINGS.getSetting('pref_playlist') == 'true':		# Button für Playlist	
+		title = u"PLAYLIST-Tools"	
+		tag = u"Abspielen und Verwaltung der addon-internen Playlist" 
+		fparams="&fparams={'action': 'do_tools', 'url': ''}" 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.playlist.playlist_tools",\
+			fanart=R(FANART), thumb=R("icon-playlist.png"), tagline=tag, fparams=fparams)	
+	'''	
+		
 	if SETTINGS.getSetting('pref_usefilter') == 'true':											
 		title = u"Filter bearbeiten "					# Button für Filter
 		tag = "Ausschluss-Filter bearbeiten (nur für Beiträge von ARD und ZDF)" 
@@ -551,6 +568,80 @@ def InfoAndFilter():
 			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+#----------------------------------------------------------------
+# Aufruf InfoAndFilter
+def AddonStartlist(mode='', query=''):
+	PLog('AddonStartlist:');
+	PLog(mode); PLog(query)
+	maxvideos = 100
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)										# Home-Button
+	img = R("icon-list.png")
+	startlist=''
+
+	if os.path.exists(STARTLIST):
+		startlist= RLoad(STARTLIST, abs_path=True)				# Video-Startliste ergänzen
+	if startlist == '':
+		msg1 = "die Video-Startlist ist leer"
+		MyDialog(msg1, '', '')
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+	if mode == 'search':										# Suche
+		query = get_keyboard_input() 
+		if query == None or query.strip() == '': 				# None bei Abbruch
+			pass
+		else:
+			query = query.strip()	
+			query = py2_encode(query)							# decode in up_low	
+
+		
+	title = u"Suche in Video-Startliste"						# Suchbutton
+	tag = u"Suche der im Addon gestarteten Videos (max %d)."  % maxvideos
+	tag = u"%s\n\nGesucht wird im Titel und im Infotext." % tag
+	fparams="&fparams={'mode': 'search'}" 
+	addDir(li=li, label=title, action="dirList", dirID="AddonStartlist", fanart=img, 
+		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)	
+			
+	startlist=py2_encode(startlist)
+	startlist= startlist.strip().splitlines()
+	PLog(len(startlist))
+
+	cnt=0
+	for item in startlist:
+		Plot=''
+		ts, title, url, thumb, Plot = item.split('###')
+		ts = datetime.datetime.fromtimestamp(float(ts))
+		ts = ts.strftime("%d.%m.%Y %H:%M:%S")
+		Plot_par = "gestartet: [COLOR darkgoldenrod]%s[/COLOR]\n\n%s" % (ts, Plot)
+		Plot_par=py2_encode(Plot_par); 		
+		Plot_par=Plot_par.replace('\n', '||')					# für router
+		tag=Plot_par.replace('||', '\n')
+		
+		PLog("Satz:"); PLog(title); PLog(ts); PLog(url); PLog(Plot_par)	
+		show = True
+		if 	query:												# Suchergebnis anwenden
+			q = up_low(query, mode='low'); i = up_low(item, mode='low');
+			PLog(q in i)
+			show = q in i										# Abgleich 
+		
+		PLog(show)		
+		if show == True:		
+			url=py2_encode(url); title=py2_encode(title);  thumb=py2_encode(thumb);
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+				(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot_par))
+			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=thumb, 
+				fparams=fparams, mediatype='video', tagline=tag)
+			cnt = cnt+1 	
+	
+	PLog(cnt);
+	if query:
+		if cnt == 0:
+			msg1 = u"Suchwort >%s< leider nicht gefunden" % py2_decode(query)
+			MyDialog(msg1, '', '')	
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 #----------------------------------------------------------------
 # Aufruf InfoAndFilter
 # Menüs für FilterToolsWork 
@@ -7939,9 +8030,9 @@ def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 		
 	PLog("Videolänge:")
 	dauer = stringextract(u'Videolänge:', 'Datum', page) 		# Länge - 1. Variante 
-	dauer = stringextract('m-border">', '</', dauer)		# Ende </dd> od. </dt>
+	dauer = stringextract('m-border">', '</', dauer)			# Ende </dd> od. </dt>
 	if dauer == '':
-		dauer = stringextract(u'Videolänge:', 'min', page) 	# Länge - 2. Variante bzw. fehlend
+		dauer = stringextract(u'Videolänge', 'min', page) 		# Länge - 2. Variante bzw. fehlend
 	if dauer:
 		dauer = "%s min" % cleanhtml(dauer) 
 		dauer = mystrip(dauer.strip())
@@ -8527,7 +8618,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		if ID != 'DEFAULT':					 			# DEFAULT: Übersichtsseite ohne Videos, Bsp. Sendungen A-Z
 			if ID != 'A-Z':	
 				if 'icon-502_play' not in rec :  		# Videobeitrag? auch ohne Icon möglich
-					if u'>Videolänge:<' not in rec : 
+					if u'>Videolänge<' not in rec : 
 						if '>Trailer<' not in rec : 	# Trailer o. Video-icon-502
 							PLog('Videobeitrag_fehlt')
 							continue		
@@ -8602,10 +8693,9 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 							
 		PLog("Videolänge:")
 		icon502 = stringextract('"icon-502_play', '</dl>', rec) 	
-		duration = stringextract(u'Videolänge:', 'Datum', icon502) 		# Länge - 1. Variante 
-		duration = stringextract('m-border">', '</', duration)		# Ende </dd> od. </dt>
+		duration = stringextract(u'teaser-info">', 'min', icon502) 		# Länge - 1. Variante
 		if duration == '':
-			duration = stringextract(u'Videolänge:', 'min', icon502) 	# Länge - 2. Variante bzw. fehlend
+			duration = stringextract(u'Videolänge', 'min', icon502) 	# Länge - 2. Variante bzw. fehlend
 		if duration == '':
 			duration = stringextract(u'not-tivi">', 'min', icon502) 	# Länge - 3. Variante bzw. fehlend
 		if duration:

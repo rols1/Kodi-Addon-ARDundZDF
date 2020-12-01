@@ -78,7 +78,9 @@
  
  <category label="Modul-Einstellungen" >
    	<setting label="gesamtes Addon: Verzicht auf Homebuttons" type="bool" id="pref_nohome" default="false"/>
-    <setting type="sep"/>
+    <setting label="gesamtes Addon: Video-Startliste verwenden" type="bool" id="pref_startlist" default="false"/>
+    <setting label="gesamtes Addon: Playlist verwenden" type="bool" id="pref_playlist" default="false"/>
+   <setting type="sep"/>
 	<setting label="Modul FUNK: Videoeinstellung für MP4-Sofortstart" type="select" id="pref_funk_bandw" default="1500:960x540"
   		values="400:320x180|650:640x360|900:720x404|1500:960x540|2500:1280x720|4000:1920x108|6000:1920x1080" />
    	<setting label="Modul FUNK: Videos nach Publik.-Datum absteigend sortieren" type="bool" id="pref_sort_funk" default="true"/>
