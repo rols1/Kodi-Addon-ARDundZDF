@@ -12,6 +12,10 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+02.12.2020 3.6.1
+			get_playlist (Modul playlist): Check auf fehlenden Status (vor V3.6.0) und
+			Korrektur der Liste.
+			
 02.12.2020 3.6.0
 			ZDF_get_content, ZDF_get_teaserDetails: bei fehlendem plusbar_path Auswertung 
 			des Beitraglinks im teaser-title-link (<a href=..), Auswertung Videolänge 1.

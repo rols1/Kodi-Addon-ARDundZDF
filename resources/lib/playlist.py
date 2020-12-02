@@ -58,9 +58,22 @@ PLog('Script playlist.py geladen')
 def get_playlist():
 	PLAYLIST=[]
 	if os.path.exists(PLAYFILE):			# PLAYLIST laden
-		PLAYLIST = RLoad(PLAYFILE, abs_path=True)
+		PLAYLIST = RLoad(PLAYFILE, abs_path=True)		
 		PLAYLIST = PLAYLIST.strip().splitlines()
 	PLog(len(PLAYLIST))
+	
+	new_list=[]; 							# Formatcheck: vor V3.6.0 fehlt status
+	save_new = False						#	neu / gesehen in den Zeilen
+	for item in PLAYLIST:	
+		if '###neu' not in item and '###gesehen' not in item:	# Format vor V3.6.0
+			item = item  + '###neu'
+			save_new = True
+		new_list.append(item)
+	
+	if save_new:							# altes Format überschreiben
+		new_list= "\n".join(new_list)
+		RSave(PLAYFILE, new_list)		
+	
 	return PLAYLIST
 # ----------------------------------------------------------------------
 #	Aufruf K-Menü (fparams_playlist_add, fparams_playlist_rm)
@@ -298,6 +311,7 @@ def build_textlist(PLAYLIST):
 	
 	new_list = []
 	cnt=1
+	save_new = False											# altes Format überschreiben
 	for item in PLAYLIST:
 		title, url, thumb, Plot, status = item.split('###')
 		Plot=py2_decode(Plot); title=py2_decode(title); 
@@ -312,6 +326,7 @@ def build_textlist(PLAYLIST):
 		cnt = cnt+1
 		
 	new_list= "\n".join(new_list)
+	new_list = py2_encode(new_list)
 	return new_list
 # ----------------------------------------------------------------------
 # Liste der Archiv-Dateien
