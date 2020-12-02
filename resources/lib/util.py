@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 22.11.2020
+#	Stand 02.12.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -217,6 +217,7 @@ def get_list_indices(my_items, my_list):
 #
 def get_items_from_list(my_indices, my_list):
 	PLog('get_items_from_list:')
+	PLog(my_indices)
 	
 	item_list = []
 	for i in my_indices:

@@ -19,7 +19,7 @@
 	<setting label="TV-Live / Videos: Sofortstart statt Auflösungen und Download" type="bool" id="pref_video_direct" default="false"/>
  	<setting label="Untertitel: falls vorhanden, im Player einschalten" type="bool" id="pref_UT_ON" default="false"/>
 	<setting label="Gebärdensprache: Quelle verwenden falls vorhanden" type="bool" id="pref_DGS_ON" default="false"/>
-  </category>
+  </category>Startlist
 
  <category label="Radio-Podcast Einstellungen">
   	<setting label="Podcast-/Audiothek-Erweiterung verwenden" type="bool" id="pref_use_podcast" default="true"/>
@@ -78,8 +78,8 @@
  
  <category label="Modul-Einstellungen" >
    	<setting label="gesamtes Addon: Verzicht auf Homebuttons" type="bool" id="pref_nohome" default="false"/>
-    <setting label="gesamtes Addon: Video-Startliste verwenden" type="bool" id="pref_startlist" default="false"/>
-    <setting label="gesamtes Addon: Playlist verwenden" type="bool" id="pref_playlist" default="false"/>
+    <setting label="gesamtes Addon: <Zuletzt gesehen>-Liste verwenden" type="bool" id="pref_startlist" default="false"/>
+    <setting label="gesamtes Addon: Video-Playlist verwenden" type="bool" id="pref_playlist" default="false"/>
    <setting type="sep"/>
 	<setting label="Modul FUNK: Videoeinstellung für MP4-Sofortstart" type="select" id="pref_funk_bandw" default="1500:960x540"
   		values="400:320x180|650:640x360|900:720x404|1500:960x540|2500:1280x720|4000:1920x108|6000:1920x1080" />

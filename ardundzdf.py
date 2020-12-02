@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.5.9'
-VDATE = '30.11.2020'
+VERSION = '3.6.0'
+VDATE = '02.12.2020'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -263,7 +263,7 @@ AKT_FILTER	= ''
 if os.path.exists(FILTER_SET):	
 	AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
 AKT_FILTER	= AKT_FILTER.splitlines()					# gesetzte Filter initialiseren 
-STARTLIST	= os.path.join(ADDON_DATA, "startlist") 	# Videoliste mit Datum
+STARTLIST	= os.path.join(ADDON_DATA, "startlist") 	# Videoliste mit Datum ("Zuletzt gesehen")
 
 try:	# 28.11.2019 exceptions.IOError möglich, Bsp. iOS ARM (Thumb) 32-bit
 	from platform import system, architecture, machine, release, version	# Debug
@@ -542,8 +542,8 @@ def InfoAndFilter():
 	addDir(li=li, label=title, action="dirList", dirID="AddonInfos", fanart=R(FANART), 
 		thumb=R(ICON_PREFS), tagline=tag, summary=summ, fparams=fparams)	
 			
-	if SETTINGS.getSetting('pref_startlist') == 'true':		# Button für Video-Startliste	
-		title = u"Video-Startliste"	
+	if SETTINGS.getSetting('pref_startlist') == 'true':		# Button für LastSeen-Funktion	
+		title = u"Zuletzt gesehen"	
 		tag = u"Liste der im Addon gestarteten Videos (max. 100 Einträge)." 
 		tag = u"%s\n\nSortierung absteigende (zuletzt gestartete Videos zuerst)" % tag
 		summ = u"Klick startet das Video (falls noch existent)"
@@ -581,9 +581,9 @@ def AddonStartlist(mode='', query=''):
 	startlist=''
 
 	if os.path.exists(STARTLIST):
-		startlist= RLoad(STARTLIST, abs_path=True)				# Video-Startliste ergänzen
+		startlist= RLoad(STARTLIST, abs_path=True)				# Zuletzt gesehen-Liste ergänzen
 	if startlist == '':
-		msg1 = "die Video-Startlist ist leer"
+		msg1 = u'die "Zuletzt gesehen"-Liste ist leer'
 		MyDialog(msg1, '', '')
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
@@ -596,7 +596,7 @@ def AddonStartlist(mode='', query=''):
 			query = py2_encode(query)							# decode in up_low	
 
 		
-	title = u"Suche in Video-Startliste"						# Suchbutton
+	title = u'Suche in der "Zuletzt gesehen"-Liste"'			# Suchbutton
 	tag = u"Suche der im Addon gestarteten Videos (max %d)."  % maxvideos
 	tag = u"%s\n\nGesucht wird im Titel und im Infotext." % tag
 	fparams="&fparams={'mode': 'search'}" 
@@ -2548,6 +2548,7 @@ def ARDSport(title):
 	if SETTINGS.getSetting('pref_video_direct') == 'true': 
 		mediatype='video'
 		
+	# Bei Gelegenheit NDR-Streams in livesenderTV.xml integrieren
 	# Quellen für Event-Livestreams (Chrome-Dev.-Tools):	
 	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3666-ardjson.json
 	# https://lawm.sportschau.de/doha2019/live/livestreams170-extappjson.json		
@@ -2617,7 +2618,7 @@ def ARDSport(title):
 				'MDR+ Eventlivestreams + SocialTV - 3', 'MDR+ Eventlivestreams + SocialTV - 4',
 				'MDR+ Eventlivestreams + SocialTV - 5']
 	for sname in MDR_Streams:								# aus livesenderTV.xml: MDR+ Eventlivestreams	
-		channel = 'Regional'									
+		channel = 'ARD Event Streams'									
 		onlySender = sname
 		img = R("tv-mdr-sachsen.png")	
 		SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
@@ -2640,7 +2641,7 @@ def ARDSport(title):
 	# Livestreams WDR - s. Forum:
 	WDR_Streams = ['WDR_ARD Event 1', 'WDR_ARD Event 3']
 	for sname in WDR_Streams:								# aus livesenderTV.xml: WDR Eventlivestreams	
-		channel = 'Regional'									
+		channel = 'ARD Event Streams'									
 		onlySender = sname
 		img = R("tv-wdr.png")	
 		SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
@@ -5696,8 +5697,8 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 		# thumb-Pfad an lokales Addon anpassen (externe Merkliste) -
 		# kein Test pref_merkextern (andere Gründe möglich, z.B. manuell
 		# kopiert):
+		my_thumb = thumb
 		if thumb and mode == 'Merk':  # and SETTINGS.getSetting('pref_merkextern') == 'true':
-			my_thumb = thumb
 			if thumb.startswith('http') == False:	
 				if '/addons/' in thumb:
 					home_thumb, icon = thumb.split('/addons/')
@@ -8015,7 +8016,6 @@ def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 		title	= stringextract('title="', '"', page)					# href-Titel
 	title = unescape(title);
 	title = repl_json_chars(py2_decode(title));
-	# enddate: plusbar-end-date od. playlist-toggle-end-date:
 	enddate	= stringextract('-end-date="', '"', page)					# kann leer sein, wie get_teaserElement
 	enddate = time_translate(enddate, add_hour=0)
 
@@ -8028,11 +8028,20 @@ def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 	if path and path.startswith('http') == False:
 		path = ZDF_BASE + path
 		
-	PLog("Videolänge:")
-	dauer = stringextract(u'Videolänge:', 'Datum', page) 		# Länge - 1. Variante 
-	dauer = stringextract('m-border">', '</', dauer)			# Ende </dd> od. </dt>
+	PLog("Videolänge2:")
+	icon502 = stringextract('"icon-502_play', '</dl>', page) 			# Länge - 1. Variante
+	# PLog(icon502)	
+	try:
+		dauer = re.search(u'aria-label="(\d+) min"', icon502).group(1)
+	except:
+		dauer=''
+	if dauer == '':	
+		try:															# Länge - 2. Variante
+			dauer = re.search(u'Videolänge (\d+) min', icon502).group(1)
+		except Exception as exception:
+			dauer=''
 	if dauer == '':
-		dauer = stringextract(u'Videolänge', 'min', page) 		# Länge - 2. Variante bzw. fehlend
+		dauer = stringextract(u'Videolänge', 'min', page) 				# Länge - 2. Variante bzw. fehlend
 	if dauer:
 		dauer = "%s min" % cleanhtml(dauer) 
 		dauer = mystrip(dauer.strip())
@@ -8665,14 +8674,18 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		if 	'<strong>Livestream</strong>' in rec:				# Livestreammarkierung, z.B. Send. m. Gebärdenspr.
 			continue
 			
-		# Pfad, Enddatum			
+		# Pfad, Enddatum. 01.12.2020 plusbar_path kann fehlen, z.B. bei ZDF_Search			
 		plusbar_title = stringextract('plusbar-title="', '"', rec)	# Bereichs-, nicht Einzeltitel, nachrangig
 		plusbar_path  =  stringextract('plusbar-url="', '"', rec)	# plusbar nicht vorh.? - sollte nicht vorkommen
 		enddate	= stringextract('plusbar-end-date="', '"', rec)		# kann leer sein
 		enddate = time_translate(enddate, add_hour=False)			# ohne Abgleich summer_time
 		
-		PLog('plusbar_path: ' + plusbar_path); PLog('ref_path: %s' % ref_path); PLog('enddate: ' + enddate);	
-		if plusbar_path == '' or plusbar_path == ref_path:			# kein Pfad oder Selbstreferenz
+		PLog('plusbar_path: ' + plusbar_path); PLog('ref_path: %s' % ref_path); PLog('enddate: ' + enddate);
+		if plusbar_path == '':
+			plusbar_path = stringextract('<a href="', '"', rec)
+			if plusbar_path.startswith('http') == False:
+				plusbar_path = ZDF_BASE + plusbar_path
+		if plusbar_path == ref_path:								# Selbstreferenz
 			continue
 		
 		# Datum, Uhrzeit Länge	
@@ -8691,13 +8704,25 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 				video_datum=''; video_time=''			
 		PLog(video_datum); PLog(video_time);
 							
-		PLog("Videolänge:")
-		icon502 = stringextract('"icon-502_play', '</dl>', rec) 	
-		duration = stringextract(u'teaser-info">', 'min', icon502) 		# Länge - 1. Variante
+		PLog("Videolänge1:");
+		icon502 = stringextract('"icon-502_play', '</dl>', rec) 
+		# PLog(icon502)	
+		try:															# Länge - 1. Variante
+			duration = re.search(u'aria-label="(\d+) min"', icon502).group(1)
+		except Exception as exception:
+			PLog(str(exception))
+			duration=''
+		if duration == '':	
+			try:															# Länge - 2. Variante
+				duration = re.search(u'Videolänge (\d+) min', icon502).group(1)
+			except Exception as exception:
+				PLog(str(exception))
+				duration=''
+			
 		if duration == '':
-			duration = stringextract(u'Videolänge', 'min', icon502) 	# Länge - 2. Variante bzw. fehlend
+			duration = stringextract(u'Videolänge', 'min', icon502) 	# Länge - 3. Variante bzw. fehlend
 		if duration == '':
-			duration = stringextract(u'not-tivi">', 'min', icon502) 	# Länge - 3. Variante bzw. fehlend
+			duration = stringextract(u'not-tivi">', 'min', icon502) 	# Länge - 4. Variante bzw. fehlend
 		if duration:
 			duration = "%s min" % cleanhtml(duration) 
 			

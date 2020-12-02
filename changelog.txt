@@ -12,6 +12,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+02.12.2020 3.6.0
+			ZDF_get_content, ZDF_get_teaserDetails: bei fehlendem plusbar_path Auswertung 
+			des Beitraglinks im teaser-title-link (<a href=..), Auswertung Videolänge 1.
+			Variante umgestellt auf re.search ('aria-label="(\d+) min"').
+			PlayMonitor: Abbruch-Zähler korrigiert (>= statt richtig >).
+			playlist_tools: play_list-Aufruf gelöscht (Kopier-Ruine störte Dialog).
+			ShowFavs: Fix fehlende Vorbelegung für my_thumb bei mode='Favs'.
+			Modul playlist: Tools erweitert mit Archiv (verschieben, wiederherstellen),
+			Anpassungen in playlist_tools, play_list, neue Funktion get_archiv.
+			Unbenennung Video-Startliste in "Zuletzt gesehen": Anpassungen in Settings
+			(Module), InfoAndFilter (Menübutton), AddonStartlist (Suche-Titel), Dateiname
+			STARTLIST unverändert.
+			livesenderTV.xml: Event-Streams neu gruppiert (ARD Event Streams, ZDF Event 
+			Streams), 14 ZDF-Event-Streams aufgenommen (@Weri), Anpassung in ARDSport.
+			
 29.11.2020 3.5.9
 			neues Modul playlist: Verwaltung einer addoninternen Playlist (nur
 			für direkte Stream-Url's).
@@ -38,7 +53,7 @@ not on Github 3.5.8
 			ARDStartSingle (ARD Neu): Fix msg1-Kodierung für MyDialog.
 			ZDF_get_content, ZDF_get_teaserDetails: Auswertung Videolänge an ZDF-
 			Änderung angepasst ('Videolänge' statt 'Videolänge:'), Auslesen 'teaser-info">'
-			voangestellt.
+			vorangestellt.
 
 22.11.2020 3.5.7
 			ZDFStart: funk-Startseite integriert (statt der Einzelbeiträge auf der

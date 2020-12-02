@@ -4,7 +4,7 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-#	Stand: 30.11.2020
+#	Stand: 02.12.2020
 
 from __future__ import absolute_import
 
@@ -15,7 +15,7 @@ from kodi_six.utils import py2_encode, py2_decode
 import os, sys
 import datetime, time
 from threading import Thread	
-import random						# Zufallswerte für PLAYLIST
+import glob
 	
 PYTHON2 = sys.version_info.major == 2
 PYTHON3 = sys.version_info.major == 3
@@ -50,16 +50,18 @@ ICON_PLAYLIST	= R("icon-playlist.png")
 
 PLAY_TEMPL 		= u"%s###%s###%s###%s###%s"	#  % (title, url, thumb, Plot, status)
 
-PLog('Script playlist.py geladen')
-PLAYLIST=[]
-
-if os.path.exists(PLAYFILE):			# PLAYLIST laden
-	PLAYLIST = RLoad(PLAYFILE, abs_path=True)
-	PLAYLIST = PLAYLIST.strip().splitlines()
-PLog(len(PLAYLIST))
 maxvideos = 100							# wie Video-Startlist
 msg1 = "PLAYLIST ARDundZDF"
+PLog('Script playlist.py geladen')
 
+# ----------------------------------------------------------------------
+def get_playlist():
+	PLAYLIST=[]
+	if os.path.exists(PLAYFILE):			# PLAYLIST laden
+		PLAYLIST = RLoad(PLAYFILE, abs_path=True)
+		PLAYLIST = PLAYLIST.strip().splitlines()
+	PLog(len(PLAYLIST))
+	return PLAYLIST
 # ----------------------------------------------------------------------
 #	Aufruf K-Menü (fparams_playlist_add, fparams_playlist_rm)
 #	url, title, thumb + Plot in fparams zusätzlich quotiert
@@ -70,6 +72,7 @@ def items_add_rm(action, url, title='', thumb='', Plot=''):
 	thumb = unquote_plus(thumb); Plot = unquote_plus(Plot);
 	PLog(action); PLog(url); PLog(title); PLog(thumb); PLog(Plot); 
 	
+	PLAYLIST = get_playlist()
 	new_url = url
 	doppler = False
 	msg2 = u"Eintrag hinzugefügt, Anzahl %s"
@@ -130,46 +133,55 @@ def playlist_tools(action, url, title='', thumb='', Plot=''):
 	url = unquote_plus(url); title = unquote_plus(title);  			
 	thumb = unquote_plus(thumb); Plot = unquote_plus(Plot);
 	# PLog(url); PLog(title); PLog(thumb); PLog(Plot); 
+	PLAYLIST = get_playlist()
 
 	dialog = xbmcgui.Dialog()
 	# bei Bedarf ergänzen: u"Liste endlos abspielen", u"Liste zufallgesteuert abspielen"
 	#	(mode="endless", mode="random"):
 	select_list = [	u"Liste abspielen", u"Liste zeigen", u"Liste komplett löschen", 
 					u"einzelne Titel löschen", u"Status in kompletter Liste auf >neu< setzen", 
-					u"Abbrechen"
+					u"Liste ins Archiv verschieben", 
+					u"Liste aus Archiv wiederherstellen", u"Abbrechen"
 				]
 
 	if len(PLAYLIST) == 0:
 		xbmcgui.Dialog().notification("PLAYLIST: ","noch leer",ICON_PLAYLIST,2000)
-		return
+		# return											# Verbleib in Tools für get_archiv
 
 	title = u"PLAYLIST-Tools"
-	ret = dialog.select(title, select_list)					# Auswahl Filterliste
-	PLog(ret)
-	if ret == -1 or ret == 6:
+	ret = dialog.select(title, select_list)					# Auswahl Tools
+	PLog("ret: %d" % ret)
+	if ret == -1 or ret == len(select_list):
 		return
-	elif ret == 0:
+	elif ret == 0 and len(PLAYLIST) > 0:
 		play_list(title)									# PLAYLIST starten
-	elif ret == 1:
+	elif ret == 1 and len(PLAYLIST) > 0:
 		play_list(title, mode="show")						# PLAYLIST zeigen
-	elif ret == 2:
-		play_list(title, mode="del_all")					# PLAYLIST kompl. löschen
+	elif ret == 2 and len(PLAYLIST) > 0:					# PLAYLIST kompl. löschen
 		msg1 = u"PLAYLIST mit %d Titel(n) wirklich löschen?" % len(PLAYLIST) 
 		ret4 = MyDialog(msg1=msg1, msg2='', msg3='', ok=False, cancel='Abbrechen', yes='JA', heading=title)
 		if ret4 == 1:
 			os.remove(PLAYFILE)	
 			xbmcgui.Dialog().notification("PLAYLIST: ","gelöscht",ICON_PLAYLIST,2000)
-	elif ret == 3:
+	elif ret == 3 and len(PLAYLIST) > 0:
 		play_list(title, mode="del_single")					# PLAYLIST Auswahl löschen
-	elif ret == 4:
+	elif ret == 4 and len(PLAYLIST) > 0:
 		play_list(title, mode="set_status")					# Status auf >neu< setzen
-	return	
+	elif ret == 5 and len(PLAYLIST) > 0:
+		play_list(title, mode="push_archiv")				# Liste in PLAYLIST-Archiv verschieben
+	elif ret == 6:
+		play_list(title, mode="get_archiv")					# Liste aus PLAYLIST-Archiv wiederherstellen
+	elif ret == 7:											# Abbruch Liste
+		return	
+
+	playlist_tools(action='play_list', url='')				# wieder zur Liste, auch nach PlayMonitor
 		
 # ----------------------------------------------------------------------
 def play_list(title, mode=''):		
 	PLog('play_list:')
 	PLog(mode)
 	dialog = xbmcgui.Dialog()
+	PLAYLIST = get_playlist()
 	
 	if mode == '':													# PLAYLIST starten
 		new_list = "\n".join(PLAYLIST)
@@ -197,13 +209,13 @@ def play_list(title, mode=''):
 	if mode == 'show':												# PLAYLIST zeigen
 		PLog('show:')
 		title_org = u"%s: aktuelle Liste" % title
-		new_list = build_textlist()
+		new_list = build_textlist(PLAYLIST)
 		dialog.textviewer(title_org, new_list,usemono=True)
 
 	if mode == 'del_single':										# PLAYLIST Auswahl löschen
 		PLog('del_single:')
 		title_org = u"%s: einzelne Titel löschen" % title
-		new_list = build_textlist()				
+		new_list = build_textlist(PLAYLIST)				
 		new_list = new_list.splitlines()							# Textliste zur Auswahl
 		ret_list = dialog.multiselect(title_org, new_list)
 		if ret_list !=  None:
@@ -226,12 +238,62 @@ def play_list(title, mode=''):
 		RSave(PLAYFILE, new_list)
 		msg2 = u"Status auf >neu< gesetzt"					
 		xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,3000)
+					
 		
+	if mode == 'push_archiv':										# Liste in PLAYLIST-Archiv verschieben
+		PLog('push_archiv:')
+		msg1 = u"Soll die PLAYLIST wirklich ins Archiv verschoben werden?"
+		ret = MyDialog(msg1=msg1, msg2='', msg3='', ok=False, cancel='Abbrechen',\
+			yes='VERSCHIEBEN', heading=title)
+		if ret == 1:
+			query = get_keyboard_input(head=u'Bitte Dateinamen für diese PLAYLIST vergeben:') 
+			if query == None or query.strip() == '': 				# None bei Abbruch
+				pass
+			else:
+				valid_name = make_filenames(query)
+				fname = "%s_%s" % (PLAYFILE, valid_name)
+				if os.path.exists(fname):
+					msg1 = "%s existiert schon!" % valid_name
+					xbmcgui.Dialog().notification("PLAYLIST: ",msg1,ICON_PLAYLIST,3000)	
+				else:
+					os.rename(PLAYFILE, fname)	
+					msg1 = u"neu im Archiv: %s" % valid_name
+					xbmcgui.Dialog().notification("PLAYLIST: ",msg1,ICON_PLAYLIST,3000)
+		
+	if mode == 'get_archiv':										# Liste aus PLAYLIST-Archiv wiederherstellen
+		PLog('get_archiv:')
+		archiv = get_archiv()
+		PLog(archiv)
+		if len(archiv) == 0:
+			msg2 = u"PLAYLIST-Archiv noch leer"					
+			xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,3000)
+		else:
+			my_list = []
+			for item in archiv:
+				sp = "%s_" % PLAYFILE				# Archivname abtrennen
+				my_list.append(item.split(sp)[1])	#	Bsp.: ..data/playlist_mylist2
+			title = u"Liste zur Wiederherstellung auswählen"
+			ret = dialog.select(title, my_list)
+			PLog(ret)
+			if ret != -1:
+				my_index=[]; my_index.append(ret)
+				ret_list = get_items_from_list(my_index, archiv) # hier nur 1 Element
+				PLog(ret_list)
+				if len(ret_list) > 0:
+					fname  = ret_list[0]
+					try:
+						os.rename(fname, PLAYFILE)
+						msg1 = u"ist wiederhergestellt"
+						xbmcgui.Dialog().notification("PLAYLIST:",msg1,ICON_PLAYLIST,3000)
+					except Exception as exception:	
+						PLog(str(exception))
+						MyDialog("Dateifehler bei Wiederherstellung", str(exception), '')
+
 	return		
 		
 # ----------------------------------------------------------------------
 # Textliste der PLAYLIST erzeugen
-def build_textlist():
+def build_textlist(PLAYLIST):
 	PLog('build_textlist:')
 	
 	new_list = []
@@ -252,6 +314,15 @@ def build_textlist():
 	new_list= "\n".join(new_list)
 	return new_list
 # ----------------------------------------------------------------------
+# Liste der Archiv-Dateien
+def get_archiv():
+	PLog('get_archiv:')
+	
+	globPat = '%s_*' % PLAYFILE
+	file_list = glob.glob(globPat)
+	return file_list 			# leer falls keine Archivdateien vorh.
+	
+# ----------------------------------------------------------------------
 # Thread für PLAYLIST, Aufruf play_list(mode='')
 # Problem: beim direkten Aufruf von playlist_tools via Button puffert
 #	das 1. Video fortlaufend und zeigt keine Bedienelemente, unabhängig
@@ -259,6 +330,7 @@ def build_textlist():
 #
 def PlayMonitor(mode=''):
 	PLog('PlayMonitor:')
+	PLAYLIST = get_playlist()
 	
 	mtitle = u"PLAYLIST-Tools"
 	PLAYDELAY 		= 10	# Sek.
@@ -288,18 +360,18 @@ def PlayMonitor(mode=''):
 			# Notification ev. ergänzen: player.getTotalTime(),
 			#	player.getTime():
 			if player.isPlaying():			
-				xbmc.sleep(1000)
+				xbmc.sleep(2000)
 				# notification stört hier:
 				# xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,2000) 				
 			else:
 				break
-		
+
 		item = item.replace("###neu", "###gesehen")
 		PLAYLIST[cnt-2] = py2_encode(item)
 		new_list = "\n".join(PLAYLIST)
 		RSave(PLAYFILE, new_list)						# Lock erf. falls auf Share
 
-		if cnt >= len(PLAYLIST):
+		if cnt > len(PLAYLIST):
 			break
 		msg1 = u"nächster PLAYLIST-Titel: %d von %d" % (cnt, len(PLAYLIST)) 
 		msg2 = u"startet automatisch in %d sec." % PLAYDELAY
