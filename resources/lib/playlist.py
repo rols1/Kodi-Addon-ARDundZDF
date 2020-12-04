@@ -164,10 +164,12 @@ def playlist_tools(action, url, title='', thumb='', Plot=''):
 	title = u"PLAYLIST-Tools"
 	ret = dialog.select(title, select_list)					# Auswahl Tools
 	PLog("ret: %d" % ret)
-	if ret == -1 or ret == len(select_list):
+	if ret == -1 or ret == len(select_list):				# Tools-Menü verlassen
 		return
 	elif ret == 0 and len(PLAYLIST) > 0:
-		play_list(title)									# PLAYLIST starten
+		play_list(title)									# PLAYLIST starten / Titel abspielen
+		return												# Tools-Menü verlassen
+		
 	elif ret == 1 and len(PLAYLIST) > 0:
 		play_list(title, mode="show")						# PLAYLIST zeigen
 	elif ret == 2 and len(PLAYLIST) > 0:					# PLAYLIST kompl. löschen
@@ -335,6 +337,8 @@ def get_archiv():
 	
 	globPat = '%s_*' % PLAYFILE
 	file_list = glob.glob(globPat)
+	if PLAYLIST_ALIVE in file_list:
+		file_list.remove(PLAYLIST_ALIVE)	# Lebendsignal (Ruine) ausschließen
 	return file_list 			# leer falls keine Archivdateien vorh.
 	
 # ----------------------------------------------------------------------
@@ -400,8 +404,8 @@ def PlayMonitor(mode=''):
 		ret = MyDialog(msg1=msg1, msg2=msg2, msg3=msg3, ok=False, cancel='Weiter', \
 			yes='STOP', heading=mtitle,autoclose=PLAYDELAY*1000)
 		PLog("ret: %d" % ret)
+		open(COUNT_STOP, 'w').close()
 		if ret == 1:		# autoclose, cancel: 0
-			open(COUNT_STOP, 'w').close()
 			break
 		
 		

@@ -106,7 +106,7 @@ Funktionen:
 #### Updates
 - entweder mit dem integrierten <b>Updatemodul (autom. Anpassung an Kodi-Version)</b> oder via <b>kodinerds-Repo</b>
 
-#### weitere Module
+#### weitere Module (optional)
 - ZDFmobile
 - 3Sat
 - funk
@@ -114,7 +114,8 @@ Funktionen:
 - TagesschauXL (https://www.tagesschau.de/)
 - phoenix (https://www.phoenix.de/)
 - Arte-Kategorien
-
+- "Zuletzt gesehen"-Funktion 
+- Video-Playlist einschl. Archiv-Funktion
 
 
 INSTALLATION:

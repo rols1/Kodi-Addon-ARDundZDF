@@ -448,7 +448,7 @@
 </channel>
 
 <channel>
-	<name>ARD Event Streams</name>
+	<name>ARD Event Streams (eingeschränkt verfügbar)</name>
 	<thumbnail>ard-mediathek.png</thumbnail>
 	<fanart></fanart>
 	<items>
@@ -498,6 +498,33 @@
 			<date>10.10.2020</date>
 		</item>
 		<item>
+			<title>NDR_ARD Event-Livestream 1</title>
+			<hrefsender></hrefsender>
+			<link>https://ndrspezial-lh.akamaihd.net/i/spezial_1@430235/master.m3u8</link>
+			<thumbnail>radio-ndr.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>03.12.2020</date>
+		</item>
+		<item>
+			<title>NDR_ARD Event-Livestream 2</title>
+			<hrefsender></hrefsender>
+			<link>https://ndrspezial-lh.akamaihd.net/i/spezial_2@430236/master.m3u8</link>
+			<thumbnail>radio-ndr.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>03.12.2020</date>
+		</item>
+		<item>
+			<title>NDR_ARD Event-Livestream 3</title>
+			<hrefsender></hrefsender>
+			<link>https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8</link>
+			<thumbnail>radio-ndr.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>03.12.2020</date>
+		</item>
+		<item>
 			<title>WDR_ARD Event 1</title>
 			<hrefsender></hrefsender>
 			<link>https://wdrardevent1-lh.akamaihd.net/i/ardevent1_weltweit@566648/master.m3u8</link>
@@ -517,4 +544,138 @@
 		</item>
 	</items>
 </channel>
+
+<channel>
+	<name>ZDF Event Streams (eingeschränkt verfügbar)</name>
+	<thumbnail>tv-zdf.png</thumbnail>
+	<fanart></fanart>
+	<items>
+		<item>
+			<title>ZDF Event 1</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-01.akamaized.net/hls/live/2002460/none/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 2</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-02.akamaized.net/hls/live/2016297/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 3</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-03.akamaized.net/hls/live/2016298/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 4</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-04.akamaized.net/hls/live/2016299/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 5</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-05.akamaized.net/hls/live/2016300/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 6</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-06.akamaized.net/hls/live/2016301/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 7</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-07.akamaized.net/hls/live/2016302/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 8</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-08.akamaized.net/hls/live/2016303/none/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 9</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-09.akamaized.net/hls/live/2016304/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 10</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-10.akamaized.net/hls/live/2016305/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 11</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-11.akamaized.net/hls/live/2016306/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 12</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-12.akamaized.net/hls/live/2016307/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 13</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-13.akamaized.net/hls/live/2016308/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+		<item>
+			<title>ZDF Event 14</title>
+			<hrefsender></hrefsender>
+			<link>https://zdf-hls-14.akamaized.net/hls/live/2016309/de/veryhigh/master.m3u8</link>
+			<thumbnail>zdf-mediathek.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>02.12.2020</date>
+		</item>
+</channel>
+
 </channels>

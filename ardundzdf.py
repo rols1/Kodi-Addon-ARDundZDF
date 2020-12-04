@@ -2503,7 +2503,7 @@ def ARDSport(title):
 		i=i+1
 		if 'Ergebnisse' in title:							# Switch zu Hintergrund, 
 			title = 'Hintergrund'							# Ergebnisse ohne Videos
-		if href.startswith('http') == 'False':
+		if href.startswith('http') == False:
 			href = SBASE + href
 		href = href.replace('http://', 'https://')			# alte Links im Quelltext
 		
@@ -2548,77 +2548,23 @@ def ARDSport(title):
 	if SETTINGS.getSetting('pref_video_direct') == 'true': 
 		mediatype='video'
 		
-	# Bei Gelegenheit NDR-Streams in livesenderTV.xml integrieren
 	# Quellen für Event-Livestreams (Chrome-Dev.-Tools):	
 	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3666-ardjson.json
-	# https://lawm.sportschau.de/doha2019/live/livestreams170-extappjson.json		
-	title = "NDR_ARD Event-Livestream 1"
-	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_1@430235/master.m3u8"
-	img = R('radio-ndr.png')
-	Merk = 'false'
-	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
-	if not mediatype:										# Einzelauflösungen
-		title=py2_encode(title); url=py2_encode(url); img=py2_encode(img); summ=py2_encode(summ);
-		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ))
-		addDir(li=li, label=title, action="dirList", dirID="show_single_bandwith", fanart=img, thumb=img, fparams=fparams, 
-			summary=summ) 		
-	else:
-		title=py2_encode(title); url=py2_encode(url); img=py2_encode(img); summ=py2_encode(summ);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ), Merk)
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-			mediatype=mediatype, summary=summ) 		
-
-	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3670-ardjson.json
-	title = "NDR_ARD Event-Livestream 2"
-	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_2@430236/master.m3u8"   
-	img = R('radio-ndr.png')
-	Merk = 'false'
-	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
-	if not mediatype:										# Einzelauflösungen
-		title=py2_encode(title); url=py2_encode(url); img=py2_encode(img); summ=py2_encode(summ);
-		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ))
-		addDir(li=li, label=title, action="dirList", dirID="show_single_bandwith", fanart=img, thumb=img, fparams=fparams, 
-			summary=summ) 		
-	else:
-		title=py2_encode(title); url=py2_encode(url); img=py2_encode(img); summ=py2_encode(summ);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ), Merk)
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-			mediatype=mediatype, summary=summ) 		
-
-	#
-	title = "NDR_ARD Event-Livestream 3"
-	url = "https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8"
-	img = R('radio-ndr.png')
-	Merk = 'false'
-	summ = 'bitte die anderen Event-Livestreams testen, falls dieser nicht funktioniert'
-	if not mediatype:										# Einzelauflösungen
-		title=py2_encode(title); url=py2_encode(url); img=py2_encode(img); summ=py2_encode(summ);
-		fparams="&fparams={'url_m3u8': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'ID': 'ARD'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ))
-		addDir(li=li, label=title, action="dirList", dirID="show_single_bandwith", fanart=img, thumb=img, fparams=fparams, 
-			summary=summ) 		
-	else:
-		title=py2_encode(title); url=py2_encode(url); img=py2_encode(img); summ=py2_encode(summ);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), 
-			quote_plus(summ), Merk)
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-			mediatype=mediatype, summary=summ) 	
+	# https://lawm.sportschau.de/doha2019/live/livestreams170-extappjson.json
+	NDR_Streams = ['NDR_ARD Event-Livestream 1', 'NDR_ARD Event-Livestream 2',
+				'NDR_ARD Event-Livestream 3']
+	for sname in NDR_Streams:								# aus livesenderTV.xml: NDR Eventlivestreams	
+		channel = u'ARD Event Streams (eingeschränkt verfügbar)'									
+		onlySender = sname
+		img = R("radio-ndr.png")	
+		SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
+		PLog("onlySender: " + onlySender)	
 	
 	MDR_Streams = ['MDR+ Eventlivestreams + SocialTV - 1', 'MDR+ Eventlivestreams + SocialTV - 2',
 				'MDR+ Eventlivestreams + SocialTV - 3', 'MDR+ Eventlivestreams + SocialTV - 4',
 				'MDR+ Eventlivestreams + SocialTV - 5']
 	for sname in MDR_Streams:								# aus livesenderTV.xml: MDR+ Eventlivestreams	
-		channel = 'ARD Event Streams'									
+		channel = u'ARD Event Streams (eingeschränkt verfügbar)'									
 		onlySender = sname
 		img = R("tv-mdr-sachsen.png")	
 		SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
@@ -2641,7 +2587,7 @@ def ARDSport(title):
 	# Livestreams WDR - s. Forum:
 	WDR_Streams = ['WDR_ARD Event 1', 'WDR_ARD Event 3']
 	for sname in WDR_Streams:								# aus livesenderTV.xml: WDR Eventlivestreams	
-		channel = 'ARD Event Streams'									
+		channel = u'ARD Event Streams (eingeschränkt verfügbar)'									
 		onlySender = sname
 		img = R("tv-wdr.png")	
 		SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
@@ -2650,10 +2596,12 @@ def ARDSport(title):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #--------------------------------------------------------------------------------------------------
-# 28.04.2020 redirected Url (s. Modul util) verwendet für https://tokio.sportschau.de/tokio2020/
-#	s.u.
-def ARDSportPanel(title, path, img):
-	PLog('ARDSportPanel:'); 
+# 28.04.2020 redirected Url 
+#	(s. Modul util) verwendet für https://tokio.sportschau.de/tokio2020/ s.u.
+# 2 Durchläufe bei Seiten mit Tabmenüs (vorerst nur Wintersport)
+def ARDSportPanel(title, path, img, tab_path=''):
+	PLog('ARDSportPanel:');
+	PLog(title); PLog(path); PLog(tab_path);
 	title_org = title
 
 	li = xbmcgui.ListItem()
@@ -2668,6 +2616,8 @@ def ARDSportPanel(title, path, img):
 		pre_sendungen = blockextract('class="teaser ', page)
 		PLog(len(pre_sendungen))	
 	
+	if tab_path:										# 2. Durchlauf
+		path = tab_path
 	page, msg = get_page(path=path)	
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
@@ -2688,6 +2638,47 @@ def ARDSportPanel(title, path, img):
 			sendungen = pre_sendungen
 			tdm_seite=True
 	PLog(len(sendungen))
+	
+	# ev. erweitern
+	theme_list = ['Wintersport', 'Formel 1']						
+	if tab_path == '' and title in theme_list:			# 1. Durchlauf bei Tabmenüs
+		tablist = blockextract('class="collapsed  subressort', page)
+		PLog(len(tablist))
+		tabpanel=''
+		if len(tablist) > 0:
+			path_end = "/%s/%s" % (path.split('/')[-2], path.split('/')[-1])
+			for tab in tablist:							# Unterseiten für Fußball, Wintersport, TV
+				PLog(path_end); PLog(tab[:200]);
+				if path_end in tab:
+					tabpanel = tab
+					PLog('tab_found')
+					break
+		PLog(tabpanel[:160])							# einschl. Teil-Link	
+				
+		if tabpanel:	
+			tabs = blockextract('<li>', tabpanel)
+			img = R(ICON_DIR_FOLDER)
+			i=0	
+			for tab in tabs:								# Panel Kopfbereich
+				pos = tab.find('</li>')						# begrenzen
+				if pos > 0:
+					tab = tab[:pos]
+				title = stringextract('">', '</a>', tab)
+				title = cleanhtml(tab); title = mystrip(title)
+				href = stringextract('href="', '"', tab)
+				if href.startswith('http') == False:
+					href = SBASE + href
+					
+				PLog('Satz:'); 
+				PLog(href); PLog(title);
+				title=py2_encode(title); href=py2_encode(href);	
+				img=py2_encode(img); 
+				fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'tab_path': '%s'}"	%\
+					(quote(title), quote(href), quote(img), quote(href))
+				addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
+					thumb=img, fparams=fparams)			
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+				
 		
 	mediatype=''; item_cnt=0
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
@@ -5644,7 +5635,8 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 	my_items, my_ordner= ReadFavourites(mode)			# Addon-Favs / Merkliste einlesen
 	PLog(len(my_items))
 	# Dir-Items für diese Funktionen erhalten mediatype=video:
-	CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "zdfmobile.ShowVideo",
+	# 05.12.2020 zdfmobile.ShowVideo entfernt (enthält auch Mehrfachbeiträge)
+	CallFunctions = ["PlayVideo", "ZDF_getVideoSources",
 						"zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
 						"ARDStartVideoMP4", "PlayVideo", "my3Sat.SingleBeitrag",
 						"SenderLiveResolution", "phoenix.get_formitaeten",
@@ -6602,7 +6594,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			
 	zdf_streamlinks=''
 	if py2_decode(listname) == u'Überregional':			# Streamlinks für ZDF-Sender holen
-		zdf_streamlinks = get_ZDFstreamlinks()
+		zdf_streamlinks = get_ZDFstreamlinks()			# Modul util
 	
 	mediatype='' 						# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
@@ -6746,7 +6738,8 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 		msg3 = msg
 		PLog(msg1)
 		MyDialog(msg1, msg2, msg3)
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False) # Fehlschlag - raus
+		# xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False) # Fehlschlag - raus
+		return										# endOfDirectory reicht hier nicht
 		
 	# EPG aktualisieren? Der Titel mit ev. alten EPG-Daten wird durch Sendungstitel
 	#	ersetzt. Setting unbeachtet, falls Aufruf mit Sender erfolgt (EPG_ShowSingle):
@@ -8309,6 +8302,7 @@ def BarriereArmSingle(path, title, clus_title='', ID=''):
 #	ZDFSportLiveSingle. 
 #	Angefügt: Button für zurückliegende Sendungen der ZDF-Sportreportage.
 #	Angefügt: Button für Sprung zum Livestream (unabhängig vom Inhalt)
+#	Angefügt: Button für Sprung zu Ganze Wettbewerbe	05.12.2020
 # Bei aktivem Livestream wird der Link vorangestellt (Titel: rot/bold),
 # Stream am 27.04.2019: 
 #	http://zdf0304-lh.akamaihd.net/i/de03_v1@392855/master.m3u8
@@ -8352,10 +8346,20 @@ def ZDFSportLive(title):
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
 			fparams=fparams, summary=descr, mediatype=mediatype)
 		
-	title = 'zurückliegende Sendungen'								# 3. weitere Sendungen
+	title = 'Wintersport'											# 1. Wintersport
+	url = 'https://www.zdf.de/sport/wintersport'
+	ID = 'ZDFWintersport'
+	thumb=R("zdf-sport.png")
+	title=py2_encode(title); url=py2_encode(url);  
+	fparams="&fparams={'url': '%s', 'title': '%s', 'ID': '%s'}" % (quote(url), 
+		quote(title), ID)
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=thumb, 
+		thumb=thumb, fparams=fparams)
+
+	title = 'zurückliegende Sendungen'								# 2. weitere Sendungen
 	url = 'https://www.zdf.de/sport/zdf-sportreportage'
 	ID = 'ZDFSportLive'
-	thumb=R("zdf-sportlive.png")
+	thumb=R("zdf-sport.png")
 	title=py2_encode(title); url=py2_encode(url);  
 	fparams="&fparams={'url': '%s', 'title': '%s', 'ID': '%s'}" % (quote(url), 
 		quote(title), ID)
@@ -8366,7 +8370,7 @@ def ZDFSportLive(title):
 	PLog('content: ' + str(len(content)))	
 	
 	mediatype='' 		
-	for rec in content:												# 2. redak. Beiträge (Vorschau)			
+	for rec in content:												# 3. redak. Beiträge (Vorschau)			
 		href 	= stringextract('href="', '"', rec)
 		href 	= ZDF_BASE + href
 		
@@ -9527,7 +9531,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 	if url_m3u8.find('http://') == 0 or url_m3u8.find('https://') == 0:		# URL oder lokale Datei?			
 		playlist, msg = get_page(path=url_m3u8)								# URL
 		if playlist == '':
-			line1 = 'Playlist kann nicht geladen werden.'
+			line1 = 'master.m3u8 kann nicht geladen werden.'
 			line2 = 'URL: %s '	% (url_m3u8)
 			line3 = 'Fehler: %s'	% (msg)
 			MyDialog(line1, line3, line3)

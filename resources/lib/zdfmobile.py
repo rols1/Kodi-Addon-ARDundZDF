@@ -9,7 +9,7 @@
 #	22.11.2019 Migration Python3 Modul six + manuelle Anpassungen
 ################################################################################
 #
-# Stand: 07.10.2020
+# Stand: 05.12.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -449,7 +449,7 @@ def ShowVideo(path, DictID, Merk='false'):
 		PLog("%s | %s" % (msg1, msg2))
 		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
-	
+
 		
 	li = xbmcgui.ListItem()
 	li = home(li, ID=ZDFNAME)							# Home-Button

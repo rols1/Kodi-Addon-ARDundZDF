@@ -12,6 +12,24 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+05.12.2020 3.6.2
+			get_archiv (Modul playlist): ev. Lebendsignal (Ruine) von der Archivliste
+			ausschließen.  
+			PlayMonitor (Modul playlist): Stop für Countdown-Signal bei jedem Abbruch
+			des Nächster-Titel-Dialogs (nicht nur bei STOP).
+			playlist_tools (Modul playlist): Tools-Menü verlassen nach Abspielstart.
+			livesenderTV.xml: die entfernten 14 ZDF-Event-Streams erneut aufgenommen,
+			Fehlerdialog + return in SenderLiveResolution angepasst.
+			livesenderTV.xml: 3 NDR-Event-Streams aufgenommen, Anpassung in ARDSport
+			(Buttons bisher dort).
+			ShowFavs (Merkliste): zdfmobile.ShowVideo aus den CallFunctions entfernt 
+			(enthält auch Mehrfachbeiträge).
+			ARDSportPanel (ARD Sportschau): Auswertung der Folgeseiten von 'Wintersport'
+			und 'Formel 1' (2-facher Durchlauf).
+			ZDFSportLive: Integration www.zdf.de/sport/wintersport, neues Icon zdf-sport,
+			Reduzierung Farbpalette der ZDF-Schrift-Icons, Austausch Icon fürzurückliegende 
+			Sendungen.			
+
 02.12.2020 3.6.1
 			get_playlist (Modul playlist): Check auf fehlenden Status (vor V3.6.0) und
 			Korrektur der Liste.

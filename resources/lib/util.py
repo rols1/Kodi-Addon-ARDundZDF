@@ -2543,6 +2543,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='')
 		
 		#-------------------------------------------------------# Play
 		# playlist: Start aus Modul Playlist (s.o.)
+		PLog("url: " + url)
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
