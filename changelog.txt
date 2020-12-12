@@ -12,6 +12,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+12.12.2020 3.6.3
+			ARDSportPanel (ARD Sportschau, @Weri): Auswertung Datum + Zeit (falls vorh.:
+			mediaDate, mediaDuration).
+			ARDStartSingle (Modul ARD Neu): Liste der Mehr-Beiträge abhängig von
+			Setting pref_more, Anpassung in Settings.
+			ARDSportPanel (ARD Sportschau, @Weri): zusätzl. Auswertung von ev. vorh.
+			Video-Linklisten am Webseitenfuß.
+			Modul ARD Neu: Datensatz HR Fernsehen in ARDSender (Modulkopf) ergänzt.
+			get_summary_pre (Modul util): Auswertungsschema für ARD sportschau.de ergänzt
+			(ID=ARDSport).
+			ARDSportPanel (ARD Sportschau, @Weri): Call get_summary_pre ergänzt (2. Durch-
+			lauf, einschl. Linklisten). 
+			ZDFSportLive: Verfügbarkeit des Livestreams ergänzt (mehr. Varianten), href-
+			Ergänzung mit ZDF_BASE variabel.
+
 05.12.2020 3.6.2
 			get_archiv (Modul playlist): ev. Lebendsignal (Ruine) von der Archivliste
 			ausschließen.  

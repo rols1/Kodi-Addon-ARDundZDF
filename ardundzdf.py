@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.6.1'
-VDATE = '02.12.2020'
+VERSION = '3.6.3'
+VDATE = '12.12.2020'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2602,7 +2602,7 @@ def ARDSport(title):
 def ARDSportPanel(title, path, img, tab_path=''):
 	PLog('ARDSportPanel:');
 	PLog(title); PLog(path); PLog(tab_path);
-	title_org = title
+	title_org = title; 
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
@@ -2616,7 +2616,7 @@ def ARDSportPanel(title, path, img, tab_path=''):
 		pre_sendungen = blockextract('class="teaser ', page)
 		PLog(len(pre_sendungen))	
 	
-	if tab_path:										# 2. Durchlauf
+	if tab_path:										# Path 2. Durchlauf
 		path = tab_path
 	page, msg = get_page(path=path)	
 	if page == '':
@@ -2624,14 +2624,14 @@ def ARDSportPanel(title, path, img, tab_path=''):
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li 
-	path_org = msg										# ev. redirected
+	path_org = msg									# ev. redirected
 	PLog(path_org)
 	PLog(len(page))
 	
 	if path.endswith('/video/index.html'):			# Struktur abweichend
 		sendungen = blockextract('<a href="', page)
 	else:
-		sendungen = blockextract('class="teaser"', page)
+		sendungen = blockextract('class="teaser"', page, '</h3>')
 		PLog(len(sendungen))
 		if pre_sendungen:							# Seite "TOR DES MONATS"
 			pre_sendungen.extend(sendungen)	
@@ -2665,6 +2665,7 @@ def ARDSportPanel(title, path, img, tab_path=''):
 					tab = tab[:pos]
 				title = stringextract('">', '</a>', tab)
 				title = cleanhtml(tab); title = mystrip(title)
+				title = repl_json_chars(title)
 				href = stringextract('href="', '"', tab)
 				if href.startswith('http') == False:
 					href = SBASE + href
@@ -2678,14 +2679,13 @@ def ARDSportPanel(title, path, img, tab_path=''):
 				addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
 					thumb=img, fparams=fparams)			
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-				
+	# -----------------------------------------------------	# Ende 1. Durchlauf bei Tabmenüs			
 		
 	mediatype=''; item_cnt=0
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
-		
-	
-	for s in sendungen:
+
+	for s in sendungen:										# 'class="teaser"'
 		myclass = stringextract('div class="media mediaA ', '>', s)
 		PLog("myclass1: " + myclass)
 		
@@ -2701,7 +2701,7 @@ def ARDSportPanel(title, path, img, tab_path=''):
 				if path.startswith('http') == False:
 					path = base + path
 				title = stringextract('title="', '"', s)
-				summ = stringextract('alt="', '"', s)		
+				summ = stringextract('alt="', '"', s)
 		else:			
 			PLog("myclass2: " + myclass)
 			if "video" not in myclass and "audio" not in myclass:
@@ -2723,21 +2723,43 @@ def ARDSportPanel(title, path, img, tab_path=''):
 			if title == '':
 				title = stringextract('title="', '"', s)				# ev. als Bildtitel
 			summ = stringextract('teasertext">', '<strong>', s)
-
-		if summ:
-			if duration:
-				summ = summ + " | " + "Dauer " + duration
+						
+		summ		= unescape(summ); summ = mystrip(summ)
+		summ		= cleanhtml(summ); summ=repl_json_chars(summ)
+		title=title.strip(); summ=summ.strip();						# zusätzl. erf.
+			
+		mediaDate=''; mediaDuration=''
+		if '"mediaDate"' in s:
+			mediaDate = stringextract('mediaDate">', '<', s)		
+		if '"mediaDuration"' in s:
+			mediaDuration = stringextract('mediaDuration">', '<', s)
+			if len(mediaDuration) >= 8:
+				mediaDuration = mediaDuration + "Std."
+			else:
+				mediaDuration = mediaDuration + "Min."
 		else:
-			summ = "Dauer " + duration
+			mediaDuration = duration
+		if mediaDate:
+			duration = mediaDate
+			if mediaDuration:
+				duration = "%s | %s" % (mediaDate, mediaDuration)
+
+		if title == '' or path == '':
+			continue	
+
+		if duration:
+			summ = "%s\n\n%s"	 % (duration, summ)
+		if SETTINGS.getSetting('pref_load_summary') == 'true':		# Inhaltstext im Voraus laden?
+			skip_verf=False; skip_pubDate=False						# beide Daten ermitteln
+			summ_txt = get_summary_pre(path, 'ARDSport', skip_verf, skip_pubDate)
+			PLog(len(summ)); PLog(len(summ_txt)); 
+			if 	summ_txt and len(summ_txt) > len(summ):				# größer als vorher?
+				summ = summ_txt
+		summ_par = summ.replace('\n', '||')		
 		
 		title = mystrip(title); title = unescape(title); 
 		title = cleanhtml(title); title = repl_json_chars(title)
 		
-		summ		= unescape(summ); summ = mystrip(summ)
-		summ		= cleanhtml(summ); summ=repl_json_chars(summ)
-		title=title.strip(); summ=summ.strip();						# zusätzl. erf.
-		if title == '' or path == '':
-			continue
 		
 		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
 			filtered=False
@@ -2748,16 +2770,51 @@ def ARDSportPanel(title, path, img, tab_path=''):
 			if filtered:
 				continue		
 		
-		PLog('Satz:')
+		PLog('Satz1:')
 		PLog(path); PLog(img); PLog(title); PLog(summ); 
 		title=py2_encode(title)
-		path=py2_encode(path); img=py2_encode(img); summ=py2_encode(summ);
+		path=py2_encode(path); img=py2_encode(img); summ_par=py2_encode(summ_par);
 		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
-			(quote(path), quote(title), quote(img), quote(summ))				
+			(quote(path), quote(title), quote(img), quote(summ_par))				
 		addDir(li=li, label=title, action="dirList", dirID="ARDSportVideo", fanart=img, thumb=img, 
 			fparams=fparams, summary=summ, mediatype=mediatype)	
 		item_cnt = item_cnt +1	 
 
+	# Linkliste am Ende auswerten, z.b. ../wintersport/komplette-rennen/index.html,
+	# 	im Bsp. 2 Blöcke mit Listen
+	for s in sendungen:													# 'class="teaser"' - s.o.
+		if 'class="linklist">' not in s:								# verwertbare Link-Liste
+			continue
+		img = R('tv-ard-sportschau.png')
+		href_list = blockextract('<a href="', s, "</ul>") 				# Liste begrenzen
+		for item in href_list:											
+			path = SBASE + stringextract('href="', '"', item)
+			title = stringextract('jmDescription">', '</span>', item)	# als Titel verwenden
+			info1 = stringextract('title="', '"', item)					# Bsp.: "Sportschau, Das Erste"
+			info2 = stringextract('<strong>', '</strong>', item)		# Bsp. video
+			if title =='' or info2 != 'video':
+				continue
+			title = repl_json_chars(title)
+			summ = "%s | %s | %s" % (info2, info1, title)	
+
+			if SETTINGS.getSetting('pref_load_summary') == 'true':		# Inhaltstext im Voraus laden?
+				skip_verf=False; skip_pubDate=False						# beide Daten ermitteln
+				summ_txt = get_summary_pre(path, 'ARDSport', skip_verf, skip_pubDate)
+				PLog(len(summ)); PLog(len(summ_txt)); 
+				if 	summ_txt and len(summ_txt) > len(summ):				# größer als vorher?
+					summ = summ_txt
+			summ_par = summ.replace('\n', '||')		
+			
+			PLog('Satz:')
+			PLog(path);PLog(img); PLog(title); PLog(summ); 
+			title=py2_encode(title)
+			path=py2_encode(path); img=py2_encode(img); summ_par=py2_encode(summ_par);
+			fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
+				(quote(path), quote(title), quote(img), quote(summ_par))				
+			addDir(li=li, label=title, action="dirList", dirID="ARDSportVideo", fanart=img, thumb=img, 
+				fparams=fparams, summary=summ, mediatype=mediatype)	
+			item_cnt = item_cnt +1	 
+												
 	if item_cnt == 0:
 		msg1 = title_org
 		msg2 = 'keine Beiträge gefunden'
@@ -2973,6 +3030,7 @@ def ARDSportBilder(title, path, img):
 #	übergeben an PlayVideo.
 def ARDSportVideo(path, title, img, summ, Merk='false'):
 	PLog('ARDSportVideo:'); 
+	PLog(summ)
 
 	title_org = title
 	page, msg = get_page(path=path)		
@@ -8372,21 +8430,28 @@ def ZDFSportLive(title):
 	mediatype='' 		
 	for rec in content:												# 3. redak. Beiträge (Vorschau)			
 		href 	= stringextract('href="', '"', rec)
-		href 	= ZDF_BASE + href
-		
+		if href.startswith('http') == False:
+			href 	= ZDF_BASE + href		
 		img 	= stringextract('data-src="', '"', rec)
 		title	= stringextract('title="', '"', rec)
+		title	= unescape(title); title = repl_json_chars(title)
 		title	= "kommend: " + title
+		title	= title.replace(u'Link öffnet in neuem Tab/Fenster.', '')
 		descr	= stringextract('teaser-text" >', '</p>', rec)
 		descr	= mystrip(descr); descr=unescape(descr); descr=repl_json_chars(descr);
-		video	= stringextract('icon-301_clock icon">', '</dl>', rec)
-		video	= mystrip(video); video=cleanhtml(video)
+		video	= stringextract('icon-301_clock icon ">', '</dl>', rec)
+		if video == '':	
+			video	= stringextract('icon-502_play icon ">', '</dl>', rec)
+			
+		if '>Livestream<' in rec and video == '':					# abweichend von icon-301, icon-502
+			video = stringextract('class="normal-space">', '</div>', rec)
+		video	= mystrip(video); video=cleanhtml(video); video=unescape(video)
 		if video:
 			descr = "%s\n\n%s" % (descr, video)
 		
 		if '#skiplinks' in href or href == 'https://www.zdf.de/':
 			continue
-		PLog('Satz:')
+		PLog('Satz2:')
 		PLog(href); PLog(title); PLog(descr); PLog(video);
 		title=py2_encode(title); href=py2_encode(href); img=py2_encode(img);
 		fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 

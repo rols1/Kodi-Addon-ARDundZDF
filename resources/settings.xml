@@ -85,6 +85,7 @@
   		values="400:320x180|650:640x360|900:720x404|1500:960x540|2500:1280x720|4000:1920x108|6000:1920x1080" />
    	<setting label="Modul FUNK: Videos nach Publik.-Datum absteigend sortieren" type="bool" id="pref_sort_funk" default="true"/>
  	<setting label="Modul ARD Neu, Senderwahl: im Titel >Sender:< entfernen" type="bool" id="pref_disable_sender" default="false"/>
+    <setting label="Modul ARD Neu: Mehr-Beiträge zeigen (thematisch ähnliche)" type="bool" id="pref_more" default="true"/>
   	<setting label="Modul phoenix: nur Beiträge mit Videos, keine Sendungshinweise" type="bool" id="pref_only_phoenix_videos" default="false"/>
     <setting type="sep"/>
    	<setting label="Bildersammlungen: Bildinfos als Wasserzeichen" type="bool" id="pref_watermarks" default="false"/>

@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 02.12.2020
+#	Stand 12.12.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1916,7 +1916,7 @@ def ReadJobs():
 #	in TEXTSTORE gespeichert wird die ges. html-Seite (vorher nur Text summ)
 #
 def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):	
-	PLog('get_summary_pre: ' + ID)
+	PLog('get_summary_pre: ' + ID); PLog(path)
 	PLog(skip_verf); PLog(skip_pubDate);
 	
 	if 'Video?bcastId' in path:					# ARDClassic
@@ -1996,19 +1996,16 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):
 			
 	# für Classic ist u-Kennz. vor Umlaut-strings erforderlich
 	if 	ID == 'ARDClassic':
-		PLog('Mark2')
 		# summ = stringextract('description" content="', '"', page)		# geändert 23.04.2019
 		summ = stringextract('itemprop="description">', '<', page)
 		summ = unescape(summ)			
 		summ = cleanhtml(summ)	
 		summ = repl_json_chars(summ)
-		PLog('Mark3')
 		if skip_verf == False:
 			if u'verfügbar bis' in page:										
 				verf = stringextract(u'verfügbar bis ', '</', page)		# Blank bis </p>
 			if verf:													# Verfügbar voranstellen
 				summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
-		PLog('Mark4')
 		if skip_pubDate == False:		
 			pubDate = stringextract('Video der Sendung vom', '</', page)# pageHeadline hidden
 			if pubDate:
@@ -2017,10 +2014,48 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):
 					summ = summ.replace('\n\n', pubDate)					# zwischen Verfügbar + summ  einsetzen
 				else:
 					summ = "%s%s" % (pubDate[3:], summ)
-			PLog('Mark5')
 				
+	# für Classic ist u-Kennz. vor Umlaut-strings erforderlich
+	if 	ID == 'ARDSport':		
+		PLog('Mark2')
+		mediaDate=''; mediaDuration=''; duration=''; mtitle=''
+		if 'uration"' in page:
+			duration = 	stringextract('duration">', '<', page)	
+		if '"mediaDate"' in page:
+			mediaDate = stringextract('mediaDate">', '<', page)		
+		if '"mediaDuration"' in page:
+			mediaDuration = stringextract('mediaDuration">', '<', page)
+			if len(mediaDuration) >= 8:
+				mediaDuration = mediaDuration + "Std."
+			else:
+				mediaDuration = mediaDuration + "Min."
+		else:
+			mediaDuration = duration
+		if mediaDate:
+			duration = mediaDate
+		if mediaDuration:
+			duration = "%s | %s" % (mediaDate, mediaDuration)
+
+		if u'"mediaExpiry">' in page:										
+			verf = stringextract(u'"mediaExpiry">', '<', page)
+		if verf:
+			verf = u"[B][COLOR darkgoldenrod]%s[/COLOR][/B]" % verf
+		duration = "%s | %s" % (duration, verf)
+		PLog("duration: " + duration)	
+			
+		summ = stringextract('class="einleitung small">', '<', page)
+		if summ == '':
+			summ = stringextract('class="text">', '<', page)
+		summ = unescape(summ)			
+		summ = cleanhtml(summ)	
+		summ = repl_json_chars(summ)
+		#if u'"mediaTitle">' in page:									# nivht verw.									
+		#	mtitle = stringextract(u'"mediaTitle">', '"', page)		
+		summ = u"%s | %s\n\n%s" % (duration, mtitle, summ)
+		page = py2_encode(page)		
+			
 		 	
-	PLog('summ:' + summ); PLog(verf)
+	PLog('summ: ' + summ); PLog(verf)
 	if summ and save_new:
 		msg = RSave(fpath, page)
 	# PLog(msg)

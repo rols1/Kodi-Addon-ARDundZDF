@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 23.11.2020
+#	Stand 09.12.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -62,7 +62,7 @@ ICON_MEHR 				= "icon-mehr.png"
 BETA_BASE_URL	= 'https://www.ardmediathek.de'
 
 ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle', 'Das Erste:daserste:208:tv-das-erste.png:Das Erste', 
-	'BR:br:2224:tv-br.png:BR Fernsehen', 'MDR:mdr:1386804:tv-mdr-sachsen.png:MDR Fernsehen', 
+	'BR:br:2224:tv-br.png:BR Fernsehen', 'HR:hr:5884:tv-hr.png:HR Fernsehen', 'MDR:mdr:1386804:tv-mdr-sachsen.png:MDR Fernsehen', 
 	'NDR:ndr:5898:tv-ndr-niedersachsen.png:NDR Fernsehen', 'Radio Bremen:radiobremen::tv-bremen.png:Radio Bremen TV', 
 	'RBB:rbb:5874:tv-rbb-brandenburg.png:rbb Fernsehen', 'SR:sr:5870:tv-sr.png:SR Fernsehen', 
 	'SWR:swr:5310:tv-swr.png:SWR Fernsehen', 'WDR:wdr:5902:tv-wdr.png:WDR Fernsehen',
@@ -212,7 +212,7 @@ def ARDStart(title, sender, widgetID=''):
 	else:	
 		Dict("store", 'ARDStartNEW_%s' % sendername, page) 	# Seite -> Cache: aktualisieren	
 	PLog(len(page))
-	# RSave('/tmp/x.html', page, withcodec=True) 			# Debug
+	#RSave('/tmp/x.html', page, withcodec=True) 			# Debug
 	
 	container = blockextract ('compilationType":', page)  	# Container json-Bereich (Swiper + Rest)
 	PLog(len(container))
@@ -826,7 +826,7 @@ def ARDStartSingle(path, title, duration, ID='', mehrzS=''):
 	addDir(li=li, label=title_new, action="dirList", dirID="resources.lib.ARDnew.ARDStartVideoStreams", fanart=img, thumb=img, 
 		fparams=fparams, summary=summ_lable, tagline=tagline, mediatype=mediatype)		
 					
-	if SETTINGS.getSetting('pref_use_downloads'):	
+	if SETTINGS.getSetting('pref_use_downloads') == 'true':	
 		title_new = "[COLOR blue]MP4-Formate und Downloads[/COLOR] | " + title
 	else:	
 		title_new = "[COLOR blue]MP4-Formate[/COLOR] | " + title
@@ -844,13 +844,12 @@ def ARDStartSingle(path, title, duration, ID='', mehrzS=''):
 	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten). element enthält 
 	#	Sendungen ab dem 2. Element (1. die Videodaten)
 	# 19.10.2020 Funktion get_ardsingle_more entfällt
-	if len(elements) > 1:
+	if len(elements) > 1 and SETTINGS.getSetting('pref_more') == 'true':
 		gridlist = elements[1:]									# hinter den Videodaten (1. Element)
 		PLog('gridlist_more: ' + str(len(gridlist)))	
 		page  = "\n".join(gridlist)								# passend für get_page_content 
 		PLog(page[:1000])
 		get_page_content(li, page, ID=ID, mehrzS=True, mark='')		
-					
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #---------------------------------------------------------------------------------------------------
