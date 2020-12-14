@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 12.12.2020
+#	Stand 13.12.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2496,7 +2496,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='')
 	if SETTINGS.getSetting('pref_UT_ON') == 'true':
 		if sub_path:							# Vorbehandlung ARD-Untertitel
 			if 'ardmediathek.de' in sub_path:	# ARD-Untertitel speichern + Endung -> .sub
-				local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
+				local_path = "%s/%s" % (SUBTITLESTORE, subPlayVideo_path.split('/')[-1])
 				local_path = os.path.abspath(local_path)
 				try:
 					urlretrieve(sub_path, local_path)
@@ -2562,11 +2562,11 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='')
 			
 			for item in startlist:									# alte Einträge mit Url abgleichen 
 				item = py2_encode(item)								#	und umkopieren
-				PLog("new_line[12:]: %s, item[:12]: %s" % (new_line[12:], item[:12]))
+				#PLog("new_line[12:]: %s, item[:12]: %s" % (new_line[12:], item[:12])) # nur bei Bedarf
 				old_url = stringextract('###http', '###', item)	
 				new_url = stringextract('###http', '###', new_line)	
-				PLog("old_url: %s, new_url: %s" % (old_url, new_url))
-				PLog(new_url in old_url)
+				#PLog("old_url: %s, new_url: %s" % (old_url, new_url))	# nur bei Bedarf
+				#PLog(new_url in old_url)								# nur bei Bedarf
 				if new_url not in old_url:							# Eintrag mit gleicher Url löschen (skip)
 					PLog("append:")
 					new_list.append(item)							# Eintrag -> new_list		

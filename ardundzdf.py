@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.6.3'
-VDATE = '12.12.2020'
+VERSION = '3.6.4'
+VDATE = '14.12.2020'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -851,49 +851,49 @@ def AddonInfos():
 	dialog = xbmcgui.Dialog()
 	t = "     "		# Tab (5)
 
-	a = "[COLOR red]Addon, System:[/COLOR]"
-	b = "%s%s, Version %s vom %s" % (t, ADDON_ID, VERSION, VDATE)
-	c = "%sGithub-Releases https://github.com/%s/releases" % (t, GITHUB_REPOSITORY)
-	d = "%sOS: %s" % (t, OS_DETECT)
-	e = "%sKodi-Version: %s" % (t, KODI_VERSION)
-	p1 = "%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d,e)
+	a = u"[COLOR red]Addon, System:[/COLOR]"
+	b = u"%s%s, Version %s vom %s" % (t, ADDON_ID, VERSION, VDATE)
+	c = u"%sGithub-Releases https://github.com/%s/releases" % (t, GITHUB_REPOSITORY)
+	d = u"%sOS: %s" % (t, OS_DETECT)
+	e = u"%sKodi-Version: %s" % (t, KODI_VERSION)
+	p1 = u"%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d,e)
 	
-	a = "[COLOR red]Cache:[/COLOR]"
-	b = "%s %s Dict" %  (t, get_dir_size(DICTSTORE))
-	c = "%s %s Inhaltstexte" %  (t, get_dir_size(TEXTSTORE))
-	d = "%s %s m3u8" %  (t, get_dir_size(M3U8STORE))
-	e = "%s %s Slides (Bilder)" %   (t, get_dir_size(SLIDESTORE))
-	f = "%s %s subtitles (Untertitel)" %   (t, get_dir_size(SUBTITLESTORE))
+	a = u"[COLOR red]Cache:[/COLOR]"
+	b = u"%s %s Dict (Variablen, Objekte)" %  (t, get_dir_size(DICTSTORE))
+	c = u"%s %s Inhaltstexte (im Voraus geladen)" %  (t, get_dir_size(TEXTSTORE))
+	d = u"%s %s m3u8 (Einzelauflösungen der Livestreams)" %  (t, get_dir_size(M3U8STORE))
+	e = u"%s %s Slides (Bilder)" %   (t, get_dir_size(SLIDESTORE))
+	f = u"%s %s subtitles (Untertitel)" %   (t, get_dir_size(SUBTITLESTORE))
 	g = ''
 	path = SETTINGS.getSetting('pref_download_path')
 	PLog(path); PLog(os.path.isdir(path))
 	if path and os.path.isdir(path):
 		g = "%s %s Downloads\n" %   (t, get_dir_size(path))
-	p2 = "%s\n%s\n%s\n%s\n%s\n%s\n%s" % (a,b,c,d,e,f,g)
+	p2 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s" % (a,b,c,d,e,f,g)
 
-	a = "[COLOR red]Pfade:[/COLOR]"
-	b = "%s Addon-Home: %s" % (t, PluginAbsPath)
-	c = "%s Cache: %s" % (t,ADDON_DATA)
+	a = u"[COLOR red]Pfade:[/COLOR]"
+	b = u"%s Addon-Home: %s" % (t, PluginAbsPath)
+	c = u"%s Cache: %s" % (t,ADDON_DATA)
 	fname = WATCHFILE
-	d1 = "%s Merkliste intern: %s" % (t, WATCHFILE)
-	d2 = "%s Merkliste extern: nicht aktiviert" % t
+	d1 = u"%s Merkliste intern: %s" % (t, WATCHFILE)
+	d2 = u"%s Merkliste extern: nicht aktiviert" % t
 	if SETTINGS.getSetting('pref_merkextern') == 'true':	# externe Merkliste gewählt?
 		fname = SETTINGS.getSetting('pref_MerkDest_path')
-		d2 = "%s Merkliste extern: %s" % (t,fname)
-	e = "%s Downloadverzeichnis: %s" % (t,SETTINGS.getSetting('pref_download_path'))
-	f = "%s Verschiebeverzeichnis: %s" % (t,SETTINGS.getSetting('pref_VideoDest_path'))
+		d2 = u"%s Merkliste extern: %s" % (t,fname)
+	e = u"%s Downloadverzeichnis: %s" % (t,SETTINGS.getSetting('pref_download_path'))
+	f = u"%s Verschiebeverzeichnis: %s" % (t,SETTINGS.getSetting('pref_VideoDest_path'))
 	filterfile = os.path.join(ADDON_DATA, "filter.txt")
-	g = "%s Filterliste: %s" %  (t,filterfile)
+	g = u"%s Filterliste: %s" %  (t,filterfile)
 	fname =  SETTINGS.getSetting('pref_podcast_favorits')
 	if os.path.isfile(fname) == False:
 		fname = os.path.join(PluginAbsPath, "resources", "podcast-favorits.txt") 
-	h = "%s Podcast-Favoriten:\n%s%s" %  (t,t,fname)		# fname in 2. Zeile
+	h = u"%s Podcast-Favoriten:\n%s%s" %  (t,t,fname)		# fname in 2. Zeile
 	log = xbmc.translatePath("special://logpath")
 	log = os.path.join(log, "kodi.log") 	
-	i = "%s Debug-Log: %s" %  (t, log)
+	i = u"%s Debug-Log: %s" %  (t, log)
 	
-	p3 = "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d1,d2,e,f,g,h,i)
-	page = "%s\n%s\n%s" % (p1,p2,p3)
+	p3 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d1,d2,e,f,g,h,i)
+	page = u"%s\n%s\n%s" % (p1,p2,p3)
 	PLog(page)
 	dialog.textviewer("Addon-Infos", page,usemono=True)
 	
@@ -901,7 +901,7 @@ def AddonInfos():
 #----------------------------------------------------------------
 # Aufruf Info_Filter
 # 20.01.2020 usemono für textviewer (ab Kodi v18)
-#
+# dialog.select ungeeignet (Font zu groß, Zeilen zu schmal)
 def ShowText(path, title):
 	PLog('ShowText:'); 
 	
@@ -909,6 +909,7 @@ def ShowText(path, title):
 	page = page.replace('\t', ' ')		# ersetze Tab's durch Blanks
 	dialog = xbmcgui.Dialog()
 	dialog.textviewer(title, page,usemono=True)
+	
 	return
 	
 #----------------------------------------------------------------
@@ -6642,6 +6643,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	playlist = RLoad(PLAYLIST)					# lokale XML-Datei (Pluginverz./Resources)
 	playlist = blockextract('<channel>', playlist)
 	PLog(len(playlist)); PLog(listname)
+	mylist=''
 	for i in range(len(playlist)):						# gewählte Channel extrahieren
 		item = playlist[i] 
 		name =  stringextract('<name>', '</name>', item)
@@ -6667,13 +6669,14 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		element = py2_decode(element)	
 		link = stringextract('<link>', '</link>', element) 
 		link = unescape(link)	
-		title_sender = stringextract('<hrefsender>', '</hrefsender>', element)					
+		title_sender = stringextract('<hrefsender>', '</hrefsender>', element) # mit folgendem Blank!
 		PLog(u'Sender: %s, link: %s' % (title_sender, link));
 
 		if 'ZDFsource' in link:							# Streamlink für ZDF-Sender holen,
 			link=''										# Reihenfolge an Playlist anpassen
 			# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 			for line in zdf_streamlinks:
+				# PLog("zdfline: " + line)
 				items = line.split('|')
 				# Bsp.: "ZDFneo " in "ZDFneo Livestream":
 				if up_low(title_sender) in up_low(items[0]): 
@@ -7250,7 +7253,7 @@ def ZDFStart(title, show_cluster='', path=''):
 			li = home(li, ID=ID)										# Home-Button
 			stage = stringextract('class="sb-page">', 'class="cluster-title"', page) 
 			# ID='DEFAULT': ermöglicht Auswertung Mehrfachseiten in ZDF_get_content
-			li, page_cnt = ZDF_get_content(li=li, page=stage, ref_path=path, ID='DEFAULT')
+			li, page_cnt = ZDF_get_content(li=li, page=stage, ref_path=path, ID='STAGE')
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		else:													#Home-Button in ZDFRubrikSingle
 			# Cluster ermitteln:
@@ -7964,8 +7967,11 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 			clustertitle = stringextract('cluster-title"', '</', clus) # 07.03.2020 Blank nach Trenner
 			if clustertitle == '':
 				clustertitle = stringextract('header-title ellipsis"', '</', clus)
-			clustertitle = clustertitle.replace('>', '')
-			label =	unescape(clustertitle)
+			label =	unescape(clustertitle); 
+			label = repl_json_chars(label)
+			clustertitle = repl_json_chars(clustertitle)
+			if '>' in label:							# Bsp.: data-tracking-title="Beliebte_Serien">Bel..
+				label = label.split('>')[1]
 			PLog("clustertitle: " + clustertitle);				
 			if 'Direkt zu ...' in clustertitle: 		# in zdf.de/kinder, hier nicht erreichbar
 				continue
@@ -8074,8 +8080,10 @@ def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 	if path == '':
 		path	= stringextract('href="', '"', page)					# Fallback 1
 	if path == '':
+		path	= stringextract('href = "', '"', page)					# Fallback 2
+	if path == '':
 		if 	NodePath and sophId:											
-			path	= "https://www.zdf.de%s/%s.html" % (NodePath, sophId)# Fallback 2
+			path	= "https://www.zdf.de%s/%s.html" % (NodePath, sophId)# Fallback 3
 	if path and path.startswith('http') == False:
 		path = ZDF_BASE + path
 		
@@ -8234,6 +8242,7 @@ def MeistGesehen(name):							# ZDF-Bereich, Beiträge unbegrenzt
 #	ARD siehe BarriereArmARD (Classic)
 # 06.04.2020 aktualisiert: Webseite geändert, nur kleine Übersicht, die 3
 #	Folgeseiten enthalten jeweils die neuestens Videos 
+# 13.12.2020 Anpassungen an Webseitenänderungen
 #
 def BarriereArm(title):				
 	PLog('BarriereArm:')
@@ -8255,7 +8264,7 @@ def BarriereArm(title):
 	#		>Hörfilme<
 	content = blockextract('<section class="b-content-teaser-list"', page)
 	PLog(len(content))
-	content = blockextract('class="teaser-text">', content[0])	# 2. Block: Service
+	content = blockextract('class="artdirect"', content[0])	# 2. Block: Service (nicht verw.)
 	
 	if SETTINGS.getSetting('pref_usefilter') == 'true':
 		if 'Audiodeskription' or 'Hörfassung' in AKT_FILTER:
@@ -8271,7 +8280,11 @@ def BarriereArm(title):
 		title = title.replace('\n', ''); 
 		title = (title.replace('>', '').replace('<', '')); title = title.strip()
 				
-		path = stringextract('data-plusbar-url="', '"', rec)
+		path = stringextract('href="', '"', rec)
+		if path.startswith('http') == False:
+			path = ZDF_BASE + path
+			
+		
 		tag = u"Übersicht der neuesten Videos"
 		PLog(title); PLog(path)
 		if u'Livestreams' in title:				# nur EPG, kein Video
@@ -8296,17 +8309,18 @@ def BarriereArm(title):
 #	 
 def BarriereArmSingle(path, title, clus_title='', ID=''):
 	PLog('BarriereArmSingle: ' + title)
-	PLog(clus_title)
+	PLog(clus_title); PLog(path)
 	CacheTime = 6000								# 1 Std.
 			
 	li = xbmcgui.ListItem()	
 
+	msg=''
 	page = Dict("load", ID, CacheTime=CacheTime)
 	if page == False:								# Cache miss - vom Sender holen
 		page, msg = get_page(path=path)
 		Dict("store", ID, page) 					# Seite -> Cache: aktualisieren	
 	if page == '':							
-		msg1 = 'Seite kann nicht geladen werden.'
+		msg1 = '%s: Seite kann nicht geladen werden.' % "BarriereArmSingle"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li 
@@ -8382,20 +8396,24 @@ def ZDFSportLive(title):
 		return li 
 	PLog(len(page))
 	 	
-
-	if '<strong>Jetzt live</strong>' in page:						# 1. LIVESTREAM läuft!
-		img = R(ICON_DIR_FOLDER)									# Quelle im Web unsicher
+	# s.u. Ausfilterung Livestream-Satz, 
+	if 'ellipsis">Jetzt live<' in page:								# 1. LIVESTREAM läuft!
+		pos = page.find('>Derzeit live<')							# bei Bedarf anpassen
+		rec = page[pos:]
+		# img = R(ICON_DIR_FOLDER)									# Quelle im Web unsicher
+		img = ZDF_get_img(rec)
 		mediatype='' 		
 		if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 			mediatype='video'
-		rec = stringextract('<strong>Jetzt live</strong>', 'data-tracking="', page)
-		href 	= stringextract('data-plusbar-url="', '"', rec)
-		if href == '':
-			href 	= stringextract('data-plusbar-path="', '"', rec)
+		href = stringextract('href="', '"', rec)
+		if href.startswith('http') == False:
+			href = ZDF_BASE + href
+			
 		title	= "Jetzt live: " + stringextract('title="', '"', rec)
 		title	= '[COLOR red][B]%s[/B][/COLOR]' % title
-		descr = stringextract('item-description">', '</p>', rec) 
-		descr = cleanhtml(descr); descr = mystrip(descr)
+		video	= stringextract('icon-502_play icon ">', '</dl>', rec)
+		descr = cleanhtml(video); descr = mystrip(descr)
+		
 		PLog('Satz_Live:')
 		PLog(href); PLog(img); PLog(title); PLog(descr); 
 		title=py2_encode(title); descr=py2_encode(descr);
@@ -8403,7 +8421,8 @@ def ZDFSportLive(title):
 			quote(title), img, quote(descr))	
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
 			fparams=fparams, summary=descr, mediatype=mediatype)
-		
+
+
 	title = 'Wintersport'											# 1. Wintersport
 	url = 'https://www.zdf.de/sport/wintersport'
 	ID = 'ZDFWintersport'
@@ -8449,8 +8468,11 @@ def ZDFSportLive(title):
 		if video:
 			descr = "%s\n\n%s" % (descr, video)
 		
-		if '#skiplinks' in href or href == 'https://www.zdf.de/':
+		if  'ellipsis">Jetzt live<' in rec:							# Livestream-Satz ausfiltern
 			continue
+		if '#skiplinks' in href or href == 'https://www.zdf.de/' or descr == '':
+			continue
+			
 		PLog('Satz2:')
 		PLog(href); PLog(title); PLog(descr); PLog(video);
 		title=py2_encode(title); href=py2_encode(href); img=py2_encode(img);
@@ -8572,14 +8594,11 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		if page_title:
 			msg_notfound = u'Leider kein Video verfügbar zu: ' + page_title
 	
-	if 'class="artdirect " >' in page:						# bis V2.5.3 relevant
-		content = blockextract('class="artdirect " >', page)
+	if  ID == 'STAGE':										# Highlights (dto. funk + tivi)
+		content = blockextract('class="stage-wrap ', page)  # mit Blank
 	else:													# "<img class=.." m Block ausschließen
 		content = blockextract('<picture class="artdirect"', page) # tivi: doppelt  (is-tivi,is-not-tivi)
 				
-	if len(content) == 0:
-		content =  blockextract('class="stage-image', page) 	# 10.12.2019 ZDF Highlights falls 
-																#	class="artdirect" fehlt	
 	if ID == 'VERPASST':
 		content = blockextract('class="b-content-teaser-item', page) 														
 																	
@@ -8694,7 +8713,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 				# PLog(rec)  # bei Bedarf
 			
 		if ID != 'DEFAULT':					 			# DEFAULT: Übersichtsseite ohne Videos, Bsp. Sendungen A-Z
-			if ID != 'A-Z':	
+			if ID != 'A-Z' and ID != 'STAGE':	
 				if 'icon-502_play' not in rec :  		# Videobeitrag? auch ohne Icon möglich
 					if u'>Videolänge<' not in rec : 
 						if '>Trailer<' not in rec : 	# Trailer o. Video-icon-502
@@ -8738,6 +8757,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			
 		href_title = unescape(href_title)
 		PLog('href_title: ' + href_title)
+		if 	href_title == '' and ID == "A-Z":
+			continue
 		if 	href_title == 'ZDF Livestream' or href_title == 'Sendung verpasst':
 			continue
 		if 	'<strong>Livestream</strong>' in rec:				# Livestreammarkierung, z.B. Send. m. Gebärdenspr.
@@ -8987,8 +9008,8 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 	# PLog(formitaeten)
 
 	if formitaeten == '':										# Nachprüfung auf Videos
-		msg1 = 'Video nicht vorhanden / verfügbar.'
-		msg2 = 'Titel: %s' % unquote(title)
+		msg1 = u'Video nicht vorhanden / verfügbar.'
+		msg2 = u'Titel: %s' % unquote(title)
 		MyDialog(msg1, msg2, '')
 		return li
 				
@@ -9093,8 +9114,8 @@ def ZDFotherSources(title, tagline, thumb, sid, apiToken1, apiToken2, ref_path='
 	# PLog(formitaeten)
 	
 	if formitaeten == '':							# Nachprüfung auf Videos
-		msg1 = 'Video nicht vorhanden / verfügbar'
-		msg2 = 'Video: %s' % title
+		msg1 = u'Video nicht vorhanden / verfügbar'
+		msg2 = u'Video: %s' % title
 		MyDialog(msg1, msg2, '')
 		return li
 
@@ -9126,6 +9147,8 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	PLog('sid/docId: ' + sid)
 	PLog('Client: '); PLog(OS_DETECT);						# s. Startbereich
 	PLog(apiToken1[:80]); PLog(apiToken2[:80]);
+	if apiToken2 =='':										# ZDFSportLive
+		apiToken2 = apiToken1
 	
 	# bei Änderung profile_url neu ermitteln - ZDF: zdfplayer-Bereich, NEO: data-sophoraid
 	profile_url = 'https://api.zdf.de/content/documents/%s.json?profile=player'	% sid
@@ -9180,7 +9203,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 		# videodat_url = 'https://api.zdf.de/tmd/2/portal/vod/ptmd/mediathek/'  	# unzuverlässig
 	videodat_url = videodat_url.replace('{playerId}', ptmd_player) 					# ptmd_player injiziert 
 	if videodat_url:
-		videodat_url = 'https://api.zdf.de' + videodat_url
+		videodat_url = 'https://api.zdf.de' + videodat_url		
 	PLog('videodat_url: ' + videodat_url)	
 	
 	# apiToken2 aus ZDF_getVideoSources. header ohne quotes in get_page leer 

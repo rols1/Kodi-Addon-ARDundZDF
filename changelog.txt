@@ -12,6 +12,27 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+14.12.2020 3.6.4
+			ZDFSportLive (@Weri): geänderte ZDF-Kennung für Livestream angepasst, Auswertung
+			der html-Zielseite und img-Quelle neu bestimmt, Livestream-Satz in Restliste
+			ausgefiltert, Laufzeit in Livestream-Button ergänzt. 
+			get_formitaeten: fehlendes apiToken2 (ZDFSportLive) durch apiToken1
+			ersetzt.
+			PlayVideo: Logausgabe für Video-Startliste gekürzt (länger nur noch bei Bedarf).
+			BarriereArm (ZDF): Seitenausschnitt + Link-Auswertung an ZDF-Änderung angepasst.
+			ZDFRubrikSingle (ZDF): Zusatz 'data-tracking..' in Cluster-Titel enfernt, Escape-
+			sequenzen in label entfernt.
+			ZDFStart: zusätzl. ID für Highlights ('STAGE') - relevant für ZDF_get_content.
+			ZDF_get_content: Ausfilterung Elemente ohne Titel bei A-Z-Beiträgen.
+			ZDF_get_content: für Highlights Auswert.-Muster stage-image ersetzt durch
+			'class="stage-wrap'.
+			ZDF_get_content: Auswert.-Muster 'class="artdirect " >' entfernt (n.m. relevant),
+			Mehrfachbeiträge ermöglicht.
+			AddonInfos: einheitl. Zeichencode für die Textzeilen + mehr Info zu den
+			Cache-Ordnern.
+			ZDF_get_teaserDetails: zusätzl. Fallback für path nach ZDF-Änderung ('href = "'
+			ergänzt 'href="'). 
+
 12.12.2020 3.6.3
 			ARDSportPanel (ARD Sportschau, @Weri): Auswertung Datum + Zeit (falls vorh.:
 			mediaDate, mediaDuration).
