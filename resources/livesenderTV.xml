@@ -2,7 +2,7 @@
  <channels_info>
   <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
   <imgsource>Arauco</imgsource>
-  <nr>2</nr>
+  <nr>3</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
   <date>02.12.2020 rols1</date>
@@ -358,7 +358,7 @@
 	</item>
 	<item>
 		<title>Welt_N24-Live</title>
-		<link>https://live2weltcms-lh.akamaihd.net/i/Live2WeltCMS_1@444563/index_3_av-b.m3u8?sd=10&dw=0&rebase=on</link>
+		<link>https://live2weltcms-lh.akamaihd.net/i/Live2WeltCMS_1@444563/master.m3u8?dw=0</link>
 		<thumbnail>tv-n24.png</thumbnail>
 		<imgsource>Arauco</imgsource>
 		<EPG_ID>WELT</EPG_ID>
