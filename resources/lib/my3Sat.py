@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 29.10.2020
+#	Stand: 18.12.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -499,16 +499,17 @@ def Start(name, path, rubrik=''):
 			descr	= stringextract('paragraph-large ">', '</', rec)
 			if descr == '':
 				descr	= stringextract('text show-for-large">', '</', rec)
-			descr 	= unescape(descr)
+			descr = unescape(descr); descr = mystrip(descr);
+			descr_par =	mystrip(descr); descr_par =	descr_par.replace('\n', '||')	
 			
 			if dauer == '':
 				multi = True
 				tag = "Folgeseiten"; # descr = ''		# vorh. descr beibehalten
 				
-			PLog('Satz:')
-			PLog(multi); PLog(title); PLog(href); PLog(tag); PLog(descr);
+			PLog('Satz1:')
+			PLog(multi); PLog(title); PLog(href); PLog(tag); PLog(descr); PLog(descr_par);
 			title=py2_encode(title); href=py2_encode(href);	 img_src=py2_encode(img_src);
-			descr=py2_encode(descr); 
+			descr_par=py2_encode(descr_par); 
 			if multi:							
 				fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title),
 					 quote(href), quote(img_src))
@@ -516,7 +517,7 @@ def Start(name, path, rubrik=''):
 					fanart=R('3sat.png'), thumb=img_src, tagline=tag, summary=descr, fparams=fparams)
 			else:
 				fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
-					(quote(title), quote(href), quote(img_src), quote(descr), dauer)
+					(quote(title), quote(href), quote(img_src), quote(descr_par), dauer)
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", 
 					fanart=R('3sat.png'), thumb=img_src, tagline=tag, summary=descr, fparams=fparams)
 				
@@ -525,14 +526,25 @@ def Start(name, path, rubrik=''):
 		items =  blockextract('--red is-uppercase', page)
 		PLog(len(items))
 		img_src = R('Dir-folder.png')				# alles lazyload-Beiträge ohne Bilder + hrefs
-		for rec in items:						
+		for rec in items:					
 			title	= stringextract('headline">', '</', rec)
 			title 	= repl_json_chars(title);			
 			if u'Das könnte Dich' in title:			# leer (java-script)
 				continue
 			if u'Alle löschen' in title:			# Merkliste 3sat
 				continue
+			# Bilder für 1. Rubrik-Beitrag laden (lazyload-, carousel- + andere Sätze möglich):	
+			if SETTINGS.getSetting('pref_load_summary') == 'true': # hier nur Bild verwenden
+				if 'is-medium lazyload' in rec:
+					rec	= stringextract('class="b-cluster-teaser', '</div', rec)
+					d1,d2,d3,d4,img_src,d5,d6,d7 = get_teaserElement(unescape(rec))
+				if 'zdfplayer-teaser-image=' in rec:
+					img_src = stringextract('&quot;http', '&quot;', rec)
+					img_src = img_src.replace('\\/','/')
+					img_src = "http" + img_src
 				
+			PLog('Satz2:')
+			PLog(title); PLog(path); PLog(img_src); 
 			title=py2_encode(title); path=py2_encode(path); 
 			fparams="&fparams={'name': '%s', 'path': '%s', 'rubrik': '%s'}" %\
 				(quote(title), quote(path), quote(title))
@@ -1159,7 +1171,7 @@ def get_zdfplayer_content(li, content):
 # SingleBeitrag für Verpasst + A-Z
 #	hier auch m3u8-Videos verfügbar. 
 def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
-	PLog('Funktion SingleBeitrag: ' + title)
+	PLog('SingleBeitrag: ' + title)
 	PLog(dauer);PLog(summ);PLog(path)
 	
 	Plot	 = title
@@ -1439,7 +1451,7 @@ def Bilder3sat(path=''):
 		sub_head = stringextract('class="a--subheadline', 'class', rec)				# SubTitel unten, Bsp. Musik
 		sub_head = stringextract('>', '<', sub_head)		
 		
-		title = headline
+		title = repl_json_chars(headline)
 		if pre_head and sub_head:
 			tag = "%s | %s" % (pre_head, sub_head)		
 		summ = stringextract('class="label">', '</', rec)				# Bsp. 5 Bilder

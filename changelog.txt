@@ -12,6 +12,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+18.12.2020 3.6.5
+			ZDF_get_content: teaser_brand bei A-Z-Beiträgen unterdrückt (Serienkennzeich-
+			nung im Addon), blaue Uhrzeit im Titel bei VERPASST-Sendungen.
+			Einzelupdate livesenderTV.xml: Aktualisierung Streamlink Welt/N24.
+			TVLiveRecordSender (Menü Recording TV-Live): ID-Abgleich für Kennzeichnung 
+			"ohne EPG" ergänzt. 
+			AudioStartLive (Modul Audiothek, Sendungen einzelner Radiosender): Auswertung
+			für Sender ohne Titel in json-Datei ergänzt (betrifft NDR, Radio Bremen, SWR, 
+			WDR).
+			Audio_get_homejson (Modul Audiothek): vidObs leer vorbelegt, Fix Codierung für 
+			ID (relevant für "Meistgehört"). 
+			ARD Neu A-Z: Umstellung auf neuen api-Link (experiment-a-z), Grund: Button '#'
+			für ARD-Alle nicht mehr verfügbar, Cachenutzung (ARD_AZ_ard: 1,5 MByte).
+			Startseite Modul 3sat: Zeilenumbrüche aus Infotext (summary) entfernt.
+			Startseite Modul 3sat: Vorausladen der Bilder mit Setting "..im Voraus laden..".
+			Bilder3sat Modul 3sat: probl. Zeichen in Titel entfernt (repl_json_chars).
+
 14.12.2020 3.6.4
 			ZDFSportLive (@Weri): geänderte ZDF-Kennung für Livestream angepasst, Auswertung
 			der html-Zielseite und img-Quelle neu bestimmt, Livestream-Satz in Restliste

@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.6.4'
-VDATE = '14.12.2020'
+VERSION = '3.6.5'
+VDATE = '18.12.2020'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -598,7 +598,7 @@ def AddonStartlist(mode='', query=''):
 		
 	title = u'Suche in der "Zuletzt gesehen"-Liste"'			# Suchbutton
 	tag = u"Suche der im Addon gestarteten Videos (max %d)."  % maxvideos
-	tag = u"%s\n\nGesucht wird im Titel und im Infotext." % tag
+	tag = u"%s\n\nGesucht wird in Titel und Infotext." % tag
 	fparams="&fparams={'mode': 'search'}" 
 	addDir(li=li, label=title, action="dirList", dirID="AddonStartlist", fanart=img, 
 		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)	
@@ -1192,7 +1192,8 @@ def AudioStartThemen(title, ID, page='', path=''):	# Entdecken, Unsere Favoriten
 	li = xbmcgui.ListItem()
 	# li = home(li, ID='ARD Audiothek')				# Home-Button
 	
-	if ID == 'Highlights' or ID == 'Meistgehört':	# json-Auswertung (s.o.)
+	ID = py2_decode(ID)
+	if ID == u'Highlights' or ID == u'Meistgehört':	# json-Auswertung (s.o.)
 		path = "https://audiothek.ardmediathek.de/homescreen"				
 		page, msg = get_page(path=path)	
 		if page == '':	
@@ -1328,6 +1329,8 @@ def AudioStart_AZ_content(button):
 #	nach Wegfall web.ard.de/radio/radionet)
 # 09.09.2020 Mitnutzung durch AudioSenderPrograms (programs=yes)
 # 02.11.2020 Button für ARDSportHoerfunk hinzugefügt
+# 16.12.2020 Auswertung für Sender ohne Titel in json-Datei ergänzt
+#	((betrifft NDR, Radio Bremen, SWR, WDR).
 #
 def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestreams 
 	PLog('AudioStartLive: ' + sender)
@@ -1403,12 +1406,17 @@ def AudioStartLive(title, sender='', myhome='', programs=''):	# Sender / Livestr
 		pos1 = page.find('%s:' % sender)	# keine Blockbildung für sender möglich
 		pos2 = page.find('}},', pos1)
 		grid = page[pos1:pos2]
+		bcode = stringextract('name:"', '"', grid)			# Buchstabe-Code,für wdr: o
 		gridlist = blockextract('image_16x9:"https', grid)	
 		PLog(len(gridlist))
 		for rec in gridlist:
 			title 	= stringextract('title:"', '"', rec)	# Anfang Satz
 			if title == '':
-				continue
+				if 'title:%s' % bcode in rec and programs:	# Buchstabe-Code für Sender (nur für  
+					title = up_low(sender)					#	PRG, nicht für Livestreams 
+					PLog(u"Buchstabe-Code %s für %s" % (bcode, title))
+				else:
+					continue
 			
 			img 	= stringextract('image_16x9:"', '"', rec)		
 			img		= img.replace('{width}', '640')	
@@ -1586,9 +1594,10 @@ def Audio_get_homejson(page, ID):
 	
 	li = xbmcgui.ListItem()
 	jsonObject = json.loads(page)
-	if ID == 'Highlights':
+	vidObs=[]
+	if ID == u'Highlights':
 		vidObs = jsonObject["_embedded"]['mt:stageItems']['_embedded']['mt:items']
-	if ID == 'Meistgehört':
+	if ID == u'Meistgehört':
 		vidObs = jsonObject['_embedded']['mt:mostPlayed']['_embedded']['mt:items']
 	PLog(len(vidObs))
 		
@@ -2586,7 +2595,7 @@ def ARDSport(title):
 		tagline=tag, summary=summ, mediatype='music')
 
 	# Livestreams WDR - s. Forum:
-	WDR_Streams = ['WDR_ARD Event 1', 'WDR_ARD Event 3']
+	WDR_Streams = ['WDR_ARD Event 1', 'WDR_ARD Event 3', 'WDR_ARD Event 9']
 	for sname in WDR_Streams:								# aus livesenderTV.xml: WDR Eventlivestreams	
 		channel = u'ARD Event Streams (eingeschränkt verfügbar)'									
 		onlySender = sname
@@ -6313,11 +6322,13 @@ def TVLiveRecordSender(title):
 	PLog('Sender: ' + str(len(sort_playlist)))
 	for rec in sort_playlist:
 		title 	= rec[0]
+		ID 		= rec[1]
 		img 	= rec[2]
 		if u'://' not in img:	# Logo lokal? -> wird aus Resources geladen, Unterverz. leider n.m.
 			img = R(img)
 		link 	= rec[3]
-		title 	= "%s | ohne EPG" % title 
+		if ID == '':				# ohne EPG_ID
+			title = "%s | ohne EPG" % title 
 		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
 			laenge = "wird manuell eingegeben"
 		summ 	= 'Aufnahmedauer: %s' 	% laenge
@@ -8753,7 +8764,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			href_title = mystrip(href_title)
 		if teaser_brand and href_title:							# bei Staffeln, Bsp. Der Pass , St. 01 - Finsternis
 			if teaser_brand != href_title:
-				href_title = "%s: %s" % (teaser_brand, href_title)
+				if ID != 'A-Z':
+					href_title = "%s: %s" % (teaser_brand, href_title)
 			
 		href_title = unescape(href_title)
 		PLog('href_title: ' + href_title)
@@ -8831,7 +8843,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		if ID == 'VERPASST':
 			if 'class="special-info">' in rec:						
 				sendtime = stringextract('class="special-info">', '</', rec)
-				title = "%s | %s" % (sendtime, title)				# Sendezeit | Titel
+				title = "[COLOR blue]%s[/COLOR] | %s" % (sendtime, title)	# Sendezeit | Titel
 			station = stringextract('data-station="', '"', rec)
 			station = station.strip()
 			PLog("sfilter: " + sfilter); PLog(station); 

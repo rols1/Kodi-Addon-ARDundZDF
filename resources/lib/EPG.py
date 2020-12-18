@@ -95,7 +95,7 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 def update_tvxml(PLAYLIST):
 	PLog('update_tvxml:')
 	
-	lpage 	= RLoad(PLAYLIST)					# lokale XML-Datei (Pluginverz./Resources)
+	lpage 	= RLoad(PLAYLIST)						# lokale XML-Datei (Pluginverz./Resources)
 	nr_local= stringextract('<nr>', '</nr>', lpage)	# nr = Dateiversion
 	updated	= False
 

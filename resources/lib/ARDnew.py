@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 09.12.2020
+#	Stand 17.12.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1071,15 +1071,16 @@ def SendungenAZ(name, ID):
 	title2 = name + ' | aktuell: %s' % sendername
 	# no_cache = True für Dict-Aktualisierung erforderlich - Dict.Save() reicht nicht			 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
+	li = home(li, ID='ARD Neu')						# Home-Button
 		
-	azlist = list(string.ascii_uppercase)				# A - Z
+	azlist = list(string.ascii_uppercase)			# A - Z
 																
-	azlist.insert(0,'#')							# früher 0-9	
+	azlist.insert(0,u'#')							# früher 0-9, ersetzt durch '#09' in SendungenAZ_ARDnew	
 	for button in azlist:	
-		# PLog(button)
+		PLog(button)
 		title = "Sendungen mit " + button
 		summ = u'Gezeigt wird der Inhalt für %s' % sendername
+		PLog(button)
 		fparams="&fparams={'title': '%s', 'button': '%s'}" % (title, button)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ_ARDnew", fanart=R(ICON_ARD_AZ), 
 			thumb=R(ICON_ARD_AZ), fparams=fparams, summary=summ)																	
@@ -1097,8 +1098,12 @@ def SendungenAZ(name, ID):
 #	Hier nutzen wir einen api-Call, jweils mit dem betref. Buchstaben 
 #	Alternative: kompl. Startseite laden + ab window.__FETCHED_CONTEXT__ 
 #				die Beitragstitel im json-Inhalt mit button abgleichen.
-#		
-
+# 17.12.2020 Button '#' für ARD-Alle nicht mehr verfügbar - Umstellung
+#	auf neuen api-Link (experiment-a-z). Die json-Seite enthält für den
+#	gewählten Sender alle Beiträge A-Z, jeweils in Blöcken für einz.
+#	Buchstaben.
+#	Zusätzl. Cachenutzung (ARD_AZ_ard: 1,5 MByte)
+#
 def SendungenAZ_ARDnew(title, button): 
 	PLog('SendungenAZ_ARDnew:')
 	PLog('button: ' + button); 
@@ -1110,29 +1115,40 @@ def SendungenAZ_ARDnew(title, button):
 
 	CurSender = Dict("load", 'CurSender')		
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
-	PLog(sender)	
+	PLog(sender)
 	
-	base = "https://page.ardmediathek.de/page-gateway/compilations/%s/shows/" % sender
-	path = base + "%s?pageNumber=0&pageSize=200&embedded=true" % button
+	path = 'https://api.ardmediathek.de/page-gateway/pages/%s/editorial/experiment-a-z' % sender
+
 	# path = path.replace('#', '%23')						# ab 21.06.2020 in get_page
-	page, msg = get_page(path)		
-	if page == '':	
-		msg1 = u"Fehler in SendungenAZ_ARDnew: %s"	% title
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
+	# Seite aus Cache laden
+	page = Dict("load", 'ARD_AZ_%s' %sender, CacheTime=ARDStartCacheTime)					
+	if page == False:										# nicht vorhanden oder zu alt
+		page, msg = get_page(path)		
+		if page == '':	
+			msg1 = u"Fehler in SendungenAZ_ARDnew: %s"	% title
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return li
+		else:	
+			Dict("store", 'ARD_AZ_%s' %sender, page) 		# Seite -> Cache: aktualisieren		
+	PLog(len(page))		
 	
-	gridlist = blockextract( '"images":', page)			# Beiträge? 
-	PLog('gridlist: ' + str(len(gridlist)))			
+	# Buchstabenblock, 2. Block Abschluss: "title":"#","titleVisible":true,"type":"gridlist"
+	pat = 'title":"%s"' % button							# Suchmuster Block
+	gridlist=[]
+	if pat in page:									
+		grid_block = blockextract(pat, page)[0]				# Beiträge im Block
+		gridlist = blockextract('"decor":', grid_block)
+		PLog('pat: %s, gridlist: %d' % (pat, len(gridlist)))			
 	if len(gridlist) == 0:				
 		msg1 = u'Keine Beiträge gefunden zu %s' % button	
 		MyDialog(msg1, '', '')					
 		return li
 			
 	for s  in gridlist:
-		targetID= stringextract('target":{"id":"', '"', s)	 	# targetID
+		targetID= stringextract('target":{"id":"', '"', s)	 # targetID
 		PLog(targetID)
-		if targetID == '':													# keine Video
+		if targetID == '':									# keine Video
 			continue
 		groupingID= stringextract('/ard/grouping/', '"', s)	# leer bei Beiträgen von A-Z-Seiten
 		if groupingID != '':
@@ -1153,9 +1169,7 @@ def SendungenAZ_ARDnew(title, button):
 		pubServ = stringextract('"name":"', '"', s)		# publicationService (Sender)
 		tagline = "Sender: %s" % pubServ		
 		PLog(az_sender); PLog(pubServ)
-		if sender != 'ard':								# Alle (ard) oder filtern
-			if az_sender != pubServ:
-				continue
+		# if sender != 'ard':							# Abgleich az_sender/pubServ entfällt
 				
 		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
 			filtered=False
@@ -1176,7 +1190,8 @@ def SendungenAZ_ARDnew(title, button):
 			fparams=fparams, summary=summ)													
 
 	xbmcplugin.endOfDirectory(HANDLE)	
-#---------------------------------------------------------------- 
+#----------------------------------------------------------------
+
 # Suche in beiden Mediatheken
 #	Abruf jeweils der 1. Ergebnisseite
 #	Ohne Ergebnis -> Button mit Rücksprung hierher
