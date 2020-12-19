@@ -44,11 +44,13 @@ Funktionen:
 
 #### ZDF Mediathek: 
 - Suche nach Sendungen
+- Startseite (wie Webseite, einschl. funk-Inhalte)
 - Sendung Verpasst (Sendungen der letzten 7 Tage)
 - Sendungen A-Z
+- Sendungen A-Z Neu: funk
 - Rubriken
-- MeistGesehen
-- Neu in der Mediathek
+- MeistGesehen (1 Woche)
+- Sport Live im ZDF
 - Barrierearm (Hörfassungen, Untertitel, Gebärdensprache)
 - ZDFenglish
 - ZDFarabic
@@ -79,7 +81,7 @@ Funktionen:
 - Themen
 - Sendungen A-Z (alle Radiosender)
 - Podcast-Favoriten (manuell erweiterbar)
-- Livestreams
+- Livestreams (einschl. Die Fußball-Bundesliga im ARD-Hörfunk) 
 
 #### TV-Live-Streams (30.08.2018: 33 Sender), Aufnahmefunktion: 
 - ARD- und ZDF-Sender überregional und regional, einige ausgewählte Privatsender
@@ -101,7 +103,7 @@ Funktionen:
 
 #### Favoriten, Merkliste
 - Kodi-Favoriten lassen sich einblenden und im Addon aufrufen
-- interne Merkliste mit Ordnerverwaltung und Filterfunktion
+- interne Merkliste mit Ordnerverwaltung und Filterfunktion - optional: netzwerkweit mit lokaler Synchronisation 
 
 #### Updates
 - entweder mit dem integrierten <b>Updatemodul (autom. Anpassung an Kodi-Version)</b> oder via <b>kodinerds-Repo</b>
