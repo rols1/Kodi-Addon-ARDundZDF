@@ -2526,6 +2526,31 @@ def ARDSport(title):
 			thumb=img, fparams=fparams)			
 	
 	#-------------------------------------------------------# Zusätze
+	title = "Moderatoren"									# Moderatoren 
+	href = 'https://www.sportschau.de/sendung/index.html'
+	img =  'https://www1.wdr.de/unternehmen/der-wdr/unternehmen/bundesliga-sportschau-jessy-wellmer-100~_v-gseaclassicxl.jpg'
+	tagline = 'Bilder von Moderatoren, Slideshow'
+	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
+		quote(href), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportBilder", fanart=img, 
+		thumb=img, tagline=tagline, fparams=fparams)			
+
+	fparams="&fparams={}"
+	label =u'ARD Event Streams (eingeschränkt verfügbar)'
+	img = R("tv-ard-sportschau.png")	
+	addDir(li=li, label=label, action="dirList", dirID="ARDSportEvents", fanart=img, 
+		thumb=img, fparams=fparams)	
+				
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+#--------------------------------------------------------------------------------------------------
+def ARDSportEvents():
+	PLog('ARDSportEvents:');
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	
 	title = u"Die Fussball-Bundesliga im ARD-Hörfunk"		# Bundesliga ARD-Hörfunk 
 	href = 'https://www.sportschau.de/sportimradio/bundesligaimradio102.html'
 	img = R("radio-livestreams.png")
@@ -2537,74 +2562,20 @@ def ARDSport(title):
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportHoerfunk", fanart=img, 
 		thumb=img, tagline=tag, fparams=fparams)					
 	 	
-	title = "Moderatoren"									# Moderatoren 
-	href = 'https://www.sportschau.de/sendung/index.html'
-	img =  'https://www1.wdr.de/unternehmen/der-wdr/unternehmen/bundesliga-sportschau-jessy-wellmer-100~_v-gseaclassicxl.jpg'
-	tagline = 'Bilder von Moderatoren, Slideshow'
-	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
-		quote(href), quote(img))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportBilder", fanart=img, 
-		thumb=img, tagline=tagline, fparams=fparams)			
-
-
-	channel = 'Überregional'								# zum Livestream: ARDSportschau
-	onlySender = 'ARDSportschau Livestream'	
-	img = R("tv-ard-sportschau.png")	
-	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
-	PLog(onlySender)
-		
-	mediatype=''	
-	if SETTINGS.getSetting('pref_video_direct') == 'true': 
-		mediatype='video'
-		
+	 	
 	# Quellen für Event-Livestreams (Chrome-Dev.-Tools):	
 	# https://fifafrauenwm.sportschau.de/frankreich2019/live/eventlivestream3666-ardjson.json
 	# https://lawm.sportschau.de/doha2019/live/livestreams170-extappjson.json
-	NDR_Streams = ['NDR_ARD Event-Livestream 1', 'NDR_ARD Event-Livestream 2',
-				'NDR_ARD Event-Livestream 3']
-	for sname in NDR_Streams:								# aus livesenderTV.xml: NDR Eventlivestreams	
-		channel = u'ARD Event Streams (eingeschränkt verfügbar)'									
-		onlySender = sname
-		img = R("radio-ndr.png")	
-		SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
-		PLog("onlySender: " + onlySender)	
-	
-	MDR_Streams = ['MDR+ Eventlivestreams + SocialTV - 1', 'MDR+ Eventlivestreams + SocialTV - 2',
-				'MDR+ Eventlivestreams + SocialTV - 3', 'MDR+ Eventlivestreams + SocialTV - 4',
-				'MDR+ Eventlivestreams + SocialTV - 5']
-	for sname in MDR_Streams:								# aus livesenderTV.xml: MDR+ Eventlivestreams	
-		channel = u'ARD Event Streams (eingeschränkt verfügbar)'									
-		onlySender = sname
-		img = R("tv-mdr-sachsen.png")	
-		SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
-		PLog(onlySender)	
-		
-	# Livestream: MDR-Sachsen Fußball-Livestream Audio (nicht in livesenderTV.xml)
-	#	Forum Weri 22.09.2020
-	title = 'MDR-Sachsen Fußball-Livestream Audio'	
-	PLog(title)
-	thumb = "https://www.sportschau.de/resources/img/sportschau/banner/logo_base.png"
-	url = "http://avw.mdr.de/streams/284281-0_mp3_high.m3u"
-	tag = "nur Audio"
-	summ = "3. Liga und DFB-Pokal"
-	title=py2_encode(title); url=py2_encode(url); thumb=py2_encode(thumb); 
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
-		quote(title), quote(thumb), quote_plus(title))
-	addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
-		tagline=tag, summary=summ, mediatype='music')
 
 	# Livestreams WDR - s. Forum:
-	WDR_Streams = ['WDR_ARD Event 1', 'WDR_ARD Event 3', 'WDR_ARD Event 9']
-	for sname in WDR_Streams:								# aus livesenderTV.xml: WDR Eventlivestreams	
-		channel = u'ARD Event Streams (eingeschränkt verfügbar)'									
-		onlySender = sname
-		img = R("tv-wdr.png")	
-		SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
-		PLog(onlySender)	
-				
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	# Livestream: MDR-Sachsen Fußball-Livestream Audio (nicht in livesenderTV.xml)
+	#	Forum Weri 22.09.2020
+	channel = u'ARD Event Streams (eingeschränkt verfügbar)'									
+	img = R("tv-ard-sportschau.png")			# dummy		
+	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender='')
 	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
 #--------------------------------------------------------------------------------------------------
 # 28.04.2020 redirected Url 
 #	(s. Modul util) verwendet für https://tokio.sportschau.de/tokio2020/ s.u.
@@ -6929,7 +6900,9 @@ def show_single_bandwith(url_m3u8, thumb, title, descr, ID):
 #	Buttons für die Einzelauflösungen werden in Parseplaylist
 #		gefertigt.
 #   descr = Plot, wird zu PlayVideo durchgereicht.
-def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path=''):	
+#	19.12.2020 Sendungs-Titel ergänzt (optional: stitle)
+#
+def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path='', stitle=''):	
 	PLog('ParseMasterM3u:'); 
 	PLog(title); PLog(url_m3u8); PLog(thumb); PLog(tagline);
 	 
@@ -8390,7 +8363,9 @@ def BarriereArmSingle(path, title, clus_title='', ID=''):
 # Stream am 27.04.2019: 
 #	http://zdf0304-lh.akamaihd.net/i/de03_v1@392855/master.m3u8
 #		ohne Zusatz (Web-Url) ?b=0-776&set-segment-duration=quality
-#  29.04.2019 Button für Livestream wieder entfernt (Streams wechseln), dto. Eintrag livesenderTV.xml
+# 29.04.2019 Button für Livestream wieder entfernt (Streams wechseln), dto. Eintrag livesenderTV.xml
+# 20.12.2020 Eventstreams aufgenommen (analog ARDSport)
+#
 def ZDFSportLive(title):
 	PLog('ZDFSportLive:'); 
 	title_org = title
@@ -8492,13 +8467,29 @@ def ZDFSportLive(title):
 		addDir(li=li, label=title, action="dirList", dirID="ZDFSportLiveSingle", fanart=img, 
 			thumb=img, fparams=fparams, tagline=descr )
 				
-	#channel = 'Überregional'										# 4. zum Livestream - s.o.
-	#onlySender = 'ZDFSportschau Livestream'	
-	#img = R("zdf-sportlive.png")	
-	#SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender=onlySender)
-		
+	#-------------------------------------------------------# Zusätze
+	fparams="&fparams={}"
+	label =u'ZDF Event Streams (eingeschränkt verfügbar)'
+	img = R("zdf-sportlive.png")	
+	addDir(li=li, label=label, action="dirList", dirID="ZDFSportEvents", fanart=img, 
+		thumb=img, fparams=fparams)	
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
+#-------------------------
+def ZDFSportEvents():
+	PLog('ZDFSportEvents:');
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	
+
+	channel = u'ZDF Event Streams (eingeschränkt verfügbar)'									
+	img = R("zdf-sportlive.png")				# dummy	
+	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender='')
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+		
 #-------------------------
 # holt von der aufgerufenen Seite den Titelbeitrag. Die restl. Videos der Seite
 #	(Mehr Videos aus der Sendung) werden von ZDF_get_content ermittelt.
@@ -9137,7 +9128,7 @@ def ZDFotherSources(title, tagline, thumb, sid, apiToken1, apiToken2, ref_path='
 	else:
 		tagline = duration
 
-	only_list = ["h264_aac_mp4_http_na_na", "vp8_vorbis_webm_http_na_na", "vp8_vorbis_webm_http_na_na"]
+	only_list = ["h264_aac_mp4_http_na_na", "vp8_vorbis_webm_http_na_na", "vp9_opus_webm_http_na_na"]
 	li, download_list = show_formitaeten(li=li, title_call=title_org, formitaeten=formitaeten, tagline=tagline,
 		thumb=thumb, only_list=only_list, geoblock=geoblock, sub_path=sub_path)		  
 					
@@ -9188,12 +9179,11 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 		header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken1
 	
 	page, msg	= get_page(path=profile_url, header=header, JsonPage=True)	
-	if page == '':	# Abbruch - ev. Alternative ngplayer_2_3 versuchen
+	if page == '':										# Abbruch
 		PLog('profile_url: Laden fehlgeschlagen')
 		return '', '', '', ''
 	PLog("page_json: " + page[:40])
 	page = page.replace('": "', '":"')					# für funk-Beiträge erforderlich
-	
 														# Videodaten ermitteln:
 	pos = page.rfind('mainVideoContent')				# 'mainVideoContent' am Ende suchen
 	page_part = page[pos:]
@@ -9204,7 +9194,8 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	# 23.11.2019: extract videodat_url ohne Blank hinter separator : (s. json.loads in get_page)
 	# 02.08.2020: extract DGS-Url (Gebärdensprache) abhängig vom Setting
 	
-	ptmd_player = 'ngplayer_2_3'
+	# ptmd_player = 'ngplayer_2_3'						# ohne webm
+	ptmd_player = 'ngplayer_2_4'						# ab 22.12.2020
 	videodat_url = ''
 	if SETTINGS.getSetting('pref_DGS_ON') == 'true':								# Link Gebärdensprache?
 		dgs_part = stringextract('label":"DGS"', '}}', page_part)
@@ -9598,7 +9589,7 @@ def ZDF_SlideShow(path, single=None):
 
 	 
 ####################################################################################################
-def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):	
+def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle=''):	
 #	# master.m3u8 auswerten, Url muss komplett sein. 
 #  	1. Besonderheit: in manchen *.m3u8-Dateien sind die Pfade nicht vollständig,
 #	sondern nur als Ergänzung zum Pfadrumpf (ohne Namen + Extension) angegeben, Bsp. (Arte):
@@ -9620,6 +9611,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 #  	10.08.2017 Filter für Video-Sofort-Format - wieder entfernt 17.02.2018
 #	23.02.2020 getrennte Video- und Audiostreams bei den ZDF-Sendern (ZDF, ZDFneo, ZDFinfo - nicht bei 3sat +phoenix)
 #		 - hier nur Auflistung der Audiostreams 
+#	19.12.2020 Sendungs-Titel ergänzt (optional: stitle)
 #
 	PLog ('Parseplaylist: ' + url_m3u8)
 
@@ -9716,6 +9708,10 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 	
 		if descr.strip() == '|':			# ohne EPG: EPG-Verbinder entfernen
 			descr=''
+			
+		summ=''
+		if stitle:
+			summ = u"Sendung: %s" % py2_decode(stitle)
 		
 		PLog('Satz:')
 		PLog(title); PLog(lable); PLog(url); PLog(thumb); PLog(Plot); PLog(descr); 
@@ -9727,7 +9723,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path=''):
 			(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot), 
 			quote_plus(sub_path))
 		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-			mediatype='video', tagline=descr) 
+			mediatype='video', tagline=descr, summary=summ) 
 		
 		li_cnt = li_cnt + 1  	# Listitemzähler												
 #		i = i + 1					# Index für URL

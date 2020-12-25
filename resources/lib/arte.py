@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 11.11.2020
+#	Stand: 19.12.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -91,7 +91,9 @@ def Main_arte(title='', summ='', descr='',href=''):
 		img = R(ICON_TVLIVE)
 	summ_par = summ.replace('\n', '||')	
 	title=py2_encode(title); href=py2_encode(href); summ_par=py2_encode(summ_par);
-	fparams="&fparams={'href': '%s', 'title': '%s', 'Plot': '%s'}" % (quote(href), quote(title), quote(summ_par))
+	img=py2_encode(img)
+	fparams="&fparams={'href': '%s', 'title': '%s', 'Plot': '%s', 'img': '%s'}" %\
+		(quote(href), quote(title), quote(summ_par), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.arte_Live", fanart=R(ICON_ARTE),
 		thumb=img, fparams=fparams, tagline=tag, summary=summ)
 
@@ -156,19 +158,19 @@ def get_live_data(name):
 
 ####################################################################################################
 # arte - TV-Livestream mit akt. PRG
-def arte_Live(href, title, Plot):	
+def arte_Live(href, title, Plot, img):	
 	PLog('arte_Live:')
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='arte')			# Home-Button
 
-	img = ICON_TVLIVE
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
 		PLog('Sofortstart: phoenix_Live')
 		PlayVideo(url=href, title=title, thumb=img, Plot=Plot)
 		return	
 							
 	Plot_par = Plot.replace('\n', '||')
+	
 	title=py2_encode(title); href=py2_encode(href); img=py2_encode(img);
 	Plot_par=py2_encode(Plot_par);
 	label = "Bandbreite und Auflösung automatisch (HLS)"

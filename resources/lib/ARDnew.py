@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 17.12.2020
+#	Stand 19.12.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -212,7 +212,6 @@ def ARDStart(title, sender, widgetID=''):
 	else:	
 		Dict("store", 'ARDStartNEW_%s' % sendername, page) 	# Seite -> Cache: aktualisieren	
 	PLog(len(page))
-	#RSave('/tmp/x.html', page, withcodec=True) 			# Debug
 	
 	container = blockextract ('compilationType":', page)  	# Container json-Bereich (Swiper + Rest)
 	PLog(len(container))
@@ -916,6 +915,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 	title=repl_json_chars(title); title_org=repl_json_chars(title_org); lable=repl_json_chars(lable); 
 	summ=repl_json_chars(summ); tagline=repl_json_chars(tagline); 
 	summ_lable = summ.replace('||', '\n')
+	summ_lable = u"%s\n\nSendung: %s" % (summ_lable, py2_decode(title_org))	
 	
 	href=py2_encode(href); title_org=py2_encode(title_org);  img=py2_encode(img);
 	Plot=py2_encode(Plot); sub_path=py2_encode(sub_path); 
@@ -925,7 +925,8 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 	addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 		mediatype='video', tagline=tagline, summary=summ_lable) 
 	
-	li = ardundzdf.Parseplaylist(li, href, img, geoblock, descr=Plot, sub_path=sub_path)	# einzelne Auflösungen 		
+	# einzelne Auflösungen:
+	li = ardundzdf.Parseplaylist(li, href, img, geoblock, descr=Plot, sub_path=sub_path, stitle=title_org)			
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #---------------------------------------------------------------------------------------------------
@@ -994,7 +995,8 @@ def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Mer
 		lable = quality	+ geoblock;	
 		PLog(href); PLog(quality); PLog(tagline); PLog(summary_org); 
 
-		summ_lable = summary_org.replace('||', '\n')		
+		summ_lable = summary_org.replace('||', '\n')
+		summ_lable = u"%s\n\nSendung: %s" % (summ_lable, py2_decode(title_org))		
 		Plot = "%s||||%s" % (tagline, summary_org)				# || Code für LF (\n scheitert in router)
 		
 		sub_path=''# fehlt noch bei ARD

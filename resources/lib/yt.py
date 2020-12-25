@@ -12,7 +12,7 @@
 #
 #	06.01.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-#	Stand: 06.11.2020
+#	Stand: 19.11.2020
 
 from __future__ import absolute_import
 
@@ -50,7 +50,8 @@ ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
 
-
+# 19.12.2020 ytplayer.config nicht mehr vor itag's positioniert - Block-
+#	bildung direkt mit itag (s.u.)
 def yt_get(url, vid, title, tag, summ, thumb):
 	PLog('yt_embed_url: ' + url)
 	watch_url = 'https://www.youtube.com/watch?v=' + vid
@@ -68,9 +69,7 @@ def yt_get(url, vid, title, tag, summ, thumb):
 		MyDialog(msg1, msg2, '')
 		return li 
 
-	pos1 = page.find('ytplayer.config')
-	pos2 = page.find('ytplayer.config', pos1+1)
-	page = page[pos1:pos2]
+	#pos1 = page.find('ytplayer.config')	# entf. - s.o.
 	
 	# String-Behandl. (Verzicht auf json-Funktionen)
 	page = page.replace('\\"', '"')
@@ -82,7 +81,8 @@ def yt_get(url, vid, title, tag, summ, thumb):
 		duration = get_duration(page)			
 	PLog("duration: %s" % duration)
 	
-	Videos = blockextract('"itag":', page)
+	# Video-Konfigs mit loudnessDb begrenzen (n.verw.):
+	Videos = blockextract('"itag":', page, '"loudnessDb":') 
 	PLog(len(Videos))
 	if len(Videos) == 0:
 		msg1 = u"Youtube-Video nicht verfügbar."

@@ -12,6 +12,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+25.12.2020 3.6.6
+			Modul yt: ytplayer-Konfig durch Youtube geändert. Anpassung yt_get (Block-
+			bildung direkt mittels itag).  
+			Parseplaylist (Einzelauflösungen): Sendungstitel im Infotext für ARD Neu
+			angefügt.
+			arte_Live: fehlendes Sendungsbild ergänzt.
+			Settings-Voreinstellung auf AUS (false) geändert:  "Mobile Version der ZDF 
+			Mediathek verwenden", Classic-Version der ARD Mediathek verwenden". 
+			Event-Livestreams ARD + ZDF: zusätzl. Buttons in Menüs "Sport Live im ZDF"
+			und "ARD Sportschau", Codebereinigung.
+			livesenderTV.xml: Löschen der doppelt vorhandenen Event-Streams in Liste
+			"Regional".
+			ZDFotherSources + get_formitaeten: Player-ID aktualisiert (ngplayer_2_3 ->
+			ngplayer_2_4), Auswertung für mimeCodec "vp9, opus" (HD-Format) ergänzt. 
+			
+
 18.12.2020 3.6.5
 			ZDF_get_content: teaser_brand bei A-Z-Beiträgen unterdrückt (Serienkennzeich-
 			nung im Addon), blaue Uhrzeit im Titel bei VERPASST-Sendungen.
