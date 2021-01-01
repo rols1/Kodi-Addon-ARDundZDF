@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.6.6'
-VDATE = '25.12.2020'
+VERSION = '3.6.7'
+VDATE = '01.01.2020'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7345,7 +7345,7 @@ def ZDF_get_clustertitle(rec): 							# Cluster-Titel der Startseite ermitteln
 	title 	= title.strip(); 
 	title_raw=title											# zum Vergleich im 2. Durchlauf 
 	title = unescape(title)
-	# PLog("clustertitle: " + title)
+	PLog("clustertitle: " + title)
 	return title 
 
 #---------------------------------------------------------------------------------------------------
@@ -7806,9 +7806,11 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 	PLog(len(cluster))
 	
 	if clus_title and len(cluster) > 0:							# Beiträge zu gesuchtem Cluster auswerten - s.o.
+		if clus_title.startswith('>'):
+			clus_title = clus_title[1:]
 		for clus in cluster:
 			clustertitle = ZDF_get_clustertitle(rec=clus)		# Cluster-Titel ermitteln
-			# PLog(clus_title); PLog(clustertitle);	 # Debug
+			PLog(clus_title); PLog(clustertitle);	 # Debug
 			if clus_title in clustertitle:		# Cluster gefunden
 				PLog('gefunden: clus_title=%s, clustertitle=%s' % (clus_title, clustertitle))
 				break
@@ -8995,9 +8997,10 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 			MyDialog(msg1, msg2, '')
 			return li
 
-		apiToken1 = stringextract('apiToken: \'', '\'', page) 
+		apiToken1 = stringextract('apiToken: \'', '\'', page) 	# Bereich window.zdfsite
 		apiToken2 = stringextract('"apiToken": "', '"', page)
-		sid = stringextract("docId: \'", "\'", page)				# Bereich window.zdfsite
+		sid = stringextract("docId: \'", "\'", page)				
+		scms_id = stringextract("externalId: \'", "\'", page)	# für hbbtv-Quellen			
 	PLog('apiToken1: %s, apiToken2: %s, sid: %s' % (apiToken1[:80], apiToken2[:80], sid))
 					
 	# -- Ende Vorauswertungen
@@ -9044,6 +9047,17 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 			% (quote(title), quote(tagline), quote(thumb), sid, apiToken1, apiToken2, quote(urlSource))
 		addDir(li=li, label=title_oc, action="dirList", dirID="ZDFotherSources", fanart=thumb, thumb=thumb, fparams=fparams)
 
+	pref_video_hbbtv = 'true'					# z.Z. noch ohne Setting
+	if pref_video_hbbtv == 'true':
+		title=py2_decode(title);
+		title_oc = u"[COLOR lime]HBBTV Video-Formate[/COLOR] | %s" % title
+		title=py2_encode(title);
+		tagline=py2_encode(tagline); thumb=py2_encode(thumb);
+		fparams="&fparams={'title': '%s', 'tagline': '%s', 'thumb': '%s', 'ref_path': '%s', 'scms_id': '%s'}" \
+			% (quote(title), quote(tagline), quote(thumb), quote(urlSource), scms_id)
+		addDir(li=li, label=title_oc, action="dirList", dirID="ZDFSourcesHBBTV", fanart=thumb, thumb=thumb, fparams=fparams)
+
+
 	# MEHR_Suche (wie ZDF_Sendungen) - bei Verpasst-Beiträge Uhrzeit abschneiden:
 	if '|' in title:							# Bsp. Verpasst:  "04:20 Uhr | Abenteuer Winter.."
 		title = title.split('|')[1].strip()
@@ -9060,6 +9074,102 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
+#-------------------------
+# HBBTV Videoquellen 		
+def ZDFSourcesHBBTV(title, tagline, thumb, ref_path, scms_id):
+	PLog('ZDFSourcesHBBTV:'); 
+	title_org = title
+	tagline_org = tagline		
+	PLog("scms_id: " + scms_id) 
+	url = "https://hbbtv.zdf.de/zdfm3/dyn/get.php?id=%s" % scms_id
+		
+	li = xbmcgui.ListItem()
+	if "www.zdf.de/kinder" in ref_path:
+		li = home(li, ID='Kinderprogramme')			# Home-Button
+	else:
+		li = home(li, ID='ZDF')						# Home-Button
+		
+	# Call funktioniert auch ohne Header:
+	header = "{'Host': 'hbbtv.zdf.de', 'content-type': 'application/vnd.hbbtv.xhtml+xml'}"
+	page, msg = get_page(path=url, header=header, JsonPage=True)	
+	if page == '':						
+		msg1 = u'HBBTV-Quellen nicht vorhanden / verfügbar'
+		msg2 = u'Video: %s' % title
+		MyDialog(msg1, msg2, '')
+		return li
+		
+	page = page.replace('": "', '":"')				# für funk-Beiträge erforderlich
+	PLog('page_hbbtv: ' + page[:100])
+	
+	duration = stringextract('duration',  'fsk', page)	# Angabe im Kopf, sec/1000
+	duration = stringextract('"value":',  '}', duration).strip()
+	PLog(duration)	
+	if duration:
+		duration = int((int(duration) / 1000) / 60)		# Rundung auf volle Minuten reicht hier 
+		duration = max(1, duration)						# 1 zeigen bei Werten < 1
+		duration = str(duration) + " min"	
+	PLog('duration: ' + duration)
+	geoblock =  stringextract('geoLocation',  '}', page) 
+	geoblock =  stringextract('"value": "',  '"', geoblock).strip()
+	PLog('geoblock: ' + geoblock);
+	if 	geoblock == 'none':								# i.d.R. "none", sonst "de" - wie bei ARD verwenden
+		geoblock = ' | ohne Geoblock'
+	else:
+		if geoblock == 'de':			# Info-Anhang für summary 
+			geoblock = ' | Geoblock DE!'
+		if geoblock == 'dach':			# Info-Anhang für summary 
+			geoblock = ' | Geoblock DACH!'
+				
+	streams = stringextract('"streams":', '"head":', page)	# Video-URL's ermitteln
+	ptmdUrl_list = blockextract('"ptmdUrl":', streams)		# mehrere mögl., z.B. Normal + DGS
+	PLog(len(ptmdUrl_list))
+	stream_list=[]
+	for ptmdUrl in ptmdUrl_list:
+		PLog(ptmdUrl[:200])
+		label = stringextract('"label":"', '"', ptmdUrl)
+		streams = blockextract('"main":', ptmdUrl)		#  mehrere mögl., z.B. MP4, m3u8
+		for stream in streams:
+			if '"q1":' in stream:
+				q1 = stringextract('"q1":"',  '"', stream)
+				if 'm3u8' in q1:
+					res = 'HLS (adaptiv)'
+				else:
+					res = 'MP4 (%s)' % q1.split('_')[-2]
+				stream_list.append(u"1. Qualität|%s|%s|%s" % (label, q1, res))
+			if '"q2":' in stream:
+				q2 = stringextract('"q2":"',  '"', stream)
+				if 'm3u8' in q2:
+					res = 'HLS (adaptiv)'
+				else:
+					res = 'MP4 (%s)' % q2.split('_')[-2]
+				stream_list.append(u"2. Qualität|%s|%s|%s" % (label, q1, res))
+			if '"q3":' in stream:
+				q3 = stringextract('"q3":"',  '"', stream)
+				if 'm3u8' in q3:
+					res = 'HLS (adaptiv)'
+				else:
+					res = 'MP4 (%s)' % q3.split('_')[-2]
+				stream_list.append(u"3. Qualität|%s|%s|%s" % (label, q1, res))
+	PLog(stream_list[0])
+				
+	# Buttons bauen - show_formitaeten passt formatmäßig nicht:
+	for rec in stream_list:	
+		qual, label, url, res = rec.split('|')
+		title = "%s | %s | %s" % (qual, label, res)
+		Plot_par = "%s||||%s||||%s | %s" % (title_org, tagline_org, res, 'HBBTV-Videoquelle')
+		tagline = Plot_par.replace('||', '\n')
+		PLog('Satz3:')
+		PLog(title); PLog(Plot_par); PLog(url); 
+
+		title=py2_encode(title); url=py2_encode(url);
+		thumb=py2_encode(thumb); Plot_par=py2_encode(Plot_par); 
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+			(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot_par))	
+		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
+			mediatype='video', tagline=tagline)
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	 
 #-------------------------
 # Aufrufer: ZDF_getVideoSources (ZDFRubrikSingle -> ZDF_Sendungen), 
 #			ZDFSportLiveSingle
@@ -9217,7 +9327,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
 	PLog("request_json: " + page[:40])
 
-	if page == '':	# Abbruch - ev. Alternative ngplayer_2_3 versuchen
+	if page == '':	# Abbruch 
 		PLog('videodat_url: Laden fehlgeschlagen')
 		return '', '', '', ''
 	PLog(page[:100])	# "{..attributes" ...
@@ -9281,7 +9391,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	return formitaeten, duration, geoblock, sub_path  
 
 #-------------------------
-# 	Ausgabe der Videoformate
+# 	Ausgabe der ZDF-Videoformate
 #	
 def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geoblock, sub_path, Merk='false'):	
 	PLog('show_formitaeten:')

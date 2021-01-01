@@ -54,7 +54,7 @@ HANDLE			= int(sys.argv[1])
 #	bildung direkt mit itag (s.u.)
 def yt_get(url, vid, title, tag, summ, thumb):
 	PLog('yt_embed_url: ' + url)
-	watch_url = 'https://www.youtube.com/watch?v=' + vid
+	watch_url = 'https://www.youtube.com/watch?v=' + vid	
 	PLog('yt_watch_url: ' + watch_url)
 	PLog(tag); PLog(summ);PLog(thumb);
 	title_org=title; tag_org=tag; summ_org=summ

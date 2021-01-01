@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 07.10.2020
+#	Stand: 31.12.2020
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -797,15 +797,16 @@ def XLGetVideoSources(path, title, summary, tagline, thumb):
 	PLog(len(page))			
 	
 	if path.find('/multimedia/bilder/') > 0:					# kann nur Bildstrecke sein, kommt z.B. aus Suche
-		li = Bildgalerie(path=path, title=title)
+		li = XL_Bildgalerie(path=path, title=title)
 		return 
 	if '/faktenfinder/kurzerklaert/' in  path:					# 1 Beitrag in class="infokasten small"
 		href = stringextract('href="/multimedia/video/video-', '"', page)
 		PLog(href)
-		path = BASE_URL + "/multimedia/video/video-" + href
-		PLog(path)
-		XLGetVideoSources(path, title, summary, tagline, thumb) # nochmal
-		return
+		if href:
+			path = BASE_URL + "/multimedia/video/video-" + href
+			PLog(path)
+			XLGetVideoSources(path, title, summary, tagline, thumb) # nochmal
+			return
 	
 	PLog('<fieldset>' in page)								# Download-Formate
 	if '<fieldset>' not in page:							# Test auf Videos
@@ -813,7 +814,7 @@ def XLGetVideoSources(path, title, summary, tagline, thumb):
 			leftpos, leftstring = my_rfind('href=', 'magnifier_pos-0.html">', page)	
 			PLog(leftstring)	
 			gallery_url = BASE_URL + stringextract('href="', '"', leftstring) 
-			li = Bildgalerie(path=gallery_url, title=title)
+			li = XL_Bildgalerie(path=gallery_url, title=title)
 			return
 		else:												
 			msg1 = u'Das Video steht nicht (mehr) zur Verfügung.'	# weder Videos noch Einzelbilder - Abbruch	 			 	 

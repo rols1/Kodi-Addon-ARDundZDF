@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 19.12.2020
+#	Stand 26.12.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -212,6 +212,8 @@ def ARDStart(title, sender, widgetID=''):
 	else:	
 		Dict("store", 'ARDStartNEW_%s' % sendername, page) 	# Seite -> Cache: aktualisieren	
 	PLog(len(page))
+	page = page.replace('\\"', '*')							# quotierte Marks entf.
+	
 	
 	container = blockextract ('compilationType":', page)  	# Container json-Bereich (Swiper + Rest)
 	PLog(len(container))
@@ -336,7 +338,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))
-	page = page.replace('\\"', '*')						# quotiere Marks entf.
+	page = page.replace('\\"', '*')						# quotierte Marks entf.
 
 	mehrfach=False; mediatype=''
 	if 'Livestream' in ID:
@@ -437,7 +439,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark):
 		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))	
-	page = page.replace('\\"', '*')							# quotiere Marks entf.
+	page = page.replace('\\"', '*')							# quotierte Marks entf.
 	
 	
 	li = get_page_content(li, page, ID, mark)
@@ -544,7 +546,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	pagination	= stringextract('pagination":', '"type"', page)
 	pagetitle 	= stringextract('title":"', '"', pagination)	# bei Suche: SearchCompilationWidget:..
 	PLog(pagetitle)
-	page = page.replace('\\"', '*')								# quotiere Marks entf., Bsp. \"query\"
+	page = page.replace('\\"', '*')								# quotierte Marks entf., Bsp. \"query\"
 	
 	
 	if 'Livestream' in ID or 'EPG' in ID:
@@ -927,7 +929,7 @@ def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='',
 	
 	# einzelne Auflösungen:
 	li = ardundzdf.Parseplaylist(li, href, img, geoblock, descr=Plot, sub_path=sub_path, stitle=title_org)			
-			
+	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #---------------------------------------------------------------------------------------------------
 #	Wiedergabe eines Videos aus ARDStart, hier MP4-Formate

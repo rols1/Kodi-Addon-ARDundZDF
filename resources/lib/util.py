@@ -2496,7 +2496,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='')
 	if SETTINGS.getSetting('pref_UT_ON') == 'true':
 		if sub_path:							# Vorbehandlung ARD-Untertitel
 			if 'ardmediathek.de' in sub_path:	# ARD-Untertitel speichern + Endung -> .sub
-				local_path = "%s/%s" % (SUBTITLESTORE, subPlayVideo_path.split('/')[-1])
+				local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
 				local_path = os.path.abspath(local_path)
 				try:
 					urlretrieve(sub_path, local_path)

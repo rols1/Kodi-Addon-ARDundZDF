@@ -12,6 +12,19 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+01.01.2021 3.6.7
+			Auswertung ZDF-HBBTV-Videoquellen: Anpassung ZDF_getVideoSources, neue 
+			Funktion ZDFSourcesHBBTV (bisher max. Auflösung 1280x720) - Auswertung
+			MP4 + HLS (m3u8), div. Label (Bsp. Normal, DGS).
+			ARDStartRubrik (Modul ARD NEU): quotierte Marks entfernt - Fehler: 
+			unvollständige Titel).
+			ZDFRubrikSingle: Fix clus_title (führendes '>' entfernen) - Fehler: in Rubriken 
+			wurde die falsche (letzte) Kategorie ausgewertet.
+			PlayVideo (Modul util): Fix subPlayVideo_path -> sub_path (Kopierrest) - Fehler:
+			bei Setting "Untertitel EIN" starteten ARD-Videos nicht mehr.
+			XLGetVideoSources (Modul TagesschauXL): Fix Funktions-Call (Bildgalerie ->
+			XL_Bildgalerie, 2x) - Fehler: Klick ohne Wirkung/Dialog.
+
 25.12.2020 3.6.6
 			Modul yt: ytplayer-Konfig durch Youtube geändert. Anpassung yt_get (Block-
 			bildung direkt mittels itag).  
