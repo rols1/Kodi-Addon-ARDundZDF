@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.6.7'
-VDATE = '01.01.2020'
+VERSION = '3.6.8'
+VDATE = '10.01.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -4798,10 +4798,11 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 #-----------------------
 # test_downloads: prüft ob curl/wget-Downloads freigeschaltet sind + erstellt den Downloadbutton
 # high (int): Index für einzelne + höchste Video-Qualität in download_list
+# 04.01.2021 Anpassung Trennz. Stream_List (Bsp. Parseplaylist, StreamsShow)
 def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high):  # Downloadbuttons (ARD + ZDF)
 	PLog('test_downloads:')
-	PLog('test_downloads: ' + summary_org)
-	PLog('test_downloads: ' + title_org)
+	PLog('summary_org: ' + summary_org)
+	PLog('title_org: ' + title_org)
 	PLog('tagline_org: ' + tagline_org)
 
 	PLog(SETTINGS.getSetting('pref_use_downloads')) 	# Voreinstellung: False 
@@ -4817,6 +4818,8 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 		
 	i=0
 	for item in download_items:
+		PLog(item)
+		item = item.replace('**', '|')						# 04.01.2021 Korrek. Trennz. Stream_List
 		quality,url = item.split('#')
 		PLog(url); PLog(quality); PLog(title_org)
 		if url.find('.m3u8') == -1 and url.find('rtmp://') == -1:
@@ -4825,11 +4828,12 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 				summary=summary_org,tagline=tagline_org,url=url)
 			v = 'detailtxt'+str(i)
 			Dict('store', v, detailtxt)		# detailtxt speichern 
-			if url.endswith('.mp3'):
+			if url.endswith('.mp3'):		
 				Format = 'Podcast ' 			
 			else:	
-				Format = 'Video '			# .mp4 oder .webm  (ARD nur .mp4)
-			lable = 'Download ' + Format + ' | ' + quality
+				Format = 'Video '			# .mp4, .webm, .. 
+			#lable = 'Download ' + Format + ' | ' + quality
+			lable = 'Download' + ' | ' + quality	# 09.01.2021 Wegfall Format aus Platzgründen 
 			dest_path = SETTINGS.getSetting('pref_download_path')
 			tagline = Format + 'wird in ' + dest_path + ' gespeichert' 									
 			summary = 'Sendung: ' + title_org
@@ -7901,6 +7905,8 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 			title = repl_json_chars(py2_decode(title));
 			lable = title
 			descr = repl_json_chars(descr)
+			if tag:
+				descr = "%s\n\n%s" % (tag, descr)
 			descr_par = descr.replace('\n', '||')
 			
 			PLog('12Satz:')
@@ -7912,7 +7918,8 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 					fparams="&fparams={'title': '%s', 'url': '%s', 'ID': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
 						(quote(title),  quote(path), 'ZDFRubrikSingle', quote(descr_par), quote(img_src))
 					addDir(li=li, label=lable, action="dirList", dirID="ZDF_Sendungen", fanart=img_src, 
-						thumb=img_src, tagline=tag, summary=descr, fparams=fparams)
+#						thumb=img_src, tagline=tag, summary=descr, fparams=fparams)
+						thumb=img_src, summary=descr, fparams=fparams)
 				else:						# Bildgalerie
 					fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))	
 					addDir(li=li, label=lable, action="dirList", dirID="ZDF_BildgalerieSingle", fanart=img_src, 
@@ -7943,7 +7950,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 				fparams="&fparams={'title': '%s', 'url': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
 					(quote(title),  quote(path), quote(descr_par), quote(img_src))
 				addDir(li=li, label=lable, action="dirList", dirID="ZDF_getVideoSources", fanart=img_src, 
-					thumb=img_src, tagline=tag, summary=descr, fparams=fparams)
+					thumb=img_src, summary=descr, fparams=fparams)
 							
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
@@ -8580,6 +8587,7 @@ def International(title):
 #	Änderungen Webseite nachziehen: SearchARDundZDF, SearchARDundZDFnew,
 #		ZDF_Search, ZDFSportLive, Tivi_Search (Modul childs).
 #	Blockbereich für VERPASST erweitert (umfasst data-station)
+#	08.01.2021 Anpassung an geänderte Formate bei Hochkant-Videos.
 #
 def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):	
 	PLog('ZDF_get_content:'); PLog(ref_path); PLog(ID);  PLog(sfilter)				
@@ -8607,20 +8615,14 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		content = blockextract('class="b-content-teaser-item', page) 														
 																	
 	# 27.03.2020 Hochkant-Videos (neues ZDF-Format bei Nachrichten)
-	#	Auswirkung: thumb + brand (s.u.)	
-	if 'class="b-cluster-poster"' in page:					# 
-		page_segment = stringextract('class="b-cluster-poster"', u'"Blättern_links"', page)
-		poster = blockextract('b-cluster-poster-teaser m-clickarea', page_segment)
-		PLog('poster: ' + str(len(poster)))		
-		content = content + poster							# Blöcke an content anhängen
-		poster_title =  stringextract('cluster-title">', '</', page_segment)
-		
+	#	Auswirkung: thumb + brand (s.u.)
+	# 08.01.2020 Blocks entfernt - Format geändert, s.u. ("PlakatTeaser")	
+
 	if 'data-module="zdfplayer"' in page:					# Kurzvideos
 		if "www.zdf.de/kinder" not in ref_path:				# tivi: doppel vermeiden	
 			zdfplayer = blockextract('data-module="zdfplayer"', page, '</article>')
 			PLog('zdfplayer: ' + str(len(zdfplayer)))		
-			content = content + zdfplayer						# Blöcke an content anhängen
-	
+			content = content + zdfplayer						# Blöcke an content anhängen	
 #---------------------------		
 	if len(content) == 0:
 		msg_notfound = 'Video ist leider nicht mehr oder noch nicht verfügbar'
@@ -8644,7 +8646,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 	page_cnt = len(content)
 	PLog('content_Blocks: ' + str(page_cnt));			
 	
-	if page_cnt == 0:											# kein Ergebnis oder allg. Fehler
+	if page_cnt == 0:
+																# kein Ergebnis oder allg. Fehler
 		if 'class="b-playerbox' not in page and 'class="item-caption' not in page: # Einzelvideo?
 			s = 'Es ist leider ein Fehler aufgetreten.'				# ZDF-Meldung Server-Problem
 			if page.find('\"title\">' + s) >= 0:
@@ -8675,10 +8678,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 	#---------------------------		
 	items_cnt=0									# listitemzähler
 	for rec in content:					
-		teaser_nr=''; teaser_brand=''; poster=False
-		if rec.startswith('b-cluster-poster-teaser'):		# angehängte Sätze, z.B. Hochkant-Videos s.o.
-			poster=True
-			
+		teaser_nr=''; teaser_brand=''; poster=False			
 		if rec.startswith('data-module="zdfplayer"'):		# Kurzvideos s.o. - eigene Auswertung
 			PLog("data-module=zdfplayer")
 			if SETTINGS.getSetting('pref_usefilter') == 'true':	# Filter - s.a. neuer_Satz
@@ -8855,9 +8855,6 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		# z.Z.nicht genutzt:
 		# teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi = ZDF_get_teaserbox(rec)
 			
-		if poster:													# poster=True s.o. (z.B. Hochkant-Videos)
-			brand = "[COLOR blue]%s[/COLOR]" % poster_title	
-			
 		tagline = video_datum
 		video_time = video_time.replace('00:00', '')				# ohne Uhrzeit
 		if video_time:
@@ -8916,6 +8913,17 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		summary=repl_json_chars(summary)					# dto.
 		tagline=repl_json_chars(tagline)					# dto.
 		
+		# ab 08.01.2021 in Sätzen mit class="b-cluster-poster-teaser:
+		if '"element": "PlakatTeaser"' in rec:
+			track = stringextract("data-track='{", '<div', rec)
+			form =  stringextract('format": "', '"', track)
+			title =  stringextract('Teaser:', '|', track)
+			plusbar_path =  stringextract('Linkziel:', '"', track)
+			if plusbar_path.startswith('http') == False:
+				plusbar_path = ZDF_BASE + plusbar_path
+			tagline = "Format: %s | %s" % (form, tagline)
+						
+		
 		if SETTINGS.getSetting('pref_usefilter') == 'true':	# Filter
 			filtered=False
 			for item in AKT_FILTER: 
@@ -8945,10 +8953,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 					skip_verf = True
 				summ_txt = get_summary_pre(plusbar_path, 'ZDF', skip_verf, skip_pubDate)
 				PLog(len(summary));PLog(len(summ_txt)); 
-				PLog('Mark3')
 				if 	summ_txt and len(summ_txt) > len(summary):
 					tag_par= "%s\n\n%s" % (tagline, summ_txt)
-					PLog('Mark4')
 					tag_par = tag_par.replace('\n', '||')
 					summary = summ_txt	
 						
@@ -8978,10 +8984,9 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid=''):
 	PLog('ZDF_getVideoSources:'); PLog(url); PLog(tagline); 
 	PLog(title); 
-	title = unescape(title); 
-				
+	title = unescape(title); url_org = url
+	urlSource = url			
 	li = xbmcgui.ListItem()
-	urlSource = url 		# für ZDFotherSources
 		
 	# ab hier normale Auswertung (Einzelbeitrag)
 	# ab 08.10.2017 dyn. ermitteln (wieder mal vom ZDF geändert)
@@ -9024,47 +9029,149 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 			tagline = tagline + " | " + duration
 	else:
 		tagline = duration
-
-	# Sofortstart: Behandlung in show_formitaeten
-	only_list = ["h264_aac_ts_http_m3u8_http"]					# Video-Items erstellen: m3u8-Formate
-	li, download_list = show_formitaeten(li=li, title_call=title, formitaeten=formitaeten, tagline=tagline,
-		thumb=thumb, only_list=only_list,geoblock=geoblock, sub_path=sub_path, Merk=Merk)
-	if 	download_list == '':	# Sofortstart erfolgt, raus
-		return	  
 		
-	if SETTINGS.getSetting('pref_use_downloads'):				# Video-Items erstellen: weitere Formate
-		title_oc = "[COLOR blue]weitere Video-Formate und Downloads[/COLOR] | %s" % title
-	else:	
-		title_oc = u"[COLOR blue]weitere Video-Formate[/COLOR] | %s" % title
-	PLog("title_oc: " + title_oc)
+	#----------------------------------------------- 	
+	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
+	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
+	#	fehlende Bandbreiten + Auflösungen werden ergänzt
+	HLS_List=[]; MP4_List=[]; HBBTV_List=[];			# MP4_List = download_list
+	only_list = ["h264_aac_mp4_http_na_na", "h264_aac_ts_http_m3u8_http",	# erlaubte Formate
+				"vp9_opus_webm_http_na_na", "vp8_vorbis_webm_http_na_na"]
+	for rec in formitaeten:									# Datensätze gesamt, Achtung unicode!
+		typ = stringextract('"type":"', '"', rec)
+		typ = typ.replace('[]', '').strip()
+		facets = stringextract('"facets": ', ',', rec)	# Bsp.: "facets": ["progressive"]
+		facets = facets.replace('"', '').replace('\n', '').replace(' ', '') 
+		PLog("typ %s, facets %s" % (typ, facets))
+		if typ not in only_list:
+			continue 
+			
+# [progressive], [restriction_useragent]		
 
-	PLog(title); PLog(title_oc); PLog(tagline); PLog(sid); 
+		audio = blockextract('"audio":', rec)			# Datensätze je Typ
+		PLog("audio_Blocks: " + str(len(audio)))
+		# PLog(audio)	# bei Bedarf
+		for audiorec in audio:					
+			url = stringextract('"uri":"',  '"', audiorec)			# URL
+			# Zusatz audiotrack ff. abschneiden, lädt falsche Playlist ('#EXT-X-MEDIA')
+			if '?audiotrack=1' in url:
+				url = url.split('?audiotrack=1')[0]					
+			quality = stringextract('"quality":"',  '"', audiorec)
+			mimeCodec = stringextract('"mimeCodec":"',  '"', audiorec)
+
+			PLog(url); PLog(quality)
+			if facets.startswith('['):
+				quality = "%s [%s..]" % (quality, facets[1:6])
 		
-	if SETTINGS.getSetting('pref_video_direct') == 'false':	# ZDFotherSources nicht bei Sofortstart zeigen
-		# li = Parseplaylist(li, videoURL, thumb)	# hier nicht benötigt - das ZDF bietet bereits 3 Auflösungsbereiche
-		title=py2_encode(title); tagline=py2_encode(tagline); thumb=py2_encode(thumb);
-		fparams="&fparams={'title': '%s', 'tagline': '%s', 'thumb': '%s', 'sid': '%s', 'apiToken1': '%s', 'apiToken2': '%s', 'ref_path': '%s'}" \
-			% (quote(title), quote(tagline), quote(thumb), sid, apiToken1, apiToken2, quote(urlSource))
-		addDir(li=li, label=title_oc, action="dirList", dirID="ZDFotherSources", fanart=thumb, thumb=thumb, fparams=fparams)
+			if url:	
+				if quality == 'auto' and 'master.m3u8' not in url:	# funk: m3u8-Urls nicht verwertbar
+					continue	
+				if url.find('master.m3u8') > 0:			# m3u8 enthält alle Auflösungen
+					quality = u'automatisch'
+					HLS_List.append('HLS automatische Anpassung ** auto ** auto ** %s#%s' % (title,url))
+					Stream_List = Parseplaylist(li, url, thumb, geoblock, tagline,\
+						stitle=title,buttons=False)
+					HLS_List = HLS_List + Stream_List
+					break
+				else:
+					if 'hd' in quality:
+						w = "1920"; h = "1080"					# Probeentnahme													
+					if 'veryhigh' in quality:
+						w = "1280"; h = "720"					# Probeentnahme							
+					if 'high' in quality:
+						w = "960"; h = "540"					# Probeentnahme							
+					if 'med' in quality:
+						w = "640"; h = "360"					# Probeentnahme							
+					if 'low' in quality:
+						w = "480"; h = "270"					# Probeentnahme							
+					
+					if '://funk' in url:						# funk: anderes Format
+						# Bsp.: ../1646936_src_1024x576_1500.mp4?fv=1
+						res = url.split('_')[2]
+						bitrate = url.split('_')[3]				# 6000.mp4?fv=2
+						bitrate = bitrate.split('.')[0]
+						bitrate = bitrate + "000"				# K-Angabe anpassen 
+					else:
+						bitrate = re.search(u'_(\d+)k_', url).group(1)
+						res = "%sx%s" % (w,h)
+					
+					quality = up_low(quality)	
+					PLog(res)
+					title_url = u"%s#%s" % (title, url)
+					item = u"MP4 Qualität: %s ** Bitrate %sk ** Auflösung %s ** %s" %\
+						(quality, bitrate, res, title_url)
+					MP4_List.append(item)
+	
+	HBBTV_List = ZDFSourcesHBBTV(title, scms_id)				
+	PLog("HLS_List: " + str(len(HLS_List)))
+	#PLog(HLS_List)
+	PLog("MP4_List: " + str(len(MP4_List)))
+	PLog("HBBTV_List: " + str(len(HBBTV_List)))
+	Dict("store", 'ZDF_HLS_List', HLS_List) 
+	Dict("store", 'ZDF_MP4_List', MP4_List) 
+	Dict("store", 'ZDF_HBBTV_List', HBBTV_List) 
+	
+	if not len(HLS_List) and not len(MP4_List) and not len(HBBTV_List):
+		msg = 'keine Streamingquelle gefunden - Abbruch' 
+		PLog(msg)
+		msg1 = u"keine Streamingquelle gefunden: %s"	% title
+		MyDialog(msg1, '', '')	
+		return li
+		
+	tagline=repl_json_chars(tagline); tagline=tagline.replace( '||', '\n')
+	Plot=tagline; 
+	Plot=Plot.replace('\n', '||')
 
-	pref_video_hbbtv = 'true'					# z.Z. noch ohne Setting
-	if pref_video_hbbtv == 'true':
-		title=py2_decode(title);
-		title_oc = u"[COLOR lime]HBBTV Video-Formate[/COLOR] | %s" % title
-		title=py2_encode(title);
-		tagline=py2_encode(tagline); thumb=py2_encode(thumb);
-		fparams="&fparams={'title': '%s', 'tagline': '%s', 'thumb': '%s', 'ref_path': '%s', 'scms_id': '%s'}" \
-			% (quote(title), quote(tagline), quote(thumb), quote(urlSource), scms_id)
-		addDir(li=li, label=title_oc, action="dirList", dirID="ZDFSourcesHBBTV", fanart=thumb, thumb=thumb, fparams=fparams)
+	# Sofortstart HLS / MP4 - abhängig von Settings	 	# Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':	
+		img = thumb
+		PlayVideo_Direct(HLS_List, MP4_List, title, img, Plot, sub_path, HBBTV_List)
+		return li		
 
+	# -----------------------------------------			# Buttons Einzelauflösungen
+	title_org = title
+
+	PLog('Satz3:')
+	title_list=[]
+	img=thumb; path=url_org; 
+	PLog(title); PLog(tagline[:60]); PLog(img); PLog(path); PLog(sub_path);
+	title_hls 	= u"[COLOR blue]Streaming-Formate[/COLOR]"
+	title_hb = "[COLOR blue]HBBTV-Formate[/COLOR]"
+	title_mp4 = "[COLOR red]MP4-Formate und Downloads[/COLOR]"
+	title_hls=repl_json_chars(title_hls); title_hb=repl_json_chars(title_hb);
+	title_mp4=repl_json_chars(title_mp4); 
+	
+	# title_list: Titel + Dict-ID + Anzahl Streams
+	title_list.append("%s###%s###%s" % (title_hls, 'ZDF_HLS_List', len(HLS_List)))	
+	title_list.append("%s###%s###%s" % (title_hb, 'ZDF_HBBTV_List', len(HBBTV_List)))	
+	title_list.append("%s###%s###%s" % (title_mp4, 'ZDF_MP4_List', len(MP4_List)))	
+
+	mediatype=''										# Kennz. Video für Sofortstart 
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
+
+	path=py2_encode(path); Plot=py2_encode(Plot); img=py2_encode(img);
+	geoblock=py2_encode(geoblock); sub_path=py2_encode(sub_path); 
+	
+	for item in title_list:
+		title, Dict_ID, anz = item.split('###')
+		if anz == '0':									# skip leere Liste
+			continue
+		title=py2_encode(title); title_org=py2_encode(title_org);
+		fparams="&fparams={'path': '%s', 'title': '%s', 'Plot': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s', 'ID': '%s'}" \
+			% (quote(path), quote(title_org), quote(Plot), quote(img), quote(geoblock), quote(sub_path), Dict_ID)
+		addDir(li=li, label=title, action="dirList", dirID="StreamsShow", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tagline, mediatype=mediatype)
+	
+	#----------------------------------------------- 	
 
 	# MEHR_Suche (wie ZDF_Sendungen) - bei Verpasst-Beiträge Uhrzeit abschneiden:
-	if '|' in title:							# Bsp. Verpasst:  "04:20 Uhr | Abenteuer Winter.."
-		title = title.split('|')[1].strip()
-	label = "Alle Beiträge im ZDF zu >%s< suchen"  % title
-	query = title.replace(' ', '+')	
+	if '|' in title_org:						# Bsp. Verpasst:  "04:20 Uhr | Abenteuer Winter.."
+		title_org = title_org.split('|')[1].strip()
+	label = "Alle Beiträge im ZDF zu >%s< suchen"  % title_org
+	query = title_org.replace(' ', '+')	
 	tagline = u"zusätzliche Suche starten"
-	summ 	= "suche alle Beiträge im ZDF, die sich auf >%s< beziehen" % title
+	summ 	= "suche alle Beiträge im ZDF, die sich auf >%s< beziehen" % title_org
 	s_type	= 'MEHR_Suche'						# Suche alle Beiträge (auch Minutenbeiträge)
 	query=py2_encode(query); 
 	fparams="&fparams={'query': '%s', 's_type': '%s'}" % (quote(query), s_type)
@@ -9076,18 +9183,11 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 	
 #-------------------------
 # HBBTV Videoquellen 		
-def ZDFSourcesHBBTV(title, tagline, thumb, ref_path, scms_id):
+def ZDFSourcesHBBTV(title, scms_id):
 	PLog('ZDFSourcesHBBTV:'); 
-	title_org = title
-	tagline_org = tagline		
 	PLog("scms_id: " + scms_id) 
+	HBBTV_List=[]
 	url = "https://hbbtv.zdf.de/zdfm3/dyn/get.php?id=%s" % scms_id
-		
-	li = xbmcgui.ListItem()
-	if "www.zdf.de/kinder" in ref_path:
-		li = home(li, ID='Kinderprogramme')			# Home-Button
-	else:
-		li = home(li, ID='ZDF')						# Home-Button
 		
 	# Call funktioniert auch ohne Header:
 	header = "{'Host': 'hbbtv.zdf.de', 'content-type': 'application/vnd.hbbtv.xhtml+xml'}"
@@ -9096,29 +9196,10 @@ def ZDFSourcesHBBTV(title, tagline, thumb, ref_path, scms_id):
 		msg1 = u'HBBTV-Quellen nicht vorhanden / verfügbar'
 		msg2 = u'Video: %s' % title
 		MyDialog(msg1, msg2, '')
-		return li
+		return 
 		
 	page = page.replace('": "', '":"')				# für funk-Beiträge erforderlich
 	PLog('page_hbbtv: ' + page[:100])
-	
-	duration = stringextract('duration',  'fsk', page)	# Angabe im Kopf, sec/1000
-	duration = stringextract('"value":',  '}', duration).strip()
-	PLog(duration)	
-	if duration:
-		duration = int((int(duration) / 1000) / 60)		# Rundung auf volle Minuten reicht hier 
-		duration = max(1, duration)						# 1 zeigen bei Werten < 1
-		duration = str(duration) + " min"	
-	PLog('duration: ' + duration)
-	geoblock =  stringextract('geoLocation',  '}', page) 
-	geoblock =  stringextract('"value": "',  '"', geoblock).strip()
-	PLog('geoblock: ' + geoblock);
-	if 	geoblock == 'none':								# i.d.R. "none", sonst "de" - wie bei ARD verwenden
-		geoblock = ' | ohne Geoblock'
-	else:
-		if geoblock == 'de':			# Info-Anhang für summary 
-			geoblock = ' | Geoblock DE!'
-		if geoblock == 'dach':			# Info-Anhang für summary 
-			geoblock = ' | Geoblock DACH!'
 				
 	streams = stringextract('"streams":', '"head":', page)	# Video-URL's ermitteln
 	ptmdUrl_list = blockextract('"ptmdUrl":', streams)		# mehrere mögl., z.B. Normal + DGS
@@ -9130,45 +9211,39 @@ def ZDFSourcesHBBTV(title, tagline, thumb, ref_path, scms_id):
 		streams = blockextract('"main":', ptmdUrl)		#  mehrere mögl., z.B. MP4, m3u8
 		for stream in streams:
 			if '"q1":' in stream:
-				q1 = stringextract('"q1":"',  '"', stream)
-				if 'm3u8' in q1:
-					res = 'HLS (adaptiv)'
-				else:
-					res = 'MP4 (%s)' % q1.split('_')[-2]
-				stream_list.append(u"1. Qualität|%s|%s|%s" % (label, q1, res))
+				url = stringextract('"q1":"',  '"', stream)
+				quality = u'hohe'
+				w = "960"; h = "540"					# Probeentnahme	
+				bitrate = u"1812067"
 			if '"q2":' in stream:
-				q2 = stringextract('"q2":"',  '"', stream)
-				if 'm3u8' in q2:
-					res = 'HLS (adaptiv)'
-				else:
-					res = 'MP4 (%s)' % q2.split('_')[-2]
-				stream_list.append(u"2. Qualität|%s|%s|%s" % (label, q1, res))
+				url = stringextract('"q2":"',  '"', stream)
+				quality = u'sehr hohe'
+				w = "1280"; h = "720"					# Probeentnahme							
+				bitrate = u"3621101"
 			if '"q3":' in stream:
-				q3 = stringextract('"q3":"',  '"', stream)
-				if 'm3u8' in q3:
-					res = 'HLS (adaptiv)'
-				else:
-					res = 'MP4 (%s)' % q3.split('_')[-2]
-				stream_list.append(u"3. Qualität|%s|%s|%s" % (label, q1, res))
-	PLog(stream_list[0])
-				
-	# Buttons bauen - show_formitaeten passt formatmäßig nicht:
-	for rec in stream_list:	
-		qual, label, url, res = rec.split('|')
-		title = "%s | %s | %s" % (qual, label, res)
-		Plot_par = "%s||||%s||||%s | %s" % (title_org, tagline_org, res, 'HBBTV-Videoquelle')
-		tagline = Plot_par.replace('||', '\n')
-		PLog('Satz3:')
-		PLog(title); PLog(Plot_par); PLog(url); 
+				url = stringextract('"q3":"',  '"', stream)
+				quality = u'Full HD'
+				w = "1920"; h = "1080"					# Probeentnahme							
+				bitrate = u"6501324"
+			
+			res = "%sx%s" % (w,h)
+			
+			if 'm3u8' in stream:
+				label = u'HLS Qualität: %s' % quality
+			else:
+				label = u'MP4 Qualität: %s' % quality
+				try:
+					bitrate = re.search(u'_(\d+)k_', url).group(1)	# bitrate überschreiben	
+				except Exception as exception:			# ts möglich: http://cdn.hbbtvlive.de/zdf/106-de.ts
+					PLog(str(exception))
+					PLog(url)	
 
-		title=py2_encode(title); url=py2_encode(url);
-		thumb=py2_encode(thumb); Plot_par=py2_encode(Plot_par); 
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot_par))	
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-			mediatype='video', tagline=tagline)
+			title_url = u"%s#%s" % (title, url)
+			item = u"%s ** Bitrate %s ** Auflösung %s ** %s" %\
+				(label, bitrate, res, title_url)
+			HBBTV_List.append(item)
 		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	return HBBTV_List
 	 
 #-------------------------
 # Aufrufer: ZDF_getVideoSources (ZDFRubrikSingle -> ZDF_Sendungen), 
@@ -9210,42 +9285,10 @@ def ZDF_getKurzVideoDetails(rec):
 	
 #-------------------------
 
-# weitere Videoquellen - Übergabe der Webseite in Dict[key]		
-def ZDFotherSources(title, tagline, thumb, sid, apiToken1, apiToken2, ref_path=''):
-	PLog('ZDFotherSources:'); 
-	title_org = title		# Backup für Textdatei zum Video
-	summary_org = tagline	# Tausch summary mit tagline (summary erstrangig bei Wiedergabe)
-	PLog(title_org)
+# 08.01.2021 ZDFotherSources + show_formitaeten entfallen	
+#	def ZDFotherSources(title, tagline, thumb, sid, apiToken1, apiToken2, ref_path=''):
+#	def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geoblock, sub_path, Merk='false'):	
 
-	li = xbmcgui.ListItem()
-	if "www.zdf.de/kinder" in ref_path:
-		li = home(li, ID='Kinderprogramme')			# Home-Button
-	else:
-		li = home(li, ID='ZDF')						# Home-Button			
-		
-	formitaeten,duration,geoblock, sub_path = get_formitaeten(sid, apiToken1, apiToken2)	# Video-URL's ermitteln
-	# PLog(formitaeten)
-	
-	if formitaeten == '':							# Nachprüfung auf Videos
-		msg1 = u'Video nicht vorhanden / verfügbar'
-		msg2 = u'Video: %s' % title
-		MyDialog(msg1, msg2, '')
-		return li
-
-	if tagline:
-		if 'min' in tagline == False:	# schon enthalten (aus ZDF_get_content)?
-			tagline = tagline + " | " + duration
-	else:
-		tagline = duration
-
-	only_list = ["h264_aac_mp4_http_na_na", "vp8_vorbis_webm_http_na_na", "vp9_opus_webm_http_na_na"]
-	li, download_list = show_formitaeten(li=li, title_call=title_org, formitaeten=formitaeten, tagline=tagline,
-		thumb=thumb, only_list=only_list, geoblock=geoblock, sub_path=sub_path)		  
-					
-	# high=0: 	1. Video bisher höchste Qualität:  [progressive] veryhigh
-	li = test_downloads(li,download_list,title_org,summary_org,tagline,thumb,high=0)  # Downloadbutton(s)
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 #-------------------------
 #	Ladekette für Videoquellen ab 30.05.2017:
 #		1. Ermittlung der apiToken (in configuration.json), nur anfangs 2016 unverändert, Verwendung in header
@@ -9326,6 +9369,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken2
 	page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
 	PLog("request_json: " + page[:40])
+	RSave('/tmp/ZDF_VideoSources_funk.json', py2_encode(page))	# Debug	
 
 	if page == '':	# Abbruch 
 		PLog('videodat_url: Laden fehlgeschlagen')
@@ -9390,76 +9434,6 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	PLog('Ende get_formitaeten:')
 	return formitaeten, duration, geoblock, sub_path  
 
-#-------------------------
-# 	Ausgabe der ZDF-Videoformate
-#	
-def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geoblock, sub_path, Merk='false'):	
-	PLog('show_formitaeten:')
-	PLog(only_list); PLog(title_call); PLog(tagline)
-	# PLog(formitaeten)		# bei Bedarf
-
-	title_call = unquote(title_call)
-	if 	title_call != tagline:		
-		Plot	 = "%s\n\n%s" % (title_call, tagline + geoblock)
-		Plot_par = "%s||||%s" % (title_call, tagline + geoblock)	# || Code für LF (\n scheitert in router)
-	else:
-		Plot	 = title_call
-		Plot_par = title_call
-	tagline = tagline + geoblock
-	PLog("Plot_par: " + Plot_par)
-
-	i = 0 	# Titel-Zähler für mehrere Objekte mit dem selben Titel (manche Clients verwerfen solche)
-	download_list = []		# 2-teilige Liste für Download: 'Titel # url'	
-	for rec in formitaeten:									# Datensätze gesamt, Achtung unicode!
-		# PLog(rec)		# bei Bedarf
-		typ = stringextract('"type":"', '"', rec)
-		typ = typ.replace('[]', '').strip()
-		facets = stringextract('"facets": ', ',', rec)	# Bsp.: "facets": ["progressive"]
-		facets = facets.replace('"', '').replace('\n', '').replace(' ', '') 
-		PLog(typ); PLog(facets)
-		
-		# PLog(typ in only_list)
-		if (typ in only_list) == True:								
-			audio = blockextract('"audio":', rec)			# Datensätze je Typ
-			# PLog(audio)	# bei Bedarf
-			for audiorec in audio:					
-				url = stringextract('"uri":"',  '"', audiorec)			# URL
-				url = url.replace('https', 'http')
-				quality = stringextract('"quality":"',  '"', audiorec)
-				PLog(url); PLog(quality)
-				
-				i = i +1
-				if url:		
-					if url.find('master.m3u8') > 0:			# m3u8 enthält alle Auflösungen
-						# 04.08.2019 Sofortstart nur noch abhängig von Settings und nicht zusätzlich von  
-						#	Param. Merk.
-						if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true':	# Sofortstart
-							PLog('Sofortstart: show_formitaeten')
-							PLog("Plot_par: " + Plot_par)
-							PlayVideo(url=url, title=title_call, thumb=thumb, Plot=Plot_par, sub_path=sub_path, Merk=Merk)
-							return li, ''	# sauber raus in ZDF_getVideoSources
-							
-						title = u'%s. %s [m3u8] Bandbreite und Auflösung automatisch | %s' % (str(i), quality, title_call)
-
-						#   "auto"-Button + Ablage master.m3u8:
-						li = ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, tagline='', descr=Plot_par,
-							sub_path=sub_path)	
-					else:									# m3u8 enthält Auflösungen high + med
-						title = u'Qualität: ' + quality + ' | Typ: ' + typ + ' ' + facets 
-						title = u'%s. Qualität: %s | Typ: %s %s' % (str(i), quality, typ, facets)
-						download_list.append(title + '#' + url)				# Download-Liste füllen	
-						tagline	 = Plot_par.replace('||','\n')				# wie m3u8-Formate
-
-						title=py2_encode(title); url=py2_encode(url);
-						thumb=py2_encode(thumb); Plot_par=py2_encode(Plot_par); 
-						sub_path=py2_encode(sub_path);
-						fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
-							(quote_plus(url), quote_plus(title), quote_plus(thumb), 
-							quote_plus(Plot_par), quote_plus(sub_path), Merk)	
-						addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-							mediatype='video', tagline=tagline) 
-													
-	return li, download_list
 #-------------------------
 # Aufufer: ZDF_Search (weitere Seiten via page_cnt)
 def ZDF_Bildgalerien(li, page):	
@@ -9699,7 +9673,7 @@ def ZDF_SlideShow(path, single=None):
 
 	 
 ####################################################################################################
-def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle=''):	
+def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', buttons=True):	
 #	# master.m3u8 auswerten, Url muss komplett sein. 
 #  	1. Besonderheit: in manchen *.m3u8-Dateien sind die Pfade nicht vollständig,
 #	sondern nur als Ergänzung zum Pfadrumpf (ohne Namen + Extension) angegeben, Bsp. (Arte):
@@ -9722,10 +9696,13 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle=''):
 #	23.02.2020 getrennte Video- und Audiostreams bei den ZDF-Sendern (ZDF, ZDFneo, ZDFinfo - nicht bei 3sat +phoenix)
 #		 - hier nur Auflistung der Audiostreams 
 #	19.12.2020 Sendungs-Titel ergänzt (optional: stitle)
+#	03.03.2020 Erweiterung buttons: falls False keine Buttons sondern Rückgabe als Liste
+#		Stream_List (Format s.u.)
 #
 	PLog ('Parseplaylist: ' + url_m3u8)
+	Stream_List=[]
 
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
+	if SETTINGS.getSetting('pref_video_direct') == 'true' and buttons:		# nicht für Stream_List
 		return li
 
 	playlist = ''
@@ -9752,7 +9729,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle=''):
 	i = 0; li_cnt = 1; url=''
 	for i, line in enumerate(lines):
 		thumb=thumb_org
-		res_geo=''; lable=''
+		res_geo=''; label=''; BandwithInt=0; Resolution_org=''
 		# Abgrenzung zu ts-Dateien (Bsp. Welt24): #EXT-X-MEDIA-SEQUENCE: 9773324
 		if line.startswith('#EXT-X-MEDIA:') == False and line.startswith('#EXT-X-STREAM-INF') == False:
 			continue
@@ -9776,6 +9753,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle=''):
 				PLog("url: " + url)
 				Bandwith = GetAttribute(line, 'BANDWIDTH')
 				Resolution = GetAttribute(line, 'RESOLUTION')
+				Resolution_org = Resolution				# -> Stream_List
 				try:
 					BandwithInt	= int(Bandwith)
 				except:
@@ -9806,9 +9784,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle=''):
 			else:
 				continue
 
-		lable = "%s" % li_cnt + ". " + title
+		label = "%s" % li_cnt + ". " + title
 		if res_geo:
-			lable = "%s | %s" % (lable, res_geo)
+			label = "%s | %s" % (label, res_geo)
 						
 		# quote für url erforderlich wg. url-Inhalt "..sd=10&rebase=on.." - das & erzeugt in router
 		#	neuen Parameter bei dict(parse_qs(paramstring)
@@ -9824,27 +9802,95 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle=''):
 			summ = u"Sendung: %s" % py2_decode(stitle)
 		
 		PLog('Satz:')
-		PLog(title); PLog(lable); PLog(url); PLog(thumb); PLog(Plot); PLog(descr); 
+		PLog(title); PLog(label); PLog(url[:80]); PLog(thumb); PLog(Plot); PLog(descr); 
 		
-		title=py2_encode(title); url=py2_encode(url);
-		thumb=py2_encode(thumb); Plot=py2_encode(Plot); 
-		sub_path=py2_encode(sub_path);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot), 
-			quote_plus(sub_path))
-		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-			mediatype='video', tagline=descr, summary=summ) 
+		if buttons:															# Buttons, keine Stream_List
+			title=py2_encode(title); url=py2_encode(url);
+			thumb=py2_encode(thumb); Plot=py2_encode(Plot); 
+			sub_path=py2_encode(sub_path);
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+				(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot), 
+				quote_plus(sub_path))
+			addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
+				mediatype='video', tagline=descr, summary=summ) 
+		else:																# nur Stream_List füllen
+			# Format: "HLS Einzelstream | Bandbreite | Auflösung | Titel#Url"
+			PLog("append: %s, %s.." % (str(BandwithInt), Resolution_org))
+			if Resolution_org == '':										# für sorted in StreamsShow erford.
+				Resolution_org = '0x0 (vermutl. Audio)'
+			Stream_List.append(u'HLS Einzelstream ** Bitrate %s ** Auflösung %s ** %s#%s' %\
+				(str(BandwithInt), Resolution_org, stitle, url)) # wie Downloadliste
 		
 		li_cnt = li_cnt + 1  	# Listitemzähler												
-#		i = i + 1					# Index für URL
   	
 	if i == 0:	# Fehler
 		line1 = 'Kennung #EXT-X-STREAM-INF / #EXT-X-MEDIA fehlt'
 		line2 = 'oder den Streamlinks fehlt http / https'
 		MyDialog(line1, line2, '')
 	
-	return li
-		    
+	if buttons:
+		return li
+	else:
+		return Stream_List
+		
+####################################################################################################
+# Streambuttons HLS / MP4 (ID-abh.), einschl. Downloadbuttons bei MP4-Liste
+# Streamliste wird aus Dict geladen (Datei: ID)
+#	Bandbreite + Auflösung können fehlen (Qual. < hohe, Audiostreams)
+# Formate:
+#	"HLS automatische Anpassung ** auto ** auto ** Titel#Url"  	# master.m3u8
+# 	"HLS Einzelstream ** Bandbreite ** Auflösung ** Titel#Url" (wie Downloadliste)"
+#
+#	"MP4 Qualität: niedrige ** leer **leer ** Titel#Url"	
+#	"MP4 Qualität: Full HD ** Bandbreite ** Auflösung ** Titel#Url"
+# Anzeige: aufsteigend (beide Listen)
+# Aufrufer: ARDStartSingle, ZDF_getVideoSources (ZDF)
+#
+def StreamsShow(title, path, Plot, img, geoblock, ID, sub_path=''):	
+	PLog('StreamsShow:'); PLog(ID)
+	title_org = title; 
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Neu')						# Home-Button
+
+	Stream_List = Dict("load", ID)
+	if 'MP4_List' in ID:
+		Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'lösung (\d+)', x).group(1)))
+
+	title_org=py2_encode(title_org);  img=py2_encode(img);
+	sub_path=py2_encode(sub_path); 	Plot=py2_encode(Plot); 
+	tagline_org = Plot.replace('||', '\n')
+
+	cnt=1
+	for item in Stream_List:
+		item = py2_encode(item)
+		PLog("item: " + item[:80])
+		label, bitrate, res, title_href = item.split('**')
+		title, href = title_href.split('#')
+		
+		PLog(title); PLog(tagline_org[:80]);
+		tagline = tagline_org
+		if title_href not in tagline_org:
+			tagline = "%s | %s" % (title_href, tagline_org)
+	
+		label = "%d. %s | %s| %s" % (cnt, label, bitrate, res)
+		cnt = cnt+1
+		href=py2_encode(href); title=py2_encode(title);
+		
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+			(quote_plus(href), quote_plus(title_org), quote_plus(img), 
+			quote_plus(Plot), quote_plus(sub_path))
+		addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+			tagline=tagline, mediatype='') 	# Absturz mit 'video' nach Sofortstart aus Kontextmenü 
+
+	if 'MP4_List' in ID:
+		if SETTINGS.getSetting('pref_show_qualities') == 'false':
+			del Stream_List[:-1]											# nur letztes Element verwenden
+		summ=''
+		li = test_downloads(li,Stream_List,title,summ,tagline,img,high=-1)  # Downloadbutton(s)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			    
 ####################################################################################################
 #						Hilfsfunktionen - für Kodiversion augelagert in Modul util.py
 ####################################################################################################

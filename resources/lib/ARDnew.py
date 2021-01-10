@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 26.12.2020
+#	Stand 08.01.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -548,7 +548,6 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	PLog(pagetitle)
 	page = page.replace('\\"', '*')								# quotierte Marks entf., Bsp. \"query\"
 	
-	
 	if 'Livestream' in ID or 'EPG' in ID:
 		gridlist = blockextract('"broadcastedOn"', page)
 	else:
@@ -570,7 +569,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			gridlist = blockextract( '"images":', page) 		# geändert 20.09.2019 
 							
 		
-	if len(gridlist) == 0:				
+	if len(gridlist) == 0:		
 		msg1 = 'keine Beiträge gefunden'
 		PLog(msg1)
 		MyDialog(msg1, '', '')	
@@ -640,49 +639,19 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		img 	= stringextract('src":"', '"', s)	
 		img 	= img.replace('{width}', '640'); 
 		img= img.replace('u002F', '/')
-		summ 	= stringextract('synopsis":"', '"', s)	
-			
-		duration = stringextract('"duration":', ',', s)			# Sekunden
-		if duration == '0':										# auch bei Einzelbeitrag möglich
-			duration=''
-		if duration:										
-			duration = seconds_translate(duration)
-			duration = 'Dauer %s' % duration
-		maturitytRating = stringextract('maturityContentRating":"', '"', page) # "FSK16"
-		PLog('maturitytRating: ' + maturitytRating)				# außerhalb Block!
-		if 	maturitytRating:
-			duration = u"%s | %s" % (duration, maturitytRating)	
-			
-		tag = duration	
-		pubServ = stringextract('"name":"', '"', s)		# publicationService (Sender)
-		# Filterung nach Sendern entfällt - s.o.
-		#if sender != 'ard':							# Alle (ard) oder filtern
-		#	if sender not in pubServ.lower():
-		#		continue		
-		
-		broadcast = stringextract('"broadcastedOn":"', '"', s)	# Sendedatum
-		PLog(broadcast)
-		if broadcast and ID != 'Livestream':					# Live enth. unsinnige Werte
-			uhr=''
-			broadcast = time_translate(broadcast)				# vor 06.11.2020 2 Std., s. time_translate
-			uhr = u"[COLOR blue]%s[/COLOR]" % broadcast[11:]	# -> title (EPG)
-			tag = u"%s\nSendedatum: [COLOR blue]%s Uhr[/COLOR]" % (tag, broadcast)
-			
-		availableTo = stringextract('"availableTo":"', '"', s)	# availableTo
-		PLog(availableTo)
-		if availableTo:											# möglich: availableTo":null
-			availableTo = time_translate(availableTo)			# hier ohne UTC-Zusatz
-			tag = u"%s\n\n[B]Verfügbar bis: [COLOR darkgoldenrod]%s[/COLOR][/B]" % (tag, availableTo)
-		
-		if pubServ:
-			tag = u"%s\nSender: %s" % (tag, pubServ)
-
+		summ=''
+		if ID != 'Livestream':
+			PLog("pre: %s" % s[:80])
+			summ = get_summary_pre(path='dummy', ID='ARDnew', skip_verf=False, skip_pubDate=False, page=s)
+		else:
+			summ = title
+	
 		title = repl_json_chars(title); summ = repl_json_chars(summ);
 		if ID == 'EPG' and uhr:									# Zeit im Titel, Langfass. tagline
 			title = "%s | %s" % (uhr, title) 
 		
 		PLog('Satz:');
-		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ); PLog(duration); PLog(ID)
+		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ[:60]); PLog(ID)
 		
 		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
 			filtered=False
@@ -702,16 +671,16 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 				fparams=fparams, summary=summ, mediatype='')																							
 		else:
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
-				# skip availableTo + (hier in tag)
-				summ_new = get_summary_pre(path=href, ID='ARDnew', skip_verf=True, skip_pubDate=True) 
+				summ_new = get_summary_pre(path=href, ID='ARDnew') 
 				if 	summ_new:
 					summ = summ_new
 			
-			href=py2_encode(href); title=py2_encode(title); 
-			fparams="&fparams={'path': '%s', 'title': '%s', 'duration': '%s', 'ID': '%s'}" %\
-				(quote(href), quote(title), duration, ID)
+			summ_par = summ.replace('\n', '||')
+			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
+			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s'}" %\
+				(quote(href), quote(title), quote(summ_par), ID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)	
+				fparams=fparams, summary=summ, mediatype=mediatype)	
 	
 	return li
 		
@@ -731,10 +700,13 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 #	page="\n".join(gridlist). mehrzS verhindert Rekursion.	
 # 13.11.2020 Anpassung an ARDRetro: Switch Home-Button via ID=ARDRetroStart (dto. in
 #	ARDStartVideoStreams + ARDStartVideoMP4, Änderung mehrzS (ID -> Flag, Rekurs.-Stop)
+# 05.01.2021 Anpassung für Sofortstart-Format: HLS_List + MP4_List -> PlayVideo_Direct
+#	(Streamwahl -> PlayVideo)
+#	Ohne Sofortstart: HLS_List + MP4_List -> StreamsShow -> PlayVideo
+#	(Haupt-PRG) -> 
 #
-def ARDStartSingle(path, title, duration, ID='', mehrzS=''): 
+def ARDStartSingle(path, title, summary, ID='', mehrzS=''): 
 	PLog('ARDStartSingle: %s' % ID);
-	title_org 	= title 
 	
 	page, msg = get_page(path)
 	if page == '':	
@@ -765,15 +737,12 @@ def ARDStartSingle(path, title, duration, ID='', mehrzS=''):
 	else:
 		li = home(li, ID='ARD Neu')							# Home-Button
 
-	summ 		= stringextract('synopsis":"', '"', page)		# mit verfügbar wie	get_summary_pre
-	verf=''
-	if u'verfügbar bis:' in page:								# html mit Uhrzeit									
-		verf = stringextract(u'verfügbar bis:', '</p>', page)	
-		verf = cleanhtml(verf)
-	if verf:													# Verfügbar voranstellen
-		summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
+	# summ = get_summary_pre(path, ID='ARDnew', page=page)	# entfällt mit summary aus get_page_content 
+	summ = summary.replace('||', '\n')
+
+	PLog('summ:' + summ)
+
 	img 		= stringextract('src":"', '"', page)
-	
 	img 		= img.replace('{width}', '640')
 	sub_path	= stringextract('_subtitleUrl":"', '"', page)
 	geoblock 	= stringextract('geoblocked":', ',', page)
@@ -801,265 +770,178 @@ def ARDStartSingle(path, title, duration, ID='', mehrzS=''):
 		PLog('Livestream_Abzweig: ' + href)
 		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summ)
 	
-	mediatype='							'# Kennz. Video für Sofortstart 
+	mediatype=''										# Kennz. Video für Sofortstart 
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
-	
-	summ = repl_json_chars(summ)
-	summ_lable = summ
-	summ = summ.replace('\n','||')
 
-	if duration == None or duration.strip() == '':
-		duration = stringextract('_duration":', ',', page)	# Sekunden
-		duration = 'Dauer %s' % seconds_translate(duration)	
-	tagline = duration
-	# tagline=transl_doubleUTF8(tagline)		# Bsp. â<U+0088><U+0099> (a mit Circumflex)
+	tagline = summ
+	Plot = tagline.replace('\n','||')
 	
+	# -----------------------------------------			# Extrakt Videoquellen
+	Plugins = blockextract('_plugin', page)				# wir verwenden nur Plugin1 (s.o.)
+	if len(Plugins) > 0:
+		Plugin1	= Plugins[0]							
+		VideoUrls = blockextract('_quality', Plugin1)
+	PLog(len(VideoUrls))
+	
+	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
+	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
+	#	fehlende Bandbreiten + Auflösungen werden ergänzt
+	HLS_List = ARDStartVideoHLSget(title, VideoUrls)	# Extrakt HLS
+	PLog("HLS_List: " + str(HLS_List)[:80])
+	MP4_List = ARDStartVideoMP4get(title, VideoUrls)	# Extrakt MP4
+	Dict("store", 'ARDNEU_HLS_List', HLS_List) 
+	Dict("store", 'ARDNEU_MP4_List', MP4_List) 
+	PLog("download_list: " + str(MP4_List)[:80])
+	
+	if not len(HLS_List) and not len(MP4_List):
+		msg = 'keine Streamingquelle gefunden - Abbruch' 
+		PLog(msg)
+		msg1 = "keine Streamingquelle gefunden: %s"	% title
+		MyDialog(msg1, '', '')	
+		return li
+	
+	# Sofortstart HLS / MP4 - abhängig von Settings	 	# Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':	
+		PlayVideo_Direct(HLS_List, MP4_List, title, img, summ, sub_path)
+		return li		
+	
+	# -----------------------------------------			# Buttons Einzelauflösungen
 	PLog('Satz:')
-	PLog(title); PLog(summ[:60]); PLog(tagline); PLog(img); PLog(path); PLog(sub_path);
-	title_new 	= u"[COLOR blue]Streaming-Formate[/COLOR] | " + title
-	title_new=repl_json_chars(title_new); summ=repl_json_chars(summ); 
-		
-	path=py2_encode(path); title=py2_encode(title); summ=py2_encode(summ); tagline=py2_encode(tagline);
-	img=py2_encode(img); geoblock=py2_encode(geoblock); sub_path=py2_encode(sub_path);
-	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s', 'ID': '%s'}" \
-		% (quote(path), quote(title), quote(summ), quote(tagline), quote(img), quote(geoblock), quote(sub_path), ID)
-	addDir(li=li, label=title_new, action="dirList", dirID="resources.lib.ARDnew.ARDStartVideoStreams", fanart=img, thumb=img, 
-		fparams=fparams, summary=summ_lable, tagline=tagline, mediatype=mediatype)		
-					
-	if SETTINGS.getSetting('pref_use_downloads') == 'true':	
-		title_new = "[COLOR blue]MP4-Formate und Downloads[/COLOR] | " + title
-	else:	
-		title_new = "[COLOR blue]MP4-Formate[/COLOR] | " + title
-	path=py2_encode(path); title=py2_encode(title); summ=py2_encode(summ); tagline=py2_encode(tagline);
-	img=py2_encode(img); geoblock=py2_encode(geoblock); sub_path=py2_encode(sub_path);
-	fparams="&fparams={'path': '%s', 'title': '%s', 'summ': '%s', 'tagline': '%s',  'img': '%s', 'geoblock': '%s', 'sub_path': '%s', 'ID': '%s'}" \
-		% (quote(path), quote(title), quote(summ), quote(tagline), quote(img), quote(geoblock), quote(sub_path), ID)
-	addDir(li=li, label=title_new, action="dirList", dirID="resources.lib.ARDnew.ARDStartVideoMP4", fanart=img, thumb=img, 
-		fparams=fparams, summary=summ_lable, tagline=tagline, mediatype=mediatype)	
+	title_list=[]
+	PLog(title); PLog(tagline[:60]); PLog(img); PLog(path); PLog(sub_path);
+	title_org = title
+	title_hls 	= u"[COLOR blue]Streaming-Formate[/COLOR]"
+	title_mp4 = "[COLOR red]MP4-Formate und Downloads[/COLOR]"
+	title_hls=repl_json_chars(title_hls); title_mp4=repl_json_chars(title_mp4);
+	summ=repl_json_chars(summ);
+	# title_list: Titel + Dict-ID + Anzahl Streams
+	title_list.append("%s###%s###%s" % (title_hls, 'ARDNEU_HLS_List', len(HLS_List)))	
+	title_list.append("%s###%s###%s" % (title_mp4, 'ARDNEU_MP4_List', len(MP4_List)))	
+
+	path=py2_encode(path); Plot=py2_encode(Plot); img=py2_encode(img); 
+	geoblock=py2_encode(geoblock); sub_path=py2_encode(sub_path); 
+	title_org=py2_encode(title_org)
 	
-	if mehrzS:													# nicht nochmal "mehr" zeigen
-		xbmcplugin.endOfDirectory(HANDLE)	
+	for item in title_list:
+		title, Dict_ID, anz = item.split('###')
+		if anz == '0':									# skip leere Liste
+			continue
+		
+		fparams="&fparams={'path': '%s', 'title': '%s', 'Plot': '%s', 'img': '%s', 'geoblock': '%s', 'ID': '%s', 'sub_path': '%s'}" \
+			% (quote(path), quote(title_org), quote(Plot), quote(img), quote(geoblock), Dict_ID, quote(sub_path))
+		addDir(li=li, label=title, action="dirList", dirID="StreamsShow", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tagline, mediatype=mediatype)
+	
+	# -----------------------------------------		# mehr (Videos) zur Sendung
+	if mehrzS:										# nicht nochmal "mehr" zeigen
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 	PLog('Mehr_Test')
 	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten). element enthält 
 	#	Sendungen ab dem 2. Element (1. die Videodaten)
 	# 19.10.2020 Funktion get_ardsingle_more entfällt
 	if len(elements) > 1 and SETTINGS.getSetting('pref_more') == 'true':
-		gridlist = elements[1:]									# hinter den Videodaten (1. Element)
+		gridlist = elements[1:]						# hinter den Videodaten (1. Element)
 		PLog('gridlist_more: ' + str(len(gridlist)))	
-		page  = "\n".join(gridlist)								# passend für get_page_content 
+		page  = "\n".join(gridlist)					# passend für get_page_content 
 		PLog(page[:1000])
-		get_page_content(li, page, ID=ID, mehrzS=True, mark='')		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-#---------------------------------------------------------------------------------------------------
-#	Wiedergabe eines Videos aus ARDStart, hier Streaming-Formate
-#	Die Live-Funktion ist völlig getrennt von der Funktion TV-Livestreams - ohne EPG, ohne Private..
-#	HTML-Seite mit json-Inhalt
-#	28.05.2020 nur noch json-Seite, Stream-Bezeichner durch ARD geändert
-def ARDStartVideoStreams(title, path, summ, tagline, img, geoblock, sub_path='', Merk='false', ID=''): 
-	PLog('ARDStartVideoStreams:'); 
-	
-	title_org = title	
-	li = xbmcgui.ListItem()
-	if ID == "ARDRetroStart":
-		li = home(li, ID=NAME)								# Home-Button -> Hauptmenü
-	else:
-		li = home(li, ID='ARD Neu')							# Home-Button
-	
-	page, msg = get_page(path)					
-	if page == '':	
-		msg1 = "Fehler in ARDStartVideoStreams: %s"	% title
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
-	PLog(len(page))
-	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
-	
-	href = ''; VideoUrls = []
-	Plugins = blockextract('_plugin', page)	# wir verwenden nur Plugin1 (s.o.)
-	if len(Plugins) > 0:
-		Plugin1	= Plugins[0]							
-		VideoUrls = blockextract('_quality', Plugin1)
-	PLog(len(VideoUrls))
-	
-															# auch möglich: nur .mp3-Quelle
-	if len(VideoUrls) > 0:									# nur 1 m3u8-Link möglich
-		for video in  VideoUrls:							#	bei Jugendschutz ges.
-			# PLog(video)
-			if '"auto"' in video:
-				href = stringextract('stream":"', '"', video)	# Video-Url
-				quality = u'Qualität: automatische'
-				PLog(quality); PLog(href)	 
-				break
-	else:													# kein Abgleich mit 'master.m3u8' (fehlt in funk-
-		msg = 'keine Streamingquelle gefunden - Abbruch' 	#	Beiträgen
-		PLog(msg)
-		msg1 = "keine Streamingquelle gefunden: %s"	% title
-		MyDialog(msg1, '', '')	
-		return li
-		
-	if href.startswith('http') == False:
-		href = 'http:' + href
-	href = href.replace('https', 'http')					# Plex: https: crossdomain access denied
-		
-	lable = u'Bandbreite und Auflösung automatisch ' 		# master.m3u8
-	lable = lable + geoblock
-	
-	Plot = "%s||||%s" % (tagline, summ)					# || Code für LF (\n scheitert in router)
-	if SETTINGS.getSetting('pref_video_direct') == 'true' or Merk == 'true':	# Sofortstart
-		PLog('Sofortstart: ARDStartVideoStreams')
-		PlayVideo(url=href, title=title, thumb=img, Plot=Plot, sub_path=sub_path, Merk=Merk)
-		return
-		
-		
-	title=repl_json_chars(title); title_org=repl_json_chars(title_org); lable=repl_json_chars(lable); 
-	summ=repl_json_chars(summ); tagline=repl_json_chars(tagline); 
-	summ_lable = summ.replace('||', '\n')
-	summ_lable = u"%s\n\nSendung: %s" % (summ_lable, py2_decode(title_org))	
-	
-	href=py2_encode(href); title_org=py2_encode(title_org);  img=py2_encode(img);
-	Plot=py2_encode(Plot); sub_path=py2_encode(sub_path); 
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
-		(quote_plus(href), quote_plus(title_org), quote_plus(img), quote_plus(Plot), 
-		quote_plus(sub_path), quote_plus(Merk))
-	addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-		mediatype='video', tagline=tagline, summary=summ_lable) 
-	
-	# einzelne Auflösungen:
-	li = ardundzdf.Parseplaylist(li, href, img, geoblock, descr=Plot, sub_path=sub_path, stitle=title_org)			
+		get_page_content(li, page, ID=ID, mehrzS=True, mark='')	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-#---------------------------------------------------------------------------------------------------
-#	Wiedergabe eines Videos aus ARDStart, hier MP4-Formate
-#	Die Live-Funktion ist völlig getrennt von der Funktion TV-Livestreams - ohne EPG, ohne Private..
-#	28.05.2020 nur noch json-Seite, Stream-Bezeichner durch ARD geändert (_plugin fehlt)
-#	26.10.2020 dto (funk-Beiträge o. 'master' in href)
-def ARDStartVideoMP4(title, path, summ, tagline, img, geoblock, sub_path='', Merk='false', ID=''): 
-	PLog('ARDStartVideoMP4:'); 
-	title_org=title; summary_org=summ; thumb=img; tagline_org=tagline	# Backup 
-
-	li = xbmcgui.ListItem()
-	if ID == "ARDRetroStart":
-		li = home(li, ID=NAME)								# Home-Button -> Hauptmenü
-	else:
-		li = home(li, ID='ARD Neu')							# Home-Button
 	
-	page, msg = get_page(path)					
-	if page == '':	
-		msg1 = "Fehler in ARDStartVideoMP4: %s"	% title
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
-	PLog(len(page))
-	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Pyton3 geändert
+#----------------------------
+# auto-Stream master.m3u8 aus VideoUrls ermitteln, 
+#	via li in Einzelauflösungen zerlegen
+# Aufrufer ARDStartSingle (Länge VideoUrls > 0)
+#
+def ARDStartVideoHLSget(title, VideoUrls): 
+	PLog('ARDStartVideoHLSget:'); 
+	HLS_List=[]
+	for video in  VideoUrls:				
+		# PLog(video)
+		if '"auto"' in video:								# master.m3u8
+			href = stringextract('stream":"', '"', video)	# Video-Url
+			if href.startswith('http') == False:
+				href = 'https:' + href
+			quality = u'automatisch'
+			HLS_List.append('HLS automatische Anpassung ** auto ** auto ** %s#%s' % (title,href))
+			break
+			
+	li=''; img=''; geoblock=''; descr='';					# für Stream_List n.b.
+	Stream_List = ardundzdf.Parseplaylist(li, href, img, geoblock, descr, stitle=title, buttons=False)
+	# PLog(Stream_List)
+	HLS_List = HLS_List + Stream_List
 	
-	Plugins = blockextract('_plugin', page)	# wir verwenden nur Plugin1 (s.o.)
-	if len(Plugins) == 0:
-		msg1 = "keine .mp4-Quelle gefunden zu: %s" % title_org
-		MyDialog(msg1, '', '')	
-		return li
-	Plugin1	= Plugins[0]							
-	VideoUrls = blockextract('_quality', Plugin1)
-	PLog(len(VideoUrls))
+	return HLS_List
 
-	# Format Downloadliste "Qualität: niedrige | Titel#https://pdvideosdaserste.."
-	download_list = ARDStartVideoMP4get(title,VideoUrls)	# holt Downloadliste mit mp4-videos
-	PLog(len(download_list))
-	if len(download_list) == 0:
-		msg1 = "keine .mp4-Quelle gefunden zu: %s" % title_org
-		msg2 = u"Abspielen und Download sind leider nicht möglich"
-		MyDialog(msg1, msg2, '')	
-		return li
-	Plugin1	= Plugins[0]							
-	PLog(download_list[:1])									# 1. Element
-	
-	title=repl_json_chars(title); title_org=repl_json_chars(title_org); summary_org=repl_json_chars(summary_org); 
-	tagline=repl_json_chars(tagline); 
-
-	# Sofortstart mit letzter=höchster Qualität	
-	Plot = "%s||||%s" % (tagline, summary_org)		# || Code für LF (\n scheitert in router)
-	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart
-		PLog('Sofortstart: ARDStartVideoMP4')
-		video = download_list[-1]				# letztes Element = höchste Qualität
-		meta, href = video.split('#')
-		PLog(meta); PLog(href);
-		quality 	= meta.split('|')[0]		# "Qualität: sehr hohe | Titel.."
-		PLog(quality);
-		PlayVideo(url=href, title=title, thumb=img, Plot=Plot, sub_path=sub_path, Merk=Merk)
-		return
-		
-	for video in  download_list:
-		PLog(video[:100]);
-		meta, href = video.split('#')
-		quality 	= meta.split('|')[0]
-		lable = quality	+ geoblock;	
-		PLog(href); PLog(quality); PLog(tagline); PLog(summary_org); 
-
-		summ_lable = summary_org.replace('||', '\n')
-		summ_lable = u"%s\n\nSendung: %s" % (summ_lable, py2_decode(title_org))		
-		Plot = "%s||||%s" % (tagline, summary_org)				# || Code für LF (\n scheitert in router)
-		
-		sub_path=''# fehlt noch bei ARD
-		href=py2_encode(href); title_org=py2_encode(title_org);  img=py2_encode(img);
-		Plot=py2_encode(Plot); sub_path=py2_encode(sub_path); 
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
-			(quote_plus(href), quote_plus(title_org), quote_plus(img), 
-			quote_plus(Plot), quote_plus(sub_path))
-		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-			mediatype='video', tagline=tagline, summary=summ_lable) 
-		
-	if download_list:	
-		PLog(title_org);PLog(summary_org);PLog(tagline);PLog(thumb);
-		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline,thumb,high=-1)  # Downloadbutton(s)		
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-#----------------------------------------------------------------
-# 28.05.2020 json-Formate durch ARD geändert
-# 26.10.2020 dto (funk-Beiträge, href-Liste/Qualität)
-def ARDStartVideoMP4get(title, VideoUrls):	# holt Downloadliste mit mp4-videos für ARDStartVideoMP4
+#----------------------------
+# holt Downloadliste mit MP4-Videos
+# altes Format: "Qualität: niedrige | Titel#https://pdvideosdaserste.."
+# neues Format:	"MP4 Qualität: Full HD ** Bandbreite ** Auflösung ** Titel#Url"
+#
+def ARDStartVideoMP4get(title, VideoUrls):	
 	PLog('ARDStartVideoMP4get:'); 
 			
 	href=''; quality=''
 	download_list = []		# 2-teilige Liste für Download: 'title # url'
 	Format = 'Video-Format: MP4'
 	for video in  VideoUrls:
-		PLog(video[:200])
+		PLog(video[:100])
 		if 'stream":["' in video:							# mögliche: 2 Url's in Liste, Unterschied n.b.
 			href = stringextract('stream":["', '"', video)
 		else:
 			href = stringextract('stream":"', '"', video)	# Video-Url
-		if href == '' or '"auto"' in href:		
+		if href == '' or 'm3u8' in href:		
 			continue
 		if '.mp4' not in href:							# funk-Beiträge: ..src_1024x576_1500.mp4?fv=1
 			continue
 		if href.startswith('http') == False:
 			href = 'http:' + href
 		q = stringextract('_quality":', ',', video)		# Qualität (Bez. wie Original)
+		w=''; h=''
 		if q == '0':
-			quality = u'Qualität: niedrige'
+			quality = u'niedrige'
+			if "_width" not in video:
+				bitrate = u"256312"
+				w = "480"; h = "270"					# Probeentnahme							
 		if q == '1':
-			quality = u'Qualität: mittlere'
+			quality = u'mittlere'
+			if "_width" not in video:
+				bitrate = u"1024321"
+				w = "640"; h = "360"					# Probeentnahme							
 		if q == '2':
-			quality = u'Qualität: hohe'
+			quality = u'hohe'
+			if "_width" not in video:
+				bitrate = u"1812067"
+				w = "960"; h = "540"					# Probeentnahme							
 		if q == '3':
-			quality = u'Qualität: sehr hohe'
+			quality = u'sehr hohe'
+			if "_width" not in video:
+				bitrate = u"3621101"
+				w = "1280"; h = "720"					# Probeentnahme							
 		if q == '4':
-			quality = u'Qualität: sehr hohe'
-			
-		if quality != '' and href != '':					# kein mp4-Format gefunden
+			quality = u'Full HD'
+			if "_width" not in video:
+				bitrate = u"6501324"
+				w = "1920"; h = "1080"					# Probeentnahme							
+		
+		#if int(q) >= 2:								# Auflösung auswerten (ab hohe Qual.) - nicht sicher
+		if "_width" in video:							# Proben überschreiben
 			w = stringextract('_width":', ',', video)
 			h = stringextract('_height":', ',', video)
-			if w and h:
-				quality = "%s (%s x %s)" % (quality, w, h)
-			
-			PLog(quality)
-			download_title = "%s | %s" % (quality, title)	# download_list stellt "Download Video" voran 
-			download_list.append(download_title + '#' + href)	
+		if w and h:
+			res = "%sx%s" % (w,h)
+		else:
+			res = u"Auflösung ?"
+		
+		PLog(res)
+		title_url = u"%s#%s" % (title, href)
+		item = u"MP4 Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
+		download_list.append(item)	
 	return download_list			
 	
+			
 ####################################################################################################
 # Auflistung 0-9 (1 Eintrag), A-Z (einzeln) 
 # 10.11.2019 Verzicht auf Abgleich Button/Webseite (Performance, lange Ladezeit).

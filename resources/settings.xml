@@ -30,7 +30,7 @@
  
  <category label="Download Einstellungen">
  	<setting label="Downloads freischalten (auch im Kontextmenü möglich)" type="bool" id="pref_use_downloads" default="false"/>
-  	<setting label="alle verfuegbaren Video-Qualitaeten anbieten" type="bool" id="pref_show_qualities" default="false"/>
+  	<setting label="alle verfuegbaren Video-Qualitaeten anbieten" type="bool" id="pref_show_qualities" default="true"/>
  	<setting label="Dateinamen aus dem Titel erzeugen (statt Download_{Datum}_{Uhrzeit})" type="bool" id="pref_generate_filenames" default="false"/>
 	<setting label="Downloadverzeichnis (auch für Recording TV-Live)" type="folder" option="writeable" id="pref_download_path" default=""/>
 	<setting label="Downloads verschieben in dieses Verzeichnis" type="folder" source="" id="pref_VideoDest_path" default=""/>
@@ -77,16 +77,18 @@
  </category>
  
  <category label="Modul-Einstellungen" >
-	<!-- 
-   	<setting label="gesamtes Addon: Sofortstart mit MP4- statt HLS-Format" type="bool" id="pref_direct_mp4" default="false"/> 
-	<setting label="gesamtes Addon: bevorzugte Videoqualität" type="select" id="pref_quality" default="960x540"
-  		values="320x180|640x360|720x400|960x540|1280x720|1920x1080" />
+   	<setting label="gesamtes Addon: Videoformat bei Sofortstart" type="select" id="pref_direct_format" default="HLS (adaptiv)"
+		values="HLS (adaptiv)|MP4, VP9/Opus, VP8/Vorbis" /> 
+	<setting label="gesamtes Addon: Videoqualität bei Sofortstart" type="select" id="pref_direct_quality" default="auto (nur HLS)"
+  		values="auto (nur HLS)|320x180|640x360|720x400|960x540|1280x720|1920x1080" />
    <setting type="sep"/>
-   -->
   	<setting label="gesamtes Addon: Verzicht auf Homebuttons" type="bool" id="pref_nohome" default="false"/>
     <setting label="gesamtes Addon: <Zuletzt gesehen>-Liste verwenden" type="bool" id="pref_startlist" default="false"/>
     <setting label="gesamtes Addon: Video-Playlist verwenden" type="bool" id="pref_playlist" default="false"/>
    <setting type="sep"/>
+	<setting label="Modul FUNK: Videoeinstellung für MP4-Sofortstart" type="select" id="pref_funk_bandw" default="1500:960x540"
+  		values="400:320x180|650:640x360|900:720x404|1500:960x540|2500:1280x720|4000:1920x108|6000:1920x1080" />
+   	<setting label="Modul FUNK: Videos nach Publik.-Datum absteigend sortieren" type="bool" id="pref_sort_funk" default="true"/>
  	<setting label="Modul ARD Neu, Senderwahl: im Titel >Sender:< entfernen" type="bool" id="pref_disable_sender" default="false"/>
     <setting label="Modul ARD Neu: Mehr-Beiträge zeigen (thematisch ähnliche)" type="bool" id="pref_more" default="true"/>
   	<setting label="Modul phoenix: nur Beiträge mit Videos, keine Sendungshinweise" type="bool" id="pref_only_phoenix_videos" default="false"/>

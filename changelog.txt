@@ -12,6 +12,31 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+10.01.2021 3.6.8 Sofortstart-Erweiterungen 
+			Parseplaylist: Anpassung für Erweiterung - Listenrückgabe statt Buttons. 
+			Modul ARD Neu - Anpassung für Erweiterung): ARDStartSingle angepasst, neue 
+			Funktionen ARDStartVideoHLSget, ARDStartVideoMP4get, StreamsShow.
+			Modul util - Anpassung für Erweiterung: Korrek. Trennz. in test_downloads,
+			optionale Rückgabe Stream_List in Parseplaylist.
+			Modul util - Anpassung für Erweiterung: neue Funktion PlayVideo_Direct
+			(Url-Auswahl + Call -> PlayVideo).
+			Haupt-PRG - Anpassung für Erweiterung: StreamsShow aus ARD Neu hierher 
+			verlagert, Anpassungen in ZDF_getVideoSources + ZDFSourcesHBBTV, gelöscht:
+			ZDFotherSources + show_formitaeten.
+			Einzelupdate livesenderTV.xml: Streamlink WDR_ARD Event 2 wiederhergestellt.
+			get_summary_pre (Modul util): Code für ARD Neu aktualisiert. 
+			ARDStartSingle, get_page_content (Modul ARD Neu): Info-Text (summary) durch
+			Nutzung von get_summary_pre vereinheitlicht.
+			ZDF_get_content: Anpassung an geänderte Formate bei Hochkant-Videos.
+			Settings Download Einstellungen: Default für Option "alle verfuegbaren 
+			Video-Qualitaeten anbieten" auf true gesetzt (entspr. Wicki).
+			Settings Modul funk: 2 verlorengegangene Settings wiederhergestellt (Video-
+			einstellung, Sortierung).
+			Kontextmenü "Sofortstart EIN / Downl. AUS": Umstellung auf direkte Wertzuweisung 
+			statt bool-Switching (sicherer), Anpassungen Modul util (addDir, switch_Setting)
+			test_downloads(Modul util): aus Platzgründen "Video" aus Titel des Download-
+			Buttons entfernt.   
+			
 01.01.2021 3.6.7
 			Auswertung ZDF-HBBTV-Videoquellen: Anpassung ZDF_getVideoSources, neue 
 			Funktion ZDFSourcesHBBTV (bisher max. Auflösung 1280x720) - Auswertung

@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 13.12.2020
+#	Stand 09.01.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -77,6 +77,7 @@ DEBUG			= SETTINGS.getSetting('pref_info_debug')
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 ICON_TOOLS 				= "icon-tools.png"
+ICON_WARNING 			= "icon-warning.png"
 
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
@@ -715,12 +716,14 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				menu_entry = "Sofortstart AUS / Downl. EIN"
 				msg1 = "Video-Sofortstart AUS"
 				msg2 = "Downloads EIN"
+				ID = 'pref_video_direct,false|pref_use_downloads,true'
 			else:
 				menu_entry = "Sofortstart EIN / Downl. AUS"
 				msg1 = "Video-Sofortstart EIN"
 				msg2 = "Downloads AUS"
+				ID = 'pref_video_direct,true|pref_use_downloads,false'
 			icon = R(ICON_TOOLS)									# ständig: Umschalter Settings 
-			fp = {'ID': 'pref_video_direct', 'msg1': msg1,\
+			fp = {'ID': ID, 'msg1': msg1,\
 				'msg2': msg2, 'icon': quote_plus(icon), 'delay': '3000'} 
 			fparams_setting_sofortstart = "&fparams={0}".format(fp)
 			PLog("fparams_setting_sofortstart: " + fparams_setting_sofortstart[:100])
@@ -1915,9 +1918,9 @@ def ReadJobs():
 # 21.06.2020 zusätzl. Sendedatum pubDate
 #	in TEXTSTORE gespeichert wird die ges. html-Seite (vorher nur Text summ)
 #
-def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):	
+def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
-	PLog(skip_verf); PLog(skip_pubDate);
+	PLog(skip_verf); PLog(skip_pubDate); PLog(len(page))
 	
 	if 'Video?bcastId' in path:					# ARDClassic
 		fname = path.split('=')[-1]				# ../&documentId=31984002
@@ -1925,22 +1928,29 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):
 	else:	
 		fname = path.split('/')[-1]
 		fname.replace('.html', '')				# .html bei ZDF-Links abschneiden
+	if '?devicetype' in fname:					# ARDNew-Zusatz: ?devicetype=pc&embedded=true
+		fname = fname.split('?devicetype')[0]
 		
 	fpath = os.path.join(TEXTSTORE, fname)
 	PLog('fpath: ' + fpath)
 	
-	summ=''; page=''; pubDate=''
-	if os.path.exists(fpath):		# Text lokal laden + zurückgeben
-		PLog('lade lokal:') 
-		page =  RLoad(fpath, abs_path=True)
+	summ=''; pubDate=''
+	if page:							# Seite bereits übergeben
+		PLog(u"lade_aus_Übergabe: %s" % page[:80])
+		save_new = False
+	else:		
+		if os.path.exists(fpath):		# Text lokal laden + zurückgeben
+			page=''
+			PLog('lade_lokal:') 
+			page =  RLoad(fpath, abs_path=True)
 
-	save_new = False
-	if page == '' or '<!DOCTYPE html>' not in page: # Format vor 21.06.2020 (nur summ)
-		page, msg = get_page(path)	# extern laden
-		save_new = True
-	if page == '' or 'APOLLO_STATE__ = {}' in page:
-		return '', pubDate
-	
+		save_new = False
+		if page == '':
+			page, msg = get_page(path)	# extern laden
+			save_new = True
+		if page == '':
+			return '', pubDate
+			
 	# Decodierung plus bei Classic u-Kennz. vor Umlaut-strings (s.u.)
 	page = py2_decode(page)
 	verf='';
@@ -1973,27 +1983,40 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):
 					summ = "%s%s" % (pubDate[3:], summ)
 		
 	if 	ID == 'ARDnew':
-		page = page.replace('\\"', '*')									# Quotierung vor " entfernen, Bsp. \"query\"
-		if '/ard/player/' in path or '/ard/live/' in path:				# json-Inhalt
-			summ = stringextract('synopsis":"', '","', page)
-		else:									# HTML-Inhalt
-			summ = stringextract('synopsis":"', '"', page)
+		page = page.replace('\\"', '*')							# Quotierung vor " entfernen, Bsp. \"query\"
+		pubServ = stringextract('"name":"', '"', page)			# publicationService (Sender)
+		maturitytRating = stringextract('maturityContentRating":"', '"', page) # "FSK16"
+		maturitytRating = maturitytRating.replace('NONE', 'ohne')
+		duration = stringextract('"duration":', ',', page)		# Sekunden
+		if duration == '0':										# auch bei Einzelbeitrag möglich
+			duration=''
+		if duration and pubServ:										
+			duration = seconds_translate(duration)
+			duration = u'Dauer %s | %s' % (duration, pubServ)
+		if 	maturitytRating:
+			duration = u"%s | FSK: %s\n" % (duration, maturitytRating)	
+		
+		summ = stringextract('synopsis":"', '","', page)
 		summ = repl_json_chars(summ)
+			
 		if skip_verf == False:
-			if 'verfügbar bis:' in page:								# html mit Uhrzeit									
-				verf = stringextract('verfügbar bis:', '</p>', page)	# 
-				verf = cleanhtml(verf)
-			if verf:													# Verfügbar voranstellen
-				summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
+				verf = stringextract('availableTo":"', '","', page)
+				if verf:
+					verf = time_translate(verf)
+					summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
 		if skip_pubDate == False:		
 			pubDate = stringextract('"broadcastedOn":"', '"', page)
 			if pubDate:
-				pubDate = " | Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate	# 
-				if 'erfügbar bis' in summ:	
+				pubDate = time_translate(pubDate)
+				pubDate = u" | Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate	
+				if u'erfügbar bis' in summ:	
 					summ = summ.replace('\n\n', pubDate)					# zwischen Verfügbar + summ  einsetzen
 				else:
 					summ = "%s%s" % (pubDate[3:], summ)
-			
+					
+		if duration and summ:
+			summ = "%s\n%s" % (duration, summ)
+		
 	# für Classic ist u-Kennz. vor Umlaut-strings erforderlich
 	if 	ID == 'ARDClassic':
 		# summ = stringextract('description" content="', '"', page)		# geändert 23.04.2019
@@ -2052,10 +2075,9 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False):
 		#if u'"mediaTitle">' in page:									# nivht verw.									
 		#	mtitle = stringextract(u'"mediaTitle">', '"', page)		
 		summ = u"%s | %s\n\n%s" % (duration, mtitle, summ)
-		page = py2_encode(page)		
 			
-		 	
-	PLog('summ: ' + summ); PLog(verf)
+	page = py2_encode(page)
+	PLog('summ: ' + summ[:80]); PLog(save_new)
 	if summ and save_new:
 		msg = RSave(fpath, page)
 	# PLog(msg)
@@ -2425,22 +2447,94 @@ def check_Setting(ID):
 #---------------------------------------------------------------------------------------------------
 # schaltet boolean-Setting ID um und gibt Notification aus
 # Aufrufer: Kontextmenü (Umschalter Downloads/Sofortstart)
-#
+# Format ID, Bsp.: 'pref_video_direct,false|pref_use_downloads,true'
 def switch_Setting(ID, msg1,msg2,icon,delay):
 	PLog('switch_Setting:')
 	delay = int(delay)
 	
-	if SETTINGS.getSetting(ID) == 'true':
-		SETTINGS.setSetting(ID, 'false')
+	ID_list=[]
+	if '|' in ID:
+		ID_list = ID.split('|')
 	else:
-		SETTINGS.setSetting(ID, 'true')
+		ID_list = ID
+		
+	for item in ID_list:
+		ID, boolset = item.split(',')
+		SETTINGS.setSetting(ID, boolset)
 
 	xbmc.executebuiltin('Container.Refresh')
 	xbmcgui.Dialog().notification(msg1,msg2,icon,delay)
 	return	
-	
+
 ####################################################################################################
-# PlayVideo aktuell 28.11.2020: 
+# PlayVideo_Direct ruft PlayVideo abhängig von den Settings pref_direct_format + 
+# pref_direct_quality auf.
+# Listen-Formate:
+#		"HLS Einzelstream ## Bandbreite ## Auflösung ## Titel#Url"
+#		"MP4 Qualität: Full HD ## Bandbreite ## Auflösung ## Titel#Url"
+# Auflösung/Bitrate In beiden Listen wg. re.search-Sortierung erford.!
+# 
+def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, playlist='', HBBTV_List=''):	
+	PLog('PlayVideo_Direct:') 
+	
+	form = SETTINGS.getSetting('pref_direct_format')
+	qual = SETTINGS.getSetting('pref_direct_quality')
+	PLog("form: %s, qual: %s" % (form, qual))
+	mode=''
+	
+	if 'HLS' in form:
+		Stream_List = HLS_List
+	else:	
+		Stream_List = MP4_List
+		if 'auto' in qual:							# Sicherung gegen falsches MP4-Setting:
+			qual = '960x544'						# 	Default, falls 'auto' gesetzt
+	if len(Stream_List) == 0:
+		PLog('Stream_List leer')					# Fallback MP4: bei funk fehlt HLS
+		Stream_List = MP4_List
+		form = 'MP4'
+		msg1 = u"HLS-Video fehlt"
+		msg2 = u"verwende MP4"
+		icon = R(ICON_WARNING)
+		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)		
+
+	if 'HLS' in form:
+		if 'auto' in qual:
+			mode = 'Sofortstart: HLS/auto'
+			url = Stream_List[0].split('#')[-1]		# master.m3u8 Pos. 1
+		mode = 'Sofortstart: HLS/Einzelstream'
+		del Stream_List[0]							# Pos. 1 entf. (ohne Aufl.-Wert)	
+	else: 
+		mode = 'Sofortstart: MP4'
+		
+	# PLog(str(Stream_List)[:80])
+	# HLS: höchste Auflös. nach unten, x-Param.: Auflösung - s.a. ARDStartVideoHLSget
+	Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'lösung (\d+)', x).group(1)))
+	# Alternative:
+	# Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))	
+
+	url = Stream_List[-1].split('#')[-1]			# Default für HLS (nach Sort.) + MP4: höchste Url
+	PLog("Default_Url: %s" % url)
+	PLog(str(Stream_List)[:80])
+	
+		
+	if 'auto' not in qual:							# Abgleich width mit Setting
+		qual = qual.split('x')[0]
+		
+		for item in Stream_List:
+			PLog(item)
+			res = item.split('**')[2]
+			width = re.search("(\d+)", res).group(0)
+			PLog("width %s, qual %s" % (width, qual))
+			if int(width) >= int(qual):
+				url = item.split('#')[-1]
+				mode = '%s | width %s (Setting: %s)' % (mode, width, qual)
+				break 
+
+	PLog('Direct: %s | %s' % (mode, url))
+	PlayVideo(url, title, thumb, Plot, sub_path)
+	return 
+#---------------------------------------------------------------------------------------------------
+# PlayVideo: 
 #	Sofortstart + Resumefunktion, einschl. Anzeige der Medieninfo:
 #		nur problemlos, wenn das gewählte Listitem als Video (Playable) gekennzeichnet ist.
 # 		mediatype steuert die Videokennz. im Listing - abhängig von Settings (Sofortstart /
