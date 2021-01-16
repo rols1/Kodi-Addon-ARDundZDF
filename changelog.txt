@@ -12,6 +12,38 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.01.2021 3.6.9
+			Settings: Fix Schreibfehler Order -> Ordner (@grobiralf).
+			Modul 3sat: Header für Seitenabruf geändert (Austausch "Host" -> "Referer", 
+			sonst SSL-Error bei urlopen).
+			addDir (Modul util): Berücksichtigung Setting pref_watchlist beim Bau des 
+			Kontextmenüs für die Merkliste (@grobiralf)
+			Menü ARD Sportschau: Einbindung www.sportschau.de/handball-wm/index.html
+			(manuell, da fehlend in Dauer-Links). 
+			ARDSportPanel: Blockbereich erweitert für Beiträge ohne Video/Audio ('teaser'
+			statt 'teaser"', zusätzl. Auswertung von Bildstrecken, Sätze mit Titel "Ergeb-
+			nisse" oder "Spielplan" entfernt.
+			ARDSportVideo: im Fehlerdialog Link durch Titel ersetzt (Lesbarkeit), ausge-
+			sonderte Beiträge mittels Liste (JavaScript-Hinw., PRG-Hinw., redakt. Hinw...).
+			get_summary_pre (Modul util): Fix leeres summary-Ergebnis (' | ').
+			get_page_content (Modul ARD Neu): Fix fehlenden Param. "uhr" ("Verpasst" ohne 
+			Listen - Hinw. thecook22). 
+			unescape (Modul util): Ersetzung '&middot;' -> '|' (ARD Sportschau).
+			StreamsShow (Anzeige der Streamlisten): Streamlink aus Infotext entfernt (hier 
+			nicht vorgesehen).
+			ARDStartVideoMP4get (MP4-Streamliste ARD Neu): Param. bitrate sicherer plat-
+			ziert.
+			home (Modul util): 'set' in filterstatus für Homemenü ZDF gesetzt (fehlte für
+			Kontextmenü).
+			ZDFRubrikSingle: Code für Ausschluss-Filter neu platziert (wirksam auch für Mehr-
+			fachbeiträge). 
+			Modul playlist: Direktstart aus Kontextmenü hinzugefügt - Anpassungen in addDir
+			(util), items_add_rm (playlist) + PlayMonitor.
+			Modul playlist: : Option "gesehene Beiträge löschen" - Anpassungen in Settings,
+			get_playlist, PlayMonitor.
+			Downloads-Erweiterung: stückweiser Download mit Fortschrittsbalken - Anpassungen
+			in Settings, thread_getfile, neue Funktion get_chunks (@Jonas29).
+			
 10.01.2021 3.6.8 Sofortstart-Erweiterungen 
 			Parseplaylist: Anpassung für Erweiterung - Listenrückgabe statt Buttons. 
 			Modul ARD Neu - Anpassung für Erweiterung): ARDStartSingle angepasst, neue 

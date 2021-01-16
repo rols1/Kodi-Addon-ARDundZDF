@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 18.12.2020
+#	Stand: 11.01.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1220,8 +1220,10 @@ def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
 		MyDialog(msg1, '', '')
 		return li	
 	
-	headers = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken 
-	page,msg = get_page3sat(path=profile_url, apiToken=apiToken)	# 2. Playerdaten mit neuer Video-ID	
+	# 11.01.2021 Host nicht mehr akzeptiert - Austausch gegen Referer und
+	#	Nutzung get_page (Modul util)
+	headers = "{'Api-Auth': 'Bearer %s','Referer': 'https://www.3sat.de/'}" % apiToken 
+	page,msg = get_page(path=profile_url, header=headers)
 	
 	if page == '':			
 		msg1 = "SingleBeitrag2: Abruf fehlgeschlagen"
@@ -1240,7 +1242,8 @@ def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
 	video_ID = videodat_url.split('/')[-1]					#  ID z.B. 190521_sendung_nano
 	videodat_url = 'https://api.3sat.de/tmd/2/ngplayer_2_3/vod/ptmd/3sat/' + video_ID
 	PLog("videodat_url: " + videodat_url)
-	page,msg = get_page3sat(path=videodat_url, apiToken=apiToken)
+	page,msg = get_page(path=videodat_url, header=headers)
+	
 	if page == '':			
 		msg1 = "SingleBeitrag3: Abruf fehlgeschlagen"
 		PLog(msg1); PLog(msg)
@@ -1248,7 +1251,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
 	
 	if page == '':											# Alternative mediathek statt 3sat
 		videodat_url = 'https://api.3sat.de/tmd/2/ngplayer_2_3/vod/ptmd/mediathek/' + video_ID
-		page = get_page3sat(path=videodat_url, apiToken=apiToken)
+		page,msg = get_page(path=videodat_url, header=headers)
 		page = str(page)									# <type 'tuple'> möglich
 		PLog(page[:100])
 
@@ -1613,28 +1616,10 @@ def HourToMinutes(timecode):
 	
 	return str(minutes)
 #----------------------------------------------------------------  
-# nur für Anford. Videodaten mittels apiToken 	
-def get_page3sat(path, apiToken):
-	PLog("get_page3sat: " + path) 
-	PLog('Api-Auth: Bearer %s' % apiToken)
-	msg=''
-	try:
-		PLog(type(path))	
-		req = Request(path)
-		req.add_header('Api-Auth', 'Bearer ' + apiToken)
-		gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)  
-		gcontext.check_hostname = False	
-		r = urlopen(req, context=gcontext)
-		page = r.read()
-		PLog(page[:100])
-	except Exception as exception:
-		page = ''
-		msg = str(exception)
-		PLog(msg)
-	PLog(len(page))
-	
-	#page = page.decode('utf-8')			# scheitert in PY3 bei Sonderz. in json-Daten (Bsp. 37°)	
-	page = str(page)
-	return page, msg
+# 11.01.2021 Nutzung get_page (Modul util)
+# nur für Anford. Videodaten mittels apiToken 
+# def get_page3sat(path, apiToken):
+#----------------------------------------------------------------  
+
 
 

@@ -4,7 +4,7 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-#	Stand: 02.12.2020
+#	Stand: 14.01.2021
 
 from __future__ import absolute_import
 
@@ -65,7 +65,7 @@ def get_playlist():
 	new_list=[]; 							# Formatcheck: vor V3.6.0 fehlt status
 	save_new = False						#	neu / gesehen in den Zeilen
 	for item in PLAYLIST:	
-		if '###neu' not in item and '###gesehen' not in item:	# Format vor V3.6.0
+		if '###neu' not in item and '###gesehen' not in item and '###delete' not in item :	# Format vor V3.6.0
 			item = item  + '###neu'
 			save_new = True
 		new_list.append(item)
@@ -78,8 +78,9 @@ def get_playlist():
 # ----------------------------------------------------------------------
 #	Aufruf K-Menü (fparams_playlist_add, fparams_playlist_rm)
 #	url, title, thumb + Plot in fparams zusätzlich quotiert
+#	14.01.2021 playlist_play (Start außerhalb Tools-Menü)
 #
-def items_add_rm(action, url, title='', thumb='', Plot=''):		
+def items_add_rm(action, url='', title='', thumb='', Plot=''):		
 	PLog('items_add_rm: ' + action)
 	url = unquote_plus(url); title = unquote_plus(title);  			
 	thumb = unquote_plus(thumb); Plot = unquote_plus(Plot);
@@ -89,6 +90,15 @@ def items_add_rm(action, url, title='', thumb='', Plot=''):
 	new_url = url
 	doppler = False
 	msg2 = u"Eintrag hinzugefügt, Anzahl %s"
+	#------------------
+	if action == 'playlist_play':
+		if len(PLAYLIST) > 0:
+			play_list(u'PLAYLIST Direktstart')
+		else:
+			msg2 = u"keine Einträgefunden"
+			xbmcgui.Dialog().notification(msg1,msg2,ICON_PLAYLIST,3000)
+			
+		
 	#------------------
 	if action == 'playlist_add':
 		Plot=Plot.replace('\n', '||')
@@ -358,6 +368,25 @@ def PlayMonitor(mode=''):
 	monitor = xbmc.Monitor()
 	player = xbmc.Player()
 
+
+	if SETTINGS.getSetting('pref_delete_viewed') == 'true': # gesehene löschen
+		new_list = "\n".join(PLAYLIST)					#  AttributeError bei Löschen in PLAYLIST
+		new_list = py2_encode(new_list)
+		new_list = new_list.splitlines()
+		save_new=False; del_list=[]
+		for item in new_list:
+			if '###delete' in item:
+				save_new=True
+				del_list.append(item)
+		if save_new:
+			PLAYLIST = new_list							# PLAYLIST aktualisieren
+			for item in del_list:
+				PLog('Lösche: ' + item[:80])
+				new_list.remove(item)	
+			new_list = "\n".join(new_list)
+			RSave(PLAYFILE, new_list)						# Lock erf. falls auf Share
+			
+			
 	cnt=1
 	for item in PLAYLIST:
 		PLog(item)
@@ -385,7 +414,12 @@ def PlayMonitor(mode=''):
 			else:
 				break
 
-		item = item.replace("###neu", "###gesehen")
+		if SETTINGS.getSetting('pref_delete_viewed') == 'true':
+			item = item.replace("###neu", "###delete")
+			PLog('mark_delete: ' + item[:80])		
+		else:
+			item = item.replace("###neu", "###gesehen")
+			PLog('mark_gesehen: ' + item[:80])
 		PLAYLIST[cnt-2] = py2_encode(item)
 		new_list = "\n".join(PLAYLIST)
 		RSave(PLAYFILE, new_list)						# Lock erf. falls auf Share
@@ -407,11 +441,11 @@ def PlayMonitor(mode=''):
 		open(COUNT_STOP, 'w').close()
 		if ret == 1:		# autoclose, cancel: 0
 			break
-		
-		
-	xbmcgui.Dialog().notification("PLAYLIST: ","beendet",ICON_PLAYLIST,2000)
+			
+	xbmcgui.Dialog().notification("PLAYLIST: ","beendet",ICON_PLAYLIST,2000)					
 	if os.path.exists(PLAYLIST_ALIVE):					# Lebendsignal aus
-		os.remove(PLAYLIST_ALIVE)	
+		os.remove(PLAYLIST_ALIVE)
+		
 	return
 
 # ----------------------------------------------------------------------

@@ -576,6 +576,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	PLog('gridlist: ' + str(len(gridlist)))	
 
 	for s  in gridlist:
+		uhr=''
 		PLog("Mark10")
 		if 'EPG' not in ID:										# decor im 1. Drittel
 			pos = s.find('"decor"',100)							# möglich: Block reicht in Folgeblock
@@ -645,10 +646,13 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			summ = get_summary_pre(path='dummy', ID='ARDnew', skip_verf=False, skip_pubDate=False, page=s)
 		else:
 			summ = title
+		if "Sendedatum:" in summ:									# aus Rückabe get_summary_pre
+			uhr = summ.split(' ')[-2]
 	
 		title = repl_json_chars(title); summ = repl_json_chars(summ);
-		if ID == 'EPG' and uhr:									# Zeit im Titel, Langfass. tagline
-			title = "%s | %s" % (uhr, title) 
+		# ARDVerpasstContent: Zeit im Titel, Langfass. tagline:
+		if ID == 'EPG' and uhr:									
+			title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 
 		
 		PLog('Satz:');
 		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ[:60]); PLog(ID)
@@ -671,7 +675,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 				fparams=fparams, summary=summ, mediatype='')																							
 		else:
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
-				summ_new = get_summary_pre(path=href, ID='ARDnew') 
+				summ_new = get_summary_pre(path=href, ID='ARDnew')  # s.o. pre:
 				if 	summ_new:
 					summ = summ_new
 			
@@ -899,33 +903,35 @@ def ARDStartVideoMP4get(title, VideoUrls):
 		if href.startswith('http') == False:
 			href = 'http:' + href
 		q = stringextract('_quality":', ',', video)		# Qualität (Bez. wie Original)
-		w=''; h=''
+		q = str(q).strip()
+		PLog("q:" + q)
+		w=''; h=''; bitrate=0
 		if q == '0':
 			quality = u'niedrige'
+			bitrate = u"256312"
 			if "_width" not in video:
-				bitrate = u"256312"
 				w = "480"; h = "270"					# Probeentnahme							
 		if q == '1':
 			quality = u'mittlere'
+			bitrate = "1024321"
 			if "_width" not in video:
-				bitrate = u"1024321"
 				w = "640"; h = "360"					# Probeentnahme							
 		if q == '2':
 			quality = u'hohe'
+			bitrate = u"1812067"
 			if "_width" not in video:
-				bitrate = u"1812067"
 				w = "960"; h = "540"					# Probeentnahme							
 		if q == '3':
 			quality = u'sehr hohe'
+			bitrate = u"3621101"
 			if "_width" not in video:
-				bitrate = u"3621101"
 				w = "1280"; h = "720"					# Probeentnahme							
 		if q == '4':
 			quality = u'Full HD'
+			bitrate = u"6501324"
 			if "_width" not in video:
-				bitrate = u"6501324"
 				w = "1920"; h = "1080"					# Probeentnahme							
-		
+
 		#if int(q) >= 2:								# Auflösung auswerten (ab hohe Qual.) - nicht sicher
 		if "_width" in video:							# Proben überschreiben
 			w = stringextract('_width":', ',', video)
@@ -935,7 +941,7 @@ def ARDStartVideoMP4get(title, VideoUrls):
 		else:
 			res = u"Auflösung ?"
 		
-		PLog(res)
+		PLog(res); PLog(res) 
 		title_url = u"%s#%s" % (title, href)
 		item = u"MP4 Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
 		download_list.append(item)	

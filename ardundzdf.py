@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.6.8'
-VDATE = '10.01.2021'
+VERSION = '3.6.9'
+VDATE = '16.01.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2499,6 +2499,7 @@ def ARDSport(title):
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, fparams=fparams)			
 
+	# Dauerlinks am Fuß der Leitseite (Tab's am Kopf  können abweichen)
 	tabpanel = stringextract('<ul id="gseafooterlinks116-panel"', '</ul>', page) 
 	tabpanel = blockextract('<li>', tabpanel)
 	img = R(ICON_DIR_FOLDER)
@@ -2511,8 +2512,6 @@ def ARDSport(title):
 			href = stringextract('href="', '"', tab)
 			title = stringextract('">', '</a>', tab)
 		i=i+1
-		if 'Ergebnisse' in title:							# Switch zu Hintergrund, 
-			title = 'Hintergrund'							# Ergebnisse ohne Videos
 		if href.startswith('http') == False:
 			href = SBASE + href
 		href = href.replace('http://', 'https://')			# alte Links im Quelltext
@@ -2526,8 +2525,20 @@ def ARDSport(title):
 			thumb=img, fparams=fparams)			
 	
 	#-------------------------------------------------------# Zusätze
+	# beim Ziel ARDSportPanel den Titel in theme_list für 2. Durchlauf 
+	#	aufnehmen
+	title = "Handball-WM"									# 11.01.2021 Handball-WM (nicht in Fußlinks)
+	href = 'https://www.sportschau.de/handball-wm/index.html'
+	img =  'https://www.sportschau.de/handball-wm/handball-wm-leere-halle-100~_v-TeaserAufmacher.jpg'
+	tagline = 'Handball-WM findet ohne Zuschauer statt'
+	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
+		quote(href), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
+		thumb=img, tagline=tagline, fparams=fparams)			
+	
 	title = "Moderatoren"									# Moderatoren 
-	href = 'https://www.sportschau.de/sendung/index.html'
+	href = 'https://www.sportschau.de/sendung/moderatoren/index.html'
 	img =  'https://www1.wdr.de/unternehmen/der-wdr/unternehmen/bundesliga-sportschau-jessy-wellmer-100~_v-gseaclassicxl.jpg'
 	tagline = 'Bilder von Moderatoren, Slideshow'
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
@@ -2579,11 +2590,12 @@ def ARDSportEvents():
 #--------------------------------------------------------------------------------------------------
 # 28.04.2020 redirected Url 
 #	(s. Modul util) verwendet für https://tokio.sportschau.de/tokio2020/ s.u.
-# 2 Durchläufe bei Seiten mit Tabmenüs (vorerst nur Wintersport)
+# 2 Durchläufe bei Seiten mit Tabmenüs, 2. Lauf mit tab_path (Wintersport, 
+#	Formel 1, Handball-WM)
 def ARDSportPanel(title, path, img, tab_path=''):
 	PLog('ARDSportPanel:');
 	PLog(title); PLog(path); PLog(tab_path);
-	title_org = title; 
+	title_org = title; path_org=path
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
@@ -2601,40 +2613,46 @@ def ARDSportPanel(title, path, img, tab_path=''):
 		path = tab_path
 	page, msg = get_page(path=path)	
 	if page == '':
-		msg1 = 'Seite kann nicht geladen werden.'
+		msg1 = 'Seite kann nicht geladen werden: %s' % title
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li 
-	path_org = msg									# ev. redirected
-	PLog(path_org)
 	PLog(len(page))
 	
 	if path.endswith('/video/index.html'):			# Struktur abweichend
 		sendungen = blockextract('<a href="', page)
 	else:
-		sendungen = blockextract('class="teaser"', page, '</h3>')
+		sendungen = blockextract('class="teaser', page)
 		PLog(len(sendungen))
-		if pre_sendungen:							# Seite "TOR DES MONATS"
-			pre_sendungen.extend(sendungen)	
-			sendungen = pre_sendungen
-			tdm_seite=True
+	if pre_sendungen:							# Seite "TOR DES MONATS"
+		pre_sendungen.extend(sendungen)	
+		sendungen = pre_sendungen
+		tdm_seite=True
 	PLog(len(sendungen))
 	
 	# ev. erweitern
-	theme_list = ['Wintersport', 'Formel 1']						
+	theme_list = ['Wintersport', 'Handball-WM']						
 	if tab_path == '' and title in theme_list:			# 1. Durchlauf bei Tabmenüs
-		tablist = blockextract('class="collapsed  subressort', page)
+		if title == 'Formel 1':
+			tablist = blockextract('class="collapsed  subressort', page, '--googleoff')
+		else:
+			tablist = blockextract('class="collapsed  subressort', page)
 		PLog(len(tablist))
-		tabpanel=''
+		
+		found=False
 		if len(tablist) > 0:
 			path_end = "/%s/%s" % (path.split('/')[-2], path.split('/')[-1])
 			for tab in tablist:							# Unterseiten für Fußball, Wintersport, TV
+				tabpanel=''
 				PLog(path_end); PLog(tab[:200]);
 				if path_end in tab:
 					tabpanel = tab
 					PLog('tab_found')
+					found=True
 					break
-		PLog(tabpanel[:160])							# einschl. Teil-Link	
+					
+		PLog(found)
+		PLog(tabpanel[:160])							# einschl. Teil-Link
 				
 		if tabpanel:	
 			tabs = blockextract('<li>', tabpanel)
@@ -2647,11 +2665,13 @@ def ARDSportPanel(title, path, img, tab_path=''):
 				title = stringextract('">', '</a>', tab)
 				title = cleanhtml(tab); title = mystrip(title)
 				title = repl_json_chars(title)
+				if 'Spielplan' in title or 'Ergebnisse' in title: # skip
+					continue
 				href = stringextract('href="', '"', tab)
 				if href.startswith('http') == False:
 					href = SBASE + href
 					
-				PLog('Satz:'); 
+				PLog('Satz4:'); 
 				PLog(href); PLog(title);
 				title=py2_encode(title); href=py2_encode(href);	
 				img=py2_encode(img); 
@@ -2666,39 +2686,59 @@ def ARDSportPanel(title, path, img, tab_path=''):
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 
-	for s in sendungen:										# 'class="teaser"'
-		myclass = stringextract('div class="media mediaA ', '>', s)
-		PLog("myclass1: " + myclass)
-		
-		duration=''; summ=''; title=''; path=''
-		if myclass == '':
-			# abweichende Struktur, Bsp. https://tokio.sportschau.de/tokio2020/:
-			if 'class="icon icon_video"' in s or 'class="icon icon_audio"' in s:
-				base  = 'https://%s/' % path_org.split('/')[2]
-				img	= stringextract('img src="', '"', s)
-				if img.startswith('http') == False:
-					img	= base + img
-				path = base + stringextract('href="', '"', s)
-				if path.startswith('http') == False:
-					path = base + path
-				title = stringextract('title="', '"', s)
-				summ = stringextract('alt="', '"', s)
+	# Müll-Liste für continue:
+	garb_list = [u'Javascript-Fehler', u'Fragen und Antworten zu', u'class="tickerDate"'
+				u'//programm.ard.de', u'class="first"', u'class="list">', 
+				u'title="Darstellung der Seite'
+		]
+	for s in sendungen:										# 'class="teaser'		
+		duration=''; tag=''; summ=''; title=''; path=''; skip=False	
+		for garb in garb_list:								# Müllabfuhr
+			if garb in s:
+				skip=True
+		if skip:
+			continue
+			
+		if 'Mehr Beitr' in s:								# begrenzen
+			pos = s.find('Mehr Beitr')
+			s = s[:pos]
+		if 'text="mehr"' in s:								# begrenzen
+			pos = s.find('text="mehr"')
+			s = s[:pos]
+			
+		# abweichende Struktur, Bsp. https://tokio.sportschau.de/tokio2020/:
+		if 'class="icon icon_video"' in s or 'class="icon icon_audio"' in s:
+			PLog('icon_video, icon_audio')
+			base  = 'https://%s/' % path_org.split('/')[2]
+			img	= stringextract('img src="', '"', s)
+			if img.startswith('http') == False:
+				img	= base + img
+			path = base + stringextract('href="', '"', s)
+			if path.startswith('http') == False:
+				path = base + path
+			title = stringextract('title="', '"', s)
+			summ = stringextract('alt="', '"', s)
 		else:			
-			PLog("myclass2: " + myclass)
-			if "video" not in myclass and "audio" not in myclass:
-				continue
+			PLog('icon_video, icon_audio fehlen')
+			if "video" not in s and "audio" not in s:
+				tag = u'Beitrag [COLOR red] ohne Video / Audio[/COLOR]'
 			path = stringextract('href="', '"', s)	
 			if path.startswith('http') == False:						# http://www.ard.de/ ?
 				path = SBASE + stringextract('href="', '"', s)		
 			if 'uration"' in s:
 				duration = 	stringextract('duration">', '<', s)			# Video im Beitrag?
-			img	= stringextract('srcset="', '"', s)				# erste = größtes Bild
-			if img.startswith('//'):									# //www1.wdr.de/..
-				img	= 'https:' + img
+			img	= stringextract('srcset="', '"', s)						# erste = größtes Bild
+			if img:
+				if img.startswith('//'):								# //www1.wdr.de/..
+					img	= 'https:' + img
+				else:
+					if img.startswith('http') == False:					# /sendung/moderatoren/
+						img	= SBASE + img
 			else:
-				if img.startswith('http') == False:						# /sendung/moderatoren/
-					img	= SBASE + img
+				img = R("tv-ard-sportschau.png")						# Fallback
 			title = stringextract('class="headline">', '</h', s)
+			if title == '':
+				title = stringextract('jmDescription">', '</', s)
 			if title == '':
 				title = stringextract('<span>', '</strong>', s)			# Videosseite: Kleinbeiträge unten
 			if title == '':
@@ -2725,7 +2765,7 @@ def ARDSportPanel(title, path, img, tab_path=''):
 			if mediaDuration:
 				duration = "%s | %s" % (mediaDate, mediaDuration)
 
-		if title == '' or path == '':
+		if title == '' or path == '' or path.endswith('#'):
 			continue	
 
 		if duration:
@@ -2755,10 +2795,18 @@ def ARDSportPanel(title, path, img, tab_path=''):
 		PLog(path); PLog(img); PLog(title); PLog(summ); 
 		title=py2_encode(title)
 		path=py2_encode(path); img=py2_encode(img); summ_par=py2_encode(summ_par);
-		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
-			(quote(path), quote(title), quote(img), quote(summ_par))				
-		addDir(li=li, label=title, action="dirList", dirID="ARDSportVideo", fanart=img, thumb=img, 
-			fparams=fparams, summary=summ, mediatype=mediatype)	
+		
+		if 'data-more-text="bilder"' in s:
+			tagline = "Bildgalerie"
+			fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
+				quote(path), quote(img))
+			addDir(li=li, label=title, action="dirList", dirID="ARDSportBilder", fanart=img, 
+				thumb=img, tagline=tagline, fparams=fparams)				
+		else:
+			fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
+				(quote(path), quote(title), quote(img), quote(summ_par))				
+			addDir(li=li, label=title, action="dirList", dirID="ARDSportVideo", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)	
 		item_cnt = item_cnt +1	 
 
 	# Linkliste am Ende auswerten, z.b. ../wintersport/komplette-rennen/index.html,
@@ -2786,7 +2834,7 @@ def ARDSportPanel(title, path, img, tab_path=''):
 					summ = summ_txt
 			summ_par = summ.replace('\n', '||')		
 			
-			PLog('Satz:')
+			PLog('Satz5:')
 			PLog(path);PLog(img); PLog(title); PLog(summ); 
 			title=py2_encode(title)
 			path=py2_encode(path); img=py2_encode(img); summ_par=py2_encode(summ_par);
@@ -2796,9 +2844,10 @@ def ARDSportPanel(title, path, img, tab_path=''):
 				fparams=fparams, summary=summ, mediatype=mediatype)	
 			item_cnt = item_cnt +1	 
 												
+	PLog(item_cnt)
 	if item_cnt == 0:
 		msg1 = title_org
-		msg2 = 'keine Beiträge gefunden'
+		msg2 = u'keine Beiträge gefunden'
 		icon = R(ICON_DIR_FOLDER)
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
 	
@@ -2883,6 +2932,7 @@ def ARDSportHoerfunkSingle(title, path, img, summ):
 # Slideshow: ZDF_SlideShow
 def ARDSportBilder(title, path, img):
 	PLog('ARDSportBilder:'); 
+	PLog(title); PLog(path)
 	title_org = title
 
 	li = xbmcgui.ListItem()
@@ -2896,7 +2946,8 @@ def ARDSportBilder(title, path, img):
 		return li 
 	PLog(len(page))
 	
-	content = blockextract('class="teaser"', page)	
+#	content = blockextract('class="teaser"', page)	
+	content = blockextract('class="teaser', page)	
 	PLog(len(content))
 	if len(content) == 0:										
 		msg1 = 'Keine Bilder gefunden.'
@@ -2925,14 +2976,15 @@ def ARDSportBilder(title, path, img):
 		pos = rec.find('<!-- googleon: all -->')	# "Javascript-Fehler" entfernen
 		if pos > 0:
 			rec = rec[pos:]
-		if 'media mediaA gallery gallery' not in rec:					# Gallery im Beitrag?
-			continue												
+			
 		# größere Bilder erst auf der verlinkten Seite für einz. Moderator		
 		img_src		= stringextract('srcset="', '"', rec)				# erste = größtes Bild
 		if img_src.startswith('//'):									# //www1.wdr.de/..
 			img_src	= 'https:' + img_src
 		else:															# /sendung/moderatoren/
 			img_src	= SBASE + img_src
+		if img_src == 'https://www.sportschau.de':
+			continue
 			
 		headline	= stringextract('Fotostrecke:</span>', '</', rec)	# z.B. Name
 		headline	= mystrip(headline); headline = unescape(headline)
@@ -3050,10 +3102,11 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		PLog(video_src)
 	
 	if video_src == '':
-		msg1 = 'Leider kein Video gefunden. Seite:'
+		msg1 = u'Leider kein Video gefunden: %s' % title
 		msg2 = path
 		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+		return
 	
 		
 	li = xbmcgui.ListItem()
@@ -4973,7 +5026,14 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 					return
 			if pathtextfile:
 				RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
-			urlretrieve(url, fulldestpath)
+				
+			if SETTINGS.getSetting('pref_use_pgbar') == 'true':
+				msg = get_chunks(url, clen, fulldestpath)
+				if msg:
+					raise Exception(msg)
+			else:
+				urlretrieve(url, fulldestpath)
+			
 			# sleep(20)											# Debug
 			msg1 = 'Download abgeschlossen:'
 			msg2 = os.path.basename(fulldestpath) 				# Bsp. heute_Xpress.mp4
@@ -5008,6 +5068,53 @@ def get_content_length(url):
 	
 	PLog(clen)
 	return clen
+	
+#---------------------------
+# Download stückweise mit Fortschrittsbalken
+# Aufrufer: thread_getfile
+#
+def get_chunks(url, DL_len, fulldestpath):
+	PLog('get_chunks:')
+	
+	msg=''; DL_len = int(DL_len); get_len = 0	
+	
+	dp = xbmcgui.DialogProgress()
+	fname = fulldestpath.split('/')[-1]				# Dateiname
+	dp.create('%s: %s' % (humanbytes(DL_len), fname))
+	r = urlopen(url)
+	blowup = 1024									# Default 1 MByte	
+	CHUNK_len = 1024 * blowup
+	if CHUNK_len > DL_len:
+		CHUNK_len = DL_len
+	PLog("DL_len %s, CHUNK_len %s, fname %s" % (str(DL_len), str(CHUNK_len), fname))
+
+
+	with open(fulldestpath, 'wb') as f:
+		remain = DL_len
+		while remain > 0:	
+			chunk = r.read(CHUNK_len)
+			if not chunk:
+				break
+			f.write(chunk)
+			
+			chunk_len = len(chunk)
+			get_len = get_len + chunk_len
+			remain = DL_len - get_len
+			up = 100 * float(get_len) / float(DL_len)	# Prozentsatz
+			upround = int(round(up))					# int für DialogProgress erford.
+			PLog("up: %s, upround %s" % (str(up), str(upround)))
+			line = 'Länge chunk: %s, ausstehend %s von %s' % (str(chunk_len), remain, str(DL_len))
+			PLog(line)
+			dp.update(upround)
+			#xbmc.sleep(1000)	# Debug
+			up=up+up
+			if (dp.iscanceled()): 
+				msg="abgebrochen"
+				break
+			
+	r.close()
+	dp.close()
+	return msg
 	
 #---------------------------
 # Download-Routine mittels urlretrieve ähnlich thread_getfile
@@ -7632,7 +7739,7 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 	
 	page, msg = get_page(path=url)	
 	if page == '':
-		msg1 = 'Beitrag kann nicht geladen werden.'
+		msg1 = u'Beitrag kann nicht geladen werden: %s' % title
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li 
@@ -7909,6 +8016,18 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 				descr = "%s\n\n%s" % (tag, descr)
 			descr_par = descr.replace('\n', '||')
 			
+			if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
+				filtered=False
+				for item in AKT_FILTER: 
+					if 'DHB-Kader' in rec:
+						PLog(item); PLog(title);
+					if up_low(item) in py2_encode(up_low(rec)):
+						filtered = True
+						continue		
+				if filtered:
+					PLog('filtered: ' + title)
+					continue	
+			
 			PLog('12Satz:')
 			PLog(title);PLog(path);PLog(img_src);PLog(tag);PLog(descr); PLog(isvideo);  PLog(isgallery);
 			if isvideo == False:			# Mehrfachbeiträge
@@ -7918,7 +8037,6 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 					fparams="&fparams={'title': '%s', 'url': '%s', 'ID': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
 						(quote(title),  quote(path), 'ZDFRubrikSingle', quote(descr_par), quote(img_src))
 					addDir(li=li, label=lable, action="dirList", dirID="ZDF_Sendungen", fanart=img_src, 
-#						thumb=img_src, tagline=tag, summary=descr, fparams=fparams)
 						thumb=img_src, summary=descr, fparams=fparams)
 				else:						# Bildgalerie
 					fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))	
@@ -7927,15 +8045,6 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 					
 					
 			else:							# Einzelbeitrag direkt - anders als A-Z (ZDF_get_content)
-				if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
-					filtered=False
-					for item in AKT_FILTER: 
-						if up_low(item) in py2_encode(up_low(rec)):
-							filtered = True
-							continue		
-					if filtered:
-						# PLog('filtered: ' + title)
-						continue	
 						
 				if SETTINGS.getSetting('pref_load_summary') == 'true':		# Inhaltstext im Voraus laden?
 					skip_verf=False; skip_pubDate=False						# beide Daten ermitteln
@@ -8374,6 +8483,7 @@ def BarriereArmSingle(path, title, clus_title='', ID=''):
 #		ohne Zusatz (Web-Url) ?b=0-776&set-segment-duration=quality
 # 29.04.2019 Button für Livestream wieder entfernt (Streams wechseln), dto. Eintrag livesenderTV.xml
 # 20.12.2020 Eventstreams aufgenommen (analog ARDSport)
+# 12.11.2021 Einfügung zeitl. begrenzter Events (Wintersport, Handball-WM) - ähnl. ARDSportPanel
 #
 def ZDFSportLive(title):
 	PLog('ZDFSportLive:'); 
@@ -8391,7 +8501,7 @@ def ZDFSportLive(title):
 		return li 
 	PLog(len(page))
 	 	
-	# s.u. Ausfilterung Livestream-Satz, 
+	# s.u. Ausfilterung Livestream-Satz 
 	if 'ellipsis">Jetzt live<' in page:								# 1. LIVESTREAM läuft!
 		pos = page.find('>Derzeit live<')							# bei Bedarf anpassen
 		rec = page[pos:]
@@ -8417,18 +8527,24 @@ def ZDFSportLive(title):
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
 			fparams=fparams, summary=descr, mediatype=mediatype)
 
+	# Einfügung zeitl. begrenzter Events ähnlich ARDSportPanel (Wintersport,  Handball-WM)
+	theme_list = ['Wintersport|https://www.zdf.de/sport/wintersport', 
+		'Handball-WM|https://www.zdf.de/sport/handball/ihf-wm-weltmeisterschaft-live-livestream-spielplan-100.html'
+		]						
+	for theme in theme_list:
+		PLog('link-label">%s' % theme)
+		title, url = theme.split('|')
+		if 'link-label">%s' % title in page:
+			tag = "zeitlich begrenzter Event"
+			ID = 'ZDF_%s' % title
+			thumb=R("zdf-sport.png")
+			title=py2_encode(title); url=py2_encode(url);  
+			fparams="&fparams={'url': '%s', 'title': '%s', 'ID': '%s'}" % (quote(url), 
+				quote(title), ID)
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=thumb, 
+				thumb=thumb, tagline=tag, fparams=fparams)
 
-	title = 'Wintersport'											# 1. Wintersport
-	url = 'https://www.zdf.de/sport/wintersport'
-	ID = 'ZDFWintersport'
-	thumb=R("zdf-sport.png")
-	title=py2_encode(title); url=py2_encode(url);  
-	fparams="&fparams={'url': '%s', 'title': '%s', 'ID': '%s'}" % (quote(url), 
-		quote(title), ID)
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=thumb, 
-		thumb=thumb, fparams=fparams)
-
-	title = 'zurückliegende Sendungen'								# 2. weitere Sendungen
+	title = u'zurückliegende Sendungen'								# weitere Sendungen
 	url = 'https://www.zdf.de/sport/zdf-sportreportage'
 	ID = 'ZDFSportLive'
 	thumb=R("zdf-sport.png")
@@ -9870,8 +9986,8 @@ def StreamsShow(title, path, Plot, img, geoblock, ID, sub_path=''):
 		
 		PLog(title); PLog(tagline_org[:80]);
 		tagline = tagline_org
-		if title_href not in tagline_org:
-			tagline = "%s | %s" % (title_href, tagline_org)
+		if title not in tagline_org:
+			tagline = "%s | %s" % (title, tagline_org)
 	
 		label = "%d. %s | %s| %s" % (cnt, label, bitrate, res)
 		cnt = cnt+1

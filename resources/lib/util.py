@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 09.01.2021
+#	Stand 14.01.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -278,7 +278,7 @@ def home(li, ID):
 		name = 'Home: ' + "ZDF Mediathek"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_ZDF", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='', fparams=fparams)
+			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 		
 	if ID == 'ZDFmobile':
 		img = R('zdf-mobile.png')
@@ -709,7 +709,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_change=''; fparams_record=''; fparams_recordLive='';
 		fparams_setting_sofortstart=''; fparams_do_folder='';
 		fparams_rename=''; 
-		fparams_playlist_add=''; fparams_playlist_rm=''								
+		fparams_playlist_add=''; fparams_playlist_rm='';fparams_playlist_play=''							
 		
 		if filterstatus != 'set':									# Doppel im Hauptmenü vermeiden (s. home)
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# ständig: Umschalter Settings 
@@ -730,7 +730,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			fparams_setting_sofortstart = quote_plus(fparams_setting_sofortstart)			
 		
 		if merkname:												# Aufrufer ShowFavs (Settings: Ordner .. verwenden)
-			if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
+			if SETTINGS.getSetting('pref_watchlist') == 'true':		# Merkliste verwenden 
 				label = merkname
 				# Param name reicht für folder, filter, rename		
 				fp = {'action': 'rename', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
@@ -814,7 +814,12 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			title = stringextract("title':'", "'", f) 
 			Plot = Plot.replace('\n', '||')							# Plot hier : tagline+summary
 			
-			fp = {'action': 'playlist_rm', 'url': quote_plus(url)} 			# Url reicht
+			# Abfrage PLAYFILE) hier nicht mögl. (USERDATA fehlt in util)
+			fp = {'action': 'playlist_play'} 								# action reicht
+			fparams_playlist_play = "&fparams={0}".format(fp)
+			fparams_playlist_play = quote_plus(fparams_playlist_play) 		# Playlist direkt abspielen
+					
+			fp = {'action': 'playlist_rm', 'url': quote_plus(url)} 			# action + Url reichen
 			fparams_playlist_rm = "&fparams={0}".format(fp)
 			fparams_playlist_rm = quote_plus(fparams_playlist_rm) 			# Eintrag Playlist löschen
 					
@@ -840,27 +845,29 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		PLog("fparams_del: " + fparams_del[:100])
 		fparams_del = quote_plus(fparams_del)
 		
-		
-		# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
-		MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID))
+		# --------------------------------------------------------- Scipt-Defs:
 		commands = []
-		commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-				% (MY_SCRIPT, HANDLE, fparams_add)))
-		commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-				% (MY_SCRIPT, HANDLE, fparams_del)))
+		if SETTINGS.getSetting('pref_watchlist') == 'true':			# Merkliste verwenden 
+			# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID))
+			commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MY_SCRIPT, HANDLE, fparams_add)))
+			commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MY_SCRIPT, HANDLE, fparams_del)))
 	
-		if fparams_folder or fparams_rename:						# Aufrufer ShowFavs s.o.
-			PLog('set_folder_context: ' + merkname)
-			commands.append(('Merklisten-Eintrag umbenennen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-				% (MY_SCRIPT, HANDLE, fparams_rename)))
-			commands.append(('Merklisten-Eintrag zuordnen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-				% (MY_SCRIPT, HANDLE, fparams_folder)))
-			commands.append(('Merkliste filtern', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-				% (MY_SCRIPT, HANDLE, fparams_filter)))
-			commands.append(('Filter der  Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-				% (MY_SCRIPT, HANDLE, fparams_delete)))
-			commands.append(('Merklisten-Ordner bearbeiten', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-				% (MY_SCRIPT, HANDLE, fparams_do_folder)))
+		
+			if fparams_folder or fparams_rename:					# Aufrufer ShowFavs s.o.
+				PLog('set_folder_context: ' + merkname)
+				commands.append(('Merklisten-Eintrag umbenennen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MY_SCRIPT, HANDLE, fparams_rename)))
+				commands.append(('Merklisten-Eintrag zuordnen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MY_SCRIPT, HANDLE, fparams_folder)))
+				commands.append(('Merkliste filtern', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MY_SCRIPT, HANDLE, fparams_filter)))
+				commands.append(('Filter der  Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MY_SCRIPT, HANDLE, fparams_delete)))
+				commands.append(('Merklisten-Ordner bearbeiten', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+					% (MY_SCRIPT, HANDLE, fparams_do_folder)))
 				
 		if fparams_change or fparams_record or fparams_recordLive:	# Ausschluss-Filter EIN/AUS, ProgramRecord
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
@@ -878,9 +885,12 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			commands.append((menu_entry, 'RunScript(%s, %s, ?action=dirList&dirID=switch_Setting%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_setting_sofortstart)))
-			
-		if fparams_playlist_rm or fparams_playlist_add or fparams_playlist_add:	# mode="video"
+		
+		# mode="video"	
+		if fparams_playlist_play or fparams_playlist_rm or fparams_playlist_add or fparams_playlist_add:	
 			dirID = "resources.lib.playlist.items_add_rm"
+			commands.append(('PLAYLIST direkt starten', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
+					% (MY_SCRIPT, HANDLE, dirID, fparams_playlist_play)))
 			commands.append(('Zur PLAYLIST hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 					% (MY_SCRIPT, HANDLE, dirID, fparams_playlist_add)))
 			commands.append(('Aus PLAYLIST entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
@@ -925,7 +935,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		header = unquote(header);  
 		header = header.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 		header = json.loads(header)
-		PLog("header: " + str(header)[:80]);
+		PLog("header: " + str(header)[:100]);
 
 	# path = transl_umlaute(path)				# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
 	# path = unquote(path)						# scheitert bei quotierten Umlauten, Ersatz replace				
@@ -1417,7 +1427,7 @@ def unescape(line):
 		(u'undoacute;', u'o'), (u'&eacute;', u'e'), (u'&oacute;', u'o'), (u'&egrave;', u'e'),
 		(u'&atilde;', u'a'), (u'quot;', u' '), (u'&#10;', u'\n'),
 		(u'&#8222;', u' '), (u'&#8220;', u' '), (u'&#034;', u' '),
-		(u'&copy;', u' | ')):
+		(u'&copy;', u' | '), (u'&middot;', u'|')):
 		line = line.replace(*r)
 	return line
 #----------------------------------------------------------------  
@@ -2069,12 +2079,15 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 		summ = stringextract('class="einleitung small">', '<', page)
 		if summ == '':
 			summ = stringextract('class="text">', '<', page)
-		summ = unescape(summ)			
+		if summ == '':
+			summ = stringextract('teasertext">', '<strong>', page)
+		summ = unescape(summ);  summ = mystrip(summ)			
 		summ = cleanhtml(summ)	
 		summ = repl_json_chars(summ)
-		#if u'"mediaTitle">' in page:									# nivht verw.									
+		#if u'"mediaTitle">' in page:									# nicht verw.									
 		#	mtitle = stringextract(u'"mediaTitle">', '"', page)		
 		summ = u"%s | %s\n\n%s" % (duration, mtitle, summ)
+		summ = summ.replace(' | ', '')									# Korrek. Leer
 			
 	page = py2_encode(page)
 	PLog('summ: ' + summ[:80]); PLog(save_new)
