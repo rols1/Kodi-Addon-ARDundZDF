@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 11.01.2020
+#	Stand: 23.01.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1165,12 +1165,14 @@ def get_zdfplayer_content(li, content):
 
 #------------
 
-# 16.05.2017: Design neu, Videoquellen nicht mehr auf der Webseite vorhanden - (Ladekette ähnlich ZDF-Mediathek)
-# 22.05.2019: Design neu, Ladekette noch ähnlich ZDF-Mediathek, andere Parameter, Links + zusätzl. apiToken
-#
 # SingleBeitrag für Verpasst + A-Z
 #	hier auch m3u8-Videos verfügbar. 
-def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
+#
+# 16.05.2017: Design neu, Videoquellen nicht mehr auf der Webseite vorhanden - (Ladekette ähnlich ZDF-Mediathek)
+# 22.05.2019: Design neu, Ladekette noch ähnlich ZDF-Mediathek, andere Parameter, Links + zusätzl. apiToken
+# 21.01.2021 Nutzung build_Streamlists + build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
+#
+def SingleBeitrag(title, path, img_src, summ, dauer):
 	PLog('SingleBeitrag: ' + title)
 	PLog(dauer);PLog(summ);PLog(path)
 	
@@ -1233,7 +1235,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
 		MyDialog(msg1, msg2, msg3)
 		return li	
 	
-	page = page.replace('\\', '')
+	page = (page.replace('\\', '').replace('": "', '":"'))
 	PLog(page[:100])
 
 	videodat	= blockextract('ptmd-template":"',page)		# mehrfach möglich
@@ -1249,7 +1251,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
 		PLog(msg1); PLog(msg)
 		msg2 = msg
 	
-	if page == '':											# Alternative mediathek statt 3sat
+	if page == '':											# Alternative mediathek statt 3sat in Url
 		videodat_url = 'https://api.3sat.de/tmd/2/ngplayer_2_3/vod/ptmd/mediathek/' + video_ID
 		page,msg = get_page(path=videodat_url, header=headers)
 		page = str(page)									# <type 'tuple'> möglich
@@ -1262,11 +1264,13 @@ def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
 		PLog(videodat_url)		# zur Kontrolle
 		MyDialog(msg1, '', '')
 		return li	
+	page = (page.replace('" : "', '":"').replace('" : ', '":'))
+	PLog(page[:100])
 
 	if page:
 		formitaeten = blockextract('formitaeten', page)		# 4. einzelne Video-URL's ermitteln 
 		geoblock =  stringextract('geoLocation',  '}', page) 
-		geoblock =  stringextract('"value" : "',  '"', geoblock).strip()
+		geoblock =  stringextract('"value":"',  '"', geoblock).strip()
 		PLog('geoblock: ' + geoblock);
 		if 	geoblock == 'none':								# i.d.R. "none", sonst "de" - wie bei ARD verwenden
 			geoblock = ' | ohne Geoblock'
@@ -1279,72 +1283,23 @@ def SingleBeitrag(title, path, img_src, summ, dauer, Merk='false'):
 	download_list = []
 	if endDate:
 		dauer = u"%s | %s [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, pubDate, endDate)
-	tagline = title + " | " + dauer + " " + geoblock
-	Plot_par = tagline + "||||" + Plot_par
+	tagline = dauer + " " + geoblock
+	Plot_par = tagline + "||||" + Plot_par	
 	
-	thumb=img_src
-	for rec in formitaeten:									# Datensätze gesamt
-		# PLog(rec)		# bei Bedarf
-		typ = stringextract('\"type\" : \"', '\"', rec)
-		facets = stringextract('\"facets\" : ', ',', rec)	# Bsp.: "facets": ["progressive"]
-		facets = facets.replace('\"', '').replace('\n', '').replace(' ', '')  
-		PLog('typ: ' + typ); PLog('facets: ' + facets)
-		if typ == "h264_aac_f4f_http_f4m_http":				# manifest.f4m auslassen
-			continue
-		audio = blockextract('\"audio\" :', rec)			# Datensätze je Typ
-		# PLog(audio)	# bei Bedarf
-		
-		for audiorec in audio:					
-			url = stringextract('\"uri\" : \"',  '\"', audiorec)			# URL
-			quality = stringextract('\"quality\" : \"',  '\"', audiorec)
-			if quality == 'high':							# high bisher identisch mit auto 
-				continue
-			PLog(url); PLog(quality); 
-			
-			PLog('Mark0')
-			if url:		
-				if url.find('master.m3u8') > 0:			# m3u8 enthält alle Auflösungen					
-					title = quality + ' [m3u8]'
-					# Sofortstart - direkt, falls Listing nicht Playable			
-					if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'
-						PLog('Sofortstart: SingleBeitrag')
-						PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
-						# sub_path=''	# fehlt bei ARD - entf. ab 1.4.2019
-						PlayVideo(url=url, title=title_org, thumb=thumb, Plot=Plot_par, sub_path='')
-						return									
-
-					#  "auto"-Button + Ablage master.m3u8:
-					# Da 3Sat 2 versch. m3u8-Qualitäten zeigt,verzichten wir (wie bei ZDF_getVideoSources)
-					#	auf Einzelauflösungen via Parseplaylist
-					#	
-					li = ParseMasterM3u(li=li, url_m3u8=url, thumb=thumb, title=title, descr=Plot_par)
-			
-				else:									# m3u8 enthält Auflösungen high + med
-					title = 'Qualitaet: ' + quality + ' | Typ: ' + typ + ' ' + facets 
-
-					download_list.append(title + '#' + url)			# Download-Liste füllen	
-					tagline	= tagline.replace('||','\n')			# s. tagline in ZDF_get_content				
-					summ	= summ.replace('||','\n')				# 
-					tag	= 	tagline + '\n\n' + summ	
-					
-					title=py2_encode(title); url=py2_encode(url); thumb=py2_encode(thumb);
-					Plot_par=py2_encode(Plot_par);
-					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': ''}" %\
-						(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot_par))	
-					addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-						mediatype='video', tagline=tag) # summary=summ) 
-												
-	if SETTINGS.getSetting('pref_use_downloads'):
-		# high=0: 	1. Video bisher höchste Qualität:  [progressive] veryhigh
-		tagline=tag_org
-		li = test_downloads(li,download_list,title_org,Plot_par,tag,thumb,high=0)  # Downloadbutton(s)
+	#----------------------------------------------- 
+	# Nutzung build_Streamlists + build_Streamlists_buttons (Haupt-PRG),
+	#	einschl. Sofortstart
+	#
+	thumb=img_src; sub_path=''; scms_id=''
+	HLS_List,MP4_List,HBBTV_List = build_Streamlists(li,title,thumb,geoblock,tagline,\
+		sub_path,formitaeten,scms_id,ID="3sat")
 					
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 ####################################################################################################
 # 3Sat - TV-Livestream mit EPG
 #
-def Live(name, epg='', Merk='false'):	
+def Live(name, epg=''):	
 	PLog('Live: ' + name)
 	title2 = name
 	
@@ -1367,17 +1322,17 @@ def Live(name, epg='', Merk='false'):
 	img	= R(ICON_TV3Sat)
 	
 
-	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		PLog('Sofortstart: Live')
 		Plot	 = 'Live: ' + name + '\n\n' + epg + '\n\n' + summary
-		PlayVideo(url=m3u8link, title='3Sat Live TV', thumb=img, Plot=Plot, Merk=Merk)
+		PlayVideo(url=m3u8link, title='3Sat Live TV', thumb=img, Plot=Plot)
 		return	
 							
 	Plot	 = 'Live: ' + name + '\n\n' + epg
 	Plot_par = Plot.replace('\n', '||')
 	title=py2_encode(title); m3u8link=py2_encode(m3u8link); img=py2_encode(img);
 	Plot_par=py2_encode(Plot_par);
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': 'false'}" %\
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': ''}" %\
 		(quote_plus(m3u8link), quote_plus(title), quote_plus(img), quote_plus(Plot_par))
 	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 		mediatype='video', tagline=Plot) 		

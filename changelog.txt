@@ -12,6 +12,36 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+24.01.2021 3.7.0
+			Sofortstart-Erweiterung (Fortsetzung Update 3.6.8): Modul 3sat - Anpassung 
+			Haupt-PRG für gemeinsame Nutzung ZDF + 3sat (Anpassung ZDF_getVideoSources,
+			neue Funktionen build_Streamlists + build_Streamlists_buttons).
+			Sofortstart-Erweiterung: SingleSendung (ARD Classic) - rtmp-Auswertung entfernt
+			(obsolet), umgestellt auf  (HLS_List, MP4_List, gemeins. Codenutzung), Podcast-
+			Code bereinigt, parseLinks_Mp4_Rtmp entfernt (obsolet).
+			Sofortstart-Erweiterung: gekennz. + vorangestellter Titel im Infotext - Anpas-
+			sungen in SingleBeitrag (3sat), SingleSendung (ARD Classic), build_Streamlists,
+			build_Streamlists_buttons.
+			Sofortstart-Erweiterung: ARDStartSingle (Modul ARD Neu) - Nutzung 
+			build_Streamlists_buttons (Haupt-PRG).
+			ZDFRubrikSingle: Code für Ausschluss-Filter angepasst für lazyload-Beiträge.
+			Code für Ausschluss-Filter: erstes continue durch break ersetzt (1. Treffer
+			reicht), Anpassungen im Haupt-PRG und Modul ARD Neu.
+			Modul playlist: Löschroutine für gesehene Beiträge aus PlayMonitor verlagert
+			nach get_playlist, zusätzl. Button im Info-Menü für Playlist-Tools - Anpas-
+			sungen in playlist_tools, InfoAndFilter + neue Funktion start_script (Haupt-
+			PRG) - @grobiralf. 
+			Modul playlist: Dialog für bereits gesehene Beiträge hinzugefügt - @grobiralf.
+			Settings "Modul-Einstellungen": variable Werte für <Zuletzt gesehen>-Liste,
+			Anpassung in AddonStartlist und PlayVideo (Modul util).
+			Modul playlist: Abgleich mit <Zuletzt gesehen>-Liste beim Hinzufügen,
+			(@grobiralf) - Anpassungen in items_add_rm.
+			DownloadsList: 'Video' in 'Video ohne Beschreibung' (Infotext) entfernt
+			(da auch Aufnahme möglich).
+			Modul 3sat: "Merk"- Parameter entfernt (früher für Merkliste erford., obsolet.
+			ZDFSportLive: Erfassung zusätzl. Auswertungs-Cluster (zunächst nur für 
+			Handball-WM), Anpassung in ZDFRubrikSingle, router-kompat. Behandl. für title.
+
 16.01.2021 3.6.9
 			Settings: Fix Schreibfehler Order -> Ordner (@grobiralf).
 			Modul 3sat: Header für Seitenabruf geändert (Austausch "Host" -> "Referer", 
@@ -26,6 +56,7 @@ CHANGE HISTORY
 			ARDSportVideo: im Fehlerdialog Link durch Titel ersetzt (Lesbarkeit), ausge-
 			sonderte Beiträge mittels Liste (JavaScript-Hinw., PRG-Hinw., redakt. Hinw...).
 			get_summary_pre (Modul util): Fix leeres summary-Ergebnis (' | ').
+			Menü Sport Live im ZDF: Einbindung Handball-WM (@Weri) 
 			get_page_content (Modul ARD Neu): Fix fehlenden Param. "uhr" ("Verpasst" ohne 
 			Listen - Hinw. thecook22). 
 			unescape (Modul util): Ersetzung '&middot;' -> '|' (ARD Sportschau).
@@ -39,7 +70,7 @@ CHANGE HISTORY
 			fachbeiträge). 
 			Modul playlist: Direktstart aus Kontextmenü hinzugefügt - Anpassungen in addDir
 			(util), items_add_rm (playlist) + PlayMonitor.
-			Modul playlist: : Option "gesehene Beiträge löschen" - Anpassungen in Settings,
+			Modul playlist: Option "gesehene Beiträge löschen" - Anpassungen in Settings,
 			get_playlist, PlayMonitor.
 			Downloads-Erweiterung: stückweiser Download mit Fortschrittsbalken - Anpassungen
 			in Settings, thread_getfile, neue Funktion get_chunks (@Jonas29).

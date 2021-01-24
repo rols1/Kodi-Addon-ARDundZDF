@@ -4,7 +4,7 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-#	Stand: 14.01.2021
+#	Stand: 19.01.2021
 
 from __future__ import absolute_import
 
@@ -42,38 +42,47 @@ ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 PLAYFILE		= os.path.join(ADDON_DATA, "playlist") 
+STARTLIST		= os.path.join(ADDON_DATA, "startlist") 		# Videoliste mit Datum ("Zuletzt gesehen")
+
 PLAYLIST_ALIVE 	= os.path.join(ADDON_DATA, "playlist_alive")	# Lebendsignal für PlayMonitor (leer)
-COUNT_STOP 	= os.path.join(ADDON_DATA, "count_stop")		# Stopsignal für Countdown-Thread (leer)
+COUNT_STOP 	= os.path.join(ADDON_DATA, "count_stop")			# Stopsignal für Countdown-Thread (leer)
+MENU_STOP		= os.path.join(ADDON_DATA, "menu_stop") 		# Stopsignal für Tools-Menü (Haupt-PRG)
+
 
 ICON 			= 'icon.png'			# ARD + ZDF
 ICON_PLAYLIST	= R("icon-playlist.png")
 
 PLAY_TEMPL 		= u"%s###%s###%s###%s###%s"	#  % (title, url, thumb, Plot, status)
 
-maxvideos = 100							# wie Video-Startlist
-msg1 = "PLAYLIST ARDundZDF"
+maxvideos = 100							# z.Z. noch fester Wert
+PTITLE = "PLAYLIST ARDundZDF"
 PLog('Script playlist.py geladen')
 
 # ----------------------------------------------------------------------
 def get_playlist():
 	PLAYLIST=[]
 	if os.path.exists(PLAYFILE):			# PLAYLIST laden
-		PLAYLIST = RLoad(PLAYFILE, abs_path=True)		
+		PLAYLIST = RLoad(PLAYFILE, abs_path=True)
+		PLAYLIST = py2_encode(PLAYLIST)		
 		PLAYLIST = PLAYLIST.strip().splitlines()
 	PLog(len(PLAYLIST))
 	
-	new_list=[]; 							# Formatcheck: vor V3.6.0 fehlt status
-	save_new = False						#	neu / gesehen in den Zeilen
+	new_list=[]; 							# Bereinigung + Formatcheck: vor V3.6.0 fehlt status
+	save_new = False						#	in den Zeilen
 	for item in PLAYLIST:	
-		if '###neu' not in item and '###gesehen' not in item and '###delete' not in item :	# Format vor V3.6.0
+		if '###neu' not in item and '###gesehen' not in item and '###delete' not in item:	# Format vor V3.6.0
 			item = item  + '###neu'
 			save_new = True
-		new_list.append(item)
+		if '###delete' not in item: 
+			new_list.append(item)
+		else:
+			save_new = True
 	
 	if save_new:							# altes Format überschreiben
 		new_list= "\n".join(new_list)
-		RSave(PLAYFILE, new_list)		
-	
+		RSave(PLAYFILE, new_list)
+			
+	PLAYLIST = new_list
 	return PLAYLIST
 # ----------------------------------------------------------------------
 #	Aufruf K-Menü (fparams_playlist_add, fparams_playlist_rm)
@@ -87,42 +96,71 @@ def items_add_rm(action, url='', title='', thumb='', Plot=''):
 	PLog(action); PLog(url); PLog(title); PLog(thumb); PLog(Plot); 
 	
 	PLAYLIST = get_playlist()
-	new_url = url
-	doppler = False
+	new_url = str(url)
 	msg2 = u"Eintrag hinzugefügt, Anzahl %s"
 	#------------------
 	if action == 'playlist_play':
 		if len(PLAYLIST) > 0:
 			play_list(u'PLAYLIST Direktstart')
 		else:
-			msg2 = u"keine Einträgefunden"
+			msg2 = u"keine Einträge gefunden"
 			xbmcgui.Dialog().notification(msg1,msg2,ICON_PLAYLIST,3000)
 			
 		
 	#------------------
+	# Default: hinzufügen - bei Bedarf in Checks wieder entfernen.
+	#	Die Liste wird immer neu gespeichert (delete-Bereinigung in
+	#	get_playlist.
 	if action == 'playlist_add':
+		new_list = "\n".join(PLAYLIST)				# für schnellen Doppler-Check
+
 		Plot=Plot.replace('\n', '||')
 		new_line = PLAY_TEMPL % (title, url, thumb, Plot, 'neu')
-		new_line = py2_encode(new_line)
+		new_line = py2_encode(new_line)				# 'ascii' codec error ohne
+		new_line = str(new_line)					# 	encode + str
 		PLog("new_line: " + new_line)
 		PLAYLIST.append(new_line)
 		
-		for i in range(len(PLAYLIST)-1):			# Doppler-Check
-			item = PLAYLIST[i]
-			title, url, thumb, Plot, status = item.split('###')	# Status: neu, gesehen
-			if url in new_url:
-				PLAYLIST.remove(new_line)
-				doppler = True
-				msg2 = u"existiert bereits, Anzahl %s"
-				PLog("Doppler url: %s, new_url: %s" % (url, new_url))
-				break
+		startlist=[]; check_exit=False
+		check_startlist = SETTINGS.getSetting('pref_check_with_startlist')
+		if check_startlist == 'true':
+			if os.path.exists(STARTLIST):			# Startlist laden
+				startlist= RLoad(STARTLIST, abs_path=True)		
+				startlist=py2_encode(startlist)
+				startlist= startlist.strip().splitlines()
+				PLog(len(startlist))
+		
+		if new_url in new_list:						# Prio Doppler-Check 
+			PLAYLIST.remove(new_line)
+			msg2 = u"existiert bereits, Anzahl %s"
+			PLog("Doppler url: %s, new_url: %s" % (url, new_url))
+			check_exit = True
+				
+		if check_startlist == 'true' and check_exit == False: # Abgleich mit <Zuletzt gesehen>-Liste			
+			for start_item in startlist:
+				ts, title, start_url, thumb, Plot = start_item.split('###')
+				if start_url == new_url:
+					ts = datetime.datetime.fromtimestamp(float(ts))
+					ts = ts.strftime("%d.%m.%Y, %H:%M Uhr")
+					g1 = u"bereits gesehen am %s" % ts
+					g2 = u"trotzdem hinzufügen?"
+					PLog("url in <Zuletzt gesehen>-Liste: %s, Datum: %s" % (url, ts))
+					PLog("new_url %s" % (new_url))
+					ret = MyDialog(msg1=g1, msg2=g2, msg3='', ok=False, cancel='Abbrechen', yes='JA', heading=PTITLE)
+					PLog("ret: " + str(ret))
+					if ret != 1: 
+						PLAYLIST.remove(new_line)
+						msg2 = u"Einfügen abgebrochen, Anzahl %s"
+					else:
+						pass					# msg2 wie eingangs
+					break						# stop Abgleich immer
 		
 		cnt = len(PLAYLIST)		
 		new_list = "\n".join(PLAYLIST)
-		RSave(PLAYFILE, new_list)		
-		msg2 = msg2 % cnt
+		RSave(PLAYFILE, new_list)
+		msg2 = msg2 % str(cnt)
 		PLog(msg2)	
-		xbmcgui.Dialog().notification(msg1,msg2,ICON_PLAYLIST,3000)
+		xbmcgui.Dialog().notification(PTITLE,msg2,ICON_PLAYLIST,3000)
 
 	#------------------
 	if action == 'playlist_rm':
@@ -143,20 +181,29 @@ def items_add_rm(action, url='', title='', thumb='', Plot=''):
 			msg2 = u"Eintrag nicht gefunden, Anzahl %s"
 	
 		cnt = len(PLAYLIST)	
-		msg2 = msg2 % cnt
+		msg2 = msg2 % str(cnt)
 		PLog(msg2)	
-		xbmcgui.Dialog().notification(msg1,msg2,ICON_PLAYLIST,3000)
+		xbmcgui.Dialog().notification(PTITLE,msg2,ICON_PLAYLIST,3000)
 
 # ----------------------------------------------------------------------
-#	Aufruf K-Menü (fparams_playlist_add), action nicht verwendet
-#	url, title, thumb + Plot in fparams zusätzlich quotiert
-#
-def playlist_tools(action, url, title='', thumb='', Plot=''):		
+# Aufruf K-Menü (fparams_playlist_add), action nicht verwendet
+# url, title, thumb + Plot in fparams zusätzlich quotiert
+# 17.01.2020 MENU_STOP zur Verhind. von Rekursion nach zusätzl. Aufruf 
+#	via Button im Info-Menü.
+# 
+def playlist_tools(action, url, title='', thumb='', Plot='', menu_stop=''):		
 	PLog('playlist_tools:')
 	url = unquote_plus(url); title = unquote_plus(title);  			
 	thumb = unquote_plus(thumb); Plot = unquote_plus(Plot);
-	# PLog(url); PLog(title); PLog(thumb); PLog(Plot); 
+	# PLog(url); PLog(title); PLog(thumb); PLog(Plot);
+	PLog(menu_stop) 
 	PLAYLIST = get_playlist()
+	
+	if menu_stop == 'true':								# verhindert Rekurs. in start_script (Haupt-PRG)
+		if os.path.exists(MENU_STOP):	
+			return
+		else:
+			open(MENU_STOP, 'w').close()				# Entfernung in InfoAndFilter (Haupt-PRG)
 
 	dialog = xbmcgui.Dialog()
 	# bei Bedarf ergänzen: u"Liste endlos abspielen", u"Liste zufallgesteuert abspielen"
@@ -170,12 +217,14 @@ def playlist_tools(action, url, title='', thumb='', Plot=''):
 	if len(PLAYLIST) == 0:
 		xbmcgui.Dialog().notification("PLAYLIST: ","noch leer",ICON_PLAYLIST,2000)
 		# return											# Verbleib in Tools für get_archiv
-
+	
+	noloop=True
 	title = u"PLAYLIST-Tools"
 	ret = dialog.select(title, select_list)					# Auswahl Tools
 	PLog("ret: %d" % ret)
 	if ret == -1 or ret == len(select_list):				# Tools-Menü verlassen
 		return
+		
 	elif ret == 0 and len(PLAYLIST) > 0:
 		play_list(title)									# PLAYLIST starten / Titel abspielen
 		return												# Tools-Menü verlassen
@@ -200,7 +249,7 @@ def playlist_tools(action, url, title='', thumb='', Plot=''):
 		return	
 
 	playlist_tools(action='play_list', url='')				# wieder zur Liste, auch nach PlayMonitor
-		
+
 # ----------------------------------------------------------------------
 def play_list(title, mode=''):		
 	PLog('play_list:')
@@ -228,8 +277,9 @@ def play_list(title, mode=''):
 			if ret ==1:
 				if os.path.exists(PLAYLIST_ALIVE):					# Lebendsignal aus
 					os.remove(PLAYLIST_ALIVE)
-					play_list(title, mode='')						# neuer Startversuch	
-	
+					play_list(title, mode='')						# neuer Startversuch
+		return
+
 	# alternativ als Kodi-Liste zeigen (dirID="PlayVideo")
 	if mode == 'show':												# PLAYLIST zeigen
 		PLog('show:')
@@ -237,6 +287,7 @@ def play_list(title, mode=''):
 		new_list = build_textlist(PLAYLIST)
 		dialog.textviewer(title_org, new_list,usemono=True)
 
+	# Param. "del_single" passt nicht mehr, bleibt aber unverändert 
 	if mode == 'del_single':										# PLAYLIST Auswahl löschen
 		PLog('del_single:')
 		title_org = u"%s: einzelne Titel löschen" % title
@@ -361,31 +412,14 @@ def PlayMonitor(mode=''):
 	PLog('PlayMonitor:')
 	PLAYLIST = get_playlist()
 	
+	OSD = xbmcgui.Dialog()
+	
 	mtitle = u"PLAYLIST-Tools"
 	PLAYDELAY 		= 10	# Sek.
 	open(PLAYLIST_ALIVE, 'w').close()					# Lebendsignal ein - Abgleich play_list
 	xbmc.sleep(1000)									# Start-Info abwarten
 	monitor = xbmc.Monitor()
-	player = xbmc.Player()
-
-
-	if SETTINGS.getSetting('pref_delete_viewed') == 'true': # gesehene löschen
-		new_list = "\n".join(PLAYLIST)					#  AttributeError bei Löschen in PLAYLIST
-		new_list = py2_encode(new_list)
-		new_list = new_list.splitlines()
-		save_new=False; del_list=[]
-		for item in new_list:
-			if '###delete' in item:
-				save_new=True
-				del_list.append(item)
-		if save_new:
-			PLAYLIST = new_list							# PLAYLIST aktualisieren
-			for item in del_list:
-				PLog('Lösche: ' + item[:80])
-				new_list.remove(item)	
-			new_list = "\n".join(new_list)
-			RSave(PLAYFILE, new_list)						# Lock erf. falls auf Share
-			
+	player = xbmc.Player()			
 			
 	cnt=1
 	for item in PLAYLIST:
@@ -402,7 +436,7 @@ def PlayMonitor(mode=''):
 		msg2 = "Titel %d von %d" % (cnt, len(PLAYLIST))
 		xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,2000)
 		cnt = cnt+1	
-		PlayVideo(url, title, thumb, Plot, playlist="true")
+		PlayVideo(url, title, thumb, Plot, playlist="")	# playlist="true": skip Startliste
 		
 		while not monitor.waitForAbort(2):
 			# Notification ev. ergänzen: player.getTotalTime(),

@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 08.01.2021
+#	Stand 24.01.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -662,7 +662,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			for item in AKT_FILTER: 
 				if up_low(item) in py2_encode(up_low(s)):
 					filtered = True
-					continue		
+					break		
 			if filtered:
 				# PLog('filtered: ' + title)
 				continue		
@@ -706,11 +706,11 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 #	ARDStartVideoStreams + ARDStartVideoMP4, Änderung mehrzS (ID -> Flag, Rekurs.-Stop)
 # 05.01.2021 Anpassung für Sofortstart-Format: HLS_List + MP4_List -> PlayVideo_Direct
 #	(Streamwahl -> PlayVideo)
-#	Ohne Sofortstart: HLS_List + MP4_List -> StreamsShow -> PlayVideo
-#	(Haupt-PRG) -> 
+# 21.01.2021 Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
 #
 def ARDStartSingle(path, title, summary, ID='', mehrzS=''): 
 	PLog('ARDStartSingle: %s' % ID);
+	title_org = title
 	
 	page, msg = get_page(path)
 	if page == '':	
@@ -741,11 +741,6 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	else:
 		li = home(li, ID='ARD Neu')							# Home-Button
 
-	# summ = get_summary_pre(path, ID='ARDnew', page=page)	# entfällt mit summary aus get_page_content 
-	summ = summary.replace('||', '\n')
-
-	PLog('summ:' + summ)
-
 	img 		= stringextract('src":"', '"', page)
 	img 		= img.replace('{width}', '640')
 	sub_path	= stringextract('_subtitleUrl":"', '"', page)
@@ -772,14 +767,11 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 		if href.startswith('//'):
 			href = 'http:' + href
 		PLog('Livestream_Abzweig: ' + href)
-		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summ)
+		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summary)
 	
 	mediatype=''										# Kennz. Video für Sofortstart 
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
-
-	tagline = summ
-	Plot = tagline.replace('\n','||')
 	
 	# -----------------------------------------			# Extrakt Videoquellen
 	Plugins = blockextract('_plugin', page)				# wir verwenden nur Plugin1 (s.o.)
@@ -791,6 +783,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
 	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
 	#	fehlende Bandbreiten + Auflösungen werden ergänzt
+	HBBTV_List=''										# nur ZDF
 	HLS_List = ARDStartVideoHLSget(title, VideoUrls)	# Extrakt HLS
 	PLog("HLS_List: " + str(HLS_List)[:80])
 	MP4_List = ARDStartVideoMP4get(title, VideoUrls)	# Extrakt MP4
@@ -799,43 +792,21 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	PLog("download_list: " + str(MP4_List)[:80])
 	
 	if not len(HLS_List) and not len(MP4_List):
-		msg = 'keine Streamingquelle gefunden - Abbruch' 
-		PLog(msg)
 		msg1 = "keine Streamingquelle gefunden: %s"	% title
+		PLog(msg1)
 		MyDialog(msg1, '', '')	
 		return li
 	
-	# Sofortstart HLS / MP4 - abhängig von Settings	 	# Sofortstart
-	if SETTINGS.getSetting('pref_video_direct') == 'true':	
-		PlayVideo_Direct(HLS_List, MP4_List, title, img, summ, sub_path)
-		return li		
-	
-	# -----------------------------------------			# Buttons Einzelauflösungen
-	PLog('Satz:')
-	title_list=[]
-	PLog(title); PLog(tagline[:60]); PLog(img); PLog(path); PLog(sub_path);
-	title_org = title
-	title_hls 	= u"[COLOR blue]Streaming-Formate[/COLOR]"
-	title_mp4 = "[COLOR red]MP4-Formate und Downloads[/COLOR]"
-	title_hls=repl_json_chars(title_hls); title_mp4=repl_json_chars(title_mp4);
-	summ=repl_json_chars(summ);
-	# title_list: Titel + Dict-ID + Anzahl Streams
-	title_list.append("%s###%s###%s" % (title_hls, 'ARDNEU_HLS_List', len(HLS_List)))	
-	title_list.append("%s###%s###%s" % (title_mp4, 'ARDNEU_MP4_List', len(MP4_List)))	
-
-	path=py2_encode(path); Plot=py2_encode(Plot); img=py2_encode(img); 
-	geoblock=py2_encode(geoblock); sub_path=py2_encode(sub_path); 
-	title_org=py2_encode(title_org)
-	
-	for item in title_list:
-		title, Dict_ID, anz = item.split('###')
-		if anz == '0':									# skip leere Liste
-			continue
-		
-		fparams="&fparams={'path': '%s', 'title': '%s', 'Plot': '%s', 'img': '%s', 'geoblock': '%s', 'ID': '%s', 'sub_path': '%s'}" \
-			% (quote(path), quote(title_org), quote(Plot), quote(img), quote(geoblock), Dict_ID, quote(sub_path))
-		addDir(li=li, label=title, action="dirList", dirID="StreamsShow", fanart=img, thumb=img, 
-			fparams=fparams, tagline=tagline, mediatype=mediatype)
+	#----------------------------------------------- 
+	# Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
+	# 
+	PLog('Lists_ready:');
+	# summ = get_summary_pre(path, ID='ARDnew', page=page)	# entfällt mit summary aus get_page_content 
+	Plot = "Titel: %s\n\n%s" % (title_org, summary)				# -> build_Streamlists_buttons
+	PLog('Plot:' + Plot)
+	thumb = img; ID = 'ARDNEU'
+	ardundzdf.build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID)
 	
 	# -----------------------------------------		# mehr (Videos) zur Sendung
 	if mehrzS:										# nicht nochmal "mehr" zeigen
@@ -1068,7 +1039,7 @@ def SendungenAZ_ARDnew(title, button):
 			for item in AKT_FILTER: 
 				if up_low(item) in py2_encode(up_low(s)):
 					filtered = True
-					continue		
+					break		
 			if filtered:
 				# PLog('filtered: ' + title)
 				continue		

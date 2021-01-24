@@ -601,8 +601,6 @@ def get_Setting(ID):
 def UtfToStr(line):
 	PLog('UtfToStr:')
 	return py2_encode(line)			# wirkt nur in Python2: Unicode -> str
-		
-# def BytesToUnicode(line) - ersetzt durch py2_decode
 	
 def up_low(line, mode='up'):
 	try:
@@ -655,7 +653,6 @@ def up_low(line, mode='up'):
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='',\
 		cmenu=True, sortlabel='', merkname='', filterstatus='', start_end=''):
 	PLog('addDir:');
-	PLog(type(label))
 	label_org=label				# s. 'Job löschen' in K-Menüs
 	label=py2_encode(label)
 	PLog('addDir_label: {0}, action: {1}, dirID: {2}'.format(label[:100], action, dirID))
@@ -2637,9 +2634,10 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='')
 		
 	if url_check(url, caller='PlayVideo'):							# Url-Check
 		startlist = SETTINGS.getSetting('pref_startlist')
+		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
 		if  startlist == 'true' and playlist == '':					# Startliste  (skip bei playlist-Url)
 			PLog("STARTLIST: " + STARTLIST)
-			maxvideos = 100											# dto. AddonStartlist
+			PLog(maxvideos)
 			startlist=''
 			if os.path.exists(STARTLIST):
 				startlist= RLoad(STARTLIST, abs_path=True)			# Video-Startliste ergänzen
@@ -2649,7 +2647,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='')
 			else:
 				startlist=[]
 			PLog(len(startlist))
-			if len(startlist) >= maxvideos:							# 1. Eintrag löschen (ältester)
+			if len(startlist) >= int(maxvideos):					# 1. Eintrag löschen (ältester)
 				del startlist[0]
 			
 			dt = datetime.datetime.now()							# Format 2017-03-09 22:04:19.044463
@@ -2717,6 +2715,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='')
 def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall=''):
 	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
 	Plot=transl_doubleUTF8(Plot)
+	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
 				
 	if url.startswith('http') == False:			# lokale Datei
 		if url.startswith('smb://') == False:	# keine Share

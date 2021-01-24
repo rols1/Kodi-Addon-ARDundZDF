@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.6.9'
-VDATE = '16.01.2021'
+VERSION = '3.7.0'
+VDATE = '24.01.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -542,23 +542,15 @@ def InfoAndFilter():
 	addDir(li=li, label=title, action="dirList", dirID="AddonInfos", fanart=R(FANART), 
 		thumb=R(ICON_PREFS), tagline=tag, summary=summ, fparams=fparams)	
 			
-	if SETTINGS.getSetting('pref_startlist') == 'true':		# Button für LastSeen-Funktion	
+	if SETTINGS.getSetting('pref_startlist') == 'true':		# Button für LastSeen-Funktion
+		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
 		title = u"Zuletzt gesehen"	
-		tag = u"Liste der im Addon gestarteten Videos (max. 100 Einträge)." 
+		tag = u"Liste der im Addon gestarteten Videos (max. %s Einträge)." % maxvideos
 		tag = u"%s\n\nSortierung absteigende (zuletzt gestartete Videos zuerst)" % tag
 		summ = u"Klick startet das Video (falls noch existent)"
 		fparams="&fparams={}" 
 		addDir(li=li, label=title, action="dirList", dirID="AddonStartlist", fanart=R(FANART), 
 			thumb=R("icon-list.png"), tagline=tag, summary=summ, fparams=fparams)	
-			
-	''' Problem beim Abspielen der Liste - s. PlayMonitor (Modul playlist)
-	if SETTINGS.getSetting('pref_playlist') == 'true':		# Button für Playlist	
-		title = u"PLAYLIST-Tools"	
-		tag = u"Abspielen und Verwaltung der addon-internen Playlist" 
-		fparams="&fparams={'action': 'do_tools', 'url': ''}" 
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.playlist.playlist_tools",\
-			fanart=R(FANART), thumb=R("icon-playlist.png"), tagline=tag, fparams=fparams)	
-	'''	
 		
 	if SETTINGS.getSetting('pref_usefilter') == 'true':											
 		title = u"Filter bearbeiten "					# Button für Filter
@@ -566,14 +558,70 @@ def InfoAndFilter():
 		fparams="&fparams={}" 
 		addDir(li=li, label=title, action="dirList", dirID="FilterTools", fanart=R(FANART), 
 			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)		
+
+	# Problem beim Abspielen der Liste - s. PlayMonitor (Modul playlist)
+	if SETTINGS.getSetting('pref_playlist') == 'true':
+		MENU_STOP = os.path.join(ADDON_DATA, "menu_stop") 	# Stopsignal für Tools-Menü (Haupt-PRG)								
+		if os.path.exists(MENU_STOP):						# verhindert Rekurs. in start_script 
+			os.remove(MENU_STOP)							# Entfernung in playlist_tools
+			
+		title = u"PLAYLIST-Tools"					# Button für PLAYLIST-Tools
+		myfunc="resources.lib.playlist.playlist_tools"
+		fparams_add = quote('{"action": "playlist_add", "url": "", "menu_stop": "true"}') # hier json-kompat.
+		
+		tag = u"Abspielen und Verwaltung der addon-internen Playlist"
+		tag = u"%s\n\nEinträge werden via Kontextmenü in den Einzelauflösungen eines Videos hinzugefügt." % tag
+		
+		summ = u"die PLAYLIST-Tools stehen auch im Kontextmenü zur Verfügung, wenn ein Listeneintrag eine geeignete Stream-Url enthält" 
+		fparams="&fparams={'myfunc': '%s', 'fparams_add': '%s'}"  %\
+			(quote(myfunc), quote(fparams_add))
+			
+		addDir(li=li, label=title, action="dirList", dirID="start_script",\
+			fanart=R(FANART), thumb=R("icon-playlist.png"), tagline=tag, summary=summ, fparams=fparams)		
 	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+#---------------------------------------------------------------- 
+# Wg.  Problemen mit der xbmc-Funktion executebuiltin(RunScript()) verwenden
+#	wir importlib wie in router()
+#	Bsp. myfunc: "resources.lib.playlist.items_add_rm" (relatv. Modulpfad + Zielfunktion)
+#	fparams_add json-kompat., Bsp.: '{"action": "playlist_add", "url": ""}'
+# Um die Rekursion der Web-Tools-Liste zu vermeiden wird MENU_STOP in playlist_tools
+#	gesetzt und in InfoAndFilter wieder entfernt.
+#  
+def start_script(myfunc, fparams_add):
+	PLog("start_script:")
+	import importlib
+	fparams_add = unquote(fparams_add)
+	PLog(myfunc); PLog(fparams_add)
+	
+	l = myfunc.split('.')				# Bsp. resources.lib.updater.update
+	PLog(l)
+	newfunc =  l[-1:][0]				# Bsp. updater
+	dest_modul = '.'.join(l[:-1])
+
+	dest_modul = importlib.import_module(dest_modul )		# Modul laden
+	PLog('loaded: ' + str(dest_modul))
+	func = getattr(dest_modul, newfunc)	
+
+	if fparams_add != '""':				# leer, ohne Parameter?	
+		mydict = json.loads(fparams_add)
+		PLog("mydict: " + str(mydict));
+		func(**mydict)
+	else:
+		func()
+
+#	xbmc.sleep(500)
+	# ohne endOfDirectory wird das Fenster des Videoplayers blockiert (Ladekreis):
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True) 	 
+	
 #----------------------------------------------------------------
 # Aufruf InfoAndFilter
+# 18.01.2021 Abgleich mit STARTLIST in items_add_rm (Modul Playlist)
+#
 def AddonStartlist(mode='', query=''):
 	PLog('AddonStartlist:');
 	PLog(mode); PLog(query)
-	maxvideos = 100
+	maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)										# Home-Button
@@ -597,7 +645,7 @@ def AddonStartlist(mode='', query=''):
 
 		
 	title = u'Suche in der "Zuletzt gesehen"-Liste"'			# Suchbutton
-	tag = u"Suche der im Addon gestarteten Videos (max %d)."  % maxvideos
+	tag = u"Suche der im Addon gestarteten Videos (max %s)."  % maxvideos
 	tag = u"%s\n\nGesucht wird in Titel und Infotext." % tag
 	fparams="&fparams={'mode': 'search'}" 
 	addDir(li=li, label=title, action="dirList", dirID="AddonStartlist", fanart=img, 
@@ -2787,7 +2835,7 @@ def ARDSportPanel(title, path, img, tab_path=''):
 			for item in AKT_FILTER: 
 				if up_low(item) in py2_encode(up_low(s)):
 					filtered = True
-					continue		
+					break		
 			if filtered:
 				continue		
 		
@@ -3505,7 +3553,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 				# PLog(item);PLog(h); PLog(s);PLog(s2);PLog(t);
 				if item in h or item in s or item in s2 or item in t:
 					filtered = True
-					continue
+					break
 			if filtered:
 				PLog('filtered:')
 				continue
@@ -3538,7 +3586,7 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 					for item in AKT_FILTER: 
 						if up_low(item) in py2_encode(up_low(s)):
 							filtered = True
-							continue		
+							break		
 					if filtered:
 						continue		
 							
@@ -4635,28 +4683,19 @@ def SinglePage(title, path, next_cbKey, mode, ID, offset=0):	# path komplett
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 ####################################################################################################
-# ARD - einzelne Sendung, path in neuer Mediathek führt zur 
-# Quellenseite (verschiedene Formate -> 
-#	1. Text-Seite mit Verweis auf .m3u8-Datei und / oder href_quality_ Angaben zu mp4-videos -
-#		im Listenformat, nicht m3u8-Format, die verlinkte master.m3u8 ist aber im 3u8-Format
-#	2. Text-Seite mit rtmp-Streams (Listenformat ähnlich Zif. 1, rtmp-Pfade müssen zusammengesetzt
-#		werden
-#   ab 01.04.2017 mit Podcast-Erweiterung auch Verarbeitung von Audio-Dateien
-#	18.04.2017 die Podcasts von PodFavoriten enthalten in path bereits mp3-Links, 
-#		parseLinks_Mp4_Rtmp entfällt.
-#	07.11.2020 Verarbeitung PodFavoriten nur noch im Rahmen der neuen Audiothek - hier nur
-#		noch Classic-Podcasts.
+# ARD Classic - einzelne Sendung
+# 07.11.2020 Verarbeitung PodFavoriten nur noch im Rahmen der neuen Audiothek (-> AudioPlayMP3)
+#		- hier nur noch Classic-Podcasts.
 # path: z.B. https://classic.ardmediathek.de/play/media/11177770
+# 23.01.2021 Umstellung auf Sofortstart-Erweiterungen (HLS_List, MP4_List, gemeins. Codenutzung),
+#	die Streamlink-Quellen sind bei Classic (einschl. Podcasts) + ARD Neu identisch, ebenso die 
+#	Formate für img, sub_path, geoblocked - allerdings mit anderen Platzierungen in json-Quelltext.	
+#
 def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, Merk='false'):	
 	PLog('SingleSendung:')						
 	PLog('path: ' + path)			
 	PLog('ID: ' + str(ID))
 	PLog(thumb); PLog(summary); PLog(tagline);
-	
-	if tagline in summary:								# vermeidet Doppler in Inhaltstext
-		tagline = tagline.strip()
-		summary = summary.replace(tagline, '')
-		summary = summary.replace('||||[B]', '||[B]')	# 1 Leerz. entf.
 	
 	title = unquote(title)
 	title_org=title; summary_org=summary; tagline_org=tagline	# Backup 
@@ -4670,181 +4709,86 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 	else:
 		Format = 'Video-Format: MP4'
 		
-	mediatype=''						# Kennz. Video für Sofortstart, hier für dirID="SingleSendung"
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
+	page, msg = get_page(path=path)	
+	if page == '':
+		msg1 = 'Fehler SingleSendung: %s' % title
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return li
+	
+	link_img = stringextract('_previewImage":"', '",', page) # ev. nur Mediatheksymbol
+	geoblock =  stringextract('_geoblocked":', '}', page)	# Geoblock-Markierung ARD
+	sub_path = stringextract('_subtitleUrl":"', '"', page)
+	if geoblock == '':
+		geoblock = 'ohne'
 
-	# Bei Podcasts enthält path i.d.R. 1 Link zur Seite mit einer mp3-Datei, bei Podcasts von PodFavoriten 
-	# wird der mp3-Link	direkt in path übergeben.
-	# 07.11.2020 bei Podcasts getrennte Auswertung in parseLinks_Mp4_Rtmp - s. dort
-	if path.endswith('.mp3') == False:
-		page, msg = get_page(path=path)				# Absicherung gegen Connect-Probleme. Page=Textformat
-		if page == '':
-			msg1 = 'Fehler SingleSendung:'
-			msg2 = msg
-			MyDialog(msg1, msg2, '')
-			return li
-		# link_img kommt bereits mit thumb, außer Podcasts						
-		link_path,link_img, m3u8_master, geoblock, sub_path = parseLinks_Mp4_Rtmp(page, ID) 
-		PLog('m3u8_master: ' + m3u8_master); PLog(link_img); PLog(link_path); PLog(sub_path);
-		if thumb == None or thumb == '': 
-			thumb = link_img
+	if ID == 'PODCAST':										# PODCAST
+		PLog("Audio:")		
+		url = stringextract('_stream":["', '"', page) 		# Streamliste
+		if url == '':
+			url = stringextract('_stream":"', '"', page) 	# Einzelstream
+		PLog(url)
+		download_list = ["%s#%s" % (title, url)] 
 
-		if link_path == []:	      		# keine Videos gefunden		
-			PLog('link_path == []') 		 
-			msg1 = 'keine Videoquelle gefunden. Seite:'
-			msg2 = path
-			MyDialog(msg1, msg2, '')
-		PLog('geoblock: ' + geoblock)
-		if geoblock == 'true':			# Info-Anhang für summary 
-			geoblock = ' | Geoblock!'
-		else:
-			geoblock = ' | ohne Geoblock'
-	else:
-		m3u8_master = False
-		# Nachbildung link_path, falls path == mp3-Link:
-		link_path = []; link_path.append('1|'  + path)	# Bsp.: ['1|http://mp3-download.ard.de/...mp3]
-  
-	# *.m3u8-Datei vorhanden -> auswerten, falls ladefähig. die Alternative 'Client wählt selbst' (master.m3u8)
-	# stellen wir voran (WDTV-Live OK, VLC-Player auf Nexus7 'schwerwiegenden Fehler'), MXPlayer läuft dagegen
-	summary=summary.replace('||', '\n')		
-	summary_org = summary_org.replace('\n', '||')
-	if m3u8_master:	 		 		  								# nicht bei rtmp-Links (ohne master wie m3u8)
-		# Sofortstart - direkt, falls Listing nicht Playable:
-		# 04.08.2019 Sofortstart nur noch abhängig von Settings und nicht zusätzlich von  
-		#	Param. Merk. (wie SenderLiveResolution)
-		if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true': 
-			PLog('Sofortstart: SingleSendung')
-			PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
-			# sub_path=''	# fehlt bei ARD - entf. ab 1.4.2019
-			PlayVideo(url=m3u8_master, title=title_org, thumb=thumb, Plot=summary, sub_path=sub_path)
-			return
-			
-		title = '1. Bandbreite und Auflösung automatisch' + geoblock			# master.m3u8
-		m3u8_master = m3u8_master.replace('https', 'http')	# 26.06.2017: nun auch ARD mit https
-		m3u8_master=py2_encode(m3u8_master); title_org=py2_encode(title_org); thumb=py2_encode(thumb);
-		summary_org=py2_encode(summary_org); sub_path=py2_encode(sub_path);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
-			(quote_plus(m3u8_master), quote_plus(title_org), quote_plus(thumb), 
-			quote_plus(summary_org), quote_plus(sub_path), Merk)
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-			mediatype=mediatype, tagline=tagline, summary=summary) 
-						
-		if tagline:
-			descr = "%s\n\n%s" % (tagline, summary)
-
-		li = Parseplaylist(li, m3u8_master, thumb, geoblock=geoblock, descr=descr, 
-			sub_path=sub_path)
-		#del link_path[0]								# master.m3u8 entfernen, Rest bei m3u8_master: mp4-Links
-		PLog(li)  										
-	 
-	# ab hier Auswertung der restlichen mp4-Links bzw. rtmp-Links (aus parseLinks_Mp4_Rtmp)
-	# Format: 0|http://mvideos.daserste.de/videoportal/Film/c_610000/611560/format706220.mp4
-	# 	oder: rtmp://vod.daserste.de/ardfs/mp4:videoportal/mediathek/...
-	#	
-	href_quality_S 	= ''; href_quality_M 	= ''; href_quality_L 	= ''; href_quality_XL 	= ''
-	download_list = []		# 2-teilige Liste für Download: 'title # url'
-	li_cnt = 1
-	for i in range(len(link_path)):
-		s = link_path[i]
-		href = s.split('|')[1].strip() # Bsp.: auto|http://www.hr.. / 0|http://pd-videos.daserste.de/..
-		PLog('s: ' + s)
-		if s[0:4] == "auto":	# m3u8_master bereits entfernt. Bsp. hier: 	
-			# http://tagesschau-lh.akamaihd.net/z/tagesschau_1@119231/manifest.f4m?b=608,1152,1992,3776 
-			#	Platzhalter für künftige Sendungen, z.B. Tagesschau (Meldung in Original-Mediathek:
-			# 	'dieser Livestream ist noch nicht verfügbar!'
-			#	auto aber auch bei .mp4-Dateien beobachtet, Bsp.: http://www.ardmediathek.de/play/media/40043626
-			# href_quality_Auto = s[2:]	
-			href_quality_Auto = href	# auto auch bei .mp4-Dateien möglich (s.o.)
-			title = 'Qualitaet AUTO'
-			url = href_quality_Auto
-			resolution = ''
-		if s[0:1] == "0":			
-			href_quality_S = href
-			title = 'Qualitaet SMALL'
-			url = href_quality_S
-			resolution = 240
-			download_list.append(title + '#' + url)
-		if s[0:1] == "1":			
-			href_quality_M = href
-			title = 'Qualitaet MEDIUM'
-			url = href_quality_M
-			resolution = 480
-			download_list.append(title + '#' + url)
-		if s[0:1] == "2":			
-			href_quality_L = href
-			title = 'Qualitaet LARGE'
-			url = href_quality_L
-			resolution = 540
-			download_list.append(title + '#' + url)
-		if s[0:1] == "3":			
-			href_quality_XL = href
-			title = 'Qualitaet EXTRALARGE'
-			url = href_quality_XL
-			resolution = 720
-			download_list.append(title + '#' + url)
-			
-
-		PLog('title: ' + title); PLog('url: ' + url);  PLog(summary)
-		if url:
-			if '.m3u8' in url:				# master.m3u8 überspringen, oben bereits abgehandelt
-				continue
-			if 'manifest.f4m' in url:		# manifest.f4m überspringen
-				continue
-						
-			if url.find('rtmp://') >= 0:	# 2. rtmp-Links:	
-				summary = Format + 'RTMP-Stream'	
-				lable = "%s | %s" % (title, summary)				
-				url=py2_encode(url); title_org=py2_encode(title_org); thumb=py2_encode(thumb);
-				summary_org=py2_encode(summary_org); sub_path=py2_encode(sub_path);
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
-					(quote_plus(url), quote_plus(title_org), quote_plus(thumb), 
-					quote_plus(summary_org), quote_plus(sub_path), Merk)
-				addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-					 mediatype=mediatype, tagline=tagline, summary=summary)
-									
-			else:
-				title=py2_encode(title); Format=py2_encode(Format); tagline=py2_encode(tagline); 
-				summary=py2_encode(summary);
-				summary = "%s\n%s" % (title, Format)		# 3. Podcasts mp3-Links, mp4-Links
-				summ_lable=summary_org.replace('||', '\n')
-				summ_lable=py2_encode(summ_lable);
-				if tagline:	
-					summ_lable = "%s\n%s" % (tagline, summ_lable)
-				if ID == 'PODCAST':			# (noch) keine Header benötigt
-					lable = "%s. %s | %s" % (str(li_cnt), title, summary)
-					url=py2_encode(url); title_org=py2_encode(title_org); thumb=py2_encode(thumb);
-					summary_org=py2_encode(summary_org); 
-					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
-						quote(title_org), quote(thumb), quote_plus(summary_org))
-					addDir(li=li, label=lable, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
-						summary=summ_lable, mediatype='music')
-				else:
-					# 26.06.2017: nun auch ARD mit https - aber: bei den mp4-Videos liefern die Server auch
-					#	mit http, während bei m3u8-Url https durch http ersetzt werden MUSS. 
-					url = url.replace('https', 'http')	
-					lable = "%s. %s | %s" % (str(li_cnt), title, Format + geoblock)
-					summary_org = summary_org.replace('\n', '||')
-					url=py2_encode(url); title_org=py2_encode(title_org); thumb=py2_encode(thumb);
-					summary_org=py2_encode(summary_org); sub_path=py2_encode(sub_path);					
-					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': '%s'}" %\
-						(quote_plus(url), quote_plus(title_org), quote_plus(thumb), 
-						quote_plus(summary_org), quote_plus(sub_path), Merk)
-					addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-						mediatype=mediatype, summary=summ_lable) 
-			li_cnt=li_cnt+1
-						
-	PLog(download_list)
-	if 	download_list:			
-		# high=-1: letztes Video bisher höchste Qualität
-		if summary_org == None:		# Absicherungen für MakeDetailText
-			summary_org=''
-		if tagline_org == None:
-			tagline_org=''
-		if thumb == None:
-			thumb=''		
-		PLog(title);PLog(summary_org);PLog(tagline_org);PLog(thumb);
+		title = repl_json_chars(title)
+		summary=py2_encode(summary);
+		summary = "%s\n%s" % (title, Format)	
+		summ_lable=summary_org.replace('||', '\n')
+		summ_lable=py2_encode(summ_lable);
+		url=py2_encode(url); title_org=py2_encode(title_org); thumb=py2_encode(link_img);
+		summary_org=py2_encode(summary_org); tagline=py2_encode(tagline); 
+		
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
+			quote(title_org), quote(thumb), quote_plus(summary_org))
+		addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
+			tagline=tagline, summary=summ_lable, mediatype='music')
+				
 		li = test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=-1)  # Downloadbutton(s)
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
+	#--------------------									# Ende Podcasts
+    
+	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
+	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
+	#	fehlende Bandbreiten + Auflösungen werden ergänzt
+	PLog('import_ARDnew:');
+	import resources.lib.ARDnew as ARDnew
+	VideoUrls = blockextract('_quality', page)
+	PLog(len(VideoUrls))
+	
+	HBBTV_List=''										# nur ZDF
+	HLS_List=[]; MP4_List=[]
+	HLS_List = ARDnew.ARDStartVideoHLSget(title, VideoUrls)	# Extrakt HLS
+	PLog("HLS_List: " + str(HLS_List)[:80])
+	MP4_List = ARDnew.ARDStartVideoMP4get(title, VideoUrls)	# Extrakt MP4
+	Dict("store", 'ARDClassic_HLS_List', HLS_List) 
+	Dict("store", 'ARDClassic_MP4_List', MP4_List) 
+	PLog("download_list: " + str(MP4_List)[:80])
+	
+	if not len(HLS_List) and not len(MP4_List):
+		msg1 = "keine Streamingquelle gefunden: %s"	% title
+		PLog(msg1)
+		MyDialog(msg1, '', '')	
+		return li
+		 
+	#----------------------------------------------- 
+	# Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
+	# 	-> StreamsShow (einschl. test_downloads bei MP4_List)
+	if summary in tagline or tagline in summary:	# Aufräumen: Doppler, Müllzeichen					
+		tagline = tagline.replace(summary, '')
+	else:
+		tagline = "%s\n\n%s" % (tagline, summary)
+	if tagline.endswith('||||'):					
+		tagline=tagline[:-4]
+	tagline = tagline.replace('||||[B]', '||[B]')	# 1 Leerz. entf.
+	tagline = mystrip(tagline)
+	tagline = "Titel: %s\n\n%s" % (title_org, tagline)	# Titel neu in Streamlists_buttons
+	Plot = tagline.replace('\n', '||')
+	
+	PLog('Lists_ready:');
+	thumb = link_img; ID = 'ARDClassic'; 
+	build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID)
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -5496,7 +5440,7 @@ def DownloadsList():
 				# pass									# Plex brauchte hier die Web-Url	aus der Beschreibung
 				title = fname
 				httpurl = fname							# Berücksichtigung in VideoTools - nicht abspielbar
-				summary = 'Download ohne Beschreibung'
+				summary = 'ohne Beschreibung'
 				#tagline = 'Beschreibung fehlt - Beschreibung gelöscht, Sammeldownload oder TVLive-Video'
 				
 			tag_par= tagline.replace('\n', '||')	
@@ -6047,81 +5991,9 @@ def convBase64(s):
 #	verlagert nach resources/lib/merkliste.py - Grund: bei Verabeitung hier war kein
 #	ein Verbleib im akt. Verz. möglich.
 #def Watch(action, name, thumb='', Plot='', url=''):
-#				
-####################################################################################################
-# extrahiert aus Mediendatei (json) .mp3-, .mp4-, rtmp-Links + Untertitel (Aufrufer 
-# 	SingleSendung). Bsp.: http://www.ardmediathek.de/play/media/35771780
-# Untertitel in ARD-Neu gefunden siehe ARDStartSingle
-# 07.11.2020 wg. abweichender Formate getrennte Auswertung für Podcasts (ID)	 
+# 23.01.2021 Wegfall parseLinks_Mp4_Rtmp nach Umstellung auf Sofortstart-Erweiterungen:  				
+#def parseLinks_Mp4_Rtmp(page, ID=''):	
 #	
-def parseLinks_Mp4_Rtmp(page, ID=''):		
-	PLog('parseLinks_Mp4_Rtmp: ' + ID)
-	# PLog(page)	# Quellen im json-Format	
-	
-	if page.find('_previewImage') >= 0:
-		#link_img = teilstring(page, 'http://www.ardmediathek.de/image', '\",\"_subtitleUrl')
-		#link_img = stringextract('_previewImage\":\"', '\",\"_subtitle', page)
-		link_img = stringextract('_previewImage":"', '",', page) # ev. nur Mediatheksymbol
-	else:
-		link_img = ""
-
-	link_path = []							# Liste nimmt Pfade und Quali.-Markierung auf
-	m3u8_master = ''						# nimmt master.m3u8 zusätzlich auf	
-	geoblock =  stringextract('_geoblocked":', '}', page)	# Geoblock-Markierung ARD
-	sub_path = stringextract('_subtitleUrl":"', '"', page)
-	
-	if ID == 'PODCAST':						# getrennte Auswertung für Podcasts 
-		path = stringextract('_stream":["', '"', page) 		# Streamliste
-		if path == '':
-			path = stringextract('_stream":"', '"', page) 	# Einzelstream
-		if path:	
-			link_path.append('1|'  + path)
-		
-		PLog(link_path)	
-		return link_path, '', '', '', ''	# Dialog bei leerem link_path in SingleSendung
-
-		
-	if '"_quality":' in page:
-		s = page.split('"_quality":')	
-		PLog(len(s))						
-		del s[0]							# 1. Teil entfernen - enthält img-Quelle (s.o.)
-		
-		for i in range(len(s)):
-			s1 =  s[i]
-			s2 = ''
-			PLog(s1)						# Bsp.: 1,"_server":"","_cdn":"akamai","_stream":"http://avdlswr-..
-				
-			if s1.find('rtmp://') >= 0: # rtmp-Stream 
-				PLog('s1: ' + s1)
-				t1 = stringextract('server\":\"', '\",\"_cdn\"', s1) 
-				t2 = stringextract( '\"_stream\":\"', '\"}', s1) 
-				s2 = t1 + t2	# beide rtmp-Teile verbinden
-				#PLog(s2)				# nur bei Bedarf
-			else:						# http-Links, auch Links, die mit // beginnen
-				s2 = stringextract('stream\":\"','\"', s1)
-				if s2.startswith('//'):				# 12.09.2017: WDR-Links ohne http:
-					s2 = 'http:' + s2
-				if 'master.m3u8' in s1:
-					m3u8_master = s2
-			PLog(s2); PLog(len(s2))				
-				
-							
-			if len(s2) > 9:						# schon url gefunden? Dann Markierung ermitteln
-				if s1.find('auto') >= 0:
-					mark = 'auto' + '|'					
-				else:
-					m = s1[0:1] 				# entweder Ziffern 0,1,2,3 
-					mark = m + '|' 	
-								
-				link = mark + s2				# Qualität voranstellen			
-				link_path.append(link)
-				PLog(mark); PLog(s2); PLog(link); # PLog(link_path)
-			
-	link_path = list(set(link_path))			# Doppel entfernen (gesehen: 0, 1, 2 doppelt)
-	link_path.sort()							# Sortierung - Original Bsp.: 0,1,2,0,1,2,3
-	PLog(link_path); PLog(len(link_path)); PLog(sub_path)				
-	return link_path, link_img, m3u8_master, geoblock, sub_path				 		
-		
 ####################################################################################################
 # Aufrufer SinglePage
 def get_sendungen(li, sendungen, ID, mode): # Sendungen ausgeschnitten mit class="teaser", aus Verpasst + A-Z,
@@ -7886,10 +7758,12 @@ def ZDFRubriken(name):
 #	Auswertung für loader- und Normal-Seiten vereinheitlicht (get_teaserElement,
 #	ZDF_get_teaserDetails, ZDF_get_teaserbox)
 # 05.09.2020 promo-teaser in ZDFStart + hier ergänzt (bisher nur 1 x je Seite gesichtet)
+# 22.01.2021 custom_cluster: vom Aufrufer def. Anfangs- und Endbedingung, 
+#	z.B. '>Spielberichte<|</section>'
 #
-def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):							
-	PLog('ZDFRubrikSingle:'); PLog(title); 
-	PLog(clus_title); PLog(ID)
+def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster=''):							
+	PLog('ZDFRubrikSingle:'); PLog(title);
+	PLog(clus_title); PLog(ID); PLog(custom_cluster);  
 	path_org = path
 	
 	title_org = title
@@ -7907,25 +7781,39 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 		MyDialog(msg1, msg2, '')
 		return li
 
-	# cluster-title + section-header-title, einschl. Blockbegrenzung:
-	cluster =  blockextract('class="cluster-title"', page, '')
-	PLog(len(cluster))
-	cluster = cluster + blockextract('"section-header-title ellipsis"', page, '</section>')
-	if len(cluster) == 0:										# aus promo-teaser
-		cluster =  blockextract('class="big-headline"', page, '')
-	PLog('class="big-headline"' in page)
-	PLog(len(cluster))
-	
-	if clus_title and len(cluster) > 0:							# Beiträge zu gesuchtem Cluster auswerten - s.o.
-		if clus_title.startswith('>'):
-			clus_title = clus_title[1:]
-		for clus in cluster:
-			clustertitle = ZDF_get_clustertitle(rec=clus)		# Cluster-Titel ermitteln
-			PLog(clus_title); PLog(clustertitle);	 # Debug
-			if clus_title in clustertitle:		# Cluster gefunden
-				PLog('gefunden: clus_title=%s, clustertitle=%s' % (clus_title, clustertitle))
-				break
-
+	if custom_cluster == '':										# Standard-Cluster
+		# cluster-title + section-header-title, einschl. Blockbegrenzung:
+		cluster =  blockextract('class="cluster-title"', page, '')
+		PLog(len(cluster))
+		cluster = cluster + blockextract('"section-header-title ellipsis"', page, '</section>')
+		if len(cluster) == 0:										# aus promo-teaser
+			cluster =  blockextract('class="big-headline"', page, '')
+		PLog('class="big-headline"' in page)
+		PLog(len(cluster))
+		
+		if clus_title and len(cluster) > 0:							# Beiträge zu gesuchtem Cluster auswerten - s.o.
+			if clus_title.startswith('>'):
+				clus_title = clus_title[1:]
+			for clus in cluster:
+				clustertitle = ZDF_get_clustertitle(rec=clus)		# Cluster-Titel ermitteln
+				PLog(clus_title); PLog(clustertitle);	 # Debug
+				if clus_title in clustertitle:		# Cluster gefunden
+					PLog('gefunden: clus_title=%s, clustertitle=%s' % (clus_title, clustertitle))
+					break
+					
+	else:															# freie Anfangs- und Endbedingung
+#		custom_cluster=py2_encode(custom_cluster)
+		PLog(custom_cluster)
+		blockstart, blockend = custom_cluster.split("|")
+		cluster =  blockextract(blockstart, page, blockend)
+		PLog(len(cluster))
+		if clus_title and len(cluster) > 0:							# Beiträge zu gesuchtem Cluster auswerten - s.o.
+			for clus in cluster:
+				if  clus_title in clus:
+					PLog('gefunden: clus_title=%s' % clus_title)
+					break
+		
+	if clus_title and len(cluster) > 0:	
 		# script-gesteuerte Beiträge ("clusterrecommendation"), z.Z. nicht genutzt:
 		'''
 		if '&quot;SCMS' in clus:
@@ -7950,7 +7838,11 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 		if len(content) == 0:
 			content =  blockextract('class="artdirect', clus)  # Fallback, kann in nächsten Cluster reichen
 			PLog('artdirect_poster: ' + str(len(content)))
-		
+		if len(content) == 0:
+			content =  blockextract('class="b-content-teaser-item', clus)  # Fallback für custom_cluster
+			PLog('b-content-teaser-item: ' + str(len(content)))
+			
+
 		for rec in content:	
 			title='';  clustertitle=''; lable=''; isvideo=False; isgallery=False
 			teaser_nr=''
@@ -8016,14 +7908,15 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 				descr = "%s\n\n%s" % (tag, descr)
 			descr_par = descr.replace('\n', '||')
 			
+			
 			if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
 				filtered=False
 				for item in AKT_FILTER: 
-					if 'DHB-Kader' in rec:
-						PLog(item); PLog(title);
-					if up_low(item) in py2_encode(up_low(rec)):
+					item = up_low(item)
+					# rec ist hier lazyload-Element, Inhalte fehlen für Abgleich!
+					if up_low(item) in up_low(title) or up_low(item) in up_low(descr):
 						filtered = True
-						continue		
+						break		
 				if filtered:
 					PLog('filtered: ' + title)
 					continue	
@@ -8044,8 +7937,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 						thumb=img_src, fparams=fparams, summary='Bilderserie', tagline=descr)
 					
 					
-			else:							# Einzelbeitrag direkt - anders als A-Z (ZDF_get_content)
-						
+			else:							# Einzelbeitrag direkt - anders als A-Z (ZDF_get_content)		
 				if SETTINGS.getSetting('pref_load_summary') == 'true':		# Inhaltstext im Voraus laden?
 					skip_verf=False; skip_pubDate=False						# beide Daten ermitteln
 					summ_txt = get_summary_pre(path, 'ZDF', skip_verf, skip_pubDate)
@@ -8062,8 +7954,8 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID=''):
 					thumb=img_src, summary=descr, fparams=fparams)
 							
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
-	
-			
+
+		
 	else:										# nur Cluster listen, ohne Bilder, Blockbegrenzung s.o.
 		for clus in cluster:					# Cluster: cluster-title + section-header-title	- s.o.
 			clustertitle = stringextract('cluster-title"', '</', clus) # 07.03.2020 Blank nach Trenner
@@ -8515,6 +8407,7 @@ def ZDFSportLive(title):
 			href = ZDF_BASE + href
 			
 		title	= "Jetzt live: " + stringextract('title="', '"', rec)
+		title	= unescape(title); title = repl_json_chars(title)
 		title	= '[COLOR red][B]%s[/B][/COLOR]' % title
 		video	= stringextract('icon-502_play icon ">', '</dl>', rec)
 		descr = cleanhtml(video); descr = mystrip(descr)
@@ -8528,6 +8421,7 @@ def ZDFSportLive(title):
 			fparams=fparams, summary=descr, mediatype=mediatype)
 
 	# Einfügung zeitl. begrenzter Events ähnlich ARDSportPanel (Wintersport,  Handball-WM)
+	PLog('Handball-WM:')
 	theme_list = ['Wintersport|https://www.zdf.de/sport/wintersport', 
 		'Handball-WM|https://www.zdf.de/sport/handball/ihf-wm-weltmeisterschaft-live-livestream-spielplan-100.html'
 		]						
@@ -8543,6 +8437,24 @@ def ZDFSportLive(title):
 				quote(title), ID)
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=thumb, 
 				thumb=thumb, tagline=tag, fparams=fparams)
+				
+		# falls in ZDF_Sendungen nur b_cluster ausgewertet werden:
+		# clus_title ist gleichzeitig Blockstart, Blockende: </section
+		if 'Handball-WM' in theme:									# Erfassung zusätzl. Cluster
+			path = theme_list[1].split('|')[-1]						#	mit verschied. Startmarken
+			cluster_list = [u'>Spiele in voller Länge<|</section>', '>Spielberichte<|</section>']
+			for custom_cluster in cluster_list:	
+				title = u"Handball-WM: %s"	% custom_cluster.split('|')[0][1:-1]
+				clus_title = custom_cluster.split('|')[0][1:-1]		# z.B. "Spielberichte"
+				
+				title=py2_encode(title); path=py2_encode(path); 	
+				clus_title=py2_encode(clus_title); custom_cluster=py2_encode(custom_cluster)
+				fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s', 'custom_cluster': '%s'}"	%\
+					(quote(title), quote(path), quote(clus_title), quote(custom_cluster))
+				PLog(fparams)						
+				addDir(li=li, label=title, action="dirList", dirID="ZDFRubrikSingle", fanart=R(ICON_ZDF_RUBRIKEN), 
+					thumb=R(ICON_ZDF_RUBRIKEN), fparams=fparams)
+				
 
 	title = u'zurückliegende Sendungen'								# weitere Sendungen
 	url = 'https://www.zdf.de/sport/zdf-sportreportage'
@@ -8802,7 +8714,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 				for item in AKT_FILTER: 
 					if up_low(item) in py2_encode(up_low(rec)):
 						filtered = True
-						continue		
+						break		
 				if filtered:
 					PLog('filtered: ' + 'data-module="zdfplayer"')
 					continue		
@@ -9045,7 +8957,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			for item in AKT_FILTER: 
 				if up_low(item) in py2_encode(up_low(rec)):
 					filtered = True
-					continue		
+					break		
 			if filtered:
 				continue		
 			
@@ -9100,7 +9012,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid=''):
 	PLog('ZDF_getVideoSources:'); PLog(url); PLog(tagline); 
 	PLog(title); 
-	title = unescape(title); url_org = url
+	title=unescape(title); title_org=title; url_org=url
 	urlSource = url			
 	li = xbmcgui.ListItem()
 		
@@ -9145,11 +9057,39 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 			tagline = tagline + " | " + duration
 	else:
 		tagline = duration
-		
+	
+
+	HLS_List,MP4_List,HBBTV_List = build_Streamlists(li,title,thumb,geoblock,tagline,\
+		sub_path,formitaeten,scms_id,ID="ZDF")
 	#----------------------------------------------- 	
-	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
-	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
-	#	fehlende Bandbreiten + Auflösungen werden ergänzt
+
+	# MEHR_Suche (wie ZDF_Sendungen) - bei Verpasst-Beiträge Uhrzeit abschneiden:
+	if '|' in title_org:						# Bsp. Verpasst:  "04:20 Uhr | Abenteuer Winter.."
+		title_org = title_org.split('|')[1].strip()
+	label = u"Alle Beiträge im ZDF zu >%s< suchen"  % title_org
+	query = title_org.replace(' ', '+')	
+	tagline = u"zusätzliche Suche starten"
+	summ 	= u"suche alle Beiträge im ZDF, die sich auf >%s< beziehen" % title_org
+	s_type	= 'MEHR_Suche'						# Suche alle Beiträge (auch Minutenbeiträge)
+	query=py2_encode(query); 
+	fparams="&fparams={'query': '%s', 's_type': '%s'}" % (quote(query), s_type)
+	addDir(li=li, label=label, action="dirList", dirID="ZDF_Search", fanart=R(ICON_MEHR), 
+		thumb=R(ICON_MEHR), fparams=fparams, tagline=tagline, summary=summ)
+		
+			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+#-------------------------
+# Bau HLS_List, MP4_List, HBBTV_List (nur ZDF)
+# Formate siehe StreamsShow						
+#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
+#	fehlende Bandbreiten + Auflösungen werden ergänzt
+# Aufrufer: ZDF_getVideoSources, SingleBeitrag (my3Sat)
+#
+def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_id='',ID="ZDF"):
+	PLog('build_Streamlists:'); PLog(ID)
+	title_org = title
+	
 	HLS_List=[]; MP4_List=[]; HBBTV_List=[];			# MP4_List = download_list
 	only_list = ["h264_aac_mp4_http_na_na", "h264_aac_ts_http_m3u8_http",	# erlaubte Formate
 				"vp9_opus_webm_http_na_na", "vp8_vorbis_webm_http_na_na"]
@@ -9162,8 +9102,6 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 		if typ not in only_list:
 			continue 
 			
-# [progressive], [restriction_useragent]		
-
 		audio = blockextract('"audio":', rec)			# Datensätze je Typ
 		PLog("audio_Blocks: " + str(len(audio)))
 		# PLog(audio)	# bei Bedarf
@@ -9173,32 +9111,33 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 			if '?audiotrack=1' in url:
 				url = url.split('?audiotrack=1')[0]					
 			quality = stringextract('"quality":"',  '"', audiorec)
+			quality = up_low(quality)
 			mimeCodec = stringextract('"mimeCodec":"',  '"', audiorec)
 
 			PLog(url); PLog(quality)
 			if facets.startswith('['):
-				quality = "%s [%s..]" % (quality, facets[1:6])
+				quality = "%s [%s..]" % (quality, up_low(facets[1:6], mode='low'))
 		
 			if url:	
 				if quality == 'auto' and 'master.m3u8' not in url:	# funk: m3u8-Urls nicht verwertbar
 					continue	
 				if url.find('master.m3u8') > 0:			# m3u8 enthält alle Auflösungen
 					quality = u'automatisch'
-					HLS_List.append('HLS automatische Anpassung ** auto ** auto ** %s#%s' % (title,url))
+					HLS_List.append('HLS, automatische Anpassung ** auto ** auto ** %s#%s' % (title,url))
 					Stream_List = Parseplaylist(li, url, thumb, geoblock, tagline,\
 						stitle=title,buttons=False)
 					HLS_List = HLS_List + Stream_List
 					break
-				else:
-					if 'hd' in quality:
+				else:								
+					if 'HD' in quality:							# up_low(quality s.o.
 						w = "1920"; h = "1080"					# Probeentnahme													
-					if 'veryhigh' in quality:
+					if 'VERYHIGH' in quality:
 						w = "1280"; h = "720"					# Probeentnahme							
-					if 'high' in quality:
+					if 'HIGH' in quality:
 						w = "960"; h = "540"					# Probeentnahme							
-					if 'med' in quality:
+					if 'MED' in quality:
 						w = "640"; h = "360"					# Probeentnahme							
-					if 'low' in quality:
+					if 'LOW' in quality:
 						w = "480"; h = "270"					# Probeentnahme							
 					
 					if '://funk' in url:						# funk: anderes Format
@@ -9211,46 +9150,69 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 						bitrate = re.search(u'_(\d+)k_', url).group(1)
 						res = "%sx%s" % (w,h)
 					
-					quality = up_low(quality)	
 					PLog(res)
 					title_url = u"%s#%s" % (title, url)
-					item = u"MP4 Qualität: %s ** Bitrate %sk ** Auflösung %s ** %s" %\
+					item = u"MP4, Qualität: %s ** Bitrate %sk ** Auflösung %s ** %s" %\
 						(quality, bitrate, res, title_url)
 					MP4_List.append(item)
 	
-	HBBTV_List = ZDFSourcesHBBTV(title, scms_id)				
 	PLog("HLS_List: " + str(len(HLS_List)))
 	#PLog(HLS_List)
 	PLog("MP4_List: " + str(len(MP4_List)))
-	PLog("HBBTV_List: " + str(len(HBBTV_List)))
-	Dict("store", 'ZDF_HLS_List', HLS_List) 
-	Dict("store", 'ZDF_MP4_List', MP4_List) 
-	Dict("store", 'ZDF_HBBTV_List', HBBTV_List) 
-	
-	if not len(HLS_List) and not len(MP4_List) and not len(HBBTV_List):
+	Dict("store", '%s_HLS_List' % ID, HLS_List) 
+	Dict("store", '%s_MP4_List' % ID, MP4_List) 
+		
+	if not len(HLS_List) and not len(MP4_List):			
 		msg = 'keine Streamingquelle gefunden - Abbruch' 
 		PLog(msg)
 		msg1 = u"keine Streamingquelle gefunden: %s"	% title
 		MyDialog(msg1, '', '')	
-		return li
+		return HLS_List, MP4_List, HBBTV_List
 		
+	if ID == "ZDF":										# o. Abbruch-Dialog
+		HBBTV_List = ZDFSourcesHBBTV(title, scms_id)				
+		PLog("HBBTV_List: " + str(len(HBBTV_List)))
+		Dict("store", '%s_HBBTV_List' % ID, HBBTV_List) 
+		
+	tagline = "Titel: %s\n\n%s" % (title_org, tagline)	# s.a. ARD (Classic + Neu)
 	tagline=repl_json_chars(tagline); tagline=tagline.replace( '||', '\n')
 	Plot=tagline; 
 	Plot=Plot.replace('\n', '||')
-
+	
+	PLog('Lists_ready:');
+	build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID)
+	
+	PLog("build_Streamlists_end")		
+	return HLS_List, MP4_List, HBBTV_List
+	
+#-------------------------
+# Sofortstart + Buttons für die einz. Streamlisten
+# Aufrufer: build_Streamlists (ZDF, 3sat), ARDStartSingle (ARD Neu),
+#	SingleSendung (ARD Classic)
+# Plot = tagline (zusammengefasst: Titel (abgesetzt), tagline, summary)
+#
+def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID="ZDF"):
+	PLog('build_Streamlists_buttons:'); PLog(ID)
+	
+	if geoblock:
+		Plot = "%s||%s" % (Plot, geoblock) 
+	
+	tagline = Plot.replace('||', '\n')
+	Plot = Plot.replace('\n', '||')
+	
 	# Sofortstart HLS / MP4 - abhängig von Settings	 	# Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':	
 		img = thumb
-		PlayVideo_Direct(HLS_List, MP4_List, title, img, Plot, sub_path, HBBTV_List)
-		return li		
+		PlayVideo_Direct(HLS_List, MP4_List, title_org, img, Plot, sub_path, HBBTV_List)
+		return
 
 	# -----------------------------------------			# Buttons Einzelauflösungen
-	title_org = title
-
 	PLog('Satz3:')
 	title_list=[]
-	img=thumb; path=url_org; 
-	PLog(title); PLog(tagline[:60]); PLog(img); PLog(path); PLog(sub_path);
+	img=thumb; 
+	PLog(title_org); PLog(tagline[:60]); PLog(img); PLog(sub_path);
 	title_hls 	= u"[COLOR blue]Streaming-Formate[/COLOR]"
 	title_hb = "[COLOR blue]HBBTV-Formate[/COLOR]"
 	title_mp4 = "[COLOR red]MP4-Formate und Downloads[/COLOR]"
@@ -9258,15 +9220,16 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 	title_mp4=repl_json_chars(title_mp4); 
 	
 	# title_list: Titel + Dict-ID + Anzahl Streams
-	title_list.append("%s###%s###%s" % (title_hls, 'ZDF_HLS_List', len(HLS_List)))	
-	title_list.append("%s###%s###%s" % (title_hb, 'ZDF_HBBTV_List', len(HBBTV_List)))	
-	title_list.append("%s###%s###%s" % (title_mp4, 'ZDF_MP4_List', len(MP4_List)))	
+	title_list.append("%s###%s###%s" % (title_hls, '%s_HLS_List' % ID, len(HLS_List)))
+	if ID == "ZDF":										# HBBTV nur bei ZDF verwenden
+		title_list.append("%s###%s###%s" % (title_hb, 'ZDF_HBBTV_List', len(HBBTV_List)))	
+	title_list.append("%s###%s###%s" % (title_mp4, '%s_MP4_List' % ID, len(MP4_List)))	
 
 	mediatype=''										# Kennz. Video für Sofortstart 
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 
-	path=py2_encode(path); Plot=py2_encode(Plot); img=py2_encode(img);
+	Plot=py2_encode(Plot); img=py2_encode(img);
 	geoblock=py2_encode(geoblock); sub_path=py2_encode(sub_path); 
 	
 	for item in title_list:
@@ -9274,31 +9237,14 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 		if anz == '0':									# skip leere Liste
 			continue
 		title=py2_encode(title); title_org=py2_encode(title_org);
-		fparams="&fparams={'path': '%s', 'title': '%s', 'Plot': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s', 'ID': '%s'}" \
-			% (quote(path), quote(title_org), quote(Plot), quote(img), quote(geoblock), quote(sub_path), Dict_ID)
+		fparams="&fparams={'title': '%s', 'Plot': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s', 'ID': '%s'}" \
+			% (quote(title_org), quote(Plot), quote(img), quote(geoblock), quote(sub_path), Dict_ID)
 		addDir(li=li, label=title, action="dirList", dirID="StreamsShow", fanart=img, thumb=img, 
-			fparams=fparams, tagline=tagline, mediatype=mediatype)
-	
-	#----------------------------------------------- 	
-
-	# MEHR_Suche (wie ZDF_Sendungen) - bei Verpasst-Beiträge Uhrzeit abschneiden:
-	if '|' in title_org:						# Bsp. Verpasst:  "04:20 Uhr | Abenteuer Winter.."
-		title_org = title_org.split('|')[1].strip()
-	label = "Alle Beiträge im ZDF zu >%s< suchen"  % title_org
-	query = title_org.replace(' ', '+')	
-	tagline = u"zusätzliche Suche starten"
-	summ 	= "suche alle Beiträge im ZDF, die sich auf >%s< beziehen" % title_org
-	s_type	= 'MEHR_Suche'						# Suche alle Beiträge (auch Minutenbeiträge)
-	query=py2_encode(query); 
-	fparams="&fparams={'query': '%s', 's_type': '%s'}" % (quote(query), s_type)
-	addDir(li=li, label=label, action="dirList", dirID="ZDF_Search", fanart=R(ICON_MEHR), 
-		thumb=R(ICON_MEHR), fparams=fparams, tagline=tagline, summary=summ)
-		
-			
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			fparams=fparams, tagline=tagline, mediatype=mediatype)	
+	return
 	
 #-------------------------
-# HBBTV Videoquellen 		
+# HBBTV Videoquellen (nur ZDF)		
 def ZDFSourcesHBBTV(title, scms_id):
 	PLog('ZDFSourcesHBBTV:'); 
 	PLog("scms_id: " + scms_id) 
@@ -9320,34 +9266,49 @@ def ZDFSourcesHBBTV(title, scms_id):
 	streams = stringextract('"streams":', '"head":', page)	# Video-URL's ermitteln
 	ptmdUrl_list = blockextract('"ptmdUrl":', streams)		# mehrere mögl., z.B. Normal + DGS
 	PLog(len(ptmdUrl_list))
-	stream_list=[]
-	for ptmdUrl in ptmdUrl_list:
+
+	for ptmdUrl in ptmdUrl_list:							# 1-2
 		PLog(ptmdUrl[:200])
 		label = stringextract('"label":"', '"', ptmdUrl)
-		streams = blockextract('"main":', ptmdUrl)		#  mehrere mögl., z.B. MP4, m3u8
-		for stream in streams:
-			if '"q1":' in stream:
-				url = stringextract('"q1":"',  '"', stream)
-				quality = u'hohe'
+		main_list = blockextract('"main":', ptmdUrl)		#  mehrere mögl., z.B. MP4, m3u8
+		stream_list=[]
+		for qual in main_list:								# bisher nur q1 + q3 gesehen
+			PLog(qual[:80])
+			if '"q1"' in qual:								# Bsp.: "q1": "http://tvdlzdf..
+				q="q1"
+				url = stringextract('"q1":"',  '"', qual)
+				stream_list.append("%s|%s" % (q, url)) 
+			if '"q2"' in qual:							
+				q="q2"
+				url = stringextract('"q2":"',  '"', qual)
+				stream_list.append("%s|%s" % (q, url)) 
+			if '"q3"' in qual:
+				q="q3"
+				url = stringextract('"q3":"',  '"', qual)
+				stream_list.append("%s|%s" % (q, url))
+		
+		PLog(len(stream_list))
+		for stream in stream_list:
+			q, url = stream.split("|")
+			if q == 'q1':
+				quality = u'HOHE'
 				w = "960"; h = "540"					# Probeentnahme	
 				bitrate = u"1812067"
-			if '"q2":' in stream:
-				url = stringextract('"q2":"',  '"', stream)
-				quality = u'sehr hohe'
+			if q == 'q2':
+				quality = u'SEHR HOHE'
 				w = "1280"; h = "720"					# Probeentnahme							
 				bitrate = u"3621101"
-			if '"q3":' in stream:
-				url = stringextract('"q3":"',  '"', stream)
-				quality = u'Full HD'
+			if q == 'q3':
+				quality = u'FULL HD'
 				w = "1920"; h = "1080"					# Probeentnahme							
 				bitrate = u"6501324"
 			
 			res = "%sx%s" % (w,h)
 			
-			if 'm3u8' in stream:
-				label = u'HLS Qualität: %s' % quality
+			if u'm3u8' in stream:
+				stream_title = u'HLS, Qualität: %s | %s' % (quality, label) # label: Normal, DGS, .
 			else:
-				label = u'MP4 Qualität: %s' % quality
+				stream_title = u'MP4, Qualität: %s | %s' % (quality, label)
 				try:
 					bitrate = re.search(u'_(\d+)k_', url).group(1)	# bitrate überschreiben	
 				except Exception as exception:			# ts möglich: http://cdn.hbbtvlive.de/zdf/106-de.ts
@@ -9356,9 +9317,10 @@ def ZDFSourcesHBBTV(title, scms_id):
 
 			title_url = u"%s#%s" % (title, url)
 			item = u"%s ** Bitrate %s ** Auflösung %s ** %s" %\
-				(label, bitrate, res, title_url)
+				(stream_title, bitrate, res, title_url)
 			HBBTV_List.append(item)
 		
+	PLog(len(HBBTV_List))
 	return HBBTV_List
 	 
 #-------------------------
@@ -9934,7 +9896,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 			PLog("append: %s, %s.." % (str(BandwithInt), Resolution_org))
 			if Resolution_org == '':										# für sorted in StreamsShow erford.
 				Resolution_org = '0x0 (vermutl. Audio)'
-			Stream_List.append(u'HLS Einzelstream ** Bitrate %s ** Auflösung %s ** %s#%s' %\
+			Stream_List.append(u'HLS, Einzelstream ** Bitrate %s ** Auflösung %s ** %s#%s' %\
 				(str(BandwithInt), Resolution_org, stitle, url)) # wie Downloadliste
 		
 		li_cnt = li_cnt + 1  	# Listitemzähler												
@@ -9960,9 +9922,13 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 #	"MP4 Qualität: niedrige ** leer **leer ** Titel#Url"	
 #	"MP4 Qualität: Full HD ** Bandbreite ** Auflösung ** Titel#Url"
 # Anzeige: aufsteigend (beide Listen)
-# Aufrufer: ARDStartSingle, ZDF_getVideoSources (ZDF)
+# Aufrufer: build_Streamlists_buttons (Aufrufer: ARDStartSingle (ARD Neu), 
+#	build_Streamlists (ZDF,  my3Sat), SingleSendung (ARD Classic)
+# 
+# Plot = tagline (zusammengefasst: Titel, tagline, summary)
+ 
 #
-def StreamsShow(title, path, Plot, img, geoblock, ID, sub_path=''):	
+def StreamsShow(title, Plot, img, geoblock, ID, sub_path=''):	
 	PLog('StreamsShow:'); PLog(ID)
 	title_org = title; 
 	
@@ -9975,6 +9941,7 @@ def StreamsShow(title, path, Plot, img, geoblock, ID, sub_path=''):
 
 	title_org=py2_encode(title_org);  img=py2_encode(img);
 	sub_path=py2_encode(sub_path); 	Plot=py2_encode(Plot); 
+	
 	tagline_org = Plot.replace('||', '\n')
 
 	cnt=1
@@ -9986,8 +9953,6 @@ def StreamsShow(title, path, Plot, img, geoblock, ID, sub_path=''):
 		
 		PLog(title); PLog(tagline_org[:80]);
 		tagline = tagline_org
-		if title not in tagline_org:
-			tagline = "%s | %s" % (title, tagline_org)
 	
 		label = "%d. %s | %s| %s" % (cnt, label, bitrate, res)
 		cnt = cnt+1
