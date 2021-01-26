@@ -9,7 +9,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
 ################################################################################
-#	Stand: 07.10.2020
+#	Stand: 26.01.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -652,13 +652,15 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 		geoblock =  " | Geoblock: %s"	% geo
 														# 2. Video-Metadaten
 	x_cid	= "x-request-cid,%s" % x_cid							# x-request-cid
-	x_token = "x-request-token,f058a27469d8b709c3b9db648cae47c2"	# x-request-token
+	#x_token = "x-request-token,f058a27469d8b709c3b9db648cae47c2"	# x-request-token
+	x_token = "x-request-token,137782e774d7cadc93dcbffbbde0ce9c"	# 26.01.2021 neu
+	
 	data = 'addStatusDetails=1&addStreamDetails=1&addFeatures=1&addCaptions=1&addBumpers=1&captionFormat=data'
 	path = "https://api.nexx.cloud/v3/741/videos/byid/%s" % entityId
 	page = loadPage(path, x_cid=x_cid, x_token=x_token, data=data)
 	PLog(page[:80]) 
 	jsonObject = json.loads(page)
-	# RSave("/tmp/x_videometa_protec.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
+	#RSave("/tmp/x_videometa_protec.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
 	
 	protected=False; tokenHLS=''; tokenDASH=''			# 3. Stream-Url 
 	server = jsonObject["result"]["streamdata"]["cdnShieldProgHTTPS"]

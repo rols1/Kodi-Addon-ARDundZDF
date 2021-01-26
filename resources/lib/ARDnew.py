@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 24.01.2021
+#	Stand 25.01.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -707,12 +707,20 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 # 05.01.2021 Anpassung für Sofortstart-Format: HLS_List + MP4_List -> PlayVideo_Direct
 #	(Streamwahl -> PlayVideo)
 # 21.01.2021 Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
+# 25.01.2021 no-cache-Header für Verpasst- und A-Z-Beiträge
 #
 def ARDStartSingle(path, title, summary, ID='', mehrzS=''): 
 	PLog('ARDStartSingle: %s' % ID);
 	title_org = title
 	
-	page, msg = get_page(path)
+
+	headers=''
+	# Header für Verpasst-Beiträge (ARDVerpasstContent -> get_page_content)
+	if ID == 'EPG' or ID == 'A-Z':											
+		headers = "{'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma':'no-cache',\
+			'Expires': '0'}"		
+
+	page, msg = get_page(path, header=headers)
 	if page == '':	
 		msg1 = "Fehler in ARDStartRubrik: %s"	% title
 		msg2=msg
@@ -923,7 +931,9 @@ def ARDStartVideoMP4get(title, VideoUrls):
 # Auflistung 0-9 (1 Eintrag), A-Z (einzeln) 
 # 10.11.2019 Verzicht auf Abgleich Button/Webseite (Performance, lange Ladezeit).
 # 28.05.2020 ARD-Änderungen - s. SendungenAZ_ARDnew
-#			
+# 25.01.2021 Laden + Caching der Link-Übersicht, Laden der Zielseite in 
+#	SendungenAZ_ARDnew
+# 		
 def SendungenAZ(name, ID):		
 	PLog('SendungenAZ: ' + name)
 	PLog(ID)
@@ -936,17 +946,51 @@ def SendungenAZ(name, ID):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')						# Home-Button
 		
-	azlist = list(string.ascii_uppercase)			# A - Z
-																
-	azlist.insert(0,u'#')							# früher 0-9, ersetzt durch '#09' in SendungenAZ_ARDnew	
-	for button in azlist:	
-		PLog(button)
+	# Link-Übersicht laden:
+	# azlist = list(string.ascii_uppercase)			# 25.01.2021 A-Z - nicht mehr benötigt
+	# azlist.insert(0,u'#')	
+	path = 'https://api.ardmediathek.de/page-gateway/pages/%s/editorial/experiment-a-z?embedded=false' % sender
+	page = Dict("load", 'ARDnew_AZ_%s' %sender, CacheTime=ARDStartCacheTime)					
+	if page == False:										# nicht vorhanden oder zu alt
+		page, msg = get_page(path)		
+		if page == '':	
+			msg1 = u"Fehler in SendungenAZ: %s"	% name
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return li
+		else:	
+			Dict("store", 'ARDnew_AZ_%s' %sender, page) 	# Seite -> Cache: aktualisieren	
+	
+	# Buchstabenblock: "title":"#","href":"https://api...
+	pat = '"urlId":'									# Link-Blöcke (title":" 2x enth.)
+	gridlist = blockextract(pat, page)	
+	PLog('pat: %s, gridlist: %d' % (pat, len(gridlist)))			
+	if len(gridlist) == 0:				
+		msg1 = u'Keine Beiträge gefunden zu %s' % button	
+		MyDialog(msg1, '', '')					
+		return li	
+							
+	for grid in gridlist:
+		tag=''
+		if 'Experiment A-Z' in grid:						# Gesamtlink
+			continue
+		button = stringextract('title":"', '"', grid)
+		#if button == 'Z':	# Debug
+		#	PLog(grid)
+			
 		title = "Sendungen mit " + button
+		anz = stringextract('totalElements":', '}', grid)
+		#if anz:											# falsch bei den Senderseiten
+		#	tag = u"Beiträge: %s" % anz
+		href = stringextract('href":"', '"', grid)
 		summ = u'Gezeigt wird der Inhalt für %s' % sendername
-		PLog(button)
-		fparams="&fparams={'title': '%s', 'button': '%s'}" % (title, button)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ_ARDnew", fanart=R(ICON_ARD_AZ), 
-			thumb=R(ICON_ARD_AZ), fparams=fparams, summary=summ)																	
+		
+		PLog('Satz1:');
+		PLog(button); PLog(anz); PLog(href); 
+		href=py2_encode(href); title=py2_encode(title); 	
+		fparams="&fparams={'title': '%s', 'button': '%s', 'href': '%s'}" % (title, button, quote(href))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ_ARDnew",\
+			fanart=R(ICON_ARD_AZ), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams, summary=summ)																	
 										
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 ####################################################################################################
@@ -966,8 +1010,12 @@ def SendungenAZ(name, ID):
 #	gewählten Sender alle Beiträge A-Z, jeweils in Blöcken für einz.
 #	Buchstaben.
 #	Zusätzl. Cachenutzung (ARD_AZ_ard: 1,5 MByte)
+# 25.01.2021 die grouping-Links funktionieren nicht mehr bei allen Beiträgen-
+#	Umstellung auf "editorial"-Links (i.d.R. 2x vorh., Auswahl "embedded"),
+#	Verzicht auf Laden + Caching der Gesamtseite, stattdessen in SendungenAZ
+#	Laden der Link-Übersicht mit embedded-Zusatz und hier Laden der Zielseite
 #
-def SendungenAZ_ARDnew(title, button): 
+def SendungenAZ_ARDnew(title, button, href): 
 	PLog('SendungenAZ_ARDnew:')
 	PLog('button: ' + button); 
 	title = title	
@@ -980,43 +1028,33 @@ def SendungenAZ_ARDnew(title, button):
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)
 	
-	path = 'https://api.ardmediathek.de/page-gateway/pages/%s/editorial/experiment-a-z' % sender
-
-	# path = path.replace('#', '%23')						# ab 21.06.2020 in get_page
-	# Seite aus Cache laden
-	page = Dict("load", 'ARD_AZ_%s' %sender, CacheTime=ARDStartCacheTime)					
-	if page == False:										# nicht vorhanden oder zu alt
-		page, msg = get_page(path)		
-		if page == '':	
-			msg1 = u"Fehler in SendungenAZ_ARDnew: %s"	% title
-			msg2 = msg
-			MyDialog(msg1, msg2, '')	
-			return li
-		else:	
-			Dict("store", 'ARD_AZ_%s' %sender, page) 		# Seite -> Cache: aktualisieren		
-	PLog(len(page))		
-	
-	# Buchstabenblock, 2. Block Abschluss: "title":"#","titleVisible":true,"type":"gridlist"
-	pat = 'title":"%s"' % button							# Suchmuster Block
-	gridlist=[]
-	if pat in page:									
-		grid_block = blockextract(pat, page)[0]				# Beiträge im Block
-		gridlist = blockextract('"decor":', grid_block)
-		PLog('pat: %s, gridlist: %d' % (pat, len(gridlist)))			
+	# der Link lädt die kompl. Beiträge A-Z, ausgewertet wird der passende Buchstabenblock
+	# Alternative (vor V3.7.1): Link ohne Zusatz  lädt die kompl. Beiträge A-Z
+	href = href.replace('&embedded=false', '')				# ohne entspr. Header nur leere Seite
+	page, msg = get_page(href)		
+	if page == '':	
+		msg1 = u"Fehler in SendungenAZ_ARDnew: %s"	% title
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	PLog(len(page))
+			
+	gridlist = blockextract('"decor":', page)			# Beiträge im Block
+	PLog(len(gridlist))
 	if len(gridlist) == 0:				
 		msg1 = u'Keine Beiträge gefunden zu %s' % button	
 		MyDialog(msg1, '', '')					
 		return li
 			
 	for s  in gridlist:
-		targetID= stringextract('target":{"id":"', '"', s)	 # targetID
-		PLog(targetID)
-		if targetID == '':									# keine Video
-			continue
-		groupingID= stringextract('/ard/grouping/', '"', s)	# leer bei Beiträgen von A-Z-Seiten
-		if groupingID != '':
-			targetID = groupingID
-		href = 'http://page.ardmediathek.de/page-gateway/pages/%s/grouping/%s'  % (sender, targetID)
+		href_list = blockextract('"href":"', s, '"')
+		PLog(href_list); 
+		for url in href_list:
+			if 'embedded=true' in url:
+				href = stringextract('"href":"', '"', url)
+				break
+		if href == '':
+			continue		
 
 		title 	= stringextract('"longTitle":"', '"', s)
 		if title == '':
@@ -1044,7 +1082,7 @@ def SendungenAZ_ARDnew(title, button):
 				# PLog('filtered: ' + title)
 				continue		
 
-		PLog('Satz:');
+		PLog('Satz2:');
 		PLog(title); PLog(href); PLog(img); PLog(summ); PLog(tagline);
 		summ = "%s\n\n%s" % (tagline, summ)
 		href=py2_encode(href); title=py2_encode(title); 
@@ -1328,7 +1366,7 @@ def ARDVerpasstContent(title, startDate, endDate, CurSender):
 
 	base = "https://page.ardmediathek.de/page-gateway/compilations/ard/pastbroadcasts"
 	base = base.replace('/ard/', '/%s/' % sender)
-	path = base + "?startDateTime=%s&endDateTime=%s&pageNumber=0&pageSize=100" % (startDate, endDate)		
+	path = base + "?startDateTime=%s&endDateTime=%s&pageNumber=0&pageSize=100" % (startDate, endDate)
 	
 	page, msg = get_page(path)
 	if page == '':	

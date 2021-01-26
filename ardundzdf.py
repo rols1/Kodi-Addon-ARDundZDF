@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.7.0'
-VDATE = '24.01.2021'
+VERSION = '3.7.1'
+VDATE = '26.01.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5447,10 +5447,10 @@ def DownloadsList():
 			PLog('Satz:')
 			PLog(httpurl); PLog(summary); PLog(tagline); PLog(quality); # PLog(txt); 			
 			if httpurl.endswith('mp3'):
-				oc_title = 'Bearbeiten: Podcast | ' + title
+				oc_title = u'Anhören, Bearbeiten: Podcast | ' + title
 				thumb = R(ICON_NOTE)
 			else:
-				oc_title='Bearbeiten: ' + title
+				oc_title=u'Ansehen, Bearbeiten: ' + title
 				if thumb == '':							# nicht in Beschreibung
 					thumb = R(ICON_DIR_VIDEO)
 
@@ -9117,9 +9117,8 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 			PLog(url); PLog(quality)
 			if facets.startswith('['):
 				quality = "%s [%s..]" % (quality, up_low(facets[1:6], mode='low'))
-		
 			if url:	
-				if quality == 'auto' and 'master.m3u8' not in url:	# funk: m3u8-Urls nicht verwertbar
+				if up_low(quality) == 'AUTO' and 'master.m3u8' not in url:	# funk: m3u8-Urls nicht verwertbar
 					continue	
 				if url.find('master.m3u8') > 0:			# m3u8 enthält alle Auflösungen
 					quality = u'automatisch'
@@ -9196,7 +9195,7 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		HLS_List,MP4_List,HBBTV_List,ID="ZDF"):
 	PLog('build_Streamlists_buttons:'); PLog(ID)
 	
-	if geoblock:
+	if geoblock and geoblock not in Plot:
 		Plot = "%s||%s" % (Plot, geoblock) 
 	
 	tagline = Plot.replace('||', '\n')
@@ -9447,7 +9446,6 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken2
 	page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
 	PLog("request_json: " + page[:40])
-	RSave('/tmp/ZDF_VideoSources_funk.json', py2_encode(page))	# Debug	
 
 	if page == '':	# Abbruch 
 		PLog('videodat_url: Laden fehlgeschlagen')

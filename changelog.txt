@@ -12,6 +12,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+26.01.2021 3.7.1
+			A-Z (Modul ARD Neu): Anpassung an api-Änderung - Laden + Caching der json-
+			Link-Übersicht für Button-Liste (keine Gesamtbeiträge), nach Buttonwahl
+			Auswertung der einz. Zielseite, Anpassungen in SendungenAZ + SendungenAZ_ARDnew.
+			build_Streamlists_buttons: geoblock-Doppler in Info-Text unterdrückt.
+			ARDStartSingle (Modul ARD Neu): no-cache-Header für Verpasst- und A-Z-Beiträge.
+			DownloadsList: Titeltext erweitert (Ansehen, Anhören).
+			build_Streamlists: up_low(quality) - für ZDF-funk-Beiträge erford., Hinw.:
+			funk-m3u8-Urls nicht verwertbar.
+			ShowVideo (Modul funk): Austausch x_token (alter ungültig), x_cid noch aktuell.
+
 24.01.2021 3.7.0
 			Sofortstart-Erweiterung (Fortsetzung Update 3.6.8): Modul 3sat - Anpassung 
 			Haupt-PRG für gemeinsame Nutzung ZDF + 3sat (Anpassung ZDF_getVideoSources,
