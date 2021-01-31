@@ -9,7 +9,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
 ################################################################################
-#	Stand: 26.01.2021
+#	Stand: 29.01.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -609,6 +609,9 @@ def extract_videos(stageObject):
 # Sofortstart: i.Z.m. den geschützte Videos und auch häufigem 
 #	"Stottern" bei ungeschützten Streams wird im Modul das größte
 #		MP4-Video verwendet (Vorgabe in Settings)
+# 26.01.2021 x_token geändert
+# 29.01.2021 Anpassung an neues Format "applyAzureStructure": 0,
+#	betroffen HLS- und MP4-Formate
 #
 def ShowVideo(title, img, descr, entityId, Merk='false'):
 	PLog('ShowVideo:'); PLog(title); PLog(entityId)
@@ -651,40 +654,71 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	if geo:
 		geoblock =  " | Geoblock: %s"	% geo
 														# 2. Video-Metadaten
-	x_cid	= "x-request-cid,%s" % x_cid							# x-request-cid
+	x_cid	= "x-request-cid, %s" % x_cid							# x-request-cid
 	#x_token = "x-request-token,f058a27469d8b709c3b9db648cae47c2"	# x-request-token
-	x_token = "x-request-token,137782e774d7cadc93dcbffbbde0ce9c"	# 26.01.2021 neu
+	x_token = "x-request-token, 137782e774d7cadc93dcbffbbde0ce9c"	# 26.01.2021 neu
 	
 	data = 'addStatusDetails=1&addStreamDetails=1&addFeatures=1&addCaptions=1&addBumpers=1&captionFormat=data'
 	path = "https://api.nexx.cloud/v3/741/videos/byid/%s" % entityId
 	page = loadPage(path, x_cid=x_cid, x_token=x_token, data=data)
 	PLog(page[:80]) 
 	jsonObject = json.loads(page)
-	#RSave("/tmp/x_videometa_protec.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
+	#RSave("/tmp/x.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
 	
-	protected=False; tokenHLS=''; tokenDASH=''			# 3. Stream-Url 
-	server = jsonObject["result"]["streamdata"]["cdnShieldProgHTTPS"]
-	if server == '':	# i.d.R. funk-01dd.akamaized.net
-		# 				# protected: nx-t09.akamaized.net	
-		# token-Lösung von realvito (kodinerds, s. Post vom 20.10.2019)		
-		server = jsonObject["result"]["streamdata"]["cdnShieldHTTPS"]	# endet mit /
-		tokenHLS = jsonObject["result"]["protectiondata"]["tokenHLS"]
-		tokenDASH= jsonObject["result"]["protectiondata"]["tokenDASH"]
-		protected = True
+	azure = jsonObject["result"]['streamdata']['applyAzureStructure']	# Test (s. 00_Codebeispiele)
+	azure = str(azure)
+	PLog("azure: " + azure);										# 0 oder 1, verschiedene Url-Struktur MP4,
+																	# 	steuert Format MP4-Url (s.u.)
+	
+	streamdata = jsonObject["result"]["streamdata"] 
+	protected=False; tokenHLS=''; tokenDASH=''						# 3. Stream-Url 
+	mp4_server=''; stream_server='';
+	#if server == '':	# i.d.R. funk-01dd.akamaized.net
+	# 				# protected: nx-t09.akamaized.net	
+	# protected = True
+	# token-Lösung von realvito (kodinerds, s. Post vom 20.10.2019), ungültig ab 26.01.2021
+	if "cdnShieldProgHTTPS" in streamdata:
+		mp4_server = streamdata["cdnShieldProgHTTPS"]
+	if "cdnShieldHTTPS" in streamdata:
+		stream_server = streamdata["cdnShieldHTTPS"]	# endet mit /
+	if "tokenHLS" in streamdata:
+		tokenHLS = streamdata["tokenHLS"]
+	if "tokenDASH" in streamdata:
+		tokenDASH= streamdata["tokenDASH"]
 		
-	PLog("server: "+ server)
+	PLog("mp4_server: %s, stream_server: %s" % (mp4_server, stream_server))
 	PLog("tokenHLS: "+ tokenHLS); PLog("tokenDASH: "+ tokenDASH);
-	locator	 = jsonObject["result"]["streamdata"]["azureLocator"]	
-	distrib  = jsonObject["result"]["streamdata"]["azureFileDistribution"]
-	
-	if protected:
-		stream_url = "https://%s%s/%s_src.ism/Manifest(format=mpd-time-cmaf)?hdnts=%s"	% (server,locator,entityId, tokenHLS)
-		# Header Referer von  Kodi nicht verwendet/erkannt - weiterhin Player-Error (s.o.)
-		#h1='cors'
-		#h2='https://www.funk.net/channel/doctor-who-1164/boeser-wolf-133317/doctor-who-staffel-1-1290'
-		#stream_url = "%s|Sec-Fetch-Mode=%s&Referer=%s" % (stream_url, urllib2.quote(h1), urllib2.quote(h2))
+	locator=''; qAccount=''; qPrefix=''; qHash=''
+	if "azureLocator" in streamdata:									# 26.01.2021 fehlt wenn azure=0
+		locator	 = streamdata["azureLocator"]
 	else:
-		stream_url = "https://%s%s/%s_src.ism/Manifest(format=mpd-time-cmaf)"	% (server,locator,entityId)
+		if "qLocator" in streamdata:
+			locator	 = streamdata["qLocator"]							# bei beiden Varianten 
+		if "qAccount" in streamdata:
+			qAccount	 = streamdata["qAccount"]
+		if "qPrefix" in streamdata:
+			qPrefix	 = streamdata["qPrefix"]
+		if "qHash" in streamdata:
+			qHash	 = streamdata["qHash"]
+
+	distrib  = jsonObject["result"]["streamdata"]["azureFileDistribution"] # Liste der Auflösungen
+	PLog("locator: %s, qAccount: %s, qPrefix: %s" % (locator, qAccount, qPrefix))
+	
+	#if protected:
+	#	stream_url = "https://%s%s/%s_src.ism/Manifest(format=mpd-time-cmaf)?hdnts=%s"	% (server,locator,entityId, tokenHLS)
+	#	# Header Referer von  Kodi nicht verwendet/erkannt - weiterhin Player-Error (s.o.)
+	#	#h1='cors'
+	#	#h2='https://www.funk.net/channel/doctor-who-1164/boeser-wolf-133317/doctor-who-staffel-1-1290'
+	#	#stream_url = "%s|Sec-Fetch-Mode=%s&Referer=%s" % (stream_url, urllib2.quote(h1), urllib2.quote(h2))
+	#else:
+	if azure == '1':
+		stream_url = "https://%s%s/%s_src.ism/Manifest(format=mpd-time-cmaf)"	% (stream_server,locator,entityId)
+	else: 
+		# neu ab 26.01.2021 - entspr. dem HLS-Format bei ZDF-funk-Beiträgen
+		# Format: server/qAccount/files/qPrefix/locator/qAccount-qHash.ism/manifest.m3u8
+		stream_url = "https://%s%s/files/%s/%s/%s-%s.ism/manifest.m3u8" %\
+			(stream_server,qAccount,qPrefix,locator,qAccount,qHash)
+		
 	PLog("stream_url: "+ stream_url)
 															# Video-Details
 	title 	= jsonObject["result"]["general"]["title"]
@@ -700,10 +734,25 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	forms = get_forms(distrib)								# Details für mp4_url's 
 	mp4_urls = []
 	for form in forms:
+		# Format: server/locator/entityId/form/qLocator/form.mp4?hdnts=%s
 		# leerer hdnts-Zusatz bei nicht geschützten Videos stört nicht.
  		# https://funk-01.akamaized.net/59536be8-46cc-4d1e-83b7-d7bab4b3eb5d/1633982_src_1920x1080_6000.mp4
-		mp4_urls.append("https://%s%s/%s_src_%s.mp4?hdnts=%s"	% (server,locator,entityId,form,tokenDASH))
-	PLog("mp4_urls: "+ str(mp4_urls))	
+ 		if azure == '1':										# 
+			mp4_urls.append("https://%s%s/%s_src_%s.mp4?hdnts=%s"	% (mp4_server,locator,entityId,form,tokenDASH))
+		else:
+			# neu ab 26.01.2021 - entspr. dem MP4-Format bei ZDF-funk-Beiträgen
+			# Format: server/qAccount/files/qPrefix/qLocator/forms.split(':')[-1].mp4?fv=1
+			# 
+			form  = form.split('_')[-1]						# 0460_426x240_5-nM7LBFrZD4JdCqWm8czk
+			mp4_urls.append("https://%s%s/files/%s/%s/%s.mp4?fv=1"	% (mp4_server,qAccount,qPrefix,locator,form))
+	PLog("mp4_urls: "+ str(mp4_urls))
+	
+	if len(mp4_urls) == 0:									# Prüfung hls kann entfallen (beide oder keine)
+		msg1 = 'keine Videoquellen gefunden'
+		msg2 = 'Bitte Kontakt zum Addon-Entwickler aufnehmen'
+		MyDialog(msg1, msg2, '')
+		return
+		
 	
 	title = repl_json_chars(title)
 	title_org = title
@@ -716,12 +765,18 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 		if  len(myform) == 0:							# Sicherung: kleinste 
 			mp4_url = mp4_urls[0]
 		else:											# tokenDASH leer falls Server funk-01.akamaized
-			mp4_url = "https://%s%s/%s_src_%s.mp4?hdnts=%s"	% (server,locator,entityId,myform,tokenDASH)
+			if azure == '1':
+				mp4_url = "https://%s%s/%s_src_%s.mp4?hdnts=%s"	% (mp4_server,locator,entityId,myform,tokenDASH)
+			else:
+				myform  = myform.split('_')[-1]				# s.o.
+				mp4_url = "https://%s%s/files/%s/%s/%s.mp4?fv=1"	% (mp4_server,qAccount,qPrefix,locator,myform)
 	
 		tag_add = ''
 		if protected:
-			tag_add = "geschützt"
-		tag = "MP4 %s | %s" % (tag_add, re.search("_src_(.*?).mp4", mp4_url).group(1))	# 1920x1080_6000
+			tag_add = "geschützt"	
+		form = forms[0]
+		res, bandw, stream_id = form.split('_')			# stream_id leer bei azure=0
+		tag = "MP4 | %s | %sk" % (res, bandw)			# 1920x1080_4148_1-7Rk8TrYftK9FVbXQWZdj	
 		tag = tag + geoblock
 		descr_par = "%s||||%s" % (tag, descr)
 		PlayVideo(url=mp4_url, title=title_org, thumb=img, Plot=descr_par, Merk=Merk)
@@ -743,9 +798,20 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	
 	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
 	title = "MP4 | %s" % title_org							# einzelne MP4-Url
+	i=0
 	for mp4_url in mp4_urls:
-		tag 	= "MP4 | %s" % re.search("_src_(.*?).mp4", mp4_url).group(1)	# 1920x1080_6000
+		form = forms[i]
+		PLog("form: " + form)
+		i=i+1
+		res=''; bandw=''; stream_id=''
+		if len(form.split('_')) == 2:						# azure=1
+			res, bandw= form.split('_')
+		if len(form.split('_')) == 3:						# azure=0
+			res, bandw, stream_id = form.split('_')
+		PLog(res)
+		tag = "MP4 | %s | %sk" % (res, bandw)
 		tag = tag + geoblock
+		PLog(tag)
 		
 		title=py2_encode(title); mp4_url=py2_encode(mp4_url);
 		img=py2_encode(img); descr_par=py2_encode(descr_par);
@@ -773,6 +839,8 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 # zerteilt den Distribution-string (azureFileDistribution) in einzelne 
 #	Auflösungen, passend für die Video-Url's
 #	Bsp. 0400:320x180,0700:640x360,1500:1024x576,2500:1280x720,6000:1920x1080
+# 26.01.2021 neues Format: 0460:426x240:5-nM7LBFrZD4JdCqWm8czk - Wegfall
+#	Auflösung + Bandbreite in Url (Abtrennung in ShowVideo)
 #
 def get_forms(distrib, prev_bandw=''):
 	PLog('get_forms: ' + distrib)
@@ -781,11 +849,16 @@ def get_forms(distrib, prev_bandw=''):
 	records = distrib.split(',')
 	records = sorted(records, reverse=True)		# absteigend
 	bandw_old = '0'
-	for rec in records:
-		bandw, res = rec.split(':')		# 0400:320x180
+	for rec in records:	
+		stream_id=''					
+		if len(rec.split(':')) == 2:		# 2-Teilig
+			bandw, res = rec.split(':')		# 0400:320x180
+		else:
+			bandw, res, stream_id = rec.split(':')
+			stream_id = "_%s" % stream_id
 		if bandw.startswith('0'):
 			bandw = bandw[1:]	
-		form = "%s_%s" % (res, bandw)	# 320x180_400
+		form = "%s_%s%s" % (res, bandw, stream_id)	
 		if prev_bandw:					# Abgleich mit Settings
 			#PLog(form); PLog(prev_bandw);  PLog(bandw);  PLog(bandw_old);
 			#PLog(forms)

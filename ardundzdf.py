@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.7.1'
-VDATE = '26.01.2021'
+VERSION = '3.7.2'
+VDATE = '31.01.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8916,7 +8916,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			summary = href_title
 			
 		# Kurzform icon-502_play in https://www.zdf.de/sport/zdf-sportreportage
-		if 	'icon-502_play' not in rec and 'icon-301_clock' not in rec:
+		if 	'icon-502_play' not in rec and 'icon-301_clock' not in rec or ID == "A-Z":
 			PLog('icon-502_play und icon-301_clock nicht gefunden')
 			if plusbar_title.find(' in Zahlen') > 0:	# Statistik-Seite, voraus. ohne Galeriebilder 
 				continue
@@ -9127,7 +9127,8 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 						stitle=title,buttons=False)
 					HLS_List = HLS_List + Stream_List
 					break
-				else:								
+				else:	
+					res='0x0'; bitrate='0'						# Default funk ohne AzureStructure						
 					if 'HD' in quality:							# up_low(quality s.o.
 						w = "1920"; h = "1080"					# Probeentnahme													
 					if 'VERYHIGH' in quality:
@@ -9139,19 +9140,21 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 					if 'LOW' in quality:
 						w = "480"; h = "270"					# Probeentnahme							
 					
-					if '://funk' in url:						# funk: anderes Format
+					if '://funk' in url:						# funk: anderes Format (nur AzureStructure)
 						# Bsp.: ../1646936_src_1024x576_1500.mp4?fv=1
-						res = url.split('_')[2]
-						bitrate = url.split('_')[3]				# 6000.mp4?fv=2
-						bitrate = bitrate.split('.')[0]
-						bitrate = bitrate + "000"				# K-Angabe anpassen 
+						if '_' in url:
+							res = url.split('_')[2]
+							bitrate = url.split('_')[3]				# 6000.mp4?fv=2
+							bitrate = bitrate.split('.')[0]
+							bitrate = bitrate + "000"				# K-Angabe anpassen 
 					else:
-						bitrate = re.search(u'_(\d+)k_', url).group(1)
+						if '_' in url:
+							bitrate = re.search(u'_(\d+)k_', url).group(1)
 						res = "%sx%s" % (w,h)
 					
 					PLog(res)
 					title_url = u"%s#%s" % (title, url)
-					item = u"MP4, Qualität: %s ** Bitrate %sk ** Auflösung %s ** %s" %\
+					item = u"MP4, Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" %\
 						(quality, bitrate, res, title_url)
 					MP4_List.append(item)
 	
@@ -9385,6 +9388,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	
 	# bei Änderung profile_url neu ermitteln - ZDF: zdfplayer-Bereich, NEO: data-sophoraid
 	profile_url = 'https://api.zdf.de/content/documents/%s.json?profile=player'	% sid
+
 	PLog("profile_url: " + profile_url)
 	if sid == '':											# Nachprüfung auf Videos
 		return '','',''
@@ -9783,13 +9787,13 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 
 	playlist = ''
 	# seit ZDF-Relaunch 28.10.2016 dort nur noch https
-	if url_m3u8.find('http://') == 0 or url_m3u8.find('https://') == 0:		# URL oder lokale Datei?			
+	if url_m3u8.startswith('http') == True :								# URL oder lokale Datei?			
 		playlist, msg = get_page(path=url_m3u8)								# URL
 		if playlist == '':
 			line1 = 'master.m3u8 kann nicht geladen werden.'
-			line2 = 'URL: %s '	% (url_m3u8)
+			# line2 = 'URL: %s '	% (url_m3u8)							# zu lang für Dialog, s. Log
 			line3 = 'Fehler: %s'	% (msg)
-			MyDialog(line1, line3, line3)
+			MyDialog(line1, '', line3)
 			return li			
 	else:																	# lokale Datei	
 		fname =  os.path.join(M3U8STORE, url_m3u8) 
@@ -9947,6 +9951,8 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path=''):
 		item = py2_encode(item)
 		PLog("item: " + item[:80])
 		label, bitrate, res, title_href = item.split('**')
+		bitrate = bitrate.replace('Bitrate 0', 'Bitrate unbekannt')	# Anpassung für funk ohne AzureStructure
+		res = res.replace('0x0', 'unbekannt')						# Anpassung für funk ohne AzureStructure
 		title, href = title_href.split('#')
 		
 		PLog(title); PLog(tagline_org[:80]);

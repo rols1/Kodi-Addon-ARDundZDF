@@ -1266,7 +1266,7 @@ def stringextract(mFirstChar, mSecondChar, mString):  	# extrahiert Zeichenkette
 def blockextract(blockmark, mString, blockendmark=''):  	
 	#	blockmark bleibt Bestandteil der Rückgabe - im Unterschied zu split()
 	#	Block wird durch blockendmark begrenzt, falls belegt, sonst reicht 
-	#		 letzter Block reicht bis Ende mString (undefinierte Länge). 
+	#		 letzter Block bis Ende mString (undefinierte Länge). 
 	#	Rückgabe in Liste.
 	#	Verwendung, wenn xpath nicht funktioniert 
 	rlist = []				

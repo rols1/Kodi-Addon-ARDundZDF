@@ -593,19 +593,19 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			continue			
 
 		PLog('"availableTo":null' in s)							# kein Einzelbetrag
-		if '"availableTo":"' in s or '"duration":' in s or 'Livestream' in ID:	# Einzelbetrag
-			if not '"availableTo":null' in s:					# u.a. Bsp. "show":null 
-				mehrfach = False
 		if '/compilation/' in s or '/grouping/' in s:			# Serie Vorrang vor z.B. Teaser 
 			mehrfach = True
 		if ID == 'EPG':
 			mehrfach = False
+		if '"availableTo":"' in s or '"duration":' in s or 'Livestream' in ID:	# Einzelbetrag
+			#if s.find('"availableTo":null') < 0:				# auch bei  vorh. Videos möglich
+			mehrfach = False
 					
-		
+		href=''
 		if mehrfach == True:									# Pfad für Mehrfachbeiträge ermitteln 						
 			url_parts = ['/grouping/', '/compilation/', '/editorial/']
 			hreflist = blockextract('"href":"', s)
-			PLog("hreflist: " + str (hreflist))
+			# PLog("hreflist: " + str (hreflist))
 			for h in hreflist:
 				for u in url_parts:
 					if u in h:
@@ -657,6 +657,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		PLog('Satz:');
 		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ[:60]); PLog(ID)
 		
+		if href == '':
+			continue
 		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
 			filtered=False
 			for item in AKT_FILTER: 
@@ -785,8 +787,9 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	Plugins = blockextract('_plugin', page)				# wir verwenden nur Plugin1 (s.o.)
 	if len(Plugins) > 0:
 		Plugin1	= Plugins[0]							
-		VideoUrls = blockextract('_quality', Plugin1)
+		VideoUrls = blockextract('_quality', Plugin1, "publicationService")
 	PLog(len(VideoUrls))
+	#PLog(VideoUrls)
 	
 	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
 	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
@@ -840,10 +843,13 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 #
 def ARDStartVideoHLSget(title, VideoUrls): 
 	PLog('ARDStartVideoHLSget:'); 
-	HLS_List=[]
+	# PLog(VideoUrls)
+	
+	HLS_List=[]; Stream_List=[];
+	href=''
 	for video in  VideoUrls:				
 		# PLog(video)
-		if '"auto"' in video:								# master.m3u8
+		if '"auto"' in video or  'master.m3u8' in video:	# master.m3u8
 			href = stringextract('stream":"', '"', video)	# Video-Url
 			if href.startswith('http') == False:
 				href = 'https:' + href
@@ -852,9 +858,13 @@ def ARDStartVideoHLSget(title, VideoUrls):
 			break
 			
 	li=''; img=''; geoblock=''; descr='';					# für Stream_List n.b.
-	Stream_List = ardundzdf.Parseplaylist(li, href, img, geoblock, descr, stitle=title, buttons=False)
-	# PLog(Stream_List)
-	HLS_List = HLS_List + Stream_List
+	if href:
+		Stream_List = ardundzdf.Parseplaylist(li, href, img, geoblock, descr, stitle=title, buttons=False)
+		if type(Stream_List) == list:						# Fehler Parseplaylist = string
+			HLS_List = HLS_List + Stream_List
+		else:
+			HLS_List=[]
+	PLog(Stream_List)
 	
 	return HLS_List
 

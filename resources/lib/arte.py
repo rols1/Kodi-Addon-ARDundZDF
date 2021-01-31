@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 19.12.2020
+#	Stand: 31.01.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -226,7 +226,7 @@ def arte_Search(query='', nextpage=''):
 	nextpage = stringextract('page=', '&', nexturl)
 	PLog("nextpage: " + nextpage)	
 
-	li = GetContent(li, page, ID='SEARCH')						
+	li,cnt = GetContent(li, page, ID='SEARCH')						
 		
 	
 	if nextpage:
@@ -248,21 +248,29 @@ def arte_Search(query='', nextpage=''):
 def GetContent(li, page, ID):
 	PLog("GetContent: " + ID)
 	
+	pre_items=[]; max_pre=0
 	if ID == 'SEARCH':
 		items = blockextract('"programId"',  page)
 	else:
-		#items = blockextract('programId":',  page)						# Titel fehlt
+		pos = page.find(u'Auch interessant für Sie')
+		if  pos > 0:					# Trennung: Leithema vom Rest
+			pre_items = blockextract('"title":"',  page[:pos])			# "{" entf. hier
+			max_pre = len(pre_items)
+			page = page[pos:]
 		items = blockextract('{"title":"',  page)
 	if 	len(items) == 0:
 		items = blockextract('"programId"',  page)						# Fallback		 
-	PLog(len(items))
+	PLog("pre_items: %d, items: %d" % (len(pre_items), len(items)))
+	if max_pre > 0:														# Blöcke zusammenlegen
+		items = pre_items + items
 	
-	mediatype=''														# Default für mehrfach
+	
+	mediatype=''; cnt=0													# Default für mehrfach
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'												# für SingleVideo
 	
 	for item in items:
-		mehrfach = False
+		mehrfach = False			
 			
 		title = stringextract('title":"', '"', item)
 		title_raw = title 												# für Abgleich in Kategorien
@@ -325,7 +333,7 @@ def GetContent(li, page, ID):
 		summ = repl_json_chars(summ)						# -"-
 		tag_par = tag.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 		
-		PLog('Satz:')
+		PLog('Satz1:')
 		PLog(mehrfach); PLog(pid); PLog(title); PLog(url); PLog(tag[:80]); PLog(summ[:80]); 
 		PLog(img); PLog(geo);
 		title=py2_encode(title); url=py2_encode(url);
@@ -341,20 +349,27 @@ def GetContent(li, page, ID):
 				cat = stringextract('label":"%s"' % title, '}]}', page) # Sub-Kategorien-Liste ausschneiden
 				tag = stringextract('description":"', '"', cat)
 
-				fparams="&fparams={'title':'%s'}" % (quote(title))
+				fparams="&fparams={'title':'%s', 'path':'%s'}" % (quote(title), quote(url))
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Kategorien", fanart=img, 
 					thumb=img, tagline=tag, fparams=fparams)
 			else:
 				fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(url), quote(title))
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Beitrag_Liste", 
-					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)					
-		else:	
+					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
+			cnt=cnt+1					
+		else:
+			if mystrip(dur) == '':
+				continue
+			#if cnt > max_pre:								# ungenau
+			#	tag = u"[COLOR blue]Auch interessant für Sie[/COLOR]\n\n%s" % tag
+			
 			fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s'}" %\
 				(quote(img), quote(title), quote(pid), quote(tag_par), quote(summ), dur, geo)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.SingleVideo", 
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ,  mediatype=mediatype)		
-	
-	return li
+			cnt=cnt+1
+			
+	return li, cnt
 	
 # -------------------------------
 # holt Bild aus Datensatz
@@ -409,7 +424,7 @@ def Beitrag_Liste(url, title):
 	page = page.replace('\\u002F', '/')	
 	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
 
-	li = GetContent(li, page, ID='Beitrag_Liste')	
+	li,cnt = GetContent(li, page, ID='Beitrag_Liste')	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -562,57 +577,67 @@ def get_masterm3u8(rec_list):					# passende master.m3u8 wählen
 # 13.10.2020 Auswertung Adds hinzugefügt (Aktuelle Highlights, 
 #	Kollektionen, Sendungen) durch Laden der akt. SubKat
 # 23.10.2020 Erfassung der Adds erweitert (s.u. Adds-Liste)
+# 31.01.2021 Stufe 2 aufgrund der unsicheren Adds (dynamisch) geändert: 
+#	keine Differenz. mehr für Titel + Pfadinhalte (z.B. Concert), Übergabe
+#	der Katseite (path) für intrins. Inhalte + der verlinkten Webseite
+#	(link_url). KatSub extrahiert den Seiten-Ausschnitt (-> GetContent).
+#	Falls die Beitragszahl < 2 ist, lässt KatSub zusätzl. die verlinkte 
+#	Webseite auswerten. Die Seitensteuerung folgt zum Schluss (nexturl).  
 #
-def Kategorien(title=''):
+def Kategorien(title='', path=''):
 	PLog("Kategorien: " + title)
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='arte')						# Home-Button
+	li = home(li, ID='arte')				# Home-Button
 	
-	path = BASE_ARTE+'/de/'
-	page = get_ArtePage('Kategorien_1', title, Dict_ID='ArteStart', path=path)	
-	if page == '':	
-		return li	
-
 	
-	if title == '':									# 1. Stufe: Kategorien listen
+	if title == '':											# 1. Stufe: Kategorien listen
 		PLog('Stufe1:')	
-		pos1 = page.find(':"Alle Kategorien"')		# ausschneiden
+		path = BASE_ARTE+'/de/'
+		page = get_ArtePage('Kategorien_1', title, Dict_ID='ArteStart', path=path)	
+		if page == '':	
+			return li
+				
+		pos1 = page.find(':"Alle Kategorien"')				# ausschneiden
 		pos2 = page.find('"Meistgesehene Videos"', pos1+1)	
 		PLog("pos1: %d, pos2: %d" % (pos1, pos2))
-		if pos2 == -1:								# Fallback ("Meistgesehene Videos" nicht sicher) 
+		if pos2 == -1:										# Fallback  
 			pos2 = len(page)
 		page = page[pos1:pos2]
 		PLog(page[:100])
 		
 		# Kategorien listen
 		# GetContent: eigenes ListItem mit Titel (raw) -> KatSub 
-		li = GetContent(li, page, ID='KAT_START') 	# eigenes ListItem
+		li,cnt = GetContent(li, page, ID='KAT_START') 		# eigenes ListItem
 		
-	else:											# 2. Stufe: Subkats von title listen
+	else:													# 2. Stufe: Subkats von path
 		PLog('Stufe2:')
-		pos = page.find('"categories":')			# Listen Subkats am Seitenende o. Bilder
+		page = get_ArtePage('Kategorien_1', title, Dict_ID='ArteStart_%s' % title[:10], path=path)	
+		if page == '':	
+			return li
+			
+		pos = page.find('"categories":')					# Listen Subkats am Seitenende o. Bilder
 		PLog(pos)
 		page = page[pos:]
 		PLog(page[:100])
 						
 		# zum Titel passende Liste suchen, dann die Seite
 		#	rückwärts ab "id" ausschneiden, um den Kat-pid
-		#	zu ermitteln (benötigt fü die Adds). 
+		#	zu ermitteln (benötigt für die Adds). 
 		pos = page.find('label":"%s"' % title)
-		if pos > 0:										# Liste ausschneiden, zurück bis:
-			page = page[pos-50:]						# 	"id":"CPO_de","code":"CPO","language":"de",
+		if pos > 0:											# Liste ausschneiden, zurück bis:
+			page = page[pos-50:]							# 	"id":"CPO_de","code":"CPO","language":"de",
 			
 		page = stringextract('"id"', '}]}', page)
-		Kat_pid = stringextract('"code":"', '"', page)	# pid für ganze Kat
+		Kat_pid = stringextract('"code":"', '"', page)		# pid für ganze Kat
 		PLog(page[:100])
 		if page == '':						
 			msg1 = 'Kategorie nicht gefunden: %s' % title
 			MyDialog(msg1, '', '')
 			return 
 	
-		PLog('Mark0')									# Liste SubKats einschl. Add's	
-		Kat_url = stringextract('url":"', '"', page)	# Bsp.: ../videos/kultur-und-pop/
+		PLog('Mark0')										# Liste SubKats einschl. Add's	
+		Kat_url = stringextract('url":"', '"', page)		# Bsp.: ../videos/kultur-und-pop/
 		PLog("Kat_url: " + Kat_url); PLog("Kat_pid: " + Kat_pid)
 		Kat_page = get_ArtePage('Kategorien_2', title, Dict_ID='ArteKat_%s' % Kat_pid, path=Kat_url)
 		#RSave('/tmp/x.json', py2_encode(Kat_page))	# Debug	
@@ -624,71 +649,39 @@ def Kategorien(title=''):
 		
 		items = blockextract('code":{"name', Kat_page)	# Altern.:'{"id":"'
 		PLog(len(items))
-		
-		# Wiederholung Adds-Liste in KatSub - bei Bedarf ergänzen	
-		# Adds: zusätzl. Beiträge neben den SubKats. Einige sind regelmäßig vorhanden (Highlights,
-		#	Kollektionen, Sendungen, Category Banner) andere individuell (Concert, Fernsehfilme 
-		#	und Serien). Allen gemeinsam: alle oder mind. die Beiträge der 1. Seite sind auf der
-		#	Kat-Seite enthalten.
-		Adds = [u"Fernsehfilm der Woche", u"Krimi und Thriller", u"Comedy", u"Drama", u"Fernsehfilme", 
-			u"Kurz und witzig", u"Letzte Chance", u"", u"Very british", u"Serien-Highlights",
-			u"Highlights", u"Aktuelle Highlights", u"Kollektionen", u"Sendungen", u"Category Banner (%s)" % Kat_pid]
-		base_url = 'https://www.arte.tv/guide/api/emac/v3/de/web/data/MOST_RECENT_SUBCATEGORY/'
-		base_url = base_url + '?imageFormats=landscape&authorizedAreas=DE_FR,EUR_DE_FR,SAT,ALL&mainZonePage=1'
+					
 		for item in items:
-			title = stringextract('title":"', '"', item)
-			subAdd=False
-			if title in Adds:
-				subAdd=True
-			PLog("subAdd: " + str(subAdd))	
-			
+			title = stringextract('title":"', '"', item)			
 			label = title
 			if "Category Banner" in title:
 				label = title.replace("Category Banner", "arte Empfehlung")
 			if 'data":[]' in item:						# skip, ohne Beiträge, Bsp. Playlists
 				continue
 			summ = stringextract('escription":"', '"', item)
+			link_url = stringextract('url":"', '"', item)	# Webseite, abweichend von url in data
 			data = stringextract('data":[', '],', item)
 			
 			# 1. Bild der Subkat laden 
 			#	(Bild nur stellvertretend für gesamte Subkat)
 			#	bei Cache-miss ICON_DIR_FOLDER . Subkats-Listen ohne img.
 			#	Sonderfall arte-concert (mehrere Seiten möglich).
-			img = R(ICON_DIR_FOLDER)							# Default 
+			img = R(ICON_DIR_FOLDER)						# Default 
 			pos = Kat_page.find('title":"%s"' % title)
 			PLog('pos: ' + str(pos))
 			if pos > 0:
 				PLog(Kat_page[pos:pos+100])
 				img = get_img(item=Kat_page[pos:])
 				
-			if subAdd:											# Zusatz Kollektionen u.a., s.o.
-				url = Kat_url
-				pid = Kat_pid									# pid für ganze Kat
-				if 'nextPage":' in item:						# Kat_url durch json-Call ersetzen
-					nexturl = stringextract('nextPage":', ',', item)
-					PLog(nexturl)
-					if nexturl != 'null':
-						url = url.replace('api-cdn.arte.tv', 'www.arte.tv/guide')
-			else:
-				pid = stringextract('id":"', '"', item)			# pid für SubKat
-				if '/AFP_LISTING/' in item:						# Bsp. Das Wichtigste in Kürze
-					url = stringextract('nextPage":"', '"', item)
-					url = url.replace('api-internal.arte.tv', 'www.arte.tv/guide')
-					url = unquote(url)
-				else:
-					url = base_url + '&subCategoryCode=%s&page=1&limit=20' % pid
-			url = url.replace('&page=2', '&page=1')				# erste Seite in KatSub erfassen
-			
-			if '/arte-concert/' in Kat_url and subAdd == False: # Beiträge in der Kat-json
-				url = Kat_url
-				pid = Kat_pid
+			pid = stringextract('id":"', '"', item)			# pid für SubKat				
+			title = repl_json_chars(title)
+			url = path
 						
-			PLog('Satz_Subs:');  PLog(title);  PLog(pid); PLog(url); PLog(img); 
-			title=py2_encode(title); url=py2_encode(url);	
-			fparams="&fparams={'path': '%s','title':'%s', 'pid':'%s'}" % (quote(url), 
-				quote(title), pid)
+			PLog('Satz_Subs:');  PLog(title);  PLog(pid); PLog(url); PLog(link_url); PLog(img);
+			title=py2_encode(title); url=py2_encode(url); link_url=py2_encode(link_url);	
+			fparams="&fparams={'path': '%s','title':'%s','pid':'%s','link_url':'%s'}" %\
+				(quote(url), quote(title), pid, quote(link_url))
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.KatSub", fanart=img, 
-				thumb=img, summary=summ, fparams=fparams)
+				thumb=img, summary=summ, fparams=fparams) 
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -701,38 +694,41 @@ def Kategorien(title=''):
 #		(ermit. in chrome-tools) -> KatSubConcert
 # add: Trigger für Zusätze (Aktuelle Highlights, Kollektionen, Sendungen)
 #
-def KatSub(path, title, pid, add=''):
+def KatSub(path, title, pid, link_url=''):
 	PLog("KatSub: " + title)
-	PLog(pid); PLog(path)
+	PLog(pid); PLog(path); PLog(link_url);
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='arte')						# Home-Button
 	
 	pagenr = stringextract('&page=', '&', path)	
-	page = get_ArtePage('KatSub', title, Dict_ID='ArteSubKat_%s_page_%s' % (pid, pagenr), path=path)	
+	page = get_ArtePage('KatSub', title, Dict_ID='ArteSubKat_%s' % pid, path=path)	
 	# RSave('/tmp/x.json', py2_encode(page))	# Debug	
 	if page == '':	
 		return li
-	Kat_pid =  stringextract('currentCategory":"', '"', page)
 		
-	# Wiederholung Adds-Liste in KatSub - bei Bedarf ergänzen. Hinw. s. Kategorien	
-	Adds = [u"Fernsehfilm der Woche", u"Krimi und Thriller", u"Comedy", u"Drama", u"Fernsehfilme", 
-		u"Kurz und witzig", u"Letzte Chance", u"", u"Very british", u"Serien-Highlights",
-		u"Highlights", u"Aktuelle Highlights", u"Kollektionen", u"Sendungen", u"Category Banner (%s)" % pid]
-	if title in Adds and pagenr == '' or '/arte-concert/' in path:
-		PLog('Mark2')								
-		# alle Beiträge auf der 1. SubKat-Seite - zum Blättern wie im Web 
-		# schneiden wir aus. Die Folgeseiten (json) enthalten nur die Beiträge
-		# der angeforderten Seite. 
-		PLog("title: %s, Kat_pid: %s" % (title,Kat_pid))
-		pos1 = page.find('"title":"%s"' % title) 		# Anfang 
-		pos2 = page.find('{"id":"', pos1+1)	# Ende
-		PLog("pos1 %s, pos2 %s, len %s" % (pos1, pos2, len(page)))
-		page = page[pos1:pos2]							# Ausschnitt
-		PLog(page[:80])
-		PLog(page[len(page)-80:])	
+	PLog('Mark2')								
+	# alle Beiträge auf der 1. SubKat-Seite - zum Blättern wie im Web 
+	# schneiden wir aus. Die Folgeseiten (json) enthalten nur die Beiträge
+	# der angeforderten Seite. 
+	PLog("title: %s" % title)
+	pos1 = page.find('"title":"%s"' % title) 		# Anfang 
+	pos2 = page.find('{"id":"', pos1+1)	# Ende
+	PLog("pos1 %s, pos2 %s, len %s" % (pos1, pos2, len(page)))
+	page = page[pos1:pos2]							# Ausschnitt
+	PLog(page[:80])
+	PLog(page[len(page)-80:])	
 
-	li = GetContent(li, page, ID='KAT_SUB') # eigenes ListItem	
+	li,cnt = GetContent(li, page, ID='KAT_SUB') 	# eigenes ListItem
+	PLog("cnt: %d" % cnt)
+	#if cnt == 0:									# von Webseite ergänzen
+	if cnt < 2:										# von Webseite ergänzen (skip ev. Teaser)
+		page = get_ArtePage('KatSub', title, Dict_ID='ArteWeb_%s' % pid, path=link_url)	
+		if page:
+			pos = page.find('"Die meistgesehenen Videos')	# ausschließen (auf jeder Seite wieder)
+			page = page[:pos]
+			li,cnt = GetContent(li, page, ID='KAT_SUB')
+	
 
 	nexturl = stringextract('nextPage":', ',', page)		# letzte Seite: "", auch "null," möglich
 	if nexturl == 'null':
@@ -741,7 +737,7 @@ def KatSub(path, title, pid, add=''):
 		nextpage = re.search('&page=(.d?)', nexturl).group(1)
 	except:
 		nextpage=""
-	PLog("nexturl: " + nexturl); PLog("nextpage: " + nextpage)	
+	PLog("nextpage: " + nextpage)	
 
 	PLog('Mark3')								
 	if nexturl:										# Mehr-Button
@@ -750,14 +746,16 @@ def KatSub(path, title, pid, add=''):
 		nexturl = nexturl.replace('"', '')										# s.o. null
 		nexturl = nexturl.replace('api-cdn.arte.tv', 'www.arte.tv/guide')		# Adds-Url
 		nexturl = nexturl.replace('api-internal.arte.tv', 'www.arte.tv/guide')	# SubKats-Url
+		nexturl = nexturl.replace('&limit=6', '&limit=100')
 			
 		nexturl = unquote(nexturl)						# DE_FR%252CEUR_DE_FR%252CSAT%252CALL
+		PLog("nexturl: " + nexturl);
 		PLog('Satz_KatSubs:'); PLog(nextpage); PLog(nexturl);
 		tag = "weiter zu Seite %s" % nextpage
 		
 		title=py2_encode(title); nexturl=py2_encode(nexturl)
-		fparams="&fparams={'title': '%s', 'path': '%s', 'pid': '%s', 'add': '%s'}" %\
-			(quote(title), quote(nexturl), Kat_pid, add)
+		fparams="&fparams={'title': '%s', 'path': '%s', 'pid': '%s', 'link_url': '%s'}" %\
+			(quote(title), quote(nexturl), pid, quote(link_url))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.KatSub", 
 			fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), tagline=tag, fparams=fparams)		
 			
@@ -770,9 +768,11 @@ def KatSub(path, title, pid, add=''):
 #
 def get_ArtePage(caller, title, Dict_ID, path, header=''):
 	PLog("get_ArtePage: " + Dict_ID)
-	PLog(caller)
+	PLog(caller); PLog(path)
 	
-	page = Dict("load", Dict_ID, CacheTime=ArteKatCacheTime)	
+	page = Dict("load", Dict_ID, CacheTime=ArteKatCacheTime)
+	# page=False	# Debug
+		
 	if page == False:								# nicht vorhanden oder zu alt
 		page, msg = get_page(path, header=header)	
 		if page == '':						

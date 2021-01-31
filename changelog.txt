@@ -12,6 +12,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+31.01.2021 3.7.2
+			build_Streamlists, StreamsShow: Anpassung an zusätzl. funk-Format (Url ohne
+			Bitrate + Auflösung).
+			ShowVideo, get_forms (Modul funk): Anpassung an zusätzl. funk-Format (Url
+			ohne Bitrate + Auflösung, applyAzureStructure=0), Dialog bei fehlenden
+			MP4-Quellen.
+			ZDF_get_content: Erzwingung von Folgeseiten bei A-Z ohne play-Symbol ('icon-
+			502_play' ff.) - Ergänzung der Erweiterung in V3.6.8, Fehler: Listitem für
+			ZDF_getVideoSources.
+			ARDStartVideoHLSget: Erkennung master.m3u8 erweitert, Param. Stream_List
+			leer vorbelegt, Typeprüfung bei Abbruch, Abbruchdialog gekürzt (relev. für 
+			BR-Videos).
+			Parseplaylist: Fix Unterscheidung Url/lokale Datei (nicht eindeutig).
+			get_page_content (Modul ARD Neu): leere Url abgefangen, Mehrfach-Erkennung
+			eindeutiger (Einschluss '"availableTo":null' - relev. für ARD Retro).			
+			Modul arte: Überarbeitung der Unterkategorien - Anpassung Funktionen Kate-
+			gorien, KatSub, GetContent
+			
+
 26.01.2021 3.7.1
 			A-Z (Modul ARD Neu): Anpassung an api-Änderung - Laden + Caching der json-
 			Link-Übersicht für Button-Liste (keine Gesamtbeiträge), nach Buttonwahl
