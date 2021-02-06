@@ -9,7 +9,7 @@
 #	22.11.2019 Migration Python3 Modul six + manuelle Anpassungen
 ################################################################################
 #
-# Stand: 05.12.2020
+# Stand: 05.02.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -149,13 +149,11 @@ def Hub(ID):
 		
 	jsonObject = json.loads(page)	
 	
-	if ID=='Startseite':
-		v = 'Startpage' 		# speichern
-		Dict('store', v, jsonObject)
+	if ID=='Startseite':		# speichern
+		Dict('store', ID, jsonObject)
 		li = PageMenu(li,jsonObject,DictID='Startpage')		
 	if ID=='Kategorien':
-		v = 'Kategorien'
-		Dict("store", v, jsonObject)
+		Dict("store", ID, jsonObject)
 		li = PageMenu(li,jsonObject,DictID='Kategorien')		
 	if ID=='Sendungen A-Z':
 		v = 'A_Z'
@@ -257,9 +255,12 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 	if("cluster" in jsonObject):		# Bsp- A-Z Leitseite -> SingleRubrik
 		PLog('PageMenu cluster')
 		for counter, clusterObject in enumerate(jsonObject["cluster"]):	# Bsp. "name":"Neu in der Mediathek"
-			if "teaser" in clusterObject and "name" in clusterObject:
+			if "teaser" in clusterObject and "name" in clusterObject:	# name kann leer sein
 				path = "cluster|%d|teaser" % counter
-				title = clusterObject["name"]
+				if "name" in clusterObject:
+					title = clusterObject["name"]
+				if title == '':											# "teaser": [..
+					title = clusterObject["teaser"][0]['titel']
 				
 				# keine personalisierten Inhalte
 				if 'Weiterschauen' in title or u'Das könnte Dich' in title or 'Derzeit beliebt' in title:							
@@ -505,7 +506,7 @@ def ShowVideo(path, DictID, Merk='false'):
 			PLog('Abruf formitaeten jsonurl fehlgeschlagen')			
 		
 		# Fallback:
-		if "formitaeten" not in videoObject:			# 2. Videoquellen via Web/apiToken suchen
+		if "formitaeten" not in page:			# 2. Videoquellen via Web/apiToken suchen
 			streamApiUrl, jsonurl, htmlurl = get_video_urls(videoObject) # neu holen	
 			PLog('formitaeten fehlen, lade htmlurl')
 			PLog('htmlurl: ' + htmlurl)					# Webseite mit apiToken
@@ -640,7 +641,7 @@ def get_formitaeten(jsonObject):
 	PLog('get_formitaeten:')
 	forms=[]
 	# Debug
-	# RSave("/tmp/x_forms.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
+	#RSave("/tmp/x_forms.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
 
 	try:
 		formObject = jsonObject["document"]["formitaeten"]

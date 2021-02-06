@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 25.01.2021
+#	Stand 02.02.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -789,7 +789,6 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 		Plugin1	= Plugins[0]							
 		VideoUrls = blockextract('_quality', Plugin1, "publicationService")
 	PLog(len(VideoUrls))
-	#PLog(VideoUrls)
 	
 	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
 	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
@@ -815,9 +814,9 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	# summ = get_summary_pre(path, ID='ARDnew', page=page)	# entfällt mit summary aus get_page_content 
 	Plot = "Titel: %s\n\n%s" % (title_org, summary)				# -> build_Streamlists_buttons
 	PLog('Plot:' + Plot)
-	thumb = img; ID = 'ARDNEU'
+	thumb = img; ID = 'ARDNEU'; HOME_ID = "ARD Neu"
 	ardundzdf.build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
-		HLS_List,MP4_List,HBBTV_List,ID)
+		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
 	
 	# -----------------------------------------		# mehr (Videos) zur Sendung
 	if mehrzS:										# nicht nochmal "mehr" zeigen
@@ -843,7 +842,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 #
 def ARDStartVideoHLSget(title, VideoUrls): 
 	PLog('ARDStartVideoHLSget:'); 
-	# PLog(VideoUrls)
+	PLog(VideoUrls)
 	
 	HLS_List=[]; Stream_List=[];
 	href=''
@@ -864,7 +863,7 @@ def ARDStartVideoHLSget(title, VideoUrls):
 			HLS_List = HLS_List + Stream_List
 		else:
 			HLS_List=[]
-	PLog(Stream_List)
+	#PLog(Stream_List)
 	
 	return HLS_List
 
@@ -890,32 +889,33 @@ def ARDStartVideoMP4get(title, VideoUrls):
 		if '.mp4' not in href:							# funk-Beiträge: ..src_1024x576_1500.mp4?fv=1
 			continue
 		if href.startswith('http') == False:
-			href = 'http:' + href
+			href = 'https:' + href
 		q = stringextract('_quality":', ',', video)		# Qualität (Bez. wie Original)
 		q = str(q).strip()
-		PLog("q:" + q)
+		PLog("q: " + q)
+
 		w=''; h=''; bitrate=0
-		if q == '0':
+		if '0' in q:
 			quality = u'niedrige'
 			bitrate = u"256312"
 			if "_width" not in video:
 				w = "480"; h = "270"					# Probeentnahme							
-		if q == '1':
+		if '1' in q:
 			quality = u'mittlere'
 			bitrate = "1024321"
 			if "_width" not in video:
 				w = "640"; h = "360"					# Probeentnahme							
-		if q == '2':
+		if '2' in q:
 			quality = u'hohe'
 			bitrate = u"1812067"
 			if "_width" not in video:
 				w = "960"; h = "540"					# Probeentnahme							
-		if q == '3':
+		if '3' in q:
 			quality = u'sehr hohe'
 			bitrate = u"3621101"
 			if "_width" not in video:
 				w = "1280"; h = "720"					# Probeentnahme							
-		if q == '4':
+		if '4' in q:
 			quality = u'Full HD'
 			bitrate = u"6501324"
 			if "_width" not in video:
@@ -930,12 +930,12 @@ def ARDStartVideoMP4get(title, VideoUrls):
 		else:
 			res = u"Auflösung ?"
 		
-		PLog(res); PLog(res) 
+		PLog(bitrate); PLog(res); 
 		title_url = u"%s#%s" % (title, href)
 		item = u"MP4 Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
-		download_list.append(item)	
-	return download_list			
+		download_list.append(item)
 	
+	return download_list			
 			
 ####################################################################################################
 # Auflistung 0-9 (1 Eintrag), A-Z (einzeln) 

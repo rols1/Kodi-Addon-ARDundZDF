@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.7.2'
-VDATE = '31.01.2021'
+VERSION = '3.7.3'
+VDATE = '06.02.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -950,11 +950,15 @@ def AddonInfos():
 # Aufruf Info_Filter
 # 20.01.2020 usemono für textviewer (ab Kodi v18)
 # dialog.select ungeeignet (Font zu groß, Zeilen zu schmal)
-def ShowText(path, title):
+# 02.02.2021 erweitert mit direkter page-Übergabe
+#
+def ShowText(path, title, page=''):
 	PLog('ShowText:'); 
 	
-	page = RLoad(path, abs_path=True)
-	page = page.replace('\t', ' ')		# ersetze Tab's durch Blanks
+	if page == '':
+		page = RLoad(path, abs_path=True)
+		page = page.replace('\t', ' ')		# ersetze Tab's durch Blanks
+	
 	dialog = xbmcgui.Dialog()
 	dialog.textviewer(title, page,usemono=True)
 	
@@ -2575,10 +2579,10 @@ def ARDSport(title):
 	#-------------------------------------------------------# Zusätze
 	# beim Ziel ARDSportPanel den Titel in theme_list für 2. Durchlauf 
 	#	aufnehmen
-	title = "Handball-WM"									# 11.01.2021 Handball-WM (nicht in Fußlinks)
-	href = 'https://www.sportschau.de/handball-wm/index.html'
-	img =  'https://www.sportschau.de/handball-wm/handball-wm-leere-halle-100~_v-TeaserAufmacher.jpg'
-	tagline = 'Handball-WM findet ohne Zuschauer statt'
+	title = "Alpine Ski-WM"									# 11.01.2021 Handball-WM (nicht in Fußlinks)
+	href = 'https://www.sportschau.de/alpine-ski-wm/index.html'
+	img =  'https://www.sportschau.de/wintersport/ski-alpin/thomas-dressen128~_v-gseapremiumxl.jpg'
+	tagline = 'Die Alpine Ski-WM 2021 in Cortina dAmpezzo'
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
 		quote(href), quote(img))
@@ -2679,12 +2683,12 @@ def ARDSportPanel(title, path, img, tab_path=''):
 	PLog(len(sendungen))
 	
 	# ev. erweitern
-	theme_list = ['Wintersport', 'Handball-WM']						
+	theme_list = ['Wintersport', 'Alpine Ski-WM']						
 	if tab_path == '' and title in theme_list:			# 1. Durchlauf bei Tabmenüs
 		if title == 'Formel 1':
 			tablist = blockextract('class="collapsed  subressort', page, '--googleoff')
 		else:
-			tablist = blockextract('class="collapsed  subressort', page)
+			tablist = blockextract('class="collapsed  subressort ', page, "</ul>")
 		PLog(len(tablist))
 		
 		found=False
@@ -4786,9 +4790,9 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 	Plot = tagline.replace('\n', '||')
 	
 	PLog('Lists_ready:');
-	thumb = link_img; ID = 'ARDClassic'; 
+	thumb = link_img; ID = 'ARDClassic'; HOME_ID = "ARD"
 	build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
-		HLS_List,MP4_List,HBBTV_List,ID)
+		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -5447,16 +5451,16 @@ def DownloadsList():
 			PLog('Satz:')
 			PLog(httpurl); PLog(summary); PLog(tagline); PLog(quality); # PLog(txt); 			
 			if httpurl.endswith('mp3'):
-				oc_title = u'Anhören, Bearbeiten: Podcast | ' + title
+				oc_title = u'Anhören, Bearbeiten: Podcast | %s' % py2_decode(title)
 				thumb = R(ICON_NOTE)
 			else:
-				oc_title=u'Ansehen, Bearbeiten: ' + title
+				oc_title=u'Ansehen, Bearbeiten: %s' % py2_decode(title)
 				if thumb == '':							# nicht in Beschreibung
 					thumb = R(ICON_DIR_VIDEO)
 
 			httpurl=py2_encode(httpurl); localpath=py2_encode(localpath); dlpath=py2_encode(dlpath); 
 			title=py2_encode(title); summary=py2_encode(summary); thumb=py2_encode(thumb); 
-			tag_par=py2_encode(tag_par); 
+			tag_par=py2_encode(tag_par); txtpath=py2_encode(txtpath);
 			fparams="&fparams={'httpurl': '%s', 'path': '%s', 'dlpath': '%s', 'txtpath': '%s', 'title': '%s','summary': '%s', \
 				'thumb': '%s', 'tagline': '%s'}" % (quote(httpurl), quote(localpath), quote(dlpath), 
 				quote(txtpath), quote(title), quote(summary), quote(thumb), quote(tag_par))
@@ -9181,9 +9185,11 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 	Plot=tagline; 
 	Plot=Plot.replace('\n', '||')
 	
-	PLog('Lists_ready:');
+	HOME_ID = ID										# ZDF (Default), 3sat
+	PLog('Lists_ready: ID=%s, HOME_ID=%s' % (ID, HOME_ID));
+		
 	build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
-		HLS_List,MP4_List,HBBTV_List,ID)
+		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
 	
 	PLog("build_Streamlists_end")		
 	return HLS_List, MP4_List, HBBTV_List
@@ -9195,7 +9201,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 # Plot = tagline (zusammengefasst: Titel (abgesetzt), tagline, summary)
 #
 def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
-		HLS_List,MP4_List,HBBTV_List,ID="ZDF"):
+		HLS_List,MP4_List,HBBTV_List,ID="ZDF",HOME_ID="ZDF"):
 	PLog('build_Streamlists_buttons:'); PLog(ID)
 	
 	if geoblock and geoblock not in Plot:
@@ -9239,8 +9245,8 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		if anz == '0':									# skip leere Liste
 			continue
 		title=py2_encode(title); title_org=py2_encode(title_org);
-		fparams="&fparams={'title': '%s', 'Plot': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s', 'ID': '%s'}" \
-			% (quote(title_org), quote(Plot), quote(img), quote(geoblock), quote(sub_path), Dict_ID)
+		fparams="&fparams={'title': '%s', 'Plot': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s', 'ID': '%s', 'HOME_ID': '%s'}" \
+			% (quote(title_org), quote(Plot), quote(img), quote(geoblock), quote(sub_path), Dict_ID, HOME_ID)
 		addDir(li=li, label=title, action="dirList", dirID="StreamsShow", fanart=img, thumb=img, 
 			fparams=fparams, tagline=tagline, mediatype=mediatype)	
 	return
@@ -9790,11 +9796,12 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	if url_m3u8.startswith('http') == True :								# URL oder lokale Datei?			
 		playlist, msg = get_page(path=url_m3u8)								# URL
 		if playlist == '':
-			line1 = 'master.m3u8 kann nicht geladen werden.'
-			# line2 = 'URL: %s '	% (url_m3u8)							# zu lang für Dialog, s. Log
-			line3 = 'Fehler: %s'	% (msg)
-			MyDialog(line1, '', line3)
-			return li			
+			icon = R(ICON_WARNING)
+			# msg1 = "master.m3u8 nicht abrufbar"
+			msg1 = "Streaming-Quelle fehlt."
+			msg2 = 'Fehler: %s'	% (msg)
+			xbmcgui.Dialog().notification(msg1, msg2,icon,5000)
+			return li						
 	else:																	# lokale Datei	
 		fname =  os.path.join(M3U8STORE, url_m3u8) 
 		playlist = RLoad(fname, abs_path=True)					
@@ -9930,12 +9937,12 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 # Plot = tagline (zusammengefasst: Titel, tagline, summary)
  
 #
-def StreamsShow(title, Plot, img, geoblock, ID, sub_path=''):	
+def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):	
 	PLog('StreamsShow:'); PLog(ID)
 	title_org = title; 
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')						# Home-Button
+	li = home(li, ID=HOME_ID)						# Home-Button
 
 	Stream_List = Dict("load", ID)
 	if 'MP4_List' in ID:
@@ -9952,10 +9959,10 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path=''):
 		PLog("item: " + item[:80])
 		label, bitrate, res, title_href = item.split('**')
 		bitrate = bitrate.replace('Bitrate 0', 'Bitrate unbekannt')	# Anpassung für funk ohne AzureStructure
-		res = res.replace('0x0', 'unbekannt')						# Anpassung für funk ohne AzureStructure
+		res = res.replace('0x0', 'unbekannt')						# dto.
 		title, href = title_href.split('#')
 		
-		PLog(title); PLog(tagline_org[:80]);
+		PLog(title); PLog(tagline_org[:80]); PLog(sub_path)
 		tagline = tagline_org
 	
 		label = "%d. %s | %s| %s" % (cnt, label, bitrate, res)

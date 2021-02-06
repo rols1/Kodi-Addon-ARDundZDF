@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 22.11.2020
+#	Stand: 06.02.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -749,7 +749,7 @@ def Tonschnipsel():
 # einzelnes Video - xml-Seite
 def Kika_SingleBeitrag(path, title, thumb, summ, duration):
 	PLog('Kika_SingleBeitrag: ' + path)
-	title_call = title
+	title_org = title
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
@@ -765,68 +765,91 @@ def Kika_SingleBeitrag(path, title, thumb, summ, duration):
 	summ = summ1 + ' ' + summ2
 	summ = repl_json_chars(summ)
 	Plot_par = summ
-	
+
+	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
+	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
+	#	fehlende Bandbreiten + Auflösungen werden ergänzt
 	assets = blockextract('<asset>', page)
 	url_m3u8 = stringextract('<adaptiveHttpStreamingRedirectorUrl>', '</', page) # x-mal identisch
 	sub_path = ''
-	if 'master.m3u8' in url_m3u8:	
-		# 04.08.2019 Sofortstart nur noch abhängig von Settings und nicht zusätzlich von  
-		#	Param. Merk.
-		if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true':	# Sofortstart
-			PLog('Sofortstart: Kika_SingleBeitrag')
-			PLog("Plot_par: " + Plot_par)
-			PlayVideo(url=url_m3u8, title=title_call, thumb=thumb, Plot=Plot_par, sub_path=sub_path)
-			return
-			
-		title = u'[m3u8] Bandbreite und Auflösung automatisch'
-		#   "auto"-Button + Ablage master.m3u8:
-		li = ardundzdf.ParseMasterM3u(li=li, url_m3u8=url_m3u8, thumb=thumb, title=title, tagline='', descr=Plot_par,
-			sub_path='')	
-	
-	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
-	oldbitrate=0
-	cnt=0; high=0
-	for s in assets:
-		# Log(s)			# bei Bedarf
-		frameWidth = stringextract('<frameWidth>', '</frameWidth>', s)	
-		frameHeight = stringextract('<frameHeight>', '</frameHeight>', s)
-		url_mp4 = stringextract('<progressiveDownloadUrl>', '</', s)
-		bitrate =  stringextract('<bitrateVideo>', '</', s)
-		if bitrate == '':
-			bitrate = '0'
-		profil =  stringextract('<profileName>', '</', s)	
-		resolution = frameWidth + 'x' + frameHeight
-		
-		if int(bitrate) > oldbitrate:
-			oldbitrate = int(bitrate)
-			high = cnt										# Qualitäts-Index Downloads 
-									
-		title = profil 
-		download_list.append(title + '#' + url_mp4)			# Download-Liste füllen	
-		tagline	 = Plot_par.replace('||','\n')				# wie m3u8-Formate
 
-		PLog('Satz:')
-		PLog(title); PLog(url_mp4); PLog(thumb); PLog(Plot_par);
-		title_call=py2_encode(title_call)
-		title=py2_encode(title); url_mp4=py2_encode(url_mp4);
-		thumb=py2_encode(thumb); Plot_par=py2_encode(Plot_par); 
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s', 'Merk': ''}" %\
-			(quote_plus(url_mp4), quote_plus(title_call), quote_plus(thumb), 
-			quote_plus(Plot_par), quote_plus(sub_path))	
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-			mediatype='video', tagline=summ) 
-		cnt = cnt + 1
+	HBBTV_List=''										# nur ZDF
+	HLS_List=[]; Stream_List=[];
+	quality = u'automatisch'
+	HLS_List.append('HLS automatische Anpassung ** auto ** auto ** %s#%s' % (title,url_m3u8))
 			
-	if 	download_list:										# Downloadbutton(s)	
-		# Qualitäts-Index high: hier Basis Bitrate (s.o.)
-		title_org = title_call	
-		summary_org = summ;
-		tagline_org = ''
-		PLog(summary_org);PLog(tagline_org);PLog(thumb);
-		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=high)  
+	href=url_m3u8;  geoblock=''; descr='';					# für Stream_List n.b.
+	img = thumb
+	if href:
+		Stream_List = ardundzdf.Parseplaylist(li, href, img, geoblock, descr, stitle=title, buttons=False)
+		if type(Stream_List) == list:						# Fehler Parseplaylist = string
+			HLS_List = HLS_List + Stream_List
+		else:
+			HLS_List=[]
+	PLog("HLS_List: " + str(HLS_List)[:80])
+	MP4_List = Kika_VideoMP4get(title, assets)
+	PLog("download_list: " + str(MP4_List)[:80])
+	Dict("store", 'KIKA_HLS_List', HLS_List) 
+	Dict("store", 'KIKA_MP4_List', MP4_List) 
+	
+	if not len(HLS_List) and not len(MP4_List):
+		msg1 = "keine Streamingquelle gefunden: %s"	% title
+		PLog(msg1)
+		MyDialog(msg1, '', '')	
+		return li
+	
+	#----------------------------------------------- 
+	# Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
+	# 
+	PLog('Lists_ready:');
+	Plot = "Titel: %s\n\n%s" % (title_org, summ)				# -> build_Streamlists_buttons
+	PLog('Plot:' + Plot)
+	thumb = img; ID = 'KIKA'; HOME_ID = "Kinderprogramme"
+	ardundzdf.build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+# ------------------------------
+def Kika_VideoMP4get(title, assets):	
+	PLog('Kika_VideoMP4get:')
+	
+	href=''; quality=''
+	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
+	for s in assets:
+		PLog(s[:100])		
+		frameWidth = stringextract('<frameWidth>', '</frameWidth>', s)	
+		frameHeight = stringextract('<frameHeight>', '</frameHeight>', s)
+		href = stringextract('<progressiveDownloadUrl>', '</', s)
+		bitrate =  stringextract('<bitrateVideo>', '</', s)
+		if bitrate == '':
+			if '_' in href:
+				bitrate = re.search(u'_(\d+)k_', href).group(1)
+			else:
+				bitrate = '0'
+		profil =  stringextract('<profileName>', '</', s)	
+		res = frameWidth + 'x' + frameHeight
+				
+		# Bsp. Profil: Video 2018 | MP4 720p25 | Web XL| 16:9 | 1280x72
+		# einige Profile enthalten nur die Auflösung, Bsp. 640x360
+		if 	"MP4 Web S" in profil or "480" in frameWidth:			# skip niedrige 320x180
+			continue			
+		if "MP4 Web M Mobil" in profil or "640" in frameWidth:
+			quality = u'mittlere'
+		if "MP4 Web L mobil" in profil or "960" in frameWidth:
+			quality = u'hohe'
+		if "MP4 Web L |" in profil or "1024" in frameWidth:
+			quality = u'sehr hohe'
+		if "MP4 Web XL" in profil or "1280" in frameWidth:
+			quality = u'Full HD'
+			
+		PLog("res: %s, bitrate: %s" % (res, bitrate)); 
+		title_url = u"%s#%s" % (title, href)
+		item = u"MP4 Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
+		download_list.append(item)
+
+	return download_list
+			
 # ----------------------------------------------------------------------			
 #								tivi
 # ----------------------------------------------------------------------			
@@ -975,7 +998,7 @@ def Tivi_AZ_Sendungen(name, char=None):
 	
 	char_tmp = char
 	if char_tmp == '0-9':
-		char_tmp = '0+-+9'
+		char_tmp = '0 - 9'						# ZDF-Vorgabe (vormals '0+-+9')
 	path = 'https://www.zdf.de/kinder/sendungen-a-z?group=%s'	% char_tmp
 	page, msg = get_page(path)	
 	if page == '':	
@@ -996,7 +1019,7 @@ def Tivi_AZ_Sendungen(name, char=None):
 		return li
 	
 	# Sendungsdetails holen, ID: Einzelvideos auswerten
-	li = ardundzdf.ZDF_get_content(li, page, ref_path=path, ID='DEFAULT')				
+	li = ardundzdf.ZDF_get_content(li, page, ref_path=path, ID='A-Z')				
 							
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
