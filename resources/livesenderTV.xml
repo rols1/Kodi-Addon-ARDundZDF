@@ -2,7 +2,7 @@
  <channels_info>
   <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
   <imgsource>Arauco</imgsource>
-  <nr>6</nr>
+  <nr>7</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
   <date>11.02.2021 rols1</date>
@@ -527,6 +527,15 @@
 			<title>WDR_ARD Event 10</title>
 			<hrefsender></hrefsender>
 			<link>https://wdrevent.akamaized.net/hls/live/2020360/wdr_msl4_wdrevent10/master.m3u8</link>
+			<thumbnail>tv-wdr.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>11.02.2021</date>
+		</item>
+		<item>
+			<title>WDR_ARD Event 11</title>
+			<hrefsender></hrefsender>
+			<link>https://wdrevent.akamaized.net/hls/live/2020361/wdr_msl4_wdrevent11/master.m3u8</link>
 			<thumbnail>tv-wdr.png</thumbnail>
 			<imgsource></imgsource>
 			<EPG_ID></EPG_ID>
