@@ -9,7 +9,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
 ################################################################################
-#	Stand: 29.01.2021
+#	Stand: 09.02.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -737,7 +737,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 		# Format: server/locator/entityId/form/qLocator/form.mp4?hdnts=%s
 		# leerer hdnts-Zusatz bei nicht geschützten Videos stört nicht.
  		# https://funk-01.akamaized.net/59536be8-46cc-4d1e-83b7-d7bab4b3eb5d/1633982_src_1920x1080_6000.mp4
- 		if azure == '1':										# 
+		if azure == '1':										# 
 			mp4_urls.append("https://%s%s/%s_src_%s.mp4?hdnts=%s"	% (mp4_server,locator,entityId,form,tokenDASH))
 		else:
 			# neu ab 26.01.2021 - entspr. dem MP4-Format bei ZDF-funk-Beiträgen
@@ -751,8 +751,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 		msg1 = 'keine Videoquellen gefunden'
 		msg2 = 'Bitte Kontakt zum Addon-Entwickler aufnehmen'
 		MyDialog(msg1, msg2, '')
-		return
-		
+		return		
 	
 	title = repl_json_chars(title)
 	title_org = title
@@ -768,16 +767,21 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 			if azure == '1':
 				mp4_url = "https://%s%s/%s_src_%s.mp4?hdnts=%s"	% (mp4_server,locator,entityId,myform,tokenDASH)
 			else:
-				myform  = myform.split('_')[-1]				# s.o.
+				myform  = myform.split('_')[-1]			# s.o.
 				mp4_url = "https://%s%s/files/%s/%s/%s.mp4?fv=1"	% (mp4_server,qAccount,qPrefix,locator,myform)
 	
 		tag_add = ''
 		if protected:
 			tag_add = "geschützt"	
 		form = forms[0]
-		res, bandw, stream_id = form.split('_')			# stream_id leer bei azure=0
-		tag = "MP4 | %s | %sk" % (res, bandw)			# 1920x1080_4148_1-7Rk8TrYftK9FVbXQWZdj	
+		PLog(form)
+		if len(form.split('_')) == 2:					# azure=1 1920x1080_6000
+			res, bandw= form.split('_')
+		if len(form.split('_')) == 3:					# azure=0 1920x1080_4148_1-7Rk8TrYftK9FVbXQWZdj
+			res, bandw, stream_id = form.split('_')
+		tag = "MP4 | %s | %sk" % (res, bandw)	
 		tag = tag + geoblock
+		PLog(tag)
 		descr_par = "%s||||%s" % (tag, descr)
 		PlayVideo(url=mp4_url, title=title_org, thumb=img, Plot=descr_par, Merk=Merk)
 		return
@@ -844,6 +848,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 #
 def get_forms(distrib, prev_bandw=''):
 	PLog('get_forms: ' + distrib)
+	PLog(prev_bandw)
 	forms=[]
 	
 	records = distrib.split(',')

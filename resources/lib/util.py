@@ -2533,7 +2533,11 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 		for item in Stream_List:
 			PLog(item)
 			res = item.split('**')[2]
-			width = re.search("(\d+)", res).group(0)
+			try:
+				width = re.search("(\d+)", res).group(0)
+			except Exception as exception:
+				PLog(str(exception))
+				continue
 			PLog("width %s, qual %s" % (width, qual))
 			if int(width) >= int(qual):
 				url = item.split('#')[-1]
@@ -2570,9 +2574,9 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #	Resume-Funktion Kodi-intern  DB MyVideos107.db, Tab files (idFile, playCount, lastPlayed) + (via key idFile),
 #		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
 #
-def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist=''):	
+def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=''):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
-	PLog(sub_path);
+	PLog(sub_path); PLog(seekTime);
 	
 	Plot=transl_doubleUTF8(Plot)
 	Plot=(Plot.replace('[B]', '').replace('[/B]', ''))	# Kodi-Problem: [/B] wird am Info-Ende platziert
@@ -2692,6 +2696,16 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='')
 			PLog('PlayVideo_Start: direkt, playlist: '); PLog(playlist)
 			xbmc.Player().play(url, li, windowed=False) 		# direkter Start
 			sleep(50 / 100)
+			if seekTime:
+				while 1:
+					if xbmc.Player().isPlaying():
+						seekTime = int(seekTime)
+						xbmc.Player().seekTime(seekTime) 		# Startpos aus Play
+						play_time = xbmc.Player().getTime()
+						PLog(play_time)
+						break
+						xbmc.sleep(200)
+				
 			return
 
 #---------------------------------------------------------------- 

@@ -4,7 +4,7 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-#	Stand: 19.01.2021
+#	Stand: 14.02.2021
 
 from __future__ import absolute_import
 
@@ -30,6 +30,8 @@ elif PYTHON3:
 		pass
 
 from resources.lib.util import *
+import resources.lib.EPG as EPG
+
 
 HANDLE			= int(sys.argv[1])
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -73,7 +75,7 @@ def get_playlist():
 		if '###neu' not in item and '###gesehen' not in item and '###delete' not in item:	# Format vor V3.6.0
 			item = item  + '###neu'
 			save_new = True
-		if '###delete' not in item: 
+		if '###delete' not in item and '###gesehen' not in item: # gesehen: Format vor V3.7.4
 			new_list.append(item)
 		else:
 			save_new = True
@@ -284,7 +286,19 @@ def play_list(title, mode=''):
 	if mode == 'show':												# PLAYLIST zeigen
 		PLog('show:')
 		title_org = u"%s: aktuelle Liste" % title
-		new_list = build_textlist(PLAYLIST)
+		new_list = []
+		my_list = build_textlist(PLAYLIST)
+		my_list = my_list.splitlines()								# Seek-Sekunden übersetzen
+		for item in my_list:
+			if "Status: neu ab" in item:
+				seekTime = re.search(u'Status: neu ab (\d+) sec', item).group(1)
+				if int(seekTime) > 3600:							# erst ab 1 Std.
+					seekTime = seconds_translate(seekTime)
+					pos = item.find("Status: neu ab")
+					item = item[:pos] + "Status: neu ab %s" % seekTime
+			new_list.append(item)
+			 
+		new_list= "\n".join(new_list)
 		dialog.textviewer(title_org, new_list,usemono=True)
 
 	# Param. "del_single" passt nicht mehr, bleibt aber unverändert 
@@ -406,7 +420,8 @@ def get_archiv():
 # Thread für PLAYLIST, Aufruf play_list(mode='')
 # Problem: beim direkten Aufruf von playlist_tools via Button puffert
 #	das 1. Video fortlaufend und zeigt keine Bedienelemente, unabhängig
-#	vom Param. windowed. OK beim Aufruf aus K-Menü.
+#	vom Param. windowed. OK beim Aufruf aus K-Menü. Gelöst mit vorge-
+#	schalteter Startfunktion start_script (Haupt-PRG)
 #
 def PlayMonitor(mode=''):
 	PLog('PlayMonitor:')
@@ -424,6 +439,7 @@ def PlayMonitor(mode=''):
 	cnt=1
 	for item in PLAYLIST:
 		PLog(item)
+		seekTime = 0									# seek-Point Video
 		item = py2_decode(item)
 		if '###gesehen' in item:
 			msg1 = "Titel %d schon gespielt" % cnt
@@ -432,27 +448,44 @@ def PlayMonitor(mode=''):
 			continue
 
 		title, url, thumb, Plot, status = item.split('###')
-		PLog("Nr. %s | %s" % (cnt, title[:80]))
+		if "neu ab" in status:
+			seekTime = re.search(u'neu ab (\d+) sec', status).group(1)		# Startpos aus Playlist übernehmen
+		PLog("Nr.: %s | %s | ab %s sec" % (cnt, title[:80], seekTime))
 		msg2 = "Titel %d von %d" % (cnt, len(PLAYLIST))
 		xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,2000)
 		cnt = cnt+1	
-		PlayVideo(url, title, thumb, Plot, playlist="")	# playlist="true": skip Startliste
+		start_time = int(seekTime)
+		PlayVideo(url, title, thumb, Plot, playlist="", seekTime=seekTime)	# playlist="true": skip Startliste
+		video_dur = player.getTotalTime()
+		video_dur = int(video_dur)
+		percent = 0										# Fallback: noch nichts abgespielt
 		
 		while not monitor.waitForAbort(2):
 			# Notification ev. ergänzen: player.getTotalTime(),
-			#	player.getTime():
-			if player.isPlaying():			
+			if player.isPlaying():
+				play_time = player.getTime()
 				xbmc.sleep(2000)
+				play_time = play_time + 2				# Pause addieren
 				# notification stört hier:
 				# xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,2000) 				
 			else:
+				percent=0
+				if play_time > 0 and video_dur > 0:
+					percent = 100 * (float(play_time) / float(video_dur))
+					percent = int(round(percent))
 				break
 
-		if SETTINGS.getSetting('pref_delete_viewed') == 'true':
+		PLog("start_time %d, play_time %d, video_dur %d, percent %d" %\
+			(start_time,play_time,video_dur,percent))
+		del_val = SETTINGS.getSetting('pref_delete_viewed')	# default 75%
+		del_val = re.search(u'(\d+)', del_val).group(1)
+		del_val = int(del_val)
+		if percent >= del_val:							# Prozentabgleich mit Setting
 			item = item.replace("###neu", "###delete")
 			PLog('mark_delete: ' + item[:80])		
 		else:
-			item = item.replace("###neu", "###gesehen")
+			pos = item.find("###neu")					# seekTime=play_time anhängen
+			item = item[:pos] + "###neu ab %d sec" % play_time
 			PLog('mark_gesehen: ' + item[:80])
 		PLAYLIST[cnt-2] = py2_encode(item)
 		new_list = "\n".join(PLAYLIST)

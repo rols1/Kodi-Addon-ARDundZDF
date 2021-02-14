@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 05.02.2021
+#	Stand: 08.02.2021
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -883,10 +883,10 @@ def get_content_text(page, title, summ, tag,):					# Textausgabe statt Video
 		datum=mystrip(datum);topline=mystrip(topline);
 		headline=mystrip(headline); 
 		
-		absatztitle = u"%s | %s | %s\n" % (datum, topline, headline)
-		if datum == '':
+		absatztitle = u"[COLOR red]%s | %s | %s[/COLOR]\n" % (datum, topline, headline)
+		if datum == '':												# statt Datum tag + summ
 			PLog(topline); PLog(headline);
-			absatztitle = u"%s | %s | %s\n" % (title, tag, summ)
+			absatztitle = u"[COLOR red]%s | %s[/COLOR]\n\n%s\n" % (title, tag, summ)
 		show_text.append(absatztitle)
 		PLog('Satz5:')
 		PLog(datum); PLog(topline);PLog(headline);PLog(title); PLog(absatztitle)

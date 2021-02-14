@@ -12,6 +12,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+14.02.2021 3.7.4
+			ZDF_getVideoSources: Abfangen nicht mehr verfügbarer Videos bei Mehr-Suche
+			(falsche Video-Url's möglich bei nur redakt. Beiträgen).
+			SendungenAZ_ARDnew: Seitensteuerung ergänzt (ARD-Begrenzung: 100 Beiträge),
+			Nutzung get_pagination + ARDPagination - @Simaryp.
+			get_content_text Modul TagesschauXL: Titelzeilen bei Textausgabe rot markiert.
+			Modul funk: Fix spaces -> Tabs (Menü in Matrix nicht aktivierbar, @udobroemme).
+			ShowVideo (Modul funk): Fix Zerlegung Distrib-Strings (ohne/mit stream_id) - 
+			relev. für Sofortstart. 
+			ARDSport: Einbindung 'Biathlon-WM' (manuell, Austausch gegen Button Handball-
+			WM), Anpassung ARDSportPanel (@Weri).
+			PlayVideo_Direct: Exception-Behandlung für Abgleich der Videoauflösungen.
+			Einzelupdate livesenderTV.xml: WDR-Event 7,8,10,11 + Bremen (@Weri).
+			livesenderTV.xml: Umbennnung Event-Sender Bremen -> BR, einschl. Icon (@Weri).
+			Modul playlist: Erweiterung "Löschen ab x Prozent", Anpassung PlayMonitor,  
+			play_list, PlayVideo (Modul util) - @grobiralf
+
 06.02.2021 3.7.3
 			DownloadsList: Coding-Behandl. für Button-Titel
 			Parseplaylist: Dialog bei fehlender master.m3u8-Datei ersetzt durch Notifi-
@@ -27,9 +44,8 @@ CHANGE HISTORY
 			ARD Neu, Untertiteldateien in PlayVideo verfügbar gemacht (Abgleich sub_path
 			auf 'tagesschau.de'), Anpassungen in menu_hub, get_content, Ablösung Videoblogs 
 			durch Faktenfinder, Wegfall Bildergalerien, neues Icon tagesschau-Fakt.png 
-			(Aktualiserung Github), neue 
-			Funktion ShowText: erweitert für direkter page-Übergabe (anstelle 
-			changelog.txt) - Nutzung  durch TagesschauXL.
+			(Aktualiserung Github), neue Funktion ShowText: erweitert für direkter page-
+			Übergabe (anstelle changelog.txt) - Nutzung  durch TagesschauXL.
 			ARDSport: Einbindung 'Alpine Ski-WM' (manuell, Austausch gegen Button Handball-
 			WM), Anpassung ARDSportPanel.
 			ShowVideo (Modul zdfMobile): Austausch videoObject -> page (funk-Quellen
@@ -57,8 +73,7 @@ CHANGE HISTORY
 			get_page_content (Modul ARD Neu): leere Url abgefangen, Mehrfach-Erkennung
 			eindeutiger (Einschluss '"availableTo":null' - relev. für ARD Retro).			
 			Modul arte: Überarbeitung der Unterkategorien - Anpassung Funktionen Kate-
-			gorien, KatSub, GetContent
-			
+			gorien, KatSub, GetContent.
 
 26.01.2021 3.7.1
 			A-Z (Modul ARD Neu): Anpassung an api-Änderung - Laden + Caching der json-

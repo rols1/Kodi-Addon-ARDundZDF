@@ -80,7 +80,7 @@
  
  <category label="Modul-Einstellungen" >
    	<setting label="gesamtes Addon: Videoformat bei Sofortstart" type="select" id="pref_direct_format" default="HLS (adaptiv)"
-		values="HLS (adaptiv)|MP4, VP9/Opus, VP8/Vorbis" /> 
+		values="HLS (adaptiv)|MP4, VP9/Opus, VP8/Vorbis"/> 
 	<setting label="gesamtes Addon: Videoqualität bei Sofortstart" type="select" id="pref_direct_quality" default="auto (nur HLS)"
   		values="auto (nur HLS)|320x180|640x360|720x400|960x540|1280x720|1920x1080" />
    <setting type="sep"/>
@@ -89,7 +89,8 @@
     <setting label="gesamtes Addon: Video-Playlist verwenden" type="bool" id="pref_playlist" default="false"/>
    <setting type="sep"/>
   	<setting label="Modul Video-Playlist: Abgleich mit Zuletzt-gesehen-Liste" type="bool" id="pref_check_with_startlist" default="false"/>
-  	<setting label="Modul Video-Playlist: gesehene Beiträge löschen" type="bool" id="pref_delete_viewed" default="false"/>
+  	<setting label="Modul Video-Playlist: gesehene Beiträge löschen ab" type="select" id="pref_delete_viewed" default="75%"
+		values="25%|50%|75%|100%"/>
 	<setting label="Zuletzt-gesehen-Liste: max. Anzahl" type="select" values="50|100|200|500" default="100" id="pref_max_videos_startlist"/>
 	<setting label="Modul FUNK: Videoeinstellung für MP4-Sofortstart" type="select" id="pref_funk_bandw" default="1500:960x540"
   		values="400:320x180|650:640x360|900:720x404|1500:960x540|2500:1280x720|4000:1920x108|6000:1920x1080" />

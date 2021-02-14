@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.7.3'
-VDATE = '06.02.2021'
+VERSION = '3.7.4'
+VDATE = '14.02.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -505,6 +505,8 @@ def Main():
 
 	tag = 'Infos zu diesem Addon'					# Menü Info + Filter
 	summ= u'Ausschluss-Filter (nur für Beiträge von ARD und ZDF)'
+	if SETTINGS.getSetting('pref_playlist') == 'true':
+		summ = "%s\n\n%s" % (summ, "PLAYLIST-Tools")
 	fparams="&fparams={}" 
 	addDir(li=li, label='Info', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
 		fparams=fparams, summary=summ, tagline=tag)
@@ -610,7 +612,7 @@ def start_script(myfunc, fparams_add):
 	else:
 		func()
 
-#	xbmc.sleep(500)
+	#xbmc.sleep(500)
 	# ohne endOfDirectory wird das Fenster des Videoplayers blockiert (Ladekreis):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True) 	 
 	
@@ -2579,7 +2581,17 @@ def ARDSport(title):
 	#-------------------------------------------------------# Zusätze
 	# beim Ziel ARDSportPanel den Titel in theme_list für 2. Durchlauf 
 	#	aufnehmen
-	title = "Alpine Ski-WM"									# 11.01.2021 Handball-WM (nicht in Fußlinks)
+	title = "Biathlon-WM"									# 08.02.2021 Biathlon-WM (nicht in Fußlinks)
+	href = 'https://www.sportschau.de/biathlon-wm/index.html'
+	img =  'https://www.sportschau.de/biathlon-wm/pokljuka-102~_v-gseagaleriexl.jpg'
+	tagline = u'Nachrichten, Berichte, Interviews und Ergebnisse zur Biathlon-WM 2021 in Pokljuka'
+	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
+		quote(href), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
+		thumb=img, tagline=tagline, fparams=fparams)			
+
+	title = "Alpine Ski-WM"									# 11.01.2021 Alpine Ski-WM (nicht in Fußlinks)
 	href = 'https://www.sportschau.de/alpine-ski-wm/index.html'
 	img =  'https://www.sportschau.de/wintersport/ski-alpin/thomas-dressen128~_v-gseapremiumxl.jpg'
 	tagline = 'Die Alpine Ski-WM 2021 in Cortina dAmpezzo'
@@ -2683,7 +2695,7 @@ def ARDSportPanel(title, path, img, tab_path=''):
 	PLog(len(sendungen))
 	
 	# ev. erweitern
-	theme_list = ['Wintersport', 'Alpine Ski-WM']						
+	theme_list = ['Wintersport', 'Alpine Ski-WM', "Biathlon-WM"]						
 	if tab_path == '' and title in theme_list:			# 1. Durchlauf bei Tabmenüs
 		if title == 'Formel 1':
 			tablist = blockextract('class="collapsed  subressort', page, '--googleoff')
@@ -9050,8 +9062,10 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 	formitaeten,duration,geoblock, sub_path = get_formitaeten(sid, apiToken1, apiToken2)	# Video-URL's ermitteln
 	# PLog(formitaeten)
 
-	if formitaeten == '':										# Nachprüfung auf Videos
-		msg1 = u'Video nicht vorhanden / verfügbar.'
+	# 06.02.2021 Kennz. "nicht mehr verfügbar" z.B. bei Mehr-Suche (redak. Inhalte zu
+	#	vergangenen Videos, formitaeten liefern dann falsche Quellen bei ptmd-template)
+	if formitaeten == '' or u"Video leider nicht mehr verfügbar" in page:					# Nachprüfung auf Videos
+		msg1 = u'Video nicht (mehr) vorhanden / verfügbar.'
 		msg2 = u'Titel: %s' % unquote(title)
 		MyDialog(msg1, msg2, '')
 		return li
@@ -9921,6 +9935,8 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		return Stream_List
 		
 ####################################################################################################
+# Ausführung nur ohne Sofortstart - bei Sofortstart ruft build_Streamlists_buttons
+#	PlayVideo_Direct auf (Auswahl Format/Qualität -> PlayVideo).
 # Streambuttons HLS / MP4 (ID-abh.), einschl. Downloadbuttons bei MP4-Liste
 # Streamliste wird aus Dict geladen (Datei: ID)
 #	Bandbreite + Auflösung können fehlen (Qual. < hohe, Audiostreams)

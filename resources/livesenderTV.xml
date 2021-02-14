@@ -389,10 +389,10 @@
 	<fanart></fanart>
 	<items>
 		<item>
-			<title>Bremen Event</title>
+			<title>BR Event</title>
 			<hrefsender></hrefsender>
 			<link>https://brevent1hds-lh.akamaihd.net/i/br_event02isma@111248/master.m3u8</link>
-			<thumbnail>tv-bremen.png</thumbnail>
+			<thumbnail>tv-br.png</thumbnail>
 			<imgsource></imgsource>
 			<EPG_ID></EPG_ID>
 			<date>11.02.2021</date>

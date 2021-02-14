@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 02.02.2021
+#	Stand 08.02.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1094,11 +1094,33 @@ def SendungenAZ_ARDnew(title, button, href):
 
 		PLog('Satz2:');
 		PLog(title); PLog(href); PLog(img); PLog(summ); PLog(tagline);
+		ID = 'A-Z'
 		summ = "%s\n\n%s" % (tagline, summ)
 		href=py2_encode(href); title=py2_encode(title); 
-		fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s'}" % (quote(href), quote(title), 'A-Z')
+		fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s'}" % (quote(href), quote(title), ID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-			fparams=fparams, summary=summ)													
+			fparams=fparams, summary=summ)	
+			
+	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
+	#	pagination mit Basispfad immer vorhanden, Mehr-Button abhängig von Anz. der Beiträge
+	if 	'"pagination":'	in page:						# Scroll-Beiträge
+		PLog('pagination_Rubrik:')
+		title = "Mehr zu >%s<" % title_org				# Mehr-Button	 
+		pages, pN, pageSize, totalElements, next_path = get_pagination(page)	# Basis 0
+		mark=''		
+		
+		if next_path:	
+			summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (pages, totalElements)
+			pN = int(pN)+1								# nächste pageNumber, Basis 0
+			tag = "weiter zu Seite %s" % str(pN)
+			PLog(summ); PLog(next_path)
+			
+			title_org=py2_encode(title_org); next_path=py2_encode(next_path); mark=py2_encode(mark);
+			fparams="&fparams={'title': '%s', 'path': '%s', 'pageNumber': '%s', 'pageSize': '%s', 'ID': '%s', \
+				'mark': '%s'}" % (quote(title_org), quote(next_path), str(pN), pageSize, ID, quote(mark))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDPagination", 
+				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)	
+														
 
 	xbmcplugin.endOfDirectory(HANDLE)	
 #----------------------------------------------------------------
