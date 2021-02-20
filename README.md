@@ -10,7 +10,7 @@ Für die ZDF Mediathek kann wahlweise die kompakte Version ZDFmobile genutzt wer
 
 Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-ARDundZDF/total.svg "Downloads")
-oder [kodinerds-Repo](https://repo.kodinerds.net) - siehe INSTALLATION.
+<b>(Kodi Leia)</b> oder [kodinerds-Repo](https://repo.kodinerds.net) <b>(Kodi Leia, Kodi Matrix)</b> - siehe INSTALLATION.
 
 Die Plex-Versionen [Plex-Plugin-ARDMediathek2016](https://github.com/rols1/Plex-Plugin-ARDMediathek2016) und [ARDundZDF](https://github.com/rols1/ARDundZDF) werden nicht mehr gepflegt - Plex hat die Unterstützung für Plugins in seinen Client-Softwarepaketen eingestellt.
 
