@@ -12,12 +12,38 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+20.02.2021 3.7.5
+			PlayVideo (Modul util): 1/2sec-Pause vor xbmc.Player().seekTime ergänzt (für
+			Raspi + Playlist erforderlich). 
+			Modul playlist: Löschen aller Beiträge ohne neu-Status, Verhinderung Aufnahme
+			von Livestream-Url's, Codeoptimierung PlayMonitor + PlayVideo, einschl. Rück-
+			gabe getTime() + getTotalTime(), try/exception für getTime() + Exception-Be-
+			handlung für nicht verfügb. Videos in PlayMonitor, 3-stellige Numerierung der
+			Liste, Code für "Status auf neu setzen" angepasst (play_list), Aktualisierung 
+			Wicki.
+			Einzelupdate livesenderTV.xml: Url "SR Fernsehen" aktualisiert.
+			Parseplaylist: Doppler im Infotext entfernt (betraf Livesender ARD Neu).
+			SingleSendung (ARD Classic): Bez. "Geoblock" für geoblock-Param. ergänzt.
+			SendungenAZ_ARDnew: Ausschluss nicht passender Beiträge ohne 
+			"publicationService" (z. B. Kultur unter "A").
+			get_content_text (Modul TagesschauXL): Log show_text auf 80 Zeichen beschränkt.
+			Faktenfinder (Modul TagesschauXL): Basis-Url für Icons ergänzt.
+			ZDF_get_content: skip_Liste für redakt. tivi-Beiträge, Ausleitung Einzelbei-
+			träge bei nur 1 Beitrag + b-playerbox (relev. für tivi-Beiträge), item-Zähler
+			+1 bei data-module=zdfplayer.
+			ZDF_get_content: Begrenzung der Highlights-Beiträge (teilw. im Web doppelt vorh.)
+			durch Abgleich stage_url_list/plusbar_path.
+			ZDF_get_content: Verwendung der Ziel-Url in embed_content, Anpassung 
+			ZDF_getKurzVideoDetails.
+			ZDF_get_content: Auswertung neue zusätzl. Staffel-Kennz. in teaser_info.
+			ZDF_getVideoSources: zusätzl. Param. nohome (relev. für tivi-Beiträge).		
+
 14.02.2021 3.7.4
 			ZDF_getVideoSources: Abfangen nicht mehr verfügbarer Videos bei Mehr-Suche
 			(falsche Video-Url's möglich bei nur redakt. Beiträgen).
 			SendungenAZ_ARDnew: Seitensteuerung ergänzt (ARD-Begrenzung: 100 Beiträge),
 			Nutzung get_pagination + ARDPagination - @Simaryp.
-			get_content_text Modul TagesschauXL: Titelzeilen bei Textausgabe rot markiert.
+			get_content_text (Modul TagesschauXL): Titelzeilen bei Textausgabe rot markiert.
 			Modul funk: Fix spaces -> Tabs (Menü in Matrix nicht aktivierbar, @udobroemme).
 			ShowVideo (Modul funk): Fix Zerlegung Distrib-Strings (ohne/mit stream_id) - 
 			relev. für Sofortstart. 

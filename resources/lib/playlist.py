@@ -4,7 +4,7 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-#	Stand: 14.02.2021
+#	Stand: 18.02.2021
 
 from __future__ import absolute_import
 
@@ -72,10 +72,7 @@ def get_playlist():
 	new_list=[]; 							# Bereinigung + Formatcheck: vor V3.6.0 fehlt status
 	save_new = False						#	in den Zeilen
 	for item in PLAYLIST:	
-		if '###neu' not in item and '###gesehen' not in item and '###delete' not in item:	# Format vor V3.6.0
-			item = item  + '###neu'
-			save_new = True
-		if '###delete' not in item and '###gesehen' not in item: # gesehen: Format vor V3.7.4
+		if '###neu' in item:
 			new_list.append(item)
 		else:
 			save_new = True
@@ -132,10 +129,17 @@ def items_add_rm(action, url='', title='', thumb='', Plot=''):
 				startlist= startlist.strip().splitlines()
 				PLog(len(startlist))
 		
-		if new_url in new_list:						# Prio Doppler-Check 
+		if new_url in new_list:						# 1. Prio Doppler-Check 
 			PLAYLIST.remove(new_line)
 			msg2 = u"existiert bereits, Anzahl %s"
 			PLog("Doppler url: %s, new_url: %s" % (url, new_url))
+			check_exit = True
+			
+		# Bsp. Live: zdf-hls-17.akamaized.net/hls/live/2016500/de/high/master.m3u8:
+		if ".m3u8" in new_url and "/live/" in new_url:	# 2. Prio Livestream-Check 
+			PLAYLIST.remove(new_line)
+			msg2 = u"Livestream verweigert, Anzahl %s"
+			PLog("Livestream_url: %s" % (new_url))
 			check_exit = True
 				
 		if check_startlist == 'true' and check_exit == False: # Abgleich mit <Zuletzt gesehen>-Liste			
@@ -321,10 +325,17 @@ def play_list(title, mode=''):
 					new_list = "\n".join(PLAYLIST)
 					RSave(PLAYFILE, new_list)						# geänderte PLAYLIST speichern		
 
+	# ab V3.7.4 entfällt gesehen - set_status löscht ev. vorh. Pos.-Angabe (sec)
 	if mode == 'set_status':										# Status auf >neu< setzen
 		PLog('set_status:')
-		new_list = "\n".join(PLAYLIST)
-		new_list = new_list.replace("###gesehen", "###neu")
+		new_list = []
+		for item in PLAYLIST:
+			pos = item.find("###neu ")								# Eintrag mit Pos.
+			if pos > 0:
+				item = item[:pos + len("###neu")]	
+			new_list.append(item)		
+
+		new_list = "\n".join(new_list)
 		RSave(PLAYFILE, new_list)
 		msg2 = u"Status auf >neu< gesetzt"					
 		xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,3000)
@@ -392,7 +403,7 @@ def build_textlist(PLAYLIST):
 	for item in PLAYLIST:
 		title, url, thumb, Plot, status = item.split('###')
 		Plot=py2_decode(Plot); title=py2_decode(title); 
-		my_line = u"%d. %s.." % (cnt, title[:60])
+		my_line = u"%s. %s.." % (str(cnt).zfill(3), title[:60]) # Color in Textviewer o. Wirkung
 		if Plot:
 			my_line = u"%s | %s.." % (my_line, Plot[:60])
 		my_line = "%s | Status: %s" % (my_line, status) 
@@ -455,25 +466,30 @@ def PlayMonitor(mode=''):
 		xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,2000)
 		cnt = cnt+1	
 		start_time = int(seekTime)
-		PlayVideo(url, title, thumb, Plot, playlist="", seekTime=seekTime)	# playlist="true": skip Startliste
-		video_dur = player.getTotalTime()
-		video_dur = int(video_dur)
-		percent = 0										# Fallback: noch nichts abgespielt
+		
+		# Exception-Behandl. für nicht verfügb. Videos:
+		try:																#  playlist="true" = skip Startliste:
+			play_time,video_dur = PlayVideo(url, title, thumb, Plot, playlist="true", seekTime=seekTime)
+		except Exception as exception:
+			PLog(str(exception))
+			continue
+		percent=0; 															# noch nichts abgespielt
 		
 		while not monitor.waitForAbort(2):
 			# Notification ev. ergänzen: player.getTotalTime(),
 			if player.isPlaying():
-				play_time = player.getTime()
-				xbmc.sleep(2000)
-				play_time = play_time + 2				# Pause addieren
-				# notification stört hier:
-				# xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,2000) 				
+				try:
+					play_time = player.getTime()
+				except:
+					pass
 			else:
 				percent=0
 				if play_time > 0 and video_dur > 0:
+					play_time = play_time + 2			# Ausgleich Pause
 					percent = 100 * (float(play_time) / float(video_dur))
 					percent = int(round(percent))
 				break
+			xbmc.sleep(1000)
 
 		PLog("start_time %d, play_time %d, video_dur %d, percent %d" %\
 			(start_time,play_time,video_dur,percent))

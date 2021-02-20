@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.7.4'
-VDATE = '14.02.2021'
+VERSION = '3.7.5'
+VDATE = '20.02.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -573,6 +573,8 @@ def InfoAndFilter():
 		
 		tag = u"Abspielen und Verwaltung der addon-internen Playlist"
 		tag = u"%s\n\nEinträge werden via Kontextmenü in den Einzelauflösungen eines Videos hinzugefügt." % tag
+		tag = u"%s\n\n[COLOR blue]Am besten eigenen sich MP4-Url's[/COLOR]. HLS-Url's starten immer am Anfang, " % tag
+		tag = u"%sunabhängig von der letzten Position. Livestreams werden abgewiesen." % tag
 		
 		summ = u"die PLAYLIST-Tools stehen auch im Kontextmenü zur Verfügung, wenn ein Listeneintrag eine geeignete Stream-Url enthält" 
 		fparams="&fparams={'myfunc': '%s', 'fparams_add': '%s'}"  %\
@@ -4737,6 +4739,7 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 	sub_path = stringextract('_subtitleUrl":"', '"', page)
 	if geoblock == '':
 		geoblock = 'ohne'
+	geoblock = "Geoblock: %s" % geoblock
 
 	if ID == 'PODCAST':										# PODCAST
 		PLog("Audio:")		
@@ -8652,6 +8655,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 	
 	if  ID == 'STAGE':										# Highlights (dto. funk + tivi)
 		content = blockextract('class="stage-wrap ', page)  # mit Blank
+		stage_url_list=[]
 	else:													# "<img class=.." m Block ausschließen
 		content = blockextract('<picture class="artdirect"', page) # tivi: doppelt  (is-tivi,is-not-tivi)
 				
@@ -8671,19 +8675,14 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 	if len(content) == 0:
 		msg_notfound = 'Video ist leider nicht mehr oder noch nicht verfügbar'
 		
-	if len(content) == 0:										# Ausleitung Einzelbeiträge ohne icon-502 
-		if 'class="b-playerbox' in page:						# 	oder icon-301, Kennung mediatype für
-			PLog('Ausleitung Einzelbeitrag')					#	Sofortstart hier nicht mehr möglich
-			title = stringextract('class="big-headline" >', '</', page)
-			if title: title = title.strip()
-			dauer = stringextract('teaser-info">', '<', page)
-			thumb =  stringextract('data-src="', '"', page)
-			if dauer: dauer = "Dauer %s" % dauer
-			descr =  stringextract('item-description" >', '</', page)
-			descr = descr.strip(); descr = cleanhtml(descr); 
-			descr = unescape(descr); descr = repl_json_chars(descr);	
-			ZDF_getVideoSources(url=ref_path, title=title, thumb=thumb, tagline=descr)
+	if len(content) == 0:										# Ausleitung Einzelbeiträge ohne icon-502
+		rec = ZDF_get_playerbox(page)						# Format: Titel##Thumb###tagline
+		if rec:
+			PLog('AusleitungEinzelbeitrag1')
+			title, thumb, tag = rec.split('###')
+			ZDF_getVideoSources(url=ref_path, title=title, thumb=thumb, tagline=tag)
 			return li, 0
+			
 	
 	if ID == 'NeuInMediathek':									# letztes Element entfernen (Verweis Sendung verpasst)
 		content.pop()	
@@ -8733,15 +8732,19 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 						break		
 				if filtered:
 					PLog('filtered: ' + 'data-module="zdfplayer"')
-					continue		
-			apiToken,sid,descr_display,descr,title,img = ZDF_getKurzVideoDetails(rec) # Details holen
+					continue
+							
+			url,apiToken,sid,descr_display,descr,title,img = ZDF_getKurzVideoDetails(rec) # Details holen
 			PLog('Satz_zdfplayer:')
-			PLog(title); PLog(img); PLog(sid); PLog(apiToken[:80]);
+			PLog(rec[:100])
+			PLog(url); PLog(title); PLog(img); PLog(sid); PLog(apiToken[:80]);
 			title=py2_encode(title); descr=py2_encode(descr);
-			fparams="&fparams={'url': '', 'title': '%s', 'thumb': '%s', 'tagline': '%s', 'apiToken': '%s', 'sid': '%s'}" %\
-				(quote(title), quote(img), quote(descr), quote(apiToken), quote(sid))	
+			# sid="": ZDF_getVideoSources soll url neu laden
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s', 'apiToken': '%s', 'sid': '%s'}" %\
+				(quote(url),quote(title), quote(img), quote(descr), quote(apiToken), "")
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
 				fparams=fparams, tagline=descr_display, mediatype=mediatype)
+			items_cnt = items_cnt + 1
 			continue		
 			
 		# loader:  enthält bei Suche Links auch wenn weiterer Inhalt fehlt. 
@@ -8766,7 +8769,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 					if u'>Videolänge<' not in rec : 
 						if '>Trailer<' not in rec : 	# Trailer o. Video-icon-502
 							PLog('Videobeitrag_fehlt')
-							continue		
+							continue
 		
 		multi = False			# steuert Mehrfachergebnisse 
 		thumb = ZDF_get_img(rec)
@@ -8783,6 +8786,14 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		teaser_brand = stringextract('class="teaser-cat-brand-ellipsis">', '</span>', rec) # "<a href" n. eindeutig
 		teaser_brand = cleanhtml(teaser_brand); teaser_brand = mystrip(teaser_brand)
 		PLog('teaser_brand: ' + teaser_brand)
+		
+		# 20.02.2021 neue Staffel-Info in teaser_info, angehängt in tag
+		teaser_info = stringextract('"teaser-info"', '>', rec)
+		if "Staffel" in teaser_info:
+			teaser_info = stringextract('aria-label="', '"', teaser_info)
+		else:
+			teaser_info=''
+		PLog('teaser_info: ' + teaser_info)
 			
 		subscription = stringextract('is-subscription="', '"', rec)	# aus plusbar-Block	
 		PLog(subscription)
@@ -8909,6 +8920,8 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			tagline = tagline + ' | ' + category
 		if brand:
 			tagline = tagline + ' | ' + brand
+		if teaser_info:
+			tagline = tagline + ' | ' + teaser_info
 		if tagline.startswith(' |'):
 			tagline = tagline[2:]			# Korrektur
 		if station:
@@ -8966,7 +8979,16 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			if plusbar_path.startswith('http') == False:
 				plusbar_path = ZDF_BASE + plusbar_path
 			tagline = "Format: %s | %s" % (form, tagline)
-						
+			
+		skip_list = [u"Über ZDFtivi : Kontakt ZDFtivi"]		# skip_Liste - bisher nur tivi 
+		if title.strip() in skip_list:
+			continue
+					
+		if ID == 'STAGE':								# einige Stage-Beiträge im Web doppelt vorh.
+			if plusbar_path in stage_url_list:
+				continue
+			else:
+				stage_url_list.append(plusbar_path)
 		
 		if SETTINGS.getSetting('pref_usefilter') == 'true':	# Filter
 			filtered=False
@@ -9013,10 +9035,38 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 				fparams=fparams, tagline=tag, mediatype=mediatype)
 				
 		items_cnt = items_cnt+1
+		
+	if items_cnt == 0:										# Ausleitung Einzelbeiträge ohne icon-502 
+		rec = ZDF_get_playerbox(page)						# Format: Titel##Thumb###tagline
+		if rec:
+			PLog('AusleitungEinzelbeitrag2')
+			title, thumb, tag = rec.split('###')
+			ZDF_getVideoSources(url=ref_path, title=title, thumb=thumb, tagline=tag)
+			return li, 0
 
 	return li, page_cnt 
 	
 #-------------
+# Einzelbeitrag in b-playerbox ermitteln
+def ZDF_get_playerbox(page):								# Daten ev. b-playerbox verwerten
+	PLog('ZDF_get_playerbox:')
+	if 'class="b-playerbox' in page:						# 	oder icon-301, Kennung mediatype für
+		title = stringextract('class="big-headline" >', '</', page)
+		if title: title=mystrip(title); title = unescape(title)
+	
+		dauer = stringextract('teaser-info">', '<', page)
+		thumb =  stringextract('data-src="', '"', page)
+		if dauer: dauer = "Dauer %s" % dauer
+		tag =  stringextract('item-description" >', '</', page)
+		if dauer:
+			tag = "%s | %s" % (dauer, tag)
+		tag = mystrip(tag); tag = cleanhtml(tag); 
+		tag = unescape(tag); tag = repl_json_chars(tag);
+		playerbox = '%s###%s###%s' % (title, thumb, tag)
+	else:
+		playerbox=''
+	return playerbox
+	
 ####################################################################################################
 # Subtitles: im Kopf der videodat-Datei enthalten (Endung .vtt). Leider z.Z. keine Möglichkeit
 #	bekannt, diese in Plex-Plugins einzubinden. Umsetzung in Kodi-Version OK (s. get_formitaeten).
@@ -9025,7 +9075,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 # Auswertung Kurzvideos (Block 'data-module="zdfplayer" ') in ZDF_getKurzVideoDetails -
 #	Aufrufer ZDF_get_content + ZDFSportLiveSingle
 # 
-def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid=''):
+def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='',nohome=''):
 	PLog('ZDF_getVideoSources:'); PLog(url); PLog(tagline); 
 	PLog(title); 
 	title=unescape(title); title_org=title; url_org=url
@@ -9038,6 +9088,7 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 	# 29.03.2020: bei Kurzvideos nur 1 apiToken - ermittelt in ZDF_get_content
 	if apiToken and sid:
 		apiToken1 = apiToken; apiToken2=apiToken1
+		page=''
 	else:
 		page, msg = get_page(url)
 		if page == '':
@@ -9053,11 +9104,11 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='')
 	PLog('apiToken1: %s, apiToken2: %s, sid: %s' % (apiToken1[:80], apiToken2[:80], sid))
 					
 	# -- Ende Vorauswertungen
-			
-	if "www.zdf.de/kinder" in urlSource:
-		li = home(li, ID='Kinderprogramme')			# Home-Button
-	else:
-		li = home(li, ID='ZDF')						# Home-Button
+	if nohome != '':									# z.B. nach ZDF_get_playerbox
+		if "www.zdf.de/kinder" in urlSource:
+			li = home(li, ID='Kinderprogramme')			# Home-Button
+		else:
+			li = home(li, ID='ZDF')						# Home-Button
 
 	formitaeten,duration,geoblock, sub_path = get_formitaeten(sid, apiToken1, apiToken2)	# Video-URL's ermitteln
 	# PLog(formitaeten)
@@ -9379,9 +9430,11 @@ def ZDF_getKurzVideoDetails(rec):
 	img = stringextract('teaser-image="', '</', rec)	
 	img = unescape(img); img = img.replace('\\/','/')
 	PLog(img[:80])
-	img = stringextract('x720":"', '"', img) 		
+	img = stringextract('x720":"', '"', img) 
+	url = stringextract('"embed_content": "', '"', rec) # im json-Block data-zdfplayer-jsb 
+	url = "https://www.zdf.de%s.html" % url				# 		
 	
-	return(apiToken,sid,descr_display,descr,title,img)				
+	return(url,apiToken,sid,descr_display,descr,title,img)				
 	
 #-------------------------
 
@@ -9892,6 +9945,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		# quote für url erforderlich wg. url-Inhalt "..sd=10&rebase=on.." - das & erzeugt in router
 		#	neuen Parameter bei dict(parse_qs(paramstring)
 		Plot = descr_org
+		if "\n" in Plot:
+			Plot = repl_dop(Plot.splitlines())
+			Plot = "\n".join(Plot)
 		Plot = Plot.replace('\n', '||')	
 		descr = Plot.replace('||', '\n')		
 	

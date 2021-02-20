@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 14.01.2021
+#	Stand 16.02.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2574,7 +2574,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #	Resume-Funktion Kodi-intern  DB MyVideos107.db, Tab files (idFile, playCount, lastPlayed) + (via key idFile),
 #		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
 #
-def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=''):	
+def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=None):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
 	PLog(sub_path); PLog(seekTime);
 	
@@ -2640,7 +2640,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	if url_check(url, caller='PlayVideo'):							# Url-Check
 		startlist = SETTINGS.getSetting('pref_startlist')
 		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
-		if  startlist == 'true' and playlist == '':					# Startliste  (skip bei playlist-Url)
+		if  startlist == 'true' and playlist == '':					# Startliste  (true: skip bei playlist-Url)
 			PLog("STARTLIST: " + STARTLIST)
 			PLog(maxvideos)
 			startlist=''
@@ -2692,21 +2692,24 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
+			return
 		else:													# false, None od. Blank
 			PLog('PlayVideo_Start: direkt, playlist: '); PLog(playlist)
-			xbmc.Player().play(url, li, windowed=False) 		# direkter Start
-			sleep(50 / 100)
-			if seekTime:
-				while 1:
-					if xbmc.Player().isPlaying():
-						seekTime = int(seekTime)
-						xbmc.Player().seekTime(seekTime) 		# Startpos aus Play
-						play_time = xbmc.Player().getTime()
-						PLog(play_time)
-						break
-						xbmc.sleep(200)
-				
-			return
+			player = xbmc.Player()
+			player.play(url, li, windowed=False) 		# direkter Start
+			xbmc.sleep(200)
+			while 1:
+				if player.isPlaying():
+					xbmc.sleep(500)							# für Raspi erforderl.
+					PLog("set_seekTime %s" % str(seekTime))
+					seekTime = int(seekTime)
+					player.seekTime(seekTime) 				# Startpos aus PlayMonitor (HLS o. Wirkung)
+					play_time = player.getTime()
+					video_dur = player.getTotalTime()
+					PLog("play_time %d, video_dur %d" % (play_time, video_dur))
+					break
+				xbmc.sleep(200)
+			return play_time, video_dur
 
 #---------------------------------------------------------------- 
 # SSL-Probleme in Kodi mit https-Code 302 (Adresse verlagert) - Lösung:

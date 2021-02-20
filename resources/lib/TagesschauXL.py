@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 08.02.2021
+#	Stand: 19.02.2021
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -692,15 +692,15 @@ def Faktenfinder(title, path):								# Faktenfinder
 			Dict("store", 'XL_FAKT', page) 					# Seite -> Cache: aktualisieren		
 
 	items=[]
-	block  = blockextract('class="teaser__link"',  page, 'div class="columns')
+	block  = blockextract('class="teaser__link"',  page, 'div class="columns')			# 1. Block
 	PLog(len(block))
 	if len(block) > 0:
 		items = items + block
-	block  = blockextract('class="list-element__link"',  page, ">Alle Meldungen")
+	block  = blockextract('class="list-element__link"',  page, ">Alle Meldungen")		# 2. Block
 	PLog(len(block))
 	if len(block) > 0:
 		items = items + block
-	block  = blockextract('class="list-element__teaserinfo',  page, '"class="footer"')
+	block  = blockextract('class="list-element__teaserinfo',  page, '"class="footer"')	# 3. Block
 	PLog(len(block))
 	if len(block) > 0:
 		items = items + block
@@ -718,6 +718,8 @@ def Faktenfinder(title, path):								# Faktenfinder
 			img = stringextract('src="', '"', item)
 		else:
 			img = ICON_FAKT	
+		if img and img.startswith("http") == False:
+			img = BASE_URL + img
 		page_local='' 										# Satz ohne Videodaten
 		if "component='ts-mediaplayer" in item:				# mit Videodaten
 			#player = stringextract('data-ts_component=', '</div>', item)
@@ -734,7 +736,7 @@ def Faktenfinder(title, path):								# Faktenfinder
 		summ_par = summ.replace('\n', '||')
 						
 		PLog('Satz4:')
-		PLog(title);PLog(summ[:80]);PLog(tag);PLog(href);
+		PLog(title);PLog(summ[:80]);PLog(tag);PLog(href);PLog(img);
 		title=py2_encode(title); href=py2_encode(href);  summ=py2_encode(summ)
 		img=py2_encode(img); tag=py2_encode(tag); summ_par=py2_encode(summ_par);
 		page_local=py2_encode(page_local)				
@@ -905,7 +907,7 @@ def get_content_text(page, title, summ, tag,):					# Textausgabe statt Video
 		
 	PLog('Mark1')
 	PLog(len(show_text))	
-	PLog(str(show_text))
+	PLog(str(show_text)[:80])
 
 	show_text = "\n".join(show_text)
 	show_text = cleanhtml(show_text)

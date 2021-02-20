@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 08.02.2021
+#	Stand 17.02.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1063,8 +1063,6 @@ def SendungenAZ_ARDnew(title, button, href):
 			if 'embedded=true' in url:
 				href = stringextract('"href":"', '"', url)
 				break
-		if href == '':
-			continue		
 
 		title 	= stringextract('"longTitle":"', '"', s)
 		if title == '':
