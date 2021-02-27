@@ -6,11 +6,27 @@ CHANGE HISTORY
 --------------		
 			Kodi-Forum, Support:
 			https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF
-			Plex-Foren:
-			https://forums.plex.tv/t/rel-ardundzdf/309751
-			https://forums.plex.tv/discussion/213947/rel-plex-plugin-ardmediathek2016
 			max_col 97	
 --------------
+
+27.02.2021 3.7.6
+			changelog.txt: Hinweis auf Plex-Foren entfernt (nicht mehr relevant).
+			get_page_content (ARD Neu): Anzeige des Senders in summary für VERPASST.
+			SendungenAZ_ARDnew: Ausschluss kodi-ungeeigneter Beiträge (in V3.7.5
+			verseh. gelöscht).
+			Barrierefreie Angebote ARD Neu: nach Verlagerung durch die ARD Anpassung 
+			der Menü-Infotexte in Main + Main_NEW.
+			BarriereArmSingle (ZDF): Cluster-Merkmal für 2. Aufruf gefixt (alle Beiträge
+			fehlten).
+			ARDSport: Einbindung 'Nordische Ski-WM' (manuell, Anpassung ARDSportPanel -
+			@Weri).
+			ARDSport: Button "Biathlon-WM" und "Alpine-Ski-WM" entfernt - @Weri.
+			ARDSport: Auswertung der Medaillenspiegel (Events + wintersport/ergebnisse/) 
+			- neue Funktion ARDSportTable (Verzicht auf Font Arial erford.).
+			PlayVideo: seekTime-Default None gegen 0 getauscht (Error in Kodi-Player mögl.).
+			xml2srt (Untertitel-Übersetzer für ARD-Videos): wg. Python3-Problemen (byte/str-
+			error) Ersatz von xbmc-File/open durch RLoad/RSave - @max62.
+			ZDFRubriken: Fix html-Müll - unescape(title).
 
 20.02.2021 3.7.5
 			PlayVideo (Modul util): 1/2sec-Pause vor xbmc.Player().seekTime ergänzt (für

@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 17.02.2021
+#	Stand 21.02.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -134,10 +134,11 @@ def Main_NEW(name, CurSender=''):
 		
 	title = 'Start'	
 	tag = 'Sender: [COLOR red] %s [/COLOR]' % sendername
+	summ = "[COLOR red] barrierefreie Angebote[/COLOR] im Untermenü <Genrezugänge>"
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s', 'sender': '%s'}" % (quote(title), sender)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", fanart=R(ICON_MAIN_ARD), thumb=R(img), 
-		tagline=tag, fparams=fparams)
+		tagline=tag, summary=summ, fparams=fparams)
 
 	title = 'Sendung verpasst'
 	tag = 'Sender: [COLOR red] %s [/COLOR]' % sendername
@@ -652,7 +653,10 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		title = repl_json_chars(title); summ = repl_json_chars(summ);
 		# ARDVerpasstContent: Zeit im Titel, Langfass. tagline:
 		if ID == 'EPG' and uhr:									
-			title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 
+			title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 			
+			pubServ = stringextract('publicationService":{"name":"', '"', s)	# publicationService (Sender)
+			if pubServ:
+				summ = "%sSender: %s" % (summ, pubServ)
 		
 		PLog('Satz:');
 		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ[:60]); PLog(ID)
@@ -1078,7 +1082,8 @@ def SendungenAZ_ARDnew(title, button, href):
 		pubServ = stringextract('"name":"', '"', s)		# publicationService (Sender)
 		tagline = "Sender: %s" % pubServ		
 		PLog(az_sender); PLog(pubServ)
-		# if sender != 'ard':							# Abgleich az_sender/pubServ entfällt
+		if pubServ  == '':								#
+			continue
 				
 		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
 			filtered=False

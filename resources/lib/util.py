@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 16.02.2021
+#	Stand 25.02.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1771,15 +1771,14 @@ def transl_wtag(tag):
 # 	https://forum.kodi.tv/showthread.php?tid=112916
 # Migration Python3: s. from __future__ import print_function
 # 16.05.2020 Anpassung an Python3, try-except-Block für Einlesen der UT-Datei
-#
+# 25.02.2021 wg. Pyton3-Problemen (byte/str-error) Verzicht auf xbmc-File und
+#	open(outfile, 'w') - akt. Verwendung RLoad + RSave
 def xml2srt(infile):
 	PLog("xml2srt: " + infile)
 	outfile = '%s.srt' % infile
 		
 	try:
-		f = xbmcvfs.File(infile)
-		page = f.readBytes()
-		f.close()
+		page = RLoad(infile, abs_path=True)
 		page = page.replace('-1:', '00:') 		# xml-Fehler
 		# 10-Std.-Offset simpel beseitigen (2 Std. müssten reichen):
 		page = (page.replace('"10:', '"00:').replace('"11:', '"01:').replace('"12:', '"02:'))
@@ -1789,22 +1788,24 @@ def xml2srt(infile):
 		return ''				
 		
 	try:
-		with open(outfile, 'w') as fout:
-			for i, p in enumerate(ps):
-				begin 	= stringextract('begin="', '"', p)		# "10:00:07.400"
-				end 	= stringextract('end="', '"', p)		# "10:00:10.920"			
-				ptext	=  blockextract('tt:span style=', p)
-				
-				begin	= begin[:8] + ',' + begin[9:11]			# ""10:00:07,40"			
-				end		= end[:8] + ',' + end[9:11]				# "10:00:10,92"
+		out = []											# Ausgabeliste
+		for i, p in enumerate(ps):
+			begin 	= stringextract('begin="', '"', p)		# "10:00:07.400"
+			end 	= stringextract('end="', '"', p)		# "10:00:10.920"			
+			ptext	=  blockextract('tt:span style=', p)
+			
+			begin	= begin[:8] + ',' + begin[9:11]			# ""10:00:07,40"			
+			end		= end[:8] + ',' + end[9:11]				# "10:00:10,92"
 
-				print(i+1, file=fout)
-				print('%s --> %s' % (begin, end), file=fout)
-				# print >>fout, p.text
-				for textline in ptext:
-					text = stringextract('>', '<', textline) # style="S3">Willkommen zum großen</tt:span>
-					print(text, file=fout)
-				print(file=fout)
+			out.append(str(i))
+			out.append('%s --> %s' % (begin, end))
+			for textline in ptext:
+				text = stringextract('>', '<', textline) 	# style="S3">Willkommen zum großen</tt:span>
+				out.append(text)
+			out.append("")
+			
+		page = "\n".join(out)
+		RSave(outfile, page)	
 		os.remove(infile)									# Quelldatei entfernen
 	except Exception as exception:
 		PLog(str(exception))
@@ -2574,7 +2575,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #	Resume-Funktion Kodi-intern  DB MyVideos107.db, Tab files (idFile, playCount, lastPlayed) + (via key idFile),
 #		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
 #
-def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=None):	
+def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=0):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
 	PLog(sub_path); PLog(seekTime);
 	

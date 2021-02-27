@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.7.5'
-VDATE = '20.02.2021'
+VERSION = '3.7.6'
+VDATE = '27.02.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -347,8 +347,8 @@ def Main():
 	else:
 		title = "ARD Mediathek Neu"
 		tagline = 'in den Settings sind ARD Mediathek Neu und ARD Mediathek Classic austauschbar'
-		summ = u'Die barrierefreien Angebote befinden sich im Menü Start in <Mehr zum Thema | Rubriken>.'
-		summ = summ + u'\nDas Menü <BarriereArm> ist zur Zeit nur in der Classic-Version verfügbar.'
+		summ = u'Die [COLOR red] barrierefreien Angebote[/COLOR] befinden sich im Start-Menü, zur Zeit in <Genrezugänge>.'
+		summ = summ + u'\nDas eigenständige Menü <BarriereArm> ist nur in der Classic-Version verfügbar.'
 		fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, '')
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
 			thumb=R(ICON_MAIN_ARD), tagline=tagline, summary=summ, fparams=fparams)
@@ -955,6 +955,8 @@ def AddonInfos():
 # 20.01.2020 usemono für textviewer (ab Kodi v18)
 # dialog.select ungeeignet (Font zu groß, Zeilen zu schmal)
 # 02.02.2021 erweitert mit direkter page-Übergabe
+# Hinw.: usemono wirkt nicht, falls im Skin der Font Arial
+#	gewählt ist (notwend. für arabische Schrift (ZDFarabic) 
 #
 def ShowText(path, title, page=''):
 	PLog('ShowText:'); 
@@ -2582,26 +2584,17 @@ def ARDSport(title):
 	
 	#-------------------------------------------------------# Zusätze
 	# beim Ziel ARDSportPanel den Titel in theme_list für 2. Durchlauf 
-	#	aufnehmen
-	title = "Biathlon-WM"									# 08.02.2021 Biathlon-WM (nicht in Fußlinks)
-	href = 'https://www.sportschau.de/biathlon-wm/index.html'
-	img =  'https://www.sportschau.de/biathlon-wm/pokljuka-102~_v-gseagaleriexl.jpg'
-	tagline = u'Nachrichten, Berichte, Interviews und Ergebnisse zur Biathlon-WM 2021 in Pokljuka'
+	#	aufnehmen				
+	title = "Nordische Ski-WM"									# 11.01.2021 Alpine Ski-WM (nicht in Fußlinks)
+	href = 'https://www.sportschau.de/nordische-ski-wm/index.html'
+	img =  'https://www.sportschau.de/wintersport/skispringen/Skispringen-Zakopane-erster-Durchgang-100~_v-gseapremiumxl.jpg'
+	tagline = 'Nordische Ski-WM in Oberstdorf'
+	summ = u"Skispringer, Langläufer und die Nordischen Kombinierer treffen sich vom 24. Februar bis 7. März in Oberstdorf, um in 24 Wettbewerben ihre Weltmeister zu ermitteln."
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
 		quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
-		thumb=img, tagline=tagline, fparams=fparams)			
-
-	title = "Alpine Ski-WM"									# 11.01.2021 Alpine Ski-WM (nicht in Fußlinks)
-	href = 'https://www.sportschau.de/alpine-ski-wm/index.html'
-	img =  'https://www.sportschau.de/wintersport/ski-alpin/thomas-dressen128~_v-gseapremiumxl.jpg'
-	tagline = 'Die Alpine Ski-WM 2021 in Cortina dAmpezzo'
-	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
-		quote(href), quote(img))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
-		thumb=img, tagline=tagline, fparams=fparams)			
+		thumb=img, tagline=tagline, summary=summ, fparams=fparams)
 	
 	title = "Moderatoren"									# Moderatoren 
 	href = 'https://www.sportschau.de/sendung/moderatoren/index.html'
@@ -2673,7 +2666,13 @@ def ARDSportPanel(title, path, img, tab_path=''):
 		pre_path = SBASE + '/sendung/tdm/abstimmung/tordesmonatsvideos104.html'
 		page, msg = get_page(path=pre_path)	
 		pre_sendungen = blockextract('class="teaser ', page)
-		PLog(len(pre_sendungen))	
+		PLog(len(pre_sendungen))
+	
+	table_list = ["/medaillenspiegel/", "/ergebnisse/"]
+	for t in table_list:
+		if 	t in path:									# Abzweig ARDSportTable
+			ARDSportTable(li, path, title)
+			return li
 	
 	if tab_path:										# Path 2. Durchlauf
 		path = tab_path
@@ -2696,8 +2695,8 @@ def ARDSportPanel(title, path, img, tab_path=''):
 		tdm_seite=True
 	PLog(len(sendungen))
 	
-	# ev. erweitern
-	theme_list = ['Wintersport', 'Alpine Ski-WM', "Biathlon-WM"]						
+	# manuelle Buttons in ARDSport - s. Zusätze dort
+	theme_list = ['Wintersport', "Nordische Ski-WM"]						
 	if tab_path == '' and title in theme_list:			# 1. Durchlauf bei Tabmenüs
 		if title == 'Formel 1':
 			tablist = blockextract('class="collapsed  subressort', page, '--googleoff')
@@ -2731,7 +2730,8 @@ def ARDSportPanel(title, path, img, tab_path=''):
 				title = stringextract('">', '</a>', tab)
 				title = cleanhtml(tab); title = mystrip(title)
 				title = repl_json_chars(title)
-				if 'Spielplan' in title or 'Ergebnisse' in title: # skip
+				
+				if 'Spielplan' in title: 					# skip, Ergebnisse -> ARDSportTable - s.o.
 					continue
 				href = stringextract('href="', '"', tab)
 				if href.startswith('http') == False:
@@ -3281,7 +3281,213 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 			mediatype=mediatype, summary=summ) 
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+#--------------------------------------------------------------------------------------------------
+# extrahiert Medaillenspiegel auf sportschau.de (einheitl. Aufbau)
+#	Bsp.: https://www.sportschau.de/biathlon-wm/medaillenspiegel/index.html (Options-Feld),
+#		https://www.sportschau.de/wintersport/ergebnisse/index.html (Klapp-Listen)
+#	Home in ARDSportPanel
+# 1. Durchlauf (ohne table_path): Param. für die einz. Tabellen ermitteln
+#	Übersicht abweichend: Klapp-Listen, Options-Feld
+# 2.  Durchlauf (mit table_path): Seite laden + Tabelle im Textviewer darstellen
+#
+def ARDSportTable(li, path, title, table_path=''):
+	PLog('ARDSportTable:'); 
+	
+	if table_path:
+		path = table_path
+	page, msg = get_page(path)
+	if page == '':
+		msg1 = 'Seite kann nicht geladen werden.'
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return li 
+	PLog(len(page))
+	
+	img = R(ICON_DIR_FOLDER)
+	base = "https://www.sportschau.de"
+	
+	# ----------------------------------------------------------			# 1. Durchlauf
+	if table_path == '':
+		if "/ergebnisse/" in path:										# 1.1 abweichende Übersicht (Klapp-Listen)
+			PLog('pass1_lists:')
+			page = stringextract('class="conHeadline">', 'sectionArticle', page)
+			clap_list =  blockextract("data-ctrl-klappe-entry", page)	# Klappen: BIATHLON, SKI ALPIN..
+			PLog("clap_list %d" % len(clap_list))
+			clap_cnt=0
+			for clap in clap_list:
+				clap_cnt=clap_cnt+1
+				clap_title = stringextract('title="', '"', clap)
+				if clap_cnt % 2 == 0:								# Farbwechsel clap_title
+					clap_col = "red"
+				else:
+					clap_col = "blue"
+				
+				h3_list =  blockextract("<h3>", clap, "</ul>")		# Groß-Events: WELTCUP, OLYMPIA..
+				if len(h3_list) == 0:								# ohne Groß-Events
+					h3_list =  blockextract("<h2>", clap, "</ul>")
+				PLog("h3_list %d" % len(h3_list))
+				h3_cnt=clap_cnt+1									# Farbwechsel für h3_title
+				for h3 in h3_list:
+					h3_cnt=h3_cnt+1
+					h3_title = stringextract('<h3>', '</h3>', h3)
+					if h3_title == '':								# ohne Groß-Events
+						h3_title = stringextract('<h2>', '</h2>', h3)
+					if h3_cnt % 2 == 0:								# Farbwechsel h3_title
+						h3_col = "darkgoldenrod"
+					else:
+						h3_col = "violet"
+					
+					li_list = blockextract("<li>", h3, "</li>")
+					PLog("li_list %d" % len(li_list))
+					for item in li_list:
+						table_path = base + stringextract('href="', '"', item)
+						li_title=cleanhtml(item); li_title=li_title.strip()# Wettkampf
+						title = u"[COLOR %s]%s[/COLOR] | [COLOR %s]%s[/COLOR] | %s" %\
+							(clap_col, clap_title, h3_col, h3_title, li_title)
+						tag = title
+						
+						PLog('Satz6_1:')
+						PLog(clap_title); PLog(h3_title); PLog(li_title);
+						title=py2_encode(title); table_path=py2_encode(table_path)
+						fparams="&fparams={'li': '%s', 'path': '', 'title': '%s', 'table_path': '%s'}"	% (li,
+							quote(title), quote(table_path))
+						addDir(li=li, label=title, action="dirList", dirID="ARDSportTable", fanart=img, 
+							thumb=img, tagline=tag, fparams=fparams)
+									
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			return li
+		
+		PLog('pass1_optionfields:')													# 1.2 Übersicht in Options-Feld
+		# Tabellen-Übersicht auf jeder Seite vorh. (selected="selected") :
+		page = stringextract('class="siteHeadline', '<thead', page) # Tab-Übersicht ausschneiden
+		form_url = stringextract('form action="', '"', page)					# .jsp-Url
+		id_name =  stringextract('onchangesubmit', '<optgroup', page)	# -> table_path
+		id_name =  stringextract('name="', '"', id_name) 
+		eap = stringextract('"eap" ', '/>', page)						# -> table_path
+		eap = stringextract('value="', '"', eap)
 
+		optgroups = blockextract("<optgroup", page, "</optgroup>")
+		for item in optgroups:
+			label  = stringextract('label="', '"', item)			# Haupt-Titel
+			options = blockextract("<option ", item, "</option>")	# Unter-Titel
+			option_list=[]
+			for option in options:
+				op = stringextract('value="', '"', option) 			# Bsp. value="bi|wc|Einzelrennen"
+				s = cleanhtml(option)
+				title = "%s: %s" % (label, s)
+				tag = "Tabelle %s" % s
+				
+				# <input name="_sportart" value="ws",   <input name="eap" 
+				liga = '?%s=%s&_sportart=ws&eap=%s' % (id_name, op, eap) # Bez. ws + eap bei Bedarf auslesen
+				liga = (liga.replace('|', '%7C').replace('/', '%2F'))# Quoting: | und /
+				table_path = base + form_url + liga
+				
+	
+				PLog('Satz6_2:')
+				PLog(title);PLog(label); PLog(table_path);
+				title=py2_encode(title); table_path=py2_encode(table_path)
+				fparams="&fparams={'li': '%s', 'path': '', 'title': '%s', 'table_path': '%s'}"	% (li,
+					quote(title), quote(table_path))
+				addDir(li=li, label=title, action="dirList", dirID="ARDSportTable", fanart=img, 
+					thumb=img, tagline=tag, fparams=fparams)
+
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return li
+		
+	# ----------------------------------------------------------			# 2. Durchlauf: einz. Tabelle
+	
+	PLog('pass2:')
+	table = stringextract("<table", "</table>", page)
+	if table == '':
+		msg1 = 'keine Tabelle gefunden.'
+		msg2 = title
+		MyDialog(msg1, msg2, '')
+		return li 
+	PLog(len(table))
+	
+	# die unterschiedl. Zeichensätze in Header + Zeilen verhindern im Texviewer
+	#	die Überstimmung. Die hier verwend. Werte sind Näherungswerte.
+	width_def = "Default|%15s#Default|%15s"								# Defaults
+	width_list = [u"Rang|%8s#Rang|%10s", u"Name|%26s#Name|%20s", 			# "Header#Zeile"
+				u"Land|%22s#Land|%14s", u"Team|%22s#Team|%14s", 
+				u"Punkte|%20s#Punkte|%10s", u"Lauf|%20s#Lauf|%7s",
+				u"Minuten|%10s#Minuten|%7s"]
+				
+	table = re.sub(r"\s+", " ", table)
+	hzeile  = stringextract('class="headlines"' , '</tr>', table)		# Tabelle-Header-Zeile
+	hzeile  = blockextract('<th', hzeile, '</th>')
+	headline = stringextract('"conHeadline">' , '</', page)				# Event-Titel
+	stand = stringextract('</table>' , '</div>', page)					# Schlusszeile
+	stand = cleanhtml(stand)
+	
+	htitle=''
+	cnt=0; width_list2=[]												# width_list2: Tabbreite in Zeilen
+	for d in hzeile:
+		td = stringextract('scope="col">', '</th>', d)
+		if 'title="' in td:
+			td = stringextract('title="' , '"', td)
+		for w in width_list:
+			PLog(">%s<" % td)
+			default=True							
+			if td in w:
+				tab_h, tab_z = w.split("#") 								# "Rang|%10s#Rang|%10s"	
+				bez, svar = tab_h.split("|")								# "Rang|%5s"
+				td_width = re.search('\d+', svar).group(0)
+				td_width = int(td_width)
+				width_list2.append(w)
+				default=False
+				break
+		if default:	
+			tab_h, tab_z = width_def.split("#") 						# "Default|%15s#Default|%15s"	
+			bez, svar = tab_h.split("|")								# "Default|%15s"
+			td_width = re.search('\d+', svar).group(0)
+			td_width = int(td_width)
+			width_list2.append(width_def)
+
+		s = svar % td[:td_width]		
+		htitle = htitle +s
+		cnt=cnt+1
+			
+	htitle = "%s\n[COLOR red] %s [/COLOR]" % (headline, htitle)			# max. 2 Zeilen
+	htitle = htitle.replace('<span class="hi ', '')
+	PLog("htitle: " + htitle)
+
+	zeilen = blockextract('<tr', table, '</tr>')
+	PLog(len(zeilen))
+	zeilen = hzeile + zeilen
+
+	line=''; 
+	for z in zeilen:													# Zeilen
+		#print z[:80]
+		if '<td' in z and  '</td>' in z:
+			spalten = blockextract('<td', z, '</td>') 
+			s_anz = len(spalten)
+			cnt=0;
+			for s in spalten:				# Spalten-Data
+				s_bak = s
+				s=cleanhtml(s); s=unescape(s); s=mystrip(s)
+				if s.strip() == '' and 'title="' in s_bak:				# Länder-Bez.
+					s = stringextract('title="' , '"', s_bak)
+					s=unescape(s);
+				
+				w = width_list2[cnt]
+				tab_h, tab_z = w.split("#") 							# "Rang|%10s#Rang|%10s"	
+				bez, svar = tab_z.split("|")							# "Rang|%5s"
+				td_width = re.search('\d+', svar).group(0)
+				td_width = int(td_width)
+				s = svar % s[:td_width]
+				
+				line = line + s
+				cnt=cnt+1
+			line = line + "\n"
+				
+	new_table = "%s\n\n%s" % (htitle, line)
+	ShowText(path='', title=htitle, page=line)
+
+	return	# GetDirectory-Error, dafür Verbleib in Liste				
+	#xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	
 ####################################################################################################
 # 
 def SearchUpdate(title):		
@@ -7742,7 +7948,7 @@ def ZDFRubriken(name):
 		path = stringextract('href="', '"', rec)
 		path = ZDF_BASE + path
 		title = stringextract('class="link-text">', '</span>', rec)
-		title = mystrip(title)
+		title = mystrip(title); title = unescape(title)
 		if title == "Sendungen A-Z":	# Rest nicht mehr relevant
 			break
 		title=py2_encode(title); path=py2_encode(path); 	
@@ -8278,6 +8484,7 @@ def BarriereArm(title):
 	content = blockextract('<section class="b-content-teaser-list"', page)
 	PLog(len(content))
 	content = blockextract('class="artdirect"', content[0])	# 2. Block: Service (nicht verw.)
+	PLog(len(content))
 	
 	if SETTINGS.getSetting('pref_usefilter') == 'true':
 		if 'Audiodeskription' or 'Hörfassung' in AKT_FILTER:
@@ -8303,7 +8510,9 @@ def BarriereArm(title):
 		if u'Livestreams' in title:				# nur EPG, kein Video
 			PLog('skip: '  + title)
 			continue
-				
+		
+		PLog('Satz7:')
+		PLog(title);	PLog(path)	
 		ID = 'BarriereArm_%s' % str(i)		
 		path=py2_encode(path); title=py2_encode(title);	
 		fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s'}" % (quote(path), quote(title), ID)
@@ -8340,9 +8549,10 @@ def BarriereArmSingle(path, title, clus_title='', ID=''):
 		
 	PLog(len(page))
 	
+	cluster =  blockextract('class="cluster-title">', page, '') 
+	PLog(len(cluster))
+	
 	if clus_title:								# 2. Aufruf: Beiträge zu Cluster-Titel auswerten
-		cluster =  blockextract('class="cluster-title">', page, '') 
-		PLog(len(cluster))
 		for clus in cluster:
 			clustertitle = stringextract('class="cluster-title">', '</', clus)
 			# PLog(clus_title); PLog(clustertitle);	 # Debug
@@ -8356,8 +8566,6 @@ def BarriereArmSingle(path, title, clus_title='', ID=''):
 							
 	else:										# 1. Aufruf: nur Cluster-Titel + Bild listen 
 		li = home(li, ID='ZDF')							# Home-Button
-		cluster =  blockextract('class="b-cluster">', page, '')
-		PLog(len(cluster))
 		for clus in cluster:
 			clustertitle = stringextract('class="cluster-title">', '</', clus)
 			if 'Livestream' in clustertitle:
