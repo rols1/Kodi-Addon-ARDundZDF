@@ -9,6 +9,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+06.03.2021 3.7.7
+			SearchARDundZDFnew: Trennung Suchstring ('|') für ARD-api-Call (doppelter
+			Suchstring funktionierte trotzdem).
+			ARDSport: Einbindung www.sportschau.de/ergebnisse_tabellen/index.html (gesam-
+			te Tabellenübersicht) - neue Funktion ARDSportTablePre für zusätzl. Menü-
+			Ebene, Anpassungen in ARDSportTable + ARDSportPanel. Verzicht auf Auswertung
+			des Optionsfeldes o.r. auf der html-Seite (Spieltag, Wertung).
+			ZDF_Bildgalerien: Anpassung an ZDF-Änderung (Abgleich infoline-text statt
+			icon-504_gallery), Fix tagline.
+			getOnline (Modul phoenix): Sekunden aus Sendezeit entfernt (tagline), Anpassung
+			date_format in time_state.
+			SendungenAZ_ARDnew: Filtermerkmal "pubServ" durch "partner" ergänzt (Beitrag
+			nur bei Fehlen beider Merkmale verwerfen, Bsp. Tatort @Simaryp).
+			ZDFSportLive: Code für Handball-WM auskommentiert (@Weri).  
+
 27.02.2021 3.7.6
 			changelog.txt: Hinweis auf Plex-Foren entfernt (nicht mehr relevant).
 			get_page_content (ARD Neu): Anzeige des Senders in summary für VERPASST.

@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 21.02.2021
+#	Stand 05.03.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1080,9 +1080,10 @@ def SendungenAZ_ARDnew(title, button, href):
 		img = img.replace('{width}', '720')
 		summ 	= stringextract('synopsis":"', '"', s)	
 		pubServ = stringextract('"name":"', '"', s)		# publicationService (Sender)
+		partner = stringextract('"partner":"', '"', s)
 		tagline = "Sender: %s" % pubServ		
-		PLog(az_sender); PLog(pubServ)
-		if pubServ  == '':								#
+		PLog(az_sender); PLog(pubServ); PLog(partner);
+		if pubServ  == '' and partner  == '':			# pubServ kann fehlen
 			continue
 				
 		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
@@ -1181,7 +1182,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	pageNumber = 0
 	
 	query_lable = query_ard.replace('+', ' ')
-	path = 'https://page.ardmediathek.de/page-gateway/widgets/%s/search/vod?searchString=%s&pageNumber=%s' % (sender, query, pageNumber)
+	path = 'https://page.ardmediathek.de/page-gateway/widgets/%s/search/vod?searchString=%s&pageNumber=%s' % (sender, query_ard, pageNumber)
 	page, msg = get_page(path,JsonPage=True)					
 		
 	vodTotal =  stringextract('"totalElements":', '}', page)	# Beiträge?

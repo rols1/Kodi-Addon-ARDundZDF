@@ -7,7 +7,7 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-#	Stand: 07.10.2020
+#	Stand: 04.03.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -840,14 +840,15 @@ def getOnline(datestamp, onlycheck=False):
 
 	if datestamp.endswith('Z'):							# s.o.
 		datestamp = datestamp[:len(datestamp)-1]
+	
 		
 	online = ''
 	if len(datestamp) == 19 or len(datestamp) == 16:
 		senddate = datestamp[:10]
 		year,month,day = senddate.split('-')
 		sendtime = datestamp[11:]
-		if len(sendtime) == 5:							# auffüllen: 17:00 -> 17:00:00
-			sendtime = "%s:00" % sendtime
+		if len(sendtime) > 5:
+			sendtime = sendtime[:5]
 		
 		checkstamp = "%s %s" % (senddate, sendtime)
 		check_state= time_state(checkstamp)
@@ -863,10 +864,11 @@ def getOnline(datestamp, onlycheck=False):
 	
 # ----------------------------------------------------------------------
 # Prüft datestamp auf Vergangenheit, Gegenwart, Zukunft
-#	Format datestamp: "2020-01-26 11:15:00" 19 stel.
+#	Format datestamp: "2020-01-26 11:15:00" 19 stel., in
+#	getOnline auf 16 Stellen reduz. (o. Sek.)
 def time_state(checkstamp):
 	PLog("time_state: " + checkstamp)		
-	date_format = "%Y-%m-%d %H:%M:%S"
+	date_format = "%Y-%m-%d %H:%M"
 
 	start = datetime.datetime.fromtimestamp(time.mktime(time.strptime(checkstamp, date_format)))
 	# PLog(start)

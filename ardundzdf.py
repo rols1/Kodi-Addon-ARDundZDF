@@ -2656,9 +2656,6 @@ def ARDSportPanel(title, path, img, tab_path=''):
 	PLog(title); PLog(path); PLog(tab_path);
 	title_org = title; path_org=path
 
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD')						# Home-Button
-
 	SBASE = 'https://www.sportschau.de'
 	pre_sendungen = ''; tdm_seite=False
 	# Seite "TOR DES MONATS" voranstellen, Folgeseite Retro-Inhalt
@@ -2668,12 +2665,15 @@ def ARDSportPanel(title, path, img, tab_path=''):
 		pre_sendungen = blockextract('class="teaser ', page)
 		PLog(len(pre_sendungen))
 	
-	table_list = ["/medaillenspiegel/", "/ergebnisse/"]
+	table_list = ["/medaillenspiegel/", "/ergebnisse/", "/ergebnisse_tabellen/"]
 	for t in table_list:
 		if 	t in path:									# Abzweig ARDSportTable
-			ARDSportTable(li, path, title)
-			return li
+			ARDSportTable(path, title)					# Home-Button dort
+			return
 	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+
 	if tab_path:										# Path 2. Durchlauf
 		path = tab_path
 	page, msg = get_page(path=path)	
@@ -3283,6 +3283,96 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #--------------------------------------------------------------------------------------------------
+# erste Menüebene für umfangr. Tabellen in ARDSportTable - bisher "/ergebnisse/", 
+#	"/ergebnisse_tabellen/"
+# page: 'class="conHeadline">' .. 'sectionArticle'
+# 1. Durchlauf (ohne clap_title): Liste der Klappentitel
+# 2. Durchlauf: Eventtitel mit Unterevents (s. Radsport)
+#
+# Todo: Auswertung Optionsfeld o.r. (Spieltag, Wertung)
+#
+def ARDSportTablePre(base, img, clap_title=''):
+	PLog('ARDSportTablePre:'); 
+	PLog(clap_title)
+	
+	page = Dict("load", 'ARDSportTable')
+	clap_list =  blockextract("data-ctrl-klappe-entry", page)	# Klappen: BIATHLON, SKI ALPIN..
+	PLog("clap_list %d" % len(clap_list))
+	
+	if clap_title == '':										# 1. Durchlauf: Klappentitel
+		li = xbmcgui.ListItem()
+		li = home(li, ID='ARD')					# Home-Button
+		for clap in clap_list:
+			clap_title = stringextract('title="', '"', clap)
+			clap_title = unescape(clap_title)
+			
+			PLog('Satz6_1:')
+			PLog(clap_title); 
+			clap_title=py2_encode(clap_title);
+			fparams="&fparams={'base': '%s', 'img': '%s', 'clap_title': '%s'}"	%\
+				(quote(base), quote(img), quote(clap_title))
+			addDir(li=li, label=clap_title, action="dirList", dirID="ARDSportTablePre", fanart=img, 
+				thumb=img, fparams=fparams)
+		
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+		return 
+						
+	# -----------------------------------------					# 2. Durchlauf: Eventtitel 
+	PLog("clap_title: " + clap_title)
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	clap_title_org=clap_title; found=False
+	clap=''
+	for clap in clap_list:
+		clap_title = stringextract('title="', '"', clap)
+		clap_title = unescape(clap_title)
+		if clap_title_org in clap_title:
+			PLog("gefunden: %s" % clap_title)
+			found = True
+			break
+			
+	if found == False:
+		msg1 = "Tabelle nicht gefunden: %s"	% clap_title_org
+		MyDialog(msg1, '', '')	
+		return li			
+	
+	h3_cnt=0
+	h3_list =  blockextract("<h3>", clap, "</ul>")		# Groß-Events: WELTCUP, OLYMPIA..
+	if len(h3_list) == 0:								# ohne Groß-Events
+		h3_list =  blockextract("<h2>", clap, "</ul>")
+	PLog("h3_list %d" % len(h3_list))
+	for h3 in h3_list:
+		h3_cnt=h3_cnt+1
+		h3_title = stringextract('<h3>', '</h3>', h3)
+		if h3_title == '':								# ohne Groß-Events
+			h3_title = stringextract('<h2>', '</h2>', h3)
+		if h3_cnt % 2 == 0:								# Farbwechsel h3_title
+			h3_col = "red"
+		else:
+			h3_col = "blue"
+		
+		li_list = blockextract("<li>", h3, "</li>")
+		PLog("li_list %d" % len(li_list))
+		for item in li_list:
+			table_path = base + stringextract('href="', '"', item)
+			li_title=cleanhtml(item); li_title=li_title.strip()# Wettkampf
+			title = u"%s | [COLOR %s]%s[/COLOR] | %s" %\
+				(clap_title, h3_col, h3_title, li_title)
+			title = unescape(title)
+			tag = title	
+			
+			PLog('Satz6_2:')
+			PLog(clap_title); PLog(h3_title); PLog(li_title);
+			title=py2_encode(title); table_path=py2_encode(table_path)
+			fparams="&fparams={'path': '', 'title': '%s', 'table_path': '%s'}"	%\
+				(quote(title), quote(table_path))
+			addDir(li=li, label=title, action="dirList", dirID="ARDSportTable", fanart=img, 
+				thumb=img, tagline=tag, fparams=fparams)
+					
+						
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+#--------------------------------------------------------------------------------------------------
 # extrahiert Medaillenspiegel auf sportschau.de (einheitl. Aufbau)
 #	Bsp.: https://www.sportschau.de/biathlon-wm/medaillenspiegel/index.html (Options-Feld),
 #		https://www.sportschau.de/wintersport/ergebnisse/index.html (Klapp-Listen)
@@ -3291,7 +3381,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 #	Übersicht abweichend: Klapp-Listen, Options-Feld
 # 2.  Durchlauf (mit table_path): Seite laden + Tabelle im Textviewer darstellen
 #
-def ARDSportTable(li, path, title, table_path=''):
+def ARDSportTable(path, title, table_path=''):
 	PLog('ARDSportTable:'); 
 	
 	if table_path:
@@ -3301,7 +3391,7 @@ def ARDSportTable(li, path, title, table_path=''):
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
-		return li 
+		return
 	PLog(len(page))
 	
 	img = R(ICON_DIR_FOLDER)
@@ -3309,54 +3399,13 @@ def ARDSportTable(li, path, title, table_path=''):
 	
 	# ----------------------------------------------------------			# 1. Durchlauf
 	if table_path == '':
-		if "/ergebnisse/" in path:										# 1.1 abweichende Übersicht (Klapp-Listen)
+		# "ergebnisse" deckt ab: "/ergebnisse/", "/ergebnisse_tabellen/"
+		if "ergebnisse" in path:										# 1.1 abweichende Übersicht (Klapp-Listen)
 			PLog('pass1_lists:')
-			page = stringextract('class="conHeadline">', 'sectionArticle', page)
-			clap_list =  blockextract("data-ctrl-klappe-entry", page)	# Klappen: BIATHLON, SKI ALPIN..
-			PLog("clap_list %d" % len(clap_list))
-			clap_cnt=0
-			for clap in clap_list:
-				clap_cnt=clap_cnt+1
-				clap_title = stringextract('title="', '"', clap)
-				if clap_cnt % 2 == 0:								# Farbwechsel clap_title
-					clap_col = "red"
-				else:
-					clap_col = "blue"
-				
-				h3_list =  blockextract("<h3>", clap, "</ul>")		# Groß-Events: WELTCUP, OLYMPIA..
-				if len(h3_list) == 0:								# ohne Groß-Events
-					h3_list =  blockextract("<h2>", clap, "</ul>")
-				PLog("h3_list %d" % len(h3_list))
-				h3_cnt=clap_cnt+1									# Farbwechsel für h3_title
-				for h3 in h3_list:
-					h3_cnt=h3_cnt+1
-					h3_title = stringextract('<h3>', '</h3>', h3)
-					if h3_title == '':								# ohne Groß-Events
-						h3_title = stringextract('<h2>', '</h2>', h3)
-					if h3_cnt % 2 == 0:								# Farbwechsel h3_title
-						h3_col = "darkgoldenrod"
-					else:
-						h3_col = "violet"
-					
-					li_list = blockextract("<li>", h3, "</li>")
-					PLog("li_list %d" % len(li_list))
-					for item in li_list:
-						table_path = base + stringextract('href="', '"', item)
-						li_title=cleanhtml(item); li_title=li_title.strip()# Wettkampf
-						title = u"[COLOR %s]%s[/COLOR] | [COLOR %s]%s[/COLOR] | %s" %\
-							(clap_col, clap_title, h3_col, h3_title, li_title)
-						tag = title
-						
-						PLog('Satz6_1:')
-						PLog(clap_title); PLog(h3_title); PLog(li_title);
-						title=py2_encode(title); table_path=py2_encode(table_path)
-						fparams="&fparams={'li': '%s', 'path': '', 'title': '%s', 'table_path': '%s'}"	% (li,
-							quote(title), quote(table_path))
-						addDir(li=li, label=title, action="dirList", dirID="ARDSportTable", fanart=img, 
-							thumb=img, tagline=tag, fparams=fparams)
-									
-			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			return li
+			page = stringextract('class="conHeadline">', 'sectionArticle', page)		
+			Dict("store", 'ARDSportTable', page) 
+			ARDSportTablePre(base, img)									# erste Menüebene außerhalb
+			return
 		
 		PLog('pass1_optionfields:')													# 1.2 Übersicht in Options-Feld
 		# Tabellen-Übersicht auf jeder Seite vorh. (selected="selected") :
@@ -3384,7 +3433,7 @@ def ARDSportTable(li, path, title, table_path=''):
 				table_path = base + form_url + liga
 				
 	
-				PLog('Satz6_2:')
+				PLog('Satz6_3:')
 				PLog(title);PLog(label); PLog(table_path);
 				title=py2_encode(title); table_path=py2_encode(table_path)
 				fparams="&fparams={'li': '%s', 'path': '', 'title': '%s', 'table_path': '%s'}"	% (li,
@@ -3396,7 +3445,6 @@ def ARDSportTable(li, path, title, table_path=''):
 		return li
 		
 	# ----------------------------------------------------------			# 2. Durchlauf: einz. Tabelle
-	
 	PLog('pass2:')
 	table = stringextract("<table", "</table>", page)
 	if table == '':
@@ -3408,26 +3456,40 @@ def ARDSportTable(li, path, title, table_path=''):
 	
 	# die unterschiedl. Zeichensätze in Header + Zeilen verhindern im Texviewer
 	#	die Überstimmung. Die hier verwend. Werte sind Näherungswerte.
-	width_def = "Default|%15s#Default|%15s"								# Defaults
-	width_list = [u"Rang|%8s#Rang|%10s", u"Name|%26s#Name|%20s", 			# "Header#Zeile"
+	# Bei der großen Ergebnisseite (außerhalb Wintersport) müssen Spaltengrenzen entfallen,
+	#	um Infos zu erhalten. Das betrifft auch verdeckte Bezeichner (Bsp. Halbzeitstand) -
+	#	Folge: Zeilenumbruch
+	width_def = "Default|%10s#Default|%20s"								# Defaults
+	PLog("width_def: " + width_def)
+	width_list = [u"Rang|%8s#Rang|%10s", u"Name|%26s#Name|%20s", 		# "Header#Zeile"
 				u"Land|%22s#Land|%14s", u"Team|%22s#Team|%14s", 
 				u"Punkte|%20s#Punkte|%10s", u"Lauf|%20s#Lauf|%7s",
-				u"Minuten|%10s#Minuten|%7s"]
-				
+				u"Minuten|%10s#Minuten|%7s", u"Pkt|%20s#Pkt|%10s",
+				u"Informationen|%20s#Informationen|%10s",				# ab hier Tabs != Wintersport
+				u"Tag|%10s#Tag|%10s", u"Ergebnis|%20s#Ergebnis|%40s",	# Ergebnis: einschl. Halbzeitstand
+				u"Begegnung|%20s#Begegnung|%40s"]
 	table = re.sub(r"\s+", " ", table)
 	hzeile  = stringextract('class="headlines"' , '</tr>', table)		# Tabelle-Header-Zeile
 	hzeile  = blockextract('<th', hzeile, '</th>')
+	PLog(len(hzeile)); PLog(str(hzeile))
 	headline = stringextract('"conHeadline">' , '</', page)				# Event-Titel
+	headline = unescape(headline)
 	stand = stringextract('</table>' , '</div>', page)					# Schlusszeile
 	stand = cleanhtml(stand)
 	
 	htitle=''
 	cnt=0; width_list2=[]												# width_list2: Tabbreite in Zeilen
 	for d in hzeile:
+		PLog(d)
 		td = stringextract('scope="col">', '</th>', d)
 		if 'title="' in td:
 			td = stringextract('title="' , '"', td)
+		else:
+			td = cleanhtml(d)
+		td = cleanhtml(d)
+		td = td.strip()
 		for w in width_list:
+			s=td
 			PLog(">%s<" % td)
 			default=True							
 			if td in w:
@@ -3439,12 +3501,15 @@ def ARDSportTable(li, path, title, table_path=''):
 				default=False
 				break
 		if default:	
-			tab_h, tab_z = width_def.split("#") 						# "Default|%15s#Default|%15s"	
-			bez, svar = tab_h.split("|")								# "Default|%15s"
-			td_width = re.search('\d+', svar).group(0)
-			td_width = int(td_width)
-			width_list2.append(width_def)
-
+			if 'nolimit' in width_def:									# s ohne Begrenzung
+				 svar = "%s    "										# + 4 Blanks Abstand
+				 td_width = len(s)
+			else:
+				tab_h, tab_z = width_def.split("#") 						# "Default|%15s#Default|%15s"	
+				bez, svar = tab_h.split("|")								# "Default|%15s"
+				td_width = re.search('\d+', svar).group(0)
+				td_width = int(td_width)
+				width_list2.append(width_def)
 		s = svar % td[:td_width]		
 		htitle = htitle +s
 		cnt=cnt+1
@@ -3471,15 +3536,27 @@ def ARDSportTable(li, path, title, table_path=''):
 					s = stringextract('title="' , '"', s_bak)
 					s=unescape(s);
 				
-				w = width_list2[cnt]
-				tab_h, tab_z = w.split("#") 							# "Rang|%10s#Rang|%10s"	
-				bez, svar = tab_z.split("|")							# "Rang|%5s"
-				td_width = re.search('\d+', svar).group(0)
-				td_width = int(td_width)
-				s = svar % s[:td_width]
+				PLog("width_def: "+ width_def)
+				if 'nolimit' in width_def:								# s ohne Begrenzung
+					# pass
+					s = "%s    " %s										# + 4 Blanks Abstand
+				else:
+					if width_list2:
+						w = width_list2[cnt]
+					else:
+						w = width_def
+					tab_h, tab_z = w.split("#") 							# "Rang|%10s#Rang|%10s"	
+					bez, svar = tab_z.split("|")							# "Rang|%5s"
+					td_width = re.search('\d+', svar).group(0)
+					td_width = int(td_width)
+					s = svar % s[:td_width]
 				
 				line = line + s
 				cnt=cnt+1
+			line = (line.replace('Statistik', '').replace(' gegen : ', ' : ')
+				.replace('Endstand', '').replace('Halbzeitstand', '')
+				.replace(': zu', ':'))
+					
 			line = line + "\n"
 				
 	new_table = "%s\n\n%s" % (htitle, line)
@@ -7638,7 +7715,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 
 	if s_type == 'MEHR_Suche':		# ZDF_Sendungen: Suche alle Beiträge (auch Minutenbeiträge)
 		ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&sortBy=date&page=%s'
-		
+
 	if s_type == 'Bilderserien':	# 'ganze Sendungen' aus Suchpfad entfernt:
 		ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&contentTypes=&sortBy=date&page=%s'
 		ID=s_type
@@ -8667,6 +8744,8 @@ def ZDFSportLive(title):
 				
 		# falls in ZDF_Sendungen nur b_cluster ausgewertet werden:
 		# clus_title ist gleichzeitig Blockstart, Blockende: </section
+		# 06.03.2021 Code Handball-WM für ähnl. Events belassen:
+		'''
 		if 'Handball-WM' in theme:									# Erfassung zusätzl. Cluster
 			path = theme_list[1].split('|')[-1]						#	mit verschied. Startmarken
 			cluster_list = [u'>Spiele in voller Länge<|</section>', '>Spielberichte<|</section>']
@@ -8681,7 +8760,7 @@ def ZDFSportLive(title):
 				PLog(fparams)						
 				addDir(li=li, label=title, action="dirList", dirID="ZDFRubrikSingle", fanart=R(ICON_ZDF_RUBRIKEN), 
 					thumb=R(ICON_ZDF_RUBRIKEN), fparams=fparams)
-				
+		'''		
 
 	title = u'zurückliegende Sendungen'								# weitere Sendungen
 	url = 'https://www.zdf.de/sport/zdf-sportreportage'
@@ -9803,7 +9882,8 @@ def ZDF_Bildgalerien(li, page):
 	page_cnt=0;
 	content =  blockextract('class="artdirect"', page)
 	for rec in content:	
-		if "icon-504_gallery icon" not in rec:		# Symbol Kamera
+		infoline = stringextract('infoline-text="', '"', rec)
+		if " Bilder " in infoline == False:
 			continue
 			
 		category = stringextract('teaser-cat-category">', '</span>', rec)
@@ -9833,7 +9913,8 @@ def ZDF_Bildgalerien(li, page):
 		if title == '':
 			title =  descr		
 		
-		tag = stringextract('"teaser-info">', '<', rec)		# Anzahl Bilder
+		tag = stringextract('aria-label="', '</dd', rec)		# Anzahl Bilder
+		tag=mystrip(tag); tag=cleanhtml(tag); tag=tag.replace('">', "")
 		airtime = stringextract('class="air-time" ', '</time>', rec)
 		airtime = stringextract('">', '</time>', airtime)
 		if airtime:

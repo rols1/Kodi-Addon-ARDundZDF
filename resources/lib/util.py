@@ -1772,7 +1772,8 @@ def transl_wtag(tag):
 # Migration Python3: s. from __future__ import print_function
 # 16.05.2020 Anpassung an Python3, try-except-Block für Einlesen der UT-Datei
 # 25.02.2021 wg. Pyton3-Problemen (byte/str-error) Verzicht auf xbmc-File und
-#	open(outfile, 'w') - akt. Verwendung RLoad + RSave
+#	open(outfile, 'w') - akt. Verwendung RLoad + RSave - s.a.
+#	https://github.com/romanvm/kodi.six#known-issues
 def xml2srt(infile):
 	PLog("xml2srt: " + infile)
 	outfile = '%s.srt' % infile
