@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 31.01.2021
+#	Stand: 06.03.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -597,9 +597,9 @@ def Kategorien(title='', path=''):
 		page = get_ArtePage('Kategorien_1', title, Dict_ID='ArteStart', path=path)	
 		if page == '':	
 			return li
-				
-		pos1 = page.find(':"Alle Kategorien"')				# ausschneiden
-		pos2 = page.find('"Meistgesehene Videos"', pos1+1)	
+		
+		pos1 = page.find(':"Alle Kategorien')				# ausschneiden
+		pos2 = page.find(':"Alle Sendungen', pos1+1)	
 		PLog("pos1: %d, pos2: %d" % (pos1, pos2))
 		if pos2 == -1:										# Fallback  
 			pos2 = len(page)

@@ -9,6 +9,12 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+19.03.2021 3.7.8
+			Modul arte: Auswahl Kategorien an arte-Änderungen angepasst.
+			Kika_VideoMP4get (Modul childs): Ausnahmebehandlung für fehlende Bitraten in MP4-Url. 
+			ZDF_get_content: Blockbegrenzung für Highlights ('STAGE') - Zielpfad im letzten Element
+			sonst unsicher.  
+
 06.03.2021 3.7.7
 			SearchARDundZDFnew: Trennung Suchstring ('|') für ARD-api-Call (doppelter
 			Suchstring funktionierte trotzdem).
@@ -22,7 +28,9 @@ CHANGE HISTORY
 			date_format in time_state.
 			SendungenAZ_ARDnew: Filtermerkmal "pubServ" durch "partner" ergänzt (Beitrag
 			nur bei Fehlen beider Merkmale verwerfen, Bsp. Tatort @Simaryp).
-			ZDFSportLive: Code für Handball-WM auskommentiert (@Weri).  
+			ZDFSportLive: Code für Handball-WM auskommentiert (@Weri). 
+			ZDF_get_teaserbox: zusätzl. Auswertung ev. Serien-Info bei loader-Beiträgen (Bsp.
+			Der STA) 
 
 27.02.2021 3.7.6
 			changelog.txt: Hinweis auf Plex-Foren entfernt (nicht mehr relevant).

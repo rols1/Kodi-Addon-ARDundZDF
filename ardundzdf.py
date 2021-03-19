@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.7.7'
-VDATE = '06.03.2021'
+VERSION = '3.7.8'
+VDATE = '19.03.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8485,12 +8485,19 @@ def ZDF_get_teaserbox(page):
 		if teaser_brand == '':
 			# teaser_brand = stringextract('cat-brand-ellipsis">', '</', page)  
 			teaser_brand =  stringextract('cat-brand-ellipsis">', '<a href=', page)	 # Bsp. Wilsberg, St. 07 -
+		
 		teaser_brand = cleanhtml(teaser_brand);
 		teaser_brand = mystrip(teaser_brand)
 		teaser_brand = (teaser_brand.replace(" - ", "").replace(" , ", ", "))
+	
+	if teaser_nr == '' and teaser_count == '':							# mögl. Serienkennz. bei loader-Beiträgen,
+		ts = stringextract('502_play icon ">', '</div>', page)			# Bsp. der STA
+		ts=mystrip(ts); ts=cleanhtml(ts)
+		if teaser_typ == '':
+			teaser_typ=ts
 		
-		PLog('teaser_label: %s,teaser_typ: %s, teaser_nr: %s, teaser_brand: %s, teaser_count: %s, multi: %s' %\
-			(teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count, multi))
+	PLog('teaser_label: %s,teaser_typ: %s, teaser_nr: %s, teaser_brand: %s, teaser_count: %s, multi: %s' %\
+		(teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count, multi))
 		
 	return teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi
 	
@@ -8941,7 +8948,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			msg_notfound = u'Leider kein Video verfügbar zu: ' + page_title
 	
 	if  ID == 'STAGE':										# Highlights (dto. funk + tivi)
-		content = blockextract('class="stage-wrap ', page)  # mit Blank
+		content = blockextract('class="stage-wrap ', page, "</article>")  # mit Blank + Begrenzung
 		stage_url_list=[]
 	else:													# "<img class=.." m Block ausschließen
 		content = blockextract('<picture class="artdirect"', page) # tivi: doppelt  (is-tivi,is-not-tivi)
@@ -9875,7 +9882,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	return formitaeten, duration, geoblock, sub_path  
 
 #-------------------------
-# Aufufer: ZDF_Search (weitere Seiten via page_cnt)
+# Aufrufer: ZDF_Search (weitere Seiten via page_cnt)
 def ZDF_Bildgalerien(li, page):	
 	PLog('ZDF_Bildgalerien:'); 
 	

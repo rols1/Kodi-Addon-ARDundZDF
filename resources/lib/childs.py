@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 06.02.2021
+#	Stand: 06.03.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -824,9 +824,11 @@ def Kika_VideoMP4get(title, assets):
 		bitrate =  stringextract('<bitrateVideo>', '</', s)
 		if bitrate == '':
 			if '_' in href:
-				bitrate = re.search(u'_(\d+)k_', href).group(1)
-			else:
-				bitrate = '0'
+				try:
+					bitrate = re.search(u'_(\d+)k_', href).group(1)
+				except Exception as exception:
+					PLog(str(exception))
+					bitrate = '0'
 		profil =  stringextract('<profileName>', '</', s)	
 		res = frameWidth + 'x' + frameHeight
 				
