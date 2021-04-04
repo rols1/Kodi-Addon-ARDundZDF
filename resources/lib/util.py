@@ -2605,17 +2605,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	
 	if SETTINGS.getSetting('pref_UT_ON') == 'true':
 		if sub_path:								# Vorbehandlung ARD-Untertitel
-			if 'ardmediathek.de' in sub_path or 'tagesschau.de' in sub_path:	
-				# ARD-Untertitel speichern + Endung -> .sub
-				local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
-				local_path = os.path.abspath(local_path)
-				try:
-					urlretrieve(sub_path, local_path)
-				except Exception as exception:
-					PLog(str(exception))
-					local_path = ''
-				if 	local_path:
-					sub_path = xml2srt(local_path)	# util: Konvert. für Kodi leer bei Fehlschlag
+			sub_path = sub_path_conv(sub_path)		# ARD-Untertitel konvertieren
 
 	PLog('sub_path: ' + str(sub_path));		
 	if sub_path:								# Untertitel aktivieren, falls vorh.				
@@ -2713,6 +2703,25 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 				xbmc.sleep(200)
 			return play_time, video_dur
 
+#-------------------------------------
+#  ARD-Untertitel konvertieren
+def sub_path_conv(sub_path):
+	PLog("sub_path_conv:")
+	if 'ardmediathek.de' in sub_path or 'tagesschau.de' in sub_path:	
+		# ARD-Untertitel speichern + Endung -> .sub
+		local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
+		local_path = os.path.abspath(local_path)
+		try:
+			urlretrieve(sub_path, local_path)
+		except Exception as exception:
+			PLog(str(exception))
+			local_path = ''
+		if 	local_path:
+			sub_path = xml2srt(local_path)	# util: Konvert. für Kodi leer bei Fehlschlag
+	
+	PLog("sub_path_conv: " + sub_path)		# Endung .srt, falls erfolgreich
+	return sub_path
+	
 #---------------------------------------------------------------- 
 # SSL-Probleme in Kodi mit https-Code 302 (Adresse verlagert) - Lösung:
 #	 Redirect-Abfrage vor Abgabe an Kodi-Player

@@ -31,6 +31,7 @@
  <category label="Download Einstellungen">
  	<setting label="Downloads freischalten (auch im Kontextmenü möglich)" type="bool" id="pref_use_downloads" default="false"/>
   	<setting label="alle verfuegbaren Video-Qualitaeten anbieten" type="bool" id="pref_show_qualities" default="true"/>
+  	<setting label="Untertitel mit herunterladen" type="bool" id="pref_load_subtitles" default="false"/>
  	<setting label="Dateinamen aus dem Titel erzeugen (statt Download_{Datum}_{Uhrzeit})" type="bool" id="pref_generate_filenames" default="false"/>
 	<setting label="Downloadverzeichnis (auch für Recording TV-Live)" type="folder" option="writeable" id="pref_download_path" default=""/>
 	<setting label="Downloads verschieben in dieses Verzeichnis" type="folder" source="" id="pref_VideoDest_path" default=""/>

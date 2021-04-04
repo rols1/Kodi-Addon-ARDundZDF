@@ -9,6 +9,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+04.04.2021 3.7.9
+			Modul TagesschauXL: Blockmerkmale in XLSinglePage und XLGetSourcesHTML an 
+			ARD-Änderungen angepasst, fehlende Url im 1. Block aus 2. Block ergänzt, 
+			Bild-Url in XLGetSourcesJSON mit Basis-Url ergänzt.
+			Downloads mit Untertitel: neue Seting-Option pref_load_subtitles, neue 
+			Funktion sub_path_conv (Modul util), Anpassungen in PlayVideo, DownloadExtern, 
+			DownloadsMove, VideoTools, test_downloads, StreamsShow, neue Funktion 
+			get_subtitles.
+			DownloadExtern: Verhinderung get_chunks (Fortschrittsbalken), falls Dateilänge
+			nicht ermittelt werden kann, Var PIDcurl entfernt (für Kodi obsolet), zweite 
+			Variante für die Ermittlung der Dateilänge (Python2/3) in get_content_length.
+			livesenderTV.xml: Ergänzung Audio-Stream "MDR-Sachsen Fußball-Radio"
+			SenderLiveResolution: Anpassung für Radiosender (z.B. MDR Fußball-Radio 
+			Livestream).
+
 19.03.2021 3.7.8
 			Modul arte: Auswahl Kategorien an arte-Änderungen angepasst.
 			Kika_VideoMP4get (Modul childs): Ausnahmebehandlung für fehlende Bitraten in MP4-Url. 

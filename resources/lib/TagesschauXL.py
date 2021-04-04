@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 19.02.2021
+#	Stand: 04.04.2021
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -294,7 +294,7 @@ def menu_hub(title, path, ID, img):
 # ----------------------------------------------------------------------
 def XLSinglePage(title,thumb, summ='', tag='', ID='',path='',page=''):
 	PLog('XLSinglePage:'); PLog(ID);
-	img = thumb
+	img = thumb; title_org = title
 	
 	if page == '':						# ID Search
 		page, msg = get_page(path=path)	
@@ -308,7 +308,7 @@ def XLSinglePage(title,thumb, summ='', tag='', ID='',path='',page=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')			# Home-Button
 
-	items = blockextract('list-element__teaserinfo', page) 
+	items = blockextract("component='ts-mediaplayer", page) 
 	PLog(len(items))
 	themen = stringextract('video__details">', '</div>', page)
 	themen = repl_json_chars(themen)
@@ -317,7 +317,9 @@ def XLSinglePage(title,thumb, summ='', tag='', ID='',path='',page=''):
 	cnt=0;  
 	for item in items:
 		href = stringextract('href="', '"', item)
-		title = stringextract('__headline">', '</h3', item)
+		if href == '':							# Link fehlt im 1. item, aus 2. item entnommen
+			href = stringextract('href="', '"', items[1])
+		title = stringextract('__headline">', '</', item)
 		title = mystrip(title); title = cleanhtml(title); 
 		datum = stringextract('_topline">', '</', item)
 		if datum == '':
@@ -325,7 +327,7 @@ def XLSinglePage(title,thumb, summ='', tag='', ID='',path='',page=''):
 		datum.strip()
 		
 		if cnt == 0:							# letzte Sendung
-			title = "[B][COLOR red]%s[/COLOR][/B]: letzte Sendung" % title
+			title = "[B][COLOR red]%s[/COLOR][/B]" % title_org + ": letzte Sendung"
 			datum = "[B][COLOR red]%s[/COLOR][/B]" % datum
 			summ = themen; summ_par = summ.replace('\n', '||')
 		else:
@@ -333,7 +335,8 @@ def XLSinglePage(title,thumb, summ='', tag='', ID='',path='',page=''):
 			if datum:											# fehlt bei TSchau100
 				title = "%s: %s" % (title, datum)
 		
-		tag = datum
+		tag = datum; img = thumb
+		tag = mystrip(tag)
 		
 		PLog('Satz1:')
 		PLog(title);PLog(summ[:80]);PLog(tag);PLog(href);
@@ -676,7 +679,6 @@ def Faktenfinder(title, path):								# Faktenfinder
 	PLog('Faktenfinder: ' + path)
 	XLCacheTime = 3600										# 1 Std.	
 	
-	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')						# Home-Button
 		
@@ -755,8 +757,9 @@ def Faktenfinder(title, path):								# Faktenfinder
 #
 def XLGetSourcesJSON(path, title, summ, tag, thumb, page_local='', ID=''):
 	PLog('XLGetSourcesJSON: ' + title)
-	title_org = title
-	tagline = tag; summary =summ 
+	title_org = title; thumb_org = thumb
+	tagline = tag.replace('||', ''); 
+	summary =summ 
 	
 	if page_local:								# Seitenausschnitt 
 		page = Dict("load", page_local)
@@ -794,6 +797,11 @@ def XLGetSourcesJSON(path, title, summ, tag, thumb, page_local='', ID=''):
 	page = data
 	#link_img = stringextract('_previewImage":"', '",', page) # ev. nur Mediatheksymbol
 	thumb = stringextract('xl":"', '"', page) 				# ev. nur Mediatheksymbol
+	if thumb == '':
+		thumb = thumb_org
+	else:
+		if thumb.startswith('http') == False:
+			thumb = BASE_URL + thumb
 	geoblock =  stringextract('geoblocked":', ',', page)	# Geoblock-Markierung ARD
 	sub_path = stringextract('_subtitleUrl":"', '"', page)
 	if geoblock == 'true':									# Geoblock-Anhang für title, summary
@@ -813,7 +821,7 @@ def XLGetSourcesJSON(path, title, summ, tag, thumb, page_local='', ID=''):
 	Plot = tagline.replace('\n', '||')
 	
 	PLog('Satz2:')
-	PLog(title); PLog(dauer); PLog(geoblock);  PLog(tagline);
+	PLog(title); PLog(dauer); PLog(geoblock);  PLog(tagline); PLog(thumb)
 
 	PLog('import_ARDnew:');								# ARDStartVideoHLSget, ARDStartVideoMP4get
 	import resources.lib.ARDnew as ARDnew
@@ -930,15 +938,18 @@ def XLGetSourcesHTML(path, title, summ, tag, thumb, ID=''):
 
 	page, msg = get_page(path=path)
 	# Bsp. ../multimedia/video/video-813379~ardplayer.html:
-	player_id = stringextract('/multimedia/video/video-', '~ardplayer.html', page)
-	PLog("player_id: " + player_id)
-	
-	if player_id == '':										# o. Video, nach Audio suchen
-		player = stringextract('player:stream"', '/>', page)
-		url = stringextract('content="', '"', player)
-		Plot = "%s\n\n%s" % (tag, summ)
-		PlayVideo(url, title, thumb, Plot)
-		return
+	if '/multimedia/video/video-' in page:
+		player_id = stringextract('/multimedia/video/video-', '.html', page)
+		videolink = BASE_URL + '/multimedia/video/video-' + player_id + ".html"
+		videolink = videolink.replace('~ardplayer', '')
+		PLog("player_id: %s, videolink: %s" % (player_id, videolink))
+		page, msg = get_page(path=videolink)	
+	 	
+	player = stringextract('player:stream"', '/>', page)
+	url = stringextract('content="', '"', player)
+	Plot = "%s\n\n%s" % (tag, summ)
+	PlayVideo(url, title, thumb, Plot)
+	return
 
 	media_base = "https://www.tagesschau.de/multimedia/video/video-%s~mediajson.json"
 	path = media_base % player_id

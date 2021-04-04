@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.7.8'
-VDATE = '19.03.2021'
+VERSION = '3.7.9'
+VDATE = '04.04.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2639,7 +2639,8 @@ def ARDSportEvents():
 
 	# Livestreams WDR - s. Forum:
 	# Livestream: MDR-Sachsen Fußball-Livestream Audio (nicht in livesenderTV.xml)
-	#	Forum Weri 22.09.2020
+	#	Forum Weri 22.09.2020 - 04.04.2021 verlagert in livesenderTV.xml, SenderLiveResolution
+	#		angepasst.
 	channel = u'ARD Event Streams (eingeschränkt verfügbar)'									
 	img = R("tv-ard-sportschau.png")			# dummy		
 	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender='')
@@ -5098,7 +5099,8 @@ def SingleSendung(path, title, thumb, duration, summary, tagline, ID, offset=0, 
 # test_downloads: prüft ob curl/wget-Downloads freigeschaltet sind + erstellt den Downloadbutton
 # high (int): Index für einzelne + höchste Video-Qualität in download_list
 # 04.01.2021 Anpassung Trennz. Stream_List (Bsp. Parseplaylist, StreamsShow)
-def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high):  # Downloadbuttons (ARD + ZDF)
+# 23.04.2021 Durchreichen von sub_path (Untertitel), leer für mp3-files
+def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high, sub_path=''):  
 	PLog('test_downloads:')
 	PLog('summary_org: ' + summary_org)
 	PLog('title_org: ' + title_org)
@@ -5137,9 +5139,9 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 			tagline = Format + 'wird in ' + dest_path + ' gespeichert' 									
 			summary = 'Sendung: ' + title_org
 			key_detailtxt='detailtxt'+str(i)
-			url=py2_encode(url); title_org=py2_encode(title_org);
-			fparams="&fparams={'url': '%s', 'title': '%s', 'dest_path': '%s', 'key_detailtxt': '%s'}" % \
-				(quote(url), quote(title_org), dest_path, key_detailtxt)
+			url=py2_encode(url); title_org=py2_encode(title_org); sub_path=py2_encode(sub_path);
+			fparams="&fparams={'url': '%s', 'title': '%s', 'dest_path': '%s', 'key_detailtxt': '%s', 'sub_path': '%s'}" % \
+				(quote(url), quote(title_org), dest_path, key_detailtxt, quote(sub_path))
 			addDir(li=li, label=lable, action="dirList", dirID="DownloadExtern", fanart=R(ICON_DOWNL), 
 				thumb=R(ICON_DOWNL), fparams=fparams, summary=summary, tagline=tagline, mediatype='')
 			i=i+1					# Dict-key-Zähler
@@ -5159,13 +5161,13 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 # 20.01.2020 der Thread zum internen Download wird hier ebenfalls aufgerufen 
 # 27.02.2020 Code für curl/wget-Download entfernt
 # 30.06.2020 Angleichung Dateiname (Datum) an epgRecord (Bindestriche entf.)
-
-def DownloadExtern(url, title, dest_path, key_detailtxt):  
+# 23.03.2021 erweitert um Download der Untertitel (sub_path), leer für mp3-files 
+# 02.04.2021 Var PIDcurl entfernt (für Kodi obsolet)
+#
+def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):  
 	PLog('DownloadExtern: ' + title)
 	PLog(url); PLog(dest_path); PLog(key_detailtxt)
 	
-	PIDcurl =  Dict("load", 'PIDcurl') # PMS-Version benötigte Check auf Wiedereintritt
-	PLog('PIDcurl: %s' % str(PIDcurl))
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 
@@ -5211,11 +5213,15 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):
 	storetxt = 'Details zum ' + dtyp +  dfname + ':\r\n\r\n' + detailtxt
 	
 	PLog(sys.platform)
-	from threading import Thread	# thread_getfile
 	fulldestpath = os.path.join(dest_path, dfname)	# wie curl_fullpath s.u.
-	background_thread = Thread(target=thread_getfile, args=(textfile, pathtextfile, storetxt, url, fulldestpath))
+									# Untertiteldatei hinzufügen:
+	PLog(dtyp); PLog(SETTINGS.getSetting('pref_load_subtitles'))
+	
+	from threading import Thread	# thread_getfile
+	path_url_list=''; timemark=''; notice=True
+	background_thread = Thread(target=thread_getfile, args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark,notice,sub_path,dtyp))
 	background_thread.start()		
-	# return li						# Kodi-Problem: wartet bis Ende Thread			
+				
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 	return										
@@ -5232,7 +5238,7 @@ def DownloadExtern(url, title, dest_path, key_detailtxt):
 # Alternativen für urlretrieve (legacy): wget-Modul oder 
 #	Request (stackoverflow: alternative-of-urllib-urlretrieve-in-python-3-5)
 #
-def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list='',timemark='',notice=True):
+def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list='',timemark='',notice=True,sub_path="",dtyp=""):
 	PLog("thread_getfile:")
 	PLog(url); PLog(fulldestpath); PLog(len(path_url_list)); PLog(timemark); PLog(notice); 
 
@@ -5258,14 +5264,23 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	# Fertig-Info
 				xbmc.executebuiltin('Container.NextSortMethod') # OK s.o.
 
-		else:
+		else:												# Einzeldownload
 			vsize=''
 			clen = get_content_length(url)
 			if clen:
 				vsize = " (%s):" % humanbytes(clen)
+			else:
+				vsize = u" (Größe unbekannt)"
 			msg1 = 'Starte Download im Hintergrund'	+ vsize	
 			msg2 = fulldestpath	
 			msg3 = 'Begleit-Infos in: %s' % textfile
+			subget = False
+			if SETTINGS.getSetting('pref_load_subtitles') == 'true':		
+				if sub_path and 'Video' in dtyp:				# Untertitel verfügbar?
+					subget = True
+					subname = os.path.split(sub_path)[1]
+					msg3 = u"%s\nUntertitel werden zusätzlich geladen" % (msg3)					  
+
 			if notice:
 				ret=MyDialog(msg1, msg2, msg3, ok=False, yes='OK')
 				if ret  == False:
@@ -5273,12 +5288,16 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 			if pathtextfile:
 				RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
 				
-			if SETTINGS.getSetting('pref_use_pgbar') == 'true':
+			# Fortschrittsbalken nur mit ermittelter Länge möglich:
+			if clen and SETTINGS.getSetting('pref_use_pgbar') == 'true':	# Fortschrittsbalken anzeigen
 				msg = get_chunks(url, clen, fulldestpath)
 				if msg:
 					raise Exception(msg)
 			else:
 				urlretrieve(url, fulldestpath)
+				
+			if subget:											# Untertitel holen 
+				get_subtitles(fulldestpath, sub_path)
 			
 			# sleep(20)											# Debug
 			msg1 = 'Download abgeschlossen:'
@@ -5295,7 +5314,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 	return
 
 #---------------------------
-# ermittelt Dateilänge für Downloads
+# ermittelt Dateilänge für Downloads (leer bei Problem mit HTTPMessage-Objekt)
 # Aufrufer: thread_getfile
 #
 def get_content_length(url):
@@ -5304,9 +5323,14 @@ def get_content_length(url):
 	try:
 		req = Request(url)	
 		r = urlopen(req)
-		h = r.headers.dict
+		if PYTHON2:					
+			h = r.headers.dict
+			clen = h['content-length']
+		else:
+			h = r.getheader['Content-Length']
+			clen = h
 		# PLog(h)
-		clen = h['content-length']
+		
 	except Exception as exception:
 		err = str(exception)
 		PLog(err)
@@ -5361,7 +5385,50 @@ def get_chunks(url, DL_len, fulldestpath):
 	r.close()
 	dp.close()
 	return msg
+
+#---------------------------
+# Untertitel für Download holen
+# Aufrufer: thread_getfile
+def get_subtitles(fulldestpath, sub_path):
+	PLog('get_subtitles:')
 	
+	PLog("fulldestpath: " + fulldestpath)
+	PLog("sub_path: " + sub_path)
+	if "|" in sub_path:						# ZDF 2 Links: .sub, .vtt
+		 sub_path = sub_path.split('|')[0]
+	local_path=''
+	sub_path = sub_path_conv(sub_path)		# ARD-Untertitel holen + konvertieren
+	if sub_path.startswith('http'):			# ZDF-Untertitel holen
+		local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
+		local_path = os.path.abspath(local_path)
+		try:
+			urlretrieve(sub_path, local_path)
+		except Exception as exception:
+			PLog(str(exception))
+			local_path=''
+	else:
+		local_path = sub_path
+			
+	if 	local_path:						# Name der UT-Datei an Videotitel anpassen
+		suffix=''; ext=''
+		if "." in fulldestpath:
+			suffix =  "." + fulldestpath.split('.')[-1]
+		if "." in local_path:
+			ext =  "." + local_path.split('.')[-1]
+		PLog("local_path: %s, suffix: %s, ext: %s" % (local_path, suffix, ext))
+		
+		utsrc = local_path
+		if suffix and ext:
+			utdest = fulldestpath.replace(suffix, ext)  # Bsp.: .mp4 -> .srt
+		else:
+			utdest = fulldestpath + ext
+		PLog("utdest: " + utdest)
+		if '//' not in utdest:		# keine Share
+			shutil.copy(utsrc, utdest)					
+			os.remove(utsrc)
+		else:
+			xbmcvfs.copy(utsrc, utdest)	
+	return					
 #---------------------------
 # Download-Routine mittels urlretrieve ähnlich thread_getfile
 #	hier für Bilder + Erzeugung von Wasserzeichen (text_list: Titel, tagline,
@@ -5779,7 +5846,7 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 
 	title_org = py2_encode(title)
 	
-	sub_path=''# fehlt noch bei ARD
+	sub_path=''							# s. 1. Ansehen
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	
@@ -5800,13 +5867,20 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		MyDialog(msg1, msg2, '')
 		xbmcplugin.endOfDirectory(HANDLE)
 	else:
-		fsize = os.path.getsize(fulldest_path)
+		fsize = os.path.getsize(fulldest_path)  # nur Video bzw. mp3
 			
 	fulldest_path=py2_encode(fulldest_path); 
 	PLog("fulldest_path: " + fulldest_path)
 	tagline = u'Größe: %s' % humanbytes(fsize)
 	if fulldest_path.endswith('mp4') or fulldest_path.endswith('webm'): # 1. Ansehen
 		title = title_org 
+		globFiles = "%s*" % fulldest_path.split('.')[0] # Maske o. Endung: Video-, Text-, Sub-Datei
+		files = glob.glob(globFiles)
+		PLog(files) 
+		for src_file in files:
+			if src_file.endswith(".srt") or src_file.endswith(".sub"):
+				sub_path = src_file
+		PLog("sub_path: " + sub_path)
 		lable = "Ansehen | %s" % (title_org)
 		fulldest_path=py2_encode(fulldest_path); title=py2_encode(title); thumb=py2_encode(thumb);	
 		summary=py2_encode(summary); sub_path=py2_encode(sub_path);
@@ -5937,36 +6011,37 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 			return li
 				 			 	 
 		else:								# Einzeldatei verschieben
-			textsrc = os.path.join(dlpath, textname)
-			videosrc = os.path.join(dlpath, dfname)
-			if '//' not in destpath:						
-				textdest = os.path.join(destpath, textname)	
-				videodest = os.path.join(destpath, dfname)
-			else:		
-				textdest = destpath + textname	
-				videodest = destpath + dfname
-			PLog(textsrc); PLog(textdest);
-			PLog(videosrc); PLog(videodest);
+			videosrc = os.path.join(dlpath, dfname)	
+			globFiles = "%s*" % videosrc.split('.')[0] # Maske o. Endung: Video-, Text-, Sub-Datei
+			files = glob.glob(globFiles) 
+			PLog(files)
 					
-			if '//' not in destpath:						
-				if os.path.isfile(textsrc) == True:	# Quelldatei testen						
-					shutil.copy(textsrc, textdest)		
-					os.remove(textsrc)				# Textdatei löschen
-				if os.path.isfile(videosrc) == True:							
-					shutil.copy(videosrc, videodest)				
-					os.remove(videosrc)				# Videodatei dto.
-			else:
-				ret1=xbmcvfs.copy(textsrc, textdest)
-				ret2=xbmcvfs.copy(videosrc, videodest)
-				if xbmcvfs.exists(textdest):
-					xbmcvfs.delete(textsrc)
-				if xbmcvfs.exists(videodest):
-					xbmcvfs.delete(videosrc)
-				else:
-					raise Exception('Kopieren auf Share %s fehlgeschlagen' % destpath)
+			if '//' not in destpath:
+				for src_file in files:
+					srcname = os.path.split(src_file)[1]
+					dest_file = os.path.join(destpath, srcname)
+					PLog("srcname %s, dest_file %s" % (srcname, dest_file))	 						
+					if os.path.isfile(src_file) == True:	# Quelldatei testen						
+						shutil.copy(src_file, dest_file)		
+						os.remove(src_file)					# Quelldatei löschen
+			else:											# Share
+				for src_file in files:
+					srcname = os.path.split(src_file)[1]
+					dest_file = destpath + srcname
+					PLog("srcname %s, dest_file %s" % (srcname, dest_file))	 						
+					ret = xbmcvfs.copy(src_file, dest_file)
+					PLog(ret)
+
+					if xbmcvfs.exists(dest_file):
+						xbmcvfs.delete(src_file)
+					else:
+						msg = 'Kopieren auf Share %s fehlgeschlagen' % dest_file
+						PLog(msg)
+						raise Exception(msg)
+						break
 				
 		msg1 = 'Verschieben erfolgreich'
-		msg2 = 'Video + Textdatei verschoben: ' + 	dfname
+		msg2 = 'Video verschoben: ' + 	dfname
 		PLog(msg2)	
 		MyDialog(msg1, msg2, '')
 		return li
@@ -7053,6 +7128,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 #	Sender: Sendername bei Aufrufen durch EPG_ShowSingle (title mit EPG-Daten
 #			belegt)
 #	start_end: EPG-Start-/Endzeit Unix-Format für Kontextmenü (EPG_ShowSingle <-)
+# 04.04.2021 Anpassung für Radiosender (z.B. MDR Fußball-Radio Livestream)
 #
 def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', start_end=''):
 	PLog('SenderLiveResolution:')
@@ -7155,10 +7231,13 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 		li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr)	
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)					
 	else:	# keine oder unbekannte Extension - Format unbekannt
-		msg1 = 'SenderLiveResolution: unbekanntes Format. Url:'
-		msg2 = url_m3u8
-		PLog(msg1)
-		MyDialog(msg1, msg2, '')
+		if url_m3u8.find('.m3u') >= 0: 			# Radiosender in livesenderTV.xml ermöglichen
+			PlayAudio(url_m3u8, title, thumb, Plot=title)  # direkt	
+		else:
+			msg1 = 'SenderLiveResolution: unbekanntes Format. Url:'
+			msg2 = url_m3u8
+			PLog(msg1)
+			MyDialog(msg1, msg2, '')
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
@@ -10345,9 +10424,9 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 
 	if 'MP4_List' in ID:
 		if SETTINGS.getSetting('pref_show_qualities') == 'false':
-			del Stream_List[:-1]											# nur letztes Element verwenden
+			del Stream_List[:-1]													# nur letztes Element verwenden
 		summ=''
-		li = test_downloads(li,Stream_List,title,summ,tagline,img,high=-1)  # Downloadbutton(s)
+		li = test_downloads(li,Stream_List,title,summ,tagline,img,high=-1, sub_path=sub_path) # Downloadbutton(s)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			    
