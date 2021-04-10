@@ -1,0 +1,17 @@
+# full_shows_ZDF - Kennzeichnungstabelle für ganze ZDF-Sendungen
+# 	Format: Sendungstitel|Mindestdauer in Minuten
+#	Bsp.: Report Mainz|21
+#	pro Sendung 1 Eintrag je Zeile
+#	Kommentarzeilen mit einem # am Anfang werden überlesen
+#
+# Das Addon sucht die Datei in dem im Setting festgelegten Verzeichnis. Falls diese
+#	fehlt wird die Default-Datei geladen.
+# Der Name der Datei muss full_shows_ZDF lauten.
+#
+# Das Addon kennzeichnet den Sendungstitel in Listen rot, wenn Titelbeginn und Sendungsdauer
+#	der Vorgabe in dieser Tabelle entsprechen.
+# -----------------------------------------------
+#
+heute-show|30
+heute journal|13
+Volle Kanne|60

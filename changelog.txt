@@ -9,6 +9,14 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+10.04.2021 3.8.0
+			get_content_length: Fix getheader-Abfrage für Matrix (runde statt eckige 
+			Klammer).
+			ZDF_get_content + get_page_content (ARD Neu): fett-/rot-Markierung ganzer 
+			Sendungen (z.B. heute), die (z.B. heute-show od. Extra 3), die einer 
+			Mindestdauer (Tabellen full_shows_ARD, full_shows_ZDF) entsprechen, neue
+			Funktion ReadTextFile (Modul util).
+
 04.04.2021 3.7.9
 			Modul TagesschauXL: Blockmerkmale in XLSinglePage und XLGetSourcesHTML an 
 			ARD-Änderungen angepasst, fehlende Url im 1. Block aus 2. Block ergänzt, 

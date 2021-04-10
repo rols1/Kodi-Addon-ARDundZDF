@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 05.03.2021
+#	Stand 08.03.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -657,6 +657,33 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			pubServ = stringextract('publicationService":{"name":"', '"', s)	# publicationService (Sender)
 			if pubServ:
 				summ = "%sSender: %s" % (summ, pubServ)
+				
+		PLog("full_shows")									# full_show im Titel: ganze Sendungen rot+fett
+		if ID != 'EPG' and SETTINGS.getSetting('pref_mark_full_shows') == 'true':
+			fname = SETTINGS.getSetting('pref_fullshows_path')
+			if fname == '':
+				fname = '%s/resources/%s' % (ADDON_PATH, "full_shows_ARD")
+			else:
+				fname = "%s/full_shows_ARD" % SETTINGS.getSetting('pref_mark_full_shows')
+			shows = ReadTextFile(fname)
+			PLog(len(shows))
+				
+			for show in shows:
+				sd, md = show.split("|")
+				sd = u'title":"%s' % sd						# Bsp. 'title":"Querbeet|40'
+				PLog(sd); PLog(md); PLog(up_low(sd) in up_low(s));
+				if up_low(sd) in up_low(s):					# Show in Datensatz?
+					md_rec = stringextract('duration":', ',', s)
+					PLog("md_rec: " + md_rec)
+					if md_rec:
+						md_rec = seconds_translate(md_rec)
+						PLog("md_rec2: " + md_rec)
+						if md_rec.endswith("sec"): 			# Korr. sec < 60 -> 1 min
+							md_rec = "0:01"
+						md_rec = time_to_minutes(md_rec)
+						if int(md_rec) >= int(md):
+							title = "[B][COLOR red]%s[/COLOR][/B]" % title
+					break		
 		
 		PLog('Satz:');
 		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ[:60]); PLog(ID)

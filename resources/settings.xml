@@ -74,10 +74,13 @@
   	<setting label="interne Merkliste mit externer synchronisieren" type="bool" id="pref_merksync" default="false"/>
 </category> 
 
- <category label="Beiträge filtern">
+ <category label="Beiträge filtern, markieren">
  	<setting label="Ausschluss-Filter verwenden (Beiträge von ARD und ZDF)" type="bool" id="pref_usefilter" default="false"/>
 	<setting label="Info: die Filter-Einstellungen befinden sich im Menü Info" type="text" id="filterinfo" enable="false"/>  
- </category>
+  	<setting label="Titel ganzer Sendungen rot markieren (nur ARD und ZDF)" type="bool" id="pref_mark_full_shows" default="false"/>
+	<setting label="Verzeichnis für Kennzeichnungstabellen" type="folder" source="" id="pref_fullshows_path" default=""/>
+	<setting label="Info - Namen der Tabellen: full_shows_ARD, full_shows_ZDF" type="text" id="full_shows_info" enable="false"/>  
+</category>
  
  <category label="Modul-Einstellungen" >
    	<setting label="gesamtes Addon: Videoformat bei Sofortstart" type="select" id="pref_direct_format" default="HLS (adaptiv)"

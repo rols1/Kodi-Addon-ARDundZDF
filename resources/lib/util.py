@@ -1706,6 +1706,17 @@ def time_translate(timecode, add_hour=True):
 		return timecode
 
 #---------------------------------------------------------------- 
+# wandelt time_str (Formate 1:45, 00:30) in Minuten
+def time_to_minutes(time_str):
+	PLog('time_to_minutes:')
+	
+	minutes=""
+	if ":" in time_str:	
+		h, m = time_str.split(':')
+		minutes = int(h) * 3600 + int(m)
+	PLog(minutes)
+	return minutes
+#---------------------------------------------------------------- 
 # Format timecode 	Fri, 06 Jul 2018 06:58:00 GMT (ARD Audiothek , xml-Ausgaben)
 # Rückgabe:			06.07.2018, 06:58 Uhr   (Sekunden entfallen)
 # funktioniert nicht in Kodi, auch nicht der Workaround in
@@ -1867,6 +1878,31 @@ def ReadFavourites(mode):
 	PLog(len(my_favs)); PLog(len(my_ordner)); 
 	return my_favs, my_ordner
 
+#----------------------------------------------------------------
+# Liest Textdateien, filtert Kommentarzeilen aus, Rückgabe: Liste
+# fname: kompl. Pfad zur Datei (Kodierung Unicode utf-8)
+# Bsp.: full_shows_ARD, full_shows_ZDF
+#
+def ReadTextFile(fname):
+	PLog('ReadTextFile:')
+	PLog(fname)
+	try:
+		PLog("xbmcvfs_fname: " + fname)
+		f = xbmcvfs.File(fname)		# extern - Share		
+		page = f.read(); f.close()
+		PLog(len(page))				
+	except Exception as exception:
+		PLog(str(exception))
+		return []
+		
+	newlist = []						# Ordner einlesen
+	mylist = page.splitlines()
+	for item in mylist:
+		item = item.strip()
+		if item and item.startswith('#') == False:
+			newlist.append(item)
+	
+	return newlist
 #----------------------------------------------------------------
 #	Jobliste für Modul epgRecord einlesen
 #

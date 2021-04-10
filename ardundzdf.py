@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.7.9'
-VDATE = '04.04.2021'
+VERSION = '3.8.0'
+VDATE = '10.04.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5327,7 +5327,7 @@ def get_content_length(url):
 			h = r.headers.dict
 			clen = h['content-length']
 		else:
-			h = r.getheader['Content-Length']
+			h = r.getheader('Content-Length')
 			clen = h
 		# PLog(h)
 		
@@ -9342,6 +9342,31 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		title=repl_json_chars(title)						# json-komp. für func_pars in router()
 		summary=repl_json_chars(summary)					# dto.
 		tagline=repl_json_chars(tagline)					# dto.
+		
+							
+		PLog("full_shows")									# full_show in summary: ganze Sendungen rot+fett
+		if ID != 'EPG' and SETTINGS.getSetting('pref_mark_full_shows') == 'true':
+			fname = SETTINGS.getSetting('pref_fullshows_path')
+			if fname == '':
+				fname = '%s/resources/%s' % (ADDON_PATH, "full_shows_ZDF")
+			else:
+				fname = "%s/full_shows_ZDF" % SETTINGS.getSetting('pref_mark_full_shows')
+			shows = ReadTextFile(fname)
+			PLog(len(shows))
+					
+			for show in shows:
+				sd, md = show.split("|")						# Bsp. heute-show|30
+				title = title.strip()
+				PLog(sd); PLog(md); PLog(title); PLog(up_low(title).startswith(up_low(sd)));
+				if up_low(title).startswith(up_low(sd)):		# Show im Titel? (ARD Neu: im Datensatz)
+					md_rec = duration							# hier in min ((ARD Neu: sec)
+					if md_rec:
+						PLog("md_rec2: " + md_rec)
+						if " min" in md_rec:
+							md_rec = md_rec.split(" min")[0]
+							if int(md_rec) >= int(md):
+								title = "[B][COLOR red]%s[/COLOR][/B]" % title
+					break			
 		
 		# ab 08.01.2021 in Sätzen mit class="b-cluster-poster-teaser:
 		if '"element": "PlakatTeaser"' in rec:
