@@ -9,6 +9,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+17.04.2021 3.8.1
+			ARDStartRubrik (Classic, Menü Start): Ausleitung Livestreams zu 
+			ARDnew.ARDStartRubrik, Abschaltung Home ARDNeu  bei Livestreams.
+			Hauptmenü TV-Livestreams: Verwendung der Livestreams zu ARDnew.ARDStartRubrik,
+			Anpassung SenderLiveListe + sort_playlist, neue Funktion get_ARDstreamlinks 
+			(util).
+			PlayVideo (Modul util): exit(0, falls Homebuttons abgewählt ) nach Videostart,
+			um Rekursion zu vermeiden, zusätzl. Vergleich mit Url+Laufzeit sowie OS_RELEASE.
+			GetContent (Moedul arte): Fix 'ascii'-codec-error.
+			ZDFSourcesHBBTV: Korrektur der Stichproben-Werte und Qualitäts-Bezeichnungen
+			(github-issue 7).
+			XLGetSourcesHTML (Modul TagesschauXL): Fix Einzelauflösungen (Video startete
+			unabhängig vom Setting pref_video_direct), Fixes Ermittlung Audiolinks für
+			"Politik im Radio". 
+
 10.04.2021 3.8.0
 			get_content_length: Fix getheader-Abfrage für Matrix (runde statt eckige 
 			Klammer).

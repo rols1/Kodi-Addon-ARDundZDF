@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 25.02.2021
+#	Stand 15.04.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2133,7 +2133,7 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 	
 #-----------------------------------------------
 # Aufrufer : SenderLiveListe, ZDFStartLive, get_live_data (Arte),
-#			Live (3sat), Kika_Live.
+#			Live (3sat), Kika_Live, get_playlist_img
 # ermittelt master.m3u8 für die ZDF-Sender (Kennz. ZDFsource in
 #	livesenderTV.xml). Rückgabe Liste (Zeile: Sender|Url) -
 #	Reihenfolge wie Web (www.zdf.de/live-tv).
@@ -2151,10 +2151,14 @@ def get_ZDFstreamlinks(skip_log=False):
 	ZDFlinks_CacheTime	= 86400					# 24 Std.: (60*60)*24
 		
 	page = Dict("load", 'zdf_streamlinks', CacheTime=ZDFlinks_CacheTime)
+
 	if len(str(page)) > 1000:					# bei Error nicht leer od. False von Dict
 		if skip_log == False:
 			PLog(page)							# für IPTV-Interessenten
 		return page.splitlines()
+
+	icon = R(ICON_TOOLS)
+	xbmcgui.Dialog().notification("Cache ZDFlinks:","wird erneuert",icon,3000)
 
 	page, msg = get_page(path='https://www.zdf.de/live-tv')			# Links neu holen
 	if page == '':
@@ -2212,6 +2216,61 @@ def get_ZDFstreamlinks(skip_log=False):
 		PLog(page)														# für IPTV-Interessenten
 	Dict("store", 'zdf_streamlinks', page)
 	return zdf_streamlinks	
+#-----------------------------------------------
+# ähnlich get_ZDFstreamlinks
+# Aufruf SenderLiveListe, ARDStartRubrik -> get_playlist_img
+def get_ARDstreamlinks(skip_log=False):
+	PLog('get_ARDstreamlinks:')
+	PLog(skip_log)
+	ARDlinks_CacheTime	= 86400					# 24 Std.: (60*60)*24
+		
+	page = Dict("load", 'ard_streamlinks', CacheTime=ARDlinks_CacheTime)
+	page = py2_encode(page)
+
+	if len(str(page)) > 1000:					# bei Error nicht leer od. False von Dict
+		if skip_log == False:
+			PLog(page)							# für IPTV-Interessenten
+		return page.splitlines()
+		
+	icon = R(ICON_TOOLS)
+	xbmcgui.Dialog().notification("Cache ARDlinks:","wird erneuert",icon,3000)
+	
+	api_url = "https://api.ardmediathek.de/page-gateway/widgets/ard/editorials/4hEeBDgtx6kWs6W6sa44yY?pageNumber=0&pageSize=24"
+	page, msg = get_page(path=api_url, JsonPage=True)			# Links neu holen
+	if page == '':
+		PLog('get_ARDstreamlinks: leer')
+		return []
+
+	content = blockextract('"broadcastedOn":', page)
+	PLog(len(content))	
+	
+	ard_streamlinks=[]; api_part = u"https://api.ardmediathek.de/page-gateway/pages/ard/item/"
+	for rec in content:												# Schleife  Web-Sätze		
+		videodat_url=''; href=''; streamurl=''
+		title = stringextract('longTitle":"', '"', rec)				# livesenderTV.xml anpassen
+		href = stringextract(api_part, '"', rec)
+		href = api_part + href
+		PLog(href)
+		thumb = stringextract('src":"', '"', rec)
+		thumb = thumb.replace('{width}', '720')			
+
+		if href:
+			page, msg = get_page(path=href, JsonPage=True)
+			streamurl = stringextract('_stream":"', '"', page)
+			if streamurl.startswith('http') == False:
+				streamurl = "https:" + streamurl
+		
+		PLog("Satz1:")
+		PLog(title); PLog(href);  PLog(streamurl);
+		# Zeile: "title_sender|streamurl|thumb|tagline"
+		ard_streamlinks.append("%s|%s|%s|%s" % (title, streamurl,thumb,''))	
+	
+	PLog("ard_streamlinks: %d" % len(ard_streamlinks))
+	page = "\n".join(ard_streamlinks)									# Ablage Cache
+	if skip_log == False:
+		PLog(str(ard_streamlinks))										# für IPTV-Interessenten
+	Dict("store", 'ard_streamlinks', page)
+	return ard_streamlinks	
 #---------------------------------------------------------------------------------------------------
 # Aufruf: 
 # Icon aus livesenderTV.xml holen
@@ -2219,6 +2278,7 @@ def get_ZDFstreamlinks(skip_log=False):
 # 25.06.2020 für SenderLiveResolution um EPG_ID erweitert 
 # 26.06.2020 Anpassung für ZDF-Sender (bei Classic-Livestreams: 
 #	Arte, KiKA, 3sat)
+# 11.04.2021 Anpassung für ARD-Classic-Sender
 #
 def get_playlist_img(hrefsender):
 	PLog('get_playlist_img: ' + hrefsender); 
@@ -2235,6 +2295,7 @@ def get_playlist_img(hrefsender):
 				playlist_img = stringextract('thumbnail>', '</thumbnail', p)
 				playlist_img = R(playlist_img)
 				link =  stringextract('link>', '</link', p)
+				
 				if "ZDFsource" in link:			# Anpassung für ZDF-Sender
 					zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
 					link=''	
@@ -2245,7 +2306,19 @@ def get_playlist_img(hrefsender):
 						if up_low(title_sender) in up_low(items[0]): 
 							link = items[1]
 					if link == '':
-						PLog('%s: Streamlink fehlt' % title_sender)			
+						PLog('%s: ZDF-Streamlink fehlt' % title_sender)	
+						
+				if "ARDclassicSource" in link:			# Anpassung für ARD-Clasic-Sender
+					ard_streamlinks = get_ARDstreamlinks(skip_log=True)
+					link=''	
+					# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
+					for line in ard_streamlinks:
+						items = line.split('|')
+						if up_low(title_sender) in up_low(items[0]): 
+							link = items[1]
+					if link == '':
+						PLog('%s: ARD-Streamlink fehlt' % title_sender)	
+								
 					
 				EPG_ID =  stringextract('EPG_ID>', '</EPG_ID', p)
 				PLog("EPG_ID für %s: %s" % (s, EPG_ID))
@@ -2584,7 +2657,9 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 
 	PLog('Direct: %s | %s' % (mode, url))
 	PlayVideo(url, title, thumb, Plot, sub_path)
+	
 	return 
+	
 #---------------------------------------------------------------------------------------------------
 # PlayVideo: 
 #	Sofortstart + Resumefunktion, einschl. Anzeige der Medieninfo:
@@ -2614,7 +2689,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #
 def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=0):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
-	PLog(sub_path); PLog(seekTime);
+	PLog(Merk); PLog(sub_path); PLog(seekTime);
 	
 	Plot=transl_doubleUTF8(Plot)
 	Plot=(Plot.replace('[B]', '').replace('[/B]', ''))	# Kodi-Problem: [/B] wird am Info-Ende platziert
@@ -2693,7 +2768,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 				
 			new_line = u"%s###%s###%s###%s###%s" % (now, title, url, thumb, Plot)
 			new_line = py2_encode(new_line)
-			PLog("new_line: " + new_line)
+			PLog("new_line: " + new_line[:100])
 			new_list=[]
 			new_list.append(new_line)
 			PLog(len(new_list))	
@@ -2714,30 +2789,70 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 			new_list = "\n".join(new_list)
 			RSave(STARTLIST, new_list)		
 		
-		#-------------------------------------------------------# Play
+		#-------------------------------------------------------# Play		
 		# playlist: Start aus Modul Playlist (s.o.)
-		PLog("url: " + url)
+		try:
+			from platform import release						# für Verhind. Rekursion 
+			OS_RELEASE = release()
+		except:
+			OS_RELEASE =''
+		PLog("OS_RELEASE: " + OS_RELEASE)		
+			
+		PLog("url: " + url); PLog("playlist: %d" % len(playlist))
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
 			return
 		else:													# false, None od. Blank
-			PLog('PlayVideo_Start: direkt, playlist: '); PLog(playlist)
+			PLog('PlayVideo_Start: direkt, playlist: %d' % len(playlist))
+			
+			line = Dict("load", 'Rekurs_check')					# Dict-Abgleich url/Laufzeit
+			PLog(line)
+			oldurl='' 
+			if line != False:									# False, falls fehlend
+				oldurl, old_dur, old_now = line.split('||')
+			if oldurl and oldurl in url:
+				now = time.time(); 
+				now=int(now); old_now=int(float(old_now)); old_dur=int(float(old_dur))
+				PLog("now-old_now: %d,  old_dur %d" % (now-old_now, old_dur))
+				if (now - old_now) < old_dur + 5:					# erneuter Aufruf vor regul. Videoende?
+					if SETTINGS.getSetting('pref_nohome') == 'true':
+						msg1 = "Videoabbruch"; msg2 = "wegen vermutl. Rekursion"
+						icon = R(ICON_WARNING)
+						xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
+						PLog("Rekursions_exit")
+						return
+
+			
 			player = xbmc.Player()
-			player.play(url, li, windowed=False) 		# direkter Start
+			player.play(url, li, windowed=False) 				# direkter Start
 			xbmc.sleep(200)
+			
+			if len(playlist) == 0:								# Verhind. Rekursion (ohne Homebutton)
+				if SETTINGS.getSetting('pref_nohome') == 'true':
+					PLog("pref_nohome=true")
+					if "-tegra-" in OS_RELEASE == False:	# ev. prüfen: "-tegra-" in OS_RELEASE +
+						exit(0)									#	nicht bei Shield + FT1-Stick.				
+				
 			while 1:
 				if player.isPlaying():
-					xbmc.sleep(500)							# für Raspi erforderl.
+					xbmc.sleep(500)								# für Raspi erforderl.
 					PLog("set_seekTime %s" % str(seekTime))
 					seekTime = int(seekTime)
-					player.seekTime(seekTime) 				# Startpos aus PlayMonitor (HLS o. Wirkung)
+					player.seekTime(seekTime) 					# Startpos aus PlayMonitor (HLS o. Wirkung)
 					play_time = player.getTime()
 					video_dur = player.getTotalTime()
+					
+					now = time.time()
+					line = "%s||%s||%s" % (url, video_dur, now)
+					Dict("store", 'Rekurs_check', line) 
 					PLog("play_time %d, video_dur %d" % (play_time, video_dur))
 					break
 				xbmc.sleep(200)
-			return play_time, video_dur
+			
+			return play_time, video_dur				# -> PlayMonitor
+			exit(0)
+
 
 #-------------------------------------
 #  ARD-Untertitel konvertieren

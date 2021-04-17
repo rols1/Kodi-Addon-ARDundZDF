@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 08.03.2021
+#	Stand 13.03.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -322,7 +322,8 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	if ID == "ARDRetroStart":
 		li = home(li, ID=NAME)								# Home-Button -> Hauptmenü
 	else:
-		li = home(li, ID='ARD Neu')							# Home-Button
+		if ID != 'Livestream':								# ohne home - Nutzung durch Classic
+			li = home(li, ID='ARD Neu')						# Home-Button
 
 	page = False
 	if 	'/editorials/' in path == False:				# nur kompl. Startseite aus Cache laden (nicht Rubriken) 
@@ -745,7 +746,6 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 def ARDStartSingle(path, title, summary, ID='', mehrzS=''): 
 	PLog('ARDStartSingle: %s' % ID);
 	title_org = title
-	
 
 	headers=''
 	# Header für Verpasst-Beiträge (ARDVerpasstContent -> get_page_content)
@@ -780,7 +780,8 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	if ID == "ARDRetroStart":
 		li = home(li, ID=NAME)								# Home-Button -> Hauptmenü
 	else:
-		li = home(li, ID='ARD Neu')							# Home-Button
+		if ID != 'Livestream':								# ohne home - Nutzung durch Classic
+			li = home(li, ID='ARD Neu')						# Home-Button
 
 	img 		= stringextract('src":"', '"', page)
 	img 		= img.replace('{width}', '640')
@@ -873,7 +874,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 #
 def ARDStartVideoHLSget(title, VideoUrls): 
 	PLog('ARDStartVideoHLSget:'); 
-	PLog(VideoUrls)
+	PLog(str(VideoUrls)[:100])
 	
 	HLS_List=[]; Stream_List=[];
 	href=''

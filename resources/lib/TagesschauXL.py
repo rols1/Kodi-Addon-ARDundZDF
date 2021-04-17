@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 04.04.2021
+#	Stand: 16.04.2021
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -948,8 +948,24 @@ def XLGetSourcesHTML(path, title, summ, tag, thumb, ID=''):
 	player = stringextract('player:stream"', '/>', page)
 	url = stringextract('content="', '"', player)
 	Plot = "%s\n\n%s" % (tag, summ)
-	PlayVideo(url, title, thumb, Plot)
-	return
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true': # Sofortstart
+		PLog('Sofortstart: XLGetSourcesHTML')
+		PlayVideo(url, title, thumb, Plot)
+		return
+
+	if ID =="ARD_PolitikRadio":
+		url = stringextract('title="MP3-Format', '>mp3<', page)
+		url = stringextract('href="', '"', url)
+		if url == '':										# Altermative
+			url = stringextract('player:stream', '/>', page)
+			url = stringextract('content="', '"', url)
+		PLog('audio_url' + url)
+		
+		if url:
+			PlayAudio(url, title, thumb, Plot=title)  		# direkt	
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return	
+		
 
 	media_base = "https://www.tagesschau.de/multimedia/video/video-%s~mediajson.json"
 	path = media_base % player_id
@@ -1035,8 +1051,6 @@ def XLGetSourcesHTML(path, title, summ, tag, thumb, ID=''):
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	 	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
 # ----------------------------------------------------------------------
 
 

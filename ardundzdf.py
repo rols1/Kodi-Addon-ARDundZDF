@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.8.0'
-VDATE = '10.04.2021'
+VERSION = '3.8.1'
+VDATE = '17.04.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2584,8 +2584,9 @@ def ARDSport(title):
 	
 	#-------------------------------------------------------# Zusätze
 	# beim Ziel ARDSportPanel den Titel in theme_list für 2. Durchlauf 
-	#	aufnehmen				
-	title = "Nordische Ski-WM"									# 11.01.2021 Alpine Ski-WM (nicht in Fußlinks)
+	#	aufnehmen
+	'''				
+	title = "Nordische Ski-WM"									# (nicht in Fußlinks)
 	href = 'https://www.sportschau.de/nordische-ski-wm/index.html'
 	img =  'https://www.sportschau.de/wintersport/skispringen/Skispringen-Zakopane-erster-Durchgang-100~_v-gseapremiumxl.jpg'
 	tagline = 'Nordische Ski-WM in Oberstdorf'
@@ -2595,6 +2596,7 @@ def ARDSport(title):
 		quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, summary=summ, fparams=fparams)
+	'''
 	
 	title = "Moderatoren"									# Moderatoren 
 	href = 'https://www.sportschau.de/sendung/moderatoren/index.html'
@@ -2697,7 +2699,7 @@ def ARDSportPanel(title, path, img, tab_path=''):
 	PLog(len(sendungen))
 	
 	# manuelle Buttons in ARDSport - s. Zusätze dort
-	theme_list = ['Wintersport', "Nordische Ski-WM"]						
+	theme_list = ['Wintersport',] 						# "Nordische Ski-WM"]						
 	if tab_path == '' and title in theme_list:			# 1. Durchlauf bei Tabmenüs
 		if title == 'Formel 1':
 			tablist = blockextract('class="collapsed  subressort', page, '--googleoff')
@@ -3739,6 +3741,8 @@ def ARDStart(title):
 	
 # Auflistung einer Rubrik aus ARDStart - title (ohne unescape) ist eindeutige Referenz 
 # path=Seite aus ARDStart - wir laden aus dem Cache, speichern nicht
+# 11.04.2021 Ausleitung Livestreams zu ARDnew.ARDStartRubrik
+#
 def ARDStartRubrik(path, title, img, sendername='', ID=''): 
 	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path); 
 	title_org 	= title 								# title ist Referenz zur Rubrik
@@ -3791,9 +3795,19 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 		MyDialog(msg1, '', '')	
 		return li
 	
+	if	ID == 'Livestreams':								# Ausleitung ARD Neu
+		ID = 'Livestream'
+		PLog('Livestreams:')								# Korr. für ARDnew.ARDStartRubrik
+		path = "https://api.ardmediathek.de/page-gateway/widgets/ard/editorials/4hEeBDgtx6kWs6W6sa44yY?pageNumber=0&pageSize=24"
+		import resources.lib.ARDnew as ARDnew
+		ARDnew.ARDStartRubrik(path, title='Livestreams',  widgetID='', ID='Livestream')
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
+				
 	multi = False											# steuert Einzel-/Mehrfachbeiträge	
 	sendungen = blockextract('class="teaser"', gridlist)
 	PLog(len(sendungen))
+		
 	for s in sendungen:
 		# PLog(s)		# Debug
 		tagline=''; summ=''; mediatype=''
@@ -3810,22 +3824,11 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 			more_path = BASE_URL + stringextract('href="', '"', more)
 					
 		if summ == '':											# summary (Inhaltstext) im Voraus holen,
-			if ID != 'Livestreams':								#	Seite Livestreams enthält bereits EPG
-				if SETTINGS.getSetting('pref_load_summary') == 'true':
-					summ_txt = get_summary_pre(href, 'ARDClassic')
-					PLog(summ_txt)
-					if 	summ_txt:
-						summ = summ_txt	
-					
-		if	ID == 'Livestreams':								# EPG in subline:					
-			if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-				mediatype='video'
-			subline =  stringextract('class="subtitle">', '</p>', s) # Uhrzeit + Sendung
-			subline = cleanhtml(subline); subline = unescape(subline);
-			subline=subline.replace('&', '+') 
-			sender = (title.replace('Livestream', '').replace('im', '')).strip()
-																	# Icon, link aus livesenderTV.xml holen	:
-			playlist_img, href, EPG_ID= get_playlist_img(hrefsender=sender) 		
+			if SETTINGS.getSetting('pref_load_summary') == 'true':
+				summ_txt = get_summary_pre(href, 'ARDClassic')
+				PLog(summ_txt)
+				if 	summ_txt:
+					summ = summ_txt	
 			
 		tagline = stringextract('class="dachzeile">', '<', s)	
 		duration= stringextract('duration">', '</div>', s)
@@ -3861,52 +3864,42 @@ def ARDStartRubrik(path, title, img, sendername='', ID=''):
 				continue
 						
 		PLog("title: " + title);  PLog(tagline); PLog(href); PLog(multi);		
-		
-		# -> SenderLiveResolution wie SenderLiveListe aus Hauptmenü, Fallback zum Classic-Senderlink
-		#		bei Fehlschlag	
-		if	ID == 'Livestreams':
-			href=py2_encode(href); title=py2_encode(title); img=py2_encode(img); subline=py2_encode(subline);
-			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s'}" %\
-				(quote(href), quote(title), quote(img), quote(subline))
-			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
-				thumb=img, fparams=fparams, summary=subline, mediatype=mediatype)					
-		else:	
-			if ID == 'Swiper':				# nur Einzelbeiräge zeigen (weitere Beiträge via PageControl möglich)
-				Plot=summ					# für Einzelauflösungen/summary in SingleSendung
-				sid = href.split('documentId=')[1]
-				path = BASE_URL + '/play/media/' + sid			# -> *.mp4 (Quali.-Stufen) + master.m3u8-Datei (Textform)
-				PLog('Medien-Url: ' + path)	
+		if ID == 'Swiper':				# nur Einzelbeiräge zeigen (weitere Beiträge via PageControl möglich)
+			Plot=summ					# für Einzelauflösungen/summary in SingleSendung
+			sid = href.split('documentId=')[1]
+			path = BASE_URL + '/play/media/' + sid			# -> *.mp4 (Quali.-Stufen) + master.m3u8-Datei (Textform)
+			PLog('Medien-Url: ' + path)	
+					
+			if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+				mediatype='video'
+
+			Plot = "%s||||%s" % (subline, summ)			# für Sofortstart/Plot in SingleSendung
+			Plot = Plot.replace('\n', '||')				# \n aus summ -> ||
+			
+			if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
+				filtered=False
+				for item in AKT_FILTER: 
+					if up_low(item) in py2_encode(up_low(s)):
+						filtered = True
+						break		
+				if filtered:
+					continue		
 						
-				if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-					mediatype='video'
-	
-				Plot = "%s||||%s" % (subline, summ)			# für Sofortstart/Plot in SingleSendung
-				Plot = Plot.replace('\n', '||')				# \n aus summ -> ||
-				
-				if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
-					filtered=False
-					for item in AKT_FILTER: 
-						if up_low(item) in py2_encode(up_low(s)):
-							filtered = True
-							break		
-					if filtered:
-						continue		
-							
-				PLog("Satz_Swiper:") 				
-				PLog(path); PLog(title);
-				path=py2_encode(path); img=py2_encode(img); 
-				title=py2_encode(title); Plot=py2_encode(Plot);
-				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
-					% (quote(path), quote(title), quote(img), duration, quote(Plot),  quote(subline), 'ARD', '0')				
-				addDir(li=li, label=title, action="dirList", dirID="SingleSendung", fanart=img, thumb=img, 
-					fparams=fparams, summary=summ, tagline=subline, mediatype=mediatype)			
-			else:
-				next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl  SinglePage
-				href=py2_encode(href); title=py2_encode(title); next_cbKey=py2_encode(next_cbKey);
-				fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
-					% (quote(title), quote(href), quote(next_cbKey))
-				addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
-					thumb=img, fparams=fparams, tagline=tagline)
+			PLog("Satz_Swiper:") 				
+			PLog(path); PLog(title);
+			path=py2_encode(path); img=py2_encode(img); 
+			title=py2_encode(title); Plot=py2_encode(Plot);
+			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'duration': '%s', 'summary': '%s', 'tagline': '%s', 'ID': '%s', 'offset': '%s'}" \
+				% (quote(path), quote(title), quote(img), duration, quote(Plot),  quote(subline), 'ARD', '0')				
+			addDir(li=li, label=title, action="dirList", dirID="SingleSendung", fanart=img, thumb=img, 
+				fparams=fparams, summary=summ, tagline=subline, mediatype=mediatype)			
+		else:
+			next_cbKey = 'SinglePage'	# cbKey = Callback für Container in PageControl  SinglePage
+			href=py2_encode(href); title=py2_encode(title); next_cbKey=py2_encode(next_cbKey);
+			fparams="&fparams={'title': '%s', 'path': '%s', 'cbKey': '%s', 'mode': 'Sendereihen', 'ID': 'ARD'}" \
+				% (quote(title), quote(href), quote(next_cbKey))
+			addDir(li=li, label=title, action="dirList", dirID="PageControl", fanart=img, 
+				thumb=img, fparams=fparams, tagline=tagline)
 	
 		if more_path:				# Button "ALLE ZEIGEN"	
 			PLog("more_path more: " + more_path)	
@@ -6319,7 +6312,7 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 			if SETTINGS.getSetting('pref_WatchFolderInTitle') ==  'true':	# Kennz. Ordner
 				if ordner: 
 					name = "[COLOR blue]%s[/COLOR] | %s" % (ordner, name)
-			
+
 		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=my_thumb,
 			summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype, 
 			sortlabel=sortlabel, merkname=merkname)
@@ -6649,7 +6642,7 @@ def TVLiveRecordSender(title):
 	duration, laenge = duration.split('=')
 	duration = duration.strip()
 
-	sort_playlist = get_sort_playlist()		# Senderliste, einschl. get_ZDFstreamlinks
+	sort_playlist = get_sort_playlist()		# Senderliste, einschl. get_ZDFstreamlinks, get_ARDstreamlinks
 	PLog('Sender: ' + str(len(sort_playlist)))
 	for rec in sort_playlist:
 		title 	= rec[0]
@@ -6755,6 +6748,7 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 	playlist = blockextract('<item>', playlist)
 	sort_playlist =  []
 	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)				# skip_log: Log-Begrenzung
+	ard_streamlinks = get_ARDstreamlinks(skip_log=True)
 	
 	for item in playlist:   
 		rec = []
@@ -6777,7 +6771,19 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 				if up_low(title_sender) in up_low(items[0]): 
 					link = items[1]
 			if link == '':
-				PLog('%s: Streamlink fehlt' % title_sender)			
+				PLog('%s: Streamlink fehlt' % title_sender)	
+						
+		if 'ARDSource' in link:							# Streamlink für ARD-Sender holen,
+			title_sender = stringextract('<hrefsender>', '</hrefsender>', item)	
+			link=''										# Reihenfolge an Playlist anpassen
+			# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
+			for line in ard_streamlinks:
+				PLog("ardline: " + line)
+				items = line.split('|')
+				if up_low(title_sender) in up_low(items[0]): 
+					link = items[1]
+			if link == '':
+				PLog('%s: Streamlink fehlt' % title_sender)
 		
 		rec.append(title); rec.append(EPG_ID);						# Listen-Element
 		rec.append(img); rec.append(link);
@@ -6972,8 +6978,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	#	-> CreateVideoStreamObject 
 	PLog('SenderLiveListe:')
 	PLog(title); PLog(listname)
-	
-			
+				
 	title2 = 'Live-Sender ' + title
 	title2 = title2
 	li = xbmcgui.ListItem()
@@ -6995,9 +7000,12 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			break
 			
 	zdf_streamlinks=''
-	if py2_decode(listname) == u'Überregional':			# Streamlinks für ZDF-Sender holen
+	lname = py2_decode(listname)
+	if lname == u'Überregional':			# Streamlinks für ZDF-Sender holen
 		zdf_streamlinks = get_ZDFstreamlinks()			# Modul util
-	
+	if lname == u'Überregional' or lname == u'Regional':
+		ard_streamlinks = get_ARDstreamlinks()			# Modul util	
+		
 	mediatype='' 						# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
@@ -7018,9 +7026,20 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			link=''										# Reihenfolge an Playlist anpassen
 			# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 			for line in zdf_streamlinks:
-				# PLog("zdfline: " + line)
+				PLog("zdfline: " + line)
 				items = line.split('|')
 				# Bsp.: "ZDFneo " in "ZDFneo Livestream":
+				if up_low(title_sender) in up_low(items[0]): 
+					link = items[1]
+			if link == '':
+				PLog('%s: Streamlink fehlt' % title_sender)
+				
+		if 'ARDSource' in link:							# Streamlink für ARD-Sender holen,
+			link=''										# Reihenfolge an Playlist anpassen
+			# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
+			for line in ard_streamlinks:
+				PLog("ardline: " + line)
+				items = line.split('|')
 				if up_low(title_sender) in up_low(items[0]): 
 					link = items[1]
 			if link == '':
@@ -7036,7 +7055,6 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			if title != onlySender:
 				continue
 			
-		epg_schema='';
 		epg_date=''; epg_title=''; epg_text=''; summary=''; tagline='' 
 		# PLog(SETTINGS.getSetting('pref_use_epg')) 	# Voreinstellung: EPG nutzen? - nur mit Schema nutzbar
 		PLog('setting: ' + str(SETTINGS.getSetting('pref_use_epg')))
@@ -7089,6 +7107,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		if geo:
 			tagline = 'Livestream nur in Deutschland zu empfangen!'
 			
+		PLog("Satz8")
 		PLog(title); PLog(link); PLog(img); PLog(summary); PLog(tagline[0:80]);
 		Resolution = ""; Codecs = ""; duration = ""
 	
@@ -9736,6 +9755,7 @@ def ZDFSourcesHBBTV(title, scms_id):
 				
 	streams = stringextract('"streams":', '"head":', page)	# Video-URL's ermitteln
 	ptmdUrl_list = blockextract('"ptmdUrl":', streams)		# mehrere mögl., z.B. Normal + DGS
+	#PLog(ptmdUrl_list)
 	PLog(len(ptmdUrl_list))
 
 	for ptmdUrl in ptmdUrl_list:							# 1-2
@@ -9765,14 +9785,20 @@ def ZDFSourcesHBBTV(title, scms_id):
 				quality = u'HOHE'
 				w = "960"; h = "540"					# Probeentnahme	
 				bitrate = u"1812067"
+				if u'm3u8' in stream:
+					bitrate = u"16 MB/Min."
 			if q == 'q2':
 				quality = u'SEHR HOHE'
-				w = "1280"; h = "720"					# Probeentnahme							
+				w = "1024"; h = "576"					# Probeentnahme							
 				bitrate = u"3621101"
+				if u'm3u8' in stream:
+					bitrate = u"19 MB/Min."
 			if q == 'q3':
-				quality = u'FULL HD'
-				w = "1920"; h = "1080"					# Probeentnahme							
+				quality = u'HD'
+				w = "1280"; h = "720"					# Probeentnahme, bisher fehlend: w = "1920"; h = "1080"						
 				bitrate = u"6501324"
+				if u'm3u8' in stream:
+					bitrate = u"23 MB/Min."
 			
 			res = "%sx%s" % (w,h)
 			
@@ -9782,6 +9808,7 @@ def ZDFSourcesHBBTV(title, scms_id):
 				stream_title = u'MP4, Qualität: %s | %s' % (quality, label)
 				try:
 					bitrate = re.search(u'_(\d+)k_', url).group(1)	# bitrate überschreiben	
+					bitrate = bitrate + "000"			# k ergänzen 
 				except Exception as exception:			# ts möglich: http://cdn.hbbtvlive.de/zdf/106-de.ts
 					PLog(str(exception))
 					PLog(url)	

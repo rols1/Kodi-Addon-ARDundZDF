@@ -5,7 +5,7 @@
   <nr>9</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
-  <date>04.04.2021 rols1</date>
+  <date>11.04.2021 rols1</date>
   <ARDsource></ARDsource>
   <ZDFsource>https://www.zdf.de/live-tv</ZDFsource>
   <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ Button:Alle Sender</info>
@@ -23,12 +23,12 @@
 	<item>
 		<title>Das Erste</title>
 		<hrefsender>Das Erste</hrefsender>
-		<link>https://mcdn.daserste.de/daserste/de/master.m3u8</link>
+		<link>ARDSource</link>
 		<reclink>https://derste247livede.akamaized.net/hls/live/658317/daserste_de/profile1/1.m3u8</reclink>
 		<thumbnail>tv-das-erste.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>ARD</EPG_ID>
-		<date>13.07.2020</date>
+		<date>11.04.2021</date>
 	</item>
 	<item>
 		<title>ZDF</title>
@@ -64,11 +64,11 @@
 	<item>
 		<title>ONE</title>
 		<hrefsender>ONE</hrefsender>
-		<link>http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/master.m3u8</link>
+		<link>ARDSource</link>
 		<thumbnail>tv-one.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>fes</EPG_ID>
-		<date>07.09.2018</date>
+		<date>11.04.2021</date>
 	</item>
 	<item>
 		<title>3sat</title>
@@ -115,7 +115,7 @@
 		<hrefsender>ARD-alpha</hrefsender>
 		<link>https://brlive-lh.akamaihd.net/i/bralpha_germany@119899/master.m3u8</link>
 		<thumbnail>tv-alpha.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>ALPHA</EPG_ID>
 		<date>07.09.2018</date>
 	</item>
@@ -130,22 +130,22 @@
 		<geoblock>ja</geoblock>
 	</item>
 	<item>
-		<title>Tagesschau24-Livestream</title>
+		<title>tagesschau24</title>
 		<hrefsender>tagesschau24</hrefsender>
-		<link>http://tagesschau-lh.akamaihd.net/i/tagesschau_1@119231/master.m3u8</link>
+		<link>ARDSource</link>
 		<thumbnail>tv-tagesschau.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>TAG24</EPG_ID>
-		<date>07.09.2018</date>
+		<date>11.04.2021</date>
 	</item>
 	<item>
 		<title>Deutsche Welle</title>
 		<hrefsender>Deutsche Welle</hrefsender>
-		<link>https://dwstream72-lh.akamaihd.net/i/dwstream72_live@123556/master.m3u8</link>
+		<link>ARDSource</link>
 		<thumbnail>tv-deutsche-welle.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>DWTV</EPG_ID>
-		<date>19.06.2016</date>
+		<date>11.04.2021</date>
 	</item>
 </items>
 </channel>
@@ -160,54 +160,54 @@
 		<hrefsender>BR Fernsehen Nord</hrefsender>
 		<link>http://brlive-lh.akamaihd.net/i/bfsnord_germany@119898/master.m3u8</link>
 		<thumbnail>tv-br.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>BR</EPG_ID>
 		<date>21.09.2018</date>
 	</item>
 	<item>
-		<title>BR Fernsehen-Süd</title>
-		<hrefsender>BR Fernsehen Süd</hrefsender>
-		<link>https://mcdn.br.de/bfs_sued/de/master.m3u8</link>
+		<title>BR Fernsehen - Süd</title>
+		<hrefsender>BR Fernsehen - Süd</hrefsender>
+		<link>ARDSource</link>
 		<thumbnail>tv-br.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>BR</EPG_ID>
-		<date>07.09.2018</date>
+		<date>11.04.2021</date>
 	</item>
 	<item>
 		<title>hr-fernsehen</title>
 		<hrefsender>hr-fernsehen</hrefsender>
-		<link>https://hrlive1-lh.akamaihd.net/i/hr_fernsehen@75910/master.m3u8</link>		  
+		<link>ARDSource</link>		  
 		<thumbnail>tv-hr.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>HR</EPG_ID>
-		<date>07.09.2018</date>
+		<date>11.04.2021</date>
 	</item>
 	<item>
 		<title>MDR Sachsen</title>
 		<hrefsender>MDR</hrefsender>
-		<link>https://mdrsnhls-lh.akamaihd.net/i/livetvmdrsachsen_de@513998/master.m3u8</link>
+		<link>ARDSource</link>
 		<thumbnail>tv-mdr-sachsen.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>MDR</EPG_ID>
-		<date>07.09.2018</date>
+		<date>11.04.2021</date>
 	</item>
 	<item>
 		<title>Radio Bremen</title>
 		<hrefsender>Radio Bremen</hrefsender>
-		<link>https://rbfs-lh.akamaihd.net/i/rb_fs@438960/master.m3u8</link>
+		<link>ARDSource</link>
 		<thumbnail>tv-bremen.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>N3</EPG_ID>
-		<date>07.09.2018</date>
+		<date>11.04.2021</date>
 	</item>
 	<item>
-		<title>NDR Niedersachsen</title>
+		<title>NDR Fernsehen</title>
 		<hrefsender>NDR</hrefsender>
-		<link>https://ndrfs-lh.akamaihd.net/i/ndrfs_nds@430233/master.m3u8</link>
+		<link>ARDSource</link>
 		<thumbnail>tv-ndr-niedersachsen.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>N3</EPG_ID>
-		<date>07.09.2018</date>
+		<date>11.04.2021</date>
 	</item>
 	<item>
 		<title>NDR Schleswig-Holstein</title>
@@ -237,44 +237,44 @@
 		<date>21.09.2018</date>
 	</item>
 	<item>
-		<title>rbb Fernsehen Brandenburg</title>
-		<hrefsender>rbb</hrefsender>
-		<link>https://rbblive-lh.akamaihd.net/i/rbb_brandenburg@349369/master.m3u8</link>
+		<title>Rundfunk Berlin Brandenburg</title>
+		<hrefsender>Rundfunk Berlin Brandenburg</hrefsender>
+		<link>ARDSource</link>
 		<thumbnail>tv-rbb-brandenburg.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>RBB</EPG_ID>
-		<date>07.09.2018</date>
+		<date>11.04.2021</date>
 	</item>
 	<item>
-		<title>SR Fernsehen</title>
-		<hrefsender>SR</hrefsender>
-		<link>https://srlive24-lh.akamaihd.net/i/sr_universal02@107595/master.m3u8</link>
+		<title>Saarländischer Rundfunk</title>
+		<hrefsender>Saarländischer Rundfunk</hrefsender>
+		<link>ARDSource</link>
 		<thumbnail>tv-sr.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>SWR</EPG_ID>
-		<date>16.02.2021</date>
+		<date>11.04.2021</date>
 		<epg_schema>ARD</epg_schema>
 		<info>TVToday: SWR/SR gemeinsam</info>
 	</item>
 	<item>
-		<title>SWR Fernsehen Baden-Württemberg</title>
+		<title>SWR Baden-Württemberg</title>
 		<hrefsender>SWR</hrefsender>
-		<link>https://swrbwhls-i.akamaihd.net/hls/live/667638/swrbwd/master.m3u8</link>
+		<link>ARDSource</link>
 		<thumbnail>tv-swr.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>SWR</EPG_ID>
-		<date>07.09.2018</date>
+		<date>11.04.2021</date>
 		<info>TVToday: SWR/SR gemeinsam</info>
 	</item>
 	<item>
-		<title>WDR Fernsehen im Livestream</title>
-		<hrefsender>WDR</hrefsender>
-		<link>https://wdrfs247.akamaized.net/hls/live/681509/wdr_msl4_fs247/master.m3u8</link>
+		<title>Westdeutscher Rundfunk</title>
+		<hrefsender>Westdeutscher Rundfunk</hrefsender>
+		<link>ARDSource</link>
 		<link-old>https://wdrfsgeo-lh.akamaihd.net/i/wdrfs_geogeblockt@530016/master.m3u8</link-old>
 		<thumbnail>tv-wdr.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>WDR</EPG_ID>
-		<date>07.09.2018</date>
+		<date>11.04.2021</date>
 	</item>
 </items>
 </channel>

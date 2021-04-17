@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 06.03.2021
+#	Stand: 13.04.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -346,7 +346,7 @@ def GetContent(li, page, ID):
 		if mehrfach:
 			if ID == 'KAT_START':							# mit Url + id zurück zu -> Kategorien
 				pid = stringextract('id":"', '"', item) 	# programId hier null
-				cat = stringextract('label":"%s"' % title, '}]}', page) # Sub-Kategorien-Liste ausschneiden
+				cat = stringextract(u'label":"%s"' % py2_decode(title), '}]}', page) # Sub-Kategorien-Liste ausschneiden
 				tag = stringextract('description":"', '"', cat)
 
 				fparams="&fparams={'title':'%s', 'path':'%s'}" % (quote(title), quote(url))
