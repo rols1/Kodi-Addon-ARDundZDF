@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.8.1'
-VDATE = '17.04.2021'
+VERSION = '3.8.2'
+VDATE = '24.04.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2699,7 +2699,9 @@ def ARDSportPanel(title, path, img, tab_path=''):
 	PLog(len(sendungen))
 	
 	# manuelle Buttons in ARDSport - s. Zusätze dort
-	theme_list = ['Wintersport',] 						# "Nordische Ski-WM"]						
+	# Wintersport: solange nicht in den Tabs präsent, aus theme_list
+	#	entfernen. Die Auswertung läuft dann direkt über die teaser-Blocks
+	theme_list = [] 									#['Wintersport', "Nordische Ski-WM"]						
 	if tab_path == '' and title in theme_list:			# 1. Durchlauf bei Tabmenüs
 		if title == 'Formel 1':
 			tablist = blockextract('class="collapsed  subressort', page, '--googleoff')
@@ -3363,6 +3365,8 @@ def ARDSportTablePre(base, img, clap_title=''):
 				(clap_title, h3_col, h3_title, li_title)
 			title = unescape(title)
 			tag = title	
+			inf = u"aktuelle Saison, letzter Spieltag.\nÄltere Ergebnisse s. sportschau.de, Tab Ergebnisse"
+			tag = u"%s\n\n%s" % (tag, inf)
 			
 			PLog('Satz6_2:')
 			PLog(clap_title); PLog(h3_title); PLog(li_title);
@@ -5288,7 +5292,6 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 					raise Exception(msg)
 			else:
 				urlretrieve(url, fulldestpath)
-				
 			if subget:											# Untertitel holen 
 				get_subtitles(fulldestpath, sub_path)
 			
@@ -5297,6 +5300,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 			msg2 = os.path.basename(fulldestpath) 				# Bsp. heute_Xpress.mp4
 			if notice:
 				xbmcgui.Dialog().notification(msg1,msg2,icon,5000)	# Fertig-Info
+				
 	except Exception as exception:
 		PLog("thread_getfile:" + str(exception))
 		msg1 = 'Download fehlgeschlagen'

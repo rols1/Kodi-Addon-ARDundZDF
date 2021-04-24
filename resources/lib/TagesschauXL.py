@@ -946,11 +946,11 @@ def XLGetSourcesHTML(path, title, summ, tag, thumb, ID=''):
 		page, msg = get_page(path=videolink)	
 	 	
 	player = stringextract('player:stream"', '/>', page)
-	url = stringextract('content="', '"', player)
+	player_url = stringextract('content="', '"', player)	# i.d.R. mp3-url
 	Plot = "%s\n\n%s" % (tag, summ)
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true': # Sofortstart
 		PLog('Sofortstart: XLGetSourcesHTML')
-		PlayVideo(url, title, thumb, Plot)
+		PlayVideo(player_url, title, thumb, Plot)
 		return
 
 	if ID =="ARD_PolitikRadio":
@@ -968,6 +968,7 @@ def XLGetSourcesHTML(path, title, summ, tag, thumb, ID=''):
 		
 
 	media_base = "https://www.tagesschau.de/multimedia/video/video-%s~mediajson.json"
+	player_id = player_id.replace('~ardplayer', '')
 	path = media_base % player_id
 	page, msg = get_page(path=path, JsonPage=True)
 

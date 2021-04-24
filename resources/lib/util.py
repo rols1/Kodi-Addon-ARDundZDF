@@ -2814,7 +2814,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 			if oldurl and oldurl in url:
 				now = time.time(); 
 				now=int(now); old_now=int(float(old_now)); old_dur=int(float(old_dur))
-				PLog("now-old_now: %d,  old_dur %d" % (now-old_now, old_dur))
+				PLog("now - old_now: %d,  old_dur %d" % (now-old_now, old_dur))
 				if (now - old_now) < old_dur + 5:					# erneuter Aufruf vor regul. Videoende?
 					if SETTINGS.getSetting('pref_nohome') == 'true':
 						msg1 = "Videoabbruch"; msg2 = "wegen vermutl. Rekursion"
@@ -2841,17 +2841,18 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 					seekTime = int(seekTime)
 					player.seekTime(seekTime) 					# Startpos aus PlayMonitor (HLS o. Wirkung)
 					play_time = player.getTime()
+					xbmc.sleep(500)								# für Raspi erforderl., sonst 0 möglich
 					video_dur = player.getTotalTime()
 					
 					now = time.time()
-					line = "%s||%s||%s" % (url, video_dur, now)
+					line = "%s||%s||%s" % (url, str(video_dur), now)
 					Dict("store", 'Rekurs_check', line) 
 					PLog("play_time %d, video_dur %d" % (play_time, video_dur))
 					break
 				xbmc.sleep(200)
 			
 			return play_time, video_dur				# -> PlayMonitor
-			exit(0)
+#			exit(0)
 
 
 #-------------------------------------
@@ -2894,7 +2895,7 @@ def sub_path_conv(sub_path):
 #			
 def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall=''):
 	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
-	Plot=transl_doubleUTF8(Plot)
+#	Plot=transl_doubleUTF8(Plot)
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
 				
 	if url.startswith('http') == False:			# lokale Datei

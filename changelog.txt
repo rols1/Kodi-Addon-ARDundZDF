@@ -9,6 +9,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+24.04.2021 3.8.2
+			Menü ARD Sportschau: switch Wintersport (von den Tabs zu Footer-Links aus),
+			Entfernung aus theme_list (reaktivierbar). 
+			Nachbesserung Rekursionscheck (falls Homebuttons abgewählt): Delay 1/2 sec in
+			PlayVideo vor player.getTime() (für Raspi erforderlich, sonst Wert 0 möglich).
+			XLGetSourcesHTML (Modul TagesschauXL): Fix player_id in json-Url für "Bericht
+			aus Berlin" (replace ~ardplayer).
+			Kiraka_Live (Modul childs): ersetzt durch Kiraka_shows mit Liste der 1-wöchigen 
+			Sendungen des WDR 5 (jew. ca. 55 min) und Kiraka_pods mit den Kinderhörspielen -
+			die bisherige Livesendung 6 bis 22 Uhr existiert nicht mehr.
+
 17.04.2021 3.8.1
 			ARDStartRubrik (Classic, Menü Start): Ausleitung Livestreams zu 
 			ARDnew.ARDStartRubrik, Abschaltung Home ARDNeu  bei Livestreams.
