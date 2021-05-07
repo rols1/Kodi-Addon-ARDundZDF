@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 24.04.2021
+#	Stand: 25.04.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -92,6 +92,9 @@ GIT_KRAMLIEDER	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/
 GIT_KRAMSCHNIPP	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaninchenKramSchnipsel.png?raw=true"
 GIT_ZDFTIVI		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-zdftivi.png?raw=true"
 GIT_TIVIHOME	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/zdftivi-home.png?raw=true"
+GIT_KIR			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/kiraka.png?raw=true"
+GIT_KIR_SHOWS	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/kiraka-shows.png?raw=true"
+GIT_KIR_KLICK	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/klicker.png?raw=true"
 
 KikaCacheTime = 1*86400					# Addon-Cache für A-Z-Seiten: 1 Tag
 
@@ -326,22 +329,29 @@ def Kiraka():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
-	thumb 	= R('kiraka.png')
+	thumb 	= GIT_KIR
 	title = u'KiRaKa - Sendungen zum Nachhören'
 	tagline = u'Die Live-Sendung WDR 5 KiRaKa sieben Tage lang nachhören. Mit allem drum und dran.'
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s'}" % (quote(title))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kiraka_shows", fanart=R(GIT_RADIO), 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kiraka_shows", fanart=GIT_RADIO, 
 		thumb=thumb, fparams=fparams, tagline=tagline)
 	
-	thumb 	= R('kiraka-shows.png')
+	thumb 	= GIT_KIR_SHOWS
 	title = u'KiRaKa - Hörspiele'
 	tagline = u'Alle KiRaKa - Kinderhörspiele'
 	title=py2_encode(title); 
 	fparams="&fparams={'title': '%s'}" % (quote(title))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kiraka_pods", fanart=R(GIT_RADIO), 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kiraka_pods", fanart=GIT_RADIO, 
 		thumb=thumb, fparams=fparams, tagline=tagline)
 	
+	thumb 	= GIT_KIR_KLICK
+	title = u'KiRaKa-Klicker - Nachrichten für Kinder'
+	tagline = u'aktuelle und speziell für Kinder aufbereitete Nachrichten von der Kiraka-Redaktion'
+	title=py2_encode(title); 
+	fparams="&fparams={'title': '%s'}" % (quote(title))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kiraka_klick", fanart=GIT_RADIO, 
+		thumb=thumb, fparams=fparams, tagline=tagline)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -379,11 +389,11 @@ def Kiraka_shows(title):
 		thumb=py2_encode(img); Plot=py2_encode(Plot); 
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3url), 
 			quote(stitle), quote(thumb), quote_plus(Plot))
-		addDir(li=li, label=stitle, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
+		addDir(li=li, label=stitle, action="dirList", dirID="PlayAudio", fanart=GIT_KIR, thumb=thumb, fparams=fparams, 
 			tagline=tag, mediatype='music')
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		
+
 # ----------------------------------------------------------------------			
 def Kiraka_pods(title):
 	PLog('Kiraka_pods:')
@@ -420,11 +430,88 @@ def Kiraka_pods(title):
 		thumb=py2_encode(img); Plot=py2_encode(Plot); 
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3url), 
 			quote(stitle), quote(thumb), quote_plus(Plot))
-		addDir(li=li, label=stitle, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
+		addDir(li=li, label=stitle, action="dirList", dirID="PlayAudio", fanart=GIT_KIR_SHOWS, thumb=thumb, fparams=fparams, 
 			tagline=tag, mediatype='music')
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+# ----------------------------------------------------------------------
+# 2 Durchgänge:
+#	1. Übersicht der Beiträge
+#	2. Weburl: Zielseite mit mp3url
+#			
+def Kiraka_klick(title, weburl=''):
+	PLog('Kiraka_klick:')
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
+	base = "https://kinder.wdr.de"
+	if weburl == '':							# 1. Durchlauf: Übersicht
+		path = base + "/radio/kiraka/nachrichten/klicker/index.html"
+	else:
+		path = weburl
+	page, msg = get_page(path)	
+	if page == '':	
+		msg1 = "Fehler in Kiraka_klick"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	PLog(len(page))	
+	
+	
+	if weburl == '':							# 1. Durchlauf: Übersicht
+		items = blockextract('class="teaser">', page)	
+		for s in items:
+			if '"Javascript-Fehler"' in s:
+				continue
+			weburl = base + stringextract('href="', '"', s)
+			img = stringextract('srcset="', '"', s)
+			if img.startswith('//'):
+				img = "https:" + img
+			else:
+				img = base + img
+			stitle = stringextract('title="', '"', s)		# href-title
+			descr = stringextract('teasertext">', '&nbsp', s)
+			descr = mystrip(descr)										
+			
+			tag = "%s\n\n%s" % (stitle, descr)
+			
+			PLog('Satz6:')
+			PLog(img); PLog(stitle); PLog(weburl);
+			stitle=py2_encode(stitle); weburl=py2_encode(weburl);
+			fparams="&fparams={'weburl': '%s', 'title': '%s'}" % (quote(weburl), quote(stitle))
+			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kiraka_klick", 
+				fanart=GIT_KIR_KLICK, thumb=img, fparams=fparams, tagline=tag)
+				
+	else:										# 2. Durchlauf: Zielseite
+		page=py2_encode(page)
+		items = blockextract('"AudioObject",', page)	# 1 Block, wie Kiraka_pods
+		for s in items:
+			img = stringextract('url" : "', '"', s)
+			stitle = stringextract('headline" : "', '"', s)
+			mp3url = "https:" + stringextract('audioURL" : "', '"', s)
+			dur = stringextract('duration" : "', '"', s)		# Bsp. PT55M38S
+			dur = dur[2:5]										# min ausschneiden
+			dur = dur.replace('M', ' min')
+			if dur.startswith('00'):							# werte < 1 min korrig.
+				dur = "1 min"
+			descr = stringextract('tion" : "', '"', s)
+			
+			
+			tag = "%s | %s\n\n%s" % (stitle, dur, descr)
+			Plot = tag.replace('\n', '||')
+		
+			PLog('Satz7:')
+			PLog(img); PLog(title); PLog(mp3url); PLog(Plot);
+			
+			stitle=py2_encode(stitle); mp3url=py2_encode(mp3url);
+			thumb=py2_encode(img); Plot=py2_encode(Plot); 
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3url), 
+				quote(stitle), quote(thumb), quote_plus(Plot))
+			addDir(li=li, label=stitle, action="dirList", dirID="PlayAudio", fanart=GIT_KIR_KLICK, 
+				thumb=thumb, fparams=fparams, tagline=tag, mediatype='music')
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 # ----------------------------------------------------------------------
 # alle Videos - erster Aufruf A-Z-Liste ../allevideos-buendelgruppen100.html, 
 #	zweiter Aufruf: Liste einer Gruppe 

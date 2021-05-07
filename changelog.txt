@@ -9,6 +9,18 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+07.05.2021 3.8.3
+			Modul childs: Verlagerung kiraka-shows.png, kiraka.png + klicker.png zu 
+			github; neues Menü "KiRaKa-Klicker - Nachrichten für Kinder", neue Funktion
+			Kiraka_klick (Auswertung der WDR5-Klicker-Seite).
+			ARDStart (ARD Neu): Fix nach Änderung der Webseite (Austausch des Merkmals
+			'__PRELOADED_STATE__' gegen '"widgets":'.
+			ARD RETRO: Fix nach Änderung der Webseite (Austausch des Merkmals
+			'FETCHED_CONTEXT__' gegen '<body>'. 
+			Einzelupdate livesenderTV.xml: Ergänzung BR Event 2-3, Aktual. icon (@Weri).
+			ARDSport,  ARDSportPanel: Ergänzung Tab EURO 2020 (@Weri).
+			ZDFSportLive: Ergänzung Tab Fußball-EM (@Weri).
+
 24.04.2021 3.8.2
 			Menü ARD Sportschau: switch Wintersport (von den Tabs zu Footer-Links aus),
 			Entfernung aus theme_list (reaktivierbar). 

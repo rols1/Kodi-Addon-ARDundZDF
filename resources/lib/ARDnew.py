@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 13.03.2021
+#	Stand 07.05.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -199,7 +199,7 @@ def ARDStart(title, sender, widgetID=''):
 	path = BETA_BASE_URL + "/%s/" % sender
 	page, msg = get_page(path=path)			# vom Sender holen
 	
-	if '__PRELOADED_STATE__ ' not in page:						# Fallback: Cache ohne CacheTime
+	if '"widgets":' not in page:								# Fallback: Cache ohne CacheTime
 		page = Dict("load", 'ARDStartNEW_%s' % sendername)					
 		msg1 = "Startseite nicht im Web verfuegbar."
 		PLog(msg1)
@@ -480,7 +480,7 @@ def ARDRetro():
 
 	path = "https://www.ardmediathek.de/ard/retro/" 
 	# Seite aus Cache laden
-	page = Dict("load", 'ARDRetro', CacheTime=ARDStartCacheTime)					
+	page = Dict("load", 'ARDRetro', CacheTime=ARDStartCacheTime)
 	if page == False:										# nicht vorhanden oder zu alt
 		page, msg = get_page(path=path)						# vom Sender holen
 		if page == '':	
@@ -493,8 +493,7 @@ def ARDRetro():
 	PLog(len(page))		
 	
 	# json:
-	page = stringextract('FETCHED_CONTEXT__ = ', '</script>', page)
-	page = page[:-1]										# Ende: ';' entf.
+	page = stringextract('<body', '</body>', page)
 	# Rubriken: 
 	container = blockextract ('compilationType":', page)  	# Container json-Bereich (Swiper + Rest)
 	PLog(len(container))

@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.8.2'
-VDATE = '24.04.2021'
+VERSION = '3.8.3'
+VDATE = '07.05.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2585,18 +2585,18 @@ def ARDSport(title):
 	#-------------------------------------------------------# Zusätze
 	# beim Ziel ARDSportPanel den Titel in theme_list für 2. Durchlauf 
 	#	aufnehmen
-	'''				
-	title = "Nordische Ski-WM"									# (nicht in Fußlinks)
-	href = 'https://www.sportschau.de/nordische-ski-wm/index.html'
-	img =  'https://www.sportschau.de/wintersport/skispringen/Skispringen-Zakopane-erster-Durchgang-100~_v-gseapremiumxl.jpg'
-	tagline = 'Nordische Ski-WM in Oberstdorf'
-	summ = u"Skispringer, Langläufer und die Nordischen Kombinierer treffen sich vom 24. Februar bis 7. März in Oberstdorf, um in 24 Wettbewerben ihre Weltmeister zu ermitteln."
+	#'''				
+	title = "EURO 2020"									# (nicht in Fußlinks)
+	href = 'https://www.sportschau.de/fussball/uefaeuro2020/index.html'
+	img =  'https://www.sportschau.de/fussball/euro-zweitausendundzwanzig-logo-100~_v-gseagaleriexl.jpg'
+	tagline = 'Alle Infos zur UEFA EURO 2021 - EURO 2020 - Fußball - sportschau.de'
+	summ = u"Nachrichten, Berichte, Interviews und Ergebnisse zur UEFA EURO 2021 - Videos, Beiträge und Bilder zum Thema bei sportschau.de."
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
 		quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, summary=summ, fparams=fparams)
-	'''
+	#'''
 	
 	title = "Moderatoren"									# Moderatoren 
 	href = 'https://www.sportschau.de/sendung/moderatoren/index.html'
@@ -2701,12 +2701,10 @@ def ARDSportPanel(title, path, img, tab_path=''):
 	# manuelle Buttons in ARDSport - s. Zusätze dort
 	# Wintersport: solange nicht in den Tabs präsent, aus theme_list
 	#	entfernen. Die Auswertung läuft dann direkt über die teaser-Blocks
-	theme_list = [] 									#['Wintersport', "Nordische Ski-WM"]						
+	theme_list = ["EURO 2020"] 							#['Wintersport', "Nordische Ski-WM"]
+	PLog(title in theme_list)						
 	if tab_path == '' and title in theme_list:			# 1. Durchlauf bei Tabmenüs
-		if title == 'Formel 1':
-			tablist = blockextract('class="collapsed  subressort', page, '--googleoff')
-		else:
-			tablist = blockextract('class="collapsed  subressort ', page, "</ul>")
+		tablist = blockextract('class="collapsed', page)
 		PLog(len(tablist))
 		
 		found=False
@@ -8835,13 +8833,14 @@ def ZDFSportLive(title):
 
 	# Einfügung zeitl. begrenzter Events ähnlich ARDSportPanel (Wintersport,  Handball-WM)
 	PLog('Handball-WM:')
-	theme_list = ['Wintersport|https://www.zdf.de/sport/wintersport', 
-		'Handball-WM|https://www.zdf.de/sport/handball/ihf-wm-weltmeisterschaft-live-livestream-spielplan-100.html'
+	theme_list = [u'Wintersport|https://www.zdf.de/sport/wintersport', 
+		u'Handball-WM|https://www.zdf.de/sport/handball/ihf-wm-weltmeisterschaft-live-livestream-spielplan-100.html',
+		u'Fußball-EM|https://www.zdf.de/sport/fussball-em'
 		]						
 	for theme in theme_list:
 		PLog('link-label">%s' % theme)
 		title, url = theme.split('|')
-		if 'link-label">%s' % title in page:
+		if 'link-label">%s' % title in page:	# Bsp.: link-label">Fußball-EM
 			tag = "zeitlich begrenzter Event"
 			ID = 'ZDF_%s' % title
 			thumb=R("zdf-sport.png")
