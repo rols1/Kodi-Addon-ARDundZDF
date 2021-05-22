@@ -9,6 +9,24 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.05.2021 3.8.4
+			AudioStart (Audiothek): Bez. Highlights geändert in Entdecken (wie Webseite).
+			Audio_get_rubriken (Audiothek): Bildtitel 'nullnull© null' entfernt.
+			phoenix_Search (Modul phoenix): Fix Fehlerdialog (title -> query).
+			ZDF_get_content: Ausschluss 'class="b-playerbox' in Auswertungsschleife (be-
+			reits vor der Schleife ausgewertet, kann im Datensatz unerwünschte Trailerdaten 
+			enthalten).
+			ZDF_get_clustertitle: html-tags in Cluster-Titeln entfernt (relevant für 
+			neoriginal-Serien).
+			ZDF_Sendungen: fehlende Clusterung bei Webseiten ergänzt, Nutzung 
+			ZDF_getKurzVideoDetails, neue Funktion ZDF_getDuration, Anpassungen: 
+			ZDFRubrikSingle, ZDF_Sendungen, ZDF_get_content.
+			ZDF Menü Barrierearm: Anpassung an Änderung der Webseite, Nutzung der zusätzl. 
+			Clusterung wie in ZDF_Sendungen.
+			ZDF Rubriken: Anpassung an Änderungen der Webseite www.zdf.de/doku-wissen, Cache-
+			Nutzung (1 Std.), Nutzung der zusätzl. Clusterung wie in ZDF_Sendungen.
+			build_Streamlists: Fix network_error bei Arte-MP4-Links in ZDF-Beiträgen.
+
 07.05.2021 3.8.3
 			Modul childs: Verlagerung kiraka-shows.png, kiraka.png + klicker.png zu 
 			github; neues Menü "KiRaKa-Klicker - Nachrichten für Kinder", neue Funktion
@@ -111,6 +129,7 @@ CHANGE HISTORY
 			xml2srt (Untertitel-Übersetzer für ARD-Videos): wg. Python3-Problemen (byte/str-
 			error) Ersatz von xbmc-File/open durch RLoad/RSave - @max62.
 			ZDFRubriken: Fix html-Müll - unescape(title).
+			Main_ZDF, Menü ZDFarabic: Hinw. auf Font Arial ergänzt.
 
 20.02.2021 3.7.5
 			PlayVideo (Modul util): 1/2sec-Pause vor xbmc.Player().seekTime ergänzt (für

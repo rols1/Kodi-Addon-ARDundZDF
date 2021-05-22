@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 13.04.2021
+#	Stand: 10.05.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -583,6 +583,9 @@ def get_masterm3u8(rec_list):					# passende master.m3u8 wählen
 #	(link_url). KatSub extrahiert den Seiten-Ausschnitt (-> GetContent).
 #	Falls die Beitragszahl < 2 ist, lässt KatSub zusätzl. die verlinkte 
 #	Webseite auswerten. Die Seitensteuerung folgt zum Schluss (nexturl).  
+# 10.05.2021 Webseite geändert: Abschluss Kategorien nun ab
+#	page.find('"pageNumber"', pos1+300). Auswertung der zusätzl. Beiträge
+#	belassen.
 #
 def Kategorien(title='', path=''):
 	PLog("Kategorien: " + title)
@@ -599,7 +602,7 @@ def Kategorien(title='', path=''):
 			return li
 		
 		pos1 = page.find(':"Alle Kategorien')				# ausschneiden
-		pos2 = page.find(':"Alle Sendungen', pos1+1)	
+		pos2 = page.find(':"Alle Sendungen', pos1+1)		# 10.05.2021 geändert. s.o.
 		PLog("pos1: %d, pos2: %d" % (pos1, pos2))
 		if pos2 == -1:										# Fallback  
 			pos2 = len(page)

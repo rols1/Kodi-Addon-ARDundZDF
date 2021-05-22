@@ -199,7 +199,7 @@ def phoenix_Search(query='', nexturl=''):
 	PLog(path)
 	page, msg = get_page(path=path)	
 	if page == '':						
-		msg1 = 'Fehler in Suche: %s' % title
+		msg1 = 'Fehler in Suche: %s' % query
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li
