@@ -9,7 +9,7 @@
 #	22.11.2019 Migration Python3 Modul six + manuelle Anpassungen
 ################################################################################
 #
-# Stand: 05.02.2021
+# Stand: 26.02.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -75,10 +75,12 @@ imgWidth		= 840			# max. Breite Teaserbild
 imgWidthLive	= 1280			# breiter für Videoobjekt
 NAME			= 'ARD und ZDF'
 ZDFNAME			= "ZDFmobile"
+ZDFStartCacheTime = 300			# 5 Min.	
+
 
 def Main_ZDFmobile():
 	PLog('zdfmobile_Main_ZDF:')
-	
+
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD und ZDF')		# Home-Button
 	
@@ -89,7 +91,7 @@ def Main_ZDFmobile():
 	#	fanart=R(ICON_SEARCH), thumb=R(ICON_SEARCH), fparams=fparams)
 		
 	title = 'Startseite'
-	fparams="&fparams={'ID': '%s'}" % title
+	fparams="&fparams={'ID': '%s'}" % "Startpage"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Hub", fanart=R(ICON_MAIN_ZDFMOBILE), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 
@@ -97,15 +99,15 @@ def Main_ZDFmobile():
 	addDir(li=li, label="Kategorien", action="dirList", dirID="resources.lib.zdfmobile.Hub", fanart=R(ICON_MAIN_ZDFMOBILE), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 
-	fparams="&fparams={'ID': 'Sendungen A-Z'}"
+	fparams="&fparams={'ID': 'Sendungen_A-Z'}"
 	addDir(li=li, label="Sendungen A-Z", action="dirList", dirID="resources.lib.zdfmobile.Hub", fanart=R(ICON_MAIN_ZDFMOBILE), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 
-	fparams="&fparams={'ID': 'Sendung verpasst'}"
+	fparams="&fparams={'ID': 'Sendung_verpasst'}"
 	addDir(li=li, label="Sendung verpasst", action="dirList", dirID="resources.lib.zdfmobile.Hub", fanart=R(ICON_MAIN_ZDFMOBILE), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 
-	fparams="&fparams={'ID': 'Live TV'}"
+	fparams="&fparams={'ID': 'Live_TV'}"
 	addDir(li=li, label='Live TV', action="dirList", dirID="resources.lib.zdfmobile.Hub", fanart=R(ICON_MAIN_ZDFMOBILE), 
 	thumb=R(ICON_DIR_FOLDER), fparams=fparams, summary='nur in Deutschland zu empfangen!')
 
@@ -118,51 +120,52 @@ def Hub(ID):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=ZDFNAME)				# Home-Button
 	
-	if ID=='Startseite':
+	if ID=='Startpage':
 		# lokale Testdatei:
 		# path = '/daten/entwicklung/Plex/Codestuecke/ZDF_JSON/ZDF_start-page.json'
 		# page = Resource.Load(path)
 		path = 'https://zdf-cdn.live.cellular.de/mediathekV2/start-page'
 	
 	if ID=='Kategorien':
-		path = 'https://zdf-cdn.live.cellular.de/mediathekV2/categories'
+		path = 'https://zdf-cdn.live.cellular.de/mediathekV2/categories-overview'
 		
-	if ID=='Sendungen A-Z':
+	if ID=='Sendungen_A-Z':
 		path = 'https://zdf-cdn.live.cellular.de/mediathekV2/brands-alphabetical'
 		
-	if ID=='Sendung verpasst':
-		li = Verpasst(DictID='Verpasst')	
+	if ID=='Sendung_verpasst':
+		li = Verpasst(DictID='mobile_Verpasst')	
 		return li		# raus - jsonObject wird in Verpasst_load geladen	
 
-	if ID=='Live TV':
+	if ID=='Live_TV':
 		now 	= datetime.datetime.now()
 		datum 	= now.strftime("%Y-%m-%d")	
 		path = 'https://zdf-cdn.live.cellular.de/mediathekV2/live-tv/%s' % datum	
 
-	page = loadPage(path)
 
-	if len(page) == 0 or str(page).startswith('Fehler'):
-		msg1 = 'Fehler beim Abruf von:'
-		msg2 = path
-		MyDialog(msg1, msg2, '')
-		xbmcplugin.endOfDirectory(HANDLE)
+	# Im Cache wird das jsonObject abgelegt, Name: "mobile_%s" % ID
+	page = Dict("load", "mobile_%s" % ID, CacheTime=ZDFStartCacheTime)	# 5 min				
+	if page == False:										# nicht vorhanden oder zu alt
+		page = loadPage(path)								# vom Sender holen		
+		if len(page) == 0 or str(page).startswith('Fehler'):
+			msg1 = 'Fehler beim Abruf von:'
+			msg2 = path
+			MyDialog(msg1, msg2, '')
+			xbmcplugin.endOfDirectory(HANDLE)
+		else:
+			jsonObject = json.loads(page)
+			Dict('store', "mobile_%s" % ID, jsonObject)		# jsonObject speichern
+	else:
+		jsonObject = page
 		
-	jsonObject = json.loads(page)	
-	
-	if ID=='Startseite':		# speichern
-		Dict('store', ID, jsonObject)
-		li = PageMenu(li,jsonObject,DictID='Startpage')		
+	PLog("jsonObject1: " + str(jsonObject)[:100])
+	if ID=='Startpage':		# speichern
+		li = PageMenu(li,jsonObject,DictID='mobile_Startpage')		
 	if ID=='Kategorien':
-		Dict("store", ID, jsonObject)
-		li = PageMenu(li,jsonObject,DictID='Kategorien')		
-	if ID=='Sendungen A-Z':
-		v = 'A_Z'
-		Dict("store", v, jsonObject)
-		li = PageMenu(li,jsonObject,DictID='A_Z')		
-	if ID=='Live TV':
-		v = 'Live'
-		Dict("store", v, jsonObject)
-		li = PageMenu(li,jsonObject,DictID='Live')	
+		li = PageMenu(li,jsonObject,DictID='mobile_Kategorien')		
+	if ID=='Sendungen_A-Z':
+		li = PageMenu(li,jsonObject,DictID='mobile_Sendungen_A-Z')		
+	if ID=='Live_TV':
+		li = PageMenu(li,jsonObject,DictID='mobile_Live_TV')	
 
 	return li
 
@@ -199,19 +202,24 @@ def Verpasst_load(path, datum):		# 5 Tages-Abschnitte in 1 Datei, path -> DictID
 	PLog('Verpasst_load:' + path)
 	li = xbmcgui.ListItem()
 	
-	page = loadPage(path)		
-	if page.startswith('Fehler') or page == '':
-		msg1 = 'Fehler beim Abruf von:'
-		msg2 = path
-		MyDialog(msg1, msg2, '')
-		xbmcplugin.endOfDirectory(HANDLE)
-	PLog(len(page))
+	jsonpath = path.split('/')[-1]							# Pfadende -> Dict-ID 
+	DictID = 'mobile_Verpasst_%s' % jsonpath				# DictID mit Datum
 	
-	jsonObject = json.loads(page)
-	path = path.split('/')[-1]			# Pfadende -> Dict-ID
-	v = path
-	Dict("store", v, jsonObject)
-	li = PageMenu(li,jsonObject,DictID=path)
+	page = Dict("load", DictID, CacheTime=ZDFStartCacheTime)# 5 min				
+	if page == False:										# nicht vorhanden oder zu alt
+		page = loadPage(path)								# vom Sender holen		
+		if len(page) == 0 or str(page).startswith('Fehler'):
+			msg1 = 'Fehler beim Abruf von:'
+			msg2 = path
+			MyDialog(msg1, msg2, '')
+			xbmcplugin.endOfDirectory(HANDLE)
+		else:
+			jsonObject = json.loads(page)
+			Dict('store', DictID, jsonObject)		# jsonObject speichern
+	else:
+		jsonObject = page
+	
+	li = PageMenu(li,jsonObject,DictID)
 	xbmcplugin.endOfDirectory(HANDLE)
 				
 # ----------------------------------------------------------------------
@@ -259,20 +267,38 @@ def PageMenu(li,jsonObject,DictID):										# Start- + Folgeseiten
 				path = "cluster|%d|teaser" % counter
 				if "name" in clusterObject:
 					title = clusterObject["name"]
-				if title == '':											# "teaser": [..
-					title = clusterObject["teaser"][0]['titel']
+				if title == '':											# "teaser": [.. - kann leer sein
+					PLog(clusterObject["teaser"])
+					if clusterObject["teaser"]:
+						title = clusterObject["teaser"][0]['titel']
 				
-				# keine personalisierten Inhalte
-				if 'Weiterschauen' in title or u'Das könnte Dich' in title or 'Derzeit beliebt' in title:							
+				# keine personalisierten Inhalte:
+				skip_list = [u'Weiterschauen', u'Das könnte Dich', u'Derzeit beliebt',
+							u'Mein Programm', u'Vorab in der', u'Letzte Chance', 'Beliebte',
+							 ]
+				skip=False						
+				for t in skip_list:
+					# PLog("t: %s, title: %s" % (t, title))
+					if title.startswith(t):
+						PLog("skip: %s" % title)
+						skip = True 
+				if skip:
 					continue 
-
+				if u'könnten Dich interessieren' in title:
+					continue 
+					
 				if title == '':
-					title = 'ohne Titel'
+					title = 'ohne Titel'								# ?
+					continue
+					
 				title = repl_json_chars(title)
 				PLog(title); PLog(path);  
-				fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s'}"  % (path, title, DictID)
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.SingleRubrik", 				
-					fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
+				if DictID == 'mobile_Kategorien':						# cluster|0|teaser direkt, skip Button A-Z
+					SingleRubrik(path, title, DictID)
+				else:
+					fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s'}"  % (path, title, DictID)
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.SingleRubrik", 				
+						fanart=R(ICON_MAIN_ZDFMOBILE), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 								
 	if("broadcastCluster" in jsonObject):								# 
 		PLog('PageMenu broadcastCluster')
@@ -357,7 +383,7 @@ def Get_content(stageObject, maxWidth):
 def SingleRubrik(path, title, DictID):	
 	PLog('SingleRubrik: %s' % path); PLog(DictID)
 	path_org = path
-	
+
 	jsonObject = Dict("load", DictID)
 	jsonObject = GetJsonByPath(path, jsonObject)
 	if jsonObject == '':					# index error
@@ -368,7 +394,8 @@ def SingleRubrik(path, title, DictID):
 	# RSave("/tmp/x_SingleRubrik.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID=ZDFNAME)				# Home-Button
+	if DictID != "mobile_Kategorien":		# direkt aus PageMenu
+		li = home(li, ID=ZDFNAME)			# Home-Button
 	
 	i=0
 	for entry in jsonObject:
@@ -419,7 +446,9 @@ def GetJsonByPath(path, jsonObject):
 		return jsonObject
 	path = path.split('|')
 	i = 0
+
 	try:									# index error möglich
+		index=0
 		while(i < len(path)):
 			if(isinstance(jsonObject,list)):
 				index = int(path.pop(0))
@@ -428,9 +457,10 @@ def GetJsonByPath(path, jsonObject):
 			PLog('i=%s, index=%s' % (i,index))
 			jsonObject = jsonObject[index]
 	except Exception as exception:
-		PLog(str(exception))
+		PLog("Error: " + str(exception))
 		return ''			# Aufrufer muss beenden
-	#PLog(jsonObject)
+		
+	# PLog(jsonObject)
 	return jsonObject	
 # ----------------------------------------------------------------------
 # 07.10.2019 Stringauswertung get_formitaeten2 für neue 
@@ -441,6 +471,8 @@ def ShowVideo(path, DictID, Merk='false'):
 	PLog(Merk)
 	
 	jsonObject = Dict("load", DictID)
+	PLog(type(jsonObject))
+
 	videoObject = GetJsonByPath(path,jsonObject)
 	# Debug:
 	# RSave("/tmp/x_ShowVideo.json", json.dumps(videoObject, sort_keys=True, indent=2, separators=(',', ': ')))
@@ -470,9 +502,9 @@ def ShowVideo(path, DictID, Merk='false'):
 		
 		# Debug:
 		# RSave("/tmp/x_ShowVideo_multi.json", json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
-		Dict("store", 'ShowVideo_multi', jsonObject)
-		li = PageMenu(li,jsonObject,DictID='ShowVideo_multi')	# Rubrik o.ä. (key "cluster")	
-		return li
+		Dict("store", 'mobile_ShowVideo_multi', jsonObject)
+		return PageMenu(li,jsonObject,DictID='mobile_ShowVideo_multi')	# Rubrik o.ä. (key "cluster")
+
 	
 	PLog('Einzelbeitrag')								# Einzelbeitrag
 	typ,title,subTitle,descr,img,date,dauer = Get_content(videoObject,imgWidthLive)
@@ -819,7 +851,7 @@ def loadPage(url, apiToken='', maxTimeout = None):
 		# PLog("headers: " + str(r.headers))
 		doc = r.read()
 		PLog(len(doc))
-		doc = doc.decode('utf-8')	
+		doc = doc.decode('utf-8')
 		return doc
 		
 	except Exception as exception:

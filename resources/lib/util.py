@@ -933,7 +933,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		header = header.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 		header = json.loads(header)
 		PLog("header: " + str(header)[:100]);
-
+		
 	# path = transl_umlaute(path)				# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
 	# path = unquote(path)						# scheitert bei quotierten Umlauten, Ersatz replace				
 	path = path.replace('https%3A//','https://')# z.B. https%3A//classic.ardmediathek.de
@@ -952,7 +952,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		PLog("get_page1:")
 		...
 	'''
-	
+
 	if page == '':
 		try:															# 2. Versuch ohne SSLContext 
 			PLog("get_page2:")

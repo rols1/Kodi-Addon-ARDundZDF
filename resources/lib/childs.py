@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 25.04.2021
+#	Stand: 28.05.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -374,7 +374,8 @@ def Kiraka_shows(title):
 	for s in items:
 		img = stringextract('url" : "', '"', s)
 		stitle = stringextract('headline" : "', '"', s)
-		mp3url = "https:" + stringextract('audioURL" : "', '"', s)
+		webid = stringextract('"@id" : "', '"', s) # url" : "https://www1.wdr.de/mediathek/..
+		
 		dur = stringextract('duration" : "', '"', s)		# Bsp. PT55M38S
 		dur = dur[2:5]										# min ausschneiden
 		dur = dur.replace('M', ' min')
@@ -384,17 +385,23 @@ def Kiraka_shows(title):
 		Plot = tag
 		
 		PLog('Satz5:')
-		PLog(img); PLog(stitle); PLog(mp3url); PLog(Plot);
-		stitle=py2_encode(stitle); mp3url=py2_encode(mp3url);
+		PLog(img); PLog(stitle); PLog(webid); PLog(Plot);
+		stitle=py2_encode(stitle); webid=py2_encode(webid);
 		thumb=py2_encode(img); Plot=py2_encode(Plot); 
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3url), 
+			
+		fparams="&fparams={'webid': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(webid), 
 			quote(stitle), quote(thumb), quote_plus(Plot))
-		addDir(li=li, label=stitle, action="dirList", dirID="PlayAudio", fanart=GIT_KIR, thumb=thumb, fparams=fparams, 
-			tagline=tag, mediatype='music')
+		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kiraka_get_mp3", \
+			fanart=GIT_KIR, thumb=thumb, fparams=fparams, tagline=tag, mediatype='music')
+			
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-# ----------------------------------------------------------------------			
+# ----------------------------------------------------------------------
+# Kinderhörspiele
+# die ermittelte webid wird in Kiraka_get_mp3 zur Web-Url. Auf der
+#	Webseite wird dann die mp3-Quelle ermittelt.
+#			
 def Kiraka_pods(title):
 	PLog('Kiraka_pods:')
 	li = xbmcgui.ListItem()
@@ -412,30 +419,80 @@ def Kiraka_pods(title):
 	
 	items = blockextract('podcast-102-entry=', page)	
 	for s in items:
-		img = base + stringextract('srcset="', '"', s)
+		img = stringextract('srcset="', '"', s)
+		if img.startswith('//'):				# //www1.wdr.de/..
+			img = 'https:' + img
+		else:									# /radio/kiraka/..
+			img = base + img
 		stitle = stringextract('mediaTitle">', '</', s)
-		mp3url = "https:" + stringextract('audioURL" : "', '"', s)
+		webid = stringextract("'id':'", "'", s) # podcast-102-entry="{'id':'audio-wie-viele..
+			
 		day = stringextract('mediaDate">', '</', s)	
 		dur = stringextract('mediaDuration">', '</', s)	
 		dur = cleanhtml(dur)
 		descr = stringextract('"text">', '</p', s)
-		descr = mystrip(descr)										
+		descr = mystrip(descr); descr = unescape(descr)										
 		
 		tag = "%s | %s | %s | %s\n\n%s" % (title, stitle, day, dur, descr)
-		Plot = tag.replace('\n', '||')
+		Plot = tag.replace('\n', '||'); 
 		
 		PLog('Satz6:')
-		PLog(img); PLog(stitle); PLog(mp3url); PLog(Plot);
-		stitle=py2_encode(stitle); mp3url=py2_encode(mp3url);
+		PLog(img); PLog(stitle); PLog(webid); PLog(Plot);
+		stitle=py2_encode(stitle); webid=py2_encode(webid);
 		thumb=py2_encode(img); Plot=py2_encode(Plot); 
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3url), 
+		fparams="&fparams={'webid': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(webid), 
 			quote(stitle), quote(thumb), quote_plus(Plot))
-		addDir(li=li, label=stitle, action="dirList", dirID="PlayAudio", fanart=GIT_KIR_SHOWS, thumb=thumb, fparams=fparams, 
-			tagline=tag, mediatype='music')
+		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kiraka_get_mp3", \
+			fanart=GIT_KIR_SHOWS, thumb=thumb, fparams=fparams, tagline=tag, mediatype='music')
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 # ----------------------------------------------------------------------
+# mp3-Quelle ermitteln + direkt zu PlayAudio
+# Aufrufer Kiraka_pods, Kiraka_klick (2. Durchlauf)
+def Kiraka_get_mp3(webid, title, thumb, Plot):
+	PLog('Kiraka_get_mp3: ' + webid)
+
+	if webid.startswith('http') == False:					# kompl. Url bei Klicker-Nachrichten, nicht bei Pods
+		base = "https://kinder.wdr.de/radio/kiraka/hoeren/hoerspiele/"
+		path = base + webid + ".html"
+	else:
+		path = webid
+	page, msg = get_page(path)	
+	if page == '':	
+		msg1 = "Fehler in Kiraka_klick"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	PLog(len(page))	
+
+	mp3url=''
+	if '"mediaObj":' in page:								# mit + ohne Download-Button
+		PLog("Lade mediaObj:")
+		dl_js = stringextract('"mediaObj":', 'title="Audio starten"', page)
+		dl_js = stringextract('url":"', '"', dl_js)		# java -> json-Seite mit mp3
+		page, msg = get_page(dl_js)
+		mp3url = stringextract('audioURL":"', '"', page)			
+	else:
+		msg1 = u"Kiraka_get_mp3: MediaObjekt nicht gefunden für"
+		msg2 = ">%s<" % title
+		MyDialog(msg1, msg2, '')	
+		return li
+
+	if mp3url.startswith('//'):
+		mp3url = "https:" + mp3url
+	else:
+		if mp3url:
+			mp3url = base + mp3url
+		else:
+			stitle = stitle + " | keine mp3-Quelle gefunden!"
+	
+	PLog('Satz7:')
+	PLog(title); PLog(mp3url); PLog(Plot);
+	PlayAudio(mp3url, title, thumb, Plot, header=None, url_template=None, FavCall='')
+	return
+# ----------------------------------------------------------------------
+# Nachrichten für Kinder
 # 2 Durchgänge:
 #	1. Übersicht der Beiträge
 #	2. Weburl: Zielseite mit mp3url
@@ -458,60 +515,36 @@ def Kiraka_klick(title, weburl=''):
 		return li
 	PLog(len(page))	
 	
-	
 	if weburl == '':							# 1. Durchlauf: Übersicht
 		items = blockextract('class="teaser">', page)	
 		for s in items:
-			if '"Javascript-Fehler"' in s:
+			if '"Javascript-Fehler"' in s or 'class="media mediaA audio' not in s:
 				continue
-			weburl = base + stringextract('href="', '"', s)
+			weburl = base + stringextract('href="', '"', s)	# abweichend von Kiraka_pods
 			img = stringextract('srcset="', '"', s)
 			if img.startswith('//'):
 				img = "https:" + img
 			else:
 				img = base + img
 			stitle = stringextract('title="', '"', s)		# href-title
+			stitle = unescape(stitle)
 			descr = stringextract('teasertext">', '&nbsp', s)
 			descr = mystrip(descr)										
 			
 			tag = "%s\n\n%s" % (stitle, descr)
-			
-			PLog('Satz6:')
-			PLog(img); PLog(stitle); PLog(weburl);
-			stitle=py2_encode(stitle); weburl=py2_encode(weburl);
-			fparams="&fparams={'weburl': '%s', 'title': '%s'}" % (quote(weburl), quote(stitle))
-			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kiraka_klick", 
-				fanart=GIT_KIR_KLICK, thumb=img, fparams=fparams, tagline=tag)
-				
-	else:										# 2. Durchlauf: Zielseite
-		page=py2_encode(page)
-		items = blockextract('"AudioObject",', page)	# 1 Block, wie Kiraka_pods
-		for s in items:
-			img = stringextract('url" : "', '"', s)
-			stitle = stringextract('headline" : "', '"', s)
-			mp3url = "https:" + stringextract('audioURL" : "', '"', s)
-			dur = stringextract('duration" : "', '"', s)		# Bsp. PT55M38S
-			dur = dur[2:5]										# min ausschneiden
-			dur = dur.replace('M', ' min')
-			if dur.startswith('00'):							# werte < 1 min korrig.
-				dur = "1 min"
-			descr = stringextract('tion" : "', '"', s)
-			
-			
-			tag = "%s | %s\n\n%s" % (stitle, dur, descr)
 			Plot = tag.replace('\n', '||')
-		
-			PLog('Satz7:')
-			PLog(img); PLog(title); PLog(mp3url); PLog(Plot);
 			
-			stitle=py2_encode(stitle); mp3url=py2_encode(mp3url);
+			PLog('Satz6:')		
+			PLog(img); PLog(stitle); PLog(weburl); PLog(Plot);
+			stitle=py2_encode(stitle); weburl=py2_encode(weburl);
 			thumb=py2_encode(img); Plot=py2_encode(Plot); 
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3url), 
+			fparams="&fparams={'webid': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(weburl), 
 				quote(stitle), quote(thumb), quote_plus(Plot))
-			addDir(li=li, label=stitle, action="dirList", dirID="PlayAudio", fanart=GIT_KIR_KLICK, 
-				thumb=thumb, fparams=fparams, tagline=tag, mediatype='music')
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
+			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kiraka_get_mp3", \
+				fanart=GIT_KIR_KLICK, thumb=thumb, fparams=fparams, tagline=tag, mediatype='music')
+				
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
+
 # ----------------------------------------------------------------------
 # alle Videos - erster Aufruf A-Z-Liste ../allevideos-buendelgruppen100.html, 
 #	zweiter Aufruf: Liste einer Gruppe 

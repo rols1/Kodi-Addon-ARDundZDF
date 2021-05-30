@@ -246,7 +246,7 @@ def ARDStart(title, sender, widgetID=''):
 		else:
 			ID = 'ARDStart'			
 		
-		PLog('Satz_cont:');
+		PLog('Satz_cont1:');
 		PLog(title); PLog(ID); PLog(anz); PLog(img); 
 		path=py2_encode(path); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
@@ -300,6 +300,51 @@ def img_preload(ID, path, title, caller):
 	return fname										# lokaler img-Pfad
 	
 #---------------------------------------------------------------------------------------------------
+# Auflistung der Rubriken in json-Seite page
+def ARDRubriken(li, page): 
+	PLog('ARDRubriken:')
+
+	container = blockextract ('compilationType":', page)  	# Test auf Rubriken
+	PLog(len(container))
+	title_list=[]
+	for cont in container:
+		title 	= stringextract('"title":"', '"', cont)		
+		if title in title_list:								# Doppel? - s.o.
+			break
+		title_list.append(title)
+
+		ID	= stringextract('"id":"', '"', cont)
+		anz= stringextract('"totalElements":', '}', cont)
+		anz= mystrip(anz)
+		PLog("anz: " + anz)
+		if anz == '1':
+			tag = u"%s Beitrag" % anz
+		else:
+			if anz == "null": anz='mehrere'
+			tag = u"%s Beiträge" % anz
+
+		path 	= stringextract('"href":"', '"', cont)
+		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
+		img 	= stringextract('"src":"', '"', cont)		# mehrere Formate möglich, 1. Treffer
+		img 	= img.replace('{width}', '640'); 
+		if img == '':
+			# img = img_preload(ID, path, title, 'ARDStart')# kann dauern..
+			img = R(ICON_DIR_FOLDER)
+
+		ID = 'ARDStartRubrik'
+		PLog('Satz_cont2:');
+		PLog(title); PLog(ID); PLog(anz); PLog(img); 
+		path=py2_encode(path); title=py2_encode(title); 
+		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
+			(quote(path), quote(title), ID)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
+			tagline=tag, fparams=fparams)
+			
+	return
+
+###################################################			
+
+#---------------------------------------------------------------------------------------------------
 # Auflistung einer Rubrik aus ARDStart - geladen wird das json-Segment für die Rubrik, z.B.
 #		page.ardmediathek.de/page-gateway/widgets/ard/editorials/5zY7iWtNzGagawo0A86Y6U?pageNumber=0&pageSize=12
 #		path enthält entweder den Link zur html-Seite www.ardmediathek.de (ID=Swiper) oder den Link
@@ -342,12 +387,15 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	PLog(len(page))
 	page = page.replace('\\"', '*')						# quotierte Marks entf.
 
-	mehrfach=False; mediatype=''
-	if 'Livestream' in ID:
-		gridlist = blockextract('"broadcastedOn"', page)
-			
+#----------------------------------------
 	mark=''
-	li = get_page_content(li, page, ID, mark)			# Auswertung Rubriken																	
+	container = blockextract ('compilationType":', page)  	# Test auf Rubriken
+	PLog(len(container))
+	if len(container) > 1:
+		ARDRubriken(li, page)								# direkt
+	else:
+		li = get_page_content(li, page, ID, mark)			# Auswertung Rubriken																	
+#----------------------------------------
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
 	#	pagination mit Basispfad immer vorhanden, Mehr-Button abhängig von Anz. der Beiträge
@@ -495,38 +543,8 @@ def ARDRetro():
 	# json:
 	page = stringextract('<body', '</body>', page)
 	# Rubriken: 
-	container = blockextract ('compilationType":', page)  	# Container json-Bereich (Swiper + Rest)
-	PLog(len(container))
-	title_list=[]											# für Doppel-Erkennung
-	for cont in container:
-		title 	= stringextract('"title":"', '"', cont)		
-		if title in title_list:								# Doppel? - s.o.
-			break
-		title_list.append(title)
+	ARDRubriken(li, page)
 
-		ID	= stringextract('"id":"', '"', cont)
-		anz= stringextract('"totalElements":', '}', cont)
-		anz= mystrip(anz)
-		PLog("anz: " + anz)
-		if anz == '1':
-			tag = u"%s Beitrag" % anz
-		else:
-			if anz == "null": anz='mehrere'
-			tag = u"%s Beiträge" % anz
-
-		path 	= stringextract('"href":"', '"', cont)
-		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
-		img = img_preload(ID, path, title, 'ARDStart')
-
-		ID = 'ARDRetroStart'
-		PLog('Satz_cont:');
-		PLog(title); PLog(ID); PLog(anz); PLog(img); 
-		path=py2_encode(path); title=py2_encode(title); 
-		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
-			(quote(path), quote(title), ID)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-			tagline=tag, fparams=fparams)
-		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #---------------------------------------------------------------------------------------------------
@@ -666,12 +684,12 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			else:
 				fname = "%s/full_shows_ARD" % SETTINGS.getSetting('pref_mark_full_shows')
 			shows = ReadTextFile(fname)
-			PLog(len(shows))
+			PLog('full_shows_lines: %d' % len(shows))
 				
 			for show in shows:
 				sd, md = show.split("|")
 				sd = u'title":"%s' % sd						# Bsp. 'title":"Querbeet|40'
-				PLog(sd); PLog(md); PLog(up_low(sd) in up_low(s));
+				#PLog(sd); PLog(md); PLog(up_low(sd) in up_low(s));
 				if up_low(sd) in up_low(s):					# Show in Datensatz?
 					md_rec = stringextract('duration":', ',', s)
 					PLog("md_rec: " + md_rec)

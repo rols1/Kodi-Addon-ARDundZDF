@@ -9,6 +9,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+30.05.2021 3.8.5
+			Main_ZDFmobile (Modul ZDFmobile): falsche ID korrigiert (Startseite -> 
+			Startpage) - Videos der Startseite waren nicht zugänglich.
+			Modul ZDFmobile: Cache-Nutzung für die json-Objekte (5 min), DictID's
+			vereinheitlicht, Fix Rubriken (api-Url, Direktsprung in PageMenu).
+			phoenix_Search (Modul phoenix): Url für die Suche aktualisiert (von
+			phoenix geändert).
+			ARDStartRubrik (Modul ARD Neu): obsoleten Code entfernt (zw. page.replace und
+			mark='').
+			Modul ARD Neu: fehlende Clusterung bei Webseiten ergänzt - neue Funktion
+			ARDRubriken (relevant für Start/Themenwelten, Start/Genrezugänge
+			ZDFSportLive: Integration www.zdf.de/sport/olympia (@Weri).
+			ZDFSportLive: Anpassung an ZDF-Änderung (Live-Videolink nicht mehr in Web-
+			seite - Ermittlung via apiToken). 
+			Modul ZDFmobile: leere clusterObject["teaser"] in PageMenu abgefangen (
+			personalisierte Inhalte: 'Mein Programm', 'Vorab in der ..', ..).
+			Kiraka_pods (Modul childs): unescape descr (Hochkommata in Beschreibung),
+			dto. Kiraka_pods, https für Bildquelle //www1.wdr.de ergänzt.
+			Modul childs: mp3-Quelle für Kiraka_shows, Kiraka_klick und Kiraka_pods via 
+			Kiraka_shows ermittelt (Quelle fehlt bei Seiten ohne Download -Button), neue
+			Kiraka_shows Kiraka_get_mp3, 2. Durchlauf bei Kiraka_klick entfernt (obsolet).
+
 22.05.2021 3.8.4
 			AudioStart (Audiothek): Bez. Highlights geändert in Entdecken (wie Webseite).
 			Audio_get_rubriken (Audiothek): Bildtitel 'nullnull© null' entfernt.

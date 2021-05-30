@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.8.4'
-VDATE = '22.05.2021'
+VERSION = '3.8.5'
+VDATE = '30.05.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1083,7 +1083,7 @@ def Main_ZDF(name):
 		thumb=R('ZDFenglish.png'), fparams=fparams)
 
 	fparams="&fparams={'title': 'ZDFarabic'}"
-	tag = u'für die Darstellung der arabischen Schrift bitte in Kodis Einstellungen für die Benutzerobefläche '
+	tag = u'für die Darstellung der arabischen Schrift bitte in Kodis Einstellungen für die Benutzeroberfläche '
 	tag = tag + u'den Font [B]Arial [/B]auswählen'
 	addDir(li=li, label="ZDFarabic", action="dirList", dirID="International", fanart=R('ZDFarabic.png'), 
 		thumb=R('ZDFarabic.png'), tagline=tag, fparams=fparams)
@@ -7611,7 +7611,10 @@ def ZDFStart(title, show_cluster='', path=''):
 		Logo	= 'ZDFtivi'
 		ID 		= 'Kinderprogramme'								
 		
-	page, msg = get_page(path=BASE)
+	#headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+	#'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}"
+	headers=''
+	page, msg = get_page(path=BASE, header=headers)
 	if page == '':
 		msg1 = "%s-Startseite nicht im Web verfügbar." % Logo
 		msg2 = msg
@@ -8149,7 +8152,7 @@ def ZDFRubriken(name):
 
 	path = 'https://www.zdf.de/doku-wissen'		# Rubriken im Dropdown-Menü
 	page = Dict("load", "ZDF_Rubriken", CacheTime=CacheTime)
-	if page == False:								# Cache miss - vom Sender holen
+	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
 		page, msg = get_page(path=path)
 		Dict("store", "ZDF_Rubriken", page) 					# Seite -> Cache: aktualisieren	
 	if page == '':
@@ -8851,7 +8854,8 @@ def BarriereArmSingle(path, title, clus_title='', ID=''):
 # 29.04.2019 Button für Livestream wieder entfernt (Streams wechseln), dto. Eintrag livesenderTV.xml
 # 20.12.2020 Eventstreams aufgenommen (analog ARDSport)
 # 12.11.2021 Einfügung zeitl. begrenzter Events (Wintersport, Handball-WM) - ähnl. ARDSportPanel
-#
+# 27.05.2021 Live-Videolink nicht mehr in Webseite - Ermittlung via apiToken in ZDF_getVideoSources
+# 
 def ZDFSportLive(title):
 	PLog('ZDFSportLive:'); 
 	title_org = title
@@ -8869,37 +8873,54 @@ def ZDFSportLive(title):
 	PLog(len(page))
 	 	
 	# s.u. Ausfilterung Livestream-Satz 
-	if 'ellipsis">Jetzt live<' in page:								# 1. LIVESTREAM läuft!
-		pos = page.find('>Derzeit live<')							# bei Bedarf anpassen
-		rec = page[pos:]
-		# img = R(ICON_DIR_FOLDER)									# Quelle im Web unsicher
-		img = ZDF_get_img(rec)
-		mediatype='' 		
-		if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-			mediatype='video'
-		href = stringextract('href="', '"', rec)
-		if href.startswith('http') == False:
-			href = ZDF_BASE + href
-			
-		title	= "Jetzt live: " + stringextract('title="', '"', rec)
-		title	= unescape(title); title = repl_json_chars(title)
-		title	= '[COLOR red][B]%s[/B][/COLOR]' % title
-		video	= stringextract('icon-502_play icon ">', '</dl>', rec)
-		descr = cleanhtml(video); descr = mystrip(descr)
+	PLog('isLivestream": true' in page)
+	PLog('isLivestream" : true' in page)
+	PLog('isLivestream":true' in page)
+	
+	if 'ellipsis">Jetzt live<' in page:							# LIVESTREAM läuft!	
+		items = blockextract('class="artdirect"', page)
+		rec=''
+		for item in items:
+			if 'ellipsis">Jetzt live<' in item:
+				rec = item
+				break
 		
-		PLog('Satz_Live:')
-		PLog(href); PLog(img); PLog(title); PLog(descr); 
-		title=py2_encode(title); descr=py2_encode(descr);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" % (quote(href),
-			quote(title), img, quote(descr))	
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
-			fparams=fparams, summary=descr, mediatype=mediatype)
+		if 	rec:		
+			# img = R(ICON_DIR_FOLDER)									# Quelle im Web unsicher
+			img = ZDF_get_img(rec)
+			mediatype='' 		
+			if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+				mediatype='video'
+
+			# 2 versch. token auf der Seite - beide funktionieren. Alternativ kann die 
+			# videodat_url auch auf der Ziel-Webseite ermittelt werden ("data-dialog="):
+			#	"contentUrl": "https://api.zdf.de/tmd/2/{playerId}/live/ptmd/100-130957"
+			#	-> PlayVideo
+			apiToken = stringextract("apiToken: '", "'", page)  # 1. apiToken
+			sid = stringextract('targetAssetId": "', '"', rec)
+				
+			title	= "Jetzt live: " + stringextract('title="', '"', rec) # href-Zielseite
+			title	= unescape(title); title = repl_json_chars(title)
+			title	= '[COLOR red][B]%s[/B][/COLOR]' % title
+			video	= stringextract('icon-502_play icon ">', '</dl>', rec)
+			descr = cleanhtml(video); descr = mystrip(descr)
+			
+			PLog('Satz_Live:')
+			PLog(path); PLog(img); PLog(title); PLog(descr); 
+			title=py2_encode(title); descr=py2_encode(descr); 
+			path=py2_encode(path); apiToken=py2_encode(apiToken);
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s', 'apiToken': '%s', 'sid': '%s'}" % (quote(path),
+				quote(title), img, quote(descr), quote(apiToken))	
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
+				fparams=fparams, summary=descr, mediatype=mediatype)
 
 	# Einfügung zeitl. begrenzter Events ähnlich ARDSportPanel (Wintersport,  Handball-WM)
+	# Ausleitung via class="b-cluster" in ZDF_Sendungen. Button nur, wenn Thema dort gefunden
+	# 	wird
 	PLog('Handball-WM:')
 	theme_list = [u'Wintersport|https://www.zdf.de/sport/wintersport', 
 		u'Handball-WM|https://www.zdf.de/sport/handball/ihf-wm-weltmeisterschaft-live-livestream-spielplan-100.html',
-		u'Fußball-EM|https://www.zdf.de/sport/fussball-em'
+		u'Fußball-EM|https://www.zdf.de/sport/fussball-em', u'Olympia 2020|https://www.zdf.de/sport/olympia',
 		]						
 	for theme in theme_list:
 		PLog('link-label">%s' % theme)
@@ -8969,7 +8990,7 @@ def ZDFSportLive(title):
 		if video:
 			descr = "%s\n\n%s" % (descr, video)
 		
-		if  'ellipsis">Jetzt live<' in rec:							# Livestream-Satz ausfiltern
+		if  'isLivestream": true' in rec:							# Livestream-Satz ausfiltern
 			continue
 		if '#skiplinks' in href or href == 'https://www.zdf.de/' or descr == '':
 			continue
@@ -9431,12 +9452,12 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			else:
 				fname = "%s/full_shows_ZDF" % SETTINGS.getSetting('pref_mark_full_shows')
 			shows = ReadTextFile(fname)
-			PLog(len(shows))
+			PLog('full_shows_lines: %d' % len(shows))
 					
 			for show in shows:
 				sd, md = show.split("|")						# Bsp. heute-show|30
 				title = title.strip()
-				PLog(sd); PLog(md); PLog(title); PLog(up_low(title).startswith(up_low(sd)));
+				#PLog(sd); PLog(md); PLog(title); PLog(up_low(title).startswith(up_low(sd)));
 				if up_low(title).startswith(up_low(sd)):		# Show im Titel? (ARD Neu: im Datensatz)
 					md_rec = duration							# hier in min ((ARD Neu: sec)
 					if md_rec:

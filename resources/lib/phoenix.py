@@ -7,7 +7,7 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-#	Stand: 04.03.2021
+#	Stand: 25.05.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -181,6 +181,7 @@ def get_live_data():
 	return title,subtitle,vorspann,descr,href
 # ----------------------------------------------------------------------
 # path via chrome-tools ermittelt. Ergebnisse im json-Format
+# 25.05.2021 Suchlink an phoenix-Änderung angepasst
 #
 def phoenix_Search(query='', nexturl=''):
 	PLog("phoenix_Search:")
@@ -192,7 +193,7 @@ def phoenix_Search(query='', nexturl=''):
 		
 	query=py2_encode(query);
 	if nexturl == '':
-		path = 'https://www.phoenix.de/response/template/suche_select_json/term/%s/sort/online' % quote(query)
+		path = 'https://www.phoenix.de/suche.html?vt=%s' % quote(query)
 	else:
 		path = nexturl
 	PLog('Mark1')
