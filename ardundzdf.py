@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.8.5'
-VDATE = '30.05.2021'
+VERSION = '3.8.6'
+VDATE = '01.06.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3672,7 +3672,7 @@ def ARDStart(title):
 			msg3=''
 			if page:
 				msg2 = "Seite wurde aus dem Addon-Cache geladen."
-				msg3 = "Seite ist älter als %s Minuten (CacheTime)" % str(CacheTime/60)
+				msg3 = "Seite ist älter als %s Minuten (ARDStartCacheTime)" % str(ARDStartCacheTime/60)
 			else:
 				msg2='Startseite nicht im Cache verfuegbar.'
 			MyDialog(msg1, msg2, msg3)	
@@ -7627,13 +7627,13 @@ def ZDFStart(title, show_cluster='', path=''):
 		PLog("ZDFStart_2:")
 		if  title == "Highlights":										# Liste Highlights 
 			li = home(li, ID=ID)										# Home-Button
-			stage = stringextract('class="sb-page">', 'class="cluster-title"', page) 
+			stage = stringextract('class="sb-page">', 'class="cluster-title-wrap">', page) 
 			# ID='DEFAULT': ermöglicht Auswertung Mehrfachseiten in ZDF_get_content
 			li, page_cnt = ZDF_get_content(li=li, page=stage, ref_path=path, ID='STAGE')
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		else:													#Home-Button in ZDFRubrikSingle
 			# Cluster ermitteln:
-			content =  blockextract('class="cluster-title"', page)			
+			content =  blockextract('class="cluster-title-wrap">', page)
 			PLog('content2: ' + str(len(content)))
 			if 'class="b-promo-teaser">' in page:						# o. cluster-title
 				rec = stringextract('class="b-promo-teaser">', '</article>', page)
@@ -7727,7 +7727,7 @@ def ZDFStart(title, show_cluster='', path=''):
 # Aufrufer: ZDFStart (2x), ZDFRubrikSingle, ZDF_Sendungen
 def ZDF_get_clustertitle(rec): 							# Cluster-Titel der Startseite ermitteln
 	PLog('ZDF_get_clustertitle:');
-	# PLog(rec[:200])
+	#PLog(rec[:200])
 	
 	# ZDFtivi: ohne Blank vor >								
 	title = stringextract('cluster-title"', '<', rec)		# Ref. für ZDFRubrik
@@ -7741,8 +7741,9 @@ def ZDF_get_clustertitle(rec): 							# Cluster-Titel der Startseite ermitteln
 		title  = title[title.rfind('"')+1:]
 	title 	= title.strip(); 
 	
-	if 'tabindex="0">' in rec:								# Bsp.: tabindex="0">Sendungen</h2>
-		title = stringextract(u'tabindex="0">', '<', rec)
+	if 'tabindex="0"' in rec:								# Bsp.: tabindex="0"\n>Sendungen</h2>
+		title = stringextract(u'tabindex="0"', '<', rec)
+		title=mystrip(title); title=title[2:]				# >Film-Highlights</h2>
 	if u'Beiträge zum Thema:' in title:						# neoriginal-Serien
 		title =  stringextract(u'Beiträge zum Thema: ', '"', title)
 								
@@ -8016,7 +8017,7 @@ def ZDFSendungenAZList(title, element, ID=''):			# ZDF-Sendereihen zum gewählte
 #	02.09.2020 Abzweig zu ZDFRubrikSingle bei Cluster-Titeln (Bsp. Dinner Date,
 #		Die Küchenschlacht)
 #	19.11.2020 Ausleitung funk A-Z (aus ZDFRubrikSingle) -> ZDFSendungenAZ (Übersichtsseite)
-#	20.05.2021 ACluster + Playerbox detektieren, Ausleitung -> ZDFRubrikSingle
+#	20.05.2021 Cluster + Playerbox detektieren, Ausleitung -> ZDFRubrikSingle
 #
 def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 	PLog('ZDF_Sendungen:')
@@ -8041,7 +8042,7 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 	else:
 		li = home(li, ID='ZDF')						# Home-Button			
 
-# Abzweig funk "Alle Folgen" muss vor 'class="b-cluster">' erfolgen,
+# Abzweig funk "Alle Folgen" muss vor 'class="b-cluster' erfolgen,
 #	sonst Liste weiterer funk-Sendungen und eigentl. Beiträge werden
 #	übersprungen. 
 #----------------------------------------------		# Abzweig funk "Alle Folgen" -> ZDF_get_content
@@ -8051,11 +8052,12 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 
 #----------------------------------------------		# Abzweig Cluster -> ZDFRubrikSingle
 
-	if 'class="b-cluster"' in page:				# Cluster ermitteln, pro Cluster -> ZDFRubrikSingle
+	if 'class="b-cluster' in page:				# Cluster ermitteln, pro Cluster -> ZDFRubrikSingle
 		# if ID == 'A-Z':							
 		PLog('Abzweig_b_cluster')
 		path = url
-		cluster =  blockextract('class="cluster-title"', page, '')
+		# Cluster-Blöcke, dto. ZDF_Sendungen, ZDFRubrikSingle, ZDFStart:
+		cluster =  blockextract('class="cluster-title-wrap">', page)
 		PLog(len(cluster))
 
 		if 'data-module="zdfplayer"' in page:					# Beitrag in Playerbox Seitenanfang voranstellen
@@ -8224,7 +8226,8 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 		return li
 
 	if custom_cluster == '':										# Standard-Cluster
-		cluster =  blockextract('class="cluster-title"', page, '')	# Cluster-Blöcke
+		# Cluster-Blöcke, dto. ZDF_Sendungen, ZDFRubrikSingle, ZDFStart:
+		cluster =  blockextract('class="cluster-title-wrap">', page)# Cluster-Blöcke
 		PLog(len(cluster))
 		cluster = cluster + blockextract('"section-header-title', page)
 		if len(cluster) == 0:										# aus promo-teaser
@@ -8239,10 +8242,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 			if clus_title.startswith('>'):
 				clus_title = clus_title[1:]
 			for clus in cluster:
-				if 'tabindex="0">' in clus:								# Bsp.: tabindex="0">Sendungen</h2>
-					clustertitle = stringextract('tabindex="0">', '<', clus)
-				else:	
-					clustertitle = ZDF_get_clustertitle(rec=clus)		# Cluster-Titel ermitteln
+				clustertitle = ZDF_get_clustertitle(rec=clus)		# Cluster-Titel ermitteln
 				PLog(clus_title); PLog(clustertitle);	 # Debug
 				if clus_title in clustertitle:		# Cluster gefunden
 					PLog('gefunden: clus_title=%s, clustertitle=%s' % (clus_title, clustertitle))
@@ -8406,13 +8406,11 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 	else:										# nur Cluster listen, ohne Bilder, Blockbegrenzung s.o.
 		i=0
 		for clus in cluster:					# Cluster: cluster-title + section-header-title	- s.o.
+			clustertitle=''
 			i=i+1
 			PLog("cluster_%d" % i)
 			PLog(clus[:80])
-			if 'tabindex="0">' in clus:			# Bsp.: tabindex="0">Sendungen</h2>
-				clustertitle = stringextract('tabindex="0">', '<', clus)
-			else:	
-				clustertitle = ZDF_get_clustertitle(clustertitle)
+			clustertitle = ZDF_get_clustertitle(clus)
 				
 			label =	unescape(clustertitle); 
 			label = repl_json_chars(label)
@@ -8789,7 +8787,8 @@ def BarriereArmSingle(path, title, clus_title='', ID=''):
 		
 	PLog(len(page))
 	
-	cluster =  blockextract('class="cluster-title"', page, '') 
+	# Cluster-Blöcke, dto. ZDF_Sendungen, ZDFRubrikSingle, ZDFStart:
+	cluster =  blockextract('class="cluster-title-wrap">', page)
 	PLog(len(cluster))
 	
 	if clus_title:								# 2. Aufruf: Beiträge zu Cluster-Titel auswerten

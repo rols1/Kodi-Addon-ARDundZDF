@@ -9,6 +9,11 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+01.06.2021 3.8.6
+			ZDF Mediathek: Anpassung an Änderungen im html-Quelltext (Funktionen
+			ZDF_Sendungen, ZDFRubrikSingle, ZDF_get_clustertitle, BarriereArmSingle,
+			ZDFStart.
+
 30.05.2021 3.8.5
 			Main_ZDFmobile (Modul ZDFmobile): falsche ID korrigiert (Startseite -> 
 			Startpage) - Videos der Startseite waren nicht zugänglich.
