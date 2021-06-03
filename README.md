@@ -14,7 +14,7 @@ Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/release
 
 Die Plex-Versionen [Plex-Plugin-ARDMediathek2016](https://github.com/rols1/Plex-Plugin-ARDMediathek2016) und [ARDundZDF](https://github.com/rols1/ARDundZDF) werden nicht mehr gepflegt - Plex hat die Unterstützung für Plugins in seinen Client-Softwarepaketen eingestellt.
 
-Die ARD kündigt schon lange die Einstellung der Classic-Funktionen an. Bis zur Umsetzung verbleibt der Classic-Code im Addon.
+Die ARD kündigt schon lange die Einstellung der Classic-Funktionen an. Bis zur Umsetzung verbleibt der Classic-Code im Addon. <b>Hinweis</b>: seit Juni 2021 sind die Classic-Links nicht mehr erreichbar. Der Code im Addon wurde entfernt.
 
 #### Rückmeldungen willkommen:
 Im Forum: https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/  
@@ -25,14 +25,7 @@ direkt: rols1@gmx.de
 Funktionen: 
 ===================
 
-#### ARD Mediathek (Classic-Version):  
-- Suche nach Sendungen
-- Startseite (wie Webseite)
-- Sendung Verpasst 
-- Sendungen A-Z
-- Rubriken
-- ARD Sportschau
-- Barrierearm
+#### ARD Mediathek (Classic-Version): seit Juni 2021 entfallen  
 
 #### ARD Mediathek (neue Version):  
 - Suche nach Sendungen
@@ -41,6 +34,7 @@ Funktionen:
 - Sendungen A-Z
 - ARD Sportschau
 - Senderwahl
+- barrierefreie Angebote finden sich im Startmenü bei Rubriken oder Genrezugängen
 
 #### ZDF Mediathek: 
 - Suche nach Sendungen
