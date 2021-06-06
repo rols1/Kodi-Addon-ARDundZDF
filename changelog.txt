@@ -9,6 +9,30 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+06.06.2021 3.8.7
+			ZDF_Search, ZDF_get_content: Umstellung auf alle Beiträge (statt nur ganzen 
+			Sendungen).
+			ZDF_Sendungen: Auswertung von Einzelbeiträgen vor dem 1. Cluster.
+			Ende ARD Classic: Enfernung Settings (pref_use_classic, pref_use_audio), Ent-
+			fernung Icon ard-mediathek-classic, Menüeinträge ARD-Classic einschl. Classic-
+			Podcasts, Funktionen: Main_ARD, Main_POD, BarriereArmARD, BarriereArmARD, 
+			PageControl, SinglePage, SingleSendung, Search_refugee, Podcasts, PODMore,
+			ARD_Verpasst_Filter, get_sendungen.
+			SendungenAZ (Modul ARD Neu): Gesamtlink A-Z in Liste entfernt.
+			Einzelupdate livesenderTV.xml: Ergänzung WDR_ARD Spezial 2-3 (@Weri).
+			Menü Sport Live im ZDF: Nachbesserung Erkennung Livestream (Anpassung an
+			ZDF-Änderungen in ZDFSportLive - @Weri).
+			Menü Sport Live im ZDF: Integration Die Finals 2021 (/sport/die-finals) -
+			@Weri.
+			ARD Sportschau: Integration Die Finals 2021 (/die-finals/index.html) -
+			@Weri.
+			ARD Sportschau (ARDSportPanel): Einsatz urlparse zur Server-Ermittlung für
+			zusammengesetzte Links.
+			ARD Sportschau (ARDSport): Fuß-Panel-Link für "Mehr Sport" korrigiert (Fehler
+			in Webseite, Link führt zur Startseite).
+			ARD Sportschau (ARDSportVideo): HTTP Error 404 mit Dialog abgefangen.
+			get_summary_pre: Fix Leereintrag in summary (' | | ').
+			
 01.06.2021 3.8.6
 			ZDF Mediathek: Anpassung an Änderungen im html-Quelltext (Funktionen
 			ZDF_Sendungen, ZDFRubrikSingle, ZDF_get_clustertitle, BarriereArmSingle,

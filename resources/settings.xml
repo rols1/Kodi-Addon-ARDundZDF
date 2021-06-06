@@ -4,7 +4,6 @@
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
    	<setting label="neues Update beim Start des Plugins anzeigen" type="bool" id="pref_info_update" default="false"/>
            <setting type="sep"/>
-   	<setting label="Classic-Version der ARD Mediathek verwenden" type="bool" id="pref_use_classic" default="false"/>
     	<setting label="Mobile Version der ZDF Mediathek verwenden" type="bool" id="pref_use_zdfmobile" default="false"/>
     	<setting label="3Sat Mediathek verwenden" type="bool" id="pref_use_3sat" default="false"/>
     	<setting label="FUNK verwenden" type="bool" id="pref_use_funk" default="false"/>
@@ -23,7 +22,6 @@
 
  <category label="Radio-Podcast Einstellungen">
   	<setting label="Podcast-/Audiothek-Erweiterung verwenden" type="bool" id="pref_use_podcast" default="true"/>
-    	<setting label="ARD Audiothek statt Podcasts Classic verwenden" type="bool" id="pref_use_audio" default="true"/>
 	<setting label="Pfad zur Podcast-Favoritenliste (ohne Pfad: Ressourcenverzeichnis)" type="file" id="pref_podcast_favorits" default="podcast-favorits.txt"/>
 	<setting label="Info: die Podcast-Favoriten befinden sich in der ARD Audiothek" type="text" id="podinfo" enable="false"/>  
  </category>

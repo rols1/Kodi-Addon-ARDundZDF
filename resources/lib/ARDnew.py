@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 07.05.2021
+#	Stand 03.06.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1031,11 +1031,11 @@ def SendungenAZ(name, ID):
 							
 	for grid in gridlist:
 		tag=''
-		if 'Experiment A-Z' in grid:						# Gesamtlink
-			continue
 		button = stringextract('title":"', '"', grid)
 		#if button == 'Z':	# Debug
 		#	PLog(grid)
+		if ' A-Z' in button:								# Gesamtlink
+			continue
 			
 		title = "Sendungen mit " + button
 		anz = stringextract('totalElements":', '}', grid)

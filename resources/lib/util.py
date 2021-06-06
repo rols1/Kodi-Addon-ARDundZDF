@@ -256,14 +256,8 @@ def home(li, ID):
 	if ID == 'ARD':
 		if SETTINGS.getSetting('pref_use_classic') == 'false':	# Umlabeln für ARD-Suche (Classic)
 			ID ='ARD Neu'
-					
-	if ID == 'ARD':
-		img = R('home-ard-classic.png')
-		name = 'Home: ' + "ARD Mediathek Classic"
-		# CurSender = Dict("load", "CurSender")	# entf.  bei Classic
-		fparams="&fparams={'name': '%s', 'sender': '%s'}"	% (quote(name), '')
-		addDir(li=li, label=title, action="dirList", dirID="Main_ARD", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+		
+	# 	03.06.2021 ARD (Classic) entfernt		
 		
 	if ID == 'ARD Neu':			
 		img = R('ard-mediathek.png') 
@@ -286,13 +280,8 @@ def home(li, ID):
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
 			fanart=img, thumb=img, filterstatus='', fparams=fparams)
-			
-	if ID == 'PODCAST':
-		img = R(ICON_MAIN_POD)
-		name = 'Home :' + "Radio-Podcasts"
-		fparams="&fparams={'name': '%s'}" % quote(name)
-		addDir(li=li, label=title, action="dirList", dirID="Main_POD", fanart=img, 
-			thumb=img, filterstatus='set', fparams=fparams)
+	
+	# 	03.06.2021 ARD-Podcasts (Classic) entfernt		
 			
 	if ID == 'ARD Audiothek':
 		img = R(ICON_MAIN_AUDIO)
@@ -1997,7 +1986,9 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 			return '', pubDate
 			
 	# Decodierung plus bei Classic u-Kennz. vor Umlaut-strings (s.u.)
+	PLog('Mark0:')
 	page = py2_decode(page)
+	PLog('Mark1:')
 	verf='';
 	if 	ID == 'ZDF' or ID == '3sat':
 		summ = stringextract('description" content="', '"', page)
@@ -2085,7 +2076,7 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 				
 	# für Classic ist u-Kennz. vor Umlaut-strings erforderlich
 	if 	ID == 'ARDSport':		
-		PLog('Mark2')
+		PLog('Mark2:')
 		mediaDate=''; mediaDuration=''; duration=''; mtitle=''
 		if 'uration"' in page:
 			duration = 	stringextract('duration">', '<', page)	
@@ -2104,27 +2095,36 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 		if mediaDuration:
 			duration = "%s | %s" % (mediaDate, mediaDuration)
 
-		if u'"mediaExpiry">' in page:										
-			verf = stringextract(u'"mediaExpiry">', '<', page)
-		if verf:
-			verf = u"[B][COLOR darkgoldenrod]%s[/COLOR][/B]" % verf
-		duration = "%s | %s" % (duration, verf)
-		PLog("duration: " + duration)	
-			
-		summ = stringextract('class="einleitung small">', '<', page)
-		if summ == '':
-			summ = stringextract('class="text">', '<', page)
-		if summ == '':
-			summ = stringextract('teasertext">', '<strong>', page)
-		summ = unescape(summ);  summ = mystrip(summ)			
-		summ = cleanhtml(summ)	
-		summ = repl_json_chars(summ)
-		#if u'"mediaTitle">' in page:									# nicht verw.									
-		#	mtitle = stringextract(u'"mediaTitle">', '"', page)		
-		summ = u"%s | %s\n\n%s" % (duration, mtitle, summ)
-		summ = summ.replace(' | ', '')									# Korrek. Leer
+		try:																# todo: codec-Error einkreisen
+			PLog('Mark3:')
+			if u'"mediaExpiry">' in page:										
+				verf = stringextract(u'"mediaExpiry">', '<', page)
+			if verf:
+				verf = u"[B][COLOR darkgoldenrod]%s[/COLOR][/B]" % verf
+			duration = "%s | %s" % (duration, verf)
+			PLog("duration: " + duration)	
+			PLog('Mark4:')
+				
+			summ = stringextract('class="einleitung small">', '<', page)
+			if summ == '':
+				summ = stringextract('class="text">', '<', page)
+			if summ == '':
+				summ = stringextract('teasertext">', '<strong>', page)
+			if 'Falls JavaScript in Ihrem' in summ:
+				summ = ''
+			summ = unescape(summ);  summ = mystrip(summ)			
+			summ = cleanhtml(summ)	
+			summ = repl_json_chars(summ)
+			#if u'"mediaTitle">' in page:									# nicht verw.									
+			#	mtitle = stringextract(u'"mediaTitle">', '"', page)		
+			PLog('Mark5:')
+			summ = u"%s | %s\n\n%s" % (duration, mtitle, summ)
+		except Exception as exception:
+			PLog(str(exception))
+			summ=''		
 			
 	page = py2_encode(page)
+	summ = summ.replace(' |  | ', '')								# Korrek. Leer
 	PLog('summ: ' + summ[:80]); PLog(save_new)
 	if summ and save_new:
 		msg = RSave(fpath, page)
