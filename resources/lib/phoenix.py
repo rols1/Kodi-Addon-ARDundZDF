@@ -7,7 +7,7 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-#	Stand: 25.05.2021
+#	Stand: 07.06.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -686,7 +686,7 @@ def get_zdf_search(li, page, title):
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 # ----------------------------------------------------------------------
-# beitrags_details 	-> xml-format
+# beitrags_details 	-> xml-format, 06/2021 Umstellung auf json (s. basename)
 # ngplayer_2_3		-> json-Format
 def get_formitaeten(content_id,title,tagline,thumb):
 	PLog('get_formitaeten')
@@ -708,7 +708,7 @@ def get_formitaeten(content_id,title,tagline,thumb):
 		return li
 	PLog(len(page))
 	
-	basename = stringextract('<basename>', '</basename>', page)#	 Bsp. <basename>180605_phx_runde</basename>
+	basename = stringextract('assetid":"',  '"', page) 			# Bsp. "assetid":"210416_phx_doku_awri_5"
 	#if basename == '':
 	#	continue
 	url = 'https://tmd.phoenix.de/tmd/2/ngplayer_2_3/vod/ptmd/phoenix/' + basename

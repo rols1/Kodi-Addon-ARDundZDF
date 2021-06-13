@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 28.05.2021
+#	Stand: 09.06.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -489,7 +489,7 @@ def Kiraka_get_mp3(webid, title, thumb, Plot):
 	
 	PLog('Satz7:')
 	PLog(title); PLog(mp3url); PLog(Plot);
-	PlayAudio(mp3url, title, thumb, Plot, header=None, url_template=None, FavCall='')
+	PlayAudio(mp3url, title, thumb, Plot)
 	return
 # ----------------------------------------------------------------------
 # Nachrichten für Kinder

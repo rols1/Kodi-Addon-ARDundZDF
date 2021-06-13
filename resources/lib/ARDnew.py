@@ -894,15 +894,16 @@ def ARDStartVideoHLSget(title, VideoUrls):
 	PLog(str(VideoUrls)[:100])
 	
 	HLS_List=[]; Stream_List=[];
+	title = py2_decode(title)
 	href=''
 	for video in  VideoUrls:				
 		# PLog(video)
-		if '"auto"' in video or  'master.m3u8' in video:	# master.m3u8
+		if 'u"auto"' in video or  u'master.m3u8' in video:	# master.m3u8
 			href = stringextract('stream":"', '"', video)	# Video-Url
 			if href.startswith('http') == False:
 				href = 'https:' + href
 			quality = u'automatisch'
-			HLS_List.append('HLS automatische Anpassung ** auto ** auto ** %s#%s' % (title,href))
+			HLS_List.append(u'HLS automatische Anpassung ** auto ** auto ** %s#%s' % (title,href))
 			break
 			
 	li=''; img=''; geoblock=''; descr='';					# für Stream_List n.b.
@@ -925,6 +926,7 @@ def ARDStartVideoMP4get(title, VideoUrls):
 	PLog('ARDStartVideoMP4get:'); 
 			
 	href=''; quality=''
+	title = py2_decode(title)
 	download_list = []		# 2-teilige Liste für Download: 'title # url'
 	Format = 'Video-Format: MP4'
 	for video in  VideoUrls:

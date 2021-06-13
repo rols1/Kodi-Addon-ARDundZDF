@@ -652,7 +652,6 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	merkname=py2_encode(merkname); start_end=py2_encode(start_end);
 	PLog('addDir_summary: {0}, tagline: {1}, mediatype: {2}, cmenu: {3}'.format(summary[:80], tagline[:80], mediatype, cmenu))
 
-		
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
 	# PLog('summary, tagline: {0}, {1}'.format(summary, tagline))
 	Plot = ''
@@ -959,7 +958,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			else:
 				req = Request(path)
 			
-			r = urlopen(req, timeout=UrlopenTimeout)					# float-Werte möglich	
+			r = urlopen(req, timeout=UrlopenTimeout)					# float-Werte möglich
 			new_url = r.geturl()										# follow redirects
 			PLog("new_url: " + new_url)									# -> msg s.u.
 			# PLog("headers: " + str(r.headers))
@@ -1201,7 +1200,7 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 #----------------------------------------------------------------
 #	doppelte utf-8-Enkodierung führt an manchen Stellen zu Sonderzeichen
 #  	14.04.2019 entfernt: (':', ' ')
-# 	todo: decode('utf-8') hier  wie unescape ff.
+# 
 def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
 	line_ret = line
 	#PLog(type(line_ret))
@@ -1588,7 +1587,7 @@ def CalculateDuration(timecode):
 #---------------------------------------------------------------- 
 # Format seconds	86400	(String, Int, Float)
 # Rückgabe:  		1d, 0h, 0m, 0s	(days=True)
-#		oder:		0h, 0d				
+#		oder:		0h:0d				
 def seconds_translate(seconds, days=False):
 	#PLog('seconds_translate:')
 	#PLog(seconds)
@@ -2890,10 +2889,10 @@ def sub_path_conv(sub_path):
 #		replaced-Url: 	dg-ndr-http-dus-dtag-cdn.cast.addradio.de/ndr/ndr1niedersachsen/..
 # url_template gesetzt von RadioAnstalten (Radio-Live-Sender)
 # 18.06.2019 Kodi 17.6:  die template-Lösung funktioniert nicht mehr - dto. Redirect - 
-#				Code für beides entfernt. Hilft ab er nur bei wenigen Sendern.
+#				Code für beides entfernt.
 #				Neue Kodivers. ansch. nicht betroffen, Kodi 18.2. OK
 #			
-def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall=''):
+def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
 #	Plot=transl_doubleUTF8(Plot)
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)

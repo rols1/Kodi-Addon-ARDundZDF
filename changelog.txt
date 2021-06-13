@@ -9,6 +9,29 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+13.06.2021 3.8.8
+			Einzelupdate livesenderTV.xml: Ergänzung WDR_ARD Spezial 1 (@Weri).
+			get_formitaeten (Modul phoenix): Anpassung an phoenix-Änderung (xml ->
+			json-Format).
+			ARD Sportschau: PRG-Hinweise ohne Video/Audio ausgeblendet.
+			livesenderTV.xml: Integration ARD Audio Event Streams (@Weri), Anpassung
+			SenderLiveResolution, ARDSport, ARDSportEvents, AudioStartLive, neue Funktion 
+			ARDSportAudioEvent. 
+			ZDF Startseite: leere Rubrik "Mein Programm" unterdrückt.
+			Sport Live im ZDF: weiteren Cluster '<h2 class="title"' verwendet (relevant für
+			"Die EM im ZDF"), Auswertung der Vorankündigungen (Cluster "Demnächst) mit 
+			neuer Wrapper-Funktion ZDFRubrikSingleCall). 
+			ZDF_getKurzVideoDetails: 5. Variante für Titelauswertung hinzugefügt (relevant
+			für Playerbox-Videos), unescape + repl_json_chars für Titel.
+			ZDF_Search: Behandlung von Umlauten in der ZDF-Mehrsuche (Url-Error: can't 
+			contain control characters.
+			AudioStart (Audiothek): Menüverlagerung "Livestreams" hinter das Menü "Suche.." 
+			Modul TagesschauXL: Erweiterung um Rubrik INVESTIGATIV, Ersatz der entfallenen
+			Seite "politikimradio" durch "Podcasts und Audios" auf der Multimedia-Webseite -
+			neue Funktionen Investigativ, XLGetVideoLists und XLGetSourcesPlayer (Nutzung 
+			der Streamlistfunktionen in ARD Neu (py2_decode für title) und Haupt-PRG), neues
+			Icon tagesschau-Investigativ.png (Github). 
+
 06.06.2021 3.8.7
 			ZDF_Search, ZDF_get_content: Umstellung auf alle Beiträge (statt nur ganzen 
 			Sendungen).
@@ -45,13 +68,17 @@ CHANGE HISTORY
 			vereinheitlicht, Fix Rubriken (api-Url, Direktsprung in PageMenu).
 			phoenix_Search (Modul phoenix): Url für die Suche aktualisiert (von
 			phoenix geändert).
+			Modul phoenix:Anpassung an phoenix-Änderung bei den Videoquellen (Wechsel xml
+			-> json-Format) -
 			ARDStartRubrik (Modul ARD Neu): obsoleten Code entfernt (zw. page.replace und
 			mark='').
 			Modul ARD Neu: fehlende Clusterung bei Webseiten ergänzt - neue Funktion
-			ARDRubriken (relevant für Start/Themenwelten, Start/Genrezugänge
+			ARDRubriken (relevant für Start/Themenwelten, Start/Genrezugänge).
 			ZDFSportLive: Integration www.zdf.de/sport/olympia (@Weri).
 			ZDFSportLive: Anpassung an ZDF-Änderung (Live-Videolink nicht mehr in Web-
 			seite - Ermittlung via apiToken). 
+			ZDF_getVideoSources: Eingangs-Test auf Videoquelle (zdfplayer-Modul) - ohne
+			falsches Video möglich.
 			Modul ZDFmobile: leere clusterObject["teaser"] in PageMenu abgefangen (
 			personalisierte Inhalte: 'Mein Programm', 'Vorab in der ..', ..).
 			Kiraka_pods (Modul childs): unescape descr (Hochkommata in Beschreibung),
