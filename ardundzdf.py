@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.8.8'
-VDATE = '13.06.2021'
+VERSION = '3.8.9'
+VDATE = '19.06.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -326,7 +326,8 @@ def Main():
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
 		thumb=R(ICON_MAIN_ARD), summary=summ, fparams=fparams)
 	
-	# Retro-Version ab 12.11.2020, V3.5.4		
+	# Retro-Version ab 12.11.2020, V3.5.4
+	# 16.06.2021 auch erreichbar via ARD-Startseite/Premium_Teaser_Themenwelten		
 	title = "ARD Mediathek RETRO"
 	erbe = u"[COLOR darkgoldenrod]%s[/COLOR]" % "UNESCO Welttag des Audiovisuellen Erbes"
 	tag = u'Die ARD Sender öffneten zum %s ihre Archive und stellen zunehmend zeitgeschichtlich relevante Videos frei zugänglich ins Netz' % erbe
@@ -2518,7 +2519,7 @@ def ARDSport(title):
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, summary=summ, fparams=fparams)
 	#'''
-	
+	'''
 	title = "DIE FINALS"									# (nicht in Fußlinks)
 	href = 'https://www.sportschau.de/die-finals/index.html'
 	img =  'https://www.sportschau.de/die-finals/ard-kamera-100~_v-ARDAustauschformats.jpg'
@@ -2528,7 +2529,7 @@ def ARDSport(title):
 		quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, fparams=fparams)
-	
+	'''
 	title = "Moderatoren"									# Moderatoren 
 	href = 'https://www.sportschau.de/sendung/moderatoren/index.html'
 	img =  'https://www1.wdr.de/unternehmen/der-wdr/unternehmen/bundesliga-sportschau-jessy-wellmer-100~_v-gseaclassicxl.jpg'
@@ -2817,6 +2818,9 @@ def ARDSportPanel(title, path, img, tab_path=''):
 		
 		title = mystrip(title); title = unescape(title); 
 		title = cleanhtml(title); title = repl_json_chars(title)
+		if "Video" in title:
+			#title = "[B]%s[/B]" % title
+			title = title.replace("Video", "[B]Video[/B]")
 		
 		
 		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
@@ -5680,36 +5684,32 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis:
 			EPG_ID = stringextract('<EPG_ID>', '</EPG_ID>', element)
 			PLog(EPG_ID); PLog(EPG_ID_old);
-			if  EPG_ID == EPG_ID_old:					# Doppler: EPG vom Vorgänger verwenden
-				sname=sname_old; stime=stime_old; summ=summ_old; vonbis=vonbis_old
-				summary=summary_old; tagline=tagline_old
-				PLog('EPG_ID=EPG_ID_old')
+
+			try:
+				rec = EPG.EPG(ID=EPG_ID, mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
+				if rec == '':								# Fehler, ev. Sender EPG_ID nicht bekannt
+					sname=''; stime=''; summ=''; vonbis=''
+				else:
+					sname=py2_encode(rec[3]); stime=py2_encode(rec[4]); 
+					summ=py2_encode(rec[5]); vonbis=py2_encode(rec[6])	
+			except:
+				sname=''; stime=''; summ=''; vonbis=''	
+									
+			if sname:
+				title=py2_encode(title); 
+				title = "%s: %s"  % (title, sname)
+			if summ:
+				summary = py2_encode(summ)
 			else:
-				EPG_ID_old = EPG_ID
-				try:
-					rec = EPG.EPG(ID=EPG_ID, mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
-					if rec == '':								# Fehler, ev. Sender EPG_ID nicht bekannt
-						sname=''; stime=''; summ=''; vonbis=''
-					else:
-						sname=py2_encode(rec[3]); stime=py2_encode(rec[4]); 
-						summ=py2_encode(rec[5]); vonbis=py2_encode(rec[6])	
-				except:
-					sname=''; stime=''; summ=''; vonbis=''	
-										
-				if sname:
-					title=py2_encode(title); 
-					title = "%s: %s"  % (title, sname)
-				if summ:
-					summary = py2_encode(summ)
-				else:
-					summary = ''
-				if vonbis:
-					tagline = u'Sendung: %s Uhr' % vonbis
-				else:
-					tagline = ''
-				# Doppler-Erkennung:	
-				sname_old=sname; stime_old=stime; summ_old=summ; vonbis_old=vonbis;
-				summary_old=summary; tagline_old=tagline
+				summary = ''
+			if vonbis:
+				tagline = u'Sendung: %s Uhr' % vonbis
+			else:
+				tagline = ''
+#			# Doppler-Erkennung:	
+#			sname_old=sname; stime_old=stime; summ_old=summ; vonbis_old=vonbis;
+#			summary_old=summary; tagline_old=tagline
+
 		title = unescape(title)	
 		title = title.replace('JETZT:', '')					# 'JETZT:' hier überflüssig
 		if link == '':										# fehlenden Link im Titel kennz.
@@ -6867,6 +6867,10 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li
+		
+	mediatype=''									# Kennz. Video für Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'	
 
 	if custom_cluster == '':										# Abgleich mit clus_title
 		# Cluster-Blöcke, dto. ZDF_Sendungen, ZDFRubrikSingle, ZDFStart:
@@ -6940,7 +6944,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 
 		for rec in content:	
 			title='';  clustertitle=''; lable=''; isvideo=False; isgallery=False
-			teaser_nr=''
+			teaser_nr=''; summ_txt=''; descr='';teaserDetails=''
 			pos = rec.find('</article>')						# Satz begrenzen
 			if pos > 0:
 				rec = rec[:pos]
@@ -6960,6 +6964,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 			else:												# Seite normal auswerten	
 			# --------------------------------------------------
 				title,path,img_src,descr,dauer,enddate,isvideo = ZDF_get_teaserDetails(rec)
+				teaserDetails='done'							# Flag für get_summary_pre
 				# multi z.Z. nicht verwendet, isvideo reicht aus
 				teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi = ZDF_get_teaserbox(rec)
 			
@@ -6968,7 +6973,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 			#if isvideo == True and dauer == '':								# filtert 'Demnächst'-Beiträge aus
 			#	continue
 
-			tag=''; 
+			tag='';
 			if path == '' or 'skiplinks' in path:
 				PLog('skip_path: ' + path)
 				continue
@@ -7046,19 +7051,21 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 					
 			else:							# Einzelbeitrag direkt - anders als A-Z (ZDF_get_content)		
 				if SETTINGS.getSetting('pref_load_summary') == 'true':		# Inhaltstext im Voraus laden?
-					skip_verf=False; skip_pubDate=False						# beide Daten ermitteln
-					summ_txt = get_summary_pre(path, 'ZDF', skip_verf, skip_pubDate)
-					PLog(len(summ_txt)); 
-					if 	summ_txt and len(summ_txt) > len(descr):
-						descr= summ_txt
-						descr_par = descr.replace('\n', '||')
+					# get_summary_pre in ZDF_get_teaserDetails bereits erledigt
+					if teaserDetails == '':									
+						skip_verf=False; skip_pubDate=False					# beide Daten ermitteln
+						summ_txt = get_summary_pre(path, 'ZDF', skip_verf, skip_pubDate)
+						PLog(len(summ_txt)); PLog(len(descr));
+						if 	summ_txt and len(summ_txt) > len(descr):
+							descr= summ_txt
+							descr_par = descr.replace('\n', '||')
 							
 				title=py2_encode(title); path=py2_encode(path); 
 				descr_par=py2_encode(descr_par); img_src=py2_encode(img_src); 	
 				fparams="&fparams={'title': '%s', 'url': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
 					(quote(title),  quote(path), quote(descr_par), quote(img_src))
 				addDir(li=li, label=lable, action="dirList", dirID="ZDF_getVideoSources", fanart=img_src, 
-					thumb=img_src, summary=descr, fparams=fparams)
+					thumb=img_src, summary=descr, mediatype=mediatype, fparams=fparams)
 							
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -7222,6 +7229,7 @@ def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 	descr = unescape(descr)
 	if u'Videolänge' in descr:
 		dauer=''
+	PLog(descr)
 	
 	enddate=py2_decode(enddate); descr=py2_decode(descr)
 	if enddate:
@@ -7741,6 +7749,7 @@ def ZDFSportLiveSingle(title, path, img):
 	mediatype=''
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
+		
 	path=py2_encode(path); title=py2_encode(title); descr=py2_encode(descr);
 	fparams="&fparams={'url': '%s','title': '%s','thumb': '%s','tagline': '%s','apiToken': '%s','sid': '%s'}" % (quote(path),
 		quote(title), img, quote(descr), quote(apiToken), quote(sid))	
@@ -8273,7 +8282,6 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='',
 		apiToken1 = apiToken; apiToken2=apiToken1
 		page=''
 	else:
-#		page, msg = get_page(url)
 		if page == '':
 			msg1 = 'ZDF_getVideoSources: Problem beim Abruf der Videoquellen.'
 			msg2 = msg
@@ -8451,6 +8459,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 # Aufrufer: build_Streamlists (ZDF, 3sat), ARDStartSingle (ARD Neu),
 #	SingleSendung (ARD Classic)
 # Plot = tagline (zusammengefasst: Titel (abgesetzt), tagline, summary)
+# Kennzeichung mit mediatype='video' in Funktion StreamsShow
 #
 def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		HLS_List,MP4_List,HBBTV_List,ID="ZDF",HOME_ID="ZDF"):
@@ -8485,9 +8494,6 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		title_list.append("%s###%s###%s" % (title_hb, 'ZDF_HBBTV_List', len(HBBTV_List)))	
 	title_list.append("%s###%s###%s" % (title_mp4, '%s_MP4_List' % ID, len(MP4_List)))	
 
-	mediatype=''										# Kennz. Video für Sofortstart 
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
 
 	Plot=py2_encode(Plot); img=py2_encode(img);
 	geoblock=py2_encode(geoblock); sub_path=py2_encode(sub_path); 
@@ -8500,7 +8506,7 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		fparams="&fparams={'title': '%s', 'Plot': '%s', 'img': '%s', 'geoblock': '%s', 'sub_path': '%s', 'ID': '%s', 'HOME_ID': '%s'}" \
 			% (quote(title_org), quote(Plot), quote(img), quote(geoblock), quote(sub_path), Dict_ID, HOME_ID)
 		addDir(li=li, label=title, action="dirList", dirID="StreamsShow", fanart=img, thumb=img, 
-			fparams=fparams, tagline=tagline, mediatype=mediatype)	
+			fparams=fparams, tagline=tagline, mediatype='')	
 	return
 	
 #-------------------------
@@ -9302,19 +9308,21 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 		cnt = cnt+1
 		href=py2_encode(href); title=py2_encode(title);
 		
+		# 17.06.2021 Absturz mit 'video' nach Sofortstart aus Kontextmenü nicht
+		#	mehr relevant
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
 			(quote_plus(href), quote_plus(title_org), quote_plus(img), 
 			quote_plus(Plot), quote_plus(sub_path))
 		addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-			tagline=tagline, mediatype='') 	# Absturz mit 'video' nach Sofortstart aus Kontextmenü 
-
+			tagline=tagline, mediatype='video')
+	
 	if 'MP4_List' in ID:
 		if SETTINGS.getSetting('pref_show_qualities') == 'false':
 			del Stream_List[:-1]													# nur letztes Element verwenden
 		summ=''
 		li = test_downloads(li,Stream_List,title,summ,tagline,img,high=-1, sub_path=sub_path) # Downloadbutton(s)
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 			    
 ####################################################################################################
 #						Hilfsfunktionen - für Kodiversion augelagert in Modul util.py

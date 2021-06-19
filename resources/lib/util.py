@@ -1950,6 +1950,7 @@ def ReadJobs():
 #
 # 21.06.2020 zusätzl. Sendedatum pubDate
 #	in TEXTSTORE gespeichert wird die ges. html-Seite (vorher nur Text summ)
+# 14.06.2021 Sendedatum pubDate für ZDF Sport unterdrückt (oft falsch bei Livestreams)
 #
 def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
@@ -1988,10 +1989,16 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 	PLog('Mark0:')
 	page = py2_decode(page)
 	PLog('Mark1:')
-	verf='';
+	PLog(skip_verf);PLog(skip_pubDate);
+	if "zdf.de/sport/" in path:												# ZDF Sport: pubDate unterdrücken -
+		skip_pubDate=True													#	bei Livestreams oft falsch
+	verf='';				
 	if 	ID == 'ZDF' or ID == '3sat':
+		teaserinfo = stringextract('teaser-info">', '<', page)
 		summ = stringextract('description" content="', '"', page)
 		summ = mystrip(summ)
+		if teaserinfo:
+			summ = "%s\n\n%s" % (teaserinfo, summ)
 		summ = unescape(summ)
 		summ = repl_json_chars(summ)
 		#if 'title="Untertitel">UT</abbr>' in page:	# stimmt nicht mit get_formitaeten überein
@@ -2004,7 +2011,7 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 				verf = time_translate(verf, add_hour=0)
 			if verf:														# Verfügbar voranstellen
 				summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s\n" % (verf, summ)
-		PLog(skip_pubDate)
+		
 		if skip_pubDate == False:		
 			pubDate = stringextract('publicationDate" content="', '"', page)# Bsp. 2020-06-15T22:51:28.328+02:00
 			if pubDate == '':
@@ -2095,14 +2102,12 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 			duration = "%s | %s" % (mediaDate, mediaDuration)
 
 		try:																# todo: codec-Error einkreisen
-			PLog('Mark3:')
 			if u'"mediaExpiry">' in page:										
 				verf = stringextract(u'"mediaExpiry">', '<', page)
 			if verf:
 				verf = u"[B][COLOR darkgoldenrod]%s[/COLOR][/B]" % verf
 			duration = "%s | %s" % (duration, verf)
 			PLog("duration: " + duration)	
-			PLog('Mark4:')
 				
 			summ = stringextract('class="einleitung small">', '<', page)
 			if summ == '':
@@ -2116,7 +2121,6 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 			summ = repl_json_chars(summ)
 			#if u'"mediaTitle">' in page:									# nicht verw.									
 			#	mtitle = stringextract(u'"mediaTitle">', '"', page)		
-			PLog('Mark5:')
 			summ = u"%s | %s\n\n%s" % (duration, mtitle, summ)
 		except Exception as exception:
 			PLog(str(exception))
@@ -2702,7 +2706,8 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	# li.setProperty('IsPlayable', 'true')		# hier unwirksam
 	# li.setInfo(type="video", infoLabels={"Title": title, "Plot": Plot, "mediatype": "video"}) # s.u.
 
-	infoLabels = {}
+	'''
+	infoLabels = {}								# 17.06.2921 Setzen hier behindert Resume-Funktion (s. addDir)
 	infoLabels['title'] = title
 	infoLabels['sorttitle'] = title
 	#infoLabels['genre'] = genre
@@ -2712,6 +2717,8 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	infoLabels['tagline'] = Plot
 	infoLabels['mediatype'] = 'video'
 	li.setInfo(type="Video", infoLabels=infoLabels)
+	li.setInfo(type="video", infoLabels=infoLabels)
+	'''
 	
 	if SETTINGS.getSetting('pref_UT_ON') == 'true':
 		if sub_path:								# Vorbehandlung ARD-Untertitel
@@ -2734,7 +2741,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	# 29.01.2020 sleep verhindert selbständige Restarts nach Stop - Bsp. phoenix/
 	#	Sendungen/"Armes Deutschland? Deine Kinder" 
 	IsPlayable = xbmc.getInfoLabel('ListItem.Property(IsPlayable)') # 'true' / 'false'
-	PLog("IsPlayable: %s, Merk: %s" % (IsPlayable, Merk))
+	PLog("IsPlayable: %s, Merk: %s" % (IsPlayable, Merk))			# IsPlayable: "false" / "true" !
 	PLog("kodi_version: " + KODI_VERSION)							# Debug
 	# kodi_version = re.seplayer.playarch('(\d+)', KODI_VERSION).group(0) # Major-Version reicht hier - entfällt
 	

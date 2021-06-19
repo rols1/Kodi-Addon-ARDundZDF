@@ -467,6 +467,7 @@ def PlayMonitor(mode=''):
 		cnt = cnt+1	
 		start_time = int(seekTime)
 		
+		# seek-Problem bei HLS-Streams - s. github.com/xbmc/xbmc/issues/18415
 		# Exception-Behandl. für nicht verfügb. Videos:
 		try:																#  playlist="true" = skip Startliste:
 			play_time,video_dur = PlayVideo(url, title, thumb, Plot, playlist="true", seekTime=seekTime)

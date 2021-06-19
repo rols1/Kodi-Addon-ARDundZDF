@@ -9,6 +9,30 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+19.06.2021 3.8.9
+			ARDSport: Zusatz-Button "DIE FINALS" auskommentiert (@Weri).
+			Sport Live im ZDF: Unterdrückung Auswertung publicationDate beim Vorausladen
+			von ZDF-Sport-Beiträgen (@Weri).
+			podcast-favorits.txt (Modul Audiothek): Eintrag "Computer und Kommunikation"
+			(DLF) entfernt - Link nicht mehr existent.
+			ARD Sportschau (ARDSportPanel): "Video" im Titel gekennzeichnet (fett). 
+			EPG-Daten für TV-Live-Sender (SenderLiveListe): Code für Doppler-Erkennung
+			entfernt (Fehleranfällig + obsolet, Daten für einige reg. Sender fehlten).
+			Resumefunktion (Einzelauflösungen ARD neu, ZDF): Directory-Kennzeichung mit 
+			mediatype='video' in Funktion StreamsShow, in build_Streamlists_buttons 
+			entfernt (obsol.), infoLabels in PlayVideo (util) abgeschaltet (verhindern 
+			dort Resume).
+			Resumefunktion (Sofortstart ZDF): mediatype='video' gesetzt in 
+			dirID="ZDF_getVideoSources"-Calls (ZDF_Sendungen, ZDFRubrikSingle, 
+			ZDFSportLive, ZDFSportLiveSingle, ZDF_get_content).
+			Resumefunktion (Sofortstart ARD Neu): mediatype='video' gesetzt in
+			dirID"resources.lib.ARDnew.ARDStartSingle"-Calls (get_page_content),
+			Auswertung von Folgebeiträgen in ARDStartSingle abhängig gemacht vom IsPlayable-
+			Zustand.
+			get_page_content (ARD Neu): "availableTo" als Merkmal von Folgebeiträgen entfernt
+			("duration", 'Livestream' ausreichend). 
+			
+
 13.06.2021 3.8.8
 			Einzelupdate livesenderTV.xml: Ergänzung WDR_ARD Spezial 1 (@Weri).
 			get_formitaeten (Modul phoenix): Anpassung an phoenix-Änderung (xml ->

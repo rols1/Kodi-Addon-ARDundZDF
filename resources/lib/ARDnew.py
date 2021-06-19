@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 03.06.2021
+#	Stand 19.06.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -616,7 +616,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			mehrfach = True
 		if ID == 'EPG':
 			mehrfach = False
-		if '"availableTo":"' in s or '"duration":' in s or 'Livestream' in ID:	# Einzelbetrag
+		# if '"availableTo":"' in s or '"duration":' in s or 'Livestream' in ID:	# Einzelbetrag
+		if '"duration":' in s or 'Livestream' in ID:	# Einzelbetrag
 			#if s.find('"availableTo":null') < 0:				# auch bei  vorh. Videos möglich
 			mehrfach = False
 					
@@ -729,6 +730,9 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 				summ_new = get_summary_pre(path=href, ID='ARDnew')  # s.o. pre:
 				if 	summ_new:
 					summ = summ_new
+					
+			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
+				mediatype='video'
 			
 			summ_par = summ.replace('\n', '||')
 			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
@@ -746,8 +750,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 # Videodaten unterteilt in _plugin":0 und _plugin":1,
 #	_plugin":0 enthält manifest.f4m-Url und eine mp4-Url, die auch in _plugin":1
 #	vorkommt.
-# Parameter duration (müsste sonst aus json-Daten neu ermittelt werden, Bsp. _duration":5318.
-# Falls path auf eine Rubrik-Seite zeigt, wird zu ARDStartRubrik zurück verzweigt.
+# Falls path auf eine Rubrik-Seite zeigt, wird zu ARDStartRubrik zurück verzweigt 
+#	(sofern keine Streams vorhanden)
 # 02.05.2019 erweitert: zusätzl. Videos zur Sendung angehängt - s.u.
 # 28.05.2020 Stream-Bezeichner durch ARD geändert
 # 19.10.2020 Mehr-Auswertung an ARD-Änderungen angepasst: get_ardsingle_more entfällt,
@@ -772,7 +776,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 
 	page, msg = get_page(path, header=headers)
 	if page == '':	
-		msg1 = "Fehler in ARDStartRubrik: %s"	% title
+		msg1 = "Fehler in ARDStartSingle: %s"	% title
 		msg2=msg
 		MyDialog(msg1, msg2, '')	
 		xbmcplugin.endOfDirectory(HANDLE)
@@ -781,10 +785,19 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	page= page.replace('+++\\n', '+++ ')					# Zeilentrenner ARD Neu
 
 	elements = blockextract('"availableTo":', page)			# möglich: Mehrfachbeiträge? z.B. + Hörfassung
+	IsPlayable = xbmc.getInfoLabel('ListItem.Property(IsPlayable)') # 'true' / 'false'
+	PLog("IsPlayable: %s" % IsPlayable)	
 	if len(elements) > 1:
 		if '_quality"' not in page:							# bei Streamlinks bleiben wir hier
-			PLog('%s Elemente -> ARDStartRubrik' % str(len(elements)))
-			return ARDStartRubrik(path,title,ID='ARDStartSingle')
+			if IsPlayable == "false":						# IsPlayable-Einträge nur mit Video-Quellen auswerten
+				PLog('%s Elemente -> ARDStartRubrik' % str(len(elements)))
+				return ARDStartRubrik(path,title,ID='ARDStartSingle')
+			else:
+				msg1 = u">%s< enthält Folgebeiträge."	% title
+				msg2 = u"Anzeige mit Sofortstart nicht möglich."
+				MyDialog(msg1, msg2, '')	
+				return										# hebt IsPlayable auf (Player-Error: skipping ..)
+			
 			
 	if len(elements) == 0:									# möglich: keine Video (dto. Web)
 		msg1 = u'keine Beiträge zu %s gefunden'  % title
@@ -827,11 +840,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 			href = 'http:' + href
 		PLog('Livestream_Abzweig: ' + href)
 		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summary)
-	
-	mediatype=''										# Kennz. Video für Sofortstart 
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
-	
+		
 	# -----------------------------------------			# Extrakt Videoquellen
 	Plugins = blockextract('_plugin', page)				# wir verwenden nur Plugin1 (s.o.)
 	if len(Plugins) > 0:
