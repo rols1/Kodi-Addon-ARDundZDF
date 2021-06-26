@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 10.05.2021
+#	Stand: 21.06.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -344,8 +344,7 @@ def GetContent(li, page, ID):
 			continue
 			
 		if mehrfach:
-			if ID == 'KAT_START':							# mit Url + id zurück zu -> Kategorien
-				pid = stringextract('id":"', '"', item) 	# programId hier null
+			if ID == 'KAT_START':							# mit Url zurück zu -> Kategorien (id vor Block "title")
 				cat = stringextract(u'label":"%s"' % py2_decode(title), '}]}', page) # Sub-Kategorien-Liste ausschneiden
 				tag = stringextract('description":"', '"', cat)
 
@@ -619,6 +618,11 @@ def Kategorien(title='', path=''):
 		if page == '':	
 			return li
 			
+		if "/dokumentationen-und-reportagen/" in path:		# nicht im Abschnitt categories + abweichend
+			Kategorie_Dokus(li, title, page, path)
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+			
 		pos = page.find('"categories":')					# Listen Subkats am Seitenende o. Bilder
 		PLog(pos)
 		page = page[pos:]
@@ -652,42 +656,75 @@ def Kategorien(title='', path=''):
 		
 		items = blockextract('code":{"name', Kat_page)	# Altern.:'{"id":"'
 		PLog(len(items))
-					
-		for item in items:
-			title = stringextract('title":"', '"', item)			
-			label = title
-			if "Category Banner" in title:
-				label = title.replace("Category Banner", "arte Empfehlung")
-			if 'data":[]' in item:						# skip, ohne Beiträge, Bsp. Playlists
-				continue
-			summ = stringextract('escription":"', '"', item)
-			link_url = stringextract('url":"', '"', item)	# Webseite, abweichend von url in data
-			data = stringextract('data":[', '],', item)
-			
-			# 1. Bild der Subkat laden 
-			#	(Bild nur stellvertretend für gesamte Subkat)
-			#	bei Cache-miss ICON_DIR_FOLDER . Subkats-Listen ohne img.
-			#	Sonderfall arte-concert (mehrere Seiten möglich).
-			img = R(ICON_DIR_FOLDER)						# Default 
-			pos = Kat_page.find('title":"%s"' % title)
-			PLog('pos: ' + str(pos))
-			if pos > 0:
-				PLog(Kat_page[pos:pos+100])
-				img = get_img(item=Kat_page[pos:])
-				
-			pid = stringextract('id":"', '"', item)			# pid für SubKat				
-			title = repl_json_chars(title)
-			url = path
-						
-			PLog('Satz_Subs:');  PLog(title);  PLog(pid); PLog(url); PLog(link_url); PLog(img);
-			title=py2_encode(title); url=py2_encode(url); link_url=py2_encode(link_url);	
-			fparams="&fparams={'path': '%s','title':'%s','pid':'%s','link_url':'%s'}" %\
-				(quote(url), quote(title), pid, quote(link_url))
-			addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.KatSub", fanart=img, 
-				thumb=img, summary=summ, fparams=fparams) 
-	
+		get_subkats(li, items, path)
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
+# ----------------------------------------------------------------------
+# Dokumentationen und Reportagen: nicht im Abschnitt categories + abweichend
+# Aufrufer: Kategorien (Stufe 2),  Hauptmenü dort 
+def Kategorie_Dokus(li, title, page, path):
+	PLog("Kategorie_Dokus:")
+	
+	pos = page.find('"title":"Dokus und Reportagen"')
+	pos2 = page.find('"title":"Alle Kategorien"')
+	PLog("titel: %s, pos: %d, pos2: %d" % (title, pos, pos2))
+
+	if pos == -1:						
+		msg1 = 'Kategorie nicht gefunden: %s' % title
+		MyDialog(msg1, '', '')
+		return 
+
+	page = page[pos:pos2]
+	PLog(page[:100])
+	
+	items = blockextract('"code":{', page)			# entspr. bei Dokus den Subkats
+	PLog(len(items))
+	get_subkats(li, items, path)
+
+	return
+
+# ----------------------------------------------------------------------
+# Liste der Subkategorien
+# Aufrufer: Kategorien (Stufe 2) und Kategorie_Dokus (via Kategorien)
+# 
+def get_subkats(li, items, path):
+	PLog("get_subkats:")
+
+	for item in items:
+		title = stringextract('title":"', '"', item)			
+		label = title
+		if title == '':								# vemutl. Restblock "Alle Kategorien"
+			continue
+		if "Category Banner" in title:
+			label = title.replace("Category Banner", "arte Empfehlung")
+		if 'data":[]' in item:						# skip, ohne Beiträge, Bsp. Playlists
+			continue
+		summ = stringextract('escription":"', '"', item)
+		link_url = stringextract('url":"', '"', item)	# Webseite, abweichend von url in data
+		data = stringextract('data":[', '],', item)
+		
+		# 1. Bild der Subkat laden 
+		#	(Bild nur stellvertretend für gesamte Subkat)
+		#	bei Cache-miss ICON_DIR_FOLDER . Subkats-Listen ohne img.
+		#	Sonderfall arte-concert (mehrere Seiten möglich).
+		img = R(ICON_DIR_FOLDER)						# Default 
+		pos = item.find('title":"%s"' % title)
+		PLog('pos: ' + str(pos))
+		if pos > 0:
+			img = get_img(item)
+			
+		pid = stringextract('id":"', '"', item)			# pid für SubKat				
+		title = repl_json_chars(title)
+		url = path
+					
+		PLog('Satz_Subs_Dokus:');  PLog(title);  PLog(pid); PLog(url); PLog(link_url); PLog(img);
+		title=py2_encode(title); url=py2_encode(url); link_url=py2_encode(link_url);	
+		fparams="&fparams={'path': '%s','title':'%s','pid':'%s','link_url':'%s'}" %\
+			(quote(url), quote(title), pid, quote(link_url))
+		addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.KatSub", fanart=img, 
+			thumb=img, summary=summ, fparams=fparams)	
+	return
 # ----------------------------------------------------------------------
 # listet einzelne Beiträge der Sub-Kategorie title in Datei path
 # Hinw.: jede Datei der SubKats enthält die Subkats aller Kategorien
@@ -724,8 +761,8 @@ def KatSub(path, title, pid, link_url=''):
 
 	li,cnt = GetContent(li, page, ID='KAT_SUB') 	# eigenes ListItem
 	PLog("cnt: %d" % cnt)
-	#if cnt == 0:									# von Webseite ergänzen
-	if cnt < 2:										# von Webseite ergänzen (skip ev. Teaser)
+	if cnt == 0:									# von Webseite ergänzen
+	#if cnt < 2:									# von Webseite ergänzen (skip ev. Teaser)
 		page = get_ArtePage('KatSub', title, Dict_ID='ArteWeb_%s' % pid, path=link_url)	
 		if page:
 			pos = page.find('"Die meistgesehenen Videos')	# ausschließen (auf jeder Seite wieder)
@@ -797,6 +834,8 @@ def get_ArtePage(caller, title, Dict_ID, path, header=''):
 			page = page.replace('\\u002F', '/')	
 			page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
 			Dict("store", Dict_ID, page) # Seite -> Cache: aktualisieren				
+
+	# RSave('/tmp/x.json', py2_encode(page))	# Debug	
 	PLog(len(page))
 	# page = str(page)  # n. erf.
 	PLog(page[:100])

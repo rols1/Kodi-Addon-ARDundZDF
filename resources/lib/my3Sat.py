@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 02.02.2021
+#	Stand: 23.06.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -472,6 +472,10 @@ def Start(name, path, rubrik=''):
 			Dict("store", '3satStart', page) # Seite -> Cache: aktualisieren				
 	PLog(len(page))
 	
+	mediatype=''
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
+
 	if rubrik == '':								# 1. Durchlauf: Stage + Rubrik-Liste
 		stage_home = stringextract('data-module="stage-home"', '</section', page)
 		content =  blockextract('class="artdirect">', stage_home)
@@ -499,7 +503,7 @@ def Start(name, path, rubrik=''):
 			descr	= stringextract('paragraph-large ">', '</', rec)
 			if descr == '':
 				descr	= stringextract('text show-for-large">', '</', rec)
-			descr = unescape(descr); descr = mystrip(descr);
+			descr = unescape(descr); descr = mystrip(descr); descr = repl_json_chars(descr)
 			descr_par =	mystrip(descr); descr_par =	descr_par.replace('\n', '||')	
 			
 			if dauer == '':
@@ -519,7 +523,8 @@ def Start(name, path, rubrik=''):
 				fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
 					(quote(title), quote(href), quote(img_src), quote(descr_par), dauer)
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", 
-					fanart=R('3sat.png'), thumb=img_src, tagline=tag, summary=descr, fparams=fparams)
+					fanart=R('3sat.png'), thumb=img_src, tagline=tag, summary=descr, mediatype=mediatype,
+					fparams=fparams)
 				
 
 													# restl. Rubriken der Leitseite listen
@@ -808,7 +813,11 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 	
 	if page == '':								# Seitenausschnitt vom Aufrufer?
 		page, msg = get_page(path=path, do_safe=False)	
-	
+		
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+		mediatype='video'
+									
 	# 1. Strukturen am Seitenanfang (1 Video doppelt möglich):	
 	if 'video-carousel-item' in page:		# Bsp. www.3sat.de/kultur/kulturzeit
 		# video-carousel-item-Beiträge auswerten, html-Format, Seitenkopf
@@ -834,11 +843,19 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		if 'class="video-module-video b-ratiobox"' in page:
 			summ = stringextract('paragraph-large ">', '<', page)
 			summ = unescape(summ); summ = repl_json_chars(summ)
+			descr_par =	summ.replace('\n', '||')
 			content = stringextract('class="video-module-video b-ratiobox"', '</button>', page)
 			img_src = stringextract('teaser-image="[', ',', content)
 			duration = stringextract('duration": "', '"', content)
-			SingleBeitrag(title, path, img_src, summ, dauer=duration)
-			return 
+			# SingleBeitrag(title, path, img_src, summ, dauer=duration)	# direkt zugunsten Resume entfernt  
+
+			title=py2_encode(title); href=py2_encode(path);	 img_src=py2_encode(img_src);
+			descr_par=py2_encode(descr_par); duration=py2_encode(duration);						
+			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
+				(quote(title), quote(href), quote(img_src), quote(descr_par), quote(duration))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
+				thumb=img_src, summary=summ, fparams=fparams, mediatype=mediatype)
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
 	PLog(len(rubriken))
 	 									# kein Einzelbeitrag, weiterführender Link?
@@ -861,10 +878,6 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
 				fanart=R('3sat.png'), thumb=img_src, summary=descr, fparams=fparams)
 
-	mediatype='' 		
-	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-		mediatype='video'
-								
 	for rec in rubriken:
 		if 'data-playlist-toggle' not in rec:
 			continue

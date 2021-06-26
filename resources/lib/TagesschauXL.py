@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 13.06.2021
+#	Stand: 25.06.2021
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -211,15 +211,15 @@ def Main_XL():
 	tag = u"Investigative Inhalte der ARD - aufwändig recherchierte Beiträge und Exclusivgeschichten der "
 	tag = u"%sPolitik-Magazine Monitor, Panorama, Report und Kontraste. " % tag
 	fparams="&fparams={'title': '%s','path': '%s'}"  % (quote(title), quote(ARD_Investigativ))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.Investigativ", fanart=ICON_MAINXL, 
-		thumb=ICON_Investig, tagline=tag, fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.get_VideoAudio", 
+		fanart=ICON_MAINXL, thumb=ICON_Investig, tagline=tag, fparams=fparams)
 	
 	title = 'Faktenfinder'
-	tag = u"häufig ohne Videos, dafür HTML-Auszüge. Für weitergehende Recherchen bitte  Quellen außerhalb des "
-	tag = u"%sAddons verwenden" % tag
+	tag = u"Die faktenfinder - das Verifikationsteam der ARD - untersuchen Gerüchte, stellen Falschmeldungen "
+	tag = u"%srichtig und liefern Hintergründe zu aktuellen Themen." % tag
 	fparams="&fparams={'title': '%s','path': '%s'}"  % (title, quote(ARD_Fakt)) 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.Faktenfinder", fanart=ICON_MAINXL, 
-		thumb=ICON_FAKT, tagline=tag, fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.get_VideoAudio", 
+		fanart=ICON_MAINXL, thumb=ICON_FAKT, tagline=tag, fparams=fparams)
 		
 	title = 'Podcasts und Audios'
 	tag = u"Audiobeiträge"
@@ -303,7 +303,7 @@ def menu_hub(title, path, ID, img):
 #	erfasst (-> summ)
 # 
 # ----------------------------------------------------------------------
-def XLSinglePage(title,thumb, summ='', tag='', ID='',path='',page=''):
+def XLSinglePage(title, thumb, summ='', tag='', ID='', path='', page=''):
 	PLog('XLSinglePage:'); PLog(ID);
 	img = thumb; title_org = title
 	
@@ -319,14 +319,33 @@ def XLSinglePage(title,thumb, summ='', tag='', ID='',path='',page=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')			# Home-Button
 
-	items = blockextract("component='ts-mediaplayer", page) 
+	mediatype=''									# Kennz. Video für Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
+
+	# 2 Varianten: "ts-mediaplayer" (häufig Audio), 'ts-mediaplayer' (häufig Video):
+	items =  blockextract('ts_component="ts-mediaplayer"', page)
 	PLog(len(items))
-	themen = stringextract('video__details">', '</div>', page)
+	items =  items + blockextract("ts_component='ts-mediaplayer'", page)
+	PLog(len(items))
+	base_url = BASE_URL
+	
+	themen = stringextract('video__details">', '</div>', page)	# Themen 1. Sendung -> summ
 	themen = repl_json_chars(themen)
 	themen = cleanhtml(mystrip(themen)); 
 	
 	cnt=0;  
 	for item in items:
+		conf = stringextract("data-config='", "'", item)				# json-Daten mit mp3-Link
+		conf = conf.replace('\\"', '"')
+		conf = conf.replace('&quot;', '"')
+		
+		teaser_img = stringextract('"xs":"', '"', conf)					# häufig gleich				
+		if teaser_img == '':
+			teaser_img = stringextract('"m":"', '"', conf)
+		if teaser_img.startswith('http') == False:
+			teaser_img = base_url + teaser_img
+
 		href = stringextract('href="', '"', item)
 		if href == '':							# Link fehlt im 1. item, aus 2. item entnommen
 			href = stringextract('href="', '"', items[1])
@@ -351,12 +370,19 @@ def XLSinglePage(title,thumb, summ='', tag='', ID='',path='',page=''):
 		
 		PLog('Satz1:')
 		PLog(title);PLog(summ[:80]);PLog(tag);PLog(href);
+			
+		Dict_ID = 'XLSinglePage_%d' % cnt						# Dict hier vertretbar (kleine Listen) -
+		Dict("store", Dict_ID, conf) 							#	anders: get_VideoAudio
 		title=py2_encode(title); href=py2_encode(href);  summ=py2_encode(summ)
-		img=py2_encode(img); tag=py2_encode(tag); summ_par=py2_encode(summ_par)	
-		fparams="&fparams={'title': '%s', 'path': '%s', 'summ': '%s', 'thumb': '%s', 'tag': '%s'}" %\
-			(quote(title), quote(href), quote(summ_par), quote(img), quote(tag))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XLGetSourcesJSON", 
-			fanart=img, thumb=img, summary=summ, tagline=tag, fparams=fparams)				
+		teaser_img=py2_encode(teaser_img); tag=py2_encode(tag); summ_par=py2_encode(summ_par)
+		
+		fparams="&fparams={'title': '%s', 'Dict_ID': '%s', 'Plot': '%s', 'img': '%s'}" %\
+			(quote(title), Dict_ID, quote(summ_par), quote(teaser_img))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XLGetSourcesPlayer", 
+			fanart=teaser_img, thumb=teaser_img, tagline=tag, fparams=fparams, mediatype=mediatype, 
+			summary=summ)
+			
+						
 		cnt=cnt+1
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
@@ -404,7 +430,7 @@ def XL_Search(query='', pagenr=''):
 		query = get_query(channel='ARD')
 	PLog(query)
 	if  query == None or query.strip() == '':
-		return ""
+		return Main_XL()		# sonst Wiedereintritt XL_Search bei Sofortstart, dann Absturz Addon
 	query_org = query	
 	query=py2_decode(query)		# decode, falls erf. (1. Aufruf)
 
@@ -490,15 +516,6 @@ def get_content(li, page, ID, mark='', path=''):
 		return
 		
 	base_url = BASE_URL
-	func = "XLGetSourcesHTML"									# Default Zielfunktion
-	if ID=="ARD_Archiv_Day" or  ID=="Search":					
-		func = "XLGetSourcesJSON"
-
-	mediatype='' 												# 04.02.2021 entf. hier		
-	#if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Kennz. Video für Sofortstart 
-	#	mediatype='video'
-
-
 	cnt = 0
 	for rec in content:	
 		cnt = cnt +1											# Satz-Zähler						
@@ -526,15 +543,20 @@ def get_content(li, page, ID, mark='', path=''):
 		gallery_url='';	tagline=''; mp3_url=''; onlyGallery=False							
 		if ID=='Search':
 			teasertext = stringextract('class="teasertext ">', '</p>', rec).strip()	# Teasertext mit url + Langtext, 
-			teasertext = stringextract('html">', '<strong>', teasertext)		# Text hinter url, nach | folgt typ
-			teasertext = teasertext.replace('|', '')			
-			dachzeile = stringextract('dachzeile">', '</p>', rec).strip()		# Dachzeile mit url + Typ + Datum							
+			teasertext = teasertext.replace('|&nbsp;', '')
+			teasertext = cleanhtml(teasertext)	
+			
+			dachzeile = stringextract('dachzeile">', '</p>', rec).strip()		# Dachzeile mit url + Typ + Datum
+			dachzeile = cleanhtml(dachzeile)							
 			teaser_typ =  stringextract('<strong>', '</strong>', dachzeile)
 			teaser_date =  stringextract('</strong>', '</a>', dachzeile)
 			tagline = teaser_typ + teaser_date
 			headlineclass = stringextract('headline">', '</h3>', rec).strip()	# Headline mit url + Kurztext
 			headline = stringextract('html">', '</a>', headlineclass)
 			
+			teasertext = "%s | %s" % (dachzeile, teasertext.strip())
+			PLog(teasertext[:80])
+				
 		if ID=='ARD_bab':
 			headline = stringextract('class="headline">', '</h', rec)
 			dachzeile = stringextract('dachzeile">', '</p>', rec)				# fehlt im 1. Satz
@@ -563,22 +585,22 @@ def get_content(li, page, ID, mark='', path=''):
 				gallery_url = base_url + stringextract('href="', '"', leftstring) 
 				
 		if ID=='ARD_Bilder': 
-			onlyGallery=True													# kein Hybrid-Satz
-			gallery_url =  base_url + stringextract('href="', '"', rec)			# 1. Stelle <a href=
+			onlyGallery=True											# kein Hybrid-Satz
+			gallery_url =  base_url + stringextract('href="', '"', rec)	# 1. Stelle <a href=
 			headlineclass = stringextract('headline">', '</h4>', rec).strip()	# Headline mit url + Kurztext
 			headline = stringextract('html">', '</a>', headlineclass)
-			teasertext = stringextract('title="', '"', rec)						# Bildtitel als teasertext
+			teasertext = stringextract('title="', '"', rec)				# Bildtitel als teasertext
 			teaserdate = stringextract('class="teasertext">', '|&nbsp', rec)  # nur Datum
 			tagline = teaserdate
 		
-		if ID=='Podcasts_Audios': 												# Podcasts + Audios
+		if ID=='Podcasts_Audios': 										# Podcasts + Audios
 			# teaser_url s.o
-			if 'class="teaser__link"' in rec:									# Podcasts
-				teaser_img = stringextract('data-srcset="', '"', rec)			# 1. (kleines Bild)
+			if 'class="teaser__link"' in rec:							# Podcasts
+				teaser_img = stringextract('data-srcset="', '"', rec)	# 1. (kleines Bild)
 				if teaser_img.startswith('http') == False:
 					teaser_img = base_url + teaser_img
 				
-				# topline = stringextract('teaser__topline">', '<', rec)		# mal Rubrik, mal Podcast	
+				# topline = stringextract('teaser__topline">', '<', rec)# mal Rubrik, mal Podcast	
 				headline = stringextract('__headline">', '<', rec)
 				headline = unescape(headline)
 				headline = "%s: %s" % ("Podcast", headline)	
@@ -586,34 +608,34 @@ def get_content(li, page, ID, mark='', path=''):
 				teasertext = stringextract('teaser__shorttext">', '</p>', rec)
 				teasertext = cleanhtml(teasertext); teasertext = mystrip(teasertext)
 			
-			if 'component="ts-mediaplayer"' in rec:								# Audios
-				conf = stringextract("data-config='", "'", rec)					# json-Daten mit mp3-Link
+			if 'component="ts-mediaplayer"' in rec:						# Audios
+				conf = stringextract("data-config='", "'", rec)			# json-Daten mit mp3-Link
 				conf = unescape(conf); conf = conf.replace('\\"', '"')
-				teaser_img = stringextract('"xs":"', '"', conf)					# immer gleich				
+				teaser_img = stringextract('"xs":"', '"', conf)			# immer gleich				
 				if teaser_img == '':
 					teaser_img = stringextract('"m":"', '"', conf)
 				if teaser_img.startswith('http') == False:
 					teaser_img = base_url + teaser_img
 				headline =  stringextract('"title":"', '"', conf)
-				mp3_url =  stringextract('"url":"', '"', conf)					# Audios (download-Url)
-				dur =  stringextract('"duration":"', '"', conf)					# sec
+				mp3_url =  stringextract('"url":"', '"', conf)			# Audios (download-Url)
+				dur =  stringextract('"duration":"', '"', conf)			# sec
 				dur = "%s sec" % dur
 				teasertext = "%s | Dauer %s" % (headline, dur)
 				PLog(conf[:80])
 			
 		if ID=='ARD_Archiv_Day':
-			headlineclass = stringextract('headline">', '</h4>', rec)			# Headline mit url + Kurztext
+			headlineclass = stringextract('headline">', '</h4>', rec)	# Headline mit url + Kurztext
 			headline = stringextract('html">', '</a>', headlineclass)
 			teasertext = stringextract('class="teasertext ">', '</p>', rec).strip()	# Teasertext mit url + Langtext, 
-			teasertext = stringextract('html">', '</a>', teasertext)		# Text hinter url, nach | folgt typ
-			if teasertext == '':											# leer: tagesschau vor 20 Jahren
+			teasertext = stringextract('html">', '</a>', teasertext)	# Text hinter url, nach | folgt typ
+			if teasertext == '':										# leer: tagesschau vor 20 Jahren
 				teasertext = headline		
 			dachzeile = stringextract('dachzeile">', '</p>', rec)		
 			tagline = dachzeile
-			headline = "%s: %s" % (headline, dachzeile[-9:])	# Titel mit Uhrzeit
+			headline = "%s: %s" % (headline, dachzeile[-9:])			# Titel mit Uhrzeit
 			
 		PLog('pre_Satz3:')
-		PLog(teaser_url); PLog(headline); PLog(teasertext[:81]);  		
+		PLog(teaser_url); PLog(headline); PLog(teasertext[:80]);  		
 		PLog(dachzeile);	PLog(teaser_typ); PLog(teaser_date);		
 			
 		title = headline; title = repl_json_chars(title)
@@ -634,22 +656,36 @@ def get_content(li, page, ID, mark='', path=''):
 			
 		PLog('Satz3:')
 		PLog(teaser_img);PLog(teaser_url);PLog(title);PLog(summary[:80]);PLog(tagline);
-		PLog(ID); PLog(mp3_url); PLog(func)
+		PLog(ID); PLog(mp3_url); 
 		title=py2_encode(title); gallery_url=py2_encode(gallery_url)
 		teaser_url=py2_encode(teaser_url);  summary=py2_encode(summary)
 		teaser_img=py2_encode(teaser_img); tagline=py2_encode(tagline); summ_par=py2_encode(summ_par)	
 		
-		if mp3_url:															# mp3-Quelle bereits bekannt
+		if mp3_url:														# mp3-Quelle bereits bekannt
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
 				quote(title), quote(teaser_img), quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.AudioPlayMP3", fanart=teaser_img, thumb=teaser_img, 
 				fparams=fparams, summary=summary)
 			
-		else:																# -> XLGetSourcesHTML / XLGetSourcesJSON
-			fparams="&fparams={'title': '%s', 'path': '%s', 'summ': '%s', 'thumb': '%s', 'tag': '%s', 'ID': '%s'}" %\
-				(quote(title), quote(teaser_url), quote(summ_par), quote(teaser_img), quote(tagline), ID)
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.%s" % func, 
-				fanart=teaser_img, thumb=teaser_img, summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype)				
+		else:															# -> XLGetSourcesHTML / XLGetSourcesJSON
+			mediatype=''												# (direkt -> PlayVideo)
+			if SETTINGS.getSetting('pref_video_direct') == 'true': 		# Kennz. Video für Sofortstart 
+				mediatype='video'	
+				
+			if ID=="ARD_Archiv_Day" or  ID=="Search":					# ohne ts-mediaplayer in Webseite				
+				func = "XLGetSourcesPlayer"
+				Dict_ID=teaser_url										# XLGetSourcesPlayer lädt conf von Zielseite
+				fparams="&fparams={'title': '%s', 'Dict_ID': '%s', 'Plot': '%s', 'img': '%s'}" %\
+					(quote(title), Dict_ID, quote(summ_par), quote(teaser_img))
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.%s" % func, 
+					fanart=teaser_img, thumb=teaser_img, fparams=fparams, mediatype=mediatype, summary=summary)
+			else:									
+				func = "XLGetSourcesHTML"								# Default Zielfunktion
+				fparams="&fparams={'title': '%s', 'path': '%s', 'summ': '%s', 'thumb': '%s', 'tag': '%s', 'ID': '%s'}" %\
+					(quote(title), quote(teaser_url), quote(summ_par), quote(teaser_img), quote(tagline), ID)
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.%s" % func, 
+					fanart=teaser_img, thumb=teaser_img, summary=summary, tagline=tagline, fparams=fparams, 
+					mediatype=mediatype)				
 	return li
 
 # ----------------------------------------------------------------------
@@ -706,106 +742,26 @@ def XL_Live(ID=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 # ----------------------------------------------------------------------
-# Abweichende Struktur der HTML-Seite 
-#	
-#
-def Faktenfinder(title, path):								# Faktenfinder
-	PLog('Faktenfinder: ' + path)
-	XLCacheTime = 3600										# 1 Std.	
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')						# Home-Button
-		
-	page = Dict("load", 'XL_FAKT', CacheTime=XLCacheTime)					
-	if page == False:										# nicht vorhanden oder zu alt
-		page, msg = get_page(path)		
-		if page == '':	
-			msg1 = u"Fehler in Faktenfinder"
-			msg2 = msg
-			MyDialog(msg1, msg2, '')	
-			return li
-		else:	
-			Dict("store", 'XL_FAKT', page) 					# Seite -> Cache: aktualisieren		
-
-	items=[]
-	block  = blockextract('class="teaser__link"',  page, 'div class="columns')			# 1. Block
-	PLog(len(block))
-	if len(block) > 0:
-		items = items + block
-	block  = blockextract('class="list-element__link"',  page, ">Alle Meldungen")		# 2. Block
-	PLog(len(block))
-	if len(block) > 0:
-		items = items + block
-	block  = blockextract('class="list-element__teaserinfo',  page, '"class="footer"')	# 3. Block
-	PLog(len(block))
-	if len(block) > 0:
-		items = items + block
-	PLog(len(items))
-		
-	old_href=[]; cnt=0
-	for item in items:	
-		href = stringextract('href="', '"', item)
-		if href in old_href:
-			continue
-		old_href.append(href)
-		if '__headline' not in item:						# skip Kurzform mit ts-picture__wrapper				
-			continue
-		if 'ts-image js-image' in item:
-			img = stringextract('src="', '"', item)
-		else:
-			img = ICON_FAKT	
-		if img and img.startswith("http") == False:
-			img = BASE_URL + img
-		page_local='' 										# Satz ohne Videodaten
-		if "component='ts-mediaplayer" in item:				# mit Videodaten
-			#player = stringextract('data-ts_component=', '</div>', item)
-			Dict("store", 'XLFakt_%s' % cnt, item) 			# XLGetSourcesJSON lädt
-			page_local = 'XLFakt_%s' % cnt
-			
-		title = stringextract('__headline">', '</', item)
-		title = mystrip(title); title = cleanhtml(title); 
-		title = unescape(title); title = repl_json_chars(title)
-		tag = stringextract('__topline">', '</', item)
-		summ = stringextract('_shorttext">', '</', item)
-		summ = mystrip(summ); summ = repl_json_chars(summ)
-		summ = cleanhtml(summ);
-		summ_par = summ.replace('\n', '||')
-						
-		PLog('Satz4:')
-		PLog(title);PLog(summ[:80]);PLog(tag);PLog(href);PLog(img);
-		title=py2_encode(title); href=py2_encode(href);  summ=py2_encode(summ)
-		img=py2_encode(img); tag=py2_encode(tag); summ_par=py2_encode(summ_par);
-		page_local=py2_encode(page_local)				
-		fparams="&fparams={'title': '%s', 'path': '%s', 'summ': '%s', 'thumb': '%s', 'tag': '%s', 'page_local': '%s'}" %\
-			(quote(title), quote(href), quote(summ_par), quote(img), quote(tag), quote(page_local))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XLGetSourcesJSON", 
-			fanart=img, thumb=img, summary=summ, tagline=tag, fparams=fparams)				
-		cnt=cnt+1
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-
-# ----------------------------------------------------------------------
 # Abweichende Struktur der HTML-Seite (Daten im ts-mediaplayer-Block)
 #
-def Investigativ(title, path):								# Faktenfinder
-	PLog('Investigativ: ' + path)
-	XLCacheTime = 3600										# 1 Std.	
+def get_VideoAudio(title, path):								# Faktenfinder
+	PLog('get_VideoAudio: ' + path)
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')						# Home-Button
 		
-	page = Dict("load", 'XL_Investigativ', CacheTime=XLCacheTime)					
-	if page == False:										# nicht vorhanden oder zu alt
-		page, msg = get_page(path)		
-		if page == '':	
-			msg1 = u"Fehler in Faktenfinder"
-			msg2 = msg
-			MyDialog(msg1, msg2, '')	
-			return li
-		else:	
-			Dict("store", 'XL_Investigativ', page) 				# Seite -> Cache: aktualisieren	
+	page, msg = get_page(path)		
+	if page == '':	
+		msg1 = u"Fehler in get_VideoAudio"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
 				
+	mediatype=''									# Kennz. Video für Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
 	
-	# 2 Varianten: "ts-mediaplayer" (Audio), 'ts-mediaplayer' (Video):
+	# 2 Varianten: "ts-mediaplayer" (häufig Audio), 'ts-mediaplayer' (häufi Video):
 	content =  blockextract('"ts-mediaplayer"', page)
 	PLog(len(content))
 	content =  content + blockextract("'ts-mediaplayer'", page)
@@ -815,9 +771,12 @@ def Investigativ(title, path):								# Faktenfinder
 	cnt = 0; url_list=[]
 	for rec in content:
 		cnt = cnt +1													# Satz-Zähler						
-		conf = stringextract("data-config='", "'", rec)					# json-Daten mit mp3-Link
+		path =  stringextract('href="', '"', rec)						# Zielseite
+			
+		conf = stringextract("data-config='", "'", rec)					# json-Daten mit media-Links
 		conf = conf.replace('\\"', '"')
 		conf = conf.replace('&quot;', '"')
+		conf = unescape(conf)
 		teaser_img = stringextract('"xs":"', '"', conf)					# immer gleich				
 		if teaser_img == '':
 			teaser_img = stringextract('"m":"', '"', conf)
@@ -825,9 +784,15 @@ def Investigativ(title, path):								# Faktenfinder
 			teaser_img = base_url + teaser_img
 			
 		#title =  stringextract('"title":"', '"', conf)					# Clip-Titel (stimmt nicht mit Web überein)
-		img_title =  stringextract('"_title":"', '"', conf)				# Bildtitel
-		title =  stringextract('__headline">', '<', rec)				# Web-Titel
-		title = unescape(title); 
+		img_title =  stringextract('"_title":"', '"', conf)				# Bildtitel -> tag
+		h3_teaser = stringextract('<h3 class="teaser', '</h3>', rec)    # Titelvarianten
+		h3_teaser = unescape(h3_teaser)
+		teaser1 = stringextract('topline">', '</span>', h3_teaser)
+		teaser2 = stringextract('headline">', '</span>', h3_teaser)		# kann </span> im Titel enthalten
+		title = "%s: [B]%s[/B]" % (teaser1, teaser2)
+		title = cleanhtml(title)
+		title = mystrip(title); 	 
+		title = unescape(title); title = repl_json_chars(title)
 		
 		typ =  stringextract('"_type":"', '"', conf)
 		typ_org = typ
@@ -841,8 +806,8 @@ def Investigativ(title, path):								# Faktenfinder
 		dur =  stringextract('"duration":"', '"', conf)					# sec
 		dur = "%s sec" % dur
 		
-		sub_path	= stringextract('_subtitleUrl":"', '"', page)
-		geoblock 	= stringextract('geoblocked":', ',', page)
+		sub_path	= stringextract('_subtitleUrl":"', '"', conf)
+		geoblock 	= stringextract('geoblocked":', ',', conf)
 		if geoblock == 'true':										# Geoblock-Anhang für title, summary
 			geoblock = 'Geoblock: JA'
 		else:
@@ -853,13 +818,12 @@ def Investigativ(title, path):								# Faktenfinder
 		
 		PLog(conf[:80])
 		
-		title = repl_json_chars(title); title = unescape(title);	
 		teasertext = repl_json_chars(teasertext); teasertext = unescape(teasertext);
 		summ = "%s\n\n%s" % (tag, teasertext)	
 		summ_par=summ.replace('\n', '||'); 
 		
 		PLog('Satz6:')
-		PLog(title);PLog(teaser_img);PLog(typ);PLog(title);
+		PLog(title);PLog(path);PLog(teaser_img);PLog(typ);PLog(title);
 		PLog(summ[:80]); 
 		
 		title=py2_encode(title); url=py2_encode(url); 
@@ -872,29 +836,50 @@ def Investigativ(title, path):								# Faktenfinder
 				fparams=fparams, summary=summ)
 				
 		if typ_org == "video":											# Video	
-			Dict_ID = 'XLPlayer_%d' % cnt
-			Dict("store", Dict_ID, conf) 
+			#Dict_ID = 'get_VideoAudio_%d' % cnt						# bremst bei großen Listen (Dateisystem-abh.)
+			#Dict("store", Dict_ID, conf) 
+			Dict_ID = path												# XLGetSourcesPlayer holt conf neu
 			fparams="&fparams={'title': '%s', 'Dict_ID': '%s', 'Plot': '%s', 'img': '%s'}" %\
 				(quote(title), Dict_ID, quote(summ_par), quote(teaser_img))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XLGetSourcesPlayer", 
-				fanart=teaser_img, thumb=teaser_img, fparams=fparams, summary=summ)
+				fanart=teaser_img, thumb=teaser_img, fparams=fparams, mediatype=mediatype, summary=summ)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 # ----------------------------------------------------------------------
 # holt Videoquellen aus data-config-Bereich des eingebetteten 
 #	ts-mediaplayers, hier erneut geladen via Dict_ID
-# 
+# Ev. vorh. Audioquelle wird sofort gestartet 
+#  Sofortstart: Direktaufruf in build_Streamlists_buttons
+# Dict_ID enthält path bei Aufruf aus get_content (ID's: ARD_Archiv_Day, 
+#	Search - Webseiten ohne ts-mediaplayer)
+#
 def XLGetSourcesPlayer(title, Dict_ID, Plot, img):
 	PLog('XLGetSourcesPlayer: ' + title)
 	PLog(Dict_ID)
 	
-	conf = Dict("load", Dict_ID)
+	if Dict_ID.startswith('http'):
+		page, msg = get_page(path=Dict_ID)
+		conf = stringextract("data-config='", "'", page)			# json-Daten mit Video-/Audio-Link
+		conf = unescape(conf); conf = conf.replace('\\"', '"')
+		if page == '' or conf == '':
+			conf=False	
+	else:	
+		conf = Dict("load", Dict_ID)								# unescape durch Aufrufer
+	PLog(conf[:80])
+		
 	if conf == False:
 		msg1 = u"XLGetSourcesPlayer: Playerdaten nicht gefunden für"
 		msg2 = title
 		MyDialog(msg1, msg2, '')	
 		return 
+		
+	typ =  stringextract('"_type":"', '"', conf)					# Ausleitung Audio
+	if typ == "audio":
+		Plot = Plot.replace("VIDEO", "AUDIO")
+		url =  stringextract('"url":"', '"', conf)
+		AudioPlayMP3(url, title, img, Plot)
+		return
 		
 	base_url = BASE_URL
 	li = xbmcgui.ListItem()
@@ -931,101 +916,6 @@ def XLGetSourcesPlayer(title, Dict_ID, Plot, img):
 		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-
-# ----------------------------------------------------------------------
-# Aufrufer XLSinglePage - s. dort, Nutzung der Streamlisten-Funktionen
-# 	in Haupt-PRG und ARD Neu
-# page_local kann einen lokalen Seitenausschnitt enthalten (Dict) - 
-#	z.B. Fakentfinder
-#
-def XLGetSourcesJSON(path, title, summ, tag, thumb, page_local='', ID=''):
-	PLog('XLGetSourcesJSON: ' + title)
-	title_org = title; thumb_org = thumb
-	tagline = tag.replace('||', ''); 
-	summary =summ 
-	
-	if page_local:								# Seitenausschnitt 
-		page = Dict("load", page_local)
-	else:
-		page, msg = get_page(path=path)				# Seite existiert nicht (mehr)?
-	if page == '':	
-		msg1 = "Fehler in XLGetSourcesJSON:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return 
-	PLog(len(page))			
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')					# Home-Button
-	
-	# -----------------------------------------			# Extrakt Videoquellen
-	player = stringextract("component='ts-mediaplayer", 'class="player">', page)
-	data = stringextract("data-config='", "'", player)	# quoted json
-	PLog(data[:100])
-	if data == '':
-		if '__topline' in page and '__headline' in page:
-			msg = get_content_text(page, title, summ, tag,)	# Textausgabe statt Video
-			return
-		else:
-			msg1 = u"Keine Videoquellen gefunden für:"
-			msg2 = "%s" % title
-			MyDialog(msg1, msg2, '')	
-			return 
-		
-	data = unescape(data)
-	PLog(data[:100])
-	PLog(data[-100:])
-	#RSave('/tmp/XL_VideoSources.json', py2_encode(data))					
-
-	page = data
-	#link_img = stringextract('_previewImage":"', '",', page) # ev. nur Mediatheksymbol
-	thumb = stringextract('xl":"', '"', page) 				# ev. nur Mediatheksymbol
-	if thumb == '':
-		thumb = thumb_org
-	else:
-		if thumb.startswith('http') == False:
-			thumb = BASE_URL + thumb
-	geoblock =  stringextract('geoblocked":', ',', page)	# Geoblock-Markierung ARD
-	sub_path = stringextract('_subtitleUrl":"', '"', page)
-	if geoblock == 'true':									# Geoblock-Anhang für title, summary
-		geoblock = ' | Geoblock: JA'
-		title = title + geoblock
-	else:
-		geoblock = ' | Geoblock: nein'
-	dauer = stringextract('duration":"', '"', page)
-	dauer = seconds_translate(dauer)
-	
-	tagline = "%s | Dauer: %s" % (tagline, dauer)
-	if summary:	
-		tagline = "%s\n\n%s" % (tagline, summary)
-		
-		
-	tagline = "Titel: %s\n\n%s" % (title_org, tagline)	# Titel neu in Streamlists_buttons
-	Plot = tagline.replace('\n', '||')
-	
-	PLog('Satz2:')
-	PLog(title); PLog(dauer); PLog(geoblock);  PLog(tagline); PLog(thumb)
-
-	VideoUrls = blockextract('_quality', page)
-	PLog(len(VideoUrls))
-	HLS_List,MP4_List,HBBTV_List = XLGetVideoLists(li, title, VideoUrls)
-	
-	if not len(HLS_List) and not len(MP4_List):
-		msg1 = "keine Streamingquelle gefunden: %s"	% title
-		PLog(msg1)
-		MyDialog(msg1, '', '')	
-		return li
-
-	#----------------------------------------------- Abschluss wie Investigativ
-	# Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart 
-	# 
-	PLog('Lists_XLGetSourcesJSON_ready:');
-	ID = ""; HOME_ID = 'TagesschauXL'; 
-	ID = 'TXL'; 
-	build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
-		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------
 # Bau HBBTV_List (leer), HLS_List, MP4_List via Modul ARDnew

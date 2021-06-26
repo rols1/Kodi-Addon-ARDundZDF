@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 09.06.2021
+#	Stand: 20.06.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1071,7 +1071,8 @@ def Tivi_Search(query=None, title='Search', pagenr=''):
 		query = ardundzdf.get_query(channel='ZDF')
 	PLog(query)
 	if  query == None or query.strip() == '':
-		return ""
+		# return ""
+		return Main_TIVI("tivi") # sonst Wiedereintritt Tivi_Search bei Sofortstart, dann Absturz Addon
 	query_org = query	
 	query=py2_decode(query)		# decode, falls erf. (1. Aufruf)
 
@@ -1099,6 +1100,7 @@ def Tivi_Search(query=None, title='Search', pagenr=''):
 		MyDialog(msg1, '', '')
 		return li	
 				
+	
 	# anders als bei den übrigen ZDF-'Mehr'-Optionen gibt der Sender Suchergebnisse bereits
 	#	seitenweise aus, hier umgesetzt mit pagenr - offset entfällt	
 	li, page_cnt = ardundzdf.ZDF_get_content(li=li, page=page, ref_path=path, ID=ID)
@@ -1116,8 +1118,8 @@ def Tivi_Search(query=None, title='Search', pagenr=''):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_Search", fanart=R(ICON_MEHR), 
 			thumb=R(ICON_MEHR), fparams=fparams)
 	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)	# Absturz Addon bei Sofortstart - s.o.
+
 # ----------------------------------------------------------------------			
 def Tivi_Woche():
 	PLog('Tivi_Woche')

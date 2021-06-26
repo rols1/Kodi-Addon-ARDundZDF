@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.8.9'
-VDATE = '19.06.2021'
+VERSION = '3.9.0'
+VDATE = '26.06.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7841,14 +7841,19 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 	if len(content) == 0:
 		msg_notfound = 'Video ist leider nicht mehr oder noch nicht verfügbar'
 		
-	if len(content) == 0:										# Ausleitung Einzelbeiträge ohne icon-502
+	if len(content) == 0:									# Ausleitung Einzelbeiträge ohne icon-502
 		rec = ZDF_get_playerbox(page)						# Format: Titel##Thumb###tagline
 		if rec:
 			PLog('AusleitungEinzelbeitrag1')
 			title, thumb, tag = rec.split('###')
 			ZDF_getVideoSources(url=ref_path, title=title, thumb=thumb, tagline=tag)
 			return li, 0
-			
+	
+	if len(content) == 0:									# Ausleitung ZDF_Bildgalerien
+		if "gallery-slider-box" in page:
+			PLog('AusleitungBildgalerie')
+			ZDF_BildgalerieSingle(ref_path, page_title)		
+			return li, 0			
 	
 	if ID == 'NeuInMediathek':									# letztes Element entfernen (Verweis Sendung verpasst)
 		content.pop()	
@@ -8457,9 +8462,10 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 #-------------------------
 # Sofortstart + Buttons für die einz. Streamlisten
 # Aufrufer: build_Streamlists (ZDF, 3sat), ARDStartSingle (ARD Neu),
-#	SingleSendung (ARD Classic)
+#	SingleSendung (ARD Classic), XLGetSourcesPlayer
 # Plot = tagline (zusammengefasst: Titel (abgesetzt), tagline, summary)
-# Kennzeichung mit mediatype='video' in Funktion StreamsShow
+# Kennzeichung mit mediatype='video' vor aufrufenden Funktionenen, z.B.
+#	StreamsShow, XLGetSourcesPlayer, 
 #
 def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		HLS_List,MP4_List,HBBTV_List,ID="ZDF",HOME_ID="ZDF"):
@@ -8976,8 +8982,22 @@ def ZDF_BildgalerieSingle(path, title):
 		brand = mystrip(brand)	
 		PLog(brand)
 
-		img_src =  stringextract('data-srcset="', ' ', rec)	
-		img_src = img_src.replace('384x216', '1280x720')			
+		img_links =  stringextract('data-srcset="', '"', rec)	# mehrere Links, aufsteig. Bildgrößen
+		img_links = blockextract('http', img_links)
+		w_old=0
+		for img_link in img_links:
+			img_link = img_link.split(' ')[0]					# Link bis 1. Blank: ..?cb=1462007560755 384w 216h
+			w=''
+			w_h = stringextract('~', '?cb', img_link)			# Bsp.: ..-2014-100~384x216?cb=1462007562325
+			PLog(img_link); PLog(w_h)
+			if "x" in w_h:
+				w  = w_h.split('x')[0]							# Bsp.: 384
+				if int(w) > w_old and int(w) <= 1280:			# Begrenz.: 1280 (gesehen: 3840)
+					w_old = int(w)
+					
+		img_src  = img_link
+		PLog("img_src: %s, w: %d" % (img_link, w_old))			
+					
 		href = stringextract('a href', '</a>', rec)
 		path  = stringextract('="', '"', href)
 		if path == '':										# Sicherung
@@ -9040,7 +9060,7 @@ def ZDF_BildgalerieSingle(path, title):
 				background	= True											
 									
 			title=repl_json_chars(title); summ=repl_json_chars(summ)
-			PLog('neu:');PLog(title);PLog(thumb);PLog(summ[0:40]);
+			PLog('neu:');PLog(title);PLog(img_src);PLog(thumb);PLog(summ[0:40]);
 			if thumb:	
 				local_path=py2_encode(local_path);
 				fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)

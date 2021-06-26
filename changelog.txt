@@ -9,6 +9,45 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+26.06.2021 3.9.0
+			Resumefunktion (Sofortstart childs/Kika): mediatype='video' gesetzt in dirID=
+			"resources.lib.childs.Kika_SingleBeitrag"-Calls (Kikaninchen_Videos, Kika_Videos,
+			KikaninchenLieder).
+			Resumefunktion (Sofortstart childs/Tivi): Quellenermittlung via ZDF-Funktionen -
+			keine Änderung erforderlich.
+			Tivi_Search: Rücksprung zum tivi-Hauptmenü bei leerer Sucheingabe, die auf 
+			Sofortstart folgt (sonst Addon-Absturz).  
+			ZDF_BildgalerieSingle: Bildauswahl erweitert - Links bis einschl. 1280x720 
+			ausgewählt (mit früherem replace '384x216' -> '1280x720' waren Ladefehler 
+			möglich). 
+			ZDF_get_content: Ausleitung ZDF_Bildgalerien, falls sonst kein Beitrag gefunden.
+			Modul arte: neue Funktion Kategorie_Dokus für abweichende Kat ":"Dokus und 
+			Reportagen"'), Trigger für json-nachfolgende Webauswertung geändert von 1 auf 0
+			json-Ergebnisse, Auswertung der Subkategorienliste (einschl. Kategorie_Dokus)
+			zusammengefasst in get_subkats.
+			Resumefunktion (Sofortstart 3sat):  mediatype='video' gesetzt in dirID=
+			"resources.lib.my3Sat.SingleBeitrag", in Sendereihe_Sendungen direkten Aufruf
+			von SingleBeitrag zugunsten Resume durch Button ersetzt (1 Klick mehr 
+			erforderlich).
+			Start (3sat): repl_json_chars für descr (Hochkommata -> network_error).
+			Investigativ (TagesschauXL): Titelauswertung verbessert (mehrere Varianten),
+			Zusammenfassung Topline (normal) + Headline (fett).
+			Resumefunktion (Sofortstart TagesschauXL): mediatype='video' gesetzt in dirID=
+			"resources.lib.TagesschauXL.XLGetSourcesPlayer" -> PlayVideo_Direct in 
+			build_Streamlists_buttons.
+			XLSinglePage, Faktenfinder (TagesschauXL): Umstellung Zielfunktion auf 
+			XLGetSourcesPlayer, Nutzung Cache für Player-Daten, Auswertung Icons für
+			letzte + zurückliegende Sendungen, XLGetSourcesJSON entfernt (obsolet),
+			Anpassungen in get_content (insbes. für ID's ARD_Archiv_Day + Search).
+			XL_Search (TagesschauXL): Rücksprung zum XL-Hauptmenü bei leerer Sucheingabe, 
+			die auf Sofortstart folgt (sonst Addon-Absturz).
+			Faktenfinder, Investigativ ((TagesschauXL):) Auswertung zusammengefasst in
+			get_VideoAudio, Auswertung Icons, Ausleitung Audios in XLGetSourcesPlayer.
+			Aktualisierung Event-Streams (livesenderTV.xml): BR Event - 1 hinzugefügt 
+			(@Nirvana777).
+			TV-Livestreams: Pos. Chemnitz Fernsehen geändert, Logo eingefügt.
+			
+			
 19.06.2021 3.8.9
 			ARDSport: Zusatz-Button "DIE FINALS" auskommentiert (@Weri).
 			Sport Live im ZDF: Unterdrückung Auswertung publicationDate beim Vorausladen
@@ -160,7 +199,7 @@ CHANGE HISTORY
 			(util).
 			PlayVideo (Modul util): exit(0, falls Homebuttons abgewählt ) nach Videostart,
 			um Rekursion zu vermeiden, zusätzl. Vergleich mit Url+Laufzeit sowie OS_RELEASE.
-			GetContent (Moedul arte): Fix 'ascii'-codec-error.
+			GetContent (Modul arte): Fix 'ascii'-codec-error.
 			ZDFSourcesHBBTV: Korrektur der Stichproben-Werte und Qualitäts-Bezeichnungen
 			(github-issue 7).
 			XLGetSourcesHTML (Modul TagesschauXL): Fix Einzelauflösungen (Video startete
