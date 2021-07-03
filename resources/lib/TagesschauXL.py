@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 25.06.2021
+#	Stand: 02.07.2021
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -79,7 +79,7 @@ ARD_Nacht 		= 'https://www.tagesschau.de/sendung/nachtmagazin/index.html'
 ARD_bab 		= 'https://www.tagesschau.de/bab/index.html'
 ARD_Archiv 		= 'https://www.tagesschau.de/multimedia/video/videoarchiv2~_date-%s.html'	# 02.02.2021
 ARD_Fakt		= 'https://www.tagesschau.de/investigativ/faktenfinder/'					# 02.02.2021
-Podcasts_Audios	= 'https://www.tagesschau.de/multimedia/'
+Podcasts_Audios	= 'https://www.tagesschau.de/multimedia/audio'
 ARD_kurz 		= 'https://www.tagesschau.de/faktenfinder/kurzerklaert/index.html'
 BASE_FAKT		='https://faktenfinder.tagesschau.de'										
 ARD_Investigativ='https://www.tagesschau.de/investigativ/'									# 10.06.2021
@@ -223,9 +223,10 @@ def Main_XL():
 		
 	title = 'Podcasts und Audios'
 	tag = u"Audiobeiträge"
+	ID = "Audios"
 	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-		(quote(title), quote(Podcasts_Audios), 'Podcasts_Audios', quote(ICON_RADIO))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
+		(quote(title), quote(Podcasts_Audios), ID, quote(ICON_RADIO))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Audios", fanart=ICON_MAINXL, 
 		thumb=ICON_RADIO, tagline=tag, fparams=fparams)
 		
 	title = '#kurzerklärt'
@@ -499,12 +500,6 @@ def get_content(li, page, ID, mark='', path=''):
 	if ID=='ARD_Blogs' or ID=='ARD_kurz'  or ID=='ARD_Archiv_Day':
 		content =  blockextract('class="teaser" >', page)
 		base_url = BASE_FAKT
-	if ID=='Podcasts_Audios':
-		content = stringextract('<h2>Podcasts</h2>', '<h2>Audios</h2>', page)
-		content =  blockextract('class="teaser__link"', content)
-		more = stringextract('<h2>Audios</h2>', 'class="footer"', page)
-		more_list = blockextract('component="ts-mediaplayer"', more)
-		content = content + more_list			# Weitere Audios anhängen
 	
 
 	PLog(len(page)); PLog(len(content));
@@ -592,36 +587,6 @@ def get_content(li, page, ID, mark='', path=''):
 			teasertext = stringextract('title="', '"', rec)				# Bildtitel als teasertext
 			teaserdate = stringextract('class="teasertext">', '|&nbsp', rec)  # nur Datum
 			tagline = teaserdate
-		
-		if ID=='Podcasts_Audios': 										# Podcasts + Audios
-			# teaser_url s.o
-			if 'class="teaser__link"' in rec:							# Podcasts
-				teaser_img = stringextract('data-srcset="', '"', rec)	# 1. (kleines Bild)
-				if teaser_img.startswith('http') == False:
-					teaser_img = base_url + teaser_img
-				
-				# topline = stringextract('teaser__topline">', '<', rec)# mal Rubrik, mal Podcast	
-				headline = stringextract('__headline">', '<', rec)
-				headline = unescape(headline)
-				headline = "%s: %s" % ("Podcast", headline)	
-				
-				teasertext = stringextract('teaser__shorttext">', '</p>', rec)
-				teasertext = cleanhtml(teasertext); teasertext = mystrip(teasertext)
-			
-			if 'component="ts-mediaplayer"' in rec:						# Audios
-				conf = stringextract("data-config='", "'", rec)			# json-Daten mit mp3-Link
-				conf = unescape(conf); conf = conf.replace('\\"', '"')
-				teaser_img = stringextract('"xs":"', '"', conf)			# immer gleich				
-				if teaser_img == '':
-					teaser_img = stringextract('"m":"', '"', conf)
-				if teaser_img.startswith('http') == False:
-					teaser_img = base_url + teaser_img
-				headline =  stringextract('"title":"', '"', conf)
-				mp3_url =  stringextract('"url":"', '"', conf)			# Audios (download-Url)
-				dur =  stringextract('"duration":"', '"', conf)			# sec
-				dur = "%s sec" % dur
-				teasertext = "%s | Dauer %s" % (headline, dur)
-				PLog(conf[:80])
 			
 		if ID=='ARD_Archiv_Day':
 			headlineclass = stringextract('headline">', '</h4>', rec)	# Headline mit url + Kurztext
@@ -662,8 +627,9 @@ def get_content(li, page, ID, mark='', path=''):
 		teaser_img=py2_encode(teaser_img); tagline=py2_encode(tagline); summ_par=py2_encode(summ_par)	
 		
 		if mp3_url:														# mp3-Quelle bereits bekannt
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
-				quote(title), quote(teaser_img), quote_plus(summ_par))
+			ID='TagesschauXL'
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
+				quote(title), quote(teaser_img), quote_plus(summ_par), ID)
 			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.AudioPlayMP3", fanart=teaser_img, thumb=teaser_img, 
 				fparams=fparams, summary=summary)
 			
@@ -691,6 +657,97 @@ def get_content(li, page, ID, mark='', path=''):
 # ----------------------------------------------------------------------
 # 02.02.2021 Wegfall Bildergalerien:
 # def XL_Bildgalerie(path, title):	
+	
+# ----------------------------------------------------------------------
+# Übersicht Podcasts + einz. Audios auf www.tagesschau.de/multimedia/audio/
+#	(1. Aufruf mit ID="Audios"
+# path: einz. Podcastseiten, z.B. podcasts/faktenfinder-feed-101.html 
+#	(2. Aufruf mit ID=Podcasts und path)
+#
+def XL_Audios(title, ID, img,  path=''):	
+	PLog('XL_Audios:')
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='TagesschauXL')									# Home-Button
+	
+	if path == '':														# ID = "Audios"
+		path = Podcasts_Audios
+		
+	page, msg = get_page(path=path)	
+	if page == '':	
+		msg1 = "Fehler in XL_Audios:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return 
+	PLog(len(page));
+	
+	items=[]
+	items =  blockextract('class="teaser__link"', page)				# Podcasts-Übersichten
+	items =  items + blockextract('component="ts-mediaplayer"', page)
+	PLog(len(page));	
+
+	base_url = BASE_URL
+	for item in items:
+		if '>Unser Podcast-Angebot<' in item:						# Feeds html/itunes
+			continue
+			
+		if 'class="teaser__link"' in item:							# Podcasts
+			mp3_url=''
+			href = stringextract('href="', '"', item)	
+			teaser_img = stringextract('data-srcset="', '"', item)	# 1. (kleines Bild)
+			if teaser_img.startswith('http') == False:
+				teaser_img = base_url + teaser_img
+			
+			# topline = stringextract('teaser__topline">', '<', rec)# mal Rubrik, mal Podcast	
+			headline = stringextract('__headline">', '<', item)
+			headline = unescape(headline)
+			headline = "%s: %s" % ("Podcast", headline)	
+			
+			teasertext = stringextract('teaser__shorttext">', '</p>', item)
+			teasertext = cleanhtml(teasertext); teasertext = mystrip(teasertext)
+			
+		if 'component="ts-mediaplayer"' in item:						# Audios
+			conf = stringextract("data-config='", "'", item)			# json-Daten mit mp3-Link
+			conf = unescape(conf); conf = conf.replace('\\"', '"')
+			teaser_img = stringextract('"xs":"', '"', conf)			# immer gleich				
+			if teaser_img == '':
+				teaser_img = stringextract('"m":"', '"', conf)
+			if teaser_img.startswith('http') == False:
+				teaser_img = base_url + teaser_img
+			headline =  stringextract('"title":"', '"', conf)
+			mp3_url =  stringextract('"url":"', '"', conf)			# Audios (download-Url)
+			dur =  stringextract('"duration":"', '"', conf)			# sec, Kurzbeiträge
+			dur = "%s sec" % dur									# 	Alt.: seconds_translate
+			teasertext = "%s | Dauer %s" % (headline, dur)
+	
+		title = unescape(headline); title = repl_json_chars(title)
+		summary = unescape(teasertext.strip())
+		summary = cleanhtml(summary); summary = repl_json_chars(summary)
+		summ_par = summary.replace('\n','||')
+		
+		PLog('Satz4:')
+		PLog(teaser_img);PLog(mp3_url);PLog(title);PLog(summary[:80]);
+		PLog(ID);
+
+		title=py2_encode(title); summary=py2_encode(summary);
+		teaser_img=py2_encode(teaser_img); summ_par=py2_encode(summ_par)			
+		
+		if mp3_url:													# Podcasts -> XL_Audios, 2. Aufruf
+			tag = "[COLOR red]%s[/COLOR]" % "Audio"
+			mp3_url=py2_encode(mp3_url);
+			ID='TagesschauXL'										# ID Homebutton
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
+				quote(title), quote(teaser_img), quote_plus(summ_par), ID)
+			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.AudioPlayMP3", fanart=teaser_img, thumb=teaser_img, 
+				fparams=fparams, tagline=tag, summary=summary)
+				
+		else:														# Audios -> AudioPlayMP3 (play + download)
+			fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
+				(quote(title), quote(href), ID, quote(teaser_img))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Audios", fanart=teaser_img, 
+				thumb=teaser_img, fparams=fparams, tagline="Folgeseiten",  summary=summary)
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 # ----------------------------------------------------------------------
 def XL_Live(ID=''):	
@@ -830,8 +887,9 @@ def get_VideoAudio(title, path):								# Faktenfinder
 		summ_par=py2_encode(summ_par); teaser_img=py2_encode(teaser_img); 
 			
 		if typ_org == "audio":											# Audio
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
-				quote(title), quote(teaser_img), quote_plus(summ_par))
+			ID='TagesschauXL'
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(url), 
+				quote(title), quote(teaser_img), quote_plus(summ_par), ID)
 			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.AudioPlayMP3", fanart=teaser_img, thumb=teaser_img, 
 				fparams=fparams, summary=summ)
 				
@@ -878,7 +936,8 @@ def XLGetSourcesPlayer(title, Dict_ID, Plot, img):
 	if typ == "audio":
 		Plot = Plot.replace("VIDEO", "AUDIO")
 		url =  stringextract('"url":"', '"', conf)
-		AudioPlayMP3(url, title, img, Plot)
+		ID='TagesschauXL'
+		AudioPlayMP3(url, title, img, Plot, ID)
 		return
 		
 	base_url = BASE_URL
@@ -1043,7 +1102,8 @@ def XLGetSourcesHTML(path, title, summ, tag, thumb, ID=''):
 		PLog('audio_url' + url)
 		
 		if url:
-			AudioPlayMP3(url, title, thumb, Plot=title)  	# direkt (ardundzdf.py)	
+			ID='TagesschauXL'
+			AudioPlayMP3(url, title, thumb, Plot=title, ID=ID)  	# direkt (ardundzdf.py)	
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		return
 

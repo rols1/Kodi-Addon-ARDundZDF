@@ -9,6 +9,16 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+03.07.2021 3.9.1
+			phoenix_Search (phoenix): Suchlink an phoenix-Änderung angepasst.
+			ARD Sportschau: Tour de France integriert (@Weri) - Anpassung ARDSport
+			und ARDSportPanel, neue Funktion ARDSportPodcast für spez. Pocastseiten
+			auf sportschau.de (Ausleitung in ARDSportPanel). 
+			AudioPlayMP3: variable ID für Homebutton hinzugefügt (statt 'ARD Audiothek'),
+			Anpassung ARDSportPodcast und AudioPlayMP3-Calls in TagesschauXL.
+			TagesschauXL: Anpassung an geänderte Webseite ../multimedia/audio/, neue
+			Funktion XL_Audios, Anpassung get_content.
+
 26.06.2021 3.9.0
 			Resumefunktion (Sofortstart childs/Kika): mediatype='video' gesetzt in dirID=
 			"resources.lib.childs.Kika_SingleBeitrag"-Calls (Kikaninchen_Videos, Kika_Videos,

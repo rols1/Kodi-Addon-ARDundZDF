@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.9.0'
-VDATE = '26.06.2021'
+VERSION = '3.9.1'
+VDATE = '03.07.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2414,8 +2414,9 @@ def AudioContentXML(title, path, offset='', url_html=''):
 #	(Abspielen + Download).
 # Falls pref_use_downloads abgeschaltet, wird direkt an PlayAudio
 #	übergeben.
+# 01.07.2021 ID variabel für Austausch des Home-Buttons
 #
-def AudioPlayMP3(url, title, thumb, Plot):
+def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 	PLog('AudioPlayMP3: ' + title)
 	
 	if SETTINGS.getSetting('pref_use_downloads') == 'false':
@@ -2424,7 +2425,9 @@ def AudioPlayMP3(url, title, thumb, Plot):
 		return
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Audiothek')		# Home-Button
+	if ID == '':
+		ID='ARD Audiothek'
+	li = home(li, ID=ID)						# Home-Button
 		
 	summary = Plot.replace('||', '\n')			# Display
 	 
@@ -2519,17 +2522,23 @@ def ARDSport(title):
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, summary=summ, fparams=fparams)
 	#'''
-	'''
-	title = "DIE FINALS"									# (nicht in Fußlinks)
-	href = 'https://www.sportschau.de/die-finals/index.html'
-	img =  'https://www.sportschau.de/die-finals/ard-kamera-100~_v-ARDAustauschformats.jpg'
-	tagline = 'Das Erste und das ZDF berichten sowohl im TV, als auch im Livestream umfassend von "Die Finals" 2021'
+	#'''
+	title = "Tour"										# (nicht in Fußlinks)
+	label = "Tour de France"
+	#href = 'https://www.sportschau.de/radsport/tourdefrance/index.html'	# intern anderer Link s.u.
+	href = 'https://www.sportschau.de/tdf-navipunkt/index.html'
+	#img =  'https://www.sportschau.de/radsport/tourdefr:ance/tour-de-france-logo-110~_v-gseabannerxl.png'
+	#img =  'https://www.sportschau.de/radsport/tourdefrance/tour-de-france-logo-110~_v-gseabannerxl.png'
+	img =  'https://www.sportschau.de/radsport/tourdefrance/gesamtkarte-tour-100~_v-gseagaleriexl.jpg'
+	tagline = 'Tour de France 2021, Livestreams, Videos, Nachrichten, Rennberichte, Etappen, Ergebnisse und Wertungen - Tour de France - Radsport - sportschau.de'
+	tagline = "Bildquelle: ard | Die Gesamtübersicht über die Strecke der Tour de France 2021\n\n%s" % tagline
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
 		quote(href), quote(img))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
+	addDir(li=li, label=label, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, fparams=fparams)
-	'''
+	#'''
+	
 	title = "Moderatoren"									# Moderatoren 
 	href = 'https://www.sportschau.de/sendung/moderatoren/index.html'
 	img =  'https://www1.wdr.de/unternehmen/der-wdr/unternehmen/bundesliga-sportschau-jessy-wellmer-100~_v-gseaclassicxl.jpg'
@@ -2610,6 +2619,10 @@ def ARDSportPanel(title, path, img, tab_path=''):
 	PLog(title); PLog(path); PLog(tab_path);
 	title_org = title; path_org=path
 
+	if title.strip() == "Podcast":
+		ARDSportPodcast(path, title.strip())
+		return
+		
 	SBASE = 'https://www.sportschau.de'
 	if tab_path == '':
 		parsed = urlparse(path)
@@ -2660,7 +2673,7 @@ def ARDSportPanel(title, path, img, tab_path=''):
 	# Wintersport: solange nicht in den Tabs präsent, aus theme_list
 	#	entfernen. Die Auswertung läuft dann direkt über die teaser-Blocks
 	#	(s. for s in sendungen).
-	theme_list = ["EURO 2020"] 			#['Wintersport', "Nordische Ski-WM"]
+	theme_list = ["EURO 2020", "Tour"] 			#['Wintersport', "Nordische Ski-WM"]
 	PLog(title in theme_list)						
 	if tab_path == '' and title in theme_list:			# 1. Durchlauf bei Tabmenüs
 		tablist = blockextract('class="collapsed', page)
@@ -2698,6 +2711,8 @@ def ARDSportPanel(title, path, img, tab_path=''):
 				href = stringextract('href="', '"', tab)
 				if href.startswith('http') == False:
 					href = SBASE + href
+				if href == "https://www.sportschau.de":
+					continue
 					
 				PLog('Satz4:'); 
 				PLog(href); PLog(title);
@@ -3125,6 +3140,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		return li 
 	PLog(len(page))
 
+	'''
 	# Livestream-Problematik 
 	# todo: für nächstes Großereignis anpassen
 	#	s. Forum https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF Post 472ff
@@ -3140,6 +3156,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			mediatype=mediatype, summary=summ) 
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	'''
 
 	# Bsp. video_src: "url":"http://deviceids-medp.wdr.de/ondemand/167/1673848.js"}
 	#	-> 	//ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/master.m3u8
@@ -3273,6 +3290,64 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
+#--------------------------------------------------------------------------------------------------
+# spez. Pocastseiten, z.B. www.sportschau.de/tourfunk/index.html bei Tour de France
+#	Inhalte collapsed, mp3-Link als Download-Button eingebettet
+# Aufrufer: ARDSportPanel
+def ARDSportPodcast(path, title):
+	PLog('ARDSportPodcast:'); PLog(path)
+	
+	page, msg = get_page(path=path)	
+	if page == '':
+		msg1 = 'Seite kann nicht geladen werden: %s' % title
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return li 
+	PLog(len(page))
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	
+	img = R(ICON_SPEAKER)
+	items = blockextract('class="infotext">', page)				# Verzicht auf Mini-Icons (außerhalb)
+	for item in items:
+		dl_button = stringextract('class="button download', 'Download">', item)
+		mp3_url = stringextract('href="', '"', dl_button)
+		if ".mp3" in mp3_url == False:
+			continue
+		if mp3_url.startswith("//"):
+			mp3_url = "https:" + mp3_url
+			
+		mediaTitle = stringextract('mediaTitle">', '</span>', item)
+		mediaSerial = stringextract('mediaSerial">', '</span>', item)
+		mediaDate = stringextract('mediaDate">', '</span>', item)
+		dur = stringextract('mediaDuration">', '</span>', item)
+		exp = stringextract('mediaExpiry">', '</span>', item)
+		sender = stringextract('mediaStation">', '</span>', item)
+		summ = stringextract('class="text">', '</p>', item)
+		summ_par= summ.replace('\n', '||')
+		
+		mediaTitle=cleanhtml(mediaTitle); mediaSerial=cleanhtml(mediaSerial)
+		mediaDate=cleanhtml(mediaDate); dur=cleanhtml(dur)
+		exp=cleanhtml(exp); sender=cleanhtml(sender)
+		
+		title=repl_json_chars(mediaTitle); 
+		tag="%s: %s, %s | [COLOR darkgoldenrod]%s[/COLOR]" % (mediaSerial, mediaDate, dur, exp)
+		
+		
+		PLog("Satz9")
+		PLog(title); PLog(mp3_url); PLog(summ[:80]); PLog(tag[:80]);
+		
+		title=py2_encode(title); mp3_url=py2_encode(mp3_url);
+		img=py2_encode(img); summ_par=py2_encode(summ_par);	
+		ID="ARD"													# ID Home-Button
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
+			quote(title), quote(img), quote_plus(summ_par), ID)
+		addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tag, summary=summ)
+				
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
 #--------------------------------------------------------------------------------------------------
 # erste Menüebene für umfangr. Tabellen in ARDSportTable - bisher "/ergebnisse/", 
 #	"/ergebnisse_tabellen/"
