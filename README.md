@@ -116,6 +116,8 @@ Funktionen:
 
 INSTALLATION:
 ===================  
+### Hinweis für Kodi-Matrix-Nutzer: für die Erstinstallation muss die [Matrix-Version](https://repo.kodinerds.net) auf kodinerds.net verwendet werden.
+
 - Download der zip-Datei: [aktuelles Release, Leia-Version](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) oder [kodinerds-Repo, Leia- und Matrix-Version](https://repo.kodinerds.net)
 - Download script.module.kodi-six.zip hier https://github.com/romanvm/kodi.six/releases
 - Beide zip-Dateien mittels Kodi-Menü Addons/Addon-Browser installieren
