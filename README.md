@@ -118,8 +118,8 @@ INSTALLATION:
 ===================  
 ### Hinweis für Kodi-Matrix-Nutzer: für die Erstinstallation muss die [Matrix-Version](https://repo.kodinerds.net) auf kodinerds.net verwendet werden.
 
-- [B]Leia-Version:[/B] Download der zip-Datei [aktuelles Release](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) 
-- [B]Matrix-Version:[/B] Download der zip-Datei [kodinerds-Repo, im Tab Kodi-Version Kodi 19 auswählen](https://repo.kodinerds.net)
+- <b>Leia-Version:</b> Download der zip-Datei [aktuelles Release](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) 
+- <b>Matrix-Version:</b> Download der aktuellen zip-Datei ARDundZDF im [kodinerds-Repo, im Tab Kodi-Version Kodi 19 auswählen](https://repo.kodinerds.net)
 - zip-Datei mittels Kodi-Menü Addons/Addon-Browser installieren
 - nur falls die Abhängigkeit zum Modul kodi-six bemängelt wird: Download und Installation des Moduls [script.module.kodi-six.zip](https://github.com/romanvm/kodi.six/releases)
 - Addon öffen und Addon-Einstellungen anpassen.
