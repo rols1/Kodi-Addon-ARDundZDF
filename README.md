@@ -122,7 +122,7 @@ INSTALLATION:
 - <b>Matrix-Version:</b> Download der aktuellen zip-Datei ARDundZDF im [kodinerds-Repo, im Tab Kodi-Version Kodi 19 auswählen](https://repo.kodinerds.net)
 - zip-Datei mittels Kodi-Menü Addons/Addon-Browser installieren
 - nur falls die Abhängigkeit zum Modul kodi-six bemängelt wird: Download und Installation des Moduls [script.module.kodi-six.zip](https://github.com/romanvm/kodi.six/releases)
-- Addon öffen und Addon-Einstellungen anpassen.
+- Addon öffen und Addon-Einstellungen anpassen
 - [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
 
 Credits:

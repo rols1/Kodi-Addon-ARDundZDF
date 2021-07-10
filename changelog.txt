@@ -9,6 +9,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+10.07.2021 3.9.2
+			ZDFStart: nach Webänderung neue Auswertung der "PromoTeaser" (z.B. Das Boot),
+			Position: nach Highlights, Kennz. Teaserbox (fett) im Titel.
+			Main_NEW (ARD Neu): Menütitel geändert "Start" -> "Startseite".
+			ARDSportPanel: Unterdrückung doppelter Listenelemente (@Weri)
+			ARD Sportschau: Auswertung der Rubriken von "Olympia in Tokio" (@Weri) - 
+			Anpassung ARDSport und ARDSportPanel, neue Funktion ARDSportPanelTabs.
+			Menü "ARD Mediathek RETRO": aus Hauptmenü verlagert zum Menü "ARD Mediathek
+			Neu", Anpassung Main_NEW und ARDRubriken (-> img_preload für fehlende Icons,
+			einschl. Notification).
+			ZDF Mediathek: neue Funktion (Menü) Main_ZDFfunk mit den Menüs  
+			"ZDF-funk-Startseite", "ZDF-funk-A-Z" und "zum FUNK-Modul", Anpassungen
+			in Main_ZDF, ZDFStart, ZDFRubrikSingle (skip_list, Cluster- und Content-
+			Bildung) sowie home (Modul util), neue Icons zdf-funk.png + zdf-funk-AZ.png.
+
 03.07.2021 3.9.1
 			phoenix_Search (phoenix): Suchlink an phoenix-Änderung angepasst.
 			ARD Sportschau: Tour de France integriert (@Weri) - Anpassung ARDSport

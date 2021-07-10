@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.9.1'
-VDATE = '03.07.2021'
+VERSION = '3.9.2'
+VDATE = '10.07.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -325,17 +325,6 @@ def Main():
 	fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, '')
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
 		thumb=R(ICON_MAIN_ARD), summary=summ, fparams=fparams)
-	
-	# Retro-Version ab 12.11.2020, V3.5.4
-	# 16.06.2021 auch erreichbar via ARD-Startseite/Premium_Teaser_Themenwelten		
-	title = "ARD Mediathek RETRO"
-	erbe = u"[COLOR darkgoldenrod]%s[/COLOR]" % "UNESCO Welttag des Audiovisuellen Erbes"
-	tag = u'Die ARD Sender öffneten zum %s ihre Archive und stellen zunehmend zeitgeschichtlich relevante Videos frei zugänglich ins Netz' % erbe
-	tag = u"%s\n\nDeutsche Geschichte und Kultur nacherleben: Mit ARD Retro können Sie in die Zeit der 1950er und frühen 1960er Jahre eintauchen. Hier stoßen Sie auf spannende, informative und auch mal kuriose Sendungen aus den Anfängen der Fernsehgeschichte des öffentlich-rechtlichen Rundfunks." % tag
-	tag = u"%s\n\nMehr: NDR ardretro100.html" % tag
-	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDRetro", fanart=R(FANART), 
-		thumb=R('ard-mediathek-retro.png'), tagline=tag, fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':
 		PLog('zdfmobile_set: ')
@@ -357,7 +346,7 @@ def Main():
 			
 	if SETTINGS.getSetting('pref_use_funk') == 'true':
 		tag = 'in den Settings kann das Modul FUNK ein- und ausgeschaltet werden'
-		tag = u"%s\n\ndie Beiträge sind auch in der ZDF Mediathek enthalten (siehe Startseite und A-Z)" % tag
+		tag = u"%s\n\ndie Beiträge sind auch in der Startseite der ZDF Mediathek enthalten" % tag
 		fparams="&fparams={}"													# funk-Modul
 		addDir(li=li, label="FUNK", action="dirList", dirID="resources.lib.funk.Main_funk", 
 			fanart=R('funk.png'), thumb=R('funk.png'), tagline=tag, fparams=fparams)
@@ -953,16 +942,17 @@ def Main_ZDF(name):
 	addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=R(ICON_MAIN_ZDF), thumb=R(ICON_MAIN_ZDF), 
 		fparams=fparams)
 
+	title = 'ZDF-funk' 
+	fparams="&fparams={'title': '%s'}" % (quote(title))
+	addDir(li=li, label=title, action="dirList", dirID="Main_ZDFfunk", fanart=R(ICON_MAIN_ZDF), thumb=R('zdf-funk.png'), 
+		fparams=fparams)
+
 	fparams="&fparams={'name': 'ZDF-Mediathek', 'title': 'Sendung verpasst'}" 
 	addDir(li=li, label='Sendung verpasst', action="dirList", dirID="VerpasstWoche", fanart=R(ICON_ZDF_VERP), 
 		thumb=R(ICON_ZDF_VERP), fparams=fparams)	
 
 	fparams="&fparams={'name': 'Sendungen A-Z'}"
 	addDir(li=li, label="Sendungen A-Z", action="dirList", dirID="ZDFSendungenAZ", fanart=R(ICON_ZDF_AZ), 
-		thumb=R(ICON_ZDF_AZ), fparams=fparams)
-
-	fparams="&fparams={'name': 'Sendungen A-Z funk', 'ID': 'funk'}"
-	addDir(li=li, label="Sendungen A-Z Neu: funk", action="dirList", dirID="ZDFSendungenAZ", fanart=R(ICON_ZDF_AZ), 
 		thumb=R(ICON_ZDF_AZ), fparams=fparams)
 
 	fparams="&fparams={'name': 'Rubriken'}"
@@ -997,6 +987,29 @@ def Main_ZDF(name):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+#----------------------------------------------------------------
+def Main_ZDFfunk(title):
+	PLog('Main_ZDFfunk:')
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
+	
+	title = 'ZDF-funk-Startseite' 
+	path = "https://www.zdf.de/funk"
+	fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=R('zdf-funk.png'), thumb=R('zdf-funk.png'), 
+		fparams=fparams)
+
+	fparams="&fparams={'name': 'ZDF-funk-A-Z', 'ID': 'ZDFfunk'}"
+	addDir(li=li, label="ZDF-funk-A-Z", action="dirList", dirID="ZDFSendungenAZ", fanart=R('zdf-funk-AZ.png'), 
+		thumb=R('zdf-funk-AZ.png'), fparams=fparams)
+
+	fparams="&fparams={}"											# Button funk-Modul hinzufügen
+	addDir(li=li, label="zum FUNK-Modul", action="dirList", dirID="resources.lib.funk.Main_funk", 
+		fanart=R('zdf-funk.png'), thumb=R('funk.png'), fparams=fparams)
+			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+	
 #----------------------------------------------------------------
 def Main_POD(name):
 	PLog('Main_POD:')
@@ -2479,6 +2492,9 @@ def ARDSport(title):
 		thumb=img, tagline=tagline, fparams=fparams)			
 
 	# Dauerlinks am Fuß der Leitseite (Tab's am Kopf  können abweichen)
+	# skip_title enthält manuell bearbeitete Buttons (Bsp. Olympia in Tokio), 
+	#	die unten eingefügt werden-
+	skip_title = ["Olympia in Tokio"]
 	tabpanel = stringextract('<ul id="gseafooterlinks116-panel"', '</ul>', page) 
 	tabpanel = blockextract('<li>', tabpanel)
 	img = R(ICON_DIR_FOLDER)
@@ -2490,6 +2506,10 @@ def ARDSport(title):
 		else:		
 			href = stringextract('href="', '"', tab)
 			title = stringextract('">', '</a>', tab)
+			
+		if title in skip_title:
+			continue
+				
 		i=i+1
 		if href.startswith('http') == False:
 			href = SBASE + href
@@ -2538,6 +2558,18 @@ def ARDSport(title):
 	addDir(li=li, label=label, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, fparams=fparams)
 	#'''
+
+	title = "Olympia in Tokio"										# manuell trotz Fußlinks 
+	#href = 'https://tokio.sportschau.de/tokio2020/index.html'
+	href = 'https://tokio.sportschau.de'
+	img =  'https://www.ndr.de/sport/olympia3382_v-contentxl.jpg'
+	tagline = 'Olympische Spiele 2021 in Tokio | 23.07.-08.08.2021 | Die wichtigsten Daten und Fakten'
+	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s',  'paneltabs': 'true'}"	% (quote(title), 
+		quote(href), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
+		thumb=img, tagline=tagline, fparams=fparams)
+
 	
 	title = "Moderatoren"									# Moderatoren 
 	href = 'https://www.sportschau.de/sendung/moderatoren/index.html'
@@ -2613,11 +2645,16 @@ def ARDSportEvents():
 # 28.04.2020 redirected Url 
 #	(s. Modul util) verwendet für https://tokio.sportschau.de/tokio2020/ s.u.
 # 2 Durchläufe bei Seiten mit Tabmenüs, 2. Lauf mit tab_path (Wintersport, 
-#	Formel 1, Handball-WM)
-def ARDSportPanel(title, path, img, tab_path=''):
+#	Formel 1, Handball-WM), paneltabs triggert Auswertung eigener tablist in
+#		ARDSportPanelTabs
+def ARDSportPanel(title, path, img, tab_path='', paneltabs=''):
 	PLog('ARDSportPanel:');
 	PLog(title); PLog(path); PLog(tab_path);
 	title_org = title; path_org=path
+
+	if paneltabs:									# abweichende tablist-Auswertung
+		ARDSportPanelTabs(title.strip(), path, img)		# -> ARDSportPanel
+		return
 
 	if title.strip() == "Podcast":
 		ARDSportPodcast(path, title.strip())
@@ -2673,7 +2710,8 @@ def ARDSportPanel(title, path, img, tab_path=''):
 	# Wintersport: solange nicht in den Tabs präsent, aus theme_list
 	#	entfernen. Die Auswertung läuft dann direkt über die teaser-Blocks
 	#	(s. for s in sendungen).
-	theme_list = ["EURO 2020", "Tour"] 			#['Wintersport', "Nordische Ski-WM"]
+	# Getrennte Auswertung für abweichende Tabs in ARDSportPanelTabs (s.o.) 
+	theme_list = ["EURO 2020", "Tour"] 					#['Wintersport', "Nordische Ski-WM"]
 	PLog(title in theme_list)						
 	if tab_path == '' and title in theme_list:			# 1. Durchlauf bei Tabmenüs
 		tablist = blockextract('class="collapsed', page)
@@ -2681,11 +2719,12 @@ def ARDSportPanel(title, path, img, tab_path=''):
 		
 		found=False
 		if len(tablist) > 0:
-			path_end = "/%s/%s" % (path.split('/')[-2], path.split('/')[-1])
+			#path_end = "/%s/%s" % (path.split('/')[-2], path.split('/')[-1])
 			for tab in tablist:							# Unterseiten für Fußball, Wintersport, TV
 				tabpanel=''
-				PLog(path_end); PLog(tab[:200]);
-				if path_end in tab:
+				PLog(tab[:200]); # PLog(path_end); 
+				#if path_end in tab:
+				if title in tab:
 					tabpanel = tab
 					PLog('tab_found')
 					found=True
@@ -2734,6 +2773,7 @@ def ARDSportPanel(title, path, img, tab_path=''):
 				u'//programm.ard.de', u'class="first"', u'class="list">', 
 				u'title="Darstellung der Seite'
 		]
+	path_list=[];											# Dopplercheck 
 	for s in sendungen:										# 'class="teaser'		
 		duration=''; tag=''; summ=''; title=''; path=''; skip=False	
 		for garb in garb_list:								# Müllabfuhr
@@ -2800,7 +2840,11 @@ def ARDSportPanel(title, path, img, tab_path=''):
 						
 		summ		= unescape(summ); summ = mystrip(summ)
 		summ		= cleanhtml(summ); summ=repl_json_chars(summ)
-		title=title.strip(); summ=summ.strip();						# zusätzl. erf.
+		title=title.strip(); summ=summ.strip();							# zusätzl. erf.
+		
+		if path in path_list:											# Dopplercheck
+			continue
+		path_list.append(path)
 			
 		mediaDate=''; mediaDuration=''
 		if '"mediaDate"' in s:
@@ -2909,6 +2953,110 @@ def ARDSportPanel(title, path, img, tab_path=''):
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
+#---------------------------------------------
+# Aufrufer: ARDSportPanel mit manuellem Menübutton und Trigger paneltabs 
+# Auswertung von Seiten, deren Tabstruktur nicht zu ARDSportPanel
+#	passt 
+# Bei mehr als 1 main_tabs erfolgt 2. Aufruf  zum Listen der subressorts
+# Da im html-Code die href-Listen der Tabs nicht voneinander getrennt sind,
+#	gleichen wir die href-Liste (Nutzung Dict) beim 2. Aufruf ab 
+#
+def ARDSportPanelTabs(title, path, img, tab_path=''):
+	PLog('ARDSportPanelTabs: ' + title);
+	 
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+
+	if tab_path:
+		path = tab_path
+	page, msg = get_page(path)	
+	if page == '':
+		msg1 = 'ARDSportPanelTabs: Seite kann nicht geladen werden.'
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return li 
+	PLog(len(page))
+	
+	parsed = urlparse(path)
+	base = 'https://' + parsed.netloc
+	if base.endswith('/'):
+		base = base[:len(base)-1]				# Bsp.: https://tokio.sportschau.de
+	PLog("base: " + base)
+	
+	main_tabs =  blockextract('class="desktop">', page)
+	if tab_path == '':							# 1. Aufruf
+		href_list=[]							# Abgleich nächster Tab (2. Aufruf)
+		for main_tab in main_tabs:
+			line = stringextract('class="desktop">', '</span>', main_tab)
+			href = stringextract('href="', '"', line)
+			title = cleanhtml(line)
+			if href.startswith('http') == False:
+				href = base + href	
+			href_list.append(href)		
+		
+			PLog('Satz10:')
+			PLog(title); PLog(href); 
+			title=py2_encode(title); path=py2_encode(path); img=py2_encode(img); 
+			fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'tab_path': '%s'}"	%\
+				(quote(title), quote(path), quote(img), quote(href))
+			addDir(li=li, label=title, action="dirList", dirID="ARDSportPanelTabs", fanart=img, 
+				thumb=img, fparams=fparams)	
+		Dict("store", 'ARDSport_href_list', href_list)				
+	else:										# 2. Aufruf
+		found=False; tabpanel=''
+		href_list = Dict("load", 'ARDSport_href_list')	
+		PLog(href_list)			
+		for main_tab in main_tabs:				# Tab via href suchen
+			line = stringextract('class="desktop', '</span>', main_tab)
+			href = stringextract('href="', '"', line)
+			if href.startswith('http') == False:
+				href = base + href
+			PLog('href: ' + href)	
+			if href in tab_path:
+				PLog('tab_found')
+				PLog(len(main_tab))
+				found=True
+				href_list.remove(href)			# akt. href aus Abgleich-Liste entfernen
+				break
+		
+		# tabpanel enthält subressorts aller tabs. Nur der letzte enthält nur die eigenen -
+		#	bei den übrigen Stop sobald der erste Link des nächsten tab erreicht ist (Abgleich
+		#	href_list)
+		# 	Doppler (bei Klapp-tabs) werden via path_list ausgefiltert. 
+		#	z.B. paralympics in ../tokio.sportschau.de/tokio2020/paralympics/index.html
+		if found:								# subressorts des Tab listen 	
+			if '<!-- mnHolder -->' in main_tab:			# letzter Tab
+				tabpanel = stringextract('class="desktop">', '<!-- mnHolder -->', main_tab)
+			else:										# nächster Tab
+				tabpanel = stringextract('class="desktop">', 'class="firstlevel">', main_tab)
+			PLog(len(tabpanel))
+			PLog(tabpanel[:80])
+			link_list = blockextract('<li>', tabpanel, '</a>')
+			PLog(len(tabpanel))
+			
+			path_list=[];							# Dopplercheck 
+			for link in link_list:
+				PLog(link[:200])
+				href = base + stringextract('href="', '"', link)
+				title=cleanhtml(link); title=mystrip(title); title=unescape(title)
+				if href in href_list:				# Links des nächsten tab erreicht
+					break
+				
+				if href in path_list:				# Dopplercheck
+					continue
+				path_list.append(href)
+						
+				PLog('Satz11:')
+				PLog(title); PLog(href);
+				title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);	
+				fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
+					quote(href), quote(img))
+				addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
+					thumb=img, fparams=fparams)			
+				 
+			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 #--------------------------------------------------------------------------------------------------
 # BUNDESLIGA IM ARD-HÖRFUNK
 # img: radio-livestreams.png
@@ -2923,7 +3071,7 @@ def ARDSportHoerfunk(title, path, img):
 
 	page, msg = get_page(path=path)		
 	if page == '':
-		msg1 = 'Seite kann nicht geladen werden.'
+		msg1 = 'ARDSportHoerfunk: Seite kann nicht geladen werden.'
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li 
@@ -6272,7 +6420,7 @@ def BilderDasErsteSingle(title, path):
 	
 				  
 ####################################################################################################
-# 29.09.2019 Umstellung Livestreams auf ARD Audiothek
+# 29.09.2019 Umstellung Radio-Livestreams auf ARD Audiothek
 #	Codebereinigung - gelöscht: 
 #		RadioLiveListe, RadioAnstalten, livesenderRadio.xml, 77 Radio-Icons (Autor: Arauco)
 #
@@ -6292,7 +6440,9 @@ def BilderDasErsteSingle(title, path):
 # 21.11.2020 funk-Cluster "funk - Wissen, Liebe, Gaming" -> statt des 2. Durchlaufs mit 
 #	den einzelnen Beiträgen zeigen wir die funk-Startseite verlinkt im letzten Einzel-
 #	beitrag und verfahren wie beim 1. Durchlauf (Quell-Struktur mit ZDF-Startseite identisch).
-#	
+# 07.07.2021 ZDF-funk-Beiträge aufgrund der Webänderungen mit eigenem Menü ZDF-funk in Main_ZDF,
+#	Nutzung ZDFStart für die funk-Startseite wie bisher.
+#
 def ZDFStart(title, show_cluster='', path=''): 
 	PLog('ZDFStart: ' + show_cluster); 
 	PLog(title)
@@ -6300,11 +6450,13 @@ def ZDFStart(title, show_cluster='', path=''):
 	title_org = title
 	li = xbmcgui.ListItem()
 
-	if '/funk/' in path:
+	if 'www.zdf.de/funk' in path:
 		BASE = ZDF_BASE + '/funk/'
+		ID = 'ZDFfunkStart'
 	else:
 		BASE = ZDF_BASE
-	Logo = 'ZDF'; ID = 'ZDFStart'
+		ID = 'ZDFStart'
+	Logo = 'ZDF'; 
 	if "www.zdf.de/kinder" in path:
 		BASE 	= "https://www.zdf.de/kinder"							# BASE_TIVI
 		Logo	= 'ZDFtivi'
@@ -6324,7 +6476,7 @@ def ZDFStart(title, show_cluster='', path=''):
 	# 2. Durchlauf: 
 	if show_cluster:											
 		PLog("ZDFStart_2:")
-		if  title == "Highlights":										# Liste Highlights 
+		if  title == "[B]Highlights[/B]":								# Liste Highlights 
 			li = home(li, ID=ID)										# Home-Button
 			stage = stringextract('class="sb-page">', 'class="cluster-title-wrap">', page) 
 			# ID='DEFAULT': ermöglicht Auswertung Mehrfachseiten in ZDF_get_content
@@ -6333,10 +6485,13 @@ def ZDFStart(title, show_cluster='', path=''):
 		else:													#Home-Button in ZDFRubrikSingle
 			# Cluster ermitteln:
 			content =  blockextract('class="cluster-title-wrap">', page)
+			promo=[]
+			if 'class="b-promo-teaser' in page:						# o. cluster-title-wrap
+				promo = blockextract('class="b-promo-teaser', page, '</article>')
+				PLog('content_promo2: ' + str(len(promo)))
+			content = promo + content
 			PLog('content2: ' + str(len(content)))
-			if 'class="b-promo-teaser">' in page:						# o. cluster-title
-				rec = stringextract('class="b-promo-teaser">', '</article>', page)
-				content.insert(0, rec)									# an den Anfang der Liste
+				
 			for rec in content:
 				href	= stringextract('href="', '"', rec)
 				if href.startswith('http') == False:
@@ -6357,33 +6512,37 @@ def ZDFStart(title, show_cluster='', path=''):
 	PLog("ID: " + ID)
 	li = home(li, ID=ID)						# Home-Button
 	
-	title = 'Highlights'										# Highlights voranstellen
+	title = '[B]Highlights[/B]'									# Highlights voranstellen
 	# thumb = R(ICON_DIR_FOLDER)
 	thumb = ZDF_get_img(page)									#  1. img der Highlights
+	tag = "Folgeseiten"
 	fparams="&fparams={'title': '%s', 'show_cluster': 'true','path': '%s'}" % (quote(title), quote(BASE))
 	addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=thumb, 
-		thumb=thumb, fparams=fparams)
+		thumb=thumb, tagline=tag, fparams=fparams)
 	
 	content =  blockextract('cluster-title"', page)				# 2.Cluster
+	promo=[]
+	if 'class="b-promo-teaser' in page:							# o. cluster-title-wrap
+		promo = blockextract('class="b-promo-teaser', page, '</article>')
+		promo_cnt = len(promo)
+		PLog('content_promo1: ' + str(promo_cnt))
+	content = promo + content
 	PLog('content1: ' + str(len(content)))
-	if 'class="b-promo-teaser">' in page:						# o. cluster-title
-		promo = stringextract('class="b-promo-teaser">', '</article>', page)
-		content.insert(0, promo)									# an den Anfang der Liste
 
-	tlist=[]													# Titel-Liste für Dopplererkenn.
+	tlist=[]; cnt=0												# Titel-Liste für Dopplererkenn.
 	for rec in content:
 		title = ZDF_get_clustertitle(rec)						# Cluster-Titel ermitteln
-		title = py2_decode(title)
+		title = py2_decode(title)		
 
 		# "Inhaltstext im Voraus laden" in ZDF_get_content (via ZDFRubrikSingle ->
 		#	ZDF_Sendungen) 
 		# Getrennt behandeln:
-		if title == 'Rubriken':								# doppelt: hier + Hauptmenü
+		if title == 'Rubriken':									# doppelt: hier + Hauptmenü
 			fparams="&fparams={'name': 'Rubriken'}"
 			addDir(li=li, label="Rubriken", action="dirList", dirID="ZDFRubriken", fanart=R(ICON_ZDF_RUBRIKEN), 
 				thumb=R(ICON_ZDF_RUBRIKEN), tagline=tag, fparams=fparams)
 		
-		elif title == 'Livestreams':						# Livestreams, geändert 27.09.2019 
+		elif title == 'Livestreams':							# Livestreams, geändert 27.09.2019 
 			fparams="&fparams={'title': '%s'}"	% title 
 			addDir(li=li, label=title, action="dirList", dirID="ZDFStartLive", fanart=thumb, 
 				thumb=thumb, tagline=tag, fparams=fparams)
@@ -6407,23 +6566,26 @@ def ZDFStart(title, show_cluster='', path=''):
 		elif 'data-tracking-title=' in rec:
 			continue
 		else:													# restl. Cluster -> 2. Durchlauf	
+			label = title
 			tag = "Folgeseiten"
 			href = BASE
 			show_cluster = "true"
-			if title.startswith('funk -'):						# funk -> 1. Durchlauf funk-Startseite, s.o.
-				href = href + '/funk/'	
-				show_cluster = ""
-				tag = "direkt zur funk-Startseite"
 			thumb = ZDF_get_img(rec)
+			
+			if 'class="b-promo-teaser' in rec:					# Text für Teaserboxen erweitern
+				if cnt < promo_cnt:
+					label,path,img_src,descr,dauer,enddate,isvideo = ZDF_get_teaserDetails(page=rec)
+					label = "[B]Teaserbox:[/B] %s" % label
+					tag = "%s\n\n%s" % (tag, descr)
+					cnt = cnt + 1
 			
 			PLog('Satz:')
 			PLog(title); PLog(href); PLog(thumb); PLog(tag); 
 			title=py2_encode(title);
 			fparams="&fparams={'title': '%s', 'show_cluster': '%s','path': '%s'}" %\
 				(quote(title), show_cluster, quote(href))
-			addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=thumb, 
-				thumb=thumb, tagline=tag, fparams=fparams)
-		
+			addDir(li=li, label=label, action="dirList", dirID="ZDFStart", fanart=thumb, 
+				thumb=thumb, tagline=tag, fparams=fparams)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 #---------------------------------------------------------------------------------------------------
@@ -6675,7 +6837,7 @@ def ZDFSendungenAZList(title, element, ID=''):			# ZDF-Sendereihen zum gewählte
 		group = '0 - 9'		# ZDF-Vorgabe (vormals '0+-+9')
 	azPath = ZDF_SENDUNGEN_AZ % group
 	add = "ZDF: "
-	if ID == 'funk':
+	if ID == 'ZDFfunk':
 		add = "funk: "
 		group = "group=%s" % element
 		azPath = "https://www.zdf.de/funk/funk-alle-sendungen-von-a-z-100.html?%s" % group
@@ -6690,7 +6852,6 @@ def ZDFSendungenAZList(title, element, ID=''):			# ZDF-Sendereihen zum gewählte
 		
 	content = blockextract(u'<picture class="artdirect"', page)
 	if len(content) == 0:
-	 
 		msg1 = u'%skeine AZ-Beiträge für die Gruppe >%s< gefunden' % (add, element)
 		MyDialog(msg1, '', '')
 		return li
@@ -6739,14 +6900,12 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 	else:
 		li = home(li, ID='ZDF')						# Home-Button			
 
-# Abzweig funk "Alle Folgen" muss vor 'class="b-cluster' erfolgen,
-#	sonst Liste weiterer funk-Sendungen und eigentl. Beiträge werden
-#	übersprungen. 
-#----------------------------------------------		# Abzweig funk "Alle Folgen" -> ZDF_get_content
-	if 'www.zdf.de/funk/' in url and '>Alle Folgen</h2>' in page:
-		li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=url, ID='ZDF_Sendungen')
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+#----------------------------------------------		# Abzweig funk "Alle Folgen" -> ZDF_get_content
+#	if 'www.zdf.de/funk/' in url and '>Alle Folgen</h2>' in page:
+#		li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=url, ID='ZDF_Sendungen')
+#		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+#	08.07.2021 Abzweig >Alle Folgen< kann entfallen - keine weitere Clusterung gesichtet
 #----------------------------------------------		# Abzweig Cluster -> ZDFRubrikSingle
 
 	if 'class="b-cluster' in page:				# Cluster ermitteln, pro Cluster -> ZDFRubrikSingle
@@ -6922,7 +7081,7 @@ def ZDFRubrikSingleCall(path, clustertitle):
 # 05.09.2020 promo-teaser in ZDFStart + hier ergänzt (bisher nur 1 x je Seite gesichtet)
 # 22.01.2021 custom_cluster: vom Aufrufer def. Anfangs- und Endbedingung, 
 #	z.B. '>Spielberichte<|</section>'
-# 12.06.2021 li + skip_EoD für außenliegende Listen (Bsp. ZDFSportLive)
+# 
 def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster=''):							
 	PLog('ZDFRubrikSingle:'); PLog(title);
 	PLog(clus_title); PLog(ID); PLog(custom_cluster);  
@@ -6951,7 +7110,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 		# Cluster-Blöcke, dto. ZDF_Sendungen, ZDFRubrikSingle, ZDFStart:
 		cluster =  blockextract('class="cluster-title-wrap">', page)# Cluster-Blöcke
 		PLog(len(cluster))
-		cluster = cluster + blockextract('"section-header-title', page)
+		cluster = cluster + blockextract('"section-header-title', page, "</section>")
 		if len(cluster) == 0:										# aus promo-teaser
 			cluster =  cluster + blockextract('class="big-headline"', page, '')
 		if len(cluster) == 0:										
@@ -7003,19 +7162,20 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 		# class="artdirect"> und class="artdirect " nicht eindeutig genug,
 		# b-cluster-teaser umfassen die article-Blöcke und lazyload-Blöcke
 		# lazyload-Blöcke können Einzelbeiträge enthalten (teaserElement: icon-502_play)
-		# 28.03.2020 'class="artdirect' als Fallback (u.a. für 'class="artdirect cell">') 
-		content =  blockextract('class="b-cluster-teaser', clus) 
+		# 28.03.2020 'class="artdirect' als Fallback (u.a. für 'class="artdirect cell">')
+		# 08.07.2021 skip_list hinzugefügt (z.B. für funk-SendungenA-Z), verlässlichere
+		#	Blockbildung via "article class".
+
+		skip_list = [u"https://www.zdf.de/funk/funk-alle-sendungen-von-a-z-100.html"]	# Abgleich 
+		if '"PromoTeaser"' in clus:							# Promo-Teasern fehlt "article class"
+			article = "article: entf."
+			content = [clus]								# je Promo-Teaser nur 1 Block
+			PLog(clus[:80])
+		else:
+			article = stringextract('<article class="', ' ', clus)	# class für Block bestimmen
+			content =  blockextract('class="%s' % article, clus, "</article>")
+		PLog("article: " + article)
 		PLog('content1: ' + str(len(content)))
-		if len(content) == 0:
-			content =  blockextract('class="b-cluster-poster-teaser', clus)  # Bsp. Dokus - Komplette Reihen
-			PLog('content_poster: ' + str(len(content)))
-		if len(content) == 0:
-			content =  blockextract('class="artdirect', clus)  # Fallback, kann in nächsten Cluster reichen
-			PLog('artdirect_poster: ' + str(len(content)))
-		if len(content) == 0:
-			content =  blockextract('class="b-content-teaser-item', clus)  # Fallback für custom_cluster
-			PLog('b-content-teaser-item: ' + str(len(content)))	
-		PLog('content2: ' + str(len(content)))
 
 		for rec in content:	
 			title='';  clustertitle=''; lable=''; isvideo=False; isgallery=False
@@ -7045,13 +7205,17 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 			
 			PLog("isvideo: %s, dauer: %s" % (isvideo, dauer))
 			PLog(enddate);
-			#if isvideo == True and dauer == '':								# filtert 'Demnächst'-Beiträge aus
+			#if isvideo == True and dauer == '':						# filtert 'Demnächst'-Beiträge aus
 			#	continue
 
 			tag='';
 			if path == '' or 'skiplinks' in path:
 				PLog('skip_path: ' + path)
 				continue
+			if path in skip_list:										# z.B. funk-SendungenA-Z
+				PLog('skip_list: ' + path)
+				continue
+				
 			if teaser_label:
 				tag = teaser_label
 			if teaser_brand:
@@ -7064,7 +7228,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 			if teaser_nr:
 				tag = "Episode %s | %s" % (teaser_nr, tag)
 				title = "[%s] %s" % (teaser_nr, title)
-			if tag.startswith(' | '):										# tag-Korr. leer Brand								
+			if tag.startswith(' | '):									# tag-Korr. leer Brand								
 				tag = tag.replace(' | ', '')
 			tag = tag.replace('  ,', ', ')
 								
@@ -7072,7 +7236,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 				PLog('Bilderserie')
 				isgallery = True
 			
-																			# Formatierung
+																		# Formatierung
 			if 'Folgen' in tag or 'Staffeln' in tag or 'Teile' in tag:		
 				title = teaser_label.ljust(11) + "| %s" % title
 				# Einzelvideo bei Folgen ausgeblenden, um Folge auszuwerten 
@@ -7250,7 +7414,6 @@ def get_teaserElement(rec):
 
 #-------------------------
 # Auswertung ZDF-Seite für ZDFRubrikSingle
-# nutzt ZDF_get_teaserbox - s.u.
 # page hier Blocksatz (rec)
 #	
 def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
@@ -7301,7 +7464,7 @@ def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 		descr	= stringextract('teaser-info" aria-label="', '"', page)	
 	if descr == '':
 		descr = stringextract('alt="', '"', page)						# Bildbeschr.
-	descr = unescape(descr)
+	descr = unescape(descr); descr = descr.strip()
 	if u'Videolänge' in descr:
 		dauer=''
 	PLog(descr)

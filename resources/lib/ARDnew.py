@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 19.06.2021
+#	Stand 07.07.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -132,13 +132,24 @@ def Main_NEW(name, CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", fanart=R(ICON_MAIN_ARD), 
 		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)
 		
-	title = 'Start'	
+	title = 'Startseite'	
 	tag = 'Sender: [COLOR red] %s [/COLOR]' % sendername
 	summ = "[COLOR red] barrierefreie Angebote[/COLOR] im Untermenü <Genrezugänge>"
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s', 'sender': '%s'}" % (quote(title), sender)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", fanart=R(ICON_MAIN_ARD), thumb=R(img), 
 		tagline=tag, summary=summ, fparams=fparams)
+
+	# Retro-Version ab 12.11.2020, V3.5.4
+	# 16.06.2021 auch erreichbar via ARD-Startseite/Premium_Teaser_Themenwelten		
+	title = "ARD Mediathek RETRO"
+	erbe = u"[COLOR darkgoldenrod]%s[/COLOR]" % "UNESCO Welttag des Audiovisuellen Erbes"
+	tag = u'Die ARD Sender öffneten zum %s ihre Archive und stellen zunehmend zeitgeschichtlich relevante Videos frei zugänglich ins Netz' % erbe
+	tag = u"%s\n\nDeutsche Geschichte und Kultur nacherleben: Mit ARD Retro können Sie in die Zeit der 1950er und frühen 1960er Jahre eintauchen. Hier stoßen Sie auf spannende, informative und auch mal kuriose Sendungen aus den Anfängen der Fernsehgeschichte des öffentlich-rechtlichen Rundfunks." % tag
+	tag = u"%s\n\nMehr: NDR ardretro100.html" % tag
+	fparams="&fparams={}"
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDRetro", fanart=R(FANART), 
+		thumb=R('ard-mediathek-retro.png'), tagline=tag, fparams=fparams)
 
 	title = 'Sendung verpasst'
 	tag = 'Sender: [COLOR red] %s [/COLOR]' % sendername
@@ -262,7 +273,7 @@ def ARDStart(title, sender, widgetID=''):
 #	der ARD-Startseite: lädt das erste img ermittelt in geladener
 #	Seite oder ID.img aus dem Cache - Löschfrist: Setting Slide Shows)
 #
-def img_preload(ID, path, title, caller):
+def img_preload(ID, path, title, caller, icon=ICON_MAIN_ARD):
 	PLog("img_preload: " + title)
 	PLog(caller); PLog(path)
 
@@ -274,6 +285,7 @@ def img_preload(ID, path, title, caller):
 	img=''
 	oname = os.path.join(SLIDESTORE, "ARDNeu_Startpage")
 	fname = os.path.join(oname, ID)
+	PLog(fname)
 	
 	if os.path.isdir(oname) == False:
 		try:  
@@ -295,6 +307,10 @@ def img_preload(ID, path, title, caller):
 	
 	img = img.replace('{width}', '720')
 	urlretrieve(img, fname)								# img -> Cache
+	icon = R(icon)
+	msg1 = "Lade Bild"
+	msg2 = title										# Dateiname bei ARD neu nichtssagend
+	xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)	 
 		
 	PLog('img: ' + fname)	
 	return fname										# lokaler img-Pfad
@@ -328,7 +344,8 @@ def ARDRubriken(li, page):
 		img 	= stringextract('"src":"', '"', cont)		# mehrere Formate möglich, 1. Treffer
 		img 	= img.replace('{width}', '640'); 
 		if img == '':
-			# img = img_preload(ID, path, title, 'ARDStart')# kann dauern..
+			img = img_preload(ID, path, title, 'ARDStart')# kann dauern..
+		if img == '':
 			img = R(ICON_DIR_FOLDER)
 
 		ID = 'ARDStartRubrik'
@@ -538,7 +555,8 @@ def ARDRetro():
 			return li
 		else:	
 			Dict("store", 'ARDRetro', page) 				# Seite -> Cache: aktualisieren		
-	PLog(len(page))		
+	PLog(len(page))
+	RSave('/tmp/x.html', py2_encode(page))	# Debug			
 	
 	# json:
 	page = stringextract('<body', '</body>', page)

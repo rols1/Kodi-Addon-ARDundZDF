@@ -267,7 +267,8 @@ def home(li, ID):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", 
 			fanart=img, thumb=img, tagline=tag, filterstatus='', fparams=fparams)
 			
-	if ID == 'ZDF' or ID == 'ZDFStart':
+	if ID == 'ZDF' or ID == 'ZDFStart' or ID == 'ZDFfunkStart':
+		title = u'Zurück zum Hauptmenü ZDF'
 		img = R('zdf-mediathek.png')
 		name = 'Home: ' + "ZDF Mediathek"
 		fparams="&fparams={'name': '%s'}" % quote(name)
