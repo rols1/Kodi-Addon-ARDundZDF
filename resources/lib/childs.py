@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 20.06.2021
+#	Stand: 15.07.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1169,8 +1169,8 @@ def Tivi_Woche_Sendungen(day, title):
 		MyDialog(msg1, msg2, '')	
 		return
 		
-	# Home-Button in ZDFRubrikSingle
-	ardundzdf.ZDFRubrikSingle(title, path, clus_title=day, page=page)				
+	# Home-Button in ZDFClusterSingle
+	ardundzdf.ZDFClusterSingle(title, path, clus_title=day, page=page)				
 	return
 
 # ----------------------------------------------------------------------
@@ -1243,13 +1243,13 @@ def Tivi_AZ_Sendungen(name, char=None):
 #	Tivi_SinglePage)
 # def get_tivi_details(li, sendungen, path):			
 # ----------------------------------------------------------------------
-# 12.12.2019 Tivi_SinglePage entfernt - Auswertung durch ZDFRubrikSingle
+# 12.12.2019 Tivi_SinglePage entfernt - Auswertung durch ZDFClusterSingle
 #	in Tivi_Woche_Sendungen
 # def Tivi_SinglePage(title, path, ID=None, key=None):
 # ----------------------------------------------------------------------
 # 12.12.2019 SingleBeitragTivi entfernt - Auswertung durch durch
 #	ZDF_getVideoSources im Verlauf von ZDF_get_content,  ZDFStart,
-#	ZDFRubrikSingle.
+#	ZDFClusterSingle.
 # def SingleBeitragTivi(path, title):
 # ----------------------------------------------------------------------
 

@@ -9,6 +9,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+17.07.2021 3.9.3
+			ZDF_Sendungen, ZDF_get_content: Untersuchung Playerboxen-Doppel - im Quelltext
+			möglich (Bsp.: www.zdf.de/nachrichten/heute-journal)
+			ZDF_Sendungen: Ermittlung von Beiträgen (content_page_cut) vor ev. Clustern 
+			ausgedehnt auf Großtitel (big-headline).
+			ZDFStart: im 2. Durchlauf Blöcke begrenzt, um unterschiedliche Behandlung in
+			ZDFRubrikSingle zu gewährleisten  (PromoTeaser / normale Cluster).
+			ZDF_get_teaserDetails: Titelermittlung erweitert (relevant für Cluster Fußball-
+			Europameisterschaft.
+			ARD Audio Event Streams: Eintrag B5 Plus geändert -> BR24live,  Einzelupdate 
+			livesenderTV.xml (@Weri).
+			ZDF Event Streams: Fix Hauptmenü (ARD -> ZDF).
+			ZDFRubrikSingle: Blockbegrenzung </article> verlagert in Datensatzschleife,
+			loader-Beiträge werden sonst ausgeschlossen.
+			ZDF_get_content: Behandl. 'NeuInMediathek' entfernt (hier obsolet), für Search
+			und VERPASST Blockbildung via b-content-teaser (Codeoptimierung).
+
 10.07.2021 3.9.2
 			ZDFStart: nach Webänderung neue Auswertung der "PromoTeaser" (z.B. Das Boot),
 			Position: nach Highlights, Kennz. Teaserbox (fett) im Titel.
