@@ -2,7 +2,7 @@
  <channels_info>
   <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
   <imgsource>Arauco</imgsource>
-  <nr>15</nr>
+  <nr>16</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
   <date>21.07.2021 rols1</date>
@@ -768,29 +768,29 @@
 		<item>
 			<title>ZDF Event 12</title>
 			<hrefsender></hrefsender>
-			<link>https://zdf-hls-12.akamaized.net/hls/live/2016307/de/veryhigh/master.m3u8</link>
+			<link>https://zdf-hls-12.akamaized.net/hls/live/2016495/de/veryhigh/master.m3u8</link>
 			<thumbnail>zdf-mediathek.png</thumbnail>
 			<imgsource></imgsource>
 			<EPG_ID></EPG_ID>
-			<date>02.12.2020</date>
+			<date>21.07.2021</date>
 		</item>
 		<item>
 			<title>ZDF Event 13</title>
 			<hrefsender></hrefsender>
-			<link>https://zdf-hls-13.akamaized.net/hls/live/2016308/de/veryhigh/master.m3u8</link>
+			<link>https://zdf-hls-13.akamaized.net/hls/live/2016496/de/veryhigh/master.m3u8</link>
 			<thumbnail>zdf-mediathek.png</thumbnail>
 			<imgsource></imgsource>
 			<EPG_ID></EPG_ID>
-			<date>02.12.2020</date>
+			<date>21.07.2021</date>
 		</item>
 		<item>
 			<title>ZDF Event 14</title>
 			<hrefsender></hrefsender>
-			<link>https://zdf-hls-14.akamaized.net/hls/live/2016309/de/veryhigh/master.m3u8</link>
+			<link>https://zdf-hls-14.akamaized.net/hls/live/2016497/de/veryhigh/master.m3u8</link>
 			<thumbnail>zdf-mediathek.png</thumbnail>
 			<imgsource></imgsource>
 			<EPG_ID></EPG_ID>
-			<date>02.12.2020</date>
+			<date>21.07.2021</date>
 		</item>
 </channel>
 
