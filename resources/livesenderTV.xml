@@ -2,7 +2,7 @@
  <channels_info>
   <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
   <imgsource>Arauco</imgsource>
-  <nr>14</nr>
+  <nr>15</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
   <date>21.07.2021 rols1</date>
@@ -732,11 +732,11 @@
 		<item>
 			<title>ZDF Event 8</title>
 			<hrefsender></hrefsender>
-			<link>https://zdf-hls-08.akamaized.net/hls/live/2016303/none/veryhigh/master.m3u8</link>
+			<link>https://zdf-hls-08.akamaized.net/hls/live/2016303/de/veryhigh/master.m3u8</link>
 			<thumbnail>zdf-mediathek.png</thumbnail>
 			<imgsource></imgsource>
 			<EPG_ID></EPG_ID>
-			<date>02.12.2020</date>
+			<date>21.07.2021</date>
 		</item>
 		<item>
 			<title>ZDF Event 9</title>
