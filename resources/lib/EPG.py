@@ -304,10 +304,12 @@ def get_sort_playlist(PLAYLIST):				# sortierte Playliste der TV-Livesender
 #	tvtoday.de verwendet Unix-Format: data-start-time, data-end-time (beide ohne Sekunden)
 # 	day_offset:	1,2,3 ... Offset in Tagen
 #	Rückgabe today: today + Offset
-def get_unixtime(day_offset=None, onlynow=False):		
+#	Unix-Sommerzeit für Folgejahre anpassen
+def get_unixtime(day_offset=None, onlynow=False):
 	dt = datetime.datetime.now()								# Format 2017-03-09 22:04:19.044463
 	now = time.mktime(dt.timetuple())							# Unix-Format 1489094334.0
 	now = str(now).split('.')[0]								# .0 kappen (tvtoday.de ohne .0)
+	
 	if onlynow:
 		return now
 	

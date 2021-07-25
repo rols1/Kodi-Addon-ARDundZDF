@@ -7,7 +7,7 @@
 #
 ####################################################################################################
 #	01.07.2020 Start
-#	Stand 07.10.2020
+#	Stand 23.07.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -88,6 +88,8 @@ MSG_ICON 		= R("icon-record.png")
 # Verfahren Recording-TV-Live-Jobs: LiveRecord erzeugt Job via JobMain +
 #	startet direkt ffmpeg oder m3u8-Verfahren (je nach Setting) 
 # 30.08.2020 experimentelles m3u8-Verfahren entf.
+# 19.07.2021 Aufschlag Sommerzeit in JobMonitor, Funktion get_summer_unix_time -
+# 	entf. mit Anpassung JOBDELAY
 
 def JobMonitor():
 	PLog("JobMonitor:")
@@ -96,7 +98,7 @@ def JobMonitor():
 	pre_rec = re.search('= (\d+) Min', pre_rec).group(1)
 	post_rec = re.search('= (\d+) Min', post_rec).group(1)
 	if pre_rec == '0':
-		pre_rec = JOBDELAY									# Ausgleich Intervall
+		pre_rec = JOBDELAY/60								# Ausgleich Intervall 
 		
 	if os.path.exists(JOB_STOP):							# Ruine?		
 		os.remove(JOB_STOP)	
@@ -148,14 +150,23 @@ def JobMonitor():
 			PLog("scan_Job %d status: %s" % (cnt+1, status))			
 												
 			start_end 	= stringextract('<startend>', '</startend>', myjob)
-			start, end = start_end.split('|')						# 1593627300|1593633300					
-			start 	= int(start) - int(pre_rec) * 60				# Vorlauf (Min -> Sek) abziehen
-			end 	= int(end) + int(post_rec) * 60					# Nachlauf (Min -> Sek) aufschlagen 
+			start, end = start_end.split('|')						# 1593627300|1593633300
+			start = int(start); end = int(end);
+				
+			#start = get_summer_unix_time(start)					# entf. mit 
+			#end = get_summer_unix_time(end)
+			PLog("end - start1: %d" % (end-start))
+
+			start 	= start - (int(pre_rec) * 60)						# Vorlauf (Min -> Sek) abziehen
+			end 	= end + (int(post_rec) * 60)						# Nachlauf (Min -> Sek) aufschlagen 
+			PLog("end - start2: %d" % (end-start))
+			
 			start_human = date_human("%Y.%m.%d_%H:%M:%S", now=start)
-			mydate = date_human("%Y%m%d_%H%M%S", now=start)			# Zeitstempel für titel in LiveRecord	
+			mydate = date_human("%Y%m%d_%H%M%S", now=now)			# Zeitstempel für titel in LiveRecord	
 			end_human= date_human("%Y.%m.%d_%H:%M:%S", now=end)			
 			
 			duration = end - start									# in Sekunden für ffmpeg
+
 			diff = start - now
 			vorz=''
 			if diff < 0: 
@@ -164,7 +175,7 @@ def JobMonitor():
 			
 			laenge = ""; PIDffmpeg=''								# laenge entfällt hier
 			# PLog("now %s, start %s, end %s" % (now, start, end))  # Debug
-			PLog("now %s, start %s, end %s, start-now: %s" % (now_human, start_human, end_human, diff))
+			PLog("now %s, start %s, end %s, start-now: %s, dur: %s" % (now_human,start_human,end_human,diff,duration))
 			
 			#---------------------------------------------------	# 1 Job -> Aufnahme		
 			if (now >= start and now <= end) and status == 'waiting':	# Job ist aufnahmereif
@@ -227,6 +238,26 @@ def JobMonitor():
 		os.remove(MONITOR_ALIVE)
 		
 	return
+	
+#---------------------------------------------------
+# timecode: Unix-Zeit in sec
+# Aufschlag 1 Std. während der Sommerzeit
+# Sommerzeit jährlich aktualisieren (www.ptb.de)
+# 23.07.2021 z.Z. nicht genutzt
+def get_summer_unix_time(timecode):
+	PLog("get_summer_unix_time:")
+	PLog(timecode); 
+	summ_start 	= 1616893200									# Sommerzeit 2021 Unix Start	
+	summ_end 	= 1635642000									# Sommerzeit 2021 Unix Ende	
+	timecode = int(timecode)
+	if (timecode > summ_start) and (timecode < summ_end):		# add 1 Std.
+		PLog(datetime.datetime.fromtimestamp(float(timecode)))	# Debug
+		PLog("add_1_Std")
+		timecode = timecode + 3600
+
+	PLog(timecode); 
+	PLog(datetime.datetime.fromtimestamp(float(timecode)))		# Debug
+	return timecode
 
 ######################################################################## 
 # 
@@ -679,8 +710,8 @@ def date_human(myformat, now=''):
 
 	if now == '':
 		now = EPG.get_unixtime(onlynow=True)
-	now = int(now)
-	s = datetime.datetime.fromtimestamp(now)
+	
+	s = datetime.datetime.fromtimestamp(float(now))
 	date_human = s.strftime(myformat)	
 	return date_human
 	

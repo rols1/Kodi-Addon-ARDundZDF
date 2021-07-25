@@ -1169,8 +1169,8 @@ def Tivi_Woche_Sendungen(day, title):
 		MyDialog(msg1, msg2, '')	
 		return
 		
-	# Home-Button in ZDFClusterSingle
-	ardundzdf.ZDFClusterSingle(title, path, clus_title=day, page=page)				
+	# Home-Button in ZDFRubrikSingle
+	ardundzdf.ZDFRubrikSingle(title, path, clus_title=day, page=page)				
 	return
 
 # ----------------------------------------------------------------------
@@ -1243,13 +1243,13 @@ def Tivi_AZ_Sendungen(name, char=None):
 #	Tivi_SinglePage)
 # def get_tivi_details(li, sendungen, path):			
 # ----------------------------------------------------------------------
-# 12.12.2019 Tivi_SinglePage entfernt - Auswertung durch ZDFClusterSingle
+# 12.12.2019 Tivi_SinglePage entfernt - Auswertung durch ZDFRubrikSingle
 #	in Tivi_Woche_Sendungen
 # def Tivi_SinglePage(title, path, ID=None, key=None):
 # ----------------------------------------------------------------------
 # 12.12.2019 SingleBeitragTivi entfernt - Auswertung durch durch
 #	ZDF_getVideoSources im Verlauf von ZDF_get_content,  ZDFStart,
-#	ZDFClusterSingle.
+#	ZDFRubrikSingle.
 # def SingleBeitragTivi(path, title):
 # ----------------------------------------------------------------------
 

@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 15.04.2021
+#	Stand 18.07.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2332,23 +2332,6 @@ def get_playlist_img(hrefsender):
 	PLog(playlist_img); PLog(link); 
 	return playlist_img, link, EPG_ID
 
-#---------------------------------------------------------------------------------------------------
-# Link für TV-Livesender aus ARD-Start holen - z.Z. nur Classic
-#	Aufrufer: ARDStartRubrik, SenderLiveResolution (Fallback für
-#		 Link in livesenderTV.xml)
-def get_startsender(hrefsender):
-	PLog('get_startsender: ' + hrefsender); 
-	page, msg = get_page(path=hrefsender)	
-	config_id =  stringextract('/play/config/', '&', page)
-	# Altern.: /play/media/35283076?devicetype=phone&features=hls (weniger Inhalt)
-	json_url = BASE_URL + '/play/config/%s?devicetype=phone' % config_id
-	
-	page, msg = get_page(path=json_url)
-	href = stringextract('clipUrl":"', '"', page)
-	if href.startswith('http') == False:
-		href = 'https:' + href	
-	return href
-	
 ####################################################################################################
 def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für Download-Video / -Podcast
 	PLog('MakeDetailText:')

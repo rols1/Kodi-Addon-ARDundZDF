@@ -9,6 +9,29 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+25.07.2021 3.9.4
+			get_startsender (Modul util) entfernt - nach Wegfall ARD-Classic obsolet.
+			Modul epgRecord: Zuschlag 1 Std. Sommerzeit bei Start- und Endzeit - Anpas-
+			sung JobMonitor, neue Funktion get_summer_unix_time, Korrektur pre_rec (bei
+			0 -> JOBDELAY/60 statt JOBDELAY).
+			ZDF_get_teaserDetails: isvideo-Erkennung hinzugefügt (anhand "Videolänge" in
+			Teaser-Info).
+			Sport Live im ZDF: erweitert mit Menüs "Olympia Live" + "Olympia relive" -
+			@Weri.
+			ARD-Sportschau: ​Einblendung der ARD Event Streams in das Menü  "Olympia in 
+			Tokio" /"Olympia" /"Live" (@Weri).
+			ARD-Sportschau, Menü Live: Verwendung der Seite sportschau.de/
+			streamindex100.html statt der java-script-generierten Seite livecenter.
+			sportschau.de (@Weri).
+			TV - Eventstreams: hinzugefügt: NDR 4 - 6 (Olympia), aktualisiert: ZDF 2,
+			11 - 14, entfernt: ZDF 3, Einzelupdate livesenderTV.xml - (@Weri)
+			ZDFRubrikSingleCall: ergänzt für Auswertung ohne Cluster (alle Beiträge),
+			aktuell relevant für "Olympia relive". 
+			ZDF_Sendungen: quote(ctitle_org) - relevant für Ku'damm-Serie u.ä. Worttren-
+			nungen.
+			Radio-Livestreams: für neue Struktur der ARD-Audiothek Anpassungen in Main,
+			AudioStartLive, ARDSportHoerfunkSingle (Bundesliga), entfernt: AudioLiveSingle.
+
 17.07.2021 3.9.3
 			ZDF_Sendungen, ZDF_get_content: Untersuchung Playerboxen-Doppel - im Quelltext
 			möglich (Bsp.: www.zdf.de/nachrichten/heute-journal)
