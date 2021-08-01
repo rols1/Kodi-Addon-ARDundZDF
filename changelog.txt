@@ -9,6 +9,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+01.08.2021 3.9.5
+			ARDSportHoerfunkSingle: hartkodierte streamUrls entfernt, Nutzung AudioSender
+			im Cache (Livesender Audiothek).
+			Arte-Kategorien: nach Änderung des eingebetteten json-codes im Arte-Web
+			Anpassungen in Funktion Kategorien (Stufe 2: Blockbildung, neuer Pfad Arte-
+			Concert), get_ArtePage (json-Ausschnitt), arte_Search (neuer Pfad, Seitenzahl-
+			Abgleich), Anpassung in Watchdog2.
+			Audiothek: Revision  nach ARD-Änderungen (Details s. Addon-Code).
+			ARD-Icons: Farbpalette optimiert (Dateigrößen verringert), neue Icons für
+			Audiothek.
+			
 25.07.2021 3.9.4
 			get_startsender (Modul util) entfernt - nach Wegfall ARD-Classic obsolet.
 			Modul epgRecord: Zuschlag 1 Std. Sommerzeit bei Start- und Endzeit - Anpas-

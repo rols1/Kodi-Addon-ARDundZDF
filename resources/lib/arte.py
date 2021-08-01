@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 21.06.2021
+#	Stand: 27.07.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -189,6 +189,7 @@ def arte_Live(href, title, Plot, img):
 # 	Seite html / json gemischt, Blöcke im html-Bereich ohne img-Url's
 # 	Problem: Folgeseiten via Web nicht erreichbar
 # Api-Call s.u. (div. Varianten, nur 1 ohne Error 401 / 403)
+# 27.07.2021 neuer Api-Call
 #
 def arte_Search(query='', nextpage=''):
 	PLog("arte_Search:")
@@ -203,8 +204,9 @@ def arte_Search(query='', nextpage=''):
 	if nextpage == '':
 		nextpage = '1'
 
-	path = 'https://www.arte.tv/guide/api/emac/v3/de/web/data/SEARCH_LISTING/?imageFormats=landscape&mainZonePage=1&query=%s&page=%s&limit=20' %\
+	path = 'https://www.arte.tv/api/rproxy/emac/v3/de/web/pages/SEARCH/?query=%s&mainZonePage=1&page=%s&limit=20' %\
 		(quote(query), nextpage)
+	aktpage = stringextract('page=', '&', path)
 
 	page, msg = get_page(path=path, do_safe=False)		# ohne quote in get_page (api-Call)
 	if page == '':						
@@ -222,14 +224,14 @@ def arte_Search(query='', nextpage=''):
 	# page = page.replace('\\u002F', '/')	# hier nicht erf.	
 	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
 
-	nexturl = stringextract('nextPage":', ',', page)		# letzte Seite: "", auch "null," möglich
+	nexturl = stringextract('"nextPage":"', '"', page)		# letzte Seite: ""
 	nextpage = stringextract('page=', '&', nexturl)
 	PLog("nextpage: " + nextpage)	
 
 	li,cnt = GetContent(li, page, ID='SEARCH')						
 		
 	
-	if nextpage:
+	if nextpage and  int(nextpage) > int(aktpage):			# letzte Seite = akt. Seite
 		img = R(ICON_MEHR)
 		title = u"Weitere Beiträge"
 		tag = u"weiter zu Seite %s" % nextpage
@@ -614,6 +616,8 @@ def Kategorien(title='', path=''):
 		
 	else:													# 2. Stufe: Subkats von path
 		PLog('Stufe2:')
+		if 'Concert' in title:
+			path = 'https://www.arte.tv/de/arte-concert/'
 		page = get_ArtePage('Kategorien_1', title, Dict_ID='ArteStart_%s' % title[:10], path=path)	
 		if page == '':	
 			return li
@@ -622,39 +626,9 @@ def Kategorien(title='', path=''):
 			Kategorie_Dokus(li, title, page, path)
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-			
-		pos = page.find('"categories":')					# Listen Subkats am Seitenende o. Bilder
-		PLog(pos)
-		page = page[pos:]
-		PLog(page[:100])
-						
-		# zum Titel passende Liste suchen, dann die Seite
-		#	rückwärts ab "id" ausschneiden, um den Kat-pid
-		#	zu ermitteln (benötigt für die Adds). 
-		pos = page.find('label":"%s"' % title)
-		if pos > 0:											# Liste ausschneiden, zurück bis:
-			page = page[pos-50:]							# 	"id":"CPO_de","code":"CPO","language":"de",
-			
-		page = stringextract('"id"', '}]}', page)
-		Kat_pid = stringextract('"code":"', '"', page)		# pid für ganze Kat
-		PLog(page[:100])
-		if page == '':						
-			msg1 = 'Kategorie nicht gefunden: %s' % title
-			MyDialog(msg1, '', '')
-			return 
-	
 		PLog('Mark0')										# Liste SubKats einschl. Add's	
-		Kat_url = stringextract('url":"', '"', page)		# Bsp.: ../videos/kultur-und-pop/
-		PLog("Kat_url: " + Kat_url); PLog("Kat_pid: " + Kat_pid)
-		Kat_page = get_ArtePage('Kategorien_2', title, Dict_ID='ArteKat_%s' % Kat_pid, path=Kat_url)
-		#RSave('/tmp/x.json', py2_encode(Kat_page))	# Debug	
-
-		pos1 = Kat_page.find('"zones":')					# Anfang
-		pos2 = Kat_page.find('"categories":')				# Ende
-		Kat_page = Kat_page[pos1:pos2]						# Ausschnitt
-		PLog("pos1 %s, pos2 %s, len %s" % (pos1, pos2, len(page)))
-		
-		items = blockextract('code":{"name', Kat_page)	# Altern.:'{"id":"'
+		Kat_pid =  stringextract('page":"', '"', page)		# z.B. HIS
+		items = blockextract('code":{', page)	# Altern.:'{"id":"'
 		PLog(len(items))
 		get_subkats(li, items, path)
 
@@ -805,6 +779,7 @@ def KatSub(path, title, pid, link_url=''):
 # lädt Arte-Seite aus Cache / Web
 # Rückgabe json-Teil der Webseite oder ''
 # Cachezeit für Startseite + Kategorien identisch
+# 26.07.2021 Anpassung an Webänderung (json-Auschnitt)
 #
 def get_ArtePage(caller, title, Dict_ID, path, header=''):
 	PLog("get_ArtePage: " + Dict_ID)
@@ -828,7 +803,8 @@ def get_ArtePage(caller, title, Dict_ID, path, header=''):
 				MyDialog(msg1, msg2, '')
 				return ''
 		else:
-			pos = page.find('__INITIAL_STATE__ ')	# json-Bereich
+			# pos = page.find('__INITIAL_STATE__ ')	# json-Bereich
+			pos = page.find('{"props":')	# json-Bereich			# 26.07.2021 angepasst
 			if pos > 0:
 				page = page[pos:]
 			page = page.replace('\\u002F', '/')	

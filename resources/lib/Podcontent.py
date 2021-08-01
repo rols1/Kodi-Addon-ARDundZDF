@@ -15,7 +15,7 @@
 #
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-#	Stand: 07.10.2020 
+#	Stand: 31.07.2021 
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -79,7 +79,7 @@ ICON_DOWNL 				= "icon-downl.png"
 ICON_NOTE 				= "icon-note.png"
 ICON_STAR 				= "icon-star.png"
 
-ARD_AUDIO_BASE			= 'https://www.ardaudiothek.de'
+ARD_AUDIO_BASE = 'https://api.ardaudiothek.de/'
 ####################################################################################################
 
 # Aufrufer: PodFavoritenListe (Haupt-PRG)
@@ -87,85 +87,35 @@ ARD_AUDIO_BASE			= 'https://www.ardaudiothek.de'
 #	hier Abruf im json-Format, aber nicht komp. mit AudioContentJSON
 #
 # xml-format verworfen, da Dauer des mp3 fehlt.
-#	
-def PodFavoriten(title, path, pagenr='1'):
-	PLog('PodFavoriten:'); PLog(path);  PLog(pagenr);
-	# json_base = 'https://audiothek.ardmediathek.de/programsets/%s/synd_rss?'
-	# path 	= feed_base  % url_id						# Abruf xml-Format
-	
+# 30.07.2021 Anpassung an renovierte Audiothek (alte Links -> neue api-Calls)  
+# 
+def PodFavoriten(title, path):
+	PLog('PodFavoriten:'); PLog(path);	
 	title_org = title
-	path_org = path									# path_org für url_id
+	base = "https://api.ardaudiothek.de/"
 	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ARDaudio')					# Home-Button
-
-	if '/api/search/' not in path:					# Suchergebnisse, ohne url_id
+	if '//www.ardaudiothek.de/' in path:			#  alte Links -> neue api-Calls
 		url_id 	= path.split('/')[-1]
-		pagenr = int(pagenr)
-		path = ARD_AUDIO_BASE + "/api/podcasts/%s/episodes?items_per_page=24&page=%d" % (url_id, pagenr)				
+		path = ARD_AUDIO_BASE + "programsets/%s" % url_id						
+	
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Audiothek')				# Home-Button
+
 	page, msg = get_page(path)	
 	if page == '':	
 		msg1 = "Fehler in PodFavoriten:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
-		return li
+		return #li
 	PLog(len(page))	
 		
-	cnt=0
-	gridlist = blockextract('"duration"', page)		# Sendungen 
-	PLog(len(gridlist))
-	
-	tagline=''; downl_list=[]
-	for rec in gridlist:
-		rec = rec.replace('\\"', '*')						# mögl. in title
-		descr_l	=  blockextract('"summary"', rec)			# 2 x 
-		
-		dauer 	= stringextract('duration":"', '"', rec) 
-		rubrik 	= stringextract('category":"', '"', rec) 		
-		category= stringextract('category":"', '"', rec)
-		cat_descr=  stringextract('summary":"', '"', descr_l[0])	# nicht gebraucht
-		
-		downl_url= stringextract('download_url":"', '"', rec) 		# möglich: null
-		if downl_url.startswith('//'):
-			downl_url = 'https:' + downl_url
-		play_url= stringextract('playback_url":"', '"', rec) 
-		if play_url.startswith('//'):
-			play_url = 'https:' + play_url
-		if downl_url == '':
-			downl_url = play_url
-		if downl_url == '':
-			continue
-		
-		sender	= stringextract('station":"', '"', rec) 
-		
-		descr	=  stringextract('summary":"', '"', descr_l[-1])
-		title	= stringextract('title":"', '"', descr_l[-1]) 	# folgt hinter summary
-		
-		pub_date= stringextract('publication_date":"', '"', rec) 
-		pub_date= time_translate(pub_date) 	
-		img 	=  stringextract('image_16x9":"', '"', rec)
-		img		= img.replace('{width}', '640')
-		
-		title = rubrik + ' | ' + title
-		title = repl_json_chars(title)
-		descr	= "" + sender + ' | ' + dauer + ' | ' + pub_date + '\n\n' + descr 
-		descr = repl_json_chars(descr)
-		summ_par= descr.replace('\n', '||')
-	
-		PLog('Satz:');
-		PLog(dauer); PLog(title); PLog(img); PLog(downl_url); PLog(play_url);
-		PLog(descr); 						
-		
-		# AudioPlayMP3: 2 Buttons (Abspielen + Download)
-		downl_url=py2_encode(downl_url); title=py2_encode(title); 
-		img=py2_encode(img); summ_par=py2_encode(summ_par); 
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(downl_url), 
-			quote(title), quote(img), quote(summ_par))
-		addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, fparams=fparams, 
-			summary=descr)
-		
-		downl_list.append(title + '#' + downl_url)
-		cnt=cnt+1		
+	if '/editorialcategories/' in path:				# Rubriken (neues api ab 07/2021)
+		ID="PodFavs"
+	else:
+		ID="AudioSearch"		
+	cnt, downl_list = ardundzdf.Audio_get_json_single(li, page, ID)
+
 
 	if cnt == 0:
 		msg1 = 'nichts gefunden zu >%s<' % title_org
@@ -188,27 +138,25 @@ def PodFavoriten(title, path, pagenr='1'):
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
 				fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
 		
-	try:  																		# Mehr-Button?
-		items_per_page =  int(stringextract('items_per_page":', ',', page))
-		total 			= int(stringextract('total":', '}', page)) 
-		now_max			= int(pagenr) * items_per_page
-		PLog("items_per_page %d, total %d, now_max %d " % (items_per_page, total, now_max))
+	try:  																		
+		anz = stringextract('"numberOfElements":', ',', page)				# Mehr Beiträge
+		next_url = stringextract('"next":', '}},', page)
 	except Exception as exception:
 		PLog(str(exception))
-		now_max=1; total=1		# Fallback: kein Mehr-Button
+		next_url=''
 	
-	if now_max < total:	
-		title = "WEITERE LADEN zu >%s<" % title_org				
-		page_next = int(pagenr) +1	
-		img = R(ICON_MEHR) 
-		tag = "weiter zu Seite %d" % page_next
-		PLog(tag)
-		path_org=py2_encode(path_org); title=py2_encode(title); 
-		fparams="&fparams={'path': '%s', 'title': '%s', 'pagenr': '%d'}" % (quote(path_org), 
-			quote(title), page_next)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodFavoriten", \
+	if next_url:
+		url = stringextract('"href":"', '"', next_url)
+		url = base + url
+		offset = stringextract('offset=', '&', url)
+		img = R(ICON_MEHR)
+		tag = u"Mehr (ab Beitrag %s von %s)" % (offset, anz)
+		PLog(url); PLog(tag);
+		url=py2_encode(url); title_org=py2_encode(title_org); 
+		fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(url), 
+			quote(title_org))
+		addDir(li=li, label=title_org, action="dirList", dirID="resources.lib.Podcontent.PodFavoriten", \
 			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
-		
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
@@ -365,6 +313,9 @@ def PodAddFavs(title, path, fav_path, mehrfach=''):
 	PLog('PodAddFavs:')
 	PLog(title); PLog(path); PLog(fav_path); 
 	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Audiothek')								# Home-Button
+
 	if int(mehrfach) > 0:						# Vorab-Test auf Mehrfach-Sätze
 		msg1=u'Nur Einzelbeiträge erlaubt! Folgebeiträge: %s' % mehrfach
 		msg2=u'Verweise auf Folgebeiträge werden verworfen.' 
@@ -413,7 +364,7 @@ def PodAddFavs(title, path, fav_path, mehrfach=''):
 		PLog(msg2)
 		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)	# Fehler-Hinweis
 	
-	return
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 
 

@@ -19,6 +19,11 @@
 #	hinzufügen.	
 #  Gewünschte Sendungen und Fehler hierhin melden (bitte vorher die Seite mittels Webbrowser testen):
 #	https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF
+#  Suchergebnisse der Audiothek lassen sich via Button hier anfügen.
+#
+#  Nach Renovierung der Audiothek 07/2021 durch die ARD werden neue HTTP-Links (www.ardaudiothek.de)verwendet. 
+#	Die alten sind vielfach noch verwendbar - sie werden vom Addon in neue Links (api.ardaudiothek.de) 
+#	übersetzt.
 #-------------------------------------------------------------------------------------------------------------------------------------
  
 ## Magazine          
@@ -29,11 +34,10 @@ Das Verbrauchermagazin - B5 aktuell 		| https://www.ardaudiothek.de/das-verbrauc
 Wirtschaft - hrINFO | 				https://www.ardaudiothek.de/wirtschaft/467742
 Aus Wissenschaft und Technik - B5 aktuell 	| https://www.ardaudiothek.de/wissenschaft-und-technik/53609516
 
-Quarks - Wissenschaft und mehr				| https://www.ardaudiothek.de/quarks-wissenschaft-und-mehr/33674778 
-Quarks - Topthemen aus der Wissenschaft     | https://www.ardaudiothek.de/quarks-topthemen-aus-der-wissenschaft/53095256
-Quarks - Kleine Anfrage						| https://www.ardaudiothek.de/quarks-kleine-anfrage/53095232
-Quarks - Digital Leben						| https://www.ardaudiothek.de/quarks-digital-leben/53590536
-Quarks - Hintergrund						| https://www.ardaudiothek.de/quarks-hintergrund/53095244
+Quarks - Wissenschaft und mehr				| https://www.ardaudiothek.de/sendung/quarks-wissenschaft-und-mehr/33674778 
+Quarks - Storys						| https://www.ardaudiothek.de/sendung/quarks-storys/66294074
+Quarks - Digital Leben						| https://www.ardaudiothek.de/sendung/quarks-digital-leben/53590536
+Quarks - Hintergrund						| https://www.ardaudiothek.de/sendung/quarks-hintergrund/53095244
 
 Das Computermagazin - B 5  					| https://www.ardaudiothek.de/das-computermagazin/7257376
 Visite - Das Gesundheitsmagazin - NDR 1  	| https://www.ardaudiothek.de/visite-das-gesundheitsmagazin/7853020
@@ -43,7 +47,7 @@ Forschung Aktuell - Deutschlandfunk			| https://www.ardaudiothek.de/forschung-ak
 ## Kabarett / Humor
 Kabarett WDR 2								| https://www.ardaudiothek.de/kabarett/36244764
 Unterhaltung am Wochenende WDR5				|https://www.ardaudiothek.de/unterhaltung-am-wochenende/33607722
-Zugabe Pur - der Satire-Podcast WDR 2			|https://www.ardaudiothek.de/zugabe-pur-der-satire-podcast/61650156
+Zugabe Pur - der Satire-Podcast WDR 2		|https://www.ardaudiothek.de/zugabe-pur-der-satire-podcast/61650156
 Lach matt - Bayerns beste Kabarettisten BR 1| https://www.ardaudiothek.de/lach-matt-bayerns-beste-kabarettisten/33819834
 radioSpitzen BR 2							| https://www.ardaudiothek.de/radiospitzen/5962920
 Unterhaltung am Wochenende WDR 5			| https://www.ardaudiothek.de/unterhaltung-am-wochenende/33607722
@@ -60,6 +64,6 @@ Cybercrime									| https://www.ardaudiothek.de/api/search/Cybercrime?items_per
 ARD Radio Tatort							| https://www.ardaudiothek.de/ard-radio-tatort/1998988
 NDR Coronavirus Update						| https://www.ardaudiothek.de/das-coronavirus-update/72451786
 
-
-Suchergebnis: corona		| https://www.ardaudiothek.de/api/search/corona?items_per_page=24&page=1
-Suchergebnis: philosophie		| https://www.ardaudiothek.de/api/search/philosophie?items_per_page=24&page=1
+#
+Suchergebnis: corona		| https://api.ardaudiothek.de/search?query=corona
+Suchergebnis: philosophie	| https://api.ardaudiothek.de/search?query=philosophie
