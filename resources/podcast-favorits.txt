@@ -65,5 +65,6 @@ ARD Radio Tatort							| https://www.ardaudiothek.de/ard-radio-tatort/1998988
 NDR Coronavirus Update						| https://www.ardaudiothek.de/das-coronavirus-update/72451786
 
 #
-Suchergebnis: corona		| https://api.ardaudiothek.de/search?query=corona
-Suchergebnis: philosophie	| https://api.ardaudiothek.de/search?query=philosophie
+Suchergebnis: corona		| https://api.ardaudiothek.de/search?query=corona&offset=0&limit=12
+Suchergebnis: philosophie	| https://api.ardaudiothek.de/search?query=philosophie&offset=0&limit=12
+Suchergebnis: sport (ab Beitrag 1)		| https://api.ardaudiothek.de/search/items?query=sport&offset=0&limit=12

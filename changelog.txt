@@ -9,6 +9,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+08.08.2021 3.9.6 Audiothek: Cluster-Auswertung der Ergebnisseiten
+			Audio_get_sendung: Fix falsche Param.-Überagabe an Audio_get_rubrik.
+			Audio_get_rubrik + Audio_get_rubrik_sport: Auswertung numberOfElements 
+			unterdrückt (bei Rubriken nicht vorh.).
+			AudioSearch: quote(query) ersetzt durch quote_plus(query) (Behandl. Leerz.).
+			GetJsonByPath: verlagert aus zdfmobile nach util (Nutzung durch Haupt-PRG).
+			Anpassung Suche für Cluster-Auswertung: neue Funktionen Audio_get_nexturl
+			(Mehr-Button), Audio_get_cluster (Webseite, html-Code), Audio_get_webslice
+			(Webausschnitt html/json). Anpassungen in AudioSearch, Audio_get_json_multi,
+			Audio_get_json_multi, PodFavoriten.
+			Menü Sport: umgestellt auf Cluster-Auswertung (Weblink), Audio_get_rubrik_sport
+			entfernt.
+			DownloadExtern: Abbruch-Dialog für mögl. Livestream aus Audiothek.
+			get_page (Modul util): Behandl. HTTP Error 308: Permanent Redirect hinzugefügt.
+
 01.08.2021 3.9.5
 			ARDSportHoerfunkSingle: hartkodierte streamUrls entfernt, Nutzung AudioSender
 			im Cache (Livesender Audiothek).

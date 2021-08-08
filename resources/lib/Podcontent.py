@@ -97,6 +97,7 @@ def PodFavoriten(title, path):
 	if '//www.ardaudiothek.de/' in path:			#  alte Links -> neue api-Calls
 		url_id 	= path.split('/')[-1]
 		path = ARD_AUDIO_BASE + "programsets/%s" % url_id						
+	path = path.replace('/items', '')				# aus Cluster-Suche entf. (key-error Audio_get_json_single)
 	
 
 	li = xbmcgui.ListItem()
@@ -113,7 +114,8 @@ def PodFavoriten(title, path):
 	if '/editorialcategories/' in path:				# Rubriken (neues api ab 07/2021)
 		ID="PodFavs"
 	else:
-		ID="AudioSearch"		
+		ID="AudioSearch"
+		
 	cnt, downl_list = ardundzdf.Audio_get_json_single(li, page, ID)
 
 
@@ -129,7 +131,7 @@ def PodFavoriten(title, path):
 		if len(downl_list) > 1:
 			# Sammel-Downloads - alle angezeigten Favoriten-Podcasts downloaden?
 			#	für "normale" Podcasts erfolgt die Abfrage in SinglePage
-			title=u'Download! Alle angezeigten [B]%d[/B] Podcasts ohne Rückfrage speichern?' % cnt
+			title=u'[B]Download! Alle angezeigten %d Podcasts speichern?[/B]' % cnt
 			summ = u'Download von insgesamt %s Podcasts' % len(downl_list)	
 			Dict("store", 'downl_list', downl_list) 
 			Dict("store", 'URL_rec', downl_list) 
@@ -137,27 +139,11 @@ def PodFavoriten(title, path):
 			fparams="&fparams={'key_downl_list': 'downl_list', 'key_URL_rec': 'downl_list'}" 
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
 				fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
-		
-	try:  																		
-		anz = stringextract('"numberOfElements":', ',', page)				# Mehr Beiträge
-		next_url = stringextract('"next":', '}},', page)
-	except Exception as exception:
-		PLog(str(exception))
-		next_url=''
 	
-	if next_url:
-		url = stringextract('"href":"', '"', next_url)
-		url = base + url
-		offset = stringextract('offset=', '&', url)
-		img = R(ICON_MEHR)
-		tag = u"Mehr (ab Beitrag %s von %s)" % (offset, anz)
-		PLog(url); PLog(tag);
-		url=py2_encode(url); title_org=py2_encode(title_org); 
-		fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(url), 
-			quote(title_org))
-		addDir(li=li, label=title_org, action="dirList", dirID="resources.lib.Podcontent.PodFavoriten", \
-			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
-		
+
+	destfunc = "resources.lib.Podcontent.PodFavoriten" 
+	ardundzdf.Audio_get_nexturl(li, page, title_org, ID, destfunc)				# Mehr-Button anhängen
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 #----------------------------------------------------------------  
@@ -196,7 +182,14 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 		msg1='Downloadverzeichnis nicht gefunden:'	
 		msg2=path
 		MyDialog(msg1, msg2, '')		
-		return li		
+		return
+		
+	msg1 = 'Starte Download im Hintergrund'		
+	msg2 = 'Anzahl der Dateien: %s' % len(downl_list)
+	msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_download_path')
+	ret=MyDialog(msg1, msg2, msg3, ok=False, yes='OK')
+	if ret  == False:
+		return		
 	
 	i = 0
 	for rec in downl_list:									# Parameter-Liste erzeugen

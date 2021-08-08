@@ -9,7 +9,7 @@
 #	22.11.2019 Migration Python3 Modul six + manuelle Anpassungen
 ################################################################################
 #
-# Stand: 26.02.2021
+# Stand: 02.08.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -435,33 +435,6 @@ def SingleRubrik(path, title, DictID):
 		# break		# Test Einzelsatz
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-# ----------------------------------------------------------------------
-# iteriert durch das Objekt	und liefert Restobjekt ab path
-# bei leerem Pfad wird jsonObject unverändert zurückgegeben
-# index error möglich bei veralteten Indices z.B. aus
-#	Merkliste (Startpage wird aus Cache geladen).
-def GetJsonByPath(path, jsonObject):		
-	PLog('GetJsonByPath: '+ path)
-	if path == '':
-		return jsonObject
-	path = path.split('|')
-	i = 0
-
-	try:									# index error möglich
-		index=0
-		while(i < len(path)):
-			if(isinstance(jsonObject,list)):
-				index = int(path.pop(0))
-			else:
-				index = path.pop(0)
-			PLog('i=%s, index=%s' % (i,index))
-			jsonObject = jsonObject[index]
-	except Exception as exception:
-		PLog("Error: " + str(exception))
-		return ''			# Aufrufer muss beenden
-		
-	# PLog(jsonObject)
-	return jsonObject	
 # ----------------------------------------------------------------------
 # 07.10.2019 Stringauswertung get_formitaeten2 für neue 
 #	formitaeten-Variante hinzugefügt	

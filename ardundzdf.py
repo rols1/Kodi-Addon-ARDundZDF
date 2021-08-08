@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.9.5'
-VDATE = '01.08.2021'
+VERSION = '3.9.6'
+VDATE = '08.08.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1008,63 +1008,7 @@ def Main_ZDFfunk(title):
 		fanart=R('zdf-funk.png'), thumb=R('funk.png'), fparams=fparams)
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-	
-#----------------------------------------------------------------
-def Main_POD(name):
-	PLog('Main_POD:')
-	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)				# Home-Button
 		
-	title="Suche Podcasts in ARD-Mediathek"
-	fparams="&fparams={'channel': 'PODCAST', 'title': '%s'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MAIN_ARD), 
-		thumb=R(ICON_SEARCH), fparams=fparams)
-
-	title = 'Sendungen A-Z'
-	fparams="&fparams={'name': '%s', 'ID': 'PODCAST'}"	% title
-	addDir(li=li, label=title, action="dirList", dirID="SendungenAZ", fanart=R(ICON_MAIN_POD), thumb=R(ICON_ARD_AZ), 
-		fparams=fparams)
-
-	title = 'Rubriken'	
-	fparams="&fparams={'title': '%s', 'morepath': '%s', 'next_cbKey': 'SinglePage', 'ID': 'PODCAST', 'mode': 'Sendereihen'}" \
-		% (title,quote(POD_RUBRIK))
-	addDir(li=li, label=title, action="dirList", dirID="PODMore", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_RUBRIK), 
-		fparams=fparams)
-
-	title="Radio-Feature"	 
-	fparams="&fparams={'title': '%s', 'morepath': '%s', 'next_cbKey': 'SingleSendung', 'ID': 'PODCAST', 'mode': 'Sendereihen'}" \
-		% (title,quote(POD_FEATURE))
-	addDir(li=li, label=title, action="dirList", dirID="PODMore", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_FEATURE), 
-		fparams=fparams)
-
-	title="Radio-Tatort"
-	fparams="&fparams={'title': '%s', 'morepath': '%s', 'next_cbKey': 'SingleSendung', 'ID': 'PODCAST', 'mode': 'Sendereihen'}" \
-		% (title,quote(POD_TATORT))
-	addDir(li=li, label=title, action="dirList", dirID="PODMore", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_TATORT), 
-	fparams=fparams)
-		 
-	title="Neueste Audios"	 
-	fparams="&fparams={'title': '%s', 'morepath': '%s', 'next_cbKey': 'SingleSendung', 'ID': 'PODCAST', 'mode': 'Sendereihen'}" \
-		% (title,quote(POD_NEU))
-	addDir(li=li, label=title, action="dirList", dirID="PODMore", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_NEU), 
-		fparams=fparams)
-
-	title="Meist abgerufen"	 
-	fparams="&fparams={'title': '%s', 'morepath': '%s', 'next_cbKey': 'SingleSendung', 'ID': 'PODCAST', 'mode': 'Sendereihen'}" \
-		% (title,quote(POD_MEIST))
-	addDir(li=li, label=title, action="dirList", dirID="PODMore", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_MEIST), 
-		fparams=fparams)
-
-	title="Refugee-Radio"; query='Refugee Radio'	# z.Z. Refugee Radio via Suche
-	tag = "Quelle Cosmo WDR:"
-	summ = "www1.wdr.de/mediathek/audio/cosmo"
-	fparams="&fparams={'title': '%s', 'query': '%s', 'channel': 'PODCAST'}" % (query, query)
-	addDir(li=li, label=title, action="dirList", dirID="Search", fanart=R(ICON_MAIN_POD), thumb=R(ICON_POD_REFUGEE), 
-		fparams=fparams, tagline=tag, summary=summ)
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
 ##################################### Start Audiothek ###############################################
 # Aufruf: Main
 # 24.07.2021 Revision nach Renovierung der Audiothek durch die ARD
@@ -1098,16 +1042,16 @@ def AudioStart(title):
 		thumb=R(ICON_AUDIO_LIVE), fparams=fparams)
 
 	img = R(ICON_MAIN_AUDIO)
-	title_list = ['Entdecken|ard-entdecken.png', 'Unsere Favoriten|ard-favoriten.png', 
-			'Themen|ard-themen.png', u'Meistgehörte Episoden|ard-meistgehoert.png',
-			u'Ausgewählte Podcasts|ard-ausgewaehlt.png', 'Rubriken|ard-rubriken.png',
-			'Sport|ard-sport.png']								
+	title_list = [u'Entdecken|ard-entdecken.png', u'Unsere Favoriten|ard-favoriten.png', 
+			u'Themen|ard-themen.png', u'Meistgehörte Episoden|ard-meistgehoert.png',
+			u'Ausgewählte Podcasts|ard-ausgewaehlt.png', u'Rubriken|ard-rubriken.png',
+			u'Sport|ard-sport.png']								
 	for item in title_list:
 		title, img = item.split('|')
 		tag=''
-		if title == "Entdecken":
+		if title == u"Entdecken":
 			tag = "die Highlights  der Audiothek"
-		if title == "Sport":
+		if title == u"Sport":
 			tag = "Achtung: Livestreams nicht aufnehmen. Stop im Addon nicht möglich!"
 		fparams="&fparams={'title': '%s', 'ID': '%s'}" % (title, title)	
 		addDir(li=li, label=title, action="dirList", dirID="AudioStartHome", fanart=R(ICON_MAIN_AUDIO), 
@@ -1140,15 +1084,6 @@ def AudioStart(title):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #----------------------------------------------------------------
-# Die Startseite liefert html/json gemischt. mp3-Url wird im html-Bereich
-#	ermittelt, bei Fehlen wird die Homepage des Beitrags weitergegeben.
-#	img wird im json-Bereich ermittelt - bei Fehlen "kein-Bild".
-# Hier wird zur ID der passende page-Ausschnitt ermittelt - Auswertung in 
-#	Audio_get_rubrik oder Audio_get_sendungen (Entdecken, Meistgehört)
-#
-# 05.10.2020 für Entdecken + Meistgehört Wechsel der Auswertung
-#	von Homepage zu homescreen.json (Audio_get_json_single).
-#
 # 31.07.2021 Revision nach Renovierung der Audiothek durch die ARD
 #
 def AudioStartHome(title, ID, page='', path=''):	# Auswertung Homepage	
@@ -1156,10 +1091,14 @@ def AudioStartHome(title, ID, page='', path=''):	# Auswertung Homepage
 	li = xbmcgui.ListItem()
 	
 	ID = py2_decode(ID)
+	if ID == 'Entdecken':							# Stage Web, Sonderbhdl., nicht im api		
+		Audio_get_cluster_stage()					# direkt
+		return
 	if ID == 'Rubriken':							# Rubriken: eig. api-Call
 		path = ARD_AUDIO_BASE + "editorialcategories"
 	elif ID == 'Sport':								# Menü: Rubrik Sport 
-		path = 'https://api.ardaudiothek.de/editorialcategories/42914734'
+		# path = 'https://www.ardaudiothek.de/suche/Sport' 			# Suche statt Rubrik
+		path = 'https://www.ardaudiothek.de/rubrik/sport/42914734'	# 08.08.2021 (umfangreicher)
 	else:
 		path = ARD_AUDIO_BASE + "homescreen"		# Kat's der Leitseite			
 	page, msg = get_page(path=path)	
@@ -1172,44 +1111,68 @@ def AudioStartHome(title, ID, page='', path=''):	# Auswertung Homepage
 		
 	li = home(li, ID='ARD Audiothek')				# Home-Button
 		
-	if ID == 'Entdecken' or ID == u'Meistgehörte Episoden':
-		Audio_get_json_single(li, page, ID)
-	elif ID == 'Sport':
-		Audio_get_rubrik_sport(title, path, ID, page)
-	else:
-		Audio_get_rubrik(title, path, ID, page)
+	if ID == u'Meistgehörte Episoden':							
+		Audio_get_json_single(li, page, ID)			# einz. Beiträge
+	if ID == u'Unsere Favoriten' or ID == u'Themen' or ID == u'Ausgewählte Podcasts':
+		Audio_get_json_multi(li, page, ID)			# mehrf. Beiträge
+	if ID == u'Sport':
+		Audio_get_cluster_rubrik(li, path, title, ID)
+	if ID == u'Rubriken':
+		ID = "AudioStartHome"
+		Audio_get_rubriken_web(li, title, path, ID, page)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------------------------
-# 31.07.2021 nach Renovierung der Audiothek durch die ARD entfallen:
-#		AudioStart_AZ + AudioStart_AZ_content
-#----------------------------------------------------------------		
-
-#----------------------------------------------------------------
-# Radio-Live-Sender via Haupt-Menü "Radio-Livestreams"
-# 25.09.2020 wegen fehlender regionaler Sender in der Audiothek Nutzung 
-#	der Webseite web.ard.de/radio/radionet/index_infowellen.php - 
-#	Redaktion: SÜDWESTRUNDFUNK
+# 1. Aufruf: (ID=AudioStartHome mit Liste der Rubriken via api),
+#	Ablage im Dict mit den passenden Webadressen
+# 2. Aufruf (Rubrik-Webseite in path) -> Audio_get_cluster_rubrik
 # 
-# 26.09.2020 Anpassung für BR (neue Streamlinks),
-#	zusätzl. Param. sender für Ausgabe von Einzelsendern - Nutzung durch  
-#	ARDSportHoerfunkSingle
-# 02.11.2020 AudioLiveAll deaktiviert - web.ard.de/radio/radionet umge-
-#	leitet auf Audiothek
-# def AudioLiveAll(anstalt='', sender=''):
+def Audio_get_rubriken_web(li, title, path, ID, page):
+	PLog('Audio_get_rubriken_web: ' + ID)
+	CacheTime = 6000 * 24											# 24 Std.
 
+	if li  == '':
+		li = xbmcgui.ListItem()
+		li = home(li,ID='ARD Audiothek')							# Home-Button		
+
+	page = Dict("load", "AudioRubriken", CacheTime=CacheTime)		# editorialCategories laden
+	if page == False or page == '':									# Cache miss od. leer - vom Sender holen
+		page, msg = get_page(path=path)
+		Dict("store", "AudioRubriken", page)						
+	if page == '':	
+		msg1 = "Fehler in Audio_get_rubriken_web:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	
+	if ID == "AudioStartHome":										# 1. Liste der Rubriken
+		jsonObject = json.loads(page)
+		Obs = jsonObject["_embedded"]['mt:editorialCategories']
+		PLog(len(Obs))
+		base = "https://www.ardaudiothek.de/rubrik/%s"				# Name im Pfad ../wissen/..  nicht nötig
+		# base = "https://www.ardaudiothek.de/redirect/%s"			# HTTP-error 301 vermeiden - s. get_page
+		img = R("ard-rubriken.png"); thumb = R(ICON_DIR_FOLDER)
+		for ob in Obs:
+			oid = ob["id"]
+			title = ob["title"]
+			href = base % oid
+			
+			PLog('10Satz:');
+			PLog(title); PLog(oid); PLog(href);
+			
+			title=py2_encode(title); href=py2_encode(href);	
+			fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'ID': 'Audio_get_rubriken_web'}" % (quote(href), 
+				quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_rubrik", \
+				fanart=img, thumb=thumb, fparams=fparams)	
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 #----------------------------------------------------------------
-# Liste der Livestreams der Audiothek (nur Programmsender) - Mit- 
-#	nutzung durch Haupt-Menü "Radio-Livestreams" (erneut ab 02.11.2020
-#	nach Wegfall web.ard.de/radio/radionet)
-# 09.09.2020 Mitnutzung durch AudioSenderPrograms (programs=yes)
-# 02.11.2020 Button für ARDSportHoerfunk hinzugefügt (Bundesliga)
-# 16.12.2020 Auswertung für Sender ohne Titel in json-Datei ergänzt
-#	((betrifft NDR, Radio Bremen, SWR, WDR).
-# 08.06.2021 Button ARDSportAudioEvent hinzugefügt (ARD Audio Event Streams)
 # 24.07.2021 Anpassung an renovierte Audiothek
-# 
+# 	einschl.Event Streams
+#
 def AudioStartLive(title, sender='', streamUrl='', myhome='', programs='', img='', Plot=''): # Sender / Livestreams 
 	PLog('AudioStartLive: ' + sender)
 	PLog(programs)
@@ -1282,7 +1245,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', programs='', img='
 						add = "zum Livestream"
 					tag = "Weiter %s von: %s" % (add, title)
 					
-					PLog('2Satz:');
+					PLog('3Satz:');
 					PLog(title); PLog(img); PLog(streamUrl); PLog(Plot);
 					title=py2_encode(title); sender=py2_encode(sender);
 					streamUrl=py2_encode(streamUrl); img=py2_encode(img)
@@ -1335,8 +1298,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', programs='', img='
 #----------------------------------------------------------------
 # listet Sendungen einzelner Radiosender
 #	Sendungen sind bereits alph. sortiert
-#	Auswertung Sendung -> Audio_get_sender
-# 09.09.2020 img-Reihenfolge OK
+#	Auswertung Sendung -> Audio_get_sendung
 # 28.07.2021 Anpassung an renovierte Audiothek
 # 
 def AudioSenderPrograms(li, page, sender, img):
@@ -1400,23 +1362,23 @@ def AudioSenderPrograms(li, page, sender, img):
 			tag = u"%s\n[B]Folgeseiten[/B] | Sendungen: %s"  % (cat_title, anzahl)
 			
 			img=cat_img
-		
 			PLog('14Satz:');
 			PLog(title); PLog(tag); PLog(img); PLog(href); PLog(anzahl);
 			title=py2_encode(title); href=py2_encode(href);
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
-			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sender", fanart=img, thumb=img, fparams=fparams, 
+			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", fanart=img, thumb=img, fparams=fparams, 
 				tagline=tag)
 						
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 #----------------------------------------------------------------
 # Wrapper für Listing der Einzelbeiträge -> Audio_get_json
-# Aufrufer: AudioStartHome + Audio_get_json_multi
+# Aufrufer: AudioStartHome, Audio_get_json_multi
 #
 def Audio_get_rubrik(title, path, ID, page=''):							
 	PLog('Audio_get_rubrik: ' + ID)
 	PLog(path); PLog(len(page))
+	path_org = path; ID_org=ID
 	
 	li = xbmcgui.ListItem()
 	
@@ -1431,80 +1393,102 @@ def Audio_get_rubrik(title, path, ID, page=''):
 	else:										#1. Aufruf: AudioStartHome	
 		Audio_get_json_multi(li, page, ID)
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
+		return									# zusätzl. nötig
+		
 	#------------------------------------------	# Folgeaufrufe
 	li = home(li, ID='ARD Audiothek')			# Home-Button
-	ID = "PodFavs"								# neue ID für Audio_get_json_single
-	
-	next_url = stringextract('"next":', '}},', page)				# 1. next-Link gilt
-	
-	cnt, downl_list = Audio_get_json_single(li, page=page, ID="PodFavs")
+	ID = "get_rubrik"							# neue ID für Audio_get_json_single
+		
+	cnt, downl_list = Audio_get_json_single(li, page=page, ID=ID)
 
+	destfunc = "Audio_get_rubrik"
+	Audio_get_nexturl(li, page, title, ID, destfunc)				# Mehr-Button anhängen
+	path = ""
+	
+	#-------------------	# für Podfavs Button "Suchergebnis hinzufügen", nicht bei PodFavs selbst:
+							
+	if '/search/' in path and ID_org != "PodFavs":	
+		query = stringextract('query=', '&', path)
+		query = unquote_plus(query)								
+		offset = stringextract('offset=', '&', path)
+		if offset == "0" or  offset == "": 
+			offset = "1"
+		
+		fav_path =  SETTINGS.getSetting('pref_podcast_favorits')
+		if fav_path == 'podcast-favorits.txt' or fav_path == '':		# im Verz. resources
+			fav_path = R(fav_path)
+			fname = os.path.basename(fav_path)
+		else:
+			fav_path = os.path.abspath(fav_path)
+			fname = "%s..%s" % (os.path.dirname(fav_path[:10]), os.path.basename(fav_path))
+		PLog("fav_path: " + fav_path)
+		PLog(os.path.isfile(fav_path)); 
+		
+		if os.path.isfile(fav_path):									# Button zum Anfügen in podcast-favorits.txt
+			query	= "Suchergebnis: %s (ab Beitrag %s)" % (query, offset)
+			title 	= u"Suchergebnis den Podcast-Favoriten hinzufügen"
+			tag 	= query
+			summ 	= "Ablage: %s" % fname
+			mehrfach='0'
+			fparams="&fparams={'title': '%s', 'path': '%s', 'fav_path': '%s', 'mehrfach': '%s'}" % \
+				(quote(query), quote(path_org), quote(fav_path), mehrfach)
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodAddFavs", 
+				fanart=R(ICON_STAR), thumb=R(ICON_STAR), fparams=fparams, summary=summ, 
+				tagline=tag)			
+				
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+#----------------------------------------------------------------
+# fertigt den Mehr-Button an Ende von Ergebnislisten 
+#	via "next"-Key in json-Datei
+def Audio_get_nexturl(li, page, title, ID, destfunc):							
+	PLog('Audio_get_nexturl: ' + ID)
+	
 	next_url = stringextract('"next":', '}},', page)				# 1. next-Link gilt
-	anz = stringextract('"numberOfElements":', ',', page)			# Mehr Beiträge
+	# anz = stringextract('"numberOfElements":', ',', page)			# anz fehlt bei einz. Rubriken
 	if next_url:
 		url = stringextract('"href":"', '"', next_url)
 		url = ARD_AUDIO_BASE + url
 		offset = stringextract('offset=', '&', url)
 		img = R(ICON_MEHR)
-		title = title
-		tag = u"Mehr (ab Beitrag %s von %s)" % (offset, anz)
+		tag = u"Mehr (ab Beitrag %s)" % (offset)					# o. anz
 		PLog('next:'); PLog(url); PLog(tag);
 		url=py2_encode(url); title=py2_encode(title); ID=py2_encode(ID) 
-		fparams="&fparams={'title': '%s', 'path': '%s', 'ID': '%s'}" % (quote(title), 
-			quote(url), quote(ID))
-		addDir(li=li, label=title, action="dirList", dirID="Audio_get_rubrik", \
-			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
+		
+		if 'get_rubrik' in destfunc:
+			fparams="&fparams={'title': '%s', 'path': '%s', 'ID': '%s'}" % (quote(title), 
+				quote(url), quote(ID))
+			addDir(li=li, label=title, action="dirList", dirID=destfunc, \
+				fanart=img, thumb=img, fparams=fparams, tagline=tag)
+
+		if 'PodFavoriten' in destfunc:
+			fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(url), 
+				quote(title))
+			addDir(li=li, label=title, action="dirList", dirID=destfunc, \
+				fanart=img, thumb=img, fparams=fparams, tagline=tag)
+					
+	return
+
 #----------------------------------------------------------------
-# Herausgehobene Rubrik Sport (Menü, wie ARD- und ZDF-Menüs)
-# Aufrufer: AudioStartHome mit page + Home-Button
+# gibt entw. den  HTML- oder den json-Teil der Webseite zurück
 #
-def Audio_get_rubrik_sport(title, path, ID, page=''):							
-	PLog('Audio_get_rubrik_sport: ' + ID)
-	PLog(path); PLog(len(page))
+def Audio_get_webslice(page, mode="web"):
+	PLog('Audio_get_webslice:')
 	
-	li = xbmcgui.ListItem()
-	if not page:								# Home-Button in AudioStartHome
-		li = home(li, ID='ARD Audiothek')		# Home-Button
+	if mode == "web":
+		pos1 = page.find('</head><body>')
+		pos2 = page.find('"props"')
+		page = page[pos1:pos2]
+	if mode == "json":
+		pos1 = page.find('"props"')
+		pos2 = page.find('<script nomodule=')
+		page = page[pos1:pos2]
 	
-	if page == '':								# Seite holen für Folgeaufrufe
-		page, msg = get_page(path=path)	
-		if page == '':	
-			msg1 = "Fehler in Audio_get_rubrik:" 
-			msg2 = msg
-			MyDialog(msg1, msg2, '')	
-			return li
-		PLog(len(page))
-
-	#------------------------------------------	# Folgeaufrufe
-	ID = "PodFavs"								# neue ID für Audio_get_json_single
-	
-	next_url = stringextract('"next":', '}},', page)				# 1. next-Link gilt
-	
-	cnt, downl_list = Audio_get_json_single(li, page=page, ID="PodFavs")
-
-	next_url = stringextract('"next":', '}},', page)				# 1. next-Link gilt
-	anz = stringextract('"numberOfElements":', ',', page)			# Mehr Beiträge
-	if next_url:
-		url = stringextract('"href":"', '"', next_url)
-		url = ARD_AUDIO_BASE + url
-		offset = stringextract('offset=', '&', url)
-		img = R(ICON_MEHR)
-		title = title
-		tag = u"Mehr (ab Beitrag %s von %s)" % (offset, anz)
-		PLog('next:'); PLog(url); PLog(tag);
-		url=py2_encode(url); title=py2_encode(title); ID=py2_encode(ID) 
-		fparams="&fparams={'title': '%s', 'path': '%s', 'ID': '%s'}" % (quote(title), 
-			quote(url), quote(ID))
-		addDir(li=li, label=title, action="dirList", dirID="Audio_get_rubrik_sport", \
-			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	PLog(len(page))
+	return page
 	
 #----------------------------------------------------------------
+
 # anstelle Homepage: Auswertung homescreen.json, nur Einzelbeiträge:
 #	Entdecken, Meistgehört, Podcast-Favoriten, Suche
 #
@@ -1512,23 +1496,28 @@ def Audio_get_rubrik_sport(title, path, ID, page=''):
 #		Rückgabe Zähler + Downloadliste), Aufrufer erl. li, Home + 
 #		Mehr-Button
 #
-def Audio_get_json_single(li, page, ID):
+def Audio_get_json_single(li, page, ID, jsonObject=''):
 	PLog('Audio_get_json_single: ' + ID)
 	PLog(len(page))
 	
-	jsonObject = json.loads(page)
-	audObs=[]
-	if ID == u'Entdecken':				# Einzelbeiträge
-		audObs = jsonObject["_embedded"]['mt:stageItems']['_embedded']['mt:items']
-	if ID == u'Meistgehörte Episoden':	# Einzelbeiträge
-		audObs = jsonObject['_embedded']['mt:mostPlayed']['_embedded']['mt:items']
-	if ID == u'PodFavs':				# Einzelbeiträge Podcast-Favoriten (podcast-favorits.txt)
-										#	und Einzelbeiträge vom Wrapper Audio_get_rubrik
-		audObs = jsonObject['_embedded']['mt:items']
-	if ID == u'AudioSearch':			# z.Z. Einzelbeiträge
-		audObs = jsonObject['_embedded']['mt:itemSearchResults']['_embedded']['mt:items']
-	if ID == u'Sport':					# wie Podcast-Favoriten
-		audObs = jsonObject['_embedded']['mt:items']			
+	audObs=[];
+	if jsonObject:
+		audObs = jsonObject
+	else:
+		jsonObject = json.loads(page)
+		if ID == u'Entdecken':				# Einzelbeiträge
+			PLog("Mark3")
+			audObs = jsonObject["_embedded"]['mt:stageItems']['_embedded']['mt:items']
+		if ID == u'Meistgehörte Episoden':	# Einzelbeiträge
+			audObs = jsonObject['_embedded']['mt:mostPlayed']['_embedded']['mt:items']
+		if ID == u'get_rubrik':				# Einzelbeiträge vom Wrapper Audio_get_rubrik und
+											#	Einzelbeiträge Podcast-Favoriten (podcast-favorits.txt)
+			audObs = jsonObject['_embedded']['mt:items']
+		if ID == u'AudioSearch':			# z.Z. Einzelbeiträge
+			audObs = jsonObject['_embedded']['mt:itemSearchResults']['_embedded']['mt:items']
+		if ID == u'Sport':					# wie Podcast-Favoriten
+			audObs = jsonObject['_embedded']['mt:items']
+					
 	PLog(len(audObs))
 		
 	cnt=0; downl_list=[]; 
@@ -1552,7 +1541,7 @@ def Audio_get_json_single(li, page, ID):
 			pubDate	= aO["tracking"]["play"]["publicationDate"]
 			pubDate = "%s.%s.%s" % (pubDate[6:8], pubDate[4:6], pubDate[0:4])
 			
-			descr	= "[B]Audiobeitrag[/B] | %s | %s | %s\n\n%s" % (dauer, pubDate, source, descr)
+			descr	= "[B]Audiobeitrag[/B] | %s Std.| %s | %s\n\n%s" % (dauer, pubDate, source, descr)
 			  
 			descr	= unescape(descr); descr = repl_json_chars(descr)
 			summ_par= descr.replace('\n', '||')
@@ -1580,26 +1569,41 @@ def Audio_get_json_single(li, page, ID):
 #	30.07.2021 renovierte Audiothek: Ersatz für Audio_get_rubriken
 #		Auswertung Mehrfach-Beiträge
 #
-def Audio_get_json_multi(li, page, ID):
+def Audio_get_json_multi(li, page, ID, jsonObject=''):
 	PLog('Audio_get_json_multi: ' + ID)
-	
-	jsonObject = json.loads(page)
+
 	audObs=[];
-	if ID == u'Unsere Favoriten':		
-		audObs = jsonObject["_embedded"]['mt:editorialCollections']['_embedded']['mt:editorialCollections']
-	if ID == u'Themen':				
-		audObs = jsonObject["_embedded"]['mt:featuredPlaylists']['_embedded']['mt:editorialCollections']
-	if ID == u'Ausgewählte Podcasts':				
-		audObs = jsonObject["_embedded"]['mt:featuredProgramSets']['_embedded']['mt:programSets']
-	if ID == u'Rubriken':				
-		audObs = jsonObject["_embedded"]['mt:editorialCategories']
-	if ID == u'funk':
-		audObs = jsonObject["_embedded"]['mt:organizations'][11]['_embedded']["mt:publicationServices"]["_embedded"]["mt:programSets"]
+	if jsonObject:
+		audObs = jsonObject
+	else:
+		jsonObject = json.loads(page)
+		if ID == u'Unsere Favoriten':		
+			audObs = jsonObject["_embedded"]['mt:editorialCollections']['_embedded']['mt:editorialCollections']
+		if ID == u'Themen':			
+			audObs = jsonObject["_embedded"]['mt:featuredPlaylists']['_embedded']['mt:editorialCollections']
+		if ID == u'Ausgewählte Podcasts':				
+			audObs = jsonObject["_embedded"]['mt:featuredProgramSets']['_embedded']['mt:programSets']
+		if ID == u'Rubriken':				
+			audObs = jsonObject["_embedded"]['mt:editorialCategories']
+		if ID == u'funk':
+			audObs = jsonObject["_embedded"]['mt:organizations'][11]['_embedded']["mt:publicationServices"]["_embedded"]["mt:programSets"]
+
+		if ID == "Cluster_Sendungen":									# aus Audio_get_cluster_search 2. Aufruf
+			audObs = jsonObject["_embedded"]['mt:programSets']	
+		if ID == "Cluster_Rubriken":									# aus Audio_get_cluster_search 2. Aufruf
+			audObs = jsonObject["_embedded"]['mt:editorialCategories']	# kleines c in Audio_get_cluster_search!
+			anz=jsonObject["numberOfElements"]
+			PLog(anz)
+			if anz==1:													# Klammer [ fehlt in json-Datei bei anz 1
+				audObs=[]
+				audObs.append(jsonObject['_embedded']['mt:editorialCategories'])	
+		if ID == "Cluster_Sammlungen":											# aus Audio_get_cluster_search 2. Aufruf
+			audObs = jsonObject["_embedded"]['mt:editorialCollections']	# 
+
+	PLog(len(audObs))
 		
-	PLog(len(audObs))	
-		
-	cnt=0; downl_list=[]
-	for aO in audObs:						
+	cnt=0;
+	for aO in audObs:
 		try:				
 			href = aO["_links"]["self"]["href"]
 			href = href.replace('order,', '')
@@ -1611,7 +1615,7 @@ def Audio_get_json_multi(li, page, ID):
 			sid = aO["id"]
 			title = aO["title"]
 			
-			if ID == 'Rubriken':						# Rubriken ohne Text, Anzahl
+			if ID == 'Rubriken' or ID == 'Cluster_Rubriken':			# Rubriken ohne Text, Anzahl
 				descr=''
 				anz=''
 				tag = "Folgeseiten"
@@ -1641,22 +1645,17 @@ def Audio_get_json_multi(li, page, ID):
 			
 		except Exception as exception:
 			PLog("json_Fehler: " + str(exception))
-			PLog(href)
 
 	return cnt
 
 #----------------------------------------------------------------
-# 31.07.2021 nach ARD-Änderungen entfernt: Audio_get_rubriken
-#----------------------------------------------------------------
-			
-#----------------------------------------------------------------
 # Auswertung Einzelrubrik /Sendung
-# Aufrufer: Audio_get_sender
+# Aufrufer: AudioSenderPrograms
 # 29.07.2021 Anpassung an renovierte Audiothek, Beiträge enthalten  
 #	bereits Downloadlink
 #	
-def Audio_get_sender(url, title):			# extrahiert Einzelbeiträge einer Sendung
-	PLog('Audio_get_rubrik: ' + title)
+def Audio_get_sendung(url, title):			# extrahiert Einzelbeiträge einer Sendung
+	PLog('Audio_get_sendung: ' + title)
 	title_org = title
 	PLog(url);  
 	base = "https://api.ardaudiothek.de/"
@@ -1717,7 +1716,7 @@ def Audio_get_sender(url, title):			# extrahiert Einzelbeiträge einer Sendung
 		tag = u"Mehr (ab Beitrag %s von %s)" % (offset, anz)
 		PLog(url); PLog(tag);
 		title_org=py2_encode(title_org); url=py2_encode(url);
-		fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(url), quote(title_org))
+		fparams="&fparams={'title': '%s', 'path': '%s', 'ID': ''}" % (quote(title_org), quote(url))
 		addDir(li=li, label=title_org, action="dirList", dirID="Audio_get_rubrik", fanart=R(ICON_MEHR), 
 			thumb=R(ICON_MEHR), fparams=fparams, tagline=tag)		
 				
@@ -1753,120 +1752,6 @@ def Audio_get_rubrik_funk(url):							# Übersicht der funk-Podcasts
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 #----------------------------------------------------------------
-# Aufrufer: Audio_get_rubrik ('Rubrik_ohne_api_call')
-# gridlist: 	Blöcke aus page-Ausschnitt (Entdecken + Meistgehört 
-#				der Startseite)
-# page:			kompl. Seite für die img-Suche (html/json gemischt)
-# img_via_audio_href hier mit Param. search_back (sonst Versatz um 1)
-#
-def Audio_get_sendungen(li, gridlist, page, ID):	# extrahiert Einzelbeiträge
-	PLog('Audio_get_sendungen: ' + ID)
-	PLog(len(gridlist))	
-
-	li = home(li, ID='ARD Audiothek')				# Home-Button
-	
-	cnt=0; img_list=[]								# img_list für Doppel-Check
-	for grid in gridlist:
-		# PLog(grid) # Debug
-		descr2	= ''; title='';	stitle=''										
-		title 	= stringextract('podcast-title"', '<', grid)	# Default ergänzt 01.05.2020
-		stitle 	= stringextract('episode-title"', '<', grid)
-		title = rm_datav(title); stitle = rm_datav(stitle);
-		descr = stitle											# Fallback descr
-		if stitle:
-			title = "%s | %s" % (title, stitle)
-		
-		label_list = blockextract('aria-label="', grid)			# title/stitle geändert 30.03.2020
-		if ID == u'Audio_get_rubrik':
-			stitle	= title
-			title 	= descr			
-		if ID == 'Entdecken':
-			title 	= stringextract('aria-label="', '"', label_list[1])
-			stitle 	= stringextract('aria-label="', '"', label_list[0])
-		if ID == u'Meistgehört':
-			title 	= stringextract('aria-label="', '"', label_list[0])
-			stitle 	= stringextract('aria-label="', '"', label_list[1])
-		title 	= unescape(title); stitle = unescape(stitle)
-		
-		PLog("title: " + title); 
-		if ' | ' in title:									# Titel aufteilen 
-			title = title.split('|')						# mehr als 1 | möglich
-			descr2 = title[-1]								# Fallback descr
-			title.remove(descr2)							# entf.
-			if len(title) > 0:
-				title = " | ".join(title)
-			else:
-				title = title[0]
-						
-		mp3_url	= stringextract('share-menu-button', 'aria-label', grid)	# teilw. ohne mp3-url
-		mp3_url	= stringextract('href="', '"', mp3_url)    		# mp3-File
-		href 	= stringextract('podcast-title"', 'aria-label', grid)				# Default
-		if ID == u"Meistgehört":
-			href 	= stringextract('class="podcast-title"', 'aria-label', grid)	# Homepage Beitrag
-		href 	= stringextract('href="', '"', href)
-		href	= ARD_AUDIO_BASE + href
-		
-		img=''
-		if ID == 'Entdecken' or ID == u'Meistgehört':							# img von Zielseite holen
-			img = img_via_web(href)												# in json nicht eindeutig
-		else:
-			img = img_via_audio_href(href=href, page=page, search_back=True)	# img im json-Teil holen
-
-		if not descr:
-			descr 	= stringextract('href"', '"', grid)
-		if not descr:
-			descr = descr2
-		dauer	= stringextract('duration"', '</div>', grid)
-		dauer	= cleanhtml(dauer); dauer = mystrip(dauer)
-		pos		= dauer.find('>'); dauer = dauer[pos+1:]	# entfernen: data-v-7c906280>		
-		
-		
-		if dauer:
-			descr	= "[B]Audiobeitrag[/B] | %s\n\n%s" % (dauer, descr)
-		else:
-			descr	= "[B]Audiobeitrag[/B]\n\n%s" % (descr)
-		if stitle:
-			if stitle.strip() in descr == False:			# Doppler vermeiden			
-				descr	= "%s\n%s" % (stitle, descr)
-			  
-		descr	= unescape(descr); descr = repl_json_chars(descr)
-		summ_par= descr.replace('\n', '||')
-		title = repl_json_chars(title)
-			
-		PLog('6Satz:');
-		PLog(title); PLog(stitle); PLog(img); PLog(href);  PLog(mp3_url);
-		title=py2_encode(title); mp3_url=py2_encode(mp3_url);
-		img=py2_encode(img); summ_par=py2_encode(summ_par);	
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
-			quote(title), quote(img), quote_plus(summ_par))
-		if mp3_url:
-			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
-				fparams=fparams, summary=descr)
-		else:
-			title=py2_encode(title); href=py2_encode(href);
-			img=py2_encode(img); summ_par=py2_encode(summ_par);		
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(href), 
-				quote(title), quote(img), quote_plus(summ_par))
-			addDir(li=li, label=title, action="dirList", dirID="AudioSingle", fanart=img, thumb=img, 
-				fparams=fparams, summary=descr, mediatype='music')
-	
-		cnt=cnt+1
-	return li	
-#-----------------------------
-# entfernt data-v-Markierung + LF in Titel und Subtitel,
-#	Bsp.: episode-title" data-v-132985da> ... </h3>
-# Aufruf: Audio_get_sendungen, Audio_get_rubriken
-#
-def rm_datav(line):
-	PLog("rm_datav:")
-	
-	line=cleanhtml(line)
-	pos	= line.find('>')
-	if pos >= 0:
-		line = line[pos+1:]
-		line = line.strip()
-	return line
-#----------------------------------------------------------------
 # AudioSingle gibt direkt das Thema-mp3 seiner Homepage wieder - die 
 # 	Funktion ist Fallback für Beiträge (Bsp. Startseite), für die sonst
 #	keine mp3-Quelle gefunden wurde.
@@ -1894,62 +1779,10 @@ def AudioSingle(url, title, thumb, Plot):
 
 	AudioPlayMP3(url, title, thumb, Plot)  # direkt	
 	return
-	
-#-----------------------------
-# img_via_audio_href: ermittelt im json-Teil der Webseite (ARD Audiothek) 
-#	 img mittels letztem href-url-Teil, z.B. ../-diversen-peinlichkeiten/63782268
-# Wegen der url-Quotierung (u002F) kann nicht die gesamte url
-#	verwendet werden.
-# Bei einigen Webseiten (Audio_get_rubrik -> Audio_get_sendungen) muss 
-#	rückwärts gesucht werden, Bsp. Unsere Favoriten/True Crime (sonst
-#	 Versatz um 1) - Trigger: search_back.
-# Für inkompatible Seiten dienen img_via_web + thread_img_via_web.
-# 19.08.2020 für funk-Beiträge renoviert
-# 
-def img_via_audio_href(href, page, ID='', search_back=''):
-	PLog("img_via_audio_href: " + href)
-	PLog(ID)
-
-	url_part = href.split('/')[-1]		# letzten url-Teil abschneiden
-	url_part = "u002F%s" % url_part		# eindeutiger machen
-	PLog(url_part)
-	pos1 = page.find(url_part)
-		
-	pos2 = page.find('img.ardmediathek.de', pos1)
-	if search_back:						# rückwärts suchen
-		pos2 = page.rfind('img.ardmediathek.de', pos1)
-	PLog('pos1 %d, pos2 %d' % (pos1, pos2))
-	l = page[pos2:]
-
-	l = l.replace('\/', '/')			# Migration PY2/PY3: Maskierung
-	PLog(l[:100])
-	
-	img=''
-	if 'img.ardmediathek.de' in l:		# image_16x9 fehlt manchmal
-		img = stringextract('img.ardmediathek.de', '"', l)
-		if img:
-			img = 'https://img.ardmediathek.de' + img
-	img = img.replace('{width}', '640')
-	img = img.replace('\\u002F', '/')	# Migration PY2/PY3: Maskierung
-			
-	if img == '':
-		img = R('icon-bild-fehlt.png')	# Fallback bei fehlendem Bild
-
-	return img							
 
 #----------------------------------------------------------------
-# 21.08.2020 für Hintergrundprozess erneuert
-# Aufrufer: Audio_get_rubriken (Entdecken, Meistgehört),
-#	Audio_get_sendungen, 
-# ermittelt img auf Webseite href (i.d.R. html/json gemischt) und
-#	speichert es im Hintergrund (thread_img_via_web). Die Webseite 
-#	selbst wird verworfen (nicht benötigt).
-# Als Dateiname dient der letzte Teil von href (i.d.R. Beitrags-ID).
-# Ablage: Cache-Ordner Bildersammlungen/Audiothek.
-# Auf Fallback-img wird verzichtet, um den Thread nicht abzuwarten.
-#	Achtung: abweichende img's auch auf Zielseite möglich. 
-# 21.08.2020 Umstellung auf Thread: Bild statt Webseite speichern 
-#	(Performance) - früher gespeicherte Webseite wird entfernt
+# ermittelt img auf Webseite href (i.d.R. html/json gemischt) 
+# 05.08.2021 benötigt in der alten Audiothek. Verbleibt vorerst..
 #
 def img_via_web(href):
 	PLog('img_via_web:')
@@ -2014,28 +1847,27 @@ def thread_img_via_web(url, path, fname, icon):
 	return
 										
 #----------------------------------------------------------------
-# AudioSearch verwendet api-Call -> Seiten im json-Format, img-Zuordnung
-#	via img_via_audio_href möglich.
-# Auswertung in AudioContentJSON (li-Behandl. + Mehr-Button dort).
-# Achtung: cacheToDisc in endOfDirectory nicht verwenden, 
-#	cacheToDisc=False springt bei Rückkehr in get_query
-# AudioContentJSON listet erst Folgeseiten, dann Einzelbeiträge
 # 30.07.2021 Anpassung an renovierte Audiothek (neuer api-Call +
 #	Nutzung Audio_get_json_single) - bisher nur Einzelbeiträge ausgewertet
-# 
+# 03.08.2021 für Auswertung der Cluster Rückkehr zum html-Code (Cluster-
+#	Titel fehlen im api, Key-Probleme bei Objektanzahl 1) 
+#
 def AudioSearch(title, query='', path=''):
 	PLog('AudioSearch:')
+	CacheTime = 6000								# 1 Std.
 	title_org = title
-	# Bsp.: https://api.ardaudiothek.de/search?query=pandemie:
-	base = ARD_AUDIO_BASE + u'search?query=%s'  
+	ID="AudioSearch"
 
+	base = "https://www.ardaudiothek.de/suche/%s"
+	# api-Bsp.: https://api.ardaudiothek.de/search?query=pandemie:
+	
 	if 	query == '':	
 		query = get_query(channel='ARD Audiothek')
 	PLog(query)
 	if  query == None or query.strip() == '':
 		return ""
 		
-	query=py2_encode(query)		# encode für quote
+	query = py2_encode(query)										# encode für quote
 	query = query.strip()
 	query_org = query	
 	
@@ -2043,70 +1875,348 @@ def AudioSearch(title, query='', path=''):
 	li = home(li, ID='ARD Audiothek')								# Home-Button
 	
 	if path == '':													# Folgeseiten
-		path = base  % quote(query)
+		path = base  % quote_plus(query)
 	path_org=path
+	
 	page, msg = get_page(path=path)	
 	if page == '':	
 		msg1 = "Fehler in AudioSearch:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
-	PLog(len(page))	
-	
-	cnt, downl_list = Audio_get_json_single(li, page, ID="AudioSearch")
-	if cnt == 0:
-		msg1 = 'leider nichts gefunden zu >%s<' % query
-		MyDialog(msg1, '', '')
+		
+	if '>Keine Treffer</' in page:	
+		msg1 = "leider keine Treffer zu:"
+		msg2 = query
+		MyDialog(msg1, msg2, '')	
 		return li
-	
-	next_url = stringextract('"next":', '}},', page)				# 1. next-Link gilt
-	pos = page.find('mt:itemSearchResults')
-	page=page[pos:]
-	anz = stringextract('"numberOfElements":', ',', page)			# Mehr Beiträge
-	if next_url:
-		url = stringextract('"href":"', '"', next_url)
-		url = ARD_AUDIO_BASE + url
-		offset = stringextract('offset=', '&', url)
-		img = R(ICON_MEHR)
-		title = "Suche: %s" % query
-		tag = u"Mehr (ab Beitrag %s von %s)" % (offset, anz)
-		PLog('next:'); PLog(url); PLog(tag);
-		path=py2_encode(path); title=py2_encode(title); query=py2_encode(query) 
-		fparams="&fparams={'title': '%s', 'query': '%s', 'path': '%s'}" % (quote(title), 
-			quote(query), quote(url))
-		addDir(li=li, label=title, action="dirList", dirID="AudioSearch", \
-			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
-			
-	#-------------------											# Button bei Suche anhängen
-	fav_path =  SETTINGS.getSetting('pref_podcast_favorits')
-	if fav_path == 'podcast-favorits.txt' or fav_path == '':# im Verz. resources
-		fav_path = R(fav_path)
-		fname = os.path.basename(fav_path)
-	else:
-		fav_path = os.path.abspath(fav_path)
-		fname = "%s..%s" % (os.path.dirname(fav_path[:10]), os.path.basename(fav_path))
-	PLog("fav_path: " + fav_path)
-	PLog(os.path.isfile(fav_path)); 
-	
-	if os.path.isfile(fav_path):									# Button zum Anfügen in podcast-favorits.txt
-		query	= "Suchergebnis: %s" % query
-		title 	= u"Suchergebnis den Podcast-Favoriten hinzufügen"
-		tag 	= query
-		summ 	= "Ablage: %s" % fname
-		mehrfach='0'
-		fparams="&fparams={'title': '%s', 'path': '%s', 'fav_path': '%s', 'mehrfach': '%s'}" % \
-			(quote(query), quote(path_org), quote(fav_path), mehrfach)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodAddFavs", 
-			fanart=R(ICON_STAR), thumb=R(ICON_STAR), fparams=fparams, summary=summ, 
-			tagline=tag)			
+		
+	Audio_get_cluster_search(li, path, title="Suche: %s" % query, ID=ID, query=query)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+#----------------------------------------------------------------
+# 1. Aufruf: lädt Webseite für Suche + ermittelt Cluster im Webteil,
+#	erstellt die passenden api-Calls
+# 2. Aufruf: führt api-Call aus und übergibt an Audio_get_json_multi
+def Audio_get_cluster_search(li, url, title, page='', ID='', query=''):
+	PLog('Audio_get_cluster_search: ' + ID)
+	PLog(query)
+	
+	if li  == '':
+		li = xbmcgui.ListItem()
+		li = home(li,ID='ARD Audiothek')							# Home-Button		
+		
+	if page == '':							
+		page, msg = get_page(path=url)	
+		if page == '':	
+			msg1 = "Fehler in Audio_get_cluster_search:" 
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return li
+		PLog(len(page))
+		
+	#--------------------------------								# 2. Aufruf Sendungen, Sammlungen
+	if ID=="Cluster_Sendungen" or ID=="Cluster_Rubriken" or ID=="Cluster_Sammlungen":		
+		#PLog(page[:80])
+		Audio_get_json_multi(li, page, ID)	
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	#--------------------------------								# 1. Aufruf 
+
+	if page.startswith('<!DOCTYPE html>'):
+		page = Audio_get_webslice(page, mode="html")				# HTML ausschneiden
+		
+	href_add = "offset=0&limit=12"
+	# Bsp. Cluster: <h2 class="H2-sc-1h18a06-3 hzOdMY">Sendungen <span..
+	cluster = blockextract('<h2 class="H2', page)					
+	PLog(len(cluster))	
+	for clus in cluster:
+		href = stringextract('href="', '"', clus)					# Web-href
+		sid = href.split("/")[-1]									# z.B. 21679406
+
+		ftitle = stringextract('<h3 class="H3', '<div>', clus)		# 1. Titel für tag
+		ftitle = stringextract('">', '</h3>', ftitle)
+		ftitle = unescape(ftitle); ftitle = repl_json_chars(ftitle)
+		img = stringextract('img src="', '"', clus)					# 1. img vor srcSet
+
+		tag = "[B]Folgeseiten[/B]"
+		if '/sendung/' in href:
+			href = ARD_AUDIO_BASE  + "search/programsets?query=%s&%s" % (query, href_add) 
+			dest_func = "Audio_get_cluster_search"
+			title = "Sendungen"
+			ID = "Cluster_Sendungen"
+		if '/sammlung/' in href:
+			href = ARD_AUDIO_BASE  + "search/editorialcollections?query=%s&%s" % (query, href_add) 
+			dest_func = "Audio_get_cluster_search"
+			title = "Sammlungen"
+			ID = "Cluster_Sammlungen"
+		if '/rubrik/' in href:
+			href = ARD_AUDIO_BASE  + "search/editorialcategories?query=%s&%s" % (query, href_add) 
+			dest_func = "Audio_get_cluster_search"
+			title = "Rubriken"
+			ID = "Cluster_Rubriken"
+		if '/episode/' in href:
+			dest_func = "Audio_get_rubrik"
+			href = ARD_AUDIO_BASE  + "search/items?query=%s&%s" % (query, href_add) 
+			title = "Episoden (einzelne Beiträge)"
+		
+		if ftitle:
+			tag = "%s\n\n1. Beitrag: %s" % (tag, ftitle)
+		
+		PLog("1Satz:")
+		PLog(href); PLog(title);
+		
+		href=py2_encode(href); title=py2_encode(title); ID=py2_encode(ID) 
+		if dest_func == "Audio_get_rubrik":	
+			fparams="&fparams={'title': '%s', 'path': '%s', 'ID': '%s'}" % (quote(title), 
+				quote(href), quote(ID))
+			addDir(li=li, label=title, action="dirList", dirID="Audio_get_rubrik", \
+				fanart=img, thumb=img, fparams=fparams, tagline=tag)	
+		if dest_func == "Audio_get_cluster_search":	
+			fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'ID': '%s'}" % (quote(href), 
+				quote(title), quote(ID))
+			addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_search", \
+				fanart=img, thumb=img, fparams=fparams, tagline=tag)	
+			
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 #----------------------------------------------------------------
-# 30.07.2021 nach Renovierung der Audiothek durch die ARD
-#  	entfernt: AudioContentJSON, AudioContentXML			
-#----------------------------------------------------------------
+# Aufrufer: Audio_get_rubriken_web (Liste Rubriken)
+# anders als Audio_get_cluster_search wird für Rubriken der json-
+#	Teil der Webseite ausgewertet - mit string-funktionen, da 
+#	python's json.loads + json.load hier fehlschlagen.
+#	Der Webteil eignet sich nicht wg. fehlender Bilder in den
+#	Empfehlungen.
+# Aufteilung Webseite: 1. Highligths, 2. veränderliche
+#	Cluster, 3. Meistgehört, 4. Neueste Episoden, 5. Ausgewählte 
+#	Sendungen, 6. Alle Sendungen aus dieser Rubrik  
+def Audio_get_cluster_rubrik(li, url, title, ID=''):
+	PLog('Audio_get_cluster_rubrik: ' + ID)
+	PLog(title)
+	title_org = title
+	CacheTime = 6000												# 1 Std.
 	
+	if li  == '':
+		li = xbmcgui.ListItem()
+		li = home(li,ID='ARD Audiothek')							# Home-Button		
+		
+	
+	if ID=="Audio_get_rubriken_web" or ID=="Sport":					# 1. Aufruf
+		rid = url.split('/')[-1]
+		# Name im Pfad fehlt hier noch, daher Redirect:
+		page, msg = get_page(path=url, GetOnlyRedirect=True)		# Permanent-Redirect-Url
+		url = page								
+	page, msg = get_page(path=url)	
+	if page == '':	
+		msg1 = "Fehler in Audio_get_cluster_rubrik:" 
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	PLog(len(page))
+		
+	if page.startswith('<!DOCTYPE html>'):
+		page = Audio_get_webslice(page, mode="json")				# json ausschneiden
+		page = transl_json(page); page = page.replace('\\"', '*')
+		rubrik_id = "AudioRubrikWebJson_%s" % rid
+		Dict("store", rubrik_id, page)
+
+	#--------------------------------								# Empfehlungen + veränderliche Cluster
+	sections = stringextract('"sections":', '"widgets":', page)	
+	PLog(sections[:80])
+	
+	PLog('Mark0')
+	block = ']},{"id":'	
+		
+	data=[]
+	if '"type":"STAGE"' in page:									# Empfehlungen vor Blockmarke
+		stage = stringextract('"STAGE"', '"GRID_LIST"', page)
+		data.append(stage)
+	cluster = blockextract(block, sections)
+	data = data + cluster
+	PLog(len(data))
+	
+	for item in data:												# einschl. Meistgehört, Neueste Episoden ..			
+		tag = u"[B]Folgeseiten[/B]"
+		title = stringextract('"title":"', '"', item)				# Cluster-Titel	
+		pos = item.find('__typename'); item = item[pos:]			# 1. Beitrag
+		ftitle = stringextract('"title":"', '"', item)
+		img = stringextract('"url1X1":"', '"', item)
+		img = img.replace('{width}', '640')
+		tag = "%s\n\n1. Beitrag: %s" % (tag, ftitle)	
+
+		PLog('2Satz:')
+		PLog(title); PLog(rubrik_id); 
+		title=py2_encode(title); rubrik_id=py2_encode(rubrik_id); 
+		fparams="&fparams={'title': '%s', 'rubrik_id': '%s'}" % \
+			(quote(title), quote(rubrik_id))
+		addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_single", \
+			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+#----------------------------------------------------------------
+# Aufrufer Audio_get_cluster_rubrik: listet einz. Cluster
+#	Json-Ausschnitt der Rubrik-Webseite im Dict(rubrik_id)
+#
+def Audio_get_cluster_single(title, rubrik_id):
+	PLog('Audio_get_cluster_single: ' + title)
+	PLog(rubrik_id)
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Audiothek')			# Home-Button
+
+	page = Dict("load", rubrik_id)
+	#PLog(page[:80])
+	cluster = stringextract('"title":"%s' % title, '}]},', page)	# einz. section/Cluster
+	#PLog(cluster[:80])
+	if cluster == '':
+		cluster = stringextract('"title":"%s' % title, '}]}],', page)# letzter Cluster (Alle Sendungen aus..)
+	PLog(len(cluster))
+	PLog(cluster[:80])
+	
+	pos = cluster.find('nodes'); cluster = cluster[pos:]
+
+	nodes = blockextract('"__typename":', cluster)	
+	PLog(len(nodes))
+			
+	downl_list=[]; 	href_add = "offset=0&limit=12"	
+	PLog('Mark1')
+	for node in nodes:
+		node_id = stringextract('"id":"','"', node)				# ID der Sendung / des Beitrags / ..	
+		typename = stringextract('__typename":"','"', node)		# Typ der Sendung / des Beitrags / ..	
+		title = stringextract('"title":"','"', node)	
+		dur = stringextract('"duration":"','"', node)
+		dauer = seconds_translate(dur)	
+		pubDate = stringextract('"publishDate":"','"', node)
+		if pubDate:												# 2021-08-11T07:00:00+00:00
+			pubDate = pubDate = "%s.%s.%s" % (pubDate[8:10], pubDate[5:7], pubDate[0:4])
+		descr = stringextract('"summary":"','"', node)	
+		mp3_url = stringextract('"downloadUrl":"','"', node)
+		if 	mp3_url == '':										# EventLivestream
+			mp3_url = stringextract('"url":"','"', node)
+		img = stringextract('"url1X1":"','"', node)	
+		img = img.replace('{width}', '640')
+		imgalt1 = stringextract('"description":"','"', node)	# Bildbeschr.	
+		imgalt2 = stringextract('"attribution":"','"', node)	# Bild-Autor
+		org = stringextract('"organizationName":"','"', node)	
+		anz = stringextract('"totalCount":','}', node)			# Anzahl bei Mehrfach-Beiträgen
+		
+		descr	= unescape(descr); descr = repl_json_chars(descr)
+		summ_par= descr.replace('\n', '||')
+		title = repl_json_chars(title)
+		
+		PLog('4Satz:');
+		PLog(title); PLog(img); PLog(mp3_url); PLog(descr[:40]);
+		title=py2_encode(title); mp3_url=py2_encode(mp3_url);
+		img=py2_encode(img); summ_par=py2_encode(summ_par);	
+
+		if typename=="Item" or typename=="EventLivestream":		# Einzelbeitrag
+			tag = "[B]Audiobeitrag[/B] | %s Std.| %s | %s\nBild: %s" % (dauer,pubDate,org,imgalt2)
+			if typename=="EventLivestream":		
+				tag = "[B]EventLivestream[/B]  %s | %s\nBild: %s" % (pubDate,org,imgalt2)
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+				quote(title), quote(img), quote_plus(summ_par))
+			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=descr)
+				
+						
+	#--------------------------------							# Cluster mit Folgebeiträgen
+		if typename=="EditorialCollection" or typename=="ProgramSet":
+			if anz: anz = "(%s)" % anz
+#			tag = u"[B]Folgebeiträge[/B] (%s)\nBild: %s" % (anz, imgalt2)
+			tag = u"[B]Folgebeiträge[/B] %s\nBild: %s" % (anz, imgalt2)
+			if typename=="EditorialCollection":	
+				ID="Cluster_Sammlungen"
+				href = ARD_AUDIO_BASE  + "editorialcollections/%s?%s" % (node_id, href_add)
+			if typename=="ProgramSet":
+				ID=typename
+				href = ARD_AUDIO_BASE  + "programsets/%s?%s" % (node_id, href_add)
+				
+			PLog(href)
+			href=py2_encode(href)
+			fparams="&fparams={'title': '%s', 'path': '%s', 'ID': '%s', 'page': ''}" %\
+				(quote(title), quote(href), ID)
+			addDir(li=li, label=title, action="dirList", dirID="Audio_get_rubrik", \
+				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=descr)						
+			
+		if 	mp3_url:											# Downloadliste füllen
+			downl_list.append(title + '#' + mp3_url)
+			
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
+#----------------------------------------------------------------
+# holt die Stage-Beiträge von der Web-Startseite (json-Teil), da
+# nicht im api enthalten.
+# Aufrufer: AudioStartHome
+def Audio_get_cluster_stage():
+	PLog('Audio_get_cluster_stage:')
+	CacheTime = 6000											# 1 Std.
+	
+	path = "https://www.ardaudiothek.de/"
+	ID = "AudioWebStage"
+	page = Dict("load", ID, CacheTime=CacheTime)				# Startseite Web laden
+	if page == False or page == '':									# Cache miss od. leer - vom Sender holen
+		page, msg = get_page(path=path)
+		Dict("store", ID, page)						
+	if page == '':	
+		msg1 = "Fehler in Audio_get_rubriken_web:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+			
+	li = xbmcgui.ListItem()
+	li = home(li,ID='ARD Audiothek')							# Home-Button		
+	
+	page = Audio_get_webslice(page, mode="json")				# json ausschneiden
+	page = transl_json(page); page = page.replace('\\"', '*')
+	
+	pos1=page.find('"STAGE"'); pos2=page[pos1+10:].find('"SophoraWidget"')
+	#PLog(pos1); PLog(pos2);
+	page = page[pos1:pos2]
+	#PLog(len(page))
+	
+	block = '}}},'; items=[]
+	item1 = stringextract('"nodes"', '}}},', page)				# 1. Beitrag voranstellen
+	items.append(item1)
+	items = items + blockextract(block, page)
+	PLog(len(items))
+	
+	for item in items:
+		node_id = stringextract('"id":"','"', item)				# ID der Sendung / des Beitrags / ..	
+		typename = stringextract('__typename":"','"', item)		# Typ der Sendung / des Beitrags / ..	
+		title = stringextract('"title":"','"', item)	
+		dur = stringextract('"duration":',',', item)
+		dauer = seconds_translate(dur)	
+		pubDate = stringextract('"publishDate":"','"', item)
+		if pubDate:												# 2021-08-11T07:00:00+00:00
+			pubDate = pubDate = "%s.%s.%s" % (pubDate[8:10], pubDate[5:7], pubDate[0:4])
+		descr = stringextract('"description":"','"', item)	
+		mp3_url = stringextract('"downloadUrl":"','"', item)	
+		img = stringextract('"url1X1":"','"', item)	
+		img = img.replace('{width}', '640')
+		#imgalt1 = stringextract('"description":"','"', item)	# Bildbeschr.	
+		imgalt2 = stringextract('"attribution":"','"', item)	# Bild-Autor
+		org = stringextract('"organizationName":"','"', item)	
+		
+		descr	= unescape(descr); descr = repl_json_chars(descr)
+		summ_par= descr.replace('\n', '||')
+		title = repl_json_chars(title)
+		
+		PLog('6Satz:');
+		PLog(title); PLog(img); PLog(mp3_url); PLog(descr[:40]); PLog(dauer)
+		title=py2_encode(title); mp3_url=py2_encode(mp3_url);
+		img=py2_encode(img); summ_par=py2_encode(summ_par);	
+
+		if typename == "Item":									# Einzelbeitrag
+			tag = "[B]Audiobeitrag[/B] | %s Std.| %s | %s\nBild: %s" % (dauer,pubDate,org,imgalt2)		
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+				quote(title), quote(img), quote_plus(summ_par))
+			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=descr)
+				
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
 #----------------------------------------------------------------
 # Ausgabe Audiobeitrag
 # Falls pref_use_downloads eingeschaltet, werden 2 Buttons erstellt
@@ -2138,6 +2248,7 @@ def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 	addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
 		summary=summary, mediatype='music')
 	
+		
 	download_list = []					# 2-teilige Liste für Download: 'title # url'
 	download_list.append("%s#%s" % (title, url))
 	PLog(download_list)
@@ -3888,6 +3999,15 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 		now = datetime.datetime.now()
 		mydate = now.strftime("%Y%m%d_%H%M%S")	
 		dfname = 'Download_' + mydate 
+	
+	if '?file=.mp3' in url:								# Livestream aus Audiothek?
+		msg1 = "Achtung: vermutlich Livestream!"
+		msg2 = "Trotzdem downloaden?"
+		msg3 = "Abbruch des Downloads im Addon nicht möglich."
+		ret=MyDialog(msg1, msg2, msg3, ok=False, yes='JA')
+		if ret  == False:
+			return		
+	
 	
 	suffix=''
 	if url.endswith('.mp3'):

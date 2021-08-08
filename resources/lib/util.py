@@ -913,6 +913,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 #	Bedarf hierher verlagern)
 # 02.09.2020 Rückgabe page='' bei PDF-Seiten
 # 02.11.2020 URLError -> Exception, s. changelog.txt
+# 06.08.2021 Behandl. HTTP Error 308: Permanent Redirect hinzugefügt
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True, decode=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
@@ -949,9 +950,20 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				# Alt. hier : new_url = r.geturl()
 				# bei Bedarf HttpLib2 mit follow_all_redirects=True verwenden
 				PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
-				r = urlopen(path)
+				try:
+					r = urlopen(path)
+				except Exception as e:
+					PLog(str(e))
+					if "308:" in str(e):								# Permanent-Redirect-Url
+						new_url = e.hdrs.get("Location")
+						parsed = urlparse(path)
+						new_url = 'https://%s%s' % (parsed.netloc, new_url)
+						PLog("http308_new_url: " + new_url)
+						return new_url, ''
+					
 				page = r.geturl()
-				PLog(page)			# Url
+				info = r.info()
+				PLog("redirect: %s, info: %s" % (page, info))			# neue Url
 				return page, msg					
 
 			if header:
@@ -1043,6 +1055,61 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			PLog(msg)
 
 	return page, msg	
+# ----------------------------------------------------------------------
+def getHeaders(response):
+	PLog('getHeaders:')
+	item_headers = ''
+	
+	if PYTHON2:						# PYTHON2
+		dict_headers = response.headers.dict
+		if 'item' in dict_headers:
+			item_headers = dict_headers['item']
+	else:  							# PYTHON3
+		dict_headers = dict(response.info())
+		if 'item' in dict_headers:
+			item_headers = dict_headers['item']
+		
+	txt_headers = response.info()
+	PLog(dict_headers)
+	PLog(item_headers)
+
+	headers=''
+	if is_empty(dict_headers) is False:
+		headers = dict_headers
+	elif item_headers and is_empty(item_headers) is False:
+		headers = item_headers
+	else:
+		if headers:
+			headers = parse_headers(str(response.info()))
+		
+	return headers
+# ----------------------------------------------------------------------
+# iteriert durch das Objekt	und liefert Restobjekt ab path
+# bei leerem Pfad wird jsonObject unverändert zurückgegeben
+# index error möglich bei veralteten Indices z.B. aus
+#	Merkliste (Startpage wird aus Cache geladen).
+def GetJsonByPath(path, jsonObject):		
+	PLog('GetJsonByPath: '+ path)
+	if path == '':
+		return jsonObject
+	path = path.split('|')
+	i = 0
+
+	try:									# index error möglich
+		index=0
+		while(i < len(path)):
+			if(isinstance(jsonObject,list)):
+				index = int(path.pop(0))
+			else:
+				index = path.pop(0)
+			PLog('i=%s, index=%s' % (i,index))
+			jsonObject = jsonObject[index]
+	except Exception as exception:
+		PLog("Error: " + str(exception))
+		return ''			# Aufrufer muss beenden
+		
+	# PLog(jsonObject)
+	return jsonObject	
 #---------------------------------------------------------------- 
 # img_urlScheme: img-Url ermitteln für get_sendungen, ARDRubriken. text = string, dim = Dimension
 def img_urlScheme(text, dim, ID=''):
