@@ -34,6 +34,7 @@
 	<setting label="Downloadverzeichnis (auch für Recording TV-Live)" type="folder" option="writeable" id="pref_download_path" default=""/>
 	<setting label="Downloads verschieben in dieses Verzeichnis" type="folder" source="" id="pref_VideoDest_path" default=""/>
  	<setting label="Fortschrittsbalken beim Download anzeigen" type="bool" id="pref_use_pgbar" default="false"/>
+ 	<setting label="verbleibende Downloads anzeigen" type="bool" id="pref_dl_cnt" default="false"/>
 
 </category>
  

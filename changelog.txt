@@ -9,6 +9,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+14.08.2021 3.9.7
+			Audio_get_rubrik (Audiothek): bei api-Fehlschlag (HTTP Error 404) optionale
+			Suche nach Webseite mit dem übergebenen Titel (Bsp. "DFB-Pokal Live").
+			Audio_get_cluster_rubrik (Audiothek): Verzicht auf Laden der Rubrik-Webseite, 
+			falls json-Daten noch im Cache.
+			Audio_get_cluster_stage (Audiothek): Fix Abgrenzung zum nächsten Cluster.
+			PodFavoriten: Fix ID für Audio_get_json_single (Fehler im Update 3.9.6).
+			Anzeige verbleibender Downloads (Zähler und Gesamtgröße): neue Funktion 
+			(thread) get_active_dls im Modul epgRecord, Anpassung Startbereich Haupt-PRG
+			und thread_getfile.
+			ZDF-Hauptmenü: neues Menü ZDFinternational (Zusammenfassung English, Spanish,
+			Arabic) - Anpassung Funktion International (-> Cluster-Auswertung), neues Icon,
+			Cache-Nutzung.
+
 08.08.2021 3.9.6 Audiothek: Cluster-Auswertung der Ergebnisseiten
 			Audio_get_sendung: Fix falsche Param.-Überagabe an Audio_get_rubrik.
 			Audio_get_rubrik + Audio_get_rubrik_sport: Auswertung numberOfElements 

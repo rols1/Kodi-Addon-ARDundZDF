@@ -46,8 +46,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.9.6'
-VDATE = '08.08.2021'
+VERSION = '3.9.7'
+VDATE = '14.08.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -209,6 +209,7 @@ if 	check_AddonXml('"xbmc.python" version="3.0.0"'):					# ADDON_DATA-Verzeichni
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 PLog("ADDON_DATA: " + ADDON_DATA)
 
+
 M3U8STORE 		= os.path.join(ADDON_DATA, "m3u8") 
 DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
 SLIDESTORE 		= os.path.join(ADDON_DATA, "slides") 
@@ -216,10 +217,13 @@ SUBTITLESTORE 	= os.path.join(ADDON_DATA, "subtitles")
 TEXTSTORE 		= os.path.join(ADDON_DATA, "Inhaltstexte")
 WATCHFILE		= os.path.join(ADDON_DATA, "merkliste.xml") 
 JOBFILE			= os.path.join(ADDON_DATA, "jobliste.xml") 		# Jobliste für epgRecord
-MONITOR_ALIVE 	= os.path.join(ADDON_DATA, "monitor_alive") 		# Lebendsignal für JobMonitor
+MONITOR_ALIVE 	= os.path.join(ADDON_DATA, "monitor_alive") 	# Lebendsignal für JobMonitor
+DL_CHECK 		= os.path.join(ADDON_DATA, "dl_check_alive") 	# Anzeige Downloads (Lockdatei)
+DL_CNT 			= os.path.join(ADDON_DATA, "dl_cnt") 			# Anzeige Downloads (Zähler)
 PLog(SLIDESTORE); PLog(WATCHFILE); 
 check 			= check_DataStores()					# Check /Initialisierung / Migration 
 PLog('check: ' + str(check))
+
 
 # die tvtoday-Seiten decken 12 Tage ab, trotzdem EPG-Lauf alle 12 Stunden
 #	 (dto. Cachezeit für einz. EPG-Seite in EPG.EPG).
@@ -240,8 +244,20 @@ if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden
 	if is_activ == False:									# EPG-Daten veraltet, neu holen
 		from threading import Thread
 		bg_thread = Thread(target=EPG.thread_getepg, args=(EPGACTIVE, DICTSTORE, PLAYLIST))
-		bg_thread.start()											
-		
+		bg_thread.start()
+													
+if SETTINGS.getSetting('pref_dl_cnt') == 'true':			# laufende Downloads anzeigen
+	if os.path.exists(DL_CHECK) == False:					# Lock beachten (Datei dl_check_alive)						
+		PLog("Haupt_PRG: get_active_dls")
+		from threading import Thread
+		bg_thread = Thread(target=epgRecord.get_active_dls, args=())
+		bg_thread.start()	
+else:
+		if os.path.exists(DL_CHECK):	
+			os.remove(DL_CHECK)								# Setting Aus: Lock dl_check_alive entfernen
+		if os.path.exists(DL_CNT):
+			os.remove(DL_CNT)								# Zähler dl_cnt entfernen
+				
 
 MERKACTIVE 	= os.path.join(DICTSTORE, 'MerkActive') 		# Marker aktive Merkliste
 if os.path.exists(MERKACTIVE):
@@ -971,15 +987,11 @@ def Main_ZDF(name):
 	addDir(li=li, label="Barrierearm", action="dirList", dirID="BarriereArm", fanart=R(ICON_ZDF_BARRIEREARM), 
 		thumb=R(ICON_ZDF_BARRIEREARM), fparams=fparams)
 
-	fparams="&fparams={'title': 'ZDFenglish'}"
-	addDir(li=li, label="ZDFenglish", action="dirList", dirID="International", fanart=R('ZDFenglish.png'), 
-		thumb=R('ZDFenglish.png'), fparams=fparams)
-
-	fparams="&fparams={'title': 'ZDFarabic'}"
-	tag = u'für die Darstellung der arabischen Schrift bitte in Kodis Einstellungen für die Benutzeroberfläche '
-	tag = tag + u'den Font [B]Arial [/B]auswählen'
-	addDir(li=li, label="ZDFarabic", action="dirList", dirID="International", fanart=R('ZDFarabic.png'), 
-		thumb=R('ZDFarabic.png'), tagline=tag, fparams=fparams)
+	fparams="&fparams={'title': 'ZDFinternational'}"
+	tag = "This channel provides selected videos in English, Spanish or Arabic or with respective subtitles."
+	summ = 'For Arabic, please set the font of your Skin to "Arial based".'
+	addDir(li=li, label="ZDFinternational", action="dirList", dirID="International", fanart=R('ZDFinternational.png'), 
+		thumb=R('ZDFinternational.png'), tagline=tag, summary=summ, fparams=fparams)
 
 	fparams="&fparams={'s_type': 'Bilderserien', 'title': 'Bilderserien', 'query': 'Bilderserien'}"
 	addDir(li=li, label="Bilderserien", action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_BILDERSERIEN), 
@@ -1091,14 +1103,14 @@ def AudioStartHome(title, ID, page='', path=''):	# Auswertung Homepage
 	li = xbmcgui.ListItem()
 	
 	ID = py2_decode(ID)
-	if ID == 'Entdecken':							# Stage Web, Sonderbhdl., nicht im api		
+	if ID == 'Entdecken':							# Stage Web, Sonderbhdl., Beiträge nicht im api 		
 		Audio_get_cluster_stage()					# direkt
 		return
 	if ID == 'Rubriken':							# Rubriken: eig. api-Call
 		path = ARD_AUDIO_BASE + "editorialcategories"
 	elif ID == 'Sport':								# Menü: Rubrik Sport 
-		# path = 'https://www.ardaudiothek.de/suche/Sport' 			# Suche statt Rubrik
-		path = 'https://www.ardaudiothek.de/rubrik/sport/42914734'	# 08.08.2021 (umfangreicher)
+		# path = 'https://www.ardaudiothek.de/suche/Sport' 			# Web-Suche
+		path = 'https://www.ardaudiothek.de/rubrik/sport/42914734'	# 08.08.2021 (Rubrik umfangreicher)
 	else:
 		path = ARD_AUDIO_BASE + "homescreen"		# Kat's der Leitseite			
 	page, msg = get_page(path=path)	
@@ -1117,15 +1129,15 @@ def AudioStartHome(title, ID, page='', path=''):	# Auswertung Homepage
 		Audio_get_json_multi(li, page, ID)			# mehrf. Beiträge
 	if ID == u'Sport':
 		Audio_get_cluster_rubrik(li, path, title, ID)
-	if ID == u'Rubriken':
+	if ID == u'Rubriken':							# Rubrik Sport direkt
 		ID = "AudioStartHome"
 		Audio_get_rubriken_web(li, title, path, ID, page)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------------------------
-# 1. Aufruf: (ID=AudioStartHome mit Liste der Rubriken via api),
-#	Ablage im Dict mit den passenden Webadressen
+# 1. Aufruf: (ID=AudioStartHome) -> Liste der Rubriken via api,
+#	Ablage mit den passenden Webadressen im Dict 
 # 2. Aufruf (Rubrik-Webseite in path) -> Audio_get_cluster_rubrik
 # 
 def Audio_get_rubriken_web(li, title, path, ID, page):
@@ -1373,7 +1385,8 @@ def AudioSenderPrograms(li, page, sender, img):
 	
 #----------------------------------------------------------------
 # Wrapper für Listing der Einzelbeiträge -> Audio_get_json
-# Aufrufer: AudioStartHome, Audio_get_json_multi
+# Aufrufer: Audio_get_json_multi, Audio_get_sendung,
+#	Audio_get_cluster_search, Audio_get_cluster_single
 #
 def Audio_get_rubrik(title, path, ID, page=''):							
 	PLog('Audio_get_rubrik: ' + ID)
@@ -1385,9 +1398,19 @@ def Audio_get_rubrik(title, path, ID, page=''):
 	if page == '':								# Seite holen für Folgeaufrufe
 		page, msg = get_page(path=path)	
 		if page == '':	
-			msg1 = "Fehler in Audio_get_rubrik:" 
-			msg2 = msg
-			MyDialog(msg1, msg2, '')	
+			if 	"Error 404" in msg:
+				msg1 = "HTTP Error 404 - %s nicht im API gefunden." % ID
+				msg2 = u"Alternative: Webseite suchen für:"
+				msg3 = "[B]%s[/B]" % title
+				ret=MyDialog(msg1, msg2, msg3, ok=False, yes='JA')
+				if ret:
+					ID = "Error_404_Search"
+					path = "https://www.ardaudiothek.de/suche/%s" % title
+					Audio_get_cluster_search(li, path, title="Suche: %s" % title, ID=ID, query=title)
+			else:
+				msg1 = "Fehler in Audio_get_rubrik:" 
+				msg2 = msg
+				MyDialog(msg1, msg2, '')		
 			return li
 		PLog(len(page))
 	else:										#1. Aufruf: AudioStartHome	
@@ -1666,7 +1689,7 @@ def Audio_get_sendung(url, title):			# extrahiert Einzelbeiträge einer Sendung
 	path = url
 	page, msg = get_page(path)	
 	if page == '':	
-		msg1 = "Fehler in Audio_get_rubrik:"
+		msg1 = "Fehler in Audio_get_sendung:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
@@ -1898,6 +1921,7 @@ def AudioSearch(title, query='', path=''):
 # 1. Aufruf: lädt Webseite für Suche + ermittelt Cluster im Webteil,
 #	erstellt die passenden api-Calls
 # 2. Aufruf: führt api-Call aus und übergibt an Audio_get_json_multi
+#
 def Audio_get_cluster_search(li, url, title, page='', ID='', query=''):
 	PLog('Audio_get_cluster_search: ' + ID)
 	PLog(query)
@@ -1937,6 +1961,8 @@ def Audio_get_cluster_search(li, url, title, page='', ID='', query=''):
 		ftitle = stringextract('">', '</h3>', ftitle)
 		ftitle = unescape(ftitle); ftitle = repl_json_chars(ftitle)
 		img = stringextract('img src="', '"', clus)					# 1. img vor srcSet
+		if img == '':
+			img = R(ICON_DIR_FOLDER)
 
 		tag = "[B]Folgeseiten[/B]"
 		if '/sendung/' in href:
@@ -1954,7 +1980,7 @@ def Audio_get_cluster_search(li, url, title, page='', ID='', query=''):
 			dest_func = "Audio_get_cluster_search"
 			title = "Rubriken"
 			ID = "Cluster_Rubriken"
-		if '/episode/' in href:
+		if '/episode/' in href or ID == "Error_404_Search":			# optionale Websuche in Audio_get_rubrik
 			dest_func = "Audio_get_rubrik"
 			href = ARD_AUDIO_BASE  + "search/items?query=%s&%s" % (query, href_add) 
 			title = "Episoden (einzelne Beiträge)"
@@ -1963,7 +1989,7 @@ def Audio_get_cluster_search(li, url, title, page='', ID='', query=''):
 			tag = "%s\n\n1. Beitrag: %s" % (tag, ftitle)
 		
 		PLog("1Satz:")
-		PLog(href); PLog(title);
+		PLog(href); PLog(title); PLog(img);
 		
 		href=py2_encode(href); title=py2_encode(title); ID=py2_encode(ID) 
 		if dest_func == "Audio_get_rubrik":	
@@ -1987,7 +2013,7 @@ def Audio_get_cluster_search(li, url, title, page='', ID='', query=''):
 #	python's json.loads + json.load hier fehlschlagen.
 #	Der Webteil eignet sich nicht wg. fehlender Bilder in den
 #	Empfehlungen.
-# Aufteilung Webseite: 1. Highligths, 2. veränderliche
+# Aufteilung Web-Beiträge: 1. Highligths, 2. veränderliche
 #	Cluster, 3. Meistgehört, 4. Neueste Episoden, 5. Ausgewählte 
 #	Sendungen, 6. Alle Sendungen aus dieser Rubrik  
 def Audio_get_cluster_rubrik(li, url, title, ID=''):
@@ -2001,12 +2027,15 @@ def Audio_get_cluster_rubrik(li, url, title, ID=''):
 		li = home(li,ID='ARD Audiothek')							# Home-Button		
 		
 	
-	if ID=="Audio_get_rubriken_web" or ID=="Sport":					# 1. Aufruf
-		rid = url.split('/')[-1]
+	rid = url.split('/')[-1]
+	rubrik_id = "AudioRubrikWebJson_%s" % rid
+
+	page = Dict("load", rubrik_id, CacheTime=CacheTime)				# json-Teil der Webseite schon vorhanden?
+	if page == False or page == '':									# Cache miss od. leer - vom Sender holen
 		# Name im Pfad fehlt hier noch, daher Redirect:
 		page, msg = get_page(path=url, GetOnlyRedirect=True)		# Permanent-Redirect-Url
 		url = page								
-	page, msg = get_page(path=url)	
+		page, msg = get_page(path=url)	
 	if page == '':	
 		msg1 = "Fehler in Audio_get_cluster_rubrik:" 
 		msg2 = msg
@@ -2014,10 +2043,9 @@ def Audio_get_cluster_rubrik(li, url, title, ID=''):
 		return li
 	PLog(len(page))
 		
-	if page.startswith('<!DOCTYPE html>'):
-		page = Audio_get_webslice(page, mode="json")				# json ausschneiden
+	if page.startswith('<!DOCTYPE html>'):							# Webseite musste neu geladen werden
+		page = Audio_get_webslice(page, mode="json")				# webslice: json ausschneiden
 		page = transl_json(page); page = page.replace('\\"', '*')
-		rubrik_id = "AudioRubrikWebJson_%s" % rid
 		Dict("store", rubrik_id, page)
 
 	#--------------------------------								# Empfehlungen + veränderliche Cluster
@@ -2171,10 +2199,9 @@ def Audio_get_cluster_stage():
 	page = Audio_get_webslice(page, mode="json")				# json ausschneiden
 	page = transl_json(page); page = page.replace('\\"', '*')
 	
-	pos1=page.find('"STAGE"'); pos2=page[pos1+10:].find('"SophoraWidget"')
-	#PLog(pos1); PLog(pos2);
+	pos1=page.find('"STAGE"'); pos2=page[pos1+10:].find('"nodes"')
 	page = page[pos1:pos2]
-	#PLog(len(page))
+	PLog(len(page))
 	
 	block = '}}},'; items=[]
 	item1 = stringextract('"nodes"', '}}},', page)				# 1. Beitrag voranstellen
@@ -4001,13 +4028,12 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 		dfname = 'Download_' + mydate 
 	
 	if '?file=.mp3' in url:								# Livestream aus Audiothek?
-		msg1 = "Achtung: vermutlich Livestream!"
-		msg2 = "Trotzdem downloaden?"
-		msg3 = "Abbruch des Downloads im Addon nicht möglich."
+		msg1 = "Achtung: das ist vermutlich ein Livestream!"
+		msg2 = "Download trotzdem durchführen?"
+		msg3 = "Ein Abbruch des Downloads ist im Addon nicht möglich!"
 		ret=MyDialog(msg1, msg2, msg3, ok=False, yes='JA')
 		if ret  == False:
 			return		
-	
 	
 	suffix=''
 	if url.endswith('.mp3'):
@@ -4061,7 +4087,7 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 #	Download-Routine für Bilder: thread_getpic
 #	bei Bedarf ssl.SSLContext verwenden - s.
 #		https://docs.python.org/2/library/urllib.html
-# vorh. Dateien werden überschrieben (wie bei curl/wget).
+# vorh. Dateien werden überschrieben (wie früher mit curl/wget).
 # Aufrufer: DownloadExtern, DownloadMultiple (mit 
 #	path_url_list + timemark)
 # 	notice triggert die Dialog-Ausgabe.
@@ -4086,7 +4112,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				PLog(item)
 				path, url = item.split('|')
 				urlretrieve(url, path)
-				# xbmc.sleep(2000)							# Debug
+				#xbmc.sleep(1000*3)							# Debug
 			
 			msg1 = 'Download erledigt'
 			msg2 = 'gestartet: %s' % timemark				# Zeitstempel 
@@ -4119,12 +4145,32 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
 				
 			# Fortschrittsbalken nur mit ermittelter Länge möglich:
-			if clen and SETTINGS.getSetting('pref_use_pgbar') == 'true':	# Fortschrittsbalken anzeigen
+			if clen and SETTINGS.getSetting('pref_use_pgbar') == 'true':	# mit Fortschrittsbalken 
 				msg = get_chunks(url, clen, fulldestpath)
 				if msg:
 					raise Exception(msg)
 			else:
-				urlretrieve(url, fulldestpath)
+				if os.path.exists(DL_CNT):						# Datei dl_cnt
+					with open(DL_CNT,'r+') as f:				# Anz. Downloads schreiben -> get_active_dls
+						line = f.read()
+						new_len=clen
+						if line == '' or line.startswith('0|'):	# leer / 0
+							cnt=0; old_len=0; new_len=clen
+							if new_len == '' :					# mögl. Problem in get_content_length
+								new_len=0
+						else:
+							cnt, old_len = line.split("|")
+						cnt = int(cnt) + 1; new_len = int(old_len) + int(new_len)
+						f.seek(0)								# seek + trancate: alten Inhalt löschen
+						line = "%s|%s" % (str(cnt), str(new_len))
+						f.write(line)
+						f.truncate()
+						PLog("line_start_dl: %s" % line)
+				else:
+					with open(DL_CNT,'w') as f:
+						f.write("1|%s" % str(clen))					
+				urlretrieve(url, fulldestpath)				
+				#xbmc.sleep(1000*30)	# Debug
 			if subget:											# Untertitel holen 
 				get_subtitles(fulldestpath, sub_path)
 			
@@ -4132,7 +4178,26 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 			msg1 = 'Download abgeschlossen:'
 			msg2 = os.path.basename(fulldestpath) 				# Bsp. heute_Xpress.mp4
 			if notice:
-				xbmcgui.Dialog().notification(msg1,msg2,icon,5000)	# Fertig-Info
+				xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	# Fertig-Info
+				if os.path.exists(DL_CNT):						# Datei dl_cnt
+					with open(DL_CNT,'r+') as f:				# Anz. Downloads verringern -> get_active_dls
+						line = f.read()
+						new_len=clen
+						cnt, old_len = line.split("|")
+						if line != '' and line.startswith('0|') == False:
+							cnt = int(cnt) - 1; 
+							try:
+								new_len = int(old_len) - int(new_len)
+								if new_len < 0:
+									new_len=0
+							except:
+								new_len = 0
+							line = "%s|%s" % (str(cnt), str(new_len))
+						f.seek(0)								# seek + trancate: alten Inhalt löschen
+						f.write(line)
+						f.truncate()
+						PLog("line_end_dl: %s" % line)
+			
 				
 	except Exception as exception:
 		PLog("thread_getfile:" + str(exception))
@@ -4216,6 +4281,7 @@ def get_chunks(url, DL_len, fulldestpath):
 	dp.close()
 	return msg
 
+
 #---------------------------
 # Untertitel für Download holen
 # Aufrufer: thread_getfile
@@ -4259,6 +4325,7 @@ def get_subtitles(fulldestpath, sub_path):
 		else:
 			xbmcvfs.copy(utsrc, utdest)	
 	return					
+
 #---------------------------
 # Download-Routine mittels urlretrieve ähnlich thread_getfile
 #	hier für Bilder + Erzeugung von Wasserzeichen (text_list: Titel, tagline,
@@ -6729,7 +6796,7 @@ def ZDFSendungenAZList(title, element, ID=''):			# ZDF-Sendereihen zum gewählte
 #	19.11.2020 Ausleitung funk A-Z (aus ZDFRubrikSingle) -> ZDFSendungenAZ (Übersichtsseite)
 #	20.05.2021 Cluster + Playerbox detektieren, Ausleitung -> ZDFRubrikSingle
 #
-def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
+def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb='', page=''):
 	PLog('ZDF_Sendungen:')
 	PLog(title); PLog("ID: " + ID); 
 	title_org 	= title
@@ -6740,12 +6807,13 @@ def ZDF_Sendungen(url, title, ID, page_cnt=0, tagline='', thumb=''):
 		ZDFSendungenAZ(title, ID='funk')
 		return li 
 	
-	page, msg = get_page(path=url)	
 	if page == '':
-		msg1 = u'Beitrag kann nicht geladen werden: %s' % title
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return li 
+		page, msg = get_page(path=url)	
+		if page == '':
+			msg1 = u'Beitrag kann nicht geladen werden: %s' % title
+			msg2 = msg
+			MyDialog(msg1, msg2, '')
+			return li 
 						
 	if "www.zdf.de/kinder" in url:
 		li = home(li, ID='Kinderprogramme')			# Home-Button
@@ -7892,28 +7960,25 @@ def ZDFSportLiveSingle(title, path, img):
 def International(title):
 	PLog('International:'); 
 	title_org = title
-
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')						# Home-Button
+	CacheTime = 6000								# 1 Std.
+			
+	#path = 'https://www.zdf.de/international/zdfenglish'		# engl. Seite
+	#path = 'https://www.zdf.de/international/zdfarabic'		# arab. Seite
+	path = 'https://www.zdf.de/international'					# Cluster-Auswertung
+	ID="ZDFInternational"
 	
-	if title == 'ZDFenglish':
-		path = 'https://www.zdf.de/international/zdfenglish'
-	if title == 'ZDFarabic':
-		path = 'https://www.zdf.de/international/zdfarabic'
-		
-	page, msg = get_page(path=path)		
+	page = Dict("load", ID, CacheTime=CacheTime)
+	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
+		page, msg = get_page(path=path)
+		Dict("store", ID, page) 								# Seite -> Cache: aktualisieren	
 	if page == '':
-		msg1 = 'Seite kann nicht geladen werden.'
+		msg1 = 'Beitrag kann nicht geladen werden.'
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
-		return li 
-	PLog(len(page))
-	 			
-	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID='International')
+		return li 						
 	
-	PLog(page_cnt)
-	# if offset:	Code entfernt, in Kodi nicht nutzbar
-			
+	ZDF_Sendungen(path, title, ID, page=page)
+				
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ####################################################################################################

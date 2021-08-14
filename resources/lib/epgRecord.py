@@ -57,6 +57,8 @@ JOBFILE			= os.path.join(ADDON_DATA, "jobliste.xml") 		# Jobliste für epgRecord
 JOBFILE_LOCK	= os.path.join(ADDON_DATA, "jobliste.lck") 		# Lockfile für Jobliste
 JOB_STOP		= os.path.join(ADDON_DATA, "job_stop") 			# Stopfile für JobMonitor
 MONITOR_ALIVE 	= os.path.join(ADDON_DATA, "monitor_alive")		# Lebendsignal für JobMonitor (leer, mtime-Abgleich)
+DL_CHECK 		= os.path.join(ADDON_DATA, "dl_check_alive") 	# Anzeige Downloads (Thread-Lockdatei)
+DL_CNT 			= os.path.join(ADDON_DATA, "dl_cnt") 			# Anzeige Downloads (Zähler)
 
 JOBLINE_TEMPL	= "<startend>%s</startend><title>%s</title><descr>%s</descr><sender>%s</sender><url>%s</url><status>%s</status><pid>%s</pid><JobID>%s</JobID>"
 JOB_TEMPL		= "<job>%s</job>"
@@ -769,4 +771,57 @@ def test_jobs():
 	err_msg = RSave(JOBFILE, page)							# Jobliste -> Livesystem
 	return
 	
+#---------------------------
+# Anzeige laufender Downloads einschl. Bilder
+# Setting "Download Einstellungen"/"laufende Downloads anzeigen"
+# Aufruf beim Start Haupt-PRG (nach EPG)
+# threading.active_count() funktioniert in der Kodi-Umgebung nicht zuverl.,
+#	daher Kommunikation via Datei dl_cnt
+#
+def get_active_dls():
+	PLog('get_active_dls_start:')
+	import threading
+			
+	xbmc.sleep(1000)							# Pause für Datei-OP durch Haupt-PRG		
+			
+	open(DL_CHECK, 'w').close()					# Lock dl_check_alive anlegen
+	PLog("dl_check_alive_angelegt")
+		
+	icon = R('icon-downl.png')
+	monitor = xbmc.Monitor()
+	i=0
+	while not monitor.abortRequested():			# Abbruch durch Kodi
+		if os.path.exists(DL_CHECK) == False:	# Abbruch durch Addon 
+			break
+		if SETTINGS.getSetting('pref_dl_cnt') == 'false': # dopp. Sicherung
+			break	
+		
+		if os.path.exists(DL_CNT):
+			with open(DL_CNT,'r') as f: 
+				line=f.read()
+				cnt, new_len = line.split("|")
+				if new_len == '0' or  new_len == '':
+					new_len = u"Größe unbekannt"
+				else:
+					new_len = humanbytes(new_len)
+		else:
+			cnt=''	
+		# PLog("%d.dlcnt: %s" %  (i, cnt)) # Debug
+		if cnt != '' and cnt != '0':
+			msg1 = "Downloads"
+			msg2 = "Anzahl: %s | %s" % (cnt, new_len)
+			xbmcgui.Dialog().notification(msg1,msg2,icon,2000)
+		i=i+1
+		xbmc.sleep(2000)
+
+	PLog('get_active_dls_stop:')
+	#--------------------------					# Abbruch durch Addon oder Kodi
+	if os.path.exists(DL_CHECK):		
+		os.remove(DL_CHECK)						# Lock dl_check_alive entfernen
+		PLog("dl_check_alive_entfernt")
+	if os.path.exists(DL_CNT):
+		os.remove(DL_CNT)						# Zähler dl_cnt entfernen
+		PLog("dl_check_alive_entfernt")
 	
+	return
+#--------------------------	

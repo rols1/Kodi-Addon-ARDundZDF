@@ -15,7 +15,7 @@
 #
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-#	Stand: 31.07.2021 
+#	Stand: 13.08.2021 
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -96,7 +96,8 @@ def PodFavoriten(title, path):
 	
 	if '//www.ardaudiothek.de/' in path:			#  alte Links -> neue api-Calls
 		url_id 	= path.split('/')[-1]
-		path = ARD_AUDIO_BASE + "programsets/%s" % url_id						
+		path = ARD_AUDIO_BASE + "programsets/%s" % url_id
+#		path = "https://api.ardaudiothek.de/search?query=%s" 					
 	path = path.replace('/items', '')				# aus Cluster-Suche entf. (key-error Audio_get_json_single)
 	
 
@@ -111,13 +112,13 @@ def PodFavoriten(title, path):
 		return #li
 	PLog(len(page))	
 		
-	if '/editorialcategories/' in path:				# Rubriken (neues api ab 07/2021)
-		ID="PodFavs"
+	if '/programsets/' in path:				# Rubriken (neues api ab 07/2021)
+		# ID="PodFavs"
+		ID="get_rubrik"
 	else:
 		ID="AudioSearch"
 		
 	cnt, downl_list = ardundzdf.Audio_get_json_single(li, page, ID)
-
 
 	if cnt == 0:
 		msg1 = 'nichts gefunden zu >%s<' % title_org
@@ -220,6 +221,7 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	background_thread = Thread(target=ardundzdf.thread_getfile,
 		args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark))
 	background_thread.start()
+		
 	# return li						# Kodi-Problem: wartet bis Ende Thread			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	return							# hier trotz endOfDirectory erforderlich
