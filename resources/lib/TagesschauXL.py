@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-#	Stand: 02.07.2021
+#	Stand: 15.08.2021
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -355,7 +355,7 @@ def XLSinglePage(title, thumb, summ='', tag='', ID='', path='', page=''):
 		datum = stringextract('_topline">', '</', item)
 		if datum == '':
 			datum = stringextract('__date">', '</', item)
-		datum.strip()
+		datum = mystrip(datum)
 		
 		if cnt == 0:							# letzte Sendung
 			title = "[B][COLOR red]%s[/COLOR][/B]" % title_org + ": letzte Sendung"
@@ -475,7 +475,7 @@ def XL_Search(query='', pagenr=''):
 	if pagenr <= MaxPages:
 		PLog("pagenr: " + str(pagenr))
 		title 	= u"Weitere Beiträge zu [B][COLOR red]%s[/COLOR][/B]" % query_org
-		summ 	= "Insgesamt: %s Treffer, Seite(n): %d," % (searchResult, MaxPages) 
+		summ 	= "Insgesamt: %s Treffer, Seiten: %d," % (searchResult, MaxPages) 
 		summ	= "%s %s" % (summ, searchView)  
 		tag 	= "Aktuelle Seite: %d" % (pagenr-1)
 		query_org=py2_encode(query_org); 

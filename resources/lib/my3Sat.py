@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 23.06.2021
+#	Stand: 15.08.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -118,7 +118,7 @@ def Main_3Sat(name):
 		fanart=R('3sat.png'), thumb=R(ICON_MAIN_TVLIVE), tagline=epg, fparams=fparams)
 	
 	title = "Startseite"
-	path = 'https://www.3sat.de'							
+	path = DreiSat_BASE							
 	summ = "Startseite der 3sat-Mediathek"
 	title=py2_encode(title); path=py2_encode(path);
 	fparams="&fparams={'name': '%s', 'path': '%s'}"	% (quote(title), quote(path))
@@ -1357,14 +1357,21 @@ def Live(name, epg=''):
 #-----------------------------
 def get_epg():		# akt. PRG-Hinweis von 3Sat-Startseite holen
 	PLog('get_epg:')
+	my3satCacheTime =  600					# 10 Min.: 10*60
 	# 03.08-2017: get_epg_ARD entfällt - akt. PRG-Hinweis auf DreiSat_BASE eingeblendet
 	# epg_date, epg_title, epg_text = get_epg_ARD(epg_url, listname)
-	page, msg = get_page(path=DreiSat_BASE)	
-	if page == '':	
-		msg1 = "Fehler in get_epg:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return ''
+	
+	
+	page = Dict("load", '3satStart', CacheTime=my3satCacheTime)	
+	if page == False:								# nicht vorhanden oder zu alt
+		page, msg = get_page(path=DreiSat_BASE)	
+		if page == '':	
+			msg1 = "Fehler in get_epg:"
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return ''
+		else:
+			Dict("store", '3satStart', page) # Seite -> Cache: aktualisieren
 	
 	epg = stringextract('>Jetzt live<', '</div>', page)
 	epg = stringextract("class='time'>", '</h3>', epg)

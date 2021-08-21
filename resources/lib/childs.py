@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 15.07.2021
+#	Stand: 17.08.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -95,6 +95,9 @@ GIT_TIVIHOME	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KI
 GIT_KIR			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/kiraka.png?raw=true"
 GIT_KIR_SHOWS	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/kiraka-shows.png?raw=true"
 GIT_KIR_KLICK	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/klicker.png?raw=true"
+GIT_DGS			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaDGS.png?raw=true"
+GIT_AD			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaAD.png?raw=true"
+GIT_ARD_KINDER	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-ard_kinder-familie.png?raw=true"
 
 KikaCacheTime = 1*86400					# Addon-Cache für A-Z-Seiten: 1 Tag
 
@@ -114,6 +117,17 @@ def Main_childs():
 	addDir(li=li, label= "tivi", action="dirList", dirID="resources.lib.childs.Main_TIVI", fanart=R(ICON_CHILDS), 
 		thumb=GIT_ZDFTIVI, fparams=fparams)
 
+	title = "ARD - Kinder und Familie"
+	tag = u"Märchen, Spielfilme, Serien, Wissen und Dokus - hier gibt's unterhaltsame und "
+	tag = u"%s%s" % (tag, u"spannende Videos für Kinder und die ganze Familie!")
+	img = GIT_ARD_KINDER
+	path = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/kinderfamilie?embedded=true"
+	ID = "Main_childs"
+	fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
+		(quote(path), quote(title), ID)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
+		tagline=tag, fparams=fparams)
+
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
@@ -127,33 +141,52 @@ def Main_KIKA(title):
 	title="Suche in KIKA"
 	summ = "Suche Sendungen in KIKA"
 	fparams="&fparams={'query': '', 'title': '%s'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Search", fanart=GIT_KIKA, 
-		thumb=R(ICON_SEARCH), fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Search", 
+		fanart=GIT_KIKA, thumb=R(ICON_SEARCH), fparams=fparams)
 			
 	title='KIKA Live gucken'
 	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Live", fanart=GIT_KIKA,
-		thumb=R(ICON_MAIN_TVLIVE), tagline='KIKA TV-Live', fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Live", 
+		fanart=GIT_KIKA, thumb=R(ICON_MAIN_TVLIVE), tagline='KIKA TV-Live', fparams=fparams)
 	
 	title=u'KiRaKa - Sendungen und Hörspiele'
+	tag = "%s\n\nDer Kinderradiokanal des WDR" % title
 	fparams="&fparams={}" 
-	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.Kiraka", fanart=GIT_KIKA,
-		thumb=GIT_RADIO, tagline=title, fparams=fparams)
+	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.Kiraka",
+		fanart=GIT_KIKA, thumb=GIT_RADIO, tagline=tag, fparams=fparams)
 		
 	title='Videos und Bilder (A-Z)'
 	fparams="&fparams={}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_VideosBuendelAZ", fanart=GIT_KIKA,
-		thumb=GIT_VIDEO, tagline=title, fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_VideosBuendelAZ",
+		fanart=GIT_KIKA, thumb=GIT_VIDEO, tagline=title, fparams=fparams)
 		
 	title='Die beliebtesten Videos (meist geklickt)'
 	fparams="&fparams={}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_VideosBeliebt", fanart=GIT_KIKA,
-		thumb=GIT_VIDEO, tagline=title, fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_VideosBeliebt", 
+		fanart=GIT_KIKA, thumb=GIT_VIDEO, tagline=title, fparams=fparams)
+
+	title=u'Videos mit Gebärdensprache'
+	path = "https://www.kika.de/videos/alle-dgs/videos-dgs-100.html"
+	thumb = GIT_DGS
+	path=py2_encode(path); title=py2_encode(title); thumb=py2_encode(thumb);
+	fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}"  %\
+		(quote(path), quote(title), quote(thumb))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Barrierearm", 
+		fanart=GIT_KIKA, thumb=GIT_DGS, tagline=title, fparams=fparams)
+
+	title=u'Videos als Hörfilme'
+	path = "https://www.kika.de/videos/alle-ad/videos-ad-100.html"
+	thumb = GIT_AD
+	path=py2_encode(path); title=py2_encode(title); thumb=py2_encode(thumb);
+	fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}"  %\
+		(quote(path), quote(title), quote(thumb))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Barrierearm",
+		fanart=GIT_KIKA, thumb=GIT_AD, tagline=title, fparams=fparams)
 		
 	title='KiKANiNCHEN'	
 	fparams="&fparams={}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Menu", fanart=GIT_KIKA,
-		thumb=GIT_KANINCHEN, tagline='für Kinder 3-6 Jahre', fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Menu", 
+		fanart=GIT_KIKA, thumb=GIT_KANINCHEN, tagline='für Kinder 3-6 Jahre', fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
@@ -775,6 +808,89 @@ def Kika_Videos(path, title, thumb, pagenr=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 					
 # ----------------------------------------------------------------------
+# Kika_Barrierearm: Videos mit Gebärdensprache + als Hörfilme
+# 1. Durchgang Navigation	
+# 2. Durchgang: einz. Videos (rubrik)
+#
+def Kika_Barrierearm(path, title, thumb, rubrik=''):
+	PLog('Kika_Barrierearm:')
+	PLog(rubrik)
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+	
+	page, msg = get_page(path)	
+	if page == '':	
+		msg1 = "Fehler in Kika_Barrierearm:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	PLog(len(page))
+		
+	#------------------------------------------
+	if rubrik == '':							# 1. Durchgang Navigation
+		PLog('Stufe1:')	
+		pos = page.find("bottom navigation -->")
+		page = page[pos:]
+		nav_items =  blockextract('"bundleNaviItem', page)
+		PLog(len(nav_items))
+		
+		thumb = R(ICON_DIR_FOLDER)
+		if u'Hörfilme' in title:
+			fanart = GIT_AD
+		else:
+			fanart = GIT_DGS
+		thumb = R(ICON_DIR_FOLDER)	
+			
+		for item in nav_items:
+			path = BASE_KIKA + stringextract('href="', '"', item)
+			title = stringextract('title="">', '<', item)
+			
+			path=py2_encode(path); title=py2_encode(title); thumb=py2_encode(thumb);
+			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'rubrik': '%s'}"  %\
+				(quote(path), quote(title), quote(thumb), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Barrierearm", 
+				fanart=fanart, thumb=thumb, tagline=title, fparams=fparams)
+	
+	else:	
+	#------------------------------------------	# 2. Durchgang: einz. Videos (rubrik)
+		PLog('Stufe2:')	
+		PLog(len(page))
+		videos = blockextract('class="av-playerContainer"', page)	# wie Kika_Videos, ohne 
+		PLog(len(videos))											#	bottom navigation
+		
+		mediatype='' 		
+		if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+			mediatype='video'
+		for s in videos:					
+			href = ref = stringextract('dataURL:\'', '\'}', s)		# Link Videodetails  (..avCustom.xml)
+			# PLog(href);   # PLog(s);   # Bei Bedarf
+			img = stringextract('<noscript>', '</noscript>', s).strip()	# Bildinfo separieren
+			img_alt = stringextract('alt=\"', '\"', img)	
+			img_alt = unescape(img_alt)	
+			img_src = stringextract('src="', '"', img)
+			if img_src.startswith('http') == False:
+				img_src = BASE_KIKA + img_src
+
+			stitle = stringextract('title="', '"', s)
+			duration = stringextract('icon-duration">', '</span>', s)	
+			tagline = duration + ' Minuten'	
+			
+			stitle = unescape(stitle); stitle = repl_json_chars(stitle)	
+			img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt);	
+				
+			PLog('Satz8:')		
+			PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src);
+			PLog(tagline); 
+			href=py2_encode(href); stitle=py2_encode(stitle); img_src=py2_encode(img_src); img_alt=py2_encode(img_alt);
+			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'summ': '%s', 'duration': '%s'}" %\
+				(quote(href), quote(stitle), quote(img_src), quote(img_alt), quote(duration))
+			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag", fanart=img_src, 
+				thumb=img_src, fparams=fparams, tagline=img_alt, mediatype=mediatype)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+# ----------------------------------------------------------------------
 # Kikaninchen - Seitenliste Sendungsvideos  			
 def Kikaninchen_Videoseite():
 	PLog('Kikaninchen_Videoseite')
@@ -1122,7 +1238,7 @@ def Tivi_Search(query=None, title='Search', pagenr=''):
 
 # ----------------------------------------------------------------------			
 def Tivi_Woche():
-	PLog('Tivi_Woche')
+	PLog('Tivi_Woche:')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
@@ -1170,13 +1286,13 @@ def Tivi_Woche_Sendungen(day, title):
 		return
 		
 	# Home-Button in ZDFRubrikSingle
-	ardundzdf.ZDFRubrikSingle(title, path, clus_title=day, page=page)				
+	ardundzdf.ZDFRubrikSingle(title, path, clus_title=day, page=page)					
 	return
 
 # ----------------------------------------------------------------------
 # Auflistung 0-9 (1 Eintrag), A-Z (einzeln) 			
 def Tivi_AZ():
-	PLog('Tivi_AZ')
+	PLog('Tivi_AZ:')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
@@ -1206,7 +1322,7 @@ def Tivi_AZ():
 # Alle Sendungen, char steuert Auswahl 0-9, A-Z
 # 12.12.2019 Nutzung ZDF_get_content statt get_tivi_details
 def Tivi_AZ_Sendungen(name, char=None):	
-	PLog('Tivi_AZ_Sendungen'); PLog(char)
+	PLog('Tivi_AZ_Sendungen:'); PLog(char)
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	

@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 18.07.2021
+#	Stand 15.08.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -35,10 +35,11 @@ elif PYTHON3:
 	from urllib.request import Request, urlopen, urlretrieve
 	from urllib.error import URLError
 	LOG_MSG = xbmc.LOGINFO 					# s. PLog
-	try:									# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
+	try:									
 		xbmc.translatePath = xbmcvfs.translatePath
 	except:
 		pass
+
 	
 # import requests		# kein Python-built-in-Modul, urllib2 verwenden
 import datetime as dt	# für xml2srt
@@ -1275,7 +1276,7 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
 		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad')
-		, (u'\r', u''), (u'#', u'*')):			
+		, (u'\r', u''), (u'#', u'*'), (u'u003e', u'')):		# u'u003e' -> u'®'		
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret

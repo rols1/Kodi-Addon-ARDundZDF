@@ -9,6 +9,36 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+21.08.2021 3.9.8
+			Audio_get_cluster_single: Bildtext in tagline unterdrückt, falls imgalt2=''.
+			XLSinglePage (TagesschauXL): Fix Linefeed in Datum (Titelzusatz).
+			Audio_get_cluster_single (Audiothek): Fix Auswert. dauer.
+			repl_json_chars (Modul util): 'u003e' entfernt (relev. für 
+			Audio_get_cluster_single).
+			get_epg (Modul 3sat): Nutzung Cache (Haltedauer 10min).
+			KIKA (modul childs): Auswertung der Seiten für Hörfilme und Videos mit
+			Gebärdensprache - neue Funktion Kika_Barrierearm, neue Icons, Fix Icon
+			tv-kikaVideo.png (Ausrichtung).
+			Modul childs: Erweiterung mit der neuen ARD-Themenwelt "Kinder und Familie",
+			Anpassung Main_childs, neues Icon tv-ard_kinder-familie (github).
+			ARDSport: Menü "Ergebnisse" mit Hinweis "..nicht darstellbar"
+			ZDF-Mediathek: Auswertung Playerbox-Videos zusammengefasst - Neue Funktion 
+			ZDF_get_playerbox, Anpassungen in ZDF_Sendungen, ZDFRubrikSingle, 
+			ZDF_get_content, ZDFSportLiveSingle.
+			ZDF_getVideoSources: Nachprüfung auf Videos, falls formitaeten leer.
+			ZDF_Sendungen: Fix ctitle_org (repl_json_chars ließ Cluster-Abgleich fehl-
+			schlagen) - Bsp. "Thriler-Serien"/"West of Liberty".
+			ZDFRubrikSingle: Auswertung Stageboxen bei ZDF-Rubriken (ähnlich Playerbox),
+			relev. für Rubriken Kultur und "ZDFtivi für  Kinder".
+			ZDFRubrikSingle: Auswertung ev. Navigationsleiste (Bsp. zdf.de/sport).
+			ZDFRubrikSingle: Auswertung ev. Beiträge ohne Clustertitel, Bsp.: 
+			"Superwahljahr 2021" und "Medien verstehen" auf zdf.de/politik-gesellschaft.
+			ZDFRubrikSingle: Cache-Nutzung für Webinhalte (5 min.), Livestream-Kennzeichn.,
+			Vorschaubilder ausgewertet. 
+			ZDF-Mediathek: Änderung Hauptmenü "Sport Live im ZDF" -> "ZDF-sportstudio",
+			Funktionen entfernt(obsolet):  ZDFSportLive, ZDFSportLiveSingle, 
+			ZDFRubrikSingleCall.
+			
 14.08.2021 3.9.7
 			Audio_get_rubrik (Audiothek): bei api-Fehlschlag (HTTP Error 404) optionale
 			Suche nach Webseite mit dem übergebenen Titel (Bsp. "DFB-Pokal Live").
