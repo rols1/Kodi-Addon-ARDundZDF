@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 17.08.2021
+#	Stand: 23.08.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -78,8 +78,9 @@ ICON_DIR_FOLDER	= "Dir-folder.png"
 ICON_MAIN_TVLIVE= 'tv-livestreams.png'
 ICON_MEHR 		= "icon-mehr.png"
 ICON_SEARCH 	= 'ard-suche.png'
-ICON_ZDF_SEARCH = 'zdf-suche.png'				
-# Github-Icons zum Nachladen aus Platzgründen
+ICON_ZDF_SEARCH = 'zdf-suche.png'
+				
+# Github-Icons zum Nachladen aus Platzgründen,externe Nutzung: ZDFRubriken  (GIT_ZDFTIVI)							
 GIT_KIKA		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kika.png?raw=true"
 GIT_AZ			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-AZ.png?raw=true"
 				# Einzelbuchstaben zu A-Z siehe Tivi_AZ
@@ -114,8 +115,8 @@ def Main_childs():
 		thumb=GIT_KIKA, fparams=fparams)
 		
 	fparams="&fparams={'title': '%s'}" % "tivi"
-	addDir(li=li, label= "tivi", action="dirList", dirID="resources.lib.childs.Main_TIVI", fanart=R(ICON_CHILDS), 
-		thumb=GIT_ZDFTIVI, fparams=fparams)
+	addDir(li=li, label= "ZDFtivi für Kinder", action="dirList", dirID="resources.lib.childs.Main_TIVI", 
+		fanart=R(ICON_CHILDS), thumb=GIT_ZDFTIVI, fparams=fparams)
 
 	title = "ARD - Kinder und Familie"
 	tag = u"Märchen, Spielfilme, Serien, Wissen und Dokus - hier gibt's unterhaltsame und "

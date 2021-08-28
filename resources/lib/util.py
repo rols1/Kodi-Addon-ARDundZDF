@@ -452,6 +452,7 @@ def getDirZipped(path, zipf):
 #	Bsp. für Laden:
 #		CurSender = Dict("load", "CurSender")
 #
+#	CacheTime: Dauer in sec (60=1 min, 3600=1 std, 86400=1 tag)
 #   Bsp. für CacheTime: 5*60 (5min) - Verwendung bei "load", Prüfung mtime 
 #	ev. ergänzen: OS-Verträglichkeit des Dateinamens
 
@@ -2020,8 +2021,9 @@ def ReadJobs():
 # 21.06.2020 zusätzl. Sendedatum pubDate
 #	in TEXTSTORE gespeichert wird die ges. html-Seite (vorher nur Text summ)
 # 14.06.2021 Sendedatum pubDate für ZDF Sport unterdrückt (oft falsch bei Livestreams)
+# 26.08.2021 Erweiterung für einzelnes Auswertungsmerkmal (pattern) 
 #
-def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''):	
+def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page='', pattern=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
 	PLog(skip_verf); PLog(skip_pubDate); PLog(len(page))
 	
@@ -2061,7 +2063,14 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 	PLog(skip_verf);PLog(skip_pubDate);
 	if "zdf.de/sport/" in path:												# ZDF Sport: pubDate unterdrücken -
 		skip_pubDate=True													#	bei Livestreams oft falsch
-	verf='';				
+	verf='';
+	
+	if pattern: 
+		ID=''															#einzelnes Auswertungsmerkmal
+		pat1, pat2 = pattern.split('|')
+		summ = stringextract(pat1, pat2, page)
+		summ = repl_json_chars(summ)
+					
 	if 	ID == 'ZDF' or ID == '3sat':
 		teaserinfo = stringextract('teaser-info">', '<', page)
 		summ = stringextract('description" content="', '"', page)

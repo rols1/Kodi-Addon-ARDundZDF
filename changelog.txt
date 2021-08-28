@@ -9,6 +9,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+28.08.2021 3.9.9
+			ZDFRubriken: Umlenkung Rubrik ZDFtivi -> tivi Modul childs.
+			ZDFStart: Unterdrückung leerer Cluster auf tivi-Startseite "Neue Videos aus
+			deinen Lieblingssendungen".
+			ZDF_get_content: Fix '>Videolänge<' -> '>Videolänge' (mehrere Varianten mögl.),
+			Fix Rückgabe 0 von ZDF_get_playerbox (verhind. Button für leeren Satz).
+			ZDF_getKurzVideoDetails: Fix Ermittlung Bildquelle
+			ZDF_get_teaserDetails: "dd class"-tag in Param. dauer (Staffel-Info + Dauer)
+			entfernt.
+			Änderungen ARD Audio Livestreams: 'ARD Audio Event Streams' aus TV-Livestreams
+			entfernt (Function SenderLiveListePre), Umbennenung  ARDSportAudioEvent ->
+			ARDSportAudioXML, neu: ARDSportAudioStreams und ARDSportAudioStreamsSingle
+			(Cache 1 Std.), ARDSportHoerfunk (Fussball-Bundesliga) an ARD-Änderungen 
+			angepasst, ARDSportHoerfunkSingle entfernt (Ausgabe ARDSportAudioStreamsSingle),
+			Audio-Endungen in SenderLiveResolution wieder freigegeben (waren für Tests 
+			abgeschaltet).
+			get_summary_pre: Erweiterung für einzelnes Auswertungsmerkmal (pattern).  
+			ZDF_Sendungen + ZDFRubrikSingle: Fix Hochkommata in Cluster-Titel.
+			ZDF_get_playerbox: Ermittlung + Kennzeichnung der Laufzeit für Livestream
+			ZDF_get_content: Fix Doppel teaser_info/duration
+			ARDSport: Link für "Tour de France" nach ARD-Änderung aktualisiert.
+			
 21.08.2021 3.9.8
 			Audio_get_cluster_single: Bildtext in tagline unterdrückt, falls imgalt2=''.
 			XLSinglePage (TagesschauXL): Fix Linefeed in Datum (Titelzusatz).
