@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 15.08.2021
+#	Stand: 04.09.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1324,7 +1324,7 @@ def Live(name, epg=''):
 	for line in zdf_streamlinks:
 		webtitle, href, thumb, tagline = line.split('|')
 		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
-		if up_low('3sat ') in up_low(webtitle): 	# Sender mit Blank!
+		if up_low('3sat') in up_low(webtitle): 	# Sender mit Blank!
 			m3u8link = href
 			break
 	if m3u8link == '':

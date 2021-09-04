@@ -9,6 +9,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+04.09.2021 4.0.0
+			ARDSport: Link für Seite "Moderatoren" aktualisiert.
+			ARDSportVideo: Auswertung Livestreams Paralympics, Abzweig zur neuen
+			Funktion ARDSportEventLive.
+			get_page_content (ARD Neu): Auswertung Livestream im Stage-Bereich.
+			Audio_get_cluster_stage: Fix repl_json_chars(imgalt2).
+			ParseMasterM3u: Fix unescape(title), repl_json_chars(title).
+			get_ARDstreamlinks (Ermittlung Livestreams von ARD-Seite): Anpassung 
+			an ARD-Änderung ("?devicetype=pc" in href-Link).
+			Ermittlung Livestreams für Menüs "EPG Alle JETZT" / "EPG Sender einzeln":
+			Anpassung an ARD-Änderung ("?devicetype=pc" in href-Link) in get_ARDstreamlinks,
+			Anpassung an ZDF-Änderung in get_ZDFstreamlinks und in livesenderTV.xml 
+			(Leerz. in hrefsender) sowie Ermittlung Arte-Link via get_ARDstreamlinks 
+			(zuverlässiger), Anpassung in Kika_Live + 3sat (Leerz. in sendername.
+
 28.08.2021 3.9.9
 			ZDFRubriken: Umlenkung Rubrik ZDFtivi -> tivi Modul childs.
 			ZDFStart: Unterdrückung leerer Cluster auf tivi-Startseite "Neue Videos aus

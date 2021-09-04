@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-#	Stand: 23.08.2021
+#	Stand: 04.09.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -317,10 +317,12 @@ def Kika_Live():
 	import resources.lib.EPG as EPG
 	zdf_streamlinks = get_ZDFstreamlinks()
 	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
+	m3u8link=''
 	for line in zdf_streamlinks:
+		PLog(line)
 		webtitle, href, thumb, tagline = line.split('|')
 		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
-		if up_low('KiKA ') in up_low(webtitle): 	# Sender mit Blank!
+		if up_low('KiKA') in up_low(webtitle): 	# Sender mit Blank!
 			m3u8link = href
 			break
 	if m3u8link == '':

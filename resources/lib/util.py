@@ -2213,6 +2213,7 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 	return summ
 	
 #-----------------------------------------------
+# ARD-Links s. get_ARDstreamlinks
 # Aufrufer : SenderLiveListe, ZDFStartLive, get_live_data (Arte),
 #			Live (3sat), Kika_Live, get_playlist_img
 # ermittelt master.m3u8 für die ZDF-Sender (Kennz. ZDFsource in
@@ -2258,7 +2259,8 @@ def get_ZDFstreamlinks(skip_log=False):
 	for rec in content:												# Schleife  Web-Sätze		
 		player2_url=''; assetid=''; videodat_url=''; apiToken=''; href=''
 		title = stringextract('visuallyhidden">', '<', rec)
-		PLog(title);
+		title = title.replace('Livestream', ''); title = title.strip()
+		PLog("Sender: " + title);
 		# Bsp.: api.zdf.de/../zdfinfo-live-beitrag-100.json?profile=player2:
 		player2_url = stringextract('"content":"', '"', rec)
 
@@ -2293,12 +2295,13 @@ def get_ZDFstreamlinks(skip_log=False):
 	
 	PLog("zdf_streamlinks: %d" % len(zdf_streamlinks))
 	page = "\n".join(zdf_streamlinks)									# Ablage Cache
+	#skip_log=False				# Debug
 	if skip_log == False:
 		PLog(page)														# für IPTV-Interessenten
 	Dict("store", 'zdf_streamlinks', page)
 	return zdf_streamlinks	
 #-----------------------------------------------
-# ähnlich get_ZDFstreamlinks
+# ZDF-Links s. get_ZDFstreamlinks
 # Aufruf SenderLiveListe, ARDStartRubrik -> get_playlist_img
 def get_ARDstreamlinks(skip_log=False):
 	PLog('get_ARDstreamlinks:')
@@ -2323,19 +2326,22 @@ def get_ARDstreamlinks(skip_log=False):
 		return []
 
 	content = blockextract('"broadcastedOn":', page)
-	PLog(len(content))	
+	PLog("Senderliste: %d" % len(content))	
 	
-	ard_streamlinks=[]; api_part = u"https://api.ardmediathek.de/page-gateway/pages/ard/item/"
+	ard_streamlinks=[]; 
 	for rec in content:												# Schleife  Web-Sätze		
-		videodat_url=''; href=''; streamurl=''
+		title=''; href=''; streamurl=''; thumb=''
 		title = stringextract('longTitle":"', '"', rec)				# livesenderTV.xml anpassen
-		href = stringextract(api_part, '"', rec)
-		href = api_part + href
-		PLog(href)
+		href_list = blockextract('href":"', rec, '"type"')
+		for h in href_list:
+			if '?devicetype=pc' in h:								# Stream-Quellen
+				href = stringextract('href":"', '"', h)	 
+				break
 		thumb = stringextract('src":"', '"', rec)
 		thumb = thumb.replace('{width}', '720')			
 
 		if href:
+			PLog("lade_livelink:")
 			page, msg = get_page(path=href, JsonPage=True)
 			streamurl = stringextract('_stream":"', '"', page)
 			if streamurl.startswith('http') == False:
@@ -2348,8 +2354,9 @@ def get_ARDstreamlinks(skip_log=False):
 	
 	PLog("ard_streamlinks: %d" % len(ard_streamlinks))
 	page = "\n".join(ard_streamlinks)									# Ablage Cache
+	#skip_log=False				# Debug
 	if skip_log == False:
-		PLog(str(ard_streamlinks))										# für IPTV-Interessenten
+		PLog(str(ard_streamlinks))										# Ausgabe im LOG für IPTV-Interessenten
 	Dict("store", 'ard_streamlinks', page)
 	return ard_streamlinks	
 #---------------------------------------------------------------------------------------------------

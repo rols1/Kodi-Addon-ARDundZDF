@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand 07.07.2021
+#	Stand 10.07.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -382,10 +382,10 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 		
 	li = xbmcgui.ListItem()
 	if ID == "ARDRetroStart":
-		li = home(li, ID=NAME)								# Home-Button -> Hauptmenü
+		li = home(li, ID=NAME)							# Home-Button -> Hauptmenü
 	else:
-		if ID != 'Livestream':								# ohne home - Nutzung durch Classic
-			li = home(li, ID='ARD Neu')						# Home-Button
+		if ID != 'Livestream':							# ohne home - Nutzung durch Classic
+			li = home(li, ID='ARD Neu')					# Home-Button
 
 	page = False
 	if 	'/editorials/' in path == False:				# nur kompl. Startseite aus Cache laden (nicht Rubriken) 
@@ -406,12 +406,12 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 
 #----------------------------------------
 	mark=''
-	container = blockextract ('compilationType":', page)  	# Test auf Rubriken
+	container = blockextract ('compilationType":', page)# Test auf Rubriken
 	PLog(len(container))
 	if len(container) > 1:
-		ARDRubriken(li, page)								# direkt
+		ARDRubriken(li, page)							# direkt
 	else:
-		li = get_page_content(li, page, ID, mark)			# Auswertung Rubriken																	
+		li = get_page_content(li, page, ID, mark)		# Auswertung Rubriken																	
 #----------------------------------------
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
@@ -574,6 +574,7 @@ def ARDRetro():
 #	
 def get_page_content(li, page, ID, mark='', mehrzS=''): 
 	PLog('get_page_content: ' + ID); PLog(mark)
+	ID_org=ID
 	
 	CurSender = Dict("load", 'CurSender')					# Debug, Seite bereits senderspez.
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
@@ -597,10 +598,10 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			else:
 				gridlist = blockextract('id":"Link:', page)		# deckt auch Serien in Swiper ab
 					
-		if 'ARDStart' in ID:									# zusätzl. Beiträge ganz links
-			decorlist = blockextract( '{"decor":', page)
+		if 'ARDStart' in ID:									# zusätzl. Beiträge ganz links, Livestream 
+			decorlist = blockextract( '"decor":', page)		# 	möglich, s.u.
 			PLog('decorlist: ' + str(len(decorlist)))
-			gridlist = decorlist + gridlist
+			gridlist = decorlist
 			
 		if len(gridlist) == 0:									# Fallback (außer Livestreams)
 			gridlist = blockextract( '"images":', page) 		# geändert 20.09.2019 
@@ -635,7 +636,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		if ID == 'EPG':
 			mehrfach = False
 		# if '"availableTo":"' in s or '"duration":' in s or 'Livestream' in ID:	# Einzelbetrag
-		if '"duration":' in s or 'Livestream' in ID:	# Einzelbetrag
+		if '"duration":' in s or 'Livestream' in ID or 'type":"live"' in s:			# Einzelbetrag, Livestream
 			#if s.find('"availableTo":null') < 0:				# auch bei  vorh. Videos möglich
 			mehrfach = False
 					
@@ -643,7 +644,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		if mehrfach == True:									# Pfad für Mehrfachbeiträge ermitteln 						
 			url_parts = ['/grouping/', '/compilation/', '/editorial/']
 			hreflist = blockextract('"href":"', s)
-			# PLog("hreflist: " + str (hreflist))
+			#PLog("hreflist: " + str (hreflist))
 			for h in hreflist:
 				for u in url_parts:
 					if u in h:
@@ -655,6 +656,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 				if 'embedded=true' in h:
 					href = stringextract('"href":"', '"', h)
 					break
+		# PLog("href: " + str (href))	
 								
 		title=''	
 		if 'longTitle":"' in s:
@@ -680,7 +682,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		img= img.replace('u002F', '/')
 		summ=''
 		if ID != 'Livestream':
-			PLog("pre: %s" % s[:80])
+			PLog("pre: %s" % s[:80])				# Verfügbar + Sendedatum aus s laden (nicht Zielseite) 
 			summ = get_summary_pre(path='dummy', ID='ARDnew', skip_verf=False, skip_pubDate=False, page=s)
 		else:
 			summ = title
@@ -752,6 +754,11 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
 				mediatype='video'
 			
+			if '"type":"live"' in s:								# Livestream im Stage-Bereich
+				ID = "Livestream"
+			else:
+				ID=ID_org
+
 			summ_par = summ.replace('\n', '||')
 			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
 			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s'}" %\

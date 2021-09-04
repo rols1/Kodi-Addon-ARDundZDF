@@ -54,8 +54,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '3.9.9'
-VDATE = '28.08.2021'
+VERSION = '4.0.0'
+VDATE = '04.09.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1045,7 +1045,7 @@ def AudioStart(title):
 	li = home(li, ID=NAME)						# Home-Button
 
 	path = ARD_AUDIO_BASE					
-	page, msg = get_page(path=path)	
+	page, msg = get_page(path=path)
 	if page == '':	
 		msg1 = "Fehler in AudioStart:"
 		msg2 = msg
@@ -2273,7 +2273,7 @@ def Audio_get_cluster_stage():
 		
 		descr	= unescape(descr); descr = repl_json_chars(descr)
 		summ_par= descr.replace('\n', '||')
-		title = repl_json_chars(title)
+		title = repl_json_chars(title); imgalt2 = repl_json_chars(imgalt2); 
 		
 		PLog('6Satz:');
 		PLog(title); PLog(img); PLog(mp3_url); PLog(descr[:40]); PLog(dauer)
@@ -2348,7 +2348,7 @@ def ARDSport(title):
 		return li 
 	PLog(len(page))	
 	
-	title = "Live"								# Zusatz: Live (fehlt in tabpanel)
+	title = "Live"								# Zusatz: Live (in tabpanel "Live&Ergebnisse")
 	# href = 'https://www.sportschau.de/ticker/index.html'
 	href = 'https://www.sportschau.de/streamindex100.html'
 	img = R(ICON_DIR_FOLDER)
@@ -2444,7 +2444,7 @@ def ARDSport(title):
 
 	
 	title = "Moderatoren"									# Moderatoren 
-	href = 'https://www.sportschau.de/sendung/moderatoren/index.html'
+	href = 'https://www.sportschau.de/sendung/moderation/index.html'
 	img =  'https://www1.wdr.de/unternehmen/der-wdr/unternehmen/bundesliga-sportschau-jessy-wellmer-100~_v-gseaclassicxl.jpg'
 	tagline = 'Bilder von Moderatoren, Slideshow'
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
@@ -2505,6 +2505,10 @@ def ARDSportPanel(title, path, img, tab_path='', paneltabs=''):
 	PLog(title); PLog(path); PLog(tab_path);
 	title_org = title; path_org=path
 
+	if path.endswith('/paralympics/live/index.html'):		# Sonderbehandlung Livestreams Paralympics -> 
+		ARDSportEventLive(path, page='', title=title)		# ARDSportVideo -> ARDSportTokioLive
+		return
+		
 	if paneltabs:									# abweichende tablist-Auswertung
 		ARDSportPanelTabs(title.strip(), path, img)		# -> ARDSportPanel
 		return
@@ -2512,7 +2516,7 @@ def ARDSportPanel(title, path, img, tab_path='', paneltabs=''):
 	if title.strip() == "Podcast":
 		ARDSportPodcast(path, title.strip())
 		return
-		
+				
 	SBASE = 'https://www.sportschau.de'
 	if tab_path == '':
 		parsed = urlparse(path)
@@ -2754,6 +2758,9 @@ def ARDSportPanel(title, path, img, tab_path='', paneltabs=''):
 			addDir(li=li, label=title, action="dirList", dirID="ARDSportBilder", fanart=img, 
 				thumb=img, tagline=tagline, fparams=fparams)				
 		else:
+			if path.endswith('/tokio2020/live/index.html'):	 	# Sonderbehandlung Livestreams Paralympics -> 
+				mediatype=''									# ARDSportVideo -> ARDSportEventLive
+				tag = "Folgeseite"
 			fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
 				(quote(path), quote(title), quote(img), quote(summ_par))				
 			addDir(li=li, label=title, action="dirList", dirID="ARDSportVideo", fanart=img, thumb=img, 
@@ -2794,6 +2801,7 @@ def ARDSportPanel(title, path, img, tab_path='', paneltabs=''):
 			addDir(li=li, label=title, action="dirList", dirID="ARDSportVideo", fanart=img, thumb=img, 
 				fparams=fparams, summary=summ, mediatype=mediatype)	
 			item_cnt = item_cnt +1	 
+
 										
 	if 'tokio.sportschau.de/tokio2020/live/index.html' in  path_org:	# temp.
 		channel = u'ARD Event Streams (eingeschränkt verfügbar)'
@@ -3118,7 +3126,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
-		return li 
+		return 
 	PLog(len(page))
 
 	'''
@@ -3139,6 +3147,10 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	'''
 
+	if path.endswith('/tokio2020/live/index.html'):					# Sonderbehandlung Livestreams Paralympics
+		ARDSportEventLive(path, page, title)						# für künft. Events prüfen (aktuell OK)
+		return
+		
 	# Bsp. video_src: "url":"http://deviceids-medp.wdr.de/ondemand/167/1673848.js"}
 	#	-> 	//ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/master.m3u8
 	#	derselbe Streamlink wie Direktlink + Hauptmenü
@@ -3270,6 +3282,144 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 			mediatype=mediatype, summary=summ) 
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#------------------------------------
+# Sonderbehandlung Livestreams Paralympics
+# page (aktuell): https://tokio.sportschau.de/tokio2020/live/index.html - kein
+#	verwertbarer Inhalt (Streambezüge komplett js-generiert)
+# pgm_id osslive100: Sportschau
+# pgm_id osslive102: Einzelsendung
+# 2. Durchlauf mit oss_url -> PlayVideo
+# anpassen: path in ARDSportVideo
+def ARDSportEventLive(path, page, title, oss_url='', url='', thumb='', Plot=''):		
+	PLog('ARDSportEventLive:')
+	PLog(path); PLog(oss_url);
+	title_org=title
+		
+	if oss_url:															# 2. Durchlauf
+		page, msg = get_page(path=oss_url)
+		if page == '':
+			msg1 = "Fehler in ARDSportEventLive" 
+			msg2 = "%s nicht gefunden"	% oss_url.split('/')[-1]
+			msg3 = msg
+			PLog(msg2)	
+			MyDialog(msg1, msg2, msg3)
+			return 
+		
+		url = stringextract('"_stream": "', '"', page)
+		tag, descr = Plot.split('||||')
+		PLog(url); PLog(tag); PLog(descr[:80]) 
+		
+		li = xbmcgui.ListItem()
+		li = home(li, ID='ARD')						# Home-Button
+		
+		img=py2_encode(thumb); Plot=py2_encode(Plot); 
+		title=py2_encode(title); url=py2_encode(url);		
+		
+		if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true': 	# Sofortstart
+			PLog('Sofortstart: ARDSportEventLive')
+			PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
+			PlayVideo(url=url, title=title, thumb=img, Plot=Plot)
+			#xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			return
+
+		if url.endswith('master.m3u8'):
+			li = Parseplaylist(li=li, url_m3u8=url, thumb=thumb, geoblock='', descr=Plot)
+		else:		
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+				(quote_plus(url), quote_plus(title), quote_plus(img), quote_plus(Plot))
+			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+				tagline=tag, summary=descr) 
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
+		
+	#------------------------------------------------------------------	# 1. Durchlauf	
+	#img = "https://tokio.sportschau.de/tokio2020/olympiastadiontokio100_v-original.jpg"
+	# Bsp. 	path: "https://tokio.sportschau.de/tokio2020/live/index.html",
+	#		path: "https://tokio.sportschau.de/tokio2020/paralympics/live/livestreams180.html"
+	# json-Inhalt für beide Beisp. identisch	
+	base = "%s/live" % path.split('/live/')[0]
+	page, msg = get_page(path=base + "/lcconfig110-extappjson.json")	# Liste zusätzl. json-Dateien
+	if page == '':
+		msg1 = "Fehler in ARDSportEventLive" 
+		msg2 = "lcconfig110-extappjson.json nicht gefunden"
+		PLog(msg2)	
+		MyDialog(msg1, msg2, '')
+		return 
+	
+	url = stringextract('"additionalTitleClass":"","url":"', '"', page)	# livestreams184-extappjson.json (channels)	
+	url = base + url
+	page, msg = get_page(path=url)
+	if page == '':
+		msg1 = "Fehler in ARDSportEventLive" 
+		msg2 = "%s nicht gefunden" % url.split('/')[-1]
+		PLog(msg2)	
+		MyDialog(msg1, msg2, '')
+		return	
+				
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	
+
+	channels  = blockextract('"starttime":', page)						# Beiträge
+	PLog(len(channels))
+	# Bsp: "/paralympics/live/osslive102-ardjson_image-36c61add-66fc-4fd8-8050-126ef2095659.json":
+	oss_url_templ = base + "/paralympics/live/%s-ardjson_image-%s.json"
+	now = EPG.get_unixtime(onlynow=True)								# akt. Zeit für Abgleich
+	now = int(now)
+	now_human = epgRecord.date_human("%Y.%m.%d_%H:%M:%S", now='')		# Debug	
+	PLog("now_human: " + now_human)
+	live_flag=False
+	for rec in channels:
+		start = stringextract('"starttime": ', ',', rec)				# Unix-Time
+		end = stringextract('"endtime": ', ',', rec)					# 	-"-
+		PLog("start, end: %s, %s" % (epgRecord.date_human("%Y.%m.%d_%H:%M:%S", now=start), 
+			epgRecord.date_human("%Y.%m.%d_%H:%M:%S", now=end)))
+		start=int(start); end=int(end); 
+		if end < now:													# abgelaufen
+			continue
+		
+		datum = stringextract('"displaystartdate": "', '"', rec)	 
+		zeitstart = stringextract('"displaystarttime": "', '"', rec)	 
+		zeitende = stringextract('"displayendtime": "', '"', rec)
+		headline = stringextract('"headline": "', '"', rec)	 
+		sender = stringextract('"channel": "', '"', rec)	 
+		pgm_id = stringextract('"pgm_id": "', '"', rec)	 
+		descr = stringextract('"description": "', '"', rec)	 
+		img = base + stringextract('"displayimage": "', '"', rec)	 
+		image_uuid = stringextract('"displayimage_uuid": "', '"', rec)	 
+		mod = stringextract('"moderation": "', '"', rec)
+		if mod == '':
+			mod = stringextract('"reporter": "', '"', rec) 
+		mod = mod.replace('\\t', '')									# italic entf.
+	
+		title = repl_json_chars(headline); descr= repl_json_chars(descr)
+		if now >= start and now <= end:									# Zeitabgleich für Titel
+			title = '[COLOR red][B]  LIVE [/B][/COLOR] | %s' % (title)
+			live_flag=True
+		else:
+			title = '[B]%s[/B] | %s' % (datum, title)
+			
+		tag = '[B]Start: %s, %s[/B] | Ende: %s | %s' % (datum, zeitstart, zeitende, mod)
+		Plot = "%s||||%s" %  (tag, descr)
+		oss_url = oss_url_templ % (pgm_id, image_uuid)
+		
+		PLog('Satz2:')
+		PLog(title); PLog(pgm_id); PLog(image_uuid); PLog(oss_url); PLog(Plot[:80]);
+		
+		img=py2_encode(img); Plot=py2_encode(Plot); 
+		title=py2_encode(title); oss_url=py2_encode(oss_url);
+		
+		fparams="&fparams={'path': '', 'page': '', 'oss_url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+			(quote(oss_url), quote(title), quote(img), quote(Plot))
+		addDir(li=li, label=title, action="dirList", dirID="ARDSportEventLive", fanart=img, thumb=img, fparams=fparams, 
+			tagline=tag, summary=descr) 
+			
+		if live_flag == False:
+			icon = R("icon-info.png")
+			msg1 = "Derzeit keine Livestreams"
+			xbmcgui.Dialog().notification(msg1,'',icon,2000)	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #--------------------------------------------------------------------------------------------------
 # spez. Pocastseiten, z.B. www.sportschau.de/tourfunk/index.html bei Tour de France
@@ -3283,7 +3433,7 @@ def ARDSportPodcast(path, title):
 		msg1 = 'Seite kann nicht geladen werden: %s' % title
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
-		return li 
+		return
 	PLog(len(page))
 	
 	li = xbmcgui.ListItem()
@@ -5435,6 +5585,8 @@ def EPG_Sender(title, Merk='false'):
 			img = R(img)
 		link = rec[3]
 		ID = rec[1]
+		
+		PLog('Satz13:')
 		PLog('title: %s, ID: %s' % (title, ID))
 		PLog(img)
 		if ID == '':				# ohne EPG_ID
@@ -5769,7 +5921,10 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 		laenge = laenge.strip()
 		summ 	= "%s\n\n%s" % (summ, u"Kontextmenü: Recording TV-Live (Aufnahmedauer: %s)" % laenge)	
 		title = unescape(title)
-		PLog("title: " + title); PLog(summ)
+		
+		PLog('Satz14:')
+		PLog("title: " + title); PLog(m3u8link); PLog(summ)
+		
 		title=py2_encode(title); m3u8link=py2_encode(m3u8link);
 		img=py2_encode(img); descr=py2_encode(descr); summ=py2_encode(summ);		
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Merk': '%s'}" %\
@@ -5913,9 +6068,6 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 				tagline = u'Sendung: %s Uhr' % vonbis
 			else:
 				tagline = ''
-#			# Doppler-Erkennung:	
-#			sname_old=sname; stime_old=stime; summ_old=summ; vonbis_old=vonbis;
-#			summary_old=summary; tagline_old=tagline
 
 		title = unescape(title)	
 		title = title.replace('JETZT:', '')					# 'JETZT:' hier überflüssig
@@ -5932,7 +6084,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		if geo:
 			tagline = 'Livestream nur in Deutschland zu empfangen!'
 			
-		PLog("Satz8")
+		PLog("Satz8:")
 		PLog(title); PLog(link); PLog(img); PLog(summary); PLog(tagline[0:80]);
 		Resolution = ""; Codecs = ""; duration = ""
 	
@@ -6126,6 +6278,7 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path='', s
 	PLog(title); PLog(url_m3u8); PLog(thumb); PLog(tagline);
 	 
 	PLog(type(title)); 	PLog(type(url_m3u8))
+	title=unescape(title); title=repl_json_chars(title)
 	
 	sname = url_m3u8.split('/')[2]				# Filename: Servername.m3u8
 	msg1 = "Datei konnte nicht "				# Vorgaben xbmcgui.Dialog
@@ -6137,7 +6290,7 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path='', s
 	if page == '':								# Fehlschlag
 		msg1 = msg1 + "geladen werden." 
 		MyDialog(msg1, msg2, msg3)
-		return li
+		return
 		
 	lines = page.splitlines()					# 2. rel. Links korrigieren 
 	lines_new = []
@@ -6170,7 +6323,7 @@ def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path='', s
 		msg1 = msg1 + " gespeichert werden." # msg1 s.o.
 		PLog(msg1); PLog(msg2)
 		MyDialog(msg1, msg2, msg3)
-		return li
+		return
 	else:				
 		# Alternative: m3u8-lokal starten:
 		# 	fparams="&fparams=url=%s, title=%s, is_playable=%s" % (sname + ".m3u8", title, True)
@@ -7460,7 +7613,7 @@ def get_teaserElement(rec):
 
 #-------------------------
 # Auswertung ZDF-Seite für ZDFRubrikSingle
-# page hier Blocksatz (rec)
+# page hier Einzelblock (rec)
 #	
 def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 	PLog('ZDF_get_teaserDetails:')
@@ -7858,7 +8011,7 @@ def International(title):
 		msg1 = 'Beitrag kann nicht geladen werden.'
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
-		return li 						
+		return					
 	
 	ZDF_Sendungen(path, title, ID, page=page)
 				
@@ -7889,7 +8042,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			msg1 = 'Seite kann nicht geladen werden.'
 			msg2 = msg
 			MyDialog(msg1, msg2, '')
-			return li 	
+			return	
 		
 	img_alt = teilstring(page, 'class=\"m-desktop', '</picture>') # Bildsätze für b-playerbox
 		
@@ -7974,7 +8127,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 		mediatype='video'
 			
 	#---------------------------		
-	items_cnt=0													# listitemzähler
+	items_cnt=0													# Zähler listitems
 	href_list=[]
 	for rec in content:	
 		PLog("items_cnt: %d" % items_cnt)
@@ -8015,15 +8168,14 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender'):
 			if pos > 0:								# 	Inhalte möglich
 				rec = rec[0:pos]
 				# PLog(rec)  # bei Bedarf
-			
+		
 		if ID != 'DEFAULT':								# DEFAULT: Übersichtsseite ohne Videos, Bsp. Sendungen A-Z
 			if ID != 'A-Z' and ID != 'STAGE':	
 				if 'icon-502_play' not in rec :  		# Videobeitrag? auch ohne Icon möglich
 					if u'>Videolänge' not in rec: 
 						if '>Trailer<' not in rec: 		# Trailer o. Video-icon-502
-							PLog('Videobeitrag_fehlt')
+							PLog('Beitrag_fehlt')
 							continue
-
 		
 		multi = False			# steuert Mehrfachergebnisse 
 		thumb = ZDF_get_img(rec)
@@ -9322,7 +9474,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 			msg1 = "Streaming-Quelle fehlt."
 			msg2 = 'Fehler: %s'	% (msg)
 			xbmcgui.Dialog().notification(msg1, msg2,icon,5000)
-			return li						
+			return li				
 	else:																	# lokale Datei	
 		fname =  os.path.join(M3U8STORE, url_m3u8) 
 		playlist = RLoad(fname, abs_path=True)					
@@ -9412,7 +9564,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		if stitle:
 			summ = u"Sendung: %s" % py2_decode(stitle)
 		
-		PLog('Satz:')
+		PLog('SatzParse:')
 		PLog(title); PLog(label); PLog(url[:80]); PLog(thumb); PLog(Plot); PLog(descr); 
 		
 		if buttons:															# Buttons, keine Stream_List
