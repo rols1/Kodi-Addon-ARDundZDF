@@ -13,6 +13,7 @@
 #	06.01.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 #	Stand: 19.11.2020
+#
 
 from __future__ import absolute_import
 

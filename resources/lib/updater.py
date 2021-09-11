@@ -11,7 +11,7 @@
 # 	18.03.2020 adjust_AddonXml: Anpassung python-Version an Kodi-Version
 #	13.04.2020 Aktualisierung adjust_AddonXml 
 ################################################################################
-# Stand 07.10.2020
+# Stand: 07.10.2020
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 

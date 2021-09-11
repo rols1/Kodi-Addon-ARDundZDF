@@ -9,7 +9,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
 ################################################################################
-#	Stand: 09.02.2021
+#	Stand: 05.09.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -68,6 +68,7 @@ DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 				# hier nur DICTSTORE genutzt
 
 ICON 			= 'icon.png'		# ARD + ZDF
 ICON_FUNK		= 'funk.png'			
+ICON_MAIN_ZDF	= 'zdf-mediathek.png'
 ICON_DIR_FOLDER	= "Dir-folder.png"
 ICON_SPEAKER 	= "icon-speaker.png"
 ICON_SEARCH 	= 'ard-suche.png'						
@@ -126,6 +127,12 @@ def Main_funk():
 	addDir(li=li, label= "NEUESTE VIDEOS", action="dirList", dirID="resources.lib.funk.ChannelSingle", fanart=R(ICON_FUNK), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 
+	title = 'zu ZDF-funk' 
+	tag = u"ZDF-funk ergänzt das Modul funk mit der Startseite und A-Z-Beiträgen"
+	fparams="&fparams={'title': '%s'}" % (quote(title))
+	addDir(li=li, label=title, action="dirList", dirID="Main_ZDFfunk", fanart=R(ICON_MAIN_ZDF), thumb=R('zdf-funk.png'), 
+		tagline=tag, fparams=fparams)
+		
 	xbmcplugin.endOfDirectory(HANDLE)
 		
 # ----------------------------------------------------------------------			

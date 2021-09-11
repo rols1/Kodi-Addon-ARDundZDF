@@ -7,6 +7,7 @@
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
 #	Stand: 07.10.2020
+#
 
 from __future__ import absolute_import
 

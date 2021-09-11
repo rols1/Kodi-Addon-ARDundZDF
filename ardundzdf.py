@@ -54,8 +54,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '4.0.0'
-VDATE = '04.09.2021'
+VERSION = '4.0.1'
+VDATE = '11.09.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -920,10 +920,32 @@ def AddonInfos():
 	log = xbmc.translatePath("special://logpath")
 	log = os.path.join(log, "kodi.log") 	
 	i = u"%s Debug-Log: %s" %  (t, log)
+	j = u"%s TV-und Event-Livestreams: %s/%s" % (t, PluginAbsPath, "resources/livesenderTV.xml")
 	
-	p3 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d1,d2,e,f,g,h,i)
+	p3 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d1,d2,e,f,g,h,i,j)
 	page = u"%s\n%s\n%s" % (p1,p2,p3)
-	PLog(page)
+	
+	#--------------------------------------------------					# Module
+	mpage = u"\n[COLOR red]Module:[/COLOR]"
+	skip_list = ["__init__.py"]
+	globFiles = "%s/%s/*py" % (PluginAbsPath, "resources/lib")
+	files = glob.glob(globFiles) 
+	files = sorted(files,key=lambda x: x.upper())
+	# PLog(files)			# Debug
+	for f in files:
+		if "__init__.py" in f:
+			continue
+		modul = f.split('/')[-1]
+		modul = modul.replace('.py', '')
+		fcont = RLoad(f, abs_path=True)
+		datum = stringextract('Stand:', '#', fcont)
+		datum = datum.strip()
+		
+		datum = "%s %16s (Stand: %s)" % (t, modul, datum)		
+		mpage = "%s\n%s" % (mpage, datum) 
+	
+	# PLog(mpage)			# Debug
+	page = page + mpage
 	dialog.textviewer("Addon-Infos", page,usemono=True)
 	
 #	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -3415,10 +3437,10 @@ def ARDSportEventLive(path, page, title, oss_url='', url='', thumb='', Plot=''):
 		addDir(li=li, label=title, action="dirList", dirID="ARDSportEventLive", fanart=img, thumb=img, fparams=fparams, 
 			tagline=tag, summary=descr) 
 			
-		if live_flag == False:
-			icon = R("icon-info.png")
-			msg1 = "Derzeit keine Livestreams"
-			xbmcgui.Dialog().notification(msg1,'',icon,2000)	
+	if live_flag == False:
+		icon = R("icon-info.png")
+		msg1 = "Derzeit keine Livestreams"
+		xbmcgui.Dialog().notification(msg1,'',icon,2000)	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #--------------------------------------------------------------------------------------------------
@@ -6013,7 +6035,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 				PLog("zdfline: " + line)
 				items = line.split('|')
 				# Bsp.: "ZDFneo " in "ZDFneo Livestream":
-				if up_low(title_sender) in up_low(items[0]): 
+				if up_low(title_sender) == up_low(items[0]): 
 					link = items[1]
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
@@ -7225,7 +7247,7 @@ def ZDFRubriken(name):
 def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='', nav_title=''):							
 	PLog('ZDFRubrikSingle:'); PLog(title);
 	CacheTime = 60*5								# 5 min.
-	PLog(clus_title); PLog(ID); PLog(custom_cluster); 
+	PLog(clus_title); PLog(ID); PLog(custom_cluster); PLog(nav_title)
 	clus_title = clus_title.replace('&quot;', '"')				# Hochkommata-Behandl. (s. ZDF_Sendungen)
  
 	path_org = path
@@ -7493,7 +7515,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 		if pos1 > 0:
 			pos2 = page.find('"b-content-teaser-list"')					# ev. Varianten prüfen
 			PLog("%d, %d" % (pos1, pos2))
-			if pos2 > 0:
+			if pos2 > 0 and pos2 > pos1:								# Blockende < Blockanfang mögl.
 				page_cut = page[pos1:pos2]
 				ZDF_get_content(li, page=page_cut, ref_path=path_org, ID="Search")
 				# xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# Debug

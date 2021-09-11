@@ -9,6 +9,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+
+11.09.2021 4.0.1
+			ARDSportEventLive: Fix Info "Derzeit keine Livestreams" (Einrückung falsch).
+			Modul funk: Wechsel-Button 'zu ZDF-funk' eingefügt (Startseite, A-Z-Beiträge). 
+			get_ZDFstreamlinks: nachträgl. Fix für Sender phoenix ("im Livestream" im Titel 
+			entfernt.
+			SenderLiveListe (TV-Livestreams): Senderabgleich für ZDF umgestellt auf 
+			"Übereinstimmung" statt "enthalten" ('==' statt 'in'). 
+			ZDFRubrikSingle: Fix no_title_Check (Beiträge ohne Clustertitel) - skip, falls 
+			Blockende > Blockanfang. 
+			livesenderTV.xml: Link für "BR Fernsehen - Nord" aktualisiert (nicht im Cache 
+			enthalten, nur Süd).
+			Menü Addon-Infos:  Pfad zu livesenderTV.xml und Liste der Module ergänzt.
+
 04.09.2021 4.0.0
 			ARDSport: Link für Seite "Moderatoren" aktualisiert.
 			ARDSportVideo: Auswertung Livestreams Paralympics, Abzweig zur neuen

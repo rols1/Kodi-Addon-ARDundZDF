@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-#	Stand 15.08.2021
+#	Stand: 15.08.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2259,7 +2259,8 @@ def get_ZDFstreamlinks(skip_log=False):
 	for rec in content:												# Schleife  Web-Sätze		
 		player2_url=''; assetid=''; videodat_url=''; apiToken=''; href=''
 		title = stringextract('visuallyhidden">', '<', rec)
-		title = title.replace('Livestream', ''); title = title.strip()
+		title = title.replace('im Livestream', ''); title = title.strip()	# phoenix
+		title = title.replace('Livestream', ''); title = title.strip()		# restl. sender
 		PLog("Sender: " + title);
 		# Bsp.: api.zdf.de/../zdfinfo-live-beitrag-100.json?profile=player2:
 		player2_url = stringextract('"content":"', '"', rec)

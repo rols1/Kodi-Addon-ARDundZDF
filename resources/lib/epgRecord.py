@@ -7,7 +7,7 @@
 #
 ####################################################################################################
 #	01.07.2020 Start
-#	Stand 23.07.2021
+#	Stand: 23.07.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 

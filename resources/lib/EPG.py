@@ -10,7 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# Stand: 10.11.02020	
+# Stand: 10.11.2020
+#	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
 from kodi_six.utils import py2_encode, py2_decode
