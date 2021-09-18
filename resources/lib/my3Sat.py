@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 04.09.2021
+#	Stand: 16.09.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -110,8 +110,10 @@ def Main_3Sat(name):
 			
 	epg = get_epg()
 	if epg:
-		epg = 'Jetzt in 3sat: ' + epg
-	title = '3sat-Livestream'
+		epg = 'LIVE: %s]'  % epg
+		title = '[B][COLOR red]%s[/COLOR][/B]'  % epg
+	else:
+		title = '3sat-Livestream'
 	title=py2_encode(title); epg=py2_encode(epg);
 	fparams="&fparams={'name': '%s', 'epg': '%s'}" % (quote(title), quote(epg))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Live", 

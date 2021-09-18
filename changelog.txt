@@ -9,6 +9,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+18.09.2021 4.0.2
+			Menü Addon-Infos: Modul-Liste, Cache-Ausgabe bündig, Anpassung Var-Bez., 
+			Log-Ausgabe.
+			Audio_get_cluster_stage (Audiothek): Auswertung alternativer url, falls 
+			downloadUrl fehlt.
+			get_page_content (ARD Neu): Pfad-Suchmuster für Mehrfachbeiträge erweitert
+			(ARD-Änderung, relevant: Film-Highlights, Doku-Highlights, Talk-Highlights,
+			 Filmtipps, Filme für die ganze Familie, aktuelle Tatortfolgen, ..).
+			ZDF-Bilderserien: Prüfung auf externen Link in ZDF_BildgalerieSingle, falls 
+			gallery-slider-box fehlt (Bsp. "Der kleine Nick").
+			Main_3Sat: Live-Titel rot markiert (wie restl. Module). 
 
 11.09.2021 4.0.1
 			ARDSportEventLive: Fix Info "Derzeit keine Livestreams" (Einrückung falsch).
@@ -21,7 +32,7 @@ CHANGE HISTORY
 			Blockende > Blockanfang. 
 			livesenderTV.xml: Link für "BR Fernsehen - Nord" aktualisiert (nicht im Cache 
 			enthalten, nur Süd).
-			Menü Addon-Infos:  Pfad zu livesenderTV.xml und Liste der Module ergänzt.
+			Menü Addon-Infos: Pfad zu livesenderTV.xml und Liste der Module ergänzt.
 
 04.09.2021 4.0.0
 			ARDSport: Link für Seite "Moderatoren" aktualisiert.

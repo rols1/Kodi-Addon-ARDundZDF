@@ -54,8 +54,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '4.0.1'
-VDATE = '11.09.2021'
+VERSION = '4.0.2'
+VDATE = '18.09.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -881,48 +881,48 @@ def AddonInfos():
 	t = "     "		# Tab (5)
 
 	a = u"[COLOR red]Addon, System:[/COLOR]"
-	b = u"%s%s, Version %s vom %s" % (t, ADDON_ID, VERSION, VDATE)
-	c = u"%sGithub-Releases https://github.com/%s/releases" % (t, GITHUB_REPOSITORY)
-	d = u"%sOS: %s" % (t, OS_DETECT)
-	e = u"%sKodi-Version: %s" % (t, KODI_VERSION)
-	p1 = u"%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d,e)
+	a1 = u"%s%s, Version %s vom %s" % (t, ADDON_ID, VERSION, VDATE)
+	a2 = u"%sGithub-Releases https://github.com/%s/releases" % (t, GITHUB_REPOSITORY)
+	a3 = u"%sOS: %s" % (t, OS_DETECT)
+	a4 = u"%sKodi-Version: %s" % (t, KODI_VERSION)
+	p1 = u"%s\n%s\n%s\n%s\n%s\n" % (a,a1,a2,a3,a4)
 	
 	a = u"[COLOR red]Cache:[/COLOR]"
-	b = u"%s %s Dict (Variablen, Objekte)" %  (t, get_dir_size(DICTSTORE))
-	c = u"%s %s Inhaltstexte (im Voraus geladen)" %  (t, get_dir_size(TEXTSTORE))
-	d = u"%s %s m3u8 (Einzelauflösungen der Livestreams)" %  (t, get_dir_size(M3U8STORE))
-	e = u"%s %s Slides (Bilder)" %   (t, get_dir_size(SLIDESTORE))
-	f = u"%s %s subtitles (Untertitel)" %   (t, get_dir_size(SUBTITLESTORE))
-	g = ''
+	a1 = u"%s %10s Dict (Variablen, Objekte)" %  (t, get_dir_size(DICTSTORE))
+	a2 = u"%s %10s Inhaltstexte (im Voraus geladen)" %  (t, get_dir_size(TEXTSTORE))
+	a3 = u"%s %10s m3u8 (Einzelauflösungen der Livestreams)" %  (t, get_dir_size(M3U8STORE))
+	a4 = u"%s %10s Slides (Bilder)" %   (t, get_dir_size(SLIDESTORE))
+	a5 = u"%s %10s subtitles (Untertitel)" %   (t, get_dir_size(SUBTITLESTORE))
+	a6 = ''
 	path = SETTINGS.getSetting('pref_download_path')
 	PLog(path); PLog(os.path.isdir(path))
 	if path and os.path.isdir(path):
-		g = "%s %s Downloads\n" %   (t, get_dir_size(path))
-	p2 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s" % (a,b,c,d,e,f,g)
+		a6 = "%s %10s Downloads\n" %   (t, get_dir_size(path))
+	p2 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s" % (a,a1,a2,a3,a4,a5,a6)
 
 	a = u"[COLOR red]Pfade:[/COLOR]"
-	b = u"%s Addon-Home: %s" % (t, PluginAbsPath)
-	c = u"%s Cache: %s" % (t,ADDON_DATA)
+	a1 = u"%s Addon-Home: %s" % (t, PluginAbsPath)
+	a2 = u"%s Cache: %s" % (t,ADDON_DATA)
 	fname = WATCHFILE
-	d1 = u"%s Merkliste intern: %s" % (t, WATCHFILE)
-	d2 = u"%s Merkliste extern: nicht aktiviert" % t
+	a3 = u"%s Merkliste intern: %s" % (t, WATCHFILE)
+	a4 = u"%s Merkliste extern: nicht aktiviert" % t
 	if SETTINGS.getSetting('pref_merkextern') == 'true':	# externe Merkliste gewählt?
 		fname = SETTINGS.getSetting('pref_MerkDest_path')
-		d2 = u"%s Merkliste extern: %s" % (t,fname)
-	e = u"%s Downloadverzeichnis: %s" % (t,SETTINGS.getSetting('pref_download_path'))
-	f = u"%s Verschiebeverzeichnis: %s" % (t,SETTINGS.getSetting('pref_VideoDest_path'))
+		a4 = u"%s Merkliste extern: %s" % (t,fname)
+	a5 = u"%s Downloadverzeichnis: %s" % (t,SETTINGS.getSetting('pref_download_path'))
+	a6 = u"%s Verschiebeverzeichnis: %s" % (t,SETTINGS.getSetting('pref_VideoDest_path'))
 	filterfile = os.path.join(ADDON_DATA, "filter.txt")
-	g = u"%s Filterliste: %s" %  (t,filterfile)
+	a7 = u"%s Filterliste: %s" %  (t,filterfile)
 	fname =  SETTINGS.getSetting('pref_podcast_favorits')
 	if os.path.isfile(fname) == False:
 		fname = os.path.join(PluginAbsPath, "resources", "podcast-favorits.txt") 
-	h = u"%s Podcast-Favoriten:\n%s%s" %  (t,t,fname)		# fname in 2. Zeile
+	a8 = u"%s Podcast-Favoriten:\n%s%s" %  (t,t,fname)		# fname in 2. Zeile
 	log = xbmc.translatePath("special://logpath")
 	log = os.path.join(log, "kodi.log") 	
-	i = u"%s Debug-Log: %s" %  (t, log)
-	j = u"%s TV-und Event-Livestreams: %s/%s" % (t, PluginAbsPath, "resources/livesenderTV.xml")
+	a9 = u"%s Debug-Log: %s" %  (t, log)
+	a10 = u"%s TV-und Event-Livestreams: %s/%s" % (t, PluginAbsPath, "resources/livesenderTV.xml")
 	
-	p3 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,b,c,d1,d2,e,f,g,h,i,j)
+	p3 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10)
 	page = u"%s\n%s\n%s" % (p1,p2,p3)
 	
 	#--------------------------------------------------					# Module
@@ -944,8 +944,8 @@ def AddonInfos():
 		datum = "%s %16s (Stand: %s)" % (t, modul, datum)		
 		mpage = "%s\n%s" % (mpage, datum) 
 	
-	# PLog(mpage)			# Debug
 	page = page + mpage
+	PLog(page)
 	dialog.textviewer("Addon-Infos", page,usemono=True)
 	
 #	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -2251,7 +2251,7 @@ def Audio_get_cluster_stage():
 	path = "https://www.ardaudiothek.de/"
 	ID = "AudioWebStage"
 	page = Dict("load", ID, CacheTime=CacheTime)				# Startseite Web laden
-	if page == False or page == '':									# Cache miss od. leer - vom Sender holen
+	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
 		page, msg = get_page(path=path)
 		Dict("store", ID, page)						
 	if page == '':	
@@ -2286,7 +2286,10 @@ def Audio_get_cluster_stage():
 		if pubDate:												# 2021-08-11T07:00:00+00:00
 			pubDate = pubDate = "%s.%s.%s" % (pubDate[8:10], pubDate[5:7], pubDate[0:4])
 		descr = stringextract('"description":"','"', item)	
-		mp3_url = stringextract('"downloadUrl":"','"', item)	
+		mp3_url = stringextract('"downloadUrl":"','"', item)
+		if mp3_url == '':
+			audios = stringextract('"audios":[',']', item)	
+			mp3_url = stringextract('"url":"','"', audios)		# downloadUrl kann fehlen
 		img = stringextract('"url1X1":"','"', item)	
 		img = img.replace('{width}', '640')
 		#imgalt1 = stringextract('"description":"','"', item)	# Bildbeschr.	
@@ -9201,6 +9204,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 
 #-------------------------
 # Aufrufer: ZDF_Search (weitere Seiten via page_cnt)
+#	Einzelseite -> ZDF_BildgalerieSingle
 def ZDF_Bildgalerien(li, page):	
 	PLog('ZDF_Bildgalerien:'); 
 	
@@ -9290,7 +9294,21 @@ def ZDF_BildgalerieSingle(path, title):
 
 	li = home(li, ID="ZDF")						# Home-Button
 	
-	# gallery-slider-box: echte Bildgalerien, andere spielen kaum eine Rolle 		
+	# gallery-slider-box: echte Bildgalerien, andere spielen kaum eine Rolle
+	#	bei Fehlen auf Weiterleitung prüfen (z.B. in lazyload-container):
+	if page.find(u'class="content-box gallery-slider-box') < 0:
+		PLog('check_extern_link:')
+		href=''
+		href_list = blockextract('a href=', page, '</a>')
+		for h in href_list:
+			PLog(h[:80])
+			if u'#gallerySlide=0' in h:
+				href = stringextract('href="', '"', h)
+				break
+		if href:
+			PLog('get_extern_link')
+			page, msg = get_page(path=href)	
+		
 	content =  stringextract(u'class="content-box gallery-slider-box', u'title="Bilderserie schließen"', page)
 	content = blockextract('class="img-container', content)	
 	PLog("content: " + str(len(content)))
