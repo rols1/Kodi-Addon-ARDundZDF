@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 16.09.2021
+#	Stand: 23.09.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -919,7 +919,9 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 
 	if 'is-medium lazyload' in page:							# Test auf Loader-Beiträge, escaped
 		li, cnt = get_lazyload(li=li, page=page, ref_path=path)
-				
+		
+	if cnt == 0 and "Einige Folgen sind FSK 16" in page:		# FSK-Hinweis bei leerer Liste
+		dialog_fsk(page)										# util			
 
 	if ret == True:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -1002,27 +1004,31 @@ def get_lazyload(li, page, ref_path):
 #	(teaserHeadline,teasertext,clusterTitle entfallen)
 # Hinweis: Änderungen ev. auch in ardundzdf erforderlich.
 #
+# 20.09.2021 Einsetzungselemente style, moduleId, clusterType
+#	fallen ebenfalls (sophoraId + sourceModuleType ausreichend)
+#
 def get_teaserElement(rec):
 	PLog('get_teaserElement:')
 	# Reihenfolge Ersetzung: sophoraId, teaserHeadline, teasertext, clusterTitle
 	
 	sophoraId = stringextract('"sophoraId": "', '"', rec)
 	teaserHeadline = stringextract('teaserHeadline": "', ',', rec)
-	teaserHeadline = teaserHeadline.replace('"', '')
 	teasertext = stringextract('"teasertext": "', '",', rec)
 	clusterTitle = stringextract('clusterTitle": "', ',', rec)
 	
-	sophoraId = transl_json(sophoraId); teaserHeadline = transl_json(teaserHeadline);
+	sophoraId = transl_json(sophoraId); #teaserHeadline = transl_json(teaserHeadline);
 	teasertext = transl_json(teasertext); clusterTitle = transl_json(clusterTitle);
 	PLog(teaserHeadline)	
 	
 	sophId = sophoraId; title = teaserHeadline; ctitle = clusterTitle;  # Fallback-Rückgaben
-	descr = teasertext; isvideo=''	
+	descr = teasertext; 
+	isvideo=''	
 		
-	sophoraId=quote(py2_encode(sophoraId)); teaserHeadlin =quote(py2_encode(teaserHeadline));
+	sophoraId=quote(py2_encode(sophoraId)); 
 	teasertext = quote(py2_encode(teasertext)); clusterTitle = quote(py2_encode(clusterTitle));
 	
-	path = "https://www.3sat.de/teaserElement?sophoraId=%s&style=m2&moduleId=mod-2&clusterType=Cluster_S&sourceModuleType=cluster-s" % (sophoraId)
+	#path = "https://www.3sat.de/teaserElement?sophoraId=%s&style=m2&moduleId=mod-2&clusterType=Cluster_S&sourceModuleType=cluster-s" % (sophoraId)
+	path = "https://www.3sat.de/teaserElement?sophoraId=%s&sourceModuleType=cluster-s" % (sophoraId)
 	PLog(path)
 	
 	fpath = os.path.join(TEXTSTORE, sophoraId)
@@ -1459,6 +1465,9 @@ def Bilder3sat(path=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  # ohne Cache, um Neuladen zu verhindern
 		
 ####################################################################################################
+# 23.09.2021 Umstellung Bildname aus Quelle statt "Bild_01" (eindeutiger beim
+#	Nachladen) - wie ZDF_BildgalerieSingle.
+#
 def Bilder3satSingle(title, path):
 	PLog('Bilder3satSingle:')
 	
@@ -1516,10 +1525,12 @@ def Bilder3satSingle(title, path):
 			
 		#  Kodi braucht Endung für SildeShow; akzeptiert auch Endungen, die 
 		#	nicht zum Imageformat passen
-		pic_name 	= 'Bild_%04d.jpg' % (image+1)		# Bildname
-		local_path 	= "%s/%s" % (fpath, pic_name)
-		PLog("local_path: " + local_path)
-		title = "Bild %03d" % (image+1)
+		#pic_name 	= 'Bild_%04d.jpg' % (image+1)		# Bildname
+		pic_name 	= img_src.split('/')[-1]			# Bildname aus Quelle
+		if '?' in pic_name:								# Bsp.: ~2400x1350?cb=1631630217812
+			pic_name = pic_name.split('?')[0]
+		local_path 	= "%s/%s.jpg" % (fpath, pic_name)
+		title = "Bild %03d: %s" % (image+1, pic_name)	# Numerierung
 		PLog("Bildtitel: " + title)
 		
 		local_path 	= os.path.abspath(local_path)
@@ -1536,7 +1547,7 @@ def Bilder3satSingle(title, path):
 			background	= True											
 								
 		title=repl_json_chars(title); summ=repl_json_chars(summ)
-		PLog('neu:');PLog(title);PLog(thumb);PLog(summ[0:40]);
+		PLog('neu:');PLog(title);PLog(img_src);PLog(thumb);PLog(summ[0:40]);
 		if thumb:	
 			local_path=py2_encode(local_path);
 			fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)

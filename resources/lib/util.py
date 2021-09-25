@@ -1393,15 +1393,27 @@ def my_rfind(left_pattern, start_pattern, line):  # sucht ab start_pattern rück
 # Rückgabe False/True
 #  	
 def exist_in_list(insert, my_items):
-	PLog("exist_in_list:")	
+	PLog("exist_in_list:")
+	insert = py2_encode(insert);	
 	try:
 		for item in my_items:
-			if insert in item:
+			if insert in py2_encode(item):
 				return True
 	except Exception as exception:
 		PLog(str(exception))
 		
 	return False		
+#---------------------------------------------------------------- 
+# Dialog mit FSK-Hinweis in page 	
+def dialog_fsk(page):
+	PLog('dialog_fsk:')
+	fsk = stringextract('Einige Folgen sind FSK 16 und', ')</', page)
+	if fsk:
+		msg1 = "FSK-Hinweis:"
+		msg2 = 'Einige Folgen sind FSK 16 und %s'	% (fsk)
+		MyDialog(msg1, msg2, '')
+	
+	return
 #----------------------------------------------------------------  	
 # make_mark: farbige Markierung plus fett (optional	
 # Groß-/Kleinschreibung egal

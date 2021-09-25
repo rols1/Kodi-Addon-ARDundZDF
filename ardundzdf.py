@@ -54,8 +54,8 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '4.0.2'
-VDATE = '18.09.2021'
+VERSION = '4.0.3'
+VDATE = '25.09.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6459,6 +6459,9 @@ def BilderDasErste(path=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #--------------------------------------------------------------------------------------------------	
+# 23.09.2021 Umstellung Bildname aus Quelle statt "Bild_01" (eindeutiger beim
+#	Nachladen) - wie ZDF_BildgalerieSingle.
+#
 def BilderDasErsteSingle(title, path):					  
 	PLog("BilderDasErsteSingle:")
 	PLog(title)
@@ -6526,10 +6529,14 @@ def BilderDasErsteSingle(title, path):
 			
 		#  Kodi braucht Endung für SildeShow; akzeptiert auch Endungen, die 
 		#	nicht zum Imageformat passen
-		pic_name 	= 'Bild_%04d.jpg' % (image+1)		# Bildname
+		#pic_name 	= 'Bild_%04d.jpg' % (image+1)		# Bildname
+		pic_name 	= img_src.split('/')[-1]			# Bildname aus Quelle
 		local_path 	= "%s/%s" % (fpath, pic_name)
 		PLog("local_path: " + local_path)
-		title = "Bild %03d" % (image+1)
+		title = "Bild %03d: %s" % (image+1, pic_name)	# Numerierung
+		if len(title) > 70:
+			title = "%s.." % title[:70]					# Titel begrenzen
+		
 		PLog("Bildtitel: " + title)
 		
 		local_path 	= os.path.abspath(local_path)
@@ -6545,7 +6552,7 @@ def BilderDasErsteSingle(title, path):
 			background	= True											
 								
 		title=repl_json_chars(title); summ=repl_json_chars(summ)
-		PLog('neu:');PLog(title);PLog(thumb);PLog(summ[0:40]);
+		PLog('neu:');PLog(title);PLog(img_src);PLog(thumb);PLog(summ[0:40]);
 		if thumb:	
 			local_path=py2_encode(local_path);
 			fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
@@ -7109,6 +7116,15 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 		if len(content) > 0:									# 
 			li, page_cnt = ZDF_get_content(li=li, page=page_cut, ref_path=url, ID='ZDF_Sendungen')	
 
+		tag = 'Folgeseiten'	
+		PLog('click">Altersverifikation</a>' in page)
+		if 'click">Altersverifikation</a>' in page:							# FSK-Hinweis (bisher ohne Blockade)
+			fsk = stringextract('-headline">Hinweis</h3>', 'click">Altersverifikation</a>', page)
+			if fsk:
+				fsk = stringextract('nur in der Zeit zwischen ', ' oder mit', fsk)
+				fsk = "[B]FSK-Hinweis:[/B] Folgen nur zwischen %s abrufbar" % fsk
+				tag = "%s\n\n%s" % (tag, fsk)			
+
 		for clus in cluster:
 			clustertitle = ZDF_get_clustertitle(clus) # Entf. html-Tags dort
 			clustertitle = py2_decode(clustertitle)
@@ -7128,7 +7144,7 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s', 'ID': '%s'}"	%\
 				(quote(clustertitle), quote(path), quote_plus(ctitle_org), ID)						
 			addDir(li=li, label=clustertitle, action="dirList", dirID="ZDFRubrikSingle", fanart=R(ICON_DIR_FOLDER), 
-				thumb=img_src, tagline="Folgeseiten", fparams=fparams)
+				thumb=img_src, tagline=tag, fparams=fparams)
 
 		ZDF_search_button(li, query=title_org)
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -7155,8 +7171,11 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #----------------------------------------------
 # MEHR_Suche ZDF nach query (title)
+# Aufrufer: ZDF_Sendungen
 def ZDF_search_button(li, query):
 	PLog('ZDF_search_button:')
+
+	query = (query.replace('|', '').replace('>', '')) # Trenner + Staffelkennz. entfernen
 	query_org = query
 
 	query = query.replace(u"Das ZDF ist für den verlinkten Inhalt nicht verantwortlich!", '')
@@ -7707,6 +7726,7 @@ def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 		descr = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s\n" % (enddate, descr)
 	if 'class="icon-502_play' in page:
 		isvideo = True
+	
 		
 	if SETTINGS.getSetting('pref_load_summary') == 'true':				# Inhaltstext im Voraus laden?
 		skip_verf=False; skip_pubDate=False								# Teaser enth. beide Daten
@@ -9278,7 +9298,9 @@ def ZDF_Bildgalerien(li, page):
 # 07.02.2020 wegen Rekursion (Rücksprung zu ZDF_getVideoSources) Umstellung:
 #	Auswertung des Suchergebnisses (s. ZDF_Search) in ZDF_Bildgalerien,
 #	Auswertung Einzelgalerie hier.
-
+# 23.09.2021 Umstellung Bildname aus Quelle statt "Bild_01" (eindeutiger beim
+#	Nachladen).
+#
 def ZDF_BildgalerieSingle(path, title):	
 	PLog('ZDF_BildgalerieSingle:'); PLog(path); PLog(title)
 	title_org = title
@@ -9398,10 +9420,13 @@ def ZDF_BildgalerieSingle(path, title):
 			
 			#  Kodi braucht Endung für SildeShow; akzeptiert auch Endungen, die 
 			#	nicht zum Imageformat passen
-			pic_name 	= 'Bild_%04d.jpg' % (image+1)		# Bildname
-			local_path 	= "%s/%s" % (fpath, pic_name)
+			# pic_name 	= 'Bild_%04d.jpg' % (image+1)		# Bildname
+			pic_name 	= img_src.split('/')[-1]			# Bildname aus Quelle
+			if '?' in pic_name:								# Bsp.: ~2400x1350?cb=1631630217812
+				pic_name = pic_name.split('?')[0]
+			local_path 	= "%s/%s.jpg" % (fpath, pic_name)
 			PLog("local_path: " + local_path)
-			title = "Bild %03d" % (image+1)
+			title = "Bild %03d: %s" % (image+1, pic_name)	# Numerierung
 			PLog("Bildtitel: " + title)
 			summ = unescape(descr)			
 			
@@ -9410,7 +9435,7 @@ def ZDF_BildgalerieSingle(path, title):
 			thumb = local_path
 			if os.path.isfile(local_path) == False:			# schon vorhanden?
 				# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Bild-Url, 
-				#	Zieldatei_kompletter_Pfad|Bild-Url ..
+				#								 Zieldatei_kompletter_Pfad|Bild-Url, ..
 				path_url_list.append('%s|%s' % (local_path, img_src))
 
 				if SETTINGS.getSetting('pref_watermarks') == 'true':

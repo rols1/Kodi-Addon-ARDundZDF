@@ -6,7 +6,7 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-#	Stand: 07.10.2020
+#	Stand: 18.10.2020
 #
 
 from __future__ import absolute_import
@@ -229,7 +229,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 				if new_name != iname:
 					insert = 'name="%s"' % new_name
 					if exist_in_list(insert, my_items) == False:		 
-						item = item.replace('name="%s"' % iname, 'name="%s"' % new_name)
+						item = item.replace('name="%s"' % py2_encode(iname), 'name="%s"' % py2_encode(new_name))
 						renamed = True
 					else:
 						msg1 = ">%s< existiert bereits - Abbruch" % new_name 				

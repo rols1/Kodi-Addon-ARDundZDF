@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand: 15.09.2021
+#	Stand: 24.09.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -151,6 +151,15 @@ def Main_NEW(name, CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDRetro", fanart=R(FANART), 
 		thumb=R('ard-mediathek-retro.png'), tagline=tag, fparams=fparams)
 
+	title = "ARD Mediathek Entdecken"
+	tag = 'Inhalte der ARD-Seite [B]%s[/B]' % "ENTDECKEN"
+	summ = 'Sender: [COLOR red]%s[/COLOR] (unabhängig von der Senderwahl)' % "ARD-Alle"
+	path = 'https://www.ardmediathek.de/entdecken/'
+	title=py2_encode(title); path=py2_encode(path);
+	fparams="&fparams={'title': '%s', 'sender': '%s', 'path': '%s'}" % (quote(title), sender, quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", 
+		fanart=R(ICON_MAIN_ARD), thumb=R('ard-entdecken.png'), tagline=tag, summary=summ, fparams=fparams)
+
 	title = 'Sendung verpasst'
 	tag = 'Sender: [COLOR red] %s [/COLOR]' % sendername
 	fparams="&fparams={'title': 'Sendung verpasst', 'CurSender': '%s'}" % (quote(CurSender))
@@ -196,7 +205,7 @@ def Main_NEW(name, CurSender=''):
 #	Problem Stringauswertung: die ersten 4 Container folgen doppelt (bei jedem Sender) - Abhilfe: 
 #		Abgleich mit Titelliste. Wg. Performance Verzicht auf json-/key-Auswertung.
 #
-def ARDStart(title, sender, widgetID=''): 
+def ARDStart(title, sender, widgetID='', path=''): 
 	PLog('ARDStart:'); 
 	
 	CurSender = Dict("load", 'CurSender')		
@@ -207,7 +216,8 @@ def ARDStart(title, sender, widgetID=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')								# Home-Button
 
-	path = BETA_BASE_URL + "/%s/" % sender
+	if path == '':
+		path = BETA_BASE_URL + "/%s/" % sender
 	page, msg = get_page(path=path)			# vom Sender holen
 	
 	if '"widgets":' not in page:								# Fallback: Cache ohne CacheTime

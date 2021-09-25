@@ -9,6 +9,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+
+25.09.2021 4.0.3
+			Watch_items (Modul Merkliste): py2_encode für iname und new_name, um 'ascii'-
+			codec-error zu vermeiden, dto. in exist_in_list (Modul util) für insert und
+			item.
+			get_teaserElement (Modul 3sat): obsolete Pfadelemente entfernt (style, moduleId, 
+			clusterType).
+			Sendereihe_Sendungen (Modul 3sat): Ausgabe FSK-Hinweis (falls vorh.) bei leerer 
+			Liste (Blockade i.G.z. ZDF)
+			ZDF_Sendungen: FSK-Hinweis ausgewertet, falls in Webseite  vorh. (bisher ohne
+			Blockade).
+			ZDF_search_button: Staffelkennz. entfernt (Vermeid. http-400-error).
+			ZDF_BildgalerieSingle: eindeutiger Bildname aus Quelle statt "Bild_01" (verh.
+			falsche Textzuordnung beim Nachladen von Bildern).
+			BilderDasErsteSingle: wie ZDF_BildgalerieSingle, zusätzl. Titel begrenzt.
+			Bilder3satSingle: wie ZDF_BildgalerieSingle.
+			ARD-Mediathek: Einbindung der ARD-Seite "ENTDECKEN" - Anpassung in Main_NEW 
+			und ARDStart.
+					
 18.09.2021 4.0.2
 			Menü Addon-Infos: Modul-Liste, Cache-Ausgabe bündig, Anpassung Var-Bez., 
 			Log-Ausgabe.
