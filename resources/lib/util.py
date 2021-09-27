@@ -1008,7 +1008,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				req = Request(path, headers=header)	
 			else:
 				req = Request(path)														
-			# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+			# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)				# insecure
 			gcontext = ssl.create_default_context()
 			gcontext.check_hostname = False
 			# gcontext.verify_mode = ssl.CERT_REQUIRED

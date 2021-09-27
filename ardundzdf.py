@@ -337,11 +337,10 @@ def Main():
 	li = xbmcgui.ListItem("ARD und ZDF")
 	title="Suche in ARD und ZDF"
 	tagline = 'gesucht wird in ARD  Mediathek Neu und in der ZDF Mediathek.'
-	summ	= 'beim ZDF wird nur nach Einzelbeiträgen gesucht, bei ARD Neu auch nach Sendereihen.'
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 		fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tagline, 
-		summary=summ, fparams=fparams)
+		fparams=fparams)
 		
 
 	title = "ARD Mediathek Neu"

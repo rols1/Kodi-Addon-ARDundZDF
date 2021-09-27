@@ -9,6 +9,14 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+??.10.2021 4.0.4 (Testmodus)
+			ARD-Suche: Auswertung von Sendungen getestet + verworfen, da i.G.z.
+			ZDF zusätzl. Suchlauf erforderlich.
+			Senderwahl (ARD Neu): "Sender:" in Titel entfernt - obsolet, Sendernamen
+			in ARD-Menüs fett + rot markiert.
+			Settings: Option "Modul ARD Neu, Senderwahl: im Titel >Sender:< entfernen"
+			gelöscht - obsolet (Setting pref_disable_sender).
+
 
 25.09.2021 4.0.3
 			Watch_items (Modul Merkliste): py2_encode für iname und new_name, um 'ascii'-

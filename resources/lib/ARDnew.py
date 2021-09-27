@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand: 24.09.2021
+#	Stand: 26.09.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -125,15 +125,16 @@ def Main_NEW(name, CurSender=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 			
+	def_tag = 'Sender: [B][COLOR red] %s [/COLOR][/B]' % sendername
 	title = 'Suche in ARD-Mediathek'
-	tag = 'Sender: [COLOR red] %s [/COLOR]' % sendername
+	tag = def_tag
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s', 'sender': '%s' }" % (quote(title), sender)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", fanart=R(ICON_MAIN_ARD), 
 		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)
 		
 	title = 'Startseite'	
-	tag = 'Sender: [COLOR red] %s [/COLOR]' % sendername
+	tag = def_tag
 	summ = "[COLOR red] barrierefreie Angebote[/COLOR] im Untermenü <Genrezugänge>"
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s', 'sender': '%s'}" % (quote(title), sender)
@@ -161,13 +162,13 @@ def Main_NEW(name, CurSender=''):
 		fanart=R(ICON_MAIN_ARD), thumb=R('ard-entdecken.png'), tagline=tag, summary=summ, fparams=fparams)
 
 	title = 'Sendung verpasst'
-	tag = 'Sender: [COLOR red] %s [/COLOR]' % sendername
+	tag = def_tag
 	fparams="&fparams={'title': 'Sendung verpasst', 'CurSender': '%s'}" % (quote(CurSender))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasst", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_VERP), tagline=tag, fparams=fparams)
 	
 	title = 'Sendungen A-Z'
-	tag = 'Sender: [COLOR red] %s [/COLOR]' % sendername
+	tag = def_tag
 	fparams="&fparams={'name': 'Sendungen A-Z', 'ID': 'ARD'}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
@@ -182,7 +183,7 @@ def Main_NEW(name, CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="BilderDasErste", fanart=R(ICON_MAIN_ARD),
 		thumb=R('ard-bilderserien.png'), fparams=fparams)
 
-	title 	= u'Wählen Sie Ihren Sender | aktuell: [COLOR red]%s[/COLOR]' % sendername	# Senderwahl
+	title 	= u'Wählen Sie Ihren Sender | aktuell: [B][COLOR red]%s[/COLOR][/B]' % sendername	# Senderwahl
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
@@ -1088,7 +1089,7 @@ def SendungenAZ(name, ID):
 		#if anz:											# falsch bei den Senderseiten
 		#	tag = u"Beiträge: %s" % anz
 		href = stringextract('href":"', '"', grid)
-		summ = u'Gezeigt wird der Inhalt für %s' % sendername
+		summ = u'Gezeigt wird der Inhalt für [B]%s[/B]' % sendername
 		
 		PLog('Satz1:');
 		PLog(button); PLog(anz); PLog(href); 
@@ -1352,6 +1353,8 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 # 27.06.2020 die Web-Url "www.ardmediathek.de/ard/suche/.." funktioniert nicht mehr -
 #	Webcheck entfällt, gesamte Suchfunktion jetzt script-gesteuert. api-Call ebenfalls 
 #	geändert - das Zusammensetzen mit extensions + variables entfällt.  
+# 26.09.2021 Suche nach Sendungen möglich aber verworfen, da zusätzl. Suche erforderlich
+#	 (Suchstring: ../ard/search/grouping?searchString=..) 
 #
 def ARDSearchnew(title, sender, offset=0, query=''):
 	PLog('ARDSearchnew:');	
@@ -1450,7 +1453,7 @@ def ARDVerpasst(title, CurSender):
 		if nr == 1:
 			iWeekday = 'GESTERN'	
 		title =	"%s %s" % (iWeekday, myDate)	# DI 09.04.
-		tagline = "Sender: %s" % sendername	
+		tagline = "Sender: [B]%s[/B]" % sendername	
 		
 		PLog(title); PLog(startDate); PLog(endDate)
 		CurSender=py2_encode(CurSender); 
@@ -1459,12 +1462,11 @@ def ARDVerpasst(title, CurSender):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasstContent", fanart=R(ICON_ARD_VERP), 
 			thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=tagline)
 			
-	title 	= u'Wählen Sie Ihren Sender | aktuell: [COLOR red]%s[/COLOR]' % sendername	# Senderwahl
+	title 	= u'Wählen Sie Ihren Sender | aktuell: [B][COLOR red]%s[/COLOR][/B]' % sendername	# Senderwahl
 	title=py2_encode(title); caller='resources.lib.ARDnew.ARDVerpasst'
 	fparams="&fparams={'title': '%s', 'caller': '%s'}" % (quote(title), caller)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
 		thumb=R('tv-regional.png'), fparams=fparams) 
-	
 	
 	xbmcplugin.endOfDirectory(HANDLE)
 
@@ -1547,11 +1549,12 @@ def convHour(zeit):
 # Senderformat Sendername:Sender (Pfadbestandteil):Kanal:Icon
 #	Bsp.: 'ARD-Alle:ard::ard-mediathek.png', Rest s. ARDSender[]
 # caller ARDVerpasst, sonst Main_NEW
+# 26.09.2021 Settting pref_disable_sender entfernt - "Sender:" in 
+#	Titel entfällt.
 # 		
 def Senderwahl(title, caller=''):	
 	PLog('Senderwahl:'); PLog(caller)
 	
-	PLog(SETTINGS.getSetting('pref_disable_sender'))	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')							# Home-Button
 	
@@ -1565,10 +1568,7 @@ def Senderwahl(title, caller=''):
 		PLog(entry)
 		tagline = 'Mediathek des Senders [COLOR red] %s [/COLOR]' % sendername
 		PLog('sendername: %s, sender: %s, kanal: %s, img: %s, az_sender: %s'	% (sendername, sender, kanal, img, az_sender))
-		if SETTINGS.getSetting('pref_disable_sender') == 'true':
-			title = '%s' % sendername
-		else:
-			title = 'Sender: %s' % sendername
+		title = sendername
 		entry=py2_encode(entry); 			
 		if 'ARDVerpasst' in caller:
 			fparams="&fparams={'title': 'Sendung verpasst', 'CurSender': '%s'}" % quote(entry)
