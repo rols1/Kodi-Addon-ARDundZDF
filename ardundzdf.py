@@ -4258,6 +4258,8 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 # 30.06.2020 Angleichung Dateiname (Datum) an epgRecord (Bindestriche entf.)
 # 23.03.2021 erweitert um Download der Untertitel (sub_path), leer für mp3-files 
 # 02.04.2021 Var PIDcurl entfernt (für Kodi obsolet)
+# 25.09.2021 Fix Security-Issue Incomplete URL substring sanitization (CodeQL-
+#				Check)
 #
 def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):  
 	PLog('DownloadExtern: ' + title)
@@ -4288,7 +4290,7 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 		dtyp = 'Podcast '
 	else:												# .mp4 oder .webm	
 		dtyp = 'Video '
-		if '.googlevideo.com/' in url:					# Youtube-Url ist  ohne Endung (pytube-Ausgabe)
+		if 'googlevideo.com/' in url:					# Youtube-Url ist ohne Endung (pytube-Ausgabe)
 			suffix = '.mp4'	
 		if url.endswith('.mp4') or '.mp4' in url:		# funk: ..920x1080_6000.mp4?hdnts=				
 			suffix = '.mp4'		

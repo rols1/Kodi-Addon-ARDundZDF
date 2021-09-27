@@ -16,6 +16,8 @@ CHANGE HISTORY
 			in ARD-Menüs fett + rot markiert.
 			Settings: Option "Modul ARD Neu, Senderwahl: im Titel >Sender:< entfernen"
 			gelöscht - obsolet (Setting pref_disable_sender).
+			DownloadExtern: Fix Security-Issue Incomplete URL substring sanitization
+			(CodeQL-Check).
 			
 
 25.09.2021 4.0.3
