@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-#	Stand: 26.09.2021
+#	Stand: 30.09.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -205,6 +205,7 @@ def Main_NEW(name, CurSender=''):
 #	Frühere Kopf-Doku entfernt - siehe commits zu V<=3.0.3
 #	Problem Stringauswertung: die ersten 4 Container folgen doppelt (bei jedem Sender) - Abhilfe: 
 #		Abgleich mit Titelliste. Wg. Performance Verzicht auf json-/key-Auswertung.
+# 30.09.2021 Sonderbehdl. spaltenübergreifender Titel mit Breitbild (Auswert. descr, skip Bild)
 #
 def ARDStart(title, sender, widgetID='', path=''): 
 	PLog('ARDStart:'); 
@@ -243,11 +244,17 @@ def ARDStart(title, sender, widgetID='', path=''):
 	title_list=[]											# für Doppel-Erkennung
 
 	for cont in container:
+		descr =  stringextract('"description":"', '"', cont)
+		ID	= stringextract('"id":"', '"', cont)			# id vor pagination
+		pos = cont.find('"pagination"')						# skip ev. spaltenübergreifendes Bild mit 
+		if pos > 0:											# descr (Bsp. Bundestagswahl 2021)
+			cont = cont[pos:]
+			
 		title 	= stringextract('"title":"', '"', cont)
 		if title in title_list:								# Doppel? - s.o.
 			break
 		title_list.append(title)
-		
+				
 		ID	= stringextract('"id":"', '"', cont)
 		anz= stringextract('"totalElements":', '}', cont)
 		anz= mystrip(anz)
@@ -257,6 +264,9 @@ def ARDStart(title, sender, widgetID='', path=''):
 		else:
 			if anz == "null": anz='mehrere'
 			tag = u"%s Beiträge" % anz
+			
+		if descr:
+			tag = "%s\n\n%s" % (tag, descr)
 
 		path 	= stringextract('"href":"', '"', cont)
 		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
