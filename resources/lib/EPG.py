@@ -87,8 +87,6 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 		xbmc.sleep(1000)							# Systemlast verringern
 		
 	xbmcgui.Dialog().notification("EPG-Download", "abgeschlossen",icon,3000)
-	xbmc.sleep(6000)
-	update_tvxml(PLAYLIST)							# Update livesenderTV.xml
 	
 	return
 
