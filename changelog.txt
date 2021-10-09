@@ -10,6 +10,10 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+09.10.2021 4.0.6
+			update_single (Modul EPG): Fix gegen Byte-Error unter Python3 bei 
+			Verarbeitung der Github-Dateien.
+
 09.10.2021 4.0.5
 			AudioSenderPrograms (Audiothek): Fix Titel die nur aus / bestehen (Hochkom-
 			mata \" -> SenderSets.replace('\\"', '*'), Fix Titel (skip ev. Bildtitel

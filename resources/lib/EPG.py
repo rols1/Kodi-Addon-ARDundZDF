@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
+# 	<nr>0</nr>										# Numerierung für Einzelupdate
 #	Stand: 09.10.2021
 #	
  
@@ -136,8 +136,9 @@ def update_single(PluginAbsPath):
 				remote_file = "%s/%s?%s" % (GIT_BASE, fname, "raw=true")
 				PLog('lade %s' % remote_file) 
 				r = urlopen(remote_file)					# Updatedatei auf Github 
-				page = r.read()					
-				page=py2_decode(page)
+				page = r.read()
+				if PYTHON3:									# vermeide Byte-Error bei py2_decode			
+					page = page.decode("utf-8")
 				PLog(page[:80])
 
 				nr_remote	= stringextract('<nr>', '</nr>', page)
@@ -161,9 +162,10 @@ def update_single(PluginAbsPath):
 				xbmcgui.Dialog().notification(fname,msg2,icon,1000)
 			else:
 				# time < 1000 offensichtlich ignoriert:		# Notification ohne Update
-				x=xbmcgui.Dialog().notification("Einzelupdate",fname,icon,250, False) 
-				result_list.append("%14s: %s" % (msg2, fname))
-				xbmc.sleep(1000)								# ohne Pause nachlaufende notifications
+				x=xbmcgui.Dialog().notification("Einzelupdate",fname,icon,250, False)
+				 
+			result_list.append("%14s: %s" % (msg2, fname))
+			xbmc.sleep(1000)								# ohne Pause nachlaufende notifications
 		else:
 			PLog("nr_local fehlt in %s" % local_file)
 	
