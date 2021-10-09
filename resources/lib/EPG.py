@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
 #	Stand: 09.10.2021
 #	
  
@@ -97,7 +97,7 @@ def update_single(PluginAbsPath):
 	GIT_BASE = "https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master/resources/"
 	icon = R("icon-update-einzeln.png")
 		
-	msg1 = "Der Einzelupdate vergleicht lokale Dateien mit den entsprechenden Dateien im Github-Repo."
+	msg1 = "Einzelupdate vergleicht lokale Dateien mit den entsprechenden Dateien im Github-Repo."
 	msg2 = "Einzelupdate starten?"
 	title = "Einzelupdate"
 	ret = util.MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='JA', heading=title)
