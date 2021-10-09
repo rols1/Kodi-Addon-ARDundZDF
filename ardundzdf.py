@@ -54,8 +54,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-VERSION = '4.0.4'
-VDATE = '02.10.2021'
+# 	<nr>0</nr>										# Numerierung für Einzelupdate
+VERSION = '4.0.5'
+VDATE = '09.10.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -500,19 +501,19 @@ def Main():
 def InfoAndFilter():
 	PLog('InfoAndFilter:'); 
 	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)								# Home-Button
+	li = home(li, ID=NAME)									# Home-Button
 
-														# Button changelog.txt
-	tag= u'Störungsmeldungen via Kodinerds-Forum, Github-Issue oder rols1@gmx.de'
-	summ = u'für weitere Infos (changelog.txt) klicken'
+															# Button changelog.txt
+	tag= u'Störungsmeldungen bitte via Kodinerds-Forum, Github-Issue oder rols1@gmx.de'
+	summ = u'für weitere Infos zu bisherigen Änderungen [B](changelog.txt)[/B] klicken'
 	path = os.path.join(ADDON_PATH, "changelog.txt") 
-	title = "Änderungsliste (changelog.txt)"
+	title = "Änderungsliste [B](changelog.txt)[/B]"
 	title=py2_encode(title)
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))
 	addDir(li=li, label=title, action="dirList", dirID="ShowText", fanart=R(FANART), 
 		thumb=R(ICON_TOOLS), fparams=fparams, summary=summ, tagline=tag)		
 							
-	title = u"Addon-Infos"								# Button für Addon-Infos
+	title = u"Addon-Infos"									# Button für Addon-Infos
 	tag = "Infos zu Version, Cache und Dateipfaden." 
 	summ = "Bei aktiviertem Debug-Log erfolgt die Ausgabe auch dort"
 	summ = "%s (nützlich zum Kopieren der Pfade)." % summ
@@ -531,7 +532,7 @@ def InfoAndFilter():
 			thumb=R("icon-list.png"), tagline=tag, summary=summ, fparams=fparams)	
 		
 	if SETTINGS.getSetting('pref_usefilter') == 'true':											
-		title = u"Filter bearbeiten "					# Button für Filter
+		title = u"Filter bearbeiten "						# Button für Filter
 		tag = "Ausschluss-Filter bearbeiten (nur für Beiträge von ARD und ZDF)" 
 		fparams="&fparams={}" 
 		addDir(li=li, label=title, action="dirList", dirID="FilterTools", fanart=R(FANART), 
@@ -543,7 +544,7 @@ def InfoAndFilter():
 		if os.path.exists(MENU_STOP):						# verhindert Rekurs. in start_script 
 			os.remove(MENU_STOP)							# Entfernung in playlist_tools
 			
-		title = u"PLAYLIST-Tools"					# Button für PLAYLIST-Tools
+		title = u"PLAYLIST-Tools"							# Button für PLAYLIST-Tools
 		myfunc="resources.lib.playlist.playlist_tools"
 		fparams_add = quote('{"action": "playlist_add", "url": "", "menu_stop": "true"}') # hier json-kompat.
 		
@@ -557,7 +558,15 @@ def InfoAndFilter():
 			(quote(myfunc), quote(fparams_add))
 			
 		addDir(li=li, label=title, action="dirList", dirID="start_script",\
-			fanart=R(FANART), thumb=R("icon-playlist.png"), tagline=tag, summary=summ, fparams=fparams)		
+			fanart=R(FANART), thumb=R("icon-playlist.png"), tagline=tag, summary=summ, fparams=fparams)	
+			
+		title = u"Einzelupdate (Dateien und Module)"		# Update von Einzeldateien
+		tag = 'Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s' % REPO_NAME
+		
+		fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.EPG.update_single",\
+			fanart=R(FANART), thumb=R("icon-update-einzeln.png"), tagline=tag, fparams=fparams)	
+		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #---------------------------------------------------------------- 
@@ -574,16 +583,16 @@ def start_script(myfunc, fparams_add):
 	fparams_add = unquote(fparams_add)
 	PLog(myfunc); PLog(fparams_add)
 	
-	l = myfunc.split('.')				# Bsp. resources.lib.updater.update
+	l = myfunc.split('.')									# Bsp. resources.lib.updater.update
 	PLog(l)
-	newfunc =  l[-1:][0]				# Bsp. updater
+	newfunc =  l[-1:][0]									# Bsp. updater
 	dest_modul = '.'.join(l[:-1])
 
 	dest_modul = importlib.import_module(dest_modul )		# Modul laden
 	PLog('loaded: ' + str(dest_modul))
 	func = getattr(dest_modul, newfunc)	
 
-	if fparams_add != '""':				# leer, ohne Parameter?	
+	if fparams_add != '""':									# leer, ohne Parameter?	
 		mydict = json.loads(fparams_add)
 		PLog("mydict: " + str(mydict));
 		func(**mydict)
@@ -926,7 +935,6 @@ def AddonInfos():
 	
 	#--------------------------------------------------					# Module
 	mpage = u"\n[COLOR red]Module:[/COLOR]"
-	skip_list = ["__init__.py"]
 	globFiles = "%s/%s/*py" % (PluginAbsPath, "resources/lib")
 	files = glob.glob(globFiles) 
 	files = sorted(files,key=lambda x: x.upper())
@@ -945,7 +953,7 @@ def AddonInfos():
 	
 	page = page + mpage
 	PLog(page)
-	dialog.textviewer("Addon-Infos", page,usemono=True)
+	dialog.textviewer(u"Addon-Infos (Ausgabe auch im Debug-Log bei aktiviertem Plugin-Logging)", page,usemono=True)
 	
 #	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #----------------------------------------------------------------
@@ -1287,7 +1295,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', programs='', img='
 						add = "zu den Programmen"
 					else:
 						add = "zum Livestream"
-					tag = "Weiter %s von: %s" % (add, title)
+					tag = "Weiter %s von: [B]%s[/B]" % (add, sender)
 					
 					PLog('3Satz:');
 					PLog(title); PLog(img); PLog(streamUrl); PLog(Plot);
@@ -1408,26 +1416,28 @@ def AudioSenderPrograms(li, page, sender, img):
 		PLog("cnt_max: " + cnt_max)	
 		pos = pubObjekt.find('mt:programSets')		
 		SenderSets = pubObjekt[pos:]
+		SenderSets = SenderSets.replace('\\"', '*')
 		SenderSets = blockextract('"href":"./programsets/', SenderSets)	# 1. Link enth. PRG-ID
-		PLog(len(SenderSets))	
+		PLog(len(SenderSets))
 		cnt=0
 		for prgSet in SenderSets:
 			# PLog(prgSet[80:])
 			cnt=cnt+1
+			if cnt==4:
+				PLog(prgSet)
 			
 			set_url = stringextract('"href":"', '"', prgSet)			# 1. link in _links
 			set_img = stringextract('"mt:image":"', '}', prgSet)
 			set_img = stringextract('"href":"', '"', set_img)
-			title = stringextract('"title":"', '"', prgSet)
 			anzahl = stringextract('"numberOfElements":', ',', prgSet)
 			prg_id = stringextract('/programsets/', '{?order', prgSet)
 			href = base + "programsets/%s" % prg_id
 			
-			pos = prgSet.find('"mt:editorialCategories":')				# enthält links zur Kat, z.B. Gesellschaft
+			pos = prgSet.find('numberOfElements":')						# enthält Titel, Kategorie, ..
 			cat = prgSet[pos:]
+			title = stringextract('"title":"', '"', cat)
 			
 			#cat_url = stringextract('"href":"', '"', cat)				# -> Kategorie, nicht -> PRG
-			#cat_url = stringextract('"href":"', '"', cat)
 			
 			cat_img = stringextract('"mt:image":', '"templated"', cat)
 			cat_img = stringextract('"href":"', '"', cat_img)

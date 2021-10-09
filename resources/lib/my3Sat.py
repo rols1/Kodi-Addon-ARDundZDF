@@ -11,7 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-#	Stand: 23.09.2021
+# 	<nr>0</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.10.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -110,7 +111,7 @@ def Main_3Sat(name):
 			
 	epg = get_epg()
 	if epg:
-		epg = 'LIVE: %s]'  % epg
+		epg = 'LIVE: %s'  % epg
 		title = '[B][COLOR red]%s[/COLOR][/B]'  % epg
 	else:
 		title = '3sat-Livestream'
@@ -879,7 +880,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 				 quote(href), quote(img_src))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
 				fanart=R('3sat.png'), thumb=img_src, summary=descr, fparams=fparams)
-
+	cnt=0
 	for rec in rubriken:
 		if 'data-playlist-toggle' not in rec:
 			continue

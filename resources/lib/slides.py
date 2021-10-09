@@ -13,7 +13,8 @@
 # 	Scan Keys + rechte Maustaste s. KeyListener
 #	Auswertung Keys s. img_update
 ################################################################################
-#	Stand: 07.10.2020
+# 	<nr>0</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.10.2021
 
 
 # Python3-Kompatibilität:

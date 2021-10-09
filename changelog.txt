@@ -6,9 +6,35 @@ CHANGE HISTORY
 --------------		
 			Kodi-Forum, Support:
 			https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF
+			statt Handbuch: https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki
 			max_col 97	
 --------------
 
+09.10.2021 4.0.5
+			AudioSenderPrograms (Audiothek): Fix Titel die nur aus / bestehen (Hochkom-
+			mata \" -> SenderSets.replace('\\"', '*'), Fix Titel (skip ev. Bildtitel
+			"picture alliance" mit Satzzeiger auf numberOfElements).
+			loadPage (Modul funk): ssl.create_default_context() nach "SSL: 
+			CERTIFICATE_VERIFY_FAILED" hinzugefügt
+			AudioStartLive (Audiothek): Fix Infotext (Senderbezeichnung fehlte bzw. falsch).
+			Menü Info/AddonInfos: im Titel hinzugefügt "(Ausgabe auch im Debug-Log bei 
+			aktiviertem Plugin-Logging)".
+			Sendereihe_Sendungen (Modul 3sat): Fix Zähler cnt (Vorbelegung 0 fehlte).
+			Main_3Sat (Modul 3sat): Zeichen "]" aus EPG-Titel entfernt.
+			Main_arte (Modul arte): Fix repl_json_chars(title).
+			images: icon tv-privat.png aktualisiert, Farben begrenzt in icons tv-swr,
+			tv-regional, tv-ueberregional, tv-zdf-sportschau, tv-tagesschau, tv-servus,
+			tv-qvc, tv-das-erste, tv-ard-sportschau, suche_ardundzdf, radio-podcasts,
+			phoenix, plugin-update, plugin-update-new, pod-feature, pod-meist, pod-refugee,
+			pod-tatort, icon-info, icon-downl-dir, icon-downl, icon-delete, home-zdf,
+			home-ard-classic, home-ard, home, fanart, Dir-work, Dir-watch, Dir-video,
+			Dir-prg, Dir-move-single, Dir-moveDir, Dir-move-all, ard-bilderserien,
+			ard-barrierearm, ard-audiothek, ard-audio-az, alpha, 3sat,  entfernt: 
+			icon-pages.
+			Einzelupdate: erweitert für mehrere einzelne Bestandteile des Addons. Neue
+			Funktion update_single in Modul EPG, neues Menü "Einzelupdate" in Menü "Info"
+			im Haupt-PRG, Initialisierung aller Module mit Zähler 0.			
+			
 02.10.2021 4.0.4
 			ARD-Suche: Auswertung von Sendungen getestet + verworfen, da i.G.z.
 			ZDF zusätzl. Suchlauf erforderlich.

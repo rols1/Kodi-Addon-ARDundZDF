@@ -7,7 +7,8 @@
 #
 ####################################################################################################
 #	01.07.2020 Start
-#	Stand: 23.07.2021
+# 	<nr>0</nr>								# Numerierung für Einzelupdate
+#	Stand: 08.10.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 

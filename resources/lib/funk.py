@@ -9,7 +9,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
 ################################################################################
-#	Stand: 05.09.2021
+# 	<nr>0</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.10.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -890,6 +891,7 @@ def get_forms(distrib, prev_bandw=''):
 #									Hilfsfunktionen
 ####################################################################################################
 # 17.10.2019 auth nicht mehr benötigt
+# 05.10.2021 ssl.create_default_context() nach "SSL: CERTIFICATE_VERIFY_FAILED" hinzugefügt
 #----------------------------------------------------------------  			
 def loadPage(url, auth='', x_cid='', x_token='', data='', maxTimeout = None):
 	try:
@@ -902,6 +904,7 @@ def loadPage(url, auth='', x_cid='', x_token='', data='', maxTimeout = None):
 		
 		# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)		# 07.10.2019: Abruf mit SSLContext klemmt häufig - bei
 		# 	Bedarf mit Prüfung auf >'_create_unverified_context' in dir(ssl)< nachrüsten:
+		gcontext = ssl.create_default_context()
 
 		req.add_header('User-Agent', 'Mozilla/5.0 (Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Mobile Safari/537.36')
 		req.add_header('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3')
@@ -932,8 +935,7 @@ def loadPage(url, auth='', x_cid='', x_token='', data='', maxTimeout = None):
 			
 		if maxTimeout == None:
 			maxTimeout = 60;
-		# r = urlopen(req, timeout=maxTimeout, context=gcontext) # s.o.
-		r = urlopen(req, timeout=maxTimeout)
+		r = urlopen(req, timeout=maxTimeout, context=gcontext) # s.o.
 		# PLog("headers: " + str(r.headers))
 		doc = r.read()
 		PLog(len(doc))	

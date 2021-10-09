@@ -10,7 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# Stand: 10.11.2020
+# 	<nr>0</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.10.2021
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -40,13 +41,12 @@ ADDON_ID 	= 'plugin.video.ardundzdf'
 SETTINGS 	= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_PATH	= SETTINGS.getAddonInfo('path')
 EPG_BASE 	= "http://www.tvtoday.de"
-GIT_TVXML	= "https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master/resources/livesenderTV.xml?raw=true"
 
-
-# EPG im Hintergrund laden - Aufruf Haupt-PRG abhängig von Setting 
-#	pref_epgpreload + Abwesenheit von EPGACTIVE
+# EPG im Hintergrund laden - Aufruf Haupt-PRG (Kopfbereich) abhängig von 
+#	Setting pref_epgpreload + Abwesenheit von EPGACTIVE (Setting
+#		"Recording TV-Live"/"EPG im Hintergrund laden ..") 
 #	Startverzögerung 10 sec, 2 sec-Ladeintervall 
-#	Aktiv-Signal EPGACTIVEwird nach 12 Std. von
+#	Aktiv-Signal EPGACTIVE wird nach 12 Std. von
 #	 Haupt-PRG wieder entfernt.
 #	Dateilock nicht erf. - CacheTime hier und in EPG identisch
 # 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt
@@ -93,39 +93,86 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	return
 
 #-----------------------
-def update_tvxml(PLAYLIST):
-	PLog('update_tvxml:')
-	
-	lpage 	= RLoad(PLAYLIST)						# lokale XML-Datei (Pluginverz./Resources)
-	nr_local= stringextract('<nr>', '</nr>', lpage)	# nr = Dateiversion
-	updated	= False
-
-	try:
-		PLog('lade %s' % GIT_TVXML) 
-		r = urlopen(GIT_TVXML)
-		page = r.read()					
-		page=py2_decode(page)
-		PLog(page[:80])
-
-		nr_remote	= stringextract('<nr>', '</nr>', page)
-		nr_local 	= py2_encode(nr_local)
-		PLog("nr_local: %s, nr_remote: %s" % (nr_local, nr_remote))
-		if int(nr_remote) > int(nr_local):
-			page = py2_encode(page)
-			fname = os.path.join('%s/resources/%s') % (ADDON_PATH, PLAYLIST)
-			RSave(fname, page)
-			PLog("TV-Livestreams: aktualisiert")
-			updated	= True
-		else:
-			PLog("TV-Livestreams: sind aktuell")
-	except Exception as exception:	
-		PLog("TV-Livestreams: %s" % str(exception))
+def update_single(PluginAbsPath):
+	PLog('update_single:')
+	import glob	
+	GIT_BASE = "https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master/resources/"
+	icon = R("icon-update-einzeln.png")
 		
-	if updated:
-		icon = R('tv-livestreams.png')
-		xbmcgui.Dialog().notification("TV-Livestreams", "aktualisiert",icon,3000)
-		xbmc.sleep(3000)
+	msg1 = "Der Einzelupdate vergleicht lokale Dateien mit den entsprechenden Dateien im Github-Repo."
+	msg2 = "Einzelupdate starten?"
+	title = "Einzelupdate"
+	ret = util.MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='JA', heading=title)
+	if ret != 1:
+		return
 
+	# Dateiliste SINGLELIST für Einzelupdate:
+	# nicht verwenden: addon.xml + settings.xml (CAddonSettings-error),
+	#	changelog.txt, slides.xml, ca-bundle.pem, Icons
+	SINGLELIST = ["%s/%s" % (PluginAbsPath, "resources/livesenderTV.xml"),
+				"%s/%s" % (PluginAbsPath, "resources/podcast-favorits.txt")
+		]
+
+
+	globFiles = "%s/%s/*py" % (PluginAbsPath, "resources/lib")
+	files = glob.glob(globFiles) 					# Module -> SINGLELIST 
+	files = sorted(files,key=lambda x: x.upper())
+	# PLog(files)			# Debug
+	for f in files:
+		if "__init__.py" in f:
+			continue
+		SINGLELIST.append(f)
+		modul = f.split('/')[-1]
+	# PLog(SINGLELIST)		# Debug
+
+	result_list=[]											# Ergebnis für textviewer
+	for local_file in SINGLELIST:
+		lpage = RLoad(local_file, abs_path=True)			# lokale Updatedatei 
+		nr_local= stringextract('<nr>', '</nr>', lpage)	# nr = Dateiversion lokal
+		if nr_local.isdigit() == False:
+			nr_local = "0"
+		updated	= False
+		if nr_local:		
+			try:
+				fname = local_file.split("/resources/")[-1]	# Bsp.: lib/ARDnew.py
+				remote_file = "%s/%s?%s" % (GIT_BASE, fname, "raw=true")
+				PLog('lade %s' % remote_file) 
+				r = urlopen(remote_file)					# Updatedatei auf Github 
+				page = r.read()					
+				page=py2_decode(page)
+				PLog(page[:80])
+
+				nr_remote	= stringextract('<nr>', '</nr>', page)
+				if nr_remote.isdigit() == False:
+					nr_remote = "0"
+				PLog("nr_local: %s, nr_remote: %s" % (nr_local, nr_remote))
+				if int(nr_remote) > int(nr_local):
+					page = py2_encode(page)
+					RSave(local_file, page)
+					PLog("aktualisiert: %s" % local_file)
+					updated	= True
+				else:
+					PLog("noch aktuell: %s" % fname)
+			except Exception as exception:	
+				PLog("exept_update_single: %s" % str(exception))
+
+			msg2 = "noch aktuell"
+			if updated:										# Notification bei Update
+				fname = "[B]%s[/B]" % fname										
+				msg2 = "aktualisiert"
+				xbmcgui.Dialog().notification(fname,msg2,icon,1000)
+			else:
+				# time < 1000 offensichtlich ignoriert:		# Notification ohne Update
+				x=xbmcgui.Dialog().notification("Einzelupdate",fname,icon,250, False) 
+				result_list.append("%14s: %s" % (msg2, fname))
+				xbmc.sleep(1000)								# ohne Pause nachlaufende notifications
+		else:
+			PLog("nr_local fehlt in %s" % local_file)
+	
+	# xbmc.executebuiltin('Dialog.Close(all,true)')			# verhindert nicht Nachlaufen 
+	result_list = "\n".join(result_list)					# Ergebnisliste
+	xbmcgui.Dialog().textviewer(u"Einzelupdate - Ergebnis:", result_list,usemono=True)
+	
 	return
 
 #-----------------------

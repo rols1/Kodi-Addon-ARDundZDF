@@ -7,7 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-#	Stand: 27.07.2021
+# 	<nr>0</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.10.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -87,6 +88,7 @@ def Main_arte(title='', summ='', descr='',href=''):
 			
 	tag='[B][COLOR red]Arte Livestream[/COLOR][/B]'
 	title, summ, descr, vonbis, img, href = get_live_data('ARTE')
+	title = repl_json_chars(title)
 	if img == '':
 		img = R(ICON_TVLIVE)
 	summ_par = summ.replace('\n', '||')	

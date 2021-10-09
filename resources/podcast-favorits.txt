@@ -24,6 +24,9 @@
 #  Nach Renovierung der Audiothek 07/2021 durch die ARD werden neue HTTP-Links (www.ardaudiothek.de)verwendet. 
 #	Die alten sind vielfach noch verwendbar - sie werden vom Addon in neue Links (api.ardaudiothek.de) 
 #	übersetzt.
+#
+# 	<nr>0</nr>								# Numerierung für Einzelupdate
+#	Stand: 08.10.2021
 #-------------------------------------------------------------------------------------------------------------------------------------
  
 ## Magazine          
