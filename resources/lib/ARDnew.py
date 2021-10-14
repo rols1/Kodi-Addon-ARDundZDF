@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.10.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -346,7 +346,8 @@ def ARDRubriken(li, page):
 	PLog(len(container))
 	title_list=[]
 	for cont in container:
-		title 	= stringextract('"title":"', '"', cont)		
+		title 	= stringextract('"title":"', '"', cont)	
+		title = repl_json_chars(title)
 		if title in title_list:								# Doppel? - s.o.
 			break
 		title_list.append(title)
