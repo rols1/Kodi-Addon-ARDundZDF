@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>1</nr>								# Numerierung für Einzelupdate
+# 	<nr>2</nr>								# Numerierung für Einzelupdate
 #	Stand: 14.10.2021
 #
 #	Anpassung Python3: Modul future
@@ -945,8 +945,10 @@ def XLGetSourcesPlayer(title, Dict_ID, Plot, img):
 	base_url = BASE_URL
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')						# Home-Button
-		
+
 	title =  stringextract('"title":"', '"', conf)
+	title = title.replace('#', '*')							# # ist Trenner in title_href in StreamsShow
+	PLog("title: " + title)
 	typ =  stringextract('"_type":"', '"', conf)
 	
 	sub_path	= stringextract('_subtitleUrl":"', '"', conf)
