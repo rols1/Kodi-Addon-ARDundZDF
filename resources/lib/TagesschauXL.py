@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>0</nr>								# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+# 	<nr>1</nr>								# Numerierung für Einzelupdate
+#	Stand: 14.10.2021
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -710,12 +710,13 @@ def XL_Audios(title, ID, img,  path=''):
 		if 'component="ts-mediaplayer"' in item:						# Audios
 			conf = stringextract("data-config='", "'", item)			# json-Daten mit mp3-Link
 			conf = unescape(conf); conf = conf.replace('\\"', '"')
+			conf = conf.replace(':""', ':"')						# Titelstart mit "
 			teaser_img = stringextract('"xs":"', '"', conf)			# immer gleich				
 			if teaser_img == '':
 				teaser_img = stringextract('"m":"', '"', conf)
 			if teaser_img.startswith('http') == False:
 				teaser_img = base_url + teaser_img
-			headline =  stringextract('"title":"', '"', conf)
+			headline =  stringextract('"title":"', '",', conf)
 			mp3_url =  stringextract('"url":"', '"', conf)			# Audios (download-Url)
 			dur =  stringextract('"duration":"', '"', conf)			# sec, Kurzbeiträge
 			dur = "%s sec" % dur									# 	Alt.: seconds_translate
