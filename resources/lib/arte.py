@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.10.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -206,8 +206,12 @@ def arte_Search(query='', nextpage=''):
 	if nextpage == '':
 		nextpage = '1'
 
+									
 	path = 'https://www.arte.tv/api/rproxy/emac/v3/de/web/pages/SEARCH/?query=%s&mainZonePage=1&page=%s&limit=20' %\
 		(quote(query), nextpage)
+	if nextpage != '1':									# ab page 2 leicht abweichend
+		path = path.replace('pages/SEARCH', 'data/SEARCH_LISTING')
+		
 	aktpage = stringextract('page=', '&', path)
 
 	page, msg = get_page(path=path, do_safe=False)		# ohne quote in get_page (api-Call)
@@ -230,7 +234,12 @@ def arte_Search(query='', nextpage=''):
 	nextpage = stringextract('page=', '&', nexturl)
 	PLog("nextpage: " + nextpage)	
 
-	li,cnt = GetContent(li, page, ID='SEARCH')						
+	li,cnt = GetContent(li, page, ID='SEARCH')
+	if 	cnt == 0:
+		msg1 = "leider keine Treffer zu:"
+		msg2 = query
+		MyDialog(msg1, msg2, '')	
+		return li
 		
 	
 	if nextpage and  int(nextpage) > int(aktpage):			# letzte Seite = akt. Seite
