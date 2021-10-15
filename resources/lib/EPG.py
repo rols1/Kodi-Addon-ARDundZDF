@@ -49,7 +49,8 @@ EPG_BASE 	= "http://www.tvtoday.de"
 #	Aktiv-Signal EPGACTIVE wird nach 12 Std. von
 #	 Haupt-PRG wieder entfernt.
 #	Dateilock nicht erf. - CacheTime hier und in EPG identisch
-# 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt
+# 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - entf. ab
+#	09.10.2021 s. update_single
 #
 def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	PLog('thread_getepg:')
@@ -90,88 +91,130 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	
 	return
 
-#-----------------------
+#---------------------------------------------------------------- 
+# Update einzelner, neuer Bestandteile des Addons vom Github-Repo
+# Ablösung der vorherigen Funktion update_tvxml
+#
 def update_single(PluginAbsPath):
 	PLog('update_single:')
 	import glob	
-	GIT_BASE = "https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master/resources/"
+	GIT_BASE = "https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master"
 	icon = R("icon-update-einzeln.png")
 		
-	msg1 = "Einzelupdate vergleicht lokale Dateien mit den entsprechenden Dateien im Github-Repo."
-	msg2 = "Einzelupdate starten?"
-	title = "Einzelupdate"
-	ret = util.MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='JA', heading=title)
-	if ret != 1:
-		return
-
-	# Dateiliste SINGLELIST für Einzelupdate:
+	# Dateiliste SINGLELIST für Einzelupdate:						# 1. Erstellung Liste
 	# nicht verwenden: addon.xml + settings.xml (CAddonSettings-error),
 	#	changelog.txt, slides.xml, ca-bundle.pem, Icons
 	SINGLELIST = ["%s/%s" % (PluginAbsPath, "resources/livesenderTV.xml"),
-				"%s/%s" % (PluginAbsPath, "resources/podcast-favorits.txt")
+				"%s/%s" % (PluginAbsPath, "resources/podcast-favorits.txt"),
+				"%s/%s" % (PluginAbsPath, "ardundzdf.py")
 		]
-
+	selected=[0,1,2]												# Auswahl-Vorbelegung, s.u.
 
 	globFiles = "%s/%s/*py" % (PluginAbsPath, "resources/lib")
-	files = glob.glob(globFiles) 					# Module -> SINGLELIST 
+	files = glob.glob(globFiles) 									# Module -> SINGLELIST 
 	files = sorted(files,key=lambda x: x.upper())
-	# PLog(files)			# Debug
+	#PLog(files)			# Debug
+	cnt=3
 	for f in files:
 		if "__init__.py" in f:
 			continue
 		SINGLELIST.append(f)
-		modul = f.split('/')[-1]
-	# PLog(SINGLELIST)		# Debug
-
-	result_list=[]											# Ergebnis für textviewer
-	for local_file in SINGLELIST:
-		lpage = RLoad(local_file, abs_path=True)			# lokale Updatedatei 
-		nr_local= stringextract('<nr>', '</nr>', lpage)	# nr = Dateiversion lokal
-		if nr_local.isdigit() == False:
-			nr_local = "0"
-		updated	= False
-		if nr_local:		
-			try:
-				fname = local_file.split("/resources/")[-1]	# Bsp.: lib/ARDnew.py
-				remote_file = "%s/%s?%s" % (GIT_BASE, fname, "raw=true")
-				PLog('lade %s' % remote_file) 
-				r = urlopen(remote_file)					# Updatedatei auf Github 
-				page = r.read()
-				if PYTHON3:									# vermeide Byte-Error bei py2_decode			
-					page = page.decode("utf-8")
-				PLog(page[:80])
-
-				nr_remote	= stringextract('<nr>', '</nr>', page)
-				if nr_remote.isdigit() == False:
-					nr_remote = "0"
-				PLog("nr_local: %s, nr_remote: %s" % (nr_local, nr_remote))
-				if int(nr_remote) > int(nr_local):
-					page = py2_encode(page)
-					RSave(local_file, page)
-					PLog("aktualisiert: %s" % local_file)
-					updated	= True
-				else:
-					PLog("noch aktuell: %s" % fname)
-			except Exception as exception:	
-				PLog("exept_update_single: %s" % str(exception))
-
-			msg2 = "noch aktuell"
-			if updated:										# Notification bei Update
-				fname = "[B]%s[/B]" % fname										
-				msg2 = "aktualisiert"
-				xbmcgui.Dialog().notification(fname,msg2,icon,1000)
-			else:
-				# time < 1000 offensichtlich ignoriert:		# Notification ohne Update
-				x=xbmcgui.Dialog().notification("Einzelupdate",fname,icon,250, False)
-				 
-			result_list.append("%14s: %s" % (msg2, fname))
-			xbmc.sleep(1000)								# ohne Pause nachlaufende notifications
-		else:
-			PLog("nr_local fehlt in %s" % local_file)
+		selected.append(cnt)										# Auswahl-Vorbelegung
+		cnt=cnt+1
+	#PLog(SINGLELIST)		# Debug
 	
-	# xbmc.executebuiltin('Dialog.Close(all,true)')			# verhindert nicht Nachlaufen 
-	result_list = "\n".join(result_list)					# Ergebnisliste
-	xbmcgui.Dialog().textviewer(u"Einzelupdate - Ergebnis:", result_list,usemono=True)
+	#-------------													# 2. Dialoge Auswahl + Start
+
+	ret_list = selected												# default: alle ausgewählt
+	title = u"Einzelupdate - eigene Auswahl oder Liste?"
+	msg1 = u"Vor Einzelupdate eigene Auswahl vornehmen?"
+	msg2 = u"Ohne eigene Auswahl wird die  komplette Liste abgeglichen (%s Dateien)" % len(SINGLELIST)
+	ret = util.MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False,  yes='eigene Auswahl', cancel='komplette Liste', 
+		heading=title)
+	PLog(ret)														# 0 od. ESC = komplette Liste
+	if ret == 1:													# 1 = eigene Auswahl
+		textlist=[]; selected=[]
+		for local_file in SINGLELIST:
+			local_file = local_file.split(PluginAbsPath)[-1]		
+			textlist.append(local_file[1:])							# ohne führ. /	(wie Ergebnisliste)
+		
+		title = u"Einzelupdate - eigene Auswahl vornehmen:"
+		ret_list = xbmcgui.Dialog().multiselect(title, textlist, preselect=selected)
+		PLog("ret_list: %s" % str(ret_list))
+		if ret_list ==  None or len(ret_list) == 0:					# ohne Auswahl
+			return
+	
+	title = "Einzelupdate starten (eigene Auswahl)"
+	if len(ret_list) == len(SINGLELIST):
+		title = "Einzelupdate starten (komplette Liste)"
+	msg1 = u"Einzelupdate ersetzt lokale Dateien nach Abgleich mit den entsprechenden Dateien im Github-Repo" 
+	msg1 = u"%s (Abgleich: [B]%d[/B] von [B]%d[/B] Dateien)" % (msg1, len(ret_list), len(SINGLELIST))
+	msg2 = u"Einzelupdate starten?"
+	ret = util.MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='JA', heading=title)
+	if ret != 1:
+		return
+
+	#-------------													# 3. Abgleich / Update
+	
+	result_list=[]; 												# Ergebnisliste für textviewer
+	cnt=-1		
+	for local_file in SINGLELIST:
+		cnt=cnt+1
+		PLog("cnt=%d, %s" % (cnt, str(cnt in ret_list)) )
+		if cnt in ret_list:											# in Auswahlliste?	
+			# Bsp.: ../.kodi/addons/plugin.video.ardundzdf/resources/livesenderTV.xml
+			lpage = RLoad(local_file, abs_path=True)				# lokale Updatedatei 
+			nr_local= stringextract('<nr>', '</nr>', lpage)			# nr = Dateiversion lokal
+			if nr_local.isdigit() == False:
+				nr_local = "0"
+			updated	= False
+			if nr_local:		
+				try:
+					fname = local_file.split(PluginAbsPath)[-1]		# Bsp.: /resources/lib/ARDnew.py
+					# Bsp.: ../github.com/rols1/Kodi-Addon-ARDundZDF/blob/master/resources/livesenderTV.xml?raw=true
+					remote_file = "%s%s?%s" % (GIT_BASE, fname, "raw=true")
+					PLog('lade %s' % remote_file) 
+					r = urlopen(remote_file)						# Updatedatei auf Github 
+					page = r.read()
+					if PYTHON3:										# vermeide Byte-Error bei py2_decode			
+						page = page.decode("utf-8")
+					PLog(page[:80])
+
+					nr_remote	= stringextract('<nr>', '</nr>', page)
+					if nr_remote.isdigit() == False:
+						nr_remote = "0"
+					PLog("nr_local: %s, nr_remote: %s" % (nr_local, nr_remote))
+					if int(nr_remote) > int(nr_local):
+						page = py2_encode(page)
+						RSave(local_file, page)
+						PLog("aktualisiert: %s" % local_file)
+						updated	= True
+					else:
+						PLog("noch aktuell: %s" % fname)
+				except Exception as exception:	
+					PLog("exept_update_single: %s" % str(exception))
+
+				fname = fname[1:]								# fname ohne führ. /	
+				msg2 = "noch aktuell"
+				if updated:										# Notification bei Update
+					fname = "[B]%s[/B]" % fname								
+					msg2 = "aktualisiert"
+					xbmcgui.Dialog().notification(fname,msg2,icon,1000)
+				else:
+					# time < 1000 offensichtlich ignoriert:		# Notification ohne Update
+					x=xbmcgui.Dialog().notification("Einzelupdate",fname,icon,1000, False)
+					 
+				result_list.append("%14s: %s" % (msg2, fname)) 
+				xbmc.sleep(1000)								# ohne Pause nachlaufende notifications
+			else:
+				PLog("nr_local fehlt in %s" % local_file)
+	
+	#-------------														# 4. Ergebnisliste
+
+	# xbmc.executebuiltin('Dialog.Close(all,true)')				# verhindert nicht Nachlaufen 
+	result_list = "\n".join(result_list)						# Ergebnisliste
+	title = u"Einzelupdate - Abgleich von %d Dateien | Ergebnis:" % len(ret_list)
+	xbmcgui.Dialog().textviewer(title, result_list,usemono=True)
 	
 	return
 

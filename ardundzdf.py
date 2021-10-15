@@ -55,8 +55,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>0</nr>										# Numerierung für Einzelupdate
-VERSION = '4.0.6'
-VDATE = '09.10.2021'
+VERSION = '4.0.7'
+VDATE = '15.10.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -551,8 +551,7 @@ def InfoAndFilter():
 		tag = u"Abspielen und Verwaltung der addon-internen Playlist"
 		tag = u"%s\n\nEinträge werden via Kontextmenü in den Einzelauflösungen eines Videos hinzugefügt." % tag
 		tag = u"%s\n\n[COLOR blue]Am besten eigenen sich MP4-Url's[/COLOR]. HLS-Url's starten immer am Anfang, " % tag
-		tag = u"%sunabhängig von der letzten Position. Livestreams werden abgewiesen." % tag
-		
+		tag = u"%sunabhängig von der letzten Position. Livestreams werden abgewiesen." % tag			
 		summ = u"die PLAYLIST-Tools stehen auch im Kontextmenü zur Verfügung, wenn ein Listeneintrag eine geeignete Stream-Url enthält" 
 		fparams="&fparams={'myfunc': '%s', 'fparams_add': '%s'}"  %\
 			(quote(myfunc), quote(fparams_add))
@@ -562,10 +561,11 @@ def InfoAndFilter():
 			
 		title = u"Einzelupdate (Dateien und Module)"		# Update von Einzeldateien
 		tag = 'Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s' % REPO_NAME
-		
+		tag = "%s\n\nNach Abgleich werden neue Dateien heruntergeladen und ersetzen lokale Dateien im Addon." % tag
+		summ = "Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt."
 		fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.EPG.update_single",\
-			fanart=R(FANART), thumb=R("icon-update-einzeln.png"), tagline=tag, fparams=fparams)	
+			fanart=R(FANART), thumb=R("icon-update-einzeln.png"), tagline=tag, summary=summ, fparams=fparams)	
 		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
@@ -7797,6 +7797,7 @@ def ZDF_get_teaserbox(page):
 		else:
 			teaser_label = stringextract('class="teaser-label"', '</div>', page) 
 			teaser_typ =  stringextract('<strong>', '</strong>', teaser_label)
+				
 		PLog('teaser_typ: ' + teaser_typ)
 		teaser_label = cleanhtml(teaser_label.strip())					# wird ev. -> title	
 		teaser_label = unescape(teaser_label);
@@ -7821,7 +7822,17 @@ def ZDF_get_teaserbox(page):
 		ts=mystrip(ts); ts=cleanhtml(ts)
 		if teaser_typ == '':
 			teaser_typ=ts
-		
+			
+	# Bsp. teaser_label class="teaser-label">4 Teile</div> oder 
+	#	class="teaser-label"><div class="ellipsis">3 Teile</div></div>
+	if teaser_label == '' and teaser_typ == '':							# z.B. >3 Teile< bei Doku-Titel
+		teaser_label = stringextract('class="teaser-label"', '</div>', page)
+		try: 
+			teaser_typ = re.search(u'>(\d+) Teile', teaser_label).group(0)
+		except:
+			teaser_typ=''
+	teaser_label = teaser_label.replace('<div class="ellipsis">', ' ')
+	
 	PLog('teaser_label: %s,teaser_typ: %s, teaser_nr: %s, teaser_brand: %s, teaser_count: %s, multi: %s' %\
 		(teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count, multi))
 		
@@ -9714,6 +9725,7 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 		label, bitrate, res, title_href = item.split('**')
 		bitrate = bitrate.replace('Bitrate 0', 'Bitrate unbekannt')	# Anpassung für funk ohne AzureStructure
 		res = res.replace('0x0', 'unbekannt')						# dto.
+		PLog(title_href)
 		title, href = title_href.split('#')
 		
 		PLog(title); PLog(tagline_org[:80]); PLog(sub_path)

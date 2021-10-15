@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+#	Stand: 15.10.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -183,7 +183,7 @@ def Search(first, path, query=''):
 
 	name = 'Suchergebnis zu: ' + unquote(query)
 		
-	if first == 'True':								# query nur beim 1. Aufruf injizieren, nicht bei 'mehr' 
+	if first == 'True':								# query nur 1. Aufruf injizieren,  Anpass. s. 'Mehr' 
 		path =  DreiSat_Suche % quote(py2_encode(query))
 		path = path + "&page=1"
 	PLog(path); 										# Bsp. https://www.3sat.de/suche?q=brexit&synth=true&attrs=&page=2
@@ -213,18 +213,22 @@ def Search(first, path, query=''):
 	
 	# auf mehr prüfen:
 	if test_More(page=page):						# Test auf weitere Seiten (class="loader)
+		search_cnt = stringextract('class="search-number">', '<', page)
+		page_max = 12
+		
 		plist = path.split('&page=')
 		pagenr = int(plist[-1])
 		new_path = plist[0] + '&page=' + str(pagenr + 1)
 		title = "Mehr zu: %s" %  unquote(query)
-		summary='Mehr...'
+		tag = "Suchergebnisse gesamt: %s | Anzeige pro Seite: %d" % (search_cnt, page_max)
+		summ = 'Weiter zu Seite %s' % (pagenr + 1)
 		PLog(new_path)
 		
 		new_path=py2_encode(new_path); query=py2_encode(query);
 		fparams="&fparams={'first': 'False', 'path': '%s', 'query': '%s'}" % (quote(new_path), 
 			quote(query))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Search", fanart=R('3sat.png'), 
-			thumb=R(ICON_MEHR), summary='Mehr...', fparams=fparams)
+			thumb=R(ICON_MEHR), tagline=tag, summary=summ, fparams=fparams)
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		

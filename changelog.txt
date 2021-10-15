@@ -10,6 +10,24 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+15.10.2021 4.0.7
+			Github-Wicki: Aktualisierung "Settings Allgemein", Zif. 2.2 "Einzelupdate 
+			(Dateien und Module)".
+			update_single (Modul EPG): Haupt-PRG in die Liste übernommen,  Anpassung 
+			Pfad-Bildung der Github-Dateien, in Startdialog Größe der Dateiliste 
+			eingefügt.
+			ZDF_get_teaserbox: Auswertung Folgen-Anzahl (teaser_label) bei Dokus,
+			Serien usw. 
+			update_single (Modul EPG): Auswahl der abzugleichenden Dateien ermöglicht -
+			Anpassung Dialoge.
+			XL_Audios (TagesschauXL): Fix fehlende Titel (Titelstart mit ").
+			XLGetSourcesPlayer (TagesschauXL): Austausch Trennzeichen # gegen * in
+			Titel-/Url-Kombi.
+			ARDRubriken (Modul ARD Neu): Fix Titel (Zeichen ' entfernt).
+			arte_Search (Modul arte): Fix Url (ab Seite 2 abweichend).
+			Search (Modul 3sat): im Infobereich Gesamtzahl der Ergebnisse, Seitennr., 
+			Zahl pro Seite hinzugefügt. 
+
 09.10.2021 4.0.6
 			update_single (Modul EPG): Fix gegen Byte-Error unter Python3 bei 
 			Verarbeitung der Github-Dateien.
