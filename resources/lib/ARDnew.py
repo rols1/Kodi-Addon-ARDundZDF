@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.10.2021
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.10.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -779,6 +779,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			
 			if '"type":"live"' in s:								# Livestream im Stage-Bereich
 				ID = "Livestream"
+				summ = "%s | [COLOR red]Livestream[/COLOR]" % summ
 			else:
 				ID=ID_org
 
