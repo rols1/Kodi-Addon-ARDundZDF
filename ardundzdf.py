@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
 VERSION = '4.0.7'
 VDATE = '15.10.2021'
 
@@ -7579,6 +7579,9 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 				continue
 			if clustertitle.strip() == '': 
 				continue
+			if 'eliebte Filme' in clustertitle or 'eliebte Serien' in clustertitle or 'Dich interessieren' in clustertitle:
+				continue
+				
 				
 			#img_src = R(ICON_DIR_FOLDER)
 			img_src = ZDF_get_img(clus)
@@ -7599,7 +7602,8 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-------------------------
-# Ersatz für javascript: Ermittlung Icon + Sendedauer
+# Ersatz für javascript: Ermittlung Icon + Sendedauer (Nachlade-Beiträge, 
+#	escaped' - class="loader")
 #	die html-Seite des get_teaserElements wird aus TEXTSTORE 
 #	geladen bzw. bei www.zdf.de/teaserElement abgerufen und
 #	dann in TEXTSTORE gespeichert.
@@ -7831,8 +7835,10 @@ def ZDF_get_teaserbox(page):
 			teaser_typ = re.search(u'>(\d+) Teile', teaser_label).group(0)
 		except:
 			teaser_typ=''
+	teaser_label = mystrip(teaser_label) 
 	teaser_label = teaser_label.replace('<div class="ellipsis">', ' ')
-	
+	teaser_label = (teaser_label.replace('<strong>', '').replace('</strong>', ''))
+
 	PLog('teaser_label: %s,teaser_typ: %s, teaser_nr: %s, teaser_brand: %s, teaser_count: %s, multi: %s' %\
 		(teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count, multi))
 		
