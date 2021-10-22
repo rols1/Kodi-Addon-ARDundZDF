@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
 VERSION = '4.0.7'
 VDATE = '15.10.2021'
 
@@ -1224,6 +1224,10 @@ def Audio_get_rubriken_web(li, title, path, ID, page):
 #----------------------------------------------------------------
 # 24.07.2021 Anpassung an renovierte Audiothek
 # 	einschl.Event Streams
+# Aufrufer: Main, AudioStart - Param. programs  steuert Unterscheidung
+#	Livestreams / PRG-Sets
+# 20.10.2021 zusätzl. Auswertung der Org. ohne Livesender (ARD, funk 
+#	usw.)
 #
 def AudioStartLive(title, sender='', streamUrl='', myhome='', programs='', img='', Plot=''): # Sender / Livestreams 
 	PLog('AudioStartLive: ' + sender)
@@ -1246,67 +1250,49 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', programs='', img='
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
-		
-	jsonObject = json.loads(page)
-	PLog(len(jsonObject))
-	
-	try:
-		OrgObj = jsonObject["_embedded"]["mt:organizations"]
-	except Exception as exception:
-		msg2 = "json-Fehler: " + str(exception)
-		PLog(msg2)
-		MyDialog(msg1, msg2, '')	
-		return li	
-		
-		
-	skip_title=[]
-	if sender == '':			
-		for cnt1, SObj in enumerate(OrgObj):							# Senderobjekte
-			PLog("SObj_name: " + SObj["name"])			
-			SObj_single = SObj["_embedded"]["mt:publicationServices"]
-			for cnt2, pubObj in enumerate(SObj_single):					# Inhalte eines Senderobjekts				
-				try:
-					live_cnt = pubObj["_embedded"]['mt:liveStreams']['numberOfElements']	# Anz. Livestreams
-				except:													# bei funk
-					live_cnt=0
-				PLog("live_cnt: %d" % live_cnt)
-				if live_cnt == 0:
-					continue
+
+	pubObjekts = blockextract('"brandingColor":"', page)				# Station: Livestreams + PRG
+	PLog(len(pubObjekts))
+	if sender == '':
+		for pubObjekt in pubObjekts:
+			orgname = stringextract('"organizationName":"', '"', pubObjekt)	# Sender, z.B BR
+			LiveObj = stringextract('mt:liveStreams', 'mt:programSets', pubObjekt)
+			live_cnt = stringextract('numberOfElements":', '},', LiveObj)	
+			title = stringextract('"title":"', '"', pubObjekt)	
+			PLog("orgname: %s, title: %s" % (orgname,title))
+			img = stringextract('"mt:image"', 'ratio', pubObjekt)
+			img = stringextract('"href":"', '{', img)					# ../46/555337067/{ratio}/{width}?
+			img = img + "1x1/640?mandant=ard"
+			Plot = stringextract('"synopsis":"', '"', pubObjekt)
+			Plot = repl_json_chars(Plot)
+			sender = title
+			
+			if programs == 'yes':										# Info-Text anpassen
+				add = "zu den Programmen"
+			else:
+				add = "zum Livestream"
+			tag = "Weiter %s von: [B]%s[/B]" % (add, title)
+			
+			if live_cnt != '0':											# Livestreams enthalten
+				streamUrl = stringextract('"streamUrl":"', '"', pubObjekt)							
+			else:
+				streamUrl=''
+				cnt_max = stringextract('"numberOfElements":', ',', pubObjekt)
+				PLog("cnt_max: " + cnt_max)	
+				if programs == '':										# Livestreams gefordert, nicht enth.
+					continue			
 				
-				PLog(pubObj['organizationName'])
-				Plot=''
-				if 'synopsis' in pubObj:
-					Plot = pubObj['synopsis']
-					Plot = repl_json_chars(Plot)
-				
-				img = pubObj["_links"]['mt:image']["href"] 
-				img = img.replace('{ratio}', '1x1')
-				img = img.replace('{width}', '640')
-				LiveObj = pubObj["_embedded"]['mt:liveStreams']["_embedded"]["mt:items"]
-				for cnt3, item in enumerate(LiveObj):					# Inhalte einer Sendestation
-					sender = LiveObj["stream"]["sender"]
-					if sender in skip_title:
-						continue
-					skip_title.append(sender)
-					
-					streamUrl = LiveObj["stream"]["streamUrl"]
-					
-					if programs == 'yes':								# Sendungen der Sender listen
-						add = "zu den Programmen"
-					else:
-						add = "zum Livestream"
-					tag = "Weiter %s von: [B]%s[/B]" % (add, sender)
-					
-					PLog('3Satz:');
-					PLog(title); PLog(img); PLog(streamUrl); PLog(Plot);
-					title=py2_encode(title); sender=py2_encode(sender);
-					streamUrl=py2_encode(streamUrl); img=py2_encode(img)
-					Plot=py2_encode(Plot)
-					fparams="&fparams={'title': '%s', 'sender': '%s', 'streamUrl': '%s', 'myhome': '%s', 'programs': '%s', 'img': '%s', 'Plot': '%s'}" %\
-						(quote(title), quote(sender), quote(streamUrl), myhome, programs,
-						quote(img), quote(Plot))	
-					addDir(li=li, label=sender, action="dirList", dirID="AudioStartLive", fanart=img, 
-						thumb=img, tagline=tag, summary=Plot, fparams=fparams)
+			PLog('3Satz:');
+			PLog(title); PLog(img); PLog(streamUrl); PLog(Plot);
+			title=py2_encode(title); sender=py2_encode(sender);
+			streamUrl=py2_encode(streamUrl); img=py2_encode(img)
+			Plot=py2_encode(Plot)
+			fparams="&fparams={'title': '%s', 'sender': '%s', 'streamUrl': '%s', 'myhome': '%s', 'programs': '%s', 'img': '%s', 'Plot': '%s'}" %\
+				(quote(title), quote(sender), quote(streamUrl), myhome, programs,
+				quote(img), quote(Plot))	
+			addDir(li=li, label=sender, action="dirList", dirID="AudioStartLive", fanart=img, 
+				thumb=img, tagline=tag, summary=Plot, fparams=fparams)
+
 
 	#-------------------------		
 		if programs == '':
@@ -1385,6 +1371,8 @@ def ARDAudioEventStreams(li):
 #	Sendungen sind bereits alph. sortiert
 #	Auswertung Sendung -> Audio_get_sendung
 # 28.07.2021 Anpassung an renovierte Audiothek
+# 20.10.2021 zusätzl. Auswertung der Org. ohne Livesender (ARD, funk 
+#	usw.) - Block organizationName statt sender 
 # 
 def AudioSenderPrograms(li, page, sender, img):
 	PLog('AudioSenderPrograms:')
@@ -1398,15 +1386,16 @@ def AudioSenderPrograms(li, page, sender, img):
 		orgname = stringextract('"organizationName":"', '"', pubObjekt)	# Sender, z.B BR
 		PLog("orgname: " + orgname)
 
-		titles = blockextract('"sender":"', pubObjekt)					# od. "title"
+		titles = blockextract('"organizationName":"', pubObjekt, ",")	
 		found=False
 		for title in titles:
-			title = stringextract('"sender":"', '"', pubObjekt)	
-			title = up_low(title)
-			# PLog("sender: %s, title: %s" % (sender,title))			
-			if title == sender:
+			title = stringextract('"organizationName":"', '"', pubObjekt)	
+			title2 = stringextract('"title":"', '"', pubObjekt)	
+			title = up_low(title); title2 = up_low(title2)
+			PLog("sender: %s, title: %s" % (sender,title))			
+			if title == sender or title2 == sender:
 				found=True
-				PLog("found_sender: " + title)
+				PLog("found_sender: %s bzw. %s" % (title, title2))
 				break
 		if found:
 			break
@@ -2192,7 +2181,7 @@ def Audio_get_cluster_single(title, rubrik_id):
 		dauer = seconds_translate(dur)
 		pubDate = stringextract('"publishDate":"','"', node)
 		if pubDate:												# 2021-08-11T07:00:00+00:00
-			pubDate = pubDate = "%s.%s.%s" % (pubDate[8:10], pubDate[5:7], pubDate[0:4])
+			pubDate = pubDate = "%s.%s.%s %s Uhr" % (pubDate[8:10], pubDate[5:7], pubDate[0:4], pubDate[11:16])
 		descr = stringextract('"summary":"','"', node)	
 		mp3_url = stringextract('"downloadUrl":"','"', node)
 		if 	mp3_url == '':										# EventLivestream
