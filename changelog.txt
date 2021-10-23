@@ -10,6 +10,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+23.10.2021 4.0.8
+			get_page_content (Modul ARD Neu): Kennzeichnung von Livestreams der Menüebene
+			unterhalb der Startseite (z.B. tagesschau24 und Phoenix unter "..Nachrichten
+			& Aktuelles") - Einzelupdate.
+			ZDF_get_teaserbox: Fix 2-zeiligen Titel + Entf. html-Tag <strong>.
+			ZDFRubrikSingle: "beliebte Filme", "beliebte Serien", "..Dich interessieren" 
+			ausgeblendet (java-script-Inhalt nicht erreichbar).
+			Audio_get_cluster_single (Audiothek): Ergänzung Uhrzeit im Infotext - relev. 
+			u.a. für Livestreams inRrubrik Sport.
+			AudioStartLive (Audiothek), Menü "Sender (Sendungen einzelner Radiosender)": 
+			zusätzl. Auswertung der PRG-Sets  von ARD.de, Tagesschau und Sportschau.
+			Dauerhafte Senderwahl ARD: Anpassungen im Haupt-PRG (PRG-Kopf) und Main 
+			(ARDnew).
+			Dauerhafte Senderwahl ZDF (nur VERPASST): Anpassungen in VerpasstWoche und
+			ZDF_Verpasst_Filter.
+ 
 15.10.2021 4.0.7
 			Github-Wicki: Aktualisierung "Settings Allgemein", Zif. 2.2 "Einzelupdate 
 			(Dateien und Module)".

@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.10.2021
+#	Stand: 19.10.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -113,12 +113,12 @@ def Main_NEW(name, CurSender=''):
 	PLog('Main_NEW:'); 
 	PLog(name); PLog(CurSender)
 			
-	if ':' not in CurSender:			# '', False od. 'False'
+	if CurSender == '' or CurSender == False or CurSender == 'false':	# Ladefehler?
 		CurSender = ARDSender[0]
-	
-	Dict('store', "CurSender", CurSender)
-	PLog('sender: ' + CurSender); 
-	CurSender=py2_encode(CurSender);
+	if ':' in CurSender:				# aktualisieren	
+		Dict('store', "CurSender", CurSender)
+		PLog('sender: ' + CurSender); 
+		CurSender=py2_encode(CurSender);
 	
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')	# sender -> Menüs
 		

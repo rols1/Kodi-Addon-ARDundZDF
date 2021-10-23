@@ -55,8 +55,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>2</nr>										# Numerierung für Einzelupdate
-VERSION = '4.0.7'
-VDATE = '15.10.2021'
+VERSION = '4.0.8'
+VDATE = '23.10.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -319,7 +319,12 @@ PLog("skindir: %s" % skindir)
 if 'confluence' in skindir:									# ermöglicht Plot-Infos in Medienansicht
 	xbmcplugin.setContent(HANDLE, 'movies')	
 
-ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle']	# Rest in ARD_NEW
+ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle']	# Rest in ARD_NEW, CurSenderZDF s. VerpasstWoche
+CurSender = ARDSender[0]									# Default ARD-Alle
+fname = os.path.join(DICTSTORE, 'CurSender')				# init CurSender (aktueller Sender)
+if os.path.exists(fname):									# kann fehlen (Aufruf Merkliste)
+	CurSender = Dict('load', "CurSender")					# Übergabe -> ARDnew in Main
+
 
 #----------------------------------------------------------------  
 																	
@@ -346,7 +351,7 @@ def Main():
 
 	title = "ARD Mediathek Neu"
 	summ = u'Die [COLOR red] barrierefreien Angebote[/COLOR] befinden sich im Start-Menü, zur Zeit in <Genrezugänge>.'
-	fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, '')
+	fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, CurSender)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
 		thumb=R(ICON_MAIN_ARD), summary=summ, fparams=fparams)
 			
@@ -3994,7 +3999,7 @@ def get_query(channel='ARD'):
 #		Podcasts Classics - 03.06.2021  entfernt
 ####################################################################################################
 # Liste der Wochentage ARD + ZDF
-	# Ablauf (ARD): 	
+	# Ablauf (ARD):  entfällt seit Einstellung der alten Mediathek	
 	#		2. PageControl: Liste der Rubriken des gewählten Tages
 	#		3. SinglePage: Sendungen der ausgewählten Rubrik mit Bildern (mehrere Sendungen pro Rubrik möglich)
 	#		4. Parseplaylist: Auswertung m3u8-Datei (verschiedene Auflösungen)
@@ -4003,27 +4008,29 @@ def get_query(channel='ARD'):
 	#
 	# ZDF:
 	#	Wochentag-Buttons -> ZDF_Verpasst
+	# 22.10.2021 sfilter dauerhaft  (Dict("CurSenderZDF")), Ablage
+	#	in ZDF_Verpasst_Filter
 	#
-def VerpasstWoche(name, title, sfilter='Alle ZDF-Sender'):		# Wochenliste zeigen, name: ARD, ZDF Mediathek
+def VerpasstWoche(name, title):					# Wochenliste zeigen, name: ARD, ZDF Mediathek
 	PLog('VerpasstWoche:')
 	PLog(name);PLog(title); 
 	title_org = title
 	 
-	# Senderwahl deaktivert		
-	#CurSender 	= ARDSender[0]	# Default 1. Element ARD-Alle
-	#sendername, sender, kanal, img, az_sender = CurSender.split(':')
+	sfilter=''
+	fname = os.path.join(DICTSTORE, 'CurSenderZDF')				# init CurSenderZDF (aktueller Sender)
+	if os.path.exists(fname):									# kann fehlen (Aufruf Merkliste)
+		sfilter = Dict('load', 'CurSenderZDF')			
+		
+	if sfilter == '' or sfilter == False or sfilter == 'false':	# Ladefehler?
+		sfilter = 'Alle ZDF-Sender'								# Default Alle ZDF-Sender (nur VERPASST)
 	
 	li = xbmcgui.ListItem()
-	if name == 'ZDF-Mediathek':
-		li = home(li, ID='ZDF')						# Home-Button
-	else:	
-		li = home(li, ID='ARD')						# Home-Button
+	li = home(li, ID='ZDF')						# Home-Button
 		
 	wlist = list(range(0,7))
 	now = datetime.datetime.now()
 
 	for nr in wlist:
-		iPath = BASE_URL + ARD_VERPASST + str(nr)	# classic.ardmediathek.de'
 		rdate = now - datetime.timedelta(days = nr)
 		iDate = rdate.strftime("%d.%m.%Y")		# Formate s. man strftime (3)
 		zdfDate = rdate.strftime("%Y-%m-%d")		
@@ -4034,35 +4041,27 @@ def VerpasstWoche(name, title, sfilter='Alle ZDF-Sender'):		# Wochenliste zeigen
 		if nr == 1:
 			iWeekday = 'Gestern'	
 		iWeekday = transl_wtag(iWeekday)
-		PLog(iPath); PLog(iDate); PLog(iWeekday);
+		PLog(iDate); PLog(iWeekday);
 		#title = ("%10s ..... %10s"% (iWeekday, iDate))	 # Formatierung in Plex ohne Wirkung		
 		title =	"%s | %s" % (iDate, iWeekday)
-		if name == 'ARD':
-			summ = 'Auswahl für Sender folgt'
-			title=py2_encode(title); iPath=py2_encode(iPath);
-			fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(title),  quote(iPath))
-			addDir(li=li, label=title, action="dirList", dirID="ARD_Verpasst_Filter", fanart=R(ICON_ARD_VERP), 
-				thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=summ)
-
-		else:
-			title=py2_encode(title); zdfDate=py2_encode(zdfDate);
-			fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=R(ICON_ZDF_VERP), 
-				thumb=R(ICON_ZDF_VERP), fparams=fparams)
-	
-	if name == 'ZDF-Mediathek':								# Button für Datumeingabe anhängen
-		label = "Datum eingeben"
-		tag = u"teilweise sind bis zu 4 Jahre alte Beiträge abrufbar"
+		
+		title=py2_encode(title); zdfDate=py2_encode(zdfDate);
 		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
-		addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Datum", fanart=R(ICON_ZDF_VERP), 
-			thumb=GIT_CAL, fparams=fparams, tagline=tag)
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=R(ICON_ZDF_VERP), 
+			thumb=R(ICON_ZDF_VERP), fparams=fparams)
+	
+	label = "Datum eingeben"							# Button für Datumeingabe anhängen
+	tag = u"teilweise sind bis zu 4 Jahre alte Beiträge abrufbar"
+	fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
+	addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Datum", fanart=R(ICON_ZDF_VERP), 
+		thumb=GIT_CAL, fparams=fparams, tagline=tag)
 
-															# Button für Stationsfilter
-		label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [COLOR red]%s[/COLOR]" % sfilter
-		tag = "Auswahl: Alle ZDF-Sender, zdf, zdfneo oder zdfinfo" 
-		fparams="&fparams={'name': '%s', 'title': 'ZDF-Mediathek', 'sfilter': '%s'}" % (quote(name), sfilter)
-		addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Filter", fanart=R(ICON_ZDF_VERP), 
-			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)
+														# Button für Stationsfilter
+	label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [COLOR red]%s[/COLOR]" % sfilter
+	tag = "Auswahl: Alle ZDF-Sender, zdf, zdfneo oder zdfinfo" 
+	fparams="&fparams={'name': '%s', 'title': 'ZDF-Mediathek', 'sfilter': '%s'}" % (quote(name), sfilter)
+	addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Filter", fanart=R(ICON_ZDF_VERP), 
+		thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)
 		
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# True, sonst Rückspr. nach ZDF_Verpasst_Filter
@@ -4083,8 +4082,9 @@ def ZDF_Verpasst_Filter(name, title, sfilter):
 		d = 0
 	sfilter = stations[d]
 	PLog("Auswahl: %d. %s" % (d, sfilter))
+	Dict('store', "CurSenderZDF", sfilter)
 	
-	return VerpasstWoche(name, title, sfilter)
+	return VerpasstWoche(name, title)
 
 ####################################################################################################
 # 03.06.2021 entfernt (Classic-Version eingestellt): PODMore							
