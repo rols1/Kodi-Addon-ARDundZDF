@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.10.2021
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.10.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -149,6 +149,7 @@ def Main_3Sat(name):
 	fparams="&fparams={'name': '%s', 'path': '%s', 'themen': 'ja'}"	% (quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubriken", 
 		fanart=R('3sat.png'), thumb=R('zdf-themen.png'), summary=summ, fparams=fparams)
+		
 
 	title = "Rubriken"
 	path = 'https://www.3sat.de/themen'								# auch Leitseite
@@ -313,7 +314,7 @@ def SendungenAZ(name, path):
 		title = repl_json_chars(title); descr = repl_json_chars(descr); 
 		descr_par =	descr.replace('\n', '||')	
 		
-		PLog('Satz:')
+		PLog('Satz1:')
 		PLog(img_src); PLog(rubrik); PLog(title);  PLog(href); PLog(descr);
 			
 		# Aufruf Sendereihe_Sendungen hier ohne Listitem					
@@ -364,7 +365,7 @@ def Verpasst(title):	# je 1 Tag - passend zum Webdesign
 		title =	"%s | %s" % (iDate, iWeekday)
 		title =	iDate + ' | ' + iWeekday
 		
-		PLog('Satz:')	
+		PLog('Satz2:')	
 		PLog(SendDate); PLog(title); 
 		title=py2_encode(title); 
 		fparams="&fparams={'SendDate': '%s', 'title': '%s'}" % (SendDate, quote(title))
@@ -425,7 +426,7 @@ def SendungenDatum(SendDate, title):
 		descr = repl_json_chars(descr); 
 		descr_par =	descr.replace('\n', '||')	
 
-		PLog('Satz:')
+		PLog('Satz3:')
 		PLog(img_src);  PLog(href); PLog(sendung); PLog(tagline); PLog(descr); PLog(dauer);
 			 
 		sendung=py2_encode(sendung); href=py2_encode(href);  img_src=py2_encode(img_src);
@@ -594,8 +595,8 @@ def Start(name, path, rubrik=''):
 				else:								# alle  übrigen Rubriken auswerten
 					if 'is-medium lazyload' in rec:	# lazyload-Beiträge (die meisten)
 						li, cnt = get_lazyload(li=li, page=rec, ref_path=path) 
-					else: 							# -> Rubrik_Single als 2. Durchlauf mit thema
-						Rubrik_Single(name=title, path=path, thema=title) # nochmal laden
+					else: 							# -> Rubrik_Single als 2. Durchlauf mit thema, nochmal laden
+						Rubrik_Single(name=title, path=path, thema=title, ID='Start')
 					break
 		
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -603,14 +604,19 @@ def Start(name, path, rubrik=''):
 #------------
 # Aufrufer: Main_3Sat
 #	Liste der 3sat-Rubriken (aus Dropdownmenü Webseite) 
-#	Liste der 3sat-Themen (themen=ja)
-# path (Rubriken + Themen): https://www.3sat.de/themen	
-# 	
+#	Liste der 3sat-Themen (themen=ja) von https://www.3sat.de/themen	
+# 	Liste der 3sat-Rubriken: 	1. Lauf: dropdown-link Themen-Seite, 	
+#								2. Lauf: Auswertung wie Themen
+# 	-> Rubrik_Single
+# 27.10.2021 Blockbildung grid-container statt picture class 
+#
 def Rubriken(name, path, themen=''):
-	PLog('Rubriken: ' + themen)
+	PLog('Rubriken:')
+	PLog('themen')
+	path_org=path
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')				# Home-Button		
+	li = home(li, ID='3Sat')							# Home-Button		
 	
 	page, msg = get_page(path)	
 	if page == '':			
@@ -620,40 +626,73 @@ def Rubriken(name, path, themen=''):
 		MyDialog(msg1, msg2, '')
 		return li	
 	
-	if themen:													# Themen
-		# Auswertung Blöcke + lazyload-Beiträge -> Sendereihe_Sendungen
-		# 	lazyload (>mehr Themen<) direkt mit page-Ausschnitt
-		# Rubrik_Single passt nicht, Blöcke weichen ab
-		# <picture class="">,  class="artdirect .., class="artdirect">
-		items = blockextract('picture class="', page) 		
-		for rec in items:							
-			title=''; 
-			rec = py2_encode(rec)
-			tlist = blockextract('data-module="headline">', rec)
-			for t in tlist:
-				title = stringextract('headline">', '<', t)
-				if len(title.strip()) > 0:
-					break
-			href =  stringextract('href="', '"', rec)
-			if href == '':
-				continue		
-			if href.startswith('http') == False:
-				href	= DreiSat_BASE + href
-			img_src =  stringextract('data-srcset="', ' ', rec)	
-			
-			PLog('Satz:')
-			PLog(title); PLog(href); PLog(img_src); 
-			title=py2_encode(title); href=py2_encode(href);  img_src=py2_encode(img_src);
-			fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title),
-				 quote(href), quote(img_src))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
-				fanart=R('3sat.png'), thumb=img_src, fparams=fparams)
+	if themen:											# Themen od. einz. Rubrik (name) 
+		pos = page.find('class="o--footer">')
+		if pos > 0:
+			page = page[:pos]							# Fuß abschneiden
+		items = blockextract('grid-container"', page) 	# häufige Container		
+		PLog(len(items))		
+		items = items + blockextract('grid-container js-title"', page) # container mit lazyload-Beiträgen 		
+		PLog(len(items))		
+
+		skip_list=[]
+		for rec in items:
+			if 'Fortfahren</button>' in rec:			# Systemhinw.
+				continue
+			if 'dropdown-link' in rec:					# Systemhinw.
+				continue
+			if '"search-bar-row"' in rec:				# Systemhinw.
+				continue				
 				
-		if '>mehr Themen<' in page:					# hier als lazyload-Beiträge
-			page = stringextract('>mehr Themen<', 'type="button"', page)
-			li = Sendereihe_Sendungen(li, path, title, page=page)		
+			title = stringextract('data-module="headline">', '</', rec) # nicht immer sichtbar, z.B. Kultur
+			title = cleanhtml(title); title = mystrip(title)			
+			PLog("title: " + title)	
+												
+			href =  stringextract('href="', '"', rec)
+			if  "#skip-cluster" in href:
+				href = href.split("#skip-cluster")[0]
+			PLog("href:" + href)
+			if href == '':
+				href = path_org
+			else:
+				if href.startswith('http') == False:
+					href	= DreiSat_BASE + href
+													
+				
+			img_src =  stringextract('data-srcset="', ' ', rec)
+			if img_src == '' or rec.startswith('grid-container js-title"'):	# lazyload-Beiträge ohne Bilder + hrefs
+				img_src = R('Dir-folder.png')
+			img_txt =  stringextract('alt="', '"', rec)
+			tag = "Folgeseiten"	
+			if img_txt:
+				tag = "%s\nBild: %s" % (tag, img_txt)
+			
+			descr =  stringextract('subheadline level-8 " >', '</', rec)
+			if descr == '':
+				descr =  stringextract('subheadline level-8 " >', '</p>', rec)
+			descr = cleanhtml(descr); 
+			
+			thema = title
+			if href != path_org:						# kompl. Seite auswerten
+				thema=''
+			if 	rec.startswith('grid-container js-title"'):		# lazyload-Beiträge als Cluster
+				thema = title
+			if rec.startswith('grid-container"'):
+				thema = title
+				href = path_org
+					
+			PLog('Satz4:')
+			PLog(title); PLog(href); PLog(img_src); 
+			title=py2_encode(title); thema=py2_encode(thema); href=py2_encode(href);  
+			img_src=py2_encode(img_src);
+			fparams="&fparams={'name': '%s', 'path': '%s', 'thema': '%s'}" % (quote(title), 
+				quote(href), quote(thema))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubrik_Single", 
+				fanart=R('3sat.png'), thumb=img_src, summary='Folgeseiten', fparams=fparams)
+
 		
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# Ende Themen
+		return
 		
 	else:													# Rubriken 
 		rubriken =  blockextract('class="dropdown-link js-rb-click js-track-click"', page)
@@ -674,25 +713,28 @@ def Rubriken(name, path, themen=''):
 	for rec in rubrik:
 		title, href = rec.split('|')
 		title=py2_encode(title); href=py2_encode(href); 
-		fparams="&fparams={'name': '%s', 'path': '%s'}" % (quote(title), quote(href))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubrik_Single", 
+		fparams="&fparams={'name': '%s', 'path': '%s', 'themen': '%s'}" % (quote(title), quote(href), quote(title))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubriken", 
 			fanart=R('3sat.png'), thumb=img_src, summary='Folgeseiten', fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #------------
-# Aufrufer: Rubrik - Liste der Themen einer 3Sat-Rubrik, z.B. Film
-# rekursiv: zweiter Durchlauf mit thema listet die Sendereihen dieser Rubrik
-#			dritter Durchlauf nach thema 'Mehr' (Sendereihe, keine Einzelbeiträge) -	
-#				Liste der Sendereihen beim 2. Durchlauf.
+# Aufrufer: Rubrik - Auswertung eines Rubrik-Clusters, z.B. von www.3sat.de/film
+#			Themen - Auswertung eines Themen-Clusters von www.3sat.de/themen
 # 04.08.2020 Anpassungen an Webänderungen (Rubrik, Titel)
+# 27.10.2021 vereinheitlichte Auswertung Rubriken und Themen, Auswertung
+#	mögliche Carousel-Serie + mögl. zdfplayer für gesamte Seite
 # 
-def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Sendereihen
+def Rubrik_Single(name, path, thema='', ID=''):	
 	PLog('Rubrik_Single: '+ name)
-	PLog("thema: " + thema)
+	thema = thema.replace('*', '"')
+	PLog("thema: " + thema)	
+	path_org=path
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')										# Home-Button		
+	if ID != 'Start':
+		li = home(li, ID='3Sat')								# Home-Button		
 	
 	page, msg = get_page(path)	
 	if page == '':			
@@ -701,56 +743,91 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 		PLog(msg1)
 		MyDialog(msg1, msg2, '')
 		return li	
+	pos = page.find('class="o--footer">')
+	if pos > 0:
+		page = page[:pos]										# Fuß abschneiden
 		
-	themen =  blockextract('<h2  class="a--headline', page)	
-	PLog(len(themen))											
+	mediatype='' 		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': 		# Kennz. Video für Sofortstart 
+		mediatype='video'
+
+	# Blöcke wie Rubrik_Single:
+	items = blockextract('grid-container"', page) 				# häufige Container		
+	PLog(len(items))		
+	items = items + blockextract('grid-container js-title"', page) # container mit lazyload-Beiträgen 		
+	PLog(len(items))		
 	
-	if thema == '':									# 1. Durchlauf: Themen der Rubrik name	
-		PLog('1. Durchlauf, thema: %s' % thema)						
-		img_src = R('Dir-folder.png')			
-		for rec in themen:
-			title	= stringextract('data-module="headline">', '</', rec)
-			PLog(title)
-				
-			title	= up_low(title)
-			summ = "Folgeseiten"
-			if 'VIDEOTIPP' in title:
-				summ = 'Videotipp(s) der Redaktion'
-			title = repl_json_chars(py2_decode(title))			
-			PLog('Satz: %s' % title)
-		
-			title=py2_encode(title); path=py2_encode(path); 
-			fparams="&fparams={'name': '%s', 'path': '%s', 'thema': '%s'}" % (quote(title),
-				 quote(path), quote(title))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubrik_Single", 
-				fanart=R('3sat.png'), thumb=img_src, summary=summ, fparams=fparams)
-				
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# Ende 1. Durchlauf
-	
-	PLog('2. Durchlauf, thema: %s' % thema)	
-	content =  blockextract('<h2  class="a--headline', page)		
-	for rec in content:										# 2. Durchlauf: Beiträge zu Thema thema		
-		title	= stringextract('data-module="headline">', '</', rec)
-		title 	= repl_json_chars(py2_decode(title))		# dto. 1. Durchlauf
-		title	= up_low(title); name = up_low(name); 
-		if 	py2_decode(name) in py2_decode(title):			# Bsp. VIDEOTIPP "SEIDENSTRASSE"
-			PLog('Thema gefunden: %s' % name)
-			page = rec
-			PLog(len(rec))
+	if thema:
+		PLog('Suche_Cluster: %s' % thema)						# Cluster thema auf Seite suche
+		pos = page.find(thema)
+		PLog(pos)		
+		if pos > 0:												# Ausschnitt Start, zw.  2 Headlines
+			PLog('Cluster gefunden: %s' % thema)
 			if 'TV-SENDETERMINE' in name:
 				msg1 = 'TV-SENDETERMINE'
 				msg2 = u'Bitte das Menü Verpasst verwenden'
 				MyDialog(msg1, msg2, '')
 				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-			break											# -> Sendereihe_Sendungen	
+				return
+			page = page[pos:]									# Seite ab hier	
+			
+			if '"application/ld+json"' in page:
+				pos = page.find('"application/ld+json"')	
+			else:							
+				pos = page.find("</article>")
+			if pos > 0:											# bis hier
+				page = page[:pos] 							
+		PLog(len(page))	
+	else:
+		PLog('ohne_Cluster: %s' % name)
+	title=name
 	
-	if up_low("Videotipp") in title:						# 1 oder mehrere Videos am Kopf
-		if 'video-carousel-item">' in rec:
-			li, cnt = get_video_carousel(li, rec) 			# mehrere Videos am Kopf
-		else:									
-			li, cnt = get_zdfplayer_content(li, content)	# 1 Video
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
+	if 'video-carousel-item">' in page:						# Carousel mit 1 od. mehreren zdfplayer-Beiträgen
+		PLog("video_carousel")
+		pos = page.find("video-carousel-btn-prev context")	# Ausschnitt bis Carousel-/lazyload-Ende
+		if pos < 0:
+			pos = page.find("</article>")				
+		if pos > 0:
+			content = page[:pos]
+		get_video_carousel(li, content)
+	else:
+		if 'data-module="zdfplayer"' in page:		
+			PLog("zdfplayer")
+			content = blockextract('data-module="zdfplayer"', page)
+			PLog(len(content))
+			get_zdfplayer_content(li, content)
+			
+			
+	PLog("Mark0")
+	if '"grid-container js-title"' in page:					# Cluster mit lazyload-Beiträgen 
+		PLog('lazyload_grid_container: %s' % thema)			# thema -> Rubrik_Single
+		items = blockextract('"grid-container js-title"', page)
+		img_src = R('Dir-folder.png')
+		for item in  items:
+			if 'data-module="headline"' in item:
+				thema = stringextract('data-module="headline">', '</', item)
+				label = thema
+				thema = thema.replace('"', '*')				# häufig mit "
+				href = path_org
+				if u'Das könnte Sie auch' in thema:
+					continue
+				
+				PLog('Satz13:')
+				PLog(thema); PLog(href); PLog(img_src); 
+				name=py2_encode(name); thema=py2_encode(thema); href=py2_encode(href);  
+				img_src=py2_encode(img_src);
+				fparams="&fparams={'name': '%s', 'path': '%s', 'thema': '%s'}" % (quote(name), 
+					quote(href), quote(thema))
+				addDir(li=li, label=label, action="dirList", dirID="resources.lib.my3Sat.Rubrik_Single", 
+					fanart=R('3sat.png'), thumb=img_src, summary='Folgeseiten', fparams=fparams)
+	else:
+		if 'is-medium lazyload' in page:					# einzelne lazyload-Beiträge
+			PLog('lazyload_container: %s' % thema)			# Ausgabe hier
+			pos = page.find("</article>")					# lazyload-Ende
+			if pos > 0:
+				page = page[:pos]
+			get_lazyload(li, page, ref_path=path_org)
+		
 	# Auswertung weiterer Inhalte (page = rec)				
 	# Kennzeichnungen: Mehr, MEHR, ZUM STöBERN
 	# Blockmerkmal'<picture class=""> entscheidet über Ziel:
@@ -769,7 +846,7 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 				descr	= stringextract('clickarea-link" >', '<', rec)
 				
 				title = repl_json_chars(title); descr = repl_json_chars(descr); 					
-				PLog('Satz:')
+				PLog('Satz6:')
 				PLog(img_src); PLog(title);  PLog(href); PLog(descr);
 				
 				if name == 'ZUM STöBERN':					# ähnlich mehr, aber Auswertung als Rubrik
@@ -791,7 +868,7 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 	#	 <picture class=""> (hier nicht enthalten), 'is-medium lazyload'
 	PLog(len(page))
 
-	li = Sendereihe_Sendungen(li, path, title, page=page)
+	li = Sendereihe_Sendungen(li, path, title, page=page, skip_carousel='yes', skip_lazyload='yes')
 				
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #------------
@@ -803,9 +880,11 @@ def Rubrik_Single(name, path, thema=''):	# Liste der Einzelsendungen zu Senderei
 #
 # Achtung: hier wird (nochmal) auf video-carousel-item	+ o--stage-brand
 #	geprüft - page ev. vorher begrenzen.
-#
-def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzelsendungen zu Sendereihen
+#																# Liste der Einzelsendungen zu Sendereihen
+def Sendereihe_Sendungen(li, path, title, img='', page='', skip_carousel='', skip_lazyload=''):		
 	PLog('Sendereihe_Sendungen: ' + path)
+	PLog(title)
+	PLog(skip_carousel); PLog(skip_lazyload);
 	PLog(len(page))
 	title_org = title
 	got_page = False
@@ -824,14 +903,16 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 	mediatype='' 		
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 		mediatype='video'
-									
+			
+					
 	# 1. Strukturen am Seitenanfang (1 Video doppelt möglich):	
-	if 'video-carousel-item' in page:		# Bsp. www.3sat.de/kultur/kulturzeit
+	if 'video-carousel-item' in page:			# Bsp. www.3sat.de/kultur/kulturzeit
 		# video-carousel-item-Beiträge auswerten, html-Format, Seitenkopf
-		PLog('Struktur video-carousel-item')
-		content =  blockextract('video-carousel-item">', page)
-		PLog(len(content))
-		li, cnt = get_zdfplayer_content(li, content=content)
+		if skip_carousel == '':					# ausgewertet in Rubrik_Single		
+			PLog('Struktur video-carousel-item')
+			content =  blockextract('video-carousel-item">', page)
+			PLog(len(content))
+			li, cnt = get_zdfplayer_content(li, content=content)
 		
 	if 'o--stage-brand' in page:		# Bsp. www.3sat.de/wissen/netz-natur (1 Beitrag)
 		# "o--stage-brand-Beiträge auswerten, html-Format, Seitenkopf
@@ -839,11 +920,14 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		content =   stringextract('o--stage-brand">', '</article>', page)	# ausschneiden
 		content =  blockextract('class="artdirect">', page)
 		PLog(len(content))
-		li, cnt = get_zdfplayer_content(li, content=content)	
+		li, cnt = get_zdfplayer_content(li, content=content)
+
 	
 	# 2. Strukturen nach Seitenanfang (1 Video doppelt möglich)
 	PLog('Sendereihe_Sendungen2:')	
 	rubriken =  blockextract('<picture class="">', page)
+	PLog(len(rubriken))
+	
 	if len(rubriken) == 0:				# Einzelbeitrag mit Abspielbutton 
 		# get_video_carousel od. get_zdfplayer_content nicht geeignet
 		# Seite kürzen, da 2 x duration 
@@ -868,27 +952,42 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 	 									# kein Einzelbeitrag, weiterführender Link?
 	# Bsp.: Rubriken/Kabarett/35 JAHRE 3SAT - JUBILÄUMSPROGRAMM
 	#	-> rekursiv
+	skip_list=[]
 	if len(rubriken) == 0 and got_page == True:		
 		if 'class="is-clickarea-action' in page:
 			PLog('is-clickarea-action:')
-			img_src = stringextract('data-srcset="', ' ', page)	
+			img_src = stringextract('data-srcset="', ' ', page)		#  vor is-clickarea-action
+			if img_src == '':
+				img_src = R('Dir-folder.png')
+			try:
+				dur = re.search(u'>(\d+) min</span>', page).group(1)
+			except:
+				dur=''
+			pos = page.find('class="is-clickarea-action')
+			page = page [pos:]
 			title 	= stringextract('title="', '"', page)	
-			title	= unescape(title)
+			title	= unescape(title); title = repl_json_chars(title)
 			href	= stringextract('href="', '"', page)
 			if href.startswith('http') == False:
 				href	= DreiSat_BASE + href
 			descr	= stringextract('paragraph-large ">', '</p>', page)
+			
+			if dur:
+				descr = "Dauer: %s min\n\n%s" % (str(dur), descr)
 			
 			title=py2_encode(title); href=py2_encode(href);	 img_src=py2_encode(img_src);							
 			fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title),
 				 quote(href), quote(img_src))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
 				fanart=R('3sat.png'), thumb=img_src, summary=descr, fparams=fparams)
+				
 	cnt=0
 	for rec in rubriken:
 		if 'data-playlist-toggle' not in rec:
 			continue
 		img_src =  stringextract('data-srcset="', ' ', rec)	
+		if img_src == '':
+			img_src = R('Dir-folder.png')
 		rubrik 	= stringextract('<span>', '</span>', rec)
 		rubrik	= cleanhtml(rubrik); rubrik = mystrip(rubrik)
 		sub_rubrik = stringextract('ellipsis" >', '<', rec)
@@ -896,7 +995,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		title	= stringextract('clickarea-link">', '</p>', rec)
 		if title == '':
 			title = stringextract('title="', '"', rec)
-		title = unescape(title)
+		title = unescape(title); title = mystrip(title)
 		
 		href	= stringextract('href="', '"', rec)
 		if href.startswith('http') == False:
@@ -911,7 +1010,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 		title = repl_json_chars(title); descr = repl_json_chars(descr); 
 		descr_par =	descr.replace('\n', '||')	
 				
-		PLog('Satz:')
+		PLog('Satz7:')
 		PLog(img_src); PLog(rubrik); PLog(title);  PLog(href); PLog(tagline); PLog(descr);
 		PLog(dauer); PLog(duration);
 				
@@ -923,7 +1022,8 @@ def Sendereihe_Sendungen(li, path, title, img='', page=''):		# Liste der Einzels
 			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams, mediatype=mediatype)
 
 	if 'is-medium lazyload' in page:							# Test auf Loader-Beiträge, escaped
-		li, cnt = get_lazyload(li=li, page=page, ref_path=path)
+		if skip_lazyload == '':
+			li, cnt = get_lazyload(li=li, page=page, ref_path=path)
 		
 	if cnt == 0 and "Einige Folgen sind FSK 16" in page:		# FSK-Hinweis bei leerer Liste
 		dialog_fsk(page)										# util			
@@ -980,7 +1080,7 @@ def get_lazyload(li, page, ref_path):
 		descr_par =	descr.replace('\n', '||')	
 		
 		cnt = cnt+1	
-		PLog('Satz: %d' % cnt)
+		PLog('Satz8: %d' % cnt)
 		PLog(sophId); PLog(path); PLog(title);PLog(descr); PLog(img_src); PLog(dauer); PLog(tag); 
 		
 		if isvideo == 'true':											#  page enthält data-playlist
@@ -1109,6 +1209,8 @@ def get_video_carousel(li, page):
 		img_src	= stringextract('image="{', '}', rec)	# data-zdfplayer-teaser-image=
 		img_src	= stringextract('768xauto&quot;:&quot;', '&quot', rec)	# 768xauto	
 		img_src	= unescape(img_src); img_src = img_src.replace('\\', '')
+		if img_src == '':
+			img_src = R('Dir-folder.png')
 	
 		tagline = dauer
 		subtitle	= stringextract('brand-subtitle">', '<', rec)
@@ -1121,7 +1223,7 @@ def get_video_carousel(li, page):
 		descr = transl_json(descr); 
 
 		descr = transl_json(descr); 
-		PLog('Satz:')
+		PLog('Satz9:')
 		PLog(img_src); PLog(title); PLog(dauer); PLog(path); 
 		title=py2_encode(title); path=py2_encode(path);	 img_src=py2_encode(img_src);
 		dauer=py2_encode(dauer);
@@ -1153,19 +1255,20 @@ def get_zdfplayer_content(li, content):
 		title 	= stringextract('title":', '",', videoinfos)
 		title 	= (title.replace('\\"', '').replace('"', ''))
 
-		dauer 	= stringextract('duration": "', '"', videoinfos)	# Bsp. 2 min
+		dauer 	= stringextract('duration": "', '",', videoinfos)	# Bsp. 2 min
+		
 		path	= stringextract('embed_content": "', '"', rec)
 		path 	= DreiSat_BASE + path + ".html"
 		img_src	= stringextract('data-srcset="', '"', rec)			
 		img_src	= img_src.split(' ')[0]								# kann mit Blank enden
 		if img_src == '':
 			img_src = stringextract('teaser-image-overwrite', 'quot;}', rec)	# Bsp. Wissen/#Erklärt
-			PLog(img_src)
+			PLog(img_src[:100])
 			img_src =stringextract('https:', '&', img_src)
 			PLog(img_src)
 			img_src = 'https:' + img_src.replace('\\/', '/')	 
 		
-		tagline = dauer
+		tag = dauer
 		subtitle	= stringextract('brand-subtitle">', '<', rec)
 		if subtitle:
 			tag = dauer + ' | ' + subtitle
@@ -1175,14 +1278,14 @@ def get_zdfplayer_content(li, content):
 		descr = transl_json(descr); 
 		title = transl_json(title); title = repl_json_chars(title);
 	
-		PLog('Satz:')
+		PLog('Satz10:')
 		PLog(img_src); PLog(title); PLog(path); 
 		title=py2_encode(title); path=py2_encode(path);	img_src=py2_encode(img_src);
 		dauer=py2_encode(dauer);
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s'}" %\
 			(quote(title), quote(path), quote(img_src), quote(dauer))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
-			thumb=img_src, summary=descr, fparams=fparams, mediatype=mediatype)
+			thumb=img_src, tagline=tag, summary=descr, fparams=fparams, mediatype=mediatype)
 			 	
 		cnt=cnt+1
 
@@ -1447,7 +1550,7 @@ def Bilder3sat(path=''):
 			tag = "%s | %s" % (pre_head, sub_head)		
 		summ = stringextract('class="label">', '</', rec)				# Bsp. 5 Bilder
 		
-		PLog('Satz:')
+		PLog('Satz11:')
 		PLog(img_src); PLog(title); PLog(tag);  		
 			
 		href=py2_encode(href); title=py2_encode(title);
@@ -1523,7 +1626,7 @@ def Bilder3satSingle(title, path):
 		tag = "%s | %s" % (stitle, title)
 		summ = "%s\n%s" % (descr, urh)
 		
-		PLog('Satz:')
+		PLog('Satz12:')
 		PLog(img_src); PLog(tag[:60]); PLog(summ[:60]);	
 		tag=repl_json_chars(tag) 
 		title=repl_json_chars(title); summ=repl_json_chars(summ); 		
