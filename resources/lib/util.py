@@ -1346,9 +1346,14 @@ def blockextract(blockmark, mString, blockendmark=''):
 		pos2 = mString.find(blockmark, pos1 + ind)		
 		
 		if blockendmark:
+			# PLog(blockendmark)
 			pos3 = mString.find(blockendmark, pos1 + ind)
-			ind_end = len(blockendmark)
-			block = mString[pos1:pos3+ind_end]	# extrahieren einschl.  blockmark + blockendmark
+			# PLog("pos3: %d" % pos3)
+			if pos3 > 0:
+				ind_end = len(blockendmark)
+				block = mString[pos1:pos3+ind_end]	# extrahieren einschl.  blockmark + blockendmark
+			else:
+				block = mString[pos1:]				# Block von blockmark bis Ende mString
 			# PLog(block)			
 		else:
 			block = mString[pos1:pos2]			# extrahieren einschl.  blockmark

@@ -10,6 +10,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+31.10.2021 4.0.9
+			Rubrik (Modul 3sat): Bildtexte -> Infotext, Blockbildung für mehr Inhalte
+			geändert (neue Funktionen get_container, get_title).
+			Rubrik_Single (Modul 3sat): 2. Auswertungsebene entfernt, Auswertung
+			Rubriken und Themen vereinheitlicht, Fix doppelten home-Button, Auswertung 
+			mögliche mögl. zdfplayer für gesamte Seite, Auswertung von lazyload-Beiträgen 
+			einzeln oder als Container (rekursiv). 
+			Sendereihe_Sendungen (Modul 3sat): Leerz. in Titel entfernt (router-relevant),
+			Fix href in is-clickarea-action, Ermittlung Videodauer, Unterdrückung  
+			lazyload- und zdfplayer-Auswertung bei Bedarf (Params skip*), Blockmerkmal 
+			'<img class=' ergänzt.
+			Rubrik_Single (Modul 3sat): Suchmuster für Cluster ergänzt (eindeutiger:
+			'headline">%s<' statt '%s').
+			get_zdfplayer_content (Modul 3sat): skip_list für ext. Abgleich hinzugefügt.
+			blockextract (Modul util): Fix Blockende, falls blockendmark nicht enthalten.					
+
 23.10.2021 4.0.8
 			get_page_content (Modul ARD Neu): Kennzeichnung von Livestreams der Menüebene
 			unterhalb der Startseite (z.B. tagesschau24 und Phoenix unter "..Nachrichten

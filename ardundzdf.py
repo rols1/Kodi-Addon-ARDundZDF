@@ -55,8 +55,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>2</nr>										# Numerierung für Einzelupdate
-VERSION = '4.0.8'
-VDATE = '23.10.2021'
+VERSION = '4.0.9'
+VDATE = '31.10.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8608,7 +8608,6 @@ def ZDF_get_playerbox(li, page):
 				continue
 			PLog(box[:80])
 			title,path,img,descr,dauer,enddate,isvideo = ZDF_get_teaserDetails(box)		
-#			tag = "[B]Stagebox-Video[/B]\n\n%s" % descr_display
 			tag = "[B]Stagebox-Video[/B]"
 
 			PLog(url); PLog(title); PLog(img); PLog(sid); PLog(apiToken[:80]);
