@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>2</nr>								# Numerierung für Einzelupdate
-#	Stand: 14.10.2021
+# 	<nr>3</nr>								# Numerierung für Einzelupdate
+#	Stand: 03.11.2021
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -115,11 +115,8 @@ ICON_BILDER		= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/Ta
 ICON_KURZ 		= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau-Kurz.png?raw=true'
 ICON_24			= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau24.png?raw=true'
 ICON_Investig	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau-Investigativ.png?raw=true'
-
-# ----------------------------------------------------------------------
-# Seiten mit unterschiedlichen Archiv-Inhalten - ARD_bab, ARD_Archiv, ARD_Blogs,
-#	Podcasts_Audios, ARD_Bilder, ARD_kurz, BASE_FAKT
-# 
+ICON_Themen		= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau-Themen.png?raw=true'
+# ---------------------------------------------------------------------- 
 # 			
 def Main_XL():
 	PLog('Main_XL:')
@@ -235,6 +232,11 @@ def Main_XL():
 		(quote(title), quote(ARD_kurz), 'ARD_kurz', quote(ICON_KURZ))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
 		thumb=ICON_KURZ, fparams=fparams)
+		
+	title = 'Weitere Themen'									# weitere Themen der Startseite
+	fparams="&fparams={'title': '%s','path': '', 'menu': ''}"  % quote(title)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Themen", fanart=ICON_MAINXL, 
+		thumb=ICON_Themen, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
@@ -748,6 +750,73 @@ def XL_Audios(title, ID, img,  path=''):
 				(quote(title), quote(href), ID, quote(teaser_img))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Audios", fanart=teaser_img, 
 				thumb=teaser_img, fparams=fparams, tagline="Folgeseiten",  summary=summary)
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
+# ----------------------------------------------------------------------
+# weitere Themen der Startseite
+# 1. step: Menüs der Startseite listen
+# 2. step (path, menu): Untermenüs listen 
+def XL_Themen(title, path, menu=''):	
+	PLog('XL_Themen:')
+	PLog(menu)
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='TagesschauXL')							# Home-Button
+	
+	menu_list = [
+					u'/inland/|Startseite Inland', u'/ausland/|Startseite Ausland',
+					u'/wirtschaft/|Startseite Wirtschaft',
+				]
+	PLog(len(menu_list))
+	skip_list = [u'Podcast', u'Investigativ', u'Wetter', 'Wahlergebnisse', 
+				u'Audios',]
+	
+	if menu == '':												# Step 1 Menüs der Startseite listen
+		for item in menu_list:
+			href, title = item.split('|')
+			href = BASE_URL + href
+			PLog('Satz7:')
+			PLog(title);PLog(href);
+			title=py2_encode(title); href=py2_encode(href); 
+			fparams="&fparams={'title': '%s','path': '%s', 'menu': '%s'}"  %\
+				(quote(title), quote(href), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Themen", 
+				fanart=ICON_MAINXL, thumb=ICON_Themen, fparams=fparams)
+					
+	# -----------------											# Step 2 Untermenüs listen 
+	
+	else:
+		page, msg = get_page(path=path)
+		if page == '':	
+			msg1 = "Fehler in XL_Themen:"
+			msg2 = msg
+			MyDialog(msg1, msg2, '')
+			return 	
+			
+		menu_list = blockextract('class="header__navigation__list">', page,  '</ul>') # Hamb.-Menü Web
+		block=[]; img_src=R(ICON_DIR_FOLDER)
+		for block in menu_list:
+			found=False
+			if '/">%s<' % menu in block:
+				PLog('gefunden: >%s<' % menu)
+				found=True
+				break
+		
+		items = blockextract('list__item">', block, '</li>')
+		PLog(len(items))
+		for item in items:
+			href =  stringextract('href="', '"', item)
+			title = stringextract('/">', '</a', item)
+			title = unescape(title)
+			
+			PLog('Satz8:')
+			PLog(title);PLog(href);
+			title=py2_encode(title); href=py2_encode(href); 
+			fparams="&fparams={'title': '%s','path': '%s'}"  % (title, quote(href)) 
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.get_VideoAudio", 
+				fanart=ICON_MAINXL, thumb=img_src, tagline='Folgeseiten', fparams=fparams)						
+		
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
