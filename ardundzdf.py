@@ -54,9 +54,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
+# 	<nr>3</nr>										# Numerierung für Einzelupdate
 VERSION = '4.0.9'
-VDATE = '31.10.2021'
+VDATE = '03.11.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1157,13 +1157,20 @@ def AudioStartHome(title, ID, page='', path=''):	# Auswertung Homepage
 		# path = 'https://www.ardaudiothek.de/suche/Sport' 			# Web-Suche
 		path = 'https://www.ardaudiothek.de/rubrik/sport/42914734'	# 08.08.2021 (Rubrik umfangreicher)
 	else:
-		path = ARD_AUDIO_BASE + "homescreen"		# Kat's der Leitseite			
-	page, msg = get_page(path=path)	
-	if page == '':	
-		msg1 = "Fehler in AudioStartHome:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
+		path = ARD_AUDIO_BASE + "homescreen"		# Kat's der Leitseite
+		
+	page=''									
+	if 	ID == 'Sport':								# Permanent Redirect - s.a. Audio_get_cluster_rubrik
+		page, msg = get_page(path=path, GetOnlyRedirect=True)	
+		url = page								
+		page, msg = get_page(path=url)			
+	else:	
+		page, msg = get_page(path=path)	
+		if page == '':	
+			msg1 = "Fehler in AudioStartHome:"
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return li
 	PLog(len(page))	
 		
 	li = home(li, ID='ARD Audiothek')				# Home-Button
