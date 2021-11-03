@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
 VERSION = '4.0.9'
 VDATE = '03.11.2021'
 
@@ -1957,7 +1957,7 @@ def AudioSearch(title, query='', path=''):
 	title_org = title
 	ID="AudioSearch"
 
-	base = "https://www.ardaudiothek.de/suche/%s"
+	base = "https://www.ardaudiothek.de/suche/%s/"
 	# api-Bsp.: https://api.ardaudiothek.de/search?query=pandemie:
 	
 	if 	query == '':	
