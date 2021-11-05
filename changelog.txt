@@ -10,6 +10,26 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+05.11.2021 4.1.0
+			epgRecord: Check Zeitsteuerung nach Ende Sommerzeit - OK
+			time_translate (Modul util): Abgleich Sendezeiten ARD mit Ausgabe in Verpasst -
+			OK, Anpassung Tabelle summer_time für 2022.
+			Audiothek: Fix Permanent-Redirect-Error  im Menü Sport.
+			Modul TagesschauXL: Erweiterung mit Menü "Weitere Themen" (Untermenüs: Inland,
+			Ausland, Wirtschaft), neue Funktion XL_Themen.
+			AudioSearch (Audiothek): Fix Permanent-Redirect-Error  im Menü Suche.
+			Audio_get_json_multi (Audiothek): Fix json_Fehler bei Sendungen mit nur einem
+			Beitrag im Suchergebnis.
+			Sendereihe_Sendungen (Modul 3sat): Links zur Redaktion und SocialMedia 
+			ausgeblendet.
+			AudioStartLive (Audiothek): Fix Sender-Icon (vorher 1. Bild der Sendungen).  
+			AudioSenderPrograms (Audiothek): Fix Sendungsbild web-entsprechend (bisher 
+			Kategoriebild). 
+			Audio_get_sendung (Audiothek): Blockmerkmal bestQualityPlaybackUrl ergänzt
+			(leere Sendungsliste z.B. ARD-Sendung Maischberger).
+			XL_Audios (Audiothek): Link-Button zu Audiothek-Tagesschau-Podcasts, neue
+			Funktion XL_Link.
+
 31.10.2021 4.0.9
 			Rubrik (Modul 3sat): Bildtexte -> Infotext, Blockbildung für mehr Inhalte
 			geändert (neue Funktionen get_container, get_title).

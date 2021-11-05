@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 31.10.2021
+#	Stand: 03.11.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1048,7 +1048,13 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 	
 	PLog("Mark1")													# Einzelbeiträge
 	cnt=0; 
+	add_list = ['/gesellschaft/quer/quer-kontakt-100.html',			# Redakt. + SocialMedia ausblenden
+				'twitter.com/BR_quer', 'facebook.com/quer',
+				'youtube.com/quer', 'instagram.com/quer_vom_br/',
+				]
+	skip_list = skip_list + add_list		
 	PLog(skip_list)
+	
 	for rec in rubriken:
 		#if 'data-playlist-toggle' not in rec:
 		#	continue
@@ -1066,7 +1072,13 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 		
 		href	= stringextract('href="', '"', rec)
 		PLog("href: " + href)
-		if href in skip_list:											# get_zdfplayer_content: skip_list o. BASE
+		skip=False
+		for h in skip_list:											# get_zdfplayer_content: skip_list o. BASE
+			if h in href:
+				PLog("skip: " + href)
+				skip=True
+				break
+		if skip:	
 			PLog("skip") 
 			continue
 		skip_list.append(href)									

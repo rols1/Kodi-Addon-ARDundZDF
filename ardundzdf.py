@@ -55,8 +55,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>4</nr>										# Numerierung für Einzelupdate
-VERSION = '4.0.9'
-VDATE = '03.11.2021'
+VERSION = '4.1.0'
+VDATE = '05.11.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1263,7 +1263,8 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', programs='', img='
 		MyDialog(msg1, msg2, '')	
 		return li
 
-	pubObjekts = blockextract('"brandingColor":"', page)				# Station: Livestreams + PRG
+	#pubObjekts = blockextract('"brandingColor":"', page)				# Sender-Icon außerhalb
+	pubObjekts = blockextract('"name":"publicationService"', page)		# Station: Livestreams + PRG
 	PLog(len(pubObjekts))
 	if sender == '':
 		for pubObjekt in pubObjekts:
@@ -1424,12 +1425,13 @@ def AudioSenderPrograms(li, page, sender, img):
 		for prgSet in SenderSets:
 			# PLog(prgSet[80:])
 			cnt=cnt+1
-			if cnt==4:
-				PLog(prgSet)
+			#if cnt==4:			# Debug
+			#	PLog(prgSet)
 			
 			set_url = stringextract('"href":"', '"', prgSet)			# 1. link in _links
-			set_img = stringextract('"mt:image":"', '}', prgSet)
-			set_img = stringextract('"href":"', '"', set_img)
+			set_img = stringextract('{"href":"', '{ratio}', prgSet)
+			set_img = set_img + "1x1/640?mandant=ard"
+			
 			anzahl = stringextract('"numberOfElements":', ',', prgSet)
 			prg_id = stringextract('/programsets/', '{?order', prgSet)
 			href = base + "programsets/%s" % prg_id
@@ -1440,21 +1442,19 @@ def AudioSenderPrograms(li, page, sender, img):
 			
 			#cat_url = stringextract('"href":"', '"', cat)				# -> Kategorie, nicht -> PRG
 			
-			cat_img = stringextract('"mt:image":', '"templated"', cat)
-			cat_img = stringextract('"href":"', '"', cat_img)
-			cat_img =cat_img.replace('{ratio}', '1x1'); 
-			cat_img =cat_img.replace('{width}', '640'); 
+			cat_img = stringextract('"mt:image":', '"templated"', cat)	# Kategorie-Bild z.Z. nicht verwendet
+			cat_img = stringextract('"href":"', '{ratio}', cat_img)
+			cat_img = cat_img + "1x1/640?mandant=ard"
 			pos = cat.find('"id":'); cat = cat[pos:]
 			cat_title = stringextract('"title":"', '"', cat)
 			
 			tag = u"%s\n[B]Folgeseiten[/B] | Sendungen: %s"  % (cat_title, anzahl)
 			
-			img=cat_img
 			PLog('14Satz:');
 			PLog(title); PLog(tag); PLog(img); PLog(href); PLog(anzahl);
 			title=py2_encode(title); href=py2_encode(href);
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
-			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", fanart=img, thumb=img, fparams=fparams, 
+			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", fanart=img, thumb=set_img, fparams=fparams, 
 				tagline=tag)
 						
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
@@ -1689,6 +1689,11 @@ def Audio_get_json_multi(li, page, ID, jsonObject=''):
 
 		if ID == "Cluster_Sendungen":									# aus Audio_get_cluster_search 2. Aufruf
 			audObs = jsonObject["_embedded"]['mt:programSets']	
+			anz=jsonObject["numberOfElements"]
+			PLog(anz)
+			if anz==1:													# Klammer [ fehlt in json-Datei bei anz 1
+				audObs=[]
+				audObs.append(jsonObject['_embedded']['mt:programSets'])	
 		if ID == "Cluster_Rubriken":									# aus Audio_get_cluster_search 2. Aufruf
 			audObs = jsonObject["_embedded"]['mt:editorialCategories']	# kleines c in Audio_get_cluster_search!
 			anz=jsonObject["numberOfElements"]
@@ -1702,18 +1707,22 @@ def Audio_get_json_multi(li, page, ID, jsonObject=''):
 	PLog(len(audObs))
 		
 	cnt=0;
+	PLog(audObs)		
 	for aO in audObs:
-		try:				
+		try:	
+			PLog("Mark0")
 			href = aO["_links"]["self"]["href"]
 			href = href.replace('order,', '')
 			href = href.replace('{?offset,limit}', '?offset=0&limit=12')
 			
+			PLog("Mark1")			
 			href = ARD_AUDIO_BASE + href
 			img = aO["_links"]["mt:image"]["href"]
 			img = img.replace('{ratio}/{width}', '1x1/640')
 			sid = aO["id"]
 			title = aO["title"]
 			
+			PLog("Mark2")			
 			if ID == 'Rubriken' or ID == 'Cluster_Rubriken':			# Rubriken ohne Text, Anzahl
 				descr=''
 				anz=''
@@ -1726,6 +1735,7 @@ def Audio_get_json_multi(li, page, ID, jsonObject=''):
 				descr = aO["synopsis"]	
 				anz = aO["numberOfElements"]	
 				tag	= "Folgeseiten | Anzahl %s" % (anz)
+			PLog("Mark3")			
 			  
 			descr	= unescape(descr); descr = repl_json_chars(descr)
 			summ_par= descr.replace('\n', '||')
@@ -1771,7 +1781,9 @@ def Audio_get_sendung(url, title):			# extrahiert Einzelbeiträge einer Sendung
 		return li
 
 	page = page.replace('\\"', '*')
-	items = blockextract('"mt:downloadUrl', page)
+	items = blockextract('mt:downloadUrl', page)
+	if len(items) == 0:													# Bsp. ARD-Sendung Maischberger
+		items = blockextract('mt:bestQualityPlaybackUrl', page)
 	PLog(len(items))
 	
 	for item in items:

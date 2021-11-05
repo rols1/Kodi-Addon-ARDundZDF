@@ -156,7 +156,7 @@ def JobMonitor():
 			start, end = start_end.split('|')						# 1593627300|1593633300
 			start = int(start); end = int(end);
 				
-			#start = get_summer_unix_time(start)					# entf. mit 
+			#start = get_summer_unix_time(start)					# entf. mit Anpassung JOBDELAY 
 			#end = get_summer_unix_time(end)
 			PLog("end - start1: %d" % (end-start))
 

@@ -1734,6 +1734,7 @@ def time_translate(timecode, add_hour=True):
 	summer_time = [	"2019-03-31T01:00:00Z|2019-10-27T01:00:00Z",
 					"2020-03-29T01:00:00Z|2020-10-25T01:00:00Z",
 					"2021-03-28T01:00:00Z|2021-10-31T01:00:00Z",
+					"2022-03-27T01:00:00Z|2022-10-30T01:00:00Z"
 				]
 
 	if timecode.strip() == '' or len(timecode) < 19 or timecode[10] != 'T':

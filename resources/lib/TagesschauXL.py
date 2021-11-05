@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>3</nr>								# Numerierung für Einzelupdate
-#	Stand: 03.11.2021
+#	Stand: 05.11.2021
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -666,6 +666,7 @@ def get_content(li, page, ID, mark='', path=''):
 #	(1. Aufruf mit ID="Audios"
 # path: einz. Podcastseiten, z.B. podcasts/faktenfinder-feed-101.html 
 #	(2. Aufruf mit ID=Podcasts und path)
+# 05.11.2021 Link-Button zu Audiothek-Tagesschau-Podcasts
 #
 def XL_Audios(title, ID, img,  path=''):	
 	PLog('XL_Audios:')
@@ -687,7 +688,17 @@ def XL_Audios(title, ID, img,  path=''):
 	items=[]
 	items =  blockextract('class="teaser__link"', page)				# Podcasts-Übersichten
 	items =  items + blockextract('component="ts-mediaplayer"', page)
-	PLog(len(page));	
+	PLog(len(page));
+	
+	
+	dest_func = "ardundzdf.AudioSenderPrograms"						# -> Audiothek-Tagesschau-Podcasts
+	path = "https://api.ardaudiothek.de/organizations"
+	tag = "weiter zu den Podcasts der ARD-Audiothek"
+	path=py2_encode(path);
+	fparams="&fparams={'dest_func': '%s', 'path': '%s'}" % (dest_func, quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Link", 
+		fanart=ICON_MAINXL, thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)
+		
 
 	base_url = BASE_URL
 	for item in items:
@@ -753,6 +764,29 @@ def XL_Audios(title, ID, img,  path=''):
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
+# ----------------------------------------------------------------------
+# Wrapper für Funktionsaufrufe
+def XL_Link(dest_func, path):	
+	PLog('XL_Link:')
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='TagesschauXL')							# Home-Button
+	
+	if "AudioSenderPrograms" in dest_func:
+		page, msg = get_page(path=path)	
+		if page == '':	
+			msg1 = "Fehler in XL_Audios:"
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return 
+		PLog(len(page));
+		
+		sender = "Tagesschau"
+		img = ICON_MAINXL		# github
+		AudioSenderPrograms(li, page, sender, img)	
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
 # ----------------------------------------------------------------------
 # weitere Themen der Startseite
 # 1. step: Menüs der Startseite listen
