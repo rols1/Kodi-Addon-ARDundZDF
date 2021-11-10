@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>5</nr>										# Numerierung für Einzelupdate
+# 	<nr>6</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.0'
 VDATE = '05.11.2021'
 
@@ -564,13 +564,13 @@ def InfoAndFilter():
 		addDir(li=li, label=title, action="dirList", dirID="start_script",\
 			fanart=R(FANART), thumb=R("icon-playlist.png"), tagline=tag, summary=summ, fparams=fparams)	
 			
-		title = u"Einzelupdate (Dateien und Module)"		# Update von Einzeldateien
-		tag = 'Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s' % REPO_NAME
-		tag = "%s\n\nNach Abgleich werden neue Dateien heruntergeladen und ersetzen lokale Dateien im Addon." % tag
-		summ = "Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt."
-		fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.EPG.update_single",\
-			fanart=R(FANART), thumb=R("icon-update-einzeln.png"), tagline=tag, summary=summ, fparams=fparams)	
+	title = u"Einzelupdate (Dateien und Module)"		# Update von Einzeldateien
+	tag = 'Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s' % REPO_NAME
+	tag = "%s\n\nNach Abgleich werden neue Dateien heruntergeladen und ersetzen lokale Dateien im Addon." % tag
+	summ = "Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt."
+	fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.EPG.update_single",\
+		fanart=R(FANART), thumb=R("icon-update-einzeln.png"), tagline=tag, summary=summ, fparams=fparams)	
 		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
@@ -9713,7 +9713,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 #	build_Streamlists (ZDF,  my3Sat), SingleSendung (ARD Classic)
 # 
 # Plot = tagline (zusammengefasst: Titel, tagline, summary)
- 
+# 10.11.2021 Sortierung der MP4-Liste von Auflösung nach Bitrate geändert
 #
 def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):	
 	PLog('StreamsShow:'); PLog(ID)
@@ -9723,10 +9723,10 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 	li = home(li, ID=HOME_ID)						# Home-Button
 
 	Stream_List = Dict("load", ID)
-	PLog(Stream_List)
-#	if 'MP4_List' in ID:
-#		Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'lösung (\d+)', x).group(1)))
-#		Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'sung (\d+)', x).group(1)))
+	#PLog(Stream_List)
+
+	if 'MP4_List' in ID:
+		Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))
 
 	title_org=py2_encode(title_org);  img=py2_encode(img);
 	sub_path=py2_encode(sub_path); 	Plot=py2_encode(Plot); 

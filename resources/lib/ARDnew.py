@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
 #	Stand: 10.11.2021
 
 # Python3-Kompatibilität:
@@ -1033,18 +1033,17 @@ def ARDStartVideoMP4get(title, VideoUrls):
 
 		#if int(q) >= 2:								# Auflösung auswerten (ab hohe Qual.) - nicht sicher
 		if "_width" in video:							# Proben überschreiben
-			w = stringextract('_width":', ',', video)
+			w = stringextract('_width":', '}', video)
 			h = stringextract('_height":', ',', video)
 		if w and h:
 			res = "%sx%s" % (w,h)
 		else:
-			res = u"Auflösung ?"
+			res = u" ?"
 		
-#		title = repl_json_chars(title)
-#		href = repl_json_chars(href)
 		PLog(bitrate); PLog(res); 
 		title_url = u"%s#%s" % (title, href)
 		item = u"MP4 Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
+		item = py2_decode(item)
 		download_list.append(item)
 	
 	#PLog(download_list)
