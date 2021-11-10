@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.0'
 VDATE = '05.11.2021'
 
@@ -9723,8 +9723,10 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 	li = home(li, ID=HOME_ID)						# Home-Button
 
 	Stream_List = Dict("load", ID)
-	if 'MP4_List' in ID:
-		Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'lösung (\d+)', x).group(1)))
+	PLog(Stream_List)
+#	if 'MP4_List' in ID:
+#		Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'lösung (\d+)', x).group(1)))
+#		Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'sung (\d+)', x).group(1)))
 
 	title_org=py2_encode(title_org);  img=py2_encode(img);
 	sub_path=py2_encode(sub_path); 	Plot=py2_encode(Plot); 

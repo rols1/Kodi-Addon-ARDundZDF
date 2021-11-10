@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.10.2021
+# 	<nr>3</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.11.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -891,10 +891,10 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summary)
 		
 	# -----------------------------------------			# Extrakt Videoquellen
-	Plugins = blockextract('_plugin', page)				# wir verwenden nur Plugin1 (s.o.)
+	Plugins = blockextract('"_defaultQuality"', page)	# 10.11.2021 Block vormals '_plugin'
 	if len(Plugins) > 0:
 		Plugin1	= Plugins[0]							
-		VideoUrls = blockextract('_quality', Plugin1, "publicationService")
+		VideoUrls = blockextract('_quality', Plugin1)
 	PLog(len(VideoUrls))
 	
 	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
@@ -985,7 +985,8 @@ def ARDStartVideoMP4get(title, VideoUrls):
 			
 	href=''; quality=''
 	title = py2_decode(title)
-	download_list = []		# 2-teilige Liste für Download: 'title # url'
+	download_list = []		#PLog(Stream_List)
+	# 2-teilige Liste für Download: 'title # url'
 	Format = 'Video-Format: MP4'
 	for video in  VideoUrls:
 		PLog(video[:100])
@@ -1039,11 +1040,14 @@ def ARDStartVideoMP4get(title, VideoUrls):
 		else:
 			res = u"Auflösung ?"
 		
+#		title = repl_json_chars(title)
+#		href = repl_json_chars(href)
 		PLog(bitrate); PLog(res); 
 		title_url = u"%s#%s" % (title, href)
 		item = u"MP4 Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
 		download_list.append(item)
 	
+	#PLog(download_list)
 	return download_list			
 			
 ####################################################################################################
