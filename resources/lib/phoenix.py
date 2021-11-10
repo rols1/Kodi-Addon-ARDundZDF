@@ -7,7 +7,7 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
 #	Stand: 08.10.2021
 
 # Python3-Kompatibilität:
@@ -184,7 +184,8 @@ def get_live_data():
 # path via chrome-tools ermittelt. Ergebnisse im json-Format
 # 25.05.2021 Suchlink an phoenix-Änderung angepasst
 # 28.06.2021 erneut angepasst
-#
+# 09.11.2021 wegen key-Problem ("0", "1"..) Wechsel json -> string-Auwertung,
+#	s. GetContent + ThemenListe
 def phoenix_Search(query='', nexturl=''):
 	PLog("phoenix_Search:")
 	if 	query == '':	
@@ -214,28 +215,30 @@ def phoenix_Search(query='', nexturl=''):
 		MyDialog(msg1, '', '')
 		return
 		
-	jsonObject = json.loads(page)
-	search_cnt = jsonObject["content"]['hits']
+	page = page.replace('\\/', '/')		# json-raw Links
+	page = page.replace('\\"', '*')		# "-Zeichen ersetzen
+	search_cnt = stringextract('hits":', ',', page)
+	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='phoenix')			# Home-Button
 
-	items = jsonObject["content"]['items']
-	PLog(len(items))
-	li = GetContent(li, items)						
+	li = GetContent(li, page)						
 		
-	nexturl = jsonObject["content"]["next"]					# letzte Seite: ""
-	if nexturl:
-		nexturl = BASE_PHOENIX + nexturl
-		PLog("nexturl: " + nexturl)	
-		img = R(ICON_MEHR)
-		title = u"Weitere Beiträge"
-		tag = u"Beiträge gezeigt: %s, gesamt: %s" % (len(items), search_cnt)
+	if '"next":' in page:				# Mehr-Seiten, hier "next" statt "next_url"
+		next_url	= stringextract('next":"', '"', page)
+		if next_url:
+			next_url = BASE_PHOENIX + next_url
+			skipcnt =  stringextract('skip/', '/', next_url)
+			PLog("next_url: %s, skipcnt: %s" % (next_url, skipcnt))	
+			img = R(ICON_MEHR)
+			title = u"Weitere Beiträge"
+			tag = u"Beiträge gezeigt: %s, gesamt: %s" % (skipcnt, search_cnt)
 
-		nexturl=py2_encode(nexturl); query=py2_encode(query); 
-		fparams="&fparams={'nexturl': '%s', 'query': '%s'}" %\
-			(quote(nexturl), quote(query))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.phoenix_Search", fanart=img, 
-			thumb=img, fparams=fparams, tagline=tag)
+			next_url=py2_encode(next_url); query=py2_encode(query); 
+			fparams="&fparams={'nexturl': '%s', 'query': '%s'}" %\
+				(quote(next_url), quote(query))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.phoenix_Search", fanart=img, 
+				thumb=img, fparams=fparams, tagline=tag)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -245,86 +248,85 @@ def phoenix_Search(query='', nexturl=''):
 # turn_title: veranlasst Tausch Titel/Subtitel
 # 29.01.2020 mediatype=video: Video lässt sich beim Autostart
 #	nicht mehr abschalten - auf '' gesetzt
-def GetContent(li, items, base_img=None, turn_title=True ):
+# 09.11.2021 wegen key-Problem ("0", "1"..) Wechsel json -> string-Auwertung,
+#	s.a. ThemenListe
+def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
 	PLog('GetContent:')
 
-	mediatype=''			# Kennzeichn. als Playable hier zu unsicher (Bsp. Plenarwochen)		
-
+	mediatype=''			# Kennzeichn. als Playable hier zu unsicher (Bsp. Plenarwochen)	
 	if not base_img:
-		base_img = R(ICON_PHOENIX)		# Ergebnisseite ohne Bilder, Phoenix-Bild verwenden
-	
-	for item in items:
-		# PLog(item)					# bei Bedarf
+		base_img = R(ICON_PHOENIX)		# Ergebnisseite ohne Bilder, Phoenix-Bild verwenden	
+
+	items = blockextract('{"link":',  page)
+	if len(items) == 0:					# Folgeseiten aus BeitragsListe
+		items = blockextract('"link":',  page)
+	PLog(len(items))
+	for item in items:	
 		vorspann=''; tag=''; summ=''; summ_par=''; subtitel=''; online=''
 		single = False; video='false'
-		try:
-			img = item["bild_m"]
-		except:
-			img = ''
-		if img == '':
-			try:
-				img = item["bild_l"]
-			except:
-				img = ''
-		if img == '':
-			img = base_img			
-			
+
+		img		= stringextract('"bild_l":"', '"', item)
+		if img == '':	
+			img	= stringextract('"bild_m":"', '"', item)
 		if img == '' or 'placeholder' in img:
-			img = base_img							# Fallback lokal
-		else:
-			if img.startswith('http') == False:
-				img = BASE_PHOENIX + img
+			img = base_img				
+		if img.startswith('http') == False:
+			img = BASE_PHOENIX + img
 		if '%' in img:								# Dekodierung  quotierte img-url's
 			img = decode_url(img)
-			PLog("decode_img: " + img)
-				
+			PLog("decode_img: " + img)				
 			
 		# "inhalt_video":true muss nicht stimmen, Bsp.: 
 		#	https://www.phoenix.de/response/template/suche_select_json/term/dialog/sort/score
 		#if "inhalt_video" in item:
 		#	video = item["inhalt_video"]	# false, true
 		
-		if "link" in item:					# Bsp. ../lindholz-am-05062018-a-262217.html, 
-			url	= BASE_PHOENIX + item["link"] # 	augstein-und-blome-s-121540.html	
-			PLog('url: ' + url)
-			html_ref = "Link: .." + url.split('-')[-1]	# 121540.html	
-		else:
+		url	= stringextract('link":"', '"', item)
+		if url == '':
 			continue
-		
-		subtitel=''
-		title 	= item["titel"]
-		if "subtitel" in item:
-			subtitel= item["subtitel"]
-		if '"vorspann"' in item:
-			vorspann= item["vorspann"]
-		typ 	= item["typ"]				# Artikel, Doku, Ereignis..
+		url	= BASE_PHOENIX + url 						# Bsp. augstein-und-blome-s-121540.html	
+		PLog('url: ' + url)
+		html_ref = "Link: .." + url.split('-')[-1]	# 121540.html	
+
+		title= stringextract('titel":"', '"', item)
+		subtitel = stringextract('subtitel":"', '"', item)
+		vorspann = stringextract('vorspann":"', '"', item)
+		typ	= stringextract('typ":"', '"', item)	# Artikel, Doku, Ereignis..
+		if typ == '':
+			continue
 		
 		# Formate Sendezeit: "2017-02-26 21:45:00", "2018-01-27 00:30"
 		if "online" in item:	
-			datestamp= item["online"]			# Formate wie sendezeit 
+			datestamp = stringextract('datestamp":"', '"', item)
 			online = getOnline(datestamp)
 		if online == '':						# vorh. bei Suche, nicht in response-Beiträgen
 			if "sendung" in item:
-				datestamp= item["sendung"]["sendezeit"]
+				datestamp = stringextract('sendezeit":"', '"', item)
 				online = getOnline(datestamp)	
+		if online == '':						# Beiträge aus BeitragsListe im 2. Durchlauf
+			datestamp = stringextract('online":"', '"', item)
+			online = getOnline(datestamp)	
 		if online == '':						# vorh. bei Suche, nicht in response-Beiträgen
 			online = "Sendezeit fehlt"
 			# trotz Sendezeit kann Video fehlen - Nachprüfung in SingleBeitrag
 		else:
 			if "inhalt_video" in item:			# trotz False Videos möglich (Bsp. Plenarwochen)
 				single = True
+		if get_single:							# Zwangsvorgabe aus BeitragsListe (2. Durchlauf)
+			single = True
 		PLog("typ: %s, %s" % (typ, online))
 		PLog('single: ' + str(single))	
-		
+
 		# Link kann trotz VIDEO-Kennz. mehrere Beiträge enthalten - Nachprüfung in
 		#	SingleBeitrag
 		if single:							# Typ-Angabe (Artikel, Doku..) nicht bei Videos
-			tag = "VIDEO | %s" % online
+			tag = u"VIDEO | %s" % online
 		else:
-			tag = "%s | Folgeseiten | %s"	% (typ, html_ref)
+			tag = u"%s | Folgeseiten | %s"	% (typ, html_ref)
 			
 		if SETTINGS.getSetting('pref_only_phoenix_videos') == 'true': 
 			vinhalt = item["inhalt_video"] 			# false, wenn z.Z. kein phoenix-Video vorhanden 
+			inhalt_video = stringextract('inhalt_video":', ',', item)
 			PLog('vinhalt: ' + str(vinhalt))
 			if vinhalt == False:
 				continue		
@@ -338,14 +340,14 @@ def GetContent(li, items, base_img=None, turn_title=True ):
 		if subtitel:		
 			summ = subtitel	
 		if vorspann:
-			summ = "%s\n\n" % (summ, vorspann)
+			summ = u"[B]%s[/B]\n\n%s" % (summ, vorspann)
 			summ_par = summ.replace('\n', '||')
 			
-		summ = repl_json_chars(summ);
-		title = cleanhtml(title); title = repl_json_chars(title);
+		title = transl_json(title); summ = transl_json(summ); 
+		summ = repl_json_chars(summ);  title = repl_json_chars(title);
 
-		PLog('Satz:')
-		PLog(url); PLog(img); PLog(title); PLog(summ[:80]); PLog(tag)
+		PLog('Satz1:')
+		PLog(url); PLog(img); PLog(title); PLog(subtitel); PLog(summ[:80]); PLog(tag)
 		url=py2_encode(url); title=py2_encode(title); img=py2_encode(img); summ_par=py2_encode(summ_par);
 		tag=py2_encode(tag);
 		if single:
@@ -364,6 +366,9 @@ def GetContent(li, items, base_img=None, turn_title=True ):
 # ----------------------------------------------------------------------
 # BeitragsListe: Liste der json-Datensätze in url
 #	Aufrufer: GetContent (Mehrfach-Beiträge)
+# 09.11.2021 wegen key-Problem ("0", "1"..) Wechsel json -> 
+#	string-Auwertung, Erzwingung von Einzelbeiträgen in
+#	GetContent (get_single) 
 #
 def BeitragsListe(path, html_url, title, skip_sid=False):
 	PLog('BeitragsListe:')
@@ -383,22 +388,26 @@ def BeitragsListe(path, html_url, title, skip_sid=False):
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li
+	page = page.replace('\\/', '/')		# json-raw Links
+	page = page.replace('\\"', '*')		# "-Zeichen ersetzen
+	page = page.replace('": "', '":"')  # Blank entf. (komp. mit GetContent)
+	
+	base_img = ICON_PHOENIX				# Fallback
+	if 'bild_l' in page:
+		base_img	= BASE_PHOENIX + stringextract('"bild_l":"', '"', page)
+		
+
+	if '"sendungen":' in page:
+		pos = page.find('"sendungen":')
+		page = page[pos:]
+		PLog(pos)
 	PLog(len(page))
-	
-	
-	jsonObject = json.loads(page)
-	items=''
-	# search_cnt = jsonObject["content"]['hits']# fehlt hier
-	if "related" in jsonObject: 	
-		items = jsonObject["related"]["sendungen"]
-	if "content" in jsonObject: 					# phoenix_Search Folgeseiten 
-		items = jsonObject["content"]["items"]
-	PLog(len(items))
+	PLog(page[:200])
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='phoenix')			# Home-Button
 		
-	li = GetContent(li, items, turn_title=True)	
+	li = GetContent(li, page, base_img=base_img, turn_title=True, get_single=True)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
@@ -441,7 +450,7 @@ def Themen(ID):							# Untermenüs zu ID
 		title = cleanhtml(title); title = mystrip(title);
 		title = repl_json_chars(title)
 	
-		PLog('Satz:')
+		PLog('Satz2:')
 		PLog(url); PLog(img); PLog(title)
 		url=py2_encode(url); title=py2_encode(title);
 		fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s'}" %\
@@ -455,12 +464,20 @@ def Themen(ID):							# Untermenüs zu ID
 # 07.11.2020 Hinweis: Datumsangaben für "online" / "sendezeit" können 
 #	vor den Datumsangaben im "subtitel" liegen (Bsp. Rubriken/Bundestag,
 #	sowohl Web- als auch json-Quellen).
-def ThemenListe(title, ID, path):				# Liste zu einzelnem Untermenü
+# 09.11.2021 wegen key-Problem ("0", "1"..) Wechsel json -> string-Auwertung,
+#	Berücksicht. weiterer Seiten (next_url)
+#
+def ThemenListe(title, ID, path, next_url=''):				# Liste zu einzelnem Untermenü
 	PLog('ThemenListe: ' + title)
-	PLog('ID: ' + ID)	
-		
-	sid 	= re.search(u'\-(\d+)\.html', path).group(1)	# Bsp. ../russland-r-252413.html
-	url 	= 'https://www.phoenix.de/response/id/'	+ sid
+	PLog('ID: ' + ID)
+	PLog('next_url: ' + next_url)
+	title_org = title	
+	
+	if next_url == '':										# 1. Aufruf
+		sid 	= re.search(u'\-(\d+)\.html', path).group(1)	# Bsp. ../russland-r-252413.html
+		url 	= 'https://www.phoenix.de/response/id/'	+ sid
+	else:
+		url = next_url
 	PLog('url: ' + url)
 
 	page, msg = get_page(path=url)	
@@ -470,20 +487,36 @@ def ThemenListe(title, ID, path):				# Liste zu einzelnem Untermenü
 		MyDialog(msg1, msg2, '')
 		return 
 	PLog(len(page))
-	
-	jsonObject = json.loads(page)
-	# search_cnt = jsonObject["content"]['hits']	
-	items = jsonObject["content"]['items']		
-	PLog(len(items))						
+	page = page.replace('\\/', '/')		# json-raw Links
+	page = page.replace('\\"', '*')		# "-Zeichen ersetzen
 	
 	base_img = ICON_PHOENIX				# Fallback
-	if 'bild_l' in jsonObject:
-		base_img = BASE_PHOENIX + jsonObject["bild_l"]
+	if 'bild_l' in page:
+		base_img	= BASE_PHOENIX + stringextract('"bild_l":"', '"', page)
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='phoenix')			# Home-Button
 		
-	li = GetContent(li, items, base_img=base_img, turn_title=True)		
+	li = GetContent(li, page, base_img=base_img, turn_title=True)
+	
+	if '"next_url":' in page:			# Mehr-Seiten
+		next_url	= stringextract('next_url":"', '"', page)
+		if next_url:
+			next_url = BASE_PHOENIX + next_url
+			PLog("next_url: " + next_url)	
+			img = R(ICON_MEHR)
+			title = u"Weitere Beiträge"
+			tag = "%s zu: [B]%s[/B]" % (title, title_org)
+			# tag = u"Beiträge gezeigt: %s, gesamt: %s" % (len(items), search_cnt) # nicht verfügbar
+			
+			title_org=py2_encode(title_org); ID=py2_encode(ID);  
+			path=py2_encode(path); next_url=py2_encode(next_url);  
+			fparams="&fparams={'title': '%s', 'ID': '%s', 'path': '%s', 'next_url': '%s'}" %\
+				(quote(title_org), quote(ID), quote(path), quote(next_url))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.ThemenListe", fanart=img, 
+				thumb=img, fparams=fparams, tagline=tag)
+		
+				
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -577,7 +610,12 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 			title = title.replace('\\r\\n', ''); title = title.strip()
 			summ = "Youtube-Video" 
 		else:	# typ "video-smubl"
-			vid = stringextract('basename": ', ',', item)		# Bsp. "basename": 253381, "bild_l":
+			if '<basename>' in item:							# xml, Bsp. <basename> 210829_1200_fruehschoppen
+				vid = stringextract('<basename>', '</', item)
+			else:												# json-Formate	
+				vid = stringextract('basename": ', ',', item)	# json,  ev. nicht mehr relevant
+				if vid == '':										
+					vid = stringextract('content": ', ',', item)# json, Bsp. "content": 2339044, 
 			summ = "phoenix-Video" 
 			
 		PLog('typ %s, vid %s' % (typ, vid))
@@ -585,11 +623,11 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 			title='%s | %s' % (s1, s2)							# Seiten-Titel + -Subtitel aus Leitthema (s.o.)
 		title = repl_json_chars(title)
 		if vid:
-			PLog('Satz:')
+			PLog('Satz3:')
 			PLog(vid); PLog(title); PLog(url); PLog(tag[:80]); PLog(summ[:80]); PLog(img); 
 			title=py2_encode(title); url=py2_encode(url);
-			vid=py2_encode(vid); tag=py2_encode(tag);
-			img=py2_encode(img); summ=py2_encode(summ);
+			vid=py2_encode(vid); tag=py2_encode(tag); tag_org=py2_encode(tag_org);
+			img=py2_encode(img); summ=py2_encode(summ); summ_org=py2_encode(summ_org);
 			tag_par = summ.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 
 			if 	typ == 'video-smubl':
@@ -640,7 +678,8 @@ def get_zdf_search(li, page, title):
 		summ = summ.replace('\\r\\n', ' ')
 		summ = cleanhtml(summ); summ = unescape(summ);
 		summ = repl_json_chars(summ) 
-		PLog("Satz:"); PLog(title); PLog(stitle_org);PLog(query); PLog(summ[:80]); 
+		PLog("Satz4:"); 
+		PLog(title); PLog(stitle_org);PLog(query); PLog(summ[:80]); 
 		query=py2_encode(query); title=py2_encode(title);
 		# return ardundzdf.ZDF_Search(query=query, title=title)	# Altern.: Direktsprung nur mit Subtitel
 		query=py2_encode(query); title=py2_encode(title); 	# Suche mit Titel
@@ -679,7 +718,7 @@ def get_zdf_search(li, page, title):
 			summ = summ.replace('\\r\\n', ' ')
 			summ = cleanhtml(summ); summ = unescape(summ);
 			summ = repl_json_chars(summ) 
-			PLog("Satz:"); PLog(title); PLog(query); PLog(summ[:80]); 
+			PLog("Satz5:"); PLog(title); PLog(query); PLog(summ[:80]); 
 			
 			query=py2_encode(query); title=py2_encode(title);
 			fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))
