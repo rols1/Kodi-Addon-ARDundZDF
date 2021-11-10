@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
 #	Stand: 10.11.2021
 
 # Python3-Kompatibilität:
@@ -606,7 +606,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	mediatype=''; pagetitle=''
 	pagination	= stringextract('pagination":', '"type"', page)
 	pagetitle 	= stringextract('title":"', '"', pagination)	# bei Suche: SearchCompilationWidget:..
-	PLog(pagetitle)
+	PLog("pagetitle: " + pagetitle)
 	page = page.replace('\\"', '*')								# quotierte Marks entf., Bsp. \"query\"
 	
 	if 'Livestream' in ID or 'EPG' in ID:
@@ -627,7 +627,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			gridlist = decorlist
 			
 		if len(gridlist) == 0:									# Fallback (außer Livestreams)
-			gridlist = blockextract( '"images":', page) 		# geändert 20.09.2019 
+			#gridlist = blockextract( '"images":', page) 		# geändert 20.09.2019 
+			gridlist = blockextract( '"availableTo":', page) 	# geändert 10.11.2021
 							
 		
 	if len(gridlist) == 0:		
