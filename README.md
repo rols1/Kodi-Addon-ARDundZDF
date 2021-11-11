@@ -14,7 +14,7 @@ Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/release
 
 Die Plex-Versionen [Plex-Plugin-ARDMediathek2016](https://github.com/rols1/Plex-Plugin-ARDMediathek2016) und [ARDundZDF](https://github.com/rols1/ARDundZDF) werden nicht mehr gepflegt - Plex hat die Unterstützung für Plugins in seinen Client-Softwarepaketen eingestellt.
 
-Die ARD kündigt schon lange die Einstellung der Classic-Funktionen an. Bis zur Umsetzung verbleibt der Classic-Code im Addon. <b>Hinweis</b>: seit Juni 2021 sind die Classic-Links nicht mehr erreichbar. Der Code im Addon wurde entfernt.
+<b>Classic-Version der ARD Mediathek</b>: seit Juni 2021 sind die Classic-Links nicht mehr erreichbar. Der Code im Addon wurde entfernt; im Addon ist die neue ARD Mediathek weiterhin verfügbar (siehe Funktionen).
 
 #### Rückmeldungen willkommen:
 Im Forum: https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/  
