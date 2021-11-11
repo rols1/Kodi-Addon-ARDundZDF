@@ -323,7 +323,6 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
 			tag = u"%s | Folgeseiten | %s"	% (typ, html_ref)
 			
 		if SETTINGS.getSetting('pref_only_phoenix_videos') == 'true': 
-#			vinhalt = item["inhalt_video"] 	
 			vinhalt = stringextract('inhalt_video":', ',', item)
 			PLog('vinhalt: ' + str(vinhalt))
 			if vinhalt == 'false':					# false, wenn z.Z. kein phoenix-Video vorhanden 

@@ -2076,9 +2076,7 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 			return '', pubDate
 			
 	# Decodierung plus bei Classic u-Kennz. vor Umlaut-strings (s.u.)
-	PLog('Mark0:')
 	page = py2_decode(page)
-	PLog('Mark1:')
 	PLog(skip_verf);PLog(skip_pubDate);
 	if "zdf.de/sport/" in path:												# ZDF Sport: pubDate unterdrücken -
 		skip_pubDate=True													#	bei Livestreams oft falsch

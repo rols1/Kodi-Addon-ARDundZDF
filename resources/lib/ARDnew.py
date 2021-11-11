@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.11.2021
+#	Stand: 11.11.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -579,7 +579,7 @@ def ARDRetro():
 		else:	
 			Dict("store", 'ARDRetro', page) 				# Seite -> Cache: aktualisieren		
 	PLog(len(page))
-	RSave('/tmp/x.html', py2_encode(page))	# Debug			
+	#RSave('/tmp/x.html', py2_encode(page))	# Debug			
 	
 	# json:
 	page = stringextract('<body', '</body>', page)

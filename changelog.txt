@@ -10,6 +10,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+11.11.2021 4.1.1
+			Modul phoenix: Anpassung an Sender-Änderungen (json-, xml-Formate) in 
+			SingleBeitrag (zusätzl. Fix Ermittlung der Video-ID (vid)), GetContent,
+			ThemenListe und BeitragsListe (json- -> string-Auswertung, Mehr-Seiten).
+			getOnline (Modul phoenix): fehlende Vorbelegung check_state ergänzt.
+			ARDStartSingle (Modul ARDnew): nach ARD-Änderung Auswertungsmerkmal für 
+			Videoquellen angepasst (_plugin -> _defaultQuality).
+			get_page_content (Modul ARDnew): nach ARD-Änderung Auswertungsmerkmal für
+			Beiträge der Startseite angepasst ("images" -> "availableTo").
+			StreamsShow (Streamlisten ARD/ZDF): Sortierung der MP4-Liste von Auflösung 
+			nach Bitrate geändert (lambda-Sortierung funktionierte nicht mehr).
+			AudioSearch: Austausch quote_plus(query) -> quote(query) (HTTP Error 404
+			bei Blanks in einigen Suchen).
+			ARDRetro (Modul ARDnew): RSave(page) auskommentiert (nur für Debugzwecke).
+
 05.11.2021 4.1.0
 			epgRecord: Check Zeitsteuerung nach Ende Sommerzeit - OK
 			time_translate (Modul util): Abgleich Sendezeiten ARD mit Ausgabe in Verpasst -

@@ -55,8 +55,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>6</nr>										# Numerierung für Einzelupdate
-VERSION = '4.1.0'
-VDATE = '05.11.2021'
+VERSION = '4.1.1'
+VDATE = '11.11.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1986,7 +1986,7 @@ def AudioSearch(title, query='', path=''):
 	li = home(li, ID='ARD Audiothek')								# Home-Button
 	
 	if path == '':													# Folgeseiten
-		path = base  % quote_plus(query)
+		path = base  % quote(query)
 	path_org=path
 	
 	page, msg = get_page(path=path)	
