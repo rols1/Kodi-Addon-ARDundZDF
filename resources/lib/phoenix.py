@@ -7,8 +7,8 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.11.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -200,7 +200,6 @@ def phoenix_Search(query='', nexturl=''):
 		path = "https://www.phoenix.de/response/template/suche_select_json/term/%s/sort/online" % quote(query)
 	else:
 		path = nexturl
-	PLog('Mark1')
 	PLog(path)
 	page, msg = get_page(path=path)	
 	if page == '':						
@@ -316,7 +315,7 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
 			single = True
 		PLog("typ: %s, %s" % (typ, online))
 		PLog('single: ' + str(single))	
-
+#-------- Debug Start 11.11.2021
 		# Link kann trotz VIDEO-Kennz. mehrere Beiträge enthalten - Nachprüfung in
 		#	SingleBeitrag
 		if single:							# Typ-Angabe (Artikel, Doku..) nicht bei Videos
@@ -325,7 +324,7 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
 			tag = u"%s | Folgeseiten | %s"	% (typ, html_ref)
 			
 		if SETTINGS.getSetting('pref_only_phoenix_videos') == 'true': 
-			vinhalt = item["inhalt_video"] 			# false, wenn z.Z. kein phoenix-Video vorhanden 
+#			vinhalt = item["inhalt_video"] 			# false, wenn z.Z. kein phoenix-Video vorhanden 
 			inhalt_video = stringextract('inhalt_video":', ',', item)
 			PLog('vinhalt: ' + str(vinhalt))
 			if vinhalt == False:
@@ -343,6 +342,7 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
 			summ = u"[B]%s[/B]\n\n%s" % (summ, vorspann)
 			summ_par = summ.replace('\n', '||')
 			
+#-------- Debug Ende 11.11.2021
 		title = transl_json(title); summ = transl_json(summ); 
 		summ = repl_json_chars(summ);  title = repl_json_chars(title);
 
