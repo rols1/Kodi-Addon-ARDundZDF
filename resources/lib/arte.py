@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.10.2021
+#	Stand: 20.11.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -89,6 +89,7 @@ def Main_arte(title='', summ='', descr='',href=''):
 	tag='[B][COLOR red]Arte Livestream[/COLOR][/B]'
 	title, summ, descr, vonbis, img, href = get_live_data('ARTE')
 	title = repl_json_chars(title)
+	
 	if img == '':
 		img = R(ICON_TVLIVE)
 	summ_par = summ.replace('\n', '||')	
@@ -408,6 +409,9 @@ def get_img(item):
 # ----------------------------------------------------------------------
 # Folgebeiträge aus GetContent
 #	-> GetContent -> SingleVideo
+# 19.11.2021 ergänzt um weitere Auswertungsmerkmale, Hinw. auf Überschreitung
+#	der Ebenentiefe entfernt
+#
 def Beitrag_Liste(url, title):
 	PLog("Beitrag_Liste:")				
 
@@ -422,22 +426,63 @@ def Beitrag_Liste(url, title):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='arte')				# Home-Button
 
-	pos = page.find('__INITIAL_STATE__ ')	# json-Bereich
-	if pos == -1:							# führt über die Kategorien hinaus
-		msg1 = u'Auswertung überschreitet die Ebenentiefe.'
-		msg2 = u'Auswertung im Addon nicht möglich: >%s<' % title
-		msg3 = u'Bitte bei Bedarf im Web nachschlagen'  
+	mediatype=''; cnt=0													# Default für mehrfach
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'												# für SingleVideo
+	
+	cnt=0;
+	if '__INITIAL_STATE__ ' in page:			# json-Format
+		page = page.replace('\\u002F', '/')	
+		page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
+		li,cnt = GetContent(li, page, ID='Beitrag_Liste')		
+	else:	
+		pos1 = page.find('labelledby')
+		pos2 = page.find('>Websites<')
+		page = page[pos1:pos2]
+		PLog(len(page))
+		items = blockextract('labelledby', page)	
+		PLog(len(items))
+		
+		for item in items:
+			summ=''; geo='';											# nicht vorh.
+			tag=''									
+			url = stringextract('href="', '"', item)
+			pid = stringextract('/videos/', '/', url)
+			img = stringextract('src="', '"', item)
+			title = stringextract('_title">', '</h3>', item)
+			title = unescape(title); title = repl_json_chars(title);
+			title = unescape(title); title = repl_json_chars(title);
+			subtitle = stringextract('de_subtitle">', '</p>', item)
+			subtitle = unescape(subtitle); subtitle = repl_json_chars(subtitle);
+			dur = stringextract('css-18884f0">', '</p>', item)
+			if dur:
+				tag = "Dauer %s" % dur
+				if subtitle:
+					tag = "%s | %s" % (tag, subtitle)
+				tag_par = tag; 
+			
+			
+			PLog('Satz2:')
+			PLog(pid); PLog(title); PLog(url); PLog(tag[:80]); PLog(summ[:80]); 
+			PLog(img); PLog(geo);
+			title=py2_encode(title); url=py2_encode(url);
+			pid=py2_encode(pid); tag_par=py2_encode(tag_par);
+			img=py2_encode(img); summ=py2_encode(summ);
+
+			fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s'}" %\
+				(quote(img), quote(title), quote(pid), quote(tag_par), quote(summ), dur, geo)
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.SingleVideo", 
+				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ,  mediatype=mediatype)		
+			cnt=cnt+1
+	
+	if cnt == 0:					
+		msg1 = u"%s:" % py2_decode(title)
+		msg2 = u'Leider keine Videos gefunden.' 
+		msg3 = u'Bitte bei Bedarf im Web nachschlagen' 
 		MyDialog(msg1, msg2, msg3)
 		PLog(msg1)
 		return li
 		
-	page = page[pos:]
-	PLog(len(page))
-	page = page.replace('\\u002F', '/')	
-	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
-
-	li,cnt = GetContent(li, page, ID='Beitrag_Liste')	
-	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------
@@ -468,6 +513,10 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	
 	formitaeten = blockextract('"id":"H', page) # Bsp. "id":"HTTPS_MQ_1", "id":"HLS_XQ_1"
 	PLog(len(formitaeten))
+	if summ == '':							# ev. nicht besetzt in Beitrag_Liste
+		summ = stringextract('"V7T":"',  '"', page)
+		summ=transl_json(summ); summ=repl_json_chars(summ)
+	PLog("summ: " + summ)
 	
 	form_arr = []; rec_list=[]	
 	for rec in formitaeten:	

@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.11.2021
+#	Stand: 13.11.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -923,12 +923,15 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	Plot = "Titel: %s\n\n%s" % (title_org, summary)				# -> build_Streamlists_buttons
 	PLog('Plot:' + Plot)
 	thumb = img; ID = 'ARDNEU'; HOME_ID = "ARD Neu"
-	ardundzdf.build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
-		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
 	
-	# -----------------------------------------		# mehr (Videos) zur Sendung
-	if mehrzS:										# nicht nochmal "mehr" zeigen
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	played_direct = ardundzdf.build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
+		
+
+	# -----------------------------------------		# mehr (Videos) zur Sendung,
+	if mehrzS or played_direct:						# skip bei direktem Aufruf
+		return										# 13.11.2021 notw. für Rückspr. z. Merkliste
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 	PLog('Mehr_Test')
 	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten). element enthält 

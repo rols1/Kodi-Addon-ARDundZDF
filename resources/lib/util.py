@@ -236,22 +236,24 @@ def get_items_from_list(my_indices, my_list):
 # 	filterstatus='set' steuert Eintrag im Kontext-Menü
 def home(li, ID):												
 	PLog('home: ' + ID)	
+		
 	if SETTINGS.getSetting('pref_nohome') == 'true':	# keine Homebuttons
 		return li
-		
-	title = u'Zurück zum Hauptmenü %s' % ID
+			
+	# Position 1 bei aufst. Sortierung:					# ZERO WIDTH SPACE u"\u200B" wirkt nicht mit Color
+	Home = " Home: "									#	getestet: 2000 - 202F (invisible-characters-ascii)
+	title = u' Zurück zum Hauptmenü %s' % ID
 	summary = title										# z.Z. n.w.
 	tag =  "Ausschluss-Filter Status: AUS"				# nur ARD und ZDF, nicht Module
 	if SETTINGS.getSetting('pref_usefilter') == 'true':	
 		tag = tag.replace('AUS','[COLOR blue]EIN[/COLOR]')										
 	
-	CurSender = Dict("load", 'CurSender')		
-	PLog(CurSender)	
 
 	if ID == NAME:		# 'ARD und ZDF'
-		name = 'Home : ' + NAME
+		name = Home + NAME
 		fparams="&fparams={}"
 		img = R('icon.png') 
+		name = ' Home: ARD und ZDF'
 		addDir(li=li, label=name, action="dirList", dirID="Main", fanart=img, 
 			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 			
@@ -259,27 +261,26 @@ def home(li, ID):
 		if SETTINGS.getSetting('pref_use_classic') == 'false':	# Umlabeln für ARD-Suche (Classic)
 			ID ='ARD Neu'
 		
-	# 	03.06.2021 ARD (Classic) entfernt		
 		
 	if ID == 'ARD Neu':			
 		img = R('ard-mediathek.png') 
-		name = 'Home: ' + "ARD Mediathek"
+		name = Home + "ARD Mediathek"
 		CurSender = Dict("load", "CurSender")
 		fparams="&fparams={'name': '%s', 'CurSender': '%s'}"	% (quote(name), quote(CurSender))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", 
 			fanart=img, thumb=img, tagline=tag, filterstatus='', fparams=fparams)
 			
 	if ID == 'ZDF' or ID == 'ZDFStart' or ID == 'ZDFfunkStart':
-		title = u'Zurück zum Hauptmenü ZDF'
+		title = u' Zurück zum Hauptmenü ZDF'
 		img = R('zdf-mediathek.png')
-		name = 'Home: ' + "ZDF Mediathek"
+		name = Home + "ZDF Mediathek"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_ZDF", fanart=img, 
 			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
 		
 	if ID == 'ZDFmobile':
 		img = R('zdf-mobile.png')
-		name = 'Home :' + "ZDFmobile"
+		name = Home + "ZDFmobile"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
 			fanart=img, thumb=img, filterstatus='', fparams=fparams)
@@ -288,49 +289,49 @@ def home(li, ID):
 			
 	if ID == 'ARD Audiothek':
 		img = R(ICON_MAIN_AUDIO)
-		name = 'Home :' + "ARD Audiothek"
+		name = Home + "ARD Audiothek"
 		fparams="&fparams={'title': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=img, 
 			thumb=img, tagline=tag, filterstatus='', fparams=fparams)
 			
 	if ID == '3Sat':
 		img = R('3sat.png')
-		name = 'Home :' + "3Sat"
+		name = Home + "3Sat"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", fanart=img, 
 			thumb=img, filterstatus='', fparams=fparams)
 			
 	if ID == 'FUNK':
 		img = R('funk.png')
-		name = 'Home :' + "FUNK"
+		name = Home + "FUNK"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Main_funk", fanart=img, 
 			thumb=img, filterstatus='set', fparams=fparams)
 			
 	if ID == 'Kinderprogramme':
 		img = R('childs.png')
-		name = 'Home :' + ID
+		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Main_childs", fanart=img, 
 			thumb=img, filterstatus='', fparams=fparams)
 
 	if ID == 'TagesschauXL':
 		img = ICON_MAINXL		# github
-		name = 'Home :' + ID
+		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", fanart=img, 
 			thumb=img, filterstatus='', fparams=fparams)
 			
 	if ID == 'phoenix':
 		img = R(ICON_PHOENIX)
-		name = 'Home :' + ID
+		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.Main_phoenix", fanart=img, 
 			thumb=img, filterstatus='', fparams=fparams)
 
 	if ID == 'arte':
 		img = R(ICON_ARTE)
-		name = 'Home :' + ID
+		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Main_arte", fanart=img, 
 			thumb=img, filterstatus='', fparams=fparams)
@@ -674,11 +675,12 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		isFolder = True	
 
 	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
-	if sortlabel:
+	# PLog('sortlabel: %s' % sortlabel)								# z.Z. nicht genutzt							
+	if SETTINGS.getSetting('pref_sort_label') == 'true':			# Testaddon: Sortierung 
 		# kein Unterschied zw. SORT_METHOD_LABEL / SORT_METHOD_LABEL_IGNORE_THE
-		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL)
-	else:
 		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
+		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL)
+		# xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_DATE)		# falls für "verfügbar bis" möglich
 	PLog('PLUGIN_URL: ' + PLUGIN_URL)	# plugin://plugin.video.ardundzdf/
 	PLog('HANDLE: %s' % HANDLE)
 	
@@ -696,8 +698,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		# PLog('Plot: ' + Plot)
 		fparams_folder=''; fparams_filter=''; fparams_delete=''; 
 		fparams_change=''; fparams_record=''; fparams_recordLive='';
-		fparams_setting_sofortstart=''; fparams_do_folder='';
-		fparams_rename=''; 
+		fparams_setting_sofortstart=''; fparams_sorting=''; 
+		fparams_do_folder=''; fparams_rename=''; 
 		fparams_playlist_add=''; fparams_playlist_rm='';fparams_playlist_play=''							
 		
 		if filterstatus != 'set':									# Doppel im Hauptmenü vermeiden (s. home)
@@ -711,12 +713,32 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				msg1 = "Video-Sofortstart EIN"
 				msg2 = "Downloads AUS"
 				ID = 'pref_video_direct,true|pref_use_downloads,false'
-			icon = R(ICON_TOOLS)									# ständig: Umschalter Settings 
+			icon = R(ICON_TOOLS) 
 			fp = {'ID': ID, 'msg1': msg1,\
 				'msg2': msg2, 'icon': quote_plus(icon), 'delay': '3000'} 
 			fparams_setting_sofortstart = "&fparams={0}".format(fp)
 			PLog("fparams_setting_sofortstart: " + fparams_setting_sofortstart[:100])
-			fparams_setting_sofortstart = quote_plus(fparams_setting_sofortstart)			
+			fparams_setting_sofortstart = quote_plus(fparams_setting_sofortstart)
+
+			#--------------
+			
+			if SETTINGS.getSetting('pref_sort_label') == 'true':	# ständig: Umschalter Sortierung 
+				menu_entry_sort = u"Sortierung ermöglichen: AUS"
+				msg1_sort = "Sortierung AUS"
+				msg2_sort = "globale Sortierung ausgeschaltet"
+				ID = 'pref_sort_label,false'
+			else:
+				menu_entry_sort = u"Sortierung ermöglichen: EIN"
+				msg1_sort = "Sortierung EIN"
+				msg2_sort = "globale Sortierung eingeschaltet"
+				ID = 'pref_sort_label,true'
+			icon = R(ICON_TOOLS) 
+			fp = {'ID': ID, 'msg1': msg1_sort,\
+				'msg2': msg2_sort, 'icon': quote_plus(icon), 'delay': '3000'} 
+			fparams_sorting = "&fparams={0}".format(fp)
+			PLog("fparams_sorting: " + fparams_sorting[:100])
+			fparams_sorting = quote_plus(fparams_sorting)
+						
 		
 		if merkname:												# Aufrufer ShowFavs (Settings: Ordner .. verwenden)
 			if SETTINGS.getSetting('pref_watchlist') == 'true':		# Merkliste verwenden 
@@ -874,6 +896,12 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			commands.append((menu_entry, 'RunScript(%s, %s, ?action=dirList&dirID=switch_Setting%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_setting_sofortstart)))
+				
+		if fparams_sorting:
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
+			commands.append((menu_entry_sort, 'RunScript(%s, %s, ?action=dirList&dirID=switch_Setting%s)' \
+				% (MY_SCRIPT, HANDLE, fparams_sorting)))
+				
 		
 		# mode="video"	
 		if fparams_playlist_play or fparams_playlist_rm or fparams_playlist_add or fparams_playlist_add:	
@@ -2660,14 +2688,15 @@ def check_Setting(ID):
 # Format ID, Bsp.: 'pref_video_direct,false|pref_use_downloads,true'
 def switch_Setting(ID, msg1,msg2,icon,delay):
 	PLog('switch_Setting:')
+	PLog(ID)
 	delay = int(delay)
 	
 	ID_list=[]
 	if '|' in ID:
 		ID_list = ID.split('|')
 	else:
-		ID_list = ID
-		
+		ID_list.append(ID)
+
 	for item in ID_list:
 		ID, boolset = item.split(',')
 		SETTINGS.setSetting(ID, boolset)
@@ -2686,7 +2715,7 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 # 
 def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, playlist='', HBBTV_List=''):	
 	PLog('PlayVideo_Direct:') 
-	
+	PLog(title)
 	form = SETTINGS.getSetting('pref_direct_format')
 	qual = SETTINGS.getSetting('pref_direct_quality')
 	PLog("form: %s, qual: %s" % (form, qual))
@@ -2716,11 +2745,11 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 	else: 
 		mode = 'Sofortstart: MP4'
 		
-	# PLog(str(Stream_List)[:80])
+	#PLog(str(Stream_List))							# Sorierung für PlayVideo_Direct (wie StreamsShow)
 	# HLS: höchste Auflös. nach unten, x-Param.: Auflösung - s.a. ARDStartVideoHLSget
-	Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'lösung (\d+)', x).group(1)))
-	# Alternative:
-	# Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))	
+	#Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Auflösung (\d+)', x).group(1)))
+	# Alternative - ab 11.11.2021 error mit Auflösung:
+	Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))	
 
 	url = Stream_List[-1].split('#')[-1]			# Default für HLS (nach Sort.) + MP4: höchste Url
 	PLog("Default_Url: %s" % url)
@@ -2745,6 +2774,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 				break 
 
 	PLog('Direct: %s | %s' % (mode, url))
+
 	PlayVideo(url, title, thumb, Plot, sub_path)
 	
 	return 
@@ -2779,7 +2809,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=0):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
 	PLog(Merk); PLog(sub_path); PLog(seekTime);
-	
+
 	Plot=transl_doubleUTF8(Plot)
 	Plot=(Plot.replace('[B]', '').replace('[/B]', ''))	# Kodi-Problem: [/B] wird am Info-Ende platziert
 	url=url.replace('\\u002F', '/')						# json-Pfad noch unbehandelt
@@ -2789,8 +2819,8 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	li.setArt({'poster': thumb, 'banner': thumb, 'thumb': thumb, 'icon': thumb, 'fanart': thumb})	
 	
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
-	# li.setProperty('IsPlayable', 'true')		# hier unwirksam
-	# li.setInfo(type="video", infoLabels={"Title": title, "Plot": Plot, "mediatype": "video"}) # s.u.
+	#li.setProperty('IsPlayable', 'true')		# hier unwirksam
+	li.setInfo(type="video", infoLabels={"Title": title, "Plot": Plot, "mediatype": "video"}) # s.u.
 
 	'''
 	infoLabels = {}								# 17.06.2921 Setzen hier behindert Resume-Funktion (s. addDir)

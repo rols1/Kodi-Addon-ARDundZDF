@@ -10,6 +10,30 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+21.11.2021 4.1.2	Testaddon: Sortierung (verschiedene Settings-Setups)
+			addDir (Modul util): Sortierung Ein/Aus via Kontextmenü hinzugefügt, 
+			Sortiermethoden für Kodi gesetzt (SORT_METHOD_UNSORTED, SORT_METHOD_LABEL), 
+			Param, sortlabel deaktiviert (Merkliste, obsolet)
+			switch_Setting (Modul util): Fix Auswertung ID (ID_list.append).
+			home (Modul util): Durchlauf abhängig von Setting 'pref_nohome'.
+			ShowFavs (Merkliste): Setting-Änderung (Austausch 'pref_watchsort' -> 
+			'pref_nohome').
+			ShowFavs (Merkliste): Funktion ARDStartSingle in CallFunctions-Liste 
+			ergänzt (für Kennz. Listenelement als Video).
+			ShowFavs (Favoriten): Fix fehlende Quotierung für fparams bei Favoriten, 
+			Param. fanart vorbelegt. 
+			PlayVideo_Direct (Modul util): lambda-Sortierung für PlayVideo_Direct 
+			angepasst (wie StreamsShow).
+			PlayVideo (Modul util): setInfo wiederholt (zu addDir) - erford. für
+			ARD-Videos der Merkliste (falsche Titel, fehlende Infos).
+			ARDStartSingle (Modul ARDnew): return bei Sofortstart ergänzt für Rücksprung
+			zum akt. Listing.
+			Modul arte: Ebenentiefe erweitert um Webauswertung von Folgebeiträgen - 
+			Anpassungen in Beitrag_Liste und SingleVideo.
+			ZDFStart: Fix Icon für Livestream-Button
+			ZDF-Rubriken: Quellen-Wechsel von Drowdown-Menü zur Rubrik-Liste auf 
+			www.zdf.de, ZDFRubriken erneuert, Anpassung in ZDF_get_teaserDetails (descr). 
+
 11.11.2021 4.1.1
 			Modul phoenix: Anpassung an Sender-Änderungen (json-, xml-Formate) in 
 			SingleBeitrag (zusätzl. Fix Ermittlung der Video-ID (vid)), GetContent,
@@ -936,7 +960,7 @@ CHANGE HISTORY
 			Filters.
 
 not on Github 3.5.8
-			PlayVideo (ARD util): Liste gestarter Videos erzeugen/fortschreiben/
+			PlayVideo (Modul util): Liste gestarter Videos erzeugen/fortschreiben/
 			kappen (STARTLIST in ADDON_DATA/startlist).
 			AddonStartlist: Liste gestarter Videos zeigen + durchsuchen.
 			InfoAndFilter: Button "Video-Startliste" hinzugefügt.

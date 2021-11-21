@@ -384,7 +384,9 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 	if("list" in jsonObject):								# Gesamtliste, latestVideos
 		videoObject = jsonObject["list"]
 	if("_embedded" in jsonObject):							# Standard-Videoliste, ab 08.09.2020 abst. sortiert
+		#sort_date=False
 		if SETTINGS.getSetting('pref_sort_funk') == 'true':
+			#sort_date=True									# s.u.
 			videoObject = sorted(jsonObject["_embedded"]["videoDTOList"], key=lambda k: k["publicationDate"], reverse=True)
 			# Alternative Update-Datum:
 			#videoObject = sorted(jsonObject["_embedded"]["videoDTOList"], key=lambda k: k["updateDate"], reverse=True) 
@@ -398,6 +400,8 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 
 	for stageObject in videoObject:
 		title,alias,descr,img,date,dur,cr,entityId = extract_videos(stageObject) 
+		date_org=date
+		
 		date = time_translate(date)
 		dur = seconds_translate(dur)
 		tag = "%s | %s" % (date, dur)
@@ -411,12 +415,20 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 		title = repl_json_chars(title)
 		title = unescape(title)
 
+		PLog("Satz1:")
 		PLog(title); PLog(entityId); 
 		title=py2_encode(title); img=py2_encode(img); descr_par=py2_encode(descr_par);
 		fparams="&fparams={'title': '%s', 'img': '%s', 'descr': '%s', 'entityId': '%s'}"  %\
 			(quote(title), quote(img), quote(descr_par), entityId)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ShowVideo", 				
-			fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams, mediatype=mediatype)					
+			fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams, mediatype=mediatype)
+			
+		#if sort_date == True:			# 16.11.2021 datesort mit setInfo klappt nicht
+		#	date_org = date_org[:10]	# Bsp.: 2021-03-03T15:10:43.000+0000
+		#	PLog(date_org)		
+		#	#li.setInfo(type="video", infoLabels={"Premiered": date_org, "ReleaseDate": date_org, "Year": date_org})	
+	
+		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
 	
 	pN,pageSize,totalPages,totalElements,next_path = get_pagination(jsonObject)	# Mehr?		
 	if next_path:	

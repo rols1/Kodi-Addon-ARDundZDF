@@ -63,8 +63,7 @@
  	<setting label="ARDundZDF-Favoriten im Hauptmenü einblenden" type="bool" id="pref_showFavs" default="false"/>
  	<setting label="ARDundZDF-Merkliste verwenden (getrennt von Favoriten)" type="bool" id="pref_watchlist" default="true"/>
 	<setting label="Begleitinfos für Favoriten und Merkliste verwenden - falls verfügbar" type="bool" id="pref_FavsInfo" default="true"/>
- 	<setting label="Info-Menue-Button ausblenden" type="bool" id="pref_FavsInfoMenueButton" default="false"/>
-   	<setting label="Beiträge sortieren (Info- und Homebutton entfallen)" type="bool" id="pref_watchsort" default="false"/>
+ 	<setting label="Info-Button ausblenden" type="bool" id="pref_FavsInfoMenueButton" default="false"/>
    	<setting label="Ordner für Merkliste verwenden" type="bool" id="pref_merkordner" default="false"/>
   	<setting label="Ordner im Titel kennzeichnen" type="bool" id="pref_WatchFolderInTitle" default="false"/>
     <setting type="sep"/>
@@ -88,6 +87,7 @@
   		values="auto (nur HLS)|320x180|640x360|720x400|960x540|1280x720|1920x1080" />
    <setting type="sep"/>
   	<setting label="gesamtes Addon: Verzicht auf Homebuttons" type="bool" id="pref_nohome" default="false"/>
+  	<setting label="gesamtes Addon: Sortierung ermöglichen" type="bool" id="pref_sort_label" default="false"/>
     <setting label="gesamtes Addon: Zuletzt-gesehen-Liste verwenden" type="bool" id="pref_startlist" default="false"/>
     <setting label="gesamtes Addon: Video-Playlist verwenden" type="bool" id="pref_playlist" default="false"/>
    <setting type="sep"/>
