@@ -9,8 +9,9 @@
 #	fehlt wird die Default-Datei geladen.
 # Der Name der Datei muss full_shows_ARD lauten.
 #
-# Das Addon kennzeichnet den Sendungstitel in Listen rot, wenn Titel und Sendungsdauer
-#	der Vorgabe in dieser Tabelle entsprechen.
+# Das Addon kennzeichnet den Sendungstitel in Listen rot, wenn Titel plus Seiten-Titel
+#	und Sendungsdauer der Vorgabe in dieser Tabelle entsprechen.
+#	
 #-----------------------------------------------
 #
 quer mit|40
@@ -29,3 +30,5 @@ Visite|55
 Grünwald|40
 Hart aber fair|60
 Anne Will|50
+maybrit illner|59
+maischberger|60

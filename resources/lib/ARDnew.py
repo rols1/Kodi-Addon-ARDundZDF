@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.11.2021
+#	Stand: 23.11.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -605,7 +605,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	
 	mediatype=''; pagetitle=''
 	pagination	= stringextract('pagination":', '"type"', page)
-	pagetitle 	= stringextract('title":"', '"', pagination)	# bei Suche: SearchCompilationWidget:..
+	if ID == "A-Z" or  ID == "Search":
+		pagetitle 	= stringextract('title":"', '"', pagination)# bei Suche: SearchCompilationWidget:..
 	PLog("pagetitle: " + pagetitle)
 	page = page.replace('\\"', '*')								# quotierte Marks entf., Bsp. \"query\"
 	
@@ -721,33 +722,6 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			if pubServ:
 				summ = "%sSender: %s" % (summ, pubServ)
 				
-		PLog("full_shows")									# full_show im Titel: ganze Sendungen rot+fett
-		if ID != 'EPG' and SETTINGS.getSetting('pref_mark_full_shows') == 'true':
-			fname = SETTINGS.getSetting('pref_fullshows_path')
-			if fname == '':
-				fname = '%s/resources/%s' % (ADDON_PATH, "full_shows_ARD")
-			else:
-				fname = "%s/full_shows_ARD" % SETTINGS.getSetting('pref_mark_full_shows')
-			shows = ReadTextFile(fname)
-			PLog('full_shows_lines: %d' % len(shows))
-				
-			for show in shows:
-				sd, md = show.split("|")
-				sd = u'title":"%s' % sd						# Bsp. 'title":"Querbeet|40'
-				#PLog(sd); PLog(md); PLog(up_low(sd) in up_low(s));
-				if up_low(sd) in up_low(s):					# Show in Datensatz?
-					md_rec = stringextract('duration":', ',', s)
-					PLog("md_rec: " + md_rec)
-					if md_rec:
-						md_rec = seconds_translate(md_rec)
-						PLog("md_rec2: " + md_rec)
-						if md_rec.endswith("sec"): 			# Korr. sec < 60 -> 1 min
-							md_rec = "0:01"
-						md_rec = time_to_minutes(md_rec)
-						if int(md_rec) >= int(md):
-							title = "[B][COLOR red]%s[/COLOR][/B]" % title
-					break		
-		
 		PLog('Satz:');
 		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ[:60]); PLog(ID)
 		
@@ -784,6 +758,13 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			else:
 				ID=ID_org
 
+			PLog("check_full_shows")								# full_show im Titel: ganze Sendungen rot+fett
+			if ID != 'EPG':
+				title_samml = "%s|%s" % (title, pagetitle)			# Titel + Seitentitel (A-Z, Suche)
+				duration = stringextract('duration":', ',', s)		# sec-Wert
+				duration = seconds_translate(duration)				# 0:15
+				title = ardundzdf.full_shows(title, title_samml, summ, duration, "full_shows_ARD")	
+		
 			summ_par = summ.replace('\n', '||')
 			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
 			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s'}" %\

@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+#	Stand: 26.11.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -586,6 +586,29 @@ def get_Setting(ID):
 			return val
 			
 	return ''
+	
+#---------------------------------------------------------------- 
+# checkt url auf Vorkommen in skip_list (nur html-Links)
+# Aufrufer prüft auf leere Url! 
+# wg. abweichenden Url's bei identischem Ziel wird nur
+# 	der letzte Teil der Url geprüft (zwischen / und .html)
+def check_urlend(url, skip_list):
+	PLog('check_urlend:')
+	url_org=url	
+	if ".html" in url_org:
+		url_org = url_org.split(".html")[0]		# Bsp. doku-reportage-portraet-100
+	url_org = url_org.split("/")[-1]
+	
+	for url in skip_list:
+		if ".html" in url:
+			url = url.split(".html")[0]
+		url = url.split("/")[-1]
+		PLog("url_org: %s, url: %s" % (url_org, url))
+		if url in url_org:
+			return True
+			
+	return False
+	
 #----------------------------------------------------------------  
 # Listitems verlangen encodierte Strings auch bei Umlauten. Einige Quellen liegen in unicode 
 #	vor (s. json-Auswertung in get_page) und müssen rückkonvertiert  werden.
@@ -679,7 +702,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	if SETTINGS.getSetting('pref_sort_label') == 'true':			# Testaddon: Sortierung 
 		# kein Unterschied zw. SORT_METHOD_LABEL / SORT_METHOD_LABEL_IGNORE_THE
 		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
-		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL)
+		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL)		# od. SORT_METHOD_TITLE
 		# xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_DATE)		# falls für "verfügbar bis" möglich
 	PLog('PLUGIN_URL: ' + PLUGIN_URL)	# plugin://plugin.video.ardundzdf/
 	PLog('HANDLE: %s' % HANDLE)
@@ -1067,9 +1090,16 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		return page, msg
 		
 	if page:
-		if decode:				
-			page = page.decode('utf-8')	
-		pass
+		if decode:
+			try:
+				if PYTHON2:			
+					page = py2_decode(page)								# erzeugt bei PY3 Bytestrings (ARD)
+				else:
+					page = page.decode('utf-8')
+			except Exception as exception:
+				msg = str(exception)
+				PLog(msg)
+
 	if JsonPage:
 		PLog('json_load: ' + str(JsonPage))
 		PLog(len(page))
@@ -1820,7 +1850,7 @@ def time_to_minutes(time_str):
 		h, m = time_str.split(':')
 		minutes = int(h) * 3600 + int(m)
 	PLog(minutes)
-	return minutes
+	return str(minutes)
 #---------------------------------------------------------------- 
 # Format timecode 	Fri, 06 Jul 2018 06:58:00 GMT (ARD Audiothek , xml-Ausgaben)
 # Rückgabe:			06.07.2018, 06:58 Uhr   (Sekunden entfallen)

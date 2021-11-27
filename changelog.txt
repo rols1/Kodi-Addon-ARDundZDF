@@ -10,6 +10,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+27.11.2021 4.1.3
+			BarriereArm (ZDF): Text-Icons​ ausgetauscht gegen Icon-Symbole der Webseite. 
+			ZDF:  Fix Beitrags-Doppler, Anpassungen in ZDFRubrikSingle + ZDF_get_playerbox
+			(skip_list), ZDF_get_content (ID="ZDF_Sendungen").
+			SearchUpdate (Status: ist aktuell): changelog begrenzt (200Z) - dadurch tagline 
+			komplett sichtbar.
+			full_shows (Kennzeichnung ganzer Sendungen im Titel) für ARD + ZDF als eigene 
+			Funktion vereinheitlicht, Anpassung get_page_content (ARDnew) und Textdateien
+			full_shows_ARD + full_shows_ZDF.
+			time_to_minutes (Modul util): Rückabe string (für full_shows erford.). 
+			ARDSportVideo, ARDSportSingleTab (Sportschau): Auswertung ev. vorhandener Videos,
+			falls Webseite ohne Videoquellen, Header für Seitenabruf hinzugefügt, neue 
+			Funktion ARDSportgetMedia, Anpassung ARDSportPanel.
+			ARDSportPanel (Sportschau): Themen-Liste geleert, um bei "EURO 2020" + "Tour"
+			"invalid handle"-Error zu vermeiden.
+			get_page (Modul util): try-/except-Block für Seiten-Dekodierung.
+			
 21.11.2021 4.1.2	Testaddon: Sortierung (verschiedene Settings-Setups)
 			addDir (Modul util): Sortierung Ein/Aus via Kontextmenü hinzugefügt, 
 			Sortiermethoden für Kodi gesetzt (SORT_METHOD_UNSORTED, SORT_METHOD_LABEL), 

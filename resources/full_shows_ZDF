@@ -8,10 +8,11 @@
 #	fehlt wird die Default-Datei geladen.
 # Der Name der Datei muss full_shows_ZDF lauten.
 #
-# Das Addon kennzeichnet den Sendungstitel in Listen rot, wenn Titelbeginn und Sendungsdauer
+# Das Addon kennzeichnet den Sendungstitel in Listen rot, wenn Titel (Titel, Kategorie,
+# 	Marke) und Sendungsdauer
 #	der Vorgabe in dieser Tabelle entsprechen.
 # -----------------------------------------------
 #
 heute-show|30
 heute journal|13
-Volle Kanne|60
+Volle Kanne|59
