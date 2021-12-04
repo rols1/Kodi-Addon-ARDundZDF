@@ -55,8 +55,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>6</nr>										# Numerierung für Einzelupdate
-VERSION = '4.1.3'
-VDATE = '27.11.2021'
+VERSION = '4.1.4'
+VDATE = '04.12.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -350,10 +350,9 @@ def Main():
 		
 
 	title = "ARD Mediathek Neu"
-	summ = u'Die [COLOR red] barrierefreien Angebote[/COLOR] befinden sich im Start-Menü, zur Zeit in <Genrezugänge>.'
 	fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, CurSender)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
-		thumb=R(ICON_MAIN_ARD), summary=summ, fparams=fparams)
+		thumb=R(ICON_MAIN_ARD), fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':
 		PLog('zdfmobile_set: ')
@@ -6169,7 +6168,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	if lname == u'Überregional':			# Streamlinks für ZDF-Sender holen
 		zdf_streamlinks = get_ZDFstreamlinks()			# Modul util
 	if lname == u'Überregional' or lname == u'Regional':
-		ard_streamlinks = get_ARDstreamlinks()			# Modul util	
+		ard_streamlinks = get_ARDstreamlinks()			# ard_streamlinks oder ard_streamlinks_UT	
 		
 	mediatype='' 						# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
@@ -9828,6 +9827,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		thumb=thumb_org
 		res_geo=''; label=''; BandwithInt=0; Resolution_org=''
 		# Abgrenzung zu ts-Dateien (Bsp. Welt24): #EXT-X-MEDIA-SEQUENCE: 9773324
+		# Playlist Tags s. https://datatracker.ietf.org/doc/html/rfc8216
 		if line.startswith('#EXT-X-MEDIA:') == False and line.startswith('#EXT-X-STREAM-INF') == False:
 			continue
 		PLog("line: " + line)		# bei Bedarf
@@ -9897,6 +9897,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		if descr.strip() == '|':			# ohne EPG: EPG-Verbinder entfernen
 			descr=''
 			
+		if url.startswith('http') == False: # kompl. Pfad fehlt - Bsp.: one, kika
+			continue
+		
 		summ=''
 		if stitle:
 			summ = u"Sendung: %s" % py2_decode(stitle)

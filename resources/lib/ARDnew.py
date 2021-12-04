@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.11.2021
+#	Stand: 29.11.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -54,6 +54,7 @@ ICON_MAIN_ARD 			= 'ard-mediathek.png'
 ICON_ARD_AZ 			= 'ard-sendungen-az.png'
 ICON_ARD_VERP 			= 'ard-sendung-verpasst.png'			
 ICON_ARD_RUBRIKEN 		= 'ard-rubriken.png' 
+ICON_ARD_BARRIEREARM 	= 'ard-barrierearm.png'
 			
 ICON_SEARCH 			= 'ard-suche.png'						
 ICON_DIR_FOLDER			= "Dir-folder.png"
@@ -136,11 +137,10 @@ def Main_NEW(name, CurSender=''):
 		
 	title = 'Startseite'	
 	tag = def_tag
-	summ = "[COLOR red] barrierefreie Angebote[/COLOR] im Untermenü <Genrezugänge>"
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s', 'sender': '%s'}" % (quote(title), sender)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", fanart=R(ICON_MAIN_ARD), thumb=R(img), 
-		tagline=tag, summary=summ, fparams=fparams)
+		tagline=tag, fparams=fparams)
 
 	# Retro-Version ab 12.11.2020, V3.5.4
 	# 16.06.2021 auch erreichbar via ARD-Startseite/Premium_Teaser_Themenwelten		
@@ -178,7 +178,17 @@ def Main_NEW(name, CurSender=''):
 	fparams="&fparams={'title': '%s'}"	% title
 	addDir(li=li, label=title, action="dirList", dirID="ARDSport", 
 		fanart=R("tv-ard-sportschau.png"), thumb=R("tv-ard-sportschau.png"), fparams=fparams)
-						
+			
+	# 27.11.2021 als eigenständiges Menü (vorher an wechselnden Pos. im Startmenü):
+	title = 'Barrierearm'
+	summ = "Barrierefreie Inhalte in der ARD Mediathek"
+	img = R(ICON_ARD_BARRIEREARM)
+	href = 'https://api.ardmediathek.de/page-gateway/pages/ard/editorial/barrierefrei?embedded=true'
+	href=py2_encode(href); title=py2_encode(title); 
+	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
+		fparams=fparams, summary=summ)																							
+
 	title = 'Bildgalerien Das Erste'	
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="BilderDasErste", fanart=R(ICON_MAIN_ARD),
@@ -857,18 +867,23 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 					
 	# Livestream-Abzweig, Bsp. tagesschau24:	
 	# 	Kennzeichnung Livestream: 'class="day">Live</p>' in ARDStartRubrik.
+	#	für Menü TV-Livestreams s. get_ARDstreamlinks
 	if ID	== 'Livestream':									# Livestreams -> SenderLiveResolution		
 		VideoUrls = blockextract('_quality', page)				# 2 master.m3u8-Url (1 x UT)
 		PLog(len(VideoUrls))
+		href_ut=''
 		for video in VideoUrls:
 			href = stringextract('stream":"', '"', video)	
-			if SETTINGS.getSetting('pref_UT_ON') == 'true':		# UT-Stream filtern, bisher nur ARD, HR
-				if '_ut_' in href or '_sub' in href:
-					break
-			else:
-				break
+			PLog(href)
+			if '_ut_' in href or '_sub' in href:				# UT-Stream filtern, bisher nur ARD, HR
+				href_ut = href
+
+		if SETTINGS.getSetting('pref_UT_ON') == 'true':	
+			if href_ut:
+				href = href_ut
+		
 		if href.startswith('//'):
-			href = 'http:' + href
+			href = 'https:' + href
 		PLog('Livestream_Abzweig: ' + href)
 		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summary)
 		
@@ -1579,5 +1594,13 @@ def Senderwahl(title, caller=''):
 			tagline=tagline, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+####################################################################################################
+
+
+
+
+
+
+	
 		
 

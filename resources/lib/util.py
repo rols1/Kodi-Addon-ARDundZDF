@@ -2362,6 +2362,7 @@ def get_ZDFstreamlinks(skip_log=False):
 			videodat_url = "https://api.zdf.de/tmd/2/ngplayer_2_3/live/ptmd/%s" % assetid
 			page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
 			PLog("videodat: " + page[:40])
+			PLog(page)
 		
 			href = stringextract('"https://',  'master.m3u8', page) 	# 1.: auto
 			if href:
@@ -2379,12 +2380,17 @@ def get_ZDFstreamlinks(skip_log=False):
 #-----------------------------------------------
 # ZDF-Links s. get_ZDFstreamlinks
 # Aufruf SenderLiveListe, ARDStartRubrik -> get_playlist_img
+# 01.12.2021 erweitert um Liste für Untertitel-Links
+#
 def get_ARDstreamlinks(skip_log=False):
 	PLog('get_ARDstreamlinks:')
 	PLog(skip_log)
 	ARDlinks_CacheTime	= 86400					# 24 Std.: (60*60)*24
-		
-	page = Dict("load", 'ard_streamlinks', CacheTime=ARDlinks_CacheTime)
+
+	ID = "ard_streamlinks"
+	if SETTINGS.getSetting('pref_UT_ON') == 'true':	
+		ID = "ard_streamlinks_UT"
+	page = Dict("load", ID, CacheTime=ARDlinks_CacheTime)
 	page = py2_encode(page)
 
 	if len(str(page)) > 1000:					# bei Error nicht leer od. False von Dict
@@ -2418,11 +2424,20 @@ def get_ARDstreamlinks(skip_log=False):
 
 		if href:
 			PLog("lade_livelink:")
-			page, msg = get_page(path=href, JsonPage=True)
-			streamurl = stringextract('_stream":"', '"', page)
+			page, msg = get_page(path=href, JsonPage=True)			# s.a. Livestream ARDStartSingle
+			VideoUrls = blockextract('_quality', page)				# 2 master.m3u8-Url (1 x UT) bei ARD-Sendern
+			PLog(len(VideoUrls))
+			streamurl_ut=''
+			for video in VideoUrls:
+				streamurl = stringextract('stream":"', '"', video)	
+				if '_ut_' in streamurl or '_sub' in streamurl:		# UT-Stream filtern, bisher nur ARD, HR
+					streamurl_ut = streamurl
+			if SETTINGS.getSetting('pref_UT_ON') == 'true':	
+				if streamurl_ut:
+					streamurl = streamurl_ut
 			if streamurl.startswith('http') == False:
-				streamurl = "https:" + streamurl
-		
+				streamurl = "https:" + streamurl				
+					
 		PLog("Satz1:")
 		PLog(title); PLog(href);  PLog(streamurl);
 		# Zeile: "title_sender|streamurl|thumb|tagline"
@@ -2433,7 +2448,7 @@ def get_ARDstreamlinks(skip_log=False):
 	#skip_log=False				# Debug
 	if skip_log == False:
 		PLog(str(ard_streamlinks))										# Ausgabe im LOG für IPTV-Interessenten
-	Dict("store", 'ard_streamlinks', page)
+	Dict("store", ID, page)
 	return ard_streamlinks	
 #---------------------------------------------------------------------------------------------------
 # Aufruf: 
@@ -2836,6 +2851,13 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #	Resume-Funktion Kodi-intern  DB MyVideos107.db, Tab files (idFile, playCount, lastPlayed) + (via key idFile),
 #		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
 #
+#	Untertitel bei Livestreams (01. / 02.12.2021_
+#		ARD-Sender: falls UT vorh., wird ein zusätzl. Livestream-Link für UT angeboten,
+#			s. ARDStartSingle + get_ARDstreamlinks
+#		ZDF-Sender: verwenden Mehrkanal-Url's für HLS. Die master.m3u8-Dateien enthalten jeweils
+#			2  Untertitel-Links (../8.m3u8) für die webvtt-Segmente. Beide lassen sich im  Kodi-
+#			Player nicht aktivieren. Siehe ZDF_Untertitel_Livestream (lokale Doku)
+#
 def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=0):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
 	PLog(Merk); PLog(sub_path); PLog(seekTime);
@@ -2866,16 +2888,16 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	li.setInfo(type="video", infoLabels=infoLabels)
 	'''
 	
+	sub_list=[]
+	PLog("pref_UT_ON: " + SETTINGS.getSetting('pref_UT_ON'))	
 	if SETTINGS.getSetting('pref_UT_ON') == 'true':
-		if sub_path:								# Vorbehandlung ARD-Untertitel
-			sub_path = sub_path_conv(sub_path)		# ARD-Untertitel konvertieren
-
-	PLog('sub_path: ' + str(sub_path));		
-	if sub_path:								# Untertitel aktivieren, falls vorh.				
-		if SETTINGS.getSetting('pref_UT_ON') == 'true':
-			sub_path = 	sub_path.split('|')											
-			li.setSubtitles(sub_path)
-			xbmc.Player().showSubtitles(True)		
+		if sub_path:								# Konvertierung ARD-UT, Pfade -> Liste 
+			sub_list = sub_path_conv(sub_path)	
+			li.setSubtitles(sub_list)
+		xbmc.Player().showSubtitles(True)			# unwirksam bei ZDF-Livestream s.o.
+	else:		
+		xbmc.Player().showSubtitles(False)	
+	PLog('sub_list: ' + str(sub_list));				# s. get_subtitles
 		
 	# Abfrage: ist gewähltes ListItem als Video deklariert? - Falls ja,	
 	#	erfolgt der Aufruf indirekt (setResolvedUrl). Falls nein,
@@ -3006,25 +3028,37 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 			return play_time, video_dur				# -> PlayMonitor
 #			exit(0)
 
-
 #-------------------------------------
 #  ARD-Untertitel konvertieren
+#  ARDUT, ZDF-UT u.a. -> Liste (für li.setSubtitles)
 def sub_path_conv(sub_path):
 	PLog("sub_path_conv:")
+	
+	sub_list=[]
 	if 'ardmediathek.de' in sub_path or 'tagesschau.de' in sub_path:	
-		# ARD-Untertitel speichern + Endung -> .sub
+		# ARD-Untertitel speichern
 		local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
 		local_path = os.path.abspath(local_path)
+		local_path = local_path.replace(':', '_')# Bsp. ../subtitles/urn:ard:subtitle:..
 		try:
 			urlretrieve(sub_path, local_path)
 		except Exception as exception:
 			PLog(str(exception))
 			local_path = ''
-		if 	local_path:
-			sub_path = xml2srt(local_path)	# util: Konvert. für Kodi leer bei Fehlschlag
-	
-	PLog("sub_path_conv: " + sub_path)		# Endung .srt, falls erfolgreich
-	return sub_path
+		if 	local_path:							# util: Konvert. für Kodi leer bei Fehlschlag,
+			sub_path = xml2srt(local_path)		# 	Endung .srt, falls erfolgreich
+
+		sub_list.append(sub_path) 	# subtitleFiles: tuple or list
+		if PYTHON3:
+			sub_list.append(sub_path) 			# Matrix erwartet UT-Paar (kostete Lebenszeit..)
+	else:
+		if '|' in sub_path:						# ZDF 2 Links: .sub, .vtt
+			sub_list = 	sub_path.split('|')											
+		else:									# != ARD, ZDF
+			sub_list.append(sub_path) 
+			
+	PLog("sub_path_conv: " + str(sub_list))		
+	return sub_list
 	
 #---------------------------------------------------------------- 
 # SSL-Probleme in Kodi mit https-Code 302 (Adresse verlagert) - Lösung:

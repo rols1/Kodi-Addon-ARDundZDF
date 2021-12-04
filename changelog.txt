@@ -10,6 +10,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+04.12.2021 4.1.4
+			ARDnew: Barrierearm als eigenständiges Menü (wie ZDF), Anpassungen Main_NEW +
+			Main.
+			Parseplaylist: Aussonderung unvollständiger Links in m3u8-playlist (kika, one).
+			livesenderTV.xml: Link für "BR Fernsehen - Süd" wieder auf ARDSource gesetzt
+			(Kopierfehler?).
+			Livesender ARD: Erweiterung für Untertitel abh. vom Setting - Anpassungen in
+			ARDStartSingle (Separierung Untertitel-Link), get_ARDstreamlinks (zusätzl. UT-
+			Liste), sub_path_conv (return list, paarige Rückgabe für Matrix) und PlayVideo
+			(Doku ergänzt).		
+
 27.11.2021 4.1.3
 			BarriereArm (ZDF): Text-Icons​ ausgetauscht gegen Icon-Symbole der Webseite. 
 			ZDF:  Fix Beitrags-Doppler, Anpassungen in ZDFRubrikSingle + ZDF_get_playerbox
@@ -21,8 +32,8 @@ CHANGE HISTORY
 			full_shows_ARD + full_shows_ZDF.
 			time_to_minutes (Modul util): Rückabe string (für full_shows erford.). 
 			ARDSportVideo, ARDSportSingleTab (Sportschau): Auswertung ev. vorhandener Videos,
-			falls Webseite ohne Videoquellen, Header für Seitenabruf hinzugefügt, neue 
-			Funktion ARDSportgetMedia, Anpassung ARDSportPanel.
+			falls Webseite ohne Videoquellen, neue Funktion ARDSportgetMedia, Anpassung 
+			ARDSportPanel.
 			ARDSportPanel (Sportschau): Themen-Liste geleert, um bei "EURO 2020" + "Tour"
 			"invalid handle"-Error zu vermeiden.
 			get_page (Modul util): try-/except-Block für Seiten-Dekodierung.
