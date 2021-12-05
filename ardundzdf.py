@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>6</nr>										# Numerierung für Einzelupdate
+# 	<nr>7</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.4'
 VDATE = '04.12.2021'
 
@@ -407,8 +407,8 @@ def Main():
 			
 	label = 'TV-Livestreams'
 	if SETTINGS.getSetting('pref_epgRecord') == 'true':		
-		label = 'TV-Livestreams | Sendungen aufnehmen'; 
-	tagline = 'TV-Livestreams stehen auch in ARD Mediathek Neu zur Verfügung'																																	
+		label = u'TV-Livestreams | Sendungen aufnehmen'; 
+	tagline = u'Livestreams von ARD, ZDF und einigen Privaten. Zusätzlich Event Streams von ARD und ZDF.'																																	
 	fparams="&fparams={'title': 'TV-Livestreams'}"
 	addDir(li=li, label=label, action="dirList", dirID="SenderLiveListePre", 
 		fanart=R(FANART), thumb=R(ICON_MAIN_TVLIVE), tagline=tagline, fparams=fparams)
@@ -416,11 +416,11 @@ def Main():
 	# 29.09.2019 Umstellung Livestreams auf ARD Audiothek
 	#	erneut ab 02.11.2020 nach Wegfall web.ard.de/radio/radionet
 	# Button für Livestreams anhängen (eigenes ListItem)		# Radio-Livestreams
-	tagline = 'die Radio-Livestreams stehen auch in der neuen ARD Audiothek zur Verfügung'
-	title = 'Radio-Livestreams'	
+	tagline = u'die Radio-Livestreams stehen auch in der neuen ARD Audiothek zur Verfügung'
+	title = u'Radio-Livestreams'	
 	fparams="&fparams={'title': '%s', 'myhome': 'ARD'}" % (title)	
 	addDir(li=li, label=title, action="dirList", dirID="AudioStartLive", fanart=R(FANART), 
-		thumb=R(ICON_MAIN_RADIOLIVE), fparams=fparams)
+		thumb=R(ICON_MAIN_RADIOLIVE), tagline=tagline, fparams=fparams)
 		
 		
 	if SETTINGS.getSetting('pref_use_podcast') ==  'true':		# Podcasts / Audiothek
@@ -479,7 +479,7 @@ def Main():
 		tag ='Bezugsquelle: ' + repo_url			
 		fparams="&fparams={'title': 'Addon-Update'}"
 		addDir(li=li, label=title, action="dirList", dirID="SearchUpdate", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summ, tagline=tagline)
+			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summ)
 
 	# Menü Einstellungen (obsolet) ersetzt durch Info-Button
 	#	freischalten nach Posting im Kodi-Forum
@@ -3339,7 +3339,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 				url= stringextract('"audioURL" : "', '"', video)
 			if 'manifest.f4m' in url:					#  manifest.f4m überspringen
 				continue
-			if url.endswith('master.m3u8'):
+			if url.endswith('.m3u8'):
 				m3u8_url = url
 				title_m3u8 = "HLS auto | %s" % title_org
 			if url.endswith('.mp4'):
