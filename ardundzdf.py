@@ -54,9 +54,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>7</nr>										# Numerierung für Einzelupdate
+# 	<nr>8</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.4'
-VDATE = '04.12.2021'
+VDATE = '05.12.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3255,24 +3255,26 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 			video_src = base + playerurl
 	PLog("video_src: " + video_src)
 	
-
 	if video_src == '':
-		if page.find('class="media mediaA videoLink') < 0:
-			if 'class="media mediaA video' in page:					# ohne Quellen, aber Videos gefunden
-				ARDSportSingleTab(title, path, img, page)			# -> ARDSportSingleTab
-				return
-				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			
+		if 'class="media mediaA video' in page:					# ohne Quellen, aber Videos gefunden
+			ARDSportSingleTab(title, path, img, page)			# -> ARDSportSingleTab
+			return
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+				
 		else:
-			if '"videoURL" : "' in page:						# Quellen in Seite eingebettet					
+			if '"videoURL" : "' in page or '"config"' in page:	# Quellen in Seite eingebettet					
 				PLog('detect_videoURL:')
 				# Je ein HLS + MP4-Link direkt auf der Seite im json-Format
 				# Bsp.: www.sportschau.de/tor-des-monats/archiv/april2017tdm100.html
-				page = stringextract('"mediaResource"', '</script>', page)	# json-Inhalt ausschneiden
-				PLog("page_web: " + page[:100])
-				video_src=''									# skip 	'-ardplayer_image-' in video_src
+				web = stringextract('"mediaResource"', '</script>', page)	# json-Inhalt ausschneiden
+				if web == '':							
+					web = stringextract('"streamUrl":"', '"', page)	# z.B. .m3u8-Link auf hessenschau.de/sport
+					web = '"videoURL":"' + web + '"'				# komp. für weit. Auswertung
+				PLog("web-media oder -config: " + web[:100])
+				page = web
+				video_src=''										# skip 	'-ardplayer_image-' in video_src
 			else:
-				msg1 = u'Leider kein Video gefunden: %s' % title # keine Chance auf Videoquellen
+				msg1 = u'Leider kein Video gefunden: %s' % title 	# keine Chance auf Videoquellen
 				msg2 = path
 				MyDialog(msg1, msg2, '')
 				return
@@ -3321,7 +3323,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	
 	else:															# Videoquellen in Webseite?
 		videos = blockextract('"videoURL" : "', page, '}')
-		videos = videos + blockextract('"audioURL" : "', page, '}')			
+		videos = videos + blockextract('"audioURL" : "', page, '}')
 		PLog(len(videos))
 		
 		if len(videos) == 0:
