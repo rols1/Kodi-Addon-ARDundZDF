@@ -54,9 +54,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>8</nr>										# Numerierung für Einzelupdate
+# 	<nr>9</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.4'
-VDATE = '05.12.2021'
+VDATE = '09.12.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -350,9 +350,10 @@ def Main():
 		
 
 	title = "ARD Mediathek Neu"
+	tagline = u'die Classic-Version der Mediathek existiert nicht mehr - sie wurde von der ARD eingestellt'
 	fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, CurSender)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
-		thumb=R(ICON_MAIN_ARD), fparams=fparams)
+		thumb=R(ICON_MAIN_ARD), tagline=tagline, fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':
 		PLog('zdfmobile_set: ')
@@ -7306,6 +7307,7 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 
 		ZDF_search_button(li, query=title_org)
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return															# sonst Fortsetzung
 
 #----------------------------------------------
 	
@@ -8278,7 +8280,7 @@ def International(title):
 #	08.01.2021 Anpassung an geänderte Formate bei Hochkant-Videos.
 #
 def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip_list=''):	
-	PLog('ZDF_get_content:'); PLog(ref_path); PLog(ID); PLog(sfilter)
+	PLog('ZDF_get_content:'); PLog(ref_path); PLog(ID); PLog(sfilter); 
 	PLog(len(page));
 
 	max_count = 0; content=[]
@@ -8311,7 +8313,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip
 		
 	if len(content) == 0:									# Fallback artdirect
 		content = blockextract('<picture class="artdirect"', page) # tivi: doppelt  (is-tivi,is-not-tivi)
-																																
+																														
 	# 27.03.2020 Hochkant-Videos (neues ZDF-Format bei Nachrichten)
 	#	Auswirkung: thumb + brand (s.u.)
 	# 08.01.2020 Blocks entfernt - Format geändert, s.u. ("PlakatTeaser")	
@@ -8322,11 +8324,11 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip
 				zdfplayer = blockextract('data-module="zdfplayer"', page, '</article>')
 				PLog('zdfplayer: ' + str(len(zdfplayer)))
 				content = zdfplayer	+ content				# Blöcke content voranstellen
-				
+		
 #---------------------------		
 	if len(content) == 0:
 		msg_notfound = 'Video ist leider nicht mehr oder noch nicht verfügbar'
-		
+
 	if len(content) == 0:									# Ausleitung Einzelbeiträge ohne icon-502
 		rec = ZDF_get_playerbox(li, page)					# Format: Titel##Thumb###tagline
 		if rec:
@@ -9267,9 +9269,7 @@ def ZDF_getKurzVideoDetails(rec):
 		descr_display 	= "%s, %s Uhr \n\n%s" % (video_datum, video_time, descr)		
 		descr 			= "%s, %s Uhr||||%s" % (video_datum, video_time, descr)	
 		
-	duration = ZDF_getDuration(rec)
-	#if duration:									# -> Titel s.u.
-	#	descr = "%s | %s" % (descr, duration)
+	duration = ZDF_getDuration(rec)					# mehrere Varianten
 
 	title=''
 	if '"title-inner">' in rec:
@@ -9309,15 +9309,16 @@ def ZDF_getKurzVideoDetails(rec):
 # Videolänge holen
 def ZDF_getDuration(rec):
 	PLog('ZDF_getDuration:')
+	#PLog(rec)	# Debug
 	
 	duration=''
+	PLog("Var0:")
 	if u'>Videolänge<' in rec:											# Ausn. Trailer
-		PLog("Var0:")
 		duration = stringextract(u'>Videolänge<', '</dd>', rec) 
 		duration = stringextract('aria-label="', '"', duration) 
 		if duration:
-			return duration
-			
+			return duration			
+	
 	PLog("Var1:")
 	if ' min</dd>' in rec:
 		try:															# 1. Variante
@@ -9325,6 +9326,7 @@ def ZDF_getDuration(rec):
 			return duration + " min"
 		except Exception as exception:
 			duration=''		
+	
 	PLog("Var2:")
 	if u'"Videolänge ' in rec:
 		try:															# 2. Variante
@@ -9332,14 +9334,24 @@ def ZDF_getDuration(rec):
 			return duration + " min"
 		except Exception as exception:
 			duration=''
+			
 	PLog("Var3:")
+	if u'"duration":' in rec:											# 4. Variante
+		duration = stringextract(u'"duration": "', '"', rec) 
+		if duration:
+			duration = seconds_translate(duration)
+			PLog("duration: " + duration)
+			return duration
+			
+	PLog("Var4:")
 	if ' min ' in rec:
 		try:															# Fallback-Variante
 			duration = re.search(u'(\d+) min ', rec).group(1)
 			return duration + " min"
 		except Exception as exception:
 			duration=''
-
+	
+	PLog("duration: " + duration)
 	return duration
 #-------------------------
 
