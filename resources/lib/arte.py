@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.11.2021
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.12.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -550,8 +550,8 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 						
 	form_arr.sort()								# Sortieren
 	if len(form_arr) == 0:
-		msg1 = 'Fehler in SingleVideo: %s' % title
-		msg2 = 'keine verwertbaren Streams gefunden'
+		msg1 = u'SingleVideo: [B]%s[/B]' % title
+		msg2 = u'Streams leider (noch) nicht verfügbar.'
 		MyDialog(msg1, msg2, '')
 		return li		
 			
