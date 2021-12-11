@@ -10,6 +10,16 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+11.12.2021 4.1.5
+			Main: Menü-Infotexte korrigiert/aktualisiert.
+			ARDSportVideo: Auswertung auf alle Video-Links mit Endung .m3u8 erweitert,
+			Auswertung auf "config"-Bereich der hessenschau.de-Seiten erweitert.
+			ZDF_getDuration: weitere Variante für Videodauer hinzugefügt.
+			ZDF_Sendungen: return nach b-cluster-Auswertung eingefügt (endOfDirectory
+			nicht ausreichend, Ursache für falsche Abbruchdialoge).
+			SingleVideo (Modul arte): Fehlerdialog angepasst für künftige Beiträge ohne 
+			akt. Streamquelle.
+
 04.12.2021 4.1.4
 			ARDnew: Barrierearm als eigenständiges Menü (wie ZDF), Anpassungen Main_NEW +
 			Main.
