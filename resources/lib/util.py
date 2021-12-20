@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.11.2021
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.12.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2873,19 +2873,11 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
 	#li.setProperty('IsPlayable', 'true')		# hier unwirksam
 	li.setInfo(type="video", infoLabels={"Title": title, "Plot": Plot, "mediatype": "video"}) # s.u.
+	
 
 	'''
 	infoLabels = {}								# 17.06.2921 Setzen hier behindert Resume-Funktion (s. addDir)
-	infoLabels['title'] = title
-	infoLabels['sorttitle'] = title
-	#infoLabels['genre'] = genre
-	#infoLabels['plot'] = Plot
-	#infoLabels['plotoutline'] = Plot
-	infoLabels['tvshowtitle'] = Plot
-	infoLabels['tagline'] = Plot
-	infoLabels['mediatype'] = 'video'
-	li.setInfo(type="Video", infoLabels=infoLabels)
-	li.setInfo(type="video", infoLabels=infoLabels)
+		...
 	'''
 	
 	sub_list=[]
@@ -2975,8 +2967,18 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		PLog("url: " + url); PLog("playlist: %d" % len(playlist))
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
-			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
+			# Check auf inputstream.adaptive nicht erforderlich
+			if url.endswith('.m3u8'):							# SetInputstreamAddon hier nur HLS
+				PLog("SetInputstreamAddon:")
+				li.setMimeType('application/vnd.apple.mpegurl')
+				li.setProperty('inputstreamaddon', 'inputstream.adaptive')
+				# funktioniert (noch) nicht:
+				#li.setProperty('#KODIPROP:inputstream=inputstream.adaptive', 'inputstream.adaptive')
+				li.setProperty('inputstream.adaptive.manifest_type', 'hls')
+				li.setContentLookup(False)				
+				xbmcplugin.setResolvedUrl(HANDLE, True, li)		# indirekt						
 			return
+
 		else:													# false, None od. Blank
 			PLog('PlayVideo_Start: direkt, playlist: %d' % len(playlist))
 			
