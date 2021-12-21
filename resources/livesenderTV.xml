@@ -2,10 +2,10 @@
  <channels_info>
   <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
   <imgsource>Arauco</imgsource>
-  <nr>23</nr>
+  <nr>24</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
-  <date>30.11.2021 rols1</date>
+  <date>21.12.2021 rols1</date>
   <ARDsource></ARDsource>
   <ZDFsource>https://www.zdf.de/live-tv</ZDFsource>
   <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ Button:Alle Sender</info>
@@ -279,6 +279,17 @@
 </items>
 </channel>
 
+
+<channel>
+	<name>Regional: WDR Lokalzeit Livestreams</name>
+	<thumbnail>tv-wdr.png</thumbnail>
+	<info>Auswertung: SenderLiveListe -> list_WDRstreamlinks</info>
+	<date>20.12.2021</date>
+	</items>
+	</items>
+</channel>
+
+
 <channel>
 <name>Privat</name>
 <thumbnail>tv-privat.png</thumbnail>
@@ -409,6 +420,7 @@
 	</item>
 </items>
 </channel>
+
 
 <channel>
 	<name>ARD Event Streams (eingeschränkt verfügbar)</name>

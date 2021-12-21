@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>10</nr>										# Numerierung für Einzelupdate
+# 	<nr>11</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.5'
 VDATE = '11.12.2021'
 
@@ -6351,25 +6351,20 @@ def list_WDRstreamlinks(url):
 def WDRstream(path, title, img, summ):
 	PLog('WDRstream:')
 	
-	page, msg = get_page(url)					
+	page, msg = get_page(path)					
 	if page == '':	
 		msg1 = "Fehler in WDRstream:"
 		msg2=msg
 		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))
+	page=py2_decode(page)					
 	
-	pos = page.find('id="articleStart"')
-	page = page[pos:]
-	
-	summ = stringextract('text small">', '</p>', item)
-	
-# todo: Nutzung ARDSportVideo
-#	Hinw. Forum: voreilig zugestimmt (aber wer A sagt, ..), weitere ähnliche Seiten nicht annehmen, nur
-#		Einzellinks. 
-	
+	PLog('deviceids-medp.wdr.de' in page)
+	if 'deviceids-medp.wdr.de' in page:	
+		ARDSportVideo(path, title, img, summ)
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
 	
 #-----------------------------------------------------------------------------------------------------
 #	17.02.2018 Video-Sofort-Format wieder entfernt (V3.1.6 - V3.5.0)
