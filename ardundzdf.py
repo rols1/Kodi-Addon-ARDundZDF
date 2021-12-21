@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>9</nr>										# Numerierung für Einzelupdate
+# 	<nr>10</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.5'
 VDATE = '11.12.2021'
 
@@ -4697,8 +4697,12 @@ def get_subtitles(fulldestpath, sub_path):
 	if "|" in sub_path:						# ZDF 2 Links: .sub, .vtt
 		 sub_path = sub_path.split('|')[0]
 	local_path=''
-	sub_path = sub_path_conv(sub_path)		# ARD-Untertitel holen + konvertieren
-	if sub_path.startswith('http'):			# ZDF-Untertitel holen
+	sub_path = sub_path_conv(sub_path)		# Untertitel holen + konvertieren
+	if isinstance(sub_path, list):			# Liste für PY3 in sub_path_conv
+		sub_path = sub_path[0]
+	PLog("sub_path2: " + str(sub_path))
+
+	if sub_path.startswith('http'):	# ZDF-Untertitel holen
 		local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
 		local_path = os.path.abspath(local_path)
 		try:
@@ -6168,10 +6172,16 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			
 	zdf_streamlinks=''
 	lname = py2_decode(listname)
-	if lname == u'Überregional':			# Streamlinks für ZDF-Sender holen
+	if lname == u'Überregional':						# Streamlinks für ZDF-Sender holen
 		zdf_streamlinks = get_ZDFstreamlinks()			# Modul util
 	if lname == u'Überregional' or lname == u'Regional':
-		ard_streamlinks = get_ARDstreamlinks()			# ard_streamlinks oder ard_streamlinks_UT	
+		ard_streamlinks = get_ARDstreamlinks()			# ard_streamlinks oder ard_streamlinks_UT
+
+	# abweichend - externe Funktion:
+	if u'Regional: WDR' in lname:						# Auswertung + Liste WDR Lokalzeit
+		url = "https://www1.wdr.de/fernsehen/livestream/lokalzeit-livestream/index.html" 
+		wdr_streamlinks = list_WDRstreamlinks(url)		# Webseite
+		return
 		
 	mediatype='' 						# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
@@ -6286,6 +6296,81 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	if onlySender== '':		
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
+#-----------------------------------------------
+# WRD-Links 
+# Aufruf SenderLiveListe
+#
+def list_WDRstreamlinks(url):
+	PLog('list_WDRstreamlinks:')
+	wdr_base = "https://www1.wdr.de"
+	
+	page, msg = get_page(url)					
+	if page == '':	
+		msg1 = "Fehler in get_WRDstreamlinks:"
+		msg2=msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	PLog(len(page))
+	
+	items = blockextract('hideTeasertext">', page)
+	PLog(len(items))	
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
+	
+	for item in items:
+		if 'title="Alle Livestreams' in item:
+			continue
+		path = stringextract('href="', '"', item)
+		if path.startswith("/"):
+			path = wdr_base + path
+		title = stringextract('title="', '"', item)			# href-title
+		img = stringextract('srcset="', '"', item)
+		if img.startswith("/"):
+			img = wdr_base + img
+		img_src = stringextract('alt="', 'src=', item)
+		img_src = stringextract('title="', '"', img_src)	# alt-title
+		summ = img_src
+		
+		PLog("Satz28:")
+		PLog(path);PLog(img); PLog(title); PLog(summ); 
+		title=py2_encode(title); summ=py2_encode(summ)
+		path=py2_encode(path); img=py2_encode(img);
+		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
+			(quote(path), quote(title), quote(img), quote(summ))				
+		addDir(li=li, label=title, action="dirList", dirID="WDRstream", fanart=img, thumb=img, 
+			fparams=fparams, summary=summ)	
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+	
+#-----------------------------------------------
+# Livesender WRD-Link 
+# Aufruf list_WDRstreamlinks
+#
+def WDRstream(path, title, img, summ):
+	PLog('WDRstream:')
+	
+	page, msg = get_page(url)					
+	if page == '':	
+		msg1 = "Fehler in WDRstream:"
+		msg2=msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	PLog(len(page))
+	
+	pos = page.find('id="articleStart"')
+	page = page[pos:]
+	
+	summ = stringextract('text small">', '</p>', item)
+	
+# todo: Nutzung ARDSportVideo
+#	Hinw. Forum: voreilig zugestimmt (aber wer A sagt, ..), weitere ähnliche Seiten nicht annehmen, nur
+#		Einzellinks. 
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+	
 #-----------------------------------------------------------------------------------------------------
 #	17.02.2018 Video-Sofort-Format wieder entfernt (V3.1.6 - V3.5.0)
 #		Forum:  https://forums.plex.tv/discussion/comment/1606010/#Comment_1606010
