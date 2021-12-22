@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>12</nr>										# Numerierung für Einzelupdate
+# 	<nr>13</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.5'
 VDATE = '22.12.2021'
 
@@ -1468,6 +1468,7 @@ def AudioSenderPrograms(li, page, sender, img):
 def Audio_get_rubrik(title, path, ID, page=''):							
 	PLog('Audio_get_rubrik: ' + ID)
 	PLog(path); PLog(len(page))
+	path = path.replace('/./', '/')				# rel. json-Link nicht mehr akzeptiert
 	path_org = path; ID_org=ID
 	
 	li = xbmcgui.ListItem()
@@ -1671,6 +1672,7 @@ def Audio_get_json_single(li, page, ID, jsonObject=''):
 #
 def Audio_get_json_multi(li, page, ID, jsonObject=''):
 	PLog('Audio_get_json_multi: ' + ID)
+	#RSave('/tmp/x.json', py2_encode(page))	# Debug			
 
 	audObs=[];
 	if jsonObject:
@@ -1708,7 +1710,7 @@ def Audio_get_json_multi(li, page, ID, jsonObject=''):
 	PLog(len(audObs))
 		
 	cnt=0;
-	PLog(audObs)		
+	# PLog(audObs)	# Debug	
 	for aO in audObs:
 		try:	
 			PLog("Mark0")
