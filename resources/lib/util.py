@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.12.2021
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.12.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2971,12 +2971,15 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 			if url.endswith('.m3u8'):							# SetInputstreamAddon hier nur HLS
 				PLog("SetInputstreamAddon:")
 				li.setMimeType('application/vnd.apple.mpegurl')
-				li.setProperty('inputstreamaddon', 'inputstream.adaptive')
-				# funktioniert (noch) nicht:
-				#li.setProperty('#KODIPROP:inputstream=inputstream.adaptive', 'inputstream.adaptive')
+				if PYTHON2:
+					li.setProperty('inputstreamaddon', 'inputstream.adaptive')
+				else:
+					# Kodi-Debug Matrix: depricated, use
+					#	 #KODIPROP:inputstream=inputstream.adaptive', 'inputstream.adaptive'
+					li.setProperty('inputstream', 'inputstream.adaptive')
 				li.setProperty('inputstream.adaptive.manifest_type', 'hls')
 				li.setContentLookup(False)				
-				xbmcplugin.setResolvedUrl(HANDLE, True, li)		# indirekt						
+			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt						
 			return
 
 		else:													# false, None od. Blank

@@ -54,9 +54,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>11</nr>										# Numerierung für Einzelupdate
+# 	<nr>12</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.5'
-VDATE = '11.12.2021'
+VDATE = '22.12.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6360,12 +6360,19 @@ def WDRstream(path, title, img, summ):
 	PLog(len(page))
 	page=py2_decode(page)					
 	
+	summ = stringextract('>Hier sehen Sie ', ' die Lokalzeit ', page)	
+	
 	PLog('deviceids-medp.wdr.de' in page)
 	if 'deviceids-medp.wdr.de' in page:	
 		ARDSportVideo(path, title, img, summ)
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	else:
+		icon = img
+		msg1 = u"Sendungszeiten"
+		msg2 = summ									
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=True)	 
+	return
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
 #-----------------------------------------------------------------------------------------------------
 #	17.02.2018 Video-Sofort-Format wieder entfernt (V3.1.6 - V3.5.0)
 #		Forum:  https://forums.plex.tv/discussion/comment/1606010/#Comment_1606010
