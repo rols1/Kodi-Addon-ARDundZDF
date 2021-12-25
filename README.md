@@ -127,8 +127,8 @@ INSTALLATION:
 
 Credits:
 ===================  
-- Credits to [coder-alpha] https://forums.plex.tv/discussion/166602/rel-ccloudtv-channel-iptv/p1): (Channel updater, based on Channel updater by sharkone/BitTorrent.bundle)
-- Credits to [Arauco] (https://forums.plex.tv/profile/Arauco): processing of Logos and Icons (Plex-Plugin ARDundZDF)
+- Credits to [coder-alpha](https://forums.plex.tv/discussion/166602/rel-ccloudtv-channel-iptv/p1): (Channel updater, based on Channel updater by sharkone/BitTorrent.bundle)
+- Credits to [Arauco](https://forums.plex.tv/profile/Arauco): processing of Logos and Icons (Plex-Plugin ARDundZDF)
 - Credits to [romanv](https://github.com/romanvm) for his script.module.kodi-six
 - Credits to all the members of Forum Kodinerds who help to make this addon better
 
@@ -175,14 +175,6 @@ Audiothek:
 Audiothek Livestreams:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Radio_Livesender.png)
-
-Audiothek Radio-Livestreams BR:
-===================  
-![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Radio_Livesender_BR.png)
-
-Podcast-Menü (Classic):
-===================  
-![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Podcast_Menue.png)
 
 Podcast-Favoriten:
 ===================  
