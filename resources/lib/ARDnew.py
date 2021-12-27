@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.11.2021
+#	Stand: 23.12.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -161,6 +161,19 @@ def Main_NEW(name, CurSender=''):
 	fparams="&fparams={'title': '%s', 'sender': '%s', 'path': '%s'}" % (quote(title), sender, quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", 
 		fanart=R(ICON_MAIN_ARD), thumb=R('ard-entdecken.png'), tagline=tag, summary=summ, fparams=fparams)
+
+	# 25.12.2021 als eigenständiges Menü (zusätzl. zum Startmenü) - wie Web:
+	#	href wie get_ARDstreamlinks
+	title = 'Livestreams'
+	summ = "Die [B]Livestreams[/B] der ARD"
+	img = R("ard-livestreams.png")
+	ID = 'Livestream'
+	href = 'https://api.ardmediathek.de/page-gateway/widgets/ard/editorials/4hEeBDgtx6kWs6W6sa44yY?pageNumber=0&pageSize=24'
+	href=py2_encode(href); title=py2_encode(title); 
+	fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
+		(quote(href), quote(title), ID)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
+		fparams=fparams, summary=summ)																							
 
 	title = 'Sendung verpasst'
 	tag = def_tag
@@ -317,18 +330,20 @@ def img_preload(ID, path, title, caller, icon=ICON_MAIN_ARD):
 	img=''
 	oname = os.path.join(SLIDESTORE, "ARDNeu_Startpage")
 	fname = os.path.join(oname, ID)
-	PLog(fname)
+	# PLog(fname)
 	
 	if os.path.isdir(oname) == False:
 		try:  
-			os.mkdir(oname)
+			os.mkdir(oname)								# Verz. ARDNeu_Startpage erzeugen
 		except OSError as exception:
 			msg = str(exception)
 			PLog(msg)
 			
 	if os.path.exists(fname):							# img aus Cache laden
+		PLog('img_cache_load: ' + fname)	
 		return fname
 	else:
+		PLog('img_cache_leer')	
 		page, msg = get_page(path=path)					# ganze Seite von Sender laden	
 		if page=='':
 			return leer_img								# Fallback 
@@ -344,7 +359,7 @@ def img_preload(ID, path, title, caller, icon=ICON_MAIN_ARD):
 	msg2 = title										# Dateiname bei ARD neu nichtssagend
 	xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)	 
 		
-	PLog('img: ' + fname)	
+	PLog('img_cache_fill: ' + fname)	
 	return fname										# lokaler img-Pfad
 	
 #---------------------------------------------------------------------------------------------------

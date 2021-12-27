@@ -55,8 +55,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>13</nr>										# Numerierung für Einzelupdate
-VERSION = '4.1.5'
-VDATE = '22.12.2021'
+VERSION = '4.1.6'
+VDATE = '27.12.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3200,8 +3200,9 @@ def ARDSportBilder(title, path, img):
 # Fallback ohne Quellen: Webseiten mit 'media mediaA video' -> ARDSportSingleTab
 # Besonderheit: bei einigen Seiten scheitert utf-8-Dekodierung in util. Daher Dekodierung 
 #	hier mit py2_decode
-#	
-def ARDSportVideo(path, title, img, summ, Merk='false'):
+# 22.12.2021 auch verwendet von WDRstream mit page. 	
+#
+def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	PLog('ARDSportVideo:'); 
 	PLog(summ)
 	summ = summ.replace('||||', ' | ')
@@ -3210,7 +3211,8 @@ def ARDSportVideo(path, title, img, summ, Merk='false'):
 	# Header erforder.?: /wintersport/alle-videos-komplett-uebersicht-100.html
 	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 		'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}"
-	page, msg = get_page(path=path, header='', decode=True)		# decode hier i.V.m. py2_decode 						
+	if page != '':
+		page, msg = get_page(path=path, header='', decode=True)		# decode hier i.V.m. py2_decode 						
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
 		msg2 = msg
@@ -3979,8 +3981,15 @@ def ARDSportAudioStreams(title, path, img, ID):
 	else:														# Netcast-Audiostreams-Liste 
 		items = blockextract('class="teaser hideTeasertext">', page)
 		imgbase = "https:"
-		
+
 	PLog(len(items))
+	if len(items) == 0:
+		msg1 = u"%s:" % title
+		msg2 = u'leider keine Beiträge gefunden'
+		MyDialog(msg1, msg2, "")
+		return li 						
+		
+	
 	for item in items:
 		href = base + stringextract('href="', '"', item)
 		title = stringextract('title="', '"', item)			# in href-tag
@@ -6349,6 +6358,8 @@ def list_WDRstreamlinks(url):
 #-----------------------------------------------
 # Livesender WRD-Link 
 # Aufruf list_WDRstreamlinks
+# Nach Sendungsende bleivbt der Link unter deviceids-medp.wdr.de noch
+#	einige Minuten erhalten, führt jedoch ins Leere - dann ohne Notific.
 #
 def WDRstream(path, title, img, summ):
 	PLog('WDRstream:')
@@ -6366,7 +6377,7 @@ def WDRstream(path, title, img, summ):
 	
 	PLog('deviceids-medp.wdr.de' in page)
 	if 'deviceids-medp.wdr.de' in page:	
-		ARDSportVideo(path, title, img, summ)
+		ARDSportVideo(path, title, img, summ, page=page)
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	else:
 		icon = img

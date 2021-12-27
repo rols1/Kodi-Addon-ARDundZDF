@@ -10,6 +10,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+27.12.2021 4.1.6
+			PlayVideo: Replay-Funktion-Nutzung - Konfiguration der Stream-Url für 
+			inputstream.adaptive, einschl. Anpassung für Matrix (Einzel-Update).
+			TV-Livestreams/Regionale Sender: Integration WDR Lokalzeit Livestreams -
+			Anpassung livesenderTV.xml, neue Funktionen WDRstream, list_WDRstreamlinks.
+			get_subtitles: Fix UT-Liste -> Einzel-UT (Liste für PY3 in sub_path_conv
+			erforderlich).
+			Audio_get_rubrik (Audiothek): nicht mehr akzeptierten json-Anteil in
+			Link entfernt ('/./' -> '/').
+			ARD-Mediathek: zusätzl. Menü für "Livestreams" (wie Web)- Anpassung in 
+			Main_NEW, neues Icon ard-livestreams.png. 
+			img_preload(Modul ARDnew): Debug-Statements img_cache_* ergänzt.
+			ARDSportAudioStreams: Abbruch-Behandlung verbessert (Dialog, Rücksprung
+			zur Liste).
+			README: Aktualisierung Bilder im Repo PluginPictures.
+			
+
 11.12.2021 4.1.5
 			Main: Menü-Infotexte korrigiert/aktualisiert.
 			ARDSportVideo: Auswertung auf alle Video-Links mit Endung .m3u8 erweitert,

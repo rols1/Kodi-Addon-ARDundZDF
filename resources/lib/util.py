@@ -2401,6 +2401,7 @@ def get_ARDstreamlinks(skip_log=False):
 	icon = R(ICON_TOOLS)
 	xbmcgui.Dialog().notification("Cache ARDlinks:","wird erneuert",icon,3000)
 	
+	# api_url wie Livestreams in Main_NEW
 	api_url = "https://api.ardmediathek.de/page-gateway/widgets/ard/editorials/4hEeBDgtx6kWs6W6sa44yY?pageNumber=0&pageSize=24"
 	page, msg = get_page(path=api_url, JsonPage=True)			# Links neu holen
 	if page == '':
