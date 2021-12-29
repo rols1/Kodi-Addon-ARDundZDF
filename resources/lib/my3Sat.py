@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.11.2021
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.12.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -535,6 +535,31 @@ def Start(name, path, rubrik=''):
 					fparams=fparams)
 				
 
+		if 'class="m--teaser-topic-' in page:		# herausgestellte Themenseiten
+			items =  blockextract('class="m--teaser-topic-', page, '</article>')
+			PLog(len(items))
+			for rec in items:
+				img_src = stringextract('data-srcset="', ' ', rec)	
+				title 	= stringextract('title="', '"', rec)
+				href	= stringextract('href="', '"', rec)
+				if href.startswith('http') == False:
+					href	= DreiSat_BASE + href
+				anz 	= stringextract('class="info">', '</', rec)	# Anzahl Beiträge
+				tag		= u"[B]%s[/B] Beiträge" % anz
+				
+				subhead = stringextract('subheadline level-8', "<div", rec)
+				descr	= stringextract('" >', '</', subhead)	
+									# show-for-large" >
+				descr 	= unescape(descr); descr = mystrip(descr); descr = repl_json_chars(descr)
+				
+				PLog('Satz2:')
+				PLog(title); PLog(href); PLog(tag); PLog(descr);
+				title=py2_encode(title); href=py2_encode(href);	 img_src=py2_encode(img_src);
+				fparams="&fparams={'li': '', 'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title),
+					 quote(href), quote(img_src))
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
+					fanart=R('3sat.png'), thumb=img_src, tagline=tag, summary=descr, fparams=fparams)
+
 													# restl. Rubriken der Leitseite listen
 		items =  blockextract('--red is-uppercase', page)
 		PLog(len(items))
@@ -556,7 +581,7 @@ def Start(name, path, rubrik=''):
 					img_src = img_src.replace('\\/','/')
 					img_src = "https" + img_src
 				
-			PLog('Satz2:')
+			PLog('Satz3:')
 			PLog(title); PLog(path); PLog(img_src); 
 			title=py2_encode(title); path=py2_encode(path); 
 			fparams="&fparams={'name': '%s', 'path': '%s', 'rubrik': '%s'}" %\

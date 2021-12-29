@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>13</nr>										# Numerierung für Einzelupdate
+# 	<nr>14</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.6'
 VDATE = '27.12.2021'
 
@@ -8005,6 +8005,15 @@ def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 		descr	= stringextract('extended-text">', '<', page)	
 	if descr == '':
 		descr = stringextract('alt="', '"', page)						# Fallback Bildbeschr.
+	
+	if "erfügbar " in page:												# Info Livestream
+		if descr.find(u'erfügbar ') < 0:
+			try:
+				live = re.search(u'fügbar (.*?)">', page).group(1)		# ..erfügbar .. Uhr Sport">
+			except:
+				live=''
+			if live:
+				descr = "verfügbar [B]%s[/B]\n\n%s" % (live, descr.strip())	
 		
 	descr = unescape(descr); descr = descr.strip()
 	if u'Videolänge' in descr:
