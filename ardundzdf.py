@@ -54,9 +54,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>14</nr>										# Numerierung für Einzelupdate
+# 	<nr>15</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.6'
-VDATE = '27.12.2021'
+VDATE = '30.12.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2413,8 +2413,8 @@ def ARDSport(title):
 
 	# Dauerlinks am Fuß der Leitseite (Tab's am Kopf  können abweichen)
 	# skip_title enthält manuell bearbeitete Buttons (Bsp. Olympia in Tokio), 
-	#	die unten eingefügt werden-
-	skip_title = ["Olympia in Tokio"]
+	#	die unten eingefügt werden
+	skip_title = ["Olympia in Tokio", "Wintersport"]
 	tabpanel = stringextract('<ul id="gseafooterlinks116-panel"', '</ul>', page) 
 	tabpanel = blockextract('<li>', tabpanel)
 	img = R(ICON_DIR_FOLDER)
@@ -2454,6 +2454,32 @@ def ARDSport(title):
 	# beim Ziel ARDSportPanel den Titel in theme_list für 2. Durchlauf 
 	#	aufnehmen - entfernen, wenn Titel nicht in Panel vorh. (Auswer-
 	#	tung läuft dann über die teaser-Blocks).
+				
+	title = u"Wintersport"									# Winter-Wechsel Fuß/Tab (s. skip_title)
+	label = "Wintersport: Übersicht"
+	href = 'https://www.sportschau.de/wintersport/index.html'
+	img =  'https://www.sportschau.de/wintersport/skispringen/severin-freund-292~_v-TeaserAufmacher.jpg'
+	tagline = 'Alles zum Wintersport'
+	summ = u"Nachrichten, Berichte, Interviews und Ergebnisse zum Wintersport."
+	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
+		quote(href), quote(img))
+	addDir(li=li, label=label, action="dirList", dirID="ARDSportPanel", fanart=img, 
+		thumb=img, tagline=tagline, summary=summ, fparams=fparams)
+		
+	title = "Wettbewerbe in voller Länge"					# Zusatz Wintersport
+	label = "Wintersport: Wettbewerbe in voller Länge"
+	href = 'https://www.sportschau.de/wintersport/alle-videos-komplett-uebersicht-100.html'
+	img =  'https://www.sportschau.de/wintersport/wintersport-banner-mediathek-102~_v-gseapremiumxl.jpg'
+	tagline = 'Themenwelt Sport in der ARD-Mediathek'
+	summ = u"Unsere besten Sport-Dokus, Reportagen und Recherchen. Livestreams, aktuelle Highlights und alle sportlichen Großereignisse."
+	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
+		quote(href), quote(img))
+	addDir(li=li, label=label, action="dirList", dirID="ARDSportPanel", fanart=img, 
+		thumb=img, tagline=tagline, summary=summ, fparams=fparams)
+		
+
 	#'''				
 	title = "EURO 2020"									# (nicht in Fußlinks)
 	href = 'https://www.sportschau.de/fussball/uefaeuro2020/index.html'
@@ -2480,7 +2506,7 @@ def ARDSport(title):
 	addDir(li=li, label=label, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, fparams=fparams)
 	
-
+	'''
 	title = "Olympia in Tokio"										# manuell trotz Fußlinks 
 	#href = 'https://tokio.sportschau.de/tokio2020/index.html'
 	href = 'https://tokio.sportschau.de'
@@ -2491,7 +2517,7 @@ def ARDSport(title):
 		quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, fparams=fparams)
-
+	'''
 	
 	title = "Moderatoren"									# Moderatoren 
 	href = 'https://www.sportschau.de/sendung/moderation/index.html'
@@ -3204,13 +3230,14 @@ def ARDSportBilder(title, path, img):
 #
 def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	PLog('ARDSportVideo:'); 
-	PLog(summ)
+	PLog(path); PLog(summ)
 	summ = summ.replace('||||', ' | ')
 
 	title_org = title
 	# Header erforder.?: /wintersport/alle-videos-komplett-uebersicht-100.html
 	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 		'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}"
+	msg=''
 	if page != '':
 		page, msg = get_page(path=path, header='', decode=True)		# decode hier i.V.m. py2_decode 						
 	if page == '':
