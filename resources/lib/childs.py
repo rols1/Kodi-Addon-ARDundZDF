@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
+#	Stand: 30.12.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -589,27 +589,31 @@ def Kiraka_klick(title, weburl=''):
 #	Auswertung in Kika_VideosBeliebt
 # getHrefList: nur hrefs der Bündelgruppen sammeln für Kika_Search - dort
 #	-> Dict-Cache 
+# 30.12.2021 Cache ergänzt (Leit- und Einzelseiten) 			
 #	
 def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''): 
 	PLog('Kika_VideosBuendelAZ: ' + path); PLog(button)
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
-	first=False; fname=''
+	first=False; fname=''; page=''
 	if button == '':								# A-Z-Liste laden
 		path = 'https://www.kika.de/videos/allevideos/allevideos-buendelgruppen100.html'
 		first=True
+		fname = "page-A_zc-05fb1331"
 	else:
 		fname = stringextract('allevideos-buendelgruppen100_', '.htm', path)
-
-	page = Dict("load", fname, CacheTime=KikaCacheTime)
-	if page == False:
+		page = Dict("load", fname, CacheTime=KikaCacheTime)
+	
+	if page == False or page == '':
 		page, msg = get_page(path)	
 	if page == '':	
 		msg1 = "Fehler in Kika_VideosBuendelAZ:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
+	else:
+		Dict("store", fname, page)
 	PLog(len(page)); PLog(first)
 	
 	if first:							# 1. Aufruf: A-Z-Liste
@@ -628,7 +632,7 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''):
 			else:
 				button = stringextract('title="">', '<', item)
 				if '...' in button:					# Ende Liste
-					break
+					button = "0-9"
 				img_src = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % button
 				PLog("button: " + button); PLog("href: " + href)
 				title = "Sendungen mit " + button
@@ -644,7 +648,9 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''):
 	# 2. Aufruf: Liste einer Gruppe 
 	PLog("button: " + button);  PLog(first)
 	pos = page.find("The bottom navigation")		# begrenzen, es folgen A-Z + meist geklickt
-	page = page[:pos]
+	PLog(pos)
+	if pos > 0:
+		page = page[:pos]
 	PLog(len(page))
 	pageItems = blockextract('class="media mediaA">', page)	
 	PLog(len(pageItems))
@@ -895,27 +901,34 @@ def Kika_Barrierearm(path, title, thumb, rubrik=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------
-# Kikaninchen - Seitenliste Sendungsvideos  			
+# Kikaninchen - Seitenliste Sendungsvideos 
+# 30.12.2021 Cache ergänzt (hier nur Leitseite) 			
 def Kikaninchen_Videoseite():
 	PLog('Kikaninchen_Videoseite')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
 	path = 'https://www.kika.de/kikaninchen/sendungen/videos-kikaninchen-100.html'
-	page, msg = get_page(path)	
+	page = Dict("load", "KikaninchenAZ", CacheTime=KikaCacheTime)
+	if page == False or page == '':
+		page, msg = get_page(path)	
 	if page == '':	
 		msg1 = "Fehler in Kikaninchen_Videoseite:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
+	else:
+		Dict("store", "KikaninchenAZ", page)
 														# Buchstabenblock (2 x vorh.):
-	items = stringextract('class="bundleNaviWrapper"', '"">...</a>', page)
+	items = stringextract('class="bundleNaviWrapper"', '"modCon"', page)
 	items = blockextract('bundleNaviItem', items)		# nur aktive Buchstaben
 	PLog(len(items))
 	
 	for s in items:	
 		# PLog(s)
 		seite =  stringextract('title="">', '</a>', s).strip()
+		if '...' in seite:					# Ende Liste
+			seite = "0-9"
 		if "disabled" in s or seite == '':
 			continue 
 		PLog(seite)
