@@ -54,9 +54,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>15</nr>										# Numerierung für Einzelupdate
+# 	<nr>16</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.6'
-VDATE = '30.12.2021'
+VDATE = '31.12.2021'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3230,7 +3230,7 @@ def ARDSportBilder(title, path, img):
 #
 def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	PLog('ARDSportVideo:'); 
-	PLog(path); PLog(summ)
+	PLog(path); PLog(summ); PLog(len(page))
 	summ = summ.replace('||||', ' | ')
 
 	title_org = title
@@ -3238,7 +3238,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 		'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}"
 	msg=''
-	if page != '':
+	if page == '':
 		page, msg = get_page(path=path, header='', decode=True)		# decode hier i.V.m. py2_decode 						
 	if page == '':
 		msg1 = 'Seite kann nicht geladen werden.'
