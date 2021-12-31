@@ -7,8 +7,8 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.11.2021
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
+#	Stand: 31.12.2021
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -264,16 +264,18 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
 		vorspann=''; tag=''; summ=''; summ_par=''; subtitel=''; online=''
 		single = False; video='false'
 
-		img		= stringextract('"bild_l":"', '"', item)
+		img		= stringextract('"bild_m":"', '"', item)
 		if img == '':	
-			img	= stringextract('"bild_m":"', '"', item)
+			img	= stringextract('"bild_ml":"', '"', item)
+		if img == '':	
+			img	= stringextract('"bild_l":"', '"', item)	# nachrangig, da falsche Url mögl.
 		if img == '' or 'placeholder' in img:
 			img = base_img				
 		if img.startswith('http') == False:
 			img = BASE_PHOENIX + img
 		if '%' in img:								# Dekodierung  quotierte img-url's
-			img = decode_url(img)
-			PLog("decode_img: " + img)				
+			#img = decode_url(img)					# Bsp.: ..17-3083922,(ap,XAZ109,A15_11_2017),russisches..
+			PLog("decode_img: " + img)				# für Kodi Dekodierung nicht erforderl.
 			
 		# "inhalt_video":true muss nicht stimmen, Bsp.: 
 		#	https://www.phoenix.de/response/template/suche_select_json/term/dialog/sort/score
@@ -803,7 +805,6 @@ def get_formitaeten(content_id,title,tagline,thumb):
 		# PLog(audio)	# bei Bedarf
 		for audiorec in audio:		
 			url = stringextract('"uri" : "',  '"', audiorec)			# URL
-			url = url.replace('https', 'http')			# im Plugin kein Zugang mit https!
 			quality = stringextract('"quality" : "',  '"', audiorec)
 			if quality == 'high':						# high bisher identisch mit auto 
 				continue
