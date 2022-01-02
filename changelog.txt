@@ -10,6 +10,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+02.01.2022 4.1.7
+			ZDF_get_teaserDetails: Auswertung Livestream-Infos (Datum, Zeit) für
+			ZDF-Sportstudio.
+			Startseite Modul 3sat: zusätzl. Auswertung von herausgestellten Themenseiten.
+			Kika_VideosBuendelAZ (Modul childs): Auswertung Videos 0-9 (Web: "...") 
+			ergänzt, Nutzung Cache (Haltedauer 1 Tag) für Leit- und Einzelseiten ergänzt.
+			Kikaninchen_Videoseite: Nutzung Cache (Haltedauer 1 Tag) für Leitseite ergänzt.
+			ARD Sportschau: manuelle Saisonänderung in ARDSport (Wintersport: Übersicht,
+			Wintersport: Wettbewerbe in voller Länge).
+			get_formitaeten (Modul phoenix): Ersetzung https -> http gelöscht (Altlast Plex).
+			GetContent (Modul phoenix): Reihenfolge Auswertung Bild-Url geändert (falsche
+			Url bei "bild_l" möglich).
+			ARDSportVideo (ARD Sportschau): Fix 'Seite kann nicht geladen werden.'.
+			
 27.12.2021 4.1.6
 			PlayVideo: Replay-Funktion-Nutzung - Konfiguration der Stream-Url für 
 			inputstream.adaptive, einschl. Anpassung für Matrix (Einzel-Update).
@@ -21,12 +35,11 @@ CHANGE HISTORY
 			Link entfernt ('/./' -> '/').
 			ARD-Mediathek: zusätzl. Menü für "Livestreams" (wie Web)- Anpassung in 
 			Main_NEW, neues Icon ard-livestreams.png. 
-			img_preload(Modul ARDnew): Debug-Statements img_cache_* ergänzt.
+			img_preload (Modul ARDnew): Debug-Statements img_cache_* ergänzt.
 			ARDSportAudioStreams: Abbruch-Behandlung verbessert (Dialog, Rücksprung
 			zur Liste).
 			README: Aktualisierung Bilder im Repo PluginPictures.
 			
-
 11.12.2021 4.1.5
 			Main: Menü-Infotexte korrigiert/aktualisiert.
 			ARDSportVideo: Auswertung auf alle Video-Links mit Endung .m3u8 erweitert,

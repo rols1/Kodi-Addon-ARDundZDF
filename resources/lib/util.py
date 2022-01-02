@@ -1524,14 +1524,18 @@ def decode_url(line):
 	line = py2_decode(line)
 	unquote_plus(line)
 	line = line.replace(u'&amp;', u'&')
-	if PYTHON2:	
-		line = line.replace(u'%C3%BC', u'ü')
-		line = line.replace(u'%C3%B6', u'ö')
-		line = line.replace(u'%C3%A4', u'ä')
-		line = line.replace(u'%C3%9F', u'ß')
-		line = line.replace(u'%C3%9C', u'Ü')
-		line = line.replace(u'%C3%96', u'Ö')
-		line = line.replace(u'%C3%84', u'Ä')
+	#if PYTHON2:	
+	line = line.replace(u'%C3%BC', u'ü')
+	line = line.replace(u'%C3%B6', u'ö')
+	line = line.replace(u'%C3%A4', u'ä')
+	line = line.replace(u'%C3%9F', u'ß')
+	line = line.replace(u'%C3%9C', u'Ü')
+	line = line.replace(u'%C3%96', u'Ö')
+	line = line.replace(u'%C3%84', u'Ä')
+	
+	#line = line.replace(u'%28', u'(')		# für Kodi nicht erforderlich, Bsp. (phoenix): 
+	#line = line.replace(u'%29', u')')		#	..17-3083922,(ap,XAZ109,A15_11_2017),russisches..
+	#line = line.replace(u'%2C', u',')
 	return line
 #----------------------------------------------------------------  	
 # Migration PY2/PY3: py2_decode aus kodi-six

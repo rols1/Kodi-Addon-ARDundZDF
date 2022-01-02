@@ -264,8 +264,8 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
 		vorspann=''; tag=''; summ=''; summ_par=''; subtitel=''; online=''
 		single = False; video='false'
 
-		img		= stringextract('"bild_m":"', '"', item)
-		if img == '':	
+		img		= stringextract('"bild_m":"', '"', item)	# 31.12.2021 Reihenfolge wg. fehlender Bilder
+		if img == '':										#	gedreht: medium, medium_large, large
 			img	= stringextract('"bild_ml":"', '"', item)
 		if img == '':	
 			img	= stringextract('"bild_l":"', '"', item)	# nachrangig, da falsche Url mögl.
