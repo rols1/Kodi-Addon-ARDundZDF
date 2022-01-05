@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.12.2021
+# 	<nr>3</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2891,9 +2891,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		if sub_path:								# Konvertierung ARD-UT, Pfade -> Liste 
 			sub_list = sub_path_conv(sub_path)	
 			li.setSubtitles(sub_list)
-		xbmc.Player().showSubtitles(True)			# unwirksam bei ZDF-Livestream s.o.
-	else:		
-		xbmc.Player().showSubtitles(False)	
+			# xbmc.Player().showSubtitles(True)		# hier unwirksam, s.u. (isPlaying)
 	PLog('sub_list: ' + str(sub_list));				# s. get_subtitles
 		
 	# Abfrage: ist gewähltes ListItem als Video deklariert? - Falls ja,	
@@ -2908,7 +2906,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	IsPlayable = xbmc.getInfoLabel('ListItem.Property(IsPlayable)') # 'true' / 'false'
 	PLog("IsPlayable: %s, Merk: %s" % (IsPlayable, Merk))			# IsPlayable: "false" / "true" !
 	PLog("kodi_version: " + KODI_VERSION)							# Debug
-	# kodi_version = re.seplayer.playarch('(\d+)', KODI_VERSION).group(0) # Major-Version reicht hier - entfällt
+	# kodi_version = re.search('(\d+)', KODI_VERSION).group(0) 		# Major-Version reicht hier - entfällt
 	
 		
 	if url_check(url, caller='PlayVideo'):							# Url-Check
@@ -2962,6 +2960,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		
 		#-------------------------------------------------------# Play		
 		# playlist: Start aus Modul Playlist (s.o.)
+		player = xbmc.Player()
 		try:
 			from platform import release						# für Verhind. Rekursion 
 			OS_RELEASE = release()
@@ -2985,9 +2984,20 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 				li.setProperty('inputstream.adaptive.manifest_type', 'hls')
 				li.setContentLookup(False)				
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt						
+			while 1:
+				if player.isPlaying():
+					xbmc.sleep(500)								# für Raspi erforderl.
+					if SETTINGS.getSetting('pref_UT_ON') == 'true':
+						PLog("Player_Subtitles_on")
+						xbmc.Player().showSubtitles(True)			# unwirksam bei ZDF-Livestream s.o.
+					else:		
+						PLog("Player_Subtitles_off")
+						xbmc.Player().showSubtitles(False)									
+					break
+				xbmc.sleep(200)
 			return
 
-		else:													# false, None od. Blank
+		else:													# false, None od. Blank - Playlist
 			PLog('PlayVideo_Start: direkt, playlist: %d' % len(playlist))
 			
 			line = Dict("load", 'Rekurs_check')					# Dict-Abgleich url/Laufzeit
@@ -3008,17 +3018,16 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 						return
 
 			
-			player = xbmc.Player()
 			player.play(url, li, windowed=False) 				# direkter Start
 			xbmc.sleep(200)
 			
 			if len(playlist) == 0:								# Verhind. Rekursion (ohne Homebutton)
 				if SETTINGS.getSetting('pref_nohome') == 'true':
 					PLog("pref_nohome=true")
-					if "-tegra-" in OS_RELEASE == False:	# ev. prüfen: "-tegra-" in OS_RELEASE +
+					if "-tegra-" in OS_RELEASE == False:		# ev. prüfen: "-tegra-" in OS_RELEASE +
 						exit(0)									#	nicht bei Shield + FT1-Stick.				
 				
-			while 1:
+			while 1:											# seekTime setzen
 				if player.isPlaying():
 					xbmc.sleep(500)								# für Raspi erforderl.
 					PLog("set_seekTime %s" % str(seekTime))
