@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.12.2021
+# 	<nr>6</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -150,7 +150,7 @@ def Main_NEW(name, CurSender=''):
 	tag = u"%s\n\nDeutsche Geschichte und Kultur nacherleben: Mit ARD Retro können Sie in die Zeit der 1950er und frühen 1960er Jahre eintauchen. Hier stoßen Sie auf spannende, informative und auch mal kuriose Sendungen aus den Anfängen der Fernsehgeschichte des öffentlich-rechtlichen Rundfunks." % tag
 	tag = u"%s\n\nMehr: NDR ardretro100.html" % tag
 	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDRetro", fanart=R(FANART), 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDRetro", fanart=R(ICON_MAIN_ARD), 
 		thumb=R('ard-mediathek-retro.png'), tagline=tag, fparams=fparams)
 
 	title = "ARD Mediathek Entdecken"
@@ -187,10 +187,16 @@ def Main_NEW(name, CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
 						
+	title = 'ARD Sport (neu)'
+	img = R("ard-sport.png")
+	fparams="&fparams={}"
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSportneu", 
+		fanart=img, thumb=img, fparams=fparams)
+			
 	title = 'ARD Sportschau'
 	fparams="&fparams={'title': '%s'}"	% title
 	addDir(li=li, label=title, action="dirList", dirID="ARDSport", 
-		fanart=R("tv-ard-sportschau.png"), thumb=R("tv-ard-sportschau.png"), fparams=fparams)
+		fanart=R("ard-sport.png"), thumb=R("tv-ard-sportschau.png"), fparams=fparams)
 			
 	# 27.11.2021 als eigenständiges Menü (vorher an wechselnden Pos. im Startmenü):
 	title = 'Barrierearm'
@@ -371,7 +377,9 @@ def ARDRubriken(li, page):
 	PLog(len(container))
 	title_list=[]
 	for cont in container:
-		title 	= stringextract('"title":"', '"', cont)	
+		title = stringextract('"title":"', '"', cont)		# Bild-Titel
+		self =stringextract('"self":{', '}', cont) 
+		title = stringextract('"title":"', '"', self)
 		title = repl_json_chars(title)
 		if title in title_list:								# Doppel? - s.o.
 			break
@@ -398,7 +406,7 @@ def ARDRubriken(li, page):
 
 		ID = 'ARDStartRubrik'
 		PLog('Satz_cont2:');
-		PLog(title); PLog(ID); PLog(anz); PLog(img); 
+		PLog(title); PLog(ID); PLog(anz); PLog(img); PLog(path);
 		path=py2_encode(path); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
 			(quote(path), quote(title), ID)
@@ -459,7 +467,14 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	if len(container) > 1:
 		ARDRubriken(li, page)							# direkt
 	else:
-		li = get_page_content(li, page, ID, mark)		# Auswertung Rubriken																	
+		if '_quality"' in page:							# (Live-)stream-Erkennung
+			summ = stringextract('synopsis":"', '"', page)
+			m3u8_url= stringextract('stream":"', '"', page)
+			if m3u8_url:
+				PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
+				return
+		else:
+			li = get_page_content(li, page, ID, mark)	# Auswertung Rubriken																	
 #----------------------------------------
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
@@ -580,7 +595,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark):
 	
 ####################################################################################################
 #							ARD Retro www.ardmediathek.de/ard/retro/
-#					vorerst Heimat im Modul ARDnew - bei Bedarf auslagern
+#				als eigenst. Menü, Inhalte auch via Startseite/Menü/Retro erreichbar
 ####################################################################################################
 def ARDRetro(): 
 	PLog('ARDRetro:'); 
@@ -603,6 +618,42 @@ def ARDRetro():
 			return li
 		else:	
 			Dict("store", 'ARDRetro', page) 				# Seite -> Cache: aktualisieren		
+	PLog(len(page))
+	
+	# json:
+	page = stringextract('<body', '</body>', page)
+	# Rubriken: 
+	ARDRubriken(li, page)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+####################################################################################################
+#						ARD Sport (neu) www.ardmediathek.de/ard/sport/
+#				als eigenst. Menü, Inhalte auch via Startseite/Menü/Sport erreichbar
+####################################################################################################
+# 06.01.2022 mit ARDRetro zusammenlegen, falls keine abweichenden Inhalte vorkommen
+#
+def ARDSportneu(): 
+	PLog('ARDSportneu:'); 
+	
+	sendername = "ARD-Alle"
+	title2 = "Sender: ARD-Alle"
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)									# Home-Button -> Hauptmenü
+
+	path = "https://www.ardmediathek.de/ard/sport/" 
+	# Seite aus Cache laden
+	page = Dict("load", 'ARDSport', CacheTime=ARDStartCacheTime)
+	if page == False:										# nicht vorhanden oder zu alt
+		page, msg = get_page(path=path)						# vom Sender holen
+		if page == '':	
+			msg1 = "Fehler Startseite ARDRetro"
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return li
+		else:	
+			Dict("store", 'ARDSport', page) 				# Seite -> Cache: aktualisieren		
 	PLog(len(page))
 	#RSave('/tmp/x.html', py2_encode(page))	# Debug			
 	
