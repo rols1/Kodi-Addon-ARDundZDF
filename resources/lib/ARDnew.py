@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>6</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.01.2022
+# 	<nr>7</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -471,6 +471,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			summ = stringextract('synopsis":"', '"', page)
 			m3u8_url= stringextract('stream":"', '"', page)
 			if m3u8_url:
+				PLog("ARDStartRubrik_starte_Livestream")
 				PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
 				return
 		else:
@@ -670,7 +671,7 @@ def ARDSportneu():
 # mark: farbige Markierung in title (z.B. query aus ARDSearchnew) 
 # Seiten sind hier bereits senderspezifisch.
 # Aufrufe Direktsprünge
-#	
+#
 def get_page_content(li, page, ID, mark='', mehrzS=''): 
 	PLog('get_page_content: ' + ID); PLog(mark)
 	ID_org=ID
@@ -691,7 +692,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	else:
 		if  ID == 'Search':										# Search immer Einzelbeiträge
 			mehrfach = False
-			gridlist = blockextract( '"ondemand"', page)				
+			#gridlist = blockextract( '"ondemand"', page)		# ondemand: neuester Beitrag kann fehlen				
+			gridlist = blockextract( '"availableTo"', page)				
 		else:
 			if 'target":{"id":"' in page:
 				gridlist = blockextract('"availableTo"', page)	# Sendungen, json-key "teasers"	
@@ -715,7 +717,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	PLog('gridlist: ' + str(len(gridlist)))	
 
 	for s  in gridlist:
-		uhr=''
+		uhr=''; ID=ID_org
 		PLog("Mark10")
 		if 'EPG' not in ID:										# decor im 1. Drittel
 			pos = s.find('"decor"',100)							# möglich: Block reicht in Folgeblock
@@ -736,9 +738,10 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			mehrfach = True
 		if ID == 'EPG':
 			mehrfach = False
-		# if '"availableTo":"' in s or '"duration":' in s or 'Livestream' in ID:	# Einzelbetrag
-		if '"duration":' in s or 'Livestream' in ID or 'type":"live"' in s:			# Einzelbetrag, Livestream
-			#if s.find('"availableTo":null') < 0:				# auch bei  vorh. Videos möglich
+		if '"duration":' in s:									# Einzelbetrag
+			mehrfach = False
+		# Live-Stream od. -Aufzeichnung (Bsp. ARD Sport):
+		if 'type":"live"' in s or '"type":"event"' in s or 'Livestream' in ID:
 			mehrfach = False
 					
 		href=''
@@ -820,26 +823,27 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
 				fparams=fparams, summary=summ, mediatype='')																							
 		else:
-			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
-				summ_new = get_summary_pre(path=href, ID='ARDnew')  # s.o. pre:
-				if 	summ_new:
-					summ = summ_new
-					
-			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
-				mediatype='video'
-			
-			if '"type":"live"' in s:								# Livestream im Stage-Bereich
-				ID = "Livestream"
-				summ = "%s | [COLOR red]Livestream[/COLOR]" % summ
-			else:
-				ID=ID_org
-
 			PLog("check_full_shows")								# full_show im Titel: ganze Sendungen rot+fett
 			if ID != 'EPG':
 				title_samml = "%s|%s" % (title, pagetitle)			# Titel + Seitentitel (A-Z, Suche)
 				duration = stringextract('duration":', ',', s)		# sec-Wert
 				duration = seconds_translate(duration)				# 0:15
 				title = ardundzdf.full_shows(title, title_samml, summ, duration, "full_shows_ARD")	
+
+			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
+				summ_new = get_summary_pre(path=href, ID='ARDnew', duration=duration)  # s.o. pre:
+				if 	summ_new:
+					summ = summ_new
+					
+			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
+				mediatype='video'
+			
+			if '"type":"live"' in s or '"type":"event"' in s:		# Livestream in Stage od. ARD Sport
+				ID = "Livestream"								
+				summ = "%s | [B][COLOR red]Livestream[/COLOR][/B]" % summ
+			else:
+				ID=ID_org
+
 		
 			summ_par = summ.replace('\n', '||')
 			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
@@ -1468,7 +1472,7 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 		MyDialog(msg1, msg2, '')	
 		return li
 	
-	gridlist = blockextract( '"mediumTitle":', page) 		# Beiträge?
+	gridlist = blockextract( '"availableTo"', page) 		# Beiträge?
 	if len(gridlist) == 0:				
 		msg1 = u'keine Beiträge gefunden zu: %s'  % query
 		PLog(msg1)

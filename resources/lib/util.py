@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.01.2022
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2104,7 +2104,7 @@ def ReadJobs():
 # 14.06.2021 Sendedatum pubDate für ZDF Sport unterdrückt (oft falsch bei Livestreams)
 # 26.08.2021 Erweiterung für einzelnes Auswertungsmerkmal (pattern) 
 #
-def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page='', pattern=''):	
+def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pattern='',duration=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
 	PLog(skip_verf); PLog(skip_pubDate); PLog(len(page))
 	
@@ -2185,14 +2185,17 @@ def get_summary_pre(path, ID='ZDF', skip_verf=False, skip_pubDate=False, page=''
 		page = page.replace('\\"', '*')							# Quotierung vor " entfernen, Bsp. \"query\"
 		pubServ = stringextract('"name":"', '"', page)			# publicationService (Sender)
 		maturitytRating = stringextract('maturityContentRating":"', '"', page) # "FSK16"
-		maturitytRating = maturitytRating.replace('NONE', 'ohne')
-		duration = stringextract('"duration":', ',', page)		# Sekunden
-		if duration == '0':										# auch bei Einzelbeitrag möglich
-			duration=''
-		if duration and pubServ:										
+		maturitytRating = maturitytRating.replace('NONE', 'Ohne')
+		if duration == '':										# schon übergeben?
+			duration = stringextract('"duration":', ',', page)	# Sekunden
+			if duration == '0':									# auch bei Einzelbeitrag möglich
+				duration=''
 			duration = seconds_translate(duration)
+		if duration and pubServ:										
 			duration = u'Dauer %s | %s' % (duration, pubServ)
 		if 	maturitytRating:
+			if duration == '':
+				duration = "Dauer unbekannt"
 			duration = u"%s | FSK: %s\n" % (duration, maturitytRating)	
 		
 		summ = stringextract('synopsis":"', '","', page)
@@ -2967,29 +2970,30 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		except:
 			OS_RELEASE =''
 		PLog("OS_RELEASE: " + OS_RELEASE)		
+
+		# Check auf inputstream.adaptive nicht erforderlich
+		if url.endswith('.m3u8'):							# SetInputstreamAddon hier nur HLS
+			PLog("SetInputstreamAddon:")
+			li.setMimeType('application/vnd.apple.mpegurl')
+			if PYTHON2:
+				li.setProperty('inputstreamaddon', 'inputstream.adaptive')
+			else:
+				# Kodi-Debug Matrix: depricated, use
+				#	 #KODIPROP:inputstream=inputstream.adaptive', 'inputstream.adaptive'
+				li.setProperty('inputstream', 'inputstream.adaptive')
+			li.setProperty('inputstream.adaptive.manifest_type', 'hls')
+			li.setContentLookup(False)				
 			
 		PLog("url: " + url); PLog("playlist: %d" % len(playlist))
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
-			# Check auf inputstream.adaptive nicht erforderlich
-			if url.endswith('.m3u8'):							# SetInputstreamAddon hier nur HLS
-				PLog("SetInputstreamAddon:")
-				li.setMimeType('application/vnd.apple.mpegurl')
-				if PYTHON2:
-					li.setProperty('inputstreamaddon', 'inputstream.adaptive')
-				else:
-					# Kodi-Debug Matrix: depricated, use
-					#	 #KODIPROP:inputstream=inputstream.adaptive', 'inputstream.adaptive'
-					li.setProperty('inputstream', 'inputstream.adaptive')
-				li.setProperty('inputstream.adaptive.manifest_type', 'hls')
-				li.setContentLookup(False)				
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt						
-			while 1:
+			while 1:											# showSubtitles nur bei akt. Player wirksam
 				if player.isPlaying():
 					xbmc.sleep(500)								# für Raspi erforderl.
 					if SETTINGS.getSetting('pref_UT_ON') == 'true':
 						PLog("Player_Subtitles_on")
-						xbmc.Player().showSubtitles(True)			# unwirksam bei ZDF-Livestream s.o.
+						xbmc.Player().showSubtitles(True)
 					else:		
 						PLog("Player_Subtitles_off")
 						xbmc.Player().showSubtitles(False)									
