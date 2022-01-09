@@ -55,8 +55,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>16</nr>										# Numerierung für Einzelupdate
-VERSION = '4.1.7'
-VDATE = '02.01.2022'
+VERSION = '4.1.8'
+VDATE = '09.01.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2398,8 +2398,8 @@ def ARDSport(title):
 		return li 
 	PLog(len(page))	
 	
-	title = "Live"								# Zusatz: Live (in tabpanel "Live&Ergebnisse")
-	# href = 'https://www.sportschau.de/ticker/index.html'
+	title = "Live"											# Zusatz: Live, anderer Link als tabpanel + bottom
+	# href = 'https://www.sportschau.de/ticker/index.html'	# java-script-Seite hier nicht umsetzbar
 	href = 'https://www.sportschau.de/streamindex100.html'
 	img = R(ICON_DIR_FOLDER)
 	# summ = "Livestreams nur hier im Menü [B]Live[/B] oder unten bei den Direktlinks unterhalb der Moderatoren"
@@ -3102,7 +3102,6 @@ def ARDSportBilder(title, path, img):
 		return li 
 	PLog(len(page))
 	
-#	content = blockextract('class="teaser"', page)	
 	content = blockextract('class="teaser', page)	
 	PLog(len(content))
 	if len(content) == 0:										

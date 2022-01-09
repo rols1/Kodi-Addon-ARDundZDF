@@ -10,6 +10,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+09.01.2022 4.1.8
+			PlayVideo (Modul util): Aktivierung showSubtitles nach Player-Start
+			(unwirksam bisher vor Start). 
+			Main_NEW: fanart Menü Retro ergänzt (ARD-Logo).
+			Sport ARD Mediathek: Einbindung Menü Startseite/Menü/Sport als eigenst. Menü,
+			neue Funktion ARDSportneu, neues Icon, Anpassung Main_NEW.
+			PlayVideo: inputstreamaddon-Behandl. verlagert (wirksam für direkte und 
+			indirekte Streamaufrufe).
+			get_page_content (ARD Neu): Suchmuster ausgetauscht (ondemand ->
+			availableTo) für ARDSearchnew, Kennz. type":"event" als Livestream +
+			Einzelbeitrag, duration für get_summary_pre vorausgewertet, ID am Schleifen-
+			kopf neu initialisiert (ID_org).
+			get_summary_pre (Modul util): Param. duration hinzugefügt (Berücks. 
+			Vorauswertung).
+			Main_NEW (ARD Neu): Info "Sender: ARD-Alle" ergänzt für Menüs Sport + 
+			Barrierearm.
+
 02.01.2022 4.1.7
 			ZDF_get_teaserDetails: Auswertung Livestream-Infos (Datum, Zeit) für
 			ZDF-Sportstudio.

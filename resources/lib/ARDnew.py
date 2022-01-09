@@ -122,7 +122,7 @@ def Main_NEW(name, CurSender=''):
 		CurSender=py2_encode(CurSender);
 	
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')	# sender -> Menüs
-		
+	sender_summ = 'Sender: [COLOR red]%s[/COLOR] (unabhängig von der Senderwahl)' % "ARD-Alle"
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
@@ -155,7 +155,7 @@ def Main_NEW(name, CurSender=''):
 
 	title = "ARD Mediathek Entdecken"
 	tag = 'Inhalte der ARD-Seite [B]%s[/B]' % "ENTDECKEN"
-	summ = 'Sender: [COLOR red]%s[/COLOR] (unabhängig von der Senderwahl)' % "ARD-Alle"
+	summ = sender_summ	
 	path = 'https://www.ardmediathek.de/entdecken/'
 	title=py2_encode(title); path=py2_encode(path);
 	fparams="&fparams={'title': '%s', 'sender': '%s', 'path': '%s'}" % (quote(title), sender, quote(path))
@@ -165,7 +165,8 @@ def Main_NEW(name, CurSender=''):
 	# 25.12.2021 als eigenständiges Menü (zusätzl. zum Startmenü) - wie Web:
 	#	href wie get_ARDstreamlinks
 	title = 'Livestreams'
-	summ = "Die [B]Livestreams[/B] der ARD"
+	tag = "Die [B]Livestreams[/B] der ARD"
+	summ = 'Sender: [COLOR red]%s[/COLOR] (unabhängig von der Senderwahl)' % "ARD-Alle"
 	img = R("ard-livestreams.png")
 	ID = 'Livestream'
 	href = 'https://api.ardmediathek.de/page-gateway/widgets/ard/editorials/4hEeBDgtx6kWs6W6sa44yY?pageNumber=0&pageSize=24'
@@ -173,7 +174,7 @@ def Main_NEW(name, CurSender=''):
 	fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
 		(quote(href), quote(title), ID)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-		fparams=fparams, summary=summ)																							
+		fparams=fparams, tagline=tag, summary=summ)																							
 
 	title = 'Sendung verpasst'
 	tag = def_tag
@@ -188,25 +189,28 @@ def Main_NEW(name, CurSender=''):
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
 						
 	title = 'ARD Sport (neu)'
+	summ = sender_summ	
 	img = R("ard-sport.png")
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSportneu", 
-		fanart=img, thumb=img, fparams=fparams)
+		fanart=img, thumb=img, fparams=fparams, summary=summ)
 			
 	title = 'ARD Sportschau'
+	summ = sender_summ	
 	fparams="&fparams={'title': '%s'}"	% title
-	addDir(li=li, label=title, action="dirList", dirID="ARDSport", 
-		fanart=R("ard-sport.png"), thumb=R("tv-ard-sportschau.png"), fparams=fparams)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSport", fanart=R("ard-sport.png"), 
+		thumb=R("tv-ard-sportschau.png"), fparams=fparams, summary=summ)
 			
 	# 27.11.2021 als eigenständiges Menü (vorher an wechselnden Pos. im Startmenü):
 	title = 'Barrierearm'
-	summ = "Barrierefreie Inhalte in der ARD Mediathek"
+	tag = "Barrierefreie Inhalte in der ARD Mediathek"
+	summ = sender_summ	
 	img = R(ICON_ARD_BARRIEREARM)
 	href = 'https://api.ardmediathek.de/page-gateway/pages/ard/editorial/barrierefrei?embedded=true'
 	href=py2_encode(href); title=py2_encode(title); 
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-		fparams=fparams, summary=summ)																							
+		fparams=fparams, tagline=tag, summary=summ)																							
 
 	title = 'Bildgalerien Das Erste'	
 	fparams="&fparams={}" 
@@ -465,17 +469,10 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	container = blockextract ('compilationType":', page)# Test auf Rubriken
 	PLog(len(container))
 	if len(container) > 1:
+		PLog("ARDStartRubrik_more_container")
 		ARDRubriken(li, page)							# direkt
 	else:
-		if '_quality"' in page:							# (Live-)stream-Erkennung
-			summ = stringextract('synopsis":"', '"', page)
-			m3u8_url= stringextract('stream":"', '"', page)
-			if m3u8_url:
-				PLog("ARDStartRubrik_starte_Livestream")
-				PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
-				return
-		else:
-			li = get_page_content(li, page, ID, mark)	# Auswertung Rubriken																	
+		li = get_page_content(li, page, ID, mark)		# Auswertung Rubriken + Live-/Eventstreams																	
 #----------------------------------------
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
