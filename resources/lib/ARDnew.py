@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>7</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.01.2022
+# 	<nr>8</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -705,7 +705,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		if len(gridlist) == 0:									# Fallback (außer Livestreams)
 			#gridlist = blockextract( '"images":', page) 		# geändert 20.09.2019 
 			gridlist = blockextract( '"availableTo":', page) 	# geändert 10.11.2021
-							
+		if len(gridlist) == 0:									# 09.01.2022 Fallback für A-Z-Inhalte
+			gridlist = blockextract( '"decor":', page) 				
 		
 	if len(gridlist) == 0:		
 		msg1 = 'keine Beiträge gefunden'
