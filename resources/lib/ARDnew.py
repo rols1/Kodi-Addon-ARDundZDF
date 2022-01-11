@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>8</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.01.2022
+# 	<nr>9</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1579,7 +1579,8 @@ def ARDVerpasstContent(title, startDate, endDate, CurSender):
 
 	base = "https://page.ardmediathek.de/page-gateway/compilations/ard/pastbroadcasts"
 	base = base.replace('/ard/', '/%s/' % sender)
-	path = base + "?startDateTime=%s&endDateTime=%s&pageNumber=0&pageSize=100" % (startDate, endDate)
+	# 09.01.2022 Anz. 100 kann bei ARD-Alle (ard) fehlschlagen -> 200 
+	path = base + "?startDateTime=%s&endDateTime=%s&pageNumber=0&pageSize=200" % (startDate, endDate)
 	
 	page, msg = get_page(path)
 	if page == '':	
