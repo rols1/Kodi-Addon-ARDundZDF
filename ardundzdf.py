@@ -55,8 +55,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>16</nr>										# Numerierung für Einzelupdate
-VERSION = '4.1.8'
-VDATE = '09.01.2022'
+VERSION = '4.1.9'
+VDATE = '14.01.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -375,7 +375,7 @@ def Main():
 			
 	if SETTINGS.getSetting('pref_use_funk') == 'true':
 		tag = 'in den Settings kann das Modul FUNK ein- und ausgeschaltet werden'
-		tag = u"%s\n\ndie Beiträge sind auch in der Startseite der ZDF Mediathek enthalten" % tag
+		tag = u"%s\n\ndie Beiträge sind auch in der ZDF Mediathek enthalten (Menü ZDF-funk)" % tag
 		fparams="&fparams={}"													# funk-Modul
 		addDir(li=li, label="FUNK", action="dirList", dirID="resources.lib.funk.Main_funk", 
 			fanart=R('funk.png'), thumb=R('funk.png'), tagline=tag, fparams=fparams)

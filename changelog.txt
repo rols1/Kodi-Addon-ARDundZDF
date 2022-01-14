@@ -10,6 +10,14 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+14.01.2022 4.1.9 Erzeugung von strm-Dateien (experimentell)
+			neues Modul strm, Anpassungen in Settings, PlayVideo_Direct, neues Icon
+			Dir-strm.png.
+			get_page_content (ARD Neu): Fallback für A-Z-Inhalte ergänzt ('"decor":'). 
+			ARDVerpasstContent (ARD Neu): im api-Pfad Anzahl 100 auf 200 vergrößert (100
+			kann bei ARD-Alle (ard) fehlschlagen.
+			Main: Aktualisierung Infotext Menü FUNK (Verweis -> ZDF).		
+
 09.01.2022 4.1.8
 			PlayVideo (Modul util): Aktivierung showSubtitles nach Player-Start
 			(unwirksam bisher vor Start). 

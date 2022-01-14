@@ -59,7 +59,7 @@
 	<setting label="Inhaltstexte (im Voraus geladen): " type="select" values="5|10|30|100" default="30" id="pref_TEXTE_store_days"/>
 </category> 
 
- <category label="Favoriten / Merkliste">
+ <category label="Favoriten / Merkliste / strm-Dateien">
  	<setting label="ARDundZDF-Favoriten im Hauptmenü einblenden" type="bool" id="pref_showFavs" default="false"/>
  	<setting label="ARDundZDF-Merkliste verwenden (getrennt von Favoriten)" type="bool" id="pref_watchlist" default="true"/>
 	<setting label="Begleitinfos für Favoriten und Merkliste verwenden - falls verfügbar" type="bool" id="pref_FavsInfo" default="true"/>
@@ -70,6 +70,10 @@
   	<setting label="externe (zentrale) Merkliste verwenden" type="bool" id="pref_merkextern" default="false"/>
 	<setting label="Pfad zur externen Merkliste" type="file" source="" id="pref_MerkDest_path" default=""/>
   	<setting label="interne Merkliste mit externer synchronisieren" type="bool" id="pref_merksync" default="false"/>
+    <setting type="sep"/>
+  	<setting label="strm-Dateien für einzelnde Videos erzeugen" type="bool" id="pref_strm" default="false"/>
+  	<setting label="Für jede strm-Datei ein Unterverzeichnis anlegen" type="bool" id="pref_strm_uz" default="false"/>
+	<setting label="Dateiverzeichnis für strm-Dateien" type="folder" option="writeable" id="pref_strm_path" default=""/>
 </category> 
 
  <category label="Beiträge filtern, markieren">

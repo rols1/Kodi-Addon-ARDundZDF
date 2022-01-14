@@ -127,6 +127,7 @@ SUBTITLESTORE 	= os.path.join(ADDON_DATA, "subtitles")
 TEXTSTORE 		= os.path.join(ADDON_DATA, "Inhaltstexte")
 WATCHFILE		= os.path.join(ADDON_DATA, "merkliste.xml") 
 TEMP_ADDON		= xbmc.translatePath("special://temp")			# Backups
+FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")			# Flag PlayVideo_Direct -> strm-Modul	
 
 PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
 ICON_MAIN_POD	= 'radio-podcasts.png'
@@ -723,8 +724,18 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_change=''; fparams_record=''; fparams_recordLive='';
 		fparams_setting_sofortstart=''; fparams_sorting=''; 
 		fparams_do_folder=''; fparams_rename=''; 
-		fparams_playlist_add=''; fparams_playlist_rm='';fparams_playlist_play=''							
-		
+		fparams_playlist_add=''; fparams_playlist_rm='';fparams_playlist_play=''
+		fparams_strm=''							
+	
+
+		if SETTINGS.getSetting('pref_strm') == 'true':					# strm-Datei für Video erzeugen
+			if mediatype == "video":
+				fp = {'label': label, 'add_url': quote_plus(add_url)}	# extract -> strm-Modul							
+				fparams_strm = "&fparams={0}".format(fp)
+				PLog("fparams_strm: " + fparams_strm[:100])
+				fparams_strm = quote_plus(fparams_strm)
+				
+
 		if filterstatus != 'set':									# Doppel im Hauptmenü vermeiden (s. home)
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# ständig: Umschalter Settings 
 				menu_entry = "Sofortstart AUS / Downl. EIN"
@@ -796,6 +807,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			fparams_change = "&fparams={0}".format(fp)
 			fparams_change = quote_plus(fparams_change)				# Filtern
 			
+
+		# Recording:
 		# unterschiedl. Parameterquellen: EPG_ShowSingle, EPG_ShowAll - bei
 		#	title + descr sind hier die Codier.-Behandl. zu wiederholen:
 		if start_end:												# Unix-Time-Format od. "Recording.."
@@ -888,7 +901,6 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					% (MY_SCRIPT, HANDLE, fparams_add)))
 			commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_del)))
-	
 		
 			if fparams_folder or fparams_rename:					# Aufrufer ShowFavs s.o.
 				PLog('set_folder_context: ' + merkname)
@@ -924,10 +936,11 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			commands.append((menu_entry_sort, 'RunScript(%s, %s, ?action=dirList&dirID=switch_Setting%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_sorting)))
-				
 		
-		# mode="video"	
+		
+		# Playlist	
 		if fparams_playlist_play or fparams_playlist_rm or fparams_playlist_add or fparams_playlist_add:	
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			dirID = "resources.lib.playlist.items_add_rm"
 			commands.append(('PLAYLIST direkt starten', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 					% (MY_SCRIPT, HANDLE, dirID, fparams_playlist_play)))
@@ -938,7 +951,15 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			dirID = "resources.lib.playlist.playlist_tools"	# Parameter wie items_add_rm
 			commands.append(('PLAYLIST-Tools', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 					% (MY_SCRIPT, HANDLE, dirID, fparams_playlist_add)))
-							
+		
+		if SETTINGS.getSetting('pref_strm') == 'true' and fparams_strm:	# strm-Datei für Video erzeugen
+			if mediatype == "video":			
+				MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
+				PLog("MY_SCRIPT:" + MY_SCRIPT)		
+				dirID = "resources.lib.strm.do_create"
+				commands.append(('STRM-Datei erzeugen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
+						% (MY_SCRIPT, HANDLE, dirID, fparams_strm)))		
+				
 
 		li.addContextMenuItems(commands)				
 	
@@ -2767,7 +2788,7 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 # Auflösung/Bitrate In beiden Listen wg. re.search-Sortierung erford.!
 # 
 def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, playlist='', HBBTV_List=''):	
-	PLog('PlayVideo_Direct:') 
+	PLog('PlayVideo_Direct:')
 	PLog(title)
 	form = SETTINGS.getSetting('pref_direct_format')
 	qual = SETTINGS.getSetting('pref_direct_quality')
@@ -2827,9 +2848,14 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 				break 
 
 	PLog('Direct: %s | %s' % (mode, url))
-
-	PlayVideo(url, title, thumb, Plot, sub_path)
-	
+	PLog(FLAG_OnlyUrl)
+	if os.path.isfile(FLAG_OnlyUrl) == True:		# Rückgabe Url -> strm-Modul, kein Start
+		PLog("FLAG_OnlyUrl")
+		os.remove(FLAG_OnlyUrl)								
+		return url
+		exit(0)
+	else:											# default
+		PlayVideo(url, title, thumb, Plot, sub_path)
 	return 
 	
 #---------------------------------------------------------------------------------------------------
