@@ -8032,14 +8032,14 @@ def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 	if descr == '':
 		descr = stringextract('alt="', '"', page)						# Fallback Bildbeschr.
 	
-	if "erfügbar " in page:												# Info Livestream
+	if u"erfügbar " in page:												# Info Livestream
 		if descr.find(u'erfügbar ') < 0:
 			try:
 				live = re.search(u'fügbar (.*?)">', page).group(1)		# ..erfügbar .. Uhr Sport">
 			except:
 				live=''
 			if live:
-				descr = "verfügbar [B]%s[/B]\n\n%s" % (live, descr.strip())	
+				descr = u"verfügbar [B]%s[/B]\n\n%s" % (live, descr.strip())	
 		
 	descr = unescape(descr); descr = descr.strip()
 	if u'Videolänge' in descr:

@@ -16,7 +16,8 @@ CHANGE HISTORY
 			get_page_content (ARD Neu): Fallback für A-Z-Inhalte ergänzt ('"decor":'). 
 			ARDVerpasstContent (ARD Neu): im api-Pfad Anzahl 100 auf 200 vergrößert (100
 			kann bei ARD-Alle (ard) fehlschlagen.
-			Main: Aktualisierung Infotext Menü FUNK (Verweis -> ZDF).		
+			Main: Aktualisierung Infotext Menü FUNK (Verweis -> ZDF).
+			ZDF_get_teaserDetails: Fix Kodierungsfehler	(verfügbar).	
 
 09.01.2022 4.1.8
 			PlayVideo (Modul util): Aktivierung showSubtitles nach Player-Start
