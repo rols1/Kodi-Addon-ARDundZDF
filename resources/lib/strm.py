@@ -4,7 +4,7 @@
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
 # 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.01.2022
+#	Stand: 15.01.2022
 #
 
 from __future__ import absolute_import
@@ -112,9 +112,7 @@ def do_create(label, add_url):
 	title	= stringextract("title': '", "'", fparams) 				# fparams json-Format
 	url	= stringextract("url': '", "'", fparams) 
 	thumb	= stringextract("thumb': '", "'", fparams) 
-	Plot	= stringextract("Plot': '", "'", fparams)
-	if Plot == '':
-		 Plot	= stringextract("summary': '", "'", fparams)
+	Plot	= get_Plot(fparams)
 		
 	if title == '' or "| auto" in title or u"| Auflösung" in title:	# Anwahl Streaming-/MP4-Formate
 		if Plot.startswith("Title: "):
@@ -177,6 +175,23 @@ def get_strm_types():
 	PLog("strm_type: " + strm_type)
 	
 	return strm_type
+
+# ----------------------------------------------------------------------
+def get_Plot(fparams):
+	PLog("get_Plot:")
+	Plot=''
+
+	Plot	= stringextract("Plot': '", "'", fparams)
+	if Plot == '':													# Plot + Altern.
+		 Plot = stringextract("summary': '", "'", fparams)
+	if Plot == '':
+		 Plot = stringextract("summ': '", "'", fparams)
+	 
+	if "'dauer'" in fparams:
+		dauer = stringextract("dauer': '", "'", fparams)
+		Plot = "%s\n\n%s" % (dauer, Plot)
+
+	return Plot
 # ----------------------------------------------------------------------
 #
 # strm-, nfo-, jpeg-Dateien anlegen
@@ -261,10 +276,11 @@ def get_streamurl(add_url):
 	if ID == '':										# derzeit nicht ermittelbar
 		return streamurl
 		
-	PLog("HLS_List: " + "%s_HLS_List" % ID)
+	PLog("ID: " + ID)
 	HLS_List =  Dict("load", "%s_HLS_List" % ID)
-	PLog("HLS_List: " + str(HLS_List))
+	PLog("HLS_List: " + str(HLS_List[:100]))
 	MP4_List =  Dict("load", "%s_MP4_List" % ID)
+	PLog("MP4_List: " + str(MP4_List[:100]))
 	
 	# todo: Dateiflag urlonly setzen/löschen - Übergabe via script unsicher
 	#	ev. auch Rückgabe via Datei
