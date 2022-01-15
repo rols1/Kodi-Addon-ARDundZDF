@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.12.2021
+# 	<nr>3</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
