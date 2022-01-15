@@ -445,7 +445,7 @@ def Beitrag_Liste(url, title):
 		
 		for item in items:
 			summ=''; geo='';											# nicht vorh.
-			tag=''									
+			tag=''; tag_par=''									
 			url = stringextract('href="', '"', item)
 			pid = stringextract('/videos/', '/', url)
 			img = stringextract('src="', '"', item)
@@ -455,6 +455,7 @@ def Beitrag_Liste(url, title):
 			subtitle = stringextract('de_subtitle">', '</p>', item)
 			subtitle = unescape(subtitle); subtitle = repl_json_chars(subtitle);
 			dur = stringextract('css-18884f0">', '</p>', item)
+			
 			if dur:
 				tag = "Dauer %s" % dur
 				if subtitle:
