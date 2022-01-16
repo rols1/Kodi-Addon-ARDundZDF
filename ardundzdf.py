@@ -319,6 +319,9 @@ PLog("skindir: %s" % skindir)
 if 'confluence' in skindir:									# ermöglicht Plot-Infos in Medienansicht
 	xbmcplugin.setContent(HANDLE, 'movies')	
 
+if SETTINGS.getSetting('pref_content_type_tvshows') == 'true':
+	xbmcplugin.setContent(HANDLE, 'tvshows')
+
 ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle']	# Rest in ARD_NEW, CurSenderZDF s. VerpasstWoche
 CurSender = ARDSender[0]									# Default ARD-Alle
 fname = os.path.join(DICTSTORE, 'CurSender')				# init CurSender (aktueller Sender)
