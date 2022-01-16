@@ -112,7 +112,10 @@
   	<setting label="Slideshow für Musik-Player: " type="select" id="pref_musicslideshow" default="Keine"
    		values="Keine|Kodi <Bild-Steuerung>|Addon <Player-Steuerung und Musikinfos>"/>
 	<setting label="Slideshow für Musik-Player: Verzeichnis wählen" type="folder" source="" id="pref_slides_path" default=""/>
-	<setting label="Slideshow für Musik-Player: Anzeigedauer in Sekunden" type="select" id="pref_slides_time" default="10" values="5|10|15|20|30|60|120|240|600"/></category>
+	<setting label="Slideshow für Musik-Player: Anzeigedauer in Sekunden" type="select" id="pref_slides_time" default="10" values="5|10|15|20|30|60|120|240|600"/>
+    <setting type="sep"/>
+  	<setting label="Setze Inhaltstyp TV-Shows" type="bool" id="pref_content_type_tvshows" default="false"/>
+</category>
 </settings>
 
 
