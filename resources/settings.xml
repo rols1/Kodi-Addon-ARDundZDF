@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!-- 	<nr>1</nr>	# Numerierung für Einzelupdate -->
 <settings> 
     <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
@@ -115,8 +116,7 @@
 	<setting label="Slideshow für Musik-Player: Anzeigedauer in Sekunden" type="select" id="pref_slides_time" default="10" values="5|10|15|20|30|60|120|240|600"/>
     <setting type="sep"/>
   	<setting label="Setze Inhaltstyp TV-Shows" type="bool" id="pref_content_type_tvshows" default="false"/>
-</category>
-</settings>
+</category></settings>
 
 
 

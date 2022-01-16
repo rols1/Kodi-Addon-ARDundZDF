@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.10.2021
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.01.2022
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -106,6 +106,7 @@ def update_single(PluginAbsPath):
 	#	changelog.txt, slides.xml, ca-bundle.pem, Icons
 	SINGLELIST = ["%s/%s" % (PluginAbsPath, "resources/livesenderTV.xml"),
 				"%s/%s" % (PluginAbsPath, "resources/podcast-favorits.txt"),
+				"%s/%s" % (PluginAbsPath, "resources/settings.xml"),
 				"%s/%s" % (PluginAbsPath, "ardundzdf.py")
 		]
 	selected=[0,1,2]												# Auswahl-Vorbelegung, s.u.
