@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.01.2022
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.01.2022
 #
 
 from __future__ import absolute_import
@@ -86,29 +86,50 @@ def do_create(label, add_url):
 	PLog(SETTINGS.getSetting('pref_strm_path'))
 	icon = R(ICON_DIR_STRM)
 
-	dirID, fanart, thumb_org, fparams = unpack(add_url)
-	
-	strmpath = SETTINGS.getSetting('pref_strm_path')
-	if strmpath == '' or strmpath == None:	
+	dirID, fanart, thumb_org, fparams = unpack(add_url)				# Params Kontextmenü auspacken
+	if get_Source_Funcs_ID(add_url) == '':							# Zielfunktion unterstützt?
+		msg1 = u'nicht unterstützt'
+		msg2 = u'Videoquelle nicht für strm geeignet'
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
+		return	
+			
+	strm_type = get_strm_types()									# Genre-Auswahl
+	if strm_type == '':
+		return
+	#------------------------------									# Abfrage Zielverz. != Filme/Serien
+	strmpath = STRMSTORE											# Default
+	choose_path = False
+	if strm_type == "movie":
+		verz = SETTINGS.getSetting('pref_strm_film_path')
+		if verz != '' and verz != None:	
+			strmpath = verz
+			choose_path = False
+	else:
+		verz = SETTINGS.getSetting('pref_strm_series_path')
+		if verz != '' and verz != None:	
+			heading = u"Ablage festlegen/ändern: %s" % verz
+			newdir = DirectoryNavigator(settingKey='',mytype=0, heading=verz, shares='files', path=verz)
+			PLog("newdir: " + str(newdir))
+			strmpath = newdir										# Abbruch-Behandl. entf., bei Titelwahl möglich
+		else:
+			strmpath = STRMSTORE									# strm-Verzeichnis in userdata
+			if os.path.isdir(strmpath) == False:
+				try:
+					os.mkdir(strmpath)
+				except Exception as exception:
+					PLog(str(exception))
+					msg1 = u'strm-Verzeichnis konnte nicht angelegt werden:'
+					msg2 = str(exception)
+					MyDialog(msg1, msg2, '')
+					return
+
+	if strmpath == STRMSTORE:			
 		msg1 = u'Die Ablage erfolgt im Datenverzeichnis des Addons, Unterverzeichnis: strm'
 		msg2 = u'Ein anderes Verzeichnis kann in den Settings festgelegt werden.'
 		MyDialog(msg1, msg2, '')
+	PLog("strmpath: " + strmpath)		
 		
-		strmpath = STRMSTORE
-		if os.path.exists(STRMSTORE) == False:						# strm-Verzeichnis in userdata
-			try:
-				os.mkdir(strmpath)
-			except Exception as exception:
-				PLog(str(exception))
-				msg1 = u'strm-Verzeichnis konnte nicht angelegt werden:'
-				msg2 = str(exception)
-				MyDialog(msg1, msg2, '')
-				return
-			
-	strm_type = get_strm_types()
-	if strm_type == '':
-		return
-	
+	#------------------------------							
 	title	= stringextract("title': '", "'", fparams) 				# fparams json-Format
 	url	= stringextract("url': '", "'", fparams) 
 	thumb	= stringextract("thumb': '", "'", fparams) 
@@ -134,8 +155,8 @@ def do_create(label, add_url):
 		msg2 = title
 		xbmcgui.Dialog().notification(msg1,msg2,icon,1000,sound=False)
 					
-		url = get_streamurl(add_url)									# Streamurl ermitteln
-		if url == '':													# Url fehlt/falsch: Abbruch	
+		url = get_streamurl(add_url)								# Streamurl ermitteln
+		if url == '':												# Url fehlt/falsch: Abbruch	
 			msg1 = u"die erforderliche Stream-Url fehlt für"
 			msg2 = title									
 			MyDialog(msg1, msg2, "Abbruch")
@@ -149,7 +170,6 @@ def do_create(label, add_url):
 	PLog("new_name: " + new_name)
 	if new_name.strip() == '':
 		return
-	
 	#------------------------------									# strm-, nfo-, jpeg-Dateien anlegen
 	ret = xbmcvfs_store(strmpath, url, thumb, fname, title, Plot, strm_type)
 	msg1 = u'STRM-Datei angelegt'
@@ -250,32 +270,21 @@ def xbmcvfs_store(strmpath, url, thumb, fname, title, Plot, strm_type):
 # ----------------------------------------------------------------------
 #
 # plugin-Script add_url ausführen -> HLS_List, MP4_List bauen,
-# HLS_List, MP4_List durch PlayVideo_Direct auwerten lassen - dabei
-# Param-Austausch via Dict
+# HLS_List, MP4_List durch PlayVideo_Direct auwerten lassen, Flag +
+# 	Param-Austausch via Dict
 #
 def get_streamurl(add_url):
 	PLog("get_streamurl:")
 	streamurl=''; ID=''
-	
-	params = add_url.split("%s/" % ADDON_ID)[-1]		# ADDON_ID von Params trennen
-	PLog(params[:100])
-	MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % ADDON_ID) 
-	#xbmc.executebuiltin('RunScript(%s, %s, %s)'  % (MY_SCRIPT, HANDLE, params), True) # blocking call o. Wirkung
-	xbmc.executebuiltin('RunScript(%s, %s, %s)'  % (MY_SCRIPT, HANDLE, params)) # 
-	
-	# nachrüsten (abweichende Streamermittlung): funk, arte, 
-	#	phoenix (einsch. Youtube-Videos), TagesschauXL, zdfmobile
-	#u"funk.ShowVideo|", u"|KIKA", u"|", u"|",
-	Source_Funcs = [u"dirID=ZDF|ZDF", u"ARDnew.ARDStartSingle|ARDNEU",	# Funktionen + ID's
-					u"my3Sat.SingleBeitrag|3sat",
-					]
-	for item in Source_Funcs:
-		dest_func, ID = item.split("|")
-		if 	dest_func in params:
-			break	
-	if ID == '':										# derzeit nicht ermittelbar
-		return streamurl
 		
+	ID = get_Source_Funcs_ID(add_url)
+	if ID == '':
+		return ''
+	params = add_url.split("%s/" % ADDON_ID)[-1]		# ADDON_ID von Params trennen
+
+	MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % ADDON_ID) 
+	xbmc.executebuiltin('RunScript(%s, %s, %s)'  % (MY_SCRIPT, HANDLE, params)) # Hinw.: blocking call o. Wirkung
+			
 	PLog("ID: " + ID)
 	HLS_List =  Dict("load", "%s_HLS_List" % ID)
 	PLog("HLS_List: " + str(HLS_List[:100]))
@@ -292,5 +301,30 @@ def get_streamurl(add_url):
 	streamurl = PlayVideo_Direct(HLS_List, MP4_List, title_org, img, Plot)
 	PLog("streamurl: " + streamurl)	
 	return streamurl
+	
+# ----------------------------------------------------------------------
+#
+# Test auf unterstützte Zielfunktion 
+#
+def get_Source_Funcs_ID(add_url):
+	PLog("get_Source_Funcs_ID:")	
+	
+	PLog(unquote_plus(add_url[:100]))
+	
+	# nachrüsten (abweichende Streamermittlung): funk, arte, 
+	#	phoenix (einsch. Youtube-Videos), TagesschauXL, zdfmobile
+	#u"funk.ShowVideo|", u"|KIKA", u"|", u"|",
+	Source_Funcs = [u"dirID=ZDF|ZDF", u"ARDnew.ARDStartSingle|ARDNEU",	# Funktionen + ID's
+					u"my3Sat.SingleBeitrag|3sat",
+					]
+	ID=''												# derzeit nicht ermittelbar
+	for item in Source_Funcs:
+		dest_func, sid = item.split("|")
+		PLog(dest_func); PLog(sid)
+		if 	dest_func in add_url:
+			ID = sid
+			break
+	PLog("ID: " + ID)	
+	return ID	
 	
 ######################################################################## 			

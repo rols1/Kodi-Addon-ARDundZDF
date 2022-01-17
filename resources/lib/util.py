@@ -1372,6 +1372,7 @@ def mystrip(line):
 #----------------------------------------------------------------  	
 # DirectoryNavigator - Nutzung des Kodi-builtin, der Code der PMS-Version kann entfallen
 # S. http://mirrors.kodi.tv/docs/python-docs/13.0-gotham/xbmcgui.html
+# settingKey: z.B. "pref_download_path"
 # mytype: 	0 : ShowAndGetDirectory, 1 : ShowAndGetFile, 2
 # mask: 	nicht brauchbar bei endungslosen Dateien, Bsp. curl
 def DirectoryNavigator(settingKey, mytype, heading, shares='files', useThumbs=False, \
@@ -1381,10 +1382,12 @@ def DirectoryNavigator(settingKey, mytype, heading, shares='files', useThumbs=Fa
 	
 	dialog = xbmcgui.Dialog()
 	d_ret = dialog.browseSingle(int(mytype), heading, shares, '', False, False, path)	
-	PLog('d_ret: ' + d_ret)
+	PLog('d_ret: ' + str(d_ret))
 	
-	SETTINGS.setSetting(settingKey, d_ret)	
-	return 
+	if settingKey:
+		SETTINGS.setSetting(settingKey, d_ret)	
+	return d_ret
+	
 #----------------------------------------------------------------  
 def stringextract(mFirstChar, mSecondChar, mString):  	# extrahiert Zeichenkette zwischen 1. + 2. Zeichenkette
 	pos1 = mString.find(mFirstChar)						# return '' bei Fehlschlag
@@ -1678,7 +1681,8 @@ def transl_json(line):	# json-Umlaute übersetzen
 		, (u'\\u00c6', u"Ö"), (u'\\u00d6', u"Ö"),(u'\\u00fc', u"ü"), (u'\\u00dc', u'Ü')
 		, (u'\\u00DF', u'ß'), (u'\\u00df', u'ß'), (u'\\u0026', u'&'), (u'\\u00AB', u'"')
 		, (u'\\u00BB', u'"')
-		, (u'\xc3\xa2', u'*')			# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
+		, (u'\\u00b7', u'·')		# Trenner: "S01 F01 · 47 min · Serien"
+		, (u'\xc3\xa2', u'*')		# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
 		, (u'u00B0', u' Grad')		# u00BA -> Grad (3Sat, 37 Grad)	
 		, (u'u00EA', u'e')			# 3Sat: Fête 
 		, (u'u00E9', u'e')			# 3Sat: Fabergé
@@ -2818,12 +2822,14 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 		del Stream_List[0]							# Pos. 1 entf. (ohne Aufl.-Wert)	
 	else: 
 		mode = 'Sofortstart: MP4'
-		
+	PLog("mode: " + mode)	
+	
 	#PLog(str(Stream_List))							# Sorierung für PlayVideo_Direct (wie StreamsShow)
 	# HLS: höchste Auflös. nach unten, x-Param.: Auflösung - s.a. ARDStartVideoHLSget
 	#Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Auflösung (\d+)', x).group(1)))
 	# Alternative - ab 11.11.2021 error mit Auflösung:
-	Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))	
+	if "Bitrate" in str(Stream_List):
+		Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))	
 
 	url = Stream_List[-1].split('#')[-1]			# Default für HLS (nach Sort.) + MP4: höchste Url
 	PLog("Default_Url: %s" % url)
@@ -2848,7 +2854,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 				break 
 
 	PLog('Direct: %s | %s' % (mode, url))
-	PLog(FLAG_OnlyUrl)
+	PLog(FLAG_OnlyUrl)								# Flagdatei
 	if os.path.isfile(FLAG_OnlyUrl) == True:		# Rückgabe Url -> strm-Modul, kein Start
 		PLog("FLAG_OnlyUrl")
 		os.remove(FLAG_OnlyUrl)								
@@ -2998,6 +3004,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		PLog("OS_RELEASE: " + OS_RELEASE)		
 
 		# Check auf inputstream.adaptive nicht erforderlich
+
 		if url.endswith('.m3u8'):							# SetInputstreamAddon hier nur HLS
 			PLog("SetInputstreamAddon:")
 			li.setMimeType('application/vnd.apple.mpegurl')
@@ -3009,7 +3016,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 				li.setProperty('inputstream', 'inputstream.adaptive')
 			li.setProperty('inputstream.adaptive.manifest_type', 'hls')
 			li.setContentLookup(False)				
-			
+
 		PLog("url: " + url); PLog("playlist: %d" % len(playlist))
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
@@ -3130,12 +3137,14 @@ def sub_path_conv(sub_path):
 #			
 def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
-#	Plot=transl_doubleUTF8(Plot)
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
 				
 	if url.startswith('http') == False:			# lokale Datei
 		if url.startswith('smb://') == False:	# keine Share
 			url = os.path.abspath(url)
+	else:										# 14.01.2022 Bsp. HTTP Error 404 NDR Schlager
+		if url_check(url, caller='PlayAudio') == False:
+			return
 	
 	# 1. Url einer Playlist auspacken, Bsp.: MDR-Sachsen Fußball-Livestream
 	#	bei Bedarf ausbauen (s. get_m3u Tunein2017)

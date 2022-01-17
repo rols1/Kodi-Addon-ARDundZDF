@@ -74,7 +74,8 @@
     <setting type="sep"/>
   	<setting label="strm-Dateien für einzelnde Videos erzeugen" type="bool" id="pref_strm" default="false"/>
   	<setting label="Für jede strm-Datei ein Unterverzeichnis anlegen" type="bool" id="pref_strm_uz" default="false"/>
-	<setting label="Dateiverzeichnis für strm-Dateien" type="folder" option="writeable" id="pref_strm_path" default=""/>
+	<setting label="strm-Verzeichnis für Filme" type="folder" option="writeable" id="pref_strm_film_path" default=""/>
+	<setting label="strm-Verzeichnis für Serien" type="folder" option="writeable" id="pref_strm_series_path" default=""/>
 </category> 
 
  <category label="Beiträge filtern, markieren">

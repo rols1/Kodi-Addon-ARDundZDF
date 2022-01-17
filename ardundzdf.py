@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>16</nr>										# Numerierung für Einzelupdate
+# 	<nr>17</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.9'
 VDATE = '14.01.2022'
 
@@ -317,9 +317,9 @@ if SETTINGS.getSetting('pref_epgRecord') == 'true':
 skindir = xbmc.getSkinDir()
 PLog("skindir: %s" % skindir)
 if 'confluence' in skindir:									# ermöglicht Plot-Infos in Medienansicht
-	xbmcplugin.setContent(HANDLE, 'movies')	
+	xbmcplugin.setContent(HANDLE, 'movies')
 
-if SETTINGS.getSetting('pref_content_type_tvshows') == 'true':
+if SETTINGS.getSetting('pref_content_type_tvshows') == 'true': # 16.01.2022 pull request #12 from Trekky12
 	xbmcplugin.setContent(HANDLE, 'tvshows')
 
 ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle']	# Rest in ARD_NEW, CurSenderZDF s. VerpasstWoche
@@ -7369,7 +7369,16 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 	else:
 		li = home(li, ID='ZDF')						# Home-Button			
 
-
+	if "www.zdf.de/serien/" in url:					# Abzweig Serienliste ZDF_FlatListEpisodes
+		PLog('Button_FlatListEpisodes')
+		sid = url.split("/")[-1]					# z.B. ../serien/soko-hamburg
+		label = "komplette Liste: %s" % title
+		tag = u"Liste aller verfügbaren Folgen"
+		fparams="&fparams={'sid': '%s'}"	% (sid)						
+		addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
+			thumb=thumb, tagline=tag, fparams=fparams)
+	
+	
 #----------------------------------------------		# Abzweig funk "Alle Folgen" -> ZDF_get_content
 #	if 'www.zdf.de/funk/' in url and '>Alle Folgen</h2>' in page:
 #		li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=url, ID='ZDF_Sendungen')
@@ -7479,6 +7488,204 @@ def ZDF_search_button(li, query):
 		thumb=R(ICON_MEHR), fparams=fparams, tagline=tagline, summary=summ)
 	return
   
+#----------------------------------------------
+# Abzweig ZDF_Sendungen, Button flache Serienliste 
+#	sid=Serien-ID (Url-Ende)
+#	Ablauf: Liste holen via api-Call, Abgleich mit sid,
+#		Serieninhalt holen via api-Call
+# 	Cache: von der Gesamt-Liste (> 3 MB) werden im Dict nur
+#		sid und url gespeichert
+def ZDF_FlatListEpisodes(sid):
+	PLog('ZDF_FlatListEpisodes:')
+	CacheTime = 43200											# 12 Std.
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ZDF')										# Home-Button			
+	
+	path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/serien-100"
+	page = Dict("load", "ZDF_Serien", CacheTime=CacheTime)
+	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
+		page, msg = get_page(path=path)
+		if page == '':	
+			msg1 = "Fehler in ZDF_FlatListEpisodes:"
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return
+		else:
+			page = page.replace('\\/','/')
+			Dict("store", "ZDF_Serien", page)
+	
+	pat = '"id":"%s-' %sid										# Suchmuster Bsp. "id": "soko-leipzig-
+	PLog("pat: " + pat)
+	pos = page.find(pat)
+	page = page[pos:]
+	PLog("pos: %d, %s" % (pos, page[:80]))
+	url = stringextract('"url":"', '"', page)
+	PLog("url2: " + url)
+
+	#-----------------------------								# 2. Folgen zur Serie holen
+	
+	url = stringextract('url":"', '"', page)
+	page, msg = get_page(path=url)
+	if page == '':	
+		msg1 = "Fehler in ZDF_FlatListEpisodes:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return
+	page = page.replace('\\/','/')
+	page = py2_encode(page)
+	
+	mediatype=''												# Kennz. Video für Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
+
+	# Blockmermal für Folgen unterschiedlich:
+	staffel_list = blockextract('"name":"Staffel ', page)		# Staffel-Blöcke
+	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page)	
+	if len(staffel_list) == 0:									# ohne Staffel-Blöcke
+		staffel_list = blockextract('"headline":"', page)
+	PLog("staffel_list: %d" % len(staffel_list))
+	
+	for staffel in 	staffel_list:								
+		folgen = blockextract('"headline":"', staffel)			# Folgen-Blöcke	
+		PLog("Folgen: %d" % len(folgen))
+		for folge in folgen:
+			folge = transl_json(folge)
+			brand =  stringextract('"headline":"', '"', folge)
+			title =  stringextract('"titel":"', '"', folge)
+			descr =  stringextract('"beschreibung":"', '"', folge)
+			season =  stringextract('"seasonNumber":"', '"', folge)
+			fsk =  stringextract('"fsk":"', '"', folge)
+			if fsk == "none":
+				fsk = "ohne"
+			geo =  stringextract('"geoLocation":"', '"', folge)
+			episode =  stringextract('"episodeNumber":"', '"', folge)
+			dauer = stringextract('"length":', ',', folge)
+			dauer = seconds_translate(dauer)
+			if season == '':
+				continue
+			
+			img =  stringextract('"url":"', '"', folge)			# Bild
+			pos = folge.find("cockpitPrimaryTarget")
+			cockpit = folge[pos:]
+			url =  stringextract('"url":"', '"', cockpit)		# Ziel-Url mit Streamquellen
+			
+			tag = u"%s | Staffel: %s | Folge: %s\nDauer: %s | FSK: %s | %s" % (brand, season, episode, dauer, fsk, geo)
+			summ = repl_json_chars(descr)
+
+			PLog("Satz29:")
+			PLog(url);PLog(img);PLog(title);PLog(tag);PLog(summ[:80]); 
+			url=py2_encode(url); title=py2_encode(title); 
+			img=py2_encode(img); descr=py2_encode(descr);
+			apiToken=''
+			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'tag': '%s', 'summ': '%s'}" %\
+				(quote(url), quote(title), quote(img), quote(tag), quote(summ))
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_getStreamsApi", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#----------------------------------------------
+# Ermittlung Streamquellen für api-call
+# Mitnutzung get_form_streams wie get_formitaeten  sowie
+#	 build_Streamlists
+def ZDF_getStreamsApi(path, title, thumb, tag,  summ):
+	PLog("ZDF_getStreamsApi:")
+	
+	page, msg = get_page(path)
+	if page == '':	
+		msg1 = "Fehler in ZDF_getStreamSources:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return
+	page = page.replace('\\/','/')
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ZDF')									# Home-Button	
+	
+	HLS_List=[]; MP4_List=[]; HBBTV_List=[];				# MP4_List = download_list
+	# erlaubte Formate wie build_Streamlists:
+	only_list = ["h264_aac_mp4_http_na_na", "h264_aac_ts_http_m3u8_http",	
+				"vp9_opus_webm_http_na_na", "vp8_vorbis_webm_http_na_na"
+				]
+			
+		
+	# Format formitaeten von Webversion abweichend, build_Streamlists
+	#	nicht verwendbar
+	formitaeten, duration, geoblock, sub_path = get_form_streams(page)
+	forms = stringextract('formitaeten":', 'teaserBild', formitaeten[0])
+	forms = blockextract('"type":', forms)
+	PLog("forms: %d" % len(forms))
+	
+	Plot  = "%s||||%s" % (tag, summ)
+	line=''; skip_hls=False;
+	for form in forms:
+		typ = stringextract('"type":"', '"', form)
+		fclass = stringextract('"class":"', '"', form)
+		url = stringextract('"url":"',  '"', form)		# Stream-URL
+		server = stringextract('//',  '/', url)			# 2 Server pro Bitrate möglich
+		if typ not in only_list:
+			continue 
+		if fclass == "ad":								# url mit "main" identisch
+			continue 			
+			
+		quality = stringextract('"quality":"',  '"', form)
+		mimeType = stringextract('mimeType":"', '"', form)
+		
+		# bei HLS entfällt Parseplaylist - verschiedene HLS-Streams verfügbar 
+		if url.find('master.m3u8') > 0:					# HLS-Stream 
+			HLS_List.append('HLS, automatische Anpassung ** auto ** %s ** %s#%s' % (quality,title,url))
+			#Stream_List = Parseplaylist(li, url, thumb, geoblock, Plot,\	# skip Mehrkanal-Streams 
+			#	stitle=title,buttons=False)
+			#HLS_List = HLS_List + Stream_List
+			skip_hls = True
+		else:
+			res='0x0'; bitrate='0'; w=''; h=''			# Default					
+			if 'hd":true' in form:	
+				w = "1920"; h = "1080"					# Probeentnahme													
+			if 'veryhigh' in quality:
+				w = "1280"; h = "720"					# Probeentnahme							
+			if 'high' in quality:
+				w = "960"; h = "540"					# Probeentnahme							
+			if 'med' in quality:
+				w = "640"; h = "360"					# Probeentnahme							
+			if 'low' in quality:
+				w = "480"; h = "270"					# Probeentnahme							
+			
+			if '_' in url:
+				try:									# wie build_Streamlists
+					bitrate = re.search(u'_(\d+)k_', url).group(1)
+				except:
+					bitrate = "unbekannt"
+			res = "%sx%s" % (w,h)
+			title_url = u"%s#%s" % (title, url)
+			item = u"MP4, Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" %\
+				(quality, bitrate, res, title_url)
+			PLog("item: " + item)
+			PLog("server: " + server)					# nur hier, kein Platz im Titel
+			MP4_List.append(item)
+			
+	ID="ZDF"; HOME_ID = ID
+	title_org = title
+	
+	PLog("HLS_List: " + str(len(HLS_List)))
+	#PLog(HLS_List)
+	PLog("MP4_List: " + str(len(MP4_List)))
+	Dict("store", '%s_HLS_List' % ID, HLS_List) 
+	Dict("store", '%s_MP4_List' % ID, MP4_List) 
+		
+	if not len(HLS_List) and not len(MP4_List):			
+		msg = 'keine Streamingquelle gefunden - Abbruch' 
+		PLog(msg)
+		msg1 = u"keine Streamingquelle gefunden: %s"	% title
+		MyDialog(msg1, '', '')	
+		return HLS_List, MP4_List, HBBTV_List
+	
+	build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
 ####################################################################################################
 # ZDF-Bereich, Liste der Rubriken (Filme, Serien,  Comedy & Satire,  Politik & Gesellschaft, ..)
 #	Auswertung der Einzelbeiträge (nur solche) in ZDFRubrikSingle 
@@ -7775,7 +7982,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 			PLog(isvideo);PLog(multi);PLog(isgallery);
 			descr=py2_encode(descr)
 			
-			if isvideo == False:			# Mehrfachbeiträge
+			if isvideo == False or dauer == '':			# Mehrfachbeiträge
 				ID='ZDFRubrikSingle'
 				title=py2_encode(title); path=py2_encode(path); ID=py2_encode(ID);
 				descr_par=py2_encode(descr_par); img_src=py2_encode(img_src);
@@ -9131,6 +9338,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 	title_org = title
 	
 	HLS_List=[]; MP4_List=[]; HBBTV_List=[];			# MP4_List = download_list
+	# erlaubte Formate wie ZDF_getStreamsApi 
 	only_list = ["h264_aac_mp4_http_na_na", "h264_aac_ts_http_m3u8_http",	# erlaubte Formate
 				"vp9_opus_webm_http_na_na", "vp8_vorbis_webm_http_na_na"]
 	for rec in formitaeten:									# Datensätze gesamt, Achtung unicode!
@@ -9588,12 +9796,22 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	PLog(page[:100])	# "{..attributes" ...
 	# PLog(page)		# bei Bedarf
 		
+	formitaeten, duration, geoblock, sub_path = get_form_streams(page)
+	PLog('Ende get_formitaeten:')
+	return formitaeten, duration, geoblock, sub_path  
+
+#-------------------------
+# 16.01.2022 Auslagerung aus get_formitaeten  
+# ermittelt streamurls, duration, geoblock, sub_path
+#
+def get_form_streams(page):
+	PLog('Ende get_form_streams:')
 	# Kodi: https://kodi.wiki/view/Features_and_supported_formats#Audio_playback_in_detail 
 	#	AQTitle, ASS/SSA, CC, JACOsub, MicroDVD, MPsub, OGM, PJS, RT, SMI, SRT, SUB, VOBsub, VPlayer
 	#	Für Kodi eignen sich beide ZDF-Formate xml + vtt, umbenannt in *.sub oder *.srt
 	#	VTT entspricht SubRip: https://en.wikipedia.org/wiki/SubRip
-	subtitles = stringextract('\"captions\"', '\"documentVersion\"', page)	# Untertitel ermitteln, bisher in Plex-
-	subtitles = blockextract('\"class\"', subtitles)						# Channels nicht verwendbar
+	subtitles = stringextract('"captions"', '"documentVersion"', page)	# Untertitel ermitteln, bisher in Plex-
+	subtitles = blockextract('"class"', subtitles)						# Channels nicht verwendbar
 	PLog('subtitles: ' + str(len(subtitles)))
 	sub_path = ''													# Format: "local_path|url", Liste 
 	if len(subtitles) == 2:											#			scheitert in router
@@ -9641,10 +9859,9 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 			geoblock = ' | Geoblock DE!'
 		if geoblock == 'dach':			# Info-Anhang für summary 
 			geoblock = ' | Geoblock DACH!'
-
-	PLog('Ende get_formitaeten:')
-	return formitaeten, duration, geoblock, sub_path  
-
+			
+	return formitaeten, duration, geoblock, sub_path
+	
 #-------------------------
 # Aufrufer: ZDF_Search (weitere Seiten via page_cnt)
 #	Einzelseite -> ZDF_BildgalerieSingle
