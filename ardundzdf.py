@@ -54,9 +54,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>17</nr>										# Numerierung für Einzelupdate
+# 	<nr>18</nr>										# Numerierung für Einzelupdate
 VERSION = '4.1.9'
-VDATE = '14.01.2022'
+VDATE = '18.01.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7554,16 +7554,19 @@ def ZDF_FlatListEpisodes(sid):
 			brand =  stringextract('"headline":"', '"', folge)
 			title =  stringextract('"titel":"', '"', folge)
 			descr =  stringextract('"beschreibung":"', '"', folge)
-			season =  stringextract('"seasonNumber":"', '"', folge)
 			fsk =  stringextract('"fsk":"', '"', folge)
 			if fsk == "none":
 				fsk = "ohne"
 			geo =  stringextract('"geoLocation":"', '"', folge)
-			episode =  stringextract('"episodeNumber":"', '"', folge)
 			dauer = stringextract('"length":', ',', folge)
 			dauer = seconds_translate(dauer)
+			season =  stringextract('"seasonNumber":"', '"', folge)
+			episode =  stringextract('"episodeNumber":"', '"', folge)
 			if season == '':
 				continue
+				
+			title_pre = "S%02d F%02d" % (int(season), int(episode))
+			title = "%s | %s" % (title_pre, title)
 			
 			img =  stringextract('"url":"', '"', folge)			# Bild
 			pos = folge.find("cockpitPrimaryTarget")
@@ -7587,6 +7590,7 @@ def ZDF_FlatListEpisodes(sid):
 
 #----------------------------------------------
 # Ermittlung Streamquellen für api-call
+# Aufrufer: ZDF_FlatListEpisodes
 # Mitnutzung get_form_streams wie get_formitaeten  sowie
 #	 build_Streamlists
 def ZDF_getStreamsApi(path, title, thumb, tag,  summ):
