@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.01.2022
+# 	<nr>3</nr>										# Numerierung für Einzelupdate
+#	Stand: 19.01.2022
 #
 
 from __future__ import absolute_import
@@ -58,7 +58,7 @@ NFO1 = '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>\n'
 NFO2 = '<movie>\n<title>%s</title>\n<uniqueid type="tmdb" default="true"></uniqueid>\n'
 NFO3 = '<thumb spoof="" cache="" aspect="poster">%s</thumb>\n'
 NFO4 = '<plot>%s</plot>\n</movie>'
-NFO = NFO1+NFO2+NFO3+NFO4													# nfo-Template
+NFO = NFO1+NFO2+NFO3+NFO4												# nfo-Template
 
 ######################################################################## 			
 def unpack(add_url):
@@ -69,12 +69,12 @@ def unpack(add_url):
 	dirID 	= stringextract('dirID=', '&', add_url)
 	fanart 	= stringextract('fanart=', '&', add_url)
 	thumb	= stringextract('thumb=', '&', add_url)
-	fparams = add_url.split('fparams')[-1]
+	fparams = add_url.split('fparams')[-1]					#/?action=dirList&dirID= ..
 	fparams = unquote_plus(fparams)
-	fparams	= fparams[1:]					# ={'url':..
+	fparams	= fparams[1:]									# ={'url':..
 	
 	PLog("unpack_done")
-	PLog("dirID: %s\n fanart: %s\n thumb: %s\n fparams:%s" % (dirID, fanart, thumb, fparams))
+	PLog("dirID: %s\n fanart: %s\n thumb: %s\n fparams: %s" % (dirID, fanart, thumb, fparams))
 	return dirID, fanart, thumb, fparams
 
 # ----------------------------------------------------------------------
@@ -93,7 +93,7 @@ def do_create(label, add_url):
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
 		return	
 			
-	strm_type = get_strm_types()									# Genre-Auswahl
+	strm_type = get_strm_genre()									# Genre-Auswahl
 	if strm_type == '':
 		return
 	#------------------------------									# Abfrage Zielverz. != Filme/Serien
@@ -180,8 +180,8 @@ def do_create(label, add_url):
 									
 	return
 # ----------------------------------------------------------------------
-def get_strm_types():
-	PLog("get_strm_types:")
+def get_strm_genre():
+	PLog("get_strm_genre:")
 	strm_type=''
 	
 	head = u"bitte Genre auswählen"
@@ -200,9 +200,10 @@ def get_strm_types():
 def get_Plot(fparams):
 	PLog("get_Plot:")
 	Plot=''
+	#PLog(fparams)	# Debug
 
 	Plot	= stringextract("Plot': '", "'", fparams)
-	if Plot == '':													# Plot + Altern.
+	if Plot == '':										# Plot + Altern.
 		 Plot = stringextract("summary': '", "'", fparams)
 	if Plot == '':
 		 Plot = stringextract("summ': '", "'", fparams)
@@ -210,6 +211,8 @@ def get_Plot(fparams):
 	if "'dauer'" in fparams:
 		dauer = stringextract("dauer': '", "'", fparams)
 		Plot = "%s\n\n%s" % (dauer, Plot)
+
+	Plot = Plot.replace("||", "\n")						# Rückübersetzung			
 
 	return Plot
 # ----------------------------------------------------------------------
@@ -276,20 +279,28 @@ def xbmcvfs_store(strmpath, url, thumb, fname, title, Plot, strm_type):
 def get_streamurl(add_url):
 	PLog("get_streamurl:")
 	streamurl=''; ID=''
+	PLog(add_url[:100])
 		
 	ID = get_Source_Funcs_ID(add_url)
 	if ID == '':
 		return ''
-	params = add_url.split("%s/" % ADDON_ID)[-1]		# ADDON_ID von Params trennen
-
+		
+	pos = add_url.find('/?action=')
+	MY_SCRIPT_fparams = add_url[pos+1:]
+	PLog("MY_SCRIPT_fparams: " + MY_SCRIPT_fparams)
+	
+	# Ermittlung Streamquelle + Start PlayVideo bis 'PlayVideo_Start: listitem'.
+	# Bei Bedarf den Flag FLAG_OnlyUrl hierher verlegen und in PlayVideo beachten.
+	# Hinw.: True für blocking call zur Erzeugung der HLS_List + MP4_List durch 
+	#	MY_SCRIPT
 	MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % ADDON_ID) 
-	xbmc.executebuiltin('RunScript(%s, %s, %s)'  % (MY_SCRIPT, HANDLE, params)) # Hinw.: blocking call o. Wirkung
+	xbmc.executebuiltin('RunScript(%s, %s, %s)'  % (MY_SCRIPT, HANDLE, MY_SCRIPT_fparams), True)
 			
-	PLog("ID: " + ID)
+	PLog("strm_ID: " + ID)
 	HLS_List =  Dict("load", "%s_HLS_List" % ID)
-	PLog("HLS_List: " + str(HLS_List[:100]))
+	PLog("strm_HLS_List: " + str(HLS_List[:100]))
 	MP4_List =  Dict("load", "%s_MP4_List" % ID)
-	PLog("MP4_List: " + str(MP4_List[:100]))
+	PLog("strm_MP4_List: " + str(MP4_List[:100]))
 	
 	# todo: Dateiflag urlonly setzen/löschen - Übergabe via script unsicher
 	#	ev. auch Rückgabe via Datei
@@ -297,6 +308,7 @@ def get_streamurl(add_url):
 														# Url entspr. Settings holen:
 	title_org=''; img=''; Plot='';						# hier nicht benötigt 
 	
+	# s. Beachte im Log: es überschneiden sich MY_SCRIPT und PlayVideo_Direct: 
 	open(FLAG_OnlyUrl, 'w').close()						# Flag PlayVideo_Direct	-> strm-Modul		
 	streamurl = PlayVideo_Direct(HLS_List, MP4_List, title_org, img, Plot)
 	PLog("streamurl: " + streamurl)	
@@ -315,7 +327,7 @@ def get_Source_Funcs_ID(add_url):
 	#	phoenix (einsch. Youtube-Videos), TagesschauXL, zdfmobile
 	#u"funk.ShowVideo|", u"|KIKA", u"|", u"|",
 	Source_Funcs = [u"dirID=ZDF|ZDF", u"ARDnew.ARDStartSingle|ARDNEU",	# Funktionen + ID's
-					u"my3Sat.SingleBeitrag|3sat",
+					u"my3Sat.SingleBeitrag|3sat", u'.XLGetSourcesPlayer|TXL',
 					]
 	ID=''												# derzeit nicht ermittelbar
 	for item in Source_Funcs:
