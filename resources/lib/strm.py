@@ -3,7 +3,7 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
 #	Stand: 19.01.2022
 #
 
@@ -295,6 +295,7 @@ def get_streamurl(add_url):
 	#	MY_SCRIPT
 	MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % ADDON_ID) 
 	xbmc.executebuiltin('RunScript(%s, %s, %s)'  % (MY_SCRIPT, HANDLE, MY_SCRIPT_fparams), True)
+	sleep(1)											# für Leia/Mint erford.
 			
 	PLog("strm_ID: " + ID)
 	HLS_List =  Dict("load", "%s_HLS_List" % ID)
