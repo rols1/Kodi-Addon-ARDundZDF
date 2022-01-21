@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.01.2022
+# 	<nr>6</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2158,10 +2158,11 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 
 		save_new = False
 		if page == '':
-			page, msg = get_page(path)	# extern laden
+			PLog('lade_extern:') 
+			page, msg = get_page(path)	# extern laden, HTTP Error 404 möglich
 			save_new = True
 		if page == '':
-			return '', pubDate
+			return ''					# ohne pubdate (Aufrufer: summ.replace) 				
 			
 	# Decodierung plus bei Classic u-Kennz. vor Umlaut-strings (s.u.)
 	page = py2_decode(page)

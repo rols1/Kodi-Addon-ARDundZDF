@@ -54,7 +54,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>18</nr>										# Numerierung für Einzelupdate
+# 	<nr>19</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.0'
 VDATE = '21.01.2022'
 
@@ -2523,8 +2523,8 @@ def ARDSport(title):
 		
 	title = "Olympia"										# (nicht in Fußlinks)
 	label = "Olympia"
-	href = 'https://www.sportschau.de/radsport/tourdefrance/index.html'	# intern anderer Link s.u.
-	img =  'https://www.sportschau.de/radsport/tourdefrance/gesamtkarte-tour-100~_v-gseagaleriexl.jpg'
+	href = 'https://www.sportschau.de/olympia/index.html'	# intern anderer Link s.u.
+	img =  'https://www.sportschau.de/olympia/olympia-china-peking-100~_v-gseagaleriexl.jpg'
 	tagline = 'Olympische Winterspiele 2022 in Peking - sportschau.de'
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
