@@ -55,8 +55,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>18</nr>										# Numerierung für Einzelupdate
-VERSION = '4.1.9'
-VDATE = '18.01.2022'
+VERSION = '4.2.0'
+VDATE = '21.01.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -151,6 +151,7 @@ ICON_DIR_MOVE_SINGLE	= "Dir-move-single.png"
 ICON_DIR_MOVE_ALL 		= "Dir-move-all.png"
 ICON_DIR_BACK	 		= "Dir-back.png"
 ICON_DIR_SAVE 			= "Dir-save.png"
+ICON_DIR_STRM			= "Dir-strm.png"
 
 ICON_DIR_VIDEO 			= "Dir-video.png"
 ICON_DIR_WORK 			= "Dir-work.png"
@@ -2417,7 +2418,7 @@ def ARDSport(title):
 	# Dauerlinks am Fuß der Leitseite (Tab's am Kopf  können abweichen)
 	# skip_title enthält manuell bearbeitete Buttons (Bsp. Olympia in Tokio), 
 	#	die unten eingefügt werden
-	skip_title = ["Olympia in Tokio", "Wintersport"]
+	skip_title = ["Olympia in Tokio", "Wintersport", "Handball", "Olympia"]
 	tabpanel = stringextract('<ul id="gseafooterlinks116-panel"', '</ul>', page) 
 	tabpanel = blockextract('<li>', tabpanel)
 	img = R(ICON_DIR_FOLDER)
@@ -2508,6 +2509,30 @@ def ARDSport(title):
 		quote(href), quote(img))
 	addDir(li=li, label=label, action="dirList", dirID="ARDSportPanel", fanart=img, 
 		thumb=img, tagline=tagline, fparams=fparams)
+		
+	title = "Handball"										# (nicht in Fußlinks)
+	label = "Handball"
+	href = 'https://www.sportschau.de/handball/index.html'	# 
+	img =  'https://www1.wdr.de/sport/handball-symbolbild-100~_v-gseagaleriexl.jpg'
+	tagline = 'Aktuelle Nachrichten und Ergebnisse zum Handball - sportschau.de'
+	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
+		quote(href), quote(img))
+	addDir(li=li, label=label, action="dirList", dirID="ARDSportPanel", fanart=img, 
+		thumb=img, tagline=tagline, fparams=fparams)
+		
+	title = "Olympia"										# (nicht in Fußlinks)
+	label = "Olympia"
+	href = 'https://www.sportschau.de/radsport/tourdefrance/index.html'	# intern anderer Link s.u.
+	img =  'https://www.sportschau.de/radsport/tourdefrance/gesamtkarte-tour-100~_v-gseagaleriexl.jpg'
+	tagline = 'Olympische Winterspiele 2022 in Peking - sportschau.de'
+	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
+		quote(href), quote(img))
+	addDir(li=li, label=label, action="dirList", dirID="ARDSportPanel", fanart=img, 
+		thumb=img, tagline=tagline, fparams=fparams)
+		
+		
 	
 	'''
 	title = "Olympia in Tokio"										# manuell trotz Fußlinks 
@@ -7489,7 +7514,8 @@ def ZDF_search_button(li, query):
 	return
   
 #----------------------------------------------
-# Abzweig ZDF_Sendungen, Button flache Serienliste 
+# Abzweig ZDF_Sendungen, Button flache Serienliste,
+#	zusätzl. strm-Button Button für gesamte Liste  
 #	sid=Serien-ID (Url-Ende)
 #	Ablauf: Liste holen via api-Call, Abgleich mit sid,
 #		Serieninhalt holen via api-Call
@@ -7538,63 +7564,56 @@ def ZDF_FlatListEpisodes(sid):
 	mediatype=''												# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
+		
+	#															# Button strm-Dateien gesamte Liste
+	url =  stringextract('"url":"', '"', page)					# 1. Url/Seite
+	img = R(ICON_DIR_STRM)
+	title = u"strm-Dateien für die komplette Liste erzeugen / aktualisieren"
+	tag = u"Verwenden Sie das Kontextmenü, um strm-Dateien für einzelne Videos zu erzeugen"
+	url=py2_encode(url); title=py2_encode(title); 
+	fparams="&fparams={'path': '%s', 'title': '%s'}" %\
+		(quote(url), quote(title))
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_getStrmList", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
+	
 
-	# Blockmermal für Folgen unterschiedlich:
+	# Blockmerkmal für Folgen unterschiedlich:
 	staffel_list = blockextract('"name":"Staffel ', page)		# Staffel-Blöcke
 	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page)	
 	if len(staffel_list) == 0:									# ohne Staffel-Blöcke
 		staffel_list = blockextract('"headline":"', page)
 	PLog("staffel_list: %d" % len(staffel_list))
-	
+
 	for staffel in 	staffel_list:								
 		folgen = blockextract('"headline":"', staffel)			# Folgen-Blöcke	
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
-			folge = transl_json(folge)
-			brand =  stringextract('"headline":"', '"', folge)
-			title =  stringextract('"titel":"', '"', folge)
-			descr =  stringextract('"beschreibung":"', '"', folge)
-			fsk =  stringextract('"fsk":"', '"', folge)
-			if fsk == "none":
-				fsk = "ohne"
-			geo =  stringextract('"geoLocation":"', '"', folge)
-			dauer = stringextract('"length":', ',', folge)
-			dauer = seconds_translate(dauer)
-			season =  stringextract('"seasonNumber":"', '"', folge)
-			episode =  stringextract('"episodeNumber":"', '"', folge)
+			title, url, img, tag, summ, season = ZDF_FlatListRec(folge)
 			if season == '':
 				continue
 				
-			title_pre = "S%02d F%02d" % (int(season), int(episode))
-			title = "%s | %s" % (title_pre, title)
-			
-			img =  stringextract('"url":"', '"', folge)			# Bild
-			pos = folge.find("cockpitPrimaryTarget")
-			cockpit = folge[pos:]
-			url =  stringextract('"url":"', '"', cockpit)		# Ziel-Url mit Streamquellen
-			
-			tag = u"%s | Staffel: %s | Folge: %s\nDauer: %s | FSK: %s | %s" % (brand, season, episode, dauer, fsk, geo)
-			summ = repl_json_chars(descr)
-
+			summ_par= summ.replace('\n', '||')
+			tag_par= tag.replace('\n', '||')
 			PLog("Satz29:")
 			PLog(url);PLog(img);PLog(title);PLog(tag);PLog(summ[:80]); 
-			url=py2_encode(url); title=py2_encode(title); 
-			img=py2_encode(img); descr=py2_encode(descr);
-			apiToken=''
+			url=py2_encode(url); title=py2_encode(title); img=py2_encode(img); 
+			tag_par=py2_encode(tag_par);summ_par=py2_encode(summ_par);
 			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'tag': '%s', 'summ': '%s'}" %\
-				(quote(url), quote(title), quote(img), quote(tag), quote(summ))
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_getStreamsApi", fanart=img, thumb=img, 
+				(quote(url), quote(title), quote(img), quote(tag_par), quote(summ_par))
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------
-# Ermittlung Streamquellen für api-call
+# Ermittlung Streamquellen für api-call, ähnlich build_Streamlists 
+#	aber abweichendes Quellformat
 # Aufrufer: ZDF_FlatListEpisodes
 # Mitnutzung get_form_streams wie get_formitaeten  sowie
 #	 build_Streamlists
-def ZDF_getStreamsApi(path, title, thumb, tag,  summ):
-	PLog("ZDF_getStreamsApi:")
+# gui=False: ohne Gui, z.B. für ZDF_getStrmList
+def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
+	PLog("ZDF_getApiStreams:")
 	
 	page, msg = get_page(path)
 	if page == '':	
@@ -7605,14 +7624,14 @@ def ZDF_getStreamsApi(path, title, thumb, tag,  summ):
 	page = page.replace('\\/','/')
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')									# Home-Button	
+	if gui:
+		li = home(li, ID='ZDF')								# Home-Button	
 	
 	HLS_List=[]; MP4_List=[]; HBBTV_List=[];				# MP4_List = download_list
 	# erlaubte Formate wie build_Streamlists:
 	only_list = ["h264_aac_mp4_http_na_na", "h264_aac_ts_http_m3u8_http",	
 				"vp9_opus_webm_http_na_na", "vp8_vorbis_webm_http_na_na"
-				]
-			
+				]		
 		
 	# Format formitaeten von Webversion abweichend, build_Streamlists
 	#	nicht verwendbar
@@ -7679,18 +7698,169 @@ def ZDF_getStreamsApi(path, title, thumb, tag,  summ):
 	Dict("store", '%s_MP4_List' % ID, MP4_List) 
 		
 	if not len(HLS_List) and not len(MP4_List):			
-		msg = 'keine Streamingquelle gefunden - Abbruch' 
-		PLog(msg)
-		msg1 = u"keine Streamingquelle gefunden: %s"	% title
-		MyDialog(msg1, '', '')	
+		if gui:										# ohne Gui
+			msg = 'keine Streamingquelle gefunden - Abbruch' 
+			PLog(msg)
+			msg1 = u"keine Streamingquelle gefunden: %s"	% title
+			MyDialog(msg1, '', '')
+
 		return HLS_List, MP4_List, HBBTV_List
 	
 	build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	if gui:											# ohne Gui
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	else:
+		return
 
-####################################################################################################
+#----------------------------------------------
+# erzeugt / aktualsiert strm-Dateien für die komplette Liste 
+# Ermittlung Streamquellen für api-call
+# Ablauf: Seite path laden, Blöcke wie ZDF_FlatListEpisodes
+#	iterieren -> ZDF_FlatListRec -> ZDF_getApiStreams (Streamquelle 
+#	ermitteln -> 
+# Nutzung strm-Modul: get_strm_path, xbmcvfs_store
+# Cache-Verzicht, um neue Folgen nicht zu verpassen.
+#
+def ZDF_getStrmList(path, title):
+	PLog("ZDF_getStrmList:")
+	title_org = title
+	icon = R(ICON_DIR_STRM)
+	FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")
+	import resources.lib.strm as strm								# strm-Modul	
+	
+	page, msg = get_page(path=path)
+	if page == '':
+		msg1 = "Fehler in ZDF_getStrList:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return li 
+	page = page.replace('\\/','/')
+				
+	list_title =  stringextract('"titel":"', '"', page)				# Serien-Titel
+	strm_type = strm.get_strm_genre()								# Genre-Auswahl
+	if strm_type == '':
+		return
+	strmpath = strm.get_strm_path(strm_type)						# Abfrage Zielverz. != Filme
+	
+	fname = make_filenames(list_title)								# Abfrage Unterverzeichnis Serie
+	strmpath = os.path.join(strmpath, fname)
+	PLog("list_strmpath: " + strmpath)		
+	head = u"Unterverzeichnis für die Serie"
+	msg1 = u"Das Addon legt für die Serie folgendes Unterverzeichnis an:"
+	if os.path.isdir(strmpath):		
+		msg1 = u"Das Addon verwendet für die Serie folgendes Unterverzeichnis:"
+	msg2 = u"[B]%s[/B]" % fname
+	ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='OK', heading=head)
+	if ret != 1:
+		return
+	if os.path.isdir(strmpath) == False:
+		os.mkdir(strmpath)											# Verz. erzeugen, falls noch nicht vorh.
+
+	#---------------------
+	# Blockmerkmale s. ZDF_FlatListEpisodes:
+	staffel_list = blockextract('"name":"Staffel ', page)			# Staffel-Blöcke
+	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page)	
+	if len(staffel_list) == 0:										# ohne Staffel-Blöcke
+		staffel_list = blockextract('"headline":"', page)
+	PLog("staffel_list: %d" % len(staffel_list))
+	
+	cnt=0
+	for staffel in 	staffel_list:								
+		folgen = blockextract('"headline":"', staffel)				# Folgen-Blöcke	
+		PLog("Folgen: %d" % len(folgen))
+		for folge in folgen:
+			title, url, img, tag, summ, season = ZDF_FlatListRec(folge)
+			if season == '':
+				continue
+				
+			fname = make_filenames(title)							# hier ohne Dialog
+			PLog("fname: " + fname)
+			f = os.path.join(strmpath, fname, "%s.nfo" % fname)
+			PLog("f: " + f)
+			if os.path.isfile(f):									# skip vorh. strm-Bundle
+				msg1 = u'schon vorhanden:'
+				msg2 = title
+				xbmcgui.Dialog().notification(msg1,msg2,icon,500,sound=False)
+				PLog("skip_bundle: " + f)
+				continue
+						
+			PLog("Satz30:")
+			PLog(url);PLog(img);PLog(title);PLog(tag);PLog(summ[:80]); 
+			
+			msg1 = u'Suche Streamquellen'
+			msg2 = title
+			xbmcgui.Dialog().notification(msg1,msg2,icon,500,sound=False)
+			open(FLAG_OnlyUrl, 'w').close()							# Flag PlayVideo_Direct: kein Videostart
+			ZDF_getApiStreams(url, title, img, tag,  summ, gui=False) # Streamlisten
+			url = RLoad(STRM_URL, abs_path=True)
+			PLog("strm_Url: " + str(url))
+			
+			Plot = "%s\n\n%s" % (tag, summ)
+			ret = strm.xbmcvfs_store(strmpath, url, img, fname, title, Plot, strm_type)
+			if ret:
+				cnt=cnt+1
+			
+	PLog("cnt: %d" % cnt)		
+	if cnt:
+		msg1 = u'%d neue STRM-Datei(en)' % cnt
+		sflag = False
+		if ret ==  False:
+			sflag = True
+			msg1 = u'STRM-Dateien fehlgeschlagen'
+		msg2 = list_title
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=sflag)			
+	
+	return
+
+#----------------------------------------------
+# holt Details für item
+# Aufrufer: ZDF_FlatListEpisodes, ZDF_getStrmList
+def ZDF_FlatListRec(item):
+	PLog('ZDF_FlatListRec:')
+
+	title='';url='';img='';tag='';summ='';season='';descr=''
+	item = item.replace('u0022', '*')					# \"
+	item = transl_json(item)
+	
+	season =  stringextract('"seasonNumber":"', '"', item)
+	if season == '':									# Satz verwerfen	
+		return title, url, img, tag, summ, season
+		
+	episode =  stringextract('"episodeNumber":"', '"', item)
+	PLog(season); PLog(episode)
+	title_pre = "S%02d F%02d" % (int(season), int(episode))
+	
+	brand =  stringextract('"headline":"', '"', item)
+	title =  stringextract('"titel":"', '"', item)
+	descr =  stringextract('"beschreibung":"', '"', item)
+	fsk =  stringextract('"fsk":"', '"', item)
+	if fsk == "none":
+		fsk = "ohne"
+	end =  stringextract('"timetolive":"', '"', item)	# Altern.: offlineAvailability
+	end = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % end
+	geo =  stringextract('"geoLocation":"', '"', item)
+	if geo == "none":
+		geo = "ohne"
+	dauer = stringextract('"length":', ',', item)
+	dauer = seconds_translate(dauer)
+	title = "%s | %s" % (title_pre, title)
+	
+	img =  stringextract('"url":"', '"', item)			# Bild
+	pos = item.find("cockpitPrimaryTarget")
+	cockpit = item[pos:]
+	url =  stringextract('"url":"', '"', cockpit)		# Ziel-Url mit Streamquellen
+	
+	tag = u"%s | Staffel: %s | Folge: %s\nDauer: %s | FSK: %s | Geo: %s | %s" %\
+		(brand, season, episode, dauer, fsk, geo, end)
+	
+	title = unescape(title)
+	summ = repl_json_chars(descr)
+
+	return title, url, img, tag, summ, season
+
+###################################################################################################
 # ZDF-Bereich, Liste der Rubriken (Filme, Serien,  Comedy & Satire,  Politik & Gesellschaft, ..)
 #	Auswertung der Einzelbeiträge (nur solche) in ZDFRubrikSingle 
 # 19.05.2021 Anpassung an Änderung Webseite, Cache-Nutzung für 
@@ -7915,11 +8085,10 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 				# multi z.Z. nicht verwendet, isvideo reicht aus
 				teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi = ZDF_get_teaserbox(rec)
 			
-			PLog("isvideo: %s, dauer: %s" % (isvideo, dauer))
-			PLog(enddate);
-			#if isvideo == True and dauer == '':						# filtert 'Demnächst'-Beiträge aus
-			#	continue
-
+			PLog("isvideo: %s, dauer: %s, enddate: %s" % (isvideo, dauer, enddate))
+			if dauer or enddate:										# enddate ohne dauer mögliche
+				isvideo = True
+		
 			tag='';
 			if path == '' or 'skiplinks' in path:
 				PLog('skip_path: ' + path)
@@ -7986,7 +8155,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 			PLog(isvideo);PLog(multi);PLog(isgallery);
 			descr=py2_encode(descr)
 			
-			if isvideo == False or dauer == '':			# Mehrfachbeiträge
+			if isvideo == False:			# Mehrfachbeiträge
 				ID='ZDFRubrikSingle'
 				title=py2_encode(title); path=py2_encode(path); ID=py2_encode(ID);
 				descr_par=py2_encode(descr_par); img_src=py2_encode(img_src);
@@ -9342,7 +9511,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 	title_org = title
 	
 	HLS_List=[]; MP4_List=[]; HBBTV_List=[];			# MP4_List = download_list
-	# erlaubte Formate wie ZDF_getStreamsApi 
+	# erlaubte Formate wie ZDF_getApiStreams 
 	only_list = ["h264_aac_mp4_http_na_na", "h264_aac_ts_http_m3u8_http",	# erlaubte Formate
 				"vp9_opus_webm_http_na_na", "vp8_vorbis_webm_http_na_na"]
 	for rec in formitaeten:									# Datensätze gesamt, Achtung unicode!
@@ -9451,7 +9620,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 #	SingleSendung (ARD Classic), XLGetSourcesPlayer
 # Plot = tagline (zusammengefasst: Titel (abgesetzt), tagline, summary)
 # Kennzeichung mit mediatype='video' vor aufrufenden Funktionenen, z.B.
-#	StreamsShow, XLGetSourcesPlayer, 
+#	StreamsShow, XLGetSourcesPlayer, ZDF_getApiStreams
 #
 def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		HLS_List,MP4_List,HBBTV_List,ID="ZDF",HOME_ID="ZDF"):
@@ -9469,7 +9638,7 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		played_direct=True
 		img = thumb
 		PlayVideo_Direct(HLS_List, MP4_List, title_org, img, Plot, sub_path, HBBTV_List)
-		return played_direct
+		return played_direct							# direct-Flag z.B. für ARDStartSingle
 
 	# -----------------------------------------			# Buttons Einzelauflösungen
 	PLog("Satz3:")

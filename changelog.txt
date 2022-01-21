@@ -10,6 +10,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+21.01.2022 4.2.0
+			do_create (strm): neue Funktion get_Plot - Alternative für Plot + summary 
+			hinzugefügt (summ).
+			PlayAudio (util): Url-Check hinzugefügt (Anlass HTTP Error 404 NDR Schlager),
+			Audiothek-Team benachrichtigt / Problem inzw. gelöst.
+			Beitrag_Liste (arte): Param. tag_par leer vorbelegt.
+			get_formitaeten (ZDF): Auslagerung get_form_streams (ermittelt streamurls, 
+			duration, geoblock, sub_path), Mitnutzung durch ZDF_getApiStreams.
+			Github-issue: Add possibility to set content type to tvshows (PR #12, 
+			Trekky12) - Änderung insetting.xml + Haupt-PRG.
+			ZDFRubrikSingle (ZDF): Kennz. von Mehrfachbeiträge zusätzl abhängig von dauer.
+			strm: vorgeschalteter Test für Zielfunktion, Unterstützung für vorgewählte 
+			Verz. Filme + Serien, Anpassung setting.xml, DirectoryNavigator.
+			Start (3sat): unescape-Behandl. für title (&amp; -> &).
+			strm: Unterstützung für TagesschauXL hinzugefügt.
+			ZDF-Serien: zusätzlicher Button für "komplette Liste: ...", neue Funktionen
+			ZDF_FlatListEpisodes + ZDF_getApiStreams - "flache Liste" ohne Teaser u.ä.,
+			Anpassungen Streamauswahl in PlayVideo_Direct, build_Streamlists_buttons.
+			ZDFRubrikSingle: isvideo von dauer oder enddate abhängig (biser nur dauer)	
+			ARD Neu: Farbe für Senderkennz. entfernt, umgestellt auf fett (@Bobbi2021).
+			ARD Sportschau: Einbindung Handball + Olympia (@Weri) - Anpassung ARDSport.	
+
 14.01.2022 4.1.9 Erzeugung von strm-Dateien (experimentell)
 			neues Modul strm, Anpassungen in Settings, PlayVideo_Direct, neues Icon
 			Dir-strm.png.

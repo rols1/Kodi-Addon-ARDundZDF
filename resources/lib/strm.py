@@ -4,7 +4,7 @@
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
 # 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.01.2022
+#	Stand: 21.01.2022
 #
 
 from __future__ import absolute_import
@@ -43,6 +43,8 @@ if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 STRMSTORE 		= os.path.join(ADDON_DATA, "strm") 						# Default-Verz. strm
 FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")					# Flag PlayVideo_Direct	-> strm-Modul
+																		# 	Mitnutzung ZDF_getStrmList
+STRM_URL		= os.path.join(ADDON_DATA, "strmurl")					# Ablage strm-Url (PlayVideo_Direct)	
 
 ICON 			= 'icon.png'		# ARD + ZDF
 ICON_DIR_STRM	= "Dir-strm.png"
@@ -97,37 +99,7 @@ def do_create(label, add_url):
 	if strm_type == '':
 		return
 	#------------------------------									# Abfrage Zielverz. != Filme/Serien
-	strmpath = STRMSTORE											# Default
-	choose_path = False
-	if strm_type == "movie":
-		verz = SETTINGS.getSetting('pref_strm_film_path')
-		if verz != '' and verz != None:	
-			strmpath = verz
-			choose_path = False
-	else:
-		verz = SETTINGS.getSetting('pref_strm_series_path')
-		if verz != '' and verz != None:	
-			heading = u"Ablage festlegen/ändern: %s" % verz
-			newdir = DirectoryNavigator(settingKey='',mytype=0, heading=verz, shares='files', path=verz)
-			PLog("newdir: " + str(newdir))
-			strmpath = newdir										# Abbruch-Behandl. entf., bei Titelwahl möglich
-		else:
-			strmpath = STRMSTORE									# strm-Verzeichnis in userdata
-			if os.path.isdir(strmpath) == False:
-				try:
-					os.mkdir(strmpath)
-				except Exception as exception:
-					PLog(str(exception))
-					msg1 = u'strm-Verzeichnis konnte nicht angelegt werden:'
-					msg2 = str(exception)
-					MyDialog(msg1, msg2, '')
-					return
-
-	if strmpath == STRMSTORE:			
-		msg1 = u'Die Ablage erfolgt im Datenverzeichnis des Addons, Unterverzeichnis: strm'
-		msg2 = u'Ein anderes Verzeichnis kann in den Settings festgelegt werden.'
-		MyDialog(msg1, msg2, '')
-	PLog("strmpath: " + strmpath)		
+	strmpath = get_strm_path(strm_type)
 		
 	#------------------------------							
 	title	= stringextract("title': '", "'", fparams) 				# fparams json-Format
@@ -162,7 +134,7 @@ def do_create(label, add_url):
 			MyDialog(msg1, msg2, "Abbruch")
 			return
 
-	fname = make_filenames(title)
+	fname = make_filenames(title)									# hier ohne Film-Titel-Auswahl
 	PLog("fname: " + fname)
 	
 	#------------------------------									# Abfrage Dateiname
@@ -179,6 +151,42 @@ def do_create(label, add_url):
 	xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
 									
 	return
+# ----------------------------------------------------------------------
+def get_strm_path(strm_type):
+	PLog("get_strm_path:")
+	
+	strmpath = STRMSTORE											# Default
+	choose_path = False
+	if strm_type == "movie":
+		verz = SETTINGS.getSetting('pref_strm_film_path')
+		if verz != '' and verz != None:	
+			strmpath = verz
+			choose_path = False
+	else:
+		verz = SETTINGS.getSetting('pref_strm_series_path')
+		if verz != '' and verz != None:	
+			heading = u"Ablage festlegen/ändern: %s" % verz
+			newdir = DirectoryNavigator(settingKey='',mytype=0, heading=verz, shares='files', path=verz)
+			PLog("newdir: " + str(newdir))
+			strmpath = newdir										# Abbruch-Behandl. entf., bei Titelwahl möglich
+		else:
+			strmpath = STRMSTORE									# strm-Verzeichnis in userdata
+			if os.path.isdir(strmpath) == False:
+				try:
+					os.mkdir(strmpath)
+				except Exception as exception:
+					PLog(str(exception))
+					msg1 = u'strm-Verzeichnis konnte nicht angelegt werden:'
+					msg2 = str(exception)
+					MyDialog(msg1, msg2, '')
+					return
+					
+	if strmpath == STRMSTORE:			
+		msg1 = u'Die Ablage erfolgt im Datenverzeichnis des Addons, Unterverzeichnis: strm'
+		msg2 = u'Ein anderes Verzeichnis kann in den Settings festgelegt werden.'
+		MyDialog(msg1, msg2, '')
+	PLog("strmpath: " + strmpath)		
+	return strmpath
 # ----------------------------------------------------------------------
 def get_strm_genre():
 	PLog("get_strm_genre:")
@@ -200,13 +208,17 @@ def get_strm_genre():
 def get_Plot(fparams):
 	PLog("get_Plot:")
 	Plot=''
-	#PLog(fparams)	# Debug
+	PLog(fparams)	# Debug
 
 	Plot	= stringextract("Plot': '", "'", fparams)
 	if Plot == '':										# Plot + Altern.
 		 Plot = stringextract("summary': '", "'", fparams)
 	if Plot == '':
 		 Plot = stringextract("summ': '", "'", fparams)
+	if "'tag'" in fparams:
+		tag = stringextract("tag': '", "'", fparams)
+		Plot = "%s\n\n%s" % (tag, Plot)
+
 	 
 	if "'dauer'" in fparams:
 		dauer = stringextract("dauer': '", "'", fparams)
@@ -220,7 +232,8 @@ def get_Plot(fparams):
 # strm-, nfo-, jpeg-Dateien anlegen
 # 	strmpath=strm-Verzeichnis, fname=Dateiname ohne ext.
 # 	url=Video-Url, thumb=thumb-Url
-def xbmcvfs_store(strmpath, url, thumb, fname, title, Plot, strm_type):
+# gui=False: ohne Gui, z.B. für ZDF_getStrmList
+def xbmcvfs_store(strmpath, url, thumb, fname, title, Plot, strm_type, gui=True):
 	PLog("xbmcvfs_store:")
 	PLog("strmpath: " + strmpath)
 	
@@ -263,10 +276,11 @@ def xbmcvfs_store(strmpath, url, thumb, fname, title, Plot, strm_type):
 	PLog("nfo_ret: " + str(ret2))
 	
 	if ret1 == False or ret2 == False:
+		if gui:
 			msg1 = u"Erzeugung strm-Datei oder nfo-Datei fehlgeschlagen."
 			msg2 = u"Bitte überprüfen"									
 			MyDialog(msg1, msg2, "Abbruch")
-			return False
+		return False
 
 	return True
 
@@ -326,7 +340,8 @@ def get_Source_Funcs_ID(add_url):
 	
 	# nachrüsten (abweichende Streamermittlung): funk, arte, 
 	#	phoenix (einsch. Youtube-Videos), TagesschauXL, zdfmobile
-	#u"funk.ShowVideo|", u"|KIKA", u"|", u"|",
+	#u"funk.ShowVideo|", u"|KIKA", u"|", u"|"
+	# dirID=ZDF: ZDF_getVideoSources + ZDF_getApiStreams
 	Source_Funcs = [u"dirID=ZDF|ZDF", u"ARDnew.ARDStartSingle|ARDNEU",	# Funktionen + ID's
 					u"my3Sat.SingleBeitrag|3sat", u'.XLGetSourcesPlayer|TXL',
 					]

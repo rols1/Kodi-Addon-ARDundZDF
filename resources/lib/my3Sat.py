@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.12.2021
+#	Stand: 17.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -548,8 +548,8 @@ def Start(name, path, rubrik=''):
 				tag		= u"[B]%s[/B] Beiträge" % anz
 				
 				subhead = stringextract('subheadline level-8', "<div", rec)
-				descr	= stringextract('" >', '</', subhead)	
-									# show-for-large" >
+				descr	= stringextract('" >', '</', subhead)		# show-for-large" >
+				title 	= unescape(title)
 				descr 	= unescape(descr); descr = mystrip(descr); descr = repl_json_chars(descr)
 				
 				PLog('Satz2:')

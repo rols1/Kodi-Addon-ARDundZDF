@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.01.2022
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -127,7 +127,8 @@ SUBTITLESTORE 	= os.path.join(ADDON_DATA, "subtitles")
 TEXTSTORE 		= os.path.join(ADDON_DATA, "Inhaltstexte")
 WATCHFILE		= os.path.join(ADDON_DATA, "merkliste.xml") 
 TEMP_ADDON		= xbmc.translatePath("special://temp")			# Backups
-FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")			# Flag PlayVideo_Direct -> strm-Modul	
+FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")			# Flag PlayVideo_Direct -> strm-Modul
+STRM_URL		= os.path.join(ADDON_DATA, "strmurl")			# Ablage strm-Url (PlayVideo_Direct)	
 
 PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
 ICON_MAIN_POD	= 'radio-podcasts.png'
@@ -1357,7 +1358,7 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
 		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad')
-		, (u'\r', u''), (u'#', u'*'), (u'u003e', u'')):		# u'u003e' -> u'®'		
+		, (u'\r', u''), (u'#', u'*'), (u'u003e', u'')):		# u'u003e' 	-> u'®'
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret
@@ -2790,7 +2791,8 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 #		"HLS Einzelstream ## Bandbreite ## Auflösung ## Titel#Url"
 #		"MP4 Qualität: Full HD ## Bandbreite ## Auflösung ## Titel#Url"
 # Auflösung/Bitrate In beiden Listen wg. re.search-Sortierung erford.!
-# 
+# Aufrufer: build_Streamlists_buttons (Sofortstart), get_streamurl
+#
 def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, playlist='', HBBTV_List=''):	
 	PLog('PlayVideo_Direct:')
 	PLog(title)
@@ -2846,23 +2848,39 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 				width = re.search("(\d+)", res).group(0)
 			except Exception as exception:
 				PLog(str(exception))
-				continue
+				#continue
+				
+			if "** veryhigh **" in item:			# Rückübersetzung HLS-Qualitäten
+				width = "1280"						#	bei ZDF-Api-Streams
+			if "** high **" in item:
+				width = "960"
+			if "** med **" in item:
+				width = "640"
+			if "** low **" in item:
+				width = "480"
+			
 			PLog("width %s, qual %s" % (width, qual))
 			if int(width) >= int(qual):
 				url = item.split('#')[-1]
 				mode = '%s | width %s (Setting: %s)' % (mode, width, qual)
 				break 
 
+	# Beachte im Log: beim Aufruf aus strm-Modul (Kontext-Thread): läuft noch
+	#	MY_SCRIPT aus get_streamurl. PlayVideo wird gestartet + stoppt bei
+	#	'PlayVideo_Start: listitem'. Im Log wirkt es, als führe
+	#	Kodi sowohl if- als auch else-Statement aus. Das Log für den Thread 
+	#	kann sich zeitlich weiter vorn befinden (s. FLAG_OnlyUrl).
 	PLog('Direct: %s | %s' % (mode, url))
 	PLog(FLAG_OnlyUrl)								# Flagdatei
-	if os.path.isfile(FLAG_OnlyUrl) == True:		# Rückgabe Url -> strm-Modul, kein Start
+	if os.path.isfile(FLAG_OnlyUrl):				# Rückgabe Url -> strm-Modul, kein Start
 		PLog("FLAG_OnlyUrl")
-		os.remove(FLAG_OnlyUrl)								
-		return url
+		os.remove(FLAG_OnlyUrl)
+		RSave(STRM_URL, url)						# indirekte Rückgabe 	-> 
+		return url									# direkte Rückgabe 		-> strm-Modul
 		exit(0)
 	else:											# default
 		PlayVideo(url, title, thumb, Plot, sub_path)
-	return 
+	return ''
 	
 #---------------------------------------------------------------------------------------------------
 # PlayVideo: 

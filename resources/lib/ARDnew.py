@@ -122,12 +122,12 @@ def Main_NEW(name, CurSender=''):
 		CurSender=py2_encode(CurSender);
 	
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')	# sender -> Menüs
-	sender_summ = 'Sender: [COLOR red]%s[/COLOR] (unabhängig von der Senderwahl)' % "ARD-Alle"
+	sender_summ = 'Sender: [B]%s[/B] (unabhängig von der Senderwahl)' % "ARD-Alle"
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 			
-	def_tag = 'Sender: [B][COLOR red] %s [/COLOR][/B]' % sendername
+	def_tag = 'Sender: [B]%s[/B]' % sendername
 	title = 'Suche in ARD-Mediathek'
 	tag = def_tag
 	title=py2_encode(title);
@@ -166,7 +166,7 @@ def Main_NEW(name, CurSender=''):
 	#	href wie get_ARDstreamlinks
 	title = 'Livestreams'
 	tag = "Die [B]Livestreams[/B] der ARD"
-	summ = 'Sender: [COLOR red]%s[/COLOR] (unabhängig von der Senderwahl)' % "ARD-Alle"
+	summ = 'Sender: [B]%s[/B] (unabhängig von der Senderwahl)' % "ARD-Alle"
 	img = R("ard-livestreams.png")
 	ID = 'Livestream'
 	href = 'https://api.ardmediathek.de/page-gateway/widgets/ard/editorials/4hEeBDgtx6kWs6W6sa44yY?pageNumber=0&pageSize=24'
@@ -217,7 +217,7 @@ def Main_NEW(name, CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="BilderDasErste", fanart=R(ICON_MAIN_ARD),
 		thumb=R('ard-bilderserien.png'), fparams=fparams)
 
-	title 	= u'Wählen Sie Ihren Sender | aktuell: [B][COLOR red]%s[/COLOR][/B]' % sendername	# Senderwahl
+	title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
@@ -1546,7 +1546,7 @@ def ARDVerpasst(title, CurSender):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasstContent", fanart=R(ICON_ARD_VERP), 
 			thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=tagline)
 			
-	title 	= u'Wählen Sie Ihren Sender | aktuell: [B][COLOR red]%s[/COLOR][/B]' % sendername	# Senderwahl
+	title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
 	title=py2_encode(title); caller='resources.lib.ARDnew.ARDVerpasst'
 	fparams="&fparams={'title': '%s', 'caller': '%s'}" % (quote(title), caller)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
