@@ -54,9 +54,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>19</nr>										# Numerierung für Einzelupdate
+# 	<nr>20</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.0'
-VDATE = '21.01.2022'
+VDATE = '22.01.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7566,20 +7566,21 @@ def ZDF_FlatListEpisodes(sid):
 		mediatype='video'
 		
 	#															# Button strm-Dateien gesamte Liste
-	url =  stringextract('"url":"', '"', page)					# 1. Url/Seite
-	img = R(ICON_DIR_STRM)
-	title = u"strm-Dateien für die komplette Liste erzeugen / aktualisieren"
-	tag = u"Verwenden Sie das Kontextmenü, um strm-Dateien für einzelne Videos zu erzeugen"
-	url=py2_encode(url); title=py2_encode(title); 
-	fparams="&fparams={'path': '%s', 'title': '%s'}" %\
-		(quote(url), quote(title))
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_getStrmList", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
+	if SETTINGS.getSetting('pref_strm') == 'true':
+		url =  stringextract('"url":"', '"', page)				# 1. Url/Seite
+		img = R(ICON_DIR_STRM)
+		title = u"strm-Dateien für die komplette Liste erzeugen / aktualisieren"
+		tag = u"Verwenden Sie das Kontextmenü, um strm-Dateien für einzelne Videos zu erzeugen"
+		url=py2_encode(url); title=py2_encode(title); 
+		fparams="&fparams={'path': '%s', 'title': '%s'}" %\
+			(quote(url), quote(title))
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_getStrmList", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tag)
 	
 
-	# Blockmerkmal für Folgen unterschiedlich:
+	# Blockmerkmal für Folgen unterschiedlich:					# Blockmerkmale wie 
 	staffel_list = blockextract('"name":"Staffel ', page)		# Staffel-Blöcke
-	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page)	
+	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page, '"profile":')	
 	if len(staffel_list) == 0:									# ohne Staffel-Blöcke
 		staffel_list = blockextract('"headline":"', page)
 	PLog("staffel_list: %d" % len(staffel_list))
@@ -7739,6 +7740,10 @@ def ZDF_getStrmList(path, title):
 	page = page.replace('\\/','/')
 				
 	list_title =  stringextract('"titel":"', '"', page)				# Serien-Titel
+	list_title = list_title.replace('u0022', '*')					# \"
+	list_title = transl_json(list_title)
+	PLog("list_title:" + list_title)
+	
 	strm_type = strm.get_strm_genre()								# Genre-Auswahl
 	if strm_type == '':
 		return
@@ -7759,15 +7764,15 @@ def ZDF_getStrmList(path, title):
 		os.mkdir(strmpath)											# Verz. erzeugen, falls noch nicht vorh.
 
 	#---------------------
-	# Blockmerkmale s. ZDF_FlatListEpisodes:
+	# Blockmerkmale s. ZDF_FlatListEpisodes:						# Blockmerkmale wie ZDF_FlatListEpisodes
 	staffel_list = blockextract('"name":"Staffel ', page)			# Staffel-Blöcke
-	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page)	
+	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page, '"profile":')	
 	if len(staffel_list) == 0:										# ohne Staffel-Blöcke
 		staffel_list = blockextract('"headline":"', page)
 	PLog("staffel_list: %d" % len(staffel_list))
 	
 	cnt=0
-	for staffel in 	staffel_list:								
+	for staffel in 	staffel_list:
 		folgen = blockextract('"headline":"', staffel)				# Folgen-Blöcke	
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
@@ -8086,7 +8091,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 				teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi = ZDF_get_teaserbox(rec)
 			
 			PLog("isvideo: %s, dauer: %s, enddate: %s" % (isvideo, dauer, enddate))
-			if dauer or enddate:										# enddate ohne dauer mögliche
+			if isvideo or dauer or enddate:								# enddate ohne dauer mögliche
 				isvideo = True
 		
 			tag='';

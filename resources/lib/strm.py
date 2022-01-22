@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.01.2022
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.01.2022
 #
 
 from __future__ import absolute_import
@@ -208,6 +208,7 @@ def get_strm_genre():
 def get_Plot(fparams):
 	PLog("get_Plot:")
 	Plot=''
+	fparams = transl_doubleUTF8(fparams)
 	PLog(fparams)	# Debug
 
 	Plot	= stringextract("Plot': '", "'", fparams)
