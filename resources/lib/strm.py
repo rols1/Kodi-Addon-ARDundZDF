@@ -3,7 +3,7 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>6</nr>										# Numerierung für Einzelupdate
+# 	<nr>7</nr>										# Numerierung für Einzelupdate
 #	Stand: 23.01.2022
 #
 
@@ -41,10 +41,13 @@ ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
 if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
+DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
 STRMSTORE 		= os.path.join(ADDON_DATA, "strm") 						# Default-Verz. strm
 FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")					# Flag PlayVideo_Direct	-> strm-Modul
 																		# 	Mitnutzung ZDF_getStrmList
 STRM_URL		= os.path.join(ADDON_DATA, "strmurl")					# Ablage strm-Url (PlayVideo_Direct)	
+STRM_SYNCLIST	= os.path.join(ADDON_DATA, "strmsynclist")				# strm-Liste für Synchronisierung	
+STRM_TOOLS_SET	= os.path.join(ADDON_DATA, "strmtoolset")				# Settings der stm-Tools	
 
 ICON 			= 'icon.png'		# ARD + ZDF
 ICON_DIR_STRM	= "Dir-strm.png"
@@ -134,21 +137,21 @@ def do_create(label, add_url):
 			msg2 = title									
 			MyDialog(msg1, msg2, "Abbruch")
 			return
-
-	fname = make_filenames(title)									# hier ohne Film-Titel-Auswahl
-	PLog("fname: " + fname)
 	
 	#------------------------------									# Abfrage Dateiname
-	new_name = get_keyboard_input(line=fname, head="Dateiname übernehmen / eingeben")
+	fname = make_filenames(title)									# sichere Dateinamen für Video
+	new_name = get_keyboard_input(line=fname, head=u"Dateiname übernehmen / eingeben")
 	PLog("new_name: " + new_name)
 	if new_name.strip() == '':
 		return
+	fname = make_filenames(new_name)								# nochmal, falls geändert
+	PLog("dest_fname: " + fname)
 	#------------------------------									# strm-, nfo-, jpeg-Dateien anlegen
 	ret = xbmcvfs_store(strmpath, url, thumb, fname, title, Plot, strm_type)
 	msg1 = u'STRM-Datei angelegt'
 	if ret ==  False:
 		msg1 = u'STRM-Datei fehlgeschlagen'
-	msg2 = title
+	msg2 = fname
 	xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
 									
 	return
@@ -311,7 +314,16 @@ def get_streamurl(add_url):
 	#	MY_SCRIPT
 	MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % ADDON_ID) 
 	xbmc.executebuiltin('RunScript(%s, %s, %s)'  % (MY_SCRIPT, HANDLE, MY_SCRIPT_fparams), True)
-	sleep(1)											# für Leia/Mint erford.
+	
+	hls_list = os.path.join(DICTSTORE, "%s_HLS_List" % ID)
+	mp4_list = os.path.join(DICTSTORE, "%s_MP4_List" % ID)
+	max_cnt=0
+	while(1):											# file_event: für die schwachbrüstigen Clients
+		sleep(1)
+		max_cnt = max_cnt + 1
+		PLog("waiting: %d" % max_cnt)
+		if os.path.exists(mp4_list) or os.path.exists(hls_list) or max_cnt > 3:
+			break
 			
 	PLog("strm_ID: " + ID)
 	HLS_List =  Dict("load", "%s_HLS_List" % ID)
@@ -332,7 +344,6 @@ def get_streamurl(add_url):
 	return streamurl
 	
 # ----------------------------------------------------------------------
-#
 # Test auf unterstützte Zielfunktion 
 #
 def get_Source_Funcs_ID(add_url):
@@ -357,4 +368,48 @@ def get_Source_Funcs_ID(add_url):
 	PLog("ID: " + ID)	
 	return ID	
 	
+# ----------------------------------------------------------------------
+# holt strm-Liste STRM_SYNCLIST
+# title: Titel der Liste aus ZDF_getStrmList
+def get_strm_synclist(mode="load", title=''):
+	PLog("get_strm_synclist:")	
+	icon = R(ICON_DIR_STRM)
+	
+	synclist = RLoad(STRM_SYNCLIST, abs_path=True)
+	if mode == "load":
+		if synclist == '':
+			return []
+		return synclist
+	
+	if mode == "save":							# falls fehlend neu aufnehmen
+		synclist = synclist.splitlines()
+		if exist_in_list(title, synclist) == False:
+			synclist.append(title)
+			msg = RSave(STRM_SYNCLIST, py2_encode(synclist))
+			if msg:
+				msg1 = "Syncliste fehlgeschlagen" 
+				msg2 = msg
+				xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
+		
+	PLog(len(synclist))	
+		
+# ----------------------------------------------------------------------
+# holt Settings der stm-Tools
+# bei Bedarf erweitern
+# mode: load / save
+def strm_tool_set(mode="load"):
+	PLog("get_strm_tool_set:")
+	sync_hour = 12							# Default Intervall in Std.	
+	
+	if mode == "load":
+		toolset = RLoad(STRM_TOOLS_SET, abs_path=True)
+		PLog(toolset[:60])
+		if toolset == '':
+			return 
+		lines = toolset.splitlines()
+		sync_hour = lines[0].split("=")[-1]	
+		sync_hour = sync_hour.strip()			# manuell geändert?
+		return sync_hour
+
+
 ######################################################################## 			
