@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.01.2022
+# 	<nr>6</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.01.2022
 #
 
 from __future__ import absolute_import
@@ -116,13 +116,14 @@ def do_create(label, add_url):
 		thumb = thumb_org	
 	PLog("title: %s\n thumb: %s\n url: %s\n Plot:%s" % (title, thumb, url, Plot))
 	
-	formats = [".m3u8", "mp4", ".mp3", ".webm"]						# Url-Test
+	formats = [".m3u8", ".mp4", ".mp3", ".webm"]					# Url-Test
 	my_ext = url.split(".")[-1]
-	url_test = False
+	url_found = False										
 	for f in formats:
-		if f in my_ext:
-			url_test = True
-	if url_test == False:
+		if f in url:
+			url_found = True										# True: PlayVideo bei Einzelauflösung
+	PLog("url_found: " + str(url_found))
+	if url_found == False and dirID != "PlayVideo":	
 		msg1 = u'ermittle Streamurl'
 		msg2 = title
 		xbmcgui.Dialog().notification(msg1,msg2,icon,1000,sound=False)
@@ -297,7 +298,7 @@ def get_streamurl(add_url):
 	PLog(add_url[:100])
 		
 	ID = get_Source_Funcs_ID(add_url)
-	if ID == '':
+	if ID == '' or ID == "PlayVideo":					# PlayVideo: Url liegt schon vor
 		return ''
 		
 	pos = add_url.find('/?action=')
@@ -341,10 +342,10 @@ def get_Source_Funcs_ID(add_url):
 	
 	# nachrüsten (abweichende Streamermittlung): funk, arte, 
 	#	phoenix (einsch. Youtube-Videos), TagesschauXL, zdfmobile
-	#u"funk.ShowVideo|", u"|KIKA", u"|", u"|"
-	# dirID=ZDF: ZDF_getVideoSources + ZDF_getApiStreams
+	# PlayVideo: Einzelauflösung - ohne Ermittlung der Quellen, s. url_test
 	Source_Funcs = [u"dirID=ZDF|ZDF", u"ARDnew.ARDStartSingle|ARDNEU",	# Funktionen + ID's
 					u"my3Sat.SingleBeitrag|3sat", u'.XLGetSourcesPlayer|TXL',
+					u"dirID=PlayVideo|PlayVideo"
 					]
 	ID=''												# derzeit nicht ermittelbar
 	for item in Source_Funcs:
