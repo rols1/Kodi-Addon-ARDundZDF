@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>7</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.01.2022
+# 	<nr>8</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.01.2022
 #
 
 from __future__ import absolute_import

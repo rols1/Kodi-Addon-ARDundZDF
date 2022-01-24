@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>6</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.01.2022
+# 	<nr>7</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2339,14 +2339,16 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 def get_ZDFstreamlinks(skip_log=False):
 	PLog('get_ZDFstreamlinks:')
 	PLog(skip_log)
-	ZDFlinks_CacheTime	= 86400					# 24 Std.: (60*60)*24
+	days = int(SETTINGS.getSetting('pref_tv_store_days'))
+	PLog("days: %d" % days)
+	CacheTime = days*86400						# Default 1 Tag
 		
-	page = Dict("load", 'zdf_streamlinks', CacheTime=ZDFlinks_CacheTime)
-
-	if len(str(page)) > 1000:					# bei Error nicht leer od. False von Dict
-		if skip_log == False:
-			PLog(page)							# für IPTV-Interessenten
-		return page.splitlines()
+	if days:									# skip CacheTime=0
+		page = Dict("load", 'zdf_streamlinks', CacheTime=CacheTime)
+		if len(str(page)) > 1000:					# bei Error nicht leer od. False von Dict
+			if skip_log == False:
+				PLog(page)							# für IPTV-Interessenten
+			return page.splitlines()
 
 	icon = R(ICON_TOOLS)
 	xbmcgui.Dialog().notification("Cache ZDFlinks:","wird erneuert",icon,3000)
@@ -2419,18 +2421,21 @@ def get_ZDFstreamlinks(skip_log=False):
 def get_ARDstreamlinks(skip_log=False):
 	PLog('get_ARDstreamlinks:')
 	PLog(skip_log)
-	ARDlinks_CacheTime	= 86400					# 24 Std.: (60*60)*24
+	days = int(SETTINGS.getSetting('pref_tv_store_days'))
+	PLog("days: %d" % days)
+	CacheTime = days*86400						# Default 1 Tag
 
 	ID = "ard_streamlinks"
-	if SETTINGS.getSetting('pref_UT_ON') == 'true':	
-		ID = "ard_streamlinks_UT"
-	page = Dict("load", ID, CacheTime=ARDlinks_CacheTime)
-	page = py2_encode(page)
+	if days:									# skip CacheTime=0
+		if SETTINGS.getSetting('pref_UT_ON') == 'true':	
+			ID = "ard_streamlinks_UT"
+		page = Dict("load", ID, CacheTime=CacheTime)
+		page = py2_encode(page)
 
-	if len(str(page)) > 1000:					# bei Error nicht leer od. False von Dict
-		if skip_log == False:
-			PLog(page)							# für IPTV-Interessenten
-		return page.splitlines()
+		if len(str(page)) > 1000:					# bei Error nicht leer od. False von Dict
+			if skip_log == False:
+				PLog(page)							# für IPTV-Interessenten
+			return page.splitlines()
 		
 	icon = R(ICON_TOOLS)
 	xbmcgui.Dialog().notification("Cache ARDlinks:","wird erneuert",icon,3000)

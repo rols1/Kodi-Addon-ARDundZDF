@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!-- 	<nr>1</nr>	# Numerierung für Einzelupdate -->
+<!-- 	<nr>2</nr>	# Numerierung für Einzelupdate -->
 <settings> 
     <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
@@ -54,10 +54,11 @@
 </category> 
 
  <category label="Addon-Cache: Löschfristen (Tage)">
-	<setting label="Dict (div. Variablen): " type="select" values="1|10|30|100" default="30" id="pref_DICT_store_days"/>
+	<setting label="Dict (div. Variablen)" type="select" values="1|10|30|100" default="30" id="pref_DICT_store_days"/>
 	<setting label="Untertitel" type="select" values="1|10|30|100" default="30" id="pref_UT_store_days"/>
-	<setting label="Bildersammlungen (Slide Shows):" type="select" values="1|10|30|100" default="30" id="pref_SLIDES_store_days"/>
-	<setting label="Inhaltstexte (im Voraus geladen): " type="select" values="5|10|30|100" default="30" id="pref_TEXTE_store_days"/>
+	<setting label="Bildersammlungen (Slide Shows)" type="select" values="1|10|30|100" default="30" id="pref_SLIDES_store_days"/>
+	<setting label="Inhaltstexte (im Voraus geladen)" type="select" values="5|10|30|100" default="30" id="pref_TEXTE_store_days"/>
+	<setting label="ARD- und ZDF-TV-Livestream-Quellen" type="select" values="0|1|5|10|20" default="1" id="pref_tv_store_days"/>
 </category> 
 
  <category label="Favoriten / Merkliste / strm-Dateien">
@@ -72,7 +73,7 @@
 	<setting label="Pfad zur externen Merkliste" type="file" source="" id="pref_MerkDest_path" default=""/>
   	<setting label="interne Merkliste mit externer synchronisieren" type="bool" id="pref_merksync" default="false"/>
     <setting type="sep"/>
-  	<setting label="strm-Dateien für einzelnde Videos erzeugen" type="bool" id="pref_strm" default="false"/>
+  	<setting label="strm-Dateien für Videos erzeugen" type="bool" id="pref_strm" default="false"/>
   	<setting label="Für jede strm-Datei ein Unterverzeichnis anlegen" type="bool" id="pref_strm_uz" default="false"/>
 	<setting label="strm-Verzeichnis für Filme" type="folder" option="writeable" id="pref_strm_film_path" default=""/>
 	<setting label="strm-Verzeichnis für Serien" type="folder" option="writeable" id="pref_strm_series_path" default=""/>
