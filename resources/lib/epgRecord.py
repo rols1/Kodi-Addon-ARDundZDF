@@ -7,8 +7,8 @@
 #
 ####################################################################################################
 #	01.07.2020 Start
-# 	<nr>0</nr>								# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+# 	<nr>1</nr>								# Numerierung für Einzelupdate
+#	Stand: 25.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -822,7 +822,7 @@ def get_active_dls():
 		PLog("dl_check_alive_entfernt")
 	if os.path.exists(DL_CNT):
 		os.remove(DL_CNT)						# Zähler dl_cnt entfernen
-		PLog("dl_check_alive_entfernt")
+		PLog("dl_cnt_entfernt")
 	
 	return
 #--------------------------	

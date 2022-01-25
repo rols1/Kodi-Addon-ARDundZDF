@@ -54,9 +54,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>20</nr>										# Numerierung für Einzelupdate
+# 	<nr>21</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.0'
-VDATE = '22.01.2022'
+VDATE = '25.01.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -542,12 +542,21 @@ def InfoAndFilter():
 			thumb=R("icon-list.png"), tagline=tag, summary=summ, fparams=fparams)	
 		
 	if SETTINGS.getSetting('pref_usefilter') == 'true':											
-		title = u"Filter bearbeiten "						# Button für Filter
-		tag = "Ausschluss-Filter bearbeiten (nur für Beiträge von ARD und ZDF)" 
+		title = u"Filter bearbeiten"						# Button für Filter
+		tag = "Ausschluss-Filter bearbeiten (nur für Beiträge von ARD und ZDF)" 								
 		fparams="&fparams={}" 
 		addDir(li=li, label=title, action="dirList", dirID="FilterTools", fanart=R(FANART), 
-			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)		
-
+			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)	
+				
+	'''
+	if SETTINGS.getSetting('pref_strm') == 'true':											
+		title = u"strm-Tools - Baustelle"					# Button für strm-Tools
+		tag = "strm-Tools - Baustelle" 
+		fparams="&fparams={}" 
+		addDir(li=li, label=title, action="dirList", dirID="unbekannt", fanart=R(FANART), 
+			thumb=R("icon-strmtools.png"), tagline=tag, fparams=fparams)		
+	'''
+	
 	# Problem beim Abspielen der Liste - s. PlayMonitor (Modul playlist)
 	if SETTINGS.getSetting('pref_playlist') == 'true':
 		MENU_STOP = os.path.join(ADDON_DATA, "menu_stop") 	# Stopsignal für Tools-Menü (Haupt-PRG)								
@@ -4562,6 +4571,8 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 # 	notice triggert die Dialog-Ausgabe.
 # Alternativen für urlretrieve (legacy): wget-Modul oder 
 #	Request (stackoverflow: alternative-of-urllib-urlretrieve-in-python-3-5)
+# 25.01.2022 hinzugefügt nach Ende Einzeldownload: Entfernung Lock DL_CHECK, 
+#	Entf. in Monitor get_active_dls nicht sicher
 #
 def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list='',timemark='',notice=True,sub_path="",dtyp=""):
 	PLog("thread_getfile:")
@@ -4630,7 +4641,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 						else:
 							cnt, old_len = line.split("|")
 						cnt = int(cnt) + 1; new_len = int(old_len) + int(new_len)
-						f.seek(0)								# seek + trancate: alten Inhalt löschen
+						f.seek(0)								# seek + truncate: alten Inhalt löschen
 						line = "%s|%s" % (str(cnt), str(new_len))
 						f.write(line)
 						f.truncate()
@@ -4643,7 +4654,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 			if subget:											# Untertitel holen 
 				get_subtitles(fulldestpath, sub_path)
 			
-			# sleep(20)											# Debug
+			# sleep(10)											# Debug
 			msg1 = 'Download abgeschlossen:'
 			msg2 = os.path.basename(fulldestpath) 				# Bsp. heute_Xpress.mp4
 			if notice:
@@ -4666,6 +4677,10 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 						f.write(line)
 						f.truncate()
 						PLog("line_end_dl: %s" % line)
+						if "0|0" in line:
+							if os.path.exists(DL_CHECK):		
+								os.remove(DL_CHECK)						# Lock dl_check_alive entfernen
+							PLog("Lock_entfernt")
 			
 				
 	except Exception as exception:
@@ -7729,6 +7744,7 @@ def ZDF_getStrmList(path, title):
 	title_org = title
 	icon = R(ICON_DIR_STRM)
 	FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")
+	STRM_SYNCLIST	= os.path.join(ADDON_DATA, "strmsynclist")		# strm-Liste für Synchronisierung	
 	import resources.lib.strm as strm								# strm-Modul	
 	
 	page, msg = get_page(path=path)
@@ -7739,7 +7755,7 @@ def ZDF_getStrmList(path, title):
 		return li 
 	page = page.replace('\\/','/')
 				
-	list_title =  stringextract('"titel":"', '"', page)				# Serien-Titel
+	list_title =  stringextract('"titel":"', '"', page)				# Serien-Titel (vorgegeben)
 	list_title = list_title.replace('u0022', '*')					# \"
 	list_title = transl_json(list_title)
 	PLog("list_title:" + list_title)
@@ -7776,11 +7792,11 @@ def ZDF_getStrmList(path, title):
 		folgen = blockextract('"headline":"', staffel)				# Folgen-Blöcke	
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
-			title, url, img, tag, summ, season = ZDF_FlatListRec(folge)
+			title, url, img, tag, summ, season = ZDF_FlatListRec(folge) # Datensatz
 			if season == '':
 				continue
 				
-			fname = make_filenames(title)							# hier ohne Dialog
+			fname = make_filenames(title)							# Zieldatei hier ohne Dialog
 			PLog("fname: " + fname)
 			f = os.path.join(strmpath, fname, "%s.nfo" % fname)
 			PLog("f: " + f)
@@ -7798,8 +7814,8 @@ def ZDF_getStrmList(path, title):
 			msg2 = title
 			xbmcgui.Dialog().notification(msg1,msg2,icon,500,sound=False)
 			open(FLAG_OnlyUrl, 'w').close()							# Flag PlayVideo_Direct: kein Videostart
-			ZDF_getApiStreams(url, title, img, tag,  summ, gui=False) # Streamlisten
-			url = RLoad(STRM_URL, abs_path=True)
+			ZDF_getApiStreams(url, title, img, tag,  summ, gui=False) # Streamlisten bauen, Ablage Url
+			url = RLoad(STRM_URL, abs_path=True)					# abgelegt von PlayVideo_Direct
 			PLog("strm_Url: " + str(url))
 			
 			Plot = "%s\n\n%s" % (tag, summ)
@@ -7815,8 +7831,18 @@ def ZDF_getStrmList(path, title):
 			sflag = True
 			msg1 = u'STRM-Dateien fehlgeschlagen'
 		msg2 = list_title
-		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=sflag)			
-	
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=sflag)
+	else:
+		synclist = strm.get_strm_synclist(list_title)				# Abgleich mit synclist?
+		sync_hour = strm.strm_tool_set()							# Setting laden
+		if exist_in_list(list_title, synclist) == False:
+			head = u"Liste synchronisieren"
+			msg1 = u"Soll das Addon diese Liste regelmäßig abgleichen?"
+			msg2 = u"Intervall: %s Stunden" % sync_hour	
+			ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='OK', heading=head)
+			if ret == 1:
+				strm.get_strm_synclist(mode="save", title=list_title)
+
 	return
 
 #----------------------------------------------
@@ -9513,7 +9539,7 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='',
 #
 def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_id='',ID="ZDF"):
 	PLog('build_Streamlists:'); PLog(ID)
-	title_org = title
+	title_org = title	
 	
 	HLS_List=[]; MP4_List=[]; HBBTV_List=[];			# MP4_List = download_list
 	# erlaubte Formate wie ZDF_getApiStreams 
@@ -10354,10 +10380,13 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		if playlist == '':
 			icon = R(ICON_WARNING)
 			# msg1 = "master.m3u8 nicht abrufbar"
-			msg1 = "Streaming-Quelle fehlt."
+			msg1 = "master.m3u8 fehlt"
 			msg2 = 'Fehler: %s'	% (msg)
 			xbmcgui.Dialog().notification(msg1, msg2,icon,5000)
-			return li				
+			if buttons:
+				return li
+			else:
+				return []													# leere Liste für build_Streamlists				
 	else:																	# lokale Datei	
 		fname =  os.path.join(M3U8STORE, url_m3u8) 
 		playlist = RLoad(fname, abs_path=True)					
@@ -10510,10 +10539,13 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 	li = home(li, ID=HOME_ID)						# Home-Button
 
 	Stream_List = Dict("load", ID)
-	#PLog(Stream_List)
+	PLog(Stream_List)
+	PLog(len(Stream_List))
 
-	if 'MP4_List' in ID:
-		Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))
+	# bei Kennzeichnung einz. Stream mit unbekannt keine Sortierung
+	if 'MP4_List' in ID and "Bitrate unbekannt" in str(Stream_List) == False:
+		if "Bitrate" in str(Stream_List):
+			Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))
 
 	title_org=py2_encode(title_org);  img=py2_encode(img);
 	sub_path=py2_encode(sub_path); 	Plot=py2_encode(Plot); 
