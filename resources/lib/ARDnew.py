@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.01.2022
+# 	<nr>10</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -715,7 +715,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	PLog('gridlist: ' + str(len(gridlist)))	
 
 	for s  in gridlist:
-		uhr=''; ID=ID_org
+		uhr=''; ID=ID_org; duration='';	
 		PLog("Mark10")
 		if 'EPG' not in ID:										# decor im 1. Drittel
 			pos = s.find('"decor"',100)							# möglich: Block reicht in Folgeblock
