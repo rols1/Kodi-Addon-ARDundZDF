@@ -50,13 +50,15 @@ import resources.lib.updater as updater
 from resources.lib.util import *
 import resources.lib.EPG as EPG
 import resources.lib.epgRecord as epgRecord
+#import resources.lib.strm as strm
+
 																		
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>21</nr>										# Numerierung für Einzelupdate
-VERSION = '4.2.0'
-VDATE = '25.01.2022'
+VERSION = '4.2.1'
+VDATE = '30.01.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -230,6 +232,8 @@ JOBFILE			= os.path.join(ADDON_DATA, "jobliste.xml") 		# Jobliste für epgRecord
 MONITOR_ALIVE 	= os.path.join(ADDON_DATA, "monitor_alive") 	# Lebendsignal für JobMonitor
 DL_CHECK 		= os.path.join(ADDON_DATA, "dl_check_alive") 	# Anzeige Downloads (Lockdatei)
 DL_CNT 			= os.path.join(ADDON_DATA, "dl_cnt") 			# Anzeige Downloads (Zähler)
+STRM_SYNCLIST	= os.path.join(ADDON_DATA, "strmsynclist")		# strm-Liste für Synchronisierung	
+STRM_CHECK 		= os.path.join(ADDON_DATA, "strm_check_alive") 	# strm-Synchronisierung (Lockdatei)
 PLog(SLIDESTORE); PLog(WATCHFILE); 
 check 			= check_DataStores()					# Check /Initialisierung / Migration 
 PLog('check: ' + str(check))
@@ -267,7 +271,18 @@ else:
 			os.remove(DL_CHECK)								# Setting Aus: Lock dl_check_alive entfernen
 		if os.path.exists(DL_CNT):
 			os.remove(DL_CNT)								# Zähler dl_cnt entfernen
-				
+	
+if os.path.exists(STRM_SYNCLIST):							# strm-Liste für Synchronisierung					
+	if os.path.exists(STRM_CHECK) == False:					# Lock beachten (Datei strm_check_alive)
+		PLog("Haupt_PRG: start_strm_sync")
+		import resources.lib.strm as strm
+		from threading import Thread
+		bg_thread = Thread(target=strm.strm_sync, args=())
+		bg_thread.start()	
+else:
+		if os.path.exists(STRM_CHECK):	
+			os.remove(STRM_CHECK)							# Liste fehlt: Lock strm_check_alive entfernen
+		
 
 MERKACTIVE 	= os.path.join(DICTSTORE, 'MerkActive') 		# Marker aktive Merkliste
 if os.path.exists(MERKACTIVE):
@@ -491,6 +506,8 @@ def Main():
 
 	tag = 'Infos zu diesem Addon'					# Menü Info + Filter
 	summ= u'Ausschluss-Filter (nur für Beiträge von ARD und ZDF)'
+	if SETTINGS.getSetting('pref_strm') == 'true':
+		summ = "%s\n\n%s" % (summ, "strm-Tools")
 	if SETTINGS.getSetting('pref_playlist') == 'true':
 		summ = "%s\n\n%s" % (summ, "PLAYLIST-Tools")
 	summ = "%s\n\n%s" % (summ, u"Einzelupdate (Dateien und Module)")
@@ -548,14 +565,17 @@ def InfoAndFilter():
 		addDir(li=li, label=title, action="dirList", dirID="FilterTools", fanart=R(FANART), 
 			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)	
 				
-	'''
 	if SETTINGS.getSetting('pref_strm') == 'true':											
-		title = u"strm-Tools - Baustelle"					# Button für strm-Tools
-		tag = "strm-Tools - Baustelle" 
-		fparams="&fparams={}" 
-		addDir(li=li, label=title, action="dirList", dirID="unbekannt", fanart=R(FANART), 
-			thumb=R("icon-strmtools.png"), tagline=tag, fparams=fparams)		
-	'''
+		title = u"strm-Tools"								# Button für strm-Tools
+		tag = "Zeitintervall für Listenabgleich\nListen anzeigen\nListeneinträge löschen\nMonitorreset\nunterstützte Sender/Beiträge"
+		myfunc="resources.lib.strm.strm_tools"
+		fparams_add = quote('{}')
+
+		fparams="&fparams={'myfunc': '%s', 'fparams_add': '%s'}"  %\
+			(quote(myfunc), quote(fparams_add))			
+		addDir(li=li, label=title, action="dirList", dirID="start_script",\
+			fanart=R(FANART), thumb=R("icon-strmtools.png"), tagline=tag, fparams=fparams)	
+
 	
 	# Problem beim Abspielen der Liste - s. PlayMonitor (Modul playlist)
 	if SETTINGS.getSetting('pref_playlist') == 'true':
@@ -572,9 +592,9 @@ def InfoAndFilter():
 		tag = u"%s\n\n[COLOR blue]Am besten eigenen sich MP4-Url's[/COLOR]. HLS-Url's starten immer am Anfang, " % tag
 		tag = u"%sunabhängig von der letzten Position. Livestreams werden abgewiesen." % tag			
 		summ = u"die PLAYLIST-Tools stehen auch im Kontextmenü zur Verfügung, wenn ein Listeneintrag eine geeignete Stream-Url enthält" 
+
 		fparams="&fparams={'myfunc': '%s', 'fparams_add': '%s'}"  %\
-			(quote(myfunc), quote(fparams_add))
-			
+			(quote(myfunc), quote(fparams_add))			
 		addDir(li=li, label=title, action="dirList", dirID="start_script",\
 			fanart=R(FANART), thumb=R("icon-playlist.png"), tagline=tag, summary=summ, fparams=fparams)	
 			
@@ -590,7 +610,7 @@ def InfoAndFilter():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 #---------------------------------------------------------------- 
 # Wg.  Problemen mit der xbmc-Funktion executebuiltin(RunScript()) verwenden
-#	wir importlib wie in router()
+#	wie importlib wie in router()
 #	Bsp. myfunc: "resources.lib.playlist.items_add_rm" (relatv. Modulpfad + Zielfunktion)
 #	fparams_add json-kompat., Bsp.: '{"action": "playlist_add", "url": ""}'
 # Um die Rekursion der Web-Tools-Liste zu vermeiden wird MENU_STOP in playlist_tools
@@ -4655,6 +4675,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				get_subtitles(fulldestpath, sub_path)
 			
 			# sleep(10)											# Debug
+			line=''
 			msg1 = 'Download abgeschlossen:'
 			msg2 = os.path.basename(fulldestpath) 				# Bsp. heute_Xpress.mp4
 			if notice:
@@ -4673,14 +4694,15 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 							except:
 								new_len = 0
 							line = "%s|%s" % (str(cnt), str(new_len))
-						f.seek(0)								# seek + trancate: alten Inhalt löschen
+						f.seek(0)								# seek + truncate: alten Inhalt löschen
 						f.write(line)
 						f.truncate()
+		
 						PLog("line_end_dl: %s" % line)
-						if "0|0" in line:
-							if os.path.exists(DL_CHECK):		
-								os.remove(DL_CHECK)						# Lock dl_check_alive entfernen
+						if "0|0" in line:						# Lock dl_check_alive entfernen
 							PLog("Lock_entfernt")
+							if os.path.exists(DL_CHECK):		
+								os.remove(DL_CHECK)						
 			
 				
 	except Exception as exception:
@@ -7604,7 +7626,7 @@ def ZDF_FlatListEpisodes(sid):
 		folgen = blockextract('"headline":"', staffel)			# Folgen-Blöcke	
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
-			title, url, img, tag, summ, season = ZDF_FlatListRec(folge)
+			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
 			if season == '':
 				continue
 				
@@ -7742,17 +7764,17 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
 def ZDF_getStrmList(path, title):
 	PLog("ZDF_getStrmList:")
 	title_org = title
+	list_path = path
 	icon = R(ICON_DIR_STRM)
 	FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")
-	STRM_SYNCLIST	= os.path.join(ADDON_DATA, "strmsynclist")		# strm-Liste für Synchronisierung	
-	import resources.lib.strm as strm								# strm-Modul	
+	import resources.lib.strm as strm
 	
 	page, msg = get_page(path=path)
 	if page == '':
 		msg1 = "Fehler in ZDF_getStrList:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
-		return li 
+		return
 	page = page.replace('\\/','/')
 				
 	list_title =  stringextract('"titel":"', '"', page)				# Serien-Titel (vorgegeben)
@@ -7760,12 +7782,17 @@ def ZDF_getStrmList(path, title):
 	list_title = transl_json(list_title)
 	PLog("list_title:" + list_title)
 	
-	strm_type = strm.get_strm_genre()								# Genre-Auswahl
+	strm_type = strm.get_strm_genre()					# Genre-Auswahl
 	if strm_type == '':
 		return
-	strmpath = strm.get_strm_path(strm_type)						# Abfrage Zielverz. != Filme
+	strmpath = strm.get_strm_path(strm_type)			# Abfrage Zielverz. != Filme
+	if os.path.isdir(strmpath) == False:
+		msg1 = "Zielverzeichnis existiert nicht."
+		msg2 = u"Bitte Settings überprüfen."
+		MyDialog(msg1, msg2, '')
+		return
 	
-	fname = make_filenames(list_title)								# Abfrage Unterverzeichnis Serie
+	fname = make_filenames(list_title)					# Abfrage Unterverzeichnis Serie
 	strmpath = os.path.join(strmpath, fname)
 	PLog("list_strmpath: " + strmpath)		
 	head = u"Unterverzeichnis für die Serie"
@@ -7773,11 +7800,15 @@ def ZDF_getStrmList(path, title):
 	if os.path.isdir(strmpath):		
 		msg1 = u"Das Addon verwendet für die Serie folgendes Unterverzeichnis:"
 	msg2 = u"[B]%s[/B]" % fname
-	ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='OK', heading=head)
+	msg3 = u"Ein vorhandenes Verzeichnis wird überschrieben."
+	ret = MyDialog(msg1, msg2, msg3, ok=False, cancel='Abbruch', yes='OK', heading=head)
 	if ret != 1:
 		return
 	if os.path.isdir(strmpath) == False:
 		os.mkdir(strmpath)											# Verz. erzeugen, falls noch nicht vorh.
+		list_exist=False
+	else:
+		list_exist=True
 
 	#---------------------
 	# Blockmerkmale s. ZDF_FlatListEpisodes:						# Blockmerkmale wie ZDF_FlatListEpisodes
@@ -7787,12 +7818,12 @@ def ZDF_getStrmList(path, title):
 		staffel_list = blockextract('"headline":"', page)
 	PLog("staffel_list: %d" % len(staffel_list))
 	
-	cnt=0
+	cnt=0; skip_cnt=0
 	for staffel in 	staffel_list:
 		folgen = blockextract('"headline":"', staffel)				# Folgen-Blöcke	
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
-			title, url, img, tag, summ, season = ZDF_FlatListRec(folge) # Datensatz
+			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge) # Datensatz
 			if season == '':
 				continue
 				
@@ -7805,7 +7836,13 @@ def ZDF_getStrmList(path, title):
 				msg2 = title
 				xbmcgui.Dialog().notification(msg1,msg2,icon,500,sound=False)
 				PLog("skip_bundle: " + f)
+				skip_cnt=skip_cnt+1
 				continue
+			else:
+				msg1 = u'neues strm-Bündel:'
+				msg2 = title
+				xbmcgui.Dialog().notification(msg1,msg2,icon,500,sound=False)
+				
 						
 			PLog("Satz30:")
 			PLog(url);PLog(img);PLog(title);PLog(tag);PLog(summ[:80]); 
@@ -7819,29 +7856,37 @@ def ZDF_getStrmList(path, title):
 			PLog("strm_Url: " + str(url))
 			
 			Plot = "%s\n\n%s" % (tag, summ)
-			ret = strm.xbmcvfs_store(strmpath, url, img, fname, title, Plot, strm_type)
+			ret = strm.xbmcvfs_store(strmpath, url, img, fname, title, Plot, weburl, strm_type)
 			if ret:
 				cnt=cnt+1
-			
-	PLog("cnt: %d" % cnt)		
-	if cnt:
-		msg1 = u'%d neue STRM-Datei(en)' % cnt
-		sflag = False
-		if ret ==  False:
-			sflag = True
-			msg1 = u'STRM-Dateien fehlgeschlagen'
+
+	#------------------
+	PLog("strm_cnt: %d" % cnt)		
+	msg1 = u'%d neue STRM-Datei(en)' % cnt
+	if cnt == 0:
+		msg1 = u'STRM-Liste fehlgeschlagen'
+		if list_exist == True:
+			msg1 = u'STRM-Liste unverändert'
+	msg2 = list_title
+	xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
+		
+	#------------------												# Liste synchronisieren?
+	# Format: Listen-Titel ## lokale strm-Ablage ##  ext.Url ## strm_type
+	item = "%s##%s##%s##%s"	% (list_title, strmpath, list_path, strm_type)
+	PLog("item: " + item)
+	synclist = strm.strm_synclist(mode="load")						# "strm_synclist"
+	if exist_in_list(item, synclist) == True:	
+		msg1 = "Synchronsisation läuft"
 		msg2 = list_title
-		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=sflag)
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
 	else:
-		synclist = strm.get_strm_synclist(list_title)				# Abgleich mit synclist?
-		sync_hour = strm.strm_tool_set()							# Setting laden
-		if exist_in_list(list_title, synclist) == False:
-			head = u"Liste synchronisieren"
-			msg1 = u"Soll das Addon diese Liste regelmäßig abgleichen?"
-			msg2 = u"Intervall: %s Stunden" % sync_hour	
-			ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='OK', heading=head)
-			if ret == 1:
-				strm.get_strm_synclist(mode="save", title=list_title)
+		sync_hour = strm.strm_tool_set(mode="load")	# Setting laden
+		head = u"Liste synchronisieren"
+		msg1 = u"Soll das Addon diese Liste regelmäßig abgleichen?"
+		msg2 = u"Intervall: %s Stunden" % sync_hour	
+		ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='OK', heading=head)
+		if ret == 1:											# Liste neu aufnehmen
+			strm.strm_synclist(mode="save", item=item)
 
 	return
 
@@ -7851,13 +7896,14 @@ def ZDF_getStrmList(path, title):
 def ZDF_FlatListRec(item):
 	PLog('ZDF_FlatListRec:')
 
-	title='';url='';img='';tag='';summ='';season='';descr=''
+	title='';url='';img='';tag='';summ='';season='';
+	descr='';weburl=''
 	item = item.replace('u0022', '*')					# \"
 	item = transl_json(item)
 	
 	season =  stringextract('"seasonNumber":"', '"', item)
 	if season == '':									# Satz verwerfen	
-		return title, url, img, tag, summ, season
+		return title, url, img, tag, summ, season, weburl
 		
 	episode =  stringextract('"episodeNumber":"', '"', item)
 	PLog(season); PLog(episode)
@@ -7866,6 +7912,7 @@ def ZDF_FlatListRec(item):
 	brand =  stringextract('"headline":"', '"', item)
 	title =  stringextract('"titel":"', '"', item)
 	descr =  stringextract('"beschreibung":"', '"', item)
+	weburl =  stringextract('"sharingUrl":"', '"', item) # für Abgleich vor./nicht mehr vorh. 
 	fsk =  stringextract('"fsk":"', '"', item)
 	if fsk == "none":
 		fsk = "ohne"
@@ -7889,7 +7936,7 @@ def ZDF_FlatListRec(item):
 	title = unescape(title)
 	summ = repl_json_chars(descr)
 
-	return title, url, img, tag, summ, season
+	return title, url, img, tag, summ, season, weburl
 
 ###################################################################################################
 # ZDF-Bereich, Liste der Rubriken (Filme, Serien,  Comedy & Satire,  Politik & Gesellschaft, ..)
@@ -8117,8 +8164,10 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 				teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi = ZDF_get_teaserbox(rec)
 			
 			PLog("isvideo: %s, dauer: %s, enddate: %s" % (isvideo, dauer, enddate))
-			if isvideo or dauer or enddate:								# enddate ohne dauer mögliche
+			if isvideo or dauer or enddate:								# enddate ohne dauer möglich
 				isvideo = True
+			if " Staffel" in teaser_label:
+				isvideo = False
 		
 			tag='';
 			if path == '' or 'skiplinks' in path:
@@ -10009,7 +10058,7 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 # ermittelt streamurls, duration, geoblock, sub_path
 #
 def get_form_streams(page):
-	PLog('Ende get_form_streams:')
+	PLog('get_form_streams:')
 	# Kodi: https://kodi.wiki/view/Features_and_supported_formats#Audio_playback_in_detail 
 	#	AQTitle, ASS/SSA, CC, JACOsub, MicroDVD, MPsub, OGM, PJS, RT, SMI, SRT, SUB, VOBsub, VPlayer
 	#	Für Kodi eignen sich beide ZDF-Formate xml + vtt, umbenannt in *.sub oder *.srt

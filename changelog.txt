@@ -10,6 +10,38 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+30.01.2022 4.2.1
+			ARD Sportschau: Fix Kopierfehler Menü Olympia, HTTP Error 404 abgefangen 
+			(relevant beim Vorausladen - @Weri).
+			strm-Modul: aus Setting "strm-Dateien für einzelne Videos erzeugen" das Wort
+			"einzelne" entfernt.
+			strm-Modul (get_Plot): doppelt kodiertes UTF-8 in fparams für Leia 
+			rückübersetzen (Ã¤, Ã¶..) via transl_doubleUTF8(fparams).
+			strm-Liste (ZDF_getStrmList): Escapezeichen in Serientitel entfernt, Bsp.
+			Nesth\u00e4kchen.
+			ZDFRubrikSingle: Videoerkennung ergänzt (isvideo or dauer or enddate).
+			ZDF-Listen: Blockbegrenzung erforderlich: '"profile":', Anpassung in
+			ZDF_FlatListEpisodes + ZDF_getStrmList.
+			build_Streamlists, Parseplaylist (ZDF): Rückgabe leere Liste bei nicht
+			erreichbarer Videoquelle (HTTTP-Error 404). 
+			StreamsShow: lambda-Sortierung der MP4-Streams abhängig gemacht von 
+			Bitratenkennzeichnung (Bsp. ZDF-Arte-Streams).
+			strm-Modul: Einzelauflösungen ermöglicht, Anpassung in do_create und
+			get_Source_Funcs_ID.
+			strm-Modul: wait-Schleife für HLS_List + MP4_List in get_streamurl.
+			strm-Modul: manuell geänderten Videotitel berücksichtigt (Anpassung
+			do_create).
+			Setting für TV-Links-Cache: variabel 1-20 Tage (0 für Reset), Anpassung 
+			settings.xml, get_ZDFstreamlinks + get_ARDstreamlinks (util).
+			thread_getfile: Entfernung Lock DL_CHECK nach Ende Einzeldownload (Entf.
+			in Monitor get_active_dls nicht sicher).
+			get_page_content (ARD Neu): duration leer vorbelegt (fehlt beim Vorausladen).
+			ZDFRubrikSingle (ZDF): Kennz. von Mehrfachbeiträge zusätzl abhängig von 
+			"Staffel" in teaser_label.
+			strm-Modul: Verwaltungstool ergänzt (strm_tools, strm_tool_set), Anpassung
+			strm_sync, do_sync, Haupt-PRG (ZDF_getStrmList, Button "strm-Tools" in
+			InfoAndFilter).
+
 21.01.2022 4.2.0
 			do_create (strm): neue Funktion get_Plot - Alternative für Plot + summary 
 			hinzugefügt (summ).
@@ -19,7 +51,7 @@ CHANGE HISTORY
 			get_formitaeten (ZDF): Auslagerung get_form_streams (ermittelt streamurls, 
 			duration, geoblock, sub_path), Mitnutzung durch ZDF_getApiStreams.
 			Github-issue: Add possibility to set content type to tvshows (PR #12, 
-			Trekky12) - Änderung insetting.xml + Haupt-PRG.
+			Trekky12) - Änderung in setting.xml + Haupt-PRG.
 			ZDFRubrikSingle (ZDF): Kennz. von Mehrfachbeiträge zusätzl abhängig von dauer.
 			strm: vorgeschalteter Test für Zielfunktion, Unterstützung für vorgewählte 
 			Verz. Filme + Serien, Anpassung setting.xml, DirectoryNavigator.
@@ -28,7 +60,7 @@ CHANGE HISTORY
 			ZDF-Serien: zusätzlicher Button für "komplette Liste: ...", neue Funktionen
 			ZDF_FlatListEpisodes + ZDF_getApiStreams - "flache Liste" ohne Teaser u.ä.,
 			Anpassungen Streamauswahl in PlayVideo_Direct, build_Streamlists_buttons.
-			ZDFRubrikSingle: isvideo von dauer oder enddate abhängig (biser nur dauer)	
+			ZDFRubrikSingle: isvideo von dauer oder enddate abhängig (bisher nur dauer)	
 			ARD Neu: Farbe für Senderkennz. entfernt, umgestellt auf fett (@Bobbi2021).
 			ARD Sportschau: Einbindung Handball + Olympia (@Weri) - Anpassung ARDSport.	
 

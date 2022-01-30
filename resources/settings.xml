@@ -73,8 +73,8 @@
 	<setting label="Pfad zur externen Merkliste" type="file" source="" id="pref_MerkDest_path" default=""/>
   	<setting label="interne Merkliste mit externer synchronisieren" type="bool" id="pref_merksync" default="false"/>
     <setting type="sep"/>
-  	<setting label="strm-Dateien für Videos erzeugen" type="bool" id="pref_strm" default="false"/>
-  	<setting label="Für jede strm-Datei ein Unterverzeichnis anlegen" type="bool" id="pref_strm_uz" default="false"/>
+  	<setting label="strm-Dateien für Videos erzeugen (Bündel: strm, nfo, jpeg)" type="bool" id="pref_strm" default="false"/>
+  	<setting label="Für jedes strm-Bündel ein Unterverzeichnis anlegen" type="bool" id="pref_strm_uz" default="false"/>
 	<setting label="strm-Verzeichnis für Filme" type="folder" option="writeable" id="pref_strm_film_path" default=""/>
 	<setting label="strm-Verzeichnis für Serien" type="folder" option="writeable" id="pref_strm_series_path" default=""/>
 </category> 
