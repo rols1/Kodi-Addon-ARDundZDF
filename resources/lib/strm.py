@@ -3,7 +3,7 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>8</nr>										# Numerierung für Einzelupdate
+# 	<nr>9</nr>										# Numerierung für Einzelupdate
 #	Stand: 30.01.2022
 #
 
@@ -91,7 +91,8 @@ def strm_tools():
 		# Tools verlassen: Haupt-PRG startet Monitor neu
 		tmenu = [ u"Abgleichintervall | %s Stunden | Tools verlassen" % sync_hour, u"Liste anzeigen", 
 					u"Listeneinträge löschen", u"Monitor-Reset | Tools verlassen", 
-					u"strm-Log anzeigen", u"unterstützte Sender / Beiträge",
+					u"strm-Log anzeigen", u"einzelne Liste jetzt abgleichen",
+					u"unterstützte Sender / Beiträge",
 				]
 		head = "strm-Tools"
 		ret = xbmcgui.Dialog().select(head, tmenu)
@@ -113,10 +114,10 @@ def strm_tools():
 				if os.path.exists(STRM_CHECK):
 					os.remove(STRM_CHECK)			# Monitorreset
 				xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=True)
-				add_log = "%s | %6s | %15s | %15s..." % (logtime, "TIME", "strm-Tools", "Intervall: %s Stunden" % sync_hour)
+				add_log = "%s | %6s | %15s | %s" % (logtime, "TIME", "strm-Tools", "Intervall: %s Stunden" % sync_hour)
 			
 				
-		if ret == 1 or  ret == 2:					# Liste anzeigen / löschen
+		if ret == 1 or  ret == 2 or  ret == 5:		# Liste anzeigen / löschen / abgleichen
 			PLog("show_list")
 			title = u"zum Abgleich gewählte strm-Listen"
 			if os.path.exists(STRM_SYNCLIST):		# Listenabgleich
@@ -155,7 +156,7 @@ def strm_tools():
 							msg1 = u"Listeneintrag"
 							msg2 = u"gelöscht"
 							xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
-							add_log = "%s | %6s | %15s | %15s..." % (logtime, "DELETE", "strm-Tools", item[:15])
+							add_log = "%s | %6s | %15s | %s" % (logtime, "DELETE", "strm-Tools", item[:15])
 
 			
 		if ret == 3:								# Monitorreset			
@@ -165,22 +166,30 @@ def strm_tools():
 			if os.path.exists(STRM_CHECK):
 				os.remove(STRM_CHECK)			
 			xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=True)
-			add_log = "%s | %6s | %15s | %15s" % (logtime, "RESET", "strm-Tools", "Monitor-Reset")
+			add_log = "%s | %6s | %15s | %s" % (logtime, "RESET", "strm-Tools", "Monitor-Reset")
 			
 		if ret == 4:								# strm-Log anzeigen			
 			PLog("strm_log_show")
-			if os.path.exists(STRM_LOGLIST):
-				loglist = RLoad(STRM_LOGLIST, abs_path=True)
-				loglist = loglist.splitlines()
-				mylist=[]
-				for line in loglist:
-					mylist.append(u"%s..." % line[:80])
-				mylist.sort(reverse=True)			# absteigend				
-				mylist =  "\n".join(mylist)
-				xbmcgui.Dialog().textviewer("strm-Log", mylist,usemono=True)	
+			log_show()
 						
-		
-		if ret == 5:								# unterstützte Sender/Beiträge
+		if ret == 5:								# einzelne Liste abgleichen
+			PLog("strm_run_sync")
+			title = u"einzelne Liste jetzt abgleichen"
+			ret5 = xbmcgui.Dialog().select(title, mylist2)
+			PLog(ret5)
+			if ret5 >= 0:
+				msg1 = u"Abgleich jetzt starten?"
+				msg2 = "[B]%s[/B]" % mylist2[ret5]
+				ret6 = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='JA', heading=title)
+				if ret6 == 1:
+					item = synclist[ret5]
+					PLog("strm_run_sync: " + item)
+					list_title, strmpath, list_path, strm_type= item.split("##")
+					do_sync(list_title, strmpath, list_path, strm_type)
+					log_show()						# Log anzeigen
+			
+
+		if ret == 6:								# unterstützte Sender/Beiträge
 			msg1 = u"zur Zeit werden nur ZDF-Serien für strm-Listen unterstützt"
 			msg2 = u'erkennbar am Button:\n[B]strm-Dateien für die komplette Liste erzeugen[/B]'
 			MyDialog(msg1, msg2, msg3='')
@@ -193,7 +202,7 @@ def strm_tools():
 		dt = datetime.datetime.now()
 		logtime = dt.strftime("%Y-%m-%d_%H-%M-%S")
 		loglist=[]
-		if os.path.exists(STRM_LOGLIST):
+		if os.path.exists(STRM_LOGLIST):			# Log laden
 			loglist = RLoad(STRM_LOGLIST, abs_path=True)
 			loglist = loglist.splitlines()
 			if len(loglist) >= max_lines:
@@ -205,11 +214,52 @@ def strm_tools():
 			loglist = "%s\n%s" % (loglist, add_log)
 			save_log=True
 		if save_log:								# Log aktualisieren
-			RSave(STRM_LOGLIST, loglist.strip())
+			log_save(loglist.strip())
 		if ret == 3 or ret == 0:
 			InfoAndFilter()
 				
-	return		
+	return	
+# ----------------------------
+# Anzeige strm-Log 
+def log_show():	
+	PLog("log_show:")
+	if os.path.exists(STRM_LOGLIST):
+		loglist = RLoad(STRM_LOGLIST, abs_path=True)
+		loglist = loglist.splitlines()
+		mylist=[]
+		for line in loglist:
+			mylist.append(u"%s..." % line[:80])
+		mylist.sort(reverse=True)			# absteigend				
+		mylist =  "\n".join(mylist)
+		xbmcgui.Dialog().textviewer("strm-Log", mylist,usemono=True)	
+	return	
+		
+# ----------------------------
+# Speichern strm-Log mit Lock 
+# loglist: Textformat
+def log_save(loglist):	
+	PLog("log_save:")
+	maxloops	= 10				# 1 sec bei 10 x xbmc.sleep(100)	
+	
+	lockfile = os.path.join(ADDON_DATA, "strmloglock")
+	PLog(lockfile) 
+	while os.path.exists(lockfile):	
+		i=i+1
+		if i >= maxloops:		# Lock brechen, vermutl. Ruine
+			os.remove(lockfile)
+			PLog("doLock_break: " + lockfile)
+			break
+		xbmc.sleep(100)	
+	
+	if os.path.exists(lockfile) == False:
+		open(lockfile, 'w').close()
+	RSave(STRM_LOGLIST, loglist.strip())
+	try:
+		os.remove(lockfile)
+	except Exception as exception:
+		PLog(str(exception))
+	return
+	
 # ----------------------------------------------------------------------
 def unpack(add_url):
 	PLog("unpack:")
@@ -596,10 +646,10 @@ def do_sync(list_title, strmpath, list_path, strm_type):
 	logtime = dt.strftime("%Y-%m-%d_%H-%M-%S")
 	page, msg = get_page(path=list_path)
 	if page == '':
-		line = "%s | %6s | %15s | %s" % (logtime, "ERR", list_title, msg)
+		line = "%s | %6s | %15s | %s" % (logtime, "ERR", list_title, msg[:45])
 		loglist = "%s\n%s" % (loglist, line)
 		PLog(line)
-		RSave(STRM_LOGLIST, loglist.strip())
+		log_save(loglist.strip())
 		return
 		
 	#-------------													# Blockmerkmale wie ZDF_FlatListEpisodes
@@ -612,7 +662,7 @@ def do_sync(list_title, strmpath, list_path, strm_type):
 	cnt=0; skip_cnt=0;
 	for staffel in 	staffel_list:
 		folgen = blockextract('"headline":"', staffel)				# Folgen-Blöcke	
-		PLog("Folgen: %d" % len(folgen))
+		PLog("sync_Folgen: %d" % len(folgen))
 		for folge in folgen:
 			folge = folge.replace('\\/','/')
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge) # Datensatz
@@ -622,7 +672,10 @@ def do_sync(list_title, strmpath, list_path, strm_type):
 	
 			fname = make_filenames(title)							# Zieldatei hier ohne Dialog
 			PLog("fname: " + fname)
-			f = os.path.join(strmpath, fname, "%s.nfo" % fname)
+			if SETTINGS.getSetting('pref_strm_uz') == "true":	# Für jede strm-Datei ein Unterverzeichnis
+				f = os.path.join(strmpath, fname, "%s.nfo" % fname)
+			else:
+				f = os.path.join(strmpath, "%s.nfo" % fname)
 			PLog("f: " + f)
 			if os.path.isfile(f):									# skip vorh. strm-Bundle
 				PLog("skip_bundle: " + f)
@@ -640,21 +693,21 @@ def do_sync(list_title, strmpath, list_path, strm_type):
 			ret = xbmcvfs_store(strmpath, url, img, fname, title, Plot, weburl, strm_type)
 			if ret:
 				cnt=cnt+1
-				line = "%s | %6s | %15s | %20s" % (logtime, "NEU", list_title, title)
+				line = "%s | %6s | %15s | %s..." % (logtime, "NEU", list_title, title[:45])
 				loglist = "%s\n%s" % (loglist, line)
 	
-	line = "%s | %6s | %15s" % (logtime, "CHECK1", list_title)
+	line = "%s | %6s | %15s | %s" % (logtime, "CHECK1", list_title, strm_type)
 	loglist = "%s\n%s" % (loglist, line)
-	RSave(STRM_LOGLIST, loglist.strip())
+	log_save(loglist.strip())
 		
-	clear_cnt = do_clear(list_title, strmpath, page)				# Check entfallene Folgen	
+	clear_cnt = do_clear(list_title, strmpath, strm_type, page)			# Check entfallene Folgen	
 		
 	return
 
 # ----------------------------------------------------------------------
 # Check2: prüft auf entfallene Folgen
 #
-def do_clear(list_title, strmpath, page):
+def do_clear(list_title, strmpath, strm_type, page):
 	PLog("do_clear: " + list_title)
 	
 	loglist = RLoad(STRM_LOGLIST, abs_path=True)
@@ -678,16 +731,16 @@ def do_clear(list_title, strmpath, page):
 					PLog('rm_strmdir: ' + rm_strmdir)
 					shutil.rmtree(rm_strmdir, ignore_errors=True)
 					cnt=cnt+1
-					line = "%s |  %6s | %15s | %s" % (logtime, "CLEAR",  list_title, title)
+					line = "%s |  %6s | %15s | %s" % (logtime, "CLEAR",  list_title, title[:45])
 					loglist = "%s\n%s" % (loglist, line)
 					PLog(line)
 
 	if cnt == 0:
-		line = "%s | %6s | %15s" % (logtime, "CHECK2", list_title)
+		line = "%s | %6s | %15s | %s" % (logtime, "CHECK2", list_title, strm_type)
 		loglist = "%s\n%s" % (loglist, line)
 		PLog(line)
 		
-	RSave(STRM_LOGLIST, loglist.strip())	
+	log_save(loglist.strip())
 				
 	return	
 
@@ -729,12 +782,12 @@ def strm_sync():
 			if os.path.exists(STRM_SYNCLIST):	# Listenabgleich
 				synclist = strm_synclist(mode="load")				
 				for item in synclist:
-					checking = True
+					# checking = True
 					PLog("item: " + item)
 					# Format: Listen-Titel ## lokale strm-Ablage ##  ext.Url ## strm_type
 					list_title, strmpath, list_path, strm_type= item.split("##")
 					do_sync(list_title, strmpath, list_path, strm_type)
-				checking=False					# interner Lock
+				# checking=False					# interner Lock, nicht genutzt
 					
 			#os.remove(STRM_CHECK)	# Debug-Stop		
 			i=i+1
