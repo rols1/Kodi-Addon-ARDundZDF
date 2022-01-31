@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>10</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.01.2022
+# 	<nr>11</nr>										# Numerierung für Einzelupdate
+#	Stand: 31.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -687,20 +687,18 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	if 'Livestream' in ID or 'EPG' in ID:
 		gridlist = blockextract('"broadcastedOn"', page)
 	else:
+		gridlist = blockextract( '"availableTo"', page)				
 		if  ID == 'Search':										# Search immer Einzelbeiträge
 			mehrfach = False
 			#gridlist = blockextract( '"ondemand"', page)		# ondemand: neuester Beitrag kann fehlen				
-			gridlist = blockextract( '"availableTo"', page)				
-		else:
-			if 'target":{"id":"' in page:
-				gridlist = blockextract('"availableTo"', page)	# Sendungen, json-key "teasers"	
-			else:
+		else:				
+			if  len(gridlist) == 0:								# Altern.	
 				gridlist = blockextract('id":"Link:', page)		# deckt auch Serien in Swiper ab
 					
 		if 'ARDStart' in ID:									# zusätzl. Beiträge ganz links, Livestream 
-			decorlist = blockextract( '"decor":', page)		# 	möglich, s.u.
+			decorlist = blockextract( '"decor":', page)			# 	möglich, s.u.
 			PLog('decorlist: ' + str(len(decorlist)))
-			gridlist = decorlist
+			gridlist = gridlist + decorlist						# 30.01.2022 (Filter href in skip_list)					
 			
 		if len(gridlist) == 0:									# Fallback (außer Livestreams)
 			#gridlist = blockextract( '"images":', page) 		# geändert 20.09.2019 
@@ -714,6 +712,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		MyDialog(msg1, '', '')	
 	PLog('gridlist: ' + str(len(gridlist)))	
 
+	skiplist=[]
 	for s  in gridlist:
 		uhr=''; ID=ID_org; duration='';	
 		PLog("Mark10")
@@ -804,6 +803,10 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		
 		if href == '':
 			continue
+		if href in skiplist:
+			continue
+		skiplist.append(href)	
+			
 		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
 			filtered=False
 			for item in AKT_FILTER: 
@@ -826,7 +829,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 				title_samml = "%s|%s" % (title, pagetitle)			# Titel + Seitentitel (A-Z, Suche)
 				duration = stringextract('duration":', ',', s)		# sec-Wert
 				duration = seconds_translate(duration)				# 0:15
-				title = ardundzdf.full_shows(title, title_samml, summ, duration, "full_shows_ARD")	
+				if SETTINGS.getSetting('pref_mark_full_shows') == 'true':
+					title = ardundzdf.full_shows(title, title_samml, summ, duration, "full_shows_ARD")	
 
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
 				summ_new = get_summary_pre(path=href, ID='ARDnew', duration=duration)  # s.o. pre:
