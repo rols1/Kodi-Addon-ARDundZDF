@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>21</nr>										# Numerierung für Einzelupdate
+# 	<nr>22</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.1'
-VDATE = '30.01.2022'
+VDATE = '31.01.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7829,7 +7829,10 @@ def ZDF_getStrmList(path, title):
 				
 			fname = make_filenames(title)							# Zieldatei hier ohne Dialog
 			PLog("fname: " + fname)
-			f = os.path.join(strmpath, fname, "%s.nfo" % fname)
+			if SETTINGS.getSetting('pref_strm_uz') == "true":	# Für jede strm-Datei ein Unterverzeichnis
+				f = os.path.join(strmpath, fname, "%s.nfo" % fname)
+			else:
+				f = os.path.join(strmpath, "%s.nfo" % fname)
 			PLog("f: " + f)
 			if os.path.isfile(f):									# skip vorh. strm-Bundle
 				msg1 = u'schon vorhanden:'
@@ -7879,6 +7882,7 @@ def ZDF_getStrmList(path, title):
 		msg1 = "Synchronsisation läuft"
 		msg2 = list_title
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
+		PLog(msg1)
 	else:
 		sync_hour = strm.strm_tool_set(mode="load")	# Setting laden
 		head = u"Liste synchronisieren"
@@ -7907,7 +7911,7 @@ def ZDF_FlatListRec(item):
 		
 	episode =  stringextract('"episodeNumber":"', '"', item)
 	PLog(season); PLog(episode)
-	title_pre = "S%02d F%02d" % (int(season), int(episode))
+	title_pre = "S%02dE%02d" % (int(season), int(episode))	# 31.01.2022 S13_F10 -> S13E10
 	
 	brand =  stringextract('"headline":"', '"', item)
 	title =  stringextract('"titel":"', '"', item)
@@ -10530,7 +10534,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 			summ = u"Sendung: %s" % py2_decode(stitle)
 		
 		PLog("SatzParse:")
-		PLog(title); PLog(label); PLog(url[:80]); PLog(thumb); PLog(Plot); PLog(descr); 
+		PLog(title); PLog(label); PLog(url[:80]); PLog(thumb); PLog(Plot[:80]); PLog(descr[:80]); 
 		
 		if buttons:															# Buttons, keine Stream_List
 			title=py2_encode(title); url=py2_encode(url);

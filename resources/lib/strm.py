@@ -4,7 +4,7 @@
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
 # 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.01.2022
+#	Stand: 31.01.2022
 #
 
 from __future__ import absolute_import
@@ -523,9 +523,9 @@ def get_streamurl(add_url):
 			
 	PLog("strm_ID: " + ID)
 	HLS_List =  Dict("load", "%s_HLS_List" % ID)
-	PLog("strm_HLS_List: " + str(HLS_List[:100]))
+	PLog("strm_HLS_List: " + str(HLS_List))
 	MP4_List =  Dict("load", "%s_MP4_List" % ID)
-	PLog("strm_MP4_List: " + str(MP4_List[:100]))
+	PLog("strm_MP4_List: " + str(MP4_List))
 	
 	# todo: Dateiflag urlonly setzen/löschen - Übergabe via script unsicher
 	#	ev. auch Rückgabe via Datei
@@ -777,13 +777,13 @@ def strm_sync():
 		now = int(time.time()); checking=False
 		if now >= next_sync:
 			dt = datetime.datetime.fromtimestamp(int(now))
-			PLog("strm_%d. %s" % (i+1, dt.strftime("%Y-%m-%d_%H-%M-%S")))
+			PLog("sync_strm_%d. %s" % (i+1, dt.strftime("%Y-%m-%d_%H-%M-%S")))
 			next_sync = int(time.time()) + sync_sec	# nächster Abgleich ab hier
 			if os.path.exists(STRM_SYNCLIST):	# Listenabgleich
 				synclist = strm_synclist(mode="load")				
 				for item in synclist:
 					# checking = True
-					PLog("item: " + item)
+					PLog("sync_item: " + item)
 					# Format: Listen-Titel ## lokale strm-Ablage ##  ext.Url ## strm_type
 					list_title, strmpath, list_path, strm_type= item.split("##")
 					do_sync(list_title, strmpath, list_path, strm_type)
