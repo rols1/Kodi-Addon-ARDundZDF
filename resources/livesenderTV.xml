@@ -2,7 +2,7 @@
  <channels_info>
   <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
   <imgsource>Arauco</imgsource>
-  <nr>27</nr>
+  <nr>28</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
   <date>03.02.2022 rols</date>
@@ -751,6 +751,15 @@
 			<EPG_ID></EPG_ID>
 			<date>01.02.2022</date>
 		</item>
+		<item>
+			<title>WDR Spezial 6 (Olympia)</title>
+			<hrefsender></hrefsender>
+			<link>https://wdrspezial.akamaized.net/hls/live/2013621/wdr_spezial6/index.m3u8</link>
+			<thumbnail>tv-wdr.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>03.02.2022</date>
+		</item>
 	</items>
 </channel>
 
@@ -868,13 +877,13 @@
 			<date>03.02.2022</date>
 		</item>
 		<item>
-			<title>ZDF Event 14</title>
+			<title>ZDF Event 14 (Olympia)</title>
 			<hrefsender></hrefsender>
 			<link>https://zdf-hls-14.akamaized.net/hls/live/2016497/de/veryhigh/master.m3u8</link>
 			<thumbnail>zdf-mediathek.png</thumbnail>
 			<imgsource></imgsource>
 			<EPG_ID></EPG_ID>
-			<date>21.07.2021</date>
+			<date>03.02.2022</date>
 		</item>
 		<item>
 			<title>ZDF Event test01</title>
