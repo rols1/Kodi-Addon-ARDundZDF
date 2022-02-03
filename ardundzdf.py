@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>22</nr>										# Numerierung für Einzelupdate
+# 	<nr>23</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.1'
 VDATE = '31.01.2022'
 
@@ -7432,7 +7432,7 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 		li = home(li, ID='ZDF')						# Home-Button			
 
 	if "www.zdf.de/serien/" in url:					# Abzweig Serienliste ZDF_FlatListEpisodes
-		PLog('Button_FlatListEpisodes')
+		PLog('Button_FlatListZDF')
 		sid = url.split("/")[-1]					# z.B. ../serien/soko-hamburg
 		label = "komplette Liste: %s" % title
 		tag = u"Liste aller verfügbaren Folgen"
@@ -7551,7 +7551,9 @@ def ZDF_search_button(li, query):
 	return
   
 #----------------------------------------------
-# Abzweig ZDF_Sendungen, Button flache Serienliste,
+# Ähnlich ARD_FlatListEpisodes (dort entfällt die
+#	Liste aller Serien)
+# Audruf ZDF_Sendungen (Abzweig), Button flache Serienliste,
 #	zusätzl. strm-Button Button für gesamte Liste  
 #	sid=Serien-ID (Url-Ende)
 #	Ablauf: Liste holen via api-Call, Abgleich mit sid,
@@ -7761,7 +7763,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
 # Nutzung strm-Modul: get_strm_path, xbmcvfs_store
 # Cache-Verzicht, um neue Folgen nicht zu verpassen.
 #
-def ZDF_getStrmList(path, title):
+def ZDF_getStrmList(path, title, ID="ZDF"):
 	PLog("ZDF_getStrmList:")
 	title_org = title
 	list_path = path
@@ -7769,13 +7771,14 @@ def ZDF_getStrmList(path, title):
 	FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")
 	import resources.lib.strm as strm
 	
-	page, msg = get_page(path=path)
+	page, mZDF_getStrmListsg = get_page(path=path)
 	if page == '':
 		msg1 = "Fehler in ZDF_getStrList:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return
-	page = page.replace('\\/','/')
+	if '\\/' in page:									# ZDF-Urls
+		page = page.replace('\\/','/')
 				
 	list_title =  stringextract('"titel":"', '"', page)				# Serien-Titel (vorgegeben)
 	list_title = list_title.replace('u0022', '*')					# \"
@@ -9777,6 +9780,7 @@ def ZDFSourcesHBBTV(title, scms_id):
 	PLog('page_hbbtv: ' + page[:100])
 				
 	streams = stringextract('"streams":', '"head":', page)	# Video-URL's ermitteln
+	streams = streams.replace('\\/','/')
 	ptmdUrl_list = blockextract('"ptmdUrl":', streams)		# mehrere mögl., z.B. Normal + DGS
 	#PLog(ptmdUrl_list)
 	PLog(len(ptmdUrl_list))
@@ -9788,17 +9792,15 @@ def ZDFSourcesHBBTV(title, scms_id):
 		stream_list=[]
 		for qual in main_list:								# bisher nur q1 + q3 gesehen
 			PLog(qual[:80])
+			url = stringextract('"url":"',  '"', qual)
 			if '"q1"' in qual:								# Bsp.: "q1": "http://tvdlzdf..
 				q="q1"
-				url = stringextract('"q1":"',  '"', qual)
 				stream_list.append("%s|%s" % (q, url)) 
 			if '"q2"' in qual:							
 				q="q2"
-				url = stringextract('"q2":"',  '"', qual)
 				stream_list.append("%s|%s" % (q, url)) 
 			if '"q3"' in qual:
 				q="q3"
-				url = stringextract('"q3":"',  '"', qual)
 				stream_list.append("%s|%s" % (q, url))
 		
 		PLog(len(stream_list))
@@ -9839,6 +9841,7 @@ def ZDFSourcesHBBTV(title, scms_id):
 			title_url = u"%s#%s" % (title, url)
 			item = u"%s ** Bitrate %s ** Auflösung %s ** %s" %\
 				(stream_title, bitrate, res, title_url)
+			PLog("item: " + item)
 			HBBTV_List.append(item)
 		
 	PLog(len(HBBTV_List))
