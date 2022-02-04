@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 31.01.2022
+# 	<nr>12</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.02.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -471,7 +471,21 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	if len(container) > 1:
 		PLog("ARDStartRubrik_more_container")
 		ARDRubriken(li, page)							# direkt
-	else:
+	else:												# detect Staffeln/Folgen
+		# cnt = page.count(u'"Folge ')					# falsch positiv für "alt":"Folge 9"
+		if 'hasSeasons":true' in page:
+			PLog('Button_FlatListARD')
+			label = "komplette Liste: %s" % title
+			tag = u"Liste aller verfügbaren Folgen"
+			if SETTINGS.getSetting('pref_usefilter') == 'false':
+				add = u"Voreinstellung: Normalversion.\nFür Hörfassung und weitere Versionen "
+				add = u'%sbitte das Setting "Beiträge filtern / Ausschluss-Filter" einschalten' % add
+				tag = u"%s\n\n%s" % (tag, add)
+			fparams="&fparams={'path': '%s', 'title': '%s'}"	% (quote(path), quote(title))						
+			title_org=py2_encode(title_org); path=py2_encode(path)			
+			addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARD_FlatListEpisodes", 
+				fanart=R('icon.png'), thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
+			
 		li = get_page_content(li, page, ID, mark)		# Auswertung Rubriken + Live-/Eventstreams																	
 #----------------------------------------
 	
@@ -591,6 +605,165 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark):
 	
 	xbmcplugin.endOfDirectory(HANDLE)
 	
+#---------------------------------------------------------------------------------------------------
+# Ähnlich ARD_FlatListEpisodes, flache Liste aler Folgen
+#	ohne Zusätze (Teaser usw.)
+# Aufruf ARDStartRubrik ('hasSeasons":true')
+#
+def ARD_FlatListEpisodes(path, title):
+	PLog('ARD_FlatListEpisodes:')
+	
+	page, msg = get_page(path)	
+	if page == '':	
+		msg1 = "Fehler in ARD_FlatListEpisodes: %s"	% title
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return
+	PLog(len(page))
+	page = page.replace('\\"', '*')						# quotierte Marks entf.
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)									# Home-Button -> HauptmenüARDStartSingle:
+
+	mediatype=''
+	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
+		mediatype='video'
+		
+	versions = [u'Normalfassung', u'Hörfassung', u'Originalversion (OV)']
+	if page.find(u'(OV)') < 0 and page.find(u'(Originalversion)') < 0: 	# Varianten OV
+		versions.remove(u'Originalversion (OV)')
+	if page.find(u'Hörfassung') < 0:
+		versions.remove(u'Hörfassung')
+
+	vers='Normalfassung'								# Default: Normalfassung
+	if u'Hörfassung' in page or u'(OV)' in page or 'Originalfassung' in page or '(Originalversion)' in page:	
+		if SETTINGS.getSetting('pref_usefilter') == 'true':	# Abfrage Audiodeskription / Originalfassung
+			head = u"bitte Filter wählen"
+			ret = xbmcgui.Dialog().select(head, versions)
+			if ret < 0:
+				PLog("Abbruch")
+				return							
+			v = versions[ret]; 
+			vers = py2_decode(v)			
+
+	items = blockextract('availableTo":', page)				# Videos
+	for item in items:
+		if "Folge " in item == False:
+			continue
+		title, url, img, tag, summ, season, weburl, ID = ARD_FlatListRec(item, vers) # Datensatz
+		if title == '':										# skipped
+			continue
+		summ_par = summ.replace('\n', '||')
+		
+		url=py2_encode(url); title=py2_encode(title); summ_par=py2_encode(summ_par);
+		fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s'}" %\
+			(quote(url), quote(title), quote(summ_par), ID)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			
+#----------------------------------------------
+# holt Details für item
+# Aufrufer: ZDF_FlatListEpisodes, ZDF_getStrmList
+# Titel enthält Staffel-/Folgen-Kennz., Bsp.: Folge 1: Das Seil <S01/E01>
+# vers: Version, z.B. Hörfassung
+#
+def ARD_FlatListRec(item, vers):
+	PLog('ARD_FlatListRec: ' + vers)
+	vers_list=[]	 
+	if 'Original' in vers:
+		vers_list = [u'(OV)', u'(Original']
+	if 'Hörfassung' in vers:
+		vers_list = [u'Hörfassung']
+
+	title='';url='';img='';tag='';summ='';
+	season='';episode='';descr='';weburl=''; ID=''
+	
+	title = stringextract('"longTitle":"', '"', item)
+	if title == "":
+		title =  stringextract('"mediumTitle":"', '"', item)
+	PLog("title: " + title)
+	title_org=title
+	
+	if 'Normal' in vers:								# Version berücksichtigen?
+		if u'Hörfassung' in title or u'(OV)' in title or u'Original' in title:
+			PLog("skip_title: " + title)	
+			return '', url, img, tag, summ, season, weburl, ID
+	else:
+		skip=True
+		v=''
+		for v in vers_list:
+			PLog(title.find(v))
+			if title.find(v) >= 0:
+				skip=False; break
+		if skip == True:
+			PLog("skip: %s" % v)	
+			return '', url, img, tag, summ, season, weburl, ID
+			
+	se=''
+	try:												# hinter Folge in Titel kann ":" fehlen
+		se = re.search(u'\((.*?)\)', title).group(1)	# Bsp. (S03/E12)
+		season = re.search(u'S(\d+)', se).group(1)
+		episode = re.search(u'E(\d+)', se).group(1)
+	except Exception as exception:
+		PLog(str(exception))
+	PLog(season); PLog(episode)
+	
+	if episode == '':
+		title=''
+		PLog("no_episode")	
+		return '', url, img, tag, summ, season, weburl, ID	
+	
+	if title.startswith("Folge "):						# Austausch "Folge 1" -> S01E01
+		if ":" in title:								# mögl. Titel: "Folge 28 (S03/E12)"
+			pos = title.find(":")
+			if pos > 0:
+				title = title[pos+1:]
+			title = "S%02dE%02d %s" % (int(season), int(episode), title)
+		else:
+			title = "S%02dE%02d Folge %02d Staffel %s" % (int(season), int(episode), int(episode), season)
+	else:
+		title = "S%02dE%02d %s" % (int(season), int(episode), title)
+
+	if u"Hörfassung" in title_org and title.find(u"Hörfassung") < 0:
+		title = u"%s - %s" % (title, u"Hörfassung")	
+	
+	producer =  stringextract('"producerName":"', '"', item)
+	descr =  stringextract('"synopsis":"', '"', item)
+	web = stringextract('"homepage"', '"hasSeasons"', item)
+	weburl =  stringextract('"href":"', '"', web) # für Abgleich vor./nicht mehr vorh. 
+	fsk =  stringextract('Rating":"', '"', item)
+	if up_low(fsk) == "NONE":
+		fsk = "ohne"
+	end =  stringextract('availableTo":"', '"', item)
+	end = time_translate(end)
+	end = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % end
+	# geo =  stringextract('Rating":"', '"', item)		# Geo fehlt
+	dauer = stringextract('"duration":', ',', item)
+	dauer = seconds_translate(dauer)
+	Type =  stringextract('groupingType":"', '"', item)	
+	
+	img = stringextract('"aspect16x9"', '"title"', item)		# Bild
+	# PLog(img)	# Debug
+	img =  stringextract('"src":"', '"', img)
+	img = img.replace('{width}', '720')
+	
+	target =  stringextract('"target":', '}', item)	# Ziel-Url mit Streamquellen
+	url =  stringextract('"href":"', '"', target)	
+	ID =  stringextract('"id":"', '"', target)
+	
+	tag = u"Staffel: %s | Folge: %s\nDauer: %s | FSK: %s | %s | Hersteller: %s | %s" %\
+		(season, episode, dauer, fsk, end, producer, Type)
+	
+	title = unescape(title)
+	summ = repl_json_chars(descr)
+	PLog('Satz3:');
+	PLog(title); PLog(url); PLog(img); PLog(tag); PLog(summ[:80]);
+	PLog(season); PLog(weburl);
+
+	return title, url, img, tag, summ, season, weburl, ID
+		
 ####################################################################################################
 #							ARD Retro www.ardmediathek.de/ard/retro/
 #				als eigenst. Menü, Inhalte auch via Startseite/Menü/Retro erreichbar
@@ -902,13 +1075,16 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	PLog("IsPlayable: %s" % IsPlayable)	
 	if len(elements) > 1:
 		if '_quality"' not in page:							# bei Streamlinks bleiben wir hier
+			msg1 = u">%s< enthält keine Videoquellen aber Folgebeiträge."	% title
+			msg2 = u"Mögliche Ursache: Altersbeschränkung"
+			msg3 = u"Das Addon zeigt die Folgebeiträge."
 			if IsPlayable == "false":						# IsPlayable-Einträge nur mit Video-Quellen auswerten
 				PLog('%s Elemente -> ARDStartRubrik' % str(len(elements)))
+				MyDialog(msg1, msg2, msg3)	
 				return ARDStartRubrik(path,title,ID='ARDStartSingle')
 			else:
-				msg1 = u">%s< enthält Folgebeiträge."	% title
-				msg2 = u"Anzeige mit Sofortstart nicht möglich."
-				MyDialog(msg1, msg2, '')	
+				msg3 = u"Sofortstart ist nicht möglich."
+				MyDialog(msg1, msg2, msg3)	
 				return										# hebt IsPlayable auf (Player-Error: skipping ..)
 			
 			
