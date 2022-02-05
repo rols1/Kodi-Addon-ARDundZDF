@@ -10,6 +10,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+05.02.2022 4.2.2
+			strm-Tools (strm-Modul): Option "einzelne Liste jetzt abgleichen" ergänzt.
+			strm_Tools (strm_tools): Fix Auswahl Abgleichintervall (war immer 6).
+			do_sync (strm-Modul): Setting pref_strm_uz berücksichtigt bei Abgleich.
+			strm-Modul: Speichern der Logdatei mit Lock gesichert (log_save).
+			get_page_content (ARD Neu): Fix Sendedatum aus Folgesatz (Blockauswahl 
+			geändert).
+			Beitrag_Liste (Modul arte): Alternativen für Subtitel + Dauer ausgewertet.
+			PlayVideo_Direct: Audiostream aus Abgleich entfernt.
+			ZDF_FlatListRec: Benennung geändert S13_F10 -> S13E10 (@Bobbi2021).
+			ARD + ZDF TV Event Streams: Aktualisierungen Olympia-Streams (@Weri). 
+			ARDStartSingle: Dialog-Behandlung bei nicht verfügbaren Videoquellen,
+			mögl. Ursache: Altersbeschränkung).
+			ZDFSourcesHBBTV: Ermittl. HBBTV-Quellen an ZDF-Änderung angepasst.
+			ARD-Serien: zusätzlicher Button für "komplette Liste: ..." wie ZDF-Serien
+			"flache Liste" ohne Teaser u.ä., neue Funktion ARD_FlatListEpisodes. 		
+
 30.01.2022 4.2.1
 			ARD Sportschau: Fix Kopierfehler Menü Olympia, HTTP Error 404 abgefangen 
 			(relevant beim Vorausladen - @Weri).

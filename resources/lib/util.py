@@ -2802,28 +2802,28 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, playlist='', HBBTV_List=''):	
 	PLog('PlayVideo_Direct:')
 	PLog(title)
-	form = SETTINGS.getSetting('pref_direct_format')
-	qual = SETTINGS.getSetting('pref_direct_quality')
-	PLog("form: %s, qual: %s" % (form, qual))
+	myform = SETTINGS.getSetting('pref_direct_format')
+	myqual = SETTINGS.getSetting('pref_direct_quality')
+	PLog("myform: %s, myqual: %s" % (myform, myqual))
 	mode=''
 	
-	if 'HLS' in form:
+	if 'HLS' in myform:
 		Stream_List = HLS_List
 	else:	
 		Stream_List = MP4_List
-		if 'auto' in qual:							# Sicherung gegen falsches MP4-Setting:
-			qual = '960x544'						# 	Default, falls 'auto' gesetzt
+		if 'auto' in myqual:						# Sicherung gegen falsches MP4-Setting:
+			myqual = '960x544'						# 	Default, falls 'auto' gesetzt
 	if len(Stream_List) == 0:
 		PLog('Stream_List leer')					# Fallback MP4: bei funk fehlt HLS
 		Stream_List = MP4_List
-		form = 'MP4'
-		msg1 = u"HLS-Video fehlt"
+		myform = 'MP4'
+		msg1 = u"HLS- oder HBBTV-Video fehlt"
 		msg2 = u"verwende MP4"
 		icon = R(ICON_WARNING)
 		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)		
 
-	if 'HLS' in form:
-		if 'auto' in qual:
+	if 'HLS' in myform:
+		if 'auto' in myqual:
 			mode = 'Sofortstart: HLS/auto'
 			url = Stream_List[0].split('#')[-1]		# master.m3u8 Pos. 1
 		mode = 'Sofortstart: HLS/Einzelstream'
@@ -2844,18 +2844,21 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 	PLog(str(Stream_List)[:80])
 	
 		
-	if 'auto' not in qual:							# Abgleich width mit Setting
-		qual = qual.split('x')[0]
+	if 'auto' not in myqual:							# Abgleich width mit Setting
+		mywidth = myqual.split('x')[0]
 		
 		for item in Stream_List:
-			PLog(item)
 			res = item.split('**')[2]
+			if '0x0' in res:							# Auflösung 0x0 (vermutl. Audio)
+				continue
+				
+			PLog(item)
 			try:
 				width = re.search("(\d+)", res).group(0)
 			except Exception as exception:
 				PLog(str(exception))
 				#continue
-				
+			
 			if "** veryhigh **" in item:			# Rückübersetzung HLS-Qualitäten
 				width = "1280"						#	bei ZDF-Api-Streams
 			if "** high **" in item:
@@ -2865,10 +2868,10 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 			if "** low **" in item:
 				width = "480"
 			
-			PLog("width %s, qual %s" % (width, qual))
-			if int(width) >= int(qual):
+			PLog("width %s, mywidth %s" % (width, mywidth))
+			if int(width) >= int(mywidth):
 				url = item.split('#')[-1]
-				mode = '%s | width %s (Setting: %s)' % (mode, width, qual)
+				mode = '%s | width %s (Setting: %s)' % (mode, width, mywidth)
 				break 
 
 	# Beachte im Log: beim Aufruf aus strm-Modul (Kontext-Thread): läuft noch

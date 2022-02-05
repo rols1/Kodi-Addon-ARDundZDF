@@ -109,12 +109,14 @@ def strm_tools():
 			if ret0 >= 0:							
 				dt = datetime.datetime.now()
 				logtime = dt.strftime("%Y-%m-%d_%H-%M-%S")
-				sync_hour = valmenu[ret]
-				strm_tool_set(mode="save", index=0, val=sync_hour)
+				sync_hour = valmenu[ret0]
+				PLog("sync_hour: " +  sync_hour)
+				strm_tool_set(mode="save", index=0, val=sync_hour)	# Index 0: sync_hour
 				if os.path.exists(STRM_CHECK):
 					os.remove(STRM_CHECK)			# Monitorreset
 				xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=True)
 				add_log = "%s | %6s | %15s | %s" % (logtime, "TIME", "strm-Tools", "Intervall: %s Stunden" % sync_hour)
+				PLog("add_log: " +  add_log)
 			
 				
 		if ret == 1 or  ret == 2 or  ret == 5:		# Liste anzeigen / löschen / abgleichen

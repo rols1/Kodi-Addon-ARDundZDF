@@ -473,16 +473,16 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 		ARDRubriken(li, page)							# direkt
 	else:												# detect Staffeln/Folgen
 		# cnt = page.count(u'"Folge ')					# falsch positiv für "alt":"Folge 9"
-		if 'hasSeasons":true' in page:
+		if 'hasSeasons":true' in page and '"heroImage":' in page:
 			PLog('Button_FlatListARD')
-			label = "komplette Liste: %s" % title
+			label = u"komplette Liste: %s" % title
 			tag = u"Liste aller verfügbaren Folgen"
 			if SETTINGS.getSetting('pref_usefilter') == 'false':
 				add = u"Voreinstellung: Normalversion.\nFür Hörfassung und weitere Versionen "
 				add = u'%sbitte das Setting "Beiträge filtern / Ausschluss-Filter" einschalten' % add
 				tag = u"%s\n\n%s" % (tag, add)
+			title=py2_encode(title); path=py2_encode(path)			
 			fparams="&fparams={'path': '%s', 'title': '%s'}"	% (quote(path), quote(title))						
-			title_org=py2_encode(title_org); path=py2_encode(path)			
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARD_FlatListEpisodes", 
 				fanart=R('icon.png'), thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
 			
@@ -615,7 +615,7 @@ def ARD_FlatListEpisodes(path, title):
 	
 	page, msg = get_page(path)	
 	if page == '':	
-		msg1 = "Fehler in ARD_FlatListEpisodes: %s"	% title
+		msg1 = u"Fehler in ARD_FlatListEpisodes: %s"	% title
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return
@@ -674,7 +674,7 @@ def ARD_FlatListRec(item, vers):
 	vers_list=[]	 
 	if 'Original' in vers:
 		vers_list = [u'(OV)', u'(Original']
-	if 'Hörfassung' in vers:
+	if u'Hörfassung' in vers:
 		vers_list = [u'Hörfassung']
 
 	title='';url='';img='';tag='';summ='';

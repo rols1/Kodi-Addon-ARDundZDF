@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>3</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.01.2022
+#	Stand: 30.01.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -410,7 +410,8 @@ def get_img(item):
 # Folgebeiträge aus GetContent
 #	-> GetContent -> SingleVideo
 # 19.11.2021 ergänzt um weitere Auswertungsmerkmale, Hinw. auf Überschreitung
-#	der Ebenentiefe entfernt
+#	der Ebenentiefe entfernt, dto. 31.01.2022 (Subtitel, Dauer - Bilder 
+#	können fehlen bzw. transparent.png)
 #
 def Beitrag_Liste(url, title):
 	PLog("Beitrag_Liste:")				
@@ -452,9 +453,11 @@ def Beitrag_Liste(url, title):
 			title = stringextract('_title">', '</h3>', item)
 			title = unescape(title); title = repl_json_chars(title);
 			title = unescape(title); title = repl_json_chars(title);
-			subtitle = stringextract('de_subtitle">', '</p>', item)
+			subtitle = stringextract('_subtitle">', '</p>', item)
 			subtitle = unescape(subtitle); subtitle = repl_json_chars(subtitle);
 			dur = stringextract('css-18884f0">', '</p>', item)
+			if dur == '':
+				dur = stringextract('css-rmfqry">', '</p>', item)
 			
 			if dur:
 				tag = "Dauer %s" % dur
