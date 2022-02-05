@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>7</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.01.2022
+# 	<nr>8</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.02.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2802,45 +2802,86 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, playlist='', HBBTV_List=''):	
 	PLog('PlayVideo_Direct:')
 	PLog(title)
+	PLog(len(HLS_List)); PLog(len(MP4_List)); PLog(len(HBBTV_List));
+	#PLog(str(HLS_List)); PLog(str(MP4_List)); PLog(str(HBBTV_List)); # Debug
 	myform = SETTINGS.getSetting('pref_direct_format')
 	myqual = SETTINGS.getSetting('pref_direct_quality')
 	PLog("myform: %s, myqual: %s" % (myform, myqual))
-	mode=''
+	icon = R(ICON_WARNING)
 	
-	if 'HLS' in myform:
+	for item in HLS_List:							# Audiostream entfernen
+		if "vermutl. Audio" in item:
+			HLS_List.remove(item)
+			PLog(item)		
+	
+	msg1=''; msg2=''
+	mode_hls=False; mode=''
+	if 'HLS' in myform:								# Austausch bei leeren Listen
 		Stream_List = HLS_List
-	else:	
+		if len(Stream_List) == 0:
+			msg1 = u"HLS-Quellen fehlen"
+			Stream_List = MP4_List
+			msg2 = "verwende MP4"
+			if len(Stream_List) == 0:
+				Stream_List = HBBTV_List
+				msg2 = "verwende HBBTV (MP4)"
+		else:
+			mode_hls=True			
+	else:
+		myform = 'MP4'
 		Stream_List = MP4_List
 		if 'auto' in myqual:						# Sicherung gegen falsches MP4-Setting:
 			myqual = '960x544'						# 	Default, falls 'auto' gesetzt
-	if len(Stream_List) == 0:
-		PLog('Stream_List leer')					# Fallback MP4: bei funk fehlt HLS
-		Stream_List = MP4_List
-		myform = 'MP4'
-		msg1 = u"HLS- oder HBBTV-Video fehlt"
-		msg2 = u"verwende MP4"
-		icon = R(ICON_WARNING)
-		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)		
-
-	if 'HLS' in myform:
-		if 'auto' in myqual:
+		if len(Stream_List) == 0:
+			msg1 = u"MP4-Quellen fehlen"
+			Stream_List = HLS_List
+			msg2 = "verwende HLS"
+			if len(Stream_List) == 0:
+				Stream_List = HBBTV_List
+				msg2 = "verwende HBBTV (MP4)"
+			else:		
+				mode_hls=True			
+				
+	if len(Stream_List) == 0:						# alle Listen leer		
+			msg1 = u"Video-Quellen fehlen"
+			msg2 = u"nicht verfügbar: HLS, MP4, HBBTV"
+			icon = R(ICON_WARNING)
+			xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	
+		
+	if msg1 and msg2:								# Hinweis zu Austausch
+		xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	
+		
+	Default_Url=''
+	PLog("mode_hls: " + str(mode_hls))
+	PLog(myqual)
+	if mode_hls:				
+		if myqual.find('auto') >= 0:
 			mode = 'Sofortstart: HLS/auto'
-			url = Stream_List[0].split('#')[-1]		# master.m3u8 Pos. 1
-		mode = 'Sofortstart: HLS/Einzelstream'
-		del Stream_List[0]							# Pos. 1 entf. (ohne Aufl.-Wert)	
+			Default_Url = Stream_List[0].split('#')[-1]		# master.m3u8 Pos. 1
+			del Stream_List[0]							# Pos. 1 entf. (ohne Auflösung)	
+		else:
+			mode = 'HLS/Einzelstream'
 	else: 
-		mode = 'Sofortstart: MP4'
+		mode = 'MP4'
 	PLog("mode: " + mode)	
 	
-	#PLog(str(Stream_List))							# Sorierung für PlayVideo_Direct (wie StreamsShow)
-	# HLS: höchste Auflös. nach unten, x-Param.: Auflösung - s.a. ARDStartVideoHLSget
-	#Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Auflösung (\d+)', x).group(1)))
-	# Alternative - ab 11.11.2021 error mit Auflösung:
-	if "Bitrate" in str(Stream_List):
-		Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))	
+	if Default_Url == '':								# besetzt: HLS/auto
+		#PLog(str(Stream_List))							# Sorierung für PlayVideo_Direct (wie StreamsShow)
+		# HLS: höchste Auflös. nach unten, x-Param.: Auflösung - s.a. ARDStartVideoHLSget
+		#Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Auflösung (\d+)', x).group(1)))
+		# Alternative - ab 11.11.2021 error mit Auflösung:
+		try:
+			if "Bitrate" in str(Stream_List):
+				Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))	
+				Default_Url = Stream_List[-1].split('#')[-1]	# Default für HLS (nach Sort.) + MP4: höchste Url
+		except Exception as exception:
+			PLog(str(exception))
+			myqual = "auto"									# verwende Default_Url - kein Abgleich mit width
+			if len(Stream_List) > 0:
+				Default_Url = Stream_List[0].split('#')[-1]	# Fallback: master.m3u8 Pos. 1
 
-	url = Stream_List[-1].split('#')[-1]			# Default für HLS (nach Sort.) + MP4: höchste Url
-	PLog("Default_Url: %s" % url)
+	PLog("Default_Url: %s" % Default_Url)
+	url = Default_Url 
 	PLog(str(Stream_List)[:80])
 	
 		
