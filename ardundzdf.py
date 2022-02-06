@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>23</nr>										# Numerierung für Einzelupdate
+# 	<nr>24</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.2'
-VDATE = '05.02.2022'
+VDATE = '06.02.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -4455,8 +4455,7 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 		return
 			
 	if SETTINGS.getSetting('pref_show_qualities') == 'false':	# nur 1 (höchste) Qualität verwenden
-		download_items = []
-		download_items.append(download_list.pop(high))									 
+		download_items = get_bestdownload(download_list)
 	else:	
 		download_items = download_list						# ganze Liste verwenden
 	# PLog(download_items)
@@ -4491,6 +4490,43 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 			i=i+1					# Dict-key-Zähler
 	
 	return li
+	
+#---------------------------
+# Aufruf test_downloads (Setting pref_show_qualities=false)
+# ermittelt Stream mit höchster Auflösung / höchster Bitrate
+#
+def get_bestdownload(download_list):
+	PLog('get_bestdownload:')
+	PLog("download_list:" + str(download_list))
+	download_items=[]
+
+	# Filterung Arte-Streams (Sprachen, UT, ..). Bei leerer Liste
+	#	erfolgt Abgleich mit download_list unabhängig von Sprachen
+	my_list=[]
+	pref = SETTINGS.getSetting('pref_arte_streams')
+	pref = py2_decode(pref)
+	PLog(u"pref: " + pref)
+	for item in download_list:
+		if "//arteptweb" in item and item.find(pref) >= 0:
+			my_list.append(item)
+	PLog(len(my_list))		
+	if len(my_list) > 0:
+		download_list =my_list	
+
+	# Full HD (ARD, ZDF): 1920x1080 (funk)
+	# high_list: absteigende Qualitäten in diversen Erscheinungen
+	high_list =  ["3840x2160", "Full HD", "1920x1080", "1280x1080", "5000kbit",
+					"1280x", "veryhigh", "960x720", "960x", "640x540", "640x360"]
+	for hl in high_list:					# Abgleich mit Auslösungen
+		for item in download_list:
+			#PLog("hl: %s | %s" % (hl, item))
+			if hl in item:
+				download_items.append(item)
+				PLog("found1: " + item)
+				return download_items
+
+	download_items.append(download_list[0])		# Fallback 1. Stream (ARD, ZDF OK)
+	return download_items
 	
 #-----------------------
 # Textdatei für Download-Video / -Podcast -
@@ -7553,7 +7589,7 @@ def ZDF_search_button(li, query):
 #----------------------------------------------
 # Ähnlich ARD_FlatListEpisodes (dort entfällt die
 #	Liste aller Serien)
-# Audruf ZDF_Sendungen (Abzweig), Button flache Serienliste,
+# Aufruf ZDF_Sendungen (Abzweig), Button flache Serienliste,
 #	zusätzl. strm-Button Button für gesamte Liste  
 #	sid=Serien-ID (Url-Ende)
 #	Ablauf: Liste holen via api-Call, Abgleich mit sid,
@@ -7622,12 +7658,18 @@ def ZDF_FlatListEpisodes(sid):
 	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page, '"profile":')	
 	if len(staffel_list) == 0:									# ohne Staffel-Blöcke
 		staffel_list = blockextract('"headline":"', page)
+	season_title = stringextract('"title":"', '"', page)		# Serientitel für Abgleich 
+	PLog("season_title: %s" % season_title)
 	PLog("staffel_list: %d" % len(staffel_list))
 
 	for staffel in 	staffel_list:								
 		folgen = blockextract('"headline":"', staffel)			# Folgen-Blöcke	
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
+			headline = stringextract('"headline":"', '"', folge)
+			PLog("%s | %s" % (headline, season_title))
+			if headline != season_title:				# Seite kann weitere Serien enthalten
+				break
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
 			if season == '':
 				continue
@@ -7819,13 +7861,20 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page, '"profile":')	
 	if len(staffel_list) == 0:										# ohne Staffel-Blöcke
 		staffel_list = blockextract('"headline":"', page)
+	season_title = stringextract('"title":"', '"', page)			# Serientitel für Abgleich 
+	PLog("season_title: %s" % season_title)
 	PLog("staffel_list: %d" % len(staffel_list))
 	
-	cnt=0; skip_cnt=0
+	cnt=0; skip_cnt=0; do_break=False
 	for staffel in 	staffel_list:
 		folgen = blockextract('"headline":"', staffel)				# Folgen-Blöcke	
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
+			headline = stringextract('"headline":"', '"', folge)
+			PLog("%s | %s" % (headline, season_title))
+			if headline != season_title:				# Seite kann weitere Serien enthalten
+				do_break=True
+				break
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge) # Datensatz
 			if season == '':
 				continue
@@ -7865,7 +7914,8 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 			ret = strm.xbmcvfs_store(strmpath, url, img, fname, title, Plot, weburl, strm_type)
 			if ret:
 				cnt=cnt+1
-
+		if do_break:
+			break
 	#------------------
 	PLog("strm_cnt: %d" % cnt)		
 	msg1 = u'%d neue STRM-Datei(en)' % cnt
@@ -8173,7 +8223,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 			PLog("isvideo: %s, dauer: %s, enddate: %s" % (isvideo, dauer, enddate))
 			if isvideo or dauer or enddate:								# enddate ohne dauer möglich
 				isvideo = True
-			if " Staffel" in teaser_label:
+			if " Staffel" in teaser_label or descr == "Serien":
 				isvideo = False
 		
 			tag='';
@@ -10634,8 +10684,6 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 			tagline=tagline, mediatype='video')
 	
 	if 'MP4_List' in ID:
-		if SETTINGS.getSetting('pref_show_qualities') == 'false':
-			del Stream_List[:-1]													# nur letztes Element verwenden
 		summ=''
 		li = test_downloads(li,Stream_List,title,summ,tagline,img,high=-1, sub_path=sub_path) # Downloadbutton(s)
 	
