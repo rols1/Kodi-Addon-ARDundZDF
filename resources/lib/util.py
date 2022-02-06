@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>8</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.02.2022
+# 	<nr>9</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.02.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2849,7 +2849,10 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 			xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	
 		
 	if msg1 and msg2:								# Hinweis zu Austausch
-		xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	
+		if "/live/" in Stream_List[0] or 'ivestream' in Stream_List[0]:	
+			PLog("is_Livestream")					# 	entf. bei Kennz. als Livestream
+		else:
+			xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	
 		
 	Default_Url=''
 	PLog("mode_hls: " + str(mode_hls))
