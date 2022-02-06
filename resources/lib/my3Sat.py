@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.01.2022
+# 	<nr>3</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.02.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -378,7 +378,7 @@ def Verpasst(title):	# je 1 Tag - passend zum Webdesign
 
 # Liste Sendungen gewählter Tag
 # 04.08.2020 Webänderung Sendung (label)
-#
+# 06.02.2022 dto
 def SendungenDatum(SendDate, title):	
 	PLog('SendungenDatum: ' + SendDate)
 	
@@ -408,7 +408,8 @@ def SendungenDatum(SendDate, title):
 		if href == '' or '#skiplinks' in href:
 			continue
 		href	= DreiSat_BASE + href
-		sendung	= stringextract('data-module="headline">', '</', rec)
+		sendung	= stringextract('-headline', 'class', rec)
+		sendung = stringextract('>', '<', sendung)
 		descr	= stringextract('teaser-epg-text">', '</p>', rec)		# mehrere Zeilen
 		PLog(descr)
 		descr	= cleanhtml(descr); 
