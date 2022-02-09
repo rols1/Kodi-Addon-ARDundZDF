@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>24</nr>										# Numerierung für Einzelupdate
+# 	<nr>25</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.2'
-VDATE = '06.02.2022'
+VDATE = '09.02.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -4508,8 +4508,20 @@ def get_bestdownload(download_list):
 	PLog(u"pref: " + pref)
 	for item in download_list:
 		if "//arteptweb" in item and item.find(pref) >= 0:
-			my_list.append(item)
-	PLog(len(my_list))		
+			lang = stringextract('|', '#', item)
+			if len(lang.strip()) == len(pref): 		# Zusätze berücks. z.B. UT Deutsch	
+				my_list.append(item)				
+	PLog(len(my_list))
+	
+	if len(my_list)== 0:							# Arte Fallback Deutsch
+		pref = "Deutsch"
+		for item in download_list:
+			if "//arteptweb" in item and item.find(pref) >= 0:
+				lang = stringextract('|', '#', item)
+				if len(lang.strip()) == len(pref): 
+					my_list.append(item)				
+	PLog(len(my_list))
+				
 	if len(my_list) > 0:
 		download_list =my_list	
 
@@ -7474,7 +7486,7 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 		tag = u"Liste aller verfügbaren Folgen"
 		fparams="&fparams={'sid': '%s'}"	% (sid)						
 		addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
-			thumb=thumb, tagline=tag, fparams=fparams)
+			thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
 	
 	
 #----------------------------------------------		# Abzweig funk "Alle Folgen" -> ZDF_get_content
@@ -7604,13 +7616,13 @@ def ZDF_FlatListEpisodes(sid):
 	li = home(li, ID='ZDF')										# Home-Button			
 	
 	path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/serien-100"
-	page = Dict("load", "ZDF_Serien", CacheTime=CacheTime)
+	page = Dict("load", "ZDF_Serien", CacheTime=CacheTime)		# ZDF-Serien Gesamtübersicht
 	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
 		page, msg = get_page(path=path)
 		if page == '':	
 			msg1 = "Fehler in ZDF_FlatListEpisodes:"
 			msg2 = msg
-			MyDialog(msg1, msg2, '')	
+			MyDialog(msg1, msg2, '')
 			return
 		else:
 			page = page.replace('\\/','/')
@@ -7653,7 +7665,7 @@ def ZDF_FlatListEpisodes(sid):
 			fparams=fparams, tagline=tag)
 	
 
-	# Blockmerkmal für Folgen unterschiedlich:					# Blockmerkmale wie 
+	# Blockmerkmal für Folgen unterschiedlich:					# Blockmerkmale wie ZDF_getStrmList
 	staffel_list = blockextract('"name":"Staffel ', page)		# Staffel-Blöcke
 	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page, '"profile":')	
 	if len(staffel_list) == 0:									# ohne Staffel-Blöcke
