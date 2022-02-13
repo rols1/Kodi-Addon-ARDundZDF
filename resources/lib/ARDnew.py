@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>12</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.02.2022
+#	Stand: 11.02.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -50,6 +50,7 @@ from resources.lib.util import *
 
 
 # Globals
+ICON					= "icon.png"
 ICON_MAIN_ARD 			= 'ard-mediathek.png'			
 ICON_ARD_AZ 			= 'ard-sendungen-az.png'
 ICON_ARD_VERP 			= 'ard-sendung-verpasst.png'			
@@ -58,6 +59,7 @@ ICON_ARD_BARRIEREARM 	= 'ard-barrierearm.png'
 			
 ICON_SEARCH 			= 'ard-suche.png'						
 ICON_DIR_FOLDER			= "Dir-folder.png"
+ICON_DIR_STRM			= "Dir-strm.png"
 ICON_SPEAKER 			= "icon-speaker.png"
 ICON_MEHR 				= "icon-mehr.png"
 
@@ -474,7 +476,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	else:												# detect Staffeln/Folgen
 		# cnt = page.count(u'"Folge ')					# falsch positiv für "alt":"Folge 9"
 		if 'hasSeasons":true' in page and '"heroImage":' in page:
-			PLog('Button_FlatListARD')
+			PLog('Button_FlatListARD')					# Button für flache Liste
 			label = u"komplette Liste: %s" % title
 			tag = u"Liste aller verfügbaren Folgen"
 			if SETTINGS.getSetting('pref_usefilter') == 'false':
@@ -484,7 +486,8 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			title=py2_encode(title); path=py2_encode(path)			
 			fparams="&fparams={'path': '%s', 'title': '%s'}"	% (quote(path), quote(title))						
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARD_FlatListEpisodes", 
-				fanart=R('icon.png'), thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
+				fanart=ICON, thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
+				
 			
 		li = get_page_content(li, page, ID, mark)		# Auswertung Rubriken + Live-/Eventstreams																	
 #----------------------------------------
@@ -642,16 +645,47 @@ def ARD_FlatListEpisodes(path, title):
 			ret = xbmcgui.Dialog().select(head, versions)
 			if ret < 0:
 				PLog("Abbruch")
-				return							
+				#return  crasht Addon nach Video, Liste wird erneut durchlaufen - nach Filterwahl OK 
+				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)					
 			v = versions[ret]; 
-			vers = py2_decode(v)			
+			vers = py2_decode(v)
+			
+	#---------------------										# Button strm-Dateien gesamte Liste
+	if SETTINGS.getSetting('pref_strm') == 'true':
+		img = R(ICON_DIR_STRM)
+		title = u"strm-Dateien für die komplette Liste erzeugen / aktualisieren"
+		tag = u"Verwenden Sie das Kontextmenü, um strm-Dateien für [B]einzelne Videos[/B] zu erzeugen"
+		summ = u"[B]strm-Dateien (strm-Bündel)[/B] sparen Platz und lassen sich auch in die Kodi-Bibliothek integrieren."
+		summ = u"%s\n\nEin strm-Bündel in diesem Addon besteht aus der strm-Datei mit der Streamurl, einer jpeg-Datei" % summ
+		summ = u"%s\nmit dem Bild zum Video und einer nfo-Datei mit dem Begleittext." % summ
+		url = path
+		url=py2_encode(url); title=py2_encode(title); 
+		fparams="&fparams={'path': '%s', 'title': '%s'}" %\
+			(quote(url), quote(title))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_getStrmList", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tag, summary=summ)
 
-	items = blockextract('availableTo":', page)				# Videos
+		title = u"strm-Tools"									# Button für strm-Tools
+		tag = "Abgleichintervall in Stunden\nListen anzeigen\nListeneinträge löschen\n"
+		tag = "%sMonitorreset\nstrm-Log anzeigen\nAbgleich einer Liste erzwingen\n" % tag
+		tag = "%sunterstützte Sender/Beiträge\nzu einem strm-Verzeichnis wechseln" % tag
+		myfunc="resources.lib.strm.strm_tools"
+		fparams_add = quote('{}')
+
+		fparams="&fparams={'myfunc': '%s', 'fparams_add': '%s'}"  %\
+			(quote(myfunc), quote(fparams_add))			
+		addDir(li=li, label=title, action="dirList", dirID="start_script",\
+			fanart=R(FANART), thumb=R("icon-strmtools.png"), tagline=tag, fparams=fparams)	
+
+	#---------------------
+	
+	items = blockextract('availableTo":', page)					# Videos
+	PLog("items_list: %d" % len(items))
 	for item in items:
 		if "Folge " in item == False:
 			continue
 		title, url, img, tag, summ, season, weburl, ID = ARD_FlatListRec(item, vers) # Datensatz
-		if title == '':										# skipped
+		if title == '':											# skipped
 			continue
 		summ_par = summ.replace('\n', '||')
 		
@@ -662,10 +696,10 @@ def ARD_FlatListEpisodes(path, title):
 			fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			
+	
 #----------------------------------------------
 # holt Details für item
-# Aufrufer: ZDF_FlatListEpisodes, ZDF_getStrmList
+# Aufrufer: ARD_FlatListEpisodes, ARD_getStrmList
 # Titel enthält Staffel-/Folgen-Kennz., Bsp.: Folge 1: Das Seil <S01/E01>
 # vers: Version, z.B. Hörfassung
 #
@@ -700,14 +734,24 @@ def ARD_FlatListRec(item, vers):
 		if skip == True:
 			PLog("skip: %s" % v)	
 			return '', url, img, tag, summ, season, weburl, ID
-			
+	
+	#---------------------								# Staffel-/Folge-Erkennung
 	se=''
 	try:												# hinter Folge in Titel kann ":" fehlen
-		se = re.search(u'\((.*?)\)', title).group(1)	# Bsp. (S03/E12)
+		se = title
+		if ":" in se:
+			se = se.split(":")[-1]						# manchmal zusätzl. im Titel: ..(6):.. 
+		se = re.search(u'\((.*?)\)', se).group(1)		# Bsp. (S03/E12)
 		season = re.search(u'S(\d+)', se).group(1)
 		episode = re.search(u'E(\d+)', se).group(1)
 	except Exception as exception:
 		PLog(str(exception))
+	if season == '' and episode == '':					# Alternative: ohne Staffel, nur Folgen
+		try: 
+			episode = re.search(u'\((\d+)\)', title).group(1)									
+			season = "0"
+		except Exception as exception:
+			PLog(str(exception))	
 	PLog(season); PLog(episode)
 	
 	if episode == '':
@@ -764,6 +808,207 @@ def ARD_FlatListRec(item, vers):
 
 	return title, url, img, tag, summ, season, weburl, ID
 		
+#----------------------------------------------
+# wie ZDF_getStrmList
+# erzeugt / aktualsiert strm-Dateien für die komplette Liste 
+# Ermittlung Streamquellen für api-call
+# Ablauf: Seite path laden, Blöcke wie ARD_FlatListEpisodes
+#	iterieren -> ZDF_FlatListRec -> ZDF_getApiStreams (Streamquelle 
+#	ermitteln -> 
+# Nutzung strm-Modul: get_strm_path, xbmcvfs_store
+# Cache-Verzicht, um neue Folgen nicht zu verpassen.
+#
+def ARD_getStrmList(path, title, ID="ARD"):
+	PLog("ARD_getStrmList:")
+	title_org = title
+	list_path = path
+	icon = R(ICON_DIR_STRM)
+	FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")
+	import resources.lib.strm as strm
+	
+	page, msg = get_page(path=path)
+	if page == '':
+		msg1 = "Fehler in ARD_getStrmList:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return
+
+	pos = page.find("synopsis")							# Serien-Titel (vorgegeben)
+	list_title =  stringextract('"title":"', '"', page[pos:])			
+	list_title = transl_json(list_title)
+	PLog("list_title:" + list_title)
+	
+	#---------------------								# wie ZDF_getStrmList
+	strm_type = strm.get_strm_genre()					# Genre-Auswahl
+	if strm_type == '':
+		return
+	strmpath = strm.get_strm_path(strm_type)			# Abfrage Zielverz. != Filme
+	if os.path.isdir(strmpath) == False:
+		msg1 = "Zielverzeichnis existiert nicht."
+		msg2 = u"Bitte Settings überprüfen."
+		MyDialog(msg1, msg2, '')
+		return
+	
+	#---------------------								# Abfrage Version
+	versions = [u'Normalfassung', u'Hörfassung', u'Originalversion (OV)']
+	if page.find(u'(OV)') < 0 and page.find(u'(Originalversion)') < 0: 	# Varianten OV
+		versions.remove(u'Originalversion (OV)')
+	if page.find(u'Hörfassung') < 0:
+		versions.remove(u'Hörfassung')
+
+	vers='Normalfassung'								# Default: Normalfassung
+	if u'Hörfassung' in page or u'(OV)' in page or 'Originalfassung' in page or '(Originalversion)' in page:	
+		if SETTINGS.getSetting('pref_usefilter') == 'true':	# Abfrage Audiodeskription / Originalfassung
+			head = u"bitte Filter wählen"
+			ret = xbmcgui.Dialog().select(head, versions)
+			if ret < 0:
+				PLog("Abbruch")
+				return							
+			v = versions[ret]; 
+			vers = py2_decode(v)	
+	#---------------------										
+		
+	fname = make_filenames(list_title)					# Abfrage Unterverzeichnis Serie
+	strmpath = os.path.join(strmpath, fname)
+	PLog("list_strmpath: " + strmpath)		
+	head = u"Unterverzeichnis für die Serie"
+	msg1 = u"Das Addon legt für die Serie folgendes Unterverzeichnis an:"
+	if os.path.isdir(strmpath):		
+		msg1 = u"Das Addon verwendet für die Serie folgendes Unterverzeichnis:"
+	msg2 = u"[B]%s[/B]" % fname
+	msg3 = u"Ein vorhandenes Verzeichnis wird überschrieben."
+	ret = MyDialog(msg1, msg2, msg3, ok=False, cancel='Abbruch', yes='OK', heading=head)
+	if ret != 1:
+		return
+	if os.path.isdir(strmpath) == False:
+		os.mkdir(strmpath)								# Verz. erzeugen, falls noch nicht vorh.
+		list_exist=False
+	else:
+		list_exist=True
+
+	#---------------------
+	cnt=0; 
+	items = blockextract('availableTo":', page)					# Videos
+	for item in items:
+		if "Folge " in item == False:
+			continue
+		title, url, img, tag, summ, season, weburl, ID = ARD_FlatListRec(item, vers) # Datensatz
+		if title == '':											# skipped
+			continue
+	
+		fname = make_filenames(title)							# Zieldatei hier ohne Dialog
+		PLog("fname: " + fname)
+		if SETTINGS.getSetting('pref_strm_uz') == "true":	# Für jede strm-Datei ein Unterverzeichnis
+			f = os.path.join(strmpath, fname, "%s.nfo" % fname)
+		else:
+			f = os.path.join(strmpath, "%s.nfo" % fname)
+		PLog("f: " + f)
+		if os.path.isfile(f):									# skip vorh. strm-Bundle
+			msg1 = u'schon vorhanden:'
+			msg2 = title
+			xbmcgui.Dialog().notification(msg1,msg2,icon,500,sound=False)
+			PLog("skip_bundle: " + f)
+			skip_cnt=skip_cnt+1
+			continue
+		else:
+			msg1 = u'neues strm-Bündel:'
+			msg2 = title
+			PLog("%s %s" % (msg1, msg2))
+			xbmcgui.Dialog().notification(msg1,msg2,icon,500,sound=False)
+					
+		Plot = "%s\n\n%s" % (tag, summ)
+		msg1 = u'Suche Streamquellen'
+		msg2 = title
+		xbmcgui.Dialog().notification(msg1,msg2,icon,500,sound=False)
+		open(FLAG_OnlyUrl, 'w').close()							# Flag PlayVideo_Direct: kein Videostart
+		ARD_get_strmStream(url, title, img, Plot) 				# Streamlisten bauen, Ablage Url
+		url = RLoad(STRM_URL, abs_path=True)					# abgelegt von PlayVideo_Direct
+		PLog("strm_Url: " + str(url))
+		
+		Plot = "%s\n\n%s" % (tag, summ)
+		ret = strm.xbmcvfs_store(strmpath, url, img, fname, title, Plot, weburl, strm_type)
+		if ret:
+			cnt=cnt+1
+
+
+	#------------------
+	PLog("strm_cnt: %d" % cnt)		
+	msg1 = u'%d neue STRM-Datei(en)' % cnt
+	if cnt == 0:
+		msg1 = u'STRM-Liste fehlgeschlagen'
+		if list_exist == True:
+			msg1 = u'STRM-Liste unverändert'
+	msg2 = list_title
+	xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
+		
+	#------------------												# Liste synchronisieren?
+	# Format: Listen-Titel ## lokale strm-Ablage ##  ext.Url ## strm_type
+	item = "%s##%s##%s##%s"	% (list_title, strmpath, list_path, strm_type)
+	PLog("item: " + item)
+	synclist = strm.strm_synclist(mode="load")						# "strm_synclist"
+	if exist_in_list(item, synclist) == True:	
+		msg1 = "Synchronsisation läuft"
+		msg2 = list_title
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
+		PLog(msg1)
+	else:
+		if cnt > 0:
+			sync_hour = strm.strm_tool_set(mode="load")	# Setting laden
+			head = u"Liste synchronisieren"
+			msg1 = u"Soll das Addon diese Liste regelmäßig abgleichen?"
+			msg2 = u"Intervall: %s Stunden" % sync_hour	
+			ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='OK', heading=head)
+			if ret == 1:											# Liste neu aufnehmen
+				strm.strm_synclist(mode="save", item=item)
+				line = "%6s | %15s | %s..." % ("NEU", list_title[:15], "Liste neu aufgenommen")
+				strm.log_update(line)
+				line = "strm-Serie|%s|%s" % (list_title, vers)
+				Dict("store", 'strmListVersion_%s' % list_title, line) # load: do_sync_ARD 
+
+	return
+		
+#----------------------------------------------
+# Ermittlung Streamquellen für ARD_getStrmList
+#	ähnlich ZDF_getApiStreams
+# Ablauf: Seite url laden, HLS_List + MP4_List
+#	bauen, strm-Url via PlayVideo_Direct ermitteln
+#	(dort Abgleich Settings pref_direct_format +
+#	pref_direct_quality, Ablage STRM_URL)
+# Plot: tag + summ von Aufrufer zusammengelegt
+def ARD_get_strmStream(url, title, img, Plot):
+	PLog('ARD_get_strmStream:'); 
+	
+	page, msg = get_page(url)
+	if page == '':	
+		msg1 = "Fehler in ARD_get_strmStream: %s"	% title
+		PLog("%s | %s" % (msg1, msg))	
+		return
+	PLog(len(page))
+	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Python3 geändert
+	page= page.replace('+++\\n', '+++ ')					# Zeilentrenner ARD Neu
+			
+	# -----------------------------------------			# Extrakt Videoquellen
+	Plugins = blockextract('"_defaultQuality"', page)	# 10.11.2021 Block vormals '_plugin'
+	if len(Plugins) > 0:
+		Plugin1	= Plugins[0]							
+		VideoUrls = blockextract('_quality', Plugin1)
+	PLog(len(VideoUrls))
+	
+	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
+	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
+	#	fehlende Bandbreiten + Auflösungen werden ergänzt
+	HBBTV_List=''										# nur ZDF
+	HLS_List = ARDStartVideoHLSget(title, VideoUrls)	# Extrakt HLS
+	PLog("HLS_List: " + str(HLS_List)[:80])
+	MP4_List = ARDStartVideoMP4get(title, VideoUrls)	# Extrakt MP4
+	PLog("MP4_List: " + str(MP4_List)[:80])
+
+	# Abgleich Settings, Ablage STRM_URL
+	thumb = img
+	PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot) 
+	
+	return
+	
 ####################################################################################################
 #							ARD Retro www.ardmediathek.de/ard/retro/
 #				als eigenst. Menü, Inhalte auch via Startseite/Menü/Retro erreichbar

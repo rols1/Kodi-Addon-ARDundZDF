@@ -50,15 +50,14 @@ import resources.lib.updater as updater
 from resources.lib.util import *
 import resources.lib.EPG as EPG
 import resources.lib.epgRecord as epgRecord
-#import resources.lib.strm as strm
 
 																		
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>25</nr>										# Numerierung für Einzelupdate
-VERSION = '4.2.2'
-VDATE = '09.02.2022'
+VERSION = '4.2.3'
+VDATE = '13.02.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -273,14 +272,26 @@ else:
 			os.remove(DL_CNT)								# Zähler dl_cnt entfernen
 	
 if os.path.exists(STRM_SYNCLIST):							# strm-Liste für Synchronisierung					
+	if os.path.exists(STRM_CHECK):							# Leiche? 2-sec-Aktualisierung durch strm_sync
+		now = time.time()
+		mtime = os.stat(STRM_CHECK).st_mtime
+		diff = int(now) - mtime
+		if diff > 10:										# entf. wenn älter als 10 sec	
+			os.remove(STRM_CHECK)
+			PLog("strm_check_alive_removed, age: %d sec" % diff)
+		else:
+			PLog("Haupt_PRG: strm_sync_is_running")
+
 	if os.path.exists(STRM_CHECK) == False:					# Lock beachten (Datei strm_check_alive)
+		open(STRM_CHECK, 'w').close()						# Lock strm_check_alive anlegen
 		PLog("Haupt_PRG: start_strm_sync")
 		import resources.lib.strm as strm
 		from threading import Thread
 		bg_thread = Thread(target=strm.strm_sync, args=())
 		bg_thread.start()	
 else:
-		if os.path.exists(STRM_CHECK):	
+		if os.path.exists(STRM_CHECK):
+			PLog("Haupt_PRG: clear_strm_check_alive")	
 			os.remove(STRM_CHECK)							# Liste fehlt: Lock strm_check_alive entfernen
 		
 
@@ -567,7 +578,9 @@ def InfoAndFilter():
 				
 	if SETTINGS.getSetting('pref_strm') == 'true':											
 		title = u"strm-Tools"								# Button für strm-Tools
-		tag = "Zeitintervall für Listenabgleich\nListen anzeigen\nListeneinträge löschen\nMonitorreset\nunterstützte Sender/Beiträge"
+		tag = "Abgleichintervall in Stunden\nListen anzeigen\nListeneinträge löschen\n"
+		tag = "%sMonitorreset\nstrm-Log anzeigen\nAbgleich einer Liste erzwingen\n" % tag
+		tag = "%sunterstützte Sender/Beiträge\nzu einem strm-Verzeichnis wechseln" % tag
 		myfunc="resources.lib.strm.strm_tools"
 		fparams_add = quote('{}')
 
@@ -615,10 +628,15 @@ def InfoAndFilter():
 #	fparams_add json-kompat., Bsp.: '{"action": "playlist_add", "url": ""}'
 # Um die Rekursion der Web-Tools-Liste zu vermeiden wird MENU_STOP in playlist_tools
 #	gesetzt und in InfoAndFilter wieder entfernt.
-#  
-def start_script(myfunc, fparams_add):
+# Beispiel fparams bei Direktaufruf (no_dict=True):   
+#					fparams="{'strmpath': '%s'}" % strmpath	 
+#					fparams = quote(fparams)
+#					start_script(myfunc, fparams)
+#
+def start_script(myfunc, fparams_add, is_dict=True):
 	PLog("start_script:")
 	import importlib
+	PLog(type(fparams_add))
 	fparams_add = unquote(fparams_add)
 	PLog(myfunc); PLog(fparams_add)
 	
@@ -631,6 +649,14 @@ def start_script(myfunc, fparams_add):
 	PLog('loaded: ' + str(dest_modul))
 	func = getattr(dest_modul, newfunc)	
 
+	if is_dict == False:									# Direktaufruf
+		try:
+			fparams_add = fparams_add.replace("'", "\"")
+			fparams_add = fparams_add.replace('\\', '\\\\')	
+		except Exception as exception:
+			PLog('router_exception: {0}'.format(str(exception)))	
+		PLog(fparams_add)
+		
 	if fparams_add != '""':									# leer, ohne Parameter?	
 		mydict = json.loads(fparams_add)
 		PLog("mydict: " + str(mydict));
@@ -4523,7 +4549,7 @@ def get_bestdownload(download_list):
 	PLog(len(my_list))
 				
 	if len(my_list) > 0:
-		download_list =my_list	
+		download_list = my_list	
 
 	# Full HD (ARD, ZDF): 1920x1080 (funk)
 	# high_list: absteigende Qualitäten in diversen Erscheinungen
@@ -7602,7 +7628,7 @@ def ZDF_search_button(li, query):
 # Ähnlich ARD_FlatListEpisodes (dort entfällt die
 #	Liste aller Serien)
 # Aufruf ZDF_Sendungen (Abzweig), Button flache Serienliste,
-#	zusätzl. strm-Button Button für gesamte Liste  
+#	zusätzl. Button für ZDF_getStrmList + strm-Tools
 #	sid=Serien-ID (Url-Ende)
 #	Ablauf: Liste holen via api-Call, Abgleich mit sid,
 #		Serieninhalt holen via api-Call
@@ -7628,13 +7654,19 @@ def ZDF_FlatListEpisodes(sid):
 			page = page.replace('\\/','/')
 			Dict("store", "ZDF_Serien", page)
 	
-	pat = '"id":"%s-' %sid										# Suchmuster Bsp. "id": "soko-leipzig-
+	pat = '"id":"%s-' % sid										# Suchmuster Bsp. "id": "soko-leipzig-
 	PLog("pat: " + pat)
 	pos = page.find(pat)
 	page = page[pos:]
 	PLog("pos: %d, %s" % (pos, page[:80]))
 	url = stringextract('"url":"', '"', page)
 	PLog("url2: " + url)
+	if url == '':	
+		msg1 = "Abbruch  in ZDF_FlatListEpisodes:"
+		msg2 = "Die Serien-ID [B]%s[/B] ist nicht (mehr)" % sid
+		msg3 = " in der Serienübersicht des  ZDF enthalten."
+		MyDialog(msg1, msg2, msg3)	
+		return
 
 	#-----------------------------								# 2. Folgen zur Serie holen
 	
@@ -7657,12 +7689,28 @@ def ZDF_FlatListEpisodes(sid):
 		url =  stringextract('"url":"', '"', page)				# 1. Url/Seite
 		img = R(ICON_DIR_STRM)
 		title = u"strm-Dateien für die komplette Liste erzeugen / aktualisieren"
-		tag = u"Verwenden Sie das Kontextmenü, um strm-Dateien für einzelne Videos zu erzeugen"
+		tag = u"Verwenden Sie das Kontextmenü, um strm-Dateien für [B]einzelne Videos[/B] zu erzeugen"
+		summ = u"[B]strm-Dateien (strm-Bündel)[/B] sparen Platz und lassen sich auch in die Kodi-Bibliothek integrieren."
+		summ = u"%s\n\nEin strm-Bündel in diesem Addon besteht aus der strm-Datei mit der Streamurl, einer jpeg-Datei" % summ
+		summ = u"%s\nmit dem Bild zum Video und einer nfo-Datei mit dem Begleittext." % summ
 		url=py2_encode(url); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s'}" %\
 			(quote(url), quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_getStrmList", fanart=img, thumb=img, 
-			fparams=fparams, tagline=tag)
+			fparams=fparams, tagline=tag, summary=summ)
+			
+		title = u"strm-Tools"									# Button für strm-Tools
+		tag = "Abgleichintervall in Stunden\nListen anzeigen\nListeneinträge löschen\n"
+		tag = "%sMonitorreset\nstrm-Log anzeigen\nAbgleich einer Liste erzwingen\n" % tag
+		tag = "%sunterstützte Sender/Beiträge\nzu einem strm-Verzeichnis wechseln" % tag
+		myfunc="resources.lib.strm.strm_tools"
+		fparams_add = quote('{}')
+
+		fparams="&fparams={'myfunc': '%s', 'fparams_add': '%s'}"  %\
+			(quote(myfunc), quote(fparams_add))			
+		addDir(li=li, label=title, action="dirList", dirID="start_script",\
+			fanart=R(FANART), thumb=R("icon-strmtools.png"), tagline=tag, fparams=fparams)	
+		
 	
 
 	# Blockmerkmal für Folgen unterschiedlich:					# Blockmerkmale wie ZDF_getStrmList
@@ -7679,8 +7727,8 @@ def ZDF_FlatListEpisodes(sid):
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
 			headline = stringextract('"headline":"', '"', folge)
-			PLog("%s | %s" % (headline, season_title))
-			if headline != season_title:				# Seite kann weitere Serien enthalten
+			if headline.strip() != season_title.strip():		# Seite kann weitere Serien enthalten
+				PLog("%s | %s" % (headline, season_title))
 				break
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
 			if season == '':
@@ -7825,9 +7873,9 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 	FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")
 	import resources.lib.strm as strm
 	
-	page, mZDF_getStrmListsg = get_page(path=path)
+	page, msg = get_page(path=path)
 	if page == '':
-		msg1 = "Fehler in ZDF_getStrList:"
+		msg1 = "Fehler in ZDF_getStrmList:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return
@@ -7883,9 +7931,8 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
 			headline = stringextract('"headline":"', '"', folge)
-			PLog("%s | %s" % (headline, season_title))
-			if headline != season_title:				# Seite kann weitere Serien enthalten
-				do_break=True
+			if headline.strip() != season_title.strip():			# Seite kann weitere Serien enthalten
+				PLog("%s | %s" % (headline, season_title))
 				break
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge) # Datensatz
 			if season == '':
@@ -7926,8 +7973,8 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 			ret = strm.xbmcvfs_store(strmpath, url, img, fname, title, Plot, weburl, strm_type)
 			if ret:
 				cnt=cnt+1
-		if do_break:
-			break
+
+
 	#------------------
 	PLog("strm_cnt: %d" % cnt)		
 	msg1 = u'%d neue STRM-Datei(en)' % cnt
@@ -7956,6 +8003,8 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 		ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='OK', heading=head)
 		if ret == 1:											# Liste neu aufnehmen
 			strm.strm_synclist(mode="save", item=item)
+			line = "%6s | %15s | %s..." % ("NEU", list_title[:15], "Liste neu aufgenommen")
+			strm.log_update(line)
 
 	return
 
@@ -8002,7 +8051,7 @@ def ZDF_FlatListRec(item):
 	tag = u"%s | Staffel: %s | Folge: %s\nDauer: %s | FSK: %s | Geo: %s | %s" %\
 		(brand, season, episode, dauer, fsk, geo, end)
 	
-	title = unescape(title)
+	title = repl_json_chars(title); title = unescape(title); 
 	summ = repl_json_chars(descr)
 
 	return title, url, img, tag, summ, season, weburl

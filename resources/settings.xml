@@ -30,6 +30,7 @@
  <category label="Download Einstellungen">
  	<setting label="Downloads freischalten (auch im Kontextmenü möglich)" type="bool" id="pref_use_downloads" default="false"/>
   	<setting label="alle verfuegbaren Video-Qualitaeten anbieten" type="bool" id="pref_show_qualities" default="true"/>
+  	<setting label="Auswahl Arte-Streams für Downloads" type="select" id="pref_arte_streams" default="Deutsch" values="Deutsch|UT Deutsch|Deutsch (Hörgeschädigte)|Deutsch - UT französisch|Französisch|UT Französisch|Französisch (Hörfilm)|Französisch (Hörgeschädigte)|Polnisch|UT Polnisch|Polnisch (Hörgeschädigte)|Italienisch|UT Italienisch|Italienisch (Hörgeschädigte)|Spanisch|UT Spanisch|Spanisch (Hörgeschädigte)"/>
   	<setting label="Untertitel mit herunterladen" type="bool" id="pref_load_subtitles" default="false"/>
  	<setting label="Dateinamen aus dem Titel erzeugen (statt Download_{Datum}_{Uhrzeit})" type="bool" id="pref_generate_filenames" default="false"/>
 	<setting label="Downloadverzeichnis (auch für Recording TV-Live)" type="folder" option="writeable" id="pref_download_path" default=""/>
@@ -92,7 +93,8 @@
 		values="HLS (adaptiv)|MP4, VP9/Opus, VP8/Vorbis"/> 
 	<setting label="gesamtes Addon: Videoqualität bei Sofortstart" type="select" id="pref_direct_quality" default="auto (nur HLS)"
   		values="auto (nur HLS)|320x180|640x360|720x400|960x540|1280x720|1920x1080" />
-   <setting type="sep"/>
+   	<setting label="gesamtes Addon: inputstream.adaptive nutzen, falls verfügbar" type="bool" id="pref_inputstream" default="true"/>
+  <setting type="sep"/>
   	<setting label="gesamtes Addon: Verzicht auf Homebuttons" type="bool" id="pref_nohome" default="false"/>
   	<setting label="gesamtes Addon: Sortierung ermöglichen" type="bool" id="pref_sort_label" default="false"/>
     <setting label="gesamtes Addon: Zuletzt-gesehen-Liste verwenden" type="bool" id="pref_startlist" default="false"/>

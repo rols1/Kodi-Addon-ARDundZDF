@@ -11,7 +11,7 @@
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.01.2022
+#	Stand: 06.03.2022
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -174,6 +174,7 @@ def update_single(PluginAbsPath):
 					fname = local_file.split(PluginAbsPath)[-1]		# Bsp.: /resources/lib/ARDnew.py
 					# Bsp.: ../github.com/rols1/Kodi-Addon-ARDundZDF/blob/master/resources/livesenderTV.xml?raw=true
 					remote_file = "%s%s?%s" % (GIT_BASE, fname, "raw=true")
+					remote_file = remote_file.replace('\\', '/')
 					PLog('lade %s' % remote_file) 
 					r = urlopen(remote_file)						# Updatedatei auf Github 
 					page = r.read()

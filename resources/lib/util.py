@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.02.2022
+#	Stand: 13.02.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1357,7 +1357,7 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	#PLog(type(line_ret))
 	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
 		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
-		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad')
+		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
 		, (u'\r', u''), (u'#', u'*'), (u'u003e', u'')):		# u'u003e' 	-> u'®'
 		line_ret = line_ret.replace(*r)
 	
@@ -2890,8 +2890,8 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 		
 	if 'auto' not in myqual:							# Abgleich width mit Setting
 		mywidth = myqual.split('x')[0]
-		
 		for item in Stream_List:
+			width="320"									# Vorbelegung (u.a. für LibreElec 20.0-ALPHA1
 			res = item.split('**')[2]
 			if '0x0' in res:							# Auflösung 0x0 (vermutl. Audio)
 				continue
@@ -2916,7 +2916,8 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 			if int(width) >= int(mywidth):
 				url = item.split('#')[-1]
 				mode = '%s | width %s (Setting: %s)' % (mode, width, mywidth)
-				break 
+				break
+
 
 	# Beachte im Log: beim Aufruf aus strm-Modul (Kontext-Thread): läuft noch
 	#	MY_SCRIPT aus get_streamurl. PlayVideo wird gestartet + stoppt bei
@@ -2934,7 +2935,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 	else:											# default
 		PlayVideo(url, title, thumb, Plot, sub_path)
 	return ''
-	
+
 #---------------------------------------------------------------------------------------------------
 # PlayVideo: 
 #	Sofortstart + Resumefunktion, einschl. Anzeige der Medieninfo:
@@ -3077,16 +3078,17 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		# Check auf inputstream.adaptive nicht erforderlich
 
 		if url.endswith('.m3u8'):							# SetInputstreamAddon hier nur HLS
-			PLog("SetInputstreamAddon:")
-			li.setMimeType('application/vnd.apple.mpegurl')
-			if PYTHON2:
-				li.setProperty('inputstreamaddon', 'inputstream.adaptive')
-			else:
-				# Kodi-Debug Matrix: depricated, use
-				#	 #KODIPROP:inputstream=inputstream.adaptive', 'inputstream.adaptive'
-				li.setProperty('inputstream', 'inputstream.adaptive')
-			li.setProperty('inputstream.adaptive.manifest_type', 'hls')
-			li.setContentLookup(False)				
+			if SETTINGS.getSetting('pref_inputstream') == 'true':
+				PLog("SetInputstreamAddon:")
+				li.setMimeType('application/vnd.apple.mpegurl')
+				if PYTHON2:
+					li.setProperty('inputstreamaddon', 'inputstream.adaptive')
+				else:
+					# Kodi-Debug Matrix: depricated, use
+					#	 #KODIPROP:inputstream=inputstream.adaptive', 'inputstream.adaptive'
+					li.setProperty('inputstream', 'inputstream.adaptive')
+				li.setProperty('inputstream.adaptive.manifest_type', 'hls')
+				li.setContentLookup(False)				
 
 		PLog("url: " + url); PLog("playlist: %d" % len(playlist))
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem

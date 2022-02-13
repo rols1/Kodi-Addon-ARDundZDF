@@ -10,6 +10,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+13.02.2022 4.2.3
+			PlayVideo_Direct (util): Rückfallebenen für leere Listen geändert, Fehler-
+			meldung unterdrückt bei Livestreamkennz, Vorbelegung width="320" für u.a.
+			LibreElec 20.0-ALPHA1.
+			ZDFRubrikSingle: Merkmal descr="Serien" für Mehrfach-Erkennung hinzugefügt.
+			strm-Tools (strm-Modul): Format akt. Liste geändert (Titel 20 statt 15 Z.),
+			max. Log-Zeilen auf 200 erhöht + in Listentitel angezeigt.
+			Downloads: Überarbeitung Auswahl beste Streamqualität, neue Funktion 
+			get_bestdownload, Anpassung StreamsShow und test_downloads.
+			SendungenDatum (Modul 3sat): Fix fehlende Titel nach 3sat-Änderung.
+			update_single (Modul EPG): Fix Webpfad für Windows (remote_file.replace('\\',
+			'/').
+			strm-Modul: Listentitle in Logdatei auf 15 Zeichen begrenzt (Optik), Option
+			"Listeneintrag löschen" ergänzt mit "dazugehörige Beiträge löschen", sowie
+			"zu einem strm-Verzeichnis wechseln, Log-Updates zusammengeführt in neuer
+			Funktion log_update, leere Syncliste abgefangen in strm_tools, Tools-Titel
+			mit next_sync-Time ergänzt, "Leichen"-Behandl. für STRM_CHECK.
+			ARD_FlatListEpisodes + ZDF_FlatListEpisodes: ergänzt mit Button für strm-Tools.		
+
 05.02.2022 4.2.2
 			strm-Tools (strm-Modul): Option "einzelne Liste jetzt abgleichen" ergänzt.
 			strm_Tools (strm_tools): Fix Auswahl Abgleichintervall (war immer 6).
@@ -24,7 +43,7 @@ CHANGE HISTORY
 			ARDStartSingle: Dialog-Behandlung bei nicht verfügbaren Videoquellen,
 			mögl. Ursache: Altersbeschränkung).
 			ZDFSourcesHBBTV: Ermittl. HBBTV-Quellen an ZDF-Änderung angepasst.
-			ARD-Serien: zusätzlicher Button für "komplette Liste: ..." wie ZDF-Serien
+			ARD-Serien: zusätzlicher Button für "komplette Liste: ..." - wie ZDF-Serien
 			"flache Liste" ohne Teaser u.ä., neue Funktion ARD_FlatListEpisodes. 		
 
 30.01.2022 4.2.1
@@ -97,7 +116,8 @@ CHANGE HISTORY
 			Sport ARD Mediathek: Einbindung Menü Startseite/Menü/Sport als eigenst. Menü,
 			neue Funktion ARDSportneu, neues Icon, Anpassung Main_NEW.
 			PlayVideo: inputstreamaddon-Behandl. verlagert (wirksam für direkte und 
-			indirekte Streamaufrufe).
+			indirekte Streamaufrufe), optionale Nutzung von inputstream.adaptive einschl.
+			Anpassung settings.xml (Leia-Mint-Problem).
 			get_page_content (ARD Neu): Suchmuster ausgetauscht (ondemand ->
 			availableTo) für ARDSearchnew, Kennz. type":"event" als Livestream +
 			Einzelbeitrag, duration für get_summary_pre vorausgewertet, ID am Schleifen-
