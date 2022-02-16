@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.02.2022
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.02.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -278,6 +278,7 @@ def SendungenAZlist(name, path):				#
 # A-Z Liste der Beiträge
 #	-> Sendereihe_Sendungen -> get_zdfplayer_content
 # 04.08.2020 Anpassungen an Webänderungen (Rubrik, Titel)
+# 16.02.2021 dto (Titel)
 #
 def SendungenAZ(name, path): 
 	PLog('SendungenAZ: ' + name)
@@ -301,8 +302,10 @@ def SendungenAZ(name, path):
 		rubrik 	= stringextract('a--preheadline level-4">', '<span class', rec)
 		rubrik 	= stringextract('<span>', '</span>', rubrik)
 		sub_rubrik = stringextract('ellipsis" >', '<', rec)
-		title	= stringextract('clickarea-link js-teaser-title', '</h', rec)
-		title	= stringextract('headline">', '</', title)
+		title	= stringextract('clickarea-link js-teaser-title', '</h3', rec)
+		title	= stringextract('">', '</', title)
+		if "is-lowercase" in title:
+			title	= stringextract('case">', '</span>', rec)
 		href	= stringextract('href="', '"', rec)
 		href	= DreiSat_BASE + href
 		descr	= stringextract('clickarea-link" >', '<', rec)
@@ -459,6 +462,7 @@ def transl_month(shortmonth):	# Monatsbez. (3-stellig) -> Zahl
 # 	2. Durchlauf: Rubrik-Ausschnitt erzeugen -> get_lazyload (die 
 #			meisten oder -> Rubrik_Single (zdfplayer-Inhalte)
 # 04.08.2020 Anpassungen an Webänderungen (Muster red is-uppercase)
+# 16.02.2021 dto (headline)
 #
 def Start(name, path, rubrik=''):
 	PLog('3satStart:')
@@ -566,7 +570,9 @@ def Start(name, path, rubrik=''):
 		PLog(len(items))
 		img_src = R('Dir-folder.png')				# alles lazyload-Beiträge ohne Bilder + hrefs
 		for rec in items:					
-			title	= stringextract('headline">', '</', rec)
+			title	= stringextract('">', '</h2', rec)
+			if "is-lowercase" in title:
+				title	= stringextract('case">', '</span>', rec)
 			title 	= repl_json_chars(title);			
 			if u'Das könnte Dich' in title:			# leer (java-script)
 				continue
@@ -583,6 +589,7 @@ def Start(name, path, rubrik=''):
 					img_src = "https" + img_src
 				
 			PLog('Satz3:')
+			path = DreiSat_BASE
 			PLog(title); PLog(path); PLog(img_src); 
 			title=py2_encode(title); path=py2_encode(path); 
 			fparams="&fparams={'name': '%s', 'path': '%s', 'rubrik': '%s'}" %\
@@ -595,7 +602,9 @@ def Start(name, path, rubrik=''):
 		items =  blockextract('--red is-uppercase', page)
 		PLog(len(items))
 		for rec in items:						
-			title	= stringextract('headline">', '</', rec)
+			title	= stringextract('">', '</h2', rec)
+			if "is-lowercase" in title:
+				title	= stringextract('case">', '</span>', rec)
 			title 	= repl_json_chars(title);
 			rubrik=py2_encode(rubrik); title=py2_encode(title);
 			# PLog("title: %s, rubrik: %s" % (title, rubrik))
@@ -666,11 +675,12 @@ def Rubriken(name, path, themen=''):
 		items = get_container(page)						# Blöcke bilden
 		PLog(len(items))
 		skip_list=[]; dur=''
+		PLog("Mark0")
 		for  rec in items:	
 			PLog(len(rec))
 			PLog(rec[:100])
-			title = stringextract('data-module="headline">', '<', rec) # Ende: </h3>, /h2> oder </p>
-			title = get_title(rec)				
+			title = stringextract('-headline', 'class=', rec) 
+			title = get_title(title)				
 			if title == '':
 				continue
 			title_org = title							# unbehandelt für Abgleich
@@ -736,6 +746,7 @@ def Rubriken(name, path, themen=''):
 			#skip_list.append(href)
 				
 			if dur:			
+				PLog('Satz4:')
 				tag = dur
 				if img_txt:
 					tag = "%s\nBild: %s" % (tag, img_txt)
@@ -754,7 +765,7 @@ def Rubriken(name, path, themen=''):
 			if img_txt:
 				tag = "%s\nBild: %s" % (tag, img_txt)	
 				
-			PLog('Satz4:')
+			PLog('Satz5:')
 			PLog(title); PLog(href); PLog(img_src);  PLog(dur); PLog(single);
 			title=py2_encode(title); thema=py2_encode(thema); href=py2_encode(href);  
 			img_src=py2_encode(img_src);
@@ -840,8 +851,9 @@ def Rubrik_Single(name, path, thema='', ID=''):
 		found=False
 		PLog('Suche_Cluster: %s' % thema)						# Cluster thema auf Seite suche
 		for item in items:
-			# PLog(item[:100])
-			pos = item.find(u'headline">%s<' % thema)
+			#PLog(item[:100])
+			head = stringextract('-headline', 'class', item)
+			pos = item.find(u'">%s<' % thema)
 			if pos > 0:
 				PLog('Cluster gefunden: %s' % thema)
 				PLog("pos: %d" % pos)
@@ -1115,6 +1127,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 		tagline = rubrik
 		if sub_rubrik:
 			tagline = tagline + ' | ' + sub_rubrik
+		tagline = unescape(tagline)
 			
 		try:
 			dur = re.search(u'>(.*?) min</span>', page).group(1)		# 1 h 56 min
@@ -1129,7 +1142,8 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 		if href == DreiSat_BASE:
 			continue
 			
-		title = repl_json_chars(title); descr = repl_json_chars(descr); 
+		title = repl_json_chars(title); descr = unescape(descr);
+		descr = repl_json_chars(descr); 
 		descr_par =	descr.replace('\n', '||')	
 				
 		PLog('Satz7:')
@@ -1167,7 +1181,7 @@ def get_container(page):
 				u'<article class="m--teaser-topic-primary align-center-middle is-clickarea"|</article>',
 				u'<article class="m--teaser-topic-secondary is-clickarea"|</article>',		
 				u'<article class="m--teaser-small js-teaser js-rb-live  is-responsive"|</article>',
-				u'<article class="video-carousel-item">|</article>',		# Carousel-Item einzeln
+				u'<article class="video-carousel-item|</article>',				# Carousel-Item einzeln
 				]
 	
 	container=[]; 
@@ -1185,20 +1199,12 @@ def get_container(page):
 # Titel zum Block ermittlen
 def get_title(rec):
 	PLog("get_title:")
+	PLog(rec)
 	try:
-		title = re.search(u'data-module="headline">(.*?)</h3>', rec).group(1)
+		title = re.search(u'">(.*?)</h', rec).group(1)
 	except:
 		title=''
-	if title == '':
-		try:
-			title = re.search(u'data-module="headline">(.*?)</h2>', rec).group(1)
-		except:
-			title=''
-	if title == '':
-		try:
-			title = re.search(u'data-module="headline">(.*?)</p>', rec).group(1)
-		except:
-			PLog("skip_empty_title")
+		PLog("skip_empty_title")
 	
 	return title
 
@@ -1718,8 +1724,13 @@ def Bilder3sat(path=''):
 		
 		href = 'https://www.3sat.de' + stringextract('href="', '"', rec)
 		
-		headline = stringextract('clickarea-link js-teaser-title', '</h', rec)	# Klick-Titel
-		headline = stringextract('headline">', '</', headline)		
+		
+		headline = stringextract('clickarea-link js-teaser-title', 'class', rec)	# Klick-Titel
+		headline = stringextract('">', '<', headline)
+		PLog("headline; " + headline)
+		if headline == '':
+			 headline = stringextract('title="', '"', rec)
+			
 		pre_head = stringextract('class="a--preheadline level-4">', '</span>', rec)	# SubTitel oben, Bsp. Kultur
 		pre_head = pre_head.replace('<span>', '').strip()	
 		sub_head = stringextract('class="a--subheadline', 'class', rec)				# SubTitel unten, Bsp. Musik
