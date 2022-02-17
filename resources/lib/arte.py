@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.01.2022
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.02.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -342,7 +342,7 @@ def GetContent(li, page, ID):
 		else:
 			tag = u"Dauer %s\n\n%s\n%s" % (dur, start_end, geo)
 			
-		title = unescape(title);
+		title = transl_json(title); title = unescape(title);
 		title = repl_json_chars(title); 					# franz. Akzent mögl.
 		summ = repl_json_chars(summ)						# -"-
 		tag_par = tag.replace('\n', '||')					# || Code für LF (\n scheitert in router)
@@ -412,7 +412,7 @@ def get_img(item):
 # 19.11.2021 ergänzt um weitere Auswertungsmerkmale, Hinw. auf Überschreitung
 #	der Ebenentiefe entfernt, dto. 31.01.2022 (Subtitel, Dauer - Bilder 
 #	können fehlen bzw. transparent.png)
-#
+# 17.02.2022 fehlende Bilder via api-Call ergänzt 
 def Beitrag_Liste(url, title):
 	PLog("Beitrag_Liste:")				
 
@@ -443,6 +443,7 @@ def Beitrag_Liste(url, title):
 		PLog(len(page))
 		items = blockextract('labelledby', page)	
 		PLog(len(items))
+		img_api = "https://api-cdn.arte.tv/api/mami/v1/program/de/%s/1920x1080"
 		
 		for item in items:
 			summ=''; geo='';											# nicht vorh.
@@ -450,6 +451,9 @@ def Beitrag_Liste(url, title):
 			url = stringextract('href="', '"', item)
 			pid = stringextract('/videos/', '/', url)
 			img = stringextract('src="', '"', item)
+			if img == '' or img.endswith("transparent.png"):
+				img = img_api % pid										# Bild via api
+				
 			title = stringextract('_title">', '</h3>', item)
 			title = unescape(title); title = repl_json_chars(title);
 			title = unescape(title); title = repl_json_chars(title);
@@ -752,8 +756,9 @@ def get_subkats(li, items, path):
 		if pos > 0:
 			img = get_img(item)
 			
-		pid = stringextract('id":"', '"', item)			# pid für SubKat				
-		title = repl_json_chars(title)
+		pid = stringextract('id":"', '"', item)			# pid für SubKat
+		label = transl_json(label)				
+		title = transl_json(title); title = repl_json_chars(title)
 		url = path
 					
 		PLog('Satz_Subs_Dokus:');  PLog(title);  PLog(pid); PLog(url); PLog(link_url); PLog(img);
