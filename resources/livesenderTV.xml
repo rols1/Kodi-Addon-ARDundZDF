@@ -2,10 +2,10 @@
  <channels_info>
   <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
   <imgsource>Arauco</imgsource>
-  <nr>28</nr>
+  <nr>29</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
-  <date>03.02.2022 rols</date>
+  <date>17.02.2022 rols</date>
   <ARDsource></ARDsource>
   <ZDFsource>https://www.zdf.de/live-tv</ZDFsource>
   <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ Button:Alle Sender</info>
@@ -156,7 +156,7 @@
 <epg>http://www.zdf.de/epg/programm-4100.html</epg>
 <items>
 	<item>
-		<title>BR Fernsehen-Nord</title>
+		<title>BR Fernsehen - Nord</title>
 		<hrefsender>BR Fernsehen - Nord</hrefsender>
 		<link>http://mcdn.br.de/br/fs/bfs_nord/hls/de/master.m3u8</link>
 		<thumbnail>tv-br.png</thumbnail>
@@ -166,7 +166,7 @@
 	</item>
 	<item>
 		<title>BR Fernsehen - Süd</title>
-		<hrefsender>BR Fernsehen - Süd</hrefsender>
+		<hrefsender>BR Fernsehen Süd</hrefsender>
 		<link>ARDSource</link>
 		<thumbnail>tv-br.png</thumbnail>
 		<imgsource></imgsource>
@@ -238,7 +238,7 @@
 	</item>
 	<item>
 		<title>Rundfunk Berlin Brandenburg</title>
-		<hrefsender>Rundfunk Berlin Brandenburg</hrefsender>
+		<hrefsender>rbb Fernsehen</hrefsender>
 		<link>ARDSource</link>
 		<thumbnail>tv-rbb-brandenburg.png</thumbnail>
 		<imgsource></imgsource>
@@ -247,7 +247,7 @@
 	</item>
 	<item>
 		<title>Saarländischer Rundfunk</title>
-		<hrefsender>Saarländischer Rundfunk</hrefsender>
+		<hrefsender>SR</hrefsender>
 		<link>ARDSource</link>
 		<thumbnail>tv-sr.png</thumbnail>
 		<imgsource></imgsource>
@@ -268,7 +268,7 @@
 	</item>
 	<item>
 		<title>Westdeutscher Rundfunk</title>
-		<hrefsender>Westdeutscher Rundfunk</hrefsender>
+		<hrefsender>WDR</hrefsender>
 		<link>ARDSource</link>
 		<link-old>https://wdrfsgeo-lh.akamaihd.net/i/wdrfs_geogeblockt@530016/master.m3u8</link-old>
 		<thumbnail>tv-wdr.png</thumbnail>

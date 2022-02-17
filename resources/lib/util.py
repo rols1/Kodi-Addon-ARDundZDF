@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.02.2022
+# 	<nr>10</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.02.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2417,7 +2417,8 @@ def get_ZDFstreamlinks(skip_log=False):
 # ZDF-Links s. get_ZDFstreamlinks
 # Aufruf SenderLiveListe, ARDStartRubrik -> get_playlist_img
 # 01.12.2021 erweitert um Liste für Untertitel-Links
-#
+# 17.02.2021 Auswertung publicationService/name statt
+#	longTitle
 def get_ARDstreamlinks(skip_log=False):
 	PLog('get_ARDstreamlinks:')
 	PLog(skip_log)
@@ -2453,7 +2454,7 @@ def get_ARDstreamlinks(skip_log=False):
 	ard_streamlinks=[]; 
 	for rec in content:												# Schleife  Web-Sätze		
 		title=''; href=''; streamurl=''; thumb=''
-		title = stringextract('longTitle":"', '"', rec)				# livesenderTV.xml anpassen
+		title = stringextract('name":"', '"', rec)					# publicationService":{"name -> livesenderTV.xml 
 		href_list = blockextract('href":"', rec, '"type"')
 		for h in href_list:
 			if '?devicetype=pc' in h:								# Stream-Quellen
@@ -2463,7 +2464,7 @@ def get_ARDstreamlinks(skip_log=False):
 		thumb = thumb.replace('{width}', '720')			
 
 		if href:
-			PLog("lade_livelink:")
+			PLog("lade_livelink: " + title)
 			page, msg = get_page(path=href, JsonPage=True)			# s.a. Livestream ARDStartSingle
 			VideoUrls = blockextract('_quality', page)				# 2 master.m3u8-Url (1 x UT) bei ARD-Sendern
 			PLog(len(VideoUrls))
