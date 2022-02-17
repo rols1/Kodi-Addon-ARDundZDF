@@ -14,7 +14,8 @@ Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/release
 
 Die Plex-Versionen [Plex-Plugin-ARDMediathek2016](https://github.com/rols1/Plex-Plugin-ARDMediathek2016) und [ARDundZDF](https://github.com/rols1/ARDundZDF) werden nicht mehr gepflegt - Plex hat die Unterstützung für Plugins in seinen Client-Softwarepaketen eingestellt.
 
-<b>Classic-Version der ARD Mediathek</b>: seit Juni 2021 sind die Classic-Links nicht mehr erreichbar. Der Code im Addon wurde entfernt; im Addon ist die neue ARD Mediathek weiterhin verfügbar (siehe Funktionen).
+<b>Classic-Version der ARD Mediathek</b>: seit Juni 2021 sind die Classic-Links nicht mehr erreichbar. Der Code im Addon wurde entfernt; im Addon ist die neue ARD Mediathek weiterhin verfügbar (siehe Funktionen).<br>
+Damit entfallen auch die Radio-Podcasts der Classic-Version. Sie werden durch die neue Audiothek abgelöst.<br>
 
 #### Rückmeldungen willkommen:
 Im Forum: https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/  
@@ -30,24 +31,27 @@ Funktionen:
 #### ARD Mediathek (neue Version):  
 - Suche nach Sendungen
 - Startseite (wie Webseite)
+- ARD Mediathek RETRO
+- ARD Mediathek Entdecken
+- Livestreams
 - Sendung Verpasst
 - Sendungen A-Z
-- ARD Sportschau
+- ARD Sport (neu)
+- ARD Sportschau (sportschau.de)
+- Barrierearm
+- Bildgalerien Das Erste
 - Senderwahl
-- barrierefreie Angebote finden sich im Startmenü bei Rubriken oder Genrezugängen
 
 #### ZDF Mediathek: 
 - Suche nach Sendungen
 - Startseite (wie Webseite, einschl. funk-Inhalte)
 - Sendung Verpasst (Sendungen der letzten 7 Tage)
 - Sendungen A-Z
-- Sendungen A-Z Neu: funk
 - Rubriken
 - MeistGesehen (1 Woche)
-- Sport Live im ZDF
+- ZDF-sportstudio
 - Barrierearm (Hörfassungen, Untertitel, Gebärdensprache)
-- ZDFenglish
-- ZDFarabic
+- ZDFinternational
 - Bilderserien
 
 #### 3Sat Mediathek:
@@ -55,27 +59,22 @@ Funktionen:
 - 3Sat-Livestream
 - Sendung Verpasst (Sendungen der letzten 30 Tage
 - Sendungen A-Z
-- Rubriken
-
-#### Radio-Podcasts:
-- Sendungen A-Z
-- Rubriken
-- Radio-Feature
-- Radio-Tatort
-- Neueste Audios
-- Meist abgerufen
-- Refugee-Radio
-
-#### ARD-Audiothek Neu:
-- Highlights
-- Unsere Favoriten
-- Sammlungen
-- Meistgehört
-- Ausgewählte Sendungen
 - Themen
-- Sendungen A-Z (alle Radiosender)
-- Podcast-Favoriten (manuell erweiterbar)
+- Rubriken
+- Bildgalerien 3sat
+
+#### ARD-Audiothek Neu mit Podcast-Favoriten:
+- Suche
 - Livestreams (einschl. Die Fußball-Bundesliga im ARD-Hörfunk) 
+- Entdecken
+- Unsere Favoriten
+- Themen
+- Meistgehörte Episoden
+- Ausgewählte Podcasts
+- Rubriken
+- Sender (Sendungen einzelner Radiosender)
+- FUNK-Podcasts - Pop und Szene
+- Podcast-Favoriten (manuell erweiterbar)
 
 #### TV-Live-Streams (30.08.2018: 33 Sender), Aufnahmefunktion: 
 - ARD- und ZDF-Sender überregional und regional, einige ausgewählte Privatsender
@@ -85,7 +84,7 @@ Funktionen:
 - alle Radiosender von Bayern, HR, mdr, NDR, Radio Bremen, RBB, SR, SWR, WDR, Deutschlandfunk. Insgesamt 10 Stationen, 63 Sender
  
 #### Videobehandlung ARD Mediathek und ZDF Mediathek:
-- Videostreams: Auflistung der verfügbaren Angebote an Bandbreiten + Auflösungen (falls verfügbar: Audio ohne Video)
+- Livestreams: Auflistung der verfügbaren Angebote an Bandbreiten + Auflösungen (falls verfügbar: Audio ohne Video)
 - Videoclips: Auflistung der verfügbaren Angebote an Qualitätstufen sowie zusätzlich verfügbarer Videoformate (Ausnahme HDS + SMIL) 
 
 #### Downloadoption (ab Version 2.6.8 ohne cURL/wget)
@@ -95,12 +94,14 @@ Funktionen:
 - Download von Podcasts - bei Podcast-Favoriten zusätzlich Sammeldownloads 
 - Tools zum Bearbeiten des Download-Verzeichnisses (Verzeichnisse festlegen, Verschieben, Löschen)
 
-#### Favoriten, Merkliste
+#### Favoriten, Merkliste, strm-Dateien
 - Kodi-Favoriten lassen sich einblenden und im Addon aufrufen
-- interne Merkliste mit Ordnerverwaltung und Filterfunktion - optional: netzwerkweit mit lokaler Synchronisation 
+- interne Merkliste mit Ordnerverwaltung und Filterfunktion - optional: netzwerkweit mit lokaler Synchronisation
+- strm-Dateien für einzelne Videos und Serien (einschl. Serienüberwachung für die meisten ARD- und ZDF-Serien)
 
 #### Updates
 - entweder mit dem integrierten <b>Updatemodul (autom. Anpassung an Kodi-Version)</b> oder via <b>kodinerds-Repo</b>
+- Updates einzelner Bestandteile des  Addons (Einzelupdate) zwischen den regulären  Updates - Näheres siehe [Startpost im kodinerds-Forum](https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=502022#post502022) 
 
 #### weitere Module (optional)
 - ZDFmobile
@@ -112,6 +113,7 @@ Funktionen:
 - Arte-Kategorien
 - "Zuletzt gesehen"-Funktion 
 - Video-Playlist einschl. Archiv-Funktion
+- strm-Modul
 
 
 INSTALLATION:
