@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.02.2022
+# 	<nr>10</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.02.2022
 #
 
 from __future__ import absolute_import
@@ -358,6 +358,8 @@ def do_create(label, add_url):
 	#------------------------------							
 	title	= stringextract("title': '", "'", fparams) 				# fparams json-Format
 	url	= stringextract("url': '", "'", fparams) 
+	if url == '':
+		url	= stringextract("path': '", "'", fparams)				# Livestream  SenderLiveResolution
 	thumb	= stringextract("thumb': '", "'", fparams) 
 	Plot	= get_Plot(fparams)
 		
@@ -502,9 +504,11 @@ def get_Plot(fparams):
 # 	strmpath=strm-Verzeichnis, fname=Dateiname ohne ext.
 # 	url=Video-Url, thumb=thumb-Url
 # gui=False: ohne Gui, z.B. für ZDF_getStrmList
+# 
 def xbmcvfs_store(strmpath, url, thumb, fname, title, Plot, weburl, strm_type, gui=True):
 	PLog("xbmcvfs_store:")
 	PLog("strmpath: " + strmpath)
+	PLog(url)
 	
 	if SETTINGS.getSetting('pref_strm_uz') == "true":	# Für jede strm-Datei ein Unterverzeichnis
 		strmpath = os.path.join(strmpath, fname)	# STRMSTORE + fname
@@ -512,9 +516,13 @@ def xbmcvfs_store(strmpath, url, thumb, fname, title, Plot, weburl, strm_type, g
 			os.mkdir(strmpath)
 	
 	if thumb:
-		xbmcvfs_icon = os.path.join(strmpath, "%s.jpeg" % fname)
+		if thumb.startswith("http"):					# Server / lokal?
+			xbmcvfs_icon = os.path.join(strmpath, "%s.jpeg" % fname)
+			urlretrieve(thumb, xbmcvfs_icon)
+		else:
+			xbmcvfs_icon = os.path.join(strmpath, "%s.png" % fname)
+			shutil.copy(thumb, xbmcvfs_icon)			# Kopie von lokalem Icon (TV-Livestreams)	
 		PLog("xbmcvfs_icon: " + xbmcvfs_icon)
-		urlretrieve(thumb, xbmcvfs_icon)
 
 	xbmcvfs_fname = os.path.join(strmpath, "%s.strm" % fname)
 	PLog("xbmcvfs_fname: " + xbmcvfs_fname)
@@ -554,7 +562,7 @@ def xbmcvfs_store(strmpath, url, thumb, fname, title, Plot, weburl, strm_type, g
 	return True
 
 # ----------------------------------------------------------------------
-#
+# Ermittlung Streamquelle (falls noch nicht gefunden, s. url_found).
 # plugin-Script add_url ausführen -> HLS_List, MP4_List bauen,
 # HLS_List, MP4_List durch PlayVideo_Direct auwerten lassen, Flag +
 # 	Param-Austausch via Dict
@@ -620,7 +628,7 @@ def get_Source_Funcs_ID(add_url):
 	# PlayVideo: Einzelauflösung - ohne Ermittlung der Quellen, s. url_test
 	Source_Funcs = [u"dirID=ZDF|ZDF", u"ARDnew.ARDStartSingle|ARDNEU",	# Funktionen + ID's
 					u"my3Sat.SingleBeitrag|3sat", u'.XLGetSourcesPlayer|TXL',
-					u"dirID=PlayVideo|PlayVideo"
+					u"dirID=PlayVideo|PlayVideo",u"dirID=SenderLiveResolution|ARD"
 					]
 	ID=''												# derzeit nicht ermittelbar
 	for item in Source_Funcs:

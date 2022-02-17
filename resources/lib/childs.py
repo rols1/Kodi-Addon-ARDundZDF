@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.12.2021
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.02.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -189,6 +189,14 @@ def Main_KIKA(title):
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Menu", 
 		fanart=GIT_KIKA, thumb=GIT_KANINCHEN, tagline='für Kinder 3-6 Jahre', fparams=fparams)
+
+	title=u'[B]für Erwachsene:[/B] Generation Alpha – Der KiKA-Podcast'
+	tag = u"[B]für Erwachsene:[/B]\nwie entwickelt sich die Lebenswelt der Kinder und welche Herausforderungen kommen auf "
+	tag = u"%sMedienmacher*innen zu? Das sind die Leitfragen von [B]Generation Alpha – Der KiKA-Podcast[/B]" % tag
+	thumb = "https://kommunikation.kika.de/ueber-kika/25-jahre/podcast/generation-alpha-100_v-tlarge169_zc-cc2f4e31.jpg?version=35225"	
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.gen_alpha", 
+		fanart=GIT_KIKA, thumb=thumb, tagline=tag, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
@@ -1195,6 +1203,83 @@ def Kika_VideoMP4get(title, assets):
 
 	return download_list
 			
+# ----------------------------------------------------------------------
+# Jubiläumspodcast (25 Jahre Kika), 14-tätig
+# aktuell (16.02.2022): 4 Folgen, geplant: 25
+# 2 Durchläufe, xml_path: 1 Podcast mit Details + mp4-Quelle
+def gen_alpha(xml_path='', thumb=''):
+	PLog('gen_alpha:')
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+	base = "https://kommunikation.kika.de"
+	
+	if xml_path == '':							# 1. html-, 2. xml-Seite 
+		path = "https://kommunikation.kika.de/ueber-kika/25-jahre/podcast/generation-alpha-podcast-100.html"
+	else:
+		path = xml_path
+		
+	page, msg = get_page(path)	
+	if page == '':	
+		msg1 = "Fehler in Kika_SingleBeitrag:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+			
+	if xml_path == '':							# 1. Durchlauf: Liste Podcasts
+		items = blockextract('class="av-playerContainer', page)
+		PLog(len(items))
+		for s in items:			
+			img = stringextract('<noscript>', '</noscript>', s)
+			title = stringextract('alt="', '|', img)
+			img_alt = stringextract('title="', '"', img)
+			img_src = base + stringextract('src="', '"', img)
+			
+			xml_path = stringextract("dataURL:'", "'", s)
+			dur = stringextract('duration">', '</', s)
+			
+			tag = "Dauer: %s" % dur
+			summ = img_alt
+			title = unescape(title)
+			summ = unescape(summ)
+
+			PLog('Satz9:')		
+			PLog(xml_path);PLog(title);PLog(img_alt);PLog(img_src);
+			xml_path=py2_encode(xml_path); img_src=py2_encode(img_src)
+			fparams="&fparams={'xml_path': '%s', 'thumb': '%s'}" % (quote(xml_path), quote(img_src))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.gen_alpha", fanart=GIT_KIKA, 
+				thumb=img_src, fparams=fparams, tagline=tag, summary=summ)
+	
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	else:	# ---------------------------		# 2. Durchlauf: einz. Podcast
+			
+			title = stringextract("<headline>", "</headline>", page)
+			top = stringextract("<topline>", "</topline>", page)
+			summ1 = stringextract("<title>", "</title>", page)
+			summ2 = stringextract("<teaserText>", "</teaserText>", page)
+			sday = stringextract("<webTime>", "</webTime>", page)	# gesendet
+			dur = stringextract("<duration>", "</duration>", page)
+			
+			tag = "Dauer: %s | %s" % (dur, top)
+			summ = "%s\n%s" % (summ1, summ2)
+			Plot = "%s\n\n%s" % (tag, summ)
+			
+			assets = blockextract('<asset>', page)
+			PLog(len(assets))
+			url=''
+			for a in assets:
+				profil = stringextract("<profileName>", "</profileName>", a) # Codec
+				if "MP3" in profil:
+					url = stringextract("Url>", "</", a)
+					size = stringextract("<fileSize>", "</fileSize>", a)
+					break	
+		
+			PLog('Satz10:')		
+			PLog(url);PLog(title);PLog(thumb);
+			if url:				
+				PlayAudio(url, title, thumb, Plot)
+	return
+
 # ----------------------------------------------------------------------			
 #								tivi
 # ----------------------------------------------------------------------			
