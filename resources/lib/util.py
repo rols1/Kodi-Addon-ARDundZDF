@@ -3077,7 +3077,8 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		PLog("OS_RELEASE: " + OS_RELEASE)		
 
 		# Check auf inputstream.adaptive nicht erforderlich
-
+		# s. https://github.com/xbmc/inputstream.adaptive,
+		# 	https://github.com/xbmc/inputstream.adaptive/wiki/
 		if url.endswith('.m3u8'):							# SetInputstreamAddon hier nur HLS
 			if SETTINGS.getSetting('pref_inputstream') == 'true':
 				PLog("SetInputstreamAddon:")

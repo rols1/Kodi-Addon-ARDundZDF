@@ -10,6 +10,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+19.02.2022 4.2.4
+			strm-Modul: Berücksichtigung Menü TV-Livestreams für strm-Bündel, 
+			Anpassung get_Source_Funcs_ID + xbmcvfs_store.
+			Modul 3sat: Senderänderungen - Anpassungen in Start (lazyload-Beiträge),
+			Rubrik_Single, SendungenAZ, Sendereihe_Sendungen, get_container, get_title,
+			Bilder3sat.
+			Modul childs: Podcast-Reihe  "Generation Alpha" hinzugefügt, neue Funktion
+			gen_alpha, neues Menü in Main_KIKA.
+			Beitrag_Liste (modul arte): fehlende Bilder via api-Call ergänzt.
+			get_ARDstreamlinks (modul util): Auswertung publicationService/name statt
+			longTitle, Anpassung hrefsender in livesenderTV.xml (Streamlink fehlte für 
+			tagesschau24 + einige Regionalsender). 
+			Audiothek: Key-Änderungen der ARD in den json-Dateien - Anpassungen in
+			Audio_get_rubriken_web, AudioStartLive (img-Format), AudioSenderPrograms
+			(img, title), Audio_get_sendung (img, Titel, downloadUrl -> web_url),
+			neue Funktion AudioWebMP3.
+
 13.02.2022 4.2.3
 			PlayVideo_Direct (util): Rückfallebenen für leere Listen geändert, Fehler-
 			meldung unterdrückt bei Livestreamkennz, Vorbelegung width="320" für u.a.
@@ -24,10 +41,11 @@ CHANGE HISTORY
 			'/').
 			strm-Modul: Listentitle in Logdatei auf 15 Zeichen begrenzt (Optik), Option
 			"Listeneintrag löschen" ergänzt mit "dazugehörige Beiträge löschen", sowie
-			"zu einem strm-Verzeichnis wechseln, Log-Updates zusammengeführt in neuer
+			"zu einem strm-Verzeichnis wechseln", Log-Updates zusammengeführt in neuer
 			Funktion log_update, leere Syncliste abgefangen in strm_tools, Tools-Titel
 			mit next_sync-Time ergänzt, "Leichen"-Behandl. für STRM_CHECK.
-			ARD_FlatListEpisodes + ZDF_FlatListEpisodes: ergänzt mit Button für strm-Tools.		
+			ARD_FlatListEpisodes + ZDF_FlatListEpisodes: ergänzt mit Button für strm-Tools.
+			Setting für inputstream.adaptive: Anpassung PlayVideo + settings.xml.		
 
 05.02.2022 4.2.2
 			strm-Tools (strm-Modul): Option "einzelne Liste jetzt abgleichen" ergänzt.
