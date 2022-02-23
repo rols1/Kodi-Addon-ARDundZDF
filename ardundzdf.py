@@ -1768,7 +1768,7 @@ def Audio_get_sendung(url, title):
 	pos = page.find("nodes")
 	if pos > 0:
 		page = page[pos:]
-	items = blockextract('"id":', page, '}]},')
+	items = blockextract('"id":', page, '}]},{')					# bis nächste "id"
 					
 	#if len(items) == 0:											# 18.02.2022 entfallen: downloadUrl,
 	#	items = blockextract('mt:bestQualityPlaybackUrl', page)		# 	bestQualityPlaybackUrl
@@ -1814,7 +1814,7 @@ def Audio_get_sendung(url, title):
 #----------------------------------------------------------------
 # Aufrufer: PodFavoriten (Web-Url -> api umgesetzt)
 # json -> strings (Performance) 
-def Audio_get_sendung_api(url, title, page='', ret='', home_id='', ID=''):
+def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 	PLog('Audio_get_sendung_api: ' + url)
 	PLog(ID)
 	url_org=url; title_org=title
@@ -1876,10 +1876,10 @@ def Audio_get_sendung_api(url, title, page='', ret='', home_id='', ID=''):
 	# Web-Urls funktionieren nicht mit offset + limit, daher hier bei 
 	#	Bedarf Konvertierung
 	if elements:														# Mehr anzeigen
-		PLog(url)
+		PLog(url_org)
 		offset = stringextract('offset=', '&', url_org)
 		limit=20
-		if "limit=" in url:
+		if "limit=" in url_org:
 			limit = url_org.split("limit=")[-1]
 		PLog(elements); PLog(offset);
 		listed = int(offset) + cnt 
@@ -1893,10 +1893,23 @@ def Audio_get_sendung_api(url, title, page='', ret='', home_id='', ID=''):
 			fparams="&fparams={'title': '%s', 'url': '%s'}" % (quote(title_org), quote(url))
 			addDir(li=li, label=title_org, action="dirList", dirID="Audio_get_sendung_api", fanart=R(ICON_MEHR), 
 				thumb=R(ICON_MEHR), fparams=fparams, tagline=tag)		
+		
+	#	
+	PLog("Laenge: %d" % len(downl_list))																# Sammel-Download-Button?				
+	if SETTINGS.getSetting('pref_use_downloads') == 'true':
+		if len(downl_list) > 1:
+			#downl_list=downl_list[:1]	# Debug
+			# Sammel-Downloads - alle angezeigten Favoriten-Podcasts downloaden?
+			#	für "normale" Podcasts erfolgt die Abfrage in SinglePage
+			title=u'[B]Download! Alle angezeigten %d Podcasts speichern?[/B]' % len(downl_list)	
+			summ = u'Download von insgesamt %s Podcasts' % len(downl_list)	
+			Dict("store", 'downl_list', downl_list) 
+			Dict("store", 'URL_rec', downl_list) 
 
-	if len(downl_list) > 0 and ret:										# -> PodFavoriten
-		PLog(len(downl_list))							
-		return dl_cnt, downl_list
+			fparams="&fparams={'key_downl_list': 'downl_list', 'key_URL_rec': 'downl_list'}" 
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
+				fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
+	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -1911,9 +1924,11 @@ def Audio_get_items_single(item, ID=''):
 	mp3_url=''; web_url=''; attr=''; img=''; dur=''; title=''; 
 	summ=''; source=''; sender=''; pubDate='';
 	
-	if '"downloadUrl"' in item:										# api-Seiten ohne mp3_url
-		mp3_url = stringextract('"downloadUrl":"', '"', item)	
-	else:	
+	mp3_url = stringextract('"downloadUrl":"', '"', item)			# api-Seiten ev. ohne mp3_url
+	if 	mp3_url == '':
+		audios = stringextract('"audios":', '}', item)				# Altern.
+		mp3_url = stringextract('"url":"', '"', audios)
+	if 	mp3_url == '':	
 		web_url = stringextract('"sharingUrl":"', '"', item)		# Weblink
 	#path = stringextract('path":', '},', item)						# Titel-Ersatz in tag z.Z.n. genutzt
 	#path = path.split("/")
@@ -1927,7 +1942,10 @@ def Audio_get_items_single(item, ID=''):
 	dur = stringextract('"duration":', ',', item)					# in Sek.
 	dur = dur.replace("}", '')										# 3592} statt 3592,
 	dur = seconds_translate(dur)
-	title = stringextract('"title":"', '"', item)
+	if "clipTitle" in item:											# Abschnitt "tracking"
+		title = stringextract('"clipTitle":"', '"', item)
+	else:
+		title = stringextract('"title":"', '"', item)
 	title = repl_json_chars(title)
 	summ = stringextract('"synopsis":"', '"', item)
 	summ = repl_json_chars(summ)
@@ -2463,7 +2481,6 @@ def Audio_get_homescreen(li='', page='', cluster_id=''):
 		
 		page, msg = get_page(node_path, do_safe=False)			# node_path bereits quotiert
 		PLog(page[:140])
-#		RSave('/tmp/x.json', py2_encode(page))	# Debug	
 		
 		typ = stringextract('"type":"', '"', page)
 		PLog("typ: " + typ)	
