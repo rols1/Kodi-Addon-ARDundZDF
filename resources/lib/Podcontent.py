@@ -89,7 +89,9 @@ ARD_AUDIO_BASE = 'https://api.ardaudiothek.de/'
 #	hier Abruf im json-Format, aber nicht komp. mit AudioContentJSON
 #
 # xml-format verworfen, da Dauer des mp3 fehlt.
-# 30.07.2021 Anpassung an renovierte Audiothek (alte Links -> neue api-Calls)  
+# 30.07.2021 Anpassung an renovierte Audiothek (alte Links -> neue api-Calls) 
+# 20.02.2022 dto - akt. o. Sammeldownloads mp3_urls nur in Webpage vorh., 
+#	blättern aber nur in api-pages
 # 
 def PodFavoriten(title, path):
 	PLog('PodFavoriten:'); PLog(path);	
@@ -97,55 +99,16 @@ def PodFavoriten(title, path):
 	base = "https://api.ardaudiothek.de/"
 	
 	if '//www.ardaudiothek.de/' in path:			#  alte Links -> neue api-Calls
+		href_add = "?offset=0&limit=20"
 		url_id 	= path.split('/')[-1]
-		path = ARD_AUDIO_BASE + "programsets/%s" % url_id
-#		path = "https://api.ardaudiothek.de/search?query=%s" 					
+		path = ARD_AUDIO_BASE + "programsets/%s/%s" % (url_id, href_add)
+		#path = "https://api.ardaudiothek.de/search?query=%s" 					
 	path = path.replace('/items', '')				# aus Cluster-Suche entf. (key-error Audio_get_json_single)
-	
-
+	 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Audiothek')				# Home-Button
-
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in PodFavoriten:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return #li
-	PLog(len(page))	
+	#li = home(li, ID='ARD Audiothek')				# Home-Button
 		
-	if '/programsets/' in path:				# Rubriken (neues api ab 07/2021)
-		# ID="PodFavs"
-		ID="get_rubrik"
-	else:
-		ID="AudioSearch"
-		
-	cnt, downl_list = ardundzdf.Audio_get_json_single(li, page, ID)
-
-	if cnt == 0:
-		msg1 = 'nichts gefunden zu >%s<' % title_org
-		msg2 = path
-		if '/api/search/' in path:
-			msg2 = u'Vielleicht Suchergebnis ohne Einzelbeiträge?'
-		MyDialog(msg1, msg2, '')
-											
-	#																			# Download-Button?				
-	if SETTINGS.getSetting('pref_use_downloads') == 'true':
-		if len(downl_list) > 1:
-			# Sammel-Downloads - alle angezeigten Favoriten-Podcasts downloaden?
-			#	für "normale" Podcasts erfolgt die Abfrage in SinglePage
-			title=u'[B]Download! Alle angezeigten %d Podcasts speichern?[/B]' % cnt
-			summ = u'Download von insgesamt %s Podcasts' % len(downl_list)	
-			Dict("store", 'downl_list', downl_list) 
-			Dict("store", 'URL_rec', downl_list) 
-
-			fparams="&fparams={'key_downl_list': 'downl_list', 'key_URL_rec': 'downl_list'}" 
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
-				fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
-	
-
-	destfunc = "resources.lib.Podcontent.PodFavoriten" 
-	ardundzdf.Audio_get_nexturl(li, page, title_org, ID, destfunc)				# Mehr-Button anhängen
+	ardundzdf.Audio_get_sendung_api(path, title)	# -> DownloadMultiple
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
