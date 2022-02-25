@@ -10,6 +10,8 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+25.02.2022 4.2.5 Neubau Audiothek nach ARD-Änderungen
+
 19.02.2022 4.2.4
 			strm-Modul: Berücksichtigung Menü TV-Livestreams für strm-Bündel, 
 			Anpassung get_Source_Funcs_ID + xbmcvfs_store.

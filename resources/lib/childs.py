@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.02.2022
+#	Stand: 20.02.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -42,7 +42,7 @@ import datetime, time
 import re				# u.a. Reguläre Ausdrücke
 import string
 
-import ardundzdf					# -> ParseMasterM3u, transl_wtag, get_query
+import ardundzdf					# -> ParseMasterM3u, transl_wtag, get_query, Audio_get_sendung..
 from resources.lib.util import *
 
 
@@ -446,49 +446,19 @@ def Kiraka_shows(title):
 # Kinderhörspiele
 # die ermittelte webid wird in Kiraka_get_mp3 zur Web-Url. Auf der
 #	Webseite wird dann die mp3-Quelle ermittelt.
+# 20.02.2022 WDR-Seite kinderhoerspiel-podcast-102 nicht mehr vorh. -
+#	Umstellung auf Inhalte der Audiothek
 #			
 def Kiraka_pods(title):
 	PLog('Kiraka_pods:')
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
-	base = "https://kinder.wdr.de"
-	path = base + "/radio/kiraka/hoeren/hoerspiele/kinderhoerspiel-podcast-102.html"
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Kiraka_pods"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
-	PLog(len(page))	
+	title = u'KiRaKa - Hörspiele'
+	ARD_AUDIO_BASE = 'https://api.ardaudiothek.de/'
+	web_url = "https://www.ardaudiothek.de/kinderhoerspiel-im-wdr/36244846"
+	node_id = "36244846"
+	url = "https://api.ardaudiothek.de/programsets/36244846/?offset=0&limit=20"
 	
-	items = blockextract('podcast-102-entry=', page)	
-	for s in items:
-		img = stringextract('srcset="', '"', s)
-		if img.startswith('//'):				# //www1.wdr.de/..
-			img = 'https:' + img
-		else:									# /radio/kiraka/..
-			img = base + img
-		stitle = stringextract('mediaTitle">', '</', s)
-		webid = stringextract("'id':'", "'", s) # podcast-102-entry="{'id':'audio-wie-viele..
-			
-		day = stringextract('mediaDate">', '</', s)	
-		dur = stringextract('mediaDuration">', '</', s)	
-		dur = cleanhtml(dur)
-		descr = stringextract('"text">', '</p', s)
-		descr = mystrip(descr); descr = unescape(descr)										
-		
-		tag = "%s | %s | %s | %s\n\n%s" % (title, stitle, day, dur, descr)
-		Plot = tag.replace('\n', '||'); 
-		
-		PLog('Satz6:')
-		PLog(img); PLog(stitle); PLog(webid); PLog(Plot);
-		stitle=py2_encode(stitle); webid=py2_encode(webid);
-		thumb=py2_encode(img); Plot=py2_encode(Plot); 
-		fparams="&fparams={'webid': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(webid), 
-			quote(stitle), quote(thumb), quote_plus(Plot))
-		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kiraka_get_mp3", \
-			fanart=GIT_KIR_SHOWS, thumb=thumb, fparams=fparams, tagline=tag, mediatype='music')
+	ardundzdf.Audio_get_sendung_api(url, title, home_id='Kinderprogramme')
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 

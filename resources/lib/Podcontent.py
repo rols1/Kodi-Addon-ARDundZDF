@@ -90,8 +90,8 @@ ARD_AUDIO_BASE = 'https://api.ardaudiothek.de/'
 #
 # xml-format verworfen, da Dauer des mp3 fehlt.
 # 30.07.2021 Anpassung an renovierte Audiothek (alte Links -> neue api-Calls) 
-# 20.02.2022 dto - akt. o. Sammeldownloads mp3_urls nur in Webpage vorh., 
-#	blättern aber nur in api-pages
+# 23.02.2022 dto - akt. Sammeldownloads deaktiviert, da mp3_urls nur in Webpage vorh., 
+#	api-pages aber zum Blättern notwendig.
 # 
 def PodFavoriten(title, path):
 	PLog('PodFavoriten:'); PLog(path);	
@@ -109,6 +109,24 @@ def PodFavoriten(title, path):
 	#li = home(li, ID='ARD Audiothek')				# Home-Button
 		
 	ardundzdf.Audio_get_sendung_api(path, title)	# -> DownloadMultiple
+	
+	'''	
+	# Rückgabe reaktivieren (cnt, downl_list)
+	PLog("Laenge: %d" % len(downl_list))																# Sammel-Download-Button?				
+	if SETTINGS.getSetting('pref_use_downloads') == 'true':
+		if len(downl_list) > 1:
+			#downl_list=downl_list[:1]	# Debug
+			# Sammel-Downloads - alle angezeigten Favoriten-Podcasts downloaden?
+			#	für "normale" Podcasts erfolgt die Abfrage in SinglePage
+			title=u'[B]Download! Alle angezeigten %d Podcasts speichern?[/B]' % len(downl_list)	
+			summ = u'Download von insgesamt %s Podcasts' % len(downl_list)	
+			Dict("store", 'downl_list', downl_list) 
+			Dict("store", 'URL_rec', downl_list) 
+
+			fparams="&fparams={'key_downl_list': 'downl_list', 'key_URL_rec': 'downl_list'}" 
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
+				fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
+	'''
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
@@ -125,8 +143,10 @@ def PodFavoriten(title, path):
 #	bis ca. 4 KByte getestet) 
 #
 # Rücksprung-Problem: unter Kodi keine wie unter Plex beoachtet.
-# Bei internem Download wird mit path_url_list zu thread_getfile verzweigt.
+# Bei Sammeldownload wird mit path_url_list zu thread_getfile verzweigt.
 # 27.02.2020 Code für curl/wget-Download entfernt
+# 23.02.2022 Sammeldownload deaktiviert: bei den api-Calls für die 
+#	PodFavoriten enthalten die json-Seiten keine Download-Url 
 
 #----------------------------------------------------------------  	
 def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads

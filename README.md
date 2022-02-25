@@ -63,14 +63,10 @@ Funktionen:
 - Rubriken
 - Bildgalerien 3sat
 
-#### ARD-Audiothek Neu mit Podcast-Favoriten:
+#### ARD-Audiothek Neu (Stand 25.02.2022) mit Podcast-Favoriten:
 - Suche
-- Livestreams (einschl. Die Fußball-Bundesliga im ARD-Hörfunk) 
-- Entdecken
-- Unsere Favoriten
-- Themen
-- Meistgehörte Episoden
-- Ausgewählte Podcasts
+- Livestreams, einschl. "Die Fußball-Bundesliga im ARD-Hörfunk", "ARD Event Streams", "Livestreams der sportschau.de" 
+- Entdecken (wie Webseite)
 - Rubriken
 - Sender (Sendungen einzelner Radiosender)
 - FUNK-Podcasts - Pop und Szene

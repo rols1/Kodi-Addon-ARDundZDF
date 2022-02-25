@@ -1034,7 +1034,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 						new_url = e.hdrs.get("Location")
 						parsed = urlparse(path)
 						new_url = 'https://%s%s' % (parsed.netloc, new_url)
-						PLog("http308_new_url: " + new_url)
+						PLog("HTTP308_new_url: " + new_url)
 						return new_url, ''
 					
 				page = r.geturl()
