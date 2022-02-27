@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>28</nr>										# Numerierung für Einzelupdate
+# 	<nr>29</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.5'
-VDATE = '25.02.2022'
+VDATE = '27.02.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1314,7 +1314,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 				
 			img = stringextract('"image"', '"url1X1"', LiveObj)			# 18.02.2022 neues Format:
 			img = stringextract('"url":"', '"', img)	
-			img = img.replace('{width}', '640')							# vormals: w=1x1/640?mandant=ard
+			img = img.replace('{width}', '640')						# fehlt manchmal
 			Plot = stringextract('"synopsis":"', '"', LiveObj)
 			Plot = repl_json_chars(Plot)
 					
@@ -2110,7 +2110,7 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page=''):
 
 	if page == '':								# page nicht genutzt
 		page = Dict("load", rubrik_id)
-	
+
 	data=[]										# wie Audio_get_cluster_rubrik
 	if section_id == "STAGE":					# nur Stage auswerten, Homescreen od. Rubriken
 		cluster = stringextract('"sections"', '}}}]},', page)
@@ -2148,7 +2148,8 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page=''):
 		if 	descr == '':
 			descr = stringextract('"synopsis":"','"', node)
 		img = stringextract('"url1X1":"','"', node)				# möglich: "image": null 	
-		img = img.replace('{width}', '640')
+		#img = img.replace('{width}', '640')
+		img = img.replace('{width}', '320')
 		if img == '':
 			img = R(ICON_DIR_FOLDER)
 		imgalt1 = stringextract('"description":"','"', node)	# Bildbeschr.	
@@ -2262,6 +2263,8 @@ def Audio_get_homescreen(page='', cluster_id=''):
 		for item in items:
 			if item.find('"image"') > 0:
 				continue
+			if item.find('"GRID_LIST_COLLAPSIBLE"') > 0:				# Bsp. "LIVE: die Bundesliga"
+				continue
 
 			typename =  stringextract('"__typename":"', '"', item)
 			cluster_id =  stringextract('"id":"', '"', item)
@@ -2299,7 +2302,6 @@ def Audio_get_homescreen(page='', cluster_id=''):
 		
 		page, msg = get_page(node_path, do_safe=False)					# node_path bereits quotiert
 		page = page.replace('\\"', '*')
-		PLog(page[:140])
 		
 		typ = stringextract('"type":"', '"', page)
 		PLog("typ: " + typ)	
@@ -2322,7 +2324,8 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			node_id = stringextract('"id":"','"', item)					# ID der Sendung / des Beitrags / ..	
 			title = stringextract('"title":"', '"', item)
 			img = stringextract('"url":"', '"', item)
-			img = img.replace('{width}', '640')
+			#img = img.replace('{width}', '640')						# fehlt manchmal
+			img = img.replace('{width}', '320')
 			summ = stringextract('"synopsis":"', '"', item)	
 			# anz = stringextract('"numberOfElements":"', '"', item)	# fehlt
 			attr = stringextract('"attribution":"', '"', item)
