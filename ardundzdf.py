@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>29</nr>										# Numerierung für Einzelupdate
+# 	<nr>30</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.5'
-VDATE = '27.02.2022'
+VDATE = '04.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1180,8 +1180,7 @@ def AudioStart(title):
 	# Button für Podcast-Favoriten anhängen 					# Podcast-Favoriten
 	title="Podcast-Favoriten"; 
 	tagline = u'konfigurierbar mit der Datei podcast-favorits.txt im Addon-Verzeichnis resources'
-	summ = u'Suchergebnisse der Audiothek lassen sich hinzufügen\n'
-	summ = u"%s\nMehrfach-Downloads (komplette Liste) möglich" % summ
+	summ=''
 	fparams="&fparams={'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="PodFavoritenListe", fanart=R(ICON_MAIN_POD), 
 		thumb=R(ICON_POD_FAVORITEN), tagline=tagline, summary=summ, fparams=fparams)
@@ -2072,10 +2071,11 @@ def Audio_get_cluster_rubrik(li, url, title, ID=''):
 		data = data + blockextract(']},{"id":', page)				# und restl. Cluster
 	PLog(len(data))
 	
-	for item in data:												# einschl. Meistgehört, Neueste Episoden ..	
+	for item in data:	
 		section_id = stringextract('"id":"', '"', item)				# id":"comedy_satire-100:-8132981499462389106",
 		if cnt == 0 and stage:
 			section_id = "STAGE"									# nur STAGE auswerten
+
 		tag = u"[B]Folgeseiten[/B]"
 		title = stringextract('"title":"', '"', item)				# Cluster-Titel	
 		pos = item.find('__typename'); item = item[pos:]			# 1. Beitrag
@@ -2083,6 +2083,9 @@ def Audio_get_cluster_rubrik(li, url, title, ID=''):
 		img = stringextract('"url1X1":"', '"', item)
 		#img = img.replace('{width}', '640')						# fehlt manchmal
 		img = img.replace('{width}', '320')
+		if img == '':												# fehlt bei nicht verfügb. Livestreams, s.
+			continue												#	Audio_get_homescreen (GRID_LIST_COLLAPSIBLE)
+			
 		tag = "%s\n\n1. Beitrag: %s" % (tag, ftitle)	
 
 		PLog('2Satz:')
@@ -2127,7 +2130,7 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page=''):
 	PLog(len(nodes))
 			
 	downl_list=[]; 	href_add = "offset=0&limit=12"	
-	for node in nodes:
+	for node in nodes:		
 		imgalt2=''; web_url=''; mp3_url=''
 		mp3_url = stringextract('"downloadUrl":"', '"', node)			# api-Seiten ev. ohne mp3_url
 		if 	mp3_url == '':
@@ -2147,6 +2150,8 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page=''):
 		descr = stringextract('"summary":"','"', node)
 		if 	descr == '':
 			descr = stringextract('"synopsis":"','"', node)
+		if 	descr == '':
+			descr = stringextract('"description":"','"', node)
 		img = stringextract('"url1X1":"','"', node)				# möglich: "image": null 	
 		#img = img.replace('{width}', '640')
 		img = img.replace('{width}', '320')
@@ -3314,7 +3319,7 @@ def ARDSportBilder(title, path, img):
 # Fallback ohne Quellen: Webseiten mit 'media mediaA video' -> ARDSportSingleTab
 # Besonderheit: bei einigen Seiten scheitert utf-8-Dekodierung in util. Daher Dekodierung 
 #	hier mit py2_decode
-# 22.12.2021 auch verwendet von WDRstream mit page. 	
+# 22.12.2021 auch verwendet von list_WDRstreamlinks->WDRstream mit page. 	
 #
 def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	PLog('ARDSportVideo:'); 
@@ -6532,14 +6537,16 @@ def list_WDRstreamlinks(url):
 			fparams=fparams, summary=summ)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-	
+
 #-----------------------------------------------
-# Livesender WRD-Link 
+# Livesender WRD-Lokalzeit-Link 
 # Aufruf list_WDRstreamlinks
 # Nach Sendungsende bleibt der Link unter deviceids-medp.wdr.de noch
-#	einige Minuten erhalten, führt jedoch ins Leere - dann ohne Notific.
-#
+#	einige Minuten erhalten, führt jedoch ins Leere. Ohne Link: Notific.
+# 04.03.2022 einige Seiten enthalten bereits eine .m3u8-Quelle während 
+#	der Lokalzeit - außerhalb Verzweigung via deviceids-medp.wdr.de mit
+#	js-Dateilink zum Livestream WDR od. Störungsbild.
+#	
 def WDRstream(path, title, img, summ):
 	PLog('WDRstream:')
 	
@@ -6553,16 +6560,38 @@ def WDRstream(path, title, img, summ):
 	page=py2_decode(page)					
 	
 	summ = stringextract('>Hier sehen Sie ', ' die Lokalzeit ', page)	
-	
 	PLog('deviceids-medp.wdr.de' in page)
-	if 'deviceids-medp.wdr.de' in page:	
-		ARDSportVideo(path, title, img, summ, page=page)
+	videos = blockextract('"videoURL" : "', page, '}')			# .m3u8-Quelle vorh.?
+
+	if len(videos) >0:											# wie ARDSportVideo
+		PLog("detect_videoURL")
+		li = xbmcgui.ListItem()
+		li = home(li, ID=NAME)				# Home-Button
+		m3u8_url= stringextract('"videoURL" : "', '"', video)
+		if m3u8_url and m3u8_url.startswith('http') == False:		
+			m3u8_url = 'https:' + m3u8_url						# //wdradaptiv-vh.akamaihd.net/..	
+		
+		if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Sofortstart
+			PLog('Sofortstart: WDRstream')
+			PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
+		else:
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': ''}" %\
+				(quote_plus(m3u8_url), quote_plus(title), quote_plus(img), quote_plus(summ))
+			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+				mediatype=mediatype, tagline=title_m3u8, summary=summ)
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	else:
-		icon = img
-		msg1 = u"Sendungszeiten"
-		msg2 = summ									
-		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=True)	 
+				 				 
+	else:														# keine m3u8-Quelle vorh.	
+		if 'deviceids-medp.wdr.de' in page:
+			summ = "%s | außerhalb dieser Zeiten zeigen einige Sender den Livestream des WDR" % summ
+			PLog("detect_deviceids")
+			ARDSportVideo(path, title, img, summ, page=page)
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		else:
+			icon = img
+			msg1 = u"Sendungszeiten"
+			msg2 = summ									
+			xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=True)
 	return
 
 #-----------------------------------------------------------------------------------------------------
@@ -9428,7 +9457,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip
 # title_samml: Titel|Subtitel oder (Long-|Medium-|Short-Titel)
 # duration: Minuten-Wert (ARD-sec umrechnen)
 # fname: Dateinamen der Liste (full_shows_ZDF, full_shows_ARD)
-# Rückgabe: fett/rot-markierter Titel bei entspr. Beitrag, sonst unbeh.
+# Rückgabe: fett-markierter Titel bei entspr. Beitrag, sonst unbeh.
 #	Titel
 # Aufrufer: ZDF_get_content, get_page_content (ARDnew)
 #
@@ -9478,7 +9507,7 @@ def full_shows(title, title_samml, summary, duration,  fname):
 						sdur = time_to_minutes(duration)
 					PLog("sdur: " + sdur)
 					if int(duration) >= int(sdur):
-						title = "[B][COLOR red]%s[/COLOR][/B]" % title
+						title = "[B]%s[/B]" % title
 				break		
 	PLog("return: " + title)
 	return title
