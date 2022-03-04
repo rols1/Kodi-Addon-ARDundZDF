@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>10</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.02.2022
+# 	<nr>11</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2929,7 +2929,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 	PLog(FLAG_OnlyUrl)								# Flagdatei
 	if os.path.isfile(FLAG_OnlyUrl):				# Rückgabe Url -> strm-Modul, kein Start
 		PLog("FLAG_OnlyUrl")
-		os.remove(FLAG_OnlyUrl)
+		os.remove(FLAG_OnlyUrl)						# zusätzl. Leichenbehandl. im Haupt-PRG
 		RSave(STRM_URL, url)						# indirekte Rückgabe 	-> 
 		return url									# direkte Rückgabe 		-> strm-Modul
 		exit(0)
@@ -3218,6 +3218,7 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 		if url.startswith('smb://') == False:	# keine Share
 			url = os.path.abspath(url)
 	else:										# 14.01.2022 Bsp. HTTP Error 404 NDR Schlager
+		pass
 		if url_check(url, caller='PlayAudio') == False:
 			return
 	
@@ -3302,6 +3303,8 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 
 #---------------------------------------------------------------- 
 # Aufruf: PlayVideo
+# 04.03.2022 Header für ZDF-Url erforderl. (Error "502 Bad Gateway")
+#
 def url_check(url, caller=''):
 	PLog('url_check:')
 	if url.startswith('http') == False:		# lokale Datei - kein Check
@@ -3311,8 +3314,12 @@ def url_check(url, caller=''):
 	# Tests:
 	# url='http://104.250.149.122:8012'	# Debug: HTTP Error 401: Unauthorized
 	# url='http://feeds.soundcloud.com/x'	# HTTP Error 400: Bad Request
+	header="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+		'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}"
+	header = header.replace("'", "\"")		# json.loads-kompatible string-Rahmen
+	header = json.loads(header)
 	
-	req = Request(url)
+	req = Request(url, headers=header)
 	try:
 		r = urlopen(req, timeout=UrlopenTimeout)
 		PLog('Status: ' + str(r.getcode()))
