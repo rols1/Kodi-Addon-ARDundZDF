@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>30</nr>										# Numerierung für Einzelupdate
+# 	<nr>31</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.5'
 VDATE = '04.03.2022'
 
@@ -233,6 +233,7 @@ DL_CHECK 		= os.path.join(ADDON_DATA, "dl_check_alive") 	# Anzeige Downloads (Lo
 DL_CNT 			= os.path.join(ADDON_DATA, "dl_cnt") 			# Anzeige Downloads (Zähler)
 STRM_SYNCLIST	= os.path.join(ADDON_DATA, "strmsynclist")		# strm-Liste für Synchronisierung	
 STRM_CHECK 		= os.path.join(ADDON_DATA, "strm_check_alive") 	# strm-Synchronisierung (Lockdatei)
+FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")			# Flag PlayVideo_Direct	-> strm-Modul
 PLog(SLIDESTORE); PLog(WATCHFILE); 
 check 			= check_DataStores()					# Check /Initialisierung / Migration 
 PLog('check: ' + str(check))
@@ -270,6 +271,14 @@ else:
 			os.remove(DL_CHECK)								# Setting Aus: Lock dl_check_alive entfernen
 		if os.path.exists(DL_CNT):
 			os.remove(DL_CNT)								# Zähler dl_cnt entfernen
+
+if os.path.exists(FLAG_OnlyUrl):							# strm-Liste für Synchronisierung					
+	now = time.time()
+	mtime = os.stat(FLAG_OnlyUrl).st_mtime
+	diff = int(now) - mtime
+	if diff > 60:											# entf. wenn älter als 60 sec	
+		os.remove(FLAG_OnlyUrl)
+		PLog("onlyurl_removed, age: %d sec" % diff)
 	
 if os.path.exists(STRM_SYNCLIST):							# strm-Liste für Synchronisierung					
 	if os.path.exists(STRM_CHECK):							# Leiche? 2-sec-Aktualisierung durch strm_sync
@@ -6562,12 +6571,13 @@ def WDRstream(path, title, img, summ):
 	summ = stringextract('>Hier sehen Sie ', ' die Lokalzeit ', page)	
 	PLog('deviceids-medp.wdr.de' in page)
 	videos = blockextract('"videoURL" : "', page, '}')			# .m3u8-Quelle vorh.?
+	PLog(videos)
 
 	if len(videos) >0:											# wie ARDSportVideo
 		PLog("detect_videoURL")
 		li = xbmcgui.ListItem()
 		li = home(li, ID=NAME)				# Home-Button
-		m3u8_url= stringextract('"videoURL" : "', '"', video)
+		m3u8_url= stringextract('"videoURL" : "', '"', videos[0])
 		if m3u8_url and m3u8_url.startswith('http') == False:		
 			m3u8_url = 'https:' + m3u8_url						# //wdradaptiv-vh.akamaihd.net/..	
 		
@@ -6578,7 +6588,7 @@ def WDRstream(path, title, img, summ):
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': ''}" %\
 				(quote_plus(m3u8_url), quote_plus(title), quote_plus(img), quote_plus(summ))
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-				mediatype=mediatype, tagline=title_m3u8, summary=summ)
+				mediatype=mediatype, tagline=title, summary=summ)
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 				 				 
 	else:														# keine m3u8-Quelle vorh.	
@@ -7913,7 +7923,7 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 	title_org = title
 	list_path = path
 	icon = R(ICON_DIR_STRM)
-	FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")
+	FLAG_OnlyUrl = os.path.join(ADDON_DATA, "onlyurl")
 	import resources.lib.strm as strm
 	
 	page, msg = get_page(path=path)
@@ -8016,7 +8026,6 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 			ret = strm.xbmcvfs_store(strmpath, url, img, fname, title, Plot, weburl, strm_type)
 			if ret:
 				cnt=cnt+1
-
 
 	#------------------
 	PLog("strm_cnt: %d" % cnt)		
