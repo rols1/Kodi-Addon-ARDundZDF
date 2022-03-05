@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>31</nr>										# Numerierung für Einzelupdate
+# 	<nr>32</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.5'
-VDATE = '04.03.2022'
+VDATE = '05.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6389,7 +6389,10 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		
 	mediatype='' 						# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
+		if "Audio Event" in title:		# ARD Audio Event Streams (ARDSportAudioXML:)
+			mediatype='music'
+		else:
+			mediatype='video'
 
 	liste = blockextract('<item>', mylist)				# Details eines Senders
 	PLog(len(liste));
@@ -6568,7 +6571,7 @@ def WDRstream(path, title, img, summ):
 	PLog(len(page))
 	page=py2_decode(page)					
 	
-	summ = stringextract('>Hier sehen Sie ', ' die Lokalzeit ', page)	
+	vonbis = stringextract('>Hier sehen Sie ', ' die Lokalzeit ', page)	# 19.30 - 20.00 Uhr
 	PLog('deviceids-medp.wdr.de' in page)
 	videos = blockextract('"videoURL" : "', page, '}')			# .m3u8-Quelle vorh.?
 	PLog(videos)
@@ -6591,16 +6594,16 @@ def WDRstream(path, title, img, summ):
 				mediatype=mediatype, tagline=title, summary=summ)
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 				 				 
-	else:														# keine m3u8-Quelle vorh.	
+	else:														# keine m3u8-Quelle vorh.
+		PLog("no_videoURL")	
+		summ = "%s | außerhalb dieser Zeiten zeigen einige Sender den Livestream des WDR" % vonbis
 		if 'deviceids-medp.wdr.de' in page:
-			summ = "%s | außerhalb dieser Zeiten zeigen einige Sender den Livestream des WDR" % summ
 			PLog("detect_deviceids")
 			ARDSportVideo(path, title, img, summ, page=page)
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		else:
-			icon = img
 			msg1 = u"Sendungszeiten"
-			msg2 = summ									
+			msg2 = vonbis									
 			xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=True)
 	return
 
@@ -6634,13 +6637,15 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 	path_org = path
 
 	# Radiosender in livesenderTV.xml ermöglichen (ARD Audio Event Streams)
-	link_ext = ["mp3", '.m3u', 'low']				# auch ../stream/mp3
+	link_ext = ["mp3", '.m3u', 'low', '=ard-at']	# auch ../stream/mp3
 	switch_audio = False
 	for ext in link_ext:
 		if path_org.endswith(ext):
 			switch_audio = True
 	if switch_audio or 'sportradio' in path_org:	# sportradio-deutschland o. passende Ext.
-		PLog("Audiolink: %s" % path_org) 			
+		PLog("Audiolink: %s" % path_org) 
+		li = xbmcgui.ListItem()
+		li.setProperty('IsPlayable', 'false')			
 		PlayAudio(path_org, title, thumb, Plot=title)  # direkt	
 		return
 
