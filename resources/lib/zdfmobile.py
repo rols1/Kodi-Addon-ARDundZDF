@@ -9,8 +9,8 @@
 #	22.11.2019 Migration Python3 Modul six + manuelle Anpassungen
 ################################################################################
 #
-# 	<nr>0</nr>								# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+# 	<nr>1</nr>								# Numerierung für Einzelupdate
+#	Stand: 06.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -502,7 +502,7 @@ def ShowVideo(path, DictID, Merk='false'):
 			videoObject = json.loads(page)
 			page = json.dumps(videoObject, sort_keys=True, indent=2, separators=(',', ': '))
 			# Debug:
-			# RSave("/tmp/x_ShowVideo2.json", page)
+			#RSave("/tmp/x_ShowVideo2.json", page)
 			# streamApiUrl = videoObject["streamApiUrlAndroid"]					# json-key-error möglich	
 			streamApiUrl = stringextract('streamApiUrlAndroid": "', '"', page)		
 			PLog(streamApiUrl)	
@@ -530,7 +530,7 @@ def ShowVideo(path, DictID, Merk='false'):
 			else:
 				page = loadPage(streamApiUrl, apiToken=apiToken)	
 				# Debug:
-				# RSave("/tmp/x_cco.json", page)		# Debug	
+				#RSave("/tmp/x_cco.json", page)		# Debug	
 
 				# neue Auswertung (Webseite kann von jsonObject abweichen) - 
 				#	Bsp. countdown-copenhagen-102 / countdown-copenhagen-118.html							
@@ -552,7 +552,7 @@ def ShowVideo(path, DictID, Merk='false'):
 		hd = 'HD: ' + str(detail[1])	# False bei mp4-Dateien, s.u.
 		hd = hd.replace('true', 'ja'); hd = hd.replace('false', 'nein');
 		url = detail[2]
-		url = url.replace('https', 'http')
+		#url = url.replace('https', 'http')
 		typ = detail[3]
 		codec = detail[4]
 		geo = detail[5]
