@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>32</nr>										# Numerierung für Einzelupdate
-VERSION = '4.2.5'
-VDATE = '05.03.2022'
+VERSION = '4.2.6'
+VDATE = '06.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1493,6 +1493,8 @@ def AudioSenderPrograms(org='', prgset=''):
 #	ARDSportAudioXML -> 	SenderLiveResolution		-> PlayAudio
 #	ARDSportHoerfunk ->  	ARDSportAudioStreamsSingle 	-> PlayAudio
 #	ARDSportAudioStreams ->	ARDSportAudioStreamsSingle 	-> PlayAudio
+# Hinw.: Timeouts bei den Sportschau-Audio-Seiten möglich (aktuelle 
+#	Livestreams, Netcast-Audiostreams)
 #
 def ARDAudioEventStreams(li):
 	PLog('ARDAudioEventStreams:')
@@ -1511,11 +1513,12 @@ def ARDAudioEventStreams(li):
 	img = R("tv-ard-sportschau.png")							
 	tag = u'An Spieltagen der Fußball-Bundesliga übertragen die Landesrundanstalten ' 
 	tag = tag + u'im ARD-Hörfunk die Spiele live aus dem Stadion mit der berühmten ARD-Schlusskonferenz.'
+	summ = "[B]Hinweis:[/B] außerhalb der Spielzeiten sind die meisten Sender nicht erreichbar."
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
 		quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportHoerfunk", fanart=img, 
-		thumb=img, tagline=tag, fparams=fparams)
+		thumb=img, tagline=tag, summary=summ, fparams=fparams)
 							
 	title = u"[B]Audio:[/B] aktuelle Livestreams (sportschau.de)"		# Button aktuelle LIVESTREAMS
 	href = 'https://www.sportschau.de/audio/index.html'
@@ -1790,6 +1793,8 @@ def Audio_get_items_single(item, ID=''):
 	img = stringextract('image":', '},', item)
 	img = stringextract('"url":"', '"', img)
 	img = img.replace('{width}', '640')
+	img = img.replace('16x9', '1x1')								# 16x9 kann fehlen, z,B. bei Suche
+	
 
 	dur = stringextract('"duration":', ',', item)					# in Sek.
 	dur = dur.replace("}", '')										# 3592} statt 3592,
@@ -6538,6 +6543,7 @@ def list_WDRstreamlinks(url):
 		img_src = stringextract('alt="', 'src=', item)
 		img_src = stringextract('title="', '"', img_src)	# alt-title
 		summ = img_src
+		summ = "%s\n\n[B]Sendezeit 19.30 - 20.00 Uhr[/B]" % summ
 		
 		PLog("Satz28:")
 		PLog(path);PLog(img); PLog(title); PLog(summ); 
@@ -6602,6 +6608,7 @@ def WDRstream(path, title, img, summ):
 			ARDSportVideo(path, title, img, summ, page=page)
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		else:
+			icon=img
 			msg1 = u"Sendungszeiten"
 			msg2 = vonbis									
 			xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=True)

@@ -187,12 +187,11 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 		if 	SETTINGS.getSetting('pref_generate_filenames'):	# Dateiname aus Titel generieren
 			dfname = make_filenames(py2_encode(title)) + '.mp3'
 			PLog(dfname)
-		else:												# Bsp.: Download_2016-12-18_09-15-00.mp4  oder ...mp3
+		else:												# Bsp.: Download_2016-12-18_09-15-00.mp3
 			now = datetime.datetime.now()
 			mydate = now.strftime("%Y-%m-%d_%H-%M-%S")	
 			dfname = 'Download_' + mydate + '.mp3'
 
-		# Parameter-Format: -o Zieldatei_kompletter_Pfad Podcast-Url -o Zieldatei_kompletter_Pfad Podcast-Url ..
 		# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Podcast, Zieldatei_kompletter_Pfad|Podcast ..
 		fullpath = os.path.join(dest_path, dfname)
 		fullpath = os.path.abspath(fullpath)		# os-spezischer Pfad

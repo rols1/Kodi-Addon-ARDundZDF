@@ -571,9 +571,7 @@ def Start(name, path, rubrik=''):
 		img_src = R('Dir-folder.png')				# alles lazyload-Beiträge ohne Bilder + hrefs
 		for rec in items:					
 			title	= stringextract('">', '</h2', rec)
-			if "is-lowercase" in title:
-				title	= stringextract('case">', '</span>', rec)
-			title 	= repl_json_chars(title);			
+			title = cleanhtml(title)				# z.B.: 3sat</span>-Tipps
 			if u'Das könnte Dich' in title:			# leer (java-script)
 				continue
 			if u'Alle löschen' in title:			# Merkliste 3sat
@@ -602,9 +600,8 @@ def Start(name, path, rubrik=''):
 		items =  blockextract('--red is-uppercase', page)
 		PLog(len(items))
 		for rec in items:						
-			title	= stringextract('">', '</h2', rec)
-			if "is-lowercase" in title:
-				title	= stringextract('case">', '</span>', rec)
+			title = stringextract('">', '</h2', rec)
+			title = cleanhtml(title)				# z.B.: 3sat</span>-Tipps
 			title 	= repl_json_chars(title);
 			rubrik=py2_encode(rubrik); title=py2_encode(title);
 			# PLog("title: %s, rubrik: %s" % (title, rubrik))

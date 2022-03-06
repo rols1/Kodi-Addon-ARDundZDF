@@ -552,7 +552,7 @@ def ShowVideo(path, DictID, Merk='false'):
 		hd = 'HD: ' + str(detail[1])	# False bei mp4-Dateien, s.u.
 		hd = hd.replace('true', 'ja'); hd = hd.replace('false', 'nein');
 		url = detail[2]
-		#url = url.replace('https', 'http')
+		#url = url.replace('https', 'http')			# 06.03.2022 Plex-Workaround, entfällt für Kodi
 		typ = detail[3]
 		codec = detail[4]
 		geo = detail[5]

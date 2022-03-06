@@ -10,6 +10,30 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+06.02.2022 4.2.6
+			Audio_get_homescreen: Ausschluss GRID_LIST_COLLAPSIBLE-Beiträge (nicht im Web
+			sichtbar, z.B. "LIVE: die Bundesliga"), dto Audio_get_cluster_rubrik (dort 
+			abh. von img).
+			Audio_get_cluster_single: Bildbreite auf 320 reduziert (640 nicht immer 
+			verfügbar), Ergänz. "description" für summary.
+			Audio_get_items_single: Bildformat auf 1x1 geändert (16x9) nicht immer verfüg-
+			bar - relevant für Suche und Rubriken.
+			AudioStart: Hinweis auf Sammeldownloads + Suchergebn. für  PodFavoriten entf.
+			full_shows (Markierung ganzer Sendungen im Titel): rot entfernt (Sichtbarkeit).
+			Start (Modul 3sat): cleanhtml für Titel (z.B.: 3sat</span>-Tipps).
+			Haupt-PRG: "Leichen-Behandlung" (60 sec) für FLAG_OnlyUrl (strm-Nutzung).
+			WDR Lokalzeit Livestreams (Menü TV-Livestreams): Anpassung an geänderte Stream-
+			quellen einschl. Fallback zum WDR-Livestream.
+			url_check (Modul util): Header für Request hinzugefügt, um Error "502 Bad 
+			Gateway" und "<!-- a padding to disable MSIE and Chrome friendly error 
+			page -->" zu vermeiden.
+			ARD Audio Event Streams: Korrektur mediatype "video" -> "music" für ARD Audio 
+			Event Streams, Aktualisierung Link für hr-iNFO + WDR Event - Anpassungen in 
+			SenderLiveListe, SenderLiveResolution und livesenderTV.xml (@Weri).
+			Merkliste: Textänderung im Dialog "Eintrag existiert bereits" - "neuen" -> 
+			"diesen".
+			ShowVideo (zdfmobile): Ersatz https -> http aus alter Plex-Version entfernt.
+
 25.02.2022 4.2.5 Neubau Audiothek nach ARD-Änderungen
 
 19.02.2022 4.2.4

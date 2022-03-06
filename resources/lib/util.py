@@ -3218,7 +3218,6 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 		if url.startswith('smb://') == False:	# keine Share
 			url = os.path.abspath(url)
 	else:										# 14.01.2022 Bsp. HTTP Error 404 NDR Schlager
-		pass
 		if url_check(url, caller='PlayAudio') == False:
 			return
 	
