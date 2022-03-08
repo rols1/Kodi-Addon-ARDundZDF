@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.03.2022
+# 	<nr>12</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2826,10 +2826,13 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 			if len(Stream_List) == 0:
 				Stream_List = HBBTV_List
 				msg2 = "verwende HBBTV (MP4)"
+				
+			if str(MP4_List).find("//funk") > 0:	# ZDF-Funk immer ohne HLS-Quellen
+				msg1=''; msg2=''
 		else:
 			mode_hls=True			
 	else:
-		myform = 'MP4'
+		myform = 'MP4'								# enth. auch Webm, VP8/Vorbis, VP9/Opus
 		Stream_List = MP4_List
 		if 'auto' in myqual:						# Sicherung gegen falsches MP4-Setting:
 			myqual = '960x544'						# 	Default, falls 'auto' gesetzt

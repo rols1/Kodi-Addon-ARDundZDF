@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>32</nr>										# Numerierung für Einzelupdate
+# 	<nr>33</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.6'
-VDATE = '06.03.2022'
+VDATE = '08.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6544,13 +6544,14 @@ def list_WDRstreamlinks(url):
 		img_src = stringextract('title="', '"', img_src)	# alt-title
 		summ = img_src
 		summ = "%s\n\n[B]Sendezeit 19.30 - 20.00 Uhr[/B]" % summ
+		summ_par = summ.replace('\n', '||')
 		
 		PLog("Satz28:")
 		PLog(path);PLog(img); PLog(title); PLog(summ); 
 		title=py2_encode(title); summ=py2_encode(summ)
 		path=py2_encode(path); img=py2_encode(img);
 		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
-			(quote(path), quote(title), quote(img), quote(summ))				
+			(quote(path), quote(title), quote(img), quote(summ_par))				
 		addDir(li=li, label=title, action="dirList", dirID="WDRstream", fanart=img, thumb=img, 
 			fparams=fparams, summary=summ)	
 	
@@ -6567,6 +6568,7 @@ def list_WDRstreamlinks(url):
 #	
 def WDRstream(path, title, img, summ):
 	PLog('WDRstream:')
+	summ = summ.replace( '||', '\n')
 	
 	page, msg = get_page(path)					
 	if page == '':	
@@ -6581,6 +6583,10 @@ def WDRstream(path, title, img, summ):
 	PLog('deviceids-medp.wdr.de' in page)
 	videos = blockextract('"videoURL" : "', page, '}')			# .m3u8-Quelle vorh.?
 	PLog(videos)
+	
+	mediatype=''									# Kennz. Video für Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
 
 	if len(videos) >0:											# wie ARDSportVideo
 		PLog("detect_videoURL")
@@ -6594,8 +6600,11 @@ def WDRstream(path, title, img, summ):
 			PLog('Sofortstart: WDRstream')
 			PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
 		else:
+			summ_par = summ.replace('\n', '||')
+			title=py2_encode(title); summ_par=py2_encode(summ_par)
+			img=py2_encode(img); m3u8_url=py2_encode(m3u8_url)
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': ''}" %\
-				(quote_plus(m3u8_url), quote_plus(title), quote_plus(img), quote_plus(summ))
+				(quote_plus(m3u8_url), quote_plus(title), quote_plus(img), quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 				mediatype=mediatype, tagline=title, summary=summ)
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -7946,6 +7955,13 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 		return
 	if '\\/' in page:									# ZDF-Urls
 		page = page.replace('\\/','/')
+		
+	if page.find('"seasonNumber"') < 0:
+		msg1 = "[B]seasonNumber[/B] fehlt in den Beiträgen."
+		msg2 = "strm-Liste für diese Serie kann nicht erstellt werden."
+		MyDialog(msg1, msg2, '')
+		return
+		
 				
 	list_title =  stringextract('"titel":"', '"', page)				# Serien-Titel (vorgegeben)
 	list_title = list_title.replace('u0022', '*')					# \"
@@ -8077,6 +8093,7 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 # Aufrufer: ZDF_FlatListEpisodes, ZDF_getStrmList
 def ZDF_FlatListRec(item):
 	PLog('ZDF_FlatListRec:')
+	PLog(item)
 
 	title='';url='';img='';tag='';summ='';season='';
 	descr='';weburl=''
@@ -9767,12 +9784,15 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='',
 #	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
 #	fehlende Bandbreiten + Auflösungen werden ergänzt
 # Aufrufer: ZDF_getVideoSources, SingleBeitrag (my3Sat)
+# formitaeten: Blöcke 'formitaeten' (get_form_streams)
+# 08.03.2022 Anpassung für Originalton + Audiodeskription (class_add)
 #
 def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_id='',ID="ZDF"):
 	PLog('build_Streamlists:'); PLog(ID)
 	title_org = title	
 	
 	HLS_List=[]; MP4_List=[]; HBBTV_List=[];			# MP4_List = download_list
+	skip_list=[]
 	# erlaubte Formate wie ZDF_getApiStreams 
 	only_list = ["h264_aac_mp4_http_na_na", "h264_aac_ts_http_m3u8_http",	# erlaubte Formate
 				"vp9_opus_webm_http_na_na", "vp8_vorbis_webm_http_na_na"]
@@ -9784,65 +9804,93 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 		PLog("typ %s, facets %s" % (typ, facets))
 		if typ not in only_list:
 			continue 
+		if "restriction_useragent" in facets:			# Server rodlzdf statt nrodlzdf sonst identisch
+			continue 
 			
 		audio = blockextract('"audio":', rec)			# Datensätze je Typ
+		tagline_org=tagline
 		PLog("audio_Blocks: " + str(len(audio)))
 		# PLog(audio)	# bei Bedarf
-		for audiorec in audio:					
-			url = stringextract('"uri":"',  '"', audiorec)			# URL
-			# Zusatz audiotrack ff. abschneiden, lädt falsche Playlist ('#EXT-X-MEDIA')
-			if '?audiotrack=1' in url:
-				url = url.split('?audiotrack=1')[0]					
+		for audiorec in audio:
+			mimeCodec = stringextract('"mimeCodec":"',  '"', audiorec)
+			if '"cdn":' in audiorec:
+				tracks = blockextract('"cdn":', audiorec)		# class-Sätze: main, ot, ad
+			else:
+				tracks = blockextract('"language":', audiorec)	# class-Sätze in ZDF-funk
+			PLog("tracks: " + str(len(tracks)))
 			quality = stringextract('"quality":"',  '"', audiorec)
 			quality = up_low(quality)
-			mimeCodec = stringextract('"mimeCodec":"',  '"', audiorec)
+			
+			for track in tracks:	
+				track_add=''; class_add=''; lang_add=''				# class-und Sprach-Zusätze
+				class_add = stringextract('"class":"',  '"', track)	
+				lang_add = stringextract('"language":"',  '"', track)
+				if class_add == "main": class_add = "TV-Ton"
+				if class_add == "ot": class_add = "Originalton"
+				if class_add == "ad": class_add = "Audiodeskription"
+				if class_add or lang_add:
+					track_add = "[B]%s %s[/B]" % (class_add, lang_add)
+					
+				url = stringextract('"uri":"',  '"', track)			# URL
+				# Zusatz audiotrack ff. abschneiden, lädt falsche Playlist ('#EXT-X-MEDIA')
+				if '?audiotrack=1' in url:
+					url = url.split('?audiotrack=1')[0]					
 
-			PLog(url); PLog(quality)
-			if facets.startswith('['):
-				quality = "%s [%s..]" % (quality, up_low(facets[1:6], mode='low'))
-			if url:	
-				if up_low(quality) == 'AUTO' and 'master.m3u8' not in url:	# funk: m3u8-Urls nicht verwertbar
-					continue	
-				if url.find('master.m3u8') > 0:			# m3u8 enthält alle Auflösungen
-					quality = u'automatisch'
-					HLS_List.append('HLS, automatische Anpassung ** auto ** auto ** %s#%s' % (title,url))
-					Stream_List = Parseplaylist(li, url, thumb, geoblock, tagline,\
-						stitle=title,buttons=False)
-					HLS_List = HLS_List + Stream_List
-					break
-				else:	
-					res='0x0'; bitrate='0'						# Default funk ohne AzureStructure						
-					if 'HD' in quality:							# up_low(quality s.o.
-						w = "1920"; h = "1080"					# Probeentnahme													
-					if 'VERYHIGH' in quality:
-						w = "1280"; h = "720"					# Probeentnahme							
-					if 'HIGH' in quality:
-						w = "960"; h = "540"					# Probeentnahme							
-					if 'MED' in quality:
-						w = "640"; h = "360"					# Probeentnahme							
-					if 'LOW' in quality:
-						w = "480"; h = "270"					# Probeentnahme							
+				PLog("track:"); 
+				PLog(class_add); PLog(lang_add); PLog(url); PLog(quality);
+				if url:	
+					#PLog(skip_list)	# Debug
+					if up_low(quality) == 'AUTO' and 'master.m3u8' not in url:	# ZDF-funk: m3u8-Urls nicht verwertbar
+						continue												#	(manifest.m3u8)
+					url_combi = "%s|%s" % (class_add, url)
+					if url_combi in skip_list:
+						PLog("skip_url_combi: " + url_combi)
+						continue
+					skip_list.append(url)	
 					
-					if '://funk' in url:						# funk: anderes Format (nur AzureStructure)
-						# Bsp.: ../1646936_src_1024x576_1500.mp4?fv=1
-						if '_' in url:
-							res = url.split('_')[2]
-							bitrate = url.split('_')[3]				# 6000.mp4?fv=2
-							bitrate = bitrate.split('.')[0]
-							bitrate = bitrate + "000"				# K-Angabe anpassen 
-					else:
-						if '_' in url:
-							try:								# Fehlschlag bei arte-Links
-								bitrate = re.search(u'_(\d+)k_', url).group(1)
-							except:
-								bitrate = "unbekannt"
-						res = "%sx%s" % (w,h)
-					
-					PLog(res)
-					title_url = u"%s#%s" % (title, url)
-					item = u"MP4, Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" %\
-						(quality, bitrate, res, title_url)
-					MP4_List.append(item)
+					if url.find('master.m3u8') > 0:					# m3u8 high (=auto) enthält alle Auflösungen
+						if 'AUTO' in up_low(quality):				# skip high, med + low
+							if track_add:
+								HLS_List.append('HLS, %s ** AUTO ** %s ** %s#%s' % (track_add, quality,title,url))
+							else:
+								HLS_List.append('HLS, automatische Anpassung ** AUTO ** AUTO ** %s#%s' % (title,url))
+							Stream_List = Parseplaylist(li, url, thumb, geoblock, tagline,\
+								stitle=title,buttons=False, track_add=track_add)
+							HLS_List = HLS_List + Stream_List
+
+					else:	
+						res='0x0'; bitrate='0'; w='0'; h='0'						# Default funk ohne AzureStructure						
+						if 'HD' in quality:							# up_low(quality s.o.
+							w = "1920"; h = "1080"					# Probeentnahme													
+						if 'VERYHIGH' in quality:
+							w = "1280"; h = "720"					# Probeentnahme							
+						if 'HIGH' in quality:
+							w = "960"; h = "540"					# Probeentnahme							
+						if 'MED' in quality:
+							w = "640"; h = "360"					# Probeentnahme							
+						if 'LOW' in quality:
+							w = "480"; h = "270"					# Probeentnahme							
+						
+						if '://funk' in url:						# funk: anderes Format (nur AzureStructure)
+							# Bsp.: ../1646936_src_1024x576_1500.mp4?fv=1
+							if '_' in url:
+								res = url.split('_')[2]
+								bitrate = url.split('_')[3]				# 6000.mp4?fv=2
+								bitrate = bitrate.split('.')[0]
+								bitrate = bitrate + "000"				# K-Angabe anpassen 
+						else:
+							if '_' in url:
+								try:								# Fehlschlag bei arte-Links
+									bitrate = re.search(u'_(\d+)k_', url).group(1)
+								except:
+									bitrate = "unbekannt"
+							res = "%sx%s" % (w,h)
+						
+						PLog(res)
+						title_url = u"%s#%s" % (title, url)
+						item = u"MP4, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
+							(track_add, quality, bitrate, res, title_url)
+						MP4_List.append(item)
 	
 	PLog("HLS_List: " + str(len(HLS_List)))
 	#PLog(HLS_List)
@@ -10572,7 +10620,7 @@ def ZDF_SlideShow(path, single=None):
 
 	 
 ####################################################################################################
-def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', buttons=True):	
+def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', buttons=True, track_add=''):	
 #	# master.m3u8 auswerten, Url muss komplett sein. 
 #  	1. Besonderheit: in manchen *.m3u8-Dateien sind die Pfade nicht vollständig,
 #	sondern nur als Ergänzung zum Pfadrumpf (ohne Namen + Extension) angegeben, Bsp. (Arte):
@@ -10730,6 +10778,8 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 				Resolution_org = '0x0 (vermutl. Audio)'
 			Stream_List.append(u'HLS, Einzelstream ** Bitrate %s ** Auflösung %s ** %s#%s' %\
 				(str(BandwithInt), Resolution_org, stitle, url)) # wie Downloadliste
+			if track_add:													# TV-Ton deu, Originalton eng usw.
+				Stream_List[-1] = Stream_List[-1].replace("Einzelstream", track_add)
 		
 		li_cnt = li_cnt + 1  	# Listitemzähler												
   	
