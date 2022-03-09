@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>33</nr>										# Numerierung für Einzelupdate
+# 	<nr>34</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.6'
-VDATE = '08.03.2022'
+VDATE = '09.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7421,8 +7421,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_MEHR), 
 			thumb=R(ICON_MEHR), tagline=tagline, fparams=fparams)
 
-	xbmcplugin.endOfDirectory(HANDLE)
-	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #-------------------------
 # Aufruf VerpasstWoche (Button "Datum eingeben")
 # xbmcgui.INPUT_DATE gibt akt. Datum vor
@@ -7838,7 +7837,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
 		MyDialog(msg1, msg2, '')	
 		return
 	page = page.replace('\\/','/')
-	
+
 	li = xbmcgui.ListItem()
 	if gui:
 		li = home(li, ID='ZDF')								# Home-Button	
@@ -7852,33 +7851,38 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
 	# Format formitaeten von Webversion abweichend, build_Streamlists
 	#	nicht verwendbar
 	formitaeten, duration, geoblock, sub_path = get_form_streams(page)
-	forms = stringextract('formitaeten":', 'teaserBild', formitaeten[0])
-	forms = blockextract('"type":', forms)
+	forms=[]
+	if len(formitaeten) > 0:								# Videoquellen fehlen
+		forms = stringextract('formitaeten":', 'teaserBild', formitaeten[0])
+		forms = blockextract('"type":', forms)
 	PLog("forms: %d" % len(forms))
 	
 	Plot  = "%s||||%s" % (tag, summ)
-	line=''; skip_hls=False;
+	line=''; skip_list=[]
 	for form in forms:
+		track_add=''; class_add=''; lang_add=''				# class-und Sprach-Zusätze
 		typ = stringextract('"type":"', '"', form)
-		fclass = stringextract('"class":"', '"', form)
+		class_add = stringextract('"class":"',  '"', form)	
+		lang_add = stringextract('"language":"',  '"', form)
+		if class_add == "main": class_add = "TV-Ton"
+		if class_add == "ot": class_add = "Originalton"
+		if class_add == "ad": class_add = "Audiodeskription"
+		if class_add or lang_add:
+			track_add = "[B]%s %s[/B]" % (class_add, lang_add)
+					
 		url = stringextract('"url":"',  '"', form)		# Stream-URL
 		server = stringextract('//',  '/', url)			# 2 Server pro Bitrate möglich
-		if typ not in only_list:
-			continue 
-		if fclass == "ad":								# url mit "main" identisch
-			continue 			
+		if typ not in only_list or url in skip_list:
+			continue
+		skip_list.append(url)
 			
 		quality = stringextract('"quality":"',  '"', form)
 		mimeType = stringextract('mimeType":"', '"', form)
 		
 		# bei HLS entfällt Parseplaylist - verschiedene HLS-Streams verfügbar 
 		if url.find('master.m3u8') > 0:					# HLS-Stream 
-			HLS_List.append('HLS, automatische Anpassung ** auto ** %s ** %s#%s' % (quality,title,url))
-			#Stream_List = Parseplaylist(li, url, thumb, geoblock, Plot,\	# skip Mehrkanal-Streams 
-			#	stitle=title,buttons=False)
-			#HLS_List = HLS_List + Stream_List
-			skip_hls = True
-		else:
+			HLS_List.append('HLS, %s ** AUTO ** %s ** %s#%s' % (track_add, quality,title,url))
+
 			res='0x0'; bitrate='0'; w=''; h=''			# Default					
 			if 'hd":true' in form:	
 				w = "1920"; h = "1080"					# Probeentnahme													
@@ -7898,8 +7902,8 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
 					bitrate = "unbekannt"
 			res = "%sx%s" % (w,h)
 			title_url = u"%s#%s" % (title, url)
-			item = u"MP4, Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" %\
-				(quality, bitrate, res, title_url)
+			item = u"MP4, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
+				(track_add, quality, bitrate, res, title_url)
 			PLog("item: " + item)
 			PLog("server: " + server)					# nur hier, kein Platz im Titel
 			MP4_List.append(item)
@@ -9406,9 +9410,10 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip
 		
 							
 		PLog("check_full_shows")							# full_show in summary: ganze Sendungen rot+fett
-		if ID != 'EPG' and duration != '':
-			title_samml = "%s|%s|%s" % (title, category, brand)
-			title = full_shows(title, title_samml, summary, duration, "full_shows_ZDF")
+		if ID != 'EPG' and  duration != '':
+			if ID != 'Search': 								# bei Suche Absturz nach Video-Sofortstart
+				title_samml = "%s|%s|%s" % (title, category, brand)
+				title = full_shows(title, title_samml, summary, duration, "full_shows_ZDF")
 		
 		# ab 08.01.2021 in Sätzen mit class="b-cluster-poster-teaser:
 		if '"element": "PlakatTeaser"' in rec:

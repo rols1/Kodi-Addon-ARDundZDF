@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>12</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.02.2022
+# 	<nr>13</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1243,7 +1243,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 				fparams=fparams, summary=summ, mediatype='')																							
 		else:
 			PLog("check_full_shows")								# full_show im Titel: ganze Sendungen rot+fett
-			if ID != 'EPG':
+			if ID != 'EPG' and ID != 'Search:':				 		# bei Suche Absturz nach Video-Sofortstart
 				title_samml = "%s|%s" % (title, pagetitle)			# Titel + Seitentitel (A-Z, Suche)
 				duration = stringextract('duration":', ',', s)		# sec-Wert
 				duration = seconds_translate(duration)				# 0:15
