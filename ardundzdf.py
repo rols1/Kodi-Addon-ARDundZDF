@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>34</nr>										# Numerierung für Einzelupdate
+# 	<nr>35</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.6'
-VDATE = '09.03.2022'
+VDATE = '10.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7869,6 +7869,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
 		if class_add == "ad": class_add = "Audiodeskription"
 		if class_add or lang_add:
 			track_add = "[B]%s %s[/B]" % (class_add, lang_add)
+			track_add = "%23s" % track_add 				# formatiert
 					
 		url = stringextract('"url":"',  '"', form)		# Stream-URL
 		server = stringextract('//',  '/', url)			# 2 Server pro Bitrate möglich
@@ -9835,6 +9836,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 				if class_add == "ad": class_add = "Audiodeskription"
 				if class_add or lang_add:
 					track_add = "[B]%s %s[/B]" % (class_add, lang_add)
+					track_add = "%23s" % track_add
 					
 				url = stringextract('"uri":"',  '"', track)			# URL
 				# Zusatz audiotrack ff. abschneiden, lädt falsche Playlist ('#EXT-X-MEDIA')
@@ -10056,9 +10058,9 @@ def ZDFSourcesHBBTV(title, scms_id):
 			res = "%sx%s" % (w,h)
 			
 			if u'm3u8' in stream:
-				stream_title = u'HLS, Qualität: %s | %s' % (quality, label) # label: Normal, DGS, .
+				stream_title = u'HLS, Qualität: [B]%s | %s[/B]' % (quality, label) # label: Normal, DGS, .
 			else:
-				stream_title = u'MP4, Qualität: %s | %s' % (quality, label)
+				stream_title = u'MP4, Qualität: [B]%s | %s[/B]' % (quality, label)
 				try:
 					bitrate = re.search(u'_(\d+)k_', url).group(1)	# bitrate überschreiben	
 					bitrate = bitrate + "000"			# k ergänzen 
@@ -10781,10 +10783,10 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 			PLog("append: %s, %s.." % (str(BandwithInt), Resolution_org))
 			if Resolution_org == '':										# für sorted in StreamsShow erford.
 				Resolution_org = '0x0 (vermutl. Audio)'
-			Stream_List.append(u'HLS, Einzelstream ** Bitrate %s ** Auflösung %s ** %s#%s' %\
+			Stream_List.append(u'HLS-Stream ** Bitrate %s ** Auflösung %s ** %s#%s' %\
 				(str(BandwithInt), Resolution_org, stitle, url)) # wie Downloadliste
 			if track_add:													# TV-Ton deu, Originalton eng usw.
-				Stream_List[-1] = Stream_List[-1].replace("Einzelstream", track_add)
+				Stream_List[-1] = Stream_List[-1].replace("HLS-Stream", "HLS, %s" % track_add)
 		
 		li_cnt = li_cnt + 1  	# Listitemzähler												
   	

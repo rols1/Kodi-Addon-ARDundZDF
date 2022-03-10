@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>13</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.03.2022
+# 	<nr>14</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1535,7 +1535,7 @@ def ARDStartVideoMP4get(title, VideoUrls):
 		
 		PLog(bitrate); PLog(res); 
 		title_url = u"%s#%s" % (title, href)
-		item = u"MP4 Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
+		item = u"MP4 Qualität: [B]%10s[/B] ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
 		item = py2_decode(item)
 		download_list.append(item)
 	
