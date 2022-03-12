@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>10</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.02.2022
+# 	<nr>11</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.03.2022
 #
 
 from __future__ import absolute_import
@@ -68,8 +68,8 @@ STRM_TYPES		= ["Film|movie", "TV-Show|tvshow", "Episode|episodedetails",
 NFO1 = '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>\n'		# nfo-Template, 
 NFO2 = '<movie>\n<title>%s</title>\n<uniqueid type="tmdb" default="true"></uniqueid>\n'
 NFO3 = '<thumb spoof="" cache="" aspect="poster">%s</thumb>\n'
-NFO4 = '<plot>%s</plot>\n<weburl>%s</weburl>\n</movie>'					#Tag weburl (inoff.) für Abgleich
-NFO = NFO1+NFO2+NFO3+NFO4												#	 vor./nicht mehr vorh.
+NFO4 = '<plot>%s</plot>\n<weburl>%s</weburl>\n</movie>'					# Tag weburl (inoff.) für Abgleich
+NFO = NFO1+NFO2+NFO3+NFO4												#	 vorh. / nicht mehr vorh.
 									
 
 ######################################################################## 
@@ -108,7 +108,7 @@ def strm_tools():
 				]
 		head = u"strm-Tools | nächster Abgleich: %s Uhr" % Dict("load", "next_strm_sync")
 		ret = xbmcgui.Dialog().select(head, tmenu)
-		PLog(ret)	
+		PLog("tools_ret: " + str(ret))	
 		if ret == None or ret == -1:
 			return #InfoAndFilter()						# -> InfoAndFilter, kompl. Liste
 			
@@ -202,7 +202,9 @@ def strm_tools():
 					ret_flag = show_strm_element(strmpath)
 					PLog("ret_flag: " + str(ret_flag))
 					# ext. Aufruf verhindert nicht Rückspr. in Loop
-					# s. Doku start_script					
+					# s. Doku start_script
+				else:
+					ret = 1										# in Tools bleiben					
 			
 		if ret == 3:											# Monitorreset			
 			PLog("set_reset")
@@ -246,8 +248,12 @@ def strm_tools():
 		if add_log:										# z.B.: "RESET"		
 			log_update(add_log)							# Log aktualisieren
 
-		if ret == 0 or ret == 3 or ret == 7:			# Tools sicher verlassen
+		if ret == 0 or ret == 3:# or ret == 7:			# Tools sicher verlassen
 			return 										# Intervall, Reset, Beitrag ansehen
+		if ret == 7:									# Overlay Tools verhindern in Beitrag ansehen
+			sleep(2)
+			return
+				
 				
 	return	
 # ----------------------------
@@ -896,6 +902,11 @@ def show_strm_element(strmpath):
 	file_cnt = sum([len(files) for root, dirs, files in os.walk(strmpath)])
 	PLog("dir_cnt: %d, file_cnt: %d" % (dir_cnt, file_cnt))
 
+	import sqlite3
+	db =  xbmc.translatePath('special://database/MyVideos119.db')
+	conn = sqlite3.connect(db)
+	cur = conn.cursor()
+	
 	strm_files=[]
 	# Anzahl Unterverzeichnissen abhängig von Setting pref_strm_uz
 	#	(0 falls AUS):
@@ -913,11 +924,12 @@ def show_strm_element(strmpath):
 		dir_list.append(strm_files[i+1]); 
 		dir_list.append(strm_files[i+2]); 
 		PLog(dir_list); 
-		url=''; img=''; title=''; tag=''; Plot=''
+		url=''; img=''; title=''; tag=''; Plot=''; fname_strm=''
 		for fname in dir_list:						# 1 Bündel auswerten
 			PLog("fname: " + fname)
 			if fname.endswith(".strm"):
 				url = RLoad(fname, abs_path=True)
+				fname_strm = fname
 			if fname.endswith(".nfo"):
 				page = RLoad(fname, abs_path=True)
 				title = stringextract('<title>', '</title>', page)
@@ -925,18 +937,43 @@ def show_strm_element(strmpath):
 				Plot = tag.replace("\n", "||")		
 			if fname.endswith(".jpeg"):
 				img = fname
+				
+		#--------------------	
+		if SETTINGS.getSetting('pref_skip_played_strm') == 'true':	# Abgleich PlayCount in Video-DB
+			surl = quote_plus(url)						
+			try:
+				cur.execute("SELECT strFilename, PlayCount FROM files WHERE strFilename like ?", ('%'+surl+'%',))
+				rows = cur.fetchall()
+			except Exception as exception:
+				rows=[]
+				PLog("cursor_exception: " + str(exception))
+			PLog("db_rows: %d" % len(rows))
+			
+			playcount=""
+			# Abgleich img-Pfad - Video kann mehrfach abgelegt sein, dirID=PlayVideo zählt
+			for row in rows:
+				action = unquote_plus(row[0])			# Plugin-Call
+				playcount = row[1]						# None, 1,2..
+				if "dirID=PlayVideo" in action and img in action:
+					PLog(action)
+					PLog("playcount: " + str(playcount))
+					break
+			if playcount:
+				PLog("skip: %s | %s" % (title, fname_strm))
+				continue
+		#--------------------		
 			
 		PLog("Satz:")
-		PLog(title); PLog(img); PLog(tag[:80]);
+		PLog(title); PLog(img); PLog(url); PLog(tag[:80]);
 		title=py2_encode(title); img=py2_encode(img); 
 		tag=py2_encode(tag);  url=py2_encode(url); 
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
 			(quote_plus(url), quote_plus(title), quote_plus(img), quote_plus(Plot))
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
-			fparams=fparams, mediatype="video", tagline=tag) 
+		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, 
+			thumb=img, fparams=fparams, mediatype="video", tagline=tag) 
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
+
 ######################################################################## 			
 # Monitoring strm-Verzeichnisse via Verzeichnisliste
 # Verzeichnisliste: STRM_SYNCLIST (strmsynclist)

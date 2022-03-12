@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!-- 	<nr>2</nr>	# Numerierung für Einzelupdate -->
+<!-- 	<nr>3</nr>	# Numerierung für Einzelupdate -->
 <settings> 
     <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
@@ -78,19 +78,20 @@
   	<setting label="Für jedes strm-Bündel ein Unterverzeichnis anlegen" type="bool" id="pref_strm_uz" default="false"/>
 	<setting label="strm-Verzeichnis für Filme" type="folder" option="writeable" id="pref_strm_film_path" default=""/>
 	<setting label="strm-Verzeichnis für Serien" type="folder" option="writeable" id="pref_strm_series_path" default=""/>
+  	<setting label="Gesehene strm-Videos in Listen ausblenden" type="bool" id="pref_skip_played_strm" default="false"/>
 </category> 
 
  <category label="Beiträge filtern, markieren">
  	<setting label="Ausschluss-Filter verwenden (Beiträge von ARD und ZDF)" type="bool" id="pref_usefilter" default="false"/>
 	<setting label="Info: die Filter-Einstellungen befinden sich im Menü Info" type="text" id="filterinfo" enable="false"/>  
-  	<setting label="Titel ganzer Sendungen rot markieren (nur ARD und ZDF)" type="bool" id="pref_mark_full_shows" default="false"/>
+  	<setting label="Titel ganzer Sendungen markieren (nur ARD und ZDF)" type="bool" id="pref_mark_full_shows" default="false"/>
 	<setting label="Verzeichnis für Kennzeichnungstabellen" type="folder" source="" id="pref_fullshows_path" default=""/>
 	<setting label="Info - Namen der Tabellen: full_shows_ARD, full_shows_ZDF" type="text" id="full_shows_info" enable="false"/>  
 </category>
  
  <category label="Modul-Einstellungen" >
    	<setting label="gesamtes Addon: Videoformat bei Sofortstart" type="select" id="pref_direct_format" default="HLS (adaptiv)"
-		values="HLS (adaptiv)|MP4, VP9/Opus, VP8/Vorbis"/> 
+		values="HLS (adaptiv)|MP4, Webm, VP8/Vorbis, VP9/Opus"/> 
 	<setting label="gesamtes Addon: Videoqualität bei Sofortstart" type="select" id="pref_direct_quality" default="auto (nur HLS)"
   		values="auto (nur HLS)|320x180|640x360|720x400|960x540|1280x720|1920x1080" />
    	<setting label="gesamtes Addon: inputstream.adaptive nutzen, falls verfügbar" type="bool" id="pref_inputstream" default="true"/>
