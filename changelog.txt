@@ -10,7 +10,31 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-06.02.2022 4.2.6
+
+13.03.2022 4.2.7
+			build_Streamlists: Auswertung zusätzl. ZDF-Videoquellen (Originalton, Audio-
+			deskription), Anpassungen für ZDF-Funk und 3sat.
+			ZDF_getApiStreams: Auswertung zusätzl. ZDF-Videoquellen für strm-Videos, ähnlich
+			build_Streamlists (Format abweichend), Fehlerbehandlung bei fehlender Video-
+			quelle.
+			PlayVideo_Direct (util) : Unterdrückung Fehlermeldung für fehlende HLS-Quellen bei
+			ZDF-funk-Videos (nur HBBTV- und MP4-Quellen).
+			ZDF_getStrmList: Fehlerbehandlung für Liste ohne seasonNumber.
+			ZDF_get_content, get_page_content (ARDnew): Unterdrückung full_shows-Kennzeichnung
+			bei Suchergebnissen (Absturz des Addons bei Video-Sofortstart, Rekursion xbmc.Key-
+			board).
+			Stream-Listen: Optik verbessert (blue entfernt, fett, versetzt, Ersatz "HLS, Ein-
+			zelstream" durch "HLS-Stream", WEBM-Kennzeichnung) - Anpassungen in Parseplaylist,
+			ARDStartVideoMP4get, build_Streamlists, ZDF_getApiStreams.
+			strm-Tools: "gesehene strm-Videos optional ausblenden" (Abfrage MyVideos119.db) -
+			neues Setting pref_skip_played_strm, Anpassung show_strm_element.
+			strm-Tools: Overlay Tools verhindern in "Beitrag ansehen" (2-sec-Pause eingefügt).
+			Audio_get_items_single (Audiothek): Fix escape-Zeichen (\u0026) in img-Url bei
+			Suchergebnissen (Cluster Sendungen).
+			Audio_get_search_cluster (Audiothek): Cluster Rubriken in Suchergebnissen ver-
+			fügbar gemacht.
+
+06.03.2022 4.2.6
 			Audio_get_homescreen: Ausschluss GRID_LIST_COLLAPSIBLE-Beiträge (nicht im Web
 			sichtbar, z.B. "LIVE: die Bundesliga"), dto Audio_get_cluster_rubrik (dort 
 			abh. von img).

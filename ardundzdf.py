@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>35</nr>										# Numerierung für Einzelupdate
-VERSION = '4.2.6'
-VDATE = '10.03.2022'
+VERSION = '4.2.7'
+VDATE = '13.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -549,7 +549,7 @@ def InfoAndFilter():
 	PLog('InfoAndFilter:'); 
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)									# Home-Button
-
+	
 															# Button changelog.txt
 	tag= u'Störungsmeldungen bitte via Kodinerds-Forum, Github-Issue oder rols1@gmx.de'
 	summ = u'für weitere Infos zu bisherigen Änderungen [B](changelog.txt)[/B] klicken'
@@ -572,7 +572,7 @@ def InfoAndFilter():
 		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
 		title = u"Zuletzt gesehen"	
 		tag = u"Liste der im Addon gestarteten Videos (max. %s Einträge)." % maxvideos
-		tag = u"%s\n\nSortierung absteigende (zuletzt gestartete Videos zuerst)" % tag
+		tag = u"%s\n\nSortierung absteigend (zuletzt gestartete Videos zuerst)" % tag
 		summ = u"Klick startet das Video (falls noch existent)"
 		fparams="&fparams={}" 
 		addDir(li=li, label=title, action="dirList", dirID="AddonStartlist", fanart=R(FANART), 
@@ -1794,6 +1794,7 @@ def Audio_get_items_single(item, ID=''):
 	img = stringextract('"url":"', '"', img)
 	img = img.replace('{width}', '640')
 	img = img.replace('16x9', '1x1')								# 16x9 kann fehlen, z,B. bei Suche
+	img = img.replace(u'\\u0026', '&')								# 13.03.2022: escape-Zeichen mögl.
 	
 
 	dur = stringextract('"duration":', ',', item)					# in Sek.
@@ -1993,7 +1994,7 @@ def Audio_get_search_cluster(page, ID):
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)						
 			cnt=cnt+1		
 
-	if ID == "Collections": 								# Sammlungen								
+	if ID == "Collections" or ID == "Categories": 								# Sammlungen								
 		items = blockextract('"id":', page, '}]},')
 		PLog(len(items))
 		cnt=0
@@ -2011,7 +2012,10 @@ def Audio_get_search_cluster(page, ID):
 				summ = "%s | %s" %  (attr, summ)
 			
 			tag = u"Folgeseiten"
-			api_url = ARD_AUDIO_BASE  + "editorialcollections/%s?%s" % (node_id, href_add)
+			if ID == "Collections":
+				api_url = ARD_AUDIO_BASE  + "editorialcollections/%s?%s" % (node_id, href_add)
+			else:
+				api_url = ARD_AUDIO_BASE  + "editorialcategories/%s?%s" % (node_id, href_add)
 			title = repl_json_chars(title)
 		
 			PLog('13Satz:');
@@ -9895,8 +9899,11 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 						
 						PLog(res)
 						title_url = u"%s#%s" % (title, url)
-						item = u"MP4, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
-							(track_add, quality, bitrate, res, title_url)
+						mp4 = "%s" % "MP4"
+						if ".webm" in url:
+							mp4 = "%s" % "WEBM"
+						item = u" %s, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
+							(mp4, track_add, quality, bitrate, res, title_url)
 						MP4_List.append(item)
 	
 	PLog("HLS_List: " + str(len(HLS_List)))
@@ -9962,9 +9969,9 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	title_list=[]
 	img=thumb; 
 	PLog(title_org); PLog(tagline[:60]); PLog(img); PLog(sub_path);
-	title_hls 	= u"[COLOR blue]Streaming-Formate[/COLOR]"
-	title_hb = "[COLOR blue]HBBTV-Formate[/COLOR]"
-	title_mp4 = "[COLOR red]MP4-Formate und Downloads[/COLOR]"
+	title_hls 	= u"[B]Streaming[/B]-Formate"
+	title_hb = "[B]HBBTV[/B]-Formate"
+	title_mp4 = "[B]MP4[/B]-Formate und [B]Downloads[/B]"
 	title_hls=repl_json_chars(title_hls); title_hb=repl_json_chars(title_hb);
 	title_mp4=repl_json_chars(title_mp4); 
 	
