@@ -12,6 +12,7 @@
      	<setting label="TagesschauXL verwenden" type="bool" id="pref_use_XL" default="false"/>
       	<setting label="Phoenix verwenden" type="bool" id="pref_use_phoenix" default="false"/>
       	<setting label="Arte-Kategorien verwenden" type="bool" id="pref_use_arte" default="false"/>
+      	<setting label="MediathekViewWeb-Suche verwenden" type="bool" id="pref_use_mvw" default="false"/>
     <setting type="sep"/>
    	<setting label="EPG-Daten für TV-Live-Sender zeigen - dauert etwas länger" type="bool" id="pref_use_epg" default="false"/>
    	<setting label="Inhaltstext zu Video im Voraus laden - kann sehr lange dauern!" type="bool" id="pref_load_summary" default="false"/>
@@ -21,10 +22,11 @@
 	<setting label="Gebärdensprache: Quelle verwenden falls vorhanden" type="bool" id="pref_DGS_ON" default="false"/>
   </category>Startlist
 
- <category label="Radio-Podcast Einstellungen">
-  	<setting label="Podcast-/Audiothek-Erweiterung verwenden" type="bool" id="pref_use_podcast" default="true"/>
+ <category label="Audiothek-/Podcast Einstellungen">
+  	<setting label="Audiothek-/Podcast-Erweiterung verwenden" type="bool" id="pref_use_podcast" default="true"/>
 	<setting label="Pfad zur Podcast-Favoritenliste (ohne Pfad: Ressourcenverzeichnis)" type="file" id="pref_podcast_favorits" default="podcast-favorits.txt"/>
-	<setting label="Info: die Podcast-Favoriten befinden sich in der ARD Audiothek" type="text" id="podinfo" enable="false"/>  
+	<setting label="Info: die Podcast-Favoriten befinden sich in der ARD Audiothek" type="text" id="podinfo" enable="false"/> 
+	<setting label="Sammeldownloads für Podcastliste erlauben" type="bool" id="pref_dl_podlist" default="true"/> 
  </category>
  
  <category label="Download Einstellungen">

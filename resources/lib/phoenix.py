@@ -8,7 +8,7 @@
 #	
 ################################################################################
 # 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 31.12.2021
+#	Stand: 17.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -94,6 +94,16 @@ def Main_phoenix():
 	
 	li = xbmcgui.ListItem()
 	liICON_TVLIVE = home(li, ID=NAME)			# Home-Button
+
+	if SETTINGS.getSetting('pref_use_mvw') == 'true':
+		title = 'Suche auf MediathekViewWeb.de'
+		tag = 'Sender: [B]alle Sender des ARD[/B] (phoenix selbst nicht unterstützt)' 
+		title=py2_encode(title); 
+		func = "resources.lib.phoenix.Main_phoenix"
+		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
+			(quote(title), "ARD", quote(func))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R(ICON_PHOENIX), 
+			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
 
 	title="Suche auf phoenix"
 	tag = "Suche Themen, Sendungen und Videos in phoenix"

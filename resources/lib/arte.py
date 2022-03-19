@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.02.2022
+#	Stand: 17.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -79,6 +79,16 @@ def Main_arte(title='', summ='', descr='',href=''):
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)			# Home-Button
+
+	if SETTINGS.getSetting('pref_use_mvw') == 'true':
+		title = 'Suche auf MediathekViewWeb.de'
+		tag = 'gesucht wird in [B]ARTE.DE[/B]'
+		title=py2_encode(title);
+		func = "resources.lib.arte.Main_arte"
+		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
+			(quote(title), "ARTE.DE", quote(func))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R(ICON_ARTE), 
+			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
 
 	title="Suche in Arte-Kategorien"
 	fparams="&fparams={}" 

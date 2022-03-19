@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>15</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.03.2022
+#	Stand: 17.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -112,7 +112,7 @@ NAME			= 'ARD und ZDF'
 
 #----------------------------------------------------------------
 # sender neu belegt in Senderwahl
-def Main_NEW(name, CurSender=''):
+def Main_NEW(name='', CurSender=''):
 	PLog('Main_NEW:'); 
 	PLog(name); PLog(CurSender)
 			
@@ -128,15 +128,25 @@ def Main_NEW(name, CurSender=''):
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
-			
 	def_tag = 'Sender: [B]%s[/B]' % sendername
+	
+	if SETTINGS.getSetting('pref_use_mvw') == 'true':
+		title = 'Suche auf MediathekViewWeb.de'
+		tag = 'Sender: [B]alle Sender des ARD[/B]' 
+		title=py2_encode(title); sender="ARD"
+		func = "resources.lib.ARDnew.Main_NEW"
+		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
+			(quote(title), "ARD", quote(func))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R(ICON_MAIN_ARD), 
+			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+		
 	title = 'Suche in ARD-Mediathek'
 	tag = def_tag
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s', 'sender': '%s' }" % (quote(title), sender)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", fanart=R(ICON_MAIN_ARD), 
 		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)
-		
+	
 	title = 'Startseite'	
 	tag = def_tag
 	title=py2_encode(title);
@@ -1415,7 +1425,6 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	
 	played_direct = ardundzdf.build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
-		
 
 	# -----------------------------------------		# mehr (Videos) zur Sendung,
 	if mehrzS or played_direct:						# skip bei direktem Aufruf
@@ -1864,23 +1873,29 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 #	geändert - das Zusammensetzen mit extensions + variables entfällt.  
 # 26.09.2021 Suche nach Sendungen möglich aber verworfen, da zusätzl. Suche erforderlich
 #	 (Suchstring: ../ard/search/grouping?searchString=..) 
+# 14.03.2022 nach Sofortstart-Abbruch springt Kodi erneut nach get_keyboard_input - Addon-
+#	Absturz bei Abbruch der Eingabe. Abhilfe: return ersetzt durch Aufruf Main_NEW.
 #
 def ARDSearchnew(title, sender, offset=0, query=''):
 	PLog('ARDSearchnew:');	
-	PLog(sender); PLog(offset); PLog(query);
-	
-	if sender == '':											# Sender gewählt?
+	PLog(title); PLog(sender); PLog(offset); PLog(query);
+
+	if sender == '':								# Sender gewählt?
+		CurSender = Dict("load", 'CurSender')		
 		sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)
 	
 	if query == '':
 		query = get_keyboard_input() 
-		if query == None or query.strip() == '': # None bei Abbruch
-			return
+		if query == None or query.strip() == '': 	# None bei Abbruch
+			PLog(query)
+			# return								# Absturz nach Sofortstart-Abbruch					
+			Main_NEW(NAME)
+			
 	query = query.strip()
-	query = query.replace(' ', '+')	# Aufruf aus Merkliste unbehandelt	
+	query = query.replace(' ', '+')					# Aufruf aus Merkliste unbehandelt	
 	query_org = query	
-	query=py2_decode(query)		# decode, falls erf. (1. Aufruf)
+	query=py2_decode(query)							# decode, falls erf. (1. Aufruf)
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')								# Home-Button
@@ -1925,7 +1940,7 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", fanart=R(ICON_MEHR), 
 			thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)																	
 				
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #---------------------------------------------------------------- 
 # Verpasst Mediathek Neu - Liste Wochentage
@@ -1977,7 +1992,7 @@ def ARDVerpasst(title, CurSender):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
 		thumb=R('tv-regional.png'), fparams=fparams) 
 	
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #---------------------------------------------------------------- 
 # ARDVerpasstContent Mediathek Neu - Inhalt des gewählten Tages
@@ -2028,7 +2043,7 @@ def ARDVerpasstContent(title, startDate, endDate, CurSender):
 	li = get_page_content(li, page, ID='EPG', mark='')
 																	
 	
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #----------------------------------------------------------------
 # convHour z.Z. nicht genutzt
@@ -2087,7 +2102,7 @@ def Senderwahl(title, caller=''):
 		addDir(li=li, label=title, action="dirList", dirID="%s" % caller, fanart=R(img), thumb=R(img), 
 			tagline=tagline, fparams=fparams)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 ####################################################################################################
 
 

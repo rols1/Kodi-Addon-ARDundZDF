@@ -10,6 +10,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+19.03.2022 4.2.8
+			Integration der Suchfunktion bei MediathekViewWeb: Erweiterung Modul yt
+			(Funktionen MVWSearch, MVWSingleVideo, get_mvw_page), Anpassungen in den
+			Menüs (Haupt-PRG, ARDnew, arte, childs, funk, my3sat, phoenix, TagesschauXL).
+			Audio_get_search_cluster (Audiothek): Fix Encoding in Titeln bei Sendungen 
+			(relevant für Kodi Leia).
+			Settings: Umbenennung "Radio-Podcast Einstellungen".
+			get_page_content (ARDnew): Unterdrückung full_shows-Kennzeichnung" nachgebes-
+			sert.
+			ARDSearchnew: Aufruf Main_NEW bei Abbruch der Sucheingabe (verhindert Addon-
+			Absturz bei abgebrochenen Videos).
+			Start (Modul 3sat): Cluster "livestream & programm" unterdrückt (eigenständige
+			Menüs).
+			do_sync (strm-Modul): nicht existierendes Verzeichnis abgefangen (strmpath).
+			transl_json (Modul util): zusätzl. Ersetzungen fürArte.
 
 13.03.2022 4.2.7
 			build_Streamlists: Auswertung zusätzl. ZDF-Videoquellen (Originalton, Audio-

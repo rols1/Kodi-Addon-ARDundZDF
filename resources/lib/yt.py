@@ -6,14 +6,19 @@
 #	phoenix-Videos entfällt die Dechiffrierung der Youtube-Signaturen.
 #	Damit entfallen auch Importprobleme und die laufende Anpassung an
 #	die pytube-library.
-#
 #	Test-Videos: Rubriken/Bundestag
+#
+#	März 2022: ergänzt mit MediathekViewWeb-Funktionen, basierend auf
+#		dem api von Dev. bagbag (https://github.com/bagbag), 
+#		https://github.com/mediathekview/mediathekviewweb,
+#		https://mediathekview.de/news/mediathekviewweb/ 
+#
 ################################################################################
 #
-#	06.01.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
+#	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 # 	<nr>0</nr>								# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+#	Stand: 19.03.2022
 #
 
 from __future__ import absolute_import
@@ -39,9 +44,10 @@ elif PYTHON3:
 		pass
 
 
-import ardundzdf					# -> test_downloads 
+import ardundzdf					# -> test_downloads, Main, start_script, build_Streamlists_buttons
 from resources.lib.util import *
 
+ICON_MEHR 				= "icon-mehr.png"
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -51,7 +57,11 @@ ADDON_PATH    	= SETTINGS.getAddonInfo('path')	# Basis-Pfad Addon
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
+NAME			= 'ARD und ZDF'
+MVW_DATA 		= '{"queries":[{"fields":["title","topic"],"query":"%s"},{"fields":["channel"],"query":"%s"}],"sortBy":"timestamp","sortOrder":"desc","future":false,"offset":%d,"size":%d}'
+MVW_DATA_ALL 	= '{"queries":[{"fields":["title","topic"],"query":"%s"}],"sortBy":"timestamp","sortOrder":"desc","future":false,"offset":%d,"size":%d}'
 
+#----------------------------------------------------------------
 # 19.12.2020 ytplayer.config nicht mehr vor itag's positioniert - Block-
 #	bildung direkt mit itag (s.u.)
 def yt_get(url, vid, title, tag, summ, thumb):
@@ -201,15 +211,217 @@ def get_duration(page):
 	
 	return duration
 	
+##################### MediathekViewWeb-Funktionen ######################
+# Aufruf aus den div. Hauptmenüs (Setting pref_use_mvw)
+# 	
+# func-Bsp. (Fallback bei Absturz nach Sofortstart-Abbruch): 
+#	resources.lib.ARDnew.Main_NEW
+#
+def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
+	PLog('MVWSearch:') 
+	PLog(title); PLog(sender); PLog(offset); PLog(query); 
+	PLog(home_id); PLog(myfunc);
+		
+	if sender == '':								# Sender gewählt?
+		CurSender = Dict("load", 'CurSender')		
+		sendername, sender, kanal, img, az_sender = CurSender.split(':')
+	PLog(sender)
 	
+	if query == '':
+		query = get_keyboard_input() 
+		if query == None or query.strip() == '': 	# None bei Abbruch
+			# return								# Absturz nach Sofortstart-Abbruch					
+			if myfunc == '':
+				myfunc = ardundzdf.Main 
+			import importlib
+			fparams="{}"  
+			fparams = quote(fparams)
+			ardundzdf.start_script(myfunc, fparams, is_dict=False)	# Fallback zu myfunc
+			return									# ohne return wird hier fortgesetzt
+			
+	query = query.strip()
+	query_org = query
+	lsize = 20								# Anzahl pro Liste
+	offset=int(offset)
+	 
+	if "ARD|ZDF" in sender:					# Suche in ARD und ZDF
+		data = MVW_DATA_ALL  % (query, offset, lsize)
+	else:									# Suche in einz. Sender / Channel
+		data = MVW_DATA % (query, sender, offset, lsize)
 	
+	page = get_mvw_page(data)
+	if page == '':	
+		msg1 = "Fehler in MVWSearch:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return
+		
+	PLog(type(page))
+	page = json.dumps(page)					# tuple -> string
+	page = transl_json(page)
+
+	PLog(type(page))
+	page = page.replace('\\"', '"')			# dumps-doublequotes
+	page = page.replace('\\"', '*')			# doublequotes			
+	PLog(page[:100])
+	PLog(page[:100])	
+	#RSave('/tmp/x.json', py2_encode(page)) # Debug
 	
+	items = blockextract('"channel"', page)
+	queryInfo = stringextract('"queryInfo"', '"err"', page)	
+	PLog(len(items))
+	if len(items) == 0:	
+		msg1 = u"Suchwort >%s< leider nicht gefunden" % py2_decode(query)
+		MyDialog(msg1, '', '')	
+		return	
+		
+	li = xbmcgui.ListItem()
+	if home_id:
+		li = home(li, home_id)				# Home-Button
+	else:
+		li = home(li, NAME)					# Hauptmenü
 	
+	mediatype=''
+	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
+		mediatype='video'
 	
+	PLog("Mark0")
+	img = R("suche_mv.png"); cnt=0
+	page = py2_decode(page)
+	page = transl_json(page)
+	totalResults = stringextract('"totalResults":', '}', page)
+	PLog(totalResults)
+	totalResults = int(totalResults)
+	for item in items:
+		channel 	= stringextract('"channel":"', '"', item)
+		topic 		= stringextract('"topic":"', '"', item)
+		title 		= stringextract('"title":"', '"', item)
+		descr 		= stringextract('"description":"', '"', item)
+		timestamp 	= stringextract('"timestamp":', ',', item)
+		duration 	= stringextract('"duration":', ',', item)
+		size 		= stringextract('"size":', ',', item)
+		url_website	= stringextract('"url_website":"', '"', item)
+		sended 		= stringextract('"filmlisteTimestamp":"', '"', item)
+		sid 		= stringextract('"id":"', '"', item)
+		
+		url_sub 	= stringextract('"url_subtitle":"', '"', item)
+		url_med 	= stringextract('"url_video":"', '"', item)		# med?
+		url_low 	= stringextract('"url_video_low":"', '"', item)
+		url_hd 		= stringextract('"url_video_hd":"', '"', item)
+
+		PLog(timestamp); PLog(sended);
+		tstamp = datetime.datetime.fromtimestamp(int(timestamp))
+		tstamp = tstamp.strftime("%d. %b. %Y %R")
+		sended = datetime.datetime.fromtimestamp(int(sended))
+		sended = sended.strftime("%d. %b. %Y %R")
+		tstamp = py2_decode(tstamp); sended = py2_decode(sended)
+		
+		dauer = seconds_translate(duration)
+		title = repl_json_chars(title)
+		summ = repl_json_chars(descr)
+		ut = u"nein"
+		if url_sub:
+			ut = u"ja"
+		tag = u"Dauer: %s | [B]%s[/B] | gesendet: [B]%s[/B] | [B]%s[/B] | UT: %s | ausgewertet: %s" % \
+			(dauer, channel, sended, topic, ut, tstamp)
+		tag = repl_json_chars(tag)
+		Plot = "%s||||%s" % (tag, summ)
+		
+		PLog("Satz2:")
+		PLog(title); PLog(url_med); PLog(Plot[:80]); PLog(url_sub)
+		
+		title=py2_encode(title); Plot=py2_encode(Plot);
+		url_sub=py2_encode(url_sub); url_low=py2_encode(url_low); 
+		url_med=py2_encode(url_med); url_hd=py2_encode(url_hd)
+		fparams="&fparams={'title': '%s','Plot': '%s','home_id': '%s','url_sub': '%s','url_low': '%s','url_med': '%s','url_hd': '%s'}" %\
+			(quote(title),quote(Plot),home_id,quote(url_sub),quote(url_low),quote(url_med),quote(url_hd))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSingleVideo",
+			fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+		cnt=cnt+1	
 	
+	PLog(offset); PLog(lsize)				# Mehr-Button
+	new_offset = offset + lsize
+	PLog("new_offset: %d" % offset)	
+	if new_offset < totalResults:
+		title = "Mehr zu: [B]%s[/B]" % query
+		tag = "weiter ab  %d | gesamt: %d" % (new_offset+1, totalResults)
+		fparams="&fparams={'title': '%s','sender': '%s','offset': '%s','query': '%s','home_id': '%s','myfunc': '%s'}" %\
+			(quote(title),sender,str(new_offset),quote(query),home_id,quote(myfunc))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch",
+			fanart=img, thumb=R(ICON_MEHR), fparams=fparams, tagline=tag, summary=summ)
 	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
+# ----------------------------------------------------------------------
+# Aufruf: MVWSearch
+# Fertigung der Videolisten - bisher nur MP4-Formate gefunden
+# 	-> build_Streamlists_buttons (mit opt. Sofortstart)
+def MVWSingleVideo(title,Plot,home_id,url_sub='',url_low='',url_med='',url_hd=''):
+	PLog('MVWSingleVideo:')
+	PLog(url_sub) 
 	
+	HLS_List=[]; MP4_List=[]; HBBTV_List=[];
+	track_add = "MediathekView"
+	if url_low:
+		title_url = u"%s#%s" % (title, url_low)
+		item = u"MP4, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
+			(track_add, "LOW", "unbekant", "480x270", title_url)
+		MP4_List.append(item)
+		PLog("item: " + item)
+	if url_med:
+		title_url = u"%s#%s" % (title, url_med)
+		item = u"MP4, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
+			(track_add, "MED", "unbekant", "640x360", title_url)
+		MP4_List.append(item)
+		PLog("item: " + item)
+	if url_hd:
+		title_url = u"%s#%s" % (title, url_hd)
+		item = u"MP4, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
+			(track_add, "HD", "unbekant", "1920x1080", title_url)
+		MP4_List.append(item)
+		PLog("item: " + item)
+	
+	ID="MVW"	
+	PLog("MP4_List: " + str(len(MP4_List)))
+	Dict("store", '%s_HLS_List' % ID, HLS_List) 
+	Dict("store", '%s_MP4_List' % ID, MP4_List) 
+	Dict("store", '%s_HLS_List' % ID, HLS_List) 
+	
+	li = xbmcgui.ListItem(); thumb = R("suche_mv.png")
+	geoblock=''; sub_path=url_sub; HOME_ID=home_id
+	ardundzdf.build_Streamlists_buttons(li,title,thumb,geoblock,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+# ----------------------------------------------------------------------
+# get_page in util wegen Post-Daten nicht geeignet
+#
+def get_mvw_page(data):
+	PLog('get_mvw_page:') 
+	
+	path = "https://mediathekviewweb.de/api/query"
+	header = {"user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36", \
+		"content-type": "text/plain;charset=UTF-8", "accept": "*/*"}
+	data = data.encode('utf-8')
+
+	msg = ''; page = ''	
+	try:
+		req = Request(path, data=data, headers=header)
+		r = urlopen(req)
+		PLog(r.info())
+		page = r.read()		
+	except Exception as e:
+		page=''
+		msg=str(e)
+		PLog(msg)
+	
+	page = page.decode('utf-8')
+	PLog(len(page))
+	PLog(page[:100])
+	return page,msg
+
+# ----------------------------------------------------------------------
 	
 	
 	

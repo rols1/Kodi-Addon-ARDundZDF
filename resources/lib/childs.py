@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.02.2022
+#	Stand: 17.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -134,12 +134,22 @@ def Main_childs():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 # ----------------------------------------------------------------------			
-def Main_KIKA(title):
+def Main_KIKA(title=''):
 	PLog('Main_KIKA:')
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 		
+	if SETTINGS.getSetting('pref_use_mvw') == 'true':
+		title = 'Suche auf MediathekViewWeb.de'
+		tag = 'gesucht wird in [B]KiKA[/B]'
+		title=py2_encode(title);
+		func = "resources.lib.childs.Main_KIKA"
+		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
+			(quote(title), "KiKA", quote(func))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=GIT_KIKA, 
+			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+	
 	title="Suche in KIKA"
 	summ = "Suche Sendungen in KIKA"
 	fparams="&fparams={'query': '', 'title': '%s'}" % title
@@ -201,12 +211,22 @@ def Main_KIKA(title):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
 # ----------------------------------------------------------------------			
-def Main_TIVI(title):
+def Main_TIVI(title=''):
 	PLog('Main_TIVI:')
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 			
+	if SETTINGS.getSetting('pref_use_mvw') == 'true':
+		title = 'Suche auf MediathekViewWeb.de'
+		tag = 'gesucht wird in [B]ZDF-tivi[/B]'
+		title=py2_encode(title);
+		func = "resources.lib.childs.Main_TIVI"
+		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
+			(quote(title), "ZDF-tivi", quote(func))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=GIT_ZDFTIVI, 
+			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+	
 	title="Suche in ZDFtivi"
 	summ = "Suche Videos in KIKA"
 	fparams="&fparams={'query': '', 'title': '%s'}" % title

@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.02.2022
+#	Stand: 18.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -96,7 +96,7 @@ NAME			= 'ARD und ZDF'
 #----------------------------------------------------------------
 # Aufrufer: Haupt-PRG, Menü Main
 #
-def Main_3Sat(name):
+def Main_3Sat(name=''):
 	PLog('Main_3Sat:'); 
 	PLog(name)
 				
@@ -104,6 +104,16 @@ def Main_3Sat(name):
 	li = home(li, ID=NAME)				# Home-Button
 	PLog("li:" + str(li))						
 			
+	if SETTINGS.getSetting('pref_use_mvw') == 'true':
+		title = 'Suche auf MediathekViewWeb.de'
+		tag = 'gesucht wird in [B]3Sat[/B]'
+		title=py2_encode(title);
+		func = "resources.lib.my3Sat.Main_3Sat"
+		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
+			(quote(title), "3Sat", quote(func))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R('3sat.png'), 
+			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+	
 	title="Suche in 3sat-Mediathek"		
 	fparams="&fparams={'first': 'True','path': ''}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Search", fanart=R('3sat.png'), 
@@ -575,6 +585,8 @@ def Start(name, path, rubrik=''):
 			if u'Das könnte Dich' in title:			# leer (java-script)
 				continue
 			if u'Alle löschen' in title:			# Merkliste 3sat
+				continue
+			if u'livestream &' in title:			# ausgelagert
 				continue
 			# Bilder für 1. Rubrik-Beitrag laden (lazyload-, carousel- + andere Sätze möglich):	
 			if SETTINGS.getSetting('pref_load_summary') == 'true': # hier nur Bild verwenden

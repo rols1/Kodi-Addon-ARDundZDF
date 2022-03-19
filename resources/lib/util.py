@@ -1672,8 +1672,8 @@ def wrap(text, width):
 # Migration PY2/PY3: py2_decode aus kodi-six
 def transl_json(line):	# json-Umlaute übersetzen
 	# Vorkommen: Loader-Beiträge ZDF/3Sat (ausgewertet als Strings)
-	# Recherche Bsp.: https://www.compart.com/de/unicode/U+00BA
-	# 
+	# Recherche Bsp.: https://www.compart.com/de/unicode/U+00BA,
+	# 	https://html.spec.whatwg.org/multipage/named-characters.html
 	line=py2_decode(line)
 	#PLog(line)
 	for r in ((u'\\u00E4', u"ä"), (u'\\u00C4', u"Ä"), (u'\\u00F6', u"ö"), (u'u002F', u"/")		
@@ -1687,7 +1687,13 @@ def transl_json(line):	# json-Umlaute übersetzen
 		, (u'u00B0', u' Grad')		# u00BA -> Grad (3Sat, 37 Grad)	
 		, (u'u00EA', u'e')			# 3Sat: Fête 
 		, (u'u00E9', u'e')			# 3Sat: Fabergé
-		, (u'u00E6', u'ae')):			# 3Sat: Kjaerstad
+		, (u'u00E6', u'ae')			# 3Sat: Kjaerstad
+		, (u'\\u00e9', u'e')		# Arte: Frédéric
+		, (u'\\u201e', u'*')		# Arte: doublequote hoch
+		, (u'\\u201e', u'*')		# Arte: doublequote hoch
+		, (u'\\u2013', u'-')		# Arte: -
+		, (u'\\u2019', u'*')		# Arte: '
+		, (u'\\u00a0', u' ')):		# NO-BREAK SPACE
 
 		line = line.replace(*r)
 	#PLog(line)
@@ -2800,9 +2806,9 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 # Auflösung/Bitrate In beiden Listen wg. re.search-Sortierung erford.!
 # Aufrufer: build_Streamlists_buttons (Sofortstart), get_streamurl
 #
-def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, playlist='', HBBTV_List=''):	
+def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, playlist='', HBBTV_List='', ID=''):	
 	PLog('PlayVideo_Direct:')
-	PLog(title)
+	PLog(title); PLog(ID)
 	PLog(len(HLS_List)); PLog(len(MP4_List)); PLog(len(HBBTV_List));
 	#PLog(str(HLS_List)); PLog(str(MP4_List)); PLog(str(HBBTV_List)); # Debug
 	myform = SETTINGS.getSetting('pref_direct_format')
@@ -2817,7 +2823,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 	
 	msg1=''; msg2=''
 	mode_hls=False; mode=''
-	if 'HLS' in myform:								# Austausch bei leeren Listen
+	if 'HLS' in myform and  ID != "MVW":			# Austausch bei leeren Listen, bei MVW nur MP4-Quellen
 		Stream_List = HLS_List
 		if len(Stream_List) == 0:
 			msg1 = u"HLS-Quellen fehlen"

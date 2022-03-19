@@ -110,6 +110,7 @@ Funktionen:
 - "Zuletzt gesehen"-Funktion 
 - Video-Playlist einschl. Archiv-Funktion
 - strm-Modul
+- Suchfunktion für MediathekView (s. Credits)
 
 
 INSTALLATION:
@@ -124,11 +125,12 @@ INSTALLATION:
 - [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
 
 Credits:
-===================  
-- Credits to [coder-alpha](https://forums.plex.tv/discussion/166602/rel-ccloudtv-channel-iptv/p1): (Channel updater, based on Channel updater by sharkone/BitTorrent.bundle)
+===================
+- Credits to [bagbag](https://github.com/bagbag): [MediathekViewWeb with API](https://github.com/mediathekview/mediathekviewweb/) 
+- Credits to all the members of Forum Kodinerds who help to make this addon better
+- Credits to [coder-alpha](https://forums.plex.tv/discussion/166602/rel-ccloudtv-channel-iptv/p1): Channel updater, based on Channel updater by sharkone/BitTorrent.bundle
 - Credits to [Arauco](https://forums.plex.tv/profile/Arauco): processing of Logos and Icons (Plex-Plugin ARDundZDF)
 - Credits to [romanv](https://github.com/romanvm) for his script.module.kodi-six
-- Credits to all the members of Forum Kodinerds who help to make this addon better
 
 Hauptmenü:
 ===================  

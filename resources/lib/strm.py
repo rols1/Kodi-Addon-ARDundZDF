@@ -4,7 +4,7 @@
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
 # 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.03.2022
+#	Stand: 19.03.2022
 #
 
 from __future__ import absolute_import
@@ -719,17 +719,24 @@ def strm_tool_set(mode="load", index=0, val=''):
 #
 def do_sync(list_title, strmpath, list_path, strm_type):
 	PLog("do_sync:")
-	PLog("synchronisiere: %s" % list_title)
+	PLog("synchronisiere: %s, %s" % (list_title, strmpath))
+	
 	from ardundzdf import ZDF_FlatListRec, ZDF_getApiStreams
 	icon = R("icon-strmtools.png")
 	
+	err=''
 	page, msg = get_page(path=list_path)
 	if page == '':
+		err = msg
+	if os.path.exists(strmpath) == False:
+		err = "Zielverzeichnis fehlt"
+	if err:
 		msg1 = u"Abgleich fehlgeschlagen"
-		msg2 = msg
-		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
-		line = "%6s | %15s | %s" % ("ERR", list_title[:15], msg[:45])
+		msg2 = err
+		line = "%6s | %15s | %s" % ("ERR", list_title[:15], err[:45])
+		PLog(line)
 		log_update(line)
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
 		return
 		
 	#-------------													# Blockmerkmale wie ZDF_FlatListEpisodes

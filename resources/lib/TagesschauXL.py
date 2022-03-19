@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>3</nr>								# Numerierung für Einzelupdate
-#	Stand: 05.11.2021
+#	Stand: 17.03.2022
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -124,6 +124,16 @@ def Main_XL():
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)			# Home-Button
 				
+	if SETTINGS.getSetting('pref_use_mvw') == 'true':
+		title = 'Suche auf MediathekViewWeb.de'
+		tag = 'gesucht wird in [B]ARD[/B] (tagesschau.de selbst nicht unterstützt)'
+		title=py2_encode(title);
+		func = "resources.lib.TagesschauXL.Main_XL"
+		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
+			(quote(title), "ARD", quote(func))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=ICON_MAINXL, 
+			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+
 	title="Suche auf www.tagesschau.de"
 	summ = "Suche Sendungen und Videos auf www.tagesschau.de"
 	fparams="&fparams={'query': ''}"

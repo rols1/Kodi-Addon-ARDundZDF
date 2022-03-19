@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>36</nr>										# Numerierung für Einzelupdate
-VERSION = '4.2.7'
-VDATE = '13.03.2022'
+VERSION = '4.2.8'
+VDATE = '19.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -378,15 +378,25 @@ def Main():
 
 	icon = R(ICON_MAIN_ARD)
 	label 		= NAME
-	
 	li = xbmcgui.ListItem("ARD und ZDF")
+	
+	
+	if SETTINGS.getSetting('pref_use_mvw') == 'true':
+		title = 'Suche auf MediathekViewWeb.de'
+		tag = 'gesucht wird in [B]allen von MediathekView unterstützen Sendern[/B]'
+		title=py2_encode(title);
+		func = "ardundzdf.Main"
+		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
+			(quote(title), "ARD|ZDF", quote(func))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R('suche_ardundzdf.png'), 
+			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+	
 	title="Suche in ARD und ZDF"
-	tagline = 'gesucht wird in ARD  Mediathek Neu und in der ZDF Mediathek.'
+	tagline = 'gesucht wird in [B]ARD  Mediathek Neu [/B]und in der [B]ZDF Mediathek[/B].'
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 		fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tagline, 
 		fparams=fparams)
-		
 
 	title = "ARD Mediathek Neu"
 	tagline = u'die Classic-Version der Mediathek existiert nicht mehr - sie wurde von der ARD eingestellt'
@@ -637,7 +647,7 @@ def InfoAndFilter():
 #	fparams_add json-kompat., Bsp.: '{"action": "playlist_add", "url": ""}'
 # Um die Rekursion der Web-Tools-Liste zu vermeiden wird MENU_STOP in playlist_tools
 #	gesetzt und in InfoAndFilter wieder entfernt.
-# Beispiel fparams bei Direktaufruf (no_dict=True):   
+# Beispiel fparams bei Direktaufruf (is_dict=False):   
 #					fparams="{'strmpath': '%s'}" % strmpath	 
 #					fparams = quote(fparams)
 #					start_script(myfunc, fparams)
@@ -1054,11 +1064,21 @@ def ShowText(path, title, page=''):
 #  03.06.2021 Main_ARD (Classic) entfernt
 # def Main_ARD(name, sender=''):		 		
 #---------------------------------------------------------------- 
-def Main_ZDF(name):
+def Main_ZDF(name=''):
 	PLog('Main_ZDF:'); PLog(name)
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	
+	if SETTINGS.getSetting('pref_use_mvw') == 'true':
+		title = 'Suche auf MediathekViewWeb.de'
+		tag = 'Sender: [B]alle Sender des ZDF[/B]' 
+		title=py2_encode(title);
+		func = "ardundzdf.Main_ZDF"
+		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
+			(quote(title), "ZDF", quote(func))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R(ICON_MAIN_ARD), 
+			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+		
 	title="Suche in ZDF-Mediathek"
 	fparams="&fparams={'query': '', 'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_SEARCH), 
@@ -8103,7 +8123,7 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 # Aufrufer: ZDF_FlatListEpisodes, ZDF_getStrmList
 def ZDF_FlatListRec(item):
 	PLog('ZDF_FlatListRec:')
-	PLog(item)
+	PLog(item[:80])
 
 	title='';url='';img='';tag='';summ='';season='';
 	descr='';weburl=''
@@ -9962,8 +9982,9 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	if SETTINGS.getSetting('pref_video_direct') == 'true':	
 		played_direct=True
 		img = thumb
-		PlayVideo_Direct(HLS_List, MP4_List, title_org, img, Plot, sub_path, HBBTV_List)
+		PlayVideo_Direct(HLS_List, MP4_List, title_org, img, Plot, sub_path, HBBTV_List,ID=ID)
 		return played_direct							# direct-Flag z.B. für ARDStartSingle
+		
 
 	# -----------------------------------------			# Buttons Einzelauflösungen
 	PLog("Satz3:")
