@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>36</nr>										# Numerierung für Einzelupdate
+# 	<nr>37</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.8'
-VDATE = '19.03.2022'
+VDATE = '20.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1527,6 +1527,18 @@ def ARDAudioEventStreams(li):
 	fparams="&fparams={'channel': '%s'}"	% (quote(channel))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportAudioXML", fanart=img, 
 		thumb=img, tagline=tag, fparams=fparams)
+		
+	label = "[B]Audio:[/B] Sport in der Audiothek"					# Querverweis Audiothek Rubrik Sport
+	li = xbmcgui.ListItem()
+	tag = u"LIVE: 1. und 2. Bundesliga, einschl. Bundesliga-Konferenz, Aktuell informiert und weitere Themen"
+	thumb = R("ard-sport.png")
+	href = 'https://www.ardaudiothek.de/rubrik/sport/42914734'
+	title=py2_encode(title); href=py2_encode(href);
+	fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'ID': 'Audio_get_rubriken_web'}" % (quote(href), 
+		quote("Sport"))
+	addDir(li=li, label=label, action="dirList", dirID="Audio_get_cluster_rubrik", \
+		fanart=img, thumb=thumb, tagline=tag, fparams=fparams)	
+	 	
 
 	title = u"[B]Audio:[/B] Die Fussball-Bundesliga im ARD-Hörfunk"		# Button Bundesliga ARD-Hörfunk 
 	href = 'https://www.sportschau.de/sportimradio/bundesligaimradio102.html'
@@ -3159,7 +3171,7 @@ def ARDSportPanelTabs(title, path, img, tab_path=''):
 # BUNDESLIGA IM ARD-HÖRFUNK
 # img: radio-livestreams.png
 # path: sportschau.de/sportimradio/bundesligaimradio102.html
-#
+# 19.03.2022 Test - Ausfall: alle außer WDR 2-Liga live
 def ARDSportHoerfunk(title, path, img):
 	PLog('ARDSportHoerfunk:'); 
 	fanimg = img

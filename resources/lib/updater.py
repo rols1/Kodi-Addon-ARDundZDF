@@ -11,8 +11,8 @@
 # 	18.03.2020 adjust_AddonXml: Anpassung python-Version an Kodi-Version
 #	13.04.2020 Aktualisierung adjust_AddonXml 
 ################################################################################
-# 	<nr>0</nr>								# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+# 	<nr>1</nr>								# Numerierung für Einzelupdate
+#	Stand: 20.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -87,21 +87,18 @@ def get_latest_version():
 		title	= stringextract('<title>', '</title>', page)		# 
 		content	= stringextract('li&gt;', '</content>', page)
 		summary = cleanSummary(content)
-		# PLog("content: "  + content)
+		
+		#PLog("content: "  + content)
 		# PLog(link); PLog(title); PLog(summary); PLog(tag);  
-		return (title, summary, tag)
+		return (py2_encode(title), py2_encode(summary), py2_encode(tag))
 	except Exception as exception:
 		PLog(str(exception))
 		return ('', '', '')
 
 ################################################################################
-# decode latest_version (hier bytestring) erforderlich für Pfad-Bau in 
+# Abgleich Github-tag mit Addon-Version 
 def update_available(VERSION):
 	PLog('update_available:')
-
-	# save_restore('save')					# Test-Session save_restore
-	# save_restore('restore')
-	# return (False, '', '', '', '', '')
 	
 	try:
 		title, summ, tag = get_latest_version()
