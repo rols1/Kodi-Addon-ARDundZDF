@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>13</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.03.2022
+# 	<nr>14</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -990,6 +990,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 # 02.09.2020 Rückgabe page='' bei PDF-Seiten
 # 02.11.2020 URLError -> Exception, s. changelog.txt
 # 06.08.2021 Behandl. HTTP Error 308: Permanent Redirect hinzugefügt
+# 21.03.2021 Option Download PDF-Dateien hinzugefügt
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True, decode=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
@@ -1000,6 +1001,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		header = json.loads(header)
 		PLog("header: " + str(header)[:100]);
 		
+	path_org=path
 	# path = transl_umlaute(path)				# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
 	# path = unquote(path)						# scheitert bei quotierten Umlauten, Ersatz replace				
 	path = path.replace('https%3A//','https://')# z.B. https%3A//classic.ardmediathek.de
@@ -1062,11 +1064,34 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				page = f.read()
 				PLog(len(page))
 			r.close()
-			if page.startswith(b'%PDF-'):								# Bsp. Rezepte (Die Küchenschlacht),
-				msg1 = "PDF-Format nicht darstellbar"					#	Bytecodierung für PY3 erford.
+			if page.startswith(b'%PDF-'):								# Bsp. Rezepte (Die Küchenschlacht)
+				msg1 = "PDF-Format nicht darstellbar"
 				msg2 = 'Inhalt verworfen'
 				msg = "%s,\n%s" % (msg1, msg2)
-				return '', msg
+				dl_path = SETTINGS.getSetting('pref_download_path')
+				if os.path.isdir(dl_path):
+					fname = make_filenames(new_url.split('/')[-1])
+					if '7Eoriginalcb' in fname:							# ZDF: ..rezepte-vom-21-maerz-2022-100~original?cb=..
+						fname = fname.split('7Eoriginalcb')[0]
+					PLog("Mark0")
+					PLog(fname);PLog(new_url);	
+					heading = "PDF-Datei herunterladen?"
+					msg1 = u"PDF-Dateien sind hier nicht darstellbar"
+					msg2 = u"Soll die Datei [B]>%s<[/B] heruntergeladen werden?" % fname
+					msg3 = "Ablage: Downloadverzeichnis"
+					ret2 = MyDialog(msg1=msg1, msg2=msg2, msg3=msg3, ok=False, cancel='Abbruch', yes='JA', heading=heading)
+					if ret2 == 1:
+						fpath = os.path.join(dl_path, fname)
+						PLog(fpath);
+						urlretrieve(new_url, fpath)
+						if os.path.exists(fpath):
+							return '', "Stattdessen: [B]PDF-Datei erfolgreich heruntergeladen[/B]"
+						else:
+							return '', "[B]Download der PDF-Datei gescheitert[/B]"
+					else:
+						return '', msg
+				else:
+					return '', msg
 			PLog(page[:100])
 			msg = new_url
 		except Exception as exception:									# s.o.
@@ -1689,8 +1714,8 @@ def transl_json(line):	# json-Umlaute übersetzen
 		, (u'u00E9', u'e')			# 3Sat: Fabergé
 		, (u'u00E6', u'ae')			# 3Sat: Kjaerstad
 		, (u'\\u00e9', u'e')		# Arte: Frédéric
-		, (u'\\u201e', u'*')		# Arte: doublequote hoch
-		, (u'\\u201e', u'*')		# Arte: doublequote hoch
+		, (u'\\u201e', u'*')		# Arte: doublequote tief
+		, (u'\\u201c', u'*')		# Arte: doublequote hoch
 		, (u'\\u2013', u'-')		# Arte: -
 		, (u'\\u2019', u'*')		# Arte: '
 		, (u'\\u00a0', u' ')):		# NO-BREAK SPACE
