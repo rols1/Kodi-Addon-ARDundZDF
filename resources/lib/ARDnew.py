@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>15</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.03.2022
+# 	<nr>16</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -456,8 +456,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	if ID == "ARDRetroStart":
 		li = home(li, ID=NAME)							# Home-Button -> Hauptmenü
 	else:
-		if ID != 'Livestream':							# ohne home - Nutzung durch Classic
-			li = home(li, ID='ARD Neu')					# Home-Button
+		li = home(li, ID='ARD Neu')						# Home-Button
 
 	page = False
 	if 	'/editorials/' in path == False:				# nur kompl. Startseite aus Cache laden (nicht Rubriken) 
@@ -1066,7 +1065,7 @@ def ARDSportneu():
 	title2 = "Sender: ARD-Alle"
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)									# Home-Button -> Hauptmenü
+	li = home(li, ID='ARD Neu')								# Home-Button
 
 	path = "https://www.ardmediathek.de/ard/sport/" 
 	# Seite aus Cache laden

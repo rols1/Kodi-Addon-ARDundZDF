@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>37</nr>										# Numerierung für Einzelupdate
+# 	<nr>38</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.8'
-VDATE = '20.03.2022'
+VDATE = '24.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2382,6 +2382,7 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			img = stringextract('"url":"', '"', item)
 			#img = img.replace('{width}', '640')						# fehlt manchmal
 			img = img.replace('{width}', '320')
+			img = img.replace('16x9', '1x1')							# 16x9 kann fehlen (ähnlich Suche)
 			summ = stringextract('"synopsis":"', '"', item)	
 			# anz = stringextract('"numberOfElements":"', '"', item)	# fehlt
 			attr = stringextract('"attribution":"', '"', item)
@@ -2507,7 +2508,7 @@ def ARDSport(title):
 	title_org = title
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD')						# Home-Button
+	li = home(li, ID='ARD Neu')								# Home-Button
 
 	SBASE = 'https://www.sportschau.de'
 	path = 'https://www.sportschau.de/index.html'	 		# Leitseite		
@@ -4539,20 +4540,20 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 	PLog('title_org: ' + title_org)
 	PLog('tagline_org: ' + tagline_org)
 
-	PLog(SETTINGS.getSetting('pref_use_downloads')) 	# Voreinstellung: False 
-	if check_Setting('pref_use_downloads') == False:	# einschl. Test Downloadverzeichnis
+	PLog(SETTINGS.getSetting('pref_use_downloads')) 			# Voreinstellung: False 
+	if check_Setting('pref_use_downloads') == False:			# einschl. Test Downloadverzeichnis
 		return
 			
 	if SETTINGS.getSetting('pref_show_qualities') == 'false':	# nur 1 (höchste) Qualität verwenden
 		download_items = get_bestdownload(download_list)
 	else:	
-		download_items = download_list						# ganze Liste verwenden
+		download_items = download_list							# ganze Liste verwenden
 	# PLog(download_items)
 		
 	i=0
 	for item in download_items:
 		PLog(item)
-		item = item.replace('**', '|')						# 04.01.2021 Korrek. Trennz. Stream_List
+		item = item.replace('**', '|')							# 04.01.2021 Korrek. Trennz. Stream_List
 		quality,url = item.split('#')
 		PLog(url); PLog(quality); PLog(title_org)
 		if url.find('.m3u8') == -1 and url.find('rtmp://') == -1:
@@ -4560,13 +4561,13 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 			detailtxt = MakeDetailText(title=title_org,thumb=thumb,quality=quality,
 				summary=summary_org,tagline=tagline_org,url=url)
 			v = 'detailtxt'+str(i)
-			Dict('store', v, detailtxt)		# detailtxt speichern 
+			Dict('store', v, detailtxt)							# detailtxt speichern 
 			if url.endswith('.mp3'):		
 				Format = 'Podcast ' 			
 			else:	
-				Format = 'Video '			# .mp4, .webm, .. 
+				Format = 'Video '								# .mp4, .webm, .. 
 			#lable = 'Download ' + Format + ' | ' + quality
-			lable = 'Download' + ' | ' + quality	# 09.01.2021 Wegfall Format aus Platzgründen 
+			lable = 'Download' + ' | ' + quality				# 09.01.2021 Wegfall Format aus Platzgründen 
 			dest_path = SETTINGS.getSetting('pref_download_path')
 			tagline = Format + 'wird in ' + dest_path + ' gespeichert' 									
 			summary = 'Sendung: ' + title_org
@@ -6399,6 +6400,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	title2 = 'Live-Sender ' + title
 	title2 = title2
 	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
 			
 	# Besonderheit: die Senderliste wird lokal geladen (s.o.). Über den link wird die URL zur  
 	#	*.m3u8 geholt. Nach Anwahl eines Live-Senders werden in SenderLiveResolution die 
@@ -6565,7 +6567,6 @@ def list_WDRstreamlinks(url):
 	PLog(len(items))	
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)				# Home-Button
 	
 	for item in items:
 		if 'title="Alle Livestreams' in item:
@@ -7605,7 +7606,7 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 	if page == '':
 		page, msg = get_page(path=url)	
 		if page == '':
-			msg1 = u'Beitrag kann nicht geladen werden: %s' % title
+			msg1 = u'Beitrag >%s< kann nicht gezeigt werden.' % title
 			msg2 = msg
 			MyDialog(msg1, msg2, '')
 			return li 
