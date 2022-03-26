@@ -26,7 +26,7 @@
   	<setting label="Audiothek-/Podcast-Erweiterung verwenden" type="bool" id="pref_use_podcast" default="true"/>
 	<setting label="Pfad zur Podcast-Favoritenliste (ohne Pfad: Ressourcenverzeichnis)" type="file" id="pref_podcast_favorits" default="podcast-favorits.txt"/>
 	<setting label="Info: die Podcast-Favoriten befinden sich in der ARD Audiothek" type="text" id="podinfo" enable="false"/> 
-	<setting label="Sammeldownloads für Podcastliste erlauben" type="bool" id="pref_dl_podlist" default="true"/> 
+	<setting label="Sammeldownloads für Podcastliste erlauben" type="bool" id="pref_dl_podlist" default="false"/> 
  </category>
  
  <category label="Download Einstellungen">

@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>38</nr>										# Numerierung für Einzelupdate
-VERSION = '4.2.8'
-VDATE = '24.03.2022'
+VERSION = '4.2.9'
+VDATE = '26.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1603,6 +1603,8 @@ def Audio_get_webslice(page, mode="web"):
 #	Web-Url -> AudioWebMP3, next-Url nicht mehr enthalten
 # Nutzung Audio_get_items_single  + Audio_get_nexturl wie 
 #	Audio_get_sendung_api
+# Sammel-Downloads: Liste enthält je nach Quelle mp3_url oder web_url
+#	(Auswertung web_url via DownloadMultiple -> AudioWebMP3)
 #
 def Audio_get_sendung(url, title, page=''):	
 	PLog('Audio_get_sendung: ' + title)
@@ -1662,7 +1664,6 @@ def Audio_get_sendung(url, title, page=''):
 		img=py2_encode(img); summ_par=py2_encode(summ_par);	
 		
 		if mp3_url:
-			dl_cnt=dl_cnt+1
 			downl_list.append("%s#%s" % (title, url))
 
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
@@ -1670,6 +1671,8 @@ def Audio_get_sendung(url, title, page=''):
 			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ)			
 		else:
+			downl_list.append("%s#%s" % (title, web_url))
+			
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': ''}" % (quote(web_url), 
 				quote(title), quote(img), quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
@@ -1686,6 +1689,16 @@ def Audio_get_sendung(url, title, page=''):
 		
 	myfunc = "Audio_get_sendung"	
 	Audio_get_nexturl(li, url_org, title_org, elements, cnt, myfunc)	# Mehr anzeigen
+	
+	if len(downl_list) > 1:												# Button Sammel-Downloads
+		title=u'[B]Download! Alle angezeigten %d Podcasts speichern?[/B]' % cnt
+		summ = u'[B]Download[/B] von insgesamt %s Podcasts' % len(downl_list)	
+		Dict("store", 'dl_podlist', downl_list) 
+
+		fparams="&fparams={'key_downl_list': 'dl_podlist'}" 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
+			fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
+		
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -1694,7 +1707,9 @@ def Audio_get_sendung(url, title, page=''):
 #	Audio_get_search_cluster, Audio_get_homescreen
 # json -> strings (Performance)
 # Nutzung Audio_get_items_single + Audio_get_nexturl wie Audio_get_sendung
-# 
+# Sammel-Downloads: Liste enthält je nach Quelle mp3_url oder web_url
+#	(Auswertung web_url via DownloadMultiple -> AudioWebMP3)
+#
 def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 	PLog('Audio_get_sendung_api: ' + url)
 	PLog(ID)
@@ -1726,7 +1741,7 @@ def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 	items = blockextract('"duration"', page)
 	PLog(len(items))
 	
-	PLog("Mark0")
+	PLog("Mark1")
 	cnt=0; dl_cnt=0; downl_list=[]
 	for item in items:
 		mp3_url, web_url, attr, img, dur, title, summ, source, sender, pubDate = Audio_get_items_single(item, ID)		
@@ -1744,7 +1759,6 @@ def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 		img=py2_encode(img); summ_par=py2_encode(summ_par);	
 			
 		if mp3_url:
-			dl_cnt=dl_cnt+1
 			downl_list.append("%s#%s" % (title, mp3_url))
 
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
@@ -1752,6 +1766,8 @@ def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ)			
 		else:
+			downl_list.append("%s#%s" % (title, web_url))
+			
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': ''}" % (quote(web_url), 
 				quote(title), quote(img), quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
@@ -1769,6 +1785,16 @@ def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 	
 	myfunc = "Audio_get_sendung_api"	
 	Audio_get_nexturl(li, url_org, title_org, elements, cnt, myfunc)	# Mehr anzeigen
+	
+	if len(downl_list) > 1:												# Button Sammel-Downloads
+		title=u'[B]Download! Alle angezeigten %d Podcasts speichern[/B]' % cnt
+		summ = u'[B]Download[/B] von insgesamt %s Podcasts' % len(downl_list)	
+		Dict("store", 'dl_podlist', downl_list) 
+
+		fparams="&fparams={'key': 'dl_podlist'}" 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
+			fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
+	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -2429,16 +2455,17 @@ def Audio_get_homescreen(page='', cluster_id=''):
 
 #----------------------------------------------------------------
 # MP3 in Webpage (json-Bereich) ermitteln - Vorstufe für AudioPlayMP3
-# Aufruf Audio_get_sendung (Seite Feb. 2022 ohne mp3-Quellen)
+# Aufruf Audio_get_sendung (Webseite Feb. 2022 ohne mp3-Quellen)
 # Audio_get_webslice nicht benötigt (url eindeutig ermittelbar)
+# no_gui: nur Rückgabe (-> DownloadMultiple)
 #
-def AudioWebMP3(url, title, thumb, Plot, ID=''):
+def AudioWebMP3(url, title, thumb, Plot, ID='', no_gui=''):
 	PLog('AudioWebMP3: ' + title)
 	
 	page, msg = get_page(path=url, GetOnlyRedirect=True)	
 	url = page								
 	page, msg = get_page(path=url)			
-	if page == '':	
+	if page == '' and no_gui == '':	
 		msg1 = "Fehler in AudioWebMP3:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
@@ -2451,13 +2478,17 @@ def AudioWebMP3(url, title, thumb, Plot, ID=''):
 		if pos >= 0:
 			url = stringextract('"url":"','"', page)			# vor downloadUrl
 	 
-	if url == '':	
+	if url == '' and no_gui == '':	
 		msg1 = "AudioWebMP3:"
 		msg2 = "leider keine Audioquelle gefunden zu:"
 		msg3 = "[B]%s[/B]" % title
 		MyDialog(msg1, msg2, msg3)	
 	else:
-		AudioPlayMP3(url, title, thumb, Plot, ID='')
+		if no_gui:
+			PLog("url: " + url)
+			return url
+		else:
+			AudioPlayMP3(url, title, thumb, Plot, ID='')
 		
 	return
 	
@@ -4730,7 +4761,7 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 # Alternativen für urlretrieve (legacy): wget-Modul oder 
 #	Request (stackoverflow: alternative-of-urllib-urlretrieve-in-python-3-5)
 # 25.01.2022 hinzugefügt nach Ende Einzeldownload: Entfernung Lock DL_CHECK, 
-#	Entf. in Monitor get_active_dls nicht sicher
+#	Entf. in Monitor epgRecord.get_active_dls nicht sicher
 # 19.02.2022 Nachrüstung GetOnlyRedirect vor urlretrieve für Audiothek
 #
 def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list='',timemark='',notice=True,sub_path="",dtyp=""):
@@ -4747,7 +4778,12 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 			if ret  == False:
 				return
 
+			cnt=0
 			for item in path_url_list:
+				cnt=cnt+1
+				msg1 = "Sammeldownloads"
+				msg2 = "Podcast: %d von %d" % (cnt, len(path_url_list))
+				xbmcgui.Dialog().notification(msg1,msg2,icon,500)
 				PLog(item)
 				path, url = item.split('|')		
 				new_url, msg = get_page(path=url, GetOnlyRedirect=True) # für Audiothek erforderlich	

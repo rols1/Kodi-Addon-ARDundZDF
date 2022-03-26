@@ -259,12 +259,9 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 	PLog(type(page))
 	page = json.dumps(page)					# tuple -> string
 	page = transl_json(page)
-
-	PLog(type(page))
+	
 	page = page.replace('\\"', '"')			# dumps-doublequotes
 	page = page.replace('\\"', '*')			# doublequotes			
-	PLog(page[:100])
-	PLog(page[:100])	
 	#RSave('/tmp/x.json', py2_encode(page)) # Debug
 	
 	items = blockextract('"channel"', page)
@@ -322,7 +319,7 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 		ut = u"nein"
 		if url_sub:
 			ut = u"ja"
-		tag = u"Dauer: %s | [B]%s[/B] | gesendet: [B]%s[/B] | [B]%s[/B] | UT: %s | ausgewertet: %s" % \
+		tag = u"Dauer: %s | [B]%s[/B] | am: [B]%s[/B] | [B]%s[/B] | UT: %s | Filmliste: %s" % \
 			(dauer, channel, sended, topic, ut, tstamp)
 		tag = repl_json_chars(tag)
 		Plot = "%s||||%s" % (tag, summ)

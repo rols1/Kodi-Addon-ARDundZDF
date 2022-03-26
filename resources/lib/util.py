@@ -1714,6 +1714,7 @@ def transl_json(line):	# json-Umlaute übersetzen
 		, (u'u00E9', u'e')			# 3Sat: Fabergé
 		, (u'u00E6', u'ae')			# 3Sat: Kjaerstad
 		, (u'\\u00e9', u'e')		# Arte: Frédéric
+		, (u'\\u00e0', u'a')		# Arte: agrave
 		, (u'\\u201e', u'*')		# Arte: doublequote tief
 		, (u'\\u201c', u'*')		# Arte: doublequote hoch
 		, (u'\\u2013', u'-')		# Arte: -

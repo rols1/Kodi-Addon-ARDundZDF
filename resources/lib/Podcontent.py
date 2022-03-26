@@ -16,7 +16,7 @@
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>1</nr>								# Numerierung für Einzelupdate
-#	Stand: 23.02.2022
+#	Stand: 26.03.2022
 
 
 # Python3-Kompatibilität:
@@ -50,7 +50,7 @@ import json, re
 import datetime, time
 
 # Addonmodule + Funktionsziele 
-import ardundzdf					# -> thread_getfile 
+import ardundzdf					# -> thread_getfile, AudioWebMP3 
 from resources.lib.util import *
  
 
@@ -147,13 +147,16 @@ def PodFavoriten(title, path):
 # 27.02.2020 Code für curl/wget-Download entfernt
 # 23.02.2022 Sammeldownload deaktiviert: bei den api-Calls für die 
 #	PodFavoriten enthalten die json-Seiten keine Download-Url 
-
+# 25.03.2022 Sammeldownload reaktiviert: Buttons + Dict-Ablage 
+#	in Audio_get_sendung + Audio_get_sendung_api. Hier Auswertung
+#	der Quelle bei Web-Urls (www.ardaudiothek.de) in AudioWebMP3 (no_gui) 	
+#
 #----------------------------------------------------------------  	
-def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
+def DownloadMultiple(key):									# Sammeldownloads
 	PLog('DownloadMultiple:'); 
 	import shlex											# Parameter-Expansion
 	
-	downl_list =  Dict("load", "downl_list")
+	downl_list =  Dict("load", key)
 	# PLog('downl_list: %s' % downl_list)
 
 	li = xbmcgui.ListItem()
@@ -162,28 +165,37 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 	rec_len = len(downl_list)
 	dest_path = SETTINGS.getSetting('pref_download_path')
 			
-	path_url_list = []									# für int. Download									
+	path_url_list = []										# für int. Download									
 
-	if os.path.isdir(dest_path)	== False:				# Downloadverzeichnis prüfen		
+	if os.path.isdir(dest_path)	== False:					# Downloadverzeichnis prüfen		
 		msg1='Downloadverzeichnis nicht gefunden:'	
 		msg2=path
 		MyDialog(msg1, msg2, '')		
 		return
 		
-	msg1 = 'Starte Download im Hintergrund'		
+	#---------------------------							# 1. Schritt: Auswahl	
+		
+		
+	#---------------------------							# 2. Schritt: Vorbereitung	
+	msg1 = "Fertige Dateinamen für die Podcasts"
+	if "www.ardaudiothek.de" in str(downl_list):
+		msg1 = "%s und ermittle die mp3-Quellen" % msg1
 	msg2 = 'Anzahl der Dateien: %s' % len(downl_list)
-	msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_download_path')
-	ret=MyDialog(msg1, msg2, msg3, ok=False, yes='OK')
+	ret=MyDialog(msg1, msg2, msg3="", ok=False, yes='OK')
 	if ret  == False:
-		return		
-	
+		return
+				
 	i = 0
-	for rec in downl_list:									# Parameter-Liste erzeugen
+	for rec in downl_list:									# Parameter für path_url_list erzeugen
 		i = i + 1
 		#if  i > 2:											# reduz. Testlauf
 		#	break
 		title, url = rec.split('#')
 		title = unescape(title)								# schon in PodFavoriten, hier erneut nötig 
+		
+		if "www.ardaudiothek.de" in url:					# mp3-Quelle ermitteln
+			url = ardundzdf.AudioWebMP3(url, title="", thumb="", Plot="", ID="", no_gui="true")			
+			
 		if 	SETTINGS.getSetting('pref_generate_filenames'):	# Dateiname aus Titel generieren
 			dfname = make_filenames(py2_encode(title)) + '.mp3'
 			PLog(dfname)
@@ -195,10 +207,11 @@ def DownloadMultiple(key_downl_list, key_URL_rec):			# Sammeldownloads
 		# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Podcast, Zieldatei_kompletter_Pfad|Podcast ..
 		fullpath = os.path.join(dest_path, dfname)
 		fullpath = os.path.abspath(fullpath)		# os-spezischer Pfad
-		path_url_list.append('%s|%s' % (fullpath, url))
-		
+		path_url_list.append('%s|%s' % (fullpath, url))		
+	
+	#---------------------------							# 3. Schritt: Download	
 	PLog(sys.platform)
-	from threading import Thread	# thread_getfile
+	from threading import Thread							# Dialog +  Abbruchmögl. in thread_getfile
 	textfile='';pathtextfile='';storetxt='';url='';fulldestpath=''
 	now = datetime.datetime.now()
 	timemark = now.strftime("%Y-%m-%d_%H-%M-%S")

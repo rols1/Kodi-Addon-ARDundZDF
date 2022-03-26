@@ -890,7 +890,6 @@ def do_sync_ARD(list_title, strmpath, list_path, strm_type):
 	return
 
 # ----------------------------------------------------------------------
-
 ########################################################################		
 # ----------------------------------------------------------------------
 # listet die Beiträge eines strm-Verzeichnsses:
@@ -899,6 +898,7 @@ def do_sync_ARD(list_title, strmpath, list_path, strm_type):
 #	strmpath
 # mediatype="video" hier unabhängig vom Setting (nur 1 Url in strm)
 # Rückkehr zur Liste nach play oder Rückkehr zu Info/strm-Tools
+#
 def show_strm_element(strmpath):
 	PLog('show_strm_element: ' + strmpath)
 

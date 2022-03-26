@@ -10,6 +10,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+26.03.2022 4.2.9
+			ARDAudioEventStreams: Button für Audiothek-Rubrik Sport hinzugefügt.
+			Modul updater: encoding für title, summary und tag in get_latest_version
+			ergänzt.
+			MVWSearch: Bezeichner im Infotext geändert (gesendet-> am, ausgewertet ->
+			Filmliste) angelehnt an Web + json-Datensatz.
+			get_page (Modul util): Option Download PDF-Dateien hinzugefügt.
+			Audio_get_homescreen (Audiothek) : Bildformat auf 1x1 geändert (16x9) nicht 
+			immer verfügbar (wie Audio_get_items_single in V4.2.6).
+			SenderLiveListe: fehlende Hauptmenübuttons in Untermenüs von TV-Livestreams
+			ergänzt, dto. ARDStartRubrik (Modul ARDnew).
+			Weitere Homebutton-Anpassungen: ARDSportneu (Hauptmenü -> ARD Neu), ARDSport
+			(Classic ->  ARD Neu).
+			Sammel-Downloads Audiothek: Buttons ergänzt in Audio_get_sendung und
+			Audio_get_sendung_api (Haupt-PRG), Anpassungen in DownloadMultiple (Podcontent).
+
 19.03.2022 4.2.8
 			Integration der Suchfunktion bei MediathekViewWeb: Erweiterung Modul yt
 			(Funktionen MVWSearch, MVWSingleVideo, get_mvw_page), Anpassungen in den
@@ -25,6 +41,9 @@ CHANGE HISTORY
 			Menüs).
 			do_sync (strm-Modul): nicht existierendes Verzeichnis abgefangen (strmpath).
 			transl_json (Modul util): zusätzl. Ersetzungen fürArte.
+			Audiothek: Reaktivierung der Sammeldownloads - Anpassungen in DownloadMultiple
+			(Modul Podcontent), thread_getfile (Dialog  + Anzeige), AudioWebMP3 (MP3-
+			Quelle für DownloadMultiple).
 
 13.03.2022 4.2.7
 			build_Streamlists: Auswertung zusätzl. ZDF-Videoquellen (Originalton, Audio-
