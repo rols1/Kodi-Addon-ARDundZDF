@@ -169,7 +169,7 @@ def DownloadMultiple(key):									# Sammeldownloads
 
 	if os.path.isdir(dest_path)	== False:					# Downloadverzeichnis prüfen		
 		msg1='Downloadverzeichnis nicht gefunden:'	
-		msg2=path
+		msg2=dest_path
 		MyDialog(msg1, msg2, '')		
 		return
 		

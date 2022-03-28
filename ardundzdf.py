@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>38</nr>										# Numerierung für Einzelupdate
+# 	<nr>39</nr>										# Numerierung für Einzelupdate
 VERSION = '4.2.9'
-VDATE = '26.03.2022'
+VDATE = '28.03.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -108,7 +108,6 @@ ICON_ARD_BILDERSERIEN 	= 'ard-bilderserien.png'
 ICON_ZDF_AZ 			= 'zdf-sendungen-az.png'
 ICON_ZDF_VERP 			= 'zdf-sendung-verpasst.png'
 ICON_ZDF_RUBRIKEN 		= 'zdf-rubriken.png'
-ICON_ZDF_MEIST 			= 'zdf-meist-gesehen.png'
 ICON_ZDF_BARRIEREARM 	= 'zdf-barrierearm.png'
 ICON_ZDF_BILDERSERIEN 	= 'zdf-bilderserien.png'
 
@@ -1106,10 +1105,6 @@ def Main_ZDF(name=''):
 	addDir(li=li, label="Rubriken", action="dirList", dirID="ZDFRubriken", fanart=R(ICON_ZDF_RUBRIKEN), 
 		thumb=R(ICON_ZDF_RUBRIKEN), fparams=fparams)
 
-	fparams="&fparams={'name': 'Meist gesehen'}"
-	addDir(li=li, label="Meist gesehen (1 Woche)", action="dirList", dirID="MeistGesehen", 
-		fanart=R(ICON_ZDF_MEIST), thumb=R(ICON_ZDF_MEIST), fparams=fparams)
-
 	title = "ZDF-sportstudio"
 	path = "https://www.zdf.de/sport"
 	tag = "	Aktuelle News, Livestreams, Liveticker, Ergebnisse, Hintergründe und Sportdokus. Sportstudio verpasst? Aktuelle Sendungen einfach online schauen!"
@@ -1446,7 +1441,7 @@ def AudioSenderPrograms(org='', prgset=''):
 			
 			anz =  stringextract('"numberOfElements":', ',', item)
 			summ = stringextract('"synopsis":"', '"', item)
-			summ = py2_encode(summ)											# für Leia	
+			summ = py2_decode(summ)											# für Leia	
 			summ = repl_json_chars(summ)
 			tag = "Das Angebot zum Genre [B]%s[/B]\nAnzahl %s" % (genre, anz)
 			
@@ -8912,28 +8907,6 @@ def ZDF_get_rubrikpath(page, sophId):
 			PLog("path: " + path)
 			return path	
 	return	'' 
-####################################################################################################
-def MeistGesehen(name):							# ZDF-Bereich, Beiträge unbegrenzt
-	PLog('MeistGesehen'); 
-	title_org = name
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')						# Home-Button
-	
-	path = ZDF_SENDUNGEN_MEIST
-	page, msg = get_page(path=path)	
-	if page == '':
-		msg1 = 'Beitrag kann nicht geladen werden.'
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return li 
-		
-	# unbegrenzt (anders als A-Z Beiträge):
-	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID='MeistGesehen')
-	
-	PLog(page_cnt)
-	# if offset:	Code entfernt, in Kodi nicht nutzbar
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		
 ####################################################################################################
 # ZDF Barrierefreie Angebote - Vorauswahl
