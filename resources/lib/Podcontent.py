@@ -15,8 +15,8 @@
 #
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>1</nr>								# Numerierung für Einzelupdate
-#	Stand: 26.03.2022
+# 	<nr>2</nr>								# Numerierung für Einzelupdate
+#	Stand: 29.03.2022
 
 
 # Python3-Kompatibilität:
@@ -109,24 +109,6 @@ def PodFavoriten(title, path):
 	#li = home(li, ID='ARD Audiothek')				# Home-Button
 		
 	ardundzdf.Audio_get_sendung_api(path, title)	# -> DownloadMultiple
-	
-	'''	
-	# Rückgabe reaktivieren (cnt, downl_list)
-	PLog("Laenge: %d" % len(downl_list))																# Sammel-Download-Button?				
-	if SETTINGS.getSetting('pref_use_downloads') == 'true':
-		if len(downl_list) > 1:
-			#downl_list=downl_list[:1]	# Debug
-			# Sammel-Downloads - alle angezeigten Favoriten-Podcasts downloaden?
-			#	für "normale" Podcasts erfolgt die Abfrage in SinglePage
-			title=u'[B]Download! Alle angezeigten %d Podcasts speichern?[/B]' % len(downl_list)	
-			summ = u'Download von insgesamt %s Podcasts' % len(downl_list)	
-			Dict("store", 'downl_list', downl_list) 
-			Dict("store", 'URL_rec', downl_list) 
-
-			fparams="&fparams={'key_downl_list': 'downl_list', 'key_URL_rec': 'downl_list'}" 
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
-				fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
-	'''
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
@@ -173,20 +155,37 @@ def DownloadMultiple(key):									# Sammeldownloads
 		MyDialog(msg1, msg2, '')		
 		return
 		
-	#---------------------------							# 1. Schritt: Auswahl	
+	#---------------------------							# 1. Schritt: Auswahl
+	if 	SETTINGS.getSetting('pref_check_podlist') == 'true':
+		tlist=[]											# Titel-Liste
+		for item in downl_list:
+			tlist.append(item.split("#")[0])
 		
+		title = u"Unerwünschte Podcasts anklicken. OK nach Auswahl:"
+		if PYTHON2:											
+			selected = range(0, len(tlist))
+		else:												# PY3: range=iterator
+			selected = list(range(0, len(tlist)))
+		tlist = xbmcgui.Dialog().multiselect(title, tlist, preselect=selected)
+		PLog("tlist: %s" % str(tlist))
+		if tlist ==  None or len(tlist) == 0:				# ohne Auswahl
+			return
 		
+		new_downl_list=[]									# Auswahl auf downl_list anwenden
+		for i in tlist:	
+			new_downl_list.append(downl_list[i])				
+
 	#---------------------------							# 2. Schritt: Vorbereitung	
 	msg1 = "Fertige Dateinamen für die Podcasts"
-	if "www.ardaudiothek.de" in str(downl_list):
+	if "www.ardaudiothek.de" in str(new_downl_list):
 		msg1 = "%s und ermittle die mp3-Quellen" % msg1
-	msg2 = 'Anzahl der Dateien: %s' % len(downl_list)
+	msg2 = 'Anzahl der Dateien: %s' % len(new_downl_list)
 	ret=MyDialog(msg1, msg2, msg3="", ok=False, yes='OK')
 	if ret  == False:
 		return
 				
 	i = 0
-	for rec in downl_list:									# Parameter für path_url_list erzeugen
+	for rec in new_downl_list:								# Parameter für path_url_list erzeugen
 		i = i + 1
 		#if  i > 2:											# reduz. Testlauf
 		#	break
@@ -214,7 +213,7 @@ def DownloadMultiple(key):									# Sammeldownloads
 	from threading import Thread							# Dialog +  Abbruchmögl. in thread_getfile
 	textfile='';pathtextfile='';storetxt='';url='';fulldestpath=''
 	now = datetime.datetime.now()
-	timemark = now.strftime("%Y-%m-%d_%H-%M-%S")
+	timemark = now.strftime("%d.%m.%Y, %H:%M:%S Uhr")
 	background_thread = Thread(target=ardundzdf.thread_getfile,
 		args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark))
 	background_thread.start()

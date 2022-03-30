@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!-- 	<nr>3</nr>	# Numerierung für Einzelupdate -->
+<!-- 	<nr>4</nr>	# Numerierung für Einzelupdate -->
 <settings> 
     <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
@@ -22,12 +22,13 @@
 	<setting label="Gebärdensprache: Quelle verwenden falls vorhanden" type="bool" id="pref_DGS_ON" default="false"/>
   </category>Startlist
 
- <category label="Audiothek-/Podcast Einstellungen">
+ <category label="Audiothek-/Podcast">
   	<setting label="Audiothek-/Podcast-Erweiterung verwenden" type="bool" id="pref_use_podcast" default="true"/>
 	<setting label="Pfad zur Podcast-Favoritenliste (ohne Pfad: Ressourcenverzeichnis)" type="file" id="pref_podcast_favorits" default="podcast-favorits.txt"/>
 	<setting label="Info: die Podcast-Favoriten befinden sich in der ARD Audiothek" type="text" id="podinfo" enable="false"/> 
 	<setting label="Sammeldownloads für Podcastliste erlauben" type="bool" id="pref_dl_podlist" default="false"/> 
- </category>
+ 	<setting label="Sammeldownloads-Liste zur Auswahl vorlegen" type="bool" id="pref_check_podlist" default="true"/> 
+</category>
  
  <category label="Download Einstellungen">
  	<setting label="Downloads freischalten (auch im Kontextmenü möglich)" type="bool" id="pref_use_downloads" default="false"/>

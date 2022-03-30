@@ -406,14 +406,16 @@ def Main():
 	if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':
 		PLog('zdfmobile_set: ')
 		tagline = 'in den Settings sind ZDF Mediathek und ZDFmobile austauschbar'
+		summ = "Schwerpunkt des Supports ist die ZDF Mediathek"
 		fparams="&fparams={}"
 		addDir(li=li, label="ZDFmobile", action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
-			fanart=R(FANART), thumb=R(ICON_MAIN_ZDFMOBILE), tagline=tagline, fparams=fparams)
+			fanart=R(FANART), thumb=R(ICON_MAIN_ZDFMOBILE), tagline=tagline, summary=summ, fparams=fparams)
 	else:
 		tagline = 'in den Settings sind ZDF Mediathek und ZDFmobile austauschbar'
+		summ = "Schwerpunkt des Supports ist die ZDF Mediathek"
 		fparams="&fparams={'name': 'ZDF Mediathek'}"
 		addDir(li=li, label="ZDF Mediathek", action="dirList", dirID="Main_ZDF", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_ZDF), tagline=tagline, fparams=fparams)
+			thumb=R(ICON_MAIN_ZDF), tagline=tagline, summary=summ, fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_3sat') == 'true':
 		tagline = 'in den Settings kann das Modul 3Sat ein- und ausgeschaltet werden'
@@ -4778,17 +4780,22 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				cnt=cnt+1
 				msg1 = "Sammeldownloads"
 				msg2 = "Podcast: %d von %d" % (cnt, len(path_url_list))
-				xbmcgui.Dialog().notification(msg1,msg2,icon,500)
+				xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
 				PLog(item)
 				path, url = item.split('|')		
 				new_url, msg = get_page(path=url, GetOnlyRedirect=True) # für Audiothek erforderlich	
-				if new_url == '':
-					raise Exception("Quelle nicht gefunden")
-				urlretrieve(new_url, path)
-				#xbmc.sleep(1000*3)							# Debug
+				if new_url == '':							# 30.03.2022 weiter ohne Exception
+					msg1 = "Fehler"
+					msg2 = "Quelle nicht gefunden: %s" % url.split("/")[-1]
+					wicon = R(ICON_WARNING)
+					#raise Exception("Quelle nicht gefunden: %s" % url.split("/")[-1])
+					xbmcgui.Dialog().notification(msg1,msg2,wicon,2000)
+				else:
+					urlretrieve(new_url, path)
+				#xbmc.sleep(1000*2)							# Debug
 			
-			msg1 = 'Download erledigt'
-			msg2 = 'gestartet: %s' % timemark				# Zeitstempel 
+			msg1 = u'%d Downloads erledigt' % cnt 
+			msg2 = u'gestartet: %s' % timemark				# Zeitstempel 
 			if notice:
 				xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	# Fertig-Info
 				xbmc.executebuiltin('Container.NextSortMethod') # OK s.o.

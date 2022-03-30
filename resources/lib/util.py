@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>14</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.03.2022
+# 	<nr>15</nr>										# Numerierung für Einzelupdate
+#	Stand: 30.03.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1038,6 +1038,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 						new_url = 'https://%s%s' % (parsed.netloc, new_url)
 						PLog("HTTP308_new_url: " + new_url)
 						return new_url, ''
+					else:
+						return '', str(e)
 					
 				page = r.geturl()
 				info = r.info()
