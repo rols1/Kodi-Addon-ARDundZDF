@@ -10,6 +10,18 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+01.04.2022 4.3.0
+			ZDF: Funktion MeistGesehen, Icon + Button "Meist gesehen (1 Woche)" entfernt 
+			- entfallen, Startseite enthält Cluster "Derzeit beliebt". 
+			DownloadMultiple (Modul Podcontent): Select-Dialog für Sammeldownloads.
+			settings.xml: neue Option "Sammeldownloads-Liste zur Auswahl vorlegen".
+			thread_getfile: bei Sammeldownloads Url-Exception ausgetauscht gegen 
+			Notification.
+			GetOnlyRedirect (Modul util): Rückgabe Leer-Url bei HTTP-Error ungleich 308.
+			ZDF-Mediathek: Anpassung an gänderte Blockmarke für Cluster-Titel in
+			ZDFStart ("ZDFStart_1:" und "ZDFStart_2:") - auch relevant für ZDF-
+			funkStartseite. Dto. in ZDFRubrikSingle, ZDF_Sendungen, BarriereArmSingle.
+
 26.03.2022 4.2.9
 			ARDAudioEventStreams: Button für Audiothek-Rubrik Sport hinzugefügt.
 			Modul updater: encoding für title, summary und tag in get_latest_version
