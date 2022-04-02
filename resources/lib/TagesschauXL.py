@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>3</nr>								# Numerierung für Einzelupdate
-#	Stand: 17.03.2022
+# 	<nr>4</nr>								# Numerierung für Einzelupdate
+#	Stand: 02.04.2022
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -70,7 +70,7 @@ ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 
 NAME			= 'ARD und ZDF'
 BASE_URL 		= 'https://www.tagesschau.de'
-ARD_m3u8 		= 'http://tagesschau-lh.akamaihd.net/i/tagesschau_1@119231/master.m3u8' # intern. Link
+ARD_m3u8 		= 'https://tagesschau-lh.akamaihd.net/i/tagesschau_1@119231/master.m3u8' # intern. Link
 ARD_100 		= 'https://www.tagesschau.de/100sekunden/index.html'
 ARD_Last 		= 'https://www.tagesschau.de/sendung/letzte-sendung/index.html'
 ARD_20Uhr 		= 'https://www.tagesschau.de/sendung/tagesschau/index.html'
@@ -144,8 +144,8 @@ def Main_XL():
 	# --------------------------------- 						# Livestreams
 	# Live: akt. PRG + vom Sender holen, json-Links in XL_Live
 	# PRG gilt auch für die  intern. Seite			
-	path = "http://www.tagesschau.de/multimedia/livestreams/index.html"
-	page, msg = get_page(path=path)			
+	path = "https://www.tagesschau.de/multimedia/livestreams/index.html"
+	page, msg = get_page(path=path)				
 	if page == '':	
 		msg1 = "Fehler in Main_XL:"
 		msg2 = msg
@@ -874,9 +874,9 @@ def XL_Live(ID=''):
 	# json-Seiten ermittelt mit chrome-dev-tools von 
 	# 	tagesschau.de/multimedia/livestreams/index.htm,
 	#	tagesschau.de/multimedia/livestreams/livestream1/index.html (int.)
-	path = "http://www.tagesschau.de/multimedia/livestreams/livestream-3-105~mediajson.json"
+	path = "https://www.tagesschau.de/multimedia/livestreams/livestream-3-105~mediajson.json"
 	if ID == "international":
-		path = "http://www.tagesschau.de/multimedia/livestreams/livestream-1-101~mediajson.json"
+		path = "https://www.tagesschau.de/multimedia/livestreams/livestream-1-101~mediajson.json"
 	page, msg = get_page(path=path)
 	PLog(page[:100])	
 
