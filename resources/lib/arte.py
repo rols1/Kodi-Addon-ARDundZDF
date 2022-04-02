@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.03.2022
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -36,7 +36,7 @@ elif PYTHON3:
 		pass
 
 
-import ardundzdf					# -> get_query,test_downloads, get_ZDFstreamlinks
+import ardundzdf					# -> get_query,test_downloads, get_ZDFstreamlinks, build_Streamlists_buttons
 from resources.lib.util import *
 from resources.lib.phoenix import getOnline
 
@@ -178,7 +178,7 @@ def arte_Live(href, title, Plot, img):
 	li = home(li, ID='arte')			# Home-Button
 
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
-		PLog('Sofortstart: phoenix_Live')
+		PLog('Sofortstart: arte_Live')
 		PlayVideo(url=href, title=title, thumb=img, Plot=Plot)
 		return	
 							
@@ -290,8 +290,6 @@ def GetContent(li, page, ID):
 	
 	
 	mediatype=''; cnt=0													# Default für mehrfach
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'												# für SingleVideo
 	
 	for item in items:
 		mehrfach = False			
@@ -438,8 +436,6 @@ def Beitrag_Liste(url, title):
 	li = home(li, ID='arte')				# Home-Button
 
 	mediatype=''; cnt=0													# Default für mehrfach
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'												# für SingleVideo
 	
 	cnt=0;
 	if '__INITIAL_STATE__ ' in page:			# json-Format
@@ -510,10 +506,12 @@ def Beitrag_Liste(url, title):
 #	(Videos möglich mit ausschl. franz. Streams), master.m3u8 wird
 #	unverändert ausgewertet.
 # 24.09.2020 Filterung master.m3u8 nach "DE" oder "FR"
+# 02.04.2022 Nutzung build_Streamlists_buttons mit HLS_List, MP4_List,
+#	Vorauswahl Deutsch bei Sofortstart (HLS + MP4)
 #
 def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	PLog("SingleVideo: " + pid)
-	title_call = title
+	title_org = title
 
 	path = 'https://api.arte.tv/api/player/v1/config/de/%s/?autostart=0' % pid
 	page, msg = get_page(path)	
@@ -537,6 +535,8 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	PLog("summ: " + summ)
 	
 	form_arr = []; rec_list=[]	
+	HLS_List=[]; MP4_List=[]; HBBTV_List=[];			# MP4_List = download_list
+	skip_list=[]
 	for rec in formitaeten:	
 		r = []
 		mediaType = stringextract('"mediaType":"',  '"', rec)
@@ -549,103 +549,52 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 		lang = stringextract('"versionLibelle":"',  '"', rec)# z.B. Deutsch (Original)
 		lang = transl_json(lang)
 		
-		# versch. Streams möglich (franz, UT, ..) - in Konzert-Streams
-		#	alle erlauben (s.o.):
-		r.append(mediaType); r.append(bitrate);
-		r.append(size); r.append(quality); 
-		r.append(url); r.append(lang);
-		form_arr.append(r)
+		PLog('Satz3:')
+		PLog(url); PLog(size); PLog(lang);
 		
-		if 'master.m3u8' in rec:				# master.m3u8 für Sofortstart holen
-			rec_list.append(rec)
-
-	href_m3u8 = get_masterm3u8(rec_list)		# passende master.m3u8 wählen, s.u.
-	if href_m3u8 == '':							# Fallback: 1. master-Url der Seite
-		hls = stringextract('mediaType":"hls"', '"versionProg"', page)
-		href_m3u8 = stringextract('url":"', '"', hls)
-		PLog('Fallback_href_m3u8: ' + href_m3u8)
-	PLog('href_m3u8: ' + href_m3u8)
-						
-	form_arr.sort()								# Sortieren
-	if len(form_arr) == 0:
+		# versch. Streams möglich (franz, UT, ..) - in Konzert-Streams
+		#	Einzelauflösungen alle erlauben (s.o.),
+		#	für Sofortstart nur Deutsch auswählen (HLS + MP4)
+		#	Downloads (MP4): get_bestdownload berücksichtigt Setting pref_arte_streams
+		# skip Parseplaylist für master.m3u8 (arte liefert Auflösungen als master.m3u8)
+		if SETTINGS.getSetting('pref_video_direct') == 'true':	
+			if lang.strip() != "Deutsch":	# Sofortstart nur Deutsch
+				PLog("skip_%s" % lang)
+				continue
+		if 'master.m3u8' in url:				# master.m3u8 
+			HLS_List.append('HLS, [B]%s[/B] ** %s ** AUTO ** %s#%s' % (lang, size, title,url))
+		else:									# MP4
+			title_url = u"%s#%s" % (title, url)
+			mp4 = "MP4 [B]%s[/B]" % lang
+			item = u"%s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
+				(mp4, quality, bitrate, size, title_url)
+			MP4_List.append(item)
+		
+			
+	PLog("MP4_List: " + str(len(MP4_List)))
+	ID = 'arte'
+	Dict("store", '%s_HLS_List' % ID, HLS_List) 
+	Dict("store", '%s_MP4_List' % ID, MP4_List) 
+							
+	if not len(HLS_List) and not len(MP4_List):			
 		msg1 = u'SingleVideo: [B]%s[/B]' % title
 		msg2 = u'Streams leider (noch) nicht verfügbar.'
 		MyDialog(msg1, msg2, '')
 		return li		
 			
-	Plot_par = tag
-	if summ:
-		Plot_par = "%s||||%s" % (tag, summ)
-	if SETTINGS.getSetting('pref_video_direct') == 'true': 	# or Merk == 'true':	# Sofortstart
-		PLog('Sofortstart: arte SingleVideo')
-		PLog('Bitrate: %s, %s' % (bitrate, size))
-		li.setProperty('IsPlayable', 'false')				# verhindert wiederh. Starten nach Stop
-		PlayVideo(url=href_m3u8, title=title, thumb=img, Plot=Plot_par)
-		return
 
-	download_list = []						# 2-teilige Liste für Download: 'Titel # url'		
-	for rec in form_arr:					# alle Video-Url ausgeben
-		mediaType=rec[0];  bitrate=rec[1]
-		size = rec[2]; quality=rec[3]; 
-		url=rec[4]; lang=rec[5]
+	tagline = "Titel: %s\n\n%s\n\n%s" % (title_org, tag, summ)	# s.a. ARD (Classic + Neu)
+	tagline=repl_json_chars(tagline); tagline=tagline.replace( '||', '\n')
+	Plot=tagline; 
+	Plot=Plot.replace('\n', '||')
+	sub_path=''
+	HOME_ID = ID									# Default ZDF), 3sat
+	PLog('Lists_ready: ID=%s, HOME_ID=%s' % (ID, HOME_ID));
 		
-		if 'master.m3u8' in url:
-			quality = quality + ' (auto)'
-		title = u"Typ: %s, Bitrate: %s, %s, %s" % (up_low(mediaType), bitrate, size, quality)
-		if lang:
-			title = "%s | %s" % (title, lang)
-		if 'mp4' in mediaType:
-			download_list.append(title + '#' + url)	# Download-Liste füllen	
-	
-		PLog('Satz:')
-		PLog(title); PLog(url);
-		thumb = img
-		tag = tag.replace('||', '\n')
-		title_call=py2_encode(title_call)
-		title=py2_encode(title); url=py2_encode(url);
-		thumb=py2_encode(thumb); Plot_par=py2_encode(Plot_par); 
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
-			(quote_plus(url), quote_plus(title_call), quote_plus(thumb), quote_plus(Plot_par))	
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-			mediatype='video', tagline=tag) 
-			
-	PLog(download_list[0])
-	if 	download_list:	# Downloadbutton(s), high=0: 1. Video = höchste Qualität	
-		# Qualitäts-Index high: hier Basis Bitrate (s.o.)
-		title_org = title_call
-		summary_org = summ
-		tagline_org = repl_json_chars(tag)
-		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
-		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
-	
+	ardundzdf.build_Streamlists_buttons(li,title_org,img,geo,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-# ----------------------------------------------------------------------
-# Muster versionShortLibelle (Bsp.): "DE", FR", "UT (frz.)", 
-#	"OmU-ESP", "OmU-ITA"
-
-def get_masterm3u8(rec_list):					# passende master.m3u8 wählen
-	PLog("get_masterm3u8: ")
-	PLog(len(rec_list))
-	
-	FR_list=[]; DE_list=[]
-	for rec in rec_list:
-		if 'ShortLibelle":"FR"' in rec:
-			url = stringextract('url":"', '"', rec)
-			FR_list.append(url)
-		if 'ShortLibelle":"DE"' in rec:
-			url = stringextract('url":"', '"', rec)
-			DE_list.append(url)
-	
-	PLog(len(FR_list)); PLog('FR_list: ' + str(FR_list))
-	PLog(len(DE_list)); PLog('DE_list: ' + str(DE_list))
-	
-	if len(DE_list) > 0:						# Prio 1. Link DE
-		return DE_list[0]
-	if len(FR_list) > 0:						# 2. Link FR
-		return FR_list[0]
-	
-	return ''									# Fallback Aufrufer
 	
 # ----------------------------------------------------------------------
 # BASE_ARTE wird nur zum Auslesen der Kategorien verwendet

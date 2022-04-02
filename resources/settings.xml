@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!-- 	<nr>4</nr>	# Numerierung für Einzelupdate -->
+<!-- 	<nr>5</nr>	# Numerierung für Einzelupdate -->
 <settings> 
     <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
@@ -33,7 +33,7 @@
  <category label="Download Einstellungen">
  	<setting label="Downloads freischalten (auch im Kontextmenü möglich)" type="bool" id="pref_use_downloads" default="false"/>
   	<setting label="alle verfuegbaren Video-Qualitaeten anbieten" type="bool" id="pref_show_qualities" default="true"/>
-  	<setting label="Auswahl Arte-Streams für Downloads" type="select" id="pref_arte_streams" default="Deutsch" values="Deutsch|UT Deutsch|Deutsch (Hörgeschädigte)|Deutsch - UT französisch|Französisch|UT Französisch|Französisch (Hörfilm)|Französisch (Hörgeschädigte)|Polnisch|UT Polnisch|Polnisch (Hörgeschädigte)|Italienisch|UT Italienisch|Italienisch (Hörgeschädigte)|Spanisch|UT Spanisch|Spanisch (Hörgeschädigte)"/>
+  	<setting label="Auswahl Arte-Streams für Downloads" type="select" id="pref_arte_streams" default="Deutsch" values="Deutsch|UT Deutsch|Deutsch (Hörgeschädigte)|Deutsch - UT französisch|Originalfassung - UT französisch|Französisch|UT Französisch|Französisch (Hörfilm)|Französisch (Hörgeschädigte)|Polnisch|UT Polnisch|Polnisch (Hörgeschädigte)|Italienisch|UT Italienisch|Italienisch (Hörgeschädigte)|Spanisch|UT Spanisch|Spanisch (Hörgeschädigte)"/>
   	<setting label="Untertitel mit herunterladen" type="bool" id="pref_load_subtitles" default="false"/>
  	<setting label="Dateinamen aus dem Titel erzeugen (statt Download_{Datum}_{Uhrzeit})" type="bool" id="pref_generate_filenames" default="false"/>
 	<setting label="Downloadverzeichnis (auch für Recording TV-Live)" type="folder" option="writeable" id="pref_download_path" default=""/>

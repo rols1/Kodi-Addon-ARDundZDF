@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>39</nr>										# Numerierung für Einzelupdate
+# 	<nr>40</nr>										# Numerierung für Einzelupdate
 VERSION = '4.3.0'
-VDATE = '01.04.2022'
+VDATE = '02.04.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -4624,20 +4624,21 @@ def get_bestdownload(download_list):
 	pref = SETTINGS.getSetting('pref_arte_streams')
 	pref = py2_decode(pref)
 	PLog(u"pref: " + pref)
+	
 	for item in download_list:
-		if "//arteptweb" in item and item.find(pref) >= 0:
-			lang = stringextract('|', '#', item)
-			if len(lang.strip()) == len(pref): 		# Zusätze berücks. z.B. UT Deutsch	
+		item = py2_decode(item)
+		lang = stringextract('[B]', '[/B]', item)
+		if item.find(u"//arteptweb") >= 0 and item.find(pref) >= 0:
+			if lang == pref: 		# Zusätze berücks. z.B. UT Deutsch	
 				my_list.append(item)				
 	PLog(len(my_list))
 	
 	if len(my_list)== 0:							# Arte Fallback Deutsch
-		pref = "Deutsch"
 		for item in download_list:
-			if "//arteptweb" in item and item.find(pref) >= 0:
-				lang = stringextract('|', '#', item)
-				if len(lang.strip()) == len(pref): 
-					my_list.append(item)				
+			item = py2_decode(item)
+			lang = stringextract('[B]', '[/B]', item)
+			if u"//arteptweb" in item and lang == u"Deutsch":
+				my_list.append(item)				
 	PLog(len(my_list))
 				
 	if len(my_list) > 0:
@@ -10724,7 +10725,6 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		playlist, msg = get_page(path=url_m3u8)								# URL
 		if playlist == '':
 			icon = R(ICON_WARNING)
-			# msg1 = "master.m3u8 nicht abrufbar"
 			msg1 = "master.m3u8 fehlt"
 			msg2 = 'Fehler: %s'	% (msg)
 			xbmcgui.Dialog().notification(msg1, msg2,icon,5000)
