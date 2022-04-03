@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>40</nr>										# Numerierung für Einzelupdate
+# 	<nr>41</nr>										# Numerierung für Einzelupdate
 VERSION = '4.3.0'
-VDATE = '02.04.2022'
+VDATE = '03.04.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7225,11 +7225,14 @@ def ZDFStart(title, show_cluster='', path=''):
 			# ID='DEFAULT': ermöglicht Auswertung Mehrfachseiten in ZDF_get_content
 			li, page_cnt = ZDF_get_content(li=li, page=stage, ref_path=path, ID='STAGE')
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		else:													#Home-Button in ZDFRubrikSingle
+		elif "lazyload" in show_cluster:								# s.u. data-tracking-title
+			ZDF_get_tracking(title, page, show_cluster, ID)							
+			return
+		else:															#Home-Button in ZDFRubrikSingle
 			# Cluster ermitteln:
 			content =  blockextract('cluster-title-wrap', page)		
 			promo=[]
-			if 'class="b-promo-teaser' in page:						# o. cluster-title-wrap
+			if 'class="b-promo-teaser' in page:							# o. cluster-title-wrap
 				promo = blockextract('class="b-promo-teaser', page, '</article>')
 				PLog('content_promo2: ' + str(len(promo)))
 			content = promo + content
@@ -7313,19 +7316,23 @@ def ZDFStart(title, show_cluster='', path=''):
 			continue
 		elif title == '':				
 			continue
-
-		# skip: javascript-erzeugte Inhalte, SCMS-ID's bisher nicht erreichbar,
-		#	Call data-clusterrecommendation-template="/broker/relay?plays=..,
-		# Bsp: 'Empfehlungen für Sie', 'Direkt zu ..', 'weiterschauen..', 'Vorab in..', Trending,
-		# dto. ZDF_Sendungen:	
-		elif 'data-tracking-title=' in rec:
-			continue
-		else:													# restl. Cluster -> 2. Durchlauf	
+			
+		else:													# restl. Cluster -> 2. Durchlauf
+			# data-tracking-title:
+			# javascript-erzeugte Inhalte, SCMS-ID's bisher nicht erreichbar,
+			#	Call data-clusterrecommendation-template="/broker/relay?plays=..,
+			# Bsp: 'Empfehlungen für Sie', 'Direkt zu ..', 'weiterschauen..', 'Vorab in..', Trending,
+			# dto. ZDF_Sendungen:	
+			if 'data-tracking-title=' in rec:
+				thumb = R(ICON_DIR_FOLDER)
+				# show_cluster -> block im 2. Durchlauf für lazyload-Sätze (clusterrecommendation):
+				show_cluster = "b-cluster m-personal m-dynamic lazyload"
+			else:												# normale Cluster	
+				show_cluster = "true"
+				thumb = ZDF_get_img(rec)
 			label = title
 			tag = "Folgeseiten"
 			href = BASE
-			show_cluster = "true"
-			thumb = ZDF_get_img(rec)
 			
 			if 'class="b-promo-teaser' in rec:					# Text für Teaserboxen erweitern
 				if cnt < promo_cnt:
@@ -7360,6 +7367,101 @@ def ZDF_get_clustertitle(rec): 							# Cluster-Titel der Startseite ermitteln
 	title = py2_encode(title)									# Aufrufer muss dekodieren
 	PLog("clustertitle: " + title)
 	return title 
+
+#---------------------------------------------------------------------------------------------------
+# Aufrufer: ZDFStart (ZDFStart_2) 
+# title = data-tracking-title
+# show_cluster = Blockmerkmal ("b-cluster..")
+def ZDF_get_tracking(title, page, show_cluster, ID): 			# lazyload-Sätze zu Cluster title ermitteln
+	PLog('ZDF_get_tracking:');
+	PLog(title); PLog(ID)
+	title_org = title
+
+	apiToken = stringextract("apiToken: '", "'", page)
+	PLog(apiToken)
+	content =  blockextract(show_cluster, page)
+	PLog(len(content))
+	myrec=''
+	for rec in content:
+		title = ZDF_get_clustertitle(rec)						# Cluster-Titel ermitteln
+		title = py2_decode(title)
+		# PLog('Mark0'); PLog(title); PLog(title_org)
+		if title_org in title:
+			myrec = rec
+			PLog('Cluster_gefunden: %s' % title_org)
+			break  
+	if myrec == '':
+		PLog("not_found")
+		return
+	
+	conf =  stringextract('&configuration=', '&', rec)			# z.B.: letzte-chance -> path
+	PLog("conf: " + conf)
+	path = "https://api.zdf.de/automation/trending?env=zdf_prod&appId=exozet-zdf-pd-0.85.10169&abGroup=gruppe-c&configuration=%s&teaserType=default&profile=minimal"
+	path = path % conf
+	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken
+	page, msg	= get_page(path=path, header=header, JsonPage=True)	
+	if page == '':										# Abbruch
+		PLog('ZDF_get_tracking_return')
+		return
+		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ZDF')										# Home-Button, ev. anpassen
+	
+	mediatype=''									# Kennz. Video für Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'	
+	
+	PLog("Mark0")
+	teaser_path = "https://www.zdf.de/teaserElement?assetId=%s" # auch sophoraId mögl. wie get_teaserElement
+	content =  blockextract('"id":', page)
+	PLog(len(content))
+	for rec in content:
+		PLog(rec)
+		sid = stringextract('id": "', '"', rec)					# Bsp.: SCMS_4a84403d-..
+		PLog("sid: " + sid)
+		path = teaser_path % sid
+		page, msg = get_page(path=path)	
+		PLog(page[:10])											# verkürzt wg. Lerzeilen
+		if page:												# wie get_teaserElement
+			title,path,img_src,descr,dauer,enddate,isvideo = ZDF_get_teaserDetails(page)
+			# multi z.Z. nicht verwendet, isvideo reicht aus
+			teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi = ZDF_get_teaserbox(page)
+			descr=py2_encode(descr)
+			descr_par = descr.replace('\n', '||')
+		
+			PLog("isvideo: %s, dauer: %s, enddate: %s" % (isvideo, dauer, enddate)) # wie ZDFRubrikSingle
+			if isvideo or dauer or enddate:								# enddate ohne dauer möglich
+				isvideo = True
+			if " Staffel" in teaser_label or descr == "Serien":
+				isvideo = False
+				
+			ID='ZDF_get_tracking'
+			title=py2_encode(title); path=py2_encode(path); ID=py2_encode(ID);
+			descr_par=py2_encode(descr_par); img_src=py2_encode(img_src);
+			if isvideo == False:			# Mehrfachbeiträge
+				fparams="&fparams={'title': '%s', 'url': '%s', 'ID': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
+					(quote(title),  quote(path), quote(ID), quote(descr_par), quote(img_src))
+				addDir(li=li, label=lable, action="dirList", dirID="ZDF_Sendungen", fanart=img_src, 
+					thumb=img_src, summary=descr, fparams=fparams)
+			else:				
+				if SETTINGS.getSetting('pref_load_summary') == 'true':		# Inhaltstext im Voraus laden?
+					# get_summary_pre in ZDF_get_teaserDetails bereits erledigt
+					if teaserDetails == '':									
+						skip_verf=False; skip_pubDate=False					# beide Daten ermitteln
+						summ_txt = get_summary_pre(path, 'ZDF', skip_verf, skip_pubDate)
+						PLog(len(summ_txt)); PLog(len(descr));
+						if 	summ_txt and len(summ_txt) > len(descr):
+							descr= summ_txt
+							descr_par = descr.replace('\n', '||')
+							
+				title=py2_encode(title); path=py2_encode(path); 
+				descr_par=py2_encode(descr_par); img_src=py2_encode(img_src); 	
+				fparams="&fparams={'title': '%s', 'url': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
+					(quote(title),  quote(path), quote(descr_par), quote(img_src))
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img_src, 
+					thumb=img_src, summary=descr, mediatype=mediatype, fparams=fparams)
+				
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #---------------------------------------------------------------------------------------------------
 # Aufruf: ZDFStart
