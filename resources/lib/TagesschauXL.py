@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>4</nr>								# Numerierung für Einzelupdate
-#	Stand: 02.04.2022
+# 	<nr>5</nr>								# Numerierung für Einzelupdate
+#	Stand: 03.04.2022
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -145,12 +145,13 @@ def Main_XL():
 	# Live: akt. PRG + vom Sender holen, json-Links in XL_Live
 	# PRG gilt auch für die  intern. Seite			
 	path = "https://www.tagesschau.de/multimedia/livestreams/index.html"
-	page, msg = get_page(path=path)				
+	page, msg = get_page(path=path)	
 	if page == '':	
 		msg1 = "Fehler in Main_XL:"
 		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return 
+		msg3 = u"Livestreams nicht verfügbar"
+		MyDialog(msg1, msg2, msg3)	
+		#return 												# ohne Livestreams weiter
 	PLog(len(page))			
 	teasertext = stringextract('class="teasertext">', '</p>', page)
 	teasertext =  stringextract('<strong>', '</strong>', teasertext)
@@ -687,7 +688,9 @@ def XL_Audios(title, ID, img,  path=''):
 	if path == '':														# ID = "Audios"
 		path = Podcasts_Audios
 		
-	page, msg = get_page(path=path)	
+	page, msg = get_page(path=path, GetOnlyRedirect=True)	
+	path = page								
+	page, msg = get_page(path)	
 	if page == '':	
 		msg1 = "Fehler in XL_Audios:"
 		msg2 = msg

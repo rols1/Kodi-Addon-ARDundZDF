@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>15</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.03.2022
+# 	<nr>16</nr>										# Numerierung für Einzelupdate
+#	Stand: 03.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1035,7 +1035,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 					if "308:" in str(e):								# Permanent-Redirect-Url
 						new_url = e.hdrs.get("Location")
 						parsed = urlparse(path)
-						new_url = 'https://%s%s' % (parsed.netloc, new_url)
+						if new_url.startswith("http") == False:			# Serveradr. vorh.?
+							new_url = 'https://%s%s' % (parsed.netloc, new_url)
 						PLog("HTTP308_new_url: " + new_url)
 						return new_url, ''
 					else:
@@ -1127,7 +1128,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	if page == '':
 		# Abschalthinweis verfrüht - fehlende Beiträge in Classic-
 		#	Version immer noch möglich (02.03.2020)
-		error_txt = 'Seite nicht erreichbar oder nicht mehr vorhanden'
+		error_txt = 'Quelle nicht erreichbar oder nicht mehr vorhanden'
 		#error_txt = msg
 		#if 'classic.ardmediathek.de' in path:
 		#	msg1 = 'Die ARD-Classic-Mediathek ist vermutlich nicht mehr verfügbar.'	
