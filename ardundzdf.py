@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>41</nr>										# Numerierung für Einzelupdate
+# 	<nr>42</nr>										# Numerierung für Einzelupdate
 VERSION = '4.3.0'
-VDATE = '03.04.2022'
+VDATE = '04.04.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1692,7 +1692,7 @@ def Audio_get_sendung(url, title, page=''):
 		summ = u'[B]Download[/B] von insgesamt %s Podcasts' % len(downl_list)	
 		Dict("store", 'dl_podlist', downl_list) 
 
-		fparams="&fparams={'key_downl_list': 'dl_podlist'}" 
+		fparams="&fparams={'key': 'dl_podlist'}" 
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.DownloadMultiple", 
 			fanart=R(ICON_DOWNL), thumb=R(ICON_DOWNL), fparams=fparams, summary=summ)
 		
