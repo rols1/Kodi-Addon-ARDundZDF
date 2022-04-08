@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>43</nr>										# Numerierung für Einzelupdate
+# 	<nr>44</nr>										# Numerierung für Einzelupdate
 VERSION = '4.3.0'
-VDATE = '04.04.2022'
+VDATE = '08.04.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1329,6 +1329,10 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 
 	LiveObjekts = blockextract('"organizationName"', page)				# Station: Livestreams + programSets
 	PLog(len(LiveObjekts))
+	streamList=[]
+	now = datetime.datetime.now()										# für streamList
+	timemark = now.strftime("%d.%m.%Y")
+	
 	if sender == '':
 		for LiveObj in LiveObjekts:
 			liveStreams = stringextract('liveStreams":', 'programSets', LiveObj)
@@ -1339,7 +1343,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 				
 			img = stringextract('"image"', '"url1X1"', LiveObj)			# 18.02.2022 neues Format:
 			img = stringextract('"url":"', '"', img)	
-			img = img.replace('{width}', '640')						# fehlt manchmal
+			img = img.replace('{width}', '640')							# fehlt manchmal
 			Plot = stringextract('"synopsis":"', '"', LiveObj)
 			Plot = repl_json_chars(Plot)
 					
@@ -1358,7 +1362,20 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 				(quote(title), quote(sender), quote(streamUrl), myhome, quote(img), quote(Plot))	
 			addDir(li=li, label=sender, action="dirList", dirID="AudioStartLive", fanart=img, 
 				thumb=img, tagline=tag, summary=Plot, fparams=fparams)
-
+			
+			# Format: "Dateiname ** Titel Zeitmarke ** Streamlink" -> DownloadText
+			fname = make_filenames(title)	
+			streamList.append("%s.m3u**#%s | ARDundZDF %s**%s" % (fname,title, timemark, streamUrl))	
+		
+		streamList = py2_encode(streamList)								#Streamlist-Button
+		Dict("store", "RadioStreamLinks", streamList)				
+		lable = u"[B]Download der Streamlinks (Anzahl: %d)[/B] als m3u-Dateien" % len(streamList)
+		tag = u"Ablage als einzelne m3u-Datei je Streamlink im Downloadverzeichnis"
+		summ = u"die nachfolgenden Audio-Buttons bleiben beim Download unberücksichtigt."
+		fparams="&fparams={'textKey': '%s'}" % "RadioStreamLinks"
+		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
+			thumb=R(ICON_DOWNL), fparams=fparams, tagline=tag, summary=summ)
+		
 		ARDAudioEventStreams(li)										# externe Zusätze listen
 
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -5644,6 +5661,60 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 		MyDialog(msg1, msg2, '')
 		return li
 		
+#---------------------------
+# Ablage von Texten im Downloadverzeichnis
+# Aufruf: AudioStartLive (Liste RadioStreamLinks)
+#	textKey -> Dict-Datei 
+# data = Liste oder string, je Zeile wird eine Datei erzeugt,
+#	"**" splittet Zeile in mehrere Zeilen, 1. Zeile = Dateiname
+def DownloadText(textKey):
+	PLog('DownloadText: ' + textKey)
+	
+	data = Dict("load", textKey)
+	PLog(type(data))
+	if isinstance(data, list) == False:
+		data = data.splitlines() 
+	textlen = len(data)
+	PLog(textlen)
+	
+	path = SETTINGS.getSetting('pref_download_path')
+	PLog(path)
+	if path == None or path == '':									# Existenz Verz. prüfen, falls vorbelegt
+		msg1 = 'Downloadverzeichnis noch nicht festgelegt'
+		MyDialog(msg1, '', '')
+		return
+	else:
+		if os.path.isdir(path)	== False:			
+			msg1 =  'Downloadverzeichnis nicht gefunden: ' 
+			msg2 =  path
+			MyDialog(msg1, msg2, '')
+			return
+	
+	
+	msg1 = "DownloadText"
+	msg2 = "%d Dateien gespeichert" % textlen
+	icon = R('icon-downl-dir.png')
+		
+	for inline in data:
+		lines=[] ; outlines=[]
+		lines = inline.split("**")
+		f = lines[0]							# Dateiname
+		fname = os.path.join(path, f)	 
+		del lines[0]
+		
+		for line in lines:
+			outlines.append(line)
+		page  = "\n".join(outlines)
+		PLog(page) 
+		msg = RSave(fname, py2_encode(page), withcodec=False)
+#		msg = RSave(fname, py2_encode(page), withcodec=True)
+		if msg:									# RSave_Exception
+			msg2 = msg
+			break	 
+
+	xbmcgui.Dialog().notification(msg1,msg2,icon,2000)	
+	return			
+		
 ####################################################################################################
 # Aufruf Main, Favoriten oder Merkliste anzeigen + auswählen
 #	Hinzufügen / Löschen in Watch (Script merkliste.py)
@@ -7208,7 +7279,13 @@ def ZDFStart(title, show_cluster='', path=''):
 	#headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 	#'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}"
 	headers=''
-	page, msg = get_page(path=BASE, header=headers)
+	if BASE.endswith('www.zdf.de/funk/'):				# timeoutanfällig - 5 min Cache
+		page = Dict("load", "ZDFfunkStart", CacheTime=300)
+		if page == False:								# Cache miss - vom Sender holen
+			page, msg = get_page(path=path)
+			Dict("store", "ZDFfunkStart", page) 		# Seite -> Cache: aktualisieren			
+	else:
+		page, msg = get_page(path=BASE, header=headers)
 	if page == '':
 		msg1 = "%s-Startseite nicht im Web verfügbar." % Logo
 		msg2 = msg
@@ -8652,7 +8729,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 					fparams="&fparams={'title': '%s', 'url': '%s', 'ID': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
 						(quote(title),  quote(path), quote(ID), quote(descr_par), quote(img_src))
 					addDir(li=li, label=lable, action="dirList", dirID="ZDF_Sendungen", fanart=img_src, 
-						thumb=img_src, summary=descr, fparams=fparams)
+						thumb=img_src, summary=descr, tagline="Folgeseiten", fparams=fparams)
 				else:						# Bildgalerie
 					fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))	
 					addDir(li=li, label=lable, action="dirList", dirID="ZDF_BildgalerieSingle", fanart=img_src, 
@@ -9320,18 +9397,17 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip
 		msg_notfound = 'Video ist leider nicht mehr oder noch nicht verfügbar'
 
 	if len(content) == 0:									# Ausleitung Einzelbeiträge ohne icon-502
-		rec = ZDF_get_playerbox(li, page)					# Format: Titel##Thumb###tagline
-		if rec:
+		cnt = ZDF_get_playerbox(li, page)					# Format: Titel##Thumb###tagline
+		if cnt > 0:
 			PLog('AusleitungEinzelbeitrag1')
-			title, thumb, tag = rec.split('###')
-			ZDF_getVideoSources(url=ref_path, title=title, thumb=thumb, tagline=tag)
-			return li, 0
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			return #li, 0
 
 	if len(content) == 0:									# Ausleitung ZDF_Bildgalerien
 		if "gallery-slider-box" in page:
 			PLog('AusleitungBildgalerie')
 			ZDF_BildgalerieSingle(ref_path, page_title)		
-			return li, 0			
+			return 	# ohne: Video nicht mehr ..			
 	
 	page_cnt = len(content)
 	PLog('content_Blocks: ' + str(page_cnt));			
@@ -9771,9 +9847,12 @@ def ZDF_get_playerbox(li, page, skip_list=[]):
 			dauer = stringextract('aria-label="Laufzeit Livestream', '"', box)
 			dauer = 'Laufzeit Livestream ' + dauer
 			tag = "%s\n%s" % (tag, dauer)
-		summ = descr
-		if summ and descr_display:
-			summ = "%s\n%s" % (summ, descr_display)
+		
+		summ=''
+		if descr_display == '':	
+			summ = descr
+		#if summ and descr_display:
+		#	summ = "%s\n%s" % (summ, descr_display)
 			
 		if url != '':
 			if check_urlend(url,skip_list):			# Url-Enden vergleichen 
