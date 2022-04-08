@@ -1364,8 +1364,13 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 				thumb=img, tagline=tag, summary=Plot, fparams=fparams)
 			
 			# Format: "Dateiname ** Titel Zeitmarke ** Streamlink" -> DownloadText
-			fname = make_filenames(title)	
-			streamList.append("%s.m3u**#%s | ARDundZDF %s**%s" % (fname,title, timemark, streamUrl))	
+			fname = make_filenames(title)
+			fname = py2_encode(fname)
+			# Test erweiterte m3u (für Total Commander überdimensioniert:
+			#extinf = '#EXTM3U\n#EXTINF:-1 tvg-name="%s" group-title="ARDundZDF %s" radio="true" tvg-logo="%s"\n%s'
+			#extinf = extinf % (title, timemark, img, streamUrl)
+			#streamList.append("%s.m3u**#%s" % (fname, extinf))	
+			streamList.append("%s.m3u**# %s | ARDundZDF %s**%s" % (fname,title, timemark, streamUrl))	
 		
 		streamList = py2_encode(streamList)								#Streamlist-Button
 		Dict("store", "RadioStreamLinks", streamList)				
@@ -5689,8 +5694,7 @@ def DownloadText(textKey):
 			msg2 =  path
 			MyDialog(msg1, msg2, '')
 			return
-	
-	
+
 	msg1 = "DownloadText"
 	msg2 = "%d Dateien gespeichert" % textlen
 	icon = R('icon-downl-dir.png')
@@ -5707,7 +5711,6 @@ def DownloadText(textKey):
 		page  = "\n".join(outlines)
 		PLog(page) 
 		msg = RSave(fname, py2_encode(page), withcodec=False)
-#		msg = RSave(fname, py2_encode(page), withcodec=True)
 		if msg:									# RSave_Exception
 			msg2 = msg
 			break	 
