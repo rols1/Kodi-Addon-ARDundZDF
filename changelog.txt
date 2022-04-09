@@ -10,6 +10,30 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+09.04.2022 4.3.1
+			arte-Modul: Anpassung für Nutzung HLS_List und MP4_List sowie
+			ardundzdf.build_Streamlists_buttons. Einschränkung auf "Deutsch"-Fassung 
+			bei Sofortstart, Anpassung an geänderte Downloadliste in get_bestdownload, 
+			Wegfall mediatype=video in  GetContent, Beitrag_Liste.
+			Main_XL (Modul TagesschauXL): alte http-Calls durch https-Calls ersetzt und
+			return bei Livestream-Ausfall entfernt (redakt. Links weiter verfügbar).
+			Modul get_page: Behandlung Sonderfall Redirect-Error 308 für XL_Audios in
+			Modul TagesschauXL (netloc in new_url bereits vorhanden).
+			Audio_get_sendung_api (Audiothek): Fix key-Bezeichner für DownloadMultiple.
+			ZDF-Mediathek: java-generierte Inhalte für "Derzeit beliebt", "Vorab - zuerst
+			online" und "Letzte Chance - noch kurz online" verfügbar gemacht - Anpassungen
+			in ZDFStart (ZDFStart_1, 'data-tracking-title=', ZDFStart_2, "lazyload"),
+			ZDF_get_tracking (neu, Nutzung get_teaserElement einschl. ZDF_get_teaserDetails 
+			und ZDF_get_teaserbox).
+			ZDF-funk-Startseite: 5-min-Cache für www.zdf.de/funk/ (timeoutanfällig). 
+			ZDF_get_playerbox: Unterdrückung Doppel Infotext (descr_display, descr).
+			ZDF_get_content: AusleitungEinzelbeitrag1 an int-return durch ZDF_get_playerbox 
+			angepasst (vormals return des kompl. Satzes). 
+			Radio-Livestreams: Erweiterung für Download der Streamlinks mit Button in 
+			AudioStartLive,  neue Funktion DownloadText. 
+			DownloadMultiple (Modul Podcontent): Ergänzung Dialog vor Sammeldownload.
+					
+
 01.04.2022 4.3.0
 			ZDF: Funktion MeistGesehen, Icon + Button "Meist gesehen (1 Woche)" entfernt 
 			- entfallen, Startseite enthält Cluster "Derzeit beliebt". 
@@ -18,7 +42,7 @@ CHANGE HISTORY
 			thread_getfile: bei Sammeldownloads Url-Exception ausgetauscht gegen 
 			Notification.
 			GetOnlyRedirect (Modul util): Rückgabe Leer-Url bei HTTP-Error ungleich 308.
-			ZDF-Mediathek: Anpassung an gänderte Blockmarke für Cluster-Titel in
+			ZDF-Mediathek: Anpassung an geänderte Blockmarke für Cluster-Titel in
 			ZDFStart ("ZDFStart_1:" und "ZDFStart_2:") - auch relevant für ZDF-
 			funkStartseite. Dto. in ZDFRubrikSingle, ZDF_Sendungen, BarriereArmSingle.
 

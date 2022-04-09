@@ -16,7 +16,7 @@
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>2</nr>								# Numerierung für Einzelupdate
-#	Stand: 29.03.2022
+#	Stand: 08.04.2022
 
 
 # Python3-Kompatibilität:
@@ -192,7 +192,7 @@ def DownloadMultiple(key):									# Sammeldownloads
 		title, url = rec.split('#')
 		title = unescape(title)								# schon in PodFavoriten, hier erneut nötig 
 		
-		if "www.ardaudiothek.de" in url:					# mp3-Quelle ermitteln
+		if "www.ardaudiothek.de" in url:					# mp3-Quelle ermitteln bei Webquellen
 			url = ardundzdf.AudioWebMP3(url, title="", thumb="", Plot="", ID="", no_gui="true")			
 			
 		if 	SETTINGS.getSetting('pref_generate_filenames'):	# Dateiname aus Titel generieren

@@ -618,7 +618,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark):
 	xbmcplugin.endOfDirectory(HANDLE)
 	
 #---------------------------------------------------------------------------------------------------
-# Ähnlich ARD_FlatListEpisodes, flache Liste aler Folgen
+# Ähnlich ZDF_FlatListEpisodes, flache Liste aller Folgen
 #	ohne Zusätze (Teaser usw.)
 # Aufruf ARDStartRubrik ('hasSeasons":true')
 #

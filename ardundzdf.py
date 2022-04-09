@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>44</nr>										# Numerierung für Einzelupdate
-VERSION = '4.3.0'
-VDATE = '08.04.2022'
+VERSION = '4.3.1'
+VDATE = '09.04.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5694,6 +5694,13 @@ def DownloadText(textKey):
 			msg2 =  path
 			MyDialog(msg1, msg2, '')
 			return
+	
+	msg1 = "[B]%d Streamlinks[/B] in einzelnen m3u-Dateien speichern?"	 % textlen	
+	msg2 = 'Die Ablage erfolgt im Downloadverzeichnis.'
+	ret=MyDialog(msg1, msg2, msg3="", ok=False, yes='OK')
+	if ret  == False:
+		return
+			
 
 	msg1 = "DownloadText"
 	msg2 = "%d Dateien gespeichert" % textlen
@@ -5709,7 +5716,7 @@ def DownloadText(textKey):
 		for line in lines:
 			outlines.append(line)
 		page  = "\n".join(outlines)
-		PLog(page) 
+		#PLog(page) 	# Debug
 		msg = RSave(fname, py2_encode(page), withcodec=False)
 		if msg:									# RSave_Exception
 			msg2 = msg
