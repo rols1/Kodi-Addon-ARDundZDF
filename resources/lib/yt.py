@@ -17,8 +17,8 @@
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-# 	<nr>0</nr>								# Numerierung für Einzelupdate
-#	Stand: 19.03.2022
+# 	<nr>1</nr>								# Numerierung für Einzelupdate
+#	Stand: 19.04.2022
 #
 
 from __future__ import absolute_import
@@ -313,7 +313,9 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 		sended = sended.strftime("%d. %b. %Y %R")
 		tstamp = py2_decode(tstamp); sended = py2_decode(sended)
 		
-		dauer = seconds_translate(duration)
+		dauer="?"
+		if duration != '""':										# z.B. Livestream 
+			dauer = seconds_translate(duration)
 		title = repl_json_chars(title)
 		summ = repl_json_chars(descr)
 		ut = u"nein"
@@ -346,7 +348,7 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 			(quote(title),sender,str(new_offset),quote(query),home_id,quote(myfunc))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch",
 			fanart=img, thumb=R(ICON_MEHR), fparams=fparams, tagline=tag, summary=summ)
-	
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 # ----------------------------------------------------------------------
