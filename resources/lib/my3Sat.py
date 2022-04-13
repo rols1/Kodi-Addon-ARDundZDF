@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.03.2022
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -122,7 +122,7 @@ def Main_3Sat(name=''):
 	epg = get_epg()
 	if epg:
 		epg = 'LIVE: %s'  % epg
-		title = '[B][COLOR red]%s[/COLOR][/B]'  % epg
+		title = '[B]%s[/B]'  % epg
 	else:
 		title = '3sat-Livestream'
 	title=py2_encode(title); epg=py2_encode(epg);
@@ -271,7 +271,7 @@ def SendungenAZlist(name, path):				#
 		PLog(title)
 		if 'link is-disabled' in rec:							# Button inaktiv
 			letter = stringextract('true">', '<', rec)
-			title= "[COLOR red]Sendungen mit " + letter + ' | ' + u'ohne Beiträge[/COLOR]'
+			title = "[COLOR grey]Sendungen mit %s[/COLOR]" % letter
 			title=py2_encode(title); DreiSat_AZ=py2_encode(DreiSat_AZ);
 			fparams="&fparams={'name': '%s', 'path': '%s'}"	% (quote(title), quote(DreiSat_AZ))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SendungenAZlist", 
