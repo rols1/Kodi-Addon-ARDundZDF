@@ -7,8 +7,8 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.03.2022
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -112,21 +112,25 @@ def Main_phoenix():
 		thumb=ICON_SEARCH, fparams=fparams, tagline=tag)
 	# ------------------------------------------------------
 			
-	tag='[B][COLOR red]Phoenix Livestream[/COLOR][/B]'
-	title,subtitle,vorspann,descr,href = get_live_data()
-	title = '[B][COLOR red]LIVE: %s[/COLOR][/B]' % title
+	tag='[B]Phoenix Livestream[/B]'
+	title,subtitle,vorspann,descr,href,sender,icon = get_live_data()
+	title = '[B]LIVE: %s[/B]' % title
 	
+	if sender:
+		tag = "%s | Herkunft: %s" % (tag, sender)
 	summ = descr
 	if subtitle:
 		summ = '%s\n%s' % (subtitle, summ)
 	if vorspann:
 		summ = '%s\n%s' % (vorspann, summ)
+	thumb = icon
+	if icon == '':	
+		thumb = ICON_TVLIVE
 		
 	title=py2_encode(title); href=py2_encode(href); tag=py2_encode(tag);
-	PLog(title); PLog(subtitle); PLog(vorspann); PLog(descr); PLog(href)
 	fparams="&fparams={'href': '%s', 'title': '%s', 'Plot': '%s'}" % (quote(href), quote(title), quote(tag))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.phoenix_Live", fanart=R(ICON_PHOENIX),
-		thumb=ICON_TVLIVE, fparams=fparams, tagline=tag, summary=summ)
+		thumb=thumb, fparams=fparams, tagline=tag, summary=summ)
 	# ------------------------------------------------------
 	title="Themen: Rubriken (alle)"
 	fparams="&fparams={'ID': 'Rubriken'}" 
@@ -161,23 +165,31 @@ def get_live_data():
 		PLog("%s | %s" % (msg1, msg2))	
 	PLog(len(page))			
 	
-	title='';subtitle='';vorspann='';descr='';href=''
+	title='';subtitle='';vorspann='';descr='';href='';sender='';thumb=''
 	if page:
 		# Kurzf. möglich: {"title":"tagesschau","subtitel":"mit Geb\u00e4rdensprache",
 		#	"typ":"","vorspann":""}
 		if '":"' in page:					# möglich: '":"', '": "'
 			page = page.replace('":"', '": "')
-		page = page.replace('\\"', '*')							# "-Zeichen ersetzen
+		page = page.replace('\\"', '*')	
+		page = 	transl_json(page)					
 		PLog(page[:80])
 		title 	= stringextract('"titel": "', '"', page)		# titel!
 		subtitle= stringextract('"subtitel": "', '"', page)
 		vorspann= stringextract('"vorspann": "', '"', page)
-		descr	= stringextract('"text":"', '"', page)
+		descr	= stringextract('"text": "', '"', page)			# html als Text
+		sender	= stringextract('sender": "', '"', page)
+		icon	= stringextract('bild_l": "', '"', page)		# bild_s winzig
+		if icon == '':
+			icon = stringextract('bild_m": "', '"', page)
+		PLog("icon: " + icon)
+		if icon != '' and icon.startswith('http') == False:
+			icon = BASE_PHOENIX + icon
 
 		title=transl_json(title); subtitle=transl_json(subtitle); 
 		vorspann=transl_json(vorspann); 
-		descr=cleanhtml(descr);
-		descr=unescape(descr);
+		descr=cleanhtml(descr); descr=transl_json(descr)
+		descr=unescape(descr); descr=descr.replace("\\r\\n", "\n")
 		
 	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
 	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
@@ -187,9 +199,12 @@ def get_live_data():
 		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
 		if up_low('phoenix ') in up_low(webtitle): 	# Arte mit Blank!
 			href = href
-			break	
-					
-	return title,subtitle,vorspann,descr,href
+			break
+	
+	PLog("Satz6:")
+	PLog(title); PLog(subtitle); PLog(vorspann); PLog(descr); PLog(href);
+	PLog(sender); PLog(icon);					
+	return title,subtitle,vorspann,descr,href,sender,icon
 # ----------------------------------------------------------------------
 # path via chrome-tools ermittelt. Ergebnisse im json-Format
 # 25.05.2021 Suchlink an phoenix-Änderung angepasst
