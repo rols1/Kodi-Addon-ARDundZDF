@@ -7,8 +7,8 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.04.2022
+# 	<nr>6</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -77,7 +77,9 @@ ICON 			= 'icon.png'				# ARD + ZDF
 ICON_PHOENIX	= 'phoenix.png'			
 ICON_DIR_FOLDER	= "Dir-folder.png"
 ICON_MEHR 		= "icon-mehr.png"
-ICON_ZDF_SEARCH = 'zdf-suche.png'				
+ICON_ZDF_SEARCH = 'zdf-suche.png'
+ICON_ARD_SEARCH = 'ard-suche.png'						
+				
 				
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_DISKUSS	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/Phoenix/phoenix.png?raw=true'			
@@ -86,7 +88,7 @@ ICON_SEARCH		= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/Ph
 ICON_SENDUNGEN	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/Phoenix/Sendungen.png?raw=true'			
 ICON_DOSSIERS	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/Phoenix/Themen_Dossiers.png?raw=true'			
 ICON_RUBRIKEN	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/Phoenix/Themen_Rubriken.png?raw=true'			
-
+ICON_VERPASST	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/Phoenix/Verpasst.png?raw=true'
 		
 # ----------------------------------------------------------------------			
 def Main_phoenix():
@@ -132,6 +134,13 @@ def Main_phoenix():
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.phoenix_Live", fanart=R(ICON_PHOENIX),
 		thumb=thumb, fparams=fparams, tagline=tag, summary=summ)
 	# ------------------------------------------------------
+	title = 'Sendung verpasst'
+	tag=u"[B]Hinweis:[/B] Viele Sendungen existieren nicht in der phoenix-Mediathek, sondern nur bei den Partnersendern "
+	tag=u"%sARD und ZDF (z.B. Dokus).\nDas Addon bietet in solchen Fällen eine weiterführende Suche an." % tag 
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.Verpasst", 
+		fanart=R(ICON_PHOENIX), thumb=ICON_VERPASST, tagline=tag, fparams=fparams)
+
 	title="Themen: Rubriken (alle)"
 	fparams="&fparams={'ID': 'Rubriken'}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.Themen", fanart=R(ICON_PHOENIX), 
@@ -274,7 +283,8 @@ def phoenix_Search(query='', nexturl=''):
 #	nicht mehr abschalten - auf '' gesetzt
 # 09.11.2021 wegen key-Problem ("0", "1"..) Wechsel json -> string-Auwertung,
 #	s.a. ThemenListe
-def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
+# 15.04.2022 ID: skip vinhalt + Zukunft bei ID="Verpasst"
+def GetContent(li, page, base_img=None, turn_title=True, get_single='', ID=''):
 	PLog('GetContent:')
 
 	mediatype=''			# Kennzeichn. als Playable hier zu unsicher (Bsp. Plenarwochen)	
@@ -294,10 +304,10 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
 			img	= stringextract('"bild_ml":"', '"', item)
 		if img == '':	
 			img	= stringextract('"bild_l":"', '"', item)	# nachrangig, da falsche Url mögl.
-		if img == '' or 'placeholder' in img:
-			img = base_img				
 		if img.startswith('http') == False:
 			img = BASE_PHOENIX + img
+		if img == '' or 'placeholder' in img:
+			img = base_img				
 		if '%' in img:								# Dekodierung  quotierte img-url's
 			#img = decode_url(img)					# Bsp.: ..17-3083922,(ap,XAZ109,A15_11_2017),russisches..
 			PLog("decode_img: " + img)				# für Kodi Dekodierung nicht erforderl.
@@ -308,10 +318,11 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
 		#	video = item["inhalt_video"]	# false, true
 		
 		url	= stringextract('link":"', '"', item)
-		if url == '':
-			continue
-		url	= BASE_PHOENIX + url 						# Bsp. augstein-und-blome-s-121540.html	
 		PLog('url: ' + url)
+		if url == '':		
+			if  ID != "Verpasst":					# z.B. bei Tagesschau leer
+				continue
+		url	= BASE_PHOENIX + url 					# Bsp. augstein-und-blome-s-121540.html	
 		html_ref = "Link: .." + url.split('-')[-1]	# 121540.html	
 
 		title= stringextract('titel":"', '"', item)
@@ -319,7 +330,8 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
 		vorspann = stringextract('vorspann":"', '"', item)
 		typ	= stringextract('typ":"', '"', item)	# Artikel, Doku, Ereignis..
 		if typ == '':
-			continue
+			if  ID != "Verpasst":					# z.B. bei Tagesschau leer
+				continue
 		
 		# Formate Sendezeit: "2017-02-26 21:45:00", "2018-01-27 00:30"
 		if "online" in item:	
@@ -350,12 +362,13 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='' ):
 			tag = u"%s | Folgeseiten | %s"	% (typ, html_ref)
 			
 		if SETTINGS.getSetting('pref_only_phoenix_videos') == 'true': 
-			vinhalt = stringextract('inhalt_video":', ',', item)
-			PLog('vinhalt: ' + str(vinhalt))
-			if vinhalt == 'false':					# false, wenn z.Z. kein phoenix-Video vorhanden 
-				continue		
-			if not single or 'Zukunft' in online:	# skip Beiträge ohne Videos, künftige Videos
-				continue
+			if ID != "Verpasst":
+				vinhalt = stringextract('inhalt_video":', ',', item)
+				PLog('vinhalt: ' + str(vinhalt))
+				if vinhalt == 'false':					# false, wenn z.Z. kein phoenix-Video vorhanden 
+					continue		
+				if not single or 'Zukunft' in online:	# skip Beiträge ohne Videos, künftige Videos
+					continue
 				
 		if turn_title and subtitel:
 			t = title
@@ -544,6 +557,74 @@ def ThemenListe(title, ID, path, next_url=''):				# Liste zu einzelnem Untermen�
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
+# ----------------------------------------------------------------------
+# 15.04.2022 Verpasst Woche - Liste Wochentage
+#
+def Verpasst():
+	PLog('Verpasst:')
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='phoenix')					# Home-Button
+
+	wlist = list(range(0,7))
+	now = datetime.datetime.now()
+
+	for nr in wlist:
+		rdate = now - datetime.timedelta(days = nr)
+		startDate = rdate.strftime("%Y-%m-%dT03:30:00.000Z")
+		myDate  = rdate.strftime("%d.%m.")		# Formate s. man strftime (3)
+		
+		rdate2 = now - datetime.timedelta(days = nr-1)
+
+		iWeekday = rdate.strftime("%A")
+		iWeekday = transl_wtag(iWeekday)
+		iWeekday = iWeekday[:2].upper()
+		if nr == 0:
+			iWeekday = 'HEUTE'	
+		if nr == 1:
+			iWeekday = 'GESTERN'	
+		title =	"%s %s" % (iWeekday, myDate)	# DI 09.04.
+		day = nr								# VerpasstContent: 0days, -1days usw
+		
+		PLog("Satz7:")
+		PLog(title); PLog(nr); PLog(iWeekday)
+		fparams="&fparams={'title': '%s', 'nr': '%d'}" % (title, nr)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.VerpasstContent", fanart=ICON_VERPASST, 
+			thumb=ICON_VERPASST, fparams=fparams)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+# ----------------------------------------------------------------------
+# 15.04.2022 Inhalt des gewählten Tages <- Verpasst
+# Auswertung -> GetContent wie phoenix_Search
+#
+def VerpasstContent(title, nr):
+	PLog('VerpasstContent: ' + title)
+	base = "https://www.phoenix.de/response/template/tvprogramm_tag_json/datum/"
+	
+	if nr == "0":
+		day = "0days"
+	else:
+		day = "-%sdays" % nr
+	path = base + day
+	page, msg = get_page(path)
+	if page == '':	
+		msg1 = 'Fehler in VerpasstContent'
+		msg2=msg
+		MyDialog(msg1, msg2, "")	
+		return
+	PLog(len(page))
+	
+	page = page.replace('\\/', '/')		# json-raw Links
+	page = page.replace('\\"', '*')		# "-Zeichen ersetzen
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='phoenix')			# Home-Button
+
+	li = GetContent(li, page, ID="Verpasst")						
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
 ####################################################################################################
 # Ermittlung der Videoquellen ähnlich ZDF-Mediathek:
 #	1. Die Url der Homepage der Sendung enthält am Ende die Sendungs-ID (../am-05062018-a-262217.html).
@@ -563,15 +644,20 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 	summ_org = summary
 	
 	# ev. für sid split-Variante aus phoenix_Search verwenden
-	sid 	= re.search(u'-(\d+)\.html', path).group(1)
-	url 	= 'https://www.phoenix.de/response/id/'	+ sid
+	try:								# url: leer möglich bei Verpasst-Beiträgen
+		sid 	= re.search(u'-(\d+)\.html', path).group(1)
+		url 	= 'https://www.phoenix.de/response/id/'	+ sid
+	except:
+		sid=''; url=''
 	PLog('url: ' + url)
 	PLog('html_url: ' + html_url)	
-	
 
-	page, msg = get_page(path=url)	
-	if page == '':						
+	page=''; msg=''
+	msg1 = u"Kein phoenix-Video zu >%s< gefunden." % title
+	if url:
+		page, msg = get_page(path=url)	
 		msg1 = 'Fehler in SingleBeitrag: %s' % title
+	if page == '':						
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return 
@@ -589,7 +675,7 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 	PLog(len(items))
 	if len(items) == 0:
 		if 'text":"<div><strong>' in page or 'text":"<p><strong>':	# Suchtexte
-			msg1 = u"Kein phoenix-Video zu >%s< gefunden.\nFundstellen beim Partnersender ZDF möglich.\nDort suchen?" % title
+			msg1 = u"Kein phoenix-Video zu >%s< gefunden.\nFundstellen bei den Partnersendern möglich.\nDort suchen?" % title
 			ret=MyDialog(msg1, '', '', ok=False, yes='OK', heading='Weiterleitung?')
 			PLog(ret)
 			if ret:
@@ -678,7 +764,8 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 # Dokus: Suche mit Title und Subtitel (Achtung: gedreht in GetContent
 #	für Download + Merkliste)
 # phoenix history: Suchbuttons erstellen mit Titeln aus 1. Satz der Beschreibung
-# 
+# 15.04.2022 erweitert für ARD-Suche
+#
 def get_zdf_search(li, page, title):
 	PLog('get_zdf_search:')
 	PLog(title)
@@ -692,12 +779,12 @@ def get_zdf_search(li, page, title):
 	title_org = stringextract('titel": "', '"', page)  		# hier mit Blank
 	PLog(title_org)
 	stitle_org = stringextract('subtitel": "', '"', page)	# hier mit Blank
-	tag = "Suche phoenix-Beitrag auf Partnersender ZDF"
+	tag_org = "Suche phoenix-Beitrag auf Partnersender %s"
 	
 	if "phoenix history" not in title_org: 					# Dokus mit Titel + Subtitel suchen 
 		query = stitle_org				
-		title = "1. ZDFSuche (Titel): %s" % query	
-		tag = tag + " | Suche mit Titel des Beitrags"	
+		title = "1. ZDFSuche (Titel): %s" % query
+		tag = tag_org % "ZDF"	
 		summ = stringextract('text":"', '"}', page)
 		summ = summ.replace('\\r\\n', ' ')
 		summ = cleanhtml(summ); summ = unescape(summ);
@@ -713,11 +800,27 @@ def get_zdf_search(li, page, title):
 		
 		query = title_org
 		title = "2. ZDFSuche (Subtitel): %s" % query	 	# Suche mit Subtitel
-		tag = tag.replace('Titel', 'Subtitel')	
+		tag = tag_org % "ZDF"	
 		query=py2_encode(query); title=py2_encode(title);
 		fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_SEARCH), 
 			thumb=R(ICON_ZDF_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+
+		query = stitle_org
+		title = "3. ARDSuche (Titel): %s" % query	 	# ARD-Suche mit Titel
+		tag = tag_org % "ARD"	
+		query=py2_encode(query); title=py2_encode(title);
+		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': 'ARD' }" % (quote(query), quote(title))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
+			fanart=R(ICON_ARD_SEARCH), thumb=R(ICON_ARD_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+
+		query = title_org
+		title = "4. ARDSuche (Subtitel): %s" % query	 	# ARD-Suche mit Subtitel
+		tag = tag_org % "ARD"	
+		query=py2_encode(query); title=py2_encode(title);
+		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': 'ard' }" % (quote(query), quote(title))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
+			fanart=R(ICON_ARD_SEARCH), thumb=R(ICON_ARD_SEARCH), tagline=tag, summary=summ, fparams=fparams)
 
 	else:
 		items = blockextract('text":"<div><strong>',  page)	
