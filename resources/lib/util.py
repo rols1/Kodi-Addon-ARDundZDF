@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.04.2022
+#	Stand: 14.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1546,7 +1546,9 @@ def make_mark(mark, mString, color='red', bold=''):
 		pos2 = pos1 + len(ma)		
 		ms = mString[pos1:pos2]		# Mittelstück mark unverändert
 		s1 = mString[:pos1]; s2 = mString[pos2:];
-		if bold:
+		if bold and color == '':
+			rString= u"%s[B]%s[/B]%s" % (s1, ms, s2)
+		elif color and bold:
 			rString= u"%s[COLOR %s][B]%s[/B][/COLOR]%s"	% (s1, color, ms, s2)
 		else:
 			rString= u"%s[COLOR %s]%s[/COLOR]%s"	% (s1, color, ms, s2)
@@ -1615,7 +1617,7 @@ def unescape(line):
 		(u'undoacute;', u'o'), (u'&eacute;', u'e'), (u'&oacute;', u'o'), (u'&egrave;', u'e'),
 		(u'&atilde;', u'a'), (u'quot;', u' '), (u'&#10;', u'\n'),
 		(u'&#8222;', u' '), (u'&#8220;', u' '), (u'&#034;', u' '),
-		(u'&copy;', u' | '), (u'&middot;', u'|')):
+		(u'&copy;', u' | '), (u'&middot;', u'|'), (u'&ndash;', u'-')):
 		line = line.replace(*r)
 	return line
 #----------------------------------------------------------------  
@@ -2254,7 +2256,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 				duration=''
 			duration = seconds_translate(duration)
 		if duration and pubServ:										
-			duration = u'Dauer %s | %s' % (duration, pubServ)
+			duration = u'Dauer %s | [B]%s[/B]' % (duration, pubServ)
 		if 	maturitytRating:
 			if duration == '':
 				duration = "Dauer unbekannt"

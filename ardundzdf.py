@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>44</nr>										# Numerierung für Einzelupdate
-VERSION = '4.3.1'
-VDATE = '09.04.2022'
+VERSION = '4.3.2'
+VDATE = '16.04.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -811,7 +811,7 @@ def FilterTools():
 		addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
 			thumb=R(ICON_FILTER), tagline=tag, summary=summ, fparams=fparams)
 					
-		title = u"Filterwort [COLOR red]löschen[/COLOR]"
+		title = u"Filterwort [B]löschen[/B]"
 		tag = u"ein Filterwort aus der Ausschluss-Liste [COLOR red]löschen[/COLOR]" 
 		fparams="&fparams={'action': 'delete'}" 
 		addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
@@ -2957,7 +2957,7 @@ def ARDSportPanel(title, path, img, tab_path='', paneltabs=''):
 		else:			
 			PLog('ohne_Video_Audio:')									# ARDSportVideo -> ARDSportSingleTab 
 			mediatype=''												# Sofortstart aus
-			tag = u'Beitrag hier [COLOR red] ohne Video / Audio[/COLOR] - '
+			tag = u'Beitrag hier [B] ohne Video / Audio[/B] - '
 			tag = "%s%s" % (tag, u'eventuell auf der Folgeseite enthalten?')
 			if 'programm.ard.de/Programm/Sender' in path:				# PRG-Hinweis ausblenden
 				continue		
@@ -3805,7 +3805,7 @@ def ARDSportEventLive(path, page, title, oss_url='', url='', thumb='', Plot=''):
 	
 		title = repl_json_chars(headline); descr= repl_json_chars(descr)
 		if now >= start and now <= end:									# Zeitabgleich für Titel
-			title = '[COLOR red][B]  LIVE [/B][/COLOR] | %s' % (title)
+			title = '[B]  LIVE [/B] | %s' % (title)
 			live_flag=True
 		else:
 			title = '[B]%s[/B] | %s' % (datum, title)
@@ -4446,7 +4446,7 @@ def VerpasstWoche(name, title):					# Wochenliste zeigen, name: ARD, ZDF Mediath
 		thumb=GIT_CAL, fparams=fparams, tagline=tag)
 
 														# Button für Stationsfilter
-	label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [COLOR red]%s[/COLOR]" % sfilter
+	label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [B]%s[/B]" % sfilter
 	tag = "Auswahl: Alle ZDF-Sender, zdf, zdfneo oder zdfinfo" 
 	fparams="&fparams={'name': '%s', 'title': 'ZDF-Mediathek', 'sfilter': '%s'}" % (quote(name), sfilter)
 	addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Filter", fanart=R(ICON_ZDF_VERP), 
@@ -5980,7 +5980,7 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 		tagline = tagline.replace('||', '\n')
 		
 		if modul != "ardundzdf":					# Hinweis Modul
-			tagline = "[B][COLOR red]Modul: %s[/COLOR][/B]%s" % (modul, tagline)
+			tagline = "[B]Modul: %s[/B]%s" % (modul, tagline)
 		if SETTINGS.getSetting('pref_merkordner') == 'true':	
 			merkname = name								# für Kontextmenü Ordner in addDir
 			if ordner:									# Hinweis Ordner
@@ -6369,7 +6369,7 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 		summ = unescape(summ)
 		if 'JETZT' in title:			# JETZT-Markierung unter icon platzieren
 			# Markierung für title bereits in EPG
-			summ = "[COLOR red][B]LAUFENDE SENDUNG![/B][/COLOR]\n\n%s" % summ
+			summ = "[B]LAUFENDE SENDUNG![/B]\n\n%s" % summ
 			title = sname
 		PLog("title: " + title)
 		tagline = 'Zeit: ' + vonbis
@@ -6427,6 +6427,10 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 	start_cnt = int(offset) 						# Startzahl diese Seite
 	end_cnt = int(start_cnt) + int(rec_per_page)	# Endzahl diese Seite
 	
+	icon = R('tv-EPG-all.png')
+	xbmcgui.Dialog().notification("lade EPG-Daten",u"max. Anzahl: %d" % rec_per_page,icon,5000)
+	
+	
 	for i in range(len(sort_playlist)):
 		cnt = int(i) + int(offset)
 		# PLog(cnt); PLog(i)
@@ -6447,7 +6451,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 		
 		tagline = 'weiter zum Livestream'
 		if ID == '':									# ohne EPG_ID
-			title = title_playlist + ': ohne EPG' 
+			title = "[COLOR grey]%s[/COLOR]" % title_playlist + ' | ohne EPG'
 			img = img_playlist
 			PLog("img: " + img)
 		else:
@@ -6455,7 +6459,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 			rec = EPG.EPG(ID=ID, mode='OnlyNow')		# Daten holen - nur aktuelle Sendung
 			# PLog(rec)	# bei Bedarf
 			if len(rec) == 0:							# EPG-Satz leer?
-				title = title_playlist + '| ohne EPG'
+				title = "[COLOR grey]%s[/COLOR]" % title_playlist + ' | ohne EPG'
 				img = img_playlist			
 			else:	
 				href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6]
@@ -6486,6 +6490,9 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-all.png'), 
 			thumb=img, fparams=fparams, summary=summ, tagline=tagline, start_end="Recording TV-Live")
 
+	icon = R('tv-EPG-all.png')
+	xbmcgui.Dialog().notification("EPG-Daten geladen", "",icon,2000)
+	
 	# Mehr Seiten anzeigen:
 	# PLog(offset); PLog(cnt); PLog(max_len);
 	if (int(cnt) +1) < int(max_len): 						# Gesamtzahl noch nicht ereicht?
@@ -7526,7 +7533,7 @@ def ZDF_get_tracking(title, page, show_cluster, ID): 			# lazyload-Sätze zu Clu
 			tag = teaser_label
 		if teaser_brand:
 			teaser_brand = teaser_brand.replace(' - ', '')
-			teaser_brand = "[COLOR red]%s[/COLOR]" % teaser_brand
+			teaser_brand = "[B]%s[/B]" % teaser_brand
 			tag = teaser_brand
 			
 		if teaser_typ:
@@ -7695,7 +7702,8 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	if s_type == 'Bilderserien':	# 'ganze Sendungen' aus Suchpfad entfernt:
 		li, page_cnt = ZDF_Bildgalerien(li, page)
 	else:
-		li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID=ID)
+		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen
+		li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID=ID, mark=query)
 	PLog('li, page_cnt: %s, %s' % (li, page_cnt))
 	
 	if page_cnt == 'next':							# mehr Seiten (Loader erreicht)
@@ -8675,7 +8683,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 				tag = teaser_label
 			if teaser_brand:
 				teaser_brand = teaser_brand.replace(' - ', '')
-				teaser_brand = "[COLOR red]%s[/COLOR]" % teaser_brand
+				teaser_brand = "[B]%s[/B]" % teaser_brand
 				tag = teaser_brand
 				
 			if teaser_typ:
@@ -8708,7 +8716,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 			
 			if '>Jetzt live</h2>' in rec:								# Livestream-Satz?
 				PLog('>Jetzt live</h2>')
-				title = '[COLOR red][B]%s[/B][/COLOR]' % title
+				title = '[B]%s[/B]' % title
 			lable = title
 			
 						
@@ -9355,8 +9363,9 @@ def International(title):
 #		ZDF_Search, ZDFSportLive, Tivi_Search (Modul childs).
 #	Blockbereich für VERPASST erweitert (umfasst data-station)
 #	08.01.2021 Anpassung an geänderte Formate bei Hochkant-Videos.
+# mark: farbige Markierung in title (wie ARDSearchnew -> get_page_content) 
 #
-def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip_list=''):	
+def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip_list='', mark=''):	
 	PLog('ZDF_get_content:'); PLog(ref_path); PLog(ID); PLog(sfilter); 
 	PLog(len(page));
 
@@ -9588,7 +9597,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip
 			teaser_info=''
 			
 		if 	'<strong>Livestream</strong>' in rec:
-			duration = u'[COLOR red]Livestream[/COLOR]'	
+			duration = u'[B]Livestream[/B]'	
 		duration = duration.strip()
 		PLog('duration: ' + duration);
 		if duration == '':											# Search: icon-502_play vorh., duration nicht
@@ -9600,6 +9609,11 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip
 		if title.startswith(' |'):
 			title = title[2:]				# Korrektur
 			
+		if mark:
+			PLog(title); PLog(mark)
+			title = title.strip() 
+			title = make_mark(mark, title, "", bold=True)	# farbige Markierung
+
 		station=''
 		if ID == 'VERPASST':
 			if 'class="special-info">' in rec:						
@@ -9638,7 +9652,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip
 		if tagline.startswith(' |'):
 			tagline = tagline[2:]			# Korrektur
 		if station:
-			tagline = "%s | Sender: [COLOR red]%s[/COLOR]" % (tagline, station)
+			tagline = "%s | Sender: [B]%s[/B]" % (tagline, station)
 		if enddate:
 			tagline = u"%s\n\n[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (tagline, enddate)
 			
@@ -9852,7 +9866,7 @@ def ZDF_get_playerbox(li, page, skip_list=[]):
 		url,apiToken,sid,descr_display,descr,title,img = ZDF_getKurzVideoDetails(box)
 		tag = "[B]Playerbox-Video[/B]\n\n%s" % descr_display
 		if '"isLivestream": true' in box:
-			tag = "[COLOR red]Jetzt live[/COLOR] | %s" % tag
+			tag = "[B]Jetzt live[/B] | %s" % tag
 		if 'Laufzeit Livestream' in box:
 			dauer = stringextract('aria-label="Laufzeit Livestream', '"', box)
 			dauer = 'Laufzeit Livestream ' + dauer

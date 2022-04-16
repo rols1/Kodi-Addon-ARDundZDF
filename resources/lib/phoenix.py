@@ -779,48 +779,52 @@ def get_zdf_search(li, page, title):
 	title_org = stringextract('titel": "', '"', page)  		# hier mit Blank
 	PLog(title_org)
 	stitle_org = stringextract('subtitel": "', '"', page)	# hier mit Blank
-	tag_org = "Suche phoenix-Beitrag auf Partnersender %s"
+	tag_org = "Suche phoenix-Beitrag beim Partnersender %s"
+	summ = stringextract('text":"', '"}', page)
+	summ = summ.replace('\\r\\n', ' ')
+	summ = cleanhtml(summ); summ = unescape(summ);
+	summ = repl_json_chars(summ) 
+	PLog("Satz4:"); 
+	PLog(title); PLog(stitle_org); PLog(summ[:80]); 
 	
 	if "phoenix history" not in title_org: 					# Dokus mit Titel + Subtitel suchen 
-		query = stitle_org				
-		title = "1. ZDFSuche (Titel): %s" % query
-		tag = tag_org % "ZDF"	
-		summ = stringextract('text":"', '"}', page)
-		summ = summ.replace('\\r\\n', ' ')
-		summ = cleanhtml(summ); summ = unescape(summ);
-		summ = repl_json_chars(summ) 
-		PLog("Satz4:"); 
-		PLog(title); PLog(stitle_org);PLog(query); PLog(summ[:80]); 
-		query=py2_encode(query); title=py2_encode(title);
-		# return ardundzdf.ZDF_Search(query=query, title=title)	# Altern.: Direktsprung nur mit Subtitel
-		query=py2_encode(query); title=py2_encode(title); 	# Suche mit Titel
-		fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_SEARCH), 
-			thumb=R(ICON_ZDF_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+		if stitle_org:
+			query = stitle_org				
+			title = "1. ZDFSuche (Titel): %s" % query
+			tag = tag_org % "ZDF"	
+			query=py2_encode(query); title=py2_encode(title);
+			# return ardundzdf.ZDF_Search(query=query, title=title)	# Altern.: Direktsprung nur mit Subtitel
+			query=py2_encode(query); title=py2_encode(title); 	# Suche mit Titel
+			fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_SEARCH), 
+				thumb=R(ICON_ZDF_SEARCH), tagline=tag, summary=summ, fparams=fparams)
 		
-		query = title_org
-		title = "2. ZDFSuche (Subtitel): %s" % query	 	# Suche mit Subtitel
-		tag = tag_org % "ZDF"	
-		query=py2_encode(query); title=py2_encode(title);
-		fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_SEARCH), 
-			thumb=R(ICON_ZDF_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+		if title_org:
+			query = title_org
+			title = "2. ZDFSuche (Subtitel): %s" % query	 	# Suche mit Subtitel
+			tag = tag_org % "ZDF"	
+			query=py2_encode(query); title=py2_encode(title);
+			fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_SEARCH), 
+				thumb=R(ICON_ZDF_SEARCH), tagline=tag, summary=summ, fparams=fparams)
 
-		query = stitle_org
-		title = "3. ARDSuche (Titel): %s" % query	 	# ARD-Suche mit Titel
-		tag = tag_org % "ARD"	
-		query=py2_encode(query); title=py2_encode(title);
-		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': 'ARD' }" % (quote(query), quote(title))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
-			fanart=R(ICON_ARD_SEARCH), thumb=R(ICON_ARD_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+		if stitle_org:
+			query = stitle_org
+			title = "3. ARDSuche (Titel): %s" % query	 	# ARD-Suche mit Titel
+			tag = tag_org % "ARD"	
+			query=py2_encode(query); title=py2_encode(title);
+			fparams="&fparams={'query': '%s', 'title': '%s', 'sender': 'ARD' }" % (quote(query), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
+				fanart=R(ICON_ARD_SEARCH), thumb=R(ICON_ARD_SEARCH), tagline=tag, summary=summ, fparams=fparams)
 
-		query = title_org
-		title = "4. ARDSuche (Subtitel): %s" % query	 	# ARD-Suche mit Subtitel
-		tag = tag_org % "ARD"	
-		query=py2_encode(query); title=py2_encode(title);
-		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': 'ard' }" % (quote(query), quote(title))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
-			fanart=R(ICON_ARD_SEARCH), thumb=R(ICON_ARD_SEARCH), tagline=tag, summary=summ, fparams=fparams)
+		if title_org:
+			query = title_org
+			title = "4. ARDSuche (Subtitel): %s" % query	 	# ARD-Suche mit Subtitel
+			tag = tag_org % "ARD"	
+			query=py2_encode(query); title=py2_encode(title);
+			fparams="&fparams={'query': '%s', 'title': '%s', 'sender': 'ard' }" % (quote(query), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
+				fanart=R(ICON_ARD_SEARCH), thumb=R(ICON_ARD_SEARCH), tagline=tag, summary=summ, fparams=fparams)
 
 	else:
 		items = blockextract('text":"<div><strong>',  page)	

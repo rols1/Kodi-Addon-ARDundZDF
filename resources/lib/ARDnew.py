@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.03.2022
+#	Stand: 14.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -259,7 +259,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 	CurSender = Dict("load", 'CurSender')		
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)	
-	tagline = 'Mediathek des Senders [COLOR red] %s [/COLOR]' % sendername
+	summ = 'Mediathek des Senders [B] %s [/B]' % sendername
 		
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')								# Home-Button
@@ -330,7 +330,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
 			(quote(path), quote(title), ID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-			tagline=tag, fparams=fparams)
+			tagline=tag, summary=summ, fparams=fparams)
 			
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -1203,7 +1203,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		if mark:
 			PLog(title); PLog(mark)
 			title = title.strip() 
-			title = make_mark(mark, title, "red")	# farbige Markierung
+			# title = make_mark(mark, title, "red")	# farbige Markierung
+			title = make_mark(mark, title, "", bold=True)	# farbige Markierung
 	
 		img 	= stringextract('src":"', '"', s)	
 		img 	= img.replace('{width}', '640'); 
@@ -2090,7 +2091,7 @@ def Senderwahl(title, caller=''):
 			continue
 		sendername, sender, kanal, img, az_sender = entry.split(':')
 		PLog(entry)
-		tagline = 'Mediathek des Senders [COLOR red] %s [/COLOR]' % sendername
+		tagline = 'Mediathek des Senders [B] %s [/B]' % sendername
 		PLog('sendername: %s, sender: %s, kanal: %s, img: %s, az_sender: %s'	% (sendername, sender, kanal, img, az_sender))
 		title = sendername
 		entry=py2_encode(entry); 			

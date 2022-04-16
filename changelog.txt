@@ -10,6 +10,24 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.04.2022 4.3.2
+			MVWSearch (Modul yt): network_error abgefangen (invalid literal) für 
+			leere duration bei Livestreams.
+			Sichtbarkeit (Ersatz roter Markierungen durch fett): EPG (Modul EPG),
+			EPG_ShowSingle, ARDSportEventLive, VerpasstWoche, ShowFavs (Merkliste),
+			ZDF_get_tracking, ZDF_get_content, ZDF_get_playerbox, FilterTools, 3Sat,
+			ARDStart, Senderwahl, get_page_content, Main_phoenix.
+			SendungenAZlist (3Sat): Markierung leerer Titel geändert (rot -> grau).
+			EPG: Sender ohne EPG im Titel grau markiert + Notification bei Lade-Start
+			und -Ende.
+			get_live_data (Modul phoenix): Auswertung Bild und Herkunftssender für
+			laufende Sendung.
+			ZDF_Search i.V.m. ZDF_get_content: Suchbegriff in Titel fett markiert (wie
+			ARDSearchnew i.V.m. get_page_content). 
+			Modul phoenix: Menü "Sendung verpasst" ergänzt, neue Funktion Verpasst,
+			neues Icon (Github-Repo), Anpassung Main_phoenix, SingleBeitrag und 
+			get_zdf_search (erweitert um ARD-Suche).
+
 09.04.2022 4.3.1
 			arte-Modul: Anpassung für Nutzung HLS_List und MP4_List sowie
 			ardundzdf.build_Streamlists_buttons. Einschränkung auf "Deutsch"-Fassung 

@@ -11,7 +11,7 @@
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.03.2022
+#	Stand: 14.04.2022
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -303,7 +303,7 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		if now >= starttime and now < endtime:
 			# PLog("diffnow_%d: %s, %s-%s" % (i, now, starttime, endtime))	# bei Bedarf
 			# Farb-/Fettmarkierung bleiben im Kontextmenü erhalten (addDir):
-			sname = "[COLOR red][B]JETZT: %s[/B][/COLOR]" % sname_org	# JETZT: rot + fett
+			sname = "[B]JETZT: %s[/B]" % sname_org	# JETZT: fett 
 			PLog(sname); PLog(img)				# bei Bedarf
 			if mode == 'OnlyNow':				# aus EPG_ShowAll - nur aktuelle Sendung
 				rec = [starttime,href,img,sname,stime,summ,vonbis]  # Index wie EPG_rec
