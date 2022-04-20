@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.04.2022
+# 	<nr>6</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -254,6 +254,7 @@ def arte_Search(query='', nextpage=''):
 		
 	
 	if nextpage and  int(nextpage) > int(aktpage):			# letzte Seite = akt. Seite
+		li = xbmcgui.ListItem()								# Kontext-Doppel verhindern
 		img = R(ICON_MEHR)
 		title = u"Weitere Beiträge"
 		tag = u"weiter zu Seite %s" % nextpage
@@ -312,7 +313,9 @@ def GetContent(li, page, ID):
 		if dur != "null":
 			dur = seconds_translate(dur)
 		else:
-			mehrfach = True											# ohne Dauer -> Mehrfachbeitrag
+			mehrfach = True												# ohne Dauer -> Mehrfachbeitrag
+		if item.find('isCollection":true') >= 0:						# auch mit Dauer möglich
+			mehrfach = True	
 			
 		geo = stringextract('geoblocking":', '},', item)
 		geo = "Geoblock-Info: %s" % stringextract('code":"', '"', geo)	# "DE_FR", "ALL"
@@ -508,13 +511,14 @@ def Beitrag_Liste(url, title):
 # 24.09.2020 Filterung master.m3u8 nach "DE" oder "FR"
 # 02.04.2022 Nutzung build_Streamlists_buttons mit HLS_List, MP4_List,
 #	Vorauswahl Deutsch bei Sofortstart (HLS + MP4)
+# 20.04.2022 api (v1 -> v2) und Format geändert. Nur noch HLS-Quellen
 #
 def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	PLog("SingleVideo: " + pid)
 	title_org = title
 
-	path = 'https://api.arte.tv/api/player/v1/config/de/%s/?autostart=0' % pid
-	page, msg = get_page(path)	
+	path = 'https://api.arte.tv/api/player/v2/config/de/%s' % pid
+	page, msg = get_page(path, JsonPage=True)	
 	if page == '':						
 		msg1 = 'Fehler in SingleVideo: %s' % title
 		msg2 = msg
@@ -527,10 +531,15 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='arte')				# Home-Button
 	
-	formitaeten = blockextract('"id":"H', page) # Bsp. "id":"HTTPS_MQ_1", "id":"HLS_XQ_1"
+	pos1 = page.find('"streams":')
+	pos2 = page.find('"stat":')
+	if pos1 >= 0 and pos2 > pos1:
+		page = page[pos1:pos2]
+	
+	formitaeten = blockextract('"url":', page) 
 	PLog(len(formitaeten))
 	if summ == '':							# ev. nicht besetzt in Beitrag_Liste
-		summ = stringextract('"V7T":"',  '"', page)
+		summ = stringextract('description":"',  '"', page)
 		summ=transl_json(summ); summ=repl_json_chars(summ)
 	PLog("summ: " + summ)
 	
@@ -539,15 +548,22 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	skip_list=[]
 	for rec in formitaeten:	
 		r = []
-		mediaType = stringextract('"mediaType":"',  '"', rec)
-		bitrate = stringextract('"bitrate":',  ',', rec)
-		quality = stringextract('"quality":"',  '"', rec)
-		width = stringextract('"width":',  ',', rec)
-		height = stringextract('"height":',  ',', rec)
+		versions = stringextract('"versions":',  ']', rec)
+		mainQuality = stringextract('"mainQuality":',  '}', rec)
+		
+		mediaType = stringextract('"protocol":"',  '"', rec)
+		bitrate = stringextract('"bitrate":',  ',', rec)	# ? fehlt
+		quality = stringextract('"code":"',  '"', mainQuality)
+		width = stringextract('"label":"',  '"', mainQuality)
+		height = stringextract('"height":"',  '"', rec)		# ? fehlt
+		if height == "": height = "?"
 		size = "%sx%s" % (width, height)
+		size = size.replace("p", "")
+		
 		url = stringextract('"url":"',  '"', rec)
-		lang = stringextract('"versionLibelle":"',  '"', rec)# z.B. Deutsch (Original)
+		lang = stringextract('"label":"',  '"', versions)	# z.B. Deutsch (Original)
 		lang = transl_json(lang)
+		shortLabel = stringextract('"shortLabel":"',  '"', versions) # Bsp..: "UT" oder "FR"
 		
 		PLog('Satz3:')
 		PLog(url); PLog(size); PLog(lang);
@@ -561,7 +577,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 			if lang.strip() != "Deutsch":	# Sofortstart nur Deutsch
 				PLog("skip_%s" % lang)
 				continue
-		if 'master.m3u8' in url:				# master.m3u8 
+		if '.m3u8' in url:						# master.m3u8 
 			HLS_List.append('HLS, [B]%s[/B] ** %s ** AUTO ** %s#%s' % (lang, size, title,url))
 		else:									# MP4
 			title_url = u"%s#%s" % (title, url)
@@ -783,6 +799,7 @@ def KatSub(path, title, pid, link_url=''):
 
 	PLog('Mark3')								
 	if nexturl:										# Mehr-Button
+		li = xbmcgui.ListItem()						# Kontext-Doppel verhindern
 		# der api-internal Link in nextPage erzeugt http-403-Error - 
 		# 	nach ersetzen durch www.arte.tv/guide OK: 
 		nexturl = nexturl.replace('"', '')										# s.o. null

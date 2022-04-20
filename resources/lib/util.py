@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.04.2022
+# 	<nr>17</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -668,6 +668,7 @@ def up_low(line, mode='up'):
 #
 # 	04.07.2020 Erweiterung Kontextmenüs "Sendung aufnehmen" (EPG_ShowSingle)
 # 	08.07.2020 Erweiterung Kontextmenüs "Recording TV-Live" (EPG_ShowAll)  
+# 	18.04.2022 Erweiterung Kontextmenüs "Abgleich Videotitel mit Medienbibliothek" 
 #
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='',\
 		cmenu=True, sortlabel='', merkname='', filterstatus='', start_end=''):
@@ -726,9 +727,16 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_setting_sofortstart=''; fparams_sorting=''; 
 		fparams_do_folder=''; fparams_rename=''; 
 		fparams_playlist_add=''; fparams_playlist_rm='';fparams_playlist_play=''
-		fparams_strm=''							
+		fparams_strm=''; fparams_exist_inlib=''							
 	
 
+		if SETTINGS.getSetting('pref_exist_inlib') == 'true':			# Abgleich Medienbibliothek
+			if mediatype == "video":
+				fp = {'title': label}									# Videotitel							
+				fparams_exist_inlib = "&fparams={0}".format(fp)
+				PLog("fparams_existinlib: " + fparams_exist_inlib[:80])
+				fparams_exist_inlib = quote_plus(fparams_exist_inlib)
+				
 		if SETTINGS.getSetting('pref_strm') == 'true':					# strm-Datei für Video erzeugen
 			if mediatype == "video":
 				fp = {'label': label, 'add_url': quote_plus(add_url)}	# extract -> strm-Modul							
@@ -953,7 +961,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			commands.append(('PLAYLIST-Tools', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 					% (MY_SCRIPT, HANDLE, dirID, fparams_playlist_add)))
 		
-		if SETTINGS.getSetting('pref_strm') == 'true' and fparams_strm:	# strm-Datei für Video erzeugen
+		if SETTINGS.getSetting('pref_strm') == 'true' and fparams_strm:		# strm-Datei für Video erzeugen
 			if mediatype == "video":			
 				MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 				PLog("MY_SCRIPT:" + MY_SCRIPT)		
@@ -961,6 +969,13 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				commands.append(('STRM-Datei erzeugen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 						% (MY_SCRIPT, HANDLE, dirID, fparams_strm)))		
 				
+		if SETTINGS.getSetting('pref_exist_inlib') == 'true' and fparams_exist_inlib:	# Abgleich mit Medienbibliothek
+			if mediatype == "video":			
+				MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
+				PLog("MY_SCRIPT:" + MY_SCRIPT)		
+				dirID = "resources.lib.strm.exist_in_library"
+				commands.append(('Abgleich mit Medienbibliothek', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
+						% (MY_SCRIPT, HANDLE, dirID, fparams_exist_inlib)))		
 
 		li.addContextMenuItems(commands)				
 	
@@ -2902,7 +2917,9 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 		if myqual.find('auto') >= 0:
 			mode = 'Sofortstart: HLS/auto'
 			Default_Url = Stream_List[0].split('#')[-1]		# master.m3u8 Pos. 1
-			del Stream_List[0]							# Pos. 1 entf. (ohne Auflösung)	
+			if len(Stream_List) > 1:						# arte-Links o. master möglich
+				del Stream_List[0]							# Pos. 1 entf. (ohne Auflösung)	
+			PLog("Default_Url1: %s" % Default_Url)
 		else:
 			mode = 'HLS/Einzelstream'
 	else: 
@@ -2921,10 +2938,12 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 		except Exception as exception:
 			PLog(str(exception))
 			myqual = "auto"									# verwende Default_Url - kein Abgleich mit width
-			if len(Stream_List) > 0:
-				Default_Url = Stream_List[0].split('#')[-1]	# Fallback: master.m3u8 Pos. 1
+			PLog("Mark0")
+		if len(Stream_List) > 0:
+			Default_Url = Stream_List[0].split('#')[-1]	# Fallback: master.m3u8 Pos. 1
+			PLog("Default_Url2: %s" % Default_Url)
 
-	PLog("Default_Url: %s" % Default_Url)
+	PLog("Default_Url3: %s" % Default_Url)
 	url = Default_Url 
 	PLog(str(Stream_List)[:80])
 	

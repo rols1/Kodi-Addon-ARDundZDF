@@ -342,6 +342,7 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 	new_offset = offset + lsize
 	PLog("new_offset: %d" % offset)	
 	if new_offset < totalResults:
+		li = xbmcgui.ListItem()				# Kontext-Doppel verhindern
 		title = "Mehr zu: [B]%s[/B]" % query
 		tag = "weiter ab  %d | gesamt: %d" % (new_offset+1, totalResults)
 		fparams="&fparams={'title': '%s','sender': '%s','offset': '%s','query': '%s','home_id': '%s','myfunc': '%s'}" %\
