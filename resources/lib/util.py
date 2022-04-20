@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>17</nr>										# Numerierung für Einzelupdate
+# 	<nr>18</nr>										# Numerierung für Einzelupdate
 #	Stand: 20.04.2022
 
 # Python3-Kompatibilität:
@@ -468,9 +468,13 @@ def Dict(mode, Dict_name='', value='', CacheTime=None):
 	PLog("dictfile: " + dictfile)
 	
 	if mode == 'store':	
-		with open(dictfile, 'wb') as f: pickle.dump(value, f, protocol=pickle.HIGHEST_PROTOCOL)
-		f.close
-		return True
+		try:					# try wg. ukrain. Schrift 
+			with open(dictfile, 'wb') as f: pickle.dump(value, f, protocol=pickle.HIGHEST_PROTOCOL)
+			f.close
+			return True
+		except:	
+			PLog("store_Problem")
+			return False
 	if mode == 'remove':		# einzelne Datei löschen
 		try:
 			 os.remove(dictfile)
@@ -483,8 +487,12 @@ def Dict(mode, Dict_name='', value='', CacheTime=None):
 		return ClearUp(DICTSTORE, maxdays*86400) # 1 Tag=86400 sec
 			
 	if mode == 'load':	
-		if os.path.exists(dictfile) == False:
-			PLog('Dict: %s nicht gefunden' % dictfile)
+		try:						# try wg. ukrain. Schrift 		
+			if os.path.exists(dictfile) == False:
+				PLog('Dict: %s nicht gefunden' % dictfile)
+				return False
+		except:	
+			PLog("load_Problem")
 			return False
 		if CacheTime:
 			mtime = os.path.getmtime(dictfile)	# modified-time
