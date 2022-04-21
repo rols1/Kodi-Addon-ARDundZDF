@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>6</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.04.2022
+# 	<nr>7</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -371,11 +371,12 @@ def GetContent(li, page, ID):
 		if mehrfach:
 			if ID == 'KAT_START':							# mit Url zurück zu -> Kategorien (id vor Block "title")
 				cat = stringextract(u'label":"%s"' % py2_decode(title), '}]}', page) # Sub-Kategorien-Liste ausschneiden
-				tag = stringextract('description":"', '"', cat)
+				tag = "Folgeseiten"
+				summ = stringextract('description":"', '"', cat)
 
 				fparams="&fparams={'title':'%s', 'path':'%s'}" % (quote(title), quote(url))
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Kategorien", fanart=img, 
-					thumb=img, tagline=tag, fparams=fparams)
+					thumb=img, tagline=tag, summary=summ, fparams=fparams)
 			else:
 				fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(url), quote(title))
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Beitrag_Liste", 
@@ -512,13 +513,20 @@ def Beitrag_Liste(url, title):
 # 02.04.2022 Nutzung build_Streamlists_buttons mit HLS_List, MP4_List,
 #	Vorauswahl Deutsch bei Sofortstart (HLS + MP4)
 # 20.04.2022 api (v1 -> v2) und Format geändert. Nur noch HLS-Quellen
-#
+# 21.04.2022 neuer api-Call (mit Authorization) aus Java-MServer von 
+#	MediathekView
 def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	PLog("SingleVideo: " + pid)
 	title_org = title
 
-	path = 'https://api.arte.tv/api/player/v2/config/de/%s' % pid
-	page, msg = get_page(path, JsonPage=True)	
+	#path = 'https://api.arte.tv/api/player/v2/config/de/%s' % pid	# nur  HLS-Quellen
+	path = "https://api.arte.tv/api/opa/v3/programs/de/%s"  % pid
+
+	header = "{'Authorization': 'Bearer Nzc1Yjc1ZjJkYjk1NWFhN2I2MWEwMmRlMzAzNjI5NmU3NWU3ODg4ODJjOWMxNTMxYzEzZGRjYjg2ZGE4MmIwOA',\
+		'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',\
+		'Accept': 'application/json'}"
+	page, msg = get_page(path, JsonPage=True, header=header)
+		
 	if page == '':						
 		msg1 = 'Fehler in SingleVideo: %s' % title
 		msg2 = msg
@@ -528,20 +536,44 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	page = page.replace('\\/', '/')
 	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
 	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='arte')				# Home-Button
-	
-	pos1 = page.find('"streams":')
-	pos2 = page.find('"stat":')
-	if pos1 >= 0 and pos2 > pos1:
-		page = page[pos1:pos2]
-	
-	formitaeten = blockextract('"url":', page) 
-	PLog(len(formitaeten))
-	if summ == '':							# ev. nicht besetzt in Beitrag_Liste
+	if summ == '':							# ev. nicht besetzt in Beitrag_Liste. Fehlt in stream_* Dateien
 		summ = stringextract('description":"',  '"', page)
 		summ=transl_json(summ); summ=repl_json_chars(summ)
 	PLog("summ: " + summ)
+	
+	# Abschnitt offlineAvailability enthält Links zu div. Quellen,
+	#	z.Z. nur stream_web genutzt:
+	streams = stringextract('"videoStreams":',  ']', page)		
+	#stream_ios = stringextract('iOS":',  '}', streams)
+	#stream_ios = stringextract('href":"',  '"', stream_ios)
+	#stream_andr = stringextract('android":',  '}', streams)
+	#stream_andr = stringextract('href":"',  '"', stream_andr)
+	stream_hbbtv = stringextract('hbbtv":',  '}', streams)
+	stream_web = stringextract('web":',  '}', streams)
+	
+	stream_hbbtv = stringextract('href": "',  '"', stream_hbbtv)
+	stream_web = stringextract('href": "',  '"', stream_web)
+	PLog("stream_web: " + stream_web); PLog("stream_hbbtv: " + stream_hbbtv)
+
+	header = "{'Authorization': 'Bearer Nzc1Yjc1ZjJkYjk1NWFhN2I2MWEwMmRlMzAzNjI5NmU3NWU3ODg4ODJjOWMxNTMxYzEzZGRjYjg2ZGE4MmIwOA'}"
+	page, msg = get_page(path=stream_web, JsonPage=True, do_safe=False, header=header)
+	#RSave('/tmp/x.json', py2_encode(page))	# Debug	
+		
+	# page2, msg = get_page(path=stream_hbbtv, JsonPage=True,  do_safe=False, header=header)	
+	if page == '':							# stream_web hat Vorrang				
+		msg1 = 'Fehler in SingleVideo: %s' % title
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return li
+	PLog(len(page))
+	page = page.replace('\\/', '/'); page = page.replace('\\"', '*')		
+	PLog(page[:100])
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='arte')				# Home-Button
+	
+	formitaeten = blockextract('"videoStreamId"', page) 
+	PLog(len(formitaeten))
 	
 	form_arr = []; rec_list=[]	
 	HLS_List=[]; MP4_List=[]; HBBTV_List=[];			# MP4_List = download_list
@@ -549,21 +581,20 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	for rec in formitaeten:	
 		r = []
 		versions = stringextract('"versions":',  ']', rec)
-		mainQuality = stringextract('"mainQuality":',  '}', rec)
 		
-		mediaType = stringextract('"protocol":"',  '"', rec)
-		bitrate = stringextract('"bitrate":',  ',', rec)	# ? fehlt
-		quality = stringextract('"code":"',  '"', mainQuality)
-		width = stringextract('"label":"',  '"', mainQuality)
-		height = stringextract('"height":"',  '"', rec)		# ? fehlt
+		mediaType = stringextract('"mediaType": "',  '"', rec)
+		bitrate = stringextract('"bitrate":',  ',', rec)
+		quality = stringextract('"quality": "',  '"', rec)
+		width = stringextract('"width": ',  ',', rec)
+		height = stringextract('"height": ',  ',', rec)		# ? fehlt
 		if height == "": height = "?"
 		size = "%sx%s" % (width, height)
 		size = size.replace("p", "")
 		
-		url = stringextract('"url":"',  '"', rec)
-		lang = stringextract('"label":"',  '"', versions)	# z.B. Deutsch (Original)
+		url = stringextract('"url": "',  '"', rec)
+		lang = stringextract('"audioLabel": "',  '"', versions)	# z.B. Deutsch (Original)
 		lang = transl_json(lang)
-		shortLabel = stringextract('"shortLabel":"',  '"', versions) # Bsp..: "UT" oder "FR"
+		shortLabel = stringextract('"audioShortLabel": "',  '"', versions) # Bsp..: "UT" oder "FR"
 		
 		PLog('Satz3:')
 		PLog(url); PLog(size); PLog(lang);
@@ -741,7 +772,7 @@ def get_subkats(li, items, path):
 		fparams="&fparams={'path': '%s','title':'%s','pid':'%s','link_url':'%s'}" %\
 			(quote(url), quote(title), pid, quote(link_url))
 		addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.KatSub", fanart=img, 
-			thumb=img, summary=summ, fparams=fparams)	
+			thumb=img, tagline="Folgeseiten", summary=summ, fparams=fparams)	
 	return
 # ----------------------------------------------------------------------
 # listet einzelne Beiträge der Sub-Kategorie title in Datei path
@@ -831,8 +862,7 @@ def get_ArtePage(caller, title, Dict_ID, path, header=''):
 	PLog(caller); PLog(path)
 	
 	page = Dict("load", Dict_ID, CacheTime=ArteKatCacheTime)
-	# page=False	# Debug
-		
+
 	if page == False:								# nicht vorhanden oder zu alt
 		page, msg = get_page(path, header=header)	
 		if page == '':						
@@ -854,9 +884,9 @@ def get_ArtePage(caller, title, Dict_ID, path, header=''):
 				page = page[pos:]
 			page = page.replace('\\u002F', '/')	
 			page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
-			Dict("store", Dict_ID, page) # Seite -> Cache: aktualisieren				
+			Dict("store", Dict_ID, page) # Seite -> Cache: aktualisieren
 
-	# RSave('/tmp/x.json', py2_encode(page))	# Debug	
+	#RSave('/tmp/x.json', py2_encode(page))	# Debug	
 	PLog(len(page))
 	# page = str(page)  # n. erf.
 	PLog(page[:100])
