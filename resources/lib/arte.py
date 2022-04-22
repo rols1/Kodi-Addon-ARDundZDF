@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>7</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.04.2022
+# 	<nr>8</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -519,13 +519,13 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	PLog("SingleVideo: " + pid)
 	title_org = title
 
-	#path = 'https://api.arte.tv/api/player/v2/config/de/%s' % pid	# nur  HLS-Quellen
+	#path = 'https://api.arte.tv/api/player/v2/config/de/%s' % pid	# nur  HLS-Quellen (20.04.2022)
 	path = "https://api.arte.tv/api/opa/v3/programs/de/%s"  % pid
 
 	header = "{'Authorization': 'Bearer Nzc1Yjc1ZjJkYjk1NWFhN2I2MWEwMmRlMzAzNjI5NmU3NWU3ODg4ODJjOWMxNTMxYzEzZGRjYjg2ZGE4MmIwOA',\
 		'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',\
 		'Accept': 'application/json'}"
-	page, msg = get_page(path, JsonPage=True, header=header)
+	page, msg = get_page(path, JsonPage=True, do_safe=False, header=header)
 		
 	if page == '':						
 		msg1 = 'Fehler in SingleVideo: %s' % title
@@ -533,8 +533,6 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 		MyDialog(msg1, msg2, '')
 		return li
 	PLog(len(page))
-	page = page.replace('\\/', '/')
-	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
 	
 	if summ == '':							# ev. nicht besetzt in Beitrag_Liste. Fehlt in stream_* Dateien
 		summ = stringextract('description":"',  '"', page)
@@ -542,44 +540,68 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	PLog("summ: " + summ)
 	
 	# Abschnitt offlineAvailability enthält Links zu div. Quellen,
-	#	z.Z. nur stream_web genutzt:
+	#	z.Z. nur stream_web + stream_hbbtv genutzt:
 	streams = stringextract('"videoStreams":',  ']', page)		
 	#stream_ios = stringextract('iOS":',  '}', streams)
 	#stream_ios = stringextract('href":"',  '"', stream_ios)
 	#stream_andr = stringextract('android":',  '}', streams)
 	#stream_andr = stringextract('href":"',  '"', stream_andr)
-	stream_hbbtv = stringextract('hbbtv":',  '}', streams)
-	stream_web = stringextract('web":',  '}', streams)
 	
+	stream_hbbtv = stringextract('hbbtv":',  '}', streams)
 	stream_hbbtv = stringextract('href": "',  '"', stream_hbbtv)
+	stream_web = stringextract('web":',  '}', streams)
 	stream_web = stringextract('href": "',  '"', stream_web)
 	PLog("stream_web: " + stream_web); PLog("stream_hbbtv: " + stream_hbbtv)
 
 	header = "{'Authorization': 'Bearer Nzc1Yjc1ZjJkYjk1NWFhN2I2MWEwMmRlMzAzNjI5NmU3NWU3ODg4ODJjOWMxNTMxYzEzZGRjYjg2ZGE4MmIwOA'}"
 	page, msg = get_page(path=stream_web, JsonPage=True, do_safe=False, header=header)
 	#RSave('/tmp/x.json', py2_encode(page))	# Debug	
-		
-	# page2, msg = get_page(path=stream_hbbtv, JsonPage=True,  do_safe=False, header=header)	
-	if page == '':							# stream_web hat Vorrang				
-		msg1 = 'Fehler in SingleVideo: %s' % title
-		msg2 = msg
+
+	HLS_List, MP4_List = get_streams(page, title,summ, mode="hls_mp4")
+	page, msg = get_page(path=stream_hbbtv, JsonPage=True, do_safe=False, header=header)
+	dummy, HBBTV_List = get_streams(page, title,summ, mode="hbbtv")	# HLS_List hier leer
+	PLog("HBBTV_List: " + str(len(HBBTV_List)))
+			
+	if not len(HLS_List) and not len(MP4_List):			
+		msg1 = u'SingleVideo: [B]%s[/B]' % title
+		msg2 = u'Streams leider (noch) nicht verfügbar.'
 		MyDialog(msg1, msg2, '')
 		return li
-	PLog(len(page))
-	page = page.replace('\\/', '/'); page = page.replace('\\"', '*')		
-	PLog(page[:100])
 	
+	ID = 'arte'
+	Dict("store", '%s_HLS_List' % ID, HLS_List) 
+	Dict("store", '%s_MP4_List' % ID, MP4_List) 
+	Dict("store", '%s_HBBTV_List' % ID, HBBTV_List) 
+
 	li = xbmcgui.ListItem()
-	li = home(li, ID='arte')				# Home-Button
+	li = home(li, ID='arte')					# Home-Button
 	
+	tagline = "Titel: %s\n\n%s\n\n%s" % (title_org, tag, summ)	# s.a. ARD (Classic + Neu)
+	tagline=repl_json_chars(tagline); tagline=tagline.replace( '||', '\n')
+	Plot=tagline; 
+	Plot=Plot.replace('\n', '||')
+	sub_path=''
+	HOME_ID = ID								# Default ZDF), 3sat
+	PLog('Lists_ready: ID=%s, HOME_ID=%s' % (ID, HOME_ID));
+		
+	ardundzdf.build_Streamlists_buttons(li,title_org,img,geo,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)	
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+# ----------------------------------------------------------------------
+# Auslesen der Streamdetails
+# Arte verwendet wie ZDF bei HBBTV MP4-Formate (HLS_List bleibt leer)
+#
+def get_streams(page, title,summ, mode="hls_mp4"):
+	PLog("get_streams: " + mode)
+
 	formitaeten = blockextract('"videoStreamId"', page) 
 	PLog(len(formitaeten))
 	
 	form_arr = []; rec_list=[]	
-	HLS_List=[]; MP4_List=[]; HBBTV_List=[];			# MP4_List = download_list
-	skip_list=[]
+	HLS_List=[]; MP4_List=[];
 	for rec in formitaeten:	
-		r = []
 		versions = stringextract('"versions":',  ']', rec)
 		
 		mediaType = stringextract('"mediaType": "',  '"', rec)
@@ -589,7 +611,6 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 		height = stringextract('"height": ',  ',', rec)		# ? fehlt
 		if height == "": height = "?"
 		size = "%sx%s" % (width, height)
-		size = size.replace("p", "")
 		
 		url = stringextract('"url": "',  '"', rec)
 		lang = stringextract('"audioLabel": "',  '"', versions)	# z.B. Deutsch (Original)
@@ -605,10 +626,10 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 		#	Downloads (MP4): get_bestdownload berücksichtigt Setting pref_arte_streams
 		# skip Parseplaylist für master.m3u8 (arte liefert Auflösungen als master.m3u8)
 		if SETTINGS.getSetting('pref_video_direct') == 'true':	
-			if lang.strip() != "Deutsch":	# Sofortstart nur Deutsch
+			if lang.find("Deutsch") < 0:		# Sofortstart nur Deutsch
 				PLog("skip_%s" % lang)
 				continue
-		if '.m3u8' in url:						# master.m3u8 
+		if '.m3u8' in url:						# Hinw.: Beschreib. 384x216 für master.m3u8 mögl. statt 1280x720
 			HLS_List.append('HLS, [B]%s[/B] ** %s ** AUTO ** %s#%s' % (lang, size, title,url))
 		else:									# MP4
 			title_url = u"%s#%s" % (title, url)
@@ -616,32 +637,10 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 			item = u"%s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
 				(mp4, quality, bitrate, size, title_url)
 			MP4_List.append(item)
-		
-			
-	PLog("MP4_List: " + str(len(MP4_List)))
-	ID = 'arte'
-	Dict("store", '%s_HLS_List' % ID, HLS_List) 
-	Dict("store", '%s_MP4_List' % ID, MP4_List) 
-							
-	if not len(HLS_List) and not len(MP4_List):			
-		msg1 = u'SingleVideo: [B]%s[/B]' % title
-		msg2 = u'Streams leider (noch) nicht verfügbar.'
-		MyDialog(msg1, msg2, '')
-		return li		
-			
 
-	tagline = "Titel: %s\n\n%s\n\n%s" % (title_org, tag, summ)	# s.a. ARD (Classic + Neu)
-	tagline=repl_json_chars(tagline); tagline=tagline.replace( '||', '\n')
-	Plot=tagline; 
-	Plot=Plot.replace('\n', '||')
-	sub_path=''
-	HOME_ID = ID									# Default ZDF), 3sat
-	PLog('Lists_ready: ID=%s, HOME_ID=%s' % (ID, HOME_ID));
-		
-	ardundzdf.build_Streamlists_buttons(li,title_org,img,geo,Plot,sub_path,\
-		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)	
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	PLog("HLS_List: " + str(len(HLS_List)))	
+	PLog("MP4_List: " + str(len(MP4_List)))		# MP4_List = download_list
+	return HLS_List,MP4_List
 	
 # ----------------------------------------------------------------------
 # BASE_ARTE wird nur zum Auslesen der Kategorien verwendet
