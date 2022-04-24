@@ -8,7 +8,7 @@
 #	
 ################################################################################
 # 	<nr>6</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.04.2022
+#	Stand: 23.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -260,6 +260,7 @@ def phoenix_Search(query='', nexturl=''):
 	if '"next":' in page:				# Mehr-Seiten, hier "next" statt "next_url"
 		next_url	= stringextract('next":"', '"', page)
 		if next_url:
+			li = xbmcgui.ListItem()		# Kontext-Doppel verhindern
 			next_url = BASE_PHOENIX + next_url
 			skipcnt =  stringextract('skip/', '/', next_url)
 			PLog("next_url: %s, skipcnt: %s" % (next_url, skipcnt))	
@@ -539,6 +540,7 @@ def ThemenListe(title, ID, path, next_url=''):				# Liste zu einzelnem Untermen�
 	if '"next_url":' in page:			# Mehr-Seiten
 		next_url	= stringextract('next_url":"', '"', page)
 		if next_url:
+			li = xbmcgui.ListItem()		# Kontext-Doppel verhindern
 			next_url = BASE_PHOENIX + next_url
 			PLog("next_url: " + next_url)	
 			img = R(ICON_MEHR)
@@ -974,6 +976,8 @@ def get_formitaeten(content_id,title,tagline,thumb):
 	
 ####################################################################################################
 # Phoenix - TV-Livestream mit EPG
+# 23.04.2022 Parseplaylist entfernt (ungeeignet für Mehrkanal-Streams)
+# 
 def phoenix_Live(href, title, Plot):	
 	PLog('phoenix_Live:')
 
@@ -994,8 +998,6 @@ def phoenix_Live(href, title, Plot):
 		(quote_plus(href), quote_plus(title), quote_plus(img), quote_plus(Plot_par))
 	addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
 		fparams=fparams, mediatype='video', tagline=Plot) 		
-	
-	li =  ardundzdf.Parseplaylist(li, href, img, geoblock='', descr=Plot)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 

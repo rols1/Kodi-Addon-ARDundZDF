@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.03.2022
+#	Stand: 23.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -805,6 +805,7 @@ def Kika_Videos(path, title, thumb, pagenr=''):
 					href = BASE_KIKA + stringextract('href="', '"', item)
 					break
 		if href:
+			li = xbmcgui.ListItem()										# Kontext-Doppel verhindern
 			tag = "weiter zu Seite %s" % str(next_pagenr) 
 			href=py2_encode(href); title_org=py2_encode(title_org); 
 			thumb_org=py2_encode(thumb_org); 
@@ -1315,6 +1316,7 @@ def Tivi_Search(query=None, title='Search', pagenr=''):
 	PLog('li, page_cnt: %s, %s' % (li, page_cnt))
 	
 	if page_cnt == 'next':							# mehr Seiten (Loader erreicht)
+		li = xbmcgui.ListItem()						# Kontext-Doppel verhindern
 		pagenr = int(pagenr) + 1
 		query = query_org.replace('+', ' ')
 		path = Tivi_Search_PATH % (query, pagenr)	# Debug

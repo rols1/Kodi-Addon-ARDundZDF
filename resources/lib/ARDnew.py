@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.04.2022
+#	Stand: 19.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -506,6 +506,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	if 	'"pagination":'	in page:						# Scroll-Beiträge
 		PLog('pagination_Rubrik:')
 		title = "Mehr zu >%s<" % title_org				# Mehr-Button	 
+		li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
 		pages, pN, pageSize, totalElements, next_path = get_pagination(page)	# Basis 0		
 		
 		if next_path:	
@@ -600,6 +601,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark):
 	
 	if 	'"pagination":'	in page:				# z.B. Scroll-Beiträge zu Rubriken
 		title = "Mehr zu >%s<" % title_org		# Mehr-Button	 # ohne Pfad
+		li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
 		pages, pN, pageSize, totalElements, next_path  = get_pagination(page)
 		
 		# Mehr-Button, falls noch nicht alle Sätze ausgegeben		
@@ -1720,9 +1722,9 @@ def SendungenAZ_ARDnew(title, button, href):
 	if 	'"pagination":'	in page:						# Scroll-Beiträge
 		PLog('pagination_Rubrik:')
 		title = "Mehr zu >%s<" % title_org				# Mehr-Button	 
+		li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
 		pages, pN, pageSize, totalElements, next_path = get_pagination(page)	# Basis 0
 		mark=''		
-		
 		if next_path:	
 			summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (pages, totalElements)
 			pN = int(pN)+1								# nächste pageNumber, Basis 0
@@ -1923,6 +1925,7 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 	
 															# Mehr-Button:
 	title = "Mehr zu >%s<" % unquote(query)		
+	li = xbmcgui.ListItem()									# Kontext-Doppel verhindern
 	offset = int(offset) +1
 	vodTotal	= stringextract('"totalElements":', '}', page)
 	vodPageSize = stringextract('"pageSize":', ',', page)

@@ -10,6 +10,39 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+24.04.2022 4.3.3
+			ZDF_FlatListEpisodes: HTTP-Headers für Abruf von Serienlisten hinzugefügt
+			(Anlass: verzögerte Antworten).
+			addDir (Modul util): Erweiterung Kontextmenü "Abgleich mit Medienbibliothek",
+			Anpassung strm-Modul (neue Funktionen exist_in_library, clear_titel).
+			Kontext-Menüs - Verhinderung von Dopplern durch zusätzl. ListItem für
+			Folgesätze: ZDF_Sendungen, ZDF_Search, SendungenAZ_ARDnew, ARDSearchnew,
+			ARDStartRubrik, ARDPagination, MVWSearch (yt), Kika_Videos, Tivi_Search,
+			Channels + ChannelSingle (funk), Search + Bilder3sat (my3Sat), phoenix_Search
+			+ ThemenListe (phoenix), XL_Search (TagesschauXL), MVWSearch (yt).
+			GetContent (Modul arte): Berücksichtigung Collections (Mehrfach-Seiten 
+			trotz duration), "Folgeseiten" für Mehrfachbeiträge ergänzt (dto. in 
+			get_subkats).
+			SingleVideo (Modul arte): Anpassung an api-Änderung (v1 -> v2) und geänderte
+			Videoquellen. Zusätzl. Anpassung in PlayVideo_Direct (Modul util) für 
+			fehlende master.m3u8-Quelle erforderlich.
+			SingleVideo (Modul arte): erneute Umstellung nach Einzelupdate - Nutzung
+			api/opa/v3/-Call mit Authorization-Header statt api/player/v2-Call. 
+			Dict (Modul util): Lade- und Ablagefehler abgefangen (try/except) - für
+			Dateinamen mit ukrainischen Anteilen erforderlich.
+			Beitrag_Liste (Modul arte): Auswertung Webseite umgestellt auf enth. json-
+			Anteil.
+			arte_Live (Modul arte): Parseplaylist entfernt (ungeeignet für Mehrkanal-
+			Streams).
+			phoenix_Live: Parseplaylist entfernt (wie arte_Live).
+			Beitrag_Liste (Modul util): Entfernung Quotation bei json-Dateien hinzugefügt.
+			build_Streamlists_buttons: ID "arte" für HBBTV-Liste ergänzt, Titel-Liste
+			angepasst.
+			Parseplaylist:  Mehrkanalstreams mit Kennung GROUP-ID entf. (in Kodi nicht 
+			verwertbar).
+			ZDFStart: login-relevante (leere) Beiträge für tivi-Startseite unterdrückt. 
+			
+
 16.04.2022 4.3.2
 			MVWSearch (Modul yt): network_error abgefangen (invalid literal) für 
 			leere duration bei Livestreams.

@@ -1177,6 +1177,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		PLog('json_load: ' + str(JsonPage))
 		PLog(len(page))
 		page = page.replace('\\/', '/')									# für Python3 erf.
+		page = page.replace('\\"', '*')									# Quotation entf.
 		try:
 			request = json.loads(page)
 			# 23.11.2019: Blank hinter separator : entfernt - wird in Python nicht beachtet.
@@ -2383,6 +2384,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 	
 #-----------------------------------------------
 # ARD-Links s. get_ARDstreamlinks
+# Sender: ZDF, ZDFneo, 3sat, Phoenix, KiKA, ZDFinfo.
 # Aufrufer : SenderLiveListe, ZDFStartLive, get_live_data (Arte),
 #			Live (3sat), Kika_Live, get_playlist_img
 # ermittelt master.m3u8 für die ZDF-Sender (Kennz. ZDFsource in
@@ -2395,6 +2397,8 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 #	Abgleich kompl. Titel nicht sicher (Bsp. 2 Blanks bei Arte)
 # 26.06.2020 skip_log hinzugefügt (True in get_sort_playlist
 #	loop, Ausgabe der Liste in  "Überregional")
+# Mehrkanal-Streamlinks seit Aug. 2020 - die enth. Audiolinks in 
+#	Kodi nicht verwertbar. 
 #-----------------------------------------------
 def get_ZDFstreamlinks(skip_log=False):
 	PLog('get_ZDFstreamlinks:')

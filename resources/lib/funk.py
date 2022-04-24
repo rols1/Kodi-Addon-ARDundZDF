@@ -10,7 +10,7 @@
 #	
 ################################################################################
 # 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.03.2022
+#	Stand: 23.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -342,7 +342,8 @@ def Channels(title, next_path=''):
 							
 		
 	pN,pageSize,totalPages,totalElements,next_path = get_pagination(jsonObject)	# Mehr?		
-	if next_path:	
+	if next_path:
+		li = xbmcgui.ListItem()						# Kontext-Doppel verhindern	
 		summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (totalPages, totalElements)
 		pN = int(pN)								# nächste pageNumber, Basis 0
 		tag = "weiter zu Seite %s" % str(pN)
@@ -442,6 +443,7 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 	
 	pN,pageSize,totalPages,totalElements,next_path = get_pagination(jsonObject)	# Mehr?		
 	if next_path:	
+		li = xbmcgui.ListItem()						# Kontext-Doppel verhindern
 		summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (totalPages, totalElements)
 		pN = int(pN)								# nächste pageNumber, Basis 0
 		tag = "weiter zu Seite %s" % str(pN)

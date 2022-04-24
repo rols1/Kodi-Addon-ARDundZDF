@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>44</nr>										# Numerierung für Einzelupdate
-VERSION = '4.3.2'
-VDATE = '16.04.2022'
+VERSION = '4.3.3'
+VDATE = '24.04.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7407,7 +7407,9 @@ def ZDFStart(title, show_cluster='', path=''):
 			continue
 		elif 'Mein Programm' in title:				
 			continue
-		elif 'Neue Videos aus deinen Lieblingssendungen' in title:	# tivi-Start			
+		elif 'deinen Lieblingssendungen' in title:				# tivi-Start			
+			continue
+		elif '${name}"' in title:								# tivi-Start			
 			continue
 		elif title == '':				
 			continue
@@ -7706,6 +7708,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 		li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID=ID, mark=query)
 	PLog('li, page_cnt: %s, %s' % (li, page_cnt))
 	
+	li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
 	if page_cnt == 'next':							# mehr Seiten (Loader erreicht)
 		pagenr = int(pagenr) + 1
 		query = query_org.replace('+', ' ')
@@ -7929,6 +7932,7 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 				fsk = "[B]FSK-Hinweis:[/B] Folgen nur zwischen %s abrufbar" % fsk
 				tag = "%s\n\n%s" % (tag, fsk)			
 
+		li = xbmcgui.ListItem()	
 		for clus in cluster:
 			clustertitle = ZDF_get_clustertitle(clus) # Entf. html-Tags dort
 			clustertitle = py2_decode(clustertitle)
@@ -7948,8 +7952,9 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s', 'ID': '%s'}"	%\
 				(quote(clustertitle), quote(path), quote_plus(ctitle_org), ID)						
 			addDir(li=li, label=clustertitle, action="dirList", dirID="ZDFRubrikSingle", fanart=R(ICON_DIR_FOLDER), 
-				thumb=img_src, tagline=tag, fparams=fparams)
+				thumb=img_src, tagline=tag, mediatype="", fparams=fparams)
 
+		li = xbmcgui.ListItem()
 		ZDF_search_button(li, query=title_org)
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		return															# sonst Fortsetzung
@@ -7971,7 +7976,8 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 				
 	if ID == 'ZDFSportLive':					# ohne zusätzliche Suche 
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
-		
+	
+	li = xbmcgui.ListItem()	
 	ZDF_search_button(li, query=title_org)			# Abschluss: MEHR_Suche ZDF
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #----------------------------------------------
@@ -8041,8 +8047,10 @@ def ZDF_FlatListEpisodes(sid):
 
 	#-----------------------------								# 2. Folgen zur Serie holen
 	
+	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+	'Referer': '%s', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
 	url = stringextract('url":"', '"', page)
-	page, msg = get_page(path=url)
+	page, msg = get_page(path=url, header=headers)				# headers wg. häufiger timeouts
 	if page == '':	
 		msg1 = "Fehler in ZDF_FlatListEpisodes:"
 		msg2 = msg
@@ -10246,6 +10254,7 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	# Sofortstart HLS / MP4 - abhängig von Settings	 	# Sofortstart
 	played_direct=False
 	if SETTINGS.getSetting('pref_video_direct') == 'true':	
+		PLog('Sofortstart: build_Streamlists_buttons, ID: %s' % ID)
 		played_direct=True
 		img = thumb
 		PlayVideo_Direct(HLS_List, MP4_List, title_org, img, Plot, sub_path, HBBTV_List,ID=ID)
@@ -10253,10 +10262,11 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		
 
 	# -----------------------------------------			# Buttons Einzelauflösungen
-	PLog("Satz3:")
+	PLog("Satz3_buttons:")
 	title_list=[]
 	img=thumb; 
 	PLog(title_org); PLog(tagline[:60]); PLog(img); PLog(sub_path);
+	
 	title_hls 	= u"[B]Streaming[/B]-Formate"
 	title_hb = "[B]HBBTV[/B]-Formate"
 	title_mp4 = "[B]MP4[/B]-Formate und [B]Downloads[/B]"
@@ -10265,10 +10275,11 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	
 	# title_list: Titel + Dict-ID + Anzahl Streams
 	title_list.append("%s###%s###%s" % (title_hls, '%s_HLS_List' % ID, len(HLS_List)))
-	if ID == "ZDF":										# HBBTV nur bei ZDF verwenden
-		title_list.append("%s###%s###%s" % (title_hb, 'ZDF_HBBTV_List', len(HBBTV_List)))	
+	if ID == "ZDF" or ID == "arte":						# HBBTV: ZDF + arte 
+		listtyp = "%s_HBBTV_List" % ID
+		title_list.append("%s###%s###%s" % (title_hb, listtyp, len(HBBTV_List)))	
 	title_list.append("%s###%s###%s" % (title_mp4, '%s_MP4_List' % ID, len(MP4_List)))	
-
+	PLog(len(title_list))
 
 	Plot=py2_encode(Plot); img=py2_encode(img);
 	geoblock=py2_encode(geoblock); sub_path=py2_encode(sub_path); 
@@ -10947,6 +10958,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 #	19.12.2020 Sendungs-Titel ergänzt (optional: stitle)
 #	03.03.2020 Erweiterung buttons: falls False keine Buttons sondern Rückgabe als Liste
 #		Stream_List (Format s.u.)
+#	23.04.2022  Mehrkanalstreams mit Kennung GROUP-ID entf. (in Kodi nicht verwertbar)
 #
 	PLog ('Parseplaylist: ' + url_m3u8)
 	Stream_List=[]
@@ -10986,6 +10998,8 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		# Playlist Tags s. https://datatracker.ietf.org/doc/html/rfc8216
 		if line.startswith('#EXT-X-MEDIA:') == False and line.startswith('#EXT-X-STREAM-INF') == False:
 			continue
+		if ',GROUP-ID' in line:						# zusätzl. Mehrkanalstreams (Audio)
+			continue
 		PLog("line: " + line)		# bei Bedarf
 		if '#EXT-X-MEDIA' in playlist:				# getrennte ZDF-Audiostreams, 1-zeilig
 			if line.startswith('#EXT-X-MEDIA'):			# 
@@ -11007,6 +11021,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 				Bandwith = GetAttribute(line, 'BANDWIDTH')
 				Resolution = GetAttribute(line, 'RESOLUTION')
 				Resolution_org = Resolution				# -> Stream_List
+
 				try:
 					BandwithInt	= int(Bandwith)
 				except:
@@ -11029,7 +11044,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 				
 				PLog(Resolution); PLog(BandwithInt); 
 				# nur Audio (Bsp. ntv 48000, ZDF 96000), 
-				if BandwithInt and BandwithInt <=  100000: 		
+				if BandwithInt and BandwithInt <=  100000:
 					Resolution = Resolution + ' (nur Audio)'
 					thumb=R(ICON_SPEAKER)
 				res_geo = Resolution+geoblock
@@ -11074,9 +11089,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 				mediatype='video', tagline=descr, summary=summ) 
 		else:																# nur Stream_List füllen
 			# Format: "HLS Einzelstream | Bandbreite | Auflösung | Titel#Url"
+			if Resolution_org=='':
+				Resolution_org = "Audiostream"
 			PLog("append: %s, %s.." % (str(BandwithInt), Resolution_org))
-			if Resolution_org == '':										# für sorted in StreamsShow erford.
-				Resolution_org = '0x0 (vermutl. Audio)'
 			Stream_List.append(u'HLS-Stream ** Bitrate %s ** Auflösung %s ** %s#%s' %\
 				(str(BandwithInt), Resolution_org, stitle, url)) # wie Downloadliste
 			if track_add:													# TV-Ton deu, Originalton eng usw.

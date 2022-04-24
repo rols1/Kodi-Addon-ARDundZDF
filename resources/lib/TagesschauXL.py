@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>5</nr>								# Numerierung für Einzelupdate
-#	Stand: 03.04.2022
+#	Stand: 23.04.2022
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -487,6 +487,7 @@ def XL_Search(query='', pagenr=''):
 
 	pagenr = int(pagenr) + 1
 	if pagenr <= MaxPages:
+		li = xbmcgui.ListItem()									# Kontext-Doppel verhindern
 		PLog("pagenr: " + str(pagenr))
 		title 	= u"Weitere Beiträge zu [B][COLOR red]%s[/COLOR][/B]" % query_org
 		summ 	= "Insgesamt: %s Treffer, Seiten: %d," % (searchResult, MaxPages) 

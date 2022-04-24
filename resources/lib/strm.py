@@ -898,6 +898,8 @@ def do_sync_ARD(list_title, strmpath, list_path, strm_type):
 #	strmpath
 # mediatype="video" hier unabhängig vom Setting (nur 1 Url in strm)
 # Rückkehr zur Liste nach play oder Rückkehr zu Info/strm-Tools
+# 12.03.2022 Abgleich Video mit MyVideos119.db + ggfls. Kennzeichnung
+#	 (Setting pref_skip_played_strm)
 #
 def show_strm_element(strmpath):
 	PLog('show_strm_element: ' + strmpath)
@@ -909,7 +911,19 @@ def show_strm_element(strmpath):
 	file_cnt = sum([len(files) for root, dirs, files in os.walk(strmpath)])
 	PLog("dir_cnt: %d, file_cnt: %d" % (dir_cnt, file_cnt))
 
+	# json_rpc- Altern. für sqlite3 (s. Funktion json_rpc) - Test OK,
+	#	nicht genutzt: 
+	'''
+	params = {"filter": {"field": "playcount", "operator": "is", "value": "0"}, "limits": { "start" : 0, "end": 1000 }, "properties" : ["art", "rating", "thumbnail", "playcount", "file"]}
+	obj = json_rpc("VideoLibrary.GetMovies", params)
+	PLog(type(obj))
+	PLog(str(obj)[:400])
+	movie = obj["movies"][0]
+	PLog(movie)
+	'''
+
 	import sqlite3
+	# DB-Versionen: https://kodi.wiki/view/Databases, hier Matrix:
 	db =  xbmc.translatePath('special://database/MyVideos119.db')
 	conn = sqlite3.connect(db)
 	cur = conn.cursor()
@@ -1062,4 +1076,130 @@ def strm_sync():
 		PLog("strmsync_stop_entfernt")
 
 	return
+
 # ----------------------------------------------------------------------
+# json-rpc-Call - s. https://kodi.wiki/view/JSON-RPC_API/Examples,
+# 					https://kodi.wiki/index.php?title=JSON-RPC_API#Examples
+def json_rpc(method, params=''):
+	PLog('json_rpc:')
+	PLog(method); 
+
+	request_data = {'jsonrpc': '2.0', 'method': method, 'id': 1,
+					'params': params or {}}
+	request = json.dumps(request_data)
+	PLog("json_rpc_call: %s" % request)
+	page = xbmc.executeJSONRPC(request)
+	
+	page = page.replace('\udcf6', '')		# isolated surrogate
+	page = page.replace('\udcfc', '')		# isolated surrogate
+
+	obj = json.loads(page)
+	if 'error' in obj:
+		raise IOError('json_rpc_error {}: {}' .format(page['error']['code'],
+			page['error']['message']))
+			
+	return obj['result'] 
+	
+# ----------------------------------------------------------------------
+# prüft Vorkommen von Titel in Medienbibliothek via rpc_json-Call
+# Rückgabe: Dateiliste
+# Altern.: sqlite3-Call MyVideos119.db (Matrix), Tab movie, Feld c00
+# Hinw.: Anpassung des Titels (clear_titel) wegen mögl. Änderungen 
+#	der Titel durch das Addon (z.B. bei Serien)
+#	 
+#  	
+def exist_in_library(title):
+	PLog("exist_in_library:")
+	title_raw = title
+	PLog("title_raw: %s" % title_raw)
+	max_anz = 1000							# Anpassung s.u. 
+	
+	title = clear_titel(title)				# Markierungen entfernen
+	PLog("title: %s" % title)
+
+	#params = {"filter": {"field": "playcount", "operator": "is", "value": "0"}, "limits": { "start" : 0, "end": max_anz }, "properties" : ["art", "rating", "thumbnail", "playcount", "file"]}
+	params = {"limits": { "start" : 0, "end": max_anz }, "properties" : ["art", "rating", "thumbnail", "playcount", "file"]}
+	result = json_rpc("VideoLibrary.GetMovies", params)
+	PLog(type(result))
+	PLog(str(result)[:100])
+	total = result["limits"]["total"]
+	PLog("total: " + str(total))
+	if total > max_anz:						# Anpassung an tats.  Umfang
+		PLog("new_rpc_with_total: %d statt %d" % (total, max_anz))
+		params = {"limits": { "start" : 0, "end": total }, "properties" : ["art", "rating", "thumbnail", "playcount", "file"]}
+		result = json_rpc("VideoLibrary.GetMovies", params)
+
+	movies = result['movies']		# type list	
+	PLog(str(movies)[:100])
+	PLog("movies: %d" % len(movies))	
+	PLog(movies[0])
+	#PLog(title in str(movies))		# Debug
+	
+	hit_list=[]
+	for movie in movies:
+		if "Prima Klima" in str(movie):	# Debug
+			PLog(str(movie))
+		label = movie["label"]				# hier Markierungen beibehalten
+		#PLog(label)	# Debug
+		if title in label:
+			playcount = movie["playcount"]
+			path = movie["file"]
+			line = "%s##%s##%s" % (title, playcount, path)
+			hit_list.append(line)
+			
+	cnt = len(hit_list)
+	PLog("cnt: %d" % cnt)
+	if cnt == 0:							# Abgleich negativ: notification
+		msg1 = "Abgleich Video"
+		msg2 = "Video nicht in MyVideos-Datenbank"
+		icon = R('Dir-video.png')
+		xbmcgui.Dialog().notification(msg1,msg2,icon,5000,sound=True)
+		return
+
+	# Verzicht auf playcount (hier nur relevant für Bibliothek, nicht für Abrufe im
+	#	Internet)
+	PLog(str(hit_list))						# Abgleich positiv: Liste zeigen mit File-Check
+	my_list=[]
+	for item in hit_list:
+		title,playcount, path = item.split("##")
+		fchk = "nein"
+		if os.path.exists(path):
+			fchk = "ja"
+		#  line = "%74s | %d | %s" % (path[:60], int(playcount), fchk)
+		line = "%74s | %s" % (path[:60],  fchk)
+		my_list.append(line)
+	header = "%s: Video existiert %d mal" % (title_raw[:50], len(my_list))
+	textlist =  "\n".join(my_list)
+	xbmcgui.Dialog().textviewer(header, textlist,usemono=True)
+	return
+
+# ----------------------------------------------------------------------
+# entfernt Markierungen (fett, Color, Zeit, Serienmark.)
+def clear_titel(title):
+	title = cleanmark(title)				# Markierungen entf.
+	pos = title.find("|")
+	#PLog("pos: %d" % pos)
+	if pos == 7:							# Serienmark. strm-Listen (ZDF-api)
+		title = title[pos+2:]				# Bsp.: S02E10 | Prima Klima
+	if pos == 10:							# Zeitangabe aus Verpasst entf.
+		title = title[pos+2:]				# Bsp.: 20:15 Uhr | Heute 
+		
+	pos = title.find(" : ")					# Serienmark. ZDF-Beiträge (Web)
+	if pos:									# Bsp.: Friesland : Krabbenkrieg
+		title = title[pos+3:]
+	#PLog(title)
+	return title
+	
+# ----------------------------------------------------------------------
+
+
+	
+
+
+
+
+
+
+
+
+

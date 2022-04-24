@@ -18,7 +18,7 @@
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 # 	<nr>1</nr>								# Numerierung für Einzelupdate
-#	Stand: 19.04.2022
+#	Stand: 23.04.2022
 #
 
 from __future__ import absolute_import
@@ -47,7 +47,7 @@ elif PYTHON3:
 import ardundzdf					# -> test_downloads, Main, start_script, build_Streamlists_buttons
 from resources.lib.util import *
 
-ICON_MEHR 				= "icon-mehr.png"
+ICON_MEHR 		= "icon-mehr.png"
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)

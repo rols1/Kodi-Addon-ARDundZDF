@@ -171,6 +171,7 @@ def get_live_data(name):
 
 ####################################################################################################
 # arte - TV-Livestream mit akt. PRG
+# 23.04.2022 Parseplaylist entfernt (ungeeignet für Mehrkanal-Streams)
 def arte_Live(href, title, Plot, img):	
 	PLog('arte_Live:')
 
@@ -192,8 +193,6 @@ def arte_Live(href, title, Plot, img):
 		(quote_plus(href), quote_plus(title), quote_plus(img), quote_plus(Plot_par))
 	addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
 		fparams=fparams, mediatype='video', tagline=tag) 		
-	
-	li =  ardundzdf.Parseplaylist(li, href, img, geoblock='', descr=Plot)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
@@ -425,83 +424,21 @@ def get_img(item):
 #	der Ebenentiefe entfernt, dto. 31.01.2022 (Subtitel, Dauer - Bilder 
 #	können fehlen bzw. transparent.png)
 # 17.02.2022 fehlende Bilder via api-Call ergänzt 
+# 23.04.2022 Auswertung Webseite umgestellt auf enth. json-Anteil
+# 
 def Beitrag_Liste(url, title):
-	PLog("Beitrag_Liste:")				
+	PLog("Beitrag_Liste: " + title)				
 
-	page, msg = get_page(path=url)	
-	if page == '':						
-		msg1 = 'Fehler in Beitrag_Liste: %s' % title
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
+	page = get_ArtePage('Kategorien_1', title, Dict_ID='Arte_Beitrag_Liste', path=url)	
+	if page == '':	
 		return li
-	PLog(len(page))
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='arte')				# Home-Button
-
-	mediatype=''; cnt=0													# Default für mehrfach
+	li,cnt = GetContent(li, page, ID='Beitrag_Liste') 	# eigenes ListItem
 	
-	cnt=0;
-	if '__INITIAL_STATE__ ' in page:			# json-Format
-		page = page.replace('\\u002F', '/')	
-		page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
-		li,cnt = GetContent(li, page, ID='Beitrag_Liste')		
-	else:	
-		pos1 = page.find('labelledby')
-		pos2 = page.find('>Websites<')
-		page = page[pos1:pos2]
-		PLog(len(page))
-		items = blockextract('labelledby', page)	
-		PLog(len(items))
-		img_api = "https://api-cdn.arte.tv/api/mami/v1/program/de/%s/1920x1080"
-		
-		for item in items:
-			summ=''; geo='';											# nicht vorh.
-			tag=''; tag_par=''									
-			url = stringextract('href="', '"', item)
-			pid = stringextract('/videos/', '/', url)
-			img = stringextract('src="', '"', item)
-			if img == '' or img.endswith("transparent.png"):
-				img = img_api % pid										# Bild via api
-				
-			title = stringextract('_title">', '</h3>', item)
-			title = unescape(title); title = repl_json_chars(title);
-			title = unescape(title); title = repl_json_chars(title);
-			subtitle = stringextract('_subtitle">', '</p>', item)
-			subtitle = unescape(subtitle); subtitle = repl_json_chars(subtitle);
-			dur = stringextract('css-18884f0">', '</p>', item)
-			if dur == '':
-				dur = stringextract('css-rmfqry">', '</p>', item)
-			
-			if dur:
-				tag = "Dauer %s" % dur
-				if subtitle:
-					tag = "%s | %s" % (tag, subtitle)
-				tag_par = tag; 
-			
-			
-			PLog('Satz2:')
-			PLog(pid); PLog(title); PLog(url); PLog(tag[:80]); PLog(summ[:80]); 
-			PLog(img); PLog(geo);
-			title=py2_encode(title); url=py2_encode(url);
-			pid=py2_encode(pid); tag_par=py2_encode(tag_par);
-			img=py2_encode(img); summ=py2_encode(summ);
-
-			fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s'}" %\
-				(quote(img), quote(title), quote(pid), quote(tag_par), quote(summ), dur, geo)
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.SingleVideo", 
-				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ,  mediatype=mediatype)		
-			cnt=cnt+1
-	
-	if cnt == 0:					
-		msg1 = u"%s:" % py2_decode(title)
-		msg2 = u'Leider keine Videos gefunden.' 
-		msg3 = u'Bitte bei Bedarf im Web nachschlagen' 
-		MyDialog(msg1, msg2, msg3)
-		PLog(msg1)
-		return li
-		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	return
 
 # ----------------------------------------------------------------------
 # holt die Videoquellen -> Sofortstart bzw. Liste der  Auflösungen 

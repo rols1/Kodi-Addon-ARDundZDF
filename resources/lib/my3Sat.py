@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.04.2022
+#	Stand: 23.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -224,6 +224,7 @@ def Search(first, path, query=''):
 	
 	# auf mehr prüfen:
 	if test_More(page=page):						# Test auf weitere Seiten (class="loader)
+		li = xbmcgui.ListItem()						# Kontext-Doppel verhindern
 		search_cnt = stringextract('class="search-number">', '<', page)
 		page_max = 12
 		
