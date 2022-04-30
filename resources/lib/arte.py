@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>8</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.04.2022
+# 	<nr>9</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -67,12 +67,14 @@ PLAYLIST 		= 'livesenderTV.xml'	  	# enth. Link für arte-Live
 
 # Icons
 ICON 			= 'icon.png'				# ARD + ZDF
-ICON_ARTE		= 'icon-arte_kat.png'			
+ICON_ARTE		= 'icon-arte_kat.png'		# Bitstream Charter Bold, 60p			
+ICON_ARTE_START	= 'icon-arte-start.png'			
 ICON_DIR_FOLDER	= 'Dir-folder.png'
 ICON_MEHR 		= 'icon-mehr.png'
 ICON_SEARCH 	= 'arte-suche.png'				
 ICON_TVLIVE		= 'tv-arte.png'						
 ICON_DIR_FOLDER	= "Dir-folder.png"
+
 # ----------------------------------------------------------------------			
 def Main_arte(title='', summ='', descr='',href=''):
 	PLog('Main_arte:')
@@ -292,7 +294,7 @@ def GetContent(li, page, ID):
 	mediatype=''; cnt=0													# Default für mehrfach
 	
 	for item in items:
-		mehrfach = False			
+		mehrfach=False; katurl=''			
 			
 		title = stringextract('title":"', '"', item)
 		title_raw = title 												# für Abgleich in Kategorien
@@ -349,6 +351,9 @@ def GetContent(li, page, ID):
 		
 		if mehrfach:
 			tag = u"[B]Folgebeiträge[/B]"
+			if page.find('"link":null') < 0:				# null: weiterer Cluster
+				katurl = stringextract('"url":"', '"', item)
+				PLog("katurl: " + title)
 		else:
 			tag = u"Dauer %s\n\n%s\n%s" % (dur, start_end, geo)
 			
@@ -358,8 +363,8 @@ def GetContent(li, page, ID):
 		tag_par = tag.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 		
 		PLog('Satz1:')
-		PLog(mehrfach); PLog(pid); PLog(title); PLog(url); PLog(tag[:80]); PLog(summ[:80]); 
-		PLog(img); PLog(geo);
+		PLog(mehrfach); PLog(pid); PLog(title); PLog(url); PLog(katurl); 
+		PLog(img); PLog(tag[:80]); PLog(summ[:80]);  PLog(geo);
 		title=py2_encode(title); url=py2_encode(url);
 		pid=py2_encode(pid); tag_par=py2_encode(tag_par);
 		img=py2_encode(img); summ=py2_encode(summ);
@@ -377,9 +382,18 @@ def GetContent(li, page, ID):
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Kategorien", fanart=img, 
 					thumb=img, tagline=tag, summary=summ, fparams=fparams)
 			else:
-				fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(url), quote(title))
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Beitrag_Liste", 
-					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
+				if katurl:									# mit Seitensteuerung
+					katurl=py2_encode(katurl);
+					fparams="&fparams={'katurl': '%s'}" % quote(katurl)
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
+						thumb=img, tagline=tag, summary=summ, fparams=fparams)
+		
+				else:										# ohne Seitensteuerung
+					fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(url), quote(title))
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Beitrag_Liste", 
+						fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
+				
+
 			cnt=cnt+1					
 		else:
 			if mystrip(dur) == '':
@@ -392,7 +406,7 @@ def GetContent(li, page, ID):
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.SingleVideo", 
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ,  mediatype=mediatype)		
 			cnt=cnt+1
-			
+
 	return li, cnt
 	
 # -------------------------------
@@ -425,17 +439,36 @@ def get_img(item):
 #	können fehlen bzw. transparent.png)
 # 17.02.2022 fehlende Bilder via api-Call ergänzt 
 # 23.04.2022 Auswertung Webseite umgestellt auf enth. json-Anteil
-# 
-def Beitrag_Liste(url, title):
+# 28.04.2022 Auswertung next_url ergänzt (s. get_ArtePage), Ausleitung zu
+#	ArteCluster bei Seiten mit collection_subcollection
+#
+def Beitrag_Liste(url, title, get_cluster='yes'):
 	PLog("Beitrag_Liste: " + title)				
 
-	page = get_ArtePage('Kategorien_1', title, Dict_ID='Arte_Beitrag_Liste', path=url)	
+	page = get_ArtePage('Beitrag_Liste', title, path=url)	
 	if page == '':	
-		return li
+		msg1 = "Keine Videos oder Folgeseiten gefunden."
+		msg2 = "Eventuell liegen nur redaktionelle Inhalte vor zu:"
+		msg3 = "[B]%s[/B]" % title
+		MyDialog(msg1, msg2, msg3)
+		return
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='arte')				# Home-Button
-	li,cnt = GetContent(li, page, ID='Beitrag_Liste') 	# eigenes ListItem
+	
+	items = blockextract('code":{',  page)
+	PLog(len(items))
+	if page.find('"collection_subcollection"') > 0 and get_cluster:	# Cluster vorh.?
+		PLog("Ausleitung_Cluster")
+		ArteCluster(katurl=url)
+		
+	else:
+		li = home(li, ID='arte')									# Home-Button
+		li,cnt = GetContent(li, page, ID='Beitrag_Liste') 			# eigenes ListItem
+		
+		next_url = stringextract('next_url":"', '"', page[-100:]) 	# next_url am Seitenende 
+		PLog("next_url4: " + next_url)	
+		if next_url:							# Mehr-Beiträge?
+			ArteMehr(next_url, first=True)		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	return
@@ -597,209 +630,248 @@ def get_streams(page, title,summ, mode="hls_mp4"):
 # 10.05.2021 Webseite geändert: Abschluss Kategorien nun ab
 #	page.find('"pageNumber"', pos1+300). Auswertung der zusätzl. Beiträge
 #	belassen.
+# 26.04.2022 Abschluss Kategorien nach Auswertung "Wissenschaft",
+#	Button Startseite hinzugefügt, Codebereinigung (gelöscht:  Kategorie_Dokus,
+#	get_subkats, KatSub, neu: ArteCluster, ArteMehr, get_cluster, get_next_url)
 #
-def Kategorien(title='', path=''):
-	PLog("Kategorien: " + title)
+def Kategorien():
+	PLog("Kategorien:")
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='arte')				# Home-Button
 	
-	
-	if title == '':											# 1. Stufe: Kategorien listen
-		PLog('Stufe1:')	
-		path = BASE_ARTE+'/de/'
-		page = get_ArtePage('Kategorien_1', title, Dict_ID='ArteStart', path=path)	
-		if page == '':	
-			return li
-		
-		pos1 = page.find(':"Alle Kategorien')				# ausschneiden
-		pos2 = page.find(':"Alle Sendungen', pos1+1)		# 10.05.2021 geändert. s.o.
-		PLog("pos1: %d, pos2: %d" % (pos1, pos2))
-		if pos2 == -1:										# Fallback  
-			pos2 = len(page)
-		page = page[pos1:pos2]
-		PLog(page[:100])
-		
-		# Kategorien listen
-		# GetContent: eigenes ListItem mit Titel (raw) -> KatSub 
-		li,cnt = GetContent(li, page, ID='KAT_START') 		# eigenes ListItem
-		
-	else:													# 2. Stufe: Subkats von path
-		PLog('Stufe2:')
-		if 'Concert' in title:
-			path = 'https://www.arte.tv/de/arte-concert/'
-		page = get_ArtePage('Kategorien_1', title, Dict_ID='ArteStart_%s' % title[:10], path=path)	
-		if page == '':	
-			return li
-			
-		if "/dokumentationen-und-reportagen/" in path:		# nicht im Abschnitt categories + abweichend
-			Kategorie_Dokus(li, title, page, path)
-			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-		PLog('Mark0')										# Liste SubKats einschl. Add's	
-		Kat_pid =  stringextract('page":"', '"', page)		# z.B. HIS
-		items = blockextract('code":{', page)	# Altern.:'{"id":"'
-		PLog(len(items))
-		get_subkats(li, items, path)
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-# ----------------------------------------------------------------------
-# Dokumentationen und Reportagen: nicht im Abschnitt categories + abweichend
-# Aufrufer: Kategorien (Stufe 2),  Hauptmenü dort 
-def Kategorie_Dokus(li, title, page, path):
-	PLog("Kategorie_Dokus:")
-	
-	pos = page.find('"title":"Dokus und Reportagen"')
-	pos2 = page.find('"title":"Alle Kategorien"')
-	PLog("titel: %s, pos: %d, pos2: %d" % (title, pos, pos2))
-
-	if pos == -1:						
-		msg1 = 'Kategorie nicht gefunden: %s' % title
-		MyDialog(msg1, '', '')
-		return 
-
-	page = page[pos:pos2]
-	PLog(page[:100])
-	
-	items = blockextract('"code":{', page)			# entspr. bei Dokus den Subkats
-	PLog(len(items))
-	get_subkats(li, items, path)
-
-	return
-
-# ----------------------------------------------------------------------
-# Liste der Subkategorien
-# Aufrufer: Kategorien (Stufe 2) und Kategorie_Dokus (via Kategorien)
-# 
-def get_subkats(li, items, path):
-	PLog("get_subkats:")
-
-	for item in items:
-		title = stringextract('title":"', '"', item)			
-		label = title
-		if title == '':								# vemutl. Restblock "Alle Kategorien"
-			continue
-		if "Category Banner" in title:
-			label = title.replace("Category Banner", "arte Empfehlung")
-		if 'data":[]' in item:						# skip, ohne Beiträge, Bsp. Playlists
-			continue
-		summ = stringextract('escription":"', '"', item)
-		link_url = stringextract('url":"', '"', item)	# Webseite, abweichend von url in data
-		data = stringextract('data":[', '],', item)
-		
-		# 1. Bild der Subkat laden 
-		#	(Bild nur stellvertretend für gesamte Subkat)
-		#	bei Cache-miss ICON_DIR_FOLDER . Subkats-Listen ohne img.
-		#	Sonderfall arte-concert (mehrere Seiten möglich).
-		img = R(ICON_DIR_FOLDER)						# Default 
-		pos = item.find('title":"%s"' % title)
-		PLog('pos: ' + str(pos))
-		if pos > 0:
-			img = get_img(item)
-			
-		pid = stringextract('id":"', '"', item)			# pid für SubKat
-		label = transl_json(label)				
-		title = transl_json(title); title = repl_json_chars(title)
-		url = path
-					
-		PLog('Satz_Subs_Dokus:');  PLog(title);  PLog(pid); PLog(url); PLog(link_url); PLog(img);
-		title=py2_encode(title); url=py2_encode(url); link_url=py2_encode(link_url);	
-		fparams="&fparams={'path': '%s','title':'%s','pid':'%s','link_url':'%s'}" %\
-			(quote(url), quote(title), pid, quote(link_url))
-		addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.KatSub", fanart=img, 
-			thumb=img, tagline="Folgeseiten", summary=summ, fparams=fparams)	
-	return
-# ----------------------------------------------------------------------
-# listet einzelne Beiträge der Sub-Kategorie title in Datei path
-# Hinw.: jede Datei der SubKats enthält die Subkats aller Kategorien
-# Sonderfall: Arte Concert - die Url's (nextPage) der folgenden Seiten 
-#		ergeben 401-errors. Daher leiten wir SubKats mit /arte-concert/
-#		hier aus + verwenden einen Api-Call ähnlich in arte_Search
-#		(ermit. in chrome-tools) -> KatSubConcert
-# add: Trigger für Zusätze (Aktuelle Highlights, Kollektionen, Sendungen)
-#
-def KatSub(path, title, pid, link_url=''):
-	PLog("KatSub: " + title)
-	PLog(pid); PLog(path); PLog(link_url);
-
-	li = xbmcgui.ListItem()
-	li = home(li, ID='arte')						# Home-Button
-	
-	pagenr = stringextract('&page=', '&', path)	
-	page = get_ArtePage('KatSub', title, Dict_ID='ArteSubKat_%s' % pid, path=path)	
-	# RSave('/tmp/x.json', py2_encode(page))	# Debug	
+	title = "Startseite arte.tv"
+	path = BASE_ARTE+'/de/'
+	page = get_ArtePage('Kategorien_1', title, path=path)	
 	if page == '':	
 		return li
-		
-	PLog('Mark2')								
-	# alle Beiträge auf der 1. SubKat-Seite - zum Blättern wie im Web 
-	# schneiden wir aus. Die Folgeseiten (json) enthalten nur die Beiträge
-	# der angeforderten Seite. 
-	PLog("title: %s" % title)
-	pos1 = page.find('"title":"%s"' % title) 		# Anfang 
-	pos2 = page.find('{"id":"', pos1+1)	# Ende
-	PLog("pos1 %s, pos2 %s, len %s" % (pos1, pos2, len(page)))
-	page = page[pos1:pos2]							# Ausschnitt
-	PLog(page[:80])
-	PLog(page[len(page)-80:])	
-
-	li,cnt = GetContent(li, page, ID='KAT_SUB') 	# eigenes ListItem
-	PLog("cnt: %d" % cnt)
-	if cnt == 0:									# von Webseite ergänzen
-	#if cnt < 2:									# von Webseite ergänzen (skip ev. Teaser)
-		page = get_ArtePage('KatSub', title, Dict_ID='ArteWeb_%s' % pid, path=link_url)	
-		if page:
-			pos = page.find('"Die meistgesehenen Videos')	# ausschließen (auf jeder Seite wieder)
-			page = page[:pos]
-			li,cnt = GetContent(li, page, ID='KAT_SUB')
 	
+	path=py2_encode(path)
+	fparams="&fparams={'katurl': '%s'}" % quote(path)			# Button Startseite
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
+		thumb=R(ICON_ARTE_START), fparams=fparams)
+	
+	pos1 = page.find(':"Alle Kategorien')						# ausschneiden
+	page = page[pos1+1:]
+	PLog(page[:100])
 
-	nexturl = stringextract('nextPage":', ',', page)		# letzte Seite: "", auch "null," möglich
-	if nexturl == 'null':
-		nexturl = ''	
-	try:
-		nextpage = re.search('&page=(.d?)', nexturl).group(1)
-	except:
-		nextpage=""
-	PLog("nextpage: " + nextpage)	
-
-	PLog('Mark3')								
-	if nexturl:										# Mehr-Button
-		li = xbmcgui.ListItem()						# Kontext-Doppel verhindern
-		# der api-internal Link in nextPage erzeugt http-403-Error - 
-		# 	nach ersetzen durch www.arte.tv/guide OK: 
-		nexturl = nexturl.replace('"', '')										# s.o. null
-		nexturl = nexturl.replace('api-cdn.arte.tv', 'www.arte.tv/guide')		# Adds-Url
-		nexturl = nexturl.replace('api-internal.arte.tv', 'www.arte.tv/guide')	# SubKats-Url
-		nexturl = nexturl.replace('&limit=6', '&limit=100')
-			
-		nexturl = unquote(nexturl)						# DE_FR%252CEUR_DE_FR%252CSAT%252CALL
-		PLog("nexturl: " + nexturl);
-		PLog('Satz_KatSubs:'); PLog(nextpage); PLog(nexturl);
-		tag = "weiter zu Seite %s" % nextpage
+	items = blockextract('"title"',  page)
+	PLog(len(items))
+	for item in items:											# Kategorien listen
+		title = stringextract('title":"', '"', item)
+		katurl = stringextract('url":"', '"', item)
+		img = get_img(item)
 		
-		title=py2_encode(title); nexturl=py2_encode(nexturl)
-		fparams="&fparams={'title': '%s', 'path': '%s', 'pid': '%s', 'link_url': '%s'}" %\
-			(quote(title), quote(nexturl), pid, quote(link_url))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.KatSub", 
-			fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), tagline=tag, fparams=fparams)		
-			
+		PLog('Satz4:')
+		PLog(title); PLog(katurl);
+		title=py2_encode(title); katurl=py2_encode(katurl)		# ohne title, katurl laden
+		fparams="&fparams={'title': '', 'katurl': '%s'}" % quote(katurl)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
+				thumb=img, fparams=fparams)
+		if title == "Wissenschaft":
+			break
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+# ---------------------------------------------------------------------
+# Webseite arte.tv ohne Kategorien
+# Aufrufer: Kategorien / ArteCluster
+# 2 Durchläufe: 1. Liste Cluster, 2. Cluster-Details
+# Mehr-Seiten:  -> get_ArtePage mit katurl, ohne Dict_ID
+#
+def ArteCluster(title='', katurl=''):
+	PLog("ArteCluster: " + title)
+	PLog(katurl); 
+	katurl_org=katurl
+
+	page = get_ArtePage('ArteCluster', title, path=katurl)	
+	next_url = stringextract('next_url":"', '"', page[-100:]) # next_url am Seitenende 
+	PLog("next_url2: " + next_url)					# next_url1 s. get_ArtePage
+	
+	pos = page.find("footerProps")					# Footer kann skip_items enth.
+	if pos > 0:
+		page = page[:pos]
+	items = blockextract('code":{',  page)
+	PLog(len(items))
+	img_def = R(ICON_DIR_FOLDER)
+
+	li = xbmcgui.ListItem()
+	
+	# contentId: Login-relevante Beiträge	
+	skip_item = [u'"Alle Kategorien', u'"contentId',  u'"Newsletter',
+				u'"ARTE Magazin', u'"Meine Liste', u'Demnächst',
+				 u'Zum selben Thema', u'Collection Articles', u'Collection Partners',
+				 u'Collection Upcomings', u'"collection_content"']
+				
+	if title == '':								# 1. Durchlauf
+		PLog('ArteStart_1:')
+		li = home(li, ID='arte')					# Home-Button
+		for item in items:
+			title = stringextract('title":"', '"', item)
+			title = transl_json(title)
+			label = title
+							
+			img = get_img(item)
+			if img == '':
+				img = img_def
+			
+			if item.find('"link":null') < 0:				# null: Beiträge, sonst weiterer Cluster
+				katurl = stringextract('"url":"', '"', item)
+				title=''
+			else:
+				katurl = katurl_org
+
+			skip=False
+			for s in skip_item:
+				if item.find(s) > 0: PLog(s); skip=True
+			if skip: 
+				PLog("skip: " + title)
+				continue
+				
+			PLog('Satz2:')
+			PLog(title); PLog(katurl);
+			
+			title=py2_encode(title); katurl=py2_encode(katurl);
+			if '"title":"Alle Videos"' in item:				# einz. Videos listen
+				fparams="&fparams={'title': '%s','url': '%s','get_cluster': ''}" %\
+					(quote(title), quote(katurl))
+				addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.Beitrag_Liste", 
+					fanart=R(ICON_ARTE), thumb=img, fparams=fparams)
+		
+			else:
+				fparams="&fparams={'title': '%s', 'katurl': '%s'}" % (quote(title), quote(katurl))
+				addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.ArteCluster", 
+					fanart=R(ICON_ARTE), thumb=img, fparams=fparams)
+
+	else:											# 2. Durchlauf
+			PLog('ArteStart_2:')
+			items = blockextract('code":{', page)	# wie ArteStart_1
+			PLog(len(items))
+			name_org=name; title_org=title
+			page = get_cluster(items, title_org)
+			if page  == '':	
+				return
+				
+			PLog(page[:80])
+			if page.find('"link":null') < 0:				# null: Beiträge, sonst weiterer Cluster
+				katurl = stringextract('"url":"', '"', page)
+				page = get_ArtePage('ArteStart_2', title, path=katurl)
+				ArteCluster(title=title_org, katurl=katurl)
+				
+			else:											# Beiträge zum Cluster-Titel zeigen
+				PLog("next_url3: " + next_url)				# next_url1 s. get_ArtePage
+				li = home(li, ID='arte')					# Home-Button
+				li, cnt = GetContent(li, page, ID="ArteStart_2")
+				PLog("cnt: " + str(cnt))
+				if next_url:								# Mehr-Beiträge?
+					ArteMehr(next_url, first=True)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			
+# ---------------------------------------------------------------------
+# holt Cluster zu Cluster-titel title_org
+def get_cluster(items, title_org):
+	PLog("get_cluster:")
+	page=''
+	for item in items:
+		title = stringextract('title":"', '"', item)
+		title = transl_json(title)
+		PLog(title)
+		if title_org in title:
+			PLog("found_Cluster: " + title)
+			page = item
+	if len(page) == 0:
+		PLog("Cluster_failed: " + title_org)
+	
+	return page
+
+# ---------------------------------------------------------------------
+# holt Mehr-Beiträge 
+# 
+def ArteMehr(next_url, first=False):
+	PLog("ArteMehr: " + next_url)
+	PLog(first)
+	jsonmark = '{"props":'								# json-Bereich wie get_ArtePage
+	li = xbmcgui.ListItem()
+
+	if first:											# 1. Aufruf
+		title = u"Weitere Beiträge"
+		tag = u"weiter zu Seite %s (Gesamtzahl unbekannt)" % next_url[-1:]
+		img = R(ICON_MEHR)
+
+		query=py2_encode(next_url); 
+		fparams="&fparams={'next_url': '%s'}" % quote(next_url)	
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteMehr", fanart=img, 
+			thumb=img , fparams=fparams, tagline=tag)
+		return
+		
+	#------------------------------------------------	# Folgeaufrufe
+	
+	li = home(li, ID='arte')				#			 Home-Button
+	page, msg = get_page(next_url)
+	if page == '':										# hier ohne Dialog
+		PLog(msg)
+		return
+
+	pos = page.find(jsonmark)
+	if pos > 0:		
+		page = page[pos:]
+		page = page.replace('\\u002F', '/')	
+		page = page.replace('\\"', '*')	
+	
+	pos = page.find('"Alle Videos"')
+	page = page[pos:]
+	li, cnt = GetContent(li, page, ID="ArteMehr")
+	
+	try:
+		nextpage = int(next_url[-1:]) + 1
+		next_url = next_url[:-1] + str(nextpage)
+		PLog("next_url_new: " + next_url)
+	except:
+		next_url=''
+	
+	if 	next_url:
+		title = u"Weitere Beiträge"
+		tag = u"weiter zu Seite %s (Gesamtzahl unbekannt)" % next_url[-1:]
+		img = R(ICON_MEHR)
+
+		query=py2_encode(next_url); 
+		fparams="&fparams={'next_url': '%s'}" % quote(next_url)	
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteMehr", fanart=img, 
+			thumb=img , fparams=fparams, tagline=tag)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 # ---------------------------------------------------------------------
 # lädt Arte-Seite aus Cache / Web
 # Rückgabe json-Teil der Webseite oder ''
 # Cachezeit für Startseite + Kategorien identisch
 # 26.07.2021 Anpassung an Webänderung (json-Auschnitt)
+# 27.04.2022 Umstellung Dict_ID wg. rekursiver Aufrufe:
+#	 Dict_ID = letzer Pfadanteil
 #
-def get_ArtePage(caller, title, Dict_ID, path, header=''):
-	PLog("get_ArtePage: " + Dict_ID)
+def get_ArtePage(caller, title, path, header=''):
+	PLog("get_ArtePage: " + path)
 	PLog(caller); PLog(path)
+	page=''
 	
-	page = Dict("load", Dict_ID, CacheTime=ArteKatCacheTime)
+	if path == '':
+		PLog("path_fehlt")
+		return page
+		
+	Dict_ID = path.split("/")[-1]						# Dict_ID aus path erzeugen
+	if Dict_ID == '':
+		Dict_ID = path.split("/")[-2]
+	Dict_ID = Dict_ID.replace("?", "")					# Arte_?genres=oper, Arte_?page=1,..
+	Dict_ID = "Arte_%s" % Dict_ID
 
-	if page == False:								# nicht vorhanden oder zu alt
+										# Sicherung
+	page = Dict("load", Dict_ID, CacheTime=ArteKatCacheTime)
+	if page == False:
+		page=''
+	jsonmark = '{"props":'								# json-Bereich	26.07.2021 angepasst
+
+	if page == '':										# nicht vorhanden
 		page, msg = get_page(path, header=header)	
 		if page == '':						
 			msg1 = 'Fehler in %s: %s' % (caller, title)
@@ -807,25 +879,58 @@ def get_ArtePage(caller, title, Dict_ID, path, header=''):
 			msg2 = u"Seite weder im Cache noch im Web verfügbar"
 			MyDialog(msg1, msg2, '')
 			return ''
-		if 'id="no-content">' in page:				# no-content-Hinweis nur im html-Teil
+		if 'id="no-content">' in page:					# no-content-Hinweis nur im html-Teil
 			msg2 = stringextract('id="no-content">', '</', page)
 			if msg2:
 				msg1 = 'Arte meldet:'
 				MyDialog(msg1, msg2, '')
 				return ''
 		else:
-			# pos = page.find('__INITIAL_STATE__ ')	# json-Bereich
-			pos = page.find('{"props":')	# json-Bereich			# 26.07.2021 angepasst
-			if pos > 0:
+			# pos = page.find('__INITIAL_STATE__ ')		# json-Bereich vor 26.07.2021
+			next_url = get_next_url(page, Dict_ID)		# ev. next_url wird unten angehängt
+			if next_url:
+				page = page + '{"next_url":"%s"}'  % next_url
+			 	
+			pos = page.find(jsonmark)					# json-Bereich abklemmen	
+			if pos > 0:	
 				page = page[pos:]
-			page = page.replace('\\u002F', '/')	
-			page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
-			Dict("store", Dict_ID, page) # Seite -> Cache: aktualisieren
+				page = page.replace('\\u002F', '/')	
+				page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
+				
+				Dict("store", Dict_ID, page) 			# Seite -> Cache, einschl. next_url
+			else:
+				PLog("json-Daten fehlen")
+				page=''									# ohne json-Bereich: leere Seite
 
 	#RSave('/tmp/x.json', py2_encode(page))	# Debug	
 	PLog(len(page))
 	# page = str(page)  # n. erf.
-	PLog(page[:100])
+	PLog("page_start: " + page[:100])
+	PLog("page_end: " + page[-100:])
 	return page
+	
+# ---------------------------------------
+# ermittelt next-Url
+# unterschiedl. Tags: 'link rel="next"', '"_self">Next<'
+# 	daher Ermittlung via '?page=2' - next_url wird verworfen,
+#	falls Dict_ID (ohne arte_) nicht vorkommt  (z.B. next_url
+#	für allgemeine neueste-videos
+#	
+def get_next_url(page, Dict_ID):
+	PLog("get_next_url:")
+
+	next_url=''; mark='?page='
+	pos = page.find(mark)
+	if pos > 0:
+		PLog(page[pos-40:pos+40])
+		pos2 = page[:pos].rfind("href=")
+		next_url = stringextract('href="', '"', page[pos2:])
+		d = Dict_ID.split("Arte_")[-1]
+		if next_url.find(d) < 0:
+			PLog("next_url_ohne: %s" % d)
+			next_url=''
+	PLog("next_url: " + next_url)
+	return next_url
+	
 # ----------------------------------------------------------------------
 
