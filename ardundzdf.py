@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>44</nr>										# Numerierung für Einzelupdate
+# 	<nr>45</nr>										# Numerierung für Einzelupdate
 VERSION = '4.3.3'
-VDATE = '24.04.2022'
+VDATE = '30.04.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1558,7 +1558,7 @@ def ARDAudioEventStreams(li):
 	addDir(li=li, label=label, action="dirList", dirID="Audio_get_cluster_rubrik", \
 		fanart=img, thumb=thumb, tagline=tag, fparams=fparams)	
 	 	
-
+	'''
 	title = u"[B]Audio:[/B] Die Fussball-Bundesliga im ARD-Hörfunk"		# Button Bundesliga ARD-Hörfunk 
 	href = 'https://www.sportschau.de/sportimradio/bundesligaimradio102.html'
 	img = R("tv-ard-sportschau.png")							
@@ -1570,7 +1570,7 @@ def ARDAudioEventStreams(li):
 		quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportHoerfunk", fanart=img, 
 		thumb=img, tagline=tag, summary=summ, fparams=fparams)
-							
+	'''						
 	title = u"[B]Audio:[/B] aktuelle Livestreams (sportschau.de)"		# Button aktuelle LIVESTREAMS
 	href = 'https://www.sportschau.de/audio/index.html'
 	img = R("tv-ard-sportschau.png")								
@@ -4176,6 +4176,8 @@ def ARDSportTable(path, title, table_path=''):
 #----------------------------------------------------------------
 # aktuelle LIVESTREAMS + Netcast-Audiostreams-Liste von sportschau.de
 # Aufrufer: ARDAudioEventStreams
+# aktuelle Livestreams: ../audio/index.html
+# Alle Netcast-Streams: ../sportimradio/audiostream-netcast-uebersicht-100.html
 #
 def ARDSportAudioStreams(title, path, img, ID):
 	PLog('ARDSportAudioStreams:')
@@ -4197,8 +4199,7 @@ def ARDSportAudioStreams(title, path, img, ID):
 		return li 						
 	
 	if "aktuelle Livestreams" in title:							# aktuelle LIVESTREAMS				
-		page = stringextract('Livestreams',  'class="conHeadline">', page)
-		items = blockextract('class="teaser">', page)
+		items = blockextract('data-ctrl-audiostream-die-konferenz', page)
 		imgbase = "https://www.sportschau.de"
 	else:														# Netcast-Audiostreams-Liste 
 		items = blockextract('class="teaser hideTeasertext">', page)
@@ -4213,6 +4214,8 @@ def ARDSportAudioStreams(title, path, img, ID):
 		
 	
 	for item in items:
+		pos = item.find("teaser")
+		item = item[pos:]
 		href = base + stringextract('href="', '"', item)
 		title = stringextract('title="', '"', item)			# in href-tag
 		img	= imgbase + stringextract('srcset="', '"', item)
@@ -6272,7 +6275,7 @@ def ProgramRecord(url, sender, title, descr, start_end):
 	return
 	
 #---------------------------------------------
-# Aufruf: EPG_Sender, TVLiveRecordSender
+# Aufruf: EPG_Sender, EPG_ShowAll, TVLiveRecordSender
 # get_sort_playlist: Einbettung get_ZDFstreamlinks 
 #	für ZDF-Sender
 #
@@ -6405,7 +6408,7 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 # EPG: aktuelle Sendungen aller Sender mode='allnow'
 # Aufrufer SenderLiveListePre (Button 'EPG Alle JETZT')
 #	26.04.2019 Anzahl pro Seite auf 20 erhöht (Timeout bei Kodi kein Problem wie bei Plex)  
-
+# Ablauf: 
 def EPG_ShowAll(title, offset=0, Merk='false'):
 	PLog('EPG_ShowAll:'); PLog(offset) 
 	title = unquote(title)
@@ -6430,7 +6433,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 	icon = R('tv-EPG-all.png')
 	xbmcgui.Dialog().notification("lade EPG-Daten",u"max. Anzahl: %d" % rec_per_page,icon,5000)
 	
-	
+	PLog("walk_playlist")
 	for i in range(len(sort_playlist)):
 		cnt = int(i) + int(offset)
 		# PLog(cnt); PLog(i)
