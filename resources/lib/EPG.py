@@ -223,6 +223,7 @@ def update_single(PluginAbsPath):
 #-----------------------
 # 	mode: 		falls 'OnlyNow' dann JETZT-Sendungen
 # 	day_offset:	1,2,3 ... Offset in Tagen (Verwendung zum Blättern in EPG_ShowSingle)
+# 	Aufruf: EPG_ShowAll (Haupt-PRG), thread_getepg
 def EPG(ID, mode=None, day_offset=None, load_only=False):
 	PLog('EPG ID: ' + ID)
 	PLog(mode)

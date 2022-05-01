@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.04.2022
+#	Stand: 30.04.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -160,6 +160,12 @@ def Main_KIKA(title=''):
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Live", 
 		fanart=GIT_KIKA, thumb=R(ICON_MAIN_TVLIVE), tagline='KIKA TV-Live', fparams=fparams)
+		
+	title='KIKA Programmvorschau'
+	tag = u"Programmvorschau für eine Woche\n\nMit Klick zur laufenden Sendung"
+	fparams="&fparams={}"
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Vorschau", 
+		fanart=GIT_KIKA, thumb=R(ICON_MAIN_TVLIVE), tagline=tag, fparams=fparams)
 	
 	title=u'KiRaKa - Sendungen und Hörspiele'
 	tag = "%s\n\nDer Kinderradiokanal des WDR" % title
@@ -387,6 +393,29 @@ def Kika_Live():
 		thumb=img, fparams=fparams, summary=summ, tagline=tagline)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+# ----------------------------------------------------------------------			
+# 
+def Kika_Vorschau():
+	PLog('Kika_Vorschau:')
+
+	zdf_streamlinks = get_ZDFstreamlinks()
+	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
+	stream_url=''
+	for line in zdf_streamlinks:
+		PLog(line)
+		webtitle, href, thumb, tagline = line.split('|')
+		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
+		if up_low('KiKA') in up_low(webtitle): 	# Sender mit Blank!
+			stream_url = href
+			break
+	if stream_url == '':
+		PLog('%s: Streamlink fehlt' % 'KiKA ')
+		
+	ID="KIKA"; name="KIKA"
+	
+	ardundzdf.EPG_ShowSingle(ID, name, stream_url, pagenr=0)
+	return
 	
 # ----------------------------------------------------------------------			
 def Kiraka():
@@ -1222,7 +1251,11 @@ def gen_alpha(xml_path='', thumb=''):
 		PLog(len(items))
 		for s in items:			
 			img = stringextract('<noscript>', '</noscript>', s)
-			title = stringextract('alt="', '|', img)
+			if '|' in img:
+				title = stringextract('alt="', '|', img)
+				img_alt = stringextract('title="', '"', img)
+			else:
+				title = stringextract('alt="', '"', img)
 			img_alt = stringextract('title="', '"', img)
 			img_src = base + stringextract('src="', '"', img)
 			

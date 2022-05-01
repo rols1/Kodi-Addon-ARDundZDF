@@ -98,13 +98,14 @@ def Main_arte(title='', summ='', descr='',href=''):
 		thumb=R(ICON_SEARCH), fparams=fparams)
 	# ------------------------------------------------------
 			
-	tag='[B][COLOR red]Arte Livestream[/COLOR][/B]'
+	tag='[B]Arte Livestream[/B]'
 	title, summ, descr, vonbis, img, href = get_live_data('ARTE')
 	title = repl_json_chars(title)
 	
 	if img == '':
 		img = R(ICON_TVLIVE)
-	summ_par = summ.replace('\n', '||')	
+	summ_par = summ.replace('\n', '||')
+	summ_par = repl_json_chars(summ_par)
 	title=py2_encode(title); href=py2_encode(href); summ_par=py2_encode(summ_par);
 	img=py2_encode(img)
 	fparams="&fparams={'href': '%s', 'title': '%s', 'Plot': '%s', 'img': '%s'}" %\
@@ -144,9 +145,9 @@ def get_live_data(name):
 		img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6];
 		sname = unescape(sname)
 		title = sname
-		summ = unescape(summ)
+		summ = unescape(summ); 
 		PLog("title: " + title); 
-		summ = "[B]LAUFENDE SENDUNG [COLOR red](%s Uhr)[/COLOR][/B]\n\n%s" % (vonbis, summ)
+		summ = "[B]LAUFENDE SENDUNG (%s Uhr) [/B]\n\n%s" % (vonbis, summ)
 		title= sname
 		try:										# 'list' object in summ möglich - Urs. n.b.
 			descr = summ.replace('\n', '||')		# \n aus summ -> ||
