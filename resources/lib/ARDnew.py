@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.04.2022
+# 	<nr>17</nr>										# Numerierung für Einzelupdate
+#	Stand: 03.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -497,7 +497,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARD_FlatListEpisodes", 
 				fanart=ICON, thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
 				
-			
+		ID = "ARDStartRubrik"	
 		li = get_page_content(li, page, ID, mark)		# Auswertung Rubriken + Live-/Eventstreams																	
 #----------------------------------------
 	
@@ -1125,7 +1125,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 				gridlist = blockextract('id":"Link:', page)		# deckt auch Serien in Swiper ab
 					
 		if 'ARDStart' in ID:									# zusätzl. Beiträge ganz links, Livestream 
-			decorlist = blockextract( '"decor":', page)			# 	möglich, s.u.
+			decorlist = blockextract( '"decor":', page)			# 	möglich, s.u., umfasst ID ARDStartRubrik
 			PLog('decorlist: ' + str(len(decorlist)))
 			gridlist = gridlist + decorlist						# 30.01.2022 (Filter href in skip_list)					
 			
