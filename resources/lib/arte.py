@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.04.2022
+# 	<nr>10</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -397,7 +397,7 @@ def GetContent(li, page, ID):
 
 			cnt=cnt+1					
 		else:
-			if mystrip(dur) == '':
+			if mystrip(dur) == '' or pid == '':
 				continue
 			#if cnt > max_pre:								# ungenau
 			#	tag = u"[COLOR blue]Auch interessant für Sie[/COLOR]\n\n%s" % tag
@@ -698,11 +698,12 @@ def ArteCluster(title='', katurl=''):
 
 	li = xbmcgui.ListItem()
 	
-	# contentId: Login-relevante Beiträge	
+	# contentId: Login-relevante Beiträge, 	ohne Beiträge: 'data":[]'
 	skip_item = [u'"Alle Kategorien', u'"contentId',  u'"Newsletter',
 				u'"ARTE Magazin', u'"Meine Liste', u'Demnächst',
 				 u'Zum selben Thema', u'Collection Articles', u'Collection Partners',
-				 u'Collection Upcomings', u'"collection_content"']
+				 u'Collection Upcomings', u'"collection_content"',
+				 u'data":[]']
 				
 	if title == '':								# 1. Durchlauf
 		PLog('ArteStart_1:')
