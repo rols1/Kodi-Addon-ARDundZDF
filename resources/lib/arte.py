@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>10</nr>										# Numerierung für Einzelupdate
+# 	<nr>11</nr>										# Numerierung für Einzelupdate
 #	Stand: 04.05.2022
 
 # Python3-Kompatibilität:
@@ -68,7 +68,8 @@ PLAYLIST 		= 'livesenderTV.xml'	  	# enth. Link für arte-Live
 # Icons
 ICON 			= 'icon.png'				# ARD + ZDF
 ICON_ARTE		= 'icon-arte_kat.png'		# Bitstream Charter Bold, 60p			
-ICON_ARTE_START	= 'icon-arte-start.png'			
+ICON_ARTE_NEW	= 'icon-arte-new.png'		# Bitstream Charter Bold, 60p			
+ICON_ARTE_START	= 'icon-arte-start.png'		# Bitstream Charter Bold, 60p				
 ICON_DIR_FOLDER	= 'Dir-folder.png'
 ICON_MEHR 		= 'icon-mehr.png'
 ICON_SEARCH 	= 'arte-suche.png'				
@@ -286,7 +287,7 @@ def GetContent(li, page, ID):
 			page = page[pos:]
 		items = blockextract('{"title":"',  page)
 	if 	len(items) == 0:
-		items = blockextract('"programId"',  page)						# Fallback		 
+		items = blockextract('"programId"',  page)						# Fallback 1		 
 	PLog("pre_items: %d, items: %d" % (len(pre_items), len(items)))
 	if max_pre > 0:														# Blöcke zusammenlegen
 		items = pre_items + items
@@ -444,8 +445,8 @@ def get_img(item):
 #	ArteCluster bei Seiten mit collection_subcollection
 #
 def Beitrag_Liste(url, title, get_cluster='yes'):
-	PLog("Beitrag_Liste: " + title)				
-
+	PLog("Beitrag_Liste: " + title)
+	
 	page = get_ArtePage('Beitrag_Liste', title, path=url)	
 	if page == '':	
 		msg1 = "Keine Videos oder Folgeseiten gefunden."
@@ -468,7 +469,7 @@ def Beitrag_Liste(url, title, get_cluster='yes'):
 		
 		next_url = stringextract('next_url":"', '"', page[-100:]) 	# next_url am Seitenende 
 		PLog("next_url4: " + next_url)	
-		if next_url:							# Mehr-Beiträge?
+		if next_url:												# Mehr-Beiträge?
 			ArteMehr(next_url, first=True)		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -672,6 +673,14 @@ def Kategorien():
 		if title == "Wissenschaft":
 			break
 
+	title = "Neueste Videos"									# Button Neueste Videos
+	path = "https://www.arte.tv/de/videos/neueste-videos/"
+	path=py2_encode(path)
+	fparams="&fparams={'title': '%s', 'url': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Beitrag_Liste", fanart=R(ICON_ARTE), 
+		thumb=R(ICON_ARTE_NEW), fparams=fparams)
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ---------------------------------------------------------------------
@@ -789,11 +798,11 @@ def get_cluster(items, title_org):
 
 # ---------------------------------------------------------------------
 # holt Mehr-Beiträge 
-# 
+# 1. Aufruf (Beitrag_Liste, ArteStart_2): nur Mehr Button
 def ArteMehr(next_url, first=False):
 	PLog("ArteMehr: " + next_url)
 	PLog(first)
-	jsonmark = '{"props":'								# json-Bereich wie get_ArtePage
+	jsonmark = '"props":'								# json-Bereich wie get_ArtePage
 	li = xbmcgui.ListItem()
 
 	if first:											# 1. Aufruf
@@ -809,7 +818,7 @@ def ArteMehr(next_url, first=False):
 		
 	#------------------------------------------------	# Folgeaufrufe
 	
-	li = home(li, ID='arte')				#			 Home-Button
+	li = home(li, ID='arte')							# Home-Button
 	page, msg = get_page(next_url)
 	if page == '':										# hier ohne Dialog
 		PLog(msg)
@@ -821,8 +830,9 @@ def ArteMehr(next_url, first=False):
 		page = page.replace('\\u002F', '/')	
 		page = page.replace('\\"', '*')	
 	
-	pos = page.find('"Alle Videos"')
-	page = page[pos:]
+	pos = page.find('"Alle Videos"')					# entf. bei neueste-videos
+	if pos > 0:
+		page = page[pos:]
 	li, cnt = GetContent(li, page, ID="ArteMehr")
 	
 	try:
@@ -871,7 +881,7 @@ def get_ArtePage(caller, title, path, header=''):
 	page = Dict("load", Dict_ID, CacheTime=ArteKatCacheTime)
 	if page == False:
 		page=''
-	jsonmark = '{"props":'								# json-Bereich	26.07.2021 angepasst
+	jsonmark = '"props":'								# json-Bereich	26.07.2021 angepasst
 
 	if page == '':										# nicht vorhanden
 		page, msg = get_page(path, header=header)	
@@ -899,7 +909,8 @@ def get_ArtePage(caller, title, path, header=''):
 				page = page.replace('\\u002F', '/')	
 				page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
 				
-				Dict("store", Dict_ID, page) 			# Seite -> Cache, einschl. next_url
+				if path.endswith("neueste-videos/") == False:	# neueste-videos ohne Cache!
+					Dict("store", Dict_ID, page) 				# Seite -> Cache, einschl. next_url
 			else:
 				PLog("json-Daten fehlen")
 				page=''									# ohne json-Bereich: leere Seite
