@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>45</nr>										# Numerierung für Einzelupdate
+# 	<nr>46</nr>										# Numerierung für Einzelupdate
 VERSION = '4.3.4'
-VDATE = '01.05.2022'
+VDATE = '05.05.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -382,13 +382,15 @@ def Main():
 	
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
-		tag = 'gesucht wird in [B]allen von MediathekView unterstützen Sendern[/B]'
+		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
+		summ = 'Gesucht wird in [B]allen von MediathekView unterstützen Sendern[/B].'
+		summ = "%s\n\nBilder sind in den Ergebnislisten nicht enthalten. " % summ
 		title=py2_encode(title);
 		func = "ardundzdf.Main"
 		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
 			(quote(title), "ARD|ZDF", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R('suche_ardundzdf.png'), 
-			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 	
 	title="Suche in ARD und ZDF"
 	tagline = 'gesucht wird in [B]ARD  Mediathek Neu [/B]und in der [B]ZDF Mediathek[/B].'
@@ -1037,7 +1039,7 @@ def AddonInfos():
 		mpage = "%s\n%s" % (mpage, datum) 
 	
 	page = page + mpage
-	PLog(page)
+	PLog(cleanmark(page))
 	dialog.textviewer(u"Addon-Infos (Ausgabe auch im Debug-Log bei aktiviertem Plugin-Logging)", page,usemono=True)
 	
 #	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -1072,13 +1074,14 @@ def Main_ZDF(name=''):
 	
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
-		tag = 'Sender: [B]alle Sender des ZDF[/B]' 
+		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
+		summ = 'Sender: [B]alle Sender des ZDF[/B]' 
 		title=py2_encode(title);
 		func = "ardundzdf.Main_ZDF"
 		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
 			(quote(title), "ZDF", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R(ICON_MAIN_ARD), 
-			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 		
 	title="Suche in ZDF-Mediathek"
 	fparams="&fparams={'query': '', 'title': '%s'}" % title
@@ -10087,7 +10090,7 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='',
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #-------------------------
-# Bau HLS_List, MP4_List, HBBTV_List (nur ZDF)
+# Bau HLS_List, MP4_List, HBBTV_List (nur ZDF + Arte)
 # Formate siehe StreamsShow						
 #	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
 #	fehlende Bandbreiten + Auflösungen werden ergänzt
@@ -10296,6 +10299,7 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 			% (quote(title_org), quote(Plot), quote(img), quote(geoblock), quote(sub_path), Dict_ID, HOME_ID)
 		addDir(li=li, label=title, action="dirList", dirID="StreamsShow", fanart=img, thumb=img, 
 			fparams=fparams, tagline=tagline, mediatype='')	
+	
 	return played_direct
 	
 #-------------------------
@@ -11130,6 +11134,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 # 
 # Plot = tagline (zusammengefasst: Titel, tagline, summary)
 # 10.11.2021 Sortierung der MP4-Liste von Auflösung nach Bitrate geändert
+# 05.05.2022 Wechsel-Button zu den DownloadTools hinzugefügt 
 #
 def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):	
 	PLog('StreamsShow:'); PLog(ID)
@@ -11180,7 +11185,13 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 	if 'MP4_List' in ID:
 		summ=''
 		li = test_downloads(li,Stream_List,title,summ,tagline,img,high=-1, sub_path=sub_path) # Downloadbutton(s)
-	
+		
+		# Wechsel-Button zu den DownloadTools:	
+		tagline = 'Downloads und Aufnahmen: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
+		fparams="&fparams={}"
+		addDir(li=li, label='Download- und Aufnahme-Tools', action="dirList", dirID="DownloadTools", 
+			fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)			
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 			    
 ####################################################################################################
