@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.04.2022
+#	Stand: 05.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -106,13 +106,14 @@ def Main_3Sat(name=''):
 			
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
-		tag = 'gesucht wird in [B]3Sat[/B]'
+		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
+		summ = 'gesucht wird in [B]3Sat[/B]'
 		title=py2_encode(title);
 		func = "resources.lib.my3Sat.Main_3Sat"
 		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
 			(quote(title), "3Sat", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R('3sat.png'), 
-			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 	
 	title="Suche in 3sat-Mediathek"		
 	fparams="&fparams={'first': 'True','path': ''}" 
@@ -576,11 +577,13 @@ def Start(name, path, rubrik=''):
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Sendereihe_Sendungen", 
 					fanart=R('3sat.png'), thumb=img_src, tagline=tag, summary=descr, fparams=fparams)
 
-													# restl. Rubriken der Leitseite listen
-		items =  blockextract('--red is-uppercase', page)
+		# todo: kurzzeitige neue Formate auswerten, z.B. <section class="o--cluster-brand"> (Top Sendungen)
+		#	
+													# restl. Rubriken der Leitseite listen													
+		items = blockextract('--red is-uppercase', page)
 		PLog(len(items))
 		img_src = R('Dir-folder.png')				# alles lazyload-Beiträge ohne Bilder + hrefs
-		for rec in items:					
+		for rec in items:
 			title	= stringextract('">', '</h2', rec)
 			title = cleanhtml(title)				# z.B.: 3sat</span>-Tipps
 			if u'Das könnte Dich' in title:			# leer (java-script)
@@ -589,6 +592,8 @@ def Start(name, path, rubrik=''):
 				continue
 			if u'livestream &' in title:			# ausgelagert
 				continue
+			title = repl_json_chars(title)	
+				
 			# Bilder für 1. Rubrik-Beitrag laden (lazyload-, carousel- + andere Sätze möglich):	
 			if SETTINGS.getSetting('pref_load_summary') == 'true': # hier nur Bild verwenden
 				if 'is-medium lazyload' in rec:
@@ -599,7 +604,7 @@ def Start(name, path, rubrik=''):
 					img_src = img_src.replace('\\/','/')
 					img_src = "https" + img_src
 				
-			PLog('Satz3:')
+			PLog('Satz15:')
 			path = DreiSat_BASE
 			PLog(title); PLog(path); PLog(img_src); 
 			title=py2_encode(title); path=py2_encode(path); 
@@ -1000,11 +1005,15 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 	
 	if page == '':								# Seitenausschnitt vom Aufrufer?
 		page, msg = get_page(path=path, do_safe=False)	
+	if 'byte' in str(type(page)):				# Bsp.: https://w1.grimme-online-award.de/goa/voting/ext_voting.pl
+		PLog("byte_page_detect: " + path)		#	-> str gegen codec-error (Bsp. Perl-Seite, s.o.)
+		page=str(page)		
 	pos = page.find('class="o--footer">')
+	PLog("Mark1")		
 	if pos > 0:
 		page = page[:pos]							# Fuß abschneiden
 	PLog(len(page))
-		
+
 	mediatype='' 		
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 		mediatype='video'
@@ -1147,7 +1156,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 		if dur:
 			tagline = tagline + ' | ' + dur
 			
-		if href.endswith('zdf.de/') or '/einstellungen' in href or u'Suche öffnen' in title:
+		if href.endswith('zdf.de/') or '/einstellungen' in href or u'Suche öffnen' in title or title=='':
 			continue
 		if href == DreiSat_BASE:
 			continue

@@ -283,6 +283,7 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 		mediatype='video'
 	
 	PLog("Mark0")
+	mark = query
 	img = R("suche_mv.png"); cnt=0
 	page = py2_decode(page)
 	page = transl_json(page)
@@ -293,6 +294,8 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 		channel 	= stringextract('"channel":"', '"', item)
 		topic 		= stringextract('"topic":"', '"', item)
 		title 		= stringextract('"title":"', '"', item)
+		title 		= make_mark(mark, title, "", bold=True)	# farbige Markierung
+		
 		descr 		= stringextract('"description":"', '"', item)
 		timestamp 	= stringextract('"timestamp":', ',', item)
 		duration 	= stringextract('"duration":', ',', item)

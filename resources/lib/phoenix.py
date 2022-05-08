@@ -99,13 +99,14 @@ def Main_phoenix():
 
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
-		tag = 'Sender: [B]alle Sender des ARD[/B] (phoenix selbst nicht unterstützt)' 
+		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
+		summ = 'Sender: [B]alle Sender des ARD[/B] (nicht in phoenix allein)' 
 		title=py2_encode(title); 
 		func = "resources.lib.phoenix.Main_phoenix"
 		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
 			(quote(title), "ARD", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R(ICON_PHOENIX), 
-			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 
 	title="Suche auf phoenix"
 	tag = "Suche Themen, Sendungen und Videos in phoenix"

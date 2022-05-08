@@ -142,13 +142,14 @@ def Main_KIKA(title=''):
 		
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
-		tag = 'gesucht wird in [B]KiKA[/B]'
+		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
+		summ = 'gesucht wird in [B]KiKA[/B]'
 		title=py2_encode(title);
 		func = "resources.lib.childs.Main_KIKA"
 		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
 			(quote(title), "KiKA", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=GIT_KIKA, 
-			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 	
 	title="Suche in KIKA"
 	summ = "Suche Sendungen in KIKA"
@@ -225,13 +226,14 @@ def Main_TIVI(title=''):
 			
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
-		tag = 'gesucht wird in [B]ZDF-tivi[/B]'
+		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
+		summ = 'gesucht wird in [B]ZDF-tivi[/B]'
 		title=py2_encode(title);
 		func = "resources.lib.childs.Main_TIVI"
 		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
 			(quote(title), "ZDF-tivi", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=GIT_ZDFTIVI, 
-			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 	
 	title="Suche in ZDFtivi"
 	summ = "Suche Videos in KIKA"

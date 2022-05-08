@@ -126,13 +126,14 @@ def Main_XL():
 				
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
-		tag = 'gesucht wird in [B]ARD[/B] (tagesschau.de selbst nicht unterstützt)'
+		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
+		summ = 'gesucht wird in [B]ARD[/B] (nicht in tagesschau.de allein)'
 		title=py2_encode(title);
 		func = "resources.lib.TagesschauXL.Main_XL"
 		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
 			(quote(title), "ARD", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=ICON_MAINXL, 
-			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 
 	title="Suche auf www.tagesschau.de"
 	summ = "Suche Sendungen und Videos auf www.tagesschau.de"

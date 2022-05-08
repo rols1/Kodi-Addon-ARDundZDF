@@ -88,13 +88,14 @@ def Main_funk():
 	
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
-		tag = 'gesucht wird in [B]FUNK[/B]'
+		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
+		summ = 'gesucht wird in [B]FUNK[/B]'
 		title=py2_encode(title);
 		func = "resources.lib.funk.Main_funk"
 		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
 			(quote(title), "Funk.net", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R(ICON_FUNK), 
-			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 
 	title = "Suche VIDEOS"
 	fparams="&fparams={'title': '%s' }" % title

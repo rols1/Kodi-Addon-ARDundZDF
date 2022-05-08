@@ -132,13 +132,14 @@ def Main_NEW(name='', CurSender=''):
 	
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
-		tag = 'Sender: [B]alle Sender des ARD[/B]' 
+		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
+		summ = 'Sender: [B]alle Sender des ARD[/B]' 
 		title=py2_encode(title); sender="ARD"
 		func = "resources.lib.ARDnew.Main_NEW"
 		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
 			(quote(title), "ARD", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=R(ICON_MAIN_ARD), 
-			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
+			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 		
 	title = 'Suche in ARD-Mediathek'
 	tag = def_tag

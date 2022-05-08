@@ -10,8 +10,26 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+
+08.05.2022 4.3.5
+			get_page_content (ARD neu): für ID ARDStartRubrik Blockmerkmal '"decor":' 
+			ausgewertet (neben ARDStart, relevant für "Guck, was die Promis gucken!").
+			MVWSearch (Modul yt): Nutzung make_mark für Markierung Suchbegriff (nur 
+			einwortige).
+			AddonInfos: Farbmarkierung in Ausgabe für Debuglog entfernt (cleanmark).
+			GetContent (Modul arte): Einzelbeiträge ohne pid überspringen (kein Video).
+			ArteCluster (Modul arte): Titel ohne Beiträge überspringen ('data":[]').
+			Kategorien (Modul arte): Auswertung für www.arte.tv/de/videos/neueste-videos
+			hinzugefügt (Button "Neueste Videos"), Anpassungen get_ArtePage, ArteMehr,
+			GetContent.
+			StreamsShow: Wechsel-Button zu den DownloadTools hinzugefügt (Einzelupdate).
+			Start(Modul my3Sat): repl_json_chars(title)
+			Sendereihe_Sendungen (Modul my3Sat): Fix codec-error bei ext. Webseiten, z.B.
+			../ext_voting.pl.
+			Sofortstart (Setting "Allgemein"): Voreinstellung auf EIN geändert.
+
 01.05.2022 4.3.4
-			Codebereinigung Modul arte : Auswertungsbereich Kategorien an arte-Änderung
+			Codebereinigung Modul arte: Auswertungsbereich Kategorien an arte-Änderung
 			angepasst, Auswertung für Webseite arte.tv hinzugefügt (Button Startseite),
 			Auswertung Kategorien ArteStart integriert, gelöscht: Kategorie_Dokus,
 			get_subkats, KatSub, neum: neu: ArteCluster, ArteMehr, get_cluster, 
@@ -19,6 +37,9 @@ CHANGE HISTORY
 			gen_alpha( Modul childs): Fix fehlende Titel in Podcast-Liste.
 			Main_KIKA (Modul childs): zusätzl. Button für Programmvorschau (1 Woche),
 			neue Funktion Kika_Vorschau.
+			ARD Audio Event Streams: Fixes für "aktuelle Livestreams (sportschau.de)": 
+			Anpassung an Änderung der Webseite (zeigte nur Javascript-Fehler), 
+			Button "Die Fussball-Bundesliga im ARD-Hörfunk" auskommentiert. 
 
 24.04.2022 4.3.3
 			ZDF_FlatListEpisodes: HTTP-Headers für Abruf von Serienlisten hinzugefügt
@@ -83,7 +104,7 @@ CHANGE HISTORY
 			Audio_get_sendung_api (Audiothek): Fix key-Bezeichner für DownloadMultiple.
 			ZDF-Mediathek: java-generierte Inhalte für "Derzeit beliebt", "Vorab - zuerst
 			online" und "Letzte Chance - noch kurz online" verfügbar gemacht - Anpassungen
-			in ZDFStart (ZDFStart_1, 'data-tracking-title=', ZDFStart_2, "lazyload"),
+			in ZDFStart (ZDFStart_1 'data-tracking-title=', ZDFStart_2 "lazyload"),
 			ZDF_get_tracking (neu, Nutzung get_teaserElement einschl. ZDF_get_teaserDetails 
 			und ZDF_get_teaserbox).
 			ZDF-funk-Startseite: 5-min-Cache für www.zdf.de/funk/ (timeoutanfällig). 
