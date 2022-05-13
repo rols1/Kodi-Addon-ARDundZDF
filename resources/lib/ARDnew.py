@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>17</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.05.2022
+# 	<nr>18</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1257,10 +1257,14 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		else:
 			PLog("check_full_shows")								# full_show im Titel: ganze Sendungen rot+fett
 			if ID != 'EPG' and ID != 'Search':				 		# bei Suche Absturz nach Video-Sofortstart
+				if pagetitle == '':
+					if '"homepage":' in s:							# Home-Titel kann fehlenden Sendungstitel enthalten
+						pagetitle = stringextract('"homepage":', '}', s)
+						pagetitle = stringextract('"title":"', '"', pagetitle)
 				title_samml = "%s|%s" % (title, pagetitle)			# Titel + Seitentitel (A-Z, Suche)
 				duration = stringextract('duration":', ',', s)		# sec-Wert
 				duration = seconds_translate(duration)				# 0:15
-				if SETTINGS.getSetting('pref_mark_full_shows') == 'true':
+				if SETTINGS.getSetting('pref_mark_full_shows') == 'true':							
 					title = ardundzdf.full_shows(title, title_samml, summ, duration, "full_shows_ARD")	
 
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
