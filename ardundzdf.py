@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>46</nr>										# Numerierung für Einzelupdate
-VERSION = '4.3.5'
-VDATE = '08.05.2022'
+VERSION = '4.3.6'
+VDATE = '14.05.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -271,7 +271,7 @@ else:
 		if os.path.exists(DL_CNT):
 			os.remove(DL_CNT)								# Zähler dl_cnt entfernen
 
-if os.path.exists(FLAG_OnlyUrl):							# strm-Liste für Synchronisierung					
+if os.path.exists(FLAG_OnlyUrl):							# Lockdatei für Synchronisierung strm-Liste				
 	now = time.time()
 	mtime = os.stat(FLAG_OnlyUrl).st_mtime
 	diff = int(now) - mtime
@@ -7377,14 +7377,14 @@ def ZDFStart(title, show_cluster='', path=''):
 	
 	content =  blockextract('cluster-title-wrap', page)		
 	promo=[]
-	if 'class="b-promo-teaser' in page:							# o. cluster-title-wrap
+	if 'class="b-promo-teaser' in page:							# Teaserboxen (ganze Seitenbreite)
 		promo = blockextract('class="b-promo-teaser', page, '</article>')
-		promo_cnt = len(promo)
-		PLog('content_promo1: ' + str(promo_cnt))
+		promo_max = len(promo)
+		PLog('content_promo1: ' + str(promo_max))
 	content = promo + content
 	PLog('content1: ' + str(len(content)))
 
-	tlist=[]; cnt=0												# Titel-Liste für Dopplererkenn.
+	tlist=[]; cnt=0												# Titel-Liste für Dopplererkenn., Promo-Zähler
 	for rec in content:
 		title = ZDF_get_clustertitle(rec)						# Cluster-Titel ermitteln
 		title = py2_decode(title)		
@@ -7438,9 +7438,9 @@ def ZDFStart(title, show_cluster='', path=''):
 			href = BASE
 			
 			if 'class="b-promo-teaser' in rec:					# Text für Teaserboxen erweitern
-				if cnt < promo_cnt:
+				if cnt < promo_max:	
 					label,path,img_src,descr,dauer,enddate,isvideo = ZDF_get_teaserDetails(page=rec)
-					label = "[B]Teaserbox:[/B] %s" % label
+					label = "[B]Teaserbox %d:[/B] %s" % (cnt+1, label)
 					tag = "%s\n\n%s" % (tag, descr)
 					cnt = cnt + 1
 			

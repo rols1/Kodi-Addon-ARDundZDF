@@ -10,6 +10,18 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+14.05.2022 4.3.6
+			Repo-README aktualisiert (Release-ZIP Kodi-Addon-ARDundZDF.zip umgestellt
+			für Kodi-Matrix, Beschreibung angepasst, Empfehlung für die Kodi-Anleitung 
+			von Rene8001 hinzugefügt).
+			repl_json_chars (Modul util): Herz-Emoji U+2764 -> love (Bsp. ARD: "We ❤ 
+			Animals").
+			ZDFStart: Numerierung der Teaserboxen (z.B. Startseite, relevant für ZDF + 
+			tivi).
+			get_page_content (ARD neu): Homepage-Titel ergänzt für Markierung ganzer
+			Sendungen (full_shows), z.B. Sendung "quer mit Christoph Süß".
+			strm-Modul: Anpassungen bei fehlender Abgleichliste (Settingdatei strmtoolset 
+			erzeugen, Dialoganpassung,  os.path.getsize(STRM_SYNCLIST) abgesichert.		
 
 08.05.2022 4.3.5
 			get_page_content (ARD neu): für ID ARDStartRubrik Blockmerkmal '"decor":' 

@@ -14,7 +14,7 @@ Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/release
 
 Plex hat die Unterstützung für Plugins in seinen Client-Softwarepaketen eingestellt. Die Repos für die Plex-Versionen [Plex-Plugin-ARDMediathek2016](https://github.com/rols1/Plex-Plugin-ARDMediathek2016) und [ARDundZDF](https://github.com/rols1/ARDundZDF) habe ich im März 2022 gelöscht (dto. FlickrExplorer, TuneIn2017, Shoutcast2017).<br>
 
-<b>Classic-Version der ARD Mediathek</b>: seit Juni 2021 sind die Classic-Links nicht mehr erreichbar. Der Code im Addon wurde entfernt; im Addon ist die neue ARD Mediathek weiterhin verfügbar (siehe Funktionen).<br>
+<b>Classic-Version der ARD Mediathek</b>: seit Juni 2021 sind die Classic-Links nicht mehr erreichbar. Der Code im Addon wurde entfernt; im Addon ist das Menü <b>ARD Mediathek Neu</b> voreingestellt (Details siehe Funktionen).<br>
 Damit entfallen auch die Radio-Podcasts der Classic-Version. Sie werden durch die neue Audiothek abgelöst.<br>
 
 #### Rückmeldungen willkommen:
@@ -44,11 +44,11 @@ Funktionen:
 
 #### ZDF Mediathek: 
 - Suche nach Sendungen
-- Startseite (wie Webseite, einschl. funk-Inhalte)
+- Startseite (wie Webseite)
+- ZDF-funk (https://www.zdf.de/funk)
 - Sendung Verpasst (Sendungen der letzten 7 Tage)
 - Sendungen A-Z
 - Rubriken
-- MeistGesehen (1 Woche)
 - ZDF-sportstudio
 - Barrierearm (Hörfassungen, Untertitel, Gebärdensprache)
 - ZDFinternational
@@ -57,6 +57,7 @@ Funktionen:
 #### 3Sat Mediathek:
 - Suche nach Sendungen
 - 3Sat-Livestream
+- Startseite (wie Webseite)
 - Sendung Verpasst (Sendungen der letzten 30 Tage
 - Sendungen A-Z
 - Themen
@@ -65,9 +66,10 @@ Funktionen:
 
 #### ARD-Audiothek Neu (Stand 25.02.2022) mit Podcast-Favoriten:
 - Suche
-- Livestreams, einschl. "Die Fußball-Bundesliga im ARD-Hörfunk", "ARD Event Streams", "Livestreams der sportschau.de" 
+- Livestreams, einschl. "ARD Audio Event Streams", "Livestreams der sportschau.de" 
 - Entdecken (wie Webseite)
 - Rubriken
+- Sport
 - Sender (Sendungen einzelner Radiosender)
 - FUNK-Podcasts - Pop und Szene
 - Podcast-Favoriten (manuell erweiterbar)
@@ -100,7 +102,7 @@ Funktionen:
 - Updates einzelner Bestandteile des  Addons (Einzelupdate) zwischen den regulären  Updates - Näheres siehe [Startpost im kodinerds-Forum](https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=502022#post502022) 
 
 #### weitere Module (optional)
-- ZDFmobile
+- ZDFmobile (gedacht als Alternative bei Ausfall der Webseite)
 - 3Sat
 - funk
 - Kinderprogramme (z.Z. KIKA und ZDFtivi)
@@ -115,14 +117,14 @@ Funktionen:
 
 INSTALLATION:
 ===================  
-### Hinweis für Kodi-Matrix-Nutzer: für die Erstinstallation muss die [Matrix-Version](https://repo.kodinerds.net) auf kodinerds.net verwendet werden. Dies gilt auch für ein Upgrade einer älteren Kodi-Version zu Matrix.
+### Hinweis für ältere Kodi-Versionen (Leia, Krypton): für die Erstinstallation muss die [Krypton-Version](https://repo.kodinerds.net) auf kodinerds.net verwendet werden. Dies gilt auch für ein Downgrade einer Kodi-Matrix-Version zu Leia, Krypton.
 
-- <b>Leia-Version:</b> Download der zip-Datei [aktuelles Release](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) 
-- <b>Matrix-Version:</b> Download der aktuellen zip-Datei ARDundZDF im [kodinerds-Repo, im Tab Kodi-Version Kodi 19 auswählen](https://repo.kodinerds.net)
+- <b>Matrix-Version:</b>Download der zip-Datei [aktuelles Release](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) oder Download der aktuellen zip-Datei ARDundZDF im [kodinerds-Repo](https://repo.kodinerds.net)
+- <b>Leia-Version:</b> Download der aktuellen zip-Datei ARDundZDF im [kodinerds-Repo, im Tab Kodi-Version Kodi 17 (Krypton) auswählen](https://repo.kodinerds.net) 
 - zip-Datei mittels Kodi-Menü Addons/Addon-Browser installieren
 - nur falls die Abhängigkeit zum Modul kodi-six bemängelt wird: Download und Installation des Moduls [script.module.kodi-six.zip](https://github.com/romanvm/kodi.six/releases)
 - Addon öffen und Addon-Einstellungen anpassen
-- [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
+- [Empfehlenswert: Kodi Anleitung & Beschreibung von Rene8001](https://www.kodinerds.net/index.php/Thread/47479-Hilfe-f%C3%BCr-Neulinge-Kodi-Anleitung-Einstellungen-GooglePlay-FireTV/?pageNo=1)
 
 Credits:
 ===================

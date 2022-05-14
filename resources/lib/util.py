@@ -1410,7 +1410,7 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
 		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
-		, (u'\r', u''), (u'#', u'*'), (u'u003e', u'')):		# u'u003e' 	-> u'®'
+		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love')):		# u'u003e' 	-> u'®'
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret

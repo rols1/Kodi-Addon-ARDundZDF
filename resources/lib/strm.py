@@ -4,7 +4,7 @@
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
 # 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.03.2022
+#	Stand: 14.05.2022
 #
 
 from __future__ import absolute_import
@@ -99,6 +99,7 @@ def strm_tools():
 		msg1 = u'Monitorreset'
 		msg2 = u"für strm-Tools"
 		sync_hour = strm_tool_set(mode="load")			# Setting laden
+		PLog("sync_hour: " + sync_hour)	
 		
 		# Tools verlassen: Haupt-PRG startet Monitor neu
 		tmenu = [ u"Abgleichintervall | %s Stunden | Tools verlassen" % sync_hour,
@@ -106,7 +107,11 @@ def strm_tools():
 					u"strm-Log anzeigen", u"sofortigen Abgleich einer Liste erzwingen",
 					u"unterstützte Sender / Beiträge", u"zu einem strm-Verzeichnis wechseln | 1 Beitrag ansehen"
 				]
-		head = u"strm-Tools | nächster Abgleich: %s Uhr" % Dict("load", "next_strm_sync")
+		next_strm_sync = Dict("load", "next_strm_sync")
+		if next_strm_sync == False:
+			head = "es existiert noch keine Abgleichliste"
+		else:
+			head = u"strm-Tools | nächster Abgleich: %s Uhr" % next_strm_sync
 		ret = xbmcgui.Dialog().select(head, tmenu)
 		PLog("tools_ret: " + str(ret))	
 		if ret == None or ret == -1:
@@ -132,10 +137,10 @@ def strm_tools():
 														# Liste anzeigen / löschen / abgleichen / zum Verzeichnis wechseln
 		if ret == 1 or  ret == 2 or  ret == 5 or ret == 7:
 			PLog("show_list")
-			PLog(os.path.getsize(STRM_SYNCLIST))
 			title = u"strm-Listen im Abgleich"
 			synclist=[]; mylist1=[]; mylist2=[]			# 2 Listen: textviewer, select
 			if os.path.exists(STRM_SYNCLIST):
+				PLog(os.path.getsize(STRM_SYNCLIST))
 				if os.path.getsize(STRM_SYNCLIST) > 10:	
 					synclist = strm_synclist(mode="load")
 					PLog("synclist: %d" % len(synclist))
@@ -688,27 +693,30 @@ def strm_synclist(mode="load", item=''):
 # mode: load / save /set 
 #	set i.V.m. index, val
 def strm_tool_set(mode="load", index=0, val=''):
-	PLog("strm_tool_set:")
+	PLog("strm_tool_set: " + mode)
 	sync_hour = "12"						# Default Intervall in Std.	
 	
 	toolset = RLoad(STRM_TOOLS_SET, abs_path=True)
 	PLog(toolset[:60])
 	toolset = toolset.splitlines()
+	save_init=False
 	if len(toolset) == 0:					# Init mit Default sync_hour
 		toolset.append(sync_hour)
+		index=0; val=sync_hour
+		save_init=True
 	
-	if mode == "load":
-		sync_hour = toolset[0]
-		sync_hour = sync_hour.strip()			# manuell geändert?
-		return sync_hour
-
-	if mode == "save":
+	if mode == "save" or save_init:
 		PLog(index); PLog(val)
 		if val:
 			toolset[index] = val
 		toolset = "\n".join(toolset)
 		RSave(STRM_TOOLS_SET, toolset)
 		
+	if mode == "load":
+		sync_hour = toolset[0]
+		sync_hour = sync_hour.strip()			# manuell geändert?
+		return sync_hour
+
 	return
 # ----------------------------------------------------------------------
 # neue Folgen aufnehmen (Log: Check1)
