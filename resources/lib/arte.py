@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.05.2022
+# 	<nr>12</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -157,12 +157,12 @@ def get_live_data(name):
 			descr = ''
 		PLog(title); PLog(img); PLog(sname); PLog(stime); PLog(vonbis); 
 
-	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
-	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
-	for line in zdf_streamlinks:
+	ard_streamlinks = get_ARDstreamlinks(skip_log=True)
+	# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
+	for line in ard_streamlinks:
 		webtitle, href, thumb, tagline = line.split('|')
 		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
-		if up_low('Arte ') in up_low(webtitle): 	# Arte mit Blank!
+		if up_low('Arte') in up_low(webtitle): 
 			href = href
 			break
 					
@@ -484,9 +484,22 @@ def Beitrag_Liste(url, title, get_cluster='yes'):
 # 24.09.2020 Filterung master.m3u8 nach "DE" oder "FR"
 # 02.04.2022 Nutzung build_Streamlists_buttons mit HLS_List, MP4_List,
 #	Vorauswahl Deutsch bei Sofortstart (HLS + MP4)
+# 15.05.2022 Rückfall auf api-v2-Call, da api-opa-Call kurze Teaser-Streams
+#	statt vollständ. Videos enthalten kann. Damit Verzicht auf HBBTV-Streams
+#
+# ----------------------------------------------------------------------
+# holt die Videoquellen -> Sofortstart bzw. Liste der  Auflösungen 
+# tag hier || behandelt (s. GetContent)
+# 14.08.2020 Beschränkung auf deutsche + concert-Streams entfernt
+#	(Videos möglich mit ausschl. franz. Streams), master.m3u8 wird
+#	unverändert ausgewertet.
+# 24.09.2020 Filterung master.m3u8 nach "DE" oder "FR"
+# 02.04.2022 Nutzung build_Streamlists_buttons mit HLS_List, MP4_List,
+#	Vorauswahl Deutsch bei Sofortstart (HLS + MP4)
 # 20.04.2022 api (v1 -> v2) und Format geändert. Nur noch HLS-Quellen
 # 21.04.2022 neuer api-Call (mit Authorization) aus Java-MServer von 
 #	MediathekView
+# 
 def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	PLog("SingleVideo: " + pid)
 	title_org = title
@@ -505,7 +518,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 		MyDialog(msg1, msg2, '')
 		return li
 	PLog(len(page))
-	
+
 	if summ == '':							# ev. nicht besetzt in Beitrag_Liste. Fehlt in stream_* Dateien
 		summ = stringextract('description":"',  '"', page)
 		summ=transl_json(summ); summ=repl_json_chars(summ)
@@ -527,7 +540,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 
 	header = "{'Authorization': 'Bearer Nzc1Yjc1ZjJkYjk1NWFhN2I2MWEwMmRlMzAzNjI5NmU3NWU3ODg4ODJjOWMxNTMxYzEzZGRjYjg2ZGE4MmIwOA'}"
 	page, msg = get_page(path=stream_web, JsonPage=True, do_safe=False, header=header)
-	#RSave('/tmp/x.json', py2_encode(page))	# Debug	
+	#RSave('/tmp/x_artestreams_opa.json', py2_encode(page))	# Debug	
 
 	HLS_List, MP4_List = get_streams(page, title,summ, mode="hls_mp4")
 	page, msg = get_page(path=stream_hbbtv, JsonPage=True, do_safe=False, header=header)
