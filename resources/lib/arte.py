@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>12</nr>										# Numerierung für Einzelupdate
+# 	<nr>13</nr>										# Numerierung für Einzelupdate
 #	Stand: 15.05.2022
 
 # Python3-Kompatibilität:
@@ -484,21 +484,12 @@ def Beitrag_Liste(url, title, get_cluster='yes'):
 # 24.09.2020 Filterung master.m3u8 nach "DE" oder "FR"
 # 02.04.2022 Nutzung build_Streamlists_buttons mit HLS_List, MP4_List,
 #	Vorauswahl Deutsch bei Sofortstart (HLS + MP4)
-# 15.05.2022 Rückfall auf api-v2-Call, da api-opa-Call kurze Teaser-Streams
-#	statt vollständ. Videos enthalten kann. Damit Verzicht auf HBBTV-Streams
-#
-# ----------------------------------------------------------------------
-# holt die Videoquellen -> Sofortstart bzw. Liste der  Auflösungen 
-# tag hier || behandelt (s. GetContent)
-# 14.08.2020 Beschränkung auf deutsche + concert-Streams entfernt
-#	(Videos möglich mit ausschl. franz. Streams), master.m3u8 wird
-#	unverändert ausgewertet.
-# 24.09.2020 Filterung master.m3u8 nach "DE" oder "FR"
-# 02.04.2022 Nutzung build_Streamlists_buttons mit HLS_List, MP4_List,
-#	Vorauswahl Deutsch bei Sofortstart (HLS + MP4)
 # 20.04.2022 api (v1 -> v2) und Format geändert. Nur noch HLS-Quellen
 # 21.04.2022 neuer api-Call (mit Authorization) aus Java-MServer von 
 #	MediathekView
+# 15.05.2022 Nutzung api-v2-Call (nur noch HLS-Quellen) und api-opa-Call 
+#	(kurze Teaser-Streams statt vollständ. Videos möglich, im Addon
+#	werden MP4- und HBBTV-Quellen verwendet). 
 # 
 def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	PLog("SingleVideo: " + pid)
@@ -527,10 +518,6 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	# Abschnitt offlineAvailability enthält Links zu div. Quellen,
 	#	z.Z. nur stream_web + stream_hbbtv genutzt:
 	streams = stringextract('"videoStreams":',  ']', page)		
-	#stream_ios = stringextract('iOS":',  '}', streams)
-	#stream_ios = stringextract('href":"',  '"', stream_ios)
-	#stream_andr = stringextract('android":',  '}', streams)
-	#stream_andr = stringextract('href":"',  '"', stream_andr)
 	
 	stream_hbbtv = stringextract('hbbtv":',  '}', streams)
 	stream_hbbtv = stringextract('href": "',  '"', stream_hbbtv)
@@ -648,6 +635,8 @@ def get_streams(page, title,summ, mode="hls_mp4"):
 # 26.04.2022 Abschluss Kategorien nach Auswertung "Wissenschaft",
 #	Button Startseite hinzugefügt, Codebereinigung (gelöscht:  Kategorie_Dokus,
 #	get_subkats, KatSub, neu: ArteCluster, ArteMehr, get_cluster, get_next_url)
+# 15.05.2022 Kat-Liste + Kat-Icons nicht mehr auf den Webseiten enthalten, neue
+#	Icons gefertigt + Kat-Liste hier mit Links vorgegeben 
 #
 def Kategorien():
 	PLog("Kategorien:")
@@ -655,36 +644,35 @@ def Kategorien():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='arte')				# Home-Button
 	
-	title = "Startseite arte.tv"
-	path = BASE_ARTE+'/de/'
-	page = get_ArtePage('Kategorien_1', title, path=path)	
-	if page == '':	
-		return li
+	cat_list = ["Dokus und Reportagen|arte_dokus.png|/videos/dokumentationen-und-reportagen/", 
+				"Kino|arte_kino.png|/videos/kino/",
+				"Fernsehfilme und Serien|arte_filme.png|/videos/fernsehfilme-und-serien/", 
+				"Aktuelles und Gesellschaft|arte_act.png|/videos/aktuelles-und-gesellschaft/",
+				"Kultur und Pop|arte_kultur.png|/videos/kultur-und-pop/", 
+				"ARTE Concert|arte_conc.png|/arte-concert/",
+				"Wissenschaft|arte_science.png|/videos/wissenschaft/", 
+				"Entdeckung der Welt|arte_entdeck.png|/videos/entdeckung-der-welt/", 
+				"Geschichte|arte_his.png|/videos/geschichte/"
+				]
 	
+	path = "https://www.arte.tv/de/"
 	path=py2_encode(path)
 	fparams="&fparams={'katurl': '%s'}" % quote(path)			# Button Startseite
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
+	addDir(li=li, label="Startseite", action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
 		thumb=R(ICON_ARTE_START), fparams=fparams)
 	
-	pos1 = page.find(':"Alle Kategorien')						# ausschneiden
-	page = page[pos1+1:]
-	PLog(page[:100])
 
-	items = blockextract('"title"',  page)
-	PLog(len(items))
-	for item in items:											# Kategorien listen
-		title = stringextract('title":"', '"', item)
-		katurl = stringextract('url":"', '"', item)
-		img = get_img(item)
+	pre = "https://www.arte.tv/de"		
+	for item in cat_list:											# Kategorien listen
+		title, img, katurl = item.split("|")
+		katurl = pre + katurl
 		
 		PLog('Satz4:')
 		PLog(title); PLog(katurl);
 		title=py2_encode(title); katurl=py2_encode(katurl)		# ohne title, katurl laden
 		fparams="&fparams={'title': '', 'katurl': '%s'}" % quote(katurl)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
-				thumb=img, fparams=fparams)
-		if title == "Wissenschaft":
-			break
+				thumb=R(img), fparams=fparams)
 
 	title = "Neueste Videos"									# Button Neueste Videos
 	path = "https://www.arte.tv/de/videos/neueste-videos/"
