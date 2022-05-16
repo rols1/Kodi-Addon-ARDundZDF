@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>13</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.05.2022
+# 	<nr>14</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -487,52 +487,72 @@ def Beitrag_Liste(url, title, get_cluster='yes'):
 # 20.04.2022 api (v1 -> v2) und Format geändert. Nur noch HLS-Quellen
 # 21.04.2022 neuer api-Call (mit Authorization) aus Java-MServer von 
 #	MediathekView
-# 15.05.2022 Nutzung api-v2-Call (nur noch HLS-Quellen) und api-opa-Call 
+# 15.05.2022 Nutzung api_v2_Call (nur noch HLS-Quellen) plus api_opa_Call 
 #	(kurze Teaser-Streams statt vollständ. Videos möglich, im Addon
 #	werden MP4- und HBBTV-Quellen verwendet). 
+#	Der Sofortstart findet hier statt (sonst build_Streamlists_buttons),
+#		um Rekursion (ohne Homebuttons) zu vermeiden (ev. Ursache mit
+#		Modulwechsel).
 # 
 def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	PLog("SingleVideo: " + pid)
 	title_org = title
 
-	#path = 'https://api.arte.tv/api/player/v2/config/de/%s' % pid	# nur  HLS-Quellen (20.04.2022)
-	path = "https://api.arte.tv/api/opa/v3/programs/de/%s"  % pid
-
+	path1 = 'https://api.arte.tv/api/player/v2/config/de/%s' % pid	# nur  HLS-Quellen, ev. Teaser (20.04.2022)
+	path2 = "https://api.arte.tv/api/opa/v3/programs/de/%s"  % pid	# Nutzung HBBTV- + MP4-Quellen
 	header = "{'Authorization': 'Bearer Nzc1Yjc1ZjJkYjk1NWFhN2I2MWEwMmRlMzAzNjI5NmU3NWU3ODg4ODJjOWMxNTMxYzEzZGRjYjg2ZGE4MmIwOA',\
 		'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',\
 		'Accept': 'application/json'}"
-	page, msg = get_page(path, JsonPage=True, do_safe=False, header=header)
-		
+
+	page, msg = get_page(path1, JsonPage=True, do_safe=False)		# api_v2_Call
 	if page == '':						
 		msg1 = 'Fehler in SingleVideo: %s' % title
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li
 	PLog(len(page))
+	page = page.replace('\\/', '/')
+	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
+	#RSave('/tmp/x_artestreams_v2.json', py2_encode(page))	# Debug	
 
-	if summ == '':							# ev. nicht besetzt in Beitrag_Liste. Fehlt in stream_* Dateien
+	if summ == '':	# ev. nicht besetzt in Beitrag_Liste. Fehlt in stream_* Dateien
 		summ = stringextract('description":"',  '"', page)
-		summ=transl_json(summ); summ=repl_json_chars(summ)
+		summ=transl_json(summ); summ=repl_json_chars(summ)			# -> HLS_List, HBBTV_List, MP4_List
 	PLog("summ: " + summ)
 	
-	# Abschnitt offlineAvailability enthält Links zu div. Quellen,
-	#	z.Z. nur stream_web + stream_hbbtv genutzt:
-	streams = stringextract('"videoStreams":',  ']', page)		
+	hls_add=""; mp4_add=""											# Titelzusatz für Trailer
+	trailer_hls, HLS_List = get_streams_api_v2(page,title_org,summ)
+	PLog("trailer_hls: " + str(trailer_hls))
+	if trailer_hls:													# Trailer eher in MP4_List wahrsch.
+		hls_add = ", HLS-Streams: [B]Trailer[/B]"
 	
+	#-------------------------------------------------------------	# HBBTV- + MP4-Quellen
+	page, msg = get_page(path2, JsonPage=True, do_safe=False, header=header)	# api_opa_Call_1
+	#RSave('/tmp/x_artestreams_opa1.json', py2_encode(page))	# Debug	
+	if page == '':						
+		PLog("error_api_opa_Call_1")
+	# Abschnitt offlineAvailability enthält Links zu div. Quellen,
+	#	z.Z. nur stream_hbbtv genutzt (ent. MP4-Quellen):
+	streams = stringextract('"videoStreams":',  ']', page)		
 	stream_hbbtv = stringextract('hbbtv":',  '}', streams)
 	stream_hbbtv = stringextract('href": "',  '"', stream_hbbtv)
-	stream_web = stringextract('web":',  '}', streams)
-	stream_web = stringextract('href": "',  '"', stream_web)
-	PLog("stream_web: " + stream_web); PLog("stream_hbbtv: " + stream_hbbtv)
+	#stream_web = stringextract('web":',  '}', streams)				# nicht genutzt - s. api_v2_Call
+	#stream_web = stringextract('href": "',  '"', stream_web)
+	#PLog("stream_web: " + stream_web); 
+	PLog("stream_hbbtv: " + stream_hbbtv)
 
-	header = "{'Authorization': 'Bearer Nzc1Yjc1ZjJkYjk1NWFhN2I2MWEwMmRlMzAzNjI5NmU3NWU3ODg4ODJjOWMxNTMxYzEzZGRjYjg2ZGE4MmIwOA'}"
-	page, msg = get_page(path=stream_web, JsonPage=True, do_safe=False, header=header)
-	#RSave('/tmp/x_artestreams_opa.json', py2_encode(page))	# Debug	
+	page, msg = get_page(path=stream_hbbtv, JsonPage=True, do_safe=False, header=header)	# api_opa_Call_2
+	if page == '':						
+		PLog("error_api_opa_Call_1")
+	#RSave('/tmp/x_artestreams_opa2.json', py2_encode(page))	# Debug	
+	trailer_mp4, MP4_List = get_streams_api_opa(page, title_org, summ)
+	if trailer_mp4:
+		mp4_add = ", MP4-Streams: [B]Trailer[/B]"
 
-	HLS_List, MP4_List = get_streams(page, title,summ, mode="hls_mp4")
-	page, msg = get_page(path=stream_hbbtv, JsonPage=True, do_safe=False, header=header)
-	dummy, HBBTV_List = get_streams(page, title,summ, mode="hbbtv")	# HLS_List hier leer
-	PLog("HBBTV_List: " + str(len(HBBTV_List)))
+	HBBTV_List=[]
+	PLog("HLS_List: " + str(len(HLS_List)))
+	PLog("MP4_List: " + str(len(MP4_List)))
+	PLog("HBBTV_List: ohne (entspr. MP4_list)")
 			
 	if not len(HLS_List) and not len(MP4_List):			
 		msg1 = u'SingleVideo: [B]%s[/B]' % title
@@ -540,15 +560,25 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 		MyDialog(msg1, msg2, '')
 		return li
 	
+	if SETTINGS.getSetting('pref_video_direct') == 'true':			# Sofortstart hier (s.o.) + raus
+		PLog('Sofortstart: SingleVideo')
+		title_hls = "%s %s" % (title_org, hls_add)
+		PlayVideo_Direct(HLS_List, MP4_List, title=title_hls, thumb=img, Plot=summ)
+		return 
+	#---------
+	
 	ID = 'arte'
 	Dict("store", '%s_HLS_List' % ID, HLS_List) 
 	Dict("store", '%s_MP4_List' % ID, MP4_List) 
-	Dict("store", '%s_HBBTV_List' % ID, HBBTV_List) 
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='arte')					# Home-Button
 	
-	tagline = "Titel: %s\n\n%s\n\n%s" % (title_org, tag, summ)	# s.a. ARD (Classic + Neu)
+	if hls_add:									# Trailer-Zusatz	
+		title = "%s %s" % (title, hls_add)
+	if mp4_add:	
+		title = "%s %s" % (title, mp4_add)
+	tagline = "Titel: %s\n\n%s\n\n%s" % (title, tag, summ)	# s.a. ARD (Classic + Neu)
 	tagline=repl_json_chars(tagline); tagline=tagline.replace( '||', '\n')
 	Plot=tagline; 
 	Plot=Plot.replace('\n', '||')
@@ -562,32 +592,34 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 # ----------------------------------------------------------------------
-# Auslesen der Streamdetails
-# Arte verwendet wie ZDF bei HBBTV MP4-Formate (HLS_List bleibt leer)
+# Auslesen der Streamdetails api-v2-Call (nur HLS)
+# Arte verwendet bei HBBTV MP4-Formate wie ZDF (HLS_List bleibt leer)
 #
-def get_streams(page, title,summ, mode="hls_mp4"):
-	PLog("get_streams: " + mode)
-
-	formitaeten = blockextract('"videoStreamId"', page) 
+def get_streams_api_v2(page, title, summ):
+	PLog("get_streams_api_v2:")
+	title_org = title
+	
+	formitaeten = blockextract('"url":"https', page) # Bsp. "id":"HTTPS_MQ_1", "id":"HLS_XQ_1"
 	PLog(len(formitaeten))
 	
-	form_arr = []; rec_list=[]	
-	HLS_List=[]; MP4_List=[];
+	HLS_List=[]; trailer=False
 	for rec in formitaeten:	
-		versions = stringextract('"versions":',  ']', rec)
+		url = stringextract('"url":"',  '"', rec)
+		if url.find("Trailer") > 0:
+			trailer = True
+		mediaType = stringextract('"protocol":"',  '"', rec)
+		bitrate = ""
 		
-		mediaType = stringextract('"mediaType": "',  '"', rec)
-		bitrate = stringextract('"bitrate":',  ',', rec)
-		quality = stringextract('"quality": "',  '"', rec)
-		width = stringextract('"width": ',  ',', rec)
-		height = stringextract('"height": ',  ',', rec)		# ? fehlt
-		if height == "": height = "?"
+		mainQuality = stringextract('"mainQuality":',  '}', rec)
+		quality = stringextract('"code":"',  '"', mainQuality)		# "XQ"
+		width = stringextract('"label":"',  '"', mainQuality)		# "720p"
+		height="?"
 		size = "%sx%s" % (width, height)
+		size = size.replace("p", "")
 		
-		url = stringextract('"url": "',  '"', rec)
-		lang = stringextract('"audioLabel": "',  '"', versions)	# z.B. Deutsch (Original)
+		versions = stringextract('"versions":',  '}', rec)
+		lang = stringextract('"label":"',  '"', versions)			# z.B. Deutsch (Original)
 		lang = transl_json(lang)
-		shortLabel = stringextract('"audioShortLabel": "',  '"', versions) # Bsp..: "UT" oder "FR"
 		
 		PLog('Satz3:')
 		PLog(url); PLog(size); PLog(lang);
@@ -598,21 +630,64 @@ def get_streams(page, title,summ, mode="hls_mp4"):
 		#	Downloads (MP4): get_bestdownload berücksichtigt Setting pref_arte_streams
 		# skip Parseplaylist für master.m3u8 (arte liefert Auflösungen als master.m3u8)
 		if SETTINGS.getSetting('pref_video_direct') == 'true':	
-			if lang.find("Deutsch") < 0:		# Sofortstart nur Deutsch
+			if lang.strip() != "Deutsch":	# Sofortstart nur Deutsch
 				PLog("skip_%s" % lang)
 				continue
-		if '.m3u8' in url:						# Hinw.: Beschreib. 384x216 für master.m3u8 mögl. statt 1280x720
-			HLS_List.append('HLS, [B]%s[/B] ** %s ** AUTO ** %s#%s' % (lang, size, title,url))
-		else:									# MP4
+		if 'master.m3u8' in url:				# HLS master.m3u8 
+			HLS_List.append('HLS, [B]%s[/B] ** %s ** AUTO ** %s#%s' % (lang, size, title, url))
+		else:
+			if ".m3u8" in url:									# HLS
+				HLS_List.append('HLS, [B]%s[/B] ** %s ** %s ** %s#%s' % (lang, size, quality, title, url))
+
+	return trailer,HLS_List
+
+# ----------------------------------------------------------------------
+# Auslesen der Streamdetails api-opa-Call 
+# Arte verwendet bei HBBTV MP4-Formate wie ZDF (HLS_List bleibt leer)
+#
+def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
+	PLog("get_streams_api_opa: " + mode)
+	title_org = title
+
+	formitaeten = blockextract('"videoStreamId"', page) 
+	PLog(len(formitaeten))
+	
+	MP4_List=[]; trailer=False
+	for rec in formitaeten:	
+		versions = stringextract('"versions":',  ']', rec)
+		
+		mediaType = stringextract('"mediaType": "',  '"', rec)
+		bitrate = stringextract('"bitrate":',  ',', rec)
+		quality = stringextract('"quality": "',  '"', rec)
+		width = stringextract('"width": ',  ',', rec)
+		height = stringextract('"height": ',  ',', rec)	
+		if height == "": height = "?"
+		size = "%sx%s" % (width, height)
+		
+		url = stringextract('"url": "',  '"', rec)
+		if url.find("Trailer") > 0:
+			trailer = True
+
+		lang = stringextract('"audioLabel": "',  '"', versions)	# z.B. Deutsch (Original)
+		lang = transl_json(lang)
+		shortLabel = stringextract('"audioShortLabel": "',  '"', versions) # Bsp..: "UT" oder "FR"
+		
+		PLog('Satz5:')
+		PLog(url); PLog(size); PLog(lang);
+		
+		# versch. Streams möglich (franz, UT, ..) - in Konzert-Streams
+		#	Einzelauflösungen alle erlauben (s.o.),
+		#	für Sofortstart nur Deutsch auswählen (HLS + MP4)
+		#	Downloads (MP4): get_bestdownload berücksichtigt Setting pref_arte_streams
+		# skip Parseplaylist für master.m3u8 (arte liefert Auflösungen als master.m3u8)
+		if ".mp4" in url:										# MP4
 			title_url = u"%s#%s" % (title, url)
 			mp4 = "MP4 [B]%s[/B]" % lang
 			item = u"%s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
 				(mp4, quality, bitrate, size, title_url)
 			MP4_List.append(item)
 
-	PLog("HLS_List: " + str(len(HLS_List)))	
-	PLog("MP4_List: " + str(len(MP4_List)))		# MP4_List = download_list
-	return HLS_List,MP4_List
+	return trailer,MP4_List
 	
 # ----------------------------------------------------------------------
 # BASE_ARTE wird nur zum Auslesen der Kategorien verwendet
