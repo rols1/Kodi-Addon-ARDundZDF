@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>18</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.04.2022
+# 	<nr>19</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2409,7 +2409,7 @@ def get_ZDFstreamlinks(skip_log=False):
 		
 	if days:									# skip CacheTime=0
 		page = Dict("load", 'zdf_streamlinks', CacheTime=CacheTime)
-		if len(str(page)) > 1000:					# bei Error nicht leer od. False von Dict
+		if len(str(page)) > 100:					# bei Error nicht leer od. False von Dict
 			if skip_log == False:
 				PLog(page)							# für IPTV-Interessenten
 			return page.splitlines()
@@ -2497,7 +2497,7 @@ def get_ARDstreamlinks(skip_log=False):
 		page = Dict("load", ID, CacheTime=CacheTime)
 		page = py2_encode(page)
 
-		if len(str(page)) > 1000:					# bei Error nicht leer od. False von Dict
+		if len(str(page)) > 100:					# bei Error nicht leer od. False von Dict
 			if skip_log == False:
 				PLog(page)							# für IPTV-Interessenten
 			return page.splitlines()
