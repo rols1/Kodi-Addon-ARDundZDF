@@ -2385,8 +2385,11 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 #-----------------------------------------------
 # ARD-Links s. get_ARDstreamlinks
 # Sender: ZDF, ZDFneo, 3sat, Phoenix, KiKA, ZDFinfo.
-# Aufrufer : SenderLiveListe, ZDFStartLive, get_live_data (Arte),
-#			Live (3sat), Kika_Live, get_playlist_img
+#
+# Aufruf get_sort_playlist (<- EPG_Sender, EPG_ShowAll,
+#	TVLiveRecordSender), SenderLiveListe, get_live_data (Arte),
+#	Live (3sat), Kika_Live, get_playlist_img
+#
 # ermittelt master.m3u8 für die ZDF-Sender (Kennz. ZDFsource in
 #	livesenderTV.xml). Rückgabe Liste (Zeile: Sender|Url) -
 #	Reihenfolge wie Web (www.zdf.de/live-tv).
@@ -2479,7 +2482,9 @@ def get_ZDFstreamlinks(skip_log=False):
 	return zdf_streamlinks	
 #-----------------------------------------------
 # ZDF-Links s. get_ZDFstreamlinks
-# Aufruf SenderLiveListe, ARDStartRubrik -> get_playlist_img
+# Aufruf get_sort_playlist (<- EPG_Sender, EPG_ShowAll,
+#	 TVLiveRecordSender), SenderLiveListe, get_playlist_img
+#
 # 01.12.2021 erweitert um Liste für Untertitel-Links
 # 17.02.2021 Auswertung publicationService/name statt
 #	longTitle

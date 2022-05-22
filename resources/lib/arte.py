@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>14</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.05.2022
+#	Stand: 22.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -552,7 +552,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo):
 	HBBTV_List=[]
 	PLog("HLS_List: " + str(len(HLS_List)))
 	PLog("MP4_List: " + str(len(MP4_List)))
-	PLog("HBBTV_List: ohne (entspr. MP4_list)")
+	PLog("HBBTV_List: ohne (=MP4_list)")
 			
 	if not len(HLS_List) and not len(MP4_List):			
 		msg1 = u'SingleVideo: [B]%s[/B]' % title
@@ -665,7 +665,7 @@ def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 		size = "%sx%s" % (width, height)
 		
 		url = stringextract('"url": "',  '"', rec)
-		if url.find("Trailer") > 0:
+		if url.find("Trailer") > 0 or url.find("_EXTRAIT_") > 0:	# Trailer-Kennz. (Stand 22.05.2022)
 			trailer = True
 
 		lang = stringextract('"audioLabel": "',  '"', versions)	# z.B. Deutsch (Original)

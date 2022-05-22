@@ -10,6 +10,33 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.05.2022 4.3.7
+			ZDF_Sendungen: Ausleitung funk-A-Z-Sendungen entfernt (obsolet).
+			get_live_data (Modul arte): Austausch get_ZDFstreamlinks gegen 
+			get_ARDstreamlinks (Senderbelegung im Cache geändert).
+			Kategorien (Modul arte): Kat-Liste + Kat-Icons nicht mehr auf den Webseiten
+			enthalten, neue Icons gefertigt + Kat-Liste mit Links vorgegeben.
+			SingleVideo (Modul arte): Nutzung api_v2_Call für HLS-Quellen, Nutzung
+			api_opa_Call für MP4-Quellen (Teaser-Streams statt vollständ. Videos möglich),
+			Wegfall HBBTV-Quellen (mit MP4-Quellen identisch), Trailer-Kennung im Info-
+			Text (für HLS + MP4, Kennz.: TRAILER, _EXTRAIT_).
+			ZDF_Sendungen: Ausleitung funk-A-Z-Sendungen entfernt (obsolet).
+			ZDF_get_clustertitle: Auswertung für <h3>-Titel erweitert, Auswertungsbereich
+			auf 600 Zeichen begrenzt, Datenmüll hinter Titel entfernt (</h..).
+			ZDFRubrikSingle: Auswertung Beiträge ohne Cluster, no_title_Check2: ohne
+			no-title. 
+			ZDF_get_tracking: direkte Suche im Block statt via ZDF_get_clustertitle.
+			ZDF_BildgalerieSingle: zusätzl. Param. li zur Vermeid. Home-Doppel bei Aufruf 
+			aus ZDF_get_content.
+			get_ZDFstreamlinks, get_ARDstreamlinks: Fehlerabgleich auf 100 Zeichen verrin-
+			gert (1000 für ZDFstreamlinks zu groß - pref_tv_store_days wirkungslos).
+			ZDF_Verpasst: Notification mit Info zu gewähltem Tag + Sender. 
+			livesenderTV.xml: Anpassung Tags <hrefsender> und <link> an get_ARDstreamlinks
+			(wie arte).
+			SenderLiveListe: für Sender ohne Icon (private) Icon tv-livestreams.png
+			ergänzt.
+
+
 14.05.2022 4.3.6
 			Repo-README aktualisiert (Release-ZIP Kodi-Addon-ARDundZDF.zip umgestellt
 			für Kodi-Matrix, Beschreibung angepasst, Empfehlung für die Kodi-Anleitung 

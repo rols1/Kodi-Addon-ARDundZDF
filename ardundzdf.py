@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>46</nr>										# Numerierung für Einzelupdate
-VERSION = '4.3.6'
-VDATE = '20.05.2022'
+VERSION = '4.3.7'
+VDATE = '22.05.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6654,7 +6654,10 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 						
 		img = stringextract('<thumbnail>', '</thumbnail>', element) 
 		if img.find('://') == -1:	# Logo lokal? -> wird aus Resources geladen, Unterverz. leider n.m.
-			img = R(img)
+			if img:											# kann fehlen, z.B. bei Privaten
+				img = R(img)
+			else:				
+				img = R(ICON_MAIN_TVLIVE)
 			
 		geo = stringextract('<geoblock>', '</geoblock>', element)
 		PLog('geo: ' + geo)
@@ -7329,8 +7332,8 @@ def ZDFStart(title, show_cluster='', path=''):
 			ZDF_get_tracking(title, page, show_cluster, ID)							
 			return
 		else:															#Home-Button in ZDFRubrikSingle
-			# Cluster-Blöcke, dto. ZDF_Sendungen, ZDFRubrikSingle, ZDFStart)
-			content = blockextract('tabindex="0"', page)				# Titel <h1 + <h2, wie ZDFRubrikSingle 
+			# Cluster-Blöcke, dto. BarriereArmSingle, nicht ZDF_Sendungen, ZDFRubrikSingle)
+			content =  blockextract('cluster-title-wrap', page)		
 			promo=[]
 			if 'class="b-promo-teaser' in page:							# o. cluster-title-wrap
 				promo = blockextract('class="b-promo-teaser', page, '</article>')
@@ -7375,8 +7378,9 @@ def ZDFStart(title, show_cluster='', path=''):
 	addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=thumb, 
 		thumb=thumb, tagline=tag, fparams=fparams)
 	
-	# Cluster-Blöcke, dto. ZDF_Sendungen, ZDFRubrikSingle, ZDFStart)
-	content = blockextract('tabindex="0"', page)				# Titel <h1 + <h2, wie ZDFRubrikSingle 
+	# Cluster-Blöcke, dto. BarriereArmSingle, nicht ZDF_Sendungen, ZDFRubrikSingle)
+	content =  blockextract('cluster-title-wrap', page)	
+
 	promo=[]
 	if 'class="b-promo-teaser' in page:							# Teaserboxen (ganze Seitenbreite)
 		promo = blockextract('class="b-promo-teaser', page, '</article>')
@@ -7427,12 +7431,13 @@ def ZDFStart(title, show_cluster='', path=''):
 			show_cluster = "true"								# normale Cluster	
 			thumb = ZDF_get_img(rec)
 			# data-tracking-title clusterrecommendation (vor neuem Blockanfang tabindex, daher 
-			#	hier Abgleich mit Titel):
+			#	hier leider Abgleich mit Titel erfoderlich):
 			# javascript-erzeugte Inhalte, Call automation-template -> json-Datei mit
 			#	SCMS-ID's -> ZDF_get_tracking -> ZDF_get_teaserDetails, ZDF_get_teaserbox
-			# Bsp: "Derzeit beliebt", "Vorab - zuerst online", "Letzte Chance - noch kurz online"'
+			# Bsp: "Derzeit beliebt", "Vorab - zuerst online", "Letzte Chance - noch kurz online",
+			#	"Trending" (funk)
 			tracking_titles = ["Vorab - zuerst online", "Letzte Chance - noch kurz online",
-							]
+							"Trending"]
 			for tracking_title in tracking_titles:				
 				if tracking_title in title:						# tracking-Cluster
 					thumb = R(ICON_DIR_FOLDER)
@@ -7463,7 +7468,7 @@ def ZDFStart(title, show_cluster='', path=''):
 # Aufrufer: ZDFStart (2x), ZDFRubrikSingle, ZDF_Sendungen
 def ZDF_get_clustertitle(rec): 							# Cluster-Titel der Startseite ermitteln
 	PLog('ZDF_get_clustertitle:');
-	rec = rec[:200]										# max. Größe für Titel
+	rec = rec[:600]										# max. Größe für Titel
 	#PLog(rec[:200])
 	
 	title=''
@@ -7923,7 +7928,7 @@ def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_play
 	if 'class="b-cluster' in page:										# Cluster ermitteln, 
 		PLog('Abzweig_b_cluster')										# 	pro Cluster -> ZDFRubrikSingle
 		path = url
-		# Cluster-Blöcke, dto. ZDF_Sendungen, ZDFRubrikSingle, ZDFStart:
+		# Cluster-Blöcke, dto. ZDFRubrikSingle, nicht ZDFStart:
 		# 18.05.2022 Performance: Blöcke 'tabindex="0"' (alle bish. Varianten enthalten) 
 		cluster = blockextract('tabindex="0"', page)					# Titel <h1 + <h2, wie ZDFRubrikSingle 
 		PLog("clus_ges: %d" % len(cluster))
@@ -8609,9 +8614,19 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 		mediatype='video'	
 
 	if custom_cluster == '':										# Abgleich mit clus_title
-		# Cluster-Blöcke, dto. ZDF_Sendungen, ZDFRubrikSingle, ZDFStart:		# Cluster-Blöcke
-		# 18.05.2022 Performance: Blöcke 'tabindex="0"' (alle bish. Varianten enthalten) 
-		cluster = blockextract('tabindex="0"', page)				# Titel <h1 + <h2 
+		# Cluster-Blöcke, dto. ZDF_Sendungen, nicht ZDFStart:		# Cluster-Blöcke
+		#	cluster-title-wrap Untermenge von b-cluster,
+		#		b-cluster-poster
+		cluster =  blockextract('cluster-title-wrap', page)			# Cluster-Blöcke
+		PLog(len(cluster))
+		cluster = cluster + blockextract('"section-header-title', page, "</section>")
+		if len(cluster) == 0:										# aus promo-teaser
+			cluster =  cluster + blockextract('class="big-headline"', page, '')
+		if len(cluster) == 0:										
+			cluster =  cluster + blockextract('headline-with-btn', page, '')
+		if len(cluster) == 0:										
+			cluster =  blockextract('class="top5-headline"', page, '')
+		cluster =  cluster + blockextract('<h2 class="title"  tabindex="0"', page)
 		PLog("clus_ges: %d" % len(cluster))
 		
 		if clus_title and len(cluster) > 0:							# Beiträge zu gesuchtem Cluster auswerten - s.o.
@@ -8653,16 +8668,18 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 		# 13.07.2021 Blockbegrenzung </article> erst im rec -  loader-Beiträge werden sonst
 		#	ausgeschlossen
 
-		skip_list = [u"https://www.zdf.de/funk/funk-alle-sendungen-von-a-z-100.html"]	# Abgleich 
+		skip_list = [u"https://www.zdf.de/funk/funk-alle-sendungen-von-a-z-100.html"]	# Abgleich
 		if '"PromoTeaser"' in clus:							# Promo-Teasern fehlt "article class"
 			article = "PromoTeaser"
 			content = [clus]								# je Promo-Teaser nur 1 Block
-			PLog(clus[:80])
+			#PLog(clus[:80])
 		else:
+			#PLog(clus[:80])
 			article = stringextract('<article class="', ' ', clus)	# class für Block bestimmen
 			if article.startswith('class="b-cluster"'):		# ohne Blank hinter class-Marke
 					article = 'class=b-cluster'
 			content =  blockextract('class="%s' % article, clus) # Begrenzung </article> erst in rec
+			
 		PLog("article: " + article)
 		PLog('content1: ' + str(len(content)))
 
@@ -9274,7 +9291,7 @@ def BarriereArmSingle(path, title, clus_title='', ID=''):
 		
 	PLog(len(page))
 	
-	# Cluster-Blöcke, dto. ZDF_Sendungen, ZDFRubrikSingle, ZDFStart:
+	# Cluster-Blöcke, dto. ZDFStart, nicht ZDF_Sendungen + ZDFRubrikSingle:
 	cluster =  blockextract('cluster-title-wrap', page)
 	PLog(len(cluster))
 	
