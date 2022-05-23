@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>19</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.05.2022
+# 	<nr>20</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3155,6 +3155,8 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		# Check auf inputstream.adaptive nicht erforderlich
 		# s. https://github.com/xbmc/inputstream.adaptive,
 		# 	https://github.com/xbmc/inputstream.adaptive/wiki/
+		# ab Kodi 20 Auswahl von Streams + -Eigenschaften
+		#	
 		if url.endswith('.m3u8'):							# SetInputstreamAddon hier nur HLS
 			if SETTINGS.getSetting('pref_inputstream') == 'true':
 				PLog("SetInputstreamAddon:")
@@ -3165,7 +3167,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 					# Kodi-Debug Matrix: depricated, use
 					#	 #KODIPROP:inputstream=inputstream.adaptive', 'inputstream.adaptive'
 					li.setProperty('inputstream', 'inputstream.adaptive')
-				li.setProperty('inputstream.adaptive.manifest_type', 'hls')
+				li.setProperty('inputstream.adaptive.manifest_type', 'hls')				
 				li.setContentLookup(False)				
 
 		PLog("url: " + url); PLog("playlist: %d" % len(playlist))
@@ -3178,6 +3180,8 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 					if SETTINGS.getSetting('pref_UT_ON') == 'true':
 						PLog("Player_Subtitles_on")
 						xbmc.Player().showSubtitles(True)
+						if "/daserste_ut_de/" in url:			# Fix inputstream: seek zum Ende 2-Std-Puffer
+							player.seekTime(3600*2)
 					else:		
 						PLog("Player_Subtitles_off")
 						xbmc.Player().showSubtitles(False)									
