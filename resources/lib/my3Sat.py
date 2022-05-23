@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.05.2022
+# 	<nr>6</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -413,6 +413,11 @@ def SendungenDatum(SendDate, title):
 		MyDialog(msg1, '', '')
 		return li	
 		
+	msg1 = "%s.%s.%s" % (SendDate[8:10], SendDate[5:7], SendDate[0:4])
+	msg2 = "3sat"
+	icon = R('zdf-sendung-verpasst.png')
+	xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)
+
 	mediatype='' 		
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 		mediatype='video'

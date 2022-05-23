@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>18</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.05.2022
+# 	<nr>19</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2048,6 +2048,13 @@ def ARDVerpasstContent(title, startDate, endDate, CurSender):
 		return li
 			
 	PLog('gridlist: ' + str(len(gridlist)))	
+	# dateformat: 2022-05-23T03:30:00.000Z
+	# Bereichsangabe (Datum, Uhrzeit) zu lang für notification:
+	msg1 = "%s.%s.%s" % (startDate[8:10], startDate[5:7], startDate[0:4])
+	msg2 = sendername
+	icon = R(ICON_ARD_VERP)
+	xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)
+	
 	li = get_page_content(li, page, ID='EPG', mark='')
 																	
 	

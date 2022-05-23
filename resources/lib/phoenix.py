@@ -7,8 +7,8 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>6</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.04.2022
+# 	<nr>7</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -623,6 +623,11 @@ def VerpasstContent(title, nr):
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='phoenix')			# Home-Button
+	
+	msg1 = title
+	msg2 = "phoenix"
+	icon = ICON_VERPASST
+	xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)	
 
 	li = GetContent(li, page, ID="Verpasst")						
 	

@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.04.2022
+# 	<nr>3</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1414,6 +1414,11 @@ def Tivi_Woche_Sendungen(day, title):
 		MyDialog(msg1, msg2, '')	
 		return
 		
+	msg1 = title											# notification
+	msg2 = "ZDF-tivi"
+	icon = GIT_CAL
+	xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)
+	
 	# Home-Button in ZDFRubrikSingle
 	ardundzdf.ZDFRubrikSingle(title, path, clus_title=day, page=page)					
 	return
