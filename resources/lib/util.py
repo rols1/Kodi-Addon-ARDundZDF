@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>20</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.05.2022
+# 	<nr>21</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2560,6 +2560,83 @@ def get_ARDstreamlinks(skip_log=False):
 		PLog(str(ard_streamlinks))										# Ausgabe im LOG für IPTV-Interessenten
 	Dict("store", ID, page)
 	return ard_streamlinks	
+#-----------------------------------------------
+# ähnlich get_ZDFstreamlinks + get_ARDstreamlinks
+# Aufruf get_sort_playlist (<- EPG_Sender, EPG_ShowAll,
+#	 TVLiveRecordSender), SenderLiveListe, get_playlist_img
+# holt Details von githubs iptv-Listen, falls
+#	livesenderTV.xml den Tag IPTVSource enthält
+#
+def get_IPTVstreamlinks(skip_log=False):
+	PLog('get_IPTVstreamlinks:')
+	PLog(skip_log)
+	days = int(SETTINGS.getSetting('pref_tv_store_days'))
+	PLog("days: %d" % days)
+	CacheTime = days*86400							# Default 1 Tag
+	#days=0	# Debug
+
+	ID = "iptv_streamlinks"
+	if days:										# skip CacheTime=0
+		page = Dict("load", ID, CacheTime=CacheTime)
+		page = py2_encode(page)
+
+		if len(str(page)) > 100:					# bei Error nicht leer od. False von Dict
+			if skip_log == False:
+				PLog(page)							# für IPTV-Interessenten
+			return page.splitlines()
+		
+	icon = R(ICON_TOOLS)
+	xbmcgui.Dialog().notification("Cache IPTVlinks:","wird erneuert",icon,3000)
+	
+	# Url der IPTV-Liste in Tag link in livesenderTV.xml
+	playlist = RLoad(PLAYLIST)					# lokale XML-Datei (Pluginverz./Resources)
+	stringextract('<channel>', '</channel>', playlist)	# ohne Header
+	playlist = blockextract('<item>', playlist)
+	PLog(len(playlist))
+	
+	iptv_streamlinks=[]; 
+	for p in playlist:													# Schleife Sender
+		list_url_old=''; page_org=''
+		if "link>IPTVSource" in p:
+			PLog(p[:60])	# Debug	
+			list_url = stringextract('link>IPTVSource|', '</', p)  		# Link Github-Liste
+			list_url = "https://github.com%s?raw=true" % list_url
+			PLog(list_url); PLog(list_url == list_url_old)
+			
+			if list_url != list_url_old:								# schon geladen?
+				page_org, msg = get_page(path=list_url)
+				
+			if page_org: 
+				list_url_old = list_url
+				thumb=''; streamurl=''
+				play_sender = stringextract('<title>', '</title>', p)	# Abgleich SenderLiveListe
+				tvg_name = stringextract('<tvg-name>', '</tvg-name>',p)	# Sendername
+				pos = page_org.find(tvg_name)
+				if pos > 0:
+					PLog("found: %s" % tvg_name)
+					page = page_org[pos:]								# Page ab Fund
+					item = stringextract(tvg_name, '#EXTINF', page)		# Satz ausschneiden
+					PLog(item)
+					if item:
+						links = blockextract('http', item)				# Links Logo + Stream, http: mögl.
+						if len(links) >= 1:
+							thumb = stringextract('tvg-logo="', '"', item)
+							streamurl = links[1]
+							title = tvg_name						
+						
+							PLog("Satz2:")
+							PLog(title); PLog(streamurl); PLog(thumb)
+							# Zeile: "title_sender|streamurl|thumb|tagline"
+							iptv_streamlinks.append("%s|%s|%s|%s" % (play_sender, streamurl,thumb,''))	
+
+	PLog("iptv_streamlinks: %d" % len(iptv_streamlinks))
+	page = "\n".join(iptv_streamlinks)									# Ablage Cache
+	#skip_log=False				# Debug
+	if skip_log == False:
+		PLog(str(iptv_streamlinks))										# Ausgabe im LOG für IPTV-Interessenten
+	Dict("store", ID, page)
+	return iptv_streamlinks	
+
 #---------------------------------------------------------------------------------------------------
 # Aufruf: 
 # Icon aus livesenderTV.xml holen
@@ -2568,14 +2645,17 @@ def get_ARDstreamlinks(skip_log=False):
 # 26.06.2020 Anpassung für ZDF-Sender (bei Classic-Livestreams: 
 #	Arte, KiKA, 3sat)
 # 11.04.2021 Anpassung für ARD-Classic-Sender
+# 26.05.2022 Anpassung für IPTV-Sender
 #
 def get_playlist_img(hrefsender):
 	PLog('get_playlist_img: ' + hrefsender); 
-	playlist_img=''; link=''; EPG_ID=''
+	playlist_img=''; link=''; EPG_ID=''; img_streamlink=''
 	playlist = RLoad(PLAYLIST)		
 	playlist = blockextract('<item>', playlist)
 	for p in playlist:
 		title_sender = stringextract('hrefsender>', '</hrefsender', p) 
+		if title_sender == '':
+			title_sender = stringextract('<title>', '</title>', p) 	# IPTVSource-Sender
 		s = stringextract('title>', '</title', p)	# Classic-Version
 		if s:									# skip Leerstrings
 			# PLog(s); PLog(hrefsender);		# Debug
@@ -2585,7 +2665,7 @@ def get_playlist_img(hrefsender):
 				playlist_img = R(playlist_img)
 				link =  stringextract('link>', '</link', p)
 				
-				if "ZDFsource" in link:			# Anpassung für ZDF-Sender
+				if "ZDFsource" in link:								# Anpassung für ZDF-Sender
 					zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
 					link=''	
 					# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
@@ -2594,10 +2674,13 @@ def get_playlist_img(hrefsender):
 						# Bsp.: "ZDFneo " in "ZDFneo Livestream":
 						if up_low(title_sender) in up_low(items[0]): 
 							link = items[1]
+							if items[2]:							# Icon aus IPTVSource?
+								img_streamlink = items[2]
+							break
 					if link == '':
 						PLog('%s: ZDF-Streamlink fehlt' % title_sender)	
 						
-				if "ARDclassicSource" in link:			# Anpassung für ARD-Clasic-Sender
+				if "ARDclassicSource" in link:						# Anpassung für ARD-Clasic-Sender
 					ard_streamlinks = get_ARDstreamlinks(skip_log=True)
 					link=''	
 					# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
@@ -2605,13 +2688,33 @@ def get_playlist_img(hrefsender):
 						items = line.split('|')
 						if up_low(title_sender) in up_low(items[0]): 
 							link = items[1]
+							if items[2]:							# Icon aus IPTVSource?
+								img_streamlink = items[2]
+							break
 					if link == '':
 						PLog('%s: ARD-Streamlink fehlt' % title_sender)	
 								
+				if "IPTVSource" in link:							# Anpassung für IPTV-Sender
+					iptv_streamlinks = get_IPTVstreamlinks()
+					link=''	
+					# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
+					for line in iptv_streamlinks:
+						items = line.split('|')
+						if up_low(title_sender) in up_low(items[0]): 
+							link = items[1]
+							if items[2]:							# Icon aus IPTVSource?
+								img_streamlink = items[2]
+							break
+					if link == '':
+						PLog('%s: ARD-Streamlink fehlt' % title_sender)	
 					
 				EPG_ID =  stringextract('EPG_ID>', '</EPG_ID', p)
 				PLog("EPG_ID für %s: %s" % (s, EPG_ID))
 				break
+	
+	if img_streamlink:									# Vorrang Icon aus direkten Quellen	
+		img = img_streamlink 
+	
 	if EPG_ID == '':
 		PLog("%s: EPG_ID nicht gefunden/vorhanden" % s)
 	PLog(playlist_img); PLog(link); 
@@ -3292,6 +3395,7 @@ def sub_path_conv(sub_path):
 #			
 def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
+	title = cleanmark(title)					# Tags erscheinen im Titel des Player-Windows
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
 				
 	if url.startswith('http') == False:			# lokale Datei

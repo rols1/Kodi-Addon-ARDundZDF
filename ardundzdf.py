@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>46</nr>										# Numerierung für Einzelupdate
+# 	<nr>47</nr>										# Numerierung für Einzelupdate
 VERSION = '4.3.7'
-VDATE = '22.05.2022'
+VDATE = '27.05.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -452,7 +452,7 @@ def Main():
 			
 	if SETTINGS.getSetting('pref_use_arte') == 'true':
 		tagline = 'in den Settings kann das Modul Arte-Kategorien ein- und ausgeschaltet werden'
-		summ = 'Ein komplettes Arte-Addon befindet sich im Kodinerds-Repo (ARTE.TV)'
+		summ = 'Ein komplettes Arte-Addon befindet sich im Kodinerds-Repo (ARTE.TV von realvito)'
 		fparams="&fparams={}"													# arte-Modul
 		addDir(li=li, label="Arte-Kategorien", action="dirList", dirID="resources.lib.arte.Main_arte", 
 			fanart=R('icon-arte_kat.png'), thumb=R('icon-arte_kat.png'), tagline=tagline,
@@ -6132,7 +6132,7 @@ def EPG_Sender(title, Merk='false'):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	
-	sort_playlist = get_sort_playlist()	# einschl. get_ZDFstreamlinks
+	sort_playlist = get_sort_playlist()	# Senderliste + Cache
 	# PLog(sort_playlist)
 	
 	summ = u"für die Merkliste (Kontextmenü) sind die Einträge dieser Liste wegen des EPG besser geeignet"
@@ -6150,7 +6150,7 @@ def EPG_Sender(title, Merk='false'):
 		PLog('title: %s, ID: %s' % (title, ID))
 		PLog(img)
 		if ID == '':				# ohne EPG_ID
-			title = title + ': ohne EPG' 
+			title = title + ': [B]ohne EPG[/B]' 
 			title=py2_encode(title); link=py2_encode(link); img=py2_encode(img); 
 			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '', 'Merk': '%s'}" %\
 				(quote(link), quote(title), quote(img), Merk)
@@ -6183,7 +6183,7 @@ def TVLiveRecordSender(title):
 	duration, laenge = duration.split('=')
 	duration = duration.strip()
 
-	sort_playlist = get_sort_playlist()		# Senderliste, einschl. get_ZDFstreamlinks, get_ARDstreamlinks
+	sort_playlist = get_sort_playlist()		# Senderliste + Cache
 	PLog('Sender: ' + str(len(sort_playlist)))
 	for rec in sort_playlist:
 		title 	= rec[0]
@@ -6193,7 +6193,7 @@ def TVLiveRecordSender(title):
 			img = R(img)
 		link 	= rec[3]
 		if ID == '':				# ohne EPG_ID
-			title = "%s | ohne EPG" % title 
+			title = title + ': [B]ohne EPG[/B]' 
 		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
 			laenge = "wird manuell eingegeben"
 		summ 	= 'Aufnahmedauer: %s' 	% laenge
@@ -6279,10 +6279,10 @@ def ProgramRecord(url, sender, title, descr, start_end):
 	
 #---------------------------------------------
 # Aufruf: EPG_Sender, EPG_ShowAll, TVLiveRecordSender
-# get_sort_playlist: Einbettung get_ZDFstreamlinks 
+# get_sort_playlist: Senderliste + Cache 
 #	für ZDF-Sender
 #
-def get_sort_playlist():						# sortierte Playliste der TV-Livesender
+def get_sort_playlist():						# Senderliste für EPG + Recording
 	PLog('get_sort_playlist:')
 	playlist = RLoad(PLAYLIST)					# lokale XML-Datei (Pluginverz./Resources)
 	stringextract('<channel>', '</channel>', playlist)	# ohne Header
@@ -6290,6 +6290,7 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 	sort_playlist =  []
 	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)				# skip_log: Log-Begrenzung
 	ard_streamlinks = get_ARDstreamlinks(skip_log=True)
+	iptv_streamlinks = get_IPTVstreamlinks(skip_log=True)
 	
 	for item in playlist:   
 		rec = []
@@ -6319,10 +6320,24 @@ def get_sort_playlist():						# sortierte Playliste der TV-Livesender
 			link=''										# Reihenfolge an Playlist anpassen
 			# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
 			for line in ard_streamlinks:
-				PLog("ardline: " + line)
+				#PLog("ardline: " + line)
 				items = line.split('|')
 				if up_low(title_sender) in up_low(items[0]): 
 					link = items[1]
+			if link == '':
+				PLog('%s: Streamlink fehlt' % title_sender)
+		
+		if 'IPTVSource' in link:						# Streamlink für private Sender holen
+			title_sender = stringextract('<title>', '</title>', item)	
+			link=''										# Reihenfolge an Playlist anpassen
+			# Zeile iptv_streamlinks: "Sender|href|thumb|tagline"
+			for line in iptv_streamlinks:
+				PLog("iptvline: " + line)
+				items = line.split('|')
+				if up_low(title_sender) in up_low(items[0]): 
+					link = items[1]
+					if items[2]:						# Icon aus IPTVSource?
+						img = items[2]
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
 		
@@ -6411,7 +6426,8 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 # EPG: aktuelle Sendungen aller Sender mode='allnow'
 # Aufrufer SenderLiveListePre (Button 'EPG Alle JETZT')
 #	26.04.2019 Anzahl pro Seite auf 20 erhöht (Timeout bei Kodi kein Problem wie bei Plex)  
-# Ablauf: 
+# sort_playlist: Senderabgleich in livesenderTV.xml mit direkten Quellen + Cachenutzung
+#
 def EPG_ShowAll(title, offset=0, Merk='false'):
 	PLog('EPG_ShowAll:'); PLog(offset) 
 	title = unquote(title)
@@ -6424,7 +6440,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 	li = home(li, ID=NAME)				# Home-Button
 
 	# Zeilen-Index: title=rec[0]; EPG_ID=rec[1]; img=rec[2]; link=rec[3];	
-	sort_playlist = get_sort_playlist()	
+	sort_playlist = get_sort_playlist()				# Senderliste + Cache
 	PLog(len(sort_playlist))
 	# PLog(sort_playlist)
 	
@@ -6457,7 +6473,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 		
 		tagline = 'weiter zum Livestream'
 		if ID == '':									# ohne EPG_ID
-			title = "[COLOR grey]%s[/COLOR]" % title_playlist + ' | ohne EPG'
+			title = "[COLOR grey]%s[/COLOR]" % title_playlist + ' | [B]ohne EPG[/B]'
 			img = img_playlist
 			PLog("img: " + img)
 		else:
@@ -6523,6 +6539,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 #	ZDFSportLive)
 # 23.06.2020 lokale m3u8-Dateien in livesenderTV.xml sind entfallen
 #			Ermittlung ZDF-Streamlinks im Web (link=ZDFsource)
+# 26.05.2022 ergänzt um Nutzung iptv_streamlinks (private Sender)
 #
 def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):			
 	# SenderLiveListe -> SenderLiveResolution (reicht nur durch) -> Parseplaylist (Ausw. m3u8)
@@ -6557,6 +6574,9 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		zdf_streamlinks = get_ZDFstreamlinks()			# Modul util
 	if lname == u'Überregional' or lname == u'Regional':
 		ard_streamlinks = get_ARDstreamlinks()			# ard_streamlinks oder ard_streamlinks_UT
+	if lname == u'Privat':						# Streamlinks für ZDF-Sender holen
+		iptv_streamlinks = get_IPTVstreamlinks()			# Modul util
+		
 
 	# abweichend - externe Funktion:
 	if u'Regional: WDR' in lname:						# Auswertung + Liste WDR Lokalzeit
@@ -6571,20 +6591,24 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		else:
 			mediatype='video'
 
-	liste = blockextract('<item>', mylist)				# Details eines Senders
+	liste = blockextract('<item>', mylist)					# Details eines Senders
 	PLog(len(liste));
 	EPG_ID_old = ''											# Doppler-Erkennung
 	sname_old=''; stime_old=''; summ_old=''; vonbis_old=''	# dto.
 	summary_old=''; tagline_old=''
 	for element in liste:									# EPG-Daten für einzelnen Sender holen 	
+		img_streamlink=''									# Austausch Icon
 		element = py2_decode(element)	
 		link = stringextract('<link>', '</link>', element) 
 		link = unescape(link)	
-		title_sender = stringextract('<hrefsender>', '</hrefsender>', element) # mit folgendem Blank!
+		title_sender = stringextract('<hrefsender>', '</hrefsender>', element) 
+		if title_sender == '':
+			title_sender = stringextract('<title>', '</title>', element) # IPTVSource-Sender
 		PLog(u'Sender: %s, link: %s' % (title_sender, link));
 
-		if 'ZDFsource' in link:							# Streamlink für ZDF-Sender holen,
-			link=''										# Reihenfolge an Playlist anpassen
+		# --												# Cache 
+		if 'ZDFsource' in link:								# Streamlink für ZDF-Sender holen,
+			link=''	
 			# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 			for line in zdf_streamlinks:
 				PLog("zdfline: " + line)
@@ -6595,8 +6619,8 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
 				
-		if 'ARDSource' in link:							# Streamlink für ARD-Sender holen,
-			link=''										# Reihenfolge an Playlist anpassen
+		if 'ARDSource' in link:								# Streamlink für ARD-Sender holen,
+			link=''	
 			# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
 			for line in ard_streamlinks:
 				PLog("ardline: " + line)
@@ -6605,13 +6629,29 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 					link = items[1]
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
+				
+		if 'IPTVSource' in link:							# Streamlink für private Sender holen
+			link=''	
+			# Zeile iptv_streamlinks: "Sender|href|thumb|tagline"
+			for line in iptv_streamlinks:
+				PLog("iptvline: " + line)
+				items = line.split('|')
+				if up_low(title_sender) in up_low(items[0]): 
+					link = items[1]
+					if items[2]:							# Icon aus IPTVSource?
+						img_streamlink = items[2]
+					break
+			if link == '':
+				PLog('%s: Streamlink fehlt' % title_sender)
+		# --												# Cache 
+				
 		
 		PLog('Mark2')
 		# Spezialbehandlung für N24 in SenderLiveResolution - Test auf Verfügbarkeit der Lastserver (1-4)
 		# EPG: ab 10.03.2017 einheitlich über Modul EPG.py (vorher direkt bei den Sendern, mehrere Schemata)
 		# 								
 		title = stringextract('<title>', '</title>', element)
-		if onlySender:									# Button nur für diesen Sender
+		if onlySender:										# Button nur für diesen Sender
 			title=py2_encode(title); onlySender=py2_encode(onlySender) 
 			if title != onlySender:
 				continue
@@ -6651,13 +6691,17 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		if link == '':										# fehlenden Link im Titel kennz.
 			title = "%s | Streamlink fehlt!" %  title	
 		summary = unescape(summary)	
-						
-		img = stringextract('<thumbnail>', '</thumbnail>', element) 
-		if img.find('://') == -1:	# Logo lokal? -> wird aus Resources geladen, Unterverz. leider n.m.
-			if img:											# kann fehlen, z.B. bei Privaten
-				img = R(img)
-			else:				
-				img = R(ICON_MAIN_TVLIVE)
+				
+		if img_streamlink:									# Vorrang Icon aus direkten Quellen	
+			img = img_streamlink 
+		else:
+			img = stringextract('<thumbnail>', '</thumbnail>', element) 
+			if img.find('://') == -1:	# Logo lokal? -> wird aus Resources geladen, Unterverz. leider n.m.
+				if img:										# kann fehlen, z.B. bei Privaten
+					img = R(img)
+				else:				
+					img = R(ICON_MAIN_TVLIVE)
+			
 			
 		geo = stringextract('<geoblock>', '</geoblock>', element)
 		PLog('geo: ' + geo)
@@ -6668,11 +6712,11 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		PLog(title); PLog(link); PLog(img); PLog(summary); PLog(tagline[0:80]);
 		Resolution = ""; Codecs = ""; duration = ""
 	
-		# if link.find('rtmp') == 0:				# rtmp-Streaming s. CreateVideoStreamObject
+		# if link.find('rtmp') == 0:						# rtmp-Streaming s. CreateVideoStreamObject
 		# Link zu master.m3u8 erst auf Folgeseite? - SenderLiveResolution reicht an  Parseplaylist durch
 		descr = summary.replace('\n', '||')
 		if tagline:
-			descr = "%s %s" % (tagline, descr)		# -> Plot (PlayVideo) 
+			descr = "%s %s" % (tagline, descr)				# -> Plot (PlayVideo) 
 		title=py2_encode(title); link=py2_encode(link);
 		img=py2_encode(img); descr=py2_encode(descr);	
 		fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s', 'descr': '%s'}" % (quote(link), 
