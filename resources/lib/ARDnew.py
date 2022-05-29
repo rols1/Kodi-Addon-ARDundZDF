@@ -649,6 +649,7 @@ def ARD_FlatListEpisodes(path, title):
 		versions.remove(u'Originalversion (OV)')
 	if page.find(u'Hörfassung') < 0:
 		versions.remove(u'Hörfassung')
+	PLog("versions" + str(versions))
 
 	vers='Normalfassung'								# Default: Normalfassung
 	if u'Hörfassung' in page or u'(OV)' in page or 'Originalfassung' in page or '(Originalversion)' in page:	

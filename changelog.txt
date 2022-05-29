@@ -10,17 +10,30 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+28.05.2022 4.3.8
+			PlayVideo (Modul util): Fix inputstream-Problem bei UT-Livestream ARD - seek
+			zum Ende des 2-Std-Puffers erzwungen.
+			Verpasst-Menüs: Notification mit Info zu gewähltem Tag + Sender, Module: 
+			ARDnew, my3Sat, phoenix, childs (ZDF-tivi).
+			PlayAudio: Stil-Tags im Titel entfernt (Tags erscheinen im Titel des Player-
+			Windows).
+			EPG-Menüs: Markierung im Titel "ohne EPG" fett.
+			Private Sender im Menü TV-Livestreams: Umstellung auf IPTV-Quellen im jnk-Repo
+			auf Github, einschl. Cache-Nutzung (wie ARD- und ZDF-Quellen) - Anpassung
+			SenderLiveListe +  get_sort_playlist (Haupt-PRG), get_playlist_img (util), 
+			neue Funktion get_IPTVstreamlinks (util).			
+
 22.05.2022 4.3.7
 			ZDF_Sendungen: Ausleitung funk-A-Z-Sendungen entfernt (obsolet).
 			get_live_data (Modul arte): Austausch get_ZDFstreamlinks gegen 
 			get_ARDstreamlinks (Senderbelegung im Cache geändert).
 			Kategorien (Modul arte): Kat-Liste + Kat-Icons nicht mehr auf den Webseiten
-			enthalten, neue Icons gefertigt + Kat-Liste mit Links vorgegeben.
+			enthalten, neue Icons gefertigt + Kat-Liste mit Links vorgegeben, Sofortstart
+			direkt im Modul statt im Haupt-PRG zur Vermeidung von Rekursion.
 			SingleVideo (Modul arte): Nutzung api_v2_Call für HLS-Quellen, Nutzung
 			api_opa_Call für MP4-Quellen (Teaser-Streams statt vollständ. Videos möglich),
 			Wegfall HBBTV-Quellen (mit MP4-Quellen identisch), Trailer-Kennung im Info-
 			Text (für HLS + MP4, Kennz.: TRAILER, _EXTRAIT_).
-			ZDF_Sendungen: Ausleitung funk-A-Z-Sendungen entfernt (obsolet).
 			ZDF_get_clustertitle: Auswertung für <h3>-Titel erweitert, Auswertungsbereich
 			auf 600 Zeichen begrenzt, Datenmüll hinter Titel entfernt (</h..).
 			ZDFRubrikSingle: Auswertung Beiträge ohne Cluster, no_title_Check2: ohne
