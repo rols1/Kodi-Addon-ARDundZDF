@@ -7,8 +7,8 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>7</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.05.2022
+# 	<nr>8</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.05.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -206,8 +206,7 @@ def get_live_data():
 	href=''
 	for line in zdf_streamlinks:
 		webtitle, href, thumb, tagline = line.split('|')
-		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
-		if up_low('phoenix ') in up_low(webtitle): 	# Arte mit Blank!
+		if up_low('phoenix') in up_low(webtitle): 
 			href = href
 			break
 	
