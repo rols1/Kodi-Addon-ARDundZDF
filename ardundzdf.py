@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>47</nr>										# Numerierung für Einzelupdate
 VERSION = '4.3.8'
-VDATE = '29.05.2022'
+VDATE = '31.05.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6929,49 +6929,16 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 	PLog(title); PLog(url_m3u8);
 
 	li = xbmcgui.ListItem()
-	if "kikade-" in path:
+	if "kikade-" in path or path.startswith("https://kika"):
 		li = home(li, ID='Kinderprogramme')			# Home-Button
 	else:
 		li = home(li, ID=NAME)				# Home-Button
 										
 	# Spezialbehandlung für N24 - Test auf Verfügbarkeit der Lastserver (1-4),
-	#	  m3u8-Datei für Parseplaylist inkompatibel, nur 1 Videoobjekt
-	if title.find('N24') >= 0:
-		url_m3u8 = N24LastServer(url_m3u8) 
-		PLog(url_m3u8)
-		if '?sd=' in url_m3u8:				# "Parameter" sd kappen: @444563/index_3_av-b.m3u8?sd=10
-			url_m3u8 = url_m3u8.split('?sd=')[0]	
-		PLog(url_m3u8)
-		summary = 'Bandbreite unbekannt'
-		title=py2_encode(title); url_m3u8=py2_encode(url_m3u8);
-		thumb=py2_encode(thumb); descr=py2_encode(descr);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote_plus(url_m3u8), 
-			quote_plus(title), quote_plus(thumb), quote_plus(descr))	
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-			summary=summary, tagline=title, mediatype='video')	
-		
-	if url_m3u8.find('rtmp') == 0:		# rtmp, nur 1 Videoobjekt
-		summary = 'rtmp-Stream'
-		title=py2_encode(title); url_m3u8=py2_encode(url_m3u8);
-		thumb=py2_encode(thumb); descr=py2_encode(descr);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote_plus(url_m3u8), 
-			quote_plus(title), quote_plus(thumb), quote_plus(descr))	
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-			summary=summary, tagline=title, mediatype='video')	
+	# entf. mit Umstellung auf IPTV-Links in V4.3.8
 		
 	# alle übrigen (i.d.R. http-Links), Videoobjekte für einzelne Auflösungen erzeugen
-	# Für Kodi: m3u8-Links abrufen, speichern und die Datei dann übergeben - direkte
-	#	Übergabe der Url nicht abspielbar
-	# is_playable ist verzichtbar
-	if url_m3u8.find('.m3u8') >= 0: # häufigstes Format
-		PLog(url_m3u8)
-		if url_m3u8.startswith('http'):			# URL extern? (lokal entfällt Eintrag "autom.")
-												# Einzelauflösungen + Ablage master.m3u8:
-			li = ParseMasterM3u(li, url_m3u8, thumb, title, tagline=title, descr=descr)	
-							
-		# Auswertung *.m3u8-Datei  (lokal oder extern), Auffüllung Container mit Auflösungen. 
-		# jeweils 1 item mit http-Link für jede Auflösung.
-		
+	if url_m3u8.endswith('master.m3u8') or url_m3u8.endswith('index.m3u8'): # Vorrang vor .m3u8
 		# Parseplaylist -> CreateVideoStreamObject pro Auflösungstufe
 		PLog("title: " + title)
 		descr = "%s\n\n%s" % (title, descr)
@@ -6979,6 +6946,13 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 		li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr)	
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 							
+	elif url_m3u8.find('.m3u8') >= 0: 
+		# 1 Button für autom. Auflösung (z.B. IPTV-Links) 
+		PLog(url_m3u8)
+		if url_m3u8.startswith('http'):			# URL extern? (lokal entfällt Eintrag "autom.")
+												# Einzelauflösungen + Ablage master.m3u8:
+			li = PlayButtonM3u8(li, url_m3u8, thumb, title, tagline=title, descr=descr)	
+									
 	else:	# keine oder unbekannte Extension - Format unbekannt,
 			# # Radiosender s.o.
 		msg1 = 'SenderLiveResolution: unbekanntes Format. Url:'
@@ -7004,82 +6978,28 @@ def show_single_bandwith(url_m3u8, thumb, title, descr, ID):
 	xbmcplugin.endOfDirectory(HANDLE)
 
 #-----------------------------
-# Ablage master.m3u8, einschl. Behandlung relativer Links
-#	Button für "Bandbreite und Aufloesung automatisch" (master.m3u8)
-#	Die Dateiablage dient zur Ablage der Einzelauflösungen, kann aber 
-#		bei Kodi auch zum Videostart verwendet werden. 
-#	Buttons für die Einzelauflösungen werden in Parseplaylist
-#		gefertigt.
-#   descr = Plot, wird zu PlayVideo durchgereicht.
-#	19.12.2020 Sendungs-Titel ergänzt (optional: stitle)
+# 31.05.2022 umbenannt (vorm. ParseMasterM3u), Code für relative Pfade 
+#	entfernt, ausschl. Behandl. .m3u8 (.master.m3u8 in Parseplaylist),
+#	Verzicht auf lokale Dateiablage
 #
-def ParseMasterM3u(li, url_m3u8, thumb, title, descr, tagline='', sub_path='', stitle=''):	
-	PLog('ParseMasterM3u:'); 
+def PlayButtonM3u8(li, url_m3u8, thumb, title, descr, tagline='', sub_path='', stitle=''):	
+	PLog('PlayButtonM3u8:'); 
 	PLog(title); PLog(url_m3u8); PLog(thumb); PLog(tagline);
 	 
-	PLog(type(title)); 	PLog(type(url_m3u8))
 	title=unescape(title); title=repl_json_chars(title)
 	
-	sname = url_m3u8.split('/')[2]				# Filename: Servername.m3u8
-	msg1 = "Datei konnte nicht "				# Vorgaben xbmcgui.Dialog
-	msg2 = sname + ".m3u8"
-	msg3 = "Details siehe Logdatei"
-			
-	page, msg = get_page(path=url_m3u8)			# 1. Inhalt m3u8 laden	
-	PLog(len(page))
-	if page == '':								# Fehlschlag
-		msg1 = msg1 + "geladen werden." 
-		MyDialog(msg1, msg2, msg3)
-		return
-		
-	lines = page.splitlines()					# 2. rel. Links korrigieren 
-	lines_new = []
-	i = 0
-	for line in lines:	
-		# PLog(line)
-		line = line.strip()
-		if line == '' or line.startswith('#'):		# skip Metadaten
-			lines_new.append(line)
-			continue
-		if line.startswith('http') == False:   		# relativer Pfad? 
-			# PLog('line: ' + line)
-			path = url_m3u8.split('/')[:-1]			# m3u8-Dateinamen abschneiden
-			path = "/".join(path)
-			url = "%s/%s" % (path, line) 			# Basispfad + relativer Pfad
-			line = url
-			# PLog('url: ' + url)
-		# PLog('line: ' + line)
-		lines_new.append(line)
-		i = i + 1
-		
-	page = '\n'.join(lines_new)
-	PLog('page: ' + page[:100])
+	tagline	= tagline.replace('||','\n')				# s. tagline in ZDF_get_content
+	descr_par= descr; descr_par	 = descr_par.replace('\n', '||')
+	descr	 = descr.replace('||','\n')					# s. descr in ZDF_get_content
+	title = "autom. | " + title
 
-	fname = sname + ".m3u8"
-	fpath = os.path.join(M3U8STORE, fname)
-	PLog('fpath: ' + fpath)
-	msg = RSave(fpath, page)			# 3.  Inhalt speichern -> resources/m3u/
-	if 'Errno' in msg:
-		msg1 = msg1 + " gespeichert werden." # msg1 s.o.
-		PLog(msg1); PLog(msg2)
-		MyDialog(msg1, msg2, msg3)
-		return
-	else:				
-		# Alternative: m3u8-lokal starten:
-		# 	fparams="&fparams=url=%s, title=%s, is_playable=%s" % (sname + ".m3u8", title, True)
-		# descr -> Plot	
-		tagline	 = tagline.replace('||','\n')				# s. tagline in ZDF_get_content
-		descr_par= descr
-		descr	 = descr.replace('||','\n')					# s. descr in ZDF_get_content
-		title = "autom. | " + title
-
-		title=py2_encode(title); url_m3u8=py2_encode(url_m3u8);
-		thumb=py2_encode(thumb); descr_par=py2_encode(descr_par); sub_path=py2_encode(sub_path);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
-			(quote_plus(url_m3u8), quote_plus(title), quote_plus(thumb), 
-			quote_plus(descr_par), quote_plus(sub_path))	
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-			mediatype='video', tagline=tagline, summary=descr) 
+	title=py2_encode(title); url_m3u8=py2_encode(url_m3u8);
+	thumb=py2_encode(thumb); descr_par=py2_encode(descr_par); sub_path=py2_encode(sub_path);
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+		(quote_plus(url_m3u8), quote_plus(title), quote_plus(thumb), 
+		quote_plus(descr_par), quote_plus(sub_path))	
+	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
+		mediatype='video', tagline=tagline, summary=descr) 
 
 	return li
 #-----------------------------
@@ -11073,7 +10993,21 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		fname =  os.path.join(M3U8STORE, url_m3u8) 
 		playlist = RLoad(fname, abs_path=True)					
 	 
-	PLog('playlist: ' + playlist[:100])		# bei Bedarf
+	PLog('playlist: ' + playlist[:100])
+	skip_list = ["/hrhlsde/", "/ndr/", "/mdrtvsn/", "/rbb_brandenburg/",	# keine Mehrkanalstreams: skip
+				"/srfsgeo/", "/swrbwd/", "/wdr/", "/ardone/", "/dwstream"
+				]
+	if '#EXT-X-MEDIA' in playlist:											# Mehrkanalstreams: 1 Button
+		skip=False
+		for item in skip_list:
+			if item in url_m3u8:
+				skip=True													# i.d.R. ARD-Streams (nicht alle)
+				break
+		if skip == False:
+			stitle = "HLS-Stream"
+			li = PlayButtonM3u8(li, url_m3u8, thumb, stitle, tagline=track_add, descr=descr)	
+			return li
+	
 	lines = playlist.splitlines()
 	# PLog(lines)
 	BandwithOld 	= ''			# für Zwilling -Test (manchmal 2 URL für 1 Bandbreite + Auflösung) 
@@ -11088,59 +11022,46 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		# Playlist Tags s. https://datatracker.ietf.org/doc/html/rfc8216
 		if line.startswith('#EXT-X-MEDIA:') == False and line.startswith('#EXT-X-STREAM-INF') == False:
 			continue
-		if ',GROUP-ID' in line:						# zusätzl. Mehrkanalstreams (Audio)
+		if ',GROUP-ID' in line:							# zusätzl. Mehrkanalstreams (Audio)
 			continue
-		PLog("line: " + line)		# bei Bedarf
-		if '#EXT-X-MEDIA' in playlist:				# getrennte ZDF-Audiostreams, 1-zeilig
-			if line.startswith('#EXT-X-MEDIA'):			# 
-				NAME = stringextract('NAME="', '"', line)
-				LANGUAGE = stringextract('LANGUAGE="', '"', line)
-				url = stringextract('URI="', '"', line)
-				title='Audio:  %s | Sprache %s' % (NAME, LANGUAGE)
-				PLog(NAME); PLog(NameOld); 
-				if NAME in NameOld:
-					title='Audio:  %s | Sprache %s %s' % (NAME, LANGUAGE, '(2. Alternative)')
-				NameOld.append(NAME)
-			else:										# skip Videostreams ohne Ton	
-				continue	
+		PLog("line: " + line)
 			
-		else:											# konventionelle Audio-/Videostreams
-			if line.startswith('#EXT-X-STREAM-INF'):# tatsächlich m3u8-Datei?
-				url = lines[i + 1]						# URL in nächster Zeile
-				PLog("url: " + url)
-				Bandwith = GetAttribute(line, 'BANDWIDTH')
-				Resolution = GetAttribute(line, 'RESOLUTION')
-				Resolution_org = Resolution				# -> Stream_List
+		if line.startswith('#EXT-X-STREAM-INF'):	# tatsächlich m3u8-Datei?
+			url = lines[i + 1]						# URL in nächster Zeile
+			PLog("url: " + url)
+			Bandwith = GetAttribute(line, 'BANDWIDTH')
+			Resolution = GetAttribute(line, 'RESOLUTION')
+			Resolution_org = Resolution				# -> Stream_List
 
-				try:
-					BandwithInt	= int(Bandwith)
-				except:
-					BandwithInt = 0
-				if Resolution:	# fehlt manchmal (bei kleinsten Bandbreiten)
-					Resolution = u'Auflösung ' + Resolution
-				else:
-					Resolution = u'Auflösung unbekannt'	# verm. nur Ton? CODECS="mp4a.40.2"
-					thumb=R(ICON_SPEAKER)
-				Codecs = GetAttribute(line, 'CODECS')
-				# als Titel wird die  < angezeigt (Sender ist als thumb erkennbar)
-				title='Bandbreite ' + Bandwith
-				if url.find('#') >= 0:	# Bsp. SR = Saarl. Rundf.: Kennzeichnung für abgeschalteten Link
-					Resolution = u'zur Zeit nicht verfügbar!'
-				if url.startswith('http') == False:   		# relativer Pfad? 
-					pos = url_m3u8.rfind('/')				# m3u8-Dateinamen abschneiden
-					url = url_m3u8[0:pos+1] + url 			# Basispfad + relativer Pfad
-				if Bandwith == BandwithOld:	# Zwilling -Test
-					title = 'Bandbreite ' + Bandwith + ' (2. Alternative)'
-				
-				PLog(Resolution); PLog(BandwithInt); 
-				# nur Audio (Bsp. ntv 48000, ZDF 96000), 
-				if BandwithInt and BandwithInt <=  100000:
-					Resolution = Resolution + ' (nur Audio)'
-					thumb=R(ICON_SPEAKER)
-				res_geo = Resolution+geoblock
-				BandwithOld = Bandwith
+			try:
+				BandwithInt	= int(Bandwith)
+			except:
+				BandwithInt = 0
+			if Resolution:	# fehlt manchmal (bei kleinsten Bandbreiten)
+				Resolution = u'Auflösung ' + Resolution
 			else:
-				continue
+				Resolution = u'Auflösung unbekannt'	# verm. nur Ton? CODECS="mp4a.40.2"
+				thumb=R(ICON_SPEAKER)
+			Codecs = GetAttribute(line, 'CODECS')
+			# als Titel wird die  < angezeigt (Sender ist als thumb erkennbar)
+			title='Bandbreite ' + Bandwith
+			if url.find('#') >= 0:	# Bsp. SR = Saarl. Rundf.: Kennzeichnung für abgeschalteten Link
+				Resolution = u'zur Zeit nicht verfügbar!'
+			if url.startswith('http') == False:   		# relativer Pfad? 
+				pos = url_m3u8.rfind('/')				# m3u8-Dateinamen abschneiden
+				url = url_m3u8[0:pos+1] + url 			# Basispfad + relativer Pfad
+			if Bandwith == BandwithOld:	# Zwilling -Test
+				title = 'Bandbreite ' + Bandwith + ' (2. Alternative)'
+			
+			PLog(Resolution); PLog(BandwithInt); 
+			# nur Audio (Bsp. ntv 48000, ZDF 96000), 
+			if BandwithInt and BandwithInt <=  100000:
+				Resolution = Resolution + ' (nur Audio)'
+				thumb=R(ICON_SPEAKER)
+			res_geo = Resolution+geoblock
+			BandwithOld = Bandwith
+		else:
+			continue
 
 		label = "%s" % li_cnt + ". " + title
 		if res_geo:
