@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>47</nr>										# Numerierung für Einzelupdate
+# 	<nr>48</nr>										# Numerierung für Einzelupdate
 VERSION = '4.3.8'
 VDATE = '31.05.2022'
 
@@ -6937,7 +6937,8 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 	# Spezialbehandlung für N24 - Test auf Verfügbarkeit der Lastserver (1-4),
 	# entf. mit Umstellung auf IPTV-Links in V4.3.8
 		
-	# alle übrigen (i.d.R. http-Links), Videoobjekte für einzelne Auflösungen erzeugen
+	# alle übrigen (i.d.R. http-Links), Videoobjekte für einzelne Auflösungen erzeugen,
+	# 	Mehrkanalstreams -> PlayButtonM3u8
 	if url_m3u8.endswith('master.m3u8') or url_m3u8.endswith('index.m3u8'): # Vorrang vor .m3u8
 		# Parseplaylist -> CreateVideoStreamObject pro Auflösungstufe
 		PLog("title: " + title)
@@ -6948,6 +6949,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 							
 	elif url_m3u8.find('.m3u8') >= 0: 
 		# 1 Button für autom. Auflösung (z.B. IPTV-Links) 
+		# 
 		PLog(url_m3u8)
 		if url_m3u8.startswith('http'):			# URL extern? (lokal entfällt Eintrag "autom.")
 												# Einzelauflösungen + Ablage master.m3u8:
@@ -6978,6 +6980,7 @@ def show_single_bandwith(url_m3u8, thumb, title, descr, ID):
 	xbmcplugin.endOfDirectory(HANDLE)
 
 #-----------------------------
+# Aufruf: Parseplaylist (bei Mehrkanalstreams), SenderLiveResolution
 # 31.05.2022 umbenannt (vorm. ParseMasterM3u), Code für relative Pfade 
 #	entfernt, ausschl. Behandl. .m3u8 (.master.m3u8 in Parseplaylist),
 #	Verzicht auf lokale Dateiablage
