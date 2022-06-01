@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>48</nr>										# Numerierung für Einzelupdate
+# 	<nr>49</nr>										# Numerierung für Einzelupdate
 VERSION = '4.3.8'
-VDATE = '31.05.2022'
+VDATE = '01.06.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6570,13 +6570,11 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			
 	zdf_streamlinks=''
 	lname = py2_decode(listname)
-	if lname == u'Überregional':						# Streamlinks für ZDF-Sender holen
-		zdf_streamlinks = get_ZDFstreamlinks()			# Modul util
-	if lname == u'Überregional' or lname == u'Regional':
-		ard_streamlinks = get_ARDstreamlinks()			# ard_streamlinks oder ard_streamlinks_UT
-	if lname == u'Privat':						# Streamlinks für ZDF-Sender holen
-		iptv_streamlinks = get_IPTVstreamlinks()			# Modul util
-		
+	# Streamlinks aus Caches laden (Modul util), ab 01.06.2022 für Überregional,
+	#	Regional + Privat:
+	zdf_streamlinks = get_ZDFstreamlinks()			# Streamlinks für ZDF-Sender 
+	ard_streamlinks = get_ARDstreamlinks()			# ard_streamlinks oder ard_streamlinks_UT
+	iptv_streamlinks = get_IPTVstreamlinks()		# private + einige regionale
 
 	# abweichend - externe Funktion:
 	if u'Regional: WDR' in lname:						# Auswertung + Liste WDR Lokalzeit
