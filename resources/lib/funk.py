@@ -9,8 +9,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
 ################################################################################
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.04.2022
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -162,13 +162,18 @@ def Search(title):
 	query = query.strip();
 	query_org = query
 	query = query.lower()
+	search_videos=False											# Flag: Ergebnisse ohne "typ"
 
+	is_channel = False											# Default: Videosuche
 	if 'PLAY' in title:	
 		path = "https://www.funk.net/api/v4.0/playlists/"		# Playlists
-	if 'SERIEN' in title:										# KANÄLEN und SERIEN
+		is_channel = True
+	if 'SERIEN' in title:										# KANÄLE und SERIEN
 		path = "https://www.funk.net/data/static/channels"		# Gesamtliste mit Kurzbeschreibungen
+		is_channel = True
 	if 'VIDEOS' in title:										# VIDEOS
-		path = "https://www.funk.net/data/search?q=%s"  % quote(py2_encode(query_org))
+		path = "https://www.funk.net/api/frontend/webapp/search?q=%s"  % quote(py2_encode(query_org))
+
 		
 	page = loadPage(path)
 	if page.startswith('Fehler'):
@@ -183,16 +188,15 @@ def Search(title):
 		mediatype='video'
 
 	i=0	# Zähler Listitems
-	is_channel = True
-	if("list" in jsonObject):											# Gesamtliste
+	listObject=[]
+	if("list" in jsonObject):											# Videos + Channels
 		listObject = jsonObject["list"]
 	if ("_embedded" in jsonObject):										# Playlist
 		listObject = jsonObject["_embedded"]["playlistDTOList"]
-	if("videos" in jsonObject):											# Videos
-		is_channel = False
-		listObject = jsonObject["videos"]["list"]
+
+	if is_channel == False:												# einz. Videos
 		for stageObject in listObject:
-			title,alias,descr,img,date,dur,cr,entityId = extract_videos(stageObject['value'])
+			title,alias,descr,img,date,dur,cr,entityId = extract_videos(stageObject)
 			date = time_translate(date)
 			dur = seconds_translate(dur)
 			tag = "%s | %s" % (date, dur)
@@ -266,7 +270,6 @@ def Search(title):
 def Channels(title, next_path=''):
 	PLog('Channels:')
 	PLog(next_path)
-	PLog('Mark0')
 
 	title_org = title
 	li = xbmcgui.ListItem()
@@ -389,16 +392,14 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 		xbmcplugin.endOfDirectory(HANDLE)
 	jsonObject = json.loads(page)
 	
-	#Dict('store',store_id , jsonObject)
-	# Debug:
-	# RSave("/tmp/x_%s.json" % store_id, json.dumps(jsonObject, sort_keys=True, indent=2, separators=(',', ': ')))
+	# RSave("/tmp/x_%s.json" % store_id, page)
 
 	if("list" in jsonObject):								# Gesamtliste, latestVideos
+		PLog("list_object")
 		videoObject = jsonObject["list"]
 	if("_embedded" in jsonObject):							# Standard-Videoliste, ab 08.09.2020 abst. sortiert
-		#sort_date=False
+		PLog("embedded_object")
 		if SETTINGS.getSetting('pref_sort_funk') == 'true':
-			#sort_date=True									# s.u.
 			videoObject = sorted(jsonObject["_embedded"]["videoDTOList"], key=lambda k: k["publicationDate"], reverse=True)
 			# Alternative Update-Datum:
 			#videoObject = sorted(jsonObject["_embedded"]["videoDTOList"], key=lambda k: k["updateDate"], reverse=True) 
@@ -493,6 +494,7 @@ def get_pagination(jsonObject):
 # ----------------------------------------------------------------------			
 #	Inhalte der Channel-Liste
 #	Rückgabe: typ,title,alias,descr,img,date,entityGroup,entityId = Get_content(stageObject) 
+#	02.06.2022 Änderungen im api 
 def extract_channels(stageObject):
 	PLog('extract_channels:')
 	base = "https://www.funk.net/api/v4.0/thumbnails/"
@@ -558,7 +560,8 @@ def extract_channels(stageObject):
 	return typ,title,alias,descr,img,date,entityGroup,entityId
 # ----------------------------------------------------------------------	
 #	Videos eines Channels
-#	Rückgabe: title,alias,descr,img,date,dur,cr,genre,entityId = Get_content(stageObject) 
+#	Rückgabe: title,alias,descr,img,date,dur,cr,genre,entityId = Get_content(stageObject)
+#	02.06.2022 Änderungen im api 
 def extract_videos(stageObject):
 	PLog('extract_videos:')
 	base = "https://www.funk.net/api/v4.0/thumbnails/"
@@ -568,16 +571,24 @@ def extract_videos(stageObject):
 	PLog(title)
 	alias=stageObject["channelAlias"]		# statt alias (ähnlich title)
 
-	entityId = stageObject["entityId"]		# int
+	entityId=0
+	if "entityId" in stageObject:
+		entityId = stageObject["entityId"]
+	if "id" in stageObject:
+		entityId = stageObject["id"]			# vorm. "entityId"
 	channelId = stageObject["channelId"]	# int
-	dur = stageObject["duration"]			# int
+	dur=''
+	if "duration" in stageObject:
+		dur = stageObject["duration"]			# int
+	if "durationInSeconds" in stageObject:
+		dur = stageObject["durationInSeconds"]	# int
 						
 											# variable Details 
 	img=''; date=''; entityGroup=''; cr=''; genre=''; descr='';
 	myhash='';
 	if "hash" in stageObject:		
 		myhash = stageObject["hash"]	
-	if("description" in stageObject):
+	if ("description" in stageObject):
 		descr = stageObject["description"]
 	if descr == '':	
 		if "shortDescription" in stageObject:
@@ -590,34 +601,26 @@ def extract_videos(stageObject):
 	if("secondGenre" in stageObject):
 		genre = "%s | %s" % (genre, stageObject["secondGenre"])
 		
-		# weitere: imageUrlLandscape, imageUrlOrigin
-			#	imageUrlSquare
-	if("imageUrlSquare" in stageObject):
-		img = stageObject["imageUrlSquare"]
-	if img == '':
-		if "imageUrlLandscape" in stageObject:
-			img = stageObject["imageUrlLandscape"]
-	if img == '':
-		if "imageUrlPortrait" in stageObject:
-			img = stageObject["imageUrlPortrait"]
-	if img == '':
-		if "imageSquare" in stageObject:  # ohne Url
-			img = stageObject["imageSquare"]
-		if img == '':
-			if "imageLandscape" in stageObject:
-				img = stageObject["imageLandscape"]
-		if img:
+	if "thumbnailImage" in stageObject:
+		img = stageObject["thumbnailImage"]["key"]
+	if  "imageLandscape" in stageObject:
+		img = stageObject["imageLandscape"]			# neueste Videos
+	if  "imageUrlLandscape" in stageObject:
+		img = stageObject["imageUrlLandscape"]		# mit Url
+	PLog(img)	
+	if img:
+		if img.startswith("http") == False:	
 			img = base + img
-	if img == '':		# Falback
+	else:				# Falback
 		img = R(ICON_DIR_FOLDER) 
 		
-	if("publicationDate" in stageObject):
+	if "publicationDate" in stageObject:
 		date = stageObject["publicationDate"]
 	else:
-		if("updateDate" in stageObject):
+		if "updateDate" in stageObject:
 			date = stageObject["updateDate"]
 	
-	if("entityGroup" in stageObject):
+	if "entityGroup" in stageObject:
 		entityGroup = stageObject["entityGroup"]
 		
 	dur=str(dur); entityId=str(entityId); channelId=str(channelId); 
@@ -963,7 +966,8 @@ def loadPage(url, auth='', x_cid='', x_token='', data='', maxTimeout = None):
 		r = urlopen(req, timeout=maxTimeout, context=gcontext) # s.o.
 		# PLog("headers: " + str(r.headers))
 		doc = r.read()
-		PLog(len(doc))	
+		PLog(len(doc))
+		PLog(doc[:80])	
 		doc = doc.decode('utf-8')		
 		return doc
 		
