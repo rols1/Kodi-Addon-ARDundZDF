@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.05.2022
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
+#	Stand: 03.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -42,7 +42,7 @@ import datetime, time
 import re				# u.a. Reguläre Ausdrücke
 import string
 
-import ardundzdf					# -> ParseMasterM3u, transl_wtag, get_query, Audio_get_sendung..
+import ardundzdf					# -> SenderLiveResolution, transl_wtag, get_query, Audio_get_sendung..
 from resources.lib.util import *
 
 
@@ -185,7 +185,7 @@ def Main_KIKA(title=''):
 		fanart=GIT_KIKA, thumb=GIT_VIDEO, tagline=title, fparams=fparams)
 
 	title=u'Videos mit Gebärdensprache'
-	path = "https://www.kika.de/videos/alle-dgs/videos-dgs-100.html"
+	path = "https://www.kika.de/videos/videos-dgs-100.html"
 	thumb = GIT_DGS
 	path=py2_encode(path); title=py2_encode(title); thumb=py2_encode(thumb);
 	fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}"  %\
@@ -194,7 +194,7 @@ def Main_KIKA(title=''):
 		fanart=GIT_KIKA, thumb=GIT_DGS, tagline=title, fparams=fparams)
 
 	title=u'Videos als Hörfilme'
-	path = "https://www.kika.de/videos/alle-ad/videos-ad-100.html"
+	path = "https://www.kika.de/videos/videos-ad-100.html"
 	thumb = GIT_AD
 	path=py2_encode(path); title=py2_encode(title); thumb=py2_encode(thumb);
 	fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}"  %\
