@@ -2409,7 +2409,8 @@ def get_ZDFstreamlinks(skip_log=False):
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
 	PLog("days: %d" % days)
 	CacheTime = days*86400						# Default 1 Tag
-		
+	#days=0	# Debug
+
 	if days:									# skip CacheTime=0
 		page = Dict("load", 'zdf_streamlinks', CacheTime=CacheTime)
 		if len(str(page)) > 100:					# bei Error nicht leer od. False von Dict
@@ -2465,7 +2466,7 @@ def get_ZDFstreamlinks(skip_log=False):
 			videodat_url = "https://api.zdf.de/tmd/2/ngplayer_2_3/live/ptmd/%s" % assetid
 			page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
 			PLog("videodat: " + page[:40])
-			PLog(page)
+			#PLog(page) 	# Debug
 		
 			href = stringextract('"https://',  'master.m3u8', page) 	# 1.: auto
 			if href:
@@ -2494,6 +2495,7 @@ def get_ARDstreamlinks(skip_log=False):
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
 	PLog("days: %d" % days)
 	CacheTime = days*86400						# Default 1 Tag
+	#days=0	# Debug
 
 	ID = "ard_streamlinks"
 	if days:									# skip CacheTime=0
@@ -3321,7 +3323,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 					PLog("pref_nohome=true")
 					if "-tegra-" in OS_RELEASE == False:		# ev. prüfen: "-tegra-" in OS_RELEASE +
 						exit(0)									#	nicht bei Shield + FT1-Stick.				
-				
+
 			while 1:											# seekTime setzen
 				if player.isPlaying():
 					xbmc.sleep(500)								# für Raspi erforderl.
@@ -3338,7 +3340,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 					PLog("play_time %d, video_dur %d" % (play_time, video_dur))
 					break
 				xbmc.sleep(200)
-			
+
 			return play_time, video_dur				# -> PlayMonitor
 #			exit(0)
 

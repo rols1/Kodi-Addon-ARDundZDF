@@ -46,7 +46,7 @@ import datetime, time
 
 # Addonmodule + Funktionsziele (util_imports.py)
 # import ardundzdf reicht nicht für thread_getpic
-from ardundzdf import *					# -> get_query, ParseMasterM3u, test_downloads, Parseplaylist, 
+from ardundzdf import *					# -> get_query, test_downloads, Parseplaylist, 
 										# thread_getpic, ZDF_SlideShow, get_ZDFstreamlinks
 from resources.lib.util import *
 
@@ -1675,8 +1675,6 @@ def Live(name, epg=''):
 		(quote_plus(m3u8link), quote_plus(title), quote_plus(img), quote_plus(Plot_par))
 	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 		mediatype='video', tagline=Plot) 		
-	
-	li = Parseplaylist(li, m3u8link, img, geoblock='', descr=Plot)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	

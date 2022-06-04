@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>49</nr>										# Numerierung für Einzelupdate
-VERSION = '4.3.8'
-VDATE = '01.06.2022'
+VERSION = '4.3.9'
+VDATE = '04.06.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6986,7 +6986,8 @@ def show_single_bandwith(url_m3u8, thumb, title, descr, ID):
 def PlayButtonM3u8(li, url_m3u8, thumb, title, descr, tagline='', sub_path='', stitle=''):	
 	PLog('PlayButtonM3u8:'); 
 	PLog(title); PLog(url_m3u8); PLog(thumb); PLog(tagline);
-	 
+	
+	li = xbmcgui.ListItem()								# li kommt hier als String an
 	title=unescape(title); title=repl_json_chars(title)
 	
 	tagline	= tagline.replace('||','\n')				# s. tagline in ZDF_get_content
@@ -11006,6 +11007,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 				break
 		if skip == False:
 			stitle = "HLS-Stream"
+			PLog("jump_PlayButtonM3u8")
 			li = PlayButtonM3u8(li, url_m3u8, thumb, stitle, tagline=track_add, descr=descr)	
 			return li
 	
