@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>21</nr>										# Numerierung für Einzelupdate
-#	Stand: 27.05.2022
+# 	<nr>22</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -868,35 +868,52 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				PLog("fparams_record: " + fparams_record[:100])
 				fparams_record = quote_plus(fparams_record)	
 									
-		# für PLAYLIST nur direkte PlayVideo-Calls relevant (ohne Setting Sofortstart):
-		if dirID == 'PlayVideo' and SETTINGS.getSetting('pref_playlist') == 'true':	# PLAYLIST gewählt?
-			PLog("start_end: " + start_end)
-			f = unquote(fparams)									# Param. extrahieren (s. PlayVideo)
-			f = f.replace("': '", "':'")
-			url = stringextract("url':'", "'", f) 					# Video-Url (eindeut. Mark.)
-			thumb = stringextract("thumb':'", "'", f)
-			title = stringextract("title':'", "'", f) 
-			Plot = Plot.replace('\n', '||')							# Plot hier : tagline+summary
-			
-			# Abfrage PLAYFILE) hier nicht mögl. (USERDATA fehlt in util)
-			fp = {'action': 'playlist_play'} 								# action reicht
-			fparams_playlist_play = "&fparams={0}".format(fp)
-			fparams_playlist_play = quote_plus(fparams_playlist_play) 		# Playlist direkt abspielen
+		# für PLAYLIST direkte PlayVideo-Calls seit Umstellung auf HLS_List,MP4_List nicht
+		#	mehr geeignet. Neu: Nutzung der Funktionen für HLS_List,MP4_List - s. playlist.py,
+		#	add_url ersetzt frühere direkte Stream-Url
+		if SETTINGS.getSetting('pref_playlist') == 'true':	# PLAYLIST gewählt?
+			PLog("pref_playlist_true")
+			if mediatype == 'video':		
+				Source_Funcs = [u"ARDStartSingle|ARDnew.py",				# Funktionen + ID's
+								u"ZDF_getVideoSources|ardundzdf.py",
+								u"SingleBeitrag|3sat", 
+								u'XLGetSourcesPlayer|TagesschauXL.py',
+								u"dirID=SenderLiveResolution|ARD"
+								]
+				do_it=False
+				for item in Source_Funcs:
+					dest_func, modul = item.split("|")
+					if dest_func in dirID:
+						PLog("dest_func: " + dest_func)
+						do_it = True
+						break
+				
+				if do_it: 
+					PLog("start_end: " + start_end)
+					f = unquote(fparams)									# Param. extrahieren (s. PlayVideo)
+					f = f.replace("': '", "':'")							# json-Blanks
+					title = label
+					Plot = Plot.replace('\n', '||')							# Plot hier : tagline+summary
 					
-			fp = {'action': 'playlist_rm', 'url': quote_plus(url)} 			# action + Url reichen
-			fparams_playlist_rm = "&fparams={0}".format(fp)
-			fparams_playlist_rm = quote_plus(fparams_playlist_rm) 			# Eintrag Playlist löschen
+					# Abfrage PLAYFILE) hier nicht mögl. (USERDATA fehlt in util)
+					fp = {'action': 'playlist_play'} 								# action reicht
+					fparams_playlist_play = "&fparams={0}".format(fp)
+					fparams_playlist_play = quote_plus(fparams_playlist_play) 		# Playlist direkt abspielen
+							
+					fp = {'action': 'playlist_rm', 'add_url': quote_plus(add_url)} 		# action + Url reichen
+					fparams_playlist_rm = "&fparams={0}".format(fp)
+					fparams_playlist_rm = quote_plus(fparams_playlist_rm) 			# Eintrag Playlist löschen
+							
+					# Verwendung fparams_playlist_add auch für Ziel	playlist_tools
+					fp = {'action': 'playlist_add', 'title': quote_plus(title), 'add_url': quote_plus(add_url),\
+						'thumb': quote_plus(thumb), 'Plot': quote_plus(Plot)} 
+					fparams_playlist_add = "&fparams={0}".format(fp)
+					fparams_playlist_add = quote_plus(fparams_playlist_add) 		# Eintrag Playlist hinzufügen
 					
-			# Verwendung fparams_playlist_add auch für Ziel	playlist_tools
-			fp = {'action': 'playlist_add', 'title': quote_plus(title), 'url': quote_plus(url),\
-				'thumb': quote_plus(thumb), 'Plot': quote_plus(Plot)} 
-			fparams_playlist_add = "&fparams={0}".format(fp)
-			fparams_playlist_add = quote_plus(fparams_playlist_add) 		# Eintrag Playlist hinzufügen
-			
-			fp = {'action': 'playlist_add', 'title': quote_plus(title), 'url': quote_plus(url),\
-				'thumb': quote_plus(thumb), 'Plot': quote_plus(Plot)} 
-			fparams_playlist_tools = "&fparams={0}".format(fp)
-			fparams_playlist_tools = quote_plus(fparams_playlist_tools) 	# Playlist-Tools
+					fp = {'action': 'playlist_add', 'title': quote_plus(title), 'add_url': quote_plus(add_url),\
+						'thumb': quote_plus(thumb), 'Plot': quote_plus(Plot)} 
+					fparams_playlist_tools = "&fparams={0}".format(fp)
+					fparams_playlist_tools = quote_plus(fparams_playlist_tools) 	# Playlist-Tools
 			
 		fp = {'action': 'add', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
 			'Plot': quote_plus(Plot),'url': quote_plus(add_url)}	
@@ -3167,12 +3184,6 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
 	#li.setProperty('IsPlayable', 'true')		# hier unwirksam
 	li.setInfo(type="video", infoLabels={"Title": title, "Plot": Plot, "mediatype": "video"}) # s.u.
-	
-
-	'''
-	infoLabels = {}								# 17.06.2921 Setzen hier behindert Resume-Funktion (s. addDir)
-		...
-	'''
 	
 	sub_list=[]
 	PLog("pref_UT_ON: " + SETTINGS.getSetting('pref_UT_ON'))	
