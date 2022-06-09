@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>22</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.06.2022
+# 	<nr>23</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -873,16 +873,19 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		#	add_url ersetzt frühere direkte Stream-Url
 		if SETTINGS.getSetting('pref_playlist') == 'true':	# PLAYLIST gewählt?
 			PLog("pref_playlist_true")
-			if mediatype == 'video':		
+			if mediatype == 'video':	
+				# Änderungen mit get_Source_Funcs_ID (strm) abgleichen:	
 				Source_Funcs = [u"ARDStartSingle|ARDnew.py",				# Funktionen + ID's
 								u"ZDF_getVideoSources|ardundzdf.py",
 								u"SingleBeitrag|3sat", 
 								u'XLGetSourcesPlayer|TagesschauXL.py',
-								u"dirID=SenderLiveResolution|ARD"
+								u"dirID=SenderLiveResolution|ARD",
+								u"arte.SingleVideo|arte"
 								]
 				do_it=False
 				for item in Source_Funcs:
 					dest_func, modul = item.split("|")
+					#PLog("dest_func: " + dest_func)
 					if dest_func in dirID:
 						PLog("dest_func: " + dest_func)
 						do_it = True
@@ -3286,7 +3289,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 				li.setProperty('inputstream.adaptive.manifest_type', 'hls')				
 				li.setContentLookup(False)				
 
-		PLog("url: " + url); PLog("playlist: %d" % len(playlist))
+		PLog("url: " + url); PLog("playlist: %s" % str(playlist))
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt						
@@ -3306,7 +3309,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 			return
 
 		else:													# false, None od. Blank - Playlist
-			PLog('PlayVideo_Start: direkt, playlist: %d' % len(playlist))
+			PLog('PlayVideo_Start: direkt, playlist: %s' % str(playlist))
 			
 			line = Dict("load", 'Rekurs_check')					# Dict-Abgleich url/Laufzeit
 			PLog(line)

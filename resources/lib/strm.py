@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.05.2022
+# 	<nr>12</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.06.2022
 #
 
 from __future__ import absolute_import
@@ -637,11 +637,12 @@ def get_Source_Funcs_ID(add_url):
 	# nachrüsten (abweichende Streamermittlung): funk, arte, 
 	#	phoenix (einsch. Youtube-Videos), TagesschauXL, zdfmobile
 	# PlayVideo: Einzelauflösung - ohne Ermittlung der Quellen, s. url_test
-	Source_Funcs = [u"dirID=ZDF|ZDF", u"ARDnew.ARDStartSingle|ARDNEU",	# Funktionen + ID's
+	Source_Funcs = [u"ARDnew.ARDStartSingle|ARDNEU",					# Funktionen + ID's
 					u"my3Sat.SingleBeitrag|3sat", u'.XLGetSourcesPlayer|TXL',
-					u"dirID=PlayVideo|PlayVideo",u"dirID=SenderLiveResolution|ARD"
+					u"dirID=PlayVideo|PlayVideo",u"dirID=SenderLiveResolution|ARD",
+					u"arte.SingleVideo|arte", u"ZDF_getVideoSources|ZDF"
 					]
-	ID=''												# derzeit nicht ermittelbar
+	ID=''																# derzeit nicht ermittelbar
 	for item in Source_Funcs:
 		dest_func, sid = item.split("|")
 		PLog(dest_func); PLog(sid)
@@ -853,7 +854,8 @@ def do_sync_ARD(list_title, strmpath, list_path, strm_type):
 		
 	#-------------												# Versionserkenung
 	line = Dict("load", 'strmListVersion_%s' % list_title)		# stored: ARD_getStrmList
-	vers = line.split("|")[-1] 						
+	if line != False:
+		vers = line.split("|")[-1] 						
 	PLog("versions_detect: " + vers)							# Default: Normalfassung
 	#-------------												# Blockmerkmale != ZDF_FlatListEpisodes
 	cnt=0; skip_cnt=0;

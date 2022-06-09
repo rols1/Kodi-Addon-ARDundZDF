@@ -4,8 +4,8 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.06.2022
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.06.2022
 #
 
 from __future__ import absolute_import
@@ -232,17 +232,18 @@ def playlist_tools(action, add_url, title='', thumb='', Plot='', menu_stop=''):
 	dialog = xbmcgui.Dialog()
 	# bei Bedarf ergänzen: u"Liste endlos abspielen", u"Liste zufallgesteuert abspielen"
 	#	(mode="endless", mode="random"):
-	select_list = [	u"Liste abspielen", u"Liste zeigen", u"Liste komplett löschen", 
+	select_list = [	u"Liste abspielen", u"Liste abspielen ab .. (Startposition wählen)", 
+					u"Liste zeigen", u"Liste komplett löschen", 
 					u"einzelne Titel löschen", u"Status in kompletter Liste auf >neu< setzen", 
 					u"Liste ins Archiv verschieben", 
-					u"Liste aus Archiv wiederherstellen", u"Abbrechen"
+					u"Liste aus Archiv wiederherstellen", u"PLAYLIST-Tools verlassen"
 				]
 
 	if len(PLAYLIST) == 0:
 		xbmcgui.Dialog().notification("PLAYLIST: ","noch leer",ICON_PLAYLIST,2000)
 		# return											# Verbleib in Tools für get_archiv
 	
-	noloop=True
+	do_wait=False											# Flag							
 	title = u"PLAYLIST-Tools"
 	ret = dialog.select(title, select_list)					# Auswahl Tools
 	PLog("ret: %d" % ret)
@@ -250,29 +251,40 @@ def playlist_tools(action, add_url, title='', thumb='', Plot='', menu_stop=''):
 		return
 		
 	elif ret == 0 and len(PLAYLIST) > 0:
-		play_list(title)									# PLAYLIST starten / Titel abspielen
-		return												# Tools-Menü verlassen
-		
+		do_wait =  play_list(title)							# PLAYLIST starten / Titel abspielen
+#		return												# Tools-Menü verlassen
 	elif ret == 1 and len(PLAYLIST) > 0:
-		play_list(title, mode="show")						# PLAYLIST zeigen
-	elif ret == 2 and len(PLAYLIST) > 0:					# PLAYLIST kompl. löschen
+		do_wait =  play_list(title, mode="play_pos")		# PLAYLIST starten ab..
+		
+	elif ret == 2 and len(PLAYLIST) > 0:
+		play_list(title, mode="show")						# PLAYLIST zeigen	
+	elif ret == 3 and len(PLAYLIST) > 0:					# PLAYLIST kompl. löschen
 		msg1 = u"PLAYLIST mit %d Titel(n) wirklich löschen?" % len(PLAYLIST.splitlines()) 
 		ret4 = MyDialog(msg1=msg1, msg2='', msg3='', ok=False, cancel='Abbrechen', yes='JA', heading=title)
 		if ret4 == 1:
 			os.remove(PLAYFILE)	
 			xbmcgui.Dialog().notification("PLAYLIST: ","gelöscht",ICON_PLAYLIST,2000)
-	elif ret == 3 and len(PLAYLIST) > 0:
-		play_list(title, mode="del_single")					# PLAYLIST Auswahl löschen
 	elif ret == 4 and len(PLAYLIST) > 0:
-		play_list(title, mode="set_status")					# Status auf >neu< setzen
+		play_list(title, mode="del_single")					# PLAYLIST Auswahl löschen
 	elif ret == 5 and len(PLAYLIST) > 0:
+		play_list(title, mode="set_status")					# Status auf >neu< setzen
+	elif ret == 6 and len(PLAYLIST) > 0:
 		play_list(title, mode="push_archiv")				# Liste in PLAYLIST-Archiv verschieben
-	elif ret == 6:
+	elif ret == 7:
 		play_list(title, mode="get_archiv")					# Liste aus PLAYLIST-Archiv wiederherstellen
-	elif ret == 7:											# Abbruch Liste
+	elif ret == 8:											# Abbruch Liste
 		return	
 
-	playlist_tools(action='play_list', add_url='')				# wieder zur Liste, auch nach PlayMonitor
+	if do_wait:												# Toolsliste ist modal (Vordergrund)
+		PLog("wait_for_Monitor_end") 
+		xbmc.sleep(2000)
+		while(1):
+			xbmc.sleep(1000)
+			if os.path.exists(PLAYLIST_ALIVE) == False:
+				break
+		PLog("back_to_tools")
+
+	playlist_tools(action='play_list', add_url='')			# zurück zu Tools
 
 # ----------------------------------------------------------------------
 def play_list(title, mode=''):		
@@ -281,16 +293,38 @@ def play_list(title, mode=''):
 	dialog = xbmcgui.Dialog()
 	PLAYLIST = get_playlist()
 	
-	if mode == '':													# PLAYLIST starten
+	
+	#----------------------------------------						# Beginn Abspielen	
+	if mode == '' or  mode == 'play_pos':
+		startpos=0
+
 		if '###neu' not in PLAYLIST:
 			msg1 = u"Alle Titel haben den Status >gesehen<."
 			msg2 = u"Bitte neue Titel einfügen oder den Status auf >neu< setzen."
 			MyDialog(msg1, msg2, '')
 			return
-		
+		if SETTINGS.getSetting('pref_inputstream') == 'false':
+			if "HLS" in SETTINGS.getSetting('pref_direct_format'):
+				msg1 = u"Beim Videoformat HLS kann die letzte Abspielposition"
+				msg2 = u"nur mit aktiviertem inputstream.adaptiv-Addon wiederhergestellt werden."
+				MyDialog(msg1, msg2, '')
+				
+		if mode == 'play_pos':											# PLAYLIST starten ab Auswahlposition
+			PLog('play_pos:')
+			title_org = u"Abspielen - bitte die Startposition wählen:" 
+			new_list = build_textlist(PLAYLIST)				
+			new_list = new_list.splitlines()							# Textliste zur Auswahl
+			dial_ret = dialog.select(title_org, new_list)
+			PLog(dial_ret)
+			if dial_ret > 0:
+				startpos = dial_ret
+			else:
+				return False
+				
 		if os.path.exists(PLAYLIST_ALIVE) == False:					# PlayMonitor läuft bereits?
+			PLog('startpos: %d' % startpos)
 			bg_thread = Thread(target=PlayMonitor,					# sonst Thread PlayMonitor starten
-				args=())
+				args=[startpos])									# []: iterable
 			bg_thread.start()
 			xbmcgui.Dialog().notification("PLAYLIST: ","gestartet",ICON_PLAYLIST,3000)
 		else:
@@ -301,7 +335,9 @@ def play_list(title, mode=''):
 				if os.path.exists(PLAYLIST_ALIVE):					# Lebendsignal aus
 					os.remove(PLAYLIST_ALIVE)
 					play_list(title, mode='')						# neuer Startversuch
-		return
+		return True
+	#----------------------------------------						# Ende Abspielen	
+
 
 	# alternativ als Kodi-Liste zeigen (dirID="PlayVideo")
 	if mode == 'show':												# PLAYLIST zeigen
@@ -406,6 +442,8 @@ def play_list(title, mode=''):
 				PLog(ret_list)
 				if len(ret_list) > 0:
 					fname  = ret_list[0]
+					if os.path.exists(PLAYFILE):	# alte PLAYLIST entf. 
+						os.remove(PLAYFILE)
 					try:
 						os.rename(fname, PLAYFILE)
 						msg1 = u"ist wiederhergestellt"
@@ -427,7 +465,7 @@ def build_textlist(PLAYLIST):
 		item = (item.replace("<play>", "").replace("</play>", ""))
 		if item  == "":
 			continue
-		PLog(item)
+		#PLog(item)		# Debug
 		timestamp, title, add_url, thumb, Plot, status = item.split('###')
 		Plot=py2_decode(Plot); title=py2_decode(title); 
 		PLog(title)
@@ -458,8 +496,8 @@ def get_archiv():
 	globPat = '%s_*' % playfile
 	file_list = glob.glob(globPat)
 	if PLAYLIST_ALIVE in file_list:
-		file_list.remove(PLAYLIST_ALIVE)	# Lebendsignal (Ruine) ausschließen
-	return file_list 			# leer falls keine Archivdateien vorh.
+		file_list.remove(PLAYLIST_ALIVE)				# Lebendsignal (Ruine) ausschließen
+	return file_list 									# leer falls keine Archivdateien vorh.
 	
 # ----------------------------------------------------------------------
 # Thread für PLAYLIST, Aufruf play_list(mode='')
@@ -468,24 +506,30 @@ def get_archiv():
 #	vom Param. windowed. OK beim Aufruf aus K-Menü. Gelöst mit vorge-
 #	schalteter Startfunktion start_script (Haupt-PRG)
 #
-def PlayMonitor(mode=''):
-	PLog('PlayMonitor:')
+def PlayMonitor(startpos):
+	PLog('PlayMonitor: ' + str(startpos))
 	PLAYLIST = get_playlist()
 	PLAYLIST = PLAYLIST.splitlines()	
-	
-	OSD = xbmcgui.Dialog()
-	
+		
 	mtitle 		= u"PLAYLIST-Tools"
 	PLAYDELAY 	= 10									# Sek.
 	open(PLAYLIST_ALIVE, 'w').close()					# Lebendsignal ein - Abgleich play_list
 	xbmc.sleep(1000)									# Start-Info abwarten
 	monitor 	= xbmc.Monitor()
 	player		= xbmc.Player()			
-			
-	cnt=1
+		
+	
+	cnt=0
 	for item in PLAYLIST:
-		PLog(item)
-		seekTime = 0									# seek-Point Video
+		PLog("cnt: %d, startpos: %d" % (cnt, startpos))
+		if startpos > 0:
+			if cnt < startpos:
+				cnt = cnt+1	
+				continue
+				
+		cnt = cnt+1		
+		PLog(item[:80])
+		seekTime = 0									# Video seek-Point 
 		item = py2_decode(item)
 		if '###gesehen' in item:
 			msg1 = "Titel %d schon gespielt" % cnt
@@ -502,10 +546,11 @@ def PlayMonitor(mode=''):
 		cnt = cnt+1	
 		start_time = int(seekTime)
 		
-		# seek-Problem bei HLS-Streams - s. github.com/xbmc/xbmc/issues/18415
+		# seek-Problem bei HLS-Streams o. EXT-X-ENDLIST tag- s. github.com/xbmc/xbmc/issues/18415
+		#	(kein Problem mit inputstream.adaptiv-Addon)
 		# Exception-Behandl. für nicht verfügb. Videos:
 		timestamp, title, add_url, thumb, Plot, status = item.split('###')
-		streamurl = get_streamurl(add_url)								# Streamurl ermitteln
+		streamurl = get_streamurl(add_url)								# Streamurl ermitteln (strm-Modul)
 		PLog("streamurl: " + streamurl)
 		try:															#  playlist="true" = skip Startliste:
 			play_time,video_dur = PlayVideo(streamurl, title, thumb, Plot, playlist="true", seekTime=seekTime)
@@ -540,6 +585,7 @@ def PlayMonitor(mode=''):
 			PLog('mark_delete: ' + item[:80])		
 		else:
 			pos = item.find("###neu")					# seekTime=play_time anhängen
+			play_time = max(0, (play_time-4))			# 4 sec Wiederholzeit
 			item = item[:pos] + "###neu ab %d sec</play>" % play_time
 			PLog('mark_gesehen: ' + item[:80])
 		PLAYLIST[cnt-2] = py2_encode(item)
@@ -573,7 +619,7 @@ def PlayMonitor(mode=''):
 # ----------------------------------------------------------------------
 # Notification-CountDown
 def CountDown(sec, title, icon): 
-	PLog('PlayMonitor:')
+	PLog('CountDown:')
 
 	if os.path.exists(COUNT_STOP):						# gesetzt: PlayMonitor (break)
 		os.remove(COUNT_STOP)

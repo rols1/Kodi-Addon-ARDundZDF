@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>14</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.05.2022
+# 	<nr>15</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -402,6 +402,8 @@ def GetContent(li, page, ID):
 				continue
 			#if cnt > max_pre:								# ungenau
 			#	tag = u"[COLOR blue]Auch interessant für Sie[/COLOR]\n\n%s" % tag
+			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
+				mediatype='video'
 			
 			fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s'}" %\
 				(quote(img), quote(title), quote(pid), quote(tag_par), quote(summ), dur, geo)
