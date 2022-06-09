@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>50</nr>										# Numerierung für Einzelupdate
+# 	<nr>51</nr>										# Numerierung für Einzelupdate
 VERSION = '4.3.9'
-VDATE = '04.06.2022'
+VDATE = '09.06.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -574,7 +574,7 @@ def InfoAndFilter():
 		thumb=R(ICON_TOOLS), fparams=fparams, summary=summ, tagline=tag)		
 							
 	title = u"Addon-Infos"									# Button für Addon-Infos
-	tag = "Infos zu Version, Cache und Dateipfaden." 
+	tag = "[B]Infos zu Version, Cache und Dateipfaden.[/B]" 
 	summ = "Bei aktiviertem Debug-Log erfolgt die Ausgabe auch dort"
 	summ = "%s (nützlich zum Kopieren der Pfade)." % summ
 	fparams="&fparams={}" 
@@ -584,7 +584,7 @@ def InfoAndFilter():
 	if SETTINGS.getSetting('pref_startlist') == 'true':		# Button für LastSeen-Funktion
 		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
 		title = u"Zuletzt gesehen"	
-		tag = u"Liste der im Addon gestarteten Videos (max. %s Einträge)." % maxvideos
+		tag = u"[B]Liste der im Addon gestarteten Videos (max. %s Einträge).[/B]" % maxvideos
 		tag = u"%s\n\nSortierung absteigend (zuletzt gestartete Videos zuerst)" % tag
 		summ = u"Klick startet das Video (falls noch existent)"
 		fparams="&fparams={}" 
@@ -600,7 +600,8 @@ def InfoAndFilter():
 				
 	if SETTINGS.getSetting('pref_strm') == 'true':											
 		title = u"strm-Tools"								# Button für strm-Tools
-		tag = "Abgleichintervall in Stunden\nListen anzeigen\nListeneinträge löschen\n"
+		tag = "[B]strm-Tools - Details siehe Addon-Wicki[/B]"
+		tag = "%s\n\nAbgleichintervall in Stunden\nListen anzeigen\nListeneinträge löschen\n" % tag
 		tag = "%sMonitorreset\nstrm-Log anzeigen\nAbgleich einer Liste erzwingen\n" % tag
 		tag = "%sunterstützte Sender/Beiträge\nzu einem strm-Verzeichnis wechseln" % tag
 		myfunc="resources.lib.strm.strm_tools"
@@ -616,17 +617,16 @@ def InfoAndFilter():
 	if SETTINGS.getSetting('pref_playlist') == 'true':
 		MENU_STOP = os.path.join(ADDON_DATA, "menu_stop") 	# Stopsignal für Tools-Menü (Haupt-PRG)								
 		if os.path.exists(MENU_STOP):						# verhindert Rekurs. in start_script 
-			os.remove(MENU_STOP)							# Entfernung in playlist_tools
+			os.remove(MENU_STOP)							# gesetzt in playlist_tools
 			
 		title = u"PLAYLIST-Tools"							# Button für PLAYLIST-Tools
 		myfunc="resources.lib.playlist.playlist_tools"
-		fparams_add = quote('{"action": "playlist_add", "url": "", "menu_stop": "true"}') # hier json-kompat.
+		fparams_add = quote('{"action": "playlist_add", "add_url": "", "menu_stop": "true"}') # hier json-kompat.
 		
-		tag = u"Abspielen und Verwaltung der addon-internen Playlist"
-		tag = u"%s\n\nEinträge werden via Kontextmenü in den Einzelauflösungen eines Videos hinzugefügt." % tag
-		tag = u"%s\n\n[COLOR blue]Am besten eigenen sich MP4-Url's[/COLOR]. HLS-Url's starten immer am Anfang, " % tag
-		tag = u"%sunabhängig von der letzten Position. Livestreams werden abgewiesen." % tag			
-		summ = u"die PLAYLIST-Tools stehen auch im Kontextmenü zur Verfügung, wenn ein Listeneintrag eine geeignete Stream-Url enthält" 
+		tag = u"[B]Abspielen und Verwaltung der addon-internen Playlist[/B]"
+		tag = u"%s\n\nEinträge werden via Kontextmenü von abspielbaren Videos hinzugefügt." % tag
+		tag = u"%s\n\nLivestreams werden abgewiesen." % tag			
+		summ = u"Die PLAYLIST-Tools stehen auch im Kontextmenü zur Verfügung." 
 
 		fparams="&fparams={'myfunc': '%s', 'fparams_add': '%s'}"  %\
 			(quote(myfunc), quote(fparams_add))			
@@ -634,7 +634,7 @@ def InfoAndFilter():
 			fanart=R(FANART), thumb=R("icon-playlist.png"), tagline=tag, summary=summ, fparams=fparams)	
 			
 	title = u"Einzelupdate (Dateien und Module)"		# Update von Einzeldateien
-	tag = 'Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s' % REPO_NAME
+	tag = '[B]Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s[/B]' % REPO_NAME
 	tag = "%s\n\nNach Abgleich werden neue Dateien heruntergeladen und ersetzen lokale Dateien im Addon." % tag
 	summ = "Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt."
 	fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
@@ -6942,7 +6942,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 		PLog("title: " + title)
 		descr = "%s\n\n%s" % (title, descr)
 		PLog("descr: " + descr)
-		li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr)	
+		li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr, live=True)	
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 							
 	elif url_m3u8.find('.m3u8') >= 0: 
@@ -7623,7 +7623,7 @@ def ZDFStartLiveSingle(path, thumb, title, descr):
 	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 		tagline=title, mediatype='video')	
 		
-	li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr)
+	li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr, live=True)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 		
@@ -10945,7 +10945,7 @@ def ZDF_SlideShow(path, single=None):
 
 	 
 ####################################################################################################
-def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', buttons=True, track_add=''):	
+def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', buttons=True, track_add='', live=''):	
 #	# master.m3u8 auswerten, Url muss komplett sein. 
 #  	1. Besonderheit: in manchen *.m3u8-Dateien sind die Pfade nicht vollständig,
 #	sondern nur als Ergänzung zum Pfadrumpf (ohne Namen + Extension) angegeben, Bsp. (Arte):
@@ -10996,22 +10996,27 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		playlist = RLoad(fname, abs_path=True)					
 	 
 	PLog('playlist: ' + playlist[:100])
+	PLog('live: ' + str(live))
 	skip_list = ["/hrhlsde/", "/ndr/", "/mdrtvsn/", "/rbb_brandenburg/",	# keine Mehrkanalstreams: skip
 				"/srfsgeo/", "/swrbwd/", "/wdr/", "/ardone/", "/dwstream"
 				]
-	# Merkmal "_sendung_" ev. austauschen gegen Live-Kennung  in Params
-	if '#EXT-X-MEDIA' in playlist and "_sendung_" in url_m3u8 == False:		# Mehrkanalstreams: 1 Button
+	PLog('#EXT-X-MEDIA' in playlist)
+	# live=True: skip 1 Button, Altern.: Merkmal "_sendung_" in url_m3u8
+	if '#EXT-X-MEDIA' in playlist:											# Mehrkanalstreams: 1 Button
 		skip=False
 		for item in skip_list:
 			if item in url_m3u8:
 				skip=True													# i.d.R. ARD-Streams (nicht alle)
 				break
-		if skip == False:
+		PLog('skip: ' + str(skip))
+		if skip == False and live:											# 
 			stitle = "HLS-Stream"
 			PLog("jump_PlayButtonM3u8")
-			li = PlayButtonM3u8(li, url_m3u8, thumb, stitle, tagline=track_add, descr=descr)	
-			return li
+			PlayButtonM3u8(li, url_m3u8, thumb, stitle, tagline=track_add, descr=descr)	
+			return
 	
+	
+	li = xbmcgui.ListItem()	
 	lines = playlist.splitlines()
 	# PLog(lines)
 	BandwithOld 	= ''			# für Zwilling -Test (manchmal 2 URL für 1 Bandbreite + Auflösung) 
@@ -11252,6 +11257,7 @@ def router(paramstring):
 				
 				dest_modul = importlib.import_module(dest_modul )		# Modul laden
 				PLog('loaded: ' + str(dest_modul))
+				#PLog(' router_params_dict: ' + str(params))			# Debug Modul-params
 				
 				try:
 					# func = getattr(sys.modules[dest_modul], newfunc)  # falls beim Start geladen
