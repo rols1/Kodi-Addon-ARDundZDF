@@ -4,7 +4,7 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
+# 	<nr>3</nr>										# Numerierung für Einzelupdate
 #	Stand: 09.06.2022
 #
 
@@ -588,7 +588,10 @@ def PlayMonitor(startpos):
 			play_time = max(0, (play_time-4))			# 4 sec Wiederholzeit
 			item = item[:pos] + "###neu ab %d sec</play>" % play_time
 			PLog('mark_gesehen: ' + item[:80])
-		PLAYLIST[cnt-2] = py2_encode(item)
+		
+		myind = max(0, cnt-2)
+		PLog("myind: %d" % myind)
+		PLAYLIST[myind] = py2_encode(item)
 		new_list = "\n".join(PLAYLIST)
 		RSave(PLAYFILE, new_list)						# Lock erf. falls auf Share
 
