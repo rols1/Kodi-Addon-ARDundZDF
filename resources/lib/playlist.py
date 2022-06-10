@@ -4,7 +4,7 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
 #	Stand: 10.06.2022
 #
 
@@ -243,7 +243,7 @@ def playlist_tools(action, add_url, title='', thumb='', Plot='', menu_stop=''):
 		xbmcgui.Dialog().notification("PLAYLIST: ","noch leer",ICON_PLAYLIST,2000)
 		# return											# Verbleib in Tools für get_archiv
 	
-	do_wait=False											# Flag							
+	playing=False											# Flag							
 	title = u"PLAYLIST-Tools"
 	ret = dialog.select(title, select_list)					# Auswahl Tools
 	PLog("ret: %d" % ret)
@@ -251,10 +251,9 @@ def playlist_tools(action, add_url, title='', thumb='', Plot='', menu_stop=''):
 		return
 		
 	elif ret == 0 and len(PLAYLIST) > 0:
-		do_wait =  play_list(title)							# PLAYLIST starten / Titel abspielen
-#		return												# Tools-Menü verlassen
+		playing =  play_list(title)							# PLAYLIST starten / Titel abspielen
 	elif ret == 1 and len(PLAYLIST) > 0:
-		do_wait =  play_list(title, mode="play_pos")		# PLAYLIST starten ab..
+		playing =  play_list(title, mode="play_pos")		# PLAYLIST starten ab..
 		
 	elif ret == 2 and len(PLAYLIST) > 0:
 		play_list(title, mode="show")						# PLAYLIST zeigen	
@@ -275,18 +274,10 @@ def playlist_tools(action, add_url, title='', thumb='', Plot='', menu_stop=''):
 	elif ret == 8:											# Abbruch Liste
 		return	
 
-	if do_wait:												# Toolsliste ist modal (Vordergrund)
-		return
-		xbmc.sleep(2000)
-		cnt=0
-		while(1):
-			cnt=cnt+1
-			PLog("wait_for_Monitor_end_%d" % cnt) 
-			xbmc.sleep(1000)
-			if os.path.exists(PLAYLIST_ALIVE) == False:
-				break
-		PLog("back_to_tools")
-
+	if playing:												# return: Toolsliste ist modal (Vordergrund)
+		return												# PlayMonitor startet nach Ende Tools neu											
+		
+	PLog("back_to_tools")
 	playlist_tools(action='play_list', add_url='')			# zurück zu Tools
 
 # ----------------------------------------------------------------------
@@ -312,14 +303,14 @@ def play_list(title, mode=''):
 				msg2 = u"nur mit aktiviertem inputstream.adaptiv-Addon wiederhergestellt werden."
 				MyDialog(msg1, msg2, '')
 				
-		if mode == 'play_pos':											# PLAYLIST starten ab Auswahlposition
+		if mode == 'play_pos':										# PLAYLIST starten ab Auswahlposition
 			PLog('play_pos:')
 			title_org = u"Abspielen - bitte die Startposition wählen:" 
 			new_list = build_textlist(PLAYLIST)				
-			new_list = new_list.splitlines()							# Textliste zur Auswahl
+			new_list = new_list.splitlines()						# Textliste zur Auswahl
 			dial_ret = dialog.select(title_org, new_list)
 			PLog(dial_ret)
-			if dial_ret > 0:
+			if dial_ret > -1:										# auch Pos. 0 erlaubt
 				startpos = dial_ret
 			else:
 				return False
@@ -527,30 +518,24 @@ def PlayMonitor(startpos):
 	PLog("del_val: %d" % del_val)
 	
 	cnt=0
-	for item in PLAYLIST:
-		PLog("cnt: %d, startpos: %d" % (cnt, startpos))
-		if startpos > 0:
-			if cnt < startpos:
-				cnt = cnt+1	
-				continue
-				
-		cnt = cnt+1		
+	for cnt in range(len(PLAYLIST) - startpos):
+		play_cnt = cnt + startpos
+		item = PLAYLIST[play_cnt]				
 		PLog(item[:80])
-		seekTime = 0									# Video seek-Point 
+		seekTime = 0
+									# Video seek-Point 
 		item = py2_decode(item)
 		if '###gesehen' in item:
-			msg1 = "Titel %d schon gespielt" % cnt
+			msg1 = "Titel %d schon gespielt" % play_cnt
 			xbmcgui.Dialog().notification("PLAYLIST: ",msg1,ICON_PLAYLIST,2000)
-			cnt = cnt+1	
 			continue
 
 		timestamp, title, add_url, thumb, Plot, status = item.split('###')
 		if "neu ab" in status:
-			seekTime = re.search(u'neu ab (\d+) sec', status).group(1)		# Startpos aus Playlist übernehmen
-		PLog("Nr.: %s | %s | ab %s sec" % (cnt, title[:80], seekTime))
-		msg2 = "Titel %d von %d" % (cnt, len(PLAYLIST))
+			seekTime = re.search(u'neu ab (\d+) sec', status).group(1)		# Seek-Pos. aus Playlist übernehmen
+		PLog("Nr.: %s | %s | ab %s sec" % (play_cnt+1, title[:80], seekTime))
+		msg2 = "Titel %d von %d" % (play_cnt+1, len(PLAYLIST))
 		xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,2000)
-		cnt = cnt+1	
 		start_time = int(seekTime)
 		
 		# seek-Problem bei HLS-Streams o. EXT-X-ENDLIST tag- s. github.com/xbmc/xbmc/issues/18415
@@ -584,26 +569,25 @@ def PlayMonitor(startpos):
 
 		PLog("start_time %d, play_time %d, video_dur %d, percent %d" %\
 			(start_time,play_time,video_dur,percent))
-			
-		if percent >= del_val:							# Prozentabgleich mit Setting
+														# Prozentabgleich mit Setting
+		if percent >= del_val:							# mark: löschen							
 			item = item.replace("###neu", "###delete")
 			PLog('mark_delete: ' + item[:80])		
-		else:
-			pos = item.find("###neu")					# seekTime=play_time anhängen
+		else:											# mark: seek-Pos. (play_time)
+			pos = item.find("###neu")
 			play_time = max(0, (play_time-4))			# 4 sec Wiederholzeit
 			item = item[:pos] + "###neu ab %d sec</play>" % play_time
 			PLog('mark_gesehen: ' + item[:80])
 		
-		myind = max(0, cnt-2)
-		PLog("myind: %d" % myind)
-		PLAYLIST[myind] = py2_encode(item)
+		PLog(u"aktualisiere_item: %d, %s" % (play_cnt, title))
+		PLAYLIST[play_cnt] = py2_encode(item)
 		new_list = "\n".join(PLAYLIST)
-		RSave(PLAYFILE, new_list)						# Lock erf. falls auf Share
+		RSave(PLAYFILE, new_list)						# Lock erford. falls auf Share
 
-		if cnt > len(PLAYLIST):
+		if play_cnt+2 > len(PLAYLIST):
 			break
 
-		msg1 = u"nächster PLAYLIST-Titel: %d von %d" % (cnt, len(PLAYLIST)) 
+		msg1 = u"nächster PLAYLIST-Titel: %d von %d" % (play_cnt+2, len(PLAYLIST)) 
 		msg2 = u"startet automatisch in %d sec." % PLAYDELAY
 		msg3 = u"STOP beendet die PLAYLIST"
 		PLog(msg1)
@@ -617,13 +601,14 @@ def PlayMonitor(startpos):
 		PLog("ret: %d" % ret)
 		open(COUNT_STOP, 'w').close()
 		if ret == 1:		# autoclose, cancel: 0
+			player.stop()
 			break
 			
 	xbmcgui.Dialog().notification("PLAYLIST: ","beendet",ICON_PLAYLIST,2000)					
 	if os.path.exists(PLAYLIST_ALIVE):					# Lebendsignal aus
 		os.remove(PLAYLIST_ALIVE)
 		
-	return
+	return playlist_tools(action='play_list', add_url='')			# zurück zu Tools
 
 # ----------------------------------------------------------------------
 # Notification-CountDown
