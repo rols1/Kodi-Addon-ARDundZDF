@@ -4,8 +4,8 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.06.2022
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.06.2022
 #
 
 from __future__ import absolute_import
@@ -276,9 +276,12 @@ def playlist_tools(action, add_url, title='', thumb='', Plot='', menu_stop=''):
 		return	
 
 	if do_wait:												# Toolsliste ist modal (Vordergrund)
-		PLog("wait_for_Monitor_end") 
+		return
 		xbmc.sleep(2000)
+		cnt=0
 		while(1):
+			cnt=cnt+1
+			PLog("wait_for_Monitor_end_%d" % cnt) 
 			xbmc.sleep(1000)
 			if os.path.exists(PLAYLIST_ALIVE) == False:
 				break
@@ -518,6 +521,10 @@ def PlayMonitor(startpos):
 	monitor 	= xbmc.Monitor()
 	player		= xbmc.Player()			
 		
+	del_val = SETTINGS.getSetting('pref_delete_viewed')	# default 75%
+	del_val = re.search(u'(\d+)', del_val).group(1)
+	del_val = int(del_val)
+	PLog("del_val: %d" % del_val)
 	
 	cnt=0
 	for item in PLAYLIST:
@@ -577,9 +584,7 @@ def PlayMonitor(startpos):
 
 		PLog("start_time %d, play_time %d, video_dur %d, percent %d" %\
 			(start_time,play_time,video_dur,percent))
-		del_val = SETTINGS.getSetting('pref_delete_viewed')	# default 75%
-		del_val = re.search(u'(\d+)', del_val).group(1)
-		del_val = int(del_val)
+			
 		if percent >= del_val:							# Prozentabgleich mit Setting
 			item = item.replace("###neu", "###delete")
 			PLog('mark_delete: ' + item[:80])		
@@ -597,6 +602,7 @@ def PlayMonitor(startpos):
 
 		if cnt > len(PLAYLIST):
 			break
+
 		msg1 = u"nächster PLAYLIST-Titel: %d von %d" % (cnt, len(PLAYLIST)) 
 		msg2 = u"startet automatisch in %d sec." % PLAYDELAY
 		msg3 = u"STOP beendet die PLAYLIST"
