@@ -4,8 +4,8 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-# 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.06.2022
+# 	<nr>6</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.06.2022
 #
 
 from __future__ import absolute_import
@@ -234,7 +234,7 @@ def playlist_tools(action, add_url, title='', thumb='', Plot='', menu_stop=''):
 	#	(mode="endless", mode="random"):
 	select_list = [	u"Liste abspielen", u"Liste abspielen ab .. (Startposition wählen)", 
 					u"Liste zeigen", u"Liste komplett löschen", 
-					u"einzelne Titel löschen", u"Status in kompletter Liste auf >neu< setzen", 
+					u"einzelne Titel löschen", u"Abspielstatus in kompletter Liste auf >neu< setzen", 
 					u"Liste ins Archiv verschieben", 
 					u"Liste aus Archiv wiederherstellen", u"PLAYLIST-Tools verlassen"
 				]
@@ -306,7 +306,7 @@ def play_list(title, mode=''):
 		if mode == 'play_pos':										# PLAYLIST starten ab Auswahlposition
 			PLog('play_pos:')
 			title_org = u"Abspielen - bitte die Startposition wählen:" 
-			new_list = build_textlist(PLAYLIST)				
+			new_list = build_textlist(PLAYLIST, cut_title=60)				
 			new_list = new_list.splitlines()						# Textliste zur Auswahl
 			dial_ret = dialog.select(title_org, new_list)
 			PLog(dial_ret)
@@ -337,26 +337,13 @@ def play_list(title, mode=''):
 	if mode == 'show':												# PLAYLIST zeigen
 		PLog('show:')
 		title_org = u"%s: aktuelle Liste" % title
-		new_list = []
 		my_list = build_textlist(PLAYLIST)							# string
-		my_list = my_list.splitlines()								# Seek-Sekunden übersetzen
-		for item in my_list:
-			if "Status: neu ab" in item:
-				seekTime = re.search(u'Status: neu ab (\d+) sec', item).group(1)
-				if int(seekTime) > 3600:							# erst ab 1 Std.
-					seekTime = seconds_translate(seekTime)
-					pos = item.find("Status: neu ab")
-					item = item[:pos] + "Status: neu ab %s" % seekTime
-			new_list.append(item)
-			 
-		new_list= "\n".join(new_list)
-		dialog.textviewer(title_org, new_list,usemono=True)
+		dialog.textviewer(title_org, my_list, usemono=True)
 
-	# Param. "del_single" passt nicht mehr, bleibt aber unverändert 
 	if mode == 'del_single':										# PLAYLIST Auswahl löschen
 		PLog('del_single:')
 		title_org = u"%s: einzelne Titel löschen" % title
-		new_list = build_textlist(PLAYLIST)				
+		new_list = build_textlist(PLAYLIST, cut_title=60)				
 		new_list = new_list.splitlines()							# Textliste zur Auswahl
 		ret_list = dialog.multiselect(title_org, new_list)
 		if ret_list !=  None:
@@ -376,7 +363,7 @@ def play_list(title, mode=''):
 					msg2 = u"gelöscht: %d, verbleibend: %d" % (len(ret_list), new_cnt)					
 					xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,3000)
 
-	# ab V3.7.4 entfällt gesehen - set_status löscht ev. vorh. Pos.-Angabe (sec)
+	# set_status löscht ev. vorh. Pos.-Angabe (sec)
 	if mode == 'set_status':										# Status auf >neu< setzen
 		PLog('set_status:')
 		new_list = []
@@ -391,8 +378,7 @@ def play_list(title, mode=''):
 		RSave(PLAYFILE, new_list)
 		msg2 = u"Status auf >neu< gesetzt"					
 		xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,3000)
-					
-		
+	
 	if mode == 'push_archiv':										# Liste in PLAYLIST-Archiv verschieben
 		PLog('push_archiv:')
 		msg1 = u"Soll die PLAYLIST wirklich ins Archiv verschoben werden?"
@@ -450,23 +436,31 @@ def play_list(title, mode=''):
 		
 # ----------------------------------------------------------------------
 # Textliste der PLAYLIST erzeugen (string)
-def build_textlist(PLAYLIST):
+def build_textlist(PLAYLIST, cut_title=0):
 	PLog('build_textlist:')
 	
-	new_list = []
+	new_list=[]
 	cnt=1
 	for item in PLAYLIST.splitlines():
 		item = (item.replace("<play>", "").replace("</play>", ""))
 		if item  == "":
 			continue
-		#PLog(item)		# Debug
+		PLog(item)		# Debug
+		if u"###neu ab " in item:								# Seek-Sekunden -> Std.
+			seekTime = re.search(u'###neu ab (\d+) sec', item).group(1)
+			PLog(seekTime)
+			if int(seekTime) > 3600:							# erst ab 1 Std.
+				seekTime = seconds_translate(seekTime)
+				pos = item.find("###neu ab")
+				item = item[:pos] + "###neu ab %s Std." % seekTime
+		
 		timestamp, title, add_url, thumb, Plot, status = item.split('###')
 		Plot=py2_decode(Plot); title=py2_decode(title); 
-		PLog(title)
 		
+		PLog(title)
 		if len(title) > 80:
 			title = "%s.." % title[:80]
-		my_line = u"%s. %s" % (str(cnt).zfill(3), title) # Color in Textviewer o. Wirkung
+		my_line = u"[B]%s.[/B] %s" % (str(cnt).zfill(3), title) 
 		if Plot:
 			if len(Plot) > 80:
 				title = "%s.." % Plot[:80]
@@ -474,7 +468,10 @@ def build_textlist(PLAYLIST):
 		my_line = "%s | Status: %s" % (my_line, status) 
 		my_line = my_line.replace('||||', ' | ')
 		my_line = my_line.replace('| |', ' | ')
-		my_line = cleanmark(my_line)
+		
+		if cut_title:											# Titel begrenzen (Auswahllisten)
+			my_line = "%s.." % my_line[:cut_title]
+			
 		new_list.append(my_line)
 		cnt = cnt+1
 		
