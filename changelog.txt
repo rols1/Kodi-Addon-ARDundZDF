@@ -10,6 +10,19 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+12.06.2022 4.4.0 Überarbeitung PLAYLIST-Modul
+			Parseplaylist: Param. live hinzugefügt zur Unterscheidung bei Mehrkanal-
+			Streams mit '#EXT-X-MEDIA' (live=True + skip=False: Einzelauflösungen)
+			GetContent (Modul arte): mediatype=video gesetzt (fehlte für Sofortstart,
+			notwendig für Nutzung des Moduls PLAYLIST).
+			do_sync_ARD (Modul strm): fehlende Versionsdatei abgefangen, sonst erneut
+			gespeichert (Schutz vor Cache-Bereinigung).
+			PLAYLIST-Modul: Anpassungen für HLS- und MP4-Listen, einschl. Nutzung
+			des strm-Moduls, Anpassungen in addDir (util), get_streamurl (strm) und
+			get_Source_Funcs_ID (strm), Anpassungen im Github-Wicki (neue Seite 10).
+			ShowFavs (Merkliste): opt. Trennung zwischen Ordner- und Modul-Bezeichnung
+			im Infotext.
+			
 04.06.2022 4.3.9
 			get_live_data (Modul phoenix): Fix  'phoenix ' (Blank entfernt) für Abgleich
 			mit Sendername.
@@ -19,7 +32,7 @@ CHANGE HISTORY
 			hinzugefügt.
 			ParseMasterM3u: umbenannt -> PlayButtonM3u8. Behandl. master.m3u8 ausschl. in
 			Parseplaylist, Code für relative Pfade entf. (obsolet bei m3u8-Links), Abgleich
-			'#EXT-X-STREAM-INF' in Zeile statttin ganzer Playlist(relev. für hr-Livestream).
+			'#EXT-X-STREAM-INF' in Zeile stattt in ganzer Playlist(relev. für hr-Livestream).
 			livesenderTV.xml: Aktualisierung IPTVStreamlinks NDR Schleswig-Holstein, NDR 
 			Mecklenburg-Vorpommern, NDR Hamburg.
 			Live (Modul my3sat): Auswertung Einzelauflösungen (Parseplaylist) entfernt -

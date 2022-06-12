@@ -59,7 +59,7 @@ ICON_PLAYLIST	= R("icon-playlist.png")
 
 PLAY_TEMPL 		= u"<play>%s###%s###%s###%s###%s###%s</play>\n"	#  % (timestamp, title, add_url, thumb, Plot, status)
 
-maxvideos = 100							# z.Z. noch fester Wert
+maxvideos = 100													# z.Z. noch fester Wert, nicht genutzt
 PTITLE = "PLAYLIST ARDundZDF"
 PLog('Script playlist.py geladen')
 
@@ -371,7 +371,8 @@ def play_list(title, mode=''):
 		for item in PLAYLIST:
 			pos = item.find("###neu ")								# Monitor:  "neu ab seek-Position" 
 			if pos > 0:
-				item = item[:pos + len("###neu")]	
+				item = "%s%s</play>" % (item[:pos], "###neu")
+				PLog(item)	
 			new_list.append(item)		
 
 		new_list = "\n".join(new_list)
@@ -445,7 +446,7 @@ def build_textlist(PLAYLIST, cut_title=0):
 		item = (item.replace("<play>", "").replace("</play>", ""))
 		if item  == "":
 			continue
-		PLog(item)		# Debug
+		#PLog(item)		# Debug
 		if u"###neu ab " in item:								# Seek-Sekunden -> Std.
 			seekTime = re.search(u'###neu ab (\d+) sec', item).group(1)
 			PLog(seekTime)

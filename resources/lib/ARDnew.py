@@ -208,11 +208,14 @@ def Main_NEW(name='', CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSportneu", 
 		fanart=img, thumb=img, fparams=fparams, summary=summ)
 			
+	# ARD Sportschau nach Web-Änderung abgeschaltet - s. Forum Post vom 12.06.2022
+	'''
 	title = 'ARD Sportschau'
 	summ = sender_summ	
 	fparams="&fparams={'title': '%s'}"	% title
 	addDir(li=li, label=title, action="dirList", dirID="ARDSport", fanart=R("ard-sport.png"), 
 		thumb=R("tv-ard-sportschau.png"), fparams=fparams, summary=summ)
+	'''
 			
 	# 27.11.2021 als eigenständiges Menü (vorher an wechselnden Pos. im Startmenü):
 	title = 'Barrierearm'
@@ -1420,7 +1423,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 		msg1 = "keine Streamingquelle gefunden: %s"	% title
 		PLog(msg1)
 		MyDialog(msg1, '', '')	
-		return li
+		return li	
 	
 	#----------------------------------------------- 
 	# Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
@@ -1451,7 +1454,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 		get_page_content(li, page, ID=ID, mehrzS=True, mark='')	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
+
 #----------------------------
 # auto-Stream master.m3u8 aus VideoUrls ermitteln, 
 #	via li in Einzelauflösungen zerlegen

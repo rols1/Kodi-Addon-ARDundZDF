@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>51</nr>										# Numerierung für Einzelupdate
-VERSION = '4.3.9'
-VDATE = '09.06.2022'
+VERSION = '4.4.0'
+VDATE = '12.06.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -537,15 +537,17 @@ def Main():
 	# Menü Einstellungen (obsolet) ersetzt durch Info-Button
 	#	freischalten nach Posting im Kodi-Forum
 
-	tag = 'Infos zu diesem Addon'					# Menü Info + Filter
+	tag = '[B]Infos, Tools und Filter zu diesem Addon[/B]'					# Menü Info + Tools
 	summ= u'Ausschluss-Filter (nur für Beiträge von ARD und ZDF)'
+	
+	summ = "%s\n\n%s" % (summ, "Download- und Aufnahme-Tools")
 	if SETTINGS.getSetting('pref_strm') == 'true':
 		summ = "%s\n\n%s" % (summ, "strm-Tools")
 	if SETTINGS.getSetting('pref_playlist') == 'true':
 		summ = "%s\n\n%s" % (summ, "PLAYLIST-Tools")
 	summ = "%s\n\n%s" % (summ, u"Einzelupdate (Dateien und Module)")
 	fparams="&fparams={}" 
-	addDir(li=li, label='Info', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
+	addDir(li=li, label='Infos + Tools', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
 		fparams=fparams, summary=summ, tagline=tag)
 
 	# Updatehinweis wird beim Caching nicht aktualisiert
@@ -567,16 +569,16 @@ def InfoAndFilter():
 	tag= u'Störungsmeldungen bitte via Kodinerds-Forum, Github-Issue oder rols1@gmx.de'
 	summ = u'für weitere Infos zu bisherigen Änderungen [B](changelog.txt)[/B] klicken'
 	path = os.path.join(ADDON_PATH, "changelog.txt") 
-	title = "Änderungsliste [B](changelog.txt)[/B]"
+	title = u"Änderungsliste [B](changelog.txt)[/B]"
 	title=py2_encode(title)
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))
 	addDir(li=li, label=title, action="dirList", dirID="ShowText", fanart=R(FANART), 
 		thumb=R(ICON_TOOLS), fparams=fparams, summary=summ, tagline=tag)		
 							
 	title = u"Addon-Infos"									# Button für Addon-Infos
-	tag = "[B]Infos zu Version, Cache und Dateipfaden.[/B]" 
-	summ = "Bei aktiviertem Debug-Log erfolgt die Ausgabe auch dort"
-	summ = "%s (nützlich zum Kopieren der Pfade)." % summ
+	tag = u"[B]Infos zu Version, Cache und Dateipfaden.[/B]" 
+	summ = u"Bei aktiviertem Debug-Log erfolgt die Ausgabe auch dort"
+	summ = u"%s (nützlich zum Kopieren der Pfade)." % summ
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="AddonInfos", fanart=R(FANART), 
 		thumb=R(ICON_PREFS), tagline=tag, summary=summ, fparams=fparams)	
@@ -593,17 +595,24 @@ def InfoAndFilter():
 		
 	if SETTINGS.getSetting('pref_usefilter') == 'true':											
 		title = u"Filter bearbeiten"						# Button für Filter
-		tag = "Ausschluss-Filter bearbeiten (nur für Beiträge von ARD und ZDF)" 								
+		tag = u"[B]Ausschluss-Filter bearbeiten[/B]\n\nnur für Beiträge von ARD und ZDF)" 								
 		fparams="&fparams={}" 
 		addDir(li=li, label=title, action="dirList", dirID="FilterTools", fanart=R(FANART), 
 			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)	
+			
+	# hier ohne Abhängigkeit vom Setting pref_use_downloads:
+	tagline = u'[B]Downloads und Aufnahmen[/B]\n\nVerschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
+	fparams="&fparams={}"
+	addDir(li=li, label='Download- und Aufnahme-Tools', action="dirList", dirID="DownloadTools", 
+		fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)	
+	
 				
 	if SETTINGS.getSetting('pref_strm') == 'true':											
 		title = u"strm-Tools"								# Button für strm-Tools
-		tag = "[B]strm-Tools - Details siehe Addon-Wicki[/B]"
-		tag = "%s\n\nAbgleichintervall in Stunden\nListen anzeigen\nListeneinträge löschen\n" % tag
-		tag = "%sMonitorreset\nstrm-Log anzeigen\nAbgleich einer Liste erzwingen\n" % tag
-		tag = "%sunterstützte Sender/Beiträge\nzu einem strm-Verzeichnis wechseln" % tag
+		tag = u"[B]strm-Tools - Details siehe Addon-Wicki[/B]"
+		tag = u"%s\n\nAbgleichintervall in Stunden\nListen anzeigen\nListeneinträge löschen\n" % tag
+		tag = u"%sMonitorreset\nstrm-Log anzeigen\nAbgleich einer Liste erzwingen\n" % tag
+		tag = u"%sunterstützte Sender/Beiträge\nzu einem strm-Verzeichnis wechseln" % tag
 		myfunc="resources.lib.strm.strm_tools"
 		fparams_add = quote('{}')
 
@@ -634,9 +643,9 @@ def InfoAndFilter():
 			fanart=R(FANART), thumb=R("icon-playlist.png"), tagline=tag, summary=summ, fparams=fparams)	
 			
 	title = u"Einzelupdate (Dateien und Module)"		# Update von Einzeldateien
-	tag = '[B]Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s[/B]' % REPO_NAME
-	tag = "%s\n\nNach Abgleich werden neue Dateien heruntergeladen und ersetzen lokale Dateien im Addon." % tag
-	summ = "Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt."
+	tag = u'[B]Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s[/B]' % REPO_NAME
+	tag = u"%s\n\nNach Abgleich werden neue Dateien heruntergeladen und ersetzen lokale Dateien im Addon." % tag
+	summ = u"Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt."
 	fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.EPG.update_single",\
 		fanart=R(FANART), thumb=R("icon-update-einzeln.png"), tagline=tag, summary=summ, fparams=fparams)	
@@ -5218,8 +5227,15 @@ def thread_getpic(path_url_list,text_list,folder=''):
 	return li	# ohne ListItem Rekursion möglich
 #---------------------------
 # Tools: Einstellungen,  Bearbeiten, Verschieben, Löschen
+# 11.06.2022 Notif. für Zugang aus Menü Infos+Tools ergänzt
 def DownloadTools():
 	PLog('DownloadTools:');
+
+	if SETTINGS.getSetting('pref_use_downloads') == 'false':
+		msg1 = "Hinweis:"
+		msg2 = 'Downloads sind ausgeschaltet'	
+		icon = R(ICON_DOWNL_DIR)
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
 
 	path = SETTINGS.getSetting('pref_download_path')
 	PLog(path)
@@ -5993,7 +6009,7 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 				if 'COLOR red' in tagline:				# bei Modul plus LF
 					tagline = "[B][COLOR blue]Ordner: %s[/COLOR][/B]\n%s" % (ordner, tagline)
 				else:
-					tagline = "[B][COLOR blue]Ordner: %s[/COLOR][/B]%s" % (ordner, tagline)
+					tagline = "[B][COLOR blue]Ordner: %s[/COLOR][/B] | %s" % (ordner, tagline)
 				
 			if SETTINGS.getSetting('pref_WatchFolderInTitle') ==  'true':	# Kennz. Ordner
 				if ordner: 

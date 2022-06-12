@@ -4,7 +4,7 @@
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
 # 	<nr>12</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.06.2022
+#	Stand: 12.06.2022
 #
 
 from __future__ import absolute_import
@@ -854,9 +854,17 @@ def do_sync_ARD(list_title, strmpath, list_path, strm_type):
 		
 	#-------------												# Versionserkenung
 	line = Dict("load", 'strmListVersion_%s' % list_title)		# stored: ARD_getStrmList
+	vers='' 						
 	if line != False:
-		vers = line.split("|")[-1] 						
+		Dict("store", 'strmListVersion_%s' % list_title, line)	# Schutz vor Cache-Bereinigung
+		vers = line.split("|")[-1]
+	else: 
+		err = "Liste fehlt im Cache"
+		line = "%6s | %15s | %s" % ("ERR", list_title[:15], err[:45])
+		log_update(line)
+		return	
 	PLog("versions_detect: " + vers)							# Default: Normalfassung
+	
 	#-------------												# Blockmerkmale != ZDF_FlatListEpisodes
 	cnt=0; skip_cnt=0;
 	items = blockextract('availableTo":', page)					# Videos
