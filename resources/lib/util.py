@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>23</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.06.2022
+# 	<nr>24</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1623,7 +1623,8 @@ def decode_url(line):
 	line = py2_decode(line)
 	unquote_plus(line)
 	line = line.replace(u'&amp;', u'&')
-	#if PYTHON2:	
+	line = line.replace(u'&quot;', u'"')
+
 	line = line.replace(u'%C3%BC', u'ü')
 	line = line.replace(u'%C3%B6', u'ö')
 	line = line.replace(u'%C3%A4', u'ä')
@@ -1632,9 +1633,14 @@ def decode_url(line):
 	line = line.replace(u'%C3%96', u'Ö')
 	line = line.replace(u'%C3%84', u'Ä')
 	
-	#line = line.replace(u'%28', u'(')		# für Kodi nicht erforderlich, Bsp. (phoenix): 
-	#line = line.replace(u'%29', u')')		#	..17-3083922,(ap,XAZ109,A15_11_2017),russisches..
-	#line = line.replace(u'%2C', u',')
+	line = line.replace(u'%20', u' ')
+	line = line.replace(u'%22', u'"')
+	line = line.replace(u'%2C', u',')
+	line = line.replace(u'%3A', u':')
+	line = line.replace(u'%3F', u'?')
+	
+	line = line.replace(u'%28', u'(')		
+	line = line.replace(u'%29', u')')	
 	return line
 #----------------------------------------------------------------  	
 # Migration PY2/PY3: py2_decode aus kodi-six
