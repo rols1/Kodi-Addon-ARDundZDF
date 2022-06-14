@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>24</nr>										# Numerierung für Einzelupdate
+# 	<nr>25</nr>										# Numerierung für Einzelupdate
 #	Stand: 14.06.2022
 
 # Python3-Kompatibilität:
@@ -3302,11 +3302,12 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 			while 1:											# showSubtitles nur bei akt. Player wirksam
 				if player.isPlaying():
 					xbmc.sleep(500)								# für Raspi erforderl.
-					if SETTINGS.getSetting('pref_UT_ON') == 'true':
-						PLog("Player_Subtitles_on")
-						xbmc.Player().showSubtitles(True)
-						if "/daserste_ut_de/" in url:			# Fix inputstream: seek zum Ende 2-Std-Puffer
-							player.seekTime(3600*2)
+#					if SETTINGS.getSetting('pref_UT_ON') == 'true':
+#						PLog("Player_Subtitles_on")
+					xbmc.Player().showSubtitles(True)
+#					if "/daserste_ut_de/" in url:			# Fix inputstream: seek zum Ende 2-Std-Puffer
+					if "/daserste/de/" in url or "/daserste_ut_de/" in url:
+						player.seekTime(3600*2) 
 					else:		
 						PLog("Player_Subtitles_off")
 						xbmc.Player().showSubtitles(False)									
