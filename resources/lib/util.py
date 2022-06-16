@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>25</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.06.2022
+# 	<nr>26</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -241,6 +241,8 @@ def home(li, ID):
 		
 	if SETTINGS.getSetting('pref_nohome') == 'true':	# keine Homebuttons
 		return li
+	if ID == 'ARD Neu':									# 15.06.2022 Zusatz Neu entfernt
+		ID = 'ARD'
 			
 	# Position 1 bei aufst. Sortierung:					# ZERO WIDTH SPACE u"\u200B" wirkt nicht mit Color
 	Home = " Home: "									#	getestet: 2000 - 202F (invisible-characters-ascii)
@@ -258,13 +260,8 @@ def home(li, ID):
 		name = ' Home: ARD und ZDF'
 		addDir(li=li, label=name, action="dirList", dirID="Main", fanart=img, 
 			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
-			
-	if ID == 'ARD':
-		if SETTINGS.getSetting('pref_use_classic') == 'false':	# Umlabeln für ARD-Suche (Classic)
-			ID ='ARD Neu'
 		
-		
-	if ID == 'ARD Neu':			
+	if ID == 'ARD':			
 		img = R('ard-mediathek.png') 
 		name = Home + "ARD Mediathek"
 		CurSender = Dict("load", "CurSender")
@@ -3301,13 +3298,13 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt						
 			while 1:											# showSubtitles nur bei akt. Player wirksam
 				if player.isPlaying():
-					xbmc.sleep(500)								# für Raspi erforderl.
-#					if SETTINGS.getSetting('pref_UT_ON') == 'true':
-#						PLog("Player_Subtitles_on")
-					xbmc.Player().showSubtitles(True)
-#					if "/daserste_ut_de/" in url:			# Fix inputstream: seek zum Ende 2-Std-Puffer
+					xbmc.sleep(1000)							# für Raspi erforderl. (500 können fehlschlagen)
+					# Fix inputstream für ARD-Livestream: seek zum Ende 2-Std-Puffer:
 					if "/daserste/de/" in url or "/daserste_ut_de/" in url:
 						player.seekTime(3600*2) 
+					if SETTINGS.getSetting('pref_UT_ON') == 'true':
+						PLog("Player_Subtitles_on")
+						xbmc.Player().showSubtitles(True)
 					else:		
 						PLog("Player_Subtitles_off")
 						xbmc.Player().showSubtitles(False)									
