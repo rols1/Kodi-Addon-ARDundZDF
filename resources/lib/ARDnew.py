@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>19</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.05.2022
+# 	<nr>20</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -201,21 +201,22 @@ def Main_NEW(name='', CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
 						
-	title = 'ARD Sport (neu)'
+	title = 'ARD Sport'
+	tag = u"einschließlich: WDR sportschau.de (Auszüge)"
 	summ = sender_summ	
 	img = R("ard-sport.png")
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSportneu", 
-		fanart=img, thumb=img, fparams=fparams, summary=summ)
+		fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
 			
 	# ARD Sportschau nach Web-Änderung abgeschaltet - s. Forum Post vom 12.06.2022
-	'''
-	title = 'ARD Sportschau'
-	summ = sender_summ	
-	fparams="&fparams={'title': '%s'}"	% title
-	addDir(li=li, label=title, action="dirList", dirID="ARDSport", fanart=R("ard-sport.png"), 
-		thumb=R("tv-ard-sportschau.png"), fparams=fparams, summary=summ)
-	'''
+	#	Ausgesuchte Inhalte sportschau.de in ARDSportWDR
+	title = u"ARD sportschau.de (WDR)"					# Button WDR sportschau.de -> Hapt_PRG
+	tag = u"Auszüge - einschließlich Audio Event Streams"
+	img = R("ard-sportschau.png")
+	fparams="&fparams={}"
+	addDir(li=li, label=title, action="dirList", dirID="ardundzdf.ARDSportWDR", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
 			
 	# 27.11.2021 als eigenständiges Menü (vorher an wechselnden Pos. im Startmenü):
 	title = 'Barrierearm'
@@ -1064,7 +1065,8 @@ def ARDRetro():
 #				als eigenst. Menü, Inhalte auch via Startseite/Menü/Sport erreichbar
 ####################################################################################################
 # 06.01.2022 mit ARDRetro zusammenlegen, falls keine abweichenden Inhalte vorkommen
-#
+# 15.06.2022 Buttons für sportschau.de eingefügt (im Hauptmenü entfallen),
+#	einschl. der ARDAudioEventStreams
 def ARDSportneu(): 
 	PLog('ARDSportneu:'); 
 	
@@ -1080,22 +1082,22 @@ def ARDSportneu():
 	if page == False:										# nicht vorhanden oder zu alt
 		page, msg = get_page(path=path)						# vom Sender holen
 		if page == '':	
-			msg1 = "Fehler Startseite ARDRetro"
+			msg1 = "Fehler ARDSportneu"
 			msg2 = msg
 			MyDialog(msg1, msg2, '')	
 			return li
 		else:	
 			Dict("store", 'ARDSport', page) 				# Seite -> Cache: aktualisieren		
 	PLog(len(page))
-	#RSave('/tmp/x.html', py2_encode(page))	# Debug			
+	#RSave('/tmp/x.html', py2_encode(page))	# Debug	
 	
 	# json:
 	page = stringextract('<body', '</body>', page)
 	# Rubriken: 
-	ARDRubriken(li, page)
+	ARDRubriken(li, page)									# Beiträge Sportschau
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
+	
 #---------------------------------------------------------------------------------------------------
 # Auswertung für ARDStartRubrik + ARDPagination + ARDSearchnew 
 #	Mehrfach- und Einzelsätze

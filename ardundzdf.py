@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>52</nr>										# Numerierung für Einzelupdate
+# 	<nr>53</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.0'
-VDATE = '12.06.2022'
+VDATE = '16.06.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -399,7 +399,7 @@ def Main():
 		fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tagline, 
 		fparams=fparams)
 
-	title = "ARD Mediathek Neu"
+	title = "ARD Mediathek"
 	tagline = u'die Classic-Version der Mediathek existiert nicht mehr - sie wurde von der ARD eingestellt'
 	fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, CurSender)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
@@ -479,7 +479,7 @@ def Main():
 	if SETTINGS.getSetting('pref_use_podcast') ==  'true':		# Podcasts / Audiothek
 			tagline	= 'ARD Audiothek | Die besten Podcasts der ARD und des Deutschlandradios'
 			fparams="&fparams={'title': 'ARD Audiothek'}"
-			label = 'ARD Audiothek - NEU'
+			label = 'ARD Audiothek'
 			addDir(li=li, label=label, action="dirList", dirID="AudioStart", fanart=R(FANART), 
 				thumb=R(ICON_MAIN_AUDIO), tagline=tagline, fparams=fparams)
 						
@@ -1546,10 +1546,17 @@ def AudioSenderPrograms(org='', prgset=''):
 #	ARDSportAudioStreams ->	ARDSportAudioStreamsSingle 	-> PlayAudio
 # Hinw.: Timeouts bei den Sportschau-Audio-Seiten möglich (aktuelle 
 #	Livestreams, Netcast-Audiostreams)
+# 01.05.2022 Button Bundesliga ARD-Hörfunk auskommentiert (Links defekt),
+# 14.06.2022 entfernt, Button "aktuelle LIVESTREAMS(sportschau.de)"
+#	verlegt nach ARDnew.ARDSportWDRLive
 #
-def ARDAudioEventStreams(li):
+def ARDAudioEventStreams(li=''):
 	PLog('ARDAudioEventStreams:')
-	
+	endof=False
+	if li == '':														# Aufruf ARDSportWDR (ARDnew)
+		endof = True
+		li = xbmcgui.ListItem()
+
 	channel = u'ARD Audio Event Streams'								# aus livesenderTV.xml								
 	title = u"[B]Audio:[/B] ARD Audio Event Streams"					# div. Events, z.Z. Fußball EM2020   
 	img = R("radio-livestreams.png")
@@ -1570,37 +1577,13 @@ def ARDAudioEventStreams(li):
 	addDir(li=li, label=label, action="dirList", dirID="Audio_get_cluster_rubrik", \
 		fanart=img, thumb=thumb, tagline=tag, fparams=fparams)	
 	 	
-	'''
-	title = u"[B]Audio:[/B] Die Fussball-Bundesliga im ARD-Hörfunk"		# Button Bundesliga ARD-Hörfunk 
-	href = 'https://www.sportschau.de/sportimradio/bundesligaimradio102.html'
-	img = R("tv-ard-sportschau.png")							
-	tag = u'An Spieltagen der Fußball-Bundesliga übertragen die Landesrundanstalten ' 
-	tag = tag + u'im ARD-Hörfunk die Spiele live aus dem Stadion mit der berühmten ARD-Schlusskonferenz.'
-	summ = "[B]Hinweis:[/B] außerhalb der Spielzeiten sind die meisten Sender nicht erreichbar."
-	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s'}"	% (quote(title), 
-		quote(href), quote(img))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportHoerfunk", fanart=img, 
-		thumb=img, tagline=tag, summary=summ, fparams=fparams)
-	'''
-		
-	'''	wird verlegt (keine Audios)				
-	title = u"[B]Audio:[/B] aktuelle Livestreams (sportschau.de) - Baustelle"	# Button aktuelle LIVESTREAMS
-	href = 'https://www.dummy.de/'
-	img = R("tv-ard-sportschau.png")								
-	tag = u'aktuelle Livestreams der ARD Sportschau.' 
-	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s',  'ID': 'SportschauLiveStreams'}"	% (quote(title), 
-		quote(href), quote(img))
-	addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, 
-		thumb=img, tagline=tag, fparams=fparams)
-	'''						
+					
 	title = u"[B]Audio:[/B] Audiostreams auf sportschau.de"						# Button Audiostreams sportschau.de
 	href = 'https://www.sportschau.de/audio/index.html'
 	img = R("tv-ard-sportschau.png")								
-	tag = u'aktuelle Livestreams der ARD Sportschau.' 
+	tag = u'aktuelle Audiostreams der ARD Sportschau.' 
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s',  'ID': 'SportschauStreams'}"	% (quote(title), 
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s',  'cacheID': 'Audiostreams'}"	% (quote(title), 
 		quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportAudioStreams", fanart=img, 
 		thumb=img, tagline=tag, fparams=fparams)
@@ -1610,12 +1593,15 @@ def ARDAudioEventStreams(li):
 	img = R("tv-ard-sportschau.png")								
 	tag = u'Die Übersicht aller Netcast-Audiostreams für die Bundesliga-Übertragungen.' 
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s',  'ID': 'NetcastStreams'}"	% (quote(title), 
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s',  'cacheID': 'NetcastStreams'}"	% (quote(title), 
 		quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportAudioStreams", fanart=img, 
 		thumb=img, tagline=tag, fparams=fparams)
-		
-	return
+	
+	if endof:
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	else:	
+		return
 
 #----------------------------------------------------------------
 # gibt entw. den  HTML- oder den json-Teil der Webseite zurück
@@ -2586,6 +2572,8 @@ def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 #def ARDSportHoerfunk(title, path, img):
 #def ARDSportTablePre(base, img, clap_title=''):
 #def ARDSportTable(path, title, table_path=''):
+#def ARDSportAudioStreamsSingle(title, path, img, tag, summ, ID):
+#def ARDSportPodcast(path, title):
 					
 #--------------------------------------------------------------------------------------------------
 # Liste der ARD Audio Event Streams in livesenderTV.xml
@@ -3152,84 +3140,173 @@ def ARDSportEventLive(path, page, title, oss_url='', url='', thumb='', Plot=''):
 		xbmcgui.Dialog().notification(msg1,'',icon,2000)	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
-#--------------------------------------------------------------------------------------------------
-# spez. Pocastseiten, z.B. www.sportschau.de/tourfunk/index.html bei Tour de France
-#	Inhalte collapsed, mp3-Link als Download-Button eingebettet
-# Aufrufer: ARDSportPanel
-def ARDSportPodcast(path, title):
-	PLog('ARDSportPodcast:'); PLog(path)
-	
-	page, msg = get_page(path=path)	
-	if page == '':
-		msg1 = 'Seite kann nicht geladen werden: %s' % title
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return
-	PLog(len(page))
+#---------------------------------------------------------------------------------------------------
+# Neues  Menü sportschau.de (WDR)
+# Ersatz für weggefallene Funktionen. Siehe Start ARD Sportschau.de
+# 
+def ARDSportWDR(): 
+	PLog('ARDSportWDR:')
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD')						# Home-Button
+	li = home(li, ID='ARD Neu')								# Home-Button
 	
-	img = R(ICON_SPEAKER)
-	items = blockextract('class="infotext">', page)				# Verzicht auf Mini-Icons (außerhalb)
-	for item in items:
-		dl_button = stringextract('class="button download', 'Download">', item)
-		mp3_url = stringextract('href="', '"', dl_button)
-		if ".mp3" in mp3_url == False:
-			continue
-		if mp3_url.startswith("//"):
-			mp3_url = "https:" + mp3_url
+	title = u"Livestreams der Sportschau"
+	tag = u"kommende Events"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABgPp7Db4/16x9-1280/logo-sportschau-100.jpg"	
+	title=py2_encode(title)
+	fparams="&fparams={'title': '%s'}" % quote(title)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportWDRLive", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+	
+	title = u"Event: [B]Tour de France[/B]"						# Großevent	
+	tag = u""
+	cacheID = "Sport_TourdeFrance"
+	img = "https://images.sportschau.de/image/4caa92cb-1518-4489-8bec-3b0764c14aa8/AAABgQJrLa8/AAABgPp7Db4/16x9-1280/tour-de-france-bild-102.jpg"
+	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportWDRCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+	title = u"Event: [B]Leichtathletik-WM 2022 in Eugene[/B]"	# Großevent	
+	tag = u""
+	cacheID = "Sport_WMEugene"
+	img = "https://images.sportschau.de/image/13d0db07-7943-415b-951f-2bfc4be7c8e9/AAABgRYL9Ys/AAABgPp7WOA/20x9-1280/leichtathlet-ryan-crouser-100.webp"
+	path = "https://www.sportschau.de/leichtathletik/wm"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportWDRCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+	title = u"ARD Audio Event Streams"						# Audio Event Streams im Haupt-PRG	
+	tag = u"Events und Liste der Netcast-Streams"
+	img = R("radio-livestreams.png")
+	fparams="&fparams={}"
+	addDir(li=li, label=title, action="dirList", dirID="ARDAudioEventStreams", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+#---------------------------------------------------------------------------------------------------
+# Großevent der Sportschau
+# 1. Aufruf: ARDSportWDR
+# 2. Aufruf: ARDSportWDRCluster mit cluster (class="trenner") 
+#
+def ARDSportWDRCluster(title, path, img, cacheID, cluster=''): 
+	PLog('ARDSportWDRCluster: ' + cluster)
+	CacheTime = 60 * 60						# 1 Std.
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Neu')								# Home-Button
+	
+	page = Dict("load", cacheID, CacheTime=CacheTime)
+	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
+		page, msg = get_page(path=path)
+		if page:
+			Dict("store", cacheID, page) 						# Seite -> Cache: aktualisieren	
+	if page == '':
+		msg1 = "Fehler in ARDSportWDREvent"
+		msg2 = 'Seite kann nicht geladen werden.'
+		msg3 = msg
+		MyDialog(msg1, msg2, msg3)
+		return li 						
+	
+	trenner = 'class="trenner__text">'
+	items = blockextract(trenner, page)
+	PLog(len(items))
+	#-----------------------------------------------			# 1. Durchlauf
+	if cluster == '':
+		PLog("stage1")
+		for item in items:
+			tag=''
+			title = stringextract('__headline">', '</', item)
+			topline = stringextract('__topline">', '</', item)
+			topline = topline.strip()
+			title = cleanhtml(title); title = title.strip()
+			PLog(title)
 			
-		mediaTitle = stringextract('mediaTitle">', '</span>', item)
-		mediaSerial = stringextract('mediaSerial">', '</span>', item)
-		mediaDate = stringextract('mediaDate">', '</span>', item)
-		dur = stringextract('mediaDuration">', '</span>', item)
-		exp = stringextract('mediaExpiry">', '</span>', item)
-		sender = stringextract('mediaStation">', '</span>', item)
-		summ = stringextract('class="text">', '</p>', item)
-		summ_par= summ.replace('\n', '||')
+			tag = "[B]%s[/B]" % topline
+			tag = "%s\nFolgeseiten" % tag
+			
+			title=py2_encode(title); path=py2_encode(path); 
+			img=py2_encode(img); cluster=py2_encode(cluster);
+			fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s', 'cluster': '%s'}" %\
+				(quote(title), quote(path), quote(img), cacheID, quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="ARDSportWDRCluster", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag)	
+			
+	#-----------------------------------------------			# 2. Durchlauf
+	else:
+		PLog("stage2")
+		headline = ">%s<" % cluster
+		PLog("headline: " + headline)
+		for item in items:
+			found=False
+			title = stringextract('__headline">', '</', item)
+			title = cleanhtml(title); title = title.strip()
+			
+			if title in headline:
+				PLog("found_cluster: " + headline)
+				found=True
+				page = item										# Cluster -> page
+				break
+		if found:
+			cnt = ARDSportMedia(li, title, page)
+			if cnt == 0:										# Verbleib in Liste
+				return		
 		
-		mediaTitle=cleanhtml(mediaTitle); mediaSerial=cleanhtml(mediaSerial)
-		mediaDate=cleanhtml(mediaDate); dur=cleanhtml(dur)
-		exp=cleanhtml(exp); sender=cleanhtml(sender)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+#---------------------------------------------------------------------------------------------------
+# Livestreams der Sportschau
+# Aufruf: ARDSportWDR
+#
+def ARDSportWDRLive(title): 
+	PLog('ARDSportWDRLive:')
+	CacheTime = 60 * 60						# 1 Std.
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Neu')								# Home-Button
+	
+	path = "https://www.sportschau.de/streams"
+	cacheID = "SportLivestreams"
+	page = Dict("load", cacheID, CacheTime=CacheTime)
+	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
+		page, msg = get_page(path=path)
+		if page:
+			Dict("store", cacheID, page) 						# Seite -> Cache: aktualisieren	
+	if page == '':
+		msg1 = "Fehler in ARDSportWDRLive"
+		msg2 = 'Seite kann nicht geladen werden.'
+		msg3 = msg
+		MyDialog(msg1, msg2, msg3)
+		return li 						
+	
+	cnt = ARDSportMedia(li, title, page)
+	if cnt == 0:												# Verbleib in Liste
+		return		
 		
-		title=repl_json_chars(mediaTitle); 
-		tag="%s: %s, %s | [COLOR darkgoldenrod]%s[/COLOR]" % (mediaSerial, mediaDate, dur, exp)
-		
-		
-		PLog("Satz9")
-		PLog(title); PLog(mp3_url); PLog(summ[:80]); PLog(tag[:80]);
-		
-		title=py2_encode(title); mp3_url=py2_encode(mp3_url);
-		img=py2_encode(img); summ_par=py2_encode(summ_par);	
-		ID="ARD"													# ID Home-Button
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
-			quote(title), quote(img), quote_plus(summ_par), ID)
-		addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
-			fparams=fparams, tagline=tag, summary=summ)
-				
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-	
 #----------------------------------------------------------------
 # aktuelle LIVESTREAMS + Netcast-Audiostreams-Liste von sportschau.de
 # Aufrufer: ARDAudioEventStreams
 # aktuelle Livestreams: ../audio/index.html
 # Alle Netcast-Streams: ../sportimradio/audiostream-netcast-uebersicht-100.html
 # ab Juni 2022 beide Webseiten ähnlich
-def ARDSportAudioStreams(title, path, img, ID):
+def ARDSportAudioStreams(title, path, img, cacheID):
 	PLog('ARDSportAudioStreams:')
 	CacheTime = 60 * 60								# 1 Std.
-	base = "https://www.sportschau.de"
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
-	page = Dict("load", ID, CacheTime=CacheTime)
+	page = Dict("load", cacheID, CacheTime=CacheTime)
 	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
 		page, msg = get_page(path=path)
 		if page:
-			Dict("store", ID, page) 							# Seite -> Cache: aktualisieren	
+			Dict("store", cacheID, page) 						# Seite -> Cache: aktualisieren	
 	if page == '':
 		msg1 = "Fehler in ARDSportAudioStreams"
 		msg2 = 'Seite kann nicht geladen werden.'
@@ -3237,104 +3314,123 @@ def ARDSportAudioStreams(title, path, img, ID):
 		MyDialog(msg1, msg2, msg3)
 		return li 						
 	
-	items = blockextract('class="mediaplayer', page, "data-v-type")
+	cnt = ARDSportMedia(li, title, page)
+	if cnt == 0:												# Verbleib in Liste
+		return		
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#---------------------------------------------------------------------------------------------------
+# Auswertung mediaplayer-Klassen (quoted:data-v=..)
+# Aufrufer ARDSportAudioStreams, ARDSportWDRLive, ..
+# Externe Links im html-Code (z.B. NDR, Pferdesport) sind nicht mit 
+#	Streamquellen im mediaplayer hinterlegt
+#
+def ARDSportMedia(li, title, page): 
+	PLog('ARDSportMedia:')
+
+	items = blockextract('class="mediaplayer', page)
 	PLog(len(items))
 	if len(items) == 0:
+		icon = R("ard-sportschau.png")
 		msg1 = u"%s:" % title
-		msg2 = u'leider keine Beiträge gefunden'
-		MyDialog(msg1, msg2, "")
-		return li 						
+		msg2 = u'keine Videos/Audios gefunden'
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=True)
+		return 0 						
 		
-	# json.loads scheitert für cont (char 360) - vermutl. vergessenes Komma:
+	# json.loads scheiterte in cont (char 360) - vermutl. vergessenes Komma:
+	cnt=0
 	for item in items:
+		mp3_url=''; stream_url=''; live=False
+		title = stringextract('__headline">', '</', item)	# html-Bereich
+		summ = stringextract('__shorttext">', '</', item)	# html-Bereich, fehlt im json-Bereich
+		title=repl_json_chars(title); summ=repl_json_chars(summ);
+		title=title.strip(); summ=summ.strip() 
+		
 		cont = stringextract('data-v="', '"', item)				# json-Inhalt zum Player
 		cont = decode_url(cont)
-		#RSave('/tmp/x.json', py2_encode(page))	# Debug	
+		#RSave('/tmp/x3.json', py2_encode(cont))	# Debug	
 
-		media = stringextract('mc":', 'isAudioOnly', cont)		# in mc
-		mp3_url = stringextract('url":"', '"', media)
+		player = stringextract('playerType":"', '"', cont)		# audio, video
+		media = stringextract('streams":', '"meta"', cont)		# für video dash.mpd, m3u8 + ts
+		if player == "audio":
+			mp3_url = stringextract('url":"', '"', media)		# 1 x mp3
+		else:
+			urls = blockextract('url":', media)
+			for url in urls:
+				if "index.m3u8" in url:
+					stream_url = stringextract('url":"', '"', url)
+					break
+		
 		duration = stringextract('durationSeconds":"', '"', media)
+		if duration == '':
+			duration = stringextract('_duration":', ',', cont) # Altern. außerhalb media
 		duration = seconds_translate(duration)
 			
-		title = stringextract('page_title":"', 's:page', cont)	# in additionalConfig, mehrere " mögl.
-		title = repl_json_chars(title)
-		title = title[:-1]										# Komma entf.
 		imgs = blockextract('"minWidth":', cont, "}")
 		img = stringextract('value":"', '"', imgs[-1])			# letztes=größtes
+		mode = stringextract('_broadcasting_type":"', '"', cont)
+		if mode == "live":
+			live=True
 		
-		ab 	= stringextract('FromDateTime":"', '"', cont)
-		ab	= time_translate(ab)
-		
-		TimeDate=''; tag=''; live=''
-		
+		TimeDate=''; tag='';
+	
 		if duration:
 			if duration == "0 sec":
 				duration = "unbekannt"
-			TimeDate = u"Dauer %s" % duration
-		if ab:
-			live=True													# Livestreams
-			TimeDate = u"verfügbar ab %s" % ab
-		if TimeDate:
-			tag = "[B]%s[/B]" % (TimeDate)
 			
 		chapter = stringextract('chapter1":"', '"', cont)
 		creator = stringextract('creator":"', '"', cont)
 		genre = stringextract('_genre":"', '"', cont)
-		tag = "%s\n%s | %s | %s" % (tag, chapter, creator, genre)		
-		Plot = tag.replace("\n", "||")												# description fehlt im json-Bereich
+		
+		if player == "audio":
+			tag = "Audio"
+		else:
+			tag = "Video"
+		if live:
+			tag = "%s-Livestream" % tag
+		tag = "[B]%s[/B]" % tag
+		PLog("duration: " + duration)
+		if live == False and duration:
+			tag = "%s | Dauer %s" % (tag, duration)
+			
+		tag = "%s\n%s | %s | %s" % (tag, chapter, creator, genre)
+
+		if summ:
+			tag = "%s\n\n%s" % (tag, summ)
+		Plot = tag.replace("\n", "||")										
 		
 		PLog("Satz12:")
-		summ=''
-		PLog(mp3_url);PLog(img); PLog(title); 
+		PLog(player); PLog(title); PLog(mp3_url); PLog(stream_url); PLog(img);  
+		PLog(summ[:80]);
 		title=py2_encode(title); mp3_url=py2_encode(mp3_url); img=py2_encode(img);
 		tag=py2_encode(tag); Plot=py2_encode(Plot);
 		
-		if live:														# netcast Livestream
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
-				quote(title), quote(img), quote_plus(Plot))
-			addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
-				tagline=tag, mediatype='music')	
-		else:															# Konserve
-			ID="ARD"													# ID Home-Button
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
-				quote(title), quote(img), quote_plus(Plot), ID)
-			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag)	
+		if player == "audio":
+			if live:														# netcast Livestream
+				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+					quote(title), quote(img), quote_plus(Plot))
+				addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
+					tagline=tag, mediatype='music')	
+			else:															# Konserve
+				ID="ARD"													# ID Home-Button
+				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
+					quote(title), quote(img), quote_plus(Plot), ID)
+				addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+					fparams=fparams, tagline=tag)
+		if player == "video":
+			if live:														# Video Livestream
+				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
+					quote(title), quote(img), quote_plus(Plot))
+				addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+					tagline=tag, mediatype='music')	
+			else:
+				continue													# ausbauen
 		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			
-#----------------------------------------------------------------
-# Audioquelle in Javascript ermitteln
-# Aufrufer: ARDSportAudioStreams (Netcast-Audiostreams-Liste,
-#	aktuelle LIVESTREAMS)
-#
-def ARDSportAudioStreamsSingle(title, path, img, tag, summ, ID):
-	PLog('ARDSportAudioStreamsSingle: ' + path)
-	
-	li = xbmcgui.ListItem()
+		cnt = cnt + 1
 
-	page, msg = get_page(path=path)
-	if page == '':
-		msg1 = "Fehler in ARDSportAudioStreamsSingle"
-		msg2 = 'Seite kann nicht geladen werden.'
-		msg3 = msg
-		MyDialog(msg1, msg2, msg3)
-		return li 						
-	
-	script = stringextract('data-extension-ard=', 'title=', page)
-	script = stringextract('url":"', '"', script)
-	PLog("script: " + script)											# Bsp.: ../ondemand/238/2380586.js
-	
-	page, msg = get_page(path=script)
-	mp3_url = stringextract('"audioURL":"','"', page)	
-	PLog("mp3_url: " + mp3_url)	
-	
-	summ_par = "%s||||%s" % (tag, summ)
-	# AudioPlayMP3(mp3_url, title, img, summ_par,"ARD")					# mit Download, Rekursion
-	PlayAudio(mp3_url, title, img, summ_par)  							# Alternative o. Download
-	
-	#xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	return																# Inkaufnahme GetDirectory-Error 
+	return cnt
+
 # ---------------------------------------- Ende ARD Sportschau.de ---------------------------------
 ####################################################################################################
 # Aufrufer: Main
@@ -5784,7 +5880,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		
 #-----------------------------------------------
 # WRD-Links 
-# Aufruf SenderLiveListe
+# Aufruf SenderLiveListe für WDR Lokalzeit
 #
 def list_WDRstreamlinks(url):
 	PLog('list_WDRstreamlinks:')
