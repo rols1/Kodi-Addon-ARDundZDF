@@ -1633,6 +1633,7 @@ def decode_url(line):
 	
 	line = line.replace(u'%20', u' ')
 	line = line.replace(u'%22', u'"')
+	line = line.replace(u'%2F', u'/')
 	line = line.replace(u'%2C', u',')
 	line = line.replace(u'%3A', u':')
 	line = line.replace(u'%3F', u'?')
