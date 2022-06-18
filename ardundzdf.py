@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>53</nr>										# Numerierung für Einzelupdate
-VERSION = '4.4.0'
-VDATE = '16.06.2022'
+VERSION = '4.4.1'
+VDATE = '18.06.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -609,7 +609,7 @@ def InfoAndFilter():
 				
 	if SETTINGS.getSetting('pref_strm') == 'true':											
 		title = u"strm-Tools"								# Button für strm-Tools
-		tag = u"[B]strm-Tools - Details siehe Addon-Wicki[/B]"
+		tag = u"[B]strm-Tools - Details siehe Addon-Wicki auf Github[/B]"
 		tag = u"%s\n\nAbgleichintervall in Stunden\nListen anzeigen\nListeneinträge löschen\n" % tag
 		tag = u"%sMonitorreset\nstrm-Log anzeigen\nAbgleich einer Liste erzwingen\n" % tag
 		tag = u"%sunterstützte Sender/Beiträge\nzu einem strm-Verzeichnis wechseln" % tag
@@ -644,7 +644,7 @@ def InfoAndFilter():
 			
 	title = u"Einzelupdate (Dateien und Module)"		# Update von Einzeldateien
 	tag = u'[B]Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s[/B]' % REPO_NAME
-	tag = u"%s\n\nNach Abgleich werden neue Dateien heruntergeladen und ersetzen lokale Dateien im Addon." % tag
+	tag = u"%s\n\nNach Abgleich werden neue Dateien heruntergeladen - diese ersetzen lokale Dateien im Addon." % tag
 	summ = u"Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt."
 	fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.EPG.update_single",\
@@ -2574,6 +2574,8 @@ def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 #def ARDSportTable(path, title, table_path=''):
 #def ARDSportAudioStreamsSingle(title, path, img, tag, summ, ID):
 #def ARDSportPodcast(path, title):
+#def ARDSportEventLive(path, page, title, oss_url='', url='', thumb='', Plot=''):		
+#def ARDSportSingleTab(title, path, img, page=''):
 					
 #--------------------------------------------------------------------------------------------------
 # Liste der ARD Audio Event Streams in livesenderTV.xml
@@ -2590,6 +2592,8 @@ def ARDSportAudioXML(channel, img=''):
 # Bilder für ARD Sportschau, z.B. Moderatoren
 # Einzelnes Listitem in Video-Addon nicht möglich - s.u.
 # Slideshow: ZDF_SlideShow
+# 17.06.2022 angepasst an Webänderungen
+#
 def ARDSportBilder(title, path, img):
 	PLog('ARDSportBilder:'); 
 	PLog(title); PLog(path)
@@ -2606,15 +2610,16 @@ def ARDSportBilder(title, path, img):
 		return li 
 	PLog(len(page))
 	
-	content = blockextract('class="teaser', page)	
+	pos = page.find('_topline">Bilderstrecke<')
+	page = page[pos:]
+	cont = stringextract('data-v="', '"', page)				# json-Inhalt (Bildstrecke.json)
+	cont = decode_url(cont)
+	cont = unescape(cont)
+	cont = (cont.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
+	PLog(cont[:30])
+	
+	content = blockextract('"description"', cont)	
 	PLog(len(content))
-	if len(content) == 0:										
-		msg1 = 'Keine Bilder gefunden.'
-		PLog(msg1)
-		msg2 = 'Seite:'
-		msg3 = path
-		MyDialog(msg1, msg2, msg3)
-		return li
 		
 	fname = make_filenames(title)			# Ablage: Titel + Bildnr
 	fpath = os.path.join(SLIDESTORE, fname)
@@ -2629,28 +2634,17 @@ def ARDSportBilder(title, path, img):
 			MyDialog(msg1, msg2, '')
 			return li	
 				
-	SBASE = 'https://www.sportschau.de'
 	image = 0; background=False; path_url_list=[]; text_list=[]
-	for rec in content:
-		pos = rec.find('<!-- googleon: all -->')	# "Javascript-Fehler" entfernen
-		if pos > 0:
-			rec = rec[pos:]
-			
+	for rec in content:			
 		# größere Bilder erst auf der verlinkten Seite für einz. Moderator		
-		img_src		= stringextract('srcset="', '"', rec)				# erste = größtes Bild
-		if img_src.startswith('//'):									# //www1.wdr.de/..
-			img_src	= 'https:' + img_src
-		else:															# /sendung/moderatoren/
-			img_src	= SBASE + img_src
-		if img_src == 'https://www.sportschau.de':
-			continue
+		img_src	= stringextract('"l":"', '"', rec)						# 
+		if img_src == "":
+			img_src	= stringextract('"m":"', '"', rec)
 			
-		headline	= stringextract('Fotostrecke:</span>', '</', rec)	# z.B. Name
-		headline	= mystrip(headline); headline = unescape(headline)
-		summ		= stringextract('teasertext">', '<strong>', rec)
-		summ		= mystrip(summ); summ = unescape(summ); summ = cleanhtml(summ)
-		summ		= repl_json_chars(summ)
-		title=summ.strip()
+		headline	= stringextract('"title":"', '"', rec)
+		headline	= unescape(headline); headline=repl_json_chars(headline)
+		summ		= stringextract('"description":"', '"', rec)
+		PLog("summ: " + summ[:80]) 	
 		
 		if img_src:
 			#  Kodi braucht Endung für SildeShow; akzeptiert auch Endungen, die 
@@ -2662,7 +2656,6 @@ def ARDSportBilder(title, path, img):
 			PLog("Bildtitel: " + title)
 			title = unescape(title)
 			lable = "%s: %s" % (title, headline)			# Listing-Titel
-			summ = unescape(summ)
 			
 			thumb = ''
 			local_path = os.path.abspath(local_path)
@@ -2731,7 +2724,7 @@ def ARDSportBilder(title, path, img):
 #	hier mit py2_decode
 # 22.12.2021 auch verwendet von list_WDRstreamlinks->WDRstream mit page (Livesender 
 #	WRD-Lokalzeit) 	
-#
+# 18.06.2022 ARDSportSingleTab als Fallback entfernt (nach Webänderung obsolet)
 def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	PLog('ARDSportVideo:'); 
 	PLog(path); PLog(summ); PLog(len(page))
@@ -2752,27 +2745,6 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	PLog(len(page))
 	page=py2_decode(page)					
 
-	'''
-	# Livestream-Problematik 
-	# todo: für nächstes Großereignis anpassen
-	#	s. Forum https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF Post 472ff
-	# Button ist Behelfslösung für Frauen-Fußball-WM - url via chrome-developer-tools ermittelt
-	# Button ist zusätzl. dauerhaft im Menü ARD Sportschau (Livestream 3) platziert.
-	if "/frankreich2019/live" in path:
-		url = "https://ndrspezial-lh.akamaihd.net/i/spezial_3@430237/master.m3u8"
-		summ = 'bitte die FRAUEN WM 2019 Livestreams testen, falls dieser nicht funktioniert'
-		mediatype = 'video'
-		url=py2_encode(url); title=py2_encode(title); img=py2_encode(img); summ=py2_encode(summ);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': '%s'}" %\
-			(quote_plus(url), quote_plus(title), quote_plus(img), quote_plus(summ), Merk)
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-			mediatype=mediatype, summary=summ) 
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-	'''
-
-	if path.endswith('/tokio2020/live/index.html'):					# Sonderbehandlung Livestreams Paralympics
-		ARDSportEventLive(path, page, title)						# für künft. Events prüfen (aktuell OK)
-		return
 		
 	# Bsp. video_src: "url":"http://deviceids-medp.wdr.de/ondemand/167/1673848.js"}
 	#	-> 	//ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/master.m3u8
@@ -2793,7 +2765,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	
 	if video_src == '':
 		if 'class="media mediaA video' in page:					# ohne Quellen, aber Videos gefunden
-			ARDSportSingleTab(title, path, img, page)			# -> ARDSportSingleTab
+			ARDSportSingleTab(title, path, img, page)			# -> ARDSportSingleTab - obsolet, s.o.
 			return
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 				
@@ -2929,216 +2901,6 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 		
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-#------------------------------------
-# 24.11.2021 bisher nur Fallback für ARDSportVideo (direkt): ohne  Quellen, 
-#	aber Videos vorhanden
-#
-def ARDSportSingleTab(title, path, img, page=''):
-	PLog('ARDSportSingleTab:')
-	
-	SBASE = 'https://www.sportschau.de'
-	sendungen = blockextract('class="teaser">', page)	# <strong>video
-	PLog(len(sendungen))
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD')						# Home-Button
-	
-	mediatype=''
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
-
-	for s in sendungen:
-		if '"Javascript-Fehler"' in s:								# Info Javascript-Fehler
-			continue
-		media = ARDSportgetMedia(s)									# Audio, Video - markiert
-		if media == '':
-			PLog('ohne_Video_Audio:')
-			continue
-		
-		styp = media			
-		path = stringextract('href="', '"', s)	
-		if 'avascript:void(0)' in path:
-			continue			
-		if path.startswith('http') == False:
-			path = SBASE + path
-		title = stringextract('data-pre-headline="', '"', s)
-		if title == '':
-			title = stringextract('title="', '"', s)				# Altern. in href
-		title=repl_json_chars(title);
-		
-		img	= stringextract('srcset="', '"', s)
-		img_txt = stringextract('title="', '"', s)
-		img_txt=unescape(img_txt);
-		
-		if img.startswith('//'):									# z.B. //www1.wdr.de/..
-			img	= "https:" + img
-		if img.startswith('/'):										# z.B. /regional/rbb/..
-			img	= SBASE + img
-		mediaDate = stringextract('mediaDate">', '<', s)	
-		mediaDuration = stringextract('mediaDuration">', '<', s)
-		tag = img_txt
-		tag=styp
-		if mediaDate and mediaDuration:
-			tag = "%s | [B]%s | %s[/B]" % (tag,mediaDate, mediaDuration)
-		if img_txt:
-			tag = "%s\n\nBild: %s" % (tag, img_txt)
-		
-		summ = stringextract('teasertext">', '<strong>', s)
-		summ=mystrip(summ); summ=cleanhtml(summ); 
-		summ = summ.replace('&nbsp;|&nbsp;', ''); summ=repl_json_chars(summ);  
-		summ_par = summ.replace('\n', '||')		
-		
-		PLog("Satz26:")
-		PLog(path); PLog(img); PLog(title); PLog(summ); 
-		title=py2_encode(title)
-		path=py2_encode(path); img=py2_encode(img); summ_par=py2_encode(summ_par);
-		
-		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
-			(quote(path), quote(title), quote(img), quote(summ_par))				
-		addDir(li=li, label=title, action="dirList", dirID="ARDSportVideo", fanart=img, thumb=img, 
-			fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)	
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		
-	
-#------------------------------------
-# Sonderbehandlung Livestreams Paralympics
-# page (aktuell): https://tokio.sportschau.de/tokio2020/live/index.html - kein
-#	verwertbarer Inhalt (Streambezüge komplett js-generiert)
-# pgm_id osslive100: Sportschau
-# pgm_id osslive102: Einzelsendung
-# 2. Durchlauf mit oss_url -> PlayVideo
-# anpassen: path in ARDSportVideo
-def ARDSportEventLive(path, page, title, oss_url='', url='', thumb='', Plot=''):		
-	PLog('ARDSportEventLive:')
-	PLog(path); PLog(oss_url);
-	title_org=title
-		
-	if oss_url:															# 2. Durchlauf
-		page, msg = get_page(path=oss_url)
-		if page == '':
-			msg1 = "Fehler in ARDSportEventLive" 
-			msg2 = "%s nicht gefunden"	% oss_url.split('/')[-1]
-			msg3 = msg
-			PLog(msg2)	
-			MyDialog(msg1, msg2, msg3)
-			return 
-		
-		url = stringextract('"_stream": "', '"', page)
-		tag, descr = Plot.split('||||')
-		PLog(url); PLog(tag); PLog(descr[:80]) 
-		
-		li = xbmcgui.ListItem()
-		li = home(li, ID='ARD')						# Home-Button
-		
-		img=py2_encode(thumb); Plot=py2_encode(Plot); 
-		title=py2_encode(title); url=py2_encode(url);		
-		
-		if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true': 	# Sofortstart
-			PLog('Sofortstart: ARDSportEventLive')
-			PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
-			PlayVideo(url=url, title=title, thumb=img, Plot=Plot)
-			#xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			return
-
-		if url.endswith('master.m3u8'):
-			li = Parseplaylist(li=li, url_m3u8=url, thumb=thumb, geoblock='', descr=Plot)
-		else:		
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
-				(quote_plus(url), quote_plus(title), quote_plus(img), quote_plus(Plot))
-			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-				tagline=tag, summary=descr) 
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		return
-		
-	#------------------------------------------------------------------	# 1. Durchlauf	
-	#img = "https://tokio.sportschau.de/tokio2020/olympiastadiontokio100_v-original.jpg"
-	# Bsp. 	path: "https://tokio.sportschau.de/tokio2020/live/index.html",
-	#		path: "https://tokio.sportschau.de/tokio2020/paralympics/live/livestreams180.html"
-	# json-Inhalt für beide Beisp. identisch	
-	base = "%s/live" % path.split('/live/')[0]
-	page, msg = get_page(path=base + "/lcconfig110-extappjson.json")	# Liste zusätzl. json-Dateien
-	if page == '':
-		msg1 = "Fehler in ARDSportEventLive" 
-		msg2 = "lcconfig110-extappjson.json nicht gefunden"
-		PLog(msg2)	
-		MyDialog(msg1, msg2, '')
-		return 
-	
-	url = stringextract('"additionalTitleClass":"","url":"', '"', page)	# livestreams184-extappjson.json (channels)	
-	url = base + url
-	page, msg = get_page(path=url)
-	if page == '':
-		msg1 = "Fehler in ARDSportEventLive" 
-		msg2 = "%s nicht gefunden" % url.split('/')[-1]
-		PLog(msg2)	
-		MyDialog(msg1, msg2, '')
-		return	
-				
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD')						# Home-Button
-	
-
-	channels  = blockextract('"starttime":', page)						# Beiträge
-	PLog(len(channels))
-	# Bsp: "/paralympics/live/osslive102-ardjson_image-36c61add-66fc-4fd8-8050-126ef2095659.json":
-	oss_url_templ = base + "/paralympics/live/%s-ardjson_image-%s.json"
-	now = EPG.get_unixtime(onlynow=True)								# akt. Zeit für Abgleich
-	now = int(now)
-	now_human = epgRecord.date_human("%Y.%m.%d_%H:%M:%S", now='')		# Debug	
-	PLog("now_human: " + now_human)
-	live_flag=False
-	for rec in channels:
-		start = stringextract('"starttime": ', ',', rec)				# Unix-Time
-		end = stringextract('"endtime": ', ',', rec)					# 	-"-
-		PLog("start, end: %s, %s" % (epgRecord.date_human("%Y.%m.%d_%H:%M:%S", now=start), 
-			epgRecord.date_human("%Y.%m.%d_%H:%M:%S", now=end)))
-		start=int(start); end=int(end); 
-		if end < now:													# abgelaufen
-			continue
-		
-		datum = stringextract('"displaystartdate": "', '"', rec)	 
-		zeitstart = stringextract('"displaystarttime": "', '"', rec)	 
-		zeitende = stringextract('"displayendtime": "', '"', rec)
-		headline = stringextract('"headline": "', '"', rec)	 
-		sender = stringextract('"channel": "', '"', rec)	 
-		pgm_id = stringextract('"pgm_id": "', '"', rec)	 
-		descr = stringextract('"description": "', '"', rec)	 
-		img = base + stringextract('"displayimage": "', '"', rec)	 
-		image_uuid = stringextract('"displayimage_uuid": "', '"', rec)	 
-		mod = stringextract('"moderation": "', '"', rec)
-		if mod == '':
-			mod = stringextract('"reporter": "', '"', rec) 
-		mod = mod.replace('\\t', '')									# italic entf.
-	
-		title = repl_json_chars(headline); descr= repl_json_chars(descr)
-		if now >= start and now <= end:									# Zeitabgleich für Titel
-			title = '[B]  LIVE [/B] | %s' % (title)
-			live_flag=True
-		else:
-			title = '[B]%s[/B] | %s' % (datum, title)
-			
-		tag = '[B]Start: %s, %s[/B] | Ende: %s | %s' % (datum, zeitstart, zeitende, mod)
-		Plot = "%s||||%s" %  (tag, descr)
-		oss_url = oss_url_templ % (pgm_id, image_uuid)
-		
-		PLog("Satz2:")
-		PLog(title); PLog(pgm_id); PLog(image_uuid); PLog(oss_url); PLog(Plot[:80]);
-		
-		img=py2_encode(img); Plot=py2_encode(Plot); 
-		title=py2_encode(title); oss_url=py2_encode(oss_url);
-		
-		fparams="&fparams={'path': '', 'page': '', 'oss_url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
-			(quote(oss_url), quote(title), quote(img), quote(Plot))
-		addDir(li=li, label=title, action="dirList", dirID="ARDSportEventLive", fanart=img, thumb=img, fparams=fparams, 
-			tagline=tag, summary=descr) 
-			
-	if live_flag == False:
-		icon = R("icon-info.png")
-		msg1 = "Derzeit keine Livestreams"
-		xbmcgui.Dialog().notification(msg1,'',icon,2000)	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #---------------------------------------------------------------------------------------------------
 # Neues  Menü sportschau.de (WDR)
@@ -3180,8 +2942,19 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportWDRCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
+	title = u"Event: [B]Fußball WM 2022 in Katar[/B]"						# Großevent	
+	tag = u""
+	cacheID = "Sport_WMKatar"
+	img = "https://images.sportschau.de/image/a12b67b2-9716-4be8-9462-79391892a4c2/AAABgRPCPcU/AAABgPp7Db4/16x9-1280/wm-katar-logo-sp-100.jpg"
+	path = "https://www.sportschau.de/fussball/fifa-wm-2022"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportWDRCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"ARD Audio Event Streams"						# Audio Event Streams im Haupt-PRG	
-	tag = u"Events und Liste der Netcast-Streams"
+	tag = u"Event- und Netcast-Streams, Sport in der Audiothek, Audiostreams auf sportschau.de"
 	img = R("radio-livestreams.png")
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="ARDAudioEventStreams", fanart=img, thumb=img, 
@@ -3327,82 +3100,82 @@ def ARDSportAudioStreams(title, path, img, cacheID):
 #	Streamquellen im mediaplayer hinterlegt
 #
 def ARDSportMedia(li, title, page): 
-	PLog('ARDSportMedia:')
+	PLog('ARDSportMedia: ' + title)
+	base = "https://www.sportschau.de"
 
-	items = blockextract('class="mediaplayer', page)
-	PLog(len(items))
+	teaser_xs=[]; teaser_slider=[]
+	if "Livestreams" in title:
+		teaser = blockextract('class="teaser__media"', page)	
+	else:
+		teaser = blockextract('class="teaser__media"', page)
+		teaser = teaser + blockextract('class="teaser__link"', page)			
+		teaser_xs = blockextract('class="teaser-xs__link"', page)
+		teaser_slider = blockextract('class="teaser-slider', page)
+		
+	PLog(len(teaser))
+	PLog(len(teaser_xs))
+	PLog(len(teaser_slider))
+	items = teaser + teaser_xs + teaser_slider
 	if len(items) == 0:
 		icon = R("ard-sportschau.png")
 		msg1 = u"%s:" % title
-		msg2 = u'keine Videos/Audios gefunden'
+		msg2 = u'keine Videos/Audios/Bilder gefunden'
 		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=True)
-		return 0 						
+		return 0 
+				
+	mediatype=''			
 		
 	# json.loads scheiterte in cont (char 360) - vermutl. vergessenes Komma:
-	cnt=0
-	for item in items:
-		mp3_url=''; stream_url=''; live=False
+	cnt=0; skip_list=["dummy"]
+	for item in items:		
+		player=''; live=False; title='';  mp3_url=''; stream_url=''; 
+		img=''; tag=''; summ=''; Plot=''; player="text"
+		PLog(item[:60])
+		
 		title = stringextract('__headline">', '</', item)	# html-Bereich
 		summ = stringextract('__shorttext">', '</', item)	# html-Bereich, fehlt im json-Bereich
 		title=repl_json_chars(title); summ=repl_json_chars(summ);
-		title=title.strip(); summ=summ.strip() 
-		
-		cont = stringextract('data-v="', '"', item)				# json-Inhalt zum Player
-		cont = decode_url(cont)
-		#RSave('/tmp/x3.json', py2_encode(cont))	# Debug	
+		title=title.strip(); summ=summ.strip() 		
 
-		player = stringextract('playerType":"', '"', cont)		# audio, video
-		media = stringextract('streams":', '"meta"', cont)		# für video dash.mpd, m3u8 + ts
-		if player == "audio":
-			mp3_url = stringextract('url":"', '"', media)		# 1 x mp3
-		else:
-			urls = blockextract('url":', media)
-			for url in urls:
-				if "index.m3u8" in url:
-					stream_url = stringextract('url":"', '"', url)
-					break
-		
-		duration = stringextract('durationSeconds":"', '"', media)
-		if duration == '':
-			duration = stringextract('_duration":', ',', cont) # Altern. außerhalb media
-		duration = seconds_translate(duration)
+		#---------------------------------------------------
+		if item.find('_topline">Bilderstrecke<') >= 0:		# Ausleitung Bildgalerie
+			if item.startswith('class="teaser__link'):
+				player = "pics"
+				url = stringextract('href="', '"', item)
+				skip_list.append(url)
+				if url.startswith("http") == False:
+					url = base + url
 			
-		imgs = blockextract('"minWidth":', cont, "}")
-		img = stringextract('value":"', '"', imgs[-1])			# letztes=größtes
-		mode = stringextract('_broadcasting_type":"', '"', cont)
-		if mode == "live":
-			live=True
+				tag = "[B]Bilderstrecke[/B]" 
+				img = stringextract('src="', '"', item)
+				PLog("Satz12_pic:")
+				PLog(title); PLog(url); PLog(img); PLog(summ[:80]);
+				fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title), 
+					quote(url), quote(img))
+				addDir(li=li, label=title, action="dirList", dirID="ARDSportBilder", fanart=img, thumb=img, 
+					fparams=fparams, tagline=tag, summary=summ)
+				continue	
+		#---------------------------------------------------
+		if item.find('class="teaser-slider') >= 0:			# Ausleitung Slider
+			player = "slider"
+			skip_list = ARDSportMediaSlider(li, item, skip_list)		# -> addDir	
+			if 'class="mediaplayer' in item == False:
+				continue
+		#---------------------------------------------------
 		
-		TimeDate=''; tag='';
-	
-		if duration:
-			if duration == "0 sec":
-				duration = "unbekannt"
-			
-		chapter = stringextract('chapter1":"', '"', cont)
-		creator = stringextract('creator":"', '"', cont)
-		genre = stringextract('_genre":"', '"', cont)
+		if item.find('class="mediaplayer') > 0:
+			if player != "pics":
+				data  = stringextract('class="mediaplayer', '"MediaPlayer"', item) # von slider abgrenzen
+				if data:
+					player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, data)
 		
-		if player == "audio":
-			tag = "Audio"
-		else:
-			tag = "Video"
-		if live:
-			tag = "%s-Livestream" % tag
-		tag = "[B]%s[/B]" % tag
-		PLog("duration: " + duration)
-		if live == False and duration:
-			tag = "%s | Dauer %s" % (tag, duration)
-			
-		tag = "%s\n%s | %s | %s" % (tag, chapter, creator, genre)
-
-		if summ:
-			tag = "%s\n\n%s" % (tag, summ)
-		Plot = tag.replace("\n", "||")										
-		
+		if title in skip_list:								# Doppel in Blöcken möglich
+			continue
+		skip_list.append(title)
+				
 		PLog("Satz12:")
-		PLog(player); PLog(title); PLog(mp3_url); PLog(stream_url); PLog(img);  
-		PLog(summ[:80]);
+		PLog(player); PLog(live); PLog(title); PLog(mp3_url); PLog(stream_url);   
+		PLog(img); PLog(summ[:80]);
 		title=py2_encode(title); mp3_url=py2_encode(mp3_url); img=py2_encode(img);
 		tag=py2_encode(tag); Plot=py2_encode(Plot);
 		
@@ -3419,17 +3192,219 @@ def ARDSportMedia(li, title, page):
 				addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag)
 		if player == "video":
-			if live:														# Video Livestream
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
-					quote(title), quote(img), quote_plus(Plot))
-				addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-					tagline=tag, mediatype='music')	
-			else:
-				continue													# ausbauen
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
+				quote(title), quote(img), quote_plus(Plot))
+			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+				tagline=tag, mediatype='mediatype')	
 		
+		if player == "text":												# Textbeiträge, Verbleib in Liste
+			if item.find('__headline"') < 0:								# Kombi-Satz aus 2 Blöcken mögl.
+				continue
+				
+			img = stringextract('src="', '"', item)
+			label = stringextract("<strong>", "</strong>", item)
+			if "Audio" in label or "Podcast" in label or "Video" in label:	# ähnlich ARDSportMediaSlider
+				url = stringextract('href="', '"', item)
+				if url.startswith("http") == False:
+					url = base + url
+				PLog("Satz12_xslink: %s, %s" % (title,url))
+				title=py2_encode(title); url=py2_encode(url);
+				img=py2_encode(img); Plot=py2_encode(Plot);
+				tag = "weiter zum [B]%s[/B]-Beitrag" % label
+				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
+					quote(title), quote(img), quote_plus(Plot))
+				addDir(li=li, label=title, action="dirList", dirID="ARDSportSingle", fanart=img, thumb=img, fparams=fparams, 
+					tagline=tag)			
+			else:
+				if img == "":													# kann fehlen
+					img = R(ICON_DIR_FOLDER) 								
+				tag = "[B]ohne Videos, Audios, Bilder[/B]\nMehr auf sportschau.de.."
+				title = "[COLOR grey]%s[/COLOR]" % title
+				PLog("Satz12_text: %s" % title)
+				fparams="&fparams={}" 
+				addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, thumb=img, fparams=fparams, 
+					tagline=tag, summary=Plot)				
+			
 		cnt = cnt + 1
 
 	return cnt
+
+#----------------------------------------------------------------
+# Auswertung Mediaplayerdaten
+#
+def ARDSportMediaPlayer(li, item): 
+	PLog('ARDSportMediaPlayer:')
+	player=''; live=False; title='';  mp3_url=''; stream_url=''; 
+	img=''; tag=''; summ=''; Plot='';
+	
+	cont = stringextract('data-v="', '"', item)				# json-Inhalt zum Player
+	cont = decode_url(cont)
+	cont = unescape(cont)
+	cont = (cont.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
+	PLog(cont[:30])
+	#if "xxx" in cont:
+	#	RSave('/tmp/x1.json', py2_encode(cont))	# Debug	
+
+	player = stringextract('playerType":"', '"', cont)		# audio, video
+	media = stringextract('streams":', '"meta"', cont)		# für video dash.mpd, m3u8 + ts
+	if player == "audio":
+		mp3_url = stringextract('url":"', '"', media)		# 1 x mp3
+	else:
+		urls = blockextract('url":', media)
+		for url in urls:
+			if "index.m3u8" in url or "master.m3u8" in url:
+				stream_url = stringextract('url":"', '"', url)
+				break
+	
+	title = stringextract('page_title":"', ',"', cont)		# kann " enthalten
+	title = repl_json_chars(title)
+	
+	duration = stringextract('durationSeconds":"', '"', cont)
+	if duration == '':
+		dur = stringextract('content_duration":', ',', cont) # Altern. außerhalb media (int, milli-secs)
+		PLog("dur_raw: " + dur)
+		try:
+			dur = int(dur)
+			duration = str(int(dur / 1000))
+		except:
+			duration=""
+	PLog("duration: " + duration)
+	duration = seconds_translate(duration)
+		
+	imgs = blockextract('"minWidth":', cont, "}")
+	img = stringextract('value":"', '"', imgs[-1])			# letztes=größtes
+	mode = stringextract('_broadcasting_type":"', '"', cont)
+	if mode == "live":
+		live=True
+	
+	TimeDate=''; tag='';
+
+	if duration:
+		if duration == "0 sec":
+			duration = "unbekannt"
+		
+	chapter = stringextract('chapter1":"', '"', cont)
+	creator = stringextract('creator":"', '"', cont)
+	genre = stringextract('_genre":"', '"', cont)
+	
+	if player == "audio":
+		tag = "Audio"
+	else:
+		tag = "Video"
+	if live:
+		tag = "%s-Livestream" % tag
+	tag = "[B]%s[/B]" % tag
+	PLog("duration: " + duration)
+	if live == False and duration:
+		tag = "%s | Dauer %s" % (tag, duration)
+		
+	tag = "%s\n%s | %s | %s" % (tag, chapter, creator, genre)
+
+	if summ:
+		tag = "%s\n\n%s" % (tag, summ)
+	Plot = tag.replace("\n", "||")
+			
+	return player, live, title, mp3_url, stream_url, img, tag, summ, Plot 
+
+#----------------------------------------------------------------
+# Auswertung Slider-Beiträge mit json-Bereich
+#	
+def ARDSportMediaSlider(li, item, skip_list): 
+	PLog('ARDSportMediaSlider:')
+	base = "https://www.sportschau.de"
+	player=''; live=False; title='';  mp3_url=''; stream_url=''; 
+	img=''; tag=''; summ=''; Plot='';
+	
+	cont = stringextract('data-v="', '"', item)				# json-Inhalt zum Player
+	cont = decode_url(cont)
+	cont = unescape(cont)
+	cont = (cont.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
+	PLog(cont[:80])
+	#RSave('/tmp/x7.json', py2_encode(cont))	# Debug	
+		
+	content = blockextract('"teaserUrl"', cont)
+	PLog(len(content))
+	
+	for rec in 	content:
+		label = stringextract('label":"', '"', rec)		# audio, video, podcast
+
+		url = stringextract('teaserUrl":"', '"', rec)
+		if url.startswith('http') == False:
+			url = base + url
+		topline = stringextract('topline":"', '"', rec)
+		title = stringextract('headline":"', '"', rec)
+		if title in skip_list:
+			continue
+		skip_list.append(title)
+
+		
+		img = stringextract('imageUrl":"', '"', rec)
+		alt = stringextract('alttext":"', '"', rec)
+		cr = stringextract('copyright":"', '"', rec)
+		
+		summ = "[B]%s[/B] | %s | %s "  % (topline, alt, cr)
+	
+		PLog("Satz12_slider:")
+		PLog(label); PLog(title); PLog(topline);PLog(url);PLog(img);PLog(alt);PLog(cr);
+		title=py2_encode(title); url=py2_encode(url);
+		img=py2_encode(img); Plot=py2_encode(Plot);
+		if "audio" in label or "podcast" in label or "video" in label:
+			tag = "weiter zum [B]%s[/B]-Beitrag" % label
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
+				quote(title), quote(img), quote_plus(Plot))
+			addDir(li=li, label=title, action="dirList", dirID="ARDSportSingle", fanart=img, thumb=img, fparams=fparams, 
+				tagline=tag)			
+		else:											# nur Textinhalte
+			tag = "[B]ohne Videos, Audios, Bilder[/B]\nMehr auf sportschau.de.."
+			title = "[COLOR grey]%s[/COLOR]" % title
+			PLog("Satz12_slider_text: %s" % title)
+			fparams="&fparams={}" 
+			addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, thumb=img, fparams=fparams, 
+				tagline=tag, summary=summ)				
+		
+	return skip_list
+
+#----------------------------------------------------------------
+# Auswertung Slider-Beiträge mit json-Bereich
+#	
+def ARDSportSingle(url, title, thumb, Plot): 
+	PLog('ARDSportSingle: ' + title)
+	PLog(url)
+	CacheTime = 60 * 60								# 1 Std.
+	cacheID=url.split("/")[-1]
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	
+	page = Dict("load", cacheID, CacheTime=CacheTime)
+	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
+		page, msg = get_page(path=url)
+		if page:
+			Dict("store", cacheID, page) 						# Seite -> Cache: aktualisieren	
+	if page == '':
+		msg1 = "Fehler in ARDSportSingle"
+		msg2 = 'Seite kann nicht geladen werden.'
+		msg3 = msg
+		MyDialog(msg1, msg2, msg3)
+		return						
+
+	mediatype=""
+	item = stringextract('class="mediaplayer', '"MediaPlayer"', page)	# erster json-Bereich
+	player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item)
+	
+	if player == "audio":
+		ID="ARD"													# ID Home-Button
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
+			quote(title), quote(img), quote_plus(Plot), ID)
+		addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tag)
+	if player == "video":
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
+			quote(title), quote(img), quote_plus(Plot))
+		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+			tagline=tag, mediatype='mediatype')	
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ---------------------------------------- Ende ARD Sportschau.de ---------------------------------
 ####################################################################################################

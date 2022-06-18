@@ -202,12 +202,11 @@ def Main_NEW(name='', CurSender=''):
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
 						
 	title = 'ARD Sport'
-	tag = u"einschließlich: WDR sportschau.de (Auszüge)"
 	summ = sender_summ	
 	img = R("ard-sport.png")
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSportneu", 
-		fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
+		fanart=img, thumb=img, fparams=fparams, summary=summ)
 			
 	# ARD Sportschau nach Web-Änderung abgeschaltet - s. Forum Post vom 12.06.2022
 	#	Ausgesuchte Inhalte sportschau.de in ARDSportWDR

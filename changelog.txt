@@ -10,6 +10,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+18.06.2022 4.4.1
+			decode_url (Modul util): weitere Ersetzungen für Audiostreams sportschau.de.
+			ARDAudioEventStreams: Button "aktuelle Livestreams (sportschau.de)" entfernt
+			(keine Audios), Button Audiostreams angepasst (Audios, keine Livestreams).
+			ARDSportAudioStreams: Anpassungen an Webänderungen für audio- und netcast-
+			Streams sportschau.de.
+			Neuauflage Sportschau.de: neue Funktionen ARDSportAudioStreams, ARDSportMedia,
+			ARDSportWDR, ARDSportWDRLive, ARDSportSingle, 
+			ARD-Livestream + inputstream.adaptive: startet 2-Std. zu früh - Startposition
+			manuell korrigiert (wie in V4.3.8 für UT-Livestream der ARD). Zusätzlich
+			Wartezeit zwischen Start des Kodi-Players und manueller Seek-Korrektur auf
+			1 Sekunde verdoppelt.
+			Menü-Zusatz "NEU" bzw. "(neu)" entfernt: ARD Mediathek, ARD Audiothek, ARD
+			Sport.	
+			
 12.06.2022 4.4.0 Überarbeitung PLAYLIST-Modul
 			Parseplaylist: Param. live hinzugefügt zur Unterscheidung bei Mehrkanal-
 			Streams mit '#EXT-X-MEDIA' (live=True + skip=False: Einzelauflösungen)

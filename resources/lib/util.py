@@ -1427,7 +1427,8 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
 		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
-		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love')):		# u'u003e' 	-> u'®'
+		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love')		# u'u003e' 	-> u'®'
+		, (u'%C3%A9', u'é')):	
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret
@@ -1638,6 +1639,8 @@ def decode_url(line):
 	
 	line = line.replace(u'%28', u'(')		
 	line = line.replace(u'%29', u')')	
+	line = line.replace(u'%7C', u'|')
+	
 	return line
 #----------------------------------------------------------------  	
 # Migration PY2/PY3: py2_decode aus kodi-six
