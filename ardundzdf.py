@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>54</nr>										# Numerierung für Einzelupdate
+# 	<nr>55</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.1'
-VDATE = '18.06.2022'
+VDATE = '19.06.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2601,19 +2601,26 @@ def ARDSportBilder(title, path, img):
 	PLog('ARDSportBilder:'); 
 	PLog(title); PLog(path)
 	title_org = title
+	icon = R("ard-sportschau.png")
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 
-	page, msg = get_page(path=path)		
+	page = ARDSportLoadPage(title, path, "ARDSportBilder") 	# path: cacheID
 	if page == '':
-		msg1 = 'Seite kann nicht geladen werden.'
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return li 
+		return
 	PLog(len(page))
 	
 	pos = page.find('_topline">Bilderstrecke<')
+	if pos < 0:
+		pos = page.find('>Bilder<')							# Altern.
+		if pos < 0:
+			msg1 = u"%s:" % title
+			msg2 = u'keine Bilder gefunden'
+			xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=True)
+			return  
+		
+		
 	page = page[pos:]
 	cont = stringextract('data-v="', '"', page)				# json-Inhalt (Bildstrecke.json)
 	cont = decode_url(cont)
@@ -2623,6 +2630,12 @@ def ARDSportBilder(title, path, img):
 	
 	content = blockextract('"description"', cont)	
 	PLog(len(content))
+	if len(content) == 0:
+		msg1 = u"%s:" % title
+		msg2 = u'keine Bilder gefunden'
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=True)
+		return  
+		
 		
 	fname = make_filenames(title)			# Ablage: Titel + Bildnr
 	fpath = os.path.join(SLIDESTORE, fname)
@@ -2964,7 +2977,8 @@ def ARDSportWDR():
 	path = "https://www.sportschau.de/sendung/moderation"
 	title=py2_encode(title); path=py2_encode(path); 
 	img=py2_encode(img); 
-	fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(title), quote(path))
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
+		(quote(title), quote(path), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportHub", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
@@ -2977,16 +2991,66 @@ def ARDSportWDR():
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #---------------------------------------------------------------------------------------------------
-def ARDSportHub(title, path): 
+# Laden + Verteilen
+def ARDSportHub(title, path, img): 
 	PLog('ARDSportHub: ' + title)
+	
+	base = "https://www.sportschau.de"
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	
+	if "Moderation" in title:
+		page = ARDSportLoadPage(title, path, "ARDSportCluster")
+		if page == '':
+			return
+		items = blockextract('class="teaser__link"', page)			
+		PLog(len(items))
+		for item in items:
+			url = stringextract('href="', '"', item)					
+			if url.startswith("http") == False:
+				url = base + url
+				
+			topline = stringextract('__topline">', '</', item)	# html-Bereich
+			title = stringextract('__headline">', '</', item)	
+			summ = stringextract('__shorttext">', '</', item)	
+			title=repl_json_chars(title); summ=repl_json_chars(summ);
+			title=title.strip(); summ=summ.strip() 
+			title = "%s: [B]%s[/B]" % (topline, title)		
+				
+			tag = "[B]Bilderstrecke[/B]" 
+			func = "ARDSportBilder"
+			if  item.find(">Bilder<") < 0:
+				tag = "[B]ohne weitere Bilder[/B]" 
+				func = "dummy"
+			img = stringextract('src="', '"', item)
+			if img == '':
+				img = R(ICON_DIR_FOLDER)
+			PLog("Satz12_pic:")
+			PLog(title); PLog(url); PLog(img); PLog(summ[:80]);
+			fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title), 
+				quote(url), quote(img))
+			addDir(li=li, label=title, action="dirList", dirID=func, fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ)
 
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+#---------------------------------------------------------------------------------------------------
+# Notification: keine Aktion
+# verhindert nicht GetDirectory-Error 
+def dummy(title="",path="",img=""):
+	PLog("dummy:")
+	icon = R(ICON_INFO)
+	msg1 = "Hinweis:"
+	msg2 = 'Button ohne Funktion'		
+	xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)
 	return
+
 #---------------------------------------------------------------------------------------------------
 # Webseite für Funktion func laden 
 # falls cacheID leer, wird sie letztes path-Element (eindeutig!)
 #
 def ARDSportLoadPage(title, path, func, cacheID=""): 
-	PLog('ARDSportHub:')
+	PLog('ARDSportLoadPage:')
 	PLog('func: ' + func)
 	CacheTime = 60 * 60						# 1 Std.
 	
@@ -3393,7 +3457,6 @@ def ARDSportSlider(li, item, skip_list):
 	cont = unescape(cont)
 	cont = (cont.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
 	PLog(cont[:80])
-	#RSave('/tmp/x7.json', py2_encode(cont))	# Debug	
 		
 	content = blockextract('"teaserUrl"', cont)
 	PLog(len(content))
