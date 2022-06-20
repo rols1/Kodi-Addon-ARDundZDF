@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>55</nr>										# Numerierung für Einzelupdate
+# 	<nr>56</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.1'
 VDATE = '19.06.2022'
 
@@ -2992,7 +2992,7 @@ def ARDSportWDR():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #---------------------------------------------------------------------------------------------------
 # Laden + Verteilen
-def ARDSportHub(title, path, img): 
+def ARDSportHub(title, path, img, Dict_ID=''): 
 	PLog('ARDSportHub: ' + title)
 	
 	base = "https://www.sportschau.de"
@@ -3000,7 +3000,7 @@ def ARDSportHub(title, path, img):
 	li = home(li, ID='ARD')						# Home-Button
 	
 	if "Moderation" in title:
-		page = ARDSportLoadPage(title, path, "ARDSportCluster")
+		page = ARDSportLoadPage(title, path, "ARDSportHub")
 		if page == '':
 			return
 		items = blockextract('class="teaser__link"', page)			
@@ -3031,7 +3031,16 @@ def ARDSportHub(title, path, img):
 				quote(url), quote(img))
 			addDir(li=li, label=title, action="dirList", dirID=func, fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ)
-
+				
+	if "[B]Sliderbox" in title:									# einzelner Sliderbeitrag
+		page = ARDSportLoadPage(title, path, "ARDSportHub")
+		if page == '':
+			return
+		PLog("slider_from_Dict")
+		teaser = Dict("load", Dict_ID)
+		skip_list = []; cnt=0
+		skip_list = ARDSportSlider(li, teaser, skip_list)		# -> addDir			
+	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #---------------------------------------------------------------------------------------------------
@@ -3092,6 +3101,24 @@ def ARDSportCluster(title, path, img, cacheID, cluster=''):
 	#-----------------------------------------------			# 1. Durchlauf
 	if cluster == '':
 		PLog("stage1")
+		#------------------
+		teaser = blockextract('class="teaser-slider', page)		# vor Cluster: Slider gesamte Seite auswerten	
+		PLog(len(teaser))
+		if len(teaser) > 0:
+			cnt=1
+			for item in teaser:
+				Dict_ID = "ARDSportSlider_%d" % cnt
+				Dict("store", Dict_ID, item)
+				title = "[B]Sliderbox %d[/B]" % cnt
+				tag = u"Folgeseiten"
+				title=py2_encode(title); path=py2_encode(path); 
+				img=py2_encode(img); 
+				fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'Dict_ID': '%s'}" %\
+					(quote(title), quote(path), quote(img), Dict_ID)
+				addDir(li=li, label=title, action="dirList", dirID="ARDSportHub", fanart=img, thumb=img, 
+					fparams=fparams, tagline=tag)	
+				cnt=cnt+1
+		#------------------
 		for item in items:
 			tag=''
 			title = stringextract('__headline">', '</', item)
@@ -3108,7 +3135,7 @@ def ARDSportCluster(title, path, img, cacheID, cluster=''):
 			fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s', 'cluster': '%s'}" %\
 				(quote(title), quote(path), quote(img), cacheID, quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag)	
+				fparams=fparams, tagline=tag)
 			
 	#-----------------------------------------------			# 2. Durchlauf
 	else:
@@ -3178,9 +3205,10 @@ def ARDSportAudioStreams(title, path, img, cacheID):
 
 #---------------------------------------------------------------------------------------------------
 # Auswertung mediaplayer-Klassen (quoted:data-v=..)
-# Aufrufer ARDSportAudioStreams, ARDSportLive, ..
+# Aufrufer ARDSportAudioStreams, ARDSportLive, ARDSportCluster
 # Externe Links im html-Code (z.B. NDR, Pferdesport) sind nicht mit 
 #	Streamquellen im mediaplayer hinterlegt
+# Slider-Auswertung extern für gesamte Seite (hier page=cluster möglich) 
 #
 def ARDSportMedia(li, title, page): 
 	PLog('ARDSportMedia: ' + title)
@@ -3195,12 +3223,10 @@ def ARDSportMedia(li, title, page):
 		teaser = blockextract('class="teaser__media"', page)
 		teaser = teaser + blockextract('class="teaser__link"', page)			
 		teaser_xs = blockextract('class="teaser-xs__link"', page)
-		teaser_slider = blockextract('class="teaser-slider', page)
 		
 	PLog(len(teaser))
 	PLog(len(teaser_xs))
-	PLog(len(teaser_slider))
-	items = teaser + teaser_xs + teaser_slider
+	items = teaser + teaser_xs
 	if len(items) == 0:
 		icon = R("ard-sportschau.png")
 		msg1 = u"%s:" % title
@@ -3240,12 +3266,6 @@ def ARDSportMedia(li, title, page):
 				addDir(li=li, label=title, action="dirList", dirID="ARDSportBilder", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=summ)
 				continue	
-		#---------------------------------------------------
-		if item.find('class="teaser-slider') >= 0:			# Ausleitung Slider
-			player = "slider"
-			skip_list = ARDSportSlider(li, item, skip_list)		# -> addDir	
-			if 'class="mediaplayer' in item == False:
-				continue
 		#---------------------------------------------------
 		
 		if item.find('class="mediaplayer') > 0:
@@ -3311,7 +3331,7 @@ def ARDSportMedia(li, title, page):
 					tagline=tag, summary=Plot)				
 			
 		cnt = cnt + 1
-
+	
 	return cnt
 
 #----------------------------------------------------------------
@@ -3394,7 +3414,7 @@ def ARDSportMediaPlayer(li, item):
 #---------------------------------------------------------------------------------------------------
 # Für Seiten mit nur einheitliche Blöcken
 # Aufrufer: ARDAudioEventStreams (Audiostreams, Netcast-Audiostreams) 
-# nur Blöcke class="mediaplayer
+# bisher nur Blöcke class="mediaplayer
 def ARDSportSingleBlock(title, path, img, cacheID, block):
 	PLog('ARDSportSingleBlock:')
 	
@@ -3445,7 +3465,7 @@ def ARDSportSingleBlock(title, path, img, cacheID, block):
 
 #----------------------------------------------------------------
 # Auswertung Slider-Beiträge mit json-Bereich
-#	
+#
 def ARDSportSlider(li, item, skip_list): 
 	PLog('ARDSportSlider:')
 	base = "https://www.sportschau.de"
@@ -3473,7 +3493,6 @@ def ARDSportSlider(li, item, skip_list):
 		if title in skip_list:
 			continue
 		skip_list.append(title)
-
 		
 		img = stringextract('imageUrl":"', '"', rec)
 		alt = stringextract('alttext":"', '"', rec)
