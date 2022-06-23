@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>56</nr>										# Numerierung für Einzelupdate
+# 	<nr>57</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.1'
-VDATE = '19.06.2022'
+VDATE = '23.06.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2930,6 +2930,17 @@ def ARDSportWDR():
 	base = "https://images.sportschau.de"
 	logo = base + "/image/3fbb1eaf-fb0a-4f1b-a5a9-44a643839cd5/AAABgTjL3GM/AAABgPp7Db4/16x9-1280/sportschau-logo-sendung-100.jpg"
 	
+	title = u"Startseite"									# Startseite	
+	tag = u""
+	cacheID = "Sport_Startseite"
+	img = logo
+	path = "https://www.sportschau.de"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Livestreams der Sportschau"
 	tag = u"kommende Events: Ankündigungen mit Direktlinks"
 	img = logo
@@ -2938,6 +2949,17 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 	
+	title = u"Event: [B]Die Finals[/B]"						# Großevent	
+	tag = u"14 Sportarten, 190 deutsche Meistertitel - vom 23. bis 26. Juni finden in Berlin die Finals statt."
+	cacheID = "Finals"
+	img = "https://images.sportschau.de/image/825edf08-5ec7-4c15-9aab-2f6cca8a1d8d/AAABgWF00Tc/AAABgPp7Db4/16x9-1280/titelbild-100.jpg"
+	path = "https://www.sportschau.de/die-finals"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Event: [B]Tour de France[/B]"						# Großevent	
 	tag = u""
 	cacheID = "Sport_TourdeFrance"
@@ -3039,7 +3061,7 @@ def ARDSportHub(title, path, img, Dict_ID=''):
 		PLog("slider_from_Dict")
 		teaser = Dict("load", Dict_ID)
 		skip_list = []; cnt=0
-		skip_list = ARDSportSlider(li, teaser, skip_list)		# -> addDir			
+		skip_list = ARDSportSlider(li, teaser, skip_list, img)		# -> addDir			
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -3391,6 +3413,11 @@ def ARDSportMediaPlayer(li, item):
 	chapter = stringextract('chapter1":"', '"', cont)
 	creator = stringextract('creator":"', '"', cont)
 	genre = stringextract('_genre":"', '"', cont)
+	geo = stringextract('languageCode":"', '"', cont)
+	if geo:
+		geo = "Geoblock: %s" % up_low(geo)
+	else:
+		geo = "Geoblock: NEIN"
 	
 	if player == "audio":
 		tag = "Audio"
@@ -3403,7 +3430,7 @@ def ARDSportMediaPlayer(li, item):
 	if live == False and duration:
 		tag = "%s | Dauer %s" % (tag, duration)
 		
-	tag = "%s\n%s | %s | %s" % (tag, chapter, creator, genre)
+	tag = "%s\n%s | %s | %s | %s" % (tag, chapter, creator, genre, geo)
 
 	if summ:
 		tag = "%s\n\n%s" % (tag, summ)
@@ -3466,7 +3493,7 @@ def ARDSportSingleBlock(title, path, img, cacheID, block):
 #----------------------------------------------------------------
 # Auswertung Slider-Beiträge mit json-Bereich
 #
-def ARDSportSlider(li, item, skip_list): 
+def ARDSportSlider(li, item, skip_list, img=''): 
 	PLog('ARDSportSlider:')
 	base = "https://www.sportschau.de"
 	player=''; live=False; title='';  mp3_url=''; stream_url=''; 
@@ -3480,6 +3507,7 @@ def ARDSportSlider(li, item, skip_list):
 		
 	content = blockextract('"teaserUrl"', cont)
 	PLog(len(content))
+	PLog(content)
 	
 	allow_list = ["AUDIO", "VIDEO", "PODCAST"]			# Web: groß-/klein-Mix
 	for rec in 	content:
@@ -3495,6 +3523,10 @@ def ARDSportSlider(li, item, skip_list):
 		skip_list.append(title)
 		
 		img = stringextract('imageUrl":"', '"', rec)
+		if img == '':
+			pos = rec.find('minWidth":640')				# Altern. minWidth 256 - 960
+			if pos > 0:
+				img = stringextract('value":"', '"', rec[pos:])
 		alt = stringextract('alttext":"', '"', rec)
 		cr = stringextract('copyright":"', '"', rec)
 		
@@ -4356,7 +4388,7 @@ def thread_getpic(path_url_list,text_list,folder=''):
 			try:										# PIL auf Android nicht verfügbar
 				from PIL import Image, ImageDraw, ImageFont
 				watermark=True; ok="ja"
-				PLog(myfont)
+				PLog("Font: " + myfont)
 				font = ImageFont.truetype(myfont)
 				img_fraction=0.50; fontsize=1		# Text -> Bildhälfte: 
 			except Exception as exception:
