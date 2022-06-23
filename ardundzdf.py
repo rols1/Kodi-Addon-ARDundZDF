@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>57</nr>										# Numerierung für Einzelupdate
+# 	<nr>58</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.1'
 VDATE = '23.06.2022'
 
@@ -3507,9 +3507,10 @@ def ARDSportSlider(li, item, skip_list, img=''):
 		
 	content = blockextract('"teaserUrl"', cont)
 	PLog(len(content))
-	PLog(content)
+	#PLog(content)	# Debug
 	
-	allow_list = ["AUDIO", "VIDEO", "PODCAST"]			# Web: groß-/klein-Mix
+	allow_list = ["AUDIO", "VIDEO", "PODCAST",			# Web: groß-/klein-Mix
+				"LIVESTREAM"]
 	for rec in 	content:
 		label = stringextract('label":"', '"', rec)		# audio, video, podcast
 
@@ -3537,12 +3538,17 @@ def ARDSportSlider(li, item, skip_list, img=''):
 		title=py2_encode(title); url=py2_encode(url);
 		img=py2_encode(img); Plot=py2_encode(Plot);
 		
-		allow=False
-		for item in allow_list:
+		allow=False; live=False
+		for item in allow_list:							# Abgleich label-Typen
 			if item in up_low(label):
-				allow=True; break
+				if "LIVESTREAM" in item:
+					live=True
+				allow=True; break				
+				
 		if allow:
 			tag = "weiter zum [B]%s[/B]-Beitrag" % label
+			if live:
+				tag = tag.replace("-Beitrag", "")
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
 				quote(title), quote(img), quote_plus(Plot))
 			addDir(li=li, label=title, action="dirList", dirID="ARDSportSliderSingle", fanart=img, thumb=img, fparams=fparams, 
@@ -3575,6 +3581,13 @@ def ARDSportSliderSingle(url, title, thumb, Plot):
 	
 	mediatype=""
 	item = stringextract('class="mediaplayer', '"MediaPlayer"', page)	# erster json-Bereich
+	if item == '':								# z.B. Verweis auf https://www.zdf.de/live-tv
+		icon = R("ard-sportschau.png")
+		msg1 = u"%s:" % title
+		msg2 = u'Quelle nicht gefunden/verfügbar'
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=True)
+		return 0 
+		
 	player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item)
 	
 	if player == "audio":
