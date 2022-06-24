@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>58</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.1'
-VDATE = '23.06.2022'
+VDATE = '24.06.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -393,7 +393,7 @@ def Main():
 			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 	
 	title="Suche in ARD und ZDF"
-	tagline = 'gesucht wird in [B]ARD  Mediathek Neu [/B]und in der [B]ZDF Mediathek[/B].'
+	tagline = 'gesucht wird in [B]ARD  Mediathek [/B]und [B]ZDF Mediathek[/B].'
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 		fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tagline, 
@@ -3095,7 +3095,7 @@ def ARDSportLoadPage(title, path, func, cacheID=""):
 		if page:
 			Dict("store", cacheID, page) 						# Seite -> Cache: aktualisieren	
 	if page == '':
-		msg1 = "Fehler in ARDSportWDREvent"
+		msg1 = "Fehler in %s" % func
 		msg2 = 'Seite kann nicht geladen werden.'
 		msg3 = msg
 		MyDialog(msg1, msg2, msg3)
@@ -3106,9 +3106,15 @@ def ARDSportLoadPage(title, path, func, cacheID=""):
 # Großevent der Sportschau
 # 1. Aufruf: ARDSportWDR
 # 2. Aufruf: ARDSportCluster mit cluster (class="trenner") 
+# 24.06.2022 Rückfall-Adresse www.sportschau.de - bei Großevents
+#	verlegt der WDR die Ankündigunsseite auf die Startseite
 #
 def ARDSportCluster(title, path, img, cacheID, cluster=''): 
 	PLog('ARDSportCluster: ' + cluster)
+	
+	new_url, msg = get_page(path=path, GetOnlyRedirect=True)
+	if new_url == '':
+		path = "https://www.sportschau.de/"
 	
 	page = ARDSportLoadPage(title, path, "ARDSportCluster")
 	if page == '':
