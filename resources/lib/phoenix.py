@@ -375,6 +375,9 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='', ID=''):
 			t = title
 			title = subtitel; subtitel = t
 		
+		if ID == "Verpasst":							# Bsp. "online: Zukunft: 20.06.2022, 23:00 Uhr"
+			title = "[COLOR blue]%s[/COLOR] | %s" % (online[-10:], title)
+		
 		if subtitel:		
 			summ = subtitel	
 		if vorspann:

@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>20</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.06.2022
+#	Stand: 23.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1871,7 +1871,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	xbmcplugin.endOfDirectory(HANDLE)
 	
 #---------------------------------------------------------------- 
-# Suche in Mediathek Neu 
+# Suche in Mediathek
 # Statt des api-Calls funktioniert auch https://www.ardmediathek.de/ard/search/%s
 # 	(Auswertung anpassen).
 # Scrollbeiträge hier leicht abweichend von ARDStartRubrik (s.u. Mehr-Button).
@@ -1956,7 +1956,7 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #---------------------------------------------------------------- 
-# Verpasst Mediathek Neu - Liste Wochentage
+# ARDVerpasst - Liste Wochentage
 # 29.05.2020 Änderung der Webseite durch die ARD. HTML steht nicht mehr
 #	zur Verfügung, Ermittlung der timeline-Sender im Web entfällt.
 #	Statt dessen forder wir mit dem gewählten Sender die entspr. 
@@ -2008,7 +2008,7 @@ def ARDVerpasst(title, CurSender):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #---------------------------------------------------------------- 
-# ARDVerpasstContent Mediathek Neu - Inhalt des gewählten Tages
+# ARDVerpasstContent - Inhalt des gewählten Tages
 #	Seite html (Uhrzeit, Titel, Link) / json (Blöcke "shortTitle") 
 # Ablauf: 	1. Senderliste (Aufruf ohne timeline_sender od. /ard/ im Pfad)
 #			2. Einzelsender (Aufruf mit timeline_sender)

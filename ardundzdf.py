@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>58</nr>										# Numerierung für Einzelupdate
-VERSION = '4.4.1'
-VDATE = '24.06.2022'
+VERSION = '4.4.2'
+VDATE = '25.06.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2931,7 +2931,7 @@ def ARDSportWDR():
 	logo = base + "/image/3fbb1eaf-fb0a-4f1b-a5a9-44a643839cd5/AAABgTjL3GM/AAABgPp7Db4/16x9-1280/sportschau-logo-sendung-100.jpg"
 	
 	title = u"Startseite"									# Startseite	
-	tag = u""
+	tag = u"Für Groß-Events bitte die vorhandenen Menü-Buttons verwenden."
 	cacheID = "Sport_Startseite"
 	img = logo
 	path = "https://www.sportschau.de"
@@ -6040,10 +6040,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			
 		PLog("Satz8:")
 		PLog(title); PLog(link); PLog(img); PLog(summary); PLog(tagline[0:80]);
-		Resolution = ""; Codecs = ""; duration = ""
 	
-		# if link.find('rtmp') == 0:						# rtmp-Streaming s. CreateVideoStreamObject
-		# Link zu master.m3u8 erst auf Folgeseite? - SenderLiveResolution reicht an  Parseplaylist durch
 		descr = summary.replace('\n', '||')
 		if tagline:
 			descr = "%s %s" % (tagline, descr)				# -> Plot (PlayVideo) 
@@ -6054,8 +6051,11 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=fanart, thumb=img, 
 			fparams=fparams, summary=summary, tagline=tagline, mediatype=mediatype)		
 	
-	if onlySender== '':		
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	#  if onlySender== '':		# obsolet seit V4.4.2 
+	# RP3b+: Abstürze möglich beim Öffen der Liste, Log: clean up-Problem mit Verweis auf classes:
+	#	N9XBMCAddon9xbmcaddon5AddonE,N9XBMCAddon9xbmcaddon5AddonE.  Ähnlich issue
+	#	https://github.com/asciidisco/plugin.video.netflix/issues/576 aber Fix hier nicht anwendbar.
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 #-----------------------------------------------
 # WRD-Links 

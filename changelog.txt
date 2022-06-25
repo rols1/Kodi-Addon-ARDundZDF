@@ -10,6 +10,27 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+25.06.2022 4.4.2
+			Sportschau.de: Codebereinigung mit ARDSportLoadPage für ARDSportCluster,
+			Nachbesserungen in ARDAudioEventStreams, ARDSportWDR, ARDSportHub (neu),
+			ARDSportLoadPage (neu), ARDSportCluster, ARDSportLive, ARDSportAudioStreams,
+			ARDSportMedia, ARDSportSingleBlock (neu), ARDSportSlider (ARDSportMediaSlider
+			umbenannt), ARDSportSliderSingle (ARDSportSingle umbenannt), decode_url (util),
+			Moderatoren-Menü ergänzt.
+			GetContent (Modul phoenix): blaue Uhrzeit im Titel bei VERPASST-Sendungen
+			(Einheitlichkeit im Addon).
+			Sportschau.de: Slider-Auswertung vereinheitlicht (ähnlich Teaserboxen beim ZDF),
+			Code aktualisiert: ARDSportCluster / ARDSportHub / ARDSportSlider.
+			Sportschau.de: Button für Startseite hinzugefügt, Geoblock ausgewertet (Info-
+			Bereich).
+			dummy-Funktion ("Button ohne Funktion"): genutzt in SendungenAZlist (my3Sat),
+			ARDSportMedia, ARDSportSlider,  ARDSportHub.
+			Sportschau.de: Event-Button für "Die Finals" in ARDSportWDR ergänzt, Altern. 
+			für Bildauswertung in ARDSportSlider ergänzt, Livestreams in ARDSportSlider
+			berücksichtigt, Notification für nicht verfügbaren (Live-)Stream ergänzt in 
+			ARDSportSliderSingle, Rückfall-Adresse www.sportschau.de in ARDSportCluster
+			bei Großevents.	
+
 18.06.2022 4.4.1
 			decode_url (Modul util): weitere Ersetzungen für Audiostreams sportschau.de.
 			ARDAudioEventStreams: Button "aktuelle Livestreams (sportschau.de)" entfernt

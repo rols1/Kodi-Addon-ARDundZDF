@@ -910,7 +910,7 @@ def do_sync_ARD(list_title, strmpath, list_path, strm_type):
 # ----------------------------------------------------------------------
 ########################################################################		
 # ----------------------------------------------------------------------
-# listet die Beiträge eines strm-Verzeichnsses:
+# listet die Beiträge eines strm-Verzeichnisses:
 # Aufruf strm_tools (7)
 # strm-Bündel je nach Setting mit/ohne Unterverzeichnis in
 #	strmpath

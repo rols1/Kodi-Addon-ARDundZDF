@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>6</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.05.2022
+#	Stand: 22.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -274,9 +274,8 @@ def SendungenAZlist(name, path):				#
 		if 'link is-disabled' in rec:							# Button inaktiv
 			letter = stringextract('true">', '<', rec)
 			title = "[COLOR grey]Sendungen mit %s[/COLOR]" % letter
-			title=py2_encode(title); DreiSat_AZ=py2_encode(DreiSat_AZ);
-			fparams="&fparams={'name': '%s', 'path': '%s'}"	% (quote(title), quote(DreiSat_AZ))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SendungenAZlist", 
+			fparams="&fparams={}"	 
+			addDir(li=li, label=title, action="dirList", dirID="dummy", 
 				fanart=R('3sat.png'), thumb=R('zdf-sendungen-az.png'), fparams=fparams)			
 		else:
 			title=py2_encode(title); href=py2_encode(href);
