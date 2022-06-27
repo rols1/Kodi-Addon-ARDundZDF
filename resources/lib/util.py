@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>26</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.06.2022
+# 	<nr>27</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -235,9 +235,12 @@ def get_items_from_list(my_indices, my_list):
 #---------------------------------------------------------------- 
 # Home-Button, Aufruf: item = home(item=item, ID=NAME)
 #	Liste item von Aufrufer erzeugt
-# 	filterstatus='set' steuert Eintrag im Kontext-Menü
+# 27.06.2022 filterstatus hier und in addDir entfernt (obsolet, da  Home-
+#	Button optional)
+#
 def home(li, ID):												
 	PLog('home: ' + ID)	
+	FILTER_SET 	= os.path.join(ADDON_DATA, "filter_set")
 		
 	if SETTINGS.getSetting('pref_nohome') == 'true':	# keine Homebuttons
 		return li
@@ -248,9 +251,12 @@ def home(li, ID):
 	Home = " Home: "									#	getestet: 2000 - 202F (invisible-characters-ascii)
 	title = u' Zurück zum Hauptmenü %s' % ID
 	summary = title										# z.Z. n.w.
-	tag =  "Ausschluss-Filter Status: AUS"				# nur ARD und ZDF, nicht Module
+	
+	tag =  "Ausschluss-Filter Status: AUS"				# nur Untermenüs ARD, ZDF + Audiothek, nicht Module
 	if SETTINGS.getSetting('pref_usefilter') == 'true':	
 		tag = tag.replace('AUS','[COLOR blue]EIN[/COLOR]')										
+		page = RLoad(FILTER_SET, abs_path=True)			# akt. Filter laden
+		tag = "%s \nFilter [B]aktuell[/B]:\n%s" % (tag, page)
 	
 
 	if ID == NAME:		# 'ARD und ZDF'
@@ -259,7 +265,7 @@ def home(li, ID):
 		img = R('icon.png') 
 		name = ' Home: ARD und ZDF'
 		addDir(li=li, label=name, action="dirList", dirID="Main", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			thumb=img, tagline='', fparams=fparams)
 		
 	if ID == 'ARD':			
 		img = R('ard-mediathek.png') 
@@ -267,7 +273,7 @@ def home(li, ID):
 		CurSender = Dict("load", "CurSender")
 		fparams="&fparams={'name': '%s', 'CurSender': '%s'}"	% (quote(name), quote(CurSender))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", 
-			fanart=img, thumb=img, tagline=tag, filterstatus='', fparams=fparams)
+			fanart=img, thumb=img, tagline=tag, fparams=fparams)
 			
 	if ID == 'ZDF' or ID == 'ZDFStart' or ID == 'ZDFfunkStart':
 		title = u' Zurück zum Hauptmenü ZDF'
@@ -275,14 +281,14 @@ def home(li, ID):
 		name = Home + "ZDF Mediathek"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_ZDF", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='set', fparams=fparams)
+			thumb=img, tagline=tag, fparams=fparams)
 		
 	if ID == 'ZDFmobile':
 		img = R('zdf-mobile.png')
 		name = Home + "ZDFmobile"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
-			fanart=img, thumb=img, filterstatus='', fparams=fparams)
+			fanart=img, thumb=img, params=fparams)
 	
 	# 	03.06.2021 ARD-Podcasts (Classic) entfernt		
 			
@@ -291,49 +297,49 @@ def home(li, ID):
 		name = Home + "ARD Audiothek"
 		fparams="&fparams={'title': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=img, 
-			thumb=img, tagline=tag, filterstatus='', fparams=fparams)
+			thumb=img, tagline=tag, fparams=fparams)
 			
 	if ID == '3Sat':
 		img = R('3sat.png')
 		name = Home + "3Sat"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", fanart=img, 
-			thumb=img, filterstatus='', fparams=fparams)
+			thumb=img, fparams=fparams)
 			
 	if ID == 'FUNK':
 		img = R('funk.png')
 		name = Home + "FUNK"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Main_funk", fanart=img, 
-			thumb=img, filterstatus='set', fparams=fparams)
+			thumb=img, fparams=fparams)
 			
 	if ID == 'Kinderprogramme':
 		img = R('childs.png')
 		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Main_childs", fanart=img, 
-			thumb=img, filterstatus='', fparams=fparams)
+			thumb=img, fparams=fparams)
 
 	if ID == 'TagesschauXL':
 		img = ICON_MAINXL		# github
 		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", fanart=img, 
-			thumb=img, filterstatus='', fparams=fparams)
+			thumb=img, fparams=fparams)
 			
 	if ID == 'phoenix':
 		img = R(ICON_PHOENIX)
 		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.Main_phoenix", fanart=img, 
-			thumb=img, filterstatus='', fparams=fparams)
+			thumb=img, fparams=fparams)
 
 	if ID == 'arte':
 		img = R(ICON_ARTE)
 		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Main_arte", fanart=img, 
-			thumb=img, filterstatus='', fparams=fparams)
+			thumb=img, fparams=fparams)
 
 	return li
 	 
@@ -676,7 +682,7 @@ def up_low(line, mode='up'):
 # 	18.04.2022 Erweiterung Kontextmenüs "Abgleich Videotitel mit Medienbibliothek" 
 #
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='',\
-		cmenu=True, sortlabel='', merkname='', filterstatus='', start_end=''):
+		cmenu=True, sortlabel='', merkname='', start_end=''):
 	PLog('addDir:');
 	label_org=label				# s. 'Job löschen' in K-Menüs
 	label=py2_encode(label)
@@ -750,17 +756,16 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				fparams_strm = quote_plus(fparams_strm)
 				
 
-		if filterstatus != 'set':									# Doppel im Hauptmenü vermeiden (s. home)
-			if SETTINGS.getSetting('pref_video_direct') == 'true':	# ständig: Umschalter Settings 
-				menu_entry = "Sofortstart AUS / Downl. EIN"
-				msg1 = "Video-Sofortstart AUS"
-				msg2 = "Downloads EIN"
-				ID = 'pref_video_direct,false|pref_use_downloads,true'
-			else:
-				menu_entry = "Sofortstart EIN / Downl. AUS"
-				msg1 = "Video-Sofortstart EIN"
-				msg2 = "Downloads AUS"
-				ID = 'pref_video_direct,true|pref_use_downloads,false'
+		if SETTINGS.getSetting('pref_video_direct') == 'true':			# ständig: Umschalter Sofortstart 
+			menu_entry = "Sofortstart AUS / Downl. EIN"
+			msg1 = "Video-Sofortstart AUS"
+			msg2 = "Downloads EIN"
+			ID = 'pref_video_direct,false|pref_use_downloads,true'
+		else:
+			menu_entry = "Sofortstart EIN / Downl. AUS"
+			msg1 = "Video-Sofortstart EIN"
+			msg2 = "Downloads AUS"
+			ID = 'pref_video_direct,true|pref_use_downloads,false'
 			icon = R(ICON_TOOLS) 
 			fp = {'ID': ID, 'msg1': msg1,\
 				'msg2': msg2, 'icon': quote_plus(icon), 'delay': '3000'} 
@@ -816,10 +821,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				fparams_do_folder = "&fparams={0}".format(fp)
 				fparams_do_folder = quote_plus(fparams_do_folder)	# Merklisten-Ordner bearbeiten (add/remove)
 				
-		if filterstatus:											# Ausschluss-Filter EIN/AUS
-			fp = {'action': 'state_change'} 
-			fparams_change = "&fparams={0}".format(fp)
-			fparams_change = quote_plus(fparams_change)				# Filtern
+		fp = {'action': 'state_change'} 						# Ausschluss-Filter EIN/AUS
+		fparams_change = "&fparams={0}".format(fp)
+		fparams_change = quote_plus(fparams_change)				# Filtern
 			
 
 		# Recording:
@@ -952,7 +956,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		if fparams_change or fparams_record or fparams_recordLive:	# Ausschluss-Filter EIN/AUS, ProgramRecord
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			if fparams_change:										# Aufrufer home s.o. -> FilterToolsWork
-				commands.append(('Ausschluss-Filter EIN/AUS', 'RunScript(%s, %s, ?action=dirList&dirID=FilterToolsWork%s)' \
+				commands.append(('Ausschluss-Filter EIN/AUS', 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.tools.FilterToolsWork%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_change)))
 			if fparams_record:										# Aufrufer EPG_ShowSingle -> ProgramRecord
 				commands.append(('diese Sendung aufnehmen', 'RunScript(%s, %s, ?action=dirList&dirID=ProgramRecord%s)' \

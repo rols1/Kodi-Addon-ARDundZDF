@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>58</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.2'
-VDATE = '25.06.2022'
+VDATE = '27.06.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -394,10 +394,11 @@ def Main():
 	
 	title="Suche in ARD und ZDF"
 	tagline = 'gesucht wird in [B]ARD  Mediathek [/B]und [B]ZDF Mediathek[/B].'
+	summ = u"Tools für die Suchwortliste: Menü [B]Suchwörter bearbeiten[/B] (siehe Infos + Tools)."
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 		fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tagline, 
-		fparams=fparams)
+		summary=summ, fparams=fparams)
 
 	title = "ARD Mediathek"
 	tagline = u'die Classic-Version der Mediathek existiert nicht mehr - sie wurde von der ARD eingestellt'
@@ -538,8 +539,9 @@ def Main():
 	#	freischalten nach Posting im Kodi-Forum
 
 	tag = '[B]Infos, Tools und Filter zu diesem Addon[/B]'					# Menü Info + Tools
-	summ= u'Ausschluss-Filter (nur für Beiträge von ARD und ZDF)'
-	
+	summ= u'Ausschluss-Filter bearbeiten (nur für Beiträge von ARD und ZDF)'
+	summ= u'%s\n\nSuchwörter bearbeiten (nur für die Suche in ARD Mediathek und ZDF Mediathek)' % summ
+
 	summ = "%s\n\n%s" % (summ, "Download- und Aufnahme-Tools")
 	if SETTINGS.getSetting('pref_strm') == 'true':
 		summ = "%s\n\n%s" % (summ, "strm-Tools")
@@ -560,11 +562,14 @@ def Main():
 # Aufruf Main
 # div. Addon-Infos + Filter (Titel) setzen/anlegen/löschen
 # Filter-Button nur zeigen, wenn in Settings gewählt
+# Juni 2022 verlagert zum neuen tools-Modul: ShowText, AddonInfos, 
+#	AddonStartlist, SearchWordTools, FilterTools.
+#
 def InfoAndFilter():
 	PLog('InfoAndFilter:'); 
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)									# Home-Button
-	
+	import resources.lib.tools	
 															# Button changelog.txt
 	tag= u'Störungsmeldungen bitte via Kodinerds-Forum, Github-Issue oder rols1@gmx.de'
 	summ = u'für weitere Infos zu bisherigen Änderungen [B](changelog.txt)[/B] klicken'
@@ -597,8 +602,14 @@ def InfoAndFilter():
 		title = u"Filter bearbeiten"						# Button für Filter
 		tag = u"[B]Ausschluss-Filter bearbeiten[/B]\n\nnur für Beiträge von ARD und ZDF)" 								
 		fparams="&fparams={}" 
-		addDir(li=li, label=title, action="dirList", dirID="FilterTools", fanart=R(FANART), 
-			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)	
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.FilterTools", 
+			fanart=R(FANART), thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)	
+			
+	title = u"Suchwörter bearbeiten"						# Button für Suchwörter
+	tag = u"[B]Suchwörter bearbeiten[/B]\n\n(nur für die Suche in ARD Mediathek und ZDF Mediathek)" 								
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordTools", 
+		fanart=R(FANART), thumb=R('icon_searchwords.png'), tagline=tag, fparams=fparams)	
 			
 	# hier ohne Abhängigkeit vom Setting pref_use_downloads:
 	tagline = u'[B]Downloads und Aufnahmen[/B]\n\nVerschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
@@ -652,6 +663,7 @@ def InfoAndFilter():
 		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+
 #---------------------------------------------------------------- 
 # Wg.  Problemen mit der xbmc-Funktion executebuiltin(RunScript()) verwenden
 #	wie importlib wie in router()
@@ -774,205 +786,7 @@ def AddonStartlist(mode='', query=''):
 			MyDialog(msg1, '', '')	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-#----------------------------------------------------------------
-# Aufruf InfoAndFilter
-# Menüs für FilterToolsWork 
-def FilterTools():
-	PLog('FilterTools:'); 
-	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)				# Home-Button
-		
-	filterfile = os.path.join(ADDON_DATA, "filter.txt") 		# init: check_DataStores
-	filter_page = RLoad(filterfile, abs_path=True)				# Filterliste laden
-
-	if filter_page == '' or len(filter_page) <= 20:
-		msg1 = "Problem Filterliste"
-		msg2 = 'Liste kann nicht geladen werden'				# -> nur Button Hinzufügen
-		PLog(msg2); PLog(filter_page)
-		filter_page=''											# fehlerhaft=leer
-		icon = R(ICON_FILTER)
-		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
-		
-	akt_filter=''; 
-	if os.path.isfile(FILTER_SET):
-		page = RLoad(FILTER_SET, abs_path=True)
-		page = page.strip()
-		akt_filter = page.splitlines()
-	PLog(akt_filter)
-												
-	summ = u"Ausschluss-Filter für Beiträge von ARD und ZDF."
-	summ = u"%s\n\nWirkung: Einzelbeiträge, die einen gesetzten Filter in Titel, Subtitel oder Beschreibung enthalten, werden aussortiert." % summ 
-	
-	if filter_page:
-		if akt_filter:
-			title = u"aktuell gesetzte(n) Filter zeigen (%d)" %  len(akt_filter)
-			fparams="&fparams={'action': 'show_set'}" 
-			addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
-				thumb=R(ICON_FILTER), summary=summ, fparams=fparams)		
-
-		title = u"alle Filterwörter zeigen" 
-		fparams="&fparams={'action': 'show_list'}" 
-		addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
-			thumb=R(ICON_FILTER), summary=summ, fparams=fparams)				
-	
-		title = u"Filter [COLOR blue]setzen (aktuell: %d)[/COLOR]" % len(akt_filter)
-		tag = u"ein oder mehrere Filterworte [COLOR blue]setzen[/COLOR]" 
-		fparams="&fparams={'action': 'set'}" 
-		addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
-			thumb=R(ICON_FILTER), tagline=tag, summary=summ, fparams=fparams)
-					
-		title = u"Filterwort [B]löschen[/B]"
-		tag = u"ein Filterwort aus der Ausschluss-Liste [COLOR red]löschen[/COLOR]" 
-		fparams="&fparams={'action': 'delete'}" 
-		addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
-			thumb=R(ICON_FILTER), tagline=tag, summary=summ, fparams=fparams)		
-		
-	title = u"Filterwort [COLOR green]hinzufügen[/COLOR]"
-	tag = u"ein Filterwort der Ausschluss-Liste [COLOR green]hinzufügen[/COLOR]" 
-	fparams="&fparams={'action': 'add'}" 
-	addDir(li=li, label=title, action="dirList", dirID="FilterToolsWork", fanart=R(FANART), 
-		thumb=R(ICON_FILTER), tagline=tag, summary=summ, fparams=fparams)		
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
-#----------------------------------------------------------------
-# Aufruf FilterTools
-# Ausschluss-Filter Anzeigen/Setzen/Hinzufügen/Löschen
-# 13.05.2020 'Container.Refresh' muss für LibreElec + Android vor 
-#	notification erfolgen und cacheToDisc=False - sonst wirkungslos.
-#
-def FilterToolsWork(action):
-	PLog('FilterToolsWork: ' + action) 
-	dialog = xbmcgui.Dialog()
-
-	filter_pat = "<filter>\n%s\n</filter>\n" 					# Rahmen Filterliste
-	filterfile = os.path.join(ADDON_DATA, "filter.txt")			# init: check_DataStores
-	page = RLoad(filterfile, abs_path=True)						# Filterliste laden
-	filter_list = stringextract('<filter>', '</filter>', page)
-	filter_list = filter_list.splitlines()
-	filter_list.remove('')										# aus ev. Leerz.
-	filter_list=sorted(filter_list, key=str.lower)
-	PLog(filter_list)
-	
-	page = RLoad(FILTER_SET, abs_path=True)						# akt. Filter laden
-	akt_filter = page.splitlines()
-	akt_filter=sorted(akt_filter, key=str.lower)
-	PLog(akt_filter)	
-
-	if action == 'show_set':									# gesetzte Filter zeigen
-		title = u"aktuell gesetzte(r) Filter"
-		akt_filter = "\n".join(akt_filter)
-		dialog.textviewer(title, akt_filter,usemono=True)
-			
-	if action == 'set':
-		index_list = get_list_indices(akt_filter, filter_list)	# akt. Filter-Indices ermitteln
-		PLog(index_list); 
-		title = u"Filter setzen (grün: gesetzt)"
-		ret = dialog.multiselect(title, filter_list, preselect=index_list)
-		PLog(ret)												# ret hier Liste
-		if ret !=  None:										# None bei Abbruch
-			if len(ret) > 0:
-				items = get_items_from_list(ret, filter_list)	# Indices -> Filter-items
-				items = "\n".join(items) 
-			else:
-				items = ''
-			RSave(FILTER_SET, items)
-			msg1 = u"Filter setzen"
-			msg2 = u"gesetzte Filter: %d" % len(ret)
-			icon = R(ICON_FILTER)
-			xbmc.executebuiltin('Container.Refresh')
-			xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
-		
-	if action == 'add':
-		title = u'Filterwort hinzufügen (Groß/klein egal)'
-		ret = dialog.input(title, type=xbmcgui.INPUT_ALPHANUM)	# Eingabe Filterwort
-		PLog(ret)
-		if ret:
-			ret = py2_encode(up_low(ret, mode='low'))
-			if ret in filter_list:								# Check: vorhanden?
-				msg1 = "Filterliste"
-				msg2 = '%s existiert schon. Anzahl: %d' % (ret.strip(), len(filter_list))		
-				icon = R(ICON_FILTER)
-				xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
-			else:	
-				filter_list.append(ret.strip())					# Filterwort hinzufügen
-				if '' in filter_list:
-					filter_list.remove('')						# aus ev. Leerz.
-				items = "\n".join(filter_list)
-				items = py2_encode(items)
-				filter_pat = filter_pat % items					# Filter -> xml-Rahmen
-				PLog(filter_pat)
-				err_msg = RSave(filterfile, filter_pat)			# speichern
-				if err_msg:
-					msg1 = "Fehler beim Speichern der Filterliste" 
-					PLog(msg1)	
-					MyDialog(msg1, '', '')
-				else:
-					msg1 = "Filterliste"
-					msg2 = '%s hinzugefügt. Anzahl: %d' % (ret.strip(), len(filter_list))		
-					icon = R(ICON_FILTER)
-					xbmc.executebuiltin('Container.Refresh')					
-					xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
-	
-	if action == 'delete':
-		title = u"Filterwort löschen (ev. gesetzter Filter wird mitgelöscht)"
-		ret = dialog.select(title, filter_list)					# Auswahl Filterliste
-		PLog(ret)
-		if ret >= 0:
-			ret = filter_list[ret]								# Index -> item
-			item = py2_encode(ret)
-			PLog(item)
-			is_filter=False;
-			if item in akt_filter:								# auch gesetzter Filter?
-				is_filter=True
-			msg2 = "[COLOR red]%s[/COLOR] ist kein gesetzter Filter." % ret
-			if is_filter:	
-				msg2 = "gesetzter Filter [COLOR red]%s[/COLOR] wird mitgelöscht" % ret
-			msg1 = "Filterwort [COLOR red]%s[/COLOR] wirklich löschen?" % ret 
-
-			ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='JA', heading=title)
-			PLog(ret)
-			if ret == 1:
-				filter_list.remove(item)						# Filterwort entfernen
-				filter_len = len(filter_list)
-				items = "\n".join(filter_list)
-				items = py2_encode(items)
-				filter_pat = filter_pat % items					# Filter -> xml-Rahmen
-				PLog(filter_pat)
-				err_msg1 = RSave(filterfile, filter_pat)			# speichern
-				if is_filter:
-					akt_filter.remove(item)
-					items = "\n".join(akt_filter)
-					err_msg2 = RSave(FILTER_SET, items)	
-
-				if err_msg1 or err_msg2:
-					if err_msg1:
-						msg1 = "Fehler beim Speichern der Filterliste" 
-						PLog(msg1)	
-						MyDialog(msg1, '', '')
-					if err_msg2:
-						msg1 = "Fehler beim Speichern der aktuell gesetzten Filter" 
-						PLog(msg1)	
-						MyDialog(msg1, '', '')
-				else:
-					msg1 = "Filterliste"
-					msg2 = u'%s gelöscht. Anzahl: %d' % (item, filter_len)		
-					icon = R(ICON_FILTER)
-					xbmc.executebuiltin('Container.Refresh')					
-					xbmcgui.Dialog().notification(msg1,msg2,icon,5000)		
-			
-	if action == 'show_list':									# Filterliste zeigen
-		title = u"Liste verfügbarer Filter"
-		filter_list = "\n".join(filter_list)
-		dialog.textviewer(title, filter_list,usemono=True)
-		
-	if action == 'state_change':								# aus Kontextmenü
-		if SETTINGS.getSetting('pref_usefilter') == 'true':
-			SETTINGS.setSetting('pref_usefilter','false')
-		else:											
-			SETTINGS.setSetting('pref_usefilter','true')
-		xbmc.executebuiltin('Container.Refresh')							
-
+							
 #----------------------------------------------------------------
 # Aufruf InfoAndFilter
 # Addon-Infos (Pfade, Cache, ..)
@@ -1005,26 +819,28 @@ def AddonInfos():
 	p2 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s" % (a,a1,a2,a3,a4,a5,a6)
 
 	a = u"[COLOR red]Pfade:[/COLOR]"
-	a1 = u"%s Addon-Home: %s" % (t, PluginAbsPath)
-	a2 = u"%s Cache: %s" % (t,ADDON_DATA)
+	a1 = u"%s [B]Addon-Home:[/B] %s" % (t, PluginAbsPath)
+	a2 = u"%s [B]Cache:[/B] %s" % (t,ADDON_DATA)
 	fname = WATCHFILE
-	a3 = u"%s Merkliste intern: %s" % (t, WATCHFILE)
-	a4 = u"%s Merkliste extern: nicht aktiviert" % t
+	a3 = u"%s [B]Merkliste intern:[/B]\n%s %s" % (t, t, WATCHFILE)
+	a4 = u"%s [B]Merkliste extern:[/B] nicht aktiviert" % t
 	if SETTINGS.getSetting('pref_merkextern') == 'true':	# externe Merkliste gewählt?
 		fname = SETTINGS.getSetting('pref_MerkDest_path')
-		a4 = u"%s Merkliste extern: %s" % (t,fname)
-	a5 = u"%s Downloadverzeichnis: %s" % (t,SETTINGS.getSetting('pref_download_path'))
-	a6 = u"%s Verschiebeverzeichnis: %s" % (t,SETTINGS.getSetting('pref_VideoDest_path'))
+		a4 = u"%s [B]Merkliste extern:[/B]\n%s %s" % (t,t,fname)
+	a5 = u"%s [B]Downloadverzeichnis:[/B] %s" % (t,SETTINGS.getSetting('pref_download_path'))
+	a6 = u"%s V[B]erschiebeverzeichnis:[/B] %s" % (t,SETTINGS.getSetting('pref_VideoDest_path'))
 	filterfile = os.path.join(ADDON_DATA, "filter.txt")
-	a7 = u"%s Filterliste: %s" %  (t,filterfile)
+	a7 = u"%s [B]Filterliste:[/B] %s" %  (t,filterfile)
+	searchwords = os.path.join(ADDON_DATA, "search_ardundzdf")
+	a8 = u"%s [B]Suchwortliste:[/B] %s" %  (t,searchwords)
 	fname =  SETTINGS.getSetting('pref_podcast_favorits')
 	if os.path.isfile(fname) == False:
 		fname = os.path.join(PluginAbsPath, "resources", "podcast-favorits.txt") 
-	a8 = u"%s Podcast-Favoriten:\n%s%s" %  (t,t,fname)		# fname in 2. Zeile
+	a9 = u"%s [B]Podcast-Favoriten:[/B]\n%s%s" %  (t,t,fname)		# fname in 2. Zeile
 	log = xbmc.translatePath("special://logpath")
 	log = os.path.join(log, "kodi.log") 	
-	a9 = u"%s Debug-Log: %s" %  (t, log)
-	a10 = u"%s TV-und Event-Livestreams: %s/%s" % (t, PluginAbsPath, "resources/livesenderTV.xml")
+	a10 = u"%s [B]Debug-Log:[/B] %s" %  (t, log)
+	a11 = u"%s [B]TV-und Event-Livestreams:[/B] %s/%s" % (t, PluginAbsPath, "resources/livesenderTV.xml")
 	
 	p3 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10)
 	page = u"%s\n%s\n%s" % (p1,p2,p3)
