@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>59</nr>										# Numerierung für Einzelupdate
+# 	<nr>60</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.2'
 VDATE = '27.06.2022'
 
@@ -569,7 +569,10 @@ def InfoAndFilter():
 	PLog('InfoAndFilter:'); 
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)									# Home-Button
-	import resources.lib.tools	
+	try:
+		import resources.lib.tools
+	except:
+		pass	
 															# Button changelog.txt
 	tag= u'Störungsmeldungen bitte via Kodinerds-Forum, Github-Issue oder rols1@gmx.de'
 	summ = u'für weitere Infos zu bisherigen Änderungen [B](changelog.txt)[/B] klicken'
