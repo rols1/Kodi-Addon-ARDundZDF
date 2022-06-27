@@ -7,7 +7,7 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>1</nr>								# Numerierung für Einzelupdate
+# 	<nr>2</nr>								# Numerierung für Einzelupdate
 #	Stand: 27.06.2022
 
 # Python3-Kompatibilität:
