@@ -36,8 +36,8 @@ Funktionen:
 - Livestreams
 - Sendung Verpasst
 - Sendungen A-Z
-- ARD Sport (neu)
-- ARD Sportschau (sportschau.de)
+- ARD Sport
+- ARD sportschau.de (WDR)
 - Barrierearm
 - Bildgalerien Das Erste
 - Senderwahl
@@ -58,7 +58,7 @@ Funktionen:
 - Suche nach Sendungen
 - 3Sat-Livestream
 - Startseite (wie Webseite)
-- Sendung Verpasst (Sendungen der letzten 30 Tage
+- Sendung Verpasst (Sendungen der letzten 30 Tage)
 - Sendungen A-Z
 - Themen
 - Rubriken
@@ -66,7 +66,7 @@ Funktionen:
 
 #### ARD-Audiothek Neu (Stand 25.02.2022) mit Podcast-Favoriten:
 - Suche
-- Livestreams, einschl. "ARD Audio Event Streams", "Livestreams der sportschau.de" 
+- Livestreams, einschl. ARD Audio Event Streams, Audio- und Netcastaudio-Streams der sportschau.de
 - Entdecken (wie Webseite)
 - Rubriken
 - Sport
@@ -74,12 +74,12 @@ Funktionen:
 - FUNK-Podcasts - Pop und Szene
 - Podcast-Favoriten (manuell erweiterbar)
 
-#### TV-Live-Streams (30.08.2018: 33 Sender), Aufnahmefunktion: 
-- ARD- und ZDF-Sender überregional und regional, einige ausgewählte Privatsender
+#### TV-Live-Streams mit Aufnahmefunktion: 
+- ARD- und ZDF-Sender überregional (13) und regional (13 plus WDR Lokalzeitsender), einige ausgewählte Privatsender
 - für die Aufnahmefunktion (mit oder ohne EPG) ist eine [ffmpeg-Installation](https://ffmpeg.org/download.html) erforderlich 
 
 #### Radio-Live-Streams der ARD:
-- alle Radiosender von Bayern, HR, mdr, NDR, Radio Bremen, RBB, SR, SWR, WDR, Deutschlandfunk. Insgesamt 10 Stationen, 63 Sender
+- alle Radiosender von Bayern, HR, mdr, NDR, Radio Bremen, RBB, SR, SWR, WDR, Deutschlandfunk. Insgesamt 10 Stationen, 65 Sender
  
 #### Videobehandlung ARD Mediathek und ZDF Mediathek:
 - Livestreams: Auflistung der verfügbaren Angebote an Bandbreiten + Auflösungen (falls verfügbar: Audio ohne Video)
@@ -88,9 +88,16 @@ Funktionen:
 #### Downloadoption (ab Version 2.6.8 ohne cURL/wget)
 - Download von Videos im ARD-Bereich
 - Download von Videos im ZDF-Bereich
-- Download von Videos in den Modulen 3Sat, funk, Kinderprogramme
-- Download von Podcasts - bei Podcast-Favoriten zusätzlich Sammeldownloads 
+- Download von Videos in den Modulen 3Sat, TagesschauXL, phoenix (einschl. Youtube-Videos), funk, Kinderprogramme
+- Download von Podcasts - bei Podcast-Favoriten zusätzlich Sammeldownloads (aktuelle Liste der Beiträge)
+
+#### Addon-Tools
+- Einzelupdate für einzelne Dateien und Module im Addon - siehe auch Updates
 - Tools zum Bearbeiten des Download-Verzeichnisses (Verzeichnisse festlegen, Verschieben, Löschen)
+- Tools zum Bearbeiten von strm-Listen für Serien (ARD, ZDF), einschl. autom. Überwachung im Hintergrund
+- Tools zum Bearbeiten von Ausschluss-Filtern (ARD, ZDF)
+- Tools zum Bearbeiten von Suchwörtern (ARD, ZDF)
+- Addon-Infos mit Angaben zum System, Cache, zu Dateipfaden und Modulen
 
 #### Favoriten, Merkliste, strm-Dateien
 - Kodi-Favoriten lassen sich einblenden und im Addon aufrufen
@@ -109,8 +116,8 @@ Funktionen:
 - TagesschauXL (https://www.tagesschau.de/)
 - phoenix (https://www.phoenix.de/)
 - Arte-Kategorien
-- "Zuletzt gesehen"-Funktion 
-- Video-Playlist einschl. Archiv-Funktion
+- "Zuletzt gesehen"-Funktion (im Tools-Menü)
+- Video-Playlist einschl. Archiv-Funktion (im Tools-Menü)
 - strm-Modul
 - Suchfunktion für MediathekView (s. Credits)
 
