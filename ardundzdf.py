@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>60</nr>										# Numerierung für Einzelupdate
+# 	<nr>61</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.3'
 VDATE = '02.07.2022'
 
@@ -10432,14 +10432,16 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 			tagline=tagline, mediatype='video')
 	
 	if 'MP4_List' in ID:
-		summ=''
-		li = test_downloads(li,Stream_List,title,summ,tagline,img,high=-1, sub_path=sub_path) # Downloadbutton(s)
-		
-		# Wechsel-Button zu den DownloadTools:	
-		tagline = 'Downloads und Aufnahmen: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
-		fparams="&fparams={}"
-		addDir(li=li, label='Download- und Aufnahme-Tools', action="dirList", dirID="DownloadTools", 
-			fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)			
+		# ohne check Error mögl. (LibreElec 10.0) - setLabel=None in addDir
+		if check_Setting('pref_use_downloads'):						
+			summ=''
+			li = test_downloads(li,Stream_List,title,summ,tagline,img,high=-1, sub_path=sub_path) # Downloadbutton(s)
+			
+			# Wechsel-Button zu den DownloadTools:	
+			tagline = 'Downloads und Aufnahmen: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
+			fparams="&fparams={}"
+			addDir(li=li, label='Download- und Aufnahme-Tools', action="dirList", dirID="DownloadTools", 
+				fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)			
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 			    
