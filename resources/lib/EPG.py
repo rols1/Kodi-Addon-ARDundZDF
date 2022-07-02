@@ -11,7 +11,7 @@
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.04.2022
+#	Stand: 29.06.2022
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -35,7 +35,7 @@ addDir=util.addDir; get_page=util.get_page;
 stringextract=util.stringextract; blockextract=util.blockextract; 
 transl_wtag=util.transl_wtag; cleanhtml=util.cleanhtml; home=util.home;
 unescape=util.unescape; get_ZDFstreamlinks=util.get_ZDFstreamlinks;
-up_low=util.up_low;
+up_low=util.up_low; MyDialog=util.MyDialog
 
 ADDON_ID 	= 'plugin.video.ardundzdf'
 SETTINGS 	= xbmcaddon.Addon(id=ADDON_ID)
@@ -92,7 +92,9 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	return
 
 #---------------------------------------------------------------- 
-# Update einzelner, neuer Bestandteile des Addons vom Github-Repo
+# Update einzelner, aktaulisierter Bestandteile des Addons vom Github-Repo
+# Hinw.: nicht für neu ins Repo eingefügte Module (lokale Datei fehlt für
+#	den Abgleich).
 # Ablösung der vorherigen Funktion update_tvxml
 #
 def update_single(PluginAbsPath):
@@ -109,7 +111,7 @@ def update_single(PluginAbsPath):
 				"%s/%s" % (PluginAbsPath, "resources/settings.xml"),
 				"%s/%s" % (PluginAbsPath, "ardundzdf.py")
 		]
-	selected=[0,1,2]												# Auswahl-Vorbelegung, s.u.
+	selected=[0,1,2]												# Auswahl-Default: alle, s.u.
 
 	globFiles = "%s/%s/*py" % (PluginAbsPath, "resources/lib")
 	files = glob.glob(globFiles) 									# Module -> SINGLELIST 
@@ -117,14 +119,53 @@ def update_single(PluginAbsPath):
 	#PLog(files)			# Debug
 	cnt=3
 	for f in files:
-		if "__init__.py" in f:
+		if "__init__.py" in f or ".pem" in f:						# PY2, Zertif.
 			continue
 		SINGLELIST.append(f)
 		selected.append(cnt)										# Auswahl-Vorbelegung
 		cnt=cnt+1
-	#PLog(SINGLELIST)		# Debug
+	#PLog(str(SINGLELIST))		# Debug
 	
-	#-------------													# 2. Dialoge Auswahl + Start
+	#-------------													# 2. Ergänzung ev. neue Module im Repo
+	path = "https://github.com/rols1/Kodi-Addon-ARDundZDF/tree/master/resources/lib" # html-Seite, ca. 140 KByte
+	cacheID = "GitRepo"
+	CacheTime = 60*5										# 5 min.
+	page = Dict("load", cacheID, CacheTime=CacheTime)
+	if page == False or page == '':							# Cache miss 
+		page, msg = get_page(path=path)
+		if page:
+			Dict("store", cacheID, page) 					# Cache: aktualisieren
+	RepoList=[]	
+	items = blockextract('href="/rols1/Kodi-Addon-ARDundZDF/blob/master/', page)
+	PLog("RepoFiles: %d" % len(items))
+	for item in items:
+		f = stringextract('href="', '"', item)
+		f = f.split("blob/master/")[-1]						# Bsp.: resources/lib/ARDnew.py
+		if f.endswith("init__.py") or f.endswith(".pem"):# skip PY2- + Repo-Leichen
+			continue
+		RepoList.append(f)
+	PLog("ModuleRepo: " + str(RepoList))					# Liste github-Module
+	
+	add_list=[]												# Abgleich Repo/lokal
+	for item in RepoList:
+		found=False
+		#PLog("item: " + item)
+		for f in SINGLELIST:								# skip lokale Files, Haupt-PRG, Leichen	
+			if f.endswith(item):
+				if f.endswith("ardundzdf.py") == False and f.endswith("init__.py") == False:
+					#PLog("f: " + f)
+					found=True
+				break
+		if found == False:						# add github-Modul
+			add_list.append(item)
+	
+	PLog("add_list_modules: " + str(add_list))	
+	if len(add_list) > 0:
+		msg1 = 'NEU und automatisch mit installiert:'
+		msg2 = "\n".join(add_list)
+		MyDialog(msg1, msg2, '')
+		
+	#-------------													# 3. Dialoge Auswahl + Start
 
 	ret_list = selected												# default: alle ausgewählt
 	title = u"Einzelupdate - eigene Auswahl oder Liste?"
@@ -155,7 +196,7 @@ def update_single(PluginAbsPath):
 	if ret != 1:
 		return
 
-	#-------------													# 3. Abgleich / Update
+	#-------------													# 4. Abgleich / Update
 	
 	result_list=[]; 												# Ergebnisliste für textviewer
 	cnt=-1		
@@ -211,7 +252,26 @@ def update_single(PluginAbsPath):
 			else:
 				PLog("nr_local fehlt in %s" % local_file)
 	
-	#-------------														# 4. Ergebnisliste
+	#-------------														# 5. Ergänzung ev. neue Module im Repo
+	if len(add_list) > 0:
+		for item in add_list:
+			local_file = "%s/%s" % (PluginAbsPath, item)
+			remote_file = "%s/%s?%s" % (GIT_BASE, item, "raw=true")
+			remote_file = remote_file.replace('\\', '/')
+			PLog('lade %s' % remote_file) 
+			try:
+				r = urlopen(remote_file)						# Updatedatei auf Github 
+				page = r.read()
+				if PYTHON3:										# vermeide Byte-Error bei py2_decode			
+					page = page.decode("utf-8")
+				page = py2_encode(page)
+				RSave(local_file, page)
+				PLog("NEU: %s" % local_file)
+				result_list.append("%14s: %s" % ("Modul NEU", item))
+			except Exception as exception:	
+				PLog("exept_update_NEU: %s" % str(exception))
+			
+	#-------------														# 6. Ergebnisliste
 
 	# xbmc.executebuiltin('Dialog.Close(all,true)')				# verhindert nicht Nachlaufen 
 	result_list = "\n".join(result_list)						# Ergebnisliste

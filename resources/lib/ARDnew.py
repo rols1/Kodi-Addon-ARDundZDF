@@ -256,6 +256,7 @@ def Main_NEW(name='', CurSender=''):
 #	Problem Stringauswertung: die ersten 4 Container folgen doppelt (bei jedem Sender) - Abhilfe: 
 #		Abgleich mit Titelliste. Wg. Performance Verzicht auf json-/key-Auswertung.
 # 30.09.2021 Sonderbehdl. spaltenübergreifender Titel mit Breitbild (Auswert. descr, skip Bild)
+# 29.06.2022 Abzweig ARDStartRegion für neuen Cluster "Unsere Region"
 #
 def ARDStart(title, sender, widgetID='', path=''): 
 	PLog('ARDStart:'); 
@@ -329,11 +330,21 @@ def ARDStart(title, sender, widgetID='', path=''):
 			ID = 'ARDStart'			
 		
 		PLog('Satz_cont1:');
+		func = "ARDStartRubrik"								# Default-Funktion
+		if "Unsere Region" in title:
+			items = Dict("load", 'ARD_REGION')
+			rname = "Berlin"; partner = "rbb"
+			if "|" in str(items):
+				region,rname,partner = items.split("|")
+			tag = u"aktuelle Region: [B]%s[/B]" % rname
+			summ = u"Partnersender: [B]%s[/B]" % partner
+			func = "ARDStartRegion"							# neu ab 29.06.2022
+			
 		PLog(title); PLog(ID); PLog(anz); PLog(img); 
 		path=py2_encode(path); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
 			(quote(path), quote(title), ID)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.%s" % func, fanart=img, thumb=img, 
 			tagline=tag, summary=summ, fparams=fparams)
 			
 
@@ -436,6 +447,108 @@ def ARDRubriken(li, page):
 	return
 
 ###################################################			
+#---------------------------------------------------------------------------------------------------
+# 29.06.2022 Auswertung Cluster "Unsere Region"
+# Default-Region: Berlin (wie Web), ID=change: Wechsel
+# widgetID transportiert hier region-Triple (Bsp. be|Berlin|rbb)
+#
+def ARDStartRegion(path, title, widgetID='', ID=''): 
+	PLog('ARDStartRegion:')
+	PLog(widgetID)	
+	PLog(ID)	
+	title_org = title
+	base = "https://api.ardmediathek.de/page-gateway/widgets/"
+
+	if widgetID:											# frisch gewechselt
+		region,rname,partner = widgetID.split("|")
+		Dict("store", 'ARD_REGION', "%s|%s|%s" % (region,rname,partner)) 
+	else:
+		region=""; rname=""; partner=""; 
+		page = Dict("load", 'ARD_REGION')
+		try:
+			region,rname,partner = page.split("|")
+		except Exception as exception:
+			PLog(str(exception))
+	if region == "": 										# Default-Region
+		region="be"; rname="Berlin"; partner="rbb"
+	
+		 
+	path = base + "ard/region/6YgzSO0C7huVaGgzM5mq19/%s?pageNumber=0&pageSize=100" % region
+	page, msg = get_page(path=path)
+	if page == '':	
+		msg1 = "Fehler in ARDStartRegion: %s"	% title
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return
+		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Neu')							# Home-Button
+	regions = stringextract('regions":', '"links"', page)
+	PLog(len(regions))
+	#------------------------							# Änderungsliste Region
+	if "change" in ID:
+		PLog("do_change:")
+		PLog(regions[:60])
+		img = R(ICON_DIR_FOLDER)
+		items = blockextract('"id"', regions)
+		for item in items:
+			region = stringextract('id":"', '"', item)
+			rname = stringextract('name":"', '"', item)
+			partner = stringextract('partner":"', '"', item)
+			
+			widgetID = "%s|%s|%s" % (region,rname,partner)
+			title = u"Region: [B]%s[/B]" % rname
+			tag = u"Partnersender: [B]%s[/B]" % partner
+		
+			title=py2_encode(title); widgetID=py2_encode(widgetID);
+			fparams="&fparams={'path': '', 'title': '%s', 'widgetID': '%s', 'ID': ''}" %\
+				(quote(title), quote(widgetID))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRegion", 
+				fanart=img, thumb=img, tagline=tag, fparams=fparams)
+	
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
+	
+	#------------------------							# Auswertung Region
+	PLog("do_region:")
+	ID = "ARDStartRubrik"
+	mark=''	
+	li = get_page_content(li, page, ID, mark)			# Auswertung Rubriken + Live-/Eventstreams
+	icon = R(ICON_DIR_FOLDER)
+	img = icon
+	msg1 = "Region"
+	msg2 = rname										# Dateiname bei ARD neu nichtssagend
+	xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)	 
+	
+																	
+	if 	'"pagination":'	in page:						# Scroll-Beiträge
+		PLog('pagination_Rubrik:')
+		title = "Mehr zu >%s<" % title_org				# Mehr-Button	 
+		li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
+		pages, pN, pageSize, totalElements, next_path = get_pagination(page)	# Basis 0		
+		
+		if next_path:	
+			summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (pages, totalElements)
+			pN = int(pN)+1								# nächste pageNumber, Basis 0
+			tag = "weiter zu Seite %s" % str(pN)
+			PLog(summ); PLog(next_path)
+
+			title_org=py2_encode(title_org); next_path=py2_encode(next_path); mark=py2_encode(mark);
+			fparams="&fparams={'title': '%s', 'path': '%s', 'pageNumber': '%s', 'pageSize': '%s', 'ID': '%s', \
+				'mark': '%s'}" % (quote(title_org), quote(next_path), str(pN), pageSize, ID, quote(mark))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDPagination", 
+				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)	
+
+	label = u"Region ändern"
+	tag = u"aktuelle Region: [B]%s[/B]" % rname
+	path=py2_encode(path); title=py2_encode(title); 
+	fparams="&fparams={'path': '%s', 'title': '%s', 'ID': 'change'}" %\
+		(quote(path), quote(title_org))
+	addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARDStartRegion", 
+		 fanart=img, thumb=img, tagline=tag, fparams=fparams)
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 
 #---------------------------------------------------------------------------------------------------
 # Auflistung einer Rubrik aus ARDStart - geladen wird das json-Segment für die Rubrik, z.B.

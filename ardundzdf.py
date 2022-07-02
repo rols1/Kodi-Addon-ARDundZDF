@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>60</nr>										# Numerierung für Einzelupdate
-VERSION = '4.4.2'
-VDATE = '27.06.2022'
+VERSION = '4.4.3'
+VDATE = '02.07.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5727,18 +5727,42 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	ard_streamlinks = get_ARDstreamlinks()			# ard_streamlinks oder ard_streamlinks_UT
 	iptv_streamlinks = get_IPTVstreamlinks()		# private + einige regionale
 
-	# abweichend - externe Funktion:
-	if u'Regional: WDR' in lname:						# Auswertung + Liste WDR Lokalzeit
-		url = "https://www1.wdr.de/fernsehen/livestream/lokalzeit-livestream/index.html" 
-		wdr_streamlinks = list_WDRstreamlinks(url)		# Webseite
-		return
-		
 	mediatype='' 						# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		if "Audio Event" in title:		# ARD Audio Event Streams (ARDSportAudioXML:)
 			mediatype='music'
 		else:
 			mediatype='video'
+
+	# abweichend - externe Funktion:
+	if u'Regional: WDR' in lname:						# Auswertung + Liste WDR Lokalzeit
+		url = "https://www1.wdr.de/fernsehen/livestream/lokalzeit-livestream/index.html" 
+		wdr_streamlinks = list_WDRstreamlinks(url)		# Webseite
+		return
+		
+	# Zusatzbutton:
+	if u'Privat' in listname:							# Suchfunktion IPTV-Private
+		title = u"Suche lokale private IPTV-Sender"
+		img = R("suche_iptv.png")
+		tag = "Quelle: [B]kodi_tv_local.m3u[/B] im jnk22-Repo auf Github"
+		summ = "der zuletzt gefundene IPTV-Sender wird unter diesem Suchbutton eingeblendet."
+		title=py2_encode(title)	
+		fparams="&fparams={'title': '%s'}" % (quote(title))
+		addDir(li=li, label=title, action="dirList", dirID="SenderLiveSearch", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tag, summary=summ)
+			
+		iptv_search = Dict("load", "iptv_search")	# letztes Suchergebnis -> Senderbutton
+		if iptv_search:
+			tvgname,tvgid,thumb,link = iptv_search.splitlines()
+			title=py2_encode(tvgname); link=py2_encode(link);
+			thumb=py2_encode(thumb); 
+			title = "Suchergebnis: [B]%s[/B]" % tvgname
+			summ = "zuletzt gefundener IPTV-Sender: [B]%s[/B]" % tvgname
+			fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s', 'descr': ''}" % (quote(link), 
+				quote(thumb), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R("suche_iptv.png"), 
+				thumb=thumb, fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)		
+				
 
 	liste = blockextract('<item>', mylist)					# Details eines Senders
 	PLog(len(liste));
@@ -5877,6 +5901,61 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 #-----------------------------------------------
+# Suche nach IPTV-Livesendern - bisher nur lokale private Sender
+#	 aus jnk22-Repo - s. Zusatzbutton SenderLiveListe
+def SenderLiveSearch(title):
+	PLog('SenderLiveSearch:')
+
+	query = get_keyboard_input() 
+	if query == None or query.strip() == '': 	# None bei Abbruch
+		return SenderLiveListe("", "","")		# dummy, sonst Absturz nach Sofortstart/Suche
+	query = query.strip()
+	PLog(query)
+	
+	url = "https://raw.githubusercontent.com/jnk22/kodinerds-iptv/master/iptv/kodi/kodi_tv_local.m3u"
+	page, msg = get_page(url)					
+	if page == '':	
+		msg1 = "Fehler in get_WRDstreamlinks:"
+		msg2=msg
+		MyDialog(msg1, msg2, '')	
+		return
+	PLog(page[:60])
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
+	
+	mediatype='' 						# Kennz. Video für Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
+	
+	items = blockextract('#EXTINF:', page)
+	for item in items:
+		if up_low(query) in up_low(item):
+			tag=""
+			tvgname = stringextract('tvg-name="', '"', item)
+			tvgid = stringextract('tvg-id="', '"', item)
+			thumb = stringextract('tvg-logo="', '"', item)
+			links = blockextract('https', item)					# 1. logo, 2. streamlink
+			link = links[-1]
+			tvgname = py2_decode(tvgname); tvgid = py2_decode(tvgid)
+			if tvgid:
+				tag = "tvg-id: [B]%S[/B]" % tvgid
+			PLog(tvgname); PLog(tvgid); PLog(thumb); PLog(link);
+			iptv_search = "%s\n%s\n%s\n%s" % (tvgname,tvgid,thumb,link)
+			Dict("store", "iptv_search", iptv_search)
+			
+			title=py2_encode(tvgname); link=py2_encode(link);
+			thumb=py2_encode(thumb); 
+			fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s', 'descr': ''}" % (quote(link), 
+				quote(thumb), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R("suche_iptv.png"), 
+				thumb=thumb, fparams=fparams, tagline=tag, mediatype=mediatype)		
+		
+			break
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
+#-----------------------------------------------
 # WRD-Links 
 # Aufruf SenderLiveListe für WDR Lokalzeit
 #
@@ -5910,13 +5989,15 @@ def list_WDRstreamlinks(url):
 		img_src = stringextract('alt="', 'src=', item)
 		img_src = stringextract('title="', '"', img_src)	# alt-title
 		summ = img_src
-		summ = "%s\n\n[B]Sendezeit 19.30 - 20.00 Uhr[/B]" % summ
+		summ = u"%s\n\n[B]Sendezeit 19.30 - 20.00 Uhr[/B]" % summ
 		summ_par = summ.replace('\n', '||')
 		
 		PLog("Satz28:")
+		
 		PLog(path);PLog(img); PLog(title); PLog(summ); 
-		title=py2_encode(title); summ=py2_encode(summ)
+		title=py2_encode(title); summ_par=py2_encode(summ_par)
 		path=py2_encode(path); img=py2_encode(img);
+		
 		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
 			(quote(path), quote(title), quote(img), quote(summ_par))				
 		addDir(li=li, label=title, action="dirList", dirID="WDRstream", fanart=img, thumb=img, 
@@ -7826,6 +7907,9 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 				teaserDetails='done'							# Flag für get_summary_pre
 				# multi z.Z. nicht verwendet, isvideo reicht aus
 				teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi = ZDF_get_teaserbox(rec)
+				if teaser_label and teaser_typ:									# Doppel möglich
+					if teaser_typ.strip() in teaser_label.strip():
+						teaser_typ=""
 			
 			PLog("isvideo: %s, dauer: %s, enddate: %s" % (isvideo, dauer, enddate))
 			if isvideo or dauer or enddate:								# enddate ohne dauer möglich
@@ -7873,7 +7957,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 			title = repl_json_chars(py2_decode(title));
 			descr = repl_json_chars(descr)
 			if tag:
-				descr = "%s\n\n%s" % (tag, descr)
+				descr = u"%s\n\n%s" % (tag, descr)
 			descr_par = descr.replace('\n', '||')
 			
 			if '>Jetzt live</h2>' in rec:								# Livestream-Satz?
@@ -8256,7 +8340,7 @@ def ZDF_get_teaserbox(page):
 		PLog('teaser_typ: ' + teaser_typ)
 		teaser_label = cleanhtml(teaser_label.strip())					# wird ev. -> title	
 		teaser_label = unescape(teaser_label);
-		teaser_typ = mystrip(teaser_typ.strip()) 
+		teaser_typ = mystrip(teaser_typ.strip())
 		
 		if u"teaser-episode-number" in page:
 			teaser_nr = stringextract('teaser-episode-number">', '</', page)
@@ -8289,6 +8373,7 @@ def ZDF_get_teaserbox(page):
 	teaser_label = mystrip(teaser_label) 
 	teaser_label = teaser_label.replace('<div class="ellipsis">', ' ')
 	teaser_label = (teaser_label.replace('<strong>', '').replace('</strong>', ''))
+	PLog(teaser_label); PLog(teaser_typ);
 
 	PLog('teaser_label: %s,teaser_typ: %s, teaser_nr: %s, teaser_brand: %s, teaser_count: %s, multi: %s' %\
 		(teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count, multi))
@@ -10308,7 +10393,7 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 	li = home(li, ID=HOME_ID)						# Home-Button
 
 	Stream_List = Dict("load", ID)
-	PLog(Stream_List)
+	#PLog(Stream_List)
 	PLog(len(Stream_List))
 
 	# bei Kennzeichnung einz. Stream mit unbekannt keine Sortierung

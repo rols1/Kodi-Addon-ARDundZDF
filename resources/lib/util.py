@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>27</nr>										# Numerierung für Einzelupdate
-#	Stand: 27.06.2022
+#	Stand: 28.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -754,7 +754,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				fparams_strm = "&fparams={0}".format(fp)
 				PLog("fparams_strm: " + fparams_strm[:100])
 				fparams_strm = quote_plus(fparams_strm)
-				
+
 
 		if SETTINGS.getSetting('pref_video_direct') == 'true':			# ständig: Umschalter Sofortstart 
 			menu_entry = "Sofortstart AUS / Downl. EIN"
@@ -766,31 +766,31 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			msg1 = "Video-Sofortstart EIN"
 			msg2 = "Downloads AUS"
 			ID = 'pref_video_direct,true|pref_use_downloads,false'
-			icon = R(ICON_TOOLS) 
-			fp = {'ID': ID, 'msg1': msg1,\
-				'msg2': msg2, 'icon': quote_plus(icon), 'delay': '3000'} 
-			fparams_setting_sofortstart = "&fparams={0}".format(fp)
-			PLog("fparams_setting_sofortstart: " + fparams_setting_sofortstart[:100])
-			fparams_setting_sofortstart = quote_plus(fparams_setting_sofortstart)
+		icon = R(ICON_TOOLS) 
+		fp = {'ID': ID, 'msg1': msg1,\
+			'msg2': msg2, 'icon': quote_plus(icon), 'delay': '3000'} 
+		fparams_setting_sofortstart = "&fparams={0}".format(fp)
+		PLog("fparams_setting_sofortstart: " + fparams_setting_sofortstart[:100])
+		fparams_setting_sofortstart = quote_plus(fparams_setting_sofortstart)
 
-			#--------------
-			
-			if SETTINGS.getSetting('pref_sort_label') == 'true':	# ständig: Umschalter Sortierung 
-				menu_entry_sort = u"Sortierung ermöglichen: AUS"
-				msg1_sort = "Sortierung AUS"
-				msg2_sort = "globale Sortierung ausgeschaltet"
-				ID = 'pref_sort_label,false'
-			else:
-				menu_entry_sort = u"Sortierung ermöglichen: EIN"
-				msg1_sort = "Sortierung EIN"
-				msg2_sort = "globale Sortierung eingeschaltet"
-				ID = 'pref_sort_label,true'
-			icon = R(ICON_TOOLS) 
-			fp = {'ID': ID, 'msg1': msg1_sort,\
-				'msg2': msg2_sort, 'icon': quote_plus(icon), 'delay': '3000'} 
-			fparams_sorting = "&fparams={0}".format(fp)
-			PLog("fparams_sorting: " + fparams_sorting[:100])
-			fparams_sorting = quote_plus(fparams_sorting)
+		#--------------
+		
+		if SETTINGS.getSetting('pref_sort_label') == 'true':	# ständig: Umschalter Sortierung 
+			menu_entry_sort = u"Sortierung ermöglichen: AUS"
+			msg1_sort = "Sortierung AUS"
+			msg2_sort = "globale Sortierung ausgeschaltet"
+			ID = 'pref_sort_label,false'
+		else:
+			menu_entry_sort = u"Sortierung ermöglichen: EIN"
+			msg1_sort = "Sortierung EIN"
+			msg2_sort = "globale Sortierung eingeschaltet"
+			ID = 'pref_sort_label,true'
+		icon = R(ICON_TOOLS) 
+		fp = {'ID': ID, 'msg1': msg1_sort,\
+			'msg2': msg2_sort, 'icon': quote_plus(icon), 'delay': '3000'} 
+		fparams_sorting = "&fparams={0}".format(fp)
+		PLog("fparams_sorting: " + fparams_sorting[:100])
+		fparams_sorting = quote_plus(fparams_sorting)
 						
 		
 		if merkname:												# Aufrufer ShowFavs (Settings: Ordner .. verwenden)
@@ -2644,6 +2644,7 @@ def get_IPTVstreamlinks(skip_log=False):
 				thumb=''; streamurl=''
 				play_sender = stringextract('<title>', '</title>', p)	# Abgleich SenderLiveListe
 				tvg_name = stringextract('<tvg-name>', '</tvg-name>',p)	# Sendername
+				play_sender = py2_decode(play_sender); tvg_name = py2_decode(tvg_name); 
 				pos = page_org.find(tvg_name)
 				if pos > 0:
 					PLog("found: %s" % tvg_name)

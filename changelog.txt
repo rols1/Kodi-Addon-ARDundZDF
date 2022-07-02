@@ -10,6 +10,29 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+02.07.2022 4.4.3
+			Suchwortliste (ARD+ZDF): Erweiterung mit Tool-Funktionen zeigen/löschen/
+			hinzufügen, neue Funktionen: SearchWordTools + SearchWordWork, Anpassung
+			InfoAndFilter. 
+			neues Modul tools: Verlagerung aus Haupt-PRG -> tools: SearchWordTools + 
+			SearchWordWork, FilterTools + FilterToolsWork.
+			Addon-Infos: Suchwortliste in Kategorie Pfade aufgenommen, Titel fett
+			markiert.
+			Kontextmenü Ausschlussfilter: Beschränkung auf Hauptmenüs aufgehoben,
+			Anpassung in home + addDir.
+			home (Modul util): aktive Filter im Infobereich ergänzt (für Homebutton 
+			ARD, ZDF, Audiothek). 
+			update_single (Modul EPG): Installation neuer Module aus Github-Repo 
+			ergänzt.
+			get_IPTVstreamlinks (Modul util): Fix codec-error Leia (py2_decode für 
+			play_sender und tvg_name.
+			list_WDRstreamlinks: py2_encode für summ_par (Fix codec-error Leia).
+			ZDFRubrikSingle: Doppel im Info-Bereich entfernt (teaser_typ und teaser_label).
+			ARDStart (ARDnew): Auswertung neue Rubrik "Unsere Region", neue Funktion
+			ARDStartRegion.
+			SenderLiveListe: Zusatzbutton "Suche lokale private IPTV-Sender" plus Button
+			für zuletzt gefundenen Sender, neue Funktion SenderLiveSearch.
+
 25.06.2022 4.4.2
 			Sportschau.de: Codebereinigung mit ARDSportLoadPage für ARDSportCluster,
 			Nachbesserungen in ARDAudioEventStreams, ARDSportWDR, ARDSportHub (neu),
