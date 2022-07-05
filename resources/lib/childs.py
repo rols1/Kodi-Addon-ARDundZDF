@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.06.2022
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -81,6 +81,10 @@ ICON_MEHR 		= "icon-mehr.png"
 ICON_SEARCH 	= 'ard-suche.png'
 ICON_ZDF_SEARCH = 'zdf-suche.png'
 				
+MAUSLIVE		= "https://www.wdrmaus.de//_teaserbilder/720913_512.jpg"
+MAUSZOOM		= "https://www.wdrmaus.de//_teaserbilder/720893_512.jpg"
+MAUSRELIVE		= "https://www.wdrmaus.de//_teaserbilder/721363_512.jpg"
+
 # Github-Icons zum Nachladen aus Platzgründen,externe Nutzung: ZDFRubriken  (GIT_ZDFTIVI)							
 GIT_KIKA		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kika.png?raw=true"
 GIT_AZ			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-AZ.png?raw=true"
@@ -168,6 +172,13 @@ def Main_KIKA(title=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Vorschau", 
 		fanart=GIT_KIKA, thumb=R(ICON_MAIN_TVLIVE), tagline=tag, fparams=fparams)
 	
+	title=u'MausLive'
+	tag = u"%s\n\nDer Kinderradiokanal des WDR  (Nachfolgeseite für KiRaKa)" % title
+	img = MAUSLIVE
+	fparams="&fparams={}" 
+	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.MausLive",
+		fanart=GIT_KIKA, thumb=img, tagline=tag, fparams=fparams)
+		
 	title=u'KiRaKa - Sendungen und Hörspiele'
 	tag = "%s\n\nDer Kinderradiokanal des WDR" % title
 	fparams="&fparams={}" 
@@ -419,19 +430,179 @@ def Kika_Vorschau():
 	ardundzdf.EPG_ShowSingle(ID, name, stream_url, pagenr=0)
 	return
 	
-# ----------------------------------------------------------------------			
+# ----------------------------------------------------------------------
+# 04.07.2021 Aus WDR5 KiRaKa wird MausLive - Infoseite:
+#	kinder.wdr.de/radio/kiraka/mauslive-160.html 
+# Aufruf: Main_KIKA	
+def MausLive():
+	PLog('MausLive:')
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+	
+	#---------------------						# Live Start: akt. Audiostream + PRG-Hinweis
+	path = "https://kinder.wdr.de/radio/player/radioplayer-die-maus-100~_layout-popupVersion.html"
+	page1, msg = get_page(path)	
+	pos = page1.find('wdrrCurrentShowTitleTitle')
+	if pos < 0:
+		mp3_img = MAUSLIVE
+		sendung = "Maus-Stream abspielen"
+	else:
+		sendung = stringextract('wdrrCurrentShowTitleTitle">', '</', page1[pos:])
+		mp3_img = stringextract('img src="', '"', page1[pos:])
+	
+	mediaObj = stringextract('mediaObj":{"url":"', '"', page1) # -> deviceids-medp.wdr.de (json)
+	PLog("mediaObj: " + mediaObj)
+	page2, msg = get_page(mediaObj)							
+	if page2 == '':	
+		msg1 = "Fehler in MausLive"
+		msg2=msg
+		MyDialog(msg1, msg2, '')	
+		return
+	PLog(len(page2))	
+	
+	mp3_url = stringextract('audioURL":"', '"', page2)	# .m3u8
+	if mp3_url.startswith("http") == False:
+		mp3_url = "https:" + mp3_url
+	PLog("mp3_url: " + mp3_url)
+	
+	title = u'MausLive hören: [B]%s[/B]' % sendung
+	tag = u"aktuelle Sendung: [B]%s[/B]" % sendung
+	summ = u'MausLive ab 19:04 Uhr live hören - Montag bis Freitag und Sonntag'
+	Plot = "%s||||%s" % (tag, summ)
+	mp3_url=py2_encode(mp3_url); title=py2_encode(title);
+	mp3_img=py2_encode(mp3_img); Plot=py2_encode(Plot);
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+		quote(title), quote(mp3_img), quote_plus(Plot))
+	addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=MAUSLIVE, thumb=mp3_img, fparams=fparams, 
+		tagline=tag, mediatype='music')	
+	
+	#---------------------						#  Live Ende
+	title = u'MausZoom - Kindernachrichten'
+	tag = u"Nachrichten gehen schnell ins Ohr und sind oft schnell wieder weg. Um sie richtig zu verstehen braucht man"
+	tag = "%s Zeit. Die Maus nimmt sich diese und schaut im MausZoom auf ein Thema wie eine Kamera, die sich" % tag
+	tag = "%s langsam reinzoomt und immer mehr Details entdeckt." % tag
+	url = "https://kinder.wdr.de/radio/diemaus/audio/maus-zoom/maus-zoom-106.podcast"
+	title=py2_encode(title); url=py2_encode(url);
+	fparams="&fparams={'title': '%s', 'url': '%s'}" % (quote(title), quote(url))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Maus_Audiobooks", fanart=MAUSLIVE, 
+		thumb=MAUSZOOM, fparams=fparams, tagline=tag)
+		
+	title = u'MausLive zum Nachhören'
+	tag = u"Hier kannst du die Sendungen noch mal anhören."
+	url = "https://www.wdrmaus.de/hoeren/MausLive/nachhoeren.php5"
+	title=py2_encode(title); url=py2_encode(url);
+	fparams="&fparams={'title': '%s', 'url': '%s'}" % (quote(title), quote(url))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Maus_MediaObjects", fanart=MAUSLIVE, 
+		thumb=MAUSRELIVE, fparams=fparams, tagline=tag)
+
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+# ----------------------------------------------------------------------
+# 05.07.2021 - Auswertung podcast-Seite (url)
+# Umsetzung java-Code loadAudiobooks, z.B. in wdrmaus.de/hoeren/mauszoom.php5	
+# Aufruf: MausLive	
+def Maus_Audiobooks(title, url):
+	PLog('Maus_Audiobooks:')
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+	
+	page, msg = get_page(url)	
+	if page == '':	
+		msg1 = "Fehler in Maus_Audiobooks"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	PLog(len(page))	
+	
+	items = blockextract("<item>", page)
+	PLog(len(items))	
+	
+	for item in items:
+		title = stringextract("<title>", "</title>", item)
+		mp3_url = stringextract('<enclosure url="', '"', item)
+		mp3_img = stringextract('href="', '"', item)			# itunes:image href="..
+		dur = stringextract("<duration>", "</itunes:duration>", item)
+		descr = stringextract("summary>", "</itunes:summary>", item)
+		pubDate = stringextract("<pubDate>", "</pubDate>", item)
+		author = stringextract("author>", "</itunes:author>", item)
+		
+		title = repl_json_chars(title)
+		descr = repl_json_chars(descr)
+		tag = "Dauer: %s | Sendung vom %s | Autor: %s" % (dur, pubDate, author)
+		Plot= "%s||||%s" % (tag, descr)
+	
+		PLog('Satz11:')		
+		PLog(title);PLog(mp3_url);PLog(mp3_img);
+		PLog(tag);PLog(descr[:60]);
+		
+		mp3_url=py2_encode(mp3_url); title=py2_encode(title);
+		mp3_img=py2_encode(mp3_img); Plot=py2_encode(Plot);
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+			quote(title), quote(mp3_img), quote_plus(Plot))
+		addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=MAUSZOOM, thumb=mp3_img, fparams=fparams, 
+			tagline=tag, summary=descr, mediatype='music')	
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+# ----------------------------------------------------------------------
+# 05.07.2021 - Auswertung Seite (url) mit mehreren 'mediaObj'	
+# Aufruf: MausLive	
+#
+def Maus_MediaObjects(title, url):
+	PLog('Maus_MediaObjects:')
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+	
+	page, msg = get_page(url)	
+	if page == '':	
+		msg1 = "Fehler in Maus_MediaObjects"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	PLog(len(page))	
+	
+	items = blockextract('class="audioButton"', page)
+	PLog(len(items))
+	
+	for item in items:
+#		PLog(item)
+		mediaObj = stringextract("'url': '", "'", item) # -> ..-hoeren-104.assetjsonp (MausLive abwei.)
+		PLog("mediaObj: " + mediaObj)
+
+		page, msg = get_page(mediaObj)
+		if page == '':
+			continue
+		mp3_url = stringextract('audioURL" : "', '"', page)	# .mp3
+		PLog("mp3_url1: " + mp3_url)
+		if mp3_url.startswith("http") == False:
+			mp3_url = "https:" + mp3_url
+		PLog("mp3_url2: " + mp3_url)
+
+		title = stringextract('ClipTitle" : "', '"', page)
+		pubDate = stringextract('AirTime" : "', '"', page)
+		Plot  = "%s||||gesendet: %s" % (title, pubDate)
+		tag = Plot.replace("||", "\n")
+		mp3_img = MAUSRELIVE							# json- und html-Seite ohne Kontext-Bild
+		
+		mp3_url=py2_encode(mp3_url); title=py2_encode(title);
+		mp3_img=py2_encode(mp3_img); Plot=py2_encode(Plot);
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+			quote(title), quote(mp3_img), quote_plus(Plot))
+		addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=MAUSLIVE, thumb=MAUSRELIVE, 
+			fparams=fparams, tagline=tag, mediatype='music')	
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
+	
+# ----------------------------------------------------------------------
+# 04.07.2021 Aus WDR5 KiRaKa wird MausLive - s. Funktion MausLive.
+#	Hörspiele + Nachrichten noch vorhanden 'KiRaKa - Sendungen 
+#	zum Nachhören'	inzwischen entfallen
+#		
 def Kiraka():
 	PLog('Kiraka:')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
-	
-	thumb 	= GIT_KIR
-	title = u'KiRaKa - Sendungen zum Nachhören'
-	tagline = u'Die Live-Sendung WDR 5 KiRaKa sieben Tage lang nachhören. Mit allem drum und dran.'
-	title=py2_encode(title);
-	fparams="&fparams={'title': '%s'}" % (quote(title))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kiraka_shows", fanart=GIT_RADIO, 
-		thumb=thumb, fparams=fparams, tagline=tagline)
 	
 	thumb 	= GIT_KIR_SHOWS
 	title = u'KiRaKa - Hörspiele'
