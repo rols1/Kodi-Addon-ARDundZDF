@@ -289,8 +289,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 	PLog(len(page))
 	page = page.replace('\\"', '*')							# quotierte Marks entf.
 	
-	
-	container = blockextract ('compilationType":', page)  	# Container json-Bereich (Swiper + Rest)
+	container = blockextract ('compilationType":', page)  	# widgets-Container json (Swiper + Rest)
 	PLog(len(container))
 	title_list=[]											# für Doppel-Erkennung
 

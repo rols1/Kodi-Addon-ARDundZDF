@@ -1428,7 +1428,7 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
 	line_ret = line
 	#PLog(type(line_ret))
-	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
+	for r in	((u'"', u''), (u'\\', u''), (u'\'', u''), (u'%5C', u'') 
 		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
 		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love')		# u'u003e' 	-> u'®'

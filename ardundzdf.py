@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>61</nr>										# Numerierung für Einzelupdate
-VERSION = '4.4.3'
-VDATE = '02.07.2022'
+VERSION = '4.4.4'
+VDATE = '09.07.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2969,13 +2969,17 @@ def ARDSportCluster(title, path, img, cacheID, cluster=''):
 		for item in items:
 			tag=''
 			title = stringextract('__headline">', '</', item)
+			title_org = title
 			topline = stringextract('__topline">', '</', item)
 			topline = topline.strip()
+
+			PLog("title: " + title)								# wie stage2
 			title = cleanhtml(title); title = title.strip()
-			PLog(title)
+			title = unescape(title); title = repl_json_chars(title)
 			
 			tag = "[B]%s[/B]" % topline
 			tag = "%s\nFolgeseiten" % tag
+			tag = unescape(tag); 
 			
 			title=py2_encode(title); path=py2_encode(path); 
 			img=py2_encode(img); cluster=py2_encode(cluster);
@@ -2993,6 +2997,7 @@ def ARDSportCluster(title, path, img, cacheID, cluster=''):
 			found=False
 			title = stringextract('__headline">', '</', item)
 			title = cleanhtml(title); title = title.strip()
+			title = unescape(title); title = repl_json_chars(title)
 			
 			if title in headline:
 				PLog("found_cluster: " + headline)
@@ -3092,6 +3097,7 @@ def ARDSportMedia(li, title, page):
 		
 		title = stringextract('__headline">', '</', item)	# html-Bereich
 		summ = stringextract('__shorttext">', '</', item)	# html-Bereich, fehlt im json-Bereich
+		title=title.replace('"', '')
 		title=repl_json_chars(title); summ=repl_json_chars(summ);
 		title=title.strip(); summ=summ.strip() 		
 
@@ -3120,6 +3126,7 @@ def ARDSportMedia(li, title, page):
 				data  = stringextract('class="mediaplayer', '"MediaPlayer', item) # von slider abgrenzen
 				if data:
 					player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, data)
+					title=repl_json_chars(title)
 		
 		if title in skip_list:								# Doppel in Blöcken möglich
 			continue

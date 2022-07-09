@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.06.2022
+#	Stand: 08.06.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -84,6 +84,7 @@ ICON_ZDF_SEARCH = 'zdf-suche.png'
 MAUSLIVE		= "https://www.wdrmaus.de//_teaserbilder/720913_512.jpg"
 MAUSZOOM		= "https://www.wdrmaus.de//_teaserbilder/720893_512.jpg"
 MAUSRELIVE		= "https://www.wdrmaus.de//_teaserbilder/721363_512.jpg"
+MAUSHEAR		= "https://www1.wdr.de/mediathek/audio/sendereihen-bilder/maus_sendereihenbild_podcast-1-100~_v-original.jpg"
 
 # Github-Icons zum Nachladen aus Platzgründen,externe Nutzung: ZDFRubriken  (GIT_ZDFTIVI)							
 GIT_KIKA		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kika.png?raw=true"
@@ -443,12 +444,12 @@ def MausLive():
 	path = "https://kinder.wdr.de/radio/player/radioplayer-die-maus-100~_layout-popupVersion.html"
 	page1, msg = get_page(path)	
 	pos = page1.find('wdrrCurrentShowTitleTitle')
+	mp3_img = MAUSHEAR
 	if pos < 0:
-		mp3_img = MAUSLIVE
 		sendung = "Maus-Stream abspielen"
 	else:
 		sendung = stringextract('wdrrCurrentShowTitleTitle">', '</', page1[pos:])
-		mp3_img = stringextract('img src="', '"', page1[pos:])
+		
 	
 	mediaObj = stringextract('mediaObj":{"url":"', '"', page1) # -> deviceids-medp.wdr.de (json)
 	PLog("mediaObj: " + mediaObj)
@@ -522,6 +523,8 @@ def Maus_Audiobooks(title, url):
 		title = stringextract("<title>", "</title>", item)
 		mp3_url = stringextract('<enclosure url="', '"', item)
 		mp3_img = stringextract('href="', '"', item)			# itunes:image href="..
+		if mp3_img == '':										# kann fehlen
+			mp3_img = MAUSZOOM
 		dur = stringextract("<duration>", "</itunes:duration>", item)
 		descr = stringextract("summary>", "</itunes:summary>", item)
 		pubDate = stringextract("<pubDate>", "</pubDate>", item)

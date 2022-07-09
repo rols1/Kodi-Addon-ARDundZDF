@@ -10,6 +10,15 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+09.07.2022 4.4.4
+			StreamsShow: Check auf Setting 'pref_use_downloads' für LibreElec 10.0
+			erforderlich (Error setLabel=None in addDir).
+			ARDSportCluster: Fix Quotes und unerlaubte Zeichen in Titel.
+			KIKA (Modul childs): Umsetzung neue Seite MausLive ("MausLive hören", 
+			"MausZoom - Kindernachrichten", "MausLive zum Nachhören"), neue Funktionen
+			MausLive, Maus_Audiobooks, Maus_MediaObjects.
+			ARDSportMedia: %5C in Titel (Hochkommata) entfernt repl_json_chars(title).
+
 02.07.2022 4.4.3
 			Suchwortliste (ARD+ZDF): Erweiterung mit Tool-Funktionen zeigen/löschen/
 			hinzufügen, neue Funktionen: SearchWordTools + SearchWordWork, Anpassung
