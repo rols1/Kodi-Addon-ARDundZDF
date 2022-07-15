@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>61</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.4'
-VDATE = '09.07.2022'
+VDATE = '15.07.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1224,14 +1224,14 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 			
 #----------------------------------------------------------------
 # 21.02.2022 Anpassung an renovierte Audiothek
-# 1. Durchlauf Org.-Liste, 2. Durchlauf Einzelsender, 
-# 3. Durchlauf PrgSets für Sender
+# 14.07.2022 
+# 1. Lauf Einzelsender, 2. Lauf Sendungen
 # Auswertung Livestreams der Sender s. AudioStartLive
 #
-def AudioSenderPrograms(org='', prgset=''): 
+def AudioSenderPrograms(org=''): 
 	PLog('AudioSenderPrograms:')
-	PLog(org); PLog(prgset)
-	CacheTime = 6000													# 1 Std.
+	PLog(org); 
+	CacheTime = 60*5													# 5 min.				
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Audiothek')									# Home-Button
@@ -1247,20 +1247,30 @@ def AudioSenderPrograms(org='', prgset=''):
 		MyDialog(msg1, msg2, '')	
 		return li
 		
-	Objekts = blockextract('"publicationServices"', page)
-	PLog(len(Objekts))
+	LiveObjekts = blockextract('"brandingColor"', page)				# Station: Livestreams + programSets
+	PLog(len(LiveObjekts))
 
 	#---------------------------------
-	if org == '' and prgset == '':										# 1. Durchlauf: Orgs listen
+	if org == '':														# 1. Durchlauf: alle Einzelsender listen
 		PLog("stage1:")
-		for obj in Objekts:
-			title = stringextract('"organizationName":"', '"', obj)		# Org, z.B. ARD
-			img = stringextract('"image"', '"url1X1"', obj)				# 18.02.2022 neues Format
+		for LiveObj in LiveObjekts:
+			PLog(LiveObj[:80])
+			liveStreams = stringextract('liveStreams":', 'programSets', LiveObj)
+				
+			live_cnt = stringextract('numberOfElements":', ',', liveStreams)
+			title = stringextract('"sender":"', '"', liveStreams)		# Sender, z.B BAYERN 1
+			if live_cnt == '0':											# ARD, funk
+				title = stringextract('"organizationName":"', '"', LiveObj)
+				synop = stringextract('"synopsis":"', '"', LiveObj)
+				if synop:
+					title = "%s: %s" % (title, synop[:70])
+				
+			img = stringextract('"image"', '"url1X1"', LiveObj)			# 18.02.2022 neues Format:
 			img = stringextract('"url":"', '"', img)	
-			img = img.replace('{width}', '640')
-			tag = "Weiter zu den Organisationen  von %s" % title 
-			
-			PLog("orgname: " + title)									# Auswahl 2. Durchlauf, z.B. BR
+			img = img.replace('{width}', '640')							# fehlt manchmal
+			tag = "Weiter zu den Sendungen  von %s" % title 
+				
+			PLog("Sendername: " + org)									# org z.B. BAYERN 1 Franken
 			title=py2_encode(title)
 			fparams="&fparams={'org': '%s'}" % (quote(title))	
 			addDir(li=li, label=title, action="dirList", dirID="AudioSenderPrograms", fanart=img, 
@@ -1269,79 +1279,54 @@ def AudioSenderPrograms(org='', prgset=''):
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 	#---------------------------------
-	if org:																# 2. Durchlauf: Stationen listen		
+	if org:															# 2. Durchlauf: programSets listen	
 		PLog("stage2: " + org)
-		for obj in Objekts:
-			title = stringextract('"organizationName":"', '"', obj)
-			if title in org:
+		for LiveObj in LiveObjekts:
+			PLog(LiveObj[:80])
+			liveStreams = stringextract('liveStreams":', 'programSets', LiveObj)
+				
+			live_cnt = stringextract('numberOfElements":', ',', liveStreams)
+			title = stringextract('"sender":"', '"', liveStreams)		# Sender, z.B BAYERN 1
+			if live_cnt == '0':											# ARD, funk
+				title = stringextract('"organizationName":"', '"', LiveObj)
+				synop = stringextract('"synopsis":"', '"', LiveObj)
+				if synop:
+					title = "%s: %s" % (title, synop[:70])
+			PLog(org); PLog(title);		
+			if org in title:
 				PLog("found: " + org)
-				orgname = title
 				break
-		
-		obj = py2_encode(obj)											# für Leia	
-		page = str(obj)
-		sets = blockextract('"brandingColor"', page)			
-		PLog(len(sets))
-		
-		for item in sets:
-			title = stringextract('"organizationName":"', '"', item)	# Org, z.B. ARD
-			if title in org == False:
-				continue
-				
-			prgset = stringextract('"title":"', '"', item)				# Auswahl 3. Durchlauf, z.B. BAYERN 1
-			genre = stringextract('"genre":"', '"', item)
-			img = stringextract('"image"', '"url1X1"', item)			# 18.02.2022 neues Format
-			img = stringextract('"url":"', '"', item)	
-			img = img.replace('{width}', '640')
 			
-			anz =  stringextract('"numberOfElements":', ',', item)
-			summ = stringextract('"synopsis":"', '"', item)
-			summ = py2_decode(summ)											# für Leia	
-			summ = repl_json_chars(summ)
-			tag = "Das Angebot zum Genre [B]%s[/B]\nAnzahl %s" % (genre, anz)
+
+		pos = LiveObj.find('"programSets"')
+		page = LiveObj[pos:]
+		PLog(page[:80])	
+		items = blockextract('"id":', page)								# 2. Block enthält editorialCategories 		
+		PLog(len(items))
+		cnt=0
+		for item in items:
+			try:														# Kategorie aus 2. Block lesen 
+				next_item = items[cnt+1]
+				PLog("next_item: " + next_item)
+			except:
+				next_item=''
+			cat =  stringextract('"title":"', '"', next_item)	
+			cnt=cnt+1
 			
-			PLog("sender: " + title)
-			prgset=py2_encode(prgset)
-			fparams="&fparams={'prgset': '%s'}" % quote(prgset)	
-			addDir(li=li, label=prgset, action="dirList", dirID="AudioSenderPrograms", fanart=img, 
-				thumb=img, tagline=tag, summary=summ, fparams=fparams)
-				
-						
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-		
-	#---------------------------------
-	if prgset:															# 3. Durchlauf: programSets listen	
-		PLog("stage3: " + prgset)
-		sets = blockextract('"brandingColor"', page)			
-		for item in sets:
-			title = stringextract('"title":"', '"', item)
-			if title in prgset:
-				PLog("found: " + prgset)
-				break
-		PLog(item[:100])
-		
-		pos  = item.find('"programSets"')
-		page = item[pos:]
-		PLog(page[:100])
-		sets = blockextract('"id":', page, '}},')
-		
-		# Alt.: statt api_url web_url  -> Audio_get_sendung (ohne Seitenzahlen)
-		for item in sets:
-			if item.find('"sharingUrl"') < 0:
-				continue
-			web_url =  stringextract('"sharingUrl":"', '"', item)		# 
+			web_url =  stringextract('"sharingUrl":"', '"', item)		
 			href_add = "?offset=0&limit=20"
 			url_id 	= web_url.split('/')[-1]
 			api_url = ARD_AUDIO_BASE + "programsets/%s/%s" % (url_id, href_add)
 			
 			title = stringextract('"title":"', '"', item)				# PRG, z.B. Blaue Couch
 			anz =  stringextract('"numberOfElements":', ',', item)
+			if anz == '':
+				continue
+
 			img = stringextract('"image"', '"url1X1"', item)			# 18.02.2022 neues Format
 			img = stringextract('"url":"', '"', item)	
 			img = img.replace('{width}', '640')
 			
-			cat = stringextract('"editorialCategories":', 'url1X1', item)
-			cat =  stringextract('"title":"', '"', cat)	
 			
 			PLog("prg: " + title)
 			tag = u"Folgeseiten | Anzahl: %s\nKategorie [B]%s[/B]" % (anz, cat) 
@@ -2006,6 +1991,7 @@ def Audio_get_cluster_rubrik(li, url, title, ID=''):
 
 		tag = u"[B]Folgeseiten[/B]"
 		title = stringextract('"title":"', '"', item)				# Cluster-Titel	
+		title = repl_json_chars(title)
 		pos = item.find('__typename'); item = item[pos:]			# 1. Beitrag
 		ftitle = stringextract('"title":"', '"', item)
 		img = stringextract('"url1X1":"', '"', item)
@@ -2189,12 +2175,13 @@ def Audio_get_homescreen(page='', cluster_id=''):
 		addDir(li=li, label=label, action="dirList", dirID="Audio_get_homescreen",
 			fanart=R(ICON_MAIN_AUDIO), thumb=img, tagline=tag, fparams=fparams)				
 		
-		pos = page.find('"widgets"')
-		page = page[:pos]
-		items = blockextract('"__typename"', page)						# Nachladebeiträge: "nodes":[]
+		endmark = '"nodes"'
+		items = blockextract('"__typename"', page, endmark)				# Nachladebeiträge: "nodes":[]
 		PLog(len(items))
 		for item in items:
 			if item.find('"image"') > 0:
+				continue
+			if item.find('"id"') < 0:									# ohne Cluster-ID
 				continue
 			if item.find('"GRID_LIST_COLLAPSIBLE"') > 0:				# Bsp. "LIVE: die Bundesliga"
 				continue
