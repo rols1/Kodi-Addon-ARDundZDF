@@ -1076,12 +1076,12 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 					r = urlopen(path)
 				except Exception as e:
 					PLog(str(e))
-					if "308:" in str(e):								# Permanent-Redirect-Url
+					if "308:" in str(e) or "301:" in str(e):			# Permanent-Redirect-Url
 						new_url = e.hdrs.get("Location")
 						parsed = urlparse(path)
 						if new_url.startswith("http") == False:			# Serveradr. vorh.?
 							new_url = 'https://%s%s' % (parsed.netloc, new_url)
-						PLog("HTTP308_new_url: " + new_url)
+						PLog("HTTP308_301_new_url: " + new_url)
 						return new_url, ''
 					else:
 						return '', str(e)

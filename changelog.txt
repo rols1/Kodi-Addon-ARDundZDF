@@ -10,6 +10,19 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.07.2022 4.4.5
+			get_page (Modul util): Test auf Permanent-Redirect-Url auf Error 301
+			erweitert (bisher nur 308).
+			Audio_get_cluster_rubrik (Audiothek): router-kompatible Behandl. für 
+			title (repl_json_chars).
+			livesenderTV.xml: lokale TV-Sender Berlin und Brandenburg umgestellt auf IPTV-
+			Quellen.
+			Audio_get_homescreen (Audiothek): Anpassung an ARD-Änderung (Mark. "widgets"
+			nicht mehr eindeutig), Blockbildung mir endmark "nodes", Sätze ohne Cluster-
+			ID überspringen.
+			AudioSenderPrograms (Audiothek): Anpassung an ARD-Änderung + Reduzierung auf
+			2 Durchläufe, Cache-Zeit von 1 Std. auf 5 Min. verringert.
+
 09.07.2022 4.4.4
 			StreamsShow: Check auf Setting 'pref_use_downloads' für LibreElec 10.0
 			erforderlich (Error setLabel=None in addDir).
