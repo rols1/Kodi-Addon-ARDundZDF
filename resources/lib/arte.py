@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>15</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.06.2022
+# 	<nr>16</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.07.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -779,7 +779,7 @@ def ArteCluster(title='', katurl=''):
 	pos = page.find("footerProps")					# Footer kann skip_items enth.
 	if pos > 0:
 		page = page[:pos]
-	items = blockextract('code":{',  page)
+	items = blockextract('code":{',  page)			# ArteStart_1 + ArteStart_2
 	PLog(len(items))
 	img_def = R(ICON_DIR_FOLDER)
 
@@ -791,9 +791,10 @@ def ArteCluster(title='', katurl=''):
 				 u'Zum selben Thema', u'Collection Articles', u'Collection Partners',
 				 u'Collection Upcomings', u'"collection_content"',
 				 u'data":[]']
-				
+					
 	if title == '':								# 1. Durchlauf
 		PLog('ArteStart_1:')
+		PLog(page[:100])
 		li = home(li, ID='arte')					# Home-Button
 		for item in items:
 			title = stringextract('title":"', '"', item)
@@ -832,43 +833,43 @@ def ArteCluster(title='', katurl=''):
 				addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.ArteCluster", 
 					fanart=R(ICON_ARTE), thumb=img, fparams=fparams)
 
-	else:											# 2. Durchlauf
-			PLog('ArteStart_2:')
-			items = blockextract('code":{', page)	# wie ArteStart_1
-			PLog(len(items))
-			name_org=name; title_org=title
-			page = get_cluster(items, title_org)
-			if page  == '':	
-				return
-				
-			PLog(page[:80])
-			if page.find('"link":null') < 0:				# null: Beiträge, sonst weiterer Cluster
-				katurl = stringextract('"url":"', '"', page)
-				page = get_ArtePage('ArteStart_2', title, path=katurl)
-				ArteCluster(title=title_org, katurl=katurl)
-				
-			else:											# Beiträge zum Cluster-Titel zeigen
-				PLog("next_url3: " + next_url)				# next_url1 s. get_ArtePage
-				li = home(li, ID='arte')					# Home-Button
-				li, cnt = GetContent(li, page, ID="ArteStart_2")
-				PLog("cnt: " + str(cnt))
-				if next_url:								# Mehr-Beiträge?
-					ArteMehr(next_url, first=True)
+	else:												# 2. Durchlauf
+		PLog('ArteStart_2:')
+		PLog(page[:100])								# identisch mit ArteStart_1 ?
+		name_org=name; title_org=title
+		page = get_cluster(items, title_org)
+		if page  == '':	
+			return
+			
+		PLog(page[:80])
+		if page.find('"link":null') < 0:				# null: Beiträge, sonst weiterer Cluster
+			katurl = stringextract('"url":"', '"', page)
+			page = get_ArtePage('ArteStart_2', title, path=katurl)
+			ArteCluster(title=title_org, katurl=katurl)
+			
+		else:											# Beiträge zum Cluster-Titel zeigen
+			PLog("next_url3: " + next_url)				# next_url1 s. get_ArtePage
+			li = home(li, ID='arte')					# Home-Button
+			li, cnt = GetContent(li, page, ID="ArteStart_2")
+			PLog("cnt: " + str(cnt))
+			if next_url:								# Mehr-Beiträge?
+				ArteMehr(next_url, first=True)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
 # ---------------------------------------------------------------------
 # holt Cluster zu Cluster-titel title_org
 def get_cluster(items, title_org):
-	PLog("get_cluster:")
+	PLog("get_cluster: " + title_org)
 	page=''
 	for item in items:
 		title = stringextract('title":"', '"', item)
 		title = transl_json(title)
-		PLog(title)
+		PLog("title_org: %s, title: %s" % (title_org, title))
 		if title_org in title:
 			PLog("found_Cluster: " + title)
 			page = item
+			break
 	if len(page) == 0:
 		PLog("Cluster_failed: " + title_org)
 	
@@ -948,8 +949,10 @@ def get_ArtePage(caller, title, path, header=''):
 	if path == '':
 		PLog("path_fehlt")
 		return page
-		
+
 	Dict_ID = path.split("/")[-1]						# Dict_ID aus path erzeugen
+	if path.endswith("arte.tv/de/"):
+		Dict_ID = "startseite"
 	if Dict_ID == '':
 		Dict_ID = path.split("/")[-2]
 	Dict_ID = Dict_ID.replace("?", "")					# Arte_?genres=oper, Arte_?page=1,..
