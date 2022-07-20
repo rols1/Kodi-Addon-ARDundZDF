@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>27</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.06.2022
+# 	<nr>28</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.07.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2844,7 +2844,10 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 			url 	= os.path.join(M3U8STORE, url)	# rtmp-Url's nicht lokal
 			url 	= '"%s"' % url					# Pfad enthält Leerz. - für ffmpeg in "" kleiden						
 	
-	url = url_correction(url)						# Url-Korrektur, z.B. für LEIPZIG_FERNSEHEN 
+	sender = title
+	if ":" in sender:
+		sender = sender.split(":")[0] 
+	url = url_correction(url, sender)				# Url-Korrektur, z.B. für LEIPZIG_FERNSEHEN 
 	
 	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
 		return
@@ -2905,18 +2908,17 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 #	ersten Streams, Veränd. ffmpeg-Param. o.Ergebnis.
 # Austausch https -> http OK
 # 
-def url_correction(url):
+def url_correction(url, sender):
 	PLog('url_correction:')
 	if url.startswith('http') == False:				# lokale + rtmp unangetastet
 		return url
 	
 	# OK BadenTV
-	TV_Liste = ["münchen.tv|ngrp:muc.stream_all", "Leipzig Fernsehen|leipzigfernsehen.stream_1",
-				"Rhein-Neckar Fernsehen|rnf/rnf.stream_1", "Franken Fernsehen|frf/ngrp:frf.stream_all"]
+	TV_Liste = ["münchen.tv", "Leipzig Fernsehen",
+				"Rhein-Neckar Fernsehen", "Franken Fernsehen"]
 	new_url = url
 	for tv in TV_Liste:
-		sender, urlpart = tv.split("|")
-		if urlpart in url:
+		if up_low(sender) in up_low(tv):
 			PLog("Url_Korrektur: %s" % sender)
 			new_url = url.replace('https:', 'http:')
 	
@@ -3177,12 +3179,14 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #	Resume-Funktion Kodi-intern  DB MyVideos107.db, Tab files (idFile, playCount, lastPlayed) + (via key idFile),
 #		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
 #
-#	Untertitel bei Livestreams (01. / 02.12.2021_
+#	Untertitel bei Livestreams (01. / 02.12.2021, 17.07.2022
 #		ARD-Sender: falls UT vorh., wird ein zusätzl. Livestream-Link für UT angeboten,
 #			s. ARDStartSingle + get_ARDstreamlinks
 #		ZDF-Sender: verwenden Mehrkanal-Url's für HLS. Die master.m3u8-Dateien enthalten jeweils
 #			2  Untertitel-Links (../8.m3u8) für die webvtt-Segmente. Beide lassen sich im  Kodi-
 #			Player nicht aktivieren. Siehe ZDF_Untertitel_Livestream (lokale Doku)
+#		ONE, KIKA, BR-Nord, HR u.a.: UT-Format wird nicht erkannt (IA: Unable to create subtitle parser)
+#			- neue Funktion sub_path_post z.Z. noch nutzlos + stillgelegt
 #
 def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=0):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
@@ -3191,7 +3195,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	Plot=transl_doubleUTF8(Plot)
 	Plot=(Plot.replace('[B]', '').replace('[/B]', ''))	# Kodi-Problem: [/B] wird am Info-Ende platziert
 	url=url.replace('\\u002F', '/')						# json-Pfad noch unbehandelt
-	
+
 	li = xbmcgui.ListItem(path=url)		
 	# li.setArt({'thumb': thumb, 'icon': thumb})
 	li.setArt({'poster': thumb, 'banner': thumb, 'thumb': thumb, 'icon': thumb, 'fanart': thumb})	
@@ -3204,9 +3208,16 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	PLog("pref_UT_ON: " + SETTINGS.getSetting('pref_UT_ON'))	
 	if SETTINGS.getSetting('pref_UT_ON') == 'true':
 		if sub_path:								# Konvertierung ARD-UT, Pfade -> Liste 
-			sub_list = sub_path_conv(sub_path)	
+			sub_list = sub_path_conv(sub_path)
 			li.setSubtitles(sub_list)
 			# xbmc.Player().showSubtitles(True)		# hier unwirksam, s.u. (isPlaying)
+		else:
+			pass
+			# z.Z. sub_path_post nutzlos, da weder für IA noch Kodi-Player nutzbar - s.o.
+			#sub_list = sub_path_post(url)			# ev. SUBTITLES aus master.-/index.m3u8 bekanntgeben
+			#if sub_list:
+			#	li.setSubtitles(sub_list)
+			
 	PLog('sub_list: ' + str(sub_list));				# s. get_subtitles
 		
 	# Abfrage: ist gewähltes ListItem als Video deklariert? - Falls ja,	
@@ -3283,11 +3294,13 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 			OS_RELEASE =''
 		PLog("OS_RELEASE: " + OS_RELEASE)		
 
-		# Check auf inputstream.adaptive nicht erforderlich
+		# Check auf inputstream.adaptive (IA) nicht erforderlich
 		# s. https://github.com/xbmc/inputstream.adaptive,
 		# 	https://github.com/xbmc/inputstream.adaptive/wiki/
 		# ab Kodi 20 Auswahl von Streams + -Eigenschaften
-		#	
+		# IA funktioniert nicht mit lokalen m3u8-Dateien (nicht 
+		#	mit relativen, nicht mir absoluten Pfaden, s.a.:
+		# 	https://github.com/xbmc/inputstream.adaptive/issues/701
 		if url.endswith('.m3u8'):							# SetInputstreamAddon hier nur HLS
 			if SETTINGS.getSetting('pref_inputstream') == 'true':
 				PLog("SetInputstreamAddon:")
@@ -3300,6 +3313,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 					li.setProperty('inputstream', 'inputstream.adaptive')
 				li.setProperty('inputstream.adaptive.manifest_type', 'hls')				
 				li.setContentLookup(False)				
+
 
 		PLog("url: " + url); PLog("playlist: %s" % str(playlist))
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
@@ -3341,7 +3355,6 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 						PLog("Rekursions_exit")
 						return
 
-			
 			player.play(url, li, windowed=False) 				# direkter Start
 			xbmc.sleep(200)
 			
@@ -3391,7 +3404,7 @@ def sub_path_conv(sub_path):
 		if 	local_path:							# util: Konvert. für Kodi leer bei Fehlschlag,
 			sub_path = xml2srt(local_path)		# 	Endung .srt, falls erfolgreich
 
-		sub_list.append(sub_path) 	# subtitleFiles: tuple or list
+		sub_list.append(sub_path) 				# subtitleFiles: tuple or list
 		if PYTHON3:
 			sub_list.append(sub_path) 			# Matrix erwartet UT-Paar (kostete Lebenszeit..)
 	else:
@@ -3401,6 +3414,48 @@ def sub_path_conv(sub_path):
 			sub_list.append(sub_path) 
 			
 	PLog("sub_path_conv: " + str(sub_list))		
+	return sub_list
+	
+#-------------------------------------
+#  Untertitel-Streamlink aus master- od. index.m3u8 ermitteln
+#  ARDUT, ZDF-UT u.a. -> Liste (für li.setSubtitles)
+def sub_path_post(url):
+	PLog("sub_path_post: " + url)
+	sub_list=[]
+	if url.endswith("master.m3u8") == False and  url.endswith("index.m3u8") == False:
+		return sub_list
+		
+	page, msg = get_page(path=url)
+	if page == '':
+		PLog(msg)
+		return sub_list
+
+	new_m3u8=[]
+	url_end = url.split("/")[-1]								# urlbase: url o. Pfadende
+	url_base = url.split(url_end)[0]
+	PLog("url_base: " + url_base)
+	lines = page.splitlines()
+	for line in lines:
+		if "EXT-X-MEDIA:TYPE=SUBTITLES" in line:
+			uri = stringextract('URI="', '"', line)
+			if uri:
+				if uri.startswith("http") == False:		# Pfadergänzung
+					uri = url.replace(url_end, uri)
+				line = line.split("URI=")[0]
+				line = '%sURI="%s"' % (line.strip(), uri)		# neue SUBTITLE-Zeile
+
+		if line.endswith("m3u8"):								# Resolution-Link master-720p-3328.m3u8
+			if line.startswith("http") == False:				# Pfadergänzung
+				line = '%s/%s' % (url_base, line)
+		
+		new_m3u8.append(line)
+		
+	new_m3u8 = "\n".join(new_m3u8)
+	#outfile = "/tmp/x_sub.m3u8"		# Debug
+	outfile = os.path.join(M3U8STORE, "sub.m3u8")	
+	RSave(outfile, new_m3u8)	
+	sub_list.append(outfile); sub_list.append(outfile)
+
 	return sub_list
 	
 #---------------------------------------------------------------- 
