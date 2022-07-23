@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>6</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.06.2022
+#	Stand: 23.07.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -180,20 +180,21 @@ def Main_3Sat(name=''):
 ####################################################################################################
 # Hinweis: wir suchen in 3Sat_XML_FULL = alle Mediathekinhalte
 #	Die Sucheingabe kann mehrere Wörter enthalten, getrennt durch Blanks (ODER-Suche) 
-#	Gesucht wird in Titel + Beschreibung
+#	Gesucht wird in Titel + Beschreibung. Mediathek listet Suchergebnisse tageweise
+# 
+# 23.07.2022 nach Sofortstart: return ersetzt durch Aufruf Main_3Sat wie ARDSearchnew
 #
-# Suche - Verarbeitung der Eingabe. Mediathek listet Suchergebnisse tageweise
 def Search(first, path, query=''):
 	PLog('Search:'); PLog(first);	
 	if 	query == '':	
 		query = get_query(channel='ZDF')
-	if  query == None or query.strip() == '':
-		return ""
 		
-	PLog(query)
 	query = py2_decode(query)
-
 	name = 'Suchergebnis zu: ' + unquote(query)
+	PLog("name: " + name)
+	if  unquote(query) == None or unquote(query).strip() == '':
+		Main_3Sat()									# statt return - s.o.
+	
 		
 	if first == 'True':								# query nur 1. Aufruf injizieren,  Anpass. s. 'Mehr' 
 		path =  DreiSat_Suche % quote(py2_encode(query))
@@ -205,7 +206,7 @@ def Search(first, path, query=''):
 		msg2 = msg
 		PLog(msg1)
 		MyDialog(msg1, msg2, '')
-		return li	
+		return
 		
 	rubriken =  blockextract('<picture class="">', page)	
 	cnt = stringextract('class="search-number">', '<', page) # Anzahl Treffer
@@ -218,7 +219,7 @@ def Search(first, path, query=''):
 		msg1 = 'Leider kein Treffer (mehr) zu '  + unquote(query)
 		PLog(msg1)
 		MyDialog(msg1, '', '')
-		return li	
+		return	
 	
 	new_title = "%s Treffer zu >%s<" % (cnt, query)
 	li = Sendereihe_Sendungen(li, path=path, title=new_title)

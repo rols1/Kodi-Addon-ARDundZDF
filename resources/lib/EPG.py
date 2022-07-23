@@ -92,8 +92,8 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	return
 
 #---------------------------------------------------------------- 
-# Update einzelner, aktaulisierter Bestandteile des Addons vom Github-Repo
-# Hinw.: nicht für neu ins Repo eingefügte Module (lokale Datei fehlt für
+# Update einzelner, aktualisierter Bestandteile des Addons vom Github-Repo
+# Hinw.: NICHT für neu ins Repo eingefügte Module (lokale Datei fehlt für
 #	den Abgleich).
 # Ablösung der vorherigen Funktion update_tvxml
 #

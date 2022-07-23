@@ -10,6 +10,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+23.07.2022 4.4.6
+			PlayVideo (Modul util): neue Funktion sub_path_post für Untertitel-
+			Streamlinks (noch deaktiviert wg. inkompatibler vtt-Senderinhalte für
+			Kodi).
+			get_cluster (Modul arte): in Abgleich break nach Fundstelle eingefügt.
+			get_ArtePage (Modul arte): neue Dict_ID für Startseite (eindeutiger).
+			Widerherstellung __init__.py-Dateien für Kodi Krypton/Leia (mit Update
+			V4.4.5 irrtümlich gelöscht).
+			url_correction (Modul util): umgestellt auf Sendervergleich statt Url-
+			Vergleich (verlässlicher) bei LiveRecord.
+			ARDSportLoadPage (sportschau.de): Cachezeit von 1 Std. auf 5min verrin-
+			gert (Aktualität für Events).
+			Search (Modul 3sat): Aufruf Main_3Sat bei Abbruch der Sucheingabe (ver-
+			hindert Addon-Absturz bei abgebrochenen Videos) - s.a. V4.2.8.
+
 16.07.2022 4.4.5
 			get_page (Modul util): Test auf Permanent-Redirect-Url auf Error 301
 			erweitert (bisher nur 308).

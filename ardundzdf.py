@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>61</nr>										# Numerierung für Einzelupdate
-VERSION = '4.4.5'
-VDATE = '16.07.2022'
+VERSION = '4.4.6'
+VDATE = '23.07.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2889,13 +2889,14 @@ def dummy(title="",path="",img=""):
 def ARDSportLoadPage(title, path, func, cacheID=""): 
 	PLog('ARDSportLoadPage:')
 	PLog('func: ' + func)
-	CacheTime = 60 * 60						# 1 Std.
+	CacheTime = 60*5							# 5 min.
 	
 	if cacheID == "":
 		p = path.split("/")[-1]
 		cacheID = "ARDSport_%s" % p
 	
 	page = Dict("load", cacheID, CacheTime=CacheTime)
+	page=''
 	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
 		page, msg = get_page(path=path)
 		if page:
@@ -3004,7 +3005,6 @@ def ARDSportCluster(title, path, img, cacheID, cluster=''):
 #
 def ARDSportLive(title): 
 	PLog('ARDSportLive:')
-	CacheTime = 60 * 60						# 1 Std.
 
 	path = "https://www.sportschau.de/streams"
 	page = ARDSportLoadPage(title, path, "ARDSportLive")
@@ -3339,6 +3339,7 @@ def ARDSportSlider(li, item, skip_list, img=''):
 		topline = stringextract('topline":"', '"', rec)
 		title = stringextract('headline":"', '"', rec)
 		if title in skip_list:
+			PLog("skip_title: " + title)
 			continue
 		skip_list.append(title)
 		
@@ -3388,7 +3389,6 @@ def ARDSportSlider(li, item, skip_list, img=''):
 def ARDSportSliderSingle(url, title, thumb, Plot): 
 	PLog('ARDSportSliderSingle: ' + title)
 	PLog(url)
-	CacheTime = 60 * 60								# 1 Std.
 	cacheID=url.split("/")[-1]
 
 	page = ARDSportLoadPage(title, url, "ARDSportSliderSingle", cacheID)
@@ -5425,7 +5425,8 @@ def ProgramRecord(url, sender, title, descr, start_end):
 #---------------------------------------------
 # Aufruf: EPG_Sender, EPG_ShowAll, TVLiveRecordSender
 # get_sort_playlist: Senderliste + Cache 
-#	für ZDF-Sender
+# erstellt sortierte Playlist für TV-Sender in livesenderTV.xml
+#	im Abgleich mit TV-Livestream-Cache
 #
 def get_sort_playlist():						# Senderliste für EPG + Recording
 	PLog('get_sort_playlist:')
@@ -10176,7 +10177,7 @@ def ZDF_SlideShow(path, single=None):
 	 
 ####################################################################################################
 def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', buttons=True, track_add='', live=''):	
-#	# master.m3u8 auswerten, Url muss komplett sein. 
+#	# master.m3u8 bzw. index.m3u8 auswerten, Url muss komplett sein. 
 #  	1. Besonderheit: in manchen *.m3u8-Dateien sind die Pfade nicht vollständig,
 #	sondern nur als Ergänzung zum Pfadrumpf (ohne Namen + Extension) angegeben, Bsp. (Arte):
 #	delive/delive_925.m3u8, url_m3u8 = http://delive.artestras.cshls.lldns.net/artestras/contrib/delive.m3u8
