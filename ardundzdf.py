@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>61</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.6'
-VDATE = '23.07.2022'
+VDATE = '25.07.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2767,7 +2767,7 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]Tour de France[/B]"						# Großevent	
-	tag = u""
+	tag = u"Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen der Tour de France 2022."
 	cacheID = "Sport_TourdeFrance"
 	img = "https://images.sportschau.de/image/4caa92cb-1518-4489-8bec-3b0764c14aa8/AAABgQJrLa8/AAABgPp7Db4/16x9-1280/tour-de-france-bild-102.jpg"
 	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
@@ -2778,7 +2778,7 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]Leichtathletik-WM 2022 in Eugene[/B]"	# Großevent	
-	tag = u""
+	tag = u"Erstmals findet eine Leichtathletik-WM in den USA statt. News, TV-Zeiten, Livestreams, Ergebnisse zur Weltmeisterschaft in Oregon."
 	cacheID = "Sport_WMEugene"
 	img = "https://images.sportschau.de/image/13d0db07-7943-415b-951f-2bfc4be7c8e9/AAABgRYL9Ys/AAABgPp7WOA/20x9-1280/leichtathlet-ryan-crouser-100.webp"
 	path = "https://www.sportschau.de/leichtathletik/wm"
@@ -2788,8 +2788,19 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
+	title = u"Event: [B]FUSSBALL: EM FRAUEN[/B]"	# Großevent	
+	tag = u"16 Mannschaften spielen im Juli in England um den Titel bei der Fußball-EM. News, Livestreams, Spielplan und Ergebnisse zur UEFA-Frauen-EM."
+	cacheID = "Sport_WMEugene"
+	img = "https://images.sportschau.de/image/46aa5ce0-ec8d-4d74-8f68-b93052194f5a/AAABgWEbjDs/AAABgPp7Db4/16x9-1280/uefa-frauen-em-2022-logo-100.jpg"
+	path = "https://www.sportschau.de/fussball/frauen-em"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Event: [B]Fußball WM 2022 in Katar[/B]"			# Großevent	
-	tag = u""
+	tag = u"Hier finden Sie alle Nachrichten, Berichte, Interviews und Ergebnisse zur FIFA WM 2022 in Katar."
 	cacheID = "Sport_WMKatar"
 	img = "https://images.sportschau.de/image/a12b67b2-9716-4be8-9462-79391892a4c2/AAABgRPCPcU/AAABgPp7Db4/16x9-1280/wm-katar-logo-sp-100.jpg"
 	path = "https://www.sportschau.de/fussball/fifa-wm-2022"
@@ -2799,9 +2810,20 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
+	title = u"Tor des Monats"									# Tor des Monats
+	tag = u"Tor des Monats: Hier gibt's Highlights, Clips und ausgewählte Höhepunkte aus der langen Geschichte dieser Rubrik."
+	img = "https://images.sportschau.de/image/02d77451-37d2-4f6c-a9e3-13747421eb85/AAABgQuiu3s/AAABgPp7Db4/16x9-1280/tordesmonats-sp-836.jpg" 
+	path = "https://www.sportschau.de/tor-des-monats"
+	title=py2_encode(title); path=py2_encode(path); 
+	img=py2_encode(img); 
+	fparams="&fparams={'title': '%s', 'path': '%s','img': '%s'}" %\
+		(quote(title), quote(path), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMonatstor", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Moderation der Sportschau"						# Moderation
 	tag = u"Bildgalerie"
-	img = logo; 
+	img = "https://images.sportschau.de/image/908ed0bc-918d-470d-bc61-377be863a818/AAABgUeOYdE/AAABgPp7JiI/16x9-640/alexander-bommes-sportschau-sp-104.jpg" 
 	path = "https://www.sportschau.de/sendung/moderation"
 	title=py2_encode(title); path=py2_encode(path); 
 	img=py2_encode(img); 
@@ -2818,6 +2840,108 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+#---------------------------------------------------------------------------------------------------
+# Untermenüs Tor des Monats
+#	Buttons für weitere Untermenüs, Beiträge der Startseite
+# 
+def ARDSportMonatstor(title, path, img): 
+	PLog("ARDSportMonatstor:")
+	path_org=path
+	img_org=img
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	
+	title = u"Tor des Monats: [B]%s[/B]" % "Abstimmung"					# Menü Abstimmung
+	tag = u"Tor des Monats: Hier gibt's Highlights, Clips und ausgewählte Höhepunkte aus der langen Geschichte dieser Rubrik."
+	summ = "Folgebeiträge"
+	path = "https://www.sportschau.de/tor-des-monats/abstimmung"
+	title=py2_encode(title); path=py2_encode(path); 
+	img=py2_encode(img); img_org=py2_encode(img_org); 
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
+		(quote(title), quote(path), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMonatstorSingle", fanart=img_org, thumb=img, 
+		fparams=fparams, tagline=tag, summary=summ)	
+	
+	title = u"Tor des Monats: [B]%s[/B]" % "Archiv"						# Menü Archiv
+	tag = u"Seit über 40 Jahren wählen die Zuschauer der Sportschau ihr Tor des Monats. Über 500 Treffer sind bereits ausgezeichnet worden. Lassen Sie sich zurückversetzen in die Zeit von Netzer, Beckenbauer und Co. und schauen Sie sich die besten Tore seit 1971 nochmal an - mit vielen Videos."
+	summ = "Folgebeiträge"
+	path = "https://www.sportschau.de/tor-des-monats/archiv"
+	title=py2_encode(title); path=py2_encode(path); 
+	img = "https://images.sportschau.de/image/f0d59127-0aa3-4ac0-bf76-2c47cb5ff332/AAABgP4SFF4/AAABgPp7Db4/16x9-1280/tdm70er-sp-104.jpg"
+	img=py2_encode(img); img_org=py2_encode(img_org); 
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
+		(quote(title), quote(path), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMonatstorSingle", fanart=img_org, thumb=img, 
+		fparams=fparams, tagline=tag, summary=summ)	
+	
+	title = u"Tor des Monats: [B]%s[/B]" % u"DIE BESTEN TORSCHÜTZEN"		# Menü DIE BESTEN TORSCHÜTZEN
+	tag = u"In den 70ern war es Gerd Müller, in den 80ern Karl-Heinz-Rummenigge und in den 90ern Jürgen Klinsmann. Sie alle vereint eine besondere Auszeichung: In Ihrer Zeit führten sie die TdM-Rangliste an. 2005 betrat Lukas Podolski die Fußball-Bühne und überholte sie alle."
+	summ = "Folgebeiträge"
+	path = "https://www.sportschau.de/tor-des-monats/statistikspieler-sp-102.html"
+	title=py2_encode(title); path=py2_encode(path); 
+	img = "https://images.sportschau.de/image/cab85e31-6758-422c-8848-86684d5de288/AAABgP63Crc/AAABgPp7Db4/16x9-1280/statistikspieler-sp-100.jpg"
+	img=py2_encode(img); img_org=py2_encode(img_org); 
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
+		(quote(title), quote(path), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMonatstorSingle", fanart=img_org, thumb=img, 
+		fparams=fparams, tagline=tag, summary=summ)	
+
+
+	#-----------------------------------------							# Beiträge der Startseite
+	page = ARDSportLoadPage(title, path_org, "ARDSportMonatstor")
+	if page == '':
+		return
+	
+	cnt = ARDSportMedia(li, title, page)
+	if cnt == 0:								# Verbleib in Liste
+		return		
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
+#---------------------------------------------------------------------------------------------------
+# Einzelnes Untermenü zu Tor des Monats
+# 
+def ARDSportMonatstorSingle(title, path, img): 
+	PLog("ARDSportMonatstorSingle:")
+	
+	li = xbmcgui.ListItem()
+	
+	page = ARDSportLoadPage(title, path, "")
+	if page == '':
+		return
+	
+	if path.endswith("/abstimmung"):
+		li = home(li, ID='ARD')						# Home-Button
+		cnt = ARDSportMedia(li, title, page)
+	if path.endswith("/archiv"):	
+		items = blockextract('data-v="', page)		# Sliderboxen	
+		for item in items:
+			ARDSportSlider(li, item, skip_list=[], img='')
+		
+	if path.endswith("/statistikspieler-sp-102.html"):
+		items = blockextract('class="teaser-xs__link"', page)			
+		PLog(len(items))
+		for item in items:
+			topline = stringextract('__topline">', '</', item)
+			title = stringextract('__headline">', '</', item)	
+			summ = stringextract('__shorttext">', '</', item)	
+			title=repl_json_chars(title); summ=repl_json_chars(summ);
+			title=cleanhtml(title)
+			title=title.strip(); summ=summ.strip() 
+			title_org=title
+			title = "%s: [B]%s[/B]" % (topline, title)		
+			img = stringextract('src="', '"', item)
+			tag = u"Statistik: %s\n ohne Video, ohne Audio" % title_org
+		
+			PLog("Satz13_pic:")
+			PLog(title); PLog(img); PLog(summ[:80]);
+			fparams="&fparams={}"  
+			addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ)	
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
 #---------------------------------------------------------------------------------------------------
 # Laden + Verteilen
 def ARDSportHub(title, path, img, Dict_ID=''): 
@@ -3084,7 +3208,8 @@ def ARDSportMedia(li, title, page):
 		
 		title = stringextract('__headline">', '</', item)	# html-Bereich
 		summ = stringextract('__shorttext">', '</', item)	# html-Bereich, fehlt im json-Bereich
-		title=title.replace('"', '')
+		title=title.replace('"', ''); title=mystrip(title)
+		title=cleanhtml(title)
 		title=repl_json_chars(title); summ=repl_json_chars(summ);
 		title=title.strip(); summ=summ.strip() 		
 
@@ -3177,6 +3302,7 @@ def ARDSportMedia(li, title, page):
 
 #----------------------------------------------------------------
 # Auswertung Mediaplayerdaten
+# 24.07.2022 Anpassung für Tor des Monats ("video/mp4" in url)
 #
 def ARDSportMediaPlayer(li, item): 
 	PLog('ARDSportMediaPlayer:')
@@ -3193,12 +3319,13 @@ def ARDSportMediaPlayer(li, item):
 
 	player = stringextract('playerType":"', '"', cont)		# audio, video
 	media = stringextract('streams":', '"meta"', cont)		# für video dash.mpd, m3u8 + ts
+	PLog("media: " + media[:60]); 
 	if player == "audio":
 		mp3_url = stringextract('url":"', '"', media)		# 1 x mp3
 	else:
 		urls = blockextract('url":', media)
-		for url in urls:
-			if "index.m3u8" in url or "master.m3u8" in url:
+		for url in urls:									# erste: höchste Auflösung
+			if "index.m3u8" in url or "master.m3u8" in url or "video/mp4" in url:
 				stream_url = stringextract('url":"', '"', url)
 				break
 	
@@ -3214,7 +3341,7 @@ def ARDSportMediaPlayer(li, item):
 			duration = str(int(dur / 1000))
 		except:
 			duration=""
-	PLog("duration: " + duration)
+	PLog("duration: " + duration); 
 	duration = seconds_translate(duration)
 		
 	imgs = blockextract('"minWidth":', cont, "}")
@@ -3254,6 +3381,9 @@ def ARDSportMediaPlayer(li, item):
 	if summ:
 		tag = "%s\n\n%s" % (tag, summ)
 	Plot = tag.replace("\n", "||")
+	
+	PLog("Satz31:")
+	PLog(player); PLog(live); PLog(title); PLog(mp3_url); PLog(stream_url);
 			
 	return player, live, title, mp3_url, stream_url, img, tag, summ, Plot 
 
@@ -3360,7 +3490,7 @@ def ARDSportSlider(li, item, skip_list, img=''):
 		
 		allow=False; live=False
 		for item in allow_list:							# Abgleich label-Typen
-			if item in up_low(label):
+			if item in up_low(label) or '"Tor des Monats' in rec: # Tor des Monats Sätze ohne label
 				if "LIVESTREAM" in item:
 					live=True
 				allow=True; break				
@@ -3385,6 +3515,7 @@ def ARDSportSlider(li, item, skip_list, img=''):
 
 #----------------------------------------------------------------
 # einzelner Slider für ARDSportSlider
+# 24.07.2022 Anpassung für Tor des Monats (mehrere mediaplayer-Sätze)
 #	
 def ARDSportSliderSingle(url, title, thumb, Plot): 
 	PLog('ARDSportSliderSingle: ' + title)
@@ -3399,27 +3530,35 @@ def ARDSportSliderSingle(url, title, thumb, Plot):
 	li = home(li, ID='ARD')						# Home-Button
 	
 	mediatype=""
-	item = stringextract('class="mediaplayer', '"MediaPlayer"', page)	# erster json-Bereich
-	if item == '':								# z.B. Verweis auf https://www.zdf.de/live-tv
+	items=[]
+	if "Tore des Monats" in title:				# mehrere Beiträge
+		items = blockextract('class="mediaplayer', page, '"MediaPlayer"')
+	else:	
+		item = stringextract('class="mediaplayer', '"MediaPlayer"', page)	# erster json-Bereich
+		items.apend(item) 
+	if len(items) == 0:							# z.B. Verweis auf https://www.zdf.de/live-tv
 		icon = R("ard-sportschau.png")
 		msg1 = u"%s:" % title
 		msg2 = u'Quelle nicht gefunden/verfügbar'
 		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=True)
 		return 0 
-		
-	player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item)
 	
-	if player == "audio":
-		ID="ARD"													# ID Home-Button
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
-			quote(title), quote(img), quote_plus(Plot), ID)
-		addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
-			fparams=fparams, tagline=tag)
-	if player == "video":
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
-			quote(title), quote(img), quote_plus(Plot))
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-			tagline=tag, mediatype='mediatype')	
+	PLog("Slideritems: %d" % len(items))
+	for item in items:
+		PLog(item[:80])	
+		player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item)
+		
+		if player == "audio":
+			ID="ARD"													# ID Home-Button
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
+				quote(title), quote(img), quote_plus(Plot), ID)
+			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag)
+		if player == "video":
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
+				quote(title), quote(img), quote_plus(Plot))
+			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+				tagline=tag, mediatype='mediatype')	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
