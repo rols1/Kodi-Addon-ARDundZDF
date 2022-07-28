@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>62</nr>										# Numerierung für Einzelupdate
+# 	<nr>63</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.6'
-VDATE = '26.07.2022'
+VDATE = '28.07.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2777,6 +2777,17 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
+	title = u"Event: [B]TOUR DE FRANCE FEMMES[/B]"				# Großevent	
+	tag = u"Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen der Tour de France Femmes 2022."
+	cacheID = "Sport_FRANCEFEMMES"
+	img = "https://images.sportschau.de/image/39c37172-4556-4739-a361-76f7fa50eb9a/AAABghr-8j8/AAABgPp7Db4/16x9-1280/giro-donne-feld-100.jpg"
+	path = "https://www.sportschau.de/radsport/tour-de-femmes-100.html"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Event: [B]Leichtathletik-WM 2022 in Eugene[/B]"	# Großevent	
 	tag = u"Erstmals findet eine Leichtathletik-WM in den USA statt. News, TV-Zeiten, Livestreams, Ergebnisse zur Weltmeisterschaft in Oregon."
 	cacheID = "Sport_WMEugene"
@@ -2790,7 +2801,7 @@ def ARDSportWDR():
 
 	title = u"Event: [B]FUSSBALL: EM FRAUEN[/B]"	# Großevent	
 	tag = u"16 Mannschaften spielen im Juli in England um den Titel bei der Fußball-EM. News, Livestreams, Spielplan und Ergebnisse zur UEFA-Frauen-EM."
-	cacheID = "Sport_WMEugene"
+	cacheID = "Sport_WMFrauen"
 	img = "https://images.sportschau.de/image/46aa5ce0-ec8d-4d74-8f68-b93052194f5a/AAABgWEbjDs/AAABgPp7Db4/16x9-1280/uefa-frauen-em-2022-logo-100.jpg"
 	path = "https://www.sportschau.de/fussball/frauen-em"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
@@ -3348,7 +3359,7 @@ def ARDSportMediaPlayer(li, item):
 				break
 	
 	title = stringextract('page_title":"', ',"', cont)		# kann " enthalten
-	title = repl_json_chars(title)
+	title=decode_url(title); title=repl_json_chars(title)
 	
 	duration = stringextract('durationSeconds":"', '"', cont)
 	if duration == '':
