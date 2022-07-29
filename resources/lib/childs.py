@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.06.2022
+# 	<nr>6</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.07.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -792,7 +792,9 @@ def Kiraka_klick(title, weburl=''):
 #	Auswertung in Kika_VideosBeliebt
 # getHrefList: nur hrefs der Bündelgruppen sammeln für Kika_Search - dort
 #	-> Dict-Cache 
-# 30.12.2021 Cache ergänzt (Leit- und Einzelseiten) 			
+# 30.12.2021 Cache ergänzt (Leit- und Einzelseiten) 
+# 29.07.2022 Link geändert ../allevideos-buendelgruppen100.html ->
+#	../uebersicht-alle-videos-100.html			
 #	
 def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''): 
 	PLog('Kika_VideosBuendelAZ: ' + path); PLog(button)
@@ -801,7 +803,7 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''):
 	
 	first=False; fname=''; page=''
 	if button == '':								# A-Z-Liste laden
-		path = 'https://www.kika.de/videos/allevideos/allevideos-buendelgruppen100.html'
+		path = 'https://www.kika.de/videos/uebersicht-alle-videos-100.html'
 		first=True
 		fname = "page-A_zc-05fb1331"
 	else:
@@ -886,12 +888,14 @@ def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''):
 	
 # ----------------------------------------------------------------------
 # alle Videos - beliebteste Bündelgruppen, Einzelvideos in Kika_Videos  		
+# 29.07.2022 Link geändert ../allevideos-buendelgruppen100.html ->
+#	../uebersicht-alle-videos-100.html			
 def Kika_VideosBeliebt(): 
 	PLog('Kika_VideosBeliebt:')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
-	path = 'https://www.kika.de/videos/allevideos/allevideos-buendelgruppen100.html'
+	path = 'https://www.kika.de/videos/uebersicht-alle-videos-100.html'
 	page, msg = get_page(path)	
 	if page == '':	
 		msg1 = "Fehler in Kika_VideosBeliebt:"
