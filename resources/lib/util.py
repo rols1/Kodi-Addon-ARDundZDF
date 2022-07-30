@@ -1646,6 +1646,9 @@ def decode_url(line):
 	line = line.replace(u'%29', u')')	
 	line = line.replace(u'%7C', u'|')
 	
+	line = line.replace(u'%E2%80%93', u'–')		# 27.07.2022
+	
+	
 	return line
 #----------------------------------------------------------------  	
 # Migration PY2/PY3: py2_decode aus kodi-six

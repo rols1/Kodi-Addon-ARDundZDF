@@ -10,6 +10,16 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+30.07.2022 4.4.7
+			ARDSportWDR (sportschau.de): Zusatz-Menüs FUSSBALL: "EM FRAUEN", "Tor des
+			Monats", "TOUR DE FRANCE FEMMES", Info-Texte ergänzt, neue Funktionen 
+			ARDSportMonatstor und ARDSportMonatstorSingle.
+			decode_url (Modul util): '%E2%80%93'  -> '–' ergänzt.
+			Kika_VideosBuendelAZ, Kika_VideosBeliebt (Modul childs): Link zur Webseite 
+			"Alle Videos" (A-Z) aktualisiert.
+			ARDStart: Link für Startseite www.ardmediathek.de/ard/ geändert ->
+			www.ardmediathek.de/ (wg. "Moved Permanently"-Error).
+
 23.07.2022 4.4.6
 			PlayVideo (Modul util): neue Funktion sub_path_post für Untertitel-
 			Streamlinks (noch deaktiviert wg. inkompatibler vtt-Senderinhalte für

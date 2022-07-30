@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>20</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.06.2022
+#	Stand: 30.07.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -271,6 +271,8 @@ def ARDStart(title, sender, widgetID='', path=''):
 
 	if path == '':
 		path = BETA_BASE_URL + "/%s/" % sender
+		if sender == "ard":									# ab 30.07.2022 erford. (Moved Permanently)
+			path = BETA_BASE_URL + "/"
 	page, msg = get_page(path=path)			# vom Sender holen
 	
 	if '"widgets":' not in page:								# Fallback: Cache ohne CacheTime
