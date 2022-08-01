@@ -7,8 +7,8 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>8</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.05.2022
+# 	<nr>9</nr>										# Numerierung für Einzelupdate
+#	Stand: 01.08.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -382,15 +382,16 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='', ID=''):
 			summ = subtitel	
 		if vorspann:
 			summ = u"[B]%s[/B]\n\n%s" % (summ, vorspann)
-			summ_par = summ.replace('\n', '||')
-			
-		title = transl_json(title); summ = transl_json(summ); 
-		summ = repl_json_chars(summ);  title = repl_json_chars(title);
+		
+		title = transl_json(title); title = repl_json_chars(title); 
+		summ = transl_json(summ); summ = repl_json_chars(summ); 
+		summ_par = summ.replace('\n', '||')
 
 		PLog('Satz1:')
 		PLog(url); PLog(img); PLog(title); PLog(subtitel); PLog(summ[:80]); PLog(tag)
 		url=py2_encode(url); title=py2_encode(title); img=py2_encode(img); summ_par=py2_encode(summ_par);
 		tag=py2_encode(tag);
+		
 		if single:
 			fparams="&fparams={'title': '%s', 'path': '%s', 'html_url': '%s', 'tagline': '%s', 'summary': '%s', 'thumb': '%s'}" %\
 				(quote(title), quote(url), quote(url), quote(tag), quote(summ_par), quote(img))
