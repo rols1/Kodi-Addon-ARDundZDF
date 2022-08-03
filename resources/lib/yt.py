@@ -17,8 +17,8 @@
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-# 	<nr>1</nr>								# Numerierung für Einzelupdate
-#	Stand: 23.04.2022
+# 	<nr>2</nr>								# Numerierung für Einzelupdate
+#	Stand: 03.08.2022
 #
 
 from __future__ import absolute_import
@@ -351,7 +351,7 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 		fparams="&fparams={'title': '%s','sender': '%s','offset': '%s','query': '%s','home_id': '%s','myfunc': '%s'}" %\
 			(quote(title),sender,str(new_offset),quote(query),home_id,quote(myfunc))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch",
-			fanart=img, thumb=R(ICON_MEHR), fparams=fparams, tagline=tag, summary=summ)
+			fanart=img, thumb=R(ICON_MEHR), fparams=fparams, tagline=tag)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
