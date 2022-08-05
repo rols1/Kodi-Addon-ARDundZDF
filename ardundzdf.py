@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>63</nr>										# Numerierung für Einzelupdate
+# 	<nr>64</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.7'
-VDATE = '30.07.2022'
+VDATE = '05.08.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5911,8 +5911,9 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 # onlySender: Button nur für diesen Sender (z.B. ZDFSportschau Livestream für Menü
 #	ZDFSportLive)
 # 23.06.2020 lokale m3u8-Dateien in livesenderTV.xml sind entfallen
-#			Ermittlung ZDF-Streamlinks im Web (link=ZDFsource)
-# 26.05.2022 ergänzt um Nutzung iptv_streamlinks (private Sender)
+#	Ermittlung Streamlinks im Web (link: ARDSource, ZDFsource)
+# 26.05.2022 ergänzt um Nutzung iptv_streamlinks für private Sender
+#	(link: IPTVSource)
 #
 def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):			
 	# SenderLiveListe -> SenderLiveResolution (reicht nur durch) -> Parseplaylist (Ausw. m3u8)
@@ -5925,10 +5926,6 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 			
-	# Besonderheit: die Senderliste wird lokal geladen (s.o.). Über den link wird die URL zur  
-	#	*.m3u8 geholt. Nach Anwahl eines Live-Senders werden in SenderLiveResolution die 
-	#	einzelnen Auflösungsstufen ermittelt.
-	#
 	playlist = RLoad(PLAYLIST)					# lokale XML-Datei (Pluginverz./Resources)
 	playlist = blockextract('<channel>', playlist)
 	PLog(len(playlist)); PLog(listname)
@@ -8151,6 +8148,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 				tag = teaser_label
 			if teaser_brand:
 				teaser_brand = teaser_brand.replace(' - ', '')
+				teaser_brand = unescape(teaser_brand)
 				teaser_brand = "[B]%s[/B]" % teaser_brand
 				tag = teaser_brand
 				
@@ -10138,6 +10136,7 @@ def ZDF_Bildgalerien(li, page):
 		infoline = stringextract('infoline-text="', '"', rec)
 		if " Bilder " in infoline == False:
 			continue
+		tag = unescape(infoline); tag=cleanhtml(tag)		# einschl. Anzahl Bilder
 			
 		category = stringextract('teaser-cat-category">', '</span>', rec)
 		category = mystrip(category)
@@ -10166,8 +10165,6 @@ def ZDF_Bildgalerien(li, page):
 		if title == '':
 			title =  descr		
 		
-		tag = stringextract('aria-label="', '</dd', rec)		# Anzahl Bilder
-		tag=mystrip(tag); tag=cleanhtml(tag); tag=tag.replace('">', "")
 		airtime = stringextract('class="air-time" ', '</time>', rec)
 		airtime = stringextract('">', '</time>', airtime)
 		if airtime:
@@ -10428,7 +10425,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 #	19.12.2020 Sendungs-Titel ergänzt (optional: stitle)
 #	03.03.2020 Erweiterung buttons: falls False keine Buttons sondern Rückgabe als Liste
 #		Stream_List (Format s.u.)
-#	23.04.2022  Mehrkanalstreams mit Kennung GROUP-ID entf. (in Kodi nicht verwertbar)
+#	23.04.2022  Mehrkanalstreams mit Kennung GROUP-ID entfernen (in Kodi nicht verwertbar)
 #
 	PLog ('Parseplaylist: ' + url_m3u8)
 	Stream_List=[]
