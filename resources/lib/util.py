@@ -3315,8 +3315,16 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 					#	 #KODIPROP:inputstream=inputstream.adaptive', 'inputstream.adaptive'
 					li.setProperty('inputstream', 'inputstream.adaptive')
 				li.setProperty('inputstream.adaptive.manifest_type', 'hls')				
-				li.setContentLookup(False)				
+				li.setContentLookup(False)
 
+					# für Tests mit inputstream.ffmpegdirect - siehe
+					#	https://github.com/xbmc/inputstream.ffmpegdirect
+				#	li.setProperty('inputstream', 'inputstream.ffmpegdirect')
+				#li.setProperty('inputstream.ffmpegdirect.manifest_type', 'hls')				
+				#li.setProperty('inputstream.ffmpegdirect.is_realtime_stream', 'timeshift')				
+				#li.setProperty('inputstream.ffmpegdirect.stream_mode', 'true')				
+				#li.setContentLookup(False)
+	
 
 		PLog("url: " + url); PLog("playlist: %s" % str(playlist))
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem

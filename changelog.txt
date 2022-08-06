@@ -10,6 +10,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+06.08.2022 4.4.8
+			ZDFRubrikSingle: Escape-Zeichen entfernt unescape(teaser_brand).
+			GetContent (Modul phoenix): Def. summ_par verlagert (hinter Def.
+			summ (json-komp. Behandl. fehlt sonst).
+			podcast-favorits.txt: Podcast-Reihe "Interviews -Inforadio RBB" 
+			(Link existiert nicht mehr), hinzugefügt: SWR Wirtschaftsnews und
+			Mondial.
+			MVWSearch (Modul yt): summary im Infotext des Mehr-Buttons entfernt 
+			(obsolet).
+			ZDF_Bildgalerien: tagline in Info-Text ersetzt durch Auswertung 
+			infoline statt aria-label (Doppler bei tivi möglich).
+			Kategorien (Modul arte): Info-Text ergänzt.
+			PlayVideo: Tests mit inputstream.ffmpegdirect (Verbleib im Code).
+			Audio_get_sendung: falsche url durch mp3_url in Downloadliste für
+			Sammeldownloads ersetzt.
+
 30.07.2022 4.4.7
 			ARDSportWDR (sportschau.de): Zusatz-Menüs FUSSBALL: "EM FRAUEN", "Tor des
 			Monats", "TOUR DE FRANCE FEMMES", Info-Texte ergänzt, neue Funktionen 

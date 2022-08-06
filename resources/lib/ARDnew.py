@@ -1071,11 +1071,11 @@ def ARD_getStrmList(path, title, ID="ARD"):
 	msg2 = list_title
 	xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
 		
-	#------------------												# Liste synchronisieren?
+	#------------------													# Liste synchronisieren?
 	# Format: Listen-Titel ## lokale strm-Ablage ##  ext.Url ## strm_type
 	item = "%s##%s##%s##%s"	% (list_title, strmpath, list_path, strm_type)
 	PLog("item: " + item)
-	synclist = strm.strm_synclist(mode="load")						# "strm_synclist"
+	synclist = strm.strm_synclist(mode="load")							# "strm_synclist"
 	if exist_in_list(item, synclist) == True:	
 		msg1 = "Synchronsisation läuft"
 		msg2 = list_title
@@ -1088,7 +1088,7 @@ def ARD_getStrmList(path, title, ID="ARD"):
 			msg1 = u"Soll das Addon diese Liste regelmäßig abgleichen?"
 			msg2 = u"Intervall: %s Stunden" % sync_hour	
 			ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='OK', heading=head)
-			if ret == 1:											# Liste neu aufnehmen
+			if ret == 1:												# Liste neu aufnehmen
 				strm.strm_synclist(mode="save", item=item)
 				line = "%6s | %15s | %s..." % ("NEU", list_title[:15], "Liste neu aufgenommen")
 				strm.log_update(line)

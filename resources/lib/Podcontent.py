@@ -100,6 +100,8 @@ def PodFavoriten(title, path):
 	
 	if '//www.ardaudiothek.de/' in path:			#  alte Links -> neue api-Calls
 		href_add = "?offset=0&limit=20"
+		if path.endswith("/"):						# letzten Slash entfernen
+			path = path[:len(path)-1]
 		url_id 	= path.split('/')[-1]
 		path = ARD_AUDIO_BASE + "programsets/%s/%s" % (url_id, href_add)
 		#path = "https://api.ardaudiothek.de/search?query=%s" 					

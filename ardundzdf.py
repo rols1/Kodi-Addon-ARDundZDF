@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>64</nr>										# Numerierung für Einzelupdate
-VERSION = '4.4.7'
-VDATE = '05.08.2022'
+VERSION = '4.4.8'
+VDATE = '06.08.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1500,7 +1500,7 @@ def Audio_get_sendung(url, title, page=''):
 		img=py2_encode(img); summ_par=py2_encode(summ_par);	
 		
 		if mp3_url:
-			downl_list.append("%s#%s" % (title, url))
+			downl_list.append("%s#%s" % (title, mp3_url))
 
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
 				quote(title), quote(img), quote_plus(summ_par))

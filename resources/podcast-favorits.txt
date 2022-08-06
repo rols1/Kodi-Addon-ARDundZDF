@@ -10,13 +10,11 @@
 # 	Zeilen, die mit # beginnen, bleiben unbeachtet.
 #
 # 	Format: 2-teilig, getrennt durch |, Muster:
-#		Titel | HTTP-Link
+#		Podcast-Titel | HTTP-Link
 #   -------------------------------------------------
 #  Die HTTP-Links lassen sich der Adresszeile eines Internetbrowsers nach Aufruf einer Rubrik oder
 #	A-Z-Seite (ALLE SENDUNGEN) entnehmen. Sie muss mit einer Zahl enden, z.B.:
 #	https://www.ardaudiothek.de/ab-21/50763770
-#	Ab Addon-Version 2.7.6 lassen sich Sucherergebnisse der Audiothek via Button dieser Datei
-#	hinzufügen.	
 #  Gewünschte Sendungen und Fehler hierhin melden (bitte vorher die Seite mittels Webbrowser testen):
 #	https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF
 #
@@ -58,7 +56,8 @@ Wir sind die Freeses						| https://www.ardaudiothek.de/wir-sind-die-freeses/278
 
 ## Aktuelles / Neueste Clips
 Inforadio - Wissenswerte RBB				| https://www.ardaudiothek.de/wissenswerte/48143414
-Interviews -Inforadio RBB					| https://www.ardaudiothek.de/interviews/46474024
+SWR Aktuell - Wirtschaftsnews				| https://www.ardaudiothek.de/sendung/wirtschaftsnews/10001527/
+SWR Aktuell - Mondial					| https://www.ardaudiothek.de/sendung/swr-aktuell-mondial/53608474/
 
 ## Hörspiele
 KiRaKa - Kinderhörspiele im WDR				| https://www.ardaudiothek.de/kinderhoerspiel-im-wdr/36244846

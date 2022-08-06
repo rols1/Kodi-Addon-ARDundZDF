@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.07.2022
+#	Stand: 05.08.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -735,21 +735,22 @@ def Kategorien():
 	path = "https://www.arte.tv/de/"
 	path=py2_encode(path)
 	fparams="&fparams={'katurl': '%s'}" % quote(path)			# Button Startseite
-	addDir(li=li, label="Startseite", action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
-		thumb=R(ICON_ARTE_START), fparams=fparams)
+	addDir(li=li, label="Startseite www.arte.tv/de", action="dirList", dirID="resources.lib.arte.ArteCluster", 
+		fanart=R(ICON_ARTE), thumb=R(ICON_ARTE_START), fparams=fparams)
 	
 
 	pre = "https://www.arte.tv/de"		
 	for item in cat_list:											# Kategorien listen
 		title, img, katurl = item.split("|")
 		katurl = pre + katurl
+		tag = "Kategorie: [B]%s[/B]" % title
 		
 		PLog('Satz4:')
 		PLog(title); PLog(katurl);
 		title=py2_encode(title); katurl=py2_encode(katurl)		# ohne title, katurl laden
 		fparams="&fparams={'title': '', 'katurl': '%s'}" % quote(katurl)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
-				thumb=R(img), fparams=fparams)
+				thumb=R(img), tagline=tag, fparams=fparams)
 
 	title = "Neueste Videos"									# Button Neueste Videos
 	path = "https://www.arte.tv/de/videos/neueste-videos/"
