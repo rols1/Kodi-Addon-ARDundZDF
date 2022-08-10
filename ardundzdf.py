@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>64</nr>										# Numerierung für Einzelupdate
+# 	<nr>65</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.8'
-VDATE = '06.08.2022'
+VDATE = '10.08.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1802,11 +1802,12 @@ def AudioSearch_cluster(li, url, title, page='', ID='', query=''):
 		li = home(li,ID='ARD Audiothek')							# Home-Button
 				
 	if page.startswith('<!DOCTYPE html>'):
-		page = Audio_get_webslice(page, mode="html")				# HTML ausschneiden
+		page = Audio_get_webslice(page, mode="web")					# HTML ausschneiden
 		
 	href_add = "offset=0&limit=20"
 	# Bsp. Cluster: <h2 class="H2-sc-1h18a06-3 hzOdMY">Sendungen <span..
-	cluster = blockextract('<h2 class="H2', page)					
+	#	oder:		<h2 class="Headlines__H2-sc-1vhiq7g-3 jkjoxW">Sendungen
+	cluster = blockextract('<h2 class="H', page)									
 	PLog(len(cluster))	
 	for clus in cluster:
 		href_web = stringextract('href="', '"', clus)				# Web-href
@@ -5487,7 +5488,7 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 		addDir(li=li, label=title, action="dirList", dirID="TVLiveRecordSender", fanart=R(ICON_MAIN_TVLIVE), 
 			thumb=R('icon-record.png'), fparams=fparams, summary=summary, tagline=tagline)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 	
 #-----------------------------------------------------------------------------------------------------
@@ -5926,7 +5927,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 			
-	playlist = RLoad(PLAYLIST)					# lokale XML-Datei (Pluginverz./Resources)
+	playlist = RLoad(PLAYLIST)							# lokale XML-Datei (Pluginverz./Resources)
 	playlist = blockextract('<channel>', playlist)
 	PLog(len(playlist)); PLog(listname)
 	mylist=''
@@ -5938,13 +5939,16 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			mylist =  playlist[i] 
 			break
 			
-	zdf_streamlinks=''
 	lname = py2_decode(listname)
 	# Streamlinks aus Caches laden (Modul util), ab 01.06.2022 für Überregional,
 	#	Regional + Privat:
 	zdf_streamlinks = get_ZDFstreamlinks()			# Streamlinks für ZDF-Sender 
 	ard_streamlinks = get_ARDstreamlinks()			# ard_streamlinks oder ard_streamlinks_UT
 	iptv_streamlinks = get_IPTVstreamlinks()		# private + einige regionale
+
+	PLog(OS_DETECT)									# 07.08.2022 kleine Verbesserung mit Delay:
+	if "armv7" in OS_DETECT:						# host: [armv7l]
+		xbmc.sleep(1000)							# Test: für Raspi (verhind. Klemmer)
 
 	mediatype='' 						# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
@@ -6003,7 +6007,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			link=''	
 			# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 			for line in zdf_streamlinks:
-				PLog("zdfline: " + line)
+				PLog("zdfline: " + line[:40])
 				items = line.split('|')
 				# Bsp.: "ZDFneo " in "ZDFneo Livestream":
 				if up_low(title_sender) == up_low(items[0]): 
@@ -6015,7 +6019,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			link=''	
 			# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
 			for line in ard_streamlinks:
-				PLog("ardline: " + line)
+				PLog("ardline: " + line[:40])
 				items = line.split('|')
 				if up_low(title_sender) in up_low(items[0]): 
 					link = items[1]
@@ -6026,7 +6030,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			link=''	
 			# Zeile iptv_streamlinks: "Sender|href|thumb|tagline"
 			for line in iptv_streamlinks:
-				PLog("iptvline: " + line)
+				PLog("iptvline: " + line[:40])
 				items = line.split('|')
 				if up_low(title_sender) in up_low(items[0]): 
 					link = items[1]
@@ -6114,9 +6118,12 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			fparams=fparams, summary=summary, tagline=tagline, mediatype=mediatype)		
 	
 	#  if onlySender== '':		# obsolet seit V4.4.2 
-	# RP3b+: Abstürze möglich beim Öffen der Liste, Log: clean up-Problem mit Verweis auf classes:
+	# RP3b+: Abstürze möglich beim Öffen der Regional-Liste, Log: clean up-Problem mit Verweis auf classes:
 	#	N9XBMCAddon9xbmcaddon5AddonE,N9XBMCAddon9xbmcaddon5AddonE.  Ähnlich issue
 	#	https://github.com/asciidisco/plugin.video.netflix/issues/576 aber Fix hier nicht anwendbar.
+	# s.a. https://forum.kodi.tv/showthread.php?tid=359608
+	# Delay nach Laden der Streamlinks ohne Wirkung (s.o. OS_DETECT)
+	# Memory-Bereinig. nach router-Ende unwirksam s. Script-Ende)
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 #-----------------------------------------------
@@ -10780,6 +10787,8 @@ PLog('Addon: Start')
 if __name__ == '__main__':
 	try:
 		router(sys.argv[2])
+		# Memory-Bereinig. unwirksam gegen Raspi-Klemmer (s. SenderLiveListe)
+		#del get_ZDFstreamlinks, get_ARDstreamlinks, get_IPTVstreamlinks
 	except Exception as e: 
 		msg = str(e)
 		PLog('network_error: ' + msg)
