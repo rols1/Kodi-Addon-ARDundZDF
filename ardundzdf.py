@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>65</nr>										# Numerierung für Einzelupdate
+# 	<nr>66</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.8'
-VDATE = '10.08.2022'
+VDATE = '11.08.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1749,18 +1749,18 @@ def AudioSearch(title, query='', path=''):
 		path = base  % quote(query)
 	path_org=path
 	
-	page, msg = get_page(path=path)	
+	page, msg = get_page(path=path, do_safe=False)					# nach quote ohne do_safe 	
 	if page == '':	
 		msg1 = "Fehler in AudioSearch:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
-		return li
+		return
 		
-	if '>Keine Treffer</' in page:	
+	if page.find('>Keine Treffer<') > 0:	
 		msg1 = "leider keine Treffer zu:"
 		msg2 = query
 		MyDialog(msg1, msg2, '')	
-		return li
+		return
 		
 	AudioSearch_cluster(li, path, title="Suche: %s" % query, ID=ID, query=query)
 	
@@ -1775,10 +1775,10 @@ def AudioSearch_cluster(li, url, title, page='', ID='', query=''):
 	PLog('AudioSearch_cluster: ' + ID)
 	PLog(query)
 		
-	if page == '':							
-		page, msg = get_page(path=url, GetOnlyRedirect=True)		# Permanent-Redirect-Url
+	if page == '':													# Permanent-Redirect-Url				
+		page, msg = get_page(path=url, do_safe=False, GetOnlyRedirect=True)	
 		url = page								
-		page, msg = get_page(path=url)	
+		page, msg = get_page(path=url, do_safe=False)	
 		if page == '':	
 			msg1 = "Fehler in AudioSearch_cluster:" 
 			msg2 = msg
@@ -1821,21 +1821,22 @@ def AudioSearch_cluster(li, url, title, page='', ID='', query=''):
 		if img == '':
 			img = R(ICON_DIR_FOLDER)
 
+		href=''
 		tag = "[B]Folgeseiten[/B]"
 		if '/sendung/' in href_web:
-			href = ARD_AUDIO_BASE  + "search/programsets?query=%s&%s" % (query, href_add) 
+			href = ARD_AUDIO_BASE  + "search/programsets?query=%s&%s" % (quote(query), href_add) 
 			title = "Sendungen"
 			ID = "ProgramSets"
 		if '/sammlung/' in href_web:
-			href = ARD_AUDIO_BASE  + "search/editorialcollections?query=%s&%s" % (query, href_add) 
+			href = ARD_AUDIO_BASE  + "search/editorialcollections?query=%s&%s" % (quote(query), href_add) 
 			title = "Sammlungen"
 			ID = "Collections"
 		if '/rubrik/' in href_web:
-			href = ARD_AUDIO_BASE  + "search/editorialcategories?query=%s&%s" % (query, href_add) 
+			href = ARD_AUDIO_BASE  + "search/editorialcategories?query=%s&%s" % (quote(query), href_add) 
 			title = "Rubriken"
 			ID = "Categories"
 		if '/episode/' in href_web or ID == "Error_404_Search":			# optionale Websuche
-			href = ARD_AUDIO_BASE  + "search/items?query=%s&%s" % (query, href_add) 
+			href = ARD_AUDIO_BASE  + "search/items?query=%s&%s" % (quote(query), href_add) 
 			title = "Episoden (einzelne Beiträge)"
 			ID = "Episodes"
 				

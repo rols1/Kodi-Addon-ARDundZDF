@@ -15,8 +15,8 @@
 #
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>2</nr>								# Numerierung für Einzelupdate
-#	Stand: 08.04.2022
+# 	<nr>3</nr>								# Numerierung für Einzelupdate
+#	Stand: 11.08.2022
 
 
 # Python3-Kompatibilität:
@@ -177,7 +177,11 @@ def DownloadMultiple(key):									# Sammeldownloads
 		for i in tlist:	
 			new_downl_list.append(downl_list[i])				
 
-	#---------------------------							# 2. Schritt: Vorbereitung	
+	#---------------------------							# 2. Schritt: Serien-Check / Frage Dateimuster
+	new_downl_list = episode_check(new_downl_list)
+	PLog(new_downl_list[0])
+		
+	#---------------------------							# 3. Schritt: mp3-Quellen + Dateinamen ermitteln	
 	msg1 = "Fertige Dateinamen für die Podcasts"
 	if "www.ardaudiothek.de" in str(new_downl_list):
 		msg1 = "%s und ermittle die mp3-Quellen" % msg1
@@ -224,6 +228,51 @@ def DownloadMultiple(key):									# Sammeldownloads
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	return							# hier trotz endOfDirectory erforderlich
 
+#---------------------------------------------------------------- 
+# detektiert / konvertiert Serienkennzeichungen in der Downloadliste
+# Aufruf: DownloadMultiple
+# Rückgabe: Liste mit geänderten Titeln od. downl_list unverändert  (je
+#	nach Nutzer-Entscheidung) 
+def episode_check(downl_list):
+	PLog("episode_check:")
+	
+	newlist=[]
+	i=0				# Zähler konvertierte Zeilen
+	for rec in downl_list:		
+		title, url = rec.split('#')
+		PLog(title)
+		pos1 = title.find("<")		# Bsp.: ..<1/16> (nach repl_json_chars)
+		pos2 = title.find(">")
+		PLog("pos2, pos1: %d-%d = %d" % (pos2, pos1, pos2-pos1) )
+		if (pos2-pos1) > 0 and (pos2-pos1)  <= 6:
+			t1 = title[:pos1-1]		# Bsp.: Der Raub des Goldes
+			t2 = title[pos1+1:pos2]	# 	1/16
+			try:
+				episode, season = t2.split("/")
+				episode = int(episode); season = int(season)
+				pre = "%02d_%02d" % (episode, season)
+				new_line = "%s_%s#%s" % (pre, t1, url)
+				newlist.append(new_line)
+				i=i+1
+				
+			except Exception as exception:
+				err = str(exception)
+				PLog(err)
+		else:
+			newlist.append(rec)		# Zeile unverändert (ohne Serienkennz.) 
+				
+	PLog(newlist[0])
+	if i > 0:
+		msg1 = u"[B]%d[/B] mögliche Serienkennzeichnungen gefunden, zuletzt: [B]%s[/B]" % (i, t2)
+		msg2 = u"Sollen die Dateinamen in der Form [B]%s_Titel.mp3[/B] geändert werden?" % pre
+		msg2 = u"%s Abbruch: keine zusätzliche Änderung" % msg2
+		ret=MyDialog(msg1, msg2, msg3="", ok=False, yes='JA')
+		PLog(ret)
+		if ret:
+			return newlist
+		else:
+			return downl_list		# gesamte Liste unverändert
+	
 #---------------------------------------------------------------- 
 #	lokale Dateiverzeichnisse /Shares in	podcast-favorits.txt
 #		Audiodateien im Verz. mit Abspielbutton listen 
