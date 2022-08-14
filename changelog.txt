@@ -10,6 +10,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+14.08.2022 4.4.9
+			SenderLiveListe: div. Tests gegen Klemmer auf Raspi bei den Menüs
+			von TV-Livestreams (s. Doku im Code), einschl. Beschränkung der
+			Logausgabe der Streamlinks beim Abgleich auf 40 Zeichen, cacheToDisc
+			in SenderLiveListePre auf true gesetzt, 1-sec-Delay für armv7-Systeme 
+			- bisher Erfolg unsicher.
+			AudioSearch_cluster (Audiothek): Anpassung an ARD-Änderung (Blockmerkmal
+			'<h2 class=..').
+			AudioSearch, AudioSearch_cluster (Audiothek): Url-Aufruf mit do_safe=False
+			(sonst zusätzl. Blank-Quotierung), Quotierung für query in api-Calls 
+			ergänzt.
+			Modul Podcontent: Sammeldownloads für Podcasts ergänzt mit sortierfähiger
+			Benennung der Dateinamen bei Serien - Anpassung DownloadMultiple, neue
+			Funktion episode_check, neues Setting pref_check_episode.
+			make_filenames (Modul util): Zeichen '/' ersetzt durch '_' für Podcasts
+			(mögl. Serienkennung 1/8, 2/8, ..).			
+
 06.08.2022 4.4.8
 			ZDFRubrikSingle: Escape-Zeichen entfernt unescape(teaser_brand).
 			GetContent (Modul phoenix): Def. summ_par verlagert (hinter Def.

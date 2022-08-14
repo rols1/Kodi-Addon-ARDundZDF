@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>5</nr>								# Numerierung für Einzelupdate
-#	Stand: 23.04.2022
+#	Stand: 12.08.2022
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -240,15 +240,17 @@ def Main_XL():
 		thumb=ICON_RADIO, tagline=tag, fparams=fparams)
 		
 	title = '#kurzerklärt'
+	tag = u"kompakte Hintergrundinfos zu Nachrichtenthemen"
 	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
 		(quote(title), quote(ARD_kurz), 'ARD_kurz', quote(ICON_KURZ))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_KURZ, fparams=fparams)
+		thumb=ICON_KURZ, tagline=tag, fparams=fparams)
 		
 	title = 'Weitere Themen'									# weitere Themen der Startseite
+	tag = u"Startseiten: Inland, Ausland, Wirtschaft"
 	fparams="&fparams={'title': '%s','path': '', 'menu': ''}"  % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Themen", fanart=ICON_MAINXL, 
-		thumb=ICON_Themen, fparams=fparams)
+		thumb=ICON_Themen, tagline=tag, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		

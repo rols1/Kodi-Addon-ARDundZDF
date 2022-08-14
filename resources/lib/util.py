@@ -1708,6 +1708,7 @@ def make_filenames(title, max_length=255):
 
 	title = title.replace(u'|', ' ') 
 	title = title.replace(u':', ' ')
+	title = title.replace(u'/', ' ')					# mögl. Serienkennung 1/8, 2/8, ..
 	
 	fname = transl_umlaute(title)						# Umlaute	
 	

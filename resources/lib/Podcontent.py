@@ -16,7 +16,7 @@
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>3</nr>								# Numerierung für Einzelupdate
-#	Stand: 11.08.2022
+#	Stand: 14.08.2022
 
 
 # Python3-Kompatibilität:
@@ -232,21 +232,26 @@ def DownloadMultiple(key):									# Sammeldownloads
 # detektiert / konvertiert Serienkennzeichungen in der Downloadliste
 # Aufruf: DownloadMultiple
 # Rückgabe: Liste mit geänderten Titeln od. downl_list unverändert  (je
-#	nach Nutzer-Entscheidung) 
+#	nach Setting) 
 def episode_check(downl_list):
 	PLog("episode_check:")
+	
+	PLog(SETTINGS.getSetting('pref_check_episode'))
+	if SETTINGS.getSetting('pref_check_episode') == 'false':
+		return downl_list			# Liste unverändert
 	
 	newlist=[]
 	i=0				# Zähler konvertierte Zeilen
 	for rec in downl_list:		
 		title, url = rec.split('#')
 		PLog(title)
-		pos1 = title.find("<")		# Bsp.: ..<1/16> (nach repl_json_chars)
+		pos1 = title.find("<")			# Bsp.: ..<1/16> (nach repl_json_chars)
 		pos2 = title.find(">")
-		PLog("pos2, pos1: %d-%d = %d" % (pos2, pos1, pos2-pos1) )
+		PLog("pos2, pos1: %d - %d = %d" % (pos2, pos1, pos2-pos1) )
 		if (pos2-pos1) > 0 and (pos2-pos1)  <= 6:
-			t1 = title[:pos1-1]		# Bsp.: Der Raub des Goldes
-			t2 = title[pos1+1:pos2]	# 	1/16
+			PLog("Altern. 1")
+			t1 = title[:pos1-1]			# Bsp.: Der Raub des Goldes
+			t2 = title[pos1+1:pos2]		# 	1/16
 			try:
 				episode, season = t2.split("/")
 				episode = int(episode); season = int(season)
@@ -258,21 +263,24 @@ def episode_check(downl_list):
 			except Exception as exception:
 				err = str(exception)
 				PLog(err)
+				PLog("Exception - ohne Konv.")
+				newlist.append(rec)			# Zeile unverändert (ohne Serienkennz.) 
 		else:
-			newlist.append(rec)		# Zeile unverändert (ohne Serienkennz.) 
-				
-	PLog(newlist[0])
-	if i > 0:
-		msg1 = u"[B]%d[/B] mögliche Serienkennzeichnungen gefunden, zuletzt: [B]%s[/B]" % (i, t2)
-		msg2 = u"Sollen die Dateinamen in der Form [B]%s_Titel.mp3[/B] geändert werden?" % pre
-		msg2 = u"%s Abbruch: keine zusätzliche Änderung" % msg2
-		ret=MyDialog(msg1, msg2, msg3="", ok=False, yes='JA')
-		PLog(ret)
-		if ret:
-			return newlist
-		else:
-			return downl_list		# gesamte Liste unverändert
+			pos = title.find(" Folge ")		# 2. Variante: Väter und Söhne. Folge 22/24
+			PLog("Altern. 2")
+			if  pos > 2 and title[pos:].find("/") > 7:					
+				t1, t2 = title.split(" Folge ")
+				new_line = "Folge %s: %s#%s" % (t2, t1, url)
+				newlist.append(new_line)
+				i=i+1
+			else:
+				PLog("ohne Konv.")
+				newlist.append(rec)			# Zeile unverändert (ohne Serienkennz.) 
 	
+	PLog("konvertiert: %d" % i)			
+	PLog(newlist[0])
+	return newlist
+
 #---------------------------------------------------------------- 
 #	lokale Dateiverzeichnisse /Shares in	podcast-favorits.txt
 #		Audiodateien im Verz. mit Abspielbutton listen 
