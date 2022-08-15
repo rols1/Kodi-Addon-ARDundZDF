@@ -15,8 +15,8 @@
 #
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>3</nr>								# Numerierung für Einzelupdate
-#	Stand: 14.08.2022
+# 	<nr>4</nr>								# Numerierung für Einzelupdate
+#	Stand: 15.08.2022
 
 
 # Python3-Kompatibilität:
@@ -233,6 +233,8 @@ def DownloadMultiple(key):									# Sammeldownloads
 # Aufruf: DownloadMultiple
 # Rückgabe: Liste mit geänderten Titeln od. downl_list unverändert  (je
 #	nach Setting) 
+# 15.08.2022 re.search statt string-funcs
+#
 def episode_check(downl_list):
 	PLog("episode_check:")
 	
@@ -240,42 +242,41 @@ def episode_check(downl_list):
 	if SETTINGS.getSetting('pref_check_episode') == 'false':
 		return downl_list			# Liste unverändert
 	
+	pat1 = r'<\d+/\d+>'				# Der Raub des Goldes <1/16> 
+	pat2 = r' Folge \d+/\d+'		# Väter und Söhne. Folge 22/24
 	newlist=[]
 	i=0				# Zähler konvertierte Zeilen
 	for rec in downl_list:		
 		title, url = rec.split('#')
 		PLog(title)
-		pos1 = title.find("<")			# Bsp.: ..<1/16> (nach repl_json_chars)
-		pos2 = title.find(">")
-		PLog("pos2, pos1: %d - %d = %d" % (pos2, pos1, pos2-pos1) )
-		if (pos2-pos1) > 0 and (pos2-pos1)  <= 6:
-			PLog("Altern. 1")
-			t1 = title[:pos1-1]			# Bsp.: Der Raub des Goldes
-			t2 = title[pos1+1:pos2]		# 	1/16
-			try:
-				episode, season = t2.split("/")
-				episode = int(episode); season = int(season)
-				pre = "%02d_%02d" % (episode, season)
-				new_line = "%s_%s#%s" % (pre, t1, url)
-				newlist.append(new_line)
-				i=i+1
+		try:
+			match = re.search(pat1, title)
+			if match == None:
+				match = re.search(pat2, title)
+			if match:
+				s = match.group()
+			else:
+				s = "#|#"
 				
-			except Exception as exception:
-				err = str(exception)
-				PLog(err)
-				PLog("Exception - ohne Konv.")
-				newlist.append(rec)			# Zeile unverändert (ohne Serienkennz.) 
-		else:
-			pos = title.find(" Folge ")		# 2. Variante: Väter und Söhne. Folge 22/24
-			PLog("Altern. 2")
-			if  pos > 2 and title[pos:].find("/") > 7:					
-				t1, t2 = title.split(" Folge ")
-				new_line = "Folge %s: %s#%s" % (t2, t1, url)
+			if s and title.find(s	) > 0:						# Muster am Anfang: unverändert
+				PLog("match: %s, pos: %d" % (s, title.find(s)))
+				title = title.replace(s, "")					# Muster entfernen
+				
+				vals = re.search(r'(\d+/\d+)', s).group(0)		# '22/24' 
+				val1, val2 = vals.split("/")
+																# Numerierung voranstellen:
+				new_line = "%02d_%02d_%s#%s" % (int(val1), int(val2), title, url) 
 				newlist.append(new_line)
 				i=i+1
 			else:
 				PLog("ohne Konv.")
-				newlist.append(rec)			# Zeile unverändert (ohne Serienkennz.) 
+				newlist.append(rec)								# Zeile unverändert (ohne Serienkennz.) 
+				
+		except Exception as exception:
+				err = str(exception)
+				PLog(err)
+				PLog("Exception - ohne Konv.")
+				newlist.append(rec)			# Zeile unverändert (ohne Serienkennz.) 			
 	
 	PLog("konvertiert: %d" % i)			
 	PLog(newlist[0])
