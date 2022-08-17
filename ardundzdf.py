@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>67</nr>										# Numerierung für Einzelupdate
+# 	<nr>68</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.9'
-VDATE = '14.08.2022'
+VDATE = '17.08.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2768,6 +2768,54 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
+	title = u"Event-Archiv"									# Buttons für ältere Events	
+	tag = u"Archiv für zurückliegende Groß-Events."
+	img = logo
+	fparams="&fparams={}"
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportWDRArchiv", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+
+	title = u"Tor des Monats"									# Tor des Monats
+	tag = u"Tor des Monats: Hier gibt's Highlights, Clips und ausgewählte Höhepunkte aus der langen Geschichte dieser Rubrik."
+	img = "https://images.sportschau.de/image/02d77451-37d2-4f6c-a9e3-13747421eb85/AAABgQuiu3s/AAABgPp7Db4/16x9-1280/tordesmonats-sp-836.jpg" 
+	path = "https://www.sportschau.de/tor-des-monats"
+	title=py2_encode(title); path=py2_encode(path); 
+	img=py2_encode(img); 
+	fparams="&fparams={'title': '%s', 'path': '%s','img': '%s'}" %\
+		(quote(title), quote(path), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMonatstor", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+	title = u"Moderation der Sportschau"						# Moderation
+	tag = u"Bildgalerie"
+	img = "https://images.sportschau.de/image/908ed0bc-918d-470d-bc61-377be863a818/AAABgUeOYdE/AAABgPp7JiI/16x9-640/alexander-bommes-sportschau-sp-104.jpg" 
+	path = "https://www.sportschau.de/sendung/moderation"
+	title=py2_encode(title); path=py2_encode(path); 
+	img=py2_encode(img); 
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
+		(quote(title), quote(path), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportHub", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+	title = u"ARD Audio Event Streams"							# Audio Event Streams im Haupt-PRG	
+	tag = u"Event- und Netcast-Streams, Sport in der Audiothek, Audiostreams auf sportschau.de"
+	img = R("radio-livestreams.png")
+	fparams="&fparams={}"
+	addDir(li=li, label=title, action="dirList", dirID="ARDAudioEventStreams", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+#---------------------------------------------------------------------------------------------------
+# Event-Archiv
+#	Buttons für ältere Events
+# 
+def ARDSportWDRArchiv(): 
+	PLog("ARDSportWDRArchiv:")
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	
 	title = u"Event: [B]Die Finals[/B]"						# Großevent	
 	tag = u"14 Sportarten, 190 deutsche Meistertitel - vom 23. bis 26. Juni finden in Berlin die Finals statt."
 	cacheID = "Finals"
@@ -2833,37 +2881,9 @@ def ARDSportWDR():
 		(quote(title), quote(path), quote(img), cacheID)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
-
-	title = u"Tor des Monats"									# Tor des Monats
-	tag = u"Tor des Monats: Hier gibt's Highlights, Clips und ausgewählte Höhepunkte aus der langen Geschichte dieser Rubrik."
-	img = "https://images.sportschau.de/image/02d77451-37d2-4f6c-a9e3-13747421eb85/AAABgQuiu3s/AAABgPp7Db4/16x9-1280/tordesmonats-sp-836.jpg" 
-	path = "https://www.sportschau.de/tor-des-monats"
-	title=py2_encode(title); path=py2_encode(path); 
-	img=py2_encode(img); 
-	fparams="&fparams={'title': '%s', 'path': '%s','img': '%s'}" %\
-		(quote(title), quote(path), quote(img))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportMonatstor", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
-
-	title = u"Moderation der Sportschau"						# Moderation
-	tag = u"Bildgalerie"
-	img = "https://images.sportschau.de/image/908ed0bc-918d-470d-bc61-377be863a818/AAABgUeOYdE/AAABgPp7JiI/16x9-640/alexander-bommes-sportschau-sp-104.jpg" 
-	path = "https://www.sportschau.de/sendung/moderation"
-	title=py2_encode(title); path=py2_encode(path); 
-	img=py2_encode(img); 
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
-		(quote(title), quote(path), quote(img))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportHub", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
-
-	title = u"ARD Audio Event Streams"							# Audio Event Streams im Haupt-PRG	
-	tag = u"Event- und Netcast-Streams, Sport in der Audiothek, Audiostreams auf sportschau.de"
-	img = R("radio-livestreams.png")
-	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="ARDAudioEventStreams", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
 	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
 #---------------------------------------------------------------------------------------------------
 # Untermenüs Tor des Monats
 #	Buttons für weitere Untermenüs, Beiträge der Startseite
