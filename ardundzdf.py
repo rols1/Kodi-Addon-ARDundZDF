@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>68</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.9'
-VDATE = '17.08.2022'
+VDATE = '23.08.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2757,6 +2757,17 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 	
+	title = u"Event: [B]Radsport: Deutschland Tour[/B]"					# Großevent	
+	tag = u"Livestreams, Rennberichte, Analysen, Videos, Ergebnisse zur Deutschland Tour."
+	cacheID = "DTOUR"
+	img = "http://images.sportschau.de/image/d3108676-9108-4c6f-8746-677eb64b3d2f/AAABgiEMZLA/AAABgPp7Tbc/1x1-640/stimmen-achtzehnte-etappe-106.jpg"
+	path = "https://www.sportschau.de/radsport/deutschland-tour/"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Event: [B]European Championships[/B]"						# Großevent	
 	tag = u"Neun Europameisterschaften unter einem Dach - vom 11. bis zum 21. August finden die European Championships in München statt."
 	cacheID = "ECS"
