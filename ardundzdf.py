@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>68</nr>										# Numerierung für Einzelupdate
+# 	<nr>69</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.9'
-VDATE = '23.08.2022'
+VDATE = '25.08.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6167,7 +6167,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	# s.a. https://forum.kodi.tv/showthread.php?tid=359608
 	# Delay nach Laden der Streamlinks ohne Wirkung (s.o. OS_DETECT)
 	# Memory-Bereinig. nach router-Ende unwirksam s. Script-Ende)
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		
 #-----------------------------------------------
 # Suche nach IPTV-Livesendern - bisher nur lokale private Sender
@@ -6200,6 +6200,7 @@ def SenderLiveSearch(title):
 	items = blockextract('#EXTINF:', page)
 	for item in items:
 		if up_low(query) in up_low(item):
+			PLog("item: %s" % item)
 			tag=""
 			tvgname = stringextract('tvg-name="', '"', item)
 			tvgid = stringextract('tvg-id="', '"', item)
@@ -6207,8 +6208,9 @@ def SenderLiveSearch(title):
 			links = blockextract('https', item)					# 1. logo, 2. streamlink
 			link = links[-1]
 			tvgname = py2_decode(tvgname); tvgid = py2_decode(tvgid)
+			PLog(tvgid)
 			if tvgid:
-				tag = "tvg-id: [B]%S[/B]" % tvgid
+				tag = "tvg-id: [B]%s[/B]" % tvgid
 			PLog(tvgname); PLog(tvgid); PLog(thumb); PLog(link);
 			iptv_search = "%s\n%s\n%s\n%s" % (tvgname,tvgid,thumb,link)
 			Dict("store", "iptv_search", iptv_search)
