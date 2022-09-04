@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>28</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.07.2022
+# 	<nr>29</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.09.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1783,6 +1783,14 @@ def transl_json(line):	# json-Umlaute übersetzen
 		, (u'\\u201c', u'*')		# Arte: doublequote hoch
 		, (u'\\u2013', u'-')		# Arte: -
 		, (u'\\u2019', u'*')		# Arte: '
+		, (u'\\u00f8', u'ø')		# ø Kleinbuchstabe o mit Strich,
+		, (u'\\u00e5', u'å')		# å Kleinbuchstabe a mit Ring,
+		, (u'\\u00c5', u'Å')		# Å Groß A mit Ring
+		, (u'\\u00ab', u'«')		# Anführungszeichen links «
+		, (u'\\u00bb', u'«')		# Anführungszeichen rechs »
+		, (u'\\u2026', u'...')		# ...
+		, (u'\\u26bd', u'<Ball-emoji>')	# Ball-emoji
+		, (u'\\ufe0f', u'')			#  Nonspacing Mark
 		, (u'\\u00a0', u' ')):		# NO-BREAK SPACE
 
 		line = line.replace(*r)
@@ -3578,7 +3586,7 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 				PLog("del_DialogSlides")
 				return
 	else:			
-		xbmc.Player().play(url, li, False)						# ohne Slideshow 
+		xbmc.Player().play(url, li, False)						# ohne Slideshow 					
 
 #---------------------------------------------------------------- 
 # Aufruf: PlayVideo
