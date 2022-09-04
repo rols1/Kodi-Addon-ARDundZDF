@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>70</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.9'
-VDATE = '28.08.2022'
+VDATE = '04.09.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -547,7 +547,7 @@ def Main():
 		summ = "%s\n\n%s" % (summ, "strm-Tools")
 	if SETTINGS.getSetting('pref_playlist') == 'true':
 		summ = "%s\n\n%s" % (summ, "PLAYLIST-Tools")
-	summ = "%s\n\n%s" % (summ, u"Einzelupdate (Dateien und Module)")
+	summ = "%s\n\n%s" % (summ, u"Einzelupdate (einzelne Dateien und Module)")
 	fparams="&fparams={}" 
 	addDir(li=li, label='Infos + Tools', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
 		fparams=fparams, summary=summ, tagline=tag)
@@ -609,7 +609,7 @@ def InfoAndFilter():
 			fanart=R(FANART), thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)	
 			
 	title = u"Suchwörter bearbeiten"						# Button für Suchwörter
-	tag = u"[B]Suchwörter bearbeiten[/B]\n\n(nur für die Suche in ARD Mediathek und ZDF Mediathek)" 								
+	tag = u"[B]Suchwörter bearbeiten[/B]\n\n(nur für die gemeinsame Suche in ARD Mediathek und ZDF Mediathek)" 								
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordTools", 
 		fanart=R(FANART), thumb=R('icon_searchwords.png'), tagline=tag, fparams=fparams)	
@@ -656,7 +656,7 @@ def InfoAndFilter():
 		addDir(li=li, label=title, action="dirList", dirID="start_script",\
 			fanart=R(FANART), thumb=R("icon-playlist.png"), tagline=tag, summary=summ, fparams=fparams)	
 			
-	title = u"Einzelupdate (Dateien und Module)"		# Update von Einzeldateien
+	title = u"Einzelupdate (einzelne Dateien und Module)"		# Update von Einzeldateien
 	tag = u'[B]Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s[/B]' % REPO_NAME
 	tag = u"%s\n\nNach Abgleich werden neue Dateien heruntergeladen - diese ersetzen lokale Dateien im Addon." % tag
 	summ = u"Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt."
@@ -9514,8 +9514,10 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='',
 	li = xbmcgui.ListItem()
 		
 	page, msg = get_page(url)									# Test auf zdfplayer-Modul
-	PLog('data-module="zdfplayer"' in page)
-	if page.find('data-module="zdfplayer"') == -1 :
+	PLog('data-module="zdfplayer"' in page)						# o. zdfplayer?
+	PLog('"icon-502_play' in page)								# 	und o.icon-502_play?
+	# mit icon-502_play weiter bei len(formitaeten) == 0:
+	if page.find('data-module="zdfplayer"') == -1 and page.find('"icon-502_play') == -1:
 		PLog("zdfplayer_Modul_Test")
 		msg1 = 'ZDF_getVideoSources: (noch) keine Videoquelle gefunden zu'
 		msg2 = "[B]>%s<[/B]" % title
@@ -9560,7 +9562,7 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='',
 	# 06.02.2021 Kennz. "nicht mehr verfügbar" z.B. bei Mehr-Suche (redak. Inhalte zu
 	#	vergangenen Videos, formitaeten liefern dann falsche Quellen bei ptmd-template)
 	if len(formitaeten) == 0:							# letzte Chance für Inhalte
-		if 'picture class="artdirect"' in page and '"icon-502_play' in page:
+		if 'picture class="artdirect"' in page and '"icon-502_play' in page: 
 			ID="ZDF_getVideoSources"
 			ZDF_Sendungen(urlSource, title, ID)
 			return
