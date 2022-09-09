@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>70</nr>										# Numerierung für Einzelupdate
+# 	<nr>71</nr>										# Numerierung für Einzelupdate
 VERSION = '4.4.9'
-VDATE = '04.09.2022'
+VDATE = '09.09.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2756,28 +2756,19 @@ def ARDSportWDR():
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
+
 	
-	title = u"Event: [B]Radsport: Deutschland Tour[/B]"					# Großevent	
-	tag = u"Livestreams, Rennberichte, Analysen, Videos, Ergebnisse zur Deutschland Tour."
-	cacheID = "DTOUR"
-	img = "http://images.sportschau.de/image/d3108676-9108-4c6f-8746-677eb64b3d2f/AAABgiEMZLA/AAABgPp7Tbc/1x1-640/stimmen-achtzehnte-etappe-106.jpg"
-	path = "https://www.sportschau.de/radsport/deutschland-tour/"
+	title = u"Event: [B]Fußball WM 2022 in Katar[/B]"			# Großevent	
+	tag = u"Hier finden Sie alle Nachrichten, Berichte, Interviews und Ergebnisse zur FIFA WM 2022 in Katar."
+	cacheID = "Sport_WMKatar"
+	img = "https://images.sportschau.de/image/a12b67b2-9716-4be8-9462-79391892a4c2/AAABgRPCPcU/AAABgPp7Db4/16x9-1280/wm-katar-logo-sp-100.jpg"
+	path = "https://www.sportschau.de/fussball/fifa-wm-2022"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
 		(quote(title), quote(path), quote(img), cacheID)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
-	title = u"Event: [B]European Championships[/B]"						# Großevent	
-	tag = u"Neun Europameisterschaften unter einem Dach - vom 11. bis zum 21. August finden die European Championships in München statt."
-	cacheID = "ECS"
-	img = "https://images.sportschau.de/image/014165c6-378c-4007-84f8-cc1d6fc3df77/AAABgmeih7M/AAABgPp7Db4/16x9-1280/symbolbild-european-championships-100.jpg"
-	path = "https://www.sportschau.de/european-championships"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
 
 	title = u"Event-Archiv"									# Buttons für ältere Events	
 	tag = u"Archiv für zurückliegende Groß-Events."
@@ -2785,7 +2776,6 @@ def ARDSportWDR():
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportWDRArchiv", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
-
 
 	title = u"Tor des Monats"									# Tor des Monats
 	tag = u"Tor des Monats: Hier gibt's Highlights, Clips und ausgewählte Höhepunkte aus der langen Geschichte dieser Rubrik."
@@ -2827,6 +2817,28 @@ def ARDSportWDRArchiv():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
+	title = u"Event: [B]Radsport: Deutschland Tour[/B]"					# Großevent	
+	tag = u"Livestreams, Rennberichte, Analysen, Videos, Ergebnisse zur Deutschland Tour."
+	cacheID = "DTOUR"
+	img = "http://images.sportschau.de/image/d3108676-9108-4c6f-8746-677eb64b3d2f/AAABgiEMZLA/AAABgPp7Tbc/1x1-640/stimmen-achtzehnte-etappe-106.jpg"
+	path = "https://www.sportschau.de/radsport/deutschland-tour/"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+	title = u"Event: [B]European Championships[/B]"						# Großevent	
+	tag = u"Neun Europameisterschaften unter einem Dach - vom 11. bis zum 21. August finden die European Championships in München statt."
+	cacheID = "ECS"
+	img = "https://images.sportschau.de/image/014165c6-378c-4007-84f8-cc1d6fc3df77/AAABgmeih7M/AAABgPp7Db4/16x9-1280/symbolbild-european-championships-100.jpg"
+	path = "https://www.sportschau.de/european-championships"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Event: [B]Die Finals[/B]"						# Großevent	
 	tag = u"14 Sportarten, 190 deutsche Meistertitel - vom 23. bis 26. Juni finden in Berlin die Finals statt."
 	cacheID = "Finals"
@@ -2882,16 +2894,6 @@ def ARDSportWDRArchiv():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
-	title = u"Event: [B]Fußball WM 2022 in Katar[/B]"			# Großevent	
-	tag = u"Hier finden Sie alle Nachrichten, Berichte, Interviews und Ergebnisse zur FIFA WM 2022 in Katar."
-	cacheID = "Sport_WMKatar"
-	img = "https://images.sportschau.de/image/a12b67b2-9716-4be8-9462-79391892a4c2/AAABgRPCPcU/AAABgPp7Db4/16x9-1280/wm-katar-logo-sp-100.jpg"
-	path = "https://www.sportschau.de/fussball/fifa-wm-2022"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
@@ -5235,9 +5237,11 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 			summary=summary, tagline=tagline, cmenu=False) 	# ohne Kontextmenü)	
 	
 	item_cnt = 0
-	for fav in my_items:
-		fav = unquote_plus(fav)						# urllib2.unquote erzeugt + aus Blanks!		
-		fav_org = fav										# für ShowFavsExec
+	for fav in my_items:		
+		#fav = unquote_plus(fav)						# urllib2.unquote erzeugt + aus Blanks!		
+		fav = unquote(fav)								# kleineres Übel (unquote_plus entfernt + im Eintrag)
+		fav_org = fav		
+		
 		# PLog('fav_org: ' + fav_org)
 		name=''; merkname=''; thumb=''; dirPars=''; fparams='';	ordner=''		
 		name 	= re.search(' name="(.*?)"', fav) 			# name, thumb,Plot zuerst
@@ -10506,7 +10510,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	 
 	PLog('playlist: ' + playlist[:100])
 	PLog('live: ' + str(live))
-	skip_list = ["/hrhlsde/", "/ndr/", "/mdrtvsn/", "/rbb_brandenburg/",	# keine Mehrkanalstreams: skip
+	skip_list = ["/hrhlsde/", "/ndr/", "/mdrtvsn/", "/rbb_brandenburg/",	# keine Mehrkanalstreams: Einzelauflösungen
 				"/srfsgeo/", "/swrbwd/", "/wdr/", "/ardone/", "/dwstream"
 				]
 	PLog('#EXT-X-MEDIA' in playlist)
@@ -10518,7 +10522,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 				skip=True													# i.d.R. ARD-Streams (nicht alle)
 				break
 		PLog('skip: ' + str(skip))
-		if skip == False and live:											# 
+		if skip == False and live:											# Mehrkanalstreams: 1 Button
 			stitle = "HLS-Stream"
 			PLog("jump_PlayButtonM3u8")
 			PlayButtonM3u8(li, url_m3u8, thumb, stitle, tagline=track_add, descr=descr)	
