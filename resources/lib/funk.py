@@ -625,7 +625,7 @@ def extract_videos(stageObject):
 		
 	dur=str(dur); entityId=str(entityId); channelId=str(channelId); 
 	entityGroup=str(entityGroup); entityId=str(entityId); 
-	
+		
 	title=repl_json_chars(title) 		# json-komp. für func_pars in router()
 	alias=repl_json_chars(alias) 		# dto
 	descr=repl_json_chars(descr) 		# dto

@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>6</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.07.2022
+#	Stand: 21.08.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1661,13 +1661,12 @@ def Live(name, epg=''):
 	img	= R(ICON_TV3Sat)
 	
 
+	Plot	 = 'Live: ' + epg + '\n\n' + summary
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		PLog('Sofortstart: Live')
-		Plot	 = 'Live: ' + name + '\n\n' + epg + '\n\n' + summary
 		PlayVideo(url=m3u8link, title='3Sat Live TV', thumb=img, Plot=Plot)
 		return	
 							
-	Plot	 = 'Live: ' + name + '\n\n' + epg
 	Plot_par = Plot.replace('\n', '||')
 	title=py2_encode(title); m3u8link=py2_encode(m3u8link); img=py2_encode(img);
 	Plot_par=py2_encode(Plot_par);

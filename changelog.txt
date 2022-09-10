@@ -10,6 +10,34 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+10.09.2022 4.5.0
+			ARDSportWDR (sportschau.de): Event-Button "European Championships"
+			ergänzt, dto. "Radsport: Deutschland Tour".
+			ARDSportWDR (sportschau.de): neue Funktion für zurückliegende Groß-
+			Events ARDSportWDRArchiv, betroffene Menübuttons verlagert.
+			episode_check (Modul Podcontent): string-Funktionen ersetzt durch 
+			re.search.
+			get_page_content (ARD neu): Logausgabe für Filterauslösung ergänzt.
+			MVWSearch (Modul yt): Übersetzung Unicodes in descr + title und
+			Anpassung in transl_json (util), Zeichen: å, ø, Å, «, «, Ball-emoji,
+			Nonspacing-Mark.
+			LIVE in Modul phoenix: vollständige Übergabe Infotext an Player - Fixes
+			in Main_phoenix + phoenix_Live.
+			LIVE in Modul 3sat: Doppler in Infotext entfernt.
+			SenderLiveSearch: Fix Format-Error (%S statt %s) in Var tag.
+			SenderLiveListe: cacheToDisc auf False geändert, um Liste nach Rückkehr
+			von SenderLiveSearch neu einzulesen.
+			ARDStart (ARD neu): Infotext "Partnersender.." aus Menü "Unsere Region" 
+			in Menüs Rubriken + ARD-Programme live entfernt. 
+			MVWSearch (Modul yt): fehlende Variable msg ergänzt (Call get_mvw_page).
+			Script Watchdog_Plex-2 (Entw.-PC): Tests um MediathekViewWeb-Suche
+			erweitert.
+			ZDF_getVideoSources: Auswertungsmerkmal 'data-module="zdfplayer"' um 
+			Merkmal '"icon-502_play' ergänzt (relevant für einige Serien).
+			ShowFavs (Merkliste): Austausch unquote_plus gegen unquote im Schleifen-
+			kopf (unquote_plus entfernte '+'-Zeichen in Titeln).  
+			Main_arte (arte): Anpassung Info-Text für MediathekViewWeb-Suche 
+
 14.08.2022 4.4.9
 			SenderLiveListe: div. Tests gegen Klemmer auf Raspi bei den Menüs
 			von TV-Livestreams (s. Doku im Code), einschl. Beschränkung der
@@ -2256,6 +2284,8 @@ not on Github	3.0.2
 			sync_list_intern (Modul Merkliste): zusätzl. Größenangabe Quellfile bei 
 			Fehlschlag, Sync-Blocking falls externe gleichzeitig interne Merkliste.
 			AddonInfos, ergänzt: OS, Kodi-Version.
+			ZDF_getVideoSources: zusätzliche Auswertung, falls Merkmal zdfplayer fehlt,
+			aber Merkmal icon-502_play gefunden wird.
 
 15.05.2020	2.9.8
 			FilterToolsWork: Container.Refresh' vor notification verlagert und cacheToDisc

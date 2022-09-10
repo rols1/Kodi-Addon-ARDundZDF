@@ -256,9 +256,9 @@ def episode_check(downl_list):
 			if match:
 				s = match.group()
 			else:
-				s = "#|#"
+				s = "#|#"										# Auschluss-Muster
 				
-			if s and title.find(s	) > 0:						# Muster am Anfang: unverändert
+			if s and title.find(s) > 0:							# Muster am Anfang: unverändert
 				PLog("match: %s, pos: %d" % (s, title.find(s)))
 				title = title.replace(s, "")					# Muster entfernen
 				

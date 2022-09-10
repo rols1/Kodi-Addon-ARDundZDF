@@ -180,6 +180,7 @@ def Main_NEW(name='', CurSender=''):
 	title = 'Livestreams'
 	tag = "Die [B]Livestreams[/B] der ARD"
 	summ = 'Sender: [B]%s[/B] (unabhängig von der Senderwahl)' % "ARD-Alle"
+	summ = "%s\n\n Fehlende regionale Sender, z.B. BR-Nord, finden sich im Hauptmenü TV-Livestreams" % summ
 	img = R("ard-livestreams.png")
 	ID = 'Livestream'
 	href = 'https://api.ardmediathek.de/page-gateway/widgets/ard/editorials/4hEeBDgtx6kWs6W6sa44yY?pageNumber=0&pageSize=24'
@@ -296,6 +297,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 	title_list=[]											# für Doppel-Erkennung
 
 	for cont in container:
+		tag=""; summ=""
 		descr =  stringextract('"description":"', '"', cont)
 		ID	= stringextract('"id":"', '"', cont)			# id vor pagination
 		pos = cont.find('"pagination"')						# skip ev. spaltenübergreifendes Bild mit 
@@ -341,7 +343,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 			summ = u"Partnersender: [B]%s[/B]" % partner
 			func = "ARDStartRegion"							# neu ab 29.06.2022
 			
-		PLog(title); PLog(ID); PLog(anz); PLog(img); 
+		PLog(path); PLog(title); PLog(ID); PLog(anz); PLog(img); 
 		path=py2_encode(path); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
 			(quote(path), quote(title), ID)
@@ -1364,7 +1366,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 					filtered = True
 					break		
 			if filtered:
-				# PLog('filtered: ' + title)
+				PLog('filtered: <%s> in %s ' % (item, title))
 				continue		
 		
 		if mehrfach:

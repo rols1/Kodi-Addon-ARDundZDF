@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.08.2022
+#	Stand: 10.09.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -85,7 +85,8 @@ def Main_arte(title='', summ='', descr='',href=''):
 
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
-		tag = 'gesucht wird in [B]ARTE.DE[/B]'
+		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
+		tag = '%s\n\ngesucht wird in [B]ARTE.DE[/B]' % tag
 		title=py2_encode(title);
 		func = "resources.lib.arte.Main_arte"
 		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \

@@ -11,7 +11,8 @@
 #	März 2022: ergänzt mit MediathekViewWeb-Funktionen, basierend auf
 #		dem api von Dev. bagbag (https://github.com/bagbag), 
 #		https://github.com/mediathekview/mediathekviewweb,
-#		https://mediathekview.de/news/mediathekviewweb/ 
+#		https://mediathekview.de/news/mediathekviewweb/,
+#		https://github.com/mediathekview 
 #
 ################################################################################
 #
@@ -249,7 +250,7 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 	else:									# Suche in einz. Sender / Channel
 		data = MVW_DATA % (query, sender, offset, lsize)
 	
-	page = get_mvw_page(data)
+	page, msg = get_mvw_page(data)
 	if page == '':	
 		msg1 = "Fehler in MVWSearch:"
 		msg2 = msg
@@ -319,8 +320,12 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 		dauer="?"
 		if duration != '""':										# z.B. Livestream 
 			dauer = seconds_translate(duration)
+			
+		title = transl_json(title)
 		title = repl_json_chars(title)
+		descr = transl_json(descr)
 		summ = repl_json_chars(descr)
+		
 		ut = u"nein"
 		if url_sub:
 			ut = u"ja"

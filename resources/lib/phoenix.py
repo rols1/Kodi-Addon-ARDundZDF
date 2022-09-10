@@ -8,7 +8,7 @@
 #	
 ################################################################################
 # 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 01.08.2022
+#	Stand: 21.08.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -129,9 +129,11 @@ def Main_phoenix():
 	thumb = icon
 	if icon == '':	
 		thumb = ICON_TVLIVE
+	Plot = "%s\n\n%s" % (tag, summ)
+	Plot = Plot.replace("\n", "||")
 		
-	title=py2_encode(title); href=py2_encode(href); tag=py2_encode(tag);
-	fparams="&fparams={'href': '%s', 'title': '%s', 'Plot': '%s'}" % (quote(href), quote(title), quote(tag))
+	title=py2_encode(title); href=py2_encode(href); Plot=py2_encode(Plot);
+	fparams="&fparams={'href': '%s', 'title': '%s', 'Plot': '%s'}" % (quote(href), quote(title), quote(Plot))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.phoenix_Live", fanart=R(ICON_PHOENIX),
 		thumb=thumb, fparams=fparams, tagline=tag, summary=summ)
 	# ------------------------------------------------------
@@ -999,14 +1001,15 @@ def phoenix_Live(href, title, Plot):
 		PlayVideo(url=href, title=title, thumb=img, Plot=Plot)
 		return	
 							
-	Plot_par = Plot.replace('\n', '||')
+	tag = Plot.replace("||", "\n")
+	
 	title=py2_encode(title); href=py2_encode(href); img=py2_encode(img);
-	Plot_par=py2_encode(Plot_par);
+	Plot=py2_encode(Plot);
 	label = title.replace('Live', 'auto')
 	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': 'false'}" %\
-		(quote_plus(href), quote_plus(title), quote_plus(img), quote_plus(Plot_par))
+		(quote_plus(href), quote_plus(title), quote_plus(img), quote_plus(Plot))
 	addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
-		fparams=fparams, mediatype='video', tagline=Plot) 		
+		fparams=fparams, mediatype='video', tagline=tag) 		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
