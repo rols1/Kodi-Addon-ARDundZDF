@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>29</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.09.2022
+# 	<nr>30</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.09.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -288,7 +288,7 @@ def home(li, ID):
 		name = Home + "ZDFmobile"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
-			fanart=img, thumb=img, params=fparams)
+			fanart=img, thumb=img, fparams=fparams)
 	
 	# 	03.06.2021 ARD-Podcasts (Classic) entfernt		
 			
