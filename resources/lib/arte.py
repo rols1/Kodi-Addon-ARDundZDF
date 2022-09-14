@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.09.2022
+# 	<nr>17</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.09.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -815,7 +815,9 @@ def ArteCluster(title='', katurl=''):
 
 			skip=False
 			for s in skip_item:
-				if item.find(s) > 0: PLog(s); skip=True
+				if item.find(s) > 0: 
+					if title != "Alle Videos":				# trotz data":[] möglich
+						PLog(s); skip=True
 			if skip: 
 				PLog("skip: " + title)
 				continue
