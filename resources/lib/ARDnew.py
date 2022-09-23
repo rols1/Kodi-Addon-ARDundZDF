@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>20</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.07.2022
+# 	<nr>21</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.09.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -111,7 +111,7 @@ DEBUG			= SETTINGS.getSetting('pref_info_debug')
 NAME			= 'ARD und ZDF'
 
 #----------------------------------------------------------------
-# sender neu belegt in Senderwahl
+# CurSender neu belegt in Senderwahl
 def Main_NEW(name='', CurSender=''):
 	PLog('Main_NEW:'); 
 	PLog(name); PLog(CurSender)
@@ -2077,11 +2077,18 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 #	zur Verfügung, Ermittlung der timeline-Sender im Web entfällt.
 #	Statt dessen forder wir mit dem gewählten Sender die entspr. 
 #	json-Seite an. Verarbeitung in ARDVerpasstContent 	
+# CurSender neubelegt in Senderwahl
 #
-def ARDVerpasst(title, CurSender):
+def ARDVerpasst(title, CurSender=''):
 	PLog('ARDVerpasst:');
 	PLog(CurSender)
 	
+	if CurSender == '' or CurSender == False or CurSender == 'false':	# Ladefehler?
+		CurSender = ARDSender[0]
+	if ':' in CurSender:				# aktualisieren	
+		Dict('store', "CurSender", CurSender)
+		PLog('sender: ' + CurSender); 
+		CurSender=py2_encode(CurSender);
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	
 	li = xbmcgui.ListItem()
