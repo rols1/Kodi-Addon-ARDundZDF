@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>21</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.09.2022
+# 	<nr>22</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.09.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -198,7 +198,7 @@ def Main_NEW(name='', CurSender=''):
 	
 	title = 'Sendungen A-Z'
 	tag = def_tag
-	fparams="&fparams={'name': 'Sendungen A-Z', 'ID': 'ARD'}"
+	fparams="&fparams={'title': 'Sendungen A-Z', 'CurSender': '%s'}" % (quote(CurSender))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
 						
@@ -235,10 +235,11 @@ def Main_NEW(name='', CurSender=''):
 		thumb=R('ard-bilderserien.png'), fparams=fparams)
 
 	title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
+	tag = "die Senderwahl ist wirksam in [B]%s[/B], [B]%s[/B] und [B]%s[/B]" % ("ARD Mediathek", "A-Z", "Sendung verpasst")
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
-		thumb=R('tv-regional.png'), fparams=fparams) 
+		thumb=R('tv-regional.png'), tagline=tag, fparams=fparams) 
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		 		
@@ -1686,14 +1687,20 @@ def ARDStartVideoMP4get(title, VideoUrls):
 # 25.01.2021 Laden + Caching der Link-Übersicht, Laden der Zielseite in 
 #	SendungenAZ_ARDnew
 # 		
-def SendungenAZ(name, ID):		
-	PLog('SendungenAZ: ' + name)
-	PLog(ID)
-	
-	CurSender = Dict("load", 'CurSender')			
+def SendungenAZ(title, CurSender=''):		
+	PLog('SendungenAZ: ' + title)
+	PLog(CurSender)
+
+	if CurSender == '' or CurSender == False or CurSender == 'false':	# Ladefehler?
+		CurSender = ARDSender[0]
+	if ':' in CurSender:				# aktualisieren	
+		Dict('store', "CurSender", CurSender)
+		PLog('sender: ' + CurSender); 
+		CurSender=py2_encode(CurSender);
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
-	PLog(sender)	
-	title2 = name + ' | aktuell: %s' % sendername
+	PLog(sender)
+		
+	title2 = title + ' | aktuell: %s' % sendername
 	# no_cache = True für Dict-Aktualisierung erforderlich - Dict.Save() reicht nicht			 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')						# Home-Button
@@ -1702,11 +1709,11 @@ def SendungenAZ(name, ID):
 	# azlist = list(string.ascii_uppercase)			# 25.01.2021 A-Z - nicht mehr benötigt
 	# azlist.insert(0,u'#')	
 	path = 'https://api.ardmediathek.de/page-gateway/pages/%s/editorial/experiment-a-z?embedded=false' % sender
-	page = Dict("load", 'ARDnew_AZ_%s' %sender, CacheTime=ARDStartCacheTime)					
+	page = Dict("load", 'ARDnew_AZ_%s' %sender, CacheTime=ARDStartCacheTime)
 	if page == False:										# nicht vorhanden oder zu alt
 		page, msg = get_page(path)		
 		if page == '':	
-			msg1 = u"Fehler in SendungenAZ: %s"	% name
+			msg1 = u"Fehler in SendungenAZ:"
 			msg2 = msg
 			MyDialog(msg1, msg2, '')	
 			return li
@@ -1723,7 +1730,6 @@ def SendungenAZ(name, ID):
 		return li	
 							
 	for grid in gridlist:
-		tag=''
 		button = stringextract('title":"', '"', grid)
 		#if button == 'Z':	# Debug
 		#	PLog(grid)
@@ -1732,17 +1738,22 @@ def SendungenAZ(name, ID):
 			
 		title = "Sendungen mit " + button
 		anz = stringextract('totalElements":', '}', grid)
-		#if anz:											# falsch bei den Senderseiten
-		#	tag = u"Beiträge: %s" % anz
 		href = stringextract('href":"', '"', grid)
-		summ = u'Gezeigt wird der Inhalt für [B]%s[/B]' % sendername
+		tag = u'Gezeigt wird der Inhalt für [B]%s[/B]' % sendername
 		
 		PLog('Satz1:');
 		PLog(button); PLog(anz); PLog(href); 
 		href=py2_encode(href); title=py2_encode(title); 	
 		fparams="&fparams={'title': '%s', 'button': '%s', 'href': '%s'}" % (title, button, quote(href))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ_ARDnew",\
-			fanart=R(ICON_ARD_AZ), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams, summary=summ)																	
+			fanart=R(ICON_ARD_AZ), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
+			
+	title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
+	title=py2_encode(title); caller='resources.lib.ARDnew.SendungenAZ'
+	tag = "die Senderwahl ist wirksam in [B]%s[/B], [B]%s[/B] und [B]%s[/B]" % ("ARD Mediathek", "A-Z", "Sendung verpasst")
+	fparams="&fparams={'title': '%s', 'caller': '%s'}" % (quote(title), caller)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
+		thumb=R('tv-regional.png'), tagline=tag, fparams=fparams)																	
 										
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 ####################################################################################################
@@ -2123,10 +2134,11 @@ def ARDVerpasst(title, CurSender=''):
 			thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=tagline)
 			
 	title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
+	tag = "die Senderwahl ist wirksam in [B]%s[/B], [B]%s[/B] und [B]%s[/B]" % ("ARD Mediathek", "A-Z", "Sendung verpasst")
 	title=py2_encode(title); caller='resources.lib.ARDnew.ARDVerpasst'
 	fparams="&fparams={'title': '%s', 'caller': '%s'}" % (quote(title), caller)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
-		thumb=R('tv-regional.png'), fparams=fparams) 
+		thumb=R('tv-regional.png'), tagline=tag, fparams=fparams) 
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -2240,6 +2252,8 @@ def Senderwahl(title, caller=''):
 		entry=py2_encode(entry); 			
 		if 'ARDVerpasst' in caller:
 			fparams="&fparams={'title': 'Sendung verpasst', 'CurSender': '%s'}" % quote(entry)
+		elif 'SendungenAZ' in caller: 
+			fparams="&fparams={'title': 'Sendungen A-Z', 'CurSender': '%s'}" % quote(entry)
 		else:	
 			fparams="&fparams={'name': 'ARD Mediathek', 'CurSender': '%s'}" % quote(entry)
 		addDir(li=li, label=title, action="dirList", dirID="%s" % caller, fanart=R(img), thumb=R(img), 
