@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>6</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.07.2022
+# 	<nr>7</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.09.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -174,18 +174,21 @@ def Main_KIKA(title=''):
 		fanart=GIT_KIKA, thumb=R(ICON_MAIN_TVLIVE), tagline=tag, fparams=fparams)
 	
 	title=u'MausLive'
-	tag = u"%s\n\nDer Kinderradiokanal des WDR  (Nachfolgeseite für KiRaKa)" % title
+	tag = u"%s\n\nDer Kinderradiokanal des WDR  (Nachfolgeseite für [B]KiRaKa[/B])" % title
 	img = MAUSLIVE
 	fparams="&fparams={}" 
 	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.MausLive",
 		fanart=GIT_KIKA, thumb=img, tagline=tag, fparams=fparams)
 		
-	title=u'KiRaKa - Sendungen und Hörspiele'
-	tag = "%s\n\nDer Kinderradiokanal des WDR" % title
-	fparams="&fparams={}" 
-	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.Kiraka",
-		fanart=GIT_KIKA, thumb=GIT_RADIO, tagline=tag, fparams=fparams)
-		
+	title=u'Kinderhörspiele der ARD-Audiothek'
+	query = u"Kinderhoerspiele"
+	tag = u"Kinderhörspiele aus verschiedenen Radio-Sendungen." 
+	summ = u"Wir verlassen KIKA und wechseln zu den Kinderhörspielen in der ARD-Audiothek."
+	title=py2_encode(title); query=py2_encode(query) 
+	fparams="&fparams={'title': '%s', 'query': '%s'}" % (quote(title), quote(query))
+	addDir(li=li, label=title , action="dirList", dirID="AudioSearch",
+		fanart=GIT_KIKA, thumb=GIT_RADIO, tagline=tag, summary=summ, fparams=fparams)
+	
 	title='Videos und Bilder (A-Z)'
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_VideosBuendelAZ",
@@ -496,7 +499,6 @@ def MausLive():
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Maus_MediaObjects", fanart=MAUSLIVE, 
 		thumb=MAUSRELIVE, fparams=fparams, tagline=tag)
 
-	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 # ----------------------------------------------------------------------
