@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>17</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.09.2022
+# 	<nr>18</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.09.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -277,7 +277,7 @@ def arte_Search(query='', nextpage=''):
 def GetContent(li, page, ID):
 	PLog("GetContent: " + ID)
 	
-	pre_items=[]; max_pre=0
+	pre_items=[]; trailer_items=[]; max_pre=0
 	if ID == 'SEARCH':
 		items = blockextract('"programId"',  page)
 	else:
@@ -286,19 +286,26 @@ def GetContent(li, page, ID):
 			pre_items = blockextract('"title":"',  page[:pos])			# "{" entf. hier
 			max_pre = len(pre_items)
 			page = page[pos:]
-		items = blockextract('{"title":"',  page)
+		items = trailer_items + blockextract('{"title":"',  page)
+		
 	if 	len(items) == 0:
 		items = blockextract('"programId"',  page)						# Fallback 1		 
 	PLog("pre_items: %d, items: %d" % (len(pre_items), len(items)))
 	if max_pre > 0:														# Blöcke zusammenlegen
 		items = pre_items + items
-	
-	
+		
 	mediatype=''; cnt=0													# Default für mehrfach
+	# Trailer-Erkennung nicht eindeutig genug:
+	#if '"trailer":{"config":"https' in page:							# Trailer?
+	#	trailer_items = blockextract('"trailer":{"config":"https', page, '{"title":"')
+	#	PLog("Trailer: " + str(trailer_items)[:80])
+	#	PLog(len(trailer_items))
+	#	img = get_img(page)												# 1. Bild 
+	#	cnt = get_trailer(li, trailer_items, img)
+	
 	
 	for item in items:
-		mehrfach=False; katurl=''			
-			
+		mehrfach=False; katurl=''				
 		title = stringextract('title":"', '"', item)
 		title_raw = title 												# für Abgleich in Kategorien
 		pid = stringextract('programId":"', '"', item)		
@@ -436,6 +443,35 @@ def get_img(item):
 	
 	return img
 	
+# -------------------------------
+# holt Trailer aus items
+#
+def get_trailer(li, trailer_items, img):
+	PLog("get_trailer:")
+
+	mediatype=""
+	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
+		mediatype='video'
+	
+	cnt=0;
+	for item in trailer_items:
+		title = "Trailer"			
+		url = stringextract('config":"', '"', item)
+		pid = url.split("/")[-1]
+		summ = stringextract('description":"', '"', item)
+		
+		PLog('Satz_Trailer:')
+		PLog(pid); PLog(title); PLog(url); PLog(img); PLog(summ[:80]); 
+		title=py2_encode(title); url=py2_encode(url);
+		pid=py2_encode(pid); img=py2_encode(img); summ=py2_encode(summ);
+		
+		fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s','trailer':'%s'}" %\
+			(quote(img), quote(title), quote(pid), "", quote(summ), "", "", "trailer")
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.SingleVideo", 
+			fanart=img, thumb=img, fparams=fparams, summary=summ,  mediatype=mediatype)		
+		cnt=cnt+1
+	return cnt
+	
 # ----------------------------------------------------------------------
 # Folgebeiträge aus GetContent
 #	-> GetContent -> SingleVideo
@@ -464,7 +500,8 @@ def Beitrag_Liste(url, title, get_cluster='yes'):
 	PLog(len(items))
 	if page.find('"collection_subcollection"') > 0 and get_cluster:	# Cluster vorh.?
 		PLog("Ausleitung_Cluster")
-		ArteCluster(katurl=url)
+#		ArteCluster(katurl=url)		hier ev. Teaser ergänzen
+		GetContent(li, page, ID='Beitrag_Liste')
 		
 	else:
 		li = home(li, ID='arte')									# Home-Button
@@ -496,11 +533,16 @@ def Beitrag_Liste(url, title, get_cluster='yes'):
 #	Der Sofortstart findet hier statt (sonst build_Streamlists_buttons),
 #		um Rekursion (ohne Homebuttons) zu vermeiden (ev. Ursache mit
 #		Modulwechsel).
-# 
-def SingleVideo(img, title, pid, tag, summ, dur, geo):
+# externe Trailer-Erkennung nicht eindeutig, s. GetContent
+#
+def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	PLog("SingleVideo: " + pid)
 	title_org = title
 
+	if trailer:														# eindeutige Trailer? s.o.
+		path1 = 'https://api.arte.tv/api/player/v2/trailer/de/%s' % pid	 
+		path2 = "https://api.arte.tv/api/opa/v3/programs/de/%s"  % pid	 
+		
 	path1 = 'https://api.arte.tv/api/player/v2/config/de/%s' % pid	# nur  HLS-Quellen, ev. Teaser (20.04.2022)
 	path2 = "https://api.arte.tv/api/opa/v3/programs/de/%s"  % pid	# Nutzung HBBTV- + MP4-Quellen
 	header = "{'Authorization': 'Bearer Nzc1Yjc1ZjJkYjk1NWFhN2I2MWEwMmRlMzAzNjI5NmU3NWU3ODg4ODJjOWMxNTMxYzEzZGRjYjg2ZGE4MmIwOA',\
@@ -824,6 +866,8 @@ def ArteCluster(title='', katurl=''):
 				
 			PLog('Satz2:')
 			PLog(title); PLog(katurl);
+			title = repl_json_chars(title) 
+			label = repl_json_chars(label) 
 			
 			title=py2_encode(title); katurl=py2_encode(katurl);
 			if '"title":"Alle Videos"' in item:				# einz. Videos listen
@@ -869,6 +913,7 @@ def get_cluster(items, title_org):
 	for item in items:
 		title = stringextract('title":"', '"', item)
 		title = transl_json(title)
+		title = repl_json_chars(title) 					# z.B. Worum geht's?
 		PLog("title_org: %s, title: %s" % (title_org, title))
 		if title_org in title:
 			PLog("found_Cluster: " + title)
@@ -969,7 +1014,9 @@ def get_ArtePage(caller, title, path, header=''):
 	jsonmark = '"props":'								# json-Bereich	26.07.2021 angepasst
 
 	if page == '':										# nicht vorhanden
-		page, msg = get_page(path, header=header)	
+		page, msg = get_page(path, GetOnlyRedirect=True)# Permanent-Redirect-Url abfangen
+		url = page								
+		page, msg = get_page(url, header=header)	
 		if page == '':						
 			msg1 = 'Fehler in %s: %s' % (caller, title)
 			msg2 = msg
