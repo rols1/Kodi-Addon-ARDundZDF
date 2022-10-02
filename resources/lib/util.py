@@ -2444,7 +2444,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 # 26.06.2020 skip_log hinzugefügt (True in get_sort_playlist
 #	loop, Ausgabe der Liste in  "Überregional")
 # Mehrkanal-Streamlinks seit Aug. 2020 - die enth. Audiolinks in 
-#	Kodi nicht verwertbar. 
+#	Kodi nicht getrennt verwertbar. 
 #-----------------------------------------------
 def get_ZDFstreamlinks(skip_log=False):
 	PLog('get_ZDFstreamlinks:')

@@ -10,6 +10,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+02.10.2022 4.5.1
+			home (util): Fix keyword-error für Var fparams beim Home-Button für
+			zdfmobile.
+			ArteCluster (arte): skip-Merkmal 'data":[]' bei Titel "Alle Videos"
+			unterdrückt, single quotes in Titel entfernt (repl_json_chars(title)).
+			get_ArtePage (arte): Permanent-Redirect-Error abgefangen (Bsp. Serie
+			Pure).
+			Beitrag_Liste (arte): Auswertung collection_subcollection verlagert
+			nach GetContent.
+			ARDVerpasst, SendungenAZ (ARD neu): Aktualisierung der Senderwahl 
+			(wie in Main_NEW), Infotext: "die Senderwahl ist wirksam in A-Z, Sendung 
+			verpasst und Menü ARD Mediathek" - auch ergänzt in Main_NEW.
+			KIKA (Modul childs): Menü Kiraka ersetzt durch Kinderhörspiele der ARD-
+			Audiothek (Kiraka-Hörspiele-Link nicht mehr existent, Nachfolge: Menü 
+			MausLive).
+			Settings TV-Livestream-Quellen: 60 Tage hinzugefügt  (bisher max. 20).
+			Settings ffmpeg-Parameter: Parameter -re entfernt (problematisch für
+			leistungsschwache Systeme, Verzicht unproblematisch). 
+
 10.09.2022 4.5.0
 			ARDSportWDR (sportschau.de): Event-Button "European Championships"
 			ergänzt, dto. "Radsport: Deutschland Tour".
@@ -36,7 +55,7 @@ CHANGE HISTORY
 			Merkmal '"icon-502_play' ergänzt (relevant für einige Serien).
 			ShowFavs (Merkliste): Austausch unquote_plus gegen unquote im Schleifen-
 			kopf (unquote_plus entfernte '+'-Zeichen in Titeln).  
-			Main_arte (arte): Anpassung Info-Text für MediathekViewWeb-Suche 
+			Main_arte (arte): Anpassung Info-Text für MediathekViewWeb-Suche. 
 
 14.08.2022 4.4.9
 			SenderLiveListe: div. Tests gegen Klemmer auf Raspi bei den Menüs

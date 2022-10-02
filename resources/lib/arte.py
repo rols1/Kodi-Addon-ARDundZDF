@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>18</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.09.2022
+#	Stand: 30.09.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -273,6 +273,7 @@ def arte_Search(query='', nextpage=''):
 # ----------------------------------------------------------------------
 # Einzel- und Folgebeiträge auch bei Suche möglich. Viele Einzelbeiträge
 #	liegen in der Zukunft, bieten aber kleinen Teaser 
+# Seiten mit collection_subcollection: Auswertung ab dort (Serien)
 #
 def GetContent(li, page, ID):
 	PLog("GetContent: " + ID)
@@ -282,13 +283,19 @@ def GetContent(li, page, ID):
 		items = blockextract('"programId"',  page)
 	else:
 		pos = page.find(u'Auch interessant für Sie')
-		if  pos > 0:					# Trennung: Leithema vom Rest
+		if  pos > 0:					# Trennung: Leit-Thema vom Rest
 			pre_items = blockextract('"title":"',  page[:pos])			# "{" entf. hier
 			max_pre = len(pre_items)
 			page = page[pos:]
-		items = trailer_items + blockextract('{"title":"',  page)
+		items = pre_items + blockextract('{"title":"',  page)
 		
-	if 	len(items) == 0:
+		if page.find('"collection_subcollection"') > 0:
+			pos = page.find('"collection_subcollection"')
+			page = page[pos:]
+			items = pre_items + blockextract('{"title":"', page)
+			PLog("items_collection_subcollection: %d" % len(items))	
+								
+	if len(items) == 0:
 		items = blockextract('"programId"',  page)						# Fallback 1		 
 	PLog("pre_items: %d, items: %d" % (len(pre_items), len(items)))
 	if max_pre > 0:														# Blöcke zusammenlegen
@@ -480,11 +487,11 @@ def get_trailer(li, trailer_items, img):
 #	können fehlen bzw. transparent.png)
 # 17.02.2022 fehlende Bilder via api-Call ergänzt 
 # 23.04.2022 Auswertung Webseite umgestellt auf enth. json-Anteil
-# 28.04.2022 Auswertung next_url ergänzt (s. get_ArtePage), Ausleitung zu
-#	ArteCluster bei Seiten mit collection_subcollection
+# 28.04.2022 Auswertung next_url ergänzt (s. get_ArtePage), 
 #
 def Beitrag_Liste(url, title, get_cluster='yes'):
 	PLog("Beitrag_Liste: " + title)
+	PLog(get_cluster)
 	
 	page = get_ArtePage('Beitrag_Liste', title, path=url)	
 	if page == '':	
@@ -497,20 +504,14 @@ def Beitrag_Liste(url, title, get_cluster='yes'):
 	li = xbmcgui.ListItem()
 	
 	items = blockextract('code":{',  page)
-	PLog(len(items))
-	if page.find('"collection_subcollection"') > 0 and get_cluster:	# Cluster vorh.?
-		PLog("Ausleitung_Cluster")
-#		ArteCluster(katurl=url)		hier ev. Teaser ergänzen
-		GetContent(li, page, ID='Beitrag_Liste')
-		
-	else:
-		li = home(li, ID='arte')									# Home-Button
-		li,cnt = GetContent(li, page, ID='Beitrag_Liste') 			# eigenes ListItem
-		
-		next_url = stringextract('next_url":"', '"', page[-100:]) 	# next_url am Seitenende 
-		PLog("next_url4: " + next_url)	
-		if next_url:												# Mehr-Beiträge?
-			ArteMehr(next_url, first=True)		
+	PLog("items: %d" % len(items))
+	li = home(li, ID='arte')									# Home-Button
+	li,cnt = GetContent(li, page, ID='Beitrag_Liste') 			# eigenes ListItem
+	
+	next_url = stringextract('next_url":"', '"', page[-100:]) 	# next_url am Seitenende 
+	PLog("next_url4: " + next_url)	
+	if next_url:												# Mehr-Beiträge?
+		ArteMehr(next_url, first=True)		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	return

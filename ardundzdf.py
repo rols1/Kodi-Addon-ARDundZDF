@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>71</nr>										# Numerierung für Einzelupdate
-VERSION = '4.5.0'
-VDATE = '10.09.2022'
+VERSION = '4.5.1'
+VDATE = '02.10.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1773,7 +1773,7 @@ def AudioSearch(title, query='', path=''):
 #
 def AudioSearch_cluster(li, url, title, page='', ID='', query=''):
 	PLog('AudioSearch_cluster: ' + ID)
-	PLog(query)
+	PLog(query); PLog(li)
 		
 	if page == '':													# Permanent-Redirect-Url				
 		page, msg = get_page(path=url, do_safe=False, GetOnlyRedirect=True)	
