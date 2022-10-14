@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>71</nr>										# Numerierung für Einzelupdate
+# 	<nr>72</nr>										# Numerierung für Einzelupdate
 VERSION = '4.5.1'
-VDATE = '02.10.2022'
+VDATE = '14.10.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1030,9 +1030,10 @@ def AudioStart(title):
 	
 	# Button für funk anhängen 									# funk
 	title = 'FUNK-Podcasts - Pop und Szene'
-	fparams="&fparams={'prgset': 'funk'}" 
+	fparams="&fparams={'org': 'funk'}" 
 	addDir(li=li, label=title, action="dirList", dirID="AudioSenderPrograms", fanart=R(ICON_MAIN_AUDIO), 
 		thumb=R('funk.png'), fparams=fparams)
+		
 	
 	# Button für Podcast-Favoriten anhängen 					# Podcast-Favoriten
 	title="Podcast-Favoriten"; 
@@ -1292,10 +1293,16 @@ def AudioSenderPrograms(org=''):
 				synop = stringextract('"synopsis":"', '"', LiveObj)
 				if synop:
 					title = "%s: %s" % (title, synop[:70])
-			PLog(org); PLog(title);		
-			if org in title:
-				PLog("found: " + org)
-				break
+			PLog(org); PLog(title);	
+			PLog(title.find(org))
+			if title.find(org) >= 0:
+				if "www.funk.net" in LiveObj:							# Sicherung gegen ..Rundfunk in title
+					PLog("found_funk")
+					break
+				else:
+					if "www.funk.net" not in LiveObj:					# Sicherung gegen funk in org
+						PLog("found_org: %s, title: %s" % (org, title))
+						break
 			
 
 		pos = LiveObj.find('"programSets"')
@@ -1314,8 +1321,12 @@ def AudioSenderPrograms(org=''):
 			cnt=cnt+1
 			
 			web_url =  stringextract('"sharingUrl":"', '"', item)		
+			PLog("web_url: " + web_url)
 			href_add = "?offset=0&limit=20"
-			url_id 	= web_url.split('/')[-1]
+			if web_url.endswith("/"):
+				url_id 	= web_url.split('/')[-2]
+			else:
+				url_id 	= web_url.split('/')[-1]
 			api_url = ARD_AUDIO_BASE + "programsets/%s/%s" % (url_id, href_add)
 			
 			title = stringextract('"title":"', '"', item)				# PRG, z.B. Blaue Couch
@@ -1328,7 +1339,7 @@ def AudioSenderPrograms(org=''):
 			img = img.replace('{width}', '640')
 			
 			
-			PLog("prg: " + title)
+			PLog("prg: %s, url_id: %s" % (title, url_id))
 			tag = u"Folgeseiten | Anzahl: %s\nKategorie [B]%s[/B]" % (anz, cat) 
 			summ = u"zu den einzelnen Beiträgen:\n%s" % title 
 			
@@ -6062,14 +6073,14 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
 				
-		if 'ARDSource' in link:								# Streamlink für ARD-Sender holen,
-			link=''	
+		if 'ARDSource' in link:								# Streamlink für ARD-Sender holen, Ermittlung
+			link=''											#	Untertitel ab Okt 2022 in PlayVideo
 			# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
 			for line in ard_streamlinks:
 				PLog("ardline: " + line[:40])
 				items = line.split('|')
 				if up_low(title_sender) in up_low(items[0]): 
-					link = items[1]
+					link = items[1]							# master.m3u8
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
 				
