@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>7</nr>										# Numerierung für Einzelupdate
-#	Stand: 27.09.2022
+# 	<nr>8</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.10.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1300,6 +1300,8 @@ def Tonschnipsel():
 
 # ######################################################################			
 # einzelnes Video - xml-Seite
+# 15.10.2022 adaptiveHttpStreamingRedirectorUrl nicht mehr verfügbar - 
+#	Austausch gegen csmilHlsStreamingRedirectorUrl
 def Kika_SingleBeitrag(path, title, thumb, summ, duration):
 	PLog('Kika_SingleBeitrag: ' + path)
 	title_org = title
@@ -1323,7 +1325,7 @@ def Kika_SingleBeitrag(path, title, thumb, summ, duration):
 	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
 	#	fehlende Bandbreiten + Auflösungen werden ergänzt
 	assets = blockextract('<asset>', page)
-	url_m3u8 = stringextract('<adaptiveHttpStreamingRedirectorUrl>', '</', page) # x-mal identisch
+	url_m3u8 = stringextract('<csmilHlsStreamingRedirectorUrl>', '</', page) # x-mal identisch
 	sub_path = ''
 
 	HBBTV_List=''										# nur ZDF
