@@ -10,6 +10,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.10.2022 4.5.2
+			ARD-TV-Livestreams: neue Funktion get_streamurl_ut zur Ermittlung der
+			Untertitel-Streamlinks aus master- od. index.m3u8 - wieder deaktiviert,
+			da bisher ohne Wirkung für Kodi-Player + VLC. Funktion sub_path_post 
+			entfernt (obsolet).
+			ARD-TV-Livestreams: experimentelle Funktion thread_getsubtitles einschl. 
+			vtt_convert wieder entfernt + archiviert.
+			livesenderTV.xml: spez. Aufnahmelink (<reclink>) entfernt -obsolet und
+			nicht mehr verfügbar).
+			AudioSenderPrograms (Audiothek): Anpassung an neue Web-Url-Variante zur
+			Ermittlung der Url-ID (mit/ohne Endungs-Slash) + Fix für eindeutige
+			Erkennung von FUNK (Sicherung gegen ..Rundfunk in title).
+			Kika_SingleBeitrag (childs): adaptiveHttpStreamingRedirectorUrl nicht
+			mehr verfügbar - Austausch gegen csmilHlsStreamingRedirectorUrl.
+			get_cluster (arte): Abgleich mit Originaltitel (transl_json entfernt),
+			Anpassung ArteCluster (ArteStart_1: title_org).
+			GetContent (arte): Trailer-Erkennung verbessert - PID aus Url extrahiert,
+			falls Dauer vorhanden, aber "programId" fehlt.
+
 02.10.2022 4.5.1
 			home (util): Fix keyword-error für Var fparams beim Home-Button für
 			zdfmobile.

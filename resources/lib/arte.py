@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>18</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.09.2022
+#	Stand: 16.10.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -413,8 +413,14 @@ def GetContent(li, page, ID):
 
 			cnt=cnt+1					
 		else:
-			if mystrip(dur) == '' or pid == '':
-				continue
+			if mystrip(dur) and pid == "":					# Dauer ohne pid: ev. Trailer
+				try:
+					pid = re.search('RC-(\d+)', url).group(0) 
+				except:
+					pid = ""
+			if mystrip(dur) == '' and pid == '':
+				continue			
+				
 			#if cnt > max_pre:								# ungenau
 			#	tag = u"[COLOR blue]Auch interessant für Sie[/COLOR]\n\n%s" % tag
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
@@ -867,6 +873,7 @@ def ArteCluster(title='', katurl=''):
 				
 			PLog('Satz2:')
 			PLog(title); PLog(katurl);
+			title_org = title								# unverändert für Abgleich
 			title = repl_json_chars(title) 
 			label = repl_json_chars(label) 
 			
@@ -878,7 +885,8 @@ def ArteCluster(title='', katurl=''):
 					fanart=R(ICON_ARTE), thumb=img, fparams=fparams)
 		
 			else:
-				fparams="&fparams={'title': '%s', 'katurl': '%s'}" % (quote(title), quote(katurl))
+				title_org=py2_encode(title_org); 
+				fparams="&fparams={'title': '%s', 'katurl': '%s'}" % (quote(title_org), quote(katurl))
 				addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.ArteCluster", 
 					fanart=R(ICON_ARTE), thumb=img, fparams=fparams)
 
@@ -913,8 +921,6 @@ def get_cluster(items, title_org):
 	page=''
 	for item in items:
 		title = stringextract('title":"', '"', item)
-		title = transl_json(title)
-		title = repl_json_chars(title) 					# z.B. Worum geht's?
 		PLog("title_org: %s, title: %s" % (title_org, title))
 		if title_org in title:
 			PLog("found_Cluster: " + title)

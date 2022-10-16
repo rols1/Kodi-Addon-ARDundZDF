@@ -2043,7 +2043,7 @@ def transl_wtag(tag):
 #	vorh. Datei wird überschrieben
 # 	Rückgabe outfile bei Erfolg, '' bei Fehlschlag
 # https://knowledge.kaltura.com/troubleshooting-srt-files
-# Wegen des strptime-Problems unter Kodi verzicht wir auf auf
+# Wegen des strptime-Problems unter Kodi verzichten wir auf
 #	korrekte Zeitübersetzung und ersetzen lediglich
 #		1. den Zeitoffset 10 durch 00
 #		2. das Sekundenformat 02.000 durch 02,00 (Verzicht auf die letzte Stelle)
@@ -2542,8 +2542,6 @@ def get_ARDstreamlinks(skip_log=False):
 
 	ID = "ard_streamlinks"
 	if days:									# skip CacheTime=0
-		if SETTINGS.getSetting('pref_UT_ON') == 'true':	
-			ID = "ard_streamlinks_UT"
 		page = Dict("load", ID, CacheTime=CacheTime)
 		page = py2_encode(page)
 
@@ -2580,21 +2578,10 @@ def get_ARDstreamlinks(skip_log=False):
 		if href:
 			PLog("lade_livelink: " + title)
 			page, msg = get_page(path=href, JsonPage=True)			# s.a. Livestream ARDStartSingle
-			VideoUrls = blockextract('_quality', page)				# 2 master.m3u8-Url (1 x UT) bei ARD-Sendern
-			PLog(len(VideoUrls))
-			streamurl_ut=''
-			for video in VideoUrls:
-				streamurl = stringextract('stream":"', '"', video)	
-				if '_ut_' in streamurl or '_sub' in streamurl:		# UT-Stream filtern, bisher nur ARD, HR
-					streamurl_ut = streamurl
-			if SETTINGS.getSetting('pref_UT_ON') == 'true':	
-				if streamurl_ut:
-					streamurl = streamurl_ut
-			if streamurl.startswith('http') == False:
-				streamurl = "https:" + streamurl				
+			streamurl = stringextract('_stream":"', '"', page)		# ab Okt. 2022 keine UT-Links mehr gesehen	
 					
 		PLog("Satz1:")
-		PLog(title); PLog(href);  PLog(streamurl);
+		PLog(title); PLog(href); PLog(streamurl);  
 		# Zeile: "title_sender|streamurl|thumb|tagline"
 		ard_streamlinks.append("%s|%s|%s|%s" % (title, streamurl,thumb,''))	
 	
@@ -2683,6 +2670,29 @@ def get_IPTVstreamlinks(skip_log=False):
 	Dict("store", ID, page)
 	return iptv_streamlinks	
 
+#-----------------------------------------------
+# Untertitel-Streamlink aus master- od. index.m3u8 ermitteln
+#  -> Liste (für li.setSubtitles)
+# Aufruf: PlayVideo
+def get_streamurl_ut(streamurl):
+	PLog('get_streamurl_ut:')
+	
+	page, msg = get_page(path=streamurl)
+	pos = page.find('GROUP-ID="subs",URI="')
+	if pos < 0:
+		PLog("streamurl_ut=streamurl_ut")
+		return streamurl									# streamurl_ut = streamurl
+	
+	page = page[pos:]
+	uri = stringextract('URI="', '"', page)					# Bsp.: master_subs_webvtt.m3u8
+	PLog("URI: " + uri)
+	if uri.startswith("https") and uri.endswith("m3u8"):	# kompl. UT-Link https://xx.akamaized.net/..
+		streamurl_ut = uri
+	else:
+		streamurl_ut = streamurl.replace("master.m3u8", uri)
+	PLog("streamurl_ut: " + streamurl_ut)
+	return streamurl_ut	 
+			
 #---------------------------------------------------------------------------------------------------
 # Aufruf: 
 # Icon aus livesenderTV.xml holen
@@ -3191,14 +3201,13 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #	Resume-Funktion Kodi-intern  DB MyVideos107.db, Tab files (idFile, playCount, lastPlayed) + (via key idFile),
 #		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
 #
-#	Untertitel bei Livestreams (01. / 02.12.2021, 17.07.2022
-#		ARD-Sender: falls UT vorh., wird ein zusätzl. Livestream-Link für UT angeboten,
-#			s. ARDStartSingle + get_ARDstreamlinks
-#		ZDF-Sender: verwenden Mehrkanal-Url's für HLS. Die master.m3u8-Dateien enthalten jeweils
-#			2  Untertitel-Links (../8.m3u8) für die webvtt-Segmente. Beide lassen sich im  Kodi-
-#			Player nicht aktivieren. Siehe ZDF_Untertitel_Livestream (lokale Doku)
-#		ONE, KIKA, BR-Nord, HR u.a.: UT-Format wird nicht erkannt (IA: Unable to create subtitle parser)
-#			- neue Funktion sub_path_post z.Z. noch nutzlos + stillgelegt
+#	Untertitel bei Livestreams: ab Okt. 2022 keine getrennten Livestream-Link für UT mehr.
+#		ARD-Sender: die in get_streamurl_ut ermittelten Links (z.B. ../master_subs_webvtt.m3u8) 
+#		funktionieren weder in Kodi (IA: Unable to create subtitle parser) noch im  VLC 
+#		- neue Funktion get_streamurl_ut z.Z. noch nutzlos + stillgelegt
+#		ZDF-Sender: funktionieren inzwischen. Mehrkanal-Url's für HLS. Die master.m3u8-Dateien 
+#		enthalten jeweils 2 Untertitel-Links (../8.m3u8) für die webvtt-Segmente. 
+#		- neue Funktion get_streamurl_ut z.Z. noch nutzlos + stillgelegt
 #
 def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=0):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
@@ -3224,10 +3233,15 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 			li.setSubtitles(sub_list)
 			# xbmc.Player().showSubtitles(True)		# hier unwirksam, s.u. (isPlaying)
 		else:
+			#if "mcdn.daserste.de" in url and url.endswith("master.m3u8"):
+			# experimentelle Funktion thread_getsubtitles einschl. vtt_convert archiviert
+			#	in ../m3u8_download,Untertitel/Untertitel/thread_getsubtitles.py
+			# s.a. https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=697102#post697102 ff.			
 			pass
-			# z.Z. sub_path_post nutzlos, da weder für IA noch Kodi-Player nutzbar - s.o.
-			#sub_list = sub_path_post(url)			# ev. SUBTITLES aus master.-/index.m3u8 bekanntgeben
-			#if sub_list:
+			# z.Z. get_streamurl_ut nutzlos, da weder für IA noch Kodi-Player nutzbar - s.o.
+			#if url.endswith(".m3u8"):				# UT-Link aus Inhalt master.m3u8 ermitteln
+			#	sub_path = get_streamurl_ut(url)
+			#	sub_list.append(sub_path); sub_list.append(sub_path)
 			#	li.setSubtitles(sub_list)
 			
 	PLog('sub_list: ' + str(sub_list));				# s. get_subtitles
@@ -3436,48 +3450,6 @@ def sub_path_conv(sub_path):
 	PLog("sub_path_conv: " + str(sub_list))		
 	return sub_list
 	
-#-------------------------------------
-#  Untertitel-Streamlink aus master- od. index.m3u8 ermitteln
-#  ARDUT, ZDF-UT u.a. -> Liste (für li.setSubtitles)
-def sub_path_post(url):
-	PLog("sub_path_post: " + url)
-	sub_list=[]
-	if url.endswith("master.m3u8") == False and  url.endswith("index.m3u8") == False:
-		return sub_list
-		
-	page, msg = get_page(path=url)
-	if page == '':
-		PLog(msg)
-		return sub_list
-
-	new_m3u8=[]
-	url_end = url.split("/")[-1]								# urlbase: url o. Pfadende
-	url_base = url.split(url_end)[0]
-	PLog("url_base: " + url_base)
-	lines = page.splitlines()
-	for line in lines:
-		if "EXT-X-MEDIA:TYPE=SUBTITLES" in line:
-			uri = stringextract('URI="', '"', line)
-			if uri:
-				if uri.startswith("http") == False:		# Pfadergänzung
-					uri = url.replace(url_end, uri)
-				line = line.split("URI=")[0]
-				line = '%sURI="%s"' % (line.strip(), uri)		# neue SUBTITLE-Zeile
-
-		if line.endswith("m3u8"):								# Resolution-Link master-720p-3328.m3u8
-			if line.startswith("http") == False:				# Pfadergänzung
-				line = '%s/%s' % (url_base, line)
-		
-		new_m3u8.append(line)
-		
-	new_m3u8 = "\n".join(new_m3u8)
-	#outfile = "/tmp/x_sub.m3u8"		# Debug
-	outfile = os.path.join(M3U8STORE, "sub.m3u8")	
-	RSave(outfile, new_m3u8)	
-	sub_list.append(outfile); sub_list.append(outfile)
-
-	return sub_list
-	
 #---------------------------------------------------------------- 
 # SSL-Probleme in Kodi mit https-Code 302 (Adresse verlagert) - Lösung:
 #	 Redirect-Abfrage vor Abgabe an Kodi-Player
@@ -3619,6 +3591,29 @@ def url_check(url, caller=''):
 		PLog(msg3)
 		MyDialog(msg1, msg2, msg3)		 			 	 
 		return False
-	
+
+#----------------------------------------------------------------
+# experimentelle Funktion thread_getsubtitles einschl. vtt_convert archiviert
+#	in ../m3u8_download,Untertitel/Untertitel/thread_getsubtitles.py
 ####################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
