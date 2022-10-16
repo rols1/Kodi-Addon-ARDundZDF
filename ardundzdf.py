@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>72</nr>										# Numerierung für Einzelupdate
+# 	<nr>73</nr>										# Numerierung für Einzelupdate
 VERSION = '4.5.2'
 VDATE = '16.10.2022'
 
@@ -10522,7 +10522,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	PLog('playlist: ' + playlist[:100])
 	PLog('live: ' + str(live))
 	skip_list = ["/hrhlsde/", "/ndr/", "/mdrtvsn/", "/rbb_brandenburg/",	# keine Mehrkanalstreams: Einzelauflösungen
-				"/srfsgeo/", "/swrbwd/", "/wdr/", "/ardone/", "/dwstream"
+				"/srfsgeo/", "/swrbwd/", "/wdr/", "/dwstream"
 				]
 	PLog('#EXT-X-MEDIA' in playlist)
 	# live=True: skip 1 Button, Altern.: Merkmal "_sendung_" in url_m3u8
