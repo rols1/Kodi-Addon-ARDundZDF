@@ -9,8 +9,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
 ################################################################################
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.06.2022
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.10.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -169,7 +169,7 @@ def Search(title):
 		path = "https://www.funk.net/api/v4.0/playlists/"		# Playlists
 		is_channel = True
 	if 'SERIEN' in title:										# KANÄLE und SERIEN
-		path = "https://www.funk.net/data/static/channels"		# Gesamtliste mit Kurzbeschreibungen
+		path = "https://www.funk.net/api/v4.0/channels/"		# Gesamtliste mit Kurzbeschreibungen
 		is_channel = True
 	if 'VIDEOS' in title:										# VIDEOS
 		path = "https://www.funk.net/api/frontend/webapp/search?q=%s"  % quote(py2_encode(query_org))
@@ -189,12 +189,16 @@ def Search(title):
 
 	i=0	# Zähler Listitems
 	listObject=[]
-	if("list" in jsonObject):											# Videos + Channels
+	if("list" in jsonObject):											# Videos 
 		listObject = jsonObject["list"]
-	if ("_embedded" in jsonObject):										# Playlist
-		listObject = jsonObject["_embedded"]["playlistDTOList"]
+	else:
+		if "channelDTOList" in page:	
+			listObject = jsonObject["_embedded"]["channelDTOList"]		# KANÄLE und SERIEN
+		else:
+			listObject = jsonObject["_embedded"]["playlistDTOList"]		# Playlist
 
 	if is_channel == False:												# einz. Videos
+		PLog("search_videos %d" % len(listObject))
 		for stageObject in listObject:
 			title,alias,descr,img,date,dur,cr,entityId = extract_videos(stageObject)
 			date = time_translate(date)
@@ -210,6 +214,7 @@ def Search(title):
 			title = repl_json_chars(title)
 			title = unescape(title)
 			
+			PLog("Satz2:")
 			PLog(title); PLog(entityId); 
 			title=py2_encode(title); img=py2_encode(img); descr_par=py2_encode(descr_par);
 			fparams="&fparams={'title': '%s', 'img': '%s', 'descr': '%s', 'entityId': '%s'}"  %\
@@ -220,6 +225,7 @@ def Search(title):
 		PLog('Search videos: ' + str(i))
 	
 	if is_channel:
+		PLog("search_channel %d" % len(listObject))
 		for stageObject in listObject:
 			typ,title,alias,descr,img,date,entityGroup,entityId = extract_channels(stageObject) 
 			if typ =='':					# Sicherung
@@ -228,6 +234,8 @@ def Search(title):
 				continue					#	eigenes Menü in Main_funk
 			PLog(type(query)); PLog(type(title)); PLog(type(descr));
 			if query in title.lower() or  query in descr.lower():
+				PLog("Mark0")
+				PLog(str(stageObject))
 				title = repl_json_chars(title)
 				title = unescape(title)
 				tag=''											# typ farbig markieren
@@ -276,7 +284,7 @@ def Channels(title, next_path=''):
 	li = home(li, ID=MNAME)			# Home-Button	
 
 	if next_path =='':	
-		next_path = "https://www.funk.net/data/static/channels"		# Gesamtliste mit Kurzbeschreibungen
+		next_path = "https://www.funk.net/api/v4.0/channels/?size=%s" % MAXLINES	# Gesamtliste mit Kurzbeschreibungen
 		if title_org.startswith("PLAY"):							# Playlists nicht in Gesamtliste
 			next_path = "https://www.funk.net/api/v4.0/playlists/?size=%s" % MAXLINES
 	page = loadPage(next_path)
@@ -290,8 +298,11 @@ def Channels(title, next_path=''):
 	
 	if("list" in jsonObject):											# Gesamtliste
 		listObject = jsonObject["list"]
-	if ("_embedded" in jsonObject):										# Playlists
-		listObject = jsonObject["_embedded"]["playlistDTOList"]
+	else:
+		if "channelDTOList" in page:	
+			listObject = jsonObject["_embedded"]["channelDTOList"]		# KANÄLE und SERIEN
+		else:
+			listObject = jsonObject["_embedded"]["playlistDTOList"]		# Playlist
 	
 	try:
 		# todo: Direktaufruf (noch 2 Klicks erforderlich) Bsp. Trend
@@ -377,19 +388,21 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 	# sortmode = "updateDate,desc"							# Alternative (funk Default)
 	if next_path =='':	
 		if title == "NEUESTE VIDEOS":						# Aufruf: Hauptmenü 
-			next_path = "https://www.funk.net/data/static/latestVideos"  # Sort. nicht akzeptiert (404-error)
-		else:												#  Aufruf: Channels
-			next_path = "https://www.funk.net/api/v4.0/videos/byChannelId/%s?size=%s&sort=%s" % (entityId, MAXLINES, sortmode)
-		if isPlaylist == 'True':
-			next_path = "https://www.funk.net/api/v4.0/videos/byPlaylistId/%s?size=%s&sort=%s" % (entityId, MAXLINES, sortmode)
+			# 21.10.2022 neuer Link:
+			next_path = "https://www.funk.net/api/v4.0/videos/?sort=publicationDate,desc"
+		else:												#  21.10.2022 Änderungen bei typ
+			if typ == "default" or typ == "topic":							# Playlist
+				next_path = "https://www.funk.net/api/v4.0/videos/byPlaylistId/%s?size=%s&sort=%s" % (entityId, MAXLINES, sortmode)
+			else:											# typ: series, format, archiveformat
+				next_path = "https://www.funk.net/api/v4.0/videos/byChannelId/%s?size=%s&sort=%s" % (entityId, MAXLINES, sortmode)
 
 
-	page = loadPage(next_path)
+	page = loadPage(next_path)	
 	if page.startswith('Fehler'):
 		msg1 = 'Verbindungsproblem'
 		msg2 = page
 		MyDialog(msg1, msg2, '')
-		xbmcplugin.endOfDirectory(HANDLE)
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	jsonObject = json.loads(page)
 	
 	# RSave("/tmp/x_%s.json" % store_id, page)
@@ -482,6 +495,9 @@ def get_pagination(jsonObject):
 			pass	
 					
 	next_path = next_path.replace('.net/v4.0/', '.net/api/v4.0/') # falls api fehlt
+	# 21.10.2022 orig. ServerLink funktioniert noch nicht
+	next_path = next_path.replace('funk-core-service.default.svc', 'www.funk.net/api')
+	
 	PLog('next_path: %s' % next_path)
 	PLog('pageNumber: %s, pageSize: %s, totalPages:%s, totalElements: %s ' % (pageNumber, pageSize, totalPages, totalElements))
 	if next_path == '':							# reicht 
@@ -534,8 +550,11 @@ def extract_channels(stageObject):
 				img = stageObject["imageLandscape"]
 		if img:
 			img = base + img
-	if img == '' or img == None:		# Falback
+	if img == '' or img == None:		# Fallback
 		img = R(ICON_DIR_FOLDER) 
+	if "funk-core-service" in img:					# 20.10.2022 orig. Link funktioniert noch nicht
+		img_id = img.split("/")[-1]
+		img = base + img_id
 
 	date=''	
 	if("publicationDate" in stageObject):
@@ -611,8 +630,11 @@ def extract_videos(stageObject):
 	if img:
 		if img.startswith("http") == False:	
 			img = base + img
-	else:				# Falback
+	else:				# Fallback
 		img = R(ICON_DIR_FOLDER) 
+	if "funk-core-service" in img:					# 20.10.2022 orig. Link funktioniert noch nicht
+		img_id = img.split("/")[-1]
+		img = base + img_id
 		
 	if "publicationDate" in stageObject:
 		date = stageObject["publicationDate"]
@@ -922,17 +944,18 @@ def get_forms(distrib, prev_bandw=''):
 # 05.10.2021 ssl.create_default_context() nach "SSL: CERTIFICATE_VERIFY_FAILED" hinzugefügt
 #----------------------------------------------------------------  			
 def loadPage(url, auth='', x_cid='', x_token='', data='', maxTimeout = None):
+	PLog("loadPage: " + url)
 	try:
 		safe_url = url.replace( " ", "%20" ).replace("&amp;","&")
 		if data:
 			safe_url="%s?%s" % (safe_url, data)
-		PLog("loadPage: " + safe_url);
+		PLog("safe_url: " + safe_url);
 
 		req = Request(safe_url)
 		
 		# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)		# 07.10.2019: Abruf mit SSLContext klemmt häufig - bei
 		# 	Bedarf mit Prüfung auf >'_create_unverified_context' in dir(ssl)< nachrüsten:
-		gcontext = ssl.create_default_context()
+		gcontext = ssl.create_default_context()	
 
 		req.add_header('User-Agent', 'Mozilla/5.0 (Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Mobile Safari/537.36')
 		req.add_header('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3')
