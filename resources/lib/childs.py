@@ -1327,20 +1327,26 @@ def Kika_SingleBeitrag(path, title, thumb, summ, duration):
 	assets = blockextract('<asset>', page)
 	url_m3u8 = stringextract('<csmilHlsStreamingRedirectorUrl>', '</', page) # x-mal identisch
 	sub_path = ''
-
+	
 	HBBTV_List=''										# nur ZDF
 	HLS_List=[]; Stream_List=[];
-	quality = u'automatisch'
-	HLS_List.append('HLS automatische Anpassung ** auto ** auto ** %s#%s' % (title,url_m3u8))
-			
-	href=url_m3u8;  geoblock=''; descr='';					# für Stream_List n.b.
+	
+	href=url_m3u8;  geoblock=''; descr='';	
+	geoblock=''; descr='';								# für Stream_List n.b.
 	img = thumb
-	if href:
+
+	page, msg = get_page(href)							# Vorprüfung HLS-Quelle
+	if page == "":
+		PLog(msg)										# HTTP Error 503?
+	else:
+		quality = u'automatisch'
+		HLS_List.append('HLS automatische Anpassung ** auto ** auto ** %s#%s' % (title,url_m3u8))
 		Stream_List = ardundzdf.Parseplaylist(li, href, img, geoblock, descr, stitle=title, buttons=False)
-		if type(Stream_List) == list:						# Fehler Parseplaylist = string
+		if type(Stream_List) == list:					# Fehler Parseplaylist = string
 			HLS_List = HLS_List + Stream_List
 		else:
 			HLS_List=[]
+
 	PLog("HLS_List: " + str(HLS_List)[:80])
 	MP4_List = Kika_VideoMP4get(title, assets)
 	PLog("download_list: " + str(MP4_List)[:80])

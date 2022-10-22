@@ -10,6 +10,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+
+22.10.2022 4.5.3
+			Parseplaylist: ONE aus Liste der TV-Livestream-Sender mit Einzelauflösungen
+			entfernt - die Einzelauflösungen funktionieren nicht mehr. 
+			Kika_SingleBeitrag (childs): Vorprüfung HLS-Quelle ergänzt (präventiv).
+			Setting "ARD- und ZDF-TV-Livestream-Quellen": Default von 1 Tag auf 10 Tage
+			erhöht. 
+			Settings-Änderung: Label "strm-Dateien für Videolisten erzeugen (Bündel: 
+			strm, nfo, jpeg)" unbenannt in "strm-Bündel für Videolisten erzeugen (strm, 
+			nfo, jpeg)" - keine funktionale Auswirkung.
+			FUNK: Channel-Pfad ../data/static/channels funktioniert nicht mehr - Tausch
+			gegen  ../api/v4.0/channels/. Anpassungen in Search, extract_channels (img),
+			extract_videos (ServerLink img), Channels, ChannelSingle (byChannelId -> 
+			byPlaylistId, neuer Link für NEUESTE VIDEOS), get_pagination (ServerLink
+			next_path).
+			FUNK: Erweiterung um Podcasts (Anbindung an Audiothek) - Anpassung AudioStart. 		
+
 16.10.2022 4.5.2
 			ARD-TV-Livestreams: neue Funktion get_streamurl_ut zur Ermittlung der
 			Untertitel-Streamlinks aus master- od. index.m3u8 - wieder deaktiviert,

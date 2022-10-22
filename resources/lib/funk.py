@@ -32,18 +32,18 @@ elif PYTHON3:
 	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs
 	from urllib.request import Request, urlopen, urlretrieve
 	from urllib.error import URLError
-	try:									# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
+	try:								# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
 		xbmc.translatePath = xbmcvfs.translatePath
 	except:
 		pass
 
-import  json		
+import json		
 import os, sys
 import ssl
 import datetime, time
-import re				# u.a. Reguläre Ausdrücke
+import re								# u.a. Reguläre Ausdrücke
 
-import ardundzdf					# -> test_downloads
+import ardundzdf						# -> test_downloads
 from resources.lib.util import *
 
 
@@ -52,9 +52,9 @@ ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path')	# Basis-Pfad Addon
+ADDON_PATH    	= SETTINGS.getAddonInfo('path')					# Basis-Pfad Addon
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
-PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
+PLUGIN_URL 		= sys.argv[0]									# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
 
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
@@ -67,7 +67,7 @@ if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 				# hier nur DICTSTORE genutzt
 
-ICON 			= 'icon.png'		# ARD + ZDF
+ICON 			= 'icon.png'			# ARD + ZDF
 ICON_FUNK		= 'funk.png'			
 ICON_MAIN_ZDF	= 'zdf-mediathek.png'
 ICON_DIR_FOLDER	= "Dir-folder.png"
@@ -129,6 +129,12 @@ def Main_funk():
 
 	fparams="&fparams={'title': '%s'}" % "PLAYLISTS"
 	addDir(li=li, label= "PLAYLISTS", action="dirList", dirID="resources.lib.funk.Channels", fanart=R(ICON_FUNK), 
+		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
+
+	title = 'funk: Das Content-Netzwerk von ARD und ZDF'					# Button-Kopie aus AudioStart
+	label = "FUNK-PODCASTS (Wechsel zur Audiothek)"	
+	fparams="&fparams={'org': '%s'}" %  title
+	addDir(li=li, label=label, action="dirList", dirID="ardundzdf.AudioSenderPrograms", fanart=R(ICON_MAIN_AUDIO), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 
 	fparams="&fparams={'title': '%s'}" % "WEITERE KANÄLE"

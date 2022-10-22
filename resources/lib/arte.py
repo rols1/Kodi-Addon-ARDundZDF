@@ -425,7 +425,7 @@ def GetContent(li, page, ID):
 			#	tag = u"[COLOR blue]Auch interessant für Sie[/COLOR]\n\n%s" % tag
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
 				mediatype='video'
-			
+				
 			fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s'}" %\
 				(quote(img), quote(title), quote(pid), quote(tag_par), quote(summ), dur, geo)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.SingleVideo", 
@@ -517,7 +517,7 @@ def Beitrag_Liste(url, title, get_cluster='yes'):
 	next_url = stringextract('next_url":"', '"', page[-100:]) 	# next_url am Seitenende 
 	PLog("next_url4: " + next_url)	
 	if next_url:												# Mehr-Beiträge?
-		ArteMehr(next_url, first=True)		
+		ArteMehr(next_url, first=True)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	return

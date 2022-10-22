@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>73</nr>										# Numerierung für Einzelupdate
-VERSION = '4.5.2'
-VDATE = '16.10.2022'
+VERSION = '4.5.3'
+VDATE = '22.10.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1029,11 +1029,10 @@ def AudioStart(title):
 		thumb=R("ard-sender.png"), fparams=fparams)
 	
 	# Button für funk anhängen 									# funk
-	title = 'FUNK-Podcasts - Pop und Szene'
-	fparams="&fparams={'org': 'funk'}" 
+	title = 'funk: Das Content-Netzwerk von ARD und ZDF'		# Watchdog: ../organizations
+	fparams="&fparams={'org': '%s'}" %  title
 	addDir(li=li, label=title, action="dirList", dirID="AudioSenderPrograms", fanart=R(ICON_MAIN_AUDIO), 
 		thumb=R('funk.png'), fparams=fparams)
-		
 	
 	# Button für Podcast-Favoriten anhängen 					# Podcast-Favoriten
 	title="Podcast-Favoriten"; 
@@ -1296,14 +1295,8 @@ def AudioSenderPrograms(org=''):
 			PLog(org); PLog(title);	
 			PLog(title.find(org))
 			if title.find(org) >= 0:
-				if "www.funk.net" in LiveObj:							# Sicherung gegen ..Rundfunk in title
-					PLog("found_funk")
-					break
-				else:
-					if "www.funk.net" not in LiveObj:					# Sicherung gegen funk in org
-						PLog("found_org: %s, title: %s" % (org, title))
-						break
-			
+				PLog("found_org: %s, title: %s" % (org, title))
+				break			
 
 		pos = LiveObj.find('"programSets"')
 		page = LiveObj[pos:]
@@ -5164,23 +5157,23 @@ def DownloadText(textKey):
 # Aufruf Main, Favoriten oder Merkliste anzeigen + auswählen
 #	Hinzufügen / Löschen in Watch (Script merkliste.py)
 # mode = 'Favs' für Favoriten  oder 'Merk' für Merkliste
-# 	Datenbasen (Einlesen in ReadFavourites (Modul util) :
-#		Favoriten: special://profile/favourites.xml 
-#		Merkliste: ADDON_DATA/merkliste.xml (WATCHFILE)
-# 	Verarbeitung:
-#		Favoriten: Kodi's Favoriten-Menü, im Addon_Listing
-#		Merkliste: zusätzl. Kontextmenmü (s. addDir Modul util) -> Script merkliste.py
+# Datenbasen (Einlesen in ReadFavourites (Modul util) :
+#	Favoriten: special://profile/favourites.xml 
+#	Merkliste: ADDON_DATA/merkliste.xml (WATCHFILE)
+# Verarbeitung:
+#	Favoriten: Kodi's Favoriten-Menü, im Addon_Listing
+#	Merkliste: zusätzl. Kontextmenmü (s. addDir Modul util) -> Script merkliste.py
 #	
-#	Probleme:  	Kodi's Fav-Funktion übernimmt nicht summary, tagline, mediatype aus addDir-Call
-#				Keine Begleitinfos, falls  summary, tagline od. Plot im addDir-Call fehlen.
-#				gelöst mit Base64-kodierter Plugin-Url: 
-#					Sonderzeichen nach doppelter utf-8-Kodierung
-#				07.01.2020 Base64 in addDir wieder entfernt - hier Verbleib zum Dekodieren
-#					alter Einträge
-# 				Sofortstart/Resumefunktion: funktioniert nicht immer - Bsp. KIKA-Videos.
-#					Die Kennzeichnung mit mediatype='video' erfolgt nach Abgleich mit
-#					CallFunctions.
-#					Kodi verwaltet die Resumedaten getrennt (Merkliste/Originalplatz). 
+# Probleme: Kodi's Fav-Funktion übernimmt nicht summary, tagline, mediatype aus addDir-Call
+#			Keine Begleitinfos, falls  summary, tagline od. Plot im addDir-Call fehlen.
+#			gelöst mit Base64-kodierter Plugin-Url: 
+#				Sonderzeichen nach doppelter utf-8-Kodierung
+#			07.01.2020 Base64 in addDir wieder entfernt - hier Verbleib zum Dekodieren
+#				alter Einträge
+# 			Sofortstart/Resumefunktion: funktioniert nicht immer - Bsp. KIKA-Videos.
+#				Die Kennzeichnung mit mediatype='video' erfolgt nach Abgleich mit
+#				CallFunctions.
+#				Kodi verwaltet die Resumedaten getrennt (Merkliste/Originalplatz). 
 #
 # Ordnerverwaltung + Filter s. Wicki
 #	Filter-Deadlock-Sicherungen: 
