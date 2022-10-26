@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>73</nr>										# Numerierung für Einzelupdate
+# 	<nr>74</nr>										# Numerierung für Einzelupdate
 VERSION = '4.5.3'
-VDATE = '22.10.2022'
+VDATE = '26.10.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5623,6 +5623,9 @@ def TVLiveRecordSender(title):
 		summ 	= 'Aufnahmedauer: %s' 	% laenge
 		summ	= u"%s\n\nStart ohne Rückfrage!" % summ
 		tag		= 'Zielverzeichnis: %s' % SETTINGS.getSetting('pref_download_path')
+		
+		PLog("RecordSender: %s, %s" % (title, link))
+		PLog(str(rec))
 		title=py2_encode(title); link=py2_encode(link);
 		fparams="&fparams={'url': '%s', 'title': '%s', 'duration': '%s', 'laenge': '%s'}" \
 			% (quote(link), quote(title), duration, laenge)
@@ -5735,8 +5738,11 @@ def get_sort_playlist():						# Senderliste für EPG + Recording
 			for line in zdf_streamlinks:
 				items = line.split('|')
 				# Bsp.: "ZDFneo " in "ZDFneo Livestream":
+				#PLog("ZDFsource: %s || %s" % (title_sender, str(items)))
 				if up_low(title_sender) in up_low(items[0]): 
 					link = items[1]
+					PLog("found: %s || %s" % (title_sender, str(items)))
+					break
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)	
 						
@@ -5745,10 +5751,11 @@ def get_sort_playlist():						# Senderliste für EPG + Recording
 			link=''										# Reihenfolge an Playlist anpassen
 			# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
 			for line in ard_streamlinks:
-				#PLog("ardline: " + line)
+				#PLog("ARDSource: %s || %s" % (title_sender, str(items)))
 				items = line.split('|')
 				if up_low(title_sender) in up_low(items[0]): 
 					link = items[1]
+					break
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
 		
@@ -5757,12 +5764,13 @@ def get_sort_playlist():						# Senderliste für EPG + Recording
 			link=''										# Reihenfolge an Playlist anpassen
 			# Zeile iptv_streamlinks: "Sender|href|thumb|tagline"
 			for line in iptv_streamlinks:
-				PLog("iptvline: " + line)
+				#PLog("IPTVSource: %s || %s" % (title_sender, str(items)))
 				items = line.split('|')
 				if up_low(title_sender) in up_low(items[0]): 
 					link = items[1]
 					if items[2]:						# Icon aus IPTVSource?
 						img = items[2]
+					break
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
 		
@@ -6063,6 +6071,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 				# Bsp.: "ZDFneo " in "ZDFneo Livestream":
 				if up_low(title_sender) == up_low(items[0]): 
 					link = items[1]
+					break
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
 				
@@ -6074,6 +6083,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 				items = line.split('|')
 				if up_low(title_sender) in up_low(items[0]): 
 					link = items[1]							# master.m3u8
+					break
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
 				
