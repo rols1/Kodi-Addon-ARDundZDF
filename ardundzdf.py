@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>74</nr>										# Numerierung für Einzelupdate
 VERSION = '4.5.3'
-VDATE = '26.10.2022'
+VDATE = '29.10.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -540,7 +540,7 @@ def Main():
 
 	tag = '[B]Infos, Tools und Filter zu diesem Addon[/B]'					# Menü Info + Tools
 	summ= u'Ausschluss-Filter bearbeiten (nur für Beiträge von ARD und ZDF)'
-	summ= u'%s\n\nSuchwörter bearbeiten (nur für die Suche in ARD Mediathek und ZDF Mediathek)' % summ
+	summ= u'%s\n\nSuchwörter bearbeiten (nur für die gleichzeitige Suche in ARD Mediathek und ZDF Mediathek)' % summ
 
 	summ = "%s\n\n%s" % (summ, "Download- und Aufnahme-Tools")
 	if SETTINGS.getSetting('pref_strm') == 'true':
@@ -10497,7 +10497,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 #	19.12.2020 Sendungs-Titel ergänzt (optional: stitle)
 #	03.03.2020 Erweiterung buttons: falls False keine Buttons sondern Rückgabe als Liste
 #		Stream_List (Format s.u.)
-#	23.04.2022  Mehrkanalstreams mit Kennung GROUP-ID entfernen (in Kodi nicht verwertbar)
+#	23.04.2022 Mehrkanalstreams mit Kennung GROUP-ID entfernen (in Kodi nicht verwertbar) - nicht mehr relevant
+#		mit Sender-Liste für Einzelauflösungen
+#	29.10.2022 Bereinigung Sender-Liste mit mögl. Einzelauflösungen (entfernt: HR, NDR, WDR)
 #
 	PLog ('Parseplaylist: ' + url_m3u8)
 	Stream_List=[]
@@ -10524,8 +10526,8 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	 
 	PLog('playlist: ' + playlist[:100])
 	PLog('live: ' + str(live))
-	skip_list = ["/hrhlsde/", "/ndr/", "/mdrtvsn/", "/rbb_brandenburg/",	# keine Mehrkanalstreams: Einzelauflösungen
-				"/srfsgeo/", "/swrbwd/", "/wdr/", "/dwstream"
+	skip_list = ["/mdrtvsn/", "/rbb_brandenburg/",							# keine Mehrkanalstreams: Einzelauflösungen mögl.
+				"/srfsgeo/", "/swrbwd/", "/dwstream"
 				]
 	PLog('#EXT-X-MEDIA' in playlist)
 	# live=True: skip 1 Button, Altern.: Merkmal "_sendung_" in url_m3u8
