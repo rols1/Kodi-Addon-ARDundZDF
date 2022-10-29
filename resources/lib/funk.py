@@ -9,8 +9,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
 ################################################################################
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.10.2022
+# 	<nr>3</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.10.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -156,9 +156,11 @@ def Main_funk():
 # ----------------------------------------------------------------------			
 # Channelformat: Playlists, KANÄLEN und SERIE
 # Videosuche: static/search?=%s
+# 29.10.2022 PLAYLISTS-Verzweigung entfernt (is_channel: typ == "default"), 
+#	Funktion Channels nicht mehr für Suchergebnisse geeignet
 #
 def Search(title):
-	PLog('Search:')
+	PLog('Search: ' + title)
 	li = xbmcgui.ListItem()
 	li = home(li, ID=MNAME)			# Home-Button	
 
@@ -252,22 +254,14 @@ def Search(title):
 					tag = u"[COLOR darkgoldenrod]SERIE[/COLOR]"
 				if typ == "archiveformat":	# WEITERE KANÄLE
 					tag = u"[COLOR green]WEITERER KANAL[/COLOR]" 
-				if typ == "default":		# PLAYLISTS	-> Channel 
-					isPlaylist = 'True'
-					next_path = "https://www.funk.net/api/v4.0/playlists/%s" % entityId
-					tag = u"[COLOR darkgoldenrod]PLAYLIST[/COLOR]"
+				if typ == "default":		# PLAYLISTS	-> Channel
+					tag = u"[COLOR blue]PLAYLISTS[/COLOR]" 
 					
-					title=py2_encode(title); next_path=py2_encode(next_path);
-					fparams="&fparams={'title': '%s','next_path': '%s'}" % (quote(title), quote(next_path))
-					addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Channels", 
-						fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)
-					
-				else:
-					title=py2_encode(title); 
-					fparams="&fparams={'title': '%s', 'typ': '%s', 'entityId': '%s', 'isPlaylist': '%s'}"  %\
-						(quote(title), typ, entityId, isPlaylist)
-					addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ChannelSingle", 				
-						fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)
+				title=py2_encode(title); 
+				fparams="&fparams={'title': '%s', 'typ': '%s', 'entityId': '%s', 'isPlaylist': '%s'}"  %\
+					(quote(title), typ, entityId, isPlaylist)
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.ChannelSingle", 				
+					fanart=R(ICON_FUNK), thumb=img, tagline=tag, summary=descr, fparams=fparams)
 				i=i+1
 		PLog('Search channels: ' + str(i))
 			
@@ -444,7 +438,6 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 		# Probleme mit zahlreichen /r/n
 		descr_par = descr.replace('\n', '||'); descr_par = descr_par.replace('\r', '')  # \r\n\r\n
 		descr_par = repl_json_chars(descr_par); 
-		title = repl_json_chars(title)
 		title = unescape(title)
 
 		PLog("Satz1:")
@@ -654,6 +647,7 @@ def extract_videos(stageObject):
 	dur=str(dur); entityId=str(entityId); channelId=str(channelId); 
 	entityGroup=str(entityGroup); entityId=str(entityId); 
 		
+	title = title.replace("\n", "")
 	title=repl_json_chars(title) 		# json-komp. für func_pars in router()
 	alias=repl_json_chars(alias) 		# dto
 	descr=repl_json_chars(descr) 		# dto
@@ -817,6 +811,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 		MyDialog(msg1, msg2, '')
 		return		
 	
+	title = title.replace("\n", "")
 	title = repl_json_chars(title)
 	title_org = title
 	
