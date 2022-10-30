@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>18</nr>										# Numerierung für Einzelupdate
+# 	<nr>19</nr>										# Numerierung für Einzelupdate
 #	Stand: 30.10.2022
 
 # Python3-Kompatibilität:
@@ -944,6 +944,11 @@ def get_cluster(items, title_org):
 def ArteMehr(next_url, first=False):
 	PLog("ArteMehr: " + next_url)
 	PLog(first)
+	PLog(next_url); 
+	if next_url.startswith("/de/"):
+		next_url = "https://www.arte.tv" + next_url	
+	PLog(next_url) 	
+	
 	jsonmark = '"props":'								# json-Bereich wie get_ArtePage
 	li = xbmcgui.ListItem()
 
