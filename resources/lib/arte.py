@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>18</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.10.2022
+#	Stand: 30.10.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -316,7 +316,7 @@ def GetContent(li, page, ID):
 		title = stringextract('title":"', '"', item)
 		title_raw = title 												# für Abgleich in Kategorien
 		pid = stringextract('programId":"', '"', item)		
-		url = stringextract('url":"', '"', item)	
+		url = stringextract('url":"', '"', item)
 		subtitle = stringextract('subtitle":"', '"', item)				# null möglich -> ''
 		summ = stringextract('Description":"', '"', item)				# shortDescription, Alt.: teaserText
 		img_alt = stringextract('caption":"', '"', item)
@@ -448,7 +448,7 @@ def get_img(item):
 	img=''
 	for image in images:
 		if 'w":300' in image or 'w":720' in image or 'w":940' in image or 'w":1920' in image:
-			img = stringextract('url":"', '",', image)
+			img = stringextract('url":"', '",', image)			
 			break
 			
 	if img == '':
@@ -493,11 +493,15 @@ def get_trailer(li, trailer_items, img):
 #	können fehlen bzw. transparent.png)
 # 17.02.2022 fehlende Bilder via api-Call ergänzt 
 # 23.04.2022 Auswertung Webseite umgestellt auf enth. json-Anteil
-# 28.04.2022 Auswertung next_url ergänzt (s. get_ArtePage), 
+# 28.04.2022 Auswertung next_url ergänzt (s. get_ArtePage)
 #
 def Beitrag_Liste(url, title, get_cluster='yes'):
 	PLog("Beitrag_Liste: " + title)
 	PLog(get_cluster)
+	PLog(url); 
+	if url.startswith("/de/"):
+		url = "https://www.arte.tv" + url	
+	PLog(url) 
 	
 	page = get_ArtePage('Beitrag_Liste', title, path=url)	
 	if page == '':	
@@ -817,9 +821,12 @@ def Kategorien():
 # Aufrufer: Kategorien / ArteCluster
 # 2 Durchläufe: 1. Liste Cluster, 2. Cluster-Details
 # Mehr-Seiten:  -> get_ArtePage mit katurl, ohne Dict_ID
-#
+# 
 def ArteCluster(title='', katurl=''):
 	PLog("ArteCluster: " + title)
+	PLog(katurl); 
+	if katurl.startswith("/de/"):
+		katurl = "https://www.arte.tv" + katurl	
 	PLog(katurl); 
 	katurl_org=katurl
 

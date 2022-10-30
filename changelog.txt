@@ -10,6 +10,19 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+30.10.2022 4.5.4
+			TV-Livestreams/Regional: alternative IPTV-Quellen für NDR Hamburg und NDR 
+			Mecklenburg-Vorpommern verwendet (livesenderTV.xml).
+			get_sort_playlist: fehlendes break in 3 Schleifen ergänzt (Sender-/Link-
+			Zuordnung bei ZDFsource war nicht eindeutig), dto. in SenderLiveListe.
+			Modul funk: weitere Anpassungen nach api-Änderungen - in Search  PLAYLISTS-
+			Verzweigung entfernt (is_channel: typ == "default"), Funktion Channels nicht 
+			mehr für Suchergebnisse geeignet.
+			extract_videos, ShowVideo (Modul funk): Zeilenumbr. in Titel entfernt.
+			Parseplaylist: Bereinigung Sender-Liste mit mögl. Einzelauflösungen (entfernt:
+			HR, NDR, WDR).
+			ArteCluster + Beitrag_Liste (Modul Arte): Link-Ergänzung für Kategorien-Url 
+			"https://www.arte.tv" + katurl).	
 
 22.10.2022 4.5.3
 			Parseplaylist: ONE aus Liste der TV-Livestream-Sender mit Einzelauflösungen
