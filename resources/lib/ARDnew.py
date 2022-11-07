@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>22</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.09.2022
+# 	<nr>23</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.11.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -258,7 +258,7 @@ def Main_NEW(name='', CurSender=''):
 #	Problem Stringauswertung: die ersten 4 Container folgen doppelt (bei jedem Sender) - Abhilfe: 
 #		Abgleich mit Titelliste. Wg. Performance Verzicht auf json-/key-Auswertung.
 # 30.09.2021 Sonderbehdl. spaltenübergreifender Titel mit Breitbild (Auswert. descr, skip Bild)
-# 29.06.2022 Abzweig ARDStartRegion für neuen Cluster "Unsere Region"
+# 29.06.2022 Abzweig ARDStartRegion für neuen Cluster "Unsere Region" 
 #
 def ARDStart(title, sender, widgetID='', path=''): 
 	PLog('ARDStart:'); 
@@ -335,7 +335,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 		
 		PLog('Satz_cont1:');
 		func = "ARDStartRubrik"								# Default-Funktion
-		if "Unsere Region" in title:
+		if "Unsere Region" in title:				
 			items = Dict("load", 'ARD_REGION')
 			rname = "Berlin"; partner = "rbb"
 			if "|" in str(items):
@@ -552,7 +552,6 @@ def ARDStartRegion(path, title, widgetID='', ID=''):
 		 fanart=img, thumb=img, tagline=tag, fparams=fparams)
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
 
 #---------------------------------------------------------------------------------------------------
 # Auflistung einer Rubrik aus ARDStart - geladen wird das json-Segment für die Rubrik, z.B.
@@ -1268,10 +1267,6 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	for s  in gridlist:
 		uhr=''; ID=ID_org; duration='';	
 		PLog("Mark10")
-		if 'EPG' not in ID:										# decor im 1. Drittel
-			pos = s.find('"decor"',100)							# möglich: Block reicht in Folgeblock
-			if pos > 100:										# eigenes decor zw. broadcastedOn + duration
-				s = s[:pos]
 		
 		mehrfach = True											# Default weitere Rubriken
 		if 'target":{"id":"' in s:
