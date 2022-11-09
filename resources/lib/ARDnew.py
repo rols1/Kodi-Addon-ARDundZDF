@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>23</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.11.2022
+# 	<nr>24</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.11.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -287,6 +287,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 			msg3 = "Seite ist älter als %s Minuten (CacheTime)" % str(ARDStartCacheTime/60)
 		else:
 			msg2='Startseite nicht im Cache verfuegbar.'
+			page=''
 		MyDialog(msg1, msg2, msg3)	
 	else:	
 		Dict("store", 'ARDStartNEW_%s' % sendername, page) 	# Seite -> Cache: aktualisieren	
@@ -325,6 +326,9 @@ def ARDStart(title, sender, widgetID='', path=''):
 
 		path 	= stringextract('"href":"', '"', cont)
 		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
+		if "/region/" in path and '{regionId}' in path:		# Bild Region laden, Default Berlin
+			region="be"; rname="Berlin"; partner="rbb"		# Default-Region, Änderung in ARDStartRegion
+			path = path.replace('{regionId}', region)
 		img = img_preload(ID, path, title, 'ARDStart')
 		
 		if 'Livestream' in title or up_low('Live') in up_low(title):

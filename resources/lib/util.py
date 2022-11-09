@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>30</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.09.2022
+# 	<nr>31</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.10.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1035,6 +1035,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 # 02.11.2020 URLError -> Exception, s. changelog.txt
 # 06.08.2021 Behandl. HTTP Error 308: Permanent Redirect hinzugefügt
 # 21.03.2021 Option Download PDF-Dateien hinzugefügt
+# 09.11.2022 Option requests-call (get_page3) hinzugefügt (wirkt nur, falls einkompiliert od.
+#	lokal vorhanden - s.o.), exception-Rückgabe bei GetOnlyRedirect angepasst (Reuse path bei
+#	get_page3. Bei Bedarf nachrüsten in url_check + Modulen funk, updater, zdfmobile, EPG.
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True, decode=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
@@ -1057,17 +1060,11 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 
 	msg = ''; page = ''	
 	UrlopenTimeout = 10
-	
-	'''
-	try:
-		import requests							# 1. Versuch mit requests - s.o.
-		PLog("get_page1:")
-		...
-	'''
+
 
 	if page == '':
-		try:															# 2. Versuch ohne SSLContext 
-			PLog("get_page2:")
+		try:															# 1. Versuch ohne SSLContext 
+			PLog("get_page1:")
 			if GetOnlyRedirect:											# nur Redirect anfordern
 				# Alt. hier : new_url = r.geturl()
 				# bei Bedarf HttpLib2 mit follow_all_redirects=True verwenden
@@ -1084,7 +1081,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 						PLog("HTTP308_301_new_url: " + new_url)
 						return new_url, ''
 					else:
-						return '', str(e)
+						return path, ''									# mögl. Reuse path in page4
+						#return '', str(e)
 					
 				page = r.geturl()
 				info = r.info()
@@ -1149,7 +1147,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	if page == '':
 		import ssl
 		try:
-			PLog("get_page3:")											# 3. Versuch mit SSLContext
+			PLog("get_page2:")											# 2. Versuch mit SSLContext
 			if header:
 				req = Request(path, headers=header)	
 			else:
@@ -1164,21 +1162,34 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			page = r.read()
 			r.close()
 			PLog(len(page))
+			PLog(page[:100])
 		except Exception as exception:									# s.o.
 			msg = str(exception)
 			PLog(msg)						
 
+	req_fail=False
+	if page == '':
+		try:
+			PLog("get_page3:")											# 3. Versuch mit requests
+			import requests												# kann fehlen - s.o 
+			if header:
+				r = requests.get(path, headers=header, timeout=UrlopenTimeout)	
+			else:
+				r = requests.get(path, timeout=UrlopenTimeout)
+			PLog(r.status_code)
+			page = r.content
+			PLog(len(page))
+			PLog(page[:100])
+		except Exception as exception:
+			PLog(str(exception))
+			req_fail=True
+			page = ''	
+
 			
 	if page == '':
-		# Abschalthinweis verfrüht - fehlende Beiträge in Classic-
-		#	Version immer noch möglich (02.03.2020)
-		error_txt = 'Quelle nicht erreichbar oder nicht mehr vorhanden'
-		#error_txt = msg
-		#if 'classic.ardmediathek.de' in path:
-		#	msg1 = 'Die ARD-Classic-Mediathek ist vermutlich nicht mehr verfügbar.'	
-		#	msg2 = 'Bitte in den Einstellungen abschalten, um das Modul'
-		#	msg3 = 'ARD-Neu zu aktivieren.'
-		#	MyDialog(msg1, msg2, msg3)		 			 	 
+		error_txt = 'Quelle nicht erreichbar oder nicht mehr vorhanden.'
+		if req_fail:
+			error_txt = "%s\nget_page1 - get_page3 fehlgeschlagen." % error_txt
 		msg = error_txt + ' | %s' % msg
 		PLog(msg)
 		return page, msg
@@ -1210,7 +1221,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			msg = str(exception)
 			PLog(msg)
 
-	return page, msg	
+	return page, msg
 # ----------------------------------------------------------------------
 def getHeaders(response):
 	PLog('getHeaders:')
