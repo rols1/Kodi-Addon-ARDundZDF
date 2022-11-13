@@ -34,8 +34,11 @@ elif PYTHON3:
 	except:
 		pass
 
-from util import PLog, stringextract, ReadFavourites, RSave, R, check_AddonXml,\
-					MyDialog, RLoad, blockextract, get_keyboard_input, exist_in_list
+try:											
+	from resources.lib.util import *		# Aufruf start_script (Haupt-PRG)
+except:
+	from util import *						# Aufruf Kontextmenü
+
 
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -695,8 +698,168 @@ def check_ordner(ordner, my_ordner_list, my_items):
 				link_list.append(iname)
 		# PLog(link_list)	# Debug
 		return exist, link_cnt
+		
+# ----------------------------------------------------------------------
+# Aufruf InfoAndFilter -> start_script
+# endet mit network_error zum Verbleib in InfoAndFilter
+# Dialog().multiselect leider ohne usemono (korr. Spalten nicht möglich)
+#
+# todo:
+#	Check ausgewählte Beiträge auf Verfügbarkeit
+#	abfangen: HTTP Error 308: Permanent Redirect
+#	OK: 'query': 
+#	Wicki: Gründe für Auswahl (Url unbekannt): urlopen-Timeout (3 sec), HTTP Error 400: Bad Request,
+#		HTTP Error 404: Not Found
 
-######################################################################## 			
+def clear_merkliste():
+	PLog("clear_merkliste:")
+	my_items, my_ordner = ReadFavourites('Merk')
+	if len(my_items) == 0:
+		msg1 = u'Keine Einträge gefunden.'
+		MyDialog(msg1, '', '')		
+		return	
+
+	title = u"Bereinigung Merkliste | Backup empfohlen"
+	msg1 = u"[B]%d Einträge[/B] einzeln überprüfen und nicht erreichbare Einträge zum Löschen vorschlagen?" % len(my_items)
+	msg2 = u"Dauer nicht kalkulierbar."
+	ret = MyDialog(msg1, msg2, msg3="", ok=False, cancel='Abbruch', yes='JA', heading=title)
+	if ret == False:
+		msg1 = ''
+		MyDialog(msg1, '', '')
+		return
+		
+	tsecs = 3												# Timeout urlopen 	
+	templ = "%03d | %15s | %36s"							# "Index | Fehler | Name "
+	name_len = 30
+
+	dirID_list = ["ZDF_Search", "SearchARDundZDFnew", "AudioSearch", "AudioSearch_cluster",
+				"arte_Search", "Kika_Search", "Tivi_Search", "Search", "phoenix_Search",
+				"XL_Search", "MVWSearch", "ARDSearchnew", "BilderDasErste",
+				"resources.lib.my3Sat.Bilder3sat", "PodFavoritenListe"
+			]
+	
+	my_list=[]; selected=[]; cnt=-1; note_cnt=0
+	icon = R(ICON_DIR_WATCH)
+	msg1 = u"%d Einträge" % len(my_items)
+	msg2 = "Check ab Nr. %d" % 1
+	xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=False)
+	for item in my_items:
+		cnt=cnt+1
+		note_cnt=note_cnt+1
+		if note_cnt > 10: 									# Notification: Einträge ab
+			msg2 = "Check ab Nr. %d" % cnt
+			xbmcgui.Dialog().notification(msg1,msg2,icon,5000,sound=False)
+			note_cnt=0
+		#if cnt > 10:				# Debug
+		#	break
+		item = unquote_plus(item)		
+		PLog(item[:60])										# Bsp.: <merk name="HR-FERNSEHEN ..
+		
+		line=""
+		name = stringextract('merk name="', '"', item)
+		dirID = stringextract('dirID=', '&amp', item)
+		if dirID in dirID_list:								# Suchen durchwinken
+			line = templ % (cnt+1, u"OK - verfügbar", name[:name_len])
+			my_list.append(line)
+			PLog("dirID_hit: " + line)
+			continue
+			
+		fparams = stringextract('fparams={', '}',item)
+		fparams = unquote_plus(fparams)						# Parameter sind zusätzl. quotiert
+		if fparams == "":									# ev. alter Base64-kodierter Eintrag
+			line = templ % (cnt+1, "Daten fehlen ", name[:name_len])
+			my_list.append(line)
+			selected.append(cnt)
+			PLog(line)
+			continue
+		path= stringextract("path': '", "'", fparams)		# 1. Altern. Web-Url
+		if path == '':
+			path= stringextract("url': '", "'", fparams)	# 2. Altern. Web-Url
+		if path == '':
+			path= stringextract("img': '", "'", fparams)	# 3. Altern.: Bild
+		if path == '':
+			path= stringextract("img':'", "'", fparams)		# 4. Altern.: Bild (o.Blank, Arte)
+		if path == '':
+			path= stringextract("thumb': '", "'", fparams)	# 5. Altern.: Bild phoenix
+		if path == '':
+			path= stringextract("thumb=", "&amp", fparams)	# 6. Altern.: Bild außerhalb fparams (Layout Button)
+		if path == "":
+			line = templ % (cnt+1, "Web-Url fehlt ", name[:name_len])
+			my_list.append(line)
+			selected.append(cnt)
+			PLog(line)
+			continue
+
+		if "//www.ardaudiothek" in path:					# Pfadergänzung "/" gegen Error HTTP308_301
+			if path.endswith("/") == False:
+				path = path + "/"
+			
+		try:												# Link-Test - nicht via get_page (Performance)
+			err=""
+			PLog("getpath: " + path)
+			r = urlopen(path, timeout=tsecs)
+			url = r.geturl()
+			PLog("url_OK: " + url)
+		except Exception as e:
+			PLog(str(e))
+			err = str(e)
+			try:
+				if "308:" in str(e) or "301:" in str(e):	# Permanent-Redirect-Url
+					new_url = e.hdrs.get("Location")
+					parsed = urlparse(path)
+					if new_url.startswith("http") == False:	# Serveradr. vorh.?
+						new_url = 'https://%s%s/' % (parsed.netloc, new_url)
+					PLog("HTTP308_301_new_url: " + new_url)
+					r.close()
+					r = urlopen(new_url, timeout=tsecs)		# Link-Test mit new_url
+			except Exception as e:
+				PLog(str(e))
+				err = str(e)
+			
+			err_msg = "Url unbekannt"						# Default-Error
+			if "operation timed out" in err:				# Hinw. auf Bedeutung Timeout im Button-Info
+				err_msg = "HTTP Timeout"
+			line = templ % (cnt+1, err_msg, name[:name_len])
+			my_list.append(line)
+			selected.append(cnt)
+			PLog(line)
+			continue			
+			
+		line = templ % (cnt+1, u"OK - verfügbar", name[:name_len])
+		PLog(line)
+		my_list.append(line)
+	
+			
+	title = u"Ausgewählte Einträge löschen? Auswahl bei Bedarf ändern"
+	ret_ind = xbmcgui.Dialog().multiselect(title, my_list, preselect=selected, useDetails=False)
+	PLog("Mark0")
+	PLog(str(ret_ind))										# 0,3,9,.. 
+		
+	heading = u'Bereinigung Merkliste'
+	if ret_ind:
+		for index in sorted(ret_ind, reverse=True):			# rückwärts (Indexaktualisierung durch Löschen)
+			del my_list[index]
+	
+		merkliste = " ".join(my_list)						# speichern als String
+		merkliste = py2_decode(merkliste) 	
+		ret, err_msg = save_merkliste(merkliste, my_ordner)
+		msg1 = u'Einträge gelöscht: %d' % len(ret_ind)
+		msg2 = u'verbleibende Einträge: %d' % len(my_list)
+		if ret == False:									# Wahrscheinlichkeit erhöht bei ext. Liste
+			msg2 = u'Fehler beim Speichern | Merkliste unverändert.'
+			msg3 = err_msg
+		else:
+			msg3 = u'Merkliste erfolgreich gespeichert.'
+			PLog("%s | %s" % (msg2, msg3))
+	else:
+		msg1 = u'keine Einträge zum Löschen ausgewählt.'
+		msg2 = u'Merkliste bleibt unverändert.' 
+		msg3 = ''
+	MyDialog(msg1, msg2, msg3, heading=heading)
+	return # -> network_error s.u.
+
+######################################################################## 
+# A>ufrufe aus Kontextmenüs	(Ausnahme clear_merkliste)		
 # argv-Verarbeitung wie in router (Haupt-PRG)
 # Beim Menü Favoriten (add) endet json.loads in exception
 
@@ -707,11 +870,17 @@ paramstring = unquote_plus(sys.argv[2])
 params = dict(parse_qs(paramstring[1:]))
 PLog('merk_params_dict: ' + str(params))
 
+if "'fparams_add': 'clear'" in str(params):			# Aufruf InfoAndFilter -> start_script
+	clear_merkliste()
+	ignore_this_network_error()						# network_error statt threading Exception
+# ----------------------------------------------------------------------	
+	
 PLog('action: ' + params['action'][0]) # hier immer action="dirList"
 PLog('dirID: ' + params['dirID'][0])
 # PLog('fparams: ' + params['fparams'][0])
 
 func_pars = params['fparams'][0]
+func_pars = unquote_plus(func_pars)
 PLog("func_pars: " + func_pars)
 name = stringextract("'name': ", ',', func_pars)	# für exceptions s.u.
 name = name.replace("'", "")
@@ -720,6 +889,7 @@ try:
 	func_pars = func_pars.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 	func_pars = func_pars.replace('\\', '\\\\')		# json.loads-kompatible Windows-Pfade
 	mydict = json.loads(func_pars)
+	PLog("mydict: " + str(mydict))
 except Exception as exception:						# Bsp. Hinzufügen von Favoriten
 	err_msg = str(exception)
 	msg3=''
@@ -749,6 +919,8 @@ if 'filter' in action:													# Filter-Aktionen:
 	if action == 'filter_delete':
 		watch_filter(delete=True)										# Filter (MERKFILTER) löschen
 	if action == 'filter_folder':										# Merklisten-Ordner bearbeiten (add/remove)
+		do_folder()
+	if action == 'clear':												# Bereinigung
 		do_folder()
 else:																	# Merklisten-Aktionen:	
 	Plot = clean_Plot(Plot) 

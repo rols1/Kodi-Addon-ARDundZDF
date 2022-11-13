@@ -312,8 +312,8 @@ FILTER_SET 	= os.path.join(ADDON_DATA, "filter_set")
 AKT_FILTER	= ''
 if os.path.exists(FILTER_SET):	
 	AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
-AKT_FILTER	= AKT_FILTER.splitlines()					# gesetzte Filter initialiseren 
-STARTLIST	= os.path.join(ADDON_DATA, "startlist") 	# Videoliste mit Datum ("Zuletzt gesehen")
+AKT_FILTER	= AKT_FILTER.splitlines()						# gesetzte Filter initialiseren 
+STARTLIST	= os.path.join(ADDON_DATA, "startlist") 		# Videoliste mit Datum ("Zuletzt gesehen")
 
 try:	# 28.11.2019 exceptions.IOError möglich, Bsp. iOS ARM (Thumb) 32-bit
 	from platform import system, architecture, machine, release, version	# Debug
@@ -539,15 +539,16 @@ def Main():
 	#	freischalten nach Posting im Kodi-Forum
 
 	tag = '[B]Infos, Tools und Filter zu diesem Addon[/B]'					# Menü Info + Tools
-	summ= u'Ausschluss-Filter bearbeiten (nur für Beiträge von ARD und ZDF)'
-	summ= u'%s\n\nSuchwörter bearbeiten (nur für die gleichzeitige Suche in ARD Mediathek und ZDF Mediathek)' % summ
+	summ= u'- Ausschluss-Filter bearbeiten (nur für Beiträge von ARD und ZDF)'
+	summ= u"%s\n- Merkliste bereinigen" % summ
+	summ= u'%s\n- Suchwörter bearbeiten (nur für die gleichzeitige Suche in ARD Mediathek und ZDF Mediathek)' % summ
 
-	summ = "%s\n\n%s" % (summ, "Download- und Aufnahme-Tools")
+	summ = "%s\n-%s" % (summ, "Download- und Aufnahme-Tools")
 	if SETTINGS.getSetting('pref_strm') == 'true':
-		summ = "%s\n\n%s" % (summ, "strm-Tools")
+		summ = "%s\n-%s" % (summ, "strm-Tools")
 	if SETTINGS.getSetting('pref_playlist') == 'true':
-		summ = "%s\n\n%s" % (summ, "PLAYLIST-Tools")
-	summ = "%s\n\n%s" % (summ, u"Einzelupdate (einzelne Dateien und Module)")
+		summ = "%s\n-%s" % (summ, "PLAYLIST-Tools")
+	summ = "%s\n\n%s" % (summ, u"Einzelupdate (für einzelne Dateien und Module)")
 	fparams="&fparams={}" 
 	addDir(li=li, label='Infos + Tools', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
 		fparams=fparams, summary=summ, tagline=tag)
@@ -606,7 +607,21 @@ def InfoAndFilter():
 		tag = u"[B]Ausschluss-Filter bearbeiten[/B]\n\nnur für Beiträge von ARD und ZDF)" 								
 		fparams="&fparams={}" 
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.FilterTools", 
-			fanart=R(FANART), thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)	
+			fanart=R(FANART), thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)
+			
+	title = u"Merkliste bereinigen"							# Button für Bereinigung der Merkliste 
+	tag = u"Nicht mehr erreichbare Beiträge listen und nach Abfrage löschen." 
+	tag = u"%s\n\n[B]Ablauf[/B]: enthaltene Url's (Webseiten, Bildverweise) werden angepingt und der Status bewertet." % tag
+	tag = u"%s\nEin [B]HTTP Timeout[/B] schließt eine spätere Erreichbarkeit nicht aus." % tag
+	tag = u"%s\nSucheinträge werden durchgewinkt." % tag
+	summ = u"Die Dauer ist von vielen Faktoren abhängig und nicht kalkulierbar (Testläufe mit 90 Einträgen: ca. 30 sec)"	
+	summ = u"%s\n\nEin [B]Backup[/B] der Datei merkliste.xml im userdata-Verzeichnis wird empfohlen." % summ					
+	myfunc="resources.lib.merkliste.clear_merkliste"
+
+	fparams="&fparams={'myfunc': '%s', 'fparams_add': 'clear'}"  % quote(myfunc)		
+	addDir(li=li, label=title, action="dirList", dirID="start_script",\
+		fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tag, summary=summ, fparams=fparams)	
+				
 			
 	title = u"Suchwörter bearbeiten"						# Button für Suchwörter
 	tag = u"[B]Suchwörter bearbeiten[/B]\n\n(nur für die gemeinsame Suche in ARD Mediathek und ZDF Mediathek)" 								
@@ -3808,23 +3823,12 @@ def get_query(channel='ARD'):
 #  Search_refugee - erforderlich für Refugee Radio (WDR) - nur
 #		Podcasts Classics - 03.06.2021  entfernt
 ####################################################################################################
-# Liste der Wochentage ARD + ZDF
-	# Ablauf (ARD):  entfällt seit Einstellung der alten Mediathek	
-	#		2. PageControl: Liste der Rubriken des gewählten Tages
-	#		3. SinglePage: Sendungen der ausgewählten Rubrik mit Bildern (mehrere Sendungen pro Rubrik möglich)
-	#		4. Parseplaylist: Auswertung m3u8-Datei (verschiedene Auflösungen)
-	#		5. in Plex CreateVideoClipObject, in Kodi PlayVideo
-	# Funktion VerpasstWoche bisher in www.ardmediathek nicht vorhanden. 
-	#
-	# ZDF:
-	#	Wochentag-Buttons -> ZDF_Verpasst
-	# 22.10.2021 sfilter dauerhaft  (Dict("CurSenderZDF")), Ablage
-	#	in ZDF_Verpasst_Filter
-	#
-def VerpasstWoche(name, title):					# Wochenliste zeigen, name: ARD, ZDF Mediathek
+# Liste der Wochentage ZDF
+# ARD s. ARDnew.SendungenAZ (früherer Classic-Code entfernt)
+#
+def VerpasstWoche(name, title):									# Wochenliste ZDF Mediathek
 	PLog('VerpasstWoche:')
-	PLog(name);PLog(title); 
-	title_org = title
+	PLog(name); 
 	 
 	sfilter=''
 	fname = os.path.join(DICTSTORE, 'CurSenderZDF')				# init CurSenderZDF (aktueller Sender)
@@ -5318,7 +5322,7 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 					break		
 		PLog('mediatype: ' + mediatype)
 		
-		modul = "ardundzdf"
+		modul = "Haupt-PRG"
 		dirPars = unescape(dirPars); 
 		if 'resources.lib.' in dirPars:
 			modul = stringextract('resources.lib.', ".", dirPars) 
@@ -6045,6 +6049,12 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R("suche_iptv.png"), 
 				thumb=thumb, fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)		
 				
+				
+	if SETTINGS.getSetting('pref_use_epg') == 'true':		# Vorab-Info: EPG-Nutzung
+		icon = R('tv-EPG-all.png')
+		msg1 = ""
+		msg2 = "wird aktualisiert"
+		xbmcgui.Dialog().notification(msg1,msg2,icon,4000)
 
 	liste = blockextract('<item>', mylist)					# Details eines Senders
 	PLog(len(liste));
