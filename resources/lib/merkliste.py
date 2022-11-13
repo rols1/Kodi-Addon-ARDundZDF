@@ -6,8 +6,8 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.03.2022
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.11.2022
 #
 
 from __future__ import absolute_import
