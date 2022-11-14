@@ -6,8 +6,8 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.11.2022
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.11.2022
 #
 
 from __future__ import absolute_import
@@ -720,7 +720,7 @@ def clear_merkliste():
 		return	
 
 	title = u"Bereinigung Merkliste | Backup empfohlen"
-	msg1 = u"[B]%d Einträge[/B] einzeln überprüfen und nicht erreichbare Einträge zum Löschen vorschlagen?" % len(my_items)
+	msg1 = u"[B]Einträge (%d)[/B] einzeln überprüfen und nicht erreichbare Einträge zum Löschen vorschlagen?" % len(my_items)
 	msg2 = u"Dauer nicht kalkulierbar."
 	ret = MyDialog(msg1, msg2, msg3="", ok=False, cancel='Abbruch', yes='JA', heading=title)
 	if ret == False:
@@ -757,6 +757,7 @@ def clear_merkliste():
 		
 		line=""
 		name = stringextract('merk name="', '"', item)
+		name = py2_decode(name)								# Leia
 		dirID = stringextract('dirID=', '&amp', item)
 		if dirID in dirID_list:								# Suchen durchwinken
 			line = templ % (cnt+1, u"OK - verfügbar", name[:name_len])
@@ -837,14 +838,14 @@ def clear_merkliste():
 		
 	heading = u'Bereinigung Merkliste'
 	if ret_ind:
-		for index in sorted(ret_ind, reverse=True):			# rückwärts (Indexaktualisierung durch Löschen)
-			del my_list[index]
+		for index in sorted(ret_ind, reverse=True):			# rückwärts (Löschen aktualisiert Index in my_list)
+			del my_items[index]
 	
-		merkliste = " ".join(my_list)						# speichern als String
+		merkliste = "\n".join(my_items)						# speichern als String
 		merkliste = py2_decode(merkliste) 	
 		ret, err_msg = save_merkliste(merkliste, my_ordner)
 		msg1 = u'Einträge gelöscht: %d' % len(ret_ind)
-		msg2 = u'verbleibende Einträge: %d' % len(my_list)
+		msg2 = u'verbleibende Einträge: %d' % len(my_items)
 		if ret == False:									# Wahrscheinlichkeit erhöht bei ext. Liste
 			msg2 = u'Fehler beim Speichern | Merkliste unverändert.'
 			msg3 = err_msg
