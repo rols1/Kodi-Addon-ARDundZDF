@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>76</nr>										# Numerierung für Einzelupdate
+# 	<nr>77</nr>										# Numerierung für Einzelupdate
 VERSION = '4.5.4'
-VDATE = '13.11.2022'
+VDATE = '14.11.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -548,7 +548,7 @@ def Main():
 		summ = "%s\n-%s" % (summ, "strm-Tools")
 	if SETTINGS.getSetting('pref_playlist') == 'true':
 		summ = "%s\n-%s" % (summ, "PLAYLIST-Tools")
-	summ = "%s\n\n%s" % (summ, u"Einzelupdate (für einzelne Dateien und Module)")
+	summ = "%s\n\n%s" % (summ, u"[B]Einzelupdate[/B] (für einzelne Dateien und Module)")
 	fparams="&fparams={}" 
 	addDir(li=li, label='Infos + Tools', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
 		fparams=fparams, summary=summ, tagline=tag)
@@ -5228,7 +5228,7 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 		tagline = u"Anzahl Merklisteneinträge: %s" % str(len(my_items)) 	# Info-Button
 		s1		= u"Einträge entfernen: via Kontextmenü hier oder am am Ursprungsort im Addon."
 		s2		= u"Merkliste filtern: via Kontextmenü hier.\nAktueller Filter: [COLOR blue]%s[/COLOR]" % mf
-		s3		= u"Ordner für Einträge lassen sich in den Settings ein-/ausschalten"
+		s3		= u"Ordner im Titel der Einträge lassen sich in den Settings ein-/ausschalten"
 		if SETTINGS.getSetting('pref_merkordner') == 'true':
 			s3 = s3 + u"[COLOR blue] (eingeschaltet)[/COLOR]"
 		else:
