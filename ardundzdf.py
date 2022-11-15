@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>77</nr>										# Numerierung für Einzelupdate
+# 	<nr>78</nr>										# Numerierung für Einzelupdate
 VERSION = '4.5.4'
-VDATE = '14.11.2022'
+VDATE = '15.11.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6051,10 +6051,11 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 				
 				
 	if SETTINGS.getSetting('pref_use_epg') == 'true':		# Vorab-Info: EPG-Nutzung
-		icon = R('tv-EPG-all.png')
-		msg1 = ""
-		msg2 = "wird aktualisiert"
-		xbmcgui.Dialog().notification(msg1,msg2,icon,4000)
+		if "Audio" in listname == False:					# nicht bei ARD Audio Event Streams 
+			icon = R('tv-EPG-all.png')
+			msg1 = ""
+			msg2 = "wird aktualisiert"
+			xbmcgui.Dialog().notification(msg1,msg2,icon,4000)
 
 	liste = blockextract('<item>', mylist)					# Details eines Senders
 	PLog(len(liste));
