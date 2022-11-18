@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>78</nr>										# Numerierung für Einzelupdate
+# 	<nr>79</nr>										# Numerierung für Einzelupdate
 VERSION = '4.5.4'
-VDATE = '15.11.2022'
+VDATE = '18.11.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5184,9 +5184,14 @@ def DownloadText(textKey):
 #		1. ShowFavs bei leerer Liste	2. Kontextmenü -> watch_filter
 #		3. Settings (Ordner abschalten)
 # 14.11.2021 Home-Button + Sortierung getrennt von globalen Settings
-#
-def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
+# 16.11.2022 Berücksichtigung ausgewählter Sätze in selected (zunächst für
+#	SearchARDundZDFnew)
+def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 	PLog('ShowFavs: ' + mode)				# 'Favs', 'Merk'
+	if selected:
+		selected = selected.split()
+		selected = [int(x) for a,x in enumerate(selected)]
+	PLog(selected)
 	
 	myfilter=''
 	if mode == 'Merk':
@@ -5244,8 +5249,13 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 			fanart=R(ICON_DIR_FAVORITS), thumb=R(ICON_INFO), fparams=fparams,
 			summary=summary, tagline=tagline, cmenu=False) 	# ohne Kontextmenü)	
 	
-	item_cnt = 0
-	for fav in my_items:		
+	item_cnt=0; cnt=-1
+	for fav in my_items:
+		if selected:									# Auswahl (Suchergebnisse) beachten
+			cnt = cnt + 1
+			if cnt not in selected:	
+				continue
+		
 		#fav = unquote_plus(fav)						# urllib2.unquote erzeugt + aus Blanks!		
 		fav = unquote(fav)								# kleineres Übel (unquote_plus entfernt + im Eintrag)
 		fav_org = fav		
@@ -5272,8 +5282,8 @@ def ShowFavs(mode, myfilter=''):			# Favoriten / Merkliste einblenden
 					myhome = xbmc.translatePath("special://home")
 					my_thumb = "%saddons/%s" % (myhome, icon)
 					PLog("home_thumb: %s, my_thumb: %s" % (home_thumb, my_thumb))
-			
-		if myfilter:
+		
+		if myfilter and len(selected) ==  0:				# Filterabgleich - nicht bei Auswahlliste 
 			if 'ohne Zuordnung' in myfilter:				# merkliste.xml: ordner=""
 				if ordner:
 					continue

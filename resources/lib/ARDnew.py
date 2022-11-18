@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>24</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.11.2022
+# 	<nr>25</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.11.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1924,7 +1924,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)												# Home-Button
 	
-	#------------------------------------------------------------------	# Suche ARD
+	#------------------------------------------------------------------	# 1. Suche ARD
 	sendername, sender, kanal, img, az_sender = ARDSender[0].split(':') # in allen Sendern
 	sender = 'ard'
 	pageNumber = 0
@@ -1938,7 +1938,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	vodTotal=py2_encode(vodTotal); query_lable=py2_encode(query_lable);
 	PLog(query_ard)
 	if len(gridlist) == 0 or vodTotal == '0':
-		label = "ARD | nichts gefunden zu: %s | neue Suche" % query_lable
+		label = "[B]ARD[/B] | nichts gefunden zu: %s | neue Suche" % query_lable
 		title="Suche in ARD und ZDF"
 		title=py2_encode(title); 
 		fparams="&fparams={'title': '%s'}" % quote(title)
@@ -1947,14 +1947,14 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	else:	
 		store_recents = True											# Sucheingabe speichern
 		PLog(type(vodTotal)); 	PLog(type(query_lable)); 			
-		title = "ARD: %s Video(s)  | %s" % (vodTotal, query_lable)
+		title = "[B]ARD[/B]: %s Video(s)  | %s" % (vodTotal, query_lable)
 		query_ard=py2_encode(query_ard); title=py2_encode(title); 
 		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '0'}" %\
 			(quote(query_ard), quote(title), sender)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
 			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
 		
-	#------------------------------------------------------------------	# Suche ZDF
+	#------------------------------------------------------------------	# 2. Suche ZDF
 	ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&contentTypes=episode&sortBy=date&page=%s'
 	if pagenr == '':		# erster Aufruf muss '' sein
 		pagenr = 1
@@ -1967,7 +1967,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	query_lable=py2_encode(query_lable); searchResult=py2_encode(searchResult);
 	
 	if searchResult == '0' or 'class="artdirect"' not in page:		# Sprung hierher
-		label = "ZDF | nichts gefunden zu: %s | neue Suche" % query_lable
+		label = "[B]ZDF[/B] | nichts gefunden zu: %s | neue Suche" % query_lable
 		title="Suche in ARD und ZDF"
 		title=py2_encode(title);
 		fparams="&fparams={'title': '%s'}" % quote(title)
@@ -1975,13 +1975,50 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
 	else:	
 		store_recents = True											# Sucheingabe speichern
-		title = "ZDF: %s Video(s)  | %s" % (searchResult, query_lable)
+		title = "[B]ZDF[/B]: %s Video(s)  | %s" % (searchResult, query_lable)
 		query_zdf=py2_encode(query_zdf); title=py2_encode(title);
 		fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (quote(query_zdf), 
 			quote(title), pagenr)
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R('suche_ardundzdf.png'), 
 			thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
 					
+	#------------------------------------------------------------------	# 3. Suche Merkliste
+	PLog("search_merk: " + query_ard)
+	my_items, my_ordner = ReadFavourites('Merk')
+	if len(my_items) > 0:
+		q_org = query_ard.replace('+', ' ')
+		q=py2_decode(up_low(q_org))
+		selected=""; cnt=0; found=0
+		for item in my_items:
+			name = stringextract('merk name="', '"', item)
+			ordner = stringextract('ordner="', '"', item)
+			Plot = stringextract('Plot="', '"', item)
+			name=py2_decode(name); Plot=py2_decode(Plot)				# Abgleich Name + Plot
+			ordner=py2_decode(ordner)
+			if q in up_low(name) or q in up_low(Plot) or q in up_low(ordner):
+				selected = 	"%s %s" % (selected,  str(cnt))				# Indices
+				found=found+1	
+			cnt=cnt+1
+		PLog(selected)
+			
+		if len(selected) == 0:											# Sprung hierher
+			label = "[B]Merkliste[/B] | nichts gefunden zu: %s | neue Suche" % q_org
+			title="Suche in ARD und ZDF"
+			title=py2_encode(title);
+			fparams="&fparams={'title': '%s'}" % quote(title)
+			addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
+				fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)		
+		else:
+			title = u"[B]Merkliste[/B]: %s Einträge  | %s" % (found, q_org)
+			if len(selected) == 1:
+				title = u"[B]Merkliste[/B]: %s Eintrag  | %s" % (found, q_org)
+			q=py2_encode(q); title=py2_encode(title);
+			fparams="&fparams={'mode': 'Merk', 'selected': '%s'}" % selected.strip()
+			addDir(li=li, label=title, action="dirList", dirID="ShowFavs", fanart=R('suche_ardundzdf.png'), 
+				thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)		
+	
+	
+	#-----------------------------------
 	if 	store_recents:													# Sucheingabe speichern
 		query_recent= RLoad(query_file, abs_path=True)
 		query_recent= query_recent.strip().splitlines()
