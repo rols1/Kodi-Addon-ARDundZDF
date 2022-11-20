@@ -10,19 +10,43 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+20.11.2022 4.5.5
+			ArteMehr (Modul Arte): Link-Ergänzung für Kategorien-Url für Links "Weitere
+			Beiträge" (analog V4.5.4 in ArteCluster + Beitrag_Liste).
+			VerpasstWoche: Kopfdoku aktualisiert (Wegfall Classic-Code).
+			SenderLiveListe: Notification für EPG-Nutzung bei Setting pref_use_epg.
+			addon.xml: 2 Tabs in <description> entfernt.
+			get_page_content (ARDnew): decor-Auswertung für ID=EPG entfernt - nach 
+			Änderung ARD-Quellen für ARDVerpasstContent entbehrlich + für andere ID's
+			schädlich.
+			ARDStart: Error object of type 'bool' has no len() nach Dict-Aufruf 
+			abgefangen, '{regionId}' in path ersetzt durch Default-Region Berlin.
+			get_page(Modul util): Alternative requests als Fallback ergänzt (get_page3),
+			vorläufig nicht in url_check + einigen Modulen (funk, updater, zdfmobile, EPG).
+			ShowFavs (Merkliste): Default-Austausch für Par. Modul  ardundzdf -> Haupt-PRG.
+			Merkliste: Funktion zum Bereinigen ergänzt - Anpassung in InfoAndFilter (Button 
+			"Merkliste bereinigen" und Main (Infotexte komprimiert).
+			podcast-favorits.txt: Pfadergänzung "/" in den Audiothek-Url's (gegen Error
+			HTTP308_301).
+			SenderLiveListe: EPG-Nutzung für ARD Audio Event Streams ausgeschlossen (nicht
+			relevant, performanter).
+			Suche in ARD und ZDF: Suche in Merkliste ergänzt (Name, Ordner, Plot), Code
+			in SearchARDundZDFnew ergänzt, Anpassung in ShowFavs.
+			Kika_Search (Modul childs): Verwendung der Websuche (Näheres s. Funktion).
+
 30.10.2022 4.5.4
 			TV-Livestreams/Regional: alternative IPTV-Quellen für NDR Hamburg und NDR 
 			Mecklenburg-Vorpommern verwendet (livesenderTV.xml).
 			get_sort_playlist: fehlendes break in 3 Schleifen ergänzt (Sender-/Link-
 			Zuordnung bei ZDFsource war nicht eindeutig), dto. in SenderLiveListe.
 			Modul funk: weitere Anpassungen nach api-Änderungen - in Search  PLAYLISTS-
-			Verzweigung entfernt (is_channel: typ == "default"), Funktion Channels nicht 
+			Verzweigung entfernt (is_channel: typ == "default"), da Funktion Channels nicht 
 			mehr für Suchergebnisse geeignet.
 			extract_videos, ShowVideo (Modul funk): Zeilenumbr. in Titel entfernt.
 			Parseplaylist: Bereinigung Sender-Liste mit mögl. Einzelauflösungen (entfernt:
 			HR, NDR, WDR).
 			ArteCluster + Beitrag_Liste (Modul Arte): Link-Ergänzung für Kategorien-Url 
-			"https://www.arte.tv" + katurl).	
+			("https://www.arte.tv" + katurl).	
 
 22.10.2022 4.5.3
 			Parseplaylist: ONE aus Liste der TV-Livestream-Sender mit Einzelauflösungen

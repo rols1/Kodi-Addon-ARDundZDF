@@ -6,8 +6,8 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.11.2022
+# 	<nr>0</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.03.2022
 #
 
 from __future__ import absolute_import
@@ -34,11 +34,16 @@ elif PYTHON3:
 	except:
 		pass
 
+#from util import PLog, stringextract, ReadFavourites, RSave, R, check_AddonXml,\
+#					MyDialog, RLoad, blockextract, get_keyboard_input, exist_in_list
 try:											
-	from resources.lib.util import *		# Aufruf start_script (Haupt-PRG)
-except:
 	from util import *						# Aufruf Kontextmenü
-
+	err="callfrom_context"
+except Exception as exception:
+	err=str(exception) 
+	err= "%s | callfromstart_script" % err
+	from resources.lib.util import *		# Aufruf start_script (Haupt-PRG)
+PLog(err)
 
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -700,17 +705,10 @@ def check_ordner(ordner, my_ordner_list, my_items):
 		return exist, link_cnt
 		
 # ----------------------------------------------------------------------
-# Aufruf InfoAndFilter -> start_script
+# Aufruf InfoAndFilter -> start_script (import util mit Pfad, s.o.)
 # endet mit network_error zum Verbleib in InfoAndFilter
 # Dialog().multiselect leider ohne usemono (korr. Spalten nicht möglich)
 #
-# todo:
-#	Check ausgewählte Beiträge auf Verfügbarkeit
-#	abfangen: HTTP Error 308: Permanent Redirect
-#	OK: 'query': 
-#	Wicki: Gründe für Auswahl (Url unbekannt): urlopen-Timeout (3 sec), HTTP Error 400: Bad Request,
-#		HTTP Error 404: Not Found
-
 def clear_merkliste():
 	PLog("clear_merkliste:")
 	my_items, my_ordner = ReadFavourites('Merk')
@@ -724,8 +722,6 @@ def clear_merkliste():
 	msg2 = u"Dauer nicht kalkulierbar."
 	ret = MyDialog(msg1, msg2, msg3="", ok=False, cancel='Abbruch', yes='JA', heading=title)
 	if ret == False:
-		msg1 = ''
-		MyDialog(msg1, '', '')
 		return
 		
 	tsecs = 3												# Timeout urlopen 	
@@ -859,10 +855,10 @@ def clear_merkliste():
 	MyDialog(msg1, msg2, msg3, heading=heading)
 	return # -> network_error s.u.
 
-######################################################################## 
-# A>ufrufe aus Kontextmenüs	(Ausnahme clear_merkliste)		
+######################################################################## 			
 # argv-Verarbeitung wie in router (Haupt-PRG)
 # Beim Menü Favoriten (add) endet json.loads in exception
+# vorgezogener Aufruf clear_merkliste ohne params
 
 PLog(str(sys.argv))
 PLog(sys.argv[2])
@@ -873,15 +869,15 @@ PLog('merk_params_dict: ' + str(params))
 
 if "'fparams_add': 'clear'" in str(params):			# Aufruf InfoAndFilter -> start_script
 	clear_merkliste()
-	ignore_this_network_error()						# network_error statt threading Exception
+	ignore_this_network_error()						# network_error statt threading Exception (s.o.)
 # ----------------------------------------------------------------------	
 	
+
 PLog('action: ' + params['action'][0]) # hier immer action="dirList"
 PLog('dirID: ' + params['dirID'][0])
 # PLog('fparams: ' + params['fparams'][0])
 
 func_pars = params['fparams'][0]
-func_pars = unquote_plus(func_pars)
 PLog("func_pars: " + func_pars)
 name = stringextract("'name': ", ',', func_pars)	# für exceptions s.u.
 name = name.replace("'", "")
@@ -890,7 +886,6 @@ try:
 	func_pars = func_pars.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 	func_pars = func_pars.replace('\\', '\\\\')		# json.loads-kompatible Windows-Pfade
 	mydict = json.loads(func_pars)
-	PLog("mydict: " + str(mydict))
 except Exception as exception:						# Bsp. Hinzufügen von Favoriten
 	err_msg = str(exception)
 	msg3=''
@@ -921,8 +916,6 @@ if 'filter' in action:													# Filter-Aktionen:
 		watch_filter(delete=True)										# Filter (MERKFILTER) löschen
 	if action == 'filter_folder':										# Merklisten-Ordner bearbeiten (add/remove)
 		do_folder()
-	if action == 'clear':												# Bereinigung
-		do_folder()
 else:																	# Merklisten-Aktionen:	
 	Plot = clean_Plot(Plot) 
 	msg1, err_msg, item_cnt = Watch_items(action,name,thumb,Plot,url)	# Einträge add / del / folder / rename
@@ -939,4 +932,3 @@ else:																	# Merklisten-Aktionen:
 	icon = R(ICON_DIR_WATCH)
 	xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
 	# exit()		# thread.lock-Error in Kodi-Matrix
-

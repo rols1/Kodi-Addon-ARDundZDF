@@ -944,7 +944,6 @@ def get_cluster(items, title_org):
 def ArteMehr(next_url, first=False):
 	PLog("ArteMehr: " + next_url)
 	PLog(first)
-	PLog(next_url); 
 	if next_url.startswith("/de/"):
 		next_url = "https://www.arte.tv" + next_url	
 	PLog(next_url) 	

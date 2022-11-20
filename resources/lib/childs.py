@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>8</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.10.2022
+#	Stand: 19.11.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -68,8 +68,8 @@ DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 				# hier nur DICTSTORE genutzt
 
 NAME			= 'ARD und ZDF'
 
-BASE_ZDF		= 'http://www.zdf.de'
-BASE_KIKA 		= 'http://www.kika.de'
+BASE_ZDF		= 'https://www.zdf.de'
+BASE_KIKA 		= 'https://www.kika.de'
 BASE_TIVI 		= 'https://www.zdf.de/kinder'
 
 # Icons
@@ -295,67 +295,75 @@ def Kikaninchen_Menu():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------
-# Die Kika-Suche über www.kika.de/suche/suche104.html?q= ist hier nicht nutzbar, da 
-#	script-generiert und außer den Bildern keine Inhalte als Text erscheinen.
-# Lösung: Suche über alle Bündelgruppen (Kika_VideosBuendelAZ) und Abgleich
-#	mit Sendungstitel. Damit nicht jedesmal sämtliche A-Z-Seiten neu geladen
-#	werden müssen, lagern wir sie 1 Tag im Cache. Diese Cacheseiten werden von
-#	Kika_VideosBuendelAZ mitgenutzt.	
-#	 
+# 19.11.2022 Verwendung der Websuche (../suche/suche104.html?q=..) - früher nicht
+#	 nutzbar, da script-generiert. Vorherigen Code der Suche über alle Bündelgruppen 
+#	(Kika_VideosBuendelAZ) gelöscht.
+#
 def Kika_Search(query=None, title='Search', pagenr=''):
 	PLog("Kika_Search:")
 	if 	query == '':	
 		query = ardundzdf.get_query(channel='ARD')
 	PLog(query)
 	query_org = unquote(query)
-	query_org = query_org.replace('+', ' ')					# für Vergleich entfernen
+	query_org = query_org.replace('+', ' ')								# für Vergleich entfernen
 	if  query == None or query.strip() == '':
 		return ""
 
-	# Home-Button in Kika_VideosBuendelAZ
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')									# Home-Button
 
-	li, HrefList = Kika_VideosBuendelAZ(getHrefList=True)
-	PLog("HrefList: " + str(len(HrefList)))
-	found_hrefs=[]
-	for path in HrefList: 
-		fname = stringextract('allevideos-buendelgruppen100_', '.htm', path)
-		page = Dict("load", fname, CacheTime=KikaCacheTime)
-		if page == False:
-			page, msg = get_page(path=path)	
-		if page == '':								# hier kein Dialog
-			PLog("Fehler in Kika_Search: " + msg)
-		else:
-			Dict("store", fname, page)				# im Addon-Cache speichern
-		pos = page.find("The bottom navigation")		# begrenzen, es folgen A-Z + meist geklickt
-		page = page[:pos]
-		pageItems = blockextract('class="media mediaA">', page)	
-		PLog(len(pageItems))
+	path = "https://www.kika.de/suche/suche104.html?q=%s" % query_org
+	page, msg = get_page(path)
+	if page == '':
+		msg1 = "Fehler in Kika_VideosBuendelAZ:"
+		msg2 = msg
+	if u'headline">Keine Ergebnisse' in page:
+		msg1 = "Keine Ergebnisse!"
+		msg2 = "Na sowas. Nichts gefunden, was deinem Suchbegriff entspricht."
+		page = ""
+	if page == "":
+		MyDialog(msg1, msg2, '')	
+		return li
+		
+	pageItems = blockextract('class="mediaCon "', page)
+	PLog(len(pageItems))
+	for s in pageItems:	
+		if '>&#xf01d' not in s:											# Icon Video: icon-font">&#xf01d
+			continue
+		try:
+			dauer = re.search(u'Video \((.*?)\)', s).group(1)			# Video (23:51)
+			dauer = "Video %s" % dauer
+		except:
+			dauer = ""
+		tag = dauer
+						
+		stitle = stringextract('page=artikel">', '</a>', s)		
+		stitle = unescape(stitle);
 
-		for s in pageItems:			
-			stitle = stringextract('class="linkAll" title="', '"', s)		
-			stitle = cleanhtml(stitle); stitle = unescape(stitle);
-			if up_low(query_org) in up_low(stitle):	
-				href =  BASE_KIKA + stringextract('href="', '\"', s)
-				if href in found_hrefs:				# Doppler vermeiden
-					continue
-				found_hrefs.append(href)
-				img = stringextract('<noscript>', '</noscript>', s).strip()		# Bildinfo separieren
-				img_alt = stringextract('alt="', '"', img)	
-				img_src = stringextract('src="', '"', img)
-				if img_src.startswith('http') == False:
-					img_src = BASE_KIKA + img_src
+		hrefs = blockextract('<a href="', s)
+		href=""
+		for href in hrefs:
+			if '?page=artikel' not in href:
+				href = BASE_KIKA + stringextract('href="', '"', href)
+				break		
+			
+		img = stringextract('<noscript>', '</noscript>', s).strip()		# Bildinfo separieren
+		img_alt = stringextract('alt="', '"', img)	
+		img_src = stringextract('src="', '"', img)
+		if img_src.startswith('http') == False:
+			img_src = BASE_KIKA + img_src
 
-				stitle = repl_json_chars(stitle)	
-				img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt) 	
-				
-				PLog('Satz4:')
-				PLog(query);PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src)
-				href=py2_encode(href); stitle=py2_encode(stitle); img_src=py2_encode(img_src);
-				
-				fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}" %\
-					(quote(href), quote(stitle), quote(img_src))
-				addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=img_src, 
-					thumb=img_src, fparams=fparams, tagline=img_alt)
+		stitle = repl_json_chars(stitle)	
+		img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt) 	
+		
+		PLog('Satz4:')
+		PLog(query);PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src)
+		href=py2_encode(href); stitle=py2_encode(stitle); img_src=py2_encode(img_src);
+		
+		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}" %\
+			(quote(href), quote(stitle), quote(img_src))
+		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=img_src, 
+			thumb=img_src, fparams=fparams, tagline=tag, summary=img_alt)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -987,19 +995,19 @@ def Kika_Videos(path, title, thumb, pagenr=''):
 
 		stitle = stringextract('title="', '"', s)
 		duration = stringextract('icon-duration">', '</span>', s)	
-		tagline = duration + ' Minuten'	
+		tag = duration + ' Minuten'	
 		
 		stitle = unescape(stitle); stitle = repl_json_chars(stitle)	
 		img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt);	
 			
 		PLog('Satz3:')		
 		PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src);
-		PLog(tagline); 
+		PLog(tag); 
 		href=py2_encode(href); stitle=py2_encode(stitle); img_src=py2_encode(img_src); img_alt=py2_encode(img_alt);
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'summ': '%s', 'duration': '%s'}" %\
 			(quote(href), quote(stitle), quote(img_src), quote(img_alt), quote(duration))
 		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag", fanart=img_src, 
-			thumb=img_src, fparams=fparams, tagline=img_alt, mediatype=mediatype)
+			thumb=img_src, fparams=fparams, tagline=tag, summary=img_alt, mediatype=mediatype)
 			
 	pos = page.find('<!--The bottom navigation')						# Seite auf Folgeseiten prüfen			
 	page = page[pos:]
