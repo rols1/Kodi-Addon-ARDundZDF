@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>25</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.11.2022
+# 	<nr>26</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.12.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -144,7 +144,7 @@ def Main_NEW(name='', CurSender=''):
 	title = 'Suche in ARD-Mediathek'
 	tag = def_tag
 	title=py2_encode(title);
-	fparams="&fparams={'title': '%s', 'sender': '%s' }" % (quote(title), sender)
+	fparams="&fparams={'title': '%s', 'sender': '' }" % quote(title) 	# sender -> ARDSearchnew
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", fanart=R(ICON_MAIN_ARD), 
 		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)
 	
@@ -2019,6 +2019,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	
 	
 	#-----------------------------------
+	# Länge begrenzt auf 24, Änderung angleichen -> tool.SearchWordWork
 	if 	store_recents:													# Sucheingabe speichern
 		query_recent= RLoad(query_file, abs_path=True)
 		query_recent= query_recent.strip().splitlines()
@@ -2058,7 +2059,7 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 	if sender == '':								# Sender gewählt?
 		CurSender = Dict("load", 'CurSender')		
 		sendername, sender, kanal, img, az_sender = CurSender.split(':')
-	PLog(sender)
+	PLog("sender: " + sender)
 	
 	if query == '':
 		query = get_keyboard_input() 
