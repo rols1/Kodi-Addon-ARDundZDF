@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>32</nr>										# Numerierung für Einzelupdate
+# 	<nr>33</nr>										# Numerierung für Einzelupdate
 #	Stand: 03.12.2022
 
 # Python3-Kompatibilität:
@@ -2549,7 +2549,7 @@ def get_ARDstreamlinks(skip_log=False):
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
 	PLog("days: %d" % days)
 	CacheTime = days*86400						# Default 1 Tag
-	days=0	# Debug
+	#days=0	# Debug
 
 	ID = "ard_streamlinks"
 	if days:									# skip CacheTime=0
