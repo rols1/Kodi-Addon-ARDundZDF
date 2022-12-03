@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>31</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.11.2022
+# 	<nr>32</nr>										# Numerierung für Einzelupdate
+#	Stand: 03.12.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2549,7 +2549,7 @@ def get_ARDstreamlinks(skip_log=False):
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
 	PLog("days: %d" % days)
 	CacheTime = days*86400						# Default 1 Tag
-	#days=0	# Debug
+	days=0	# Debug
 
 	ID = "ard_streamlinks"
 	if days:									# skip CacheTime=0
@@ -2581,7 +2581,7 @@ def get_ARDstreamlinks(skip_log=False):
 		href_list = blockextract('href":"', rec, '"type"')
 		for h in href_list:
 			if '?devicetype=pc' in h:								# Stream-Quellen
-				href = stringextract('href":"', '"', h)	 
+				href = stringextract('href":"', '"', h)
 				break
 		thumb = stringextract('src":"', '"', rec)
 		thumb = thumb.replace('{width}', '720')			
@@ -2590,6 +2590,7 @@ def get_ARDstreamlinks(skip_log=False):
 			PLog("lade_livelink: " + title)
 			page, msg = get_page(path=href, JsonPage=True)			# s.a. Livestream ARDStartSingle
 			streamurl = stringextract('_stream":"', '"', page)		# ab Okt. 2022 keine UT-Links mehr gesehen	
+			streamurl = streamurl.replace("index.m3u8", "master.m3u8")	# Fix ab 03.12.2022 (verhindert Startverzög. > 10sec)  
 					
 		PLog("Satz1:")
 		PLog(title); PLog(href); PLog(streamurl);  
