@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>79</nr>										# Numerierung für Einzelupdate
+# 	<nr>80</nr>										# Numerierung für Einzelupdate
 VERSION = '4.5.5'
-VDATE = '20.11.2022'
+VDATE = '04.12.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -604,7 +604,7 @@ def InfoAndFilter():
 		
 	if SETTINGS.getSetting('pref_usefilter') == 'true':											
 		title = u"Filter bearbeiten"						# Button für Filter
-		tag = u"[B]Ausschluss-Filter bearbeiten[/B]\n\nnur für Beiträge von ARD und ZDF)" 								
+		tag = u"[B]Ausschluss-Filter bearbeiten[/B]\n\nnur für Beiträge von ARD und ZDF" 								
 		fparams="&fparams={}" 
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.FilterTools", 
 			fanart=R(FANART), thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)
@@ -624,7 +624,7 @@ def InfoAndFilter():
 				
 			
 	title = u"Suchwörter bearbeiten"						# Button für Suchwörter
-	tag = u"[B]Suchwörter bearbeiten[/B]\n\n(nur für die gemeinsame Suche in ARD Mediathek und ZDF Mediathek)" 								
+	tag = u"[B]Suchwörter bearbeiten (max. 24)[/B]\n\n(nur für die gemeinsame Suche in ARD Mediathek und ZDF Mediathek)" 								
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordTools", 
 		fanart=R(FANART), thumb=R('icon_searchwords.png'), tagline=tag, fparams=fparams)	
@@ -744,7 +744,7 @@ def AddonStartlist(mode='', query=''):
 	startlist=''
 
 	if os.path.exists(STARTLIST):
-		startlist= RLoad(STARTLIST, abs_path=True)				# Zuletzt gesehen-Liste ergänzen
+		startlist= RLoad(STARTLIST, abs_path=True)				# Zuletzt gesehen-Liste laden
 	if startlist == '':
 		msg1 = u'die "Zuletzt gesehen"-Liste ist leer'
 		MyDialog(msg1, '', '')
@@ -2212,6 +2212,8 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			title = stringextract('"title":"', '"', item)				# Cluster-Titel	deutsch
 			cluster_type = stringextract('"type":"', '"', item)			# Cluster-Titel	engl.
 			if title == '' or  title == None:
+				continue
+			if title == 'Stage':										# -> Highlights, s. Step 2
 				continue
 			
 			PLog('6Satz:');
@@ -5529,16 +5531,16 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 
 	title = 'EPG Alle JETZT | Recording TV-Live'; 
 	summary =u'elektronischer Programmführer\n\nAufnehmen via Kontexmenü, Dauer: %s (siehe Settings)' % laenge
-	tagline = 'zeigt die laufende Sendung für jeden Sender'
+	tagline = 'zeigt die laufende Sendung für jeden Sender | Quelle: tvtoday.de'
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="EPG_ShowAll", fanart=R('tv-EPG-all.png'), 
 		thumb=R('tv-EPG-all.png'), fparams=fparams, summary=summary, tagline=tagline)
 							
-	title = 'EPG Sender einzeln'; 
+	title = 'EPG Sender einzeln'; 										# EPG-Button Einzeln anhängen
 	if SETTINGS.getSetting('pref_epgRecord') == 'true':		
 		title = 'EPG Sender einzeln | Sendungen mit EPG aufnehmen'; 
-	tagline = u'zeigt für den ausgewählten Sender ein 12-Tage-EPG'		# EPG-Button Einzeln anhängen
+	tagline = u'zeigt für den ausgewählten Sender ein 12-Tage-EPG | Quelle: tvtoday.de'
 	summary='je Seite: 24 Stunden (zwischen 05.00 und 05.00 Uhr des Folgetages)'
 	fparams="&fparams={'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="EPG_Sender", fanart=R(ICON_MAIN_TVLIVE), 
@@ -10547,7 +10549,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	 
 	PLog('playlist: ' + playlist[:100])
 	PLog('live: ' + str(live))
-	skip_list = ["/mdrtvsn/", "/rbb_brandenburg/",							# keine Mehrkanalstreams: Einzelauflösungen mögl.
+	skip_list = ["/rbb_brandenburg/",							# keine Mehrkanalstreams: Einzelauflösungen mögl.
 				"/srfsgeo/", "/swrbwd/", "/dwstream"
 				]
 	PLog('#EXT-X-MEDIA' in playlist)
