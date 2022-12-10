@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.12.2022
+# 	<nr>10</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.12.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -89,6 +89,14 @@ MAUSHEAR		= "https://www1.wdr.de/mediathek/audio/sendereihen-bilder/maus_sendere
 # ext. Icons zum Nachladen aus Platzgründen,externe Nutzung: ZDFRubriken  (GIT_ZDFTIVI)							
 #GIT_KIKA		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kika.png?raw=true"
 KIKA_START		= "https://www.kika.de/bilder/startseite-104_v-tlarge169_w-1920_zc-a4147743.jpg"	# ab 07.12.2022
+KIKA_VIDEOS		= "https://www.kika.de/videos/videos-110_v-tlarge169_zc-cc2f4e31.jpg"				# - " -
+KIKA_AD			= "https://www.kika.de/audiodeskription/ad-110_v-tlarge169_zc-cc2f4e31.jpg?version=6313"
+KIKA_DGS		= "https://www.kika.de/gebaerdensprache/dgs-110_v-tlarge169_zc-cc2f4e31.jpg?version=58142"
+KIKA_SERIES		= "https://www.kika.de/videos/serie-100_v-tlarge169_zc-cc2f4e31.jpg?version=16437"
+KIKA_FILME		= "https://www.kika.de/videos/film-108_v-tlarge169_zc-cc2f4e31.jpg?version=4412"
+KIKA_WISSEN		= "https://www.kika.de/videos/wissen-108_v-tlarge169_zc-cc2f4e31.jpg?version=11506"
+KIKA_SHOWS		= "https://www.kika.de/videos/show-100_v-tlarge169_zc-cc2f4e31.jpg?version=3229"
+KIKA_LIVE		= "https://www.kika.de/live/bilder/live-102_v-tlarge169_zc-cc2f4e31.jpg?version=32751"
 
 GIT_AZ			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-AZ.png?raw=true"
 				# Einzelbuchstaben zu A-Z siehe Tivi_AZ
@@ -158,7 +166,7 @@ def Main_KIKA(title=''):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=KIKA_START, 
 			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 	
-	title="Suche in KIKA"
+	title="Suche in KIKA"												# neu ab 07.12 2022
 	summ = "Suche Sendungen in KiKA"
 	fparams="&fparams={'query': '', 'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Search", 
@@ -167,7 +175,7 @@ def Main_KIKA(title=''):
 	title='KiKA Live gucken'
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Live", 
-		fanart=KIKA_START, thumb=R(ICON_MAIN_TVLIVE), tagline='KIKA TV-Live', fparams=fparams)
+		fanart=KIKA_START, thumb=KIKA_LIVE, tagline='KIKA TV-Live', fparams=fparams)
 		
 	title='KiKA Programmvorschau'
 	tag = u"Programmvorschau für eine Woche\n\nMit Klick zur laufenden Sendung"
@@ -175,40 +183,15 @@ def Main_KIKA(title=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Vorschau", 
 		fanart=KIKA_START, thumb=R(ICON_MAIN_TVLIVE), tagline=tag, fparams=fparams)
 
-	title='KiKA Startseite' 
+	title='KiKA Startseite' 											# neu ab 07.12 2022
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Start",
 		fanart=KIKA_START, thumb=KIKA_START, tagline=title, fparams=fparams)
 
-	'''
-	title='Videos und Bilder (A-Z)'
+	title='KiKA Videos'													# neu ab 07.12 2022
 	fparams="&fparams={}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_VideosBuendelAZ",
-		fanart=KIKA_START, thumb=GIT_VIDEO, tagline=title, fparams=fparams)
-
-	title='Die beliebtesten Videos (meist geklickt)'
-	fparams="&fparams={}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_VideosBeliebt", 
-		fanart=KIKA_START, thumb=GIT_VIDEO, tagline=title, fparams=fparams)
-
-	title=u'Videos mit Gebärdensprache'
-	path = "https://www.kika.de/videos/videos-dgs-100.html"
-	thumb = GIT_DGS
-	path=py2_encode(path); title=py2_encode(title); thumb=py2_encode(thumb);
-	fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}"  %\
-		(quote(path), quote(title), quote(thumb))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Barrierearm", 
-		fanart=KIKA_START, thumb=GIT_DGS, tagline=title, fparams=fparams)
-
-	title=u'Videos als Hörfilme'
-	path = "https://www.kika.de/videos/videos-ad-100.html"
-	thumb = GIT_AD
-	path=py2_encode(path); title=py2_encode(title); thumb=py2_encode(thumb);
-	fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}"  %\
-		(quote(path), quote(title), quote(thumb))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Barrierearm",
-		fanart=KIKA_START, thumb=GIT_AD, tagline=title, fparams=fparams)
-	'''
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Videos_Menu",
+		fanart=KIKA_START, thumb=KIKA_VIDEOS, tagline=title, fparams=fparams)
 	
 	title=u'MausLive'
 	tag = u"%s\n\nDer Kinderradiokanal des WDR  (Nachfolgeseite für [B]KiRaKa[/B])" % title
@@ -303,6 +286,130 @@ def Kikaninchen_Menu():
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+# ----------------------------------------------------------------------			
+def Kika_Videos_Menu():
+	PLog('Kika_Videos_Menu')
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+
+	title='Videos: Start'
+	fparams="&fparams={'title': '%s'}" % title
+	tag = "KiKA bietet dir in dieser Kinder-Mediathek die Videos deiner liebsten Kinderfilme, Kinderserien, Kindershows und Wissenssendungen für Kinder. Schau rein!"
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=KIKA_VIDEOS, 
+		thumb=KIKA_VIDEOS, tagline=tag, fparams=fparams)
+	title='Videos: Serien'
+	tag = "Bei KiKA findest du alte und neue Folgen deiner Lieblingsserien: Schloss Einstein, Wissen macht Ah!, KiKA LIVE und viele mehr. Schau rein!"
+	fparams="&fparams={'title': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=KIKA_VIDEOS, 
+		thumb=KIKA_SERIES, tagline=tag, fparams=fparams)
+	title='Videos: Filme'
+	tag = "Schau dir an, welche Filme bei KiKA laufen. Entdecke spannende, rätselhafte und lustige Kinderfilme und Märchen für Kinder in der KiKA Mediathek."
+	fparams="&fparams={'title': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=KIKA_VIDEOS, 
+		thumb=KIKA_FILME, tagline=tag, fparams=fparams)
+	title='Videos: Wissen'
+	tag = "Experimente für Kinder, Physik einfach erklärt und Antworten auf Fragen, die du dir immer gestellt hast. Das findest du bei den Wissenssendungen von KiKA."
+	fparams="&fparams={'title': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=KIKA_VIDEOS, 
+		thumb=KIKA_WISSEN, tagline=tag, fparams=fparams)
+	title='Videos: Shows'
+	tag = "Bei KiKA findest aufregende Shows, die großen Spaß machen. Verpasse keine Folge deiner Lieblingssendung: Von *Dein Song* bis *Die beste Klasse Deutschlands*"
+	fparams="&fparams={'title': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=KIKA_VIDEOS, 
+		thumb=KIKA_SHOWS, tagline=tag, fparams=fparams)
+	title='Videos: A-Z'
+	tag = "Sendungen von A bis Z"
+	fparams="&fparams={'title': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=KIKA_VIDEOS, 
+		thumb=GIT_AZ, tagline=tag, fparams=fparams)
+	title=u'Videos: mit Hörfassung'
+	tag = "Welche Hörfilme gibt es bei KiKA? Hier findest du Filme und Folgen von KiKA-Sendungen mit Audiodeskription."
+	fparams="&fparams={'title': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=KIKA_VIDEOS, 
+		thumb=KIKA_AD, tagline=tag, fparams=fparams)
+	title=u'Videos: mit Gebärdensprache'
+	tag = "Hier findest du Folgen und Videos von KiKA-Sendungen mit Deutscher Gebärdensprache. Schau dir die *Sesamstraße* oder *Die Sendung mit der Maus* an."
+	fparams="&fparams={'title': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=KIKA_VIDEOS, 
+		thumb=KIKA_DGS, tagline=tag, fparams=fparams)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+# ----------------------------------------------------------------------			
+# 25.06.2020 Nutzung neue Funktion get_ZDFstreamlinks
+def Kika_Live():
+	PLog('Kika_Live:')
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+	
+	import resources.lib.EPG as EPG
+	zdf_streamlinks = get_ZDFstreamlinks()
+	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
+	m3u8link=''
+	for line in zdf_streamlinks:
+		PLog(line)
+		webtitle, href, thumb, tagline = line.split('|')
+		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
+		if up_low('KiKA') in up_low(webtitle): 	# Sender mit Blank!
+			m3u8link = href
+			break
+	if m3u8link == '':
+		PLog('%s: Streamlink fehlt' % 'KiKA ')
+	
+	ID = 'KIKA'
+	title = 'KIKA TV-Live'
+	Merk = ''
+	
+	rec = EPG.EPG(ID=ID, mode='OnlyNow')		# Daten holen - nur aktuelle Sendung
+	PLog(rec)	# bei Bedarf
+	if len(rec) == 0:							# EPG-Satz leer?
+		title = 'EPG nicht gefunden'
+		summ = ''
+		tagline = ''
+	else:	
+		href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6]
+		if img.find('http') == -1:	# Werbebilder today.de hier ohne http://
+			img = R('tv-kika.png')
+		title 	= sname.replace('JETZT', ID)		# JETZT durch Sender ersetzen
+		# sctime 	= "[COLOR red] %s [/COLOR]" % stime			# Darstellung verschlechtert
+		# sname 	= sname.replace(stime, sctime)
+		tagline = 'Zeit: ' + vonbis
+				
+	title = unescape(title); title = repl_json_chars(title)
+	summ = unescape(summ); summ = repl_json_chars(summ)
+	PLog("title: " + title); PLog(summ)
+	title=py2_encode(title); m3u8link=py2_encode(m3u8link);
+	img=py2_encode(img); summ=py2_encode(summ);			
+	fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Merk': '%s'}" %\
+		(quote(m3u8link), quote(title), quote(img), quote_plus(summ), Merk)
+	addDir(li=li, label=title, action="dirList", dirID="ardundzdf.SenderLiveResolution", fanart=R('tv-EPG-all.png'), 
+		thumb=img, fparams=fparams, summary=summ, tagline=tagline)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+# ----------------------------------------------------------------------			
+# 
+def Kika_Vorschau():
+	PLog('Kika_Vorschau:')
+
+	zdf_streamlinks = get_ZDFstreamlinks()
+	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
+	stream_url=''
+	for line in zdf_streamlinks:
+		PLog(line)
+		webtitle, href, thumb, tagline = line.split('|')
+		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
+		if up_low('KiKA') in up_low(webtitle): 	# Sender mit Blank!
+			stream_url = href
+			break
+	if stream_url == '':
+		PLog('%s: Streamlink fehlt' % 'KiKA ')
+		
+	ID="KIKA"; name="KIKA"
+	
+	ardundzdf.EPG_ShowSingle(ID, name, stream_url, pagenr=0)
+	return
+	
 # ----------------------------------------------------------------------
 # 19.11.2022 Verwendung der Websuche (../suche/suche104.html?q=..) - früher nicht
 #	 nutzbar, da script-generiert. Vorherigen Code der Suche über alle Bündelgruppen 
@@ -341,10 +448,14 @@ def Kika_Search(query=None, title='Search', pagenr=''):
 # 06.12.2022 Neu an Webseitenänderungen
 # 1. Durchlauf Buttons Highlights + Cluster
 # 2. Durchlauf Cluster -> 
-def Kika_Start(show_cluster=''):
+def Kika_Start(show_cluster='', path=''):
 	PLog("Kika_Start: " + show_cluster)
+	PLog(path)
+	path_org=path
 
-	page, msg = get_page(path=BASE_KIKA)
+	if path == "":
+		path=BASE_KIKA
+	page, msg = get_page(path)
 	if page == '':
 		msg1 = "Fehler in Kika_Start:"
 		msg2 = msg
@@ -375,19 +486,22 @@ def Kika_Start(show_cluster=''):
 				if title in show_cluster:
 					img, img_alt = Kika_get_img(item)						# 1. Bild
 					PLog("found_cluster: " + show_cluster)
-					Kika_Rubriken(item, title, img, ID='Start_2',li=li)	# Seitensteuerung Kika_Rubriken					
+					Kika_Rubriken(item, title, img, ID='Start_2',li=li)	# Seitensteuerung Kika_Rubriken	
 	
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 	# ------------------------------------------------------------------
 	# 1. Durchlauf: Buttons Stage + Cluster 
 	PLog("Start_1:")
-	title = '[B]Highlights[/B]'											# Highlights voranstellen
-	tag = "Folgeseiten"
-	show_cluster = "Highlights"
-	fparams="&fparams={'show_cluster': 'Highlights'}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Start", 
-		fanart=KIKA_START, thumb=KIKA_START, fparams=fparams, tagline=tag)
+	if '"stageContent":null' not in page:									# fehlt in DGS- und AD-Videos
+		title = '[B]Highlights[/B]'											# Highlights voranstellen
+		tag = "Folgeseiten"
+		show_cluster = "Highlights"
+		
+		path_org=py2_encode(path_org)
+		fparams="&fparams={'show_cluster': 'Highlights', 'path': '%s'}" % quote(path_org)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Start", 
+			fanart=KIKA_START, thumb=KIKA_START, fparams=fparams, tagline=tag)
 	
 	items = blockextract('"boxType":', page)
 	PLog("items1: %d" % len(items))
@@ -399,12 +513,91 @@ def Kika_Start(show_cluster=''):
 			
 		img, img_alt = Kika_get_img(item)								# 1. Bild
 		tag = "Folgeseiten"
-		fparams="&fparams={'show_cluster': '%s'}" % title
+		fparams="&fparams={'show_cluster': '%s', 'path': '%s'}" % (title, quote(path_org))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Start", 
 			fanart=KIKA_START, thumb=img, fparams=fparams, tagline=tag)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+# ----------------------------------------------------------------------
+# 07.12.2022 Neu nach Webänderungen	
+# Verteiler für Kika_Videos_Menu	
+def Kika_Videos(title):
+	PLog('Kika_Videos: ' + title)
+
+	if title.endswith("Start"):
+		path = "https://www.kika.de/videos/kindervideos-videos-fuer-kinder-100"
+		Kika_Start(path=path)
+	if title.endswith("Serien"):
+		path = "https://www.kika.de/videos/serien/kinderserien-100"
+		Kika_Start(path=path)
+	if title.endswith("Filme"):
+		path = "https://www.kika.de/videos/filme/kinderfilme-100"
+		Kika_Start(path=path)
+	if title.endswith("Wissen"):
+		path = "https://www.kika.de/videos/wissen/wissenssendung-kinder-100"
+		Kika_Start(path=path)
+	if title.endswith("Shows"):
+		path = "https://www.kika.de/videos/shows/kindershows-100"
+		Kika_Start(path=path)
+	if title.endswith("fassung"):
+		path = "https://www.kika.de/audiodeskription/videos-mit-hoerfassung-102"
+		Kika_Start(path=path)
+	if title.endswith("sprache"):
+		path = "https://www.kika.de/gebaerdensprache/videos-mit-gebaerdensprache-102"
+		Kika_Start(path=path)
+		
+	if title.endswith("A-Z"):
+		Kika_AZ()
+		
+	return
+	
+# ----------------------------------------------------------------------
+# 07.12.2022 Neu nach Webänderungen
+#	
+def Kika_AZ(title='', path=''):
+	PLog('Kika_AZ: ' + path)
+		
+	# ---------------------------------------							# 1. Durchlauf: Liste Buchstaben
+	if path == "":
+		PLog("AZ_1:")
+		li = xbmcgui.ListItem()
+		li = home(li, ID='Kinderprogramme')				# Home-Button
+		
+		azlist = list(string.ascii_uppercase)
+		azlist.append('...')
+
+		# Menü A to Z
+		for element in azlist:
+			title='Sendungen mit ' + element
+			button = element
+			if element == "...":
+				button = "0-9"
+			img = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % button
+			path = "https://www.kika.de/suche/suche104?broadcast=%s" % element
+			fparams="&fparams={'title': '%s', 'path': '%s'}" % (button, quote(path))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_AZ", fanart=GIT_AZ, 
+				thumb=img, fparams=fparams)
+
+	# ---------------------------------------							# 2. Durchlauf
+	else:			
+		PLog("AZ_2:")
+		page, msg = get_page(path)
+		if page == '':
+			msg1 = "Fehler in Kika_AZ:"
+			msg2 = msg
+
+		page = Kika_get_props(page)										# Web-json ausschneiden
+		page = page.replace('\\"', '*')
+		
+		# Hinw.: firstBroadcastResponse zeigt Inhalte zu A
+		pos1 = page.find('"broadcastResponse"')	
+		page = page[pos1:]
+			
+		Kika_Rubriken(page, title='', thumb=GIT_AZ, ID='AZ')
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+					
 # ----------------------------------------------------------------------
 # 07.12.2022 nach Webänderungen - json-Inhalt ausschneiden (nicht
 #	json.loads-geeignet)
@@ -449,7 +642,7 @@ def Kika_get_singleItem(s):
 	typ = stringextract('docType":"', '"', s)
 	PLog("docType: " + typ)
 	
-	s = s.replace('\\"', '*')
+	s = s.replace('\\"', '*'); s = s.replace(u'\\u0026', u'&')
 	ext_id = stringextract('externalId":"', '"', s)					# Bsp. zdf-SCMS_tivi_vcms_video_1914206-default
 	api_url = stringextract('url":"', '"', s)						# "api":{	
 	stitle = stringextract('title":"', '"', s)		
@@ -471,6 +664,7 @@ def Kika_get_singleItem(s):
 	img, img_alt = Kika_get_img(s)		
 	cr = stringextract('copyrights":"', '"', s)
 	dur = stringextract('duration":"', '"', s)
+	ctitle = stringextract('contentCategoryTitle":"', '"', s)		# Kategorie-Title
 	
 	if mehrf == False:
 		summ = descr
@@ -478,12 +672,17 @@ def Kika_get_singleItem(s):
 		tag = "%s\n\n%s\n%s" % (tag,  endDate, date)
 	else:
 		tag = "[B]Bild: [/B] %s | Folgeseiten" % cr
+		if ctitle:
+			tag = "%s[B] | %s[/B]" % (tag, ctitle)
 	summ = descr			
 
 	stitle = unescape(stitle); stitle = repl_json_chars(stitle); 
 	tag = unescape(tag); tag = repl_json_chars(tag); 
 	summ = unescape(summ); summ = repl_json_chars(summ); 
-	Plot = "%s\n\n[B]Inhalt: [/B] %s" % (tag, summ)
+	if summ:														# kann fehlen
+		summ = '[B]Inhalt: [/B] %s' % summ 
+	
+	Plot = "%s\n\n%s" % (tag, summ)
 	Plot = Plot.replace('\n', '||')
 		
 	api_url=py2_encode(api_url); stitle=py2_encode(stitle); img=py2_encode(img);
@@ -597,6 +796,10 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 		# path: api_url 
 		mehrf,typ,path,stitle,thumb,Plot = Kika_get_singleItem(s)		# -> Kika_get_singleItem
 		tag = Plot.replace('||', '\n')
+		if typ == "interactiveContent":									# Spiele ausblenden
+			continue
+		if stitle.endswith("Start"):									# Ende Rubrik
+			break
 
 		if mehrf:														# Folgeseiten
 			if "channel" in typ:
@@ -640,81 +843,7 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
-# ----------------------------------------------------------------------			
-# 25.06.2020 Nutzung neue Funktion get_ZDFstreamlinks
-def Kika_Live():
-	PLog('Kika_Live:')
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-	
-	import resources.lib.EPG as EPG
-	zdf_streamlinks = get_ZDFstreamlinks()
-	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
-	m3u8link=''
-	for line in zdf_streamlinks:
-		PLog(line)
-		webtitle, href, thumb, tagline = line.split('|')
-		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
-		if up_low('KiKA') in up_low(webtitle): 	# Sender mit Blank!
-			m3u8link = href
-			break
-	if m3u8link == '':
-		PLog('%s: Streamlink fehlt' % 'KiKA ')
-	
-	ID = 'KIKA'
-	title = 'KIKA TV-Live'
-	Merk = ''
-	
-	rec = EPG.EPG(ID=ID, mode='OnlyNow')		# Daten holen - nur aktuelle Sendung
-	PLog(rec)	# bei Bedarf
-	if len(rec) == 0:							# EPG-Satz leer?
-		title = 'EPG nicht gefunden'
-		summ = ''
-		tagline = ''
-	else:	
-		href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6]
-		if img.find('http') == -1:	# Werbebilder today.de hier ohne http://
-			img = R('tv-kika.png')
-		title 	= sname.replace('JETZT', ID)		# JETZT durch Sender ersetzen
-		# sctime 	= "[COLOR red] %s [/COLOR]" % stime			# Darstellung verschlechtert
-		# sname 	= sname.replace(stime, sctime)
-		tagline = 'Zeit: ' + vonbis
-				
-	title = unescape(title); title = repl_json_chars(title)
-	summ = unescape(summ); summ = repl_json_chars(summ)
-	PLog("title: " + title); PLog(summ)
-	title=py2_encode(title); m3u8link=py2_encode(m3u8link);
-	img=py2_encode(img); summ=py2_encode(summ);			
-	fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Merk': '%s'}" %\
-		(quote(m3u8link), quote(title), quote(img), quote_plus(summ), Merk)
-	addDir(li=li, label=title, action="dirList", dirID="ardundzdf.SenderLiveResolution", fanart=R('tv-EPG-all.png'), 
-		thumb=img, fparams=fparams, summary=summ, tagline=tagline)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-# ----------------------------------------------------------------------			
-# 
-def Kika_Vorschau():
-	PLog('Kika_Vorschau:')
-
-	zdf_streamlinks = get_ZDFstreamlinks()
-	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
-	stream_url=''
-	for line in zdf_streamlinks:
-		PLog(line)
-		webtitle, href, thumb, tagline = line.split('|')
-		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
-		if up_low('KiKA') in up_low(webtitle): 	# Sender mit Blank!
-			stream_url = href
-			break
-	if stream_url == '':
-		PLog('%s: Streamlink fehlt' % 'KiKA ')
-		
-	ID="KIKA"; name="KIKA"
-	
-	ardundzdf.EPG_ShowSingle(ID, name, stream_url, pagenr=0)
-	return
-	
 # ----------------------------------------------------------------------
 # 04.07.2021 Aus WDR5 KiRaKa wird MausLive - Infoseite:
 #	kinder.wdr.de/radio/kiraka/mauslive-160.html 
@@ -1069,331 +1198,6 @@ def Kiraka_klick(title, weburl=''):
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 
 # ----------------------------------------------------------------------
-# alle Videos - erster Aufruf A-Z-Liste ../allevideos-buendelgruppen100.html, 
-#	zweiter Aufruf: Liste einer Gruppe 
-# Info: die Blöcke 'teaser teaserIdent' enthaltenen die Meist geklickten,
-#	Auswertung in Kika_VideosBeliebt
-# getHrefList: nur hrefs der Bündelgruppen sammeln für Kika_Search - dort
-#	-> Dict-Cache 
-# 30.12.2021 Cache ergänzt (Leit- und Einzelseiten) 
-# 29.07.2022 Link geändert ../allevideos-buendelgruppen100.html ->
-#	../uebersicht-alle-videos-100.html			
-# 06.12.2022 Link-Änderung: https://www.kika.de/videos		
-#	
-def Kika_VideosBuendelAZ(path='', getHrefList=False, button=''): 
-	PLog('Kika_VideosBuendelAZ: ' + path); PLog(button)
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-	
-	first=False; fname=''; page=''
-	if button == '':								# A-Z-Liste laden
-		path = 'https://www.kika.de/videos'
-		first=True
-		fname = "page-A_zc-05fb1331"
-	else:
-		fname = stringextract('allevideos-buendelgruppen100_', '.htm', path)
-		page = Dict("load", fname, CacheTime=KikaCacheTime)
-	
-	if page == False or page == '':
-		page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Kika_VideosBuendelAZ:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
-	else:
-		Dict("store", fname, page)
-	PLog(len(page)); PLog(first)
-	
-	if first:							# 1. Aufruf: A-Z-Liste
-		# begrenzen - Wiederholung A-Z-Liste am Fuß:
-		page = stringextract('top navigation -->', 'class="media mediaA"', page)
-		HrefList = []
-		pageItems = blockextract('class="bundleNaviItem ">', page)
-		blockA = stringextract('bundleNaviWrapper"', '</div>', page) # A fehlt in pageItems
-		pageItems.insert(0, blockA)
-		PLog(len(pageItems))
-		for item in pageItems:
-			href = BASE_KIKA + stringextract('href="', '"', item)
-			href=py2_encode(href)
-			if getHrefList:							# nur hrefs sammeln 
-				HrefList.append(href)
-			else:
-				button = stringextract('title="">', '<', item)
-				if '...' in button:					# Ende Liste
-					button = "0-9"
-				img_src = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % button
-				PLog("button: " + button); PLog("href: " + href)
-				title = "Sendungen mit " + button
-				fparams="&fparams={'path': '%s', 'button': '%s'}" % (quote(href), button)
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_VideosBuendelAZ", fanart=KIKA_START,
-					thumb=img_src, tagline=title, fparams=fparams)
-				
-		if getHrefList:							# nur hrefs return
-			return li, HrefList	
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True); 
-		return
-			
-	# 2. Aufruf: Liste einer Gruppe 
-	PLog("button: " + button);  PLog(first)
-	pos = page.find("The bottom navigation")		# begrenzen, es folgen A-Z + meist geklickt
-	PLog(pos)
-	if pos > 0:
-		page = page[:pos]
-	PLog(len(page))
-	pageItems = blockextract('class="media mediaA">', page)	
-	PLog(len(pageItems))
-	
-	for s in pageItems:			
-		# PLog(s[0:40])		# bei Bedarf
-		href =  BASE_KIKA + stringextract('href="', '"', s)
-		img = stringextract('<noscript>', '</noscript>', s).strip()		# Bildinfo separieren
-		img_alt = stringextract('alt="', '"', img)						# hier Infotext
-		img_src = stringextract('src="', '"', img)
-		if img_src.startswith('http') == False:
-			img_src = BASE_KIKA + img_src
-		
-		stitle = stringextract('class="linkAll" title="', '"', s)		
-		stitle = cleanhtml(stitle)
-		
-		stitle = unescape(stitle); stitle = repl_json_chars(stitle)	
-		img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt)		
-		
-		PLog('Satz1:')
-		PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src)
-		href=py2_encode(href); stitle=py2_encode(stitle); img_src=py2_encode(img_src);
-		
-		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}" %\
-			(quote(href), quote(stitle), quote(img_src))
-		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=img_src, 
-			thumb=img_src, fparams=fparams, tagline=img_alt)
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-# ----------------------------------------------------------------------
-# alle Videos - beliebteste Bündelgruppen, Einzelvideos in Kika_Videos  		
-# 29.07.2022 Link geändert ../allevideos-buendelgruppen100.html ->
-#	../uebersicht-alle-videos-100.html
-# 06.12.2022 Link-Änderung: https://www.kika.de/videos		
-def Kika_VideosBeliebt(): 
-	PLog('Kika_VideosBeliebt:')
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-	
-	path = 'https://www.kika.de/videos'
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Kika_VideosBeliebt:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
-	PLog(len(page))	
-	buendel = blockextract('teaser teaserIdent', page)	
-	PLog(len(buendel))
-	
-	for s in 	buendel:			
-		# PLog(s[0:40])		# bei Bedarf
-		href =  BASE_KIKA + stringextract('href=\"', '\"', s)
-		img = stringextract('<noscript>', '</noscript>', s).strip()		# Bildinfo separieren
-		img_alt = stringextract('alt=\"', '\"', img)	
-		img_src = stringextract('src="', '"', img)
-		if img_src.startswith('http') == False:
-			img_src = BASE_KIKA + img_src
-		
-		dachzeile = stringextract('<h4 class=\"headline\">', '</h4>', s)		
-		headline = stringextract('page=artikel\">', '</a>', dachzeile).strip()	
-		stitle = headline
-		img_title = stringextract('img title="', '"', s)
-		if stitle == '':
-			stitle = img_title
-		
-		stitle = unescape(stitle); stitle = repl_json_chars(stitle)	
-		img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt)		
-		
-		PLog('Satz2:')
-		PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src)
-		href=py2_encode(href); stitle=py2_encode(stitle); img_src=py2_encode(img_src);
-		
-		if 'KiKA LIVE' in stitle:										# s. Main_KIKA
-			continue
-		else:				
-			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s'}" %\
-				(quote(href), quote(stitle), quote(img_src))
-			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_Videos", fanart=img_src, 
-				thumb=img_src, fparams=fparams, tagline=img_alt)
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-# ----------------------------------------------------------------------
-# Kika-Videos eines Bündels aus Kika_VideosBuendelAZ oder Kika_VideosBeliebt 
-# 30.08.2020 Folgeseiten-Auswertung hinzugefügt
-#	
-def Kika_Videos(path, title, thumb, pagenr=''):
-	PLog('Kika_Videos:')
-	if pagenr == '':
-		pagenr  =  1
-	pagenr = int(pagenr)
-	PLog(pagenr)
-	title_org = title; thumb_org = thumb
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-	
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Kika_VideosAZ:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
-		
-	if page.find('dataURL:') < 0:		  # ohne 'dataURL:' - ohne kein Link zu xml-Seite, also keine Videos.
-		msg1 = "Leider kein Video gefunden zu:"
-		msg2 = title
-		MyDialog(msg1, msg2, '')	
-		return li
-		
-	videos = blockextract('class="av-playerContainer"', page)
-	PLog(len(videos))
-	
-	mediatype='' 		
-	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-		mediatype='video'
-	for s in videos:					
-		href = ref = stringextract('dataURL:\'', '\'}', s)				# Link Videodetails  (..avCustom.xml)
-		# PLog(href);   # PLog(s);   # Bei Bedarf
-		img = stringextract('<noscript>', '</noscript>', s).strip()		# Bildinfo separieren
-		img_alt = stringextract('alt=\"', '\"', img)	
-		img_alt = unescape(img_alt)	
-		img_src = stringextract('src="', '"', img)
-		if img_src.startswith('http') == False:
-			img_src = BASE_KIKA + img_src
-
-		stitle = stringextract('title="', '"', s)
-		duration = stringextract('icon-duration">', '</span>', s)	
-		tag = duration + ' Minuten'	
-		
-		stitle = unescape(stitle); stitle = repl_json_chars(stitle)	
-		img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt);	
-			
-		PLog('Satz3:')		
-		PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src);
-		PLog(tag); 
-		href=py2_encode(href); stitle=py2_encode(stitle); img_src=py2_encode(img_src); img_alt=py2_encode(img_alt);
-		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'summ': '%s', 'duration': '%s'}" %\
-			(quote(href), quote(stitle), quote(img_src), quote(img_alt), quote(duration))
-		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag", fanart=img_src, 
-			thumb=img_src, fparams=fparams, tagline=tag, summary=img_alt, mediatype=mediatype)
-			
-	pos = page.find('<!--The bottom navigation')						# Seite auf Folgeseiten prüfen			
-	page = page[pos:]
-	if 'class="bundleNavi' in page:
-		pagelist = blockextract('class="bundleNaviItem', page)
-		next_pagenr = int(pagenr + 1)		
-		PLog('pagelist: %d, next_pagenr: %d' % (len(pagelist), next_pagenr))
-		href=''
-		if next_pagenr-1 < len(pagelist):								# Basis 0
-			for item in pagelist:
-				title = stringextract('title="">', '</a>', item)
-				PLog(title)
-				if title == str(next_pagenr):							# Basis 0
-					href = BASE_KIKA + stringextract('href="', '"', item)
-					break
-		if href:
-			li = xbmcgui.ListItem()										# Kontext-Doppel verhindern
-			tag = "weiter zu Seite %s" % str(next_pagenr) 
-			href=py2_encode(href); title_org=py2_encode(title_org); 
-			thumb_org=py2_encode(thumb_org); 
-			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'pagenr': '%d'}" %\
-				(quote(href), quote(title_org), quote(thumb_org), next_pagenr)
-			addDir(li=li, label="Mehr..", action="dirList", dirID="resources.lib.childs.Kika_Videos", 
-				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), fparams=fparams, tagline=tag)
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-					
-# ----------------------------------------------------------------------
-# Kika_Barrierearm: Videos mit Gebärdensprache + als Hörfilme
-# 1. Durchgang Navigation	
-# 2. Durchgang: einz. Videos (rubrik)
-#
-def Kika_Barrierearm(path, title, thumb, rubrik=''):
-	PLog('Kika_Barrierearm:')
-	PLog(rubrik)
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-	
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Kika_Barrierearm:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
-	PLog(len(page))
-		
-	#------------------------------------------
-	if rubrik == '':							# 1. Durchgang Navigation
-		PLog('Stufe1:')	
-		pos = page.find("bottom navigation -->")
-		page = page[pos:]
-		nav_items =  blockextract('"bundleNaviItem', page)
-		PLog(len(nav_items))
-		
-		thumb = R(ICON_DIR_FOLDER)
-		if u'Hörfilme' in title:
-			fanart = GIT_AD
-		else:
-			fanart = GIT_DGS
-		thumb = R(ICON_DIR_FOLDER)	
-			
-		for item in nav_items:
-			path = BASE_KIKA + stringextract('href="', '"', item)
-			title = stringextract('title="">', '<', item)
-			
-			path=py2_encode(path); title=py2_encode(title); thumb=py2_encode(thumb);
-			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'rubrik': '%s'}"  %\
-				(quote(path), quote(title), quote(thumb), quote(title))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Barrierearm", 
-				fanart=fanart, thumb=thumb, tagline=title, fparams=fparams)
-	
-	else:	
-	#------------------------------------------	# 2. Durchgang: einz. Videos (rubrik)
-		PLog('Stufe2:')	
-		PLog(len(page))
-		videos = blockextract('class="av-playerContainer"', page)	# wie Kika_Videos, ohne 
-		PLog(len(videos))											#	bottom navigation
-		
-		mediatype='' 		
-		if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-			mediatype='video'
-		for s in videos:					
-			href = ref = stringextract('dataURL:\'', '\'}', s)		# Link Videodetails  (..avCustom.xml)
-			# PLog(href);   # PLog(s);   # Bei Bedarf
-			img = stringextract('<noscript>', '</noscript>', s).strip()	# Bildinfo separieren
-			img_alt = stringextract('alt=\"', '\"', img)	
-			img_alt = unescape(img_alt)	
-			img_src = stringextract('src="', '"', img)
-			if img_src.startswith('http') == False:
-				img_src = BASE_KIKA + img_src
-
-			stitle = stringextract('title="', '"', s)
-			duration = stringextract('icon-duration">', '</span>', s)	
-			tagline = duration + ' Minuten'	
-			
-			stitle = unescape(stitle); stitle = repl_json_chars(stitle)	
-			img_alt = unescape(img_alt); img_alt = repl_json_chars(img_alt);	
-				
-			PLog('Satz8:')		
-			PLog(href);PLog(stitle);PLog(img_alt);PLog(img_src);
-			PLog(tagline); 
-			href=py2_encode(href); stitle=py2_encode(stitle); img_src=py2_encode(img_src); img_alt=py2_encode(img_alt);
-			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'summ': '%s', 'duration': '%s'}" %\
-				(quote(href), quote(stitle), quote(img_src), quote(img_alt), quote(duration))
-			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag", fanart=img_src, 
-				thumb=img_src, fparams=fparams, tagline=img_alt, mediatype=mediatype)
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-# ----------------------------------------------------------------------
 # Kikaninchen - Seitenliste Sendungsvideos 
 # 30.12.2021 Cache ergänzt (hier nur Leitseite) 			
 def Kikaninchen_Videoseite():
@@ -1592,11 +1396,13 @@ def Kika_SingleBeitrag(path, title, thumb, Plot):
 	title_org = title
 		
 	path = path + "/assets"
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Kika_SingleBeitrag:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
+	page, msg = get_page(path)
+	PLog(msg)	
+	if page == '':								# bei Spielen können Videos fehlen
+		msg1 = "Kika_SingleBeitrag:"
+		msg2 = "leider finde ich dazu kein Video."
+		msg3 = "Spiele lassen sich nur im Webbrowser spielen."
+		MyDialog(msg1, msg2, msg3)	
 		return
 		
 	li = xbmcgui.ListItem()
