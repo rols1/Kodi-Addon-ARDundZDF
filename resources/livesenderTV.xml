@@ -13,7 +13,7 @@
   <info3>hrefsender enthält Sendernamen passend zu www.ardmediathek.de (ARD-Neu)</info3>
   <info4>link: Kennung statt Streamurl möglich, z.B. ZDFsource -> get_ZDFstreamlinks</info4>
   <info5>Datei livesenderTV.xml: autom. Update im Modul EPG, thread_getepg()</info5>
-  <info6>IPTVSource: https://github.com/jnk22/kodinerds-iptv/e297851866d6af270e69da6d1d60f2e938f72860/iptv/kodi/kodi.m3u</info6>
+  <info6>IPTVSource: https://github.com/jnk22/kodinerds-iptv/blob/e297851866d6af270e69da6d1d60f2e938f72860/iptv/kodi/kodi.m3u</info6>
   <info7>	Altern.: https://github.com/jnk22/kodinerds-iptv/blob/master/iptv/kodi/kodi.m3u</info7>
 </channels_info>
  

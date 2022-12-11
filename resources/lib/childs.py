@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>10</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.12.2022
+#	Stand: 11.12.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -414,7 +414,7 @@ def Kika_Vorschau():
 # 19.11.2022 Verwendung der Websuche (../suche/suche104.html?q=..) - früher nicht
 #	 nutzbar, da script-generiert. Vorherigen Code der Suche über alle Bündelgruppen 
 #	(Kika_VideosBuendelAZ) gelöscht.
-# 06.12.2022 Anpassung an Webseitenänderungen
+# 06.12.2022 Neu nach Webseitenänderungen
 #
 def Kika_Search(query=None, title='Search', pagenr=''):
 	PLog("Kika_Search:")
@@ -447,7 +447,8 @@ def Kika_Search(query=None, title='Search', pagenr=''):
 # ----------------------------------------------------------------------
 # 06.12.2022 Neu an Webseitenänderungen
 # 1. Durchlauf Buttons Highlights + Cluster
-# 2. Durchlauf Cluster -> 
+# 2. Durchlauf Cluster -> Kika_Rubriken
+#
 def Kika_Start(show_cluster='', path=''):
 	PLog("Kika_Start: " + show_cluster)
 	PLog(path)
@@ -483,10 +484,15 @@ def Kika_Start(show_cluster='', path=''):
 				PLog("title: %s, show_cluster: %s" % (title, show_cluster))
 				summ = "Folgeseiten"
 				ID = "Start_2"
-				if title in show_cluster:
-					img, img_alt = Kika_get_img(item)						# 1. Bild
+				if title and title in show_cluster:
+					img, img_alt = Kika_get_img(item)					# 1. Bild
 					PLog("found_cluster: " + show_cluster)
-					Kika_Rubriken(item, title, img, ID='Start_2',li=li)	# Seitensteuerung Kika_Rubriken	
+					pos2 = item.find("viewVariant")						# boxType begrenzen
+					PLog(pos2); PLog(item[-60:])						# Check viewVariant
+					item = item[:pos2]
+					
+					Kika_Rubriken(page=item, title=title, thumb=img, ID='Start_2',li=li)	# Seitensteuerung Kika_Rubriken	
+					break
 	
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -599,8 +605,8 @@ def Kika_AZ(title='', path=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 					
 # ----------------------------------------------------------------------
-# 07.12.2022 nach Webänderungen - json-Inhalt ausschneiden (nicht
-#	json.loads-geeignet)
+# 07.12.2022 Neu nach Webänderungen - json-Inhalt ausschneiden,
+#	nicht json.loads-geeignet
 def Kika_get_props(page):
 	PLog('Kika_get_props:')
 	
@@ -612,7 +618,7 @@ def Kika_get_props(page):
 	return page
 				
 # ----------------------------------------------------------------------
-# 07.12.2022 nach Webänderungen - img + img_alt ermitteln
+# 07.12.2022 Neu nach Webänderungen - img + img_alt ermitteln
 #	
 def Kika_get_img(item):
 	PLog('Kika_get_img:')
@@ -631,8 +637,8 @@ def Kika_get_img(item):
 	return img, img_alt
 				
 # ----------------------------------------------------------------------
-# 07.12.2022 nach Webänderungen - einz. Datensatz auswerten (docType
-#	videoSubchannel, externalVideo, ..)
+# 07.12.2022 Neu nach Webänderungen - einz. Datensatz auswerten 
+#	(docType: videoSubchannel, externalVideo, ..)
 # s=Blockitem (z.B. docType)
 # 
 def Kika_get_singleItem(s):
@@ -644,12 +650,17 @@ def Kika_get_singleItem(s):
 	
 	s = s.replace('\\"', '*'); s = s.replace(u'\\u0026', u'&')
 	ext_id = stringextract('externalId":"', '"', s)					# Bsp. zdf-SCMS_tivi_vcms_video_1914206-default
-	api_url = stringextract('url":"', '"', s)						# "api":{	
+	if '"api":null' in s:											# z.B. ext. Link zu Junior ESC-Abstimmung
+		api_url=""
+		typ = "skip_api_null"
+	else:
+		api_url = stringextract('url":"', '"', s)					# "api":{	
 	stitle = stringextract('title":"', '"', s)		
 	
+	mehrf = True													# default 
 	# Einzelvideos: docType":"externalVideo", docType":"video"
-	if "channel" in typ or typ=="broadcastSeries":
-		mehrf = True												# Folgeseiten
+	if typ.endswith("ideo"):
+		mehrf = False												# Folgeseiten
 						
 	date = stringextract('date":"', '"', s)	
 	endDate = stringextract('endDate":"', '"', s)
@@ -690,7 +701,7 @@ def Kika_get_singleItem(s):
 	PLog('mehrf: %s, typ: %s, api_url: %s, stitle: %s, thumb: %s, Plot: %s' % (mehrf, typ, path, stitle, thumb, Plot))	
 	return mehrf,typ,path,stitle,thumb,Plot			
 # ----------------------------------------------------------------------
-# 07.12.2022 nach Webänderungen - Cluster ermitteln in  
+# 07.12.2022 Neu nach Webänderungen - Cluster ermitteln in  
 #	Folgeseiten (path=api_url -> json), docType: videoSubchannel
 #
 def Kika_Subchannel(path, title, thumb, Plot, li=''):
@@ -712,11 +723,11 @@ def Kika_Subchannel(path, title, thumb, Plot, li=''):
 		mediatype='video'
 	
 	Plot_par = Plot
-	summ_org = Plot.replace("||", "\n")										# Plot hier: tagline + summary
+	summ_org = Plot.replace("||", "\n")									# Plot hier: tagline + summary
 	
 	featuredVideo = stringextract('"featuredVideo"',  '"videosPageUrl"', page)
 	fanimg=""
-	if featuredVideo:													# kann fehlen
+	if featuredVideo:													# Empfehlung od. 1. Folge | kann fehlen 
 		teaserImage = stringextract('"teaserImage"',  '"structure"', page)
 		if teaserImage:
 			fanimg, img_alt = Kika_get_img(teaserImage)
@@ -724,7 +735,7 @@ def Kika_Subchannel(path, title, thumb, Plot, li=''):
 		mehrf,typ,path,stitle,thumb,Plot = Kika_get_singleItem(featuredVideo)
 		summ = Plot.replace("||", "\n")	
 	
-		stitle = "[B]Empfehlung: [/B] %s" % stitle							# herausgestelltes Video im Web
+		stitle = "[B]Empfehlung: [/B] %s" % stitle						# herausgestelltes Video im Web
 		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
 			(quote(path), quote(stitle), quote(thumb), quote(Plot))
 		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag", 
@@ -746,13 +757,13 @@ def Kika_Subchannel(path, title, thumb, Plot, li=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)				
 				
 # ----------------------------------------------------------------------
-# 07.12.2022 nach Webänderungen - Folgeseiten ermitteln in  
+# 07.12.2022 Neu nach Webänderungen - Folgeseiten ermitteln in  
 #	 (path=api_url -> json), docType: broadcastSeries
-#
+# Aufrufer: Kika_Rubriken
 def Kika_Series(path, title, thumb, Plot):
 	PLog('Kika_Series: ' + title)
 	title_org=title
-	
+
 	page, msg = get_page(path)
 	if page == '':
 		msg1 = "Fehler in Kika_Series:"
@@ -763,11 +774,13 @@ def Kika_Series(path, title, thumb, Plot):
 	Subchannel = stringextract('"videoSubchannel"',  '},', page)
 	api_url = stringextract('url":"', '"', Subchannel)
 	Kika_Subchannel(api_url, title, thumb, Plot)						# -> Seitensteuerung Kika_Rubriken
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)				
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 # ----------------------------------------------------------------------
-# 07.12.2022 nach Webänderungen - einz. Cluster/Channel/Folgen auswerten 
-#	li + page durch Aufrufer möglich
+# 07.12.2022 Neu nach Webänderungen - einz. Cluster/Channel/Folgen
+#	 auswerten
+# einz. Datensätze -> Kika_get_singleItem
+# li + page durch Aufrufer möglich
 def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 	PLog('Kika_Rubriken: ' + ID)
 	thumb_org=thumb; title_org=title; li_org=li
@@ -788,24 +801,30 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 				msg2 = msg
 				MyDialog(msg1, msg2, '')
 				return
-	
+	PLog(page[:100])
+
 	items = blockextract('"docType":', page)
 	PLog(len(items))
 	for s in items:
 		mediatype='' 
-		# path: api_url 
+		# path: api_url, neue typ-Varianten in Kika_get_singleItem
+		#	ergänzen: 
 		mehrf,typ,path,stitle,thumb,Plot = Kika_get_singleItem(s)		# -> Kika_get_singleItem
 		tag = Plot.replace('||', '\n')
+		if typ == "skip_api_null":										# fehlende api-Url ausblenden
+			continue
 		if typ == "interactiveContent":									# Spiele ausblenden
 			continue
-		if stitle.endswith("Start"):									# Ende Rubrik
+		if stitle.endswith("Start") or path.endswith("suche104"):		# Ende Rubrik
 			break
 
 		if mehrf:														# Folgeseiten
 			if "channel" in typ:
 				func = "Kika_Subchannel"
-			if typ == "broadcastSeries":
+			elif typ == "broadcastSeries" or typ == "link":
 				func = "Kika_Series"
+			else:
+				func = "Kika_Subchannel"
 		else:
 			func = "Kika_SingleBeitrag"									# einz. Video
 			if SETTINGS.getSetting('pref_video_direct') == 'true': 		# Kennz. Video für Sofortstart 
@@ -841,8 +860,11 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 		addDir(li=li, label=tag, action="dirList", dirID="resources.lib.childs.Kika_Rubriken", 
 			fanart=thumb_org, thumb=R(ICON_MEHR), fparams=fparams, tagline=tag,summary=summ)
 	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			
+	if li_org:
+		return
+	else:
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 
 # ----------------------------------------------------------------------
 # 04.07.2021 Aus WDR5 KiRaKa wird MausLive - Infoseite:
@@ -1387,21 +1409,28 @@ def Tonschnipsel():
 
 # ######################################################################
 # einzelnes Video
-# 07.12.2022 Umbau nach Webänderungen (vormals xml-Seite)			
+# 07.12.2022 Neu nach Webänderungen (vormals xml-Seite)			
 # path enthält die api-Seite mit Details. Hier direkt
-#	weiter mit der assets-Url zu den Videoquellen
+#	weiter mit der assets-Url zu den Videoquellen (einfaches Anängen
+#	von /assets klappt nicht bei typ=relatedVideo
 #
 def Kika_SingleBeitrag(path, title, thumb, Plot):
 	PLog('Kika_SingleBeitrag: ' + path)
 	title_org = title
 		
-	path = path + "/assets"
-	page, msg = get_page(path)
-	PLog(msg)	
+	page, msg = get_page(path)					# Details mit asset_url
+	pos = page.find('"assets":{')
+	page = page[pos:]
+	PLog("pos: %d" % pos)
+	asset_url = stringextract('"url":"', '"', page)
+	PLog("asset_url: " + asset_url)
+	page, msg = get_page(path=asset_url)		# Videoquellen
+	PLog(msg)
+		
 	if page == '':								# bei Spielen können Videos fehlen
 		msg1 = "Kika_SingleBeitrag:"
 		msg2 = "leider finde ich dazu kein Video."
-		msg3 = "Spiele lassen sich nur im Webbrowser spielen."
+		msg3 = "Spiele oder Abstimmungen kann ich leider auch nicht."
 		MyDialog(msg1, msg2, msg3)	
 		return
 		
@@ -1458,6 +1487,7 @@ def Kika_SingleBeitrag(path, title, thumb, Plot):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ------------------------------
+# 07.12.2022 angepasst nach Webänderungen
 def Kika_VideoMP4get(title, assets):	
 	PLog('Kika_VideoMP4get:')
 	

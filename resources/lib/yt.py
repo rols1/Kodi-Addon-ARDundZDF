@@ -249,6 +249,7 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 		data = MVW_DATA_ALL  % (query, offset, lsize)
 	else:									# Suche in einz. Sender / Channel
 		data = MVW_DATA % (query, sender, offset, lsize)
+	PLog("data: " + data)
 	
 	page, msg = get_mvw_page(data)
 	if page == '':	

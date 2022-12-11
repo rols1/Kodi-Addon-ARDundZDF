@@ -40,7 +40,8 @@ elif PYTHON3:
 from resources.lib.util import *
 
 # Globals
-ICON_FILTER				= 'icon-filter.png'	
+ICON_FILTER		= 'icon-filter.png'
+MAX_LEN 		= 24	
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -91,7 +92,7 @@ def SearchWordTools():
 			thumb=R('icon_searchwords.png'), tagline=tag, summary=summ, fparams=fparams)		
 		
 	title = u"Suchwort [B]hinzufügen[/B]"
-	tag = u"ein Suchwort der Liste [B]hinzufügen[/B]" 
+	tag = u"ein Suchwort der Liste [B]hinzufügen[/B] (max. %d)" % MAX_LEN 
 	fparams="&fparams={'action': 'add'}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordWork", fanart=R(FANART), 
 		thumb=R('icon_searchwords.png'), tagline=tag, summary=summ, fparams=fparams)		
@@ -150,6 +151,13 @@ def SearchWordWork(action):
 
 	if action == 'add':
 		PLog("do: " + action)
+		
+		if len(searchwords) >= MAX_LEN:
+			msg1 = "Suchwortliste"
+			msg2 = u'maximale Länge bereits erreicht: [B]%d[/B] ' % max_len
+			MyDialog(msg1, msg2, '')
+			return
+					
 		title = u'Suchwort hinzufügen (Groß/klein egal)'
 		ret = dialog.input(title, type=xbmcgui.INPUT_ALPHANUM)	# Eingabe Suchwort
 		PLog(ret)

@@ -97,6 +97,11 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 #	den Abgleich).
 # Ablösung der vorherigen Funktion update_tvxml
 #
+# Details Commits (json):
+# 	https://api.github.com/repos/rols1/Kodi-Addon-ARDundZDF/commits?&page=1&per_page=1 
+# Details Einzeldatei (json, letzter Commit: committer["date"]):
+#	https://api.github.com/repos/rols1/Kodi-Addon-ARDundZDF/commits?path=ARDnew.py&page=1&per_page=1 
+#
 def update_single(PluginAbsPath):
 	PLog('update_single:')
 	import glob	
@@ -111,7 +116,7 @@ def update_single(PluginAbsPath):
 				"%s/%s" % (PluginAbsPath, "resources/settings.xml"),
 				"%s/%s" % (PluginAbsPath, "ardundzdf.py")
 		]
-	selected=[0,1,2]												# Auswahl-Default: alle, s.u.
+	selected=[0,1,2]												# Auswahl-Default: alle, weiter s.u.
 
 	globFiles = "%s/%s/*py" % (PluginAbsPath, "resources/lib")
 	files = glob.glob(globFiles) 									# Module -> SINGLELIST 
@@ -135,13 +140,14 @@ def update_single(PluginAbsPath):
 		page, msg = get_page(path=path)
 		if page:
 			Dict("store", cacheID, page) 					# Cache: aktualisieren
+			
 	RepoList=[]	
 	items = blockextract('href="/rols1/Kodi-Addon-ARDundZDF/blob/master/', page)
 	PLog("RepoFiles: %d" % len(items))
 	for item in items:
 		f = stringextract('href="', '"', item)
 		f = f.split("blob/master/")[-1]						# Bsp.: resources/lib/ARDnew.py
-		if f.endswith("init__.py") or f.endswith(".pem"):# skip PY2- + Repo-Leichen
+		if f.endswith("init__.py") or f.endswith(".pem"):	# skip PY2- + Repo-Leichen
 			continue
 		RepoList.append(f)
 	PLog("ModuleRepo: " + str(RepoList))					# Liste github-Module
@@ -217,6 +223,8 @@ def update_single(PluginAbsPath):
 					remote_file = "%s%s?%s" % (GIT_BASE, fname, "raw=true")
 					remote_file = remote_file.replace('\\', '/')
 					PLog('lade %s' % remote_file) 
+					
+					
 					r = urlopen(remote_file)						# Updatedatei auf Github 
 					page = r.read()
 					if PYTHON3:										# vermeide Byte-Error bei py2_decode			

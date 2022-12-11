@@ -10,7 +10,19 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-20.11.2022 4.5.5
+11.12.2022 4.5.6
+			SearchWordWork (Modul tools): Hinzufügen neuer Suchwörter begrenzt auf 24,
+			einschl. Dialog.
+			Suche in ARD-Mediathek (ARDnew): Berücksichtigung des gewählten Senders
+			(bisher ARD-Alle), Anpassung in Main_NEW. Bei der MediathekViewWeb-Suche 
+			bleibt es bei ARD-Alle.
+			get_ARDstreamlinks: Austausch Endung index.m3u8 -> master.m3u8 bei DasErste
+			und MDR (gegen Startverzög. > 10 sec).  
+			Audio_get_homescreen (Audiothek): Button Stage entfernt (Inhalte in Button
+			Highlights enthalten).
+			Kika (Modul childs): Runderneuerung nach Webänderungen.
+
+20.11.2022 
 			ArteMehr (Modul Arte): Link-Ergänzung für Kategorien-Url für Links "Weitere
 			Beiträge" (analog V4.5.4 in ArteCluster + Beitrag_Liste).
 			VerpasstWoche: Kopfdoku aktualisiert (Wegfall Classic-Code).
