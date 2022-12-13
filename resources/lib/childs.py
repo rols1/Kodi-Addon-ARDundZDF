@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>10</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.12.2022
+# 	<nr>11</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.12.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -103,6 +103,7 @@ GIT_AZ			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_t
 GIT_CAL			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-calendar.png?raw=true"
 GIT_VIDEO		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaVideo.png?raw=true"
 GIT_RADIO		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/radio-kiraka.png?raw=true"
+GIT_POPCORN		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaPopcorn.png?raw=true"
 GIT_KANINCHEN	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaninchen.png?raw=true"
 GIT_KANINVIDEOS	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaninchenVideos.png?raw=true"
 GIT_KRAMLIEDER	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaninchenKramLieder.png?raw=true"
@@ -116,7 +117,9 @@ GIT_DGS			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_
 GIT_AD			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaAD.png?raw=true"
 GIT_ARD_KINDER	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-ard_kinder-familie.png?raw=true"
 
-KikaCacheTime = 1*86400					# Addon-Cache für A-Z-Seiten: 1 Tag
+KikaCacheTime = 1*3600					# Addon-Cache für A-Z-Seiten: 1 Stunde
+KIKA_HEADERS	="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+		'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}"
 
 
 # ----------------------------------------------------------------------			
@@ -265,16 +268,21 @@ def Main_TIVI(title=''):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-# ----------------------------------------------------------------------			
+# ----------------------------------------------------------------------
+# 13.12.2022 neu: 'Kikaninchen Videos A-Z' und 'Kikaninchen Filme'			
 def Kikaninchen_Menu():
 	PLog('Kikaninchen_Menu')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
-	title='Kikaninchen Videos'
-	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videoseite", fanart=GIT_KANINCHEN, 
+	title='Kikaninchen Videos A-Z'				# www.kikaninchen.de/videos/allevideos864.html
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KikaninchenVideosAZ", fanart=GIT_KANINCHEN, 
 		thumb=GIT_KANINVIDEOS, tagline='für Kinder 3-6 Jahre', fparams=fparams)
+	title='Kikaninchen Filme'					# www.kikaninchen.de/filme/filme-122.html ausgelagert von					
+	fparams="&fparams={}"						#	Kikaninchen Videos ("Alle Filme")
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KikaninchenFilme", fanart=GIT_KANINCHEN, 
+		thumb=GIT_POPCORN, tagline='für Kinder 3-6 Jahre', fparams=fparams)
 	title='Kikaninchen Singen und Tanzen'
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KikaninchenLieder", fanart=GIT_KANINCHEN, 
@@ -287,6 +295,7 @@ def Kikaninchen_Menu():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------			
+# 07.12.2022 Neu nach Webänderungen	
 def Kika_Videos_Menu():
 	PLog('Kika_Videos_Menu')
 	
@@ -445,7 +454,7 @@ def Kika_Search(query=None, title='Search', pagenr=''):
 	return
 	
 # ----------------------------------------------------------------------
-# 06.12.2022 Neu an Webseitenänderungen
+# 06.12.2022 Neu nach Webseitenänderungen
 # 1. Durchlauf Buttons Highlights + Cluster
 # 2. Durchlauf Cluster -> Kika_Rubriken
 #
@@ -1003,7 +1012,6 @@ def Maus_MediaObjects(title, url):
 	PLog(len(items))
 	
 	for item in items:
-#		PLog(item)
 		mediaObj = stringextract("'url': '", "'", item) # -> ..-hoeren-104.assetjsonp (MausLive abwei.)
 		PLog("mediaObj: " + mediaObj)
 
@@ -1137,7 +1145,7 @@ def Kiraka_get_mp3(webid, title, thumb, Plot):
 		msg1 = "Fehler in Kiraka_klick"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
-		return li
+		return
 	PLog(len(page))	
 
 	mp3url=''
@@ -1151,7 +1159,7 @@ def Kiraka_get_mp3(webid, title, thumb, Plot):
 		msg1 = u"Kiraka_get_mp3: MediaObjekt nicht gefunden für"
 		msg2 = ">%s<" % title
 		MyDialog(msg1, msg2, '')	
-		return li
+		return
 
 	if mp3url.startswith('//'):
 		mp3url = "https:" + mp3url
@@ -1220,101 +1228,314 @@ def Kiraka_klick(title, weburl=''):
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 
 # ----------------------------------------------------------------------
-# Kikaninchen - Seitenliste Sendungsvideos 
-# 30.12.2021 Cache ergänzt (hier nur Leitseite) 			
-def Kikaninchen_Videoseite():
-	PLog('Kikaninchen_Videoseite')
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
+# Kikaninchen: alle Videos von A-Z
+#	A-Z-Liste der Sendereihen (Web: Videos)
+# 12.12.2022 Neu nach Webseitenänderungen
+# 		
+def KikaninchenVideosAZ():
+	PLog('KikaninchenVideosAZ:')
 	
-	path = 'https://www.kika.de/kikaninchen/sendungen/videos-kikaninchen-100.html'
-	page = Dict("load", "KikaninchenAZ", CacheTime=KikaCacheTime)
-	if page == False or page == '':
-		page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Kikaninchen_Videoseite:"
+	path = 'https://www.kikaninchen.de/videos/allevideos864.html'	
+	page = Dict("load", "KikaninchenVideos", CacheTime=KikaCacheTime)
+	if page == False:
+		page, msg = get_page(path, header=KIKA_HEADERS)
+		if page:
+			Dict("store", "KikaninchenVideos", page)
+	
+	if page == '':							
+		msg1 = "Fehler in KikaninchenVideosAZ:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
-		return li
-	else:
-		Dict("store", "KikaninchenAZ", page)
-														# Buchstabenblock (2 x vorh.):
-	items = stringextract('class="bundleNaviWrapper"', '"modCon"', page)
-	items = blockextract('bundleNaviItem', items)		# nur aktive Buchstaben
+		return
+
+	pos1 = page.find("node-videos")
+	page = page[pos1:]
+	PLog(page[:100])
+	items = blockextract("<a href", page)							# Sendungen-Links
 	PLog(len(items))
 	
-	for s in items:	
-		# PLog(s)
-		seite =  stringextract('title="">', '</a>', s).strip()
-		if '...' in seite:					# Ende Liste
-			seite = "0-9"
-		if "disabled" in s or seite == '':
-			continue 
-		PLog(seite)
-		title = 'Kikaninchen Videos: Seite ' + seite
-		tag = 'Sendungen mit ' + seite
-		# img_src = R(ICON_DIR_FOLDER)
-		img_src = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % seite
+	AZ_lines=[]														# Zeile: Titel|Link
+	AZ_chars=[]														# vorkommende Buchst.
+	for s in items:
+		#PLog(s)
+		href = stringextract('href="', '"', s)
+		if href.endswith("filme-122.html"):							# ausgelagert -> KikaninchenFilme
+			continue
+		title = stringextract('title="', '"', s)
+		AZ_lines.append("%s|%s" % (title, href))
+		fchar = up_low(title[0])
+		PLog("fchar: %s, title: %s" % (fchar, title))
+		if fchar not in AZ_chars:
+			AZ_chars.append(fchar)
+
+	if 	len(AZ_lines) == 0:
+		msg1 = "Leider finde ich keine Videos bei Kikaninchen."
+		msg2 = "Jemand hat sie wohl versteckt."
+		MyDialog(msg1, msg2, '')	
+		return
+	
+	#-----------------------------------------------------------	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+			
+	PLog(AZ_lines[0])	
+	AZ_lines.sort(); AZ_chars.sort()
+	Dict("store", "KikaninchenAZ", AZ_lines)						# sortierte Titel|Link - Liste speichern
+	PLog(len(AZ_lines));
+	PLog(str(AZ_chars))
+	
+	for fchar in AZ_chars:											# A-Z-Liste  für die Sendereihen
+		showChar = fchar
+		PLog(ord(fchar))
+		if ord(fchar) < 65 or ord(fchar) > 90: 	# außerhalb A - Z
+			showChar = "0-9"
+			
+		title = 'Kikaninchen Videos: Seite ' + showChar
+		tag = 'Weiter zu den Videos mit [B]%s[/B]' % showChar
+		img = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % showChar
 		
-		href = BASE_KIKA + stringextract('href="', '"', s)
-		
-		PLog(href); PLog(title); PLog(img_src)
-		href=py2_encode(href); 		
-		fparams="&fparams={'path': '%s'}" % (quote(href))
+		fparams="&fparams={'showChar': '%s'}" % showChar
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videos", fanart=GIT_KANINCHEN, 
-			thumb=img_src, fparams=fparams, tagline=tag)
+			thumb=img, fparams=fparams, tagline=tag)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------
-# Kikaninchen - Sendungsvideos, mehrere Seiten - ermittelt die Videos
-#	zu einer einzelnen (Buchstaben-)Seite
-#	zusammengelegt mit 	playerContainer() der Plexversion	
-def Kikaninchen_Videos(path):
-	PLog('Kikaninchen_Videos')
+# Kikaninchen - Videos zum Buchstaben showChar zeigen
+# 12.12.2022 Neu nach Webseitenänderungen
+# 1. Durchlauf: Sendereihen zu showChar
+# 2. Durchlauf: Videoliste zu path
+def Kikaninchen_Videos(showChar, path='', title=''):
+	PLog('Kikaninchen_Videos: ' + showChar)
+	PLog(path); PLog(title)
+	#-------------------------------------------------					# 2. Videoliste zu path
+	if path:
+		PLog("Step2:")
+		if "_zc-" and "_zs-" in path:									# Test auf Einzelvideo
+			Kikaninchen_VideoSingle(path, title)
+			return
+			
+		page, msg = get_page(path, header=KIKA_HEADERS)
+	
+		item = stringextract('json">', '</script>', page)
+		item = item.replace('\/', '/')
+		thumb = stringextract('image":"', '"', item)					# gesamt-img
+		if thumb == "":
+			thumb = R("Dir-video.png")
+		id_link = stringextract('@id":"', '"', item)					# ev. Link zu KiKA-Seite
+		PLog("id_link: %s, thumb: %s" % (id_link, thumb))
+	
+		# Inhalte node-videos fehlen bei id-Links zu KiKA-Seiten. 
+		pos1 = page.find("node-videos")									# wie KikaninchenVideosAZ
+		page = page[pos1:]
+		PLog(page[:100])
+		items = blockextract("<a href", page)							# Sendungen-Links
+		PLog(len(items))
+		
+		if len(items) == 0:												# Seite vorhanden, aber keine Videos
+			if id_link == "":
+				msg1 = "Leider finde ich keine Videos zu"
+				msg2 = "[B]%s[/B]" % title
+				MyDialog(msg1, msg2, '')
+			else:
+				PLog("jump_to_kika:")
+				msg1 = "KiKA-Videos"									# notification
+				msg2 = title
+				icon = KIKA_VIDEOS
+				xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)
+				Kika_Subchannel(id_link,title,thumb,Plot='')
+			return
+			
+		li = xbmcgui.ListItem()
+		li = home(li, ID='Kinderprogramme')			# Home-Button	
+				
+		tag = "weiter zum Video"
+		for s in items:
+			href = stringextract('href="', '"', s)
+			title = stringextract('title="', '"', s)
+			title = unescape(title)
+			PLog("title: %s, href: %s" % (title, href))
+		
+			img = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % showChar
+			href=py2_encode(href); title=py2_encode(title);
+			fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_VideoSingle", fanart=GIT_KANINCHEN, 
+				thumb=thumb, fparams=fparams, tagline=tag)
+		
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+	#-------------------------------------------------					# 1. Sendereihen zu showChar
+	PLog("Step1:")
+	AZ_lines = Dict("load", "KikaninchenAZ")
+	if AZ_lines == False:	
+		msg1 = "Leider finde ich keine Videos bei Kikaninchen."
+		msg2 = "Jemand hat sie wohl versteckt."
+		MyDialog(msg1, msg2, '')	
+		return
+	PLog(len(AZ_lines))
+		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+			
+	thumb = R(ICON_DIR_FOLDER)
+	for s in AZ_lines:
+		title, href = s.split("|")										# Zeile: Titel|Link
+		title = unescape(title)
+		fchar = up_low(title[0])
+		tag = "weiter zu den [B]Videos[/B]"
+		if "_zc-" and "_zs-" in href:
+			tag = "weiter zum [B]Einzelvideo[/B]"
+		if fchar == showChar:
+			PLog(href); PLog(title); 
+			img = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % showChar
+			href=py2_encode(href); title=py2_encode(title);
+			fparams="&fparams={'showChar': '%s', 'path': '%s', 'title': '%s'}" % (showChar, quote(href), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videos", fanart=img, 
+				thumb=thumb, fparams=fparams, tagline=tag)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+# ----------------------------------------------------------------------
+# 13.12.2022 Neu nach Webseitenänderungen
+# ausgelagert von Kikaninchen Videos ("Alle Filme")
+def KikaninchenFilme():	
+	PLog("KikaninchenFilme:")
+	
+	path = 'https://www.kikaninchen.de/filme/filme-122.html'
+	page, msg = get_page(path, header=KIKA_HEADERS)			# ohne Dict, kleine Seite
+	if page == '':							
+		msg1 = "Fehler in KikaninchenVideosAZ:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+			
+	pos1 = page.find("node-filme")
+	page = page[pos1:]
+	PLog(page[:100])
+	items = blockextract("<a href", page)							# Sendungen-Links
+	PLog(len(items))
+	
+	thumb = R("Dir-video.png")
+	for s in items:
+		href = stringextract('href="', '"', s)
+		title = stringextract('title="', '"', s)
+		tag = 'Weiter zum [B]Film[/B]'
+		
+		href=py2_encode(href)
+		fparams="&fparams={'showChar': '', 'path': '%s'}" % quote(href)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videos", fanart=GIT_KANINCHEN, 
+			thumb=thumb, fparams=fparams, tagline=tag)
+			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+# ----------------------------------------------------------------------
+# 10.12.2022 Neu nach Webseitenänderungen
+# Videodetails via Assets-Url ermitteln. path = Videoseite mit embedded
+#	Player, für Videodetails 	
+def Kikaninchen_VideoSingle(path, title):	
+	PLog('Kikaninchen_VideoSingle: ' + path)
+	title_org=title
+
+	#-------------------------------------------------		# 1. Assets-Url ermittlen -> xml-Datei
+	try:
+		path = path.split("_zc-")[0]						# Bsp.: ../video52242_zc-b799b903_zs-8eedf79c.html
+		assets_url = path + "-avCustom.xml"					# Bsp.: ../videos/video52242-avCustom.xml		
+	except Exception as exception:
+		PLog(str(exception))
+		assets_url=""
+
+	#-------------------------------------------------		# 2. Videodetails aus xml-Datei holen
+	page=""
+	if assets_url:
+		page, msg = get_page(path=assets_url)
+	if page == '':	
+		msg1 = "Leider finde ich den Weg zum Video nicht."
+		msg2 = "Fehler in Kikaninchen_VideoSingle."
+		MyDialog(msg1, msg2, '')	
+		return
+	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Kikaninchen_Videos:"
-		msg2 = msg
+	title = stringextract("<headline>", "</headline>", page)
+	top = stringextract("<topline>", "</topline>", page)
+	summ1 = stringextract("<title>", "</title>", page)
+	summ2 = stringextract("<teaserText>", "</teaserText>", page)
+	dur = stringextract("<duration>", "</duration>", page)
+	
+	img_src = stringextract("<teaserimage>", "</teaserimage>", page)
+	img = stringextract("<url>", "</url>", img_src)
+	variant = stringextract("<large>", "</large>", img_src)
+	if variant == "":
+		variant = stringextract("<small>", "</small>", img_src)
+	img = img.replace("**aspectRatio**", variant)
+	img = img.replace("**width**", "1024")
+	
+	tag = "Dauer: %s | %s" % (dur, top)
+	summ = "%s\n%s" % (summ1, summ2)
+	Plot = "%s\n\n%s" % (tag, summ)
+	assets = blockextract('<asset>', page)
+	
+	PLog("Satz1:")
+	PLog(len(assets)); PLog(title); PLog(summ); PLog(img); 
+	
+	#-------------------------------------------------		# 3. Bau HLS_List + Stream_List, ähnl. Kika_SingleBeitrag
+	# Formate siehe StreamsShow								# HLS_List + MP4_List anlegen
+	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
+	#	fehlende Bandbreiten + Auflösungen werden ergänzt
+	asset=""
+	for asset in assets:
+		if "Web XL|" in asset:								# größte HLS-Quelle verwenden, Altern.: "MP4 Web L"
+			break
+		
+	url_m3u8 = stringextract('<csmilHlsStreamingRedirectorUrl>', '</', asset)
+	PLog("url_m3u8: " + url_m3u8)
+	# sub_path = stringextract('"webvttUrl":"', '"', page)	# Altern.: subtitle-Url tt:style, fehlen hier
+	sub_path=""; geoblock=''; descr='';	
+	href = url_m3u8
+	HBBTV_List=''											# nur ZDF
+	HLS_List=[]; Stream_List=[];
+	
+	#'''
+	quality = u'automatisch'
+	HLS_List.append('HLS automatische Anpassung ** auto ** auto ** %s#%s' % (title,url_m3u8))
+	Stream_List = ardundzdf.Parseplaylist(li, href, img, geoblock, descr, stitle=title, buttons=False)
+	if type(Stream_List) == list:					# Fehler Parseplaylist = string
+		HLS_List = HLS_List + Stream_List
+	else:
+		HLS_List=[]
+	#'''
+		
+	#PLog("HLS_List: " + str(HLS_List)[:80])
+	PLog("HLS_List: inputstream.adaptive returned bad status Permanent failure..")
+	MP4_List = Kika_VideoMP4getXML(title, assets)
+	PLog("download_list: " + str(MP4_List)[:80])
+	Dict("store", 'KIKA_HLS_List', HLS_List) 
+	Dict("store", 'KIKA_MP4_List', MP4_List) 
+	
+	if not len(HLS_List) and not len(MP4_List):
+		msg1 = "Leider finde ich keine Videodaten."
+		msg2 = "Fehler in Kikaninchen_VideoSingle."
 		MyDialog(msg1, msg2, '')	
 		return li
-		
-	videos =  blockextract('class="av-playerContainer"', page)	# 16 pro Seite
-	PLog(len(videos))
-	mediatype='' 		
-	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-		mediatype='video'
-	
-	for s in videos:					 # stringextract('', '', s)
-		href = ref = stringextract('dataURL:\'', '\'}', s)					# Link Videodetails  (..avCustom.xml)
-		PLog(href);   # PLog(s);   # Bei Bedarf
-		img = stringextract('<noscript>', '</noscript>', s).strip()			# Bildinfo separieren
-		img_alt = stringextract('alt="', '"', img)	
-		img_alt = unescape(img_alt)	
-		img_src = stringextract('src="', '"', img)
-		if img_src.startswith('http') == False:
-			img_src = BASE_KIKA + img_src
-		stitle = stringextract('title="', '"', s)
-		stitle = unescape(stitle)	
-		duration = stringextract('icon-duration">', '</span>', s)	
-		tagline = duration + ' Minuten'	
-		
-		stitle = repl_json_chars(stitle)
-		img_alt = repl_json_chars(img_alt);
-		
-		PLog(href); PLog(stitle); PLog(img_src); PLog(img_alt)
-		href=py2_encode(href); 		
-		href=py2_encode(href); stitle=py2_encode(stitle); img_src=py2_encode(img_src); img_alt=py2_encode(img_alt);
-		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'summ': '%s', 'duration': '%s'}" %\
-			(quote(href), quote(stitle), quote(img_src), quote(img_alt), quote(duration))
-		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag", fanart=img_src, 
-			thumb=img_src, fparams=fparams, tagline=tagline, mediatype=mediatype)
-	
+
+	#----------------------------------------------- 
+	# Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
+	# 
+	PLog('Lists_ready:');
+	Plot = "Titel: %s\n\n%s" % (title_org, summ)				# -> build_Streamlists_buttons
+	PLog('Plot:' + Plot)
+	thumb = img; ID = 'KIKA'; HOME_ID = "Kinderprogramme"
+	ardundzdf.build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)	
+			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 # ----------------------------------------------------------------------			
+# 18.06.2017: KikaninchenLieder ersetzt die Kikaninchen Kramkiste (xml-Seite mit mp3-Audioschnipsel, abgeschaltet)
 # 18.06.2017: KikaninchenLieder ersetzt die Kikaninchen Kramkiste (xml-Seite mit mp3-Audioschnipsel, abgeschaltet)
 # 	Unterseite 'Singen + Tanzen' von http://www.kikaninchen.de/index.html?page=0
 def KikaninchenLieder():	
@@ -1536,6 +1757,49 @@ def Kika_VideoMP4get(title, assets):
 
 	return download_list
 			
+# ------------------------------
+# 13.12.2022 Neu nach Webänderungen
+def Kika_VideoMP4getXML(title, assets):	
+	PLog('Kika_VideoMP4getXML:')
+	
+	href=''; quality=''
+	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
+	for s in assets:
+		PLog(s[:100])		
+		frameWidth = stringextract('<frameWidth>', '</frameWidth>', s)	
+		frameHeight = stringextract('<frameHeight>', '</frameHeight>', s)
+		href = stringextract('<progressiveDownloadUrl>', '</', s)
+		bitrate =  stringextract('<bitrateVideo>', '</', s)
+		if bitrate == '':
+			if '_' in href:
+				try:
+					bitrate = re.search(u'_(\d+)k_', href).group(1)
+				except Exception as exception:
+					PLog(str(exception))
+					bitrate = '0'
+		profil =  stringextract('<profileName>', '</', s)	
+		res = frameWidth + 'x' + frameHeight
+				
+		# Bsp. Profil: Video 2018 | MP4 720p25 | Web XL| 16:9 | 1280x72
+		# einige Profile enthalten nur die Auflösung, Bsp. 640x360
+		if 	"MP4 Web S" in profil or "480" in frameWidth:			# skip niedrige 320x180
+			continue			
+		if "MP4 Web M Mobil" in profil or "640" in frameWidth:
+			quality = u'mittlere'
+		if "MP4 Web L mobil" in profil or "960" in frameWidth:
+			quality = u'hohe'
+		if "MP4 Web L |" in profil or "1024" in frameWidth:
+			quality = u'sehr hohe'
+		if "MP4 Web XL" in profil or "1280" in frameWidth:
+			quality = u'Full HD'
+			
+		PLog("res: %s, bitrate: %s" % (res, bitrate)); 
+		title_url = u"%s#%s" % (title, href)
+		item = u"MP4 Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
+		download_list.append(item)
+
+	return download_list	
+	
 # ----------------------------------------------------------------------
 # Jubiläumspodcast (25 Jahre Kika), 14-tätig
 # aktuell (16.02.2022): 4 Folgen, geplant: 25
