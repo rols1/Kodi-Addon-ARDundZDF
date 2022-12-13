@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>11</nr>										# Numerierung für Einzelupdate
+# 	<nr>12</nr>										# Numerierung für Einzelupdate
 #	Stand: 13.12.2022
 
 # Python3-Kompatibilität:
@@ -1346,6 +1346,10 @@ def Kikaninchen_Videos(showChar, path='', title=''):
 				Kika_Subchannel(id_link,title,thumb,Plot='')
 			return
 			
+		mediatype='' 		
+		if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
+			mediatype='video'
+			
 		li = xbmcgui.ListItem()
 		li = home(li, ID='Kinderprogramme')			# Home-Button	
 				
@@ -1360,7 +1364,7 @@ def Kikaninchen_Videos(showChar, path='', title=''):
 			href=py2_encode(href); title=py2_encode(title);
 			fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_VideoSingle", fanart=GIT_KANINCHEN, 
-				thumb=thumb, fparams=fparams, tagline=tag)
+				thumb=thumb, fparams=fparams, tagline=tag, mediatype=mediatype)
 		
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -1434,18 +1438,21 @@ def KikaninchenFilme():
 # ----------------------------------------------------------------------
 # 10.12.2022 Neu nach Webseitenänderungen
 # Videodetails via Assets-Url ermitteln. path = Videoseite mit embedded
-#	Player, für Videodetails 	
-def Kikaninchen_VideoSingle(path, title):	
+#	Player, für Videodetails 
+# Aufrufer mit assets_url: KikaninchenLieder
+#	
+def Kikaninchen_VideoSingle(path, title, assets_url=''):	
 	PLog('Kikaninchen_VideoSingle: ' + path)
 	title_org=title
 
 	#-------------------------------------------------		# 1. Assets-Url ermittlen -> xml-Datei
-	try:
-		path = path.split("_zc-")[0]						# Bsp.: ../video52242_zc-b799b903_zs-8eedf79c.html
-		assets_url = path + "-avCustom.xml"					# Bsp.: ../videos/video52242-avCustom.xml		
-	except Exception as exception:
-		PLog(str(exception))
-		assets_url=""
+	if assets_url == "":
+		try:
+			path = path.split("_zc-")[0]					# Bsp.: ../video52242_zc-b799b903_zs-8eedf79c.html
+			assets_url = path + "-avCustom.xml"				# Bsp.: ../videos/video52242-avCustom.xml		
+		except Exception as exception:
+			PLog(str(exception))
+			assets_url=""
 
 	#-------------------------------------------------		# 2. Videodetails aus xml-Datei holen
 	page=""
@@ -1538,6 +1545,7 @@ def Kikaninchen_VideoSingle(path, title):
 # 18.06.2017: KikaninchenLieder ersetzt die Kikaninchen Kramkiste (xml-Seite mit mp3-Audioschnipsel, abgeschaltet)
 # 18.06.2017: KikaninchenLieder ersetzt die Kikaninchen Kramkiste (xml-Seite mit mp3-Audioschnipsel, abgeschaltet)
 # 	Unterseite 'Singen + Tanzen' von http://www.kikaninchen.de/index.html?page=0
+# 13.12.2022 avCustomUrl als assets_url -> Kikaninchen_VideoSingle (früher Kika_SingleBeitrag)
 def KikaninchenLieder():	
 	PLog('KikaninchenLieder')
 	li = xbmcgui.ListItem()
@@ -1581,10 +1589,9 @@ def KikaninchenLieder():
 			summ = titleText
 										
 		PLog(href); PLog(title); PLog(img_src); PLog(summ)
-		href=py2_encode(href); title=py2_encode(title); img_src=py2_encode(img_src); summ=py2_encode(summ);
-		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'summ': '%s', 'duration': ''}" %\
-			(quote(href), quote(title), quote(img_src), quote(summ))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag", fanart=img_src, 
+		href=py2_encode(href); title=py2_encode(title)
+		fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_VideoSingle", fanart=img_src, 
 			thumb=img_src, fparams=fparams, tagline=summ, mediatype=mediatype)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
