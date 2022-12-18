@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>12</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.12.2022
+#	Stand: 17.12.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -86,7 +86,7 @@ MAUSZOOM		= "https://www.wdrmaus.de//_teaserbilder/720893_512.jpg"
 MAUSRELIVE		= "https://www.wdrmaus.de//_teaserbilder/721363_512.jpg"
 MAUSHEAR		= "https://www1.wdr.de/mediathek/audio/sendereihen-bilder/maus_sendereihenbild_podcast-1-100~_v-original.jpg"
 
-# ext. Icons zum Nachladen aus Platzgründen,externe Nutzung: ZDFRubriken  (GIT_ZDFTIVI)							
+# ext. Icons zum Nachladen aus Platzgründen,externe Nutzung:						
 #GIT_KIKA		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kika.png?raw=true"
 KIKA_START		= "https://www.kika.de/bilder/startseite-104_v-tlarge169_w-1920_zc-a4147743.jpg"	# ab 07.12.2022
 KIKA_VIDEOS		= "https://www.kika.de/videos/videos-110_v-tlarge169_zc-cc2f4e31.jpg"				# - " -
@@ -97,6 +97,7 @@ KIKA_FILME		= "https://www.kika.de/videos/film-108_v-tlarge169_zc-cc2f4e31.jpg?v
 KIKA_WISSEN		= "https://www.kika.de/videos/wissen-108_v-tlarge169_zc-cc2f4e31.jpg?version=11506"
 KIKA_SHOWS		= "https://www.kika.de/videos/show-100_v-tlarge169_zc-cc2f4e31.jpg?version=3229"
 KIKA_LIVE		= "https://www.kika.de/live/bilder/live-102_v-tlarge169_zc-cc2f4e31.jpg?version=32751"
+KIKA_GENALPHA	= "https://kommunikation.kika.de/ueber-kika/25-jahre/podcast/generation-alpha-100_v-tlarge169_zc-cc2f4e31.jpg?version=35225"	
 
 GIT_AZ			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-AZ.png?raw=true"
 				# Einzelbuchstaben zu A-Z siehe Tivi_AZ
@@ -116,6 +117,14 @@ GIT_KIR_KLICK	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/K
 GIT_DGS			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaDGS.png?raw=true"
 GIT_AD			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaAD.png?raw=true"
 GIT_ARD_KINDER	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-ard_kinder-familie.png?raw=true"
+
+# 14.12.2022 1024x1024:
+GIT_KIKASTART	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/GIT_KIKASTART.png?raw=true"
+GIT_KIKALIVE	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/GIT_KIKALIVE.png?raw=true"
+GIT_KIKAVIDEOS	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/GIT_KIKAVIDEOS.png?raw=true"
+GIT_GENALPHA	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/GIT_GENALPHA.png?raw=true"
+GIT_MAUSLIVE	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/GIT_MAUSLIVE.png?raw=true"
+
 
 KikaCacheTime = 1*3600					# Addon-Cache für A-Z-Seiten: 1 Stunde
 KIKA_HEADERS	="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
@@ -173,12 +182,12 @@ def Main_KIKA(title=''):
 	summ = "Suche Sendungen in KiKA"
 	fparams="&fparams={'query': '', 'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Search", 
-		fanart=KIKA_START, thumb=R(ICON_SEARCH), fparams=fparams)
+		fanart=KIKA_START, thumb=R("kika-suche.png"), fparams=fparams)
 			
 	title='KiKA Live gucken'
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Live", 
-		fanart=KIKA_START, thumb=KIKA_LIVE, tagline='KIKA TV-Live', fparams=fparams)
+		fanart=KIKA_START, thumb=GIT_KIKALIVE, tagline='KIKA TV-Live', fparams=fparams)
 		
 	title='KiKA Programmvorschau'
 	tag = u"Programmvorschau für eine Woche\n\nMit Klick zur laufenden Sendung"
@@ -189,16 +198,16 @@ def Main_KIKA(title=''):
 	title='KiKA Startseite' 											# neu ab 07.12 2022
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Start",
-		fanart=KIKA_START, thumb=KIKA_START, tagline=title, fparams=fparams)
+		fanart=KIKA_START, thumb=GIT_KIKASTART, tagline=title, fparams=fparams)
 
 	title='KiKA Videos'													# neu ab 07.12 2022
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Videos_Menu",
-		fanart=KIKA_START, thumb=KIKA_VIDEOS, tagline=title, fparams=fparams)
+		fanart=KIKA_START, thumb=GIT_KIKAVIDEOS, tagline=title, fparams=fparams)
 	
 	title=u'MausLive'
 	tag = u"%s\n\nDer Kinderradiokanal des WDR  (Nachfolgeseite für [B]KiRaKa[/B])" % title
-	img = MAUSLIVE
+	img = GIT_MAUSLIVE
 	fparams="&fparams={}" 
 	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.MausLive",
 		fanart=KIKA_START, thumb=img, tagline=tag, fparams=fparams)
@@ -220,7 +229,7 @@ def Main_KIKA(title=''):
 	title=u'[B]für Erwachsene:[/B] Generation Alpha – Der KiKA-Podcast'
 	tag = u"[B]für Erwachsene:[/B]\nwie entwickelt sich die Lebenswelt der Kinder und welche Herausforderungen kommen auf "
 	tag = u"%sMedienmacher*innen zu? Das sind die Leitfragen von [B]Generation Alpha – Der KiKA-Podcast[/B]" % tag
-	thumb = "https://kommunikation.kika.de/ueber-kika/25-jahre/podcast/generation-alpha-100_v-tlarge169_zc-cc2f4e31.jpg?version=35225"	
+	thumb = GIT_GENALPHA
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.gen_alpha", 
 		fanart=KIKA_START, thumb=thumb, tagline=tag, fparams=fparams)
@@ -712,10 +721,11 @@ def Kika_get_singleItem(s):
 # ----------------------------------------------------------------------
 # 07.12.2022 Neu nach Webänderungen - Cluster ermitteln in  
 #	Folgeseiten (path=api_url -> json), docType: videoSubchannel
-#
+# Sonderbehdl. Kikaninchen_Videos: extract api_url in html-Seite,
+#	erneut -> Kika_Subchannel
 def Kika_Subchannel(path, title, thumb, Plot, li=''):
 	PLog('Kika_Subchannel: ' + title)
-	title_org=title
+	title_org=title	
 	
 	page, msg = get_page(path)
 	if page == '':
@@ -723,6 +733,19 @@ def Kika_Subchannel(path, title, thumb, Plot, li=''):
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return
+
+	# ------------------------
+	if path.endswith("html"):											# von Kikaninchen_Videos, s.o.
+		PLog("html_site")
+		pos1 = page.find('"videoSubchannel"')
+		PLog(pos1)
+		if pos1 > 0:
+			page = page[pos1:]
+		allvideos = stringextract('"url":"',  '"', page)				# wie videosPageUrl in json-Seite
+		Kika_Subchannel(allvideos, title, thumb, Plot="")
+		return
+	# ------------------------		
+		
 	if li == "":			
 		li = xbmcgui.ListItem()
 		li = home(li, ID='Kinderprogramme')				# Home-Button
@@ -733,7 +756,7 @@ def Kika_Subchannel(path, title, thumb, Plot, li=''):
 	
 	Plot_par = Plot
 	summ_org = Plot.replace("||", "\n")									# Plot hier: tagline + summary
-	
+		
 	featuredVideo = stringextract('"featuredVideo"',  '"videosPageUrl"', page)
 	fanimg=""
 	if featuredVideo:													# Empfehlung od. 1. Folge | kann fehlen 
@@ -780,10 +803,11 @@ def Kika_Series(path, title, thumb, Plot):
 		MyDialog(msg1, msg2, '')
 		return
 	
-	Subchannel = stringextract('"videoSubchannel"',  '},', page)
-	api_url = stringextract('url":"', '"', Subchannel)
-	Kika_Subchannel(api_url, title, thumb, Plot)						# -> Seitensteuerung Kika_Rubriken
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	Subchannel = stringextract('"videoSubchannel"',  '},', page)		# fehlt für Serien-Button
+	if Subchannel:		
+		api_url = stringextract('url":"', '"', Subchannel)
+		Kika_Subchannel(api_url, title, thumb, Plot)					# -> Seitensteuerung Kika_Rubriken
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 # ----------------------------------------------------------------------
 # 07.12.2022 Neu nach Webänderungen - einz. Cluster/Channel/Folgen
@@ -814,12 +838,16 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 
 	items = blockextract('"docType":', page)
 	PLog(len(items))
+	skip_list=[]
 	for s in items:
 		mediatype='' 
 		# path: api_url, neue typ-Varianten in Kika_get_singleItem
 		#	ergänzen: 
 		mehrf,typ,path,stitle,thumb,Plot = Kika_get_singleItem(s)		# -> Kika_get_singleItem
 		tag = Plot.replace('||', '\n')
+		if path in skip_list:											# Doppler vermeiden
+			continue
+		skip_list.append(path)	
 		if typ == "skip_api_null":										# fehlende api-Url ausblenden
 			continue
 		if typ == "interactiveContent":									# Spiele ausblenden
@@ -853,7 +881,7 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 		next_page=0
 		try:
 			next_page =  re.search(u'page=(\d+)', next_path).group(1)
-			next_page = int(next_page)
+			next_page = int(next_page) +1
 		except Exception as exception:
 			PLog(str(exception))
 			
@@ -1322,14 +1350,14 @@ def Kikaninchen_Videos(showChar, path='', title=''):
 		thumb = stringextract('image":"', '"', item)					# gesamt-img
 		if thumb == "":
 			thumb = R("Dir-video.png")
-		id_link = stringextract('@id":"', '"', item)					# ev. Link zu KiKA-Seite
+		id_link = stringextract('@id":"', '"', item)					# ev. Link zu KiKA-Seite (html)
 		PLog("id_link: %s, thumb: %s" % (id_link, thumb))
 	
 		# Inhalte node-videos fehlen bei id-Links zu KiKA-Seiten. 
 		pos1 = page.find("node-videos")									# wie KikaninchenVideosAZ
 		page = page[pos1:]
 		PLog(page[:100])
-		items = blockextract("<a href", page)							# Sendungen-Links
+		items = blockextract("<a href", page)							# Sendungen-Links 
 		PLog(len(items))
 		
 		if len(items) == 0:												# Seite vorhanden, aber keine Videos
@@ -1338,7 +1366,7 @@ def Kikaninchen_Videos(showChar, path='', title=''):
 				msg2 = "[B]%s[/B]" % title
 				MyDialog(msg1, msg2, '')
 			else:
-				PLog("jump_to_kika:")
+				PLog("jump_to_kika:")									# -> extract api_url zu videosPageUrl (alle-folgen)
 				msg1 = "KiKA-Videos"									# notification
 				msg2 = title
 				icon = KIKA_VIDEOS
@@ -1381,14 +1409,15 @@ def Kikaninchen_Videos(showChar, path='', title=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 			
-	thumb = R(ICON_DIR_FOLDER)
 	for s in AZ_lines:
+		thumb = R(ICON_DIR_FOLDER)
 		title, href = s.split("|")										# Zeile: Titel|Link
 		title = unescape(title)
 		fchar = up_low(title[0])
 		tag = "weiter zu den [B]Videos[/B]"
 		if "_zc-" and "_zs-" in href:
 			tag = "weiter zum [B]Einzelvideo[/B]"
+			thumb = R("Dir-video.png")	
 		if fchar == showChar:
 			PLog(href); PLog(title); 
 			img = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % showChar
@@ -1439,6 +1468,7 @@ def KikaninchenFilme():
 # 10.12.2022 Neu nach Webseitenänderungen
 # Videodetails via Assets-Url ermitteln. path = Videoseite mit embedded
 #	Player, für Videodetails 
+# Aufrufer: Kikaninchen_Videos
 # Aufrufer mit assets_url: KikaninchenLieder
 #	
 def Kikaninchen_VideoSingle(path, title, assets_url=''):	
@@ -1538,7 +1568,9 @@ def Kikaninchen_VideoSingle(path, title, assets_url=''):
 	thumb = img; ID = 'KIKA'; HOME_ID = "Kinderprogramme"
 	ardundzdf.build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)	
-			
+		
+	if SETTINGS.getSetting('pref_video_direct') == 'true': 		# Verbleib in Liste	
+		return	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 # ----------------------------------------------------------------------			
@@ -1638,9 +1670,10 @@ def Tonschnipsel():
 # ######################################################################
 # einzelnes Video
 # 07.12.2022 Neu nach Webänderungen (vormals xml-Seite)			
-# path enthält die api-Seite mit Details. Hier direkt
+# path enthält die api-Seite mit Details (json). Hier direkt
 #	weiter mit der assets-Url zu den Videoquellen (einfaches Anängen
 #	von /assets klappt nicht bei typ=relatedVideo
+# Aufrufer: Kika_Subchannel, Kika_Rubriken
 #
 def Kika_SingleBeitrag(path, title, thumb, Plot):
 	PLog('Kika_SingleBeitrag: ' + path)

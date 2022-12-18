@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>80</nr>										# Numerierung für Einzelupdate
-VERSION = '4.5.6'
-VDATE = '11.12.2022'
+VERSION = '4.5.7'
+VDATE = '18.12.2022'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -548,6 +548,7 @@ def Main():
 		summ = "%s\n-%s" % (summ, "strm-Tools")
 	if SETTINGS.getSetting('pref_playlist') == 'true':
 		summ = "%s\n-%s" % (summ, "PLAYLIST-Tools")
+	summ = "%s\n-%s" % (summ, "Kodis Thumbnails-Ordner bereinigen")
 	summ = "%s\n\n%s" % (summ, u"[B]Einzelupdate[/B] (für einzelne Dateien und Module)")
 	fparams="&fparams={}" 
 	addDir(li=li, label='Infos + Tools', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
@@ -671,7 +672,17 @@ def InfoAndFilter():
 		addDir(li=li, label=title, action="dirList", dirID="start_script",\
 			fanart=R(FANART), thumb=R("icon-playlist.png"), tagline=tag, summary=summ, fparams=fparams)	
 			
-	title = u"Einzelupdate (einzelne Dateien und Module)"		# Update von Einzeldateien
+	title = u"Kodis Thumbnails-Ordner bereinigen"			# Thumbnails-Ordner bereinigen
+	tag = u'[B]Kodis Thumbnails-Ordner bereinigen[/B]'
+	summ = u"Das Bereinigen schafft Platz, indem es ältere Bilder entfernt (Auswahl 1-100 Tage)."
+	summ = u"%s\nDadurch kann sich die Anzeige älterer Beiträge anfangs verzögern." %summ
+	summ = u"%s\n\nDer aktuelle Füllstand kann im Menü Addon-Infos eingesehen werden." % summ
+	fparams="&fparams={}"
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.ClearUpThumbnails",\
+		fanart=R(FANART), thumb=R("icon-clear.png"), tagline=tag, summary=summ, fparams=fparams)	
+			
+			
+	title = u"Einzelupdate (einzelne Dateien und Module)"	# Update von Einzeldateien
 	tag = u'[B]Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s[/B]' % REPO_NAME
 	tag = u"%s\n\nNach Abgleich werden neue Dateien heruntergeladen - diese ersetzen lokale Dateien im Addon." % tag
 	summ = u"Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt."
@@ -823,10 +834,11 @@ def AddonInfos():
 	a4 = u"%sKodi-Version: %s" % (t, KODI_VERSION)
 	p1 = u"%s\n%s\n%s\n%s\n%s\n" % (a,a1,a2,a3,a4)
 	
+	THUMBNAILS = os.path.join(USERDATA, "Thumbnails") 
 	a = u"[COLOR red]Cache:[/COLOR]"
-	a1 = u"%s %10s Dict (Variablen, Objekte)" %  (t, get_dir_size(DICTSTORE))
-	a2 = u"%s %10s Inhaltstexte (im Voraus geladen)" %  (t, get_dir_size(TEXTSTORE))
-	a3 = u"%s %10s m3u8 (Einzelauflösungen der Livestreams)" %  (t, get_dir_size(M3U8STORE))
+	a1 = u"%s %10s Thumbnails (Kodi gesamt)" %  (t, get_dir_size(THUMBNAILS))
+	a2 = u"%s %10s Dict (Variablen, Objekte)" %  (t, get_dir_size(DICTSTORE))
+	a3 = u"%s %10s Inhaltstexte (im Voraus geladen)" %  (t, get_dir_size(TEXTSTORE))
 	a4 = u"%s %10s Slides (Bilder)" %   (t, get_dir_size(SLIDESTORE))
 	a5 = u"%s %10s subtitles (Untertitel)" %   (t, get_dir_size(SUBTITLESTORE))
 	a6 = ''

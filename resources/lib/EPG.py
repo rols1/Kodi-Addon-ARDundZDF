@@ -180,17 +180,19 @@ def update_single(PluginAbsPath):
 	ret = util.MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False,  yes='eigene Auswahl', cancel='komplette Liste', 
 		heading=title)
 	PLog(ret)														# 0 od. ESC = komplette Liste
-	if ret == 1:													# 1 = eigene Auswahl
-		textlist=[]; selected=[]
-		for local_file in SINGLELIST:
-			local_file = local_file.split(PluginAbsPath)[-1]		
-			textlist.append(local_file[1:])							# ohne führ. /	(wie Ergebnisliste)
+	if ret != 1:													# 1 = eigene Auswahl
+		return
 		
-		title = u"Einzelupdate - eigene Auswahl vornehmen:"
-		ret_list = xbmcgui.Dialog().multiselect(title, textlist, preselect=selected)
-		PLog("ret_list: %s" % str(ret_list))
-		if ret_list ==  None or len(ret_list) == 0:					# ohne Auswahl
-			return
+	textlist=[]; selected=[]
+	for local_file in SINGLELIST:
+		local_file = local_file.split(PluginAbsPath)[-1]		
+		textlist.append(local_file[1:])							# ohne führ. /	(wie Ergebnisliste)
+	
+	title = u"Einzelupdate - eigene Auswahl vornehmen:"
+	ret_list = xbmcgui.Dialog().multiselect(title, textlist, preselect=selected)
+	PLog("ret_list: %s" % str(ret_list))
+	if ret_list ==  None or len(ret_list) <= 0:					# ohne Auswahl
+		return
 	
 	title = "Einzelupdate starten (eigene Auswahl)"
 	if len(ret_list) == len(SINGLELIST):

@@ -10,6 +10,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+
+18.12.2022 4.5.7
+			Kika (Modul childs): Erneuerung Kikaninchen-Code, Bilder neu/aktualisert:
+			kika-suche, GIT_KIKASTART, GIT_KIKALIVE, GIT_KIKAVIDEOS, GIT_GENALPHA,
+			GIT_MAUSLIVE, Korrektur Seitenzahl in Kika_Rubriken bei Folgeseiten,
+			variables Funktionsende in Kikaninchen_VideoSingle (abhängig vom Status
+			pref_video_direct) für Verbleib in Videoliste.
+			Neue Funktion ClearupThumbnails (Modul tools): Icon update-einzeln, Menü
+			"Kodis Thumbnails-Ordner bereinigen" in "Infos + Tools" (Haupt-PRG), An-
+			passung Cache-Info in Addon-Infos (Haupt-PRG).
+			update_single (Modul EPG): Abbruch ermöglicht bei 1. Dialog ("eigene Auswahl
+			oder Liste").
+			ClearUp (Modul util): zusätzl. Param keep_dirs (keine Verzeichnisse löschen).
+			get_dir_size (Modul util): zusätzl. Param raw (raw-Rückgabe size in Bytes).		
+
 11.12.2022 4.5.6
 			SearchWordWork (Modul tools): Hinzufügen neuer Suchwörter begrenzt auf 24,
 			einschl. Dialog.

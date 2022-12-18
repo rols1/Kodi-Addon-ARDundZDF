@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>33</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.12.2022
+#	Stand: 18.12.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -527,10 +527,11 @@ def name(**variables):
 # Dateien löschen älter als seconds
 #		directory 	= os.path.join(path)
 #		seconds		= int (1 Tag=86400, 1 Std.=3600)
-# leere Ordner werden entfernt
-def ClearUp(directory, seconds):	
+# Ältere Ordner werden ohne Leertest entfernt!
+def ClearUp(directory, seconds, keep_dirs=False):	
 	PLog('ClearUp: %s, sec: %s' % (directory, seconds))	
 	PLog('älter als: ' + seconds_translate(seconds, days=True))
+	PLog("keep_dirs: " + str(keep_dirs))
 	now = time.time()
 	cnt_files=0; cnt_dirs=0
 	try:
@@ -546,10 +547,11 @@ def ClearUp(directory, seconds):
 					PLog('entfernte_Datei: ' + f)
 					os.remove(f)
 					cnt_files = cnt_files + 1
-				if os.path.isdir(f):		# Verz. ohne Leertest entf.
-					PLog('entferntes Verz.: ' + f)
-					shutil.rmtree(f, ignore_errors=True)
-					cnt_dirs = cnt_dirs + 1
+				if os.path.isdir(f):		# Verz. ohne Leertest entfernen
+					if keep_dirs:
+						PLog('entferntes Verz.: ' + f)
+						shutil.rmtree(f, ignore_errors=True)
+						cnt_dirs = cnt_dirs + 1
 		PLog("ClearUp: entfernte Dateien %s, entfernte Ordner %s" % (str(cnt_files), str(cnt_dirs)))	
 		return True
 	except Exception as exception:	
@@ -558,8 +560,9 @@ def ClearUp(directory, seconds):
 
 #---------------------------------------------------------------- 
 # u.a. für AddonInfos
-def get_dir_size(directory):
-	PLog('get_dir_size:')
+# raw= False: Rückgabe humanbytes
+def get_dir_size(directory, raw=False):
+	PLog('get_dir_size: ' + str(raw))
 	size=0
 
 	for dirpath, dirnames, filenames in os.walk(directory):
@@ -568,8 +571,10 @@ def get_dir_size(directory):
 			# skip symbolic link
 			if not os.path.islink(fp):
 				size += os.path.getsize(fp)
-
-	return humanbytes(size)	
+	if raw:
+		return size
+	else:
+		return humanbytes(size)	
 #---------------------------------------------------------------- 
 # checkt Existenz + Größe Datei fpath
 # Rückgabe True falls > 2 Byte

@@ -8,7 +8,7 @@
  
 ################################################################################
 # 	<nr>2</nr>								# Numerierung für Einzelupdate
-#	Stand: 27.06.2022
+#	Stand: 18.12.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -390,4 +390,106 @@ def FilterToolsWork(action):
 		xbmc.executebuiltin('Container.Refresh')
 								
 	return
+	
 #----------------------------------------------------------------
+# Aufruf InfoAndFilter
+# Kodis Thumbnails-Ordner bereinigen
+# Hinw.: ClearUp (util) nicht geeignet (ohne Check einz. Dateien
+#	in Unterverz.)
+# 
+def ClearUpThumbnails():
+	PLog('ClearUpThumbnails:') 
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
+
+	THUMBNAILS = os.path.join(USERDATA, "Thumbnails") 
+	directory = THUMBNAILS
+	#directory = "/tmp/Thumbnails/"		# Debug
+	
+	akt_size_raw = get_dir_size(directory, raw=True)
+	akt_size = humanbytes(akt_size_raw)	
+	dialog = xbmcgui.Dialog()
+
+	#-----------------------									# 1. Auswahl Lösch-Alter
+	title = u"Bitte das Lösch-Alter in Tagen auswählen:"
+	day_list = ["1","5","10","30","100"]
+	sel = dialog.select(title, day_list)	
+	if sel < 0:
+		return
+
+	sel = day_list[sel]
+	PLog("Auswahl: " + sel)
+	
+	#-----------------------									# 2. Bereinigung / Abbruch
+	title = u"Thumbnails-Bereinigung starten?"
+	msg1 = u"Aktuelle Größe: [B]%s[/B] | Lösch-Alter: [B]%s[/B] Tage" % (akt_size, sel)
+	msg2 = u"Thumbnails-Bereinigung jetzt starten?"
+	msg3 = u"Rückgängig nicht möglich!"
+	ret = MyDialog(msg1, msg2, msg3, ok=False, cancel='Abbruch', yes='JA', heading=title)
+	PLog(ret)
+	if ret != 1:
+		return
+	
+	maxdays = int(sel)
+	PLog("ClearUp_Start: %s | days: %d" % (directory, maxdays))
+	max_secs = maxdays*86400 									# 1 Tag=86400 sec
+	now = time.time()
+	cnt=0; del_cnt=0; 
+	for dirpath, dirnames, filenames in os.walk(directory):
+		for f in filenames:
+			fp = os.path.join(dirpath, f)						# Filepath
+			#  PLog(fp)				# Debug
+			# skip symbolic link
+			if not os.path.islink(fp):
+				cnt = cnt+1
+				if os.stat(fp).st_mtime < (now - max_secs):
+					os.remove(fp)
+					del_cnt = del_cnt+1
+	
+	#-----------------------									# 3. Abschluss-Info
+	if ret == False:
+		msg1 = u"Bereinigung fehlgeschlagen"
+		msg2 = u"Fehler siehe Addon-Log (Plugin-Logging einschalten)"
+		msg3 = ""
+		MyDialog(msg1, msg2, '')
+		return
+	
+	new_size_raw = get_dir_size(directory, raw=True)
+	new_size = humanbytes(new_size_raw)	
+	win = akt_size_raw - new_size_raw
+	PLog(del_cnt); PLog(win)
+	msg1 = u"Fertig | Entfernte Thumbnails: [B]%s[/B]" % del_cnt
+	msg2 = u"Größe vorher / nachher: %s / %s." % (akt_size, new_size)
+	msg3 = "Speicherplatz unverändert."
+	if win > 0:
+		msg3 = "Speicherplatz freigegeben: [B]%s[/B]." % humanbytes(win)	
+	MyDialog(msg1, msg2, msg3)
+			
+	return														# Verbleib in Tools-Liste
+	
+#----------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
