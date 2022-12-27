@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>12</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.12.2022
+# 	<nr>13</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.12.2022
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -662,6 +662,11 @@ def Kika_get_img(item):
 def Kika_get_singleItem(s):
 	PLog('Kika_get_singleItem:')
 
+	if '"mainNavigation":' in s:
+		mehrf='';typ='';path='';stitle='';thumb='';Plot=''
+		PLog("skip_mainNavigation")
+		return mehrf,typ,path,stitle,thumb,Plot
+
 	date=""; endDate=""; summ=""; mehrf=False; func=""
 	typ = stringextract('docType":"', '"', s)
 	PLog("docType: " + typ)
@@ -802,13 +807,18 @@ def Kika_Series(path, title, thumb, Plot):
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return
-	
-	Subchannel = stringextract('"videoSubchannel"',  '},', page)		# fehlt für Serien-Button
-	if Subchannel:		
+			
+	Subchannel = stringextract('"videoSubchannel":',  '},', page)		# fehlt für Serien-Button
+	PLog("videoSubchannel: " + Subchannel)
+	if Subchannel.startswith("null") == False:							# broadcastSeries mit/ohne Subchannel		
 		api_url = stringextract('url":"', '"', Subchannel)
 		Kika_Subchannel(api_url, title, thumb, Plot)					# -> Seitensteuerung Kika_Rubriken
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
+	if page.startswith('{"docType":"broadcastSeries'):
+		Kika_Rubriken(page, title, thumb, ID='Kika_Series')
+		return
+
 # ----------------------------------------------------------------------
 # 07.12.2022 Neu nach Webänderungen - einz. Cluster/Channel/Folgen
 #	 auswerten
@@ -848,6 +858,9 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 		if path in skip_list:											# Doppler vermeiden
 			continue
 		skip_list.append(path)	
+		
+		if typ == "":													# mainNavigation, Satz leer
+			continue
 		if typ == "skip_api_null":										# fehlende api-Url ausblenden
 			continue
 		if typ == "interactiveContent":									# Spiele ausblenden
