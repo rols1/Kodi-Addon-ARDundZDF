@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.06.2022
+# 	<nr>3</nr>										# Numerierung für Einzelupdate
+#	Stand: 31.12.2022
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -122,13 +122,10 @@ def update_single(PluginAbsPath):
 	files = glob.glob(globFiles) 									# Module -> SINGLELIST 
 	files = sorted(files,key=lambda x: x.upper())
 	#PLog(files)			# Debug
-	cnt=3
 	for f in files:
 		if "__init__.py" in f or ".pem" in f:						# PY2, Zertif.
 			continue
 		SINGLELIST.append(f)
-		selected.append(cnt)										# Auswahl-Vorbelegung
-		cnt=cnt+1
 	#PLog(str(SINGLELIST))		# Debug
 	
 	#-------------													# 2. Ergänzung ev. neue Module im Repo
@@ -173,26 +170,28 @@ def update_single(PluginAbsPath):
 		
 	#-------------													# 3. Dialoge Auswahl + Start
 
-	ret_list = selected												# default: alle ausgewählt
 	title = u"Einzelupdate - eigene Auswahl oder Liste?"
 	msg1 = u"Vor Einzelupdate eigene Auswahl vornehmen?"
 	msg2 = u"Ohne eigene Auswahl wird die  komplette Liste abgeglichen (%s Dateien)" % len(SINGLELIST)
 	ret = util.MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False,  yes='eigene Auswahl', cancel='komplette Liste', 
-		heading=title)
-	PLog(ret)														# 0 od. ESC = komplette Liste
-	if ret != 1:													# 1 = eigene Auswahl
-		return
-		
-	textlist=[]; selected=[]
+		heading=title)												# False: ESC, komplette Liste
+	single = ret													# True = eigene Auswahl	
+	PLog("single: " + str(single))		
+	
+	textlist=[]; ret_list=[]; cnt=0
 	for local_file in SINGLELIST:
 		local_file = local_file.split(PluginAbsPath)[-1]		
-		textlist.append(local_file[1:])							# ohne führ. /	(wie Ergebnisliste)
+		textlist.append(local_file[1:])								# ohne führ. /	(wie Ergebnisliste)
+		ret_list.append(cnt)										# default: alle ausgewählt
+		cnt=cnt+1
 	
-	title = u"Einzelupdate - eigene Auswahl vornehmen:"
-	ret_list = xbmcgui.Dialog().multiselect(title, textlist, preselect=selected)
-	PLog("ret_list: %s" % str(ret_list))
-	if ret_list ==  None or len(ret_list) <= 0:					# ohne Auswahl
-		return
+	if single:
+		selected=[]
+		title = u"Einzelupdate - eigene Auswahl vornehmen:"
+		ret_list = xbmcgui.Dialog().multiselect(title, textlist, preselect=selected)
+		PLog("ret_list: %s" % str(ret_list))
+		if ret_list ==  None or len(ret_list) <= 0:					# ohne Auswahl
+			return
 	
 	title = "Einzelupdate starten (eigene Auswahl)"
 	if len(ret_list) == len(SINGLELIST):
@@ -224,8 +223,7 @@ def update_single(PluginAbsPath):
 					# Bsp.: ../github.com/rols1/Kodi-Addon-ARDundZDF/blob/master/resources/livesenderTV.xml?raw=true
 					remote_file = "%s%s?%s" % (GIT_BASE, fname, "raw=true")
 					remote_file = remote_file.replace('\\', '/')
-					PLog('lade %s' % remote_file) 
-					
+					PLog('lade %s' % remote_file) 					
 					
 					r = urlopen(remote_file)						# Updatedatei auf Github 
 					page = r.read()
