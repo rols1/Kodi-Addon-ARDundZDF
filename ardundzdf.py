@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>80</nr>										# Numerierung für Einzelupdate
+# 	<nr>81</nr>										# Numerierung für Einzelupdate
 VERSION = '4.5.7'
-VDATE = '18.12.2022'
+VDATE = '08.01.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -681,11 +681,14 @@ def InfoAndFilter():
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.ClearUpThumbnails",\
 		fanart=R(FANART), thumb=R("icon-clear.png"), tagline=tag, summary=summ, fparams=fparams)	
 			
-			
-	title = u"Einzelupdate (einzelne Dateien und Module)"	# Update von Einzeldateien
+	
+	dt = resources.lib.tools.get_foruminfo()
+	dt = "[B]Stand: %s[/B]" % dt		
+	title = u"Einzelupdate (einzelne Dateien und Module), %s" % dt	# Update von Einzeldateien
 	tag = u'[B]Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s[/B]' % REPO_NAME
 	tag = u"%s\n\nNach Abgleich werden neue Dateien heruntergeladen - diese ersetzen lokale Dateien im Addon." % tag
-	summ = u"Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt."
+	summ = u"Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt"
+	summ = u"%s (%s)." % (summ, dt)
 	fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.EPG.update_single",\
 		fanart=R(FANART), thumb=R("icon-update-einzeln.png"), tagline=tag, summary=summ, fparams=fparams)	
@@ -4388,6 +4391,7 @@ def get_content_length(url):
 #---------------------------
 # Download stückweise mit Fortschrittsbalken
 # Aufrufer: thread_getfile
+# Upgrade: xbmcgui.DialogProgressBG (nach Supportende Leia)
 #
 def get_chunks(url, DL_len, fulldestpath):
 	PLog('get_chunks:')
