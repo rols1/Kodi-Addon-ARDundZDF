@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>19</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.10.2022
+# 	<nr>20</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.01.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -207,6 +207,7 @@ def arte_Live(href, title, Plot, img):
 # 	Problem: Folgeseiten via Web nicht erreichbar
 # Api-Call s.u. (div. Varianten, nur 1 ohne Error 401 / 403)
 # 27.07.2021 neuer Api-Call
+# 15.01.2023 umgestellt: api-path (path für Seite 1 war abweichend)
 #
 def arte_Search(query='', nextpage=''):
 	PLog("arte_Search:")
@@ -220,13 +221,9 @@ def arte_Search(query='', nextpage=''):
 	query=py2_encode(query);
 	if nextpage == '':
 		nextpage = '1'
-
 									
-	path = 'https://www.arte.tv/api/rproxy/emac/v3/de/web/pages/SEARCH/?query=%s&mainZonePage=1&page=%s&limit=20' %\
-		(quote(query), nextpage)
-	if nextpage != '1':									# ab page 2 leicht abweichend
-		path = path.replace('pages/SEARCH', 'data/SEARCH_LISTING')
-		
+	path = "https://www.arte.tv/api/rproxy/emac/v3/de/web/data/SEARCH_LISTING/?query=%s&mainZonePage=1&page=%s&limit=20" %\
+		(quote(query), nextpage)		
 	aktpage = stringextract('page=', '&', path)
 
 	page, msg = get_page(path=path, do_safe=False)		# ohne quote in get_page (api-Call)
@@ -242,13 +239,13 @@ def arte_Search(query='', nextpage=''):
 	li = home(li, ID='arte')				# Home-Button
 
 	PLog(len(page))
-	# page = page.replace('\\u002F', '/')	# hier nicht erf.	
 	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
 
 	nexturl = stringextract('"nextPage":"', '"', page)		# letzte Seite: ""
 	nextpage = stringextract('page=', '&', nexturl)
 	PLog("nextpage: " + nextpage)	
 
+	page = json.loads(page)
 	li,cnt = GetContent(li, page, ID='SEARCH')
 	if 	cnt == 0:
 		msg1 = "leider keine Treffer zu:"
@@ -274,105 +271,119 @@ def arte_Search(query='', nextpage=''):
 # Einzel- und Folgebeiträge auch bei Suche möglich. Viele Einzelbeiträge
 #	liegen in der Zukunft, bieten aber kleinen Teaser 
 # Seiten mit collection_subcollection: Auswertung ab dort (Serien)
+# 15.01.2023 umgestellt: page=json
 #
 def GetContent(li, page, ID):
 	PLog("GetContent: " + ID)
 	
-	pre_items=[]; trailer_items=[]; max_pre=0
-	if ID == 'SEARCH':
-		items = blockextract('"programId"',  page)
+	PLog(str(page)[:80])		
+	if ID == "SEARCH":									# api-Call
+		values = page["value"]["data"]
+	elif ID == "Beitrag_Liste":			
+		values = page["pageProps"]["initialPage"]["value"]["zones"][0]["content"]["data"]
+		PLog(len(values))
+		PLog(str(values)[:100])
+	elif ID == "MOST_RECENT":			
+		values = page["value"]["data"]
+		PLog(len(values))
+		PLog(str(values)[:100])
+	elif ID == "ArteStart_2":							# web-embedded, Kategorie
+		values = page["content"]["data"]
 	else:
-		pos = page.find(u'Auch interessant für Sie')
-		if  pos > 0:					# Trennung: Leit-Thema vom Rest
-			pre_items = blockextract('"title":"',  page[:pos])			# "{" entf. hier
-			max_pre = len(pre_items)
-			page = page[pos:]
-		items = pre_items + blockextract('{"title":"',  page)
+		values = page["pageProps"]["initialPage"]	# web-embedded, ganze Seite
+		try:
+			if "value" in page:						# nach 13.01.2021
+				values = values["value"]["zones"]
+			else:									# vor 13.01.2021
+				values = values["zones"]
+		except Exception as exception:
+			PLog("json_error: " + str(exception))
+			values=[]
 		
-		if page.find('"collection_subcollection"') > 0:
-			pos = page.find('"collection_subcollection"')
-			page = page[pos:]
-			items = pre_items + blockextract('{"title":"', page)
-			PLog("items_collection_subcollection: %d" % len(items))	
-								
-	if len(items) == 0:
-		items = blockextract('"programId"',  page)						# Fallback 1		 
-	PLog("pre_items: %d, items: %d" % (len(pre_items), len(items)))
-	if max_pre > 0:														# Blöcke zusammenlegen
-		items = pre_items + items
-		
-	mediatype=''; cnt=0													# Default für mehrfach
-	# Trailer-Erkennung nicht eindeutig genug:
-	#if '"trailer":{"config":"https' in page:							# Trailer?
-	#	trailer_items = blockextract('"trailer":{"config":"https', page, '{"title":"')
-	#	PLog("Trailer: " + str(trailer_items)[:80])
-	#	PLog(len(trailer_items))
-	#	img = get_img(page)												# 1. Bild 
-	#	cnt = get_trailer(li, trailer_items, img)
+	PLog(len(values))
+	if len(values) == 0:
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
 	
+	PLog(str(values)[:100])
+	img_base = "https://api-cdn.arte.tv/img/v2/program/de/%s/200x113?type=TEXT"
+	mediatype=''; cnt=0
 	
-	for item in items:
-		mehrfach=False; katurl=''				
-		title = stringextract('title":"', '"', item)
-		title_raw = title 												# für Abgleich in Kategorien
-		pid = stringextract('programId":"', '"', item)		
-		url = stringextract('url":"', '"', item)
-		subtitle = stringextract('subtitle":"', '"', item)				# null möglich -> ''
-		summ = stringextract('Description":"', '"', item)				# shortDescription, Alt.: teaserText
-		img_alt = stringextract('caption":"', '"', item)
+	for item in values:
+		mehrfach=False; katurl=''; summ=''; dur=""; geo=""	
+		start=''; end=''; upcoming=""; teaserText=""
 		
+		title = item["title"]							# für Abgleich in Kategorien
+		title = transl_json(title)
+		subtitle = item["subtitle"]	
 		if subtitle:													# arte verbindet mit -
 			title  = "%s - %s" % (title, subtitle)
-		
-		img = get_img(item)			
-								
-		dur = stringextract('duration":', ',', item)					# 5869,
-		PLog('dur: ' + dur)
-		if dur != "null":
-			dur = seconds_translate(dur)
-		else:
-			mehrfach = True												# ohne Dauer -> Mehrfachbeitrag
-		if item.find('isCollection":true') >= 0:						# auch mit Dauer möglich
+		if "Description" in item:
+			summ = item["Description"]					
+		if "shortDescription" in item:					# Vorrang, altern.: teaserText
+			summ = item["shortDescription"]
+		if summ == None:
+			summ = ""					
+		pid = item["id"]
+		kind = item["kind"]["code"]						# z.B. TOPIC
+		typ = item["kind"]["code"]						# z.B. Kollektion
+		coll = item["kind"]["isCollection"]				# true/false
+		if coll:					
 			mehrfach = True	
-			
-		geo = stringextract('geoblocking":', '},', item)
-		geo = "Geoblock-Info: %s" % stringextract('code":"', '"', geo)	# "DE_FR", "ALL"
 		
-		start=''; end=''
-		start_end = stringextract(u'Verfügbar vom', '"', item)			# kann fehlen
-		if start_end:													# beide Zeiten bei Suche, o. Uhrzeit
-			# start_end = u'[B]Verfügbar vom %s [/B]' % start_end		# Anzeige vereinheitlichen:
-			s = start_end.split()
-			if len(s) > 0:
-				start = s[0]; end = s[2];
-		else:															# Zeiten getrennt, mit Uhrzeit
-			start = stringextract('start":"', '"', item)				# hier ohne UTC-Zusatz	
-			end = stringextract('end":"', '"', item)					# dto.
-			start=time_translate(start)
-			end=time_translate(end)
+		url = item["url"]
+		if "mainImage" in item:
+			img = get_img(item)
+		else:	
+			img = img_base % pid
+		if "teaserText" in item:										
+			teaserText = item["teaserText"]
+		if "duration" in item:										
+			dur = item["duration"]
+		if dur == None:
+			dur = ""					
+		PLog('dur: ' + str(dur))
+		if dur:
+			dur = seconds_translate(dur)
+			
+		try:	
+			geo = item["geoblocking"]["code"]			# Bsp. "DE_FR", "ALL"
+		except:
+			geo=""
+		if geo:
+			geo = "Geoblock-Info: %s" % str(geo)	
+		else:
+			"Geoblock-Info: ALL"
+		
+		try:
+			start = item["availability"]["start"]
+			end = item["availability"]["end"]
+		except:
+			start=""; end=""; start_end=""
+		PLog(str(start)); PLog(str(end))
 		if start and end:
+			start = time_translate(start)
+			end = time_translate(end)
 			start_end = u'[B]Verfügbar vom [COLOR green]%s[/COLOR] bis [COLOR darkgoldenrod]%s[/COLOR][/B]' % (start, end)	
 
-		upcoming  = stringextract('upcomingDate":"', '"', item)			# null möglich -> ''
-		if upcoming:													# check Zukunft
-			upcoming = getOnline(upcoming, onlycheck=True)
-			PLog("upcoming: " + upcoming)
-			if 'Zukunft' in upcoming:
-				start_end = "%s:%s" % (start_end, upcoming)	
+			if "upcomingDate" in item:
+				upcoming = item["upcomingDate"]	
+				if upcoming:
+					upcoming = getOnline(upcoming, onlycheck=True)	# check Zukunft
+				if 'Zukunft' in upcoming:
+					start_end = "%s:%s" % (start_end, upcoming)	
 		
-		# Beiträge mit 'id":"auch-interessant', 'code":"BONUS"' - im Web:
-		#	"Nächstes Video", "Auch interessant für Sie" - entfallen mit
-		#	Api-Calls
-		if ID == 'SINGLE_MORE':
-			title	= u"[COLOR blue]Mehr: %s[/COLOR]" % title
 		
-		if mehrfach:
+		if mehrfach:										# s. coll
 			tag = u"[B]Folgebeiträge[/B]"
-			if page.find('"link":null') < 0:				# null: weiterer Cluster
-				katurl = stringextract('"url":"', '"', item)
-				PLog("katurl: " + title)
 		else:
-			tag = u"Dauer %s\n\n%s\n%s" % (dur, start_end, geo)
+			if start_end:
+				tag = u"Dauer %s\n\n%s\n%s" % (dur, start_end, geo)
+			else:
+				if dur:
+					tag = u"Dauer %s\n\n%s" % (dur, geo)
+				else:
+					tag = u"%s" % (geo)
 			
 		title = transl_json(title); title = unescape(title);
 		title = repl_json_chars(title); 					# franz. Akzent mögl.
@@ -380,52 +391,29 @@ def GetContent(li, page, ID):
 		tag_par = tag.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 		
 		PLog('Satz1:')
-		PLog(mehrfach); PLog(pid); PLog(title); PLog(url); PLog(katurl); 
-		PLog(img); PLog(tag[:80]); PLog(summ[:80]);  PLog(geo);
+		PLog(mehrfach); PLog(typ); PLog(pid); PLog(title); 
+		PLog(url); PLog(img); PLog(tag[:80]); PLog(summ[:80]); 
+		PLog(geo);
 		title=py2_encode(title); url=py2_encode(url);
 		pid=py2_encode(pid); tag_par=py2_encode(tag_par);
 		img=py2_encode(img); summ=py2_encode(summ);
 		
-		if mystrip(title) == '':							# Müll
-			continue
 			
 		if mehrfach:
-			if ID == 'KAT_START':							# mit Url zurück zu -> Kategorien (id vor Block "title")
-				cat = stringextract(u'label":"%s"' % py2_decode(title), '}]}', page) # Sub-Kategorien-Liste ausschneiden
-				tag = "Folgeseiten"
-				summ = stringextract('description":"', '"', cat)
-
-				fparams="&fparams={'title':'%s', 'path':'%s'}" % (quote(title), quote(url))
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Kategorien", fanart=img, 
-					thumb=img, tagline=tag, summary=summ, fparams=fparams)
-			else:
-				if katurl:									# mit Seitensteuerung
-					katurl=py2_encode(katurl);
-					fparams="&fparams={'katurl': '%s'}" % quote(katurl)
-					addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
-						thumb=img, tagline=tag, summary=summ, fparams=fparams)
-		
-				else:										# ohne Seitensteuerung
-					fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(url), quote(title))
-					addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Beitrag_Liste", 
-						fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
-				
-
+			fparams="&fparams={'katurl': '%s'}" % quote(url)
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
+				thumb=img, tagline=tag, summary=summ, fparams=fparams)													
 			cnt=cnt+1					
 		else:
-			if mystrip(dur) and pid == "":					# Dauer ohne pid: ev. Trailer
-				try:
-					pid = re.search('RC-(\d+)', url).group(0) 
-				except:
-					pid = ""
-			if mystrip(dur) == '' and pid == '':
-				continue			
+			if dur == '' and pid == '':
+				continue
+			pid = url.split("/")[3]							# /de/videos/100814-000-A/.., id nicht verwendbar
+			PLog("pid: " + pid)
 				
-			#if cnt > max_pre:								# ungenau
-			#	tag = u"[COLOR blue]Auch interessant für Sie[/COLOR]\n\n%s" % tag
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
 				mediatype='video'
 				
+			pid=py2_encode(pid); 	
 			fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s'}" %\
 				(quote(img), quote(title), quote(pid), quote(tag_par), quote(summ), dur, geo)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.SingleVideo", 
@@ -436,20 +424,37 @@ def GetContent(li, page, ID):
 	
 # -------------------------------
 # holt Bild aus Datensatz
+# 15.01.2023 angepasst für json-Inhalte
 #
 def get_img(item):
 	PLog("get_img:")
+	PLog(str(type(item)))
+	#PLog(str(item))	# Debug
 	
-	images = stringextract('resolutions":[', '}],', item)
-	# PLog(images)
-	images = blockextract('url":', images)
-	PLog(len(images))
+	img=""
+	if type(item) == dict:
+		if "mainImage" in item:
+			img = item["mainImage"]["url"]
+			img = img.replace('__SIZE__', '400x225')
+		return img
 	
-	img=''
-	for image in images:
-		if 'w":300' in image or 'w":720' in image or 'w":940' in image or 'w":1920' in image:
-			img = stringextract('url":"', '",', image)			
-			break
+	if "resolutions" in item:
+		images = stringextract('resolutions":[', '}],', item)
+		# PLog(images)
+		images = blockextract('url":', images)
+		PLog(len(images))
+		
+		img=''
+		for image in images:
+			if 'w":300' in image or 'w":720' in image or 'w":940' in image or 'w":1920' in image:
+				img = stringextract('url":"', '",', image)			
+				break
+	else: 
+		image = stringextract('mainImage":', '}', item)
+		#PLog(image)
+		img = stringextract('url":"', '"', image)
+		img = img.replace('__SIZE__', '400x225')			# nur 400x225 akzeptiert
+		
 			
 	if img == '':
 		img = R(ICON_DIR_FOLDER)
@@ -457,33 +462,8 @@ def get_img(item):
 	return img
 	
 # -------------------------------
-# holt Trailer aus items
-#
-def get_trailer(li, trailer_items, img):
-	PLog("get_trailer:")
-
-	mediatype=""
-	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
-		mediatype='video'
-	
-	cnt=0;
-	for item in trailer_items:
-		title = "Trailer"			
-		url = stringextract('config":"', '"', item)
-		pid = url.split("/")[-1]
-		summ = stringextract('description":"', '"', item)
-		
-		PLog('Satz_Trailer:')
-		PLog(pid); PLog(title); PLog(url); PLog(img); PLog(summ[:80]); 
-		title=py2_encode(title); url=py2_encode(url);
-		pid=py2_encode(pid); img=py2_encode(img); summ=py2_encode(summ);
-		
-		fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s','trailer':'%s'}" %\
-			(quote(img), quote(title), quote(pid), "", quote(summ), "", "", "trailer")
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.SingleVideo", 
-			fanart=img, thumb=img, fparams=fparams, summary=summ,  mediatype=mediatype)		
-		cnt=cnt+1
-	return cnt
+# 15.01.2023
+# def get_trailer() entfernt
 	
 # ----------------------------------------------------------------------
 # Folgebeiträge aus GetContent
@@ -494,10 +474,10 @@ def get_trailer(li, trailer_items, img):
 # 17.02.2022 fehlende Bilder via api-Call ergänzt 
 # 23.04.2022 Auswertung Webseite umgestellt auf enth. json-Anteil
 # 28.04.2022 Auswertung next_url ergänzt (s. get_ArtePage)
+# 15.01.2023 spez. ID für GetContent 
 #
-def Beitrag_Liste(url, title, get_cluster='yes'):
+def Beitrag_Liste(url, title):
 	PLog("Beitrag_Liste: " + title)
-	PLog(get_cluster)
 	PLog(url); 
 	if url.startswith("/de/"):
 		url = "https://www.arte.tv" + url	
@@ -512,19 +492,17 @@ def Beitrag_Liste(url, title, get_cluster='yes'):
 		return
 	
 	li = xbmcgui.ListItem()
-	
-	items = blockextract('code":{',  page)
-	PLog("items: %d" % len(items))
 	li = home(li, ID='arte')									# Home-Button
-	li,cnt = GetContent(li, page, ID='Beitrag_Liste') 			# eigenes ListItem
+	ID='Beitrag_Liste'
+	if url.find('pageId=MOST_RECENT') > 0:						# Neueste Videos
+		ID='MOST_RECENT'
+	li,cnt = GetContent(li, page, ID=ID) 						# eigenes ListItem
 	
-	next_url = stringextract('next_url":"', '"', page[-100:]) 	# next_url am Seitenende 
-	PLog("next_url4: " + next_url)	
-	if next_url:												# Mehr-Beiträge?
-		ArteMehr(next_url, first=True)
+	page = str(page)
+	if str(page).find("pagination"):							# Mehr-Beiträge?
+		ArteMehr(page, li)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	return
 
 # ----------------------------------------------------------------------
 # holt die Videoquellen -> Sofortstart bzw. Liste der  Auflösungen 
@@ -545,10 +523,14 @@ def Beitrag_Liste(url, title, get_cluster='yes'):
 #		um Rekursion (ohne Homebuttons) zu vermeiden (ev. Ursache mit
 #		Modulwechsel).
 # externe Trailer-Erkennung nicht eindeutig, s. GetContent
+# 14.01.2023 Korrektur "_de"-Endung in pid (falls pid=url)
 #
 def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	PLog("SingleVideo: " + pid)
 	title_org = title
+	if pid.endswith("_de"):			# Bsp. ../de/109228-000-A_de
+		pid = pid[:-3]
+	PLog(pid)
 
 	if trailer:														# eindeutige Trailer? s.o.
 		path1 = 'https://api.arte.tv/api/player/v2/trailer/de/%s' % pid	 
@@ -768,6 +750,8 @@ def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 #	get_subkats, KatSub, neu: ArteCluster, ArteMehr, get_cluster, get_next_url)
 # 15.05.2022 Kat-Liste + Kat-Icons nicht mehr auf den Webseiten enthalten, neue
 #	Icons gefertigt + Kat-Liste hier mit Links vorgegeben 
+# 15.01.2023 Auswertung wg. mehrmaliger Arte-Änderungen des eingebetteten json-
+#	Codes auf json (statt strings) umgestellt, api-Path für Neueste Videos
 #
 def Kategorien():
 	PLog("Kategorien:")
@@ -807,7 +791,7 @@ def Kategorien():
 				thumb=R(img), tagline=tag, fparams=fparams)
 
 	title = "Neueste Videos"									# Button Neueste Videos
-	path = "https://www.arte.tv/de/videos/neueste-videos/"
+	path = "https://www.arte.tv/api/rproxy/emac/v4/de/web/zones/daeadc71-4306-411a-8590-1c1f484ef5aa/content?abv=A&page=1&pageId=MOST_RECENT&zoneIndexInPage=0"
 	path=py2_encode(path)
 	fparams="&fparams={'title': '%s', 'url': '%s'}" %\
 		(quote(title), quote(path))
@@ -821,26 +805,37 @@ def Kategorien():
 # Aufrufer: Kategorien / ArteCluster
 # 2 Durchläufe: 1. Liste Cluster, 2. Cluster-Details
 # Mehr-Seiten:  -> get_ArtePage mit katurl, ohne Dict_ID
+# 14.01.2023 json-Auswertung
 # 
 def ArteCluster(title='', katurl=''):
 	PLog("ArteCluster: " + title)
 	PLog(katurl); 
+	title_org = title
 	if katurl.startswith("/de/"):
 		katurl = "https://www.arte.tv" + katurl	
 	PLog(katurl); 
 	katurl_org=katurl
 
-	page = get_ArtePage('ArteCluster', title, path=katurl)	
-	next_url = stringextract('next_url":"', '"', page[-100:]) # next_url am Seitenende 
-	PLog("next_url2: " + next_url)					# next_url1 s. get_ArtePage
+	page = get_ArtePage('ArteCluster', title, path=katurl)		
+	page = page["pageProps"]["initialPage"]
+	PLog(len(page))
 	
-	pos = page.find("footerProps")					# Footer kann skip_items enth.
-	if pos > 0:
-		page = page[:pos]
-	items = blockextract('code":{',  page)			# ArteStart_1 + ArteStart_2
-	PLog(len(items))
-	img_def = R(ICON_DIR_FOLDER)
+	try:
+		if "value" in page:							# nach 13.01.2021
+			values = page["value"]["zones"]
+		else:										# vor 13.01.2021
+			values = page["zones"]
+	except Exception as exception:
+		PLog("json_error: " + str(exception))
+		values=[]
+	
+	PLog(len(values))
+	if len(values) == 0:
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
 
+	PLog(str(values)[:100])	
+	img_def = R(ICON_DIR_FOLDER)
 	li = xbmcgui.ListItem()
 	
 	# contentId: Login-relevante Beiträge, 	ohne Beiträge: 'data":[]'
@@ -850,84 +845,73 @@ def ArteCluster(title='', katurl=''):
 				 u'Collection Upcomings', u'"collection_content"',
 				 u'data":[]']
 					
-	if title == '':								# 1. Durchlauf
+	if title == '':											# 1. Durchlauf
 		PLog('ArteStart_1:')
-		PLog(page[:100])
-		li = home(li, ID='arte')					# Home-Button
-		for item in items:
-			title = stringextract('title":"', '"', item)
+		PLog(str(page)[:100])
+		li = home(li, ID='arte')							# Home-Button
+		for item in values:
+			tag=""; anz=""
+			title = item["title"]
 			title = transl_json(title)
-			label = title
-							
-			img = get_img(item)
-			if img == '':
-				img = img_def
 			
-			if item.find('"link":null') < 0:				# null: Beiträge, sonst weiterer Cluster
-				katurl = stringextract('"url":"', '"', item)
-				title=''
-			else:
-				katurl = katurl_org
-
 			skip=False
 			for s in skip_item:
-				if item.find(s) > 0: 
+				if title.find(s) >= 0: 
 					if title != "Alle Videos":				# trotz data":[] möglich
 						PLog(s); skip=True
 			if skip: 
 				PLog("skip: " + title)
 				continue
+			
+			try:
+				anz = len(item["content"]["data"])
+				PLog(anz)
+				tag = "Folgebeiträge: %d" % anz				
+				img = item["content"]["data"][0]["mainImage"]["url"]
+				img = img.replace('__SIZE__', '400x225')	# nur 400x225 akzeptiert
+			except Exception as exception:
+				PLog("json_error: " + str(exception))
+				img = img_def
+			if anz == 0:
+				PLog("skip_no_anz: " + title)
+				continue
 				
 			PLog('Satz2:')
-			PLog(title); PLog(katurl);
+			PLog(title); PLog(katurl); PLog(img);
 			title_org = title								# unverändert für Abgleich
 			title = repl_json_chars(title) 
-			label = repl_json_chars(label) 
+			label = title 
 			
-			title=py2_encode(title); katurl=py2_encode(katurl);
-			if '"title":"Alle Videos"' in item:				# einz. Videos listen
-				fparams="&fparams={'title': '%s','url': '%s','get_cluster': ''}" %\
-					(quote(title), quote(katurl))
-				addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.Beitrag_Liste", 
-					fanart=R(ICON_ARTE), thumb=img, fparams=fparams)
-		
-			else:
-				title_org=py2_encode(title_org); 
-				fparams="&fparams={'title': '%s', 'katurl': '%s'}" % (quote(title_org), quote(katurl))
-				addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.ArteCluster", 
-					fanart=R(ICON_ARTE), thumb=img, fparams=fparams)
+			title_org=py2_encode(title_org); 
+			fparams="&fparams={'title': '%s', 'katurl': '%s'}" % (quote(title_org), quote(katurl))
+			addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.ArteCluster", 
+				fanart=R(ICON_ARTE), thumb=img, tagline=tag, fparams=fparams)
 
-	else:												# 2. Durchlauf
+	else:													# 2. Durchlauf
 		PLog('ArteStart_2:')
-		PLog(page[:100])								# identisch mit ArteStart_1 ?
+		PLog(str(page)[:100])
 		name_org=name; title_org=title
-		page = get_cluster(items, title_org)
+		page = get_cluster(values, title_org)				# Cluster in json
 		if page  == '':	
 			return
 			
-		PLog(page[:80])
-		if page.find('"link":null') < 0:				# null: Beiträge, sonst weiterer Cluster
-			katurl = stringextract('"url":"', '"', page)
-			page = get_ArtePage('ArteStart_2', title, path=katurl)
-			ArteCluster(title=title_org, katurl=katurl)
-			
-		else:											# Beiträge zum Cluster-Titel zeigen
-			PLog("next_url3: " + next_url)				# next_url1 s. get_ArtePage
-			li = home(li, ID='arte')					# Home-Button
-			li, cnt = GetContent(li, page, ID="ArteStart_2")
-			PLog("cnt: " + str(cnt))
-			if next_url:								# Mehr-Beiträge?
-				ArteMehr(next_url, first=True)
+		PLog(str(page)[:80])	
+		li = home(li, ID='arte')					# Home-Button
+		li, cnt = GetContent(li, page, ID="ArteStart_2")
+		PLog("cnt: " + str(cnt))
+		ArteMehr(page, li)							# Mehr-Beiträge?
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
 # ---------------------------------------------------------------------
 # holt Cluster zu Cluster-titel title_org
-def get_cluster(items, title_org):
+def get_cluster(values, title_org):
 	PLog("get_cluster: " + title_org)
-	page=''
-	for item in items:
-		title = stringextract('title":"', '"', item)
+	page=""
+	
+	for item in values:
+		title = item["title"]
+		title = transl_json(title)
 		PLog("title_org: %s, title: %s" % (title_org, title))
 		if title_org in title:
 			PLog("found_Cluster: " + title)
@@ -940,65 +924,21 @@ def get_cluster(items, title_org):
 
 # ---------------------------------------------------------------------
 # holt Mehr-Beiträge 
-# 1. Aufruf (Beitrag_Liste, ArteStart_2): nur Mehr Button
-def ArteMehr(next_url, first=False):
-	PLog("ArteMehr: " + next_url)
-	PLog(first)
-	if next_url.startswith("/de/"):
-		next_url = "https://www.arte.tv" + next_url	
-	PLog(next_url) 	
+# page = string
+def ArteMehr(page, li=''):
+	PLog("ArteMehr:")
 	
-	jsonmark = '"props":'								# json-Bereich wie get_ArtePage
-	li = xbmcgui.ListItem()
-
-	if first:											# 1. Aufruf
+	next_url,page_akt,page_anz,anz,next_page = get_next_url(page)
+	if next_url:
 		title = u"Weitere Beiträge"
-		tag = u"weiter zu Seite %s (Gesamtzahl unbekannt)" % next_url[-1:]
+		tag = u"weiter zu [B]Seite %s[/B] (Seiten: %s, Beiträge: %s)" % (next_page, page_anz, anz)
 		img = R(ICON_MEHR)
 
-		query=py2_encode(next_url); 
-		fparams="&fparams={'next_url': '%s'}" % quote(next_url)	
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteMehr", fanart=img, 
+		next_url=py2_encode(next_url);# title=py2_encode(title);
+		fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(next_url), quote(title))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Beitrag_Liste", fanart=img, 
 			thumb=img , fparams=fparams, tagline=tag)
-		return
-		
-	#------------------------------------------------	# Folgeaufrufe
-	
-	li = home(li, ID='arte')							# Home-Button
-	page, msg = get_page(next_url)
-	if page == '':										# hier ohne Dialog
-		PLog(msg)
-		return
-
-	pos = page.find(jsonmark)
-	if pos > 0:		
-		page = page[pos:]
-		page = page.replace('\\u002F', '/')	
-		page = page.replace('\\"', '*')	
-	
-	pos = page.find('"Alle Videos"')					# entf. bei neueste-videos
-	if pos > 0:
-		page = page[pos:]
-	li, cnt = GetContent(li, page, ID="ArteMehr")
-	
-	try:
-		nextpage = int(next_url[-1:]) + 1
-		next_url = next_url[:-1] + str(nextpage)
-		PLog("next_url_new: " + next_url)
-	except:
-		next_url=''
-	
-	if 	next_url:
-		title = u"Weitere Beiträge"
-		tag = u"weiter zu Seite %s (Gesamtzahl unbekannt)" % next_url[-1:]
-		img = R(ICON_MEHR)
-
-		query=py2_encode(next_url); 
-		fparams="&fparams={'next_url': '%s'}" % quote(next_url)	
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteMehr", fanart=img, 
-			thumb=img , fparams=fparams, tagline=tag)
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	return
 	
 # ---------------------------------------------------------------------
 # lädt Arte-Seite aus Cache / Web
@@ -1007,6 +947,7 @@ def ArteMehr(next_url, first=False):
 # 26.07.2021 Anpassung an Webänderung (json-Auschnitt)
 # 27.04.2022 Umstellung Dict_ID wg. rekursiver Aufrufe:
 #	 Dict_ID = letzer Pfadanteil
+# 14.01.2023 json.loads - soweit möglich
 #
 def get_ArtePage(caller, title, path, header=''):
 	PLog("get_ArtePage: " + path)
@@ -1016,84 +957,73 @@ def get_ArtePage(caller, title, path, header=''):
 	if path == '':
 		PLog("path_fehlt")
 		return page
-
-	Dict_ID = path.split("/")[-1]						# Dict_ID aus path erzeugen
-	if path.endswith("arte.tv/de/"):
-		Dict_ID = "startseite"
-	if Dict_ID == '':
-		Dict_ID = path.split("/")[-2]
-	Dict_ID = Dict_ID.replace("?", "")					# Arte_?genres=oper, Arte_?page=1,..
-	Dict_ID = "Arte_%s" % Dict_ID
-
 										# Sicherung
-	page = Dict("load", Dict_ID, CacheTime=ArteKatCacheTime)
-	if page == False:
-		page=''
 	jsonmark = '"props":'								# json-Bereich	26.07.2021 angepasst
 
-	if page == '':										# nicht vorhanden
-		page, msg = get_page(path, GetOnlyRedirect=True)# Permanent-Redirect-Url abfangen
-		url = page								
-		page, msg = get_page(url, header=header)	
-		if page == '':						
-			msg1 = 'Fehler in %s: %s' % (caller, title)
-			msg2 = msg
-			msg2 = u"Seite weder im Cache noch im Web verfügbar"
+	page, msg = get_page(path, GetOnlyRedirect=True)# Permanent-Redirect-Url abfangen
+	url = page								
+	page, msg = get_page(url, header=header)	
+	if page == '':						
+		msg1 = 'Fehler in %s: %s' % (caller, title)
+		msg2 = msg
+		msg2 = u"Seite weder im Cache noch im Web verfügbar"
+		MyDialog(msg1, msg2, '')
+		return ''
+			
+	PLog("extract:"); PLog(type(page))
+	if 'id="no-content">' in page:					# no-content-Hinweis nur im html-Teil
+		msg2 = stringextract('id="no-content">', '</', page)
+		if msg2:
+			msg1 = 'Arte meldet:'
 			MyDialog(msg1, msg2, '')
 			return ''
-		if 'id="no-content">' in page:					# no-content-Hinweis nur im html-Teil
-			msg2 = stringextract('id="no-content">', '</', page)
-			if msg2:
-				msg1 = 'Arte meldet:'
-				MyDialog(msg1, msg2, '')
-				return ''
-		else:
-			# pos = page.find('__INITIAL_STATE__ ')		# json-Bereich vor 26.07.2021
-			next_url = get_next_url(page, Dict_ID)		# ev. next_url wird unten angehängt
-			if next_url:
-				page = page + '{"next_url":"%s"}'  % next_url
-			 	
-			pos = page.find(jsonmark)					# json-Bereich abklemmen	
-			if pos > 0:	
-				page = page[pos:]
-				page = page.replace('\\u002F', '/')	
-				page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
-				
-				if path.endswith("neueste-videos/") == False:	# neueste-videos ohne Cache!
-					Dict("store", Dict_ID, page) 				# Seite -> Cache, einschl. next_url
-			else:
+	else:
+		if page.startswith('{"tag":"Ok"'):			# json-Daten pur
+			page = json.loads(page)
+		else:										# json-Daten extrahieren
+			mark1 = '{"pageProps'; mark2 = '__N_SSP":true}'		
+			pos1 = page.find(mark1)
+			pos2 = page.find(mark2)
+			PLog(pos1); PLog(pos2)
+			if pos1 < 0 and pos2 < 0:
 				PLog("json-Daten fehlen")
 				page=''									# ohne json-Bereich: leere Seite
+			page = page[pos1:pos2+len(mark2)]
+			page = json.loads(page)			
 
 	#RSave('/tmp/x.json', py2_encode(page))	# Debug	
 	PLog(len(page))
 	# page = str(page)  # n. erf.
-	PLog("page_start: " + page[:100])
-	PLog("page_end: " + page[-100:])
+	PLog("page_start: " + str(page)[:100])
+	PLog("page_end: " + str(page)[-100:])
 	return page
 	
 # ---------------------------------------
-# ermittelt next-Url
-# unterschiedl. Tags: 'link rel="next"', '"_self">Next<'
-# 	daher Ermittlung via '?page=2' - next_url wird verworfen,
-#	falls Dict_ID (ohne arte_) nicht vorkommt  (z.B. next_url
-#	für allgemeine neueste-videos
+# ermittelt next-Url in pagination 
+#	(json -> strings)
+# Anpassung api-Call (Variante ohne Auth-Header)
 #	
-def get_next_url(page, Dict_ID):
+def get_next_url(page):
 	PLog("get_next_url:")
+	page = str(page)
+	pos = page.find("pagination")
+	p = page[pos:]
+	if "':" in p:
+		p = p.replace("'", "\"")
+	PLog(p[:200])
 
-	next_url=''; mark='?page='
-	pos = page.find(mark)
-	if pos > 0:
-		PLog(page[pos-40:pos+40])
-		pos2 = page[:pos].rfind("href=")
-		next_url = stringextract('href="', '"', page[pos2:])
-		d = Dict_ID.split("Arte_")[-1]
-		if next_url.find(d) < 0:
-			PLog("next_url_ohne: %s" % d)
-			next_url=''
-	PLog("next_url: " + next_url)
-	return next_url
+	page_akt =stringextract('"page": ', ',', p)
+	page_anz =stringextract('"pages": ', ',', p)
+	anz =stringextract('"totalCount": ', ',', p)
+	
+	next_url = stringextract('"next": "', '"', p)
+	next_page = stringextract('page=', '&', next_url)
+	
+	# api-internal-Call endet mit HTTP Error 401: Unauthorized
+	next_url = next_url.replace("api-internal.arte.tv/api", "www.arte.tv/api/rproxy")
+
+	PLog("next_url: %s, page_akt: %s, page_anz: %s, anz: %s, next_page: %s" % (next_url, page_akt, page_anz, anz, next_page))
+	return next_url,page_akt,page_anz,anz,next_page
 	
 # ----------------------------------------------------------------------
 
