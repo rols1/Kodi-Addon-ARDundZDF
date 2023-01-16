@@ -245,22 +245,22 @@ def update_single(PluginAbsPath):
 				except Exception as exception:	
 					PLog("exept_update_single: %s" % str(exception))
 
-				fname = fname[1:]								# fname ohne führ. /	
+				fname = fname[1:]									# fname ohne führ. /	
 				msg2 = "noch aktuell"
-				if updated:										# Notification bei Update
+				if updated:											# Notification bei Update
 					fname = "[B]%s[/B]" % fname								
 					msg2 = "aktualisiert"
 					xbmcgui.Dialog().notification(fname,msg2,icon,1000)
 				else:
-					# time < 1000 offensichtlich ignoriert:		# Notification ohne Update
+					# time < 1000 offensichtlich ignoriert:			# Notification ohne Update
 					x=xbmcgui.Dialog().notification("Einzelupdate",fname,icon,1000, False)
 					 
 				result_list.append("%14s: %s" % (msg2, fname)) 
-				xbmc.sleep(1000)								# ohne Pause nachlaufende notifications
+				xbmc.sleep(1000)									# ohne Pause nachlaufende notifications
 			else:
 				PLog("nr_local fehlt in %s" % local_file)
 	
-	#-------------														# 5. Ergänzung ev. neue Module im Repo
+	#-------------													# 5. Ergänzung ev. neue Module im Repo
 	if len(add_list) > 0:
 		for item in add_list:
 			local_file = "%s/%s" % (PluginAbsPath, item)
@@ -268,9 +268,9 @@ def update_single(PluginAbsPath):
 			remote_file = remote_file.replace('\\', '/')
 			PLog('lade %s' % remote_file) 
 			try:
-				r = urlopen(remote_file)						# Updatedatei auf Github 
+				r = urlopen(remote_file)							# Updatedatei auf Github 
 				page = r.read()
-				if PYTHON3:										# vermeide Byte-Error bei py2_decode			
+				if PYTHON3:											# vermeide Byte-Error bei py2_decode			
 					page = page.decode("utf-8")
 				page = py2_encode(page)
 				RSave(local_file, page)
@@ -279,10 +279,10 @@ def update_single(PluginAbsPath):
 			except Exception as exception:	
 				PLog("exept_update_NEU: %s" % str(exception))
 			
-	#-------------														# 6. Ergebnisliste
+	#-------------													# 6. Ergebnisliste
 
-	# xbmc.executebuiltin('Dialog.Close(all,true)')				# verhindert nicht Nachlaufen 
-	result_list = "\n".join(result_list)						# Ergebnisliste
+	# xbmc.executebuiltin('Dialog.Close(all,true)')					# verhindert nicht Nachlaufen 
+	result_list = "\n".join(result_list)							# Ergebnisliste
 	title = u"Einzelupdate - Abgleich von %d Dateien | Ergebnis:" % len(ret_list)
 	xbmcgui.Dialog().textviewer(title, result_list,usemono=True)
 	

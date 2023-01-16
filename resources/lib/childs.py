@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>13</nr>										# Numerierung für Einzelupdate
-#	Stand: 27.12.2022
+#	Stand: 05.01.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -848,7 +848,7 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 
 	items = blockextract('"docType":', page)
 	PLog(len(items))
-	skip_list=[]
+	skip_list=[]; cnt=0
 	for s in items:
 		mediatype='' 
 		# path: api_url, neue typ-Varianten in Kika_get_singleItem
@@ -885,6 +885,8 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 				(quote(path), quote(stitle), quote(thumb), quote(Plot))
 			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.%s" % func, 
 				fanart=thumb_org, thumb=thumb, fparams=fparams, tagline=tag, mediatype=mediatype)
+			cnt=cnt+1
+
 
 	# Mehr Seiten anzeigen:
 	next_path = stringextract('next":"', '"', page)						# Ende: "next":null
@@ -910,7 +912,13 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 		addDir(li=li, label=tag, action="dirList", dirID="resources.lib.childs.Kika_Rubriken", 
 			fanart=thumb_org, thumb=R(ICON_MEHR), fparams=fparams, tagline=tag,summary=summ)
 	
+	
 	if li_org:
+		if cnt == 0:
+			msg1 = "Kein Video für"										# notification (nur ext. Hauptmenü)
+			msg2 = title_org
+			icon = KIKA_VIDEOS
+			xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)			
 		return
 	else:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)

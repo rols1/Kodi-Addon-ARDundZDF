@@ -10,6 +10,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.01.2023 4.5.8
+			Kika_Series: Berücksichtigung broadcastSeries (bisher nur videoSubchannel),
+			Berücksichtigung fehlende Subchannels.
+			Kika_get_singleItem + Kika_Rubriken: skip mainNavigation.
+			update_single (Modul EPG): Fix Vorbelegung für komplette Liste, Fix Abbruch
+			nach Dialog "eigene Auswahl oder Liste?" (verhinderte kompletten Abgleich).
+			Kika_Rubriken: Notification bei fehlendendem Video (z.B interactiveContent).
+			InfoAndFilter: Anzeige akt. Info-Stand im Button Einzelupdate + neue Funktion
+			tools.get_foruminfo, Anzeige akt. Füllstand im Button "Kodis Thumbnails-
+			Ordner bereinigen".
+			ARDSportWDR (sportschau.de): Event-Button "Handball-WM 2023 in Polen und 
+			Schweden" ergänzt, "Fußball WM 2022 in Katar" -> ARDSportWDRArchiv verlagert.
+			Arte-Modul: abweichende eingebettete json-Variante - Umstellung A>uswertung 
+			auf json (statt strings), Anpassungen in get_ArtePage, Beitrag_Liste, ArteMehr,
+			get_img, ArteCluster, GetContent, Kategorien, arte_Search, get_next_url und
+			SingleVideo.
+			get_page (Modul util): redirect-Ausgabe auf 100 Zeichen beschränkt (vorher o. 
+			Begrenzung).
+
 
 18.12.2022 4.5.7
 			Kika (Modul childs): Erneuerung Kikaninchen-Code, Bilder neu/aktualisert:

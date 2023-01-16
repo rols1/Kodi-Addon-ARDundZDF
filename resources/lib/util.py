@@ -560,7 +560,7 @@ def ClearUp(directory, seconds, keep_dirs=False):
 
 #---------------------------------------------------------------- 
 # u.a. für AddonInfos
-# raw= False: Rückgabe humanbytes
+# raw=False: Rückgabe humanbytes,  sonst Bytes
 def get_dir_size(directory, raw=False):
 	PLog('get_dir_size: ' + str(raw))
 	size=0
@@ -1091,7 +1091,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 					
 				page = r.geturl()
 				info = r.info()
-				PLog("redirect: %s, info: %s" % (page, info))			# neue Url
+				PLog("redirect: %s, info: %s" % (page, str(info)[:100]))		# neue Url
 				return page, msg					
 
 			if header:

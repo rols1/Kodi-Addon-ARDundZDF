@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>26</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.12.2022
+#	Stand: 10.01.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -142,7 +142,7 @@ def Main_NEW(name='', CurSender=''):
 			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 		
 	title = 'Suche in ARD-Mediathek'
-	tag = def_tag
+	tag = def_tag + " (Suchbereich)"
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s', 'sender': '' }" % quote(title) 	# sender -> ARDSearchnew
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", fanart=R(ICON_MAIN_ARD), 
