@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>20</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.01.2023
+# 	<nr>21</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.01.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -37,6 +37,7 @@ elif PYTHON3:
 
 
 import ardundzdf					# -> get_query,test_downloads, get_ZDFstreamlinks, build_Streamlists_buttons
+import resources.lib.EPG as EPG
 from resources.lib.util import *
 from resources.lib.phoenix import getOnline
 
@@ -74,6 +75,7 @@ ICON_DIR_FOLDER	= 'Dir-folder.png'
 ICON_MEHR 		= 'icon-mehr.png'
 ICON_SEARCH 	= 'arte-suche.png'				
 ICON_TVLIVE		= 'tv-arte.png'						
+ICON_TV			= 'tv-arteTV.png'						
 ICON_DIR_FOLDER	= "Dir-folder.png"
 
 # ----------------------------------------------------------------------			
@@ -99,7 +101,12 @@ def Main_arte(title='', summ='', descr='',href=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.arte_Search", fanart=R(ICON_ARTE), 
 		thumb=R(ICON_SEARCH), fparams=fparams)
 	# ------------------------------------------------------
-			
+
+	title="Arte TV-Programm heute"
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.EPG_Today", fanart=R(ICON_ARTE), 
+		thumb=R(ICON_TV), fparams=fparams)
+
 	tag='[B]Arte Livestream[/B]'
 	title, summ, descr, vonbis, img, href = get_live_data('ARTE')
 	title = repl_json_chars(title)
@@ -117,9 +124,10 @@ def Main_arte(title='', summ='', descr='',href=''):
 
 	# ------------------------------------------------------
 	title="Kategorien"
+	tag = u"einschließlich Startseite wwww.arte.tv/de"
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Kategorien", fanart=R(ICON_ARTE), 
-		thumb=R(ICON_ARTE), fparams=fparams)
+		thumb=R(ICON_ARTE), tagline=tag, fparams=fparams)
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
@@ -131,7 +139,6 @@ def Main_arte(title='', summ='', descr='',href=''):
 def get_live_data(name):
 	PLog('get_live_data:')
 
-	import resources.lib.EPG as EPG
 	rec = EPG.EPG(ID='ARTE', mode='OnlyNow')		# Daten holen
 	PLog(len(rec))
 
@@ -173,6 +180,30 @@ def get_live_data(name):
 		img = thumb									# Fallback Senderlogo (+ in Main_arte)				
 	
 	return title, summ, descr, vonbis, img, href
+
+# ----------------------------------------------------------------------
+# TV-Programm Heute von arte.tv/de/guide/		
+#
+def EPG_Today():
+	PLog('EPG_Today:')
+
+	now = datetime.datetime.now()
+	today = now.strftime("%Y-%m-%d")					# 2023-01-16 
+	path = "https://www.arte.tv/api/rproxy/emac/v3/de/web/pages/TV_GUIDE/?day=%s" % today
+	page = get_ArtePage('ArteCluster', "EPG_Today", path)		
+	if page == '':
+		msg1 = "Programmabruf fehlgeschlagen | %s" % title
+		MyDialog(msg1, msg, '')
+		return li
+		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='arte')					# Home-Button	
+	
+	li, cnt = GetContent(li, page, ID="EPG_Today")
+	PLog("cnt: " + str(cnt))
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
 
 ####################################################################################################
 # arte - TV-Livestream mit akt. PRG
@@ -277,8 +308,10 @@ def GetContent(li, page, ID):
 	PLog("GetContent: " + ID)
 	
 	PLog(str(page)[:80])		
-	if ID == "SEARCH":									# api-Call
+	if ID == "SEARCH":									# web-api-Call
 		values = page["value"]["data"]
+	elif ID == "EPG_Today":								# web-api-Call
+		values = page["value"]["zones"][1]["data"]		# 0: TVGuide Highlights, 1: Listing
 	elif ID == "Beitrag_Liste":			
 		values = page["pageProps"]["initialPage"]["value"]["zones"][0]["content"]["data"]
 		PLog(len(values))
@@ -291,7 +324,7 @@ def GetContent(li, page, ID):
 		values = page["content"]["data"]
 	else:
 		values = page["pageProps"]["initialPage"]	# web-embedded, ganze Seite
-		try:
+		try:										# s.a. ArteCluster
 			if "value" in page:						# nach 13.01.2021
 				values = values["value"]["zones"]
 			else:									# vor 13.01.2021
@@ -333,7 +366,7 @@ def GetContent(li, page, ID):
 			mehrfach = True	
 		
 		url = item["url"]
-		if "mainImage" in item:
+		if "mainImage" in item or "images" in item:
 			img = get_img(item)
 		else:	
 			img = img_base % pid
@@ -399,29 +432,37 @@ def GetContent(li, page, ID):
 		pid=py2_encode(pid); tag_par=py2_encode(tag_par);
 		img=py2_encode(img); summ=py2_encode(summ);
 		
-		PLog("Mark0")	
 		if mehrfach:
 			fparams="&fparams={'katurl': '%s'}" % quote(url)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
 				thumb=img, tagline=tag, summary=summ, fparams=fparams)													
 			cnt=cnt+1					
 		else:
-			PLog("Mark1")	
 			if dur == '' and pid == '':
 				continue
 			if url.count("/") > 2:							# Bsp. /de/ (kein video)
 				pid = url.split("/")[3]						# /de/videos/100814-000-A/.., id nicht verwendbar
 			PLog("pid: " + pid)
-			PLog("Mark2")	
 				
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
 				mediatype='video'
 				
-			PLog("Mark3")	
+			label = title
+			if ID == "EPG_Today":							# EPG: Uhrzeit -> Label
+				start = start[-5:]; end = end[-5:];
+				label = "[COLOR blue]%s[/COLOR] | %s" % (start, title)	# Sendezeit | Titel
+				tag = "[B]von %s bis %s Uhr | Dauer: %s [/B]" % (start, end, dur)
+				if "stickers" in item:
+					try:			 
+						if item["stickers"][0]["code"] == "LIVE":
+							label = "[B]%s[/B]" % label
+					except:
+						pass
+
 			pid=py2_encode(pid); 	
 			fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s'}" %\
 				(quote(img), quote(title), quote(pid), quote(tag_par), quote(summ), dur, geo)
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.SingleVideo", 
+			addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.SingleVideo", 
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ,  mediatype=mediatype)		
 			cnt=cnt+1
 
@@ -441,6 +482,15 @@ def get_img(item):
 		if "mainImage" in item:
 			img = item["mainImage"]["url"]
 			img = img.replace('__SIZE__', '400x225')
+		if "images" in item:
+			imgs = item["images"]["landscape"]["resolutions"]
+			PLog(str(imgs)[:40])
+			imgs = str(imgs)
+			imgs = blockextract("'url'", imgs)
+			for img in imgs:
+				if "400x225" in img:				# 200,400,720,940,1920 
+					img = stringextract("url': '", "'", img)
+					break	
 		return img
 	
 	if "resolutions" in item:
@@ -825,7 +875,7 @@ def ArteCluster(pid='', title='', katurl=''):
 	page = page["pageProps"]["initialPage"]
 	PLog(len(page))
 	
-	try:
+	try:											# s.a. GetContent
 		if "value" in page:							# nach 13.01.2021
 			values = page["value"]["zones"]
 		else:										# vor 13.01.2021
