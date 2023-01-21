@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>82</nr>										# Numerierung für Einzelupdate
+# 	<nr>83</nr>										# Numerierung für Einzelupdate
 VERSION = '4.5.8'
-VDATE = '16.01.2023'
+VDATE = '21.01.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1450,7 +1450,7 @@ def ARDAudioEventStreams(li=''):
 # gibt entw. den  HTML- oder den json-Teil der Webseite zurück
 # HTML-Inhalt genutzt für Cluster-Liste.
 # json-Inhalt weicht für einige Objekte von api-json-Inhalt ab
-#
+# 16.01.2023 json-Extraktion wie get_ArtePage
 def Audio_get_webslice(page, mode="web"):
 	PLog('Audio_get_webslice:')
 	
@@ -1458,10 +1458,15 @@ def Audio_get_webslice(page, mode="web"):
 		pos1 = page.find('</head><body>')
 		pos2 = page.find('{"props"')
 		page = page[pos1:pos2]
-	if mode == "json":
-		pos1 = page.find('{"props"')
-		pos2 = page.find(',"channelData"')		# neu 21.02.2022
-		page = page[pos1:pos2] + "}}"			# json-Korrekt.	
+	if mode == "json":							# wie get_ArtePage
+		mark1 = '{"pageProps'; mark2 = '__N_SSP":true}'		
+		pos1 = page.find(mark1)
+		pos2 = page.find(mark2)
+		PLog(pos1); PLog(pos2)
+		if pos1 < 0 and pos2 < 0:
+			PLog("json-Daten fehlen")
+			page=''								# ohne json-Bereich: leere Seite
+		page = page[pos1:pos2+len(mark2)]	
 	
 	PLog(len(page))
 	return page
@@ -9679,6 +9684,7 @@ def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='',
 # Aufrufer: ZDF_getVideoSources, SingleBeitrag (my3Sat)
 # formitaeten: Blöcke 'formitaeten' (get_form_streams)
 # 08.03.2022 Anpassung für Originalton + Audiodeskription (class_add)
+# 21.01.2023 UHD-Streams für Testbetrieb ergänzt (add_UHD_Streams)
 #
 def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_id='',ID="ZDF"):
 	PLog('build_Streamlists:'); PLog(ID)
@@ -9789,11 +9795,10 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 							(mp4, track_add, quality, bitrate, res, title_url)
 						MP4_List.append(item)
 	
+	
 	PLog("HLS_List: " + str(len(HLS_List)))
-	#PLog(HLS_List)
+	#PLog(HLS_List)	# Debug
 	PLog("MP4_List: " + str(len(MP4_List)))
-	Dict("store", '%s_HLS_List' % ID, HLS_List) 
-	Dict("store", '%s_MP4_List' % ID, MP4_List) 
 		
 	if not len(HLS_List) and not len(MP4_List):			
 		msg = 'keine Streamingquelle gefunden - Abbruch' 
@@ -9801,11 +9806,21 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 		msg1 = u"keine Streamingquelle gefunden: %s"	% title
 		MyDialog(msg1, '', '')	
 		return HLS_List, MP4_List, HBBTV_List
-		
+	
+	UHD_DL_list=[]										# UHD-Download-Streams
 	if ID == "ZDF":										# o. Abbruch-Dialog
 		HBBTV_List = ZDFSourcesHBBTV(title, scms_id)				
 		PLog("HBBTV_List: " + str(len(HBBTV_List)))
+		# UHD-Streams erzeugen:							# UHD-Streams
+		HBBTV_List, UHD_DL_list = add_UHD_Streams(HBBTV_List)
 		Dict("store", '%s_HBBTV_List' % ID, HBBTV_List) 
+		
+	Dict("store", '%s_HLS_List' % ID, HLS_List) 
+	# MP4_List = add_UHD_Streams(MP4_List)				# entf., nur in HBBTV-Quellen (?)
+	if len(UHD_DL_list) > 0:							# UHD_Liste für Downloads anhängen
+		MP4_List = UHD_DL_list + MP4_List
+	Dict("store", '%s_MP4_List' % ID, MP4_List) 
+
 		
 	tagline = "Titel: %s\n\n%s" % (title_org, tagline)	# s.a. ARD (Classic + Neu)
 	tagline=repl_json_chars(tagline); tagline=tagline.replace( '||', '\n')
@@ -9821,6 +9836,39 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 	PLog("build_Streamlists_end")		
 	return HLS_List, MP4_List, HBBTV_List
 	
+#-------------------------
+# Aufruf: build_Streamlists
+# UHD-Streams erzeugen + Verfügbarkeit testen:
+# verfügbare UHD-Streams werden unten angehängt,
+#	uhd_list -> Downloadliste
+def add_UHD_Streams(Stream_List):
+	PLog('add_UHD_Streams:')
+
+	uhd_list=[]; UHD_DL_list=[]; 
+	cnt_find=0; cnt_ready=0
+	mark1= "3360k_p36v15"; mark2="4692k_p72v16"
+	
+	for item in Stream_List:
+		if item.find(mark1) > 0:
+			#PLog(item)
+			uhd_list.append(item.replace(mark1, mark2))
+			cnt_find=cnt_find+1
+
+	PLog(len(uhd_list)); 
+	
+	for item in uhd_list:									# Verfügbarkeit testen
+		url = item.split("#")[-1]
+		PLog(url)
+		if url_check(url, caller='add_UHD_Streams'):		# Url-Check
+			item = item.replace("MP4,", "[B]UHD_MP4[/B],")	# Kennung ändern
+			item = item.replace("WEBM,", "[B]UHD_WEBM[/B],")
+			UHD_DL_list.append(item)						# UHD-Download-Streams
+			cnt_ready=cnt_ready+1
+	if len(UHD_DL_list) > 0:
+		Stream_List = UHD_DL_list + Stream_List
+
+	PLog(u"found_UDH-Streams: %d, verfügbar: %d" % (cnt_find, cnt_ready))
+	return Stream_List, UHD_DL_list
 #-------------------------
 # Sofortstart + Buttons für die einz. Streamlisten
 # Aufrufer: build_Streamlists (ZDF, 3sat), ARDStartSingle (ARD Neu),
