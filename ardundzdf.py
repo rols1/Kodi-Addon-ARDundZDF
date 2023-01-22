@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>83</nr>										# Numerierung für Einzelupdate
-VERSION = '4.5.8'
-VDATE = '21.01.2023'
+VERSION = '4.5.9'
+VDATE = '22.01.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -9839,14 +9839,15 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 #-------------------------
 # Aufruf: build_Streamlists
 # UHD-Streams erzeugen + Verfügbarkeit testen:
-# verfügbare UHD-Streams werden unten angehängt,
-#	uhd_list -> Downloadliste
+# verfügbare UHD-Streams werden oben in HBBTV_List 
+#	und MP4_List (->Downloadliste) eingefügt,
+#
 def add_UHD_Streams(Stream_List):
 	PLog('add_UHD_Streams:')
 
 	uhd_list=[]; UHD_DL_list=[]; 
 	cnt_find=0; cnt_ready=0
-	mark1= "3360k_p36v15"; mark2="4692k_p72v16"
+	mark1= "3360k_p36v15"; mark2="4692k_p72v16"				# Url-Schema dauerhaft?
 	
 	for item in Stream_List:
 		if item.find(mark1) > 0:
@@ -9859,7 +9860,7 @@ def add_UHD_Streams(Stream_List):
 	for item in uhd_list:									# Verfügbarkeit testen
 		url = item.split("#")[-1]
 		PLog(url)
-		if url_check(url, caller='add_UHD_Streams'):		# Url-Check
+		if url_check(url, caller='add_UHD_Streams', dialog=False):	# Url-Check
 			item = item.replace("MP4,", "[B]UHD_MP4[/B],")	# Kennung ändern
 			item = item.replace("WEBM,", "[B]UHD_WEBM[/B],")
 			UHD_DL_list.append(item)						# UHD-Download-Streams

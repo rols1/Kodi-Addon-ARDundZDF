@@ -10,6 +10,15 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.01.2023 4.5.9
+			Audio_get_webslice (Audiothek): json-Extraktion wie get_ArtePage (channel-
+			Data fehlten).
+			Arte-Modul: Erweiterung mit EPG  für Heute - neue Funktion EPG_Today, Anpas-
+			sung Main_arte und GetContent.
+			build_Streamlists: UHD-Streams für Testbetrieb ergänzt - neue Funktion
+			add_UHD_Streams.
+			url_check (Modul util): Fehler-Dialog optional für add_UHD_Streams.
+
 16.01.2023 4.5.8
 			Kika_Series: Berücksichtigung broadcastSeries (bisher nur videoSubchannel),
 			Berücksichtigung fehlende Subchannels.
@@ -22,13 +31,12 @@ CHANGE HISTORY
 			Ordner bereinigen".
 			ARDSportWDR (sportschau.de): Event-Button "Handball-WM 2023 in Polen und 
 			Schweden" ergänzt, "Fußball WM 2022 in Katar" -> ARDSportWDRArchiv verlagert.
-			Arte-Modul: abweichende eingebettete json-Variante - Umstellung A>uswertung 
+			Arte-Modul: abweichende eingebettete json-Variante - Umstellung Auswertung 
 			auf json (statt strings), Anpassungen in get_ArtePage, Beitrag_Liste, ArteMehr,
 			get_img, ArteCluster, GetContent, Kategorien, arte_Search, get_next_url und
 			SingleVideo.
 			get_page (Modul util): redirect-Ausgabe auf 100 Zeichen beschränkt (vorher o. 
 			Begrenzung).
-
 
 18.12.2022 4.5.7
 			Kika (Modul childs): Erneuerung Kikaninchen-Code, Bilder neu/aktualisert:

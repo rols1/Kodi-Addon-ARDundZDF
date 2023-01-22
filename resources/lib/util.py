@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>33</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.12.2022
+#	Stand: 21.01.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1223,7 +1223,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			page = (page.replace('" : "', '":"').replace('" :', '":'))	# für Python3 erf.
 			PLog("jsonpage: " + page[:100]);
 		except Exception as exception:
-			msg = str(exception)
+			msg = "json.loads_error: %s" % str(exception)
 			PLog(msg)
 
 	return page, msg
@@ -3580,8 +3580,8 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 #---------------------------------------------------------------- 
 # Aufruf: PlayVideo
 # 04.03.2022 Header für ZDF-Url erforderl. (Error "502 Bad Gateway")
-#
-def url_check(url, caller=''):
+# 21.01.2023 dialog optional für add_UHD_Streams (ohne Dialog)
+def url_check(url, caller='', dialog=True):
 	PLog('url_check:')
 	if url.startswith('http') == False:		# lokale Datei - kein Check
 		return True
@@ -3606,7 +3606,8 @@ def url_check(url, caller=''):
 		msg2 = url
 		msg3 = 'Fehler: %s' % err
 		PLog(msg3)
-		MyDialog(msg1, msg2, msg3)		 			 	 
+		if dialog:
+			MyDialog(msg1, msg2, msg3)		 			 	 
 		return False
 
 #----------------------------------------------------------------
