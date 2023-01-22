@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>83</nr>										# Numerierung für Einzelupdate
+# 	<nr>84</nr>										# Numerierung für Einzelupdate
 VERSION = '4.5.9'
 VDATE = '22.01.2023'
 
@@ -9904,9 +9904,15 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	img=thumb; 
 	PLog(title_org); PLog(tagline[:60]); PLog(img); PLog(sub_path);
 	
+	uhd_cnt = str(HBBTV_List).count("UHD_")				# UHD-Kennz. -> Titel
+	
 	title_hls 	= u"[B]Streaming[/B]-Formate"
 	title_hb = "[B]HBBTV[/B]-Formate"
+	if uhd_cnt:
+		title_hb = title_hb + ", einschl. [B]UHD-Streams[/B]"
 	title_mp4 = "[B]MP4[/B]-Formate und [B]Downloads[/B]"
+	if uhd_cnt:
+		title_mp4 = title_mp4 + ", einschl. [B]UHD-Streams[/B]"
 	title_hls=repl_json_chars(title_hls); title_hb=repl_json_chars(title_hb);
 	title_mp4=repl_json_chars(title_mp4); 
 	
