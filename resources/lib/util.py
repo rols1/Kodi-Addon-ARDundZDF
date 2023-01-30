@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>34</nr>										# Numerierung für Einzelupdate
+# 	<nr>35</nr>										# Numerierung für Einzelupdate
 #	Stand: 30.01.2023
 
 # Python3-Kompatibilität:
@@ -117,7 +117,7 @@ def check_AddonXml(mark):
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
-if 	check_AddonXml('"xbmc.python" version="3.s"'):
+if 	check_AddonXml('"xbmc.python" version="3.'):
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 
 M3U8STORE 		= os.path.join(ADDON_DATA, "m3u8") 
