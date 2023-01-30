@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>26</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.01.2023
+#	Stand: 28.01.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -89,8 +89,9 @@ ARDStartCacheTime = 300						# 5 Min.
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
-if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
-	PLog('Matrix-Version')
+# Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
+if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+	PLog('ARDnew_python_3.x.x')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 
 DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
@@ -116,7 +117,7 @@ def Main_NEW(name='', CurSender=''):
 	PLog('Main_NEW:'); 
 	PLog(name); PLog(CurSender)
 			
-	if CurSender == '' or CurSender == False or CurSender == 'false':	# Ladefehler?
+	if CurSender == '' or up_low(str(CurSender)) == "FALSE":			# Ladefehler?
 		CurSender = ARDSender[0]
 	if ':' in CurSender:				# aktualisieren	
 		Dict('store', "CurSender", CurSender)
