@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>33</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.01.2023
+# 	<nr>34</nr>										# Numerierung für Einzelupdate
+#	Stand: 30.01.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -89,9 +89,9 @@ ARDStartCacheTime = 300						# 5 Min.
 #---------------------------------------------------------------- 
 # prüft addon.xml auf mark - Rückgabe True, False
 #	benötigt u.a. für Check der python-Version - falls
-#	3.0.0 wird global ADDON_DATA (Modul-Kopf) neu
+#	3.x.x wird global ADDON_DATA (Modul-Kopf) neu
 #	gesetzt - s. check_DataStores
-# ADDON_DATA 3.0.0 (Kodi 19 Matrix):
+# ADDON_DATA 3.x.x (Kodi 19 Matrix, 20 Nexus):
 #	../.kodi/userdata/addon_data/plugin.video.ardundzdf
 # ADDON_DATA 2.25.0 (Kodi 18 Leia):
 #	../.kodi/userdata/ardundzdf_data
@@ -117,7 +117,7 @@ def check_AddonXml(mark):
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
-if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+if 	check_AddonXml('"xbmc.python" version="3.s"'):
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 
 M3U8STORE 		= os.path.join(ADDON_DATA, "m3u8") 
@@ -255,7 +255,7 @@ def home(li, ID):
 	tag =  "Ausschluss-Filter Status: AUS"				# nur Untermenüs ARD, ZDF + Audiothek, nicht Module
 	if SETTINGS.getSetting('pref_usefilter') == 'true':	
 		tag = tag.replace('AUS','[COLOR blue]EIN[/COLOR]')										
-		page = RLoad(FILTER_SET, abs_path=True)			# akt. Filter laden
+		page = RLoad(FILTER_SET, abs_path=True)			# akt. Filter laden, [Errno 2] möglich
 		tag = "%s \nFilter [B]aktuell[/B]:\n%s" % (tag, page)
 	
 
