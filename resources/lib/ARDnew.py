@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>26</nr>										# Numerierung für Einzelupdate
+# 	<nr>27</nr>										# Numerierung für Einzelupdate
 #	Stand: 28.01.2023
 
 # Python3-Kompatibilität:
