@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>84</nr>										# Numerierung für Einzelupdate
+# 	<nr>85</nr>										# Numerierung für Einzelupdate
 VERSION = '4.6.0'
-VDATE = '30.01.2023'
+VDATE = '31.01.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -9905,14 +9905,19 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	img=thumb; 
 	PLog(title_org); PLog(tagline[:60]); PLog(img); PLog(sub_path);
 	
-	uhd_cnt = str(HBBTV_List).count("UHD_")				# UHD-Kennz. -> Titel
+	uhd_cnt_hb = str(HBBTV_List).count("UHD_")				# UHD-Kennz. -> Titel
+	uhd_cnt_hls = str(HLS_List).count("UHD_")				# Arte
+	uhd_cnt_mp4 = str(MP4_List).count("UHD_")
+	PLog("uhd_cnt: %d, %d, %d" % (uhd_cnt_hb, uhd_cnt_hls, uhd_cnt_mp4))
 	
-	title_hls 	= u"[B]Streaming[/B]-Formate"
 	title_hb = "[B]HBBTV[/B]-Formate"
-	if uhd_cnt:
+	if uhd_cnt_hb:
 		title_hb = title_hb + ", einschl. [B]UHD-Streams[/B]"
+	title_hls 	= u"[B]Streaming[/B]-Formate"
+	if uhd_cnt_hls:
+		title_hls = title_hls + ", einschl. [B]UHD-Streams[/B]"
 	title_mp4 = "[B]MP4[/B]-Formate und [B]Downloads[/B]"
-	if uhd_cnt:
+	if uhd_cnt_mp4:
 		title_mp4 = title_mp4 + ", einschl. [B]UHD-Streams[/B]"
 	title_hls=repl_json_chars(title_hls); title_hb=repl_json_chars(title_hb);
 	title_mp4=repl_json_chars(title_mp4); 
