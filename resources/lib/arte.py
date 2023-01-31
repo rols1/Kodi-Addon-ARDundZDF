@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>23</nr>										# Numerierung für Einzelupdate
+# 	<nr>24</nr>										# Numerierung für Einzelupdate
 #	Stand: 31.01.2023
 
 # Python3-Kompatibilität:
