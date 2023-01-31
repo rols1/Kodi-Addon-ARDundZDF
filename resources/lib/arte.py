@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>21</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.01.2023
+# 	<nr>22</nr>										# Numerierung für Einzelupdate
+#	Stand: 31.01.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -56,7 +56,9 @@ HANDLE			= int(sys.argv[1])
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
-if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+# Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
+if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+	PLog('arte_python_3.x.x')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 WATCHFILE		= os.path.join(ADDON_DATA, "merkliste.xml") 
 DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 			# hier nur DICTSTORE genutzt
@@ -695,7 +697,7 @@ def get_streams_api_v2(page, title, summ):
 	formitaeten = blockextract('"url":"https', page) # Bsp. "id":"HTTPS_MQ_1", "id":"HLS_XQ_1"
 	PLog(len(formitaeten))
 	
-	HLS_List=[]; trailer=False
+	HLS_List=[]; trailer=False; uhd_m3u8=""
 	for rec in formitaeten:	
 		url = stringextract('"url":"',  '"', rec)
 		if url.find("Trailer") > 0:
@@ -704,7 +706,7 @@ def get_streams_api_v2(page, title, summ):
 		bitrate = ""
 		
 		mainQuality = stringextract('"mainQuality":',  '}', rec)
-		quality = stringextract('"code":"',  '"', mainQuality)		# "XQ"
+		quality = stringextract('"code":"',  '"', mainQuality)		# Bsp.: "XQ"
 		width = stringextract('"label":"',  '"', mainQuality)		# "720p"
 		height="?"
 		size = "%sx%s" % (width, height)
@@ -713,6 +715,10 @@ def get_streams_api_v2(page, title, summ):
 		versions = stringextract('"versions":',  '}', rec)
 		lang = stringextract('"label":"',  '"', versions)			# z.B. Deutsch (Original)
 		lang = transl_json(lang)
+		
+		if quality == "XQ" and lang == "Deutsch":					# Link für UHD-Extrakt 					
+			uhd_m3u8 = url
+			uhd_details = "%s##%s" % (lang, title)
 		
 		PLog('Satz3:')
 		PLog(url); PLog(size); PLog(lang);
@@ -731,7 +737,39 @@ def get_streams_api_v2(page, title, summ):
 		else:
 			if ".m3u8" in url:									# HLS
 				HLS_List.append('HLS, [B]%s[/B] ** %s ** %s ** %s#%s' % (lang, size, quality, title, url))
-
+	
+	PLog("uhd_check:")			
+	if uhd_m3u8:
+		page, msg = get_page(uhd_m3u8)
+		ext_list = blockextract("STREAM-INF", page)
+		PLog(len(ext_list))
+		uhd=""
+		for item in ext_list:
+			res = stringextract('RESOLUTION=',  ',', item)
+			PLog(res)
+			if "3840x" in item:
+				PLog(item)
+				uhd = item.splitlines()[-2]			# Bsp.: videos/106654-000-G_v2160.m3u8
+				PLog("uhd: " + uhd)
+				break
+		
+		if uhd:
+			try:
+				# s = uhd_m3u8.split("/")[:-2]		# Basis: Url
+				base = uhd_m3u8.split("/")[:-1]
+				base = "/".join(base)
+				uhd_stream = "%s/%s" % (base, uhd)		# plus uhd-Anhängsel
+			except Exception as exception:
+				PLog(str(exception))
+				uhd_stream=""				
+			PLog("uhd_stream: " + uhd_stream)
+			if uhd_stream:							# HLS-Liste ergänzen
+				if url_check(uhd_stream, caller='get_streams_api_v2', dialog=False):	# Url-Check
+					lang, title = uhd_details.split("##")
+					line = '[B]UHD_HLS[/B], [B]%s[/B] ** %s ** %s ** %s#%s' % (lang, "3840x2160", "XQ", title, uhd_stream)
+				
+			HLS_List.insert(0, line)				# -> 1. Position wie ZDF-HLS-UHD 
+		
 	return trailer,HLS_List
 
 # ----------------------------------------------------------------------
