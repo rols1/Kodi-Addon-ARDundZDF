@@ -8,7 +8,7 @@
 ####################################################################################################
 #	01.07.2020 Start
 # 	<nr>1</nr>								# Numerierung für Einzelupdate
-#	Stand: 25.01.2022
+#	Stand: 28.01.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -50,7 +50,9 @@ ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
-if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+# Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
+if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+	PLog('epgRecord_python_3.x.x')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
 

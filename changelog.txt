@@ -10,6 +10,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+31.01.2023 4.6.0
+			build_Streamlists_buttons: UHD-Kennz. im Titel bei UHD-Streams in den 
+			Stream-Listen.
+			Anpassung für Kodi 10 Nexus (alle Module): Aufruf check_AddonXml-Call 
+			"..version="3.0.0" ersetzt durch "..version="3.", Modul updater: Nexus in
+			adjust_line ergänzt (addon id, python-Version).
+			Main_NEW (ARDnew): Status CurSender angepasst für Kodi Nexus ->
+			(up_low(str(CurSender))).
+			util: fehlender Abgleich für Anpassung an Kodi 10 Nexus ergänzt.
+			get_streams_api_v2 (Modul arte): Ergänzung HLS-Liste mit UHD-Streams.
+
 22.01.2023 4.5.9
 			Audio_get_webslice (Audiothek): json-Extraktion wie get_ArtePage (channel-
 			Data fehlten).

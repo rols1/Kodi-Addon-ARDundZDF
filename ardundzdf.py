@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>84</nr>										# Numerierung für Einzelupdate
-VERSION = '4.5.9'
-VDATE = '22.01.2023'
+VERSION = '4.6.0'
+VDATE = '30.01.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -214,8 +214,9 @@ TEMP_ADDON		= xbmc.translatePath("special://temp")
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
-if 	check_AddonXml('"xbmc.python" version="3.0.0"'):					# ADDON_DATA-Verzeichnis anpasen
-	PLog('Matrix-Version')
+# Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
+if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+	PLog('python_3.x.x')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 PLog("ADDON_DATA: " + ADDON_DATA)
 

@@ -14,7 +14,7 @@
 #	Auswertung Keys s. img_update
 ################################################################################
 # 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.10.2021
+#	Stand: 28.01.2023
 
 
 # Python3-Kompatibilität:
@@ -64,7 +64,9 @@ PLog("POS_FILE: " + POS_FILE)
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
-if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+# Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
+if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+	PLog('slides_python_3.x.x')
 	ADDON_DATA		= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 WATCHFILE		= os.path.join(ADDON_DATA, "merkliste.xml") 
 

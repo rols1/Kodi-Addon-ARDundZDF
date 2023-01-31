@@ -9,10 +9,11 @@
 #	31.10.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	18.03.2020 adjust_AddonXml: Anpassung python-Version an Kodi-Version
-#	13.04.2020 Aktualisierung adjust_AddonXml 
+#	13.04.2020 Aktualisierung adjust_AddonXml
+# 	28.01.2023 Aktualisierung adjust_line für Kodi 20 Nexus
 ################################################################################
 # 	<nr>1</nr>								# Numerierung für Einzelupdate
-#	Stand: 20.03.2022
+#	Stand: 28.01.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -207,21 +208,39 @@ def adjust_line(line):
 	PLog(KODI_VERSION)
 	new_line = line
 
-	if KODI_VERSION.startswith('19.'):									# Anp. Kodi Matrix
+	try:
+		vers = re.search(u'(\d+).', KODI_VERSION).group(0)
+	except Exception as exception:
+		PLog(str(exception))
+		vers = "19"														# Default Matrix
+	vers = int(vers)
+	PLog("vers: %d" % vers)
+	
+	if vers < 19:														# Leia, Krypton, ..
+		if 'addon="xbmc.python"' in line:
+			python_ver = stringextract('version="', '"', line)
+			new_line = line.replace(python_ver, '2.25.0')				
+		if 'addon id=' in line:
+			new_line = line.replace('+matrix', '')						# ev. Downgrade				
+			new_line = line.replace('+nexus', '')						# ev. Downgrade
+	
+	if 	vers == 19:														# Matrix
 		if 'addon="xbmc.python"' in line:
 			python_ver = stringextract('version="', '"', line)
 			new_line = line.replace(python_ver, '3.0.0')
 		if 'addon id=' in line:
 			addon_ver = stringextract('version="', '"', line)
-			if 'matrix' not in line:									# Anp. Addon-Version
+			if 'matrix' not in line:									
 				new_line = line.replace(addon_ver, '%s+matrix' % addon_ver)	
-				
-	else:																# Anp. Kodi <= Leia
+	if 	vers == 20:														# Nexus
 		if 'addon="xbmc.python"' in line:
 			python_ver = stringextract('version="', '"', line)
-			new_line = line.replace(python_ver, '2.25.0')				# Anp. Python-Version
+			new_line = line.replace(python_ver, '3.0.1')
 		if 'addon id=' in line:
-			new_line = line.replace('+matrix', '')						# Anp. Addon-Version
+			addon_ver = stringextract('version="', '"', line)
+			if 'nexus' not in line:									
+				new_line = line.replace(addon_ver, '%s+nexus' % addon_ver)	
+				
 								
 	return new_line													
 

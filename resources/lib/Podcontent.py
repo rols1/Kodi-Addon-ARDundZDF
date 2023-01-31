@@ -16,7 +16,7 @@
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>4</nr>								# Numerierung für Einzelupdate
-#	Stand: 15.08.2022
+#	Stand: 28.01.2023
 
 
 # Python3-Kompatibilität:
@@ -71,7 +71,9 @@ ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
-if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+# Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
+if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+	PLog('Podcontent_python_3.x.x')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
 

@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>5</nr>								# Numerierung für Einzelupdate
-#	Stand: 12.08.2022
+#	Stand: 28.01.2023
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -61,7 +61,9 @@ HANDLE			= int(sys.argv[1])
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
-if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+# Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
+if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+	PLog('TagesschauXL_python_3.x.x')
 	ADDON_DATA		= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 SLIDESTORE 		= os.path.join(ADDON_DATA, "slides") 
 

@@ -4,7 +4,7 @@
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
 # 	<nr>12</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.06.2022
+#	Stand: 26.01.2023
 #
 
 from __future__ import absolute_import
@@ -42,7 +42,9 @@ ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
-if 	check_AddonXml('"xbmc.python" version="3.0.0"'):
+# Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
+if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+	PLog('python_3.x.x')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
 STRMSTORE 		= os.path.join(ADDON_DATA, "strm") 						# Default-Verz. strm
