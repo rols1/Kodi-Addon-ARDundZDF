@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>22</nr>										# Numerierung für Einzelupdate
+# 	<nr>23</nr>										# Numerierung für Einzelupdate
 #	Stand: 31.01.2023
 
 # Python3-Kompatibilität:
@@ -425,6 +425,7 @@ def GetContent(li, page, ID):
 		title = repl_json_chars(title); 					# franz. Akzent mögl.
 		summ = repl_json_chars(summ)						# -"-
 		tag_par = tag.replace('\n', '||')					# || Code für LF (\n scheitert in router)
+		summ_par = summ.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 		
 		PLog('Satz1:')
 		PLog(mehrfach); PLog(typ); PLog(pid); PLog(title); 
@@ -433,6 +434,7 @@ def GetContent(li, page, ID):
 		title=py2_encode(title); url=py2_encode(url);
 		pid=py2_encode(pid); tag_par=py2_encode(tag_par);
 		img=py2_encode(img); summ=py2_encode(summ);
+		summ_par=py2_encode(summ_par);
 		
 		if mehrfach:
 			fparams="&fparams={'katurl': '%s'}" % quote(url)
@@ -463,7 +465,7 @@ def GetContent(li, page, ID):
 
 			pid=py2_encode(pid); 	
 			fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s'}" %\
-				(quote(img), quote(title), quote(pid), quote(tag_par), quote(summ), dur, geo)
+				(quote(img), quote(title), quote(pid), quote(tag_par), quote(summ_par), dur, geo)
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.SingleVideo", 
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ,  mediatype=mediatype)		
 			cnt=cnt+1
