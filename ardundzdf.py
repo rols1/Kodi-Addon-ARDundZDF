@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>85</nr>										# Numerierung für Einzelupdate
+# 	<nr>86</nr>										# Numerierung für Einzelupdate
 VERSION = '4.6.0'
-VDATE = '31.01.2023'
+VDATE = '02.02.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -549,7 +549,7 @@ def Main():
 	if SETTINGS.getSetting('pref_strm') == 'true':
 		summ = "%s\n-%s" % (summ, "strm-Tools")
 	if SETTINGS.getSetting('pref_playlist') == 'true':
-		summ = "%s\n-%s" % (summ, "PLAYLIST-Tools")
+		summ = "%s\n-%s\n-%s" % (summ, "PLAYLIST-Tools", "Settings inputstream.adaptive")
 	summ = "%s\n-%s" % (summ, "Kodis Thumbnails-Ordner bereinigen")
 	summ = "%s\n\n%s" % (summ, u"[B]Einzelupdate[/B] (für einzelne Dateien und Module)")
 	fparams="&fparams={}" 
@@ -684,6 +684,24 @@ def InfoAndFilter():
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.ClearUpThumbnails",\
 		fanart=R(FANART), thumb=R("icon-clear.png"), tagline=tag, summary=summ, fparams=fparams)	
+
+	
+	addon_id='inputstream.adaptive'; cmd="openSettings"	
+	try:													# Check inputstream-Addon
+		inp_vers = xbmcaddon.Addon(addon_id).getAddonInfo('version')
+	except:
+		inp_vers=""
+	PLog("inp_vers: " + inp_vers)			
+	if inp_vers:
+		title = u"Settings inputstream.adaptive-Addon öffnen"		# Settings inputstream-Addon öffnen
+		akt="EIN"
+		if SETTINGS.getSetting('pref_UT_ON') == "false":
+			akt="AUS"
+		tag = u"Bandbreite, Auflösung und weitere Einstellungen."
+		tag = u"%s\nDie Nutzung ist [B]%s-[/B]geschaltet (siehe Modul-Einstellungen von ARDundZDF)" % (tag, akt)
+		fparams="&fparams={'addon_id': '%s', 'cmd': '%s'}" % (addon_id, cmd)
+		addDir(li=li, label=title, action="dirList", dirID="open_addon",\
+			fanart=R(FANART), thumb=R("icon-inp.png"), tagline=tag, fparams=fparams)	
 			
 	
 	dt = resources.lib.tools.get_foruminfo()

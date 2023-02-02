@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>35</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.01.2023
+# 	<nr>36</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1942,7 +1942,8 @@ def time_translate(timecode, add_hour=True):
 	summer_time = [	"2019-03-31T01:00:00Z|2019-10-27T01:00:00Z",
 					"2020-03-29T01:00:00Z|2020-10-25T01:00:00Z",
 					"2021-03-28T01:00:00Z|2021-10-31T01:00:00Z",
-					"2022-03-27T01:00:00Z|2022-10-30T01:00:00Z"
+					"2022-03-27T01:00:00Z|2022-10-30T01:00:00Z",
+					"2023-03-27T01:00:00Z|2023-10-29T01:00:00Z"
 				]
 
 	if timecode.strip() == '' or len(timecode) < 19 or timecode[10] != 'T':
@@ -3225,6 +3226,12 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #		ZDF-Sender: funktionieren inzwischen. Mehrkanal-Url's für HLS. Die master.m3u8-Dateien 
 #		enthalten jeweils 2 Untertitel-Links (../8.m3u8) für die webvtt-Segmente. 
 #		- neue Funktion get_streamurl_ut z.Z. noch nutzlos + stillgelegt
+#		30.01.2023 Problem beim Team inputstream.adaptive in Bearbeitung:
+#			https://github.com/xbmc/inputstream.adaptive/issues/1109
+#
+#	01.02.2023 seek für ARD-Livestream bei Nutzung inputstream.adaptive kann entfallen, Stream
+#		startet korrekt (Leia, Matrix, Nexus), Issue geschlossen:
+#		https://github.com/rols1/Kodi-Addon-ARDundZDF/issues/19
 #
 def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=0):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
@@ -3373,9 +3380,6 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 			while 1:											# showSubtitles nur bei akt. Player wirksam
 				if player.isPlaying():
 					xbmc.sleep(1000)							# für Raspi erforderl. (500 können fehlschlagen)
-					# Fix inputstream für ARD-Livestream: seek zum Ende 2-Std-Puffer:
-					if "/daserste/de/" in url or "/daserste_ut_de/" in url:
-						player.seekTime(3600*2) 
 					if SETTINGS.getSetting('pref_UT_ON') == 'true':
 						PLog("Player_Subtitles_on")
 						xbmc.Player().showSubtitles(True)
@@ -3610,6 +3614,15 @@ def url_check(url, caller='', dialog=True):
 			MyDialog(msg1, msg2, msg3)		 			 	 
 		return False
 
+#----------------------------------------------------------------
+# z.Z. nur genutzt für Settings inputstream.adaptive-Addon
+def open_addon(addon_id, cmd):
+	PLog('open_addon:')
+
+	if cmd == "openSettings":
+		xbmcaddon.Addon(addon_id).openSettings()
+	return
+	
 #----------------------------------------------------------------
 # experimentelle Funktion thread_getsubtitles einschl. vtt_convert archiviert
 #	in ../m3u8_download,Untertitel/Untertitel/thread_getsubtitles.py
