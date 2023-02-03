@@ -124,10 +124,11 @@ Funktionen:
 
 INSTALLATION:
 ===================  
-### Hinweis für ältere Kodi-Versionen (Leia, Krypton): für die Erstinstallation muss die [Krypton-Version](https://repo.kodinerds.net) auf kodinerds.net verwendet werden. Dies gilt auch für ein Downgrade einer Kodi-Matrix-Version zu Leia, Krypton.
+### Hinweis für ältere Kodi-Versionen (Leia, Krypton): für die Erstinstallation muss die [Krypton-Version](https://repo.kodinerds.net/index.php?action=list&scope=all&version=krypton/) auf kodinerds.net verwendet werden. Dies gilt auch für ein Downgrade einer Kodi-Matrix-Version zu Leia, Krypton.
 
-- <b>Matrix-Version:</b>Download der zip-Datei [aktuelles Release](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) oder Download der aktuellen zip-Datei ARDundZDF im [kodinerds-Repo](https://repo.kodinerds.net)
-- <b>Leia-Version:</b> Download der aktuellen zip-Datei ARDundZDF im [kodinerds-Repo, im Tab Kodi-Version Kodi 17 (Krypton) auswählen](https://repo.kodinerds.net) 
+- <b>Nexus-Version:</b> Download der aktuellen zip-Datei ARDundZDF im [kodinerds-Repo, im Tab Kodi-Version Kodi 17 (Nexus) auswählen](https://repo.kodinerds.net/index.php?action=list&scope=all&version=nexus/) 
+- <b>Matrix-Version:</b>Download der zip-Datei [aktuelles Release](https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest) oder Download der aktuellen zip-Datei ARDundZDF im [kodinerds-Repo](https://repo.kodinerds.net/index.php?action=list&scope=all&version=matrix/)
+- <b>Leia-Version:</b> Download der aktuellen zip-Datei ARDundZDF im [kodinerds-Repo, im Tab Kodi-Version Kodi 17 (Krypton) auswählen](https://repo.kodinerds.net/index.php?action=list&scope=all&version=krypton/) 
 - zip-Datei mittels Kodi-Menü Addons/Addon-Browser installieren
 - nur falls die Abhängigkeit zum Modul kodi-six bemängelt wird: Download und Installation des Moduls [script.module.kodi-six.zip](https://github.com/romanvm/kodi.six/releases)
 - Addon öffen und Addon-Einstellungen anpassen
@@ -168,6 +169,10 @@ Videoformate ZDF Mediathek 1:
 Videoformate ZDF Mediathek 2:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Videoformate_ZDF_Mediathek-2.png)
+
+Videoformate Arte Mediathek:
+===================  
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Videoformate_Arte_Mediathek.png)
 
 TV Livesender Vorauswahl:
 ===================  
