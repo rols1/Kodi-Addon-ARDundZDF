@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!-- 	<nr>6</nr>	# Numerierung für Einzelupdate -->
+<!-- 	<nr>7</nr>	# Numerierung für Einzelupdate -->
 <settings> 
     <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
@@ -14,7 +14,7 @@
       	<setting label="Arte-Kategorien verwenden" type="bool" id="pref_use_arte" default="false"/>
       	<setting label="MediathekViewWeb-Suche verwenden" type="bool" id="pref_use_mvw" default="false"/>
     <setting type="sep"/>
-   	<setting label="TV-Live-Sender: mit aktueller Sendung im Titel - dauert länger" type="bool" id="pref_use_epg" default="false"/>
+   	<setting label="TV-Live-Sender: aktuelle Sendung zeigen - dauert länger" type="bool" id="pref_use_epg" default="false"/>
    	<setting label="Inhaltstext zu Video im Voraus laden - kann sehr lange dauern!" type="bool" id="pref_load_summary" default="false"/>
 	<setting type="sep"/>
 	<setting label="TV-Live / Videos: Sofortstart statt Auflösungen und Download" type="bool" id="pref_video_direct" default="true"/>
