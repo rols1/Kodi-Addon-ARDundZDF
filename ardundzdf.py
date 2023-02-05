@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>86</nr>										# Numerierung für Einzelupdate
+# 	<nr>87</nr>										# Numerierung für Einzelupdate
 VERSION = '4.6.0'
-VDATE = '02.02.2023'
+VDATE = '05.02.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -686,14 +686,14 @@ def InfoAndFilter():
 		fanart=R(FANART), thumb=R("icon-clear.png"), tagline=tag, summary=summ, fparams=fparams)	
 
 	
-	addon_id='inputstream.adaptive'; cmd="openSettings"	
+	addon_id='inputstream.adaptive'; cmd="openSettings"		# Settings inputstream-Addon öffnen
 	try:													# Check inputstream-Addon
 		inp_vers = xbmcaddon.Addon(addon_id).getAddonInfo('version')
 	except:
 		inp_vers=""
 	PLog("inp_vers: " + inp_vers)			
 	if inp_vers:
-		title = u"Settings inputstream.adaptive-Addon öffnen"		# Settings inputstream-Addon öffnen
+		title = u"Settings inputstream.adaptive-Addon (v%s) öffnen" % inp_vers
 		akt="EIN"
 		if SETTINGS.getSetting('pref_UT_ON') == "false":
 			akt="AUS"
@@ -6042,6 +6042,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 #	Ermittlung Streamlinks im Web (link: ARDSource, ZDFsource)
 # 26.05.2022 ergänzt um Nutzung iptv_streamlinks für private Sender
 #	(link: IPTVSource)
+# 05.02.2023 addDir ergänzt mit EPG_ID für Kontextmenü
 #
 def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):			
 	# SenderLiveListe -> SenderLiveResolution (reicht nur durch) -> Parseplaylist (Ausw. m3u8)
@@ -6189,13 +6190,12 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 				continue
 			
 		epg_date=''; epg_title=''; epg_text=''; summary=''; tagline='' 
+		EPG_ID = stringextract('<EPG_ID>', '</EPG_ID>', element)	# -> EPG.EPG und Kontextmenü
+		PLog(EPG_ID)
 		# PLog(SETTINGS.getSetting('pref_use_epg')) 	# Voreinstellung: EPG nutzen? - nur mit Schema nutzbar
 		PLog('setting: ' + str(SETTINGS.getSetting('pref_use_epg')))
 		if SETTINGS.getSetting('pref_use_epg') == 'true':
 			# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis:
-			EPG_ID = stringextract('<EPG_ID>', '</EPG_ID>', element)
-			PLog(EPG_ID); PLog(EPG_ID_old);
-
 			try:
 				rec = EPG.EPG(ID=EPG_ID, mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
 				if rec == '':								# Fehler, ev. Sender EPG_ID nicht bekannt
@@ -6251,7 +6251,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s', 'descr': '%s'}" % (quote(link), 
 			quote(img), quote(title), quote(descr))
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=fanart, thumb=img, 
-			fparams=fparams, summary=summary, tagline=tagline, mediatype=mediatype)		
+			fparams=fparams, summary=summary, tagline=tagline, mediatype=mediatype, EPG_ID=EPG_ID)		
 	
 	#  if onlySender== '':		# obsolet seit V4.4.2 
 	# RP3b+: Abstürze möglich beim Öffen der Regional-Liste, Log: clean up-Problem mit Verweis auf classes:
