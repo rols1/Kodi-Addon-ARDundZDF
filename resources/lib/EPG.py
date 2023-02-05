@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
 #	Stand: 05.02.2023
 #	
  
@@ -177,7 +177,7 @@ def update_single(PluginAbsPath):
 	title = u"Einzelupdate - eigene Auswahl oder Liste?"
 	msg1 = u"Vor Einzelupdate eigene Auswahl vornehmen?"
 	msg2 = u"Ohne eigene Auswahl wird die  komplette Liste abgeglichen (%s Dateien)" % len(SINGLELIST)
-	ret = util.MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False,  yes='eigene Auswahl', cancel='komplette Liste', 
+	ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False,  yes='eigene Auswahl', cancel='komplette Liste', 
 		heading=title)												# False: ESC, komplette Liste
 	single = ret													# True = eigene Auswahl	
 	PLog("single: " + str(single))		
@@ -203,7 +203,7 @@ def update_single(PluginAbsPath):
 	msg1 = u"Einzelupdate ersetzt lokale Dateien nach Abgleich mit den entsprechenden Dateien im Github-Repo" 
 	msg1 = u"%s (Abgleich: [B]%d[/B] von [B]%d[/B] Dateien)" % (msg1, len(ret_list), len(SINGLELIST))
 	msg2 = u"Einzelupdate starten?"
-	ret = util.MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='JA', heading=title)
+	ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='JA', heading=title)
 	if ret != 1:
 		return
 
