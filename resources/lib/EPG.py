@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
-#	Stand: 31.12.2022
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.02.2023
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -29,13 +29,17 @@ if PYTHON2:
 elif PYTHON3:
 	from urllib.request import urlopen
 
-import resources.lib.util as util
-R=util.R; RLoad=util.RLoad; RSave=util.RSave;Dict=util.Dict; PLog=util.PLog; 
-addDir=util.addDir; get_page=util.get_page;
-stringextract=util.stringextract; blockextract=util.blockextract; 
-transl_wtag=util.transl_wtag; cleanhtml=util.cleanhtml; home=util.home;
-unescape=util.unescape; get_ZDFstreamlinks=util.get_ZDFstreamlinks;
-up_low=util.up_low; MyDialog=util.MyDialog
+context=False
+try:											
+	from util import *						# Aufruf Kontextmenü
+	err="callfrom_context"
+	context=True
+except Exception as exception:
+	err=str(exception) 
+	err= "%s | callfromstart_script" % err
+	from resources.lib.util import *		# Aufruf start_script (Haupt-PRG)
+PLog(err)
+
 
 ADDON_ID 	= 'plugin.video.ardundzdf'
 SETTINGS 	= xbmcaddon.Addon(id=ADDON_ID)
@@ -496,5 +500,41 @@ def get_unixtime(day_offset=None, onlynow=False):
 		
 	return now,today,today_5Uhr,nextday,nextday_5Uhr
 #----------------------------------------------------------------  
-
+		
+if context:														# Aufruf Kontextmenü
+	params = str(sys.argv)
+	PLog("params: " + params)
+	title =  stringextract("title': '", "'", params)
+	name =  stringextract("title': '", "'", params)
+	ID =  stringextract("ID': '", "'", params)
+	PLog("title: %s, ID: %s" % (title, ID))
+	EPG_rec = EPG(ID, day_offset=0)
+	
+	cnt=0
+	for rec in EPG_rec:
+		sname=rec[3]
+		if 'JETZT' in sname:
+			PLog(str(rec))
+			break
+		cnt=cnt+1
+	EPG_rec = EPG_rec[cnt:]
+	
+	lines=[]
+	for rec in EPG_rec:
+		sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6];	# alle Indices s. EPG
+		sname = sname.split("|")[2]								# So | JETZT: 15:55 | Weltcup-Skispringen
+		sname = sname.replace("[/B]", "")
+		sname = "%s | %s" % (vonbis,sname)
+		lines.append("[B]%s[/B]\n%s\n" % (sname, summ))
+				
+	lines =  "\n".join(lines)
+	xbmcgui.Dialog().textviewer(title , lines ,usemono=True)
+		
+		
+		
+		
+		
+		
+		
+		
 		

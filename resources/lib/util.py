@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>36</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.02.2023
+# 	<nr>37</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -685,9 +685,10 @@ def up_low(line, mode='up'):
 # 	04.07.2020 Erweiterung Kontextmenüs "Sendung aufnehmen" (EPG_ShowSingle)
 # 	08.07.2020 Erweiterung Kontextmenüs "Recording TV-Live" (EPG_ShowAll)  
 # 	18.04.2022 Erweiterung Kontextmenüs "Abgleich Videotitel mit Medienbibliothek" 
+#	05.02.2023 Erweiterung Kontextmenüs EPG (Menü TV-Livestreams)
 #
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='',\
-		cmenu=True, sortlabel='', merkname='', start_end=''):
+		cmenu=True, sortlabel='', merkname='', start_end='', EPG_ID=''):
 	PLog('addDir:');
 	label_org=label				# s. 'Job löschen' in K-Menüs
 	label=py2_encode(label)
@@ -743,8 +744,12 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_setting_sofortstart=''; fparams_sorting=''; 
 		fparams_do_folder=''; fparams_rename=''; 
 		fparams_playlist_add=''; fparams_playlist_rm='';fparams_playlist_play=''
-		fparams_strm=''; fparams_exist_inlib=''							
-	
+		fparams_strm=''; fparams_exist_inlib=''; fparams_EPG='';
+		
+		if EPG_ID:														# EPG für Sender zeigen
+			fp = {'title': label, 'ID': EPG_ID}
+			fparams_EPG = "&fparams={0}".format(fp)
+			PLog("fparams_EPG: " + fparams_EPG[:80])	
 
 		if SETTINGS.getSetting('pref_exist_inlib') == 'true':			# Abgleich Medienbibliothek
 			if mediatype == "video":
@@ -1010,6 +1015,13 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				dirID = "resources.lib.strm.exist_in_library"
 				commands.append(('Abgleich mit Medienbibliothek', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 						% (MY_SCRIPT, HANDLE, dirID, fparams_exist_inlib)))		
+
+		if fparams_EPG:															# EPG für Sender anzeigen
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/EPG.py' % (ADDON_ID))
+			PLog("MY_SCRIPT:" + MY_SCRIPT)		
+			dirID = "resources.lib.EPG.EPG"
+			commands.append(('EPG zeigen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
+					% (MY_SCRIPT, HANDLE, dirID, fparams_EPG)))
 
 		li.addContextMenuItems(commands)				
 	
