@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>6</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.01.2023
+# 	<nr>7</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1516,6 +1516,7 @@ def get_zdfplayer_content(li, page):
 def SingleBeitrag(title, path, img_src, summ, dauer):
 	PLog('SingleBeitrag: ' + title)
 	PLog(dauer);PLog(summ);PLog(path)
+	path_org = path
 	
 	Plot	 = title
 	Plot_par = summ										# -> PlayVideo
@@ -1579,11 +1580,13 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 	page = (page.replace('\\', '').replace('": "', '":"'))
 	PLog(page[:100])
 
-	videodat	= blockextract('ptmd-template":"',page)		# mehrfach möglich
-	videodat	= videodat[-1]								# letzte ist relevant
-	videodat_url= stringextract('ptmd-template":"', '"', videodat)
-	video_ID = videodat_url.split('/')[-1]					#  ID z.B. 190521_sendung_nano
-	videodat_url = 'https://api.3sat.de/tmd/2/ngplayer_2_3/vod/ptmd/3sat/' + video_ID
+	player = "ngplayer_2_4"
+	pos = page.find('"programmeItem"')
+	page = page[max(0, pos):]
+	streams = stringextract('streams":', '}}', page)	# in "mainVideoContent":..
+	videodat_url= stringextract('ptmd-template":"', '"', streams)
+	videodat_url = "https://api.3sat.de" + videodat_url
+	videodat_url = videodat_url.replace('{playerId}', player)
 	PLog("videodat_url: " + videodat_url)
 	page,msg = get_page(path=videodat_url, header=headers)
 	
@@ -1633,7 +1636,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 	#
 	thumb=img_src; sub_path=''; scms_id=''
 	HLS_List,MP4_List,HBBTV_List = build_Streamlists(li,title,thumb,geoblock,tagline,\
-		sub_path,formitaeten,scms_id,ID="3sat")
+		sub_path,formitaeten,scms_id,ID="3sat",weburl=path_org)
 					
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
