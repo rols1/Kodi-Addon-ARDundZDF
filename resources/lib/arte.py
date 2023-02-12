@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>24</nr>										# Numerierung für Einzelupdate
-#	Stand: 31.01.2023
+# 	<nr>25</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -901,7 +901,7 @@ def Kategorien():
 # 2 Durchläufe: 1. Liste Cluster, 2. Cluster-Details
 # Mehr-Seiten:  -> get_ArtePage mit katurl, ohne Dict_ID
 # 14.01.2023 json-Auswertung
-# 
+# 12.02.2023 json-keys geändert
 def ArteCluster(pid='', title='', katurl=''):
 	PLog("ArteCluster: " + pid)
 	PLog(title); PLog(katurl); 
@@ -912,14 +912,12 @@ def ArteCluster(pid='', title='', katurl=''):
 	katurl_org=katurl
 
 	page = get_ArtePage('ArteCluster', title, path=katurl)		
-	page = page["pageProps"]["initialPage"]
-	PLog(len(page))
 	
 	try:											# s.a. GetContent
-		if "value" in page:							# nach 13.01.2021
-			values = page["value"]["zones"]
-		else:										# vor 13.01.2021
-			values = page["zones"]
+		page = page["pageProps"]["props"]["page"]["value"]
+		PLog(str(page)[:100])
+		PLog(len(page))
+		values = page["zones"]
 	except Exception as exception:
 		PLog("json_error: " + str(exception))
 		values=[]
@@ -1078,15 +1076,15 @@ def get_ArtePage(caller, title, path, header=''):
 	else:
 		if page.startswith('{"tag":"Ok"'):			# json-Daten pur
 			page = json.loads(page)
-		else:										# json-Daten extrahieren
-			mark1 = '{"pageProps'; mark2 = '__N_SSP":true}'		
+		else:										# json-Daten extrahieren RFC 7159
+			mark1 = '"pageProps'; mark2 = ',"page":"/'	# angepasst  12.02.2023	
 			pos1 = page.find(mark1)
 			pos2 = page.find(mark2)
 			PLog(pos1); PLog(pos2)
-			if pos1 < 0 and pos2 < 0:
-				PLog("json-Daten fehlen")
+			if pos1 < 0 or pos2 < 0:
+				PLog("json_data_failed")
 				page=''									# ohne json-Bereich: leere Seite
-			page = page[pos1:pos2+len(mark2)]
+			page = "{" + page[pos1:pos2]
 			page = json.loads(page)			
 
 	#RSave('/tmp/x.json', py2_encode(page))	# Debug	
