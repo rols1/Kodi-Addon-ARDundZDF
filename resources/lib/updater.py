@@ -12,8 +12,8 @@
 #	13.04.2020 Aktualisierung adjust_AddonXml
 # 	28.01.2023 Aktualisierung adjust_line für Kodi 20 Nexus
 ################################################################################
-# 	<nr>1</nr>								# Numerierung für Einzelupdate
-#	Stand: 28.01.2023
+# 	<nr>2</nr>								# Numerierung für Einzelupdate
+#	Stand: 12.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -202,6 +202,7 @@ def adjust_AddonXml():
 	return	
 
 #------------------------------
+# 12.02.2023 Punkt in re.search(u'(\d+).' enfernt (ValueError)
 def adjust_line(line):
 	PLog('adjust_line:')
 	KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
@@ -209,7 +210,7 @@ def adjust_line(line):
 	new_line = line
 
 	try:
-		vers = re.search(u'(\d+).', KODI_VERSION).group(0)
+		vers = re.search(u'(\d+)', KODI_VERSION).group(0)
 	except Exception as exception:
 		PLog(str(exception))
 		vers = "19"														# Default Matrix
