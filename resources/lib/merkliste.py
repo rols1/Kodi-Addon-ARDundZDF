@@ -7,7 +7,7 @@
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
 # 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.01.2023
+#	Stand: 05.02.2023
 #
 
 from __future__ import absolute_import
@@ -34,8 +34,6 @@ elif PYTHON3:
 	except:
 		pass
 
-#from util import PLog, stringextract, ReadFavourites, RSave, R, check_AddonXml,\
-#					MyDialog, RLoad, blockextract, get_keyboard_input, exist_in_list
 try:											
 	from util import *						# Aufruf Kontextmenü
 	err="callfrom_context"

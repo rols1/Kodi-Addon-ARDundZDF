@@ -10,6 +10,30 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+12.02.2023 4.6.1
+			GetContent (Modul arte): '\n'-Ersetzung in summary (router-kompatibel).
+			build_Streamlists_buttons: UHD-Kennzeichnung im Titel der HLS-Liste für
+			Arte ergänzt.
+			time_translate (Modul util): Ergänzung Tabelle summer_time mit Sommerzeit
+			2023 (rel. ab 27.03.). 
+			Settings "Modul-Einstellungen": Text "Inhaltstyp TV-Shows" ergänzt mit 
+			"zeigt Abspielstatus für Videos".
+			PlayVideo(Modul util): seek für ARD-Livestream bei Nutzung des inputstream-
+			Addons entfernt (Zeit-Puffer wird bei Leia, Matrix, Nexus korrekt gesetzt). 
+			README, Wicki: aktualisiert (kodinerds-Links, Bilder).
+			Modul EPG: flexiblere Importanweisung für util-Modul (Haupt-PRG/Kontextmenü),
+			notwendig für Kontext-Option "EPG".
+			Menü TV-Livestreams: ergänzt mit Kontext-Option "EPG", Anpassungen in addDir
+			(util) und Modul EPG.
+			Modul my3sat: HBBTV-Quellen ergänzt - Anpassungen SingleBeitrag (Param weburl
+			für build_Streamlists -> m3satSourcesHBBTV), neue Funktionen m3satSourcesHBBTV
+			und form_HBBTV_Streams, Nutzung add_UHD_Streams (bisher keine gefunden).
+			SingleBeitrag (my3sat): Ermittlung videodat_url aktualisiert (Lokalisierung,
+			ngplayer_2_3 -> ngplayer_2_4).
+			get_pagination (ARDnew): Sicherung 'null' ergänzt.
+			ARDStart (ARDnew): Ergänzung für regionale Inhalte nach Katalog (Sender, Titel,
+			Url).		
+
 31.01.2023 4.6.0
 			build_Streamlists_buttons: UHD-Kennz. im Titel bei UHD-Streams in den 
 			Stream-Listen.
@@ -18,7 +42,7 @@ CHANGE HISTORY
 			adjust_line ergänzt (addon id, python-Version).
 			Main_NEW (ARDnew): Status CurSender angepasst für Kodi Nexus ->
 			(up_low(str(CurSender))).
-			util: fehlender Abgleich für Anpassung an Kodi 10 Nexus ergänzt.
+			util: fehlenden Abgleich für Anpassung an Kodi 10 Nexus ergänzt.
 			get_streams_api_v2 (Modul arte): Ergänzung HLS-Liste mit UHD-Streams.
 
 22.01.2023 4.5.9

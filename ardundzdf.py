@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>88</nr>										# Numerierung für Einzelupdate
-VERSION = '4.6.0'
-VDATE = '10.02.2023'
+VERSION = '4.6.1'
+VDATE = '12.02.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -395,7 +395,7 @@ def Main():
 			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 	
 	title="Suche in ARD und ZDF"
-	tagline = 'gesucht wird in [B]ARD  Mediathek [/B]und [B]ZDF Mediathek[/B].'
+	tagline = 'gesucht wird in [B]ARD  Mediathek, ZDF Mediathek[/B] und [B]Merkliste[/B].'
 	summ = u"Tools für die Suchwortliste: Menü [B]Suchwörter bearbeiten[/B] (siehe Infos + Tools)."
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 

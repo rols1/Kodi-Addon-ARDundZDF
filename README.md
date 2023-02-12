@@ -2,7 +2,7 @@ Kodi-Addon-ARDundZDF
 ===================
 
 Addon für Kodi / XBMC (Kodi-Version von [Plex-Plugin ARDundZDF](https://github.com/rols1/ARDundZDF)).<br>
-Ab Version 2.2.5 für Kodi-Leia und -Matrix geeignet (Python2- / Python3-kompatibel).<br>
+Ab Version 2.2.5 für Kodi-Krypton, -Leia, -Matrix und -Nexus  geeignet (Python2- / Python3-kompatibel).<br>
 Mit Inhalten der Mediatheken von ARD und ZDF, 3Sat, funk, phoenix, KIKA und ZDFtivi, tageschau.de, Arte-Kategorien,
 einschließlich Live-TV mit Aufnahmefunktion (ffmpeg erforderlich), Live-Radio, Podcasts.<br>
 
@@ -10,7 +10,7 @@ Für die ZDF Mediathek kann wahlweise die kompakte Version ZDFmobile genutzt wer
 
 Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-ARDundZDF/total.svg "Downloads")
-<b>(Kodi Matrix)</b> oder [kodinerds-Repo](https://repo.kodinerds.net) <b>(Kodi Krypton, Leia, Kodi Matrix)</b> - siehe INSTALLATION.
+<b>(Kodi Matrix)</b> oder [kodinerds-Repo](https://repo.kodinerds.net) <b>(Kodi-Krypton, -Leia, -Matrix und -Nexus)</b> - siehe INSTALLATION.
 
 Plex hat die Unterstützung für Plugins in seinen Client-Softwarepaketen eingestellt. Die Repos für die Plex-Versionen [Plex-Plugin-ARDMediathek2016](https://github.com/rols1/Plex-Plugin-ARDMediathek2016) und [ARDundZDF](https://github.com/rols1/ARDundZDF) habe ich im März 2022 gelöscht (dto. FlickrExplorer, TuneIn2017, Shoutcast2017).<br>
 
@@ -71,7 +71,7 @@ Funktionen:
 - Rubriken
 - Sport
 - Sender (Sendungen einzelner Radiosender)
-- FUNK-Podcasts - Pop und Szene
+- funk: Das Content-Netzwerk von ARD und ZDF
 - Podcast-Favoriten (manuell erweiterbar)
 
 #### TV-Live-Streams mit Aufnahmefunktion: 
@@ -81,9 +81,9 @@ Funktionen:
 #### Radio-Live-Streams der ARD:
 - alle Radiosender von Bayern, HR, mdr, NDR, Radio Bremen, RBB, SR, SWR, WDR, Deutschlandfunk. Insgesamt 10 Stationen, 65 Sender
  
-#### Videobehandlung ARD Mediathek und ZDF Mediathek:
+#### Videobehandlung (Setting: Sofortstart AUS):
 - Livestreams: Auflistung der verfügbaren Angebote an Bandbreiten + Auflösungen (falls verfügbar: Audio ohne Video)
-- Videoclips: Auflistung der verfügbaren Angebote an Qualitätstufen sowie zusätzlich verfügbarer Videoformate (Ausnahme HDS + SMIL) 
+- Videoclips: Auflistung der verfügbaren Angebote an Qualitätstufen sowie zusätzlich verfügbarer Videoformate (Bsp. UHD) 
 
 #### Downloadoption (ab Version 2.6.8 ohne cURL/wget)
 - Download von Videos im ARD-Bereich
@@ -92,12 +92,17 @@ Funktionen:
 - Download von Podcasts - bei Podcast-Favoriten zusätzlich Sammeldownloads (aktuelle Liste der Beiträge)
 
 #### Addon-Tools
-- Einzelupdate für einzelne Dateien und Module im Addon - siehe auch Updates
+- Addon-Infos mit Angaben zum System, Cache, zu Dateipfaden und Modulen
+- "Zuletzt gesehen"-Liste
+- Tools zum Bearbeiten von Ausschluss-Filtern (ARD, ZDF)
+- Bereinigung der Merkliste
+- Tools zum Bearbeiten von Suchwörtern (ARD, ZDF)
 - Tools zum Bearbeiten des Download-Verzeichnisses (Verzeichnisse festlegen, Verschieben, Löschen)
 - Tools zum Bearbeiten von strm-Listen für Serien (ARD, ZDF), einschl. autom. Überwachung im Hintergrund
-- Tools zum Bearbeiten von Ausschluss-Filtern (ARD, ZDF)
-- Tools zum Bearbeiten von Suchwörtern (ARD, ZDF)
-- Addon-Infos mit Angaben zum System, Cache, zu Dateipfaden und Modulen
+- Tools zum Bearbeiten der addon-internen Playlist
+- Kodis Thumbnails-Ordner bereinigen
+- Settings inputstream.adaptive-Addon öffnen (Bandbreite, Auflösung und weitere Einstellungen)
+- Einzelupdate für einzelne Dateien und Module im Addon - siehe auch Updates
 
 #### Favoriten, Merkliste, strm-Dateien
 - Kodi-Favoriten lassen sich einblenden und im Addon aufrufen
@@ -118,8 +123,8 @@ Funktionen:
 - Arte-Kategorien
 - "Zuletzt gesehen"-Funktion (im Tools-Menü)
 - Video-Playlist einschl. Archiv-Funktion (im Tools-Menü)
-- strm-Modul
-- Suchfunktion für MediathekView (s. Credits)
+- strm-Modul, einschließlich Serien-Überwachung
+- Suche im Datenbestand von MediathekView (s. Credits)
 
 
 INSTALLATION:

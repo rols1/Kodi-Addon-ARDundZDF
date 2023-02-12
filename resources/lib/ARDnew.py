@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>27</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.01.2023
+#	Stand: 12.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -266,7 +266,8 @@ def ARDStart(title, sender, widgetID='', path=''):
 	
 	CurSender = Dict("load", 'CurSender')		
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
-	PLog(sender)	
+	senderimg = img
+	PLog(sender); PLog(img)	
 	summ = 'Mediathek des Senders [B] %s [/B]' % sendername
 		
 	li = xbmcgui.ListItem()
@@ -299,6 +300,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 	PLog(len(container))
 	title_list=[]											# für Doppel-Erkennung
 
+	cnt=0
 	for cont in container:
 		tag=""; summ=""
 		descr =  stringextract('"description":"', '"', cont)
@@ -340,7 +342,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 		
 		PLog('Satz_cont1:');
 		func = "ARDStartRubrik"								# Default-Funktion
-		if "Unsere Region" in title:				
+		if "Unsere Region" in title:						# nur in Startseite ARD-Alle				
 			items = Dict("load", 'ARD_REGION')
 			rname = "Berlin"; partner = "rbb"
 			if "|" in str(items):
@@ -348,6 +350,17 @@ def ARDStart(title, sender, widgetID='', path=''):
 			tag = u"aktuelle Region: [B]%s[/B]" % rname
 			summ = u"Partnersender: [B]%s[/B]" % partner
 			func = "ARDStartRegion"							# neu ab 29.06.2022
+		
+		if cnt == 1:										# neu ab 12.02.2023: ev. "Regionales"-Menü hinter Stage
+			regio_kat = [									# nach Bedarf ergänzen + auslagern
+				"mdr|MDR+|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9tZHJwbHVz"
+				]
+			for item in regio_kat:
+				region, title, path = item.split("|")
+				if region == sender:
+					img = R(senderimg)
+					tag = "besondere regionale Inhalte des %s" % up_low(sender)
+					break
 			
 		PLog(path); PLog(title); PLog(ID); PLog(anz); PLog(img); 
 		path=py2_encode(path); title=py2_encode(title); 
@@ -355,7 +368,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 			(quote(path), quote(title), ID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.%s" % func, fanart=img, thumb=img, 
 			tagline=tag, summary=summ, fparams=fparams)
-			
+		cnt=cnt+1	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -679,7 +692,7 @@ def get_pagination(page):
 	href = href.replace('{', '')							# { statt " möglich		
 	PLog('href_akt: %s' % href)
 	PLog('pageNumber: %s, pageSize: %s, totalElements:%s ' % (pageNumber, pageSize, totalElements))
-	if pageSize == '' or totalElements == '':				# Sicherung 
+	if pageSize == '' or totalElements == '' or totalElements == 'null':	# Sicherung 
 		return "", "", "", "", ""
 	
 	next_path=''; pN=''
