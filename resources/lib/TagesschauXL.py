@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>5</nr>								# Numerierung für Einzelupdate
-#	Stand: 28.01.2023
+# 	<nr>6</nr>								# Numerierung für Einzelupdate
+#	Stand: 14.02.2023
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -45,6 +45,7 @@ import string
 # import ardundzdf reicht nicht für thread_getpic
 from ardundzdf import *					# transl_wtag, get_query, thread_getpic, 
 										# ZDF_SlideShow, Parseplaylist, test_downloads
+from resources.lib.ARDnew import get_page_content	# ARD_bab										
 from resources.lib.util import *
 
 
@@ -79,7 +80,7 @@ ARD_20Uhr 		= 'https://www.tagesschau.de/sendung/tagesschau/index.html'
 ARD_Gest 		= 'https://www.tagesschau.de/sendung/tagesschau_mit_gebaerdensprache/index.html'
 ARD_tthemen 	= 'https://www.tagesschau.de/sendung/tagesthemen/index.html'
 ARD_Nacht 		= 'https://www.tagesschau.de/sendung/nachtmagazin/index.html'
-ARD_bab 		= 'https://www.tagesschau.de/bab/index.html'
+ARD_bab 		= 'https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL2Rhc2Vyc3RlLmRlL2JlcmljaHQgYXVzIGJlcmxpbg?pageNumber=0&pageSize=12'
 ARD_Archiv 		= 'https://www.tagesschau.de/multimedia/video/videoarchiv2~_date-%s.html'	# 02.02.2021
 ARD_Fakt		= 'https://www.tagesschau.de/investigativ/faktenfinder/'					# 02.02.2021
 Podcasts_Audios	= 'https://www.tagesschau.de/multimedia/audio'
@@ -206,7 +207,7 @@ def Main_XL():
 		
 	# ---------------------------------							# in menu_hub Direktsprung zu get_content:	
 	title = 'Bericht aus Berlin'
-	tag = u"aktuelle Beiträge - mehr im Sendungsarchiv (jeweils sonntags)"
+	tag = u"In Berichten, Interviews und Analysen beleuchtet <Bericht aus Berlin> politische Sachthemen und die Persönlichkeiten, die damit verbunden sind."
 	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
 		(quote(title), quote(ARD_bab), 'ARD_bab', quote(ICON_BAB))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
@@ -294,24 +295,14 @@ def menu_hub(title, path, ID, img):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')			# Home-Button
 	
-	li = get_content(li, page, ID=ID, path=path)
+	# Archiv 'Bericht aus Berlin': von ARD umgestellt auf api
+	# 
+	if ID == 'ARD_bab':							# 14.02.2023 umgestellt auf api
+		mark=''; ID="XL_menu_hub"
+		li = get_page_content(li, page, ID, mark)
+	else:
+		li = get_content(li, page, ID=ID, path=path)
 	
-	# Archiv 'Bericht aus Berlin': enthält weitere Beiträge eines Monats (java-script -
-	#	hier nicht zugänglich, s. id="monthselect") 
-	if ID == 'ARD_bab':							# 3 Buttons aus Sendungsarchiv anhängen
-		ressort = stringextract('ressort">Sendungsarchiv', '</ul>', page)
-		hreflist = blockextract('<a href', ressort)
-		for link in hreflist:
-			PLog("Archiv: " + link)
-			href =  stringextract('href="', '"', link)
-			href = BASE_URL + href
-			title= stringextract('.html">', '</a>', link) 
-			title= "[COLOR red]Archiv: [/COLOR]" + title
-			tag = u"Auszug aus dem Sendungsarchiv - mehr im Menü Sendungsarchiv"
-			fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-				(quote(title), quote(href), 'ARD_bab', quote(ICON_BAB))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_BAB, 
-				thumb=ICON_BAB, tagline=tag, fparams=fparams)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
@@ -508,14 +499,13 @@ def XL_Search(query='', pagenr=''):
 
 # ----------------------------------------------------------------------
 # mark dient der Farbmarkierung bei ID='Search' 
+# 14.02.2023 ARD_bab hier entfernt (umgestellt auf api, s. menu_hub)
 #
 def get_content(li, page, ID, mark='', path=''):	
 	PLog('get_content:')
 	PLog(len(page)); PLog(ID);
 	
-	if  ID=='Search':
-		content =  blockextract('class="teaser">', page)
-	if ID=='ARD_bab' or ID=='ARD_Bilder':
+	if  ID=='Search' or ID=='ARD_Bilder':
 		content =  blockextract('class="teaser">', page)
 	if ID=='ARD_Blogs' or ID=='ARD_kurz'  or ID=='ARD_Archiv_Day':
 		content =  blockextract('class="teaser" >', page)
@@ -553,7 +543,7 @@ def get_content(li, page, ID, mark='', path=''):
 			 
 			
 		# hier relevante ID-Liste. ID's mit Direktsprüngen (s. menu_hub) haben XLGetSourcesHTML als Callback:
-		# Search, ARD_bab, ARD_Archiv, Podcasts_Audios, ARD_Bilder, ARD_kurz 
+		# Search, ARD_Archiv, Podcasts_Audios, ARD_Bilder, ARD_kurz 
 		teasertext='';	headline=''; dachzeile=''; teaser_typ=''; teaser_date=''
 		gallery_url='';	tagline=''; mp3_url=''; onlyGallery=False							
 		if ID=='Search':
@@ -571,21 +561,6 @@ def get_content(li, page, ID, mark='', path=''):
 			
 			teasertext = "%s | %s" % (dachzeile, teasertext.strip())
 			PLog(teasertext[:80])
-				
-		if ID=='ARD_bab':
-			headline = stringextract('class="headline">', '</h', rec)
-			dachzeile = stringextract('dachzeile">', '</p>', rec)				# fehlt im 1. Satz
-			if cnt == 1:
-				teasertext = stringextract('class="teasertext">', '|&nbsp', rec)	# 1. Satz mit Leerz. vor ", mit url + Typ
-				pos = rec.find('Ganze Sendung:')			# dachzeile im 1. Satz hier mit Datum
-				if pos:
-					headline = stringextract('>', '|&nbsp', rec[pos-1:])
-			else:
-				teasertext = stringextract('class="teasertext ">', '|&nbsp', rec)
-			if dachzeile:
-				tagline = dachzeile
-			else:
-				tagline = headline
 				
 		if ID=='ARD_Blogs' or ID=='ARD_kurz':
 			if cnt == 1 and ID=='ARD_Blogs':		# allg. Beschreibung in ARD_Blogs, 1. Satz
