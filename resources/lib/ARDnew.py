@@ -9,7 +9,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>28</nr>										# Numerierung für Einzelupdate
+# 	<nr>29</nr>										# Numerierung für Einzelupdate
 #	Stand: 15.02.2023
 
 # Python3-Kompatibilität:
@@ -356,9 +356,11 @@ def ARDStart(title, sender, widgetID='', path=''):
 			regio_kat = [									# nach Bedarf ergänzen + auslagern
 				"mdr|MDR+|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9tZHJwbHVz"
 				]
+			PLog("regio_check:"); PLog(sender)
 			for item in regio_kat:
-				region, title, path = item.split("|")
+				region, reg_title, reg_path = item.split("|")
 				if region == sender:
+					title=reg_title; path=reg_path
 					img = R(senderimg)
 					tag = "besondere regionale Inhalte des %s" % up_low(sender)
 					break
