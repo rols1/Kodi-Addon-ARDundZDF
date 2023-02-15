@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>27</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.02.2023
+# 	<nr>28</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -313,6 +313,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 		if title in title_list:								# Doppel? - s.o.
 			break
 		title_list.append(title)
+		title = repl_json_chars(title)
 				
 		ID	= stringextract('"id":"', '"', cont)
 		anz= stringextract('"totalElements":', '}', cont)
