@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>7</nr>										# Numerierung für Einzelupdate
+# 	<nr>8</nr>										# Numerierung für Einzelupdate
 #	Stand: 16.02.2023
 #	
  
