@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.02.2023
+# 	<nr>6</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.02.2023
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -29,11 +29,15 @@ if PYTHON2:
 elif PYTHON3:
 	from urllib.request import urlopen
 
+# für Python 2.* muss der  Aufruf Kontextmenü unterdrückt
+#	werden, sonst öffnet das Modul bei jedem Menüwechsel
+#	 ein leeres textvier-Fenster
 context=False
 try:											
 	from util import *						# Aufruf Kontextmenü
 	err="callfrom_context"
-	context=True
+	if 	check_AddonXml('"xbmc.python" version="3.'):
+		context=True
 except Exception as exception:
 	err=str(exception) 
 	err= "%s | callfromstart_script" % err
