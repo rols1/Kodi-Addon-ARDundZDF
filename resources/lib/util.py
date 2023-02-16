@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>37</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.02.2023
+# 	<nr>38</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -747,7 +747,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_strm=''; fparams_exist_inlib=''; fparams_EPG='';
 		
 		if EPG_ID:														# EPG für Sender zeigen
-			fp = {'title': label, 'ID': EPG_ID}
+			EPG_ID = py2_encode(EPG_ID)
+			fp = {'title': label, 'ID': EPG_ID, 'mode': 'context'}
 			fparams_EPG = "&fparams={0}".format(fp)
 			PLog("fparams_EPG: " + fparams_EPG[:80])	
 

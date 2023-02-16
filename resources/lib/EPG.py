@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>6</nr>										# Numerierung für Einzelupdate
+# 	<nr>7</nr>										# Numerierung für Einzelupdate
 #	Stand: 16.02.2023
 #	
  
@@ -29,26 +29,23 @@ if PYTHON2:
 elif PYTHON3:
 	from urllib.request import urlopen
 
+
 # für Python 2.* muss der  Aufruf Kontextmenü unterdrückt
 #	werden, sonst öffnet das Modul bei jedem Menüwechsel
-#	 ein leeres textvier-Fenster
-context=False
-try:											
-	from util import *						# Aufruf Kontextmenü
-	err="callfrom_context"
-	if 	check_AddonXml('"xbmc.python" version="3.'):
-		context=True
-except Exception as exception:
-	err=str(exception) 
-	err= "%s | callfromstart_script" % err
-	from resources.lib.util import *		# Aufruf start_script (Haupt-PRG)
-PLog(err)
-
+#	 ein leeres textviewer-Fenster
+if "'context'" in str(sys.argv):									# Aufruf Kontextmenü
+	from util import *
+	msg = "callfrom_context"
+else:
+	from resources.lib.util import *
+	msg = "callfrom_router"
+PLog(msg)
 
 ADDON_ID 	= 'plugin.video.ardundzdf'
 SETTINGS 	= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_PATH	= SETTINGS.getAddonInfo('path')
 EPG_BASE 	= "http://www.tvtoday.de"
+
 
 # EPG im Hintergrund laden - Aufruf Haupt-PRG (Kopfbereich) abhängig von 
 #	Setting pref_epgpreload + Abwesenheit von EPGACTIVE (Setting
@@ -352,6 +349,7 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		img = img.replace('159.', '640.')								# Format ändern "..4415_159.webp"
 		
 		sname = stringextract('class=\"h7 name\">', '</p>', liste[i])
+		sname = unescape(sname)
 		stime = stringextract('class=\"h7 time\">', '</p>', liste[i])   # Format: 06:00
 		stime = stime.strip()
 		summ = get_summ(liste[i])								# Beschreibung holen
@@ -505,15 +503,14 @@ def get_unixtime(day_offset=None, onlynow=False):
 	return now,today,today_5Uhr,nextday,nextday_5Uhr
 #----------------------------------------------------------------  
 		
-if context:														# Aufruf Kontextmenü
+if "'context'" in str(sys.argv):									# Aufruf Kontextmenü
 	params = str(sys.argv)
-	PLog("params: " + params)
+	PLog("context_params: " + params)
 	title =  stringextract("title': '", "'", params)
-	name =  stringextract("title': '", "'", params)
 	ID =  stringextract("ID': '", "'", params)
 	PLog("title: %s, ID: %s" % (title, ID))
 	EPG_rec = EPG(ID, day_offset=0)
-	
+
 	cnt=0
 	for rec in EPG_rec:
 		sname=rec[3]
@@ -522,7 +519,7 @@ if context:														# Aufruf Kontextmenü
 			break
 		cnt=cnt+1
 	EPG_rec = EPG_rec[cnt:]
-	
+
 	lines=[]
 	for rec in EPG_rec:
 		sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6];	# alle Indices s. EPG
