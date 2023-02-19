@@ -576,8 +576,9 @@ def Beitrag_Liste(url, title):
 # 21.04.2022 neuer api-Call (mit Authorization) aus Java-MServer von 
 #	MediathekView
 # 15.05.2022 Nutzung api_v2_Call (nur noch HLS-Quellen) plus api_opa_Call 
-#	(kurze Teaser-Streams statt vollständ. Videos möglich, im Addon
-#	werden MP4- und HBBTV-Quellen verwendet). 
+#	(kurze Teaser-Streams statt vollständ. Videos möglich). 
+# HBBTV: im Addon werden die MP4-HBBTV-Quellen aus api_opa_Call verwendet, 
+#	HBBTV_List entfällt hier. 
 #	Der Sofortstart findet hier statt (sonst build_Streamlists_buttons),
 #		um Rekursion (ohne Homebuttons) zu vermeiden (ev. Ursache mit
 #		Modulwechsel).
@@ -649,7 +650,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	HBBTV_List=[]
 	PLog("HLS_List: " + str(len(HLS_List)))
 	PLog("MP4_List: " + str(len(MP4_List)))
-	PLog("HBBTV_List: ohne (=MP4_list)")
+	PLog("HBBTV_List: in MP4_List")
 			
 	if not len(HLS_List) and not len(MP4_List):			
 		msg1 = u'SingleVideo: [B]%s[/B]' % title
@@ -690,7 +691,8 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	
 # ----------------------------------------------------------------------
 # Auslesen der Streamdetails api-v2-Call (nur HLS)
-# Arte verwendet bei HBBTV MP4-Formate wie ZDF (HLS_List bleibt leer)
+# Arte verwendet bei HBBTV MP4-Formate wie ZDF (HLS_List bleibt hier
+#	aber offenbar leer)
 #
 def get_streams_api_v2(page, title, summ):
 	PLog("get_streams_api_v2:")
@@ -775,7 +777,7 @@ def get_streams_api_v2(page, title, summ):
 	return trailer,HLS_List
 
 # ----------------------------------------------------------------------
-# Auslesen der Streamdetails api-opa-Call 
+# Streamdetails via api-opa-Call 
 # Arte verwendet bei HBBTV MP4-Formate wie ZDF (HLS_List bleibt leer)
 #
 def get_streams_api_opa(page, title,summ, mode="hls_mp4"):

@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>88</nr>										# Numerierung für Einzelupdate
-VERSION = '4.6.1'
-VDATE = '12.02.2023'
+VERSION = '4.6.2'
+VDATE = '19.02.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -10005,7 +10005,7 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	
 	# title_list: Titel + Dict-ID + Anzahl Streams
 	title_list.append("%s###%s###%s" % (title_hls, '%s_HLS_List' % ID, len(HLS_List)))
-	if ID == "ZDF" or ID == "arte" or ID == "3sat":			# HBBTV: ZDF, arte, 3sat
+	if ID == "ARDNEU" or ID == "ZDF" or ID == "arte" or ID == "3sat":			# HBBTV: ZDF, arte, 3sat
 		listtyp = "%s_HBBTV_List" % ID
 		title_list.append("%s###%s###%s" % (title_hb, listtyp, len(HBBTV_List)))	
 	title_list.append("%s###%s###%s" % (title_mp4, '%s_MP4_List' % ID, len(MP4_List)))	

@@ -10,6 +10,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+19.02.2023 4.6.2
+			adjust_line (updater): Fix invalid literal for int() with base 10: '19.'
+			arte-Modul: Anfang- und Ende-Markierungen embedded json-code aktualisiert
+			(get_ArtePage), json-keys in ArteCluster aktualisiert.
+			TagesschauXL: Umzug der Webseite (tagesschau.de -> ardmediathek.de), Url
+			aktualisiert (api-Call), Anpassung menu_hub (Nutzung ARDnew.get_page_content).
+			ARDStart (ARDnew): Fix quote marks in Titel (repl_json_chars(title)), Fix 
+			Titel und Path in regio_check + addDir-Button ergänzt.
+			Modul EPG: Laden des Moduls util abhängig sys.argv (leeres textviewer-Fenster
+			bei try/except-Variante), unescape für sname (Sendungstitel).
+			addDir ((util): py2_encode(EPG_ID) für Auswertung in Modul EPG.
+			Modul ARDnew: HBBTV-Quellen ergänzt, Umstellung MP4- + HLS-Quellen -> json, 
+			Anpassungen ARDStartSingle, ARDStartVideoHLSget, ARDStartVideoHBBTVget,
+			einschl. UHD-Erkennung.
+
 12.02.2023 4.6.1
 			GetContent (Modul arte): '\n'-Ersetzung in summary (router-kompatibel).
 			build_Streamlists_buttons: UHD-Kennzeichnung im Titel der HLS-Liste für

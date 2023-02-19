@@ -10,7 +10,7 @@
 #
 ################################################################################
 # 	<nr>30</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.02.2023
+#	Stand: 18.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -278,6 +278,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 		if sender == "ard":									# ab 30.07.2022 erford. (Moved Permanently)
 			path = BETA_BASE_URL + "/"
 	page, msg = get_page(path=path)			# vom Sender holen
+	path_org = path
 	
 	if '"widgets":' not in page:								# Fallback: Cache ohne CacheTime
 		page = Dict("load", 'ARDStartNEW_%s' % sendername)					
@@ -354,16 +355,21 @@ def ARDStart(title, sender, widgetID='', path=''):
 		
 		if cnt == 1:										# neu ab 12.02.2023: ev. "Regionales"-Menü hinter Stage
 			regio_kat = [									# nach Bedarf ergänzen + auslagern
-				"mdr|MDR+|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9tZHJwbHVz"
+				"mdr|MDR+|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9tZHJwbHVz",
+				"mdr|Sport im Osten|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9zZW5kZXJlaWhlbi82ODlhYzU5My1mOWFkLTQ3MTAtOTczMS1lMTNiZTEwODZkMGM"
 				]
 			PLog("regio_check:"); PLog(sender)
 			for item in regio_kat:
 				region, reg_title, reg_path = item.split("|")
 				if region == sender:
-					title=reg_title; path=reg_path
-					img = R(senderimg)
-					tag = "besondere regionale Inhalte des %s" % up_low(sender)
-					break
+					reg_img = R(senderimg)
+					reg_tag = "besondere regionale Inhalte des %s" % up_low(sender)
+					reg_path=py2_encode(reg_path); reg_title=py2_encode(reg_title); 
+					fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
+						(quote(reg_path), quote(reg_title), ID)
+					addDir(li=li, label=reg_title, action="dirList", dirID="resources.lib.ARDnew.%s" % func, fanart=reg_img, thumb=reg_img, 
+						tagline=reg_tag, fparams=fparams)
+					cnt=cnt+1
 			
 		PLog(path); PLog(title); PLog(ID); PLog(anz); PLog(img); 
 		path=py2_encode(path); title=py2_encode(title); 
