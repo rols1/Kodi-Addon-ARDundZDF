@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>30</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.02.2023
+# 	<nr>31</nr>										# Numerierung für Einzelupdate
+#	Stand: 19.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -355,14 +355,15 @@ def ARDStart(title, sender, widgetID='', path=''):
 		
 		if cnt == 1:										# neu ab 12.02.2023: ev. "Regionales"-Menü hinter Stage
 			regio_kat = [									# nach Bedarf ergänzen + auslagern
-				"mdr|MDR+|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9tZHJwbHVz",
-				"mdr|Sport im Osten|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9zZW5kZXJlaWhlbi82ODlhYzU5My1mOWFkLTQ3MTAtOTczMS1lMTNiZTEwODZkMGM"
+				"mdr|MDR+|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9tZHJwbHVz|https://api.ardmediathek.de/image-service/images/urn:ard:image:eab36fa8ffdb27da?w=640&ch=4bc0c7d930d596d9",
+				"mdr|Sport im Osten|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9zZW5kZXJlaWhlbi82ODlhYzU5My1mOWFkLTQ3MTAtOTczMS1lMTNiZTEwODZkMGM|https://api.ardmediathek.de/image-service/images/urn:ard:image:4b8aeaada557019e?w=1600&ch=50fb95aed76b8244&imwidth=1600"
 				]
 			PLog("regio_check:"); PLog(sender)
 			for item in regio_kat:
-				region, reg_title, reg_path = item.split("|")
+				region, reg_title, reg_path, reg_img= item.split("|")
 				if region == sender:
-					reg_img = R(senderimg)
+					if reg_img == "":
+						reg_img = R(senderimg)
 					reg_tag = "besondere regionale Inhalte des %s" % up_low(sender)
 					reg_path=py2_encode(reg_path); reg_title=py2_encode(reg_title); 
 					fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
@@ -431,7 +432,8 @@ def img_preload(ID, path, title, caller, icon=ICON_MAIN_ARD):
 	return fname										# lokaler img-Pfad
 	
 #---------------------------------------------------------------------------------------------------
-# Auflistung der Rubriken in json-Seite page
+# Auflistung der Rubriken in json-Inhalt page (json bei html-Seite
+#	in script id="fetchedContextValue")
 def ARDRubriken(li, page): 
 	PLog('ARDRubriken:')
 
@@ -669,6 +671,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
 #---------------------------------------------------------------------------------------------------
 # ermittelt aus page die Parameter für pagination oder AutoCompilationWidget (Scroll-Seiten Rubriken)
 # Rückgabe: Pfad mit inkrementierter pageNumber oder  leerer Pfad', falls Beiträge für weitere
