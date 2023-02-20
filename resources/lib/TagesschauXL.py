@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>6</nr>								# Numerierung für Einzelupdate
-#	Stand: 14.02.2023
+# 	<nr>7</nr>								# Numerierung für Einzelupdate
+#	Stand: 20.02.2023
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -1016,9 +1016,10 @@ def XLGetSourcesPlayer(title, Dict_ID, Plot, img):
 	PLog(Dict_ID)
 	
 	if Dict_ID.startswith('http'):
-		page, msg = get_page(path=Dict_ID)
-		conf = stringextract("data-config='", "'", page)			# json-Daten mit Video-/Audio-Link
+		page, msg = get_page(path=Dict_ID)							# json-Daten mit Video-/Audio-Link
+		conf = stringextract("data-config='", ',&quot;_sharing', page)	# quoted ohne Abschnitt services	
 		conf = unescape(conf); conf = conf.replace('\\"', '"')
+		conf = conf + '}}'											# json-komp.
 		if page == '' or conf == '':
 			conf=False	
 	else:	
@@ -1054,10 +1055,20 @@ def XLGetSourcesPlayer(title, Dict_ID, Plot, img):
 		geoblock = ' | Geoblock: JA'
 	else:
 		geoblock = ' | Geoblock: nein'
+		
+	try:
+		VideoObj = json.loads(conf)
+		mediaArray = VideoObj["mc"]["_mediaArray"][0]
+		StreamArray = mediaArray["_mediaStreamArray"]
+		PLog("VideoObj: %d, mediaArray: %d, StreamArray: %d" % (len(VideoObj),len(mediaArray), len(StreamArray)))		
+	except Exception as exception:
+		PLog(str(exception))
+		msg1 = u'keine Videoquellen gefunden'
+		PLog(msg1)
+		MyDialog(msg1, '', '')
+		return
 	
-	VideoUrls = blockextract('_quality', conf)
-	PLog(len(VideoUrls))
-	HLS_List,MP4_List,HBBTV_List = XLGetVideoLists(li, title, VideoUrls)
+	HLS_List,MP4_List,HBBTV_List = XLGetVideoLists(li, title, StreamArray)
 
 	if not len(HLS_List) and not len(MP4_List):
 		msg1 = "keine Streamingquelle gefunden: %s"	% title
@@ -1079,19 +1090,19 @@ def XLGetSourcesPlayer(title, Dict_ID, Plot, img):
 
 # ----------------------------------------------------------------------
 # Bau HBBTV_List (leer), HLS_List, MP4_List via Modul ARDnew
-#
-def XLGetVideoLists(li, title, VideoUrls):					
+# page -> json 
+def XLGetVideoLists(li, title, StreamArray):					
 	PLog('XLGetVideoLists:')
 	PLog('import_ARDnew:');								# ARDStartVideoHLSget, ARDStartVideoMP4get
 	import resources.lib.ARDnew as ARDnew
-
+	
 	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
 	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
 	#	fehlende Bandbreiten + Auflösungen werden ergänzt
 	HBBTV_List=''										# nur ZDF
-	HLS_List = ARDnew.ARDStartVideoHLSget(title, VideoUrls)	# Extrakt HLS
+	HLS_List = ARDnew.ARDStartVideoHLSget(title, StreamArray)	# Extrakt HLS
 	PLog("HLS_List: " + str(HLS_List)[:80])
-	MP4_List = ARDnew.ARDStartVideoMP4get(title, VideoUrls)	# Extrakt MP4
+	MP4_List = ARDnew.ARDStartVideoMP4get(title, StreamArray)	# Extrakt MP4
 	Dict("store", 'TXL_HLS_List', HLS_List) 
 	Dict("store", 'TXL_MP4_List', MP4_List) 
 	PLog("download_list: " + str(MP4_List)[:80])

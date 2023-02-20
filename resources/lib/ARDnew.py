@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>31</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.02.2023
+# 	<nr>32</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1149,20 +1149,33 @@ def ARD_get_strmStream(url, title, img, Plot):
 	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Python3 geändert
 	page= page.replace('+++\\n', '+++ ')					# Zeilentrenner ARD Neu
 			
-	# -----------------------------------------			# Extrakt Videoquellen
-	Plugins = blockextract('"_defaultQuality"', page)	# 10.11.2021 Block vormals '_plugin'
-	if len(Plugins) > 0:
-		Plugin1	= Plugins[0]							
-		VideoUrls = blockextract('_quality', Plugin1)
-	PLog(len(VideoUrls))
+	# -----------------------------------------				# Extrakt Videoquellen
+	PLog("anz_plugin: %d" % page.count("_plugin"))			# todo: Relevanz _plugin=2 prüfen
+
+	try:
+		sub_path=""
+		VideoObj = json.loads(page)["widgets"][0]
+		if "_subtitleUrl" in VideoObj["mediaCollection"]["embedded"]: # kann fehlen
+			sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleUrl"]
+		PLog("sub_path: " + sub_path)
+		mediaArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"]
+		StreamArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"][0]["_mediaStreamArray"]
+		PLog("VideoObj: %d, mediaArray: %d, StreamArray: %d" % (len(VideoObj),len(mediaArray), len(StreamArray)))
+	except Exception as exception:
+		PLog(str(exception))
+		msg1 = u'keine Videoquellen gefunden'
+		PLog(msg1)
+		# MyDialog(msg1, '', '')							# strm o. Dialog (Task)
+		return
 	
-	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
+	# Formate siehe StreamsShow								# HLS_List + MP4_List anlegen
 	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
 	#	fehlende Bandbreiten + Auflösungen werden ergänzt
-	HBBTV_List=''										# nur ZDF
-	HLS_List = ARDStartVideoHLSget(title, VideoUrls)	# Extrakt HLS
+	call = "ARD_get_strmStream"
+	HBBTV_List=''											# nur ZDF
+	HLS_List = ARDStartVideoHLSget(title, StreamArray, call)	# Extrakt HLS
 	PLog("HLS_List: " + str(HLS_List)[:80])
-	MP4_List = ARDStartVideoMP4get(title, VideoUrls)	# Extrakt MP4
+	MP4_List = ARDStartVideoMP4get(title, StreamArray, call)	# Extrakt MP4
 	PLog("MP4_List: " + str(MP4_List)[:80])
 
 	# Abgleich Settings, Ablage STRM_URL
@@ -1440,11 +1453,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		
 #---------------------------------------------------------------------------------------------------
 # Ermittlung der Videoquellen für eine Sendung - hier Aufteilung Formate Streaming + MP4
-# Videodaten in json-Abschnitt __APOLLO_STATE__ enthalten.
 # Bei Livestreams (m3u8-Links) verzweigen wir direkt zu SenderLiveResolution.
 # Videodaten unterteilt in _plugin":0 und _plugin":1,
-#	_plugin":0 enthält manifest.f4m-Url und eine mp4-Url, die auch in _plugin":1
-#	vorkommt.
 # Falls path auf eine Rubrik-Seite zeigt, wird zu ARDStartRubrik zurück verzweigt 
 #	(sofern keine Streams vorhanden)
 # 02.05.2019 erweitert: zusätzl. Videos zur Sendung angehängt - s.u.
@@ -1504,6 +1514,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 		MyDialog(msg1, '', '')
 		xbmcplugin.endOfDirectory(HANDLE)	
 	PLog('elements: ' + str(len(elements)))	
+	PLog("anz_plugin: %d" % page.count("_plugin"))			# todo: Relevanz _plugin=2 prüfen
 		
 	try:
 		sub_path=""
@@ -1517,12 +1528,9 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	except Exception as exception:
 		PLog(str(exception))
 		msg1 = u'keine Videoquellen gefunden'
-		PLog(str(exception))
 		PLog(msg1)
 		MyDialog(msg1, '', '')
-		return
-		
-	
+		return	
 	
 	li = xbmcgui.ListItem()
 	if ID == "ARDRetroStart":
@@ -1569,11 +1577,12 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
 	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
 	#	fehlende Bandbreiten + Auflösungen werden ergänzt
-	HLS_List = ARDStartVideoHLSget(title, StreamArray)	# Extrakt HLS
+	call = "ARDStartSingle"
+	HLS_List = ARDStartVideoHLSget(title, StreamArray, call)	# Extrakt HLS
 	PLog("HLS_List: " + str(HLS_List)[:80])
-	HBBTV_List = ARDStartVideoHBBTVget(title, path)		# HBBTV (MP4), eigene Quellen
+	HBBTV_List = ARDStartVideoHBBTVget(title, path)				# HBBTV (MP4), eigene Quellen
 	PLog("HBBTV_List: " + str(HBBTV_List)[:80])
-	MP4_List = ARDStartVideoMP4get(title, StreamArray)	# MP4
+	MP4_List = ARDStartVideoMP4get(title, StreamArray, call)	# MP4
 	Dict("store", 'ARDNEU_HLS_List', HLS_List) 
 	Dict("store", 'ARDNEU_HBBTV_List', HBBTV_List) 
 	Dict("store", 'ARDNEU_MP4_List', MP4_List) 
@@ -1618,10 +1627,11 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 #----------------------------
 # auto-Stream master.m3u8 aus VideoUrls ermitteln, 
 #	via li in Einzelauflösungen zerlegen
-# Aufrufer ARDStartSingle (Länge VideoUrls > 0)
+# Aufrufer ARDStartSingle (Länge VideoUrls > 0) und
+# 	ARD_get_strmStream
 #
-def ARDStartVideoHLSget(title, StreamArray): 
-	PLog('ARDStartVideoHLSget:'); 
+def ARDStartVideoHLSget(title, StreamArray, call=""): 
+	PLog('ARDStartVideoHLSget: ' + call); 
 	PLog(str(StreamArray)[:100])
 	
 	HLS_List=[]; Stream_List=[];
@@ -1692,10 +1702,11 @@ def ARDStartVideoHBBTVget(title, path):
 			continue
 		try:						
 			bitrate = re.search(u'-(\d+)kbit', href).group(1)
+			bitrate = "%skbit" % bitrate
 		except:
 			bitrate = "?"
 		
-		PLog(bitrate); PLog(res); 
+		PLog("hbbtv_bitrate: %s, res: %s" % (bitrate, res)) 
 		if "3840x" in res:
 			quality = "UHD_MP4"
 		title_url = u"%s#%s" % (title, href)
@@ -1710,13 +1721,13 @@ def ARDStartVideoHBBTVget(title, path):
 # altes Format: "Qualität: niedrige | Titel#https://pdvideosdaserste.."
 # neues Format:	"MP4 Qualität: Full HD ** Bandbreite ** Auflösung ** Titel#Url"
 # Format ähnlich ARDStartVideoHBBTVget (Label abweichend)
-def ARDStartVideoMP4get(title, StreamArray):	
+def ARDStartVideoMP4get(title, StreamArray, call=""):	
 	PLog('ARDStartVideoMP4get:'); 
 			
 	href=''; quality=''
 	title = py2_decode(title)
-	qlist = [u"0|niedrige", u"1|mittlere", u"2|hohe", 
-			u"3|sehr hohe", u"4|Full HD",
+	qlist = [u"0|niedrige|480x270", u"1|mittlere|640x360", u"2|hohe|960x540", 
+			u"3|sehr hohe|1280x720", u"4|Full HD|1920x1080",
 	]
 	download_list = []	
 	# 2-teilige Liste für Download: 'title # url'
@@ -1729,22 +1740,27 @@ def ARDStartVideoMP4get(title, StreamArray):
 			
 		quality =  "?"
 		for q in qlist:
-			q_val,  q_text = q.split("|")
+			q_val,  q_text, q_res = q.split("|")
 			if qual in q_val:
 				quality = q_text
 				break
-		w = stream["_width"] 
-		h = stream["_height"]
-		res = "%sx%s" % (str(w),str(h))	
+		if "_width" in stream and "_height" in stream: # können in TagesschauXL fehlen
+			w = stream["_width"] 
+			h = stream["_height"]
+			res = "%sx%s" % (str(w),str(h))
+		else:
+			PLog("res_missing")
+			res = q_res
 		href = stream["_stream"]
 		if "_internationalerton_" in href:		# vermutl. identisch mit "_sendeton_"-Url
 			continue
 		try:						
 			bitrate = re.search(u'-(\d+)kbit', href).group(1)
+			bitrate = "%skbit" % bitrate
 		except:
 			bitrate = "?"
 		
-		PLog("bitrate: %s, res: %s" % (bitrate, res)) 
+		PLog("mp4_bitrate: %s, res: %s" % (bitrate, res)) 
 		if "3840x" in res:
 			quality = "UHD_MP4"
 		title_url = u"%s#%s" % (title, href)

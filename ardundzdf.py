@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>88</nr>										# Numerierung für Einzelupdate
+# 	<nr>89</nr>										# Numerierung für Einzelupdate
 VERSION = '4.6.2'
-VDATE = '19.02.2023'
+VDATE = '20.02.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7800,6 +7800,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
 			if '_' in url:
 				try:									# wie build_Streamlists
 					bitrate = re.search(u'_(\d+)k_', url).group(1)
+					bitrate = "%skbit" % bitrate
 				except:
 					bitrate = "unbekannt"
 			res = "%sx%s" % (w,h)
@@ -9801,8 +9802,9 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 							if '_' in url:
 								try:								# Fehlschlag bei arte-Links
 									bitrate = re.search(u'_(\d+)k_', url).group(1)
+									bitrate = "%skbit" % bitrate
 								except:
-									bitrate = "unbekannt"
+									bitrate = "?"
 							res = "%sx%s" % (w,h)
 						
 						PLog(res)
@@ -10118,7 +10120,7 @@ def form_HBBTV_Streams(stream_list, label, title):
 			stream_title = u'MP4, Qualität: [B]%s | %s[/B]' % (quality, label)
 			try:
 				bitrate = re.search(u'_(\d+)k_', url).group(1)	# bitrate überschreiben	
-				bitrate = bitrate + "000"			# k ergänzen 
+				bitrate = bitrate + "kbit"			# k ergänzen 
 			except Exception as exception:			# ts möglich: http://cdn.hbbtvlive.de/zdf/106-de.ts
 				PLog(str(exception))
 				PLog(url)	
@@ -10298,7 +10300,6 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 		return '', '', '', ''
 	PLog("page_json: " + page[:40])
 	page = page.replace('": "', '":"')					# für funk-Beiträge erforderlich
-	#RSave('/tmp/profile_url.json', py2_encode(page))	# Debug	
 	
 														# Videodaten ermitteln:
 	pos = page.rfind('mainVideoContent')				# 'mainVideoContent' am Ende suchen
@@ -10332,7 +10333,6 @@ def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken2
 	page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
 	PLog("request_json: " + page[:40])
-	#RSave('/tmp/videodat_url.json', py2_encode(page))	# Debug	
 
 	if page == '':	# Abbruch 
 		PLog('videodat_url: Laden fehlgeschlagen')
