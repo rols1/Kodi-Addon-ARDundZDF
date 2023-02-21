@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>32</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.02.2023
+# 	<nr>33</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1892,6 +1892,7 @@ def SendungenAZ_ARDnew(title, button, href):
 		MyDialog(msg1, msg2, '')	
 		return li
 	PLog(len(page))
+	page = page.replace('\\"', '*')						# quotierte Marks entf., Bsp. \"query\"
 			
 	gridlist = blockextract('"decor":', page)			# Beiträge im Block
 	PLog(len(gridlist))

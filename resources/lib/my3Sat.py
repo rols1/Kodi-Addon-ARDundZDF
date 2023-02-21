@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>7</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.02.2023
+# 	<nr>8</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -316,11 +316,11 @@ def SendungenAZ(name, path):
 		rubrik 	= stringextract('a--preheadline level-4">', '<span class', rec)
 		rubrik 	= stringextract('<span>', '</span>', rubrik)
 		sub_rubrik = stringextract('ellipsis" >', '<', rec)
-		title	= stringextract('clickarea-link js-teaser-title', '</h3', rec)
-		title	= stringextract('">', '</', title)
+		tlink	= stringextract('teaser-title-link', "data-track=", rec)
+		title	= stringextract('title="', '"', tlink)
 		if "is-lowercase" in title:
 			title	= stringextract('case">', '</span>', rec)
-		href	= stringextract('href="', '"', rec)
+		href	= stringextract('href="', '"', tlink)
 		href	= DreiSat_BASE + href
 		descr	= stringextract('clickarea-link" >', '<', rec)
 		tag 	= rubrik
