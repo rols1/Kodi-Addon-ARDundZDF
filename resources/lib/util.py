@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>39</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.02.2023
+# 	<nr>40</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1073,7 +1073,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	
 	path = py2_encode(path)
 	if do_safe:									# never quoted: Letters, digits, and the characters '_.-' 
-		path = quote(path, safe="#@:?,&=/")		# s.o.
+		path = quote(path, safe="#@:?,&=/")	# s.o.
 	PLog("safe_path: " + path)
 
 	msg = ''; page = ''	
@@ -1896,10 +1896,12 @@ def CalculateDuration(timecode):
 #---------------------------------------------------------------- 
 # Format seconds	86400	(String, Int, Float)
 # Rückgabe:  		1d, 0h, 0m, 0s	(days=True)
-#		oder:		0h:0d				
+#		oder:		0h:0d			
 def seconds_translate(seconds, days=False):
 	#PLog('seconds_translate:')
 	#PLog(seconds)
+	if "." in str(seconds):					# Ausschluss Basis 1000
+		seconds = seconds.split(".")[0] 
 	if seconds == '' or seconds == 0  or seconds == 'null':
 		return ''
 	if int(seconds) < 60:
@@ -2341,7 +2343,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 					summ = summ.replace('\n\n', pubDate)					# zwischen Verfügbar + summ  einsetzen
 				else:
 					summ = "%s%s" % (pubDate[3:], summ)
-		
+					
 	if 	ID == 'ARDnew':
 		page = page.replace('\\"', '*')							# Quotierung vor " entfernen, Bsp. \"query\"
 		pubServ = stringextract('"name":"', '"', page)			# publicationService (Sender)

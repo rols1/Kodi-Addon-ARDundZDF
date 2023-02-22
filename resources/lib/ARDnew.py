@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>33</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.02.2023
+# 	<nr>34</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.02.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2144,6 +2144,8 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 #	 (Suchstring: ../ard/search/grouping?searchString=..) 
 # 14.03.2022 nach Sofortstart-Abbruch springt Kodi erneut nach get_keyboard_input - Addon-
 #	Absturz bei Abbruch der Eingabe. Abhilfe: return ersetzt durch Aufruf Main_NEW.
+# 22.03.2023 api-Suche umgestellt page-gateway/widgets  -> search-system/mediathek, um
+#	Videos von Sendereihen zu erfassen (Bsp. "2 für 300")
 #
 def ARDSearchnew(title, sender, offset=0, query=''):
 	PLog('ARDSearchnew:');	
@@ -2169,8 +2171,11 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')								# Home-Button
 	
-	# -----------------------------------------------------
-	path = 'https://page.ardmediathek.de/page-gateway/widgets/%s/search/vod?searchString=%s&pageNumber=%s' % (sender, query, offset)
+	# ----------------------------------------------------- # Suchstring umgestellt, s.o.
+	PLog(query)
+	# path = 'https://page.ardmediathek.de/page-gateway/widgets/%s/search/vod?searchString=%s&pageNumber=%s' % (sender, query, offset)
+	path = 'https://api.ardmediathek.de/search-system/mediathek/%s/search/vods?query=%s&pageNumber=%s&pageSize=24' % (sender, query, offset)
+
 	page, msg = get_page(path,JsonPage=True)					
 	PLog(len(page))
 	if page == '':											
