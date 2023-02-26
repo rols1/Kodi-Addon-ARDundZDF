@@ -1694,7 +1694,7 @@ def Tonschnipsel():
 # einzelnes Video
 # 07.12.2022 Neu nach Webänderungen (vormals xml-Seite)			
 # path enthält die api-Seite mit Details (json). Hier direkt
-#	weiter mit der assets-Url zu den Videoquellen (einfaches Anängen
+#	weiter mit der assets-Url zu den Videoquellen (einfaches Anhängen
 #	von /assets klappt nicht bei typ=relatedVideo
 # Aufrufer: Kika_Subchannel, Kika_Rubriken
 #
@@ -1788,9 +1788,10 @@ def Kika_VideoMP4get(title, assets):
 			if '_' in href:
 				try:
 					bitrate = re.search(u'_(\d+)k_', href).group(1)
+					bitrate = "%skbit" % bitrate
 				except Exception as exception:
 					PLog(str(exception))
-					bitrate = '0'
+					bitrate = '?'
 		profil =  stringextract('"profileName":"', '"', s)	
 		res = frameWidth + 'x' + frameHeight
 				

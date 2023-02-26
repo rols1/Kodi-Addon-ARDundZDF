@@ -494,7 +494,7 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 			job_title = title										# Abgleich in JobRemove alt
 			JobID = stringextract('<JobID>', '</JobID>', myjob)		# Abgleich in JobRemove neu
 			sender = stringextract('<sender>', '</sender>', myjob)
-			dfname = title.strip()											# Recording Live: ohne Sender
+			dfname = title.strip()									# Recording Live: ohne Sender
 			if sender:
 				dfname = "%s: %s" % (sender, title)					# Titel: Sender + Sendung (mit Mark.)
 			dfname = make_filenames(dfname.strip()) + ".mp4"		# Name aus Titel
@@ -574,7 +574,7 @@ def JobRemove(sender, job_title, start_end, job_active, pid, JobID):
 	pidtxt=''
 	if pid:
 		pidtxt = " (PID %s) " % pid
-	if job_active == 'True':
+	if job_active == 'True' and pid:
 		msg2 = u"Job %s tatsächlich abbrechen und löschen?" % pidtxt
 		heading = u"aktiven (!) %s!" % heading
 		icon = MSG_ICON
@@ -625,10 +625,10 @@ def JobStop(sender, job_title, start_end, job_active, pid, JobID):
 		msg1 = job_title
 
 	PLog("kill_pid: %s" % str(pid))
-	os.kill(int(pid), signal.SIGTERM)					# auch Windows10 OK (aber Teilvideo beschäd.)
-
-	icon = MSG_ICON
-	xbmcgui.Dialog().notification("Jobliste:", u"Job wird gestoppt",icon,3000)
+	if pid:														# int-error falls leer
+		os.kill(int(pid), signal.SIGTERM)						# auch Windows10 OK (aber Teilvideo beschäd.)
+		icon = MSG_ICON
+		xbmcgui.Dialog().notification("Jobliste:", u"Job wird gestoppt",icon,3000)
 
 	now = EPG.get_unixtime(onlynow=True)
 	jobs = ReadJobs()											# s. util

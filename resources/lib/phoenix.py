@@ -289,8 +289,9 @@ def phoenix_Search(query='', nexturl=''):
 # 09.11.2021 wegen key-Problem ("0", "1"..) Wechsel json -> string-Auwertung,
 #	s.a. ThemenListe
 # 15.04.2022 ID: skip vinhalt + Zukunft bei ID="Verpasst"
-def GetContent(li, page, base_img=None, turn_title=True, get_single='', ID=''):
+def GetContent(li, page, base_img=None, turn_title=True, get_single='', ID='', title=''):
 	PLog('GetContent:')
+	title_org=title
 
 	mediatype=''			# Kennzeichn. als Playable hier zu unsicher (Bsp. Plenarwochen)	
 	if not base_img:
@@ -300,6 +301,8 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='', ID=''):
 	if len(items) == 0:					# Folgeseiten aus BeitragsListe
 		items = blockextract('"link":',  page)
 	PLog(len(items))
+	
+	cnt=0
 	for item in items:	
 		vorspann=''; tag=''; summ=''; summ_par=''; subtitel=''; online=''
 		single = False; video='false'
@@ -406,7 +409,14 @@ def GetContent(li, page, base_img=None, turn_title=True, get_single='', ID=''):
 				(quote(url), quote(url), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.BeitragsListe", fanart=img, 
 				thumb=img, fparams=fparams, summary=summ, tagline=tag, mediatype='')
-
+		cnt=cnt+1
+		
+	if cnt == 0:
+		icon = R(ICON_PHOENIX)
+		msg1 = title_org
+		msg2 = u"keine verwertbaren Beitr√§ge"	
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)	 
+		
 	return li
 
 # ----------------------------------------------------------------------
@@ -543,7 +553,7 @@ def ThemenListe(title, ID, path, next_url=''):				# Liste zu einzelnem Untermen√
 	li = xbmcgui.ListItem()
 	li = home(li, ID='phoenix')			# Home-Button
 		
-	li = GetContent(li, page, base_img=base_img, turn_title=True)
+	li = GetContent(li, page, base_img=base_img, turn_title=True, title=title)
 	
 	if '"next_url":' in page:			# Mehr-Seiten
 		next_url	= stringextract('next_url":"', '"', page)

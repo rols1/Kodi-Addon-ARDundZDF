@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>89</nr>										# Numerierung für Einzelupdate
-VERSION = '4.6.2'
-VDATE = '20.02.2023'
+VERSION = '4.6.3'
+VDATE = '26.02.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -437,9 +437,10 @@ def Main():
 			
 	if SETTINGS.getSetting('pref_use_childprg') == 'true':
 		tagline = 'in den Settings kann das Modul Kinderprogramme ein- und ausgeschaltet werden'
+		summ = u"KiKA, ZDFtivi, MausLive u.a."
 		fparams="&fparams={}"													# Kinder-Modul
 		addDir(li=li, label="Kinderprogramme", action="dirList", dirID="resources.lib.childs.Main_childs", 
-			fanart=R('childs.png'), thumb=R('childs.png'), tagline=tagline, fparams=fparams)
+			fanart=R('childs.png'), thumb=R('childs.png'), tagline=tagline, summary=summ, fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_XL') == 'true':
 		tagline = 'in den Settings kann das Modul TagesschauXL ein- und ausgeschaltet werden'
@@ -2820,11 +2821,11 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 
 	
-	title = u"Event: [B]Handball-WM 2023 in Polen und Schweden[/B]"			# Großevent	
-	tag = u"Nachrichten, Berichte, Interviews und Ergebnisse zur Handball-WM 2023 in Polen und Schweden mit dem DHB-Team."
-	cacheID = "Sport_WMHandball"
-	img = "https://images.sportschau.de/image/9741356a-13b2-40ed-93d0-bb70c90ebbd1/AAABhSXiawI/AAABg8tME_8/16x9-1280/handball-wm-bild-100.jpg"
-	path = "https://www.sportschau.de/handball/wm"
+	title = u"Event: [B]NORDISCHE SKI-WM[/B]"			# Großevent	
+	tag = u"Alles zur Nordischen Ski-WM in Planica."
+	cacheID = "Sport_SkiWM"
+	img = "https://images.sportschau.de/image/237354e3-b9b2-46bf-993a-8ecc48947e7f/AAABhol6U80/AAABg8tMRzY/20x9-1280/constantin-schmid-150.webp"
+	path = "https://www.sportschau.de/wintersport/nordische-ski-wm"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
 		(quote(title), quote(path), quote(img), cacheID)
@@ -2878,6 +2879,17 @@ def ARDSportWDRArchiv():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
+	title = u"Event: [B]Handball-WM 2023 in Polen und Schweden[/B]"			# Großevent	
+	tag = u"Nachrichten, Berichte, Interviews und Ergebnisse zur Handball-WM 2023 in Polen und Schweden mit dem DHB-Team."
+	cacheID = "Sport_WMHandball"
+	img = "https://images.sportschau.de/image/9741356a-13b2-40ed-93d0-bb70c90ebbd1/AAABhSXiawI/AAABg8tME_8/16x9-1280/handball-wm-bild-100.jpg"
+	path = "https://www.sportschau.de/handball/wm"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Event: [B]Fußball WM 2022 in Katar[/B]"
 	tag = u"Hier finden Sie alle Nachrichten, Berichte, Interviews und Ergebnisse zur FIFA WM 2022 in Katar."
 	cacheID = "Sport_WMKatar"
@@ -3275,7 +3287,7 @@ def ARDSportLive(title):
 	li = home(li, ID='ARD Neu')								# Home-Button
 	
 	cnt = ARDSportMedia(li, title, page)
-	if cnt == 0:												# Verbleib in Liste
+	if cnt == 0:											# Verbleib in Liste
 		return		
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -3345,6 +3357,7 @@ def ARDSportMedia(li, title, page):
 		topline = stringextract('__topline">', '</', item)
 		title = stringextract('__headline">', '</', item)	# html-Bereich
 		summ = stringextract('__shorttext">', '</', item)	# html-Bereich, fehlt im json-Bereich
+		summ=cleanhtml(summ)
 		title=title.replace('"', ''); title=mystrip(title)
 		title=cleanhtml(title)
 		title=repl_json_chars(title); summ=repl_json_chars(summ);
@@ -3462,7 +3475,7 @@ def ARDSportMediaPlayer(li, item):
 	cont = (cont.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
 	PLog(cont[:30])
 	#if "xxx" in cont:
-	#	RSave('/tmp/x1.json', py2_encode(cont))	# Debug	
+	#	RSave('/tmp/x.json', py2_encode(cont))	# Debug	
 
 	player = stringextract('playerType":"', '"', cont)		# audio, video
 	media = stringextract('streams":', '"meta"', cont)		# für video dash.mpd, m3u8 + ts
@@ -3477,7 +3490,7 @@ def ARDSportMediaPlayer(li, item):
 				break
 	
 	title = stringextract('page_title":"', ',"', cont)		# kann " enthalten
-	title=decode_url(title); title=repl_json_chars(title)
+	title=decode_url(title); title=repl_json_chars(title); 
 	
 	duration = stringextract('durationSeconds":"', '"', cont)
 	if duration == '':
@@ -3532,7 +3545,7 @@ def ARDSportMediaPlayer(li, item):
 	
 	PLog("Satz31:")
 	PLog(player); PLog(live); PLog(title); PLog(mp3_url); PLog(stream_url);
-			
+		
 	return player, live, title, mp3_url, stream_url, img, tag, summ, Plot 
 
 #---------------------------------------------------------------------------------------------------
@@ -9831,7 +9844,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 	# ------------										# HBBTV + UHD-Streams von ZDF + 3sat:
 	UHD_DL_list=[]
 	if ID == "ZDF":										# ZDF, ZDF-funk							
-		HBBTV_List = ZDFSourcesHBBTV(title, scms_id)	# 				
+		HBBTV_List = ZDFSourcesHBBTV(title, scms_id)	# bisher nur MP4-Quellen				
 		PLog("HBBTV_List: " + str(len(HBBTV_List)))
 		# UHD-Streams erzeugen+testen:					# UHD-Streams -> HBBTV_List
 		HBBTV_List, UHD_DL_list = add_UHD_Streams(HBBTV_List)
@@ -9868,36 +9881,33 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 	
 #-------------------------
 # Aufruf: build_Streamlists
-# ZDF-UHD-Streams erzeugen + Verfügbarkeit testen:
-# verfügbare UHD-Streams werden oben in HBBTV_List 
-#	und MP4_List (->Downloadliste) eingefügt,
-#
+# ZDF-UHD-Streams kennzeichnen
+# verfügbare UHD-Streams werden oben in
+#	MP4_List (->Downloadliste) eingefügt.
+# 24.02.2023 replace("3360k_p36v15", "4692k_p72v16") entfällt
+#	mit Auswertung "q5" in ZDFSourcesHBBTV "h265_*", Verfügbarkeits-
+#	Ping ebenfalls entbehrlich.
 def add_UHD_Streams(Stream_List):
 	PLog('add_UHD_Streams:')
 
-	uhd_list=[]; UHD_DL_list=[]; 
+	UHD_DL_list=[]; 
 	cnt_find=0; cnt_ready=0
-	mark1= "3360k_p36v15"; mark2="4692k_p72v16"				# Url-Schema dauerhaft?
+	mark="_4692k_"											# bei Bedarf ergänzen
 	
+	cnt=0
 	for item in Stream_List:
-		if item.find(mark1) > 0:
-			#PLog(item)
-			uhd_list.append(item.replace(mark1, mark2))
-			cnt_find=cnt_find+1
-	PLog(len(uhd_list)); 
-	
-	for item in uhd_list:									# Verfügbarkeit testen
 		url = item.split("#")[-1]
 		PLog(url)
-		if url_check(url, caller='add_UHD_Streams', dialog=False):	# Url-Check
-			item = item.replace("MP4,", "[B]UHD_MP4[/B],")	# Kennung ändern
+		if url.find(mark) > 0:	 
+			item = item.replace("MP4,", "[B]UHD_MP4[/B],")	# Label ändern
 			item = item.replace("WEBM,", "[B]UHD_WEBM[/B],")
-			UHD_DL_list.append(item)						# UHD-Download-Streams
+			Stream_List[cnt] = item							# Stream_List aktualisieren
+			UHD_DL_list.append(item)						# add UHD-Download-Streams
 			cnt_ready=cnt_ready+1
-	if len(UHD_DL_list) > 0:
-		Stream_List = UHD_DL_list + Stream_List
 
-	PLog(u"found_UDH_Template: %d, Stream_verfügbar: %d" % (cnt_find, cnt_ready))
+		cnt=cnt+1
+
+	PLog(u"found_UDH_Template: %d" % cnt_find)
 	return Stream_List, UHD_DL_list
 	
 #-------------------------
@@ -9922,15 +9932,19 @@ def m3satSourcesHBBTV(weburl, title):
 	path = base + url
 	page,msg = get_page(path)
 	
-	mp4_obs={}; hls_obs={}
+	mp4uhd_obs={}; mp4_obs={}; hls_obs={}; obs={}
 	try:
 		objs = json.loads(page)
 		PLog(len(objs))
+		if "h265_aac_mp4_http_na_na" in objs["vidurls"]:								# UHD -MP4 - bisher unbekannt
+			mp4uhd_obs = objs["vidurls"]["h265_aac_mp4_http_na_na"]["main"]["deu"] 		# MP4-Streams
+			PLog("h265_mp4" + str(objs["vidurls"]["h265_aac_mp4_http_na_na"]["main"]))
 		if "h264_aac_mp4_http_na_na" in objs["vidurls"]:
-			PLog(str(objs["vidurls"]["h264_aac_mp4_http_na_na"]["main"]))
 			mp4_obs = objs["vidurls"]["h264_aac_mp4_http_na_na"]["main"]["deu"] 		# MP4-Streams
+			PLog("h264_mp4" + str(objs["vidurls"]["h264_aac_mp4_http_na_na"]["main"]))
 		if "h264_aac_ts_http_m3u8_http" in objs["vidurls"]:
 			hls_obs = objs["vidurls"]["h264_aac_ts_http_m3u8_http"]["main"]["deu"] 		# HLS-Streams, fehlen ev.
+			PLog("h264_hls" + str(objs["vidurls"]["h264_aac_mp4_http_na_na"]["main"]))
 	except Exception as exception:
 		PLog(str(exception))
 		page=""				
@@ -9938,9 +9952,10 @@ def m3satSourcesHBBTV(weburl, title):
 		PLog("no_vidurls_found")		 		
 		return HBBTV_List
 	
-	PLog("mp4_obs: %d, hls_obs: %d" % (len(mp4_obs), len(hls_obs)))
-	objs = dict(mp4_obs, **hls_obs)					# + nicht bei dicts
-	PLog(str(objs))									# {'q3': 'http://tvdlzdf-..v15.mp4'}
+	PLog("mp4uhd_obs: %d, mp4_obs: %d, hls_obs: %d" % (len(mp4uhd_obs), len(mp4_obs), len(hls_obs)))
+	objs = dict(mp4uhd_obs, **mp4_obs)							# dicts verbinden
+	objs = dict(obs, **hls_obs)	
+	PLog(str(objs))												# {'q3': 'http://tvdlzdf-..v15.mp4'}
 	
 	for obj in objs.items():
 		PLog(str(obj))
@@ -9949,7 +9964,7 @@ def m3satSourcesHBBTV(weburl, title):
 		stream_list.append("%s|%s" % (qual, url))
 	
 	label="deu"	
-	HBBTV_List = form_HBBTV_Streams(stream_list,label,title)	# Formatierung	
+	HBBTV_List = form_HBBTV_Streams(stream_list,label,title)	# Formatierung wie ZDF-Streams	
 	PLog(str(HBBTV_List))
 	
 	return HBBTV_List
@@ -10054,23 +10069,20 @@ def ZDFSourcesHBBTV(title, scms_id):
 	#PLog(ptmdUrl_list)
 	PLog(len(ptmdUrl_list))
 
+	q_list=['"q1"', '"q2"', '"q3"', '"q4"', '"q5"']			# Bsp.: "q1": "http://tvdlzdf..
 	for ptmdUrl in ptmdUrl_list:							# 1-2
 		PLog(ptmdUrl[:200])
 		label = stringextract('"label":"', '"', ptmdUrl)
 		main_list = blockextract('"main":', ptmdUrl)		#  mehrere mögl., z.B. MP4, m3u8
 		stream_list=[]
-		for qual in main_list:								# bisher nur q1 + q3 gesehen
+		for qual in main_list:								# bisher q1, q2, q3, q5 gesehen
 			PLog(qual[:80])
 			url = stringextract('"url":"',  '"', qual)
-			if '"q1"' in qual:								# Bsp.: "q1": "http://tvdlzdf..
-				q="q1"
-				stream_list.append("%s|%s" % (q, url)) 
-			if '"q2"' in qual:							
-				q="q2"
-				stream_list.append("%s|%s" % (q, url)) 
-			if '"q3"' in qual:
-				q="q3"
-				stream_list.append("%s|%s" % (q, url))
+			for q in q_list:
+				if q in qual:
+					q = q[1:-1]
+					break
+			stream_list.append("%s|%s" % (q, url)) 		
 		
 		PLog(len(stream_list))
 		HBBTV_List = form_HBBTV_Streams(stream_list, label, title)	# Formatierung
@@ -10087,6 +10099,7 @@ def form_HBBTV_Streams(stream_list, label, title):
 	
 	for stream in stream_list:
 		q, url = stream.split("|")
+		PLog("q: " + q)
 		if q == 'q0':
 			quality = u'GERINGE'
 			w = "640"; h = "360"					# Probeentnahme	
@@ -10107,10 +10120,22 @@ def form_HBBTV_Streams(stream_list, label, title):
 				bitrate = u"19 MB/Min."
 		if q == 'q3':
 			quality = u'HD'
-			w = "1280"; h = "720"					# Probeentnahme, bisher fehlend: w = "1920"; h = "1080"						
+			w = "1280"; h = "720"					# Probeentnahme					
 			bitrate = u"6501324"
 			if u'm3u8' in stream:
 				bitrate = u"23 MB/Min."
+		if q == 'q4':
+			quality = u'Full-HD'
+			w = "1920"; h = "1080"					# Probeentnahme,					
+			bitrate = u"?"
+			if u'm3u8' in stream:
+				bitrate = u"?"			
+		if q == 'q5':
+			quality = u'UHD'
+			w = "3840"; h = "2160"					# Probeentnahme						
+			bitrate = u"?"
+			if u'm3u8' in stream:
+				bitrate = u"42 MB/Min"				# geschätzt				
 		
 		res = "%sx%s" % (w,h)
 		
@@ -10914,8 +10939,8 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 		item = py2_encode(item)
 		PLog("item: " + item[:80])
 		label, bitrate, res, title_href = item.split('**')
-		bitrate = bitrate.replace('Bitrate 0', 'Bitrate unbekannt')	# Anpassung für funk ohne AzureStructure
-		res = res.replace('0x0', 'unbekannt')						# dto.
+		bitrate = bitrate.replace('Bitrate 0', 'Bitrate ?')			# Anpassung für funk ohne AzureStructure
+		res = res.replace('0x0', '?')								# dto.
 		PLog(title_href)
 		title, href = title_href.split('#')
 		

@@ -1662,7 +1662,8 @@ def decode_url(line):
 	line = line.replace(u'%C3%9F', u'ß')
 	line = line.replace(u'%C3%9C', u'Ü')
 	line = line.replace(u'%C3%96', u'Ö')
-	line = line.replace(u'%C3%84', u'Ä')
+	line = line.replace(u'%C3%84', u'Ã')
+	line = line.replace(u'%C4%87', u'Ä')
 	
 	line = line.replace(u'%20', u' ')
 	line = line.replace(u'%22', u'"')
@@ -3162,7 +3163,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 	if 'auto' not in myqual:							# Abgleich width mit Setting
 		mywidth = myqual.split('x')[0]
 		for item in Stream_List:
-			width="320"									# Vorbelegung (u.a. für LibreElec 20.0-ALPHA1
+			width="320"									# Default (u.a. für LibreElec 20.0-ALPHA1
 			res = item.split('**')[2]
 			if '0x0' in res:							# Auflösung 0x0 (vermutl. Audio)
 				continue
