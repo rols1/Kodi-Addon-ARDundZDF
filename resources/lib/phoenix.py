@@ -7,8 +7,8 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.01.2023
+# 	<nr>10</nr>										# Numerierung für Einzelupdate
+#	Stand: 01.03.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -480,6 +480,8 @@ def Themen(ID):							# Untermenüs zu ID
 	if ID == 'Sendungen':
 		url = 'https://www.phoenix.de/response/template/sendungseite_overview_json'
 		
+		
+		
 	page, msg = get_page(path=url)	
 	if page == '':						
 		msg1 = 'Fehler in Themen: %s' % ID
@@ -717,10 +719,11 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 		
 	PLog(len(items))		
 	s1 		= stringextract('titel": "', '"', page)				# Seiten-Titel + -Subtitel: Leitthema
-	s2 		= stringextract('subtitel": "', '"', page)			
-	tag 	= "Leitthema: [COLOR red]%s[/COLOR]" % (s1)
+	s2 		= stringextract('subtitel": "', '"', page)
+	leit	= s2			
+	tag 	= "Leitthema: [B]%s[/B]" % (s1)
 	if s2:														# Subtitel kann fehlen
-		tag 	= "Leitthema: [COLOR red]%s | %s[/COLOR]" % (s1, s2)
+		tag 	= "Leitthema: [B]%s | %s[/B]" % (s1, s2)
 	
 	for item in items:
 		#PLog(item)		# bei Bedarf
@@ -743,7 +746,7 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 				title = ''
 			title = cleanhtml(title);title = unescape(title);   # title kann fehlen - Ersatz s.u.
 			title = title.replace('\\r\\n', ''); title = title.strip()
-			summ = "Youtube-Video" 
+			summ = u"Youtube-Video (Download nur als Audio möglich)" 
 		else:	# typ "video-smubl"
 			if '<basename>' in item:							# xml, Bsp. <basename> 210829_1200_fruehschoppen
 				vid = stringextract('<basename>', '</', item)
@@ -777,6 +780,27 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 					quote_plus(summ_org), quote_plus(img))	
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.yt_get", 
 					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)	
+					
+				#-----------------									# Zusatzbutton: Suche bei ARDundZDF
+				if leit:											# Suche mit Leitthema (Titel häufig zu lang)
+					title = leit
+					if "|" in title and title.find("|") >= 60:		# nur Kernaussage langer Themen behalten
+						title = title.split("|")[1]
+				else:
+					split_list = [u"|", u",", u"."]					# überlange Titel splitten/kürzen
+					for sp in split_list:
+						if sp in title and len(title) >= 25:
+							title = title.split(sp)[0]
+							break 
+				if 	 len(title) >= 80:
+					title = title[:80]
+				query = "%s|%s" % (title, title)					# Doppel für SearchARDundZDFnew			
+				title = "Suche: %s" % title
+				tag = u"für einen Download werden bei ARD und ZDF ähnliche Videos gesucht."
+				query=py2_encode(query); title=py2_encode(title); 	# Suche mit Titel
+				fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
+					fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag, fparams=fparams)
 				
 		else:
 			PLog('vid fehlt: %s' % title)
