@@ -1386,9 +1386,10 @@ def RSave(fname, page, withcodec=False):
 	PLog(withcodec)
 	path = os.path.join(fname) # abs. Pfad
 	msg = ''					# Rückgabe leer falls OK
-	maxLockloops	= 10		# 1 sec bei 10 x xbmc.sleep(100)	
+	maxLockloops	= 10		# 1 sec bei 10 x xbmc.sleep(100)
+	max_length=255				# Länge Filename 
 	
-	LOCK = fname + ".lck"
+	LOCK = fname[:max_length-4] + ".lck"
 	i=0
 	while os.path.exists(LOCK):	
 		i=i+1

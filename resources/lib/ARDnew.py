@@ -1977,6 +1977,7 @@ def SendungenAZ_ARDnew(title, button, href):
 #		Ablage in Dict nicht erf., Kodi-Cache ausreichend.
 # 22.08.2019 myhash und erste pageNumber geändert durch ARD (0, vorher 1) - dto. in ARDSearchnew
 # 27.06.2020 api-Codeanteile entfernt - s. SearchARDnew
+# 01.03.2023 ARD-Suchpfad wie SearchARDundZDFnew (page.ardmediathek -> api.ardmediathek)
 #
 def SearchARDundZDFnew(title, query='', pagenr=''):
 	PLog('SearchARDundZDFnew:');
@@ -2023,7 +2024,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	pageNumber = 0
 	
 	query_lable = query_ard.replace('+', ' ')
-	path = 'https://page.ardmediathek.de/page-gateway/widgets/%s/search/vod?searchString=%s&pageNumber=%s' % (sender, query_ard, pageNumber)
+	path = 'https://api.ardmediathek.de/search-system/mediathek/%s/search/vods?query=%s&pageNumber=%s&pageSize=24' % (sender, query_ard, pageNumber)
 	page, msg = get_page(path,JsonPage=True)					
 		
 	vodTotal =  stringextract('"totalElements":', '}', page)	# Beiträge?
@@ -2164,7 +2165,7 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 			Main_NEW(NAME)
 			
 	query = query.strip()
-	query = query.replace(' ', '+')					# Aufruf aus Merkliste unbehandelt	
+	#query = query.replace(' ', '+')				# für Merkliste - 01.03.2023 nicht mehr relevant 	
 	query_org = query	
 	query=py2_decode(query)							# decode, falls erf. (1. Aufruf)
 	
@@ -2173,7 +2174,6 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 	
 	# ----------------------------------------------------- # Suchstring umgestellt, s.o.
 	PLog(query)
-	# path = 'https://page.ardmediathek.de/page-gateway/widgets/%s/search/vod?searchString=%s&pageNumber=%s' % (sender, query, offset)
 	path = 'https://api.ardmediathek.de/search-system/mediathek/%s/search/vods?query=%s&pageNumber=%s&pageSize=24' % (sender, query, offset)
 
 	page, msg = get_page(path,JsonPage=True)					

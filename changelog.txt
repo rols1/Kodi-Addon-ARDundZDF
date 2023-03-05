@@ -10,6 +10,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+05.02.2023 4.6.4
+			SingleBeitrag (phoenix): Button ARDundZDF-Suche bei Youtube-Videos ergänzt,
+			Leitthema-Stil geändert (fett statt rot).
+			DownloadExtern (util): Länge Zielpfad berücksichtigt für max. Länge in
+			make_filenames.
+			yt_get (Modul yt): Info-Text mit Hinweis zur Downloadsperre ergänzt.
+			SearchARDundZDFnew:	ARD-Suchpfad an ARDSearchnew angepasst (page.ardmediathek
+			-> api.ardmediathek).
+			ARDSearchnew: Blankbehandlung für Merkliste (' ' -> '+') entfernt.
+			Audio_get_items_single (Audiothek): Text "Bild: " in Param attr ergänzt.
+			Audiothek: Download Livestreams unterdrückt in AudioPlayMP3, Warnhinweis in
+			AudioStart entfernt.
+			ArteCluster (arte): Button "Programme in UHD-Qualität" in Startseite ergänzt.		
+
 26.02.2023 4.6.3
 			ARDStart (ARDnew): "Regionales"-Menü mit passenden Icons ergänzt.
 			GetContent (phoenix): Notification bei leerer Auswertung.
@@ -27,7 +41,7 @@ CHANGE HISTORY
 			search-system/mediathek, um Videos von Sendereihen zu erfassen (Bsp. 
 			"2 für 300").
 			seconds_translate (util): Ausschluss Basis 1000 (Bsp. 864.0) - nötig
-			für umgestellte api-Suche.
+			für umgestellte ARD-api-Suche.
 			ARDSportMedia (ARD Sportschau.de): html-Tags in summary entfernt.
 			Verz. resources/lib/: Datei util.pyc gelöscht (Herkunft unklar).
 			JobStop (epgRecord): int-error abgefangen bei leerer Prozess-ID pid.

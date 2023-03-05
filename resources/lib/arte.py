@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>25</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.02.2023
+#	Stand: 05.03.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -908,12 +908,16 @@ def ArteCluster(pid='', title='', katurl=''):
 	PLog("ArteCluster: " + pid)
 	PLog(title); PLog(katurl); 
 	title_org = title
+	ping_uhd = False
 	if katurl.startswith("/de/"):
-		katurl = "https://www.arte.tv" + katurl	
+		katurl = "https://www.arte.tv" + katurl
 	PLog(katurl); 
 	katurl_org=katurl
 
-	page = get_ArtePage('ArteCluster', title, path=katurl)		
+	page = get_ArtePage('ArteCluster', title, path=katurl)
+	if katurl == "https://www.arte.tv/de/":
+		uhd_url = "https://www.arte.tv/de/videos/RC-022710/programme-in-uhd-qualitaet/"
+		ping_uhd = url_check(uhd_url, dialog=False)
 	
 	try:											# s.a. GetContent
 		page = page["pageProps"]["props"]["page"]["value"]
@@ -944,6 +948,16 @@ def ArteCluster(pid='', title='', katurl=''):
 		PLog('ArteStart_1:')
 		PLog(str(values)[:100])
 		li = home(li, ID='arte')							# Home-Button
+		
+		if ping_uhd:										# UHD-Button
+			title = u"Programme in UHD-Qualität"
+			tag = "Folgeseiten"
+			title=py2_encode(title); uhd_url=py2_encode(uhd_url);
+			pid=""
+			fparams="&fparams={'pid': '%s', 'title': '%s', 'katurl': '%s'}" % (pid, quote(title), quote(uhd_url))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", 
+				fanart=R(ICON_ARTE), thumb=img_def, tagline=tag, fparams=fparams)
+			
 		for item in values:
 			PLog(str(page)[:60])
 			tag=""; anz=""

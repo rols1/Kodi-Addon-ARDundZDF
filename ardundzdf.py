@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>89</nr>										# Numerierung für Einzelupdate
-VERSION = '4.6.3'
-VDATE = '26.02.2023'
+VERSION = '4.6.4'
+VDATE = '05.03.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1065,8 +1065,6 @@ def AudioStart(title):
 		tag=''
 		if title == u"Entdecken":
 			tag = "die Startseite  der Audiothek"
-		if title == u"Sport":
-			tag = "Achtung: Livestreams nicht aufnehmen. Stop im Addon nicht möglich!"
 		fparams="&fparams={'title': '%s', 'ID': '%s'}" % (title, title)	
 		addDir(li=li, label=title, action="dirList", dirID="AudioStartHome", fanart=R(ICON_MAIN_AUDIO), 
 			thumb=R(img), tagline=tag, fparams=fparams)
@@ -1744,6 +1742,8 @@ def Audio_get_items_single(item, ID=''):
 	#path = path.split("/")
 	#path = "".join(path[2:3])
 	attr = stringextract('"attribution":"', '"', item)				# Sender, CR usw.
+	if attr:
+		attr = "Bild: %s" % attr
 
 	img = stringextract('image":', '},', item)
 	img = stringextract('"url":"', '"', img)
@@ -2426,12 +2426,12 @@ def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 	addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
 		summary=summary, mediatype='music')
 	
-		
-	download_list = []					# 2-teilige Liste für Download: 'title # url'
-	download_list.append("%s#%s" % (title, url))
-	PLog(download_list)
-	title_org=title; tagline_org=''; summary_org=Plot
-	li = test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=-1)  # Downloadbutton
+	if ".icecastssl." not in url:				# Livestreams ausschließen
+		download_list = []						# 2-teilige Liste für Download: 'title # url'
+		download_list.append("%s#%s" % (title, url))
+		PLog(download_list)
+		title_org=title; tagline_org=''; summary_org=Plot
+		li = test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=-1)  # Downloadbutton
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -4199,7 +4199,8 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 
 	
 	if 	SETTINGS.getSetting('pref_generate_filenames') == 'true':	# Dateiname aus Titel generieren
-		dfname = make_filenames(title.strip()) 
+		max_length = 255 - len(dest_path)
+		dfname = make_filenames(title.strip(), max_length) 
 	else:												# Bsp.: Download_20161218_091500.mp4  oder ...mp3
 		now = datetime.datetime.now()
 		mydate = now.strftime("%Y%m%d_%H%M%S")	

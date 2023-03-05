@@ -21,7 +21,7 @@ Damit entfallen auch die Radio-Podcasts der Classic-Version. Sie werden durch di
 Im Forum: https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/  
 direkt: rols1@gmx.de 
 
-#### statt Handbuch: [Einstellungen des Addons](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki)
+#### statt Handbuch: [Einstellungen des Addons - Wicki](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki)
   
 Funktionen: 
 ===================
