@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>40</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.02.2023
+# 	<nr>41</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.03.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2852,7 +2852,8 @@ def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für D
 # 24.07.2020 Anpassung für Modul m3u8: JobID wird für KillFile verwendet, für
 #	LiveRecording wird neuer Aufnahme-Job erzeugt (via JobMain 'setjob')
 # 30.08.2020 experimentelles m3u8-Verfahren entf. - s. changelog.txt
-# 
+# 12.03.2023 popen-Rückmeldung "None args" für LibreElec 11 ergänzt
+#
 def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	PLog('LiveRecord:')
 	PLog(url); PLog(title); 	
@@ -2922,7 +2923,8 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 		sp = subprocess.Popen(args, shell=False)
 		PLog('sp: ' + str(sp))
 
-		if str(sp).find('object at') > 0:  			# subprocess.Popen object OK
+		# Popen: 'None args' bei LibreElec 11
+		if str(sp).find('object at') > 0 or str(sp).find('None args') > 0:  # subprocess.Popen object OK
 			PIDffmpeg = sp.pid					# PID speichern bei Bedarf
 			PLog('PIDffmpeg neu: %s' % PIDffmpeg)
 			Dict('store', 'PIDffmpeg', PIDffmpeg)
