@@ -1,0 +1,102 @@
+{
+    "strings": {
+        "msgstr": [
+            {
+                "de": "Weitere Beiträge",
+                "fr": "Plus d'articles",
+                "en": "More articles",
+                "es": "Más aportes",
+                "pl": "Więcej wpłat",
+                "it": "Ulteriori contributi"
+            },
+            {
+                "de": "Folgebeiträge",
+                "fr": "Contributions consécutives",
+                "en": "Follow-up contributions",
+                "es": "Artículos complementarios",
+                "pl": "Artykuły związane z kontynuacją",
+                "it": "Articoli di seguito"
+            },
+            {
+                "de": "Verfügbar",
+                "fr": "Disponible",
+                "en": "Available",
+                "es": "Disponible",
+                "pl": "Dostępność",
+                "it": "Disponibile"
+            },
+            {
+                "de": "LIVE",
+                "fr": "Direct",
+                "en": "LIVE",
+                "es": "LIVE",
+                "pl": "LIVE",
+                "it": "LIVE"
+            },
+            {
+                "de": "Arte TV-Programm heute",
+                "fr": "Arte Programme TV aujourd'hui",
+                "en": "Arte TV program today",
+                "es": "Programa Arte TV de hoy",
+                "pl": "Program Arte TV już dziś",
+                "it": "Programma TV Arte oggi"
+            },
+            {
+                "de": "Kategorien",
+                "fr": "Catégories",
+                "en": "Categories",
+                "es": "Categorías",
+                "pl": "Kategorie",
+                "it": "Categorie"
+            },
+            {
+                "de": "einschließlich Startseite",
+                "fr": "y compris la page d'accueil",
+                "en": "Including home page",
+                "es": "Página de inicio incluida",
+                "pl": "Strona główna w zestawie",
+                "it": "Pagina iniziale inclusa"
+            },
+            {
+                "de": "Suche in",
+                "fr": "Recherche dans",
+                "en": "Search in",
+                "es": "Buscar en",
+                "pl": "Szukaj w",
+                "it": "Ricerca in"
+            },
+            {
+                "de": "Bandbreite und Auflösung automatisch",
+                "fr": "Largeur de bande et résolution automatiques",
+                "en": "Bandwidth and resolution automatically",
+                "es": "Ancho de banda y resolución automáticamente",
+                "pl": "Szerokość pasma i rozdzielczość automatycznie",
+                "it": "Larghezza di banda e risoluzione automatiche"
+            },
+            {
+                "de": "",
+                "fr": "",
+                "en": "",
+                "es": "",
+                "pl": "",
+                "it": ""
+            },
+            {
+                "de": "",
+                "fr": "",
+                "en": "",
+                "es": "",
+                "pl": "",
+                "it": ""
+            },
+            {
+                "de": "",
+                "fr": "",
+                "en": "",
+                "es": "",
+                "pl": "",
+                "it": ""
+            }
+        ]
+    }
+}
