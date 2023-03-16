@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>89</nr>										# Numerierung für Einzelupdate
+# 	<nr>90</nr>										# Numerierung für Einzelupdate
 VERSION = '4.6.4'
-VDATE = '05.03.2023'
+VDATE = '16.03.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -455,12 +455,11 @@ def Main():
 			fanart=R(ICON_PHOENIX), thumb=R(ICON_PHOENIX), tagline=tagline, fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_arte') == 'true':
-		tagline = 'in den Settings kann das Modul Arte-Kategorien ein- und ausgeschaltet werden'
-		summ = 'Ein komplettes Arte-Addon befindet sich im Kodinerds-Repo (ARTE.TV von realvito)'
+		tagline = 'in den Settings kann das Modul Arte-Mediathek ein- und ausgeschaltet werden'
 		fparams="&fparams={}"													# arte-Modul
-		addDir(li=li, label="Arte-Kategorien", action="dirList", dirID="resources.lib.arte.Main_arte", 
-			fanart=R('icon-arte_kat.png'), thumb=R('icon-arte_kat.png'), tagline=tagline,
-			summary=summ, fparams=fparams)
+		addDir(li=li, label="Arte-Mediathek", action="dirList", dirID="resources.lib.arte.Main_arte", 
+			fanart=R('arte_Mediathek.png'), thumb=R('arte_Mediathek.png'), tagline=tagline,
+			fparams=fparams)
 			
 	label = 'TV-Livestreams'
 	if SETTINGS.getSetting('pref_epgRecord') == 'true':		
@@ -2301,9 +2300,10 @@ def Audio_get_homescreen(page='', cluster_id=''):
 		
 		href_add = "?offset=0&limit=20"
 		for item in items:	
+			title = stringextract('"title":"', '"', item)
 			web_url = stringextract('"path":"', '"', item)
 			PLog("web_url: " + web_url) 
-			if web_url == '':
+			if web_url == '' or title == '':
 				continue
 			
 			node_id = stringextract('"id":"','"', item)					# ID der Sendung / des Beitrags / ..	
