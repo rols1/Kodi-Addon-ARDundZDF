@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>27</nr>										# Numerierung für Einzelupdate
+# 	<nr>28</nr>										# Numerierung für Einzelupdate
 #	Stand: 16.03.2023
 
 # Python3-Kompatibilität:
@@ -86,13 +86,15 @@ LANG  = [u"Français | fr",  u"Deutsch | de", u"English | en",
 fname = os.path.join("%sarte_lang") % ADDON_DATA
 if os.path.exists(fname) == False:						# Sprache vorbelegen / laden
 	arte_lang = LANG[1]
+	Dict('store', "arte_lang", arte_lang)
 else:
 	arte_lang = Dict('load', "arte_lang")
-	Dict('store', "arte_lang", new_set)
 # ----------------------------------------------------------------------			
 def Main_arte(title='', summ='', descr='',href=''):
 	PLog('Main_arte:')
 	arte_lang = Dict('load', "arte_lang")
+	if arte_lang == False or arte_lang == "":
+		arte_lang = LANG[1]
 	
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
