@@ -1,5 +1,6 @@
 {
     "strings": {
+		"numeration": "<nr>1</nr>",
         "msgstr": [
             {
                 "de": "Weitere Beiträge",
@@ -74,6 +75,126 @@
                 "it": "Larghezza di banda e risoluzione automatiche"
             },
             {
+                "de": "LAUFENDE SENDUNG",
+                "fr": "ÉMISSION EN COURS",
+                "en": "CURRENT BROADCAST",
+                "es": "PROGRAMA ACTUAL",
+                "pl": "AKTUALNY PROGRAM",
+                "it": "PROGRAMMA ATTUALE"
+            },
+            {
+                "de": "Dauer",
+                "fr": "Durée",
+                "en": "Duration",
+                "es": "Duración",
+                "pl": "Czas trwania",
+                "it": "Durata"
+            },
+            {
+                "de": "weiter zu Seite",
+                "fr": "aller à la page",
+                "en": "continue to page",
+                "es": "continuar en la página",
+                "pl": "przejdź do strony",
+                "it": "continua a pagina"
+            },
+            {
+                "de": "Dokus und Reportagen",
+                "fr": "Documentaires et reportages",
+                "en": "Documentaries and reports",
+                "es": "Documentales y reportajes",
+                "pl": "Filmy dokumentalne i reportaże",
+                "it": "Documentari e rapporti"
+            },
+            {
+                "de": "Kino",
+                "fr": "Cinéma",
+                "en": "Cinema",
+                "es": "Cine",
+                "pl": "Kino",
+                "it": "Cinema"
+            },
+            {
+                "de": "Fernsehfilme und Serien",
+                "fr": "Séries et fictions",
+                "en": "TV movies and series",
+                "es": "Películas y series de televisión",
+                "pl": "Filmy i seriale TV",
+                "it": "Film e serie televisive"
+            },
+            {
+                "de": "Aktuelles und Gesellschaft",
+                "fr": "Info et société",
+                "en": "News and society",
+                "es": "Noticias y sociedad",
+                "pl": "Wiadomości i społeczeństwo",
+                "it": "Notizie e società"
+            },
+            {
+                "de": "Kultur und Pop",
+                "fr": "Culture et pop",
+                "en": "Culture and pop",
+                "es": "Cultura y pop",
+                "pl": "Kultura i pop",
+                "it": "Cultura e pop"
+            },
+             {
+                "de": "ARTE Concert",
+                "fr": "ARTE Concert",
+                "en": "ARTE Concert",
+                "es": "Concierto ARTE",
+                "pl": "Koncert ARTE",
+                "it": "Concerto ARTE"
+            },
+            {
+                "de": "Wissenschaft",
+                "fr": "Sciences",
+                "en": "Science",
+                "es": "Ciencia",
+                "pl": "Nauka",
+                "it": "Scienza"
+            },
+            {
+                "de": "Entdeckung der Welt",
+                "fr": "Voyages et découvertes",
+                "en": "Discovery of the world",
+                "es": "Descubrimiento del mundo",
+                "pl": "Odkrycie świata",
+                "it": "Scoperta del mondo"
+            },
+            {
+                "de": "Geschichte",
+                "fr": "Histoire",
+                "en": "History",
+                "es": "Historia",
+                "pl": "Historia",
+                "it": "La storia"
+            },
+            {
+                "de": "Neueste Videos",
+                "fr": "Dernières vidéos",
+                "en": "Latest videos",
+                "es": "Últimos vídeos",
+                "pl": "Najnowsze filmy",
+                "it": "Ultimi video"
+            },
+             {
+                "de": "Zurück zum Hauptmenü",
+                "fr": "Retour au menu principal",
+                "en": "Back to main menu",
+                "es": "Volver al menú principal",
+                "pl": "Powrót do menu głównego",
+                "it": "Torna al menu principale"
+            },
+            {
+                "de": "",
+                "fr": "",
+                "en": "",
+                "es": "",
+                "pl": "",
+                "it": ""
+            },
+            {
                 "de": "",
                 "fr": "",
                 "en": "",
@@ -97,6 +218,6 @@
                 "pl": "",
                 "it": ""
             }
-        ]
+      ]
     }
 }

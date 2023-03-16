@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>26</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.03.2023
+# 	<nr>27</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.03.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -92,9 +92,13 @@ else:
 # ----------------------------------------------------------------------			
 def Main_arte(title='', summ='', descr='',href=''):
 	PLog('Main_arte:')
+	arte_lang = Dict('load', "arte_lang")
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)			# Home-Button
+	l = L(u'Zurück zum Hauptmenü')
+	ltitle = " %s %s" % (l, NAME)						# Startblank s. home
+	li = home(li, ID=NAME, ltitle=ltitle)				# Home-Button
+	
 
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		l = L(u"Suche in")
@@ -108,15 +112,17 @@ def Main_arte(title='', summ='', descr='',href=''):
 			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
 
 	title=u"%s Arte-Mediathek" % L(u"Suche in")
+	tag = "[B]%s[/B]" % arte_lang
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.arte_Search", fanart=R(ICON_ARTE), 
-		thumb=R(ICON_SEARCH), fparams=fparams)
+		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)
 	# ------------------------------------------------------
 
 	title = u"%s" % L("Arte TV-Programm heute")
+	tag = "[B]%s[/B]" % arte_lang
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.EPG_Today", fanart=R(ICON_ARTE), 
-		thumb=R(ICON_TV), fparams=fparams)
+		thumb=R(ICON_TV), tagline=tag, fparams=fparams)
 
 	tag=u'[B]%s[/B]' % L("Arte Livestream")
 	title, tag, summ, img, href = get_live_data('ARTE')
@@ -134,13 +140,13 @@ def Main_arte(title='', summ='', descr='',href=''):
 	# ------------------------------------------------------
 	title = u"%s" % L(u"Kategorien")
 	tag = u"%s wwww.arte.tv" % L(u"einschließlich Startseite")
+	summ = "[B]%s[/B]" % arte_lang
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Kategorien", fanart=R(ICON_ARTE), 
-		thumb=R(ICON_ARTE), tagline=tag, fparams=fparams)
+		thumb=R(ICON_ARTE), tagline=tag, summary=summ, fparams=fparams)
 		
 	# ------------------------------------------------------
 	
-	arte_lang = Dict('load', "arte_lang")
 	title 	= u'Sprache / Language'				# Auswahl Sprache
 	tag = "[B]%s[/B]" % arte_lang				# aktuell
 	title=py2_encode(title); 
@@ -173,7 +179,9 @@ def set_lang(title, new_set=""):
 		arte_lang = arte_lang = LANG[1]
 		
 	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)								# Home-Button
+	l = L(u'Zurück zum Hauptmenü')
+	ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 	
 	tag = "[B]%s[/B]" % arte_lang						# aktuell
 	for item in LANG:
@@ -248,7 +256,8 @@ def get_live_data(name):
 	summ = unescape(summ); 
 	title = "[B]LIVE: %s[/B]" % title
 	PLog("title: " + title); 
-	tag = "[B]LAUFENDE SENDUNG: %s - %s [/B]" % (start, end)
+	l = L("LAUFENDE SENDUNG") 
+	tag = u"[B]%s: %s - %s [/B]" % (l, start, end)
 	PLog(title); PLog(thumb); PLog(title); 
 
 	return title, tag, summ, thumb, href
@@ -280,7 +289,9 @@ def EPG_Today():
 		return li
 		
 	li = xbmcgui.ListItem()
-	li = home(li, ID='arte')					# Home-Button	
+	l = L(u'Zurück zum Hauptmenü')
+	ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button	
 	
 	li, cnt = GetContent(li, page, ID="EPG_Today")
 	PLog("cnt: " + str(cnt))
@@ -295,7 +306,9 @@ def arte_Live(href, title, Plot, img):
 	PLog('arte_Live:')
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='arte')			# Home-Button
+	l = L(u'Zurück zum Hauptmenü')
+	ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
 		PLog('Sofortstart: arte_Live')
@@ -352,7 +365,9 @@ def arte_Search(query='', nextpage=''):
 				
 		
 	li = xbmcgui.ListItem()
-	li = home(li, ID='arte')				# Home-Button
+	l = L(u'Zurück zum Hauptmenü')
+	ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 
 	PLog(len(page))
 	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
@@ -374,7 +389,8 @@ def arte_Search(query='', nextpage=''):
 		li = xbmcgui.ListItem()								# Kontext-Doppel verhindern
 		img = R(ICON_MEHR)
 		title = L(u"Weitere Beiträge")
-		tag = u"%s %s" % (L(u"weiter zu Seite"), nextpage)
+		l = L(u"weiter zu Seite")
+		tag = u"%s %s" % (l, nextpage)
 
 		query=py2_encode(query); 
 		fparams="&fparams={'query': '%s', 'nextpage': '%s'}" % (quote(query), nextpage)
@@ -497,8 +513,9 @@ def GetContent(li, page, ID):
 		if mehrfach:										# s. coll
 			tag = u"[B]%s[/B]" % L("Folgebeiträge")
 		else:
+			l = L("Dauer")
 			if start_end:
-				tag = u"Dauer %s\n\n%s\n%s" % (dur, start_end, geo)
+				tag = u"%s %s\n\n%s\n%s" % (l, dur, start_end, geo)
 			else:
 				if dur:
 					tag = u"Dauer %s\n\n%s" % (dur, geo)
@@ -635,7 +652,10 @@ def Beitrag_Liste(url, title):
 		return
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='arte')									# Home-Button
+	l = L(u'Zurück zum Hauptmenü')
+	ltitle = " %s %s" % (l, "arte")								# Startblank s. home
+	li = home(li, ID='arte', ltitle=ltitle)						# Home-Button
+
 	ID='Beitrag_Liste'
 	if url.find('pageId=MOST_RECENT') > 0:						# Neueste Videos
 		ID='MOST_RECENT'
@@ -758,7 +778,9 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	Dict("store", '%s_MP4_List' % ID, MP4_List) 
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='arte')					# Home-Button
+	l = L(u'Zurück zum Hauptmenü')
+	ltitle = " %s %s" % (l, "arte")				# Startblank s. home
+	li = home(li, ID='arte', ltitle=ltitle)		# Home-Button
 	
 	if hls_add:									# Trailer-Zusatz	
 		title = "%s %s" % (title, hls_add)
@@ -943,18 +965,23 @@ def Kategorien():
 	PLog("Kategorien:")
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='arte')				# Home-Button
+	l = L(u'Zurück zum Hauptmenü')
+	ltitle = " %s %s" % (l, "arte")					# Startblank s. home
+	li = home(li, ID='arte', ltitle=ltitle)			# Home-Button
 	
 	# Format: Titel-deutsch | Icon | Kat_ID | verfügbar für Sprache
-	cat_list = ["Dokus und Reportagen|arte_dokus.png|DOR|All", 
-				"Kino|arte_kino.png|CIN|All",
-				"Fernsehfilme und Serien|arte_filme.png|SER|All", 
-				"Aktuelles und Gesellschaft|arte_act.png|ACT|All",
-				"Kultur und Pop|arte_kultur.png|CPO|All", 
-				"ARTE Concert|arte_conc.png|arte_concert|All",
-				"Wissenschaft|arte_science.png|SCI|All", 
-				"Entdeckung der Welt|arte_entdeck.png|/de/videos/entdeckung-der-welt/|de", 
-				"Geschichte|arte_his.png|HIS|All"
+	l1=L("Dokus und Reportagen"); l2=L("Kino"); l3=L("Fernsehfilme und Serien");
+	l4=L("Aktuelles und Gesellschaft"); l5=L("Kultur und Pop"); l6=L("ARTE Concert");
+	l7=L("Wissenschaft"); l8=L("Entdeckung der Welt"); l9=L("Geschichte");
+	cat_list = [u"%s|arte_dokus.png|DOR|All" % l1, 
+				u"%s|arte_kino.png|CIN|All" % l2,
+				u"%s|arte_filme.png|SER|All" % l3, 
+				u"%s|arte_act.png|ACT|All" % l4,
+				u"%s|arte_kultur.png|CPO|All" % l5, 
+				u"%s|arte_conc.png|arte_concert|All" % l6,
+				u"%s|arte_science.png|SCI|All" % l7, 
+				u"%s|arte_entdeck.png|/de/videos/entdeckung-der-welt/|de" % l8, 
+				u"%s|arte_his.png|HIS|All" % l9
 				]
 	
 	arte_lang = Dict('load', "arte_lang")
@@ -969,11 +996,11 @@ def Kategorien():
 	
 	path=py2_encode(path)
 	fparams="&fparams={'katurl': '%s'}" % quote(path)		# Button Startseite
-	addDir(li=li, label="Startseite www.arte.tv/%s" % lang, action="dirList", dirID="resources.lib.arte.ArteCluster", 
+	l = L("Startseite")
+	addDir(li=li, label=u"%s [B]www.arte.tv/%s[/B]" % (l, lang), action="dirList", dirID="resources.lib.arte.ArteCluster", 
 		fanart=R(ICON_ARTE), thumb=R(ICON_ARTE_START), summary=summ, fparams=fparams)
 
 	pre = "https://www.arte.tv"
-	PLog("Mark0")
 	for item in cat_list:									# Kategorien listen
 		title, img, Kat_ID, for_lang = item.split("|")
 		pat = u"page': '%s" % Kat_ID
@@ -989,7 +1016,8 @@ def Kategorien():
 				
 		url = stringextract("url': '", "'", page[pos:]) 
 		katurl = pre + url
-		tag = "Kategorie: [B]%s[/B]" % title
+		l = L("Kategorie")
+		tag = u"%s: [B]%s[/B]" % (l, title)
 	
 		PLog('Satz4:')
 		PLog(title); PLog(katurl);
@@ -998,13 +1026,13 @@ def Kategorien():
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
 				thumb=R(img), tagline=tag, summary=summ, fparams=fparams)
 
-	title = "Neueste Videos"									# Button Neueste Videos
+	title = L("Neueste Videos")									# Button Neueste Videos
 	path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/zones/daeadc71-4306-411a-8590-1c1f484ef5aa/content?abv=A&page=1&pageId=MOST_RECENT&zoneIndexInPage=0" % lang
 	path=py2_encode(path)
 	fparams="&fparams={'title': '%s', 'url': '%s'}" %\
 		(quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Beitrag_Liste", fanart=R(ICON_ARTE), 
-		thumb=R(ICON_ARTE_NEW), fparams=fparams)
+		thumb=R(ICON_ARTE_NEW), summary=summ, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -1062,7 +1090,9 @@ def ArteCluster(pid='', title='', katurl=''):
 	if pid == '':											# 1. Durchlauf
 		PLog('ArteStart_1:')
 		PLog(str(values)[:100])
-		li = home(li, ID='arte')							# Home-Button
+		l = L(u'Zurück zum Hauptmenü')
+		ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 		
 		if ping_uhd and lang == "de":						# UHD-Button
 			title = u"UHD-Programme"
@@ -1125,7 +1155,9 @@ def ArteCluster(pid='', title='', katurl=''):
 			return		
 		PLog(str(page)[:80])
 		
-		li = home(li, ID='arte')					# Home-Button
+		l = L(u'Zurück zum Hauptmenü')
+		ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 		li, cnt = GetContent(li, page, ID="ArteStart_2")
 		PLog("cnt: " + str(cnt))
 		ArteMehr(page, li)							# Mehr-Beiträge?

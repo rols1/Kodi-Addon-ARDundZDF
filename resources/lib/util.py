@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>41</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.03.2023
+# 	<nr>42</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.03.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -135,7 +135,7 @@ ICON_MAIN_POD	= 'radio-podcasts.png'
 ICON_MAIN_AUDIO	= 'ard-audiothek.png'
 ICON_MAIN_ZDFMOBILE	= 'zdf-mobile.png'
 ICON_PHOENIX	= 'phoenix.png'			
-ICON_ARTE		= 'icon-arte_kat.png'			
+ICON_ARTE		= 'arte_Mediathek.png'			
 
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
@@ -237,8 +237,9 @@ def get_items_from_list(my_indices, my_list):
 #	Liste item von Aufrufer erzeugt
 # 27.06.2022 filterstatus hier und in addDir entfernt (obsolet, da  Home-
 #	Button optional)
+# 16.03.2023 optionaler Param ltitle, Bsp. Arte (übersetzt) 
 #
-def home(li, ID):												
+def home(li, ID, ltitle=""):												
 	PLog('home: ' + ID)	
 	FILTER_SET 	= os.path.join(ADDON_DATA, "filter_set")
 		
@@ -250,6 +251,8 @@ def home(li, ID):
 	# Position 1 bei aufst. Sortierung:					# ZERO WIDTH SPACE u"\u200B" wirkt nicht mit Color
 	Home = " Home: "									#	getestet: 2000 - 202F (invisible-characters-ascii)
 	title = u' Zurück zum Hauptmenü %s' % ID
+	if ltitle:											# Übersetzung (außer für 'ARD und ZDF')
+		title=ltitle
 	summary = title										# z.Z. n.w.
 	
 	tag =  "Ausschluss-Filter Status: AUS"				# nur Untermenüs ARD, ZDF + Audiothek, nicht Module
@@ -1808,6 +1811,7 @@ def transl_json(line):	# json-Umlaute übersetzen
 		, (u'u00EA', u'e')			# 3Sat: Fête 
 		, (u'u00E9', u'e')			# 3Sat: Fabergé
 		, (u'u00E6', u'ae')			# 3Sat: Kjaerstad
+		, (u'\\u00e7', u'ç')		# Arte: ç c mit Cedille
 		, (u'\\u00e9', u'e')		# Arte: Frédéric
 		, (u'\\u00e0', u'a')		# Arte: agrave
 		, (u'\\u201e', u'*')		# Arte: doublequote tief
@@ -2891,7 +2895,7 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	now = datetime.datetime.now()
 	mydate = now.strftime("%Y%m%d_%H%M%S")			# Zeitstempel
 	dfname = make_filenames(title)					# Dateiname aus Sendername generieren
-	if epgJob:
+	if epgJob:										# vorgeplante Aufnahme
 		dfname = "%s_%s.mp4" % (epgJob, dfname)
 	else:
 		dfname = "%s_%s.mp4" % (mydate, dfname)
@@ -2936,7 +2940,7 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 			# Kodi unterlässt notification bei minimiertem Fenster, daher 
 			#	beim epgJob Austausch gegen Sprachdatei: "ARDundZDF informiert:
 			#	die Aufnahme einer Sendung wurde gestartet"
-			if epgJob:
+			if epgJob:									# vorgeplante Aufnahme
 				url = R('ttsMP3_Monitor_Aufnahme_gestartet.mp3')
 				PlayAudio(url, title='', thumb='', Plot='')
 			else:										# Job für Recording erzeugen (wie m3u8-Verfahren)
