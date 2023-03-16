@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>9</nr>										# Numerierung für Einzelupdate
+# 	<nr>10</nr>										# Numerierung für Einzelupdate
 #	Stand: 15.03.2023
 #	
  
@@ -119,7 +119,7 @@ def update_single(PluginAbsPath):
 	SINGLELIST = ["%s/%s" % (PluginAbsPath, "resources/livesenderTV.xml"),
 				"%s/%s" % (PluginAbsPath, "resources/podcast-favorits.txt"),
 				"%s/%s" % (PluginAbsPath, "resources/settings.xml"),
-				"%s/%s" % (PluginAbsPath, "resources/arte_lang.json.xml"),
+				"%s/%s" % (PluginAbsPath, "resources/arte_lang.json"),
 				"%s/%s" % (PluginAbsPath, "ardundzdf.py")
 		]
 	selected=[0,1,2]												# Auswahl-Default: alle, weiter s.u.
