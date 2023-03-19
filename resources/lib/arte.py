@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>29</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.03.2023
+#	Stand: 19.03.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -96,7 +96,7 @@ def Main_arte(title='', summ='', descr='',href=''):
 	
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = " %s %s" % (l, NAME)						# Startblank s. home
+	ltitle = u" %s %s" % (l, NAME)						# Startblank s. home
 	li = home(li, ID=NAME, ltitle=ltitle)				# Home-Button
 	
 
@@ -112,7 +112,7 @@ def Main_arte(title='', summ='', descr='',href=''):
 			thumb=R("suche_mv.png"), tagline=tag, fparams=fparams)
 
 	title=u"%s Arte-Mediathek" % L(u"Suche in")
-	tag = "[B]%s[/B]" % arte_lang
+	tag = u"[B]%s[/B]" % arte_lang
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.arte_Search", fanart=R(ICON_ARTE), 
 		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)
@@ -140,7 +140,7 @@ def Main_arte(title='', summ='', descr='',href=''):
 	# ------------------------------------------------------
 	title = u"%s" % L(u"Kategorien")
 	tag = u"%s wwww.arte.tv" % L(u"einschließlich Startseite")
-	summ = "[B]%s[/B]" % arte_lang
+	summ = u"[B]%s[/B]" % arte_lang
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Kategorien", fanart=R(ICON_ARTE), 
 		thumb=R(ICON_ARTE), tagline=tag, summary=summ, fparams=fparams)
@@ -180,10 +180,10 @@ def set_lang(title, new_set=""):
 		
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+	ltitle = u" %s %s" % (l, "arte")						# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 	
-	tag = "[B]%s[/B]" % arte_lang						# aktuell
+	tag = u"[B]%s[/B]" % arte_lang						# aktuell
 	for item in LANG:
 		title = u"%s --> [B]%s[/B]" % (arte_lang, item)
 		PLog('Satz6: ' + title)
@@ -219,7 +219,10 @@ def get_live_data(name):
 	lang = arte_lang.split("|")[1].strip()			# fr, de, ..	
 	path = "https://www.arte.tv/%s/live/" % lang
 	path, msg = get_page(path, GetOnlyRedirect=True)# Permanent-Redirect bei www.arte.tv/fr/live/
+	tag_add=""
 	if url_check(path, dialog=False) == False:		# nicht für alle Sprachen verfügbar
+		tag_add = L(u"LIVE nicht verfügbar für")
+		tag_add = u"%s: [B]%s[/B]" % (tag_add, arte_lang)
 		path = "https://www.arte.tv/de/live/"		# Fallback
 	
 	# Format err_par: title, tag, summ, img, href = get_live_data
@@ -258,6 +261,9 @@ def get_live_data(name):
 	PLog("title: " + title); 
 	l = L("LAUFENDE SENDUNG") 
 	tag = u"[B]%s: %s - %s [/B]" % (l, start, end)
+	if tag_add:													# nicht verfügbar
+		tag = u"%s\n%s" % (tag, tag_add)
+		
 	PLog(title); PLog(thumb); PLog(title); 
 
 	return title, tag, summ, thumb, href
@@ -282,15 +288,15 @@ def EPG_Today():
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
 		path = "https://www.arte.tv/api/rproxy/emac/v3/%s/web/pages/TV_GUIDE/?day=%s" % ("de", today)
 	
-	page = get_ArtePage('EPG_Today', "EPG_Today", path)		
+	page = get_ArtePage('EPG_Today', "EPG_Today", path)	
 	if page == '':
-		msg1 = "Programmabruf fehlgeschlagen | %s" % title
-		MyDialog(msg1, msg, '')
+		msg1 = L(u"Programmabruf fehlgeschlagen") 
+		MyDialog(msg1, "", '')
 		return li
 		
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+	ltitle = u" %s %s" % (l, "arte")						# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button	
 	
 	li, cnt = GetContent(li, page, ID="EPG_Today")
@@ -307,7 +313,7 @@ def arte_Live(href, title, Plot, img):
 
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+	ltitle = u" %s %s" % (l, "arte")						# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
@@ -357,7 +363,7 @@ def arte_Search(query='', nextpage=''):
 
 	page, msg = get_page(path=path, do_safe=False)		# ohne quote in get_page (api-Call)
 	if page == '':						
-		msg1 = 'Fehler in Suche: %s' % query
+		msg1 = L(u'Fehler in Suche') + ": %s" % query
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li
@@ -366,7 +372,7 @@ def arte_Search(query='', nextpage=''):
 		
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+	ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 
 	PLog(len(page))
@@ -379,7 +385,7 @@ def arte_Search(query='', nextpage=''):
 	page = json.loads(page)
 	li,cnt = GetContent(li, page, ID='SEARCH')
 	if 	cnt == 0:
-		msg1 = "leider keine Treffer zu:"
+		msg1 = L(u"leider keine Treffer zu")
 		msg2 = query
 		MyDialog(msg1, msg2, '')	
 		return li
@@ -511,17 +517,17 @@ def GetContent(li, page, ID):
 		
 		
 		if mehrfach:										# s. coll
-			tag = u"[B]%s[/B]" % L("Folgebeiträge")
+			tag = u"[B]%s[/B]" % L(u"Folgebeiträge")
 		else:
 			l = L("Dauer")
 			if start_end:
 				tag = u"%s %s\n\n%s\n%s" % (l, dur, start_end, geo)
 			else:
 				if dur:
-					tag = u"Dauer %s\n\n%s" % (dur, geo)
+					tag = u"%s %s\n\n%s" % (l, dur, geo)
 				else:
 					tag = u"%s" % (geo)
-			
+					
 		title = transl_json(title); title = unescape(title);
 		title = repl_json_chars(title); 					# franz. Akzent mögl.
 		summ = repl_json_chars(summ)						# -"-
@@ -554,9 +560,11 @@ def GetContent(li, page, ID):
 				
 			label = title
 			if ID == "EPG_Today":							# EPG: Uhrzeit -> Label
+				lvon = L("von"); lbis = L("bis")
+				ldauer = L("Dauer")
 				start = start[-5:]; end = end[-5:];
 				label = "[COLOR blue]%s[/COLOR] | %s" % (start, title)	# Sendezeit | Titel
-				tag = "[B]von %s bis %s Uhr | Dauer: %s [/B]" % (start, end, dur)
+				tag = "[B]%s %s %s %s Uhr | %s: %s [/B]" % (lvon, start, lbis, end, ldauer, dur)
 				if "stickers" in item:
 					try:			 
 						if item["stickers"][0]["code"] == "LIVE":
@@ -653,7 +661,7 @@ def Beitrag_Liste(url, title):
 	
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = " %s %s" % (l, "arte")								# Startblank s. home
+	ltitle = u" %s %s" % (l, "arte")								# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)						# Home-Button
 
 	ID='Beitrag_Liste'
@@ -712,7 +720,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 
 	page, msg = get_page(path1, JsonPage=True, do_safe=False)		# api_v2_Call
 	if page == '':						
-		msg1 = 'Fehler in SingleVideo: %s' % title
+		msg1 = L(u'Fehler in SingleVideo') + ": %s" % title
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return li
@@ -762,7 +770,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 			
 	if not len(HLS_List) and not len(MP4_List):			
 		msg1 = u'SingleVideo: [B]%s[/B]' % title
-		msg2 = u'Streams leider (noch) nicht verfügbar.'
+		msg2 = L(u'Streams leider (noch) nicht verfügbar')
 		MyDialog(msg1, msg2, '')
 		return li
 	
@@ -779,7 +787,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = " %s %s" % (l, "arte")				# Startblank s. home
+	ltitle = u" %s %s" % (l, "arte")				# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)		# Home-Button
 	
 	if hls_add:									# Trailer-Zusatz	
@@ -966,7 +974,7 @@ def Kategorien():
 
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = " %s %s" % (l, "arte")					# Startblank s. home
+	ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)			# Home-Button
 	
 	# Format: Titel-deutsch | Icon | Kat_ID | verfügbar für Sprache
@@ -1028,7 +1036,7 @@ def Kategorien():
 
 	title = L("Neueste Videos")									# Button Neueste Videos
 	path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/zones/daeadc71-4306-411a-8590-1c1f484ef5aa/content?abv=A&page=1&pageId=MOST_RECENT&zoneIndexInPage=0" % lang
-	path=py2_encode(path)
+	title=py2_encode(title); path=py2_encode(path); 
 	fparams="&fparams={'title': '%s', 'url': '%s'}" %\
 		(quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Beitrag_Liste", fanart=R(ICON_ARTE), 
@@ -1091,7 +1099,7 @@ def ArteCluster(pid='', title='', katurl=''):
 		PLog('ArteStart_1:')
 		PLog(str(values)[:100])
 		l = L(u'Zurück zum Hauptmenü')
-		ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+		ltitle = u" %s %s" % (l, "arte")						# Startblank s. home
 		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 		
 		if ping_uhd and lang == "de":						# UHD-Button
@@ -1156,7 +1164,7 @@ def ArteCluster(pid='', title='', katurl=''):
 		PLog(str(page)[:80])
 		
 		l = L(u'Zurück zum Hauptmenü')
-		ltitle = " %s %s" % (l, "arte")						# Startblank s. home
+		ltitle = u" %s %s" % (l, "arte")						# Startblank s. home
 		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 		li, cnt = GetContent(li, page, ID="ArteStart_2")
 		PLog("cnt: " + str(cnt))
@@ -1222,11 +1230,11 @@ def get_ArtePage(caller, title, path, header=''):
 
 	page, msg = get_page(path, GetOnlyRedirect=True)# Permanent-Redirect-Url abfangen
 	url = page								
-	page, msg = get_page(url, header=header)	
+	page, msg = get_page(url, header=header)
 	if page == '':						
-		msg1 = 'Fehler in %s: %s' % (caller, title)
+		msg1 = u"%s: " % caller + L("nicht verfügbar") + ":"
+		msg2 = title
 		msg2 = msg
-		msg2 = u"Seite weder im Cache noch im Web verfügbar"
 		MyDialog(msg1, msg2, '')
 		return ''
 			
@@ -1296,7 +1304,8 @@ def L(string):
 	lang = arte_lang.split("|")[1].strip()			# fr, de, ..
 	PLog("lang: " + arte_lang)
 		
-	fname = os.path.join("%sresources/arte_lang.json") % ADDON_PATH
+	# erstes / für Leia erforderlich:
+	fname = os.path.join("%s/resources/arte_lang.json") % ADDON_PATH
 	if os.path.exists(fname) == False:
 		PLog("fehlt: %s" % fname)	
 		return 	string
@@ -1314,9 +1323,8 @@ def L(string):
 				break
 	except Exception as exception:
 		PLog("L_error: " + str(exception))
-#		lstring=""
 			
-	PLog("lstring: " + lstring)
+	PLog("lstring_found: %s" % lstring)
 	if lstring:
 		return lstring
 	else:

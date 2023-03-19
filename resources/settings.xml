@@ -11,7 +11,7 @@
     	<setting label="Kinderprogramme verwenden" type="bool" id="pref_use_childprg" default="false"/>
      	<setting label="TagesschauXL verwenden" type="bool" id="pref_use_XL" default="false"/>
       	<setting label="Phoenix verwenden" type="bool" id="pref_use_phoenix" default="false"/>
-      	<setting label="Arte-Kategorien verwenden" type="bool" id="pref_use_arte" default="false"/>
+      	<setting label="Arte-Mediathek verwenden" type="bool" id="pref_use_arte" default="false"/>
       	<setting label="MediathekViewWeb-Suche verwenden" type="bool" id="pref_use_mvw" default="false"/>
     <setting type="sep"/>
    	<setting label="TV-Live-Sender: aktuelle Sendung zeigen - dauert länger" type="bool" id="pref_use_epg" default="false"/>

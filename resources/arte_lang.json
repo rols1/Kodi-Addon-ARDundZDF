@@ -187,28 +187,76 @@
                 "it": "Torna al menu principale"
             },
             {
-                "de": "",
-                "fr": "",
-                "en": "",
-                "es": "",
-                "pl": "",
-                "it": ""
+                "de": "von",
+                "fr": "de",
+                "en": "from",
+                "es": "de",
+                "pl": "od",
+                "it": "da"
             },
             {
-                "de": "",
-                "fr": "",
-                "en": "",
-                "es": "",
-                "pl": "",
-                "it": ""
+                "de": "bis",
+                "fr": "à",
+                "en": "to",
+                "es": "a",
+                "pl": "do",
+                "it": "a"
             },
             {
-                "de": "",
-                "fr": "",
-                "en": "",
-                "es": "",
-                "pl": "",
-                "it": ""
+                "de": "LIVE nicht verfügbar für",
+                "fr": "LIVE non disponible pour",
+                "en": "LIVE not available for",
+                "es": "LIVE no disponible para",
+                "pl": "LIVE nie jest dostępny dla",
+                "it": "LIVE non disponibile per"
+            },
+            {
+                "de": "Programmabruf fehlgeschlagen",
+                "fr": "Échec de la récupération du programme",
+                "en": "Program fetch failed",
+                "es": "Error en la recuperación del programa",
+                "pl": "Pobieranie programu nie powiodło się",
+                "it": "Recupero del programma non riuscito"
+            },
+            {
+                "de": "Fehler in Suche",
+                "fr": "Erreur dans la recherche",
+                "en": "Error in search",
+                "es": "Error en la búsqueda",
+                "pl": "Błąd w wyszukiwaniu",
+                "it": "Errore nella ricerca"
+            },
+            {
+                "de": "leider keine Treffer zu",
+                "fr": "malheureusement aucun résultat pour",
+                "en": "unfortunately no hits for",
+                "es": "desafortunadamente no hay resultados para",
+                "pl": "niestety brak trafień dla",
+                "it": "purtroppo nessun riscontro per"
+            },
+            {
+                "de": "Fehler in SingleVideo",
+                "fr": "Erreur dans SingleVideo",
+                "en": "Error in SingleVideo",
+                "es": "Error en SingleVideo",
+                "pl": "Błąd w SingleVideo",
+                "it": "Errore in SingleVideo"
+            },
+            {
+                "de": "Streams leider (noch) nicht verfügbar",
+                "fr": "Streams malheureusement pas (encore) disponibles",
+                "en": "Streams unfortunately not (yet) available",
+                "es": "Lamentablemente (aún) no hay streams disponibles",
+                "pl": "Strumienie niestety nie są (jeszcze) dostępne",
+                "it": "I flussi purtroppo non sono (ancora) disponibili"
+            },
+            {
+                "de": "nicht verfügbar",
+                "fr": "non disponibl",
+                "en": "not available!",
+                "es": "no disponible",
+                "pl": "niedostępny",
+                "it": "non disponibile"
             },
             {
                 "de": "",

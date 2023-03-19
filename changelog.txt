@@ -10,6 +10,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+19.03.2023 4.6.5
+			Audio_get_homescreen (Audiothek): Listeneinträge ohne Titel übersprungen
+			(z.B. in Entdecken -> Exklusive Podcasts).
+			LiveRecord (Modul util): popen-Rückmeldung "None args" für LibreElec 11 
+			ergänzt.
+			arte-Modul: Erweiterung für unterstützte Sprachen - neue Funktion L, neue
+			Icons arte_Mediathek, arte_lang + arte_live, Anpassungen: Modulkopf, Main_arte,
+			arte_Search, Kategorien, ArteCluster, home (util), update_single (Modul EPG),
+			neue Datei ../resources/arte_lang.json, Anpassungen der wichtigsten Fehler-
+			meldungen, Hinweis auf plugin.video.tyl0re.arte im Haupt-PRG entfernt.
+
 05.02.2023 4.6.4
 			SingleBeitrag (phoenix): Button ARDundZDF-Suche bei Youtube-Videos ergänzt,
 			Leitthema-Stil geändert (fett statt rot).
