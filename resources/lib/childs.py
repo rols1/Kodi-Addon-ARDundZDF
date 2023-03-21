@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>13</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.01.2023
+# 	<nr>14</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.03.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1454,36 +1454,65 @@ def Kikaninchen_Videos(showChar, path='', title=''):
 # ----------------------------------------------------------------------
 # 13.12.2022 Neu nach Webseitenänderungen
 # ausgelagert von Kikaninchen Videos ("Alle Filme")
+# 21.03.2023 Quelle geändert ../filme-122.html -> ../filme-122.json
+#	(mit html nur noch 1 film erreichbar). href -> xml-Quelle ->
+#	 Kikaninchen_VideoSingle
 def KikaninchenFilme():	
 	PLog("KikaninchenFilme:")
 	
-	path = 'https://www.kikaninchen.de/filme/filme-122.html'
+	path = 'https://www.kikaninchen.de/filme/filme-122.json'
 	page, msg = get_page(path, header=KIKA_HEADERS)			# ohne Dict, kleine Seite
 	if page == '':							
-		msg1 = "Fehler in KikaninchenVideosAZ:"
+		msg1 = "Fehler in KikaninchenFilme:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
+		return
+
+	try:
+		objs = json.loads(page)
+		films = objs["document"]["teaserBoxes"][0]["teasers"]
+	except Exception as exception:
+		PLog("L_error: " + str(exception))
+		films = []
+	PLog("Filme: %s" % len(films))
+	if len(films) == 0:
 		return
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 			
-	pos1 = page.find("node-filme")
-	page = page[pos1:]
-	PLog(page[:100])
-	items = blockextract("<a href", page)							# Sendungen-Links
-	PLog(len(items))
-	
-	thumb = R("Dir-video.png")
-	for s in items:
-		href = stringextract('href="', '"', s)
-		title = stringextract('title="', '"', s)
-		tag = 'Weiter zum [B]Film[/B]'
+	#thumb = R("Dir-video.png")   				# Fallback
+	for film in films:							# Bereiche standard/special
+		standard = film["standard"]
+		special = film["special"]
+		PLog(str(standard)[:80])
+		PLog(str(special)[:80])
 		
-		href=py2_encode(href)
-		fparams="&fparams={'showChar': '', 'path': '%s'}" % quote(href)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videos", fanart=GIT_KANINCHEN, 
-			thumb=thumb, fparams=fparams, tagline=tag)
+		title = standard["title"]
+		tline = standard["topline"]
+		descr = standard["teaserText"]
+
+		img = standard["teaserImage"]["urlScheme"]
+		img = img.replace("**imageVariant**", "original")	# Varianten s. "variants":[
+		thumb = img.replace("**width**", "1920")							# s.o.
+		img_alt = standard["teaserImage"]["altText"]
+		cr = standard["teaserImage"]["rights"]
+		bild = "Bild: %s | %s" % (img_alt, cr)
+		
+		href = special["avCustomUrl"]
+		dur = special["duration"]
+		
+		dauer = "Dauer: " + dur
+		tag = "%s\n%s" % (dauer, bild)
+		summ = "[B]%s[/B]\n%s" % (tline, descr)
+		
+		PLog('Satz2:')		
+		PLog(title);PLog(href);PLog(img);
+		
+		href=py2_encode(href); title=py2_encode(title)
+		fparams="&fparams={'path': '', 'title': '%s', 'assets_url': '%s'}" % (quote(title), quote(href))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_VideoSingle", fanart=GIT_KANINCHEN, 
+			thumb=thumb, fparams=fparams, tagline=tag, summary=summ)
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
@@ -1493,7 +1522,8 @@ def KikaninchenFilme():
 #	Player, für Videodetails 
 # Aufrufer: Kikaninchen_Videos
 # Aufrufer mit assets_url: KikaninchenLieder
-#	
+# 21.03.2023 url_m3u8 <adaptiveHttpStreamingRedirectorUrl> ergänzt
+#
 def Kikaninchen_VideoSingle(path, title, assets_url=''):	
 	PLog('Kikaninchen_VideoSingle: ' + path)
 	title_org=title
@@ -1552,6 +1582,8 @@ def Kikaninchen_VideoSingle(path, title, assets_url=''):
 			break
 		
 	url_m3u8 = stringextract('<csmilHlsStreamingRedirectorUrl>', '</', asset)
+	if url_m3u8 == "":
+		url_m3u8 = stringextract('<adaptiveHttpStreamingRedirectorUrl>', '</', asset)
 	PLog("url_m3u8: " + url_m3u8)
 	# sub_path = stringextract('"webvttUrl":"', '"', page)	# Altern.: subtitle-Url tt:style, fehlen hier
 	sub_path=""; geoblock=''; descr='';	
