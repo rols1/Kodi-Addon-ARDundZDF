@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>14</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.03.2023
+# 	<nr>15</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.03.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -499,8 +499,11 @@ def Kika_Start(show_cluster='', path=''):
 		else:															# restl. Cluster
 			items = blockextract('"boxType":', page)
 			PLog("items2: %d" % len(items))
+			cnt=0
 			for item in items:
+				cnt=cnt+1												# Folge-Index zum verketten
 				title = stringextract('"title":"', '"', item)
+				title=repl_json_chars(title)
 				PLog("title: %s, show_cluster: %s" % (title, show_cluster))
 				summ = "Folgeseiten"
 				ID = "Start_2"
@@ -511,6 +514,20 @@ def Kika_Start(show_cluster='', path=''):
 					PLog(pos2); PLog(item[-60:])						# Check viewVariant
 					item = item[:pos2]
 					
+					# Bsp. für Verketten www.kika.de/videos/filme/kinderfilme-100:
+					if cnt < len(items):
+						PLog("check_Subchannel:")						# Doku: x_channel_chained.json
+						if '"docType":"videoSubchannel"' in items[cnt]:	# check Subchannel -> verketten
+							PLog("chain_Subchannel:")
+							item = str(item + items[cnt])
+						else:
+							pos = item.find('"structureBrand":')		# Alternative
+							if pos > 0:
+								item_id = stringextract('"id":"', '"', item[pos:])
+								if item_id in items[cnt]:							
+									PLog("chain_id:")
+									item = str(item + items[cnt])
+					
 					Kika_Rubriken(page=item, title=title, thumb=img, ID='Start_2',li=li)	# Seitensteuerung Kika_Rubriken	
 					break
 	
@@ -519,12 +536,12 @@ def Kika_Start(show_cluster='', path=''):
 	# ------------------------------------------------------------------
 	# 1. Durchlauf: Buttons Stage + Cluster 
 	PLog("Start_1:")
+	path_org=py2_encode(path_org)
 	if '"stageContent":null' not in page:									# fehlt in DGS- und AD-Videos
 		title = '[B]Highlights[/B]'											# Highlights voranstellen
 		tag = "Folgeseiten"
 		show_cluster = "Highlights"
 		
-		path_org=py2_encode(path_org)
 		fparams="&fparams={'show_cluster': 'Highlights', 'path': '%s'}" % quote(path_org)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Start", 
 			fanart=KIKA_START, thumb=KIKA_START, fparams=fparams, tagline=tag)
@@ -533,13 +550,15 @@ def Kika_Start(show_cluster='', path=''):
 	PLog("items1: %d" % len(items))
 	for item in items:
 		title = stringextract('"title":"', '"', item)
+		title=repl_json_chars(title)
 		PLog("title: " + title)
 		if "Jetzt live" in title or title == "":						# skip Live + Game
 			continue
 			
+		title=py2_encode(title)
 		img, img_alt = Kika_get_img(item)								# 1. Bild
 		tag = "Folgeseiten"
-		fparams="&fparams={'show_cluster': '%s', 'path': '%s'}" % (title, quote(path_org))
+		fparams="&fparams={'show_cluster': '%s', 'path': '%s'}" % (quote(title), quote(path_org))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Start", 
 			fanart=KIKA_START, thumb=img, fparams=fparams, tagline=tag)	
 	
@@ -626,14 +645,14 @@ def Kika_AZ(title='', path=''):
 					
 # ----------------------------------------------------------------------
 # 07.12.2022 Neu nach Webänderungen - json-Inhalt ausschneiden,
-#	nicht json.loads-geeignet
+# 22.03.2023 geeignet für json.loads
 def Kika_get_props(page):
 	PLog('Kika_get_props:')
 	
-	m1 = page.find('"props":')
+	m1 = page.find('{"pageProps')
 	m2 = page.find(',"__N_SSP"')
 	if m1 > 0 and m2 > 0:
-		page = page[m1:m2]
+		page = page[m1:m2] + '}'
 	PLog(page[:60])
 	return page
 				
@@ -824,6 +843,7 @@ def Kika_Series(path, title, thumb, Plot):
 # ----------------------------------------------------------------------
 # 07.12.2022 Neu nach Webänderungen - einz. Cluster/Channel/Folgen
 #	 auswerten
+# page: Seite / Ausschnitt 
 # einz. Datensätze -> Kika_get_singleItem
 # li + page durch Aufrufer möglich
 def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
