@@ -21,10 +21,12 @@
 #  Nach Renovierung der Audiothek 07/2021 durch die ARD werden neue HTTP-Links (www.ardaudiothek.de)verwendet. 
 #	Die alten sind vielfach noch verwendbar - sie werden vom Addon in neue Links (api.ardaudiothek.de) 
 #	übersetzt.
-#  Nach erneuter Renovierung der Audiothek 02/2022 lassen sich Suchergebnisse nicht mehr hinzufügen
+#  Nach erneuter Renovierung der Audiothek 02/2022 lassen sich Suchergebnisse nicht mehr im Addon hinzufügen.
+#	Sie lassen sich jedoch hier als api-Aufruf ergänzen, allerdings werden im Gegensatz zur Suchfunktion im Addon
+#	hier nur die Einzelbeiträge ausgewertet - Beispiele siehe am Ende dieser Datei.
 #
-# 	<nr>0</nr>								# Numerierung für Einzelupdate
-#	Stand: 25.02.2022
+# 	<nr>1</nr>								# Numerierung für Einzelupdate
+#	Stand: 27.03.2023
 #-------------------------------------------------------------------------------------------------------------------------------------
  
 ## Magazine          
@@ -32,10 +34,10 @@ Dossier Politik - Bayern 2  				| https://www.ardaudiothek.de/dossier-politik/72
 IQ - Wissenschaft und Forschung - Bayern 2  | https://www.ardaudiothek.de/iq-wissenschaft-und-forschung/5941402/
 radioWissen - Bayern 2  					| https://www.ardaudiothek.de/radiowissen/5945518/
 Das Verbrauchermagazin - B5 aktuell 		| https://www.ardaudiothek.de/das-verbrauchermagazin/5927628/
-Wirtschaft - hrINFO | 				https://www.ardaudiothek.de/wirtschaft/467742/
+Wirtschaft - hrINFO 						| https://www.ardaudiothek.de/wirtschaft/467742/
 Aus Wissenschaft und Technik - B5 aktuell 	| https://www.ardaudiothek.de/wissenschaft-und-technik/53609516/
 
-Quarks - Storys						| https://www.ardaudiothek.de/sendung/quarks-storys/66294074/
+Quarks - Storys								| https://www.ardaudiothek.de/sendung/quarks-storys/66294074/
 Quarks - Digital Leben						| https://www.ardaudiothek.de/sendung/quarks-digital-leben/53590536/
 Quarks - Hintergrund						| https://www.ardaudiothek.de/sendung/quarks-hintergrund/53095244/
 
@@ -46,18 +48,19 @@ Forschung Aktuell - Deutschlandfunk			| https://www.ardaudiothek.de/forschung-ak
 
 ## Kabarett / Humor
 Kabarett WDR 2								| https://www.ardaudiothek.de/kabarett/36244764/
-Unterhaltung am Wochenende WDR5				|https://www.ardaudiothek.de/unterhaltung-am-wochenende/33607722/
-Zugabe Pur - der Satire-Podcast WDR 2		|https://www.ardaudiothek.de/zugabe-pur-der-satire-podcast/61650156/
+Unterhaltung am Wochenende WDR5				| https://www.ardaudiothek.de/unterhaltung-am-wochenende/33607722/
+Zugabe Pur - der Satire-Podcast WDR 2		| https://www.ardaudiothek.de/zugabe-pur-der-satire-podcast/61650156/
 Lach matt - Bayerns beste Kabarettisten BR 1| https://www.ardaudiothek.de/lach-matt-bayerns-beste-kabarettisten/33819834/
 radioSpitzen BR 2							| https://www.ardaudiothek.de/radiospitzen/5962920/
 Unterhaltung am Wochenende WDR 5			| https://www.ardaudiothek.de/unterhaltung-am-wochenende/33607722/
 Schroeders Dienstag hr1						| https://www.ardaudiothek.de/schroeders-dienstag/24233270/
 Wir sind die Freeses						| https://www.ardaudiothek.de/wir-sind-die-freeses/27893148/
+Frühstück bei Stefanie						| https://api.ardaudiothek.de/programsets/10619341/?offset=0&limit=20
 
 ## Aktuelles / Neueste Clips
 Inforadio - Wissenswerte RBB				| https://www.ardaudiothek.de/wissenswerte/48143414/
 SWR Aktuell - Wirtschaftsnews				| https://www.ardaudiothek.de/sendung/wirtschaftsnews/10001527/
-SWR Aktuell - Mondial					| https://www.ardaudiothek.de/sendung/swr-aktuell-mondial/53608474/
+SWR Aktuell - Mondial						| https://www.ardaudiothek.de/sendung/swr-aktuell-mondial/53608474/
 
 ## Hörspiele
 KiRaKa - Kinderhörspiele im WDR				| https://www.ardaudiothek.de/kinderhoerspiel-im-wdr/36244846/
@@ -66,6 +69,6 @@ ARD Radio Tatort							| https://www.ardaudiothek.de/ard-radio-tatort/1998988/
 NDR Coronavirus Update						| https://www.ardaudiothek.de/das-coronavirus-update/72451786/
 
 #
-Suchergebnis: corona		| https://api.ardaudiothek.de/search?query=corona&offset=0&limit=12
-Suchergebnis: philosophie	| https://api.ardaudiothek.de/search?query=philosophie&offset=0&limit=12
-Suchergebnis: sport (ab Beitrag 1)		| https://api.ardaudiothek.de/search/items?query=sport&offset=0&limit=12
+Suchergebnis: corona		| https://api.ardaudiothek.de/search/items?query=corona&offset=0&limit=12
+Suchergebnis: philosophie	| https://api.ardaudiothek.de/search/items?query=philosophie&offset=0&limit=12
+Suchergebnis: sport			| https://api.ardaudiothek.de/search/items?query=sport&offset=0&limit=12
