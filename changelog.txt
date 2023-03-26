@@ -10,6 +10,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+26.03.2023 4.6.6
+			KikaninchenFilme (Modul child): Quelle geändert ../filme-122.html -> 
+			../filme-122.json (mit html nur noch 1 film erreichbar), Anpassung mit
+			alternativer m3u8-Url in Kikaninchen_VideoSingle (<adaptiveHttp..Url>).
+			Kika_Start (Modul child): quote(title) für + in Titel (Bsp. PUR+) und
+			repl_json_chars für Titel, Verkettung mit Folgeblock bei Subchanneln und
+			identischer structureBrand-ID.
+			Suche in ARD-Audiothek: Umstellung Web -> json nach ARD-Änderungen - 
+			Anpassungen in AudioSearch, AudioSearch_cluster, Audio_get_search_cluster,
+			Audio_get_webslice, Audio_get_items_single.
+			
 19.03.2023 4.6.5
 			Audio_get_homescreen (Audiothek): Listeneinträge ohne Titel übersprungen
 			(z.B. in Entdecken -> Exklusive Podcasts).
