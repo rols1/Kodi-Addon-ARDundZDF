@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>43</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.03.2023
+# 	<nr>44</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.03.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1964,7 +1964,7 @@ def time_translate(timecode, add_hour=True):
 					"2020-03-29T01:00:00Z|2020-10-25T01:00:00Z",
 					"2021-03-28T01:00:00Z|2021-10-31T01:00:00Z",
 					"2022-03-27T01:00:00Z|2022-10-30T01:00:00Z",
-					"2023-03-27T01:00:00Z|2023-10-29T01:00:00Z"
+					"2023-03-26T01:00:00Z|2023-10-29T01:00:00Z"
 				]
 
 	if timecode.strip() == '' or len(timecode) < 19 or timecode[10] != 'T':
@@ -1992,6 +1992,7 @@ def time_translate(timecode, add_hour=True):
 					end_ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(end, date_format)))	
 					ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
 					add_hour = 1					# Default
+					#PLog("ts: %s, start_ts: %s , end_ts: %s" % (ts, start_ts, end_ts))
 					if ts > start_ts and ts < end_ts:	# Timecode in Sommerzeit
 						add_hour = 2
 					PLog("add_hour: %s" % add_hour)
