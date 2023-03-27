@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>91</nr>										# Numerierung für Einzelupdate
+# 	<nr>92</nr>										# Numerierung für Einzelupdate
 VERSION = '4.6.6'
 VDATE = '27.03.2023'
 
@@ -1915,6 +1915,8 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 #			programSets = Sendungen	-> Audio_get_sendung)
 #			items = Einzelsendungen (Episoden)
 # 	25.03.2023 Anpassungen an ARD-Änderungen
+#	27.03.2023 Anbindung Rubriken an Auswertung der Cluster via 
+#		Audio_get_cluster_rubrik über Web-Link
 #
 def Audio_get_search_cluster(objs, key):
 	PLog('Audio_get_search_cluster: ' + key)
@@ -1945,12 +1947,22 @@ def Audio_get_search_cluster(objs, key):
 				tag = "%s\nSender: %s" % (tag, sender)
 			href = ARD_AUDIO_BASE  + "%s/%s/?offset=0&limit=20" % (key, node_id) 
 			
-			PLog('13Satz:');
+			PLog('13Satz_a:');
 			PLog(title); PLog(href); PLog(img);
 			title=py2_encode(title); href=py2_encode(href);	
-			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
-			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
-				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)						
+			
+			if key=="editorialCollections" or key=="programSets":# Kollektionen, ProgrammSets
+				fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
+				addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
+					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
+			else:												# editorialCategories / Kategorien
+				PLog('13Satz_b: ' + href);
+				href = "https://www.ardaudiothek.de/rubrik/%s" % node_id
+				fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'ID': 'Audio_get_search_cluster'}" %\
+					(quote(href), quote(title))
+				addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_rubrik", \
+					fanart=img, thumb=img, fparams=fparams)				
+							
 			cnt=cnt+1		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
