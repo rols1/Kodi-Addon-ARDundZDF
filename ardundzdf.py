@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>92</nr>										# Numerierung für Einzelupdate
+# 	<nr>93</nr>										# Numerierung für Einzelupdate
 VERSION = '4.6.6'
-VDATE = '27.03.2023'
+VDATE = '31.03.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -353,17 +353,20 @@ if SETTINGS.getSetting('pref_epgRecord') == 'true':
 # Skin-Anpassung:
 skindir = xbmc.getSkinDir()
 PLog("skindir: %s" % skindir)
-if 'confluence' in skindir:									# ermöglicht Plot-Infos in Medienansicht
-	xbmcplugin.setContent(HANDLE, 'movies')
-
-if SETTINGS.getSetting('pref_content_type_tvshows') == 'true': # 16.01.2022 pull request #12 from Trekky12
-	xbmcplugin.setContent(HANDLE, 'tvshows')
+sel = SETTINGS.getSetting('pref_content_type')				# 31.03.2023 erweitert: pull request #12 from Trekky12
+try:
+	sel = re.search(u'\((.*?)\)', sel).group(1)				# Default: "" -> except 
+except:
+	sel=""
+PLog("content_type: %s" % sel)				
+xbmcplugin.setContent(HANDLE, sel)
 
 ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle']	# Rest in ARD_NEW, CurSenderZDF s. VerpasstWoche
 CurSender = ARDSender[0]									# Default ARD-Alle
 fname = os.path.join(DICTSTORE, 'CurSender')				# init CurSender (aktueller Sender)
 if os.path.exists(fname):									# kann fehlen (Aufruf Merkliste)
 	CurSender = Dict('load', "CurSender")					# Übergabe -> Main_NEW (ARDnew)
+
 
 
 #----------------------------------------------------------------  
@@ -709,6 +712,7 @@ def InfoAndFilter():
 	title = u"Einzelupdate (einzelne Dateien und Module), %s" % dt	# Update von Einzeldateien
 	tag = u'[B]Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s[/B]' % REPO_NAME
 	tag = u"%s\n\nNach Abgleich werden neue Dateien heruntergeladen - diese ersetzen lokale Dateien im Addon." % tag
+	tag = u"%s\n\nEinzelupdates ermöglichen kurzfristige Fixes und neue Funktionen zwischen den regulären Updates." % tag
 	summ = u"Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt"
 	summ = u"%s (%s)." % (summ, dt)
 	fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
@@ -8483,11 +8487,13 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 #	escaped' - class="loader")
 #	die html-Seite des get_teaserElements wird aus TEXTSTORE 
 #	geladen bzw. bei www.zdf.de/teaserElement abgerufen und
-#	dann in TEXTSTORE gespeichert.
+#	dann in STORE (TEXTSTORE/SophoraTeaser) gespeichert.
 #	Hinw.1: "Verfügbar bis" nicht immer im teaserElement enthalten
 #   Hinw.2: Änderungen ev. auch in my3Sat erforderlich.
 # 03.09.2020 ergänzt um Auswertung teaserbox
 # 04.03.2022 Nutzung durch ZDF_get_tracking mit SCMS_id
+# 28.03.2023 Unterverz. SophoraTeaser in TEXTSTORE (Performance) - dto. 
+#	get_teaserElement in my3Sat
 #
 def get_teaserElement(rec, SCMS_id=''):
 	PLog('get_teaserElement:')
@@ -8526,8 +8532,18 @@ def get_teaserElement(rec, SCMS_id=''):
 	path = "https://www.zdf.de/teaserElement?sophoraId=%s&style=m2&reloadTeaser=true&filterReferenceId=%s&mainContent=false&sourceModuleType=cluster-s&highlight=false&contextStructureNodePath=%s" \
 		% (sophoraId, filterReferenceId, contextStructureNodePath)
 
+	STORE = os.path.join(TEXTSTORE, 'SophoraTeaser') 
+	if os.path.exists(STORE) == False:
+		try:  
+			os.mkdir(STORE)
+		except OSError:  
+			msg1 = 'Verzeichnis SophoraTeaser konnte nicht erzeugt werden.'
+			msg2 = "Funktion: get_teaserElement ardundzdf.py"
+			PLog(msg1); PLog(msg2); 
+			MyDialog(msg1, msg2, '')
+			return	
 
-	fpath = os.path.join(TEXTSTORE, sophoraId)		# 1. Cache für teaserElement
+	fpath = os.path.join(STORE, sophoraId)		# 1. Cache für teaserElement
 	PLog('fpath: ' + fpath)
 	if os.path.exists(fpath) and os.stat(fpath).st_size == 0: # leer? = fehlerhaft -> entfernen 
 		PLog('fpath_leer: %s' % fpath)
