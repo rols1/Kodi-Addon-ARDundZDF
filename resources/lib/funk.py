@@ -220,8 +220,8 @@ def Search(title):
 				tag = "%s | Copyright: %s" % (tag, cr)
 			# Probleme mit zahlreichen /r/n
 			descr_par = descr.replace('\n', '||'); descr_par = descr_par.replace('\r', '')  # \r\n\r\n
-			descr_par = repl_json_chars(descr_par); 
-			title = repl_json_chars(title)
+			descr_par = valid_title_chars(descr_par); 
+			title = valid_title_chars(title)
 			title = unescape(title)
 			
 			PLog("Satz2:")
@@ -246,7 +246,7 @@ def Search(title):
 			if query in title.lower() or  query in descr.lower():
 				PLog("Mark0")
 				PLog(str(stageObject))
-				title = repl_json_chars(title)
+				title = valid_title_chars(title)
 				title = unescape(title)
 				tag=''											# typ farbig markieren
 				isPlaylist=''
@@ -439,7 +439,7 @@ def ChannelSingle(title, typ, entityId, next_path='', isPlaylist=''):
 			tag = "%s | Copyright: %s" % (tag, cr)
 		# Probleme mit zahlreichen /r/n
 		descr_par = descr.replace('\n', '||'); descr_par = descr_par.replace('\r', '')  # \r\n\r\n
-		descr_par = repl_json_chars(descr_par); 
+		descr_par = valid_title_chars(descr_par); 
 		title = unescape(title)
 
 		PLog("Satz1:")
@@ -572,9 +572,9 @@ def extract_channels(stageObject):
 	
 	date=date; typ=typ; img=img; 
 
-	title=repl_json_chars(title) 		# json-komp. für func_pars in router()
-	alias=repl_json_chars(alias) 		# dto
-	descr=repl_json_chars(descr) 		# dto
+	title=valid_title_chars(title) 		# json-komp. für func_pars in router()
+	alias=valid_title_chars(alias) 		# dto
+	descr=valid_title_chars(descr) 		# dto
 	
 	PLog('extract_channels: %s | %s |%s | %s | %s | %s | %s | %s' % (typ, title,alias,descr[:60],img,date,entityGroup,entityId) )		
 	return typ,title,alias,descr,img,date,entityGroup,entityId
@@ -650,9 +650,9 @@ def extract_videos(stageObject):
 	entityGroup=str(entityGroup); entityId=str(entityId); 
 		
 	title = title.replace("\n", "")
-	title=repl_json_chars(title) 		# json-komp. für func_pars in router()
-	alias=repl_json_chars(alias) 		# dto
-	descr=repl_json_chars(descr) 		# dto
+	title=valid_title_chars(title) 		# json-komp. für func_pars in router()
+	alias=valid_title_chars(alias) 		# dto
+	descr=valid_title_chars(descr) 		# dto
 	
 	PLog('extract_videos: %s | %s |%s | %s | %s | %s | %s | %s |%s' % (title,alias,descr[:60],img,date,dur,cr,genre,entityId) )		
 	return title,alias,descr,img,date,dur,cr,entityId
@@ -814,7 +814,7 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 		return		
 	
 	title = title.replace("\n", "")
-	title = repl_json_chars(title)
+	title = valid_title_chars(title)
 	title_org = title
 	
 	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart MP4 (s.o.)
@@ -892,8 +892,8 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	
 	if 	download_list:	# Downloadbutton(s), high=0: 1. Video = höchste Qualität	
 		# Qualitäts-Index high: hier Basis Bitrate (s.o.)
-		summary_org = repl_json_chars(descr)
-		tagline_org = repl_json_chars(tag)
+		summary_org = valid_title_chars(descr)
+		tagline_org = valid_title_chars(tag)
 		thumb = img
 		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
 		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  

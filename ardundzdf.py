@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>93</nr>										# Numerierung für Einzelupdate
-VERSION = '4.6.6'
-VDATE = '31.03.2023'
+VERSION = '4.6.7'
+VDATE = '02.04.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -4097,9 +4097,11 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 			tagline = Format + 'wird in ' + dest_path + ' gespeichert' 									
 			summary = 'Sendung: ' + title_org
 			key_detailtxt='detailtxt'+str(i)
-			url=py2_encode(url); title_org=py2_encode(title_org); sub_path=py2_encode(sub_path);
+			title_par = title_org.replace("\n", "||")			# Bsp. \n s. yt_get
+			
+			url=py2_encode(url); title_par=py2_encode(title_par); sub_path=py2_encode(sub_path);
 			fparams="&fparams={'url': '%s', 'title': '%s', 'dest_path': '%s', 'key_detailtxt': '%s', 'sub_path': '%s'}" % \
-				(quote(url), quote(title_org), dest_path, key_detailtxt, quote(sub_path))
+				(quote(url), quote(title_par), dest_path, key_detailtxt, quote(sub_path))
 			addDir(li=li, label=lable, action="dirList", dirID="DownloadExtern", fanart=R(ICON_DOWNL), 
 				thumb=R(ICON_DOWNL), fparams=fparams, summary=summary, tagline=tagline, mediatype='')
 			i=i+1					# Dict-key-Zähler
@@ -4389,6 +4391,8 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				
 	except Exception as exception:
 		PLog("thread_getfile:" + str(exception))
+		if os.path.exists(DL_CHECK):							# Abbruchsignal -> 	epgRecord.get_active_dls
+			os.remove(DL_CHECK)						
 		msg1 = 'Download fehlgeschlagen'
 		msg2 = 'Fehler: %s' % str(exception)		
 		if notice:

@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>44</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.03.2023
+#	Stand: 02.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1464,10 +1464,22 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	for r in	((u'"', u''), (u'\\', u''), (u'\'', u''), (u'%5C', u'') 
 		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
-		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love')		# u'u003e' 	-> u'®'
-		, (u'%C3%A9', u'é')):	
+		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love'), (u'%C3%A9', u'é')		# u'u003e' 	-> u'®'
+		):
 		line_ret = line_ret.replace(*r)
 	
+	return line_ret
+#----------------------------------------------------------------
+# Verwendung bei übergroßen Mengen an Spezialzeichen (Performance),
+#	um replace-Aufwand zu reduzieren - Bsp. funk (Hex-Colours 🤯, 
+#	u.a. ✈, 😱, ..).
+# S. docs.python.org/3/library/string.html
+def valid_title_chars(line):
+	PLog("valid_title_chars:")
+	valid_chars = u"_üöäÜÖÄß%s" % (string.printable)
+	line_ret = ''.join(c for c in line if c in valid_chars)
+	PLog(line_ret)
+
 	return line_ret
 #---------------------------------------------------------------- 
 # strip-Funktion, die auch Zeilenumbrüche innerhalb des Strings entfernt
@@ -1960,9 +1972,7 @@ def time_translate(timecode, add_hour=True):
 	PLog("time_translate: " + timecode)
 	
 	# summer_time aus www.ptb.de, konvertiert zum date_format (s.u.):
-	summer_time = [	"2019-03-31T01:00:00Z|2019-10-27T01:00:00Z",
-					"2020-03-29T01:00:00Z|2020-10-25T01:00:00Z",
-					"2021-03-28T01:00:00Z|2021-10-31T01:00:00Z",
+	summer_time = [	"2021-03-28T01:00:00Z|2021-10-31T01:00:00Z",
 					"2022-03-27T01:00:00Z|2022-10-30T01:00:00Z",
 					"2023-03-26T01:00:00Z|2023-10-29T01:00:00Z"
 				]
@@ -3260,7 +3270,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=0):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
 	PLog(Merk); PLog(sub_path); PLog(seekTime);
-
+	
 	Plot=transl_doubleUTF8(Plot)
 	Plot=(Plot.replace('[B]', '').replace('[/B]', ''))	# Kodi-Problem: [/B] wird am Info-Ende platziert
 	url=url.replace('\\u002F', '/')						# json-Pfad noch unbehandelt

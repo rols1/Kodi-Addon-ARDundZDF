@@ -8,7 +8,7 @@
 #	
 ################################################################################
 # 	<nr>10</nr>										# Numerierung für Einzelupdate
-#	Stand: 01.03.2023
+#	Stand: 02.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -662,7 +662,9 @@ def VerpasstContent(title, nr):
 #		i.d.R. Beiträge für 2 Tage, Youtube-/Normal-Videos gemischt) - json-Seiten, Videoquellen
 #		fehlen hier. Auswertung: Schleife über die Beiträge, einz. Beitrag -> SingleBeitragVideo 
 #		Direktsprung bei nur 1 Video -> skip SingleBeitragVideo
-#		
+# 01.04.2023 Youtube nicht mehr zugänglich - Auswertung vorerst abgestellt, Info-Texte geändert,
+#		Suchbutton beibehalten 
+#
 def SingleBeitrag(title, path, html_url, summary, tagline, thumb):	
 	PLog('SingleBeitrag: ' + title);
 	PLog(summary); PLog(tagline); 
@@ -746,7 +748,8 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 				title = ''
 			title = cleanhtml(title);title = unescape(title);   # title kann fehlen - Ersatz s.u.
 			title = title.replace('\\r\\n', ''); title = title.strip()
-			summ = u"Youtube-Video (Download nur als Audio möglich)" 
+			l = "youtube.com/watch?v=%s" % vid
+			summ =  u"Youtube-Videos seit April 2023 hier leider nicht mehr zugänglich. Browser-Link:\n%s" % l  
 		else:	# typ "video-smubl"
 			if '<basename>' in item:							# xml, Bsp. <basename> 210829_1200_fruehschoppen
 				vid = stringextract('<basename>', '</', item)
@@ -775,10 +778,12 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)	
 					
 			if typ == 'video-youtube':
+				'''	01.04.2023 youtube-Videos nicht mehr verfügbar
 				fparams="&fparams={'url': '%s','vid': '%s', 'title': '%s', 'tag': '%s', 'summ': '%s', 'thumb': '%s'}" %\
 					(quote_plus(url), quote_plus(vid), quote_plus(title), quote_plus(tag_org), 
 					quote_plus(summ_org), quote_plus(img))	
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.yt_get", 
+				#addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.yt_get", 	# s. summ oben
+				addDir(li=li, label=title, action="dirList", dirID="", 
 					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)	
 					
 				#-----------------									# Zusatzbutton: Suche bei ARDundZDF
@@ -792,15 +797,17 @@ def SingleBeitrag(title, path, html_url, summary, tagline, thumb):
 						if sp in title and len(title) >= 25:
 							title = title.split(sp)[0]
 							break 
+				
 				if 	 len(title) >= 80:
 					title = title[:80]
+				'''
 				query = "%s|%s" % (title, title)					# Doppel für SearchARDundZDFnew			
 				title = "Suche: %s" % title
-				tag = u"für einen Download werden bei ARD und ZDF ähnliche Videos gesucht."
+				tag = u"Suche bei ARD und ZDF nach dieser oder ähnlichen Sendungen."
 				query=py2_encode(query); title=py2_encode(title); 	# Suche mit Titel
 				fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote_plus(query), quote_plus(title))
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
-					fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag, fparams=fparams)
+					fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag, summary=summ, fparams=fparams)
 				
 		else:
 			PLog('vid fehlt: %s' % title)

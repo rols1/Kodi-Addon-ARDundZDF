@@ -146,7 +146,7 @@ def yt_get(url, vid, title, tag, summ, thumb):
 		summ_par = "%s||||%s||||%s" % (tag, summ, title_org) 
 		title = "%s. %s" % (str(i),title_org)
 		PLog("Satz:")	
-		PLog(title); PLog(tag); PLog(summ)		
+		PLog(title); PLog(tag); PLog(summ)	
 			
 		yt_url=py2_encode(yt_url); title=py2_encode(title); thumb=py2_encode(thumb)
 		summ_par=py2_encode(summ_par)
@@ -164,6 +164,7 @@ def yt_get(url, vid, title, tag, summ, thumb):
 		summary_org = ''
 		tagline_org = repl_json_chars(tag)
 		title_org = "%s\n\n[B]Hinweis:[/B] Download seit 02/2023 nur noch  für Audio (mp4a.40.2) möglich." % title_org
+		#title_org = title_org.replace("\n", "||")		# replace in test_downloads
 		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
 		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
 

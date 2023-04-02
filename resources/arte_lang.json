@@ -51,12 +51,20 @@
                 "it": "Categorie"
             },
             {
+                "de": "Startseite",
+                "fr": "Page d'accueil",
+                "en": "Home page",
+                "es": "Página de inicio",
+                "pl": "Strona główna w zestawie",
+                "it": "Pagina iniziale inclusa"
+            },
+            {
                 "de": "einschließlich Startseite",
                 "fr": "y compris la page d'accueil",
                 "en": "Including home page",
                 "es": "Página de inicio incluida",
-                "pl": "Strona główna w zestawie",
-                "it": "Pagina iniziale inclusa"
+                "pl": "Strona główna",
+                "it": "Pagina iniziale"
             },
             {
                 "de": "Suche in",

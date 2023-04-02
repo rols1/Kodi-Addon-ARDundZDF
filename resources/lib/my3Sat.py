@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>8</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.02.2023
+#	Stand: 28.03.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1304,14 +1304,15 @@ def get_lazyload(li, page, ref_path):
 # Ersatz für javascript: Ermittlung Icon + Sendedauer
 #	rec hier bereits unescaped durch get_lazyload
 # Aus Performancegründen (Anzahl der Elemente manchmal 
-#	> 30) werden die Elemente in TEXTSTORE gecached, 
-#	unabhängig von SETTINGS('pref_load_summary').
+#	> 30) werden die Elemente in STORE (TEXTSTORE/SophoraTeaser)
+# gecached, unabhängig von SETTINGS('pref_load_summary').
 # 20.11.2019 Einsetzungselement sophoraId ausreichend für path 
 #	(teaserHeadline,teasertext,clusterTitle entfallen)
 # Hinweis: Änderungen ev. auch in ardundzdf erforderlich.
 #
 # 20.09.2021 Einsetzungselemente style, moduleId, clusterType
 #	fallen ebenfalls (sophoraId + sourceModuleType ausreichend)
+# 28.03.2023 Unterverz. SophoraTeaser in TEXTSTORE (Performance)
 #
 def get_teaserElement(rec):
 	PLog('get_teaserElement:')
@@ -1337,7 +1338,18 @@ def get_teaserElement(rec):
 	path = "https://www.3sat.de/teaserElement?sophoraId=%s&sourceModuleType=cluster-s" % (sophoraId)
 	PLog(path)
 	
-	fpath = os.path.join(TEXTSTORE, sophoraId)
+	STORE = os.path.join(TEXTSTORE, 'SophoraTeaser') 
+	if os.path.exists(STORE) == False:
+		try:  
+			os.mkdir(STORE)
+		except OSError:  
+			msg1 = 'Verzeichnis SophoraTeaser konnte nicht erzeugt werden.'
+			msg2 = "Funktion: get_teaserElement my3Sat.py"
+			PLog(msg1); PLog(msg2); 
+			MyDialog(msg1, msg2, '')
+			return	
+	
+	fpath = os.path.join(STORE, sophoraId)
 	PLog('fpath: ' + fpath)
 	if os.path.exists(fpath) and os.stat(fpath).st_size == 0: # leer? = fehlerhaft -> entfernen 
 		PLog('fpath_leer: %s' % fpath)
@@ -1347,7 +1359,7 @@ def get_teaserElement(rec):
 		page =  RLoad(fpath, abs_path=True)
 	else:
 		page, msg = get_page(path)			# teaserElement holen
-		if page:							# 	und in TEXTSTORE speichern
+		if page:							# 	und in STORE speichern
 			msg = RSave(fpath, page, withcodec=True)
 	PLog(page[:100])
 	

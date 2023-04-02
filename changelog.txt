@@ -10,6 +10,29 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+02.04.2023 4.6.7
+			time_translate (util): Startdatum Sommerzeit 2023 von 27 auf 26 korrigiert,
+			2020 + 2021 aus Tabelle entfernt.
+			Audio_get_sendung (Audiothek): tag-Info in Plot für MP3-Beiträge ergänzt.
+			ARD Audiothek: Podcast-Favoriten aktualisiert (Datei podcast-favorits.txt).
+			Audio_get_search_cluster (Audiothek): Web-Link durch api-Link ersetzt,
+			einschl. korrekter node_id, Auswertung der Rubriken via Web-Link über
+			Audio_get_cluster_rubrik.
+			get_teaserElement (my3Sat + Haupt-PRG): Unterverz. SophoraTeaser in TEXTSTORE
+			für Loader-Beiträge genutzt (Performance).
+			Haupt-PRG: künftige Skin-Anpassung via Liste - Anpassung settings.xml
+			(pref_content_type_tvshows -> pref_content_type).
+			arte_lang.json: Begriff Startseite ergänzt (in Abgrenzung zu "einschließlich
+			Startseite").
+			thread_getfile: Monitor-Abbruch ergänzt via os.remove(DL_CHECK) bei Download-
+			Exceptions (Bsp.: HTTP Error 403). 
+			test_downloads: Router-kompatible Behandl. für title_org ("\n" -> "||").
+			SingleBeitrag (phoenix): Youtube nicht mehr zugänglich - Auswertung vorerst 
+			abgestellt, Info-Texte geändert, Browser-Link eingeblendet, Suchbutton 
+			beibehalten.
+			Modul funk: Funktionsaufrufe repl_json_chars -> valid_title_chars (Ersetzung
+			Sonderzeichen = Fass ohne Boden).
+
 26.03.2023 4.6.6
 			KikaninchenFilme (Modul child): Quelle geändert ../filme-122.html -> 
 			../filme-122.json (mit html nur noch 1 film erreichbar), Anpassung mit

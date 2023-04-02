@@ -293,13 +293,13 @@ def menu_hub(title, path, ID, img):
 	# Seiten mit unterschiedlichen Archiv-Inhalten - ARD_bab, ARD_Archiv, ARD_Blogs,
 	#	Podcasts_Audios, ARD_Bilder, ARD_kurz, BASE_FAKT
 	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')			# Home-Button
+	li = home(li, ID='TagesschauXL')				# Home-Button
 	
 	# Archiv 'Bericht aus Berlin': von ARD umgestellt auf api
 	# 
-	if ID == 'ARD_bab':							# 14.02.2023 umgestellt auf api
+	if ID == 'ARD_bab':								# 14.02.2023 umgestellt auf api
 		mark=''; ID="XL_menu_hub"
-		li = get_page_content(li, page, ID, mark)
+		li = get_page_content(li, page, ID, mark)	# -> ARDnew
 	else:
 		li = get_content(li, page, ID=ID, path=path)
 	
