@@ -9,8 +9,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
 ################################################################################
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.01.2023
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
+#	Stand: 03.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -818,10 +818,10 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 	title_org = title
 	
 	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart MP4 (s.o.)
-		PLog('Sofortstart: funk (ShowVideo)')
-		prev_bandw = SETTINGS.getSetting('pref_funk_bandw')
-		prev_bandw = prev_bandw.split(':')[0]			# 400:320x180	
-		myform = get_forms(distrib,prev_bandw )			# passende form-Bandweite suchen 
+		PLog('Sofortstart_funk:')
+		prev_set = SETTINGS.getSetting('pref_funk_bandw') # Bsp.: 400:320x180	
+		PLog(prev_set)
+		myform = get_forms(distrib, prev_set)			# passende Auflösung suchen 
 		if  len(myform) == 0:							# Sicherung: kleinste 
 			mp4_url = mp4_urls[0]
 		else:											# tokenDASH leer falls Server funk-01.akamaized
@@ -903,18 +903,20 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 # ----------------------------------------------------------------------
 # zerteilt den Distribution-string (azureFileDistribution) in einzelne 
 #	Auflösungen, passend für die Video-Url's
+# Aufruf ShowVideo 2x: 	1. Erstellung mp4_urls, 
+#						2. Auswahl für Sofortstart mit prev_res
 #	Bsp. 0400:320x180,0700:640x360,1500:1024x576,2500:1280x720,6000:1920x1080
 # 26.01.2021 neues Format: 0460:426x240:5-nM7LBFrZD4JdCqWm8czk - Wegfall
 #	Auflösung + Bandbreite in Url (Abtrennung in ShowVideo)
-#
-def get_forms(distrib, prev_bandw=''):
+# 03.04.2023 Abgleich für Sofortststart umgestellt auf Auflösung (bandw
+#	unsicher)
+
+def get_forms(distrib, prev_set=''):
 	PLog('get_forms: ' + distrib)
-	PLog(prev_bandw)
-	forms=[]
 	
+	forms=[]
 	records = distrib.split(',')
 	records = sorted(records, reverse=True)		# absteigend
-	bandw_old = '0'
 	for rec in records:	
 		stream_id=''					
 		if len(rec.split(':')) == 2:		# 2-Teilig
@@ -923,22 +925,29 @@ def get_forms(distrib, prev_bandw=''):
 			bandw, res, stream_id = rec.split(':')
 			stream_id = "_%s" % stream_id
 		if bandw.startswith('0'):
-			bandw = bandw[1:]	
-		form = "%s_%s%s" % (res, bandw, stream_id)	
-		if prev_bandw:					# Abgleich mit Settings
-			#PLog(form); PLog(prev_bandw);  PLog(bandw);  PLog(bandw_old);
-			#PLog(forms)
-			if (int(prev_bandw) > int(bandw)) and (int(prev_bandw) <= int(bandw_old)):
-				PLog(forms[-1])
-				return forms[-1]
-				
+			bandw = bandw[1:]
+		bandw = int(float(bandw))			# möglich: 06310.158
+		form = "%s_%s%s" % (res, bandw, stream_id)
+		PLog("form: " + form)
 		forms.append(form)
-		bandw_old = bandw
-		
-	if prev_bandw:						# Sicherung 	
-		forms=[]	
-	PLog('forms: ' + str(forms))
-	return forms		
+			
+		if prev_set:						# Abgleich mit Settings
+			res = res.split('x')[0]			# Bsp.: 640x360
+			prev_res = prev_set.split(':')[-1]# Bsp.: 1500:960x540	
+			prev_res = prev_res.split('x')[0]
+			PLog("res: %s, prev_res: %s" % (res, prev_res))
+			try:
+				if int(res) >= int(prev_res):
+					PLog("take_res: %s, form: %s" % (res, form))
+					return form
+			except:
+				pass			
+	
+	if prev_set:						# Sicherung 	
+		form=""	
+		PLog('get_forms_failed:')
+		return form
+	return forms	
 
 ####################################################################################################
 #									Hilfsfunktionen
