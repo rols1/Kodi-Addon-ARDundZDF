@@ -937,7 +937,7 @@ def get_forms(distrib, prev_set=''):
 			prev_res = prev_res.split('x')[0]
 			PLog("res: %s, prev_res: %s" % (res, prev_res))
 			try:
-				if int(res) >= int(prev_res):
+				if int(prev_res) >= int(res):# Sort. absteigend!
 					PLog("take_res: %s, form: %s" % (res, form))
 					return form
 			except:
