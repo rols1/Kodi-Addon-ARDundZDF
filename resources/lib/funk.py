@@ -9,8 +9,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	
 ################################################################################
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.04.2023
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -909,14 +909,24 @@ def ShowVideo(title, img, descr, entityId, Merk='false'):
 # 26.01.2021 neues Format: 0460:426x240:5-nM7LBFrZD4JdCqWm8czk - Wegfall
 #	Auflösung + Bandbreite in Url (Abtrennung in ShowVideo)
 # 03.04.2023 Abgleich für Sofortststart umgestellt auf Auflösung (bandw
-#	unsicher)
+#	unsicher), Sortierung an das Bandbreitenformat float angepasst, Format-
+#	Bsp.: 4157.042:1920x1080:1-xkKtXLp4CyjJgRFZdHhn
 
 def get_forms(distrib, prev_set=''):
 	PLog('get_forms: ' + distrib)
-	
+
+	sort_float=False
+	if "." in distrib:						# float-Erkennung
+		sort_float=True
+		
 	forms=[]
 	records = distrib.split(',')
-	records = sorted(records, reverse=True)		# absteigend
+	if sort_float:
+		records = sorted(records, key=lambda x:  float(re.search(u'(\d+\.\d+)', x).group(1)), reverse=True)
+	else:
+		records = sorted(records, key=lambda x:  int(re.search(u'(\d+)', x).group(1)), reverse=True)
+	PLog(str(records))
+	
 	for rec in records:	
 		stream_id=''					
 		if len(rec.split(':')) == 2:		# 2-Teilig
