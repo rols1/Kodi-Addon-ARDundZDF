@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>29</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.03.2023
+# 	<nr>30</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -897,6 +897,7 @@ def get_streams_api_v2(page, title, summ):
 # ----------------------------------------------------------------------
 # Streamdetails via api-opa-Call 
 # Arte verwendet bei HBBTV MP4-Formate wie ZDF (HLS_List bleibt leer)
+# audioLabel: Abgleich setting pref_arte_streams in get_bestdownload
 #
 def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 	PLog("get_streams_api_opa: " + mode)
@@ -907,7 +908,7 @@ def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 	
 	MP4_List=[]; trailer=False
 	for rec in formitaeten:	
-		versions = stringextract('"versions":',  ']', rec)
+		versions = stringextract('"versions":',  '"creationDate', rec)
 		
 		mediaType = stringextract('"mediaType": "',  '"', rec)
 		bitrate = stringextract('"bitrate":',  ',', rec)
@@ -923,10 +924,18 @@ def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 
 		lang = stringextract('"audioLabel": "',  '"', versions)	# z.B. Deutsch (Original)
 		lang = transl_json(lang)
+		if lang =="":
+			lang = stringextract('"audioLabel": "',  '"', versions)
 		shortLabel = stringextract('"audioShortLabel": "',  '"', versions) # Bsp..: "UT" oder "FR"
 		
 		PLog('Satz5:')
 		PLog(url); PLog(size); PLog(lang);
+		
+		#	für Sofortstart nur Deutsch auswählen (HLS + MP4)
+		if SETTINGS.getSetting('pref_video_direct') == 'true':	
+			if lang.strip() != "Deutsch":	# Sofortstart nur Deutsch
+				PLog("skip_%s" % lang)
+				continue
 		
 		# versch. Streams möglich (franz, UT, ..) - in Konzert-Streams
 		#	Einzelauflösungen alle erlauben (s.o.),
@@ -935,7 +944,7 @@ def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 		# skip Parseplaylist für master.m3u8 (arte liefert Auflösungen als master.m3u8)
 		if ".mp4" in url:										# MP4
 			title_url = u"%s#%s" % (title, url)
-			mp4 = "MP4 [B]%s[/B]" % lang
+			mp4 = "MP4 [B]%s[/B]" % (lang)
 			item = u"%s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
 				(mp4, quality, bitrate, size, title_url)
 			MP4_List.append(item)
