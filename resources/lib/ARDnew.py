@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>34</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.02.2023
+# 	<nr>35</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -358,7 +358,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 				"mdr|MDR+|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9tZHJwbHVz|https://api.ardmediathek.de/image-service/images/urn:ard:image:eab36fa8ffdb27da?w=640&ch=4bc0c7d930d596d9",
 				"mdr|Sport im Osten|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9zZW5kZXJlaWhlbi82ODlhYzU5My1mOWFkLTQ3MTAtOTczMS1lMTNiZTEwODZkMGM|https://api.ardmediathek.de/image-service/images/urn:ard:image:4b8aeaada557019e?w=1600&ch=50fb95aed76b8244&imwidth=1600"
 				]
-			PLog("regio_check:"); PLog(sender)
+			PLog("regio_check: " + sender)
 			for item in regio_kat:
 				region, reg_title, reg_path, reg_img= item.split("|")
 				if region == sender:
@@ -450,6 +450,7 @@ def ARDRubriken(li, page):
 		title_list.append(title)
 
 		ID	= stringextract('"id":"', '"', cont)
+		
 		anz= stringextract('"totalElements":', '}', cont)
 		anz= mystrip(anz)
 		PLog("anz: " + anz)
@@ -647,7 +648,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 				fanart=ICON, thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
 				
 		ID = "ARDStartRubrik"	
-		li = get_page_content(li, page, ID, mark)		# Auswertung Rubriken + Live-/Eventstreams																	
+		li = get_page_content(li, page, ID, mark, mehrzS=True)	# Auswertung Rubriken + Live-/Eventstreams																	
 #----------------------------------------
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
@@ -1362,6 +1363,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		
 		if mehrzS:
 			title = u"Mehr: %s" % title	
+			if u"Mehr: Übersicht" in title:			# skip Subrubriken-Menüs (rekursiv, o. Icons) 
+				continue				
 
 		if mark:
 			PLog(title); PLog(mark)
@@ -1371,7 +1374,10 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	
 		img 	= stringextract('src":"', '"', s)	
 		img 	= img.replace('{width}', '640'); 
-		img= img.replace('u002F', '/')
+		img		= img.replace('u002F', '/')
+		if img == "":								# Subrubriken
+			img = R(ICON_DIR_FOLDER)
+			
 		summ=''
 		if ID != 'Livestream':
 			PLog("pre: %s" % s[:80])				# Verfügbar + Sendedatum aus s laden (nicht Zielseite) 
