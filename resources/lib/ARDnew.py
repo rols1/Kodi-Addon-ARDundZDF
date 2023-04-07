@@ -9,8 +9,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>35</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.04.2023
+# 	<nr>36</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -62,8 +62,6 @@ ICON_DIR_FOLDER			= "Dir-folder.png"
 ICON_DIR_STRM			= "Dir-strm.png"
 ICON_SPEAKER 			= "icon-speaker.png"
 ICON_MEHR 				= "icon-mehr.png"
-
-BETA_BASE_URL	= 'https://www.ardmediathek.de'
 
 ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle', 'Das Erste:daserste:208:tv-das-erste.png:Das Erste', 
 	'BR:br:2224:tv-br.png:BR Fernsehen', 'HR:hr:5884:tv-hr.png:HR Fernsehen', 'MDR:mdr:1386804:tv-mdr-sachsen.png:MDR Fernsehen', 
@@ -157,20 +155,24 @@ def Main_NEW(name='', CurSender=''):
 		tagline=tag, fparams=fparams)
 
 	# Retro-Version ab 12.11.2020, V3.5.4
-	# 16.06.2021 auch erreichbar via ARD-Startseite/Premium_Teaser_Themenwelten		
+	# 16.06.2021 auch erreichbar via ARD-Startseite/Premium_Teaser_Themenwelten	
+	# 07.04.2023 Web-Call -> api-Call	
+	path = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/retro?embedded=false" 
 	title = "ARD Mediathek RETRO"
 	erbe = u"[COLOR darkgoldenrod]%s[/COLOR]" % "UNESCO Welttag des Audiovisuellen Erbes"
 	tag = u'Die ARD Sender öffneten zum %s ihre Archive und stellen zunehmend zeitgeschichtlich relevante Videos frei zugänglich ins Netz' % erbe
 	tag = u"%s\n\nDeutsche Geschichte und Kultur nacherleben: Mit ARD Retro können Sie in die Zeit der 1950er und frühen 1960er Jahre eintauchen. Hier stoßen Sie auf spannende, informative und auch mal kuriose Sendungen aus den Anfängen der Fernsehgeschichte des öffentlich-rechtlichen Rundfunks." % tag
 	tag = u"%s\n\nMehr: NDR ardretro100.html" % tag
-	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDRetro", fanart=R(ICON_MAIN_ARD), 
+	title=py2_encode(title); path=py2_encode(path);
+	fparams="&fparams={'title': '%s', 'sender': '%s', 'path': '%s'}" % (quote(title), sender, quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", fanart=R(ICON_MAIN_ARD), 
 		thumb=R('ard-mediathek-retro.png'), tagline=tag, fparams=fparams)
 
+	# 07.04.2023 Web-Call -> api-Call	
+	path = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/entdecken?embedded=false" 
 	title = "ARD Mediathek Entdecken"
 	tag = 'Inhalte der ARD-Seite [B]%s[/B]' % "ENTDECKEN"
 	summ = sender_summ	
-	path = 'https://www.ardmediathek.de/entdecken/'
 	title=py2_encode(title); path=py2_encode(path);
 	fparams="&fparams={'title': '%s', 'sender': '%s', 'path': '%s'}" % (quote(title), sender, quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", 
@@ -203,12 +205,16 @@ def Main_NEW(name='', CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
 						
+	# 07.04.2023 Web-Call -> api-Call	
+	path = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/sport?embedded=false" 
 	title = 'ARD Sport'
 	summ = sender_summ	
 	img = R("ard-sport.png")
 	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSportneu", 
-		fanart=img, thumb=img, fparams=fparams, summary=summ)
+	title=py2_encode(title); path=py2_encode(path);
+	fparams="&fparams={'title': '%s', 'sender': '%s', 'path': '%s'}" % (quote(title), sender, quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", 
+		fanart=img, thumb=img, summary=summ, fparams=fparams)
 			
 	# ARD Sportschau nach Web-Änderung abgeschaltet - s. Forum Post vom 12.06.2022
 	#	Ausgesuchte Inhalte sportschau.de in ARDSportWDR
@@ -260,7 +266,8 @@ def Main_NEW(name='', CurSender=''):
 #		Abgleich mit Titelliste. Wg. Performance Verzicht auf json-/key-Auswertung.
 # 30.09.2021 Sonderbehdl. spaltenübergreifender Titel mit Breitbild (Auswert. descr, skip Bild)
 # 29.06.2022 Abzweig ARDStartRegion für neuen Cluster "Unsere Region" 
-#
+# 07.04.2023 Wechsel Web-Call (ardmediathek.de) -> api-Call (api.ardmediathek.de) - embedded
+#	json identisch
 def ARDStart(title, sender, widgetID='', path=''): 
 	PLog('ARDStart:'); 
 	
@@ -270,30 +277,17 @@ def ARDStart(title, sender, widgetID='', path=''):
 	PLog(sender); PLog(img)	
 	summ = 'Mediathek des Senders [B] %s [/B]' % sendername
 		
+	if sender == "ard":
+		base = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/mainstreamer-webpwa-nichtaendern?embedded=false"
+	else:
+		base = "https://api.ardmediathek.de/page-gateway/pages/%s/home?embedded=false" % sender
+
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')								# Home-Button
 
 	if path == '':
-		path = BETA_BASE_URL + "/%s/" % sender
-		if sender == "ard":									# ab 30.07.2022 erford. (Moved Permanently)
-			path = BETA_BASE_URL + "/"
-	page, msg = get_page(path=path)			# vom Sender holen
-	path_org = path
-	
-	if '"widgets":' not in page:								# Fallback: Cache ohne CacheTime
-		page = Dict("load", 'ARDStartNEW_%s' % sendername)					
-		msg1 = "Startseite nicht im Web verfuegbar."
-		PLog(msg1)
-		msg3=''
-		if page:
-			msg2 = "Seite wurde aus dem Addon-Cache geladen."
-			msg3 = "Seite ist älter als %s Minuten (CacheTime)" % str(ARDStartCacheTime/60)
-		else:
-			msg2='Startseite nicht im Cache verfuegbar.'
-			page=''
-		MyDialog(msg1, msg2, msg3)	
-	else:	
-		Dict("store", 'ARDStartNEW_%s' % sendername, page) 	# Seite -> Cache: aktualisieren	
+		path = base
+	page, msg = get_page(path)								# api-source ohne Cache
 	PLog(len(page))
 	page = page.replace('\\"', '*')							# quotierte Marks entf.
 	
@@ -334,7 +328,8 @@ def ARDStart(title, sender, widgetID='', path=''):
 		if "/region/" in path and '{regionId}' in path:		# Bild Region laden, Default Berlin
 			region="be"; rname="Berlin"; partner="rbb"		# Default-Region, Änderung in ARDStartRegion
 			path = path.replace('{regionId}', region)
-		img = img_preload(ID, path, title, 'ARDStart')
+		img_path = path.split("pageSize")[0] + "pageSize=1"	# 1. Beitrag reicht
+		img = img_preload(ID, img_path, title, 'ARDStart')
 		
 		if 'Livestream' in title or up_low('Live') in up_low(title):
 			if 'Konzerte' not in title:						# Corona-Zeit: Live-Konzerte (keine Livestreams)
@@ -381,7 +376,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 		cnt=cnt+1	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
+				
 #-----------------------------------------------------------------------
 # 19.10.2020 Ablösung img_via_id durch img_preload nach Änderung 
 #	der ARD-Startseite: lädt das erste img ermittelt in geladener
@@ -403,7 +398,7 @@ def img_preload(ID, path, title, caller, icon=ICON_MAIN_ARD):
 	
 	if os.path.isdir(oname) == False:
 		try:  
-			os.mkdir(oname)								# Verz. ARDNeu_Startpage erzeugen
+			os.mkdir(oname)								# UZ-Verz. ARDNeu_Startpage erzeugen
 		except OSError as exception:
 			msg = str(exception)
 			PLog(msg)
@@ -453,6 +448,8 @@ def ARDRubriken(li, page):
 		
 		anz= stringextract('"totalElements":', '}', cont)
 		anz= mystrip(anz)
+		if title.startswith("Subrubriken"):					# -1: Wegfall "Übersicht" in get_page_content
+			anz = str(int(anz)-1)
 		PLog("anz: " + anz)
 		if anz == '1':
 			tag = u"%s Beitrag" % anz
@@ -648,7 +645,9 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 				fanart=ICON, thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
 				
 		ID = "ARDStartRubrik"	
-		li = get_page_content(li, page, ID, mark, mehrzS=True)	# Auswertung Rubriken + Live-/Eventstreams																	
+		if "Subrubriken" in title_org:				# skip Subrubrik Übersicht
+			mark="Subrubriken"
+		li = get_page_content(li, page, ID, mark)	# Auswertung Rubriken + Live-/Eventstreams																	
 #----------------------------------------
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
@@ -1188,82 +1187,23 @@ def ARD_get_strmStream(url, title, img, Plot):
 ####################################################################################################
 #							ARD Retro www.ardmediathek.de/ard/retro/
 #				als eigenst. Menü, Inhalte auch via Startseite/Menü/Retro erreichbar
+# 07.04.2023 Direkt-Call in Main_NEW, ARDRetro() nach Wechsel zu api-Call entfernt
 ####################################################################################################
-def ARDRetro(): 
-	PLog('ARDRetro:'); 
-	
-	sendername = "ARD-Alle"
-	title2 = "Sender: ARD-Alle"
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)									# Home-Button -> Hauptmenü
-
-	path = "https://www.ardmediathek.de/ard/retro/" 
-	# Seite aus Cache laden
-	page = Dict("load", 'ARDRetro', CacheTime=ARDStartCacheTime)
-	if page == False:										# nicht vorhanden oder zu alt
-		page, msg = get_page(path=path)						# vom Sender holen
-		if page == '':	
-			msg1 = "Fehler Startseite ARDRetro"
-			msg2 = msg
-			MyDialog(msg1, msg2, '')	
-			return li
-		else:	
-			Dict("store", 'ARDRetro', page) 				# Seite -> Cache: aktualisieren		
-	PLog(len(page))
-	
-	# json:
-	page = stringextract('<body', '</body>', page)
-	# Rubriken: 
-	ARDRubriken(li, page)
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 ####################################################################################################
 #						ARD Sport (neu) www.ardmediathek.de/ard/sport/
 #				als eigenst. Menü, Inhalte auch via Startseite/Menü/Sport erreichbar
+# 07.04.2023 Direkt-Call in Main_NEW, ARDSportneu() nach Wechsel zu api-Call entfernt
 ####################################################################################################
-# 06.01.2022 mit ARDRetro zusammenlegen, falls keine abweichenden Inhalte vorkommen
-# 15.06.2022 Buttons für sportschau.de eingefügt (im Hauptmenü entfallen),
-#	einschl. der ARDAudioEventStreams
-def ARDSportneu(): 
-	PLog('ARDSportneu:'); 
-	
-	sendername = "ARD-Alle"
-	title2 = "Sender: ARD-Alle"
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
 
-	path = "https://www.ardmediathek.de/ard/sport/" 
-	# Seite aus Cache laden
-	page = Dict("load", 'ARDSport', CacheTime=ARDStartCacheTime)
-	if page == False:										# nicht vorhanden oder zu alt
-		page, msg = get_page(path=path)						# vom Sender holen
-		if page == '':	
-			msg1 = "Fehler ARDSportneu"
-			msg2 = msg
-			MyDialog(msg1, msg2, '')	
-			return li
-		else:	
-			Dict("store", 'ARDSport', page) 				# Seite -> Cache: aktualisieren		
-	PLog(len(page))
-	#RSave('/tmp/x.html', py2_encode(page))	# Debug	
-	
-	# json:
-	page = stringextract('<body', '</body>', page)
-	# Rubriken: 
-	ARDRubriken(li, page)									# Beiträge Sportschau
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
 #---------------------------------------------------------------------------------------------------
 # Auswertung für ARDStartRubrik + ARDPagination + ARDSearchnew 
 #	Mehrfach- und Einzelsätze
 # mark: farbige Markierung in title (z.B. query aus ARDSearchnew) 
 # Seiten sind hier bereits senderspezifisch.
 # Aufrufe Direktsprünge
-#
+# 07.04.2023 skip Subrubrik Übersicht (aktuelle Seite)
+# 
 def get_page_content(li, page, ID, mark='', mehrzS=''): 
 	PLog('get_page_content: ' + ID); PLog(mark)
 	ID_org=ID
@@ -1361,9 +1301,10 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 		title = unescape(title); 
 		title = repl_json_chars(title)	
 		
-		if mehrzS:
+		if mehrzS:									# Setting pref_more
 			title = u"Mehr: %s" % title	
-			if u"Mehr: Übersicht" in title:			# skip Subrubriken-Menüs (rekursiv, o. Icons) 
+		if mark == "Subrubriken":
+			if title.startswith("Übersicht"):		# skip Subrubrik Übersicht (rekursiv, o. Icons) 
 				continue				
 
 		if mark:
