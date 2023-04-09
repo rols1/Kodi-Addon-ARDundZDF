@@ -3,14 +3,15 @@
 #				ARDnew.py - Teil von Kodi-Addon-ARDundZDF
 #			neue Version der ARD Mediathek, Start Beta Sept. 2018
 #
-# 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/,
-#	Seiten werden im json-Format, teilweise html + json ausgeliefert
+# 	dieses Modul nutzt die Webseiten der Mediathek ab https://www.ardmediathek.de/
+#	bzw. den eingebetteten json-Code und die verknüpften api-Calls.
+#
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
 # 	<nr>36</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.04.2023
+#	Stand: 08.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1320,7 +1321,7 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			img = R(ICON_DIR_FOLDER)
 			
 		summ=''
-		if ID != 'Livestream':
+		if ID != 'Livestream' and mehrfach == False:# mehrfach: summ=Folgeseiten
 			PLog("pre: %s" % s[:80])				# Verfügbar + Sendedatum aus s laden (nicht Zielseite) 
 			summ = get_summary_pre(path='dummy', ID='ARDnew', skip_verf=False, skip_pubDate=False, page=s)
 		else:

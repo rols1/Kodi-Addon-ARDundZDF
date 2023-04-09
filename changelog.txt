@@ -10,6 +10,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+09.04.2023 4.6.8
+			get_forms (funk): Anpassung int/float für Bandbreite , Sortierung via
+			lambda-Funktion, Abgleich für Sofortststart umgestellt auf Auflösung 
+			(bandw unsicher in Kodi Leia).
+			get_streams_api_opa (arte): Filterung audioLabel "Deutsch" bei Sofortstart,
+			Blockbegrenzung formitaeten erweitert (creationDate), um alle Streams zu
+			erfassen.
+			get_ArtePage (arte): Ausgabe page_start, page_end verkleinert.
+			get_page_content (ARD): Subrubrik "Übersicht" in Listen entfernt 
+			(rekursiv für akt. Seite), Ordner-Icon für fehlende Icons ergänzt,
+			Auswertung summ in get_summary_pre begrenzt (mehrfach==False).
+			ARDStart (ARD): Wechsel Web-Call -> api-Call (embedded json identisch), 
+			Funktionen ARDRetro + ARDSportneu entfernt, Anpassungen in Main_NEW,
+			Verkleinerung pageSize auf 1 für img_preload.
+			ARDRubriken: Anzahl Subrubriken-1 (get_page_content: Wegfall "Übersicht").
+
 02.04.2023 4.6.7
 			time_translate (util): Startdatum Sommerzeit 2023 von 27 auf 26 korrigiert,
 			2020 + 2021 aus Tabelle entfernt.

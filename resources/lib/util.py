@@ -1475,9 +1475,10 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 #	u.a. ✈, 😱, ..).
 # S. docs.python.org/3/library/string.html
 def valid_title_chars(line):
-	PLog("valid_title_chars:")
+	#PLog("valid_title_chars:")
 	valid_chars = u"_üöäÜÖÄß%s" % (string.printable)
 	line_ret = ''.join(c for c in line if c in valid_chars)
+	line_ret = line_ret.replace('"', '') # router-komp.
 	PLog(line_ret)
 
 	return line_ret

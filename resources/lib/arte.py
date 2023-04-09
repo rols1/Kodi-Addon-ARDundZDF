@@ -909,6 +909,7 @@ def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 	MP4_List=[]; trailer=False
 	for rec in formitaeten:	
 		versions = stringextract('"versions":',  '"creationDate', rec)
+#		versions = stringextract('"versions":',  ']', rec)
 		
 		mediaType = stringextract('"mediaType": "',  '"', rec)
 		bitrate = stringextract('"bitrate":',  ',', rec)
@@ -1271,8 +1272,8 @@ def get_ArtePage(caller, title, path, header=''):
 	#RSave('/tmp/x.json', py2_encode(page))	# Debug	
 	PLog(len(page))
 	# page = str(page)  # n. erf.
-	PLog("page_start: " + str(page)[:100])
-	PLog("page_end: " + str(page)[-100:])
+	PLog("page_start: %s" % str(page)[0:60])
+	PLog("page_end: %s" % str(page)[-60:])
 	return page
 	
 # ---------------------------------------

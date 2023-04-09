@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>93</nr>										# Numerierung für Einzelupdate
-VERSION = '4.6.7'
-VDATE = '02.04.2023'
+VERSION = '4.6.8'
+VDATE = '09.04.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -621,7 +621,8 @@ def InfoAndFilter():
 	tag = u"%s\nEin [B]HTTP Timeout[/B] schließt eine spätere Erreichbarkeit nicht aus." % tag
 	tag = u"%s\nSucheinträge werden durchgewinkt." % tag
 	summ = u"Die Dauer ist von vielen Faktoren abhängig und nicht kalkulierbar (Testläufe mit 90 Einträgen: ca. 30 sec)"	
-	summ = u"%s\n\nEin [B]Backup[/B] der Datei merkliste.xml im userdata-Verzeichnis wird empfohlen." % summ					
+	summ = u"%s\n\nEin [B]Backup[/B] der Datei merkliste.xml im userdata-Verzeichnis wird empfohlen" % summ					
+	summ = u"%s (insbesondere bei externer Merkliste)." % summ					
 	myfunc="resources.lib.merkliste.clear_merkliste"
 
 	fparams="&fparams={'myfunc': '%s', 'fparams_add': 'clear'}"  % quote(myfunc)		
@@ -6071,7 +6072,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			
 	lname = py2_decode(listname)
 	# Streamlinks aus Caches laden (Modul util), ab 01.06.2022 für Überregional,
-	#	Regional + Privat:
+	#	Regional + Privat. get_sort_playlist entfällt hier:
 	zdf_streamlinks = get_ZDFstreamlinks()			# Streamlinks für ZDF-Sender 
 	ard_streamlinks = get_ARDstreamlinks()			# ard_streamlinks oder ard_streamlinks_UT
 	iptv_streamlinks = get_IPTVstreamlinks()		# private + einige regionale
@@ -6480,7 +6481,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 		return
 
 	page, msg = get_page(path=path)					# Verfügbarkeit des Streams testen
-	if page == '':									# Fallback zum Classic-Sendername in Startsender
+	if page == '':
 		msg1 = u'SenderLiveResolution: Stream nicht verfügbar'
 		msg2 = path[:50] + ".."
 		msg3 = msg
