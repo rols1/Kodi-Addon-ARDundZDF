@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>93</nr>										# Numerierung für Einzelupdate
+# 	<nr>94</nr>										# Numerierung für Einzelupdate
 VERSION = '4.6.8'
-VDATE = '09.04.2023'
+VDATE = '10.04.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1755,7 +1755,7 @@ def Audio_get_items_single(item, ID=''):
 	if attr:
 		attr = "Bild: %s" % attr
 
-	img = stringextract('image":', ',"', item)
+	img = stringextract('"image":', '},', item)
 	img = stringextract('"url":"', '"', img)
 	img = img.replace('{width}', '640')
 	img = img.replace('16x9', '1x1')								# 16x9 kann fehlen, z,B. bei Suche
