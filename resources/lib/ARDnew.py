@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>36</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.04.2023
+# 	<nr>37</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1241,6 +1241,8 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			gridlist = blockextract( '"availableTo":', page) 	# geändert 10.11.2021
 		if len(gridlist) == 0:									# 09.01.2022 Fallback für A-Z-Inhalte
 			gridlist = blockextract( '"decor":', page) 				
+		if len(gridlist) == 0:									# 12.04.2023 Fallback für Menü-Inhalte
+			gridlist = blockextract( '"images":', page) 				
 		
 	if len(gridlist) == 0:		
 		msg1 = 'keine Beiträge gefunden'
@@ -1258,7 +1260,10 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 			targetID= stringextract('target":{"id":"', '"', s)	# targetID, auch Search
 		else:
 			targetID= stringextract('id":"Link:', '"', s)		# Serie in Swiper via ARDStartSingle 
-		PLog(targetID)
+		if targetID == "":
+			links = stringextract('target":', '}', s)
+			targetID= stringextract('href:"', '"', links)
+		PLog("targetID: " + targetID)
 		if targetID == '':										# kein Video
 			continue			
 
