@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>3</nr>								# Numerierung für Einzelupdate
-#	Stand: 08.01.2023
+# 	<nr>4</nr>								# Numerierung für Einzelupdate
+#	Stand: 14.03.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -471,14 +471,15 @@ def ClearUpThumbnails():
 #----------------------------------------------------------------
 # Aufruf InfoAndFilter
 # gibt akt. Datum aus Startpost in kodinerds.net zurück
-# 
+# 14.4.2023 Anpassung an Forum-Update
+#
 def get_foruminfo():
 	PLog('get_foruminfo:') 
 	
 	dt=''
-	path = "https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF"
+	path = "https://www.kodinerds.net/index.php?thread/64244-release-kodi-addon-ardundzdf/"
 	page, msg = get_page(path=path)
-	dt = stringextract(u"nächstes Update (Stand ", ")", page)
+	dt = stringextract(u"chstes Update (Stand ", ")", page)
 	if dt == "":
 		dt = u"? - Forum nicht erreicht"
 	PLog("dt: " + dt)
