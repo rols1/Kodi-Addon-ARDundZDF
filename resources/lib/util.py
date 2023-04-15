@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>44</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.04.2023
+# 	<nr>45</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1919,6 +1919,8 @@ def CalculateDuration(timecode):
 def seconds_translate(seconds, days=False):
 	#PLog('seconds_translate:')
 	#PLog(seconds)
+	seconds = str(seconds)
+	
 	if "." in str(seconds):					# Ausschluss Basis 1000
 		seconds = seconds.split(".")[0] 
 	if seconds == '' or seconds == 0  or seconds == 'null':

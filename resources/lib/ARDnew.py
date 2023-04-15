@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>37</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.04.2023
+# 	<nr>38</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -206,15 +206,15 @@ def Main_NEW(name='', CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
 						
-	# 07.04.2023 Web-Call -> api-Call	
+	# 07.04.2023 Web-Call -> api-Call, 14.04.2023 ARDStart -> ARDRubriken	
 	path = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/sport?embedded=false" 
 	title = 'ARD Sport'
 	summ = sender_summ	
 	img = R("ard-sport.png")
 	fparams="&fparams={}"
 	title=py2_encode(title); path=py2_encode(path);
-	fparams="&fparams={'title': '%s', 'sender': '%s', 'path': '%s'}" % (quote(title), sender, quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", 
+	fparams="&fparams={'li': '', 'path': '%s'}" % quote(path)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDRubriken", 
 		fanart=img, thumb=img, summary=summ, fparams=fparams)
 			
 	# ARD Sportschau nach Web-Änderung abgeschaltet - s. Forum Post vom 12.06.2022
@@ -348,6 +348,7 @@ def ARDStart(title, sender, widgetID='', path=''):
 			tag = u"aktuelle Region: [B]%s[/B]" % rname
 			summ = u"Partnersender: [B]%s[/B]" % partner
 			func = "ARDStartRegion"							# neu ab 29.06.2022
+		# todo: ARDStartRubrik -> ARDRubriken (Bsp.: Button 'ARD Sport' in Main_NEW)
 		
 		if cnt == 1:										# neu ab 12.02.2023: ev. "Regionales"-Menü hinter Stage
 			regio_kat = [									# nach Bedarf ergänzen + auslagern
@@ -387,10 +388,10 @@ def img_preload(ID, path, title, caller, icon=ICON_MAIN_ARD):
 	PLog("img_preload: " + title)
 	PLog(caller); PLog(path)
 
-	if caller == 'ARDStart':
+	if caller == 'ARDStart' or  caller == 'ARDRubriken':
 		leer_img = R(ICON_DIR_FOLDER)
 	else:
-		leer_img = R(icon-bild-fehlt.png)
+		leer_img = R("icon-bild-fehlt.png")
 
 	img=''
 	oname = os.path.join(SLIDESTORE, "ARDNeu_Startpage")
@@ -430,53 +431,75 @@ def img_preload(ID, path, title, caller, icon=ICON_MAIN_ARD):
 #---------------------------------------------------------------------------------------------------
 # Auflistung der Rubriken in json-Inhalt page (json bei html-Seite
 #	in script id="fetchedContextValue")
-def ARDRubriken(li, page): 
+def ARDRubriken(li, path="", page=""): 
 	PLog('ARDRubriken:')
+	li_org=li
 
-	container = blockextract ('compilationType":', page)  	# Test auf Rubriken
-	PLog(len(container))
-	title_list=[]
-	for cont in container:
-		title = stringextract('"title":"', '"', cont)		# Bild-Titel
-		self =stringextract('"self":{', '}', cont) 
-		title = stringextract('"title":"', '"', self)
-		title = repl_json_chars(title)
-		if title in title_list:								# Doppel? - s.o.
-			break
-		title_list.append(title)
+	if page == '':
+		skip_subs=False
+		page, msg = get_page(path)
+	else:
+		skip_subs=True									# Subrubriken nicht erneut listen					
+	PLog(len(page))
+	page = page.replace('\\"', '*')						# quotierte Marks entf.
 
-		ID	= stringextract('"id":"', '"', cont)
+	if li == "":
+		li = xbmcgui.ListItem()
+		li = home(li, ID='ARD Neu')						# Home-Button		
+
+	try:
+		obs = json.loads(page)
+		PLog(str(page)[:80])
+		widgets = obs["widgets"]						# "teasers" hier leer			
+	except Exception as exception:
+		PLog(str(exception))
+		return
+	PLog(len(widgets))	
+
+	for s in widgets:	
+		PLog(str(s)[:60])	
+		img_alt=""; anz="null"
 		
-		anz= stringextract('"totalElements":', '}', cont)
-		anz= mystrip(anz)
-		if title.startswith("Subrubriken"):					# -1: Wegfall "Übersicht" in get_page_content
-			anz = str(int(anz)-1)
-		PLog("anz: " + anz)
-		if anz == '1':
-			tag = u"%s Beitrag" % anz
-		else:
-			if anz == "null": anz='mehrere'
-			tag = u"%s Beiträge" % anz
+		typ = s["type"]
+		title = s["title"]
+		if title.startswith("Subrubriken"):					# wurde hier bereits gelistet, s.o.
+			if skip_subs:
+				continue
+		if title == "Rubriken":								# rekursiv zur Startseite
+			continue
+		ID = s["id"]	
 
-		path 	= stringextract('"href":"', '"', cont)
-		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
-		img 	= stringextract('"src":"', '"', cont)		# mehrere Formate möglich, 1. Treffer
-		img 	= img.replace('{width}', '640'); 
-		if img == '':
-			img = img_preload(ID, path, title, 'ARDStart')# kann dauern..
-		if img == '':
-			img = R(ICON_DIR_FOLDER)
-
+		if "links" in s:
+			path = s["links"]["self"]["href"]
+			path = path.replace('&embedded=false', '')		# bzw. true
+			
+		try:
+			imgsrc 	= s["images"]["aspect16x9"]
+			img 	= imgsrc["src"]
+			img = img.replace('{width}', '640')
+			img_alt = 	imgsrc["alt"]
+		except:
+			img=""
+		if img == "":
+			img = img_preload(ID, path, title, 'ARDRubriken')			
+		
+		tag = "Folgeseiten"
+		if 	img_alt:
+			tag =  u"%s\Bild: %s" % (tag, img_alt)
+		
 		ID = 'ARDStartRubrik'
 		PLog('Satz_cont2:');
 		PLog(title); PLog(ID); PLog(anz); PLog(img); PLog(path);
 		path=py2_encode(path); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
 			(quote(path), quote(title), ID)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-			tagline=tag, fparams=fparams)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", 
+			fanart=img, thumb=img, tagline=tag, fparams=fparams)
 			
-	return
+	if li_org == "":
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	else:	
+		return
 
 ###################################################			
 #---------------------------------------------------------------------------------------------------
@@ -545,7 +568,7 @@ def ARDStartRegion(path, title, widgetID='', ID=''):
 	PLog("do_region:")
 	ID = "ARDStartRubrik"
 	mark=''	
-	li = get_page_content(li, page, ID, mark)			# Auswertung Rubriken + Live-/Eventstreams
+	li = get_json_content(li, page, ID, mark)			# Auswertung Rubriken + Live-/Eventstreams
 	icon = R(ICON_DIR_FOLDER)
 	img = icon
 	msg1 = "Region"
@@ -629,7 +652,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	PLog(len(container))
 	if len(container) > 1:
 		PLog("ARDStartRubrik_more_container")
-		ARDRubriken(li, page)							# direkt
+		ARDRubriken(li, page=page)						# direkt
 	else:												# detect Staffeln/Folgen
 		# cnt = page.count(u'"Folge ')					# falsch positiv für "alt":"Folge 9"
 		if 'hasSeasons":true' in page and '"heroImage":' in page:
@@ -644,11 +667,12 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			fparams="&fparams={'path': '%s', 'title': '%s'}"	% (quote(path), quote(title))						
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARD_FlatListEpisodes", 
 				fanart=ICON, thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
-				
-		ID = "ARDStartRubrik"	
+		
+		if ID != "Livestream":	
+			ID = "ARDStartRubrik"	
 		if "Subrubriken" in title_org:				# skip Subrubrik Übersicht
 			mark="Subrubriken"
-		li = get_page_content(li, page, ID, mark)	# Auswertung Rubriken + Live-/Eventstreams																	
+		li = get_json_content(li, page, ID, mark)																
 #----------------------------------------
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
@@ -1405,6 +1429,192 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 	return li
 		
 #---------------------------------------------------------------------------------------------------
+# 14.04.2023 get_page_content -> get_json_content 
+#
+def get_json_content(li, page, ID, mark='', mehrzS=''): 
+	PLog('get_json_content: ' + ID); PLog(mark)
+	ID_org=ID
+
+	CurSender = Dict("load", 'CurSender')					# Debug, Seite bereits senderspez.
+	sendername, sender, kanal, img, az_sender = CurSender.split(':')
+	PLog(sender)												#-> href
+	mediatype=''; pagetitle=''
+	
+	jsonpath = "teasers"									# Default
+	if "SearchCompilationWidget" in page:					# Suchergebnis
+		pagetitle = stringextract('CompilationWidget:', '"', page)# SearchCompilationWidget:..
+	if page.startswith(u'{"aZContent"'):
+		pagetitle = stringextract('title":"', '"', page)	# Buchstabe A, B..
+	if page.startswith(u'{"binaryFeatures"'):
+		jsonpath = "widgets|0|teasers"		
+		pagetitle = stringextract('title":"', '"', page)	# Titel 1. image
+	PLog("pagetitle: " + pagetitle)
+	page = page.replace('\\"', '*')
+	PLog(page[:80])
+	
+	try:
+		obs = json.loads(page)
+		PLog(len(obs))
+		obs = GetJsonByPath(jsonpath, obs)
+	except Exception as exception:
+		PLog(str(exception))
+		obs=[]
+	PLog(len(obs))
+	
+	for s in obs:
+		PLog("Mark10")
+		uhr=''; ID=ID_org; duration='';	summ=''; availableTo='';
+		matRat="Ohne"
+
+		try:
+			if "availableTo" in s:
+				availableTo = s["availableTo"]					# Einzelbetrag
+			typ = s["type"]
+			mehrfach = False
+		except Exception as exception:
+			PLog(str(exception))
+		
+		if availableTo == "":
+			if typ != "live"  and typ != "event" :				# Livestream in Stage od. ARD Sport
+				mehrfach = True									# Default weitere Rubriken	
+
+		try:
+			imgsrc 	= s["images"]["aspect16x9"]
+			img 	= imgsrc["src"]
+			img = img.replace('{width}', '640')
+			img_alt = 	imgsrc["alt"]
+		except:
+			img = R(ICON_DIR_FOLDER)							# Bsp.: Subrubriken
+		
+		title = s["longTitle"]
+		title = repl_json_chars(title)
+		if mark:
+			PLog(title); PLog(mark)
+			title = title.strip() 
+			title = make_mark(mark, title, "", bold=True)		# Markierung
+			
+		if mehrzS:									# Setting pref_more
+			title = u"Mehr: %s" % title	
+		if mark == "Subrubriken":
+			if title.startswith(u"Übersicht"):		# skip Subrubrik Übersicht (rekursiv, o. Icons) 
+				PLog("skip_Übersicht")
+				continue				
+		
+		href = 	s["links"]["target"]["href"]
+		if ID != "Livestream" and mehrfach == False:			# Einzelbeiträge außer Live
+			PLog("eval_video:")	
+			if "publicationService" in s:
+				pubServ = s["publicationService"]["name"]
+			else:
+				pubServ = s["show"]["publisher"]["name"]
+			if "maturityContentRating" in s:
+				matRat = s["maturityContentRating"]
+				matRat = matRat.replace('NONE', 'Ohne')
+			if "duration" in s:
+				duration = s["duration"]						# sec-Wert
+				duration = seconds_translate(duration)			# 0:15
+			if duration and pubServ:										
+				duration = u'Dauer %s | [B]%s[/B]' % (duration, pubServ)
+			if 	matRat:
+				if duration == '':
+					duration = "Dauer unbekannt"
+				duration = u"%s | FSK: %s\n" % (duration, matRat)
+				
+			if s["show"]:										# null?
+				summ = s["show"]["synopsis"]
+			PLog(summ[:60])	
+			if summ == None:
+				summ = ""
+			summ = repl_json_chars(summ)
+				
+			if typ != "live":
+				verf = availableTo								# s.o.
+				if verf == None:
+					verf=""
+				verf = time_translate(verf)
+				if verf:
+					summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
+				if "broadcastedOn" in s:
+					pubDate = s["broadcastedOn"]
+					pubDate = time_translate(pubDate)
+					pubDate = u" | Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate	
+					if u'erfügbar bis' in summ:	
+						summ = summ.replace('\n\n', pubDate)	# zwischen Verfügbar + summ  einsetzen
+					else:
+						summ = "%s%s" % (pubDate[3:], summ)
+				if duration and summ:
+					summ = "%s\n%s" % (duration, summ)	
+		else:
+			summ = title
+			
+		if "Sendedatum:" in summ:								# aus Rückabe get_summary_pre
+			uhr = summ.split(' ')[-2]
+		summ = repl_json_chars(summ)	
+			
+		# ARDVerpasstContent: Zeit im Titel, Langfass. tagline:
+		if 'broadcast' in typ and uhr:							# EPG: broadcastMainClip								
+			title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 			
+			pubServ = stringextract('publicationService":{"name":"', '"', s)	# publicationService (Sender)
+			if pubServ:
+				summ = "%sSender: %s" % (summ, pubServ)		
+		
+		if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
+			filtered=False
+			for item in AKT_FILTER: 
+				if up_low(item) in py2_encode(up_low(s)):
+					filtered = True
+					break		
+			if filtered:
+				PLog('filtered: <%s> in %s ' % (item, title))
+				continue		
+	
+		PLog('Satz:');
+		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ[:60]); PLog(duration);
+		
+		if mehrfach:
+			summ = "Folgeseiten"
+			href=py2_encode(href); title=py2_encode(title); 
+			fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", \
+				fanart=img, thumb=img, fparams=fparams, summary=summ, mediatype='')	
+		else:
+			PLog("eval_settings:")	
+			if pagetitle == '':									# pagetitle -> title_samml
+				if "homepage" in s:								# Home-Titel kann fehlenden Sendungstitel enthalten
+					pagetitle = s["homepage"]
+					pagetitle = stringextract('"title":"', '"', pagetitle)
+			title_samml = "%s|%s" % (title, pagetitle)			# Titel + Seitentitel (A-Z, Suche)
+			if SETTINGS.getSetting('pref_mark_full_shows') == 'true':
+				if "duration" in s:
+					dur = s["duration"]; 
+					dur = str(int(dur))					
+					title = ardundzdf.full_shows(title, title_samml, summ, dur, "full_shows_ARD")	
+
+			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
+				summ_new = get_summary_pre(path=href, ID='ARDnew', duration=duration)  # s.o. pre:
+				if 	summ_new:
+					summ = summ_new
+					
+			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
+				mediatype='video'
+			
+			if typ == "live"  or typ == "event" :					# Livestream in Stage od. ARD Sport
+				ID = "Livestream"								
+				summ = "%s | [B]Livestream[/B]" % summ
+			else:
+				ID=ID_org
+			PLog("Satz_cont3: typ: %s, ID: %s" % (typ, ID))
+			
+			summ_par = summ.replace('\n', '||')
+			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
+			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s'}" %\
+				(quote(href), quote(title), quote(summ_par), ID)
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
+				fparams=fparams, summary=summ, mediatype=mediatype)	
+																										
+	return li	
+
+#---------------------------------------------------------------------------------------------------
 # Ermittlung der Videoquellen für eine Sendung - hier Aufteilung Formate Streaming + MP4
 # Bei Livestreams (m3u8-Links) verzweigen wir direkt zu SenderLiveResolution.
 # Videodaten unterteilt in _plugin":0 und _plugin":1,
@@ -1428,7 +1638,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	title_org = title
 
 	headers=''
-	# Header für Verpasst-Beiträge (ARDVerpasstContent -> get_page_content)
+	# Header für Verpasst-Beiträge (ARDVerpasstContent -> get_json_content)
 	if ID == 'EPG' or ID == 'A-Z':											
 		headers = "{'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma':'no-cache',\
 			'Expires': '0'}"		
@@ -1551,7 +1761,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	# Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
 	# 
 	PLog('Lists_ready:');
-	# summ = get_summary_pre(path, ID='ARDnew', page=page)	# entfällt mit summary aus get_page_content 
+	# summ = get_summary_pre(path, ID='ARDnew', page=page)	# entfällt mit summary aus get_json_content 
 	Plot = "Titel: %s\n\n%s" % (title_org, summary)				# -> build_Streamlists_buttons
 	PLog('Plot:' + Plot)
 	thumb = img; ID = 'ARDNEU'; HOME_ID = "ARD Neu"
@@ -1571,9 +1781,10 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	if len(elements) > 1 and SETTINGS.getSetting('pref_more') == 'true':
 		gridlist = elements[1:]						# hinter den Videodaten (1. Element)
 		PLog('gridlist_more: ' + str(len(gridlist)))	
-		page  = "\n".join(gridlist)					# passend für get_page_content 
+		page  = "\n".join(gridlist)					# passend für get_json_content 
 		PLog(page[:1000])
 		get_page_content(li, page, ID=ID, mehrzS=True, mark='')	
+#		get_json_content(li, page, ID=ID, mehrzS=True, mark='')	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -1847,57 +2058,8 @@ def SendungenAZ_ARDnew(title, button, href):
 	PLog(len(page))
 	page = page.replace('\\"', '*')						# quotierte Marks entf., Bsp. \"query\"
 			
-	gridlist = blockextract('"decor":', page)			# Beiträge im Block
-	PLog(len(gridlist))
-	if len(gridlist) == 0:				
-		msg1 = u'Keine Beiträge gefunden zu %s' % button	
-		MyDialog(msg1, '', '')					
-		return li
-			
-	for s  in gridlist:
-		href_list = blockextract('"href":"', s, '"')
-		PLog(href_list); 
-		for url in href_list:
-			if 'embedded=true' in url:
-				href = stringextract('"href":"', '"', url)
-				break
-
-		title 	= stringextract('"longTitle":"', '"', s)
-		if title == '':
-			title 	= stringextract('"mediumTitle":"', '"', s)					
-		
-		title 	= title.replace('- Standbild', '')	
-		title	= unescape(title)
-		if title.startswith('#') == False:
-			title = repl_json_chars(title)
-		img	= stringextract('"src":"', '"', s)		
-		img = img.replace('{width}', '720')
-		summ 	= stringextract('synopsis":"', '"', s)	
-		pubServ = stringextract('"name":"', '"', s)		# publicationService (Sender)
-		partner = stringextract('"partner":"', '"', s)
-		tagline = "Sender: %s" % pubServ		
-		PLog(az_sender); PLog(pubServ); PLog(partner);
-		if pubServ  == '' and partner  == '':			# pubServ kann fehlen
-			continue
-				
-		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
-			filtered=False
-			for item in AKT_FILTER: 
-				if up_low(item) in py2_encode(up_low(s)):
-					filtered = True
-					break		
-			if filtered:
-				# PLog('filtered: ' + title)
-				continue		
-
-		PLog('Satz2:');
-		PLog(title); PLog(href); PLog(img); PLog(summ); PLog(tagline);
-		ID = 'A-Z'
-		summ = "%s\n\n%s" % (tagline, summ)
-		href=py2_encode(href); title=py2_encode(title); 
-		fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s'}" % (quote(href), quote(title), ID)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-			fparams=fparams, summary=summ)	
+	ID = 'A-Z'
+	li = get_json_content(li, page, ID, mark="")																	
 			
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
 	#	pagination mit Basispfad immer vorhanden, Mehr-Button abhängig von Anz. der Beiträge
@@ -2146,7 +2308,7 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 	PLog('gridlist: ' + str(len(gridlist)))	
 	
 	ID='Search' 	# mark für farbige Markierung
-	li = get_page_content(li, page, ID, mark=unquote(query))																	
+	li = get_json_content(li, page, ID, mark=unquote(query))																	
 	
 															# Mehr-Button:
 	title = "Mehr zu >%s<" % unquote(query)		
@@ -2283,8 +2445,8 @@ def ARDVerpasstContent(title, startDate, endDate, CurSender):
 	icon = R(ICON_ARD_VERP)
 	xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)
 	
-	li = get_page_content(li, page, ID='EPG', mark='')
-																	
+#	li = get_page_content(li, page, ID='EPG', mark='')																	
+	li = get_json_content(li, page, ID='EPG', mark='')																	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
