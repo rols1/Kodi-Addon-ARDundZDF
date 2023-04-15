@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>38</nr>										# Numerierung für Einzelupdate
+# 	<nr>39</nr>										# Numerierung für Einzelupdate
 #	Stand: 15.04.2023
 
 # Python3-Kompatibilität:
@@ -1433,21 +1433,21 @@ def get_page_content(li, page, ID, mark='', mehrzS=''):
 #
 def get_json_content(li, page, ID, mark='', mehrzS=''): 
 	PLog('get_json_content: ' + ID); PLog(mark)
-	ID_org=ID
+	ID_org=ID; PLog(type(page))
 
-	CurSender = Dict("load", 'CurSender')					# Debug, Seite bereits senderspez.
+	CurSender = Dict("load", 'CurSender')						# Debug, Seite bereits senderspez.
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)												#-> href
 	mediatype=''; pagetitle=''
 	
-	jsonpath = "teasers"									# Default
-	if "SearchCompilationWidget" in page:					# Suchergebnis
+	jsonpath = "teasers"										# Default
+	if "SearchCompilationWidget" in page:						# Suchergebnis
 		pagetitle = stringextract('CompilationWidget:', '"', page)# SearchCompilationWidget:..
 	if page.startswith(u'{"aZContent"'):
-		pagetitle = stringextract('title":"', '"', page)	# Buchstabe A, B..
+		pagetitle = stringextract('title":"', '"', page)		# Buchstabe A, B..
 	if page.startswith(u'{"binaryFeatures"'):
 		jsonpath = "widgets|0|teasers"		
-		pagetitle = stringextract('title":"', '"', page)	# Titel 1. image
+		pagetitle = stringextract('title":"', '"', page)		# Titel 1. image
 	PLog("pagetitle: " + pagetitle)
 	page = page.replace('\\"', '*')
 	PLog(page[:80])
@@ -1459,24 +1459,25 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 	except Exception as exception:
 		PLog(str(exception))
 		obs=[]
-	PLog(len(obs))
+	PLog("obs: %d" % len(obs))
 	
+	typ_single_list = ["live", "event", "broadcastMainClip", 	# Einzelbeträge
+					"ondemand"]
 	for s in obs:
 		PLog("Mark10")
 		uhr=''; ID=ID_org; duration='';	summ=''; availableTo='';
 		matRat="Ohne"
 
 		try:
-			if "availableTo" in s:
+			if "availableTo" in s:								# fehlt u.a. bei EPG
 				availableTo = s["availableTo"]					# Einzelbetrag
 			typ = s["type"]
 			mehrfach = False
 		except Exception as exception:
 			PLog(str(exception))
 		
-		if availableTo == "":
-			if typ != "live"  and typ != "event" :				# Livestream in Stage od. ARD Sport
-				mehrfach = True									# Default weitere Rubriken	
+		if typ not in typ_single_list:	
+			mehrfach = True										# Default weitere Rubriken	
 
 		try:
 			imgsrc 	= s["images"]["aspect16x9"]
@@ -1493,10 +1494,10 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 			title = title.strip() 
 			title = make_mark(mark, title, "", bold=True)		# Markierung
 			
-		if mehrzS:									# Setting pref_more
+		if mehrzS:												# Setting pref_more
 			title = u"Mehr: %s" % title	
 		if mark == "Subrubriken":
-			if title.startswith(u"Übersicht"):		# skip Subrubrik Übersicht (rekursiv, o. Icons) 
+			if title.startswith(u"Übersicht"):					# skip Subrubrik Übersicht (rekursiv, o. Icons) 
 				PLog("skip_Übersicht")
 				continue				
 		
@@ -1520,8 +1521,9 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 					duration = "Dauer unbekannt"
 				duration = u"%s | FSK: %s\n" % (duration, matRat)
 				
-			if s["show"]:										# null?
-				summ = s["show"]["synopsis"]
+			if "show" in s:		
+				if s["show"]:									# null?
+					summ = s["show"]["synopsis"]
 			PLog(summ[:60])	
 			if summ == None:
 				summ = ""
@@ -1554,7 +1556,7 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 		# ARDVerpasstContent: Zeit im Titel, Langfass. tagline:
 		if 'broadcast' in typ and uhr:							# EPG: broadcastMainClip								
 			title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 			
-			pubServ = stringextract('publicationService":{"name":"', '"', s)	# publicationService (Sender)
+			pubServ = s["publicationService"]["name"]							# publicationService (Sender)
 			if pubServ:
 				summ = "%sSender: %s" % (summ, pubServ)		
 		
@@ -1778,13 +1780,14 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten). element enthält 
 	#	Sendungen ab dem 2. Element (1. die Videodaten)
 	# 19.10.2020 Funktion get_ardsingle_more entfällt
+	# 15.04.2023 Auswertung Mehr-Beiträge -> json
 	if len(elements) > 1 and SETTINGS.getSetting('pref_more') == 'true':
 		gridlist = elements[1:]						# hinter den Videodaten (1. Element)
 		PLog('gridlist_more: ' + str(len(gridlist)))	
-		page  = "\n".join(gridlist)					# passend für get_json_content 
-		PLog(page[:1000])
-		get_page_content(li, page, ID=ID, mehrzS=True, mark='')	
-#		get_json_content(li, page, ID=ID, mehrzS=True, mark='')	
+		s = json.loads(page)["widgets"][1]			
+		page  = json.dumps(s)
+		PLog(page[:100])
+		get_json_content(li, page, ID=ID, mehrzS=True, mark='')	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -2445,8 +2448,16 @@ def ARDVerpasstContent(title, startDate, endDate, CurSender):
 	icon = R(ICON_ARD_VERP)
 	xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)
 	
-#	li = get_page_content(li, page, ID='EPG', mark='')																	
-	li = get_json_content(li, page, ID='EPG', mark='')																	
+	try:
+		obs = json.loads(page)
+		PLog(len(obs))
+	except Exception as exception:
+		PLog(str(exception))
+	
+	for s in obs:										# ARD-Alle: einz. Sender auspacken
+		PLog(str(s)[:80])
+		page  = json.dumps(s)
+		li = get_json_content(li, page, ID='EPG', mark='')																	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
