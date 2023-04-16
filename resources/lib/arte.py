@@ -1235,8 +1235,6 @@ def get_ArtePage(caller, title, path, header=''):
 	if path == '':
 		PLog("path_fehlt")
 		return page
-										# Sicherung
-	jsonmark = '"props":'								# json-Bereich	26.07.2021 angepasst
 
 	page, msg = get_page(path, GetOnlyRedirect=True)# Permanent-Redirect-Url abfangen
 	url = page								

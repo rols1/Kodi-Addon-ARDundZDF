@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>45</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.04.2023
+#	Stand: 15.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2290,14 +2290,8 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 	PLog('get_summary_pre: ' + ID); PLog(path)
 	PLog(skip_verf); PLog(skip_pubDate); PLog(len(page))
 	
-	if 'Video?bcastId' in path:					# ARDClassic
-		fname = path.split('=')[-1]				# ../&documentId=31984002
-		fname = "ID_%s" % fname
-	else:	
-		fname = path.split('/')[-1]
-		fname.replace('.html', '')				# .html bei ZDF-Links abschneiden
-	if '?devicetype' in fname:					# ARDNew-Zusatz: ?devicetype=pc&embedded=true
-		fname = fname.split('?devicetype')[0]
+	fname = path.split('/')[-1]
+	fname.replace('.html', '')				# .html bei ZDF-Links abschneiden
 		
 	fpath = os.path.join(TEXTSTORE, fname)
 	PLog('fpath: ' + fpath)
@@ -2328,11 +2322,13 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 	verf='';
 	
 	if pattern: 
-		ID=''															#einzelnes Auswertungsmerkmal
+		ID=''																#einzelnes Auswertungsmerkmal
 		pat1, pat2 = pattern.split('|')
 		summ = stringextract(pat1, pat2, page)
 		summ = repl_json_chars(summ)
 					
+	#-----------------	
+	
 	if 	ID == 'ZDF' or ID == '3sat':
 		teaserinfo = stringextract('teaser-info">', '<', page)
 		summ = stringextract('description" content="', '"', page)
@@ -2364,6 +2360,8 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 				else:
 					summ = "%s%s" % (pubDate[3:], summ)
 					
+	#-----------------	
+				
 	if 	ID == 'ARDnew':
 		page = page.replace('\\"', '*')							# Quotierung vor " entfernen, Bsp. \"query\"
 		pubServ = stringextract('"name":"', '"', page)			# publicationService (Sender)
@@ -2401,73 +2399,6 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 					
 		if duration and summ:
 			summ = "%s\n%s" % (duration, summ)
-		
-	# für Classic ist u-Kennz. vor Umlaut-strings erforderlich
-	if 	ID == 'ARDClassic':
-		# summ = stringextract('description" content="', '"', page)		# geändert 23.04.2019
-		summ = stringextract('itemprop="description">', '<', page)
-		summ = unescape(summ)			
-		summ = cleanhtml(summ)	
-		summ = repl_json_chars(summ)
-		if skip_verf == False:
-			if u'verfügbar bis' in page:										
-				verf = stringextract(u'verfügbar bis ', '</', page)		# Blank bis </p>
-			if verf:													# Verfügbar voranstellen
-				summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
-		if skip_pubDate == False:		
-			pubDate = stringextract('Video der Sendung vom', '</', page)# pageHeadline hidden
-			if pubDate:
-				pubDate = " | Sendedatum: [COLOR blue]%s[/COLOR]\n\n" % pubDate	# "Uhr" in Quelle
-				if u'erfügbar bis' in summ:	
-					summ = summ.replace('\n\n', pubDate)					# zwischen Verfügbar + summ  einsetzen
-				else:
-					summ = "%s%s" % (pubDate[3:], summ)
-				
-	# für Classic ist u-Kennz. vor Umlaut-strings erforderlich
-	if 	ID == 'ARDSport':		
-		PLog('Mark2:')
-		mediaDate=''; mediaDuration=''; duration=''; mtitle=''
-		if 'uration"' in page:
-			duration = 	stringextract('duration">', '<', page)	
-		if '"mediaDate"' in page:
-			mediaDate = stringextract('mediaDate">', '<', page)		
-		if '"mediaDuration"' in page:
-			mediaDuration = stringextract('mediaDuration">', '<', page)
-			if len(mediaDuration) >= 8:
-				mediaDuration = mediaDuration + "Std."
-			else:
-				mediaDuration = mediaDuration + "Min."
-		else:
-			mediaDuration = duration
-		if mediaDate:
-			duration = mediaDate
-		if mediaDuration:
-			duration = "%s | %s" % (mediaDate, mediaDuration)
-
-		try:																# todo: codec-Error einkreisen
-			if u'"mediaExpiry">' in page:										
-				verf = stringextract(u'"mediaExpiry">', '<', page)
-			if verf:
-				verf = u"[B][COLOR darkgoldenrod]%s[/COLOR][/B]" % verf
-			duration = "%s | %s" % (duration, verf)
-			PLog("duration: " + duration)	
-				
-			summ = stringextract('class="einleitung small">', '<', page)
-			if summ == '':
-				summ = stringextract('class="text">', '<', page)
-			if summ == '':
-				summ = stringextract('teasertext">', '<strong>', page)
-			if 'Falls JavaScript in Ihrem' in summ:
-				summ = ''
-			summ = unescape(summ);  summ = mystrip(summ)			
-			summ = cleanhtml(summ)	
-			summ = repl_json_chars(summ)
-			#if u'"mediaTitle">' in page:									# nicht verw.									
-			#	mtitle = stringextract(u'"mediaTitle">', '"', page)		
-			summ = u"%s | %s\n\n%s" % (duration, mtitle, summ)
-		except Exception as exception:
-			PLog(str(exception))
-			summ=''		
 			
 	page = py2_encode(page)
 	summ = summ.replace(' |  | ', '')								# Korrek. Leer

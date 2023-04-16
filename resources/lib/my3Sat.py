@@ -442,7 +442,10 @@ def SendungenDatum(SendDate, title):
 		tagline = title_org +  ' | ' + zeit
 		if dauer:
 			tagline = tagline + ' | ' + dauer
-					
+
+		if SETTINGS.getSetting('pref_load_summary') == 'true':			# Inhaltstext im Voraus laden?
+			pass														# o. Mehrwert zu descr												
+
 		title = repl_json_chars(title);
 		sendung = repl_json_chars(sendung)
 		descr	= unescape(descr);  

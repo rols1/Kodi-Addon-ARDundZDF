@@ -10,6 +10,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.04.2023 4.6.9
+			Audio_get_items_single (Audiothek): Fix img-Auswertung (fehlte: '"').
+			get_page_content (ARD): neues Blockmerkmal nach ARD-Änderung (images).
+			seconds_translate (util): str(seconds) ergänzt für json-Werte.
+			ARDnew: Auswertung umgestellt (get_page_content -> get_json_content) für
+			ARDSearchnew, ARDStartRubrik, ARDRubriken, SendungenAZ_ARDnew, ARDStart,
+			ARDStartRegion, MainNEW, ARDVerpasstContent, ARDStartSingle.
+			menu_hub (TagesschauXL): get_page_content -> get_json_content
+			get_foruminfo (tools): Anpassung Forum-Hinweis an Forum-Update. 
+			get_summary_pre (util): Code für ARDClassic entfernt (obsolet).
+			ARDSportWDR: Event NORDISCHE SKI-WM -> "Event-Archiv.
+			ARDSportMediaPlayer (ARDSportWDR): Datum Stream-Verfügbarkeit in Player-
+			Daten ergänzt (weggefallen in html-Quellen). 
+
 09.04.2023 4.6.8
 			get_forms (funk): Anpassung int/float für Bandbreite , Sortierung via
 			lambda-Funktion, Abgleich für Sofortststart umgestellt auf Auflösung 

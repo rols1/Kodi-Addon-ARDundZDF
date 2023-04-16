@@ -1228,206 +1228,9 @@ def ARD_get_strmStream(url, title, img, Plot):
 # Seiten sind hier bereits senderspezifisch.
 # Aufrufe Direktsprünge
 # 07.04.2023 skip Subrubrik Übersicht (aktuelle Seite)
-# 
-def get_page_content(li, page, ID, mark='', mehrzS=''): 
-	PLog('get_page_content: ' + ID); PLog(mark)
-	ID_org=ID
-	
-	CurSender = Dict("load", 'CurSender')					# Debug, Seite bereits senderspez.
-	sendername, sender, kanal, img, az_sender = CurSender.split(':')
-	PLog(sender)												#-> href
-	
-	mediatype=''; pagetitle=''
-	pagination	= stringextract('pagination":', '"type"', page)
-	if ID == "A-Z" or  ID == "Search":
-		pagetitle 	= stringextract('title":"', '"', pagination)# bei Suche: SearchCompilationWidget:..
-	PLog("pagetitle: " + pagetitle)
-	page = page.replace('\\"', '*')								# quotierte Marks entf., Bsp. \"query\"
-	
-	if 'Livestream' in ID or 'EPG' in ID:
-		gridlist = blockextract('"broadcastedOn"', page)
-	else:
-		gridlist = blockextract( '"availableTo"', page)				
-		if  ID == 'Search':										# Search immer Einzelbeiträge
-			mehrfach = False
-			#gridlist = blockextract( '"ondemand"', page)		# ondemand: neuester Beitrag kann fehlen				
-		else:				
-			if  len(gridlist) == 0:								# Altern.	
-				gridlist = blockextract('id":"Link:', page)		# deckt auch Serien in Swiper ab
-					
-		if 'ARDStart' in ID:									# zusätzl. Beiträge ganz links, Livestream 
-			decorlist = blockextract( '"decor":', page)			# 	möglich, s.u., umfasst ID ARDStartRubrik
-			PLog('decorlist: ' + str(len(decorlist)))
-			gridlist = gridlist + decorlist						# 30.01.2022 (Filter href in skip_list)					
-			
-		if len(gridlist) == 0:									# Fallback (außer Livestreams)
-			#gridlist = blockextract( '"images":', page) 		# geändert 20.09.2019 
-			gridlist = blockextract( '"availableTo":', page) 	# geändert 10.11.2021
-		if len(gridlist) == 0:									# 09.01.2022 Fallback für A-Z-Inhalte
-			gridlist = blockextract( '"decor":', page) 				
-		if len(gridlist) == 0:									# 12.04.2023 Fallback für Menü-Inhalte
-			gridlist = blockextract( '"images":', page) 				
-		
-	if len(gridlist) == 0:		
-		msg1 = 'keine Beiträge gefunden'
-		PLog(msg1)
-		MyDialog(msg1, '', '')	
-	PLog('gridlist: ' + str(len(gridlist)))	
-
-	skiplist=[]
-	for s  in gridlist:
-		uhr=''; ID=ID_org; duration='';	
-		PLog("Mark10")
-		
-		mehrfach = True											# Default weitere Rubriken
-		if 'target":{"id":"' in s:
-			targetID= stringextract('target":{"id":"', '"', s)	# targetID, auch Search
-		else:
-			targetID= stringextract('id":"Link:', '"', s)		# Serie in Swiper via ARDStartSingle 
-		if targetID == "":
-			links = stringextract('target":', '}', s)
-			targetID= stringextract('href:"', '"', links)
-		PLog("targetID: " + targetID)
-		if targetID == '':										# kein Video
-			continue			
-
-		PLog('"availableTo":null' in s)							# kein Einzelbetrag
-		if '/compilation/' in s or '/grouping/' in s:			# Serie Vorrang vor z.B. Teaser 
-			mehrfach = True
-		if ID == 'EPG':
-			mehrfach = False
-		if '"duration":' in s:									# Einzelbetrag
-			mehrfach = False
-		# Live-Stream od. -Aufzeichnung (Bsp. ARD Sport):
-		if 'type":"live"' in s or '"type":"event"' in s or 'Livestream' in ID:
-			mehrfach = False
-					
-		href=''
-		if mehrfach == True:									# Pfad für Mehrfachbeiträge ermitteln 						
-			url_parts = ['/grouping/', '/compilation/', '/editorial/', '/page-gateway/pages/']
-			hreflist = blockextract('"href":"', s)
-			#PLog("hreflist: " + str (hreflist))
-			for h in hreflist:
-				for u in url_parts:
-					if u in h:
-						href = stringextract('"href":"', '"', h)
-						break
-		else:
-			hreflist = blockextract('"href":"', s)
-			for h in hreflist:
-				if 'embedded=true' in h:
-					href = stringextract('"href":"', '"', h)
-					break
-		# PLog("href: " + str (href))	
-								
-		title=''	
-		if 'longTitle":"' in s:
-			title 	= stringextract('longTitle":"', '"', s)
-		if title == '':
-				title 	= stringextract('mediumTitle":"', '"', s)
-		if title == '':
-				title 	= stringextract('shortTitle":"', '"', s)
-		title = transl_json(title)					# <1u002F2> =  <1/2>
-		title = unescape(title); 
-		title = repl_json_chars(title)	
-		
-		if mehrzS:									# Setting pref_more
-			title = u"Mehr: %s" % title	
-		if mark == "Subrubriken":
-			if title.startswith("Übersicht"):		# skip Subrubrik Übersicht (rekursiv, o. Icons) 
-				continue				
-
-		if mark:
-			PLog(title); PLog(mark)
-			title = title.strip() 
-			# title = make_mark(mark, title, "red")	# farbige Markierung
-			title = make_mark(mark, title, "", bold=True)	# farbige Markierung
-	
-		img 	= stringextract('src":"', '"', s)	
-		img 	= img.replace('{width}', '640'); 
-		img		= img.replace('u002F', '/')
-		if img == "":								# Subrubriken
-			img = R(ICON_DIR_FOLDER)
-			
-		summ=''
-		if ID != 'Livestream' and mehrfach == False:# mehrfach: summ=Folgeseiten
-			PLog("pre: %s" % s[:80])				# Verfügbar + Sendedatum aus s laden (nicht Zielseite) 
-			summ = get_summary_pre(path='dummy', ID='ARDnew', skip_verf=False, skip_pubDate=False, page=s)
-		else:
-			summ = title
-		if "Sendedatum:" in summ:									# aus Rückabe get_summary_pre
-			uhr = summ.split(' ')[-2]
-	
-		title = repl_json_chars(title); summ = repl_json_chars(summ);
-		# ARDVerpasstContent: Zeit im Titel, Langfass. tagline:
-		if ID == 'EPG' and uhr:									
-			title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 			
-			pubServ = stringextract('publicationService":{"name":"', '"', s)	# publicationService (Sender)
-			if pubServ:
-				summ = "%sSender: %s" % (summ, pubServ)
-				
-		PLog('Satz:');
-		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ[:60]); PLog(ID)
-		
-		if href == '':
-			continue
-		if href in skiplist:
-			continue
-		skiplist.append(href)	
-			
-		if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
-			filtered=False
-			for item in AKT_FILTER: 
-				if up_low(item) in py2_encode(up_low(s)):
-					filtered = True
-					break		
-			if filtered:
-				PLog('filtered: <%s> in %s ' % (item, title))
-				continue		
-		
-		if mehrfach:
-			summ = "Folgeseiten"
-			href=py2_encode(href); title=py2_encode(title); 
-			fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-				fparams=fparams, summary=summ, mediatype='')																							
-		else:
-			PLog("check_full_shows")								# full_show im Titel: ganze Sendungen rot+fett
-			if ID != 'EPG' and ID != 'Search':				 		# bei Suche Absturz nach Video-Sofortstart
-				if pagetitle == '':
-					if '"homepage":' in s:							# Home-Titel kann fehlenden Sendungstitel enthalten
-						pagetitle = stringextract('"homepage":', '}', s)
-						pagetitle = stringextract('"title":"', '"', pagetitle)
-				title_samml = "%s|%s" % (title, pagetitle)			# Titel + Seitentitel (A-Z, Suche)
-				duration = stringextract('duration":', ',', s)		# sec-Wert
-				duration = seconds_translate(duration)				# 0:15
-				if SETTINGS.getSetting('pref_mark_full_shows') == 'true':							
-					title = ardundzdf.full_shows(title, title_samml, summ, duration, "full_shows_ARD")	
-
-			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
-				summ_new = get_summary_pre(path=href, ID='ARDnew', duration=duration)  # s.o. pre:
-				if 	summ_new:
-					summ = summ_new
-					
-			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
-				mediatype='video'
-			
-			if '"type":"live"' in s or '"type":"event"' in s:		# Livestream in Stage od. ARD Sport
-				ID = "Livestream"								
-				summ = "%s | [B][COLOR red]Livestream[/COLOR][/B]" % summ
-			else:
-				ID=ID_org
-
-		
-			summ_par = summ.replace('\n', '||')
-			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
-			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s'}" %\
-				(quote(href), quote(title), quote(summ_par), ID)
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
-				fparams=fparams, summary=summ, mediatype=mediatype)	
-	
-	return li
-		
+# 14.04.2023 get_page_content -> get_json_content 
+# gelöscht: def get_page_content(li, page, ID, mark='', mehrzS=''): 
+#		
 #---------------------------------------------------------------------------------------------------
 # 14.04.2023 get_page_content -> get_json_content 
 #
@@ -1440,44 +1243,44 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 	PLog(sender)												#-> href
 	mediatype=''; pagetitle=''
 	
+	PLog(page[:80])
 	jsonpath = "teasers"										# Default
-	if "SearchCompilationWidget" in page:						# Suchergebnis
-		pagetitle = stringextract('CompilationWidget:', '"', page)# SearchCompilationWidget:..
-	if page.startswith(u'{"aZContent"'):
-		pagetitle = stringextract('title":"', '"', page)		# Buchstabe A, B..
 	if page.startswith(u'{"binaryFeatures"'):
 		jsonpath = "widgets|0|teasers"		
-		pagetitle = stringextract('title":"', '"', page)		# Titel 1. image
-	PLog("pagetitle: " + pagetitle)
-	page = page.replace('\\"', '*')
-	PLog(page[:80])
 	
 	try:
-		obs = json.loads(page)
-		PLog(len(obs))
-		obs = GetJsonByPath(jsonpath, obs)
+		page_obs = json.loads(page)
+		PLog(len(page_obs))
+		obs = GetJsonByPath(jsonpath, page_obs)
 	except Exception as exception:
 		PLog(str(exception))
 		obs=[]
-	PLog("obs: %d" % len(obs))
-	
-	typ_single_list = ["live", "event", "broadcastMainClip", 	# Einzelbeträge
-					"ondemand"]
-	for s in obs:
-		PLog("Mark10")
-		uhr=''; ID=ID_org; duration='';	summ=''; availableTo='';
-		matRat="Ohne"
-
+	if len(obs) == 0:											# Altern.
+		jsonpath = "widgets|0|teasers"		
 		try:
-			if "availableTo" in s:								# fehlt u.a. bei EPG
-				availableTo = s["availableTo"]					# Einzelbetrag
-			typ = s["type"]
-			mehrfach = False
+			obs = GetJsonByPath(jsonpath, page_obs)
 		except Exception as exception:
 			PLog(str(exception))
-		
-		if typ not in typ_single_list:	
-			mehrfach = True										# Default weitere Rubriken	
+			obs=[]
+	PLog("obs: %d" % len(obs))
+	
+	# typ-Info Einzelbeträge: ["live", "event", "broadcastMainClip",
+	#				"ondemand", "poster"]
+	
+	for s in obs:
+		PLog("Mark10")
+		PLog(str(s)[:60])
+		uhr=''; ID=ID_org; duration='';	summ=''; availableTo='';
+		matRat="Ohne"
+		typ = s["type"]
+		if "availableTo" in s:
+			availableTo = s["availableTo"]
+
+		typ = s["type"]
+		if "duration" in s or "broadcastedOn" in s:				# broadcastedOn: Livestream
+			mehrfach = False									# Default Einzelbetrag
+		else:
+			mehrfach = True										# Default weitere Rubriken		
 
 		try:
 			imgsrc 	= s["images"]["aspect16x9"]
@@ -1489,10 +1292,10 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 		
 		title = s["longTitle"]
 		title = repl_json_chars(title)
-		if mark:
+		if mark:												# Markierung Suchbegriff 						
 			PLog(title); PLog(mark)
 			title = title.strip() 
-			title = make_mark(mark, title, "", bold=True)		# Markierung
+			title = make_mark(mark, title, "", bold=True)		# -> util
 			
 		if mehrzS:												# Setting pref_more
 			title = u"Mehr: %s" % title	
@@ -1523,14 +1326,14 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 				
 			if "show" in s:		
 				if s["show"]:									# null?
-					summ = s["show"]["synopsis"]
+					summ = s["show"]["synopsis"]				# Zusammenfassung
 			PLog(summ[:60])	
 			if summ == None:
 				summ = ""
 			summ = repl_json_chars(summ)
 				
-			if typ != "live":
-				verf = availableTo								# s.o.
+			verf = availableTo									# s.o.
+			if "live" not in typ:								# nicht in Livestreams
 				if verf == None:
 					verf=""
 				verf = time_translate(verf)
@@ -1549,7 +1352,7 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 		else:
 			summ = title
 			
-		if "Sendedatum:" in summ:								# aus Rückabe get_summary_pre
+		if "Sendedatum:" in summ:	
 			uhr = summ.split(' ')[-2]
 		summ = repl_json_chars(summ)	
 			
@@ -1571,7 +1374,8 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 				continue		
 	
 		PLog('Satz:');
-		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ[:60]); PLog(duration);
+		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ[:60]); 
+		PLog(duration); PLog(availableTo);
 		
 		if mehrfach:
 			summ = "Folgeseiten"
@@ -1587,13 +1391,14 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 					pagetitle = stringextract('"title":"', '"', pagetitle)
 			title_samml = "%s|%s" % (title, pagetitle)			# Titel + Seitentitel (A-Z, Suche)
 			if SETTINGS.getSetting('pref_mark_full_shows') == 'true':
-				if "duration" in s:
-					dur = s["duration"]; 
-					dur = str(int(dur))					
-					title = ardundzdf.full_shows(title, title_samml, summ, dur, "full_shows_ARD")	
+				if ID != "Search":								# Vorrang Suchmarkierung vor full_shows					
+					if "duration" in s:
+						dur = s["duration"]; 
+						dur = str(int(dur))					
+						title = ardundzdf.full_shows(title, title_samml, summ, dur, "full_shows_ARD")	
 
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
-				summ_new = get_summary_pre(path=href, ID='ARDnew', duration=duration)  # s.o. pre:
+				summ_new = get_summary_pre(path=href, ID='ARDnew', duration=duration)  # Modul util
 				if 	summ_new:
 					summ = summ_new
 					

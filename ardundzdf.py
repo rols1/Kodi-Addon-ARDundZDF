@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>94</nr>										# Numerierung für Einzelupdate
-VERSION = '4.6.8'
-VDATE = '10.04.2023'
+VERSION = '4.6.9'
+VDATE = '16.04.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2805,7 +2805,7 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
-	
+	'''
 	title = u"Event: [B]NORDISCHE SKI-WM[/B]"			# Großevent	
 	tag = u"Alles zur Nordischen Ski-WM in Planica."
 	cacheID = "Sport_SkiWM"
@@ -2816,7 +2816,8 @@ def ARDSportWDR():
 		(quote(title), quote(path), quote(img), cacheID)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
-
+	'''
+	
 	title = u"Event-Archiv"									# Buttons für ältere Events	
 	tag = u"Archiv für zurückliegende Groß-Events."
 	img = logo
@@ -2864,6 +2865,17 @@ def ARDSportWDRArchiv():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
+	title = u"Event: [B]NORDISCHE SKI-WM[/B]"								# Großevent	
+	tag = u"Alles zur Nordischen Ski-WM in Planica."
+	cacheID = "Sport_SkiWM"
+	img = "https://images.sportschau.de/image/237354e3-b9b2-46bf-993a-8ecc48947e7f/AAABhol6U80/AAABg8tMRzY/20x9-1280/constantin-schmid-150.webp"
+	path = "https://www.sportschau.de/wintersport/nordische-ski-wm"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Event: [B]Handball-WM 2023 in Polen und Schweden[/B]"			# Großevent	
 	tag = u"Nachrichten, Berichte, Interviews und Ergebnisse zur Handball-WM 2023 in Polen und Schweden mit dem DHB-Team."
 	cacheID = "Sport_WMHandball"
@@ -3502,6 +3514,10 @@ def ARDSportMediaPlayer(li, item):
 		if duration == "0 sec":
 			duration = "unbekannt"
 		
+	avail = stringextract('av_original_air_time":"', '"', cont)
+	if avail:
+		verf = time_translate(avail)
+	
 	chapter = stringextract('chapter1":"', '"', cont)
 	creator = stringextract('creator":"', '"', cont)
 	genre = stringextract('_genre":"', '"', cont)
@@ -3521,6 +3537,8 @@ def ARDSportMediaPlayer(li, item):
 	PLog("duration: " + duration)
 	if live == False and duration:
 		tag = "%s | Dauer %s" % (tag, duration)
+	if verf:
+		tag = u"%s | Verfügbar ab [B]%s[/B]" % (tag, verf)	
 		
 	tag = "%s\n%s | %s | %s | %s" % (tag, chapter, creator, genre, geo)
 
@@ -3529,7 +3547,7 @@ def ARDSportMediaPlayer(li, item):
 	Plot = tag.replace("\n", "||")
 	
 	PLog("Satz31:")
-	PLog(player); PLog(live); PLog(title); PLog(mp3_url); PLog(stream_url);
+	PLog(player); PLog(live); PLog(title); PLog(mp3_url); PLog(stream_url); PLog(avail);
 		
 	return player, live, title, mp3_url, stream_url, img, tag, summ, Plot 
 
@@ -8371,7 +8389,7 @@ def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='
 					
 			else:							# Einzelbeitrag direkt - anders als A-Z (ZDF_get_content)		
 				if SETTINGS.getSetting('pref_load_summary') == 'true':		# Inhaltstext im Voraus laden?
-					# get_summary_pre in ZDF_get_teaserDetails bereits erledigt
+					# get_summary_pre in ZDF_get_teaserDetails bereits erledigt?
 					if teaserDetails == '':									
 						skip_verf=False; skip_pubDate=False					# beide Daten ermitteln
 						summ_txt = get_summary_pre(path, 'ZDF', skip_verf, skip_pubDate)
@@ -8663,7 +8681,7 @@ def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 		skip_verf=False; skip_pubDate=False								# Teaser enth. beide Daten
 		summ_txt = get_summary_pre(path, 'ZDF', skip_verf, skip_pubDate)
 		PLog(len(summ_txt)); 
-		if 	summ_txt and len(summ_txt) > len(descr):
+		if 	len(summ_txt) > len(descr):
 			descr= summ_txt
 			
 	PLog('title: %s, path: %s, img_src: %s, descr: %s, dauer: %s, enddate: %s, isvideo: %s' %\
@@ -8997,7 +9015,7 @@ def International(title):
 #		ZDF_Search, ZDFSportLive, Tivi_Search (Modul childs).
 #	Blockbereich für VERPASST erweitert (umfasst data-station)
 #	08.01.2021 Anpassung an geänderte Formate bei Hochkant-Videos.
-# mark: farbige Markierung in title (wie ARDSearchnew -> get_page_content) 
+# mark: farbige Markierung in title (wie ARDSearchnew -> get_json_content) 
 #
 def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip_list='', mark=''):	
 	PLog('ZDF_get_content:'); PLog(ref_path); PLog(ID); PLog(sfilter); 
@@ -9392,7 +9410,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip
 					skip_verf = True
 				summ_txt = get_summary_pre(plusbar_path, 'ZDF', skip_verf, skip_pubDate)
 				PLog(len(summary));PLog(len(summ_txt)); 
-				if 	summ_txt and len(summ_txt) > len(summary):
+				if 	len(summ_txt) > len(summary):
 					tag_par= "%s\n\n%s" % (tagline, summ_txt)
 					tag_par = tag_par.replace('\n', '||')
 					summary = summ_txt	
@@ -9425,7 +9443,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip
 # fname: Dateinamen der Liste (full_shows_ZDF, full_shows_ARD)
 # Rückgabe: fett-markierter Titel bei entspr. Beitrag, sonst unbeh.
 #	Titel
-# Aufrufer: ZDF_get_content, get_page_content (ARDnew)
+# Aufrufer: ZDF_get_content, get_json_content (ARDnew)
 #
 def full_shows(title, title_samml, summary, duration,  fname):
 	PLog('full_shows:')
@@ -9463,6 +9481,7 @@ def full_shows(title, title_samml, summary, duration,  fname):
 		PLog("duration: " + duration)
 		title = title.strip()
 
+		ret = "nofill"									# Return-Flag
 		for show in shows:
 			st, sdur = show.split("|")					# Bsp. Querbeet|40
 			#PLog(duration); PLog(st); PLog(sdur); # PLog(up_low(st) in up_low(title));
@@ -9474,8 +9493,9 @@ def full_shows(title, title_samml, summary, duration,  fname):
 					PLog("sdur: " + sdur)
 					if int(duration) >= int(sdur):
 						title = "[B]%s[/B]" % title
+						ret = "fill"
 				break		
-	PLog("return: " + title)
+	PLog("%s_return: %s" % (ret, title))
 	return title
 #-----------------------------------------------------------------------
 # class="b-playerbox in page auswerten (1 od. mehrere)

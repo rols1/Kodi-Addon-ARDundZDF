@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>7</nr>								# Numerierung für Einzelupdate
-#	Stand: 20.02.2023
+#	Stand: 15.04.2023
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -45,7 +45,7 @@ import string
 # import ardundzdf reicht nicht für thread_getpic
 from ardundzdf import *					# transl_wtag, get_query, thread_getpic, 
 										# ZDF_SlideShow, Parseplaylist, test_downloads
-from resources.lib.ARDnew import get_page_content	# ARD_bab										
+from resources.lib.ARDnew import get_json_content	# ARD_bab										
 from resources.lib.util import *
 
 
@@ -262,6 +262,7 @@ def Main_XL():
 #	nun auf der Webseite als quoted json eingebettet, Direktsprung zu XLGetSourcesHTML 
 #	entfällt - Auswertung nun über vorgeschaltete Funktion XLSinglePage ->
 #	XLGetSourcesJSON
+# 15.04.2023 get_page_content -> get_json_content 
 #
 def menu_hub(title, path, ID, img):	
 	PLog('menu_hub:')
@@ -299,7 +300,7 @@ def menu_hub(title, path, ID, img):
 	# 
 	if ID == 'ARD_bab':								# 14.02.2023 umgestellt auf api
 		mark=''; ID="XL_menu_hub"
-		li = get_page_content(li, page, ID, mark)	# -> ARDnew
+		li = get_json_content(li, page, ID, mark)	# -> ARDnew
 	else:
 		li = get_content(li, page, ID=ID, path=path)
 	
