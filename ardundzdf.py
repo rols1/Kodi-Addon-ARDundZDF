@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>94</nr>										# Numerierung für Einzelupdate
 VERSION = '4.6.9'
-VDATE = '16.04.2023'
+VDATE = '17.04.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -9452,9 +9452,7 @@ def full_shows(title, title_samml, summary, duration,  fname):
 	if duration == '':									# Sicherung gg. int()-error
 		return title
 	
-	#if "Ende der Feier" in title_samml:	# Debug
-	#	PLog("Mark0")
-		
+	ret = "nofill"										# Return-Flag
 	if SETTINGS.getSetting('pref_mark_full_shows') == 'true':
 		path = SETTINGS.getSetting('pref_fullshows_path')
 		if path == '':
