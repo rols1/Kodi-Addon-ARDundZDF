@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>39</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.04.2023
+# 	<nr>40</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -772,7 +772,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark):
 	page = page.replace('\\"', '*')							# quotierte Marks entf.
 	
 	
-	li = get_page_content(li, page, ID, mark)
+	li = get_json_content(li, page, ID, mark)
 	
 	if 	'"pagination":'	in page:				# z.B. Scroll-Beiträge zu Rubriken
 		title = "Mehr zu >%s<" % title_org		# Mehr-Button	 # ohne Pfad
