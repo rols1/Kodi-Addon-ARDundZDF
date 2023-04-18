@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>45</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.04.2023
+# 	<nr>46</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1971,7 +1971,7 @@ def seconds_translate(seconds, days=False):
 #	Korr.-Faktor hour_info entfällt. add_hour jetzt Flag für Abgleich mit Tab. summer_time (False
 #	bei "Verfügbar bis..")
 #	
-def time_translate(timecode, add_hour=True):
+def time_translate(timecode, add_hour=True, day_warn=False):
 	PLog("time_translate: " + timecode)
 	
 	# summer_time aus www.ptb.de, konvertiert zum date_format (s.u.):
@@ -2019,6 +2019,28 @@ def time_translate(timecode, add_hour=True):
 			new_ts = ts + datetime.timedelta(hours=add_hour) # add-Faktor addieren
 			ret_ts = new_ts.strftime("%d.%m.%Y %H:%M")
 			PLog(ret_ts)
+
+			if day_warn:									# Info, Bsp.: NOCH 5 TAGE
+				today = datetime.datetime.today() 
+				sday = new_ts
+				dif  = str(sday-today)						# 18 days, 15:33:08.596024
+				PLog(new_ts); 
+				PLog("sday-today: %s" % dif)
+				try:
+					if dif.find("day") < 0:				# nur Stunden: 16:32:05.225575
+						dif = "1"
+					else:
+						dif = re.search(u'(\d+) day', dif).group(1)
+				except Exception as exception:
+					PLog(str(exception))
+					dif=""
+				PLog("dif: %s" % dif)	
+				if dif and int(dif) <= 6:
+					if dif == "1":
+						ret_ts = "%s | NOCH 1 TAG!" % ret_ts
+					else:
+						ret_ts = "%s | NOCH %s TAGE!" % (ret_ts, dif)				
+				
 			return ret_ts
 		except Exception as exception:
 			PLog(str(exception))

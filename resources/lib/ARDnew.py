@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>40</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.04.2023
+# 	<nr>41</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -431,6 +431,9 @@ def img_preload(ID, path, title, caller, icon=ICON_MAIN_ARD):
 #---------------------------------------------------------------------------------------------------
 # Auflistung der Rubriken in json-Inhalt page (json bei html-Seite
 #	in script id="fetchedContextValue")
+# Hinw.: vorerst Verzicht auf ev. Topnavigation (Submenüs), außer 
+#	Sportseite
+#
 def ARDRubriken(li, path="", page=""): 
 	PLog('ARDRubriken:')
 	li_org=li
@@ -614,6 +617,7 @@ def ARDStartRegion(path, title, widgetID='', ID=''):
 #
 # Aufrufe: Rubriken aus ARDStart, Sendereihen aus A-Z-Seiten, Mehrfachbeiträge aus ARDSearchnew
 # 28.05.2020 getrennte Swiper-Auswertung entfällt nach Änderung der ARD-Seiten
+# 18.04.2023 Cache für Startseite entfällt (obsolet - api-Call)
 #		
 def ARDStartRubrik(path, title, widgetID='', ID='', img=''): 
 	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path)	
@@ -629,15 +633,9 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	else:
 		li = home(li, ID='ARD Neu')						# Home-Button
 
-	page = False
-	if 	'/editorials/' in path == False:				# nur kompl. Startseite aus Cache laden (nicht Rubriken) 
-		if ID != 'ARDStartSingle':	
-			page = Dict("load", 'ARDStartNEW_%s' % sendername, CacheTime=ARDStartCacheTime)	# Seite aus Cache laden		
-
-	if page == False:									# keine Startseite od. Cache miss								
-		page, msg = get_page(path=path, GetOnlyRedirect=True)
-		path = page
-		page, msg = get_page(path=path)	
+	page, msg = get_page(path=path, GetOnlyRedirect=True)
+	path = page
+	page, msg = get_page(path=path)	
 	if page == '':	
 		msg1 = "Fehler in ARDStartRubrik: %s"	% title
 		msg2 = msg
@@ -968,7 +966,7 @@ def ARD_FlatListRec(item, vers):
 	if up_low(fsk) == "NONE":
 		fsk = "ohne"
 	end =  stringextract('availableTo":"', '"', item)
-	end = time_translate(end)
+	end = time_translate(end, day_warn=True)
 	end = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % end
 	# geo =  stringextract('Rating":"', '"', item)		# Geo fehlt
 	dauer = stringextract('"duration":', ',', item)
@@ -1336,7 +1334,7 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 			if "live" not in typ:								# nicht in Livestreams
 				if verf == None:
 					verf=""
-				verf = time_translate(verf)
+				verf = time_translate(verf, day_warn=True)
 				if verf:
 					summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
 				if "broadcastedOn" in s:

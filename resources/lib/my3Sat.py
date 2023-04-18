@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>8</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.03.2023
+# 	<nr>9</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -437,6 +437,11 @@ def SendungenDatum(SendDate, title):
 		descr	= cleanhtml(descr); 
 		zeit	= stringextract('class="time">', '</', rec)
 		dauer	= stringextract('class="label">', '</', rec)
+		# enddate leer bei Verpasst, anders als üblich (s. get_teaserElement)
+		#enddate	= stringextract('-end-date="', '"', rec)	
+		#enddate = time_translate(enddate, add_hour=0, day_warn=True)
+		#if dauer and enddate:
+		#	dauer = "%s | [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, enddate)			 
 		
 		sendung = u"[COLOR blue]%s[/COLOR] | %s" % (zeit, sendung)
 		tagline = title_org +  ' | ' + zeit
@@ -529,7 +534,7 @@ def Start(name, path, rubrik=''):
 				
 			dauer 	= stringextract('class="label">', '</', rec)# 2 min
 			endDate = stringextract('-end-date="', '"', rec)	# 2020-07-15T04:00:00.000Z
-			endDate = time_translate(endDate)
+			endDate = time_translate(endDate, day_warn=True)
 			
 			tag = dauer
 			if endDate:
@@ -1166,6 +1171,13 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 		if dur:
 			tagline = tagline + ' | ' + dur
 			
+		enddate	= stringextract('-end-date="', '"', rec)				# s.a. get_teaserElement
+		enddate = time_translate(enddate, add_hour=0, day_warn=True)
+		if enddate:
+			enddate = "[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % enddate			 
+			tagline = "%s | %s" % (tagline, enddate)
+		
+			
 		if href.endswith('zdf.de/') or '/einstellungen' in href or u'Suche öffnen' in title or title=='':
 			continue
 		if href == DreiSat_BASE:
@@ -1377,6 +1389,13 @@ def get_teaserElement(rec):
 		tag 	= stringextract('<span>', '</span>', page)
 		dauer	= stringextract('icon-opaque is-not-selected', '/span>', page)
 		dauer	= stringextract('class="label">', '<', dauer)	# label allein unsicher (Bsp. Vorab)
+		
+		enddate	= stringextract('-end-date="', '"', page)		# kann leer sein
+		enddate = time_translate(enddate, add_hour=0, day_warn=True)
+		if dauer and enddate:
+			dauer = "%s | [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, enddate)			 
+		
+		
 		path	= stringextract('href="', '"', page)
 		if path.startswith('http') == False:
 			path = DreiSat_BASE + path
@@ -1476,6 +1495,11 @@ def get_zdfplayer_content(li, page):
 		title 	= (title.replace('\\"', '').replace('"', ''))
 
 		dauer 	= stringextract('duration": "', '",', videoinfos)	# Bsp. 2 min
+		enddate	= stringextract('-end-date="', '"', page)			# get_teaserElement
+		enddate = time_translate(enddate, add_hour=0, day_warn=True)
+		if dauer and enddate:
+			dauer = "%s | [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, enddate)			 
+		
 		play_id	= stringextract('zdfplayer-id="', '"', rec)			# z.B. die-anstalt-vom-5-oktober-2021-100
 		
 		path	= stringextract('embed_content": "', '"', rec)

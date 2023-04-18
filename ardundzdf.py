@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>95</nr>										# Numerierung für Einzelupdate
+# 	<nr>96</nr>										# Numerierung für Einzelupdate
 VERSION = '4.6.9'
-VDATE = '17.04.2023'
+VDATE = '18.04.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3516,7 +3516,7 @@ def ARDSportMediaPlayer(li, item):
 		
 	avail = stringextract('av_original_air_time":"', '"', cont)
 	if avail:
-		verf = time_translate(avail)
+		verf = time_translate(avail, day_warn=True)
 	
 	chapter = stringextract('chapter1":"', '"', cont)
 	creator = stringextract('creator":"', '"', cont)
@@ -8613,7 +8613,7 @@ def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
 	title = unescape(title);
 	title = repl_json_chars(py2_decode(title));
 	enddate	= stringextract('-end-date="', '"', page)					# kann leer sein, wie get_teaserElement
-	enddate = time_translate(enddate, add_hour=0)						# Abgleich summer_time entfällt für ZDF 
+	enddate = time_translate(enddate, add_hour=0, day_warn=True)			# Abgleich summer_time entfällt für ZDF 
 
 	path	= stringextract('plusbar-url="', '"', page)
 	if path == '':
@@ -9217,7 +9217,7 @@ def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip
 		plusbar_title = stringextract('plusbar-title="', '"', rec)	# Bereichs-, nicht Einzeltitel, nachrangig
 		plusbar_path  =  stringextract('plusbar-url="', '"', rec)	# plusbar nicht vorh.? - sollte nicht vorkommen
 		enddate	= stringextract('plusbar-end-date="', '"', rec)		# kann leer sein
-		enddate = time_translate(enddate, add_hour=False)			# Abgleich summer_time entfällt für ZDF 
+		enddate = time_translate(enddate, add_hour=False, day_warn=True)# Abgleich summer_time entfällt für ZDF 
 		
 		PLog('plusbar_path: ' + plusbar_path); PLog('ref_path: %s' % ref_path); PLog('enddate: ' + enddate);
 		if plusbar_path == '':
