@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>46</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.04.2023
+# 	<nr>47</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1102,8 +1102,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 						PLog("HTTP308_301_new_url: " + new_url)
 						return new_url, ''
 					else:
-						return path, ''									# mögl. Reuse path in page4
-						#return '', str(e)
+						return '', str(e)
 					
 				page = r.geturl()
 				info = r.info()
@@ -1276,13 +1275,14 @@ def getHeaders(response):
 # bei leerem Pfad wird jsonObject unverändert zurückgegeben
 # index error möglich bei veralteten Indices z.B. aus
 #	Merkliste (Startpage wird aus Cache geladen).
+# 23.04.2023 Rückgabe mit error-Text
 def GetJsonByPath(path, jsonObject):		
 	PLog('GetJsonByPath: '+ path)
 	if path == '':
-		return jsonObject
+		return jsonObject, ""
+		
 	path = path.split('|')
-	i = 0
-
+	i = 0; msg=""
 	try:									# index error möglich
 		index=0
 		while(i < len(path)):
@@ -1293,11 +1293,12 @@ def GetJsonByPath(path, jsonObject):
 			PLog('i=%s, index=%s' % (i,index))
 			jsonObject = jsonObject[index]
 	except Exception as exception:
-		PLog("Error: " + str(exception))
-		return ''			# Aufrufer muss beenden
+		msg = "json_error: " + str(exception)
+		jsonObject=""
+		PLog(msg)
 		
 	# PLog(jsonObject)
-	return jsonObject	
+	return jsonObject, msg	
 #---------------------------------------------------------------- 
 # img_urlScheme: img-Url ermitteln für get_sendungen, ARDRubriken. text = string, dim = Dimension
 def img_urlScheme(text, dim, ID=''):
