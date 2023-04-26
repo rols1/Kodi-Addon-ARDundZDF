@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>41</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.04.2023
+# 	<nr>42</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1242,24 +1242,11 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 	mediatype=''; pagetitle=''
 	
 	PLog(page[:80])
-	jsonpath = "teasers"										# Default
-	if page.startswith(u'{"binaryFeatures"'):
-		jsonpath = "widgets|0|teasers"		
-	
-	try:
-		page_obs = json.loads(page)
-		PLog(len(page_obs))
-		obs = GetJsonByPath(jsonpath, page_obs)
-	except Exception as exception:
-		PLog(str(exception))
-		obs=[]
-	if len(obs) == 0:											# Altern.
-		jsonpath = "widgets|0|teasers"		
-		try:
-			obs = GetJsonByPath(jsonpath, page_obs)
-		except Exception as exception:
-			PLog(str(exception))
-			obs=[]
+	page_obs = json.loads(page)
+	if "teasers" in page_obs:
+		obs =page_obs["teasers"]
+	if "widgets" in page_obs:
+		obs =page_obs["widgets"][0]["teasers"]	
 	PLog("obs: %d" % len(obs))
 	
 	# typ-Info Einzelbeträge: ["live", "event", "broadcastMainClip",
