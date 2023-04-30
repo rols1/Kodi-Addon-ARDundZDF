@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>42</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.04.2023
+# 	<nr>43</nr>										# Numerierung für Einzelupdate
+#	Stand: 30.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1352,7 +1352,7 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 		if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
 			filtered=False
 			for item in AKT_FILTER: 
-				if up_low(item) in py2_encode(up_low(s)):
+				if up_low(item) in py2_encode(up_low(str(s))):
 					filtered = True
 					break		
 			if filtered:
