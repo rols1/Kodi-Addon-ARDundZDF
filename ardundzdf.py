@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>96</nr>										# Numerierung für Einzelupdate
-VERSION = '4.6.9'
-VDATE = '18.04.2023'
+VERSION = '4.7.0'
+VDATE = '30.04.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -164,6 +164,7 @@ ICON_PHOENIX			= 'phoenix.png'
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
 GIT_CAL			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-calendar.png?raw=true"
+GIT_TIVIHOME	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/zdftivi-home.png?raw=true"
 
 # 01.12.2018 	Änderung der BASE_URL von www.ardmediathek.de zu classic.ardmediathek.de
 # 06.12.2018 	Änderung der BETA_BASE_URL von  beta.ardmediathek.de zu www.ardmediathek.de
@@ -180,19 +181,13 @@ ARD_Live 		= '/tv/live'
 
 # ARD Audiothek
 ARD_AUDIO_BASE = 'https://api.ardaudiothek.de/'
-AUDIO_HEADERS="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+HEADERS="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 	'Referer': '%s', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
-AUDIOSENDER = ['br','dlf','hr','mdr','ndr','"radio-bremen"','rbb','sr','swr','wdr']
 
 # Relaunch der Mediathek beim ZDF ab 28.10.2016: xml-Service abgeschaltet
 ZDF_BASE				= 'https://www.zdf.de'
-# ZDF_Search_PATH: ganze Sendungen, sortiert nach Datum, bei Bilderserien ohne ganze Sendungen (ZDF_Search)
-#	s. ZDF_Search + SearchARDundZDF 
-ZDF_SENDUNG_VERPASST 	= 'https://www.zdf.de/sendung-verpasst?airtimeDate=%s'  # Datumformat 2016-10-31
-ZDF_SENDUNGEN_AZ		= 'https://www.zdf.de/sendungen-a-z?group=%s'			# group-Format: a,b, ... 0-9: group=0+-+9
-ZDF_WISSEN				= 'https://www.zdf.de/doku-wissen'						# Basis für Ermittlung der Rubriken
-ZDF_SENDUNGEN_MEIST		= 'https://www.zdf.de/meist-gesehen'
-ZDF_BARRIEREARM			= 'https://www.zdf.de/barrierefreiheit-im-zdf'
+ZDF_CacheTime_Start = 300			# 5 Min.
+ZDF_CacheTime_AZ 	= 1800			# 30 Min.
 
 REPO_NAME		 	= 'Kodi-Addon-ARDundZDF'
 GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
@@ -361,7 +356,7 @@ except:
 PLog("content_type: %s" % sel)				
 xbmcplugin.setContent(HANDLE, sel)
 
-ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle']	# Rest in ARD_NEW, CurSenderZDF s. VerpasstWoche
+ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle']	# Rest in ARD_NEW, CurSenderZDF s. ZDF_VerpasstWoche
 CurSender = ARDSender[0]									# Default ARD-Alle
 fname = os.path.join(DICTSTORE, 'CurSender')				# init CurSender (aktueller Sender)
 if os.path.exists(fname):									# kann fehlen (Aufruf Merkliste)
@@ -413,14 +408,14 @@ def Main():
 			
 	if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':
 		PLog('zdfmobile_set: ')
-		tagline = 'in den Settings sind ZDF Mediathek und ZDFmobile austauschbar'
-		summ = "Schwerpunkt des Supports ist die ZDF Mediathek"
+		tagline = 'Info: [B]ZDFmobile entfällt ab Juni 2023[/B]'
+		summ = ""
 		fparams="&fparams={}"
 		addDir(li=li, label="ZDFmobile", action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
 			fanart=R(FANART), thumb=R(ICON_MAIN_ZDFMOBILE), tagline=tagline, summary=summ, fparams=fparams)
 	else:
-		tagline = 'in den Settings sind ZDF Mediathek und ZDFmobile austauschbar'
-		summ = "Schwerpunkt des Supports ist die ZDF Mediathek"
+		tagline = 'Info: [B]ZDFmobile entfällt ab Juni 2023[/B]'
+		summ = ""
 		fparams="&fparams={'name': 'ZDF Mediathek'}"
 		addDir(li=li, label="ZDF Mediathek", action="dirList", dirID="Main_ZDF", fanart=R(FANART), 
 			thumb=R(ICON_MAIN_ZDF), tagline=tagline, summary=summ, fparams=fparams)
@@ -431,20 +426,22 @@ def Main():
 		addDir(li=li, label="3Sat Mediathek", action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", 
 			fanart=R('3sat.png'), thumb=R('3sat.png'), tagline=tagline, fparams=fparams)
 			
+	'''	26.04.2023 api V4.0 funktioniert nicht mehr - vorerst abgeschaltet		
 	if SETTINGS.getSetting('pref_use_funk') == 'true':
 		tag = 'in den Settings kann das Modul FUNK ein- und ausgeschaltet werden'
 		tag = u"%s\n\ndie Beiträge sind auch in der ZDF Mediathek enthalten (Menü ZDF-funk)" % tag
 		fparams="&fparams={}"													# funk-Modul
 		addDir(li=li, label="FUNK", action="dirList", dirID="resources.lib.funk.Main_funk", 
 			fanart=R('funk.png'), thumb=R('funk.png'), tagline=tag, fparams=fparams)
-			
+	'''		
 	if SETTINGS.getSetting('pref_use_childprg') == 'true':
 		tagline = 'in den Settings kann das Modul Kinderprogramme ein- und ausgeschaltet werden'
 		summ = u"KiKA, ZDFtivi, MausLive u.a."
 		fparams="&fparams={}"													# Kinder-Modul
 		addDir(li=li, label="Kinderprogramme", action="dirList", dirID="resources.lib.childs.Main_childs", 
 			fanart=R('childs.png'), thumb=R('childs.png'), tagline=tagline, summary=summ, fparams=fparams)
-			
+
+	#	26.04.2023 Webseite komplett verändert - vorerst abgeschaltet		
 	if SETTINGS.getSetting('pref_use_XL') == 'true':
 		tagline = 'in den Settings kann das Modul TagesschauXL ein- und ausgeschaltet werden'
 		fparams="&fparams={}"													# TagesschauXL-Modul
@@ -973,8 +970,8 @@ def Main_ZDF(name=''):
 		thumb=R(ICON_ZDF_SEARCH), fparams=fparams)
 
 	title = 'Startseite' 
-	fparams="&fparams={'title': '%s'}" % (quote(title))
-	addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=R(ICON_MAIN_ZDF), thumb=R(ICON_MAIN_ZDF), 
+	fparams="&fparams={'ID': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R(ICON_MAIN_ZDF), thumb=R(ICON_MAIN_ZDF), 
 		fparams=fparams)
 
 	title = 'ZDF-funk' 
@@ -982,36 +979,41 @@ def Main_ZDF(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="Main_ZDFfunk", fanart=R(ICON_MAIN_ZDF), thumb=R('zdf-funk.png'), 
 		fparams=fparams)
 
-	fparams="&fparams={'name': 'ZDF-Mediathek', 'title': 'Sendung verpasst'}" 
-	addDir(li=li, label='Sendung verpasst', action="dirList", dirID="VerpasstWoche", fanart=R(ICON_ZDF_VERP), 
+	title = 'Sendung verpasst' 
+	fparams="&fparams={'name': 'ZDF-Mediathek', 'title': 'title'}" 
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_VerpasstWoche", fanart=R(ICON_ZDF_VERP), 
 		thumb=R(ICON_ZDF_VERP), fparams=fparams)	
 
-	fparams="&fparams={'name': 'Sendungen A-Z'}"
-	addDir(li=li, label="Sendungen A-Z", action="dirList", dirID="ZDFSendungenAZ", fanart=R(ICON_ZDF_AZ), 
+	title = 'Sendungen A-Z' 
+	fparams="&fparams={'name': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_AZ", fanart=R(ICON_ZDF_AZ), 
 		thumb=R(ICON_ZDF_AZ), fparams=fparams)
 
-	fparams="&fparams={'name': 'Rubriken'}"
-	addDir(li=li, label="Rubriken", action="dirList", dirID="ZDFRubriken", fanart=R(ICON_ZDF_RUBRIKEN), 
+	title = 'Rubriken' 
+	fparams="&fparams={'ID': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R(ICON_ZDF_RUBRIKEN), 
 		thumb=R(ICON_ZDF_RUBRIKEN), fparams=fparams)
 
-	title = "ZDF-sportstudio"
-	path = "https://www.zdf.de/sport"
-	tag = "	Aktuelle News, Livestreams, Liveticker, Ergebnisse, Hintergründe und Sportdokus. Sportstudio verpasst? Aktuelle Sendungen einfach online schauen!"
-	fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(title), quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="ZDFRubrikSingle", fanart=R("zdf-sport.png"), 
+	title = "ZDF-Sportstudio"
+	tag = u"Aktuelle News, Livestreams, Liveticker, Ergebnisse, Hintergründe und Sportdokus. Sportstudio verpasst? Aktuelle Sendungen einfach online schauen!"
+	fparams="&fparams={'ID': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R("zdf-sport.png"), 
 		thumb=R("zdf-sport.png"), tagline=tag, fparams=fparams)
 		
-	fparams="&fparams={'title': 'Barrierearm'}"	
-	addDir(li=li, label="Barrierearm", action="dirList", dirID="BarriereArm", fanart=R(ICON_ZDF_BARRIEREARM), 
+	title = "Barrierearm"
+	tag = u"Alles an einem Ort: das gesamte Angebot an Videos mit Untertiteln, Gebärdensprache und Audiodeskription sowie hilfreiche Informationen zum Thema gebündelt."
+	fparams="&fparams={'ID': '%s'}" % title
+	addDir(li=li, label="Barrierearm", action="dirList", dirID="ZDF_Start", fanart=R(ICON_ZDF_BARRIEREARM), 
 		thumb=R(ICON_ZDF_BARRIEREARM), fparams=fparams)
 
 	fparams="&fparams={'title': 'ZDFinternational'}"
 	tag = "This channel provides selected videos in English, Spanish or Arabic or with respective subtitles."
 	summ = 'For Arabic, please set the font of your Skin to "Arial based".'
-	addDir(li=li, label="ZDFinternational", action="dirList", dirID="International", fanart=R('ZDFinternational.png'), 
+	fparams="&fparams={'ID': '%s'}" % title
+	addDir(li=li, label="ZDFinternational", action="dirList", dirID="ZDF_Start", fanart=R('ZDFinternational.png'), 
 		thumb=R('ZDFinternational.png'), tagline=tag, summary=summ, fparams=fparams)
 
-	fparams="&fparams={'s_type': 'Bilderserien', 'title': 'Bilderserien', 'query': 'Bilderserien'}"
+	fparams="&fparams={'s_type': 'Bilderserien', 'title': 'Bilderserien', 'query': 'Bilderserie'}"
 	addDir(li=li, label="Bilderserien", action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_BILDERSERIEN), 
 		thumb=R(ICON_ZDF_BILDERSERIEN), fparams=fparams)
 
@@ -1023,20 +1025,20 @@ def Main_ZDFfunk(title):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	
-	title = 'ZDF-funk-Startseite' 
-	path = "https://www.zdf.de/funk"
-	fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(title), quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=R('zdf-funk.png'), thumb=R('zdf-funk.png'), 
+	title = 'funk_Startseite' 
+	fparams="&fparams={'ID': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R('zdf-funk.png'), thumb=R('zdf-funk.png'), 
 		fparams=fparams)
 
 	fparams="&fparams={'name': 'ZDF-funk-A-Z', 'ID': 'ZDFfunk'}"
-	addDir(li=li, label="ZDF-funk-A-Z", action="dirList", dirID="ZDFSendungenAZ", fanart=R('zdf-funk-AZ.png'), 
+	addDir(li=li, label="ZDF-funk-A-Z", action="dirList", dirID="ZDF_AZ", fanart=R('zdf-funk-AZ.png'), 
 		thumb=R('zdf-funk-AZ.png'), fparams=fparams)
 
+	'''									# 27.04.2023  deaktiviert, api V4.0 nicht mehr verfügbar
 	fparams="&fparams={}"											# Button funk-Modul hinzufügen
 	addDir(li=li, label="zum FUNK-Modul", action="dirList", dirID="resources.lib.funk.Main_funk", 
 		fanart=R('zdf-funk.png'), thumb=R('funk.png'), fparams=fparams)
-			
+	'''		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 ##################################### Start Audiothek ###############################################
@@ -2240,6 +2242,8 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			if title == '' or  title == None:
 				continue
 			if title == 'Stage':										# -> Highlights, s. Step 2
+				continue
+			if u'Weiterhören' in title or  u'Meine Sender' in title:	# skip personenbezogene Beiträge 								
 				continue
 			
 			PLog('6Satz:');
@@ -3471,8 +3475,6 @@ def ARDSportMediaPlayer(li, item):
 	cont = unescape(cont)
 	cont = (cont.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
 	PLog(cont[:30])
-	#if "xxx" in cont:
-	#	RSave('/tmp/x.json', py2_encode(cont))	# Debug	
 
 	player = stringextract('playerType":"', '"', cont)		# audio, video
 	media = stringextract('streams":', '"meta"', cont)		# für video dash.mpd, m3u8 + ts
@@ -3891,83 +3893,7 @@ def get_query(channel='ARD'):
 #---------------------------------------------------------------- 
 #  Search_refugee - erforderlich für Refugee Radio (WDR) - nur
 #		Podcasts Classics - 03.06.2021  entfernt
-####################################################################################################
-# Liste der Wochentage ZDF
-# ARD s. ARDnew.SendungenAZ (früherer Classic-Code entfernt)
-#
-def VerpasstWoche(name, title):									# Wochenliste ZDF Mediathek
-	PLog('VerpasstWoche:')
-	PLog(name); 
-	 
-	sfilter=''
-	fname = os.path.join(DICTSTORE, 'CurSenderZDF')				# init CurSenderZDF (aktueller Sender)
-	if os.path.exists(fname):									# kann fehlen (Aufruf Merkliste)
-		sfilter = Dict('load', 'CurSenderZDF')			
-		
-	if sfilter == '' or sfilter == False or sfilter == 'false':	# Ladefehler?
-		sfilter = 'Alle ZDF-Sender'								# Default Alle ZDF-Sender (nur VERPASST)
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')						# Home-Button
-		
-	wlist = list(range(0,7))
-	now = datetime.datetime.now()
-
-	for nr in wlist:
-		rdate = now - datetime.timedelta(days = nr)
-		iDate = rdate.strftime("%d.%m.%Y")		# Formate s. man strftime (3)
-		zdfDate = rdate.strftime("%Y-%m-%d")		
-		iWeekday =  rdate.strftime("%A")
-		punkte = '.'
-		if nr == 0:
-			iWeekday = 'Heute'	
-		if nr == 1:
-			iWeekday = 'Gestern'	
-		iWeekday = transl_wtag(iWeekday)
-		PLog(iDate); PLog(iWeekday);
-		#title = ("%10s ..... %10s"% (iWeekday, iDate))	 # Formatierung in Plex ohne Wirkung		
-		title =	"%s | %s" % (iDate, iWeekday)
-		
-		title=py2_encode(title); zdfDate=py2_encode(zdfDate);
-		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=R(ICON_ZDF_VERP), 
-			thumb=R(ICON_ZDF_VERP), fparams=fparams)
-	
-	label = "Datum eingeben"							# Button für Datumeingabe anhängen
-	tag = u"teilweise sind bis zu 4 Jahre alte Beiträge abrufbar"
-	fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
-	addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Datum", fanart=R(ICON_ZDF_VERP), 
-		thumb=GIT_CAL, fparams=fparams, tagline=tag)
-
-														# Button für Stationsfilter
-	label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [B]%s[/B]" % sfilter
-	tag = "Auswahl: Alle ZDF-Sender, zdf, zdfneo oder zdfinfo" 
-	fparams="&fparams={'name': '%s', 'title': 'ZDF-Mediathek', 'sfilter': '%s'}" % (quote(name), sfilter)
-	addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Filter", fanart=R(ICON_ZDF_VERP), 
-		thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)
-		
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# True, sonst Rückspr. nach ZDF_Verpasst_Filter
-	
-#-------------------------
-#  03.06.2021 ARD_Verpasst_Filter (Classic) entfernt							
-#-------------------------
-# Auswahl der ZDF-Sender für VerpasstWoche
-# bei Abbruch bleibt sfilter unverändert								
-def ZDF_Verpasst_Filter(name, title, sfilter):
-	PLog('ZDF_Verpasst_Filter:'); PLog(sfilter); 
-	
-	stations = ['Alle ZDF-Sender', 'zdf', 'zdfneo', 'zdfinfo']
-	i = stations.index(sfilter)
-	dialog = xbmcgui.Dialog()
-	d = dialog.select('ZDF-Sendestation wählen', stations, preselect=i)
-	if d == -1:						# Fallback Alle
-		d = 0
-	sfilter = stations[d]
-	PLog("Auswahl: %d. %s" % (d, sfilter))
-	Dict('store', "CurSenderZDF", sfilter)
-	
-	return VerpasstWoche(name, title)
+#---------------------------------------------------------------- 
 
 ####################################################################################################
 # 03.06.2021 entfernt (Classic-Version eingestellt): PODMore							
@@ -4302,8 +4228,8 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				msg2 = "Podcast: %d von %d" % (cnt, len(path_url_list))
 				xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
 				PLog(item)
-				path, url = item.split('|')		
-				new_url, msg = get_page(path=url, GetOnlyRedirect=True) # für Audiothek erforderlich	
+				path, url = item.split('|')	
+				new_url, msg = get_page(path=url, GetOnlyRedirect=True) # für Audiothek erforderlich
 				if new_url == '':							# 30.03.2022 weiter ohne Exception
 					msg1 = "Fehler"
 					msg2 = "Quelle nicht gefunden: %s" % url.split("/")[-1]
@@ -6851,399 +6777,537 @@ def BilderDasErsteSingle(title, path):
 #									ZDF-Funktionen
 ###################################################################################################
 # Startseite der ZDF-Mediathek 
-#	show_cluster (rekursiv): falls true, wird der Stage-Bereich mit den Highlights gelistet
-#	Die Cluster haben dieselbe Struktur wie ZDF-Rubriken mit Besonderheit class="loader"
-#		(Nachlade-Beiträge, escaped) - daher jeweils Buttons für ZDFRubrikSingle.
-#	Rubriken enthalten zusätzl. Clusterung - Bearbeitung in Funktion ZDFRubriken.
-# cut Stage, geändert 27.09.2019
-#	21.11.2019 Webseite geändert - Beiträge der Cluster werden beim 2. Durchlauf 
-#		ausgeschnitten + via ZDF_get_content geladen (wie Highlights, Ausnahmen siehe
-#		Getrennt behandeln).
-# 21.11.2020 funk-Cluster "funk - Wissen, Liebe, Gaming" -> statt des 2. Durchlaufs mit 
-#	den einzelnen Beiträgen zeigen wir die funk-Startseite verlinkt im letzten Einzel-
-#	beitrag und verfahren wie beim 1. Durchlauf (Quell-Struktur mit ZDF-Startseite identisch).
-# 07.07.2021 ZDF-funk-Beiträge aufgrund der Webänderungen mit eigenem Menü ZDF-funk in Main_ZDF,
-#	Nutzung ZDFStart für die funk-Startseite wie bisher.
-# 31.03.2022 Änderung Blockmarke für Cluster-Titel
+# Neu: April 2023	
 #
-def ZDFStart(title, show_cluster='', path=''): 
-	PLog('ZDFStart: ' + show_cluster); 
-	PLog(title)
+def ZDF_Start(ID, homeID=""): 
+	PLog('ZDF_Start: ' + ID);
+	 
+	base = "https://zdf-cdn.live.cellular.de/mediathekV2/"		
+
+	if ID=='Startseite' or "tivi_" in ID or "funk_" in ID:
+		path = base + "start-page"
+		if ID.startswith("tivi"):
+			path = base + "document/zdftivi-fuer-kinder-100"
+		if "funk_" in ID:
+			path = base + "document/funk-126"
 		
-	title_org = title
-	li = xbmcgui.ListItem()
+		# Im Cache wird das jsonObject abgelegt, DictID: "mobile_%s" % ID
+		DictID =  "ZDF_%s" % ID
+		page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)	# 5 min				
+		if not page:												# nicht vorhanden oder zu alt						
+			icon = R(ICON_MAIN_ZDF)
+			if ID.startswith("tivi"):
+				icon = GIT_TIVIHOME
+			xbmcgui.Dialog().notification("Cache %s:" % ID,"Haltedauer 5 Min",icon,3000,sound=False)
 
-	if 'www.zdf.de/funk' in path:
-		BASE = ZDF_BASE + '/funk/'
-		ID = 'ZDFfunkStart'
-	else:
-		BASE = ZDF_BASE
-		ID = 'ZDFStart'
-	Logo = 'ZDF'; 
-	if "www.zdf.de/kinder" in path:
-		BASE 	= "https://www.zdf.de/kinder"							# BASE_TIVI
-		Logo	= 'ZDFtivi'
-		ID 		= 'Kinderprogramme'								
-		
-	#headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
-	#'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}"
-	headers=''
-	if BASE.endswith('www.zdf.de/funk/'):				# timeoutanfällig - 5 min Cache
-		page = Dict("load", "ZDFfunkStart", CacheTime=300)
-		if page == False:								# Cache miss - vom Sender holen
-			page, msg = get_page(path=path)
-			Dict("store", "ZDFfunkStart", page) 		# Seite -> Cache: aktualisieren			
-	else:
-		page, msg = get_page(path=BASE, header=headers)
-	if page == '':
-		msg1 = "%s-Startseite nicht im Web verfügbar." % Logo
-		msg2 = msg
-		PLog(msg1); PLog(msg2);
-		MyDialog(msg1, msg2, '')	
-		
-	# ------------------------------------------------------------------
-	# 2. Durchlauf: 
-	if show_cluster:											
-		PLog("ZDFStart_2:")
-		if  title == "[B]Highlights[/B]":								# Liste Highlights 
-			li = home(li, ID=ID)										# Home-Button
-			stage = stringextract('class="sb-page">', 'cluster-title-wrap', page) 
-			# ID='DEFAULT': ermöglicht Auswertung Mehrfachseiten in ZDF_get_content
-			li, page_cnt = ZDF_get_content(li=li, page=stage, ref_path=path, ID='STAGE')
-			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		elif "lazyload" in show_cluster:								# s.u. data-tracking-title
-			ZDF_get_tracking(title, page, show_cluster, ID)							
-			return
-		else:															#Home-Button in ZDFRubrikSingle
-			# Cluster-Blöcke, dto. BarriereArmSingle, nicht ZDF_Sendungen, ZDFRubrikSingle)
-			content =  blockextract('cluster-title-wrap', page)		
-			promo=[]
-			if 'class="b-promo-teaser' in page:							# o. cluster-title-wrap
-				promo = blockextract('class="b-promo-teaser', page, '</article>')
-				PLog('content_promo2: ' + str(len(promo)))
-			content = promo + content
-			PLog('content2: ' + str(len(content)))
-				
-			for rec in content:
-				pos=-1
-				if rec.startswith('class="b-promo-teaser') == False:	# normale Cluster begrenzen
-					if 'class="b-promo-teaser' in rec:					# PromoTeaser am Ende abschneiden
-						pos = rec.find('class="b-promo-teaser')
-					if "title='Weitere laden" in rec:					#
-						pos = rec.find("title='Weitere laden")
-				if pos > 0:
-					rec = rec[:pos]	
-
-				href	= stringextract('href="', '"', rec)
-				if href.startswith('http') == False:
-					href = BASE + href
-				title = ZDF_get_clustertitle(rec)						# Cluster-Titel ermitteln
-				title = py2_decode(title)
-				# PLog('Mark0'); PLog(title); PLog(title_org)
-				if title_org in title:
-					PLog('Cluster_gefunden: %s' % title_org)
-					break  
-					
-			ZDFRubrikSingle(title, path, clus_title=title, page=rec)	# einschl. Loader-Beiträge
-			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-	# ------------------------------------------------------------------
-	# 1. Durchlauf: Buttons Stage + Cluster 
-	PLog("ZDFStart_1:")
-	PLog("ID: " + ID)
-	li = home(li, ID=ID)						# Home-Button
-	
-	title = '[B]Highlights[/B]'									# Highlights voranstellen
-	# thumb = R(ICON_DIR_FOLDER)
-	thumb = ZDF_get_img(page)									#  1. img der Highlights
-	tag = "Folgeseiten"
-	fparams="&fparams={'title': '%s', 'show_cluster': 'true','path': '%s'}" % (quote(title), quote(BASE))
-	addDir(li=li, label=title, action="dirList", dirID="ZDFStart", fanart=thumb, 
-		thumb=thumb, tagline=tag, fparams=fparams)
-	
-	# Cluster-Blöcke, dto. BarriereArmSingle, nicht ZDF_Sendungen, ZDFRubrikSingle)
-	content =  blockextract('cluster-title-wrap', page)	
-
-	promo=[]
-	if 'class="b-promo-teaser' in page:							# Teaserboxen (ganze Seitenbreite)
-		promo = blockextract('class="b-promo-teaser', page, '</article>')
-		promo_max = len(promo)
-		PLog('content_promo1: ' + str(promo_max))
-	content = promo + content
-	PLog('content1: ' + str(len(content)))
-
-	tlist=[]; cnt=0												# Titel-Liste für Dopplererkenn., Promo-Zähler
-	for rec in content:
-		title = ZDF_get_clustertitle(rec)						# Cluster-Titel ermitteln
-		title = py2_decode(title)		
-
-		# "Inhaltstext im Voraus laden" in ZDF_get_content (via ZDFRubrikSingle ->
-		#	ZDF_Sendungen) 
-		# Getrennt behandeln:
-		if title == 'Rubriken':									# doppelt: hier + Hauptmenü
-			fparams="&fparams={'name': 'Rubriken'}"
-			addDir(li=li, label="Rubriken", action="dirList", dirID="ZDFRubriken", fanart=R(ICON_ZDF_RUBRIKEN), 
-				thumb=R(ICON_ZDF_RUBRIKEN), tagline=tag, fparams=fparams)
-		
-		elif title == 'Livestreams':							# Livestreams, geändert 27.09.2019 
-			thumb = ZDF_get_img(rec)
-			fparams="&fparams={'title': '%s'}"	% title 
-			addDir(li=li, label=title, action="dirList", dirID="ZDFStartLive", fanart=thumb, 
-				thumb=thumb, tagline=tag, fparams=fparams)
-				
-		# skip: enthaltene Cluster A-Z, Barrierefrei, Verpasst getrennt im Hauptmenü,
-		#	sowie java-Inhalte mit Login-Bezug:			
-		elif title == 'Alles auf einen Blick':					
-			continue
-		elif title.startswith('Direkt zu ...'):					
-			continue
-		elif title.startswith(u'Das könnte Dich'):				# .. interessieren 					
-			continue
-		elif 'Mein Programm' in title:				
-			continue
-		elif 'deinen Lieblingssendungen' in title:				# tivi-Start			
-			continue
-		elif '${name}"' in title:								# tivi-Start			
-			continue
-		elif title == 'funk':									# funk -> eigenes Menü		
-			continue
-		elif title == '':				
-			continue
+			page, msg = get_page(path)								# vom Sender holen		
+			if page == "":
+				msg1 = 'Fehler beim Abruf von:'
+				msg2 = msg
+				MyDialog(msg1, msg2, '')
+				return
+			else:
+				jsonObject = json.loads(page)
+				Dict('store', DictID, jsonObject)		# jsonObject -> Dict, ca. 10 MByte, tivi 8.5 MByte
+		else:
+			jsonObject = page
 			
-		else:													# restl. Cluster -> 2. Durchlauf
-			show_cluster = "true"								# normale Cluster	
-			thumb = ZDF_get_img(rec)
-			# data-tracking-title clusterrecommendation (vor neuem Blockanfang tabindex, daher 
-			#	hier leider Abgleich mit Titel erfoderlich):
-			# javascript-erzeugte Inhalte, Call automation-template -> json-Datei mit
-			#	SCMS-ID's -> ZDF_get_tracking -> ZDF_get_teaserDetails, ZDF_get_teaserbox
-			# Bsp: "Derzeit beliebt", "Vorab - zuerst online", "Letzte Chance - noch kurz online",
-			#	"Trending" (funk)
-			tracking_titles = ["Vorab - zuerst online", "Letzte Chance - noch kurz online",
-							"Trending"]
-			for tracking_title in tracking_titles:				
-				if tracking_title in title:						# tracking-Cluster
-					thumb = R(ICON_DIR_FOLDER)
-					# show_cluster -> block im 2. Durchlauf für lazyload-Sätze (clusterrecommendation):
-					show_cluster = "b-cluster m-personal m-dynamic lazyload"
-										
-			label = title
-			tag = "Folgeseiten"
-			href = BASE
-			
-			if 'class="b-promo-teaser' in rec:					# Text für Teaserboxen erweitern
-				if cnt < promo_max:	
-					label,path,img_src,descr,dauer,enddate,isvideo = ZDF_get_teaserDetails(page=rec)
-					label = "[B]Teaserbox %d:[/B] %s" % (cnt+1, label)
-					tag = "%s\n\n%s" % (tag, descr)
-					cnt = cnt + 1
-			
-			PLog("Satz3:")
-			PLog(title); PLog(href); PLog(thumb); PLog(tag); 
-			title=py2_encode(title);
-			fparams="&fparams={'title': '%s', 'show_cluster': '%s','path': '%s'}" %\
-				(quote(title), show_cluster, quote(href))
-			addDir(li=li, label=label, action="dirList", dirID="ZDFStart", fanart=thumb, 
-				thumb=thumb, tagline=tag, fparams=fparams)	
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-#---------------------------------------------------------------------------------------------------
-# Aufrufer: ZDFStart (2x), ZDFRubrikSingle, ZDF_Sendungen
-def ZDF_get_clustertitle(rec): 							# Cluster-Titel der Startseite ermitteln
-	PLog('ZDF_get_clustertitle:');
-	rec = rec[:600]										# max. Größe für Titel
-	#PLog(rec[:200])
-	
-	title=''
-	if 'tabindex="0"' in rec:
-		if '</h2>' in rec:
-			title = stringextract(u'tabindex="0"', '</h2>', rec)
-		if '</h3>' in rec:
-			title = stringextract(u'tabindex="0"', '</h3>', rec)
-		
-		pos = title.find("</h")									# Europa</h2 <h3 class=..
-		if pos > 0:
-			title = title[:pos]
-		
-		if title:
-			title=mystrip(title); title=title.replace('>', '')	# >Film-Highlights</h2>
-			title=unescape(title); title=title.strip() 			# zum Vergleich im 2. Durchlauf
-			PLog("tabindex_title: " + title)
-
-	title = py2_encode(title)									# Aufrufer muss dekodieren
-	PLog("clustertitle: " + title)
-	return title 
-
-#---------------------------------------------------------------------------------------------------
-# Aufrufer: ZDFStart (ZDFStart_2) 
-# title = data-tracking-title ("Derzeit beliebt", "Vorab - zuerst online", 
-#	"Letzte Chance- noch kurz online")
-# show_cluster = Blockmerkmal ("b-cluster..")
-# 20.05.2022 direkte Titel-Suche im Block statt via ZDF_get_clustertitle
-#
-def ZDF_get_tracking(title, page, show_cluster, ID): 			# lazyload-Sätze zu Cluster title ermitteln
-	PLog('ZDF_get_tracking:');
-	PLog(title); PLog(show_cluster); PLog(ID); 
-	title_org = title
-
-	apiToken = stringextract("apiToken: '", "'", page)
-	PLog(apiToken)
-	content =  blockextract(show_cluster, page)
-	PLog(len(content))
-	myrec=''
-	for rec in content:
-		if rec.find(">%s<" % title) > 0:
-			myrec = rec
-			PLog('Cluster_gefunden: %s' % title_org)
-			break  
-	if myrec == '':
-		PLog("not_found")
+		PLog("jsonObject1: " + str(jsonObject)[:80])
+		ZDF_PageMenu(DictID,jsonObject)
 		return
+
+	if ID=='Rubriken':
+		url = base + "categories-overview"
+	if ID=="ZDF-Sportstudio":
+		url = base + "document/sport-106"
+	if ID=='Barrierearm':
+		url = base + "document/barrierefrei-im-zdf-100"
+	if ID=='ZDFinternational':
+		url = base + "document/international-108"		
+	if ID=='ZDFchen':									# ZDFtivi-Sendereihe bis 6 Jahre
+		url = base + "document/zdfchen-100"		
+	ZDF_RubrikSingle(url, ID, homeID)
+				
+	return
 	
-	conf =  stringextract('&configuration=', '&', rec)			# z.B.: letzte-chance -> path
-	PLog("conf: " + conf)
-	path = "https://api.zdf.de/automation/trending?env=zdf_prod&appId=exozet-zdf-pd-0.85.10169&abGroup=gruppe-c&configuration=%s&teaserType=default&profile=minimal"
-	path = path % conf											# automation-Template ergänzen
-	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken
-	page, msg	= get_page(path=path, header=header, JsonPage=True)	
-	if page == '':										# Abbruch
-		PLog('ZDF_get_tracking_return')
-		return
+#---------------------------------------------------------------------------------------------------
+# Aufruf ZDF_Start mit jsonObject direkt,
+#		ZDF_RubrikSingle mit DictID (-> gespeichertes jsonObject)
+# mark: Titelmarkierung, z.B. für ZDF_Search
+#		
+def ZDF_PageMenu(DictID, jsonObject="", mark="", li="", homeID=""):								
+	PLog('ZDF_PageMenu: DictID: ' + DictID)
+	PLog(mark); PLog(homeID)
+	li_org=li; 
 		
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')										# Home-Button, ev. anpassen
+	if 	not jsonObject:
+		jsonObject = Dict("load", DictID)
+	if not jsonObject:
+		msg1 = 'ZDF_PageMenu: Beiträge können leider nicht geladen werden.'
+		MyDialog(msg1, '', '')
+		return	
+	PLog(str(jsonObject)[:80])
 	
-	mediatype=''									# Kennz. Video für Sofortstart
+		
+	if not li:	
+		li = xbmcgui.ListItem()
+	if "ZDF_tivi" in DictID or "Kinder" in homeID:
+		homeID = "Kinderprogramme"
+		li = home(li, ID=homeID)
+	else:
+		li = home(li, ID="ZDF")				# Home-Button
+		
+	mediatype=''													# Kennz. Videos im Listing
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'	
-	
-	PLog("Mark0")
-	teaser_path = "https://www.zdf.de/teaserElement?assetId=%s" # auch sophoraId mögl. wie get_teaserElement
-	content =  blockextract('"id":', page)
-	PLog(len(content))
-	for rec in content:
-		PLog(rec)
-		SCMS_id = stringextract('id": "', '"', rec)				# Bsp.: SCMS_4a84403d-..
-		PLog("SCMS_id: " + SCMS_id)
-
-		teaser_label=''; summ_txt=''; teaserDetails=''; tag=''
-		sophId,NodePath,path,title,descr,img_src,dauer,enddate,isvideo,teaser_typ,teaser_nr,\
-			teaser_brand,teaser_count = get_teaserElement(rec, SCMS_id)
-				
-		#--------------------------								# Start copy ZDFRubrikSingle
-		PLog("title: %s, isvideo: %s, dauer: %s, enddate: %s" % (title, isvideo, dauer, enddate)) # wie ZDFRubrikSingle
-		PLog("teaser_brand: %s" % teaser_brand)
+		mediatype='video'
+	PLog('mediatype: ' + mediatype); 
+	PLog("stage" in jsonObject); PLog("teaser" in jsonObject); PLog("results" in jsonObject);
 		
-		if isvideo or dauer or enddate:								# enddate ohne dauer möglich
-			isvideo = True
-		if " Staffel" in teaser_label or descr == "Serien":
-			isvideo = False
-		
-		if teaser_label:
-			tag = teaser_label
-		if teaser_brand:
-			teaser_brand = teaser_brand.replace(' - ', '')
-			teaser_brand = "[B]%s[/B]" % teaser_brand
-			tag = teaser_brand
+	if "stage" in jsonObject or "teaser" in jsonObject or "results" in jsonObject:
+		PLog('ZDF_PageMenu_stage_teaser')
+		stage=False
+		if DictID == "ZDF_Startseite" or "tivi_" in DictID or "funk_" in DictID:
+			if "stage" in jsonObject:								# <- ZDF-Start, tivi-Start
+				entryObject = jsonObject["stage"]
+				PLog("stage_len: %d" % len(entryObject))
+				stage=True
+		if "teaser" in jsonObject:									# ZDF_RubrikSingle
+			entryObject = jsonObject["teaser"]
+			PLog("teaser: %d" % len(entryObject))
+		if  "results" in jsonObject:								# ZDF_Search
+			entryObject = jsonObject["results"]
+			PLog("results: %d" % len(entryObject))
 			
-		if teaser_typ:
-			tag = "%s | %s" % (tag, teaser_typ)
-		if teaser_nr:
-			tag = "Episode %s | %s" % (teaser_nr, tag)
-			title = "[%s] %s" % (teaser_nr, title)
-		if tag.startswith(' | '):							# tag-Korr. leer Brand								
-			tag = tag.replace(' | ', '')
-		tag = tag.replace('  ,', ', ')
+		for entry in entryObject:
+			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry,mark=mark)
+			label=""
+			if stage:
+				label = "[B]TOP:[/B]"
+			label = "%s %s" % (label, title)
+			
+			PLog("Satz1_1:")
+			PLog(stage); PLog(typ); PLog(title);
+			title = repl_json_chars(title)
+			descr = repl_json_chars(descr)
+			if(entry["type"]=="video"):								# Videos
+				PLog("stream: " + stream)
+				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
+					(stream, title, img, tag, descr, scms_id)	
+				addDir(li=li, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
+			else:
+				fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" % (url, title, homeID)
+				PLog("fparams: " + fparams)	
+				addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+					thumb=img, fparams=fparams, summary=descr, tagline=tag)
 							
-															# Formatierung
-		if 'Folgen' in tag or 'Staffeln' in tag or 'Teile' in tag:		
-			title = teaser_label.ljust(11) + "| %s" % title
-			# Einzelvideo bei Folgen ausgeblenden, um Folge auszuwerten 				
-									
-		if descr and dauer:
-			descr = "%s\n\n%s" % (dauer, descr)
-
-		title = repl_json_chars(py2_decode(title));
-		descr = repl_json_chars(descr)
-		if tag:
-			descr = "%s\n\n%s" % (tag, descr)
-		descr_par = descr.replace('\n', '||')			
-		#-------------------------- 							# End copy ZDFRubrikSingle
+						
+	if("cluster" in jsonObject):		# Bsp- A-Z Leitseite -> SingleRubrik
+		PLog('ZDF_PageMenu_cluster')
+		for counter, clusterObject in enumerate(jsonObject["cluster"]):	# Bsp. "name":"Neu in der Mediathek"
+			path = "cluster|%d|teaser" % counter
+			title=""
+			if "name" in clusterObject:
+				title = clusterObject["name"]
+			if title == '':											# "teaser": [.. - kann leer sein
+				PLog(str(clusterObject["teaser"])[:60])
+				if clusterObject["teaser"]:
+					title = clusterObject["teaser"][0]['titel']
+			if clusterObject["teaser"]:
+				img = ZDF_get_img(clusterObject["teaser"][0])
+				
+			tag = "Folgeseiten"
+			descr=""
+			if  "beschreibung" in clusterObject:
+				descr = clusterObject["beschreibung"]
 			
+			# skip: personalisierten Inhalte, Addon-Menüs:
+			skip_list = ['Alles auf einen Blick', u'Das könnte Dich', 'Direkt zu',
+						'Mein Programm', 'Deine', 'KiKA live sehen', 'Weiterschauen'
+						 ]
+			skip=False						
+			for t in skip_list:
+				# PLog("t: %s, title: %s" % (t, title))
+				if title.startswith(t) or title.endswith(t):
+					PLog("skip: %s" % title)
+					skip = True 
+			if skip:
+				continue 
+			if title == '':
+				PLog('ohne_Titel: %s' % str(clusterObject)[:80])		# ?
+				continue
+				
+			title = repl_json_chars(title)
+			descr = repl_json_chars(descr)
+			PLog("Satz1_2:")
+			PLog(title); PLog(path);
+			  
+			fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s', 'homeID': '%s'}"  %\
+				(path, title, DictID, homeID)
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_Rubriken", 				
+				fanart=img, thumb=img, tagline=tag, summary=descr, fparams=fparams)		
 
-		ID='ZDF_get_tracking'
-		title=py2_encode(title); path=py2_encode(path); ID=py2_encode(ID);
-		descr_par=py2_encode(descr_par); img_src=py2_encode(img_src);
-		if isvideo == False:			# Mehrfachbeiträge
-			fparams="&fparams={'title': '%s', 'url': '%s', 'ID': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
-				(quote(title),  quote(path), quote(ID), quote(descr_par), quote(img_src))
-			addDir(li=li, label=lable, action="dirList", dirID="ZDF_Sendungen", fanart=img_src, 
-				thumb=img_src, tagline="Folgeseiten", summary=descr, fparams=fparams)
-		else:				
-			# hier tagline in descr	
-			title=py2_encode(title); path=py2_encode(path); 
-			descr_par=py2_encode(descr_par); img_src=py2_encode(img_src); 	
-			fparams="&fparams={'title': '%s', 'url': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
-				(quote(title),  quote(path), quote(descr_par), quote(img_src))
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img_src, 
-				thumb=img_src, summary=descr, mediatype=mediatype, fparams=fparams)
+	if li_org:
+		return li
+	else:
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+###################################################################################################
+# Aufruf: ZDF_PageMenu
+# ZDF-Rubriken (Film, Serie,  Comedy & Satire,  Politik & Gesellschaft, ..)
+# path: json-key-Pfad (Bsp. cluster|2|teaser)
+#
+def ZDF_Rubriken(path, title, DictID, homeID=""):								
+	PLog('ZDF_Rubriken: ' + DictID)
+	PLog("path: " + path)
+	path_org = path
+
+	jsonObject = Dict("load", DictID)
+	PLog(str(jsonObject)[:80])
+	jsonObject, msg = GetJsonByPath(path, jsonObject)
+	if jsonObject == '':					# index error
+		msg1 = 'Cluster [B]%s[/B] kann nicht geladen werden.' % title
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return
+	PLog(str(jsonObject)[:80])
+					
+	li = xbmcgui.ListItem()
+	if homeID:
+		li = home(li, ID=homeID)
+	else:
+		li = home(li, ID='ZDF')						# Home-Button
 		
+	mediatype=''
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
+		
+	i=0
+	PLog("walk_entries: %d" % len(jsonObject))					
+	for entry in jsonObject:
+		path = path_org + '|%d' % i
+		PLog("entry_type: " + entry["type"])
+				
+		typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
+		title = repl_json_chars(title)
+		descr = repl_json_chars(descr)
+		if typ == "video":	
+				fparams="&fparams={'url': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
+					(stream, title, img, tag, descr, scms_id)	
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)	
+		elif typ == "livevideo":
+			fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+			PLog("fparams: " + fparams)	
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_Live", fanart=img, 
+				thumb=img, fparams=fparams, summary=descr, tagline=tag, mediatype=mediatype)   
+					
+		else:
+			fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+			PLog("fparams: " + fparams)	
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+				thumb=img, fparams=fparams, summary=descr, tagline=tag)
+													
+		i=i+1
+		# break		# Test Einzelsatz		
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+###################################################################################################
+# einzelne ZDF-Rubrik (Film, Serie,  Comedy & Satire,  Politik & Gesellschaft, ..)
+# Cluster-Objekte > 1: Dict-Ablage mit DictID je Cluster -> PageMenu
+# einz. Cluster-Objekt: Auswertung Teaser -> wieder hierher, ohne Dict
+#
+def ZDF_RubrikSingle(url, title, homeID=""):								
+	PLog('ZDF_RubrikSingle: ' + title)
+	PLog("url: " + url)
+	title_org = title
+
+	page=""; AZ=False
+	if url.endswith("sendungen-100"):							# AZ ca. 12 MByte -> Dict
+		page = Dict("load", "ZDF_sendungen-100", CacheTime=CacheTime)
+		AZ=True
+	if not page:	
+		page, msg = get_page(path=url)
+		if not page:												# nicht vorhanden?
+			msg1 = 'ZDF_RubrikSingle: [B]%s[/B] kann nicht geladen werden.' % title
+			msg2 = msg
+			MyDialog(msg1, msg2, '')
+			return
+		if AZ:
+			page = json.loads(page)
+			Dict("store", "ZDF_sendungen-100", page)
+	
+	if "dict" in str(type(page)):									# AZ: json
+		jsonObject = page
+	else: 
+		jsonObject = json.loads(page)
+	PLog(str(jsonObject)[:80])
+		
+	clusterObject, msg = GetJsonByPath("cluster", jsonObject)
+	if clusterObject == '':					# index error
+		msg1 = 'Rubrik [B]%s[/B] kann nicht geladen werden.' % title
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return
+	PLog(str(clusterObject)[:80])
+	PLog("Cluster: %d " % len(clusterObject))
+				
+	li = xbmcgui.ListItem()
+	if homeID:
+		li = home(li, ID=homeID)
+	else:	
+		li = home(li, ID='ZDF')				# Home-Button
+	
+	mediatype=''												# Kennz. Videos im Listing
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
+	PLog('mediatype: ' + mediatype); 
+						
+	PLog("Seriencheck:")										# Abzweig Serienliste ZDF_FlatListEpisodes
+	try:
+		docObject = jsonObject["document"]
+	except:
+		docObject=""
+	if docObject:
+		if "structureNodePath" in docObject:
+			if "/zdf/serien/" in docObject["structureNodePath"]:
+				sid = docObject["id"]							# z.B. trigger-point-102
+				PLog("Serie: " + sid)
+				label = "komplette Liste: %s" % title
+				tag = u"Liste aller verfügbaren Folgen"
+				fparams="&fparams={'sid': '%s'}"	% (sid)						
+				addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
+					thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
+
+	cnt=0
+	if len(clusterObject) > 1:									# mehrere Cluster
+		PLog("walk_cluster: %d" % len(clusterObject))					
+		for jsonObject in clusterObject:
+			title = jsonObject["name"]
+			if not title:						# kann leer sein
+				title = title_org
+			title = repl_json_chars(title)
+			try:
+				img = ZDF_get_img(jsonObject["teaser"][0])
+			except:
+				continue						# leerer Vorspann: sendungen-mit-audiodeskription-hoerfilme-100
+			tag = "Folgeseiten"
+			descr = ""
+			DictID = "ZDF_%s_%d" % (url.split("/")[-1], cnt)	# DictID: url-Ende + cluster-nr
+			Dict('store', DictID, jsonObject)					# für ZDF_PageMenu
+			
+			fparams="&fparams={'DictID': '%s', 'homeID': '%s'}" % (DictID, homeID)
+			PLog("fparams: " + fparams)	
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_PageMenu", fanart=img, 
+			thumb=img, fparams=fparams, summary=descr, tagline=tag)
+			cnt=cnt+1
+	else:														# einzelner Cluster
+		teaserObject, msg = GetJsonByPath("0|teaser", clusterObject)
+		PLog("walk_teaser: %d" % len(teaserObject))
+		PLog("Teaser: %d " % len(teaserObject))				
+				
+		for entry in teaserObject:
+			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
+			title = repl_json_chars(title)
+			label = title
+			descr = repl_json_chars(descr)
+			if(entry["type"]=="video"):							# Videos am Seitenkopf
+				# path = 'stage|%d' % i	# entf. hier
+				PLog("stream: " + stream)
+				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
+					(stream, title, img, tag, descr, scms_id)	
+				addDir(li=li, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
+			else:
+				fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" % (url, title, homeID)
+				PLog("fparams: " + fparams)	
+				addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+					thumb=img, fparams=fparams, summary=descr, tagline=tag)
+					
+	ZDF_search_button(li, query=title_org)	
+			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #---------------------------------------------------------------------------------------------------
-# Aufruf: ZDFStart
-# 24.06.2020 gemeinsame Nutzung von get_ZDFstreamlinks (wie SenderLiveListe für ZDF-Sender
-#	aus livesenderTV.xml für Menü TV-Livestreams/Überregional)
-def ZDFStartLive(title): 										# ZDF-Livestreams von ZDFStart
-	PLog('ZDFStartLive:'); 
+# Aufruf: ZDF_Rubriken
+# Seite enthält alle ZDF-Sender, einschl. EPG für akt. Tag
+#
+def ZDF_Live(url, title): 										# ZDF-Livestreams von ZDFStart
+	PLog('ZDF_Live: '  + url); 
+	PLog(title)
+	title_org=title
 		
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')										# Home-Button
-
-	mediatype='' 						# Kennz. Video für Sofortstart
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
-
-	# Zeile: "webtitle|href|thumb|tagline"
-	zdf_streamlinks = get_ZDFstreamlinks()
-	for line in zdf_streamlinks:
-		title, href, thumb, tagline = line.split('|')
-		PLog(title); PLog(href);
-	
-		title=py2_encode(title); href=py2_encode(href);
-		thumb=py2_encode(thumb); descr=py2_encode(tagline);	
-		fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s', 'descr': '%s'}" % (quote(href), 
-			quote(thumb), quote(title), quote(tagline))
-		addDir(li=li, label=title, action="dirList", dirID="ZDFStartLiveSingle", fanart=thumb, thumb=thumb, 
-			fparams=fparams, tagline=tagline, mediatype=mediatype)		
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-#-------------------------------------------------------
-# Aufruf: ZDFStartLive - Sofortstart Livestream bzw. 
-#	Liste Einzelauflösungen
-#	
-def ZDFStartLiveSingle(path, thumb, title, descr):
-	PLog('ZDFStartLiveSingle:'); 
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')										# Home-Button
-
-	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true':	# Sofortstart
-		PLog('Sofortstart: ZDFStartLiveSingle')
-		PlayVideo(url=path, title=title, thumb=thumb, Plot=descr)
+	page, msg = get_page(path=url)
+	if not page:
+		msg1 = u'ZDF_Live: der Stream von [B]%s[/B] kann leider nicht geladen werden.' % title
+		MyDialog(msg1, "", '')
 		return
+	jsonObject = json.loads(page)
+	PLog(str(jsonObject)[:80])
 
-	title=py2_encode(title); url_m3u8=py2_encode(path);
-	thumb=py2_encode(thumb); descr=py2_encode(descr);
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote_plus(url_m3u8), 
-		quote_plus(title), quote_plus(thumb), quote_plus(descr))	
-	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
-		tagline=title, mediatype='video')	
+	
+	for clusterObject in jsonObject["epgCluster"]:
+		clusterLive = clusterObject["liveStream"]
+		if clusterLive["titel"] == title_org:
+			break
+	streamsObject = clusterLive["formitaeten"]
+	m3u8_url = streamsObject[0]["url"]							# 1. form. = auto
+	img = ZDF_get_img(clusterLive)
 		
-	li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr, live=True)
+	if SETTINGS.getSetting('pref_video_direct') == 'true':		# Sofortstart
+		PLog("Sofortstart_ZDF_Live")
+		PlayVideo(url=m3u8_url, title=title_org, thumb=img, Plot=title_org, sub_path="")
+		return
+	#----------------------
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ZDF')										# Home-Button
+
+	cnt=1; sub_path="";
+	for entry in streamsObject:
+		url = entry["url"]
+		quality = entry["quality"]
+		typ = entry["type"]
+		lang = entry["language"]
+		label = "%d. %s | [B]HLS %s[/B]" % (cnt, title_org, quality)
+		Plot = "Typ: %s | %s" % (typ, lang)
+		
+		PLog("Satz5:")
+		PLog(url);PLog(quality);PLog(typ);
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+			(quote_plus(url), quote_plus(title_org), quote_plus(img), quote_plus(Plot), 
+			quote_plus(sub_path))
+		addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
+			fparams=fparams, tagline=Plot, mediatype='video') 
+		cnt=cnt+1
+			
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
+#-------------------------
+def ZDF_get_img(obj, landscape=False):
+	PLog('ZDF_get_img:')
+	PLog(str(obj)[:60])	
+	
+	minWidth=1280					# 1280x720
+	if landscape:
+		minWidth=1140				# 1140x240
+	img=""
+	try:
+		if("teaserBild" in obj):
+			cnt=0
+			for width,imageObject in list(obj["teaserBild"].items()):
+				if cnt == 0:
+					img_first = imageObject["url"]		# Backup
+				cnt=cnt+1
+				if int(width) >= minWidth:
+					img=imageObject["url"]
+		if not img:
+			if("image" in obj):
+				cnt=0
+				for width,imageObject in list(obj["image"].items()):
+					if cnt == 0:
+						img_first = imageObject["url"]	# Backup
+					cnt=cnt+1
+					if int(width) >= minWidth:
+						img=imageObject["url"];
+		if not img:										# Backup -> img
+			img = img_first
 		
+	except Exception as exception:
+		PLog("get_img_error: " + str(exception))
+
+	if not img:
+		img = R(ICON_DIR_FOLDER)
+	PLog(img)	
+	return img
+
+#---------------------------------------------------------------------------------------------------
+# mark: Titelmarkierung, z.B. für ZDF_Search
+# 
+def ZDF_get_content(obj, maxWidth="", mark=""):
+	PLog('ZDF_get_content:')
+	PLog(str(obj)[:60])
+	PLog(mark)
+	
+	if not maxWidth:				# Teaserbild, Altern. 1280 für Video
+		maxWidth=840
+	multi=True; verf=""; url=""; stream=""; scms_id=""
+	season=""; episode=""			# episodeNumber, seasonNumber
+	
+	if "url" in obj:
+		url=obj["url"]
+	headline=obj["headline"]
+	title=obj["titel"]
+	if title.strip() == "":
+		title = headline
+	if title.strip() == "":			# mögl.: title/headline mit 1 Blank
+		title = obj["id"]
+
+	if mark:
+		title = make_mark(mark, title, "", bold=True)	# Titel-Markierung
+	
+	teaser_nr=''			# wie Serien in ZDF_get_content
+	if ("seasonNumber" in obj and "episodeNumber" in obj):
+		season = obj["seasonNumber"]
+		episode = obj["episodeNumber"]
+		teaser_nr = "Staffel %s | Folge %s | " % (season, episode)
+		title_pre = "S%02dE%02d" % (int(season), int(episode))
+		title = "%s | %s" % (title_pre, title)
+	descr=''	
+	if("beschreibung" in obj):
+		descr = teaser_nr + obj["beschreibung"]
+			
+	typ=''	
+	if("type" in obj):
+		typ = obj["type"]
+		
+	img="";
+	if("teaserBild" in obj):
+		for width,imageObject in list(obj["teaserBild"].items()):
+			if int(width) <= maxWidth:
+				img=imageObject["url"];
+	
+	dur=''
+	if("length" in obj):
+		multi = False
+		sec = obj["length"]
+		if sec:
+			dur = time.strftime('%H:%M Std.', time.gmtime(sec))	
+		avail=''	
+		if("offlineAvailability" in obj):
+			avail = obj["offlineAvailability"]
+			avail =time_translate(avail, day_warn=True)			# day_warn: noch x Tage!
+			avail = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % avail
+		fsk = obj["fsk"]
+		if fsk == "none":
+			fsk = "ohne"
+		geo = obj["geoLocation"]
+		if geo == "none":
+			geo = "ohne"
+		length = obj["length"]
+		#if "streamApiUrlVoice" in obj:						
+		#	stream = obj["streamApiUrlVoice"] # needs api-token
+		if "url" in obj:
+			stream = obj["url"]
+		# stream = obj["cockpitPrimaryTarget"]["url"] 			# Altern. (mit url identisch)
+		if "externalId" in obj:
+			scms_id = obj["externalId"]
+
+	summ = descr
+	if multi:
+		tag = "Folgeseiten"
+	else:
+		tag = "Dauer: %s | FSK: %s | GEO: %s | %s" % (dur, fsk, geo, avail)
+	if headline:
+		tag = "%s | [B]%s[/B]" % (tag, headline)
+	
+	
+	PLog('Get_content typ: %s | title: %s | tag: %s | descr: %s |img:  %s | url: %s | stream: %s | scms_id: %s' %\
+		(typ,title,tag,summ,img,url,stream,  scms_id) )		
+	return typ,title,tag,summ,img,url,stream,scms_id
+
 ####################################################################################################
 # ZDF-Suche:
 # 	Voreinstellungen: alle ZDF-Sender, ganze Sendungen, sortiert nach Datum
@@ -7252,7 +7316,9 @@ def ZDFStartLiveSingle(path, thumb, title, descr):
 #		..&from=2012-12-01T00:00:00.000Z&to=2019-01-19T00:00:00.000Z&..
 #	ZDF_Search_PATH steht bei Rekursion nicht als glob. Variable zur Verfügung
 # 	02.06.2021 Umstellung auf alle Beiträge (statt ganzen Sendungen)
-#
+# 	25.04.2023 Umstellung auf zdf-cdn, Pfad für MEHR_Suche (s_type) 
+#		identisch (Aufruf ZDF_search_button <- ZDF_RubrikSingle)
+# 
 def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	PLog("ZDF_Search:")
 	if 	query == '':	
@@ -7270,60 +7336,59 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	PLog(query); PLog(pagenr); PLog(s_type)
 
 	ID='Search'
-	# umgestellt von ganze Sendungen auf alle Beiträge (&abName=ab-2021-06-07 kann entfallen)
-	# ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&contentTypes=episode&sortBy=date&page=%s'
-	ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&synth=true&sender=Gesamtes+Angebot&from=&to=&attrs=&abGroup=gruppe-a&page=%s'
-	if s_type == 'MEHR_Suche':		# ZDF_Sendungen: Suche alle Beiträge (auch Minutenbeiträge)
-		ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&sortBy=date&page=%s'
-
-	if s_type == 'Bilderserien':	# 'ganze Sendungen' aus Suchpfad entfernt:
-		ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&contentTypes=&sortBy=date&page=%s'
+	ZDF_Search_PATH	 = "https://zdf-cdn.live.cellular.de/mediathekV2/search?profile=cellular-5&q=%s&page=%s"
+	if s_type == 'Bilderserien':	# im api zdf-cdn nicht verfügbar (bilder-der-woche-100)
+		ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&synth=true&sender=Gesamtes+Angebot&from=&to=&attrs=&abGroup=gruppe-a&page=%s'
 		ID=s_type
 	
 	if pagenr == '':		# erster Aufruf muss '' sein
 		pagenr = 1
-	path = ZDF_Search_PATH % (query, pagenr) 
+	path = ZDF_Search_PATH % (query, str(pagenr)) 
 	PLog(path)
 	path = transl_umlaute(path)
 	
-	page, msg = get_page(path=path, do_safe=False)	# +-Zeichen für Blank nicht quoten	
-	searchResult = stringextract('data-loadmore-result-count="', '"', page)	# Anzahl Ergebnisse
-	PLog("searchResult: "  + searchResult);
+	page, msg = get_page(path=path, do_safe=False)	# +-Zeichen für Blank nicht quoten
+	if s_type == 'Bilderserien':	# 'ganze Sendungen' aus Suchpfad entfernt:
+		ZDF_Bildgalerien(page)
+		return
 	
-	# PLog(page)	# bei Bedarf		
+	try:
+		jsonObject = json.loads(page)
+		searchResult = str(jsonObject["totalResultsCount"])
+		nextUrl = str(jsonObject["nextPageUrl"])
+		nextPage = str(jsonObject["nextPage"])
+	except:
+		searchResult=""; nextUrl=""; nextPage=""
+	PLog("searchResult: "  + searchResult);
+	PLog("nextPage: "  + nextPage);
+	
 	NAME = 'ZDF Mediathek'
 	name = 'Suchergebnisse zu: %s (Gesamt: %s), Seite %s'  % (quote(py2_encode(query)), searchResult, pagenr)
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')										# Home-Button
 
 	# Der Loader in ZDF-Suche liefert weitere hrefs, auch wenn weitere Ergebnisse fehlen
 	# 22.01.2020 Webänderung 'class="artdirect " >' -> 'class="artdirect"'
-	if searchResult == '0' or 'class="artdirect"' not in page:
+	if not searchResult:
 		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen
 		msg2 = msg 
 		msg1 = 'Keine Ergebnisse (mehr) zu: %s' % query  
 		MyDialog(msg1, msg2, '')
 		return li	
 				
-	# anders als bei den übrigen ZDF-'Mehr'-Optionen gibt der Sender Suchergebnisse bereits
-	#	seitenweise aus, hier umgesetzt mit pagenr - offset entfällt
-	#	entf. bei Bilderserien	
-	if s_type == 'Bilderserien':	# 'ganze Sendungen' aus Suchpfad entfernt:
-		li, page_cnt = ZDF_Bildgalerien(li, page)
-	else:
-		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen
-		li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID=ID, mark=query)
-	PLog('li, page_cnt: %s, %s' % (li, page_cnt))
+	query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen
+		
+	DictID="ZDF_Search"											# hier dummy
+	li=ZDF_PageMenu(DictID, jsonObject, mark=query, li=li)
 	
 	li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
-	if page_cnt == 'next':							# mehr Seiten (Loader erreicht)
-		pagenr = int(pagenr) + 1
+	PLog("nextUrl: " + nextUrl)
+	if nextPage and nextUrl:
 		query = query_org.replace('+', ' ')
-		path = ZDF_Search_PATH % (query, pagenr)	# Debug
-		PLog(pagenr); PLog(path)
-		title = "Mehr Ergebnisse im ZDF suchen zu: >%s<"  % query
-		tagline = u"zusätzliche Suche starten (Seite %d)" % pagenr
+		pagenr = re.search(u'&page=(\d+)', nextUrl).group(1)
+		PLog(pagenr); 
+		title = "Mehr Ergebnisse im ZDF zeigen zu: >%s<"  % query
+		tagline = u"nächste Seite [B]%s[/B]" % pagenr
 		query_org=py2_encode(query_org); 
 		fparams="&fparams={'query': '%s', 's_type': '%s', 'pagenr': '%s'}" %\
 			(quote(query_org), s_type, pagenr)
@@ -7331,11 +7396,95 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 			thumb=R(ICON_MEHR), tagline=tagline, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+###################################################################################################
+# Liste der Wochentage ZDF
+# ARD s. ARDnew.SendungenAZ (früherer Classic-Code entfernt)
+#
+def ZDF_VerpasstWoche(name, title):									# Wochenliste ZDF Mediathek
+	PLog('ZDF_VerpasstWoche:')
+	PLog(name); 
+	 
+	sfilter=''
+	fname = os.path.join(DICTSTORE, 'CurSenderZDF')				# init CurSenderZDF (aktueller Sender)
+	if os.path.exists(fname):									# kann fehlen (Aufruf Merkliste)
+		sfilter = Dict('load', 'CurSenderZDF')			
+		
+	if sfilter == '' or sfilter == False or sfilter == 'false':	# Ladefehler?
+		sfilter = 'Alle ZDF-Sender'								# Default Alle ZDF-Sender (nur VERPASST)
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ZDF')						# Home-Button
+		
+	wlist = list(range(0,7))
+	now = datetime.datetime.now()
+
+	for nr in wlist:
+		rdate = now - datetime.timedelta(days = nr)
+		iDate = rdate.strftime("%d.%m.%Y")		# Formate s. man strftime (3)
+		zdfDate = rdate.strftime("%Y-%m-%d")		
+		iWeekday =  rdate.strftime("%A")
+		punkte = '.'
+		if nr == 0:
+			iWeekday = 'Heute'	
+		if nr == 1:
+			iWeekday = 'Gestern'	
+		iWeekday = transl_wtag(iWeekday)
+		PLog(iDate); PLog(iWeekday);
+		#title = ("%10s ..... %10s"% (iWeekday, iDate))	 # Formatierung in Plex ohne Wirkung		
+		title =	"%s | %s" % (iDate, iWeekday)
+		
+		title=py2_encode(title); zdfDate=py2_encode(zdfDate);
+		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=R(ICON_ZDF_VERP), 
+			thumb=R(ICON_ZDF_VERP), fparams=fparams)
+	
+	label = "Datum eingeben"							# Button für Datumeingabe anhängen
+	tag = u"teilweise sind bis zu 4 Jahre alte Beiträge abrufbar"
+	fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
+	addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Datum", fanart=R(ICON_ZDF_VERP), 
+		thumb=GIT_CAL, fparams=fparams, tagline=tag)
+
+														# Button für Stationsfilter
+	label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [B]%s[/B]" % sfilter
+	tag = "Auswahl: Alle ZDF-Sender, zdf, zdfneo oder zdfinfo" 
+	fparams="&fparams={'name': '%s', 'title': 'ZDF-Mediathek', 'sfilter': '%s'}" % (quote(name), sfilter)
+	addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Filter", fanart=R(ICON_ZDF_VERP), 
+		thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)
+		
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# True, sonst Rückspr. nach ZDF_Verpasst_Filter
+	
 #-------------------------
-# Aufruf VerpasstWoche (Button "Datum eingeben")
+#  03.06.2021 ARD_Verpasst_Filter (Classic) entfernt							
+#-------------------------
+# Auswahl der ZDF-Sender für ZDF_VerpasstWoche
+# bei Abbruch bleibt sfilter unverändert
+								
+def ZDF_Verpasst_Filter(name, title, sfilter):
+	PLog('ZDF_Verpasst_Filter:'); PLog(sfilter); 
+	
+	stations = ['Alle ZDF-Sender', 'ZDF', 'ZDFneo', 'ZDFinfo']
+	if sfilter not in stations:		# Fallback für Version < 4.7.0
+		i=0
+	else:
+		i = stations.index(sfilter)
+
+	dialog = xbmcgui.Dialog()
+	d = dialog.select('ZDF-Sendestation wählen', stations, preselect=i)
+	if d == -1:						# Fallback Alle
+		d = 0
+	sfilter = stations[d]
+	PLog("Auswahl: %d. %s" % (d, sfilter))
+	Dict('store', "CurSenderZDF", sfilter)
+	
+	return ZDF_VerpasstWoche(name, title)
+
+#-------------------------
+# Aufruf ZDF_VerpasstWoche (Button "Datum eingeben")
 # xbmcgui.INPUT_DATE gibt akt. Datum vor
 # 11.01.2020: Ausgabe noch für 1.1.2016, nicht mehr für 1.1.2015
-# sfilter wieder zurück an VerpasstWoche
+# sfilter wieder zurück an ZDF_VerpasstWoche
 #
 def ZDF_Verpasst_Datum(title, zdfDate, sfilter):
 	PLog('ZDF_Verpasst_Datum:')
@@ -7357,25 +7506,75 @@ def ZDF_Verpasst_Datum(title, zdfDate, sfilter):
 	zdfDate = "%s-%s-%s" % (y,m,d)	# "%Y-%m-%d"
 	PLog(zdfDate)
 	
-	# zurück zu VerpasstWoche:
+	# zurück zu ZDF_VerpasstWoche:
 	ZDF_Verpasst(title='Datum manuell eingegeben', zdfDate=zdfDate, sfilter=sfilter)
 	return
+	
 #-------------------------
-# Aufruf: VerpasstWoche, ZDF_Verpasst_Datum
-# Abruf Webseite, Auswertung -> ZDF_get_content
-def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender'):
-	PLog('ZDF_Verpasst:'); PLog(title); PLog(zdfDate);
+# Aufruf: ZDF_VerpasstWoche, 2 Durchläufe
+# 1. Buttons Morgens. Mittags, Abends, Nachts
+# 2. Cluster-Ermittl. via DictID, Teaser-Auswertung 
+
+def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
+	PLog('ZDF_Verpasst:'); PLog(title); PLog(zdfDate); PLog(sfilter);
+	PLog("DictID: " + DictID);
+	title_org = title
+
+	mediatype=''													# Kennz. Videos im Listing
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
+	PLog('mediatype: ' + mediatype); 
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')						# Home-Button
 
-	path = ZDF_SENDUNG_VERPASST % zdfDate
+	# -----------------------------------------						# 2. Durchlauf
+	
+	if DictID:	
+		jsonObject = Dict("load", DictID)
+		teaserObject = jsonObject["teaser"]
+		PLog(len(teaserObject))
+		PLog(str(teaserObject)[:80])
+		for entry in teaserObject:
+			try:
+				typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
+				airtime = entry["airtime"]
+				t = airtime[-5:]
+				title = "[COLOR blue]%s[/COLOR] | %s" % (t, title)	# Sendezeit | Titel
+				channel = entry["channel"]
+				if sfilter.startswith("Alle") == False:
+					PLog("Mark0"); PLog(sfilter); PLog(channel)
+					if sfilter != channel:							# filtern
+						continue
+				tag = "%s | Sender: [B]%s[/B]" % (tag,channel) 
+					
+				PLog("Satz4:")
+				PLog(tag); PLog(title); PLog(stream);
+				title = repl_json_chars(title)
+				descr = repl_json_chars(descr)
+				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
+					(stream, title, img, tag, descr, scms_id)	
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
+			except Exception as exception:
+				PLog("verpasst_error: " + str(exception))
+									
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
+	
+	# -----------------------------------------							# 1. Durchlauf
+	
+	path = "https://zdf-cdn.live.cellular.de/mediathekV2/broadcast-missed/" + zdfDate
 	page, msg = get_page(path)
 	if page == '':
 		msg1 = "Abruf fehlgeschlagen | %s" % title
 		MyDialog(msg1, msg, '')
 		return li 
-	PLog(path);	PLog(len(page))
+
+	jsonObject = json.loads(page)
+	clusterObject = jsonObject["broadcastCluster"]
+	PLog(str(clusterObject)[:80])
+	PLog("Cluster: %d " % len(clusterObject))
 
 	msg1 = title								# Notification Datum + Sender
 	if "manuell" in title:
@@ -7383,219 +7582,113 @@ def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender'):
 	msg2 = sfilter
 	icon = R(ICON_ZDF_VERP)
 	xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)
+	cnt=0
+	for jsonObject in clusterObject:
+		title = jsonObject["name"]
+		img = ZDF_get_img(jsonObject["teaser"][0])
+		tag = "Folgeseiten"
+		DictID = "ZDF_Verpasst_%d" % cnt	 				# DictID: cluster-nr
+		Dict('store', DictID, jsonObject)					# -> ZDF_Verpasst
 	
-	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=path, ID='VERPASST', sfilter=sfilter)
-	PLog("page_cnt: " + str(page_cnt))
+		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s', 'DictID': '%s'}" %\
+			(title_org, zdfDate, sfilter, DictID)
+		PLog("fparams: " + fparams)	
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=img, 
+		thumb=img, fparams=fparams, tagline=tag)
+		cnt=cnt+1
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ####################################################################################################
-# 19.11.2020 Integration funk A-Z - Ausleitung aus ZDFRubrikSingle
+# ZDF-eigener Zugang via ZDF_Rubriken
+# hier: Buchstaben-Icons vorgeschaltet ->  ZDF_AZList
+#	einschl. Cache-Nutzung (AZ > 12 MByte)
+#	ID=ZDFfunk <- Main_ZDFfunk
 #
-def ZDFSendungenAZ(name, ID=''):				# name = "Sendungen A-Z"
-	PLog('ZDFSendungenAZ:'); 
+def ZDF_AZ(name, ID=""):						# name = "Sendungen A-Z"
+	PLog('ZDF_AZ: ' + name);
+	PLog(ID) 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')						# Home-Button
 	
 	azlist = list(string.ascii_uppercase)
-	azlist.append('0-9')
+	azlist.append('0 - 9')
 
 	# Menü A to Z
 	for element in azlist:
 		title='Sendungen mit ' + element
 		fparams="&fparams={'title': '%s', 'element': '%s', 'ID': '%s'}" % (title, element, ID)
-		addDir(li=li, label=title, action="dirList", dirID="ZDFSendungenAZList", fanart=R(ICON_ZDF_AZ), 
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_AZList", fanart=R(ICON_ZDF_AZ), 
 			thumb=R(ICON_ZDF_AZ), fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 ####################################################################################################
 # Laden der Buchstaben-Seite, Auflistung der Sendereihen in 
-#	ZDF_get_content -> ZDF_Sendungen (Cluster-Abzweig) -> ZDFRubrikSingle 
+#	ZDF_get_content -> ZDF_Sendungen (Cluster-Abzweig) -> ZDF_Rubriken 
 #		-> ZDF_Sendungen (isvideo=False) / ZDF_BildgalerieSingle
 #		-> ZDF_getVideoSources (isvideo=True)
 # Buchstaben-Seiten enthalten nur Sendereihen, keine Einzelbeiträge
-# 19.11.2020 Integration funk A-Z (ID=funk)
+# 19.11.2020 Integration funk A-Z (ID=ZDFfunk)
 #
-def ZDFSendungenAZList(title, element, ID=''):			# ZDF-Sendereihen zum gewählten Buchstaben
-	PLog('ZDFSendungenAZList:')
-	PLog(title)
+def ZDF_AZList(title, element, ID=""):					# ZDF-Sendereihen zum gewählten Buchstaben
+	PLog('ZDF_AZList: ' + element)
+	PLog(title); PLog(ID);
 	title_org = title
-	li = xbmcgui.ListItem()	
-	li = home(li, ID='ZDF')						# Home-Button
-
-	group = element	
-	if element == '0-9':
-		group = '0 - 9'		# ZDF-Vorgabe (vormals '0+-+9')
-	azPath = ZDF_SENDUNGEN_AZ % group
-	add = "ZDF: "
-	if ID == 'ZDFfunk':
-		add = "funk: "
-		group = "group=%s" % element
-		azPath = "https://www.zdf.de/funk/funk-alle-sendungen-von-a-z-100.html?%s" % group
-	PLog(azPath);
 	
-	page, msg = get_page(path=azPath)	
-	if page == '':
-		msg1 = u'AZ-Beiträge können nicht geladen werden.'
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return li
-		
-	content = blockextract(u'<picture class="artdirect"', page)
-	if len(content) == 0:
-		msg1 = u'%skeine AZ-Beiträge für die Gruppe >%s< gefunden' % (add, element)
-		MyDialog(msg1, '', '')
-		return li
-
-	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=azPath, ID='A-Z')
-	PLog(page_cnt)  
-	if page_cnt == 0:	# Fehlerbutton bereits in ZDF_get_content
-		return li		
-		
-	# if offset: 	Code entfernt, in Kodi nicht nutzbar
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-####################################################################################################
-# 	wrapper für Mehrfachseiten aus ZDF_get_content (multi=True). Dort ist kein rekursiver Aufruf
-#	möglich (Übergabe Objectcontainer in Callback nicht möglich - kommt als String an)
-#	Hinw.: Drei-Stufen-Test - Genehmigungsverfahren für öffentlich-rechtliche Telemedienangebote
-#		s.  https://www.zdf.de/zdfunternehmen/drei-stufen-test-100.html (1. gesellsch. Bedarf,
-#		2. Umfang am publiz. Wettbewerb, 3. finanzieller Aufwand)
-# 	06.05.2019 Anpassung an ZDFRubrikSingle (neue ZDF-Struktur): Vorprüfung auf einz. Videobeitrag,
-#		Durchreichen von tagline + thumb an ZDF_getVideoSources
-#	27.09.2019 Vorprüfung wieder verlagert nach ZDFRubrikSingle (erleichtert Debugging).
-#	02.09.2020 Abzweig zu ZDFRubrikSingle bei Cluster-Titeln (Bsp. Dinner Date,
-#		Die Küchenschlacht)
-#	19.11.2020 Ausleitung funk A-Z (aus ZDFRubrikSingle) -> ZDFSendungenAZ (Übersichtsseite)
-#	20.05.2021 Cluster + Playerbox detektieren, Ausleitung -> ZDFRubrikSingle
-#
-def ZDF_Sendungen(url, title,ID,page_cnt=0,tagline='',thumb='',page='',skip_playerbox=False):
-	PLog('ZDF_Sendungen:')
-	PLog(title); PLog("ID: " + ID); 
-	title_org 	= title
-	page_cnt_org= int(page_cnt)
-	
-	li = xbmcgui.ListItem()			
-	
-	if page == '':
-		page, msg = get_page(path=url)	
-		if page == '':
-			msg1 = u'Beitrag >%s< kann nicht gezeigt werden.' % title
+	DictID = "ZDF_sendungen-100"
+	path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/sendungen-100"
+	msg1 = "Cache ZDF A-Z:"
+	if "funk" in ID:
+		DictID = "funk-alle-sendungen-von-a-z-100"
+		path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/%s" % DictID
+		if element == "0 - 9":							# für funk o. Blanks
+			element="0-9"
+		msg1 = "Cache funk A-Z:"
+	jsonObject = Dict("load", DictID, CacheTime=ZDF_CacheTime_AZ)
+	if not jsonObject:
+		icon = R(ICON_ZDF_AZ)
+		xbmcgui.Dialog().notification(msg1,"Haltedauer 30 Min",icon,3000,sound=False)
+		page, msg = get_page(path)
+		if not page:												# nicht vorhanden?
+			msg1 = 'ZDF_AZList: Beiträge können leider nicht geladen werden.' 
 			msg2 = msg
 			MyDialog(msg1, msg2, '')
-			return li 
-						
-	if "www.zdf.de/kinder" in url:
-		li = home(li, ID='Kinderprogramme')			# Home-Button
-	else:
-		li = home(li, ID='ZDF')						# Home-Button			
-
-	if "www.zdf.de/serien/" in url:					# Abzweig Serienliste ZDF_FlatListEpisodes
-		PLog('Button_FlatListZDF')
-		sid = url.split("/")[-1]					# z.B. ../serien/soko-hamburg
-		label = "komplette Liste: %s" % title
-		tag = u"Liste aller verfügbaren Folgen"
-		fparams="&fparams={'sid': '%s'}"	% (sid)						
-		addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
-			thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
-	
-	
-#----------------------------------------------		# Abzweig funk "Alle Folgen" -> ZDF_get_content
-#	if 'www.zdf.de/funk/' in url and '>Alle Folgen</h2>' in page:
-#		li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=url, ID='ZDF_Sendungen')
-#		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-#	08.07.2021 Abzweig >Alle Folgen< kann entfallen - keine weitere Clusterung gesichtet
-#----------------------------------------------		# Abzweig Cluster -> ZDFRubrikSingle
-
-	if 'class="b-cluster' in page:										# Cluster ermitteln, 
-		PLog('Abzweig_b_cluster')										# 	pro Cluster -> ZDFRubrikSingle
-		path = url
-		# Cluster-Blöcke, dto. ZDFRubrikSingle, nicht ZDFStart:
-		# 18.05.2022 Performance: Blöcke 'tabindex="0"' (alle bish. Varianten enthalten) 
-		cluster = blockextract('tabindex="0"', page)					# Titel <h1 + <h2, wie ZDFRubrikSingle 
-		PLog("clus_ges: %d" % len(cluster))
+			return
+		jsonObject = json.loads(page)
+		Dict("store", DictID, jsonObject)
 		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ZDF')						# Home-Button
 
-		# Playerbox-Beiträge (Seitenanfang) voranstellen. Bei skip_playerbox
-		#	liegt die Auswertung bereits vor (ZDFRubrikSingle mit Clusterliste)
-		if 'data-module="zdfplayer"' in page or 'class="stage-wrapper">' in page:
-			if skip_playerbox == False:
-				ZDF_get_playerbox(li, page)
+	PLog(str(jsonObject)[:80])
+	jsonObject = jsonObject["cluster"]
+	PLog(len(jsonObject))
+	PLog(str(jsonObject)[:80])
 
-		if 'big-headline" tabindex="0"' in page:						# Suche nach Beiträgen vor 1. Cluster
-			pos = page.find('big-headline" tabindex="0"')				# Überschriften
-		else:
-			pos = page.find('cluster-title-wrap')						# Cluster
-		page_cut = page[:pos]
-		content = blockextract('<picture class="artdirect"', page_cut) # zdfplayer-Modul in artdirect möglich
-		PLog("content_page_cut: %d" % len(content))	
-		if len(content) > 0:											# -> ZDF_get_content
-			li, page_cnt = ZDF_get_content(li=li, page=page_cut, ref_path=url, ID='ZDF_Sendungen')	
-
-		tag = 'Folgeseiten'	
-		PLog('click">Altersverifikation</a>' in page)
-		if 'click">Altersverifikation</a>' in page:						# FSK-Hinweis (bisher ohne Blockade)
-			fsk = stringextract('-headline">Hinweis</h3>', 'click">Altersverifikation</a>', page)
-			if fsk:
-				fsk = stringextract('nur in der Zeit zwischen ', ' oder mit', fsk)
-				fsk = "[B]FSK-Hinweis:[/B] Folgen nur zwischen %s abrufbar" % fsk
-				tag = "%s\n\n%s" % (tag, fsk)			
-
-		li = xbmcgui.ListItem()	
-		for clus in cluster:
-			clustertitle = ZDF_get_clustertitle(clus) 					# Entf. html-Tags dort
-			clustertitle = py2_decode(clustertitle)
-			if clustertitle == '':										# Bsp. in heute/Wetter/Orte
-				continue
-
-			# skip: javascript-erzeugte Inhalte - s. ZDFStart,
-			#	Bsp. Trending
-			if 'data-tracking-title=' in clus or "Direkt zu ..." in clus:
-				continue
-
-			ctitle_org = clustertitle									# für Abgleich
-			ctitle_org = ctitle_org.replace('"', '&quot;')				# Hochkommata-Behandl.
-			img_src = ZDF_get_img(clus)	
-			if "Dir-folder" in img_src: 								# hier o. Bild weiter wie ZDFRubrikSingle
-				continue
-			
-			clustertitle = unescape(clustertitle); clustertitle = repl_json_chars(clustertitle) 
-			PLog('11Satz:')
-			
-			clustertitle=py2_encode(clustertitle); path=py2_encode(path); 
-			ctitle_org=py2_encode(ctitle_org)	
-			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s', 'ID': '%s'}"	%\
-				(quote(clustertitle), quote(path), quote_plus(ctitle_org), ID)						
-			addDir(li=li, label=clustertitle, action="dirList", dirID="ZDFRubrikSingle", fanart=R(ICON_DIR_FOLDER), 
-				thumb=img_src, tagline=tag, mediatype="", fparams=fparams)
-
-		li = xbmcgui.ListItem()
-		ZDF_search_button(li, query=title_org)
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		return															# sonst Fortsetzung
-
-#----------------------------------------------
+	AZObject=[]	
+	for clusterObject in jsonObject:
+		PLog(str(clusterObject)[:12])
+		if element in clusterObject["name"]:
+			title = clusterObject["name"]
+			PLog("found_title: " + title)
+			AZObject = clusterObject
+			break
 	
-	# 29.03.2020 Kurzvideos, in artdirect-Blöcken in ZDF_get_content
-	#	nicht als Video erkennbar. Mehrere Videos möglich, Verarbeitung
-	#	durch ZDF_getVideoSources fehlerhaft - Anpassung bzw. neue Funktion,
-	#	apiToken + Link zu json-Quellen in zdfplayer-Block vorhanden.
-	#	Aufruf: ZDFRubrikSingle, Ausleitung einz. Videobeiträge in
-	#	ZDF_get_content (Merkmal 'class="b-playerbox')
-	#	
-	li, page_cnt = ZDF_get_content(li=li, page=page, ref_path=url, ID='ZDF_Sendungen')
+	if AZObject:
+		teaserObject = AZObject["teaser"]
+		for entry in teaserObject:
+			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
+			title = repl_json_chars(title)
+			label = title
+			descr = repl_json_chars(descr)
+			fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+			PLog("fparams: " + fparams)	
+			addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+				thumb=img, fparams=fparams, summary=descr, tagline=tag)	
 	
-	PLog(page_cnt)
-	if page_cnt == 0:	# Fehlerbutton bereits in ZDF_get_content
-		return li
-				
-	if ID == 'ZDFSportLive':					# ohne zusätzliche Suche 
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
-	
-	li = xbmcgui.ListItem()	
-	ZDF_search_button(li, query=title_org)			# Abschluss: MEHR_Suche ZDF
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
 #----------------------------------------------
 # MEHR_Suche ZDF nach query (title)
 # Aufrufer: ZDF_Sendungen
@@ -7628,7 +7721,7 @@ def ZDF_search_button(li, query):
 # 	Cache: von der Gesamt-Liste (> 3 MB) werden im Dict nur
 #		sid und url gespeichert
 def ZDF_FlatListEpisodes(sid):
-	PLog('ZDF_FlatListEpisodes:')
+	PLog('ZDF_FlatListEpisodes: ' + sid)
 	CacheTime = 43200											# 12 Std.
 	
 	li = xbmcgui.ListItem()
@@ -7647,7 +7740,7 @@ def ZDF_FlatListEpisodes(sid):
 			page = page.replace('\\/','/')
 			Dict("store", "ZDF_Serien", page)
 	
-	pat = '"id":"%s-' % sid										# Suchmuster Bsp. "id": "soko-leipzig-
+	pat = '"id":"%s' % sid										# Suchmuster Bsp. "id": "soko-leipzig-
 	PLog("pat: " + pat)
 	pos = page.find(pat)
 	page = page[pos:]
@@ -7726,6 +7819,7 @@ def ZDF_FlatListEpisodes(sid):
 				PLog("%s | %s" % (headline, season_title))
 				break
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
+			scms_id = stringextract('"id":"', '"', folge)
 			if season == '':
 				continue
 				
@@ -7735,8 +7829,8 @@ def ZDF_FlatListEpisodes(sid):
 			PLog(url);PLog(img);PLog(title);PLog(tag);PLog(summ[:80]); 
 			url=py2_encode(url); title=py2_encode(title); img=py2_encode(img); 
 			tag_par=py2_encode(tag_par);summ_par=py2_encode(summ_par);
-			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'tag': '%s', 'summ': '%s'}" %\
-				(quote(url), quote(title), quote(img), quote(tag_par), quote(summ_par))
+			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'tag': '%s', 'summ': '%s', 'scms_id': '%s'}" %\
+				(quote(url), quote(title), quote(img), quote(tag_par), quote(summ_par), scms_id)
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 
@@ -7747,9 +7841,9 @@ def ZDF_FlatListEpisodes(sid):
 #	aber abweichendes Quellformat
 # Aufrufer: ZDF_FlatListEpisodes
 # Mitnutzung get_form_streams wie get_formitaeten  sowie
-#	 build_Streamlists
+#	 build_Streamlists_buttons
 # gui=False: ohne Gui, z.B. für ZDF_getStrmList
-def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
+def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	PLog("ZDF_getApiStreams:")
 	
 	page, msg = get_page(path)
@@ -7764,18 +7858,22 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
 	if gui:
 		li = home(li, ID='ZDF')								# Home-Button	
 	
+	availInfo = stringextract('"availabilityInfo":"',  '"', page) # FSK-Info? -> s.u. Dialog
+	availInfo = transl_json(availInfo)
+	channel = stringextract('"channel":"',  '"', page)
+	
 	HLS_List=[]; MP4_List=[]; HBBTV_List=[];				# MP4_List = download_list
 	# erlaubte Formate wie build_Streamlists:
 	only_list = ["h264_aac_mp4_http_na_na", "h264_aac_ts_http_m3u8_http",	
 				"vp9_opus_webm_http_na_na", "vp8_vorbis_webm_http_na_na"
-				]		
+				]	
 		
 	# Format formitaeten von Webversion abweichend, build_Streamlists
 	#	nicht verwendbar
 	formitaeten, duration, geoblock, sub_path = get_form_streams(page)
 	forms=[]
 	if len(formitaeten) > 0:								# Videoquellen fehlen
-		forms = stringextract('formitaeten":', 'teaserBild', formitaeten[0])
+		forms = stringextract('formitaeten":', ']', formitaeten[0])
 		forms = blockextract('"type":', forms)
 	PLog("forms: %d" % len(forms))
 	
@@ -7794,6 +7892,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
 			track_add = "%23s" % track_add 				# formatiert
 					
 		url = stringextract('"url":"',  '"', form)		# Stream-URL
+		PLog("url: " + url)
 		server = stringextract('//',  '/', url)			# 2 Server pro Bitrate möglich
 		if typ not in only_list or url in skip_list:
 			continue
@@ -7805,7 +7904,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
 		# bei HLS entfällt Parseplaylist - verschiedene HLS-Streams verfügbar 
 		if url.find('master.m3u8') > 0:					# HLS-Stream 
 			HLS_List.append('HLS, %s ** AUTO ** %s ** %s#%s' % (track_add, quality,title,url))
-
+		else:
 			res='0x0'; bitrate='0'; w=''; h=''			# Default					
 			if 'hd":true' in form:	
 				w = "1920"; h = "1080"					# Probeentnahme													
@@ -7838,15 +7937,24 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, gui=True):
 	PLog("HLS_List: " + str(len(HLS_List)))
 	#PLog(HLS_List)
 	PLog("MP4_List: " + str(len(MP4_List)))
+	
+	if scms_id:
+		HBBTV_List = ZDFSourcesHBBTV(title, scms_id)	# bisher nur MP4-Quellen				
+		Dict("store", '%s_HBBTV_List' % ID, HBBTV_List) 
+	PLog("HBBTV_List: " + str(len(HBBTV_List)))
+		
 	Dict("store", '%s_HLS_List' % ID, HLS_List) 
 	Dict("store", '%s_MP4_List' % ID, MP4_List) 
 		
 	if not len(HLS_List) and not len(MP4_List):			
 		if gui:										# ohne Gui
-			msg = 'keine Streamingquelle gefunden - Abbruch' 
-			PLog(msg)
-			msg1 = u"keine Streamingquelle gefunden: %s"	% title
-			MyDialog(msg1, '', '')
+			msg = 'keine Streamquellen gefunden - Abbruch' 
+			PLog(msg); PLog(availInfo)
+			msg1 = u"keine Streamquellen gefunden: [B]%s[/B]"	% title
+			msg2=""
+			if availInfo:
+				msg2 = availInfo
+			MyDialog(msg1, msg2, '')
 
 		return HLS_List, MP4_List, HBBTV_List
 	
@@ -8008,7 +8116,7 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 		head = u"Liste synchronisieren"
 		msg1 = u"Soll das Addon diese Liste regelmäßig abgleichen?"
 		msg2 = u"Intervall: %s Stunden" % sync_hour	
-		ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='OK', heading=head)
+		ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Nein', yes='OK', heading=head)
 		if ret == 1:											# Liste neu aufnehmen
 			strm.strm_synclist(mode="save", item=item)
 			line = "%6s | %15s | %s..." % ("NEU", list_title[:15], "Liste neu aufgenommen")
@@ -8037,7 +8145,8 @@ def ZDF_FlatListRec(item):
 	title_pre = "S%02dE%02d" % (int(season), int(episode))	# 31.01.2022 S13_F10 -> S13E10
 	
 	brand =  stringextract('"headline":"', '"', item)
-	title =  stringextract('"titel":"', '"', item)
+	title =	 stringextract('"titel":"', '"', item)
+	title =  repl_json_chars(title)			
 	descr =  stringextract('"beschreibung":"', '"', item)
 	weburl =  stringextract('"sharingUrl":"', '"', item) # für Abgleich vor./nicht mehr vorh. 
 	fsk =  stringextract('"fsk":"', '"', item)
@@ -8065,659 +8174,10 @@ def ZDF_FlatListRec(item):
 
 	return title, url, img, tag, summ, season, weburl
 
-###################################################################################################
-# ZDF-Bereich, Liste der Rubriken (Filme, Serien,  Comedy & Satire,  Politik & Gesellschaft, ..)
-#	Auswertung der Einzelbeiträge (nur solche) in ZDFRubrikSingle 
-# 19.05.2021 Anpassung an Änderung Webseite, Cache-Nutzung für 
-#	www.zdf.de/doku-wissen
-# 21.11.2021 Quellen-Wechsel: Rubrik-Liste von www.zdf.de (Cache hier 5 min) 
-
-def ZDFRubriken(name):								
-	PLog('ZDFRubriken:')
-	CacheTime = 60*5							# 5 min.
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')						# Home-Button
-
-	path = ZDF_BASE
-	page = Dict("load", "ZDF_Start", CacheTime=CacheTime)
-	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
-		page, msg = get_page(path=path)
-		Dict("store", "ZDF_Start", page) 						# Seite -> Cache: aktualisieren	
-	if page == '':
-		msg1 = 'ZDF_Start kann nicht geladen werden.'
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return li 						
-
-	pos1 = page.find(">Rubriken</h2>")
-	pos2 = page.find('class="b-footer"')
-	page = page[pos1:pos2]
-	dirID="ZDFRubrikSingle"
-
-	cluster = blockextract('class="b-cluster-teaser b-vertical-teaser', page, '</article')
-	lazy = blockextract('class="b-cluster-teaser m-placeholder lazyload', page, '</article')
-	rubriken = cluster + lazy
-	PLog(len(rubriken))
-	
-	for rec in rubriken:
-		if 'class="loader"' in rec:									# Nachlade-Beiträge, escaped, s. ZDFRubrikSingle
-			pos  = rec.find('class="loader"')						# Satz begrenzen (Kennz. steht
-			rec = rec[:pos]											#	am Ende
-			rec = unescape(rec)
-			rec = rec.replace('": "', '":"')						# 10.12.2019 wieder mal Blank nach Trenner
-			PLog('loader_Beitrag')
-			sophId,NodePath,path,title,descr,img_src,dauer,enddate,isvideo,teaser_typ,teaser_nr,\
-				teaser_brand,teaser_count = get_teaserElement(rec)
-			#PLog('title: %s, path: %s, img_src: %s, descr: %s, dauer: %s' %\
-			#	(title,path,img_src,descr,dauer))
-			
-		else:
-			title = stringextract('"teaser-title"', 'class', rec)
-			path = ZDF_BASE + stringextract('href="', '"', title)	# z.B. href="/Filme"
-			title = stringextract('title="', '"', title)
-			img_src = ZDF_get_img(rec)
-			descr = stringextract('extended-text">', '<', rec)
-		
-		label = unescape(title)
-		tag = descr; 
-		PLog("Satz23:")
-		PLog(title); PLog(img_src); PLog(path); PLog(tag[:80]) 		
-			
-		title=py2_encode(title); path=py2_encode(path); 
-	
-		if title.startswith('ZDFtivi'):								# Kinder: Umlenkung -> tivi Modul childs
-			GIT_ZDFTIVI	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-zdftivi.png?raw=true"
-			ICON_CHILDS	= 'childs.png'	
-			tag = "Kinder- und Jugendprogramm des ZDF"		
-			fparams="&fparams={'title': '%s'}" % "tivi"
-			addDir(li=li, label= "ZDFtivi für Kinder", action="dirList", dirID="resources.lib.childs.Main_TIVI", 
-				fanart=R(ICON_CHILDS), thumb=GIT_ZDFTIVI, tagline=tag, fparams=fparams)		
-		else:
-			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s'}"	%\
-				(quote(title), quote(path), "")						
-			addDir(li=li, label=label, action="dirList", dirID="ZDFRubrikSingle", fanart=R(ICON_MAIN_ZDF), 
-				thumb=img_src, tagline=tag, fparams=fparams)			
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-#-------------------------
-# ZDF-Bereich, Sendungen einer Rubrik (unbegrenzt, anders als A-Z Beiträge)
-#	Besonderheit: die Zielseiten enthalten class="loader" (Nachlade-Beiträge, 
-#	escaped).
-#	Aufruf auch aus ZDFStart (Struktur wie ZDF-Rubriken),
-#		ab 03.09.2020 auch aus ZDF_Sendungen (ID=A-Z).
-#	2-facher Aufruf - Unterscheidung nach Cluster-Titeln (clus_title):
-#		1. Übersichtseite (Cluster)			- Rücksprung hierher
-#		2. Zielseite (z.B. einzelne Serie) 	- Sprung -> ZDF_Sendungen
-# 	ZDF_Sendungen macht eine Vorprüfung auf Einzelvideos vor Aufruf von
-#		ZDF_get_content. Einzelvideos -> ZDF_getVideoSources
-#
-#	Hinw.: "Verfügbar bis" bisher nicht in Rubrikseiten gefunden (wie
-#		teaserElement, s. get_teaserElement)
-#
-# 27.09.2019 ZDF-Änderungen bei den Abgrenzungen der Cluster (s.u. Blockbildung)
-# 22.11.2019 Nutzung bereits geladener Seite / Seitenausschnitt (page)
-# 10.12.2019 ZDFRubriken: Abgleich Cluster-Titel wird mittels spez. clus_title 
-#	übersprungen )
-# 03.09.2020 Nutzung für A-Z-Seiten mit Cluster-Titeln (Abzweig in ZDF_Sendungen)
-#	Auswertung für loader- und Normal-Seiten vereinheitlicht (get_teaserElement,
-#	ZDF_get_teaserDetails, ZDF_get_teaserbox)
-# 05.09.2020 promo-teaser in ZDFStart + hier ergänzt (bisher nur 1 x je Seite gesichtet)
-# 22.01.2021 custom_cluster: vom Aufrufer def. Anfangs- und Endbedingung, 
-#	z.B. '>Spielberichte<|</section>'
-# 
-def ZDFRubrikSingle(title, path, clus_title='', page='', ID='', custom_cluster='', nav_title=''):							
-	PLog('ZDFRubrikSingle:'); PLog(title);
-	CacheTime = 60*5								# 5 min.
-	PLog(clus_title); PLog(ID); PLog(custom_cluster); PLog(nav_title)
-	clus_title = clus_title.replace('&quot;', '"')				# Hochkommata-Behandl. (s. ZDF_Sendungen)
- 
-	path_org = path
-	
-	title_org = title
-	li = xbmcgui.ListItem()
-	if "www.zdf.de/kinder" in path:
-		li = home(li, ID='Kinderprogramme')			# Home-Button 
-	else:
-		li = home(li, ID='ZDF')						# Home-Button
-
-	dictid = path.split('/')[-1]
-	if page == '':
-		page = Dict("load", dictid, CacheTime=CacheTime)
-		if page == False or page == '':				# Cache miss od. leer - vom Sender holen
-			page, msg = get_page(path=path)	
-			Dict("store", dictid, page) 			# Seite -> Cache: aktualisieren	
-	if page == '':
-		msg1 = 'Beitrag kann nicht geladen werden.'
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return li
-		
-	mediatype=''									# Kennz. Video für Sofortstart
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'	
-
-	if custom_cluster == '':										# Abgleich mit clus_title
-		# Cluster-Blöcke, dto. ZDF_Sendungen, nicht ZDFStart:		# Cluster-Blöcke
-		#	cluster-title-wrap Untermenge von b-cluster,
-		#		b-cluster-poster
-		cluster =  blockextract('cluster-title-wrap', page)			# Cluster-Blöcke
-		PLog(len(cluster))
-		cluster = cluster + blockextract('"section-header-title', page, "</section>")
-		if len(cluster) == 0:										# aus promo-teaser
-			cluster =  cluster + blockextract('class="big-headline"', page, '')
-		if len(cluster) == 0:										
-			cluster =  cluster + blockextract('headline-with-btn', page, '')
-		if len(cluster) == 0:										
-			cluster =  blockextract('class="top5-headline"', page, '')
-		cluster =  cluster + blockextract('<h2 class="title"  tabindex="0"', page)
-		PLog("clus_ges: %d" % len(cluster))
-		
-		if clus_title and len(cluster) > 0:							# Beiträge zu gesuchtem Cluster auswerten - s.o.
-			clus_title = py2_encode(clus_title)
-			if clus_title.startswith('>'):
-				clus_title = clus_title[1:]
-			for clus in cluster:
-				clustertitle = ZDF_get_clustertitle(rec=clus)		# Cluster-Titel ermitteln
-				clustertitle = py2_decode(clustertitle)
-				clus_title = py2_decode(clus_title)
-				PLog(clus_title); PLog(clustertitle);	 # Debug
-				PLog(clus_title in clustertitle)
-				if clus_title in clustertitle:		# Cluster gefunden
-					PLog('gefunden: clus_title=%s, clustertitle=%s' % (clus_title, clustertitle))
-					break
-					
-	else:															# freie Anfangs- und Endbedingung
-		#custom_cluster=py2_encode(custom_cluster)
-		PLog("custom_cluster. " + custom_cluster)
-		blockstart, blockend = custom_cluster.split("|")
-		cluster =  blockextract(blockstart, page, blockend)
-		PLog(len(cluster))
-		if clus_title and len(cluster) > 0:							# Beiträge zu gesuchtem Cluster auswerten - s.o.
-			for clus in cluster:
-				if  clus_title in clus:
-					PLog('gefunden: clus_title=%s' % clus_title)
-					break
-		
-	if clus_title and len(cluster) > 0:	
-		# script-gesteuerte Beiträge ("clusterrecommendation") z.Z. nicht genutzt.
-			
-		# 27.09.2019 Blockbildung geändert (nach ZDF-Änderungen)
-		# class="artdirect"> und class="artdirect " nicht eindeutig genug,
-		# b-cluster-teaser umfassen die article-Blöcke und lazyload-Blöcke
-		# lazyload-Blöcke können Einzelbeiträge enthalten (teaserElement: icon-502_play)
-		# 28.03.2020 'class="artdirect' als Fallback (u.a. für 'class="artdirect cell">')
-		# 08.07.2021 skip_list hinzugefügt (z.B. für funk-SendungenA-Z), verlässlichere
-		#	Blockbildung via "article class".
-		# 13.07.2021 Blockbegrenzung </article> erst im rec -  loader-Beiträge werden sonst
-		#	ausgeschlossen
-
-		skip_list = [u"https://www.zdf.de/funk/funk-alle-sendungen-von-a-z-100.html"]	# Abgleich
-		if '"PromoTeaser"' in clus:							# Promo-Teasern fehlt "article class"
-			article = "PromoTeaser"
-			content = [clus]								# je Promo-Teaser nur 1 Block
-			#PLog(clus[:80])
-		else:
-			#PLog(clus[:80])
-			article = stringextract('<article class="', ' ', clus)	# class für Block bestimmen
-			if article.startswith('class="b-cluster"'):		# ohne Blank hinter class-Marke
-					article = 'class=b-cluster'
-			content =  blockextract('class="%s' % article, clus) # Begrenzung </article> erst in rec
-			
-		PLog("article: " + article)
-		PLog('content1: ' + str(len(content)))
-
-		for rec in content:				
-			title='';  clustertitle=''; lable=''; isvideo=False; isgallery=False
-			teaser_nr=''; summ_txt=''; descr='';teaserDetails=''
-			pos = rec.find('</article>')						# Satz begrenzen (im Block n.m., s.o.)
-			if pos > 0:
-				rec = rec[:pos]
-			
-			
-			# --------------------------------------------------	
-			if 'class="loader"' in rec:							# Nachlade-Beiträge, escaped
-				pos  = rec.find('class="loader"')				# Satz begrenzen (Kennz. steht
-				rec = rec[:pos]									#	am Ende
-				rec = unescape(rec)
-				rec = rec.replace('": "', '":"')				# 10.12.2019 wieder mal Blank nach Trenner
-				PLog('loader_Beitrag')
-				# PLog(rec); 	# bei Bedarf
-				#	Auswertung Loader-Beitrag einschl. teaserbox
-				sophId,NodePath,path,title,descr,img_src,dauer,enddate,isvideo,teaser_typ,teaser_nr,\
-					teaser_brand,teaser_count = get_teaserElement(rec)
-			# --------------------------------------------------	
-			else:												# Seite normal auswerten	
-			# --------------------------------------------------
-				title,path,img_src,descr,dauer,enddate,isvideo = ZDF_get_teaserDetails(rec)
-				teaserDetails='done'							# Flag für get_summary_pre
-				# multi z.Z. nicht verwendet, isvideo reicht aus
-				teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi = ZDF_get_teaserbox(rec)
-				if teaser_label and teaser_typ:									# Doppel möglich
-					if teaser_typ.strip() in teaser_label.strip():
-						teaser_typ=""
-			
-			PLog("isvideo: %s, dauer: %s, enddate: %s" % (isvideo, dauer, enddate))
-			if isvideo or dauer or enddate:								# enddate ohne dauer möglich
-				isvideo = True
-			if " Staffel" in teaser_label or descr == "Serien":
-				isvideo = False
-		
-			tag='';
-			if path == '' or 'skiplinks' in path:
-				PLog('skip_path: ' + path)
-				continue
-			if path in skip_list:										# z.B. funk-SendungenA-Z
-				PLog('skip_list: ' + path)
-				continue
-				
-			if teaser_label:
-				tag = teaser_label
-			if teaser_brand:
-				teaser_brand = teaser_brand.replace(' - ', '')
-				teaser_brand = unescape(teaser_brand)
-				teaser_brand = "[B]%s[/B]" % teaser_brand
-				tag = teaser_brand
-				
-			if teaser_typ:
-				tag = "%s | %s" % (tag, teaser_typ)
-			if teaser_nr:
-				tag = "Episode %s | %s" % (teaser_nr, tag)
-				title = "[%s] %s" % (teaser_nr, title)
-			if tag.startswith(' | '):									# tag-Korr. leer Brand								
-				tag = tag.replace(' | ', '')
-			tag = tag.replace('  ,', ', ')
-								
-			if teaser_label == 'Bilderserie':
-				PLog('Bilderserie')
-				isgallery = True
-			
-																		# Formatierung
-			if 'Folgen' in tag or 'Staffeln' in tag or 'Teile' in tag:		
-				title = teaser_label.ljust(11) + "| %s" % title
-				# Einzelvideo bei Folgen ausgeblenden, um Folge auszuwerten 				
-										
-			if descr and dauer:
-				descr = "%s\n\n%s" % (dauer, descr)
-			if clustertitle:
-					descr = "%s | %s" % (clustertitle, descr.strip())
-			title = repl_json_chars(py2_decode(title));
-			descr = repl_json_chars(descr)
-			if tag:
-				descr = u"%s\n\n%s" % (tag, descr)
-			descr_par = descr.replace('\n', '||')
-			
-			if '>Jetzt live</h2>' in rec:								# Livestream-Satz?
-				PLog('>Jetzt live</h2>')
-				title = '[B]%s[/B]' % title
-			lable = title
-			
-						
-			if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
-				filtered=False
-				for item in AKT_FILTER: 
-					item = up_low(item)
-					# rec ist hier lazyload-Element, Inhalte fehlen für Abgleich!
-					if up_low(item) in up_low(title) or up_low(item) in up_low(descr):
-						filtered = True
-						break		
-				if filtered:
-					PLog('filtered: ' + title)
-					continue	
-			
-			PLog('12Satz:')
-			PLog(title);PLog(path);PLog(img_src);PLog(tag);PLog(descr); 
-			PLog(isvideo);PLog(multi);PLog(isgallery);
-			descr=py2_encode(descr)
-			
-			if isvideo == False:			# Mehrfachbeiträge
-				ID='ZDFRubrikSingle'
-				title=py2_encode(title); path=py2_encode(path); ID=py2_encode(ID);
-				descr_par=py2_encode(descr_par); img_src=py2_encode(img_src);
-				
-				 
-				if isgallery == False:		# keine Bildgalerie
-					fparams="&fparams={'title': '%s', 'url': '%s', 'ID': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
-						(quote(title),  quote(path), quote(ID), quote(descr_par), quote(img_src))
-					addDir(li=li, label=lable, action="dirList", dirID="ZDF_Sendungen", fanart=img_src, 
-						thumb=img_src, summary=descr, tagline="Folgeseiten", fparams=fparams)
-				else:						# Bildgalerie
-					fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))	
-					addDir(li=li, label=lable, action="dirList", dirID="ZDF_BildgalerieSingle", fanart=img_src, 
-						thumb=img_src, fparams=fparams, summary='Bilderserie', tagline=descr)
-					
-					
-			else:							# Einzelbeitrag direkt - anders als A-Z (ZDF_get_content)		
-				if SETTINGS.getSetting('pref_load_summary') == 'true':		# Inhaltstext im Voraus laden?
-					# get_summary_pre in ZDF_get_teaserDetails bereits erledigt?
-					if teaserDetails == '':									
-						skip_verf=False; skip_pubDate=False					# beide Daten ermitteln
-						summ_txt = get_summary_pre(path, 'ZDF', skip_verf, skip_pubDate)
-						PLog(len(summ_txt)); PLog(len(descr));
-						if 	summ_txt and len(summ_txt) > len(descr):
-							descr= summ_txt
-							descr_par = descr.replace('\n', '||')
-							
-				title=py2_encode(title); path=py2_encode(path); 
-				descr_par=py2_encode(descr_par); img_src=py2_encode(img_src); 	
-				fparams="&fparams={'title': '%s', 'url': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
-					(quote(title),  quote(path), quote(descr_par), quote(img_src))
-				addDir(li=li, label=lable, action="dirList", dirID="ZDF_getVideoSources", fanart=img_src, 
-					thumb=img_src, summary=descr, mediatype=mediatype, fparams=fparams)
-							
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		
-	else:												# nur Cluster listen, ohne Bilder, 
-														#	Blockbegrenzung s.o.		
-		PLog("nav_list_Check")			
-		if 'class="second-nav-list">' in page:			# ev. Navigationsleiste berücksichtigen, Bsp. zdf.de/sport
-			if nav_title == '':							# 1. Aufruf (ohne Wahl in Navigationsleiste)
-				nav_list = stringextract('class="second-nav-list">', '</ul>', page)	
-				nav_list = blockextract('<a href', nav_list)
-				PLog("nav_list: %d" % len(nav_list))	
-				for item in nav_list:
-					path =  ZDF_BASE + stringextract('href="', '"', item)
-					title = stringextract('title="', '"', item)
-					title = unescape(title)
-					tag = u"Navigation: %s -> %s" % (title_org, title)
-					img_src = R(ICON_DIR_FOLDER)
-					
-					title=py2_encode(title); path=py2_encode(path); 
-					fparams="&fparams={'title': '%s', 'path': '%s', 'nav_title': '%s'}" % (quote(title),
-						quote(path), quote(title))
-					addDir(li=li, label=title, action="dirList", dirID="ZDFRubrikSingle", fanart=img_src, 
-						thumb=img_src, tagline=tag, fparams=fparams)
-				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-			
-			
-		# Auswertung "zdfplayer" Seitenanfang (Highlights, Empfehlungen):
-		PLog("zdfplayer_Check")
-		skip_list=[]			
-		if 'data-module="zdfplayer"' in page or 'class="stage-wrapper">' in page:
-			skip_list = ZDF_get_playerbox(li, page, skip_list)			#  o. skip_list
-
-		PLog("no_title_Check1")											# Beiträge ohne Clustertitel ausgeben
-		pos1 = page.find('class="b-content-teaser-list no-title"')
-		if pos1 > 0:
-			pos2 = page.find('"b-content-teaser-list"')					# ev. Varianten prüfen
-			PLog("%d, %d" % (pos1, pos2))
-			if pos2 > 0 and pos2 > pos1:								# Blockende < Blockanfang mögl.
-				page_cut = page[pos1:pos2]
-				# ID="ZDF_Sendungen" unterdrückt zdfplayer-Block in ZDF_get_content:
-				ZDF_get_content(li, page=page_cut, ref_path=path_org, ID="ZDF_Sendungen", skip_list=skip_list)
-				# xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# Debug
-		else:
-			if len(cluster) == 0:										
-				PLog("no_title_Check2")									# Beiträge ohne Clustertitel, ohne no-title
-				ZDF_get_content(li, page=page, ref_path=path_org, ID="ZDF_Sendungen", skip_list=skip_list)
-				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		# Cluster-Ausgabe obsolet
-		
-		i=0
-		for clus in cluster:							# Cluster: cluster-title + section-header-title	- s.o.
-			clustertitle=''
-			i=i+1
-			PLog("cluster_%d" % i)
-			PLog(clus[:80])
-
-			clustertitle = ZDF_get_clustertitle(clus)
-			clustertitle = py2_decode(clustertitle)
-				
-			label =	unescape(clustertitle); 
-			label = repl_json_chars(label)
-			clustertitle = repl_json_chars(clustertitle)
-			if '>' in label:							# Bsp.: data-tracking-title="Beliebte_Serien">Bel..
-				label = label.split('>')[1]
-				
-			PLog("clustertitle: " + clustertitle);	
-			if 'data-module="zdfplayer"' in clus:		# bereits erfasst
-				continue		
-			if 'Direkt zu ...' in clustertitle: 		# in zdf.de/kinder, hier nicht erreichbar
-				continue
-			if clustertitle.endswith('weiterschauen'): 	# in zdf.de/kinder, .. weiterschauen
-				continue
-			if 'In eigener Sache' in clustertitle: 		# dto. (vorwiegend redakt. Seiten)
-				continue
-			if clustertitle.strip() == '': 
-				continue
-			if 'eliebte Filme' in clustertitle or 'eliebte Serien' in clustertitle or 'Dich interessieren' in clustertitle:
-				continue
-				
-				
-			#img_src = R(ICON_DIR_FOLDER)
-			img_src = ZDF_get_img(clus)
-			if "Dir-folder" in img_src: 				# hier o. Bild weiter
-				continue
-			
-			
-			clustertitle=py2_encode(clustertitle); path=py2_encode(path); 
-			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s'}" % (quote(clustertitle),
-				quote(path), quote(clustertitle))
-			addDir(li=li, label=label, action="dirList", dirID="ZDFRubrikSingle", fanart=R(ICON_DIR_FOLDER), 
-				thumb=img_src, tagline="Folgeseiten", fparams=fparams)
-				
-		if path_org.endswith('sport-im-zdf-livestream-live-100.html'):	# ZDF Event Streams einblenden
-			fparams="&fparams={}"
-			label =u'ZDF Event Streams (eingeschränkt verfügbar)'
-			img = R("zdf-sportlive.png")	
-			addDir(li=li, label=label, action="dirList", dirID="ZDFSportEvents", fanart=img, 
-				thumb=img, fparams=fparams)	
-	
-				
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-#-------------------------
-# Ersatz für javascript: Ermittlung Icon + Sendedauer (Nachlade-Beiträge, 
-#	escaped' - class="loader")
-#	die html-Seite des get_teaserElements wird aus TEXTSTORE 
-#	geladen bzw. bei www.zdf.de/teaserElement abgerufen und
-#	dann in STORE (TEXTSTORE/SophoraTeaser) gespeichert.
-#	Hinw.1: "Verfügbar bis" nicht immer im teaserElement enthalten
-#   Hinw.2: Änderungen ev. auch in my3Sat erforderlich.
-# 03.09.2020 ergänzt um Auswertung teaserbox
-# 04.03.2022 Nutzung durch ZDF_get_tracking mit SCMS_id
-# 28.03.2023 Unterverz. SophoraTeaser in TEXTSTORE (Performance) - dto. 
-#	get_teaserElement in my3Sat
-#
-def get_teaserElement(rec, SCMS_id=''):
-	PLog('get_teaserElement:')
-	# Reihenfolge Ersetzung: sophoraId, teaserHeadline, teasertext, filterReferenceId, 
-	#		contextStructureNodePath
-	#	vorbelegt (nicht ausgewertet):
-	#		style, mostwatched, recommended, newest, reloadTeaser, mainContent, 
-	#		sourceModuleType, highlight
-	# PLog(rec)
-	PLog(SCMS_id)
-	if SCMS_id:
-		sophoraId = SCMS_id; sophId = sophoraId
-		NodePath=''; filterReferenceId=''; contextStructureNodePath='';
-	else:	
-		sophoraId = stringextract('"sophoraId":"', '",', rec)
-												
-		teaserHeadline = stringextract('teaserHeadline":"', '",', rec)
-		teaserHeadline = teaserHeadline.replace('"', '')
-		teasertext = stringextract('"teasertext":"', '",', rec)
-		filterReferenceId = stringextract('filterReferenceId":"', '",', rec)
-		contextStructureNodePath = stringextract('contextStructureNodePath":"', '",', rec)
-		
-		mostwatched = stringextract('"mostwatched":"', '",', rec)
-		recommended = stringextract('"recommended":"', '",', rec)
-		newest = stringextract('"newest":"', '",', rec)
-		
-		teaserHeadline = transl_json(teaserHeadline); teasertext = transl_json(teasertext); 
-		sophId = sophoraId; title = teaserHeadline; descr = teasertext;  	# Fallback-Rückgaben
-		NodePath = contextStructureNodePath; 
-		
-		# urllib.quote_plus für Pfadslash / erf. in contextStructureNodePath
-		sophoraId = quote_plus(py2_encode(sophoraId)); 
-		contextStructureNodePath = quote_plus(py2_encode(contextStructureNodePath));
-		
-	# ähnl. 3sat - nicht erforderlich: teaserHeadline, teasertext
-	path = "https://www.zdf.de/teaserElement?sophoraId=%s&style=m2&reloadTeaser=true&filterReferenceId=%s&mainContent=false&sourceModuleType=cluster-s&highlight=false&contextStructureNodePath=%s" \
-		% (sophoraId, filterReferenceId, contextStructureNodePath)
-
-	STORE = os.path.join(TEXTSTORE, 'SophoraTeaser') 
-	if os.path.exists(STORE) == False:
-		try:  
-			os.mkdir(STORE)
-		except OSError:  
-			msg1 = 'Verzeichnis SophoraTeaser konnte nicht erzeugt werden.'
-			msg2 = "Funktion: get_teaserElement ardundzdf.py"
-			PLog(msg1); PLog(msg2); 
-			MyDialog(msg1, msg2, '')
-			return	
-
-	fpath = os.path.join(STORE, sophoraId)		# 1. Cache für teaserElement
-	PLog('fpath: ' + fpath)
-	if os.path.exists(fpath) and os.stat(fpath).st_size == 0: # leer? = fehlerhaft -> entfernen 
-		PLog('fpath_leer: %s' % fpath)
-		os.remove(fpath)
-	if os.path.exists(fpath):						# Element lokal laden
-		PLog('lade_lokal:') 
-		page =  RLoad(fpath, abs_path=True)	
-	else:											# von www.zdf.de/teaserElement laden
-		page, msg = get_page(path=path)			
-		if page:									# und in TEXTSTORE speichern - bei Bedarf
-			msg = RSave(fpath, py2_encode(page))	#	withcodec verwenden (s. my3Sat)
-	
-	page = page.strip()								# zahlr. \n vor Inhalt	
-	PLog(page[:100])
-	page = py2_decode(page)
-	isvideo = False
-	if page:										# 2. teaserElement einschl. teaserbox auswerten
-		title,path,img_src,descr,dauer,enddate,isvideo = ZDF_get_teaserDetails(page, NodePath, sophId)
-		# multi z.Z. nicht verwendet, isvideo reicht aus
-		teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi = ZDF_get_teaserbox(page)		
-		# sophId s.o.
-		return sophId,NodePath, path,title,descr,img_src,dauer,enddate,isvideo,teaser_typ,teaser_nr,teaser_brand,teaser_count	
-	else:									#  Fallback-Rückgaben, Bild + Dauer leer
-		img_src=''; dauer=''; NodePath=''
-		return sophId,NodePath,path,title,descr,img_src,dauer,enddate,isvideo,teaser_typ,teaser_nr,teaser_brand,teaser_count
-
-#-------------------------
-# Auswertung ZDF-Seite für ZDFRubrikSingle
-# page hier Einzelblock (rec)
-#	
-def ZDF_get_teaserDetails(page, NodePath='', sophId=''):
-	PLog('ZDF_get_teaserDetails:')
-	title='';path='';img_src='';descr='';dauer='';enddate='';isvideo=False
-	img_src = ZDF_get_img(page)
-		
-	title	= stringextract('plusbar-title="', '"', page)
-	if title == '':
-		if '<span class="normal-space">' in page:
-			title= stringextract('<span class="normal-space">', '<span class=', page)
-			title = title.strip()
-	if title == '':
-		title	= stringextract('title="', '"', page)					# href-Titel			
-		
-	title = unescape(title);
-	title = repl_json_chars(py2_decode(title));
-	enddate	= stringextract('-end-date="', '"', page)					# kann leer sein, wie get_teaserElement
-	enddate = time_translate(enddate, add_hour=0, day_warn=True)			# Abgleich summer_time entfällt für ZDF 
-
-	path	= stringextract('plusbar-url="', '"', page)
-	if path == '':
-		path	= stringextract('href="', '"', page)					# Fallback 1
-	if path == '':
-		path	= stringextract('href = "', '"', page)					# Fallback 2
-	if path == '':
-		if 	NodePath and sophId:											
-			path	= "https://www.zdf.de%s/%s.html" % (NodePath, sophId)# Fallback 3
-	if path and path.startswith('http') == False:
-		path = ZDF_BASE + path
-		
-	PLog("Videolänge2:")
-	icon502 = stringextract('"icon-502_play', '</dl>', page) 			# Länge - 1. Variante
-	# PLog(icon502)	
-	try:
-		dauer = re.search(u'aria-label="(\d+) min"', icon502).group(1)
-	except:
-		dauer=''
-	if dauer == '':	
-		try:															# Länge - 2. Variante
-			dauer = re.search(u'label="Videolänge (\d+) min', icon502).group(1)
-		except Exception as exception:
-			dauer=''
-	if dauer == '':
-		dauer = stringextract(u'Videolänge', 'min', icon502) 				# Länge - 2. Variante bzw. fehlend
-	if dauer:
-		dauer = "%s min" % cleanhtml(dauer) 
-		dauer = mystrip(dauer.strip())
-	if '<dd class="teaser-info" aria-label="' in dauer:
-		dauer =  dauer.replace('<dd class="teaser-info" aria-label="', '')	
-	
-	descr	= stringextract('teaser-text"', '<', page)					# > mit/ohne Blank möglich
-	descr	= descr.replace('>', '')
-	if descr == '':
-		descr	= stringextract('teaser-info" aria-label="', '"', page)	
-	if descr == '':
-		descr	= stringextract('extended-text">', '<', page)	
-	if descr == '':
-		descr = stringextract('alt="', '"', page)						# Fallback Bildbeschr.
-	
-	if u"erfügbar " in page:												# Info Livestream
-		if descr.find(u'erfügbar ') < 0:
-			try:
-				live = re.search(u'fügbar (.*?)">', page).group(1)		# ..erfügbar .. Uhr Sport">
-			except:
-				live=''
-			if live:
-				descr = u"verfügbar [B]%s[/B]\n\n%s" % (live, descr.strip())	
-		
-	descr = unescape(descr); descr = descr.strip()
-	if u'Videolänge' in descr:
-		dauer=''
-		isvideo = True
-	PLog(descr)
-	
-	enddate=py2_decode(enddate); descr=py2_decode(descr)
-	if enddate:
-		descr = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s\n" % (enddate, descr)
-	if 'class="icon-502_play' in page:
-		isvideo = True
-	
-		
-	if SETTINGS.getSetting('pref_load_summary') == 'true':				# Inhaltstext im Voraus laden?
-		skip_verf=False; skip_pubDate=False								# Teaser enth. beide Daten
-		summ_txt = get_summary_pre(path, 'ZDF', skip_verf, skip_pubDate)
-		PLog(len(summ_txt)); 
-		if 	len(summ_txt) > len(descr):
-			descr= summ_txt
-			
-	PLog('title: %s, path: %s, img_src: %s, descr: %s, dauer: %s, enddate: %s, isvideo: %s' %\
-		(title,path,img_src,descr,dauer,enddate,isvideo))
-		
-	return title,path,img_src,descr,dauer,enddate,isvideo
-			
-#-------------------------
-def ZDF_get_img(page):
-	PLog('ZDF_get_img:')
-	#PLog(page)			# Debug
-	
-	page = page.replace('data-srcset=""',  '')		# möglich: data-srcset=""
-	
-	img =  stringextract('data-srcset="', ' ', page)
-	if img == '':
-		img = stringextract('-srcset="', ' ', page)
-	if img == '':
-		img =  stringextract('data-src="', ' ', page)
-		
-	if img.startswith('data:image'):				# gif-Pixelreihe
-		img = stringextract('srcset="https://www.zdf.de', ' ', page) 
-		
-	if img== '':									# Fallback, Altern.: icon-bild-fehlt.png
-		img= R('Dir-folder.png')
-		return img
-	img = img.replace('"', '')						# solte nicht vorkommen
-	
-	if img.startswith('http') == False:
-		img = ZDF_BASE + img
-	PLog(img)
-	return img
 #-------------------------
 # wertet die (teilw. unterschiedlichen) Parameter von
 #	class="bottom-teaser-box"> aus.
-# Aufrufer: ZDFRubrikSingle, get_teaserElement (loader-
+# Aufrufer: ZDF_Rubriken, get_teaserElement (loader-
 #	Beiträge), 
 #
 def ZDF_get_teaserbox(page):
@@ -8780,7 +8240,7 @@ def ZDF_get_teaserbox(page):
 	return teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi
 	
 #-------------------------
-# ermittelt html-Pfad in json-Listen für ZDFRubrikSingle
+# ermittelt html-Pfad in json-Listen für ZDF_Rubriken
 #	 z.Z. nicht benötigt s.o. (ZDF_BASE+NodePath+sophId)
 def ZDF_get_rubrikpath(page, sophId):
 	PLog('ZDF_get_rubrikpath: ' + sophId)
@@ -8798,188 +8258,10 @@ def ZDF_get_rubrikpath(page, sophId):
 		
 ####################################################################################################
 # ZDF Barrierefreie Angebote - Vorauswahl
-#	ARD siehe BarriereArmARD (Classic)
-# 06.04.2020 aktualisiert: Webseite geändert, nur kleine Übersicht, die 3
-#	Folgeseiten enthalten jeweils die neuestens Videos 
-# 13.12.2020 Anpassungen an Webseitenänderungen
-#
-def BarriereArm(title):				
-	PLog('BarriereArm:')
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')							# Home-Button
-	
-	# kleine Übersicht, Cache n.  erf.
-	path = ZDF_BARRIEREARM							# www.zdf.de/barrierefreiheit-im-zdf/
-	page, msg = get_page(path=path)	
-	if page == '':
-		msg1 = 'Seite kann nicht geladen werden.'
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return li 
-	PLog(len(page))
-	
-	# z.Z. 	>Gebärdensprache<
-	#		>Untertitel<
-	#		>Hörfilme<
-	content = blockextract('<section class="b-content-teaser-list"', page)
-	PLog(len(content))
-	content = blockextract('class="artdirect"', content[0])	# 2. Block: Service (nicht verw.)
-	PLog(len(content))
-	
-	if SETTINGS.getSetting('pref_usefilter') == 'true':
-		if 'Audiodeskription' or 'Hörfassung' in AKT_FILTER:
-			msg1 = 'Hinweis:'
-			msg2 = 'Filter für Hörfassungen und/oder Audiodeskription ist eingeschaltet!'
-			MyDialog(msg1, msg2, '')	
-	
-	i=0
-	for rec in content:	
-		i=i+1
-		ID = "ID_%d" % i						# Titel n. als iD geeignet
-		title = stringextract('class="teaser-text">', '</p>', rec)
-		title = title.replace('\n', ''); 
-		title = (title.replace('>', '').replace('<', '')); title = title.strip()
-				
-		path = stringextract('href="', '"', rec)
-		if path.startswith('http') == False:
-			path = ZDF_BASE + path
-			
-		img_src = ZDF_get_img(rec)	
-		
-		tag = u"Übersicht der neuesten Videos"
-		PLog(title); PLog(path); PLog(img_src); 
-		if u'Livestreams' in title:				# nur EPG, kein Video
-			PLog('skip: '  + title)
-			continue
-		
-		PLog("Satz7:")
-		PLog(title);	PLog(path)	
-		ID = 'BarriereArm_%s' % str(i)		
-		path=py2_encode(path); title=py2_encode(title);	
-		fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s'}" % (quote(path), quote(title), ID)
-		addDir(li=li, label=title, action="dirList", dirID="BarriereArmSingle", fanart=R(ICON_ZDF_BARRIEREARM),
-			thumb=img_src, fparams=fparams, tagline=tag)
-			
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-#-------------------------
-# Aufrufer: BarriereArm (ZDF Barrierefreie Angebote)
-#	ARD s. BarriereArmARD (Classic)
-#	2-facher Aufruf - Unterscheidung nach Titeln (class="title"):
-#		1. Übersichtseite (Titel)			- Rücksprung hierher
-#		2. Zielseite (z.B. einzelne Serie) 	- Sprung -> ZDFRubrikSingle
-# 01.08.2020 Anpassungen an  Webänderungen, einschl. lazyload-Beiträge
-# 21.05.2021 eneute Anpassung an Webänderung, zusätzl. Clusterung wie in 
-#	ZDF_Sendungen
-#	 
-def BarriereArmSingle(path, title, clus_title='', ID=''):
-	PLog('BarriereArmSingle: ' + title)
-	PLog(clus_title); PLog(path)
-	CacheTime = 6000								# 1 Std.
-			
-	li = xbmcgui.ListItem()	
-
-	msg=''
-	page = Dict("load", ID, CacheTime=CacheTime)
-	if page == False:								# Cache miss - vom Sender holen
-		page, msg = get_page(path=path)
-		Dict("store", ID, page) 					# Seite -> Cache: aktualisieren	
-	if page == '':							
-		msg1 = '%s: Seite kann nicht geladen werden.' % "BarriereArmSingle"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return li 
-		
-	PLog(len(page))
-	
-	# Cluster-Blöcke, dto. ZDFStart, nicht ZDF_Sendungen + ZDFRubrikSingle:
-	cluster =  blockextract('cluster-title-wrap', page)
-	PLog(len(cluster))
-	
-	if clus_title:								# 2. Aufruf: Beiträge zu Cluster-Titel auswerten
-		for clus in cluster:					# wie Abzweig_b_cluster in ZDF_Sendungen
-			clustertitle = ZDF_get_clustertitle(clus) # Entf. html-Tags dort
-			clustertitle = py2_decode(clustertitle)
-			# skip: javascript-erzeugte Inhalte - s. ZDFStart,
-			#	Bsp. Trending
-			if 'data-tracking-title=' in clus:
-				continue
-
-			ctitle_org = clustertitle			# für Abgleich
-			img_src = ZDF_get_img(clus)	
-			clustertitle = unescape(clustertitle); clustertitle = repl_json_chars(clustertitle) 
-			
-			clustertitle=py2_encode(clustertitle); path=py2_encode(path); 
-			ctitle_org=py2_encode(ctitle_org)	
-			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s', 'ID': '%s'}"	%\
-				(quote(clustertitle), quote(path), quote(ctitle_org), ID)						
-			addDir(li=li, label=clustertitle, action="dirList", dirID="ZDFRubrikSingle", fanart=R(ICON_DIR_FOLDER), 
-				thumb=img_src, tagline="Folgeseiten", fparams=fparams)
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			
-							
-	else:										# 1. Aufruf: nur Cluster-Titel + Bild listen 
-		li = home(li, ID='ZDF')							# Home-Button
-		for clus in cluster:
-			if u'könnten Dich interessieren' in clus: 	# Wiederholung der Cluster
-				continue
-			clustertitle = ZDF_get_clustertitle(clus)
-			clustertitle = py2_decode(clustertitle)
-			if 'Livestream' in clustertitle:
-				continue
-			img = R(ICON_DIR_FOLDER)					# Fallback
-			img_src =  stringextract('class="m-16-9"', '</picture>', clus)
-			img_src =  blockextract('https://', img_src, ' ')
-			for img in img_src:
-				if '720' in img or '1080' in img:
-					break
-			
-			content = blockextract('class="b-cluster-teaser', clus)	# Beiträge/Cluster einschl. lazyload
-			tag = u"%d Beiträge" % len(content)
-			PLog("Satz15:")
-			PLog(clustertitle); PLog(img); PLog(tag)
-		 
-			clustertitle=py2_encode(clustertitle); path=py2_encode(path); 
-			fparams="&fparams={'title': '%s', 'path': '%s', 'clus_title': '%s', 'ID': '%s'}" %\
-				(quote(clustertitle), quote(path), quote(clustertitle), ID)
-			addDir(li=li, label=clustertitle, action="dirList", dirID="BarriereArmSingle", fanart=img, 
-				thumb=img, fparams=fparams, tagline=tag)	
-								
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			
-####################################################################################################
-# Leitseite zdf-sportreportage - enthält Vorschau mit Links zu den Reportageseiten - Auswertung in
-#	ZDFSportLiveSingle. 
-#	Angefügt: Button für zurückliegende Sendungen der ZDF-Sportreportage.
-#	Angefügt: Button für Sprung zum Livestream (unabhängig vom Inhalt)
-#	Angefügt: Button für Sprung zu Ganze Wettbewerbe	05.12.2020
-# Bei aktivem Livestream wird der Link vorangestellt (Titel: rot/bold),
-# Stream am 27.04.2019: 
-#	http://zdf0304-lh.akamaihd.net/i/de03_v1@392855/master.m3u8
-#		ohne Zusatz (Web-Url) ?b=0-776&set-segment-duration=quality
-# 29.04.2019 Button für Livestream wieder entfernt (Streams wechseln), dto. Eintrag livesenderTV.xml
-# 20.12.2020 Eventstreams aufgenommen (analog ARDSport)
-# 12.11.2021 Einfügung zeitl. begrenzter Events (Wintersport, Handball-WM) - ähnl. ARDSportPanel
-# 27.05.2021 Live-Videolink nicht mehr in Webseite - Ermittlung via apiToken in ZDF_getVideoSources
-# 21.08.2021 ZDFSportLive + ZDFSportLiveSingle entfernt - abgedeckt durch Rubrik Sport 
-#	(mit Auswertung der Navi.-Leiste). ZDFSportEvents weiter genutzt (ZDFRubrikSingle).
-#	Ebenfalls entfernt: ZDFRubrikSingleCall (Nutzung ZDFSportLive zur Vermeidung 'setLabel'-error).
+# 25.04.2023 Funktionen BarriereArm + BarriereArmSingle
+#	gelöscht - neu in ZDF_Start -> ZDF_RubrikSingle
 ####################################################################################################
 
-def ZDFSportEvents():
-	PLog('ZDFSportEvents:');
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')						# Home-Button
-	
-
-	channel = u'ZDF Event Streams (eingeschränkt verfügbar)'									
-	img = R("zdf-sportlive.png")				# dummy	
-	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender='')
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
-	 			
-####################################################################################################
 def International(title):
 	PLog('International:'); 
 	title_org = title
@@ -9002,438 +8284,7 @@ def International(title):
 	
 	ZDF_Sendungen(path, title, ID, page=page)
 				
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-####################################################################################################
-# Auswertung von ZDF-Seiten ohne Cluster (bzw. page auf Inhalt eines Clusters reduziert)
-#	Cluster-Auswertung in ZDF_Sendungen -> ZDFRubrikSingle
-# 	ID='Search' od. 'VERPASST' - Abweichungen zu Rubriken + A-Z
-#	Seiten mit Einzelvideos werden hier nicht erfasst - ev. vor
-#		Aufruf Vorprüfung 'class="artdirect"' durchführen
-#	enthält "Inhaltstext im Voraus laden"
-#	Änderungen Webseite nachziehen: SearchARDundZDF, SearchARDundZDFnew,
-#		ZDF_Search, ZDFSportLive, Tivi_Search (Modul childs).
-#	Blockbereich für VERPASST erweitert (umfasst data-station)
-#	08.01.2021 Anpassung an geänderte Formate bei Hochkant-Videos.
-# mark: farbige Markierung in title (wie ARDSearchnew -> get_json_content) 
-#
-def ZDF_get_content(li, page, ref_path, ID=None, sfilter='Alle ZDF-Sender', skip_list='', mark=''):	
-	PLog('ZDF_get_content:'); PLog(ref_path); PLog(ID); PLog(sfilter); 
-	PLog(len(page));
-
-	max_count = 0; content=[]
-	PLog(max_count)
-	
-	if page == '':											# Aufruf via Button
-		page, msg = get_page(ref_path)
-		if page == '':
-			msg1 = 'Seite kann nicht geladen werden.'
-			msg2 = msg
-			MyDialog(msg1, msg2, '')
-			return	
-		
-	img_alt = teilstring(page, 'class=\"m-desktop', '</picture>') # Bildsätze für b-playerbox
-		
-	page_title = stringextract('<title>', '</title>', page)  # Seitentitel
-	page_title = page_title.strip()
-	msg_notfound = ''
-	if 'Leider kein Video verf' in page:					# Verfügbarkeit vor class="artdirect"
-		msg_notfound = u'Leider kein Video verfügbar'		# z.B. Ausblick auf Sendung
-		if page_title:
-			msg_notfound = u'Leider kein Video verfügbar zu: ' + page_title
-	
-	if  ID == 'STAGE':										# Highlights (dto. funk + tivi)
-		content = blockextract('class="stage-wrap ', page, "</article>")  # mit Blank + Begrenzung
-		stage_url_list=[]
-				
-	if ID == 'VERPASST' or ID == 'Search':
-		content = blockextract('class="b-content-teaser-item', page) 
-		
-	if len(content) == 0:									# Fallback artdirect
-		content = blockextract('<picture class="artdirect"', page) # tivi: doppelt  (is-tivi,is-not-tivi)
-																														
-	# 27.03.2020 Hochkant-Videos (neues ZDF-Format bei Nachrichten)
-	#	Auswirkung: thumb + brand (s.u.)
-	# 08.01.2020 Blocks entfernt - Format geändert, s.u. ("PlakatTeaser")	
-
-	if 'data-module="zdfplayer"' in page:					# Playerbox-Videos
-		if "www.zdf.de/kinder" not in ref_path:				# tivi: doppel vermeiden
-			if ID != 'ZDF_Sendungen':						# Playerbox-Videos schon ausgewertet	
-				zdfplayer = blockextract('data-module="zdfplayer"', page, '</article>')
-				PLog('zdfplayer: ' + str(len(zdfplayer)))
-				content = zdfplayer	+ content				# Blöcke content voranstellen
-		
-#---------------------------		
-	if len(content) == 0:
-		msg_notfound = 'Video ist leider nicht mehr oder noch nicht verfügbar'
-
-	if len(content) == 0:									# Ausleitung Einzelbeiträge ohne icon-502
-		cnt = ZDF_get_playerbox(li, page)					# Format: Titel##Thumb###tagline
-		if cnt > 0:
-			PLog('AusleitungEinzelbeitrag1')
-			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			return #li, 0
-
-	if len(content) == 0:									# Ausleitung ZDF_Bildgalerien
-		if "gallery-slider-box" in page:
-			PLog('AusleitungBildgalerie')
-			ZDF_BildgalerieSingle(ref_path, page_title, li)		
-			return 	# ohne: Video nicht mehr ..			
-	
-	page_cnt = len(content)
-	PLog('content_Blocks: ' + str(page_cnt));			
-	
-	if page_cnt == 0:											# kein Ergebnis oder allg. Fehler
-		if 'class="b-playerbox' not in page and 'class="item-caption' not in page: # Einzelvideo?
-			s = 'Es ist leider ein Fehler aufgetreten.'				# ZDF-Meldung Server-Problem
-			if page.find('\"title\">' + s) >= 0:
-				msg_notfound = s + ' Bitte versuchen Sie es später noch einmal.'
-			else:
-				msg_notfound = 'Leider keine Inhalte gefunden.' 	# z.B. bei A-Z für best. Buchstaben 
-				if page_title:
-					msg_notfound = 'Leider keine Inhalte gefunden zu: ' + page_title
-				
-			PLog('msg_notfound: ' + str(page_cnt))
-	
-	if msg_notfound:											# gesamte Seite nicht brauchbar		
-		msg1 = msg_notfound
-		MyDialog(msg1, '', '')
-		return li, 0
-						
-	# Block '<picture class="artdirect"' kann 'class="b-playerbox' enthalten, z.B. als Trailer
-	#	wird hier getrennt erfasst und in der Schleife verworfen (s.u.)
-	if page.find('class="b-playerbox') > 0 and page.find('class="item-caption') > 0:  # mehrspaltig: Video gesamte Sendung?
-		first_rec = img_alt +  stringextract('class="item-caption', 'data-tracking=', page) # mit img_alt
-		content.insert(0, first_rec)							# an den Anfang der Liste
-		# PLog(content[0]) # bei Bedarf
-
-	PLog(len(content))
-
-	mediatype=''												# Kennz. Video für Sofortstart
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
-			
-	#---------------------------		
-	items_cnt=0													# Zähler listitems
-	href_list=[]
-	for rec in content:	
-		PLog("items_cnt: %d" % items_cnt)
-		teaser_nr=''; teaser_brand=''; poster=False			
-		if rec.startswith('data-module="zdfplayer"'): 			# Playerbox(en) auswerten 
-			PLog("data-module=zdfplayer")
-			PLog(rec[:80])				
-			if SETTINGS.getSetting('pref_usefilter') == 'true':	# Filter - s.a. neuer_Satz
-				filtered=False
-				for item in AKT_FILTER: 
-					if up_low(item) in py2_encode(up_low(rec)):
-						filtered = True
-						break		
-				if filtered:
-					PLog('filtered: ' + 'data-module="zdfplayer"')
-					continue
-
-			p_cnt = ZDF_get_playerbox(li, page=rec, skip_list=skip_list)	
-			items_cnt = items_cnt + p_cnt		
-			continue
-			
-		# loader:  enthält bei Suche Links auch wenn weiterer Inhalt fehlt. 
-		#			Bei Verpasst u.a. enthält er keinen Link
-		if 'class="loader"></span>Weitere laden' in rec:	# Loader erreicht=Ende 
-			href = stringextract('load-more-container">', 'class="loader">', rec)
-			href = stringextract('href="', '"', href)
-			PLog('href_loader:' + href)
-			if href:
-				PLog('exit_next')
-				return li, 'next'
-		
-		if 'class="b-playerbox' in rec:				# vor Schleifenstart bereits getrennt behandelt,
-			pos = rec.find('class="b-playerbox')	#	kann Trailer-Url in plusbar enthalten
-			rec = rec[:pos]
-		
-		if 'data-module="plusbar"' not in rec:	
-			pos = rec.find('</article>')		   	# Satz begrenzen - bis nächsten Satz nicht verwertbare 
-			if pos > 0:								# 	Inhalte möglich
-				rec = rec[0:pos]
-				# PLog(rec)  # bei Bedarf
-		
-		if ID != 'DEFAULT':								# DEFAULT: Übersichtsseite ohne Videos, Bsp. Sendungen A-Z
-			if ID != 'A-Z' and ID != 'STAGE':	
-				if 'icon-502_play' not in rec :  		# Videobeitrag? auch ohne Icon möglich
-					if u'>Videolänge' not in rec: 
-						if '>Trailer<' not in rec: 		# Trailer o. Video-icon-502
-							PLog('Beitrag_fehlt')
-							continue
-		
-		multi = False			# steuert Mehrfachergebnisse 
-		thumb = ZDF_get_img(rec)
-						
-		teaser_label = stringextract('class="teaser-label"', '</div>', rec) # auch möglich: noch 7 Stunden
-		teaser_typ =  stringextract('<strong>', '</strong>', teaser_label)
-		if u"teaser-episode-number" in rec:
-			teaser_nr = stringextract('teaser-episode-number">', '</', rec)
-		if teaser_typ == u'Beiträge':		# Mehrfachergebnisse ohne Datum + Uhrzeit
-			multi = True
-			summary = dt1 + teaser_typ 		# Anzahl Beiträge
-			
-		# teaser_brand bei Staffeln (vor Titel s.u.):
-		teaser_brand = stringextract('class="teaser-cat-brand-ellipsis">', '</span>', rec) # "<a href" n. eindeutig
-		teaser_brand = cleanhtml(teaser_brand); teaser_brand = mystrip(teaser_brand)
-		PLog('teaser_brand: ' + teaser_brand)
-		
-		# 20.02.2021 neue Staffel-Info in teaser_info, angehängt in tag
-		teaser_info = stringextract('"teaser-info"', '>', rec)
-		if "Staffel" in teaser_info:
-			teaser_info = stringextract('aria-label="', '"', teaser_info)
-		else:
-			teaser_info=''
-		PLog('teaser_info: ' + teaser_info)						# ev. Doppel mit duration, s.u.
-			
-		subscription = stringextract('is-subscription="', '"', rec)	# aus plusbar-Block	
-		PLog(subscription)
-		if subscription == 'true':						
-			multi = True
-			teaser_count = stringextract('</span>', '<strong>', teaser_label)	# bei Beiträgen
-			stage_title = stringextract('class="stage-title"', '</h1>', rec)  
-			summary = teaser_count + ' ' + teaser_typ 
-
-		# Titel	
-		href_title = stringextract('<a href="', '>', rec)		# href-link hinter teaser-cat kann Titel enthalten
-		href_title = stringextract('title="', '"', href_title)
-		if teaser_brand and href_title:							# bei Staffeln, Bsp. Der Pass , St. 01 - Finsternis
-			if teaser_brand != href_title:
-				if ID != 'A-Z':
-					href_title = "%s: %s" % (teaser_brand, href_title)
-			
-		href_title = unescape(href_title)
-		PLog('href_title: ' + href_title)
-		if 	href_title == '' and ID == "A-Z":
-			continue
-		if 	href_title == 'ZDF Livestream' or href_title == 'Sendung verpasst':
-			continue
-		if 	'<strong>Livestream</strong>' in rec:				# Livestreammarkierung, z.B. Send. m. Gebärdenspr.
-			continue
-			
-		# Pfad, Enddatum. 01.12.2020 plusbar_path kann fehlen, z.B. bei ZDF_Search			
-		plusbar_title = stringextract('plusbar-title="', '"', rec)	# Bereichs-, nicht Einzeltitel, nachrangig
-		plusbar_path  =  stringextract('plusbar-url="', '"', rec)	# plusbar nicht vorh.? - sollte nicht vorkommen
-		enddate	= stringextract('plusbar-end-date="', '"', rec)		# kann leer sein
-		enddate = time_translate(enddate, add_hour=False, day_warn=True)# Abgleich summer_time entfällt für ZDF 
-		
-		PLog('plusbar_path: ' + plusbar_path); PLog('ref_path: %s' % ref_path); PLog('enddate: ' + enddate);
-		if plusbar_path == '':
-			plusbar_path = stringextract('<a href="', '"', rec)
-			if plusbar_path.startswith('http') == False:
-				plusbar_path = ZDF_BASE + plusbar_path
-		if plusbar_path == ref_path:								# Selbstreferenz
-			continue
-		
-		# Datum, Uhrzeit Länge	
-		if 'icon-301_clock icon' in rec:					# Uhrsymbol  am Kopf mit Datum/Uhrzeit
-			teaser_label = stringextract('class="teaser-label"', '</div>', rec)	
-			PLog('teaser_label: ' + teaser_label)
-			video_datum =  stringextract('</span>', '<strong>', teaser_label)   
-			video_time =  stringextract('<strong>', '</strong>', teaser_label)
-		else:
-			if '<time datetime="' in rec:						# Datum / Zeit können fehlen
-				datum_line =  stringextract('<time datetime="', '/time>', rec) # datetime="2017-11-15T20:15:00.000+01:00">15.11.2017</time>
-				video_datum =  stringextract('">', '<', datum_line)
-				video_time = datum_line.split('T')[1]
-				video_time = video_time[:5] 
-			else:
-				video_datum=''; video_time=''			
-		PLog(video_datum); PLog(video_time);
-							
-		PLog("Videolänge1:");
-		duration = ZDF_getDuration(rec)								# ev. Doppel mit teaser_info
-		if teaser_info == duration:
-			teaser_info=''
-			
-		if 	'<strong>Livestream</strong>' in rec:
-			duration = u'[B]Livestream[/B]'	
-		duration = duration.strip()
-		PLog('duration: ' + duration);
-		if duration == '':											# Search: icon-502_play vorh., duration nicht
-			multi = True
-					
-		title = href_title 
-		if title == '':
-			title = plusbar_title
-		if title.startswith(' |'):
-			title = title[2:]				# Korrektur
-			
-		if mark:
-			PLog(title); PLog(mark)
-			title = title.strip() 
-			title = make_mark(mark, title, "", bold=True)	# farbige Markierung
-
-		station=''
-		if ID == 'VERPASST':
-			if 'class="special-info">' in rec:						
-				sendtime = stringextract('class="special-info">', '</', rec)
-				title = "[COLOR blue]%s[/COLOR] | %s" % (sendtime, title)	# Sendezeit | Titel
-			station = stringextract('data-station="', '"', rec)
-			station = station.strip()
-			PLog("sfilter: " + sfilter); PLog(station); 
-			if sfilter == "Alle ZDF-Sender":						# Filterung
-				if station == "undefined":
-					station = "nicht eindeutig"
-			else:
-				if sfilter != station or station == "undefined":	# undefined nur für "Alle ZDF-Sender"
-					continue
-			
-		category = stringextract('teaser-cat-category">', '</span>', rec)
-		PLog(category)
-		category = mystrip(category)
-		brand = stringextract('teaser-cat-brand">', '</span>', rec)
-		brand = mystrip(brand)
-		# z.Z.nicht genutzt:
-		# teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi = ZDF_get_teaserbox(rec)
-			
-		tagline = video_datum
-		video_time = video_time.replace('00:00', '')				# ohne Uhrzeit
-		if video_time:
-			tagline = tagline + ' | ' + video_time
-		if duration:
-			tagline = tagline + ' | ' + duration
-		if category:
-			tagline = tagline + ' | ' + category
-		if brand:
-			tagline = tagline + ' | ' + brand
-		if teaser_info:
-			tagline = tagline + ' | ' + teaser_info
-		if tagline.startswith(' |'):
-			tagline = tagline[2:]			# Korrektur
-		if station:
-			tagline = "%s | Sender: [B]%s[/B]" % (tagline, station)
-		if enddate:
-			tagline = u"%s\n\n[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (tagline, enddate)
-			
-		descr = stringextract('description">', '<', rec)
-		if descr == '':
-			descr = stringextract('teaser-text">', '<', rec) # mehrere Varianten möglich
-		if descr == '':
-			descr = stringextract('class="teaser-text" >', '<', rec)
-		descr = mystrip(descr)
-		PLog('descr:' + descr)		# UnicodeDecodeError möglich
-		if descr:
-			summary = descr
-			if teaser_nr:
-				summary = "Episode %s | %s" % (teaser_nr, summary)
-				title = "[%2s] %s" % (teaser_nr, title)
-		else:
-			summary = href_title
-			
-		# Kurzform icon-502_play in https://www.zdf.de/sport/zdf-sportreportage
-		if 	'icon-502_play' not in rec and 'icon-301_clock' not in rec or ID == "A-Z":
-			PLog('icon-502_play und icon-301_clock nicht gefunden')
-			if plusbar_title.find(' in Zahlen') > 0:	# Statistik-Seite, voraus. ohne Galeriebilder 
-				continue
-			if plusbar_title.find('Liveticker') > 0:	#   Liveticker und Ergebnisse
-				continue
-			if plusbar_path.find('-livestream-') > 0:	#   Verweis Livestreamseite
-				continue
-			multi = True			# weitere Folgeseiten mit unbekanntem Inhalt, ev. auch Videos
-			tagline = 'Folgeseiten'
-		
-		if multi == True:			
-			tagline = 'Folgeseiten'
-		
-		title = mystrip(title)
-		title = unescape(title)	
-		summary = unescape(summary)
-		summary = cleanhtml(summary)		
-		tagline = unescape(tagline); tagline = tagline.strip()
-		tagline = cleanhtml(tagline)
-		
-		title=repl_json_chars(title)						# json-komp. für func_pars in router()
-		summary=repl_json_chars(summary)					# dto.
-		tagline=repl_json_chars(tagline)					# dto.
-		
-							
-		PLog("check_full_shows")							# full_show in summary: ganze Sendungen rot+fett
-		if ID != 'EPG' and  duration != '':
-			if ID != 'Search': 								# bei Suche Absturz nach Video-Sofortstart
-				title_samml = "%s|%s|%s" % (title, category, brand)
-				title = full_shows(title, title_samml, summary, duration, "full_shows_ZDF")
-		
-		# ab 08.01.2021 in Sätzen mit class="b-cluster-poster-teaser:
-		if '"element": "PlakatTeaser"' in rec:
-			track = stringextract("data-track='{", '<div', rec)
-			form =  stringextract('format": "', '"', track)
-			title =  stringextract('Teaser:', '|', track)
-			plusbar_path =  stringextract('Linkziel:', '"', track)
-			if plusbar_path.startswith('http') == False:
-				plusbar_path = ZDF_BASE + plusbar_path
-			tagline = "Format: %s | %s" % (form, tagline)
-			
-		if title.strip() in u"Über ZDFtivi : Kontakt ZDFtivi":	# skip tivi 
-			continue
-					
-		if ID == 'STAGE':										# einige Stage-Beiträge im Web doppelt vorh.
-			if plusbar_path in stage_url_list:
-				continue
-			else:
-				stage_url_list.append(plusbar_path)
-		
-		#if plusbar_path != '':									# bisher nicht benötigt
-		#	if check_urlend(plusbar_path,skip_list):			# Url-Enden vergleichen 
-		#		PLog("skip: " + plusbar_path)
-		#		continue
-		
-		if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
-			filtered=False
-			for item in AKT_FILTER: 
-				if up_low(item) in py2_encode(up_low(rec)):
-					filtered = True
-					break		
-			if filtered:
-				continue
-				
-							
-		PLog('neuer_Satz:')
-		PLog(thumb);PLog(plusbar_path);PLog(title);PLog(summary);PLog(tagline); PLog(multi);
-		 
-		if multi == True:
-			plusbar_path=py2_encode(plusbar_path); title=py2_encode(title);
-			fparams="&fparams={'url': '%s', 'title': '%s', 'ID': '%s'}" % (quote(plusbar_path), 
-				quote(title), ID)
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=thumb, 
-				thumb=thumb, fparams=fparams, summary=summary, tagline=tagline)
-		else:											# Einzelseite	
-														# summary (Inhaltstext) im Voraus laden falls 
-														#	 leer oder identisch mit title:										
-			tag_par = tagline					
-			tag_par = "%s||||%s" % (tag_par, summary)	
-			if SETTINGS.getSetting('pref_load_summary') == 'true':	# Voraustext gefragt?
-				skip_verf=False; skip_pubDate=False
-				if u'Verfügbar' in tagline:
-					skip_verf = True
-				summ_txt = get_summary_pre(plusbar_path, 'ZDF', skip_verf, skip_pubDate)
-				PLog(len(summary));PLog(len(summ_txt)); 
-				if 	len(summ_txt) > len(summary):
-					tag_par= "%s\n\n%s" % (tagline, summ_txt)
-					tag_par = tag_par.replace('\n', '||')
-					summary = summ_txt	
-						
-			tag = tag_par.replace('||', '\n')		# Tag-Label
-			tag_par = tag_par.replace('\n', '||')	# json-komp. für func_pars in router()					
-			tagline=repl_json_chars(tagline)		# json-komp. für func_pars in router()	
-			plusbar_path=py2_encode(plusbar_path); title=py2_encode(title);
-			thumb=py2_encode(thumb); tag_par=py2_encode(tag_par);			
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s'}" %\
-				(quote(plusbar_path), quote(title), quote(thumb), quote(tag_par))	
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", 
-				fanart=thumb, thumb=thumb, fparams=fparams, tagline=tag, mediatype=mediatype)
-				
-		items_cnt = items_cnt+1
-		
-	if items_cnt == 0:								# Ausleitung Einzelbeiträge ohne icon-502 
-		if 'data-module="zdfplayer"' in page or 'class="stage-wrapper">' in page:			
-			PLog('AusleitungEinzelbeitrag2')
-			ZDF_get_playerbox(li, page)
-			return li, 0
-
-	return li, page_cnt 
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 #-----------------------------------------------------------------------
 # vergleicht Titel + Länge eines Beitrags mit den Listen full_shows_ZDF,
@@ -9495,239 +8346,6 @@ def full_shows(title, title_samml, summary, duration,  fname):
 				break		
 	PLog("%s_return: %s" % (ret, title))
 	return title
-#-----------------------------------------------------------------------
-# class="b-playerbox in page auswerten (1 od. mehrere)
-# Aufrufer: ZDFRubrikSingle, ZDF_get_content, ZDF_Sendungen
-# 20.08.2021 erweitert um Stage-Content - horiz. Scrollrahmen ähnlich 
-#	zdfplayer, Bsp.: zdf.de/kultur - Bezeichn. im Addon: Stagebox
-#	"zdfplayer"' in Stage-Content möglich (s.u. continue), Bsp. zdf.de/kinder
-# 22.11.2021 skip_list für Abgleich
-#
-def ZDF_get_playerbox(li, page, skip_list=[]):									
-	PLog('ZDF_get_playerbox:')
-
-	p_cnt=0; 
-	mediatype=''									# Kennz. Video für Sofortstart
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
-													# Playerbox
-	boxes = blockextract('data-module="zdfplayer"', page, '</article>')
-	PLog(len(boxes))
-	for box in boxes:	
-		PLog(box[:80])
-		url,apiToken,sid,descr_display,descr,title,img = ZDF_getKurzVideoDetails(box)
-		tag = "[B]Playerbox-Video[/B]\n\n%s" % descr_display
-		if '"isLivestream": true' in box:
-			tag = "[B]Jetzt live[/B] | %s" % tag
-		if 'Laufzeit Livestream' in box:
-			dauer = stringextract('aria-label="Laufzeit Livestream', '"', box)
-			dauer = 'Laufzeit Livestream ' + dauer
-			tag = "%s\n%s" % (tag, dauer)
-		
-		summ=''
-		if descr_display == '':	
-			summ = descr
-		#if summ and descr_display:
-		#	summ = "%s\n%s" % (summ, descr_display)
-			
-		if url != '':
-			if check_urlend(url,skip_list):			# Url-Enden vergleichen 
-				PLog("skip: " + url)
-				continue
-			else:
-				skip_list.append(url)	
-
-		PLog("Satz24:")
-		PLog(url); PLog(title); PLog(img); PLog(sid); PLog(apiToken[:80]);
-		title=py2_encode(title); descr=py2_encode(descr);
-		# sid="": ZDF_getVideoSources soll url neu laden
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s', 'apiToken': '%s', 'sid': '%s'}" %\
-			(quote(url),quote(title), quote(img), quote(descr), quote(apiToken), "")
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
-			fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
-		p_cnt=p_cnt+1	
-			
-	#-------------									# Stagebox (Stage-Content)
-	PLog("Stagebox_Check")				
-	if 'class="stage-wrapper">' in page and 'stageitemscroller' in page:
-		# stage-wrap m-small od. ..-large. Blockende. z.Z nur  'stageitemscroller' genutzt:
-		boxes = blockextract('class="stage-wrap m-', page, 'stageitemscroller')
-		PLog(len(boxes))
-		for box in boxes:
-			if 'data-module="zdfplayer"' in box:	# Vorkommen möglich, bereits erfasst
-				continue
-			PLog(box[:80])
-			title,path,img,descr,dauer,enddate,isvideo = ZDF_get_teaserDetails(box)		
-
-			tag = "[B]Stagebox-Video[/B]"
-			if isvideo == False:
-				tag = "%s | Folgeseiten" % tag
-			tag = "%s\n\n%s" % (tag, descr)
-			tag_par = tag.replace('\n', '||')
-
-			if path != '':
-				if check_urlend(path,skip_list):			# Url-Enden vergleichen 
-					PLog("skip: " + path)
-					continue
-				else:
-					skip_list.append(path)	
-				
-			PLog("Satz25:")
-			PLog(path); PLog(title); PLog(img);
-			title=py2_encode(title); descr=py2_encode(descr);
-			path=py2_encode(path); tag_par=py2_encode(tag_par);
-			# sid="": ZDF_getVideoSources soll url neu laden
-			
-			if isvideo == False:					# Mehrfachbeiträge
-				ID = "ZDF_get_playerbox"
-				fparams="&fparams={'title': '%s', 'url': '%s', 'ID': '%s', 'tagline': '%s', 'thumb': '%s'}"	%\
-					(quote(title),  quote(path), quote(ID), quote(tag_par), quote(img))
-				addDir(li=li, label=title, action="dirList", dirID="ZDF_Sendungen", fanart=img, 
-					thumb=img, tagline=tag, fparams=fparams)
-				
-			else:
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s', 'apiToken': '%s', 'sid': '%s'}" %\
-					(quote(path),quote(title), quote(img), quote(tag_par), "", "")
-				addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
-					fparams=fparams, tagline=tag, mediatype=mediatype)
-			p_cnt=p_cnt+1	
-			
-	#-------------									# Carousel-Box (Stage-Content) ohne zdfplayer - ungetestet
-	PLog("carousel_Check")				
-	if 'video-carousel-item' in page:
-		# stage-wrap m-small od. ..-large. Blockende. z.Z nur  'stageitemscroller' genutzt:
-		boxes = blockextract('video-carousel-item', page)
-		PLog(len(boxes))
-		for box in boxes:
-			if 'data-module="zdfplayer"' in box:	# Vorkommen möglich, bereits erfasst
-				continue
-			PLog(box[:80])
-			title,path,img,descr,dauer,enddate,isvideo = ZDF_get_teaserDetails(box)	
-			url=path	
-			tag = "[B]Stagebox-Video[/B]"
-			
-			if url != '':
-				if check_urlend(url,skip_list):			# Url-Enden vergleichen 
-					PLog("skip: " + url)
-					continue
-				else:
-					skip_list.append(url)	
-
-			PLog(url); PLog(title); PLog(img); PLog(sid); PLog(apiToken[:80]);
-			title=py2_encode(title); descr=py2_encode(descr);
-			# sid="": ZDF_getVideoSources soll url neu laden
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'tagline': '%s', 'apiToken': '%s', 'sid': '%s'}" %\
-				(quote(url),quote(title), quote(img), quote(descr), quote(apiToken), "")
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_getVideoSources", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag, mediatype=mediatype)
-			p_cnt=p_cnt+1	
-
-	return p_cnt
-
-####################################################################################################
-# Subtitles: im Kopf der videodat-Datei enthalten (Endung .vtt). Leider z.Z. keine Möglichkeit
-#	bekannt, diese in Plex-Plugins einzubinden. Umsetzung in Kodi-Version OK (s. get_formitaeten).
-# Ladekette für Videoquellen s. get_formitaeten
-# tagline enthält hier tagline + summary (tag_par von ZDF_get_content)
-# Auswertung Kurzvideos (Block 'data-module="zdfplayer" ') in ZDF_get_playerbox/
-#	ZDF_getKurzVideoDetails
-#	Aufrufer ZDF_get_content + ZDFSportLiveSingle
-# 
-def ZDF_getVideoSources(url,title,thumb,tagline,Merk='false',apiToken='',sid='',nohome=''):
-	PLog('ZDF_getVideoSources:'); PLog(url); PLog(tagline); 
-	PLog(title); 
-	title=unescape(title); title_org=title; url_org=url
-	urlSource = url			
-	li = xbmcgui.ListItem()
-		
-	page, msg = get_page(url)									# Test auf zdfplayer-Modul
-	PLog('data-module="zdfplayer"' in page)						# o. zdfplayer?
-	PLog('"icon-502_play' in page)								# 	und o.icon-502_play?
-	# mit icon-502_play weiter bei len(formitaeten) == 0:
-	if page.find('data-module="zdfplayer"') == -1 and page.find('"icon-502_play') == -1:
-		PLog("zdfplayer_Modul_Test")
-		msg1 = 'ZDF_getVideoSources: (noch) keine Videoquelle gefunden zu'
-		msg2 = "[B]>%s<[/B]" % title
-		msg3 = "oder Beitrag existiert nicht mehr"
-		MyDialog(msg1, msg2, msg3)
-		return li
-		
-			
-	# ab hier normale Auswertung (Einzelbeitrag)
-	# ab 08.10.2017 dyn. ermitteln (wieder mal vom ZDF geändert)
-	# 12.01.2018: ZDF verwendet nun 2 verschiedene Token - s. get_formitaeten: 1 x profile_url, 1 x videodat_url
-	# 29.03.2020: bei Kurzvideos nur 1 apiToken - ermittelt in ZDF_get_content
-	scms_id=sid													# Vorbelegung für Sport Live
-	if apiToken and sid:
-		apiToken1 = apiToken; apiToken2=apiToken1
-		page=''
-	else:
-		if page == '':
-			msg1 = 'ZDF_getVideoSources: Problem beim Abruf der Videoquellen.'
-			msg2 = msg
-			MyDialog(msg1, msg2, '')
-			return li
-
-		apiToken1 = stringextract('apiToken: \'', '\'', page) 	# Bereich window.zdfsite
-		apiToken2 = stringextract('"apiToken": "', '"', page)
-		sid = stringextract("docId: \'", "\'", page)				
-		scms_id = stringextract("externalId: \'", "\'", page)	# für hbbtv-Quellen	
-			
-	PLog('apiToken1: %s, apiToken2: %s, sid: %s' % (apiToken1[:80], apiToken2[:80], sid))
-					
-	# -- Ende Vorauswertungen
-	if nohome != '':									# z.B. nach ZDF_get_playerbox
-		if "www.zdf.de/kinder" in urlSource:
-			li = home(li, ID='Kinderprogramme')			# Home-Button
-		else:
-			li = home(li, ID='ZDF')						# Home-Button
-
-	formitaeten,duration,geoblock, sub_path = get_formitaeten(sid, apiToken1, apiToken2)	# Video-URL's ermitteln
-	PLog("formitaeten: %d" % len(formitaeten))
-
-	#------------ 										# Nachprüfung auf Videos
-	# 06.02.2021 Kennz. "nicht mehr verfügbar" z.B. bei Mehr-Suche (redak. Inhalte zu
-	#	vergangenen Videos, formitaeten liefern dann falsche Quellen bei ptmd-template)
-	if len(formitaeten) == 0:							# letzte Chance für Inhalte
-		if 'picture class="artdirect"' in page and '"icon-502_play' in page: 
-			ID="ZDF_getVideoSources"
-			ZDF_Sendungen(urlSource, title, ID)
-			return
-
-		if u"Video leider nicht mehr verfügbar" in page:			
-			msg1 = u'Video nicht (mehr) vorhanden / verfügbar.'
-			msg2 = u'Titel: %s' % unquote(title)
-			MyDialog(msg1, msg2, '')
-			return li	
-	#------------		
-		
-				
-	if tagline:
-		if 'min' in tagline == False:	# schon enthalten (aus ZDF_get_content)?
-			tagline = tagline + " | " + duration
-	else:
-		tagline = duration
-	
-
-	HLS_List,MP4_List,HBBTV_List = build_Streamlists(li,title,thumb,geoblock,tagline,\
-		sub_path,formitaeten,scms_id,ID="ZDF")
-	#----------------------------------------------- 	
-
-	# MEHR_Suche (wie ZDF_Sendungen) - bei Verpasst-Beiträge Uhrzeit abschneiden:
-	if '|' in title_org:						# Bsp. Verpasst:  "04:20 Uhr | Abenteuer Winter.."
-		title_org = title_org.split('|')[1].strip()
-	label = u"Alle Beiträge im ZDF zu >%s< suchen"  % title_org
-	query = title_org.replace(' ', '+')	
-	tagline = u"zusätzliche Suche starten"
-	summ 	= u"suche alle Beiträge im ZDF, die sich auf >%s< beziehen" % title_org
-	s_type	= 'MEHR_Suche'						# Suche alle Beiträge (auch Minutenbeiträge)
-	query=py2_encode(query); 
-	fparams="&fparams={'query': '%s', 's_type': '%s'}" % (quote(query), s_type)
-	addDir(li=li, label=label, action="dirList", dirID="ZDF_Search", fanart=R(ICON_MEHR), 
-		thumb=R(ICON_MEHR), fparams=fparams, tagline=tagline, summary=summ)
-		
-			
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #-------------------------
 # Bau HLS_List, MP4_List, HBBTV_List (nur ZDF + Arte)
@@ -10177,217 +8795,6 @@ def form_HBBTV_Streams(stream_list, label, title):
 		HBBTV_List.append(item)	
 		
 	return HBBTV_List
-	 
-#-------------------------
-# Aufrufer: ZDF_get_playerbox
-# Blockmerkmal 'data-module="zdfplayer"'
-def ZDF_getKurzVideoDetails(rec):
-	PLog('ZDF_getKurzVideoDetails:')
-	
-	pos = rec.find('data-module="zdfplayer"')			# Vorspann abschneiden 
-	rec = rec[pos:]
-	
-	descr_display=''; video_datum=''; video_time=''
-	apiToken = stringextract('apiToken": "', '"', rec)  # hier nur 1 apiToken
-	sid = stringextract('data-zdfplayer-id="', '"', rec)
-
-	descr = stringextract('item-description"', '</p>', rec) 
-	descr = cleanhtml(descr); descr = mystrip(descr); 
-	descr = unescape(descr); descr = repl_json_chars(descr);
-	descr = descr.replace('>','');
-
-	# Bsp.: datetime="2017-11-15T20:15:00.000+01:00">15.11.2017</time>
-	datum_line =  stringextract('<time datetime="', '/time>', rec) 
-	if datum_line:
-		video_datum =  stringextract('">', '<', datum_line)
-		video_time = datum_line.split('T')[1]
-		video_time = video_time[:5]
-	if video_datum and video_time:
-		descr_display 	= "%s, %s Uhr \n\n%s" % (video_datum, video_time, descr)		
-		descr 			= "%s, %s Uhr||||%s" % (video_datum, video_time, descr)	
-		
-	duration = ZDF_getDuration(rec)					# mehrere Varianten
-
-	title=''
-	if '"title-inner">' in rec:
-		title = stringextract('class="title-inner">', '</span>', rec)
-		title = mystrip(title); title = cleanhtml(title)
-		title = unescape(title.strip())
-	if title =='':
-		title = stringextract('medium-headline">', '</', rec)
-	if title =='':
-		title = stringextract('class="shorter">', '</', rec)
-	if title =='' and 'plusbar-title=' in rec:
-		title = stringextract('plusbar-title="', '"', rec)
-	if title =='':
-		href = stringextract('<a href="', '">', rec)
-		title = stringextract('title="', '"', href)
-	if 'nach oben scrollen' in  title:
-		title=''
-	if title =='':
-		title = sid									# Bsp. "37-nur-haut-und-knochen-100"
-	if duration:									# -> Titel s.u.
-		title = "%s | %s" % (title, duration)
-	title = unescape(title); title = repl_json_chars(title)	
-	
-	img = stringextract('teaser-image="', '</', rec)	
-	img = unescape(img); img = img.replace('\\/','/')
-	if '":"https' in img:							# 24.08.2021 json, alle Größen abschn.
-			img =  stringextract('":"', '"', img)
-		
-	url = stringextract('"embed_content": "', '"', rec) # im json-Block data-zdfplayer-jsb 
-	url = "https://www.zdf.de%s.html" % url				# 		
-	
-	PLog('url: %s, apiToken: %s, sid: %s, descr_display: %s, descr: %s, title: %s, img: %s' %\
-		(url,apiToken,sid,descr_display,descr,title,img[:80]))
-	return(url,apiToken,sid,descr_display,descr,title,img)				
-	
-#-------------------------
-# Videolänge holen
-def ZDF_getDuration(rec):
-	PLog('ZDF_getDuration:')
-	#PLog(rec)	# Debug
-	
-	duration=''
-	PLog("Var0:")
-	if u'>Videolänge<' in rec:											# Ausn. Trailer
-		duration = stringextract(u'>Videolänge<', '</dd>', rec) 
-		duration = stringextract('aria-label="', '"', duration) 
-		if duration:
-			return duration			
-	
-	PLog("Var1:")
-	if ' min</dd>' in rec:
-		try:															# 1. Variante
-			duration = re.search(u' (\d+) min</dd>', rec).group(1)
-			return duration + " min"
-		except Exception as exception:
-			duration=''		
-	
-	PLog("Var2:")
-	if u'"Videolänge ' in rec:
-		try:															# 2. Variante
-			duration = re.search(u'"Videolänge (\d+) min ', rec).group(1)
-			return duration + " min"
-		except Exception as exception:
-			duration=''
-			
-	PLog("Var3:")
-	if u'"duration":' in rec:											# 4. Variante
-		duration = stringextract(u'"duration": "', '"', rec) 
-		if duration:
-			duration = seconds_translate(duration)
-			PLog("duration: " + duration)
-			return duration
-			
-	PLog("Var4:")
-	if ' min ' in rec:
-		try:															# Fallback-Variante
-			duration = re.search(u'(\d+) min ', rec).group(1)
-			return duration + " min"
-		except Exception as exception:
-			duration=''
-	
-	PLog("duration: " + duration)
-	return duration
-#-------------------------
-
-# 08.01.2021 ZDFotherSources + show_formitaeten entfallen	
-#	def ZDFotherSources(title, tagline, thumb, sid, apiToken1, apiToken2, ref_path=''):
-#	def show_formitaeten(li, title_call, formitaeten, tagline, thumb, only_list, geoblock, sub_path, Merk='false'):	
-
-#-------------------------
-#	Ladekette für Videoquellen ab 30.05.2017:
-#		1. Ermittlung der apiToken (in configuration.json), nur anfangs 2016 unverändert, Verwendung in header
-#		2. Sender-ID sid ermitteln für profile_url (durch Aufrufer ZDF_getVideoSources, ZDFotherSources)
-#		3. Playerdaten ermitteln via profile_url (Basis bisher unverändert, hier injiziert: sid)
-#		4. Videodaten ermitteln via videodat_url )
-#	Bei Änderungen durch das ZDF Ladekette mittels chrome neu ermitteln (network / HAR-Auswertung)
-#
-def get_formitaeten(sid, apiToken1, apiToken2, ID=''):
-	PLog('get_formitaeten:')
-	PLog(apiToken1)
-	PLog('sid/docId: ' + sid)
-	PLog('Client: '); PLog(OS_DETECT);						# s. Startbereich
-	PLog(apiToken1[:80]); PLog(apiToken2[:80]);
-	if apiToken2 =='':										# ZDFSportLive
-		apiToken2 = apiToken1
-	
-	# bei Änderung profile_url neu ermitteln - ZDF: zdfplayer-Bereich, NEO: data-sophoraid
-	profile_url = 'https://api.zdf.de/content/documents/%s.json?profile=player'	% sid
-
-	PLog("profile_url: " + profile_url)
-	if sid == '':											# Nachprüfung auf Videos
-		return '','',''
-	
-	# apiToken (Api-Auth) : bei Änderungen des  in configuration.json neu ermitteln (für NEO: HAR-Analyse 
-	#	mittels chrome)	ab 08.10.2017 für ZDF in ZDF_getVideoSources ermittelt + als Dict gespeichert + 
-	#	hier injiziert (s.u.)
-	# Header Api-Auth + Host reichen manchmal, aber nicht immer - gesetzt in get_page.
-	# 15.10.2018 Abrufe ausgelagert nach get_page. 
-	# Kodi-Version: Wegen Problemen mit dem Parameterhandling von Listen und Dicts wird hier
-	#	 nur der Api-Auth Key übergeben (Rest in get_page). 
-	#	
-	if ID == 'NEO':
-		# header = {'Api-Auth': "Bearer d90ed9b6540ef5282ba3ca540ada57a1a81d670a",'Host':"api.zdf.de", 'Accept-Encoding':"gzip, deflate, sdch, br", \
-		#	'Accept':"application/vnd.de.zdf.v1.0+json"}
-		header = "{'Api-Auth': 'Bearer d90ed9b6540ef5282ba3ca540ada57a1a81d670a','Host': 'api.zdf.de'}"
-	else:
-		PLog(apiToken1)									# s. ZDF_getVideoSources
-		# kompl. Header für Modul requests, für urllib2.urlopen reichen Api-Auth + Host
-		# header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de', 'Accept-Encoding': 'gzip, deflate, sdch, br', \
-		#	'Accept':'application/vnd.de.zdf.v1.0+json'}" % apiToken1
-		header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken1
-	
-	page, msg	= get_page(path=profile_url, header=header, JsonPage=True)	
-	if page == '':										# Abbruch
-		PLog('profile_url: Laden fehlgeschlagen')
-		return '', '', '', ''
-	PLog("page_json: " + page[:40])
-	page = page.replace('": "', '":"')					# für funk-Beiträge erforderlich
-	
-														# Videodaten ermitteln:
-	pos = page.rfind('mainVideoContent')				# 'mainVideoContent' am Ende suchen
-	page_part = page[pos:]
-	PLog("page_part: " + page_part[:40])			# bei Bedarf
-	# neu ab 20.1.2016: uurl-Pfad statt ptmd-Pfad ( ptmd-Pfad fehlt bei Teilvideos)
-	# neu ab 19.04.2018: Videos ab heute auch ohne uurl-Pfad möglich, Code einschl. Abbruch entfernt - s.a. KIKA_und_tivi.
-	# 18.10.2018: Code für old_videodat_url entfernt (../streams/ptmd":).
-	# 23.11.2019: extract videodat_url ohne Blank hinter separator : (s. json.loads in get_page)
-	# 02.08.2020: extract DGS-Url (Gebärdensprache) abhängig vom Setting
-	
-	# ptmd_player = 'ngplayer_2_3'						# ohne webm
-	ptmd_player = 'ngplayer_2_4'						# ab 22.12.2020
-	videodat_url = ''
-	if SETTINGS.getSetting('pref_DGS_ON') == 'true':								# Link Gebärdensprache?
-		dgs_part = stringextract('label":"DGS"', '}}', page_part)
-		PLog("dgs_part: " + dgs_part)
-		videodat_url = stringextract('ptmd-template":"', '"', dgs_part)
-	if videodat_url == '':
-		videodat_url = stringextract('ptmd-template":"', '"', page_part)			# Ende funk-Beiträge: ..profile=tmd"}}}
-		# videodat_url = 'https://api.zdf.de/tmd/2/portal/vod/ptmd/mediathek/'  	# unzuverlässig
-	videodat_url = videodat_url.replace('{playerId}', ptmd_player) 					# ptmd_player injiziert 
-	if videodat_url:
-		videodat_url = 'https://api.zdf.de' + videodat_url		
-	PLog('videodat_url: ' + videodat_url)	
-	
-	# apiToken2 aus ZDF_getVideoSources. header ohne quotes in get_page leer 
-	# kompl. Header für Modul requests, für urllib2.urlopen reichen Api-Auth + Host
-	#header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de', 'Accept-Encoding': 'gzip, deflate, sdch, br', \
-	#	'Accept':'application/vnd.de.zdf.v1.0+json'}" % apiToken2
-	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken2
-	page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
-	PLog("request_json: " + page[:40])
-
-	if page == '':	# Abbruch 
-		PLog('videodat_url: Laden fehlgeschlagen')
-		return '', '', '', ''
-	PLog(page[:100])	# "{..attributes" ...
-	# PLog(page)		# bei Bedarf
-		
-	formitaeten, duration, geoblock, sub_path = get_form_streams(page)
-	PLog('Ende get_formitaeten:')
-	return formitaeten, duration, geoblock, sub_path  
 
 #-------------------------
 # 16.01.2022 Auslagerung aus get_formitaeten  
@@ -10399,7 +8806,8 @@ def get_form_streams(page):
 	#	AQTitle, ASS/SSA, CC, JACOsub, MicroDVD, MPsub, OGM, PJS, RT, SMI, SRT, SUB, VOBsub, VPlayer
 	#	Für Kodi eignen sich beide ZDF-Formate xml + vtt, umbenannt in *.sub oder *.srt
 	#	VTT entspricht SubRip: https://en.wikipedia.org/wiki/SubRip
-	subtitles = stringextract('"captions"', '"documentVersion"', page)	# Untertitel ermitteln, bisher in Plex-
+#	subtitles = stringextract('"captions"', '"documentVersion"', page)	# Untertitel ermitteln, bisher in Plex-
+	subtitles = stringextract('"captions"', ']', page)	# Untertitel ermitteln, bisher in Plex-
 	subtitles = blockextract('"class"', subtitles)						# Channels nicht verwendbar
 	PLog('subtitles: ' + str(len(subtitles)))
 	sub_path = ''													# Format: "local_path|url", Liste 
@@ -10449,14 +8857,25 @@ def get_form_streams(page):
 		if geoblock == 'dach':			# Info-Anhang für summary 
 			geoblock = ' | Geoblock DACH!'
 			
+			
 	return formitaeten, duration, geoblock, sub_path
 	
 #-------------------------
 # Aufrufer: ZDF_Search (weitere Seiten via page_cnt)
 #	Einzelseite -> ZDF_BildgalerieSingle
-def ZDF_Bildgalerien(li, page):	
+def ZDF_Bildgalerien(page):	
 	PLog('ZDF_Bildgalerien:'); 
 	
+	if page == '':
+		msg1 = 'Seite kann nicht geladen werden: [B]%s[/B]' % title
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID="ZDF")						# Home-Button
+			
+				
 	page_cnt=0;
 	content =  blockextract('class="artdirect"', page)
 	for rec in content:	
@@ -10512,7 +8931,9 @@ def ZDF_Bildgalerien(li, page):
 			fparams=fparams, summary=summ,  tagline=tag)
 		page_cnt = page_cnt + 1
 	
-	return li, page_cnt 
+	PLog("Serien: %d" + str(page_cnt))
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-------------------------
 # Lösung mit einzelnem Listitem wie in ShowPhotoObject (FlickrExplorer) hier

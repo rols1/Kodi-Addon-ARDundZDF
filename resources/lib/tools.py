@@ -479,6 +479,7 @@ def get_foruminfo():
 	dt=''
 	path = "https://www.kodinerds.net/index.php?thread/64244-release-kodi-addon-ardundzdf/"
 	page, msg = get_page(path=path)
+	
 	dt = stringextract(u"chstes Update (Stand ", ")", page)
 	if dt == "":
 		dt = u"? - Forum nicht erreicht"

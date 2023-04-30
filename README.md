@@ -114,11 +114,11 @@ Funktionen:
 - Updates einzelner Bestandteile des  Addons (Einzelupdate) zwischen den regulären  Updates - Näheres siehe [Startpost im kodinerds-Forum](https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=502022#post502022) 
 
 #### weitere Module (optional)
-- ZDFmobile (gedacht als Alternative bei Ausfall der Webseite)
+- ~~ZDFmobile~~ - entfernt ab Juni 2023 (obsolet)
 - 3Sat
-- funk
+- ~~funk~~ - deaktiviert ab Mai 2023
 - Kinderprogramme (z.Z. KIKA und ZDFtivi)
-- TagesschauXL (https://www.tagesschau.de/)
+- TagesschauXL
 - phoenix (https://www.phoenix.de/)
 - Arte-Kategorien
 - "Zuletzt gesehen"-Funktion (im Tools-Menü)

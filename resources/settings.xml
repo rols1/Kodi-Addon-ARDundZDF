@@ -7,9 +7,9 @@
            <setting type="sep"/>
     	<setting label="Mobile Version der ZDF Mediathek verwenden" type="bool" id="pref_use_zdfmobile" default="false"/>
     	<setting label="3Sat Mediathek verwenden" type="bool" id="pref_use_3sat" default="false"/>
-    	<setting label="FUNK verwenden" type="bool" id="pref_use_funk" default="false"/>
+    	<setting label="FUNK verwenden - vorerst deaktiviert" type="bool" id="pref_use_funk" default="false" enable="false"/>
     	<setting label="Kinderprogramme verwenden" type="bool" id="pref_use_childprg" default="false"/>
-     	<setting label="TagesschauXL verwenden" type="bool" id="pref_use_XL" default="false"/>
+     	<setting label="TagesschauXL verwenden - vorerst deaktiviert" type="bool" id="pref_use_XL" default="false" enable="false"/>
       	<setting label="Phoenix verwenden" type="bool" id="pref_use_phoenix" default="false"/>
       	<setting label="Arte-Mediathek verwenden" type="bool" id="pref_use_arte" default="false"/>
       	<setting label="MediathekViewWeb-Suche verwenden" type="bool" id="pref_use_mvw" default="false"/>

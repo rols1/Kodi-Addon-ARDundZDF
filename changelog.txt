@@ -10,6 +10,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+30.04.2023 4.7.0
+			ARDPagination: get_page_content -> get_json_content (übersehen in V4.6.9).
+			get_json_content (ARD): key-Auswahl für "teasers" aktualisiert.
+			full_shows: fehlenden Return-Flag zum Funktionsstart gesetzt.
+			ARDStartRubrik (ARD): Cache für Startseite entfernt (obsolet - api-Call).
+			time_translate (util): Info verbleibende Tage (<= 6) bis Sendungsdatum
+			ergänzt, Anpassung ARDnew (get_json_content ARD_FlatListRec), Haupt-PRG
+			(ARDSportMediaPlayer, ZDF_get_teaserDetails, ZDF_get_content), 3sat (Start,
+			Sendereihe_Sendungen, get_teaserElement, get_zdfplayer_content, SingleBeitrag).
+			get_page (util): Rückgabe new_url bei Exeption auf leer geändert (Reuse
+			praktisch ausgeschlossen). 
+			GetJsonByPath (util): Rückabe mit error-Text.
+			Audiothek: skip personenbezogene Beiträge (leer) in Audio_get_homescreen,
+			globale Var AUDIOSENDER entfernt - obsolet.
+			ZDF-Mediathek: komplett überarbeitet (Umstellung zdf.de -> zdf-cdn), einschl.
+			Serien-Erkennung.
+			ZDF-tivi: Sendereihe ZDFchen hinzugefügt.
+			TagesschauXL: Menüs der Livestreams an ARD-Änderungen angepasst (json-Quellen
+			-> ../livestreams/index.html), dto. Auswertung zu Tagesschau-Menüs + Tages-
+			themen. Wegfall Menüs: Nachtmagazin, Sendungsarchiv, #kurzerklaert, Weitere
+			Themen.
+
 16.04.2023 4.6.9
 			Audio_get_items_single (Audiothek): Fix img-Auswertung (fehlte: '"').
 			get_page_content (ARD): neues Blockmerkmal nach ARD-Änderung (images).

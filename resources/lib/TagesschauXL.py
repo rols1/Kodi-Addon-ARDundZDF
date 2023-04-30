@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>7</nr>								# Numerierung für Einzelupdate
-#	Stand: 15.04.2023
+#	Stand: 30.04.2023
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -73,20 +73,11 @@ ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 
 NAME			= 'ARD und ZDF'
 BASE_URL 		= 'https://www.tagesschau.de'
-ARD_m3u8 		= 'https://tagesschau-lh.akamaihd.net/i/tagesschau_1@119231/master.m3u8' # intern. Link
-ARD_100 		= 'https://www.tagesschau.de/100sekunden/index.html'
-ARD_Last 		= 'https://www.tagesschau.de/sendung/letzte-sendung/index.html'
-ARD_20Uhr 		= 'https://www.tagesschau.de/sendung/tagesschau/index.html'
-ARD_Gest 		= 'https://www.tagesschau.de/sendung/tagesschau_mit_gebaerdensprache/index.html'
-ARD_tthemen 	= 'https://www.tagesschau.de/sendung/tagesthemen/index.html'
-ARD_Nacht 		= 'https://www.tagesschau.de/sendung/nachtmagazin/index.html'
+ARD_Last 		= 'https://www.tagesschau.de/multimedia'	# ARD_100,ARD_Last,ARD_20Uhr,ARD_Gest,ARD_tthemen,ARD_Nacht
 ARD_bab 		= 'https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL2Rhc2Vyc3RlLmRlL2JlcmljaHQgYXVzIGJlcmxpbg?pageNumber=0&pageSize=12'
-ARD_Archiv 		= 'https://www.tagesschau.de/multimedia/video/videoarchiv2~_date-%s.html'	# 02.02.2021
-ARD_Fakt		= 'https://www.tagesschau.de/investigativ/faktenfinder/'					# 02.02.2021
+ARD_Fakt		= 'https://www.tagesschau.de/faktenfinder/'				# 30.04.2023
 Podcasts_Audios	= 'https://www.tagesschau.de/multimedia/audio'
-ARD_kurz 		= 'https://www.tagesschau.de/faktenfinder/kurzerklaert/index.html'
-BASE_FAKT		='https://faktenfinder.tagesschau.de'										
-ARD_Investigativ='https://www.tagesschau.de/investigativ/'									# 10.06.2021
+ARD_Investigativ='https://www.tagesschau.de/investigativ/'				# 10.06.2021
 
 
 # Icons
@@ -137,13 +128,13 @@ def Main_XL():
 			(quote(title), "ARD", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=ICON_MAINXL, 
 			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
-
+	'''
 	title="Suche auf www.tagesschau.de"
 	summ = "Suche Sendungen und Videos auf www.tagesschau.de"
 	fparams="&fparams={'query': ''}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Search", fanart=ICON_MAINXL, 
 		thumb=R(ICON_SEARCH), fparams=fparams)
-		
+	'''	
 	mediatype='' 
 	# --------------------------------- 						# Livestreams
 	# Live: akt. PRG + vom Sender holen, json-Links in XL_Live
@@ -157,68 +148,57 @@ def Main_XL():
 		MyDialog(msg1, msg2, msg3)	
 		#return 												# ohne Livestreams weiter
 	PLog(len(page))			
-	teasertext = stringextract('class="teasertext">', '</p>', page)
-	teasertext =  stringextract('<strong>', '</strong>', teasertext)
+	tag = stringextract('<meta name="description" content="', '"', page)
 		
 	title = 'Livestream'
-	tag = teasertext
+	tag = stringextract('<meta name="description" content="', '"', page)
 	summ = u"[B][COLOR green]Livestream mit Sport (nur für Deutschland)[/COLOR][/B]"
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Live", fanart=ICON_MAINXL, 
 		thumb=ICON_LIVE, fparams=fparams, summary=summ, tagline=tag, mediatype=mediatype)
+		
 	title = 'Livestream (diesen im Ausland verwenden)'
-	summ = "[B][COLOR green]internationaler Livestream[/COLOR][/B]"
+	tag = "[B]%s[/B]" % "Ohne Geoblocking"
+	summ = "[B][COLOR green]Internationaler Livestream[/COLOR][/B]"
 	fparams="&fparams={'ID': 'international'}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Live", fanart=ICON_MAINXL, 
 		thumb=ICON_LIVE, fparams=fparams, summary=summ, tagline=tag, mediatype=mediatype)
 
-	# ---------------------------------							# in menu_hub Direktsprung zu XLGetSourcesHTML:
-	tag = u"[B][COLOR red]Letzte Sendung[/COLOR][/B], zurückliegende Sendungen"		
+	# ---------------------------------							# menu_hub -> XL_LastSendung
+	tag = u"[B][COLOR red]Letzte Sendung[/COLOR][/B], zurückliegende Sendungen"	
+	summ = u"Tagesschau und Tagesschau:\n..in 100 Sekunden\n..17:50 Uhr\n..20 Uhr\n..vor 20 Jahren.."	
 	title = 'Tagesschau'
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-		(quote(title), quote(ARD_Last), 'ARD_Last', quote(ICON_LAST))
+	show = "tagesschau"
+	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','show': '%s'}"  %\
+		(quote(title), quote(ARD_Last), 'ARD_Last', show)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_LAST, fparams=fparams, tagline=tag, mediatype=mediatype)
-	title = 'Tagesschau in 100 Sekunden' 
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-		(quote(title), quote(ARD_100), 'ARD_100', quote(ICON_100sec))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_100sec, fparams=fparams, tagline=tag, mediatype=mediatype)
-	title = 'Tagesschau 20 Uhr'
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-		(quote(title), quote(ARD_20Uhr), 'ARD_20Uhr', quote(ICON_20))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_20, fparams=fparams, tagline=tag, mediatype=mediatype)
+		thumb=ICON_LAST, fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+
 	title = 'Tagesschau 20 Uhr (Gebärdensprache)'
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-		(quote(title), ARD_Gest, 'ARD_Gest', quote(ICON_100sec))
+	tag=""
+	path = "https://www.tagesschau.de/multimedia/sendung/tagesschau_mit_gebaerdensprache"
+	show = u"tagesschau mit Gebärdensprache"
+	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s', 'show': '%s'}"  %\
+		(quote(title), quote(path), "ARD_Gest", show)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
 		thumb=ICON_20GEST, fparams=fparams, tagline=tag, mediatype=mediatype)
+		
 	title = 'Tagesthemen'
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-		(quote(title), quote(ARD_tthemen), 'ARD_tthemen', quote(ICON_TTHEMEN))
+	tag = "mit Videos zu einzelnen Themen"
+	show = "tagesthemen"
+	path = "https://www.tagesschau.de/multimedia/sendung/tagesthemen"
+	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s', 'show': '%s'}"  %\
+		(quote(title), quote(path), "ARD_tthemen", show)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
 		thumb=ICON_TTHEMEN, fparams=fparams, tagline=tag, mediatype=mediatype)
-	title = 'Nachtmagazin'
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-		(quote(title), quote(ARD_Nacht), 'ARD_Nacht', quote(ICON_NACHT))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_NACHT, fparams=fparams, tagline=tag, mediatype=mediatype)
 		
 	# ---------------------------------							# in menu_hub Direktsprung zu get_content:	
 	title = 'Bericht aus Berlin'
 	tag = u"In Berichten, Interviews und Analysen beleuchtet <Bericht aus Berlin> politische Sachthemen und die Persönlichkeiten, die damit verbunden sind."
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-		(quote(title), quote(ARD_bab), 'ARD_bab', quote(ICON_BAB))
+	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s'}"  %\
+		(quote(title), quote(ARD_bab), 'ARD_bab')
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
 		thumb=ICON_BAB, tagline=tag, fparams=fparams)
-	title = 'Sendungsarchiv: Tagesschau-Sendungen eines Monats'
-	tag = u"enthält auch: tagesschau vor 20 Jahren und tagesthemen."
-	summ = u'sonntags enthält das Archiv in der Regel auch den Bericht aus Berlin'
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-		(quote(title), quote(ARD_Archiv), 'ARD_Archiv', quote(ICON_ARCHIV))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_ARCHIV, fparams=fparams, tagline=tag, summary=summ)
 		
 	title = 'Investigativ'
 	tag = u"Investigative Inhalte der ARD - aufwändig recherchierte Beiträge und Exclusivgeschichten der "
@@ -237,40 +217,23 @@ def Main_XL():
 	title = 'Podcasts und Audios'
 	tag = u"Audiobeiträge"
 	ID = "Audios"
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-		(quote(title), quote(Podcasts_Audios), ID, quote(ICON_RADIO))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Audios", fanart=ICON_MAINXL, 
+	fparams="&fparams={'title': '%s','path': '%s'}"  %\
+		(quote(title), quote(Podcasts_Audios))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.get_VideoAudio", fanart=ICON_MAINXL, 
 		thumb=ICON_RADIO, tagline=tag, fparams=fparams)
-		
-	title = '#kurzerklärt'
-	tag = u"kompakte Hintergrundinfos zu Nachrichtenthemen"
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-		(quote(title), quote(ARD_kurz), 'ARD_kurz', quote(ICON_KURZ))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_KURZ, tagline=tag, fparams=fparams)
-		
-	title = 'Weitere Themen'									# weitere Themen der Startseite
-	tag = u"Startseiten: Inland, Ausland, Wirtschaft"
-	fparams="&fparams={'title': '%s','path': '', 'menu': ''}"  % quote(title)
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Themen", fanart=ICON_MAINXL, 
-		thumb=ICON_Themen, tagline=tag, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 # ----------------------------------------------------------------------
 # 01.02.2021 Seitenlayout der Nachrichtenseiten durch ARD geändert, Videoquellen 
 #	nun auf der Webseite als quoted json eingebettet, Direktsprung zu XLGetSourcesHTML 
-#	entfällt - Auswertung nun über vorgeschaltete Funktion XLSinglePage ->
+#	entfällt - Auswertung nun über vorgeschaltete Funktion XL_LastSendung ->
 #	XLGetSourcesJSON
 # 15.04.2023 get_page_content -> get_json_content 
 #
-def menu_hub(title, path, ID, img):	
+def menu_hub(title, path, ID, show=""):	
 	PLog('menu_hub:')
-	PLog(title); PLog(path); PLog(img)
-
-	if ID=='ARD_Archiv':						# Vorschaltung Kalendertage (1 Monat)
-		Archiv(path=path, ID=ID, img=img) 		# Archiv: Callback nach hier, dann weiter zu get_content
-		return	
+	PLog(title); PLog(path); 
 
 	page, msg = get_page(path=path)	
 	if page == '':	
@@ -280,15 +243,9 @@ def menu_hub(title, path, ID, img):
 		return 		
 	page = py2_decode(page)
 	
-	# Direktsprünge zu Url der Sendungseite - der Rest der Seiten enthält vorwiegend gleiche Inhalte 
-	# aus dem Archiv
-	if ID=='ARD_100' or ID=='ARD_Last' or ID=='ARD_20Uhr' or ID=='ARD_Gest' or ID=='ARD_tthemen' or ID=='ARD_Nacht':
-		XLSinglePage(title,thumb=img,ID=ID,path='',page=page)
-		return
-		
-	if ID == 'ARD_kurz':							# #kurzerklärt -> Search
-		query = "kurzerklaert"
-		XL_Search(query, pagenr='')
+	# Direktsprünge zu Url der Live-Sendungseiten  -> XL_LastSendung
+	if ID=='ARD_100' or ID=='ARD_Last' or ID=='ARD_20Uhr' or ID=='ARD_Gest' or ID=='ARD_tthemen':
+		XL_LastSendung(title, page, show=show)
 		return
 
 	# Seiten mit unterschiedlichen Archiv-Inhalten - ARD_bab, ARD_Archiv, ARD_Blogs,
@@ -296,9 +253,8 @@ def menu_hub(title, path, ID, img):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')				# Home-Button
 	
-	# Archiv 'Bericht aus Berlin': von ARD umgestellt auf api
 	# 
-	if ID == 'ARD_bab':								# 14.02.2023 umgestellt auf api
+	if ID == 'ARD_bab':								# 14.02.2023 umgestellt auf api.ardmediathek.de
 		mark=''; ID="XL_menu_hub"
 		li = get_json_content(li, page, ID, mark)	# -> ARDnew
 	else:
@@ -315,88 +271,31 @@ def menu_hub(title, path, ID, img):
 #	erfasst (-> summ)
 # 
 # ----------------------------------------------------------------------
-def XLSinglePage(title, thumb, summ='', tag='', ID='', path='', page=''):
-	PLog('XLSinglePage:'); PLog(ID);
-	img = thumb; title_org = title
-	
-	if page == '':						# ID Search
-		page, msg = get_page(path=path)	
-		if page == '':	
-			msg1 = "Fehler in XLSinglePage:"
-			msg2 = msg
-			MyDialog(msg1, msg2, '')	
-			return 		
-	page = py2_decode(page)
+def XL_LastSendung(title, page, show=""):
+	PLog('XL_LastSendung:'); PLog(show);
+	title_org = title
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')			# Home-Button
 
 	mediatype=''									# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
+		mediatype='video'		
 
-	# 2 Varianten: "ts-mediaplayer" (häufig Audio), 'ts-mediaplayer' (häufig Video):
-	items =  blockextract('ts_component="ts-mediaplayer"', page)
+	items =  blockextract('class="v-instance" data-v="', page)
 	PLog(len(items))
-	items =  items + blockextract("ts_component='ts-mediaplayer'", page)
-	PLog(len(items))
-	base_url = BASE_URL
 	
-	themen = stringextract('video__details">', '</div>', page)	# Themen 1. Sendung -> summ
-	themen = repl_json_chars(themen)
-	themen = cleanhtml(mystrip(themen)); 
-	
-	cnt=0;  
 	for item in items:
-		conf = stringextract("data-config='", "'", item)				# json-Daten mit mp3-Link
-		conf = conf.replace('\\"', '"')
-		conf = conf.replace('&quot;', '"')
-		
-		teaser_img = stringextract('"xs":"', '"', conf)					# häufig gleich				
-		if teaser_img == '':
-			teaser_img = stringextract('"m":"', '"', conf)
-		if teaser_img.startswith('http') == False:
-			teaser_img = base_url + teaser_img
-
-		href = stringextract('href="', '"', item)
-		if href == '':							# Link fehlt im 1. item, aus 2. item entnommen
-			href = stringextract('href="', '"', items[1])
-		title = stringextract('__headline">', '</', item)
-		title = mystrip(title); title = cleanhtml(title); 
-		datum = stringextract('_topline">', '</', item)
-		if datum == '':
-			datum = stringextract('__date">', '</', item)
-		datum = mystrip(datum)
-		
-		if cnt == 0:							# letzte Sendung
-			title = "[B][COLOR red]%s[/COLOR][/B]" % title_org + ": letzte Sendung"
-			datum = "[B][COLOR red]%s[/COLOR][/B]" % datum
-			summ = themen; summ_par = summ.replace('\n', '||')
-		else:
-			themen=''; summ=''									# entf. bei zurückl.  Sendungen
-			if datum:											# fehlt bei TSchau100
-				title = "%s: %s" % (title, datum)
-		
-		tag = datum; img = thumb
-		tag = mystrip(tag)
-		
-		PLog('Satz1:')
-		PLog(title);PLog(summ[:80]);PLog(tag);PLog(href);
+		typ,av_typ,title,tag,summ,img,stream = get_content_json(item)
+		if title.startswith(show):
+			title=py2_encode(title); stream=py2_encode(stream); 
+			summ=py2_encode(summ); img=py2_encode(img); 
 			
-		Dict_ID = 'XLSinglePage_%d' % cnt						# Dict hier vertretbar (kleine Listen) -
-		Dict("store", Dict_ID, conf) 							#	anders: get_VideoAudio
-		title=py2_encode(title); href=py2_encode(href);  summ=py2_encode(summ)
-		teaser_img=py2_encode(teaser_img); tag=py2_encode(tag); summ_par=py2_encode(summ_par)
-		
-		fparams="&fparams={'title': '%s', 'Dict_ID': '%s', 'Plot': '%s', 'img': '%s'}" %\
-			(quote(title), Dict_ID, quote(summ_par), quote(teaser_img))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XLGetSourcesPlayer", 
-			fanart=teaser_img, thumb=teaser_img, tagline=tag, fparams=fparams, mediatype=mediatype, 
-			summary=summ)
-			
-						
-		cnt=cnt+1
-		
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+				(quote(stream), quote(title), quote(img), quote(summ))
+			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", 
+				fanart=img, thumb=img, tagline=summ, fparams=fparams, mediatype=mediatype)
+								
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 # ----------------------------------------------------------------------
@@ -450,54 +349,74 @@ def XL_Search(query='', pagenr=''):
 	PLog('XL_Search:'); PLog(query); PLog(pagenr); 
 
 	ID='Search'
-	path =  BASE_URL + '/suche2.html?page_number=%s&results_per_page=%s&query=%s&dnav_type=video&sort_by=date' %\
-		(pagenr,items_per_page,query)
 	if pagenr == '':		# erster Aufruf muss '' sein
 		pagenr = 1
-	page, msg = get_page(path=path)	
+	
+	path =  "https://www.tagesschau.de/json/search?searchText=%s" % query 	# 30.04.2023
+	page, msg = get_page(path=path, JsonPage=True)			# -> dump 
 	if page == '':	
 		msg1 = "Fehler in XL_Search:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return 
 	
-	if u'leider erfolglos. Bitte überprüfen Sie Ihre Eingabe' in page:
+	jsonObject = json.loads(page)
+	PLog(len(jsonObject))
+	cnt = jsonObject["totalEntriesCount"]
+	PLog("cnt: %d" % cnt)
+	if cnt == 0:
 		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
-		msg1 = u'Keine Beiträge zu: %s' % query  
+		msg1 = u'Leider keine Beiträge zu: [B]%s[/B] gefunden' % query  
 		MyDialog(msg1, '', '')
 		return 	
+	
+	XL_SearchCluster(jsonObject, query)
+	return
 
-	searchBox 	= stringextract('Suchergebnis</h2>', '</p>', page)	
-	searchResult = stringextract('<strong>', '</strong>', searchBox)
-	searchView	= stringextract('</strong> Treffer.', '.', searchBox)
-	MaxPages	= (int(searchResult) / items_per_page)			# -> float (__future__)
-	if '.' in str(MaxPages):									# 1 Seite mehr
-		MaxPages = MaxPages + 1
-	PLog("searchResult: %s, MaxPages %d, searchView: %s" % (searchResult, MaxPages, searchView))
-				
+# ----------------------------------------------------------------------
+def XL_SearchCluster(jsonObject, query):
+	PLog("XL_SearchCluster:")
+	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')										# Home-Button
+	li = home(li, ID='TagesschauXL')						# Home-Button
 	
-	# der Sender gibt Suchergebnisse bereits seitenweise aus, hier
-	#	 umgesetzt mit pagenr - offset entfällt	
-	li = get_content(li, page, ID='Search', mark=query)
+	# todo: "imageGallery" ergänzen:
+	typ_list = ["video", "audio"]							# nicht: "all", "article"
 
-	pagenr = int(pagenr) + 1
-	if pagenr <= MaxPages:
-		li = xbmcgui.ListItem()									# Kontext-Doppel verhindern
-		PLog("pagenr: " + str(pagenr))
-		title 	= u"Weitere Beiträge zu [B][COLOR red]%s[/COLOR][/B]" % query_org
-		summ 	= "Insgesamt: %s Treffer, Seiten: %d," % (searchResult, MaxPages) 
-		summ	= "%s %s" % (summ, searchView)  
-		tag 	= "Aktuelle Seite: %d" % (pagenr-1)
-		query_org=py2_encode(query_org); 
-		fparams="&fparams={'query': '%s', 'pagenr': '%s'}" %\
-			(quote(query_org), str(pagenr))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Search", fanart=R(ICON_MEHR), 
-			thumb=R(ICON_MEHR), tagline=tag, summary=summ, fparams=fparams)
+	for objs in jsonObject["documentTypes"]:
+		PLog(str(objs)[:60])
+		
+		summ=""
+		typ = objs ["type"]
+		cnt = objs["count"]
+		PLog("cnt: %d" % cnt)
+		if typ not in typ_list:
+			continue
+
+		for item in objs["items"]:
+			PLog(str(item)[:60])
+			headline = item["headline"]
+			title = "[B]%s: [/B] %s" % (up_low(typ), headline)
+			tag = "weiter zum Beitrag | Suche: %s" % query
+			
+			if "teaserImage" in item:						# kann fehlen
+				img = item["teaserImage"]["urlM"]	
+				img_alt = item["teaserImage"]["altText"]
+				img_cr = item["teaserImage"]["imageRights"]
+				summ = "Bild: %s | %s" % (img_alt, img_cr)
+			else:
+				img = R(ICON_DIR_FOLDER)	
+
+			url = BASE_URL + item["url"]
+		
+			query=py2_encode(query); url=py2_encode(url)
+			fparams="&fparams={'title': '%s', 'path': '%s'}" %\
+				(quote(query), quote(url))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.get_VideoAudio", 
+				fanart=img, thumb=img, tagline=tag, summary=summ, fparams=fparams)
+			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
 # ----------------------------------------------------------------------
 # mark dient der Farbmarkierung bei ID='Search' 
 # 14.02.2023 ARD_bab hier entfernt (umgestellt auf api, s. menu_hub)
@@ -649,205 +568,6 @@ def get_content(li, page, ID, mark='', path=''):
 					fanart=teaser_img, thumb=teaser_img, summary=summary, tagline=tagline, fparams=fparams, 
 					mediatype=mediatype)				
 	return li
-
-# ----------------------------------------------------------------------
-# 02.02.2021 Wegfall Bildergalerien:
-# def XL_Bildgalerie(path, title):	
-	
-# ----------------------------------------------------------------------
-# Übersicht Podcasts + einz. Audios auf www.tagesschau.de/multimedia/audio/
-#	(1. Aufruf mit ID="Audios"
-# path: einz. Podcastseiten, z.B. podcasts/faktenfinder-feed-101.html 
-#	(2. Aufruf mit ID=Podcasts und path)
-# 05.11.2021 Link-Button zu Audiothek-Tagesschau-Podcasts
-#
-def XL_Audios(title, ID, img,  path=''):	
-	PLog('XL_Audios:')
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')									# Home-Button
-	
-	if path == '':														# ID = "Audios"
-		path = Podcasts_Audios
-		
-	page, msg = get_page(path=path, GetOnlyRedirect=True)	
-	path = page								
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in XL_Audios:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return 
-	PLog(len(page));
-	
-	items=[]
-	items =  blockextract('class="teaser__link"', page)				# Podcasts-Übersichten
-	items =  items + blockextract('component="ts-mediaplayer"', page)
-	PLog(len(page));
-	
-	
-	dest_func = "ardundzdf.AudioSenderPrograms"						# -> Audiothek-Tagesschau-Podcasts
-	path = "https://api.ardaudiothek.de/organizations"
-	tag = "weiter zu den Podcasts der ARD-Audiothek"
-	path=py2_encode(path);
-	fparams="&fparams={'dest_func': '%s', 'path': '%s'}" % (dest_func, quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Link", 
-		fanart=ICON_MAINXL, thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)
-		
-
-	base_url = BASE_URL
-	for item in items:
-		if '>Unser Podcast-Angebot<' in item:						# Feeds html/itunes
-			continue
-			
-		if 'class="teaser__link"' in item:							# Podcasts
-			mp3_url=''
-			href = stringextract('href="', '"', item)	
-			teaser_img = stringextract('data-srcset="', '"', item)	# 1. (kleines Bild)
-			if teaser_img.startswith('http') == False:
-				teaser_img = base_url + teaser_img
-			
-			# topline = stringextract('teaser__topline">', '<', rec)# mal Rubrik, mal Podcast	
-			headline = stringextract('__headline">', '<', item)
-			headline = unescape(headline)
-			headline = "%s: %s" % ("Podcast", headline)	
-			
-			teasertext = stringextract('teaser__shorttext">', '</p>', item)
-			teasertext = cleanhtml(teasertext); teasertext = mystrip(teasertext)
-			
-		if 'component="ts-mediaplayer"' in item:						# Audios
-			conf = stringextract("data-config='", "'", item)			# json-Daten mit mp3-Link
-			conf = unescape(conf); conf = conf.replace('\\"', '"')
-			conf = conf.replace(':""', ':"')						# Titelstart mit "
-			teaser_img = stringextract('"xs":"', '"', conf)			# immer gleich				
-			if teaser_img == '':
-				teaser_img = stringextract('"m":"', '"', conf)
-			if teaser_img.startswith('http') == False:
-				teaser_img = base_url + teaser_img
-			headline =  stringextract('"title":"', '",', conf)
-			mp3_url =  stringextract('"url":"', '"', conf)			# Audios (download-Url)
-			dur =  stringextract('"duration":"', '"', conf)			# sec, Kurzbeiträge
-			dur = "%s sec" % dur									# 	Alt.: seconds_translate
-			teasertext = "%s | Dauer %s" % (headline, dur)
-	
-		title = unescape(headline); title = repl_json_chars(title)
-		summary = unescape(teasertext.strip())
-		summary = cleanhtml(summary); summary = repl_json_chars(summary)
-		summ_par = summary.replace('\n','||')
-		
-		PLog('Satz4:')
-		PLog(teaser_img);PLog(mp3_url);PLog(title);PLog(summary[:80]);
-		PLog(ID);
-
-		title=py2_encode(title); summary=py2_encode(summary);
-		teaser_img=py2_encode(teaser_img); summ_par=py2_encode(summ_par)			
-		
-		if mp3_url:													# Podcasts -> XL_Audios, 2. Aufruf
-			tag = "[COLOR red]%s[/COLOR]" % "Audio"
-			mp3_url=py2_encode(mp3_url);
-			ID='TagesschauXL'										# ID Homebutton
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
-				quote(title), quote(teaser_img), quote_plus(summ_par), ID)
-			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.AudioPlayMP3", fanart=teaser_img, thumb=teaser_img, 
-				fparams=fparams, tagline=tag, summary=summary)
-				
-		else:														# Audios -> AudioPlayMP3 (play + download)
-			fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-				(quote(title), quote(href), ID, quote(teaser_img))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Audios", fanart=teaser_img, 
-				thumb=teaser_img, fparams=fparams, tagline="Folgeseiten",  summary=summary)
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-	
-# ----------------------------------------------------------------------
-# Wrapper für Funktionsaufrufe
-def XL_Link(dest_func, path):	
-	PLog('XL_Link:')
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')							# Home-Button
-	
-	if "AudioSenderPrograms" in dest_func:
-		page, msg = get_page(path=path)	
-		if page == '':	
-			msg1 = "Fehler in XL_Audios:"
-			msg2 = msg
-			MyDialog(msg1, msg2, '')	
-			return 
-		PLog(len(page));
-		
-		sender = "Tagesschau"
-		img = ICON_MAINXL		# github
-		AudioSenderPrograms(li, page, sender, img)	
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-
-# ----------------------------------------------------------------------
-# weitere Themen der Startseite
-# 1. step: Menüs der Startseite listen
-# 2. step (path, menu): Untermenüs listen 
-def XL_Themen(title, path, menu=''):	
-	PLog('XL_Themen:')
-	PLog(menu)
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')							# Home-Button
-	
-	menu_list = [
-					u'/inland/|Startseite Inland', u'/ausland/|Startseite Ausland',
-					u'/wirtschaft/|Startseite Wirtschaft',
-				]
-	PLog(len(menu_list))
-	skip_list = [u'Podcast', u'Investigativ', u'Wetter', 'Wahlergebnisse', 
-				u'Audios',]
-	
-	if menu == '':												# Step 1 Menüs der Startseite listen
-		for item in menu_list:
-			href, title = item.split('|')
-			href = BASE_URL + href
-			PLog('Satz7:')
-			PLog(title);PLog(href);
-			title=py2_encode(title); href=py2_encode(href); 
-			fparams="&fparams={'title': '%s','path': '%s', 'menu': '%s'}"  %\
-				(quote(title), quote(href), quote(title))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Themen", 
-				fanart=ICON_MAINXL, thumb=ICON_Themen, fparams=fparams)
-					
-	# -----------------											# Step 2 Untermenüs listen 
-	
-	else:
-		page, msg = get_page(path=path)
-		if page == '':	
-			msg1 = "Fehler in XL_Themen:"
-			msg2 = msg
-			MyDialog(msg1, msg2, '')
-			return 	
-			
-		menu_list = blockextract('class="header__navigation__list">', page,  '</ul>') # Hamb.-Menü Web
-		block=[]; img_src=R(ICON_DIR_FOLDER)
-		for block in menu_list:
-			found=False
-			if '/">%s<' % menu in block:
-				PLog('gefunden: >%s<' % menu)
-				found=True
-				break
-		
-		items = blockextract('list__item">', block, '</li>')
-		PLog(len(items))
-		for item in items:
-			href =  stringextract('href="', '"', item)
-			title = stringextract('/">', '</a', item)
-			title = unescape(title)
-			
-			PLog('Satz8:')
-			PLog(title);PLog(href);
-			title=py2_encode(title); href=py2_encode(href); 
-			fparams="&fparams={'title': '%s','path': '%s'}"  % (title, quote(href)) 
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.get_VideoAudio", 
-				fanart=ICON_MAINXL, thumb=img_src, tagline='Folgeseiten', fparams=fparams)						
-		
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 # ----------------------------------------------------------------------
 def XL_Live(ID=''):	
@@ -856,30 +576,42 @@ def XL_Live(ID=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')									# Home-Button
 		
-	# json-Seiten ermittelt mit chrome-dev-tools von 
-	# 	tagesschau.de/multimedia/livestreams/index.htm,
-	#	tagesschau.de/multimedia/livestreams/livestream1/index.html (int.)
-	path = "https://www.tagesschau.de/multimedia/livestreams/livestream-3-105~mediajson.json"
-	if ID == "international":
-		path = "https://www.tagesschau.de/multimedia/livestreams/livestream-1-101~mediajson.json"
+	path = "https://www.tagesschau.de/multimedia/livestreams/index.html"
 	page, msg = get_page(path=path)
-	PLog(page[:100])	
 
-	if page == '':	
+	if page == '' or "(Fehlernummer 404)" in page:	
 		msg1 = "Fehler in XL_Live:"
 		msg2 = msg
-		msg3 = "Fallback zu ARD_m3u8 (s. Log)" 
+		msg3 = "Fallback zum Livestreamcache" 
 		MyDialog(msg1, msg2, msg3)
 		PLog(msg3)
 		url_m3u8=''
 	else:
-		streams = blockextract('_stream":', page)
-		for stream in streams:
-			url_m3u8 = stringextract('_stream": "', '"', stream)
-			if "master.m3u8" in url_m3u8:
-				break
+		players = blockextract('class="v-instance" data-v="', page)
+		PLog("players: %d" % len(players))
+		player = players[0]
+		if ID == "international":
+			player = players[1]
+		PLog(str(player[:80]))	
+
+	conf = stringextract('data-v="', '"', player)		# json-Daten mit Streamlink
+	conf = conf.replace('\\"', '"')
+	conf = conf.replace('&quot;', '"')
+	conf = unquote(conf)
+	PLog(conf[:80])
+	
+	streams = stringextract('streams":[', ']', conf)
+	url_m3u8 = stringextract('url":"', '"', streams)
 
 	if url_m3u8 == '':
+		ard_streamlinks = get_ARDstreamlinks()	# util
+		for rec in ard_streamlinks:
+			PLog(rec)
+			if "tagesschau24" in rec:
+				line = rec.split("|")
+				ARD_m3u8 = line[1]
+				break
+				PLog ("ARD_m3u8:" + ARD_m3u8)
 		url_m3u8 = ARD_m3u8	
 	
 	thumb = stringextract('xl": "', '"', page)
@@ -904,106 +636,94 @@ def XL_Live(ID=''):
 def get_VideoAudio(title, path):								# Faktenfinder
 	PLog('get_VideoAudio: ' + path)
 	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')						# Home-Button
-		
-	page, msg = get_page(path)		
+	page, msg = get_page(path=path, GetOnlyRedirect=True)	
+	path = page								
+	page, msg = get_page(path)	
 	if page == '':	
 		msg1 = u"Fehler in get_VideoAudio"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
-				
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='TagesschauXL')						# Home-Button
+
 	mediatype=''									# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	
-	# 2 Varianten: "ts-mediaplayer" (häufig Audio), 'ts-mediaplayer' (häufi Video):
-	content =  blockextract('"ts-mediaplayer"', page)
+	content =  blockextract('class="v-instance" data-v="', page)
 	PLog(len(content))
-	content =  content + blockextract("'ts-mediaplayer'", page)
-	PLog(len(content))
-	base_url = BASE_URL
 		
 	cnt = 0; url_list=[]
-	for rec in content:
+	for item in content:
 		cnt = cnt +1													# Satz-Zähler						
-		path =  stringextract('href="', '"', rec)						# Zielseite
-			
-		conf = stringextract("data-config='", "'", rec)					# json-Daten mit media-Links
-		conf = conf.replace('\\"', '"')
-		conf = conf.replace('&quot;', '"')
-		conf = unescape(conf)
-		teaser_img = stringextract('"xs":"', '"', conf)					# immer gleich				
-		if teaser_img == '':
-			teaser_img = stringextract('"m":"', '"', conf)
-		if teaser_img.startswith('http') == False:
-			teaser_img = base_url + teaser_img
-			
-		#title =  stringextract('"title":"', '"', conf)					# Clip-Titel (stimmt nicht mit Web überein)
-		img_title =  stringextract('"_title":"', '"', conf)				# Bildtitel -> tag
-		h3_teaser = stringextract('<h3 class="teaser', '</h3>', rec)    # Titelvarianten
-		h3_teaser = unescape(h3_teaser)
-		teaser1 = stringextract('topline">', '</span>', h3_teaser)
-		teaser2 = stringextract('headline">', '</span>', h3_teaser)		# kann </span> im Titel enthalten
-		title = "%s: [B]%s[/B]" % (teaser1, teaser2)
-		title = cleanhtml(title)
-		title = mystrip(title); 	 
-		title = unescape(title); title = repl_json_chars(title)
-		
-		typ =  stringextract('"_type":"', '"', conf)
-		typ_org = typ
-		typ = "[COLOR red]%s[/COLOR]" % up_low(typ)
-		url =  stringextract('"url":"', '"', conf)						# Videos, Audios
-		if url in url_list:
-			continue
-		else:
-			url_list.append(url)
-		
-		dur =  stringextract('"duration":"', '"', conf)					# sec
-		dur = "%s sec" % dur
-		
-		sub_path	= stringextract('_subtitleUrl":"', '"', conf)
-		geoblock 	= stringextract('geoblocked":', ',', conf)
-		if geoblock == 'true':										# Geoblock-Anhang für title, summary
-			geoblock = 'Geoblock: JA'
-		else:
-			geoblock = 'Geoblock: nein'
-		
-		tag = "%s | Bild: %s" % (typ, img_title)
-		teasertext = "Dauer %s | %s" % (dur, geoblock)
-		
-		PLog(conf[:80])
-		
-		teasertext = repl_json_chars(teasertext); teasertext = unescape(teasertext);
-		summ = "%s\n\n%s" % (tag, teasertext)	
-		summ_par=summ.replace('\n', '||'); 
-		
-		PLog('Satz6:')
-		PLog(title);PLog(path);PLog(teaser_img);PLog(typ);PLog(title);
-		PLog(summ[:80]); 
-		
-		title=py2_encode(title); url=py2_encode(url); 
-		summ_par=py2_encode(summ_par); teaser_img=py2_encode(teaser_img); 
-			
-		if typ_org == "audio":											# Audio
-			ID='TagesschauXL'
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(url), 
-				quote(title), quote(teaser_img), quote_plus(summ_par), ID)
-			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.AudioPlayMP3", fanart=teaser_img, thumb=teaser_img, 
-				fparams=fparams, summary=summ)
+		typ,av_typ,title,tag,summ,img,stream = get_content_json(item)
 				
-		if typ_org == "video":											# Video	
-			#Dict_ID = 'get_VideoAudio_%d' % cnt						# bremst bei großen Listen (Dateisystem-abh.)
-			#Dict("store", Dict_ID, conf) 
-			Dict_ID = path												# XLGetSourcesPlayer holt conf neu
-			fparams="&fparams={'title': '%s', 'Dict_ID': '%s', 'Plot': '%s', 'img': '%s'}" %\
-				(quote(title), Dict_ID, quote(summ_par), quote(teaser_img))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XLGetSourcesPlayer", 
-				fanart=teaser_img, thumb=teaser_img, fparams=fparams, mediatype=mediatype, summary=summ)
+		title=py2_encode(title); stream=py2_encode(stream); 
+		summ=py2_encode(summ); img=py2_encode(img); 
+			
+		if typ == "audio":											# Audio
+			ID='TagesschauXL'
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" %\
+				(quote(stream), quote(title), quote(img), quote_plus(summ), ID)
+			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.AudioPlayMP3", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+				
+		if typ == "video":											# Video	
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream), 
+				quote(title), quote(img), quote_plus(summ))
+			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.PlayVideo", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+# ----------------------------------------------------------------------
+def get_content_json(item):	
+	PLog('get_content_json:')		
+			
+	minWidth=700					# .., 768x, 944x
 
+	conf = stringextract('data-v="', '"', item)	
+	conf = conf.replace('\\"', '"')
+	conf = conf.replace('&quot;', '"')
+	conf = unquote(conf)
+	obj = json.loads(conf)
+	PLog(str(obj)[:60]); 
+	
+	verf=""; url=""; stream=""; 
+	tag=""; img=""
+
+	typ = obj["playerType"]
+	try:
+		items = obj["pc"]["generic"]["imageTemplateConfig"]["size"]
+		for item in items:
+			width = item["minWidth"]; url = item["value"]	
+			PLog(width);PLog(url)
+			if int(width) >= minWidth:
+				img=url
+				break
+			if img == "":
+				img=url		# Fallback: letzte url
+	except Exception as exception:
+		PLog("get_img_error: " + str(exception))
+		img = R(ICON_DIR_FOLDER)		
+
+	title=obj["mediadescription"]
+	title = repl_json_chars(title)
+	
+	# Streams: zu geringe Auswahl für Listen
+	stream = obj["mc"]["streams"][0]["media"][0]["url"]		# 1. Url, m3u8 od. mp4, 
+	
+	tag = "[B]%s[/B]" % up_low(typ)
+	summ = obj["mc"]["meta"]["title"]			
+	summ = repl_json_chars(summ)
+	av_typ = stringextract('av_content_type":"', '"', conf)
+	
+	PLog('Get_content typ: %s | av_typ: %s | title: %s | tag: %s | descr: %s |img:  %s | stream: %s' %\
+		(typ,av_typ,title,tag,summ,img,stream) )		
+	return typ,av_typ,title,tag,summ,img,stream		
+	
 # ----------------------------------------------------------------------
 # holt Videoquellen aus data-config-Bereich des eingebetteten 
 #	ts-mediaplayers, hier erneut geladen via Dict_ID

@@ -59,6 +59,7 @@ ICON_ARD_RUBRIKEN 		= 'ard-rubriken.png'
 ICON_ARD_BARRIEREARM 	= 'ard-barrierearm.png'
 			
 ICON_SEARCH 			= 'ard-suche.png'						
+ICON_ZDF_SEARCH 		= 'zdf-suche.png'				
 ICON_DIR_FOLDER			= "Dir-folder.png"
 ICON_DIR_STRM			= "Dir-strm.png"
 ICON_SPEAKER 			= "icon-speaker.png"
@@ -452,7 +453,7 @@ def ARDRubriken(li, path="", page=""):
 
 	try:
 		obs = json.loads(page)
-		PLog(str(page)[:80])
+		PLog(str(obs)[:80])
 		widgets = obs["widgets"]						# "teasers" hier leer			
 	except Exception as exception:
 		PLog(str(exception))
@@ -1142,7 +1143,7 @@ def ARD_getStrmList(path, title, ID="ARD"):
 			head = u"Liste synchronisieren"
 			msg1 = u"Soll das Addon diese Liste regelmäßig abgleichen?"
 			msg2 = u"Intervall: %s Stunden" % sync_hour	
-			ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Abbruch', yes='OK', heading=head)
+			ret = MyDialog(msg1=msg1, msg2=msg2, msg3='', ok=False, cancel='Nein', yes='OK', heading=head)
 			if ret == 1:												# Liste neu aufnehmen
 				strm.strm_synclist(mode="save", item=item)
 				line = "%6s | %15s | %s..." % ("NEU", list_title[:15], "Liste neu aufgenommen")
@@ -1450,18 +1451,12 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	IsPlayable = xbmc.getInfoLabel('ListItem.Property(IsPlayable)') # 'true' / 'false'
 	PLog("IsPlayable: %s" % IsPlayable)	
 	if len(elements) > 1:
-		if '_quality"' not in page:							# bei Streamlinks bleiben wir hier
-			msg1 = u">%s< enthält keine Videoquellen aber Folgebeiträge."	% title
+		if '_quality"' not in page:							# Keine Quellen -> Abbruch
+			msg1 = u"[B]%s[/B] enthält keine Videoquellen"	% title
 			msg2 = u"Mögliche Ursache: Altersbeschränkung"
-			msg3 = u"Das Addon zeigt die Folgebeiträge."
-			if IsPlayable == "false":						# IsPlayable-Einträge nur mit Video-Quellen auswerten
-				PLog('%s Elemente -> ARDStartRubrik' % str(len(elements)))
-				MyDialog(msg1, msg2, msg3)	
-				return ARDStartRubrik(path,title,ID='ARDStartSingle')
-			else:
-				msg3 = u"Sofortstart ist nicht möglich."
-				MyDialog(msg1, msg2, msg3)	
-				return										# hebt IsPlayable auf (Player-Error: skipping ..)			
+			msg3 = u"Eine Suche in MediathekViewWeb könnte helfen."
+			MyDialog(msg1, msg2, msg3)	
+			return											# hebt IsPlayable auf (Player-Error: skipping ..)			
 			
 	if len(elements) == 0:									# möglich: keine Video (dto. Web)
 		msg1 = u'keine Beiträge zu %s gefunden'  % title
@@ -1933,6 +1928,8 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	
 	query_lable = query_ard.replace('+', ' ')
 	path = 'https://api.ardmediathek.de/search-system/mediathek/%s/search/vods?query=%s&pageNumber=%s&pageSize=24' % (sender, query_ard, pageNumber)
+	icon = R(ICON_SEARCH)
+	xbmcgui.Dialog().notification("ARD-Suche",query_lable,icon,1000, sound=False)
 	page, msg = get_page(path,JsonPage=True)					
 		
 	vodTotal =  stringextract('"totalElements":', '}', page)	# Beiträge?
@@ -1957,18 +1954,30 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
 		
 	#------------------------------------------------------------------	# 2. Suche ZDF
-	ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=alle+Sender&attrs=&contentTypes=episode&sortBy=date&page=%s'
+	ZDF_Search_PATH	 = 'https://zdf-cdn.live.cellular.de/mediathekV2/search?profile=cellular-5&q=%s&page=%s'
 	if pagenr == '':		# erster Aufruf muss '' sein
 		pagenr = 1
-	path_zdf = ZDF_Search_PATH % (quote(query_zdf), pagenr) 
-	page, msg = get_page(path=path_zdf, do_safe=False)	
-	searchResult = stringextract('data-loadmore-result-count="', '"', page)	# Anzahl Ergebnisse
-	PLog(searchResult);
+	path_zdf = ZDF_Search_PATH % (quote(query_zdf), pagenr) 	
+	path_zdf = transl_umlaute(path_zdf)
+	
 	query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
 	query_lable = unquote(query_lable)
-	query_lable=py2_encode(query_lable); searchResult=py2_encode(searchResult);
+	icon = R(ICON_ZDF_SEARCH)
+	xbmcgui.Dialog().notification("ZDF-Suche",query_lable,icon,1000, sound=False)
+	page, msg = get_page(path_zdf)										# json.load erst hier				
 	
-	if searchResult == '0' or 'class="artdirect"' not in page:		# Sprung hierher
+	try:
+		jsonObject = json.loads(page)
+		searchResult = str(jsonObject["totalResultsCount"])
+		nextUrl = str(jsonObject["nextPageUrl"])
+		nextPage = str(jsonObject["nextPage"])
+	except:
+		searchResult=""; nextUrl=""; nextPage=""
+	PLog("searchResult: "  + searchResult);
+	PLog("nextPage: "  + nextPage);
+
+	query_lable=py2_encode(query_lable); searchResult=py2_encode(searchResult);
+	if searchResult == '':												# Sprung hierher
 		label = "[B]ZDF[/B] | nichts gefunden zu: %s | neue Suche" % query_lable
 		title="Suche in ARD und ZDF"
 		title=py2_encode(title);

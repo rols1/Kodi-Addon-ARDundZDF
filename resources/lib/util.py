@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>47</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.04.2023
+#	Stand: 30.04.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1236,8 +1236,9 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			#	Auswirkung in get_formitaeten (extract videodat_url)
 			request = json.dumps(request, sort_keys=True, indent=2, separators=(',', ':'))  # sortierte Ausgabe
 			page = (page.replace('" : "', '":"').replace('" :', '":'))	# für Python3 erf.
-			PLog("jsonpage: " + page[:100]);
+			PLog("jsonpage: " + str(page)[:100]);
 		except Exception as exception:
+			page=""
 			msg = "json.loads_error: %s" % str(exception)
 			PLog(msg)
 
