@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>96</nr>										# Numerierung für Einzelupdate
+# 	<nr>97</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.0'
 VDATE = '30.04.2023'
 
@@ -441,7 +441,7 @@ def Main():
 		addDir(li=li, label="Kinderprogramme", action="dirList", dirID="resources.lib.childs.Main_childs", 
 			fanart=R('childs.png'), thumb=R('childs.png'), tagline=tagline, summary=summ, fparams=fparams)
 
-	#	26.04.2023 Webseite komplett verändert - vorerst abgeschaltet		
+	#	26.04.2023 erneuert		
 	if SETTINGS.getSetting('pref_use_XL') == 'true':
 		tagline = 'in den Settings kann das Modul TagesschauXL ein- und ausgeschaltet werden'
 		fparams="&fparams={}"													# TagesschauXL-Modul
@@ -6992,7 +6992,7 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 		title = repl_json_chars(title)
 		descr = repl_json_chars(descr)
 		if typ == "video":	
-				fparams="&fparams={'url': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
+				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(stream, title, img, tag, descr, scms_id)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)	
