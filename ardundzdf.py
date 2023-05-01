@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>97</nr>										# Numerierung für Einzelupdate
+# 	<nr>98</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.0'
-VDATE = '30.04.2023'
+VDATE = '01.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1006,6 +1006,7 @@ def Main_ZDF(name=''):
 	addDir(li=li, label="Barrierearm", action="dirList", dirID="ZDF_Start", fanart=R(ICON_ZDF_BARRIEREARM), 
 		thumb=R(ICON_ZDF_BARRIEREARM), fparams=fparams)
 
+	title = "ZDFinternational"
 	fparams="&fparams={'title': 'ZDFinternational'}"
 	tag = "This channel provides selected videos in English, Spanish or Arabic or with respective subtitles."
 	summ = 'For Arabic, please set the font of your Skin to "Arial based".'
@@ -7025,7 +7026,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 
 	page=""; AZ=False
 	if url.endswith("sendungen-100"):							# AZ ca. 12 MByte -> Dict
-		page = Dict("load", "ZDF_sendungen-100", CacheTime=CacheTime)
+		page = Dict("load", "ZDF_sendungen-100", CacheTime=ZDF_CacheTime_AZ)
 		AZ=True
 	if not page:	
 		page, msg = get_page(path=url)
@@ -7084,10 +7085,13 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 	if len(clusterObject) > 1:									# mehrere Cluster
 		PLog("walk_cluster: %d" % len(clusterObject))					
 		for jsonObject in clusterObject:
+			typ = jsonObject["type"]
 			title = jsonObject["name"]
 			if not title:						# kann leer sein
 				title = title_org
 			title = repl_json_chars(title)
+			if typ == "videoCarousel":
+				title = "[B]Highlights[/B]: %s" % title
 			try:
 				img = ZDF_get_img(jsonObject["teaser"][0])
 			except:
@@ -7946,7 +7950,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	Dict("store", '%s_HLS_List' % ID, HLS_List) 
 	Dict("store", '%s_MP4_List' % ID, MP4_List) 
 		
-	if not len(HLS_List) and not len(MP4_List):			
+	if not len(HLS_List) and not len(MP4_List) and not len(HBBTV_List):			
 		if gui:										# ohne Gui
 			msg = 'keine Streamquellen gefunden - Abbruch' 
 			PLog(msg); PLog(availInfo)
