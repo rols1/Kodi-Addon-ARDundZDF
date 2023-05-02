@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>12</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.01.2023
+# 	<nr>13</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.05.2023
 #
 
 from __future__ import absolute_import
@@ -727,6 +727,7 @@ def strm_tool_set(mode="load", index=0, val=''):
 # strmpath: lokale strm-Ablage
 # import ZDF_FlatListRec + ZDF_getApiStreams hier wg. Rekursion im Modul-
 #	kopf (Thread strm_sync)
+# 02.05.2023 json-Auswertung (Anpass. an ZDF_FlatListEpisodes)
 #
 def do_sync(list_title, strmpath, list_path, strm_type):
 	PLog("do_sync:")
@@ -751,20 +752,28 @@ def do_sync(list_title, strmpath, list_path, strm_type):
 		return
 		
 	#-------------													# Blockmerkmale wie ZDF_FlatListEpisodes
-	staffel_list = blockextract('"name":"Staffel ', page)			# Staffel-Blöcke
-	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page, '"profile":')	
-	if len(staffel_list) == 0:										# ohne Staffel-Blöcke
-		staffel_list = blockextract('"headline":"', page)
+	jsonObject = json.loads(page)
+	PLog(str(jsonObject)[:80])
+	season_id 	= jsonObject["document"]["id"]
+	staffel_list = jsonObject["cluster"]							# Staffel-Blöcke
 	PLog("staffel_list: %d" % len(staffel_list))
 	
 	cnt=0; skip_cnt=0;
 	for staffel in 	staffel_list:
-		folgen = blockextract('"headline":"', staffel)				# Folgen-Blöcke	
+		if 	staffel["name"] == "":									# Teaser u.ä.
+			continue							
+		folgen = staffel["teaser"]									# Folgen-Blöcke	
 		PLog("sync_Folgen: %d" % len(folgen))
 		for folge in folgen:
-			folge = folge.replace('\\/','/')
+			scms_id = folge["id"]
+			try:
+				brandId = folge["brandId"]
+			except:
+				brandId=""
+			if season_id != brandId:
+				PLog("skip_no_brandId: " + str(folge)[:60])
+				continue
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge) # Datensatz
-
 			if season == '':
 				continue
 	

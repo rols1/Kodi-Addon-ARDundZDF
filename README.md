@@ -15,7 +15,7 @@ Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/release
 Plex hat die Unterstützung für Plugins in seinen Client-Softwarepaketen eingestellt. Die Repos für die Plex-Versionen [Plex-Plugin-ARDMediathek2016](https://github.com/rols1/Plex-Plugin-ARDMediathek2016) und [ARDundZDF](https://github.com/rols1/ARDundZDF) habe ich im März 2022 gelöscht (dto. FlickrExplorer, TuneIn2017, Shoutcast2017).<br>
 
 <b>Classic-Version der ARD Mediathek</b>: seit Juni 2021 sind die Classic-Links nicht mehr erreichbar. Der Code im Addon wurde entfernt; im Addon ist das Menü <b>ARD Mediathek Neu</b> voreingestellt (Details siehe Funktionen).<br>
-Damit entfallen auch die Radio-Podcasts der Classic-Version. Sie werden durch die neue Audiothek abgelöst.<br>
+Damit entfallen auch die Radio-Podcasts der Classic-Version. Sie werden durch die neue <b>ARD-Audiothek</b> abgelöst.<br>
 
 #### Rückmeldungen willkommen:
 Im Forum: https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/  
@@ -111,12 +111,12 @@ Funktionen:
 
 #### Updates
 - entweder mit dem integrierten <b>Updatemodul (autom. Anpassung an Kodi-Version)</b> oder via <b>kodinerds-Repo</b>
-- Updates einzelner Bestandteile des  Addons (Einzelupdate) zwischen den regulären  Updates - Näheres siehe [Startpost im kodinerds-Forum](https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=502022#post502022) 
+- Updates einzelner Bestandteile des  Addons (<b>Einzelupdate</b>) zwischen den regulären  Updates - Näheres siehe [Startpost im kodinerds-Forum](https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=502022#post502022) 
 
 #### weitere Module (optional)
 - ~~ZDFmobile~~ - entfernt ab Juni 2023 (obsolet)
 - 3Sat
-- ~~funk~~ - deaktiviert ab Mai 2023
+- ~~funk~~ - deaktiviert ab Mai 2023 (api V4.0 nicht mehr verfügbar)
 - Kinderprogramme (z.Z. KIKA und ZDFtivi)
 - TagesschauXL
 - phoenix (https://www.phoenix.de/)

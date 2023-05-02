@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>98</nr>										# Numerierung für Einzelupdate
+# 	<nr>99</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.0'
-VDATE = '01.05.2023'
+VDATE = '02.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7076,7 +7076,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 				sid = docObject["id"]							# z.B. trigger-point-102
 				PLog("Serie: " + sid)
 				label = "komplette Liste: %s" % title
-				tag = u"Liste aller verfügbaren Folgen"
+				tag = u"Liste aller verfügbaren Folgen | strm-Tools"
 				fparams="&fparams={'sid': '%s'}"	% (sid)						
 				addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
 					thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
@@ -7724,6 +7724,8 @@ def ZDF_search_button(li, query):
 #		Serieninhalt holen via api-Call
 # 	Cache: von der Gesamt-Liste (> 3 MB) werden im Dict nur
 #		sid und url gespeichert
+# 01.05.2023 Folge direkt holen mit sid statt serien-100
+#
 def ZDF_FlatListEpisodes(sid):
 	PLog('ZDF_FlatListEpisodes: ' + sid)
 	CacheTime = 43200											# 12 Std.
@@ -7731,63 +7733,38 @@ def ZDF_FlatListEpisodes(sid):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')										# Home-Button			
 	
-	path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/serien-100"
-	page = Dict("load", "ZDF_Serien", CacheTime=CacheTime)		# ZDF-Serien Gesamtübersicht
-	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
-		page, msg = get_page(path=path)
-		if page == '':	
-			msg1 = "Fehler in ZDF_FlatListEpisodes:"
-			msg2 = msg
-			MyDialog(msg1, msg2, '')
-			return
-		else:
-			page = page.replace('\\/','/')
-			Dict("store", "ZDF_Serien", page)
-	
-	pat = '"id":"%s' % sid										# Suchmuster Bsp. "id": "soko-leipzig-
-	PLog("pat: " + pat)
-	pos = page.find(pat)
-	page = page[pos:]
-	PLog("pos: %d, %s" % (pos, page[:80]))
-	url = stringextract('"url":"', '"', page)
-	PLog("url2: " + url)
-	if url == '':	
-		msg1 = "Abbruch  in ZDF_FlatListEpisodes:"
-		msg2 = "Die Serien-ID [B]%s[/B] ist nicht (mehr)" % sid
-		msg3 = " in der Serienübersicht des  ZDF enthalten."
-		MyDialog(msg1, msg2, msg3)	
-		return
-
-	#-----------------------------								# 2. Folgen zur Serie holen
-	
+	#															# headers wg. häufiger timeouts
 	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 	'Referer': '%s', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
-	url = stringextract('url":"', '"', page)
-	page, msg = get_page(path=url, header=headers)				# headers wg. häufiger timeouts
-	if page == '':	
-		msg1 = "Fehler in ZDF_FlatListEpisodes:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
+	path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/%s" % sid 
+	page, msg = get_page(path=path, header=headers, JsonPage=True)
+	if page == "":	
+		msg1 = "Abbruch  in ZDF_FlatListEpisodes:"
+		msg2 = "Die Serien-ID [B]%s[/B] ist nicht (mehr)" % sid
+		msg3 = " in der Serienübersicht des ZDF enthalten."
+		MyDialog(msg1, msg2, msg3)	
 		return
-	page = page.replace('\\/','/')
-	page = py2_encode(page)
-	
+		
+	jsonObject = json.loads(page)
+	PLog(str(jsonObject)[:80])
+		
+	#-----------------------------								# strm-Buttons
+
 	mediatype=''												# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 		
 	#															# Button strm-Dateien gesamte Liste
 	if SETTINGS.getSetting('pref_strm') == 'true':
-		url =  stringextract('"url":"', '"', page)				# 1. Url/Seite
 		img = R(ICON_DIR_STRM)
 		title = u"strm-Dateien für die komplette Liste erzeugen / aktualisieren"
 		tag = u"Verwenden Sie das Kontextmenü, um strm-Dateien für [B]einzelne Videos[/B] zu erzeugen"
 		summ = u"[B]strm-Dateien (strm-Bündel)[/B] sparen Platz und lassen sich auch in die Kodi-Bibliothek integrieren."
 		summ = u"%s\n\nEin strm-Bündel in diesem Addon besteht aus der strm-Datei mit der Streamurl, einer jpeg-Datei" % summ
 		summ = u"%s\nmit dem Bild zum Video und einer nfo-Datei mit dem Begleittext." % summ
-		url=py2_encode(url); title=py2_encode(title); 
+		path=py2_encode(path); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s'}" %\
-			(quote(url), quote(title))
+			(quote(path), quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_getStrmList", fanart=img, thumb=img, 
 			fparams=fparams, tagline=tag, summary=summ)
 			
@@ -7804,27 +7781,34 @@ def ZDF_FlatListEpisodes(sid):
 			fanart=R(FANART), thumb=R("icon-strmtools.png"), tagline=tag, fparams=fparams)	
 		
 	
+	#-----------------------------								# Auswertung Serie
 
-	# Blockmerkmal für Folgen unterschiedlich:					# Blockmerkmale wie ZDF_getStrmList
-	staffel_list = blockextract('"name":"Staffel ', page)		# Staffel-Blöcke
-	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page, '"profile":')	
-	if len(staffel_list) == 0:									# ohne Staffel-Blöcke
-		staffel_list = blockextract('"headline":"', page)
-	season_title = stringextract('"title":"', '"', page)		# Serientitel für Abgleich 
+	# Blockmerkmal für Folgen unterschiedlich:					# Blockmerkmale wie ZDF_getStrmList	
+	season_title = jsonObject["document"]["titel"]
+	season_id 	= jsonObject["document"]["id"]
+	staffel_list = jsonObject["cluster"]
 	PLog("season_title: %s" % season_title)
 	PLog("staffel_list: %d" % len(staffel_list))
 
-	for staffel in 	staffel_list:								
-		folgen = blockextract('"headline":"', staffel)			# Folgen-Blöcke	
+	for staffel in 	staffel_list:
+		if 	staffel["name"] == "":								# Teaser u.ä.
+			continue							
+		folgen = staffel["teaser"]								# Folgen-Blöcke	
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
-			headline = stringextract('"headline":"', '"', folge)
-			if headline.strip() != season_title.strip():		# Seite kann weitere Serien enthalten
-				PLog("%s | %s" % (headline, season_title))
-				break
+			# Abgleich headline/season_title entfällt wg. möglicher Abweichungen
+			#	Bsp.: FETT UND FETT/FETT & FETT, daher Abgleich mit brandId
+			scms_id = folge["id"]
+			try:
+				brandId = folge["brandId"]
+			except:
+				brandId=""
+			if season_id != brandId:
+				PLog("skip_no_brandId: " + str(folge)[:60])
+				continue
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
-			scms_id = stringextract('"id":"', '"', folge)
 			if season == '':
+				PLog("skip_no_season: " + str(folge)[:60])
 				continue
 				
 			summ_par= summ.replace('\n', '||')
@@ -7993,8 +7977,6 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return
-	if '\\/' in page:									# ZDF-Urls
-		page = page.replace('\\/','/')
 		
 	if page.find('"seasonNumber"') < 0:
 		msg1 = "[B]seasonNumber[/B] fehlt in den Beiträgen."
@@ -8002,9 +7984,10 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 		MyDialog(msg1, msg2, '')
 		return
 		
+	jsonObject = json.loads(page)
+	PLog(str(jsonObject)[:80])
 				
-	list_title =  stringextract('"titel":"', '"', page)				# Serien-Titel (vorgegeben)
-	list_title = list_title.replace('u0022', '*')					# \"
+	list_title = jsonObject["document"]["titel"]
 	list_title = transl_json(list_title)
 	PLog("list_title:" + list_title)
 	
@@ -8038,27 +8021,32 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 
 	#---------------------
 	# Blockmerkmale s. ZDF_FlatListEpisodes:						# Blockmerkmale wie ZDF_FlatListEpisodes
-	staffel_list = blockextract('"name":"Staffel ', page)			# Staffel-Blöcke
-	staffel_list = staffel_list + blockextract('"name":"Alle Folgen', page, '"profile":')	
+	staffel_list = jsonObject["cluster"]							# Staffel-Blöcke
 	if len(staffel_list) == 0:										# ohne Staffel-Blöcke
 		staffel_list = blockextract('"headline":"', page)
-	season_title = stringextract('"title":"', '"', page)			# Serientitel für Abgleich 
+	season_title = jsonObject["document"]["titel"]
+	season_id 	= jsonObject["document"]["id"]
 	PLog("season_title: %s" % season_title)
 	PLog("staffel_list: %d" % len(staffel_list))
 	
 	cnt=0; skip_cnt=0; do_break=False
 	for staffel in 	staffel_list:
-		folgen = blockextract('"headline":"', staffel)				# Folgen-Blöcke	
+		folgen = staffel["teaser"]								# Folgen-Blöcke	
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
-			headline = stringextract('"headline":"', '"', folge)
-			if headline.strip() != season_title.strip():			# Seite kann weitere Serien enthalten
-				PLog("%s | %s" % (headline, season_title))
-				break
+			scms_id = folge["id"]								# wie ZDF_FlatListEpisodes
+			try:
+				brandId = folge["brandId"]
+			except:
+				brandId=""
+			if season_id != brandId:
+				PLog("skip_no_brandId: " + str(folge)[:60])
+				continue
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge) # Datensatz
 			if season == '':
+				PLog("skip_no_season: " + str(folge)[:60])
 				continue
-				
+			
 			fname = make_filenames(title)							# Zieldatei hier ohne Dialog
 			PLog("fname: " + fname)
 			if SETTINGS.getSetting('pref_strm_uz') == "true":	# Für jede strm-Datei ein Unterverzeichnis
@@ -8078,7 +8066,6 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 				msg2 = title
 				xbmcgui.Dialog().notification(msg1,msg2,icon,500,sound=False)
 				
-						
 			PLog("Satz30:")
 			PLog(url);PLog(img);PLog(title);PLog(tag);PLog(summ[:80]); 
 			
@@ -8133,42 +8120,40 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 # Aufrufer: ZDF_FlatListEpisodes, ZDF_getStrmList
 def ZDF_FlatListRec(item):
 	PLog('ZDF_FlatListRec:')
-	PLog(item[:80])
+	PLog(str(item)[:80])
 
 	title='';url='';img='';tag='';summ='';season='';
 	descr='';weburl=''
-	item = item.replace('u0022', '*')					# \"
-	item = transl_json(item)
 	
-	season =  stringextract('"seasonNumber":"', '"', item)
-	if season == '':									# Satz verwerfen	
+	if "seasonNumber" in item:
+		season =  item["seasonNumber"]						# string
+	if season == '':										# Satz verwerfen	
 		return title, url, img, tag, summ, season, weburl
 		
-	episode =  stringextract('"episodeNumber":"', '"', item)
+	episode =  item["episodeNumber"]						# string
 	PLog(season); PLog(episode)
 	title_pre = "S%02dE%02d" % (int(season), int(episode))	# 31.01.2022 S13_F10 -> S13E10
+	PLog("Mark1")
 	
-	brand =  stringextract('"headline":"', '"', item)
-	title =	 stringextract('"titel":"', '"', item)
+	brand =  item["headline"]
+	title =	 item["titel"]
 	title =  repl_json_chars(title)			
-	descr =  stringextract('"beschreibung":"', '"', item)
-	weburl =  stringextract('"sharingUrl":"', '"', item) # für Abgleich vor./nicht mehr vorh. 
-	fsk =  stringextract('"fsk":"', '"', item)
+	descr =  item["beschreibung"]
+	weburl =  item["sharingUrl"] 							# für Abgleich vor./nicht mehr vorh. 
+	fsk =  item["fsk"]
 	if fsk == "none":
 		fsk = "ohne"
-	end =  stringextract('"timetolive":"', '"', item)	# Altern.: offlineAvailability
+	end =  item["timetolive"]								# Altern.: offlineAvailability
 	end = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % end
-	geo =  stringextract('"geoLocation":"', '"', item)
+	geo =  item["geoLocation"]
 	if geo == "none":
 		geo = "ohne"
-	dauer = stringextract('"length":', ',', item)
+	dauer = item["length"]
 	dauer = seconds_translate(dauer)
 	title = "%s | %s" % (title_pre, title)
 	
-	img =  stringextract('"url":"', '"', item)			# Bild
-	pos = item.find("cockpitPrimaryTarget")
-	cockpit = item[pos:]
-	url =  stringextract('"url":"', '"', cockpit)		# Ziel-Url mit Streamquellen
+	img = ZDF_get_img(item)
+	url =  item["cockpitPrimaryTarget"]["url"]				# Ziel-Url mit Streamquellen
 	
 	tag = u"%s | Staffel: %s | Folge: %s\nDauer: %s | FSK: %s | Geo: %s | %s" %\
 		(brand, season, episode, dauer, fsk, geo, end)
