@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>47</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.04.2023
+# 	<nr>48</nr>										# Numerierung für Einzelupdate
+#	Stand: 03.05.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -772,17 +772,17 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 
 		if SETTINGS.getSetting('pref_video_direct') == 'true':			# ständig: Umschalter Sofortstart 
 			menu_entry = "Sofortstart AUS / Downl. EIN"
-			msg1 = "Video-Sofortstart AUS"
-			msg2 = "Downloads EIN"
+			msg1 = "Sofortstart ist AUS"
+			msg2 = "Downloads sind EINgeschaltet"
 			ID = 'pref_video_direct,false|pref_use_downloads,true'
 		else:
 			menu_entry = "Sofortstart EIN / Downl. AUS"
-			msg1 = "Video-Sofortstart EIN"
-			msg2 = "Downloads AUS"
+			msg1 = "Sofortstart ist EIN"
+			msg2 = "Downloads sind AUSgeschaltet"
 			ID = 'pref_video_direct,true|pref_use_downloads,false'
 		icon = R(ICON_TOOLS) 
 		fp = {'ID': ID, 'msg1': msg1,\
-			'msg2': msg2, 'icon': quote_plus(icon), 'delay': '3000'} 
+			'msg2': msg2, 'icon': quote_plus(icon), 'delay': '5000'} 
 		fparams_setting_sofortstart = "&fparams={0}".format(fp)
 		PLog("fparams_setting_sofortstart: " + fparams_setting_sofortstart[:100])
 		fparams_setting_sofortstart = quote_plus(fparams_setting_sofortstart)
