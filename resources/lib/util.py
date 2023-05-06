@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>48</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.05.2023
+# 	<nr>49</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.05.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -253,14 +253,16 @@ def home(li, ID, ltitle=""):
 	title = u' Zurück zum Hauptmenü %s' % ID
 	if ltitle:											# Übersetzung (außer für 'ARD und ZDF')
 		title=ltitle
-	summary = title										# z.Z. n.w.
 	
-	tag =  "Ausschluss-Filter Status: AUS"				# nur Untermenüs ARD, ZDF + Audiothek, nicht Module
+	tag = "Status [B]Ausschluss-Filter[/B]: AUS"		# nur Untermenüs ARD, ZDF + Audiothek, nicht Module
 	if SETTINGS.getSetting('pref_usefilter') == 'true':	
 		tag = tag.replace('AUS','[COLOR blue]EIN[/COLOR]')										
 		page = RLoad(FILTER_SET, abs_path=True)			# akt. Filter laden, [Errno 2] möglich
 		tag = "%s \nFilter [B]aktuell[/B]:\n%s" % (tag, page)
-	
+		
+	summ = "Status [B]Sofortstart[/B]: AUS\nStatus [B]Downloads[/B]: EIN"
+	if SETTINGS.getSetting('pref_video_direct') == 'true':	
+		summ = "Status [B]Sofortstart[/B]: EIN\nStatus [B]Downloads[/B]: AUS"	
 
 	if ID == NAME:		# 'ARD und ZDF'
 		name = Home + NAME
@@ -268,7 +270,7 @@ def home(li, ID, ltitle=""):
 		img = R('icon.png') 
 		name = ' Home: ARD und ZDF'
 		addDir(li=li, label=name, action="dirList", dirID="Main", fanart=img, 
-			thumb=img, tagline='', fparams=fparams)
+			thumb=img, tagline='', summary=summ, fparams=fparams)
 		
 	if ID == 'ARD':			
 		img = R('ard-mediathek.png') 
@@ -276,7 +278,7 @@ def home(li, ID, ltitle=""):
 		CurSender = Dict("load", "CurSender")
 		fparams="&fparams={'name': '%s', 'CurSender': '%s'}"	% (quote(name), quote(CurSender))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", 
-			fanart=img, thumb=img, tagline=tag, fparams=fparams)
+			fanart=img, thumb=img, tagline=tag, summary=summ, fparams=fparams)
 			
 	if ID == 'ZDF' or ID == 'ZDFStart' or ID == 'ZDFfunkStart':
 		title = u' Zurück zum Hauptmenü ZDF'
@@ -284,14 +286,14 @@ def home(li, ID, ltitle=""):
 		name = Home + "ZDF Mediathek"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="Main_ZDF", fanart=img, 
-			thumb=img, tagline=tag, fparams=fparams)
+			thumb=img, tagline=tag, summary=summ, fparams=fparams)
 		
 	if ID == 'ZDFmobile':
 		img = R('zdf-mobile.png')
 		name = Home + "ZDFmobile"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
-			fanart=img, thumb=img, fparams=fparams)
+			fanart=img, thumb=img, summary=summ, fparams=fparams)
 	
 	# 	03.06.2021 ARD-Podcasts (Classic) entfernt		
 			
@@ -300,49 +302,49 @@ def home(li, ID, ltitle=""):
 		name = Home + "ARD Audiothek"
 		fparams="&fparams={'title': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=img, 
-			thumb=img, tagline=tag, fparams=fparams)
+			thumb=img, tagline=tag, summary=summ, fparams=fparams)
 			
 	if ID == '3Sat':
 		img = R('3sat.png')
 		name = Home + "3Sat"
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", fanart=img, 
-			thumb=img, fparams=fparams)
-			
+			thumb=img, summary=summ, fparams=fparams)
+	'''							# deaktiviert
 	if ID == 'FUNK':
 		img = R('funk.png')
 		name = Home + "FUNK"
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Main_funk", fanart=img, 
 			thumb=img, fparams=fparams)
-			
+	'''		
 	if ID == 'Kinderprogramme':
 		img = R('childs.png')
 		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Main_childs", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, summary=summ, fparams=fparams)
 
 	if ID == 'TagesschauXL':
 		img = ICON_MAINXL		# github
 		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.Main_XL", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, summary=summ, fparams=fparams)
 			
 	if ID == 'phoenix':
 		img = R(ICON_PHOENIX)
 		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.Main_phoenix", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, summary=summ, fparams=fparams)
 
 	if ID == 'arte':
 		img = R(ICON_ARTE)
 		name = Home + ID
 		fparams="&fparams={}"
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Main_arte", fanart=img, 
-			thumb=img, fparams=fparams)
+			thumb=img, summary=summ, fparams=fparams)
 
 	return li
 	 
