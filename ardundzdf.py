@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>99</nr>										# Numerierung für Einzelupdate
+# 	<nr>100</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.1'
 VDATE = '07.05.2023'
 
@@ -1588,7 +1588,7 @@ def Audio_get_sendung(url, title, page=''):
 		msg2 = title_org
 		icon = R(ICON_MAIN_AUDIO)		
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
-		PLog("" % (msg1, msg2))
+		PLog("%s: %s" % (msg1, msg2))
 		return
 		
 	if elements and url_org:
@@ -7831,8 +7831,9 @@ def ZDF_FlatListEpisodes(sid):
 # Mitnutzung get_form_streams wie get_formitaeten  sowie
 #	 build_Streamlists_buttons
 # gui=False: ohne Gui, z.B. für ZDF_getStrmList
+#
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
-	PLog("ZDF_getApiStreams:")
+	PLog("ZDF_getApiStreams: " + scms_id)
 	
 	page, msg = get_page(path)
 	if page == '':	
@@ -8620,7 +8621,7 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		PLog('Sofortstart: build_Streamlists_buttons, ID: %s' % ID)
 		played_direct=True
 		img = thumb
-		PlayVideo_Direct(HLS_List, MP4_List, title_org, img, Plot, sub_path, HBBTV_List,ID=ID)
+		PlayVideo_Direct(HLS_List, MP4_List, title_org, img, Plot, sub_path, HBBTV_List=HBBTV_List,ID=ID)
 		return played_direct							# direct-Flag z.B. für ARDStartSingle
 		
 
