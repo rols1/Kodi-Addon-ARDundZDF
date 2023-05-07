@@ -10,6 +10,31 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+07.05.2023 4.7.1
+			get_json_content( ARD): Filterabgleich gefixt (Dict -> string).
+			ZDF_Rubriken: Fix Parameterbez. für ZDF_getApiStreams in walk_entries
+			(url -> path).)
+			XL_Search (TagesschauXL): Suche an ARD-Änderungen angepasst (json-Quellen,
+			html-Quellen nicht mehr auswertbar).
+			TagesschauXL: Bildgalerien ergänzt - Button in Main_XL, neue Funktionen
+			XL_BilderCluster, XL_BilderClusterSingle und XL_BilderShow.
+			get_content_json (TagesschauXL): fehlende Endungen bei Bild-Links mit ".webp"
+			ergänzt.
+			ZDF_Rubriken: Titel mit "Highlights" ergänzt bei Clustertyp videoCarousel.
+			ZDF_RubrikSingle: Bez. für CacheTime korrigiert (ZDF_CacheTime_AZ), relevant
+			für Aufruf aus Startseite.
+			Main_ZDF: fehlende ID für Menü ZDFinternational ergänzt.
+			ZDF_getApiStreams: Prüfung Listen nach Auswertung der Videoquellen auf 
+			HBBTV_List erweitert (kann fsk16-Beiträge außerhalb der geschützten Zeiten 
+			enthalten). 
+			ZDF_FlatListEpisodes, ZDF_FlatListRec, ZDF_getStrmList: Anpassungen an json-
+			Quellen im ZDF-Code, Fixes in Listenauswertung (Liste direkt laden statt 
+			Übersicht, Abgleich brandId statt Abgleich Serientitel).
+			do_sync (strm): Anpassung an ZDF_FlatListEpisodes (strings -> json).
+			Modul funk: im Setting vorerst deaktiviert, README aktualisiert.
+			home (util): Status-Infos im Home-Menü zu Sofortstart + Downloads ergänzt 
+			(Tag summary).			
+
 30.04.2023 4.7.0
 			ARDPagination: get_page_content -> get_json_content (übersehen in V4.6.9).
 			get_json_content (ARD): key-Auswahl für "teasers" aktualisiert.

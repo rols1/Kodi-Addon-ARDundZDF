@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>8</nr>								# Numerierung für Einzelupdate
-#	Stand: 01.05.2023
+#	Stand: 06.05.2023
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -75,9 +75,10 @@ NAME			= 'ARD und ZDF'
 BASE_URL 		= 'https://www.tagesschau.de'
 ARD_Last 		= 'https://www.tagesschau.de/multimedia'	# ARD_100,ARD_Last,ARD_20Uhr,ARD_Gest,ARD_tthemen,ARD_Nacht
 ARD_bab 		= 'https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL2Rhc2Vyc3RlLmRlL2JlcmljaHQgYXVzIGJlcmxpbg?pageNumber=0&pageSize=12'
-ARD_Fakt		= 'https://www.tagesschau.de/faktenfinder/'				# 30.04.2023
+ARD_Fakt		= 'https://www.tagesschau.de/faktenfinder/'					# 30.04.2023
 Podcasts_Audios	= 'https://www.tagesschau.de/multimedia/audio'
-ARD_Investigativ='https://www.tagesschau.de/investigativ/'				# 10.06.2021
+ARD_Investigativ='https://www.tagesschau.de/investigativ/'					# 10.06.2021
+ARD_Bilder		= 'https://www.tagesschau.de/multimedia/bilder/index.html'	# 05.05.2023
 
 
 # Icons
@@ -223,6 +224,13 @@ def Main_XL():
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.get_VideoAudio", fanart=ICON_MAINXL, 
 		thumb=ICON_RADIO, tagline=tag, fparams=fparams)
 
+	title = 'Blickpunkte'
+	tag = u"Bilder des Tages und Bildergalerien. Blickpunkte auf das aktuelle Geschehen in aller Welt. Nachrichten in Bildern auf tagesschau.de."
+	fparams="&fparams={'title': '%s','path': '%s'}"  %\
+		(quote(title), quote(ARD_Bilder))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_BilderCluster", fanart=ICON_MAINXL, 
+		thumb=ICON_BILDER, tagline=tag, fparams=fparams) 
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 # ----------------------------------------------------------------------
@@ -295,41 +303,186 @@ def XL_LastSendung(title, page, show=""):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 # ----------------------------------------------------------------------
-def Archiv(path, ID, img):	# 30 Tage - ähnlich Verpasst 
-	PLog('Archiv:'); PLog(ID);
+# Bildcluster der Webseite listen (Wetterbilder, Bilder des Tages..)
+# 	Bilder entweder in json eingebettet  (data-v=..) oder in html-tags
+#	Cluster -> XL_BilderClusterSingle
+# 	
+def XL_BilderCluster(title, path):
+	PLog('XL_BilderCluster:')
+
+	page, msg = get_page(path=path, GetOnlyRedirect=True)	
+	path = page								
+	page, msg = get_page(path)	
+	if page == '':	
+		msg1 = u"Fehler in XL_BilderCluster"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')										# Home-Button
+	li = home(li, ID='TagesschauXL')									# Home-Button
 		
-	wlist = range(0,30)			# Abstand 1 Tage
-	now = datetime.datetime.now()
-	for nr in wlist:
-		rdate = now - datetime.timedelta(days = nr)
-		iDate = rdate.strftime("%d.%m.%Y")		# Formate s. man strftime (3)
-		SendDate = rdate.strftime("%Y%m%d")		# ARD-Archiv-Format		
-		iWeekday =  rdate.strftime("%A")
-		punkte = '.'
-		if nr == 0:
-			iWeekday = 'Heute'	
-		if nr == 1:
-			iWeekday = 'Gestern'	
-		iWeekday = transl_wtag(iWeekday)
+	cluster =  blockextract('class="trenner trenner--default', page)
+	PLog(len(cluster))
+	img = R(ICON_DIR_FOLDER)
+	for item in cluster:
+		title = stringextract('<h2>', '</h2>', item)					# topline kann entfallen
+		title=py2_encode(title); path=py2_encode(path)
+		fparams="&fparams={'title': '%s','path': '%s'}"  %\
+			(quote(title), quote(path))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_BilderClusterSingle", 
+			fanart=ICON_BILDER, thumb=img, fparams=fparams)	
 		
-		ipath =  ARD_Archiv % SendDate
-		PLog(ipath); PLog(iDate); PLog(iWeekday);
-		title =	"%s | %s" % (iDate, iWeekday)
-		PLog(title)	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 
-		ID = 'ARD_Archiv_Day'
-		title=py2_encode(title); ipath=py2_encode(ipath); img=py2_encode(img);
-		fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','img': '%s'}"  %\
-			(quote(title), quote(ipath), ID, quote(img))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-			thumb=GIT_CAL, fparams=fparams)
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+# ----------------------------------------------------------------------
+
+def XL_BilderClusterSingle(title, path):
+	PLog('XL_BilderClusterSingle: ' + title)
+	title_org=title
+
+	page, msg = get_page(path=path, GetOnlyRedirect=True)	
+	path = page								
+	page, msg = get_page(path)	
+	if page == '':	
+		msg1 = u"Fehler in XL_BilderClusterSingle"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return li
+	
+	cluster =  blockextract('class="trenner trenner--default', page)	# Cluster suchen
+	mycluster=""
+	for item in cluster:
+		title = stringextract('<h2>', '</h2>', item)
+		if title in title_org:
+			mycluster = item
+			PLog("cluster_found: " + title)
+			break
+	
+	# Format img_list: "Titel || img_url || img_alt || summ"	
+	img_list=[]; cnt=0
+	if '<div data-v="' in mycluster:										# json
+		PLog("content_json:")
+		cnt=cnt+1
+		conf = stringextract('data-v="', '"', mycluster)	
+		conf = conf.replace('\\"', '"')
+		conf = conf.replace('&quot;', '"')
+		conf = unquote(conf)
+		obj = json.loads(conf)
+		PLog(str(obj)[:60]);
+	
+		name = obj["name"]
+		imgObjects = obj["images"]
+		PLog("imgs_in_Block_%d: %d" % (cnt, len(imgObjects)))
+		for img in imgObjects:
+			summ=""
+			img_url = img["imageUrls"]["l"]
+			img_alt = img["alttext"]
+			summ = img["description"]
+			summ=summ.replace(u'&lt;strong&gt;', '')					# html-Rest in json
+			summ=summ.replace(u'&lt;/strong&gt;', '')				# html-Rest in json
+			title = img["title"]
+			line = "%s||%s||%s||%s" % (title, img_url, img_alt, summ)
+			img_list.append(line)
+	else:
+		PLog("content_html:")		
+		items = blockextract('ts-picture__wrapper', mycluster, "</noscript>")
+		cnt=0
+		for item in items:
+			summ=""
+			cnt=cnt+1
+			title = "%s: Bild %d" % (title_org, cnt)
+			img_alt = stringextract('alt="', '"', item)
+			img_last  = blockextract('data-srcset=', item)[-1] 			# größtes Bild
+			img_url = stringextract('data-srcset="', '"', img_last)
+			line = "%s||%s||%s||%s" % (title, img_url, img_alt, summ)
+			img_list.append(line)
+			PLog(line)
 			
-	 
+	PLog("img_list: %d" % len(img_list))
+	if len(img_list) > 0:
+		XL_BilderShow(title, img_list)
+	
+	return
+# ----------------------------------------------------------------------	 
+def XL_BilderShow(title, img_list):
+	PLog("XL_BilderShow:")
+	title_org=title
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='TagesschauXL')									# Home-Button
+
+	fname = make_filenames(title)			# Ordnername: Titel 
+	fpath = os.path.join(SLIDESTORE, fname)
+	PLog(fpath)
+	if os.path.isdir(fpath) == False:
+		try:  
+			os.mkdir(fpath)
+		except OSError:  
+			msg1 = 'Bildverzeichnis konnte nicht erzeugt werden:'
+			msg2 = "%s/%s" % (SLIDESTORE, fname)
+			PLog(msg1); PLog(msg2)
+			MyDialog(msg1, msg2, '')
+			return li
+			
+	cnt=0; background=False; path_url_list=[]; text_list=[]
+	for line in img_list:
+		cnt=cnt+1
+		title, img_url, img_alt, summ = line.split("||")
+		title = make_filenames(title) 					# Umlaute möglich
+		local_path 	= "%s/%s.jpg" % (fpath, title)		# Kodi braucht Endung (ohne Prüfung) 
+		if len(title) > 70:
+			title = "%s.." % title[:70]					# Titel begrenzen
+		local_path 	= os.path.abspath(local_path)
+		thumb = local_path
+		PLog(local_path)
+		if os.path.isfile(local_path) == False:			# schon vorhanden?
+			# path_url_list (int. Download): 
+			#	Zieldatei_kompletter_Pfad|Bild-Url ..
+			PLog(local_path); PLog(img_url)
+			PLog(type(local_path)); PLog(type(img_url))
+			path_url_list.append('%s|%s' % (local_path, img_url))
+
+			if SETTINGS.getSetting('pref_watermarks') == 'true':
+				txt = "%s\n%s\n%s\n%s\n%s" % (fname,title_org,title,img_alt,summ)
+				PLog("Mark6")
+				text_list.append(txt)	
+			background	= True											
+
+		title=repl_json_chars(title); summ=repl_json_chars(summ)
+		PLog('new_img:');PLog(title);PLog(img_url);PLog(thumb);PLog(summ[0:40]);
+		if thumb:	
+			local_path=py2_encode(local_path);
+			fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_SlideShow", 
+				fanart=thumb, thumb=local_path, fparams=fparams, tagline=img_alt, summary=summ)
+
+	if background and len(path_url_list) > 0:				# Übergabe Url-Liste an Thread
+		from threading import Thread	# thread_getfile
+		textfile=''; pathtextfile=''; storetxt=''; url=img_url; 
+		fulldestpath=local_path; notice=True; destdir="Slide-Show-Cache"
+		now = datetime.datetime.now()
+		timemark = now.strftime("%Y-%m-%d_%H-%M-%S")
+		folder = fname 
+		background_thread = Thread(target=thread_getpic,
+			args=(path_url_list,text_list,folder))
+		background_thread.start()
+			
+	if cnt > 0:		
+		fpath=py2_encode(fpath);
+		fparams="&fparams={'path': '%s'}" % quote(fpath) 	# fpath: SLIDESTORE/fname
+		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDF_SlideShow", 
+			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
+		
+		lable = u"Alle Bilder löschen"						# 2. Löschen
+		tag = 'Bildverzeichnis: ' + fname 
+		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  Bilder neu einlesen'
+		fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % quote(fpath)
+		addDir(li=li, label=lable, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DELETE), 
+			thumb=R(ICON_DELETE), fparams=fparams, tagline=img_alt, summary=summ)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)	
+
 # ----------------------------------------------------------------------	 
 def XL_Search(query='', pagenr=''):
 	PLog("XL_Search: " + pagenr)
@@ -341,7 +494,6 @@ def XL_Search(query='', pagenr=''):
 		return Main_XL()		# sonst Wiedereintritt XL_Search bei Sofortstart, dann Absturz Addon
 	query_org = query	
 	query=py2_decode(query)		# decode, falls erf. (1. Aufruf)
-
 
 	ID='Search'
 	if pagenr == '':		# erster Aufruf muss '' sein
@@ -531,7 +683,7 @@ def XL_Live(ID=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 # ----------------------------------------------------------------------
-# Abweichende Struktur der HTML-Seite (Daten im ts-mediaplayer-Block)
+# json-Daten im data-v-Block
 #
 def get_VideoAudio(title, path):								# Faktenfinder
 	PLog('get_VideoAudio: ' + path)
@@ -606,6 +758,8 @@ def get_content_json(item):
 				break
 			if img == "":
 				img=url		# Fallback: letzte url
+		if len(img.split(".")) < 4:						# Endung fehlt
+			img = img + ".webp"
 	except Exception as exception:
 		PLog("get_img_error: " + str(exception))
 		img = R(ICON_DIR_FOLDER)		
