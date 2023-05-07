@@ -510,13 +510,21 @@ def XL_Search(query='', pagenr=''):
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return 	
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')						# Home-Button
 
 	jsonObject1 = json.loads(page1)
-	PLog(str(jsonObject1)[:80])
 	jsonObject2 = json.loads(page2)
+	PLog(str(jsonObject1)[:80])
+	if len(jsonObject1["documentTypes"][0]["items"]) == 0 and len(jsonObject2["documentTypes"][0]["items"]) == 0:
+		msg1 = u'nichts gefunden'
+		msg2 = query
+		icon = R(ICON_MAINXL)		
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
+		PLog("%s: %s" % (msg1, msg2))
+		return
+		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='TagesschauXL')						# Home-Button
+	
 	docObject1 = jsonObject1["documentTypes"][0]
 	docObject2 = jsonObject2["documentTypes"][0]
 	cnt1 = docObject1["count"]
@@ -595,7 +603,7 @@ def XL_SearchContent(url, query, typ):
 		url = BASE_URL + item["url"]
 		
 		title = repl_json_chars(title); summ = repl_json_chars(summ);
-		
+		url=py2_encode(url); title=py2_encode(title); 		
 		fparams="&fparams={'title': '%s','path': '%s'}"  %\
 			(quote(title), quote(url))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.get_VideoAudio", 
@@ -606,7 +614,8 @@ def XL_SearchContent(url, query, typ):
 	nextpage = str(int(pagenr) + 1)
 	PLog("nextpage: %s" % nextpage) 
 	title = "Mehr: [B]%s[/B]" % query
-	fparams="&fparams={'query': '%s', 'pagenr': '%s'}" % (query, nextpage)
+	query=py2_encode(query);
+	fparams="&fparams={'query': '%s', 'pagenr': '%s'}" % (quote(query), nextpage)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Search", fanart=R(ICON_MEHR), 
 		thumb=R(ICON_MEHR), fparams=fparams, tagline=tag)		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)			
@@ -614,7 +623,7 @@ def XL_SearchContent(url, query, typ):
 # ----------------------------------------------------------------------
 def get_img(item):	
 	PLog('get_img:')
-	PLog(str(item))
+	PLog(str(item)[:60])
 	try:
 		img = item["teaserImage"]["urlM"]	
 	except:
