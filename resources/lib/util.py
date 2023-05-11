@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>49</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.05.2023
+# 	<nr>50</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.05.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1286,6 +1286,7 @@ def GetJsonByPath(path, jsonObject):
 		
 	path = path.split('|')
 	i = 0; msg=""
+	
 	try:									# index error möglich
 		index=0
 		while(i < len(path)):
@@ -1301,7 +1302,8 @@ def GetJsonByPath(path, jsonObject):
 		PLog(msg)
 		
 	# PLog(jsonObject)
-	return jsonObject, msg	
+	return jsonObject, msg
+
 #---------------------------------------------------------------- 
 # img_urlScheme: img-Url ermitteln für get_sendungen, ARDRubriken. text = string, dim = Dimension
 def img_urlScheme(text, dim, ID=''):
@@ -2311,6 +2313,7 @@ def ReadJobs():
 #	in TEXTSTORE gespeichert wird die ges. html-Seite (vorher nur Text summ)
 # 14.06.2021 Sendedatum pubDate für ZDF Sport unterdrückt (oft falsch bei Livestreams)
 # 26.08.2021 Erweiterung für einzelnes Auswertungsmerkmal (pattern) 
+# 11.05.2023 postcontent hinzugefügt
 #
 def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pattern='',duration=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
@@ -2348,7 +2351,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 	verf='';
 	
 	if pattern: 
-		ID=''																#einzelnes Auswertungsmerkmal
+		ID=''																# einzelnes Auswertungsmerkmal
 		pat1, pat2 = pattern.split('|')
 		summ = stringextract(pat1, pat2, page)
 		summ = repl_json_chars(summ)
@@ -2363,8 +2366,20 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 			summ = "%s\n\n%s" % (teaserinfo, summ)
 		summ = unescape(summ)
 		summ = repl_json_chars(summ)
-		#if 'title="Untertitel">UT</abbr>' in page:	# stimmt nicht mit get_formitaeten überein
-		#	summ = "UT | " + summ
+																			# 11.05.2023 neu 
+		postcontent = stringextract('b-post-content">', '"b-post-footer"', page)
+		if postcontent:
+			addpost=[]
+			items = blockextract("<p>", postcontent, "</p>")
+			for item in items:
+				s = stringextract("<p>", "</p>", item)
+				s=unescape(s); s=cleanhtml(s); s=transl_json(s)
+				if s:
+					addpost.append(s)
+			if len(addpost) > 0:
+				summ = summ + " | " + " | ".join(addpost)
+				summ = mystrip(summ)
+
 		if skip_verf == False:
 			if u'erfügbar bis' in page:										# enth. Uhrzeit									
 				verf = stringextract(u'erfügbar bis ', '<', page)			# Blank bis <
@@ -3087,18 +3102,18 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 				msg2 = "verwende HBBTV (MP4)"
 			else:		
 				mode_hls=True			
-				
+
 	if len(Stream_List) == 0:						# alle Listen leer		
 			msg1 = u"Video-Quellen fehlen"
-			msg2 = u"nicht verfügbar: HLS, MP4, HBBTV"
+			msg2 = u"nicht verfügbar: HLS, MP4"
 			icon = R(ICON_WARNING)
 			xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	
-		
-	if msg1 and msg2:								# Hinweis zu Austausch
-		if "/live/" in Stream_List[0] or 'ivestream' in Stream_List[0]:	
-			PLog("is_Livestream")					# 	entf. bei Kennz. als Livestream
-		else:
-			xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	
+	else:	
+		if msg1 and msg2:								# Hinweis zu Austausch
+			if "/live/" in Stream_List[0] or 'ivestream' in Stream_List[0]:	
+				PLog("is_Livestream")					# 	entf. bei Kennz. als Livestream
+			else:
+				xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	
 		
 	Default_Url=''
 	PLog("mode_hls: " + str(mode_hls))

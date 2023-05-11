@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>100</nr>										# Numerierung für Einzelupdate
+# 	<nr>101</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.1'
-VDATE = '07.05.2023'
+VDATE = '11.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6892,6 +6892,9 @@ def ZDF_PageMenu(DictID, jsonObject="", mark="", li="", homeID=""):
 			descr = repl_json_chars(descr)
 			if(entry["type"]=="video"):								# Videos
 				PLog("stream: " + stream)
+				if "channel" in entry:								# Zusatz Sender
+					sender = entry["channel"]
+					tag = "%s | %s" % (tag, sender)
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(stream, title, img, tag, descr, scms_id)	
 				addDir(li=li, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
@@ -6993,6 +6996,9 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 		title = repl_json_chars(title)
 		descr = repl_json_chars(descr)
 		if typ == "video":	
+				if "channel" in entry:									# Zusatz Sender
+					sender = entry["channel"]
+					tag = "%s | %s" % (tag, sender)
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(stream, title, img, tag, descr, scms_id)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
@@ -7119,6 +7125,9 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			if(entry["type"]=="video"):							# Videos am Seitenkopf
 				# path = 'stage|%d' % i	# entf. hier
 				PLog("stream: " + stream)
+				if "channel" in entry:							# Zusatz Sender
+					sender = entry["channel"]
+					tag = "%s | %s" % (tag, sender)
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(stream, title, img, tag, descr, scms_id)	
 				addDir(li=li, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
@@ -7261,7 +7270,7 @@ def ZDF_get_content(obj, maxWidth="", mark=""):
 		title = "%s | %s" % (title_pre, title)
 	descr=''	
 	if("beschreibung" in obj):
-		descr = teaser_nr + obj["beschreibung"]
+		descr = teaser_nr + obj["beschreibung"]	
 			
 	typ=''	
 	if("type" in obj):
@@ -7298,6 +7307,15 @@ def ZDF_get_content(obj, maxWidth="", mark=""):
 		# stream = obj["cockpitPrimaryTarget"]["url"] 			# Altern. (mit url identisch)
 		if "externalId" in obj:
 			scms_id = obj["externalId"]
+			
+		if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
+			if "sharingUrl" in obj:								# Web-Referenz
+				path=obj["sharingUrl"]
+				descr_new = get_summary_pre(path, ID='ZDF',skip_verf=True,skip_pubDate=True)  # Modul util
+				if 	len(descr_new) > len(descr):
+					PLog("descr_new: " + descr_new[:60] )
+					descr = descr_new
+		
 
 	summ = descr
 	if multi:
