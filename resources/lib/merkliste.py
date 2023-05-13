@@ -6,8 +6,8 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-# 	<nr>0</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.02.2023
+# 	<nr>1</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.05.2023
 #
 
 from __future__ import absolute_import
@@ -136,7 +136,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 				PLog('Name: %s, IName: %s' % (name, iname))
 				if iname == name:# Doppler vermeiden
 					doppler = True
-					msg1 = u"Eintrag existiert bereits - diesen Eintrag umbenennen?"
+					msg1 = u"Eintrag existiert bereits - neuen Eintrag umbenennen?"
 					msg2 = u"Info:\nin der Merkliste lassen sich alle Einträge via"
 					msg3 = u"Kontextmenü nachträglich umbenennen."
 					head = "Merkliste: neuer Eintrag"

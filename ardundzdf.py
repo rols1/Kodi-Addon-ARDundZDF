@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>101</nr>										# Numerierung für Einzelupdate
+# 	<nr>102</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.1'
-VDATE = '11.05.2023'
+VDATE = '13.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6814,7 +6814,7 @@ def ZDF_Start(ID, homeID=""):
 			jsonObject = page
 			
 		PLog("jsonObject1: " + str(jsonObject)[:80])
-		ZDF_PageMenu(DictID,jsonObject)
+		ZDF_PageMenu(DictID,jsonObject=jsonObject)
 		return
 
 	if ID=='Rubriken':
@@ -6835,16 +6835,31 @@ def ZDF_Start(ID, homeID=""):
 # Aufruf ZDF_Start mit jsonObject direkt,
 #		ZDF_RubrikSingle mit DictID (-> gespeichertes jsonObject)
 # mark: Titelmarkierung, z.B. für ZDF_Search
+# 13.05.2023 zusätzl. urlkey (Kompensation falls jsonObject fehlt),
+#	Format urlkey: "%s#cluster#%d" % (url, obj_id, obj_nr)
 #		
-def ZDF_PageMenu(DictID, jsonObject="", mark="", li="", homeID=""):								
-	PLog('ZDF_PageMenu: DictID: ' + DictID)
-	PLog(mark); PLog(homeID)
-	li_org=li; 
+def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):								
+	PLog('ZDF_PageMenu:')
+	PLog('DictID: ' + DictID)
+	PLog(mark); PLog(homeID); PLog(urlkey)
+	li_org=li 
 		
 	if 	not jsonObject:
 		jsonObject = Dict("load", DictID)
+	if not jsonObject:						# aus Url wiederherstellen (z.B. für Merkliste)
+		if urlkey:
+			url, obj_id, obj_nr = urlkey.split("#")
+			PLog("obj_id: %s, obj_nr: %s" % (obj_id, obj_nr))
+			page, msg = get_page(path=url)
+			try:
+				jsonObject = json.loads(page)
+				clusterObject = jsonObject[obj_id][int(obj_nr)]
+			except Exception as exception:
+				PLog(str(exception))
+				jsonObject=""
+
 	if not jsonObject:
-		msg1 = 'ZDF_PageMenu: Beiträge können leider nicht geladen werden.'
+		msg1 = u'ZDF_PageMenu: Beiträge können leider nicht geladen werden.'
 		MyDialog(msg1, '', '')
 		return	
 	PLog(str(jsonObject)[:80])
@@ -7092,8 +7107,10 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 		PLog("walk_cluster: %d" % len(clusterObject))					
 		for jsonObject in clusterObject:
 			typ = jsonObject["type"]
-			title = jsonObject["name"]
-			if not title:						# kann leer sein
+			title=""
+			if "name" in jsonObject:							# kann fehlen oder leer sein
+				title = jsonObject["name"]
+			if not title:						
 				title = title_org
 			title = repl_json_chars(title)
 			if typ == "videoCarousel":
@@ -7104,11 +7121,13 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 				continue						# leerer Vorspann: sendungen-mit-audiodeskription-hoerfilme-100
 			tag = "Folgeseiten"
 			descr = ""
-			DictID = "ZDF_%s_%d" % (url.split("/")[-1], cnt)	# DictID: url-Ende + cluster-nr
+			urlid = url.split("/")[-1]
+			DictID = "ZDF_%s_%d" % (urlid, cnt)	# DictID: url-Ende + cluster-nr
 			Dict('store', DictID, jsonObject)					# für ZDF_PageMenu
+			urlkey = "%s#cluster#%d" % (url, cnt)				# dto
 			
-			fparams="&fparams={'DictID': '%s', 'homeID': '%s'}" % (DictID, homeID)
-			PLog("fparams: " + fparams)	
+			urlkey=py2_encode(urlkey)
+			fparams="&fparams={'DictID': '%s', 'homeID': '%s', 'urlkey': '%s'}" % (DictID, homeID, quote(urlkey))
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_PageMenu", fanart=img, 
 			thumb=img, fparams=fparams, summary=descr, tagline=tag)
 			cnt=cnt+1
@@ -7134,7 +7153,6 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
 			else:
 				fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" % (url, title, homeID)
-				PLog("fparams: " + fparams)	
 				addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
 					thumb=img, fparams=fparams, summary=descr, tagline=tag)
 					
@@ -7401,7 +7419,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen
 		
 	DictID="ZDF_Search"											# hier dummy
-	li=ZDF_PageMenu(DictID, jsonObject, mark=query, li=li)
+	li=ZDF_PageMenu(DictID, jsonObject=jsonObject, mark=query, li=li)
 	
 	li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
 	PLog("nextUrl: " + nextUrl)
