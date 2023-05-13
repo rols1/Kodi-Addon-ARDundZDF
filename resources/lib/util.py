@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>50</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.05.2023
+# 	<nr>51</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.05.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1281,8 +1281,10 @@ def getHeaders(response):
 # 23.04.2023 Rückgabe mit error-Text
 def GetJsonByPath(path, jsonObject):		
 	PLog('GetJsonByPath: '+ path)
-	if path == '':
-		return jsonObject, ""
+	PLog(type(jsonObject))
+	if not path or not jsonObject:
+		msg = "GetJsonByPath: param_error"
+		return "", msg
 		
 	path = path.split('|')
 	i = 0; msg=""
@@ -2405,6 +2407,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 				
 	if 	ID == 'ARDnew':
 		page = page.replace('\\"', '*')							# Quotierung vor " entfernen, Bsp. \"query\"
+		page = page.replace('\\r\\n', '')						# CR+LF entf.
 		pubServ = stringextract('"name":"', '"', page)			# publicationService (Sender)
 		maturitytRating = stringextract('maturityContentRating":"', '"', page) # "FSK16"
 		maturitytRating = maturitytRating.replace('NONE', 'Ohne')

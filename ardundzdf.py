@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>102</nr>										# Numerierung für Einzelupdate
+# 	<nr>103</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.1'
 VDATE = '13.05.2023'
 
@@ -6844,16 +6844,17 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 	PLog(mark); PLog(homeID); PLog(urlkey)
 	li_org=li 
 		
-	if 	not jsonObject:
+	if not jsonObject:
 		jsonObject = Dict("load", DictID)
 	if not jsonObject:						# aus Url wiederherstellen (z.B. für Merkliste)
 		if urlkey:
+			PLog("get_from_urlkey:")
 			url, obj_id, obj_nr = urlkey.split("#")
 			PLog("obj_id: %s, obj_nr: %s" % (obj_id, obj_nr))
 			page, msg = get_page(path=url)
 			try:
 				jsonObject = json.loads(page)
-				clusterObject = jsonObject[obj_id][int(obj_nr)]
+				jsonObject = jsonObject[obj_id][int(obj_nr)]
 			except Exception as exception:
 				PLog(str(exception))
 				jsonObject=""
@@ -6905,15 +6906,21 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			PLog(stage); PLog(typ); PLog(title);
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)
-			if(entry["type"]=="video"):								# Videos
-				PLog("stream: " + stream)
+			if entry["type"]=="video":								# Videos
 				if "channel" in entry:								# Zusatz Sender
 					sender = entry["channel"]
 					tag = "%s | %s" % (tag, sender)
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
-					(stream, title, img, tag, descr, scms_id)	
+					(stream, title, img, tag, descr, scms_id)
+				PLog("fparams: " + fparams)	
 				addDir(li=li, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
+			elif entry["type"]=="livevideo":
+				fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+				PLog("fparams: " + fparams)	
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_Live", fanart=img, 
+					thumb=img, fparams=fparams, summary=descr, tagline=tag, mediatype=mediatype)   
+				
 			else:
 				fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" % (url, title, homeID)
 				PLog("fparams: " + fparams)	
@@ -6945,6 +6952,9 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 						'Mein Programm', 'Deine', 'KiKA live sehen', 'Weiterschauen'
 						 ]
 			skip=False						
+			if title == '':
+				PLog('ohne_Titel: %s' % str(clusterObject)[:80])		# ?
+				skip = True 
 			for t in skip_list:
 				# PLog("t: %s, title: %s" % (t, title))
 				if title.startswith(t) or title.endswith(t):
@@ -6952,9 +6962,6 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 					skip = True 
 			if skip:
 				continue 
-			if title == '':
-				PLog('ohne_Titel: %s' % str(clusterObject)[:80])		# ?
-				continue
 				
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)
@@ -7116,8 +7123,10 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			if typ == "videoCarousel":
 				title = "[B]Highlights[/B]: %s" % title
 			try:
-				img = ZDF_get_img(jsonObject["teaser"][0])
-			except:
+				img = ZDF_get_img(jsonObject["teaser"][0])		# kann fehlen oder leer sein
+			except Exception as exception:
+				PLog("json_error: " + str(exception))				
+				cnt=cnt+1
 				continue						# leerer Vorspann: sendungen-mit-audiodeskription-hoerfilme-100
 			tag = "Folgeseiten"
 			descr = ""
