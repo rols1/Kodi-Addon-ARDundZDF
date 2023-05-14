@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>103</nr>										# Numerierung für Einzelupdate
+# 	<nr>104</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.2'
 VDATE = '14.05.2023'
 
@@ -6910,6 +6910,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 				if "channel" in entry:								# Zusatz Sender
 					sender = entry["channel"]
 					tag = "%s | %s" % (tag, sender)
+				if stream == "":									# Bsp.: ZDFtivi -> KiKA live
+					stream = url
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(stream, title, img, tag, descr, scms_id)
 				PLog("fparams: " + fparams)	
@@ -6920,6 +6922,14 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 				PLog("fparams: " + fparams)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_Live", fanart=img, 
 					thumb=img, fparams=fparams, summary=descr, tagline=tag, mediatype=mediatype)   
+			elif entry["type"]=="externalUrl":						# Links zu anderen Sendern
+				if "KiKANiNCHEN" in title:
+					PLog("Link_KiKANiNCHEN")
+					KIKA_START="https://www.kika.de/bilder/startseite-104_v-tlarge169_w-1920_zc-a4147743.jpg"	# ab 07.12.2022
+					GIT_KANINCHEN="https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaninchen.png?raw=true"					
+					fparams="&fparams={}" 
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Menu", 
+						fanart=KIKA_START, thumb=GIT_KANINCHEN, tagline='für Kinder 3-6 Jahre', fparams=fparams)
 				
 			else:
 				fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" % (url, title, homeID)
@@ -7135,8 +7145,10 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			Dict('store', DictID, jsonObject)					# für ZDF_PageMenu
 			urlkey = "%s#cluster#%d" % (url, cnt)				# dto
 			
+			PLog("Satz6_1:")
 			urlkey=py2_encode(urlkey)
 			fparams="&fparams={'DictID': '%s', 'homeID': '%s', 'urlkey': '%s'}" % (DictID, homeID, quote(urlkey))
+			PLog("fparams: " + fparams)	
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_PageMenu", fanart=img, 
 			thumb=img, fparams=fparams, summary=descr, tagline=tag)
 			cnt=cnt+1
@@ -7150,6 +7162,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			title = repl_json_chars(title)
 			label = title
 			descr = repl_json_chars(descr)
+			PLog("Satz6_2:")
 			if(entry["type"]=="video"):							# Videos am Seitenkopf
 				# path = 'stage|%d' % i	# entf. hier
 				PLog("stream: " + stream)
@@ -7274,11 +7287,13 @@ def ZDF_get_content(obj, maxWidth="", mark=""):
 	if not maxWidth:				# Teaserbild, Altern. 1280 für Video
 		maxWidth=840
 	multi=True; verf=""; url=""; stream=""; scms_id=""
+	headline=""
 	season=""; episode=""			# episodeNumber, seasonNumber
 	
 	if "url" in obj:
 		url=obj["url"]
-	headline=obj["headline"]
+	if "headline" in obj:
+		headline=obj["headline"]
 	title=obj["titel"]
 	if title.strip() == "":
 		title = headline
