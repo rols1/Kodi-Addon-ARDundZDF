@@ -10,10 +10,24 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+14.05.2023 4.7.2
+			ZDF-Videos: Zusatz Senderbez. (entry["channel"]) in ZDF_PageMenu,
+			ZDF_Rubriken und ZDF_RubrikSingle.
+			get_summary_pre (util): Auswertung erweitert (ZDF: tag b-post-content,
+			Anpassung ZDF_get_content, ARD: CR+LF entfernt).
+			ZDF_PageMenu: zusätzl. Param. urlkey zur Kompensation eines fehlenden
+			jsonObject (referenziert durch DictID), Aussteuerung Typ "livevideo"
+			-> ZDF_Live.
+			ZDF_RubrikSingle: Objektzähler bei leeren/fehlenden Objekten erhöht
+			(für DictID und urlkey)
+			Watch_items (merkliste): Änderung Dialogtext "diesen Eintrag .." ->
+			"neuen Eintrag ..".
+			GetJsonByPath (util): leeres/falsches jsonObject abgefangen.
+
 07.05.2023 4.7.1
 			get_json_content( ARD): Filterabgleich gefixt (Dict -> string).
 			ZDF_Rubriken: Fix Parameterbez. für ZDF_getApiStreams in walk_entries
-			(url -> path).)
+			(url -> path).
 			XL_Search (TagesschauXL): Suche an ARD-Änderungen angepasst (json-Quellen,
 			html-Quellen nicht mehr auswertbar).
 			TagesschauXL: Bildgalerien ergänzt - Button in Main_XL, neue Funktionen

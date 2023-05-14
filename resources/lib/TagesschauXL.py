@@ -75,9 +75,9 @@ NAME			= 'ARD und ZDF'
 BASE_URL 		= 'https://www.tagesschau.de'
 ARD_Last 		= 'https://www.tagesschau.de/multimedia'	# ARD_100,ARD_Last,ARD_20Uhr,ARD_Gest,ARD_tthemen,ARD_Nacht
 ARD_bab 		= 'https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL2Rhc2Vyc3RlLmRlL2JlcmljaHQgYXVzIGJlcmxpbg?pageNumber=0&pageSize=12'
-ARD_Fakt		= 'https://www.tagesschau.de/faktenfinder/'					# 30.04.2023
+ARD_Fakt		= 'https://www.tagesschau.de/faktenfinder'					# 30.04.2023
 Podcasts_Audios	= 'https://www.tagesschau.de/multimedia/audio'
-ARD_Investigativ='https://www.tagesschau.de/investigativ/'					# 10.06.2021
+ARD_Investigativ='https://www.tagesschau.de/investigativ'					# 10.06.2021
 ARD_Bilder		= 'https://www.tagesschau.de/multimedia/bilder/index.html'	# 05.05.2023
 
 
