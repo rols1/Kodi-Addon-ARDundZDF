@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>104</nr>										# Numerierung für Einzelupdate
+# 	<nr>105</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.2'
-VDATE = '14.05.2023'
+VDATE = '15.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6837,7 +6837,7 @@ def ZDF_Start(ID, homeID=""):
 # mark: Titelmarkierung, z.B. für ZDF_Search
 # 13.05.2023 zusätzl. urlkey (Kompensation falls jsonObject fehlt),
 #	Format urlkey: "%s#cluster#%d" % (url, obj_id, obj_nr)
-#		
+# 	
 def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):								
 	PLog('ZDF_PageMenu:')
 	PLog('DictID: ' + DictID)
@@ -6942,6 +6942,13 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 		PLog('ZDF_PageMenu_cluster')
 		for counter, clusterObject in enumerate(jsonObject["cluster"]):	# Bsp. "name":"Neu in der Mediathek"
 			path = "cluster|%d|teaser" % counter
+
+			try:													# detect PromoTeaser (Web: ganze Breite)
+				typ = clusterObject["type"]
+				url = clusterObject["promoTeaser"]["url"]
+			except:
+				typ=""	
+
 			title=""
 			if "name" in clusterObject:
 				title = clusterObject["name"]
@@ -6951,6 +6958,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 					title = clusterObject["teaser"][0]['titel']
 			if clusterObject["teaser"]:
 				img = ZDF_get_img(clusterObject["teaser"][0])
+			if "promoTeaser" in clusterObject:						#  PromoTeaser
+				img = ZDF_get_img(clusterObject["promoTeaser"])
 				
 			tag = "Folgeseiten"
 			descr=""
@@ -6963,7 +6972,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 						 ]
 			skip=False						
 			if title == '':
-				PLog('ohne_Titel: %s' % str(clusterObject)[:80])		# ?
+				PLog('ohne_Titel: %s' % str(clusterObject)[:80])	# ?
 				skip = True 
 			for t in skip_list:
 				# PLog("t: %s, title: %s" % (t, title))
@@ -6973,15 +6982,23 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			if skip:
 				continue 
 				
+			path = "cluster|%d|teaser" % counter
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)
 			PLog("Satz1_2:")
-			PLog(title); PLog(path);
-			  
-			fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s', 'homeID': '%s'}"  %\
-				(path, title, DictID, homeID)
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_Rubriken", 				
-				fanart=img, thumb=img, tagline=tag, summary=descr, fparams=fparams)		
+			PLog(title); PLog(path); PLog(typ);
+			
+			if typ != "teaserPromo": 
+				fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s', 'homeID': '%s'}"  %\
+					(path, title, DictID, homeID)
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_Rubriken", 				
+					fanart=img, thumb=img, tagline=tag, summary=descr, fparams=fparams)
+			else:													# teaserPromo - s.o.
+				fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+				PLog("fparams: " + fparams)	
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+					thumb=img, fparams=fparams, summary=descr, tagline=tag)
+					
 
 	if li_org:
 		return li
