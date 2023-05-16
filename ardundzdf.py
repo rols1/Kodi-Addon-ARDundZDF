@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>105</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.2'
-VDATE = '15.05.2023'
+VDATE = '16.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6930,6 +6930,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 					fparams="&fparams={}" 
 					addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Menu", 
 						fanart=KIKA_START, thumb=GIT_KANINCHEN, tagline='für Kinder 3-6 Jahre', fparams=fparams)
+				if "Zahlen zur" in title:							# Wahlbeiträge, Statistiken
+					PLog("skip_externalUrl: " + title)
 				
 			else:
 				fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" % (url, title, homeID)
@@ -6991,6 +6993,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			if typ != "teaserPromo": 
 				fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s', 'homeID': '%s'}"  %\
 					(path, title, DictID, homeID)
+				PLog("fparams: " + fparams)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_Rubriken", 				
 					fanart=img, thumb=img, tagline=tag, summary=descr, fparams=fparams)
 			else:													# teaserPromo - s.o.
@@ -7078,6 +7081,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 	PLog('ZDF_RubrikSingle: ' + title)
 	PLog("url: " + url)
 	title_org = title
+	noicon = R(ICON_MAIN_ZDF)									# notific.
 
 	page=""; AZ=False
 	if url.endswith("sendungen-100"):							# AZ ca. 12 MByte -> Dict
@@ -7094,7 +7098,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			page = json.loads(page)
 			Dict("store", "ZDF_sendungen-100", page)
 	
-	if "dict" in str(type(page)):									# AZ: json
+	if "dict" in str(type(page)):								# AZ: json
 		jsonObject = page
 	else: 
 		jsonObject = json.loads(page)
@@ -7108,7 +7112,15 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 		return
 	PLog(str(clusterObject)[:80])
 	PLog("Cluster: %d " % len(clusterObject))
-				
+	
+	if len(clusterObject) == 0:									# z.B. Wahltool, ohne Videos
+		msg1 = u"%s" % title
+		msg2 = u'keine Videos gefunden'
+		xbmcgui.Dialog().notification(msg1,msg2,noicon,2000,sound=True)
+		return
+	
+	#--------------------------------
+			
 	li = xbmcgui.ListItem()
 	if homeID:
 		li = home(li, ID=homeID)
@@ -7172,7 +7184,13 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 	else:														# einzelner Cluster
 		teaserObject, msg = GetJsonByPath("0|teaser", clusterObject)
 		PLog("walk_teaser: %d" % len(teaserObject))
-		PLog("Teaser: %d " % len(teaserObject))				
+		PLog("Teaser: %d " % len(teaserObject))
+		
+		if len(teaserObject) == 0:								# z.B. redakt. Updates zu Ereignissen
+			msg1 = u"%s" % title
+			msg2 = u'keine Videos gefunden'
+			xbmcgui.Dialog().notification(msg1,msg2,noicon,2000,sound=True)
+			return						
 				
 		for entry in teaserObject:
 			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
@@ -7904,7 +7922,8 @@ def ZDF_FlatListEpisodes(sid):
 #----------------------------------------------
 # Ermittlung Streamquellen für api-call, ähnlich build_Streamlists 
 #	aber abweichendes Quellformat
-# Aufrufer: ZDF_FlatListEpisodes
+# Aufrufer: ZDF_FlatListEpisodes, ab V4.7.0 auch ZDF_PageMenu,
+#	ZDF_Rubriken, ZDF_RubrikSingle, ZDF_Verpasst.
 # Mitnutzung get_form_streams wie get_formitaeten  sowie
 #	 build_Streamlists_buttons
 # gui=False: ohne Gui, z.B. für ZDF_getStrmList
@@ -8708,9 +8727,11 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	img=thumb; 
 	PLog(title_org); PLog(tagline[:60]); PLog(img); PLog(sub_path);
 	
-	uhd_cnt_hb = str(HBBTV_List).count("UHD_")				# UHD-Kennz. -> Titel ZDF+3sat
-	uhd_cnt_hls = str(HLS_List).count("UHD_")				# Arte
-	uhd_cnt_mp4 = str(MP4_List).count("UHD_")
+	PLog(str(HBBTV_List))
+	
+	uhd_cnt_hb = str(HBBTV_List).count("UHD")				# UHD-Kennz. -> Titel ZDF+3sat
+	uhd_cnt_hls = str(HLS_List).count("UHD")				# Arte
+	uhd_cnt_mp4 = str(MP4_List).count("UHD")
 	PLog("uhd_cnt: %d, %d, %d" % (uhd_cnt_hb, uhd_cnt_hls, uhd_cnt_mp4))
 	
 	title_hb = "[B]HBBTV[/B]-Formate"
