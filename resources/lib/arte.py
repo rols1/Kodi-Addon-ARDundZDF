@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>30</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.04.2023
+# 	<nr>31</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.05.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -469,7 +469,7 @@ def GetContent(li, page, ID):
 		kind = item["kind"]["code"]						# z.B. TOPIC
 		typ = item["kind"]["code"]						# z.B. Kollektion
 		coll = item["kind"]["isCollection"]				# true/false
-		if coll:					
+		if coll:										# nicht verlässlich, s. dur					
 			mehrfach = True	
 		
 		url = item["url"]
@@ -486,6 +486,8 @@ def GetContent(li, page, ID):
 		PLog('dur: ' + str(dur))
 		if dur:
 			dur = seconds_translate(dur)
+		else:
+			mehrfach = True	
 			
 		try:	
 			geo = item["geoblocking"]["code"]			# Bsp. "DE_FR", "ALL"
@@ -533,6 +535,7 @@ def GetContent(li, page, ID):
 		summ = repl_json_chars(summ)						# -"-
 		tag_par = tag.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 		summ_par = summ.replace('\n', '||')					# || Code für LF (\n scheitert in router)
+		
 		
 		PLog('Satz1:')
 		PLog(mehrfach); PLog(typ); PLog(pid); PLog(title); 
