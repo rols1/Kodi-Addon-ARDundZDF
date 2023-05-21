@@ -11,7 +11,7 @@
 #
 ################################################################################
 # 	<nr>43</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.04.2023
+#	Stand: 19.05.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1193,7 +1193,7 @@ def ARD_get_strmStream(url, title, img, Plot):
 		return
 	
 	# Formate siehe StreamsShow								# HLS_List + MP4_List anlegen
-	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
+	#	generisch: "Label |  Auflösung | Bandbreite | Titel#Url"
 	#	fehlende Bandbreiten + Auflösungen werden ergänzt
 	call = "ARD_get_strmStream"
 	HBBTV_List=''											# nur ZDF
@@ -1525,7 +1525,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	# -----------------------------------------			# Extrakt Videoquellen
 	# 17.02.2023 Umstellung string -> json
 	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
-	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
+	#	generisch: "Label |  Auflösung | Bandbreite | Titel#Url"
 	#	fehlende Bandbreiten + Auflösungen werden ergänzt
 	call = "ARDStartSingle"
 	HLS_List = ARDStartVideoHLSget(title, StreamArray, call)	# Extrakt HLS
@@ -1662,7 +1662,7 @@ def ARDStartVideoHBBTVget(title, path):
 		if "3840x" in res:
 			quality = "UHD_MP4"
 		title_url = u"%s#%s" % (title, href)
-		item = u"MP4 Qualität: [B]%10s[/B] ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
+		item = u"MP4 Qualität: [B]%10s[/B] ** Auflösung %s ** Bitrate %s ** %s" % (quality, res, bitrate, title_url)
 		item = py2_decode(item)
 		HBBTV_List.append(item)
 
@@ -1671,7 +1671,7 @@ def ARDStartVideoHBBTVget(title, path):
 #----------------------------
 # holt Downloadliste mit MP4-Videos
 # altes Format: "Qualität: niedrige | Titel#https://pdvideosdaserste.."
-# neues Format:	"MP4 Qualität: Full HD ** Bandbreite ** Auflösung ** Titel#Url"
+# neues Format:	"MP4 Qualität: Full HD ** Auflösung ** Bandbreite ** Titel#Url"
 # Format ähnlich ARDStartVideoHBBTVget (Label abweichend)
 def ARDStartVideoMP4get(title, StreamArray, call=""):	
 	PLog('ARDStartVideoMP4get:'); 
@@ -1716,7 +1716,7 @@ def ARDStartVideoMP4get(title, StreamArray, call=""):
 		if "3840x" in res:
 			quality = "UHD_MP4"
 		title_url = u"%s#%s" % (title, href)
-		item = u"MP4 Qualität: [B]%10s[/B] ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
+		item = u"MP4 Qualität: [B]%10s[/B] ** Auflösung %s ** Bitrate %s ** %s" % (quality, res, bitrate, title_url)
 		item = py2_decode(item)
 		download_list.append(item)
 	

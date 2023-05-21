@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.04.2023
+#	Stand: 18.05.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1393,7 +1393,7 @@ def get_teaserElement(rec):
 		enddate	= stringextract('-end-date="', '"', page)		# kann leer sein
 		enddate = time_translate(enddate, add_hour=0, day_warn=True)
 		if dauer and enddate:
-			dauer = "%s | [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, enddate)			 
+			dauer = u"%s | [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, enddate)			 
 		
 		
 		path	= stringextract('href="', '"', page)
@@ -1647,8 +1647,8 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 		PLog(videodat_url)		# zur Kontrolle
 		MyDialog(msg1, '', '')
 		return li	
-	page = (page.replace('" : "', '":"').replace('" : ', '":'))
 	PLog(page[:100])
+	
 
 	if page:
 		formitaeten = blockextract('formitaeten', page)		# 4. einzelne Video-URL's ermitteln 
@@ -1675,7 +1675,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 	#
 	thumb=img_src; sub_path=''; scms_id=''
 	HLS_List,MP4_List,HBBTV_List = build_Streamlists(li,title,thumb,geoblock,tagline,\
-		sub_path,formitaeten,scms_id,ID="3sat",weburl=path_org)
+		sub_path,page,scms_id,ID="3sat",weburl=path_org)
 					
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 

@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>105</nr>										# Numerierung für Einzelupdate
-VERSION = '4.7.2'
-VDATE = '16.05.2023'
+VERSION = '4.7.3'
+VDATE = '21.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -4014,7 +4014,7 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 	PLog(SETTINGS.getSetting('pref_use_downloads')) 			# Voreinstellung: False 
 	if check_Setting('pref_use_downloads') == False:			# einschl. Test Downloadverzeichnis
 		return
-			
+
 	if SETTINGS.getSetting('pref_show_qualities') == 'false':	# nur 1 (höchste) Qualität verwenden
 		download_items = get_bestdownload(download_list)
 	else:	
@@ -6906,6 +6906,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			PLog(stage); PLog(typ); PLog(title);
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)
+			tag = repl_json_chars(tag)
 			if entry["type"]=="video":								# Videos
 				if "channel" in entry:								# Zusatz Sender
 					sender = entry["channel"]
@@ -7047,6 +7048,7 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 		typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
 		title = repl_json_chars(title)
 		descr = repl_json_chars(descr)
+		tag = repl_json_chars(tag)
 		if typ == "video":	
 				if "channel" in entry:									# Zusatz Sender
 					sender = entry["channel"]
@@ -7197,6 +7199,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			title = repl_json_chars(title)
 			label = title
 			descr = repl_json_chars(descr)
+			tag = repl_json_chars(tag)
 			PLog("Satz6_2:")
 			if(entry["type"]=="video"):							# Videos am Seitenkopf
 				# path = 'stage|%d' % i	# entf. hier
@@ -7651,6 +7654,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
 				PLog(tag); PLog(title); PLog(stream);
 				title = repl_json_chars(title)
 				descr = repl_json_chars(descr)
+				tag = repl_json_chars(tag)
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(stream, title, img, tag, descr, scms_id)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
@@ -8010,8 +8014,8 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 					bitrate = "unbekannt"
 			res = "%sx%s" % (w,h)
 			title_url = u"%s#%s" % (title, url)
-			item = u"MP4, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
-				(track_add, quality, bitrate, res, title_url)
+			item = u"MP4, %s | %s ** Auflösung %s ** Bitrate %s ** %s" %\
+				(track_add, quality, res, bitrate, title_url)
 			PLog("item: " + item)
 			PLog("server: " + server)					# nur hier, kein Platz im Titel
 			MP4_List.append(item)
@@ -8023,13 +8027,19 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	#PLog(HLS_List)
 	PLog("MP4_List: " + str(len(MP4_List)))
 	
+	UHD_DL_list=[]
 	if scms_id:
 		HBBTV_List = ZDFSourcesHBBTV(title, scms_id)	# bisher nur MP4-Quellen				
+		HBBTV_List, UHD_DL_list = add_UHD_Streams(HBBTV_List) # UHD-Streams -> Download_Liste
 		Dict("store", '%s_HBBTV_List' % ID, HBBTV_List) 
 	PLog("HBBTV_List: " + str(len(HBBTV_List)))
+	PLog("UHD_DL_list: " + str(len(UHD_DL_list)))
 		
 	Dict("store", '%s_HLS_List' % ID, HLS_List) 
+	if len(UHD_DL_list) > 0:							# UHD_Liste in Downloads voranstellen
+		MP4_List = UHD_DL_list + MP4_List
 	Dict("store", '%s_MP4_List' % ID, MP4_List) 
+		
 		
 	if not len(HLS_List) and not len(MP4_List) and not len(HBBTV_List):			
 		if gui:										# ohne Gui
@@ -8436,106 +8446,92 @@ def full_shows(title, title_samml, summary, duration,  fname):
 #-------------------------
 # Bau HLS_List, MP4_List, HBBTV_List (nur ZDF + Arte)
 # Formate siehe StreamsShow						
-#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
+#	generisch: "Label |  Auflösung | Bitrate | Titel#Url"
 #	fehlende Bandbreiten + Auflösungen werden ergänzt
 # Aufrufer: ZDF_getVideoSources, SingleBeitrag (my3Sat)
 # formitaeten: Blöcke 'formitaeten' (get_form_streams)
 # 08.03.2022 Anpassung für Originalton + Audiodeskription (class_add)
 # 21.01.2023 UHD-Streams für Testbetrieb ergänzt (add_UHD_Streams)
+# ab V4.7.0 nur noch von SingleBeitrag (my3Sat) genutzt, ZDF s. 
+#	ZDF_getApiStreams. page: json-Quelle (api.3sat.de), neu
+#	kodiert ohne funk-Beiträge 
 #
-def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_id='',ID="ZDF",weburl=''):
+def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,page,scms_id='',ID="ZDF",weburl=''):
 	PLog('build_Streamlists:'); PLog(ID)
 	title_org = title	
 	
 	HLS_List=[]; MP4_List=[]; HBBTV_List=[];			# MP4_List = download_list
 	skip_list=[]
 	# erlaubte Formate wie ZDF_getApiStreams 
-	only_list = ["h264_aac_mp4_http_na_na", "h264_aac_ts_http_m3u8_http",	# erlaubte Formate
+	form_list = ["h264_aac_mp4_http_na_na", "h264_aac_ts_http_m3u8_http",	# erlaubte Formate
 				"vp9_opus_webm_http_na_na", "vp8_vorbis_webm_http_na_na"]
-	for rec in formitaeten:									# Datensätze gesamt, Achtung unicode!
-		typ = stringextract('"type":"', '"', rec)
-		typ = typ.replace('[]', '').strip()
-		facets = stringextract('"facets": ', ',', rec)	# Bsp.: "facets": ["progressive"]
-		facets = facets.replace('"', '').replace('\n', '').replace(' ', '') 
-		PLog("typ %s, facets %s" % (typ, facets))
-		if typ not in only_list:
-			continue 
-		if "restriction_useragent" in facets:			# Server rodlzdf statt nrodlzdf sonst identisch
-			continue 
-			
-		audio = blockextract('"audio":', rec)			# Datensätze je Typ
-		tagline_org=tagline
-		PLog("audio_Blocks: " + str(len(audio)))
-		# PLog(audio)	# bei Bedarf
-		for audiorec in audio:
-			mimeCodec = stringextract('"mimeCodec":"',  '"', audiorec)
-			if '"cdn":' in audiorec:
-				tracks = blockextract('"cdn":', audiorec)		# class-Sätze: main, ot, ad
-			else:
-				tracks = blockextract('"language":', audiorec)	# class-Sätze in ZDF-funk
-			PLog("tracks: " + str(len(tracks)))
-			quality = stringextract('"quality":"',  '"', audiorec)
-			quality = up_low(quality)
-			
-			for track in tracks:	
-				track_add=''; class_add=''; lang_add=''				# class-und Sprach-Zusätze
-				class_add = stringextract('"class":"',  '"', track)	
-				lang_add = stringextract('"language":"',  '"', track)
-				if class_add == "main": class_add = "TV-Ton"
-				if class_add == "ot": class_add = "Originalton"
-				if class_add == "ad": class_add = "Audiodeskription"
-				if class_add or lang_add:
-					track_add = "[B]%s %s[/B]" % (class_add, lang_add)
-					track_add = "%23s" % track_add
+	try:			
+		jsonObject = json.loads(page)
+		prioList = jsonObject["priorityList"]
+		PLog("prioList: %d" % len(prioList))
+		for prio in prioList:
+			formitaeten = prio["formitaeten"]
+			PLog("formitaeten: %d" % len(formitaeten))
+			for form in formitaeten:
+				PLog(form["type"]); 
+				if form["type"] in form_list:
+					PLog(form["facets"])
+					PLog("found_form: " + form["type"])
+					facets = form["facets"]
+					if "restriction_useragent" in facets:	# Server rodlzdf statt nrodlzdf sonst identisch
+						continue 
 					
-				url = stringextract('"uri":"',  '"', track)			# URL
-				# Zusatz audiotrack ff. abschneiden, lädt falsche Playlist ('#EXT-X-MEDIA')
-				if '?audiotrack=1' in url:
-					url = url.split('?audiotrack=1')[0]					
-
-				PLog("track:"); 
-				PLog(class_add); PLog(lang_add); PLog(url); PLog(quality);
-				if url:	
-					#PLog(skip_list)	# Debug
-					if up_low(quality) == 'AUTO' and 'master.m3u8' not in url:	# ZDF-funk: m3u8-Urls nicht verwertbar
-						continue												#	(manifest.m3u8)
-					url_combi = "%s|%s" % (class_add, url)
-					if url_combi in skip_list:
-						PLog("skip_url_combi: " + url_combi)
-						continue
-					skip_list.append(url)	
-					
-					if url.find('master.m3u8') > 0:					# m3u8 high (=auto) enthält alle Auflösungen
-						if 'AUTO' in up_low(quality):				# skip high, med + low
-							if track_add:
-								HLS_List.append('HLS, %s ** AUTO ** %s ** %s#%s' % (track_add, quality,title,url))
-							else:
-								HLS_List.append('HLS, automatische Anpassung ** AUTO ** AUTO ** %s#%s' % (title,url))
-							Stream_List = Parseplaylist(li, url, thumb, geoblock, tagline,\
-								stitle=title,buttons=False, track_add=track_add)
-							HLS_List = HLS_List + Stream_List
-
-					else:	
-						res='0x0'; bitrate='0'; w='0'; h='0'						# Default funk ohne AzureStructure						
-						if 'HD' in quality:							# up_low(quality s.o.
-							w = "1920"; h = "1080"					# Probeentnahme													
-						if 'VERYHIGH' in quality:
-							w = "1280"; h = "720"					# Probeentnahme							
-						if 'HIGH' in quality:
-							w = "960"; h = "540"					# Probeentnahme							
-						if 'MED' in quality:
-							w = "640"; h = "360"					# Probeentnahme							
-						if 'LOW' in quality:
-							w = "480"; h = "270"					# Probeentnahme							
+					qualities = form["qualities"]
+					PLog("qualities: %d" % len(qualities))
+					for qual in qualities:
+						track_add=''; class_add=''; lang_add=''; mimeCodec=""
+						if "mimeCodec" in qual:				# fehlt bei HLS
+							mimeCodec = qual["mimeCodec"]
+						quality = up_low(qual["quality"])
+						tracks = qual["audio"]["tracks"][0]	# nir 1 track bisher, adds + url
+						PLog("tracks: %d" % len(tracks))
+						class_add = tracks["class"]
+						lang_add = tracks["language"]
+						if class_add == "main": class_add = "TV-Ton"
+						if class_add == "ot": class_add = "Originalton"
+						if class_add == "ad": class_add = "Audiodeskription"
+						if class_add or lang_add:
+							track_add = "[B]%s %s[/B]" % (class_add, lang_add)
+							track_add = "%23s" % track_add
+						url = tracks["uri"]	
+						if '?audiotrack=1' in url:
+							url = url.split('?audiotrack=1')[0]					
 						
-						if '://funk' in url:						# funk: anderes Format (nur AzureStructure)
-							# Bsp.: ../1646936_src_1024x576_1500.mp4?fv=1
-							if '_' in url:
-								res = url.split('_')[2]
-								bitrate = url.split('_')[3]				# 6000.mp4?fv=2
-								bitrate = bitrate.split('.')[0]
-								bitrate = bitrate + "000"				# K-Angabe anpassen 
+						PLog("Satz_track:")
+						PLog(class_add); PLog(lang_add); PLog(url); PLog(quality);
+						url_combi = "%s|%s" % (class_add, url)
+						if url_combi in skip_list:
+							PLog("skip_url_combi: " + url_combi)
+							continue
+						skip_list.append(url)	
+						
+						if url.find('master.m3u8') > 0:					# m3u8 high (=auto) enthält alle Auflösungen
+							if 'AUTO' in up_low(quality):				# skip high, med + low
+								if track_add:
+									HLS_List.append('HLS, %s ** AUTO ** %s ** %s#%s' % (track_add, quality,title,url))
+								else:
+									HLS_List.append('HLS, automatische Anpassung ** AUTO ** AUTO ** %s#%s' % (title,url))
+								Stream_List = Parseplaylist(li, url, thumb, geoblock, tagline,\
+									stitle=title,buttons=False, track_add=track_add)
+								HLS_List = HLS_List + Stream_List
 						else:
+							res='0x0'; bitrate='0'; w='0'; h='0'											
+							if 'HD' in quality:							# up_low(quality s.o.
+								w = "1920"; h = "1080"					# Probeentnahme													
+							if 'VERYHIGH' in quality:
+								w = "1280"; h = "720"					# Probeentnahme							
+							if 'HIGH' in quality:
+								w = "960"; h = "540"					# Probeentnahme							
+							if 'MED' in quality:
+								w = "640"; h = "360"					# Probeentnahme							
+							if 'LOW' in quality:
+								w = "480"; h = "270"					# Probeentnahme							
+							
 							if '_' in url:
 								try:								# Fehlschlag bei arte-Links
 									bitrate = re.search(u'_(\d+)k_', url).group(1)
@@ -8543,36 +8539,26 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 								except:
 									bitrate = "?"
 							res = "%sx%s" % (w,h)
-						
-						PLog(res)
-						title_url = u"%s#%s" % (title, url)
-						mp4 = "%s" % "MP4"
-						if ".webm" in url:
-							mp4 = "%s" % "WEBM"
-						item = u" %s, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
-							(mp4, track_add, quality, bitrate, res, title_url)
-						MP4_List.append(item)
-	
-	
-	PLog("HLS_List: " + str(len(HLS_List)))
-	#PLog(HLS_List)	# Debug
-	PLog("MP4_List: " + str(len(MP4_List)))
+							
+							PLog(res)
+							title_url = u"%s#%s" % (title, url)
+							mp4 = "%s" % "MP4"
+							if ".webm" in url:
+								mp4 = "%s" % "WEBM"
+							item = u" %s, %s | %s ** Auflösung %s ** Bitrate %s ** %s" %\
+								(mp4, track_add, quality, res, bitrate, title_url)
+							MP4_List.append(item)
+							
+	except Exception as exception:
+		PLog("json_error: " + str(exception))
+		HLS_List=[]; MP4_List=[]
 		
-	if not len(HLS_List) and not len(MP4_List):			
-		msg = 'keine Streamingquelle gefunden - Abbruch' 
-		PLog(msg)
-		msg1 = u"keine Streamingquelle gefunden: %s"	% title
-		MyDialog(msg1, '', '')	
-		return HLS_List, MP4_List, HBBTV_List
+	PLog("HLS_List: " + str(len(HLS_List)))
+	PLog("MP4_List: " + str(len(MP4_List)))
 	
+
 	# ------------										# HBBTV + UHD-Streams von ZDF + 3sat:
 	UHD_DL_list=[]
-	if ID == "ZDF":										# ZDF, ZDF-funk							
-		HBBTV_List = ZDFSourcesHBBTV(title, scms_id)	# bisher nur MP4-Quellen				
-		PLog("HBBTV_List: " + str(len(HBBTV_List)))
-		# UHD-Streams erzeugen+testen:					# UHD-Streams -> HBBTV_List
-		HBBTV_List, UHD_DL_list = add_UHD_Streams(HBBTV_List)
-		Dict("store", '%s_HBBTV_List' % ID, HBBTV_List) 
 	if ID == "3sat":									# 3sat 
 		HBBTV_List = m3satSourcesHBBTV(weburl, title_org)	 				
 		PLog("HBBTV_List: " + str(len(HBBTV_List)))
@@ -8587,7 +8573,6 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 	if len(UHD_DL_list) > 0:							# UHD_Liste für Downloads anhängen
 		MP4_List = UHD_DL_list + MP4_List
 	Dict("store", '%s_MP4_List' % ID, MP4_List) 
-
 		
 	tagline = "Titel: %s\n\n%s" % (title_org, tagline)	# s.a. ARD (Classic + Neu)
 	tagline=repl_json_chars(tagline); tagline=tagline.replace( '||', '\n')
@@ -8611,6 +8596,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,formitaeten,scms_
 # 24.02.2023 replace("3360k_p36v15", "4692k_p72v16") entfällt
 #	mit Auswertung "q5" in ZDFSourcesHBBTV "h265_*", Verfügbarkeits-
 #	Ping ebenfalls entbehrlich.
+# 
 def add_UHD_Streams(Stream_List):
 	PLog('add_UHD_Streams:')
 
@@ -8620,6 +8606,7 @@ def add_UHD_Streams(Stream_List):
 	
 	cnt=0
 	for item in Stream_List:
+		PLog(item)
 		url = item.split("#")[-1]
 		PLog(url)
 		if url.find(mark) > 0:	 
@@ -8636,10 +8623,8 @@ def add_UHD_Streams(Stream_List):
 	
 #-------------------------
 # Aufruf: build_Streamlists
-# 3sat-HBBTV-MP4-Streams ermitteln, URL-Schema aus
-# 	add_UHD_Streams testen + ggfls uhd_list
-# Verzicht auf HLS-HBBTV-Streams (bei Bedarf ergänzen)
-#
+# 3sat-HBBTV-MP4-Streams ermitteln, ähnlich
+# 	ZDFSourcesHBBTV (["streams"] statt ["vidurls"])
 def m3satSourcesHBBTV(weburl, title):
 	PLog('m3satSourcesHBBTV: ' + weburl)
 
@@ -8653,42 +8638,41 @@ def m3satSourcesHBBTV(weburl, title):
 		PLog(str(exception))			
 		return HBBTV_List
 
+	header = "{'Host': 'hbbtv.zdf.de', 'content-type': 'application/vnd.hbbtv.xhtml+xml'}"
 	path = base + url
-	page,msg = get_page(path)
+	page, msg = get_page(path, header=header, JsonPage=True)	
+	if page == '':						
+		msg1 = u'HBBTV-Quellen nicht vorhanden / verfügbar'
+		msg2 = u'Video: %s' % title
+		MyDialog(msg1, msg2, '')
+		return HBBTV_List
+		
+	jsonObject = json.loads(page)
+	PLog('page_hbbtv_3sat: ' + str(jsonObject)[:100])
 	
-	mp4uhd_obs={}; mp4_obs={}; hls_obs={}; obs={}
+	form_list=["h265_aac_mp4_http_na_na", "h264_aac_mp4_http_na_na"] # bei hbbtv Verzicht auf m3u8
+	q_list=["q5", "q4", "q3", "q2", "q1"]
+	stream_list=[]
 	try:
-		objs = json.loads(page)
-		PLog(len(objs))
-		if "h265_aac_mp4_http_na_na" in objs["vidurls"]:								# UHD -MP4 - bisher unbekannt
-			mp4uhd_obs = objs["vidurls"]["h265_aac_mp4_http_na_na"]["main"]["deu"] 		# MP4-Streams
-			PLog("h265_mp4" + str(objs["vidurls"]["h265_aac_mp4_http_na_na"]["main"]))
-		if "h264_aac_mp4_http_na_na" in objs["vidurls"]:
-			mp4_obs = objs["vidurls"]["h264_aac_mp4_http_na_na"]["main"]["deu"] 		# MP4-Streams
-			PLog("h264_mp4" + str(objs["vidurls"]["h264_aac_mp4_http_na_na"]["main"]))
-		if "h264_aac_ts_http_m3u8_http" in objs["vidurls"]:
-			hls_obs = objs["vidurls"]["h264_aac_ts_http_m3u8_http"]["main"]["deu"] 		# HLS-Streams, fehlen ev.
-			PLog("h264_hls" + str(objs["vidurls"]["h264_aac_mp4_http_na_na"]["main"]))
+		streams = jsonObject["vidurls"]
+		for stream in streams:
+			for form in form_list:
+				if form in stream:
+					PLog("found_form: " + form)
+					streamObject = streams[form]["main"]["deu"]	
+					for q in q_list:
+						if q in streamObject:
+							add = "%s_%s_%s_%s" % (form[:4], "main", "deu", q)
+							url = streamObject[q]
+							line = "%s##%s##%s" % (title, add, url)
+							stream_list.append(line)
 	except Exception as exception:
 		PLog(str(exception))
-		page=""				
-	if page == '':
-		PLog("no_vidurls_found")		 		
-		return HBBTV_List
-	
-	PLog("mp4uhd_obs: %d, mp4_obs: %d, hls_obs: %d" % (len(mp4uhd_obs), len(mp4_obs), len(hls_obs)))
-	objs = dict(mp4uhd_obs, **mp4_obs)							# dicts verbinden
-	objs = dict(obs, **hls_obs)	
-	PLog(str(objs))												# {'q3': 'http://tvdlzdf-..v15.mp4'}
-	
-	for obj in objs.items():
-		PLog(str(obj))
-		qual = obj[0]
-		url = obj[1]
-		stream_list.append("%s|%s" % (qual, url))
-	
-	label="deu"	
-	HBBTV_List = form_HBBTV_Streams(stream_list,label,title)	# Formatierung wie ZDF-Streams	
+		stream_list=[]
+				
+	PLog(len(stream_list))
+	PLog(str(stream_list))										
+	HBBTV_List = form_HBBTV_Streams(stream_list, title)	# Formatierung wie ZDF-Streams	
 	PLog(str(HBBTV_List))
 	
 	return HBBTV_List
@@ -8726,7 +8710,6 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	title_list=[]
 	img=thumb; 
 	PLog(title_org); PLog(tagline[:60]); PLog(img); PLog(sub_path);
-	
 	PLog(str(HBBTV_List))
 	
 	uhd_cnt_hb = str(HBBTV_List).count("UHD")				# UHD-Kennz. -> Titel ZDF+3sat
@@ -8770,7 +8753,10 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	return played_direct
 	
 #-------------------------
-# HBBTV Videoquellen (nur ZDF)		
+# HBBTV Videoquellen (nur ZDF)	
+# 17.05.2023 Auswertung vorerst	nur "main"|"deu" und "ad"|"deu"
+# ähnlich in m3satSourcesHBBTV (["vidurls"] statt ["streams"])
+#
 def ZDFSourcesHBBTV(title, scms_id):
 	PLog('ZDFSourcesHBBTV:'); 
 	PLog("scms_id: " + scms_id) 
@@ -8785,90 +8771,102 @@ def ZDFSourcesHBBTV(title, scms_id):
 		msg2 = u'Video: %s' % title
 		MyDialog(msg1, msg2, '')
 		return HBBTV_List
-		
-	page = page.replace('": "', '":"')				# für funk-Beiträge erforderlich
-	PLog('page_hbbtv: ' + page[:100])
-				
-	streams = stringextract('"streams":', '"head":', page)	# Video-URL's ermitteln
-	streams = streams.replace('\\/','/')
-	ptmdUrl_list = blockextract('"ptmdUrl":', streams)		# mehrere mögl., z.B. Normal + DGS
-	#PLog(ptmdUrl_list)
-	PLog(len(ptmdUrl_list))
-
-	q_list=['"q1"', '"q2"', '"q3"', '"q4"', '"q5"']			# Bsp.: "q1": "http://tvdlzdf..
-	for ptmdUrl in ptmdUrl_list:							# 1-2
-		PLog(ptmdUrl[:200])
-		label = stringextract('"label":"', '"', ptmdUrl)
-		main_list = blockextract('"main":', ptmdUrl)		#  mehrere mögl., z.B. MP4, m3u8
+	
+	jsonObject = json.loads(page)
+	PLog('page_hbbtv: ' + str(jsonObject)[:100])
+	label = jsonObject["streams"][0]["label"]				# i.d.R. "Normal", z.Z. nicht genutzt
+	
+	form_list=["h265_aac_mp4_http_na_na", "h264_aac_mp4_http_na_na"]
+	q_list=["q5", "q4", "q3", "q2", "q1"]
+	stream_list=[]
+	# Audiodescription bei Bedarf nachrüsten (streamObject["ad"])
+	
+	try:
+		streams = jsonObject["streams"]
+		for stream in streams:
+			for form in form_list:
+				if form in stream:
+					PLog("found_form: " + form)
+					streamObject = stream[form]["main"]["deu"]	
+					PLog(str(streamObject)[:80])
+					for q in q_list:
+						if q in streamObject:
+							add = "%s_%s_%s_%s" % (form[:4], "main", "deu", q)
+							url = streamObject[q]["url"]
+							line = "%s##%s##%s" % (title, add, url)
+							stream_list.append(line)
+	except Exception as exception:
+		PLog("json_error: " + str(exception))
 		stream_list=[]
-		for qual in main_list:								# bisher q1, q2, q3, q5 gesehen
-			PLog(qual[:80])
-			url = stringextract('"url":"',  '"', qual)
-			for q in q_list:
-				if q in qual:
-					q = q[1:-1]
-					break
-			stream_list.append("%s|%s" % (q, url)) 		
-		
-		PLog(len(stream_list))
-		HBBTV_List = form_HBBTV_Streams(stream_list, label, title)	# Formatierung
+			
+	PLog(len(stream_list))
+	HBBTV_List = form_HBBTV_Streams(stream_list, title)	# Formatierung
 		
 	PLog(len(HBBTV_List))
+	PLog(str(HBBTV_List))
 	return HBBTV_List
 	
 #-------------------------
 # Aufruf: ZDFSourcesHBBTV, m3satSourcesHBBTV
 # Formatierung der Streamlinks ("Qual.|Link")
-def form_HBBTV_Streams(stream_list, label, title):
+# 17.05.2023 Anpassungen an Änderungen in ZDFSourcesHBBTV,
+#	neue Reihenfolge im Streamtitel:  Auflösung | Bitrate 
+#
+def form_HBBTV_Streams(stream_list, title):
 	PLog('form_HBBTV_Streams:')
 	HBBTV_List=[]
 	
-	for stream in stream_list:
-		q, url = stream.split("|")
+	# line-format: 	"title ## add ## url"			# s. ZDFSourcesHBBTV
+	# add-format: 	"form[:4]_main/ad_deu_q"	# - "-
+
+	for line in stream_list:
+		title, add, url = line.split("##")
+		q = add.split("_")[-1]
 		PLog("q: " + q)
+		
 		if q == 'q0':
 			quality = u'GERINGE'
 			w = "640"; h = "360"					# Probeentnahme	
 			bitrate = u"1812067"
-			if u'm3u8' in stream:
+			if u'm3u8' in url:
 				bitrate = u"16 MB/Min."
 		if q == 'q1':
 			quality = u'HOHE'
 			w = "960"; h = "540"					# Probeentnahme	
 			bitrate = u"1812067"
-			if u'm3u8' in stream:
+			if u'm3u8' in url:
 				bitrate = u"16 MB/Min."
 		if q == 'q2':
 			quality = u'SEHR HOHE'
 			w = "1024"; h = "576"					# Probeentnahme							
 			bitrate = u"3621101"
-			if u'm3u8' in stream:
+			if u'm3u8' in url:
 				bitrate = u"19 MB/Min."
 		if q == 'q3':
 			quality = u'HD'
 			w = "1280"; h = "720"					# Probeentnahme					
 			bitrate = u"6501324"
-			if u'm3u8' in stream:
+			if u'm3u8' in url:
 				bitrate = u"23 MB/Min."
 		if q == 'q4':
 			quality = u'Full-HD'
 			w = "1920"; h = "1080"					# Probeentnahme,					
 			bitrate = u"?"
-			if u'm3u8' in stream:
+			if u'm3u8' in url:
 				bitrate = u"?"			
 		if q == 'q5':
 			quality = u'UHD'
 			w = "3840"; h = "2160"					# Probeentnahme						
 			bitrate = u"?"
-			if u'm3u8' in stream:
+			if u'm3u8' in url:
 				bitrate = u"42 MB/Min"				# geschätzt				
 		
 		res = "%sx%s" % (w,h)
 		
-		if u'm3u8' in stream:
-			stream_title = u'HLS, Qualität: [B]%s | %s[/B]' % (quality, label) # label: Normal, DGS, .
+		if u'm3u8' in url:
+			stream_title = u'HLS, Qualität: [B]%s | %s[/B]' % (quality, add) # label: Normal, DGS, .
 		else:
-			stream_title = u'MP4, Qualität: [B]%s | %s[/B]' % (quality, label)
+			stream_title = u'MP4, Qualität: [B]%s | %s[/B]' % (quality, add)
 			try:
 				bitrate = re.search(u'_(\d+)k_', url).group(1)	# bitrate überschreiben	
 				bitrate = bitrate + "kbit"			# k ergänzen 
@@ -8877,8 +8875,8 @@ def form_HBBTV_Streams(stream_list, label, title):
 				PLog(url)	
 
 		title_url = u"%s#%s" % (title, url)
-		item = u"%s ** Bitrate %s ** Auflösung %s ** %s" %\
-			(stream_title, bitrate, res, title_url)
+		item = u"%s ** Auflösung %s ** Bitrate %s ** %s" %\
+			(stream_title, res, bitrate, title_url)
 		PLog("item: " + item)
 		HBBTV_List.append(item)	
 		
@@ -9401,12 +9399,12 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 			addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 				mediatype='video', tagline=descr, summary=summ) 
 		else:																# nur Stream_List füllen
-			# Format: "HLS Einzelstream | Bandbreite | Auflösung | Titel#Url"
+			# Format: "HLS Einzelstream | Auflösung | Bitrate | Titel#Url"
 			if Resolution_org=='':
 				Resolution_org = "Audiostream"
-			PLog("append: %s, %s.." % (str(BandwithInt), Resolution_org))
-			Stream_List.append(u'HLS-Stream ** Bitrate %s ** Auflösung %s ** %s#%s' %\
-				(str(BandwithInt), Resolution_org, stitle, url)) # wie Downloadliste
+			PLog("append: %s, %s.." % (Resolution_org, str(BandwithInt)))
+			Stream_List.append(u'HLS-Stream ** Auflösung %s ** Bitrate %s ** %s#%s' %\
+				(Resolution_org, str(BandwithInt), stitle, url)) # wie Downloadliste
 			if track_add:													# TV-Ton deu, Originalton eng usw.
 				Stream_List[-1] = Stream_List[-1].replace("HLS-Stream", "HLS, %s" % track_add)
 		
@@ -9430,10 +9428,10 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 #	Bandbreite + Auflösung können fehlen (Qual. < hohe, Audiostreams)
 # Formate:
 #	"HLS automatische Anpassung ** auto ** auto ** Titel#Url"  	# master.m3u8
-# 	"HLS Einzelstream ** Bandbreite ** Auflösung ** Titel#Url" (wie Downloadliste)"
+# 	"HLS Einzelstream ** Auflösung ** Bandbreite ** Titel#Url" (wie Downloadliste)"
 #
 #	"MP4 Qualität: niedrige ** leer **leer ** Titel#Url"	
-#	"MP4 Qualität: Full HD ** Bandbreite ** Auflösung ** Titel#Url"
+#	"MP4 Qualität: Full HD ** Auflösung ** Bandbreite ** Titel#Url"
 # Anzeige: aufsteigend (beide Listen)
 # Aufrufer: build_Streamlists_buttons (Aufrufer: ARDStartSingle (ARD Neu), 
 #	build_Streamlists (ZDF,  my3Sat), SingleSendung (ARD Classic)
@@ -9441,6 +9439,8 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 # Plot = tagline (zusammengefasst: Titel, tagline, summary)
 # 10.11.2021 Sortierung der MP4-Liste von Auflösung nach Bitrate geändert
 # 05.05.2022 Wechsel-Button zu den DownloadTools hinzugefügt 
+# 20.05.2023 Sortierung MP4-Liste wieder nach Auflösung (verlässlicher),
+#	dto. in PlayVideo_Direct
 #
 def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):	
 	PLog('StreamsShow:'); PLog(ID)
@@ -9450,13 +9450,14 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 	li = home(li, ID=HOME_ID)						# Home-Button
 
 	Stream_List = Dict("load", ID)
-	#PLog(Stream_List)
+	PLog(str(Stream_List)[:80])
 	PLog(len(Stream_List))
 
-	# bei Kennzeichnung einz. Stream mit unbekannt keine Sortierung
-	if 'MP4_List' in ID and "Bitrate unbekannt" in str(Stream_List) == False:
-		if "Bitrate" in str(Stream_List):
-			Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))
+	try:
+		if u"Auflösung" in str(Stream_List):
+			Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'sung (\d+)x', x).group(1)))		
+	except Exception as exception:					# bei HLS/"auto", problemlos da vorsortiert durch Sender 
+		PLog("sort_error" + str(exception))
 
 	title_org=py2_encode(title_org);  img=py2_encode(img);
 	sub_path=py2_encode(sub_path); 	Plot=py2_encode(Plot); 

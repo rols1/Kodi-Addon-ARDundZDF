@@ -10,6 +10,36 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+21.05.2023 4.7.3
+			ZDF_PageMenu: Link zu KiKANiNCHEN realisiert (Typ "externalUrl" im
+			Menü Kinderprogramme -> ZDFtivi -> ZDFchen).
+			ZDF_PageMenu:  "url" alternativ für leeren "stream" verwendet (Bsp. 
+			ZDFtivi -> KiKA live). 
+			ZDF_PageMenu: Berücksichtigung PromoTeaser (Web: ganze Breite) - mit
+			url -> ZDF_RubrikSingle.
+			ZDF_RubrikSingle: Notification für Beiträge ohne Videos (0 Cluster,
+			0 Teaser).
+			ZDF_get_content: fehlende "headline" abgefangen.
+			GetContent (arte): "duration" ergänzend für Einstufung mehrfach=True
+			herangezogen ("isCollection" nicht verlässlich).
+			build_Streamlists_buttons: UHD-Kennzeichnung der Streamlisten an 
+			Änderungen des ZDF-Codes (V4.7.0) angepasst.
+			ZDF_getApiStreams: Aufnahme UHD-Streams in Download-Liste ergänzt 
+			(bisher in build_Streamlists).
+			SingleBeitrag (3sat), build_Streamlists, m3satSourcesHBBTV: Anpassung
+			an geänderte Auswertung der ZDF-Videoquellen.
+			Streamlisten (neue Reihenfolge im Titel: Auflösung | Bitrate) - geändert: 
+			ARDnew (ARDStartVideoHBBTVget, ARDStartVideoMP4get, ARD_get_strmStream, 
+			ARDStartSingle), Parseplaylist, StreamsShow, ZDF_getApiStreams, 
+			build_Streamlists, form_HBBTV_Streams.
+			Streamlisten (Sortierung MP4_List + HBBTV_List nach Auflösung statt Bitrate:
+			Anpassung in StreamsShow + PlayVideo_Direct, arte (get_streams_api_v2 +
+			get_streams_api_opa).
+			repl_json_chars(tag) ergänzt in: ZDF_PageMenu, ZDF_RubrikSingle,
+			ZDF_Rubriken, ZDF_Verpasst.
+			get_page(util): py2_encode(page) für JsonPage (für Kodi Leia erford.).
+			Kategorien (arte): Anpassung Suchmuster für PYTHON2.
+
 14.05.2023 4.7.2
 			ZDF-Videos: Zusatz Senderbez. (entry["channel"]) in ZDF_PageMenu,
 			ZDF_Rubriken und ZDF_RubrikSingle.

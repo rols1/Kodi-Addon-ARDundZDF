@@ -1229,6 +1229,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 
 	if JsonPage:
 		PLog('json_load: ' + str(JsonPage))
+		page = py2_encode(page)											# für Python2 erf.
 		PLog(len(page))
 		page = page.replace('\\/', '/')									# für Python3 erf.
 		page = page.replace('\\"', '*')									# Quotation entf.
@@ -3059,6 +3060,8 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 #		"MP4 Qualität: Full HD ## Bandbreite ## Auflösung ## Titel#Url"
 # Auflösung/Bitrate In beiden Listen wg. re.search-Sortierung erford.!
 # Aufrufer: build_Streamlists_buttons (Sofortstart), get_streamurl
+# 20.05.2023 Verschmelzung MP4_List + HBBTV_List, Abgleich nach Auflösung
+#	(Abgleich nach Bitrate entfällt)
 #
 def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, playlist='', HBBTV_List='', ID=''):	
 	PLog('PlayVideo_Direct:')
@@ -3094,17 +3097,18 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 	else:
 		myform = 'MP4'								# enth. auch Webm, VP8/Vorbis, VP9/Opus
 		Stream_List = MP4_List
+		PLog(Stream_List)
+		PLog(HBBTV_List)
 		if 'auto' in myqual:						# Sicherung gegen falsches MP4-Setting:
 			myqual = '960x544'						# 	Default, falls 'auto' gesetzt
+		if ID != "Arte":
+			Stream_List = Stream_List + HBBTV_List	# in HBBTV_List immer MP4 (Arte-HBBTV -> HLS)
+		
 		if len(Stream_List) == 0:
 			msg1 = u"MP4-Quellen fehlen"
 			Stream_List = HLS_List
 			msg2 = "verwende HLS"
-			if len(Stream_List) == 0:
-				Stream_List = HBBTV_List
-				msg2 = "verwende HBBTV (MP4)"
-			else:		
-				mode_hls=True			
+			mode_hls=True			
 
 	if len(Stream_List) == 0:						# alle Listen leer		
 			msg1 = u"Video-Quellen fehlen"
@@ -3132,25 +3136,23 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 			mode = 'HLS/Einzelstream'
 	else: 
 		mode = 'MP4'
-	PLog("mode: " + mode)	
+	PLog("mode: " + mode)
 	
 	if Default_Url == '':								# besetzt: HLS/auto
-		#PLog(str(Stream_List))							# Sorierung für PlayVideo_Direct (wie StreamsShow)
-		# HLS: höchste Auflös. nach unten, x-Param.: Auflösung - s.a. ARDStartVideoHLSget
-		#Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Auflösung (\d+)', x).group(1)))
-		# Alternative - ab 11.11.2021 error mit Auflösung:
+		# Sortierung Stream_List wieder nach Auflösung (verlässlicher) - wie StreamsShow
+		# höchste Auflös. nach unten, x-Param.: Auflösung
 		try:
-			if "Bitrate" in str(Stream_List):
-				Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'Bitrate (\d+)', x).group(1)))	
-				Default_Url = Stream_List[-1].split('#')[-1]	# Default für HLS (nach Sort.) + MP4: höchste Url
-		except Exception as exception:
-			PLog(str(exception))
-			myqual = "auto"									# verwende Default_Url - kein Abgleich mit width
-			PLog("Mark0")
-		if len(Stream_List) > 0:
-			Default_Url = Stream_List[0].split('#')[-1]	# Fallback: master.m3u8 Pos. 1
-			PLog("Default_Url2: %s" % Default_Url)
+			if u"Auflösung" in str(Stream_List):
+				Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'sung (\d+)x', x).group(1)))	
+		except Exception as exception:					# bei HLS/"auto", problemlos da vorsortiert durch Sender
+			PLog("sort_error: " + str(exception))
+			myqual = "auto"								# verwende Default_Url - kein Abgleich mit width
 
+		# PLog(str(Stream_List))	
+		if len(Stream_List) > 0:						# Default: höchste Url
+			Default_Url = Stream_List[-1].split('#')[-1]	# Fallback: master.m3u8 Pos. 1
+			PLog("Default_Url2: %s" % Default_Url)
+	
 	PLog("Default_Url3: %s" % Default_Url)
 	url = Default_Url 
 	PLog(str(Stream_List)[:80])
@@ -3164,11 +3166,11 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 			if '0x0' in res:							# Auflösung 0x0 (vermutl. Audio)
 				continue
 				
-			PLog(item)
+			PLog("item: " + item)
 			try:
-				width = re.search("(\d+)", res).group(0)
+				width = re.search(u'sung (\d+)x', item).group(1)
 			except Exception as exception:
-				PLog(str(exception))
+				PLog("search_error: " + str(exception))
 				#continue
 			
 			if "** veryhigh **" in item:			# Rückübersetzung HLS-Qualitäten
@@ -3182,6 +3184,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 			
 			PLog("width %s, mywidth %s" % (width, mywidth))
 			if int(width) >= int(mywidth):
+				PLog("set_width:" + width)
 				url = item.split('#')[-1]
 				mode = '%s | width %s (Setting: %s)' % (mode, width, mywidth)
 				break

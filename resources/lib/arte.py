@@ -780,7 +780,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	if SETTINGS.getSetting('pref_video_direct') == 'true':			# Sofortstart hier (s.o.) + raus
 		PLog('Sofortstart: SingleVideo')
 		title_hls = "%s %s" % (title_org, hls_add)
-		PlayVideo_Direct(HLS_List, MP4_List, title=title_hls, thumb=img, Plot=summ)
+		PlayVideo_Direct(HLS_List, MP4_List, title=title_hls, thumb=img, Plot=summ, ID="Arte")
 		return 
 	#---------
 	
@@ -858,10 +858,10 @@ def get_streams_api_v2(page, title, summ):
 				PLog("skip_%s" % lang)
 				continue
 		if 'master.m3u8' in url:				# HLS master.m3u8 
-			HLS_List.append('HLS, [B]%s[/B] ** %s ** AUTO ** %s#%s' % (lang, size, title, url))
+			HLS_List.append(u'HLS, [B]%s[/B] ** Auflösung %s ** AUTO ** %s#%s' % (lang, size, title, url))
 		else:
 			if ".m3u8" in url:									# HLS
-				HLS_List.append('HLS, [B]%s[/B] ** %s ** %s ** %s#%s' % (lang, size, quality, title, url))
+				HLS_List.append(u'HLS, [B]%s[/B] ** Auflösung %s ** %s ** %s#%s' % (lang, size, quality, title, url))
 	
 	PLog("uhd_check:")			
 	if uhd_m3u8:
@@ -891,7 +891,7 @@ def get_streams_api_v2(page, title, summ):
 			if uhd_stream:							# HLS-Liste ergänzen
 				if url_check(uhd_stream, caller='get_streams_api_v2', dialog=False):	# Url-Check
 					lang, title = uhd_details.split("##")
-					line = '[B]UHD_HLS[/B], [B]%s[/B] ** %s ** %s ** %s#%s' % (lang, "3840x2160", "XQ", title, uhd_stream)
+					line = u'[B]UHD_HLS[/B], [B]%s[/B] ** Auflösung %s ** %s ** %s#%s' % (lang, "3840x2160", "XQ", title, uhd_stream)
 				
 			HLS_List.insert(0, line)				# -> 1. Position wie ZDF-HLS-UHD 
 		
@@ -912,7 +912,6 @@ def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 	MP4_List=[]; trailer=False
 	for rec in formitaeten:	
 		versions = stringextract('"versions":',  '"creationDate', rec)
-#		versions = stringextract('"versions":',  ']', rec)
 		
 		mediaType = stringextract('"mediaType": "',  '"', rec)
 		bitrate = stringextract('"bitrate":',  ',', rec)
@@ -1014,6 +1013,7 @@ def Kategorien():
 	page = str(page)								# Stringabgleich
 	if page == "":
 		return
+	PLog("page: " + page[:200])	
 	
 	path=py2_encode(path)
 	fparams="&fparams={'katurl': '%s'}" % quote(path)		# Button Startseite
@@ -1027,6 +1027,11 @@ def Kategorien():
 		pat = u"page': '%s" % Kat_ID
 		if Kat_ID.count("/") > 1:							# Pfad? Bsp. /videos/entdeckung-der-welt/
 			pat = u"url': '%s" % Kat_ID
+		if PYTHON2:
+			pat = u"page': '%s" % Kat_ID
+			if Kat_ID.count("/") > 1:		
+				pat = u"url': '%s" % Kat_ID
+		PLog(pat)		
 		pos = page.find(pat)
 		PLog("title: %s, for_lang: %s, pat: %s, pos: %d" % (title, for_lang, pat, pos))
 		if pos < 0:											# Kat_ID vorh.?
