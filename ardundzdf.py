@@ -6905,8 +6905,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			PLog("Satz1_1:")
 			PLog(stage); PLog(typ); PLog(title);
 			title = repl_json_chars(title)
-			descr = repl_json_chars(descr)
 			tag = repl_json_chars(tag)
+			descr = repl_json_chars(descr); descr=descr.replace(';','.')
 			if entry["type"]=="video":								# Videos
 				if "channel" in entry:								# Zusatz Sender
 					sender = entry["channel"]
