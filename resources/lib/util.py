@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>51</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.05.2023
+# 	<nr>52</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.05.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1464,10 +1464,12 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 		#PLog(cut_char); PLog(pos); PLog(line_l); PLog(line_r); PLog(line_ret)	# bei Bedarf	
 	return line_ret
 #----------------------------------------------------------------
+# für json.loads (z.B.. in router) json-Zeichen in line entfernen, insbesondere
+#	Hochkommata (Problem bei Dictbildung)
 #	doppelte utf-8-Enkodierung führt an manchen Stellen zu Sonderzeichen
 #  	14.04.2019 entfernt: (':', ' ')
 # 
-def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
+def repl_json_chars(line):	
 	line_ret = line
 	#PLog(type(line_ret))
 	for r in	((u'"', u''), (u'\\', u''), (u'\'', u''), (u'%5C', u'') 
@@ -1479,16 +1481,26 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	
 	return line_ret
 #----------------------------------------------------------------
-# Verwendung bei übergroßen Mengen an Spezialzeichen (Performance),
-#	um replace-Aufwand zu reduzieren - Bsp. funk (Hex-Colours 🤯, 
+# Verwendung bei übergroßen Mengen an Spezialzeichen in Titel + Info-Text
+#	(Performance), um replace-Aufwand zu reduzieren - Bsp. funk (Hex-Colours 🤯, 
 #	u.a. ✈, 😱, ..).
+# valid_chars: Umlaute plus routerkompatible Zeichen, auch einige der in unescape
+#	übersetzte Zeichen (hier ab &)
 # S. docs.python.org/3/library/string.html
+#
 def valid_title_chars(line):
-	#PLog("valid_title_chars:")
-	valid_chars = u"_üöäÜÖÄß%s" % (string.printable)
+	PLog("valid_title_chars:")
+
+	printable = string.printable
+	#  cut ab &: &\'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r\x0b\x0c
+	printable = printable.split('&')[0]
+	valid_chars = u' üöäÜÖÄß%s&()*+,-.:<=>?_|~' % printable
 	line_ret = ''.join(c for c in line if c in valid_chars)
-	line_ret = line_ret.replace('"', '') # router-komp.
-	PLog(line_ret)
+	
+	# Hochkommata, dto urlkodiert - nicht erfasst in valid_chars: 
+	line_ret = (line_ret.replace(u'"', '').replace(u"'", '')\
+	.replace(u"%27", '').replace(u"%22", '').replace(u"%5B", '')\
+	 .replace(u"%5D", ''))
 
 	return line_ret
 #---------------------------------------------------------------- 
@@ -2366,9 +2378,8 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 		summ = stringextract('description" content="', '"', page)
 		summ = mystrip(summ)
 		if teaserinfo:
-			summ = "%s\n\n%s" % (teaserinfo, summ)
+			summ = "%s | %s" % (teaserinfo, summ)
 		summ = unescape(summ)
-		summ = repl_json_chars(summ)
 																			# 11.05.2023 neu 
 		postcontent = stringextract('b-post-content">', '"b-post-footer"', page)
 		if postcontent:
@@ -2382,6 +2393,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 			if len(addpost) > 0:
 				summ = summ + " | " + " | ".join(addpost)
 				summ = mystrip(summ)
+		summ  = valid_title_chars(summ)
 
 		if skip_verf == False:
 			if u'erfügbar bis' in page:										# enth. Uhrzeit									
