@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>105</nr>										# Numerierung für Einzelupdate
+# 	<nr>106</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.3'
-VDATE = '21.05.2023'
+VDATE = '23.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2242,7 +2242,7 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			cluster_type = stringextract('"type":"', '"', item)			# Cluster-Titel	engl.
 			if title == '' or  title == None:
 				continue
-			if title == 'Stage':										# -> Highlights, s. Step 2
+			if title == 'Stage' or u'für dich' in title:				# -> Highlights s. Step 2 / pers. Inhalte
 				continue
 			if u'Weiterhören' in title or  u'Meine Sender' in title:	# skip personenbezogene Beiträge 								
 				continue
@@ -6905,8 +6905,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			PLog("Satz1_1:")
 			PLog(stage); PLog(typ); PLog(title);
 			title = repl_json_chars(title)
+			descr = repl_json_chars(descr); sdescr=descr.replace(';','.')
 			tag = repl_json_chars(tag)
-			descr = repl_json_chars(descr); descr=descr.replace(';','.')
 			if entry["type"]=="video":								# Videos
 				if "channel" in entry:								# Zusatz Sender
 					sender = entry["channel"]
