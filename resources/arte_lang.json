@@ -1,6 +1,6 @@
 {
     "strings": {
-		"numeration": "<nr>1</nr>",
+		"numeration": "<nr>2</nr>",
         "msgstr": [
             {
                 "de": "Weitere Beiträge",
@@ -251,12 +251,12 @@
                 "it": "Errore in SingleVideo"
             },
             {
-                "de": "Streams leider (noch) nicht verfügbar",
-                "fr": "Streams malheureusement pas (encore) disponibles",
-                "en": "Streams unfortunately not (yet) available",
-                "es": "Lamentablemente (aún) no hay streams disponibles",
-                "pl": "Strumienie niestety nie są (jeszcze) dostępne",
-                "it": "I flussi purtroppo non sono (ancora) disponibili"
+                "de": "Streams leider (noch) nicht verfügbar.",
+                "fr": "Streams malheureusement pas (encore) disponibles.",
+                "en": "Streams unfortunately not (yet) available.",
+                "es": "Lamentablemente (aún) no hay streams disponibles.",
+                "pl": "Strumienie niestety nie są (jeszcze) dostępne.",
+                "it": "I flussi purtroppo non sono (ancora) disponibili."
             },
             {
                 "de": "nicht verfügbar",
@@ -265,6 +265,14 @@
                 "es": "no disponible",
                 "pl": "niedostępny",
                 "it": "non disponibile"
+            },
+            {
+                "de": "Mehr Streamauswahl ohne Sofortstart!",
+                "fr": "Plus de choix de flux sans démarrage immédiat !",
+                "en": "More stream selection without instant <Sofortstart>!",
+                "es": "Más selección de flujos sin <Sofortstart>",
+                "pl": "Większy wybór strumieni bez <Sofortstart>!",
+                "it": "Più selezione di flussi senza avvio <Sofortstart>!"
             },
             {
                 "de": "",

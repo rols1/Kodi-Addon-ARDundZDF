@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>31</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.05.2023
+# 	<nr>32</nr>										# Numerierung für Einzelupdate
+#	Stand: 25.05.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -773,8 +773,11 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 			
 	if not len(HLS_List) and not len(MP4_List):			
 		msg1 = u'SingleVideo: [B]%s[/B]' % title
-		msg2 = L(u'Streams leider (noch) nicht verfügbar')
-		MyDialog(msg1, msg2, '')
+		msg2 = L(u'Streams leider (noch) nicht verfügbar.')
+		msg3=""
+		if SETTINGS.getSetting('pref_video_direct') == 'true':	
+			msg3 = L(u"Mehr Streamauswahl ohne Sofortstart!")
+		MyDialog(msg1, msg2, msg3)
 		return li
 	
 	if SETTINGS.getSetting('pref_video_direct') == 'true':			# Sofortstart hier (s.o.) + raus
