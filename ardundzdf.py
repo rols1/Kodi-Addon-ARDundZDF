@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>107</nr>										# Numerierung für Einzelupdate
+# 	<nr>108</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.3'
-VDATE = '23.05.2023'
+VDATE = '27.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -231,10 +231,11 @@ STRM_SYNCLIST	= os.path.join(ADDON_DATA, "strmsynclist")		# strm-Liste für Sync
 STRM_CHECK 		= os.path.join(ADDON_DATA, "strm_check_alive") 	# strm-Synchronisierung (Lockdatei)
 FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")			# Flag PlayVideo_Direct	-> strm-Modul
 PLog(SLIDESTORE); PLog(WATCHFILE); 
-check 			= check_DataStores()					# Check /Initialisierung / Migration 
+check 			= check_DataStores()						# Check /Initialisierung / Migration 
 PLog('check: ' + str(check))
 
 
+now = time.time()											# Abgleich Flags
 # die tvtoday-Seiten decken 12 Tage ab, trotzdem EPG-Lauf alle 12 Stunden
 #	 (dto. Cachezeit für einz. EPG-Seite in EPG.EPG).
 # 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - s. thread_getepg
@@ -244,7 +245,6 @@ if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden
 	is_activ=False
 	if os.path.exists(EPGACTIVE):							# gesetzt in thread_getepg 
 		is_activ=True
-		now = time.time()
 		mtime = os.stat(EPGACTIVE).st_mtime
 		diff = int(now) - mtime
 		PLog(diff)
@@ -261,7 +261,15 @@ if SETTINGS.getSetting('pref_dl_cnt') == 'true':			# laufende Downloads anzeigen
 		PLog("Haupt_PRG: get_active_dls")
 		from threading import Thread
 		bg_thread = Thread(target=epgRecord.get_active_dls, args=())
-		bg_thread.start()	
+		bg_thread.start()
+	else:													# Check Dateileiche
+		mtime = os.stat(DL_CHECK).st_mtime
+		diff = int(now) - mtime
+		if diff > 43200:                        			# nach 12 Std. entfernen
+				PLog("remove_dead_file: " + DL_CHECK)
+				os.remove(DL_CHECK)
+				if os.path.exists(DL_CNT):					# einschl. alten Zähler
+						os.remove(DL_CNT)		
 else:
 		if os.path.exists(DL_CHECK):	
 			os.remove(DL_CHECK)								# Setting Aus: Lock dl_check_alive entfernen
@@ -269,7 +277,6 @@ else:
 			os.remove(DL_CNT)								# Zähler dl_cnt entfernen
 
 if os.path.exists(FLAG_OnlyUrl):							# Lockdatei für Synchronisierung strm-Liste				
-	now = time.time()
 	mtime = os.stat(FLAG_OnlyUrl).st_mtime
 	diff = int(now) - mtime
 	if diff > 60:											# entf. wenn älter als 60 sec	
@@ -278,7 +285,6 @@ if os.path.exists(FLAG_OnlyUrl):							# Lockdatei für Synchronisierung strm-Li
 	
 if os.path.exists(STRM_SYNCLIST):							# strm-Liste für Synchronisierung					
 	if os.path.exists(STRM_CHECK):							# Leiche? 2-sec-Aktualisierung durch strm_sync
-		now = time.time()
 		mtime = os.stat(STRM_CHECK).st_mtime
 		diff = int(now) - mtime
 		if diff > 10:										# entf. wenn älter als 10 sec	
