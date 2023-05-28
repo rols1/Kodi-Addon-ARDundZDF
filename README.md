@@ -1,12 +1,10 @@
 Kodi-Addon-ARDundZDF
 ===================
 
-Addon für Kodi / XBMC (Kodi-Version von [Plex-Plugin ARDundZDF](https://github.com/rols1/ARDundZDF)).<br>
+Addon für Kodi / XBMC (Kodi-Version von Plex-Plugin ARDundZDF).<br>
 Ab Version 2.2.5 für Kodi-Krypton, -Leia, -Matrix und -Nexus  geeignet (Python2- / Python3-kompatibel).<br>
 Mit Inhalten der Mediatheken von ARD und ZDF, 3Sat, funk, phoenix, KIKA und ZDFtivi, tageschau.de, Arte-Kategorien,
 einschließlich Live-TV mit Aufnahmefunktion (ffmpeg erforderlich), Live-Radio, Podcasts.<br>
-
-Für die ZDF Mediathek kann wahlweise die kompakte Version ZDFmobile genutzt werden. 
 
 Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-ARDundZDF/total.svg "Downloads")
@@ -64,7 +62,7 @@ Funktionen:
 - Rubriken
 - Bildgalerien 3sat
 
-#### ARD-Audiothek Neu (Stand 25.02.2022) mit Podcast-Favoriten:
+#### ARD-Audiothek:
 - Suche
 - Livestreams, einschl. ARD Audio Event Streams, Audio- und Netcastaudio-Streams der sportschau.de
 - Entdecken (wie Webseite)
@@ -88,8 +86,8 @@ Funktionen:
 #### Downloadoption (ab Version 2.6.8 ohne cURL/wget)
 - Download von Videos im ARD-Bereich
 - Download von Videos im ZDF-Bereich
-- Download von Videos in den Modulen 3Sat, TagesschauXL, phoenix (einschl. Youtube-Videos), funk, Kinderprogramme
-- Download von Podcasts - bei Podcast-Favoriten zusätzlich Sammeldownloads (aktuelle Liste der Beiträge)
+- Download von Videos in den Modulen arte, 3Sat, TagesschauXL, phoenix, Kinderprogramme
+- Download von Podcasts - bei Podcast-Favoriten zusätzlich Sammeldownloads (angezeigte Liste der Beiträge)
 
 #### Addon-Tools
 - Addon-Infos mit Angaben zum System, Cache, zu Dateipfaden und Modulen
@@ -116,7 +114,7 @@ Funktionen:
 #### weitere Module (optional)
 - ~~ZDFmobile~~ - entfernt ab Juni 2023 (obsolet)
 - 3Sat
-- ~~funk~~ - deaktiviert ab Mai 2023, Inhalte in der ZDF-Mediathek verfügbar
+- ~~funk~~ - entfernt ab Mai 2023 (Videos in ZDF-funk, Podcasts in der ARD-Audiothek verfügbar)
 - Kinderprogramme (z.Z. KIKA und ZDFtivi)
 - TagesschauXL
 - phoenix (https://www.phoenix.de/)

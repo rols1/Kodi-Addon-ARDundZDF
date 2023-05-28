@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>32</nr>										# Numerierung für Einzelupdate
-#	Stand: 25.05.2023
+#	Stand: 26.05.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -533,6 +533,8 @@ def GetContent(li, page, ID):
 		title = transl_json(title); title = unescape(title);
 		title = repl_json_chars(title); 					# franz. Akzent mögl.
 		summ = repl_json_chars(summ)						# -"-
+		summ  = valid_title_chars(summ)						# s. changelog V4.7.4
+		
 		tag_par = tag.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 		summ_par = summ.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 		

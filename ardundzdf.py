@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>108</nr>										# Numerierung für Einzelupdate
-VERSION = '4.7.3'
-VDATE = '27.05.2023'
+VERSION = '4.7.4'
+VDATE = '28.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -92,7 +92,6 @@ ICON_FILTER				= 'icon-filter.png'
 
 ICON_MAIN_ARD 			= 'ard-mediathek.png'
 ICON_MAIN_ZDF 			= 'zdf-mediathek.png'
-ICON_MAIN_ZDFMOBILE		= 'zdf-mobile.png'
 ICON_MAIN_TVLIVE 		= 'tv-livestreams.png'
 ICON_MAIN_RADIOLIVE 	= 'radio-livestreams.png'
 ICON_MAIN_UPDATER 		= 'plugin-update.png'
@@ -412,19 +411,11 @@ def Main():
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
 		thumb=R(ICON_MAIN_ARD), tagline=tagline, fparams=fparams)
 			
-	if SETTINGS.getSetting('pref_use_zdfmobile') == 'true':
-		PLog('zdfmobile_set: ')
-		tagline = 'Info: [B]ZDFmobile entfällt ab Juni 2023[/B]'
-		summ = ""
-		fparams="&fparams={}"
-		addDir(li=li, label="ZDFmobile", action="dirList", dirID="resources.lib.zdfmobile.Main_ZDFmobile", 
-			fanart=R(FANART), thumb=R(ICON_MAIN_ZDFMOBILE), tagline=tagline, summary=summ, fparams=fparams)
-	else:
-		tagline = 'Info: [B]ZDFmobile entfällt ab Juni 2023[/B]'
-		summ = ""
-		fparams="&fparams={'name': 'ZDF Mediathek'}"
-		addDir(li=li, label="ZDF Mediathek", action="dirList", dirID="Main_ZDF", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_ZDF), tagline=tagline, summary=summ, fparams=fparams)
+	tagline = u"einschließlich ZDF-funk"
+	summ = "funk-Podcasts befinden sich in der Audiothek"
+	fparams="&fparams={'name': 'ZDF Mediathek'}"
+	addDir(li=li, label="ZDF Mediathek", action="dirList", dirID="Main_ZDF", fanart=R(FANART), 
+		thumb=R(ICON_MAIN_ZDF), tagline=tagline, summary=summ, fparams=fparams)
 			
 	if SETTINGS.getSetting('pref_use_3sat') == 'true':
 		tagline = 'in den Settings kann das Modul 3Sat ein- und ausgeschaltet werden'
@@ -432,14 +423,16 @@ def Main():
 		addDir(li=li, label="3Sat Mediathek", action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", 
 			fanart=R('3sat.png'), thumb=R('3sat.png'), tagline=tagline, fparams=fparams)
 			
-	'''	26.04.2023 api V4.0 funktioniert nicht mehr - vorerst abgeschaltet		
+	'''	26.04.2023 api V4.0 funktioniert nicht mehr - vorerst abgeschaltet
+		27.05.2023 endgültig - nach wie vor: HTTP Error 410: Gone
 	if SETTINGS.getSetting('pref_use_funk') == 'true':
 		tag = 'in den Settings kann das Modul FUNK ein- und ausgeschaltet werden'
 		tag = u"%s\n\ndie Beiträge sind auch in der ZDF Mediathek enthalten (Menü ZDF-funk)" % tag
 		fparams="&fparams={}"													# funk-Modul
 		addDir(li=li, label="FUNK", action="dirList", dirID="resources.lib.funk.Main_funk", 
 			fanart=R('funk.png'), thumb=R('funk.png'), tagline=tag, fparams=fparams)
-	'''		
+	'''	
+	
 	if SETTINGS.getSetting('pref_use_childprg') == 'true':
 		tagline = 'in den Settings kann das Modul Kinderprogramme ein- und ausgeschaltet werden'
 		summ = u"KiKA, ZDFtivi, MausLive u.a."
@@ -1041,7 +1034,7 @@ def Main_ZDFfunk(title):
 	addDir(li=li, label="ZDF-funk-A-Z", action="dirList", dirID="ZDF_AZ", fanart=R('zdf-funk-AZ.png'), 
 		thumb=R('zdf-funk-AZ.png'), fparams=fparams)
 
-	'''									# 27.04.2023  deaktiviert, api V4.0 nicht mehr verfügbar
+	'''									# 27.05.2023  entfernt, api V4.0 nicht mehr verfügbar
 	fparams="&fparams={}"											# Button funk-Modul hinzufügen
 	addDir(li=li, label="zum FUNK-Modul", action="dirList", dirID="resources.lib.funk.Main_funk", 
 		fanart=R('zdf-funk.png'), thumb=R('funk.png'), fparams=fparams)
@@ -1093,9 +1086,10 @@ def AudioStart(title):
 	
 	# Button für funk anhängen 									# funk
 	title = 'funk: Das Content-Netzwerk von ARD und ZDF'		# Watchdog: ../organizations
+	tagline = "Podcasts des Senders funk"
 	fparams="&fparams={'org': '%s'}" %  title
 	addDir(li=li, label=title, action="dirList", dirID="AudioSenderPrograms", fanart=R(ICON_MAIN_AUDIO), 
-		thumb=R('funk.png'), fparams=fparams)
+		thumb=R('funk.png'), tagline=tagline, fparams=fparams)
 	
 	# Button für Podcast-Favoriten anhängen 					# Podcast-Favoriten
 	title="Podcast-Favoriten"; 
@@ -5219,10 +5213,10 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 	my_items, my_ordner= ReadFavourites(mode)			# Addon-Favs / Merkliste einlesen
 	PLog(len(my_items))
 	# Dir-Items für diese Funktionen erhalten mediatype=video:
-	# 05.12.2020 zdfmobile.ShowVideo entfernt (enthält auch Mehrfachbeiträge)
 	# 13.11.2021 ARDStartSingle hinzugefügt
+	# 27.05.2023 zdfmobile-Verweise entfernt
 	CallFunctions = ["PlayVideo", "ZDF_getVideoSources",
-						"zdfmobile.PlayVideo", "SingleSendung", "ARDStartVideoStreams", 
+						"SingleSendung", "ARDStartVideoStreams", 
 						"ARDStartVideoMP4", "ARDStartSingle", "PlayVideo", "my3Sat.SingleBeitrag",
 						"SenderLiveResolution", "phoenix.get_formitaeten",
 						"phoenix.SingleBeitrag", "phoenix.yt.yt_get",
@@ -5412,8 +5406,6 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 		Plot=unescape(Plot)
 		Plot = Plot.replace('||', '\n')			# s. PlayVideo
 		Plot = Plot.replace('+|+', '')	
-		if Plot.strip().startswith('stage|'):	# zdfMobile: nichtssagenden json-Pfad löschen
-			Plot = 'Beitrag aus zdfMobile' 
 		PLog('summary: ' + summary); PLog('tagline: ' + tagline); PLog('Plot: ' + Plot)
 		
 		if SETTINGS.getSetting('pref_FavsInfo') ==  'false':	# keine Begleitinfos 

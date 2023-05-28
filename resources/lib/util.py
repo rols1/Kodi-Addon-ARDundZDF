@@ -1489,7 +1489,7 @@ def repl_json_chars(line):
 # S. docs.python.org/3/library/string.html
 #
 def valid_title_chars(line):
-	PLog("valid_title_chars:")
+	#PLog("valid_title_chars:")
 
 	printable = string.printable
 	#  cut ab &: &\'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r\x0b\x0c
@@ -2393,7 +2393,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 			if len(addpost) > 0:
 				summ = summ + " | " + " | ".join(addpost)
 				summ = mystrip(summ)
-		summ  = valid_title_chars(summ)
+		summ  = valid_title_chars(summ)										# s. changelog V4.7.4
 
 		if skip_verf == False:
 			if u'erfügbar bis' in page:										# enth. Uhrzeit									
@@ -2438,6 +2438,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 		
 		summ = stringextract('synopsis":"', '","', page)
 		summ = repl_json_chars(summ)
+		summ  = valid_title_chars(summ)							# s. changelog V4.7.4
 			
 		if skip_verf == False:
 				verf = stringextract('availableTo":"', '","', page)
@@ -2450,7 +2451,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 				pubDate = time_translate(pubDate)
 				pubDate = u" | Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate	
 				if u'erfügbar bis' in summ:	
-					summ = summ.replace('\n\n', pubDate)					# zwischen Verfügbar + summ  einsetzen
+					summ = summ.replace('\n\n', pubDate)		# zwischen Verfügbar + summ  einsetzen
 				else:
 					summ = "%s%s" % (pubDate[3:], summ)
 					

@@ -10,6 +10,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+28.05.2023 4.7.4
+			Audio_get_homescreen (Audiothek): personalisierte Inhalte ausgeblendet
+			("..für dich" in title).
+			get_summary_pre (util): descr: Linefeed ersetzt durch "|" + Endbehandl.
+			mit valid_title_chars.
+			Get_content (Haupt-PRG + arte): Endbehandl. summ mit valid_title_chars.
+			valid_title_chars (util): aktualisiert, Berücksichtigung github-pull-request 
+			#28 (Semikolon-Problem mit PY2 in Funktion router).
+			SingleVideo (arte): Dialog-Zusatz "Mehr Streamauswahl ohne Sofortstart" bei
+			leeren Streamlisten, Anpassung arte_lang.json.
+			Anzeige laufender Downloads (Haupt-PRG): Leichencheck für Lockdatei DL_CHECK.
+			Module funk, zdfMobile: entfernt wie angekündigt, Bereinigung settings.xml +
+			Icons. Hauptmenü angepasst, Verweise in ShowFavs entfernt, Anpassung in
+			Watchdog_Plex-2, README + Wicki aktualisiert.
+			
 21.05.2023 4.7.3
 			ZDF_PageMenu: Link zu KiKANiNCHEN realisiert (Typ "externalUrl" im
 			Menü Kinderprogramme -> ZDFtivi -> ZDFchen).
