@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>108</nr>										# Numerierung für Einzelupdate
+# 	<nr>109</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.4'
-VDATE = '28.05.2023'
+VDATE = '29.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2809,25 +2809,24 @@ def ARDSportWDR():
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
-
-	'''
-	title = u"Event: [B]NORDISCHE SKI-WM[/B]"			# Großevent	
-	tag = u"Alles zur Nordischen Ski-WM in Planica."
-	cacheID = "Sport_SkiWM"
-	img = "https://images.sportschau.de/image/237354e3-b9b2-46bf-993a-8ecc48947e7f/AAABhol6U80/AAABg8tMRzY/20x9-1280/constantin-schmid-150.webp"
-	path = "https://www.sportschau.de/wintersport/nordische-ski-wm"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
-	'''
 	
 	title = u"Event-Archiv"									# Buttons für ältere Events	
 	tag = u"Archiv für zurückliegende Groß-Events."
 	img = logo
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportWDRArchiv", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+	title = u"Tabelle 1. Bundesliga"						# Tabelle 1					
+	tag = u"Quelle: www.sportschau.de"
+	logo=py2_encode(logo)
+	fparams="&fparams={'title': '%s', 'img': '%s'}" % (title, logo)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellen", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+	title = u"Tabelle 2. Bundesliga"						# Tabelle 2							
+	fparams="&fparams={'title': '%s', 'img': '%s'}" % (title, logo)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellen", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 	title = u"Tor des Monats"									# Tor des Monats
@@ -3089,6 +3088,65 @@ def ARDSportMonatstorSingle(title, path, img):
 				quote(title), quote(img), quote_plus(Plot))
 			addDir(li=li, label=title, action="dirList", dirID="ARDSportSliderSingle", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag)			
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
+#---------------------------------------------------------------------------------------------------
+# Tabellen
+# 
+def ARDSportTabellen(title, img): 
+	PLog("ARDSportTabellen:")
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+	
+	base = "https://www.sportschau.de/live-und-ergebnisse/fussball/"
+	if "1. Bund" in title:
+		path = base + "deutschland-bundesliga/tabelle/"
+	else:
+		path = base + "deutschland-2-bundesliga/tabelle/"
+	page = ARDSportLoadPage("Tabelle", path, "")
+	if page == '':
+		return
+	try:	
+		summ = re.search(u'<title>(.*?)</title>', page).group(1)
+	except:
+		summ=""
+	summ = "%s\n\nSpalten-Info: Rang [Punkte | Tore (Tor-Diff.) | Spiele] Mannschaft" % summ
+	
+	# Tab-Format (11): Tendenz | Rang | Icon| Team	| Sp.|S|U|N	| Tore | Diff. | Punkte
+	# Verwendung: Icon | Rang | Punkte |Tore | Diff. | Spiele
+	
+	page = stringextract("<!--start module standing", "<!--end module standing", page)
+	tr_blk = blockextract("<tr ", page)				# Zeilen
+	PLog("lines: %d" % len(tr_blk))
+	try:
+		for tr in tr_blk:
+			#PLog(tr)
+			td_blk = blockextract("<td ", tr)			# Spalten
+			PLog("columns: %d" % len(td_blk))
+			PLog("column_1: " + td_blk[0])
+			td_img		= re.search(u'src="(.*?)"', tr).group(1)	# Icon-Url
+			td_team		= re.search(u'title="(.*?)"', tr).group(1)	# Mannschaft
+			td_rank 	= re.search(u'rank">(.*?)<', tr).group(1)	# Rang
+			td_pts 		= re.search(u'points">(.*?)<', tr).group(1)	# Punkte
+			
+			td_goals 		= re.search(u'goaldiff">(.*?)<', tr).group(1)	# Tore
+			td_diff 		= re.search(u'difference">(.*?)<', tr).group(1)	# Tor-Differenz
+			td_match 		= re.search(u'played">(.*?)<', tr).group(1)	# Spiele
+			
+			points = "[%s | %s (%s) | %s]" % (td_pts, td_goals, td_diff, td_match)
+			title = u"[B]%4s[/B] %24s %4s[B]%s[/B]" % (td_rank, points, " ", td_team)
+			PLog(td_rank); PLog(td_team);
+			tag = u"[B]Platz %s: %s[/B]" % (td_rank, td_team)
+				
+			PLog("Satz12_title: %s" % title)
+			fparams="&fparams={}" 
+			addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, thumb=td_img, 
+				fparams=fparams, tagline=tag, summary=summ)	
+				
+	except Exception as exception:
+		PLog("table_error: " + str(exception))
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
