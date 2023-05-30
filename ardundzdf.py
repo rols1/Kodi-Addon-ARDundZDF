@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>109</nr>										# Numerierung für Einzelupdate
+# 	<nr>110</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.4'
-VDATE = '29.05.2023'
+VDATE = '30.05.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2819,15 +2819,18 @@ def ARDSportWDR():
 
 	title = u"Tabelle 1. Bundesliga"						# Tabelle 1					
 	tag = u"Quelle: www.sportschau.de"
-	logo=py2_encode(logo)
-	fparams="&fparams={'title': '%s', 'img': '%s'}" % (title, logo)
+	summ = u"aktuelle Tabelle plus Zugang zum Archiv bis 1964"
+	path = "https://www.sportschau.de/live-und-ergebnisse/fussball/deutschland-bundesliga/tabelle/"
+	logo=py2_encode(logo); path=py2_encode(path) 
+	fparams="&fparams={'title': '%s', 'logo': '%s', 'path': '%s'}" % (title, logo, quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellen", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
+		fparams=fparams, tagline=tag, summary=summ)	
 
 	title = u"Tabelle 2. Bundesliga"						# Tabelle 2							
-	fparams="&fparams={'title': '%s', 'img': '%s'}" % (title, logo)
+	path = "https://www.sportschau.de/live-und-ergebnisse/fussball/deutschland-2-bundesliga/tabelle/"
+	fparams="&fparams={'title': '%s', 'logo': '%s', 'path': '%s'}" % (title, logo, quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellen", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
+		fparams=fparams, tagline=tag, summary=summ)	
 
 	title = u"Tor des Monats"									# Tor des Monats
 	tag = u"Tor des Monats: Hier gibt's Highlights, Clips und ausgewählte Höhepunkte aus der langen Geschichte dieser Rubrik."
@@ -3093,26 +3096,29 @@ def ARDSportMonatstorSingle(title, path, img):
 	
 #---------------------------------------------------------------------------------------------------
 # Tabellen
+# frühere Jahre <- ARDSportTabellenArchiv
 # 
-def ARDSportTabellen(title, img): 
-	PLog("ARDSportTabellen:")
+def ARDSportTabellen(title, logo, path): 
+	PLog("ARDSportTabellen: " + path)
+	PLog(title)
+	title_org=title
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
-	base = "https://www.sportschau.de/live-und-ergebnisse/fussball/"
 	if "1. Bund" in title:
-		path = base + "deutschland-bundesliga/tabelle/"
+		cacheID="TabBund1"
 	else:
-		path = base + "deutschland-2-bundesliga/tabelle/"
-	page = ARDSportLoadPage("Tabelle", path, "")
+		cacheID="TabBund2"	
+			
+	page = ARDSportLoadPage("Tabelle", path, func="ARDSportTabellen", cacheID=cacheID)
 	if page == '':
 		return
 	try:	
 		summ = re.search(u'<title>(.*?)</title>', page).group(1)
 	except:
 		summ=""
-	summ = "%s\n\nSpalten-Info: Rang [Punkte | Tore (Tor-Diff.) | Spiele] Mannschaft" % summ
+	summ = "[B]%s[/B]\n\nSpalten-Info: Rang [Punkte | Tore (Tor-Diff.) | Spiele] Mannschaft" % summ
 	
 	# Tab-Format (11): Tendenz | Rang | Icon| Team	| Sp.|S|U|N	| Tore | Diff. | Punkte
 	# Verwendung: Icon | Rang | Punkte |Tore | Diff. | Spiele
@@ -3137,19 +3143,69 @@ def ARDSportTabellen(title, img):
 			
 			points = "[%s | %s (%s) | %s]" % (td_pts, td_goals, td_diff, td_match)
 			title = u"[B]%4s[/B] %24s %4s[B]%s[/B]" % (td_rank, points, " ", td_team)
-			PLog(td_rank); PLog(td_team);
 			tag = u"[B]Platz %s: %s[/B]" % (td_rank, td_team)
 				
 			PLog("Satz12_title: %s" % title)
+			PLog(td_img)
 			fparams="&fparams={}" 
-			addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, thumb=td_img, 
+			addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=logo, thumb=td_img, 
 				fparams=fparams, tagline=tag, summary=summ)	
 				
 	except Exception as exception:
 		PLog("table_error: " + str(exception))
+	
+	now = datetime.datetime.now()
+	thisyear = now.strftime("%Y")
+		
+	title = u"[B]Archiv[/B]: Tabellen seit 1964" 					# Archiv
+	if "2. Bund" in title_org:
+		title = u"[B]Archiv[/B]: Tabellen seit 2017"	
+	tag = u"zurückliegende Tabellen %s" % title_org					
+	logo=py2_encode(logo); path=py2_encode(path)
+	fparams="&fparams={'title': '%s', 'path': '%s', 'logo': '%s'}" % (title_org, quote(path), logo)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellenArchiv", fanart=logo, thumb=logo, 
+		fparams=fparams, tagline=tag)	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
+#---------------------------------------------------------------------------------------------------
+# Archiv: Bundeslliga-Tabellen ab 1964
+#  
+def ARDSportTabellenArchiv(title, path, logo): 
+	PLog('ARDSportTabellenArchiv: ' + path)
+	title_org=title
+	
+	page, msg = get_page(path=path)					# ohne Cache
+	page = stringextract("start module select--><", "<!--end module select-->", page)
+	if page == '':
+		return	
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+
+	base = "https://www.sportschau.de"
+	tab_list = blockextract("<option value", page)
+	PLog(tab_list[0])							# ../tabelle/">1963/1964</option>
+	try:
+		sort_list = sorted(tab_list,key=lambda x: int(re.search(u'/">(\d+)/', x).group(1)), reverse=True)	
+	except Exception as exception:
+		PLog("tab_list_error: " + str(exception))
+		sort_list = tab_list
+	
+	for tab in sort_list:
+		PLog(tab)
+		href =  base + re.search(u'value="(.*?)"', tab).group(1)
+		year = href.split("/")[-3]					# ../se2588/1966-1967/tabelle/
+		title = "%s: [B]%s[/B]" % (title_org, year)
+		PLog("href: " + href)
+		
+		title_org=py2_encode(title_org); logo=py2_encode(logo); href=py2_encode(href)
+		fparams="&fparams={'title': '%s', 'logo': '%s', 'path': '%s'}" % (title_org, quote(logo), quote(href))
+		addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellen", fanart=logo, thumb=logo, 
+			fparams=fparams)	
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
 #---------------------------------------------------------------------------------------------------
 # Laden + Verteilen
 def ARDSportHub(title, path, img, Dict_ID=''): 
