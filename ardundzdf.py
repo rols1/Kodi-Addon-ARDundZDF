@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>110</nr>										# Numerierung für Einzelupdate
+# 	<nr>111</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.4'
-VDATE = '30.05.2023'
+VDATE = '01.06.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3123,6 +3123,7 @@ def ARDSportTabellen(title, logo, path):
 	# Tab-Format (11): Tendenz | Rang | Icon| Team	| Sp.|S|U|N	| Tore | Diff. | Punkte
 	# Verwendung: Icon | Rang | Punkte |Tore | Diff. | Spiele
 	
+	base = "https://www.sportschau.de"
 	page = stringextract("<!--start module standing", "<!--end module standing", page)
 	tr_blk = blockextract("<tr ", page)				# Zeilen
 	PLog("lines: %d" % len(tr_blk))
@@ -3132,6 +3133,8 @@ def ARDSportTabellen(title, logo, path):
 			td_blk = blockextract("<td ", tr)			# Spalten
 			PLog("columns: %d" % len(td_blk))
 			PLog("column_1: " + td_blk[0])
+			path		= re.search(u'href="(.*?)"><img', tr).group(1)	# Pfad -> Team
+			path		= base + path
 			td_img		= re.search(u'src="(.*?)"', tr).group(1)	# Icon-Url
 			td_team		= re.search(u'title="(.*?)"', tr).group(1)	# Mannschaft
 			td_rank 	= re.search(u'rank">(.*?)<', tr).group(1)	# Rang
@@ -3145,11 +3148,12 @@ def ARDSportTabellen(title, logo, path):
 			title = u"[B]%4s[/B] %24s %4s[B]%s[/B]" % (td_rank, points, " ", td_team)
 			tag = u"[B]Platz %s: %s[/B]" % (td_rank, td_team)
 				
-			PLog("Satz12_title: %s" % title)
-			PLog(td_img)
-			fparams="&fparams={}" 
-			addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=logo, thumb=td_img, 
-				fparams=fparams, tagline=tag, summary=summ)	
+			PLog("Satz12_title: %s" % title); PLog(td_img)
+			tag = u"Klick für Teamübersicht von  %s" % td_team			
+			logo=py2_encode(logo); path=py2_encode(path)
+			fparams="&fparams={'title': '%s', 'path': '%s', 'logo': '%s'}" % (title_org, quote(path), logo)
+			addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellenTeam", fanart=logo, thumb=logo, 
+				fparams=fparams, tagline=tag)	
 				
 	except Exception as exception:
 		PLog("table_error: " + str(exception))
@@ -3160,11 +3164,13 @@ def ARDSportTabellen(title, logo, path):
 	title = u"[B]Archiv[/B]: Tabellen seit 1964" 					# Archiv
 	if "2. Bund" in title_org:
 		title = u"[B]Archiv[/B]: Tabellen seit 2017"	
-	tag = u"zurückliegende Tabellen %s" % title_org					
+	tag = u"zurückliegende Tabellen %s" % title_org	
+	summ = "Bildquelle: sportschau.de"
+					
 	logo=py2_encode(logo); path=py2_encode(path)
 	fparams="&fparams={'title': '%s', 'path': '%s', 'logo': '%s'}" % (title_org, quote(path), logo)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellenArchiv", fanart=logo, thumb=logo, 
-		fparams=fparams, tagline=tag)	
+		fparams=fparams, tagline=tag, summary=summ)	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
@@ -3207,7 +3213,56 @@ def ARDSportTabellenArchiv(title, path, logo):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 #---------------------------------------------------------------------------------------------------
-# Laden + Verteilen
+# Teamübersicht
+#  
+def ARDSportTabellenTeam(title, path, logo): 
+	PLog('ARDSportTabellenTeam: ' + path)
+	title_org=title
+	
+	page, msg = get_page(path=path)					# ohne Cache
+	page = stringextract("start module person--><", "<!--end module person-->", page)
+	if page == '':
+		return	
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
+
+	base = "https://www.sportschau.de"
+	role_blk = blockextract('role">', page)	# Rollen
+	try:
+		for item in role_blk:
+			tr_blk = blockextract("<tr ", item)
+			PLog("lines: %d" % len(tr_blk))
+			role = re.search(u'role">(.*?)<', item).group(1)		# z.B. Torwart
+			for tr in tr_blk:
+				#PLog(tr)
+				td_blk = blockextract("<td ", tr)			# Spalten
+				PLog("columns: %d" % len(td_blk))
+				PLog("column_1: " + td_blk[0])
+				# path		= re.search(u'href="(.*?)"><img', tr).group(1)		# Pfad -> Profil Person - nicht genutzt
+				td_img		= re.search(u'src="(.*?)" alt', tr).group(1)		# Bild-Url
+				td_name		= re.search(u'title="(.*?)"', tr).group(1)			# Name
+				td_nr 		= re.search(u'shirtnumber-">(.*?)<', tr).group(1)	# Spieler-Nr.
+				td_nation 	= re.search(u'country-name-">(.*?)<', tr).group(1)	# Nationalität
+				td_birth 	= re.search(u'birthday">(.*?)<', tr).group(1)		# Geburtstag
+				
+				title = u"[B]%2s[/B] [B]%s[/B] (geb. %s)" % (td_nr, td_name, td_birth)
+				tag = u"[B]%s[/B] | Herkunft: %s | Rolle: [B]%s[/B]" % (td_name, td_nation, role)
+				summ = "Bildquelle: sportschau.de"
+					
+				PLog("Satz12_team: %s" % title); PLog(td_img)
+				fparams="&fparams={}" 
+				addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=logo, thumb=td_img, 
+					fparams=fparams, tagline=tag, summary=summ)				
+				
+	except Exception as exception:
+		PLog("team_error: " + str(exception))
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+#---------------------------------------------------------------------------------------------------
+# Laden + Verteilen 
+#
 def ARDSportHub(title, path, img, Dict_ID=''): 
 	PLog('ARDSportHub: ' + title)
 	
