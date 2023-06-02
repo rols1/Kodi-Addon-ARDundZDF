@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>15</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.03.2023
+# 	<nr>16</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1553,16 +1553,20 @@ def KikaninchenFilme():
 #
 def Kikaninchen_VideoSingle(path, title, assets_url=''):	
 	PLog('Kikaninchen_VideoSingle: ' + path)
+	PLog(title)
 	title_org=title
 
 	#-------------------------------------------------		# 1. Assets-Url ermittlen -> xml-Datei
 	if assets_url == "":
-		try:
-			path = path.split("_zc-")[0]					# Bsp.: ../video52242_zc-b799b903_zs-8eedf79c.html
-			assets_url = path + "-avCustom.xml"				# Bsp.: ../videos/video52242-avCustom.xml		
-		except Exception as exception:
-			PLog(str(exception))
-			assets_url=""
+		if "_zc-" in path:									# Format vor 01.06.2023
+			try:
+				path = path.split("_zc-")[0]					# Bsp.: ../video52242_zc-b799b903_zs-8eedf79c.html
+				assets_url = path + "-avCustom.xml"				# Bsp.: ../videos/video52242-avCustom.xml		
+			except Exception as exception:
+				PLog(str(exception))
+				assets_url=""
+		else:
+			assets_url = path.replace(".html", "-avCustom.xml")		# ab 01.06.2023
 
 	#-------------------------------------------------		# 2. Videodetails aus xml-Datei holen
 	page=""
@@ -1596,6 +1600,9 @@ def Kikaninchen_VideoSingle(path, title, assets_url=''):
 	Plot = "%s\n\n%s" % (tag, summ)
 	assets = blockextract('<asset>', page)
 	
+	title = valid_title_chars(title)
+	summ = valid_title_chars(summ)
+	
 	PLog("Satz1:")
 	PLog(len(assets)); PLog(title); PLog(summ); PLog(img); 
 	
@@ -1628,8 +1635,8 @@ def Kikaninchen_VideoSingle(path, title, assets_url=''):
 		HLS_List=[]
 	#'''
 		
-	#PLog("HLS_List: " + str(HLS_List)[:80])
 	PLog("HLS_List: inputstream.adaptive returned bad status Permanent failure..")
+	PLog("HLS_List: " + str(HLS_List)[:80])
 	MP4_List = Kika_VideoMP4getXML(title, assets)
 	PLog("download_list: " + str(MP4_List)[:80])
 	Dict("store", 'KIKA_HLS_List', HLS_List) 
@@ -1644,10 +1651,11 @@ def Kikaninchen_VideoSingle(path, title, assets_url=''):
 	#----------------------------------------------- 
 	# Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
 	# 
-	PLog('Lists_ready:');
-	Plot = "Titel: %s\n\n%s" % (title_org, summ)				# -> build_Streamlists_buttons
-	PLog('Plot:' + Plot)
 	thumb = img; ID = 'KIKA'; HOME_ID = "Kinderprogramme"
+	PLog('childs_Lists_ready: ID=%s, HOME_ID=%s' % (ID, HOME_ID));
+	Plot = "Titel: %s\n\n%s" % (title_org, summ)				# -> build_Streamlists_buttons
+	Plot = Plot.replace("\n", "||")
+	PLog('Plot: ' + Plot)
 	ardundzdf.build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)	
 		
@@ -1916,7 +1924,7 @@ def Kika_VideoMP4getXML(title, assets):
 		if "MP4 Web XL" in profil or "1280" in frameWidth:
 			quality = u'Full HD'
 			
-		PLog("res: %s, bitrate: %s" % (res, bitrate)); 
+		PLog("res: %s, bitrate: %s, href: %s" % (res, bitrate, href)); 
 		title_url = u"%s#%s" % (title, href)
 		item = u"MP4 Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
 		download_list.append(item)
