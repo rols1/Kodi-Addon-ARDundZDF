@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>111</nr>										# Numerierung für Einzelupdate
-VERSION = '4.7.4'
-VDATE = '01.06.2023'
+VERSION = '4.7.5'
+VDATE = '04.06.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2586,24 +2586,13 @@ def ARDSportBilder(title, path, img):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
-#--------------------------------------------------------------------------------------------------
-# Die Videoquellen des WDR sind in SingleSendung nicht erreichbar. Wir laden
-#	die Quelle (2 vorh.) über die Datei ..deviceids-medp-id1.wdr.de..js und
-#	übergeben an PlayVideo.
-# 26.11.2021 neu nach Änderungen der ARD: Videoquellen: Dekodierung hier - nicht in get_page. 
-#	Video-/Audioquellen: Webseite (json embedded, wdr-Link, iframe-Link), Videolink 
-#	(Endung .js) -> json-Datei mit Quellen, Videolink (Endung .html, enthalten: 
-#	'-ardplayer_image) -> zusammengesetzt zu json-Link).
-#	Die Quellen enthalten jeweils unterschiedl. Sets an m3u8-, mp4, -mp3-Quellen, häufig nur
-#		1 Quelle.
-# Fallback ohne Quellen: Webseiten mit 'media mediaA video' -> ARDSportSliderSingleTab
-# Besonderheit: bei einigen Seiten scheitert utf-8-Dekodierung in util. Daher Dekodierung 
-#	hier mit py2_decode
-# 22.12.2021 auch verwendet von list_WDRstreamlinks->WDRstream mit page (Livesender 
-#	WRD-Lokalzeit) 	
-# 18.06.2022 ARDSportSliderSingleTab als Fallback entfernt (nach Webänderung obsolet)
+#-------------------------------------------------------------------------------------------------- 
+# 04.06.2023 nur noch von WRD-Lokalzeit verwendet - baldmöglichst auf
+#	neue ARD-Quellen umstellen 	
+# 
 def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
-	PLog('ARDSportVideo:'); 
+	PLog('ARDSportVideo:');
+	img_org=img
 	PLog(path); PLog(summ); PLog(len(page))
 	summ = summ.replace('||||', ' | ')
 
@@ -2756,9 +2745,12 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 		PlayVideo(url=m3u8_url, title=title_m3u8, thumb=img, Plot=summ, sub_path="")
 		return
 	
+	if img  == "":
+		img = img_org
 	PLog("Satz27:")
 	PLog("m3u8_url: " + m3u8_url); PLog(title_m3u8);
 	PLog(title_mp); PLog("mp_url: " + mp_url)
+	PLog(img)
 	
 	m3u8_url=py2_encode(m3u8_url); title_m3u8=py2_encode(title_m3u8); 
 	title_mp=py2_encode(title_mp); 
@@ -2774,8 +2766,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': ''}" %\
 			(quote_plus(mp_url), quote_plus(title_mp), quote_plus(img), quote_plus(summ))
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-			mediatype=mediatype, tagline=title_mp, summary=summ) 
-		
+			mediatype=mediatype, tagline=title_mp, summary=summ) 	
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -3574,6 +3565,9 @@ def ARDSportMedia(li, title, page):
 		if title in skip_list:								# Doppel in Blöcken möglich
 			continue
 		skip_list.append(title)
+		
+		if os.path.splitext(img)[-1] == "":					# fehlende Extension möglich
+			img = img + ".png"
 				
 		PLog("Satz12:")
 		PLog(player); PLog(live); PLog(title); PLog(mp3_url); PLog(stream_url);   
@@ -3638,7 +3632,7 @@ def ARDSportMedia(li, title, page):
 def ARDSportMediaPlayer(li, item): 
 	PLog('ARDSportMediaPlayer:')
 	player=''; live=False; title='';  mp3_url=''; stream_url=''; 
-	img=''; tag=''; summ=''; Plot='';
+	img=''; verf=''; tag=''; summ=''; Plot=''; 
 	
 	cont = stringextract('data-v="', '"', item)				# json-Inhalt zum Player
 	cont = decode_url(cont)
@@ -6450,37 +6444,31 @@ def list_WDRstreamlinks(url):
 		return li
 	PLog(len(page))
 	
-	items = blockextract('hideTeasertext">', page)
+	stations = stringextract('broadcastingStations">', '</script>', page)
+	items = blockextract('class="headline', stations)
 	PLog(len(items))	
 
 	li = xbmcgui.ListItem()
 	
+	tag = u"zur aktuellen Sendung des WDR"
+	img = "https://www1.wdr.de/lokalzeit/fernsehen/tv-ubersicht-bild-100~_v-TeaserAufmacher.jpg"
 	for item in items:
-		if 'title="Alle Livestreams' in item:
-			continue
-		path = stringextract('href="', '"', item)
-		if path.startswith("/"):
-			path = wdr_base + path
-		title = stringextract('title="', '"', item)			# href-title
-		img = stringextract('srcset="', '"', item)
-		if img.startswith("/"):
-			img = wdr_base + img
-		img_src = stringextract('alt="', 'src=', item)
-		img_src = stringextract('title="', '"', img_src)	# alt-title
-		summ = img_src
-		summ = u"%s\n\n[B]Sendezeit 19.30 - 20.00 Uhr[/B]" % summ
-		summ_par = summ.replace('\n', '||')
+		path = stringextract('live"><a href="', '"', item)		
+		title = stringextract('programme-uuid="', '"', item)
+		title = title.replace("_", " ")
+		title = title.replace("WDR", "")
+		summ = u"[B]Sendezeit 19.30 - 20.00 Uhr[/B]" 
 		
 		PLog("Satz28:")
 		
 		PLog(path);PLog(img); PLog(title); PLog(summ); 
-		title=py2_encode(title); summ_par=py2_encode(summ_par)
+		title=py2_encode(title); 
 		path=py2_encode(path); img=py2_encode(img);
 		
 		fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'summ': '%s'}" %\
-			(quote(path), quote(title), quote(img), quote(summ_par))				
+			(quote(path), quote(title), quote(img), quote(summ))				
 		addDir(li=li, label=title, action="dirList", dirID="WDRstream", fanart=img, thumb=img, 
-			fparams=fparams, summary=summ)	
+			fparams=fparams, tagline=tag, summary=summ)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -6496,6 +6484,7 @@ def list_WDRstreamlinks(url):
 def WDRstream(path, title, img, summ):
 	PLog('WDRstream:')
 	summ = summ.replace( '||', '\n')
+	img_org=img
 	
 	page, msg = get_page(path)					
 	if page == '':	
@@ -6507,21 +6496,24 @@ def WDRstream(path, title, img, summ):
 	page=py2_decode(page)					
 	
 	vonbis = stringextract('>Hier sehen Sie ', ' die Lokalzeit ', page)	# 19.30 - 20.00 Uhr
-	PLog('deviceids-medp.wdr.de' in page)
-	videos = blockextract('"videoURL" : "', page, '}')			# .m3u8-Quelle vorh.?
-	PLog(videos)
+	m3u8_url = stringextract('"videoURL" : "', '"', page)			# .m3u8-Quelle vorh.?
+	pos = page.find('videoLink live">')
+	img = stringextract('"contentUrl" : "', '"', page[pos:])
+	if img == "" or "json_logo_amp" in img:			# http-Error 404
+		img = img_org
+	PLog(m3u8_url)
+	PLog(img)
 	
 	mediatype=''									# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 
-	if len(videos) >0:											# wie ARDSportVideo
+	if m3u8_url:
 		PLog("detect_videoURL")
 		li = xbmcgui.ListItem()
 		li = home(li, ID=NAME)				# Home-Button
-		m3u8_url= stringextract('"videoURL" : "', '"', videos[0])
-		if m3u8_url and m3u8_url.startswith('http') == False:		
-			m3u8_url = 'https:' + m3u8_url						# //wdradaptiv-vh.akamaihd.net/..	
+		if m3u8_url.startswith('http') == False:		
+			m3u8_url = 'https:' + m3u8_url						# //wdrlokalzeit.akamaized.net/..	
 		
 		if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Sofortstart
 			PLog('Sofortstart: WDRstream')
@@ -6544,7 +6536,7 @@ def WDRstream(path, title, img, summ):
 			ARDSportVideo(path, title, img, summ, page=page)
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		else:
-			icon=img
+			icon=img_org
 			msg1 = u"Sendungszeiten"
 			msg2 = vonbis									
 			xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=True)
@@ -8852,7 +8844,7 @@ def m3satSourcesHBBTV(weburl, title):
 #
 def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		HLS_List,MP4_List,HBBTV_List,ID="ZDF",HOME_ID="ZDF"):
-	PLog('build_Streamlists_buttons:'); PLog(ID)
+	PLog('build_Streamlists_buttons:'); PLog(ID);  PLog(title_org)
 	
 	if geoblock and geoblock not in Plot:
 		Plot = "%s||%s" % (Plot, geoblock) 
@@ -8871,7 +8863,7 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		
 
 	# -----------------------------------------			# Buttons Einzelauflösungen
-	PLog("Satz3_buttons:")
+	PLog("Satz3_items:")
 	title_list=[]
 	img=thumb; 
 	PLog(title_org); PLog(tagline[:60]); PLog(img); PLog(sub_path);
@@ -8901,6 +8893,7 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		title_list.append("%s###%s###%s" % (title_hb, listtyp, len(HBBTV_List)))	
 	title_list.append("%s###%s###%s" % (title_mp4, '%s_MP4_List' % ID, len(MP4_List)))	
 	PLog(len(title_list))
+	PLog("title_list: " + str(title_list))	
 
 	Plot=py2_encode(Plot); img=py2_encode(img);
 	geoblock=py2_encode(geoblock); sub_path=py2_encode(sub_path); 

@@ -3114,7 +3114,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 		PLog(HBBTV_List)
 		if 'auto' in myqual:						# Sicherung gegen falsches MP4-Setting:
 			myqual = '960x544'						# 	Default, falls 'auto' gesetzt
-		if ID != "Arte":
+		if ID != "Arte" and len(HBBTV_List) > 0:
 			Stream_List = Stream_List + HBBTV_List	# in HBBTV_List immer MP4 (Arte-HBBTV -> HLS)
 		
 		if len(Stream_List) == 0:

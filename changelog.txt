@@ -10,6 +10,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+04.06.2023 4.7.5
+			ARDSportWDR: Menübutton Bundesligatabellen hinzugefügt, neue Funktionen 
+			ARDSportTabellen, ARDSportTabellenArchiv und ARDSportTabellenTeam.
+			ARDSportMedia: Test Bilder auf fehlende Extension / Ergänzung mit .png.
+			ARDSportMediaPlayer: Vorbelegung Param verf="" ergänzt.
+			PlayVideo_Direct (util): Check Länge HBBTV_List vor Verkettung mit Stream_List.
+			Kikaninchen_VideoSingle: avCustom.xml-Url and Kika-Änderung angepasst, Behandl.
+			title + summ mit valid_title_chars.
+			TV-Livestreams Regional Lokalzeit: Anpassung an Änderungen der WDR-Webseite in 
+			list_WDRstreamlinks, WDRstream und ARDSportVideo.
+
 28.05.2023 4.7.4
 			Audio_get_homescreen (Audiothek): personalisierte Inhalte ausgeblendet
 			("..für dich" in title).
