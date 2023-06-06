@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>111</nr>										# Numerierung für Einzelupdate
+# 	<nr>112</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.5'
-VDATE = '04.06.2023'
+VDATE = '06.06.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1008,7 +1008,7 @@ def Main_ZDF(name=''):
 	title = "ZDFinternational"
 	fparams="&fparams={'title': 'ZDFinternational'}"
 	tag = "This channel provides selected videos in English, Spanish or Arabic or with respective subtitles."
-	summ = 'For Arabic, please set the font of your Skin to "Arial based".'
+	summ = 'Kodi Leia and older: for Arabic, please set the font of your Skin to "Arial based".'
 	fparams="&fparams={'ID': '%s'}" % title
 	addDir(li=li, label="ZDFinternational", action="dirList", dirID="ZDF_Start", fanart=R('ZDFinternational.png'), 
 		thumb=R('ZDFinternational.png'), tagline=tag, summary=summ, fparams=fparams)
@@ -2587,7 +2587,7 @@ def ARDSportBilder(title, path, img):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #-------------------------------------------------------------------------------------------------- 
-# 04.06.2023 nur noch von WRD-Lokalzeit verwendet - baldmöglichst auf
+# 04.06.2023 nur noch von WDRstream (WRD-Lokalzeit) verwendet - baldmöglichst auf
 #	neue ARD-Quellen umstellen 	
 # 
 def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
@@ -2656,7 +2656,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 
 		
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD')						# Home-Button
+	#li = home(li, ID='ARD')						# Home-Button (in WDRstream gesetzt)
 
 	if video_src.endswith('.js'):									# //deviceids-medp-id1.wdr.de/../2581397.js
 		page, msg = get_page(video_src)								# json mit (nur) Videoquellen laden
@@ -6504,20 +6504,22 @@ def WDRstream(path, title, img, summ):
 	PLog(m3u8_url)
 	PLog(img)
 	
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
+
 	mediatype=''									# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 
 	if m3u8_url:
 		PLog("detect_videoURL")
-		li = xbmcgui.ListItem()
-		li = home(li, ID=NAME)				# Home-Button
 		if m3u8_url.startswith('http') == False:		
-			m3u8_url = 'https:' + m3u8_url						# //wdrlokalzeit.akamaized.net/..	
+			m3u8_url = 'https:' + m3u8_url						# //wdrlokalzeit.akamaized.net/..
 		
 		if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Sofortstart
 			PLog('Sofortstart: WDRstream')
 			PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
+			return	
 		else:
 			summ_par = summ.replace('\n', '||')
 			title=py2_encode(title); summ_par=py2_encode(summ_par)
@@ -6526,7 +6528,6 @@ def WDRstream(path, title, img, summ):
 				(quote_plus(m3u8_url), quote_plus(title), quote_plus(img), quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 				mediatype=mediatype, tagline=title, summary=summ)
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 				 				 
 	else:														# keine m3u8-Quelle vorh.
 		PLog("no_videoURL")	
@@ -6534,13 +6535,13 @@ def WDRstream(path, title, img, summ):
 		if 'deviceids-medp.wdr.de' in page:
 			PLog("detect_deviceids")
 			ARDSportVideo(path, title, img, summ, page=page)
-			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		else:
 			icon=img_org
 			msg1 = u"Sendungszeiten"
 			msg2 = vonbis									
 			xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=True)
-	return
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------------------------------------------------------------
 #	17.02.2018 Video-Sofort-Format wieder entfernt (V3.1.6 - V3.5.0)
@@ -7024,6 +7025,9 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 		return	
 	PLog(str(jsonObject)[:80])
 	
+	validchars=True													# -> valid_title_chars in ZDF_get_content
+	if 'Videos in Arabic or with Arabic subtitles' in str(jsonObject)[:80]:
+		validchars=False	
 		
 	if not li:	
 		li = xbmcgui.ListItem()
@@ -7042,6 +7046,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 	if "stage" in jsonObject or "teaser" in jsonObject or "results" in jsonObject:
 		PLog('ZDF_PageMenu_stage_teaser')
 		stage=False
+		
 		if DictID == "ZDF_Startseite" or "tivi_" in DictID or "funk_" in DictID:
 			if "stage" in jsonObject:								# <- ZDF-Start, tivi-Start
 				entryObject = jsonObject["stage"]
@@ -7055,7 +7060,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			PLog("results: %d" % len(entryObject))
 			
 		for entry in entryObject:
-			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry,mark=mark)
+			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry,mark=mark,validchars=validchars)
 			label=""
 			if stage:
 				label = "[B]TOP:[/B]"
@@ -7475,7 +7480,7 @@ def ZDF_get_img(obj, landscape=False):
 #---------------------------------------------------------------------------------------------------
 # mark: Titelmarkierung, z.B. für ZDF_Search
 # 
-def ZDF_get_content(obj, maxWidth="", mark=""):
+def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 	PLog('ZDF_get_content:')
 	PLog(str(obj)[:60])
 	PLog(mark)
@@ -7553,8 +7558,12 @@ def ZDF_get_content(obj, maxWidth="", mark=""):
 				if 	len(descr_new) > len(descr):
 					PLog("descr_new: " + descr_new[:60] )
 					descr = descr_new
+	
+	if validchars:												# unterdrückt bei Arabic
+		summ = valid_title_chars(descr)
+	else:
+		summ = repl_json_chars(descr)							# router-komp.
 
-	summ = valid_title_chars(descr)
 	if multi:
 		tag = "Folgeseiten"
 	else:
