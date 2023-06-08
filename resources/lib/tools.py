@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>4</nr>								# Numerierung für Einzelupdate
-#	Stand: 14.03.2023
+# 	<nr>5</nr>								# Numerierung für Einzelupdate
+#	Stand: 08.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -472,6 +472,7 @@ def ClearUpThumbnails():
 # Aufruf InfoAndFilter
 # gibt akt. Datum aus Startpost in kodinerds.net zurück
 # 14.4.2023 Anpassung an Forum-Update
+# 08.06.2023 ergänzt mit letztem Eintrag
 #
 def get_foruminfo():
 	PLog('get_foruminfo:') 
@@ -480,12 +481,21 @@ def get_foruminfo():
 	path = "https://www.kodinerds.net/index.php?thread/64244-release-kodi-addon-ardundzdf/"
 	page, msg = get_page(path=path)
 	
-	dt = stringextract(u"chstes Update (Stand ", ")", page)
+	dt = stringextract(u"chstes Update (Stand ", u")", page)		# Stand: Datum, Uhrzeit
 	if dt == "":
 		dt = u"? - Forum nicht erreicht"
 	PLog("dt: " + dt)
 	
-	return dt
+	items = stringextract(u"Probleme, Fixes:", u"####", page)	# Update-Infos
+	items = blockextract(u'\\n', items)
+	PLog(len(items))
+	last_item="keine Einzelupdates gefunden"
+	for item in items:
+		if len(item) > 10:										# Eintrag in Zeile?
+			last_item = item[2:]								# \nZDFinternational..
+	PLog("last_item: " + last_item)
+	
+	return dt, last_item
 	
 #----------------------------------------------------------------
 	

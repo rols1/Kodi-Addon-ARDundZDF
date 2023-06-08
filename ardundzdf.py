@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>112</nr>										# Numerierung für Einzelupdate
+# 	<nr>113</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.5'
-VDATE = '06.06.2023'
+VDATE = '08.06.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -704,14 +704,14 @@ def InfoAndFilter():
 			fanart=R(FANART), thumb=R("icon-inp.png"), tagline=tag, fparams=fparams)	
 			
 	
-	dt = resources.lib.tools.get_foruminfo()
-	dt = "[B]Forum: %s[/B]" % dt		
+	dt, lt = resources.lib.tools.get_foruminfo()					# Datum, letzter Eintrag
+	item = "zuletzt: [B]%s[/B] | %s" % (dt, lt)		
 	title = u"Einzelupdate (einzelne Dateien und Module), %s" % dt	# Update von Einzeldateien
 	tag = u'[B]Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s[/B]' % REPO_NAME
 	tag = u"%s\n\nNach Abgleich werden neue Dateien heruntergeladen - diese ersetzen lokale Dateien im Addon." % tag
 	tag = u"%s\n\nEinzelupdates ermöglichen kurzfristige Fixes und neue Funktionen zwischen den regulären Updates." % tag
 	summ = u"Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt"
-	summ = u"%s (%s)." % (summ, dt)
+	summ = u"%s - %s" % (summ, item)								# Forum-Info
 	fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.EPG.update_single",\
 		fanart=R(FANART), thumb=R("icon-update-einzeln.png"), tagline=tag, summary=summ, fparams=fparams)	
@@ -7026,7 +7026,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 	PLog(str(jsonObject)[:80])
 	
 	validchars=True													# -> valid_title_chars in ZDF_get_content
-	if 'Videos in Arabic or with Arabic subtitles' in str(jsonObject)[:80]:
+	if DictID.startswith("ZDF_international"):
 		validchars=False	
 		
 	if not li:	
@@ -7483,7 +7483,7 @@ def ZDF_get_img(obj, landscape=False):
 def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 	PLog('ZDF_get_content:')
 	PLog(str(obj)[:60])
-	PLog(mark)
+	PLog(mark); PLog(validchars)
 	
 	if not maxWidth:				# Teaserbild, Altern. 1280 für Video
 		maxWidth=840
