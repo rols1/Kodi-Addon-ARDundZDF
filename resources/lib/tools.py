@@ -7,7 +7,7 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>5</nr>								# Numerierung für Einzelupdate
+# 	<nr>6</nr>								# Numerierung für Einzelupdate
 #	Stand: 08.06.2023
 
 # Python3-Kompatibilität:
@@ -493,6 +493,8 @@ def get_foruminfo():
 	for item in items:
 		if len(item) > 10:										# Eintrag in Zeile?
 			last_item = item[2:]								# \nZDFinternational..
+			last_item = transl_json(last_item)
+
 	PLog("last_item: " + last_item)
 	
 	return dt, last_item
