@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>114</nr>										# Numerierung für Einzelupdate
+# 	<nr>115</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.5'
 VDATE = '10.06.2023'
 
@@ -5504,6 +5504,7 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 			modul = stringextract('resources.lib.', ".", dirPars) 
 		
 		name = cleanmark(name)						# Pos.-Verschieb. durch Fett + Farbe vermeiden 
+		name = name.strip()
 		
 		PLog(name); PLog(thumb); PLog(Plot_org); PLog(dirPars); PLog(modul); PLog(mediatype);
 		PLog('fparams2: ' + fparams);
