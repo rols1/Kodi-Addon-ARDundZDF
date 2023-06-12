@@ -6,8 +6,8 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-# 	<nr>1</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.05.2023
+# 	<nr>2</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.06.2023
 #
 
 from __future__ import absolute_import
@@ -134,7 +134,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 				iname = stringextract('name="', '"', item) 
 				name = py2_decode(name); iname = py2_decode(iname)
 				PLog('Name: %s, IName: %s' % (name, iname))
-				if iname == name:# Doppler vermeiden
+				if iname == name:						# Doppler vermeiden, hier cleanmark unnötig
 					doppler = True
 					msg1 = u"Eintrag existiert bereits - neuen Eintrag umbenennen?"
 					msg2 = u"Info:\nin der Merkliste lassen sich alle Einträge via"
@@ -202,7 +202,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			iname = py2_encode(iname)
 			name = py2_encode(name)		
 			PLog('Name: %s, IName: %s' % (name, iname))
-			if name == iname:
+			if name in cleanmark(iname):			# wie ShowFavs (cleanmark für Titel)
 				deleted = True						# skip Satz = löschen 
 				continue
 			item_cnt = item_cnt + 1
