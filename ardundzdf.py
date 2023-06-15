@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>115</nr>										# Numerierung für Einzelupdate
+# 	<nr>116</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.5'
-VDATE = '10.06.2023'
+VDATE = '15.06.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5503,8 +5503,8 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 		if 'resources.lib.' in dirPars:
 			modul = stringextract('resources.lib.', ".", dirPars) 
 		
-		name = cleanmark(name)						# Pos.-Verschieb. durch Fett + Farbe vermeiden 
-		name = name.strip()
+		name = cleanmark(name)						# Pos.-Verschieb. durch Fett + Farbe vermeiden,
+		name = name.strip()							# 	s.a. cleanmark in merkliste (action == 'del')
 		
 		PLog(name); PLog(thumb); PLog(Plot_org); PLog(dirPars); PLog(modul); PLog(mediatype);
 		PLog('fparams2: ' + fparams);
@@ -6571,7 +6571,7 @@ def WDRstream(path, title, img, summ):
 # 04.04.2021 Anpassung für Radiosender (z.B. MDR Fußball-Radio Livestream)
 # 08.06.2021 Anpassung für Radiosender (Endung /mp3, Code an Funktionsstart)
 #
-def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', start_end=''):
+def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', start_end='', homeID=''):
 	PLog('SenderLiveResolution:')
 	PLog(title); PLog(descr); PLog(Sender);
 	path_org = path
@@ -6636,9 +6636,12 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 
 	li = xbmcgui.ListItem()
 	if "kikade-" in path or path.startswith("https://kika"):
-		li = home(li, ID='Kinderprogramme')			# Home-Button
+		li = home(li, ID='Kinderprogramme')		# Home-Button
 	else:
-		li = home(li, ID=NAME)				# Home-Button
+		if homeID:
+			li = home(li, ID=homeID)
+		else:	
+			li = home(li, ID=NAME)				# Home-Button
 										
 	# Spezialbehandlung für N24 - Test auf Verfügbarkeit der Lastserver (1-4),
 	# entf. mit Umstellung auf IPTV-Links in V4.3.8
@@ -6669,21 +6672,6 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 		MyDialog(msg1, msg2, '')
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		
-		
-#--------------------------------------------------------------------------------------------------
-# Button für Einzelauflösungen für Streamlink url_m3u8
-#	ID: Kennung für home
-def show_single_bandwith(url_m3u8, thumb, title, descr, ID):
-	PLog('show_single_bandwith:'); 
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID=ID)						# Home-Button
-	
-	descr = title + "\n\n" + descr
-	li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr)	
-	
-	xbmcplugin.endOfDirectory(HANDLE)
 
 #-----------------------------
 # Aufruf: Parseplaylist (bei Mehrkanalstreams), SenderLiveResolution

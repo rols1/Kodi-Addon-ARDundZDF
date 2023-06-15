@@ -13,13 +13,14 @@
 #		https://github.com/mediathekview/mediathekviewweb,
 #		https://mediathekview.de/news/mediathekviewweb/,
 #		https://github.com/mediathekview 
+#	April 2023: Youtube-Videos nicht mehr via yt_get zugänglich 
 #
 ################################################################################
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 # 	<nr>2</nr>								# Numerierung für Einzelupdate
-#	Stand: 03.08.2022
+#	Stand: 02.04.2023
 #
 
 from __future__ import absolute_import

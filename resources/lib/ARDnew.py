@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>43</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.05.2023
+# 	<nr>44</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -270,10 +270,12 @@ def Main_NEW(name='', CurSender=''):
 # 29.06.2022 Abzweig ARDStartRegion für neuen Cluster "Unsere Region" 
 # 07.04.2023 Wechsel Web-Call (ardmediathek.de) -> api-Call (api.ardmediathek.de) - embedded
 #	json identisch
-def ARDStart(title, sender, widgetID='', path=''): 
-	PLog('ARDStart:'); 
+def ARDStart(title, sender, widgetID='', path='', homeID=''): 
+	PLog('ARDStart:'); PLog(sender)
 	
 	CurSender = Dict("load", 'CurSender')		
+	if homeID:												# CurSender in sender
+		CurSender=sender
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	senderimg = img
 	PLog(sender); PLog(img)	
@@ -285,7 +287,10 @@ def ARDStart(title, sender, widgetID='', path=''):
 		base = "https://api.ardmediathek.de/page-gateway/pages/%s/home?embedded=false" % sender
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
+	if not homeID:
+		li = home(li, ID='ARD Neu')							# Home-Button
+	else:
+		li = home(li, ID=homeID)
 
 	if path == '':
 		path = base
@@ -372,8 +377,8 @@ def ARDStart(title, sender, widgetID='', path=''):
 			
 		PLog(path); PLog(title); PLog(ID); PLog(anz); PLog(img); 
 		path=py2_encode(path); title=py2_encode(title); 
-		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
-			(quote(path), quote(title), ID)
+		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s','homeID': '%s'}" %\
+			(quote(path), quote(title), ID, homeID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.%s" % func, fanart=img, thumb=img, 
 			tagline=tag, summary=summ, fparams=fparams)
 		cnt=cnt+1	
@@ -435,7 +440,7 @@ def img_preload(ID, path, title, caller, icon=ICON_MAIN_ARD):
 # Hinw.: vorerst Verzicht auf ev. Topnavigation (Submenüs), außer 
 #	Sportseite
 #
-def ARDRubriken(li, path="", page=""): 
+def ARDRubriken(li, path="", page="", homeID=""): 
 	PLog('ARDRubriken:')
 	li_org=li
 
@@ -449,7 +454,10 @@ def ARDRubriken(li, path="", page=""):
 
 	if li == "":
 		li = xbmcgui.ListItem()
-		li = home(li, ID='ARD Neu')						# Home-Button		
+		if homeID:
+			li = home(li, ID=homeID)
+		else:	
+			li = home(li, ID='ARD Neu')					# Home-Button		
 
 	try:
 		obs = json.loads(page)
@@ -495,8 +503,8 @@ def ARDRubriken(li, path="", page=""):
 		PLog('Satz_cont2:');
 		PLog(title); PLog(ID); PLog(anz); PLog(img); PLog(path);
 		path=py2_encode(path); title=py2_encode(title); 
-		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
-			(quote(path), quote(title), ID)
+		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s', 'homeID': '%s'}" %\
+			(quote(path), quote(title), ID, homeID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", 
 			fanart=img, thumb=img, tagline=tag, fparams=fparams)
 			
@@ -511,7 +519,7 @@ def ARDRubriken(li, path="", page=""):
 # Default-Region: Berlin (wie Web), ID=change: Wechsel
 # widgetID transportiert hier region-Triple (Bsp. be|Berlin|rbb)
 #
-def ARDStartRegion(path, title, widgetID='', ID=''): 
+def ARDStartRegion(path, title, widgetID='', ID='', homeID=""): 
 	PLog('ARDStartRegion:')
 	PLog(widgetID)	
 	PLog(ID)	
@@ -541,7 +549,10 @@ def ARDStartRegion(path, title, widgetID='', ID=''):
 		return
 		
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')							# Home-Button
+	if homeID:											# phoenix
+		li = home(li, homeID)
+	else:
+		li = home(li, ID='ARD Neu')						# Home-Button
 	regions = stringextract('regions":', '"links"', page)
 	PLog(len(regions))
 	#------------------------							# Änderungsliste Region
@@ -560,8 +571,8 @@ def ARDStartRegion(path, title, widgetID='', ID=''):
 			tag = u"Partnersender: [B]%s[/B]" % partner
 		
 			title=py2_encode(title); widgetID=py2_encode(widgetID);
-			fparams="&fparams={'path': '', 'title': '%s', 'widgetID': '%s', 'ID': ''}" %\
-				(quote(title), quote(widgetID))
+			fparams="&fparams={'path': '', 'title': '%s', 'widgetID': '%s', 'ID': '', 'homeID': '%s'}" %\
+				(quote(title), quote(widgetID), homeID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRegion", 
 				fanart=img, thumb=img, tagline=tag, fparams=fparams)
 	
@@ -594,15 +605,16 @@ def ARDStartRegion(path, title, widgetID='', ID=''):
 
 			title_org=py2_encode(title_org); next_path=py2_encode(next_path); mark=py2_encode(mark);
 			fparams="&fparams={'title': '%s', 'path': '%s', 'pageNumber': '%s', 'pageSize': '%s', 'ID': '%s', \
-				'mark': '%s'}" % (quote(title_org), quote(next_path), str(pN), pageSize, ID, quote(mark))
+				'mark': '%s','homeID': '%s'}" %\
+					(quote(title_org), quote(next_path), str(pN), pageSize, ID, quote(mark), homeID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDPagination", 
 				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)	
 
 	label = u"Region ändern"
 	tag = u"aktuelle Region: [B]%s[/B]" % rname
 	path=py2_encode(path); title=py2_encode(title); 
-	fparams="&fparams={'path': '%s', 'title': '%s', 'ID': 'change'}" %\
-		(quote(path), quote(title_org))
+	fparams="&fparams={'path': '%s', 'title': '%s', 'ID': 'change','homeID': '%s'}" %\
+		(quote(path), quote(title_org), homeID)
 	addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARDStartRegion", 
 		 fanart=img, thumb=img, tagline=tag, fparams=fparams)
 		
@@ -620,7 +632,7 @@ def ARDStartRegion(path, title, widgetID='', ID=''):
 # 28.05.2020 getrennte Swiper-Auswertung entfällt nach Änderung der ARD-Seiten
 # 18.04.2023 Cache für Startseite entfällt (obsolet - api-Call)
 #		
-def ARDStartRubrik(path, title, widgetID='', ID='', img=''): 
+def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""): 
 	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path)	
 	title_org = title
 	
@@ -629,10 +641,13 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	PLog(sender)	
 		
 	li = xbmcgui.ListItem()
-	if ID == "ARDRetroStart":
-		li = home(li, ID=NAME)							# Home-Button -> Hauptmenü
+	if homeID:											# phoenix
+		li = home(li, ID=homeID)
 	else:
-		li = home(li, ID='ARD Neu')						# Home-Button
+		if ID == "ARDRetroStart":
+			li = home(li, ID=NAME)						# Home-Button -> Hauptmenü
+		else:
+			li = home(li, ID='ARD Neu')					# Home-Button
 
 	page, msg = get_page(path=path, GetOnlyRedirect=True)
 	path = page
@@ -651,7 +666,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 	PLog(len(container))
 	if len(container) > 1:
 		PLog("ARDStartRubrik_more_container")
-		ARDRubriken(li, page=page)						# direkt
+		ARDRubriken(li, page=page, homeID=homeID)		# direkt
 	else:												# detect Staffeln/Folgen
 		# cnt = page.count(u'"Folge ')					# falsch positiv für "alt":"Folge 9"
 		if 'hasSeasons":true' in page and '"heroImage":' in page:
@@ -671,7 +686,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			ID = "ARDStartRubrik"	
 		if "Subrubriken" in title_org:				# skip Subrubrik Übersicht
 			mark="Subrubriken"
-		li = get_json_content(li, page, ID, mark)																
+		li = get_json_content(li, page, ID, mark, homeID=homeID)																
 #----------------------------------------
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
@@ -690,7 +705,8 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img=''):
 			
 			title_org=py2_encode(title_org); next_path=py2_encode(next_path); mark=py2_encode(mark);
 			fparams="&fparams={'title': '%s', 'path': '%s', 'pageNumber': '%s', 'pageSize': '%s', 'ID': '%s', \
-				'mark': '%s'}" % (quote(title_org), quote(next_path), str(pN), pageSize, ID, quote(mark))
+				'mark': '%s','homeID': '%s'}" %\
+					(quote(title_org), quote(next_path), str(pN), pageSize, ID, quote(mark), homeID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDPagination", 
 				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)	
 	
@@ -752,14 +768,17 @@ def get_pagination(page):
 #	 27.06.2020 Alternative entfällt nach ARD-Änderungen - s. ARDSearchnew,
 #		get_api_call entfernt
 #
-def ARDPagination(title, path, pageNumber, pageSize, ID, mark): 
+def ARDPagination(title, path, pageNumber, pageSize, ID, mark, homeID=""): 
 	PLog('ARDPagination: ' + ID)
 	PLog(path)
 	
 	title_org 	= title 
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
+	if homeID:
+		li = home(li, ID=homeID)
+	else:
+		li = home(li, ID='ARD Neu')							# Home-Button
 
 	page, msg = get_page(path)					
 	if page == '':	
@@ -787,7 +806,8 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark):
 			PLog(summ); PLog(next_path)
 			title_org=py2_encode(title_org); next_path=py2_encode(next_path); mark=py2_encode(mark);
 			fparams="&fparams={'title': '%s', 'path': '%s', 'pageNumber': '%s', 'pageSize': '%s', 'ID': '%s', \
-				'mark': '%s'}" % (quote(title_org), quote(next_path), pN, pageSize, ID, quote(mark))
+				'mark': '%s','homeID': '%s'}" %\
+					(quote(title_org), quote(next_path), str(pN), pageSize, ID, quote(mark), homeID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDPagination", 
 				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)	
 	
@@ -1233,9 +1253,9 @@ def ARD_get_strmStream(url, title, img, Plot):
 #---------------------------------------------------------------------------------------------------
 # 14.04.2023 get_page_content -> get_json_content 
 #
-def get_json_content(li, page, ID, mark='', mehrzS=''): 
+def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""): 
 	PLog('get_json_content: ' + ID); PLog(mark)
-	ID_org=ID; PLog(type(page))
+	ID_org=ID; PLog(type(page)); 
 
 	CurSender = Dict("load", 'CurSender')						# Debug, Seite bereits senderspez.
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
@@ -1366,7 +1386,7 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 		if mehrfach:
 			summ = "Folgeseiten"
 			href=py2_encode(href); title=py2_encode(title); 
-			fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
+			fparams="&fparams={'path': '%s', 'title': '%s', 'homeID': '%s'}" % (quote(href), quote(title), homeID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", \
 				fanart=img, thumb=img, fparams=fparams, summary=summ, mediatype='')	
 		else:
@@ -1400,8 +1420,8 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 			
 			summ_par = summ.replace('\n', '||')
 			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
-			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s'}" %\
-				(quote(href), quote(title), quote(summ_par), ID)
+			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s','homeID': '%s'}" %\
+				(quote(href), quote(title), quote(summ_par), ID, homeID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
 				fparams=fparams, summary=summ, mediatype=mediatype)	
 																										
@@ -1426,7 +1446,7 @@ def get_json_content(li, page, ID, mark='', mehrzS=''):
 # 25.01.2021 no-cache-Header für Verpasst- und A-Z-Beiträge
 # 14.02.2023 HBBTV-Quellen (http://tv.ardmediathek.de/dyn/get?id=video%3A..)
 #
-def ARDStartSingle(path, title, summary, ID='', mehrzS=''): 
+def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''): 
 	PLog('ARDStartSingle: %s' % ID);
 	title_org = title
 
@@ -1487,7 +1507,10 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 		li = home(li, ID=NAME)								# Home-Button -> Hauptmenü
 	else:
 		if ID != 'Livestream':								# ohne home - Nutzung durch Classic
-			li = home(li, ID='ARD Neu')						# Home-Button
+			if homeID:
+				li = home(li, ID=homeID)
+			else:
+				li = home(li, ID='ARD Neu')						# Home-Button
 			
 	img = VideoObj["image"]["src"]
 	img = img.replace('{width}', '640')
@@ -1551,8 +1574,11 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS=''):
 	# summ = get_summary_pre(path, ID='ARDnew', page=page)	# entfällt mit summary aus get_json_content 
 	Plot = "Titel: %s\n\n%s" % (title_org, summary)				# -> build_Streamlists_buttons
 	PLog('Plot:' + Plot)
-	thumb = img; ID = 'ARDNEU'; HOME_ID = "ARD Neu"
-	
+	thumb = img; ID = 'ARDNEU';
+		
+	HOME_ID = "ARD Neu"
+	if homeID:
+		HOME_ID = homeID
 	played_direct = ardundzdf.build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
 
@@ -1730,13 +1756,13 @@ def ARDStartVideoMP4get(title, StreamArray, call=""):
 # 25.01.2021 Laden + Caching der Link-Übersicht, Laden der Zielseite in 
 #	SendungenAZ_ARDnew
 # 		
-def SendungenAZ(title, CurSender=''):		
+def SendungenAZ(title, CurSender='', homeID=''):		
 	PLog('SendungenAZ: ' + title)
 	PLog(CurSender)
 
 	if CurSender == '' or CurSender == False or CurSender == 'false':	# Ladefehler?
 		CurSender = ARDSender[0]
-	if ':' in CurSender:				# aktualisieren	
+	if ':' in CurSender and not homeID:				# aktualisieren	
 		Dict('store', "CurSender", CurSender)
 		PLog('sender: ' + CurSender); 
 		CurSender=py2_encode(CurSender);
@@ -1746,7 +1772,12 @@ def SendungenAZ(title, CurSender=''):
 	title2 = title + ' | aktuell: %s' % sendername
 	# no_cache = True für Dict-Aktualisierung erforderlich - Dict.Save() reicht nicht			 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')						# Home-Button
+	if homeID:
+		li = home(li, ID=homeID)
+		icon = R("phoenix_az.png")
+	else:
+		li = home(li, ID='ARD Neu')					# Home-Button
+		icon = R(ICON_ARD_AZ)
 		
 	# Link-Übersicht laden:
 	# azlist = list(string.ascii_uppercase)			# 25.01.2021 A-Z - nicht mehr benötigt
@@ -1787,16 +1818,19 @@ def SendungenAZ(title, CurSender=''):
 		PLog('Satz1:');
 		PLog(button); PLog(anz); PLog(href); 
 		href=py2_encode(href); title=py2_encode(title); 	
-		fparams="&fparams={'title': '%s', 'button': '%s', 'href': '%s'}" % (title, button, quote(href))
+		fparams="&fparams={'title': '%s', 'button': '%s', 'href': '%s', 'homeID': '%s'}" %\
+			(title, button, quote(href), homeID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ_ARDnew",\
-			fanart=R(ICON_ARD_AZ), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
-			
-	title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
-	title=py2_encode(title); caller='resources.lib.ARDnew.SendungenAZ'
-	tag = "die Senderwahl ist wirksam in [B]%s[/B], [B]%s[/B] und [B]%s[/B]" % ("ARD Mediathek", "A-Z", "Sendung verpasst")
-	fparams="&fparams={'title': '%s', 'caller': '%s'}" % (quote(title), caller)
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
-		thumb=R('tv-regional.png'), tagline=tag, fparams=fparams)																	
+			fanart=R(ICON_ARD_AZ), thumb=icon, tagline=tag, fparams=fparams)
+	
+	if not homeID:		
+		title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
+		title=py2_encode(title); caller='resources.lib.ARDnew.SendungenAZ'
+		tag = "die Senderwahl ist wirksam in [B]%s[/B], [B]%s[/B] und [B]%s[/B]" %\
+			("ARD Mediathek", "A-Z", "Sendung verpasst")
+		fparams="&fparams={'title': '%s', 'caller': '%s'}" % (quote(title), caller)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", 
+			fanart=R(ICON_MAIN_ARD), thumb=R('tv-regional.png'), tagline=tag, fparams=fparams)																	
 										
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 ####################################################################################################
@@ -1821,18 +1855,18 @@ def SendungenAZ(title, CurSender=''):
 #	Verzicht auf Laden + Caching der Gesamtseite, stattdessen in SendungenAZ
 #	Laden der Link-Übersicht mit embedded-Zusatz und hier Laden der Zielseite
 #
-def SendungenAZ_ARDnew(title, button, href): 
+def SendungenAZ_ARDnew(title, button, href, homeID=''): 
 	PLog('SendungenAZ_ARDnew:')
 	PLog('button: ' + button); 
 	title = title	
 	title_org = title
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
+	if homeID:
+		li = home(li, ID=homeID)
+	else:
+		li = home(li, ID='ARD Neu')							# Home-Button
 
-	CurSender = Dict("load", 'CurSender')		
-	sendername, sender, kanal, img, az_sender = CurSender.split(':')
-	PLog(sender)
 	
 	# der Link lädt die kompl. Beiträge A-Z, ausgewertet wird der passende Buchstabenblock
 	# Alternative (vor V3.7.1): Link ohne Zusatz  lädt die kompl. Beiträge A-Z
@@ -1847,7 +1881,7 @@ def SendungenAZ_ARDnew(title, button, href):
 	page = page.replace('\\"', '*')						# quotierte Marks entf., Bsp. \"query\"
 			
 	ID = 'A-Z'
-	li = get_json_content(li, page, ID, mark="")																	
+	li = get_json_content(li, page, ID, mark="", homeID=homeID)																	
 			
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
 	#	pagination mit Basispfad immer vorhanden, Mehr-Button abhängig von Anz. der Beiträge
@@ -1865,10 +1899,10 @@ def SendungenAZ_ARDnew(title, button, href):
 			
 			title_org=py2_encode(title_org); next_path=py2_encode(next_path); mark=py2_encode(mark);
 			fparams="&fparams={'title': '%s', 'path': '%s', 'pageNumber': '%s', 'pageSize': '%s', 'ID': '%s', \
-				'mark': '%s'}" % (quote(title_org), quote(next_path), str(pN), pageSize, ID, quote(mark))
+				'mark': '%s','homeID': '%s'}" %\
+					(quote(title_org), quote(next_path), str(pN), pageSize, ID, quote(mark), homeID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDPagination", 
-				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)	
-														
+				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)														
 
 	xbmcplugin.endOfDirectory(HANDLE)	
 #----------------------------------------------------------------
@@ -2064,10 +2098,12 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 #	Absturz bei Abbruch der Eingabe. Abhilfe: return ersetzt durch Aufruf Main_NEW.
 # 22.03.2023 api-Suche umgestellt page-gateway/widgets  -> search-system/mediathek, um
 #	Videos von Sendereihen zu erfassen (Bsp. "2 für 300")
+# 13.06.2023 Mitnutzung durch phoenix (sender, query, homeID)
 #
-def ARDSearchnew(title, sender, offset=0, query=''):
+def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 	PLog('ARDSearchnew:');	
-	PLog(title); PLog(sender); PLog(offset); PLog(query);
+	PLog(title); PLog(sender); PLog(offset); 
+	PLog(query); PLog(homeID);
 
 	if sender == '':								# Sender gewählt?
 		CurSender = Dict("load", 'CurSender')		
@@ -2087,7 +2123,10 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 	query=py2_decode(query)							# decode, falls erf. (1. Aufruf)
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
+	if homeID:
+		home(li, ID=homeID)
+	else:
+		li = home(li, ID='ARD Neu')					# Home-Button
 	
 	# ----------------------------------------------------- # Suchstring umgestellt, s.o.
 	PLog(query)
@@ -2127,8 +2166,8 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 	PLog("offset %s, pages %s" % (str(offset),str(pages)))
 	if int(offset) < int(pages):	
 		query=py2_encode(query); title=py2_encode(title); 
-		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '%s'}" %\
-			(quote(query), quote(title), quote(sender), str(offset))
+		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '%s','homeID': '%s'}" %\
+			(quote(query), quote(title), quote(sender), str(offset), homeID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", fanart=R(ICON_MEHR), 
 			thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)																	
 				
@@ -2141,21 +2180,26 @@ def ARDSearchnew(title, sender, offset=0, query=''):
 #	Statt dessen forder wir mit dem gewählten Sender die entspr. 
 #	json-Seite an. Verarbeitung in ARDVerpasstContent 	
 # CurSender neubelegt in Senderwahl
+# 13.06.2023 Mitnutzung durch phoenix
 #
-def ARDVerpasst(title, CurSender=''):
+def ARDVerpasst(title, CurSender='', homeID=""):
 	PLog('ARDVerpasst:');
 	PLog(CurSender)
 	
 	if CurSender == '' or CurSender == False or CurSender == 'false':	# Ladefehler?
 		CurSender = ARDSender[0]
-	if ':' in CurSender:				# aktualisieren	
+	
+	if ':' in CurSender and not homeID:			# aktualisieren	
 		Dict('store', "CurSender", CurSender)
 		PLog('sender: ' + CurSender); 
 		CurSender=py2_encode(CurSender);
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
+	if homeID:
+		 home(li, ID=homeID)
+	else:
+		li = home(li, ID='ARD Neu')				# Home-Button
 
 	wlist = list(range(0,7))
 	now = datetime.datetime.now()
@@ -2180,17 +2224,18 @@ def ARDVerpasst(title, CurSender=''):
 		
 		PLog(title); PLog(startDate); PLog(endDate)
 		CurSender=py2_encode(CurSender); 
-		fparams="&fparams={'title': '%s', 'startDate': '%s', 'endDate': '%s','CurSender': '%s'}" %\
-			(title,  startDate, endDate, quote(CurSender))
+		fparams="&fparams={'title': '%s', 'startDate': '%s', 'endDate': '%s','CurSender': '%s','homeID': '%s'}" %\
+			(title,  startDate, endDate, quote(CurSender), homeID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasstContent", fanart=R(ICON_ARD_VERP), 
 			thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=tagline)
-			
-	title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
-	tag = "die Senderwahl ist wirksam in [B]%s[/B], [B]%s[/B] und [B]%s[/B]" % ("ARD Mediathek", "A-Z", "Sendung verpasst")
-	title=py2_encode(title); caller='resources.lib.ARDnew.ARDVerpasst'
-	fparams="&fparams={'title': '%s', 'caller': '%s'}" % (quote(title), caller)
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
-		thumb=R('tv-regional.png'), tagline=tag, fparams=fparams) 
+	
+	if not homeID:								# nicht bei phoenix	
+		title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
+		tag = "die Senderwahl ist wirksam in [B]%s[/B], [B]%s[/B] und [B]%s[/B]" % ("ARD Mediathek", "A-Z", "Sendung verpasst")
+		title=py2_encode(title); caller='resources.lib.ARDnew.ARDVerpasst'
+		fparams="&fparams={'title': '%s', 'caller': '%s'}" % (quote(title), caller)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
+			thumb=R('tv-regional.png'), tagline=tag, fparams=fparams) 
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -2207,7 +2252,7 @@ def ARDVerpasst(title, CurSender=''):
 # 29.05.2020 Änderung der Webseite durch die ARD - s. ARDVerpasst,
 #	der 2-fache Durchlauf (Senderliste / Sendungen) entfällt
 # 
-def ARDVerpasstContent(title, startDate, endDate, CurSender):
+def ARDVerpasstContent(title, startDate, endDate, CurSender, homeID=""):
 	PLog('ARDVerpasstContent:');
 	PLog(title);  PLog(startDate); PLog(endDate); PLog(CurSender);
 	
@@ -2215,7 +2260,10 @@ def ARDVerpasstContent(title, startDate, endDate, CurSender):
 	PLog(sendername); PLog(sender); 
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')							# Home-Button
+	if homeID:
+		 home(li, ID=homeID)
+	else:
+		li = home(li, ID='ARD Neu')				# Home-Button
 
 	base = "https://page.ardmediathek.de/page-gateway/compilations/ard/pastbroadcasts"
 	base = base.replace('/ard/', '/%s/' % sender)
