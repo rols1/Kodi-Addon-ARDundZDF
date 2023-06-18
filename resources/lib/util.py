@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>53</nr>										# Numerierung für Einzelupdate
+# 	<nr>54</nr>										# Numerierung für Einzelupdate
 #	Stand: 18.06.2023
 
 # Python3-Kompatibilität:
@@ -2119,6 +2119,62 @@ def get_keyboard_input(line='', head=''):
 	inp = kb.getText() # User Eingabe
 	return inp	
 #----------------------------------------------------------------  
+# getOnline: 1. Ausstrahlung
+# Format datestamp: "2017-02-26 21:45:00", 2018-05-24T16:50:00 19-stel.
+#	05.06.2020 hinzugefügt: 2018-05-24T16:50:00Z (Z wird hier entfernt)
+#	beim Menü Sendungen auch  2018-01-20 00:30 16 stel.
+# time_state checkt auf akt. Status, Zukunft und jetzt werden rot gekennzeichnet
+def getOnline(datestamp, onlycheck=False):
+	PLog("getOnline: " + datestamp)
+	PLog(len(datestamp))
+	if datestamp == '' or '/' in datestamp:
+		return '' 
+
+	if datestamp.endswith('Z'):							# s.o.
+		datestamp = datestamp[:len(datestamp)-1]
+	
+		
+	online=''; check_state=''
+	if len(datestamp) == 19 or len(datestamp) == 16:
+		senddate = datestamp[:10]
+		year,month,day = senddate.split('-')
+		sendtime = datestamp[11:]
+		if len(sendtime) > 5:
+			sendtime = sendtime[:5]
+		
+		checkstamp = "%s %s" % (senddate, sendtime)
+		check_state= time_state(checkstamp)
+		if check_state:									# Kennz. nur Zukunft und jetzt
+			check_state = " (%s)" % check_state
+		
+		online = "Online%s: %s.%s.%s, %s Uhr"	% (check_state, day, month, year, sendtime)	
+	
+	if onlycheck == True:
+		return check_state
+	else:
+		return online
+	
+# ----------------------------------------------------------------------
+# Prüft datestamp auf Vergangenheit, Gegenwart, Zukunft
+#	Format datestamp: "2020-01-26 11:15:00" 19 stel., in
+#	getOnline auf 16 Stellen reduz. (o. Sek.)
+def time_state(checkstamp):
+	PLog("time_state: " + checkstamp)		
+	date_format = "%Y-%m-%d %H:%M"
+
+	start = datetime.datetime.fromtimestamp(time.mktime(time.strptime(checkstamp, date_format)))
+	# PLog(start)
+	now = datetime.datetime.now()
+	# PLog(now)
+	if start < now:
+		check_state = '' 	# 'Vergangenheit'
+	elif start > now:
+		check_state = "[B][COLOR red]%s[/COLOR][/B]" % 'Zukunft'
+	else:
+		check_state = 'jetzt'
+	
+	return check_state
+# ----------------------------------------------------------------------
 # Wochentage engl./deutsch wg. Problemen mit locale-Setting 
 #	für VerpasstWoche, EPG	
 def transl_wtag(tag):	
@@ -2132,7 +2188,7 @@ def transl_wtag(tag):
 			wt_ret = wt_deutsch[i]
 			break
 	return wt_ret
-#----------------------------------------------------------------  
+# ----------------------------------------------------------------------
 # simpler XML-SRT-Konverter für ARD-Untertitel
 #	pathname = os.path.abspath. 
 #	vorh. Datei wird überschrieben
@@ -3376,9 +3432,9 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		# s. https://github.com/xbmc/inputstream.adaptive,
 		# 	https://github.com/xbmc/inputstream.adaptive/wiki/
 		# ab Kodi 20 Auswahl von Streams + -Eigenschaften
-		# IA funktioniert nicht mit lokalen m3u8-Dateien (nicht 
-		#	mit relativen, nicht mir absoluten Pfaden, s.a.:
-		# 	https://github.com/xbmc/inputstream.adaptive/issues/701
+		# IA funktioniert nicht mit lokalen m3u8-Dateien ( 
+		#	relativ + absolut, s.a.:
+		# 	https://github.com/xbmc/inputstream.adaptive/issues/701)
 		if url.endswith('.m3u8'):							# SetInputstreamAddon hier nur HLS
 			if SETTINGS.getSetting('pref_inputstream') == 'true':
 				PLog("SetInputstreamAddon:")
@@ -3416,7 +3472,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 						xbmc.Player().showSubtitles(False)									
 					break
 				xbmc.sleep(200)
-			# ShowSeekPos(player, url)							# Test für issue #30
+			#ShowSeekPos(player, url)							# Test für issue #30
 			return
 
 		else:													# false, None od. Blank - Playlist
@@ -3654,7 +3710,10 @@ def open_addon(addon_id, cmd):
 	
 #----------------------------------------------------------------
 # Test: zeigt Abspielposition inputstream.adaptive als Zeitangabe 
-# Probleme:
+# Todo:
+#	Unterscheidung Live / Video
+#	Anzeige auf Zeitsprünge beschränken (dauerhaft stört sie)
+#	
 #	
 def ShowSeekPos(player, url):
 	PLog('ShowSeekPos:')

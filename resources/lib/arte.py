@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>32</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.05.2023
+# 	<nr>33</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -39,7 +39,6 @@ elif PYTHON3:
 import ardundzdf					# -> get_query,test_downloads, get_ZDFstreamlinks, build_Streamlists_buttons
 import resources.lib.EPG as EPG
 from resources.lib.util import *
-from resources.lib.phoenix import getOnline
 
 # Globals
 ArteKatCacheTime	= 3600					# 1 Std.: 60*60
