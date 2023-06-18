@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>52</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.05.2023
+# 	<nr>53</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3416,7 +3416,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 						xbmc.Player().showSubtitles(False)									
 					break
 				xbmc.sleep(200)
-			ShowSeekPos(player, url)
+			# ShowSeekPos(player, url)							# Test für issue #30
 			return
 
 		else:													# false, None od. Blank - Playlist
@@ -3653,7 +3653,7 @@ def open_addon(addon_id, cmd):
 	return
 	
 #----------------------------------------------------------------
-# zeigt Abspielposition inputstream.adaptive als Zeitangabe 
+# Test: zeigt Abspielposition inputstream.adaptive als Zeitangabe 
 # Probleme:
 #	
 def ShowSeekPos(player, url):
