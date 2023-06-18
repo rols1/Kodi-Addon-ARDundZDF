@@ -117,7 +117,7 @@ Funktionen:
 - ~~funk~~ - entfernt ab Mai 2023 (Videos in ZDF-funk, Podcasts in der ARD-Audiothek verfügbar)
 - Kinderprogramme (z.Z. KIKA und ZDFtivi)
 - TagesschauXL
-- phoenix (https://www.phoenix.de/)
+- phoenix (https://www.phoenix.de/ und https://www.ardmediathek.de/phoenix)
 - Arte-Kategorien
 - "Zuletzt gesehen"-Funktion (im Tools-Menü)
 - Video-Playlist einschl. Archiv-Funktion (im Tools-Menü)

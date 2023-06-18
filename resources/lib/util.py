@@ -3416,12 +3416,13 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 						xbmc.Player().showSubtitles(False)									
 					break
 				xbmc.sleep(200)
+			ShowSeekPos(player, url)
 			return
 
 		else:													# false, None od. Blank - Playlist
 			PLog('PlayVideo_Start: direkt, playlist: %s' % str(playlist))
 			
-			line = Dict("load", 'Rekurs_check')					# Dict-Abgleich url/Laufzeit
+			line = Dict("load", 'Rekurs_check', CacheTime=10)	# Dict-Abgleich url/Laufzeit
 			PLog(line)
 			oldurl='' 
 			if line != False:									# False, falls fehlend
@@ -3431,12 +3432,12 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 				now=int(now); old_now=int(float(old_now)); old_dur=int(float(old_dur))
 				PLog("now - old_now: %d,  old_dur %d" % (now-old_now, old_dur))
 				if (now - old_now) < old_dur + 5:					# erneuter Aufruf vor regul. Videoende?
-					if SETTINGS.getSetting('pref_nohome') == 'true':
-						msg1 = "Videoabbruch"; msg2 = "wegen vermutl. Rekursion"
-						icon = R(ICON_WARNING)
-						xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
-						PLog("Rekursions_exit")
-						return
+					#if SETTINGS.getSetting('pref_nohome') == 'true': 12.06.2023 gelöst vom Status pref_nohome
+					msg1 = "Videoabbruch"; msg2 = "wegen vermutl. Rekursion"
+					icon = R(ICON_WARNING)
+					xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
+					PLog("Rekursions_exit")
+					return
 
 			player.play(url, li, windowed=False) 				# direkter Start
 			xbmc.sleep(200)
@@ -3651,6 +3652,22 @@ def open_addon(addon_id, cmd):
 		xbmcaddon.Addon(addon_id).openSettings()
 	return
 	
+#----------------------------------------------------------------
+# zeigt Abspielposition inputstream.adaptive als Zeitangabe 
+# Probleme:
+#	
+def ShowSeekPos(player, url):
+	PLog('ShowSeekPos:')
+
+	icon=""
+	if url.endswith('.m3u8') and SETTINGS.getSetting('pref_inputstream') == 'true':
+		while player.isPlaying():
+			xbmc.sleep(500)	
+			play_time = player.getTime()
+			p = str(int(play_time))
+			xbmcgui.Dialog().notification("PlayTime: ",p,icon,500, sound=False)
+	
+	return
 #----------------------------------------------------------------
 # experimentelle Funktion thread_getsubtitles einschl. vtt_convert archiviert
 #	in ../m3u8_download,Untertitel/Untertitel/thread_getsubtitles.py

@@ -10,6 +10,34 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+18.06.2023 4.7.6
+			TV-Livestreams Regional Lokalzeit: return nach Sofortstart für Verbleib
+			in akt. Liste.
+			ARDSportVideo (Regional Lokalzeit Samstag): doppelten Homebutton entfernt. 
+			Notification-Problem LibreElec 11.0.1: nach Neuinstallation verschwunden.
+			ZDF_PageMenu, ZDF_get_content: Info-Text von valid_title_chars verschont im
+			Menü ZDF-International Arabic.
+			get_foruminfo (tools): Datum ergänzt mit letztem Eintrag.
+			ShowFavs: Fett-/Farb-Markierung aus Titel entfernt, um Positiosverschieb. zu
+			vermeiden (cleanmark). 
+			PlayVideo: Rekursionscheck gelöst vom Status pref_nohome und Wirksamkeit auf
+			10 sec beschränkt. 
+			Watch_items (merkliste): cleanmark für IName bei action==del (Gegenstück zu
+			cleanmark in ShowFavs).
+			Issue-Info: Rekursion von Videos aus MVW-Suchergebnis in der Merkliste (Call
+			aus Modul yt). Videos aus den anderen Suchmenüs zeigen zwar beim direkten
+			Abspielen Rekursion, nicht aber in der Merkliste. Beide abgefangen in PlayVideo,
+			s. Rekurs_check.
+			Modul phoenix: wegen der weggefallenen Youtube-Unterstützung Umstellung auf
+			ARD-Mediathek - Anpassungen: phoenix_Search -> ARDSearchnew, ARDStartRubrik,
+			ARDStartRegion, ARDStart, SenderLiveResolution, SendungenAZ, ARDRubriken,
+			SendungenAZ_ARDnew, Watchdog_Plex-2. 
+			show_single_bandwith: entfernt - obsolet.
+			Icons: Platzbedarf reduziert (Indizierung auf Farbzahl-Minima), erneuert:
+			icon-downl-dir und icon-downl. Obsolete Icons entfernt.
+			Main_childs (Kinderprogramme): neues Menü "Hörspaß für Kinder", Link ->
+			ARD-Audiothek.
+
 04.06.2023 4.7.5
 			ARDSportWDR: Menübutton Bundesligatabellen hinzugefügt, neue Funktionen 
 			ARDSportTabellen, ARDSportTabellenArchiv und ARDSportTabellenTeam.

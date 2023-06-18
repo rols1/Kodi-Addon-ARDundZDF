@@ -11,7 +11,7 @@
 #
 ################################################################################
 # 	<nr>44</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.06.2023
+#	Stand: 16.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -375,11 +375,15 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 						tagline=reg_tag, fparams=fparams)
 					cnt=cnt+1
 			
+		label = title										# Anpassung phoenix ("Stage Widget händisch")
+		if title.startswith("Stage") or title.startswith("Die besten Videos"):
+			label = "[B]Highlights[/B]"	
+			
 		PLog(path); PLog(title); PLog(ID); PLog(anz); PLog(img); 
 		path=py2_encode(path); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s','homeID': '%s'}" %\
 			(quote(path), quote(title), ID, homeID)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.%s" % func, fanart=img, thumb=img, 
+		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.%s" % func, fanart=img, thumb=img, 
 			tagline=tag, summary=summ, fparams=fparams)
 		cnt=cnt+1	
 
@@ -633,7 +637,10 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 # 18.04.2023 Cache für Startseite entfällt (obsolet - api-Call)
 #		
 def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""): 
-	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path)	
+	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path)
+	# Titel-Anpassung für phoenix ("Stage Widget händisch"):
+	if title.startswith("Stage") or title.startswith("Die besten Videos"):
+		title = "[B]Highlights[/B]"
 	title_org = title
 	
 	CurSender = Dict("load", 'CurSender')				# init s. Modulkopf

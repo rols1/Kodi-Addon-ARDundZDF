@@ -813,6 +813,7 @@ def get_active_dls():
 		if cnt != '' and cnt != '0':
 			msg1 = "Downloads"
 			msg2 = "Anzahl: %s | %s" % (cnt, new_len)
+			PLog("get_active_dls_update: %s" % msg2)
 			xbmcgui.Dialog().notification(msg1,msg2,icon,2000)
 		i=i+1
 		xbmc.sleep(2000)

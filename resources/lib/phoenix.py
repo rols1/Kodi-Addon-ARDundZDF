@@ -10,7 +10,7 @@
 #	
 ################################################################################
 # 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.06.2023
+#	Stand: 16.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -223,7 +223,8 @@ def phoenix_Search(query='', nexturl=''):
 		query = ardundzdf.get_query(channel='phoenix')
 	PLog(query)
 	if  query == None or query == '':
-		return ""
+		#return ""
+		Main_phoenix()					# Absturz nach Sofortstart-Abbruch
 		
 	title="Suche auf phoenix"
 	ARDSearchnew(title, sender="phoenix", offset=0, query=query, homeID="phoenix")

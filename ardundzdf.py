@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>116</nr>										# Numerierung für Einzelupdate
-VERSION = '4.7.5'
-VDATE = '15.06.2023'
+VERSION = '4.7.6'
+VDATE = '18.06.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7585,7 +7585,8 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 		query = get_query(channel='ZDF')
 	PLog(query)
 	if  query == None or query.strip() == '':
-		return ""
+		#return ""
+		Main_ZDF(name='')			# Absturz nach Sofortstart-Abbruch
 	
 	query = query.replace(u'–', '-')# verhindert 'ascii'-codec-Error
 	query = query.replace(' ', '+')	# Aufruf aus Merkliste unbehandelt	
