@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>54</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.06.2023
+# 	<nr>55</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3430,7 +3430,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 
 		# Check auf inputstream.adaptive (IA) nicht erforderlich
 		# s. https://github.com/xbmc/inputstream.adaptive,
-		# 	https://github.com/xbmc/inputstream.adaptive/wiki/
+		# 	https://github.com/xbmc/inputstream.adaptive/wiki/Integration
 		# ab Kodi 20 Auswahl von Streams + -Eigenschaften
 		# IA funktioniert nicht mit lokalen m3u8-Dateien ( 
 		#	relativ + absolut, s.a.:
@@ -3472,7 +3472,8 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 						xbmc.Player().showSubtitles(False)									
 					break
 				xbmc.sleep(200)
-			#ShowSeekPos(player, url)							# Test für issue #30
+			if SETTINGS.getSetting('pref_inputstream') == 'true':
+				ShowSeekPos(player, url)							# issue #30
 			return
 
 		else:													# false, None od. Blank - Playlist
@@ -3521,6 +3522,9 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 					break
 				xbmc.sleep(200)
 
+			if SETTINGS.getSetting('pref_inputstream') == 'true':
+				ShowSeekPos(player, url)							# issue #30, wie oben
+				
 			return play_time, video_dur				# -> PlayMonitor
 #			exit(0)
 
@@ -3709,22 +3713,84 @@ def open_addon(addon_id, cmd):
 	return
 	
 #----------------------------------------------------------------
-# Test: zeigt Abspielposition inputstream.adaptive als Zeitangabe 
-# Todo:
-#	Unterscheidung Live / Video
-#	Anzeige auf Zeitsprünge beschränken (dauerhaft stört sie)
-#	
+# Test: zeigt Abspielposition inputstream.adaptive als Zeitangabe
+# Player vor Aufruf bereits aktiviert (s. Player_Subtitles_on)
+# notification-Aufruf zu ungenau für float-Werte.
+# ZDF-Werte beim Start: 
+#		Pufferanzeige: Wert1 / Wert2 ->
+#			1. 02:59:44 - 02:59:48
+#			2. 03:00:00
+#		TotalTime: 	10800 = 180 min = 3 Std. (akt. Maximum der Sender)
+#		LastSeek: 	10786 = 179 min
+
+# Der Abstand zwischen TotalTime und LastSeek (player.getTime) variiert
+#	bei den Sendern und schwankt im Verlauf zwischen 0 und 10 (laut Tests).
+#
+# Livestream-Erkennung: LastSeek=0. inputstream startet i.d.R. kurz
+#	vor Ende des Puffers, bei Resume ist LastSeek > 0 (je nach Abbruchpos.)
+#	Bei Videos meldet LastSeek: 0.
+#
+# Probleme:
+#	ARD-Livestream verharrt in isPlaying-Schleife (vermutl. H-Task erforderlich)
 #	
 def ShowSeekPos(player, url):
 	PLog('ShowSeekPos:')
+	if SETTINGS.getSetting('pref_streamtime') == 'false':
+		return
+		
+	import resources.lib.EPG as EPG
+	icon=""										# -> Kodi's i-Symbol
+	now = EPG.get_unixtime(onlynow=True)		# unix-sec passend zu TotalTime, LastSeek
+	now_dt = datetime.datetime.fromtimestamp(int(now))
+	StartTime = now_dt.strftime("%H:%M:%S")
 
-	icon=""
-	if url.endswith('.m3u8') and SETTINGS.getSetting('pref_inputstream') == 'true':
+	while 1:											# auf Player warten 
+		xbmc.sleep(500)								
+		if player.isPlaying():
+			break			
+	
+	TotalTime = int(player.getTotalTime())		# sec, float -> int, max. Puffergröße
+	LastSeek = int(player.getTime())			# Basis-Wert für akt. Uhrzeit
+	
+	if LastSeek == 0:							# vermutl. kein Livestream?
+		PLog("no_live_stream_detect: " + url)
+		return
+
+	LastBufTime = ""							# für sync errors
+	PLog("StartTime: %s, TotalTime: %d, LastSeek: %d" % (StartTime, TotalTime, LastSeek))
+	if url.endswith('.m3u8'):
 		while player.isPlaying():
-			xbmc.sleep(500)	
-			play_time = player.getTime()
-			p = str(int(play_time))
-			xbmcgui.Dialog().notification("PlayTime: ",p,icon,500, sound=False)
+			xbmc.sleep(1000)	
+			show_time=False
+			play_time = player.getTime()		# akt. Pos im Puffer (0=Pufferstart)
+			p = int(play_time)
+			#PLog("play_time: %d, LastSeek: %d" % (p, LastSeek)) 	# Debug
+			if p < 0 or p > TotalTime:			# bei sync error falsche Werte möglich, 
+				continue						# 	Bsp. LastSeek QVC: 1271296
+			
+			# regelm. Schwankung 6-10 (empirisch):
+			if (LastSeek-p) > 10:				# rückwärts	im Puffer	
+					show_time=True
+			if p > LastSeek:					# vorwärts im Puffer
+				if (p-LastSeek) > 10:	
+					show_time=True
+			
+			if show_time:						# Ausgabe Uhrzeit für die neue Pufferpos.
+				pos_sec = TotalTime - p			# je kleiner p desto größer der Zeitabzug
+				now = EPG.get_unixtime(onlynow=True)
+				time_sec = int(now) - pos_sec	# Pos-Sekunden von akt. Zeit abziehen
+				new_dt = datetime.datetime.fromtimestamp(time_sec)
+				t_string = new_dt.strftime("%H:%M:%S")
+				
+				PLog("LastSeek: %d, pos_sec: %d" % (LastSeek, pos_sec))
+				PLog("new_t_string: " + t_string)
+				
+				if LastBufTime != new_dt:			# skip_sync_error
+					LastSeek=p						# neuer Basis-Wert, bei Playerstop identisch
+					LastBufTime=new_dt
+					xbmcgui.Dialog().notification("Stream-Uhrzeit: ", t_string, icon,5000, sound=False)
+				else:
+					PLog("skip_sync_error")
 	
 	return
 #----------------------------------------------------------------
