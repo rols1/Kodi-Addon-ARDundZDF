@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>55</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.06.2023
+#	Stand: 25.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3460,21 +3460,8 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		PLog("url: " + url); PLog("playlist: %s" % str(playlist))
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
-			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt						
-			while 1:											# showSubtitles nur bei akt. Player wirksam
-				if player.isPlaying():
-					xbmc.sleep(1000)							# für Raspi erforderl. (500 können fehlschlagen)
-					if SETTINGS.getSetting('pref_UT_ON') == 'true':
-						PLog("Player_Subtitles_on")
-						xbmc.Player().showSubtitles(True)
-					else:		
-						PLog("Player_Subtitles_off")
-						xbmc.Player().showSubtitles(False)									
-					break
-				xbmc.sleep(200)
-			if SETTINGS.getSetting('pref_inputstream') == 'true':
-				ShowSeekPos(player, url)							# issue #30
-			return
+			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
+			play_time=0; video_dur=0							# hier dummies (rel. -> PlayMonitor) 		
 
 		else:													# false, None od. Blank - Playlist
 			PLog('PlayVideo_Start: direkt, playlist: %s' % str(playlist))
@@ -3522,10 +3509,26 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 					break
 				xbmc.sleep(200)
 
-			if SETTINGS.getSetting('pref_inputstream') == 'true':
-				ShowSeekPos(player, url)							# issue #30, wie oben
-				
-			return play_time, video_dur				# -> PlayMonitor
+	while 1:											# showSubtitles laut Settings AN/AUS
+		if player.isPlaying():
+			xbmc.sleep(1000)							# für Raspi erforderl. (500 können fehlschlagen)
+			if SETTINGS.getSetting('pref_UT_ON') == 'true':
+				PLog("Player_Subtitles: on")
+				xbmc.Player().showSubtitles(True)
+			else:		
+				PLog("Player_Subtitles: off")
+				xbmc.Player().showSubtitles(False)									
+			break
+		xbmc.sleep(200)
+		
+	if SETTINGS.getSetting('pref_inputstream') == 'true':
+		from threading import Thread					# issue #30: SeekPos -> Streamuhrzeit
+		PLog("Thread_ShowSeekPos_start:")
+		bg_thread = Thread(target=ShowSeekPos, args=(player, url))
+		bg_thread.start()
+		
+		
+	return play_time, video_dur				# -> PlayMonitor
 #			exit(0)
 
 #-------------------------------------
@@ -3713,8 +3716,10 @@ def open_addon(addon_id, cmd):
 	return
 	
 #----------------------------------------------------------------
-# Test: zeigt Abspielposition inputstream.adaptive als Zeitangabe
-# Player vor Aufruf bereits aktiviert (s. Player_Subtitles_on)
+# Zeigt Abspielposition inputstream.adaptive als Zeitangabe
+# Keine Beschränkung auf HLS-Videos 
+# Aufruf: PlayAudio (direkt, indirekt)
+# Player vor Aufruf bereits aktiviert (s. Player_Subtitles:)
 # notification-Aufruf zu ungenau für float-Werte.
 # ZDF-Werte beim Start: 
 #		Pufferanzeige: Wert1 / Wert2 ->
@@ -3724,51 +3729,62 @@ def open_addon(addon_id, cmd):
 #		LastSeek: 	10786 = 179 min
 
 # Der Abstand zwischen TotalTime und LastSeek (player.getTime) variiert
-#	bei den Sendern und schwankt im Verlauf zwischen 0 und 10 (laut Tests).
+#	bei den Livestreams der Sender und schwankt im Verlauf zwischen 0 und 
+#	10 (laut Tests).
 #
-# Livestream-Erkennung: LastSeek=0. inputstream startet i.d.R. kurz
-#	vor Ende des Puffers, bei Resume ist LastSeek > 0 (je nach Abbruchpos.)
-#	Bei Videos meldet LastSeek: 0.
-#
-# Probleme:
-#	ARD-Livestream verharrt in isPlaying-Schleife (vermutl. H-Task erforderlich)
+# Issues:
+# 	Unterscheidung Live-/Videostream nicht via Url-Eigenschaften möglich - 
+#		LastSeek bei Videos häufig 0, aber s. Sportschaustream
+#	Thread für Raspi und für einzelne Streams (LastSeek=0, s.u.) zwingend 
+#		erforderlich
+#	Sportschaustream ../ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/..
+#		Start mit 2-4 absinkend auf Minuswerte
+#	Bisher keine ffmpeg-Analyse für Eignung/Nichteignung von Streams
 #	
 def ShowSeekPos(player, url):
 	PLog('ShowSeekPos:')
 	if SETTINGS.getSetting('pref_streamtime') == 'false':
+		PLog("pref_streamtime: OFF")
 		return
 		
+	monitor 	= xbmc.Monitor()
 	import resources.lib.EPG as EPG
 	icon=""										# -> Kodi's i-Symbol
 	now = EPG.get_unixtime(onlynow=True)		# unix-sec passend zu TotalTime, LastSeek
 	now_dt = datetime.datetime.fromtimestamp(int(now))
 	StartTime = now_dt.strftime("%H:%M:%S")
-
-	while 1:											# auf Player warten 
-		xbmc.sleep(500)								
-		if player.isPlaying():
-			break			
+	
+	xbmc.sleep(2000)							# Gedenksek. für Raspi u.ä., sonst LastSeek=0
 	
 	TotalTime = int(player.getTotalTime())		# sec, float -> int, max. Puffergröße
 	LastSeek = int(player.getTime())			# Basis-Wert für akt. Uhrzeit
+	PLog("StartTime: %s, TotalTime: %d, LastSeek: %d" % (StartTime, TotalTime, LastSeek))
 	
-	if LastSeek == 0:							# vermutl. kein Livestream?
-		PLog("no_live_stream_detect: " + url)
+	if LastSeek == 0: 							# vermutl. kein Livestream od. endloses
+		PLog("no_live_stream_detect: " + url)	# 	Buffering
+		xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
 		return
 
-	LastBufTime = ""							# für sync errors
-	PLog("StartTime: %s, TotalTime: %d, LastSeek: %d" % (StartTime, TotalTime, LastSeek))
-	if url.endswith('.m3u8'):
-		while player.isPlaying():
-			xbmc.sleep(1000)	
+	LastBufTime = StartTime						# für sync errors
+	while not monitor.waitForAbort(2):
+		xbmc.sleep(500)	
+		if player.isPlaying():
 			show_time=False
-			play_time = player.getTime()		# akt. Pos im Puffer (0=Pufferstart)
+			try:
+				play_time = player.getTime()	# akt. Pos im Puffer (0=Pufferstart)
+			except:
+				play_time=LastSeek
+				
 			p = int(play_time)
-			#PLog("play_time: %d, LastSeek: %d" % (p, LastSeek)) 	# Debug
-			if p < 0 or p > TotalTime:			# bei sync error falsche Werte möglich, 
-				continue						# 	Bsp. LastSeek QVC: 1271296
+			PLog("play_time_p: %d, LastSeek: %d" % (p, LastSeek)) 	# Debug
+			# Sportschaustream: Start mit 2-4 absinkend auf Minuswerte - s.o.
+			if p <= 1 or p > TotalTime: 		# sync error? Bsp. LastSeek QVC: 1271296  
+				PLog("break_on_getTime_1")
+				xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
+				xbmc.sleep(2000)
+				break							# verhind. Blockade durch Buffering (Bsp. WDR-Lokalzeit)
 			
-			# regelm. Schwankung 6-10 (empirisch):
+			# regelm. Schwankung bei Livestreams 6-10 (empirisch):
 			if (LastSeek-p) > 10:				# rückwärts	im Puffer	
 					show_time=True
 			if p > LastSeek:					# vorwärts im Puffer
@@ -3786,12 +3802,17 @@ def ShowSeekPos(player, url):
 				PLog("new_t_string: " + t_string)
 				
 				if LastBufTime != new_dt:			# skip_sync_error
-					LastSeek=p						# neuer Basis-Wert, bei Playerstop identisch
 					LastBufTime=new_dt
 					xbmcgui.Dialog().notification("Stream-Uhrzeit: ", t_string, icon,5000, sound=False)
 				else:
 					PLog("skip_sync_error")
-	
+					
+			LastSeek=p		
+			
+		else:
+			PLog("monitor_stop")
+			break
+				
 	return
 #----------------------------------------------------------------
 # experimentelle Funktion thread_getsubtitles einschl. vtt_convert archiviert

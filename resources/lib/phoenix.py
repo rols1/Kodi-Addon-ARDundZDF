@@ -10,7 +10,7 @@
 #	
 ################################################################################
 # 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.06.2023
+#	Stand: 24.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -164,7 +164,7 @@ def Main_phoenix():
 def get_live_data():
 	PLog('get_live_data:')
 	path = "https://www.phoenix.de/response/template/livestream_json"
-	page, msg = get_page(path=path)			
+	page, msg = get_page(path=path)	
 	if page == '':	
 		msg1 = "get_live_data:"
 		msg2 = msg
@@ -172,7 +172,8 @@ def get_live_data():
 		PLog("%s | %s" % (msg1, msg2))	
 	PLog(len(page))			
 	
-	title='';subtitle='';vorspann='';descr='';href='';sender='';thumb=''
+	title='';subtitle='';vorspann='';descr='';href='';sender='';
+	thumb=''; icon=''
 	if page:
 		# Kurzf. möglich: {"title":"tagesschau","subtitel":"mit Geb\u00e4rdensprache",
 		#	"typ":"","vorspann":""}

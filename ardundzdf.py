@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>116</nr>										# Numerierung für Einzelupdate
-VERSION = '4.7.6'
-VDATE = '18.06.2023'
+VERSION = '4.7.7'
+VDATE = '25.06.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2836,7 +2836,7 @@ def ARDSportWDR():
 
 	title = u"Moderation der Sportschau"						# Moderation
 	tag = u"Bildgalerie"
-	img = "https://images.sportschau.de/image/908ed0bc-918d-470d-bc61-377be863a818/AAABgUeOYdE/AAABgPp7JiI/16x9-640/alexander-bommes-sportschau-sp-104.jpg" 
+	img = "https://images.sportschau.de/image/43770bba-0b81-4d0e-8dd2-b282f90859d5/AAABgUeQFuU/AAABg8tMQ7w/1x1-840/sportschaumoderator-sp-126.jpg"
 	path = "https://www.sportschau.de/sendung/moderation"
 	title=py2_encode(title); path=py2_encode(path); 
 	img=py2_encode(img); 

@@ -10,6 +10,16 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+25.06.2023 4.7.7
+			ShowSeekPos (util): neu - blendet nach Verschieben der Pufferposition von
+			inputstream.adaptive die passende Uhrzeit per Notification ein (Aufruf in
+			PlayVideo). Neues Setting: "Stream-Uhrzeit" (pref_streamtime, default true). 
+			arte-Modul: Ersatz der durch phoenix-Erneuerung gelöschten Funktionen
+			getOnline + time_state im Modul util.
+			livesenderTV.xml: Streamlink für Lausitzwelle aktualisiert.
+			ARDSportWDR: Bild Menü Moderation aktualisiert.
+			get_live_data (phoenix): icon leer vorbelegt (erforderl. bei Senderausfall).
+
 18.06.2023 4.7.6
 			TV-Livestreams Regional Lokalzeit: return nach Sofortstart für Verbleib
 			in akt. Liste.
