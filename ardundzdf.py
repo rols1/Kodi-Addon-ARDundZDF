@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>116</nr>										# Numerierung für Einzelupdate
+# 	<nr>117</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.7'
 VDATE = '25.06.2023'
 
@@ -6653,7 +6653,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 		PLog("title: " + title)
 		descr = "%s\n\n%s" % (title, descr)
 		PLog("descr: " + descr)
-		li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr, live=True)	
+		li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr, live=True) # mit url_check
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 							
 	elif url_m3u8.find('.m3u8') >= 0: 
@@ -9431,17 +9431,18 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 
 	playlist = ''
 	# seit ZDF-Relaunch 28.10.2016 dort nur noch https
-	if url_m3u8.startswith('http') == True :								# URL oder lokale Datei?			
-		playlist, msg = get_page(path=url_m3u8)								# URL
+	if url_m3u8.startswith('http') == True :								# URL oder lokale Datei?
+		url_check(url_m3u8, caller='Parseplaylist')				
+		playlist, msg = get_page(path=url_m3u8)				
 		if playlist == '':
 			icon = R(ICON_WARNING)
-			msg1 = "master.m3u8 fehlt"
+			msg1 = "Streamquelle kann nicht geladen werden."
 			msg2 = 'Fehler: %s'	% (msg)
 			xbmcgui.Dialog().notification(msg1, msg2,icon,5000)
 			if buttons:
 				return li
 			else:
-				return []													# leere Liste für build_Streamlists				
+				return []												# leere Liste für build_Streamlists				
 	else:																	# lokale Datei	
 		fname =  os.path.join(M3U8STORE, url_m3u8) 
 		playlist = RLoad(fname, abs_path=True)					

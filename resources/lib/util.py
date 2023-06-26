@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>55</nr>										# Numerierung für Einzelupdate
-#	Stand: 25.06.2023
+# 	<nr>56</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1161,9 +1161,14 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 					return '', msg
 			PLog(page[:100])
 			msg = new_url
+			
 		except Exception as exception:									# s.o.
 			msg = str(exception)
 			PLog(msg)
+			if msg.find("HTTP Error") >= 0:								# ab 26.06.2023
+				PLog("return_HTTP Error: " + msg)
+				page=""
+				return page, msg
 				
 	
 	if page == '':
@@ -1205,11 +1210,11 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		except Exception as exception:
 			PLog(str(exception))
 			req_fail=True
-			page = ''	
+			page=""	
 
 			
 	if page == '':
-		error_txt = 'Quelle nicht erreichbar oder nicht mehr vorhanden.'
+		error_txt = u'Quelle nicht erreichbar oder nicht mehr vorhanden.'
 		if req_fail:
 			error_txt = "%s\nget_page1 - get_page3 fehlgeschlagen." % error_txt
 		msg = error_txt + ' | %s' % msg
@@ -3369,6 +3374,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	# kodi_version = re.search('(\d+)', KODI_VERSION).group(0) 		# Major-Version reicht hier - entfällt
 	
 		
+	play_time=0; video_dur=0										# hier dummies (rel. -> PlayMonitor) 		
 	if url_check(url, caller='PlayVideo'):							# Url-Check
 		startlist = SETTINGS.getSetting('pref_startlist')
 		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
@@ -3461,7 +3467,6 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
-			play_time=0; video_dur=0							# hier dummies (rel. -> PlayMonitor) 		
 
 		else:													# false, None od. Blank - Playlist
 			PLog('PlayVideo_Start: direkt, playlist: %s' % str(playlist))
@@ -3509,23 +3514,23 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 					break
 				xbmc.sleep(200)
 
-	while 1:											# showSubtitles laut Settings AN/AUS
-		if player.isPlaying():
-			xbmc.sleep(1000)							# für Raspi erforderl. (500 können fehlschlagen)
-			if SETTINGS.getSetting('pref_UT_ON') == 'true':
-				PLog("Player_Subtitles: on")
-				xbmc.Player().showSubtitles(True)
-			else:		
-				PLog("Player_Subtitles: off")
-				xbmc.Player().showSubtitles(False)									
-			break
-		xbmc.sleep(200)
-		
-	if SETTINGS.getSetting('pref_inputstream') == 'true':
-		from threading import Thread					# issue #30: SeekPos -> Streamuhrzeit
-		PLog("Thread_ShowSeekPos_start:")
-		bg_thread = Thread(target=ShowSeekPos, args=(player, url))
-		bg_thread.start()
+		while 1:											# showSubtitles laut Settings AN/AUS
+			if player.isPlaying():
+				xbmc.sleep(1000)							# für Raspi erforderl. (500 können fehlschlagen)
+				if SETTINGS.getSetting('pref_UT_ON') == 'true':
+					PLog("Player_Subtitles: on")
+					xbmc.Player().showSubtitles(True)
+				else:		
+					PLog("Player_Subtitles: off")
+					xbmc.Player().showSubtitles(False)									
+				break
+			xbmc.sleep(200)
+			
+		if SETTINGS.getSetting('pref_inputstream') == 'true':
+			from threading import Thread					# issue #30: SeekPos -> Streamuhrzeit
+			PLog("Thread_ShowSeekPos_start:")
+			bg_thread = Thread(target=ShowSeekPos, args=(player, url))
+			bg_thread.start()
 		
 		
 	return play_time, video_dur				# -> PlayMonitor
@@ -3739,15 +3744,16 @@ def open_addon(addon_id, cmd):
 #		erforderlich
 #	Sportschaustream ../ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/..
 #		Start mit 2-4 absinkend auf Minuswerte
+#	Livetreams von wdrlokalzeit.akamaized.net starten mit 1 statt TotalTime und
+#		buffern endlos in der isPlaying-Schleife
 #	Bisher keine ffmpeg-Analyse für Eignung/Nichteignung von Streams
 #	
 def ShowSeekPos(player, url):
-	PLog('ShowSeekPos:')
+	PLog('ShowSeekPos: ' + url)
 	if SETTINGS.getSetting('pref_streamtime') == 'false':
 		PLog("pref_streamtime: OFF")
 		return
 		
-	monitor 	= xbmc.Monitor()
 	import resources.lib.EPG as EPG
 	icon=""										# -> Kodi's i-Symbol
 	now = EPG.get_unixtime(onlynow=True)		# unix-sec passend zu TotalTime, LastSeek
@@ -3755,17 +3761,21 @@ def ShowSeekPos(player, url):
 	StartTime = now_dt.strftime("%H:%M:%S")
 	
 	xbmc.sleep(2000)							# Gedenksek. für Raspi u.ä., sonst LastSeek=0
-	
-	TotalTime = int(player.getTotalTime())		# sec, float -> int, max. Puffergröße
+	if player.isPlaying() == False:				# sollte hier nicht mehr passieren
+		PLog("player_is_off")
+		return
+			
+	TotalTime = int(player.getTotalTime())		# sec, float -> int, max. Puffergröße	
 	LastSeek = int(player.getTime())			# Basis-Wert für akt. Uhrzeit
 	PLog("StartTime: %s, TotalTime: %d, LastSeek: %d" % (StartTime, TotalTime, LastSeek))
 	
 	if LastSeek == 0: 							# vermutl. kein Livestream od. endloses
-		PLog("no_live_stream_detect: " + url)	# 	Buffering
+		PLog("no_live_stream_detect: ")			# 	Buffering
 		xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
 		return
 
-	LastBufTime = StartTime						# für sync errors
+	monitor 	= xbmc.Monitor()
+	LastBufTime = StartTime						# detect sync errors
 	while not monitor.waitForAbort(2):
 		xbmc.sleep(500)	
 		if player.isPlaying():
@@ -3778,6 +3788,7 @@ def ShowSeekPos(player, url):
 			p = int(play_time)
 			PLog("play_time_p: %d, LastSeek: %d" % (p, LastSeek)) 	# Debug
 			# Sportschaustream: Start mit 2-4 absinkend auf Minuswerte - s.o.
+			# wdrlokalzeit Start mit 1, buffert - s.o.
 			if p <= 1 or p > TotalTime: 		# sync error? Bsp. LastSeek QVC: 1271296  
 				PLog("break_on_getTime_1")
 				xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
@@ -3803,7 +3814,7 @@ def ShowSeekPos(player, url):
 				
 				if LastBufTime != new_dt:			# skip_sync_error
 					LastBufTime=new_dt
-					xbmcgui.Dialog().notification("Stream-Uhrzeit: ", t_string, icon,5000, sound=False)
+					xbmcgui.Dialog().notification("Stream-Uhrzeit: ", t_string, icon,3000, sound=False)
 				else:
 					PLog("skip_sync_error")
 					
