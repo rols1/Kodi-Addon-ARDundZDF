@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>44</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.06.2023
+# 	<nr>45</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.06.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1340,6 +1340,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 			if "show" in s:		
 				if s["show"]:									# null?
 					summ = s["show"]["synopsis"]				# Zusammenfassung
+					pagetitle = s["show"]["title"]				# -> full_shows
 			PLog(summ[:60])	
 			if summ == None:
 				summ = ""
@@ -1406,8 +1407,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 			if SETTINGS.getSetting('pref_mark_full_shows') == 'true':
 				if ID != "Search":								# Vorrang Suchmarkierung vor full_shows					
 					if "duration" in s:
-						dur = s["duration"]; 
-						dur = str(int(dur))					
+						dur = seconds_translate(s["duration"])	# 27.06.2023
 						title = ardundzdf.full_shows(title, title_samml, summ, dur, "full_shows_ARD")	
 
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
@@ -1433,6 +1433,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 				fparams=fparams, summary=summ, mediatype=mediatype)	
 																										
 	return li	
+	
 
 #---------------------------------------------------------------------------------------------------
 # Ermittlung der Videoquellen für eine Sendung - hier Aufteilung Formate Streaming + MP4
