@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>56</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.06.2023
+# 	<nr>57</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.07.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3760,6 +3760,10 @@ def open_addon(addon_id, cmd):
 #		zwingend erforderlich (ohne Thread endloses Buffern)
 #	Sportschaustream ../ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/..
 #		Start mit 2-4 absinkend auf Minuswerte
+#	ZDF Event-Stream 01 und 02:  inputstream bricht nach Errors (Download failed 
+#		with error 404) ab - startet hier mit LastSeek 0 und wird daher für 
+#		die Stream-Uhrzeit verworfen. Um den Stream sichtbar zu machen, muss 
+#		aber ein Wechsel in die Ansichtsoptionen erfolgen (Estuary, WideList).     
 #	Livetreams von wdrlokalzeit.akamaized.net starten mit 1 od. 2 statt TotalTime 
 #		und buffern endlos in der isPlaying-Schleife. Bei erzwungendem Seek auf
 #		TotalTime blockiert inputstream mit Ladekreis, spielt aber den Stream.
