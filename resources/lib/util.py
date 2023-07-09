@@ -3514,27 +3514,40 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 					break
 				xbmc.sleep(200)
 
-		while 1:											# showSubtitles laut Settings AN/AUS
-			if player.isPlaying():
-				xbmc.sleep(1000)							# für Raspi erforderl. (500 können fehlschlagen)
-				if SETTINGS.getSetting('pref_UT_ON') == 'true':
-					PLog("Player_Subtitles: on")
-					xbmc.Player().showSubtitles(True)
-				else:		
-					PLog("Player_Subtitles: off")
-					xbmc.Player().showSubtitles(False)									
-				break
-			xbmc.sleep(200)
-			
+		# waitForAbort für Player-Warteschleife statt while(1) - hilft gegen Buffern:											
+		monitor = xbmc.Monitor(); i=0; max_secs=5 				# showSubtitles setzen, sobald Player spielt
+		player_detect=False
+		PLog("Subtitles: wait_for_Player(%d sec)" % max_secs)
+		while not monitor.waitForAbort(1):
+				xbmc.sleep(1000)
+				i=i+1
+				if player.isPlaying():
+						PLog("player_isPlaying: %d sec" % i)
+						if SETTINGS.getSetting('pref_UT_ON') == 'true':
+								PLog("Player_Subtitles: on")
+								xbmc.Player().showSubtitles(True)
+						else:           
+								PLog("Player_Subtitles: off")
+								xbmc.Player().showSubtitles(False)
+						player_detect=True
+						break
+				if i >= max_secs:
+						PLog("Subtitles: abort_player_detect")
+						player_detect=False
+						break
+		
+		# Streamuhrzeit entspr. Setting + Status Player: 
+		PLog("player_detect: " + str(player_detect))
 		if SETTINGS.getSetting('pref_inputstream') == 'true':
-			from threading import Thread					# issue #30: SeekPos -> Streamuhrzeit
-			PLog("Thread_ShowSeekPos_start:")
-			bg_thread = Thread(target=ShowSeekPos, args=(player, url))
-			bg_thread.start()
-		
-		
+			if SETTINGS.getSetting('pref_streamtime') == 'true':
+				if player_detect:
+					xbmc.sleep(5000)
+					from threading import Thread			# Github-issue #30: Seek-Pos. -> Streamuhrzeit
+					PLog("Thread_ShowSeekPos_start:")
+					bg_thread = Thread(target=ShowSeekPos, args=(player, url))
+					bg_thread.start()
+
 	return play_time, video_dur				# -> PlayMonitor
-#			exit(0)
 
 #-------------------------------------
 #  ARD-Untertitel konvertieren
@@ -3737,47 +3750,68 @@ def open_addon(addon_id, cmd):
 #	bei den Livestreams der Sender und schwankt im Verlauf zwischen 0 und 
 #	10 (laut Tests).
 #
+# Warteschleife für Player auf Raspi & Co entfällt hier: bereits erledigt
+#	 vor Aufruf ShowSeekPos in PlayVideo (s. showSubtitles).
+#	
 # Issues:
 # 	Unterscheidung Live-/Videostream nicht via Url-Eigenschaften möglich - 
 #		LastSeek bei Videos häufig 0, aber s. Sportschaustream
-#	Thread für Raspi und für einzelne Streams (LastSeek=0, s.u.) zwingend 
-#		erforderlich
+#	Background-Thread für Raspi und für einzelne Streams (LastSeek=0, s.u.)  
+#		zwingend erforderlich (ohne Thread endloses Buffern)
 #	Sportschaustream ../ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/..
 #		Start mit 2-4 absinkend auf Minuswerte
-#	Livetreams von wdrlokalzeit.akamaized.net starten mit 1 statt TotalTime und
-#		buffern endlos in der isPlaying-Schleife
+#	Livetreams von wdrlokalzeit.akamaized.net starten mit 1 od. 2 statt TotalTime 
+#		und buffern endlos in der isPlaying-Schleife. Bei erzwungendem Seek auf
+#		TotalTime blockiert inputstream mit Ladekreis, spielt aber den Stream.
+#		Bei einer neueren inputstream-Verson (LibreElec, 20.3.9.1) starten
+#		diese Streams korrekt am Pufferende, puffern dann aber in der 
+#		waitForAbort-Schleife endlos. Dabei geben sie korrekte play_time- und
+#		TotalTime-Werte zurück und verhindern so die Buffering-Erkennung.
+#		Gibt man vor der Schleife einige Sek.
+#		Sync-Zeit, fallen sie auf TotalTime 1 od. 2 zurück - praktisch wird
+#		ein korrekter Start angetäuscht. Berücksichtigung hier mit Param.
+#		synctime, z.Z. xbmc.sleep(3000).
+#	Allgemeine Problemlage: inputstream hat mit einigen Streams Syncprobleme
+#		(Video- und/oder Sound-Streams). Dies kann zu endlosem Bufern führen, 
+#		wenn das Addon nach Playerstart Funktionen des Players abfragt (getTime,
+#		getTotalTime). Dabei spielen Zeitverzögerungen (time.sleep, xbmx.sleep,
+#		waitForAbort) offensichtlich keine Rolle.
+#	Infos zu inputstream.adaptive: https://github.com/xbmc/inputstream.adaptive/
+#		(s. issues und wiki/Settings), Kodi-Forum zu [VideoPlayer InputStream]: 
+#		https://forum.kodi.tv/forumdisplay.php?fid=312.
+# 	Bisher keine Tests mit den unterschiedlichen Settings für inputstream -
+#		getestet wurde mit den Defaultsettings.
 #	Bisher keine ffmpeg-Analyse für Eignung/Nichteignung von Streams
+#	monitor.waitForAbort() blockiert - für die while-Schleife sind mind. 1 sec
+#		Timeout und "not" erforderlich. Der Timeout-Param. ersetzt hier 
+#		xbmc.sleep.
 #	
 def ShowSeekPos(player, url):
-	PLog('ShowSeekPos: ' + url)
-	if SETTINGS.getSetting('pref_streamtime') == 'false':
-		PLog("pref_streamtime: OFF")
-		return
-		
+	PLog('ShowSeekPos: ' + url)		
 	import resources.lib.EPG as EPG
+	
 	icon=""										# -> Kodi's i-Symbol
 	now = EPG.get_unixtime(onlynow=True)		# unix-sec passend zu TotalTime, LastSeek
 	now_dt = datetime.datetime.fromtimestamp(int(now))
 	StartTime = now_dt.strftime("%H:%M:%S")
-	
-	xbmc.sleep(2000)							# Gedenksek. für Raspi u.ä., sonst LastSeek=0
-	if player.isPlaying() == False:				# sollte hier nicht mehr passieren
-		PLog("player_is_off")
+		
+	TotalTime = int(player.getTotalTime())    # sec, float -> int, max. Puffergröße
+	if not TotalTime:
+		PLog("player_is_off, TotalTime=0")
+		xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
 		return
-			
-	TotalTime = int(player.getTotalTime())		# sec, float -> int, max. Puffergröße	
-	LastSeek = int(player.getTime())			# Basis-Wert für akt. Uhrzeit
+
+	LastSeek = int(player.getTime())            # Basis-Wert für akt. Uhrzeit	
 	PLog("StartTime: %s, TotalTime: %d, LastSeek: %d" % (StartTime, TotalTime, LastSeek))
-	
 	if LastSeek == 0: 							# vermutl. kein Livestream od. endloses
 		PLog("no_live_stream_detect: ")			# 	Buffering
 		xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
 		return
 
-	monitor 	= xbmc.Monitor()
 	LastBufTime = StartTime						# detect sync errors
-	while not monitor.waitForAbort(2):
-		xbmc.sleep(500)	
+	monitor = xbmc.Monitor()	
+	while not monitor.waitForAbort(1):
+		xbmc.sleep(1000)
 		if player.isPlaying():
 			show_time=False
 			try:
