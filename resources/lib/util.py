@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>57</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.07.2023
+# 	<nr>58</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.07.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3774,7 +3774,7 @@ def open_addon(addon_id, cmd):
 #		Gibt man vor der Schleife einige Sek.
 #		Sync-Zeit, fallen sie auf TotalTime 1 od. 2 zurück - praktisch wird
 #		ein korrekter Start angetäuscht. Berücksichtigung hier mit Param.
-#		synctime, z.Z. xbmc.sleep(3000).
+#		synctime, z.Z. xbmc.sleep(3000) - wieder verworfen.
 #	Allgemeine Problemlage: inputstream hat mit einigen Streams Syncprobleme
 #		(Video- und/oder Sound-Streams). Dies kann zu endlosem Bufern führen, 
 #		wenn das Addon nach Playerstart Funktionen des Players abfragt (getTime,
