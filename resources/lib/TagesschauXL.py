@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>8</nr>								# Numerierung für Einzelupdate
-#	Stand: 06.05.2023
+#	Stand: 13.07.2023
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -631,6 +631,9 @@ def get_img(item):
 	return img
 	
 # ----------------------------------------------------------------------
+
+# todo: intern. Livesteream separieren 
+
 def XL_Live(ID=''):	
 	PLog('XL_Live:')
 	title = 'TagesschauXL Live'
@@ -650,8 +653,8 @@ def XL_Live(ID=''):
 	else:
 		players = blockextract('class="v-instance" data-v="', page)
 		PLog("players: %d" % len(players))
-		player = players[0]
-		if ID == "international":
+		player = players[0]								# Default: nation. Stream
+		if ID == "international":						
 			player = players[1]
 		PLog(str(player[:80]))	
 
@@ -682,12 +685,12 @@ def XL_Live(ID=''):
 		thumb = BASE_URL + thumb
 			
 	PLog('url_m3u8: '+ url_m3u8); PLog('thumb: ' + thumb)	
-	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true':	# Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true': 		# Sofortstart
 		PLog('Sofortstart: ' + title)
-		PlayVideo(url=url_m3u8, title=title, thumb=thumb, Plot=title)
+		PlayVideo(url=url_m3u8, title=title, thumb=thumb, Plot=title, live="true")
 		return
 	
-	li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=title,  sub_path='')	
+	li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=title,  live='true')	
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 

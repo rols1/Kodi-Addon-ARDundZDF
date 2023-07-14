@@ -2587,8 +2587,10 @@ def ARDSportBilder(title, path, img):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #-------------------------------------------------------------------------------------------------- 
-# 04.06.2023 nur noch von WDRstream (WRD-Lokalzeit) verwendet - baldmöglichst auf
-#	neue ARD-Quellen umstellen 	
+# 04.06.2023 nur noch von WDRstream (WRD-Lokalzeit) verwendet (live=true) - 
+#	baldmöglichst auf neue ARD-Quellen umstellen 
+# 14.07.2023 nicht für ShowSeekPos geeignet - alle Streams starten verzögert am
+#	Pufferanfang, zeigen "large audio sync error" - s.a. WDRstream
 # 
 def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	PLog('ARDSportVideo:');
@@ -2662,10 +2664,10 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 		page, msg = get_page(video_src)								# json mit (nur) Videoquellen laden
 		
 	if '"videoURL' in page or '"audioURL' in page:
-		page = page.replace('":"', '" : "')						# Anpassung an Web-embedded json
+		page = page.replace('":"', '" : "')							# Anpassung an Web-embedded json
 		video_src=''
 		
-	m3u8_url=''; mp_url=''; title_m3u8=''; title_mp=''					# mp_url: mp4 oder mp3
+	m3u8_url=''; mp_url=''; title_m3u8=''; title_mp=''				# mp_url: mp4 oder mp3
 	if '-ardplayer_image-' in video_src:							# Bsp. Frauen-Fußball-WM
 		PLog('-ardplayer_image- in video_src:')
 		# Debug-Url's:
@@ -2687,7 +2689,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 		PLog("m3u8_url: " + m3u8_url)
 		title_m3u8 = "HLS auto | %s" % title_org
 		
-		mp 	= stringextract('quality": 3', 'cdn"', page)		# mp4-HD-Quality od. mp3
+		mp 	= stringextract('quality": 3', 'cdn"', page)			# mp4-HD-Quality od. mp3
 		mp_url= stringextract('stream": "', '"', mp)
 		PLog("mp_url: " + mp_url)
 		if mp_url:
@@ -2742,7 +2744,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true': 	# Sofortstart
 		PLog('Sofortstart: ARDSportPanel')
 		PLog(xbmc.getInfoLabel('ListItem.Property(IsPlayable)')) 
-		PlayVideo(url=m3u8_url, title=title_m3u8, thumb=img, Plot=summ, sub_path="")
+		PlayVideo(url=m3u8_url, title=title_m3u8, thumb=img, Plot=summ, sub_path="", live="")
 		return
 	
 	if img  == "":
@@ -2756,7 +2758,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	title_mp=py2_encode(title_mp); 
 	img=py2_encode(img); summ=py2_encode(summ);
 	if m3u8_url:
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': ''}" %\
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': ''}" %\
 			(quote_plus(m3u8_url), quote_plus(title_m3u8), quote_plus(img), quote_plus(summ))
 		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 			mediatype=mediatype, tagline=title_m3u8, summary=summ) 
@@ -4467,7 +4469,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 			if subget:											# Untertitel holen 
 				get_subtitles(fulldestpath, sub_path)
 			
-			# sleep(10)											# Debug
+			# time.sleep(10)											# Debug
 			line=''
 			msg1 = 'Download abgeschlossen:'
 			msg2 = os.path.basename(fulldestpath) 				# Bsp. heute_Xpress.mp4
@@ -6484,6 +6486,8 @@ def list_WDRstreamlinks(url):
 # 04.03.2022 einige Seiten enthalten bereits eine .m3u8-Quelle während 
 #	der Lokalzeit - außerhalb Verzweigung via deviceids-medp.wdr.de mit
 #	js-Dateilink zum Livestream WDR od. Störungsbild.
+# 14.07.2023 nicht für ShowSeekPos geeignet - alle Streams starten verzögert am
+#	Pufferanfang, zeigen "large audio sync error" - s.a. ARDSportVideo
 #	
 def WDRstream(path, title, img, summ):
 	PLog('WDRstream:')
@@ -6522,13 +6526,13 @@ def WDRstream(path, title, img, summ):
 		
 		if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Sofortstart
 			PLog('Sofortstart: WDRstream')
-			PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, sub_path="")
+			PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, live="true")
 			return	
 		else:
 			summ_par = summ.replace('\n', '||')
 			title=py2_encode(title); summ_par=py2_encode(summ_par)
 			img=py2_encode(img); m3u8_url=py2_encode(m3u8_url)
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': ''}" %\
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': 'true'}" %\
 				(quote_plus(m3u8_url), quote_plus(title), quote_plus(img), quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 				mediatype=mediatype, tagline=title, summary=summ)
@@ -6626,9 +6630,9 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 	# 04.08.2019 Sofortstart nur noch abhängig von Settings und nicht zusätzlich von  
 	#	Param. Merk.
 	PLog(SETTINGS.getSetting('pref_video_direct'))
-	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true':	# Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true': 		# Sofortstart
 		PLog('Sofortstart: SenderLiveResolution')
-		PlayVideo(url=path, title=title, thumb=thumb, Plot=descr, Merk=Merk)
+		PlayVideo(url=path, title=title, thumb=thumb, Plot=descr, live="true")
 		return
 	
 	url_m3u8 = path
@@ -6675,6 +6679,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 
 #-----------------------------
 # Aufruf: Parseplaylist (bei Mehrkanalstreams), SenderLiveResolution
+# Einzelbutton für ausgewählte Livestreams
 # 31.05.2022 umbenannt (vorm. ParseMasterM3u), Code für relative Pfade 
 #	entfernt, ausschl. Behandl. .m3u8 (.master.m3u8 in Parseplaylist),
 #	Verzicht auf lokale Dateiablage
@@ -6693,7 +6698,7 @@ def PlayButtonM3u8(li, url_m3u8, thumb, title, descr, tagline='', sub_path='', s
 
 	title=py2_encode(title); url_m3u8=py2_encode(url_m3u8);
 	thumb=py2_encode(thumb); descr_par=py2_encode(descr_par); sub_path=py2_encode(sub_path);
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+	fparams="&fparams={'url': '%s','title': '%s','thumb': '%s','Plot': '%s','sub_path': '%s','live': 'true'}" %\
 		(quote_plus(url_m3u8), quote_plus(title), quote_plus(thumb), 
 		quote_plus(descr_par), quote_plus(sub_path))	
 	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
@@ -7403,14 +7408,14 @@ def ZDF_Live(url, title): 										# ZDF-Livestreams von ZDFStart
 		
 	if SETTINGS.getSetting('pref_video_direct') == 'true':		# Sofortstart
 		PLog("Sofortstart_ZDF_Live")
-		PlayVideo(url=m3u8_url, title=title_org, thumb=img, Plot=title_org, sub_path="")
+		PlayVideo(url=m3u8_url, title=title_org, thumb=img, Plot=title_org, live="true")
 		return
 	#----------------------
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')										# Home-Button
 
-	cnt=1; sub_path="";
+	cnt=1; 
 	for entry in streamsObject:
 		url = entry["url"]
 		quality = entry["quality"]
@@ -7421,9 +7426,8 @@ def ZDF_Live(url, title): 										# ZDF-Livestreams von ZDFStart
 		
 		PLog("Satz5:")
 		PLog(url);PLog(quality);PLog(typ);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
-			(quote_plus(url), quote_plus(title_org), quote_plus(img), quote_plus(Plot), 
-			quote_plus(sub_path))
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': 'true'}" %\
+			(quote_plus(url), quote_plus(title_org), quote_plus(img), quote_plus(Plot)) 
 		addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
 			fparams=fparams, tagline=Plot, mediatype='video') 
 		cnt=cnt+1
@@ -9442,7 +9446,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 			if buttons:
 				return li
 			else:
-				return []												# leere Liste für build_Streamlists				
+				return []										# leere Liste für build_Streamlists				
 	else:																	# lokale Datei	
 		fname =  os.path.join(M3U8STORE, url_m3u8) 
 		playlist = RLoad(fname, abs_path=True)					
@@ -9454,17 +9458,17 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 				]
 	PLog('#EXT-X-MEDIA' in playlist)
 	# live=True: skip 1 Button, Altern.: Merkmal "_sendung_" in url_m3u8
-	if '#EXT-X-MEDIA' in playlist:											# Mehrkanalstreams: 1 Button
+	if '#EXT-X-MEDIA' in playlist:								# Mehrkanalstreams: 1 Button
 		skip=False
 		for item in skip_list:
 			if item in url_m3u8:
-				skip=True													# i.d.R. ARD-Streams (nicht alle)
+				skip=True										# i.d.R. ARD-Streams (nicht alle)
 				break
 		PLog('skip: ' + str(skip))
-		if skip == False and live:											# Mehrkanalstreams: 1 Button
+		if skip == False and live:								# Mehrkanalstreams: 1 Button
 			stitle = "HLS-Stream"
 			PLog("jump_PlayButtonM3u8")
-			PlayButtonM3u8(li, url_m3u8, thumb, stitle, tagline=track_add, descr=descr)	
+			PlayButtonM3u8(li, url_m3u8, thumb, stitle, tagline=track_add, descr=descr)	# -> live=true
 			return
 	
 	
@@ -9483,16 +9487,16 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		# Playlist Tags s. https://datatracker.ietf.org/doc/html/rfc8216
 		if line.startswith('#EXT-X-MEDIA:') == False and line.startswith('#EXT-X-STREAM-INF') == False:
 			continue
-		if ',GROUP-ID' in line:							# zusätzl. Mehrkanalstreams (Audio)
+		if ',GROUP-ID' in line:									# zusätzl. Mehrkanalstreams (Audio)
 			continue
 		PLog("line: " + line)
 			
-		if line.startswith('#EXT-X-STREAM-INF'):	# tatsächlich m3u8-Datei?
-			url = lines[i + 1]						# URL in nächster Zeile
+		if line.startswith('#EXT-X-STREAM-INF'):				# tatsächlich m3u8-Datei?
+			url = lines[i + 1]									# URL in nächster Zeile
 			PLog("url: " + url)
 			Bandwith = GetAttribute(line, 'BANDWIDTH')
 			Resolution = GetAttribute(line, 'RESOLUTION')
-			Resolution_org = Resolution				# -> Stream_List
+			Resolution_org = Resolution							# -> Stream_List
 
 			try:
 				BandwithInt	= int(Bandwith)
@@ -9501,16 +9505,16 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 			if Resolution:	# fehlt manchmal (bei kleinsten Bandbreiten)
 				Resolution = u'Auflösung ' + Resolution
 			else:
-				Resolution = u'Auflösung unbekannt'	# verm. nur Ton? CODECS="mp4a.40.2"
+				Resolution = u'Auflösung unbekannt'				# verm. nur Ton? CODECS="mp4a.40.2"
 				thumb=R(ICON_SPEAKER)
 			Codecs = GetAttribute(line, 'CODECS')
 			# als Titel wird die  < angezeigt (Sender ist als thumb erkennbar)
 			title='Bandbreite ' + Bandwith
 			if url.find('#') >= 0:	# Bsp. SR = Saarl. Rundf.: Kennzeichnung für abgeschalteten Link
 				Resolution = u'zur Zeit nicht verfügbar!'
-			if url.startswith('http') == False:   		# relativer Pfad? 
-				pos = url_m3u8.rfind('/')				# m3u8-Dateinamen abschneiden
-				url = url_m3u8[0:pos+1] + url 			# Basispfad + relativer Pfad
+			if url.startswith('http') == False:   				# relativer Pfad? 
+				pos = url_m3u8.rfind('/')						# m3u8-Dateinamen abschneiden
+				url = url_m3u8[0:pos+1] + url 					# Basispfad + relativer Pfad
 			if Bandwith == BandwithOld:	# Zwilling -Test
 				title = 'Bandbreite ' + Bandwith + ' (2. Alternative)'
 			
@@ -9537,10 +9541,10 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		Plot = Plot.replace('\n', '||')	
 		descr = Plot.replace('||', '\n')		
 	
-		if descr.strip() == '|':			# ohne EPG: EPG-Verbinder entfernen
+		if descr.strip() == '|':								# ohne EPG: EPG-Verbinder entfernen
 			descr=''
 			
-		if url.startswith('http') == False: # kompl. Pfad fehlt - Bsp.: one, kika
+		if url.startswith('http') == False: 					# kompl. Pfad fehlt - Bsp.: one, kika
 			continue
 		
 		summ=''
@@ -9550,23 +9554,23 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		PLog("SatzParse:")
 		PLog(title); PLog(label); PLog(url[:80]); PLog(thumb); PLog(Plot[:80]); PLog(descr[:80]); 
 		
-		if buttons:															# Buttons, keine Stream_List
+		if buttons:												# Buttons, keine Stream_List
 			title=py2_encode(title); url=py2_encode(url);
 			thumb=py2_encode(thumb); Plot=py2_encode(Plot); 
 			sub_path=py2_encode(sub_path);
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
+			fparams="&fparams={'url': '%s','title': '%s','thumb': '%s','Plot': '%s','sub_path': '%s','live': '%s'}" %\
 				(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot), 
-				quote_plus(sub_path))
+				quote_plus(sub_path), live)
 			addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
 				mediatype='video', tagline=descr, summary=summ) 
-		else:																# nur Stream_List füllen
+		else:													# nur Stream_List füllen
 			# Format: "HLS Einzelstream | Auflösung | Bitrate | Titel#Url"
 			if Resolution_org=='':
 				Resolution_org = "Audiostream"
 			PLog("append: %s, %s.." % (Resolution_org, str(BandwithInt)))
 			Stream_List.append(u'HLS-Stream ** Auflösung %s ** Bitrate %s ** %s#%s' %\
 				(Resolution_org, str(BandwithInt), stitle, url)) # wie Downloadliste
-			if track_add:													# TV-Ton deu, Originalton eng usw.
+			if track_add:										# TV-Ton deu, Originalton eng usw.
 				Stream_List[-1] = Stream_List[-1].replace("HLS-Stream", "HLS, %s" % track_add)
 		
 		li_cnt = li_cnt + 1  	# Listitemzähler												

@@ -10,7 +10,7 @@
 #	
 ################################################################################
 # 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.06.2023
+#	Stand: 13.07.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -245,7 +245,7 @@ def phoenix_Live(href, title, Plot):
 	img = ICON_TVLIVE
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
 		PLog('Sofortstart: phoenix_Live')
-		PlayVideo(url=href, title=title, thumb=img, Plot=Plot)
+		PlayVideo(url=href, title=title, thumb=img, Plot=Plot, live="true")
 		return	
 							
 	tag = Plot.replace("||", "\n")
@@ -253,7 +253,7 @@ def phoenix_Live(href, title, Plot):
 	title=py2_encode(title); href=py2_encode(href); img=py2_encode(img);
 	Plot=py2_encode(Plot);
 	label = title.replace('Live', 'auto')
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': 'false'}" %\
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'live': 'true'}" %\
 		(quote_plus(href), quote_plus(title), quote_plus(img), quote_plus(Plot))
 	addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
 		fparams=fparams, mediatype='video', tagline=tag) 		
@@ -269,6 +269,8 @@ def phoenix_Start():
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 # ----------------------------------------------------------------------
+# Nutzung api.ardmediathek.de in ARDnew. Die phoenix-eigene Webseite
+#	listet zwar mehr Sendungen, die aber häufig keine Videos enthalten.
 def Verpasst():	
 	PLog('Verpasst:')
 

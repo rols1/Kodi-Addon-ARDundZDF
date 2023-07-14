@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>33</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.06.2023
+#	Stand: 13.07.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -226,7 +226,7 @@ def get_live_data(name):
 	
 	# Format err_par: title, tag, summ, img, href = get_live_data
 	err_par = [u"[B]LIVE[/B]", "", "", thumb, href]	# Stream ohne Daten
-	page = get_ArtePage('get_live_data', "Arte Live", path)
+	page = get_ArtePage('get_live_data', "Arte Live", path) # EPG Arte
 	if page == "":			
 		return err_par
 	#RSave('/tmp/x_Arte_Live.json', py2_encode(str(page)))	# Debug	
@@ -317,7 +317,7 @@ def arte_Live(href, title, Plot, img):
 
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
 		PLog('Sofortstart: arte_Live')
-		PlayVideo(url=href, title=title, thumb=img, Plot=Plot)
+		PlayVideo(url=href, title=title, thumb=img, Plot=Plot, live="true")
 		return	
 							
 	Plot_par = Plot.replace('\n', '||')
@@ -326,7 +326,7 @@ def arte_Live(href, title, Plot, img):
 	Plot_par=py2_encode(Plot_par);
 	label = u"%s (HLS)" % L(u"Bandbreite und Auflösung automatisch")
 	tag = Plot.replace('||', '\n')
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'Merk': 'false'}" %\
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '', 'live': 'true'}" %\
 		(quote_plus(href), quote_plus(title), quote_plus(img), quote_plus(Plot_par))
 	addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
 		fparams=fparams, mediatype='video', tagline=tag) 		

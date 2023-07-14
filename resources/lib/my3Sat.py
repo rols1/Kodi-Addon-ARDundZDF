@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.05.2023
+#	Stand: 13.07.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1708,13 +1708,13 @@ def Live(name, epg=''):
 	Plot	 = 'Live: ' + epg + '\n\n' + summary
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		PLog('Sofortstart: Live')
-		PlayVideo(url=m3u8link, title='3Sat Live TV', thumb=img, Plot=Plot)
+		PlayVideo(url=m3u8link, title='3Sat Live TV', thumb=img, Plot=Plot, live="true")
 		return	
 							
 	Plot_par = Plot.replace('\n', '||')
 	title=py2_encode(title); m3u8link=py2_encode(m3u8link); img=py2_encode(img);
 	Plot_par=py2_encode(Plot_par);
-	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': ''}" %\
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': 'true'}" %\
 		(quote_plus(m3u8link), quote_plus(title), quote_plus(img), quote_plus(Plot_par))
 	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 		mediatype='video', tagline=Plot) 		
