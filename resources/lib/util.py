@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>58</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.07.2023
+# 	<nr>59</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.07.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3291,17 +3291,20 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #		Param. Merk (added in Watch): True=Video aus Merkliste  
 #
 # 	Aufruf indirekt (Kennz. Playable): 	
-#		ARDStartRubrik, ARDStartSingle, SinglePage (Ausnahme Podcasts),
-#		SingleSendung (außer m3u8_master), SenderLiveListe, 
-#		ZDF_get_content, 
-#		Modul zdfMobile: PageMenu, SingleRubrik
+#		SenderLiveListe
+#		ARD_FlatListEpisodes, get_json_content 
+#		ZDF_Live, ZDF_get_content 
+#		ARDSportVideo, ARDSportMedia, ARDSportSliderSingle, AddonStartlist,
+#		WDRstream, VideoTools (Downloads)
 #							
 #	Aufruf direkt: 
 #		ARDStartVideoStreams, ARDStartVideoMP4,
 #		SingleSendung (m3u8_master), SenderLiveResolution 
-#		show_formitaeten (ZDF),
-#		Modul zdfMobile: ShowVideo
-#		ab 28.11.2020: PlayMonitor (Modul Playlist, Param. playlist)
+#		ZDF_Live, show_formitaeten (ZDF)
+#		
+#		PlayMonitor (Modul Playlist, Param. playlist), 
+#		PlayVideo_Direct, ARD_get_strmStream
+#		WDRstream
 #
 #	Format sub_path s. https://alwinesch.github.io/group__python__xbmcgui__listitem.html#ga24a6b65440083e83e67e5d0fb3379369
 #	Die XML-Untertitel der ARD werden gespeichert + nach SRT konvertiert (einschl. minus 10-Std.-Offset)
@@ -3322,9 +3325,9 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #		startet korrekt (Leia, Matrix, Nexus), Issue geschlossen:
 #		https://github.com/rols1/Kodi-Addon-ARDundZDF/issues/19
 #
-def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='', seekTime=0):	
+def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0,  live=""):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
-	PLog(Merk); PLog(sub_path); PLog(seekTime);
+	PLog(sub_path); PLog(seekTime);
 	
 	Plot=transl_doubleUTF8(Plot)
 	Plot=(Plot.replace('[B]', '').replace('[/B]', ''))	# Kodi-Problem: [/B] wird am Info-Ende platziert
@@ -3369,7 +3372,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 	# 29.01.2020 sleep verhindert selbständige Restarts nach Stop - Bsp. phoenix/
 	#	Sendungen/"Armes Deutschland? Deine Kinder" 
 	IsPlayable = xbmc.getInfoLabel('ListItem.Property(IsPlayable)') # 'true' / 'false'
-	PLog("IsPlayable: %s, Merk: %s" % (IsPlayable, Merk))			# IsPlayable: "false" / "true" !
+	PLog("IsPlayable: %s" % IsPlayable)								# IsPlayable: "false" / "true" !
 	PLog("kodi_version: " + KODI_VERSION)							# Debug
 	# kodi_version = re.search('(\d+)', KODI_VERSION).group(0) 		# Major-Version reicht hier - entfällt
 	
@@ -3535,13 +3538,12 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, Merk='false', playlist='',
 						PLog("Subtitles: abort_player_detect")
 						player_detect=False
 						break
-		
+
 		# Streamuhrzeit entspr. Setting + Status Player: 
-		PLog("player_detect: " + str(player_detect))
+		PLog("player_detect: %s, live: %s" % (str(player_detect), live))
 		if SETTINGS.getSetting('pref_inputstream') == 'true':
-			if SETTINGS.getSetting('pref_streamtime') == 'true':
+			if SETTINGS.getSetting('pref_streamtime') == 'true' and live:
 				if player_detect:
-					xbmc.sleep(5000)
 					from threading import Thread			# Github-issue #30: Seek-Pos. -> Streamuhrzeit
 					PLog("Thread_ShowSeekPos_start:")
 					bg_thread = Thread(target=ShowSeekPos, args=(player, url))
@@ -3760,6 +3762,9 @@ def open_addon(addon_id, cmd):
 #		zwingend erforderlich (ohne Thread endloses Buffern)
 #	Sportschaustream ../ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/..
 #		Start mit 2-4 absinkend auf Minuswerte
+#	ZDF Event 9 (Olympia): Issue hier irrelevant - inputstream scheiter mit
+#		"Segment download failed .. with error 404", Stream kommt hier nicht
+#		an.
 #	ZDF Event-Stream 01 und 02:  inputstream bricht nach Errors (Download failed 
 #		with error 404) ab - startet hier mit LastSeek 0 und wird daher für 
 #		die Stream-Uhrzeit verworfen. Um den Stream sichtbar zu machen, muss 
@@ -3773,13 +3778,15 @@ def open_addon(addon_id, cmd):
 #		TotalTime-Werte zurück und verhindern so die Buffering-Erkennung.
 #		Gibt man vor der Schleife einige Sek.
 #		Sync-Zeit, fallen sie auf TotalTime 1 od. 2 zurück - praktisch wird
-#		ein korrekter Start angetäuscht. Berücksichtigung hier mit Param.
-#		synctime, z.Z. xbmc.sleep(3000) - wieder verworfen.
+#		ein korrekter Start angetäuscht. 
+#		Dieses Streams hier nicht zugelassen (live="").
 #	Allgemeine Problemlage: inputstream hat mit einigen Streams Syncprobleme
 #		(Video- und/oder Sound-Streams). Dies kann zu endlosem Bufern führen, 
 #		wenn das Addon nach Playerstart Funktionen des Players abfragt (getTime,
 #		getTotalTime). Dabei spielen Zeitverzögerungen (time.sleep, xbmx.sleep,
 #		waitForAbort) offensichtlich keine Rolle.
+#		Lösung: 2 Sync-Checks, einmal auf getTime<3 nach 3 Sek., sowie Test auf
+# 			extrem Werte (<0 oder > TotalTime).
 #	Infos zu inputstream.adaptive: https://github.com/xbmc/inputstream.adaptive/
 #		(s. issues und wiki/Settings), Kodi-Forum zu [VideoPlayer InputStream]: 
 #		https://forum.kodi.tv/forumdisplay.php?fid=312.
@@ -3787,51 +3794,64 @@ def open_addon(addon_id, cmd):
 #		getestet wurde mit den Defaultsettings.
 #	Bisher keine ffmpeg-Analyse für Eignung/Nichteignung von Streams
 #	monitor.waitForAbort() blockiert - für die while-Schleife sind mind. 1 sec
-#		Timeout und "not" erforderlich. Der Timeout-Param. ersetzt hier 
-#		xbmc.sleep.
-#	
+#		Timeout und "not" erforderlich. Wieder entfernt und durch while-Schleife
+#		ersetzt.
+#    
 def ShowSeekPos(player, url):
 	PLog('ShowSeekPos: ' + url)		
 	import resources.lib.EPG as EPG
 	
+	MinusSeekMax = -10							# detect sync errors
 	icon=""										# -> Kodi's i-Symbol
 	now = EPG.get_unixtime(onlynow=True)		# unix-sec passend zu TotalTime, LastSeek
 	now_dt = datetime.datetime.fromtimestamp(int(now))
 	StartTime = now_dt.strftime("%H:%M:%S")
 		
-	TotalTime = int(player.getTotalTime())    # sec, float -> int, max. Puffergröße
-	if not TotalTime:
-		PLog("player_is_off, TotalTime=0")
-		xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
-		return
-
+	TotalTime = int(player.getTotalTime())    	# sec, float -> int, max. Puffergröße
 	LastSeek = int(player.getTime())            # Basis-Wert für akt. Uhrzeit	
 	PLog("StartTime: %s, TotalTime: %d, LastSeek: %d" % (StartTime, TotalTime, LastSeek))
-	if LastSeek == 0: 							# vermutl. kein Livestream od. endloses
-		PLog("no_live_stream_detect: ")			# 	Buffering
+	if not TotalTime or LastSeek <= 3:			# Start am Pufferanfang -> Sync-Problem
+		PLog("player_is_off or SyncProblem")
 		xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
 		return
 
-	LastBufTime = StartTime						# detect sync errors
-	monitor = xbmc.Monitor()	
+	monitor = xbmc.Monitor()
+	LastBufTime = StartTime						# detect sync errors direkt
+	p_list=[]									# dto. im 3-sec-Rahmen 									
 	while not monitor.waitForAbort(1):
-		xbmc.sleep(1000)
 		if player.isPlaying():
-			show_time=False
+			show_time=False; syncfail=False
 			try:
 				play_time = player.getTime()	# akt. Pos im Puffer (0=Pufferstart)
 			except:
 				play_time=LastSeek
-				
+					
 			p = int(play_time)
 			PLog("play_time_p: %d, LastSeek: %d" % (p, LastSeek)) 	# Debug
-			# Sportschaustream: Start mit 2-4 absinkend auf Minuswerte - s.o.
-			# wdrlokalzeit Start mit 1, buffert - s.o.
-			if p <= 1 or p > TotalTime: 		# sync error? Bsp. LastSeek QVC: 1271296  
-				PLog("break_on_getTime_1")
-				xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
+			
+			# ----------------------------------					# Sync-Checks
+			# sync-Check: Streampos. verharrt am Pufferanfang 
+			#	Bsp. kika, phoenix, TSchauXL, wdrlokalzeit
+			p_list.append(p)					# 3 sec sync-Check
+			
+			if len(p_list) >= 3:
+				if max(p_list) < 1:				# nach 3 sec ist < 1 ein Sync-Indiz
+					PLog("p_list_syncfail: %d, %d" % (p_list[-1], p_list[0]))
+					syncfail = True
+				p_list=[]			
+			
+			# sync-Check: extreme Abweichungen
+			# Bsp.: Sportschaustream: Start mit 2-4 absinkend auf Minuswerte - s.o.,
+			if p < MinusSeekMax or p > TotalTime: # sync error? Bsp. LastSeek QVC: 1271296
+				PLog("syncfail_extrem: %d, %d" % (p, TotalTime))
+				syncfail = True
+				  
+			if syncfail:
+				PLog("monitor_break_on_syncfail")
+				xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"Sync-Error - Abbruch", icon,3000, sound=True)
 				xbmc.sleep(2000)
-				break							# verhind. Blockade durch Buffering (Bsp. WDR-Lokalzeit)
+				break							# verhind. Blockade durch Buffering							
+			# ----------------------------------
 			
 			# regelm. Schwankung bei Livestreams 6-10 (empirisch):
 			if (LastSeek-p) > 10:				# rückwärts	im Puffer	
@@ -3856,8 +3876,7 @@ def ShowSeekPos(player, url):
 				else:
 					PLog("skip_sync_error")
 					
-			LastSeek=p		
-			
+			LastSeek=p					
 		else:
 			PLog("monitor_stop")
 			break
