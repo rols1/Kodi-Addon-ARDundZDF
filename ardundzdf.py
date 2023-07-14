@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>118</nr>										# Numerierung für Einzelupdate
+# 	<nr>119</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.7'
 VDATE = '14.07.2023'
 
@@ -6526,13 +6526,13 @@ def WDRstream(path, title, img, summ):
 		
 		if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Sofortstart
 			PLog('Sofortstart: WDRstream')
-			PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, live="true")
+			PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=summ, live="")
 			return	
 		else:
 			summ_par = summ.replace('\n', '||')
 			title=py2_encode(title); summ_par=py2_encode(summ_par)
 			img=py2_encode(img); m3u8_url=py2_encode(m3u8_url)
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': 'true'}" %\
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': ''}" %\
 				(quote_plus(m3u8_url), quote_plus(title), quote_plus(img), quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 				mediatype=mediatype, tagline=title, summary=summ)
