@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>59</nr>										# Numerierung für Einzelupdate
+# 	<nr>60</nr>										# Numerierung für Einzelupdate
 #	Stand: 14.07.2023
 
 # Python3-Kompatibilität:
@@ -3325,7 +3325,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #		startet korrekt (Leia, Matrix, Nexus), Issue geschlossen:
 #		https://github.com/rols1/Kodi-Addon-ARDundZDF/issues/19
 #
-def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0,  live=""):	
+def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, Merk="", live=""):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
 	PLog(sub_path); PLog(seekTime);
 	

@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>8</nr>								# Numerierung für Einzelupdate
-#	Stand: 13.07.2023
+# 	<nr>9</nr>								# Numerierung für Einzelupdate
+#	Stand: 14.07.2023
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen

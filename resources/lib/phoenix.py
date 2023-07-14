@@ -9,8 +9,8 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.07.2023
+# 	<nr>12</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.07.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
