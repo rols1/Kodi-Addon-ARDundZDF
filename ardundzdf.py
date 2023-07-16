@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>119</nr>										# Numerierung für Einzelupdate
-VERSION = '4.7.7'
-VDATE = '14.07.2023'
+VERSION = '4.7.8'
+VDATE = '16.07.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2932,7 +2932,7 @@ def ARDSportWDRArchiv():
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]Tour de France[/B]"						# Großevent	
-	tag = u"Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen der Tour de France 2022."
+	tag = u"Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen der Tour de France."
 	cacheID = "Sport_TourdeFrance"
 	img = "https://images.sportschau.de/image/4caa92cb-1518-4489-8bec-3b0764c14aa8/AAABgQJrLa8/AAABgPp7Db4/16x9-1280/tour-de-france-bild-102.jpg"
 	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"

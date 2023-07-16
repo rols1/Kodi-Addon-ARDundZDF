@@ -10,6 +10,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.07.2023 4.7.8
+			Parseplaylist: url_check der master-m3u8-Auswertung vorangestellt (rel. für
+			VideoEvent-Streams).
+			get_json_content (ARDnew): Anpassung Sek.-Format für Kennz. ganzer Sendungen
+			(seconds_translate).
+			get_page (util): vorzeitiger Ausstieg, falls in Stufe 1 (get_page1) ein HTTP
+			Error auftaucht (rel. für VideoEvent-Streams).
+			PlayVideo (util): play_time und video_dur vorbelegt für Rückgabe bei url_check
+			=False.
+			PlayVideo (util): zusätzl. Param. live als Kennung für Livestreams (relevant
+			für ThreadShowSeekPos), Anpassungen: arte_Live, SenderLiveResolution, 
+			Parseplaylist, PlayButtonM3u8, WDRstream + ARDSportVideo (WDR-Livestreams), 
+			Live (my3Sat), phoenix_Live, XL_Live, ZDF_Live.
+			ShowSeekPos (util): Test auf Verfügbarkeit des Players bereits vor showSubtitles
+			in PlayVideo, 2 Sync-Checks in waitForAbort-Schleife eingefügt, WRD-Lokalzeit-
+			Streams nicht zugelassen (live="" in WDRstream  + ARDSportVideo).		
+
 25.06.2023 4.7.7
 			ShowSeekPos (util): neu - blendet nach Verschieben der Pufferposition von
 			inputstream.adaptive die passende Uhrzeit per Notification ein (Aufruf in

@@ -2032,7 +2032,7 @@ def time_translate(timecode, add_hour=True, day_warn=False):
 					ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
 					add_hour = 1					# Default
 					#PLog("ts: %s, start_ts: %s , end_ts: %s" % (ts, start_ts, end_ts))
-					if ts > start_ts and ts < end_ts:	# Timecode in Sommerzeit
+					if ts > start_ts and ts < end_ts:	# Timecode liegt in Sommerzeit
 						add_hour = 2
 					PLog("add_hour: %s" % add_hour)
 			except Exception as exception:
@@ -2040,7 +2040,7 @@ def time_translate(timecode, add_hour=True, day_warn=False):
 				return timecode
 
 		try:
-			# ts = datetime.strptime(timecode, date_format)  # None beim 2. Durchlauf (s.o.)      
+			# ts = datetime.strptime(timecode, date_format)  # None beim 2. Durchlauf (s.o. 26.08.2019)      
 			ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
 			new_ts = ts + datetime.timedelta(hours=add_hour) # add-Faktor addieren
 			ret_ts = new_ts.strftime("%d.%m.%Y %H:%M")
@@ -2053,7 +2053,7 @@ def time_translate(timecode, add_hour=True, day_warn=False):
 				PLog(new_ts); 
 				PLog("sday-today: %s" % dif)
 				try:
-					if dif.find("day") < 0:				# nur Stunden: 16:32:05.225575
+					if dif.find("day") < 0:					# nur noch Stunden: 16:32:05.225575
 						dif = "1"
 					else:
 						dif = re.search(u'(\d+) day', dif).group(1)
@@ -3544,6 +3544,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		if SETTINGS.getSetting('pref_inputstream') == 'true':
 			if SETTINGS.getSetting('pref_streamtime') == 'true' and live:
 				if player_detect:
+					xbmc.sleep(2000)
 					from threading import Thread			# Github-issue #30: Seek-Pos. -> Streamuhrzeit
 					PLog("Thread_ShowSeekPos_start:")
 					bg_thread = Thread(target=ShowSeekPos, args=(player, url))
@@ -3878,7 +3879,7 @@ def ShowSeekPos(player, url):
 					
 			LastSeek=p					
 		else:
-			PLog("monitor_stop")
+			PLog("monitor_ShowSeekPos_stop")
 			break
 				
 	return
