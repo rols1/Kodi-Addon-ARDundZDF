@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>119</nr>										# Numerierung für Einzelupdate
+# 	<nr>120</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.8'
-VDATE = '16.07.2023'
+VDATE = '17.07.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -9566,7 +9566,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 		else:													# nur Stream_List füllen
 			# Format: "HLS Einzelstream | Auflösung | Bitrate | Titel#Url"
 			if Resolution_org=='':
-				Resolution_org = "Audiostream"
+				Resolution_org = "0x0 Audiostream"				# 0x0 -> sorted in PlayVideo_Direct
 			PLog("append: %s, %s.." % (Resolution_org, str(BandwithInt)))
 			Stream_List.append(u'HLS-Stream ** Auflösung %s ** Bitrate %s ** %s#%s' %\
 				(Resolution_org, str(BandwithInt), stitle, url)) # wie Downloadliste

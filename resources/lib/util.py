@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>60</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.07.2023
+# 	<nr>61</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.07.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3208,6 +3208,8 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 			PLog("Default_Url1: %s" % Default_Url)
 		else:
 			mode = 'HLS/Einzelstream'
+			if "** auto **" in Stream_List[0]:				# sonst sort_error für Auflösung 
+				del Stream_List[0]
 	else: 
 		mode = 'MP4'
 	PLog("mode: " + mode)
