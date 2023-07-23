@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>122</nr>										# Numerierung für Einzelupdate
+# 	<nr>123</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.9'
 VDATE = '23.07.2023'
 
@@ -7414,24 +7414,30 @@ def ZDF_Live(url, title): 										# ZDF-Livestreams von ZDFStart
 		MyDialog(msg1, "", '')
 		return
 	jsonObject = json.loads(page)
-	PLog(str(jsonObject)[:80])	
+	PLog(str(jsonObject)[:80])
 	
-	# epgCluster kann fehlen bei zeitweisen Livestreams (Events):
-	try:
-		for clusterObject in jsonObject["epgCluster"]:
-			clusterLive = clusterObject["liveStream"]
-			if clusterLive["titel"] == title_org:
-				break
-	except Exception as exception:
-		PLog("clusterLive_error: " + str(exception))
-		msg1 = u'%s:' % title
-		msg2 = "leider kein Video verfügbar."
-		MyDialog(msg1, msg2, '')
-		return
-		
-	streamsObject = clusterLive["formitaeten"]
-	m3u8_url = streamsObject[0]["url"]							# 1. form. = auto
-	img = ZDF_get_img(clusterLive)
+	if '"formitaeten"' in page:						# abweichendes Format
+		PLog("formitaetenInPage")
+		streamsObject = jsonObject["document"]["formitaeten"]
+		m3u8_url = streamsObject[0]["url"]							# 1. form. = auto
+		PLog("m3u8_url: " + m3u8_url)
+		img = ZDF_get_img(jsonObject["document"])
+	else:
+		# epgCluster kann fehlen bei zeitweisen Livestreams, s.o.:		
+		try:
+			for clusterObject in jsonObject["epgCluster"]:
+				clusterLive = clusterObject["liveStream"]
+				if clusterLive["titel"] == title_org:
+					break
+		except Exception as exception:
+			PLog("clusterLive_error: " + str(exception))
+			msg1 = u'%s:' % title
+			msg2 = "leider (noch) kein Video verfügbar."
+			MyDialog(msg1, msg2, '')
+			return
+		streamsObject = clusterLive["formitaeten"]
+		m3u8_url = streamsObject[0]["url"]							# 1. form. = auto
+		img = ZDF_get_img(clusterLive)
 		
 	if SETTINGS.getSetting('pref_video_direct') == 'true':		# Sofortstart
 		PLog("Sofortstart_ZDF_Live")
@@ -7457,8 +7463,7 @@ def ZDF_Live(url, title): 										# ZDF-Livestreams von ZDFStart
 			(quote_plus(url), quote_plus(title_org), quote_plus(img), quote_plus(Plot)) 
 		addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
 			fparams=fparams, tagline=Plot, mediatype='video') 
-		cnt=cnt+1
-			
+		cnt=cnt+1		
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
