@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>122</nr>										# Numerierung für Einzelupdate
-VERSION = '4.7.8'
+VERSION = '4.7.9'
 VDATE = '23.07.2023'
 
 
@@ -2847,6 +2847,14 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportHub", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
+	title = u"ARD Event Streams (eingeschränkt verfügbar)"		# ARD Event Streams im Haupt-PRG	
+	tag = u"Event Streams von BR, MDR, NDR, WDR | eingeschränkt verfügbar"
+	img = R("tv-livestreams.png")
+	title=py2_encode(title)
+	fparams="&fparams={'title': '%s', 'listname': '%s', 'fanart': '%s'}" % (quote(title), quote(title), img)
+	addDir(li=li, label=title, action="dirList", dirID="SenderLiveListe", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+	
 	title = u"ARD Audio Event Streams"							# Audio Event Streams im Haupt-PRG	
 	tag = u"Event- und Netcast-Streams, Sport in der Audiothek, Audiostreams auf sportschau.de"
 	img = R("radio-livestreams.png")
@@ -7502,8 +7510,8 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 	
 	if not maxWidth:				# Teaserbild, Altern. 1280 für Video
 		maxWidth=840
-	multi=True; verf=""; url=""; stream=""; scms_id=""
-	headline=""
+	multi=True; verf=""; url=""; stream=""; scms_id=""; now_live=""
+	headline=""; 
 	season=""; episode=""			# episodeNumber, seasonNumber
 	
 	if "url" in obj:
@@ -7537,6 +7545,10 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 			PLog("label: " + obj["label"])
 			if obj["label"] == "Livestream":
 				typ = "livevideo"								# z.B. Events, s.u.
+			if obj["label"] == "Jetzt live":
+				typ = "livevideo"								# aktuell ausgestrahlt
+				now_live=True
+				
 		
 	img="";
 	if("teaserBild" in obj):
@@ -7599,6 +7611,8 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 				t2 = screentxt[0]["title"]						# Bsp. Mo., 12:45 - 15:35 Uhr
 				tag = "[B]%s | %s[/B]" % (t1,  t2)
 				title = "[B]LIVE: [/B] %s" % title
+				if now_live:
+					title = "[B]JETZT[/B] %s" % title
 			except Exception as exception:
 				PLog("screentxt_error: " + str(exception))
 				tag=""

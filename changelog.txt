@@ -10,6 +10,19 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+23.07.2023 4.7.9
+			Sofortstart: vor Sortierung Stream_List in PlayVideo_Direct das Element mit
+			Auflösung "** auto **" entfernt, um sort_error zu verhindern (falls einzelne
+			Auflösung im Setting gewählt). Dto. in Parseplaylist bei Audiostreams die
+			Auflösung 0x0 eingefügt. 
+			ZDF-Livestreams: Erkennung + Kenzeichnung von zeitlich begrenzten Livestreams
+			(Events) - Anpassung in ZDF_get_content (label=Livestream, tag: Verfügbarkeit),
+			ZDF_Live (clusterLive_error), ZDF_PageMenu (Abgleich entry["type"] -> Abgleich 
+			typ).
+			livesenderTV.xml: Zusatz "Olympia" bei den ARD-Eventstreams "WDR Spezial"
+			entfernt (obsolet).
+			ARDSportWDR: Button "ARD Event Streams" hinzugefügt (-> SenderLiveListe).
+
 16.07.2023 4.7.8
 			Parseplaylist: url_check der master-m3u8-Auswertung vorangestellt (rel. für
 			VideoEvent-Streams).
