@@ -2,10 +2,10 @@
  <channels_info>
   <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
   <imgsource>Arauco</imgsource>
-  <nr>39</nr>
+  <nr>40</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
-  <date>20.06.2023 rols</date>
+  <date>23.07.2023 rols</date>
   <ARDsource></ARDsource>
   <ZDFsource>https://www.zdf.de/live-tv</ZDFsource>
   <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ Button:Alle Sender</info>
@@ -733,7 +733,7 @@
 			<date>11.02.2021</date>
 		</item>
 		<item>
-			<title>WDR Spezial 1 (Olympia)</title>
+			<title>WDR Spezial 1</title>
 			<hrefsender></hrefsender>
 			<link>https://wdrspezial.akamaized.net/hls/live/2012020/wdr_spezial1/index.m3u8</link>
 			<thumbnail>tv-wdr.png</thumbnail>
@@ -742,7 +742,7 @@
 			<date>01.02.2022</date>
 		</item>
 		<item>
-			<title>WDR Spezial 2 (Olympia)</title>
+			<title>WDR Spezial 2</title>
 			<hrefsender></hrefsender>
 			<link>https://wdrspezial.akamaized.net/hls/live/2012067/wdr_spezial2/index.m3u8</link>
 			<thumbnail>tv-wdr.png</thumbnail>
@@ -751,7 +751,7 @@
 			<date>01.02.2022</date>
 		</item>
 		<item>
-			<title>WDR Spezial 3 (Olympia)</title>
+			<title>WDR Spezial 3</title>
 			<hrefsender></hrefsender>
 			<link>https://wdrspezial.akamaized.net/hls/live/2012068/wdr_spezial3/index.m3u8</link>
 			<thumbnail>tv-wdr.png</thumbnail>
@@ -760,7 +760,7 @@
 			<date>01.02.2022</date>
 		</item>
 		<item>
-			<title>WDR Spezial 4 (Olympia)</title>
+			<title>WDR Spezial 4</title>
 			<hrefsender></hrefsender>
 			<link>https://wdrspezial.akamaized.net/hls/live/2012069/wdr_spezial4/index.m3u8</link>
 			<thumbnail>tv-wdr.png</thumbnail>
@@ -769,7 +769,7 @@
 			<date>01.02.2022</date>
 		</item>
 		<item>
-			<title>WDR Spezial 5 (Olympia)</title>
+			<title>WDR Spezial 5</title>
 			<hrefsender></hrefsender>
 			<link>https://wdrspezial.akamaized.net/hls/live/2012070/wdr_spezial5/index.m3u8</link>
 			<thumbnail>tv-wdr.png</thumbnail>
@@ -778,7 +778,7 @@
 			<date>01.02.2022</date>
 		</item>
 		<item>
-			<title>WDR Spezial 6 (Olympia)</title>
+			<title>WDR Spezial 6</title>
 			<hrefsender></hrefsender>
 			<link>https://wdrspezial.akamaized.net/hls/live/2013621/wdr_spezial6/index.m3u8</link>
 			<thumbnail>tv-wdr.png</thumbnail>
