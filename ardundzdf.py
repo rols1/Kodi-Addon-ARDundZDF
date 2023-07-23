@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>123</nr>										# Numerierung für Einzelupdate
+# 	<nr>124</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.9'
 VDATE = '23.07.2023'
 
@@ -7403,10 +7403,13 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 # Aufruf: ZDF_Rubriken
 # Seite enthält alle ZDF-Sender, einschl. EPG für akt. Tag
 #
-def ZDF_Live(url, title): 										# ZDF-Livestreams von ZDFStart
+def ZDF_Live(url, title): 											# ZDF-Livestreams von ZDFStart
 	PLog('ZDF_Live: '  + url); 
 	PLog(title)
-	title_org=title
+	if "[/B]" in title:												# entfernen: [B]LIVE: [/B]
+		pos = title.find("[/B]")
+		title_org = title[pos+5:]
+	PLog(title_org)
 		
 	page, msg = get_page(path=url)
 	if not page:
@@ -7416,7 +7419,7 @@ def ZDF_Live(url, title): 										# ZDF-Livestreams von ZDFStart
 	jsonObject = json.loads(page)
 	PLog(str(jsonObject)[:80])
 	
-	if '"formitaeten"' in page:						# abweichendes Format
+	if '"formitaeten"' in page and '"epgCluster"' not in page:		# abweichendes Format
 		PLog("formitaetenInPage")
 		streamsObject = jsonObject["document"]["formitaeten"]
 		m3u8_url = streamsObject[0]["url"]							# 1. form. = auto
@@ -7441,7 +7444,7 @@ def ZDF_Live(url, title): 										# ZDF-Livestreams von ZDFStart
 		
 	if SETTINGS.getSetting('pref_video_direct') == 'true':		# Sofortstart
 		PLog("Sofortstart_ZDF_Live")
-		PlayVideo(url=m3u8_url, title=title_org, thumb=img, Plot=title_org, live="true")
+		PlayVideo(url=m3u8_url, title=title, thumb=img, Plot=title, live="true")
 		return
 	#----------------------
 	
@@ -7460,7 +7463,7 @@ def ZDF_Live(url, title): 										# ZDF-Livestreams von ZDFStart
 		PLog("Satz5:")
 		PLog(url);PLog(quality);PLog(typ);
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': 'true'}" %\
-			(quote_plus(url), quote_plus(title_org), quote_plus(img), quote_plus(Plot)) 
+			(quote_plus(url), quote_plus(title), quote_plus(img), quote_plus(Plot)) 
 		addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
 			fparams=fparams, tagline=Plot, mediatype='video') 
 		cnt=cnt+1		
