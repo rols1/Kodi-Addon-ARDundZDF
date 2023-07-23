@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>121</nr>										# Numerierung für Einzelupdate
+# 	<nr>122</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.8'
-VDATE = '20.07.2023'
+VDATE = '23.07.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7078,7 +7078,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			PLog(stage); PLog(typ); PLog(title);
 			title = repl_json_chars(title)
 			tag = repl_json_chars(tag)
-			if entry["type"]=="video":								# Videos
+			if typ=="video":								# Videos
 				if "channel" in entry:								# Zusatz Sender
 					sender = entry["channel"]
 					tag = "%s | %s" % (tag, sender)
@@ -7089,12 +7089,12 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 				PLog("fparams: " + fparams)	
 				addDir(li=li, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
-			elif entry["type"]=="livevideo":
+			elif typ=="livevideo":
 				fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 				PLog("fparams: " + fparams)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_Live", fanart=img, 
 					thumb=img, fparams=fparams, summary=descr, tagline=tag, mediatype=mediatype)   
-			elif entry["type"]=="externalUrl":						# Links zu anderen Sendern
+			elif typ=="externalUrl":						# Links zu anderen Sendern
 				if "KiKANiNCHEN" in title:
 					PLog("Link_KiKANiNCHEN")
 					KIKA_START="https://www.kika.de/bilder/startseite-104_v-tlarge169_w-1920_zc-a4147743.jpg"	# ab 07.12.2022
@@ -7406,13 +7406,21 @@ def ZDF_Live(url, title): 										# ZDF-Livestreams von ZDFStart
 		MyDialog(msg1, "", '')
 		return
 	jsonObject = json.loads(page)
-	PLog(str(jsonObject)[:80])
-
+	PLog(str(jsonObject)[:80])	
 	
-	for clusterObject in jsonObject["epgCluster"]:
-		clusterLive = clusterObject["liveStream"]
-		if clusterLive["titel"] == title_org:
-			break
+	# epgCluster kann fehlen bei zeitweisen Livestreams (Events):
+	try:
+		for clusterObject in jsonObject["epgCluster"]:
+			clusterLive = clusterObject["liveStream"]
+			if clusterLive["titel"] == title_org:
+				break
+	except Exception as exception:
+		PLog("clusterLive_error: " + str(exception))
+		msg1 = u'%s:' % title
+		msg2 = "leider kein Video verfügbar."
+		MyDialog(msg1, msg2, '')
+		return
+		
 	streamsObject = clusterLive["formitaeten"]
 	m3u8_url = streamsObject[0]["url"]							# 1. form. = auto
 	img = ZDF_get_img(clusterLive)
@@ -7525,6 +7533,10 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 	typ=''	
 	if("type" in obj):
 		typ = obj["type"]
+		if ("label" in obj):
+			PLog("label: " + obj["label"])
+			if obj["label"] == "Livestream":
+				typ = "livevideo"								# z.B. Events, s.u.
 		
 	img="";
 	if("teaserBild" in obj):
@@ -7533,9 +7545,11 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 				img=imageObject["url"];
 	
 	dur=''
-	if("length" in obj):
+	if("length" in obj) or typ == "livevideo":					# ein. Video / Livestream
 		multi = False
-		sec = obj["length"]
+		sec=""; fsk="none"; geo="none"; 
+		if "length" in obj:
+			sec = obj["length"]
 		if sec:
 			dur = time.strftime('%H:%M Std.', time.gmtime(sec))	
 		avail=''	
@@ -7543,13 +7557,14 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 			avail = obj["offlineAvailability"]
 			avail =time_translate(avail, day_warn=True)			# day_warn: noch x Tage!
 			avail = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % avail
-		fsk = obj["fsk"]
+		if "fsk" in obj:	
+			fsk = obj["fsk"]
 		if fsk == "none":
 			fsk = "ohne"
-		geo = obj["geoLocation"]
+		if "geo" in obj:	
+			geo = obj["geoLocation"]
 		if geo == "none":
 			geo = "ohne"
-		length = obj["length"]
 		#if "streamApiUrlVoice" in obj:						
 		#	stream = obj["streamApiUrlVoice"] # needs api-token
 		if "url" in obj:
@@ -7565,6 +7580,7 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 				if 	len(descr_new) > len(descr):
 					PLog("descr_new: " + descr_new[:60] )
 					descr = descr_new
+					
 	
 	if validchars:												# unterdrückt bei Arabic
 		summ = valid_title_chars(descr)
@@ -7575,9 +7591,19 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 		tag = "Folgeseiten"
 	else:
 		tag = "Dauer: %s | FSK: %s | GEO: %s | %s" % (dur, fsk, geo, avail)
+		if typ == "livevideo":									# z.B. Events
+			try:
+				screentxt = obj["infoline"]["screenReaderTexts"]
+				PLog("screentxt: " + str(screentxt))
+				t1 = screentxt[0]["text"]						# Bsp. Livestream verfügbar
+				t2 = screentxt[0]["title"]						# Bsp. Mo., 12:45 - 15:35 Uhr
+				tag = "[B]%s | %s[/B]" % (t1,  t2)
+				title = "[B]LIVE: [/B] %s" % title
+			except Exception as exception:
+				PLog("screentxt_error: " + str(exception))
+				tag=""
 	if headline:
 		tag = "%s | [B]%s[/B]" % (tag, headline)
-	
 	
 	PLog('Get_content typ: %s | title: %s | tag: %s | descr: %s |img:  %s | url: %s | stream: %s | scms_id: %s' %\
 		(typ,title,tag,summ,img,url,stream,  scms_id) )		
