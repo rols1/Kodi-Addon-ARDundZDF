@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.06.2023
+# 	<nr>17</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.07.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1415,14 +1415,14 @@ def Kikaninchen_Videos(showChar, path='', title=''):
 		pos1 = page.find("node-videos")									# wie KikaninchenVideosAZ
 		page = page[pos1:]
 		PLog(page[:100])
-		items = blockextract("<a href", page)							# Sendungen-Links 
+		items = blockextract("<a href", page)							# Sendungen-Links, können fehlen 
 		PLog(len(items))
 		
-		if len(items) == 0:												# Seite vorhanden, aber keine Videos
-			if id_link == "":
-				msg1 = "Leider finde ich keine Videos zu"
-				msg2 = "[B]%s[/B]" % title
-				MyDialog(msg1, msg2, '')
+		if len(items) == 0:								
+			if id_link == "":											# 24.07.2023 ohne id_link ->
+				PLog("jump_to_VideoSingle")								#  	Test Variante avCustom.xml
+				Kikaninchen_VideoSingle(path, title, assets_url='')
+				return
 			else:
 				PLog("jump_to_kika:")									# -> extract api_url zu videosPageUrl (alle-folgen)
 				msg1 = "KiKA-Videos"									# notification
@@ -1967,12 +1967,11 @@ def gen_alpha(xml_path='', thumb=''):
 		PLog(len(items))
 		for s in items:			
 			img = stringextract('<noscript>', '</noscript>', s)
-			if '|' in img:
-				title = stringextract('alt="', '|', img)
-				img_alt = stringextract('title="', '"', img)
-			else:
-				title = stringextract('alt="', '"', img)
 			img_alt = stringextract('title="', '"', img)
+			title = img_alt
+			pos = title.find("|")
+			if pos > 0:							# cut Copyright
+				title = title[:pos-1]
 			img_src = base + stringextract('src="', '"', img)
 			
 			xml_path = stringextract("dataURL:'", "'", s)
