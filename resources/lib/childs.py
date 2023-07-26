@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>17</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.07.2023
+# 	<nr>18</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.07.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1391,6 +1391,9 @@ def KikaninchenVideosAZ():
 # 12.12.2022 Neu nach Webseitenänderungen
 # 1. Durchlauf: Sendereihen zu showChar
 # 2. Durchlauf: Videoliste zu path
+# 26.07.2023 zusätzlicher Durchlauf für einige Links erforderlich
+#	Ziel Kikaninchen_VideoSingle ersetzt durch  Kikaninchen_Videos
+#
 def Kikaninchen_Videos(showChar, path='', title=''):
 	PLog('Kikaninchen_Videos: ' + showChar)
 	PLog(path); PLog(title)
@@ -1439,8 +1442,8 @@ def Kikaninchen_Videos(showChar, path='', title=''):
 		li = xbmcgui.ListItem()
 		li = home(li, ID='Kinderprogramme')			# Home-Button	
 				
-		tag = "weiter zum Video"
-		for s in items:
+		tag = "weiter zum Video / zu den Videos"
+		for s in items:								# rekursiv -> hierher, Mehrfachbeiträge möglich
 			href = stringextract('href="', '"', s)
 			title = stringextract('title="', '"', s)
 			title = unescape(title)
@@ -1448,8 +1451,9 @@ def Kikaninchen_Videos(showChar, path='', title=''):
 		
 			img = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % showChar
 			href=py2_encode(href); title=py2_encode(title);
-			fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_VideoSingle", fanart=GIT_KANINCHEN, 
+
+			fparams="&fparams={'showChar': '%s', 'path': '%s', 'title': '%s'}" % (showChar, quote(href), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videos", fanart=GIT_KANINCHEN, 
 				thumb=thumb, fparams=fparams, tagline=tag, mediatype=mediatype)
 		
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
