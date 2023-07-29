@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>124</nr>										# Numerierung für Einzelupdate
+# 	<nr>125</nr>										# Numerierung für Einzelupdate
 VERSION = '4.7.9'
-VDATE = '23.07.2023'
+VDATE = '29.07.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2920,7 +2920,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Fußball WM 2022 in Katar[/B]"
 	tag = u"Hier finden Sie alle Nachrichten, Berichte, Interviews und Ergebnisse zur FIFA WM 2022 in Katar."
 	cacheID = "Sport_WMKatar"
-	img = "https://images.sportschau.de/image/a12b67b2-9716-4be8-9462-79391892a4c2/AAABgRPCPcU/AAABgPp7Db4/16x9-1280/wm-katar-logo-sp-100.jpg"
+	img = "https://images.sportschau.de/image/1e5f994d-d7c8-4c5b-a98b-23a8c5b3a71c/AAABhFJhnRw/AAABg8tME_8/16x9-1280/wm-katar-logo-news-100.jpg"
 	path = "https://www.sportschau.de/fussball/fifa-wm-2022"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
@@ -3110,10 +3110,10 @@ def ARDSportMonatstorSingle(title, path, img):
 # Tabellen
 # frühere Jahre <- ARDSportTabellenArchiv
 # 
-def ARDSportTabellen(title, logo, path): 
+def ARDSportTabellen(title, logo, path, year=""): 
 	PLog("ARDSportTabellen: " + path)
-	PLog(title)
-	title_org=title
+	PLog(title); PLog(year)
+	title_org=title; path_org=path
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
@@ -3159,13 +3159,16 @@ def ARDSportTabellen(title, logo, path):
 			points = "[%s | %s (%s) | %s]" % (td_pts, td_goals, td_diff, td_match)
 			title = u"[B]%4s[/B] %24s %4s[B]%s[/B]" % (td_rank, points, " ", td_team)
 			tag = u"[B]Platz %s: %s[/B]" % (td_rank, td_team)
+			summ=""
+			if year:
+				summ = "diese Tabelle: [B]%s[/B]" % (year)
 				
 			PLog("Satz12_title: %s" % title); PLog(td_img)
-			tag = u"Klick für Teamübersicht von  %s" % td_team			
+			tag = u"Klick für die aktuelle Teamübersicht von  %s" % td_team			
 			logo=py2_encode(logo); path=py2_encode(path)
-			fparams="&fparams={'title': '%s', 'path': '%s', 'logo': '%s'}" % (title_org, quote(path), logo)
-			addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellenTeam", fanart=logo, thumb=logo, 
-				fparams=fparams, tagline=tag)	
+			fparams="&fparams={'title': '%s', 'path': '%s', 'logo': '%s'}" % (title_org, quote(path), td_img)
+			addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellenTeam", fanart=logo, thumb=td_img, 
+				fparams=fparams, tagline=tag,  summary=summ)	
 				
 	except Exception as exception:
 		PLog("table_error: " + str(exception))
@@ -3178,9 +3181,11 @@ def ARDSportTabellen(title, logo, path):
 		title = u"[B]Archiv[/B]: Tabellen seit 2017"	
 	tag = u"zurückliegende Tabellen %s" % title_org	
 	summ = "Bildquelle: sportschau.de"
+	if year:
+		summ = "%s\n\ndiese Tabelle: [B]%s[/B]" % (summ, year)
 					
-	logo=py2_encode(logo); path=py2_encode(path)
-	fparams="&fparams={'title': '%s', 'path': '%s', 'logo': '%s'}" % (title_org, quote(path), logo)
+	logo=py2_encode(logo); path_org=py2_encode(path_org)
+	fparams="&fparams={'title': '%s', 'path': '%s', 'logo': '%s'}" % (title_org, quote(path_org), logo)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellenArchiv", fanart=logo, thumb=logo, 
 		fparams=fparams, tagline=tag, summary=summ)	
 
@@ -3218,7 +3223,8 @@ def ARDSportTabellenArchiv(title, path, logo):
 		PLog("href: " + href)
 		
 		title_org=py2_encode(title_org); logo=py2_encode(logo); href=py2_encode(href)
-		fparams="&fparams={'title': '%s', 'logo': '%s', 'path': '%s'}" % (title_org, quote(logo), quote(href))
+		fparams="&fparams={'title': '%s', 'logo': '%s', 'path': '%s', 'year': '%s'}" %\
+			(title_org, quote(logo), quote(href), year)
 		addDir(li=li, label=title, action="dirList", dirID="ARDSportTabellen", fanart=logo, thumb=logo, 
 			fparams=fparams)	
 
@@ -7402,6 +7408,8 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 #---------------------------------------------------------------------------------------------------
 # Aufruf: ZDF_Rubriken
 # Seite enthält alle ZDF-Sender, einschl. EPG für akt. Tag
+# 23.07.2023 Event-Livestreams hinzugefügt (Trigger: obj["label"] =
+#	 "Livestream" oder "Jetzt live" in ZDF_get_content) 
 #
 def ZDF_Live(url, title): 											# ZDF-Livestreams von ZDFStart
 	PLog('ZDF_Live: '  + url); 
@@ -7419,16 +7427,15 @@ def ZDF_Live(url, title): 											# ZDF-Livestreams von ZDFStart
 	jsonObject = json.loads(page)
 	PLog(str(jsonObject)[:80])
 	
-	if '"formitaeten"' in page and '"epgCluster"' not in page:		# abweichendes Format
+	if '"formitaeten"' in page and '"epgCluster"' not in page:	# abweichendes Format (Events-JustInTime)
 		PLog("formitaetenInPage")
 		streamsObject = jsonObject["document"]["formitaeten"]
-		m3u8_url = streamsObject[0]["url"]							# 1. form. = auto
+		m3u8_url = streamsObject[0]["url"]						# 1. form. = auto
 		PLog("m3u8_url: " + m3u8_url)
 		img = ZDF_get_img(jsonObject["document"])
-	else:
-		# epgCluster kann fehlen bei zeitweisen Livestreams, s.o.:		
-		try:
-			for clusterObject in jsonObject["epgCluster"]:
+	else:														# Regel-Livestreams + Events-OutOfTime		
+		try:												
+			for clusterObject in jsonObject["epgCluster"]:		# epgCluster bei Regel-Livestreams	
 				clusterLive = clusterObject["liveStream"]
 				if clusterLive["titel"] == title_org:
 					break
@@ -7439,7 +7446,7 @@ def ZDF_Live(url, title): 											# ZDF-Livestreams von ZDFStart
 			MyDialog(msg1, msg2, '')
 			return
 		streamsObject = clusterLive["formitaeten"]
-		m3u8_url = streamsObject[0]["url"]							# 1. form. = auto
+		m3u8_url = streamsObject[0]["url"]						# 1. form. = auto
 		img = ZDF_get_img(clusterLive)
 		
 	if SETTINGS.getSetting('pref_video_direct') == 'true':		# Sofortstart
@@ -7552,10 +7559,10 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 		if ("label" in obj):
 			PLog("label: " + obj["label"])
 			if obj["label"] == "Livestream":
-				typ = "livevideo"								# z.B. Events, s.u.
-			if obj["label"] == "Jetzt live":
-				typ = "livevideo"								# aktuell ausgestrahlt
-				now_live=True
+				typ = "livevideo"								# z.B. Events, s.u. screentxt
+			if obj["label"] == "Jetzt live":					# kann verzögert erscheinen 
+				typ = "livevideo"					
+				now_live=True									# s.u. screentxt
 				
 		
 	img="";
