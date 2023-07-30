@@ -1591,16 +1591,17 @@ def blockextract(blockmark, mString, blockendmark=''):
 		rlist.append(block)
 	return rlist  
 #----------------------------------------------------------------  
-def teilstring(zeile, startmarker, endmarker):  		# rfind: endmarker=letzte Fundstelle, return '' bei Fehlschlag
-  # die übergebenen Marker bleiben Bestandteile der Rückgabe (werden nicht abgeschnitten)
-  pos2 = zeile.find(endmarker, 0)
-  pos1 = zeile.rfind(startmarker, 0, pos2)
-  if pos1 & pos2:
-    teils = zeile[pos1:pos2+len(endmarker)]	# 
-  else:
-    teils = ''
-  #PLog(pos1) PLog(pos2) 
-  return teils 
+def teilstring(zeile, startmarker, endmarker):  		
+	# rfind: endmarker=letzte Fundstelle, return '' bei Fehlschlag
+	# die übergebenen Marker bleiben Bestandteile der Rückgabe (werden nicht abgeschnitten)
+	pos2 = zeile.find(endmarker, 0)
+	pos1 = zeile.rfind(startmarker, 0, pos2)
+	if pos1 & pos2:
+		teils = zeile[pos1:pos2+len(endmarker)]	# 
+	else:
+		teils = ''
+	#PLog(pos1) PLog(pos2) 
+	return teils 
 # ----------------------------------------------------------------------
 def my_rfind(left_pattern, start_pattern, line):  # sucht ab start_pattern rückwärts + erweitert 
 #	start_pattern nach links bis left_pattern.

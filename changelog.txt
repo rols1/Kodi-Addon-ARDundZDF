@@ -10,6 +10,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+30.07.2023 4.8.0
+			ZDF_Live: abweichendes Format der Videoquellen berücksichtigt (key:formitaeten
+			außerhalb key:cluster/epgCluster), Fett-Markierung aus Titel entfernt für
+			Abgleich epgCluster-key ["title"].
+			gen_alpha (KiKA-Podcasts Modul childs): Copyright aus titel entfernt.
+			Kikaninchen_Videos (childs): bei Fehlen einer Videoquelle Test der Variante 
+			avCustom.xml in Kikaninchen_VideoSingle.
+			Kikaninchen_Videos: für einige Links 3. Durchlauf erforderlich - für addDir 
+			das Ziel Kikaninchen_VideoSingle ersetzt durch Kikaninchen_Videos.
+			ARDSportTabellen: Vereinslogo ergänzt, Pfad zum Tabellen-Archiv korrigiert
+			(path -> path_org), Tabellenjahr für Archivtabellen ergänzt (Infotext).
+			ARD sportschau.de (WDR): Auswertung json-Daten vereinheitlicht )'data-v="'-
+			Blöcke) - neu: ARDSportgetPlayer, ARDSportMediaPlayer.
+
 23.07.2023 4.7.9
 			Sofortstart: vor Sortierung Stream_List in PlayVideo_Direct das Element mit
 			Auflösung "** auto **" entfernt, um sort_error zu verhindern (falls einzelne

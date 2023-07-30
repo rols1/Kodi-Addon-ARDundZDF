@@ -952,7 +952,7 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 	
 	if li_org:
 		if cnt == 0:
-			msg1 = "Kein Video für"										# notification (nur ext. Hauptmenü)
+			msg1 = "leider kein Video:"									# notification (nur ext. Hauptmenü)
 			msg2 = title_org
 			icon = KIKA_VIDEOS
 			xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)			

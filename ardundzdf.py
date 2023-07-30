@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>125</nr>										# Numerierung für Einzelupdate
-VERSION = '4.7.9'
-VDATE = '29.07.2023'
+VERSION = '4.8.0'
+VDATE = '30.07.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2484,10 +2484,10 @@ def ARDSportBilder(title, path, img):
 		
 	page = page[pos:]
 	cont = stringextract('data-v="', '"', page)				# json-Inhalt (Bildstrecke.json)
-	cont = decode_url(cont)
+	cont = decode_url(cont)									# abweichend von Playerdaten
 	cont = unescape(cont)
 	cont = (cont.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
-	PLog(cont[:30])
+	PLog(cont[:60])
 	
 	content = blockextract('"description"', cont)	
 	PLog(len(content))
@@ -3072,10 +3072,12 @@ def ARDSportMonatstorSingle(title, path, img):
 	if path.endswith("/abstimmung"):
 		li = home(li, ID='ARD')						# Home-Button
 		cnt = ARDSportMedia(li, title, page)
-	if path.endswith("/archiv") or path.endswith("/statistikspieler-sp-102.html"):	
-		items = blockextract('data-v="', page)		# Sliderboxen	
+	if path.endswith("/archiv"):	
+		items = blockextract('data-v="', page)		# Sliderboxen je Jahrzehnt	
+		PLog("archiv_or_statistikspieler")
+		PLog(len(items))
 		for item in items:
-			ARDSportSlider(li, item, skip_list=[], img='')
+			ARDSportSlider(li, item, skip_list=[], img='')		# -> json-extract
 	if path.endswith("/statistikspieler-sp-102.html"):
 		items = blockextract('class="teaser-xs__link"', page)			
 		PLog(len(items))
@@ -3304,6 +3306,7 @@ def ARDSportHub(title, path, img, Dict_ID=''):
 			summ = stringextract('__shorttext">', '</', item)	
 			title=repl_json_chars(title); summ=repl_json_chars(summ);
 			title=title.strip(); summ=summ.strip() 
+			summ = cleanhtml(summ)
 			title = "%s: [B]%s[/B]" % (topline, title)		
 				
 			tag = "[B]Bilderstrecke[/B]" 
@@ -3423,6 +3426,8 @@ def ARDSportCluster(title, path, img, cacheID, cluster=''):
 			topline = topline.strip()
 
 			PLog("title: " + title)								# wie stage2
+			if "<h2>Specials" in title:							# redakt. Inhalte
+				continue
 			title = cleanhtml(title); title = title.strip()
 			title = unescape(title); title = repl_json_chars(title)
 			
@@ -3474,13 +3479,44 @@ def ARDSportLive(title):
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')								# Home-Button
-	
-	cnt = ARDSportMedia(li, title, page)
-	if cnt == 0:											# Verbleib in Liste
-		return		
 		
+	items = blockextract('<picture class=', page)
+	PLog(len(items))
+	for item in items:
+		data  = ARDSportgetPlayer(item)
+		if data:
+			player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, data)
+			title=repl_json_chars(title)
+			PLog("player_typ: " + player)
+			
+			if player == "video":
+				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
+					quote(title), quote(img), quote_plus(Plot))
+				addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+					tagline=tag, summary=summ, mediatype='video')	
+			if player == "audio":
+				if live:
+					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+						quote(title), quote(img), quote_plus(Plot))
+					addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
+						tagline=tag, mediatype='music')	
+	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+#----------------------------------------------------------------
+# holt Playerdaten bei data-v="..
+def ARDSportgetPlayer(item):
+	PLog("ARDSportgetPlayer:")
+	data = stringextract('data-v="', '"', item)
+	# if ';mediadescription&' not in data and ';Specials&' not in data:	
+	if 'json/headerapp/' in data or '"imageVariants' in data:	# ohne Inhalt, Bildauswert. getrennt
+		data=""
+	if data:
+		data = unescape(data)
+		data = (data.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
+	PLog(data[:80])
+	return data	
+	
 #----------------------------------------------------------------
 # aktuelle LIVESTREAMS + Netcast-Audiostreams-Liste von sportschau.de
 # Aufrufer: ARDAudioEventStreams
@@ -3514,12 +3550,14 @@ def ARDSportMedia(li, title, page):
 	PLog('ARDSportMedia: ' + title)
 	base = "https://www.sportschau.de"
 
-	teaser_xs=[]; teaser_slider=[]
+	teaser_xs=[]; teaser_slider=""
 	if "Livestreams" in title:
 		teaser = blockextract('class="teaser__media"', page)
 	elif "Audiostreams" in title:	
 		teaser = blockextract('class="mediaplayer', page)
 	else:
+		if 'class="v-instance teaser-slider' in page:
+			teaser_slider = stringextract('class="v-instance teaser-slider', '</div>', page)
 		teaser = blockextract('class="teaser__media"', page)
 		teaser = teaser + blockextract('class="teaser__link"', page,)			
 		teaser_xs = blockextract('class="teaser-xs__link"', page)
@@ -3527,7 +3565,7 @@ def ARDSportMedia(li, title, page):
 	PLog(len(teaser))
 	PLog(len(teaser_xs))
 	items = teaser + teaser_xs
-	if len(items) == 0:
+	if len(items) == 0 and not teaser_slider:
 		icon = R("ard-sportschau.png")
 		msg1 = u"%s:" % title
 		msg2 = u'keine Videos/Audios/Bilder gefunden'
@@ -3536,6 +3574,26 @@ def ARDSportMedia(li, title, page):
 				
 	mediatype=''			
 		
+	#-------------------------------------------------------------------# 1. rolling Highlights zuerst
+	if 	teaser_slider: 													# hier ohne mediaplayer-Kennz.
+		slider_data = ARDSportgetPlayer(page)
+		slider_items  = blockextract('"teaserUrl"', slider_data)
+		for item_data in slider_items:
+			player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item_data)
+			title=repl_json_chars(title)
+			PLog("Satz12_1:")
+			PLog(player); PLog(live); PLog(title); PLog(mp3_url); PLog(stream_url);   
+			PLog(img); PLog(summ[:80]);
+			title=py2_encode(title); mp3_url=py2_encode(mp3_url); img=py2_encode(img);
+			tag=py2_encode(tag); Plot=py2_encode(Plot);
+			
+			if player == "video":
+				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
+					quote(title), quote(img), quote_plus(Plot))
+				addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+					tagline=tag, summary=summ, mediatype='mediatype')	
+	
+	#-------------------------------------------------------------------	
 	# json.loads scheiterte in cont (char 360) - vermutl. vergessenes Komma:
 	cnt=0; skip_list=["dummy"]
 	for item in items:		
@@ -3577,11 +3635,12 @@ def ARDSportMedia(li, title, page):
 				continue	
 		#---------------------------------------------------
 		
-		if item.find('class="mediaplayer') > 0:
+		if item.find('class="mediaplayer') >= 0:
 			if player != "pics":
 				data  = stringextract('class="mediaplayer', '"MediaPlayer', item) # von slider abgrenzen
 				if data:
-					player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, data)
+					item_data  = ARDSportgetPlayer(item)	# json-Inhalt zum Player
+					player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item_data)
 					title=repl_json_chars(title)
 
 		if len(summ_html) > len(summ):						# Alternative
@@ -3590,13 +3649,14 @@ def ARDSportMedia(li, title, page):
 			title = title_html
 		
 		if title in skip_list:								# Doppel in Blöcken möglich
+			PLog("skip: " + title)
 			continue
 		skip_list.append(title)
 		
 		if os.path.splitext(img)[-1] == "":					# fehlende Extension möglich
 			img = img + ".png"
 				
-		PLog("Satz12:")
+		PLog("Satz12_2:")
 		PLog(player); PLog(live); PLog(title); PLog(mp3_url); PLog(stream_url);   
 		PLog(img); PLog(summ[:80]);
 		title=py2_encode(title); mp3_url=py2_encode(mp3_url); img=py2_encode(img);
@@ -3656,35 +3716,29 @@ def ARDSportMedia(li, title, page):
 # Auswertung Mediaplayerdaten
 # 24.07.2022 Anpassung für Tor des Monats ("video/mp4" in url)
 #
-def ARDSportMediaPlayer(li, item): 
+def ARDSportMediaPlayer(li, item_data): 
 	PLog('ARDSportMediaPlayer:')
 	player=''; live=False; title='';  mp3_url=''; stream_url=''; 
 	img=''; verf=''; tag=''; summ=''; Plot=''; 
-	
-	cont = stringextract('data-v="', '"', item)				# json-Inhalt zum Player
-	cont = decode_url(cont)
-	cont = unescape(cont)
-	cont = (cont.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
-	PLog(cont[:30])
 
-	player = stringextract('playerType":"', '"', cont)		# audio, video
-	media = stringextract('streams":', '"meta"', cont)		# für video dash.mpd, m3u8 + ts
-	PLog("media: " + media[:60]); 
+	player = stringextract('playerType":"', '"', item_data)		# audio, video
+	media = stringextract('streams":', '"meta"', item_data)		# für video dash.mpd, m3u8 + ts
+	PLog("media: " + media[:80]); 
 	if player == "audio":
-		mp3_url = stringextract('url":"', '"', media)		# 1 x mp3
+		mp3_url = stringextract('url":"', '"', media)			# 1 x mp3
 	else:
 		urls = blockextract('url":', media)
-		for url in urls:									# erste: höchste Auflösung
+		for url in urls:										# erste: höchste Auflösung
 			if "index.m3u8" in url or "master.m3u8" in url or "video/mp4" in url:
 				stream_url = stringextract('url":"', '"', url)
 				break
 	
-	title = stringextract('page_title":"', ',"', cont)		# kann " enthalten
+	title = stringextract('page_title":"', ',"', item_data)		# kann " enthalten
 	title=decode_url(title); title=repl_json_chars(title); 
 	
-	duration = stringextract('durationSeconds":"', '"', cont)
+	duration = stringextract('durationSeconds":"', '"', item_data)
 	if duration == '':
-		dur = stringextract('content_duration":', ',', cont) # Altern. außerhalb media (int, milli-secs)
+		dur = stringextract('content_duration":', ',', item_data) # Altern. außerhalb media (int, milli-secs)
 		PLog("dur_raw: " + dur)
 		try:
 			dur = int(dur)
@@ -3694,10 +3748,12 @@ def ARDSportMediaPlayer(li, item):
 	PLog("duration: " + duration); 
 	duration = seconds_translate(duration)
 		
-	imgs = blockextract('"minWidth":', cont, "}")
+	imgs = blockextract('"minWidth":', item_data, "}")
 	if len(imgs) > 0:
 		img = stringextract('value":"', '"', imgs[-1])			# letztes=größtes
-	mode = stringextract('_broadcasting_type":"', '"', cont)
+		if "." not in img.split("/")[-1]:						# Kodi braucht Extension
+			img = img + ".png"
+	mode = stringextract('_broadcasting_type":"', '"', item_data)
 	if mode == "live":
 		live=True
 	
@@ -3707,14 +3763,14 @@ def ARDSportMediaPlayer(li, item):
 		if duration == "0 sec":
 			duration = "unbekannt"
 		
-	avail = stringextract('av_original_air_time":"', '"', cont)
+	avail = stringextract('av_original_air_time":"', '"', item_data)
 	if avail:
 		verf = time_translate(avail, day_warn=True)
 	
-	chapter = stringextract('chapter1":"', '"', cont)
-	creator = stringextract('creator":"', '"', cont)
-	genre = stringextract('_genre":"', '"', cont)
-	geo = stringextract('languageCode":"', '"', cont)
+	chapter = stringextract('chapter1":"', '"', item_data)
+	creator = stringextract('creator":"', '"', item_data)
+	genre = stringextract('_genre":"', '"', item_data)
+	geo = stringextract('languageCode":"', '"', item_data)
 	if geo:
 		geo = "Geoblock: %s" % up_low(geo)
 	else:
@@ -3801,16 +3857,12 @@ def ARDSportSingleBlock(title, path, img, cacheID, block):
 #
 def ARDSportSlider(li, item, skip_list, img=''): 
 	PLog('ARDSportSlider:')
+	PLog(item[:80])
 	base = "https://www.sportschau.de"
 	player=''; live=False; title='';  mp3_url=''; stream_url=''; 
 	img=''; tag=''; summ=''; Plot='';
 	
-	cont = stringextract('data-v="', '"', item)				# json-Inhalt zum Player
-	cont = decode_url(cont)
-	cont = unescape(cont)
-	cont = (cont.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
-	PLog(cont[:80])
-		
+	cont  = ARDSportgetPlayer(item)						# json-Inhalt zum Player
 	content = blockextract('"teaserUrl"', cont)
 	PLog(len(content))
 	#PLog(content)	# Debug
@@ -3913,6 +3965,7 @@ def ARDSportSliderSingle(url, title, thumb, Plot, firstblock=False):
 				title=repl_json_chars(title); summ=repl_json_chars(summ);
 				title=cleanhtml(title)
 				title=title.strip(); summ=summ.strip() 
+				summ = cleanhtml(summ)
 				tag = "[B]%s[/B]" % topline
 					
 				PLog("Satz32:")
@@ -3925,7 +3978,7 @@ def ARDSportSliderSingle(url, title, thumb, Plot, firstblock=False):
 					fparams=fparams, tagline=tag, summary=summ)		
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			return									# erford. für Abschluss
-		else:						
+		else:										# Einzelbeitrag "Tore des Monats"					
 			if firstblock:
 				if 'leider nicht im Internet' in page:
 					icon = R(ICON_INFO)
@@ -3935,13 +3988,29 @@ def ARDSportSliderSingle(url, title, thumb, Plot, firstblock=False):
 					PLog(msg2)
 					return
 				PLog("firstblock: " + str(items[:1])[:60] )
-				items = items[:1]					# nur 1. Block verwenden
+			if 'class="v-instance" data-v="' in page:
+				items = blockextract('class="v-instance" data-v="', page, '"MediaPlayer"')	# erster json-Bereich
+				PLog(len(items))
+				item = items[0]
+				data  = ARDSportgetPlayer(item)			# json-Inhalt
+				player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, data)
+				PLog("Satz32_2:")
+				title=py2_encode(title); mp3_url=py2_encode(mp3_url); img=py2_encode(img);
+				tag=py2_encode(tag); Plot=py2_encode(Plot);
+				if player == "video":
+					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
+						quote(title), quote(img), quote_plus(Plot))
+					addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+						tagline=tag, summary=summ, mediatype='mediatype')
+	
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			return										# erford. für Abschluss		
 			
 	else:	
-		item = stringextract('class="mediaplayer', '"MediaPlayer"', page)	# erster json-Bereich
+		item = stringextract('class="v-instance" data-v="', '"MediaPlayer"', page)	# erster json-Bereich
 		items.append(item) 
 		
-	if len(items) == 0:							# z.B. Verweis auf https://www.zdf.de/live-tv
+	if len(items) == 0:									# z.B. Verweis auf https://www.zdf.de/live-tv
 		icon = R("ard-sportschau.png")
 		msg1 = u"%s:" % title
 		msg2 = u'Quelle nicht gefunden/verfügbar'
@@ -3951,14 +4020,15 @@ def ARDSportSliderSingle(url, title, thumb, Plot, firstblock=False):
 	PLog("Slideritems: %d" % len(items))
 	for item in items:
 		PLog(item[:80])
-		if item.find('data-v="') < 0:			# Playerdaten auf Folgeseite?
+		if item.find('data-v="') < 0:					# Playerdaten auf Folgeseite?
 			PLog("follow_up:")
 			path = base + stringextract('href="', '"', item)
 			page, msg = get_page(path)
 			item = stringextract('class="mediaplayer', '"MediaPlayer"', page)
 			PLog(item[:60])	
-		if item.find('data-v="') > 0:	
-			player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item)
+		if item.find('data-v="') > 0:
+			data  = ARDSportgetPlayer(item)				# json-Inhalt zum Player	
+			player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, data)
 		else:
 			PLog('no_data-v')
 			continue
