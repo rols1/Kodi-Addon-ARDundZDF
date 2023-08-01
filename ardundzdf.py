@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>125</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.0'
-VDATE = '30.07.2023'
+VDATE = '01.08.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7512,7 +7512,7 @@ def ZDF_Live(url, title): 											# ZDF-Livestreams von ZDFStart
 		except Exception as exception:
 			PLog("clusterLive_error: " + str(exception))
 			msg1 = u'%s:' % title
-			msg2 = "leider (noch) kein Video verfügbar."
+			msg2 = u"leider (noch) kein Video verfügbar."
 			MyDialog(msg1, msg2, '')
 			return
 		streamsObject = clusterLive["formitaeten"]
@@ -7539,6 +7539,7 @@ def ZDF_Live(url, title): 											# ZDF-Livestreams von ZDFStart
 		
 		PLog("Satz5:")
 		PLog(url);PLog(quality);PLog(typ);
+		title=py2_encode(title); Plot=py2_encode(Plot)
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': 'true'}" %\
 			(quote_plus(url), quote_plus(title), quote_plus(img), quote_plus(Plot)) 
 		addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
