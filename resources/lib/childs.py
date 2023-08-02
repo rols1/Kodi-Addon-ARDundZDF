@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>18</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.07.2023
+# 	<nr>19</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.08.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -949,7 +949,10 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 		addDir(li=li, label=tag, action="dirList", dirID="resources.lib.childs.Kika_Rubriken", 
 			fanart=thumb_org, thumb=R(ICON_MEHR), fparams=fparams, tagline=tag,summary=summ)
 	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
+	PLog("Mark0")
+	PLog(li_org)
 	if li_org:
 		if cnt == 0:
 			msg1 = "leider kein Video:"									# notification (nur ext. Hauptmenü)
@@ -959,7 +962,8 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 		return
 	else:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
+		
+
 
 # ----------------------------------------------------------------------
 # 04.07.2021 Aus WDR5 KiRaKa wird MausLive - Infoseite:
@@ -1435,10 +1439,6 @@ def Kikaninchen_Videos(showChar, path='', title=''):
 				Kika_Subchannel(id_link,title,thumb,Plot='')
 			return
 			
-		mediatype='' 		
-		if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
-			mediatype='video'
-			
 		li = xbmcgui.ListItem()
 		li = home(li, ID='Kinderprogramme')			# Home-Button	
 				
@@ -1454,7 +1454,7 @@ def Kikaninchen_Videos(showChar, path='', title=''):
 
 			fparams="&fparams={'showChar': '%s', 'path': '%s', 'title': '%s'}" % (showChar, quote(href), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videos", fanart=GIT_KANINCHEN, 
-				thumb=thumb, fparams=fparams, tagline=tag, mediatype=mediatype)
+				thumb=thumb, fparams=fparams, tagline=tag)
 		
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
