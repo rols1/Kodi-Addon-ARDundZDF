@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>125</nr>										# Numerierung für Einzelupdate
+# 	<nr>126</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.0'
-VDATE = '01.08.2023'
+VDATE = '03.08.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1017,6 +1017,7 @@ def Main_ZDF(name=''):
 	addDir(li=li, label="Bilderserien", action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_BILDERSERIEN), 
 		thumb=R(ICON_ZDF_BILDERSERIEN), fparams=fparams)
 
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------------------------
@@ -1041,6 +1042,13 @@ def Main_ZDFfunk(title):
 	'''		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
+##################################### Start Teletext ###############################################
+def Teletext(org="zdf"):
+	PLog('Teletext:')
+	
+	
+	return
+
 ##################################### Start Audiothek ###############################################
 # Aufruf: Main
 # 24.07.2021 Revision nach Renovierung der Audiothek durch die ARD
@@ -7539,7 +7547,6 @@ def ZDF_Live(url, title): 											# ZDF-Livestreams von ZDFStart
 		
 		PLog("Satz5:")
 		PLog(url);PLog(quality);PLog(typ);
-		title=py2_encode(title); Plot=py2_encode(Plot)
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': 'true'}" %\
 			(quote_plus(url), quote_plus(title), quote_plus(img), quote_plus(Plot)) 
 		addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
