@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>126</nr>										# Numerierung für Einzelupdate
+# 	<nr>127</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.0'
 VDATE = '03.08.2023'
 
@@ -7547,6 +7547,7 @@ def ZDF_Live(url, title): 											# ZDF-Livestreams von ZDFStart
 		
 		PLog("Satz5:")
 		PLog(url);PLog(quality);PLog(typ);
+		title=py2_encode(title); Plot=py2_encode(Plot)
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': 'true'}" %\
 			(quote_plus(url), quote_plus(title), quote_plus(img), quote_plus(Plot)) 
 		addDir(li=li, label=label, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
