@@ -11,7 +11,7 @@
 #
 ################################################################################
 # 	<nr>46</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.07.2023
+#	Stand: 13.08.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -235,14 +235,18 @@ def Main_NEW(name='', CurSender=''):
 	href = 'https://api.ardmediathek.de/page-gateway/pages/ard/editorial/barrierefrei?embedded=true'
 	href=py2_encode(href); title=py2_encode(title); 
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag, summary=summ)																							
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", 
+		fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)																							
 
 	title = 'Bildgalerien Das Erste'	
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="BilderDasErste", fanart=R(ICON_MAIN_ARD),
 		thumb=R('ard-bilderserien.png'), fparams=fparams)
 
+	fparams="&fparams={}"												# ab V 4.8.1
+	addDir(li=li, label="Teletext Das Erste", action="dirList", dirID="resources.lib.ARDnew.ARD_Teletext", 
+		fanart=R("teletext_ard.png"), thumb=R("teletext_ard.png"), fparams=fparams)
+	
 	title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
 	tag = "die Senderwahl ist wirksam in [B]%s[/B], [B]%s[/B] und [B]%s[/B]" % ("ARD Mediathek", "A-Z", "Sendung verpasst")
 	title=py2_encode(title);
@@ -1235,6 +1239,120 @@ def ARD_get_strmStream(url, title, img, Plot):
 	
 	return
 	
+#---------------------------------------------------------------------------------------------------
+# Hinw.: in textviewer für monospaced Font die Kodi-Einstellung
+#	"Standardwert des Skins" wählen
+#
+def ARD_Teletext(path=""):
+	PLog('ARD_Teletext:')
+	
+	if path == "":
+		path = "https://www.ard-text.de/index.php?page=100"
+	base = "https://www.ard-text.de/index.php?page="
+	aktpg = path.split("page=")[-1]
+	PLog("aktpg: %s" % aktpg)
+	
+	img = R(ICON_MAIN_ARD)
+	thumb = R("teletext_ard.png")
+	Seiten = ["Startseite|100", "Nachrichten|101", "Sport|200",
+			"Programm|300", "Kultur|400", "Wetter|171", "Inhalt A-Z|790",
+		]
+		
+	page, msg = get_page(path=path)	
+	if page == '':	
+		msg1 = "Fehler in ARD_Teletext:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return
+	PLog(len(page))		
+		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')			# Home-Button
+
+	body =  stringextract('"ardtext_classic"',  '!-- TEXT', page)
+	PLog(body[:60]); 
+
+	#------------------------------------------------			# Body
+	PLog("get_tables:")
+	ARD_Teletext_Table(body, aktpg)	
+	
+	#------------------------------------------------------	
+		
+	prevpg = int(aktpg) - 1										# vorwärts/rückwärts
+	nextpg = int(aktpg) + 1
+	if prevpg < 100:
+		prevpg = 899
+	if nextpg > 899:
+		nextpg = 100
+	
+	title = u"rückwärts zu [B]%s[/B]"	% prevpg
+	thumb = R("icon-previos.png")
+	href = "%s%s" % (base, prevpg)
+	fparams="&fparams={'path': '%s'}" % quote(href)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_Teletext", 
+		fanart=img, thumb=thumb, fparams=fparams)			
+			
+	title = u"vorwärts zu [B]%s[/B]"	% nextpg
+	thumb = R("icon-next.png")
+	href = "%s%s" % (base, nextpg)
+	fparams="&fparams={'path': '%s'}" % quote(href) 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_Teletext", 
+		fanart=img, thumb=thumb, fparams=fparams)
+		
+	#------------------------------------------------------		# prominente Seiten
+	thumb = R("teletext_ard.png")
+	for item in Seiten:
+		title, pgnr = item.split("|")
+		title = "[B]%s[/B]: %s" % (pgnr, title)	
+		href = "%s%s" % (base, nextpg)
+		fparams="&fparams={'path': '%s'}" % quote(href) 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_Teletext", 
+			fanart=img, thumb=thumb, fparams=fparams)
+	#------------------------------------------------------		# manuelle Eingabe
+	title = u"Seitenzahl manuell eingeben"
+	basepath = base + "%s"
+	func = "resources.lib.ARDnew.ARD_Teletext" 
+	fparams="&fparams={'func': '%s', 'basepath': '%s'}" % (func, quote(basepath))
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Teletext_setPage", 
+		fanart=img, thumb=thumb, fparams=fparams)	
+							
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#----------------------------------------------
+#
+def ARD_Teletext_Table(body, aktpg):
+	PLog('ARD_Teletext_Table: '+ aktpg)
+	
+	base = "https://www.ard-text.de/index.php?page="
+	thumb = R("teletext_ard.png")
+	img = R(ICON_MAIN_ARD)
+
+	items = body.split(">")
+	txt = ""
+	for item in items:
+		if "</nobr" in item:
+			txt = txt + item.replace("</nobr","")
+		if "</div" in item:
+			txt = txt + "\n"
+		if "</a" in item:
+			txt = txt + item.replace("</a","")
+		if "<a onclick" in item:
+			txt = txt + item.split("<")[0]
+ 
+	txt = unescape(txt); txt = txt.strip(); txt = "  " + txt
+	PLog("txt: " + txt[:60])
+	if txt:		
+		title = "Seite " + 	aktpg	
+		xbmcgui.Dialog().textviewer(title, txt, usemono=True)
+	else:
+		msg1 = u'Seite %s' % aktpg
+		msg2 = u'Inhalt nicht darstellbar'
+		icon = thumb		
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
+		PLog("%s: %s" % (msg1, msg2))
+					
+	return
+
 ####################################################################################################
 #							ARD Retro www.ardmediathek.de/ard/retro/
 #				als eigenst. Menü, Inhalte auch via Startseite/Menü/Retro erreichbar
