@@ -1018,7 +1018,7 @@ def Main_ZDF(name=''):
 		thumb=R(ICON_ZDF_BILDERSERIEN), fparams=fparams)
 
 	fparams="&fparams={}"												# ab V 4.8.1
-	addDir(li=li, label="Teletext", action="dirList", dirID="ZDF_Teletext", fanart=R("teletext_zdf.png"), 
+	addDir(li=li, label="Teletext ZDF", action="dirList", dirID="ZDF_Teletext", fanart=R("teletext_zdf.png"), 
 		thumb=R("teletext_zdf.png"), fparams=fparams)
 	
 
@@ -1047,19 +1047,28 @@ def Main_ZDFfunk(title):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 ##################################### Start Teletext ###############################################
-# 
+# Die Mobilversion /teletext/zdf/mobil.html basiert auf /teletext/zdf/seiten/100.html
+# Für Seite 666 ist Umschaltung auf zdfinfo notwendig (beim zdf fehlt die Aktien-Tabelle)
+#
 def ZDF_Teletext(path=""):
 	PLog('ZDF_Teletext:')
 	
 	if path == "":
 		path = "https://teletext.zdf.de/teletext/zdf/seiten/100.html"
+	if path.endswith("666.html"):										# -> zdfinfo, s.o.
+		path = "https://teletext.zdf.de/teletext/zdfinfo/seiten/666.html"
 	base = "https://teletext.zdf.de/teletext/zdf/seiten/"
 	img = R(ICON_MAIN_ZDF)
 	thumb = R("teletext_zdf.png")
 		
+	Seiten = ["Startseite|100", "Rubriken|101", "Inhalt A-Z (bis ca. 108)|102", 
+		"Nachrichten|112", "Politbarometer|165", "Wetter|170", "Sport|200",
+		"Programm|300", "Flughafen|575", "Börse|600", 
+		]
+		
 	page, msg = get_page(path=path)	
 	if page == '':	
-		msg1 = "Fehler in Teletext:"
+		msg1 = "Fehler in ZDF_Teletext:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return
@@ -1068,7 +1077,6 @@ def ZDF_Teletext(path=""):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')			# Home-Button
 
-	title = stringextract('<title>',  '</', page)						# html-Titel
 	body =  stringextract('<body',  'footer_container', page)
 	footer =  page.split('footer_container')[-1]
 	PLog(body[:60]);  PLog(footer[:60])
@@ -1081,160 +1089,177 @@ def ZDF_Teletext(path=""):
 	PLog("prevpg: %s, nextpg: %s, aktpg: %s" % (prevpg, nextpg, aktpg))
 
 	#------------------------------------------------					# Body
-	cnt = body.count('<a href')
-	PLog("cnt: %d" % cnt)
 	PLog("get_tables:")
 	hrefs = ZDF_Teletext_Table(li, body, aktpg)							# <a href= .. </a>##<a href= .. </a> 
-	if "no_bottom" in hrefs:
-		return															# Verbleib in Liste
-	#   href-Links im Body (nicht genutzt)			
 	
 	# ---------------------------------------							# Footer
+	prevpg = int(aktpg) - 1												# vorwärts/rückwärts
+	nextpg = int(aktpg) + 1
+	if prevpg < 100:
+		prevpg = 899
+	if nextpg > 899:
+		nextpg = 100
 	
-	prevpg = "100"; nextpg = "100"; 
-	if u'left_number">' in footer:
-		prevpg = re.search(u'left_number">(.*?)</div>', footer).group(1)
-	if u'right_number">' in footer:
-		nextpg = re.search(u'right_number">(.*?)</div>', footer).group(1)
-	
-	if aktpg != "100":
-		title = u"zurück zu [B]%s[/B]"	% prevpg
-		thumb = R("icon-previos.png")
-		href = "%s%s.html" % (base, prevpg)
-		fparams="&fparams={'path': '%s'}" % quote(href)
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_Teletext", fanart=img, thumb=thumb, 
-			fparams=fparams)			
-				
-		title = u"vorwärts zu [B]%s[/B]"	% nextpg
-		thumb = R("icon-next.png")
-		href = "%s%s.html" % (base, nextpg)
-		fparams="&fparams={'path': '%s'}" % quote(href) 
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_Teletext", fanart=img, thumb=thumb, 
-			fparams=fparams)				
+	title = u"rückwärts zu [B]%s[/B]"	% prevpg
+	thumb = R("icon-previos.png")
+	href = "%s%s.html" % (base, prevpg)
+	fparams="&fparams={'path': '%s'}" % quote(href)
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Teletext", fanart=img, thumb=thumb, 
+		fparams=fparams)			
 			
-		title = u'Startseite [B]100[/B]'
-		thumb = R("icon-next.png")
-		href = "%s%s.html" % (base, "100")
+	title = u"vorwärts zu [B]%s[/B]"	% nextpg
+	thumb = R("icon-next.png")
+	href = "%s%s.html" % (base, nextpg)
+	fparams="&fparams={'path': '%s'}" % quote(href) 
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Teletext", fanart=img, thumb=thumb, 
+		fparams=fparams)				
+		
+	thumb = R("teletext_zdf.png")
+	#------------------------------------------------------		# prominente Seiten
+	tag=""
+	PLog("proms:")
+	for item in Seiten:
+		title, pgnr = item.split("|")
+		title = "[B]%s[/B]: %s" % (pgnr, title)	
+		if "A-Z" in title:
+			tag = title
+		href = "%s%s.html" % (base, pgnr)
 		fparams="&fparams={'path': '%s'}" % quote(href) 
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_Teletext", fanart=img, thumb=thumb, 
-			fparams=fparams, tagline=title)	
-	else:
-		pass			# bei Bedarf Seiteneingabe ergänzen (dialog.input)			
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_Teletext", 
+			fanart=img, thumb=thumb, fparams=fparams, tagline=tag)
+
+	#------------------------------------------------------		# manuelle Eingabe
+	title = u"Seitenzahl manuell eingeben"
+	thumb = R("teletext_zdf.png")
+	basepath = base + "%s.html"
+	func = "ZDF_Teletext" 
+	fparams="&fparams={'func': '%s', 'basepath': '%s'}" % (quote(func), quote(basepath))
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Teletext_setPage", 
+		fanart=img, thumb=thumb, fparams=fparams)	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #---------------------------------------------------------------- 
+# Hinw.: in textviewer für monospaced Font die Kodi-Einstellung
+#	"Standardwert des Skins" wählen
+#
 def ZDF_Teletext_Table(li, body, aktpg):
-	PLog('ZDF_Teletext_Table:')
+	PLog('ZDF_Teletext_Table: ' + aktpg)
 	base = "https://teletext.zdf.de/teletext/zdf/seiten/"
 	thumb = R("teletext_zdf.png")
 	img = R(ICON_MAIN_ZDF)
 	colors = [ u"#0000FF|dunkelblau", u"#80FFFF|hellblau", 				# s. encycolorpedia.de
 		u"#00FF00|grün", u"#FFFF00|gelb"]
-	hrefs=[]															# href-Links im Body (nicht genutzt)
+	lines=[]; img_data=""; 
 	
-	if 'link_button_a' in body and 'class="table">' not in body:		# hier EPG- u.a. Link-Buttons 
-		PLog("link_button_a:")
-		h1 = stringextract('<h1>',  '</', body)							# Bsp.: Freitag, 4. August
-		h1 = cleanhtml(h1)
-		items = blockextract('<a href=', body)	
-		for item in items:
-			tag=""
-			href = re.search(u'href="(.*?)"', item).group(1)
+	html_lines = body.splitlines()
+	PLog(len(html_lines))
+	for i, hl in enumerate(html_lines[2:]):								# ab Zeile 2
+		line=""; h1=""; left=""; leftp=""; center=""; right=""
+		hl = hl.strip()
+		PLog("%d. %s" %(i, hl))
+		if hl.startswith('<h1>'):
+			line = stringextract('<h1>',  '</', hl)
+			lines.append(cleanhtml(line))
+			continue
+		if hl.startswith('<div class="table">'):						# Einzelzeile
+			line = stringextract('table">',  '</', hl)
+			lines.append(cleanhtml(line))
+			continue
+		if hl.startswith('<h2 class="headline_normal">'):				# Einzelzeile
+			h2 = stringextract('headline_normal">',  '</h2>', hl)
+			lines.append(cleanhtml(h2))
+			continue
+		if hl.startswith('<p class="copy" >'):							# Einzelzeile
+			txt = stringextract('copy" >',  '</p>', hl)
+			lines.append(cleanhtml(txt))
+			continue
+		if 	hl.startswith("<a href="):
+			PLog("<a href=:")
+			part_list = html_lines[i+2:]
+			PLog(part_list[0])
+			for i2, p in enumerate(part_list):
+				if "</a>" in p:
+					break
+			new_ind = i + 2 + i2
+			part_list = part_list[:i2]
+			txt = "\n".join(part_list[:new_ind])						# String "<a href=" .. </a>"
+			PLog("new_ind: %d, txt: %s" % (new_ind, txt[:60]))
+			href = re.search(u'href="(.*?)"', txt).group(1)
 			pagenr = href.split(".html")[0]
-			path = "%s%s.html" % (base, pagenr)
-			title = stringextract('title="',  '"', item)				# html-Fehler in items möglich
-			title = cleanhtml(title)
-			title = mystrip(title)
-			title  = "[B]%s:[/B] %s" % (pagenr, title)
-			if "left_programm" in item:									# EPG-Links 
-				uhr = stringextract('left_programm">',  '</', item)		# hier html-Fehler möglich
-				t1 = stringextract('center"><b>',  '</', item)			# Sendereihe
-				t2 = stringextract('2px" >',  '</', item)	
-				t1 = cleanhtml(t1); t2 = cleanhtml(t2)
-				title = "[COLOR blue]%s[/COLOR] | [B]%s[/B]: %s" % (uhr, t1, t2)# Sendezeit | Titel
-				tag = h1
-			
-			PLog("title: " + title); PLog("path: " + path)
-			fparams="&fparams={'path': '%s'}" % quote(path)
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_Teletext", fanart=img, thumb=thumb, 
-				fparams=fparams, tagline=tag)			
-		return hrefs			
-
-	if '"table">' not in body and '<table class="list">' not in body:											
-		if "link_button_a" not in body:									# weder EPG noch Wetter
-			if '<img src=' not in body:
-				PLog("newsline:")
-				txt=""; h1=""; h2=""
-				if  '<h2' in body:	
-					h2 = stringextract('headline_normal">',  '</h2>', body)
-					h2 = cleanhtml(h2)
-				if 'copy" >' in body:									# Nachrichtentext 120.html
-					txt = stringextract('copy" >',  '</p>', body)
-				if  '<h1>' in body:	
-					h1 = stringextract('<h1>',  '</', body)
-					h1 = cleanhtml(h1)
-				title = "%s | %s" % (h1, h2)
-				txt = txt.replace('<br>', '\n')
-				txt = cleanhtml(txt)
-				xbmcgui.Dialog().textviewer(title, txt,usemono=False)
-				return "no_bottom"
-																		# Tabellen, Verzicht auf enth. Links
-	if 'class="table">' in body:										# Indizes 601.html 
-		PLog('"class="table">')
-		h1 = stringextract('<h1>',  '<', body)
-		title = h1
-		lines=[]
-		PLog(body[:400])			
-		items = body.splitlines()		 								# mehrere h2 möglich
-		PLog(len(items))
-		for item in items:
-			line=""
-			if '<h2' in item:
-				h2 = stringextract('headline_normal">',  '</', item)
-				line = "\n" + h2
-			if 'table">' in item:
-				line = stringextract('table">',  '</div>', item)
-				line = line.replace("<br><br>", "\n")
-				line = cleanhtml(line)	
-			if 'copy" >' in item:										# ev. Textzusatz
-				txt = stringextract('copy" >',  '</p>', item)
-				txt = txt.replace('<br>', '\n')
-				line = "\n" + cleanhtml(txt)
-			if line:
-				PLog(line)
-				lines.append(line)
+			if 'left">' in txt:											# News-Text
+				left = stringextract('left">',  '</th>', txt)
+			if "left_programm" in txt:									# EPG-Titel
+				leftp = stringextract('left_programm">',  '</th>', txt)
+			if 'class="center">' in txt:								# class="center">
+				center = stringextract('class="center">',  '</th>', txt)
+			if 'class="right">' in txt:									# class="right">
+				right = stringextract('class="right">',  '</th>', txt)
+				if pagenr in right:										# doppelt
+					right=""
+			left=cleanhtml(left.strip()); leftp=cleanhtml(leftp); 
+			center=cleanhtml(center); right=cleanhtml(right);
+			PLog("left: %s, center: %s, right: %s" % (left, center, right))
+			if pagenr:
+				line = "%s" % pagenr
+			if left:
+				line = "%s | %s" % (line, left)
+			if leftp:
+				line = "%s | %s" % (line, leftp)
+			if center:
+				line = "%s | %s" % (line, center)
+			if right:
+				line = "%s | %s" % (line, right)
+			line = unescape(line)
+			PLog(line)
+			lines.append(line)	
+			i=new_ind+1													# neuer Index
+			continue
 		
-		if len(lines) > 0:
-			txt =  "\n".join(lines)
-			xbmcgui.Dialog().textviewer(title, txt,usemono=False)		# todo: Verzicht auf Bottom-Buttons
-		return "no_bottom"
-
-	if '<table class="list">' in body:									# Heute-Meldungen 310.html
-		PLog('<table class="list">')
-		h1 = stringextract('<h1>',  '</', body)
-		h2 = stringextract('headline_normal">',  '</h2', body)			#  2-teilig
-		h1 = cleanhtml(h1); h2 = h2.replace('<br>', '\n')
-		summ = "%s\n%s" % (h1, h2)
-		tables = blockextract('<table class="list">', body)
-		for table in tables:
-			trs = blockextract('<tr>', table)							# je 2 Zeilen, 1. fett
-			t1 = stringextract('class="left">',  '</th>', trs[0])
-			t2 = stringextract('class="left">',  '</th>', trs[1])
-			t1 = cleanhtml(t1); t2 = cleanhtml(t2)
-			title = t1
-			tag = t2
-			PLog(t1[:60]); PLog(t2[:60]);
-			fparams="&fparams={}" 
-			addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, thumb=thumb, 
-				fparams=fparams, tagline=tag, summary=summ)
-		return hrefs
+		if 	hl.startswith('<div class="link_button_a"'):				# ohne Link, z.B. Trennzeile bei A-Z
+			PLog("link_button_a:")
+			part_list = html_lines[i+2:]
+			PLog(part_list[0])
+			for i2, p in enumerate(part_list):
+				if "</div>" in p:
+					break
+			new_ind = i + 2 + i2
+			part_list = part_list[:i2]
+			txt = "\n".join(part_list[:new_ind])						# String "<a href=" .. </a>"
+			PLog("new_ind: %d, txt: %s" % (new_ind, txt[:60]))			
+			if 'left">' in txt:											# News-Text
+				left = stringextract('left">',  '</th>', txt)
+			if "left_programm" in txt:									# EPG-Titel
+				leftp = stringextract('left_programm">',  '</th>', txt)
+			if 'class="center">' in txt:								# class="center">
+				center = stringextract('class="center">',  '</th>', txt)
+			left=cleanhtml(left); leftp=cleanhtml(leftp); 
+			center=cleanhtml(center); right=cleanhtml(right);
+			if left == "":
+				left = "%3s" % " "										# padding fehlende pagenr
+			PLog("left: %s, center: %s, right: %s" % (left, center, right))
+			if left:
+				line = left
+			if leftp:
+				line = "%s | %s" % (line, leftp)
+			if center:
+				line = "%s | %s" % (line, center)
+			if right:
+				line = "%s | %s" % (line, right)
+			line = unescape(line)
+			PLog(line)
+			lines.append(line)	
+			i=new_ind+1													# neuer Index
+			continue
 		
-	if '<img src=' in body:												# Wetter, 171.html
+	#----------------------------------------------						# Wetter, 171.html
+	
+	if '<img src=' in body:
 		PLog('<img src=')
 		col=""
-		lines=[]
 		tables = blockextract('<div class="table"', body)
+		img_data = stringextract('base64,',  '"', body)
+		line=""
 		for table in tables:
 			col=""
 			line = stringextract('z-index:10">',  '</', table)
@@ -1248,27 +1273,41 @@ def ZDF_Teletext_Table(li, body, aktpg):
 					if col in item:
 						this_col = item.split("|")[-1]
 				if this_col:		
-					line = "%s: %s" % (this_col, line)
-				
-			PLog(line)	
-			lines.append(line)
-		if len(lines) > 0:
-			title = u'Seite %s | Bild kommt anschließend' % aktpg		# Titel fehlt hier
-			if col:
-				title = u'Seite %s | Bild kommt anschließend' % aktpg	
-			txt =  "\n".join(lines)
-			txt = txt.strip()											# LF's vor + hinter txt entf.
-			xbmcgui.Dialog().textviewer(title, txt,usemono=False)		# todo: Verzicht auf Bottom-Buttons	
+					line = "Farbe %s: %s" % (this_col, line)	
+			PLog(line)
+			if line:
+				lines.append(line)	
+		
+	#----------------------------------------------						# Ausgabe
+	
+	PLog("anz_lines: %d" % len(lines))
+	if len(lines) > 0:
+		if aktpg == "100":
+			h1 = "Startseite"
+		if h1:
+			title = "%s | %s" % (aktpg, h1)
+		else:
+			title = "Seite %s" % aktpg
+		if title == "":
+			title =  u'Seite %s' % aktpg
+		if img_data:
+			title = u'Seite %s | Bild kommt anschließend' % aktpg	# Titel fehlt hier
 			
-		import base64
-		img_data = stringextract('base64,',  '"', body)
-		img_data = py2_encode(img_data)
-		fname = os.path.join("%s/teletext.png") % DICTSTORE	
-		PLog(fname)
-		with open(fname, "wb") as f:
-			f.write(base64.urlsafe_b64decode(img_data))	
-		ZDF_SlideShow(fname, single="True")	
-		return hrefs
+		lines = list(dict.fromkeys(lines))							# Duplikate entf.
+		
+		txt =  "\n".join(lines)
+		txt = txt.strip()											# LF's vor + hinter txt entf.
+		xbmcgui.Dialog().textviewer(title, txt,usemono=True)		# todo: Verzicht auf Bottom-Buttons	
+			
+		if img_data:
+			import base64
+			img_data = py2_encode(img_data)
+			fname = os.path.join("%s/teletext.png") % DICTSTORE	
+			PLog(fname)
+			with open(fname, "wb") as f:
+				f.write(base64.urlsafe_b64decode(img_data))	
+			ZDF_SlideShow(fname, single="True")	
+		return
 		
 	msg1 = u'Seite %s' % aktpg
 	msg2 = u'Inhalt nicht darstellbar'
@@ -1276,7 +1315,28 @@ def ZDF_Teletext_Table(li, body, aktpg):
 	xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
 	PLog("%s: %s" % (msg1, msg2))			
 	
-	return "no_bottom"
+	return
+#---------------------------------------------------------------- 
+# ohne Plausib.-Prüfung (Fehler: ARD -> 100, ZDF -> )
+def ZDF_Teletext_setPage(func, basepath):
+	PLog('ZDF_Teletext_setPage: ' + func)
+	
+	dialog = xbmcgui.Dialog()
+	inp = dialog.input("Teletextseite (3-stellig):", type=xbmcgui.INPUT_NUMERIC)
+	PLog(inp)
+	if inp == '':
+		return						# Listitem-Error, aber Verbleib im Listing
+	
+	path = basepath % inp
+	PLog("path: " + path)
+	fparams_add = "{'path': '%s'}" % path	
+	
+	if func.startswith("resources.lib"):
+		start_script(func, fparams_add, is_dict=False)
+	else:
+		ZDF_Teletext(path)
+	
+	return
 
 ##################################### Start Audiothek ###############################################
 # Aufruf: Main
