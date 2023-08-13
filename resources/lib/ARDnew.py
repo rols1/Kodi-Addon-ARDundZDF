@@ -1304,7 +1304,7 @@ def ARD_Teletext(path=""):
 	for item in Seiten:
 		title, pgnr = item.split("|")
 		title = "[B]%s[/B]: %s" % (pgnr, title)	
-		href = "%s%s" % (base, nextpg)
+		href = "%s%s" % (base, pgnr)
 		fparams="&fparams={'path': '%s'}" % quote(href) 
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_Teletext", 
 			fanart=img, thumb=thumb, fparams=fparams)

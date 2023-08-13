@@ -10,6 +10,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+13.08.2023 4.8.1
+			ZDF_Live: utf-Behandlung für Texte (MyDialog, fparams) - relevant für
+			Kodi Leia.
+			Kikaninchen_Videos: mediatyp=video entfernt (rekurs. Aufruf, verhindert 
+			Sofortstarts in Kikaninchen_Videos).
+			ZDF-Erweiterung: Teletext (teletext.zdf.de), neue Funktionen ZDF_Teletext,
+			ZDF_Teletext_Table + ZDF_Teletext_setPage, Icons: icon-next, icon-previos, 
+			teletext_zdf.
+			ARD-Erweiterung (Modul ARDnew): Teletext (ard-text.de/index.php), neue 
+			Funktionen ARD_Teletext, ARD_Teletext_Table, Icon: teletext_ard..
+
 30.07.2023 4.8.0
 			ZDF_Live: abweichendes Format der Videoquellen berücksichtigt (key:formitaeten
 			außerhalb key:cluster/epgCluster), Fett-Markierung aus Titel entfernt für
