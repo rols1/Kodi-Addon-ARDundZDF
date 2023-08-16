@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>19</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.08.2023
+# 	<nr>20</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.08.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -301,7 +301,7 @@ def Kikaninchen_Menu():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
-	title='Kikaninchen Videos A-Z'				# www.kikaninchen.de/videos/allevideos864.html
+	title='Kikaninchen Videos A-Z'				# 15.08.2023 allevideos864.html -> api/v1/
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KikaninchenVideosAZ", fanart=GIT_KANINCHEN, 
 		thumb=GIT_KANINVIDEOS, tagline='für Kinder 3-6 Jahre', fparams=fparams)
@@ -1321,14 +1321,16 @@ def Kiraka_klick(title, weburl=''):
 # Kikaninchen: alle Videos von A-Z
 #	A-Z-Liste der Sendereihen (Web: Videos)
 # 12.12.2022 Neu nach Webseitenänderungen
-# 		
+# 15.08.2023 allevideos864.html -> api/v1/
+#		
 def KikaninchenVideosAZ():
 	PLog('KikaninchenVideosAZ:')
 	
-	path = 'https://www.kikaninchen.de/videos/allevideos864.html'	
+	path = "https://www.kika.de/api/v1/kikaplayer/kikaapp/api/brands/ebb32e6f-511f-450d-9519-5cbf50d4b546/videos"
+	path_add = "?limit=400&orderBy=date&orderDirection=DESC"	
 	page = Dict("load", "KikaninchenVideos", CacheTime=KikaCacheTime)
 	if page == False:
-		page, msg = get_page(path, header=KIKA_HEADERS)
+		page, msg = get_page(path + path_add, header=KIKA_HEADERS)
 		if page:
 			Dict("store", "KikaninchenVideos", page)
 	
@@ -1338,21 +1340,22 @@ def KikaninchenVideosAZ():
 		MyDialog(msg1, msg2, '')	
 		return
 
-	pos1 = page.find("node-videos")
-	page = page[pos1:]
-	PLog(page[:100])
-	items = blockextract("<a href", page)							# Sendungen-Links
-	PLog(len(items))
-	
+	try:
+		objs = json.loads(page)
+		items = objs["_embedded"]["items"]
+	except Exception as exception:
+		PLog("items_error: " + str(exception))
+	PLog("Videos: %s" % len(items))
+	if len(items) == 0:
+		return
+
 	AZ_lines=[]														# Zeile: Titel|Link
 	AZ_chars=[]														# vorkommende Buchst.
 	for s in items:
 		#PLog(s)
-		href = stringextract('href="', '"', s)
-		if href.endswith("filme-122.html"):							# ausgelagert -> KikaninchenFilme
-			continue
-		title = stringextract('title="', '"', s)
-		AZ_lines.append("%s|%s" % (title, href))
+		title= s["title"]
+		vid = s["id"]
+		AZ_lines.append("%s|%s" % (title, vid))
 		fchar = up_low(title[0])
 		PLog("fchar: %s, title: %s" % (fchar, title))
 		if fchar not in AZ_chars:
@@ -1398,95 +1401,78 @@ def KikaninchenVideosAZ():
 # 26.07.2023 zusätzlicher Durchlauf für einige Links erforderlich
 #	Ziel Kikaninchen_VideoSingle ersetzt durch  Kikaninchen_Videos
 #
-def Kikaninchen_Videos(showChar, path='', title=''):
-	PLog('Kikaninchen_Videos: ' + showChar)
-	PLog(path); PLog(title)
-	#-------------------------------------------------					# 2. Videoliste zu path
-	if path:
+def Kikaninchen_Videos(showChar,vid='',title="",assets="",thumb="",Plot="" ):
+	PLog('Kikaninchen_Videos: %s | %s' % (showChar, vid))
+	base = "https://www.kika.de/api/v1/kikaplayer/kikaapp"
+	
+	#-------------------------------------------------					# 2. Video-Quellen zu vid
+	if vid:
 		PLog("Step2:")
-		if "_zc-" and "_zs-" in path:									# Test auf Einzelvideo
-			Kikaninchen_VideoSingle(path, title)
-			return
-			
-		page, msg = get_page(path, header=KIKA_HEADERS)
-	
-		item = stringextract('json">', '</script>', page)
-		item = item.replace('\/', '/')
-		thumb = stringextract('image":"', '"', item)					# gesamt-img
-		if thumb == "":
-			thumb = R("Dir-video.png")
-		id_link = stringextract('@id":"', '"', item)					# ev. Link zu KiKA-Seite (html)
-		PLog("id_link: %s, thumb: %s" % (id_link, thumb))
-	
-		# Inhalte node-videos fehlen bei id-Links zu KiKA-Seiten. 
-		pos1 = page.find("node-videos")									# wie KikaninchenVideosAZ
-		page = page[pos1:]
-		PLog(page[:100])
-		items = blockextract("<a href", page)							# Sendungen-Links, können fehlen 
-		PLog(len(items))
+		PLog(title)
+		page, msg = get_page(assets, header=KIKA_HEADERS)				# json-Quelle kikaplayer abweichend
+		assetid = stringextract('"assetid":"', '"', page) 				# -> _next-api/proxy..
+		proxy_path = "https://www.kika.de/_next-api/proxy/v1/videos/%s/assets" % assetid
+		PLog("proxy_path: " + proxy_path)
+		page, msg = get_page(proxy_path, header=KIKA_HEADERS)
+		Kika_SingleBeitrag(assets, title, thumb, Plot, page)			# Home-Button dort
 		
-		if len(items) == 0:								
-			if id_link == "":											# 24.07.2023 ohne id_link ->
-				PLog("jump_to_VideoSingle")								#  	Test Variante avCustom.xml
-				Kikaninchen_VideoSingle(path, title, assets_url='')
-				return
-			else:
-				PLog("jump_to_kika:")									# -> extract api_url zu videosPageUrl (alle-folgen)
-				msg1 = "KiKA-Videos"									# notification
-				msg2 = title
-				icon = KIKA_VIDEOS
-				xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)
-				Kika_Subchannel(id_link,title,thumb,Plot='')
-			return
-			
-		li = xbmcgui.ListItem()
-		li = home(li, ID='Kinderprogramme')			# Home-Button	
-				
-		tag = "weiter zum Video / zu den Videos"
-		for s in items:								# rekursiv -> hierher, Mehrfachbeiträge möglich
-			href = stringextract('href="', '"', s)
-			title = stringextract('title="', '"', s)
-			title = unescape(title)
-			PLog("title: %s, href: %s" % (title, href))
+		return
 		
-			img = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % showChar
-			href=py2_encode(href); title=py2_encode(title);
-
-			fparams="&fparams={'showChar': '%s', 'path': '%s', 'title': '%s'}" % (showChar, quote(href), quote(title))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videos", fanart=GIT_KANINCHEN, 
-				thumb=thumb, fparams=fparams, tagline=tag)
-		
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-	#-------------------------------------------------					# 1. Sendereihen zu showChar
+	#-------------------------------------------------
 	PLog("Step1:")
-	AZ_lines = Dict("load", "KikaninchenAZ")
-	if AZ_lines == False:	
+	AZ_lines = Dict("load", "KikaninchenAZ")							# Buchstabenliste
+	page =  Dict("load", "KikaninchenVideos")							# gesamte Videoliste (Einzelvideos)
+	try:
+		objs = json.loads(page)
+		items = objs["_embedded"]["items"]
+	except Exception as exception:
+		PLog("items_error: " + str(exception))
+		items=[]
+	if AZ_lines == False or len(items) == 0:	
 		msg1 = "Leider finde ich keine Videos bei Kikaninchen."
 		msg2 = "Jemand hat sie wohl versteckt."
 		MyDialog(msg1, msg2, '')	
 		return
-	PLog(len(AZ_lines))
-		
+	PLog(len(AZ_lines))	
+	PLog("Videos: %s" % len(items))
+	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 			
-	for s in AZ_lines:
-		thumb = R(ICON_DIR_FOLDER)
-		title, href = s.split("|")										# Zeile: Titel|Link
-		title = unescape(title)
+	img = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % showChar
+	for item in items:
+		title = item["title"]
 		fchar = up_low(title[0])
-		tag = "weiter zu den [B]Videos[/B]"
-		if "_zc-" and "_zs-" in href:
-			tag = "weiter zum [B]Einzelvideo[/B]"
-			thumb = R("Dir-video.png")	
-		if fchar == showChar:
-			PLog(href); PLog(title); 
-			img = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % showChar
+		if fchar in showChar:
+			vid = item["id"]
+			descr = item["description"]
+			thumb = item["teaserImageUrl"]
+			dur = item["duration"] 
+			dur = seconds_translate(str(dur))
+			date = item["appearDate"] 
+			if date:
+				date = time_translate(date, add_hour=0)
+				date = "Sendedatum: [B][COLOR blue]%s[/COLOR][/B]" % date
+			endDate = item["expirationDate"] 
+			if endDate:
+				endDate = time_translate(endDate, add_hour=0)
+				endDate = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % endDate
+			assets = item["_links"]["player-assets"]["href"]
+			href = base + assets
+			tag = "Dauer: %s" %dur
+			if date and endDate:
+				tag = "%s\n%s\n%s" % (tag, endDate, date)
+			Plot = "%s\n\n%s" % (tag, descr)
+			Plot = repl_json_chars(Plot)
+			Plot =  Plot.replace("\n", "||")
+
+			PLog(title); PLog(href); 
 			href=py2_encode(href); title=py2_encode(title);
-			fparams="&fparams={'showChar': '%s', 'path': '%s', 'title': '%s'}" % (showChar, quote(href), quote(title))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videos", fanart=img, 
-				thumb=thumb, fparams=fparams, tagline=tag)
+			thumb=py2_encode(thumb); Plot=py2_encode(Plot);
+			fparams="&fparams={'showChar':'%s','vid':'%s','title':'%s','assets':'%s','thumb':'%s','Plot':'%s'}" %\
+				(showChar, vid, quote(title), quote(href), quote(thumb), quote(Plot))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Videos", 
+				fanart=img, thumb=thumb, fparams=fparams, tagline=tag, summary=descr)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -1528,6 +1514,7 @@ def KikaninchenFilme():
 		PLog(str(special)[:80])
 		
 		title = standard["title"]
+		title = repl_json_chars(title)
 		tline = standard["topline"]
 		descr = standard["teaserText"]
 
@@ -1537,6 +1524,8 @@ def KikaninchenFilme():
 		img_alt = standard["teaserImage"]["altText"]
 		cr = standard["teaserImage"]["rights"]
 		bild = "Bild: %s | %s" % (img_alt, cr)
+		bild = unescape(bild)
+
 		
 		href = special["avCustomUrl"]
 		dur = special["duration"]
@@ -1544,9 +1533,10 @@ def KikaninchenFilme():
 		dauer = "Dauer: " + dur
 		tag = "%s\n%s" % (dauer, bild)
 		summ = "[B]%s[/B]\n%s" % (tline, descr)
+		summ = unescape(summ)
 		
 		PLog('Satz2:')		
-		PLog(title);PLog(href);PLog(img);
+		PLog(title);PLog(href);PLog(img);PLog(bild);
 		
 		href=py2_encode(href); title=py2_encode(title)
 		fparams="&fparams={'path': '', 'title': '%s', 'assets_url': '%s'}" % (quote(title), quote(href))
@@ -1776,19 +1766,21 @@ def Tonschnipsel():
 #	weiter mit der assets-Url zu den Videoquellen (einfaches Anhängen
 #	von /assets klappt nicht bei typ=relatedVideo
 # Aufrufer: Kika_Subchannel, Kika_Rubriken
+# 16.08.2023 Kikaninchen_Videos lädt Quellen bereits vor (page)
 #
-def Kika_SingleBeitrag(path, title, thumb, Plot):
+def Kika_SingleBeitrag(path, title, thumb, Plot, page=""):
 	PLog('Kika_SingleBeitrag: ' + path)
 	title_org = title
 		
-	page, msg = get_page(path)					# Details mit asset_url
-	pos = page.find('"assets":{')
-	page = page[pos:]
-	PLog("pos: %d" % pos)
-	asset_url = stringextract('"url":"', '"', page)
-	PLog("asset_url: " + asset_url)
-	page, msg = get_page(path=asset_url)		# Videoquellen
-	PLog(msg)
+	if page == "":
+		page, msg = get_page(path)					# Details mit asset_url
+		pos = page.find('"assets":{')
+		page = page[pos:]
+		PLog("pos: %d" % pos)
+		asset_url = stringextract('"url":"', '"', page)
+		PLog("asset_url: " + asset_url)
+		page, msg = get_page(path=asset_url)		# Videoquellen
+		PLog(msg)
 		
 	if page == '':								# bei Spielen können Videos fehlen
 		msg1 = "Kika_SingleBeitrag:"
@@ -1808,6 +1800,10 @@ def Kika_SingleBeitrag(path, title, thumb, Plot):
 	#	fehlende Bandbreiten + Auflösungen werden ergänzt
 	url_m3u8 = stringextract('"auto","url":"', '"', page) 
 	sub_path = stringextract('"webvttUrl":"', '"', page)	# Altern.: subtitle-Url tt:style 
+
+	PLog("Mark0")
+	PLog(page)
+	PLog(url_m3u8); PLog(sub_path)
 	
 	HBBTV_List=''										# nur ZDF
 	HLS_List=[]; Stream_List=[];

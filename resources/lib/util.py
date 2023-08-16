@@ -1737,7 +1737,7 @@ def unescape(line):
 		return ''	
 	line = py2_decode(line)
 	for r in	((u"&amp;", u"&"), (u"&lt;", u"<"), (u"&gt;", u">")
-		, (u"&#39;", u"'"), (u"&#039;", u"'"), (u"&quot;", u'"'), (u"&#x27;", u"'")
+		, (u"&#39;", u"'"), (u"&acute;", u"'"), (u"&#039;", u"'"), (u"&quot;", u'"'), (u"&#x27;", u"'")
 		, (u"&ouml;", u"ö"), (u"&auml;", u"ä"), (u"&uuml;", u"ü"), (u"&szlig;", u"ß")
 		, (u"&Ouml;", u"Ö"), (u"&Auml;", u"Ä"), (u"&Uuml;", u"Ü"), (u"&apos;", u"'")
 		, (u"&nbsp;|&nbsp;", u""), (u"&nbsp;", u" "), (u"&bdquo;", u""), (u"&ldquo;", u""),
@@ -1749,7 +1749,8 @@ def unescape(line):
 		(u'undoacute;', u'o'), (u'&eacute;', u'e'), (u'&oacute;', u'o'), (u'&egrave;', u'e'),
 		(u'&atilde;', u'a'), (u'quot;', u' '), (u'&#10;', u'\n'),
 		(u'&#8222;', u' '), (u'&#8220;', u' '), (u'&#034;', u' '),
-		(u'&copy;', u' | '), (u'&middot;', u'|'), (u'&ndash;', u'-')):
+		(u'&copy;', u' | '), (u'&middot;', u'|'), (u'&ndash;', u'-'),
+		(u'&deg;', u'°')):
 		line = line.replace(*r)
 	return line
 #----------------------------------------------------------------  
