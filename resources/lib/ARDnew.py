@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>47</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.08.2023
+# 	<nr>48</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.08.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -274,6 +274,9 @@ def Main_NEW(name='', CurSender=''):
 # 29.06.2022 Abzweig ARDStartRegion für neuen Cluster "Unsere Region" 
 # 07.04.2023 Wechsel Web-Call (ardmediathek.de) -> api-Call (api.ardmediathek.de) - embedded
 #	json identisch
+# Links des api-Calls für ard=ARD-Alle funktionieren nicht mehr (HTTP ERROR 404). Beim neuen
+#	api-Call erfordert das Merkmal personalized eine Authentifizierung bei den Folgecalls.
+#	Merkmal hier entfernt.
 def ARDStart(title, sender, widgetID='', path='', homeID=''): 
 	PLog('ARDStart:'); PLog(sender)
 	
@@ -286,7 +289,8 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 	summ = 'Mediathek des Senders [B] %s [/B]' % sendername
 		
 	if sender == "ard":
-		base = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/mainstreamer-webpwa-nichtaendern?embedded=false"
+		#base = "https://api.ardmediathek.de/page-gateway/pages/ard/home?userId=personalized&embedded=false"
+		base = "https://api.ardmediathek.de/page-gateway/pages/ard/home?embedded=false"
 	else:
 		base = "https://api.ardmediathek.de/page-gateway/pages/%s/home?embedded=false" % sender
 
@@ -305,10 +309,12 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 	container = blockextract ('compilationType":', page)  	# widgets-Container json (Swiper + Rest)
 	PLog(len(container))
 	title_list=[]											# für Doppel-Erkennung
+	skip_list = [u"Empfehlungen für Sie", u"Weiterschauen",	# personalierte Inhalte
+			u"Meine Merkliste", u"Ist Ihre App bereit"]
 
 	cnt=0
 	for cont in container:
-		tag=""; summ=""
+		tag=""; summ=""; skip_title=False
 		descr =  stringextract('"description":"', '"', cont)
 		ID	= stringextract('"id":"', '"', cont)			# id vor pagination
 		pos = cont.find('"pagination"')						# skip ev. spaltenübergreifendes Bild mit 
@@ -328,11 +334,18 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		if anz == '1':
 			tag = u"%s Beitrag" % anz
 		else:
-			if anz == "null": anz='mehrere'
+			if anz == "null": anz='mehrere'					# continue 0 s.u.
 			tag = u"%s Beiträge" % anz
-			
 		if descr:
 			tag = "%s\n\n%s" % (tag, descr)
+			
+		for item in skip_list:								# skip personalierte Inhalte
+			if item in title:
+				skip_title=True
+				break
+		if 	skip_title:
+			PLog("skip_list: %s" % title)
+			continue	
 
 		path 	= stringextract('"href":"', '"', cont)
 		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
@@ -341,6 +354,10 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 			path = path.replace('{regionId}', region)
 		img_path = path.split("pageSize")[0] + "pageSize=1"	# 1. Beitrag reicht
 		img = img_preload(ID, img_path, title, 'ARDStart')
+		
+		if anz == "0" and "/region/" not in path:
+			PLog("skip_anz_0: %s" % title)
+			continue	
 		
 		if 'Livestream' in title or up_low('Live') in up_low(title):
 			if 'Konzerte' not in title:						# Corona-Zeit: Live-Konzerte (keine Livestreams)
@@ -358,7 +375,6 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 			tag = u"aktuelle Region: [B]%s[/B]" % rname
 			summ = u"Partnersender: [B]%s[/B]" % partner
 			func = "ARDStartRegion"							# neu ab 29.06.2022
-		# todo: ARDStartRubrik -> ARDRubriken (Bsp.: Button 'ARD Sport' in Main_NEW)
 		
 		if cnt == 1:										# neu ab 12.02.2023: ev. "Regionales"-Menü hinter Stage
 			regio_kat = [									# nach Bedarf ergänzen + auslagern
@@ -378,7 +394,9 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 					addDir(li=li, label=reg_title, action="dirList", dirID="resources.lib.ARDnew.%s" % func, fanart=reg_img, thumb=reg_img, 
 						tagline=reg_tag, fparams=fparams)
 					cnt=cnt+1
-			
+		
+		# Ersetzung kann entfallen, wenn personalized bereits im Aufruf-Call fehlt
+		# path = path.replace("userId=personalized&", "")	# 17.08.2023 personalized erfordert Authentif.	
 		label = title										# Anpassung phoenix ("Stage Widget händisch")
 		if title.startswith("Stage") or title.startswith("Die besten Videos"):
 			label = "[B]Highlights[/B]"	
@@ -1319,6 +1337,8 @@ def ARD_Teletext(path=""):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------
+# issue: Wetterkarten sind aus 9x16-Gif-Pixeln zusammengesetzt - aktuell
+#	hier nicht darstellbar
 #
 def ARD_Teletext_Table(body, aktpg):
 	PLog('ARD_Teletext_Table: '+ aktpg)
@@ -1338,9 +1358,16 @@ def ARD_Teletext_Table(body, aktpg):
 			txt = txt + item.replace("</a","")
 		if "<a onclick" in item:
 			txt = txt + item.split("<")[0]
- 
+
 	txt = unescape(txt); txt = txt.strip(); txt = "  " + txt
-	PLog("txt: " + txt[:60])
+	PLog("txt: " + txt[:80])		
+
+	lines = txt.splitlines()
+	new_lines=[]
+	for line in lines:
+		new_lines.append(line.strip())					# Wetter-Gif-Lücken abschneiden 
+	txt =  "\n".join(new_lines)
+
 	if txt:		
 		title = "Seite " + 	aktpg	
 		xbmcgui.Dialog().textviewer(title, txt, usemono=True)
