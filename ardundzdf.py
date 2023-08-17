@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>128</nr>										# Numerierung für Einzelupdate
+# 	<nr>129</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.1'
-VDATE = '13.08.2023'
+VDATE = '17.08.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1142,7 +1142,9 @@ def ZDF_Teletext(path=""):
 #---------------------------------------------------------------- 
 # Hinw.: in textviewer für monospaced Font die Kodi-Einstellung
 #	"Standardwert des Skins" wählen
-#
+# Wetterkarten: liefert das ZDF anders als die ARD als bae64-kodierte
+#	Gifs aus - Darstellung hier nach Schließen des Textviewers.
+# 
 def ZDF_Teletext_Table(li, body, aktpg):
 	PLog('ZDF_Teletext_Table: ' + aktpg)
 	base = "https://teletext.zdf.de/teletext/zdf/seiten/"
@@ -6966,10 +6968,11 @@ def WDRstream(path, title, img, summ):
 #	start_end: EPG-Start-/Endzeit Unix-Format für Kontextmenü (EPG_ShowSingle <-)
 # 04.04.2021 Anpassung für Radiosender (z.B. MDR Fußball-Radio Livestream)
 # 08.06.2021 Anpassung für Radiosender (Endung /mp3, Code an Funktionsstart)
+# 17.08.2023 Anpassung für mp4-Livestreams von //sportschau-dd (Sofortstart AUS)
 #
 def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', start_end='', homeID=''):
 	PLog('SenderLiveResolution:')
-	PLog(title); PLog(descr); PLog(Sender);
+	PLog(title); PLog(path); PLog(descr); PLog(Sender);
 	path_org = path
 
 	# Radiosender in livesenderTV.xml ermöglichen (ARD Audio Event Streams)
@@ -7061,11 +7064,22 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 			li = PlayButtonM3u8(li, url_m3u8, thumb, title, tagline=title, descr=descr)	
 									
 	else:	# keine oder unbekannte Extension - Format unbekannt,
-			# # Radiosender s.o.
-		msg1 = 'SenderLiveResolution: unbekanntes Format. Url:'
-		msg2 = url_m3u8
-		PLog(msg1)
-		MyDialog(msg1, msg2, '')
+			# Radiosender s.o.
+			# 17.08.2023 Ausnahme mp4-Streams von sportschau-dd nach ARD-Änderung des 
+			#	api-Calls für Startseite
+		if "//sportschau-dd" in url_m3u8:
+			title=py2_encode(title); url_m3u8=py2_encode(url_m3u8);
+			thumb=py2_encode(thumb); descr=py2_encode(descr)
+			fparams="&fparams={'url': '%s','title': '%s','thumb': '%s','Plot': '%s', 'live': 'true'}" %\
+				(quote_plus(url_m3u8), quote_plus(title), quote_plus(thumb), 
+				quote_plus(descr))	
+			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, fparams=fparams, 
+				mediatype='video', summary=descr) 		
+		else:
+			msg1 = 'SenderLiveResolution: unbekanntes Format. Url:'
+			msg2 = url_m3u8
+			PLog(msg1)
+			MyDialog(msg1, msg2, '')
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 

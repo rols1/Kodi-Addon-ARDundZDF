@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>48</nr>										# Numerierung für Einzelupdate
+# 	<nr>49</nr>										# Numerierung für Einzelupdate
 #	Stand: 17.08.2023
 
 # Python3-Kompatibilität:
@@ -276,10 +276,13 @@ def Main_NEW(name='', CurSender=''):
 #	json identisch
 # Links des api-Calls für ard=ARD-Alle funktionieren nicht mehr (HTTP ERROR 404). Beim neuen
 #	api-Call erfordert das Merkmal personalized eine Authentifizierung bei den Folgecalls.
-#	Merkmal hier entfernt.
+#	Merkmal hier entfernt (entfällt so autom. bei den Folgecalls).
+#
 def ARDStart(title, sender, widgetID='', path='', homeID=''): 
 	PLog('ARDStart:'); PLog(sender)
 	
+	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+		'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
 	CurSender = Dict("load", 'CurSender')		
 	if homeID:												# CurSender in sender
 		CurSender=sender
@@ -289,8 +292,8 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 	summ = 'Mediathek des Senders [B] %s [/B]' % sendername
 		
 	if sender == "ard":
-		#base = "https://api.ardmediathek.de/page-gateway/pages/ard/home?userId=personalized&embedded=false"
-		base = "https://api.ardmediathek.de/page-gateway/pages/ard/home?embedded=false"
+		base = "https://api.ardmediathek.de/page-gateway/pages/ard/home?embedded=true"
+		#base = "https://api.ardmediathek.de/page-gateway/pages/ard/home?embedded=false"  # kl. Variante o. Bilder
 	else:
 		base = "https://api.ardmediathek.de/page-gateway/pages/%s/home?embedded=false" % sender
 
@@ -302,7 +305,7 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 
 	if path == '':
 		path = base
-	page, msg = get_page(path)								# api-source ohne Cache
+	page, msg = get_page(path, header=headers)				# api-source ohne Cache
 	PLog(len(page))
 	page = page.replace('\\"', '*')							# quotierte Marks entf.
 	
@@ -352,10 +355,14 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		if "/region/" in path and '{regionId}' in path:		# Bild Region laden, Default Berlin
 			region="be"; rname="Berlin"; partner="rbb"		# Default-Region, Änderung in ARDStartRegion
 			path = path.replace('{regionId}', region)
-		img_path = path.split("pageSize")[0] + "pageSize=1"	# 1. Beitrag reicht
-		img = img_preload(ID, img_path, title, 'ARDStart')
+
+		if '"images":' in cont:								# Teaser mit Bildern vorhanden
+			img = img_load(title, cont)
+		else:												# Teaser fehlt -> im Voraus laden
+			img_path = path.split("pageSize")[0] + "pageSize=1"	# 1. Beitrag reicht
+			img = img_preload(ID, img_path, title, 'ARDStart')
 		
-		if anz == "0" and "/region/" not in path:
+		if anz == "0" and "/region/" not in path:			# skip 0 Inhalte
 			PLog("skip_anz_0: %s" % title)
 			continue	
 		
@@ -396,12 +403,12 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 					cnt=cnt+1
 		
 		# Ersetzung kann entfallen, wenn personalized bereits im Aufruf-Call fehlt
-		# path = path.replace("userId=personalized&", "")	# 17.08.2023 personalized erfordert Authentif.	
+		path = path.replace("userId=personalized&", "")	# 17.08.2023 personalized erfordert Authentif.	
 		label = title										# Anpassung phoenix ("Stage Widget händisch")
 		if title.startswith("Stage") or title.startswith("Die besten Videos"):
 			label = "[B]Highlights[/B]"	
 			
-		PLog(path); PLog(title); PLog(ID); PLog(anz); PLog(img); 
+		PLog(path); PLog(img); PLog(title); PLog(ID); PLog(anz); 
 		path=py2_encode(path); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s','homeID': '%s'}" %\
 			(quote(path), quote(title), ID, homeID)
@@ -411,6 +418,21 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 				
+#-----------------------------------------------------------------------
+# 17.08.2023 img-Link für Startseite aus Block item ermitteln
+#
+def img_load(title, item, icon=ICON_MAIN_ARD):
+	PLog("img_load: " + title)
+	leer_img = R(ICON_DIR_FOLDER)
+	
+	img = stringextract('src":"', '"', item)			# Pfad zum 1. img
+	PLog(img)
+	if img == '':
+		return leer_img									# Fallback 
+	else:
+		img = img.replace('{width}', '720')
+		return img	
+
 #-----------------------------------------------------------------------
 # 19.10.2020 Ablösung img_via_id durch img_preload nach Änderung 
 #	der ARD-Startseite: lädt das erste img ermittelt in geladener
