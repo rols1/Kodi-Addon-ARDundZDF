@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>49</nr>										# Numerierung für Einzelupdate
+# 	<nr>50</nr>										# Numerierung für Einzelupdate
 #	Stand: 17.08.2023
 
 # Python3-Kompatibilität:
@@ -292,10 +292,10 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 	summ = 'Mediathek des Senders [B] %s [/B]' % sendername
 		
 	if sender == "ard":
-		base = "https://api.ardmediathek.de/page-gateway/pages/ard/home?embedded=true"
+		base = "https://api.ardmediathek.de/page-gateway/pages/ard/home?embedded=true"    # true: Variante mit Teasern
 		#base = "https://api.ardmediathek.de/page-gateway/pages/ard/home?embedded=false"  # kl. Variante o. Bilder
 	else:
-		base = "https://api.ardmediathek.de/page-gateway/pages/%s/home?embedded=false" % sender
+		base = "https://api.ardmediathek.de/page-gateway/pages/%s/home?embedded=true" % sender
 
 	li = xbmcgui.ListItem()
 	if not homeID:
