@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>129</nr>										# Numerierung für Einzelupdate
+# 	<nr>130</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.1'
-VDATE = '17.08.2023'
+VDATE = '18.08.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1065,6 +1065,15 @@ def ZDF_Teletext(path=""):
 		"Nachrichten|112", "Politbarometer|165", "Wetter|170", "Sport|200",
 		"Programm|300", "Flughafen|575", "Börse|600", 
 		]
+		
+	if url_check(path, caller='ZDF_Teletext', dialog=False) == False:   # falsche Seite manuell?
+		aktpg = re.search(u'seiten/(.*?).html', path).group(1)
+		msg1 = u'Seite %s' % aktpg
+		msg2 = u'nicht verfügbar'
+		icon = thumb		
+		xbmcgui.Dialog().notification(msg1,msg2,img,3000)
+		PLog("coreccted: %s -> %s" % (aktpg, "100"))
+		path = "https://teletext.zdf.de/teletext/zdf/seiten/100.html"
 		
 	page, msg = get_page(path=path)	
 	if page == '':	
@@ -7366,7 +7375,7 @@ def ZDF_Start(ID, homeID=""):
 
 			page, msg = get_page(path)								# vom Sender holen		
 			if page == "":
-				msg1 = 'Fehler beim Abruf von:'
+				msg1 = 'Fehler in ZDF_Start:'
 				msg2 = msg
 				MyDialog(msg1, msg2, '')
 				return

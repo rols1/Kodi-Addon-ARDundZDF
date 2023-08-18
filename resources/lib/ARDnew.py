@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>50</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.08.2023
+# 	<nr>51</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.08.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -297,18 +297,32 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 	else:
 		base = "https://api.ardmediathek.de/page-gateway/pages/%s/home?embedded=true" % sender
 
+	if path == '':
+		path = base
+	DictID = "ARDStart_%s" % sendername
+	page = Dict("load",DictID,CacheTime=ARDStartCacheTime)	# Cache: 5 min
+	if not page:											# nicht vorhanden oder zu alt						
+		icon = R(ICON_MAIN_ARD)
+		xbmcgui.Dialog().notification("Cache %s:" % DictID,"Haltedauer 5 Min",icon,3000,sound=False)
+
+		page, msg = get_page(path, header=headers)			# vom Sender holen		
+		if page == "":
+			msg1 = 'Fehler in ARDStart:'
+			msg2 = msg
+			MyDialog(msg1, msg2, '')
+			return
+		else:
+			Dict('store', DictID, page)						# json-Datei -> Dict, ca. 2,5 MByte mit Teasern
+			
+	PLog(len(page))
+	page = page.replace('\\"', '*')							# quotierte Marks entf.
+	
 	li = xbmcgui.ListItem()
 	if not homeID:
 		li = home(li, ID='ARD Neu')							# Home-Button
 	else:
 		li = home(li, ID=homeID)
 
-	if path == '':
-		path = base
-	page, msg = get_page(path, header=headers)				# api-source ohne Cache
-	PLog(len(page))
-	page = page.replace('\\"', '*')							# quotierte Marks entf.
-	
 	container = blockextract ('compilationType":', page)  	# widgets-Container json (Swiper + Rest)
 	PLog(len(container))
 	title_list=[]											# für Doppel-Erkennung
@@ -1309,6 +1323,14 @@ def ARD_Teletext(path=""):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')			# Home-Button
 
+	mobilpg = stringextract('<p><a href="/mobil/',  '"', page)
+	if mobilpg and mobilpg != aktpg:
+		msg1 = u'Seite %s' % aktpg
+		msg2 = u'nicht verfügbar'
+		icon = thumb		
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
+		PLog("coreccted: %s -> %s" % (aktpg, mobilpg))
+		aktpg = mobilpg
 	body =  stringextract('"ardtext_classic"',  '!-- TEXT', page)
 	PLog(body[:60]); 
 
