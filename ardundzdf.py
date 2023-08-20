@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>130</nr>										# Numerierung für Einzelupdate
-VERSION = '4.8.1'
-VDATE = '18.08.2023'
+VERSION = '4.8.2'
+VDATE = '20.08.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1066,6 +1066,7 @@ def ZDF_Teletext(path=""):
 		"Programm|300", "Flughafen|575", "Börse|600", 
 		]
 		
+	#  ZDF korrigiert nicht selbst (anders ARD)
 	if url_check(path, caller='ZDF_Teletext', dialog=False) == False:   # falsche Seite manuell?
 		aktpg = re.search(u'seiten/(.*?).html', path).group(1)
 		msg1 = u'Seite %s' % aktpg
@@ -3994,6 +3995,7 @@ def ARDSportMedia(li, title, page):
 				
 			img = stringextract('src="', '"', item)
 			label = stringextract("<strong>", "</strong>", item)
+			label = unescape(label)
 			if "Audio" in label or "Podcast" in label or "Video" in label:	# ähnlich ARDSportSlider
 				url = stringextract('href="', '"', item)
 				if url.startswith("http") == False:

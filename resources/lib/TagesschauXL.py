@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>9</nr>								# Numerierung für Einzelupdate
-#	Stand: 14.07.2023
+#	Stand: 20.08.2023
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -716,7 +716,7 @@ def get_VideoAudio(title, path):								# Faktenfinder
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	
-	content =  blockextract('class="v-instance" data-v="', page)
+	content =  blockextract('class="v-instance" data-v="', page, '</div>')
 	PLog(len(content))
 		
 	cnt = 0; url_list=[]
@@ -776,7 +776,9 @@ def get_content_json(item):
 		PLog("get_img_error: " + str(exception))
 		img = R(ICON_DIR_FOLDER)		
 
-	title=obj["mediadescription"]
+	title=obj["mediadescription"]						# leer möglich
+	if title.strip() == "":								# Altern.
+		title = stringextract('av_content":"', '"', conf)
 	title = repl_json_chars(title)
 	
 	# Streams: zu geringe Auswahl für Listen

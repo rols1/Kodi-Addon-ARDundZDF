@@ -10,6 +10,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+20.08.2023 4.8.2
+			unescape (util): '&deg;' -> '°' ergänzt für Teletext ARD.
+			Kikaninchen_Videos: html-Auswertung auf Kika-api/v1 umgestellt,
+			Anpassungen: Kikaninchen_Videos (Step1 + Step2), Kika_SingleBeitrag,
+			unescape (util), Watchdog_ZDF_Childs.
+			ARDnew: Austausch webpwa-api-Call gegen neuen api-Call, Anpassungen und
+			Optimierungen (img_load) in ARDStart (s. Infos dort, einschl. Cache) und 
+			SenderLiveResolution.
+			ARD_Teletext (ARDnew) + ZDF_Teletext: für falsche Seitenzahlen Hinweis und
+			Korrektur (-> Seite 100) ergänzt.
+			get_content_json (TagesschauXL): Inhalt av_content ergänzt, falls title 
+			leer.
+			ARDSportMedia: html-Behandl. -> unescape(label).
+
 13.08.2023 4.8.1
 			ZDF_Live: utf-Behandlung für Texte (MyDialog, fparams) - relevant für
 			Kodi Leia.
@@ -19,7 +33,7 @@ CHANGE HISTORY
 			ZDF_Teletext_Table + ZDF_Teletext_setPage, Icons: icon-next, icon-previos, 
 			teletext_zdf.
 			ARD-Erweiterung (Modul ARDnew): Teletext (ard-text.de/index.php), neue 
-			Funktionen ARD_Teletext, ARD_Teletext_Table, Icon: teletext_ard..
+			Funktionen ARD_Teletext, ARD_Teletext_Table, Icon: teletext_ard.
 
 30.07.2023 4.8.0
 			ZDF_Live: abweichendes Format der Videoquellen berücksichtigt (key:formitaeten

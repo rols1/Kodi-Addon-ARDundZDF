@@ -1323,7 +1323,7 @@ def ARD_Teletext(path=""):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')			# Home-Button
 
-	mobilpg = stringextract('<p><a href="/mobil/',  '"', page)
+	mobilpg = stringextract('<p><a href="/mobil/',  '"', page)	# ARD korrigiert selbst, url-Check entf.
 	if mobilpg and mobilpg != aktpg:
 		msg1 = u'Seite %s' % aktpg
 		msg2 = u'nicht verfügbar'
