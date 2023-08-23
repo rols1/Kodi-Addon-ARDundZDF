@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>130</nr>										# Numerierung für Einzelupdate
+# 	<nr>131</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.2'
-VDATE = '20.08.2023'
+VDATE = '23.08.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1066,7 +1066,7 @@ def ZDF_Teletext(path=""):
 		"Programm|300", "Flughafen|575", "Börse|600", 
 		]
 		
-	#  ZDF korrigiert nicht selbst (anders ARD)
+	#  ZDF korrigiert nicht selbst 
 	if url_check(path, caller='ZDF_Teletext', dialog=False) == False:   # falsche Seite manuell?
 		aktpg = re.search(u'seiten/(.*?).html', path).group(1)
 		msg1 = u'Seite %s' % aktpg
@@ -1311,7 +1311,7 @@ def ZDF_Teletext_Table(li, body, aktpg):
 		txt = txt.strip()											# LF's vor + hinter txt entf.
 		xbmcgui.Dialog().textviewer(title, txt,usemono=True)		# todo: Verzicht auf Bottom-Buttons	
 			
-		if img_data:
+		if img_data:												# Wetterkarten
 			import base64
 			img_data = py2_encode(img_data)
 			fname = os.path.join("%s/teletext.png") % DICTSTORE	
@@ -1751,29 +1751,28 @@ def ARDAudioEventStreams(li=''):
 	addDir(li=li, label=label, action="dirList", dirID="Audio_get_cluster_rubrik", \
 		fanart=img, thumb=thumb, tagline=tag, fparams=fparams)	
 	 	
-					
-	title = u"[B]Audio:[/B] Audiostreams auf sportschau.de"						# Button Audiostreams sportschau.de
-	href = 'https://www.sportschau.de/audio/index.html'
-	img = R("tv-ard-sportschau.png")								
-	tag = u'aktuelle Audiostreams der ARD Sportschau.' 
-	block = 'class=*mediaplayer'
+	# Startseite für Audiostreams: https://www.sportschau.de/fussball/how-to-audio-netcast-100.html				
+	title = u"[B]Audio:[/B] Alle Audiostreams der Fußball-Bundesliga"	# Button Audiostreams sportschau.de
+	href = 'https://www.sportschau.de/fussball/bundesliga/audiostreams-bundesliga-uebersicht-100.html'
+	img = R("tv-ard-sportschau.png")
+	thumb =	"https://images.sportschau.de/image/14367dff-c9b4-4237-8421-6a9c0e01d61e/AAABiYhYFh4/AAABibBxqrQ/16x9-1280/buli-audio-netcast-teaser-100.jpg"						
+	tag = u'Fußball-Bundesliga live hören.\nQuelle: ARD sportschau.de (WDR)' 
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
-	block=py2_encode(block);
-	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s', 'cacheID': 'ARDSport_Audios', 'block': '%s'}" %\
-		(quote(title), quote(href), quote(img), quote(block))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportSingleBlock", fanart=img, 
-		thumb=img, tagline=tag, fparams=fparams)
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s', 'cacheID': 'ARDSport_Audios_BL1'}" %\
+		(quote(title), quote(href), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
+		thumb=thumb, tagline=tag, fparams=fparams)
 
-	title = u"[B]Audio:[/B] alle Netcast-Audiostreams auf sportschau.de"		# Button Netcast-Audiostreams-Liste
-	href = 'https://www.sportschau.de/sportimradio/audiostream-netcast-uebersicht-100.html'
-	img = R("tv-ard-sportschau.png")								
-	tag = u'Die Übersicht aller Netcast-Audiostreams für die Bundesliga-Übertragungen.' 
-	block = 'class=*mediaplayer'
+	title = u"[B]Audio:[/B] Alle Audiostreams der 2. Fußball-Bundesliga"# Button Audiostreams sportschau.de
+	href = 'https://www.sportschau.de/fussball/bundesliga2/audiostreams-zweite-bundesliga-uebersicht-100.html'
+	img = R("tv-ard-sportschau.png")
+	thumb =	"https://images.sportschau.de/image/14367dff-c9b4-4237-8421-6a9c0e01d61e/AAABiYhYFh4/AAABibBxqrQ/16x9-1280/buli-audio-netcast-teaser-100.jpg"						
+	tag = u'2. Bundesliga live hören.\nQuelle: ARD sportschau.de (WDR)' 
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s', 'cacheID': 'ARDSport_Netcast', 'block': '%s'}" %\
-		(quote(title), quote(href), quote(img), quote(block))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportSingleBlock", fanart=img, 
-		thumb=img, tagline=tag, fparams=fparams)
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s', 'cacheID': 'ARDSport_Audios_BL2'}" %\
+		(quote(title), quote(href), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
+		thumb=thumb, tagline=tag, fparams=fparams)
 	
 	if endof:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -3112,6 +3111,17 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 	
+	title = u"Event: [B]Leichtathletik-WM 2023 in Budapest[/B]"	# Großevent	
+	tag = u"Die 19. Leichtathletik-Weltmeisterschaften finden vom 19. bis 27. August in Ungarn statt."
+	cacheID = "Sport_WMBudapest"
+	img = "https://images.sportschau.de/image/1516bd09-ab89-49dd-aeb8-942c1cd1f30a/AAABh_syXGE/AAABibBxqrQ/16x9-1280/budapest-leichtathletik-stadion-100.jpg"
+	path = "https://www.sportschau.de/leichtathletik/wm"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Event-Archiv"									# Buttons für ältere Events	
 	tag = u"Archiv für zurückliegende Groß-Events."
 	img = logo
@@ -4114,23 +4124,21 @@ def ARDSportMediaPlayer(li, item_data):
 # Für Seiten mit nur einheitliche Blöcken
 # Aufrufer: ARDAudioEventStreams (Audiostreams, Netcast-Audiostreams) 
 # bisher nur Blöcke class="mediaplayer
-def ARDSportSingleBlock(title, path, img, cacheID, block):
-	PLog('ARDSportSingleBlock:')
+def ARDSportNetcastAudios(title, path, img, cacheID):
+	PLog('ARDSportNetcastAudios:')
 	
-	page = ARDSportLoadPage(title, path, "ARDSportSingleBlock", cacheID)
+	page = ARDSportLoadPage(title, path, "ARDSportNetcastAudios", cacheID)
 	if page == '':
 		return
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
-	block = block.replace("*", '"')
+	items = blockextract('<picture class=', page)							# Kombi?: ARDSportLive (Videos + Audios)
+	PLog(len(items))
 	
-	teaser = blockextract(block, page)
-	PLog(len(teaser))
-	
-	for item in teaser:
-		data  = stringextract('class="mediaplayer', '"MediaPlayer', item) # Ende: MediaPlayer, MediaPlayerInlinePlay
+	for item in items:
+		data  = ARDSportgetPlayer(item)
 		PLog(data[:60])
 		if data:
 			player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, data)
@@ -4152,13 +4160,6 @@ def ARDSportSingleBlock(title, path, img, cacheID, block):
 						quote(title), quote(img), quote_plus(Plot), ID)
 					addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
 						fparams=fparams, tagline=tag)
-						
-	#--------------------														# Abschluss: Slider auswerten	
-	teaser = blockextract('class="teaser-slider', page)
-	PLog(len(teaser))
-	skip_list = []
-	for item in teaser:
-		skip_list = ARDSportSlider(li, item, skip_list)		# -> addDir	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
