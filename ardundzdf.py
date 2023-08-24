@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>131</nr>										# Numerierung für Einzelupdate
+# 	<nr>132</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.2'
-VDATE = '23.08.2023'
+VDATE = '24.08.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1723,6 +1723,8 @@ def AudioSenderPrograms(org=''):
 # 01.05.2022 Button Bundesliga ARD-Hörfunk auskommentiert (Links defekt),
 # 14.06.2022 entfernt, Button "aktuelle LIVESTREAMS(sportschau.de)"
 #	verlegt nach ARDnew.ARDSportLive
+# 24.08.2023 Button "ARD Audio Event Streams" entfernt, dto. entspr.
+#	Channel in livesenderTV.xml
 #
 def ARDAudioEventStreams(li=''):
 	PLog('ARDAudioEventStreams:')
@@ -1730,22 +1732,14 @@ def ARDAudioEventStreams(li=''):
 	if li == '':														# Aufruf ARDSportWDR (ARDnew)
 		endof = True
 		li = xbmcgui.ListItem()
-
-	channel = u'ARD Audio Event Streams'								# aus livesenderTV.xml								
-	title = u"[B]Audio:[/B] ARD Audio Event Streams"					# div. Events, z.Z. Fußball EM2020   
-	img = R("radio-livestreams.png")
-	tag = u'Reportagen von regionalen und überregionalen Events' 
-	img=py2_encode(img); channel=py2_encode(channel); title=py2_encode(title);
-	fparams="&fparams={'channel': '%s'}"	% (quote(channel))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportAudioXML", fanart=img, 
-		thumb=img, tagline=tag, fparams=fparams)
 		
 	label = "[B]Audio:[/B] Sport in der Audiothek"					# Querverweis Audiothek Rubrik Sport
 	li = xbmcgui.ListItem()
 	tag = u"LIVE: 1. und 2. Bundesliga, einschl. Bundesliga-Konferenz, Aktuell informiert und weitere Themen"
 	thumb = R("ard-sport.png")
+	img = R(ICON_MAIN_AUDIO)
 	href = 'https://www.ardaudiothek.de/rubrik/sport/42914734'
-	title=py2_encode(title); href=py2_encode(href);
+	href=py2_encode(href);
 	fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'ID': 'Audio_get_rubriken_web'}" % (quote(href), 
 		quote("Sport"))
 	addDir(li=li, label=label, action="dirList", dirID="Audio_get_cluster_rubrik", \
@@ -2753,13 +2747,14 @@ def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 # Liste der ARD Audio Event Streams in livesenderTV.xml
 #	-> SenderLiveListe -> SenderLiveResolution (Aufruf
 #	einz. Sender)
+# 24.08.2023 vorerst deaktivert, channel in livesenderTV.xml
+#	entfernt
+#def ARDSportAudioXML(channel, img=''):
+#	PLog('ARDSportAudioXML:') 
+#	PLog(channel)
 #
-def ARDSportAudioXML(channel, img=''):
-	PLog('ARDSportAudioXML:') 
-	PLog(channel)
-
-	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender='')
-	return
+#	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender='')
+#	return
 #--------------------------------------------------------------------------------------------------
 # Bilder für ARD Sportschau, z.B. Moderatoren
 # Einzelnes Listitem in Video-Addon nicht möglich - s.u.
@@ -3111,7 +3106,7 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 	
-	title = u"Event: [B]Leichtathletik-WM 2023 in Budapest[/B]"	# Großevent	
+	title = u"Event: [B]Leichtathletik-WM 2023 in Budapest[/B]"			# Großevent	
 	tag = u"Die 19. Leichtathletik-Weltmeisterschaften finden vom 19. bis 27. August in Ungarn statt."
 	cacheID = "Sport_WMBudapest"
 	img = "https://images.sportschau.de/image/1516bd09-ab89-49dd-aeb8-942c1cd1f30a/AAABh_syXGE/AAABibBxqrQ/16x9-1280/budapest-leichtathletik-stadion-100.jpg"
@@ -3121,6 +3116,28 @@ def ARDSportWDR():
 		(quote(title), quote(path), quote(img), cacheID)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
+
+	title = u"Event: [B]Radsport: Deutschland Tour[/B]"					# Großevent	
+	tag = u"Livestreams, Rennberichte, Analysen, Videos, Ergebnisse zur Deutschland Tour."
+	cacheID = "DTOUR"
+	img = "https://images.sportschau.de/image/c5f18e62-94e0-471f-96fc-1ca5b9d462a1/AAABiU-tGd0/AAABibBx2rU/20x9-1280/deutschland-tour-erste-etappe-108.webp"
+	path = "https://www.sportschau.de/radsport/deutschland-tour/"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
+
+	title = u"Event: [B]Hockey-EM 2023 der Männer und Frauen[/B]"		# Großevent	
+	tag = u"Aktuelle News zur Hockey-EM 2023 in Mönchengladbach | sportschau.de."
+	cacheID = "HockeyEM"
+	img = "https://images.sportschau.de/image/30211f21-15dc-44a1-a8f4-64971d609de9/AAABhOMvB3Y/AAABibBxqrQ/16x9-1280/wdr-kampf-um-den-ball-100.jpg"
+	path = "https://www.sportschau.de/hockey/feldhockey-em-index-100.html"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
 
 	title = u"Event-Archiv"									# Buttons für ältere Events	
 	tag = u"Archiv für zurückliegende Groß-Events."
@@ -3192,7 +3209,19 @@ def ARDSportWDRArchiv():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
-	title = u"Event: [B]FIFA Frauen WM 2023[/B]"
+
+	title = u"Event: [B]Hockey-EM 2023 der Männer und Frauen[/B]"		# Großevent	
+	tag = u"Aktuelle News zur Hockey-EM 2023 in Mönchengladbach | sportschau.de."
+	cacheID = "HockeyEM"
+	img = "https://images.sportschau.de/image/30211f21-15dc-44a1-a8f4-64971d609de9/AAABhOMvB3Y/AAABibBxqrQ/16x9-1280/wdr-kampf-um-den-ball-100.jpg"
+	path = "https://www.sportschau.de/hockey/feldhockey-em-index-100.html"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
+
+	title = u"Event: [B]FIFA Frauen WM 2023[/B]"						# Großevent	
 	tag = u"32 Mannschaften spielen im Juli und August in Australien und Neuseeland um den Fußball-WM-Titel der Frauen."
 	cacheID = "Sport_WMFrauen"
 	img = "https://images.sportschau.de/image/b64c79b7-767b-4a7f-acda-841a07ef03d4/AAABiUo9W2s/AAABg8tME_8/16x9-1280/ffwm-pokal-laenderflaggen-100.jpg"
@@ -3250,7 +3279,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Radsport: Deutschland Tour[/B]"					# Großevent	
 	tag = u"Livestreams, Rennberichte, Analysen, Videos, Ergebnisse zur Deutschland Tour."
 	cacheID = "DTOUR"
-	img = "http://images.sportschau.de/image/d3108676-9108-4c6f-8746-677eb64b3d2f/AAABgiEMZLA/AAABgPp7Tbc/1x1-640/stimmen-achtzehnte-etappe-106.jpg"
+	img = "https://images.sportschau.de/image/c5f18e62-94e0-471f-96fc-1ca5b9d462a1/AAABiU-tGd0/AAABibBx2rU/20x9-1280/deutschland-tour-erste-etappe-108.webp"
 	path = "https://www.sportschau.de/radsport/deutschland-tour/"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
@@ -4123,7 +4152,7 @@ def ARDSportMediaPlayer(li, item_data):
 #---------------------------------------------------------------------------------------------------
 # Für Seiten mit nur einheitliche Blöcken
 # Aufrufer: ARDAudioEventStreams (Audiostreams, Netcast-Audiostreams) 
-# bisher nur Blöcke class="mediaplayer
+# 
 def ARDSportNetcastAudios(title, path, img, cacheID):
 	PLog('ARDSportNetcastAudios:')
 	
