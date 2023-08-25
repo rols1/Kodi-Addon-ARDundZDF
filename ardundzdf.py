@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>132</nr>										# Numerierung für Einzelupdate
+# 	<nr>133</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.2'
-VDATE = '24.08.2023'
+VDATE = '25.08.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -4114,7 +4114,7 @@ def ARDSportMediaPlayer(li, item_data):
 		
 	avail = stringextract('av_original_air_time":"', '"', item_data)
 	if avail:
-		verf = time_translate(avail, day_warn=True)
+		verf = time_translate(avail, add_hour=False, day_warn=True)
 	
 	chapter = stringextract('chapter1":"', '"', item_data)
 	creator = stringextract('creator":"', '"', item_data)
