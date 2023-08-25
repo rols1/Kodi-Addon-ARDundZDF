@@ -3129,10 +3129,21 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)
 
 	title = u"Event: [B]Hockey-EM 2023 der Männer und Frauen[/B]"		# Großevent	
-	tag = u"Aktuelle News zur Hockey-EM 2023 in Mönchengladbach | sportschau.de."
+	tag = u"Aktuelle News zur Hockey-EM 2023 in Mönchengladbach | sportschau.de"
 	cacheID = "HockeyEM"
 	img = "https://images.sportschau.de/image/30211f21-15dc-44a1-a8f4-64971d609de9/AAABhOMvB3Y/AAABibBxqrQ/16x9-1280/wdr-kampf-um-den-ball-100.jpg"
 	path = "https://www.sportschau.de/hockey/feldhockey-em-index-100.html"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
+
+	title = u"Event: [B]Basketball-WM 2023[/B]"					# Großevent	
+	tag = u"Aktuelle News zur Basketball-WM 2023 | sportschau.de"
+	cacheID = "BasketballWM"
+	img = "https://images.sportschau.de/image/b39a8ecf-aeb3-4781-a3fe-1038a5a5a36a/AAABifMqafU/AAABibBxqrQ/16x9-1280/ndr-dennis-schroeder-haelt-den-ball-und-lacht-100.jpg"
+	path = "https://www.sportschau.de/basketball/wm-maenner"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
 		(quote(title), quote(path), quote(img), cacheID)
@@ -3209,6 +3220,16 @@ def ARDSportWDRArchiv():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
+	title = u"Event: [B]Basketball-WM 2023[/B]"					# Großevent	
+	tag = u"Aktuelle News zur Basketball-WM 2023 | sportschau.de"
+	cacheID = "BasketballWM"
+	img = "https://images.sportschau.de/image/b39a8ecf-aeb3-4781-a3fe-1038a5a5a36a/AAABifMqafU/AAABibBxqrQ/16x9-1280/ndr-dennis-schroeder-haelt-den-ball-und-lacht-100.jpg"
+	path = "https://www.sportschau.de/basketball/wm-maenner"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
 
 	title = u"Event: [B]Hockey-EM 2023 der Männer und Frauen[/B]"		# Großevent	
 	tag = u"Aktuelle News zur Hockey-EM 2023 in Mönchengladbach | sportschau.de."
