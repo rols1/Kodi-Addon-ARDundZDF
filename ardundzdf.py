@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>134</nr>										# Numerierung für Einzelupdate
+# 	<nr>135</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.2'
-VDATE = '25.08.2023'
+VDATE = '26.08.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1724,7 +1724,7 @@ def AudioSenderPrograms(org=''):
 # 14.06.2022 entfernt, Button "aktuelle LIVESTREAMS(sportschau.de)"
 #	verlegt nach ARDnew.ARDSportLive
 # 24.08.2023 Button "ARD Audio Event Streams" entfernt, dto. entspr.
-#	Channel in livesenderTV.xml
+#	Channel in livesenderTV.xml - 26.08.2023 wiederhergestellt
 #
 def ARDAudioEventStreams(li=''):
 	PLog('ARDAudioEventStreams:')
@@ -1732,6 +1732,15 @@ def ARDAudioEventStreams(li=''):
 	if li == '':														# Aufruf ARDSportWDR (ARDnew)
 		endof = True
 		li = xbmcgui.ListItem()
+		
+	channel = u'ARD Audio Event Streams'								# aus livesenderTV.xml								
+	title = u"[B]Audio:[/B] ARD Radio Event Streams"					# div. Events, z.Z. Fußball EM2020   
+	img = R("radio-livestreams.png")
+	tag = u'Reportagen von regionalen und überregionalen Events' 
+	img=py2_encode(img); channel=py2_encode(channel); title=py2_encode(title);
+	fparams="&fparams={'channel': '%s'}"	% (quote(channel))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportAudioXML", fanart=img, 
+		thumb=img, tagline=tag, fparams=fparams)
 		
 	label = "[B]Audio:[/B] Sport in der Audiothek"					# Querverweis Audiothek Rubrik Sport
 	li = xbmcgui.ListItem()
@@ -2748,13 +2757,13 @@ def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 #	-> SenderLiveListe -> SenderLiveResolution (Aufruf
 #	einz. Sender)
 # 24.08.2023 vorerst deaktivert, channel in livesenderTV.xml
-#	entfernt
-#def ARDSportAudioXML(channel, img=''):
-#	PLog('ARDSportAudioXML:') 
-#	PLog(channel)
-#
-#	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender='')
-#	return
+#	entfernt - 26.08.2023 wiederhergestellt
+def ARDSportAudioXML(channel, img=''):
+	PLog('ARDSportAudioXML:') 
+	PLog(channel)
+
+	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender='')
+	return
 #--------------------------------------------------------------------------------------------------
 # Bilder für ARD Sportschau, z.B. Moderatoren
 # Einzelnes Listitem in Video-Addon nicht möglich - s.u.
