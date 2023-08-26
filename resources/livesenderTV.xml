@@ -2,10 +2,10 @@
  <channels_info>
   <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
   <imgsource>Arauco</imgsource>
-  <nr>41</nr>
+  <nr>42</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
-  <date>24.08.2023 rols</date>
+  <date>26.08.2023 rols</date>
   <ARDsource></ARDsource>
   <ZDFsource>https://www.zdf.de/live-tv</ZDFsource>
   <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ Button:Alle Sender</info>
@@ -929,6 +929,80 @@
 			<EPG_ID></EPG_ID>
 			<date>24.07.2021</date>
 		</item>
+</channel>
+
+<channel>
+	<name>ARD Audio Event Streams</name>
+	<thumbnail>radio-livestreams.png</thumbnail>
+	<fanart></fanart>
+	<items>
+		<item>
+			<title>BR24live</title>
+			<hrefsender></hrefsender>
+			<link>https://streams.br.de/br24live_2.m3u</link>
+			<thumbnail>radio-br.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>17.07.2021</date>
+		</item>
+		<item>
+			<title>hr-iNFO</title>
+			<hrefsender></hrefsender>
+			<link>https://dispatcher.rndfnk.com/hr/hrinfo/live/mp3/high?aggregator=ard-at</link>
+			<thumbnail>radio-hr.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<info>Stream aus Audiothek ermittelt, Direktstart in SenderLiveResolution</info>
+			<date>04.03.2022</date>
+		</item>
+		<item>
+			<title>MDR Aktuell</title>
+			<hrefsender></hrefsender>
+			<link>https://mdr-284340-0.sslcast.mdr.de/mdr/284340/0/mp3/high/stream.mp3</link>
+			<thumbnail>radio-mdr.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<info>Stream aus Audiothek ermittelt, Direktstart in SenderLiveResolution</info>
+			<date>08.05.2021</date>
+		</item>
+		<item>
+			<title>MDR-Sachsen Fußball-Radio Livestream (3. Liga und DFB-Pokal, Audio)</title>
+			<hrefsender></hrefsender>
+			<link>http://avw.mdr.de/streams/284281-0_mp3_high.m3u</link>
+			<thumbnail>tv-mdr-sachsen.png</thumbnail>
+			<imgsource>Arauco</imgsource>
+			<EPG_ID></EPG_ID>
+			<date>04.04.2021</date>
+		</item>
+		<item>
+			<title>NDR Info</title>
+			<hrefsender></hrefsender>
+			<link>https://icecast.ndr.de/ndr/ndrinfo/niedersachsen/mp3/128/stream.mp3</link>
+			<thumbnail>radio-ndr.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			 <info>Stream aus Audiothek ermittelt, Direktstart in SenderLiveResolution</info>
+			<date>05.03.2022</date>
+		</item>
+		<item>
+			<title>NDR Info Spezial</title>
+			<hrefsender></hrefsender>
+			<link>http://www.ndr.de/resources/metadaten/audio/m3u/ndrinfo_spezial.m3u</link>
+			<thumbnail>radio-ndr.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>08.05.2021</date>
+		</item>
+		<item>
+			<title>WDR Event</title>
+			<hrefsender></hrefsender>
+			<link>https://wdr-wdr-event.icecastssl.wdr.de/wdr/wdr/event/mp3/128/stream.mp3</link>
+			<thumbnail>radio-wdr.png</thumbnail>
+			<imgsource></imgsource>
+			<EPG_ID></EPG_ID>
+			<date>05.03.2022</date>
+		</item>
+	</items>
 </channel>
 
 </channels>
