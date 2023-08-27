@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>136</nr>										# Numerierung für Einzelupdate
-VERSION = '4.8.2'
+VERSION = '4.8.3'
 VDATE = '27.08.2023'
 
 

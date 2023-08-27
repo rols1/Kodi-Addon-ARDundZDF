@@ -10,6 +10,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+27.08.2023 4.8.3
+			ARD sportschau.de (WDR): Anpassung der Audio-Netcast-Auswertung an WDR-
+			Änderungen - ARDSportSingleBlock -> ARDSportNetcastAudios und Nutzung von
+			ARDSportgetPlayer + ARDSportMediaPlayer, Aktualisierung Aufruf-Buttons
+			ARDSportWDR: Event-Buttons für Leichtathletik-WM, Radsport:Deutschland Tour,
+			Hockey-EM 2023 und Basketball-WM aktualisiert/hinzugefügt. 
+			ARDAudioEventStreams: Button "ARD Audio Event Streams" entfernt.
+			ARDSportLive: Anpassung Leia/Krypton - py2_encode für title und Plot.
+			livesenderTV.xml: Abschnitt "ARD Audio Event Streams" entfernt. 
+			ARDSportMediaPlayer: 2-Std-Versatz korrigiert (add_hour=False).
+			time_translate (util): Terminwarnung "Noch x Tage" ergänzt um Stunden 
+			"Noch %s Stunden" bei akt. Tag.
+			ARD_Teletext: erneuert - umgestellt auf HBBTV-Quellen.			
+
 20.08.2023 4.8.2
 			unescape (util): '&deg;' -> '°' ergänzt für Teletext ARD.
 			Kikaninchen_Videos: html-Auswertung auf Kika-api/v1 umgestellt,
