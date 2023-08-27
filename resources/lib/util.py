@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>61</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.07.2023
+# 	<nr>62</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.08.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2054,21 +2054,21 @@ def time_translate(timecode, add_hour=True, day_warn=False):
 				dif  = str(sday-today)						# 18 days, 15:33:08.596024
 				PLog(new_ts); 
 				PLog("sday-today: %s" % dif)
-				try:
-					if dif.find("day") < 0:					# nur noch Stunden: 16:32:05.225575
-						dif = "1"
-					else:
-						dif = re.search(u'(\d+) day', dif).group(1)
-				except Exception as exception:
-					PLog(str(exception))
-					dif=""
-				PLog("dif: %s" % dif)	
-				if dif and int(dif) <= 6:
-					if dif == "1":
-						ret_ts = "%s | NOCH 1 TAG!" % ret_ts
-					else:
-						ret_ts = "%s | NOCH %s TAGE!" % (ret_ts, dif)				
-				
+				if dif.startswith("-") == False:			# -1 day, 23:48:12.503288 (Startzeit überschritten)
+					try:
+						if "day" in dif:	
+							day = re.search(u'(-?(?:\d+,?)+) day', dif).group(1)
+							PLog("day: %s" % str(day))
+							if  int(day) <= 6:					# erst ab 1 Woche warnen
+								ret_ts = "%s | NOCH %s TAG(E)!" % (ret_ts, day)
+						else:									# nur noch Stunden: 16:32:05.225575
+							std = dif.split(".")[0]				# cut .225575
+							ret_ts = "%s | Noch %s Stunden!" % (ret_ts, std)
+							
+					except Exception as exception:
+						PLog("day_warn_error: " + str(exception))
+						ret_ts=""
+					
 			return ret_ts
 		except Exception as exception:
 			PLog(str(exception))
