@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>51</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.08.2023
+# 	<nr>52</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.08.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -244,8 +244,9 @@ def Main_NEW(name='', CurSender=''):
 		thumb=R('ard-bilderserien.png'), fparams=fparams)
 
 	fparams="&fparams={}"												# ab V 4.8.1
-	addDir(li=li, label="Teletext Das Erste", action="dirList", dirID="resources.lib.ARDnew.ARD_Teletext", 
-		fanart=R("teletext_ard.png"), thumb=R("teletext_ard.png"), fparams=fparams)
+	tag = u"Quelle: ARD Text HbbTV | Federführung: RBB"
+	addDir(li=li, label="Teletext ARD", action="dirList", dirID="resources.lib.ARDnew.ARD_Teletext", 
+		fanart=R("teletext_ard.png"), thumb=R("teletext_ard.png"), tagline=tag, fparams=fparams)
 	
 	title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
 	tag = "die Senderwahl ist wirksam in [B]%s[/B], [B]%s[/B] und [B]%s[/B]" % ("ARD Mediathek", "A-Z", "Sendung verpasst")
@@ -1296,14 +1297,18 @@ def ARD_get_strmStream(url, title, img, Plot):
 #---------------------------------------------------------------------------------------------------
 # Hinw.: in textviewer für monospaced Font die Kodi-Einstellung
 #	"Standardwert des Skins" wählen
+# Quelle: https://www.ard-text.de/index.php?page=100
+# 22.08.2023 Umstellung auf HBBTV-Variante, Quellen:
+#	vtx.ard.de/app/index.html?html5=1 -> index.php ->
+#	vtx.ard.de/data/ard/100.json
 #
 def ARD_Teletext(path=""):
 	PLog('ARD_Teletext:')
 	
+	base = "http://vtx.ard.de/data/ard/%s.json"
 	if path == "":
-		path = "https://www.ard-text.de/index.php?page=100"
-	base = "https://www.ard-text.de/index.php?page="
-	aktpg = path.split("page=")[-1]
+		path = base % "100"
+	aktpg = re.search(u'data/ard/(.*?).json', path).group(1)
 	PLog("aktpg: %s" % aktpg)
 	
 	img = R(ICON_MAIN_ARD)
@@ -1311,32 +1316,25 @@ def ARD_Teletext(path=""):
 	Seiten = ["Startseite|100", "Nachrichten|101", "Sport|200",
 			"Programm|300", "Kultur|400", "Wetter|171", "Inhalt A-Z|790",
 		]
-		
-	page, msg = get_page(path=path)	
-	if page == '':	
-		msg1 = "Fehler in ARD_Teletext:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return
-	PLog(len(page))		
-		
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD')			# Home-Button
 
-	mobilpg = stringextract('<p><a href="/mobil/',  '"', page)	# ARD korrigiert selbst, url-Check entf.
-	if mobilpg and mobilpg != aktpg:
+	page, msg = get_page(path=path)	
+	if "Error 404" in msg:										# hier bei Fehler Seitenkorrektur
 		msg1 = u'Seite %s' % aktpg
 		msg2 = u'nicht verfügbar'
 		icon = thumb		
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
-		PLog("coreccted: %s -> %s" % (aktpg, mobilpg))
-		aktpg = mobilpg
-	body =  stringextract('"ardtext_classic"',  '!-- TEXT', page)
-	PLog(body[:60]); 
+		PLog("coreccted: %s -> %s" % (aktpg, "100"))
+		path = base % "100"
+		aktpg = "100"
+		page, msg = get_page(path=path)	
+	PLog(len(page))
+		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')			# Home-Button
 
 	#------------------------------------------------			# Body
-	PLog("get_tables:")
-	ARD_Teletext_Table(body, aktpg)	
+	PLog("get_content:")
+	ARD_Teletext_extract(page, aktpg)	
 	
 	#------------------------------------------------------	
 		
@@ -1349,14 +1347,14 @@ def ARD_Teletext(path=""):
 	
 	title = u"rückwärts zu [B]%s[/B]"	% prevpg
 	thumb = R("icon-previos.png")
-	href = "%s%s" % (base, prevpg)
+	href = base % prevpg
 	fparams="&fparams={'path': '%s'}" % quote(href)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_Teletext", 
 		fanart=img, thumb=thumb, fparams=fparams)			
 			
 	title = u"vorwärts zu [B]%s[/B]"	% nextpg
 	thumb = R("icon-next.png")
-	href = "%s%s" % (base, nextpg)
+	href = base % nextpg
 	fparams="&fparams={'path': '%s'}" % quote(href) 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_Teletext", 
 		fanart=img, thumb=thumb, fparams=fparams)
@@ -1365,14 +1363,14 @@ def ARD_Teletext(path=""):
 	thumb = R("teletext_ard.png")
 	for item in Seiten:
 		title, pgnr = item.split("|")
-		title = "[B]%s[/B]: %s" % (pgnr, title)	
-		href = "%s%s" % (base, pgnr)
+		title = "[B]Direkt %s[/B]: %s" % (pgnr, title)	
+		href = base % pgnr
 		fparams="&fparams={'path': '%s'}" % quote(href) 
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_Teletext", 
 			fanart=img, thumb=thumb, fparams=fparams)
 	#------------------------------------------------------		# manuelle Eingabe
 	title = u"Seitenzahl manuell eingeben"
-	basepath = base + "%s"
+	basepath = base 
 	func = "resources.lib.ARDnew.ARD_Teletext" 
 	fparams="&fparams={'func': '%s', 'basepath': '%s'}" % (func, quote(basepath))
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Teletext_setPage", 
@@ -1381,39 +1379,139 @@ def ARD_Teletext(path=""):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------
-# issue: Wetterkarten sind aus 9x16-Gif-Pixeln zusammengesetzt - aktuell
-#	hier nicht darstellbar
+# Bsp.:
+# 	716 Kurse: 		mehrere Tabellen (Unterseiten, hier zusammengefasst) 
+#	173 Wetter D:	Text + Tabelle 
+#	182,175 Wetter: Tabellen 
+#	176 Wetter:		Image
 #
-def ARD_Teletext_Table(body, aktpg):
-	PLog('ARD_Teletext_Table: '+ aktpg)
+def ARD_Teletext_extract(page, aktpg):
+	PLog('ARD_Teletext_extract: '+ aktpg)
 	
-	base = "https://www.ard-text.de/index.php?page="
+	base = "http://vtx.ard.de/data/ard/%s.json"
 	thumb = R("teletext_ard.png")
 	img = R(ICON_MAIN_ARD)
+	PLog(page[:220])
+	try:
+		atoz=False
+		obj = json.loads(page)
+		refTitle = obj["refTitle"]
+		subs = obj["sub"]
+		PLog("subs: %d" % len(subs))							# sub häufig 1x
+	except Exception as exception:
+		PLog("json_error: " + str(exception))
 
-	items = body.split(">")
-	txt = ""
-	for item in items:
-		if "</nobr" in item:
-			txt = txt + item.replace("</nobr","")
-		if "</div" in item:
-			txt = txt + "\n"
-		if "</a" in item:
-			txt = txt + item.replace("</a","")
-		if "<a onclick" in item:
-			txt = txt + item.split("<")[0]
+	PLog(str(subs[0])[:80])
+	max_length=50												# ähnlich Original (abhäng. vom Font)
+	add_header=""												# Zusatztitel textviewer
+	
+	#---------------------------------------------------
+	if 'ctype":"image' in page:									# Bilder: Wetter, Trends, ..
+			PLog("get_image")
+			img = subs[0]["c"][0]["img"]
+			img = img[3:]										# "../images/..
+			img = "http://vtx.ard.de/" + img
+			fname = os.path.join("%s/teletext.png") % DICTSTORE	
+			PLog("fname: " + fname)
+			urlretrieve(img, fname)
+			ardundzdf.ZDF_SlideShow(fname, single="True")	
+			return	
+		
+	#---------------------------------------------------
+	if 'ctype":"atoz' in page:									# abweichend A-Z	
+		PLog("get_atoz")
+		items = subs[0]["c"][0]["items"]
+		for item in items:
+			links = item["links"]								# skip Gruppenheader wie WXYZ
+			PLog("links: %d" % len(links))
+			for  linkitem in links:
+				txtRight=""
+				link  = linkitem["link"]
+				myline = link["t"]
+				if "pg" in link:
+					pg = link["pg"]								# Pagenr			
+					txtRight = str(pg)							# txtRight nicht in link
+				
+				myline = cleanhtml(myline)											
+				new_lines = ARD_Teletext_Wrap(new_lines, myline, max_length, txtRight)
+				
+		txt =  "\n".join(new_lines)								# Ausgabe Textviewer
+		PLog(txt)
+		if txt:		
+			title = "Seite %s | %s" % (aktpg, refTitle)
+			if add_header:
+				title = "%s\n%s\n" % (title, add_header)	
+			xbmcgui.Dialog().textviewer(title, txt, usemono=True)
+		return	
+	
+	#---------------------------------------------------
 
-	txt = unescape(txt); txt = txt.strip(); txt = "  " + txt
-	PLog("txt: " + txt[:80])		
+	sub_cnt=0
+	new_lines=[]												# Sammler für textviewer									
+	for sub in subs:											# Text, Link, Tabelle
+		PLog("getsubs")
+		PLog("sub_cnt: %d" % sub_cnt)
+		header = sub["header"]
+		css = sub["css"]
+		PLog("css: %s" % css)
+		clines = sub["c"]							
+		PLog("clines: %d" % len(clines))
+		for cline in clines:
+			ctype = cline["ctype"]
+			myline="";
+			if ctype == "table":								# Tabelle zeilenweise hier auswerten
+				trs = cline["tr"] 
+				PLog("trs: %d" % len(trs))
+				for tr in trs:
+					myline="";
+					tds = tr["td"]; 								# Spalten, z.B.: Ort, Wetter, Temp
+					
+					td_list=[]; td_anz=len(tds); 
+					td_width = int(max_length/len(tds))				# Spaltenbreite abh. von Anz. Spalten
+					
+					for td in tds:									# Spalten -> 1 Zeile
+						td_list.append(td["t"])
 
-	lines = txt.splitlines()
-	new_lines=[]
-	for line in lines:
-		new_lines.append(line.strip())					# Wetter-Gif-Lücken abschneiden 
-	txt =  "\n".join(new_lines)
+					if td_list[-1] == "°C":							# Temp 2-stellig mögl., Bsp. 182	
+						td_list[-2] = td_list[-2] + td_list[-1]		# -> 21 + °C
+						td_list.pop()								# remove last lement
+						td_width=int(max_length/(len(tds)-1))		# Spaltenbreite anpassen
+						PLog("td_width_new: %d" % td_width)	
 
+					for td in td_list:
+						td = "%*s" % (td_width, td[:td_width])
+						myline = "%s %s" % (myline, td)
+					#PLog("tr_line: %s" % myline)
+					myline = cleanhtml(myline); myline = unescape(myline)
+					new_lines.append(myline)
+					
+			else:													# keine Tabelle
+				myline, txtRight = ARD_Teletext_get_cline(cline, ctype, max_length)	
+			PLog("myline: %s, txtRight: %s" % (myline, txtRight))
+			myline = cleanhtml(myline); myline = unescape(myline)
+			if myline.startswith("\n"):							# LF nach oben
+				new_lines.append("")
+				myline = myline.replace("\n", "")	
+		
+			if  "table" not in ctype: 							# Tabellenzeile ohne ARD_Teletext_Wrap
+				new_lines = ARD_Teletext_Wrap(new_lines, myline, max_length, txtRight)
+			if myline.endswith("\n"):							# LF nach unten
+				new_lines.append("")
+				myline = myline.replace("\n", "")
+					
+		sub_cnt=sub_cnt+1
+		if sub_cnt < len(subs):									# LF für Unterseiten in selben Textviewer
+			new_lines.append("")
+													
+
+	#---------------------------------------------------
+	
+	txt =  "\n".join(new_lines)									# Ausgabe Textviewer
+	PLog(txt)
 	if txt:		
-		title = "Seite " + 	aktpg	
+		title = "Seite %s | %s" % (aktpg, header)
+		if add_header:
+			title = "%s\n%s\n" % (title, add_header)	
 		xbmcgui.Dialog().textviewer(title, txt, usemono=True)
 	else:
 		msg1 = u'Seite %s' % aktpg
@@ -1424,6 +1522,88 @@ def ARD_Teletext_Table(body, aktpg):
 					
 	return
 
+#----------------------------------------------
+# Auswertung Text, EPG, Tabelle, getrennte Rückgabe
+#	Zeile und pagenr
+# bei Bedarf Zeilenumbruch nach oben / nach unten einfügen
+#
+def ARD_Teletext_get_cline(cline, ctype, max_length):
+	PLog('ARD_Teletext_get_cline: ' + ctype)
+	txtRight=""; myline=""
+	
+	if ctype == "text":
+		myline = cline["t"]									# einf. Textzeile
+		return myline, txtRight
+			
+	if ctype == "spacer":							# Trennzeile
+		myline = ""
+	if ctype == "title":							# auch als Trennzeile gesehen 171
+		myline = cline["t"]
+	if ctype == "text":	
+		myline = cline["t"]
+		myline = myline.replace("<br/>", "\n")		#  LF nach unten
+	if ctype == "epglink":
+		epg = cline["epg"][0]
+		t = epg["t"]
+		if t.strip().startswith("Jetzt im"):		# LF nach oben
+			myline ="\n%s" % myline
+		tim = epg["tim"]
+		t = "%s " % t
+		myline = "%s%s %s" % (myline, tim, t)		# optisch fehlt hier ein spacer
+		if "pg" in cline:
+			pg = cline["pg"]							# Pagenr			
+			txtRight = str(pg)						# txtRight nicht in epglink
+	if ctype == "link":
+		link = cline["link"]
+		t = link["t"]
+		myline = t
+		myline = myline.replace("<br/>", "\n")		#  LF nach unten
+		if "pg" in link:
+			pg = link["pg"]							# Pagenr
+			# txtRight = link["txtRight"]			# txtRight kann fehlen
+			txtRight = str(pg)
+	
+	return myline, txtRight
+										
+#----------------------------------------------
+# Zeilenumbruch + pagenr rechtsbündig einfügen
+#
+def ARD_Teletext_Wrap(new_lines, myline, max_length, txtRight):
+	PLog('ARD_Teletext_Wrap: ')
+	txtRight=str(txtRight)
+	mylen=max_length
+	if txtRight:
+		mylen = max_length-len(txtRight)-1			# max-Länge ohne txtRight
+	#PLog("new_lines: %d" % len(new_lines)); PLog("txtRight: %s" % txtRight); 
+	#PLog("max_length: %d" % max_length); PLog("mylen: %d" % mylen);
+	#("myline %d: %s" % (len(myline), myline))
+	
+	if len(myline) == 0:							# Spacer, LF
+		new_lines.append(myline)
+		return new_lines
+	
+	
+	if len(myline) <= mylen:
+		newline = myline
+	else:
+		words = myline.split()
+		newline=""
+		for word in words:
+			if len(newline) + len(word) + 1 > mylen:	# 1 Blank
+				new_lines.append(newline.strip())
+				newline=""
+			newline = "%s %s" % (newline, word)
+			newline = newline.strip()
+	
+	#PLog("newline: " + newline)		
+	if txtRight:									# letzte Zeile: pagenr rechtsbündig
+		fill_len = (max_length - len(newline)) 		# Anzahl Blanks zur rechtsbündigen Pagenr txtRight
+		PLog("fill_len: %d, max_length %d-%d myline +4=%d" % (fill_len, max_length, len(myline), max_length-len(myline)+4))
+		newline = "%s %s" % (newline, txtRight.rjust(fill_len))
+		
+	new_lines.append(newline)	
+	return new_lines
+	
 ####################################################################################################
 #							ARD Retro www.ardmediathek.de/ard/retro/
 #				als eigenst. Menü, Inhalte auch via Startseite/Menü/Retro erreichbar
