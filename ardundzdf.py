@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>135</nr>										# Numerierung für Einzelupdate
+# 	<nr>136</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.2'
-VDATE = '26.08.2023'
+VDATE = '27.08.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3867,6 +3867,7 @@ def ARDSportLive(title):
 			title=repl_json_chars(title)
 			PLog("player_typ: " + player)
 			
+			title=py2_encode(title); Plot=py2_encode(Plot)
 			if player == "video":
 				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
 					quote(title), quote(img), quote_plus(Plot))
