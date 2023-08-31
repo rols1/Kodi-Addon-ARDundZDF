@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>52</nr>										# Numerierung für Einzelupdate
-#	Stand: 27.08.2023
+# 	<nr>53</nr>										# Numerierung für Einzelupdate
+#	Stand: 31.08.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1458,7 +1458,7 @@ def ARD_Teletext_extract(page, aktpg):
 		PLog("clines: %d" % len(clines))
 		for cline in clines:
 			ctype = cline["ctype"]
-			myline="";
+			myline=""; txtRight=""
 			if ctype == "table":								# Tabelle zeilenweise hier auswerten
 				trs = cline["tr"] 
 				PLog("trs: %d" % len(trs))
@@ -1562,6 +1562,10 @@ def ARD_Teletext_get_cline(cline, ctype, max_length):
 			pg = link["pg"]							# Pagenr
 			# txtRight = link["txtRight"]			# txtRight kann fehlen
 			txtRight = str(pg)
+	if ctype == "list":	
+		clist = cline["li"]
+		for c in clist:								# Bsp. mehrz. EPG-Texte zu Sendung
+			myline = "%s%s" % (myline, c)
 	
 	return myline, txtRight
 										
