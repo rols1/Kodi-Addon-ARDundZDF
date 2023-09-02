@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>53</nr>										# Numerierung für Einzelupdate
-#	Stand: 31.08.2023
+# 	<nr>54</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1420,6 +1420,7 @@ def ARD_Teletext_extract(page, aktpg):
 	#---------------------------------------------------
 	if 'ctype":"atoz' in page:									# abweichend A-Z	
 		PLog("get_atoz")
+		new_lines=[]											# Sammler für textviewer									
 		items = subs[0]["c"][0]["items"]
 		for item in items:
 			links = item["links"]								# skip Gruppenheader wie WXYZ
@@ -1431,6 +1432,8 @@ def ARD_Teletext_extract(page, aktpg):
 				if "pg" in link:
 					pg = link["pg"]								# Pagenr			
 					txtRight = str(pg)							# txtRight nicht in link
+				else:
+					myline = "** %s" % myline				#Index-Zeile kennzeichnen (ohne Link)
 				
 				myline = cleanhtml(myline)											
 				new_lines = ARD_Teletext_Wrap(new_lines, myline, max_length, txtRight)
