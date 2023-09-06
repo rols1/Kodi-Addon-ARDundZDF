@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>20</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.08.2023
+# 	<nr>21</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2209,7 +2209,13 @@ def Tivi_AZ_Sendungen(name, element=None):
 			fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" % (url, title, homeID)
 			PLog("fparams: " + fparams)	
 			addDir(li=li, label=label, action="dirList", dirID="ardundzdf.ZDF_RubrikSingle", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tag)			
+				thumb=img, fparams=fparams, summary=descr, tagline=tag)	
+	else:
+		msg1 = name
+		msg2 = "leider nichts gefunden"
+		icon = GIT_AZ
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=True)
+		return					
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
