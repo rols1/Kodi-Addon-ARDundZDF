@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>136</nr>										# Numerierung für Einzelupdate
+# 	<nr>137</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.3'
-VDATE = '27.08.2023'
+VDATE = '08.09.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -230,7 +230,7 @@ STRM_SYNCLIST	= os.path.join(ADDON_DATA, "strmsynclist")		# strm-Liste für Sync
 STRM_CHECK 		= os.path.join(ADDON_DATA, "strm_check_alive") 	# strm-Synchronisierung (Lockdatei)
 FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")			# Flag PlayVideo_Direct	-> strm-Modul
 PLog(SLIDESTORE); PLog(WATCHFILE); 
-check 			= check_DataStores()						# Check /Initialisierung / Migration 
+check 			= check_DataStores()							# Check /Initialisierung / Migration 
 PLog('check: ' + str(check))
 
 
@@ -1835,7 +1835,7 @@ def Audio_get_sendung(url, title, page=''):
 		page, msg = get_page(path=url, GetOnlyRedirect=True)	
 		path = page								
 		page, msg = get_page(path)	
-		if page == '':	
+		if page == '':
 			msg1 = "Fehler in Audio_get_sendung:"
 			msg2 = msg
 			MyDialog(msg1, msg2, '')	
@@ -3115,38 +3115,7 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 	
-	title = u"Event: [B]Leichtathletik-WM 2023 in Budapest[/B]"			# Großevent	
-	tag = u"Die 19. Leichtathletik-Weltmeisterschaften finden vom 19. bis 27. August in Ungarn statt."
-	cacheID = "Sport_WMBudapest"
-	img = "https://images.sportschau.de/image/1516bd09-ab89-49dd-aeb8-942c1cd1f30a/AAABh_syXGE/AAABibBxqrQ/16x9-1280/budapest-leichtathletik-stadion-100.jpg"
-	path = "https://www.sportschau.de/leichtathletik/wm"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
 
-	title = u"Event: [B]Radsport: Deutschland Tour[/B]"					# Großevent	
-	tag = u"Livestreams, Rennberichte, Analysen, Videos, Ergebnisse zur Deutschland Tour."
-	cacheID = "DTOUR"
-	img = "https://images.sportschau.de/image/c5f18e62-94e0-471f-96fc-1ca5b9d462a1/AAABiU-tGd0/AAABibBx2rU/20x9-1280/deutschland-tour-erste-etappe-108.webp"
-	path = "https://www.sportschau.de/radsport/deutschland-tour/"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
-
-	title = u"Event: [B]Hockey-EM 2023 der Männer und Frauen[/B]"		# Großevent	
-	tag = u"Aktuelle News zur Hockey-EM 2023 in Mönchengladbach | sportschau.de"
-	cacheID = "HockeyEM"
-	img = "https://images.sportschau.de/image/30211f21-15dc-44a1-a8f4-64971d609de9/AAABhOMvB3Y/AAABibBxqrQ/16x9-1280/wdr-kampf-um-den-ball-100.jpg"
-	path = "https://www.sportschau.de/hockey/feldhockey-em-index-100.html"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
 
 	title = u"Event: [B]Basketball-WM 2023[/B]"					# Großevent	
 	tag = u"Aktuelle News zur Basketball-WM 2023 | sportschau.de"
@@ -3229,11 +3198,22 @@ def ARDSportWDRArchiv():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
-	title = u"Event: [B]Basketball-WM 2023[/B]"					# Großevent	
+	title = u"Event: [B]Basketball-WM 2023[/B]"							# Großevent	
 	tag = u"Aktuelle News zur Basketball-WM 2023 | sportschau.de"
 	cacheID = "BasketballWM"
 	img = "https://images.sportschau.de/image/b39a8ecf-aeb3-4781-a3fe-1038a5a5a36a/AAABifMqafU/AAABibBxqrQ/16x9-1280/ndr-dennis-schroeder-haelt-den-ball-und-lacht-100.jpg"
 	path = "https://www.sportschau.de/basketball/wm-maenner"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
+
+	title = u"Event: [B]Radsport: Deutschland Tour 2023[/B]"			# Großevent	
+	tag = u"Livestreams, Rennberichte, Analysen, Videos, Ergebnisse zur Deutschland Tour."
+	cacheID = "DTOUR"
+	img = "https://images.sportschau.de/image/c5f18e62-94e0-471f-96fc-1ca5b9d462a1/AAABiU-tGd0/AAABibBx2rU/20x9-1280/deutschland-tour-erste-etappe-108.webp"
+	path = "https://www.sportschau.de/radsport/deutschland-tour/"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
 		(quote(title), quote(path), quote(img), cacheID)
@@ -3262,7 +3242,7 @@ def ARDSportWDRArchiv():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
-	title = u"Event: [B]Tour de France[/B]"						# Großevent	
+	title = u"Event: [B]Tour de France 2023[/B]"						# Großevent	
 	tag = u"Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen der Tour de France."
 	cacheID = "Sport_TourdeFrance"
 	img = "https://images.sportschau.de/image/4caa92cb-1518-4489-8bec-3b0764c14aa8/AAABgYwplxs/AAABg8tME_8/16x9-1280/tour-de-france-bild-102.jpg"
@@ -3273,18 +3253,7 @@ def ARDSportWDRArchiv():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
-	title = u"Event: [B]NORDISCHE SKI-WM[/B]"								# Großevent	
-	tag = u"Alles zur Nordischen Ski-WM in Planica."
-	cacheID = "Sport_SkiWM"
-	img = "https://images.sportschau.de/image/237354e3-b9b2-46bf-993a-8ecc48947e7f/AAABhol6U80/AAABg8tMRzY/20x9-1280/constantin-schmid-150.webp"
-	path = "https://www.sportschau.de/wintersport/nordische-ski-wm"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
-
-	title = u"Event: [B]Handball-WM 2023 in Polen und Schweden[/B]"			# Großevent	
+	title = u"Event: [B]Handball-WM 2023 in Polen und Schweden[/B]"		# Großevent	
 	tag = u"Nachrichten, Berichte, Interviews und Ergebnisse zur Handball-WM 2023 in Polen und Schweden mit dem DHB-Team."
 	cacheID = "Sport_WMHandball"
 	img = "https://images.sportschau.de/image/9741356a-13b2-40ed-93d0-bb70c90ebbd1/AAABhSXiawI/AAABg8tME_8/16x9-1280/handball-wm-bild-100.jpg"
@@ -3295,40 +3264,7 @@ def ARDSportWDRArchiv():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
-	title = u"Event: [B]Fußball WM 2022 in Katar[/B]"
-	tag = u"Hier finden Sie alle Nachrichten, Berichte, Interviews und Ergebnisse zur FIFA WM 2022 in Katar."
-	cacheID = "Sport_WMKatar"
-	img = "https://images.sportschau.de/image/1e5f994d-d7c8-4c5b-a98b-23a8c5b3a71c/AAABhFJhnRw/AAABg8tME_8/16x9-1280/wm-katar-logo-news-100.jpg"
-	path = "https://www.sportschau.de/fussball/fifa-wm-2022"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
-
-	title = u"Event: [B]Radsport: Deutschland Tour[/B]"					# Großevent	
-	tag = u"Livestreams, Rennberichte, Analysen, Videos, Ergebnisse zur Deutschland Tour."
-	cacheID = "DTOUR"
-	img = "https://images.sportschau.de/image/c5f18e62-94e0-471f-96fc-1ca5b9d462a1/AAABiU-tGd0/AAABibBx2rU/20x9-1280/deutschland-tour-erste-etappe-108.webp"
-	path = "https://www.sportschau.de/radsport/deutschland-tour/"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
-
-	title = u"Event: [B]European Championships[/B]"						# Großevent	
-	tag = u"Neun Europameisterschaften unter einem Dach - vom 11. bis zum 21. August finden die European Championships in München statt."
-	cacheID = "ECS"
-	img = "https://images.sportschau.de/image/014165c6-378c-4007-84f8-cc1d6fc3df77/AAABgmeih7M/AAABgPp7Db4/16x9-1280/symbolbild-european-championships-100.jpg"
-	path = "https://www.sportschau.de/european-championships"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
-
-	title = u"Event: [B]Die Finals[/B]"						# Großevent	
+	title = u"Event: [B]Die Finals 2023[/B]"							# Großevent	
 	tag = u"14 Sportarten, 190 deutsche Meistertitel - vom 23. bis 26. Juni finden in Berlin die Finals statt."
 	cacheID = "Finals"
 	img = "https://images.sportschau.de/image/825edf08-5ec7-4c15-9aab-2f6cca8a1d8d/AAABgWF00Tc/AAABgPp7Db4/16x9-1280/titelbild-100.jpg"
@@ -3339,7 +3275,7 @@ def ARDSportWDRArchiv():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
-	title = u"Event: [B]TOUR DE FRANCE FEMMES[/B]"				# Großevent	
+	title = u"Event: [B]TOUR DE FRANCE FEMMES 2023[/B]"					# Großevent	
 	tag = u"Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen der Tour de France Femmes 2022."
 	cacheID = "Sport_FRANCEFEMMES"
 	img = "https://images.sportschau.de/image/39c37172-4556-4739-a361-76f7fa50eb9a/AAABghr-8j8/AAABgPp7Db4/16x9-1280/giro-donne-feld-100.jpg"
@@ -3350,7 +3286,18 @@ def ARDSportWDRArchiv():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
-	title = u"Event: [B]Leichtathletik-WM 2022 in Eugene[/B]"	# Großevent	
+	title = u"Event: [B]NORDISCHE SKI-WM 2023[/B]"						# Großevent	
+	tag = u"Alles zur Nordischen Ski-WM in Planica."
+	cacheID = "Sport_SkiWM"
+	img = "https://images.sportschau.de/image/237354e3-b9b2-46bf-993a-8ecc48947e7f/AAABhol6U80/AAABg8tMRzY/20x9-1280/constantin-schmid-150.webp"
+	path = "https://www.sportschau.de/wintersport/nordische-ski-wm"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+	title = u"Event: [B]Leichtathletik-WM 2022 in Eugene[/B]"			# Großevent	
 	tag = u"Erstmals findet eine Leichtathletik-WM in den USA statt. News, TV-Zeiten, Livestreams, Ergebnisse zur Weltmeisterschaft in Oregon."
 	cacheID = "Sport_WMEugene"
 	img = "https://images.sportschau.de/image/13d0db07-7943-415b-951f-2bfc4be7c8e9/AAABgRYL9Ys/AAABgPp7WOA/20x9-1280/leichtathlet-ryan-crouser-100.webp"
@@ -3361,7 +3308,18 @@ def ARDSportWDRArchiv():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
-	title = u"Event: [B]FUSSBALL: EM FRAUEN[/B]"	# Großevent	
+	title = u"Event: [B]European Championships 2022[/B]"				# Großevent	
+	tag = u"Neun Europameisterschaften unter einem Dach - vom 11. bis zum 21. August finden die European Championships in München statt."
+	cacheID = "ECS"
+	img = "https://images.sportschau.de/image/014165c6-378c-4007-84f8-cc1d6fc3df77/AAABgmeih7M/AAABgPp7Db4/16x9-1280/symbolbild-european-championships-100.jpg"
+	path = "https://www.sportschau.de/european-championships"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+	title = u"Event: [B]FUSSBALL: EM FRAUEN 2022[/B]"					# Großevent	
 	tag = u"16 Mannschaften spielen im Juli in England um den Titel bei der Fußball-EM. News, Livestreams, Spielplan und Ergebnisse zur UEFA-Frauen-EM."
 	cacheID = "Sport_WMFrauen"
 	img = "https://images.sportschau.de/image/46aa5ce0-ec8d-4d74-8f68-b93052194f5a/AAABgWEbjDs/AAABgPp7Db4/16x9-1280/uefa-frauen-em-2022-logo-100.jpg"
@@ -3372,6 +3330,16 @@ def ARDSportWDRArchiv():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
+	title = u"Event: [B]Fußball WM 2022 in Katar[/B]"					# Großevent	
+	tag = u"Hier finden Sie alle Nachrichten, Berichte, Interviews und Ergebnisse zur FIFA WM 2022 in Katar."
+	cacheID = "Sport_WMKatar"
+	img = "https://images.sportschau.de/image/1e5f994d-d7c8-4c5b-a98b-23a8c5b3a71c/AAABhFJhnRw/AAABg8tME_8/16x9-1280/wm-katar-logo-news-100.jpg"
+	path = "https://www.sportschau.de/fussball/fifa-wm-2022"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
