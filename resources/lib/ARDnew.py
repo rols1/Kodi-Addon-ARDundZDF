@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>54</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.09.2023
+# 	<nr>55</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -255,7 +255,8 @@ def Main_NEW(name='', CurSender=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
 		thumb=R('tv-regional.png'), tagline=tag, fparams=fparams) 
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+#	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		 		
 #---------------------------------------------------------------- 
 # Startseite der Mediathek - passend zum ausgewählten Sender -
@@ -2192,6 +2193,8 @@ def SendungenAZ(title, CurSender='', homeID=''):
 		#if button == 'Z':	# Debug
 		#	PLog(grid)
 		if ' A-Z' in button:								# Gesamtlink
+			continue
+		if button == "":
 			continue
 			
 		title = "Sendungen mit " + button
