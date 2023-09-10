@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>137</nr>										# Numerierung für Einzelupdate
-VERSION = '4.8.3'
-VDATE = '08.09.2023'
+VERSION = '4.8.4'
+VDATE = '10.09.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5787,7 +5787,8 @@ def DownloadText(textKey):
 # 14.11.2021 Home-Button + Sortierung getrennt von globalen Settings
 # 16.11.2022 Berücksichtigung ausgewählter Sätze in selected (zunächst für
 #	SearchARDundZDFnew)
-#
+#  10.09.2023 Sortierung der Verzeichnisliste mittels addDir-Array
+# 
 def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 	PLog('ShowFavs: ' + mode)				# 'Favs', 'Merk'
 	if selected:
@@ -5851,6 +5852,7 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 			fanart=R(ICON_DIR_FAVORITS), thumb=R(ICON_INFO), fparams=fparams,
 			summary=summary, tagline=tagline, cmenu=False) 	# ohne Kontextmenü)	
 	
+	Dir_Arr=[[] for _ in range(len(my_items))]			# addDir-Array Für Sortierung
 	item_cnt=0; cnt=-1
 	for fav in my_items:
 		if selected:									# Auswahl (Suchergebnisse) beachten
@@ -6007,7 +6009,7 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 		summary = summary.replace('&quot;', '"')
 			
 		Plot=unescape(Plot)
-		Plot = Plot.replace('||', '\n')			# s. PlayVideo
+		Plot = Plot.replace('||', '\n')							# s. PlayVideo
 		Plot = Plot.replace('+|+', '')	
 		PLog('summary: ' + summary); PLog('tagline: ' + tagline); PLog('Plot: ' + Plot)
 		
@@ -6015,23 +6017,23 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 			summary='';  tagline=''
 			
 		PLog('fanart: ' + fanart); PLog('thumb: ' + thumb);
-		fparams = fparams.replace('\n', '||')				# json-komp. für func_pars in router()
+		fparams = fparams.replace('\n', '||')					# json-komp. für func_pars in router()
 		fparams = unquote_plus(fparams)
-		fparams ="&fparams={%s}" % quote_plus(fparams)		# router-kompatibel			
+		fparams ="&fparams={%s}" % quote_plus(fparams)			# router-kompatibel			
 		PLog('fparams3: ' + fparams)
 		fanart = R(ICON_DIR_WATCH)
 		if mode == 'Favs':
 			fanart = R(ICON_DIR_FAVORITS)
 		
-		summary = summary.replace('||', '\n')		# wie Plot	
+		summary = summary.replace('||', '\n')					# wie Plot	
 		tagline = tagline.replace('||', '\n')
 		
-		if modul != "ardundzdf":					# Hinweis Modul
+		if modul != "ardundzdf":								# Hinweis Modul
 			tagline = "[B]Modul: %s[/B]%s" % (modul, tagline)
 		if SETTINGS.getSetting('pref_merkordner') == 'true':	
-			merkname = name								# für Kontextmenü Ordner in addDir
-			if ordner:									# Hinweis Ordner
-				if 'COLOR red' in tagline:				# bei Modul plus LF
+			merkname = name										# für Kontextmenü Ordner in addDir
+			if ordner:											# Hinweis Ordner
+				if 'COLOR red' in tagline:						# bei Modul plus LF
 					tagline = "[B][COLOR blue]Ordner: %s[/COLOR][/B]\n%s" % (ordner, tagline)
 				else:
 					tagline = "[B][COLOR blue]Ordner: %s[/COLOR][/B] | %s" % (ordner, tagline)
@@ -6039,22 +6041,44 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 			if SETTINGS.getSetting('pref_WatchFolderInTitle') ==  'true':	# Kennz. Ordner
 				if ordner: 
 					name = "[COLOR blue]%s[/COLOR] | %s" % (ordner, name)
-
-		sortlabel = "ShowFavs"						# 16.11.2021 z.Z. nicht genutzt
-		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=my_thumb,
-			summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype, 
-			sortlabel=sortlabel, merkname=merkname)
+		
+		# Sätze -> Array für Sortierung
+		Dir_Arr[item_cnt].append(name); Dir_Arr[item_cnt].append(action); Dir_Arr[item_cnt].append(dirID);
+		Dir_Arr[item_cnt].append(fanart); Dir_Arr[item_cnt].append(my_thumb); Dir_Arr[item_cnt].append(summary);
+		Dir_Arr[item_cnt].append(tagline); Dir_Arr[item_cnt].append(fparams); Dir_Arr[item_cnt].append(mediatype);
+		Dir_Arr[item_cnt].append(merkname)
 		item_cnt = item_cnt + 1
 		
-	if item_cnt == 0:								# Ordnerliste leer?
-		if myfilter:								# Deadlock
+	#---------------------------------							# Sortierung
+	PLog("Dir_Arr: %d" % len(Dir_Arr))	
+	PLog(Dir_Arr[0])											# erster Satz vor Sortierung
+	PLog(Dir_Arr[0][-1])										# letztes Element im eersten Satz
+	Dir_Arr = list(filter(lambda a: a != [], Dir_Arr))			# Leere Sätze entfernen
+	PLog("Dir_Arr_clean: %d" % len(Dir_Arr))
+	if 	myfilter:
+		Dir_Arr = sorted(Dir_Arr,key=lambda x: x[-1].lower())	# Sortierung nach merkname (letztes Element,
+	else:														#	 o. Attribute)
+		Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower())	# Sortierung nach name (erstes Element plus ev. 
+																#	Odner-Kennzeichnung im Titel)
+	PLog(Dir_Arr[0])											# erster Satz nach Sortierung
+	
+	for rec in Dir_Arr:
+		name=rec[0]; action=rec[1]; dirID=rec[2]; fanart=rec[3]; my_thumb=rec[4];
+		summary=rec[5]; tagline=rec[6]; fparams=rec[7]; mediatype=rec[8]; merkname=rec[9];
+		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=my_thumb,
+			summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype, 
+			merkname=merkname)	
+	#---------------------------------
+
+	if item_cnt == 0:											# Ordnerliste leer?
+		if myfilter:											# Deadlock
 			heading = u'Leere Merkliste mit dem Filter: %s' % myfilter
 			msg1 = u'Der Filter wird nun gelöscht; die Merkliste wird ohne Filter geladen.'
 			msg2 = u'Wählen Sie dann im Kontextmenü einen anderen Filter.'
 			MyDialog(msg1,msg2,heading=heading)
 			if os.path.exists(MERKFILTER):
 				os.remove(MERKFILTER)
-			# ShowFavs('Merk')						# verdoppelt Home- + Infobutton
+			# ShowFavs('Merk')									# verdoppelt Home- + Infobutton
 			xbmc.executebuiltin('Container.Refresh')
 		else:
 			heading = u'Leere Merkliste'

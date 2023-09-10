@@ -14,12 +14,16 @@
 #		https://mediathekview.de/news/mediathekviewweb/,
 #		https://github.com/mediathekview 
 #
+#	April 2023: phoenix-Youtube-Videos nicht mehr zugänglich, phoenix-
+#		Modul umgestellt auf ARD-new-Funktionen. Youtube-Funktionen
+#		yt_get und get_stream_details vorerst nicht mehr genutzt.
+#
 ################################################################################
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 # 	<nr>2</nr>								# Numerierung für Einzelupdate
-#	Stand: 03.08.2022
+#	Stand: 18.06.2023
 #
 
 from __future__ import absolute_import

@@ -436,7 +436,10 @@ def  make_newDataDir(store_Dirs, filterfile, filter_pat):
 		return str(exception)
 		
 #---------------------------
-# sichert Verz. für check_DataStores
+# sichert Verz. für check_DataStores für Daten-Migration 
+#	Leia->Matrix. Wegen Problemen auf verschied. Systemen
+# nicht mehr genutzt . s. changelog V1.5.6
+# 
 def getDirZipped(path, zipf):
 	PLog('getDirZipped:')	
 	for root, dirs, files in os.walk(path):
@@ -693,7 +696,7 @@ def up_low(line, mode='up'):
 #	05.02.2023 Erweiterung Kontextmenüs EPG (Menü TV-Livestreams)
 #
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='',\
-		cmenu=True, sortlabel='', merkname='', start_end='', EPG_ID=''):
+		cmenu=True, merkname='', start_end='', EPG_ID=''):
 	PLog('addDir:');
 	label_org=label				# s. 'Job löschen' in K-Menüs
 	label=py2_encode(label)
@@ -723,7 +726,6 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		isFolder = True	
 
 	li.setArt({'thumb':thumb, 'icon':thumb, 'fanart':fanart})
-	# PLog('sortlabel: %s' % sortlabel)								# z.Z. nicht genutzt							
 	if SETTINGS.getSetting('pref_sort_label') == 'true':			# Testaddon: Sortierung 
 		# kein Unterschied zw. SORT_METHOD_LABEL / SORT_METHOD_LABEL_IGNORE_THE
 		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)

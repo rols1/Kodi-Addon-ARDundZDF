@@ -44,11 +44,7 @@ import shutil						# Dir's löschen
 import zipfile, re
 import io 							# Python2+3 -> update() io.BytesIO für Zipfile
 
-# Addonmodule + Funktionsziele (Script util_imports.py):
-#import resources.lib.util as util
 from resources.lib.util import *
-#PLog=util.PLog; get_page=util.get_page; stringextract=util.stringextract;
-#cleanhtml=util.cleanhtml; RLoad=util.RLoad; RSave=util.RSave; MyDialog=util.MyDialog
  
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -62,7 +58,6 @@ TITLE = 'ARD und ZDF'
 REPO_NAME		 	= 'Kodi-Addon-ARDundZDF'
 GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
 
-BACKPUP_DIR			= "data"		# Cache: zu sichern vor Update / zu restaurieren nach Update
 RESSOURCES_DIR		= os.path.join(ADDON_PATH, "resources") 
 
 ################################################################################

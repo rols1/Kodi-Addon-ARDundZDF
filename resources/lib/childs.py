@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>21</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.09.2023
+#	Stand: 07.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -159,9 +159,10 @@ def Main_childs():
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
 		tagline=tag, fparams=fparams)
 
+	# 07.09.2023 Geschichten für Kinder von 3 bis 6 nicht mehr vorh.
 	title = u"Hörspaß für Kinder | ARD-Audiothek"						# neu ab 17.06.2023
 	cluster_id = "entdecken-100:-601210988128917166"
-	tag = u">Es war einmal ... Märchen\n>Hörspiele für Kinder ab 6\n>Geschichten für Kinder von 3 bis 6\n"
+	tag = u">Es war einmal ... Märchen\n>Hörspiele für Kinder ab 6\n>"
 	tag = u"%s>Wer, wie, was - und warum?\n>Maus-Zoom\n>Familienkonzerte: Geschichten mit Musik" % tag
 	summ = u"Mehr Hör-Geschichten für große und kleine Kinder findest du in der Audiothek in der Rubrik >Für Kinder<."
 	fparams="&fparams={'cluster_id': '%s'}" % cluster_id
