@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>55</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.09.2023
+# 	<nr>56</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -104,27 +104,33 @@ FILTER_SET 	= os.path.join(ADDON_DATA, "filter_set")
 AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
 AKT_FILTER	= AKT_FILTER.splitlines()					# gesetzte Filter initialiseren 
 
-fname = os.path.join(DICTSTORE, 'CurSender')			# init CurSender (aktueller Sender)
-if os.path.exists(fname) == False:						# kann fehlen (Aufruf Merkliste)
-	Dict('store', "CurSender", ARDSender[0])			# Default: ARD-Alle
-
 DEBUG			= SETTINGS.getSetting('pref_info_debug')
 NAME			= 'ARD und ZDF'
 
+#-------------------
+def ARD_CurSender():
+	PLog("ARD_CurSender:")
+	fname = os.path.join(DICTSTORE, 'CurSender')			 # init CurSender (aktueller Sender)
+	CurSender=""
+	if os.path.exists(fname):								 # kann fehlen (Aufruf Merkliste)
+		CurSender = Dict('load', "CurSender")
+	PLog(fname); PLog(CurSender)
+	if CurSender == '' or up_low(str(CurSender)) == "FALSE": # Ladefehler?
+		CurSender = ARDSender[0]	
+	return CurSender
+#-------------------
+
+CURSENDER = ARD_CurSender()
+PLog("ARDnew_loaded")
+
 #----------------------------------------------------------------
-# CurSender neu belegt in Senderwahl
-def Main_NEW(name='', CurSender=''):
+# CURSENDER neu in Senderwahl
+def Main_NEW(name=''):
 	PLog('Main_NEW:'); 
-	PLog(name); PLog(CurSender)
+	PLog(name);
 			
-	if CurSender == '' or up_low(str(CurSender)) == "FALSE":			# Ladefehler?
-		CurSender = ARDSender[0]
-	if ':' in CurSender:				# aktualisieren	
-		Dict('store', "CurSender", CurSender)
-		PLog('sender: ' + CurSender); 
-		CurSender=py2_encode(CurSender);
-	
-	sendername, sender, kanal, img, az_sender = CurSender.split(':')	# sender -> Menüs
+	CURSENDER = ARD_CurSender()
+	sendername, sender, kanal, img, az_sender = CURSENDER.split(':')	# sender -> Menüs
 	sender_summ = 'Sender: [B]%s[/B] (unabhängig von der Senderwahl)' % "ARD-Alle"
 	
 	li = xbmcgui.ListItem()
@@ -197,13 +203,13 @@ def Main_NEW(name='', CurSender=''):
 
 	title = 'Sendung verpasst'
 	tag = def_tag
-	fparams="&fparams={'title': 'Sendung verpasst', 'CurSender': '%s'}" % (quote(CurSender))
+	fparams="&fparams={'title': 'Sendung verpasst'}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasst", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_VERP), tagline=tag, fparams=fparams)
 	
 	title = 'Sendungen A-Z'
 	tag = def_tag
-	fparams="&fparams={'title': 'Sendungen A-Z', 'CurSender': '%s'}" % (quote(CurSender))
+	fparams="&fparams={'title': 'Sendungen A-Z'}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
 						
@@ -285,7 +291,8 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 	
 	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 		'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
-	CurSender = Dict("load", 'CurSender')		
+
+	CurSender = ARD_CurSender()
 	if homeID:												# CurSender in sender
 		CurSender=sender
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
@@ -703,7 +710,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		title = "[B]Highlights[/B]"
 	title_org = title
 	
-	CurSender = Dict("load", 'CurSender')				# init s. Modulkopf
+	CurSender = ARD_CurSender()								# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)	
 		
@@ -1641,7 +1648,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 	PLog('get_json_content: ' + ID); PLog(mark)
 	ID_org=ID; PLog(type(page)); 
 
-	CurSender = Dict("load", 'CurSender')						# Debug, Seite bereits senderspez.
+	CurSender = ARD_CurSender()										# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)												#-> href
 	mediatype=''; pagetitle=''
@@ -2141,16 +2148,10 @@ def ARDStartVideoMP4get(title, StreamArray, call=""):
 # 25.01.2021 Laden + Caching der Link-Übersicht, Laden der Zielseite in 
 #	SendungenAZ_ARDnew
 # 		
-def SendungenAZ(title, CurSender='', homeID=''):		
+def SendungenAZ(title,  homeID=''):		
 	PLog('SendungenAZ: ' + title)
-	PLog(CurSender)
-
-	if CurSender == '' or CurSender == False or CurSender == 'false':	# Ladefehler?
-		CurSender = ARDSender[0]
-	if ':' in CurSender and not homeID:				# aktualisieren	
-		Dict('store', "CurSender", CurSender)
-		PLog('sender: ' + CurSender); 
-		CurSender=py2_encode(CurSender);
+	
+	CurSender = ARD_CurSender()								# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)
 		
@@ -2493,7 +2494,7 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 	PLog(query); PLog(homeID);
 
 	if sender == '':								# Sender gewählt?
-		CurSender = Dict("load", 'CurSender')		
+		CurSender = ARD_CurSender()		
 		sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog("sender: " + sender)
 	
@@ -2569,17 +2570,10 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 # CurSender neubelegt in Senderwahl
 # 13.06.2023 Mitnutzung durch phoenix
 #
-def ARDVerpasst(title, CurSender='', homeID=""):
+def ARDVerpasst(title, homeID=""):
 	PLog('ARDVerpasst:');
-	PLog(CurSender)
 	
-	if CurSender == '' or CurSender == False or CurSender == 'false':	# Ladefehler?
-		CurSender = ARDSender[0]
-	
-	if ':' in CurSender and not homeID:			# aktualisieren	
-		Dict('store', "CurSender", CurSender)
-		PLog('sender: ' + CurSender); 
-		CurSender=py2_encode(CurSender);
+	CurSender = ARD_CurSender()						# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	
 	li = xbmcgui.ListItem()
@@ -2610,9 +2604,8 @@ def ARDVerpasst(title, CurSender='', homeID=""):
 		tagline = "Sender: [B]%s[/B]" % sendername	
 		
 		PLog(title); PLog(startDate); PLog(endDate)
-		CurSender=py2_encode(CurSender); 
-		fparams="&fparams={'title': '%s', 'startDate': '%s', 'endDate': '%s','CurSender': '%s','homeID': '%s'}" %\
-			(title,  startDate, endDate, quote(CurSender), homeID)
+		fparams="&fparams={'title': '%s', 'startDate': '%s', 'endDate': '%s', 'homeID': '%s'}" %\
+			(title,  startDate, endDate, homeID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasstContent", fanart=R(ICON_ARD_VERP), 
 			thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=tagline)
 	
@@ -2639,10 +2632,11 @@ def ARDVerpasst(title, CurSender='', homeID=""):
 # 29.05.2020 Änderung der Webseite durch die ARD - s. ARDVerpasst,
 #	der 2-fache Durchlauf (Senderliste / Sendungen) entfällt
 # 
-def ARDVerpasstContent(title, startDate, endDate, CurSender, homeID=""):
+def ARDVerpasstContent(title, startDate, endDate, homeID=""):
 	PLog('ARDVerpasstContent:');
-	PLog(title);  PLog(startDate); PLog(endDate); PLog(CurSender);
+	PLog(title);  PLog(startDate); PLog(endDate);
 	
+	CurSender = ARD_CurSender()								# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sendername); PLog(sender); 
 	
@@ -2726,17 +2720,19 @@ def convHour(zeit):
 # caller ARDVerpasst, sonst Main_NEW
 # 26.09.2021 Settting pref_disable_sender entfernt - "Sender:" in 
 #	Titel entfällt.
-# 		
+# 11.10.2023 eigene Funktion (ARD_CurSender_set) zum Setzen. Die frühere 
+#	Rückgabe des Senders an caller wird durch das Return-Menü von Kodi
+#	überschrieben
+#
 def Senderwahl(title, caller=''):	
 	PLog('Senderwahl:'); PLog(caller)
-	
+	CurSender = ARD_CurSender()							# init s. Modulkopf
+	PLog(CurSender.split(':')[0])						# akt. sendername
+
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')							# Home-Button
 	
-	if caller == '':
-		caller = "resources.lib.ARDnew.Main_NEW"
-	
-	for entry in ARDSender:								# entry -> CurSender in Main_ARD
+	for entry in ARDSender:								# ARDSender s. Modulkopf
 		if 'KiKA' in entry:								# bisher nicht in Base- und AZ-URL enthalten
 			continue
 		sendername, sender, kanal, img, az_sender = entry.split(':')
@@ -2744,17 +2740,34 @@ def Senderwahl(title, caller=''):
 		tagline = 'Mediathek des Senders [B] %s [/B]' % sendername
 		PLog('sendername: %s, sender: %s, kanal: %s, img: %s, az_sender: %s'	% (sendername, sender, kanal, img, az_sender))
 		title = sendername
-		entry=py2_encode(entry); 			
-		if 'ARDVerpasst' in caller:
-			fparams="&fparams={'title': 'Sendung verpasst', 'CurSender': '%s'}" % quote(entry)
-		elif 'SendungenAZ' in caller: 
-			fparams="&fparams={'title': 'Sendungen A-Z', 'CurSender': '%s'}" % quote(entry)
-		else:	
-			fparams="&fparams={'name': 'ARD Mediathek', 'CurSender': '%s'}" % quote(entry)
-		addDir(li=li, label=title, action="dirList", dirID="%s" % caller, fanart=R(img), thumb=R(img), 
-			tagline=tagline, fparams=fparams)
+		if CurSender.split(':')[0] == sendername:		# aktuelle Auswahl fett
+			title = "[B]%s[/B]" % sendername
+		fparams="&fparams={'entry': '%s', 'caller': '%s'}" % (entry, caller) 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_CurSender_set", 
+			fanart=R(img), thumb=R(img), tagline=tagline, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+#----------------------------------------------------------------
+# setzt entry als CurSender + ruft caller auf
+# caller: ARDVerpasst, SendungenAZ oder Main_NEW 
+def ARD_CurSender_set(entry, caller):
+	PLog("ARD_CurSender_set:")
+	PLog(entry); PLog(caller)
+	
+	fname = os.path.join(DICTSTORE, 'CurSender')			 # init CurSender (aktueller Sender)
+	try:
+		Dict('store', "CurSender", entry)
+	except Exception as exception:
+		PLog("store_error: " + str(exception))
+	
+	if caller == '':
+		return Main_NEW()
+	if "ARDVerpasst" in caller:								# resources.lib.ARDnew.ARDVerpasst
+		return ARDVerpasst('Sendung verpasst')
+	if "SendungenAZ" in caller:								# resources.lib.ARDnew.SendungenAZ
+		return SendungenAZ('Sendungen A-Z')	
+	
 ####################################################################################################
 
 

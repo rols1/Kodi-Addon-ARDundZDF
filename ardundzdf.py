@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>137</nr>										# Numerierung für Einzelupdate
+# 	<nr>138</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.4'
-VDATE = '10.09.2023'
+VDATE = '11.09.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -366,7 +366,7 @@ CurSender = ARDSender[0]									# Default ARD-Alle
 fname = os.path.join(DICTSTORE, 'CurSender')				# init CurSender (aktueller Sender)
 if os.path.exists(fname):									# kann fehlen (Aufruf Merkliste)
 	CurSender = Dict('load', "CurSender")					# Übergabe -> Main_NEW (ARDnew)
-
+PLog(fname); PLog(CurSender)
 
 
 #----------------------------------------------------------------  
@@ -407,7 +407,7 @@ def Main():
 
 	title = "ARD Mediathek"
 	tagline = u'die Classic-Version der Mediathek existiert nicht mehr - sie wurde von der ARD eingestellt'
-	fparams="&fparams={'name': '%s', 'CurSender': '%s'}" % (title, CurSender)
+	fparams="&fparams={'name': '%s'}" % (title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
 		thumb=R(ICON_MAIN_ARD), tagline=tagline, fparams=fparams)
 			

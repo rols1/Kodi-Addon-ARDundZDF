@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>62</nr>										# Numerierung für Einzelupdate
-#	Stand: 27.08.2023
+# 	<nr>63</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -275,8 +275,7 @@ def home(li, ID, ltitle=""):
 	if ID == 'ARD':			
 		img = R('ard-mediathek.png') 
 		name = Home + "ARD Mediathek"
-		CurSender = Dict("load", "CurSender")
-		fparams="&fparams={'name': '%s', 'CurSender': '%s'}"	% (quote(name), quote(CurSender))
+		fparams="&fparams={'name': '%s'}"	% quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", 
 			fanart=img, thumb=img, tagline=tag, summary=summ, fparams=fparams)
 			
