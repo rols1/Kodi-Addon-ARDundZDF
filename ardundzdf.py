@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>138</nr>										# Numerierung für Einzelupdate
+# 	<nr>139</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.4'
 VDATE = '11.09.2023'
 
@@ -361,13 +361,14 @@ except:
 PLog("content_type: %s" % sel)				
 xbmcplugin.setContent(HANDLE, sel)
 
-ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle']	# Rest in ARD_NEW, CurSenderZDF s. ZDF_VerpasstWoche
-CurSender = ARDSender[0]									# Default ARD-Alle
+ARDSender = 'ARD-Alle:ard::ard-mediathek.png:ARD-Alle'		# Rest in ARD_NEW, CurSenderZDF s. ZDF_VerpasstWoche
+CurSender = ARDSender										# Default ARD-Alle
 fname = os.path.join(DICTSTORE, 'CurSender')				# init CurSender (aktueller Sender)
 if os.path.exists(fname):									# kann fehlen (Aufruf Merkliste)
 	CurSender = Dict('load', "CurSender")					# Übergabe -> Main_NEW (ARDnew)
+else:
+	Dict('store', "CurSender", CurSender)
 PLog(fname); PLog(CurSender)
-
 
 #----------------------------------------------------------------  
 																	
@@ -407,6 +408,9 @@ def Main():
 
 	title = "ARD Mediathek"
 	tagline = u'die Classic-Version der Mediathek existiert nicht mehr - sie wurde von der ARD eingestellt'
+	CurSender = Dict('load', "CurSender")
+	if ":" in str(CurSender):
+		tagline = "%s\nSender: [B]%s[/B]" % (tagline, CurSender.split(":")[0])
 	fparams="&fparams={'name': '%s'}" % (title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
 		thumb=R(ICON_MAIN_ARD), tagline=tagline, fparams=fparams)
