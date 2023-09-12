@@ -9,8 +9,8 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>12</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.07.2023
+# 	<nr>13</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -265,7 +265,7 @@ def phoenix_Start():
 	PLog('phoenix_Start:')
 
 	title = 'Sendung verpasst'
-	ARDStart(title, CurSender, homeID="phoenix")
+	ARDStart(title, sender=CurSender, homeID="phoenix")
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 # ----------------------------------------------------------------------
@@ -275,7 +275,7 @@ def Verpasst():
 	PLog('Verpasst:')
 
 	title = 'Sendung verpasst'
-	ARDVerpasst(title, CurSender, homeID="phoenix")
+	ARDVerpasst(title, CurSender=CurSender, homeID="phoenix")
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -284,7 +284,7 @@ def phoenix_AZ():
 	PLog('phoenix_AZ:')
 
 	title = 'Sendungen A-Z'
-	SendungenAZ(title, CurSender, homeID="phoenix")
+	SendungenAZ(title, CurSender=CurSender, homeID="phoenix")
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 

@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>56</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.09.2023
+# 	<nr>57</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -116,7 +116,8 @@ def ARD_CurSender():
 		CurSender = Dict('load', "CurSender")
 	PLog(fname); PLog(CurSender)
 	if CurSender == '' or up_low(str(CurSender)) == "FALSE": # Ladefehler?
-		CurSender = ARDSender[0]	
+		CurSender = ARDSender[0]
+			
 	return CurSender
 #-------------------
 
@@ -261,8 +262,7 @@ def Main_NEW(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
 		thumb=R('tv-regional.png'), tagline=tag, fparams=fparams) 
 
-#	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		 		
 #---------------------------------------------------------------- 
 # Startseite der Mediathek - passend zum ausgewählten Sender -
@@ -2147,11 +2147,13 @@ def ARDStartVideoMP4get(title, StreamArray, call=""):
 # 28.05.2020 ARD-Änderungen - s. SendungenAZ_ARDnew
 # 25.01.2021 Laden + Caching der Link-Übersicht, Laden der Zielseite in 
 #	SendungenAZ_ARDnew
+# 13.06.2023 Mitnutzung durch phoenix (CurSender, homeID)
 # 		
-def SendungenAZ(title,  homeID=''):		
+def SendungenAZ(title, CurSender="", homeID=''):		
 	PLog('SendungenAZ: ' + title)
 	
-	CurSender = ARD_CurSender()								# init s. Modulkopf
+	if CurSender == "":
+		CurSender = ARD_CurSender()						# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)
 		
@@ -2567,13 +2569,14 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 #	zur Verfügung, Ermittlung der timeline-Sender im Web entfällt.
 #	Statt dessen forder wir mit dem gewählten Sender die entspr. 
 #	json-Seite an. Verarbeitung in ARDVerpasstContent 	
-# CurSender neubelegt in Senderwahl
-# 13.06.2023 Mitnutzung durch phoenix
+# CurSender neubelegt in Senderwahl od. in Param (phoenix)
+# 13.06.2023 Mitnutzung durch phoenix (CurSender, homeID)
 #
-def ARDVerpasst(title, homeID=""):
+def ARDVerpasst(title, CurSender="", homeID=""):
 	PLog('ARDVerpasst:');
 	
-	CurSender = ARD_CurSender()						# init s. Modulkopf
+	if CurSender == "":
+		CurSender = ARD_CurSender()						# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	
 	li = xbmcgui.ListItem()
