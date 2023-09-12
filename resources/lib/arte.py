@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>34</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.07.2023
+# 	<nr>35</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -340,6 +340,7 @@ def arte_Live(href, title, Plot, img):
 # Api-Call s.u. (div. Varianten, nur 1 ohne Error 401 / 403)
 # 27.07.2021 neuer Api-Call
 # 15.01.2023 umgestellt: api-path (path für Seite 1 war abweichend)
+# 12.09.2023 neue Api-Version (emac/v3 -> emac/v4)
 #
 def arte_Search(query='', nextpage=''):
 	PLog("arte_Search:")
@@ -356,7 +357,7 @@ def arte_Search(query='', nextpage=''):
 						
 	arte_lang = Dict('load', "arte_lang")
 	lang = arte_lang.split("|")[1].strip()			# fr, de, ..	
-	path = "https://www.arte.tv/api/rproxy/emac/v3/%s/web/data/SEARCH_LISTING/?query=%s&mainZonePage=1&page=%s&limit=20" %\
+	path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/SEARCH?query=%s&mainZonePage=1&page=%s&limit=20" %\
 		(quote(lang), quote(query), nextpage)		
 	aktpage = stringextract('page=', '&', path)
 
@@ -415,7 +416,7 @@ def GetContent(li, page, ID):
 	
 	PLog(str(page)[:80])		
 	if ID == "SEARCH":									# web-api-Call
-		values = page["value"]["data"]
+		values = page["value"]["zones"][0]["content"]["data"]
 	elif ID == "EPG_Today":								# web-api-Call
 		values = page["value"]["zones"][1]["data"]		# 0: TVGuide Highlights, 1: Listing
 	elif ID == "Beitrag_Liste":			
