@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>57</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.09.2023
+# 	<nr>58</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -293,7 +293,7 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
 
 	CurSender = ARD_CurSender()
-	if homeID:												# CurSender in sender
+	if homeID:												# CurSender in sender (Bsp. phoenix-Calls)
 		CurSender=sender
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	senderimg = img
@@ -2245,9 +2245,11 @@ def SendungenAZ(title, CurSender="", homeID=''):
 #	Verzicht auf Laden + Caching der Gesamtseite, stattdessen in SendungenAZ
 #	Laden der Link-Übersicht mit embedded-Zusatz und hier Laden der Zielseite
 #
-def SendungenAZ_ARDnew(title, button, href, homeID=''): 
+def SendungenAZ_ARDnew(title, button, href, CurSender="", homeID=''): 
 	PLog('SendungenAZ_ARDnew:')
 	PLog('button: ' + button); 
+	PLog(CurSender)
+
 	title = title	
 	title_org = title
 
@@ -2573,7 +2575,8 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 # 13.06.2023 Mitnutzung durch phoenix (CurSender, homeID)
 #
 def ARDVerpasst(title, CurSender="", homeID=""):
-	PLog('ARDVerpasst:');
+	PLog('ARDVerpasst: ' + CurSender);
+	PLog(homeID)
 	
 	if CurSender == "":
 		CurSender = ARD_CurSender()						# init s. Modulkopf
@@ -2607,10 +2610,10 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 		tagline = "Sender: [B]%s[/B]" % sendername	
 		
 		PLog(title); PLog(startDate); PLog(endDate)
-		fparams="&fparams={'title': '%s', 'startDate': '%s', 'endDate': '%s', 'homeID': '%s'}" %\
-			(title,  startDate, endDate, homeID)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasstContent", fanart=R(ICON_ARD_VERP), 
-			thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=tagline)
+		fparams="&fparams={'title': '%s', 'startDate': '%s', 'endDate': '%s', 'CurSender': '%s', 'homeID': '%s'}" %\
+			(title,  startDate, endDate, CurSender, homeID)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasstContent", 
+			fanart=R(ICON_ARD_VERP), thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=tagline)
 	
 	if not homeID:								# nicht bei phoenix	
 		title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
@@ -2635,11 +2638,12 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 # 29.05.2020 Änderung der Webseite durch die ARD - s. ARDVerpasst,
 #	der 2-fache Durchlauf (Senderliste / Sendungen) entfällt
 # 
-def ARDVerpasstContent(title, startDate, endDate, homeID=""):
+def ARDVerpasstContent(title, startDate, endDate, CurSender="", homeID=""):
 	PLog('ARDVerpasstContent:');
 	PLog(title);  PLog(startDate); PLog(endDate);
 	
-	CurSender = ARD_CurSender()								# init s. Modulkopf
+	if CurSender == "":
+		CurSender = ARD_CurSender()				# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sendername); PLog(sender); 
 	
