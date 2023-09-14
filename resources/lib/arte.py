@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>35</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.09.2023
+# 	<nr>36</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -113,7 +113,7 @@ def Main_arte(title='', summ='', descr='',href=''):
 	title=u"%s Arte-Mediathek" % L(u"Suche in")
 	tag = u"[B]%s[/B]" % arte_lang
 	fparams="&fparams={}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.arte_Search", fanart=R(ICON_ARTE), 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Arte_Search", fanart=R(ICON_ARTE), 
 		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)
 	# ------------------------------------------------------
 
@@ -133,7 +133,7 @@ def Main_arte(title='', summ='', descr='',href=''):
 	img=py2_encode(img)
 	fparams="&fparams={'href': '%s', 'title': '%s', 'Plot': '%s', 'img': '%s'}" %\
 		(quote(href), quote(title), quote(summ_par), quote(img))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.arte_Live", fanart=R(ICON_ARTE),
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Arte_Live", fanart=R(ICON_ARTE),
 		thumb=img, fparams=fparams, tagline=tag, summary=summ)
 
 	# ------------------------------------------------------
@@ -307,8 +307,8 @@ def EPG_Today():
 ####################################################################################################
 # arte - TV-Livestream mit akt. PRG
 # 23.04.2022 Parseplaylist entfernt (ungeeignet für Mehrkanal-Streams)
-def arte_Live(href, title, Plot, img):	
-	PLog('arte_Live:')
+def Arte_Live(href, title, Plot, img):	
+	PLog('Arte_Live:')
 
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
@@ -316,7 +316,7 @@ def arte_Live(href, title, Plot, img):
 	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
-		PLog('Sofortstart: arte_Live')
+		PLog('Sofortstart: Arte_Live')
 		PlayVideo(url=href, title=title, thumb=img, Plot=Plot, live="true")
 		return	
 							
@@ -342,23 +342,23 @@ def arte_Live(href, title, Plot, img):
 # 15.01.2023 umgestellt: api-path (path für Seite 1 war abweichend)
 # 12.09.2023 neue Api-Version (emac/v3 -> emac/v4)
 #
-def arte_Search(query='', nextpage=''):
-	PLog("arte_Search:")
+def Arte_Search(query='', next_url=''):
+	PLog("Arte_Search:")
+	PLog(query); PLog(next_url);
 	if 	query == '':	
 		query = ardundzdf.get_query(channel='phoenix')	# unbehandelt
-	PLog(query);
 	query = py2_decode(query)
 	if  query == None or query == '':
 		return ""
 				
 	query=py2_encode(query);
-	if nextpage == '':
-		nextpage = '1'
 						
 	arte_lang = Dict('load', "arte_lang")
 	lang = arte_lang.split("|")[1].strip()			# fr, de, ..	
-	path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/SEARCH?query=%s&mainZonePage=1&page=%s&limit=20" %\
-		(quote(lang), quote(query), nextpage)		
+	path = next_url									# Pagination-Link (api-internal ersetzt)
+	if path == "":									# Seite 1 
+		path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/SEARCH?query=%s&mainZonePage=1&page=1&limit=20" %\
+		(quote(lang), quote(query))		
 	aktpage = stringextract('page=', '&', path)
 
 	page, msg = get_page(path=path, do_safe=False)		# ohne quote in get_page (api-Call)
@@ -378,29 +378,30 @@ def arte_Search(query='', nextpage=''):
 	PLog(len(page))
 	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
 
-	nexturl = stringextract('"nextPage":"', '"', page)		# letzte Seite: ""
-	nextpage = stringextract('page=', '&', nexturl)
-	PLog("nextpage: " + nextpage)	
-
 	page = json.loads(page)
-	li,cnt = GetContent(li, page, ID='SEARCH')
+	ID='SEARCH'
+	if next_url:							# Folgeseiten: Struktur wie MOST_RECENT
+		ID='SEARCH_NEXT'
+	li,cnt = GetContent(li, page, ID)
 	if 	cnt == 0:
 		msg1 = L(u"leider keine Treffer zu")
 		msg2 = query
 		MyDialog(msg1, msg2, '')	
 		return li
 		
-	
-	if nextpage and  int(nextpage) > int(aktpage):			# letzte Seite = akt. Seite
+	#														# Mehr-Beiträge? ArteMehr nicht geeignet
+	next_url,page_akt,page_anz,anz,next_page = get_next_url(str(page))
+	if next_url:
+		next_url = next_url.replace("api-internal.arte.tv/api", "www.arte.tv/api/rproxy")
 		li = xbmcgui.ListItem()								# Kontext-Doppel verhindern
 		img = R(ICON_MEHR)
 		title = L(u"Weitere Beiträge")
 		l = L(u"weiter zu Seite")
-		tag = u"%s %s" % (l, nextpage)
+		tag = u"weiter zu [B]Seite %s[/B] (Seiten: %s, Beiträge: %s)" % (next_page, page_anz, anz)
 
-		query=py2_encode(query); 
-		fparams="&fparams={'query': '%s', 'nextpage': '%s'}" % (quote(query), nextpage)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.arte_Search", fanart=img, 
+		query=py2_encode(query); next_url=py2_encode(next_url)
+		fparams="&fparams={'query': '%s', 'next_url': '%s'}" % (quote(query), quote(next_url))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Arte_Search", fanart=img, 
 			thumb=img, fparams=fparams, tagline=tag)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -417,6 +418,8 @@ def GetContent(li, page, ID):
 	PLog(str(page)[:80])		
 	if ID == "SEARCH":									# web-api-Call
 		values = page["value"]["zones"][0]["content"]["data"]
+	elif ID == "SEARCH_NEXT":							# Folgeseiten wie MOST_RECENT
+		values = page["value"]["data"]
 	elif ID == "EPG_Today":								# web-api-Call
 		values = page["value"]["zones"][1]["data"]		# 0: TVGuide Highlights, 1: Listing
 	elif ID == "Beitrag_Liste":			
@@ -675,7 +678,7 @@ def Beitrag_Liste(url, title):
 	li,cnt = GetContent(li, page, ID=ID) 						# eigenes ListItem
 	
 	page = str(page)
-	if str(page).find("pagination"):							# Mehr-Beiträge?
+	if page.find("pagination"):									# Mehr-Beiträge?
 		ArteMehr(page, li)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -1214,7 +1217,8 @@ def get_cluster(values, title, pid_search):
 	return page
 
 # ---------------------------------------------------------------------
-# holt Mehr-Beiträge 
+# holt Mehr-Beiträge -> get_next_url (ab "pagination") für
+#	Beitrag_Liste + ArteCluster
 # page = string
 def ArteMehr(page, li=''):
 	PLog("ArteMehr:")
