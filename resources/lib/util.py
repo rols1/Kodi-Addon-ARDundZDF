@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>63</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.09.2023
+# 	<nr>64</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3387,45 +3387,43 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		startlist = SETTINGS.getSetting('pref_startlist')
 		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
 		if  startlist == 'true' and playlist == '':					# Startliste  (true: skip bei playlist-Url)
-			PLog("STARTLIST: " + STARTLIST)
-			PLog(maxvideos)
-			startlist=''
+			PLog("maxvideos: %s, STARTLIST: %s" % (maxvideos, STARTLIST))
+			started_videos=""
 			if os.path.exists(STARTLIST):
-				startlist= RLoad(STARTLIST, abs_path=True)			# Video-Startliste ergänzen
-			if startlist:
-				startlist=py2_encode(startlist)
-				startlist= startlist.strip().splitlines()
-			else:
-				startlist=[]
-			PLog(len(startlist))
-			if len(startlist) >= int(maxvideos):					# 1. Eintrag löschen (ältester)
-				del startlist[0]
+				started_videos= RLoad(STARTLIST, abs_path=True)		# Video-Startliste laden
+				started_videos=py2_encode(started_videos)
+				started_videos= started_videos.splitlines()
+			if started_videos == "":
+				started_videos=[]
+			PLog("started_videos: %d" % len(started_videos))
+			if len(started_videos) >= int(maxvideos):				# 1. Eintrag löschen (ältester)
+				del started_videos[0]
 			
 			dt = datetime.datetime.now()							# Format 2017-03-09 22:04:19.044463
-			now = time.mktime(dt.timetuple())						# Unix-Format 1489094334.0
+			now = time.mktime(dt.timetuple())						# Unix-Format 1489094334.0 -> Sortiermerkmal
 			Plot=Plot.replace('\n', '||')
 			if 'gestartet: [COLOR darkgoldenrod]' in Plot: 			# Video aus Startliste:
 				mark = '[/COLOR]||||'								# 	Datum/Zeit entfernen
 				pos = Plot.find(mark) + len(mark)
 				Plot = Plot[pos:]
 				
-			new_line = u"%s###%s###%s###%s###%s" % (now, title, url, thumb, Plot)
+			new_line = u"%s###%s###%s###%s###%s" % (now, title, url, thumb, Plot) 
 			new_line = py2_encode(new_line)
 			PLog("new_line: " + new_line[:100])
 			new_list=[]
 			new_list.append(new_line)
 			PLog(len(new_list))	
 			
-			for item in startlist:									# alte Einträge mit Url abgleichen 
-				item = py2_encode(item)								#	und umkopieren
+			for item in started_videos:									# alte Einträge mit Url abgleichen 
+				item = py2_encode(item)									#	und umkopieren
 				#PLog("new_line[12:]: %s, item[:12]: %s" % (new_line[12:], item[:12])) # nur bei Bedarf
 				old_url = stringextract('###http', '###', item)	
 				new_url = stringextract('###http', '###', new_line)	
 				#PLog("old_url: %s, new_url: %s" % (old_url, new_url))	# nur bei Bedarf
 				#PLog(new_url in old_url)								# nur bei Bedarf
-				if new_url not in old_url:							# Eintrag mit gleicher Url löschen (skip)
+				if new_url not in old_url:								# Eintrag mit gleicher Url löschen (skip)
 					PLog("append:")
-					new_list.append(item)							# Eintrag -> new_list		
+					new_list.append(item)								# Eintrag -> new_list		
 
 			PLog(len(new_list))	
 			new_list.sort(reverse=True)
