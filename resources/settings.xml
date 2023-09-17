@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!-- 	<nr>10</nr>	# Numerierung für Einzelupdate -->
+<!-- 	<nr>11</nr>	# Numerierung für Einzelupdate -->
 <settings> 
     <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
@@ -73,7 +73,8 @@
  	<setting label="Info-Button ausblenden" type="bool" id="pref_FavsInfoMenueButton" default="false"/>
    	<setting label="Ordner für Merkliste verwenden" type="bool" id="pref_merkordner" default="false"/>
   	<setting label="Ordner im Titel kennzeichnen" type="bool" id="pref_WatchFolderInTitle" default="false"/>
-    <setting type="sep"/>
+ 	<setting label="Sortierung der Merkliste" type="select" values="aufsteigend|absteigend|keine" default="aufsteigend" id="pref_merksort"/>
+   <setting type="sep"/>
   	<setting label="externe (zentrale) Merkliste verwenden" type="bool" id="pref_merkextern" default="false"/>
 	<setting label="Pfad zur externen Merkliste" type="file" source="" id="pref_MerkDest_path" default=""/>
   	<setting label="interne Merkliste mit externer synchronisieren" type="bool" id="pref_merksync" default="false"/>

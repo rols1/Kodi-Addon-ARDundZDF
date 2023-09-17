@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>139</nr>										# Numerierung für Einzelupdate
+# 	<nr>140</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.4'
-VDATE = '11.09.2023'
+VDATE = '17.09.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6059,11 +6059,19 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 	PLog(Dir_Arr[0][-1])										# letztes Element im eersten Satz
 	Dir_Arr = list(filter(lambda a: a != [], Dir_Arr))			# Leere Sätze entfernen
 	PLog("Dir_Arr_clean: %d" % len(Dir_Arr))
-	if 	myfilter:
-		Dir_Arr = sorted(Dir_Arr,key=lambda x: x[-1].lower())	# Sortierung nach merkname (letztes Element,
-	else:														#	 o. Attribute)
-		Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower())	# Sortierung nach name (erstes Element plus ev. 
-																#	Odner-Kennzeichnung im Titel)
+	sortoption = SETTINGS.getSetting('pref_merksort')
+	PLog("sortoption: %s" % sortoption)
+	if sortoption != "keine":
+		if 	myfilter:											# Filter gesetzt? Sortierung nach merkname 
+			if sortoption == "aufsteigend":						#	(letztes Element, o. Attribute)
+				Dir_Arr = sorted(Dir_Arr,key=lambda x: x[-1].lower())
+			else:
+				Dir_Arr = sorted(Dir_Arr,key=lambda x: x[-1].lower(), reverse=True)
+		else:													# Sortierung nach name (erstes Element plus ev. 										
+			if sortoption == "aufsteigend":						# 	Odner-Kennzeichnung im Titel)
+				Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower())
+			else:	
+				Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower(), reverse=True)													
 	PLog(Dir_Arr[0])											# erster Satz nach Sortierung
 	
 	for rec in Dir_Arr:
