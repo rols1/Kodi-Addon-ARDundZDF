@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>21</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.09.2023
+# 	<nr>22</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1051,7 +1051,14 @@ def Maus_Audiobooks(title, url):
 	PLog(len(page))	
 	
 	items = blockextract("<item>", page)
-	PLog(len(items))	
+	PLog(len(items))
+	if len(items) == 0:
+		msg1 = title
+		msg2 = "leider keine Sendung gefunden"							
+		icon = MAUSZOOM
+		xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=True)			
+		return
+		
 	
 	for item in items:
 		title = stringextract("<title>", "</title>", item)
