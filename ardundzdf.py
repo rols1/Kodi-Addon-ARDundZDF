@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>140</nr>										# Numerierung für Einzelupdate
+# 	<nr>141</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.4'
-VDATE = '17.09.2023'
+VDATE = '19.09.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1781,6 +1781,16 @@ def ARDAudioEventStreams(li=''):
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
 		thumb=thumb, tagline=tag, fparams=fparams)
 	
+	title = u"[B]Audio:[/B] Alle Audiostreams aus der Champions League"# Button Audiostreams sportschau.de
+	href = 'https://www.sportschau.de/fussball/championsleague/audiostreams-champions-league-uebersicht-100.html'
+	img = R("tv-ard-sportschau.png")
+	thumb =	"https://images.sportschau.de/image/c99df197-9b30-4af0-9a84-3cc3e1ec991a/AAABiqiMH6k/AAABibBxqrQ/16x9-1280/cl-audio-netcast-teaser-100.jpg"						
+	tag = u'Champions League live hören.\nQuelle: ARD sportschau.de (WDR)' 
+	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s', 'cacheID': 'ARDSport_Audios_CLeague'}" %\
+		(quote(title), quote(href), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
+		thumb=thumb, tagline=tag, fparams=fparams)
 	if endof:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	else:	
@@ -4153,7 +4163,7 @@ def ARDSportMediaPlayer(li, item_data):
 	return player, live, title, mp3_url, stream_url, img, tag, summ, Plot 
 
 #---------------------------------------------------------------------------------------------------
-# Für Seiten mit nur einheitliche Blöcken
+# Für Seiten mit nur einheitlichen Blöcken
 # Aufrufer: ARDAudioEventStreams (Audiostreams, Netcast-Audiostreams) 
 # 
 def ARDSportNetcastAudios(title, path, img, cacheID):
@@ -6035,7 +6045,7 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 		if modul != "ardundzdf":								# Hinweis Modul
 			tagline = "[B]Modul: %s[/B]%s" % (modul, tagline)
 		if SETTINGS.getSetting('pref_merkordner') == 'true':	
-			merkname = name										# für Kontextmenü Ordner in addDir
+			merkname = name										# für Aufnahme/Abgleich im Kontextmenü addDir
 			if ordner:											# Hinweis Ordner
 				if 'COLOR red' in tagline:						# bei Modul plus LF
 					tagline = "[B][COLOR blue]Ordner: %s[/COLOR][/B]\n%s" % (ordner, tagline)
@@ -6056,7 +6066,7 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 	#---------------------------------							# Sortierung
 	PLog("Dir_Arr: %d" % len(Dir_Arr))	
 	PLog(Dir_Arr[0])											# erster Satz vor Sortierung
-	PLog(Dir_Arr[0][-1])										# letztes Element im eersten Satz
+	PLog(Dir_Arr[0][-1])										# letztes Element im ersten Satz
 	Dir_Arr = list(filter(lambda a: a != [], Dir_Arr))			# Leere Sätze entfernen
 	PLog("Dir_Arr_clean: %d" % len(Dir_Arr))
 	sortoption = SETTINGS.getSetting('pref_merksort')
@@ -6068,7 +6078,7 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 			else:
 				Dir_Arr = sorted(Dir_Arr,key=lambda x: x[-1].lower(), reverse=True)
 		else:													# Sortierung nach name (erstes Element plus ev. 										
-			if sortoption == "aufsteigend":						# 	Odner-Kennzeichnung im Titel)
+			if sortoption == "aufsteigend":						# 	Ordner-Kennzeichnung im Titel, Bsp. Audio | ..)
 				Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower())
 			else:	
 				Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower(), reverse=True)													
@@ -9954,13 +9964,13 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	PLog ('Parseplaylist: ' + url_m3u8)
 	Stream_List=[]
 
-	if SETTINGS.getSetting('pref_video_direct') == 'true' and buttons:		# nicht für Stream_List
+	if SETTINGS.getSetting('pref_video_direct') == 'true' and buttons:	# nicht für Stream_List
 		return li
 
 	playlist = ''
 	# seit ZDF-Relaunch 28.10.2016 dort nur noch https
-	if url_m3u8.startswith('http') == True :								# URL oder lokale Datei?
-		url_check(url_m3u8, caller='Parseplaylist')				
+	if url_m3u8.startswith('http') == True :							# URL oder lokale Datei?
+		url_check(url_m3u8, caller='Parseplaylist', dialog=False)		# o. Dialog (wg. Nutzung strm-Thread)				
 		playlist, msg = get_page(path=url_m3u8)				
 		if playlist == '':
 			icon = R(ICON_WARNING)
