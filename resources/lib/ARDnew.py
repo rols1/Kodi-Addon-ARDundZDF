@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>58</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.09.2023
+# 	<nr>59</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -336,7 +336,8 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 	PLog(len(container))
 	title_list=[]											# für Doppel-Erkennung
 	skip_list = [u"Empfehlungen für Sie", u"Weiterschauen",	# personalierte Inhalte
-			u"Meine Merkliste", u"Ist Ihre App bereit"]
+			u"Meine Merkliste", u"Ist Ihre App bereit",
+			u"Login-Promo"]
 
 	cnt=0
 	for cont in container:
@@ -607,11 +608,11 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 			region,rname,partner = page.split("|")
 		except Exception as exception:
 			PLog(str(exception))
+			region=""
 	if region == "": 										# Default-Region
 		region="be"; rname="Berlin"; partner="rbb"
 	
-		 
-	path = base + "ard/region/6YgzSO0C7huVaGgzM5mq19/%s?pageNumber=0&pageSize=100" % region
+	path = base + "ard/region/1FdQ5oz2JK6o2qmyqMsqiI:-947156297680186331/%s?pageNumber=0&pageSize=100&embedded=true" % region
 	page, msg = get_page(path=path)
 	if page == '':	
 		msg1 = "Fehler in ARDStartRegion: %s"	% title
