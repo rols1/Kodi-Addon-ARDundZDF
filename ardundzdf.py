@@ -1716,19 +1716,14 @@ def AudioSenderPrograms(org=''):
 
 
 #----------------------------------------------------------------
-# Buttons ARD Audio Event Streams, Bundesliga ARD-Hörfunk,
-#	 Sportschau Livestreams, Liste Netcast-Audiostreams
-# Audio-Calls:
-#	ARDSportAudioXML -> 	SenderLiveResolution		-> PlayAudio
-#	ARDSportHoerfunk ->  	ARDSportAudioStreamsSingle 	-> PlayAudio
-#	ARDSportAudioStreams ->	ARDSportAudioStreamsSingle 	-> PlayAudio
-# Hinw.: Timeouts bei den Sportschau-Audio-Seiten möglich (aktuelle 
-#	Livestreams, Netcast-Audiostreams)
-# 01.05.2022 Button Bundesliga ARD-Hörfunk auskommentiert (Links defekt),
-# 14.06.2022 entfernt, Button "aktuelle LIVESTREAMS(sportschau.de)"
-#	verlegt nach ARDnew.ARDSportLive
-# 24.08.2023 Button "ARD Audio Event Streams" entfernt, dto. entspr.
-#	Channel in livesenderTV.xml - 26.08.2023 wiederhergestellt
+# neu ab 26.08.2023
+# Button ARD Audio Event Streams -> ARDSportAudioXML -> SenderLiveListe
+#	(Audio-channels in livesenderTV.xml
+# Button Sport in der Audiothek -> Audio_get_cluster_rubrik
+#	(Audiothek, Rubrik LIVE: 1. und 2. Bundesliga)
+# restl. Buttons -> ARDSportNetcastAudios (Audio-Livestreams auf
+#	sportschau.de, WDR -> ARDSportMediaPlayer extrahiert die eingebetteten
+#	Mediaplayerdaten)
 #
 def ARDAudioEventStreams(li=''):
 	PLog('ARDAudioEventStreams:')
@@ -1741,14 +1736,16 @@ def ARDAudioEventStreams(li=''):
 	title = u"[B]Audio:[/B] ARD Radio Event Streams"					# div. Events, z.Z. Fußball EM2020   
 	img = R("radio-livestreams.png")
 	tag = u'Reportagen von regionalen und überregionalen Events' 
+	summ = u"Quelle: Channel >ARD Audio Event Streams< in livesenderTV.xml"
 	img=py2_encode(img); channel=py2_encode(channel); title=py2_encode(title);
 	fparams="&fparams={'channel': '%s'}"	% (quote(channel))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportAudioXML", fanart=img, 
-		thumb=img, tagline=tag, fparams=fparams)
+		thumb=img, tagline=tag, summary=summ, fparams=fparams)
 		
 	label = "[B]Audio:[/B] Sport in der Audiothek"					# Querverweis Audiothek Rubrik Sport
 	li = xbmcgui.ListItem()
 	tag = u"LIVE: 1. und 2. Bundesliga, einschl. Bundesliga-Konferenz, Aktuell informiert und weitere Themen"
+	summ = u"Quelle: Rubrik sport/42914734 in der ARD Audiothek"
 	thumb = R("ard-sport.png")
 	img = R(ICON_MAIN_AUDIO)
 	href = 'https://www.ardaudiothek.de/rubrik/sport/42914734'
@@ -1756,7 +1753,7 @@ def ARDAudioEventStreams(li=''):
 	fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'ID': 'Audio_get_rubriken_web'}" % (quote(href), 
 		quote("Sport"))
 	addDir(li=li, label=label, action="dirList", dirID="Audio_get_cluster_rubrik", \
-		fanart=img, thumb=thumb, tagline=tag, fparams=fparams)	
+		fanart=img, thumb=thumb, tagline=tag, summary=summ, fparams=fparams)	
 	 	
 	# Startseite für Audiostreams: https://www.sportschau.de/fussball/how-to-audio-netcast-100.html				
 	title = u"[B]Audio:[/B] Alle Audiostreams der Fußball-Bundesliga"	# Button Audiostreams sportschau.de
@@ -1764,33 +1761,48 @@ def ARDAudioEventStreams(li=''):
 	img = R("tv-ard-sportschau.png")
 	thumb =	"https://images.sportschau.de/image/14367dff-c9b4-4237-8421-6a9c0e01d61e/AAABiYhYFh4/AAABibBxqrQ/16x9-1280/buli-audio-netcast-teaser-100.jpg"						
 	tag = u'Fußball-Bundesliga live hören.\nQuelle: ARD sportschau.de (WDR)' 
+	summ = u"Quelle: sportschau.de (WDR)"
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s', 'cacheID': 'ARDSport_Audios_BL1'}" %\
 		(quote(title), quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
-		thumb=thumb, tagline=tag, fparams=fparams)
+		thumb=thumb, tagline=tag, summary=summ, fparams=fparams)
 
 	title = u"[B]Audio:[/B] Alle Audiostreams der 2. Fußball-Bundesliga"# Button Audiostreams sportschau.de
 	href = 'https://www.sportschau.de/fussball/bundesliga2/audiostreams-zweite-bundesliga-uebersicht-100.html'
 	img = R("tv-ard-sportschau.png")
 	thumb =	"https://images.sportschau.de/image/14367dff-c9b4-4237-8421-6a9c0e01d61e/AAABiYhYFh4/AAABibBxqrQ/16x9-1280/buli-audio-netcast-teaser-100.jpg"						
 	tag = u'2. Bundesliga live hören.\nQuelle: ARD sportschau.de (WDR)' 
+	summ = u"Quelle: sportschau.de (WDR)"
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s', 'cacheID': 'ARDSport_Audios_BL2'}" %\
 		(quote(title), quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
-		thumb=thumb, tagline=tag, fparams=fparams)
+		thumb=thumb, tagline=tag, summary=summ, fparams=fparams)
+	
+	title = u"[B]Audio:[/B] Live hören: Alle Spiele im DFB Pokal"		# Button Audiostreams sportschau.de
+	href = 'https://www.sportschau.de/fussball/dfbpokal/audiostreams-dfb-pokal-uebersicht-100.html'
+	img = R("tv-ard-sportschau.png")
+	thumb =	"https://images.sportschau.de/image/5b48b637-8cc1-4228-8504-861eeb0358af/AAABiqiJb4U/AAABibBxqrQ/16x9-1280/dfb-pokal-audio-netcast-teaser-100.jpg"						
+	tag = u'DFB-Pokal live aus den Stadien: Bei der Sportschau hören Sie jedes Einzelspiel in voller Länge.' 
+	summ = u"Quelle: sportschau.de (WDR)"
+	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s', 'cacheID': 'ARDSport_DFBPokal'}" %\
+		(quote(title), quote(href), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
+		thumb=thumb, tagline=tag, summary=summ, fparams=fparams)
 	
 	title = u"[B]Audio:[/B] Alle Audiostreams aus der Champions League"# Button Audiostreams sportschau.de
 	href = 'https://www.sportschau.de/fussball/championsleague/audiostreams-champions-league-uebersicht-100.html'
 	img = R("tv-ard-sportschau.png")
 	thumb =	"https://images.sportschau.de/image/c99df197-9b30-4af0-9a84-3cc3e1ec991a/AAABiqiMH6k/AAABibBxqrQ/16x9-1280/cl-audio-netcast-teaser-100.jpg"						
 	tag = u'Champions League live hören.\nQuelle: ARD sportschau.de (WDR)' 
+	summ = u"Quelle: sportschau.de (WDR)"
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s', 'cacheID': 'ARDSport_Audios_CLeague'}" %\
 		(quote(title), quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
-		thumb=thumb, tagline=tag, fparams=fparams)
+		thumb=thumb, tagline=tag, summary=summ, fparams=fparams)
 	if endof:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	else:	
