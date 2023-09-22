@@ -57,7 +57,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>141</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.4'
-VDATE = '19.09.2023'
+VDATE = '22.09.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -4173,11 +4173,18 @@ def ARDSportNetcastAudios(title, path, img, cacheID):
 	if page == '':
 		return
 	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD')						# Home-Button
-	
 	items = blockextract('<picture class=', page)							# Kombi?: ARDSportLive (Videos + Audios)
 	PLog(len(items))
+	if  len(items) == 0:
+		icon = img
+		msg1 = u"z.Z. keine Beiträge"
+		msg2 = title		
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)
+		return
+	
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD')						# Home-Button
 	
 	for item in items:
 		data  = ARDSportgetPlayer(item)
