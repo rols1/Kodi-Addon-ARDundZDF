@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>59</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.09.2023
+# 	<nr>60</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -287,7 +287,7 @@ def Main_NEW(name=''):
 #	Merkmal hier entfernt (entfällt so autom. bei den Folgecalls).
 #
 def ARDStart(title, sender, widgetID='', path='', homeID=''): 
-	PLog('ARDStart:'); PLog(sender)
+	PLog('ARDStart: ' + title); PLog(sender)
 	
 	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 		'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
@@ -309,19 +309,23 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 	if path == '':
 		path = base
 	DictID = "ARDStart_%s" % sendername
-	page = Dict("load",DictID,CacheTime=ARDStartCacheTime)	# Cache: 5 min
-	if not page:											# nicht vorhanden oder zu alt						
-		icon = R(ICON_MAIN_ARD)
-		xbmcgui.Dialog().notification("Cache %s:" % DictID,"Haltedauer 5 Min",icon,3000,sound=False)
+	page=""
+	if title != "Startseite":								# Cache nur für Startseite, nicht Retro u.a.
+		page, msg = get_page(path, header=headers)	
+	else:
+		page = Dict("load",DictID,CacheTime=ARDStartCacheTime)	# Cache: 5 min
+		if not page:											# nicht vorhanden oder zu alt -> neu laden						
+			page, msg = get_page(path, header=headers)			# vom Sender holen		
+			if page:
+				icon = R(ICON_MAIN_ARD)
+				xbmcgui.Dialog().notification("Cache %s:" % DictID,"Haltedauer 5 Min",icon,3000,sound=False)
+				Dict('store', DictID, page)						# json-Datei -> Dict, ca. 2,5 MByte mit Teasern
 
-		page, msg = get_page(path, header=headers)			# vom Sender holen		
-		if page == "":
-			msg1 = 'Fehler in ARDStart:'
-			msg2 = msg
-			MyDialog(msg1, msg2, '')
-			return
-		else:
-			Dict('store', DictID, page)						# json-Datei -> Dict, ca. 2,5 MByte mit Teasern
+	if page == "":
+		msg1 = 'Fehler in ARDStart:'
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return
 			
 	PLog(len(page))
 	page = page.replace('\\"', '*')							# quotierte Marks entf.
