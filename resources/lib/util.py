@@ -1856,6 +1856,7 @@ def transl_json(line):	# json-Umlaute übersetzen
 		, (u'\\u00e7', u'ç')		# Arte: ç c mit Cedille
 		, (u'\\u00e9', u'e')		# Arte: Frédéric
 		, (u'\\u00e0', u'a')		# Arte: agrave
+		, (u'\\u200e', u'')			# Left-to-Right Mark 
 		, (u'\\u201e', u'*')		# Arte: doublequote tief
 		, (u'\\u201c', u'*')		# Arte: doublequote hoch
 		, (u'\\u2013', u'-')		# Arte: -

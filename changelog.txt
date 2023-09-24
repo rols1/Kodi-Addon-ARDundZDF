@@ -10,6 +10,31 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+24.09.2023 4.8.5
+			ARD Senderwahl: überarbeitet, um Überschreiben der Senderwahl durch Return-Menü
+			von Kodi zu vermeiden - neue Funktion ARD_CurSender_set, Anpassungen in ARDnew, 
+			ardundzdf, util.
+			arte_Search (Modul arte): Anpassung api-Link (emac/v3 -> emac/v4), key-Anpassung
+			für ID "SEARCH" in GetContent, Anpassung api-Link und ID ('SEARCH_NEXT') für
+			Folgesuchen.
+			Modul phoenix: Anpassung an Änderungen bei ARD Senderwahl in phoenix_Start,
+			Verpasst und phoenix_AZ. 
+			Modul ARDnew: Anpassung an zusätzl. Parameter CurSender in ARDStart, ARDVerpasst,
+			SendungenAZ bei Calls aus phoenix.
+			PlayVideo (Modul util): Liste gestarteter Videos umbenannt: startlist ->
+			started_videos wg. Namensgleichheit mit Setting pref_startlist.
+			Merkliste: Sortieroption pref_merksort ("aufsteigend|absteigend|keine") ergänzt.
+			Parseplaylist (Ermittlung der Einzelauflösungen): Dialog für url_check unter-
+			drückt wegen der Nutzung durch strm-Threads)
+			Maus Zoom Kindernachrichten (Modul childs): Notification bei fehlenden Inhalten.
+			transl_json (Modul util) ergänzt: u200e (Left-to-Right Mark) -> " " (Blank).
+			Maus_Audiobooks (Modul childs): Sendedatum und "Verfügbar bis" ergänzt.
+			ARDAudioEventStreams: Audiostreams aus der Champions League ergänzt.
+			ARDStart (ARDnew): Login-Promo -> skip_list (Login weiterhin nicht unterstützt).
+			ARDStartRegion (ARDnew): api-Link für Region-Inhalte aktualisiert.
+			ARD Audio Event Streams: Notification in ARDSportNetcastAudios bei fehlenden 
+			Inhalten, Button für Spiele im DFB-Pokal hinzugefügt.
+
 10.09.2023 4.8.4
 			Modul Updater: globale Variable BACKPUP_DIR entfernt (obsolet).
 			ARD_Teletext: in ARD_Teletext_get_cline Erfassung mehrz. EPG-Texte ergänzt

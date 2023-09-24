@@ -330,7 +330,7 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 			
 		title = transl_json(title)
 		title = repl_json_chars(title)
-		descr = transl_json(descr)
+		descr = transl_json(descr); 
 		summ = repl_json_chars(descr)
 		
 		ut = u"nein"

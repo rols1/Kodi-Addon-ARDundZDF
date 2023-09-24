@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>22</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.09.2023
+#	Stand: 23.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1066,19 +1066,27 @@ def Maus_Audiobooks(title, url):
 		mp3_img = stringextract('href="', '"', item)			# itunes:image href="..
 		if mp3_img == '':										# kann fehlen
 			mp3_img = MAUSZOOM
-		dur = stringextract("<duration>", "</itunes:duration>", item)
-		descr = stringextract("summary>", "</itunes:summary>", item)
-		pubDate = stringextract("<pubDate>", "</pubDate>", item)
+		dur = stringextract("duration>", "</", item)
+		descr = stringextract("summary>", "</", item)
+		
+		start = stringextract("visibleFrom>", "</", item)
+		start = time_translate(start)
+		start =  u"Sendedatum: [COLOR blue]%s Uhr[/COLOR]" % start
+		end = stringextract("visibleUntil>", "</", item)
+		end = time_translate(end)
+		end = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % end
+		
 		author = stringextract("author>", "</itunes:author>", item)
 		
 		title = repl_json_chars(title)
 		descr = repl_json_chars(descr)
-		tag = "Dauer: %s | Sendung vom %s | Autor: %s" % (dur, pubDate, author)
+		tag = "Dauer: %s | Autor: %s | %s | %s" % (dur, author, start, end)
+		
 		Plot= "%s||||%s" % (tag, descr)
 	
 		PLog('Satz11:')		
 		PLog(title);PLog(mp3_url);PLog(mp3_img);
-		PLog(tag);PLog(descr[:60]);
+		PLog(dur); PLog(tag);PLog(descr[:60]);
 		
 		mp3_url=py2_encode(mp3_url); title=py2_encode(title);
 		mp3_img=py2_encode(mp3_img); Plot=py2_encode(Plot);
