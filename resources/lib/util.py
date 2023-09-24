@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>64</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.09.2023
+# 	<nr>65</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2059,7 +2059,7 @@ def time_translate(timecode, add_hour=True, day_warn=False):
 				if dif.startswith("-") == False:			# -1 day, 23:48:12.503288 (Startzeit überschritten)
 					try:
 						if "day" in dif:	
-							day = re.search(u'(-?(?:\d+,?)+) day', dif).group(1)
+							day = re.search(u'(\d+) day', dif).group(1)
 							PLog("day: %s" % str(day))
 							if  int(day) <= 6:					# erst ab 1 Woche warnen
 								ret_ts = "%s | NOCH %s TAG(E)!" % (ret_ts, day)
