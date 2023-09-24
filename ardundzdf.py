@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>141</nr>										# Numerierung für Einzelupdate
+# 	<nr>142</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.5'
 VDATE = '24.09.2023'
 
@@ -1546,7 +1546,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 			img = stringextract('"url":"', '"', img)	
 			img = img.replace('{width}', '640')							# fehlt manchmal
 			Plot = stringextract('"synopsis":"', '"', LiveObj)
-			Plot = repl_json_chars(Plot)
+			Plot = repl_json_chars(py2_decode(Plot))
 					
 			title = stringextract('"sender":"', '"', liveStreams)		# Sender, z.B BAYERN 1	
 			sender = title
