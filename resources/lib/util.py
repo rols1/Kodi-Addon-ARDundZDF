@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>65</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.09.2023
+# 	<nr>66</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -64,6 +64,8 @@ PYTHON3 = sys.version_info.major == 3
 
 NAME			= 'ARD und ZDF'
 KODI_VERSION 	= xbmc.getInfoLabel('System.BuildVersion')
+KODI_MAJOR 		= int(re.search(u'(\d+)', KODI_VERSION).group(1))	
+
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -714,13 +716,26 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		Plot = tagline
 	if summary:	
 		Plot = Plot +"\n\n" + summary
-	
+		
+	# ListItem.setInfo() deprecated -> [Nexus] API changes to VideoStreamDetail and InfoTagVideo API's
+	#	s. forum.kodi.tv/showthread.php?tid=370707 und
+	#	codedocs.xyz/AlwinEsch/kodi/group__python__xbmcgui__listitem.html
+	#	KODI_VERSION s. Main()
+	PLog("KODI_MAJOR: %d" % KODI_MAJOR)
+	if KODI_MAJOR >=20:
+		videoinfo = li.getVideoInfoTag()
 	if mediatype == 'video': 	# "video", "music" setzen: List- statt Dir-Symbol
-		li.setInfo(type="video", infoLabels={"Title": label, "Plot": Plot, "mediatype": "video"})	
+		if KODI_MAJOR >=20:
+			videoinfo.setTitle(label); videoinfo.setPlot(Plot); videoinfo.setMediaType("video")
+		else:
+			li.setInfo(type="video", infoLabels={"Title": label, "Plot": Plot, "mediatype": "video"})	
 		isFolder = False		# nicht bei direktem Player-Aufruf - OK mit setResolvedUrl
 		li.setProperty('IsPlayable', 'true')					
 	else:
-		li.setInfo(type="video", infoLabels={"Title": label, "Plot": Plot})	
+		if KODI_MAJOR >=20:
+			videoinfo.setPlot(Plot); videoinfo.setTitle(label); 
+		else:
+			li.setInfo(type="video", infoLabels={"Title": label, "Plot": Plot})	
 		li.setProperty('IsPlayable', 'false')
 		isFolder = True	
 
