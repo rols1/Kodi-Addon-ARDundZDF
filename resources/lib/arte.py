@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>36</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.09.2023
+# 	<nr>37</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.09.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -278,7 +278,7 @@ def EPG_Today():
 
 	now = datetime.datetime.now()
 	today = now.strftime("%Y-%m-%d")				# 2023-01-16 
-	path = "https://www.arte.tv/api/rproxy/emac/v3/%s/web/pages/TV_GUIDE/?day=%s" % (lang, today)
+	path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/TV_GUIDE/?day=%s" % (lang, today)
 	PLog(path)
 	if url_check(path, dialog=False) == False:		# nicht für alle Sprachen verfügbar
 		icon = R('arte_lang.png')
@@ -421,7 +421,7 @@ def GetContent(li, page, ID):
 	elif ID == "SEARCH_NEXT":							# Folgeseiten wie MOST_RECENT
 		values = page["value"]["data"]
 	elif ID == "EPG_Today":								# web-api-Call
-		values = page["value"]["zones"][1]["data"]		# 0: TVGuide Highlights, 1: Listing
+		values = page["value"]["zones"][1]["content"]["data"]	# 0=TVGuide Highlights, 1=Listing
 	elif ID == "Beitrag_Liste":			
 		values = page["pageProps"]["initialPage"]["value"]["zones"][0]["content"]["data"]
 		PLog(len(values))
