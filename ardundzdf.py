@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>142</nr>										# Numerierung für Einzelupdate
+# 	<nr>143</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.5'
-VDATE = '24.09.2023'
+VDATE = '01.10.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -503,7 +503,13 @@ def Main():
 			fanart=R(FANART), thumb=R(ICON_DIR_FAVORITS), tagline=tagline, fparams=fparams)	
 				
 	if SETTINGS.getSetting('pref_watchlist') ==  'true':		# Merkliste einblenden
-		tagline = 'interne Merkliste des Addons'
+		tagline = 'Merkliste des Addons'
+		if SETTINGS.getSetting('pref_merkextern') ==  'true': 
+			add1 = u"[B]Setting:[/B] externe Merkliste eingeschaltet"
+			add2 = u"externer Dateipfad fehlt"
+			if SETTINGS.getSetting('pref_MerkDest_path'):
+				add2 = u"externer Dateipfad ausgewählt"
+			tagline = "%s\n\n%s | %s" % (tagline, add1, add2)
 		fparams="&fparams={'mode': 'Merk'}"
 		addDir(li=li, label='Merkliste', action="dirList", dirID="ShowFavs", 
 			fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tagline, fparams=fparams)		
@@ -554,7 +560,7 @@ def Main():
 	if SETTINGS.getSetting('pref_playlist') == 'true':
 		summ = "%s\n-%s\n-%s" % (summ, "PLAYLIST-Tools", "Settings inputstream.adaptive")
 	summ = "%s\n-%s" % (summ, "Kodis Thumbnails-Ordner bereinigen")
-	summ = "%s\n\n%s" % (summ, u"[B]Einzelupdate[/B] (für einzelne Dateien und Module)")
+	summ = "%s\n\n%s" % (summ, u"[B]Einzelupdate[/B] (für einzelne Dateien des Addons)")
 	fparams="&fparams={}" 
 	addDir(li=li, label='Infos + Tools', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
 		fparams=fparams, summary=summ, tagline=tag)
@@ -711,7 +717,7 @@ def InfoAndFilter():
 	dt, lt = resources.lib.tools.get_foruminfo()					# Datum, letzter Eintrag
 	item = "zuletzt: [B]%s[/B] | %s" % (dt, lt)		
 	title = u"Einzelupdate (einzelne Dateien und Module), %s" % dt	# Update von Einzeldateien
-	tag = u'[B]Update einzelner, neuer Bestandteile des Addons vom Github-Repo %s[/B]' % REPO_NAME
+	tag = u'[B]Update einzelner Dateien aus dem Github-Repo des Addons'
 	tag = u"%s\n\nNach Abgleich werden neue Dateien heruntergeladen - diese ersetzen lokale Dateien im Addon." % tag
 	tag = u"%s\n\nEinzelupdates ermöglichen kurzfristige Fixes und neue Funktionen zwischen den regulären Updates." % tag
 	summ = u"Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt"
@@ -3141,18 +3147,9 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 	
+	#---------------------------------------------------------	Großevents Start
 
-
-	title = u"Event: [B]Basketball-WM 2023[/B]"					# Großevent	
-	tag = u"Aktuelle News zur Basketball-WM 2023 | sportschau.de"
-	cacheID = "BasketballWM"
-	img = "https://images.sportschau.de/image/b39a8ecf-aeb3-4781-a3fe-1038a5a5a36a/AAABifMqafU/AAABibBxqrQ/16x9-1280/ndr-dennis-schroeder-haelt-den-ball-und-lacht-100.jpg"
-	path = "https://www.sportschau.de/basketball/wm-maenner"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
+	#---------------------------------------------------------	Großevents Ende
 
 	title = u"Event-Archiv"									# Buttons für ältere Events	
 	tag = u"Archiv für zurückliegende Groß-Events."
@@ -5846,6 +5843,15 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 
 	my_items, my_ordner= ReadFavourites(mode)			# Addon-Favs / Merkliste einlesen
 	PLog(len(my_items))
+	if len(my_items) == 0:
+		icon = R(ICON_INFO)
+		msg1 = "Merkliste"
+		if mode == 'Favs':
+			msg1 = "Favoriten"
+		msg2 = u"keine Inhalte gefunden"
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000)
+		return	
+	
 	# Dir-Items für diese Funktionen erhalten mediatype=video:
 	# 13.11.2021 ARDStartSingle hinzugefügt
 	# 27.05.2023 zdfmobile-Verweise entfernt
@@ -7512,17 +7518,23 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 	PLog(mark); PLog(homeID); PLog(urlkey)
 	li_org=li 
 		
-	if not jsonObject:
+	if not jsonObject and DictID:
 		jsonObject = Dict("load", DictID)
-	if not jsonObject:						# aus Url wiederherstellen (z.B. für Merkliste)
+	if not jsonObject:								# aus Url wiederherstellen (z.B. für Merkliste)
 		if urlkey:
 			PLog("get_from_urlkey:")
-			url, obj_id, obj_nr = urlkey.split("#")
-			PLog("obj_id: %s, obj_nr: %s" % (obj_id, obj_nr))
-			page, msg = get_page(path=url)
+			if "/recommendation/" in urlkey:		# recommendation-Inhalte (wie Web "clusterrecommendation")
+				page, msg = get_page(path=urlkey)
+				
+			else:
+				url, obj_id, obj_nr = urlkey.split("#")
+				PLog("obj_id: %s, obj_nr: %s" % (obj_id, obj_nr))
+				page, msg = get_page(path=url)
+
 			try:
 				jsonObject = json.loads(page)
-				jsonObject = jsonObject[obj_id][int(obj_nr)]
+				if "/recommendation/" not in urlkey:	# recommendation: alles teaser (Einzelbeiträge)
+					jsonObject = jsonObject[obj_id][int(obj_nr)]
 			except Exception as exception:
 				PLog(str(exception))
 				jsonObject=""
@@ -7533,7 +7545,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 		return	
 	PLog(str(jsonObject)[:80])
 	
-	validchars=True													# -> valid_title_chars in ZDF_get_content
+	validchars=True										# -> valid_title_chars in ZDF_get_content
 	if DictID.startswith("ZDF_international"):
 		validchars=False	
 		
@@ -7549,8 +7561,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	PLog('mediatype: ' + mediatype); 
-	PLog("stage" in jsonObject); PLog("teaser" in jsonObject); PLog("results" in jsonObject);
-		
+	
+	PLog("stage" in jsonObject); PLog("teaser" in jsonObject); PLog("results" in jsonObject);		
 	if "stage" in jsonObject or "teaser" in jsonObject or "results" in jsonObject:
 		PLog('ZDF_PageMenu_stage_teaser')
 		stage=False
@@ -7757,7 +7769,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 	noicon = R(ICON_MAIN_ZDF)									# notific.
 
 	page=""; AZ=False
-	if url.endswith("sendungen-100"):							# AZ ca. 12 MByte -> Dict
+	if url.endswith("sendungen-100"):							# AZ Gesamt ca. 12 MByte -> Dict
 		page = Dict("load", "ZDF_sendungen-100", CacheTime=ZDF_CacheTime_AZ)
 		AZ=True
 	if not page:	
@@ -7828,24 +7840,38 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			typ = jsonObject["type"]
 			title=""
 			if "name" in jsonObject:							# kann fehlen oder leer sein
-				title = jsonObject["name"]
+				title = jsonObject["name"]			
 			if not title:						
 				title = title_org
+			if title in title_org:								# Selbstreferenz
+				continue
 			title = repl_json_chars(title)
 			if typ == "videoCarousel":
 				title = "[B]Highlights[/B]: %s" % title
+
+			urlid = url.split("/")[-1]
+#			DictID = "ZDF_%s_%d" % (urlid, cnt)					# DictID: url-Ende + cluster-nr
+#			Dict('store', DictID, jsonObject)					# für ZDF_PageMenu
+			DictID=""
+			urlkey = "%s#cluster#%d" % (url, cnt)				# dto			
+			
 			try:
-				img = ZDF_get_img(jsonObject["teaser"][0])		# kann fehlen oder leer sein
+				img = ZDF_get_img(jsonObject["teaser"][0])		# fehlt/leer bei recommendation-Inhalten 
 			except Exception as exception:
 				PLog("json_error: " + str(exception))				
-				cnt=cnt+1
-				continue						# leerer Vorspann: sendungen-mit-audiodeskription-hoerfilme-100
+				img = R(ICON_DIR_FOLDER)
+				ref_url = jsonObject["reference"]["url"]
+				if '{bookmarks}' in ref_url:					# skip personenbezogene Inhalte
+					PLog("skip_bookmarks_url:" + title)
+					continue
+				ref_url = ref_url.replace("%2F", "/")
+				urlkey = ref_url.replace('{&appId,abGroup}', '&appId=exozet-zdf-pd-0.99.2145&abGroup=gruppe-a&')
+				PLog("new_urlkey: " + urlkey)
+				
+				
+			
 			tag = "Folgeseiten"
 			descr = ""
-			urlid = url.split("/")[-1]
-			DictID = "ZDF_%s_%d" % (urlid, cnt)	# DictID: url-Ende + cluster-nr
-			Dict('store', DictID, jsonObject)					# für ZDF_PageMenu
-			urlkey = "%s#cluster#%d" % (url, cnt)				# dto
 			
 			PLog("Satz6_1:")
 			urlkey=py2_encode(urlkey)
