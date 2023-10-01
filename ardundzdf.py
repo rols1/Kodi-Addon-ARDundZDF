@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>143</nr>										# Numerierung für Einzelupdate
+# 	<nr>144</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.5'
 VDATE = '01.10.2023'
 
@@ -7761,6 +7761,7 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 # einzelne ZDF-Rubrik (Film, Serie,  Comedy & Satire,  Politik & Gesellschaft, ..)
 # Cluster-Objekte > 1: Dict-Ablage mit DictID je Cluster -> PageMenu
 # einz. Cluster-Objekt: Auswertung Teaser -> wieder hierher, ohne Dict
+# 01.10.2023 Auswertung recommendation-Inhalte (ohne Cache, DictID leer)
 #
 def ZDF_RubrikSingle(url, title, homeID=""):								
 	PLog('ZDF_RubrikSingle: ' + title)
@@ -7850,13 +7851,14 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 				title = "[B]Highlights[/B]: %s" % title
 
 			urlid = url.split("/")[-1]
-#			DictID = "ZDF_%s_%d" % (urlid, cnt)					# DictID: url-Ende + cluster-nr
-#			Dict('store', DictID, jsonObject)					# für ZDF_PageMenu
-			DictID=""
 			urlkey = "%s#cluster#%d" % (url, cnt)				# dto			
-			
+			tag = "Folgeseiten"
+			descr = ""
+		
 			try:
-				img = ZDF_get_img(jsonObject["teaser"][0])		# fehlt/leer bei recommendation-Inhalten 
+				img = ZDF_get_img(jsonObject["teaser"][0])		# fehlt/leer bei recommendation-Inhalten
+				DictID = "ZDF_%s_%d" % (urlid, cnt)				# DictID: url-Ende + cluster-nr
+				Dict('store', DictID, jsonObject)				# für ZDF_PageMenu	
 			except Exception as exception:
 				PLog("json_error: " + str(exception))				
 				img = R(ICON_DIR_FOLDER)
@@ -7864,14 +7866,11 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 				if '{bookmarks}' in ref_url:					# skip personenbezogene Inhalte
 					PLog("skip_bookmarks_url:" + title)
 					continue
+				DictID=""
 				ref_url = ref_url.replace("%2F", "/")
 				urlkey = ref_url.replace('{&appId,abGroup}', '&appId=exozet-zdf-pd-0.99.2145&abGroup=gruppe-a&')
-				PLog("new_urlkey: " + urlkey)
-				
-				
-			
-			tag = "Folgeseiten"
-			descr = ""
+				descr = u"[B]Vorschläge der Redaktion[/B]"
+				PLog("new_urlkey: " + urlkey)										
 			
 			PLog("Satz6_1:")
 			urlkey=py2_encode(urlkey)
@@ -7880,16 +7879,28 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_PageMenu", fanart=img, 
 			thumb=img, fparams=fparams, summary=descr, tagline=tag)
 			cnt=cnt+1
-	else:														# einzelner Cluster
+	else:														# einzelner Cluster -> teaser-Auswertung
 		teaserObject, msg = GetJsonByPath("0|teaser", clusterObject)
 		PLog("walk_teaser: %d" % len(teaserObject))
 		PLog("Teaser: %d " % len(teaserObject))
 		
 		if len(teaserObject) == 0:								# z.B. redakt. Updates zu Ereignissen
-			msg1 = u"%s" % title
-			msg2 = u'keine Videos gefunden'
-			xbmcgui.Dialog().notification(msg1,msg2,noicon,2000,sound=True)
-			return						
+			ref_url=""											# 	od. ARD-Inhalte
+			obj = clusterObject[0]
+			PLog(str(obj)[:80])
+			if "reference" in obj:					# Test auf recommendation-Verweis, Bsp.
+				if "url" in obj["reference"]:			# 	https://www.zdf.de/hr/ard-crime-time
+					ref_url = obj["reference"]["url"]	# ähnlich ref_url bei mehreren Clustern (s.o.)
+					ref_url = ref_url.replace("%2F", "/")
+					urlkey = ref_url.replace('{&appId}', '&appId=exozet-zdf-pd-0.99.2145')
+					urlkey = ref_url.replace('{&abGroup}', '&abGroup=gruppe-a')
+					PLog("new_urlkey: " + urlkey)										
+				
+			if 	ref_url == "":
+				msg1 = u"%s" % title
+				msg2 = u'keine Videos gefunden'
+				xbmcgui.Dialog().notification(msg1,msg2,noicon,2000,sound=True)
+				return						
 				
 		for entry in teaserObject:
 			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
