@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>145</nr>										# Numerierung für Einzelupdate
+# 	<nr>146</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.5'
 VDATE = '02.10.2023'
 
@@ -7686,6 +7686,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_Rubriken", 				
 					fanart=img, thumb=img, tagline=tag, summary=descr, fparams=fparams)
 			else:													# teaserPromo - s.o.
+				tag = "[B]Promo-Teaser[/B] | %s" % tag
 				fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 				PLog("fparams: " + fparams)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
