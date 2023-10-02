@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>146</nr>										# Numerierung für Einzelupdate
+# 	<nr>147</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.5'
 VDATE = '02.10.2023'
 
@@ -7520,14 +7520,16 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 	PLog(mark); PLog(homeID); PLog(urlkey)
 	li_org=li 
 	
+	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+	'Referer': '%s', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
+
 	if not jsonObject and DictID:
 		jsonObject = Dict("load", DictID)
 	if not jsonObject:								# aus Url wiederherstellen (z.B. für Merkliste)
 		if urlkey:
 			PLog("get_from_urlkey:")
 			if "/recommendation/" in urlkey:		# recommendation-Inhalte (wie Web "clusterrecommendation")
-				page, msg = get_page(path=urlkey)
-				reco=True
+				page, msg = get_page(path=urlkey, header=headers)   # IncompleteRead-error o. Header
 			else:
 				url, obj_id, obj_nr = urlkey.split("#")
 				PLog("obj_id: %s, obj_nr: %s" % (obj_id, obj_nr))
