@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>144</nr>										# Numerierung für Einzelupdate
+# 	<nr>145</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.5'
-VDATE = '01.10.2023'
+VDATE = '02.10.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7511,13 +7511,15 @@ def ZDF_Start(ID, homeID=""):
 # mark: Titelmarkierung, z.B. für ZDF_Search
 # 13.05.2023 zusätzl. urlkey (Kompensation falls jsonObject fehlt),
 #	Format urlkey: "%s#cluster#%d" % (url, obj_id, obj_nr)
+# 02.10.2023 recommendation-Inhalte (ZDF, ARD-Links): DictID auf urlkey-
+#	Basis ("ZDF_reco_%s" % scmsid)
 # 	
 def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):								
 	PLog('ZDF_PageMenu:')
 	PLog('DictID: ' + DictID)
 	PLog(mark); PLog(homeID); PLog(urlkey)
 	li_org=li 
-		
+	
 	if not jsonObject and DictID:
 		jsonObject = Dict("load", DictID)
 	if not jsonObject:								# aus Url wiederherstellen (z.B. für Merkliste)
@@ -7525,7 +7527,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			PLog("get_from_urlkey:")
 			if "/recommendation/" in urlkey:		# recommendation-Inhalte (wie Web "clusterrecommendation")
 				page, msg = get_page(path=urlkey)
-				
+				reco=True
 			else:
 				url, obj_id, obj_nr = urlkey.split("#")
 				PLog("obj_id: %s, obj_nr: %s" % (obj_id, obj_nr))
@@ -7533,8 +7535,13 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 
 			try:
 				jsonObject = json.loads(page)
-				if "/recommendation/" not in urlkey:	# recommendation: alles teaser (Einzelbeiträge)
+				if "/recommendation/" not in urlkey:
 					jsonObject = jsonObject[obj_id][int(obj_nr)]
+				else:								# recommendation: teaser bei ZDF, Cluster bei ARD
+					scmsid = stringextract("configuration=", "&", urlkey) # zdfinfo-trending, ARD: automated_seasons
+					DictID = "ZDF_reco_%s" % scmsid	# eigene DictID
+					Dict('store', DictID, jsonObject)
+					
 			except Exception as exception:
 				PLog(str(exception))
 				jsonObject=""
@@ -7627,15 +7634,13 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 	if("cluster" in jsonObject):		# Bsp- A-Z Leitseite -> SingleRubrik
 		PLog('ZDF_PageMenu_cluster')
 		for counter, clusterObject in enumerate(jsonObject["cluster"]):	# Bsp. "name":"Neu in der Mediathek"
-			path = "cluster|%d|teaser" % counter
-
+			title=""; url=""
 			try:													# detect PromoTeaser (Web: ganze Breite)
 				typ = clusterObject["type"]
 				url = clusterObject["promoTeaser"]["url"]
 			except:
 				typ=""	
 
-			title=""
 			if "name" in clusterObject:
 				title = clusterObject["name"]
 			if title == '':											# "teaser": [.. - kann leer sein
@@ -7672,7 +7677,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)
 			PLog("Satz1_2:")
-			PLog(title); PLog(path); PLog(typ);
+			PLog(DictID); PLog(title); PLog(path); PLog(typ);
 			
 			if typ != "teaserPromo": 
 				fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s', 'homeID': '%s'}"  %\
@@ -7696,20 +7701,30 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 # Aufruf: ZDF_PageMenu
 # ZDF-Rubriken (Film, Serie,  Comedy & Satire,  Politik & Gesellschaft, ..)
 # path: json-key-Pfad (Bsp. cluster|2|teaser)
+# 02.10.2023 für ARD-Inhalte stream=url (abweichendes json-Format)
 #
 def ZDF_Rubriken(path, title, DictID, homeID=""):								
 	PLog('ZDF_Rubriken: ' + DictID)
 	PLog("path: " + path)
 	path_org = path
 
-	jsonObject = Dict("load", DictID)
-	PLog(str(jsonObject)[:80])
-	jsonObject, msg = GetJsonByPath(path, jsonObject)
-	if jsonObject == '':					# index error
-		msg1 = 'Cluster [B]%s[/B] kann nicht geladen werden.' % title
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return
+	if DictID:
+		jsonObject = Dict("load", DictID)
+		PLog(str(jsonObject)[:80])
+		jsonObject, msg = GetJsonByPath(path, jsonObject)
+		if jsonObject == '':					# index error
+			msg1 = 'Cluster [B]%s[/B] kann nicht geladen werden.' % title
+			msg2 = msg
+			MyDialog(msg1, msg2, '')
+			return
+	else:
+		page, msg = get_page(path=path)
+		if not page:												# nicht vorhanden?
+			msg1 = 'ZDF_Rubriken: [B]%s[/B] kann nicht geladen werden.' % title
+			msg2 = msg
+			MyDialog(msg1, msg2, '')
+			return
+		jsonObject = json.loads(page)		
 	PLog(str(jsonObject)[:80])
 					
 	li = xbmcgui.ListItem()
@@ -7732,6 +7747,9 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 		title = repl_json_chars(title)
 		descr = repl_json_chars(descr)
 		tag = repl_json_chars(tag)
+		if stream == "":												# ARD-Inhalte: o. length
+			stream = url
+			tag = tag.replace("Folgeseiten", "Video")
 		if typ == "video":	
 				if "channel" in entry:									# Zusatz Sender
 					sender = entry["channel"]
@@ -7862,15 +7880,19 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			except Exception as exception:
 				PLog("json_error: " + str(exception))				
 				img = R(ICON_DIR_FOLDER)
-				ref_url = jsonObject["reference"]["url"]
-				if '{bookmarks}' in ref_url:					# skip personenbezogene Inhalte
-					PLog("skip_bookmarks_url:" + title)
-					continue
-				DictID=""
-				ref_url = ref_url.replace("%2F", "/")
-				urlkey = ref_url.replace('{&appId,abGroup}', '&appId=exozet-zdf-pd-0.99.2145&abGroup=gruppe-a&')
-				descr = u"[B]Vorschläge der Redaktion[/B]"
-				PLog("new_urlkey: " + urlkey)										
+				if "reference" in jsonObject:
+					ref_url = jsonObject["reference"]["url"]
+					if '{bookmarks}' in ref_url:				# skip personenbezogene Inhalte
+						PLog("skip_bookmarks_url:" + title)
+						continue
+					DictID=""
+					ref_url = ref_url.replace("%2F", "/")
+					urlkey = ref_url.replace('{&appId,abGroup}', '&appId=exozet-zdf-pd-0.99.2145&abGroup=gruppe-a')
+					descr = u"[B]Vorschläge der Redaktion[/B]"
+					PLog("new_urlkey: " + urlkey)
+				else:											# o. teaser, o. reference-Url, Bsp. Weiterschauen
+					PLog("reference_missing: " + title)
+					continue										
 			
 			PLog("Satz6_1:")
 			urlkey=py2_encode(urlkey)
@@ -7884,19 +7906,28 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 		PLog("walk_teaser: %d" % len(teaserObject))
 		PLog("Teaser: %d " % len(teaserObject))
 		
-		if len(teaserObject) == 0:								# z.B. redakt. Updates zu Ereignissen
-			ref_url=""											# 	od. ARD-Inhalte
+		if len(teaserObject) == 0:								# z.B. Link zu ARD-Inhalten 
+			ref_url=""
 			obj = clusterObject[0]
 			PLog(str(obj)[:80])
-			if "reference" in obj:					# Test auf recommendation-Verweis, Bsp.
-				if "url" in obj["reference"]:			# 	https://www.zdf.de/hr/ard-crime-time
-					ref_url = obj["reference"]["url"]	# ähnlich ref_url bei mehreren Clustern (s.o.)
+			# 2-facher Aufruf bei ARD-Inhalten: hier  -> ZDF_PageMenu -> hier
+			#	ev. auslagern
+			if "reference" in obj:								# Test auf recommendation-Verweis, Bsp.
+				if "url" in obj["reference"]:					# 	https://www.zdf.de/hr/ard-crime-time
+					ref_url = obj["reference"]["url"]			# ähnlich ref_url bei mehreren Clustern (s.o.)
 					ref_url = ref_url.replace("%2F", "/")
-					urlkey = ref_url.replace('{&appId}', '&appId=exozet-zdf-pd-0.99.2145')
-					urlkey = ref_url.replace('{&abGroup}', '&abGroup=gruppe-a')
-					PLog("new_urlkey: " + urlkey)										
+					PLog(ref_url)
+					ref_url = ref_url.replace('{appId}', 'exozet-zdf-pd-0.99.2145')
+					urlkey = ref_url.replace('{abGroup}', 'abGroup=gruppe-a')
+					PLog("new_urlkey: " + urlkey)
+					img = R(ICON_DIR_FOLDER); tag=""; descr=""	
+					fparams="&fparams={'DictID': '', 'homeID': '%s', 'urlkey': '%s'}" %\
+						(homeID, quote(urlkey))					# o. DictID wie recommendation-Inhalte oben
+					PLog("fparams: " + fparams)	
+					addDir(li=li, label=title, action="dirList", dirID="ZDF_PageMenu", fanart=img, 
+					thumb=img, fparams=fparams, summary=descr, tagline=tag)
 				
-			if 	ref_url == "":
+			if 	ref_url == "":									# Fehlschlag
 				msg1 = u"%s" % title
 				msg2 = u'keine Videos gefunden'
 				xbmcgui.Dialog().notification(msg1,msg2,noicon,2000,sound=True)
