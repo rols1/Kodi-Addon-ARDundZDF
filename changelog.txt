@@ -10,6 +10,33 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+08.10.2023 4.8.6
+			AudioStartLive (Audiothek): py2_decode(Plot) - relevant für PYTHON2.
+			time_translate (Modul util): re.search-Code für Verfügbarkeitswarnung ver-
+			bessert (CodeQL-alert: Inefficient regular expression).
+			ARDStart (ARDnew): Cache auf Startseite begrenzt (Überschneidung mit Menüs
+			RETRO und Entdecken möglich).
+			ShowFavs: Notification bei fehlenden Inhalten (Favoriten/Merkliste).
+			Main: im Infotext des Buttons Merkliste Setting-Hinweis hinzugefügt, falls
+			externe Merkliste gewählt. 
+			addDir: li.setInfo für Kodi V20 (Nexus) ersetzt durch li.getVideoInfoTag 
+			(Trigger KODI_MAJOR, Zusatz-Infos in addDir).
+			ARDSportWDR: Basketball-WM aus Startseite entfernt.
+			arte-Modul: Anpassungen an api-Version 4 (error für V3) in EPG_Today (Link)
+			und GetContent (json-key).
+			ZDF: Auswertung recommendation-Inhalte ergänzt - Anpassungen in ZDF_RubrikSingle
+			(ohne Cache, DictID leer), ZDF_PageMenu (DictID auf urlkey-Basis), ZDF_Rubriken
+			(stream=url).
+			ZDF_PageMenu: application/json gegen IncompleteRead-error.
+			Main_TIVI (Modul childs): auskommentierten Code entfernt (Suche, Sendungen der
+			letzten 7 Tage).	
+			get_ARDstreamlinks (util): Liste ard_streamlinks mit linkid ergänzt (Verwendung
+			für programm-api.ard).
+			get_page (util): json-Behandlung entfernt (obsolet, json.loads durch Aufrufer),
+			Call-Anpassung in AudioStartLive, ZDF_FlatListEpisodes,	m3satSourcesHBBTV,
+			ZDFSourcesHBBTV, get_ZDFstreamlinks, get_ARDstreamlinks, SearchARDundZDFnew,
+			ARDSearchnew, SingleVideo (arte).
+
 24.09.2023 4.8.5
 			ARD Senderwahl: überarbeitet, um Überschreiben der Senderwahl durch Return-Menü
 			von Kodi zu vermeiden - neue Funktion ARD_CurSender_set, Anpassungen in ARDnew, 

@@ -43,9 +43,12 @@ elif PYTHON3:
 
 	
 # import requests		# kein Python-built-in-Modul, urllib2 verwenden
-import datetime as dt	# für xml2srt
 import time, datetime
 from time import sleep  # PlayVideo
+
+from threading import Thread	
+from threading import Timer	# KeyListener
+
 
 import glob, shutil
 from io import BytesIO	# Python2+3 -> get_page (compressed Content), Ersatz für StringIO
@@ -1079,7 +1082,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 #	get_page3. Bei Bedarf nachrüsten in url_check + Modulen funk, updater, zdfmobile, EPG.
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True, decode=True):
-	PLog('get_page:'); PLog("path: " + path); PLog("JsonPage: " + str(JsonPage)); 
+	PLog('get_page:'); PLog("path: " + path); PLog("do_safe: " + str(do_safe)); 
 
 	if header:									# dict auspacken
 		header = unquote(header);  
@@ -1247,24 +1250,6 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			except Exception as exception:
 				msg = str(exception)
 				PLog(msg)
-
-	if JsonPage:
-		PLog('json_load: ' + str(JsonPage))
-		page = py2_encode(page)											# für Python2 erf.
-		PLog(len(page))
-		page = page.replace('\\/', '/')									# für Python3 erf.
-		page = page.replace('\\"', '*')									# Quotation entf.
-		try:
-			request = json.loads(page)
-			# 23.11.2019: Blank hinter separator : entfernt - wird in Python nicht beachtet.
-			#	Auswirkung in get_formitaeten (extract videodat_url)
-			request = json.dumps(request, sort_keys=True, indent=2, separators=(',', ':'))  # sortierte Ausgabe
-			page = (page.replace('" : "', '":"').replace('" :', '":'))	# für Python3 erf.
-			PLog("jsonpage: " + str(page)[:100]);
-		except Exception as exception:
-			page=""
-			msg = "json.loads_error: %s" % str(exception)
-			PLog(msg)
 
 	return page, msg
 # ----------------------------------------------------------------------
@@ -2620,7 +2605,7 @@ def get_ZDFstreamlinks(skip_log=False):
 
 		PLog("player2_url: " + player2_url)
 		if player2_url:
-			page, msg = get_page(path=player2_url, header=header, JsonPage=True)
+			page, msg = get_page(path=player2_url, header=header)
 			# Bsp.: 247onAir-203
 			assetid = stringextract('assetid":"', '"', page)
 			assetid = assetid.strip()
@@ -2628,7 +2613,7 @@ def get_ZDFstreamlinks(skip_log=False):
 		PLog(assetid); 
 		if assetid:
 			videodat_url = "https://api.zdf.de/tmd/2/ngplayer_2_3/live/ptmd/%s" % assetid
-			page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
+			page, msg	= get_page(path=videodat_url, header=header)
 			PLog("videodat: " + page[:40])
 			#PLog(page) 	# Debug
 		
@@ -2676,7 +2661,7 @@ def get_ARDstreamlinks(skip_log=False):
 	
 	# api_url wie Livestreams in Main_NEW
 	api_url = "https://api.ardmediathek.de/page-gateway/widgets/ard/editorials/4hEeBDgtx6kWs6W6sa44yY?pageNumber=0&pageSize=24"
-	page, msg = get_page(path=api_url, JsonPage=True)			# Links neu holen
+	page, msg = get_page(path=api_url)				# Links neu holen
 	if page == '':
 		PLog('get_ARDstreamlinks: leer')
 		return []
@@ -2684,7 +2669,7 @@ def get_ARDstreamlinks(skip_log=False):
 	content = blockextract('"broadcastedOn":', page)
 	PLog("Senderliste: %d" % len(content))	
 	
-	ard_streamlinks=[]; 
+	ard_streamlinks=[]
 	for rec in content:												# Schleife  Web-Sätze		
 		title=''; href=''; streamurl=''; thumb=''
 		title = stringextract('name":"', '"', rec)					# publicationService":{"name -> livesenderTV.xml 
@@ -2694,18 +2679,20 @@ def get_ARDstreamlinks(skip_log=False):
 				href = stringextract('href":"', '"', h)
 				break
 		thumb = stringextract('src":"', '"', rec)
-		thumb = thumb.replace('{width}', '720')			
+		thumb = thumb.replace('{width}', '720')					
 
 		if href:
 			PLog("lade_livelink: " + title)
-			page, msg = get_page(path=href, JsonPage=True)			# s.a. Livestream ARDStartSingle
+			linkid = stringextract("item/", "?", href)				# für programm-api.ard (ShowSeekPos)
+
+			page, msg = get_page(path=href)							# s.a. Livestream ARDStartSingle
 			streamurl = stringextract('_stream":"', '"', page)		# ab Okt. 2022 keine UT-Links mehr gesehen	
 			streamurl = streamurl.replace("index.m3u8", "master.m3u8")	# Fix ab 03.12.2022 (verhindert Startverzög. > 10sec)  
 					
 		PLog("Satz1:")
-		PLog(title); PLog(href); PLog(streamurl);  
-		# Zeile: "title_sender|streamurl|thumb|tagline"
-		ard_streamlinks.append("%s|%s|%s|%s" % (title, streamurl,thumb,''))	
+		PLog(title); PLog(href); PLog(streamurl); PLog(linkid);
+		# Zeile: "title_sender|streamurl|thumb|linkid"
+		ard_streamlinks.append("%s|%s|%s|%s" % (title, streamurl,thumb,linkid))	
 	
 	PLog("ard_streamlinks: %d" % len(ard_streamlinks))
 	page = "\n".join(ard_streamlinks)									# Ablage Cache
@@ -2781,7 +2768,7 @@ def get_IPTVstreamlinks(skip_log=False):
 						
 							PLog("Satz2:")
 							PLog(title); PLog(streamurl); PLog(thumb)
-							# Zeile: "title_sender|streamurl|thumb|tagline"
+							# Zeile: "title_sender|streamurl|thumb|''"
 							iptv_streamlinks.append("%s|%s|%s|%s" % (play_sender, streamurl,thumb,''))	
 
 	PLog("iptv_streamlinks: %d" % len(iptv_streamlinks))
@@ -3564,8 +3551,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 			if SETTINGS.getSetting('pref_streamtime') == 'true' and live:
 				if player_detect:
 					xbmc.sleep(2000)
-					from threading import Thread			# Github-issue #30: Seek-Pos. -> Streamuhrzeit
-					PLog("Thread_ShowSeekPos_start:")
+					PLog("Thread_ShowSeekPos_start:")			# Github-issue #30: Seek-Pos. -> Streamuhrzeit
 					bg_thread = Thread(target=ShowSeekPos, args=(player, url))
 					bg_thread.start()
 
@@ -3902,6 +3888,74 @@ def ShowSeekPos(player, url):
 			break
 				
 	return
+#----------------------------------------------------------------
+# KeyListener (aus slides.py) für ShowSeekPos
+# z.Z. nicht genutzt
+class KeyListener(xbmcgui.WindowXMLDialog):
+
+	TIMEOUT = 1
+	HEADING = 401
+	ACTION_MOUSE_LEFT_CLICK = 100
+	ACTION_MOUSE_RIGHT_CLICK = 101
+	
+	def __new__(cls):
+		try: 
+			version = xbmc.getInfoLabel('system.buildversion')
+			if version[0:2] >= "17":
+				return super(KeyListener, cls).__new__(cls, "DialogNotification.xml", "")
+			else:
+				return super(KeyListener, cls).__new__(cls, "DialogKaiToast.xml", "")
+		except:
+			PLog("NOTICE = KeyListener no found")
+
+	def __init__(self):
+		self.key = None
+
+	def onInit(self):
+		try:
+			self.getControl(self.HEADING).addLabel("")
+		except AttributeError:
+			self.getControl(self.HEADING).setLabel("")
+
+	def onAction(self, action):
+		actionId = action.getId() 
+		if actionId == self.ACTION_MOUSE_RIGHT_CLICK:
+			self.key = "61467"				# rechte Maustaste = ESC
+		else:		
+			code = action.getButtonCode()
+			self.key = None if code == 0 else str(code)
+			self.close()
+
+	@staticmethod
+	def record_key():
+		dialog = KeyListener()
+		timeout = Timer(KeyListener.TIMEOUT, dialog.close)
+		timeout.start()
+		dialog.doModal()
+		timeout.cancel()
+		key = dialog.key		
+		#klick = dialog.klick	# hier nicht verfügbar
+		#PLog(klick)
+		del dialog
+		return key        
+		
+#----------------------------------------------------------------
+# z.Z. nicht genutzt
+def get_ARD_LiveEPG(epg_url, title_sender, date_format):
+	PLog("get_ARD_LiveEPG:")
+	epg_events=[];
+	page, msg = get_page(path=epg_url)
+	if page:
+		epg = json.loads(page)
+		epg_events = epg["events"]
+		sD = epg_events[-1]["startDate"]			# letzter Event: Nachladetrigger
+		sD_time = datetime.datetime.fromtimestamp(time.mktime(time.strptime(sD, date_format)))
+		event_end = time.mktime(sD_time.timetuple())
+	else:
+		PLog("epg_events_error: " + title_sender)
+		xbmcgui.Dialog().notification("EPG-Events: ", u"Fehler für %s" % title_sender, icon,3000, sound=True)
+	PLog("epg_events: %d, event_end: %d" % (len(epg_events), event_end))
+	return epg_events, event_end
 #----------------------------------------------------------------
 # experimentelle Funktion thread_getsubtitles einschl. vtt_convert archiviert
 #	in ../m3u8_download,Untertitel/Untertitel/thread_getsubtitles.py

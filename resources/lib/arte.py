@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>37</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.09.2023
+#	Stand: 04.10.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -726,7 +726,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 		'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',\
 		'Accept': 'application/json'}"
 
-	page, msg = get_page(path1, JsonPage=True, do_safe=False)		# api_v2_Call
+	page, msg = get_page(path1, do_safe=False)						# api_v2_Call
 	if page == '':						
 		msg1 = L(u'Fehler in SingleVideo') + ": %s" % title
 		msg2 = msg
@@ -749,7 +749,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 		hls_add = ", HLS-Streams: [B]Trailer[/B]"
 	
 	#-------------------------------------------------------------	# HBBTV- + MP4-Quellen
-	page, msg = get_page(path2, JsonPage=True, do_safe=False, header=header)	# api_opa_Call_1
+	page, msg = get_page(path2, do_safe=False, header=header)		# api_opa_Call_1
 	#RSave('/tmp/x_artestreams_opa1.json', py2_encode(page))	# Debug	
 	if page == '':						
 		PLog("error_api_opa_Call_1")
@@ -758,12 +758,12 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	streams = stringextract('"videoStreams":',  ']', page)		
 	stream_hbbtv = stringextract('hbbtv":',  '}', streams)
 	stream_hbbtv = stringextract('href": "',  '"', stream_hbbtv)
-	#stream_web = stringextract('web":',  '}', streams)				# nicht genutzt - s. api_v2_Call
+	#stream_web = stringextract('web":',  '}', streams)					# nicht genutzt - s. api_v2_Call
 	#stream_web = stringextract('href": "',  '"', stream_web)
 	#PLog("stream_web: " + stream_web); 
 	PLog("stream_hbbtv: " + stream_hbbtv)
 
-	page, msg = get_page(path=stream_hbbtv, JsonPage=True, do_safe=False, header=header)	# api_opa_Call_2
+	page, msg = get_page(path=stream_hbbtv, do_safe=False, header=header)	# api_opa_Call_2
 	if page == '':						
 		PLog("error_api_opa_Call_1")
 	#RSave('/tmp/x_artestreams_opa2.json', py2_encode(page))	# Debug	

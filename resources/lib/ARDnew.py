@@ -11,7 +11,7 @@
 #
 ################################################################################
 # 	<nr>60</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.09.2023
+#	Stand: 04.10.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -314,13 +314,13 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		page, msg = get_page(path, header=headers)	
 	else:
 		page = Dict("load",DictID,CacheTime=ARDStartCacheTime)	# Cache: 5 min
-		if not page:											# nicht vorhanden oder zu alt -> neu laden						
-			page, msg = get_page(path, header=headers)			# vom Sender holen		
+		if not page:											# nicht vorhanden oder zu alt -> vom					
+			page, msg = get_page(path, header=headers)			# 	Sender holen		
 			if page:
 				icon = R(ICON_MAIN_ARD)
 				xbmcgui.Dialog().notification("Cache %s:" % DictID,"Haltedauer 5 Min",icon,3000,sound=False)
-				Dict('store', DictID, page)						# json-Datei -> Dict, ca. 2,5 MByte mit Teasern
-
+				Dict('store', DictID, page)						# json-Datei -> Dict, 1 - 2,5 MByte mit Teasern,
+																#	je nach Sender
 	if page == "":
 		msg1 = 'Fehler in ARDStart:'
 		msg2 = msg
@@ -2361,7 +2361,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	path = 'https://api.ardmediathek.de/search-system/mediathek/%s/search/vods?query=%s&pageNumber=%s&pageSize=24' % (sender, query_ard, pageNumber)
 	icon = R(ICON_SEARCH)
 	xbmcgui.Dialog().notification("ARD-Suche",query_lable,icon,1000, sound=False)
-	page, msg = get_page(path,JsonPage=True)					
+	page, msg = get_page(path)					
 		
 	vodTotal =  stringextract('"totalElements":', '}', page)	# Beiträge?
 	gridlist = blockextract( '"mediumTitle":', page) 			# Sicherung
@@ -2529,7 +2529,7 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 	PLog(query)
 	path = 'https://api.ardmediathek.de/search-system/mediathek/%s/search/vods?query=%s&pageNumber=%s&pageSize=24' % (sender, query, offset)
 
-	page, msg = get_page(path,JsonPage=True)					
+	page, msg = get_page(path)					
 	PLog(len(page))
 	if page == '':											
 		msg1 = "Fehler in ARDSearchnew, Suche: %s"	% query

@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>22</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.09.2023
+#	Stand: 02.10.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -264,29 +264,18 @@ def Main_TIVI(title=''):
 			(quote(title), "ZDF-tivi", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=GIT_ZDFTIVI, 
 			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
-	
-#	title="Suche in ZDFtivi"
-#	summ = "Suche Videos in KIKA"
-#	fparams="&fparams={'query': '', 'title': '%s'}" % title
-#	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_Search", fanart=GIT_ZDFTIVI, 
-#		thumb=R(ICON_ZDF_SEARCH), fparams=fparams)
 			
 	title='tivi_Startseite'
 	fparams="&fparams={'ID': '%s'}" % (title)
 	addDir(li=li, label=title , action="dirList", dirID="ardundzdf.ZDF_Start", fanart=GIT_ZDFTIVI, 
 		thumb=GIT_TIVIHOME, tagline=title, fparams=fparams)
 		
-#	title='Sendungen der letzten 7 Tage'
-#	fparams="&fparams={}" 
-#	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.Tivi_Woche", fanart=GIT_ZDFTIVI, 
-#		thumb=GIT_CAL, tagline=title, fparams=fparams)
-		
-	title='Sendungen A-Z | 0-9'
+	title='tivi_Sendungen A-Z | 0-9'
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_AZ", fanart=GIT_ZDFTIVI, 
 		thumb=GIT_AZ, tagline=title, fparams=fparams)
 
-	title='ZDFchen'
+	title='tivi_ZDFchen'
 	tag = "Für Kinder bis 6 Jahre"
 	thumb = "https://www.zdf.de/assets/zdfchen-buehne-m-song-100~936x520?cb=1658852787035"
 	fparams="&fparams={'ID': '%s', 'homeID': 'Kinderprogramme'}" % title

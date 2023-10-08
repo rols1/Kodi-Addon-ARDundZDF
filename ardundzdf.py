@@ -56,8 +56,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>147</nr>										# Numerierung für Einzelupdate
-VERSION = '4.8.5'
-VDATE = '02.10.2023'
+VERSION = '4.8.6'
+VDATE = '08.10.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1526,7 +1526,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 	path = "https://api.ardaudiothek.de/organizations"					# api=Webjson				
 	page = Dict("load", "AudioSender", CacheTime=CacheTime)
 	if page == False or page == '':										# Cache miss od. leer - vom Sender holen
-		page, msg = get_page(path=path, JsonPage=True)
+		page, msg = get_page(path=path)
 		Dict("store", "AudioSender", page)
 	msg1 = "Fehler in AudioStartLive:"
 	if page == '':	
@@ -1615,7 +1615,7 @@ def AudioSenderPrograms(org=''):
 	path = "https://api.ardaudiothek.de/organizations"					# api=Webjson		
 	page = Dict("load", "AudioSender", CacheTime=CacheTime)
 	if page == False or page == '':										# Cache miss od. leer - vom Sender holen
-		page, msg = get_page(path=path, JsonPage=True)
+		page, msg = get_page(path=path)
 		Dict("store", "AudioSender", page)
 	msg1 = "Fehler in AudioStartLive:"
 	if page == '':	
@@ -6437,7 +6437,7 @@ def get_sort_playlist():						# Senderliste für EPG + Recording
 		if 'ARDSource' in link:							# Streamlink für ARD-Sender holen,
 			title_sender = stringextract('<hrefsender>', '</hrefsender>', item)	
 			link=''										# Reihenfolge an Playlist anpassen
-			# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
+			# Zeile ard_streamlinks: "webtitle|href|thumb|linkid"
 			for line in ard_streamlinks:
 				#PLog("ARDSource: %s || %s" % (title_sender, str(items)))
 				items = line.split('|')
@@ -6450,7 +6450,7 @@ def get_sort_playlist():						# Senderliste für EPG + Recording
 		if 'IPTVSource' in link:						# Streamlink für private Sender holen
 			title_sender = stringextract('<title>', '</title>', item)	
 			link=''										# Reihenfolge an Playlist anpassen
-			# Zeile iptv_streamlinks: "Sender|href|thumb|tagline"
+			# Zeile iptv_streamlinks: "Sender|href|thumb|''"
 			for line in iptv_streamlinks:
 				#PLog("IPTVSource: %s || %s" % (title_sender, str(items)))
 				items = line.split('|')
@@ -8623,7 +8623,7 @@ def ZDF_FlatListEpisodes(sid):
 	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 	'Referer': '%s', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
 	path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/%s" % sid 
-	page, msg = get_page(path=path, header=headers, JsonPage=True)
+	page, msg = get_page(path=path, header=headers)
 	if page == "":	
 		msg1 = "Abbruch  in ZDF_FlatListEpisodes:"
 		msg2 = "Die Serien-ID [B]%s[/B] ist nicht (mehr)" % sid
@@ -9427,7 +9427,7 @@ def m3satSourcesHBBTV(weburl, title):
 
 	header = "{'Host': 'hbbtv.zdf.de', 'content-type': 'application/vnd.hbbtv.xhtml+xml'}"
 	path = base + url
-	page, msg = get_page(path, header=header, JsonPage=True)	
+	page, msg = get_page(path, header=header)	
 	if page == '':						
 		msg1 = u'HBBTV-Quellen nicht vorhanden / verfügbar'
 		msg2 = u'Video: %s' % title
@@ -9553,7 +9553,7 @@ def ZDFSourcesHBBTV(title, scms_id):
 		
 	# Call funktioniert auch ohne Header:
 	header = "{'Host': 'hbbtv.zdf.de', 'content-type': 'application/vnd.hbbtv.xhtml+xml'}"
-	page, msg = get_page(path=url, header=header, JsonPage=True)	
+	page, msg = get_page(path=url, header=header)	
 	if page == '':						
 		msg1 = u'HBBTV-Quellen nicht vorhanden / verfügbar'
 		msg2 = u'Video: %s' % title
