@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>67</nr>										# Numerierung für Einzelupdate
+# 	<nr>68</nr>										# Numerierung für Einzelupdate
 #	Stand: 10.10.2023
 
 # Python3-Kompatibilität:
@@ -3968,6 +3968,7 @@ def ShowSeekPos(player, url):
 						xbmcgui.Dialog().notification("Sendezeit: %s" % sD_uhr, title, icon,3000, sound=False)
 
 # todo: 
+#		Maus-Event r. Maustaste
 #		Summertime-Berechnung aus time_translate auslagern
 #		Wechsel Control https://kodi.wiki/view/Skinning_Manual#Controls
 #			https://kodi.wiki/view/Conditional_visibility
@@ -4009,9 +4010,12 @@ class KeyListener(xbmcgui.WindowXMLDialog):
 
 	def onAction(self, action):
 		actionId = action.getId() 
-		code = action.getButtonCode()
-		self.key = None if code == 0 else str(code)
-		self.close()
+		if actionId == self.ACTION_MOUSE_RIGHT_CLICK:
+			self.key = "61467"				# rechte Maustaste = ESC
+		else:		
+			code = action.getButtonCode()
+			self.key = None if code == 0 else str(code)
+			self.close()
 
 	@staticmethod
 	def record_key():
