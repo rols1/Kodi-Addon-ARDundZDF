@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>66</nr>										# Numerierung für Einzelupdate
-#	Stand: 27.09.2023
+# 	<nr>67</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.10.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3807,6 +3807,28 @@ def ShowSeekPos(player, url):
 	PLog('ShowSeekPos: ' + url)		
 	import resources.lib.EPG as EPG
 	
+	# ----------------------------------		# ARD-Stream? -> EPG-Events laden
+	date_format = "%Y-%m-%dT%H:%M:%SZ";	
+	linkid=""; epg_events=""; KeyListener_run=False
+	ard_streamlinks = Dict("load", "ard_streamlinks")
+	# Format ard_streamlinks s. get_ARDstreamlinks,
+	# Ard-Sender s. Debuglog (ardline:)
+	for link in ard_streamlinks.split("\n"):	# Abgleich ARD-Url, Zuordnung linkid
+		PLog(link)
+		if url in link:
+			linkid = link.split("|")[-1]
+			title_sender = link.split("|")[0]
+			PLog("linkid_found: " + linkid)
+			epg_url  = "https://programm-api.ard.de/nownext/api/channel?channel=%s&pastHours=5&futureEvents=1" % linkid
+			break
+			
+	if linkid:									# ARD-EPG für Zeitstrahl laden
+		epg_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format)
+		event_end = int(event_end)
+		KeyListener_run=True
+	PLog("epg_events: %d" % len(epg_events))	
+	# ----------------------------------
+		
 	MinusSeekMax = -10							# detect sync errors
 	icon=""										# -> Kodi's i-Symbol
 	now = EPG.get_unixtime(onlynow=True)		# unix-sec passend zu TotalTime, LastSeek
@@ -3833,7 +3855,7 @@ def ShowSeekPos(player, url):
 				play_time=LastSeek
 					
 			p = int(play_time)
-			PLog("play_time_p: %d, LastSeek: %d" % (p, LastSeek)) 	# Debug
+			#PLog("play_time_p: %d, LastSeek: %d" % (p, LastSeek)) 	# Debug
 			
 			# ----------------------------------					# Sync-Checks
 			# sync-Check: Streampos. verharrt am Pufferanfang 
@@ -3882,7 +3904,76 @@ def ShowSeekPos(player, url):
 				else:
 					PLog("skip_sync_error")
 					
-			LastSeek=p					
+			LastSeek=p
+			
+			# ----------------------------------					# Start Event-Auwahl bei ARD-Streams
+			new_event=""
+			if epg_events and KeyListener_run:
+				now = int(EPG.get_unixtime(onlynow=True))
+				PLog("now: %d, event_end: %d, dif: %d" % (now, event_end, event_end-now))
+				if event_end < now:									# Events nachladen
+					PLog("load_events: diff now - event_end: %d" % (now - event_end))
+					epg_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format)
+					event_end = int(event_end)
+					
+				key = KeyListener.record_key()						# pressed_key: string				
+				PLog("key: " + str(key))							# ev. pausieren mit Blank?
+				if key == "61475" or key == "61467":				# Taste # oder r. Maustaste (self.key)
+					buf_events=[]; line=""							# Liste Events im Zeitpuffer
+					for event in epg_events:
+						stitle = event["title"]["short"]
+						sD = event["startDate"]
+						sD_time = datetime.datetime.fromtimestamp(time.mktime(time.strptime(sD, date_format)))
+						event_start = time.mktime(sD_time.timetuple())
+						event_start = event_start + 7200			# + 2 Std. / Abgleich Sommerzeit ergänzen
+						PLog("event_start: %s, %d" % (str(sD), event_start))
+						BufStart = now - TotalTime					# akt. Pufferstart (unix-sec)
+						PLog("BufStart: %d, now: %d, TotalTime: %d" % (BufStart, now, TotalTime))
+						if event_start > BufStart and event_start < now:
+							sD_uhr = datetime.datetime.fromtimestamp(event_start).strftime('%H:%M:%S')
+							PLog("add_event: %d | %s | %s" % (event_start, sD_uhr, stitle))
+							line = "%d|%s|%s" % (event_start, stitle, sD_uhr)	# 1696296600|Tagesschau|20:00:00
+							buf_events.append(line)
+							
+					if len(buf_events) == 0:						# keine Events (mehr)
+						xbmcgui.Dialog().notification("Zeitpuffer", "ohne weitere Sendung", icon,3000, sound=True)
+						KeyListener_run=False								# Stop bis Streamende, kein re-init
+						continue
+					
+					buf_events = sorted(buf_events, reverse=True)
+					show_list=[]; 										# Liste ohne timestamp
+					for item in buf_events:
+						event_start, title, sD_uhr = item.split("|")
+						show_list.append("%s | %s" % (sD_uhr, title))
+					
+					heading = "Sendungen im Zeitpuffer | Auswahl oder Abbruch"
+					ret = xbmcgui.Dialog().select(heading, show_list, preselect=0) # Dialog
+					if ret >= 0:											# Auswahl?
+						new_event = buf_events[ret]
+						event_start = int(new_event.split("|")[0])
+						new_event_line = show_list[ret]
+							
+						new_dt = datetime.datetime.fromtimestamp(event_start)
+						t_string = new_dt.strftime("%H:%M:%S")
+						PLog("new_event: %s | %d" % (t_string, event_start))# Start gewählter Event (unix-sec)
+						PLog("new_event_line: %s" % new_event_line)			# gewählter Event
+	
+						# neue Seek-Position mit 6 sec-Schwankungszuschlag (s.o.)
+						diff_event = now - event_start						# akt. Differenz zum Event (unix-sec)
+						new_pos_sec = TotalTime - diff_event - 6			# -> Pos. im Zeitpuffer (0 bis TotalTime)
+						PLog("diff_event: %d, new_pos_sec: %d" % (diff_event, new_pos_sec))
+						
+						sD_uhr, title = new_event_line.split("|") 
+						player.seekTime(new_pos_sec)
+						xbmcgui.Dialog().notification("Sendezeit: %s" % sD_uhr, title, icon,3000, sound=False)
+
+# todo: 
+#		Summertime-Berechnung aus time_translate auslagern
+#		Wechsel Control https://kodi.wiki/view/Skinning_Manual#Controls
+#			https://kodi.wiki/view/Conditional_visibility
+#			od. neues Control in slides.xml einbinden
+			# ----------------------------------					# Ende Event-Auwahl bei ARD-Streams		
+							
 		else:
 			PLog("monitor_ShowSeekPos_stop")
 			break
@@ -3890,7 +3981,6 @@ def ShowSeekPos(player, url):
 	return
 #----------------------------------------------------------------
 # KeyListener (aus slides.py) für ShowSeekPos
-# z.Z. nicht genutzt
 class KeyListener(xbmcgui.WindowXMLDialog):
 
 	TIMEOUT = 1
@@ -3919,12 +4009,9 @@ class KeyListener(xbmcgui.WindowXMLDialog):
 
 	def onAction(self, action):
 		actionId = action.getId() 
-		if actionId == self.ACTION_MOUSE_RIGHT_CLICK:
-			self.key = "61467"				# rechte Maustaste = ESC
-		else:		
-			code = action.getButtonCode()
-			self.key = None if code == 0 else str(code)
-			self.close()
+		code = action.getButtonCode()
+		self.key = None if code == 0 else str(code)
+		self.close()
 
 	@staticmethod
 	def record_key():
@@ -3940,23 +4027,27 @@ class KeyListener(xbmcgui.WindowXMLDialog):
 		return key        
 		
 #----------------------------------------------------------------
-# z.Z. nicht genutzt
+# Aufrufer ShowSeekPos: zum Streamstart und jeweils zum Sendungsende
+#	der letzten Sendung (vorher keine neuen Daten verfügbar). 
 def get_ARD_LiveEPG(epg_url, title_sender, date_format):
 	PLog("get_ARD_LiveEPG:")
-	epg_events=[];
 	page, msg = get_page(path=epg_url)
 	if page:
 		epg = json.loads(page)
 		epg_events = epg["events"]
-		sD = epg_events[-1]["startDate"]			# letzter Event: Nachladetrigger
+		sD = epg_events[-1]["endDate"]			# Sendungsende letzter Event: Nachladetrigger
 		sD_time = datetime.datetime.fromtimestamp(time.mktime(time.strptime(sD, date_format)))
 		event_end = time.mktime(sD_time.timetuple())
 	else:
 		PLog("epg_events_error: " + title_sender)
 		xbmcgui.Dialog().notification("EPG-Events: ", u"Fehler für %s" % title_sender, icon,3000, sound=True)
 	PLog("epg_events: %d, event_end: %d" % (len(epg_events), event_end))
+	if len(epg_events) <= 1:					# Event-Liste nur mit mehr als 1 (aktuelle) Sendung 
+		epg_events=[]; event_end=0
+		
 	return epg_events, event_end
 #----------------------------------------------------------------
+####################################################################################################
 # experimentelle Funktion thread_getsubtitles einschl. vtt_convert archiviert
 #	in ../m3u8_download,Untertitel/Untertitel/thread_getsubtitles.py
 ####################################################################################################
