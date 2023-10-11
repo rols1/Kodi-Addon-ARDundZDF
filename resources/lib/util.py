@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>68</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.10.2023
+# 	<nr>69</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.10.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2000,8 +2000,9 @@ def seconds_translate(seconds, days=False):
 #	https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=613709#post613709
 #	Korr.-Faktor hour_info entfällt. add_hour jetzt Flag für Abgleich mit Tab. summer_time (False
 #	bei "Verfügbar bis..")
-#	
-def time_translate(timecode, add_hour=True, day_warn=False):
+# 11.10.2023 Mitnutzung durch ShowSeekPos (add_hour_only=True)
+#
+def time_translate(timecode, add_hour=True, day_warn=False, add_hour_only=""):
 	PLog("time_translate: " + timecode)
 	
 	# summer_time aus www.ptb.de, konvertiert zum date_format (s.u.):
@@ -2043,6 +2044,9 @@ def time_translate(timecode, add_hour=True, day_warn=False):
 				PLog(str(exception))
 				return timecode
 
+			if add_hour_only:								# -> ShowSeekPos
+				PLog("add_hour_only: %d" % add_hour)
+				return add_hour
 		try:
 			# ts = datetime.strptime(timecode, date_format)  # None beim 2. Durchlauf (s.o. 26.08.2019)      
 			ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
@@ -3807,9 +3811,25 @@ def ShowSeekPos(player, url):
 	PLog('ShowSeekPos: ' + url)		
 	import resources.lib.EPG as EPG
 	
-	# ----------------------------------		# ARD-Stream? -> EPG-Events laden
+	icon=""										# -> Kodi's i-Symbol
+	now = EPG.get_unixtime(onlynow=True)		# unix-sec passend zu TotalTime, LastSeek
 	date_format = "%Y-%m-%dT%H:%M:%SZ";	
-	linkid=""; epg_events=""; KeyListener_run=False
+	MinusSeekMax = -10							# detect sync errors
+	now_dt = datetime.datetime.fromtimestamp(int(now))
+	StartTime = now_dt.strftime("%H:%M:%S")
+		
+	TotalTime = int(player.getTotalTime())    	# sec, float -> int, max. Puffergröße
+	LastSeek = int(player.getTime())            # Basis-Wert für akt. Uhrzeit	
+	PLog("StartTime: %s, TotalTime: %d, LastSeek: %d" % (StartTime, TotalTime, LastSeek))
+	if not TotalTime or LastSeek <= 3:			# Start am Pufferanfang -> Sync-Problem
+		PLog("player_is_off or SyncProblem")
+		xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
+		return
+	
+	# ----------------------------------		# ARD-Stream? -> EPG-Events laden
+	
+	linkid=""; buf_events=""; KeyListener_run=False
+	pos=url.rfind("/"); url=url[:pos]			# Endung index.m3u8 statt master.m3u8 möglich
 	ard_streamlinks = Dict("load", "ard_streamlinks")
 	# Format ard_streamlinks s. get_ARDstreamlinks,
 	# Ard-Sender s. Debuglog (ardline:)
@@ -3823,25 +3843,16 @@ def ShowSeekPos(player, url):
 			break
 			
 	if linkid:									# ARD-EPG für Zeitstrahl laden
-		epg_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format)
+		buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 		event_end = int(event_end)
+		txt = "Anzahl Sendungen: %d" % len(buf_events)
+		if len(buf_events) == 0:
+			txt = "KEINE weitere Sendung"
+		xbmcgui.Dialog().notification("Zeitpuffer", txt, icon,3000, sound=True)
 		KeyListener_run=True
-	PLog("epg_events: %d" % len(epg_events))	
+		
+	PLog("buf_events: %d" % len(buf_events))	
 	# ----------------------------------
-		
-	MinusSeekMax = -10							# detect sync errors
-	icon=""										# -> Kodi's i-Symbol
-	now = EPG.get_unixtime(onlynow=True)		# unix-sec passend zu TotalTime, LastSeek
-	now_dt = datetime.datetime.fromtimestamp(int(now))
-	StartTime = now_dt.strftime("%H:%M:%S")
-		
-	TotalTime = int(player.getTotalTime())    	# sec, float -> int, max. Puffergröße
-	LastSeek = int(player.getTime())            # Basis-Wert für akt. Uhrzeit	
-	PLog("StartTime: %s, TotalTime: %d, LastSeek: %d" % (StartTime, TotalTime, LastSeek))
-	if not TotalTime or LastSeek <= 3:			# Start am Pufferanfang -> Sync-Problem
-		PLog("player_is_off or SyncProblem")
-		xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
-		return
 
 	monitor = xbmc.Monitor()
 	LastBufTime = StartTime						# detect sync errors direkt
@@ -3908,32 +3919,19 @@ def ShowSeekPos(player, url):
 			
 			# ----------------------------------					# Start Event-Auwahl bei ARD-Streams
 			new_event=""
-			if epg_events and KeyListener_run:
+			if buf_events and KeyListener_run:
 				now = int(EPG.get_unixtime(onlynow=True))
 				PLog("now: %d, event_end: %d, dif: %d" % (now, event_end, event_end-now))
 				if event_end < now:									# Events nachladen
 					PLog("load_events: diff now - event_end: %d" % (now - event_end))
-					epg_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format)
+					buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 					event_end = int(event_end)
 					
 				key = KeyListener.record_key()						# pressed_key: string				
 				PLog("key: " + str(key))							# ev. pausieren mit Blank?
 				if key == "61475" or key == "61467":				# Taste # oder r. Maustaste (self.key)
-					buf_events=[]; line=""							# Liste Events im Zeitpuffer
-					for event in epg_events:
-						stitle = event["title"]["short"]
-						sD = event["startDate"]
-						sD_time = datetime.datetime.fromtimestamp(time.mktime(time.strptime(sD, date_format)))
-						event_start = time.mktime(sD_time.timetuple())
-						event_start = event_start + 7200			# + 2 Std. / Abgleich Sommerzeit ergänzen
-						PLog("event_start: %s, %d" % (str(sD), event_start))
-						BufStart = now - TotalTime					# akt. Pufferstart (unix-sec)
-						PLog("BufStart: %d, now: %d, TotalTime: %d" % (BufStart, now, TotalTime))
-						if event_start > BufStart and event_start < now:
-							sD_uhr = datetime.datetime.fromtimestamp(event_start).strftime('%H:%M:%S')
-							PLog("add_event: %d | %s | %s" % (event_start, sD_uhr, stitle))
-							line = "%d|%s|%s" % (event_start, stitle, sD_uhr)	# 1696296600|Tagesschau|20:00:00
-							buf_events.append(line)
+					line=""											# Liste Events im Zeitpuffer
+
 							
 					if len(buf_events) == 0:						# keine Events (mehr)
 						xbmcgui.Dialog().notification("Zeitpuffer", "ohne weitere Sendung", icon,3000, sound=True)
@@ -3965,11 +3963,9 @@ def ShowSeekPos(player, url):
 						
 						sD_uhr, title = new_event_line.split("|") 
 						player.seekTime(new_pos_sec)
-						xbmcgui.Dialog().notification("Sendezeit: %s" % sD_uhr, title, icon,3000, sound=False)
+						xbmcgui.Dialog().notification("Sendezeit: %s" % sD_uhr, title, icon,6000, sound=True)
 
 # todo: 
-#		Maus-Event r. Maustaste
-#		Summertime-Berechnung aus time_translate auslagern
 #		Wechsel Control https://kodi.wiki/view/Skinning_Manual#Controls
 #			https://kodi.wiki/view/Conditional_visibility
 #			od. neues Control in slides.xml einbinden
@@ -4033,8 +4029,10 @@ class KeyListener(xbmcgui.WindowXMLDialog):
 #----------------------------------------------------------------
 # Aufrufer ShowSeekPos: zum Streamstart und jeweils zum Sendungsende
 #	der letzten Sendung (vorher keine neuen Daten verfügbar). 
-def get_ARD_LiveEPG(epg_url, title_sender, date_format):
-	PLog("get_ARD_LiveEPG:")
+def get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime):
+	PLog("get_ARD_LiveEPG: " + title_sender)
+	
+	now=int(now); TotalTime=int(TotalTime)
 	page, msg = get_page(path=epg_url)
 	if page:
 		epg = json.loads(page)
@@ -4047,9 +4045,28 @@ def get_ARD_LiveEPG(epg_url, title_sender, date_format):
 		xbmcgui.Dialog().notification("EPG-Events: ", u"Fehler für %s" % title_sender, icon,3000, sound=True)
 	PLog("epg_events: %d, event_end: %d" % (len(epg_events), event_end))
 	if len(epg_events) <= 1:					# Event-Liste nur mit mehr als 1 (aktuelle) Sendung 
-		epg_events=[]; event_end=0
+		return [], 0							# return buf_events=[], event_end=0
+
+	buf_events=[]; event_end=0
+	for event in epg_events:					# events passend zum Zeitpuffer filtern
+		stitle = event["title"]["short"]
+		sD = event["startDate"]
+		sD_time = datetime.datetime.fromtimestamp(time.mktime(time.strptime(sD, date_format)))
+		event_start = time.mktime(sD_time.timetuple())
+		add_hour = time_translate(sD, add_hour=True, day_warn=False, add_hour_only=True)
+		if add_hour != sD:							# timecode bei exception
+			add_hour = add_hour * 3600
+			event_start = event_start + add_hour 	# + 2 Std. bei Sommerzeit							
+		PLog("event_start: %s, %d, added: %d" % (str(sD), event_start, add_hour))
+		BufStart = now - TotalTime					# akt. Pufferstart (unix-sec)
+		PLog("BufStart: %d, now: %d, TotalTime: %d" % (BufStart, now, TotalTime))
+		if event_start > BufStart and event_start < now:
+			sD_uhr = datetime.datetime.fromtimestamp(event_start).strftime('%H:%M:%S')
+			PLog("add_event: %d | %s | %s" % (event_start, sD_uhr, stitle))
+			line = "%d|%s|%s" % (event_start, stitle, sD_uhr)	# 1696296600|Tagesschau|20:00:00
+			buf_events.append(line)		
 		
-	return epg_events, event_end
+	return buf_events, event_end
 #----------------------------------------------------------------
 ####################################################################################################
 # experimentelle Funktion thread_getsubtitles einschl. vtt_convert archiviert
