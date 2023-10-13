@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>69</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.10.2023
+# 	<nr>70</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.10.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3811,29 +3811,29 @@ def ShowSeekPos(player, url):
 	PLog('ShowSeekPos: ' + url)		
 	import resources.lib.EPG as EPG
 	
-	icon=""										# -> Kodi's i-Symbol
-	now = EPG.get_unixtime(onlynow=True)		# unix-sec passend zu TotalTime, LastSeek
+	icon=""												# -> Kodi's i-Symbol
+	now = EPG.get_unixtime(onlynow=True)				# unix-sec passend zu TotalTime, LastSeek
 	date_format = "%Y-%m-%dT%H:%M:%SZ";	
-	MinusSeekMax = -10							# detect sync errors
+	MinusSeekMax = -10									# detect sync errors
 	now_dt = datetime.datetime.fromtimestamp(int(now))
 	StartTime = now_dt.strftime("%H:%M:%S")
 		
-	TotalTime = int(player.getTotalTime())    	# sec, float -> int, max. Puffergröße
-	LastSeek = int(player.getTime())            # Basis-Wert für akt. Uhrzeit	
+	TotalTime = int(player.getTotalTime())    			# sec, float -> int, max. Puffergröße
+	LastSeek = int(player.getTime())           		 	# Basis-Wert für akt. Uhrzeit	
 	PLog("StartTime: %s, TotalTime: %d, LastSeek: %d" % (StartTime, TotalTime, LastSeek))
-	if not TotalTime or LastSeek <= 3:			# Start am Pufferanfang -> Sync-Problem
+	if not TotalTime or LastSeek <= 3:					# Start am Pufferanfang -> Sync-Problem
 		PLog("player_is_off or SyncProblem")
 		xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"hier nicht möglich", icon,3000, sound=True)
 		return
 	
-	# ----------------------------------		# ARD-Stream? -> EPG-Events laden
+	# ----------------------------------				# ARD-Stream? -> EPG-Events laden
 	
 	linkid=""; buf_events=""; KeyListener_run=False
-	pos=url.rfind("/"); url=url[:pos]			# Endung index.m3u8 statt master.m3u8 möglich
+	pos=url.rfind("/"); url=url[:pos]					# Endung index.m3u8 statt master.m3u8 möglich
 	ard_streamlinks = Dict("load", "ard_streamlinks")
 	# Format ard_streamlinks s. get_ARDstreamlinks,
 	# Ard-Sender s. Debuglog (ardline:)
-	for link in ard_streamlinks.split("\n"):	# Abgleich ARD-Url, Zuordnung linkid
+	for link in ard_streamlinks.split("\n"):			# Abgleich ARD-Url, Zuordnung linkid
 		PLog(link)
 		if url in link:
 			linkid = link.split("|")[-1]
@@ -3842,7 +3842,7 @@ def ShowSeekPos(player, url):
 			epg_url  = "https://programm-api.ard.de/nownext/api/channel?channel=%s&pastHours=5&futureEvents=1" % linkid
 			break
 			
-	if linkid:									# ARD-EPG für Zeitstrahl laden
+	if linkid:											# ARD-EPG für Zeitstrahl laden
 		buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 		event_end = int(event_end)
 		txt = "Anzahl Sendungen: %d" % len(buf_events)
@@ -3855,26 +3855,26 @@ def ShowSeekPos(player, url):
 	# ----------------------------------
 
 	monitor = xbmc.Monitor()
-	LastBufTime = StartTime						# detect sync errors direkt
-	p_list=[]									# dto. im 3-sec-Rahmen 									
+	LastBufTime = StartTime												# detect sync errors direkt
+	p_list=[]															# dto. im 3-sec-Rahmen 									
 	while not monitor.waitForAbort(1):
 		if player.isPlaying():
 			show_time=False; syncfail=False
 			try:
-				play_time = player.getTime()	# akt. Pos im Puffer (0=Pufferstart)
+				play_time = player.getTime()							# akt. Pos im Puffer (0=Pufferstart)
 			except:
 				play_time=LastSeek
 					
 			p = int(play_time)
-			#PLog("play_time_p: %d, LastSeek: %d" % (p, LastSeek)) 	# Debug
+			#PLog("play_time_p: %d, LastSeek: %d" % (p, LastSeek)) 		# Debug
 			
-			# ----------------------------------					# Sync-Checks
+			# ----------------------------------						# Sync-Checks
 			# sync-Check: Streampos. verharrt am Pufferanfang 
 			#	Bsp. kika, phoenix, TSchauXL, wdrlokalzeit
-			p_list.append(p)					# 3 sec sync-Check
+			p_list.append(p)											# 3 sec sync-Check
 			
 			if len(p_list) >= 3:
-				if max(p_list) < 1:				# nach 3 sec ist < 1 ein Sync-Indiz
+				if max(p_list) < 1:										# nach 3 sec ist < 1 ein Sync-Indiz
 					PLog("p_list_syncfail: %d, %d" % (p_list[-1], p_list[0]))
 					syncfail = True
 				p_list=[]			
@@ -3889,27 +3889,27 @@ def ShowSeekPos(player, url):
 				PLog("monitor_break_on_syncfail")
 				xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"Sync-Error - Abbruch", icon,3000, sound=True)
 				xbmc.sleep(2000)
-				break							# verhind. Blockade durch Buffering							
+				break													# verhind. Blockade durch Buffering							
 			# ----------------------------------
 			
 			# regelm. Schwankung bei Livestreams 6-10 (empirisch):
-			if (LastSeek-p) > 10:				# rückwärts	im Puffer	
+			if (LastSeek-p) > 10:										# rückwärts	im Puffer	
 					show_time=True
-			if p > LastSeek:					# vorwärts im Puffer
+			if p > LastSeek:											# vorwärts im Puffer
 				if (p-LastSeek) > 10:	
 					show_time=True
 			
-			if show_time:						# Ausgabe Uhrzeit für die neue Pufferpos.
-				pos_sec = TotalTime - p			# je kleiner p desto größer der Zeitabzug
+			if show_time:												# Ausgabe Uhrzeit für die neue Pufferpos.
+				pos_sec = TotalTime - p									# je kleiner p desto größer der Zeitabzug
 				now = EPG.get_unixtime(onlynow=True)
-				time_sec = int(now) - pos_sec	# Pos-Sekunden von akt. Zeit abziehen
+				time_sec = int(now) - pos_sec							# Pos-Sekunden von akt. Zeit abziehen
 				new_dt = datetime.datetime.fromtimestamp(time_sec)
 				t_string = new_dt.strftime("%H:%M:%S")
 				
 				PLog("LastSeek: %d, pos_sec: %d" % (LastSeek, pos_sec))
 				PLog("new_t_string: " + t_string)
 				
-				if LastBufTime != new_dt:			# skip_sync_error
+				if LastBufTime != new_dt:								# skip_sync_error
 					LastBufTime=new_dt
 					xbmcgui.Dialog().notification("Stream-Uhrzeit: ", t_string, icon,3000, sound=False)
 				else:
@@ -3917,23 +3917,21 @@ def ShowSeekPos(player, url):
 					
 			LastSeek=p
 			
-			# ----------------------------------					# Start Event-Auwahl bei ARD-Streams
+			# ----------------------------------						# Start Event-Auwahl bei ARD-Streams
 			new_event=""
 			if buf_events and KeyListener_run:
 				now = int(EPG.get_unixtime(onlynow=True))
 				PLog("now: %d, event_end: %d, dif: %d" % (now, event_end, event_end-now))
-				if event_end < now:									# Events nachladen
+				if event_end < now:										# Events nachladen
 					PLog("load_events: diff now - event_end: %d" % (now - event_end))
 					buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 					event_end = int(event_end)
 					
-				key = KeyListener.record_key()						# pressed_key: string				
-				PLog("key: " + str(key))							# ev. pausieren mit Blank?
-				if key == "61475" or key == "61467":				# Taste # oder r. Maustaste (self.key)
-					line=""											# Liste Events im Zeitpuffer
-
-							
-					if len(buf_events) == 0:						# keine Events (mehr)
+				key = KeyListener.record_key()							# pressed_key: string
+				PLog("key: " + str(key))								# ev. pausieren mit Blank?
+				if key == "61475" or key == "61467":					# Taste # oder r. Maustaste (self.key)
+					line=""												# Liste Events im Zeitpuffer	
+					if len(buf_events) == 0:							# keine Events (mehr)
 						xbmcgui.Dialog().notification("Zeitpuffer", "ohne weitere Sendung", icon,3000, sound=True)
 						KeyListener_run=False								# Stop bis Streamende, kein re-init
 						continue
@@ -3946,7 +3944,7 @@ def ShowSeekPos(player, url):
 					
 					heading = "Sendungen im Zeitpuffer | Auswahl oder Abbruch"
 					ret = xbmcgui.Dialog().select(heading, show_list, preselect=0) # Dialog
-					if ret >= 0:											# Auswahl?
+					if ret >= 0:										# Auswahl?
 						new_event = buf_events[ret]
 						event_start = int(new_event.split("|")[0])
 						new_event_line = show_list[ret]
@@ -3954,22 +3952,16 @@ def ShowSeekPos(player, url):
 						new_dt = datetime.datetime.fromtimestamp(event_start)
 						t_string = new_dt.strftime("%H:%M:%S")
 						PLog("new_event: %s | %d" % (t_string, event_start))# Start gewählter Event (unix-sec)
-						PLog("new_event_line: %s" % new_event_line)			# gewählter Event
+						PLog("new_event_line: %s" % new_event_line)		# gewählter Event
 	
 						# neue Seek-Position mit 6 sec-Schwankungszuschlag (s.o.)
-						diff_event = now - event_start						# akt. Differenz zum Event (unix-sec)
-						new_pos_sec = TotalTime - diff_event - 6			# -> Pos. im Zeitpuffer (0 bis TotalTime)
+						diff_event = now - event_start					# akt. Differenz zum Event (unix-sec)
+						new_pos_sec = TotalTime - diff_event - 6		# -> Pos. im Zeitpuffer (0 bis TotalTime)
 						PLog("diff_event: %d, new_pos_sec: %d" % (diff_event, new_pos_sec))
 						
 						sD_uhr, title = new_event_line.split("|") 
 						player.seekTime(new_pos_sec)
 						xbmcgui.Dialog().notification("Sendezeit: %s" % sD_uhr, title, icon,6000, sound=True)
-
-# todo: 
-#		Wechsel Control https://kodi.wiki/view/Skinning_Manual#Controls
-#			https://kodi.wiki/view/Conditional_visibility
-#			od. neues Control in slides.xml einbinden
-			# ----------------------------------					# Ende Event-Auwahl bei ARD-Streams		
 							
 		else:
 			PLog("monitor_ShowSeekPos_stop")
@@ -3977,37 +3969,39 @@ def ShowSeekPos(player, url):
 				
 	return
 #----------------------------------------------------------------
-# KeyListener (aus slides.py) für ShowSeekPos
+# KeyListener (ähnlich slides.py) für ShowSeekPos
+#	Problem: alle Dialogvarianten blinken im Takt des Timeouts - 
+#		self.getControl(401).setVisible(False) bleibt ohne Effekt
+# 	Daher Verwendung von Pointer.xml  (Mauszeiger) - belegt eine kleine
+#	Fläche i.d. linken oberen Ecke (statt DialogNotification.xml)	
+#
 class KeyListener(xbmcgui.WindowXMLDialog):
-
+	PLog("KeyListener:")
 	TIMEOUT = 1
 	HEADING = 401
 	ACTION_MOUSE_LEFT_CLICK = 100
 	ACTION_MOUSE_RIGHT_CLICK = 101
-	
+
 	def __new__(cls):
 		try: 
-			version = xbmc.getInfoLabel('system.buildversion')
-			if version[0:2] >= "17":
-				return super(KeyListener, cls).__new__(cls, "DialogNotification.xml", "")
-			else:
-				return super(KeyListener, cls).__new__(cls, "DialogKaiToast.xml", "")
+			return super(KeyListener, cls).__new__(cls, "Pointer.xml", "")	# Mauszeiger
 		except:
-			PLog("NOTICE = KeyListener no found")
+			PLog("NOTICE: KeyListener not found!")
 
 	def __init__(self):
-		self.key = None
+		self.key     = 0
 
 	def onInit(self):
 		try:
-			self.getControl(self.HEADING).addLabel("")
-		except AttributeError:
-			self.getControl(self.HEADING).setLabel("")
+			self.getControl(1).setVisible(False)	 	# o. Wirkung (1=Pointer)
+			self.getControl(1).setPosition(-100, -100)  # o. Wirkung
+		except:
+			PLog("NOTICE: Control_set_error!")
 
 	def onAction(self, action):
 		actionId = action.getId() 
 		if actionId == self.ACTION_MOUSE_RIGHT_CLICK:
-			self.key = "61467"				# rechte Maustaste = ESC
+			self.key = "61467"				# hier für rechte Maustaste 
 		else:		
 			code = action.getButtonCode()
 			self.key = None if code == 0 else str(code)
@@ -4015,17 +4009,15 @@ class KeyListener(xbmcgui.WindowXMLDialog):
 
 	@staticmethod
 	def record_key():
-		dialog = KeyListener()
+		dialog  = KeyListener()
 		timeout = Timer(KeyListener.TIMEOUT, dialog.close)
 		timeout.start()
 		dialog.doModal()
 		timeout.cancel()
-		key = dialog.key		
-		#klick = dialog.klick	# hier nicht verfügbar
-		#PLog(klick)
+		key = dialog.key
 		del dialog
-		return key        
-		
+		return key
+ 
 #----------------------------------------------------------------
 # Aufrufer ShowSeekPos: zum Streamstart und jeweils zum Sendungsende
 #	der letzten Sendung (vorher keine neuen Daten verfügbar). 
