@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>70</nr>										# Numerierung für Einzelupdate
+# 	<nr>71</nr>										# Numerierung für Einzelupdate
 #	Stand: 13.10.2023
 
 # Python3-Kompatibilität:
@@ -3933,7 +3933,8 @@ def ShowSeekPos(player, url):
 					line=""												# Liste Events im Zeitpuffer	
 					if len(buf_events) == 0:							# keine Events (mehr)
 						xbmcgui.Dialog().notification("Zeitpuffer", "ohne weitere Sendung", icon,3000, sound=True)
-						KeyListener_run=False								# Stop bis Streamende, kein re-init
+						KeyListener_run=False							# Stop bis Streamende, kein re-init
+						PLog("KeyListener_stopped")
 						continue
 					
 					buf_events = sorted(buf_events, reverse=True)
@@ -3974,10 +3975,10 @@ def ShowSeekPos(player, url):
 #		self.getControl(401).setVisible(False) bleibt ohne Effekt
 # 	Daher Verwendung von Pointer.xml  (Mauszeiger) - belegt eine kleine
 #	Fläche i.d. linken oberen Ecke (statt DialogNotification.xml)	
+# 14.1.2023 ohne Timer (Aufruf sekündlich durch ShowSeekPos) 
 #
 class KeyListener(xbmcgui.WindowXMLDialog):
-	PLog("KeyListener:")
-	TIMEOUT = 1
+	PLog("KeyListener: started")
 	HEADING = 401
 	ACTION_MOUSE_LEFT_CLICK = 100
 	ACTION_MOUSE_RIGHT_CLICK = 101
@@ -4005,15 +4006,12 @@ class KeyListener(xbmcgui.WindowXMLDialog):
 		else:		
 			code = action.getButtonCode()
 			self.key = None if code == 0 else str(code)
-			self.close()
+		self.close()
 
 	@staticmethod
 	def record_key():
 		dialog  = KeyListener()
-		timeout = Timer(KeyListener.TIMEOUT, dialog.close)
-		timeout.start()
 		dialog.doModal()
-		timeout.cancel()
 		key = dialog.key
 		del dialog
 		return key
@@ -4060,10 +4058,6 @@ def get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime):
 		
 	return buf_events, event_end
 #----------------------------------------------------------------
-####################################################################################################
-# experimentelle Funktion thread_getsubtitles einschl. vtt_convert archiviert
-#	in ../m3u8_download,Untertitel/Untertitel/thread_getsubtitles.py
-####################################################################################################
 
 
 
