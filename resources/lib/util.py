@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>72</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.10.2023
+# 	<nr>73</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.10.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3930,7 +3930,8 @@ def ShowSeekPos(player, url):
 				key = KeyListener.record_key()							# pressed_key: string
 				PLog("key: " + str(key))								# ev. pausieren mit Blank?
 #				if key == "61475" or key == "61467":					# Taste # oder r. Maustaste (self.key)
-				if (key >= "61488" and key <= "61497") or (key == "61475" or key == "61467"): # einschl. 0-9
+#				if (key >= "61488" and key <= "61497") or (key == "61475" or key == "61467"): # einschl. 0-9
+				if key == "61475" or key == "61467" or key == "61448":
 					line=""												# Liste Events im Zeitpuffer	
 					if len(buf_events) == 0:							# keine Events (mehr)
 						xbmcgui.Dialog().notification("Zeitpuffer", "ohne weitere Sendung", icon,3000, sound=True)
