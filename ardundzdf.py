@@ -55,7 +55,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>148</nr>										# Numerierung für Einzelupdate
+# 	<nr>149</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.6'
 VDATE = '17.10.2023'
 
@@ -8254,7 +8254,6 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 		pagenr = 1
 	path = ZDF_Search_PATH % (query, str(pagenr)) 
 	PLog(path)
-	path = transl_umlaute(path)
 	
 	page, msg = get_page(path=path, do_safe=False)	# +-Zeichen für Blank nicht quoten
 	if s_type == 'Bilderserien':	# 'ganze Sendungen' aus Suchpfad entfernt:
