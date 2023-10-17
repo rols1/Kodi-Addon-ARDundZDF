@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>147</nr>										# Numerierung für Einzelupdate
+# 	<nr>148</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.6'
-VDATE = '08.10.2023'
+VDATE = '17.10.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7782,7 +7782,8 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 # einzelne ZDF-Rubrik (Film, Serie,  Comedy & Satire,  Politik & Gesellschaft, ..)
 # Cluster-Objekte > 1: Dict-Ablage mit DictID je Cluster -> PageMenu
 # einz. Cluster-Objekt: Auswertung Teaser -> wieder hierher, ohne Dict
-# 01.10.2023 Auswertung recommendation-Inhalte (ohne Cache, DictID leer)
+# 01.10.2023 Auswertung recommendation-Inhalte (ohne Cache, DictID leer), dabei 
+#	Verzicht auf {bookmarks}-Urls ("Das könnte Dich interessieren", kodinerds Post 3.134)
 #
 def ZDF_RubrikSingle(url, title, homeID=""):								
 	PLog('ZDF_RubrikSingle: ' + title)
@@ -7860,17 +7861,24 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 		PLog("walk_cluster: %d" % len(clusterObject))					
 		for jsonObject in clusterObject:
 			typ = jsonObject["type"]
-			title=""
+			title=""; name=""
 			if "name" in jsonObject:							# kann fehlen oder leer sein
-				title = jsonObject["name"]			
-			if not title:						
+				title = jsonObject["name"]
+			if not title:										# z.B. type=teaserContent						
 				title = title_org
-			if title in title_org:								# Selbstreferenz
-				continue
 			title = repl_json_chars(title)
+			
 			if typ == "videoCarousel":
 				title = "[B]Highlights[/B]: %s" % title
-
+			if typ == "teaserContent":							# Teaser
+				if name == "":
+					try:
+						name = jsonObject["teaser"][0]["titel"] # Titel 1. Teaser
+					except Exception as exception:
+						PLog("json_error: " + str(exception))
+						name = title
+				title = "[B]Teaser[/B]: %s" % name
+	
 			urlid = url.split("/")[-1]
 			urlkey = "%s#cluster#%d" % (url, cnt)				# dto			
 			tag = "Folgeseiten"
@@ -7885,7 +7893,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 				img = R(ICON_DIR_FOLDER)
 				if "reference" in jsonObject:
 					ref_url = jsonObject["reference"]["url"]
-					if '{bookmarks}' in ref_url:				# skip personenbezogene Inhalte
+					if '{bookmarks}' in ref_url:				# skip personenbezogene Inhalte, s.o.
 						PLog("skip_bookmarks_url:" + title)
 						continue
 					DictID=""
@@ -8084,7 +8092,7 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 	if not maxWidth:				# Teaserbild, Altern. 1280 für Video
 		maxWidth=840
 	multi=True; verf=""; url=""; stream=""; scms_id=""; now_live=""
-	headline=""; 
+	headline=""; avail=""
 	season=""; episode=""			# episodeNumber, seasonNumber
 	
 	if "url" in obj:
@@ -8130,18 +8138,29 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 				img=imageObject["url"];
 	
 	dur=''
-	if("length" in obj) or typ == "livevideo":					# ein. Video / Livestream
+	if("length" in obj) or typ == "video" or typ == "livevideo": # ein. Video / Livestream
 		multi = False
 		sec=""; fsk="none"; geo="none"; 
 		if "length" in obj:
 			sec = obj["length"]
 		if sec:
 			dur = time.strftime('%H:%M Std.', time.gmtime(sec))	
+		if sec == "" and "infoline" in obj:						# z.B "45 min · Doku" in letzte chance
+			if "title" in obj["infoline"]:
+				PLog(str(obj["infoline"]))
+				dur = obj["infoline"]["title"]
+				PLog("dur: " + dur)
+
 		avail=''	
 		if("offlineAvailability" in obj):
 			avail = obj["offlineAvailability"]
 			avail =time_translate(avail, day_warn=True)			# day_warn: noch x Tage!
 			avail = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % avail
+		if avail == "":			
+			if "label" in obj:									# z.B. "Noch 3 Stunden" in letzte chance
+				avail = obj["label"]
+				avail = u"[B][COLOR darkgoldenrod]%s[/COLOR][/B]" % avail
+		
 		if "fsk" in obj:	
 			fsk = obj["fsk"]
 		if fsk == "none":
@@ -8166,7 +8185,6 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 					PLog("descr_new: " + descr_new[:60] )
 					descr = descr_new
 					
-	
 	if validchars:												# unterdrückt bei Arabic
 		summ = valid_title_chars(descr)
 	else:
@@ -8175,7 +8193,9 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 	if multi:
 		tag = "Folgeseiten"
 	else:
-		tag = "Dauer: %s | FSK: %s | GEO: %s | %s" % (dur, fsk, geo, avail)
+		tag = "Dauer: %s | FSK: %s | GEO: %s" % (dur, fsk, geo)
+		if avail:												# kann fehlen
+			tag = "%s | %s" % (tag, avail)
 		if typ == "livevideo":									# z.B. Events
 			try:
 				screentxt = obj["infoline"]["screenReaderTexts"]
