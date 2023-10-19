@@ -55,9 +55,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>150</nr>										# Numerierung für Einzelupdate
+# 	<nr>151</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.6'
-VDATE = '17.10.2023'
+VDATE = '19.10.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3195,6 +3195,15 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportHub", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
+	title = u"ARD Livestreams 3. Bundesliga"					# Experiment:  3. Liga Livestreams	
+	tag = u"Live-Spiele der 3. Bundesliga im Free-TV\nBild: MDR.de"
+	summ = "Streamquelle: ARD Event Streams in livesenderTV.xml"
+	img = "https://cdn.mdr.de/sport/fussball_3l/logo-dritte-liga-114_v-variantBig16x9_wm-true_zc-ecbbafc6.jpg?version=19213"
+	title=py2_encode(title)
+	fparams="&fparams={'title': '%s', 'img': '%s'}" % (quote(title), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportLiga3", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag, summary=summ)	
+	
 	title = u"ARD Event Streams (eingeschränkt verfügbar)"		# ARD Event Streams im Haupt-PRG	
 	tag = u"Event Streams von BR, MDR, NDR, WDR | eingeschränkt verfügbar"
 	img = R("tv-livestreams.png")
@@ -3365,6 +3374,111 @@ def ARDSportWDRArchiv():
 		fparams=fparams, tagline=tag)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
+#---------------------------------------------------------------------------------------------------
+# Live-Spiele Liga3 - Spiele-Liste von liga3-online.de/live-spiele/,
+#	verknüpft mit individueller EventStreamliste (vorerst livesenderTV.xml)
+# 
+def ARDSportLiga3(title, img, sender=""): 
+	PLog("ARDSportLiga3: " + sender)
+	
+	if sender == "":													# ohne sender -> Liste Spielepaarungen
+		path = "https://www.liga3-online.de/live-spiele/"
+		page, msg = get_page(path)
+		if page == '':	
+			msg1 = "Fehler in ARDSportLiga3:" 
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return
+		
+		li = xbmcgui.ListItem()
+		li = home(li, ID='ARD Neu')						# Home-Button
+		
+		page = stringextract("tbody>", "</tbody>", page)# 1. Tabelle (1.: Mobilversion)
+		PLog(page[:80])
+		rows = blockextract("<tr", page, "</tr>")
+		for row in rows:
+			row = str(blockextract("<td", row, "</td>"))
+			PLog(row)
+			col0=stringextract('column-1">', '<', row)
+			col1=stringextract('column-2">', '<', row)
+			col2=stringextract('column-3">', '<', row)
+			col3=stringextract('column-4">', '<', row)
+			col4=stringextract('column-5">', '<', row)
+				
+			nr = col0
+			date=""
+			if col1 and col2:
+				date = "Spiel am: [B]%s, %s[/B]" % (col1, col2)				# Datum, Zeit
+			meet = col3
+			sender = col4
+			title = meet
+			tag = "Datum/Zeit des Spiels noch nicht bekannt "
+			tag = "Bild: MDR.de\n%s" % tag
+			if date:
+				tag = date
+			summ = "Spieltag: [B]%s[/B] | Livestream bei [B]%s[/B]" % (nr, sender)
+			if sender == "":								# Leerzeilen
+				continue
+			
+			PLog("Satz15:"); PLog(meet)
+			fparams="&fparams={'title': '%s', 'img': '%s', 'sender': '%s'}" % (quote(title), quote(img), sender)
+			addDir(li=li, label=title, action="dirList", dirID="ARDSportLiga3", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ)
+				
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	# -----------------------------------------							# mit Sender -> Streamauswahl	
+	else:
+		sender1=sender; sender2="xxx"
+		if "/" in sender:
+			sender1, sender2 = sender.split("/")			# 2 Sender möglich
+		PLog("sender1: %s, sender2: %s" % (sender1, sender2))		
+		playlist = RLoad(PLAYLIST)							# lokale XML-Datei (Pluginverz./Resources)
+		playlist = blockextract('<channel>', playlist)
+		listname = "ARD Event Streams"
+		mylist=""; 
+		for i in range(len(playlist)):						# gewählte Channel extrahieren
+			item = playlist[i] 
+			name =  stringextract('<name>', '</name>', item)
+			PLog(name)
+			if name.startswith(listname):	
+				mylist =  playlist[i]
+				break
+		PLog("mylist: " + mylist[:60])
+		
+		streamlist=[]; title_list=[]						# gewählte(n) Sender filtern
+		itemlist = blockextract('<item>', mylist)
+		for item in itemlist:
+			title = stringextract('<title>', '</title>', item)
+			# PLog(title)
+			if title.startswith(sender1.strip()) or title.startswith(sender2.strip()):
+				url = stringextract('<link>', '</link>', item)
+				img = stringextract('<thumbnail>', '</thumbnail>', item)
+				if img.startswith("http") == False:			# extern od. lokal?
+					img = R(img)
+				streamlist.append("%s##%s##%s" % (title, url, img)) 
+				title_list.append(title)
+		PLog("title_list: " + str(title_list))
+		if len(streamlist) == 0:
+			msg1 = "ARDSportLiga3: %s" % sender
+			msg2 = "keine Streams zu %s gefunden" % sender
+			xbmcgui.Dialog().notification(msg1,msg2,img,2000,sound=True)
+			
+
+		ret = xbmcgui.Dialog().select(u"Stream auswählen", title_list, preselect=0) # Dialog
+		if ret >= 0:										# Auswahl?
+			stream = streamlist[ret]
+		else:
+			return
+
+		# hier direkter Start, um bei Fehlschlag die Streamliste sofort wieder
+		#	aufrufen zu können
+		PLog(stream)
+		title, url, img = stream.split("##")				# Liste -> Kodi
+		Plot = "Falls der Stream nicht funktioniert, bitte die Streamliste durchprobieren."
+
+		PlayVideo(url=url, title=title, thumb=img, Plot=Plot, live="")
+		return
 	
 #---------------------------------------------------------------------------------------------------
 # Untermenüs Tor des Monats
