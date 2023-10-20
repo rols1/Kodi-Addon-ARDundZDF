@@ -40,6 +40,7 @@ import sys				# Plattformerkennung
 import shutil			# Dateioperationen
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
 import datetime, time
+from datetime import timedelta
 import json				# json -> Textstrings
 import string
 import importlib		# dyn. Laden zur Laufzeit, s. router
@@ -55,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>152</nr>										# Numerierung für Einzelupdate
+# 	<nr>153</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.6'
 VDATE = '19.10.2023'
 
@@ -3194,15 +3195,6 @@ def ARDSportWDR():
 		(quote(title), quote(path), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportHub", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
-
-	title = u"ARD Livestreams 3. Bundesliga"					# Experiment:  3. Liga Livestreams	
-	tag = u"Live-Spiele der 3. Bundesliga im Free-TV\nBild: MDR.de"
-	summ = "Streamquellen (umschaltbar): ARD Livestreams oder ARD Event Streams"
-	img = "https://cdn.mdr.de/sport/fussball_3l/logo-dritte-liga-114_v-variantBig16x9_wm-true_zc-ecbbafc6.jpg?version=19213"
-	title=py2_encode(title)
-	fparams="&fparams={'title': '%s', 'img': '%s'}" % (quote(title), quote(img))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportLiga3", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag, summary=summ)	
 	
 	title = u"ARD Event Streams (eingeschränkt verfügbar)"		# ARD Event Streams im Haupt-PRG	
 	tag = u"Event Streams von BR, MDR, NDR, WDR | eingeschränkt verfügbar"
@@ -3377,7 +3369,9 @@ def ARDSportWDRArchiv():
 	
 #---------------------------------------------------------------------------------------------------
 # Live-Spiele Liga3 - Spiele-Liste von liga3-online.de/live-spiele/,
-#	verknüpft mit individueller EventStreamliste (vorerst livesenderTV.xml)
+#	verknüpft wahlweise mit individueller EventStreamliste (vorerst 
+#	livesenderTV.xml) oder regionalen Livestreams
+# ext. Aufrufer: SenderLiveListe
 # Aufruf: 	ohne sender -> List Spielepaarungen, mit sender -> Streamauswahl, play
 #			mit source -> Umschalter Streamquellen (Eventstreams, Livestreams)
 # 
@@ -3386,6 +3380,7 @@ def ARDSportLiga3(title, img, sender="", source=""):
 	PLog(source)
 	title_org=title
 	
+	# -----------------------------------------							# mit source -> Umschalter	
 	if source:
 		if source == "Live":
 			Dict("store", "ARD_streamsource", "Event")
@@ -3402,13 +3397,25 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			msg2 = msg
 			MyDialog(msg1, msg2, '')	
 			return
+			
+	# -----------------------------------------							# mit Sender -> Streamauswahl	
 		
 		li = xbmcgui.ListItem()
 		li = home(li, ID='ARD Neu')						# Home-Button
 		
+		month = {"Januar":1, "Februar":2, u"März":3, "April":4, "Mai":5,	# Monat numerisch (strftime)
+           "Juni":6, "Juli":7, "August":8, "September":9, "Oktober":10, 
+           "November":11, "Dezember":12}
+	
 		page = stringextract("tbody>", "</tbody>", page)# 1. Tabelle (1.: Mobilversion)
 		PLog(page[:80])
 		rows = blockextract("<tr", page, "</tr>")
+		col0_pre=""; col1_pre=""; col2_pre=""
+		now = EPG.get_unixtime(onlynow=True)							# unix-sec passend zu TotalTime, LastSeek
+		now = int(now)
+		now_dt = datetime.datetime.fromtimestamp(now)
+		my_year = now_dt.strftime("%Y")
+		date_format = "%Y-%m-%dT%H:%M:%SZ"
 		for row in rows:
 			row = str(blockextract("<td", row, "</td>"))
 			PLog(row)
@@ -3418,22 +3425,61 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			col3=stringextract('column-4">', '<', row)
 			col4=stringextract('column-5">', '<', row)
 				
+			if col0 == "": col0=col0_pre 								# Leerspalten ergänzen
+			if col1 == "": col1=col1_pre
+			if col2 == "": col2=col2_pre
+			col0_pre = col0; col1_pre = col1; col2_pre = col2;			# Backup Spalten 1-3
+
 			nr = col0
 			date=""
-			if col1 and col2:
-				date = "Spiel am: [B]%s, %s[/B]" % (col1, col2)				# Datum, Zeit
+			date = "Spiel am: [B]%s, %s[/B]" % (col1, col2)				# Datum, Zeit
 			meet = col3
 			sender = col4
 			title = meet
-			tag = "Datum/Zeit des Spiels noch nicht bekannt "
-			tag = "Bild: MDR.de\n%s" % tag
+			tag = "Bild: MDR.de\n" 
 			if date:
 				tag = date
 			summ = "Spieltag: [B]%s[/B] | Livestream bei [B]%s[/B]" % (nr, sender)
-			if sender == "":								# Leerzeilen
+			if sender == "":											# Leerzeilen
 				continue
-			
-			PLog("Satz15:"); PLog(meet)
+				
+			try:
+				live=False
+				monat = col1.split(",")[1]; monat = monat.split(".")[1]	# Samstag, 04. November, 14:00 Uhr
+				my_month = month[monat.strip()]							# Juli -> 7
+				my_day = re.search(u'(\d+)', date.split(",")[1]).group(1)
+				my_time = col2.split(" ")[0]							# 14:00 Uhr
+				my_date = "%s-%s-%sT%s:00Z" % (my_year, my_month, my_day, my_time)
+
+				#if "Dynamo" in meet:					# Debug
+				#	my_date = "2023-10-20T21:40:00Z"
+
+				my_start = datetime.datetime.fromtimestamp(time.mktime(time.strptime(my_date, date_format)))
+				verf = time_translate(my_date, add_hour=False, day_warn=True)
+				title_date = "%2s.%s.%s" % (my_day, my_month, my_year)
+				
+				my_end = my_start + timedelta(hours=2)
+				my_start = time.mktime(my_start.timetuple())
+				my_start = int(my_start)
+				my_end = time.mktime(my_end.timetuple())
+				my_end = int(my_end)
+				PLog("now: %d, my_start: %d my_end: %d" % (now, my_start, my_end)) 
+				if now >= my_start and now <= my_end:
+					live=True				
+			except Exception as exception:
+				my_date=""; title_date=""; verf=""; live=False
+				PLog("my_date_error: " + str(exception))
+				
+			if title_date:
+				title = "%s: %s" % (title_date, title)
+			if "| NOCH" in verf:
+				only = verf.split("|")[1]
+				tag = "%s | [B]%s[/B]" % (tag, only)	
+			if live:													# fett
+				title = "[B]%s: %s[/B]" % (title_date, title)
+				tag = "[B]LIVE !!!\n[B]%s" % tag 
+				
+			PLog("Satz15:"); PLog(meet);  PLog(my_date)
 			fparams="&fparams={'title': '%s', 'img': '%s', 'sender': '%s'}" % (quote(title), quote(img), sender)
 			addDir(li=li, label=title, action="dirList", dirID="ARDSportLiga3", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ)
@@ -6355,7 +6401,9 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 	PLog(len(liste))
 	
 	for element in liste:
-		name = stringextract('<name>', '</name>', element)
+		name = stringextract('<name>', '</name>', element)				# Titel
+		tag = stringextract('<tag>', '</tag>', element)					# Zusatzinfos
+		summ = stringextract('<summ>', '</summ>', element)
 		if 'ARD Audio Event Streams' in name:							# -> Radio-Livestreams			
 			continue
 		img = stringextract('<thumbnail>', '</thumbnail>', element) # channel-thumbnail in playlist
@@ -6368,7 +6416,7 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 		name=py2_encode(name); 
 		fparams="&fparams={'title': '%s', 'listname': '%s', 'fanart': '%s'}" % (quote(name), quote(name), img)
 		addDir(li=li, label=name, action="dirList", dirID="SenderLiveListe", fanart=R(ICON_MAIN_TVLIVE), 
-			thumb=img, fparams=fparams)
+			thumb=img, fparams=fparams, tagline=tag, summary=summ)
 
 	laenge = SETTINGS.getSetting('pref_LiveRecord_duration')
 	if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
@@ -6829,6 +6877,7 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #-----------------------------------------------------------------------------------------------------
 # TV LiveListe - verwendet lokale Playlist livesenderTV.xml
+# Aufrufer: SenderLiveListePre
 # onlySender: Button nur für diesen Sender (z.B. ZDFSportschau Livestream für Menü
 #	ZDFSportLive)
 # 23.06.2020 lokale m3u8-Dateien in livesenderTV.xml sind entfallen
@@ -6878,10 +6927,17 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		else:
 			mediatype='video'
 
-	# abweichend - externe Funktion:
+	# abweichend - externe Funktion:					# channel in livesenderTV.xml
 	if u'Regional: WDR' in lname:						# Auswertung + Liste WDR Lokalzeit
 		url = "https://www1.wdr.de/fernsehen/livestream/lokalzeit-livestream/index.html" 
 		wdr_streamlinks = list_WDRstreamlinks(url)		# Webseite
+		return
+		
+	# abweichend - externe Funktion:					# channel in livesenderTV.xml
+	if u'3. Bundesliga' in lname:						# 3. Liga Livestream
+		title = u"ARD Livestreams 3. Bundesliga"
+		img = R("tv-liga3.png")			
+		ARDSportLiga3(title, img)
 		return
 		
 	# Zusatzbutton:

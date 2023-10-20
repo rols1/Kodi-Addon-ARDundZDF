@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>73</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.10.2023
+# 	<nr>74</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.10.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2065,11 +2065,11 @@ def time_translate(timecode, add_hour=True, day_warn=False, add_hour_only=""):
 						if "day" in dif:	
 							day = re.search(u'(\d+) day', dif).group(1)
 							PLog("day: %s" % str(day))
-							if  int(day) <= 6:					# erst ab 1 Woche warnen
+							if  int(day) <= 7:					# erst ab 1 Woche warnen
 								ret_ts = "%s | NOCH %s TAG(E)!" % (ret_ts, day)
 						else:									# nur noch Stunden: 16:32:05.225575
 							std = dif.split(".")[0]				# cut .225575
-							ret_ts = "%s | Noch %s Stunden!" % (ret_ts, std)
+							ret_ts = "%s | NOCH %s Stunden!" % (ret_ts, std)
 							
 					except Exception as exception:
 						PLog("day_warn_error: " + str(exception))
@@ -3929,9 +3929,7 @@ def ShowSeekPos(player, url):
 					
 				key = KeyListener.record_key()							# pressed_key: string
 				PLog("key: " + str(key))								# ev. pausieren mit Blank?
-#				if key == "61475" or key == "61467":					# Taste # oder r. Maustaste (self.key)
-#				if (key >= "61488" and key <= "61497") or (key == "61475" or key == "61467"): # einschl. 0-9
-				if key == "61475" or key == "61467" or key == "61448":
+				if key == "61475" or key == "61467" or key == "61448":	# Taste #, r. Maustaste, Taste Back
 					line=""												# Liste Events im Zeitpuffer	
 					if len(buf_events) == 0:							# keine Events (mehr)
 						xbmcgui.Dialog().notification("Zeitpuffer", "ohne weitere Sendung", icon,3000, sound=True)
@@ -4007,7 +4005,7 @@ class KeyListener(xbmcgui.WindowXMLDialog):
 			self.key = "61467"				# hier für rechte Maustaste 
 		else:		
 			code = action.getButtonCode()
-			PLog("code: " + str(code))					# 0-9: 61488 - 61497
+			#PLog("code: " + str(code))					# Debug
 			self.key = None if code == 0 else str(code)
 			
 		self.close()
