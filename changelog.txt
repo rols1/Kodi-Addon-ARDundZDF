@@ -10,6 +10,24 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.10.2023 4.8.7
+			time_translate (util): Mitnutzung durch ShowSeekPos (add_hour_only=True).
+			Sendungsnavigation im Zeitpuffer bei ARD-Livestreams (util): neue Funktionen
+			KeyListener und get_ARD_LiveEPG, Anpassung ShowSeekPos, Wiki aktualisiert.
+			ZDF_get_content: Verfügbarkeitswarnung ergänzt, wo Datum für time_translate
+			fehlt (Beiträge "Letzte Chance"), Dauer aus obj["infoline"]["title"] ergänzt,
+			wo obj["length"] fehlt, typ=="video" ergänzt (length als Krit. für Video kann
+			fehlen (joschi77 vom 15.10.)
+			ZDF_RubrikSingle: Auswertung Teaser ergänzt (type=teaserContent).
+			ZDF_Search: Umwandlung der Umlaute im Suchpfad wieder entfernt (Umlaute führten
+			bis V3.8.8 zum Url-Error, s. 13.06.), quote(py2_encode(query)) für PYTHON2.
+			SenderLiveListe (TV-Livestreams): Verknüpfung 3. Ligaspiele mit Live-/Event-
+			Streams (Forum Weri), neue Funktionen ARDSportLiga3 und ARDSportgetEventlist,
+			neuer channel in livesenderTV.xml.
+			time_translate (util): "Noch %s Stunden!" -> "NOCH %s Stunden!", Warnspanne von
+			6 auf 7 vergrößert (Nutzung durch ARDSportLiga3).
+			SearchARDundZDFnew (ARDnew): Auswertung Suchergebnis '0' statt ''.
+
 08.10.2023 4.8.6
 			AudioStartLive (Audiothek): py2_decode(Plot) - relevant für PYTHON2.
 			time_translate (Modul util): re.search-Code für Verfügbarkeitswarnung ver-
@@ -19,7 +37,7 @@ CHANGE HISTORY
 			ShowFavs: Notification bei fehlenden Inhalten (Favoriten/Merkliste).
 			Main: im Infotext des Buttons Merkliste Setting-Hinweis hinzugefügt, falls
 			externe Merkliste gewählt. 
-			addDir: li.setInfo für Kodi V20 (Nexus) ersetzt durch li.getVideoInfoTag 
+			addDir (util): li.setInfo für Kodi V20 (Nexus) ersetzt durch li.getVideoInfoTag 
 			(Trigger KODI_MAJOR, Zusatz-Infos in addDir).
 			ARDSportWDR: Basketball-WM aus Startseite entfernt.
 			arte-Modul: Anpassungen an api-Version 4 (error für V3) in EPG_Today (Link)
@@ -220,7 +238,7 @@ CHANGE HISTORY
 			Anzeige laufender Downloads (Haupt-PRG): Leichencheck für Lockdatei DL_CHECK.
 			Module funk, zdfMobile: entfernt wie angekündigt, Bereinigung settings.xml +
 			Icons. Hauptmenü angepasst, Verweise in ShowFavs entfernt, Anpassung in
-			Watchdog_Plex-2, README + Wicki aktualisiert.
+			Watchdog_Plex-2, README + Wiki aktualisiert.
 			
 21.05.2023 4.7.3
 			ZDF_PageMenu: Link zu KiKANiNCHEN realisiert (Typ "externalUrl" im
@@ -460,7 +478,7 @@ CHANGE HISTORY
 			"zeigt Abspielstatus für Videos".
 			PlayVideo(Modul util): seek für ARD-Livestream bei Nutzung des inputstream-
 			Addons entfernt (Zeit-Puffer wird bei Leia, Matrix, Nexus korrekt gesetzt). 
-			README, Wicki: aktualisiert (kodinerds-Links, Bilder).
+			README, Wiki: aktualisiert (kodinerds-Links, Bilder).
 			Modul EPG: flexiblere Importanweisung für util-Modul (Haupt-PRG/Kontextmenü),
 			notwendig für Kontext-Option "EPG".
 			Menü TV-Livestreams: ergänzt mit Kontext-Option "EPG", Anpassungen in addDir
@@ -807,7 +825,7 @@ CHANGE HISTORY
 			gespeichert (Schutz vor Cache-Bereinigung).
 			PLAYLIST-Modul: Anpassungen für HLS- und MP4-Listen, einschl. Nutzung
 			des strm-Moduls, Anpassungen in addDir (util), get_streamurl (strm) und
-			get_Source_Funcs_ID (strm), Anpassungen im Github-Wicki (neue Seite 10).
+			get_Source_Funcs_ID (strm), Anpassungen im Github-Wiki (neue Seite 10).
 			ShowFavs (Merkliste): opt. Trennung zwischen Ordner- und Modul-Bezeichnung
 			im Infotext.
 			
@@ -1382,7 +1400,7 @@ CHANGE HISTORY
 			ZDF_Verpasst_Filter.
  
 15.10.2021 4.0.7
-			Github-Wicki: Aktualisierung "Settings Allgemein", Zif. 2.2 "Einzelupdate 
+			Github-Wiki: Aktualisierung "Settings Allgemein", Zif. 2.2 "Einzelupdate 
 			(Dateien und Module)".
 			update_single (Modul EPG): Haupt-PRG in die Liste übernommen,  Anpassung 
 			Pfad-Bildung der Github-Dateien, in Startdialog Größe der Dateiliste 
@@ -1927,7 +1945,7 @@ CHANGE HISTORY
 			gabe getTime() + getTotalTime(), try/exception für getTime() + Exception-Be-
 			handlung für nicht verfügb. Videos in PlayMonitor, 3-stellige Numerierung der
 			Liste, Code für "Status auf neu setzen" angepasst (play_list), Aktualisierung 
-			Wicki.
+			Wiki.
 			Einzelupdate livesenderTV.xml: Url "SR Fernsehen" aktualisiert.
 			Parseplaylist: Doppler im Infotext entfernt (betraf Livesender ARD Neu).
 			SingleSendung (ARD Classic): Bez. "Geoblock" für geoblock-Param. ergänzt.
@@ -2099,7 +2117,7 @@ CHANGE HISTORY
 			Nutzung von get_summary_pre vereinheitlicht.
 			ZDF_get_content: Anpassung an geänderte Formate bei Hochkant-Videos.
 			Settings Download Einstellungen: Default für Option "alle verfuegbaren 
-			Video-Qualitaeten anbieten" auf true gesetzt (entspr. Wicki).
+			Video-Qualitaeten anbieten" auf true gesetzt (entspr. Wiki).
 			Settings Modul funk: 2 verlorengegangene Settings wiederhergestellt (Video-
 			einstellung, Sortierung).
 			Kontextmenü "Sofortstart EIN / Downl. AUS": Umstellung auf direkte Wertzuweisung 
@@ -2380,7 +2398,7 @@ not on Github 3.5.4
 			
 10.10.2020 3.4.6 Renovierung "Recording TV-Live"-Bereich
 			Settings "Recording TV-Live": "Aufnehmen" -> "Aufnehmen mit EPG"  (bessere 
-			Abgrenzung zum sofortigen Recording), Bild Wicki geändert, Info-Texte in
+			Abgrenzung zum sofortigen Recording), Bild Wiki geändert, Info-Texte in
 			SenderLiveListePre + EPG_Sender angepasst.
 			Modul EPG: Cache-Nutzung für die einzelnen tvtoday-Seiten (ca. 900KB/Seite).
 			Modul EPG: Erweiterung um Hintergrundfunktion thread_getepg
@@ -2679,7 +2697,7 @@ not on Github	3.2.0
 			Aufnahme-Tools'.
 			DownloadTools: Infos zum Bearbeiten-Button: Anz. Dateien, Größe Verz. + Dateien.
 			EPG_ShowAll: Listobjekt für img in EPG-Rückgabe abgefangen (Ursache n.b.).
-			Addon-Wicki (Github) aktualisiert.
+			Addon-Wiki (Github) aktualisiert.
 			livesenderTV.xml: alternative Streamurl für den Sender DasErste verwendet (An-
 			passung  in get_sort_playlist, relevant zum Aufnahmen).
 
@@ -2761,7 +2779,7 @@ not on Github	3.1.2
 			einschl. EPG_ID für tvtoday.de (BadenTV fehlt).
 			TV-Livestreams/Privat neue Sender (BadenTV, muenchen.tv, Leipzig Fernsehen, 
 			Rhein-Neckar Fernsehen).
-			TV-Livestreams/Privat: Logos der priv. Sender von Wickipedia auf Github
+			TV-Livestreams/Privat: Logos der priv. Sender von Wikipedia auf Github
 			bereitgestellt (nach Bearbeitung für Kodi).
 			Laden ext. Bild-Links in livesenderTV.xml ermöglicht: EPG_Sender, 
 			TVLiveRecordSender,  EPG_ShowAll.
@@ -3016,7 +3034,7 @@ not on Github	2.9.4
 			Beiträge im Titel kennzeichnen" geändert (Audio-Beiträge -> Ordner),
 			Funktion Watch umbenannt in Watch_items.
 			ShowFavs (Haupt-PRG): Einträge im Info-Menü gekürzt + aktualisiert.
-			Wicki (Github): Texte + Bilder für Erweiterung merkliste aktualisiert.   
+			Wiki (Github): Texte + Bilder für Erweiterung merkliste aktualisiert.   
 
 16.04.2020	2.8.7	
 			Main: Fix msg1 "Github ist nicht erreichbar" (L-Call entfernt, hier obsolet).
@@ -3084,7 +3102,7 @@ not on Github	2.8.2
 
 25.03.2020	2.7.9	
 			ShowFavs (Merkliste, Favoriten): optionale Sortierung, Settings angepasst,
-			Github-Wicki aktualisiert.
+			Github-Wiki aktualisiert.
 			Kika_VideosBeliebt (Modul childs): stitle bei Fehlen ersetzt durch img_title.
 			Main_XL (Modul TagesschauXL): Streams in summary farbig markiert (Live:grün,
 			letzte Sendung:rot).
@@ -3401,7 +3419,7 @@ not on Github	2.4.6	get_teaserElement (<- ZDFRubrikSingle): strip ctitle2 (\n wu
 
 09.01.2020	2.4.5	Merkliste, Haupt-PRG: Codeverlagerung für add/delete in Script merkliste.py 
 			(ermöglicht Verbleib im Listing), Anpassungen in ShowFavs (Haupt-PRG), addDir
-			(Modul util) und Wicki.	
+			(Modul util) und Wiki.	
 
 not on Github	2.4.4	Modul phoenix: Austausch Titel/Subtitel in GetContent (Titel meistens 
 			identisch + erschwert Download + Merkliste).
@@ -3835,7 +3853,7 @@ not on Github	1.8.9	ARDSearchnew: neuen sha256Hash ermittelt und eingesetzt (von
 			Modul 3Sat (get_teaserElement): Fix title (transl_json), z.B. Fête.
 			Modul 3Sat: cacheToDisc-Statements (=True) eingefügt in Sendereihe_Sendungen, 
 			Rubriken, Rubrik_Single (alle Listings), Verpasst, SendungenDatum.
-			Repo Github: Fertigstellung Wicki (Settings)	
+			Repo Github: Fertigstellung Wiki (Settings)	
 
 06.08.2019	1.8.6	Überarbeitung EPG:
 			EPG_ShowSingle (EPG  einzeln): Fix descr ('\n' -> '||') - Videos mit

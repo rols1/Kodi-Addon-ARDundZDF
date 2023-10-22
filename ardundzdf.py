@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>153</nr>										# Numerierung für Einzelupdate
-VERSION = '4.8.6'
-VDATE = '19.10.2023'
+VERSION = '4.8.7'
+VDATE = '22.10.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3401,7 +3401,7 @@ def ARDSportLiga3(title, img, sender="", source=""):
 	# -----------------------------------------							# mit Sender -> Streamauswahl	
 		
 		li = xbmcgui.ListItem()
-		li = home(li, ID='ARD Neu')						# Home-Button
+		#li = home(li, ID='ARD Neu')									# entfällt (SenderLiveListe <-)
 		
 		month = {"Januar":1, "Februar":2, u"März":3, "April":4, "Mai":5,	# Monat numerisch (strftime)
            "Juni":6, "Juli":7, "August":8, "September":9, "Oktober":10, 
@@ -3432,27 +3432,26 @@ def ARDSportLiga3(title, img, sender="", source=""):
 
 			nr = col0
 			date=""
-			date = "Spiel am: [B]%s, %s[/B]" % (col1, col2)				# Datum, Zeit
+			date = "Spiel: %s, %s" % (col1, col2)							# Datum, Zeit
 			meet = col3
 			sender = col4
 			title = meet
 			tag = "Bild: MDR.de\n" 
-			if date:
-				tag = date
-			summ = "Spieltag: [B]%s[/B] | Livestream bei [B]%s[/B]" % (nr, sender)
+			tag = "%s%s" % (tag,  date)
+			summ = "Spieltag: %s | Livestream bei %s" % (nr, sender)
 			if sender == "":											# Leerzeilen
 				continue
 				
 			try:
-				live=False
+				live=False; past=False
 				monat = col1.split(",")[1]; monat = monat.split(".")[1]	# Samstag, 04. November, 14:00 Uhr
 				my_month = month[monat.strip()]							# Juli -> 7
 				my_day = re.search(u'(\d+)', date.split(",")[1]).group(1)
 				my_time = col2.split(" ")[0]							# 14:00 Uhr
 				my_date = "%s-%s-%sT%s:00Z" % (my_year, my_month, my_day, my_time)
 
-				#if "Dynamo" in meet:					# Debug
-				#	my_date = "2023-10-20T21:40:00Z"
+				#if "Rot-Weiss" in meet:					# Debug
+				#	my_date = "2023-10-21T21:10:00Z"
 
 				my_start = datetime.datetime.fromtimestamp(time.mktime(time.strptime(my_date, date_format)))
 				verf = time_translate(my_date, add_hour=False, day_warn=True)
@@ -3466,18 +3465,28 @@ def ARDSportLiga3(title, img, sender="", source=""):
 				PLog("now: %d, my_start: %d my_end: %d" % (now, my_start, my_end)) 
 				if now >= my_start and now <= my_end:
 					live=True				
+				if my_end < now:										# Vergangenheit
+					past=True				
 			except Exception as exception:
 				my_date=""; title_date=""; verf=""; live=False
 				PLog("my_date_error: " + str(exception))
 				
-			if title_date:
+			if title_date:											
 				title = "%s: %s" % (title_date, title)
-			if "| NOCH" in verf:
-				only = verf.split("|")[1]
-				tag = "%s | [B]%s[/B]" % (tag, only)	
-			if live:													# fett
-				title = "[B]%s: %s[/B]" % (title_date, title)
-				tag = "[B]LIVE !!!\n[B]%s" % tag 
+			if past:													# Vergangenheit: grau
+				title = "[COLOR grey]%s: %s[/COLOR]" % (title_date, title)
+				tag = "%s\nSpiel ist vorbei." % tag 
+				summ = "%s" % summ
+			else:														# Zukunft + Live
+				if "| NOCH" in verf:
+					only = verf.split("|")[1]
+					tag = "%s | %s" % (tag, only)
+				if live:												# fett
+					title = "[B]%s: %s[/B]" % (title_date, title)
+					tag = "!!! LIVE !!!\n%s" % tag 
+	
+				tag = "[B]%s[/B]" % tag	
+				summ = "[B]%s[/B]" % summ
 				
 			PLog("Satz15:"); PLog(meet);  PLog(my_date)
 			fparams="&fparams={'title': '%s', 'img': '%s', 'sender': '%s'}" % (quote(title), quote(img), sender)
@@ -3549,12 +3558,15 @@ def ARDSportLiga3(title, img, sender="", source=""):
 
 		# live= False verhindert Streamuhrzeit (Klemmer bei einigen Streams) 
 		PlayVideo(url=url, title=title, thumb=img, Plot=Plot, live=False)
-		xbmc.sleep(2000)									# Stream kann sonst klemmen
+		xbmc.sleep(500)									# Klemmerschutz
 		return
 	
 #---------------------------------------------------------------------------------------------------
+# 21.10.2023 Url-Check hinzugefügt
+#
 def ARDSportgetEventlist(sender1, sender2): 
 	PLog("ARDSportgetEventlist:")
+	PLog(sender1); PLog(sender2);
 
 	playlist = RLoad(PLAYLIST)							# lokale XML-Datei (Pluginverz./Resources)
 	playlist = blockextract('<channel>', playlist)
@@ -3579,8 +3591,18 @@ def ARDSportgetEventlist(sender1, sender2):
 			img = stringextract('<thumbnail>', '</thumbnail>', item)
 			if img.startswith("http") == False:			# extern od. lokal?
 				img = R(img)
-			streamlist.append("%s##%s##%s" % (title, url, img)) 
-			title_list.append(title)
+			streamlist.append("%s##%s##%s" % (title, url, img))
+			 
+			msg1 = "Stream-Check gestartet" 
+			msg2 = "Sender: %s" % sender1
+			if sender2 !=  "xxx":						# leer-Marke?
+				msg2 = "%s | %s" % (msg2, sender2) 
+			xbmcgui.Dialog().notification(msg1,msg2,img,2000,sound=False)
+
+			if url_check(url, caller='ARDSportgetEventlist', dialog=False):
+				title_list.append(title + " | Check: OK")
+			else:
+				title_list.append(title + " | Check: Error")
 	PLog("title_list: " + str(title_list))	
 
 	return streamlist, title_list

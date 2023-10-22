@@ -2408,7 +2408,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	PLog("nextPage: "  + nextPage);
 
 	query_lable=py2_encode(query_lable); searchResult=py2_encode(searchResult);
-	if searchResult == '':												# Sprung hierher
+	if searchResult == '0':												# Sprung hierher
 		label = "[B]ZDF[/B] | nichts gefunden zu: %s | neue Suche" % query_lable
 		title="Suche in ARD und ZDF"
 		title=py2_encode(title);

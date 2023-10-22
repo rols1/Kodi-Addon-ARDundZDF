@@ -3807,7 +3807,7 @@ def open_addon(addon_id, cmd):
 #		Timeout und "not" erforderlich. Wieder entfernt und durch while-Schleife
 #		ersetzt.
 #    
-def ShowSeekPos(player, url):
+def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	PLog('ShowSeekPos: ' + url)		
 	import resources.lib.EPG as EPG
 	
