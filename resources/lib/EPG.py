@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>10</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.03.2023
+# 	<nr>11</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.10.2023
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -503,6 +503,7 @@ def get_unixtime(day_offset=None, onlynow=False):
 		
 	return now,today,today_5Uhr,nextday,nextday_5Uhr
 #----------------------------------------------------------------  
+#################################################################  
 		
 if "'context'" in str(sys.argv):									# Aufruf Kontextmenü
 	params = str(sys.argv)
@@ -520,15 +521,22 @@ if "'context'" in str(sys.argv):									# Aufruf Kontextmenü
 			break
 		cnt=cnt+1
 	EPG_rec = EPG_rec[cnt:]
+	PLog(str(EPG_rec[cnt:]))
 
 	lines=[]
 	for rec in EPG_rec:
-		sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6];	# alle Indices s. EPG
-		sname = sname.split("|")[2]								# So | JETZT: 15:55 | Weltcup-Skispringen
-		sname = sname.replace("[/B]", "")
-		sname = "%s | %s" % (vonbis,sname)
-		lines.append("[B]%s[/B]\n%s\n" % (sname, summ))
-				
+		try:
+			sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6];	# alle Indices s. EPG
+			if sname.count("|") > 1:
+				sname = sname.split("|")[2]							# So | JETZT: 15:55 | Weltcup-Skispringen
+			sname = sname.replace("[/B]", "")
+			sname = "%s | %s" % (vonbis,sname)
+			lines.append("[B]%s[/B]\n%s\n" % (sname, summ))
+		except Exception as exception:
+			PLog("EPG_rec_error: " + str(exception))	
+
+	if len(lines) == 0:
+		title = "%s | keine EPG-Daten gefunden"	% title
 	lines =  "\n".join(lines)
 	xbmcgui.Dialog().textviewer(title , lines ,usemono=True)
 		
