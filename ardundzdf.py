@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>153</nr>										# Numerierung für Einzelupdate
+# 	<nr>154</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.7'
-VDATE = '22.10.2023'
+VDATE = '23.10.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3374,7 +3374,9 @@ def ARDSportWDRArchiv():
 # ext. Aufrufer: SenderLiveListe
 # Aufruf: 	ohne sender -> List Spielepaarungen, mit sender -> Streamauswahl, play
 #			mit source -> Umschalter Streamquellen (Eventstreams, Livestreams)
-# 
+# Hinw.: inputstream.adaptive nicht mit Kodi < 19.* verwenden
+#	Quelle liga3-online.de in utf-8 (Umlaute-Problem mit Kodi < 19.*)
+#
 def ARDSportLiga3(title, img, sender="", source=""): 
 	PLog("ARDSportLiga3: " + sender)
 	PLog(source)
@@ -3389,6 +3391,8 @@ def ARDSportLiga3(title, img, sender="", source=""):
 		ARDSportLiga3(title, img, sender="", source="")
 		return
 		
+	# -----------------------------------------								
+		
 	if sender == "":													# ohne sender -> Liste Spielepaarungen
 		path = "https://www.liga3-online.de/live-spiele/"
 		page, msg = get_page(path)
@@ -3398,8 +3402,6 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			MyDialog(msg1, msg2, '')	
 			return
 			
-	# -----------------------------------------							# mit Sender -> Streamauswahl	
-		
 		li = xbmcgui.ListItem()
 		#li = home(li, ID='ARD Neu')									# entfällt (SenderLiveListe <-)
 		
@@ -3525,6 +3527,9 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			ard_streamlinks = Dict("load", "ard_streamlinks")
 			# Format ard_streamlinks s. get_ARDstreamlinks,
 			# Ard-Sender s. Debuglog (ardline:)
+			ard_streamlinks=py2_encode(ard_streamlinks)
+			sender1=py2_encode(sender1); sender2=py2_encode(sender2);
+			
 			for link in ard_streamlinks.split("\n"):			# Abgleich ARD-Url, Zuordnung linkid
 				title = link.split("|")[0]						# up_low, da sender1 + 2 groß
 				if up_low(title).startswith(sender1) or up_low(title).startswith(sender2):
@@ -9814,6 +9819,8 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 # HBBTV Videoquellen (nur ZDF)	
 # 17.05.2023 Auswertung vorerst	nur "main"|"deu" und "ad"|"deu"
 # ähnlich in m3satSourcesHBBTV (["vidurls"] statt ["streams"])
+# 23.10.2023 Ausfilterung DGS bei Sofortstart (ungeeignet für
+#	Sortierung in PlayVideo_Direct).
 #
 def ZDFSourcesHBBTV(title, scms_id):
 	PLog('ZDFSourcesHBBTV:'); 
@@ -9851,6 +9858,10 @@ def ZDFSourcesHBBTV(title, scms_id):
 						if q in streamObject:
 							add = "%s_%s_%s_%s" % (form[:4], "main", "deu", q)
 							url = streamObject[q]["url"]
+							if "_dgs_" in url:				# DGS nicht bei Sofortstart
+								if SETTINGS.getSetting('pref_video_direct') == 'true':
+									continue
+								add = "%s_%s_%s_%s_%s" % (form[:4], "main", "deu", "DGS", q)
 							line = "%s##%s##%s" % (title, add, url)
 							stream_list.append(line)
 	except Exception as exception:
@@ -9858,7 +9869,7 @@ def ZDFSourcesHBBTV(title, scms_id):
 		stream_list=[]
 			
 	PLog(len(stream_list))
-	HBBTV_List = form_HBBTV_Streams(stream_list, title)	# Formatierung
+	HBBTV_List = form_HBBTV_Streams(stream_list, title)		# Formatierung
 		
 	PLog(len(HBBTV_List))
 	PLog(str(HBBTV_List))
@@ -9950,9 +9961,8 @@ def get_form_streams(page):
 	#	AQTitle, ASS/SSA, CC, JACOsub, MicroDVD, MPsub, OGM, PJS, RT, SMI, SRT, SUB, VOBsub, VPlayer
 	#	Für Kodi eignen sich beide ZDF-Formate xml + vtt, umbenannt in *.sub oder *.srt
 	#	VTT entspricht SubRip: https://en.wikipedia.org/wiki/SubRip
-#	subtitles = stringextract('"captions"', '"documentVersion"', page)	# Untertitel ermitteln, bisher in Plex-
 	subtitles = stringextract('"captions"', ']', page)	# Untertitel ermitteln, bisher in Plex-
-	subtitles = blockextract('"class"', subtitles)						# Channels nicht verwendbar
+	subtitles = blockextract('"class"', subtitles)					# Channels nicht verwendbar
 	PLog('subtitles: ' + str(len(subtitles)))
 	sub_path = ''													# Format: "local_path|url", Liste 
 	if len(subtitles) == 2:											#			scheitert in router
