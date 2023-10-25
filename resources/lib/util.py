@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>74</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.10.2023
+# 	<nr>75</nr>										# Numerierung für Einzelupdate
+#	Stand: 25.10.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3246,7 +3246,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 		
 	if 'auto' not in myqual:							# Abgleich width mit Setting
 		mywidth = myqual.split('x')[0]
-		for item in Stream_List:
+		for item in Stream_List:			
 			width="320"									# Default (u.a. für LibreElec 20.0-ALPHA1
 			res = item.split('**')[2]
 			if '0x0' in res:							# Auflösung 0x0 (vermutl. Audio)
@@ -3806,10 +3806,14 @@ def open_addon(addon_id, cmd):
 #	monitor.waitForAbort() blockiert - für die while-Schleife sind mind. 1 sec
 #		Timeout und "not" erforderlich. Wieder entfernt und durch while-Schleife
 #		ersetzt.
-#    
+#
 def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	PLog('ShowSeekPos: ' + url)		
 	import resources.lib.EPG as EPG
+
+	marks="0.00,6.66,6.66,13.2,19.8,19.8,27.4"			# @PvD  14.10.023
+	xbmcgui.Window(10000).setProperty("ardundzdf",marks)# control -> DialogSeekbar.xml
+	PLog(xbmcgui.Window(10000).getProperty("ardundzdf"))# OK
 	
 	icon=""												# -> Kodi's i-Symbol
 	now = EPG.get_unixtime(onlynow=True)				# unix-sec passend zu TotalTime, LastSeek
@@ -3979,7 +3983,6 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 #
 class KeyListener(xbmcgui.WindowXMLDialog):
 	PLog("KeyListener: started")
-	HEADING = 401
 	ACTION_MOUSE_LEFT_CLICK = 100
 	ACTION_MOUSE_RIGHT_CLICK = 101
 
