@@ -10,6 +10,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+29.10.2023 4.8.8
+			ARDSportLiga3: Python2-Anpassung (py2_encode für ard_streamlinks, sender1,
+			sender2, ohne Bearbeitung der Umlaute).
+			ZDF-HBBTV: Kennzeichnung DGS-Streams - Anpassung ZDFSourcesHBBTV
+			test_downloads: Verhinderung Downloads bei Livestreams (Bsp. Audiothek:
+			liveradio.swr.de/../play.aac).
+			Audiothek: Login-Banner ausgefiltert im Menü Entdecken.
+			EPG via Kontextmenü (Modul EPG): unvollständige Daten und Exceptions 
+			abgefangen (index-error).
+			ZDF_PageMenu: Menü 'Mehr zu funk' ausgeblendet (-> skip_list), Links
+			verweisen auf www.funk.net/ und presse.funk.net/ (nicht mehr unterstützt).
+			Infos + Tools: zusätzl. Button "Refresh: Addon-Cache für TV-Livestream-Quellen",
+			neue Funktion refresh_streamlinks(util), Anpassungen in get_*streamlinks neues
+			Icon tv-livestreams_grey.png
+			EPG: Prüfung Codeverbesserung (Ablage xml-Format vs. 2-Dim-Array) - negativ,
+			relativ lange Ladedauer wg. 12-Tage-EPG für Recording. Wicki aktualisiert
+			(Seite 01 Zif.5 und 5.1, Seite 04 Zif. 9).
+			EPG_ShowSingle: akt. Datum in Info-Text eingefügt.
+
 22.10.2023 4.8.7
 			time_translate (util): Mitnutzung durch ShowSeekPos (add_hour_only=True).
 			Sendungsnavigation im Zeitpuffer bei ARD-Livestreams (util): neue Funktionen
@@ -27,7 +46,7 @@ CHANGE HISTORY
 			time_translate (util): "Noch %s Stunden!" -> "NOCH %s Stunden!", Warnspanne von
 			6 auf 7 vergrößert (Nutzung durch ARDSportLiga3).
 			SearchARDundZDFnew (ARDnew): Auswertung Suchergebnis '0' statt ''.
-
+			
 08.10.2023 4.8.6
 			AudioStartLive (Audiothek): py2_decode(Plot) - relevant für PYTHON2.
 			time_translate (Modul util): re.search-Code für Verfügbarkeitswarnung ver-

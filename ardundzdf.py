@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>154</nr>										# Numerierung für Einzelupdate
-VERSION = '4.8.7'
-VDATE = '23.10.2023'
+# 	<nr>155</nr>										# Numerierung für Einzelupdate
+VERSION = '4.8.8'
+VDATE = '29.10.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -551,10 +551,10 @@ def Main():
 	#	freischalten nach Posting im Kodi-Forum
 
 	tag = '[B]Infos, Tools und Filter zu diesem Addon[/B]'					# Menü Info + Tools
-	summ= u'- Ausschluss-Filter bearbeiten (nur für Beiträge von ARD und ZDF)'
+	summ= u'- Ausschluss-Filter bearbeiten'
 	summ= u"%s\n- Merkliste bereinigen" % summ
-	summ= u'%s\n- Suchwörter bearbeiten (nur für die gleichzeitige Suche in ARD Mediathek und ZDF Mediathek)' % summ
-
+	summ= u'%s\n- Suchwörter bearbeiten' % summ
+	summ= u'%s\n- Refresh TV-Livestream-Quellen' % summ
 	summ = "%s\n-%s" % (summ, "Download- und Aufnahme-Tools")
 	if SETTINGS.getSetting('pref_strm') == 'true':
 		summ = "%s\n-%s" % (summ, "strm-Tools")
@@ -642,6 +642,14 @@ def InfoAndFilter():
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordTools", 
 		fanart=R(FANART), thumb=R('icon_searchwords.png'), tagline=tag, fparams=fparams)	
+			
+	title = u"Refresh: Addon-Cache für TV-Livestream-Quellen" 
+	ays = int(SETTINGS.getSetting('pref_tv_store_days'))
+	tag = u"ARD- und ZDF-TV-Livestream-Quellen aktualisieren.\n"
+	tag = u"%sDas eingestellte Setting ([B]%s Tage[/B]) bleibt unverändert" % (tag, days)
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="refresh_streamlinks",
+		fanart=R(FANART), thumb=R('tv-livestreams_grey.png'), tagline=tag, fparams=fparams)	
 			
 	# hier ohne Abhängigkeit vom Setting pref_use_downloads:
 	tagline = u'[B]Downloads und Aufnahmen[/B]\n\nVerschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
@@ -1180,7 +1188,7 @@ def ZDF_Teletext_Table(li, body, aktpg):
 	for i, hl in enumerate(html_lines[2:]):								# ab Zeile 2
 		line=""; h1=""; left=""; leftp=""; center=""; right=""
 		hl = hl.strip()
-		PLog("%d. %s" %(i, hl))
+		PLog("%d. %s" %(i, hl[:80]))
 		if hl.startswith('<h1>'):
 			line = stringextract('<h1>',  '</', hl)
 			lines.append(cleanhtml(line))
@@ -1193,10 +1201,15 @@ def ZDF_Teletext_Table(li, body, aktpg):
 			h2 = stringextract('headline_normal">',  '</h2>', hl)
 			lines.append(cleanhtml(h2))
 			continue
-		if hl.startswith('<p class="copy" >'):							# Einzelzeile
-			txt = stringextract('copy" >',  '</p>', hl)
-			lines.append(cleanhtml(txt))
+		if hl.startswith('<p class="copy" >'):							# Tochterzeile o. Link
+			pre_line = lines[len(lines)-1]
+			PLog("pre_line: " + pre_line); 
+			new_line = cleanhtml(hl).rjust(len(pre_line)-5, ' ')
+			PLog("pre_line: %s" % pre_line)
+			PLog("new_line: %s" % new_line)
+			lines.append(new_line)	
 			continue
+			
 		if 	hl.startswith("<a href="):
 			PLog("<a href=:")
 			part_list = html_lines[i+2:]
@@ -1237,8 +1250,8 @@ def ZDF_Teletext_Table(li, body, aktpg):
 			PLog(line)
 			lines.append(line)	
 			i=new_ind+1													# neuer Index
-			continue
-		
+			continue			
+			 
 		if 	hl.startswith('<div class="link_button_a"'):				# ohne Link, z.B. Trennzeile bei A-Z
 			PLog("link_button_a:")
 			part_list = html_lines[i+2:]
@@ -2584,7 +2597,7 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			cluster_id =  stringextract('"id":"', '"', item)
 			title = stringextract('"title":"', '"', item)				# Cluster-Titel	deutsch
 			cluster_type = stringextract('"type":"', '"', item)			# Cluster-Titel	engl.
-			if title == '' or  title == None:
+			if title == '' or  title == None or  title == "Login-Banner":
 				continue
 			if title == 'Stage' or u'für dich' in title:				# -> Highlights s. Step 2 / pers. Inhalte
 				continue
@@ -4912,6 +4925,12 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 				Format = 'Podcast ' 			
 			else:	
 				Format = 'Video '								# .mp4, .webm, .. 
+			if url.endswith('.aac') and "/event" in url:		# z.B. liveradio.swr.de
+				msg1 = u"vermutlich Livestream - Download nicht möglich!" 
+				msg2 = title_org
+				MyDialog(msg1, msg2, "")
+				return
+			
 			#lable = 'Download ' + Format + ' | ' + quality
 			lable = 'Download' + ' | ' + quality				# 09.01.2021 Wegfall Format aus Platzgründen 
 			dest_path = SETTINGS.getSetting('pref_download_path')
@@ -6743,8 +6762,7 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 		MyDialog(msg1, msg2, '')
 		return li
 		
-	today_human = 'ab ' + EPG_rec[0][7]
-			
+	today_human = 'ab ' + EPG_rec[0][7]		
 	for rec in EPG_rec:
 		href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6];
 		starttime=rec[0]; endtime=rec[8]; 
@@ -6762,7 +6780,7 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 			summ = "[B]LAUFENDE SENDUNG![/B]\n\n%s" % summ
 			title = sname
 		PLog("title: " + title)
-		tagline = 'Zeit: ' + vonbis
+		tagline = 'Datum: %s\nZeit: %s' % (today_human, vonbis)
 		descr = summ.replace('\n', '||')		# \n aus summ -> ||
 		title=py2_encode(title); stream_url=py2_encode(stream_url);
 		img=py2_encode(img); descr=py2_encode(descr);
@@ -6776,7 +6794,7 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 	max = 12
 	pagenr = int(pagenr) + 1
 	if pagenr < max: 
-		summ = u'nächster Tag'
+		summ = u'nächster Tag (%d von %d)' % (pagenr+1, max) 
 		name=py2_encode(name); stream_url=py2_encode(stream_url);
 		fparams="&fparams={'ID': '%s', 'name': '%s', 'stream_url': '%s', 'pagenr': %s}" % (ID, quote(name),
 			quote(stream_url), pagenr)
@@ -7055,7 +7073,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		# --												# Cache 
 				
 		
-		PLog('Mark2')
+		PLog('Mark2:')
 		# Spezialbehandlung für N24 in SenderLiveResolution - Test auf Verfügbarkeit der Lastserver (1-4)
 		# EPG: ab 10.03.2017 einheitlich über Modul EPG.py (vorher direkt bei den Sendern, mehrere Schemata)
 		# 								
@@ -7917,7 +7935,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			
 			# skip: personalisierten Inhalte, Addon-Menüs:
 			skip_list = ['Alles auf einen Blick', u'Das könnte Dich', 'Direkt zu',
-						'Mein Programm', 'Deine', 'KiKA live sehen', 'Weiterschauen'
+						'Mein Programm', 'Deine', 'KiKA live sehen', 'Weiterschauen',
+						'Mehr zu funk'
 						 ]
 			skip=False						
 			if title == '':
@@ -9816,8 +9835,9 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	return played_direct
 	
 #-------------------------
-# HBBTV Videoquellen (nur ZDF)	
+# HBBTV-MP4 Videoquellen (nur ZDF)	
 # 17.05.2023 Auswertung vorerst	nur "main"|"deu" und "ad"|"deu"
+#	mit MP4-Links (s. form_list)
 # ähnlich in m3satSourcesHBBTV (["vidurls"] statt ["streams"])
 # 23.10.2023 Ausfilterung DGS bei Sofortstart (ungeeignet für
 #	Sortierung in PlayVideo_Direct).

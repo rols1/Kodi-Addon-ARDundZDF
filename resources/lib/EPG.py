@@ -11,7 +11,7 @@
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.10.2023
+#	Stand: 28.10.2023
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -89,7 +89,7 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 				PLog("EPG_%s noch aktuell" % ID)
 			
 		if os.path.exists(fname) == False:			# n.v. oder soeben entfernt
-			rec = EPG(ID=ID, load_only=True)		# Seite laden
+			rec = EPG(ID=ID, load_only=True)		# Seite laden + speichern
 		xbmc.sleep(1000)							# Systemlast verringern
 		
 	xbmcgui.Dialog().notification("EPG-Download", "abgeschlossen",icon,3000)
@@ -298,8 +298,9 @@ def update_single(PluginAbsPath):
 # 	mode: 		falls 'OnlyNow' dann JETZT-Sendungen
 # 	day_offset:	1,2,3 ... Offset in Tagen (Verwendung zum Blättern in EPG_ShowSingle)
 # 	Aufruf: EPG_ShowAll (Haupt-PRG), thread_getepg
+#	
 def EPG(ID, mode=None, day_offset=None, load_only=False):
-	PLog('EPG ID: ' + ID)
+	PLog('EPG_ID: ' + ID)
 	PLog(mode)
 	CacheTime = 43200								# 12 Std.: (60*60)*12
 	url="http://www.tvtoday.de/programm/standard/sender/%s.html" % ID
@@ -307,15 +308,13 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 	PLog(url)
 
 	page = Dict("load", Dict_ID, CacheTime=CacheTime)
-	if page == False:								# Cache miss - vom Server holen
+	if page == False:													# Cache miss - vom Server holen
 		page, msg = get_page(path=url)				
-		pos = page.find('tv-show-container js-tv-show-container')	# ab hier relevanter Inhalt
+		pos = page.find('tv-show-container js-tv-show-container')		# ab hier relevanter Inhalt
 		page = page[pos:]
-		Dict("store", Dict_ID, page) 				# Seite -> Cache: aktualisieren			
+		Dict("store", Dict_ID, page) 									# Seite -> Cache: aktualisieren			
 	# PLog(page[:500])	# bei Bedarf
 
-	pos = page.find('tv-show-container js-tv-show-container')	# ab hier relevanter Inhalt
-	page = page[pos:]
 	PLog(len(page))
 	if load_only:									
 		return ''
@@ -339,10 +338,10 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 	# PLog("neuer Satz:")
 	EPG_rec = []
 	for i in range (len(liste)):		# ältere + jüngere Sendungen in Liste - daher Schleife + Zeitabgleich	
-		# PLog(liste[i])					# bei Bedarf
+		# PLog(liste[i])				# bei Bedarf
 		rec = []
 		starttime = stringextract('data-start-time=\"', '\"', liste[i]) # Sendezeit, Bsp. "1488827700" (UTC)
-		if starttime == '':									# Ende (Impressum)
+		if starttime == '':												# Ende (Impressum)
 			break
 		endtime = stringextract('data-end-time=\"', '\"', liste[i])	 	# Format wie starttime
 		href = stringextract('href=\"', '\"', liste[i])					# wenig zusätzl. Infos
@@ -353,25 +352,25 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		sname = unescape(sname)
 		stime = stringextract('class=\"h7 time\">', '</p>', liste[i])   # Format: 06:00
 		stime = stime.strip()
-		summ = get_summ(liste[i])								# Beschreibung holen
+		summ = get_summ(liste[i])										# Beschreibung holen
 		summ = unescape(summ)
 		
-		sname = stime + ' | ' + sname							# Titel: Bsp. 06:40 | Nachrichten
+		sname = stime + ' | ' + sname									# Titel: Bsp. 06:40 | Nachrichten
 
-		s_start = 	datetime.datetime.fromtimestamp(int(starttime))	# Zeit-Konvertierung UTC-Startzeit
-		s_startday =  s_start.strftime("%A") 					# Locale’s abbreviated weekday name
+		s_start = 	datetime.datetime.fromtimestamp(int(starttime))		# Zeit-Konvertierung UTC-Startzeit
+		s_startday =  s_start.strftime("%A") 							# Locale’s abbreviated weekday name
 		
 		von = stime
 		bis = datetime.datetime.fromtimestamp(int(endtime))
 		bis = bis.strftime("%H:%M") 
 		vonbis = von + '-' + bis
-		# PLog("diff_%d: %s, %s-%s" % (i, now, starttime, endtime))			# bei Bedarf
+		# PLog("diff_%d: %s, %s-%s" % (i, now, starttime, endtime))		# bei Bedarf
 		
 		# Auslese - nur akt. Tag 05 Uhr (einschl. Offset in Tagen ) + Folgetag 05 Uhr:
-		if starttime < today_5Uhr:				# ältere verwerfen
+		if starttime < today_5Uhr:										# ältere verwerfen
 			# PLog(starttime); PLog(nextday_5Uhr)
 			continue
-		if starttime > nextday_5Uhr:			# jüngere verwerfen
+		if starttime > nextday_5Uhr:									# jüngere verwerfen
 			# PLog(starttime); PLog(nextday_5Uhr)
 			continue
 					
@@ -379,17 +378,17 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		if now >= starttime and now < endtime:
 			# PLog("diffnow_%d: %s, %s-%s" % (i, now, starttime, endtime))	# bei Bedarf
 			# Farb-/Fettmarkierung bleiben im Kontextmenü erhalten (addDir):
-			sname = "[B]JETZT: %s[/B]" % sname_org	# JETZT: fett 
-			PLog(sname); PLog(img)				# bei Bedarf
-			if mode == 'OnlyNow':				# aus EPG_ShowAll - nur aktuelle Sendung
-				rec = [starttime,href,img,sname,stime,summ,vonbis]  # Index wie EPG_rec
+			sname = "[B]JETZT: %s[/B]" % sname_org						# JETZT: fett 
+			PLog(sname); PLog(img)
+			if mode == 'OnlyNow':										# aus EPG_ShowAll - nur aktuelle Sendung
+				rec = [starttime,href,img,sname,stime,summ,vonbis]  	# Index wie EPG_rec
 				# PLog(rec)
 				PLog('EPG_EndOnlyNow')
-				return rec						# Rest verwerfen - Ende		
+				return rec												# Rest verwerfen - Ende		
 		
 		iWeekday = transl_wtag(s_startday)
-		sname = iWeekday[0:2] + ' | ' + sname	# Wochentag voranstellen
-		if endtime < now:						# vergangenes: grau markieren
+		sname = iWeekday[0:2] + ' | ' + sname							# Wochentag voranstellen
+		if endtime < now:												# vergangenes: grau markieren
 			sname = "[COLOR grey][B]%s[/B][/COLOR]" % sname_org
 
 		# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis, 
@@ -398,8 +397,7 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		rec.append(starttime);rec.append(href); rec.append(img); rec.append(sname);	# Listen-Element
 		rec.append(stime); rec.append(summ); rec.append(vonbis); rec.append(today_human);
 		rec.append(endtime)
-		EPG_rec.append(rec)
-										# Liste Gesamt (2-Dim-Liste)
+		EPG_rec.append(rec)												# Liste Gesamt (2-Dim-Liste)
 	
 	EPG_rec.sort()						# Sortierung	
 	PLog(len(EPG_rec)); PLog('EPG_End')

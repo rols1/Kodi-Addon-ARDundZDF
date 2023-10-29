@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>75</nr>										# Numerierung für Einzelupdate
-#	Stand: 25.10.2023
+# 	<nr>76</nr>										# Numerierung für Einzelupdate
+#	Stand: 28.10.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2536,6 +2536,16 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 	return summ
 	
 #-----------------------------------------------
+# aktualisiert die TV-Livestream-Quellen unabhängig
+#	vom Setting
+# Aufruf: InfoAndFilter
+def refresh_streamlinks():
+	PLog('refresh_streamlinks:')
+	get_ARDstreamlinks(skip_log=True, force=True)
+	get_ZDFstreamlinks(skip_log=True, force=True)
+	get_IPTVstreamlinks(skip_log=True, force=True)
+	return
+#-----------------------------------------------
 # ARD-Links s. get_ARDstreamlinks
 # Sender: ZDF, ZDFneo, 3sat, Phoenix, KiKA, ZDFinfo.
 #
@@ -2556,15 +2566,15 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 # Mehrkanal-Streamlinks seit Aug. 2020 - die enth. Audiolinks in 
 #	Kodi nicht getrennt verwertbar. 
 #-----------------------------------------------
-def get_ZDFstreamlinks(skip_log=False):
+def get_ZDFstreamlinks(skip_log=False, force=False):
 	PLog('get_ZDFstreamlinks:')
-	PLog(skip_log)
+	PLog(skip_log); PLog(force)
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
 	PLog("days: %d" % days)
 	CacheTime = days*86400						# Default 1 Tag
 	#days=0	# Debug
 
-	if days:									# skip CacheTime=0
+	if days and force == False:					# skip CacheTime=0
 		page = Dict("load", 'zdf_streamlinks', CacheTime=CacheTime)
 		if len(str(page)) > 100:					# bei Error nicht leer od. False von Dict
 			if skip_log == False:
@@ -2642,16 +2652,16 @@ def get_ZDFstreamlinks(skip_log=False):
 # 01.12.2021 erweitert um Liste für Untertitel-Links
 # 17.02.2021 Auswertung publicationService/name statt
 #	longTitle
-def get_ARDstreamlinks(skip_log=False):
+def get_ARDstreamlinks(skip_log=False, force=False):
 	PLog('get_ARDstreamlinks:')
-	PLog(skip_log)
+	PLog(skip_log); PLog(force)
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
 	PLog("days: %d" % days)
-	CacheTime = days*86400						# Default 1 Tag
+	CacheTime = days*86400							# Default 1 Tag
 	#days=0	# Debug
 
 	ID = "ard_streamlinks"
-	if days:									# skip CacheTime=0
+	if days and force == False:						# skip CacheTime=0
 		page = Dict("load", ID, CacheTime=CacheTime)
 		page = py2_encode(page)
 
@@ -2712,16 +2722,16 @@ def get_ARDstreamlinks(skip_log=False):
 # holt Details von githubs iptv-Listen, falls
 #	livesenderTV.xml den Tag IPTVSource enthält
 #
-def get_IPTVstreamlinks(skip_log=False):
+def get_IPTVstreamlinks(skip_log=False, force=False):
 	PLog('get_IPTVstreamlinks:')
-	PLog(skip_log)
+	PLog(skip_log); PLog(force)
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
 	PLog("days: %d" % days)
 	CacheTime = days*86400							# Default 1 Tag
 	#days=0	# Debug
 
 	ID = "iptv_streamlinks"
-	if days:										# skip CacheTime=0
+	if days and force == False:						# skip CacheTime=0
 		page = Dict("load", ID, CacheTime=CacheTime)
 		page = py2_encode(page)
 
@@ -3746,10 +3756,10 @@ def open_addon(addon_id, cmd):
 	return
 	
 #----------------------------------------------------------------
-# Zeigt Abspielposition inputstream.adaptive als Zeitangabe
-# Keine Beschränkung auf HLS-Videos 
+# Zeigt bei Livestreams die Abspielposition von inputstream.adaptive 
+#	als Zeitangabe
 # Aufruf: PlayAudio (direkt, indirekt)
-# Player vor Aufruf bereits aktiviert (s. Player_Subtitles:)
+# Player vor Aufruf bereits aktiviert (s. PlayAudio->Player_Subtitles:)
 # notification-Aufruf zu ungenau für float-Werte.
 # ZDF-Werte beim Start: 
 #		Pufferanzeige: Wert1 / Wert2 ->
@@ -3786,10 +3796,9 @@ def open_addon(addon_id, cmd):
 #		diese Streams korrekt am Pufferende, puffern dann aber in der 
 #		waitForAbort-Schleife endlos. Dabei geben sie korrekte play_time- und
 #		TotalTime-Werte zurück und verhindern so die Buffering-Erkennung.
-#		Gibt man vor der Schleife einige Sek.
-#		Sync-Zeit, fallen sie auf TotalTime 1 od. 2 zurück - praktisch wird
-#		ein korrekter Start angetäuscht. 
-#		Dieses Streams hier nicht zugelassen (live="").
+#		Gibt man vor der Schleife einige Sek. Sync-Zeit, fallen sie auf 
+#		TotalTime 1 od. 2 zurück - praktisch wird ein korrekter Start angetäuscht. 
+#		Solche Streams hier beim Aufruf ausschließen (PlayVideo: live="").
 #	Allgemeine Problemlage: inputstream hat mit einigen Streams Syncprobleme
 #		(Video- und/oder Sound-Streams). Dies kann zu endlosem Bufern führen, 
 #		wenn das Addon nach Playerstart Funktionen des Players abfragt (getTime,
@@ -3804,8 +3813,7 @@ def open_addon(addon_id, cmd):
 #		getestet wurde mit den Defaultsettings.
 #	Bisher keine ffmpeg-Analyse für Eignung/Nichteignung von Streams
 #	monitor.waitForAbort() blockiert - für die while-Schleife sind mind. 1 sec
-#		Timeout und "not" erforderlich. Wieder entfernt und durch while-Schleife
-#		ersetzt.
+#		Timeout und "not" erforderlich.
 #
 def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	PLog('ShowSeekPos: ' + url)		
@@ -3849,10 +3857,11 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	if linkid:											# ARD-EPG für Zeitstrahl laden
 		buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 		event_end = int(event_end)
+		header = "Sendungen (r. Maustaste)"
 		txt = "Anzahl Sendungen: %d" % len(buf_events)
 		if len(buf_events) == 0:
 			txt = "KEINE weitere Sendung"
-		xbmcgui.Dialog().notification("Zeitpuffer", txt, icon,3000, sound=True)
+		xbmcgui.Dialog().notification(header, txt, icon,4000, sound=True)
 		KeyListener_run=True
 		
 	PLog("buf_events: %d" % len(buf_events))	
@@ -3860,7 +3869,7 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 
 	monitor = xbmc.Monitor()
 	LastBufTime = StartTime												# detect sync errors direkt
-	p_list=[]															# dto. im 3-sec-Rahmen 									
+	p_list=[]															# dto. im 3-sec-Rahmen 
 	while not monitor.waitForAbort(1):
 		if player.isPlaying():
 			show_time=False; syncfail=False
@@ -3893,7 +3902,7 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 				PLog("monitor_break_on_syncfail")
 				xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"Sync-Error - Abbruch", icon,3000, sound=True)
 				xbmc.sleep(2000)
-				break													# verhind. Blockade durch Buffering							
+				break													# verhind. Blockade durch Buffering
 			# ----------------------------------
 			
 			# regelm. Schwankung bei Livestreams 6-10 (empirisch):
