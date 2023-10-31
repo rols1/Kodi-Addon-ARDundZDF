@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>12</nr>										# Numerierung für Einzelupdate
+# 	<nr>13</nr>										# Numerierung für Einzelupdate
 #	Stand: 31.10.2023
 #	
  
@@ -318,7 +318,7 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 	
 	page = Dict("load", Dict_ID, CacheTime=CacheTime)
 	PLog(type(page))
-	if page == False:													# Cache miss - vom Server holen
+	if page == False or len(page) == 0:									# Cache miss - vom Server holen
 		page, msg = get_page(path=url)				
 	if 'str' in str(type(page)):										# Webseite
 		EPG_dict = get_data_web(page, Dict_ID)							# Web -> 2-dim-Array EPG_rec -> Dict					 
