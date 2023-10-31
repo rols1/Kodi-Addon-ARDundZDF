@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>155</nr>										# Numerierung für Einzelupdate
+# 	<nr>156</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.8'
-VDATE = '29.10.2023'
+VDATE = '31.10.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6762,16 +6762,19 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 		MyDialog(msg1, msg2, '')
 		return li
 		
-	today_human = 'ab ' + EPG_rec[0][7]		
 	for rec in EPG_rec:
+		# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis, 
+		#			7=today_human, 8=endtime:  
 		href=rec[1]; img=rec[2]; sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6];
-		starttime=rec[0]; endtime=rec[8]; 
+		starttime=rec[0]; today_human=rec[7]; endtime=rec[8]; 
 		start_end = ''										# Trigger K-Menü
 		if SETTINGS.getSetting('pref_epgRecord') == 'true':	
 			start_end = "%s|%s" % (starttime, endtime)		# Unix-Format -> ProgramRecord
 
 		if img.find('http') == -1:	# Werbebilder today.de hier ohne http://, Ersatzbild einfügen
 			img = R('icon-bild-fehlt.png')
+		PLog("sname2: " + sname)
+			
 		sname = unescape(sname)
 		title = sname
 		summ = unescape(summ)
@@ -6782,6 +6785,7 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 		PLog("title: " + title)
 		tagline = 'Datum: %s\nZeit: %s' % (today_human, vonbis)
 		descr = summ.replace('\n', '||')		# \n aus summ -> ||
+		
 		title=py2_encode(title); stream_url=py2_encode(stream_url);
 		img=py2_encode(img); descr=py2_encode(descr);
 		Sender=py2_encode(Sender);
@@ -6836,8 +6840,8 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 	start_cnt = int(offset) 						# Startzahl diese Seite
 	end_cnt = int(start_cnt) + int(rec_per_page)	# Endzahl diese Seite
 	
-	icon = R('tv-EPG-all.png')
-	xbmcgui.Dialog().notification("lade EPG-Daten",u"max. Anzahl: %d" % rec_per_page,icon,5000)
+	#icon = R('tv-EPG-all.png')						# interferiert mit thread_getepg
+	#xbmcgui.Dialog().notification("lade EPG-Daten",u"max. Anzahl: %d" % rec_per_page,icon,5000)
 	
 	PLog("walk_playlist")
 	for i in range(len(sort_playlist)):
@@ -6899,8 +6903,8 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-all.png'), 
 			thumb=img, fparams=fparams, summary=summ, tagline=tagline, start_end="Recording TV-Live")
 
-	icon = R('tv-EPG-all.png')
-	xbmcgui.Dialog().notification("EPG-Daten geladen", "",icon,2000)
+	#icon = R('tv-EPG-all.png')											# interferiert mit thread_getepg
+	#xbmcgui.Dialog().notification("EPG-Daten geladen", "",icon,2000)
 	
 	# Mehr Seiten anzeigen:
 	# PLog(offset); PLog(cnt); PLog(max_len);
@@ -6930,6 +6934,8 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 # 26.05.2022 ergänzt um Nutzung iptv_streamlinks für private Sender
 #	(link: IPTVSource)
 # 05.02.2023 addDir ergänzt mit EPG_ID für Kontextmenü
+# 08.10.2023 ard_streamlinks mit linkid ergänzt (Verwendung
+#	für programm-api.ard)
 #
 def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):			
 	# SenderLiveListe -> SenderLiveResolution (reicht nur durch) -> Parseplaylist (Ausw. m3u8)
@@ -7021,8 +7027,9 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	EPG_ID_old = ''											# Doppler-Erkennung
 	sname_old=''; stime_old=''; summ_old=''; vonbis_old=''	# dto.
 	summary_old=''; tagline_old=''
-	for element in liste:									# EPG-Daten für einzelnen Sender holen 	
-		img_streamlink=''									# Austausch Icon
+	for element in liste:									# Senderliste mit Links, ev. EPG (Setting)  	
+		img_streamlink=''; 									# Austausch Icon
+		linkid=""											# ARD-Sender
 		element = py2_decode(element)	
 		link = stringextract('<link>', '</link>', element) 
 		link = unescape(link)	
@@ -7047,12 +7054,13 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 				
 		if 'ARDSource' in link:								# Streamlink für ARD-Sender holen, Ermittlung
 			link=''											#	Untertitel ab Okt 2022 in PlayVideo
-			# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
+			# Zeile ard_streamlinks: "webtitle|href|thumb|tagline|linkid"
 			for line in ard_streamlinks:
 				PLog("ardline: " + line[:40])
 				items = line.split('|')
 				if up_low(title_sender) in up_low(items[0]): 
 					link = items[1]							# master.m3u8
+					linkid = items[-1]						# linkid für programm-api.ard
 					break
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
@@ -7070,10 +7078,10 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 					break
 			if link == '':
 				PLog('%s: Streamlink fehlt' % title_sender)
-		# --												# Cache 
-				
+		# --												# Cache 			
 		
 		PLog('Mark2:')
+		PLog("found: %s, linkid: %s" % (title_sender, linkid))
 		# Spezialbehandlung für N24 in SenderLiveResolution - Test auf Verfügbarkeit der Lastserver (1-4)
 		# EPG: ab 10.03.2017 einheitlich über Modul EPG.py (vorher direkt bei den Sendern, mehrere Schemata)
 		# 								
@@ -7088,13 +7096,12 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		PLog(EPG_ID)
 		# PLog(SETTINGS.getSetting('pref_use_epg')) 	# Voreinstellung: EPG nutzen? - nur mit Schema nutzbar
 		PLog('setting: ' + str(SETTINGS.getSetting('pref_use_epg')))
-		if SETTINGS.getSetting('pref_use_epg') == 'true':
+		if SETTINGS.getSetting('pref_use_epg') == 'true':		# hier nur aktuelle Sendung
 			# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis:
 			try:
 				rec = EPG.EPG(ID=EPG_ID, mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
-				if rec == '':								# Fehler, ev. Sender EPG_ID nicht bekannt
-					sname=''; stime=''; summ=''; vonbis=''
-				else:
+				sname=''; stime=''; summ=''; vonbis=''		# Fehler, ev. Sender EPG_ID nicht bekannt
+				if rec:								
 					sname=py2_encode(rec[3]); stime=py2_encode(rec[4]); 
 					summ=py2_encode(rec[5]); vonbis=py2_encode(rec[6])	
 			except:

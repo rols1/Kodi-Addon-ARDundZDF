@@ -5,13 +5,13 @@
 #	Zeitbereich	5 Uhr - 5 Uhr Folgetag
 #		Einteilung (tvtoday.de): 5-11, 11-14, 14-18, 18-20, 20-00, 00-05 Uhr  (hier nicht verwendet)
 #	Struktur:
-#		Container: tv-show-container js-tv-show-container
+#		Container: class="tv-show-container..
 #		Blöcke: <a href=" .. </a>
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.10.2023
+# 	<nr>12</nr>										# Numerierung für Einzelupdate
+#	Stand: 31.10.2023
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -46,16 +46,17 @@ SETTINGS 	= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_PATH	= SETTINGS.getAddonInfo('path')
 EPG_BASE 	= "http://www.tvtoday.de"
 
-
-# EPG im Hintergrund laden - Aufruf Haupt-PRG (Kopfbereich) abhängig von 
-#	Setting pref_epgpreload + Abwesenheit von EPGACTIVE (Setting
-#		"Recording TV-Live"/"EPG im Hintergrund laden ..") 
+########################################################################
+# thread_getepg: EPG im Hintergrund laden - Aufruf Haupt-PRG (
+#	Kopfbereich) abhängig von Setting pref_epgpreload + Abwesenheit 
+#		von EPGACTIVE (Setting "Recording TV-Live"/"EPG im Hintergrund 
+#		laden ..") 
 #	Startverzögerung 10 sec, 2 sec-Ladeintervall 
 #	Aktiv-Signal EPGACTIVE wird nach 12 Std. von
 #	 Haupt-PRG wieder entfernt.
 #	Dateilock nicht erf. - CacheTime hier und in EPG identisch
 # 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - entf. ab
-#	09.10.2021 s. update_single
+#	09.10.2021 siehe update_single
 #
 def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	PLog('thread_getepg:')
@@ -296,8 +297,16 @@ def update_single(PluginAbsPath):
 
 #-----------------------
 # 	mode: 		falls 'OnlyNow' dann JETZT-Sendungen
-# 	day_offset:	1,2,3 ... Offset in Tagen (Verwendung zum Blättern in EPG_ShowSingle)
+# 	day_offset:	1,2,3 ... Offset in Tagen (Verwendung zum Blättern in EPG_ShowSingle,
+#		Umrechnung in get_unixtime)
 # 	Aufruf: EPG_ShowAll (Haupt-PRG), thread_getepg
+#	30.10.2023 neues Konzept: Cacheablage 2-dim-EPG-Array pro Sender 
+#		statt Webseite, Tage-Offset (2-12) durch kompl. 12-Tage-Erfassung 
+#		gewährleistet. thread_getepg löscht die Array-Datei im Dict und
+#		stößt die Neuerfassung in EPG() an.
+#		EPG() entscheidet anhand des Formats der Dict-Datei die Auswertung
+#		als Array (type 'list') oder als Textdatei in get_data_web (soll
+#		korrekte Behandlung alter Cache-Dateien im Webformat verhindern).
 #	
 def EPG(ID, mode=None, day_offset=None, load_only=False):
 	PLog('EPG_ID: ' + ID)
@@ -306,64 +315,42 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 	url="http://www.tvtoday.de/programm/standard/sender/%s.html" % ID
 	Dict_ID = "EPG_%s" % ID
 	PLog(url)
-
+	
 	page = Dict("load", Dict_ID, CacheTime=CacheTime)
+	PLog(type(page))
 	if page == False:													# Cache miss - vom Server holen
 		page, msg = get_page(path=url)				
-		pos = page.find('tv-show-container js-tv-show-container')		# ab hier relevanter Inhalt
-		page = page[pos:]
-		Dict("store", Dict_ID, page) 									# Seite -> Cache: aktualisieren			
-	# PLog(page[:500])	# bei Bedarf
-
+	if 'str' in str(type(page)):										# Webseite
+		EPG_dict = get_data_web(page, Dict_ID)							# Web -> 2-dim-Array EPG_rec -> Dict					 
+	else:																# EPG_rec = type list 
+		EPG_dict = page	
 	PLog(len(page))
-	if load_only:									
-		return ''
-
-	liste = blockextract('href="', page)  
-	PLog(len(liste));	
 
 	# today.de verwendet Unix-Format, Bsp. 1488830442
 	now,today,today_5Uhr,nextday,nextday_5Uhr = get_unixtime(day_offset)# lokale Unix-Zeitstempel holen + Offsets
 	now_human = datetime.datetime.fromtimestamp(int(now))				# Debug: Übereinstimmung mit UTC, Timezone?	
 	now_human =  now_human.strftime("%d.%m.%Y, %H:%M:%S")				# deutsches Format
-	today_human = datetime.datetime.fromtimestamp(int(today_5Uhr))
-	today_human =  today_human.strftime("%d.%m.%Y, %H:%M Uhr")			# deutsches Format mit Offset (Datumanzeige ab ...)
-	
-	PLog('EPGSatz:')
-	PLog(now); PLog(now_human); PLog(today_human);
+	day_human = datetime.datetime.fromtimestamp(int(today_5Uhr))
+	day_human =  day_human.strftime("%d.%m.%Y")							# deutsches Datumformat für Offset
+	PLog('EPG_date_formats:')
+	PLog(now); PLog(now_human); PLog(day_human);
 	# PLog(today); PLog(today_5Uhr); PLog(nextday); PLog(nextday_5Uhr)	# bei Bedarf
 
 	# Ausgabe: akt. Tag ab 05 Uhr(Start) bis nächster Tag 05 Uhr (Ende)
-	#	
-	# PLog("neuer Satz:")
-	EPG_rec = []
-	for i in range (len(liste)):		# ältere + jüngere Sendungen in Liste - daher Schleife + Zeitabgleich	
-		# PLog(liste[i])				# bei Bedarf
+	EPG_rec=[]															# -> gefilterte Aufbereitung (Zeit, JETZT-Mark.)
+	for i in range (len(EPG_dict)):		# ältere + jüngere Sendungen in Liste - daher Schleife + Zeitabgleich	
 		rec = []
-		starttime = stringextract('data-start-time=\"', '\"', liste[i]) # Sendezeit, Bsp. "1488827700" (UTC)
-		if starttime == '':												# Ende (Impressum)
-			break
-		endtime = stringextract('data-end-time=\"', '\"', liste[i])	 	# Format wie starttime
-		href = stringextract('href=\"', '\"', liste[i])					# wenig zusätzl. Infos
-		img = stringextract('srcset="', '"', liste[i])
-		img = img.replace('159.', '640.')								# Format ändern "..4415_159.webp"
+		r = EPG_dict[i]
+		# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime,  
+		#			5=summ, 6=vonbis, 7=today_human, 8=endtime:  
+		starttime=r[0]; href=r[1]; img=r[2]; sname=r[3];				# href=r[1] nicht verwendet
+		stime=r[4]; summ=r[5]; vonbis=r[6];today_human=r[7]; 			# today_human=r[8] noch leer
+		endtime=r[8];
 		
-		sname = stringextract('class=\"h7 name\">', '</p>', liste[i])
-		sname = unescape(sname)
-		stime = stringextract('class=\"h7 time\">', '</p>', liste[i])   # Format: 06:00
-		stime = stime.strip()
-		summ = get_summ(liste[i])										# Beschreibung holen
-		summ = unescape(summ)
-		
-		sname = stime + ' | ' + sname									# Titel: Bsp. 06:40 | Nachrichten
-
 		s_start = 	datetime.datetime.fromtimestamp(int(starttime))		# Zeit-Konvertierung UTC-Startzeit
 		s_startday =  s_start.strftime("%A") 							# Locale’s abbreviated weekday name
-		
-		von = stime
-		bis = datetime.datetime.fromtimestamp(int(endtime))
-		bis = bis.strftime("%H:%M") 
-		vonbis = von + '-' + bis
+		iWeekday = transl_wtag(s_startday)
+		today_human = iWeekday + ', ' + day_human						# Wochentag + Datum -> tagline
 		# PLog("diff_%d: %s, %s-%s" % (i, now, starttime, endtime))		# bei Bedarf
 		
 		# Auslese - nur akt. Tag 05 Uhr (einschl. Offset in Tagen ) + Folgetag 05 Uhr:
@@ -372,22 +359,20 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 			continue
 		if starttime > nextday_5Uhr:									# jüngere verwerfen
 			# PLog(starttime); PLog(nextday_5Uhr)
-			continue
+			continue	
 					
 		sname_org = sname	
 		if now >= starttime and now < endtime:
 			# PLog("diffnow_%d: %s, %s-%s" % (i, now, starttime, endtime))	# bei Bedarf
 			# Farb-/Fettmarkierung bleiben im Kontextmenü erhalten (addDir):
 			sname = "[B]JETZT: %s[/B]" % sname_org						# JETZT: fett 
-			PLog(sname); PLog(img)
+			PLog("JETZT: %s, %s" % (sname, img))
 			if mode == 'OnlyNow':										# aus EPG_ShowAll - nur aktuelle Sendung
 				rec = [starttime,href,img,sname,stime,summ,vonbis]  	# Index wie EPG_rec
 				# PLog(rec)
 				PLog('EPG_EndOnlyNow')
 				return rec												# Rest verwerfen - Ende		
-		
-		iWeekday = transl_wtag(s_startday)
-		sname = iWeekday[0:2] + ' | ' + sname							# Wochentag voranstellen
+
 		if endtime < now:												# vergangenes: grau markieren
 			sname = "[COLOR grey][B]%s[/B][/COLOR]" % sname_org
 
@@ -399,8 +384,7 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		rec.append(endtime)
 		EPG_rec.append(rec)												# Liste Gesamt (2-Dim-Liste)
 	
-	EPG_rec.sort()						# Sortierung	
-	PLog(len(EPG_rec)); PLog('EPG_End')
+	PLog(len(EPG_rec)); PLog('EPG_End:')								# Sortierung <- get_data_web
 	return EPG_rec
 #-----------------------
 def get_summ(block):		# Beschreibung holen
@@ -463,6 +447,60 @@ def get_sort_playlist(PLAYLIST):				# sortierte Playliste der TV-Livesender
 	# Zeilen-Index: title=rec[0]; EPG_ID=rec[1]; img=rec[2]; link=rec[3];	
 	sort_playlist = sorted(sort_playlist,key=lambda x: x[0])		# Array-sort statt sort()
 	return sort_playlist
+	
+########################################################################
+def get_data_web(page, Dict_ID):
+	PLog("get_data_web:")
+	
+	# today.de verwendet Unix-Format, Bsp. 1488830442
+	now,today,today_5Uhr,nextday,nextday_5Uhr = get_unixtime()# lokale Unix-Zeitstempel, ohne Offset
+	
+	page  = stringextract('class="tv-show-container', 'id="module-footer"', page)
+	liste = blockextract('href="', page)  
+	PLog(len(liste));	
+	
+	EPG_rec = []
+	# ältere + jüngere Sendungen in Liste, Zeitabgleich in EPG() bei hier Abruf
+	for i in range (len(liste)):		
+		# rec: akt. Tag ab 05 Uhr(Start) bis nächster Tag 05 Uhr (Ende):	
+		rec = []
+		starttime = stringextract('data-start-time=\"', '\"', liste[i]) # Sendezeit, Bsp. "1488827700" (UTC)
+		if starttime == '':												# Ende (Impressum)
+			break
+		endtime = stringextract('data-end-time=\"', '\"', liste[i])	 	# Format wie starttime
+		href = stringextract('href=\"', '\"', liste[i])					# wenig zusätzl. Infos
+		img = stringextract('srcset="', '"', liste[i])
+		img = img.replace('159.', '640.')								# Format ändern "..4415_159.webp"
+		
+		sname = stringextract('class=\"h7 name\">', '</p>', liste[i])
+		sname = unescape(sname); sname = sname.replace('\"', '*')
+		stime = stringextract('class=\"h7 time\">', '</p>', liste[i])   # Format: 06:00
+		stime = stime.strip()
+		summ = get_summ(liste[i])										# Beschreibung holen
+		summ = unescape(summ)
+		
+		sname = "%s | %s" % (stime, sname)								# Titel: Bsp. 06:40 | Nachrichten
+		s_start = 	datetime.datetime.fromtimestamp(int(starttime))		# Zeit-Konvertierung UTC-Startzeit
+		s_startday =  s_start.strftime("%A") 							# Locale’s abbreviated weekday name
+	
+		von = stime
+		bis = datetime.datetime.fromtimestamp(int(endtime))
+		bis = bis.strftime("%H:%M") 
+		vonbis = von + ' - ' + bis
+	
+		# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime,  
+		#			5=summ, 6=vonbis, 7=today_human, 8=endtime:  
+		# Link href zum einzelnen Satz hier nicht verwendet - wenig zusätzl. Infos
+		today_human=""													# gesetzt in EPG()
+		rec.append(starttime);rec.append(href); rec.append(img); rec.append(sname);	# Listen-Element
+		rec.append(stime); rec.append(summ); rec.append(vonbis); rec.append(today_human);
+		rec.append(endtime)
+		EPG_rec.append(rec)												# Liste Gesamt (2-Dim-Liste)
+	
+	EPG_rec.sort()														# Sortierung (-> zeitl. Folge)
+	Dict("store", Dict_ID, EPG_rec)										# Daten -> Cache: aktualisieren	
+	PLog(len(EPG_rec)); PLog('get_data_web_End')
+	return EPG_rec
 	
 ####################################################################################################
 #									Hilfsfunktionen
