@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>156</nr>										# Numerierung für Einzelupdate
+# 	<nr>157</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.8'
-VDATE = '31.10.2023'
+VDATE = '01.11.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6356,30 +6356,34 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 	#---------------------------------							# Sortierung
 	PLog("Dir_Arr: %d" % len(Dir_Arr))	
 	PLog(Dir_Arr[0])											# erster Satz vor Sortierung
-	PLog(Dir_Arr[0][-1])										# letztes Element im ersten Satz
-	Dir_Arr = list(filter(lambda a: a != [], Dir_Arr))			# Leere Sätze entfernen
-	PLog("Dir_Arr_clean: %d" % len(Dir_Arr))
-	sortoption = SETTINGS.getSetting('pref_merksort')
-	PLog("sortoption: %s" % sortoption)
-	if sortoption != "keine":
-		if 	myfilter:											# Filter gesetzt? Sortierung nach merkname 
-			if sortoption == "aufsteigend":						#	(letztes Element, o. Attribute)
-				Dir_Arr = sorted(Dir_Arr,key=lambda x: x[-1].lower())
-			else:
-				Dir_Arr = sorted(Dir_Arr,key=lambda x: x[-1].lower(), reverse=True)
-		else:													# Sortierung nach name (erstes Element plus ev. 										
-			if sortoption == "aufsteigend":						# 	Ordner-Kennzeichnung im Titel, Bsp. Audio | ..)
-				Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower())
-			else:	
-				Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower(), reverse=True)													
-	PLog(Dir_Arr[0])											# erster Satz nach Sortierung
+	try:														# fängt leere Liste ab (Filter o. Element)
+		PLog(Dir_Arr[0][-1])										# letztes Element im ersten Satz
+		Dir_Arr = list(filter(lambda a: a != [], Dir_Arr))			# Leere Sätze entfernen
+		PLog("Dir_Arr_clean: %d" % len(Dir_Arr))
+		sortoption = SETTINGS.getSetting('pref_merksort')
+		PLog("sortoption: %s" % sortoption)
+		if sortoption != "keine":
+			if 	myfilter:											# Filter gesetzt? Sortierung nach merkname 
+				if sortoption == "aufsteigend":						#	(letztes Element, o. Attribute)
+					Dir_Arr = sorted(Dir_Arr,key=lambda x: x[-1].lower())
+				else:
+					Dir_Arr = sorted(Dir_Arr,key=lambda x: x[-1].lower(), reverse=True)
+			else:													# Sortierung nach name (erstes Element plus ev. 										
+				if sortoption == "aufsteigend":						# 	Ordner-Kennzeichnung im Titel, Bsp. Audio | ..)
+					Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower())
+				else:	
+					Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower(), reverse=True)													
+		PLog(Dir_Arr[0])											# erster Satz nach Sortierung
+		
+		for rec in Dir_Arr:
+			name=rec[0]; action=rec[1]; dirID=rec[2]; fanart=rec[3]; my_thumb=rec[4];
+			summary=rec[5]; tagline=rec[6]; fparams=rec[7]; mediatype=rec[8]; merkname=rec[9];
+			addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=my_thumb,
+				summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype, 
+				merkname=merkname)
+	except Exception as exception:
+		PLog("ShowFavs_error: " + str(exception))
 	
-	for rec in Dir_Arr:
-		name=rec[0]; action=rec[1]; dirID=rec[2]; fanart=rec[3]; my_thumb=rec[4];
-		summary=rec[5]; tagline=rec[6]; fparams=rec[7]; mediatype=rec[8]; merkname=rec[9];
-		addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=my_thumb,
-			summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype, 
-			merkname=merkname)	
 	#---------------------------------
 
 	if item_cnt == 0:											# Ordnerliste leer?
