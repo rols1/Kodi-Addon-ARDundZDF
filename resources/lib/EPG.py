@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>14</nr>										# Numerierung für Einzelupdate
+# 	<nr>15</nr>										# Numerierung für Einzelupdate
 #	Stand: 02.11.2023
 #	
  
@@ -349,7 +349,8 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		if starttime > nextday_5Uhr:									# jüngere verwerfen
 			# PLog(starttime); PLog(nextday_5Uhr)
 			continue	
-					
+				
+		summ = 	repl_json_chars(summ)
 		sname_org = sname	
 		if now >= starttime and now < endtime:
 			# PLog("diffnow_%d: %s, %s-%s" % (i, now, starttime, endtime))	# bei Bedarf
