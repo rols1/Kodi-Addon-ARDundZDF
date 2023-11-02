@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>13</nr>										# Numerierung für Einzelupdate
-#	Stand: 31.10.2023
+# 	<nr>14</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.11.2023
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -62,7 +62,7 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	PLog('thread_getepg:')
 	CacheTime = 43200								# 12 Std.: (60*60)*12 wie EPG s.u.
 	
-	open(EPGACTIVE, 'w').close()					# Aktiv-Signal setzen (DICT/EPGActive)
+	open(EPGACTIVE, 'w').close()					# Aktiv-Signal setzen (DICT "EPGActive")
 	xbmc.sleep(1000 * 10)							# verzög. Start	
 	icon = R('tv-EPG-all.png')
 	xbmcgui.Dialog().notification("EPG-Download", "gestartet",icon,3000)
@@ -77,20 +77,9 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 		ID = rec[1]
 		
 		fname = os.path.join(DICTSTORE, "EPG_%s" % ID)
-		if os.path.exists(fname):					
-			now = int(time.time())
-			mtime = os.stat(fname).st_mtime			# modified-time
-			diff = int(now) - mtime
-			# PLog(title); PLog(fname); PLog(now);  PLog(mtime);  # Debug
-			PLog(diff)
-			PLog("diff EPG_%s: %s" % (ID, str(diff)))
-			if diff > CacheTime:					# CacheTime in Funkt. EPG identisch
-				os.remove(fname)					# entf. -> erneuern
-			else:
-				PLog("EPG_%s noch aktuell" % ID)
-			
-		if os.path.exists(fname) == False:			# n.v. oder soeben entfernt
-			rec = EPG(ID=ID, load_only=True)		# Seite laden + speichern
+		if os.path.exists(fname):					# n.v. oder soeben entfernt?
+			os.remove(fname)						# entf. -> erneuern								
+		rec = EPG(ID=ID, load_only=True)			# Seite laden + speichern
 		xbmc.sleep(1000)							# Systemlast verringern
 		
 	xbmcgui.Dialog().notification("EPG-Download", "abgeschlossen",icon,3000)
