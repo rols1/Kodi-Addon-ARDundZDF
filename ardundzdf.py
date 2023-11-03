@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>157</nr>										# Numerierung für Einzelupdate
+# 	<nr>158</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.8'
-VDATE = '01.11.2023'
+VDATE = '03.11.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -727,7 +727,6 @@ def InfoAndFilter():
 	item = "zuletzt: [B]%s[/B] | %s" % (dt, lt)		
 	title = u"Einzelupdate (einzelne Dateien und Module), %s" % dt	# Update von Einzeldateien
 	tag = u'[B]Update einzelner Dateien aus dem Github-Repo des Addons'
-	tag = u"%s\n\nNach Abgleich werden neue Dateien heruntergeladen - diese ersetzen lokale Dateien im Addon." % tag
 	tag = u"%s\n\nEinzelupdates ermöglichen kurzfristige Fixes und neue Funktionen zwischen den regulären Updates." % tag
 	summ = u"Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt"
 	summ = u"%s - %s" % (summ, item)								# Forum-Info
@@ -5678,7 +5677,7 @@ def DownloadsList():
 	path = SETTINGS.getSetting('pref_download_path')
 	
 	dirlist = []
-	if path == None or path == '':									# Existenz Verz. prüfen, falls vorbelegt
+	if path == None or path == '':										# Existenz Verz. prüfen, falls vorbelegt
 		msg1 = 'Downloadverzeichnis noch nicht festgelegt'
 		MyDialog(msg1, '', '')
 		return
@@ -5689,7 +5688,9 @@ def DownloadsList():
 			MyDialog(msg1, msg2, '')
 			return
 		else:
-			dirlist = os.listdir(path)						# Größe Inhalt? 		
+			dirlist = os.listdir(path)
+			dirlist = [os.path.join(path, f) for f in dirlist]			# plus path
+			dirlist.sort(key=lambda x: os.path.getmtime(x))				# sortieren
 	dlpath = path
 
 	PLog(len(dirlist))
@@ -5719,13 +5720,15 @@ def DownloadsList():
 			fname =  entry							# Dateiname 
 			basename = os.path.splitext(fname)[0]	# ohne Extension
 			ext =     os.path.splitext(fname)[1]	# Extension
-			PLog(fname); PLog(basename); PLog(ext)
+			fdate = os.stat(entry).st_mtime
+			fdate = datetime.datetime.fromtimestamp(int(fdate))
+			fdate = "Aufnahme: %s" % fdate.strftime("%d.%m.%Y, %H:%M Uhr")
+			PLog(fname); PLog(basename); PLog(ext); PLog(fdate)
 			txtfile = basename + '.txt'
 			txtpath = os.path.join(path, txtfile)   # kompl. Pfad
-			PLog('entry: ' + entry)
-			PLog('txtpath: ' + txtpath)
+			PLog('entry: ' + entry); PLog('txtpath: ' + txtpath)
 			if os.path.exists(txtpath):
-				txt = RLoad(txtpath, abs_path=True)		# Beschreibung laden - fehlt bei Sammeldownload
+				txt = RLoad(txtpath, abs_path=True)	# Beschreibung laden - fehlt bei Sammeldownload
 			else:
 				txt = None
 				title = entry						# Titel = Dateiname, falls Beschreibung fehlt
@@ -5751,7 +5754,7 @@ def DownloadsList():
 				title = fname
 				httpurl = fname							# Berücksichtigung in VideoTools - nicht abspielbar
 				summary = 'ohne Beschreibung'
-				#tagline = 'Beschreibung fehlt - Beschreibung gelöscht, Sammeldownload oder TVLive-Video'
+			tagline = "[COLOR blue]%s[/COLOR]\n%s" % (fdate, tagline)
 				
 			tag_par= tagline.replace('\n', '||')	
 			PLog("Satz20:")
