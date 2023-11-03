@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>10</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.07.2023
+# 	<nr>11</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.11.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -122,16 +122,16 @@ def Main_3Sat(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Search", fanart=R('3sat.png'), 
 		thumb=R('zdf-suche.png'), fparams=fparams)
 			
-	epg = get_epg()
-	if epg:
-		epg = 'LIVE: %s'  % epg
-		title = '[B]%s[/B]'  % epg
+	title, tag, summ = get_epg()
+	if title:
+		tagline = tag
+		summary = summ
 	else:
 		title = '3sat-Livestream'
-	title=py2_encode(title); epg=py2_encode(epg);
-	fparams="&fparams={'name': '%s', 'epg': '%s'}" % (quote(title), quote(epg))
+	title=py2_encode(title); title=py2_encode(title);
+	fparams="&fparams={'name': '%s', 'epg': '%s'}" % (quote(title), quote(title))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Live", 
-		fanart=R('3sat.png'), thumb=R(ICON_MAIN_TVLIVE), tagline=epg, fparams=fparams)
+		fanart=R('3sat.png'), thumb=R(ICON_MAIN_TVLIVE), tagline=tag, summary=summ, fparams=fparams)
 	
 	title = "Startseite"
 	path = DreiSat_BASE							
@@ -1722,30 +1722,27 @@ def Live(name, epg=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #-----------------------------
-def get_epg():		# akt. PRG-Hinweis von 3Sat-Startseite holen
+# 02.11.2023 akt. PRG-Hinweis aus EPG-Cache laden, sonst leer
+#
+def get_epg():									
 	PLog('get_epg:')
-	my3satCacheTime =  600					# 10 Min.: 10*60
-	# 03.08-2017: get_epg_ARD entfällt - akt. PRG-Hinweis auf DreiSat_BASE eingeblendet
-	# epg_date, epg_title, epg_text = get_epg_ARD(epg_url, listname)
+	my3satCacheTime =  600							# 10 Min.: 10*60	
 	
+	# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime,  
+	#			5=summ, 6=vonbis, 7=today_human, 8=endtime:  
+	rec = EPG.EPG(ID="3SAT", mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
+	sname=''; stime=''; summ=''; vonbis=''		# Fehler, ev. Sender EPG_ID nicht bekannt
+
+	if rec:								
+		sname=py2_encode(rec[3]); stime=py2_encode(rec[4]); 
+		summ=py2_encode(rec[5]); vonbis=py2_encode(rec[6])
+	else:
+		return "", "", ""						# title, tag, summ	
+
+	title = sname.replace('JETZT:', 'LIVE')
+	tag = u'Sendung: %s Uhr' % vonbis
 	
-	page = Dict("load", '3satStart', CacheTime=my3satCacheTime)	
-	if page == False:								# nicht vorhanden oder zu alt
-		page, msg = get_page(path=DreiSat_BASE)	
-		if page == '':	
-			msg1 = "Fehler in get_epg:"
-			msg2 = msg
-			MyDialog(msg1, msg2, '')	
-			return ''
-		else:
-			Dict("store", '3satStart', page) # Seite -> Cache: aktualisieren
-	
-	epg = stringextract('>Jetzt live<', '</div>', page)
-	epg = stringextract("class='time'>", '</h3>', epg)
-	epg = epg.replace('</span>', ' | ')		# Bsp.: class='time'>10:15</span> Kölner Treff</h3>
-	epg = cleanhtml(epg)		
-	PLog(epg)
-	return epg
+	return title, tag, summ
 	
 ####################################################################################################
 # 3Sat - Bild-Galerien/-Serien

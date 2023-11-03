@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>6</nr>								# Numerierung für Einzelupdate
-#	Stand: 08.06.2023
+# 	<nr>7</nr>								# Numerierung für Einzelupdate
+#	Stand: 03.11.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -494,7 +494,8 @@ def get_foruminfo():
 		if len(item) > 10:										# Eintrag in Zeile?
 			last_item = item[2:]								# \nZDFinternational..
 			last_item = transl_json(last_item)
-
+	
+	last_item = last_item.replace('\\\"','*')					# Meldung \"Streamlink\" bei..
 	PLog("last_item: " + last_item)
 	
 	return dt, last_item
