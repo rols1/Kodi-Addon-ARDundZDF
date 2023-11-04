@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>158</nr>										# Numerierung für Einzelupdate
+# 	<nr>159</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.8'
-VDATE = '03.11.2023'
+VDATE = '04.11.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5722,7 +5722,7 @@ def DownloadsList():
 			ext =     os.path.splitext(fname)[1]	# Extension
 			fdate = os.stat(entry).st_mtime
 			fdate = datetime.datetime.fromtimestamp(int(fdate))
-			fdate = "Aufnahme: %s" % fdate.strftime("%d.%m.%Y, %H:%M Uhr")
+			fdate = "Ablage: %s" % fdate.strftime("%d.%m.%Y, %H:%M Uhr")
 			PLog(fname); PLog(basename); PLog(ext); PLog(fdate)
 			txtfile = basename + '.txt'
 			txtpath = os.path.join(path, txtfile)   # kompl. Pfad
@@ -7103,7 +7103,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		PLog(EPG_ID)
 		# PLog(SETTINGS.getSetting('pref_use_epg')) 	# Voreinstellung: EPG nutzen? - nur mit Schema nutzbar
 		PLog('setting: ' + str(SETTINGS.getSetting('pref_use_epg')))
-		if SETTINGS.getSetting('pref_use_epg') == 'true':		# hier nur aktuelle Sendung
+		if SETTINGS.getSetting('pref_use_epg') == 'true' and EPG_ID:	# hier nur aktuelle Sendung
 			# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis:
 			try:
 				rec = EPG.EPG(ID=EPG_ID, mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
