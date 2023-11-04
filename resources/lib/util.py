@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>76</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.10.2023
+# 	<nr>77</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.11.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -958,12 +958,12 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			'Plot': quote_plus(Plot),'url': quote_plus(add_url)}	
 		fparams_add = "&fparams={0}".format(fp)
 		PLog("fparams_add: " + fparams_add[:100])
-		fparams_add = quote_plus(fparams_add)
+		fparams_add = quote_plus(fparams_add)						# -> Watch_items
 
 		fp = {'action': 'del', 'name': quote_plus(label)}			# name reicht für del
 		fparams_del = "&fparams={0}".format(fp)
 		PLog("fparams_del: " + fparams_del[:100])
-		fparams_del = quote_plus(fparams_del)
+		fparams_del = quote_plus(fparams_del)						# -> Watch_items
 		
 		# --------------------------------------------------------- Scipt-Defs:
 		commands = []
@@ -3854,7 +3854,7 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 			epg_url  = "https://programm-api.ard.de/nownext/api/channel?channel=%s&pastHours=5&futureEvents=1" % linkid
 			break
 			
-	if linkid:											# ARD-EPG für Zeitstrahl laden
+	if linkid:											# Sendungsnavigation: ARD-EPG für Zeitstrahl laden
 		buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 		event_end = int(event_end)
 		header = "Sendungen (r. Maustaste)"
@@ -4054,7 +4054,10 @@ def get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime):
 	buf_events=[]; event_end=0
 	for event in epg_events:					# events passend zum Zeitpuffer filtern
 		stitle = event["title"]["short"]
-		sD = event["startDate"]
+		if "currentStartDate" in event:			# kann in future-events fehlen
+			sD = event["currentStartDate"]		# kann leicht abweichen von startDate
+		else:
+			sD = event["startDate"]
 		sD_time = datetime.datetime.fromtimestamp(time.mktime(time.strptime(sD, date_format)))
 		event_start = time.mktime(sD_time.timetuple())
 		add_hour = time_translate(sD, add_hour=True, day_warn=False, add_hour_only=True)
