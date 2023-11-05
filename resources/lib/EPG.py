@@ -80,7 +80,7 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 		if os.path.exists(fname):					# n.v. oder soeben entfernt?
 			os.remove(fname)						# entf. -> erneuern								
 		rec = EPG(ID=ID, load_only=True)			# Seite laden + speichern
-		xbmc.sleep(1000)							# Systemlast verringern
+		xbmc.sleep(500)								# Systemlast verringern
 		
 	xbmcgui.Dialog().notification("EPG-Download", "abgeschlossen",icon,3000)
 	

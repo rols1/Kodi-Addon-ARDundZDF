@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>159</nr>										# Numerierung für Einzelupdate
-VERSION = '4.8.8'
-VDATE = '04.11.2023'
+VERSION = '4.8.9'
+VDATE = '05.11.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -10403,7 +10403,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 				skip=True										# i.d.R. ARD-Streams (nicht alle)
 				break
 		PLog('skip: ' + str(skip))
-		if skip == False and live:								# Mehrkanalstreams: 1 Button
+		if skip == False and live:								# Mehrkanalstreams: nur 1 Button
 			stitle = "HLS-Stream"
 			PLog("jump_PlayButtonM3u8")
 			PlayButtonM3u8(li, url_m3u8, thumb, stitle, tagline=track_add, descr=descr)	# -> live=true

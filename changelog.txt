@@ -10,6 +10,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+05.11.2023 4.8.9
+			get_ARD_LiveEPG (util): Auswertung currentStartDate statt startDate (falls
+			vorhanden).
+			EPG-Modul: neues Konzept mit Ablage des 2-dim-EPG-Array im Dict (weitere
+			Infos s. Kopfdoku in EPG), neue Funktion get_data_web, Anpassungen in
+			EPG_ShowSingle, SenderLiveListe, EPG_ShowSingle, EPG_ShowAll, 1-sec-Delay
+			auf 1/2 sec verkürzt.
+			thread_getepg (EPG): Löschen der Cache-Dateien unabhängig vom Alter.
+			ShowFavs: try/except-Block für neue Sortierroutine (Addonscrash bei
+			leerer Liste).
+			livesenderTV.xml: hrefsender-Titel aktualisiert für "Rundfunk Berlin 
+			Brandenburg" und "Rundfunk Berlin"
+			get_epg (Modul 3sat): Umstellung auf Nutzung EPG-Cache (Live-Daten nicht
+			mehr auf DreiSat_BASE).
+			EPG (Modul EPG): entf. Hochkommata in Beschreibung (router-kompatibel).
+			InfoAndFilter: Infotext "Nach Abgleich werden .." entfernt (obsolet)
+			get_foruminfo (Modul tools): Hochkommata in Infotext entfernt.
+			DownloadsList: Sortierung nach Datum, Infotext mit Aufnahmedatum ergänzt. 
+			SenderLiveListe: Verhinderung EPG-Aufruf bei fehlender EPG_ID.
+			TV-Livestreams: Austausch Welt_N24-Live iptv -> welt.personalstream.tv-
+			Stream, Anpassung livesenderTV.xml.
+
 29.10.2023 4.8.8
 			ARDSportLiga3: Python2-Anpassung (py2_encode für ard_streamlinks, sender1,
 			sender2, ohne Bearbeitung der Umlaute).
