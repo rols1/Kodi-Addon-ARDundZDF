@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>22</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.10.2023
+# 	<nr>23</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.11.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -688,9 +688,9 @@ def Kika_get_img(item):
 def Kika_get_singleItem(s):
 	PLog('Kika_get_singleItem:')
 
+	mehrf='';typ='';path='';stitle='';thumb='';Plot=''
 	if '"mainNavigation":' in s:
-		mehrf='';typ='';path='';stitle='';thumb='';Plot=''
-		PLog("skip_mainNavigation")
+		typ="skip_mainNavigation"
 		return mehrf,typ,path,stitle,thumb,Plot
 
 	date=""; endDate=""; summ=""; mehrf=False; func=""
@@ -702,6 +702,7 @@ def Kika_get_singleItem(s):
 	if '"api":null' in s:											# z.B. ext. Link zu Junior ESC-Abstimmung
 		api_url=""
 		typ = "skip_api_null"
+		return mehrf,typ,path,stitle,thumb,Plot
 	else:
 		api_url = stringextract('url":"', '"', s)					# "api":{	
 	stitle = stringextract('title":"', '"', s)		
@@ -760,7 +761,7 @@ def Kika_Subchannel(path, title, thumb, Plot, li=''):
 	
 	page, msg = get_page(path)
 	if page == '':
-		msg1 = "Fehler in Kika_Rubriken:"
+		msg1 = "Fehler in Kika_Subchannel:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return
@@ -797,12 +798,14 @@ def Kika_Subchannel(path, title, thumb, Plot, li=''):
 			
 		mehrf,typ,path,stitle,thumb,Plot = Kika_get_singleItem(featuredVideo)
 		summ = Plot.replace("||", "\n")	
-	
-		stitle = "[B]Empfehlung: [/B] %s" % stitle						# herausgestelltes Video im Web
-		fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
-			(quote(path), quote(stitle), quote(thumb), quote(Plot))
-		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag", 
-			fanart=fanimg, thumb=thumb, fparams=fparams, summary=summ, mediatype=mediatype)
+		if path == '':													# Sicherung
+			PLog("skip_empty_path") 
+		else:
+			stitle = "[B]Empfehlung: [/B] %s" % stitle					# herausgestelltes Video im Web
+			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+				(quote(path), quote(stitle), quote(thumb), quote(Plot))
+			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag", 
+				fanart=fanimg, thumb=thumb, fparams=fparams, summary=summ, mediatype=mediatype)
 	
 	if '"videosPageUrl":"' in page:										# Videos nachladen
 		PLog("get_allvideos:")
@@ -886,11 +889,11 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 			continue
 		skip_list.append(path)	
 		
-		if typ == "":													# mainNavigation, Satz leer
-			continue
-		if typ == "skip_api_null":										# fehlende api-Url ausblenden
+		if typ == "" or typ.startswith("skip_"):						#Satz leer, mainNavigation, ..
+			PLog(typ) 
 			continue
 		if typ == "interactiveContent":									# Spiele ausblenden
+			PLog(typ)
 			continue
 		if stitle.endswith("Start") or path.endswith("suche104"):		# Ende Rubrik
 			break
