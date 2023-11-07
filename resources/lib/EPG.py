@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>15</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.11.2023
+# 	<nr>16</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.11.2023
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -60,10 +60,10 @@ EPG_BASE 	= "http://www.tvtoday.de"
 #
 def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	PLog('thread_getepg:')
-	CacheTime = 43200								# 12 Std.: (60*60)*12 wie EPG s.u.
+	CacheTime = 43200									# 12 Std.: (60*60)*12 wie EPG s.u.
 	
-	open(EPGACTIVE, 'w').close()					# Aktiv-Signal setzen (DICT "EPGActive")
-	xbmc.sleep(1000 * 10)							# verzög. Start	
+	open(EPGACTIVE, 'w').close()						# Aktiv-Signal setzen (DICT "EPGActive")
+	xbmc.sleep(1000 * 10)								# verzög. Start	
 	icon = R('tv-EPG-all.png')
 	xbmcgui.Dialog().notification("EPG-Download", "gestartet",icon,3000)
 	
@@ -76,11 +76,12 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 		title = rec[0]			# Debug
 		ID = rec[1]
 		
-		fname = os.path.join(DICTSTORE, "EPG_%s" % ID)
-		if os.path.exists(fname):					# n.v. oder soeben entfernt?
-			os.remove(fname)						# entf. -> erneuern								
-		rec = EPG(ID=ID, load_only=True)			# Seite laden + speichern
-		xbmc.sleep(500)								# Systemlast verringern
+		if ID:
+			fname = os.path.join(DICTSTORE, "EPG_%s" % ID)
+			if os.path.exists(fname):					# n.v. oder soeben entfernt?
+				os.remove(fname)						# entf. -> erneuern								
+			rec = EPG(ID=ID, load_only=True)			# Seite laden + speichern
+			xbmc.sleep(500)								# Systemlast verringern
 		
 	xbmcgui.Dialog().notification("EPG-Download", "abgeschlossen",icon,3000)
 	
