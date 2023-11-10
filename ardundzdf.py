@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>159</nr>										# Numerierung für Einzelupdate
+# 	<nr>160</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.9'
-VDATE = '05.11.2023'
+VDATE = '10.11.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6381,9 +6381,10 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 		for rec in Dir_Arr:
 			name=rec[0]; action=rec[1]; dirID=rec[2]; fanart=rec[3]; my_thumb=rec[4];
 			summary=rec[5]; tagline=rec[6]; fparams=rec[7]; mediatype=rec[8]; merkname=rec[9];
+
 			addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=my_thumb,
 				summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype, 
-				merkname=merkname)
+				merkname=merkname, ShowFavs="true")					# ShowFavs verhindert "Entfernen" im Kontextmenü
 	except Exception as exception:
 		PLog("ShowFavs_error: " + str(exception))
 	
@@ -9023,8 +9024,7 @@ def ZDF_FlatListEpisodes(sid):
 #	aber abweichendes Quellformat
 # Aufrufer: ZDF_FlatListEpisodes, ab V4.7.0 auch ZDF_PageMenu,
 #	ZDF_Rubriken, ZDF_RubrikSingle, ZDF_Verpasst.
-# Mitnutzung get_form_streams wie get_formitaeten  sowie
-#	 build_Streamlists_buttons
+# Mitnutzung get_form_streams sowie build_Streamlists_buttons
 # gui=False: ohne Gui, z.B. für ZDF_getStrmList
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
@@ -9986,7 +9986,6 @@ def form_HBBTV_Streams(stream_list, title):
 	return HBBTV_List
 
 #-------------------------
-# 16.01.2022 Auslagerung aus get_formitaeten  
 # ermittelt streamurls, duration, geoblock, sub_path
 #
 def get_form_streams(page):

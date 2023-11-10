@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>77</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.11.2023
+# 	<nr>78</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.11.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -698,9 +698,10 @@ def up_low(line, mode='up'):
 # 	08.07.2020 Erweiterung Kontextmenüs "Recording TV-Live" (EPG_ShowAll)  
 # 	18.04.2022 Erweiterung Kontextmenüs "Abgleich Videotitel mit Medienbibliothek" 
 #	05.02.2023 Erweiterung Kontextmenüs EPG (Menü TV-Livestreams)
+#	10.11.2023 ShowFavs verhindert "Hinzufügen" im Kontextmenü
 #
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='',\
-		cmenu=True, merkname='', start_end='', EPG_ID=''):
+		cmenu=True, merkname='', start_end='', EPG_ID='', ShowFavs=''):
 	PLog('addDir:');
 	label_org=label				# s. 'Job löschen' in K-Menüs
 	label=py2_encode(label)
@@ -970,8 +971,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		if SETTINGS.getSetting('pref_watchlist') == 'true':			# Merkliste verwenden 
 			# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID))
-			commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
-					% (MY_SCRIPT, HANDLE, fparams_add)))
+			if ShowFavs =="":										# Hinzufügen nicht in Merkliste
+				commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+						% (MY_SCRIPT, HANDLE, fparams_add)))
 			commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_del)))
 		
