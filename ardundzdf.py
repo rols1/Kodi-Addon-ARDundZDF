@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>160</nr>										# Numerierung für Einzelupdate
+# 	<nr>161</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.9'
-VDATE = '10.11.2023'
+VDATE = '12.11.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6384,7 +6384,7 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 
 			addDir(li=li, label=name, action=action, dirID=dirID, fanart=fanart, thumb=my_thumb,
 				summary=summary, tagline=tagline, fparams=fparams, mediatype=mediatype, 
-				merkname=merkname, ShowFavs="true")					# ShowFavs verhindert "Entfernen" im Kontextmenü
+				merkname=merkname, ShowFavs="true")					# ShowFavs verhindert "Hinzufügen" im Kontextmenü
 	except Exception as exception:
 		PLog("ShowFavs_error: " + str(exception))
 	
@@ -8441,7 +8441,7 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 				dur = obj["infoline"]["title"]
 				PLog("dur: " + dur)
 
-		avail=''	
+		avail=''; pubDate=''	
 		if("offlineAvailability" in obj):
 			avail = obj["offlineAvailability"]
 			avail =time_translate(avail, day_warn=True)			# day_warn: noch x Tage!
@@ -8450,6 +8450,9 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 			if "label" in obj:									# z.B. "Noch 3 Stunden" in letzte chance
 				avail = obj["label"]
 				avail = u"[B][COLOR darkgoldenrod]%s[/COLOR][/B]" % avail
+		if("visibleFrom" in obj):
+			pubDate = obj["visibleFrom"]						# 23.10.2023 00:00
+			pubDate = "[B]ab: %s[/B]" % pubDate.split(" ")[0]	# o. Uhrzeit
 		
 		if "fsk" in obj:	
 			fsk = obj["fsk"]
@@ -8486,6 +8489,8 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 		tag = "Dauer: %s | FSK: %s | GEO: %s" % (dur, fsk, geo)
 		if avail:												# kann fehlen
 			tag = "%s | %s" % (tag, avail)
+		if pubDate:	
+			tag = "%s | %s" % (tag, pubDate)
 		if typ == "livevideo":									# z.B. Events
 			try:
 				screentxt = obj["infoline"]["screenReaderTexts"]

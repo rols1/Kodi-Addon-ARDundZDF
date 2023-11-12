@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>78</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.11.2023
+# 	<nr>79</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.11.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2446,7 +2446,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 	
 	if 	ID == 'ZDF' or ID == '3sat':
 		teaserinfo = stringextract('teaser-info">', '<', page)
-		summ = stringextract('description" content="', '"', page)
+		summ = stringextract('class="item-description" >', '</p>', page)
 		summ = mystrip(summ)
 		if teaserinfo:
 			summ = "%s | %s" % (teaserinfo, summ)
