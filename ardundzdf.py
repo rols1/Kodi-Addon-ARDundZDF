@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>161</nr>										# Numerierung für Einzelupdate
+# 	<nr>162</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.9'
-VDATE = '12.11.2023'
+VDATE = '13.11.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1417,7 +1417,7 @@ def AudioStart(title):
 		thumb=R("ard-sender.png"), fparams=fparams)
 	
 	# Button für funk anhängen 									# funk
-	title = 'funk: Das Content-Netzwerk von ARD und ZDF'		# Watchdog: ../organizations
+	title = 'funk'												# Watchdog: ../organizations
 	tagline = "Podcasts des Senders funk"
 	fparams="&fparams={'org': '%s'}" %  title
 	addDir(li=li, label=title, action="dirList", dirID="AudioSenderPrograms", fanart=R(ICON_MAIN_AUDIO), 
@@ -1683,7 +1683,7 @@ def AudioSenderPrograms(org=''):
 					title = "%s: %s" % (title, synop[:70])
 			PLog(org); PLog(title);	
 			PLog(title.find(org))
-			if title.find(org) >= 0:
+			if title.startswith(org):
 				PLog("found_org: %s, title: %s" % (org, title))
 				break			
 
