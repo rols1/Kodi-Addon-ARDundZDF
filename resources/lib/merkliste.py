@@ -6,8 +6,8 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-# 	<nr>2</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.06.2023
+# 	<nr>3</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.11.2023
 #
 
 from __future__ import absolute_import
@@ -160,7 +160,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 				if len(my_ordner) == 0:								# leer: Initialisierung
 					my_ordner = ORDNER
 				my_ordner.insert(0, u"*ohne Zuordnung*")
-				my_ordner=sorted(my_ordner)
+				my_ordner=sorted(my_ordner, key=str.lower)
 				
 				ret = xbmcgui.Dialog().select(u'Ordner wählen (Abbrechen: ohne Zuordnung)', my_ordner, preselect=0)
 				if ret > 0:
@@ -197,13 +197,14 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			PLog('my_items: ' + my_items[-1])
 		merkliste = ''
 		deleted = False
-		for item in my_items:						# Liste -> String
-			iname = stringextract('name="', '"', item) # unicode
+		for item in my_items:											# Liste -> String
+			iname = stringextract('name="', '"', item) 					# unicode
+			iname = iname.replace("–", "-")								# selten: &#8211; -> &#45;
 			iname = py2_encode(iname)
 			name = py2_encode(name)		
 			PLog('Name: %s, IName: %s' % (name, iname))
-			if name in cleanmark(iname):			# wie ShowFavs (cleanmark für Titel)
-				deleted = True						# skip Satz = löschen 
+			if name in cleanmark(iname):								# wie ShowFavs (cleanmark für Titel)
+				deleted = True											# skip Satz = löschen 
 				continue
 			item_cnt = item_cnt + 1
 			merkliste = py2_decode(merkliste) + py2_decode(item) + "\n"
@@ -224,17 +225,19 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 	if action == 'rename':
 		my_items, my_ordner = ReadFavourites('Merk')					# 'utf-8'-Decoding in ReadFavourites
 		my_ordner = check_ordnerlist(my_ordner)
-		if len(my_items):
+		if len(my_items):												# Debug: letzter Eintrag
 			PLog('my_items: ' + my_items[-1])
 		merkliste = ''
 		renamed = False
-		for item in my_items:						# Liste -> String
-			iname = stringextract('name="', '"', item) # unicode
+		for item in my_items:											# Liste -> String
+			iname = stringextract('name="', '"', item) 					# unicode
+			iname = iname.replace("–", "-")								# selten: &#8211; -> &#45;
 			iname = py2_decode(iname)
-			name = py2_decode(name)		
-			PLog('Name: %s, IName: %s' % (name, iname))		
-			if name == iname:
-				new_name = get_new_name(iname, add='')	# <- neue Bez. oder iname
+			name = py2_decode(name)	
+			PLog('Name: %s, IName: %s' % (name, iname))
+		
+			if name.strip() == iname.strip():							# unterschiedl. Leerz. möglich
+				new_name = get_new_name(iname, add='')					# <- neue Bez. oder iname
 				if new_name != iname:
 					insert = 'name="%s"' % new_name
 					if exist_in_list(insert, my_items) == False:		 
@@ -246,7 +249,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			item_cnt = item_cnt + 1
 			merkliste = py2_decode(merkliste) + py2_decode(item) + "\n"
 			
-		if renamed:									# nur nach Ändern speichern
+		if renamed:														# nur nach Ändern speichern
 			# Merkliste + Ordnerinfo + Ordner + Ordnerwahl:	
 			ret, err_msg = save_merkliste(merkliste, my_ordner)
 			msg1 = u"Eintrag umbenannt"
@@ -267,6 +270,8 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 		ret = True
 		for item in my_items:						# Liste -> String
 			iname = stringextract('name="', '"', item) # unicode
+			iname = iname.replace("–", "-")								# selten: &#8211; -> &#45;
+			
 			iname = py2_decode(iname); name = py2_decode(name)		
 			PLog('Name: %s, IName: %s' % (name, iname))		
 			if name == iname:
@@ -294,7 +299,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 						merk = '<merk name="%s" ordner="%s" thumb="%s" Plot="%s">ActivateWindow(10025,&quot;%s&quot;,return)</merk>'  \
 							% (name, ordner, thumb, Plot, url)
 						PLog('merk: ' + merk)
-						item = merk		
+						item = merk
 				
 			item_cnt = item_cnt + 1
 			merkliste = py2_decode(merkliste) + py2_decode(item) + "\n"
@@ -427,7 +432,8 @@ def save_merkliste(merkliste, my_ordner):
 			return False, err_msg	
 	PLog(fname)
 
-	# Merkliste + Ordnerinfo + Ordner:	
+	# Merkliste + Ordnerinfo + Ordner:
+	my_ordner = sorted(my_ordner, key=str.lower)
 	err_msg = ''												# gefüllt von Aufrufer 
 	if my_ordner == '' or my_ordner == []:						# Fallback Basis-Ordner-Liste
 		my_ordner = ORDNER
@@ -490,7 +496,7 @@ def watch_filter(delete=''):
 	my_items, my_ordner = ReadFavourites('Merk')	# Ordnerliste holen	
 	my_ordner = check_ordnerlist(my_ordner)
 	my_ordner.insert(0, u"*ohne Zuordnung*")
-	my_ordner=sorted(my_ordner)
+	my_ordner=sorted(my_ordner, key=str.lower)
 	
 	preselect = 0									# Vorauswahl
 	if os.path.isfile(MERKFILTER) == True:	
@@ -527,8 +533,7 @@ def check_ordnerlist(my_ordner):
 			msg3 = u"Die Ordnerliste wird nach Einfügen oder Löschen erneuert."
 			MyDialog(msg1, msg2, msg3, heading=heading)
 			my_ordner = ORDNER
-			my_ordner=sorted(my_ordner, key=str.lower)
-	return my_ordner
+	return sorted(my_ordner, key=str.lower)
 			
 # ----------------------------------------------------------------------
 # Markierungen "Ordner:" + "Modul:" aus tagline + summary der akt. 
