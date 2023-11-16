@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>162</nr>										# Numerierung für Einzelupdate
+# 	<nr>163</nr>										# Numerierung für Einzelupdate
 VERSION = '4.8.9'
-VDATE = '13.11.2023'
+VDATE = '16.11.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -697,7 +697,7 @@ def InfoAndFilter():
 	dz = "[B](%s)[/B]" % dz
 	title = u"Kodis Thumbnails-Ordner bereinigen %s" % dz	
 	tag = u'[B]Kodis Thumbnails-Ordner bereinigen[/B]'
-	summ = u"Das Bereinigen schafft Platz, indem es ältere Bilder entfernt (Auswahl 1-100 Tage)."
+	summ = u"Das Bereinigen schafft Platz, indem es ältere Bilder entfernt (Auswahl: Dateien älter als 1-100 Tage)."
 	summ = u"%s\nDadurch kann sich die Anzeige älterer Beiträge anfangs verzögern." % summ
 	summ = u"%s\n\nDer aktuelle Füllstand %s kann auch im Menü Addon-Infos eingesehen werden." % (summ, dz)
 	fparams="&fparams={}"
@@ -1423,14 +1423,6 @@ def AudioStart(title):
 	addDir(li=li, label=title, action="dirList", dirID="AudioSenderPrograms", fanart=R(ICON_MAIN_AUDIO), 
 		thumb=R('funk.png'), tagline=tagline, fparams=fparams)
 	
-	# Button für Podcast-Favoriten anhängen 					# Podcast-Favoriten
-	title="Podcast-Favoriten"; 
-	tagline = u'konfigurierbar mit der Datei podcast-favorits.txt im Addon-Verzeichnis resources'
-	summ=''
-	fparams="&fparams={'title': '%s'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="PodFavoritenListe", fanart=R(ICON_MAIN_POD), 
-		thumb=R(ICON_POD_FAVORITEN), tagline=tagline, summary=summ, fparams=fparams)
-	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #----------------------------------------------------------------
@@ -1689,6 +1681,7 @@ def AudioSenderPrograms(org=''):
 
 		pos = LiveObj.find('"programSets"')
 		page = LiveObj[pos:]
+		page= page.replace('\\"', '*')	
 		PLog(page[:80])	
 		items = blockextract('"id":', page)								# 2. Block enthält editorialCategories 		
 		PLog(len(items))
@@ -1964,8 +1957,8 @@ def Audio_get_sendung(url, title, page=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #----------------------------------------------------------------
-# Aufrufer: PodFavoriten (Web-Url -> api umgesetzt), AudioSenderPrograms,
-#	Audio_get_search_cluster, Audio_get_homescreen
+# Aufrufer: AudioSenderPrograms, Audio_get_search_cluster,
+#	Audio_get_homescreen (Step 2), Audio_get_cluster_single
 # json -> strings (Performance)
 # Nutzung Audio_get_items_single + Audio_get_nexturl wie Audio_get_sendung
 # Sammel-Downloads: Liste enthält je nach Quelle mp3_url oder web_url
@@ -2045,9 +2038,9 @@ def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 		PLog("" % (msg1, msg2))
 		return
 	
-	if elements and url_org:
+	if elements and url_org and cnt > 1:
 		myfunc = "Audio_get_sendung_api"	
-		Audio_get_nexturl(li, url_org, title_org, elements, cnt, myfunc)# Mehr anzeigen
+		Audio_get_nexturl(li, url_org, title_org, elements, cnt, myfunc)# Mehr anzeigen (Beiträge > 1)
 	
 	if len(downl_list) > 1:												# Button Sammel-Downloads
 		title=u'[B]Download! Alle angezeigten %d Podcasts speichern[/B]' % cnt
@@ -2114,11 +2107,13 @@ def Audio_get_items_single(item, ID=''):
 	if attr:
 		attr = "Bild: %s" % attr
 
-	img = stringextract('"image":', '},', item)
+	img = stringextract('"image":', ',', item)
 	img = stringextract('"url":"', '"', img)
 	img = img.replace('{width}', '640')
 	img = img.replace('16x9', '1x1')								# 16x9 kann fehlen, z,B. bei Suche
 	img = img.replace(u'\\u0026', '&')								# 13.03.2022: escape-Zeichen mögl.
+	if img == "":
+		img = R(ICON_DIR_FOLDER)
 	
 
 	dur = stringextract('"duration":', ',', item)					# in Sek.
@@ -4786,102 +4781,9 @@ def get_query(channel='ARD'):
 ####################################################################################################
 # 03.06.2021 entfernt (Classic-Version eingestellt): PODMore							
 ####################################################################################################
-
-def PodFavoritenListe(title, offset=0):
-	PLog('PodFavoritenListe:'); 
-	
-	title_org = title
-	# Default fname: podcast-favorits.txt im Ressourcenverz.
-	#	Alternative: Pfad zur persönlichen Datei 
-	fname =  SETTINGS.getSetting('pref_podcast_favorits')
-	PLog(fname)
-	if os.path.isfile(fname) == False:
-		PLog('persoenliche Datei %s nicht gefunden' % fname)					
-		Inhalt = RLoad(FAVORITS_Pod)		# Default-Datei
-	else:										
-		try:
-			Inhalt = RLoad(fname,abs_path=True)	# pers. Datei verwenden (Name ebenfalls podcast-favorits.txt)	
-		except:
-			Inhalt = ''
-		
-	if  Inhalt is None or Inhalt == '' or 'podcast-favorits.txt' not in Inhalt:				
-		msg1='Datei podcast-favorits.txt nicht gefunden, nicht lesbar oder falsche Datei.'
-		msg2='Bitte Einstellungen prüfen.'
-		MyDialog(msg1, msg2, '')
-		return
-							
-	# PLog(Inhalt) 
-	bookmarks = []
-	lines = Inhalt.splitlines()
-	for line in lines:								# skip Kommentarzeilen + Leerzeilen 
-		if line.startswith('#'):			
-			continue
-		if line.strip() == '':		
-			continue
-		bookmarks.append(line)
-		
-	rec_per_page = 20								# Anzahl pro Seite
-	max_len = len(bookmarks)						# Anzahl Sätze gesamt
-	start_cnt = int(offset) 						# Startzahl diese Seite
-	end_cnt = int(start_cnt) + int(rec_per_page)	# Endzahl diese Seite
-				
-	title2 = 'Favoriten %s - %s (%s)' % (start_cnt+1, min(end_cnt,max_len) , max_len)
-	li = xbmcgui.ListItem()
-	li = home(li,ID='ARD Audiothek')				# Home-Button
-
-	for i in range(len(bookmarks)):
-		cnt = int(i) + int(offset)
-		# PLog(cnt); PLog(i)
-		if int(cnt) >= max_len:				# Gesamtzahl überschritten?
-			break
-		if i >= rec_per_page:				# Anzahl pro Seite überschritten?
-			break
-		line = bookmarks[cnt]
-		try:		
-			title = line.split('|')[0]	
-			path = line.split('|')[1]
-			title = title.strip(); 
-			path = path.strip() 
-		except:
-			title=''; path=''
-		PLog(title); PLog(path)
-		if path == '':						# ohne Link kein verwertbarer Favorit
-			continue
-			
-		
-		title=title.replace('\'', '')		# z.B. "Stimmt's? - NDR2"
-		title=title.replace('&', 'plus')	# &=Trenner für Parameter in router
-		PLog(title); PLog(path)
-		title=py2_encode(title); path=py2_encode(path);
-		
-		if path.startswith('http'):			# Server-Url
-			summary='Favoriten: ' + title
-			fparams="&fparams={'title': '%s', 'path': '%s'}" % \
-				(quote(title), quote(path))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodFavoriten", 
-				fanart=R(ICON_STAR), thumb=R(ICON_STAR), fparams=fparams, summary=path, 
-				tagline=summary)
-		else:								# lokales Verz./Share?
-			fparams="&fparams={'title': '%s', 'path': '%s'}" % \
-				(quote(title), quote(path))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.Podcontent.PodFolder", 
-				fanart=R(ICON_NOTE), thumb=R(ICON_DIR_FOLDER), fparams=fparams, summary=path, 
-				tagline=title)		
-			
-					
-	# Mehr Seiten anzeigen:
-	PLog(offset); PLog(cnt); PLog(max_len);
-	if (int(cnt) +1) < int(max_len): 						# Gesamtzahl noch nicht ereicht?
-		new_offset = cnt + int(offset)
-		PLog(new_offset)
-		summ = 'Mehr (insgesamt ' + str(max_len) + ' Favoriten)'
-		title_org=py2_encode(title_org);
-		fparams="&fparams={'title': '%s', 'offset': '%s'}" % (quote(title_org), new_offset)
-		addDir(li=li, label=summ, action="dirList", dirID="PodFavoritenListe", fanart=R(ICON_MEHR), 
-			thumb=R(ICON_MEHR), fparams=fparams, summary=title_org, tagline='Favoriten')
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
+####################################################################################################
+# 14.11.2023 entfernt (obsolet durch Merkliste): PodFavoritenListe							
+####################################################################################################
 ####################################################################################################
 # 03.06.2021 Classic-Funktionen entfernt: BarriereArmARD, PageControl, SinglePage,
 #	SingleSendung
