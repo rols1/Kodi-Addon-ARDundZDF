@@ -8,7 +8,7 @@
  
 ################################################################################
 # 	<nr>7</nr>								# Numerierung für Einzelupdate
-#	Stand: 03.11.2023
+#	Stand: 16.11.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -412,7 +412,7 @@ def ClearUpThumbnails():
 	dialog = xbmcgui.Dialog()
 
 	#-----------------------									# 1. Auswahl Lösch-Alter
-	title = u"Bitte das Lösch-Alter in Tagen auswählen:"
+	title = u"Bitte das Lösch-Alter in Tagen auswählen (Dateien älter als x Tage):"
 	day_list = ["1","5","10","30","100"]
 	sel = dialog.select(title, day_list)	
 	if sel < 0:

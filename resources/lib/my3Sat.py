@@ -1260,7 +1260,7 @@ def get_lazyload(li, page, ref_path):
 	PLog('get_lazyload:')
 	content =  blockextract('is-medium lazyload', page)		# Test auf Loader-Beiträge, escaped
 	PLog(len(content))
-	dauer	= stringextract('duration": "', '"', page)		# gilt für folgende oader-Beiträge
+	dauer	= stringextract('duration": "', '"', page)		# gilt für folgende loader-Beiträge
 	img_pre = stringextract('data-srcset="', ' ', page)		# dto.
 	PLog("dauer %s, img_pre: %s " % (dauer, img_pre))	
 	

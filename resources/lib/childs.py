@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>23</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.11.2023
+# 	<nr>24</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.11.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -976,7 +976,7 @@ def MausLive():
 		sendung = "Maus-Stream abspielen"
 	else:
 		sendung = stringextract('wdrrCurrentShowTitleTitle">', '</', page1[pos:])
-		
+		sendung = unescape(sendung)
 	
 	mediaObj = stringextract('mediaObj":{"url":"', '"', page1) # -> deviceids-medp.wdr.de (json)
 	PLog("mediaObj: " + mediaObj)
@@ -1679,7 +1679,7 @@ def Kikaninchen_VideoSingle(path, title, assets_url=''):
 # 	Unterseite 'Singen + Tanzen' von http://www.kikaninchen.de/index.html?page=0
 # 13.12.2022 avCustomUrl als assets_url -> Kikaninchen_VideoSingle (früher Kika_SingleBeitrag)
 def KikaninchenLieder():	
-	PLog('KikaninchenLieder')
+	PLog('KikaninchenLieder:')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
@@ -1731,7 +1731,7 @@ def KikaninchenLieder():
 # ----------------------------------------------------------------------			
 # Tonschnipsel aus verschiedenen Seiten
 def Tonschnipsel():	
-	PLog('Tonschnipsel')
+	PLog('Tonschnipsel:')
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 
@@ -1762,8 +1762,8 @@ def Tonschnipsel():
 		thumb=R('radio-podcasts.png')
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': ''}" % (quote(url), 
 			quote(title), quote(thumb))
-		addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, fparams=fparams, 
-			summary=title, mediatype='music')
+		addDir(li=li, label=title, action="dirList", dirID="PlayAudio", 
+			fanart=thumb, thumb=thumb, fparams=fparams, summary=title, mediatype='music')
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 

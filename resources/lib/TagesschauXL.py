@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>9</nr>								# Numerierung für Einzelupdate
-#	Stand: 20.08.2023
+#	Stand: 19.11.2023
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -483,7 +483,9 @@ def XL_BilderShow(title, img_list):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)	
 
-# ----------------------------------------------------------------------	 
+# ----------------------------------------------------------------------
+# 18.11.2023 Anpassung an ARD-Änderungen
+#	 
 def XL_Search(query='', pagenr=''):
 	PLog("XL_Search: " + pagenr)
 	
@@ -501,23 +503,28 @@ def XL_Search(query='', pagenr=''):
 	else:
 		pagenr = int(pagenr)
 	
-	path1 =  "https://www.tagesschau.de/json/search?searchText=%s&documentType=video&pageIndex=%d" % (query, pagenr)
-	path2 =  "https://www.tagesschau.de/json/search?searchText=%s&documentType=audio&pageIndex=%d" % (query, pagenr)
-	page1, msg = get_page(path=path1)	 
-	page2, msg = get_page(path=path2)	 
-	if not page1 and not page2:	
+	path =  "https://www.tagesschau.de/json/search?searchText=%s" % (query) # ohne documentType nur jweils 3 items
+	page, msg = get_page(path)	 
+	if not page:	
 		msg1 = "Fehler in XL_Search:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return 	
 
-	jsonObject1 = json.loads(page1)
-	jsonObject2 = json.loads(page2)
-	PLog(str(jsonObject1)[:80])
-	if len(jsonObject1["documentTypes"][0]["items"]) == 0 and len(jsonObject2["documentTypes"][0]["items"]) == 0:
-		msg1 = u'nichts gefunden'
+	jsonObject = json.loads(page)
+	PLog(str(jsonObject["documentTypes"])[:80])
+	cnt_video=0; cnt_audio=0
+	for typ in jsonObject["types"]:
+		if typ["type"] == "video":
+			cnt_video = typ["count"]
+		if typ["type"] == "audio":
+			cnt_audio = typ["count"]
+	PLog("cnt_video: %d, cnt_audio: %d" % (cnt_video, cnt_audio))
+			
+	if cnt_video == 0 and cnt_audio == 0: 
+		msg1 = u'keine videos und Audios gefunden'
 		msg2 = query
-		icon = R(ICON_MAINXL)		
+		icon = ICON_MAINXL		
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
 		PLog("%s: %s" % (msg1, msg2))
 		return
@@ -525,82 +532,66 @@ def XL_Search(query='', pagenr=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')						# Home-Button
 	
-	docObject1 = jsonObject1["documentTypes"][0]
-	docObject2 = jsonObject2["documentTypes"][0]
-	cnt1 = docObject1["count"]
-	cnt2 = docObject2["count"]
-	PLog("cnt1: %d, cnt2: %d" % (cnt1, cnt2))
-	items1 = docObject1["items"]
-	items2 = docObject2["items"]
-	PLog("items1: %d, items2: %d" % (len(items1), len(items2)))
-	
-	try:
-		item1 = docObject1["items"][0]
-		PLog(str(item1)[:80])
-	except:
-		cnt1=0
-	try:
-		item2 = docObject2["items"][0]
-	except:
-		cnt2=0
-	
-	if len(items1):
-		title = "[B]Videos: Seite %d[/B]" % pagenr
-		img = get_img(item1)		# Bild 1. Beitrag
-		url = BASE_URL + item1["url"]
+	if cnt_video:
+		title = "[B]Videos: Anzahl %d[/B]" % cnt_video
+		img = R(ICON_DIR_FOLDER)
 		tag = "Folgeseiten | zu den Videos" 
-	
-		query=py2_encode(query); url=py2_encode(url)
-		fparams="&fparams={'url': '%s', 'query': '%s', 'typ': 'VIDEO'}" %\
-			(quote(path1), quote(query))					# hier Such-Url11 -> XL_SearchContent
+		query=py2_encode(query);
+		fparams="&fparams={'typ': 'video', 'query': '%s'}" % quote(query)		
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_SearchContent", 
 			fanart=img, thumb=img, tagline=tag, fparams=fparams)
 			
-	if len(items2):
-		title = "[B]Audios: Seite %d[/B]" % pagenr
-		img = get_img(item2)		# Bild 1. Beitrag
-		url = BASE_URL + item2["url"]
+	if cnt_audio:
+		title = "[B]Audios: Anzahl %d[/B]" % cnt_audio
 		tag = "Folgeseiten | zu den Audios"
-	
-		query=py2_encode(query); url=py2_encode(url)
-		fparams="&fparams={'url': '%s', 'query': '%s', 'typ': 'AUDIO'}" %\
-			(quote(path2), quote(query))					# hier Such-Url2 -> XL_SearchContent
+		fparams="&fparams={'typ': 'audio', 'query': '%s'}" % quote(query)			
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_SearchContent", 
 			fanart=img, thumb=img, tagline=tag, fparams=fparams)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)			
 	
-# ----------------------------------------------------------------------	 
-def XL_SearchContent(url, query, typ):
-	PLog("XL_SearchContent: " + url)
+# ----------------------------------------------------------------------
+# komplettes Suchergebnis mit documentType laden
+# 	 
+def XL_SearchContent(typ, query, pagenr=''):
+	PLog("XL_SearchContent: " + typ)						# Bsp. TXL_Search_video
 
-	page, msg = get_page(path=url)	 
+	if pagenr == '':		# erster Aufruf muss '' sein
+		pagenr = 0
+	else:
+		pagenr = int(pagenr)	
+	
+	path =  "https://www.tagesschau.de/json/search?searchText=%s&documentType=%s&pageIndex=%d" % (query, typ, pagenr) 
+	page, msg = get_page(path)	 
 	if not page:	
 		msg1 = "Fehler in XL_SearchContent:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
-		return 	
-	pagenr = url.split("pageIndex=")[-1]
-	PLog("pagenr: " + pagenr)
-
-	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')						# Home-Button
-	
-	jsonObject = json.loads(page)
+		return 
+	jsonObject = json.loads(page)		
 	PLog(str(jsonObject)[:80])
 	items = jsonObject["documentTypes"][0]["items"]
+	PLog(len(items))
+	PLog(str(items)[:80])
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='TagesschauXL')						# Home-Button
 	
 	for item in items:
 		tag=""; summ=""
 		title = item["headline"]
-		#img = get_img(item)								# bei Videos sehr häufig fehlend
-		img = ICON_MAINXL
+		img = get_img(item)								
 		if "datetime" in item:
 			tag = "Sendedatum: " + item["datetime"]
-		tag = "%s | weiter zum [B]%s[/B]" % (tag, typ)
+		tag = "%s | weiter zum [B]%s[/B]" % (tag, up_low(typ))
 		if "description" in item:
 			summ = item["description"] 
 		url = BASE_URL + item["url"]
+		
+		if title == "Video":								# nichtsagenden Titel erweitern
+			title = "%s ..." % summ[:50]
+		if len(title) > 65:
+			title = "%s ..." % title[:65]
 		
 		title = repl_json_chars(title); summ = repl_json_chars(summ);
 		url=py2_encode(url); title=py2_encode(title); 		
@@ -608,26 +599,30 @@ def XL_SearchContent(url, query, typ):
 			(quote(title), quote(url))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.get_VideoAudio", 
 			fanart=img, thumb=img, tagline=tag, summary=summ, fparams=fparams)
-	
+			
 	# Mehr-Seiten - ohne Berechnung
-	tag = u"nächste Seite, aktuell: %s" % pagenr
 	nextpage = str(int(pagenr) + 1)
+	tag = u"nächste Seite, aktuell: %s" % nextpage			# Basis 0
 	PLog("nextpage: %s" % nextpage) 
 	title = "Mehr: [B]%s[/B]" % query
 	query=py2_encode(query);
-	fparams="&fparams={'query': '%s', 'pagenr': '%s'}" % (quote(query), nextpage)
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Search", fanart=R(ICON_MEHR), 
+	fparams="&fparams={'typ': '%s', 'query': '%s', 'pagenr': '%s'}" % (typ, quote(query), nextpage)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_SearchContent", fanart=R(ICON_MEHR), 
 		thumb=R(ICON_MEHR), fparams=fparams, tagline=tag)		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			
 # ----------------------------------------------------------------------
 def get_img(item):	
 	PLog('get_img:')
 	PLog(str(item)[:60])
+	PLog(str(item))
 	try:
-		img = item["teaserImage"]["urlM"]	
+		img = item["teaserImage"]["urlS"]	# urlM sehr häufig fehlend
 	except:
 		img = R(ICON_DIR_FOLDER)
+	PLog("img: " + img)
 	return img
 	
 # ----------------------------------------------------------------------

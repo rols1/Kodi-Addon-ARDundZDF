@@ -1795,6 +1795,13 @@ def make_filenames(title, max_length=255):
 	fname = fname.replace(u' ', u'_')
 	fname = fname.replace(u'___', u'_')
 	return fname[:max_length]
+#---------------------------------------------------------------- 
+def valid_string(s):
+	
+	valid_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
+	ret = ''.join(c for c in s if c in valid_chars)
+	return ret
+	 
 #----------------------------------------------------------------  
 # Umlaute übersetzen, wenn decode nicht funktioniert
 # Migration PY2/PY3: py2_decode aus kodi-six

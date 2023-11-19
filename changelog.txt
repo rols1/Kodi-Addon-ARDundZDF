@@ -10,6 +10,32 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+19.11.2023 4.9.0
+			thread_getepg (Modul EPG): EPG-Abruf unterdrückt bei fehlender ID.
+			Kika_Subchannel (Modul childs): Eintrag ohne Url abgefangen.
+			MausLive (Modul childs): unescape für Sendungstitel.
+			Merkliste: Unterdrückung Kontextmenüeintrag "Hinzufügen" beim Listen der
+			Merkliste selbst.
+			Merkliste: seltenes -Zeichen ersetzt (&#8211; -> &#45; optisch identischer
+			Gedankenstrich), Anpassungen in Watch_items (actions del, rename, folder.
+			Merkliste: wegen unterschiedl. Leerz.  bei gleichen Namen Vergleich mit 
+			name.strip() == iname.strip().
+			get_summary_pre (util): Merkmal Auswertung Beschreibung geändert ->
+			item-description. Text bei "description content" zu kurz.
+			Audiothek: Titel für funk-Podcasts aktualisiert, Anpassung AudioStart 
+			und AudioSenderPrograms (title.startswith).
+			Audio_get_items_single (Audiothek): Fix img-Suche ('},' -> ',') und Platz-
+			halter für leere img-Suche.
+			AudioSenderPrograms (Audiothek): Fix Hochkommata im Titel ('\\"' -> '*').
+			Audio_get_sendung_api (Audiothek): Ausschluss Mehr-Button bei nur 1 Beitrag.
+			Podcast-Favoritenliste: entfernt (obsolet) - Code entfernt in: AudioStart,
+			PodFavoriten + PodFolder + PodAddFavs (Modul Podcontent), Datei podcast-
+			favorits.txt gelöscht, Github-Wiki aktualisiert.
+			ClearUpThumbnails (tools): Dialog-Titel ergänzt: Dateien älter als x Tage.
+			Modul TagesschauXL.py: Suche an ARD-Änderungen angepasst (XL_Search und
+			XL_SearchContent erneuert), img-Auswahl auf urlS umgestellt (mehr Ergebnisse
+			als urlM).
+
 05.11.2023 4.8.9
 			get_ARD_LiveEPG (util): Auswertung currentStartDate statt startDate (falls
 			vorhanden).
@@ -18,7 +44,7 @@ CHANGE HISTORY
 			EPG_ShowSingle, SenderLiveListe, EPG_ShowSingle, EPG_ShowAll, 1-sec-Delay
 			auf 1/2 sec verkürzt.
 			thread_getepg (EPG): Löschen der Cache-Dateien unabhängig vom Alter.
-			ShowFavs: try/except-Block für neue Sortierroutine (Addonscrash bei
+			ShowFavs: try/except-Block für neue Sortierroutine (Addoncrash bei
 			leerer Liste).
 			livesenderTV.xml: hrefsender-Titel aktualisiert für "Rundfunk Berlin 
 			Brandenburg" und "Rundfunk Berlin"
