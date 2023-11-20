@@ -6,8 +6,8 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-# 	<nr>3</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.11.2023
+# 	<nr>4</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.11.2023
 #
 
 from __future__ import absolute_import
@@ -160,7 +160,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 				if len(my_ordner) == 0:								# leer: Initialisierung
 					my_ordner = ORDNER
 				my_ordner.insert(0, u"*ohne Zuordnung*")
-				my_ordner=sorted(my_ordner, key=str.lower)
+				my_ordner=sorted(my_ordner)							# Problem mit key=str.lower in PY2
 				
 				ret = xbmcgui.Dialog().select(u'Ordner wählen (Abbrechen: ohne Zuordnung)', my_ordner, preselect=0)
 				if ret > 0:
@@ -433,7 +433,7 @@ def save_merkliste(merkliste, my_ordner):
 	PLog(fname)
 
 	# Merkliste + Ordnerinfo + Ordner:
-	my_ordner = sorted(my_ordner, key=str.lower)
+	my_ordner = sorted(my_ordner)								# Problem mit key=str.lower in PY2
 	err_msg = ''												# gefüllt von Aufrufer 
 	if my_ordner == '' or my_ordner == []:						# Fallback Basis-Ordner-Liste
 		my_ordner = ORDNER
@@ -496,7 +496,7 @@ def watch_filter(delete=''):
 	my_items, my_ordner = ReadFavourites('Merk')	# Ordnerliste holen	
 	my_ordner = check_ordnerlist(my_ordner)
 	my_ordner.insert(0, u"*ohne Zuordnung*")
-	my_ordner=sorted(my_ordner, key=str.lower)
+	my_ordner=sorted(my_ordner)						# Problem mit key=str.lower in PY2
 	
 	preselect = 0									# Vorauswahl
 	if os.path.isfile(MERKFILTER) == True:	
@@ -533,7 +533,7 @@ def check_ordnerlist(my_ordner):
 			msg3 = u"Die Ordnerliste wird nach Einfügen oder Löschen erneuert."
 			MyDialog(msg1, msg2, msg3, heading=heading)
 			my_ordner = ORDNER
-	return sorted(my_ordner, key=str.lower)
+	return sorted(my_ordner)						# Problem mit key=str.lower in PY2
 			
 # ----------------------------------------------------------------------
 # Markierungen "Ordner:" + "Modul:" aus tagline + summary der akt. 
