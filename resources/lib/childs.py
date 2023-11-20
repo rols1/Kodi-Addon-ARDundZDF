@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>24</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.11.2023
+# 	<nr>25</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.11.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -746,8 +746,9 @@ def Kika_get_singleItem(s):
 	Plot = "%s\n\n%s" % (tag, summ)
 	Plot = Plot.replace('\n', '||')
 		
-	api_url=py2_encode(api_url); stitle=py2_encode(stitle); img=py2_encode(img);
 	path=api_url; thumb=img; Plot=Plot	
+	path=py2_encode(path); typ=py2_encode(typ); stitle=py2_encode(stitle); 
+	thumb=py2_encode(thumb); Plot=py2_encode(Plot)
 	PLog('mehrf: %s, typ: %s, api_url: %s, stitle: %s, thumb: %s, Plot: %s' % (mehrf, typ, path, stitle, thumb, Plot))	
 	return mehrf,typ,path,stitle,thumb,Plot			
 # ----------------------------------------------------------------------
@@ -911,6 +912,8 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 				mediatype='video'
 		PLog("func:" + func)	
 		if func:		
+			stitle=py2_encode(stitle); path=py2_encode(path); 
+			thumb=py2_encode(thumb); Plot=py2_encode(Plot)
 			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
 				(quote(path), quote(stitle), quote(thumb), quote(Plot))
 			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.%s" % func, 
@@ -2161,9 +2164,9 @@ def Tivi_AZ():
 		title = "Sendungen mit " + element
 		img_src = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % button
 		
-		PLog(element); PLog(img_src)
+		PLog(button); PLog(img_src)
 		button=py2_encode(button); title=py2_encode(title);		
-		fparams="&fparams={'name': '%s', 'element': '%s'}" % (quote(title), element)
+		fparams="&fparams={'name': '%s', 'element': '%s'}" % (quote(title), button)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_AZ_Sendungen", fanart=R(ICON_DIR_FOLDER), 
 			thumb=img_src, fparams=fparams, tagline=title)
  

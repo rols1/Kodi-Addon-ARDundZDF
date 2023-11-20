@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.11.2023
+# 	<nr>17</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.11.2023
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -81,9 +81,9 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 			if os.path.exists(fname):					# n.v. oder soeben entfernt?
 				os.remove(fname)						# entf. -> erneuern								
 			rec = EPG(ID=ID, load_only=True)			# Seite laden + speichern
-			xbmc.sleep(500)								# Systemlast verringern
+			xbmc.sleep(250)								# Systemlast verringern
 		
-	xbmcgui.Dialog().notification("EPG-Download", "abgeschlossen",icon,3000)
+	xbmcgui.Dialog().notification("EPG-Download", "abgeschlossen (%d)" % (i+1),icon,3000)
 	
 	return
 
@@ -310,7 +310,7 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 	PLog(type(page))
 	if page == False or len(page) == 0:									# Cache miss - vom Server holen
 		page, msg = get_page(path=url)				
-	if 'str' in str(type(page)):										# Webseite
+	if '<!DOCTYPE html>' in page:										# Webseite
 		EPG_dict = get_data_web(page, Dict_ID)							# Web -> 2-dim-Array EPG_rec -> Dict					 
 	else:																# EPG_rec = type list 
 		EPG_dict = page	
