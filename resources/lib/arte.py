@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>37</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.10.2023
+#	Stand: 24.11.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -706,6 +706,8 @@ def Beitrag_Liste(url, title):
 # 14.01.2023 Korrektur "_de"-Endung in pid (falls pid=url)
 # 11.03.2023 bei Bedarf alternative HBBTV-Quellen nutzen, siehe
 #	 lokale Doku 00_Arte_HBBTV_Links
+# 24.11.2023 Check api_opa und api_V2: wie bisher nur HLS-UHD-Quellen in
+#	api_V2
 #
 def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	PLog("SingleVideo: " + pid)

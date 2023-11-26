@@ -53,7 +53,7 @@
 	<setting label="Aufnehmen mit EPG: Nachlauf" type="select" values="00:00:00 = 0 Minuten|00:05:00 = 5 Minuten|00:15:00 = 15 Minuten|00:30:00 = 30 Minuten" default="00:00:00 = 0 Minuten" id="pref_post_rec"/> 
 	<setting label="Aufnehmen mit EPG: max. Größe der Aufnahmeliste (Anzahl)" type="select" values="10|25|50|100" default="10" id="pref_max_reclist"/> 
     <setting type="sep"/>
- 	<setting label="EPG im Hintergrund laden (12 Std.-Intervall)" type="bool" id="pref_epgpreload" default="false"/>
+ 	<setting label="EPG im Hintergrund laden (Intervall siehe Addon-Cache)" type="bool" id="pref_epgpreload" default="false"/>
 </category> 
 
  <category label="Addon-Cache: Löschfristen (Tage)">
@@ -62,6 +62,7 @@
 	<setting label="Bildersammlungen (Slide Shows)" type="select" values="1|10|30|100" default="30" id="pref_SLIDES_store_days"/>
 	<setting label="Inhaltstexte (im Voraus geladen)" type="select" values="5|10|30|100" default="30" id="pref_TEXTE_store_days"/>
 	<setting label="ARD- und ZDF-TV-Livestream-Quellen" type="select" values="0|1|5|10|20|60" default="10" id="pref_tv_store_days"/>
+	<setting label="EPG: Intervall für die Aktualisierung" type="select" values="12 Std.|1 Tag|5 Tage|10 Tage" default="12 Std." id="pref_epg_intervall"/>
 </category> 
 
  <category label="Favoriten / Merkliste / strm-Dateien">

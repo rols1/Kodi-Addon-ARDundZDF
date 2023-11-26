@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>163</nr>										# Numerierung für Einzelupdate
-VERSION = '4.9.0'
-VDATE = '19.11.2023'
+VERSION = '4.9.1'
+VDATE = '26.11.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -83,7 +83,6 @@ NAME			= 'ARD und ZDF'
 PREFIX 			= '/video/ardundzdf'		#	
 												
 PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
-FAVORITS_Pod 	= 'podcast-favorits.txt' 	# Lesezeichen für Podcast-Erweiterung 
 FANART					= 'fanart.png'		# ARD + ZDF - breit
 ART 					= 'art.png'			# ARD + ZDF
 ICON 					= 'icon.png'		# ARD + ZDF
@@ -237,18 +236,27 @@ PLog('check: ' + str(check))
 
 now = time.time()											# Abgleich Flags
 # die tvtoday-Seiten decken 12 Tage ab, trotzdem EPG-Lauf alle 12 Stunden
-#	 (dto. Cachezeit für einz. EPG-Seite in EPG.EPG).
+#	 	(dto. Cachezeit für einz. EPG-Seite in EPG.EPG).
+#		26.11.2023 Intervall optional statt 12 Std. - s.a. EPG-Modul
 # 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - s. thread_getepg
 if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden?
+	eci = SETTINGS.getSetting('pref_epg_intervall')
+	eci = re.search(u'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
+	eci = int(eci)
+	PLog("eci: %d" % eci)
+	if eci == 12:											# 12 Std.
+		EPGCacheTime = 43200
+	else:
+		EPGCacheTime = eci * 86400 							# 1-10 Tage
+		
 	EPGACTIVE = os.path.join(DICTSTORE, 'EPGActive') 		# Marker thread_getepg aktiv
-	EPGCacheTime = 43200									# 12 STd.
 	is_activ=False
 	if os.path.exists(EPGACTIVE):							# gesetzt in thread_getepg 
 		is_activ=True
 		mtime = os.stat(EPGACTIVE).st_mtime
 		diff = int(now) - mtime
-		PLog(diff)
-		if diff > EPGCacheTime:								# entf. wenn älter als 1 Tag	
+		PLog(diff); PLog(EPGCacheTime)
+		if diff > EPGCacheTime:								# Flag entf. wenn älter als Option	
 			os.remove(EPGACTIVE)
 			is_activ=False
 	if is_activ == False:									# EPG-Daten veraltet, neu holen
@@ -408,15 +416,15 @@ def Main():
 		summary=summ, fparams=fparams)
 
 	title = "ARD Mediathek"
-	tagline = u'die Classic-Version der Mediathek existiert nicht mehr - sie wurde von der ARD eingestellt'
+	tagline = u'einschließlich Teletext und sportschau.de (WDR) '
 	CurSender = Dict('load', "CurSender")
 	if ":" in str(CurSender):
-		tagline = "%s\nSender: [B]%s[/B]" % (tagline, CurSender.split(":")[0])
+		tagline = "%s\n\nSender: [B]%s[/B]" % (tagline, CurSender.split(":")[0])
 	fparams="&fparams={'name': '%s'}" % (title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Main_NEW", fanart=R(FANART), 
 		thumb=R(ICON_MAIN_ARD), tagline=tagline, fparams=fparams)
 			
-	tagline = u"einschließlich ZDF-funk"
+	tagline = u"einschließlich Teletext und ZDF-funk"
 	summ = "funk-Podcasts befinden sich in der Audiothek"
 	fparams="&fparams={'name': 'ZDF Mediathek'}"
 	addDir(li=li, label="ZDF Mediathek", action="dirList", dirID="Main_ZDF", fanart=R(FANART), 
@@ -906,14 +914,10 @@ def AddonInfos():
 	a7 = u"%s [B]Filterliste:[/B] %s" %  (t,filterfile)
 	searchwords = os.path.join(ADDON_DATA, "search_ardundzdf")
 	a8 = u"%s [B]Suchwortliste:[/B] %s" %  (t,searchwords)
-	fname =  SETTINGS.getSetting('pref_podcast_favorits')
-	if os.path.isfile(fname) == False:
-		fname = os.path.join(PluginAbsPath, "resources", "podcast-favorits.txt") 
-	a9 = u"%s [B]Podcast-Favoriten:[/B]\n%s%s" %  (t,t,fname)		# fname in 2. Zeile
 	log = xbmc.translatePath("special://logpath")
 	log = os.path.join(log, "kodi.log") 	
-	a10 = u"%s [B]Debug-Log:[/B] %s" %  (t, log)
-	a11 = u"%s [B]TV-und Event-Livestreams:[/B] %s/%s" % (t, PluginAbsPath, "resources/livesenderTV.xml")
+	a9 = u"%s [B]Debug-Log:[/B] %s" %  (t, log)
+	a10 = u"%s [B]TV-und Event-Livestreams:[/B] %s/%s" % (t, PluginAbsPath, "resources/livesenderTV.xml")
 	
 	p3 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10)
 	page = u"%s\n%s\n%s" % (p1,p2,p3)
@@ -5499,15 +5503,6 @@ def DownloadTools():
 		(title, '', movie_path)
 	addDir(li=li, label=title, action="dirList", dirID="DirectoryNavigator", fanart=R(ICON_DOWNL_DIR), 
 		thumb=R(ICON_DIR_MOVE), fparams=fparams, tagline=tagline, summary=summ)
-
-	PLog(SETTINGS.getSetting('pref_podcast_favorits'))					# Pfad zur persoenlichen Podcast-Favoritenliste
-	path =  SETTINGS.getSetting('pref_podcast_favorits')							
-	title = u'Persoenliche Podcast-Favoritenliste festlegen/ändern (%s)' % path			
-	tagline = 'Format siehe podcast-favorits.txt (Ressourcenverzeichnis)'
-	# summary =    # s.o.
-	fparams="&fparams={'settingKey': 'pref_podcast_favorits', 'mytype': '1', 'heading': '%s', 'path': '%s'}" % (title, path)
-	addDir(li=li, label=title, action="dirList", dirID="DirectoryNavigator", fanart=R(ICON_DOWNL_DIR), 
-		thumb=R(ICON_DIR_FAVORITS), fparams=fparams, tagline=tagline)
 		
 	if mpcnt > 0:																# Videos / Podcasts?
 		dirsize=''

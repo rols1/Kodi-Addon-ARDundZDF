@@ -10,6 +10,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+26.11.2023 4.9.1
+			Merkliste:  Sortieroption key=str.lower für Ordner entfernt (Problem in
+			PYY2). 
+			EPG (Modul EPG): Abgleich Datentyp geändert von str(type(page)) auf 
+			'<!DOCTYPE html>' in page (komp. mit PY2). 
+			thread_getepg: Ende-Notification mit Anzahl der Abrufe ergänzt. Delay
+			von 500 auf 250 millisec verringert.
+			Kika_Rubriken (childs): py2_encode für addDir-Parameter (komp. mit PY2).
+			Kika_get_singleItem (childs): py2_encode für return-Parameter (komp. mit 
+			PY2).
+			Tivi_AZ (childs): element -> button für addDir-Parameter.
+			
+			Main: Hinweis auf ARD-Classic-Version entfernt, Hinweis auf Teletext in
+			ARD- und ZDF-Button hinzugefügt.
+			DownloadTools: Button Podcast-Favoritenliste entfernt obsolet), dto. Verweise
+			im restl. Addon.
+			SingleVideo (Modul arte): Check zusätzliche UHD-Quellen in api_opa und api_V2 -
+			neg., wie bisher nur HLS-Quellen.
+			EPG: Nachlade-Intervall von 12 Std. geändert auf Option  "12 Std. | 1 Tag | 
+			5 Tage | 10 Tage" - Anpassung settings.xml, Haupt-PRG (Zeit-Abgleich und
+			Initialisierung thread_getepg), Nutzung EPGCacheTime EPG-Modul).
+
 19.11.2023 4.9.0
 			thread_getepg (Modul EPG): EPG-Abruf unterdrückt bei fehlender ID.
 			Kika_Subchannel (Modul childs): Eintrag ohne Url abgefangen.
@@ -557,7 +579,7 @@ CHANGE HISTORY
 			ngplayer_2_3 -> ngplayer_2_4).
 			get_pagination (ARDnew): Sicherung 'null' ergänzt.
 			ARDStart (ARDnew): Ergänzung für regionale Inhalte nach Katalog (Sender, Titel,
-			Url).		
+			Url).
 
 31.01.2023 4.6.0
 			build_Streamlists_buttons: UHD-Kennz. im Titel bei UHD-Streams in den 

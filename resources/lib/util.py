@@ -1053,7 +1053,6 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		li.addContextMenuItems(commands)				
 	
 	xbmcplugin.addDirectoryItem(handle=HANDLE,url=add_url,listitem=li,isFolder=isFolder)
-	
 	PLog('addDir_End')		
 	return	
 

@@ -11,7 +11,7 @@
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>17</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.11.2023
+#	Stand: 26.11.2023
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -41,6 +41,16 @@ else:
 	msg = "callfrom_router"
 PLog(msg)
 
+# EPGCacheTime wie Haupt-PRG:
+eci = SETTINGS.getSetting('pref_epg_intervall')
+eci = re.search(u'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
+eci = int(eci)
+PLog("eci: %d" % eci)
+if eci == 12:											# 12 Std.
+	EPGCacheTime = 43200
+else:
+	EPGCacheTime = eci * 86400 							# 1-10 Tage
+
 ADDON_ID 	= 'plugin.video.ardundzdf'
 SETTINGS 	= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_PATH	= SETTINGS.getAddonInfo('path')
@@ -51,16 +61,15 @@ EPG_BASE 	= "http://www.tvtoday.de"
 #	Kopfbereich) abhängig von Setting pref_epgpreload + Abwesenheit 
 #		von EPGACTIVE (Setting "Recording TV-Live"/"EPG im Hintergrund 
 #		laden ..") 
-#	Startverzögerung 10 sec, 2 sec-Ladeintervall 
-#	Aktiv-Signal EPGACTIVE wird nach 12 Std. von
+#	Startverzögerung 10 sec
+#	Aktiv-Signal EPGACTIVE wird abhängig von pref_epg_intervall im
 #	 Haupt-PRG wieder entfernt.
-#	Dateilock nicht erf. - CacheTime hier und in EPG identisch
+#	Dateilock nicht erf.
 # 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - entf. ab
 #	09.10.2021 siehe update_single
 #
 def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	PLog('thread_getepg:')
-	CacheTime = 43200									# 12 Std.: (60*60)*12 wie EPG s.u.
 	
 	open(EPGACTIVE, 'w').close()						# Aktiv-Signal setzen (DICT "EPGActive")
 	xbmc.sleep(1000 * 10)								# verzög. Start	
@@ -108,7 +117,6 @@ def update_single(PluginAbsPath):
 	# nicht verwenden: addon.xml + settings.xml (CAddonSettings-error),
 	#	changelog.txt, slides.xml, ca-bundle.pem, Icons
 	SINGLELIST = ["%s/%s" % (PluginAbsPath, "resources/livesenderTV.xml"),
-				"%s/%s" % (PluginAbsPath, "resources/podcast-favorits.txt"),
 				"%s/%s" % (PluginAbsPath, "resources/settings.xml"),
 				"%s/%s" % (PluginAbsPath, "resources/arte_lang.json"),
 				"%s/%s" % (PluginAbsPath, "ardundzdf.py")
@@ -301,12 +309,11 @@ def update_single(PluginAbsPath):
 def EPG(ID, mode=None, day_offset=None, load_only=False):
 	PLog('EPG_ID: ' + ID)
 	PLog(mode)
-	CacheTime = 43200								# 12 Std.: (60*60)*12
 	url="http://www.tvtoday.de/programm/standard/sender/%s.html" % ID
 	Dict_ID = "EPG_%s" % ID
 	PLog(url)
 	
-	page = Dict("load", Dict_ID, CacheTime=CacheTime)
+	page = Dict("load", Dict_ID, CacheTime=EPGCacheTime)
 	PLog(type(page))
 	if page == False or len(page) == 0:									# Cache miss - vom Server holen
 		page, msg = get_page(path=url)				
@@ -314,7 +321,7 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		EPG_dict = get_data_web(page, Dict_ID)							# Web -> 2-dim-Array EPG_rec -> Dict					 
 	else:																# EPG_rec = type list 
 		EPG_dict = page	
-	PLog(len(page))
+	PLog(len(str(page)))
 
 	# today.de verwendet Unix-Format, Bsp. 1488830442
 	now,today,today_5Uhr,nextday,nextday_5Uhr = get_unixtime(day_offset)# lokale Unix-Zeitstempel holen + Offsets
