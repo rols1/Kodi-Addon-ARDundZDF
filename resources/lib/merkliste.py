@@ -6,8 +6,8 @@
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 ################################################################################
-# 	<nr>4</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.11.2023
+# 	<nr>5</nr>										# Numerierung für Einzelupdate
+#	Stand: 28.11.2023
 #
 
 from __future__ import absolute_import
@@ -863,26 +863,33 @@ def clear_merkliste():
 ######################################################################## 			
 # argv-Verarbeitung wie in router (Haupt-PRG)
 # Beim Menü Favoriten (add) endet json.loads in exception
-# vorgezogener Aufruf clear_merkliste ohne params
+# Aufrufe aus Haupt-PRG ohne fparams: clear_merkliste,
+# 	do_folder. Direkter Funktions-Call bisher nicht möglich, daher
+#	auch return via network_error.
 
 PLog(str(sys.argv))
 PLog(sys.argv[2])
 paramstring = unquote_plus(sys.argv[2])
-# PLog('params: ' + paramstring)
+PLog('params: ' + paramstring)
 params = dict(parse_qs(paramstring[1:]))
 PLog('merk_params_dict: ' + str(params))
 
-if "'fparams_add': 'clear'" in str(params):			# Aufruf InfoAndFilter -> start_script
+# ------------------------------------------------- # callfromstart_script (2 Varianten möglich):
+
+if "'fparams_add': 'clear'" in str(params):			# 1. Aufruf InfoAndFilter -> start_script -> router
 	clear_merkliste()
 	ignore_this_network_error()						# network_error statt threading Exception (s.o.)
-# ----------------------------------------------------------------------	
+if "'fparams_add': 'do_folder'" in str(params):		# 2. Aufruf InfoAndFilter -> router
+	do_folder()
+	ignore_this_network_error()						# network_error statt threading Exception (s.o.)
 	
+# ------------------------------------------------- # callfrom_context:
 
-PLog('action: ' + params['action'][0]) # hier immer action="dirList"
-PLog('dirID: ' + params['dirID'][0])
+PLog('action: ' + params['action'][0]) 				# context: immer action="dirList"
+PLog('dirID: ' + params['dirID'][0])				# context: immer dirID="Watch"
 # PLog('fparams: ' + params['fparams'][0])
 
-func_pars = params['fparams'][0]
+func_pars = params['fparams'][0]					# fparams s. addDir
 PLog("func_pars: " + func_pars)
 name = stringextract("'name': ", ',', func_pars)	# für exceptions s.u.
 name = name.replace("'", "")
@@ -891,6 +898,7 @@ try:
 	func_pars = func_pars.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 	func_pars = func_pars.replace('\\', '\\\\')		# json.loads-kompatible Windows-Pfade
 	mydict = json.loads(func_pars)
+	PLog("merk_mydict: " + str(mydict))
 except Exception as exception:						# Bsp. Hinzufügen von Favoriten
 	err_msg = str(exception)
 	msg3=''

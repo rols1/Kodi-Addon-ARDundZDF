@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>163</nr>										# Numerierung für Einzelupdate
+# 	<nr>164</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.1'
-VDATE = '26.11.2023'
+VDATE = '28.11.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -561,6 +561,7 @@ def Main():
 	tag = '[B]Infos, Tools und Filter zu diesem Addon[/B]'					# Menü Info + Tools
 	summ= u'- Ausschluss-Filter bearbeiten'
 	summ= u"%s\n- Merkliste bereinigen" % summ
+	summ= u"%s\n- Merklisten-Ordner bearbeiten" % summ
 	summ= u'%s\n- Suchwörter bearbeiten' % summ
 	summ= u'%s\n- Refresh TV-Livestream-Quellen' % summ
 	summ = "%s\n-%s" % (summ, "Download- und Aufnahme-Tools")
@@ -642,6 +643,13 @@ def InfoAndFilter():
 
 	fparams="&fparams={'myfunc': '%s', 'fparams_add': 'clear'}"  % quote(myfunc)		
 	addDir(li=li, label=title, action="dirList", dirID="start_script",\
+		fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tag, summary=summ, fparams=fparams)	
+				
+	title = u"Merklisten-Ordner bearbeiten"					# Button für Bearbeitung der Merklisten-Ordner 
+	tag = u"Ordner der Merklisten hinzufügen oder entfernen." 
+	tag = u"%s\nBasis-Ordnerliste wiederherstellen (Reset der Ordnerliste)." % tag
+	fparams="&fparams={'fparams_add': 'do_folder'}" 		# Variante ohne start_script 		
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.merkliste.do_folder",\
 		fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tag, summary=summ, fparams=fparams)	
 				
 			
@@ -732,6 +740,7 @@ def InfoAndFilter():
 			
 	
 	dt, lt = resources.lib.tools.get_foruminfo()					# Datum, letzter Eintrag
+	# dt=""; lt="" # Debug
 	item = "zuletzt: [B]%s[/B] | %s" % (dt, lt)		
 	title = u"Einzelupdate (einzelne Dateien und Module), %s" % dt	# Update von Einzeldateien
 	tag = u'[B]Update einzelner Dateien aus dem Github-Repo des Addons'
