@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>164</nr>										# Numerierung für Einzelupdate
+# 	<nr>165</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.1'
-VDATE = '28.11.2023'
+VDATE = '02.12.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -506,7 +506,7 @@ def Main():
 			fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)	
 				
 	if SETTINGS.getSetting('pref_showFavs') ==  'true':			# Favoriten einblenden
-		tagline = "Kodi's ARDundZDF-Favoriten zeigen und aufrufen"
+		tagline = "Kodis ARDundZDF-Favoriten zeigen und aufrufen"
 		fparams="&fparams={'mode': 'Favs'}"
 		addDir(li=li, label='Favoriten', action="dirList", dirID="ShowFavs", 
 			fanart=R(FANART), thumb=R(ICON_DIR_FAVORITS), tagline=tagline, fparams=fparams)	
@@ -648,7 +648,8 @@ def InfoAndFilter():
 	title = u"Merklisten-Ordner bearbeiten"					# Button für Bearbeitung der Merklisten-Ordner 
 	tag = u"Ordner der Merklisten hinzufügen oder entfernen." 
 	tag = u"%s\nBasis-Ordnerliste wiederherstellen (Reset der Ordnerliste)." % tag
-	fparams="&fparams={'fparams_add': 'do_folder'}" 		# Variante ohne start_script 		
+	fparams="&fparams={'fparams_add': 'do_folder'}" 		# Variante ohne start_script, in Merkliste identische
+															# Verarbeitung sys.argv	(Funktionscall erst dort)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.merkliste.do_folder",\
 		fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tag, summary=summ, fparams=fparams)	
 				
@@ -750,13 +751,17 @@ def InfoAndFilter():
 	fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.EPG.update_single",\
 		fanart=R(FANART), thumb=R("icon-update-einzeln.png"), tagline=tag, summary=summ, fparams=fparams)	
-		
-	
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
 #---------------------------------------------------------------- 
+# Aufruf: InfoAndFilter (-> Module strm, merkliste, playlist)
+# Bei der Merkliste erfolgt der Funktionscall bis auf Weiteres  nicht hier 
+#	sondern am Modulende durch Auswertung von sys.argv (ähnlich beim Context-Call,
+#	aber getrennte return-Behandlung, s. ignore_this_network_error in merkliste)
+#	
 # Wg.  Problemen mit der xbmc-Funktion executebuiltin(RunScript()) verwenden
-#	wie importlib wie in router()
+#	wir importlib wie in router()
 #	Bsp. myfunc: "resources.lib.playlist.items_add_rm" (relatv. Modulpfad + Zielfunktion)
 #	fparams_add json-kompat., Bsp.: '{"action": "playlist_add", "url": ""}'
 # Um die Rekursion der Web-Tools-Liste zu vermeiden wird MENU_STOP in playlist_tools
@@ -7993,7 +7998,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 		AZ=True
 	if not page:	
 		page, msg = get_page(path=url)
-		if not page:												# nicht vorhanden?
+		if not page:											# nicht vorhanden?
 			msg1 = 'ZDF_RubrikSingle: [B]%s[/B] kann nicht geladen werden.' % title
 			msg2 = msg
 			MyDialog(msg1, msg2, '')
@@ -8007,6 +8012,10 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 	else: 
 		jsonObject = json.loads(page)
 	PLog(str(jsonObject)[:80])
+		
+	navi=False
+	if "navigation"	in page:									# Navigations-Menü?, Bsp. Sportstudio
+		navi=True		
 		
 	clusterObject, msg = GetJsonByPath("cluster", jsonObject)
 	if clusterObject == '':					# index error
@@ -8035,6 +8044,18 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	PLog('mediatype: ' + mediatype); 
+						
+	if navi:													# Navigations-Menü voranstellen
+		PLog("add_navi_menu:")									# Ausw. livestreamsTeaser s.u.
+		obj = jsonObject["navigation"]
+		PLog(str(obj)[:80])
+		DictID = "ZDF_navigation"
+		Dict("store", DictID, obj)
+		label = jsonObject["navigation"]["name"]
+		fparams="&fparams={'DictID': '%s', 'title': '%s', 'homeID': '%s'}" % (DictID, title, homeID)
+		addDir(li=li, label=label, action="dirList", dirID="ZDF_get_navi", fanart=R(ICON_DIR_FOLDER), 
+			thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=u"Navigations-Menü")
+		
 						
 	PLog("Seriencheck:")										# Abzweig Serienliste ZDF_FlatListEpisodes
 	try:
@@ -8110,6 +8131,11 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			cnt=cnt+1
 	else:														# einzelner Cluster -> teaser-Auswertung
 		teaserObject, msg = GetJsonByPath("0|teaser", clusterObject)
+		if len(teaserObject) == 0:								# Bsp. Sportstudio: statt key teaser
+			teaserObject, msg = GetJsonByPath("0|livestreamsTeaser", clusterObject)
+			teaserObject2, msg = GetJsonByPath("0|scheduledLivestreamsTeaser", clusterObject)
+			if len(teaserObject) > 0:							# z.B. "Demnächst live"
+				teaserObject = teaserObject + teaserObject2
 		PLog("walk_teaser: %d" % len(teaserObject))
 		PLog("Teaser: %d " % len(teaserObject))
 		
@@ -8417,6 +8443,39 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 		(typ,title,tag,summ,img,url,stream,  scms_id) )		
 	return typ,title,tag,summ,img,url,stream,scms_id
 
+#---------------------------------------------------------------------------------------------------
+# Navigations-Menü, z.B. Sportstudio
+# Aufruf ZDF_RubrikSingle
+def ZDF_get_navi(DictID, title, homeID=""):
+	PLog('ZDF_get_navi: ' + DictID)
+	
+	li = xbmcgui.ListItem()
+	if homeID:
+		li = home(li, ID=homeID)
+	else:	
+		li = home(li, ID='ZDF')				# Home-Button
+		
+	jsonObject = Dict("load", DictID)
+	PLog(str(jsonObject)[:80])
+	name = jsonObject["name"]
+	jsonObject = jsonObject["teaser"]
+	PLog(str(jsonObject)[:80])
+	PLog(len(jsonObject))
+	for obj in jsonObject:
+		url = obj["url"]
+		title = obj["titel"]
+		summ = obj["beschreibung"]
+		
+		label = "%s | [B]%s[/B]" % (name, title)
+		tag = "Inhalt [B]%s[/B] | Folgeseiten" % title
+		title=py2_encode(title)
+	
+		fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" % (url, quote(title), homeID)
+		addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=R(ICON_DIR_FOLDER), 
+			thumb=R(ICON_DIR_FOLDER), fparams=fparams, summary=summ, tagline=tag)
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
 ####################################################################################################
 # ZDF-Suche:
 # 	Voreinstellungen: alle ZDF-Sender, ganze Sendungen, sortiert nach Datum
@@ -8967,7 +9026,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	#	nicht verwendbar
 	formitaeten, duration, geoblock, sub_path = get_form_streams(page)
 	forms=[]
-	if len(formitaeten) > 0:								# Videoquellen fehlen
+	if len(formitaeten) > 0:								# Videoquellen fehlen?
 		forms = stringextract('formitaeten":', ']', formitaeten[0])
 		forms = blockextract('"type":', forms)
 	PLog("forms: %d" % len(forms))
@@ -8991,6 +9050,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 		server = stringextract('//',  '/', url)			# 2 Server pro Bitrate möglich
 		if typ not in only_list or url in skip_list:
 			continue
+		
 		skip_list.append(url)
 			
 		quality = stringextract('"quality":"',  '"', form)
@@ -9784,6 +9844,9 @@ def ZDFSourcesHBBTV(title, scms_id):
 	
 	jsonObject = json.loads(page)
 	PLog('page_hbbtv: ' + str(jsonObject)[:100])
+	if len(jsonObject["streams"]) == 0:
+		return HBBTV_List
+		
 	label = jsonObject["streams"][0]["label"]				# i.d.R. "Normal", z.Z. nicht genutzt
 	
 	form_list=["h265_aac_mp4_http_na_na", "h264_aac_mp4_http_na_na"]
@@ -10563,8 +10626,9 @@ def router(paramstring):
 				
 				PLog(' router dest_modul: ' + str(dest_modul))
 				PLog(' router newfunc: ' + str(newfunc))
-				
-				dest_modul = importlib.import_module(dest_modul )		# Modul laden
+				# Codeausführung außerhalb der Funktionen vor func()!
+				dest_modul = importlib.import_module(dest_modul )		# Modul laden, Params -> sys.argv
+
 				PLog('loaded: ' + str(dest_modul))
 				#PLog(' router_params_dict: ' + str(params))			# Debug Modul-params
 				
