@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>165</nr>										# Numerierung für Einzelupdate
+# 	<nr>166</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.1'
 VDATE = '02.12.2023'
 
@@ -8134,7 +8134,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 		if len(teaserObject) == 0:								# Bsp. Sportstudio: statt key teaser
 			teaserObject, msg = GetJsonByPath("0|livestreamsTeaser", clusterObject)
 			teaserObject2, msg = GetJsonByPath("0|scheduledLivestreamsTeaser", clusterObject)
-			if len(teaserObject) > 0:							# z.B. "Demnächst live"
+			if len(teaserObject2) > 0:							# z.B. "Demnächst live"
 				teaserObject = teaserObject + teaserObject2
 		PLog("walk_teaser: %d" % len(teaserObject))
 		PLog("Teaser: %d " % len(teaserObject))
