@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>60</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.10.2023
+# 	<nr>61</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.12.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1647,7 +1647,8 @@ def ARD_Teletext_Wrap(new_lines, myline, max_length, txtRight):
 # gelöscht: def get_page_content(li, page, ID, mark='', mehrzS=''): 
 #		
 #---------------------------------------------------------------------------------------------------
-# 14.04.2023 get_page_content -> get_json_content 
+# 14.04.2023 get_page_content -> get_json_content
+# 06.12.2023 Auswertung EPG in ARDVerpasst_get_json
 #
 def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""): 
 	PLog('get_json_content: ' + ID); PLog(mark)
@@ -2578,6 +2579,7 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 #	json-Seite an. Verarbeitung in ARDVerpasstContent 	
 # CurSender neubelegt in Senderwahl od. in Param (phoenix)
 # 13.06.2023 Mitnutzung durch phoenix (CurSender, homeID)
+# 06.12.2023 endDate entfällt mit neuem api-Link programm-api.ard.de
 #
 def ARDVerpasst(title, CurSender="", homeID=""):
 	PLog('ARDVerpasst: ' + CurSender);
@@ -2598,7 +2600,7 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 
 	for nr in wlist:
 		rdate = now - datetime.timedelta(days = nr)
-		startDate = rdate.strftime("%Y-%m-%dT03:30:00.000Z")
+		startDate = rdate.strftime("%Y-%m-%d")
 		myDate  = rdate.strftime("%d.%m.")		# Formate s. man strftime (3)
 		
 		rdate2 = now - datetime.timedelta(days = nr-1)
@@ -2615,8 +2617,8 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 		tagline = "Sender: [B]%s[/B]" % sendername	
 		
 		PLog(title); PLog(startDate); PLog(endDate)
-		fparams="&fparams={'title': '%s', 'startDate': '%s', 'endDate': '%s', 'CurSender': '%s', 'homeID': '%s'}" %\
-			(title,  startDate, endDate, CurSender, homeID)
+		fparams="&fparams={'title': '%s', 'startDate': '%s', 'CurSender': '%s', 'homeID': '%s'}" %\
+			(title,  startDate, CurSender, homeID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasstContent", 
 			fanart=R(ICON_ARD_VERP), thumb=R(ICON_ARD_VERP), fparams=fparams, tagline=tagline)
 	
@@ -2642,45 +2644,54 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 #	entscheident (nicht geklärt).
 # 29.05.2020 Änderung der Webseite durch die ARD - s. ARDVerpasst,
 #	der 2-fache Durchlauf (Senderliste / Sendungen) entfällt
-# 
-def ARDVerpasstContent(title, startDate, endDate, CurSender="", homeID=""):
+# 06.12.2023 alter api-Link filtert nicht mehr nach Sendern, neuer Link
+#	programm-api.ard.de, gecached (ca. 2 MB, enthält alle Sender).
+#
+def ARDVerpasstContent(title, startDate, CurSender="", homeID=""):
 	PLog('ARDVerpasstContent:');
-	PLog(title);  PLog(startDate); PLog(endDate);
+	PLog(title);  PLog(startDate); 
 	
+	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+		'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
+
 	if CurSender == "":
 		CurSender = ARD_CurSender()				# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sendername); PLog(sender); 
 	
 	li = xbmcgui.ListItem()
-	if homeID:
-		 home(li, ID=homeID)
-	else:
-		li = home(li, ID='ARD Neu')				# Home-Button
+	if homeID  == "":			# Home-Button
+		homeID='ARD Neu'
+	home(li, ID=homeID)
 
-	base = "https://page.ardmediathek.de/page-gateway/compilations/ard/pastbroadcasts"
-	base = base.replace('/ard/', '/%s/' % sender)
-	# 09.01.2022 Anz. 100 kann bei ARD-Alle (ard) fehlschlagen -> 200 
-	path = base + "?startDateTime=%s&endDateTime=%s&pageNumber=0&pageSize=200" % (startDate, endDate)
+	base = "https://programm-api.ard.de/program/api/program?day=%s" % startDate
+	DictID = "ARD_PRG_%s" % startDate
+	page = Dict("load",DictID,CacheTime=ARDStartCacheTime)	# Cache: 5 min
+	if not page:											# nicht vorhanden oder zu alt -> vom					
+		page, msg = get_page(base, header=headers)			# 	Sender holen		
+		if page:
+			icon = R(ICON_MAIN_ARD)
+			xbmcgui.Dialog().notification("Cache Verpasst:" ,"Haltedauer 5 Min",icon,3000,sound=False)
+			Dict('store', DictID, page)						# json-Datei -> Dict, ca. 2 MByte 	
 	
-	page, msg = get_page(path)
 	if page == '':	
 		msg1 = 'Fehler in ARDVerpasstContent'
 		msg2=msg
 		msg3=path
 		MyDialog(msg1, msg2, msg3)	
-		return li
-	PLog(len(page))
-									
-	gridlist = blockextract( 'broadcastedOn', page) 
-	if len(gridlist) == 0:				
+		return
+	PLog(len(page))				
+	
+	pos = page.find('"id":"%s"' % sender)					# Check Fundstelle, ARD-Alle hier abgefangen
+	if pos < 0:			
 		msg1 = u'keine Beiträge gefunden zu:'
-		msg2 = '%s | %s'  % (title, sendername)
+		msg2 = u'%s | %s'  % (title, sendername)
+		msg3 = u"Bitte einen Sender wählen!"
 		PLog("%s | %s" % (msg1, msg2))
-		MyDialog(msg1, msg2, '')
+		MyDialog(msg1, msg2, msg3)
 		return li
 			
-	PLog('gridlist: ' + str(len(gridlist)))	
+	PLog('findpos: %d' % pos)	
 	# dateformat: 2022-05-23T03:30:00.000Z
 	# Bereichsangabe (Datum, Uhrzeit) zu lang für notification:
 	msg1 = "%s.%s.%s" % (startDate[8:10], startDate[5:7], startDate[0:4])
@@ -2690,17 +2701,136 @@ def ARDVerpasstContent(title, startDate, endDate, CurSender="", homeID=""):
 	
 	try:
 		obs = json.loads(page)
-		PLog(len(obs))
+		channels = obs["channels"]
+		PLog(len(channels))
+		for c in channels:
+			PLog("sender: %s, id: %s" % (sender, c["id"]))
+			if sender ==  c["id"]:
+				channel = c
+				break
 	except Exception as exception:
+		channels=[]; channel=[]
 		PLog(str(exception))
+	PLog("channels: %d" % len(channels))
+	PLog("channel: " + str(channels)[:100])
 	
-	for s in obs:										# ARD-Alle: einz. Sender auspacken
-		PLog(str(s)[:80])
-		page  = json.dumps(s)
-		li = get_json_content(li, page, ID='EPG', mark='')																	
+	PLog("extract_%s" % sender)
+	timeSlots = channel["timeSlots"]
+	PLog(str(timeSlots)[:100])
+	ARDVerpasst_get_json(li, timeSlots, homeID,sender)															
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
+#----------------------------------------------------------------
+# Auswertung timeSlots (Vormittags, Nachmittags, Abends), hier
+#	zusammenhängend
+def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
+	PLog('ARDVerpasst_get_json:')
+	PLog(len(timeSlots))
+	
+	logo = R("icon-bild-fehlt_wide.png")						# ersetzt fehlendes img im EPG
+	# targetbase (%s=sender, %s=urlId)
+	tbase = "https://api.ardmediathek.de/page-gateway/pages/%s/item/%s?devicetype=pc&embedded=true" 
+	mediatype=""
+
+	for i, slot in enumerate(timeSlots):
+		items = slot
+		PLog("slot: %d, anz: %d" % (i, len(items)))
+		for s in items:						
+			PLog(str(s)[:100])
+							
+			synopsis=""; availableTo=""; href=""; path=""		# path -> Video
+			matRat=""; uhr=""; subline=""; summ="";
+			pubServ = sender									# Problem ["channel"]["name"] s.u. 
+
+			try:
+				title = s["title"]
+				duration = s["duration"]
+				duration = seconds_translate(duration)			# 0:15
+				# pubServ = s["channel"]["name"]				# Problem swrbw
+				
+				if "images" in s:
+					img = s["images"]["aspect16x9"]["src"]
+					img = img.replace('{width}', '720')
+				else:
+					img = logo
+				
+				if "target" in s["links"]:						# target -> Video
+					urlId = s["links"]["target"]["urlId"]
+					path = tbase % (sender, urlId) 
+				
+				if "maturityContentRating" in s:
+					matRat= s["maturityContentRating"]
+				
+				if duration and pubServ:										
+					duration = u'Dauer %s | [B]%s[/B]' % (duration, pubServ)
+				if 	matRat:
+					if duration == '':
+						duration = "Dauer unbekannt"
+					duration = u"%s | FSK: %s\n" % (duration, matRat)
+				if "availableTo" in s:
+					availableTo = s["availableTo"]
+				
+				if 	"synopsis" in s:
+					summ =  s["synopsis"]
+				if "subline" in s:	
+					summ = "%s | %s" % (summ, s["subline"])	
+					
+				verf = availableTo										# s.o.
+				if verf == None:
+					verf=""
+				verf = time_translate(verf, day_warn=True)
+					
+				pubDate = s["broadcastedOn"]
+				PLog("pubDate: " + pubDate)
+				uhr = pubDate[11:16]	
+				pubDate = time_translate(pubDate)
+				pubDate = u"Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate
+				summ = "%s\n%s" % (pubDate, summ)
+
+				if verf:
+					summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (summ, verf)
+				if duration:
+					summ = "%s\n%s" % (duration, summ)
+				PLog("summ: " + summ)	
+					
+				if path == "":
+					summ = "[B]KEIN Video![/B]\n%s" % summ		
+					title = "[COLOR grey]%s | %s[/COLOR]" % (uhr, title) 
+				else:
+					title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 			
+				
+			
+				if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
+					summ_new = get_summary_pre(path=href, ID='ARDnew', duration=duration)  # Modul util
+					if 	summ_new:
+						summ = summ_new
+				summ = repl_json_chars(summ)
+		
+				if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
+					mediatype='video'
+			except Exception as exception:
+				PLog("Verpasst_json_error: " + str(exception))
+				
+			PLog("Satz:")
+			PLog(title); PLog(href); PLog(path); PLog(img); PLog(summ[:60]); 
+			PLog(duration); PLog(availableTo);
+					
+			summ_par = summ.replace('\n', '||')
+			ID = "ARDVerpasst_get_json"
+			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
+			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s','homeID': '%s'}" %\
+				(quote(path), quote(title), quote(summ_par), ID, homeID)	
+#			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, 
+			if path:
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, 
+					thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
+			else:														# function dummy Haupt-PRG
+				fparams="&fparams={'path': '', 'title': '', 'img': ''}"
+				addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, 
+					thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
+											
+	return
 #----------------------------------------------------------------
 # convHour z.Z. nicht genutzt
 #	string zeit, int offset - Bsp. 15:00, 2
