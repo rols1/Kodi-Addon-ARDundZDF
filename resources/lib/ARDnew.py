@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>61</nr>										# Numerierung für Einzelupdate
+# 	<nr>62</nr>										# Numerierung für Einzelupdate
 #	Stand: 06.12.2023
 
 # Python3-Kompatibilität:
@@ -2723,7 +2723,7 @@ def ARDVerpasstContent(title, startDate, CurSender="", homeID=""):
 	
 #----------------------------------------------------------------
 # Auswertung timeSlots (Vormittags, Nachmittags, Abends), hier
-#	zusammenhängend
+#	zusammenhängend.
 def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 	PLog('ARDVerpasst_get_json:')
 	PLog(len(timeSlots))
@@ -2768,8 +2768,8 @@ def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 					if duration == '':
 						duration = "Dauer unbekannt"
 					duration = u"%s | FSK: %s\n" % (duration, matRat)
-				if "availableTo" in s:
-					availableTo = s["availableTo"]
+				if "availableTo" in s:									# fehlt seit Api-Änderung, s.
+					availableTo = s["availableTo"]						#	pref_load_summary
 				
 				if 	"synopsis" in s:
 					summ =  s["synopsis"]
@@ -2802,8 +2802,8 @@ def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 				
 			
 				if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
-					summ_new = get_summary_pre(path=href, ID='ARDnew', duration=duration)  # Modul util
-					if 	summ_new:
+					summ_new = get_summary_pre(path=path, ID='ARDnew', duration=duration)  # Modul util
+					if 	summ_new:										# 
 						summ = summ_new
 				summ = repl_json_chars(summ)
 		
