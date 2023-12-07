@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>11</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.11.2023
+# 	<nr>12</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.12.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1732,6 +1732,7 @@ def get_epg():
 	#			5=summ, 6=vonbis, 7=today_human, 8=endtime:  
 	rec = EPG.EPG(ID="3SAT", mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
 	sname=''; stime=''; summ=''; vonbis=''		# Fehler, ev. Sender EPG_ID nicht bekannt
+	title=''; tag=''
 
 	if rec:								
 		sname=py2_encode(rec[3]); stime=py2_encode(rec[4]); 
@@ -1739,8 +1740,9 @@ def get_epg():
 	else:
 		return "", "", ""						# title, tag, summ	
 
-	title = sname.replace('JETZT:', 'LIVE')
-	tag = u'Sendung: %s Uhr' % vonbis
+	if sname:									# Sendungstitel
+		title = str(sname).replace('JETZT:', 'LIVE')
+		tag = u'Sendung: %s Uhr' % vonbis
 	
 	return title, tag, summ
 	
