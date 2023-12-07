@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>62</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.12.2023
+# 	<nr>63</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.12.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2783,8 +2783,8 @@ def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 					
 				pubDate = s["broadcastedOn"]
 				PLog("pubDate: " + pubDate)
+				pubDate = time_translate(pubDate, add_hour=False, day_warn=True)
 				uhr = pubDate[11:16]	
-				pubDate = time_translate(pubDate)
 				pubDate = u"Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate
 				summ = "%s\n%s" % (pubDate, summ)
 
