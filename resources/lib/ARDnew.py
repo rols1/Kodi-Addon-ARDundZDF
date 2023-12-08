@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>63</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.12.2023
+# 	<nr>64</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.12.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -73,6 +73,9 @@ ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle', 'Das Erste:daserste:208
 	'ONE:one:673348:tv-one.png:ONE', 'ARD-alpha:alpha:5868:tv-alpha.png:ARD-alpha', 
 	'tagesschau24:tagesschau24::tv-tagesschau24.png:tagesschau24', 'phoenix:phoenix::tv-phoenix.png:phoenix', 
 	'KiKA::::KiKA']
+
+ARDheaders="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+	'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -203,7 +206,7 @@ def Main_NEW(name=''):
 		fparams=fparams, tagline=tag, summary=summ)																							
 
 	title = 'Sendung verpasst'
-	tag = def_tag
+	tag = def_tag + u"\nKeine Anzeige für ARD-Alle."
 	fparams="&fparams={'title': 'Sendung verpasst'}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasst", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_VERP), tagline=tag, fparams=fparams)
@@ -288,9 +291,6 @@ def Main_NEW(name=''):
 #
 def ARDStart(title, sender, widgetID='', path='', homeID=''): 
 	PLog('ARDStart: ' + title); PLog(sender)
-	
-	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
-		'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
 
 	CurSender = ARD_CurSender()
 	if homeID:												# CurSender in sender (Bsp. phoenix-Calls)
@@ -311,11 +311,11 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 	DictID = "ARDStart_%s" % sendername
 	page=""
 	if title != "Startseite":								# Cache nur für Startseite, nicht Retro u.a.
-		page, msg = get_page(path, header=headers)	
+		page, msg = get_page(path, header=ARDheaders)	
 	else:
 		page = Dict("load",DictID,CacheTime=ARDStartCacheTime)	# Cache: 5 min
 		if not page:											# nicht vorhanden oder zu alt -> vom					
-			page, msg = get_page(path, header=headers)			# 	Sender holen		
+			page, msg = get_page(path, header=ARDheaders)			# 	Sender holen		
 			if page:
 				icon = R(ICON_MAIN_ARD)
 				xbmcgui.Dialog().notification("Cache %s:" % DictID,"Haltedauer 5 Min",icon,3000,sound=False)
@@ -728,9 +728,10 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		else:
 			li = home(li, ID='ARD Neu')					# Home-Button
 
-	page, msg = get_page(path=path, GetOnlyRedirect=True)
+	path=path.replace("%3A", ":")
+	page, msg = get_page(path=path, GetOnlyRedirect=True, header=ARDheaders, do_safe=True)
 	path = page
-	page, msg = get_page(path=path)	
+	page, msg = get_page(path=path, header=ARDheaders, do_safe=True)	
 	if page == '':	
 		msg1 = "Fehler in ARDStartRubrik: %s"	% title
 		msg2 = msg
@@ -2614,7 +2615,8 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 		if nr == 1:
 			iWeekday = 'GESTERN'	
 		title =	"%s %s" % (iWeekday, myDate)	# DI 09.04.
-		tagline = "Sender: [B]%s[/B]" % sendername	
+		tagline = "Sender: [B]%s[/B]" % sendername
+		tagline = u"%s\nKeine Anzeige für ARD-Alle." % tagline	
 		
 		PLog(title); PLog(startDate); PLog(endDate)
 		fparams="&fparams={'title': '%s', 'startDate': '%s', 'CurSender': '%s', 'homeID': '%s'}" %\
@@ -2785,7 +2787,7 @@ def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 				PLog("pubDate: " + pubDate)
 				pubDate = time_translate(pubDate, add_hour=False, day_warn=True)
 				uhr = pubDate[11:16]	
-				pubDate = u"Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate
+				pubDate = u"Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n" % pubDate
 				summ = "%s\n%s" % (pubDate, summ)
 
 				if verf:
@@ -2795,7 +2797,7 @@ def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 				PLog("summ: " + summ)	
 					
 				if path == "":
-					summ = "[B]KEIN Video![/B]\n%s" % summ		
+					summ = "[B]NICHT in der Mediathek![/B]\n%s" % summ		
 					title = "[COLOR grey]%s | %s[/COLOR]" % (uhr, title) 
 				else:
 					title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 			
