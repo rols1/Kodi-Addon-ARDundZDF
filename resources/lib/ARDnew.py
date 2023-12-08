@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>64</nr>										# Numerierung für Einzelupdate
+# 	<nr>65</nr>										# Numerierung für Einzelupdate
 #	Stand: 08.12.2023
 
 # Python3-Kompatibilität:
@@ -2743,7 +2743,7 @@ def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 							
 			synopsis=""; availableTo=""; href=""; path=""		# path -> Video
 			matRat=""; uhr=""; subline=""; summ="";
-			pubServ = sender									# Problem ["channel"]["name"] s.u. 
+			pubServ=""
 
 			try:
 				title = s["title"]
@@ -2756,6 +2756,15 @@ def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 					img = img.replace('{width}', '720')
 				else:
 					img = logo
+					
+				if 	"channel" in s:								# kann fehlen
+					pubServ = s["channel"]["name"]
+				else:
+					pubServ = sender 
+					
+				if "subline" in s:	
+					subline = s["subline"]
+					pubServ = "%s | %s" % (pubServ, subline)
 				
 				if "target" in s["links"]:						# target -> Video
 					urlId = s["links"]["target"]["urlId"]
@@ -2764,8 +2773,10 @@ def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 				if "maturityContentRating" in s:
 					matRat= s["maturityContentRating"]
 				
+
 				if duration and pubServ:										
 					duration = u'Dauer %s | [B]%s[/B]' % (duration, pubServ)
+					
 				if 	matRat:
 					if duration == '':
 						duration = "Dauer unbekannt"
@@ -2775,8 +2786,6 @@ def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 				
 				if 	"synopsis" in s:
 					summ =  s["synopsis"]
-				if "subline" in s:	
-					summ = "%s | %s" % (summ, s["subline"])	
 					
 				verf = availableTo										# s.o.
 				if verf == None:
