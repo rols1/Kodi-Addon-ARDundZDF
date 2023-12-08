@@ -11,7 +11,7 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>13</nr>										# Numerierung für Einzelupdate
+# 	<nr>14</nr>										# Numerierung für Einzelupdate
 #	Stand: 08.12.2023
 
 # Python3-Kompatibilität:
@@ -1745,6 +1745,9 @@ def get_epg():
 	PLog(typ)	
 	PLog(str(rec))
 	if "list" in typ:
+		msg1 = "Fehler im Datensatz."
+		msg2 = "Bitte Debuglog hochladen"
+		MyDialog(msg1, msg2, '')	
 		sname=""
 			
 
