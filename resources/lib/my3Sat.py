@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>12</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.12.2023
+# 	<nr>13</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.12.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1739,6 +1739,14 @@ def get_epg():
 		summ=py2_encode(rec[5]); vonbis=py2_encode(rec[6])
 	else:
 		return "", "", ""						# title, tag, summ	
+
+	PLog("get_epg_Debug:")
+	typ=str(type(sname))	# Debug, Forum Post 3.301
+	PLog(typ)	
+	PLog(str(rec))
+	if "list" in typ:
+		sname=""
+			
 
 	if sname:									# Sendungstitel
 		title = str(sname).replace('JETZT:', 'LIVE')
