@@ -383,6 +383,9 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		EPG_rec.append(rec)												# Liste Gesamt (2-Dim-Liste)
 	
 	PLog(len(EPG_rec)); PLog('EPG_End:')								# Sortierung <- get_data_web
+	if mode == 'OnlyNow' and len(EPG_rec) > 7:
+		PLog("OnlyNow_rec_len_to_big")
+		EPG_rec=[]
 	return EPG_rec
 #-----------------------
 def get_summ(block):		# Beschreibung holen

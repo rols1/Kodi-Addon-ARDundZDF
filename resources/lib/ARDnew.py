@@ -206,7 +206,7 @@ def Main_NEW(name=''):
 		fparams=fparams, tagline=tag, summary=summ)																							
 
 	title = 'Sendung verpasst'
-	tag = def_tag + u"\nKeine Anzeige für ARD-Alle."
+	tag = def_tag + u"\nHinweis: keine Anzeige für ARD-Alle."
 	fparams="&fparams={'title': 'Sendung verpasst'}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasst", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_VERP), tagline=tag, fparams=fparams)
@@ -473,7 +473,7 @@ def img_preload(ID, path, title, caller, icon=ICON_MAIN_ARD):
 	if caller == 'ARDStart' or  caller == 'ARDRubriken':
 		leer_img = R(ICON_DIR_FOLDER)
 	else:
-		leer_img = R("icon-bild-fehlt.png")
+		leer_img = R("icon-bild-fehlt_wide.png")
 
 	img=''
 	oname = os.path.join(SLIDESTORE, "ARDNeu_Startpage")
@@ -555,6 +555,7 @@ def ARDRubriken(li, path="", page="", homeID=""):
 				continue
 		if title == "Rubriken":								# rekursiv zur Startseite
 			continue
+		title  = repl_json_chars(title)
 		ID = s["id"]	
 
 		if "links" in s:
@@ -2616,7 +2617,7 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 			iWeekday = 'GESTERN'	
 		title =	"%s %s" % (iWeekday, myDate)	# DI 09.04.
 		tagline = "Sender: [B]%s[/B]" % sendername
-		tagline = u"%s\nKeine Anzeige für ARD-Alle." % tagline	
+		tagline = u"%s\nHinweis: keine Anzeige für ARD-Alle." % tagline	
 		
 		PLog(title); PLog(startDate); PLog(endDate)
 		fparams="&fparams={'title': '%s', 'startDate': '%s', 'CurSender': '%s', 'homeID': '%s'}" %\
@@ -2627,6 +2628,7 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 	if not homeID:								# nicht bei phoenix	
 		title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
 		tag = "die Senderwahl ist wirksam in [B]%s[/B], [B]%s[/B] und [B]%s[/B]" % ("ARD Mediathek", "A-Z", "Sendung verpasst")
+		tag = u"%s\nHinweis: keine Anzeige für ARD-Alle." % tag
 		title=py2_encode(title); caller='resources.lib.ARDnew.ARDVerpasst'
 		fparams="&fparams={'title': '%s', 'caller': '%s'}" % (quote(title), caller)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 

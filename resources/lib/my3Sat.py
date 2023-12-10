@@ -1740,17 +1740,6 @@ def get_epg():
 	else:
 		return "", "", ""						# title, tag, summ	
 
-	PLog("get_epg_Debug:")
-	typ=str(type(sname))	# Debug, Forum Post 3.301
-	PLog(typ)	
-	PLog(str(rec))
-	if "list" in typ:
-		msg1 = "Fehler im Datensatz."
-		msg2 = "Bitte Debuglog hochladen"
-		MyDialog(msg1, msg2, '')	
-		sname=""
-			
-
 	if sname:									# Sendungstitel
 		title = str(sname).replace('JETZT:', 'LIVE')
 		tag = u'Sendung: %s Uhr' % vonbis

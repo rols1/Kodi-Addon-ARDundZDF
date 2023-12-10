@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>166</nr>										# Numerierung für Einzelupdate
-VERSION = '4.9.1'
-VDATE = '02.12.2023'
+VERSION = '4.9.2'
+VDATE = '10.12.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7985,6 +7985,7 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 # einz. Cluster-Objekt: Auswertung Teaser -> wieder hierher, ohne Dict
 # 01.10.2023 Auswertung recommendation-Inhalte (ohne Cache, DictID leer), dabei 
 #	Verzicht auf {bookmarks}-Urls ("Das könnte Dich interessieren", kodinerds Post 3.134)
+# 02.12.2023 Auswertung Navigationsmenü (ZDF-Sportstudio, ZDFtivi)
 #
 def ZDF_RubrikSingle(url, title, homeID=""):								
 	PLog('ZDF_RubrikSingle: ' + title)
@@ -8092,7 +8093,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 					try:
 						name = jsonObject["teaser"][0]["titel"] # Titel 1. Teaser
 					except Exception as exception:
-						PLog("json_error: " + str(exception))
+						PLog("teaserContent_error: " + str(exception))
 						name = title
 				title = "[B]Teaser[/B]: %s" % name
 	
@@ -8106,7 +8107,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 				DictID = "ZDF_%s_%d" % (urlid, cnt)				# DictID: url-Ende + cluster-nr
 				Dict('store', DictID, jsonObject)				# für ZDF_PageMenu	
 			except Exception as exception:
-				PLog("json_error: " + str(exception))				
+				PLog("teaser_error: " + str(exception))				
 				img = R(ICON_DIR_FOLDER)
 				if "reference" in jsonObject:
 					ref_url = jsonObject["reference"]["url"]
@@ -9111,7 +9112,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 		if gui:										# ohne Gui
 			msg = 'keine Streamquellen gefunden - Abbruch' 
 			PLog(msg); PLog(availInfo)
-			msg1 = u"keine Streamquellen gefunden: [B]%s[/B]"	% title
+			msg1 = u"keine Streamquellen gefunden: >%s<"	% title
 			msg2=""
 			if availInfo:
 				msg2 = availInfo
@@ -9616,7 +9617,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,page,scms_id='',I
 							MP4_List.append(item)
 							
 	except Exception as exception:
-		PLog("json_error: " + str(exception))
+		PLog("formitaeten_error: " + str(exception))
 		HLS_List=[]; MP4_List=[]
 		
 	PLog("HLS_List: " + str(len(HLS_List)))
@@ -9873,7 +9874,7 @@ def ZDFSourcesHBBTV(title, scms_id):
 							line = "%s##%s##%s" % (title, add, url)
 							stream_list.append(line)
 	except Exception as exception:
-		PLog("json_error: " + str(exception))
+		PLog("streams_error: " + str(exception))
 		stream_list=[]
 			
 	PLog(len(stream_list))

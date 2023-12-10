@@ -5,6 +5,7 @@
 #	aus Haupt-PRG hierher verlagert, da sonst kein Verbleib im akt. Listing
 #	möglich.
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
+# 	Funktions-Calls via Auswertung sys.argv s. Modulende
 ################################################################################
 # 	<nr>5</nr>										# Numerierung für Einzelupdate
 #	Stand: 28.11.2023
@@ -556,8 +557,7 @@ def clean_Plot(Plot):
 	return Plot	
 
 # ----------------------------------------------------------------------
-# Verwaltung Merklisten-Ordner (Komfort-Lösung statt manuell via Editor)
-# 
+# Verwaltung Merklisten-Ordner (Komfort-Lösung, früher manuell via Editor)
 #
 def do_folder():
 	PLog("do_folder:")
@@ -860,12 +860,12 @@ def clear_merkliste():
 	MyDialog(msg1, msg2, msg3, heading=heading)
 	return # -> network_error s.u.
 
-######################################################################## 			
-# argv-Verarbeitung wie in router (Haupt-PRG)
+######################################################################## 
+# Direkter Funktionscall aus Kontext-Menü bisher nicht möglich, daher			
+# sys.argv-Verarbeitung wie in router (Haupt-PRG)
 # Beim Menü Favoriten (add) endet json.loads in exception
 # Aufrufe aus Haupt-PRG ohne fparams: clear_merkliste,
-# 	do_folder. Direkter Funktions-Call bisher nicht möglich, daher
-#	auch return via network_error.
+# 	do_folder - return via network_error.
 
 PLog(str(sys.argv))
 PLog(sys.argv[2])
@@ -878,10 +878,10 @@ PLog('merk_params_dict: ' + str(params))
 
 if "'fparams_add': 'clear'" in str(params):			# 1. Aufruf InfoAndFilter -> start_script -> router
 	clear_merkliste()
-	ignore_this_network_error()						# network_error statt threading Exception (s.o.)
+	ignore_this_network_error()						# network_error statt threading Exception
 if "'fparams_add': 'do_folder'" in str(params):		# 2. Aufruf InfoAndFilter -> router
 	do_folder()
-	ignore_this_network_error()						# network_error statt threading Exception (s.o.)
+	ignore_this_network_error()						# network_error statt threading Exception (
 	
 # ------------------------------------------------- # callfrom_context:
 

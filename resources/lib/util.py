@@ -848,7 +848,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				fp = {'action': 'filter', 'name': quote_plus(label)} 
 				fparams_filter = "&fparams={0}".format(fp)
 				fparams_filter = quote_plus(fparams_filter)			# Filtern
-
+ 
 				fp = {'action': 'filter_delete', 'name': quote_plus(label)} 
 				fparams_delete = "&fparams={0}".format(fp)
 				fparams_delete = quote_plus(fparams_delete) 		# Filter entfernen
@@ -970,6 +970,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		commands = []
 		if SETTINGS.getSetting('pref_watchlist') == 'true':			# Merkliste verwenden 
 			# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
+			# kodi.wiki/view/List_of_built-in_functions: RunScript(script[,args]*) using sys.argv
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID))
 			if ShowFavs =="":										# Hinzufügen nicht in Merkliste
 				commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \

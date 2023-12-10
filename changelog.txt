@@ -10,6 +10,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+10.12.2023 4.9.2
+			Infos+Tools: "Merklisten-Ordner bearbeiten" hinzugefügt - Anpassungen in
+			InfoAndFilter und Modul Merkliste.
+			Modul merkliste: Abbruchdialog aktualisiert (MyDialog).
+			Main: Austausch "Kodi's" -> "Kodis" in tagline ("Kodi's" erzeugt JSON-
+			DecodeError in Modul merkliste).
+			ZDFSourcesHBBTV: Check auf fehlende Streams (Fix list-index-error).
+			ZDF_RubrikSingle: Auswertung Navigationsmenü (ZDF-Sportstudio) einschl.
+			Berücksichtigung livestreamsTeaser und scheduledLivestreamsTeaser, neue
+			Funktion ZDF_get_navi.
+			ARD verpasst: defekten api-Link durch programm-api.ard.de ersetzt, neue
+			Funktion ARDVerpasst_get_json,  Anpassungen in ARDVerpasst (Zeitformate), 
+			ARDVerpasstContent (Dialog, Auswahl timeSlots).
+			ARDStartRubrik: Sonderbehandlung für quotierte Doppelpunkte in Rubrik-Url 
+			-> replace("%3A", ":").
+			ARDRubriken: Titel-Fix -> repl_json_chars(title).
+			EPG_rec (Modul EPG): fehlerhaften EPG-Datensatz abgefangen (Länge > 7,
+			Auftreten bei abweichender lokaler Zeitynchronisation).
+
 26.11.2023 4.9.1
 			Merkliste:  Sortieroption key=str.lower für Ordner entfernt (Problem in
 			PYY2). 
@@ -21,7 +40,6 @@ CHANGE HISTORY
 			Kika_get_singleItem (childs): py2_encode für return-Parameter (komp. mit 
 			PY2).
 			Tivi_AZ (childs): element -> button für addDir-Parameter.
-			
 			Main: Hinweis auf ARD-Classic-Version entfernt, Hinweis auf Teletext in
 			ARD- und ZDF-Button hinzugefügt.
 			DownloadTools: Button Podcast-Favoritenliste entfernt obsolet), dto. Verweise
