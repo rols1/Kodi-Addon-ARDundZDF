@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>166</nr>										# Numerierung für Einzelupdate
+# 	<nr>167</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.2'
-VDATE = '10.12.2023'
+VDATE = '11.12.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8015,7 +8015,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 	PLog(str(jsonObject)[:80])
 		
 	navi=False
-	if "navigation"	in page:									# Navigations-Menü?, Bsp. Sportstudio
+	if "navigation"	in jsonObject:								# Navigations-Menü?, Bsp. Sportstudio
 		navi=True		
 		
 	clusterObject, msg = GetJsonByPath("cluster", jsonObject)
