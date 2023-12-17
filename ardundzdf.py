@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>168</nr>										# Numerierung für Einzelupdate
+# 	<nr>169</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.2'
 VDATE = '17.12.2023'
 
@@ -3411,6 +3411,8 @@ def ARDSportWDRArchiv():
 #			mit source -> Umschalter Streamquellen (Eventstreams, Livestreams)
 # Hinw.: inputstream.adaptive nicht mit Kodi < 19.* verwenden
 #	Quelle liga3-online.de in utf-8 (Umlaute-Problem mit Kodi < 19.*)
+# 17.12.2023 Problem: Datumsangaben ohne Jahr. Daher 6-Monatsvergleich + 
+#	ggfls. Jahreskorrektur
 #
 def ARDSportLiga3(title, img, sender="", source=""): 
 	PLog("ARDSportLiga3: " + sender)
@@ -3453,6 +3455,7 @@ def ARDSportLiga3(title, img, sender="", source=""):
 		now_dt = datetime.datetime.fromtimestamp(now)
 		my_year = now_dt.strftime("%Y")
 		date_format = "%Y-%m-%dT%H:%M:%SZ"
+		sixmonth = 2629743 * 6											# unix-sec 6 Monate (Abgleich past/future)
 		for row in rows:
 			row = str(blockextract("<td", row, "</td>"))
 			PLog(row)
@@ -3499,7 +3502,15 @@ def ARDSportLiga3(title, img, sender="", source=""):
 				my_start = int(my_start)
 				my_end = time.mktime(my_end.timetuple())
 				my_end = int(my_end)
-				PLog("now: %d, my_start: %d my_end: %d" % (now, my_start, my_end)) 
+				PLog("now: %d, my_start: %d my_end: %d" % (now, my_start, my_end))
+				diff = now - my_start
+				if diff >= sixmonth:									# 6 Monate Abstand: wohl Zukunft
+					PLog("diff_greater_sixmonth")
+					my_start = now + (now-my_start)
+					my_end = now + (now-my_end)
+					next_year = int(my_year) +1							# Jahreskorrketur
+					title_date = title_date.replace(my_year, str(next_year))
+				 
 				if now >= my_start and now <= my_end:
 					live=True				
 				if my_end < now:										# Vergangenheit
