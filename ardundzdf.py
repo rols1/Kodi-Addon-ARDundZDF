@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>167</nr>										# Numerierung für Einzelupdate
+# 	<nr>168</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.2'
-VDATE = '11.12.2023'
+VDATE = '17.12.2023'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2353,10 +2353,11 @@ def Audio_get_search_cluster(objs, key):
 #	Empfehlungen.
 # Aufteilung Web-Beiträge: 1. Highligths, 2. veränderliche
 #	Cluster, 3. Meistgehört, 4. Neueste Episoden, 5. Ausgewählte 
-#	Sendungen, 6. Alle Sendungen aus dieser Rubrik  
+#	Sendungen, 6. Alle Sendungen aus dieser Rubrik
+# 
 def Audio_get_cluster_rubrik(li, url, title, ID=''):
 	PLog('Audio_get_cluster_rubrik: ' + ID)
-	PLog(title)
+	PLog(title); PLog(url)
 	title_org = title
 	CacheTime = 6000												# 1 Std.
 	
@@ -2424,9 +2425,9 @@ def Audio_get_cluster_rubrik(li, url, title, ID=''):
 		PLog('2Satz:')
 		PLog(title); PLog(img); PLog(rubrik_id); PLog(section_id);
 		title=py2_encode(title); rubrik_id=py2_encode(rubrik_id); 
-		section_id=py2_encode(section_id);
-		fparams="&fparams={'title': '%s', 'rubrik_id': '%s', 'section_id': '%s'}" % \
-			(quote(title), quote(rubrik_id), quote(section_id))
+		section_id=py2_encode(section_id);url=py2_encode(url)
+		fparams="&fparams={'title': '%s', 'rubrik_id': '%s', 'section_id': '%s', 'url': '%s'}" % \
+			(quote(title), quote(rubrik_id), quote(section_id), quote(url))
 		addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_single", \
 			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
 		cnt=cnt+1
@@ -2436,8 +2437,9 @@ def Audio_get_cluster_rubrik(li, url, title, ID=''):
 # Aufrufer Audio_get_cluster_rubrik, Audio_get_homescreen (Stage) 
 #	listet einz. Cluster oder Stage (ohne section_id)
 #	Json-Ausschnitt der Rubrik-Webseite im Dict(rubrik_id)
+# 17.12.2023 zusätzl. Param url (Absicherung gegen Dict-Löschung)
 #
-def Audio_get_cluster_single(title, rubrik_id, section_id, page=''):
+def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 	PLog('Audio_get_cluster_single: ' + title)
 	PLog(rubrik_id); PLog(section_id)
 
@@ -2446,8 +2448,16 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page=''):
 
 	if page == '':								# page nicht genutzt
 		page = Dict("load", rubrik_id)
+		if not page:							# Dict schon gelöscht?
+			page, msg = get_page(url)
+			if page == "":
+				msg1 = 'Fehler in Audio_get_cluster_single:'
+				msg2 = msg
+				MyDialog(msg1, msg2, '')
+				return
+			page = transl_json(page); page = page.replace('\\"', '*')
 
-	data=[]										# wie Audio_get_cluster_rubrik
+	data=[]; cluster=""							# wie Audio_get_cluster_rubrik
 	if section_id == "STAGE":					# nur Stage auswerten, Homescreen od. Rubriken
 		cluster = stringextract('"sections"', '}}}]},', page)
 	else:
@@ -2630,7 +2640,7 @@ def Audio_get_homescreen(page='', cluster_id=''):
 		PLog("Audio_step2")
 		PLog("cluster_id: " + cluster_id)								# ID für Nachladebeiträge (Web: "nodes":[])
 		base = "https://www.ardaudiothek.de"
-		
+
 		if cluster_id == "Highlights":
 			ID = "AudioHomescreen"
 			title = cluster_id											# Stage auswerten
@@ -5002,10 +5012,8 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 	background_thread = Thread(target=thread_getfile, args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark,notice,sub_path,dtyp))
 	background_thread.start()		
 				
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-	return										
-	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# return blockt hier bis Thread-Ende									
+	return
 #---------------------------
 # interne Download-Routine für MP4, MP3 u.a. mittels urlretrieve 
 #	Download-Routine für Bilder: thread_getpic
