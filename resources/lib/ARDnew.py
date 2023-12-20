@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>65</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.12.2023
+# 	<nr>66</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.12.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -492,6 +492,7 @@ def img_preload(ID, path, title, caller, icon=ICON_MAIN_ARD):
 		return fname
 	else:
 		PLog('img_cache_leer')	
+		path=path.replace("%3A", ":")					# ARD-Problem
 		page, msg = get_page(path=path)					# ganze Seite von Sender laden	
 		if page=='':
 			return leer_img								# Fallback 
@@ -556,20 +557,28 @@ def ARDRubriken(li, path="", page="", homeID=""):
 		if title == "Rubriken":								# rekursiv zur Startseite
 			continue
 		title  = repl_json_chars(title)
-		ID = s["id"]	
+		ID = s["id"]
 
 		if "links" in s:
 			path = s["links"]["self"]["href"]
 			path = path.replace('&embedded=false', '')		# bzw. true
 			
 		try:
-			imgsrc 	= s["images"]["aspect16x9"]
-			img 	= imgsrc["src"]
-			img = img.replace('{width}', '640')
-			img_alt = 	imgsrc["alt"]
-		except:
+			if "images" in s:
+				img_cont= s["images"]["aspect16x9"]
+				img 	= img_cont["src"]
+				img 	= img.replace('{width}', '640')
+				img_alt	= img_cont["alt"]
+			else:
+				if "teasers" in s:							# Icon fehlt, aus 1. Teaser holen
+					img_cont 	= s["teasers"][0]["images"]["aspect16x9"]
+					img 	= img_cont["src"]
+					img = img.replace('{width}', '640')
+					img_alt = img_cont["alt"]
+		except Exception as exception:
+			PLog("img_error: " + str(exception))
 			img=""
-		if img == "":
+		if img == "":										# Fallback: mit Titel auf kompl. Seite suchen
 			img = img_preload(ID, path, title, 'ARDRubriken')			
 		
 		tag = "Folgeseiten"
@@ -2834,7 +2843,6 @@ def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
 			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s','homeID': '%s'}" %\
 				(quote(path), quote(title), quote(summ_par), ID, homeID)	
-#			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, 
 			if path:
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, 
 					thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
