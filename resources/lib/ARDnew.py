@@ -93,7 +93,7 @@ USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
 # Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
-if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+if 	check_AddonXml('"xbmc.python" version="3.'):				# ADDON_DATA-Verzeichnis anpasen
 	PLog('ARDnew_python_3.x.x')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 
@@ -105,7 +105,7 @@ TEXTSTORE 		= os.path.join(ADDON_DATA, "Inhaltstexte")
 # Ort FILTER_SET wie filterfile (check_DataStores):
 FILTER_SET 	= os.path.join(ADDON_DATA, "filter_set")
 AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
-AKT_FILTER	= AKT_FILTER.splitlines()					# gesetzte Filter initialiseren 
+AKT_FILTER	= AKT_FILTER.splitlines()						# gesetzte Filter initialiseren 
 
 DEBUG			= SETTINGS.getSetting('pref_info_debug')
 NAME			= 'ARD und ZDF'
@@ -189,6 +189,23 @@ def Main_NEW(name=''):
 	fparams="&fparams={'title': '%s', 'sender': '%s', 'path': '%s'}" % (quote(title), sender, quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", 
 		fanart=R(ICON_MAIN_ARD), thumb=R('ard-entdecken.png'), tagline=tag, summary=summ, fparams=fparams)
+
+	# 23.12.2023 "Unsere Region" als eigenständiges Menü. Bei der ARD nur in Startseite für ARD-Alle
+	# 	errreichbar (skipped in ARDStart).
+	rname = "Berlin"; partner = "rbb"				# Default
+	items = Dict("load", 'ARD_REGION')				# Bsp.: by|Bayern|br
+	rname = "Berlin"; partner = "rbb"				# path s. ARDStartRegion
+	if "|" in str(items):
+		region,rname,partner = items.split("|")
+	title = "Unsere Region" 
+	tag = u"aktuelle Region: [B]%s[/B]" % rname
+	tag = u"%s\n\nDie Auswahl ist unabhängig von der Senderwahl ([B]%s[/B])" % (tag, sendername)
+	summ = u"Partnersender: [B]%s[/B]" % partner
+	path=py2_encode(path); title=py2_encode(title); 
+	fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s','homeID': '%s'}" %\
+		(quote(path), quote(title), "Main_NEW", 'ARD Neu')
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRegion",
+		fanart=R(ICON_MAIN_ARD), thumb=R("ard-unsereRegion.png"), tagline=tag, summary=summ, fparams=fparams)
 
 	# 25.12.2021 als eigenständiges Menü (zusätzl. zum Startmenü) - wie Web:
 	#	href wie get_ARDstreamlinks
@@ -380,6 +397,7 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 
 		path 	= stringextract('"href":"', '"', cont)
 		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
+		partner=""											# Abgleich Region
 		if "/region/" in path and '{regionId}' in path:		# Bild Region laden, Default Berlin
 			region="be"; rname="Berlin"; partner="rbb"		# Default-Region, Änderung in ARDStartRegion
 			path = path.replace('{regionId}', region)
@@ -393,43 +411,18 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		if anz == "0" and "/region/" not in path:			# skip 0 Inhalte
 			PLog("skip_anz_0: %s" % title)
 			continue	
-		
+
 		if 'Livestream' in title or up_low('Live') in up_low(title):
 			if 'Konzerte' not in title:						# Corona-Zeit: Live-Konzerte (keine Livestreams)
 				ID = 'Livestream'
 		else:
 			ID = 'ARDStart'			
-		
-		PLog('Satz_cont1:');
-		func = "ARDStartRubrik"								# Default-Funktion
-		if "Unsere Region" in title:						# nur in Startseite ARD-Alle				
-			items = Dict("load", 'ARD_REGION')
-			rname = "Berlin"; partner = "rbb"
-			if "|" in str(items):
-				region,rname,partner = items.split("|")
-			tag = u"aktuelle Region: [B]%s[/B]" % rname
-			summ = u"Partnersender: [B]%s[/B]" % partner
-			func = "ARDStartRegion"							# neu ab 29.06.2022
-		
-		if cnt == 1:										# neu ab 12.02.2023: ev. "Regionales"-Menü hinter Stage
-			regio_kat = [									# nach Bedarf ergänzen + auslagern
-				"mdr|MDR+|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9tZHJwbHVz|https://api.ardmediathek.de/image-service/images/urn:ard:image:eab36fa8ffdb27da?w=640&ch=4bc0c7d930d596d9",
-				"mdr|Sport im Osten|https://www.ardmediathek.de/sendung/mdr/Y3JpZDovL21kci5kZS9zZW5kZXJlaWhlbi82ODlhYzU5My1mOWFkLTQ3MTAtOTczMS1lMTNiZTEwODZkMGM|https://api.ardmediathek.de/image-service/images/urn:ard:image:4b8aeaada557019e?w=1600&ch=50fb95aed76b8244&imwidth=1600"
-				]
-			PLog("regio_check: " + sender)
-			for item in regio_kat:
-				region, reg_title, reg_path, reg_img= item.split("|")
-				if region == sender:
-					if reg_img == "":
-						reg_img = R(senderimg)
-					reg_tag = "besondere regionale Inhalte des %s" % up_low(sender)
-					reg_path=py2_encode(reg_path); reg_title=py2_encode(reg_title); 
-					fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
-						(quote(reg_path), quote(reg_title), ID)
-					addDir(li=li, label=reg_title, action="dirList", dirID="resources.lib.ARDnew.%s" % func, fanart=reg_img, thumb=reg_img, 
-						tagline=reg_tag, fparams=fparams)
-					cnt=cnt+1
-		
+
+		# Menü "Unsere Region" verlagert zu Main_NEW (-> ARDStartRegion).
+		#	Hier skipped für ARD-Alle:
+		if "Unsere Region" in title:
+				continue
+
 		# Ersetzung kann entfallen, wenn personalized bereits im Aufruf-Call fehlt
 		path = path.replace("userId=personalized&", "")	# 17.08.2023 personalized erfordert Authentif.	
 		label = title										# Anpassung phoenix ("Stage Widget händisch")
@@ -440,8 +433,8 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		path=py2_encode(path); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s','homeID': '%s'}" %\
 			(quote(path), quote(title), ID, homeID)
-		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.%s" % func, fanart=img, thumb=img, 
-			tagline=tag, summary=summ, fparams=fparams)
+		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.%s" % func, fanart=img, 
+			thumb=img, tagline=tag, summary=summ, fparams=fparams)
 		cnt=cnt+1	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -604,10 +597,12 @@ def ARDRubriken(li, path="", page="", homeID=""):
 # 29.06.2022 Auswertung Cluster "Unsere Region"
 # Default-Region: Berlin (wie Web), ID=change: Wechsel
 # widgetID transportiert hier region-Triple (Bsp. be|Berlin|rbb)
+# 21.12.2023 Auswertung regio_kat von ARDStart verlagert, Katalog 
+#	an api-Url's angepasst (früher Web).
 #
 def ARDStartRegion(path, title, widgetID='', ID='', homeID=""): 
 	PLog('ARDStartRegion:')
-	PLog(widgetID)	
+	PLog(widgetID)
 	PLog(ID)	
 	title_org = title
 	base = "https://api.ardmediathek.de/page-gateway/widgets/"
@@ -616,7 +611,7 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 		region,rname,partner = widgetID.split("|")
 		Dict("store", 'ARD_REGION', "%s|%s|%s" % (region,rname,partner)) 
 	else:
-		region=""; rname=""; partner=""; 
+		region=""; rname=""; partner=""; 					# region -> Abgleich reg_kat
 		page = Dict("load", 'ARD_REGION')
 		try:
 			region,rname,partner = page.split("|")
@@ -625,6 +620,7 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 			region=""
 	if region == "": 										# Default-Region
 		region="be"; rname="Berlin"; partner="rbb"
+	PLog("region: %s, rname: %s, partner: %s" % (region, rname, partner))
 	
 	path = base + "ard/region/1FdQ5oz2JK6o2qmyqMsqiI:-947156297680186331/%s?pageNumber=0&pageSize=100&embedded=true" % region
 	page, msg = get_page(path=path)
@@ -641,12 +637,13 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 		li = home(li, ID='ARD Neu')						# Home-Button
 	regions = stringextract('regions":', '"links"', page)
 	PLog(len(regions))
+	
 	#------------------------							# Änderungsliste Region
 	if "change" in ID:
 		PLog("do_change:")
 		PLog(regions[:60])
 		img = R(ICON_DIR_FOLDER)
-		items = blockextract('"id"', regions)
+		items = blockextract('"id"', regions)			# Liste in jeder api-region-Seite
 		for item in items:
 			region = stringextract('id":"', '"', item)
 			rname = stringextract('name":"', '"', item)
@@ -666,6 +663,35 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 		return
 	
 	#------------------------							# Auswertung Region
+	# Regionen mit Partnersendern am Kopf jeder Region-Seite, region-id abweichend von sender.
+	#	Bayern=by,  Berlin=be, Brandenburg=bb, Hessen=he, Mecklenburg-Vorpommern=mv, 
+	#	Niedersachsen=ni, NW=nw, R-Pfalz=rp, Saarland=sl, Sachsen=sn, Sachsen-Anhalt=st, 
+	# 	"Schleswig-Holstein=sh, Thüringen=th
+	PLog("regio_check: %s" % partner)					# spez. Inhalte voranstellen
+	regio_kat = [										# nach Bedarf ergänzen
+		"by|Unter unserem Himmel|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2JyLmRlL2Jyb2FkY2FzdFNlcmllcy9icm9hZGNhc3RTZXJpZXM6L2JyZGUvZmVybnNlaGVuL2JheWVyaXNjaGVzLWZlcm5zZWhlbi9zZW5kdW5nZW4vdW50ZXItdW5zZXJlbS1oaW1tZWw|https://api.ardmediathek.de/image-service/images/urn:ard:image:af246683efe842f0?w=640&ch=fcad9e13605d8eb0"
+		,"by|Blickpunkt Sport|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2JyLmRlL2Jyb2FkY2FzdFNlcmllcy9icm9hZGNhc3RTZXJpZXM6L2JyZGUvZmVybnNlaGVuL2JheWVyaXNjaGVzLWZlcm5zZWhlbi9zZW5kdW5nZW4vYmxpY2twdW5rdC1zcG9ydA|https://api.ardmediathek.de/image-service/images/urn:ard:image:47139d13d3483f29?w=640&ch=9d54ad9bea96ef5b"
+		,"he|Heimat Hessen|https://api.ardmediathek.de/page-gateway/pages/hr/editorial/hr-heimat-hessen|https://api.ardmediathek.de/image-service/images/urn:ard:image:1b827cdb8908c86a?ch=2ffab2573aac4e10&w=640"
+		,"he|Sport im hr|https://api.ardmediathek.de/page-gateway/pages/hr/editorial/hr-sport-hessen|https://api.ardmediathek.de/image-service/images/urn:ard:image:728fab9db02e4bae?ch=011a995a203e585a&w=640"
+		,"sl|Sport im SR|https://api.ardmediathek.de/page-gateway/widgets/sr/editorials/E7IQVqrZXqK24ieYwG8kO%3A-115180639807314065|https://api.ardmediathek.de/image-service/images/urn:ard:image:1c772b30babcd252?ch=5266a5922c5f86f0&w=640"
+		,"sn|MDR+|https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL21kci5kZS9tZHJwbHVz?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:eab36fa8ffdb27da?w=640&ch=4bc0c7d930d596d9"
+		,"sn|Sport im Osten|https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL21kci5kZS9zZW5kZXJlaWhlbi82ODlhYzU5My1mOWFkLTQ3MTAtOTczMS1lMTNiZTEwODZkMGM?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:4b8aeaada557019e?w=1600&ch=50fb95aed76b8244&imwidth=1600"
+		,"nw|Sportclub Story|https://api.ardmediathek.de/page-gateway/compilations/ard/2odyJaRzcJftj4uaJcwNYQ?pageNumber=0&pageSize=12&embedded=true|https://api.ardmediathek.de/image-service/images/urn:ard:image:0480dc9eb73502e2?w=640&ch=cd45598f741bf56c"
+		]
+	for item in regio_kat:
+		region_kat, reg_title, reg_path, reg_img= item.split("|")
+		PLog("region: %s, region_kat: %s" % (region, region_kat))
+		ID="ARDStartRegion"
+		if region == region_kat:
+			if reg_img == "":
+				reg_img = R(ICON_DIR_FOLDER)
+			reg_tag = "besondere regionale Inhalte des %s" % up_low(partner)
+			reg_path=py2_encode(reg_path); reg_title=py2_encode(reg_title); 
+			fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s'}" %\
+				(quote(reg_path), quote(reg_title), ID)
+			addDir(li=li, label=reg_title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik",
+				fanart=reg_img, thumb=reg_img, tagline=reg_tag, fparams=fparams)
+	
 	PLog("do_region:")
 	ID = "ARDStartRubrik"
 	mark=''	

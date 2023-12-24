@@ -10,6 +10,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+24.12.2023 4.9.3
+			ZDF_RubrikSingle: Fix Erkennung von Navigations-Menüs (Suche in jsonObject
+			statt in page).
+			Audio_get_cluster_rubrik + Audio_get_cluster_single (Audiothek): Maßnahme
+			gegen gelöschten Dict-Inhalt (zusätzl. Param url).
+			ARDSportLiga3: 6-Monatsvergleich der Datumsangaben ohne Jahr + ggfls. 
+			Jahreskorrektur.
+			img_preload (ARD): Sonderbehandlung für quotierte Doppelpunkte  (wie
+			ARDRubriken in V4.9.2).
+			ARDRubriken: ev. fehlendes Icon aus 1. Teaser holen
+			ARD: "Unsere Region" aus Startseite verlagert zu Main_NEW (so erreichbar
+			für jeden eingestellten Sender, bisher nur ARD-Alle), Auswertung regio_kat 
+			mit spez. Inhalten verschoben nach ARDStartRegion, Katalog an api-Url's 
+			angepasst + manuell erweitert, z.B.: MDR+, MDR Sport, neues Icon 
+			ard-unsereRegion.
+
 10.12.2023 4.9.2
 			Infos+Tools: "Merklisten-Ordner bearbeiten" hinzugefügt - Anpassungen in
 			InfoAndFilter und Modul Merkliste.
