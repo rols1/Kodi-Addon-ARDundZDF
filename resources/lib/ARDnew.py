@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>66</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.12.2023
+# 	<nr>67</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.12.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -428,7 +428,8 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		label = title										# Anpassung phoenix ("Stage Widget händisch")
 		if title.startswith("Stage") or title.startswith("Die besten Videos"):
 			label = "[B]Highlights[/B]"	
-			
+		
+		func = "ARDStartRubrik"
 		PLog(path); PLog(img); PLog(title); PLog(ID); PLog(anz); 
 		path=py2_encode(path); title=py2_encode(title); 
 		fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s','homeID': '%s'}" %\
