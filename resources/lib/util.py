@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>79</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.11.2023
+# 	<nr>80</nr>										# Numerierung für Einzelupdate
+#	Stand: 31.12.2023
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3228,6 +3228,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 	Default_Url=''
 	PLog("mode_hls: " + str(mode_hls))
 	PLog(myqual)
+	PLog(Stream_List)
 	if mode_hls:				
 		if myqual.find('auto') >= 0:
 			mode = 'Sofortstart: HLS/auto'
@@ -3238,6 +3239,8 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 		else:
 			mode = 'HLS/Einzelstream'
 			if "** auto **" in Stream_List[0]:				# sonst sort_error für Auflösung 
+				if len(Stream_List) == 1:
+					Default_Url = Stream_List[0].split('#')[-1]	# einzigen Stream bewahren
 				del Stream_List[0]
 	else: 
 		mode = 'MP4'
@@ -3253,7 +3256,6 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 			PLog("sort_error: " + str(exception))
 			myqual = "auto"								# verwende Default_Url - kein Abgleich mit width
 
-		# PLog(str(Stream_List))	
 		if len(Stream_List) > 0:						# Default: höchste Url
 			Default_Url = Stream_List[-1].split('#')[-1]	# Fallback: master.m3u8 Pos. 1
 			PLog("Default_Url2: %s" % Default_Url)

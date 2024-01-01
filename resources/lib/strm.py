@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>13</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.05.2023
+# 	<nr>14</nr>										# Numerierung für Einzelupdate
+#	Stand: 01.01.2024
 #
 
 from __future__ import absolute_import
@@ -55,7 +55,7 @@ STRM_SYNCLIST	= os.path.join(ADDON_DATA, "strmsynclist")				# strm-Liste für Sy
 STRM_CHECK 		= os.path.join(ADDON_DATA, "strm_check_alive") 			# strm-Synchronisierung (Lockdatei)
 STRM_TOOLS_SET	= os.path.join(ADDON_DATA, "strmtoolset")				# Settings der stm-Tools	
 STRM_LOGLIST 	= os.path.join(ADDON_DATA, "strmloglist") 				# strm-LOG-Datei 
-
+MAX_LOGLINES	= 200													# max. Anzahl Zeilen strm-LOG-Datei 
 
 ICON 			= 'icon.png'		# ARD + ZDF
 ICON_DIR_STRM	= "Dir-strm.png"
@@ -84,7 +84,6 @@ NFO = NFO1+NFO2+NFO3+NFO4												#	 vorh. / nicht mehr vorh.
 def strm_tools():
 	PLog("strm_strm_tools:")
 	icon = R("icon-strmtools.png")
-	max_loglines = 200
 	from ardundzdf import InfoAndFilter			# z.Z. nicht für Return genutzt
 	
 	if os.path.exists("strmsync_stop"):						# Stop-Flag als Leiche?
@@ -222,7 +221,7 @@ def strm_tools():
 			
 		if ret == 4:											# strm-Log anzeigen			
 			PLog("strm_log_show")
-			log_show(max_loglines)
+			log_show(MAX_LOGLINES)
 						
 		if ret == 5:											# einzelne Liste abgleichen
 			PLog("strm_run_sync")
@@ -241,7 +240,7 @@ def strm_tools():
 						do_sync(list_title, strmpath, list_path, strm_type)
 					else:
 						do_sync_ARD(list_title, strmpath, list_path, strm_type)		# ARD-Sync
-					log_show(max_loglines)				# Log anzeigen
+					log_show(MAX_LOGLINES)				# Log anzeigen
 			
 
 		if ret == 6:									# unterstützte Sender/Beiträge
@@ -267,19 +266,23 @@ def strm_tools():
 # Anzeige strm-Log 
 def log_show(max_loglines):	
 	PLog("log_show:")
+	dt = datetime.datetime.now()
+	now_time = dt.strftime("%Y-%m-%d_%H-%M-%S")
 	if os.path.exists(STRM_LOGLIST):
 		loglist = RLoad(STRM_LOGLIST, abs_path=True)
 		loglist = loglist.splitlines()
 		mylist=[]
 		for line in loglist:
-			mylist.append(u"%s..." % line[:80])
-		mylist.sort(reverse=True)			# absteigend				
+			mylist.append(u"%s..." % line[:80])				
+		mylist.sort(reverse=True)				# absteigend
+		PLog("len_mylist: %d, max_loglines: %d" % (len(mylist), max_loglines))
+							
 		mylist =  "\n".join(mylist)
 		xbmcgui.Dialog().textviewer("strm-Log (max. %d Zeilen)" % max_loglines, mylist,usemono=True)	
 	return	
 		
 # ----------------------------
-# Update strm-Log mit line (Aufrufer füllt)
+# Update strm-Log mit line (Aufrufer füllt line)
 # Bsp. für line:
 # 	"%6s | %15s | %s" % ("ERR", list_title[:15], msg[:45])
 # hier wird der Zeitstempel logtime in line vorangestellt
@@ -297,6 +300,13 @@ def log_update(line):
 	line = "%s | %s" % (logtime, line)
 	PLog("line: " + line)
 	loglist =  "%s\n%s" % (loglist, line)
+	
+	loglist = loglist.split("\n")
+	PLog("max_line_check: len_loglist: %d,max_loglines: %d" % (len(loglist), MAX_LOGLINES))
+	if len(loglist) > MAX_LOGLINES:
+		loglist = loglist[-MAX_LOGLINES:]
+		PLog(len(loglist))
+	loglist = "\n".join(loglist)
 	
 	log_save(loglist)
 	return
