@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>37</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.11.2023
+# 	<nr>38</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.01.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -760,7 +760,8 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	streams = stringextract('"videoStreams":',  ']', page)		
 	stream_hbbtv = stringextract('hbbtv":',  '}', streams)
 	stream_hbbtv = stringextract('href": "',  '"', stream_hbbtv)
-	#stream_web = stringextract('web":',  '}', streams)					# nicht genutzt - s. api_v2_Call
+	stream_hbbtv = stream_hbbtv.replace("\/", "/")					# 04.01.2023 url gequotet						
+	#stream_web = stringextract('web":',  '}', streams)				# nicht genutzt - s. api_v2_Call
 	#stream_web = stringextract('href": "',  '"', stream_web)
 	#PLog("stream_web: " + stream_web); 
 	PLog("stream_hbbtv: " + stream_hbbtv)
