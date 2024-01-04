@@ -2,7 +2,7 @@
  <channels_info>
   <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
   <imgsource>Arauco</imgsource>
-  <nr>46</nr>
+  <nr>47</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
   <date>04.01.2024 rols</date>
@@ -191,6 +191,26 @@
 		<imgsource></imgsource>
 		<EPG_ID>MDR</EPG_ID>
 		<date>11.04.2021</date>
+	</item>
+	<item>
+		<title>MDR Sachsen-Anhalt</title>
+		<hrefsender>MDR</hrefsender>
+		<tvg-name>MDR Sachsen-Anhalt HD</tvg-name>
+		<link>IPTVSource|/jnk22/kodinerds-iptv/blob/master/iptv/kodi/kodi.m3u</link>
+		<thumbnail>tvg-logo</thumbnail>
+		<imgsource></imgsource>
+		<EPG_ID>MDR</EPG_ID>
+		<date>04.01.2024</date>
+	</item>
+	<item>
+		<title>MDR Thüringen</title>
+		<hrefsender>MDR</hrefsender>
+		<tvg-name>MDR Thüringen HD</tvg-name>
+		<link>IPTVSource|/jnk22/kodinerds-iptv/blob/master/iptv/kodi/kodi.m3u</link>
+		<thumbnail>tvg-logo</thumbnail>
+		<imgsource></imgsource>
+		<EPG_ID>MDR</EPG_ID>
+		<date>04.01.2024</date>
 	</item>
 	<item>
 		<title>Radio Bremen</title>
