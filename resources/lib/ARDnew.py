@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>67</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.12.2023
+# 	<nr>68</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.01.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1816,8 +1816,8 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 				continue		
 	
 		PLog('Satz:');
-		PLog(mehrfach); PLog(title); PLog(href); PLog(img); PLog(summ[:60]); 
-		PLog(duration); PLog(availableTo);
+		PLog(mehrfach); PLog(typ); PLog(title); PLog(href); PLog(img); 
+		PLog(summ[:60]); PLog(duration); PLog(availableTo);
 		
 		if mehrfach:
 			summ = "Folgeseiten"
@@ -1967,9 +1967,13 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 		PLog(len(VideoUrls))
 		href_ut=''
 		for video in VideoUrls:
-			href = stringextract('stream":"', '"', video)	
-			PLog(href)
-			if '_ut_' in href or '_sub' in href:				# UT-Stream filtern, bisher nur ARD, HR
+			stream = stringextract('stream":"', '"', video)	
+			PLog(stream)
+			if stream.endswith(".ts"):						# 07.01.2024 Link o. Zertifikat
+				PLog("skip_ts_stream")
+				continue
+			href = stream
+			if '_ut_' in href or '_sub' in href:			# UT-Stream filtern, bisher nur ARD, HR
 				href_ut = href
 
 		if SETTINGS.getSetting('pref_UT_ON') == 'true':	
