@@ -10,6 +10,29 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+07.01.2024 4.9.4
+			PlayVideo_Direct (Modul util): Absicherung Default_Url bei nur 1 Element in
+			HLS-List.
+			ARDStart (ARDnew): fehlenden Param func für Call zu ARDStartRubrik ergänzt
+			(mehrere Menüs öffneten nicht).
+			log_update (Modul strm): fehlende Begrenzung des strm-Logs auf MAX_LOGLINES
+			Zeilen ergänzt.
+			TV-Livestreams -> Privat -> QVC: Aktualisierung der Videoquellen für die 3
+			QVC-Sender, ServusTV entfernt (nicht mehr offen erreichbar) - Anpassung 
+			livesenderTV.xml. 
+			TV-Livestreams -> Regional -> MDR: Sender Sachsen-Anhalt und Thüringen aus 
+			IPTV-Quelle ergänzt, Anpassung livesenderTV.xml.
+			SenderLiveSearch: IPTV-Suche um 2. github-Quelle ergänzt.
+			Main: Wegfall des Menüs "Download- und Aufnahme-Tools" im Hauptmenü (Zwilling
+			seit 2022 in Infos+Tools).
+			Modul Arte: quotierte Slashes in stream_hbbtv entfernt (MP4- und HBBTV-Quellen 
+			der Videos fehlten). 
+			ShowSeekPos (Modul util): control-Test auskommentiert (vorerst nicht relevant).
+			ZDF_getStrmList: Austausch os.path.isdir -> os.path.exists (strmpath), Abbruch-
+			Dialog bei strmpath-Problem.
+			Modul util: neue Funktion get_sqlite_Cursor (DB-Connect zu MyVideos*.db), 
+			Nutzung durch show_strm_element
+
 24.12.2023 4.9.3
 			ZDF_RubrikSingle: Fix Erkennung von Navigations-Menüs (Suche in jsonObject
 			statt in page).
@@ -2768,7 +2791,7 @@ not on Github	3.3.2
 			ZDF_get_content: teaser_nr zusätzl. für Kennz. im Serientitel verwendet.
 			ZDF_Sendungen: Disclaimer im Titel zur Mehr-Suche entfernt.
 
-01.07.2020	3.2.3 
+01.08.2020	3.2.3 
 			Audio_get_rubriken (Audiothek): Fix für Titel (fehlt im Menü "Unsere Favoriten"
 			nach Webänderung), neu: Bildtitel als tagline ausgewertet.
 			AudioContentJSON: die Hostadresse ist falsch + scheitert, Austausch 

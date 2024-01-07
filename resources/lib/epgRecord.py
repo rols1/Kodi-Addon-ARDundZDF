@@ -433,7 +433,7 @@ def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSet
 
 ##################################################################
 #---------------------------------------------------------------- 
-# 26.07.2020 Bereinigung KillFile-Ruinen hinzugefügt
+# 31.12.2023 Bereinigung KillFile-Ruinen entfernt (obsolet)
 # 
 def JobListe():														# Liste, Job-Status, Jobs löschen
 	PLog("JobListe:")
@@ -450,15 +450,6 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 		
 	now = EPG.get_unixtime(onlynow=True)
 	now = int(now)
-
-	globFiles = "%s/ThreadKill_*" % ADDON_DATA						# KillFile-Ruinen löschen
-	files = glob.glob(globFiles) 
-	if len(files) > 0:
-		max_rec_time = 43200 										# 12 Std. = max. Setting pref_LiveRecord_duration
-		OldKillFile = files[0]  # 1 reicht, ev. Rest wird bei Folge-Calls abgeräumt
-		if os.stat(OldKillFile).st_mtime < (now - max_rec_time):	# falls älter als max_rec_time
-			PLog("entferne OldKillFile: %s" % OldKillFile)
-			os.remove(OldKillFile)			
 	
 	now_human = date_human("%d.%m.%Y, %H:%M", now='')
 	pre_rec  = SETTINGS.getSetting('pref_pre_rec')					# Vorlauf (Bsp. 00:15:00 = 15 Minuten)
@@ -467,6 +458,7 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 	post_rec = re.search('= (\d+) Min', post_rec).group(1)
 	anz_jobs = len(jobs)
 	jobs.sort()
+		
 	
 	for cnt in range(len(jobs)):
 			myjob = jobs[cnt]

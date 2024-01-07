@@ -346,15 +346,6 @@
 <fanart></fanart>
 <items>
 	<item>
-		<title>ServusTV</title>
-		<tvg-name>ServusHD.de</tvg-name>
-		<link>IPTVSource|/jnk22/kodinerds-iptv/blob/e297851866d6af270e69da6d1d60f2e938f72860/iptv/kodi/kodi_tv_main.m3u</link>
-		<thumbnail>tvg-logo</thumbnail>
-		<imgsource></imgsource>
-		<EPG_ID>SERVU</EPG_ID>
-		<date>26.05.2022</date>
-	</item>
-	<item>
 		<title>Welt_N24-Live Nachrichten</title>
 		<tvg-name></tvg-name>
 		<link>https://welt.personalstream.tv/v1/master.m3u8?ads.country=de&ads.pf=welttv</link>

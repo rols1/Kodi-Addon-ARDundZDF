@@ -4,7 +4,7 @@
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
 # 	<nr>14</nr>										# Numerierung für Einzelupdate
-#	Stand: 01.01.2024
+#	Stand: 06.01.2024
 #
 
 from __future__ import absolute_import
@@ -56,7 +56,7 @@ STRM_CHECK 		= os.path.join(ADDON_DATA, "strm_check_alive") 			# strm-Synchronis
 STRM_TOOLS_SET	= os.path.join(ADDON_DATA, "strmtoolset")				# Settings der stm-Tools	
 STRM_LOGLIST 	= os.path.join(ADDON_DATA, "strmloglist") 				# strm-LOG-Datei 
 MAX_LOGLINES	= 200													# max. Anzahl Zeilen strm-LOG-Datei 
-
+	
 ICON 			= 'icon.png'		# ARD + ZDF
 ICON_DIR_STRM	= "Dir-strm.png"
 PLog('Script strm.py geladen')
@@ -937,8 +937,9 @@ def do_sync_ARD(list_title, strmpath, list_path, strm_type):
 #	strmpath
 # mediatype="video" hier unabhängig vom Setting (nur 1 Url in strm)
 # Rückkehr zur Liste nach play oder Rückkehr zu Info/strm-Tools
-# 12.03.2022 Abgleich Video mit MyVideos119.db + ggfls. Kennzeichnung
+# 12.03.2022 Abgleich Video mit MyVideos*.db + ggfls. Kennzeichnung
 #	 (Setting pref_skip_played_strm)
+# 06.01.2024  DB-Connect ausgelagert (util)
 #
 def show_strm_element(strmpath):
 	PLog('show_strm_element: ' + strmpath)
@@ -960,12 +961,7 @@ def show_strm_element(strmpath):
 	movie = obj["movies"][0]
 	PLog(movie)
 	'''
-
-	import sqlite3
-	# DB-Versionen: https://kodi.wiki/view/Databases, hier Matrix:
-	db =  xbmc.translatePath('special://database/MyVideos119.db')
-	conn = sqlite3.connect(db)
-	cur = conn.cursor()
+	cur = get_sqlite_Cursor("MyVideos")				# DB-Connect
 	
 	strm_files=[]
 	# Anzahl Unterverzeichnissen abhängig von Setting pref_strm_uz
@@ -974,7 +970,7 @@ def show_strm_element(strmpath):
 		for f in files:
 			fname = os.path.join(root, f)
 			strm_files.append(fname)
-	strm_files.sort(reverse=True)					# absteigen wie abgelegt
+	strm_files.sort(reverse=True)					# absteigend wie abgelegt
 			
 	max_len =  len(strm_files)
 	PLog("strm_files: %d" % max_len)		
@@ -1000,6 +996,7 @@ def show_strm_element(strmpath):
 				
 		#--------------------	
 		if SETTINGS.getSetting('pref_skip_played_strm') == 'true':	# Abgleich PlayCount in Video-DB
+			# Felder MyVideos*.db: kodi.wiki/view/Databases/MyVideos
 			surl = quote_plus(url)						
 			try:
 				cur.execute("SELECT strFilename, PlayCount FROM files WHERE strFilename like ?", ('%'+surl+'%',))
@@ -1170,8 +1167,9 @@ def exist_in_library(title):
 
 	movies = result['movies']		# type list	
 	PLog(str(movies)[:100])
-	PLog("movies: %d" % len(movies))	
-	PLog(movies[0])
+	PLog("movies: %d" % len(movies))
+	if 	len(movies) > 0:
+		PLog(movies[0])
 	#PLog(title in str(movies))		# Debug
 	
 	hit_list=[]

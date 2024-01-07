@@ -92,7 +92,7 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 			rec = EPG(ID=ID, load_only=True)			# Seite laden + speichern
 			xbmc.sleep(250)								# Systemlast verringern
 		
-	xbmcgui.Dialog().notification("EPG-Download", "abgeschlossen (%d)" % (i+1),icon,3000)
+	xbmcgui.Dialog().notification("EPG-Download", "fertig: %d Sender" % (i+1),icon,3000)
 	
 	return
 

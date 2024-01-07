@@ -498,12 +498,8 @@ def Main():
 			addDir(li=li, label=label, action="dirList", dirID="AudioStart", fanart=R(FANART), 
 				thumb=R(ICON_MAIN_AUDIO), tagline=tagline, fparams=fparams)
 						
-																# Download-/Aufnahme-Tools. zeigen
-	if SETTINGS.getSetting('pref_use_downloads')=='true' or SETTINGS.getSetting('pref_epgRecord')=='true':	
-		tagline = 'Downloads und Aufnahmen: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
-		fparams="&fparams={}"
-		addDir(li=li, label='Download- und Aufnahme-Tools', action="dirList", dirID="DownloadTools", 
-			fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)	
+	# Download-/Aufnahme-Tools. im Hauptmenü  entfernt | bis Ende 2023 im Hauptmenü, seit 
+	#	2022 zusätzlich in Infos+Tools
 				
 	if SETTINGS.getSetting('pref_showFavs') ==  'true':			# Favoriten einblenden
 		tagline = "Kodis ARDundZDF-Favoriten zeigen und aufrufen"
@@ -525,7 +521,7 @@ def Main():
 								
 	repo_url = 'https://github.com/{0}/releases/'.format(GITHUB_REPOSITORY)
 	call_update = False
-	if SETTINGS.getSetting('pref_info_update') == 'true': # Updatehinweis beim Start des Addons 
+	if SETTINGS.getSetting('pref_info_update') == 'true': 		# Updatehinweis beim Start des Addons 
 		ret = updater.update_available(VERSION)
 		if ret[0] == False:		
 			msg1 = "Github ist nicht erreichbar"
@@ -537,7 +533,7 @@ def Main():
 			int_lc = ret[1]			# Version aktuell
 			latest_version = ret[2]	# Version Github, Format 1.4.1
 			
-			if int_lv > int_lc:								# Update-Button "installieren" zeigen
+			if int_lv > int_lc:									# Update-Button "installieren" zeigen
 				call_update = True
 				title = 'neues Update vorhanden - jetzt installieren'
 				summ = 'Addon aktuell: ' + VERSION + ', neu auf Github: ' + latest_version
@@ -547,7 +543,7 @@ def Main():
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.updater.update", fanart=R(FANART), 
 					thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summ)
 			
-	if call_update == False:							# Update-Button "Suche" zeigen	
+	if call_update == False:									# Update-Button "Suche" zeigen	
 		title  = 'Addon-Update | akt. Version: ' + VERSION + ' vom ' + VDATE	
 		summ='Suche nach neuen Updates starten'
 		tag ='Bezugsquelle: ' + repo_url			
@@ -555,11 +551,9 @@ def Main():
 		addDir(li=li, label=title, action="dirList", dirID="SearchUpdate", fanart=R(FANART), 
 			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summ)
 
-	# Menü Einstellungen (obsolet) ersetzt durch Info-Button
-	#	freischalten nach Posting im Kodi-Forum
-
-	tag = '[B]Infos, Tools und Filter zu diesem Addon[/B]'					# Menü Info + Tools
-	summ= u'- Ausschluss-Filter bearbeiten'
+	summ = '[B]Infos und Tools zu diesem Addon[/B]'				# Menü Infos + Tools
+	summ= u'%s\n- Zuletzt-gesehen-Liste' % summ
+	summ= u'%s\n- Ausschluss-Filter bearbeiten' % summ
 	summ= u"%s\n- Merkliste bereinigen" % summ
 	summ= u"%s\n- Merklisten-Ordner bearbeiten" % summ
 	summ= u'%s\n- Suchwörter bearbeiten' % summ
@@ -573,7 +567,7 @@ def Main():
 	summ = "%s\n\n%s" % (summ, u"[B]Einzelupdate[/B] (für einzelne Dateien des Addons)")
 	fparams="&fparams={}" 
 	addDir(li=li, label='Infos + Tools', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
-		fparams=fparams, summary=summ, tagline=tag)
+		fparams=fparams, summary=summ)
 
 	# Updatehinweis wird beim Caching nicht aktualisiert
 	if SETTINGS.getSetting('pref_info_update') == 'true':
@@ -846,6 +840,8 @@ def AddonStartlist(mode='', query=''):
 	startlist=py2_encode(startlist)
 	startlist= startlist.strip().splitlines()
 	PLog(len(startlist))
+	
+	#cur = get_sqlite_Cursor("MyVideos")				# DB-Connect Todo
 
 	cnt=0
 	for item in startlist:
@@ -865,6 +861,18 @@ def AddonStartlist(mode='', query=''):
 			PLog(q in i)
 			show = q in i										# Abgleich 
 		
+		'''		Todo: Zusatz-Infos lastPlayed, resumeTimeInSeconds
+		try:
+			cur.execute("SELECT * FROM movieview WHERE c00 like ?", ('%'+title+'%',))
+			rows = cur.fetchall()
+		except Exception as exception:
+			rows=[]
+			PLog("cursor_exception: " + str(exception))
+		PLog("db_rows: %d" % len(rows))
+		PLog(title)
+		PLog(str(rows))
+		'''
+		
 		PLog(show)		
 		if show == True:		
 			url=py2_encode(url); title=py2_encode(title);  thumb=py2_encode(thumb);
@@ -873,7 +881,7 @@ def AddonStartlist(mode='', query=''):
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=thumb, 
 				fparams=fparams, mediatype='video', tagline=tag)
 			cnt = cnt+1 	
-	
+
 	PLog(cnt);
 	if query:
 		if cnt == 0:
@@ -7113,13 +7121,16 @@ def SenderLiveSearch(title):
 	query = query.strip()
 	PLog(query)
 	
-	url = "https://raw.githubusercontent.com/jnk22/kodinerds-iptv/master/iptv/kodi/kodi_tv_local.m3u"
-	page, msg = get_page(url)					
-	if page == '':	
-		msg1 = "Fehler in get_WRDstreamlinks:"
+	url1 = "https://raw.githubusercontent.com/jnk22/kodinerds-iptv/master/iptv/kodi/kodi_tv_local.m3u"
+	url2 = "https://github.com/jnk22/kodinerds-iptv/blob/e297851866d6af270e69da6d1d60f2e938f72860/iptv/kodi/kodi_tv_main.m3u"
+	page1, msg = get_page(url1)					
+	page2, msg = get_page(url2)					
+	if page1 == '' and  page2 == '':	
+		msg1 = "Fehler in SenderLiveSearch:"
 		msg2=msg
 		MyDialog(msg1, msg2, '')	
 		return
+	page = page1 + page2
 	PLog(page[:60])
 	
 	li = xbmcgui.ListItem()
@@ -7132,6 +7143,7 @@ def SenderLiveSearch(title):
 	items = blockextract('#EXTINF:', page)
 	for item in items:
 		if up_low(query) in up_low(item):
+			item = item.replace('\\"', '"')						# Ergebnis url2: tvg-name=\"ServusTV HD\"..
 			PLog("item: %s" % item)
 			tag=""
 			tvgname = stringextract('tvg-name="', '"', item)
@@ -7139,6 +7151,7 @@ def SenderLiveSearch(title):
 			thumb = stringextract('tvg-logo="', '"', item)
 			links = blockextract('https', item)					# 1. logo, 2. streamlink
 			link = links[-1]
+			link = link.replace('",', '')
 			tvgname = py2_decode(tvgname); tvgid = py2_decode(tvgid)
 			PLog(tvgid)
 			if tvgid:
@@ -9206,9 +9219,16 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 	ret = MyDialog(msg1, msg2, msg3, ok=False, cancel='Abbruch', yes='OK', heading=head)
 	if ret != 1:
 		return
-	if os.path.isdir(strmpath) == False:
-		os.mkdir(strmpath)											# Verz. erzeugen, falls noch nicht vorh.
-		list_exist=False
+	if os.path.exists(strmpath) == False:
+		try:
+			os.mkdir(strmpath)											# Verz. erzeugen, falls noch nicht vorh.
+			list_exist=False
+		except Exception as exception:
+			PLog(str(exception))
+			msg1 = u'strm-Verzeichnis konnte nicht angelegt werden:'
+			msg2 = str(exception)
+			MyDialog(msg1, msg2, '')
+			return	
 	else:
 		list_exist=True
 

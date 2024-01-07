@@ -760,7 +760,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	streams = stringextract('"videoStreams":',  ']', page)		
 	stream_hbbtv = stringextract('hbbtv":',  '}', streams)
 	stream_hbbtv = stringextract('href": "',  '"', stream_hbbtv)
-	stream_hbbtv = stream_hbbtv.replace("\/", "/")					# 04.01.2023 url gequotet						
+	stream_hbbtv = stream_hbbtv.replace("\/", "/")					# 04.01.2023: \/\/api.arte.tv\/api\/						
 	#stream_web = stringextract('web":',  '}', streams)				# nicht genutzt - s. api_v2_Call
 	#stream_web = stringextract('href": "',  '"', stream_web)
 	#PLog("stream_web: " + stream_web); 

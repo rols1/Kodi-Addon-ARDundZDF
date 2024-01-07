@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>80</nr>										# Numerierung für Einzelupdate
-#	Stand: 31.12.2023
+#	Stand: 06.01.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1350,7 +1350,35 @@ def img_urlScheme(text, dim, ID=''):
 		return '', ''		
 	
 #---------------------------------------------------------------- 
+# ermittelt sqlite-DB passend zur Kodi Version + stellt Verbindung her
+# Rückgabe cur
+# Aufrufer: show_strm_element (strm-Modul)
+# db=DB-Name ohne Nr, Bsp.: MyVideos (bei Bedarf erweitern: 
+#	Addons*, MyMusic*)
+# MyVideos-Felder s. kodi.wiki/view/Databases/MyVideos, Achtung: 
+#	abweichende Feldnamen möglich, Kontrolle SQLiteStudio
+def get_sqlite_Cursor(kodi_db):
+	PLog('get_sqlite_Cursor: %s' % kodi_db)
 
+	import sqlite3
+	# DB-Version wählen, Format "Kodi_Version|MyVideos_Nr"
+	if kodi_db == "MyVideos":
+		db_list = ["17|107", "18|116", "19|119", "20|121", "21|121"]
+		my_db = "MyVideos119.db" 					# Default Matrix
+	for line in db_list:
+		km, nr = line.split("|")
+		if km == str(KODI_MAJOR):
+			my_db = "%s%s" % (kodi_db, nr)
+	PLog("my_db: " + my_db)
+			
+	db_path =  xbmc.translatePath('special://database/%s.db' % my_db)
+	PLog("db_path: " + db_path)
+	conn = sqlite3.connect(db_path)					# ohne error
+	cur = conn.cursor()
+	PLog(cur)
+	return cur
+
+#---------------------------------------------------------------- 
 # Ersetzt R-Funktion von Plex (Pfad zum Verz. Resources, hier zusätzl. Unterordner möglich) 
 # Falls abs_path nicht gesetzt, wird der Pluginpfad zurückgegeben, sonst der absolute Pfad
 # für lokale Icons üblicherweise PluginAbsPath.
@@ -2132,6 +2160,7 @@ def transl_pubDate(pubDate):
 # Holt User-Eingabe für Suche ab
 #	s.a. get_query (für Search , ZDF_Search)
 def get_keyboard_input(line='', head=''):
+	PLog("get_keyboard_input: " + line)
 	if head == '':
 		head = 'Bitte Suchwort(e) eingeben'
 	kb = xbmc.Keyboard(line, head)
@@ -3341,8 +3370,9 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #
 #	Format sub_path s. https://alwinesch.github.io/group__python__xbmcgui__listitem.html#ga24a6b65440083e83e67e5d0fb3379369
 #	Die XML-Untertitel der ARD werden gespeichert + nach SRT konvertiert (einschl. minus 10-Std.-Offset)
-#	Resume-Funktion Kodi-intern  DB MyVideos107.db, Tab files (idFile, playCount, lastPlayed) + (via key idFile),
-#		bookmark (idFile, timelnSeconds, totalTimelnSeconds)
+#	Resume-Funktion Kodi-intern  DB MyVideos107.db (107-121), Tab files (idFile, playCount, lastPlayed) + (via key idFile),
+#		bookmark (idFile, timelnSeconds, totalTimelnSeconds) - s. kodi.wiki/view/Databases/MyVideos,
+#		kodi.wiki/view/Databases (107.db-121.db)
 #
 #	Untertitel bei Livestreams: ab Okt. 2022 keine getrennten Livestream-Link für UT mehr.
 #		ARD-Sender: die in get_streamurl_ut ermittelten Links (z.B. ../master_subs_webvtt.m3u8) 
@@ -3830,9 +3860,10 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	PLog('ShowSeekPos: ' + url)		
 	import resources.lib.EPG as EPG
 
-	marks="0.00,6.66,6.66,13.2,19.8,19.8,27.4"			# @PvD  14.10.023
-	xbmcgui.Window(10000).setProperty("ardundzdf",marks)# control -> DialogSeekbar.xml
-	PLog(xbmcgui.Window(10000).getProperty("ardundzdf"))# OK
+	# control-Test:
+	#marks="0.00,6.66,6.66,13.2,19.8,19.8,27.4"			# @PvD  14.10.023
+	#xbmcgui.Window(10000).setProperty("ardundzdf",marks)# control -> DialogSeekbar.xml
+	#PLog(xbmcgui.Window(10000).getProperty("ardundzdf"))# OK
 	
 	icon=""												# -> Kodi's i-Symbol
 	now = EPG.get_unixtime(onlynow=True)				# unix-sec passend zu TotalTime, LastSeek
