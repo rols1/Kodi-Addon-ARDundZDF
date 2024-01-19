@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>170</nr>										# Numerierung für Einzelupdate
+# 	<nr>171</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.4'
 VDATE = '19.01.2024'
 
@@ -926,8 +926,8 @@ def check_Resume(url, title, thumb, Plot, sub_path, seek, dur):
 		msg3 = "Abbruch für neuen Start ab Beginn."
 		ret=MyDialog(msg1, msg2, msg3, ok=False, yes='JA')
 		PLog(ret)
-		if not ret:
-			seekTime=""
+		if ret != 1:
+			seek=""
 
 	PlayVideo(url, title, thumb, Plot, sub_path, seekTime=seek)
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True) 	# Rebuild Liste
