@@ -4,7 +4,7 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-# 	<nr>6</nr>										# Numerierung für Einzelupdate
+# 	<nr>7</nr>										# Numerierung für Einzelupdate
 #	Stand: 28.01.2023
 #
 
