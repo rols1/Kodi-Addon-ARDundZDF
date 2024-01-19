@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>38</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.01.2024
+# 	<nr>39</nr>										# Numerierung für Einzelupdate
+#	Stand: 19.01.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -412,8 +412,9 @@ def Arte_Search(query='', next_url=''):
 # Seiten mit collection_subcollection: Auswertung ab dort (Serien)
 # 15.01.2023 umgestellt: page=json
 #
-def GetContent(li, page, ID):
+def GetContent(li, page, ID, ignore_pid=""):
 	PLog("GetContent: " + ID)
+	PLog(ignore_pid);
 	
 	PLog(str(page)[:80])		
 	if ID == "SEARCH":									# web-api-Call
@@ -469,6 +470,17 @@ def GetContent(li, page, ID):
 		if summ == None:
 			summ = ""					
 		pid = item["id"]
+		PLog("Mark1")
+		PLog(pid); PLog(ignore_pid); 
+		if ID == "ArteStart_2" and pid in ignore_pid:	# RC-024605 in 9aa06c3d-6202-47c3-a5a5-1d70fd37ca0a_RC-024605 
+			if len(values) == 1:
+				PLog("ignore_pid: " + pid)
+				icon = R(ICON_ARTE)
+				msg1 = L(u"Rekursion:")
+				msg2 =  L(u"zurück zur Liste")
+				xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
+				return
+		
 		kind = item["kind"]["code"]						# z.B. TOPIC
 		typ = item["kind"]["code"]						# z.B. Kollektion
 		coll = item["kind"]["isCollection"]				# true/false
@@ -1084,6 +1096,7 @@ def ArteCluster(pid='', title='', katurl=''):
 	PLog("ArteCluster: " + pid)
 	PLog(title); PLog(katurl); 
 	title_org = title
+	pid_org=pid
 	ping_uhd = False
 	
 	if katurl.startswith("http") == False:
@@ -1148,13 +1161,15 @@ def ArteCluster(pid='', title='', katurl=''):
 			title = item["title"]
 			title = transl_json(title)
 			
+			PLog("Mark0")
 			skip=False
 			for s in skip_item:
 				if title.find(s) >= 0: 
 					if title != "Alle Videos":				# trotz data":[] möglich
-						PLog(s); skip=True
+						PLog("skip_item: " + s); 
+						skip=True
 			if skip: 
-				PLog("skip: " + title)
+				PLog("skip_title: " + title)
 				continue
 			
 			try:
@@ -1179,7 +1194,8 @@ def ArteCluster(pid='', title='', katurl=''):
 			
 			title=py2_encode(title); katurl=py2_encode(katurl);
 			title_org=title
-			fparams="&fparams={'pid': '%s', 'title': '%s', 'katurl': '%s'}" % (pid, quote(title_org), quote(katurl))
+			fparams="&fparams={'pid': '%s', 'title': '%s', 'katurl': '%s'}" %\
+				(pid, quote(title_org), quote(katurl))
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.ArteCluster", 
 				fanart=R(ICON_ARTE), thumb=img, tagline=tag, summary=summ, fparams=fparams)
 
@@ -1193,9 +1209,10 @@ def ArteCluster(pid='', title='', katurl=''):
 		PLog(str(page)[:80])
 		
 		l = L(u'Zurück zum Hauptmenü')
-		ltitle = u" %s %s" % (l, "arte")						# Startblank s. home
+		ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
 		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
-		li, cnt = GetContent(li, page, ID="ArteStart_2")
+		# ignore_pid verhindert erneuten Aufruf: 
+		li, cnt = GetContent(li, page, ID="ArteStart_2", ignore_pid=pid_org)
 		PLog("cnt: " + str(cnt))
 		ArteMehr(page, li)							# Mehr-Beiträge?
 
