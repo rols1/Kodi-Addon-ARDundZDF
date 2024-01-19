@@ -149,8 +149,8 @@ def items_add_rm(action, add_url='', title='', thumb='', Plot=''):
 			
 		if check_startlist == 'true' and do_add == True: # Abgleich mit <Zuletzt gesehen>-Liste			
 			for start_item in startlist:
-				if start_item.find(title) > 0:									# Abgleich mit titel in Plugin-Url
-					ts, old_title, add_url, thumb, Plot = start_item.split('###')
+				if start_item.find(title) > 0:											# Abgleich mit titel in Plugin-Url
+					ts, old_title, add_url, thumb, Plot = start_item.split('###')[:5]	# neues Format ab V 4.9.5
 					ts = datetime.datetime.fromtimestamp(float(ts))
 					ts = ts.strftime("%d.%m.%Y, %H:%M Uhr")
 					g1 = u"[B]%s[/B]\nbereits gesehen am %s" % (title[:40], ts)
@@ -628,7 +628,6 @@ def CountDown(sec, title, icon):
 		
 	return
 # ----------------------------------------------------------------------
-
 
 
 

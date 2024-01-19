@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>80</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.01.2024
+# 	<nr>81</nr>										# Numerierung für Einzelupdate
+#	Stand: 19.01.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -134,6 +134,7 @@ WATCHFILE		= os.path.join(ADDON_DATA, "merkliste.xml")
 TEMP_ADDON		= xbmc.translatePath("special://temp")			# Backups
 FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")			# Flag PlayVideo_Direct -> strm-Modul
 STRM_URL		= os.path.join(ADDON_DATA, "strmurl")			# Ablage strm-Url (PlayVideo_Direct)	
+PLAYLIST_ALIVE 	= os.path.join(ADDON_DATA, "playlist_alive")	# Lebendsignal für PlayMonitor (leer)
 
 PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
 ICON_MAIN_POD	= 'radio-podcasts.png'
@@ -857,9 +858,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				fparams_do_folder = "&fparams={0}".format(fp)
 				fparams_do_folder = quote_plus(fparams_do_folder)	# Merklisten-Ordner bearbeiten (add/remove)
 				
-		fp = {'action': 'state_change'} 						# Ausschluss-Filter EIN/AUS
+		fp = {'action': 'state_change'} 							# Ausschluss-Filter EIN/AUS
 		fparams_change = "&fparams={0}".format(fp)
-		fparams_change = quote_plus(fparams_change)				# Filtern
+		fparams_change = quote_plus(fparams_change)					# Filtern
 			
 
 		# Recording:
@@ -909,38 +910,40 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		#	mehr geeignet. Neu: Nutzung der Funktionen für HLS_List,MP4_List - s. playlist.py,
 		#	add_url ersetzt frühere direkte Stream-Url
 		if SETTINGS.getSetting('pref_playlist') == 'true':	# PLAYLIST gewählt?
-			PLog("pref_playlist_true")
+			PLog("pref_playlist_true, mediatype: " + mediatype)
 			if mediatype == 'video':	
 				# Änderungen mit get_Source_Funcs_ID (strm) abgleichen:	
-				Source_Funcs = [u"ARDStartSingle|ARDnew.py",				# Funktionen + ID's
+				Source_Funcs = [u"ARDStartSingle|ARDnew.py",		# Funktionen + ID's
 								u"ZDF_getVideoSources|ardundzdf.py",
+								u"ZDF_getApiStreams|ardundzdf.py",
 								u"SingleBeitrag|3sat", 
 								u'XLGetSourcesPlayer|TagesschauXL.py',
 								u"dirID=SenderLiveResolution|ARD",
 								u"arte.SingleVideo|arte"
 								]
-				do_it=False
+				do_playlist=False
 				for item in Source_Funcs:
 					dest_func, modul = item.split("|")
 					#PLog("dest_func: " + dest_func)
 					if dest_func in dirID:
 						PLog("dest_func: " + dest_func)
-						do_it = True
+						do_playlist = True
 						break
+				PLog("do_playlist: " + str(do_playlist))
 				
-				if do_it: 
+				if do_playlist: 
 					PLog("start_end: " + start_end)
-					f = unquote(fparams)									# Param. extrahieren (s. PlayVideo)
-					f = f.replace("': '", "':'")							# json-Blanks
+					f = unquote(fparams)											# Param. extrahieren (s. PlayVideo)
+					f = f.replace("': '", "':'")									# json-Blanks
 					title = label
-					Plot = Plot.replace('\n', '||')							# Plot hier : tagline+summary
+					Plot = Plot.replace('\n', '||')									# Plot hier : tagline+summary
 					
 					# Abfrage PLAYFILE) hier nicht mögl. (USERDATA fehlt in util)
 					fp = {'action': 'playlist_play'} 								# action reicht
 					fparams_playlist_play = "&fparams={0}".format(fp)
-					fparams_playlist_play = quote_plus(fparams_playlist_play) 		# Playlist direkt abspielen
+					fparams_playlist_play = quote_plus(fparams_playlist_play)		# Playlist direkt abspielen
 							
-					fp = {'action': 'playlist_rm', 'add_url': quote_plus(add_url)} 		# action + Url reichen
+					fp = {'action': 'playlist_rm', 'add_url': quote_plus(add_url)} 	# action + Url reichen
 					fparams_playlist_rm = "&fparams={0}".format(fp)
 					fparams_playlist_rm = quote_plus(fparams_playlist_rm) 			# Eintrag Playlist löschen
 							
@@ -1982,7 +1985,7 @@ def CalculateDuration(timecode):
 #---------------------------------------------------------------- 
 # Format seconds	86400	(String, Int, Float)
 # Rückgabe:  		1d, 0h, 0m, 0s	(days=True)
-#		oder:		0h:0d			
+#		oder:		0h:0d:0s			
 def seconds_translate(seconds, days=False):
 	#PLog('seconds_translate:')
 	#PLog(seconds)
@@ -2007,7 +2010,7 @@ def seconds_translate(seconds, days=False):
 		return "%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds)
 	else:
 		#PLog("%d:%02d" % (hour, minutes))
-		return  "%d:%02d" % (hour, minutes)		
+		return  "%02d:%02d:%02d" % (hour, minutes, seconds)		
 #----------------------------------------------------------------  	
 # Formate timecode 	ISO8601 date y-m-dTh:m:sZ 
 # Varianten:	ARDNew			2018-11-28T23:00:00Z
@@ -2125,6 +2128,9 @@ def time_to_minutes(time_str):
 	PLog('time_to_minutes:')
 	
 	minutes=""
+	if len(time_str) > 5:	# ab V 4.9.5 möglich: 01:26:40
+		time_str = time_str[:5]
+		
 	if ":" in time_str:	
 		h, m = time_str.split(':')
 		minutes = int(h) * 3600 + int(m)
@@ -3182,8 +3188,8 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 
 	xbmc.executebuiltin('Container.Refresh')
 	xbmcgui.Dialog().notification(msg1,msg2,icon,delay)
-	return	
-
+	return
+		
 ####################################################################################################
 # PlayVideo_Direct ruft PlayVideo abhängig von den Settings pref_direct_format + 
 # pref_direct_quality auf.
@@ -3364,7 +3370,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #		SingleSendung (m3u8_master), SenderLiveResolution 
 #		ZDF_Live, show_formitaeten (ZDF)
 #		
-#		PlayMonitor (Modul Playlist, Param. playlist), 
+#		PlayMonitor (Modul Playlist, Param. playlist='true'), 
 #		PlayVideo_Direct, ARD_get_strmStream
 #		WDRstream
 #
@@ -3390,7 +3396,8 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 #
 def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, Merk="", live=""):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
-	PLog(sub_path); PLog(seekTime);
+	PLog(sub_path); PLog(seekTime); PLog("live: " + live); PLog(playlist)
+	import sqlite3										# Abfrage MyVideos*.db
 	
 	Plot=transl_doubleUTF8(Plot)
 	Plot=(Plot.replace('[B]', '').replace('[/B]', ''))	# Kodi-Problem: [/B] wird am Info-Ende platziert
@@ -3444,49 +3451,37 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 	if url_check(url, caller='PlayVideo'):							# Url-Check
 		startlist = SETTINGS.getSetting('pref_startlist')
 		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
-		if  startlist == 'true' and playlist == '':					# Startliste  (true: skip bei playlist-Url)
+		if  startlist=='true' and playlist  !='true':				# Startlist  (true: skip bei playlist-Url)
 			PLog("maxvideos: %s, STARTLIST: %s" % (maxvideos, STARTLIST))
 			started_videos=""
 			if os.path.exists(STARTLIST):
-				started_videos= RLoad(STARTLIST, abs_path=True)		# Video-Startliste laden
+				started_videos= RLoad(STARTLIST, abs_path=True)		# Video-Startlist laden
 				started_videos=py2_encode(started_videos)
 				started_videos= started_videos.splitlines()
 			if started_videos == "":
 				started_videos=[]
 			PLog("started_videos: %d" % len(started_videos))
-			if len(started_videos) >= int(maxvideos):				# 1. Eintrag löschen (ältester)
+			if len(started_videos) >= int(maxvideos):				# ältesten Eintrag löschen
 				del started_videos[0]
 			
 			dt = datetime.datetime.now()							# Format 2017-03-09 22:04:19.044463
 			now = time.mktime(dt.timetuple())						# Unix-Format 1489094334.0 -> Sortiermerkmal
 			Plot=Plot.replace('\n', '||')
-			if 'gestartet: [COLOR darkgoldenrod]' in Plot: 			# Video aus Startliste:
-				mark = '[/COLOR]||||'								# 	Datum/Zeit entfernen
+			if 'gestartet: [COLOR darkgoldenrod]' in Plot: 			# Video aus Startlist:
+				mark = '[/COLOR]||||'								# 	Datum/Zeit lokal entfernen
 				pos = Plot.find(mark) + len(mark)
 				Plot = Plot[pos:]
 				
-			new_line = u"%s###%s###%s###%s###%s" % (now, title, url, thumb, Plot) 
+			new_line = u"%s###%s###%s###%s###%s###sub_path:%s###" % (now, title, url, thumb, Plot, sub_path) 
 			new_line = py2_encode(new_line)
-			PLog("new_line: " + new_line[:100])
-			new_list=[]
-			new_list.append(new_line)
-			PLog(len(new_list))	
-			
-			for item in started_videos:									# alte Einträge mit Url abgleichen 
-				item = py2_encode(item)									#	und umkopieren
-				#PLog("new_line[12:]: %s, item[:12]: %s" % (new_line[12:], item[:12])) # nur bei Bedarf
-				old_url = stringextract('###http', '###', item)	
-				new_url = stringextract('###http', '###', new_line)	
-				#PLog("old_url: %s, new_url: %s" % (old_url, new_url))	# nur bei Bedarf
-				#PLog(new_url in old_url)								# nur bei Bedarf
-				if new_url not in old_url:								# Eintrag mit gleicher Url löschen (skip)
-					PLog("append:")
-					new_list.append(item)								# Eintrag -> new_list		
+			PLog("new_line: " + new_line)
 
-			PLog(len(new_list))	
-			new_list.sort(reverse=True)
-			new_list = "\n".join(new_list)
-			RSave(STARTLIST, new_list)		
+			new_list=[]						
+			for item in started_videos:								# umkopieren
+				if url not in item:									# skip Einträge mit gleicher Url
+					new_list.append(item)	
+			new_list.append(new_line)								# neuer Satz, Ergänzung s. monitor_resume
+			PLog(len(new_list))							
 		
 		#-------------------------------------------------------# Play		
 		# playlist: Start aus Modul Playlist (s.o.)
@@ -3527,90 +3522,194 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 				#li.setContentLookup(False)
 	
 
-		PLog("url: " + url); PLog("playlist: %s" % str(playlist))
-		if IsPlayable == 'true' and playlist =='':				# true - Call via listitem
+		PLog("url: " + url); PLog("playlist: %s" % playlist)
+		if IsPlayable == 'true' and playlist !='true':				# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
 
 		else:													# false, None od. Blank - Playlist
-			PLog('PlayVideo_Start: direkt, playlist: %s' % str(playlist))
-			
+			PLog('PlayVideo_Start: direkt, playlist: %s' % playlist)
 			line = Dict("load", 'Rekurs_check', CacheTime=10)	# Dict-Abgleich url/Laufzeit
 			PLog(line)
 			oldurl='' 
 			if line != False:									# False, falls fehlend
 				oldurl, old_dur, old_now = line.split('||')
-			if oldurl and oldurl in url:
-				now = time.time(); 
-				now=int(now); old_now=int(float(old_now)); old_dur=int(float(old_dur))
-				PLog("now - old_now: %d,  old_dur %d" % (now-old_now, old_dur))
-				if (now - old_now) < old_dur + 5:					# erneuter Aufruf vor regul. Videoende?
-					#if SETTINGS.getSetting('pref_nohome') == 'true': 12.06.2023 gelöst vom Status pref_nohome
-					msg1 = "Videoabbruch"; msg2 = "wegen vermutl. Rekursion"
-					icon = R(ICON_WARNING)
-					xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
-					PLog("Rekursions_exit")
-					return
+				if oldurl and oldurl in url:
+					now = time.time(); 
+					now=int(now); old_now=int(float(old_now)); old_dur=int(float(old_dur))
+					PLog("now - old_now: %d,  old_dur %d" % (now-old_now, old_dur))
+					if (now - old_now) < old_dur + 5:					# erneuter Aufruf vor regul. Videoende?
+						#if SETTINGS.getSetting('pref_nohome') == 'true': 12.06.2023 gelöst vom Status pref_nohome
+						msg1 = "Videoabbruch"; msg2 = "wegen vermutl. Rekursion"
+						icon = R(ICON_WARNING)
+						xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
+						PLog("Rekursions_exit")
+						return
 
-			player.play(url, li, windowed=False) 				# direkter Start
+			player.play(url, li, windowed=False) 					# direkter Start
 			xbmc.sleep(200)
 			
-			if len(playlist) == 0:								# Verhind. Rekursion (ohne Homebutton)
+			if playlist == "":										# Verhind. Rekursion (ohne Homebutton)
 				if SETTINGS.getSetting('pref_nohome') == 'true':
 					PLog("pref_nohome=true")
-					if "-tegra-" in OS_RELEASE == False:		# ev. prüfen: "-tegra-" in OS_RELEASE +
-						exit(0)									#	nicht bei Shield + FT1-Stick.				
+					if "-tegra-" in OS_RELEASE == False:			# ev. prüfen: "-tegra-" in OS_RELEASE +
+						exit(0)										#	nicht bei Shield + FT1-Stick.				
 
-			while 1:											# seekTime setzen
-				if player.isPlaying():
-					xbmc.sleep(500)								# für Raspi erforderl.
-					PLog("set_seekTime %s" % str(seekTime))
-					seekTime = int(seekTime)
-					player.seekTime(seekTime) 					# Startpos aus PlayMonitor (HLS o. Wirkung)
-					play_time = player.getTime()
-					xbmc.sleep(500)								# für Raspi erforderl., sonst 0 möglich
-					video_dur = player.getTotalTime()
-					
-					now = time.time()
-					line = "%s||%s||%s" % (url, str(video_dur), now)
-					Dict("store", 'Rekurs_check', line) 
-					PLog("play_time %d, video_dur %d" % (play_time, video_dur))
-					break
-				xbmc.sleep(200)
+		while 1:													# seekTime setzen
+			if player.isPlaying():
+				xbmc.sleep(500)										# für Raspi erforderl.
+				seekTime = float(str(seekTime))						# OK für PY2 + PY3
+				PLog("check_seekTime %s" % str(seekTime))
+				if seekTime > 0:	
+					PLog("set_seekTime %s" % str(seekTime))	
+					player.seekTime(seekTime) 						# Startpos aus PlayMonitor (HLS o. Wirkung)
+				play_time = player.getTime()						# Resume-Check verschoben -> monitor_resume
+				xbmc.sleep(500)										# für Raspi erforderl., sonst 0 möglich
+				video_dur = player.getTotalTime()
+				now = time.time()
+				line = "%s||%s||%s" % (url, str(video_dur), now)
+				Dict("store", 'Rekurs_check', line) 
+				break
+			xbmc.sleep(200)
 
 		# waitForAbort für Player-Warteschleife statt while(1) - hilft gegen Buffern:											
-		monitor = xbmc.Monitor(); i=0; max_secs=5 				# showSubtitles setzen, sobald Player spielt
+		monitor = xbmc.Monitor(); i=0; max_secs=5 					# showSubtitles setzen, sobald Player spielt
 		player_detect=False
 		PLog("Subtitles: wait_for_Player(%d sec)" % max_secs)
-		while not monitor.waitForAbort(1):
-				xbmc.sleep(1000)
-				i=i+1
-				if player.isPlaying():
-						PLog("player_isPlaying: %d sec" % i)
-						if SETTINGS.getSetting('pref_UT_ON') == 'true':
-								PLog("Player_Subtitles: on")
-								xbmc.Player().showSubtitles(True)
-						else:           
-								PLog("Player_Subtitles: off")
-								xbmc.Player().showSubtitles(False)
-						player_detect=True
-						break
-				if i >= max_secs:
-						PLog("Subtitles: abort_player_detect")
-						player_detect=False
-						break
+		while 1:
+			xbmc.sleep(1000)
+			i=i+1
+			if player.isPlaying():
+					PLog("player_isPlaying: %d sec" % i)
+					if SETTINGS.getSetting('pref_UT_ON') == 'true':
+							PLog("Player_Subtitles: on")
+							xbmc.Player().showSubtitles(True)
+					else:           
+							PLog("Player_Subtitles: off")
+							xbmc.Player().showSubtitles(False)
+					player_detect=True
+					break
+			if i >= max_secs:
+					PLog("Subtitles: abort_player_detect")
+					player_detect=False
+					break
 
 		# Streamuhrzeit entspr. Setting + Status Player: 
 		PLog("player_detect: %s, live: %s" % (str(player_detect), live))
 		if SETTINGS.getSetting('pref_inputstream') == 'true':
-			if SETTINGS.getSetting('pref_streamtime') == 'true' and live:
-				if player_detect:
-					xbmc.sleep(2000)
-					PLog("Thread_ShowSeekPos_start:")			# Github-issue #30: Seek-Pos. -> Streamuhrzeit
-					bg_thread = Thread(target=ShowSeekPos, args=(player, url))
-					bg_thread.start()
+			if SETTINGS.getSetting('pref_streamtime') == 'true':
+				if live:
+					if player_detect:
+						xbmc.sleep(2000)
+						PLog("Thread_ShowSeekPos_start:")			# Github-issue #30: Seek-Pos. -> Streamuhrzeit
+						bg_thread = Thread(target=ShowSeekPos, args=(player, url))
+						bg_thread.start()
+						return
 
-	return play_time, video_dur				# -> PlayMonitor
+		# Monitoring player.getTime für STARTLIST - Livestreams ausgenommen
+		# Issue: Kodi startet monitor_resume bei playlist=='true'
+		if startlist == 'true':						# Resume-Monitor Startlist (pref_startlist)
+			if not live and "/live/" not in url:	# Streams wdrlokalzeit ohne live-Kennung in WDRstream						
+				if playlist != 'true':				# zuständig: Modul playlist -> PlayMonitor 									
+					xbmc.sleep(2000)
+					PLog("call_monitor_resume")
+					PLog("playlist: " + playlist)
+					video_dur = player.getTotalTime()
+					bg_thread = Thread(target=monitor_resume, args=(player, new_list, video_dur, seekTime))
+					bg_thread.start()
+					return							# ohne return startet Kodi monitor_resume, ohne zutreffende
+													#	if-condition
+	PLog("leave_PlayVideo")	
+	return play_time, video_dur						# -> PlayMonitor
+	xbmcplugin.endOfDirectory(HANDLE)
+
+#-------------------------------------
+# Monitoring player.getTime für STARTLIST - bisher nutzlos
+# Problem: Blockaden möglich bei Direktstart mediatype="", 
+#	daher in AddonStartlist mediatype auf "video" gesetzt.
+#	Leider springt Kodi dann nach Playerende zurück in
+#	AddonStartlist - STARTLIST bleibt unbearbeitet.
+#	
+def monitor_resume(player, new_list, video_dur, seekTime):
+	PLog("monitor_resume:")
+
+	if os.path.exists(PLAYLIST_ALIVE):						# Beendet Kodis Fehl-Call (s. call_monitor_resume)
+		PLog("detect_running_playlist")
+		return
+
+	monitor = xbmc.Monitor()
+	if seekTime > 0:
+		cnt=0
+		while 1:
+			play_time = player.getTime()						# Resume-Check
+			PLog("play_time %d, video_dur %d, seekTime: %d" % (play_time, video_dur, seekTime))
+			xbmc.sleep(1000)
+			cnt=cnt+1
+			if (cnt > 2) or (play_time > seekTime):
+				break
+	
+		if play_time < seekTime:
+			icon = R("Dir-video.png")
+			msg1 = "Resume-Check:"
+			msg2 = "Vorspulen leider gescheitert"
+			xbmcgui.Dialog().notification(msg1, msg2, icon, 3000, sound=False)
+		else:
+			PLog("Resume-Check: OK")
+	#---------------------------------------
+	
+	p_list=[]
+	while 1:
+		try:
+			play_time = player.getTime()
+			PLog(play_time)									# -> ab hier Zwangs-Ende bei Playerende möglich (s.o.)
+		except Exception as exception:
+			PLog("player_exception: " + str(exception))
+			break
+			
+		p_list.append(play_time)							# Sync-Error-Liste, ähnlich ShowSeekPos
+		if len(p_list) >= 3:
+			diff = max(p_list) - min(p_list)
+			if max(p_list) < 1 or diff <=1 :				# nach 3 sec: Livestream oder Sync-Error, ca. 2 noch OK
+				PLog("p_list_syncfail: %s, diff: %d" % (str(p_list), diff))
+				break
+			p_list=[]						
+		xbmc.sleep(1000)
+	
+	#---------------------------------------
+	PLog("monitor_resume_stop")	
+	del_val=75												# bei Bedarf Setting pref_delete_viewed verwenden
+	seekPos=video_dur										# Default: kein Resume
+	percent=0
+	try:													# Abgleich 75% Spielzeit
+		percent = 100 * (float(play_time) / float(video_dur))
+		percent = int(round(percent))
+		if percent < del_val:
+			seekPos = play_time								# Resume-Position
+	except Exception as exception:
+		PLog("monitor_resume_exception: " + str(exception))
+	if seekPos < 10:										# 10 sec Mindestlänge für Resume
+		seekPos=0
+		
+	line = new_list[-1]										# letzte Zeile ergänzen
+	PLog(line)												
+	if "###seekPos:" in line:
+		line = line.split("###seekPos:")[0]					# alte Werte löschen
+	# sub_path, seekPos, video_dur -> AddonStartlist
+	line = "%s###seekPos:%s###video_dur:%s###" % (line, seekPos, video_dur)
+	PLog("video_dur: %d, play_time: %d, seekPos: %d, percent: %d, line:  %s " %\
+		(video_dur, play_time, seekPos, percent, line))
+	new_list[-1] = line
+	
+	try:													# Korrektur früheres Format: jüngster zuletzt
+		sorted(new_list, key=lambda x: re.search(u'(\d+).', x).group(1))
+	except Exception as exception:
+		PLog("sorted_error: " + str(exception))
+	
+	new_list = "\n".join(new_list)
+	RSave(STARTLIST, new_list)
+		
+	PLog("Leave_monitor_resume")
+	return
 
 #-------------------------------------
 #  ARD-Untertitel konvertieren
@@ -3760,8 +3859,15 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 # 21.01.2023 dialog optional für add_UHD_Streams (ohne Dialog)
 def url_check(url, caller='', dialog=True):
 	PLog('url_check:')
-	if url.startswith('http') == False:		# lokale Datei - kein Check
-		return True
+	if url.startswith('http') == False:		# lokale Datei
+		if  os.path.exists(url):
+			return True
+		else:
+			if dialog:
+				msg1= 'Video fehlt! Datei:'
+				msg2 = url
+				MyDialog(msg1, msg2, "")		 			 	 
+			return False
 		
 	UrlopenTimeout = 6
 	# Tests:
@@ -3854,8 +3960,10 @@ def open_addon(addon_id, cmd):
 #		getestet wurde mit den Defaultsettings.
 #	Bisher keine ffmpeg-Analyse für Eignung/Nichteignung von Streams
 #	monitor.waitForAbort() blockiert - für die while-Schleife sind mind. 1 sec
-#		Timeout und "not" erforderlich.
-#
+#		Timeout und "not" erforderlich. Siehe auch Monitoring für Startlist in
+#		PlayVideo (keine blokierfreie Schleife für Videoplay gefunden).
+# 15.01.2024 isPlaying-Abfrage für Player entfernt
+
 def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	PLog('ShowSeekPos: ' + url)		
 	import resources.lib.EPG as EPG
@@ -3910,114 +4018,114 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	# ----------------------------------
 
 	monitor = xbmc.Monitor()
-	LastBufTime = StartTime												# detect sync errors direkt
-	p_list=[]															# dto. im 3-sec-Rahmen 
+	LastBufTime = StartTime											# detect sync errors direkt
+	p_list=[]														# dto. im 3-sec-Rahmen 
 	while not monitor.waitForAbort(1):
-		if player.isPlaying():
-			show_time=False; syncfail=False
-			try:
-				play_time = player.getTime()							# akt. Pos im Puffer (0=Pufferstart)
-			except:
-				play_time=LastSeek
-					
-			p = int(play_time)
-			#PLog("play_time_p: %d, LastSeek: %d" % (p, LastSeek)) 		# Debug
-			
-			# ----------------------------------						# Sync-Checks
-			# sync-Check: Streampos. verharrt am Pufferanfang 
-			#	Bsp. kika, phoenix, TSchauXL, wdrlokalzeit
-			p_list.append(p)											# 3 sec sync-Check
-			
-			if len(p_list) >= 3:
-				if max(p_list) < 1:										# nach 3 sec ist < 1 ein Sync-Indiz
-					PLog("p_list_syncfail: %d, %d" % (p_list[-1], p_list[0]))
-					syncfail = True
-				p_list=[]			
-			
-			# sync-Check: extreme Abweichungen
-			# Bsp.: Sportschaustream: Start mit 2-4 absinkend auf Minuswerte - s.o.,
-			if p < MinusSeekMax or p > TotalTime: # sync error? Bsp. LastSeek QVC: 1271296
-				PLog("syncfail_extrem: %d, %d" % (p, TotalTime))
+		show_time=False; syncfail=False
+		try:
+			play_time = player.getTime()							# akt. Pos im Puffer (0=Pufferstart)
+		except:
+			play_time=LastSeek
+			break													# Livestream beendet
+				
+		p = int(play_time)
+		#PLog("play_time_p: %d, LastSeek: %d" % (p, LastSeek)) 		# Debug
+		
+		# ----------------------------------						# Sync-Checks
+		# sync-Check: Streampos. verharrt am Pufferanfang 
+		#	Bsp. kika, phoenix, TSchauXL, wdrlokalzeit
+		p_list.append(p)											# 3 sec sync-Check
+		
+		if len(p_list) >= 3:
+			if max(p_list) < 1:										# nach 3 sec ist < 1 ein Sync-Indiz
+				PLog("p_list_syncfail: %d, %d" % (p_list[-1], p_list[0]))
 				syncfail = True
-				  
-			if syncfail:
-				PLog("monitor_break_on_syncfail")
-				xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"Sync-Error - Abbruch", icon,3000, sound=True)
-				xbmc.sleep(2000)
-				break													# verhind. Blockade durch Buffering
-			# ----------------------------------
+			p_list=[]			
+		
+		# sync-Check: extreme Abweichungen
+		# Bsp.: Sportschaustream: Start mit 2-4 absinkend auf Minuswerte - s.o.,
+		if p < MinusSeekMax or p > TotalTime: # sync error? Bsp. LastSeek QVC: 1271296
+			PLog("syncfail_extrem: %d, %d" % (p, TotalTime))
+			syncfail = True
+			  
+		if syncfail:
+			PLog("monitor_break_on_syncfail")
+			xbmcgui.Dialog().notification("Stream-Uhrzeit: ", u"Sync-Error - Abbruch", icon,3000, sound=True)
+			xbmc.sleep(2000)
+			break													# verhind. Blockade durch Buffering
+		# ----------------------------------
+		
+		# regelm. Schwankung bei Livestreams 6-10 (empirisch):
+		if (LastSeek-p) > 10:										# rückwärts	im Puffer	
+				show_time=True
+		if p > LastSeek:											# vorwärts im Puffer
+			if (p-LastSeek) > 10:	
+				show_time=True
+		
+		if show_time:												# Ausgabe Uhrzeit für die neue Pufferpos.
+			pos_sec = TotalTime - p									# je kleiner p desto größer der Zeitabzug
+			now = EPG.get_unixtime(onlynow=True)
+			time_sec = int(now) - pos_sec							# Pos-Sekunden von akt. Zeit abziehen
+			new_dt = datetime.datetime.fromtimestamp(time_sec)
+			t_string = new_dt.strftime("%H:%M:%S")
 			
-			# regelm. Schwankung bei Livestreams 6-10 (empirisch):
-			if (LastSeek-p) > 10:										# rückwärts	im Puffer	
-					show_time=True
-			if p > LastSeek:											# vorwärts im Puffer
-				if (p-LastSeek) > 10:	
-					show_time=True
+			PLog("LastSeek: %d, pos_sec: %d" % (LastSeek, pos_sec))
+			PLog("new_t_string: " + t_string)
 			
-			if show_time:												# Ausgabe Uhrzeit für die neue Pufferpos.
-				pos_sec = TotalTime - p									# je kleiner p desto größer der Zeitabzug
-				now = EPG.get_unixtime(onlynow=True)
-				time_sec = int(now) - pos_sec							# Pos-Sekunden von akt. Zeit abziehen
-				new_dt = datetime.datetime.fromtimestamp(time_sec)
-				t_string = new_dt.strftime("%H:%M:%S")
+			if LastBufTime != new_dt:								# skip_sync_error
+				LastBufTime=new_dt
+				xbmcgui.Dialog().notification("Stream-Uhrzeit: ", t_string, icon,3000, sound=False)
+			else:
+				PLog("skip_sync_error")
 				
-				PLog("LastSeek: %d, pos_sec: %d" % (LastSeek, pos_sec))
-				PLog("new_t_string: " + t_string)
+		LastSeek=p
+		
+		# ----------------------------------						# Start Event-Auwahl bei ARD-Streams
+		new_event=""
+		if buf_events and KeyListener_run:
+			now = int(EPG.get_unixtime(onlynow=True))
+			PLog("now: %d, event_end: %d, dif: %d" % (now, event_end, event_end-now))
+			if event_end < now:										# Events nachladen
+				PLog("load_events: diff now - event_end: %d" % (now - event_end))
+				buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
+				event_end = int(event_end)
 				
-				if LastBufTime != new_dt:								# skip_sync_error
-					LastBufTime=new_dt
-					xbmcgui.Dialog().notification("Stream-Uhrzeit: ", t_string, icon,3000, sound=False)
-				else:
-					PLog("skip_sync_error")
-					
-			LastSeek=p
-			
-			# ----------------------------------						# Start Event-Auwahl bei ARD-Streams
-			new_event=""
-			if buf_events and KeyListener_run:
-				now = int(EPG.get_unixtime(onlynow=True))
-				PLog("now: %d, event_end: %d, dif: %d" % (now, event_end, event_end-now))
-				if event_end < now:										# Events nachladen
-					PLog("load_events: diff now - event_end: %d" % (now - event_end))
-					buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
-					event_end = int(event_end)
-					
-				key = KeyListener.record_key()							# pressed_key: string
-				PLog("key: " + str(key))								# ev. pausieren mit Blank?
-				if key == "61475" or key == "61467" or key == "61448":	# Taste #, r. Maustaste, Taste Back
-					line=""												# Liste Events im Zeitpuffer	
-					if len(buf_events) == 0:							# keine Events (mehr)
-						xbmcgui.Dialog().notification("Zeitpuffer", "ohne weitere Sendung", icon,3000, sound=True)
-						KeyListener_run=False							# Stop bis Streamende, kein re-init
-						PLog("KeyListener_stopped")
-						continue
-					
-					buf_events = sorted(buf_events, reverse=True)
-					show_list=[]; 										# Liste ohne timestamp
-					for item in buf_events:
-						event_start, title, sD_uhr = item.split("|")
-						show_list.append("%s | %s" % (sD_uhr, title))
-					
-					heading = "Sendungen im Zeitpuffer | Auswahl oder Abbruch"
-					ret = xbmcgui.Dialog().select(heading, show_list, preselect=0) # Dialog
-					if ret >= 0:										# Auswahl?
-						new_event = buf_events[ret]
-						event_start = int(new_event.split("|")[0])
-						new_event_line = show_list[ret]
-							
-						new_dt = datetime.datetime.fromtimestamp(event_start)
-						t_string = new_dt.strftime("%H:%M:%S")
-						PLog("new_event: %s | %d" % (t_string, event_start))# Start gewählter Event (unix-sec)
-						PLog("new_event_line: %s" % new_event_line)		# gewählter Event
-	
-						# neue Seek-Position mit 6 sec-Schwankungszuschlag (s.o.)
-						diff_event = now - event_start					# akt. Differenz zum Event (unix-sec)
-						new_pos_sec = TotalTime - diff_event - 6		# -> Pos. im Zeitpuffer (0 bis TotalTime)
-						PLog("diff_event: %d, new_pos_sec: %d" % (diff_event, new_pos_sec))
+			key = KeyListener.record_key()							# pressed_key: string
+			PLog("key: " + str(key))								# ev. pausieren mit Blank?
+			if key == "61475" or key == "61467" or key == "61448":	# Taste #, r. Maustaste, Taste Back
+				line=""												# Liste Events im Zeitpuffer	
+				if len(buf_events) == 0:							# keine Events (mehr)
+					xbmcgui.Dialog().notification("Zeitpuffer", "ohne weitere Sendung", icon,3000, sound=True)
+					KeyListener_run=False							# Stop bis Streamende, kein re-init
+					PLog("KeyListener_stopped")
+					continue
+				
+				buf_events = sorted(buf_events, reverse=True)
+				show_list=[]; 										# Liste ohne timestamp
+				for item in buf_events:
+					event_start, title, sD_uhr = item.split("|")
+					show_list.append("%s | %s" % (sD_uhr, title))
+				
+				heading = "Sendungen im Zeitpuffer | Auswahl oder Abbruch"
+				ret = xbmcgui.Dialog().select(heading, show_list, preselect=0) # Dialog
+				if ret >= 0:										# Auswahl?
+					new_event = buf_events[ret]
+					event_start = int(new_event.split("|")[0])
+					new_event_line = show_list[ret]
 						
-						sD_uhr, title = new_event_line.split("|") 
-						player.seekTime(new_pos_sec)
-						xbmcgui.Dialog().notification("Sendezeit: %s" % sD_uhr, title, icon,6000, sound=True)
+					new_dt = datetime.datetime.fromtimestamp(event_start)
+					t_string = new_dt.strftime("%H:%M:%S")
+					PLog("new_event: %s | %d" % (t_string, event_start))# Start gewählter Event (unix-sec)
+					PLog("new_event_line: %s" % new_event_line)		# gewählter Event
+
+					# neue Seek-Position mit 6 sec-Schwankungszuschlag (s.o.)
+					diff_event = now - event_start					# akt. Differenz zum Event (unix-sec)
+					new_pos_sec = TotalTime - diff_event - 6		# -> Pos. im Zeitpuffer (0 bis TotalTime)
+					PLog("diff_event: %d, new_pos_sec: %d" % (diff_event, new_pos_sec))
+					
+					sD_uhr, title = new_event_line.split("|") 
+					player.seekTime(new_pos_sec)
+					xbmcgui.Dialog().notification("Sendezeit: %s" % sD_uhr, title, icon,6000, sound=True)
 							
 		else:
 			PLog("monitor_ShowSeekPos_stop")

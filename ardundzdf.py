@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>169</nr>										# Numerierung für Einzelupdate
+# 	<nr>170</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.4'
-VDATE = '07.01.2024'
+VDATE = '19.01.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -324,7 +324,7 @@ AKT_FILTER	= ''
 if os.path.exists(FILTER_SET):	
 	AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
 AKT_FILTER	= AKT_FILTER.splitlines()						# gesetzte Filter initialiseren 
-STARTLIST	= os.path.join(ADDON_DATA, "startlist") 		# Videoliste mit Datum ("Zuletzt gesehen")
+STARTLIST	= os.path.join(ADDON_DATA, "startlist") 		# Videoliste ("Zuletzt gesehen")
 
 try:	# 28.11.2019 exceptions.IOError möglich, Bsp. iOS ARM (Thumb) 32-bit
 	from platform import system, architecture, machine, release, version	# Debug
@@ -586,10 +586,14 @@ def InfoAndFilter():
 	PLog('InfoAndFilter:'); 
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)									# Home-Button
+	
 	try:
 		import resources.lib.tools
 	except:
 		pass	
+
+	# AddonStartlist()	# Debug
+#---------------------------------------------------			
 															# Button changelog.txt
 	tag= u'Störungsmeldungen bitte via Kodinerds-Forum, Github-Issue oder rols1@gmx.de'
 	summ = u'für weitere Infos zu bisherigen Änderungen [B](changelog.txt)[/B] klicken'
@@ -612,8 +616,8 @@ def InfoAndFilter():
 		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
 		title = u"Zuletzt gesehen"	
 		tag = u"[B]Liste der im Addon gestarteten Videos (max. %s Einträge).[/B]" % maxvideos
-		tag = u"%s\n\nSortierung absteigend (zuletzt gestartete Videos zuerst)" % tag
-		summ = u"Klick startet das Video (falls noch existent)"
+		tag = u"%s\n\nSortierung absteigend (zuletzt gestartete Videos zuerst)." % tag
+		summ = u"Klick startet das Video (falls noch existent)."
 		fparams="&fparams={}" 
 		addDir(li=li, label=title, action="dirList", dirID="AddonStartlist", fanart=R(FANART), 
 			thumb=R("icon-list.png"), tagline=tag, summary=summ, fparams=fparams)	
@@ -645,11 +649,12 @@ def InfoAndFilter():
 	fparams="&fparams={'fparams_add': 'do_folder'}" 		# Variante ohne start_script, in Merkliste identische
 															# Verarbeitung sys.argv	(Funktionscall erst dort)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.merkliste.do_folder",\
-		fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tag, summary=summ, fparams=fparams)	
+		fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tag, fparams=fparams)	
 				
 			
 	title = u"Suchwörter bearbeiten"						# Button für Suchwörter
-	tag = u"[B]Suchwörter bearbeiten (max. 24)[/B]\n\n(nur für die gemeinsame Suche in ARD Mediathek und ZDF Mediathek)" 								
+	tag = u"[B]Suchwörter bearbeiten (max. 24)[/B]\n\n"
+	tag = u"(nur für die gemeinsame Suche in ARD-/ZDF Mediathek und der Merkliste.)" 								
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordTools", 
 		fanart=R(FANART), thumb=R('icon_searchwords.png'), tagline=tag, fparams=fparams)	
@@ -803,6 +808,15 @@ def start_script(myfunc, fparams_add, is_dict=True):
 #----------------------------------------------------------------
 # Aufruf InfoAndFilter
 # 18.01.2021 Abgleich mit STARTLIST in items_add_rm (Modul Playlist)
+# Problem: Videos aus Startlist speichert Kodi in MyVideos, table files, 
+#	nicht mit Plugin-Pfad, sondern mit http-Url-Extension (z.B. master.m3u8). 
+#	Damit sind folgende Abgleiche über die DB MyVideos nicht mehr möglich 
+#	(s. lokale Doku 00_sqlite).
+# Lösung 14.01.2024: Scan Player.getTime (monitor_resume in util). Der
+#	Resume-Abgleich mit Dialog erfolgt in check_Resume über seekPos in 
+#	STARTLIST. Überschneidungen mit Kodi-Resume möglich.
+# mediatype="video" erforderlich - ohne sind Total-Blockaden in 
+#	monitor_resume möglich.
 #
 def AddonStartlist(mode='', query=''):
 	PLog('AddonStartlist:');
@@ -815,11 +829,20 @@ def AddonStartlist(mode='', query=''):
 	startlist=''
 
 	if os.path.exists(STARTLIST):
-		startlist= RLoad(STARTLIST, abs_path=True)				# Zuletzt gesehen-Liste laden
-	if startlist == '':
+		mylist= RLoad(STARTLIST, abs_path=True)				# Zuletzt gesehen-Liste laden
+	if mylist == '':
 		msg1 = u'die "Zuletzt gesehen"-Liste ist leer'
 		MyDialog(msg1, '', '')
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
+	mylist=py2_encode(mylist)
+	mylist= mylist.strip().splitlines()
+	PLog(len(mylist))
+	try:														# Sortierung unixtime-stamp 1704966112[.0###..]
+		startlist = sorted(mylist, key=lambda x: re.search(u'(\d+).', x).group(1), reverse=True)
+	except Exception as exception:
+		PLog("sorted_error: " + str(exception))
+		startlist = mylist										# unsortiert
 
 	if mode == 'search':										# Suche
 		query = get_keyboard_input() 
@@ -837,49 +860,43 @@ def AddonStartlist(mode='', query=''):
 	addDir(li=li, label=title, action="dirList", dirID="AddonStartlist", fanart=img, 
 		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)	
 			
-	startlist=py2_encode(startlist)
-	startlist= startlist.strip().splitlines()
-	PLog(len(startlist))
-	
-	#cur = get_sqlite_Cursor("MyVideos")				# DB-Connect Todo
-
-	cnt=0
+	cnt=0; 
 	for item in startlist:
-		Plot=''
-		ts, title, url, thumb, Plot = item.split('###')
-		ts = datetime.datetime.fromtimestamp(float(ts))
-		ts = ts.strftime("%d.%m.%Y %H:%M:%S")
-		Plot_par = "gestartet: [COLOR darkgoldenrod]%s[/COLOR]\n\n%s" % (ts, Plot)
+		#PLog(item)
+		Plot=''; sub_path=''; seekPos=""; video_dur=""
+		ts, title, url, thumb, Plot = item.split('###')[0:5]	# altes Format ohne sub_path, seekPos
+		if "sub_path" in item:
+			sub_path = stringextract("###sub_path:", "###", item)
+		if "seekPos" in item:									# ..###seekPos:280.0###
+			seekPos = stringextract("###seekPos:", "###", item)
+		if "video_dur" in item:									# ..###video_dur:460.0###
+			video_dur = stringextract("###video_dur:", "###", item)
+		
+		dt = datetime.datetime.fromtimestamp(float(ts))			# Date-Objekt
+		my_date = dt.strftime("%d.%m.%Y %H:%M:%S")
+		Plot_par = "gestartet: [COLOR darkgoldenrod]%s[/COLOR]\n\n%s" % (my_date, Plot)
 		Plot_par=py2_encode(Plot_par); 		
 		Plot_par=Plot_par.replace('\n', '||')					# für router
 		tag=Plot_par.replace('||', '\n')
 		
-		PLog("Satz16:"); PLog(title); PLog(ts); PLog(url); PLog(Plot_par)	
+		PLog("Satz16:"); 
+		PLog(title); PLog(ts); PLog(url); PLog(Plot_par); 
+		PLog(sub_path); PLog("seekPos: " + str(seekPos)); PLog(video_dur)
 		show = True
 		if 	query:												# Suchergebnis anwenden
 			q = up_low(query, mode='low'); i = up_low(item, mode='low');
 			PLog(q in i)
-			show = q in i										# Abgleich 
+			show = q in i										# Abgleich 		
+		PLog(show)
 		
-		'''		Todo: Zusatz-Infos lastPlayed, resumeTimeInSeconds
-		try:
-			cur.execute("SELECT * FROM movieview WHERE c00 like ?", ('%'+title+'%',))
-			rows = cur.fetchall()
-		except Exception as exception:
-			rows=[]
-			PLog("cursor_exception: " + str(exception))
-		PLog("db_rows: %d" % len(rows))
-		PLog(title)
-		PLog(str(rows))
-		'''
-		
-		PLog(show)		
 		if show == True:		
-			url=py2_encode(url); title=py2_encode(title);  thumb=py2_encode(thumb);
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
-				(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot_par))
-			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=thumb, 
-				fparams=fparams, mediatype='video', tagline=tag)
+			url=py2_encode(url); title=py2_encode(title);  
+			thumb=py2_encode(thumb); thumb=py2_encode(thumb);
+			fparams="&fparams={'url':'%s','title':'%s','thumb':'%s','Plot':'%s','sub_path':'%s','seek':'%s','dur':'%s'}" %\
+				(quote_plus(url), quote_plus(title), quote_plus(thumb), quote_plus(Plot_par), 
+				quote_plus(sub_path), seekPos, video_dur)
+			addDir(li=li, label=title, action="dirList", dirID="check_Resume", fanart=img, thumb=thumb, 
+				fparams=fparams, tagline=tag, mediatype="video")
 			cnt = cnt+1 	
 
 	PLog(cnt);
@@ -890,6 +907,31 @@ def AddonStartlist(mode='', query=''):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 							
+#----------------------------------------------------------------
+# Resume-Zeit ermitteln, Dialog-Abfrage, -> PlayVideo
+# s.a. Kopfdoku AddonStartlist. Früherer sqlite-Code
+# in sqlite_check_Resume.py (lokale Doku)
+#
+def check_Resume(url, title, thumb, Plot, sub_path, seek, dur):	
+	PLog('check_Resume: ' + str(seek))
+	if seek == "":
+		seek = "0"
+	if float(str(seek)) > 60:						   		# Min. 60  Sek.
+		resume = seconds_translate(seek); 
+		total = seconds_translate(dur)
+		PLog("resume: %s, total: %s" % (resume,total))
+		
+		msg1 = "Fortsetzen bei [B]%s[/B]?" % resume
+		msg2 = "Gesamtdauer: [B]%s[/B]" % total
+		msg3 = "Abbruch für neuen Start ab Beginn."
+		ret=MyDialog(msg1, msg2, msg3, ok=False, yes='JA')
+		PLog(ret)
+		if not ret:
+			seekTime=""
+
+	PlayVideo(url, title, thumb, Plot, sub_path, seekTime=seek)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True) 	# Rebuild Liste
+
 #----------------------------------------------------------------
 # Aufruf InfoAndFilter
 # Addon-Infos (Pfade, Cache, ..)
@@ -1686,9 +1728,12 @@ def AudioSenderPrograms(org=''):
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 	#---------------------------------
+	RSave('/tmp/x_ARD.json', py2_encode(LiveObjekts[0]))	# Debug	
+
+	
 	if org:															# 2. Durchlauf: programSets listen	
 		PLog("stage2: " + org)
-		for LiveObj in LiveObjekts:
+		for LiveObj in LiveObjekts:			
 			PLog(LiveObj[:80])
 			liveStreams = stringextract('liveStreams":', 'programSets', LiveObj)
 				
@@ -1713,17 +1758,12 @@ def AudioSenderPrograms(org=''):
 		PLog(len(items))
 		cnt=0
 		for item in items:
-			try:														# Kategorie aus 2. Block lesen 
-				next_item = items[cnt+1]
-				PLog("next_item: " + next_item)
-			except:
-				next_item=''
-			cat =  stringextract('"title":"', '"', next_item)	
-			cnt=cnt+1
+			cat =  stringextract('"title":"', '"', item)				# 19.01.2023 Kategorie wieder im 1. Block
+			cnt=cnt+1													#	statt im früheren 2. (fehlt jetzt)
 			
 			web_url =  stringextract('"sharingUrl":"', '"', item)		
 			PLog("web_url: " + web_url)
-			href_add = "?offset=0&limit=20"
+			href_add = "?offset=0&limit=20"								# Liste der Sendungen aufsteigend sortiert
 			if web_url.endswith("/"):
 				url_id 	= web_url.split('/')[-2]
 			else:
@@ -1896,8 +1936,10 @@ def Audio_get_sendung(url, title, page=''):
 	li = home(li, ID)				# Home-Button
 		
 	if page == '':					# Fallback Audio_get_sendung_api?
-		page, msg = get_page(path=url, GetOnlyRedirect=True)	
+		page, msg = get_page(path=url, GetOnlyRedirect=True)
 		path = page								
+		if "//api" in path:
+			path = path + "&order=descending"
 		page, msg = get_page(path)	
 		if page == '':
 			msg1 = "Fehler in Audio_get_sendung:"
@@ -1998,7 +2040,7 @@ def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 	li = xbmcgui.ListItem()
 
 	if page == '':
-		page, msg = get_page(path=url)
+		page, msg = get_page(path=url+"&order=descending")
 	if page == '':	
 		msg1 = "Fehler in Audio_get_sendung_api:"
 		msg2 = msg
@@ -2307,7 +2349,7 @@ def Audio_get_search_cluster(objs, key):
 	PLog('Audio_get_search_cluster: ' + key)
 
 	li = xbmcgui.ListItem()
-	href_add = "offset=0&limit=12"
+	href_add = "offset=0&limit=12&order=descending"
 	
 	if key=="items" :											# Einzel (Episoden)
 		items =  objs[key]["nodes"]
@@ -2480,7 +2522,7 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 	nodes = blockextract('"__typename":', cluster)	
 	PLog(len(nodes))
 			
-	downl_list=[]; 	href_add = "offset=0&limit=12"	
+	downl_list=[]; 	href_add = "offset=0&limit=12&order=descending"	
 	for node in nodes:		
 		imgalt2=''; web_url=''; mp3_url=''
 		mp3_url = stringextract('"downloadUrl":"', '"', node)			# api-Seiten ev. ohne mp3_url
@@ -2675,7 +2717,7 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			items = blockextract('"id":', page, '}}')
 		PLog(len(items))
 		
-		href_add = "?offset=0&limit=20"
+		href_add = "?offset=0&limit=20&order=descending"
 		for item in items:	
 			title = stringextract('"title":"', '"', item)
 			web_url = stringextract('"path":"', '"', item)
