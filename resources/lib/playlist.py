@@ -5,7 +5,7 @@
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
 # 	<nr>7</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.01.2023
+#	Stand: 19.01.2024
 #
 
 from __future__ import absolute_import
