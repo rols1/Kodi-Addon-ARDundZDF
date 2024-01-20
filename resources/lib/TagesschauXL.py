@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>9</nr>								# Numerierung für Einzelupdate
-#	Stand: 19.11.2023
+# 	<nr>10</nr>								# Numerierung für Einzelupdate
+#	Stand: 20.01.2024
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -111,6 +111,8 @@ ICON_KURZ 		= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/Tag
 ICON_24			= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau24.png?raw=true'
 ICON_Investig	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau-Investigativ.png?raw=true'
 ICON_Themen		= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau-Themen.png?raw=true'
+
+CurSender = 'tagesschau24:tagesschau24::tv-tagesschau24.png:tagesschau24'
 # ---------------------------------------------------------------------- 
 # 			
 def Main_XL():
@@ -165,41 +167,22 @@ def Main_XL():
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Live", fanart=ICON_MAINXL, 
 		thumb=ICON_LIVE, fparams=fparams, summary=summ, tagline=tag, mediatype=mediatype)
 
-	# ---------------------------------							# -> menu_hub -> XL_LastSendung -> get_content_json
-	tag = u"[B][COLOR red]Letzte Sendung[/COLOR][/B], zurückliegende Sendungen"	
-	summ = u"Tagesschau und Tagesschau:\n..in 100 Sekunden\n..17:50 Uhr\n..20 Uhr\n..vor 20 Jahren.."	
-	title = 'Tagesschau'
-	show = "tagesschau"
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s','show': '%s'}"  %\
-		(quote(title), quote(ARD_Last), 'ARD_Last', show)
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_LAST, fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+	# ---------------------------------	
+	T_List = 	[u"tagesschau|%s|%s" % (ICON_LAST, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXU"),
+				u"tagesschau Gebärdensprache|%s|%s" % (ICON_20GEST, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXUgbWl0IEdlYsOkcmRlbnNwcmFjaGU"),
+				u"tagesschau24|%s|%s" % (ICON_24, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXUyNA"),
+				u"tagesschau in 100 SEKUNDEN|%s|%s" % (ICON_100sec, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RzMTAwcw"),
+				u"tagesthemen|%s|%s" % (ICON_TTHEMEN, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2VzdGhlbWVu"),
+				u"Bericht aus Berlin|%s|%s" % (ICON_BAB, "Y3JpZDovL2Rhc2Vyc3RlLmRlL2JlcmljaHQgYXVzIGJlcmxpbg"),
+				]
+	for t in T_List:
+		title, thumb, pid = t.split("|")
+		PLog(title); PLog(thumb); PLog(pid)
+		tag = "neu ab 20.01.2024"
+		fparams="&fparams={'title': '%s', 'pid': '%s'}"  % (quote(title), pid)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Tagesschau", 
+		fanart=ICON_MAINXL, thumb=thumb, tagline=tag, fparams=fparams, mediatype="")
 
-	title = 'Tagesschau 20 Uhr (Gebärdensprache)'
-	tag=""
-	path = "https://www.tagesschau.de/multimedia/sendung/tagesschau_mit_gebaerdensprache"
-	show = u"tagesschau mit Gebärdensprache"
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s', 'show': '%s'}"  %\
-		(quote(title), quote(path), "ARD_Gest", show)
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_20GEST, fparams=fparams, tagline=tag, mediatype=mediatype)
-		
-	title = 'Tagesthemen'
-	tag = "mit Videos zu einzelnen Themen"
-	show = "tagesthemen"
-	path = "https://www.tagesschau.de/multimedia/sendung/tagesthemen"
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s', 'show': '%s'}"  %\
-		(quote(title), quote(path), "ARD_tthemen", show)
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_TTHEMEN, fparams=fparams, tagline=tag, mediatype=mediatype)
-		
-	# ---------------------------------							
-	title = 'Bericht aus Berlin'								# -> menu_hub -> ARDnew.get_json_content
-	tag = u"In Berichten, Interviews und Analysen beleuchtet <Bericht aus Berlin> politische Sachthemen und die Persönlichkeiten, die damit verbunden sind."
-	fparams="&fparams={'title': '%s','path': '%s', 'ID': '%s'}"  %\
-		(quote(title), quote(ARD_bab), 'ARD_bab')
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.menu_hub", fanart=ICON_MAINXL, 
-		thumb=ICON_BAB, tagline=tag, fparams=fparams)
 		
 	# ---------------------------------							# -> get_VideoAudio	-> get_content_json		
 	title = 'Investigativ'
@@ -233,6 +216,31 @@ def Main_XL():
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
+# ----------------------------------------------------------------------
+# 20.01.2024 neu
+#
+def XL_Tagesschau(title, pid):	
+	PLog("XL_Tagesschau:")
+	PLog(title); PLog(pid); 
+	base="https://api.ardmediathek.de/page-gateway/pages/tagesschau24/grouping/"
+	path = "%s%s?embedded=true" % (base, pid)
+	
+	page, msg = get_page(path)		
+	if page == '':	
+		msg1 = u"Fehler in XL_Tagesschau: %s" % title
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return
+	PLog(len(page))
+	page = page.replace('\\"', '*')				# quotierte Marks entf., Bsp. \"query\"
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='TagesschauXL')			# Home-Button
+	ID = 'A-Z'
+	li = get_json_content(li, page, ID, mark="", homeID='TagesschauXL')
+																
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
 # ----------------------------------------------------------------------
 # 01.02.2021 Seitenlayout der Nachrichtenseiten durch ARD geändert, Videoquellen 
 #	nun auf der Webseite als quoted json eingebettet, Direktsprung zu XLGetSourcesHTML 
@@ -282,21 +290,25 @@ def XL_LastSendung(title, page, show=""):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')			# Home-Button
 
-	mediatype=''									# Kennz. Video für Sofortstart
+	mediatype=''								# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'		
 
 	items =  blockextract('class="v-instance" data-v="', page)
 	PLog(len(items))
 	
+	
 	for item in items:
 		typ,av_typ,title,tag,summ,img,stream = get_content_json(item)
+		live=""									# z.B. tagesschau live
+		if up_low("live") in up_low(title):
+			live = "true"	
 		if title.startswith(show):
 			title=py2_encode(title); stream=py2_encode(stream); 
 			summ=py2_encode(summ); img=py2_encode(img); 
 			
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
-				(quote(stream), quote(title), quote(img), quote(summ))
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': '%s'}" %\
+				(quote(stream), quote(title), quote(img), quote(summ), live)
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", 
 				fanart=img, thumb=img, tagline=summ, fparams=fparams, mediatype=mediatype)
 								
@@ -658,6 +670,8 @@ def XL_Live(ID=''):
 	conf = conf.replace('&quot;', '"')
 	conf = unquote(conf)
 	PLog(conf[:80])
+	PLog(conf)
+	
 	
 	streams = stringextract('streams":[', ']', conf)
 	url_m3u8 = stringextract('url":"', '"', streams)
