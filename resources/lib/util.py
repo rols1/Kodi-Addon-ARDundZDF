@@ -3532,7 +3532,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 			line = Dict("load", 'Rekurs_check', CacheTime=10)	# Dict-Abgleich url/Laufzeit
 			PLog(line)
 			oldurl='' 
-			if line != False:									# False, falls fehlend
+			if line != False:									# Rekursions-Check erforderlich
 				oldurl, old_dur, old_now = line.split('||')
 				if oldurl and oldurl in url:
 					now = time.time(); 

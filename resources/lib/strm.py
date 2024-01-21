@@ -996,7 +996,7 @@ def show_strm_element(strmpath):
 				
 		#--------------------	
 		if SETTINGS.getSetting('pref_skip_played_strm') == 'true':	# Abgleich PlayCount in Video-DB
-			# Felder MyVideos*.db: kodi.wiki/view/Databases/MyVideos
+			# Tabs/Felder MyVideos*.db: kodi.wiki/view/Databases/MyVideos
 			surl = quote_plus(url)						
 			try:
 				cur.execute("SELECT strFilename, PlayCount FROM files WHERE strFilename like ?", ('%'+surl+'%',))
@@ -1174,8 +1174,8 @@ def exist_in_library(title):
 	
 	hit_list=[]
 	for movie in movies:
-		if "Prima Klima" in str(movie):	# Debug
-			PLog(str(movie))
+		#if "Prima Klima" in str(movie):	# Debug
+		#	PLog(str(movie))
 		label = movie["label"]				# hier Markierungen beibehalten
 		#PLog(label)	# Debug
 		if title in label:
@@ -1190,7 +1190,7 @@ def exist_in_library(title):
 		msg1 = "Abgleich Video"
 		msg2 = "Video nicht in MyVideos-Datenbank"
 		icon = R('Dir-video.png')
-		xbmcgui.Dialog().notification(msg1,msg2,icon,5000,sound=True)
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
 		return
 
 	# Verzicht auf playcount (hier nur relevant für Bibliothek, nicht für Abrufe im

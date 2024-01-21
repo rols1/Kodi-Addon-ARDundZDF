@@ -2626,7 +2626,7 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 def ARDVerpasst(title, CurSender="", homeID=""):
 	PLog('ARDVerpasst: ' + CurSender);
 	PLog(homeID)
-	
+
 	if CurSender == "":
 		CurSender = ARD_CurSender()						# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')

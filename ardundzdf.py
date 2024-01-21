@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>171</nr>										# Numerierung für Einzelupdate
-VERSION = '4.9.4'
-VDATE = '19.01.2024'
+VERSION = '4.9.5'
+VDATE = '21.01.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7015,7 +7015,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 	EPG_ID_old = ''											# Doppler-Erkennung
 	sname_old=''; stime_old=''; summ_old=''; vonbis_old=''	# dto.
 	summary_old=''; tagline_old=''
-	for element in liste:									# Senderliste mit Links, ev. EPG (Setting)  	
+	for element in liste:									# Senderliste mit Links, ev. EPG (Setting) 
 		img_streamlink=''; 									# Austausch Icon
 		linkid=""											# ARD-Sender
 		element = py2_decode(element)	
@@ -7059,7 +7059,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			for line in iptv_streamlinks:
 				PLog("iptvline: " + line[:40])
 				items = line.split('|')
-				if up_low(title_sender) in up_low(items[0]): 
+				if up_low(title_sender) == up_low(items[0]): 
 					link = items[1]
 					if items[2]:							# Icon aus IPTVSource?
 						img_streamlink = items[2]

@@ -10,6 +10,27 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+21.01.2024 4.9.5
+			ARDStartSingle: Ausfilterung .ts-Link bei Streamquellen (Link o. Zertifikat).
+			AddonStartlist: sub_path, seekPos und video_dur in Param-Liste ergänzt, Anpas-
+			sung STARTLIST in PlayVideo und monitor_resume, Ausschluss von Livestreams,
+			Anpassung Modul playlist (items_add_rm: start_item.split begrenzt).
+			ShowSeekPos (util): Stop des ARD-Livestream-Monitors bei Playerende ergänzt.
+			seconds_translate (util): Sendungsdauer an Kodi angepasst (Format 00:00:00 
+			statt vorher 00:00), Anpassung time_to_minutes.
+			AudioSenderPrograms (Audiothek): Auswertung Kategorie im 1. id-Block (2. Block
+			fehlt nach ARD-Änderung). 
+			Audiothek: Erweiterung der api-Url mit "&order=descending", Anpassung in
+			Audio_get_sendung, Audio_get_sendung_api, Audio_get_search_cluster, 
+			Audio_get_cluster_single, Audio_get_homescreen.
+			GetContent (arte): Fix gegen Rekursion bei Seiten mit "Alle Videos", Ergänzung
+			arte_lang.json, Param ignore_pid in ArteCluster (ArteStart_2).
+			Modul TagesschauXL: Nutzung des Moduls ARDnew für die tagesschau-Menüs, 
+			einschl. tagesthemen und Bericht aus Berlin, Param live=true für Webplayer-
+			Streams bei eingeschalteter Zuletzt-gesehen-Liste.
+			TV-Livestreams: Umstellung Deutsche Welle auf IPTV-Links (in ARD-Mediathek
+			nicht mehr verfügbar), nur EN-Version funktionsfähig.
+
 07.01.2024 4.9.4
 			PlayVideo_Direct (Modul util): Absicherung Default_Url bei nur 1 Element in
 			HLS-List.

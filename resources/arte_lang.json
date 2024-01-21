@@ -275,6 +275,22 @@
                 "it": "Più selezione di flussi senza avvio <Sofortstart>!"
             },
             {
+                "de": "Rekursion",
+                "fr": "Récursion",
+                "en": "Recursion",
+                "es": "Recursión",
+                "pl": "Rekursja",
+                "it": "Ricorsione"
+            },
+            {
+                "de": "zurück zur Liste",
+                "fr": "retour à la liste",
+                "en": "back to list",
+                "es": "volver a la lista",
+                "pl": "powrót do listy",
+                "it": "torna all'elenco"
+            },
+            {
                 "de": "",
                 "fr": "",
                 "en": "",

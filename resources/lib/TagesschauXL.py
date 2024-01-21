@@ -73,8 +73,6 @@ ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 
 NAME			= 'ARD und ZDF'
 BASE_URL 		= 'https://www.tagesschau.de'
-ARD_Last 		= 'https://www.tagesschau.de/multimedia'	# ARD_100,ARD_Last,ARD_20Uhr,ARD_Gest,ARD_tthemen,ARD_Nacht
-ARD_bab 		= 'https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL2Rhc2Vyc3RlLmRlL2JlcmljaHQgYXVzIGJlcmxpbg?pageNumber=0&pageSize=12'
 ARD_Fakt		= 'https://www.tagesschau.de/faktenfinder'					# 30.04.2023
 Podcasts_Audios	= 'https://www.tagesschau.de/multimedia/audio'
 ARD_Investigativ='https://www.tagesschau.de/investigativ'					# 10.06.2021
@@ -178,11 +176,11 @@ def Main_XL():
 	for t in T_List:
 		title, thumb, pid = t.split("|")
 		PLog(title); PLog(thumb); PLog(pid)
-		tag = "neu ab 20.01.2024"
+		title = "[B]%s[/B]" % title
+		tag = u"neu ab 20.01.2024 (mit allen von der ARD angebotenen Stream-Qualitäten)"
 		fparams="&fparams={'title': '%s', 'pid': '%s'}"  % (quote(title), pid)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Tagesschau", 
 		fanart=ICON_MAINXL, thumb=thumb, tagline=tag, fparams=fparams, mediatype="")
-
 		
 	# ---------------------------------							# -> get_VideoAudio	-> get_content_json		
 	title = 'Investigativ'
@@ -217,8 +215,8 @@ def Main_XL():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 # ----------------------------------------------------------------------
-# 20.01.2024 neu
-#
+# 20.01.2024 umgestellt auf api.ardmediathek.de
+# Aufruf Main_XL
 def XL_Tagesschau(title, pid):	
 	PLog("XL_Tagesschau:")
 	PLog(title); PLog(pid); 
@@ -241,79 +239,6 @@ def XL_Tagesschau(title, pid):
 																
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-# ----------------------------------------------------------------------
-# 01.02.2021 Seitenlayout der Nachrichtenseiten durch ARD geändert, Videoquellen 
-#	nun auf der Webseite als quoted json eingebettet, Direktsprung zu XLGetSourcesHTML 
-#	entfällt - Auswertung nun über vorgeschaltete Funktion XL_LastSendung ->
-#	XLGetSourcesJSON
-# 15.04.2023 get_page_content -> get_content_json 
-#
-def menu_hub(title, path, ID, show=""):	
-	PLog('menu_hub : + ID')
-	PLog(title); PLog(path); 
-
-	page, msg = get_page(path=path)	
-	if page == '':	
-		msg1 = "Fehler in menu_hub:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return 		
-	page = py2_decode(page)
-	
-	# Direktsprünge zu Url der Live-Sendungseiten  -> XL_LastSendung
-	if ID=='ARD_100' or ID=='ARD_Last' or ID=='ARD_20Uhr' or ID=='ARD_Gest' or ID=='ARD_tthemen':
-		XL_LastSendung(title, page, show=show)
-		return
-	
-	# 
-	if ID == 'ARD_bab':								# 14.02.2023 umgestellt auf api.ardmediathek.de
-		mark=''; ID="XL_menu_hub"
-		li = xbmcgui.ListItem()
-		li = home(li, ID='TagesschauXL')			# Home-Button
-		li = get_json_content(li, page, ID, mark)	# -> ARDnew
-	
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-	
-# ----------------------------------------------------------------------
-# menu_hub, ID's: ARD_100, ARD_Last, ARD_20Uhr, ARD_Gest, ARD_tthemen,ARD_Nacht
-# Seitenaufbau identisch, die Videoquellen befinden sich im Abschnitt
-#	data-ts_component='ts-mediaplayer' als quoted json
-# letzte Sendung ist doppelt - von  der 1. Variante werden nur die Themen 
-#	erfasst (-> summ)
-# 
-# ----------------------------------------------------------------------
-def XL_LastSendung(title, page, show=""):
-	PLog('XL_LastSendung:'); PLog(show);
-	title_org = title
-
-	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')			# Home-Button
-
-	mediatype=''								# Kennz. Video für Sofortstart
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'		
-
-	items =  blockextract('class="v-instance" data-v="', page)
-	PLog(len(items))
-	
-	
-	for item in items:
-		typ,av_typ,title,tag,summ,img,stream = get_content_json(item)
-		live=""									# z.B. tagesschau live
-		if up_low("live") in up_low(title):
-			live = "true"	
-		if title.startswith(show):
-			title=py2_encode(title); stream=py2_encode(stream); 
-			summ=py2_encode(summ); img=py2_encode(img); 
-			
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': '%s'}" %\
-				(quote(stream), quote(title), quote(img), quote(summ), live)
-			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", 
-				fanart=img, thumb=img, tagline=summ, fparams=fparams, mediatype=mediatype)
-								
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-	
 # ----------------------------------------------------------------------
 # Bildcluster der Webseite listen (Wetterbilder, Bilder des Tages..)
 # 	Bilder entweder in json eingebettet  (data-v=..) oder in html-tags
@@ -705,6 +630,8 @@ def XL_Live(ID=''):
 
 # ----------------------------------------------------------------------
 # json-Daten im data-v-Block
+# 20.01.2024 live=true verhindert Stream-Blockade der 480p-Webplayer-Streams
+#	bei eingeschalteter Zuletzt-gesehen-Liste
 #
 def get_VideoAudio(title, path):								# Faktenfinder
 	PLog('get_VideoAudio: ' + path)
@@ -742,10 +669,13 @@ def get_VideoAudio(title, path):								# Faktenfinder
 				(quote(stream), quote(title), quote(img), quote_plus(summ), ID)
 			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.AudioPlayMP3", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
-				
+		
+		live=""
+		if SETTINGS.getSetting('pref_startlist') == 'true':			# Blockade verhindern, s. Kopf
+			live="true"		
 		if typ == "video":											# Video	
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream), 
-				quote(title), quote(img), quote_plus(summ))
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': '%s'}" %\
+				(quote(stream), quote(title), quote(img), quote_plus(summ), live)
 			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.PlayVideo", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 	
