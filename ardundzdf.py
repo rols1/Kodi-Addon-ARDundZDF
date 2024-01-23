@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>172</nr>										# Numerierung für Einzelupdate
+# 	<nr>173</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.5'
 VDATE = '23.01.2024'
 
@@ -348,11 +348,14 @@ ARDStartCacheTime = 300						# 5 Min.
 days = int(SETTINGS.getSetting('pref_DICT_store_days'))
 Dict('ClearUp', days)				# Dict bereinigen 
 ClearUp(M3U8STORE, days*86400)		# M3U8STORE bereinigen	
-
 days = int(SETTINGS.getSetting('pref_UT_store_days'))
 ClearUp(SUBTITLESTORE, days*86400)	# SUBTITLESTORE bereinigen	
+
 days = int(SETTINGS.getSetting('pref_SLIDES_store_days'))
 ClearUp(SLIDESTORE, days*86400)		# SLIDEESTORE bereinigen
+ARDNeu_Startpage = os.path.join(SLIDESTORE, "ARDNeu_Startpage")
+ClearUp(ARDNeu_Startpage, days*86400)# Thumbscache ARDneu bereinigen
+
 days = int(SETTINGS.getSetting('pref_TEXTE_store_days'))
 ClearUp(TEXTSTORE, days*86400)		# TEXTSTORE bereinigen
 
