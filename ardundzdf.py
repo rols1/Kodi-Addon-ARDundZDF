@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>171</nr>										# Numerierung für Einzelupdate
+# 	<nr>172</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.5'
-VDATE = '21.01.2024'
+VDATE = '23.01.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -727,7 +727,7 @@ def InfoAndFilter():
 	except:
 		inp_vers=""
 	PLog("inp_vers: " + inp_vers)			
-	if inp_vers:
+	if inp_vers and SETTINGS.getSetting('pref_inputstream') == 'true':
 		title = u"Settings inputstream.adaptive-Addon (v%s) öffnen" % inp_vers
 		akt="EIN"
 		if SETTINGS.getSetting('pref_UT_ON') == "false":
@@ -2927,8 +2927,8 @@ def ARDSportBilder(title, path, img):
 		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=True)
 		return  
 		
-		
-	fname = make_filenames(title)			# Ablage: Titel + Bildnr
+	DelEmptyDirs(SLIDESTORE)								# leere Verz. löschen									
+	fname = make_filenames(title)							# Ablage: Titel + Bildnr
 	fpath = os.path.join(SLIDESTORE, fname)
 	PLog(fpath)
 	if os.path.isdir(fpath) == False:
@@ -2944,7 +2944,7 @@ def ARDSportBilder(title, path, img):
 	image = 0; background=False; path_url_list=[]; text_list=[]
 	for rec in content:			
 		# größere Bilder erst auf der verlinkten Seite für einz. Moderator		
-		img_src	= stringextract('"l":"', '"', rec)						# 
+		img_src	= stringextract('"l":"', '"', rec)				
 		if img_src == "":
 			img_src	= stringextract('"m":"', '"', rec)
 			
@@ -5849,6 +5849,7 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 	
 #---------------------------
 # Downloadverzeichnis leeren (einzeln/komplett)
+# Mitnutzung: Bildershows
 def DownloadsDelete(dlpath, single):
 	PLog('DownloadsDelete: ' + dlpath)
 	PLog('single=' + single)
@@ -7613,7 +7614,8 @@ def BilderDasErsteSingle(title, path):
 		MyDialog(msg1, msg2, '')
 		return li
 	
-	fname = make_filenames(title)			# Ordnername: Titel 
+	DelEmptyDirs(SLIDESTORE)								# leere Verz. löschen							
+	fname = make_filenames(title)							# Ordnername: Titel 
 	fpath = os.path.join(SLIDESTORE, fname)
 	PLog(fpath)
 	if os.path.isdir(fpath) == False:
@@ -7639,7 +7641,7 @@ def BilderDasErsteSingle(title, path):
 			continue
 		
 		img_src = base + img_src	
-		img_src = img_src.replace('v-varxs', 'v-varxl')			# ev. attributeswap auswerten 
+		img_src = img_src.replace('v-varxs', 'v-varxl')		# ev. attributeswap auswerten 
 		
 		alt = stringextract('alt="', '"', rec)	
 		alt=unescape(alt); 
@@ -7658,19 +7660,19 @@ def BilderDasErsteSingle(title, path):
 			
 		#  Kodi braucht Endung für SildeShow; akzeptiert auch Endungen, die 
 		#	nicht zum Imageformat passen
-		#pic_name 	= 'Bild_%04d.jpg' % (image+1)		# Bildname
-		pic_name 	= img_src.split('/')[-1]			# Bildname aus Quelle
+		#pic_name 	= 'Bild_%04d.jpg' % (image+1)			# Bildname
+		pic_name 	= img_src.split('/')[-1]				# Bildname aus Quelle
 		local_path 	= "%s/%s" % (fpath, pic_name)
 		PLog("local_path: " + local_path)
-		title = "Bild %03d: %s" % (image+1, pic_name)	# Numerierung
+		title = "Bild %03d: %s" % (image+1, pic_name)		# Numerierung
 		if len(title) > 70:
-			title = "%s.." % title[:70]					# Titel begrenzen
+			title = "%s.." % title[:70]						# Titel begrenzen
 		
 		PLog("Bildtitel: " + title)
 		
 		local_path 	= os.path.abspath(local_path)
 		thumb = local_path
-		if os.path.isfile(local_path) == False:			# schon vorhanden?
+		if os.path.isfile(local_path) == False:				# schon vorhanden?
 			# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Bild-Url, 
 			#	Zieldatei_kompletter_Pfad|Bild-Url ..
 			path_url_list.append('%s|%s' % (local_path, img_src))
@@ -7712,7 +7714,7 @@ def BilderDasErsteSingle(title, path):
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DELETE), 
 			thumb=R(ICON_DELETE), fparams=fparams, summary=summ, tagline=tag)
 
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  # ohne Cache, um Neuladen zu verhindern
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  	# ohne Cache, um Neuladen zu verhindern
 		
 	
 				  

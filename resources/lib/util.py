@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>81</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.01.2024
+# 	<nr>82</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.01.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -600,6 +600,26 @@ def check_file(fpath):
 			return True
 			
 	return False
+#---------------------------------------------------------------- 
+# leere Verz. rekursiv löschen, z.B. SLIDESTORE
+# Aufrufer: Bildershow-Funktionen
+def DelEmptyDirs(directory):
+	PLog('DelEmptyDirs:')
+	cnt_dirs=0
+	try:
+		globFiles = '%s/*' % directory
+		files = glob.glob(globFiles) 
+		for f in files:
+			if os.path.isdir(f):
+				if len(os.listdir(f)) == 0:
+					shutil.rmtree(f)				# leeres Verz. löschen
+					cnt_dirs = cnt_dirs + 1
+		PLog("DelEmptyDirs: entfernte Ordner %s" % str(cnt_dirs))
+		return True
+	except Exception as exception:	
+		PLog("DelEmptyDirs_error: " + str(exception))
+		return False
+	
 #---------------------------------------------------------------- 
 # liest Setting direkt aus setting.xml 
 # hier: .kodi/userdata/addon_data/plugin.video.ardundzdf/settings.xml
@@ -2046,9 +2066,11 @@ def time_translate(timecode, add_hour=True, day_warn=False, add_hour_only=""):
 	PLog("time_translate: " + timecode)
 	
 	# summer_time aus www.ptb.de, konvertiert zum date_format (s.u.):
-	summer_time = [	"2021-03-28T01:00:00Z|2021-10-31T01:00:00Z",
+	summer_time = [	
+					"2021-03-28T01:00:00Z|2021-10-31T01:00:00Z",
 					"2022-03-27T01:00:00Z|2022-10-30T01:00:00Z",
-					"2023-03-26T01:00:00Z|2023-10-29T01:00:00Z"
+					"2023-03-26T01:00:00Z|2023-10-29T01:00:00Z",
+					"2024-03-31T01:00:00Z|2024-10-27T01:00:00Z",
 				]
 
 	if timecode.strip() == '' or len(timecode) < 19 or timecode[10] != 'T':

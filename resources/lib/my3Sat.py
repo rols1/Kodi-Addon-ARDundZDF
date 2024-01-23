@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>14</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.12.2023
+# 	<nr>15</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.01.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1852,6 +1852,7 @@ def Bilder3satSingle(title, path):
 		MyDialog(msg1, msg2, '')
 		return li
 	
+	DelEmptyDirs(SLIDESTORE)								# leere Verz. löschen							
 	fname = make_filenames(title)			# Ordnername: Titel 
 	fpath = os.path.join(SLIDESTORE, fname)
 	PLog(fpath)

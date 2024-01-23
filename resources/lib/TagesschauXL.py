@@ -3,7 +3,7 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>11</nr>								# Numerierung für Einzelupdate
+# 	<nr>12</nr>								# Numerierung für Einzelupdate
 #	Stand: 23.01.2024
 #
 #	Anpassung Python3: Modul future
@@ -371,15 +371,18 @@ def XL_BilderClusterSingle(title, path):
 
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
-# ----------------------------------------------------------------------	 
+# ----------------------------------------------------------------------
+# 23.01.2024 Bereinigung leerer Verz. in SLIDESTORE hinzugefügt (bei
+#	Abbruch vor Slideshow, bleibt das angelegte Verz. leer). 	 
 def XL_BilderShow(title, img_list):
 	PLog("XL_BilderShow:")
 	title_org=title
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')									# Home-Button
+	li = home(li, ID='TagesschauXL')						# Home-Button
 
-	fname = make_filenames(title)			# Ordnername: Titel 
+	DelEmptyDirs(SLIDESTORE)								# leere Verz. löschen							
+	fname = make_filenames(title)							# Ordnername: Titel 
 	fpath = os.path.join(SLIDESTORE, fname)
 	PLog(fpath)
 	if os.path.isdir(fpath) == False:
@@ -396,14 +399,14 @@ def XL_BilderShow(title, img_list):
 	for line in img_list:
 		cnt=cnt+1
 		title, img_url, img_alt, summ = line.split("||")
-		title = make_filenames(title) 					# Umlaute möglich
-		local_path 	= "%s/%s.jpg" % (fpath, title)		# Kodi braucht Endung (ohne Prüfung) 
+		title = make_filenames(title) 						# Umlaute möglich
+		local_path 	= "%s/%s.jpg" % (fpath, title)			# Kodi braucht Endung (ohne Prüfung) 
 		if len(title) > 70:
-			title = "%s.." % title[:70]					# Titel begrenzen
+			title = "%s.." % title[:70]						# Titel begrenzen
 		local_path 	= os.path.abspath(local_path)
 		thumb = local_path
 		PLog(local_path)
-		if os.path.isfile(local_path) == False:			# schon vorhanden?
+		if os.path.isfile(local_path) == False:				# schon vorhanden?
 			# path_url_list (int. Download): 
 			#	Zieldatei_kompletter_Pfad|Bild-Url ..
 			PLog(local_path); PLog(img_url)
