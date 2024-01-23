@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>10</nr>								# Numerierung für Einzelupdate
-#	Stand: 20.01.2024
+# 	<nr>11</nr>								# Numerierung für Einzelupdate
+#	Stand: 23.01.2024
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -165,7 +165,7 @@ def Main_XL():
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Live", fanart=ICON_MAINXL, 
 		thumb=ICON_LIVE, fparams=fparams, summary=summ, tagline=tag, mediatype=mediatype)
 
-	# ---------------------------------	
+	# ---------------------------------						# -> ARDnew -> get_json_content
 	T_List = 	[u"tagesschau|%s|%s" % (ICON_LAST, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXU"),
 				u"tagesschau Gebärdensprache|%s|%s" % (ICON_20GEST, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXUgbWl0IEdlYsOkcmRlbnNwcmFjaGU"),
 				u"tagesschau24|%s|%s" % (ICON_24, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXUyNA"),
@@ -185,17 +185,19 @@ def Main_XL():
 	# ---------------------------------							# -> get_VideoAudio	-> get_content_json		
 	title = 'Investigativ'
 	tag = u"Investigative Inhalte der ARD - aufwändig recherchierte Beiträge und Exclusivgeschichten der "
+	summ = u"Hinweis: Videos nur in geringer Auflösung (480x270) vorhanden."
 	tag = u"%sPolitik-Magazine Monitor, Panorama, Report und Kontraste. " % tag
 	fparams="&fparams={'title': '%s','path': '%s'}"  % (quote(title), quote(ARD_Investigativ))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.get_VideoAudio", 
-		fanart=ICON_MAINXL, thumb=ICON_Investig, tagline=tag, fparams=fparams)
+		fanart=ICON_MAINXL, thumb=ICON_Investig, tagline=tag, summary=summ, fparams=fparams)
 	
 	title = 'Faktenfinder'
 	tag = u"Die faktenfinder - das Verifikationsteam der ARD - untersuchen Gerüchte, stellen Falschmeldungen "
 	tag = u"%srichtig und liefern Hintergründe zu aktuellen Themen." % tag
+	summ = u"Hinweis: Videos nur in geringer Auflösung (480x270) vorhanden."
 	fparams="&fparams={'title': '%s','path': '%s'}"  % (title, quote(ARD_Fakt)) 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.get_VideoAudio", 
-		fanart=ICON_MAINXL, thumb=ICON_FAKT, tagline=tag, fparams=fparams)
+		fanart=ICON_MAINXL, thumb=ICON_FAKT, tagline=tag, summary=summ, fparams=fparams)
 		
 	title = 'Podcasts und Audios'
 	tag = u"Audiobeiträge"
@@ -273,11 +275,11 @@ def XL_BilderCluster(title, path):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 
 # ----------------------------------------------------------------------
-
+# 
 def XL_BilderClusterSingle(title, path):
 	PLog('XL_BilderClusterSingle: ' + title)
 	title_org=title
-
+		
 	page, msg = get_page(path=path, GetOnlyRedirect=True)	
 	path = page								
 	page, msg = get_page(path)	
@@ -285,62 +287,90 @@ def XL_BilderClusterSingle(title, path):
 		msg1 = u"Fehler in XL_BilderClusterSingle"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
-		return li
+		return
 	
 	cluster =  blockextract('class="trenner trenner--default', page)	# Cluster suchen
 	mycluster=""
-	for item in cluster:
-		title = stringextract('<h2>', '</h2>', item)
-		if title in title_org:
-			mycluster = item
-			PLog("cluster_found: " + title)
-			break
-	
-	# Format img_list: "Titel || img_url || img_alt || summ"	
-	img_list=[]; cnt=0
-	if '<div data-v="' in mycluster:										# json
-		PLog("content_json:")
-		cnt=cnt+1
-		conf = stringextract('data-v="', '"', mycluster)	
-		conf = conf.replace('\\"', '"')
-		conf = conf.replace('&quot;', '"')
-		conf = unquote(conf)
-		obj = json.loads(conf)
-		PLog(str(obj)[:60]);
-	
-		name = obj["name"]
-		imgObjects = obj["images"]
-		PLog("imgs_in_Block_%d: %d" % (cnt, len(imgObjects)))
-		for img in imgObjects:
-			summ=""
-			img_url = img["imageUrls"]["l"]
-			img_alt = img["alttext"]
-			summ = img["description"]
-			summ=summ.replace(u'&lt;strong&gt;', '')					# html-Rest in json
-			summ=summ.replace(u'&lt;/strong&gt;', '')				# html-Rest in json
-			title = img["title"]
-			line = "%s||%s||%s||%s" % (title, img_url, img_alt, summ)
-			img_list.append(line)
+	if len(cluster) > 0:												# Einzelbilder mit Link auf Seite mit Slider
+		for item in cluster:
+			title = stringextract('<h2>', '</h2>', item)
+			if title in title_org:
+				mycluster = item
+				PLog("cluster_found: " + title)
+				break
 	else:
-		PLog("content_html:")		
-		items = blockextract('ts-picture__wrapper', mycluster, "</noscript>")
-		cnt=0
+		mycluster = page												# Slider-Bilder
+	
+	if 	'<div data-v=' in mycluster:									# Bilder auf dieser Seite
+		items = blockextract('<div data-v=', page, "</div>")
+		PLog(len(items))
+		img_list=[]; cnt=0
+		# Format img_list: "Titel || img_url || img_alt || summ"		# img_list -> XL_BilderShow
+		for item in items:
+			PLog("content_json:")
+			PLog(item[:400])
+			cnt=cnt+1
+			conf = stringextract('data-v="', '"', item)	
+			conf = conf.replace('\\"', '"')
+			conf = conf.replace('&quot;', '"')
+			conf = unquote(conf)
+			obj = json.loads(conf)
+			PLog(str(obj)[:60]);
+		
+			name = obj["name"]
+			imgObjects = obj["images"]
+			PLog("imgs_in_Block_%d: %d" % (cnt, len(imgObjects)))
+			for img in imgObjects:
+				summ=""
+				img_url = img["imageUrls"]["l"]
+				img_alt = img["alttext"]
+				summ = img["description"]
+				summ=summ.replace(u'&lt;strong&gt;', '')				# html-Rest in json
+				
+				title = img["title"]
+				line = "%s||%s||%s||%s" % (title, img_url, img_alt, summ)
+				img_list.append(line)
+			PLog("img_list: %d" % len(img_list))
+			if len(img_list) > 0:
+				XL_BilderShow(title, img_list)
+		return
+		
+	else:																# Bilder auf Folgeseiten
+		PLog("content_html:")	
+		li = xbmcgui.ListItem()
+		li = home(li, ID='TagesschauXL')								# Home-Button
+			
+		items = blockextract('class="teaser-xs__link"', mycluster)
+		cnt=0; path=""
 		for item in items:
 			summ=""
 			cnt=cnt+1
-			title = "%s: Bild %d" % (title_org, cnt)
-			img_alt = stringextract('alt="', '"', item)
-			img_last  = blockextract('data-srcset=', item)[-1] 			# größtes Bild
-			img_url = stringextract('data-srcset="', '"', img_last)
-			line = "%s||%s||%s||%s" % (title, img_url, img_alt, summ)
-			img_list.append(line)
-			PLog(line)
+			headline = stringextract('teaser-xs__headline">', '</span>', item)
+			headline = cleanhtml(headline.strip())
+			headline  = headline.replace('"', '*')
+
 			
-	PLog("img_list: %d" % len(img_list))
-	if len(img_list) > 0:
-		XL_BilderShow(title, img_list)
-	
-	return
+			PLog(headline)
+			topline = stringextract('teaser-xs__topline">', '</span>', item)	# Subtitel
+			img_alt = stringextract('alt="', '"', item)
+			img_alt = img_alt.replace('&quot;', '"')
+			title = "Bild %2d: %s" % (cnt, headline)
+			title  = unescape(title)
+			tag = "Folgeseiten\n\nBild: %s" % img_alt
+			summ = "[B]%s[/B]" % topline
+			img_url = stringextract('js-image" src="', '"', item)
+			link = stringextract('teaser-xs__link" href="', '"', item)
+			path = BASE_URL + link
+			
+			PLog("Satz1:")
+			PLog(headline); PLog(topline); PLog(path); PLog(tag); PLog(summ); 
+			title=py2_encode(title); path=py2_encode(path);
+			fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(headline), quote(path))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_BilderClusterSingle", 
+				fanart=ICON_BILDER, thumb=img_url, fparams=fparams, tagline=tag, summary=summ)
+
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
+
 # ----------------------------------------------------------------------	 
 def XL_BilderShow(title, img_list):
 	PLog("XL_BilderShow:")
