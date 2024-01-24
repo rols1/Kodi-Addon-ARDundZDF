@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>12</nr>								# Numerierung für Einzelupdate
-#	Stand: 23.01.2024
+# 	<nr>13</nr>								# Numerierung für Einzelupdate
+#	Stand: 24.01.2024
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -455,7 +455,9 @@ def XL_BilderShow(title, img_list):
 
 # ----------------------------------------------------------------------
 # 18.11.2023 Anpassung an ARD-Änderungen
-#	 
+# 1. Call für Übersicht (nur jweils 3 items), Folgecalls in
+#	XL_SearchContent
+# Unterschiedliche Videoqualitäten
 def XL_Search(query='', pagenr=''):
 	PLog("XL_Search: " + pagenr)
 	
@@ -524,7 +526,7 @@ def XL_Search(query='', pagenr=''):
 # komplettes Suchergebnis mit documentType laden
 # 	 
 def XL_SearchContent(typ, query, pagenr=''):
-	PLog("XL_SearchContent: " + typ)						# Bsp. TXL_Search_video
+	PLog("XL_SearchContent: " + typ)							# Bsp. TXL_Search_video
 
 	if pagenr == '':		# erster Aufruf muss '' sein
 		pagenr = 0
@@ -545,7 +547,7 @@ def XL_SearchContent(typ, query, pagenr=''):
 	PLog(str(items)[:80])
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='TagesschauXL')						# Home-Button
+	li = home(li, ID='TagesschauXL')							# Home-Button
 	
 	for item in items:
 		tag=""; summ=""
@@ -558,10 +560,12 @@ def XL_SearchContent(typ, query, pagenr=''):
 			summ = item["description"] 
 		url = BASE_URL + item["url"]
 		
-		if title == "Video":								# nichtsagenden Titel erweitern
+		if title == "Video":									# nichtsagenden Titel erweitern
 			title = "%s ..." % summ[:50]
 		if len(title) > 65:
 			title = "%s ..." % title[:65]
+		mark = unquote(query).replace("+", "")
+		title = make_mark(mark, title, "", bold=True)	# Suchbegriff fett -> util		
 		
 		title = repl_json_chars(title); summ = repl_json_chars(summ);
 		url=py2_encode(url); title=py2_encode(title); 		
@@ -572,7 +576,7 @@ def XL_SearchContent(typ, query, pagenr=''):
 			
 	# Mehr-Seiten - ohne Berechnung
 	nextpage = str(int(pagenr) + 1)
-	tag = u"nächste Seite, aktuell: %s" % nextpage			# Basis 0
+	tag = u"nächste Seite, aktuell: %s" % nextpage				# Basis 0
 	PLog("nextpage: %s" % nextpage) 
 	title = "Mehr: [B]%s[/B]" % query
 	query=py2_encode(query);
