@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>173</nr>										# Numerierung für Einzelupdate
+# 	<nr>174</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.5'
-VDATE = '23.01.2024'
+VDATE = '28.01.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3582,11 +3582,11 @@ def ARDSportLiga3(title, img, sender="", source=""):
 				if "| NOCH" in verf:
 					only = verf.split("|")[1]
 					tag = "%s | %s" % (tag, only)
-				if live:												# fett
+				if live:												# LIVE: fett
 					title = "[B]%s: %s[/B]" % (title_date, title)
 					tag = "!!! LIVE !!!\n%s" % tag 
 	
-				tag = "[B]%s[/B]" % tag	
+				tag = "[B]%s[/B]" % tag									# tag + summ Zukunft: fett
 				summ = "[B]%s[/B]" % summ
 				
 			PLog("Satz15:"); PLog(meet);  PLog(my_date)
@@ -7026,7 +7026,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		link = stringextract('<link>', '</link>', element) 
 		link = unescape(link)	
 		title_sender = stringextract('<hrefsender>', '</hrefsender>', element) 
-		if title_sender == '':
+		if "<tvg-name>" in element:
 			title_sender = stringextract('<title>', '</title>', element) # IPTVSource-Sender
 		PLog(u'Sender: %s, link: %s' % (title_sender, link));
 
@@ -7061,6 +7061,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			link=''	
 			# Zeile iptv_streamlinks: "Sender|href|thumb|tagline"
 			for line in iptv_streamlinks:
+				PLog("iptvline: " + line[:40])
 				PLog("iptvline: " + line[:40])
 				items = line.split('|')
 				if up_low(title_sender) == up_low(items[0]): 
@@ -7126,7 +7127,6 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 					img = R(img)
 				else:				
 					img = R(ICON_MAIN_TVLIVE)
-			
 			
 		geo = stringextract('<geoblock>', '</geoblock>', element)
 		PLog('geo: ' + geo)
