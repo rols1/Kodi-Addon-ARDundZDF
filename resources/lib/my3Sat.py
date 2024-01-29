@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>15</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.01.2024
+# 	<nr>16</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.01.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -161,8 +161,7 @@ def Main_3Sat(name=''):
 	title=py2_encode(title); path=py2_encode(path);
 	fparams="&fparams={'name': '%s', 'path': '%s', 'themen': 'ja'}"	% (quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Rubriken", 
-		fanart=R('3sat.png'), thumb=R('zdf-themen.png'), summary=summ, fparams=fparams)
-		
+		fanart=R('3sat.png'), thumb=R('zdf-themen.png'), summary=summ, fparams=fparams)		
 
 	title = "Rubriken"
 	path = 'https://www.3sat.de/themen'								# auch Leitseite
@@ -674,8 +673,10 @@ def Start(name, path, rubrik=''):
 #	Liste der 3sat-Themen (themen=ja) von https://www.3sat.de/themen	
 # 	Liste der 3sat-Rubriken: 	1. Lauf: dropdown-link Themen-Seite, 	
 #								2. Lauf: Auswertung wie Themen
-# 	-> Rubrik_Single
+# 	-> Rubrik_Single mit neuem path oder path_org (z.B. lazyload-Inhalte)
 # 27.10.2021 Blockbildung grid-container statt picture class 
+# 29.01.2024 mehr Inhalte: Container (..is-white) ergänzt, get_video_carousel 
+#	integriert
 #
 def Rubriken(name, path, themen=''):
 	PLog('Rubriken:')
@@ -692,11 +693,15 @@ def Rubriken(name, path, themen=''):
 		PLog(msg1)
 		MyDialog(msg1, msg2, '')
 		return li	
+	page = del_footer(page)	
 	
 	mediatype='' 		
 	if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Kennz. Video für Sofortstart 
 		mediatype='video'
-		
+
+	skip_list=[]
+	skip_title = [u"", u"zurück scrollen"]	
+
 	if themen:											# Themen od. einz. Rubrik (name) 
 		pos = page.find('class="o--footer">')
 		if pos > 0:
@@ -708,15 +713,18 @@ def Rubriken(name, path, themen=''):
 		PLog("Mark0")
 		for  rec in items:	
 			PLog(len(rec))
-			PLog(rec[:100])
-			title = stringextract('-headline', 'class=', rec) 
-			title = get_title(title)				
-			if title == '':
+			PLog(rec[:80])
+			
+			if "video-carousel-item" in rec:
+				get_video_carousel(li, rec)
 				continue
+
+			title = get_title(rec)					 	# skip_title dort			
+			skip_title.append(title)	
 			title_org = title							# unbehandelt für Abgleich
 			PLog("title_org: " + title_org)	
 			title = cleanhtml(title); title = mystrip(title);  
-			title = repl_json_chars(title) 			
+			title = unescape(title); title = repl_json_chars(title) 			
 			PLog("title: " + title)	
 			if 'TV-Sendetermine' in title:
 				continue
@@ -735,8 +743,8 @@ def Rubriken(name, path, themen=''):
 			
 			 
 			thema=''; single=False; dur=''
-			if 'grid-container js-title"' in rec:			# lazyload-Beiträge ohne Bilder + hrefs
-				PLog('grid-container js-title"')
+			if 'grid-container js-title"' in rec:			# lazyload-Beiträge ohne Bilder + hrefs in
+				PLog('grid-container js-title"')			# 	Block ..js-cluster
 				img_src = R('Dir-folder.png')
 				href = path_org
 				thema = title_org
@@ -747,9 +755,6 @@ def Rubriken(name, path, themen=''):
 					img_src = stringextract('&quot;http', '&quot;', rec)
 					img_src = img_src.replace('\\/','/')
 					img_src = "http" + img_src				# s von http bereits enth.
-					if img_src in skip_list:
-						continue
-					skip_list.append(img_src)
 					
 					href	= stringextract('embed_content": "', '"', rec) # zusätzl /zdf/ enth.
 					href 	= DreiSat_BASE + href + ".html"
@@ -771,9 +776,10 @@ def Rubriken(name, path, themen=''):
 			else:
 				if href.startswith('http') == False:
 					href	= DreiSat_BASE + href
-			#if href in skip_list:
-			#	continue
-			#skip_list.append(href)
+			if href in skip_list:
+				if href != path_org:
+					continue
+			skip_list.append(href)
 				
 			if dur:			
 				PLog('Satz4:')
@@ -800,7 +806,7 @@ def Rubriken(name, path, themen=''):
 			title=py2_encode(title); thema=py2_encode(thema); href=py2_encode(href);  
 			img_src=py2_encode(img_src);
 			
-			if single == False:
+			if single == False:												# einz. Cluster
 				if href == path_org:						
 					fparams="&fparams={'name': '%s', 'path': '%s', 'thema': '%s'}" % (quote(title), 
 						quote(href), quote(thema))
@@ -1211,18 +1217,22 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #-------------
-# Blöcke für Rubrik, Rubrik_Single,  skip Systemhinw. usw. 
+# Blöcke für Rubrik, Rubrik_Single,  skip Systemhinw. usw.
+# Inhalte können sich überschneiden - skip_list (title, path)
+#	erforderlich. 
+# Größte Blockvielfalt: www.3sat.de/themen
 def get_container(page):
 	PLog("get_container:")
 			
 	block_list = [
+				u'"m--content-module grid-x large-up-2 small-margin-collapse is-white"|grid-container',
+				u'"m--content-module grid-x large-up-2 small-margin-collapse is-dark"|grid-container',
 				u'class="o--horizontal-scroller js-cluster"|</article>',	# lazyload-Container
 				u'grid-container has-title"|</article>',					# 
-				u'"m--content-module grid-x large-up-2 small-margin-collapse is-white"|grid-container',
 				u'<article class="m--teaser-topic-primary align-center-middle is-clickarea"|</article>',
 				u'<article class="m--teaser-topic-secondary is-clickarea"|</article>',		
 				u'<article class="m--teaser-small js-teaser js-rb-live  is-responsive"|</article>',
-				u'<article class="video-carousel-item|</article>',				# Carousel-Item einzeln
+				u'<article class="video-carousel-item|</article>',				# Carousel-Items einzeln od. mehrere
 				]
 	
 	container=[]; 
@@ -1240,13 +1250,22 @@ def get_container(page):
 # Titel zum Block ermittlen
 def get_title(rec):
 	PLog("get_title:")
-	PLog(rec)
-	try:
-		title = re.search(u'">(.*?)</h', rec).group(1)
-	except:
-		title=''
-		PLog("skip_empty_title")
 	
+	skip_title = [u"", u"zurück scrollen"]	
+
+	title = stringextract('title="', '"', rec)		# title=".."
+	if title not in skip_title:						# -headline im Block möglich
+		return title
+	
+	if '-headline' in rec:							# Titel in Blockanfang
+		title = stringextract('-headline', 'class=', rec) 
+		try:
+			title = re.search(u'">(.*?)</h', rec).group(1)
+		except:
+			title=''			
+	
+	if title == '':
+		PLog("skip_empty_title")
 	return title
 
 #-------------
@@ -1967,6 +1986,18 @@ def HourToMinutes(timecode):
 		minutes = (hours * 60) + minutes
 	
 	return str(minutes)
+
+#----------------------------------------------------------------  
+def del_footer(page):
+	PLog('del_footer:')
+	
+	pos = page.find('class="c--broadcast-module')
+	if pos > 0:
+		return page[:pos]							# Sendetermine abschneiden
+	pos = page.find('class="o--footer')
+	if pos > 0:
+		return page[:pos]							# Fuß abschneiden
+
 #----------------------------------------------------------------  
 # 11.01.2021 Nutzung get_page (Modul util)
 # nur für Anford. Videodaten mittels apiToken 

@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>174</nr>										# Numerierung für Einzelupdate
+# 	<nr>175</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.5'
-VDATE = '28.01.2024'
+VDATE = '29.01.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7062,9 +7062,8 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			# Zeile iptv_streamlinks: "Sender|href|thumb|tagline"
 			for line in iptv_streamlinks:
 				PLog("iptvline: " + line[:40])
-				PLog("iptvline: " + line[:40])
 				items = line.split('|')
-				if up_low(title_sender) == up_low(items[0]): 
+				if up_low(title_sender) == up_low(items[0]):# title_sender hier tvg-name
 					link = items[1]
 					if items[2]:							# Icon aus IPTVSource?
 						img_streamlink = items[2]
@@ -9794,10 +9793,12 @@ def m3satSourcesHBBTV(weburl, title):
 	header = "{'Host': 'hbbtv.zdf.de', 'content-type': 'application/vnd.hbbtv.xhtml+xml'}"
 	path = base + url
 	page, msg = get_page(path, header=header)	
-	if page == '':						
-		msg1 = u'HBBTV-Quellen nicht vorhanden / verfügbar'
-		msg2 = u'Video: %s' % title
-		MyDialog(msg1, msg2, '')
+	if page == '':		
+		msg1 =  u'HBBTV-Quellen fehlen'
+		msg2 = title
+		icon = R('3sat.png')
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)
+
 		return HBBTV_List
 		
 	jsonObject = json.loads(page)
