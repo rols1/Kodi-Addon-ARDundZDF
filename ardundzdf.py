@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>175</nr>										# Numerierung für Einzelupdate
+# 	<nr>176</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.5'
 VDATE = '29.01.2024'
 
@@ -7739,7 +7739,7 @@ def ZDF_Start(ID, homeID=""):
 
 	if ID=='Startseite' or "tivi_" in ID or "funk_" in ID:
 		path = base + "start-page"
-		if ID.startswith("tivi"):
+		if ID.startswith("tivi") and ID != "tivi_ZDFchen":			# tivi_ZDFchen s.u.
 			path = base + "document/zdftivi-fuer-kinder-100"
 		if "funk_" in ID:
 			path = base + "document/funk-126"
@@ -7777,7 +7777,7 @@ def ZDF_Start(ID, homeID=""):
 		url = base + "document/barrierefrei-im-zdf-100"
 	if ID=='ZDFinternational':
 		url = base + "document/international-108"		
-	if ID=='ZDFchen':									# ZDFtivi-Sendereihe bis 6 Jahre
+	if ID=='tivi_ZDFchen':									# ZDFtivi-Sendereihe bis 6 Jahre
 		url = base + "document/zdfchen-100"		
 	ZDF_RubrikSingle(url, ID, homeID)
 				
