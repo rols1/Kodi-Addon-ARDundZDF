@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>40</nr>										# Numerierung für Einzelupdate
+# 	<nr>41</nr>										# Numerierung für Einzelupdate
 #	Stand: 01.02.2024
 
 # Python3-Kompatibilität:
@@ -1332,12 +1332,13 @@ def get_next_url(page):
 	next_url = stringextract('"next": "', '"', p)
 	next_page = stringextract('page=', '&', next_url)
 	
-	# api-internal-Call endet mit HTTP Error 401: Unauthorized
-	next_url = next_url.replace("api-internal.arte.tv/api", "www.arte.tv/api/rproxy")
-	# 01.02.2024 api-internal-Call nicht mehr verwendet:
-	next_url = next_url.replace("/api/emac/", "www.arte.tv/api/rproxy/emac/")
-	if next_url.startswith("https://") == False:
-		next_url = "https://" + next_url 
+	if next_url:
+		# api-internal-Call endet mit HTTP Error 401: Unauthorized
+		next_url = next_url.replace("api-internal.arte.tv/api", "www.arte.tv/api/rproxy")
+		# 01.02.2024 api-internal-Call nicht mehr verwendet:
+		next_url = next_url.replace("/api/emac/", "www.arte.tv/api/rproxy/emac/")
+		if next_url.startswith("https://") == False:
+			next_url = "https://" + next_url 
  	
 
 	PLog("next_url: %s, page_akt: %s, page_anz: %s, anz: %s, next_page: %s" % (next_url, page_akt, page_anz, anz, next_page))
