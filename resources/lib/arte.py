@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>39</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.01.2024
+# 	<nr>40</nr>										# Numerierung für Einzelupdate
+#	Stand: 01.02.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -668,7 +668,7 @@ def Beitrag_Liste(url, title):
 	PLog("Beitrag_Liste: " + title)
 	PLog(url); 
 	if url.startswith("/de/"):
-		url = "https://www.arte.tv" + url	
+		url = "https://www.arte.tv" + url
 	PLog(url) 
 	
 	page = get_ArtePage('Beitrag_Liste', title, path=url)	
@@ -1334,6 +1334,11 @@ def get_next_url(page):
 	
 	# api-internal-Call endet mit HTTP Error 401: Unauthorized
 	next_url = next_url.replace("api-internal.arte.tv/api", "www.arte.tv/api/rproxy")
+	# 01.02.2024 api-internal-Call nicht mehr verwendet:
+	next_url = next_url.replace("/api/emac/", "www.arte.tv/api/rproxy/emac/")
+	if next_url.startswith("https://") == False:
+		next_url = "https://" + next_url 
+ 	
 
 	PLog("next_url: %s, page_akt: %s, page_anz: %s, anz: %s, next_page: %s" % (next_url, page_akt, page_anz, anz, next_page))
 	return next_url,page_akt,page_anz,anz,next_page
