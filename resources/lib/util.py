@@ -537,10 +537,11 @@ def name(**variables):
 	s = [x for x in variables]
 	return s[0]
 #----------------------------------------------------------------
-# Dateien löschen älter als seconds
+# Dateien löschen älter als seconds - nicht rekursiv
 #		directory 	= os.path.join(path)
 #		seconds		= int (1 Tag=86400, 1 Std.=3600)
-# Ältere Ordner werden ohne Leertest entfernt!
+# Ältere enthaltene Ordner werden ohne Leertest entfernt 
+#	(nur 1 Ebene!)
 def ClearUp(directory, seconds, keep_dirs=False):	
 	PLog('ClearUp: %s, sec: %s' % (directory, seconds))	
 	PLog('älter als: ' + seconds_translate(seconds, days=True))
@@ -549,10 +550,11 @@ def ClearUp(directory, seconds, keep_dirs=False):
 	cnt_files=0; cnt_dirs=0
 	try:
 		globFiles = '%s/*' % directory
-		files = glob.glob(globFiles) 
+		files = glob.glob(globFiles) 		# leer, fehlend -> leere Liste
 		PLog("ClearUp: globFiles " + str(len(files)))
 		# PLog(" globFiles: " + str(files))
 		for f in files:
+			#PLog(f)
 			#PLog(os.stat(f).st_mtime)
 			#PLog(now - seconds)
 			if os.stat(f).st_mtime < (now - seconds):
@@ -3552,6 +3554,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		else:													# false, None od. Blank - Playlist
 			PLog('PlayVideo_Start: direkt, playlist: %s' % playlist)
 			line = Dict("load", 'Rekurs_check', CacheTime=10)	# Dict-Abgleich url/Laufzeit
+			# Rekursion unter Nexus nicht mehr beobachtet - mit Auslaufen von Matrix entfernen
 			PLog(line)
 			oldurl='' 
 			if line != False:									# Rekursions-Check erforderlich
@@ -4029,11 +4032,14 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	if linkid:											# Sendungsnavigation: ARD-EPG für Zeitstrahl laden
 		buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 		event_end = int(event_end)
-		header = "Sendungen (r. Maustaste)"
+		header = u"Sendungen (Zurück, rechte Maustaste)"
 		txt = "Anzahl Sendungen: %d" % len(buf_events)
+		dur=10000
 		if len(buf_events) == 0:
-			txt = "KEINE weitere Sendung"
-		xbmcgui.Dialog().notification(header, txt, icon,4000, sound=True)
+			header = u"Sendungen"
+			txt = u"KEINE weitere Sendung"
+			dur=5000
+		xbmcgui.Dialog().notification(header, txt, icon,dur, sound=True)
 		KeyListener_run=True
 		
 	PLog("buf_events: %d" % len(buf_events))	
@@ -4059,7 +4065,7 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 		p_list.append(p)											# 3 sec sync-Check
 		
 		if len(p_list) >= 3:
-			if max(p_list) < 1:										# nach 3 sec ist < 1 ein Sync-Indiz
+			if max(p_list) < 1:										# nach 3 sec ist < 1 ein Sync-Error-Indiz
 				PLog("p_list_syncfail: %d, %d" % (p_list[-1], p_list[0]))
 				syncfail = True
 			p_list=[]			
@@ -4128,7 +4134,7 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 					event_start, title, sD_uhr = item.split("|")
 					show_list.append("%s | %s" % (sD_uhr, title))
 				
-				heading = "Sendungen im Zeitpuffer | Auswahl oder Abbruch"
+				heading = "Sendungen im Zeitpuffer | Auswahl"
 				ret = xbmcgui.Dialog().select(heading, show_list, preselect=0) # Dialog
 				if ret >= 0:										# Auswahl?
 					new_event = buf_events[ret]

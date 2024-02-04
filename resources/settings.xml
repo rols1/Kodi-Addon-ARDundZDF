@@ -111,7 +111,6 @@
 		values="25%|50%|75%|100%"/>
 	<setting label="Zuletzt-gesehen-Liste: max. Anzahl" type="select" values="50|100|200|500" default="100" id="pref_max_videos_startlist"/>
      <setting label="Modul ARD Neu: Mehr-Beiträge zeigen (thematisch ähnliche)" type="bool" id="pref_more" default="true"/>
-  	<setting label="Modul phoenix: nur Beiträge mit Videos, keine Sendungshinweise" type="bool" id="pref_only_phoenix_videos" default="false"/>
     <setting type="sep"/>
    	<setting label="Bildersammlungen: Bildinfos als Wasserzeichen" type="bool" id="pref_watermarks" default="false"/>
    	<setting label="Bildersammlungen: Fontgröße Wasserzeichen" type="select" id="pref_fontsize" default="auto"

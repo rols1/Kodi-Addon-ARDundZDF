@@ -383,11 +383,16 @@ def FilterToolsWork(action):
 		dialog.textviewer(title, filter_list,usemono=True)
 		
 	if action == 'state_change':								# aus Kontextmenü
+		msg1 = "Ausschluss-Filter:"
+		icon = R(ICON_FILTER)
 		if SETTINGS.getSetting('pref_usefilter') == 'true':
 			SETTINGS.setSetting('pref_usefilter','false')
+			msg2 = u'AUSgeschaltet'		
 		else:											
 			SETTINGS.setSetting('pref_usefilter','true')
+			msg2 = u'EINgeschaltet'		
 		xbmc.executebuiltin('Container.Refresh')
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)		
 								
 	return
 	

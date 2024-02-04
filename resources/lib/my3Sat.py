@@ -82,7 +82,7 @@ USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
 # Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
-if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+if 	check_AddonXml('"xbmc.python" version="3.'):				# ADDON_DATA-Verzeichnis anpasen
 	PLog('my3Sat_python_3.x.x')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 WATCHFILE		= os.path.join(ADDON_DATA, "merkliste.xml") 
@@ -91,6 +91,11 @@ DICTSTORE 		= os.path.join(ADDON_DATA, "Dict")
 SLIDESTORE 		= os.path.join(ADDON_DATA, "slides") 
 SUBTITLESTORE 	= os.path.join(ADDON_DATA, "subtitles") 
 TEXTSTORE 		= os.path.join(ADDON_DATA, "Inhaltstexte")
+
+days = int(SETTINGS.getSetting('pref_TEXTE_store_days'))
+SophoraTeaser = os.path.join(TEXTSTORE, "SophoraTeaser")
+ClearUp(SophoraTeaser, days*86400		)						# Cache SophoraTeaser bereinigen
+
 
 DEBUG			= SETTINGS.getSetting('pref_info_debug')
 NAME			= 'ARD und ZDF'

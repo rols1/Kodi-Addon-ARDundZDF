@@ -10,6 +10,38 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+04.01.2024 4.9.6
+			Main_XL (TagesschauXL): Hinw. auf geringe Videoqualität 480x270 (Investigativ,
+			Faktenfinder).
+			XL_BilderClusterSingle (TagesschauXL): Auswertung Slider-Bilder ergänzt. 
+			time_translate (util): Sommerzeit 2024 ergänzt.
+			XL_SearchContent (TagesschauXL): Nutzung make_mark (util) für Fett-Markierung 
+			der Suchbegriffe.
+			Bildergalerien: Löschen leerer Bildverz. ergänzt - Aktualisierung my3Sat, 
+			TagesschauXL, Haupt-PRG. Neue Funktion DelEmptyDirs (util).
+			Haupt-PRG: Bereinigung Thumbscache ARDNeu_Startpage ergänzt (Setting Slide
+			Shows). 
+			AddonInfos: Größe der Logdatei ergänzt, einschl. Kennzeichnung ab 1 GB.
+			ARDRubriken: fehlendes LF-Zeichen ergänzt ("%s\Bild: %s" -> "%s\nBild: %s").
+			TV-Livestreams -> Regional: Abgleich bei IPTV-Quellen mit "<tvg-name>" statt
+			"<hrefsender>".
+			TV-Livestreams -> Überregional: 2 eingestellte Sender Deutsche Welle aus
+			livesenderTV.xml entfernt, verbleibend: "Deutsche Welle (EN)".
+			Rubriken (my3Sat): fehlendes Container-Merkmal (..is-white, ..is-dark) für 
+			weitere Inhalte ergänzt, get_title erweitert, neue Funktion del_footer.
+			m3satSourcesHBBTV (Haupt-PRG): bei Fehlen von HBBTV-Quellen Dialog ersetzt 
+			durch notification.
+			my3Sat: Bereinigung Cache für SophoraTeaser ergänzt (Setting Inhaltstexte).
+			ZDF_Start (Haupt-PRG): Aufruf tivi_ZDFchen-Seite korrigiert.
+			Modul phoenix: nicht mehr benötigtes Setting "..nur Beiträge mit Videos.." 
+			entfernt, dto. Wiki (Settings Module).
+			Ausschluss-Filter (Beiträge von ARD und ZDF): verlorenen Code wiederhergestellt,
+			Anpassung get_json_content  + ARDVerpasst_get_json (ARDnew), ZDF_PageMenu, 
+			ZDF_Rubriken, ZDF_RubrikSingle, ZDF_Verpasst. Zusätz. Notification für context-
+			Umschaltung in FilterToolsWork (tools).
+			get_next_url (arte): Wegfall api-internal-Call, neuen Call für Web-json-Quellen
+			angepasst ("/api/emac/" -> "www.arte.tv/api/rproxy/emac/").
+
 21.01.2024 4.9.5
 			ARDStartSingle: Ausfilterung .ts-Link bei Streamquellen (Link o. Zertifikat).
 			AddonStartlist: sub_path, seekPos und video_dur in Param-Liste ergänzt, Anpas-
@@ -52,7 +84,7 @@ CHANGE HISTORY
 			ZDF_getStrmList: Austausch os.path.isdir -> os.path.exists (strmpath), Abbruch-
 			Dialog bei strmpath-Problem.
 			Modul util: neue Funktion get_sqlite_Cursor (DB-Connect zu MyVideos*.db), 
-			Nutzung durch show_strm_element
+			Nutzung durch show_strm_element.
 
 24.12.2023 4.9.3
 			ZDF_RubrikSingle: Fix Erkennung von Navigations-Menüs (Suche in jsonObject

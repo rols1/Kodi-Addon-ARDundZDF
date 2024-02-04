@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>176</nr>										# Numerierung für Einzelupdate
-VERSION = '4.9.5'
-VDATE = '29.01.2024'
+VERSION = '4.9.6'
+VDATE = '04.02.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -982,8 +982,12 @@ def AddonInfos():
 	searchwords = os.path.join(ADDON_DATA, "search_ardundzdf")
 	a8 = u"%s [B]Suchwortliste:[/B] %s" %  (t,searchwords)
 	log = xbmc.translatePath("special://logpath")
-	log = os.path.join(log, "kodi.log") 	
-	a9 = u"%s [B]Debug-Log:[/B] %s" %  (t, log)
+	log = os.path.join(log, "kodi.log")
+	size = humanbytes(os.path.getsize(log)) 
+	size = "[B]%s[/B]" %  size	
+	if "GB" in size or "TB" in size:
+		size = "[COLOR red]%s !!![/COLOR]" %  size	
+	a9 = u"%s [B]Debug-Log:[/B] %s | %s" %  (t, log, size)
 	a10 = u"%s [B]TV-und Event-Livestreams:[/B] %s/%s" % (t, PluginAbsPath, "resources/livesenderTV.xml")
 	
 	p3 = u"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" % (a,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10)
@@ -7878,6 +7882,15 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			title = repl_json_chars(title)
 			tag = repl_json_chars(tag)
 			if typ=="video":								# Videos
+				if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
+					filtered=False
+					for item in AKT_FILTER: 
+						if up_low(item) in py2_encode(up_low(str(entry))):
+							filtered = True
+							break		
+					if filtered:
+						PLog('filtered_1: <%s> in %s ' % (item, title))
+						continue								
 				if "channel" in entry:								# Zusatz Sender
 					sender = entry["channel"]
 					tag = "%s | %s" % (tag, sender)
@@ -8033,6 +8046,15 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 			stream = url
 			tag = tag.replace("Folgeseiten", "Video")
 		if typ == "video":	
+			if SETTINGS.getSetting('pref_usefilter') == 'true':			# Ausschluss-Filter
+				filtered=False
+				for item in AKT_FILTER: 
+					if up_low(item) in py2_encode(up_low(str(entry))):
+						filtered = True
+						break		
+				if filtered:
+					PLog('filtered_2: <%s> in %s ' % (item, title))
+					continue								
 				if "channel" in entry:									# Zusatz Sender
 					sender = entry["channel"]
 					tag = "%s | %s" % (tag, sender)
@@ -8255,6 +8277,15 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			if(entry["type"]=="video"):							# Videos am Seitenkopf
 				# path = 'stage|%d' % i	# entf. hier
 				PLog("stream: " + stream)
+				if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
+					filtered=False
+					for item in AKT_FILTER: 
+						if up_low(item) in py2_encode(up_low(str(entry))):
+							filtered = True
+							break		
+					if filtered:
+						PLog('filtered_3: <%s> in %s ' % (item, title))
+						continue								
 				if "channel" in entry:							# Zusatz Sender
 					sender = entry["channel"]
 					tag = "%s | %s" % (tag, sender)
@@ -8794,6 +8825,15 @@ def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
 					if sfilter != channel:							# filtern
 						continue
 				tag = "%s | Sender: [B]%s[/B]" % (tag,channel) 
+				if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
+					filtered=False
+					for item in AKT_FILTER: 
+						if up_low(item) in py2_encode(up_low(str(entry))):
+							filtered = True
+							break		
+					if filtered:
+						PLog('filtered_4: <%s> in %s ' % (item, title))
+						continue								
 					
 				PLog("Satz4:")
 				PLog(tag); PLog(title); PLog(stream);
@@ -9054,6 +9094,15 @@ def ZDF_FlatListEpisodes(sid):
 			if season == '':
 				PLog("skip_no_season: " + str(folge)[:60])
 				continue
+			if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
+				filtered=False
+				for item in AKT_FILTER:
+					if up_low(item) in py2_encode(up_low(str(folge))):
+						filtered = True
+						break		
+				if filtered:
+					PLog('filtered_5: <%s> in %s ' % (item, title))
+					continue								
 				
 			summ_par= summ.replace('\n', '||')
 			tag_par= tag.replace('\n', '||')

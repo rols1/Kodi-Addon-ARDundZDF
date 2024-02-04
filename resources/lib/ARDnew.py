@@ -11,7 +11,7 @@
 #
 ################################################################################
 # 	<nr>68</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.01.2024
+#	Stand: 26.01.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -577,7 +577,7 @@ def ARDRubriken(li, path="", page="", homeID=""):
 		
 		tag = "Folgeseiten"
 		if 	img_alt:
-			tag =  u"%s\Bild: %s" % (tag, img_alt)
+			tag =  u"%s\nBild: %s" % (tag, img_alt)
 		
 		ID = 'ARDStartRubrik'
 		PLog('Satz_cont2:');
@@ -1011,6 +1011,15 @@ def ARD_FlatListEpisodes(path, title):
 		if title == '':											# skipped
 			continue
 		summ_par = summ.replace('\n', '||')
+		if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
+			filtered=False
+			for fil in AKT_FILTER: 
+				if up_low(fil) in py2_encode(up_low(str(item))):
+					filtered = True
+					break		
+			if filtered:
+				PLog('filtered_6: <%s> in %s ' % (item, title))
+				continue		
 		
 		url=py2_encode(url); title=py2_encode(title); summ_par=py2_encode(summ_par);
 		fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s'}" %\
@@ -1804,16 +1813,6 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 			pubServ = s["publicationService"]["name"]							# publicationService (Sender)
 			if pubServ:
 				summ = "%sSender: %s" % (summ, pubServ)		
-		
-		if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
-			filtered=False
-			for item in AKT_FILTER: 
-				if up_low(item) in py2_encode(up_low(str(s))):
-					filtered = True
-					break		
-			if filtered:
-				PLog('filtered: <%s> in %s ' % (item, title))
-				continue		
 	
 		PLog('Satz:');
 		PLog(mehrfach); PLog(typ); PLog(title); PLog(href); PLog(img); 
@@ -1842,6 +1841,16 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 				summ_new = get_summary_pre(path=href, ID='ARDnew', duration=duration)  # Modul util
 				if 	summ_new:
 					summ = summ_new
+					
+			if SETTINGS.getSetting('pref_usefilter') == 'true':		# Ausschluss-Filter
+				filtered=False
+				for item in AKT_FILTER: 
+					if up_low(item) in py2_encode(up_low(str(s))):
+						filtered = True
+						break		
+				if filtered:
+					PLog('filtered_7: <%s> in %s ' % (item, title))
+					continue								
 					
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
 				mediatype='video'
@@ -2864,6 +2873,16 @@ def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
 					mediatype='video'
 			except Exception as exception:
 				PLog("Verpasst_json_error: " + str(exception))
+				
+			if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
+				filtered=False
+				for fil in AKT_FILTER: 
+					if up_low(item) in py2_encode(up_low(str(s))):
+						filtered = True
+						break		
+				if filtered:
+					PLog('filtered_8: <%s> in %s ' % (item, title))
+					continue		
 				
 			PLog("Satz:")
 			PLog(title); PLog(href); PLog(path); PLog(img); PLog(summ[:60]); 
