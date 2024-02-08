@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>176</nr>										# Numerierung für Einzelupdate
+# 	<nr>177</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.6'
-VDATE = '04.02.2024'
+VDATE = '08.02.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3014,7 +3014,7 @@ def ARDSportBilder(title, path, img):
 		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDF_SlideShow", 
 			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
 		
-		lable = u"Alle Bilder löschen"						# 2. Löschen
+		lable = u"Alle Bilder in diesem Bildverzeichnis löschen"		# 2. Löschen
 		tag = 'Bildverzeichnis: ' + fname 
 		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  Bilder neu einlesen'
 		fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % quote(fpath)
@@ -5374,6 +5374,7 @@ def get_subtitles(fulldestpath, sub_path):
 # Problem Windows7: die meisten draw.text-Operationen schlagen fehl -
 #	Ursache ev. Kodi 18.5/python3 auf dem Entw.PC (nicht mit
 #	python2 getestet).
+# 08.02.2024 
 #
 def thread_getpic(path_url_list,text_list,folder=''):
 	PLog("thread_getpic:")
@@ -5455,32 +5456,27 @@ def thread_getpic(path_url_list,text_list,folder=''):
 				except Exception as exception:
 					PLog("Plattform_Error: " + str(exception))				
 								
-				if SETTINGS.getSetting('pref_fontsize') == 'auto':
-					# fontsize abhängig von Bildgröße:
-					while font.getsize(mytxt)[0] < img_fraction*base.size[0]:		
-						fontsize += 2
-						font = ImageFont.truetype(myfont, fontsize)
-						
-					fontsize = max(10, fontsize)			# fontsize Minimum 10
-				else:
-					fontsize = int(SETTINGS.getSetting('pref_fontsize'))
-				PLog("Fontsize: %d" % fontsize)
-				font = ImageFont.truetype(myfont, fontsize)
-				draw = ImageDraw.Draw(txtimg)
-				# txtsz = draw.multiline_textsize(mytxt, font)	# exeption Windows7
-				# PLog("Größe Bildtext: " + str(txtsz))
-				
-				w,h = draw.textsize(mytxt, font=font)
-				W,H = base.size
-				# x,y = 0.5*(W-w),0.90*H-h		# zentriert
-				# x,y = W-w,0.90*H-h			# rechts
-				x,y = 0.05*(W-w),0.96*(H-h)		# u. links
-				PLog("x,y: %d, %d" % (x,y))
-
-				# outlined Text - für helle Flächen erforderlich, aus stackoverflow.com/
-				# /questions/41556771/is-there-a-way-to-outline-text-with-a-dark-line-in-pil 
-				# try-Block für Draw 
 				try:
+					if SETTINGS.getSetting('pref_fontsize') == 'auto':
+						# fontsize abhängig von Bildgröße:
+						while font.getsize(mytxt)[0] < img_fraction*base.size[0]:		
+							fontsize += 2
+							font = ImageFont.truetype(myfont, fontsize)
+							
+						fontsize = max(10, fontsize)			# fontsize Minimum 10
+					else:
+						fontsize = int(SETTINGS.getSetting('pref_fontsize'))
+					PLog("Fontsize: %d" % fontsize)
+					font = ImageFont.truetype(myfont, fontsize)
+					draw = ImageDraw.Draw(txtimg)
+					# txtsz = draw.multiline_textsize(mytxt, font)	# exeption Windows7
+					# PLog("Größe Bildtext: " + str(txtsz))
+					
+					#  w,h = draw.textsize(mytxt, font=font)	# textsize() nicht mehr verfügbar
+					x=1; y=1									# Start links oben
+					# outlined Text - für helle Flächen erforderlich, aus stackoverflow.com/
+					# /questions/41556771/is-there-a-way-to-outline-text-with-a-dark-line-in-pil 
+					# try-Block für Draw 
 					outlineAmount = 2
 					shadowColor = 'black'
 					for adj in range(outlineAmount):					
@@ -7713,7 +7709,7 @@ def BilderDasErsteSingle(title, path):
 		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDF_SlideShow", 
 			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
 				
-		lable = u"Alle Bilder löschen"						# 2. Löschen
+		lable = u"Alle Bilder in diesem Bildverzeichnis löschen"		# 2. Löschen
 		tag = 'Bildverzeichnis: ' + fname 
 		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  Bilder neu einlesen'
 		fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % quote(fpath)
@@ -10417,7 +10413,7 @@ def ZDF_BildgalerieSingle(path, title, li=''):
 		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDF_SlideShow", 
 			fanart=R('icon-stream.png'), thumb=R('icon-stream.png'), fparams=fparams)
 		
-		lable = u"Alle Bilder löschen"						# 2. Löschen
+		lable = u"Alle Bilder in diesem Bildverzeichnis löschen"		# 2. Löschen
 		tag = 'Bildverzeichnis: ' + fname 
 		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  Bilder neu einlesen'
 		fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % quote(fpath)
