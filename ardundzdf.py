@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>177</nr>										# Numerierung für Einzelupdate
+# 	<nr>178</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.6'
-VDATE = '08.02.2024'
+VDATE = '09.02.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3470,6 +3470,7 @@ def ARDSportWDRArchiv():
 #	Quelle liga3-online.de in utf-8 (Umlaute-Problem mit Kodi < 19.*)
 # 17.12.2023 Problem: Datumsangaben ohne Jahr. Daher 6-Monatsvergleich + 
 #	ggfls. Jahreskorrektur
+# 08.02.2024 Berücksichtigung von 1-3 Sendern statt 1-2
 #
 def ARDSportLiga3(title, img, sender="", source=""): 
 	PLog("ARDSportLiga3: " + sender)
@@ -3610,36 +3611,36 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			fparams=fparams, tagline=tag)
 			
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	# -----------------------------------------							# mit Sender -> Streamauswahl	
+	# -----------------------------------------						# mit Sender -> Streamauswahl	
 	else:
 		source = Dict("load", "ARD_streamsource")
 		PLog("source: " + str(source))
 		if source == False or source == "":
 			source = "Live"
 		
-		sender1=sender; sender2="xxx"
-		if "/" in sender:
-			sender1, sender2 = sender.split("/")					# 2 Sender möglich
-			sender1=sender1.strip(); sender2=sender2.strip()
-		PLog("sender1: %s, sender2: %s" % (sender1, sender2))
+		senderlist = ["%s" % sender]								# 3 Sender möglich, Default: 1
+		if sender.count("/") > 0:
+			senderlist = sender.split("/")
+		PLog("sender1: %s, Anz. Sender: %s" % (senderlist[0], len(senderlist)))
 		
 		if source == "Event":										# Eventstreams	
-			streamlist, title_list = ARDSportgetEventlist(sender1, sender2)	
+			streamlist, title_list = ARDSportgetEventlist(senderlist)	
 		else:														# Livestreams			
-			streamlist=[]; title_list=[]						# gewählte(n) Sender filtern
+			streamlist=[]; title_list=[]							# gewählte(n) Sender filtern
 			ard_streamlinks = Dict("load", "ard_streamlinks")
 			# Format ard_streamlinks s. get_ARDstreamlinks,
 			# Ard-Sender s. Debuglog (ardline:)
 			ard_streamlinks=py2_encode(ard_streamlinks)
-			sender1=py2_encode(sender1); sender2=py2_encode(sender2);
 			
 			for link in ard_streamlinks.split("\n"):			# Abgleich ARD-Url, Zuordnung linkid
-				title = link.split("|")[0]						# up_low, da sender1 + 2 groß
-				if up_low(title).startswith(sender1) or up_low(title).startswith(sender2):
-					url = link.split("|")[1]
-					img = link.split("|")[2]
-					streamlist.append("%s##%s##%s" % (title, url, img)) 
-					title_list.append(title)					
+				title = link.split("|")[0]						# up_low, da sender1 + 2 uppercase
+				for sender in senderlist:
+					if up_low(title).startswith(sender.strip()):
+						PLog("title: %s, sender: %s" % (title, sender.strip()))
+						url = link.split("|")[1]
+						img = link.split("|")[2]
+						streamlist.append("%s##%s##%s" % (title, url, img)) 
+						title_list.append(title)					
 
 		if len(streamlist) == 0:
 			msg1 = "ARDSportLiga3: %s" % sender
@@ -3665,16 +3666,16 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			Plot = "Falls der Stream nicht funktioniert, bitte die Streamliste durchprobieren."
 
 		# live= False verhindert Streamuhrzeit (Klemmer bei einigen Streams) 
-		PlayVideo(url=url, title=title, thumb=img, Plot=Plot, live=False)
+		PlayVideo(url=url, title=title, thumb=img, Plot=Plot, live="")
 		xbmc.sleep(500)									# Klemmerschutz
 		return
 	
 #---------------------------------------------------------------------------------------------------
 # 21.10.2023 Url-Check hinzugefügt
 #
-def ARDSportgetEventlist(sender1, sender2): 
+def ARDSportgetEventlist(senderlist): 
 	PLog("ARDSportgetEventlist:")
-	PLog(sender1); PLog(sender2);
+	PLog(senderlist)
 
 	playlist = RLoad(PLAYLIST)							# lokale XML-Datei (Pluginverz./Resources)
 	playlist = blockextract('<channel>', playlist)
@@ -3694,23 +3695,23 @@ def ARDSportgetEventlist(sender1, sender2):
 	for item in itemlist:
 		title = stringextract('<title>', '</title>', item)
 		# PLog(title)
-		if title.startswith(sender1) or title.startswith(sender2):
-			url = stringextract('<link>', '</link>', item)
-			img = stringextract('<thumbnail>', '</thumbnail>', item)
-			if img.startswith("http") == False:			# extern od. lokal?
-				img = R(img)
-			streamlist.append("%s##%s##%s" % (title, url, img))
-			 
-			msg1 = "Stream-Check gestartet" 
-			msg2 = "Sender: %s" % sender1
-			if sender2 !=  "xxx":						# leer-Marke?
-				msg2 = "%s | %s" % (msg2, sender2) 
-			xbmcgui.Dialog().notification(msg1,msg2,img,2000,sound=False)
+		for sender in senderlist:
+			if title.startswith(sender.strip()):
+				PLog("title: %s, sender: %s" % (title, sender.strip()))
+				url = stringextract('<link>', '</link>', item)
+				img = stringextract('<thumbnail>', '</thumbnail>', item)
+				if img.startswith("http") == False:			# extern od. lokal?
+					img = R(img)
+				streamlist.append("%s##%s##%s" % (title, url, img))
+				 
+				msg1 = "Stream-Check gestartet" 
+				msg2 = "Sender: %s" % sender
+				xbmcgui.Dialog().notification(msg1,msg2,img,2000,sound=False)
 
-			if url_check(url, caller='ARDSportgetEventlist', dialog=False):
-				title_list.append(title + " | Check: OK")
-			else:
-				title_list.append(title + " | Check: Error")
+				if url_check(url, caller='ARDSportgetEventlist', dialog=False):
+					title_list.append(title + " | Check: OK")
+				else:
+					title_list.append(title + " | Check: Error")
 	PLog("title_list: " + str(title_list))	
 
 	return streamlist, title_list
