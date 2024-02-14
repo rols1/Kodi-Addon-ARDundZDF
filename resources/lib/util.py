@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>82</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.01.2024
+# 	<nr>83</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.02.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3502,6 +3502,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 
 			new_list=[]						
 			for item in started_videos:								# umkopieren
+				item = py2_encode(item)
 				if url not in item:									# skip Einträge mit gleicher Url
 					new_list.append(item)	
 			new_list.append(new_line)								# neuer Satz, Ergänzung s. monitor_resume
@@ -3534,12 +3535,12 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 					# Kodi-Debug Matrix: depricated, use
 					#	 #KODIPROP:inputstream=inputstream.adaptive', 'inputstream.adaptive'
 					li.setProperty('inputstream', 'inputstream.adaptive')
-				li.setProperty('inputstream.adaptive.manifest_type', 'hls')				
+				li.setProperty('inputstream.adaptive.manifest_type', 'hls')			
 				li.setContentLookup(False)
 
 					# für Tests mit inputstream.ffmpegdirect - siehe
 					#	https://github.com/xbmc/inputstream.ffmpegdirect
-				#	li.setProperty('inputstream', 'inputstream.ffmpegdirect')
+				#li.setProperty('inputstream', 'inputstream.ffmpegdirect')
 				#li.setProperty('inputstream.ffmpegdirect.manifest_type', 'hls')				
 				#li.setProperty('inputstream.ffmpegdirect.is_realtime_stream', 'timeshift')				
 				#li.setProperty('inputstream.ffmpegdirect.stream_mode', 'true')				
@@ -3634,15 +3635,16 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		# Monitoring player.getTime für STARTLIST - Livestreams ausgenommen
 		# Issue: Kodi startet monitor_resume bei playlist=='true'
 		if startlist == 'true':						# Resume-Monitor Startlist (pref_startlist)
-			if not live and "/live/" not in url:	# Streams wdrlokalzeit ohne live-Kennung in WDRstream						
-				if playlist != 'true':				# zuständig: Modul playlist -> PlayMonitor 									
-					xbmc.sleep(2000)
-					PLog("call_monitor_resume")
-					PLog("playlist: " + playlist)
-					video_dur = player.getTotalTime()
-					bg_thread = Thread(target=monitor_resume, args=(player, new_list, video_dur, seekTime))
-					bg_thread.start()
-					return							# ohne return startet Kodi monitor_resume, ohne zutreffende
+			if "/live/" not in url:					# Streams wdrlokalzeit ohne live-Kennung in WDRstream						
+				if playlist != 'true':				# zuständig: Modul playlist -> PlayMonitor 
+					if live != "":					# Sicherung, z.B. für Streams von ARDSportLiga3									
+						xbmc.sleep(2000)
+						PLog("call_monitor_resume")
+						PLog("playlist: " + playlist)
+						video_dur = player.getTotalTime()
+						bg_thread = Thread(target=monitor_resume, args=(player, new_list, video_dur, seekTime))
+						bg_thread.start()
+						return							# ohne return startet Kodi monitor_resume, ohne zutreffende
 													#	if-condition
 	PLog("leave_PlayVideo")	
 	return play_time, video_dur						# -> PlayMonitor
@@ -4032,7 +4034,7 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	if linkid:											# Sendungsnavigation: ARD-EPG für Zeitstrahl laden
 		buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 		event_end = int(event_end)
-		header = u"Sendungen (Zurück, rechte Maustaste)"
+		header = u"Sendungen: zurück-, Maus-Taste r.)"
 		txt = "Anzahl Sendungen: %d" % len(buf_events)
 		dur=10000
 		if len(buf_events) == 0:
