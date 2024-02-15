@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>84</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.02.2024
+# 	<nr>85</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.02.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3502,9 +3502,9 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 
 			new_list=[]	
 			try:					
-				for item in started_videos:								# umkopieren
+				for item in started_videos:							# umkopieren
 					item = py2_encode(item)
-					if url not in item:									# skip Einträge mit gleicher Url
+					if py2_encode(url) not in item:					# skip Einträge mit gleicher Url
 						new_list.append(item)	
 			except Exception as exception:
 				PLog("util_error: " + str(exception))
