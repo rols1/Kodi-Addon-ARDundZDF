@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>178</nr>										# Numerierung für Einzelupdate
-VERSION = '4.9.6'
-VDATE = '09.02.2024'
+VERSION = '4.9.7'
+VDATE = '18.02.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2180,7 +2180,7 @@ def Audio_get_items_single(item, ID=''):
 
 	attr = stringextract('"attribution":"', '"', item)				# Sender, CR usw.
 	if attr:
-		attr = "Bild: %s" % attr
+		attr = "Bild: %s" % repl_json_chars(attr)					# ' möglich
 
 	img = stringextract('"image":', ',', item)
 	img = stringextract('"url":"', '"', img)
@@ -3528,9 +3528,9 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			if col2 == "": col2=col2_pre
 			col0_pre = col0; col1_pre = col1; col2_pre = col2;			# Backup Spalten 1-3
 
-			nr = col0
+			nr = unescape(col0)											# &nbsp möglich
 			date=""
-			date = "Spiel: %s, %s" % (col1, col2)							# Datum, Zeit
+			date = "Spiel: %s, %s" % (col1, col2)						# Datum, Zeit
 			meet = col3
 			sender = col4
 			title = meet
@@ -6097,10 +6097,11 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 	my_items, my_ordner= ReadFavourites(mode)			# Addon-Favs / Merkliste einlesen
 	PLog(len(my_items))
 	if len(my_items) == 0:
-		icon = R(ICON_INFO)
+		icon = R(ICON_DIR_WATCH)
 		msg1 = "Merkliste"
 		if mode == 'Favs':
 			msg1 = "Favoriten"
+			icon = R(ICON_DIR_FAVORITS)
 		msg2 = u"keine Inhalte gefunden"
 		xbmcgui.Dialog().notification(msg1,msg2,icon,2000)
 		return	

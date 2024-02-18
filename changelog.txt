@@ -10,6 +10,17 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+18.01.2024 4.9.7
+			thread_getpic (util): Anpassung an akt. python-Pillow-Version (draw.textsize
+			entfernt), Tests OK in Windows11 (Kodi Omega) und Linux (Kodi Nexus, Leia).
+			TV-Livestreams 3. Bundesliga: Berücksichtigung von 1-3 Sendern (bisher 1-2),
+			Anpassungen in ARDSportLiga3 + ARDSportgetEventlist, HTML-Escapezeichen in
+			Spieltag-Nr. entfernt.
+			Audio_get_items_single (Audiothek): Hochkommata in Bildtext entfernt.
+			PlayVideo: Encodierung beim Abgleich der Video-Url mit Zuletzt-gesehen-Liste
+			ergänzt (relevant für python < 3.0).
+			ShowFavs: Icons für Notification für merkliste/Favoriten angepasst.
+
 04.01.2024 4.9.6
 			Main_XL (TagesschauXL): Hinw. auf geringe Videoqualität 480x270 (Investigativ,
 			Faktenfinder).

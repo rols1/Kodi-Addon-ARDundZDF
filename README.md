@@ -115,7 +115,7 @@ Funktionen:
 - ~~ZDFmobile~~ - entfernt ab Juni 2023 (obsolet)
 - 3Sat
 - ~~funk~~ - entfernt ab Mai 2023 (Videos in ZDF-funk, Podcasts in der ARD-Audiothek verfügbar)
-- Kinderprogramme (z.Z. KIKA und ZDFtivi)
+- Kinderprogramme (KIKA, ZDFtivi, MausLive u.a.)
 - TagesschauXL (https://www.tagesschau.de/ und https://www.ardmediathek.de/tagesschau24)
 - phoenix (https://www.phoenix.de/ und https://www.ardmediathek.de/phoenix)
 - Arte-Kategorien

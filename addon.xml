@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.ardundzdf" name="ARDundZDF" version="4.9.6+nexus" provider-name="rols1 (rols1@gmx.de)">
+<addon id="plugin.video.ardundzdf" name="ARDundZDF" version="4.9.7+nexus" provider-name="rols1 (rols1@gmx.de)">
 <requires>
 	<import addon="xbmc.python" version="3.0.1"/>
 	<import addon="script.module.kodi-six" />
@@ -10,7 +10,7 @@
 <extension point="xbmc.addon.metadata">
 <summary lang="de">ARD- und ZDF-Mediathek</summary>
 <description lang="de">einschließlich Live-TV mit Aufnahmefunktion, Merkliste, Live-Radio, Podcasts.
-Module: ZDFmobile, 3Sat, funk, Kinderprogramme (z.Z. KIKA und ZDFtivi), TagesschauXL, phoenix, Arte-Kategorien, Audiothek.
+Module: ZDFmobile, 3Sat, funk, Kinderprogramme (KIKA, ZDFtivi, MausLive u.a.), TagesschauXL, phoenix, Arte-Kategorien, Audiothek.
 Screenshots und Wicki siehe Repo Kodi-Addon-ARDundZDF auf Github.
 </description>
 <platform>all</platform>
