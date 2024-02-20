@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>7</nr>								# Numerierung für Einzelupdate
-#	Stand: 16.11.2023
+# 	<nr>8</nr>								# Numerierung für Einzelupdate
+#	Stand: 20.02.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -492,15 +492,16 @@ def get_foruminfo():
 	PLog("dt: " + dt)
 	
 	items = stringextract(u"Probleme, Fixes:", u"####", page)	# Update-Infos
-	items = blockextract(u'\\n', items)
+	items = blockextract(u'<li>', items, "</li>")
 	PLog(len(items))
-	last_item="keine Einzelupdates gefunden"
-	for item in items:
-		if len(item) > 10:										# Eintrag in Zeile?
-			last_item = item[2:]								# \nZDFinternational..
-			last_item = transl_json(last_item)
 	
-	last_item = last_item.replace('\\\"','*')					# Meldung \"Streamlink\" bei..
+	if len(items) == 0:
+		last_item="keine Einzelupdates gefunden"
+	else:
+		last_item = items[-1]
+		last_item = cleanhtml(last_item)
+		last_item = transl_json(last_item)
+		last_item = last_item.replace('\\\"','*')				# z.B. Meldung \"Streamlink\" bei..
 	PLog("last_item: " + last_item)
 	
 	return dt, last_item
