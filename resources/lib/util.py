@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>85</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.02.2024
+# 	<nr>86</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.02.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2609,9 +2609,9 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 # Aufruf: InfoAndFilter
 def refresh_streamlinks():
 	PLog('refresh_streamlinks:')
-	get_ARDstreamlinks(skip_log=True, force=True)
-	get_ZDFstreamlinks(skip_log=True, force=True)
-	get_IPTVstreamlinks(skip_log=True, force=True)
+	get_ARDstreamlinks(skip_log=False, force=True)
+	get_ZDFstreamlinks(skip_log=False, force=True)
+	get_IPTVstreamlinks(skip_log=False, force=True)
 	return
 #-----------------------------------------------
 # ARD-Links s. get_ARDstreamlinks
@@ -4027,6 +4027,7 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	ard_streamlinks = Dict("load", "ard_streamlinks")
 	# Format ard_streamlinks s. get_ARDstreamlinks,
 	# Ard-Sender s. Debuglog (ardline:)
+	# hier bei Bedarf noch die ARD-Sender aus IPTV-Quellen ergänzen
 	for link in ard_streamlinks.split("\n"):			# Abgleich ARD-Url, Zuordnung linkid
 		PLog(link)
 		if url in link:
