@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>178</nr>										# Numerierung für Einzelupdate
+# 	<nr>179</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.7'
-VDATE = '18.02.2024'
+VDATE = '23.02.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8053,13 +8053,13 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 				if filtered:
 					PLog('filtered_2: <%s> in %s ' % (item, title))
 					continue								
-				if "channel" in entry:									# Zusatz Sender
-					sender = entry["channel"]
-					tag = "%s | %s" % (tag, sender)
-				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
-					(stream, title, img, tag, descr, scms_id)	
-				addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
-					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)	
+			if "channel" in entry:										# Zusatz Sender
+				sender = entry["channel"]
+				tag = "%s | %s" % (tag, sender)
+			fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
+				(stream, title, img, tag, descr, scms_id)	
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)	
 		elif typ == "livevideo":
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 			PLog("fparams: " + fparams)	
