@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>86</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.02.2024
+# 	<nr>87</nr>										# Numerierung für Einzelupdate
+#	Stand: 25.02.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3530,7 +3530,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		# IA funktioniert nicht mit lokalen m3u8-Dateien ( 
 		#	relativ + absolut, s.a.:
 		# 	https://github.com/xbmc/inputstream.adaptive/issues/701)
-		if url.endswith('.m3u8'):							# SetInputstreamAddon hier nur HLS
+		if url.endswith('.m3u8') or url.endswith('.mpd'):	# SetInputstreamAddon HLS/Dash
 			if SETTINGS.getSetting('pref_inputstream') == 'true':
 				PLog("SetInputstreamAddon:")
 				li.setMimeType('application/vnd.apple.mpegurl')
@@ -3540,7 +3540,11 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 					# Kodi-Debug Matrix: depricated, use
 					#	 #KODIPROP:inputstream=inputstream.adaptive', 'inputstream.adaptive'
 					li.setProperty('inputstream', 'inputstream.adaptive')
-				li.setProperty('inputstream.adaptive.manifest_type', 'hls')			
+				if url.endswith('.m3u8'):
+					li.setProperty('inputstream.adaptive.manifest_type', 'hls')
+				else:		
+					li.setProperty('inputstream.adaptive.manifest_type', 'mpd')	
+					li.setMimeType('application/dash+xml')	
 				li.setContentLookup(False)
 
 					# für Tests mit inputstream.ffmpegdirect - siehe
@@ -3649,7 +3653,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 						video_dur = player.getTotalTime()
 						bg_thread = Thread(target=monitor_resume, args=(player, new_list, video_dur, seekTime))
 						bg_thread.start()
-						return							# ohne return startet Kodi monitor_resume, ohne zutreffende
+						return						# ohne return startet Kodi monitor_resume, ohne zutreffende
 													#	if-condition
 	PLog("leave_PlayVideo")	
 	return play_time, video_dur						# -> PlayMonitor
@@ -3798,7 +3802,7 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
 	title = cleanmark(title)					# Tags erscheinen im Titel des Player-Windows
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
-				
+	
 	if url.startswith('http') == False:			# lokale Datei
 		if url.startswith('smb://') == False:	# keine Share
 			url = os.path.abspath(url)
