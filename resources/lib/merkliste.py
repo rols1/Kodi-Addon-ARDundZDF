@@ -7,8 +7,8 @@
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 # 	Funktions-Calls via Auswertung sys.argv s. Modulende
 ################################################################################
-# 	<nr>5</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.11.2023
+# 	<nr>6</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.02.2024
 #
 
 from __future__ import absolute_import
@@ -234,6 +234,7 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 			iname = stringextract('name="', '"', item) 					# unicode
 			iname = iname.replace("–", "-")								# selten: &#8211; -> &#45;
 			iname = py2_decode(iname)
+			iname = cleanmark(iname)
 			name = py2_decode(name)	
 			PLog('Name: %s, IName: %s' % (name, iname))
 		
@@ -267,13 +268,14 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 		my_items, my_ordner = ReadFavourites('Merk')					# 'utf-8'-Decoding in ReadFavourites
 		my_ordner = check_ordnerlist(my_ordner)
 		
-		merkliste = ''
+		merkliste=''; ordner=''; oldordner=''
 		ret = True
 		for item in my_items:						# Liste -> String
 			iname = stringextract('name="', '"', item) # unicode
 			iname = iname.replace("–", "-")								# selten: &#8211; -> &#45;
 			
-			iname = py2_decode(iname); name = py2_decode(name)		
+			iname = py2_decode(iname); name = py2_decode(name)
+			iname = cleanmark(iname)									# Fett-/Farbe entfernen		
 			PLog('Name: %s, IName: %s' % (name, iname))		
 			if name == iname:
 				if SETTINGS.getSetting('pref_merkordner') == 'true':	# Ordner eingeschaltet?
