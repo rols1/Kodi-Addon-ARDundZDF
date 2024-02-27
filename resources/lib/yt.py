@@ -22,8 +22,8 @@
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-# 	<nr>2</nr>								# Numerierung für Einzelupdate
-#	Stand: 18.06.2023
+# 	<nr>3</nr>								# Numerierung für Einzelupdate
+#	Stand: 27.02.2024
 #
 
 from __future__ import absolute_import
@@ -53,6 +53,7 @@ import ardundzdf					# -> test_downloads, Main, start_script, build_Streamlists_
 from resources.lib.util import *
 
 ICON_MEHR 		= "icon-mehr.png"
+ICON_DIR_WATCH	= "Dir-watch.png"
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -353,17 +354,26 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 			fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 		cnt=cnt+1	
 	
-	PLog(offset); PLog(lsize)				# Mehr-Button
+	PLog(offset); PLog(lsize)										# Mehr-Button
 	new_offset = offset + lsize
 	PLog("new_offset: %d" % offset)	
+	li = xbmcgui.ListItem()											# Kontext-Doppel verhindern
 	if new_offset < totalResults:
-		li = xbmcgui.ListItem()				# Kontext-Doppel verhindern
 		title = "Mehr zu: [B]%s[/B]" % query
 		tag = "weiter ab  %d | gesamt: %d" % (new_offset+1, totalResults)
 		fparams="&fparams={'title': '%s','sender': '%s','offset': '%s','query': '%s','home_id': '%s','myfunc': '%s'}" %\
 			(quote(title),sender,str(new_offset),quote(query),home_id,quote(myfunc))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch",
 			fanart=img, thumb=R(ICON_MEHR), fparams=fparams, tagline=tag)
+
+	title = u"Merkliste -> MVW-Suche %s: [B]%s[/B]" % (sender,query)# Merkliste-Button	
+	tag = "[B]Button für die Merkliste via Kontextmenü[/B]"
+	summ = u"%s (ab Suchindex 1).\n\n" % title
+	summ = u"%sZur Nutzung in der Merkliste bitte den Button via Kontextmenü hinzufügen" % summ
+	fparams="&fparams={'title': '%s','sender': '%s','offset': '%s','query': '%s','home_id': '%s','myfunc': '%s'}" %\
+		(quote(title),sender,str(0),quote(query),home_id,quote(myfunc))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch",
+		fanart=img, thumb=R(ICON_DIR_WATCH), fparams=fparams, tagline=tag, summary=summ)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
