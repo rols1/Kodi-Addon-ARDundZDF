@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>87</nr>										# Numerierung für Einzelupdate
+# 	<nr>89</nr>										# Numerierung für Einzelupdate
 #	Stand: 25.02.2024
 
 # Python3-Kompatibilität:
@@ -2557,7 +2557,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 				
 	if 	ID == 'ARDnew':
 		page = page.replace('\\"', '*')							# Quotierung vor " entfernen, Bsp. \"query\"
-		page = page.replace('\\r\\n', '')						# CR+LF entf.
+		page = page.replace('\\r\\n\\r\\n', " | ")				# CR+LF doppelt
 		pubServ = stringextract('"name":"', '"', page)			# publicationService (Sender)
 		maturitytRating = stringextract('maturityContentRating":"', '"', page) # "FSK16"
 		maturitytRating = maturitytRating.replace('NONE', 'Ohne')
@@ -2573,7 +2573,9 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 				duration = "Dauer unbekannt"
 			duration = u"%s | FSK: %s\n" % (duration, maturitytRating)	
 		
-		summ = stringextract('synopsis":"', '","', page)
+		summ = stringextract('synopsis":"', '","', page)	
+		summ = summ.replace('\\n\\n', " | ")					# LF doppelt, CR+LF s.o.
+		summ = summ.replace('\\n', ". ")						# LF einzeln
 		summ = repl_json_chars(summ)
 		summ  = valid_title_chars(summ)							# s. changelog V4.7.4
 			
