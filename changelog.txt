@@ -10,7 +10,24 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-18.01.2024 4.9.7
+03.03.2024 4.9.8
+			livesenderTV.xml: SWR Rheinland-Pfalz aus IPTV-Quelle jnk22 ergänzt.
+			get_foruminfo (Modul tools): Anpassung an Forum-Update
+			refresh_streamlinks (Modul util): Logausgabe der TV-Quellen ergänzt
+			(skip_log=False).
+			ZDF_Rubriken: Einrückung hinter Ausschluss-Filter beseitigt (Folgecode war
+			nur wirksam mit Filter-Setting). 
+			PlayVideo (Modul util): Berücksichtigung Dash-Streams (*.mpd) bei Direktiven
+			für das inputstreamaddon.
+			MVWSearch (Modul yt): Merkliste-Button für Suchergebnisse hinzugefügt
+			(Startindex 1).
+			Watch_items (Modul merkliste): Fett-/Farbe aus gespeichertem Titel entfernt
+			mittels cleanmark entfernt in actions rename und folder.
+			get_summary_pre (Modul util): Sonderfälle für ARDnew behandelt ('\\n\\n' ->
+			" | ", '\\n' -> ". ", '\\r\\n\\r\\n' -> " | ").
+			Main: Hinweis Einzelupdate in Button Addon-Update.
+
+18.02.2024 4.9.7
 			thread_getpic (util): Anpassung an akt. python-Pillow-Version (draw.textsize
 			entfernt), Tests OK in Windows11 (Kodi Omega) und Linux (Kodi Nexus, Leia).
 			TV-Livestreams 3. Bundesliga: Berücksichtigung von 1-3 Sendern (bisher 1-2),
@@ -21,7 +38,7 @@ CHANGE HISTORY
 			ergänzt (relevant für python < 3.0).
 			ShowFavs: Icons für Notification für merkliste/Favoriten angepasst.
 
-04.01.2024 4.9.6
+04.02.2024 4.9.6
 			Main_XL (TagesschauXL): Hinw. auf geringe Videoqualität 480x270 (Investigativ,
 			Faktenfinder).
 			XL_BilderClusterSingle (TagesschauXL): Auswertung Slider-Bilder ergänzt. 

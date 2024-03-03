@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>179</nr>										# Numerierung für Einzelupdate
-VERSION = '4.9.7'
-VDATE = '23.02.2024'
+VERSION = '4.9.8'
+VDATE = '03.03.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -548,11 +548,12 @@ def Main():
 			
 	if call_update == False:									# Update-Button "Suche" zeigen	
 		title  = 'Addon-Update | akt. Version: ' + VERSION + ' vom ' + VDATE	
-		summ='Suche nach neuen Updates starten'
-		tag ='Bezugsquelle: ' + repo_url			
+		summ = u'Quelle: github.com/rols1\n\n'
+		summ = u"%sHinweis: zwischen den Updates sind Einzelupdates in Infos + Tools möglich"	% summ		
+		tag = u'Suche nach neuen Updates starten'
 		fparams="&fparams={'title': 'Addon-Update'}"
 		addDir(li=li, label=title, action="dirList", dirID="SearchUpdate", fanart=R(FANART), 
-			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summ)
+			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, tagline=tag, summary=summ)
 
 	summ = '[B]Infos und Tools zu diesem Addon[/B]'				# Menü Infos + Tools
 	summ= u'%s\n- Zuletzt-gesehen-Liste' % summ

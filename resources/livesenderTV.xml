@@ -1,7 +1,7 @@
 <channels>
  <channels_info>
   <ctitle>Kodi-Addon-ARDundZDF Streamlinks</ctitle>
-  <imgsource>Arauco</imgsource>
+  <imgsource></imgsource>
   <nr>49</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
@@ -12,9 +12,10 @@
   <info2>das &-Zeichen verstößt zwar gegen den xml-Standard, ist aber kompatibel mit den String-Funktionen im PRG</info2>
   <info3>hrefsender enthält Sendernamen passend zu www.ardmediathek.de (ARD-Neu)</info3>
   <info4>link: Kennung statt Streamurl möglich, z.B. ZDFsource -> get_ZDFstreamlinks</info4>
-  <info5>Datei livesenderTV.xml: autom. Update im Modul EPG, thread_getepg()</info5>
+  <info5>Datei livesenderTV.xml: Einzelupdate im Modul EPG, thread_getepg()</info5>
   <info6>IPTVSource: https://github.com/jnk22/kodinerds-iptv/blob/e297851866d6af270e69da6d1d60f2e938f72860/iptv/kodi/kodi.m3u</info6>
   <info7>	Altern.: https://github.com/jnk22/kodinerds-iptv/blob/master/iptv/kodi/kodi.m3u</info7>
+  <info8> 	Dash-Streams: https://github.com/jnk22/kodinerds-iptv/tree/master/iptv/dash</info8>
 </channels_info>
  
 <channel>
@@ -36,7 +37,7 @@
 		<hrefsender>ZDF</hrefsender>
 		<link>ZDFsource</link>	  
 		<thumbnail>tv-zdf.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>ZDF</EPG_ID>
 		<date>23.02.2020</date>
 		<geoblock>ja</geoblock>
@@ -46,7 +47,7 @@
 		<hrefsender>KiKA</hrefsender>
 		<link>ZDFsource</link>
 		<thumbnail>tv-kika.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>KIKA</EPG_ID>
 		<date>07.09.2018</date>
 		<geoblock>ja</geoblock>
@@ -57,7 +58,7 @@
 		<link>ARDSource</link>
 		<info>ARDSource zuverlässiger als ZDFsource</info>
 		<thumbnail>tv-arte.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>ARTE</EPG_ID>
 		<date>07.09.2018</date>
 		<geoblock>ja</geoblock>
@@ -76,7 +77,7 @@
 		<hrefsender>3sat</hrefsender>
 		<link>ZDFsource</link>
 		<thumbnail>tv-3sat.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>3SAT</EPG_ID>
 		<date>23.02.2020</date>
 		<geoblock>ja</geoblock>
@@ -86,7 +87,7 @@
 		<hrefsender>ZDFneo</hrefsender>
 		<link>ZDFsource</link>
 		<thumbnail>tv-zdf-neo.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>2NEO</EPG_ID>
 		<date>23.02.2020</date>
 		<geoblock>ja</geoblock>
@@ -96,7 +97,7 @@
 		<hrefsender>ZDFinfo</hrefsender>
 		<link>ZDFsource</link>
 		<thumbnail>tv-zdf-info.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>ZINFO</EPG_ID>
 		<date>11.06.2016</date>
 		<geoblock>ja</geoblock>
@@ -106,7 +107,7 @@
 		<hrefsender></hrefsender>
 		<link>https://ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/master.m3u8</link>
 		<thumbnail>tv-ard-sportschau.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID></EPG_ID>
 		<date>16.04.2019</date>
 		<geoblock>ja</geoblock>
@@ -125,7 +126,7 @@
 		<hrefsender>Phoenix</hrefsender>
 		<link>ARDSource</link>
 		<thumbnail>tv-phoenix.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>PHOEN</EPG_ID>
 		<date>23.02.2020</date>
 		<geoblock>ja</geoblock>
@@ -305,7 +306,7 @@
 		<info>TVToday: SWR/SR gemeinsam</info>
 	</item>
 	<item>
-		<title>SWR Rheinland-Pfalz HD</title>
+		<title>SWR Rheinland-Pfalz</title>
 		<hrefsender></hrefsender>
 		<tvg-name>SWRFernsehen-rp.de</tvg-name>
 		<link>IPTVSource|/jnk22/kodinerds-iptv/blob/master/iptv/kodi/kodi.m3u</link>
@@ -379,7 +380,7 @@
 		<title>n-tv</title>
 		<link-out>LiveTV_ntv.m3u8</link-out>
 		<thumbnail>tv-ntv.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>NTV</EPG_ID>
 		<date>12.10.2018 - verschlüsselt, nicht mehr verfügbar</date>
 	</item-out>
@@ -387,7 +388,7 @@
 		<title>QVC_1</title>
 		<link>https://qvcde-live.akamaized.net/hls/live/2097104/qvc/master.m3u8</link>
 		<thumbnail>tv-qvc.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>QVC</EPG_ID>
 		<date>04.01.2024</date>
 	</item>
@@ -395,7 +396,7 @@
 		<title>QVC_BEAUTY & STYLE</title>
 		<link>https://qvcde-live.akamaized.net/hls/live/2097104/qby/master.m3u8</link>
 		<thumbnail>tv-qvc.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>qvcbs</EPG_ID>
 		<date>04.01.2024</date>
 	</item>
@@ -403,7 +404,7 @@
 		<title>QVC_PLUS</title>
 		<link>https://qvcde-live.akamaized.net/hls/live/2097104/qps/master.m3u8</link>
 		<thumbnail>tv-qvc.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID>qvcp</EPG_ID>
 		<date>04.01.2024</date>
 	</item>
@@ -482,7 +483,7 @@
 		<title>Lausitzwelle Fernsehen</title>
 		<link>https://h056.video-stream-hosting.de/easycast11-live/_definst_/mp4:livestreamhd2/playlist.m3u8</link>
 		<thumbnail>tv-livestreams.png</thumbnail>
-		<imgsource>Arauco</imgsource>
+		<imgsource></imgsource>
 		<EPG_ID></>
 		<date>20.06.2023</date>
 	</item>

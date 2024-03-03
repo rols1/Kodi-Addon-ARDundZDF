@@ -2718,7 +2718,10 @@ def get_ZDFstreamlinks(skip_log=False, force=False):
 # ZDF-Links s. get_ZDFstreamlinks
 # Aufruf get_sort_playlist (<- EPG_Sender, EPG_ShowAll,
 #	 TVLiveRecordSender), SenderLiveListe, get_playlist_img
-#
+# Die api-Url's der Senderliste (Block broadcastedOn) enthalten
+#	nicht alle regionalen Sender (Bsp. BR Nord) - diese werden 
+#	in get_IPTVstreamlinks  ermittelt (via Tag IPTVSource in 
+#	livesenderTV.xml.
 # 01.12.2021 erweitert um Liste für Untertitel-Links
 # 17.02.2021 Auswertung publicationService/name statt
 #	longTitle
