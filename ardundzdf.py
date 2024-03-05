@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>179</nr>										# Numerierung für Einzelupdate
+# 	<nr>180</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.8'
-VDATE = '03.03.2024'
+VDATE = '05.03.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -164,6 +164,9 @@ ICON_PHOENIX			= 'phoenix.png'
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
 GIT_CAL			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-calendar.png?raw=true"
 GIT_TIVIHOME	= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/zdftivi-home.png?raw=true"
+GIT_ZDFTIVI		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-zdftivi.png?raw=true"
+GIT_TIVICAL		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/zdftivi-cal.png?raw=true"
+
 
 # 01.12.2018 	Änderung der BASE_URL von www.ardmediathek.de zu classic.ardmediathek.de
 # 06.12.2018 	Änderung der BETA_BASE_URL von  beta.ardmediathek.de zu www.ardmediathek.de
@@ -1073,7 +1076,7 @@ def Main_ZDF(name=''):
 		fparams=fparams)
 
 	title = 'Sendung verpasst' 
-	fparams="&fparams={'name': 'ZDF-Mediathek', 'title': 'title'}" 
+	fparams="&fparams={'name': 'ZDF-Mediathek', 'title': '%s'}" % title 
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_VerpasstWoche", fanart=R(ICON_ZDF_VERP), 
 		thumb=R(ICON_ZDF_VERP), fparams=fparams)	
 
@@ -8678,7 +8681,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 # Liste der Wochentage ZDF
 # ARD s. ARDnew.SendungenAZ (früherer Classic-Code entfernt)
 #
-def ZDF_VerpasstWoche(name, title):									# Wochenliste ZDF Mediathek
+def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediathek
 	PLog('ZDF_VerpasstWoche:')
 	PLog(name); 
 	 
@@ -8691,7 +8694,10 @@ def ZDF_VerpasstWoche(name, title):									# Wochenliste ZDF Mediathek
 		sfilter = 'Alle ZDF-Sender'								# Default Alle ZDF-Sender (nur VERPASST)
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')						# Home-Button
+	if homeID:
+		li = home(li, ID=homeID)				# Home-Button extern
+	else:
+		li = home(li, ID='ZDF')					# Home-Button
 		
 	wlist = list(range(0,7))
 	now = datetime.datetime.now()
@@ -8711,24 +8717,32 @@ def ZDF_VerpasstWoche(name, title):									# Wochenliste ZDF Mediathek
 		#title = ("%10s ..... %10s"% (iWeekday, iDate))	 # Formatierung in Plex ohne Wirkung		
 		title =	"%s | %s" % (iDate, iWeekday)
 		
+		func = "ZDF_Verpasst"					# Call intern
+		fanart=R(ICON_ZDF_VERP); thumb=R(ICON_ZDF_VERP)
+		if homeID == "Kinderprogramme":
+			func = "resources.lib.childs.tivi_Verpasst"	# Call extern
+			fanart=GIT_ZDFTIVI; thumb=GIT_TIVICAL
+			sfilter='Alle ZDF-Sender'
+
 		title=py2_encode(title); zdfDate=py2_encode(zdfDate);
-		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=R(ICON_ZDF_VERP), 
-			thumb=R(ICON_ZDF_VERP), fparams=fparams)
+		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" %\
+			(quote(title), quote(zdfDate), sfilter)
+		addDir(li=li, label=title, action="dirList", dirID=func, fanart=fanart, 
+			thumb=thumb, fparams=fparams)
 	
-	label = "Datum eingeben"							# Button für Datumeingabe anhängen
-	tag = u"teilweise sind bis zu 4 Jahre alte Beiträge abrufbar"
-	fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
-	addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Datum", fanart=R(ICON_ZDF_VERP), 
-		thumb=GIT_CAL, fparams=fparams, tagline=tag)
+	if homeID == "":									# Folgebuttons nicht für ext. Nutzung
+		label = "Datum eingeben"						# Button für Datumeingabe anhängen
+		tag = u"teilweise sind bis zu 4 Jahre alte Beiträge abrufbar"
+		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
+		addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Datum", fanart=R(ICON_ZDF_VERP), 
+			thumb=GIT_CAL, fparams=fparams, tagline=tag)
 
 														# Button für Stationsfilter
-	label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [B]%s[/B]" % sfilter
-	tag = "Auswahl: Alle ZDF-Sender, zdf, zdfneo oder zdfinfo" 
-	fparams="&fparams={'name': '%s', 'title': 'ZDF-Mediathek', 'sfilter': '%s'}" % (quote(name), sfilter)
-	addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Filter", fanart=R(ICON_ZDF_VERP), 
-		thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)
-		
+		label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [B]%s[/B]" % sfilter
+		tag = "Auswahl: Alle ZDF-Sender, zdf, zdfneo oder zdfinfo" 
+		fparams="&fparams={'name': '%s', 'title': 'ZDF-Mediathek', 'sfilter': '%s'}" % (quote(name), sfilter)
+		addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Filter", fanart=R(ICON_ZDF_VERP), 
+			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)	
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	# True, sonst Rückspr. nach ZDF_Verpasst_Filter
 	
@@ -8791,7 +8805,8 @@ def ZDF_Verpasst_Datum(title, zdfDate, sfilter):
 # Aufruf: ZDF_VerpasstWoche, 2 Durchläufe
 # 1. Buttons Morgens. Mittags, Abends, Nachts
 # 2. Cluster-Ermittl. via DictID, Teaser-Auswertung 
-
+# 04.03.2024 ZDFtivi integriert
+#
 def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
 	PLog('ZDF_Verpasst:'); PLog(title); PLog(zdfDate); PLog(sfilter);
 	PLog("DictID: " + DictID);
@@ -8870,6 +8885,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
 	icon = R(ICON_ZDF_VERP)
 	xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)
 	cnt=0
+			
 	for jsonObject in clusterObject:
 		title = jsonObject["name"]
 		img = ZDF_get_img(jsonObject["teaser"][0])
