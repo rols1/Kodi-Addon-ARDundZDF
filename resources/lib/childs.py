@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>26</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.03.2024
+# 	<nr>27</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.03.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -284,9 +284,10 @@ def Main_TIVI(title=''):
 	title='tivi_ZDFchen'
 	tag = "Für Kinder bis 6 Jahre"
 	thumb = "https://www.zdf.de/assets/zdfchen-buehne-m-song-100~936x520?cb=1658852787035"
-	fparams="&fparams={'ID': '%s', 'homeID': 'Kinderprogramme'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="ardundzdf.ZDF_Start", fanart=GIT_ZDFTIVI, 
-		thumb=thumb, tagline=tag, fparams=fparams)
+	url = "https://zdf-cdn.live.cellular.de/mediathekV2/document/zdfchen-100"
+	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=GIT_ZDFTIVI, 
+		thumb=thumb, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 

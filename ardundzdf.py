@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>180</nr>										# Numerierung für Einzelupdate
+# 	<nr>181</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.8'
-VDATE = '05.03.2024'
+VDATE = '06.03.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1049,6 +1049,7 @@ def Main_ZDF(name=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	
+	
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
 		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
@@ -1085,29 +1086,35 @@ def Main_ZDF(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_AZ", fanart=R(ICON_ZDF_AZ), 
 		thumb=R(ICON_ZDF_AZ), fparams=fparams)
 
+	# 05.03.2024 Rubriken, Sportstudio, Barrierearm, ZDFinternational -> ZDF_RubrikSingle
+	base = "https://zdf-cdn.live.cellular.de/mediathekV2/"
+
 	title = 'Rubriken' 
-	fparams="&fparams={'ID': '%s'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R(ICON_ZDF_RUBRIKEN), 
+	url = base + "categories-overview"
+	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=R(ICON_ZDF_RUBRIKEN), 
 		thumb=R(ICON_ZDF_RUBRIKEN), fparams=fparams)
 
 	title = "ZDF-Sportstudio"
+	url = base + "document/sport-106"
 	tag = u"Aktuelle News, Livestreams, Liveticker, Ergebnisse, Hintergründe und Sportdokus. Sportstudio verpasst? Aktuelle Sendungen einfach online schauen!"
-	fparams="&fparams={'ID': '%s'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R("zdf-sport.png"), 
+	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=R("zdf-sport.png"), 
 		thumb=R("zdf-sport.png"), tagline=tag, fparams=fparams)
 		
 	title = "Barrierearm"
+	url = base + "document/barrierefrei-im-zdf-100"
 	tag = u"Alles an einem Ort: das gesamte Angebot an Videos mit Untertiteln, Gebärdensprache und Audiodeskription sowie hilfreiche Informationen zum Thema gebündelt."
-	fparams="&fparams={'ID': '%s'}" % title
-	addDir(li=li, label="Barrierearm", action="dirList", dirID="ZDF_Start", fanart=R(ICON_ZDF_BARRIEREARM), 
+	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+	addDir(li=li, label="Barrierearm", action="dirList", dirID="ZDF_RubrikSingle", fanart=R(ICON_ZDF_BARRIEREARM), 
 		thumb=R(ICON_ZDF_BARRIEREARM), fparams=fparams)
 
 	title = "ZDFinternational"
-	fparams="&fparams={'title': 'ZDFinternational'}"
+	url = base + "document/international-108"
 	tag = "This channel provides selected videos in English, Spanish or Arabic or with respective subtitles."
 	summ = 'Kodi Leia and older: for Arabic, please set the font of your Skin to "Arial based".'
-	fparams="&fparams={'ID': '%s'}" % title
-	addDir(li=li, label="ZDFinternational", action="dirList", dirID="ZDF_Start", fanart=R('ZDFinternational.png'), 
+	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+	addDir(li=li, label="ZDFinternational", action="dirList", dirID="ZDF_RubrikSingle", fanart=R('ZDFinternational.png'), 
 		thumb=R('ZDFinternational.png'), tagline=tag, summary=summ, fparams=fparams)
 
 	fparams="&fparams={'s_type': 'Bilderserien', 'title': 'Bilderserien', 'query': 'Bilderserie'}"
@@ -2145,7 +2152,7 @@ def Audio_get_nexturl(li, url_org, title_org, elements, cnt, myfunc):
 		offset = stringextract('offset=', '&', url_org)
 		limit=20
 		if "limit=" in url_org:
-			limit = url_org.split("limit=")[-1]
+			re.search(u'limit=(\d+)', url_org).group(1)
 		PLog(elements); PLog(offset);
 		listed = int(offset) + cnt 
 		PLog("elements: %s, offset: %s, limit: %s, listed: %d" % (elements, offset, limit, listed))
@@ -2181,6 +2188,8 @@ def Audio_get_items_single(item, ID=''):
 		web_url = stringextract('"sharingUrl":"', '"', item)		# Weblink
 	if 	mp3_url == '' and web_url == "":							# neu ab 25.03.2023 (Web-json)
 		web_url = base + stringextract('"path":"', '"', item)
+		if web_url == base:											# falls path leer
+			web_url=""	
 
 	attr = stringextract('"attribution":"', '"', item)				# Sender, CR usw.
 	if attr:
@@ -2333,6 +2342,9 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 			s=str(item); s=s.replace("'", '"'); s=s.replace('": "', '":"'); s=s.replace('", "', '","')
 			s = s.replace('\\"', '*')
 			mp3_url, web_url, attr, img, dur, title, summ, source, sender, pubDate = Audio_get_items_single(s)
+			if mp3_url == "" and web_url == "":
+				PLog("skip_empty_mp3_and_web_url") 
+				continue
 			PLog("1Satz_a:")
 			PLog(key); PLog(title); PLog(search_url); PLog(attr);
 			
@@ -7741,52 +7753,41 @@ def BilderDasErsteSingle(title, path):
 def ZDF_Start(ID, homeID=""): 
 	PLog('ZDF_Start: ' + ID);
 	 
-	base = "https://zdf-cdn.live.cellular.de/mediathekV2/"		
-
-	if ID=='Startseite' or "tivi_" in ID or "funk_" in ID:
+	base = "https://zdf-cdn.live.cellular.de/mediathekV2/"					
+	if ID=='Startseite':
 		path = base + "start-page"
-		if ID.startswith("tivi") and ID != "tivi_ZDFchen":			# tivi_ZDFchen s.u.
-			path = base + "document/zdftivi-fuer-kinder-100"
-		if "funk_" in ID:
-			path = base + "document/funk-126"
+	elif ID=="tivi_Startseite":
+		path = base + "document/zdftivi-fuer-kinder-100"
+	elif ID=="tivi_ZDFchen":
+		path = base + "document/zdfchen-100"					# ZDFtivi-Sendereihe bis 6 Jahre
+	elif ID=="funk_Startseite":
+		path = base + "document/funk-126"	
 		
-		# Im Cache wird das jsonObject abgelegt, DictID: "mobile_%s" % ID
-		DictID =  "ZDF_%s" % ID
-		page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)	# 5 min				
-		if not page:												# nicht vorhanden oder zu alt						
-			icon = R(ICON_MAIN_ZDF)
-			if ID.startswith("tivi"):
-				icon = GIT_TIVIHOME
-			xbmcgui.Dialog().notification("Cache %s:" % ID,"Haltedauer 5 Min",icon,3000,sound=False)
+	DictID =  "ZDF_%s" % ID
+	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)	# 5 min				
+	if not page:												# nicht vorhanden oder zu alt						
+		icon = R(ICON_MAIN_ZDF)
+		if ID.startswith("tivi"):
+			icon = GIT_TIVIHOME
+		xbmcgui.Dialog().notification("Cache %s:" % ID,"Haltedauer 5 Min",icon,3000,sound=False)
 
-			page, msg = get_page(path)								# vom Sender holen		
-			if page == "":
-				msg1 = 'Fehler in ZDF_Start:'
-				msg2 = msg
-				MyDialog(msg1, msg2, '')
-				return
-			else:
-				jsonObject = json.loads(page)
-				Dict('store', DictID, jsonObject)		# jsonObject -> Dict, ca. 10 MByte, tivi 8.5 MByte
+		page, msg = get_page(path)								# vom Sender holen		
+		if page == "":
+			msg1 = 'Fehler in ZDF_Start:'
+			msg2 = msg
+			MyDialog(msg1, msg2, '')
+			return
 		else:
-			jsonObject = page
-			
-		PLog("jsonObject1: " + str(jsonObject)[:80])
-		ZDF_PageMenu(DictID,jsonObject=jsonObject)
-		return
-
-	if ID=='Rubriken':
-		url = base + "categories-overview"
-	if ID=="ZDF-Sportstudio":
-		url = base + "document/sport-106"
-	if ID=='Barrierearm':
-		url = base + "document/barrierefrei-im-zdf-100"
-	if ID=='ZDFinternational':
-		url = base + "document/international-108"		
-	if ID=='tivi_ZDFchen':									# ZDFtivi-Sendereihe bis 6 Jahre
-		url = base + "document/zdfchen-100"		
-	ZDF_RubrikSingle(url, ID, homeID)
-				
+			jsonObject = json.loads(page)
+			Dict('store', DictID, jsonObject)		# jsonObject -> Dict, ca. 10 MByte, tivi 8.5 MByte
+	else:
+		jsonObject = page
+		
+	PLog("jsonObject1: " + str(jsonObject)[:80])
+	ZDF_PageMenu(DictID,jsonObject=jsonObject)
+	
+	# 05.03.2024 frühere Calls direkt verlinkt in Main_ZDF -> ZDF_RubrikSingle:
+	#	Rubriken, Sportstudio, Barrierearm, ZDFinternational
 	return
 	
 #---------------------------------------------------------------------------------------------------
@@ -7910,7 +7911,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 					thumb=img, fparams=fparams, summary=descr, tagline=tag, mediatype=mediatype)   
 			elif typ=="externalUrl":						# Links zu anderen Sendern
 				if "KiKANiNCHEN" in title:
-					PLog("Link_KiKANiNCHEN")
+					PLog("ZDF_PageMenu_Link_KiKANiNCHEN")
 					KIKA_START="https://www.kika.de/bilder/startseite-104_v-tlarge169_w-1920_zc-a4147743.jpg"	# ab 07.12.2022
 					GIT_KANINCHEN="https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/tv-kikaninchen.png?raw=true"					
 					fparams="&fparams={}" 
@@ -8068,7 +8069,9 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 			PLog("fparams: " + fparams)	
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_Live", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tag, mediatype=mediatype)   
+				thumb=img, fparams=fparams, summary=descr, tagline=tag, mediatype=mediatype)
+		elif typ == "externalUrl": 
+			PLog("externalUrl_not_used")
 					
 		else:
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
