@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>181</nr>										# Numerierung für Einzelupdate
+# 	<nr>182</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.8'
-VDATE = '06.03.2024'
+VDATE = '07.03.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -833,13 +833,15 @@ def AddonStartlist(mode='', query=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)										# Home-Button
 	img = R("icon-list.png")
-	startlist=''
+	startlist=''; mylist=""
 
+	PLog("STARTLIST: " + STARTLIST)
 	if os.path.exists(STARTLIST):
 		mylist= RLoad(STARTLIST, abs_path=True)				# Zuletzt gesehen-Liste laden
 	if mylist == '':
-		msg1 = u'die "Zuletzt gesehen"-Liste ist leer'
+		msg1 = u'"Zuletzt gesehen"-Liste nicht gefunden.'
 		MyDialog(msg1, '', '')
+		return
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 	mylist=py2_encode(mylist)
@@ -1086,6 +1088,7 @@ def Main_ZDF(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_AZ", fanart=R(ICON_ZDF_AZ), 
 		thumb=R(ICON_ZDF_AZ), fparams=fparams)
 
+	# -------------------
 	# 05.03.2024 Rubriken, Sportstudio, Barrierearm, ZDFinternational -> ZDF_RubrikSingle
 	base = "https://zdf-cdn.live.cellular.de/mediathekV2/"
 
@@ -1116,6 +1119,7 @@ def Main_ZDF(name=''):
 	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 	addDir(li=li, label="ZDFinternational", action="dirList", dirID="ZDF_RubrikSingle", fanart=R('ZDFinternational.png'), 
 		thumb=R('ZDFinternational.png'), tagline=tag, summary=summ, fparams=fparams)
+	# -------------------
 
 	fparams="&fparams={'s_type': 'Bilderserien', 'title': 'Bilderserien', 'query': 'Bilderserie'}"
 	addDir(li=li, label="Bilderserien", action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_BILDERSERIEN), 
@@ -2728,45 +2732,45 @@ def Audio_get_homescreen(page='', cluster_id=''):
 		
 		page, msg = get_page(node_path, do_safe=False)					# node_path bereits quotiert
 		page = page.replace('\\"', '*')
-		
-		typ = stringextract('"type":"', '"', page)
-		PLog("typ: " + typ)	
 		ctitle = stringextract('"title":"', '"', page)					# Cluster-Titel
-		pos = page.find("nodes")
-		page = page[pos:]
-		if '"duration"' in page:
-			items = blockextract('"duration"', page)
-		else:
-			items = blockextract('"id":', page, '}}')
-		PLog(len(items))
 		
+		objs = json.loads(page)
+		items = objs["data"]["section"]["nodes"]
+		PLog("items: %d" % len(items))
 		href_add = "?offset=0&limit=20&order=descending"
+
 		for item in items:	
-			title = stringextract('"title":"', '"', item)
-			web_url = stringextract('"path":"', '"', item)
-			PLog("web_url: " + web_url) 
-			if web_url == '' or title == '':
-				continue
-			
-			node_id = stringextract('"id":"','"', item)					# ID der Sendung / des Beitrags / ..	
-			title = stringextract('"title":"', '"', item)
-			img = stringextract('"url":"', '"', item)
-			#img = img.replace('{width}', '640')						# fehlt manchmal
+			node_id = item["id"]										# ID der Sendung / des Beitrags / ..	
+			title = item["title"]
+
+			img =  item["image"]["url"]
+			attr =  item["image"]["attribution"]						# img-Text
 			img = img.replace('{width}', '320')
 			img = img.replace('16x9', '1x1')							# 16x9 kann fehlen (ähnlich Suche)
-			summ = stringextract('"synopsis":"', '"', item)	
-			# anz = stringextract('"numberOfElements":"', '"', item)	# fehlt
-			attr = stringextract('"attribution":"', '"', item)
-			genre = stringextract('"genre":"', '"', item)
-			org = stringextract('"organizationName":"', '"', item)
+			web_url = item["path"]
+			
+			PLog("web_url: " + web_url) 
+
+			summ=""; 
+			if "synopsis" in item:
+				summ =  item["synopsis"]
+			dur=""
+			if "duration" in item:
+				dur = item["duration"]
+	
+			pubService = item["programSet"]["publicationService"]
+			genre = pubService["genre"]
+			org = pubService["organizationName"]
 			
 			summ = repl_json_chars(summ); title = repl_json_chars(title)
-			tag = "Cluster: %s | %s | %s" % (ctitle, attr, org)
+			tag = "Cluster: %s | %s | %s | %s" % (ctitle, attr, org, dur)
 			
 			# Url-Konvertierung Web->Api ähnlich AudioSearch_cluster (o. query), 
 			# items-Formate abweichend, Ziel-Verteilung via ID in AudioSearch_cluster:
 			# Fallback für fehlende Kennz. in web_url, z.B. Sendungs-Vorschau 
 			tag = "[B]Folgeseiten[/B]"
+			if dur:
+				tag = "[B]zum Audio[/B] (%s)" % seconds_translate(dur)
 			vert="sendung"
 			href = ARD_AUDIO_BASE  + "/items/%s%s" % (node_id, href_add)# Fallback vorangestellt	
 						

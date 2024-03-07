@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>89</nr>										# Numerierung für Einzelupdate
-#	Stand: 25.02.2024
+# 	<nr>90</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.03.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3649,9 +3649,13 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		# Monitoring player.getTime für STARTLIST - Livestreams ausgenommen
 		# Issue: Kodi startet monitor_resume bei playlist=='true'
 		if startlist == 'true':						# Resume-Monitor Startlist (pref_startlist)
+			PLog("prepare_resume")
 			if "/live/" not in url:					# Streams wdrlokalzeit ohne live-Kennung in WDRstream						
-				if playlist != 'true':				# zuständig: Modul playlist -> PlayMonitor 
-					if live != "":					# Sicherung, z.B. für Streams von ARDSportLiga3									
+				PLog("/live/ not in url")
+				if playlist != 'true':				# zuständig: Modul playlist -> PlayMonitor
+					PLog('playlist != true') 
+					if not live:					# Sicherung, z.B. für Streams von ARDSportLiga3
+						PLog('not_live')									
 						xbmc.sleep(2000)
 						PLog("call_monitor_resume")
 						PLog("playlist: " + playlist)
@@ -3730,7 +3734,7 @@ def monitor_resume(player, new_list, video_dur, seekTime):
 		PLog("monitor_resume_exception: " + str(exception))
 	if seekPos < 10:										# 10 sec Mindestlänge für Resume
 		seekPos=0
-		
+
 	line = new_list[-1]										# letzte Zeile ergänzen
 	PLog(line)												
 	if "###seekPos:" in line:
