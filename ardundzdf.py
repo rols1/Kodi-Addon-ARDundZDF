@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>182</nr>										# Numerierung für Einzelupdate
+# 	<nr>183</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.8'
-VDATE = '07.03.2024'
+VDATE = '08.03.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2022,6 +2022,7 @@ def Audio_get_sendung(url, title, page=''):
 				fparams=fparams, tagline=tag, summary=summ)	
 		cnt=cnt+1
 
+	PLog("cnt: %d" % cnt)
 	if cnt  == 0:
 		msg1 = u'nichts gefunden'
 		msg2 = title_org
@@ -2145,26 +2146,31 @@ def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-------------------------
-# Mehr-Button für myfunc (Audio_get_sendung,  
-#	Audio_get_sendung_api)
+# Mehr-Button für myfunc (Audio_get_sendung, Audio_get_sendung_api) 
+# Bsp.: Top-Podcasts ff.
 # 
 def Audio_get_nexturl(li, url_org, title_org, elements, cnt, myfunc):
 	PLog('Audio_get_nexturl:')
+	PLog(url_org)
+	url=url_org
 	
 	if elements:														# numberOfElements
-		PLog(url_org)
-		offset = stringextract('offset=', '&', url_org)
-		limit=20
+		limit=20; offset=0; url_part="";
+		if "offset=" in url:
+			offset = re.search(u'offset=(\d+)', url).group(1)
+			url_part = "offset=%s" % offset
 		if "limit=" in url_org:
-			re.search(u'limit=(\d+)', url_org).group(1)
-		PLog(elements); PLog(offset);
-		listed = int(offset) + cnt 
-		PLog("elements: %s, offset: %s, limit: %s, listed: %d" % (elements, offset, limit, listed))
-		if (listed + 1) < int(elements):
-			url = url_org.split("offset=")[0]
-			url = url + "offset=%d&limit=%d" % (listed, int(limit))	# listed = neuer offset
-			tag = u"Mehr (ab Beitrag %s von %s)" % (str(listed+1), elements)
-			PLog(url); PLog(tag);
+			re.search(u'limit=(\d+)', url).group(1)
+		new_offset = int(offset) + cnt 
+		if url_part:													# aktualisiere offset
+			new_url_part = "offset=%s" % str(new_offset)
+			url = url.replace(url_part, new_url_part)
+		PLog("url: " + url)	
+		PLog("elements: %s, offset: %s, new_offset: %d, limit: %d" % (elements, offset, new_offset, limit))
+
+		if new_offset < int(elements):
+			tag = u"Mehr (ab Beitrag %d von %s)" % (new_offset+1, elements)
+			PLog(tag);
 			title_org=py2_encode(title_org); url=py2_encode(url);
 			fparams="&fparams={'title': '%s', 'url': '%s'}" % (quote(title_org), quote(url))
 			addDir(li=li, label=title_org, action="dirList", dirID=myfunc, fanart=R(ICON_MEHR), 
@@ -2740,6 +2746,8 @@ def Audio_get_homescreen(page='', cluster_id=''):
 		href_add = "?offset=0&limit=20&order=descending"
 
 		for item in items:	
+			summ=""; dur=""; pubService=""; org=""; 
+
 			node_id = item["id"]										# ID der Sendung / des Beitrags / ..	
 			title = item["title"]
 
@@ -2748,19 +2756,20 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			img = img.replace('{width}', '320')
 			img = img.replace('16x9', '1x1')							# 16x9 kann fehlen (ähnlich Suche)
 			web_url = item["path"]
-			
 			PLog("web_url: " + web_url) 
-
-			summ=""; 
+			 
 			if "synopsis" in item:
 				summ =  item["synopsis"]
-			dur=""
+			
 			if "duration" in item:
 				dur = item["duration"]
-	
-			pubService = item["programSet"]["publicationService"]
-			genre = pubService["genre"]
-			org = pubService["organizationName"]
+			
+			if "programSet" in item:
+				pubService = item["programSet"]["publicationService"]
+				genre = pubService["genre"]
+				org = pubService["organizationName"]
+			if org == "":
+				org = attr												# Fallback img-Text
 			
 			summ = repl_json_chars(summ); title = repl_json_chars(title)
 			tag = "Cluster: %s | %s | %s | %s" % (ctitle, attr, org, dur)
@@ -2771,17 +2780,18 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			tag = "[B]Folgeseiten[/B]"
 			if dur:
 				tag = "[B]zum Audio[/B] (%s)" % seconds_translate(dur)
-			vert="sendung"
-			href = ARD_AUDIO_BASE  + "/items/%s%s" % (node_id, href_add)# Fallback vorangestellt	
+			href = ARD_AUDIO_BASE  + "items/%s%s" % (node_id, href_add)	# Fallback vorangestellt	
 						
+			vert="sendung"												# default -> Audio_get_sendung
 			if '/sendung/' in web_url:									# "Sendungen"
 				href = ARD_AUDIO_BASE  + "programsets/%s/%s" % (node_id, href_add)
 			if '/sammlung/' in web_url:									# "Sammlungen"		
 				href = ARD_AUDIO_BASE  + "editorialcollections/%s/%s" % (node_id, href_add)  
 			if '/rubrik/' in web_url:									# "Rubriken"		
-				href = ARD_AUDIO_BASE  + "editorialcategories/%s%s" % (node_id, href_add)  
+				href = "https://www.ardaudiothek.de/rubrik/%s" % node_id
+				vert="web"  
 			if '/episode/' in web_url:									# "Episoden (einzelne Beiträge)"										
-				href = ARD_AUDIO_BASE  + "/items/%s%s" % (node_id, href_add) 
+				href = ARD_AUDIO_BASE  + "items/%s%s" % (node_id, href_add) 
 				vert='api'				
 			
 			PLog("8Satz:")
@@ -2798,6 +2808,11 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			if vert == "api":
 				fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
 				addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung_api", \
+					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)							
+
+			if vert == "web":
+				fparams="&fparams={'li': '', 'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
+				addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_rubrik", \
 					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)							
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
