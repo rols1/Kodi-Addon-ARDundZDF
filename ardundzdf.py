@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>183</nr>										# Numerierung für Einzelupdate
+# 	<nr>184</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.8'
 VDATE = '08.03.2024'
 
@@ -2648,8 +2648,8 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 #----------------------------------------------------------------
 # Startseite https://www.ardaudiothek.de/
 # Aufrufer: AudioStartHome
-# Besonderheit: Nachladebeiträge ("nodes":[]) - hier Pfad-Nachbildung
-#	der java-Funktion (Kennz. graphql im api-Call)
+# Besonderheit: Nachladebeiträge in Step 2 ("nodes":[]) - hier Pfad-
+#	Nachbildung der java-Funktion (Kennz. graphql im api-Call)
 #	Die ermittelten Webadressen werden hier für die weitere Nutzung im
 #	Addon zu api-Calls konvertiert.
 # 
@@ -2672,6 +2672,8 @@ def Audio_get_homescreen(page='', cluster_id=''):
 		return
 	PLog(len(page))
 	
+	skip_title = [u'für dich', u'Weiterhören', u'Meine Sender',
+				u"Login-Banner", u"Bundesliga"]
 	li = xbmcgui.ListItem()
 
 	#----------------------------------------							# Step 1
@@ -2681,37 +2683,44 @@ def Audio_get_homescreen(page='', cluster_id=''):
 		tag = "Folgeseiten"
 		img = R(ICON_DIR_FOLDER)
 		
-		cluster_id = "Highlights"
-		label = "[B]%s[/B]" % cluster_id
-		fparams="&fparams={'cluster_id': '%s'}" % cluster_id			# Button Highlights				
-		addDir(li=li, label=label, action="dirList", dirID="Audio_get_homescreen",
-			fanart=R(ICON_MAIN_AUDIO), thumb=img, tagline=tag, fparams=fparams)				
+		objs = json.loads(page)
+		items = objs["pageProps"]["initialData"]["data"]["homescreen"]["sections"]
+		PLog("items: %d" % len(items))
 		
-		endmark = '"nodes"'
-		items = blockextract('"__typename"', page, endmark)				# Nachladebeiträge: "nodes":[]
-		PLog(len(items))
 		for item in items:
-			if item.find('"image"') > 0:
-				continue
-			if item.find('"id"') < 0:									# ohne Cluster-ID
-				continue
-			if item.find('"GRID_LIST_COLLAPSIBLE"') > 0:				# Bsp. "LIVE: die Bundesliga"
-				continue
+			PLog(str(item)[:80])
+			cluster_id = item["id"]
+			title = item["title"]
+			if title == None:
+				title=""
+			typ = item["type"]											# z.B. Stage (title null)
 
-			typename =  stringextract('"__typename":"', '"', item)
-			cluster_id =  stringextract('"id":"', '"', item)
-			title = stringextract('"title":"', '"', item)				# Cluster-Titel	deutsch
-			cluster_type = stringextract('"type":"', '"', item)			# Cluster-Titel	engl.
-			if title == '' or  title == None or  title == "Login-Banner":
+			PLog(title); skip=False
+			for s in skip_title:										# skip personenbezogene Beiträge 
+				if s in title:
+					skip=True; 
+					break
+			if skip:
 				continue
-			if title == 'Stage' or u'für dich' in title:				# -> Highlights s. Step 2 / pers. Inhalte
-				continue
-			if u'Weiterhören' in title or  u'Meine Sender' in title:	# skip personenbezogene Beiträge 								
-				continue
-			
+				
+			nodes = item["nodes"]
+			PLog(len(nodes))
+			if nodes:
+				img = nodes[0]["image"]["url"]
+				img = img.replace('{width}', '320')
+				img = img.replace('16x9', '1x1')						# 16x9 kann fehlen (ähnlich Suche)
+			else:
+				img = R(ICON_DIR_FOLDER)
+				
+						
 			PLog('6Satz:');
-			PLog(title); PLog(cluster_id); 
+			PLog(title); PLog(typ); PLog(cluster_id); 
 			cluster_id=py2_encode(cluster_id);
+			
+			if typ == "STAGE":											# Button Highlights
+				cluster_id = "Highlights"
+				title = "[B]%s[/B]" % cluster_id
+	
 			fparams="&fparams={'cluster_id': '%s'}" % cluster_id				
 			addDir(li=li, label=title, action="dirList", dirID="Audio_get_homescreen",
 				fanart=R(ICON_MAIN_AUDIO), thumb=img, tagline=tag, fparams=fparams)				
@@ -2724,9 +2733,9 @@ def Audio_get_homescreen(page='', cluster_id=''):
 		PLog("cluster_id: " + cluster_id)								# ID für Nachladebeiträge (Web: "nodes":[])
 		base = "https://www.ardaudiothek.de"
 
-		if cluster_id == "Highlights":
+		if cluster_id == "Highlights":									# Stage getrennt auswerten	
 			ID = "AudioHomescreen"
-			title = cluster_id											# Stage auswerten
+			title = cluster_id				
 			Audio_get_cluster_single(title, rubrik_id=ID, section_id='STAGE') # lädt Dict "AudioHomescreen"
 			return	
 		
