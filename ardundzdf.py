@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>184</nr>										# Numerierung für Einzelupdate
+# 	<nr>185</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.8'
-VDATE = '08.03.2024'
+VDATE = '10.03.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2009,13 +2009,13 @@ def Audio_get_sendung(url, title, page=''):
 			downl_list.append("%s#%s" % (title, mp3_url))
 			summ_par = "%s\n\n%s" % (tag, summ)
 			summ_par = summ_par.replace('\n', '||')
+			summ_par=py2_encode(summ_par)
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
 				quote(title), quote(img), quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ)			
 		else:
 			downl_list.append("%s#%s" % (title, web_url))
-			
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': ''}" % (quote(web_url), 
 				quote(title), quote(img), quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
