@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>68</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.01.2024
+# 	<nr>69</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.03.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1708,15 +1708,19 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 	
 	PLog(page[:80])
 	page_obs = json.loads(page)
-	if "teasers" in page_obs:
-		obs =page_obs["teasers"]
-	if "widgets" in page_obs:
-		obs =page_obs["widgets"][0]["teasers"]	
+
+	try:
+		if "teasers" in page_obs:
+			obs =page_obs["teasers"]
+		if "widgets" in page_obs:
+			obs =page_obs["widgets"][0]["teasers"]
+	except Exception as exception:
+		PLog("teasers_not_found: " + str(exception))
+		obs=[]	
 	PLog("obs: %d" % len(obs))
 	
 	# typ-Info Einzelbeträge: ["live", "event", "broadcastMainClip",
-	#				"ondemand", "poster"]
-	
+	#				"ondemand", "poster"]	
 	for s in obs:
 		PLog("Mark10")
 		PLog(str(s)[:60])
