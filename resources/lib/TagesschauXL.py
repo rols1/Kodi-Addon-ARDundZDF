@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>13</nr>								# Numerierung für Einzelupdate
-#	Stand: 24.01.2024
+# 	<nr>14</nr>								# Numerierung für Einzelupdate
+#	Stand: 13.03.2024
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -301,44 +301,40 @@ def XL_BilderClusterSingle(title, path):
 	else:
 		mycluster = page												# Slider-Bilder
 	
-	if 	'<div data-v=' in mycluster:									# Bilder auf dieser Seite
-		items = blockextract('<div data-v=', page, "</div>")
-		PLog(len(items))
-		img_list=[]; cnt=0
-		# Format img_list: "Titel || img_url || img_alt || summ"		# img_list -> XL_BilderShow
-		for item in items:
-			PLog("content_json:")
-			PLog(item[:400])
-			cnt=cnt+1
-			conf = stringextract('data-v="', '"', item)	
-			conf = conf.replace('\\"', '"')
-			conf = conf.replace('&quot;', '"')
-			conf = unquote(conf)
-			obj = json.loads(conf)
-			PLog(str(obj)[:60]);
+	if 	'<div data-v=' in mycluster:									# 1 x Bilder in quoted json
+		PLog("content_json:")
+		items = blockextract('<div data-v=', mycluster, "</div>")
+		conf = stringextract('data-v="', '"', items[0])					# nur 1 Bilderblock
+		PLog(str(conf)[:80])
+		conf = conf.replace('\\"', '"')
+		conf = conf.replace('&quot;', '"')
+		conf = unquote(conf)
+		obj = json.loads(conf)
+		PLog(str(obj)[:80]);
+	
+		name = obj["name"]
+		imgObjects = obj["images"]
+		PLog("imgs: %d, name: %s" % (len(imgObjects), name))
+		img_list=[]; img_cnt=0
+		for img in imgObjects:
+			summ=""; img_cnt=img_cnt+1
+			img_url = img["imageUrls"]["l"]
+			img_alt = img["alttext"]
+			summ=""														# i.d.R. img_alt mit  html-tags													
 		
-			name = obj["name"]
-			imgObjects = obj["images"]
-			PLog("imgs_in_Block_%d: %d" % (cnt, len(imgObjects)))
-			for img in imgObjects:
-				summ=""
-				img_url = img["imageUrls"]["l"]
-				img_alt = img["alttext"]
-				summ = img["description"]
-				summ=summ.replace(u'&lt;strong&gt;', '')				# html-Rest in json
-				
-				title = img["title"]
-				line = "%s||%s||%s||%s" % (title, img_url, img_alt, summ)
-				img_list.append(line)
-			PLog("img_list: %d" % len(img_list))
-			if len(img_list) > 0:
-				XL_BilderShow(title, img_list)
+			title = img["title"]
+			# Format img_list: "Titel || img_url || img_alt || summ"# img_list -> XL_BilderShow
+			line = "%s||%s||%s||%s" % (title, img_url, img_alt, summ)
+			img_list.append(line)
+
+		if len(img_list) > 0:
+			XL_BilderShow(name, img_list)
 		return
 		
 	else:																# Bilder auf Folgeseiten
 		PLog("content_html:")	
 		li = xbmcgui.ListItem()
-		li = home(li, ID='TagesschauXL')								# Home-Button
+		li = home(li, ID='TagesschauXL')									# Home-Button
 			
 		items = blockextract('class="teaser-xs__link"', mycluster)
 		cnt=0; path=""
@@ -354,7 +350,7 @@ def XL_BilderClusterSingle(title, path):
 			topline = stringextract('teaser-xs__topline">', '</span>', item)	# Subtitel
 			img_alt = stringextract('alt="', '"', item)
 			img_alt = img_alt.replace('&quot;', '"')
-			title = "Bild %2d: %s" % (cnt, headline)
+			title = headline
 			title  = unescape(title)
 			tag = "Folgeseiten\n\nBild: %s" % img_alt
 			summ = "[B]%s[/B]" % topline
@@ -362,7 +358,7 @@ def XL_BilderClusterSingle(title, path):
 			link = stringextract('teaser-xs__link" href="', '"', item)
 			path = BASE_URL + link
 			
-			PLog("Satz1:")
+			PLog("Satz1_2:")
 			PLog(headline); PLog(topline); PLog(path); PLog(tag); PLog(summ); 
 			title=py2_encode(title); path=py2_encode(path);
 			fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(headline), quote(path))
@@ -373,8 +369,9 @@ def XL_BilderClusterSingle(title, path):
 
 # ----------------------------------------------------------------------
 # 23.01.2024 Bereinigung leerer Verz. in SLIDESTORE hinzugefügt (bei
-#	Abbruch vor Slideshow, bleibt das angelegte Verz. leer). 	 
-def XL_BilderShow(title, img_list):
+#	Abbruch vor Slideshow, bleibt das angelegte Verz. leer).
+#  12.03.2024 Übergabe img_list	via Dict (Dict_id), 
+def XL_BilderShow(title, img_list, Dict_id=""):
 	PLog("XL_BilderShow:")
 	title_org=title
 	
@@ -396,6 +393,8 @@ def XL_BilderShow(title, img_list):
 			return li
 			
 	cnt=0; background=False; path_url_list=[]; text_list=[]
+	if Dict_id:												# Bildliste nachladen
+		img_list = Dict("load", Dict_id)
 	for line in img_list:
 		cnt=cnt+1
 		title, img_url, img_alt, summ = line.split("||")
@@ -414,7 +413,13 @@ def XL_BilderShow(title, img_list):
 			path_url_list.append('%s|%s' % (local_path, img_url))
 
 			if SETTINGS.getSetting('pref_watermarks') == 'true':
-				txt = "%s\n%s\n%s\n%s\n%s" % (fname,title_org,title,img_alt,summ)
+				# txt = "%s\n%s\n%s\n%s\n%s" % (fname,title_org,title,img_alt,summ)
+				txt = "%s" % summ							# zu viele Wiederholung in übrigen Params
+				if txt == "":
+					txt = "%s" % img_alt	
+				if txt == "":
+					txt = "%s" % title	
+				
 				PLog("Mark6")
 				text_list.append(txt)	
 			background	= True											
