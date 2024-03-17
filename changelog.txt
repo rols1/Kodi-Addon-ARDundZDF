@@ -10,6 +10,34 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+17.03.2024 4.9.9
+			Modul childs: neue Funktion tivi_Verpasst -  Anpassung Main_TIVI, Nutzung
+			ZDF_VerpasstWoche, ZDF_get_content, neues Icon zdftivi-cal.png, Menü 
+			tivi_ZDFchen verlinkt mit ZDF_RubrikSingle (analog Direkt-Calls ZDF).
+			ZDF_Start: Direkt-Calls gefixed/geordnet: Startseite, ZDFtivi, ZDFchen, funk,
+			gelöscht: Rubriken, Sportstudio, Barrierearm, ZDFinternational.
+			Main_ZDF: gelöschte Calls aus ZDF_Start verlinkt mit ZDF_RubrikSingle.
+			Audio_get_items_single, AudioSearch_cluster: Absicherung gegen leere web_url.
+			Audio_get_nexturl: Fix invalid-literal-error bis limit-Wert in nexturl via
+			re.search (betroffen: Modul childs, Menü Hörspaß für Kinder), new_offset
+			begrenzt auf elements.
+			ZDF_Rubriken: tag="Folgeseiten" für Ziel ZDF_RubrikSingle (vorher"Video").
+			ZDF_Teletext: Dialog bei leerer Seite, Bsp. 777 (Untertitel).
+			Audio_get_homescreen (Audio_step1): Auswertung umgestellt auf json (Webjson),
+			Stage-Button integriert, Bilder ergänzt (wo verfügbar).
+			Audio_get_homescreen (Audio_step2): fehlenden ersten Beitrag ergänzt, graphql-
+			Auswertung umgestellt auf json, alte Zielfunktion Audio_get_sendung_api für 
+			Rubriken geändert auf Audio_get_cluster_rubrik (Auswertung Web-json).
+			Audio_get_sendung: python2-encoding-Fix py2_encode(summ_par).
+			Zuletzt-gesehen-Liste: Fehlermeldung für nicht vorhandene Liste startlist in
+			AddonStartlist ergänzt, in PlayVideo Abgleich max. Länge auf Basis 0 korrigiert, 
+			zusätzl. Debugstatements ab prepare_resume, Absicherung gegen Live-Streams vor 
+			monitor_resume geändert (if not live).
+			get_json_content (Modul ARDnew): leere Serienliste abgefangen (try/except).
+			XL_BilderClusterSingle (TagesschauXL): Begrenzung auf 1 Bilderblock bei quoted-
+			json-Inhalten, Begrenzung Infotext auf 1 Zeile (Wiederholungsvermeidung).
+			Bilder3satSingle (my3Sat): Ersetzung "amp;" -> "" in Bildquelle.
+
 03.03.2024 4.9.8
 			livesenderTV.xml: SWR Rheinland-Pfalz aus IPTV-Quelle jnk22 ergänzt.
 			get_foruminfo (Modul tools): Anpassung an Forum-Update
@@ -21,8 +49,8 @@ CHANGE HISTORY
 			für das inputstreamaddon.
 			MVWSearch (Modul yt): Merkliste-Button für Suchergebnisse hinzugefügt
 			(Startindex 1).
-			Watch_items (Modul merkliste): Fett-/Farbe aus gespeichertem Titel entfernt
-			mittels cleanmark entfernt in actions rename und folder.
+			Watch_items (Modul merkliste): Fett-/Farbe aus gespeichertem Titel mittels
+			cleanmark entfernt in actions rename und folder.
 			get_summary_pre (Modul util): Sonderfälle für ARDnew behandelt ('\\n\\n' ->
 			" | ", '\\n' -> ". ", '\\r\\n\\r\\n' -> " | ").
 			Main: Hinweis Einzelupdate in Button Addon-Update.
@@ -89,7 +117,7 @@ CHANGE HISTORY
 			einschl. tagesthemen und Bericht aus Berlin, Param live=true für Webplayer-
 			Streams bei eingeschalteter Zuletzt-gesehen-Liste.
 			TV-Livestreams: Umstellung Deutsche Welle auf IPTV-Links (in ARD-Mediathek
-			nicht mehr verfügbar), nur EN-Version funktionsfähig.
+			nicht mehr verfügbar), nur EN-Version funktionsfähig.			
 
 07.01.2024 4.9.4
 			PlayVideo_Direct (Modul util): Absicherung Default_Url bei nur 1 Element in

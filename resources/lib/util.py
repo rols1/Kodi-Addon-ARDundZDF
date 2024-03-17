@@ -3478,6 +3478,9 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		
 	play_time=0; video_dur=0										# hier dummies (rel. -> PlayMonitor) 		
 	if url_check(url, caller='PlayVideo'):							# Url-Check
+		# Zuletzt-gesehen-Liste (STARTLIST) verwenden, Live-Streams
+		# werden später ausgeschlossen (s. prepare_resume), Aktualiserung
+		# der Liste in monitor_resume:
 		startlist = SETTINGS.getSetting('pref_startlist')
 		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
 		if  startlist=='true' and playlist  !='true':				# Startlist  (true: skip bei playlist-Url)
@@ -3490,8 +3493,10 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 			if started_videos == "":
 				started_videos=[]
 			PLog("started_videos: %d" % len(started_videos))
-			if len(started_videos) >= int(maxvideos):				# ältesten Eintrag löschen
+			if len(started_videos) >= int(maxvideos)-1:				# ältesten Eintrag löschen (Basis 0)
 				del started_videos[0]
+				v = started_videos[0]
+				PLog("delete_video_0: " + v[:40])
 			
 			dt = datetime.datetime.now()							# Format 2017-03-09 22:04:19.044463
 			now = time.mktime(dt.timetuple())						# Unix-Format 1489094334.0 -> Sortiermerkmal

@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>185</nr>										# Numerierung für Einzelupdate
-VERSION = '4.9.8'
-VDATE = '10.03.2024'
+VERSION = '4.9.9'
+VDATE = '17.03.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1204,8 +1204,14 @@ def ZDF_Teletext(path=""):
 		prevpg = "100"
 	nextpg = re.search(u'nextpg="(.*?)"', body).group(1)
 	aktpg =  re.search(u'page="(.*?)"', body).group(1)
-	PLog("prevpg: %s, nextpg: %s, aktpg: %s" % (prevpg, nextpg, aktpg))
+	PLog("prevpg: %s, nextpg: %s, aktpg: %s, lines: %d" % (prevpg, nextpg, aktpg, len(body.splitlines())))
 
+	if len(body.splitlines()) <= 6:										# body-, footer-, copy- plus 3 Leerzeilen, 
+		msg1 = "Seite [B]%s[/B]: leider keine" % aktpg					#	Bsp. 777 (Untertitel)
+		msg2 = "Inhalte gefunden."
+		MyDialog(msg1, msg2, '')	
+		return
+		
 	#------------------------------------------------					# Body
 	PLog("get_tables:")
 	hrefs = ZDF_Teletext_Table(li, body, aktpg)							# <a href= .. </a>##<a href= .. </a> 
@@ -8102,6 +8108,7 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 			PLog("externalUrl_not_used")
 					
 		else:
+			tag = "Folgeseiten"
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 			PLog("fparams: " + fparams)	
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
@@ -10541,7 +10548,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 				return li
 			else:
 				return []										# leere Liste für build_Streamlists				
-	else:																	# lokale Datei	
+	else:														# lokale Datei	
 		fname =  os.path.join(M3U8STORE, url_m3u8) 
 		playlist = RLoad(fname, abs_path=True)					
 	 

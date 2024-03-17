@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.01.2024
+#	Stand: 13.03.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1902,6 +1902,7 @@ def Bilder3satSingle(title, path):
 		descr 	= stringextract('paragraph-large ">', '</p', rec) 	# Bildtext
 		urh	= stringextract('teaser-info is-small">', '</dd', rec)	# Urheber
 		urh=mystrip(urh.strip()); 
+		urh	= urh.replace("amp;", "")
 		
 		tag = "%s | %s" % (stitle, title)
 		summ = "%s\n%s" % (descr, urh)
