@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>185</nr>										# Numerierung für Einzelupdate
+# 	<nr>186</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.9'
 VDATE = '17.03.2024'
 
@@ -7832,7 +7832,9 @@ def ZDF_Start(ID, homeID=""):
 #	Format urlkey: "%s#cluster#%d" % (url, obj_id, obj_nr)
 # 02.10.2023 recommendation-Inhalte (ZDF, ARD-Links): DictID auf urlkey-
 #	Basis ("ZDF_reco_%s" % scmsid)
-# 	
+# 17.03.2024 CacheTime für DictID (5 min), um Aktualisierung bei Favoriten
+#	 und Merkliste sicherzustellen
+#	
 def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):								
 	PLog('ZDF_PageMenu:')
 	PLog('DictID: ' + DictID)
@@ -7843,7 +7845,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 	'Referer': '%s', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
 
 	if not jsonObject and DictID:
-		jsonObject = Dict("load", DictID)
+		jsonObject = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)	# 5 min
 	if not jsonObject:								# aus Url wiederherstellen (z.B. für Merkliste)
 		if urlkey:
 			PLog("get_from_urlkey:")
