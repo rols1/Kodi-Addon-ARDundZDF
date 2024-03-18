@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>186</nr>										# Numerierung für Einzelupdate
+# 	<nr>187</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.9'
-VDATE = '17.03.2024'
+VDATE = '18.03.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8006,25 +8006,24 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			if skip:
 				continue 
 				
-			path = "cluster|%d|teaser" % counter
+			jsonpath = "cluster|%d|teaser" % counter
 			title = repl_json_chars(title)
 			descr = repl_json_chars(descr)
 			PLog("Satz1_2:")
-			PLog(DictID); PLog(title); PLog(path); PLog(typ);
-			
+			PLog(DictID); PLog(title); PLog(jsonpath); PLog(typ);
+						
 			if typ != "teaserPromo": 
-				fparams="&fparams={'path': '%s', 'title': '%s', 'DictID': '%s', 'homeID': '%s'}"  %\
-					(path, title, DictID, homeID)
+				fparams="&fparams={'jsonpath': '%s', 'title': '%s', 'DictID': '%s', 'homeID': '%s'}"  %\
+					(jsonpath, title, DictID, homeID)
 				PLog("fparams: " + fparams)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_Rubriken", 				
 					fanart=img, thumb=img, tagline=tag, summary=descr, fparams=fparams)
-			else:													# teaserPromo - s.o.
+			else:													# teaserPromo - s.o.		
 				tag = "[B]Promo-Teaser[/B] | %s" % tag
 				fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 				PLog("fparams: " + fparams)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
 					thumb=img, fparams=fparams, summary=descr, tagline=tag)
-					
 
 	if li_org:
 		return li
@@ -8033,19 +8032,20 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 
 ###################################################################################################
 # Aufruf: ZDF_PageMenu
-# ZDF-Rubriken (Film, Serie,  Comedy & Satire,  Politik & Gesellschaft, ..)
-# path: json-key-Pfad (Bsp. cluster|2|teaser)
-# 02.10.2023 für ARD-Inhalte stream=url (abweichendes json-Format)
+# ZDF-Rubriken (Film, Serie,  Comedy & Satire,  Politik & Gesellschaft, ZDF im Livestream, ..)
+# path: json-key-Pfad (Bsp. cluster|2|teaser) 
+# 02.10.2023 für ARD-Inhalte des ZDF stream=url (abweichendes json-Format)
+# 18.03.2024 bei Bedarf urlkey + CacheTime nachrüsten, Bsp.: ZDF_PageMenu, ZDF_RubrikSingle
 #
-def ZDF_Rubriken(path, title, DictID, homeID=""):								
+def ZDF_Rubriken(jsonpath, title, DictID, homeID=""):								
 	PLog('ZDF_Rubriken: ' + DictID)
-	PLog("path: " + path)
-	path_org = path
+	PLog("jsonpath: " + jsonpath)
+	jsonpath_org = jsonpath
 
 	if DictID:
 		jsonObject = Dict("load", DictID)
 		PLog(str(jsonObject)[:80])
-		jsonObject, msg = GetJsonByPath(path, jsonObject)
+		jsonObject, msg = GetJsonByPath(jsonpath, jsonObject)
 		if jsonObject == '':					# index error
 			msg1 = 'Cluster [B]%s[/B] kann nicht geladen werden.' % title
 			msg2 = msg
@@ -8074,8 +8074,8 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 	i=0
 	PLog("walk_entries: %d" % len(jsonObject))					
 	for entry in jsonObject:
-		path = path_org + '|%d' % i
-		PLog("entry_type: " + entry["type"])
+		jsonpath = jsonpath_org + '|%d' % i
+		PLog("entry_type1: " + entry["type"])
 				
 		typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
 		title = repl_json_chars(title)
@@ -8123,7 +8123,9 @@ def ZDF_Rubriken(path, title, DictID, homeID=""):
 
 ###################################################################################################
 # einzelne ZDF-Rubrik (Film, Serie,  Comedy & Satire,  Politik & Gesellschaft, ..)
-# Cluster-Objekte > 1: Dict-Ablage mit DictID je Cluster -> PageMenu
+# Cluster-Objekte > 1: Dict-Ablage mit DictID je Cluster -> PageMenu. Die Dicts 
+#	werden bei jedem Durchlauf überschrieben (max. Cachezeit=Cachezeit der entspr. Leitseite,
+#	s. ZDF_Start).
 # einz. Cluster-Objekt: Auswertung Teaser -> wieder hierher, ohne Dict
 # 01.10.2023 Auswertung recommendation-Inhalte (ohne Cache, DictID leer), dabei 
 #	Verzicht auf {bookmarks}-Urls ("Das könnte Dich interessieren", kodinerds Post 3.134)
@@ -10819,7 +10821,10 @@ def router(paramstring):
 				PLog(' router dest_modul: ' + str(dest_modul))
 				PLog(' router newfunc: ' + str(newfunc))
 				# Codeausführung außerhalb der Funktionen vor func()!
-				dest_modul = importlib.import_module(dest_modul )		# Modul laden, Params -> sys.argv
+				try:
+					dest_modul = importlib.import_module(dest_modul )	# Modul laden, Params -> sys.argv
+				except Exception as exception:
+					PLog("func_error_modul: " + str(exception))
 
 				PLog('loaded: ' + str(dest_modul))
 				#PLog(' router_params_dict: ' + str(params))			# Debug Modul-params
@@ -10828,19 +10833,27 @@ def router(paramstring):
 					# func = getattr(sys.modules[dest_modul], newfunc)  # falls beim Start geladen
 					func = getattr(dest_modul, newfunc)					# geladen via importlib
 				except Exception as exception:
-					PLog(str(exception))
+					PLog("func_error_lib: " + str(exception))
 					func = ''
 				if func == '':						# Modul nicht geladen - sollte nicht
 					li = xbmcgui.ListItem()			# 	vorkommen - s. Addon-Start
-					msg1 = "Modul %s ist nicht geladen" % dest_modul
+					msg1 = "Modul %s fehlt / ist nicht geladen" % dest_modul
 					msg2 = "oder Funktion %s wurde nicht gefunden." % newfunc
-					msg3 = "Ursache unbekannt."
+					msg3 = "Alter Eintrag in Merkliste oder Favoriten?"
 					PLog(msg1)
 					MyDialog(msg1, msg2, msg3)
 					xbmcplugin.endOfDirectory(HANDLE)
 
 			else:
-				func = getattr(sys.modules[__name__], newfunc)	# Funktion im Haupt-PRG OK		
+				try:
+					func = getattr(sys.modules[__name__], newfunc)	# Funktion im Haupt-PRG OK
+				except Exception as exception:
+					PLog("func_error: " + str(exception))
+					msg1 = "Funktion %s wurde nicht gefunden." % newfunc
+					msg2 = "Alter Eintrag in Merkliste oder Favoriten?"
+					MyDialog(msg1, msg2)
+					xbmcplugin.endOfDirectory(HANDLE)
+						
 			
 			PLog(' router func_getattr: ' + str(func))		
 			if func_pars != '""':		# leer, ohne Parameter?	
