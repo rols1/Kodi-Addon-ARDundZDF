@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>187</nr>										# Numerierung für Einzelupdate
+# 	<nr>188</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.9'
-VDATE = '18.03.2024'
+VDATE = '22.03.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7792,8 +7792,6 @@ def ZDF_Start(ID, homeID=""):
 		path = base + "start-page"
 	elif ID=="tivi_Startseite":
 		path = base + "document/zdftivi-fuer-kinder-100"
-	elif ID=="tivi_ZDFchen":
-		path = base + "document/zdfchen-100"					# ZDFtivi-Sendereihe bis 6 Jahre
 	elif ID=="funk_Startseite":
 		path = base + "document/funk-126"	
 		
@@ -7818,7 +7816,7 @@ def ZDF_Start(ID, homeID=""):
 		jsonObject = page
 		
 	PLog("jsonObject1: " + str(jsonObject)[:80])
-	ZDF_PageMenu(DictID,jsonObject=jsonObject)
+	ZDF_PageMenu(DictID,jsonObject=jsonObject,url=path)
 	
 	# 05.03.2024 frühere Calls direkt verlinkt in Main_ZDF -> ZDF_RubrikSingle:
 	#	Rubriken, Sportstudio, Barrierearm, ZDFinternational
@@ -7832,25 +7830,29 @@ def ZDF_Start(ID, homeID=""):
 #	Format urlkey: "%s#cluster#%d" % (url, obj_id, obj_nr)
 # 02.10.2023 recommendation-Inhalte (ZDF, ARD-Links): DictID auf urlkey-
 #	Basis ("ZDF_reco_%s" % scmsid)
-# 17.03.2024 CacheTime für DictID (5 min), um Aktualisierung bei Favoriten
-#	 und Merkliste sicherzustellen
+# 21.03.2024 CacheTime für DictID (30 min), um Aktualisierung bei Favoriten
+#	 und Merkliste sicherzustellen, ergänzt mit url ohne key zum Nachladen 
+#	von Startseiten (s. ZDF_Start)
+# 
 #	
-def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):								
+def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", url=""):								
 	PLog('ZDF_PageMenu:')
 	PLog('DictID: ' + DictID)
-	PLog(mark); PLog(homeID); PLog(urlkey)
+	PLog(mark); PLog(homeID);  
+	url_org = url; PLog("url_org: " + url_org)
 	li_org=li 
-	
-	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
-	'Referer': '%s', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
 
 	if not jsonObject and DictID:
-		jsonObject = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)	# 5 min
+		jsonObject = Dict("load", DictID, CacheTime=ZDF_CacheTime_AZ)	# 30 min
 	if not jsonObject:								# aus Url wiederherstellen (z.B. für Merkliste)
-		if urlkey:
+		if url:										# url ohne key (Seiten ZDF_Start)
+			PLog("get_from_url:")
+			page, msg = get_page(path=url, header=HEADERS)
+			jsonObject = json.loads(page)
+		if urlkey:									# ZDF_RubrikSingle: "%s#cluster#%s" % (url, cnt)
 			PLog("get_from_urlkey:")
-			if "/recommendation/" in urlkey:		# recommendation-Inhalte (wie Web "clusterrecommendation")
-				page, msg = get_page(path=urlkey, header=headers)   # IncompleteRead-error o. Header
+			if "/recommendation/" in urlkey:		# recommendation-Inhalte (wie Web "clusterrecommendation"),
+				page, msg = get_page(path=urlkey, header=HEADERS)   # z.B. Empf. der Redaktion
 			else:
 				url, obj_id, obj_nr = urlkey.split("#")
 				PLog("obj_id: %s, obj_nr: %s" % (obj_id, obj_nr))
@@ -8013,8 +8015,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 			PLog(DictID); PLog(title); PLog(jsonpath); PLog(typ);
 						
 			if typ != "teaserPromo": 
-				fparams="&fparams={'jsonpath': '%s', 'title': '%s', 'DictID': '%s', 'homeID': '%s'}"  %\
-					(jsonpath, title, DictID, homeID)
+				fparams="&fparams={'jsonpath':'%s','title':'%s','DictID':'%s','homeID':'%s','url':'%s'}"  %\
+					(jsonpath, title, DictID, homeID, url_org)		# url_org i.V.m. jsonpath=Fallback
 				PLog("fparams: " + fparams)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_Rubriken", 				
 					fanart=img, thumb=img, tagline=tag, summary=descr, fparams=fparams)
@@ -8035,30 +8037,26 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID=""):
 # ZDF-Rubriken (Film, Serie,  Comedy & Satire,  Politik & Gesellschaft, ZDF im Livestream, ..)
 # path: json-key-Pfad (Bsp. cluster|2|teaser) 
 # 02.10.2023 für ARD-Inhalte des ZDF stream=url (abweichendes json-Format)
-# 18.03.2024 bei Bedarf urlkey + CacheTime nachrüsten, Bsp.: ZDF_PageMenu, ZDF_RubrikSingle
+# 18.03.2024 url i.V.m. jsonpath=Fallback bei Ausfall Dict (DictID)
 #
-def ZDF_Rubriken(jsonpath, title, DictID, homeID=""):								
+def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):								
 	PLog('ZDF_Rubriken: ' + DictID)
 	PLog("jsonpath: " + jsonpath)
 	jsonpath_org = jsonpath
 
 	if DictID:
-		jsonObject = Dict("load", DictID)
-		PLog(str(jsonObject)[:80])
-		jsonObject, msg = GetJsonByPath(jsonpath, jsonObject)
-		if jsonObject == '':					# index error
-			msg1 = 'Cluster [B]%s[/B] kann nicht geladen werden.' % title
-			msg2 = msg
-			MyDialog(msg1, msg2, '')
-			return
-	else:
-		page, msg = get_page(path=path)
-		if not page:												# nicht vorhanden?
-			msg1 = 'ZDF_Rubriken: [B]%s[/B] kann nicht geladen werden.' % title
-			msg2 = msg
-			MyDialog(msg1, msg2, '')
-			return
-		jsonObject = json.loads(page)		
+		jsonObject = Dict("load", DictID, CacheTime=ZDF_CacheTime_AZ)
+	if not jsonObject:								# aus Url + wiederherstellen 
+		PLog("get_from_url:")
+		page, msg = get_page(path=url, header=HEADERS)
+		jsonObject = json.loads(page)
+	
+	jsonObject, msg = GetJsonByPath(jsonpath, jsonObject)
+	if jsonObject == '':					# index error
+		msg1 = 'Cluster [B]%s[/B] kann nicht geladen werden.' % title
+		msg2 = msg
+		MyDialog(msg1, msg2, '')
+		return
 	PLog(str(jsonObject)[:80])
 					
 	li = xbmcgui.ListItem()
@@ -9075,10 +9073,8 @@ def ZDF_FlatListEpisodes(sid):
 	li = home(li, ID='ZDF')										# Home-Button			
 	
 	#															# headers wg. häufiger timeouts
-	headers="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
-	'Referer': '%s', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
 	path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/%s" % sid 
-	page, msg = get_page(path=path, header=headers)
+	page, msg = get_page(path=path, header=HEADERS)
 	if page == "":	
 		msg1 = "Abbruch  in ZDF_FlatListEpisodes:"
 		msg2 = "Die Serien-ID [B]%s[/B] ist nicht (mehr)" % sid

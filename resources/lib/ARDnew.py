@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>69</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.03.2024
+# 	<nr>70</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.03.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2065,7 +2065,7 @@ def ARDStartVideoHLSget(title, StreamArray, call=""):
 	PLog('ARDStartVideoHLSget: ' + call); 
 	PLog(str(StreamArray)[:100])
 	
-	HLS_List=[]; Stream_List=[];
+	HLS_List=[]; Stream_List=[]; href=""
 	title = py2_decode(title)
 	
 	for video in  StreamArray:				
