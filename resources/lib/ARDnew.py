@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>70</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.03.2024
+# 	<nr>71</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.03.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -792,7 +792,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 			tag = u"Liste aller verfügbaren Folgen"
 			if SETTINGS.getSetting('pref_usefilter') == 'false':
 				add = u"Voreinstellung: Normalversion.\nFür Hörfassung und weitere Versionen "
-				add = u'%sbitte das Setting "Beiträge filtern / Ausschluss-Filter" einschalten' % add
+				add = u'%sbitte das Setting <Beiträge filtern / Ausschluss-Filter> einschalten' % add
 				tag = u"%s\n\n%s" % (tag, add)
 			title=py2_encode(title); path=py2_encode(path)			
 			fparams="&fparams={'path': '%s', 'title': '%s'}"	% (quote(path), quote(title))						
@@ -2057,7 +2057,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 
 #----------------------------
 # auto-Stream master.m3u8 aus VideoUrls ermitteln, 
-#	via li in Einzelauflösungen zerlegen
+#	via Parseplaylist in Einzelauflösungen zerlegen
 # Aufrufer ARDStartSingle (Länge VideoUrls > 0) und
 # 	ARD_get_strmStream
 #
@@ -2085,7 +2085,7 @@ def ARDStartVideoHLSget(title, StreamArray, call=""):
 			HLS_List = HLS_List + Stream_List
 		else:
 			HLS_List=[]
-	#PLog(Stream_List)
+	PLog("Streams: %d" % len(HLS_List))
 	
 	return HLS_List
 

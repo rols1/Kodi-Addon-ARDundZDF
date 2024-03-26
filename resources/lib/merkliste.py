@@ -7,8 +7,8 @@
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 # 	Funktions-Calls via Auswertung sys.argv s. Modulende
 ################################################################################
-# 	<nr>6</nr>										# Numerierung für Einzelupdate
-#	Stand: 27.02.2024
+# 	<nr>7</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.03.2024
 #
 
 from __future__ import absolute_import
@@ -887,6 +887,7 @@ if "'fparams_add': 'do_folder'" in str(params):		# 2. Aufruf InfoAndFilter -> ro
 	
 # ------------------------------------------------- # callfrom_context:
 
+icon = R(ICON_DIR_WATCH)
 PLog('action: ' + params['action'][0]) 				# context: immer action="dirList"
 PLog('dirID: ' + params['dirID'][0])				# context: immer dirID="Watch"
 # PLog('fparams: ' + params['fparams'][0])
@@ -903,13 +904,13 @@ try:
 	PLog("merk_mydict: " + str(mydict))
 except Exception as exception:						# Bsp. Hinzufügen von Favoriten
 	err_msg = str(exception)
-	msg3=''
-	if name:
-		msg3 = u"Eintrag >%s<" % name
-	msg1 = u"dieser Eintrag kann nicht verarbeitet werden."
-	msg2 = u"Fehler: %s" % err_msg
+	PLog("mydict_error: " + err_msg)
+	msg1 = u"Eintrag nicht verwendbar!"
+	msg2 = u"Fehler: %s.." % err_msg[:40]
 	heading='Fehler Merkliste'
-	xbmcgui.Dialog().ok(heading, msg1, msg2, msg3)
+	# 26.03.2024 Dialog ersetzt durch notification 
+	icon = R(ICON_DIR_WATCH)
+	xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
 	exit()
 	
 # ----------------------------------------------------------------------
@@ -943,7 +944,5 @@ else:																	# Merklisten-Aktionen:
 			if os.path.isfile(MERKACTIVE) == True:						# Merkliste aktiv?
 				xbmc.executebuiltin('Container.Refresh')
 
-	# 01.02.2029 Dialog ersetzt durch notification 
-	icon = R(ICON_DIR_WATCH)
 	xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
 	# exit()		# thread.lock-Error in Kodi-Matrix
