@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>188</nr>										# Numerierung für Einzelupdate
+# 	<nr>189</nr>										# Numerierung für Einzelupdate
 VERSION = '4.9.9'
-VDATE = '22.03.2024'
+VDATE = '29.03.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -622,7 +622,7 @@ def InfoAndFilter():
 	if SETTINGS.getSetting('pref_startlist') == 'true':		# Button für LastSeen-Funktion
 		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
 		title = u"Zuletzt gesehen"	
-		tag = u"[B]Liste der im Addon gestarteten Videos (max. %s Einträge).[/B]" % maxvideos
+		tag = u"[B]Liste der im Addon gestarteten Videos (max. %s Einträge, keine Livestreams).[/B]" % maxvideos
 		tag = u"%s\n\nSortierung absteigend (zuletzt gestartete Videos zuerst)." % tag
 		summ = u"Klick startet das Video (falls noch existent)."
 		fparams="&fparams={}" 
@@ -872,25 +872,35 @@ def AddonStartlist(mode='', query=''):
 	cnt=0; 
 	for item in startlist:
 		#PLog(item)
-		Plot=''; sub_path=''; seekPos=""; video_dur=""
+		Plot=''; sub_path=''; seekPos=""; video_dur=""; resume=""
 		ts, title, url, thumb, Plot = item.split('###')[0:5]	# altes Format ohne sub_path, seekPos
 		if "sub_path" in item:
 			sub_path = stringextract("###sub_path:", "###", item)
-		if "seekPos" in item:									# ..###seekPos:280.0###
+		if "seekPos" in item:									# ..###seekPos:75.197###
 			seekPos = stringextract("###seekPos:", "###", item)
+			PLog("seekPos: " + seekPos)
+			if seekPos:
+				seekPos = float(seekPos)
 		if "video_dur" in item:									# ..###video_dur:460.0###
 			video_dur = stringextract("###video_dur:", "###", item)
 		
 		dt = datetime.datetime.fromtimestamp(float(ts))			# Date-Objekt
 		my_date = dt.strftime("%d.%m.%Y %H:%M:%S")
-		Plot_par = "gestartet: [COLOR darkgoldenrod]%s[/COLOR]\n\n%s" % (my_date, Plot)
+		my_date = "[COLOR darkgoldenrod]%s[/COLOR]" % my_date
+		if seekPos:
+			if seekPos >= 40:						   			# Min. 40  Sek. (mögl. bei Trailern)
+				resume = seconds_translate(seekPos)
+			if resume:
+				my_date = "%s | gesehen bis: %s" % (my_date, resume)
+			
+		Plot_par = "gestartet: %s\n\n%s" % (my_date, Plot)
 		Plot_par=py2_encode(Plot_par); 		
 		Plot_par=Plot_par.replace('\n', '||')					# für router
 		tag=Plot_par.replace('||', '\n')
 		
 		PLog("Satz16:"); 
 		PLog(title); PLog(ts); PLog(url); PLog(Plot_par); 
-		PLog(sub_path); PLog("seekPos: " + str(seekPos)); PLog(video_dur)
+		PLog(sub_path); PLog(video_dur)
 		show = True
 		if 	query:												# Suchergebnis anwenden
 			q = up_low(query, mode='low'); i = up_low(item, mode='low');
@@ -925,7 +935,7 @@ def check_Resume(url, title, thumb, Plot, sub_path, seek, dur):
 	PLog('check_Resume: ' + str(seek))
 	if seek == "":
 		seek = "0"
-	if float(str(seek)) > 60:						   		# Min. 60  Sek.
+	if float(str(seek)) >= 40:						   		# Min. 40  Sek. wie  AddonStartlist
 		resume = seconds_translate(seek); 
 		total = seconds_translate(dur)
 		PLog("resume: %s, total: %s" % (resume,total))
@@ -3716,7 +3726,7 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			Plot = "Falls der Stream nicht funktioniert, bitte die Streamliste durchprobieren."
 
 		# live= False verhindert Streamuhrzeit (Klemmer bei einigen Streams) 
-		PlayVideo(url=url, title=title, thumb=img, Plot=Plot, live="")
+		PlayVideo(url=url, title=title, thumb=img, Plot=Plot, live="false")
 		xbmc.sleep(500)									# Klemmerschutz
 		return
 	
