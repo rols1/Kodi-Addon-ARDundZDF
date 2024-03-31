@@ -103,7 +103,7 @@ CallFunctions = ["PlayVideo", "ZDF_getVideoSources", "resources.lib.zdfmobile.Sh
 #	Nutzung von save_merkliste)
 #	
 def Watch_items(action, name, thumb='', Plot='', url=''):		
-	PLog('Watch: ' + action)
+	PLog('Watch_items: ' + action)
 	
 	url = unquote_plus(url)	
 	PLog(unquote_plus(url)[100:])  			# url in fparams zusätzlich quotiert

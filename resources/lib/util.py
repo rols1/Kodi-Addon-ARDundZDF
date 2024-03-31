@@ -2055,7 +2055,8 @@ def seconds_translate(seconds, days=False):
 # https://de.wikipedia.org/wiki/ISO_8601#Zeitzonen
 #
 # s.a. convHour (ARDnew) - Auswertung für html-Quelle mit PM/AM
-# 
+# Max. Datumsbereich:  ZDF_VerpasstWoche bis einschl. 2016
+#
 # 22.06.2020 Anpassung an 29-stel. ZDF-Format
 # 06.11.2020 Berücksichtigung Sommerzeit für Timecodes ohne UTC-Delta
 # 10.11.2020 Anpassung Tab. summer_time an Hinweis schubeda (UTC: -1 für MEZ, -2 für MESZ):
@@ -2068,6 +2069,7 @@ def time_translate(timecode, add_hour=True, day_warn=False, add_hour_only=""):
 	PLog("time_translate: " + timecode)
 	
 	# summer_time aus www.ptb.de, konvertiert zum date_format (s.u.):
+	#	Aktualisierung jeweils 29.01.
 	summer_time = [	
 					"2021-03-28T01:00:00Z|2021-10-31T01:00:00Z",
 					"2022-03-27T01:00:00Z|2022-10-30T01:00:00Z",
@@ -3475,7 +3477,6 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 	PLog("kodi_version: " + KODI_VERSION)							# Debug
 	# kodi_version = re.search('(\d+)', KODI_VERSION).group(0) 		# Major-Version reicht hier - entfällt
 	
-		
 	play_time=0; video_dur=0										# hier dummies (rel. -> PlayMonitor) 		
 	if url_check(url, caller='PlayVideo'):							# Url-Check
 		# Zuletzt-gesehen-Liste (STARTLIST) verwenden, Live-Streams
@@ -3484,44 +3485,45 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		startlist = SETTINGS.getSetting('pref_startlist')
 		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
 		if  startlist=='true' and playlist  !='true':				# Startlist  (true: skip bei playlist-Url)
-			PLog("maxvideos: %s, STARTLIST: %s" % (maxvideos, STARTLIST))
-			started_videos=""
-			if os.path.exists(STARTLIST):
-				started_videos= RLoad(STARTLIST, abs_path=True)		# Video-Startlist laden
-				started_videos=py2_encode(started_videos)
-				started_videos= started_videos.splitlines()
-			if started_videos == "":
-				started_videos=[]
-			PLog("started_videos: %d" % len(started_videos))
-			if len(started_videos) >= int(maxvideos)-1:				# ältesten Eintrag löschen (Basis 0)
-				del started_videos[0]
-				v = started_videos[0]
-				PLog("delete_video_0: " + v[:40])
-			
-			dt = datetime.datetime.now()							# Format 2017-03-09 22:04:19.044463
-			now = time.mktime(dt.timetuple())						# Unix-Format 1489094334.0 -> Sortiermerkmal
-			Plot=Plot.replace('\n', '||')
-			if 'gestartet: [COLOR darkgoldenrod]' in Plot: 			# Video aus Startlist:
-				mark = '[/COLOR]||||'								# 	Datum/Zeit lokal entfernen
-				pos = Plot.find(mark) + len(mark)
-				Plot = Plot[pos:]
+			if not live:											# Live für Video-Startlist ausschließen
+				PLog("maxvideos: %s, STARTLIST: %s" % (maxvideos, STARTLIST))
+				started_videos=""
+				if os.path.exists(STARTLIST):
+					started_videos= RLoad(STARTLIST, abs_path=True)		# Video-Startlist laden
+					started_videos=py2_encode(started_videos)
+					started_videos= started_videos.splitlines()
+				if started_videos == "":
+					started_videos=[]
+				PLog("started_videos: %d" % len(started_videos))
+				if len(started_videos) >= int(maxvideos)-1:				# ältesten Eintrag löschen (Basis 0)
+					del started_videos[0]
+					v = started_videos[0]
+					PLog("delete_video_0: " + v[:40])
 				
-			new_line = u"%s###%s###%s###%s###%s###sub_path:%s###" % (now, title, url, thumb, Plot, sub_path) 
-			new_line = py2_encode(new_line)
-			PLog("new_line: " + new_line)
+				dt = datetime.datetime.now()							# Format 2017-03-09 22:04:19.044463
+				now = time.mktime(dt.timetuple())						# Unix-Format 1489094334.0 -> Sortiermerkmal
+				Plot=Plot.replace('\n', '||')
+				if 'gestartet: [COLOR darkgoldenrod]' in Plot: 			# Video aus Startlist:
+					mark = '[/COLOR]||||'								# 	Datum/Zeit lokal entfernen
+					pos = Plot.find(mark) + len(mark)
+					Plot = Plot[pos:]
+					
+				new_line = u"%s###%s###%s###%s###%s###sub_path:%s###" % (now, title, url, thumb, Plot, sub_path) 
+				new_line = py2_encode(new_line)
+				PLog("new_line: " + new_line)
 
-			new_list=[]	
-			try:					
-				for item in started_videos:							# umkopieren
-					item = py2_encode(item)
-					if py2_encode(url) not in item:					# skip Einträge mit gleicher Url
-						new_list.append(item)	
-			except Exception as exception:
-				PLog("util_error: " + str(exception))
-				PLog(item); PLog(url)
+				new_list=[]	
+				try:					
+					for item in started_videos:							# umkopieren
+						item = py2_encode(item)
+						if py2_encode(url) not in item:					# skip Einträge mit gleicher Url
+							new_list.append(item)	
+				except Exception as exception:
+					PLog("util_error: " + str(exception))
+					PLog(item); PLog(url)
 
-			new_list.append(new_line)								# neuer Satz, Ergänzung s. monitor_resume
-			PLog(len(new_list))							
+				new_list.append(new_line)								# neuer Satz, Ergänzung s. monitor_resume
+				PLog(len(new_list))							
 		
 		#-------------------------------------------------------# Play		
 		# playlist: Start aus Modul Playlist (s.o.)
@@ -3604,8 +3606,11 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 			if player.isPlaying():
 				xbmc.sleep(500)										# für Raspi erforderl.
 				seekTime = float(str(seekTime))						# OK für PY2 + PY3
-				PLog("check_seekTime %s" % str(seekTime))
-				if seekTime > 0:	
+				video_dur = player.getTotalTime()
+				PLog("check_seekTime %s, video_dur %s" % (str(seekTime), str(video_dur)))
+				if 	seekTime > video_dur:							# Sicherung
+					seekTime = 0	
+				if seekTime > 0:
 					PLog("set_seekTime %s" % str(seekTime))	
 					player.seekTime(seekTime) 						# Startpos aus PlayMonitor (HLS o. Wirkung)
 				play_time = player.getTime()						# Resume-Check verschoben -> monitor_resume
@@ -3643,7 +3648,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		PLog("player_detect: %s, live: %s" % (str(player_detect), live))
 		if SETTINGS.getSetting('pref_inputstream') == 'true':
 			if SETTINGS.getSetting('pref_streamtime') == 'true':
-				if live:
+				if live:											# ShowSeekPos nor bei Live-Streams
 					if player_detect:
 						xbmc.sleep(2000)
 						PLog("Thread_ShowSeekPos_start:")			# Github-issue #30: Seek-Pos. -> Streamuhrzeit
@@ -3682,13 +3687,14 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 #	
 def monitor_resume(player, new_list, video_dur, seekTime):
 	PLog("monitor_resume:")
+	PLog(video_dur); PLog(seekTime) 
 
 	if os.path.exists(PLAYLIST_ALIVE):						# Beendet Kodis Fehl-Call (s. call_monitor_resume)
 		PLog("detect_running_playlist")
 		return
 
 	monitor = xbmc.Monitor()
-	if seekTime > 0:
+	if seekTime > 0 and seekTime < video_dur:				# seekTime größer als Vidoelänge möglich
 		cnt=0
 		while 1:
 			play_time = player.getTime()						# Resume-Check
@@ -3707,7 +3713,7 @@ def monitor_resume(player, new_list, video_dur, seekTime):
 			PLog("Resume-Check: OK")
 	#---------------------------------------
 	
-	p_list=[]
+	p_list=[]; play_time_last=0
 	while 1:
 		try:
 			play_time = player.getTime()
@@ -3719,7 +3725,7 @@ def monitor_resume(player, new_list, video_dur, seekTime):
 		p_list.append(play_time)							# Sync-Error-Liste, ähnlich ShowSeekPos
 		if len(p_list) >= 3:
 			diff = max(p_list) - min(p_list)
-			if max(p_list) < 1 or diff <=1 :				# nach 3 sec: Livestream oder Sync-Error, ca. 2 noch OK
+			if max(p_list) < 1 or diff <=1 :				# nach 3 sec: Sync-Error, ca. 2 noch OK
 				PLog("p_list_syncfail: %s, diff: %d" % (str(p_list), diff))
 				break
 			p_list=[]						
@@ -3730,24 +3736,29 @@ def monitor_resume(player, new_list, video_dur, seekTime):
 	del_val=75												# bei Bedarf Setting pref_delete_viewed verwenden
 	seekPos=video_dur										# Default: kein Resume
 	percent=0
-	try:													# Abgleich 75% Spielzeit
-		percent = 100 * (float(play_time) / float(video_dur))
-		percent = int(round(percent))
-		if percent < del_val:
-			seekPos = play_time								# Resume-Position
-	except Exception as exception:
-		PLog("monitor_resume_exception: " + str(exception))
+	if int(play_time) > 0 and int(video_dur) > 0:
+		try:												# Abgleich 75% Spielzeit
+			percent = 100 * (float(play_time) / float(video_dur))	# Division / 0 möglich
+			percent = int(round(percent))
+			if percent < del_val:
+				seekPos = play_time							# Resume-Position
+		except Exception as exception:
+			PLog("monitor_resume_exception: " + str(exception))
+	else:
+		PLog("play_time_and_seekPos_0")
+		
 	if seekPos < 10:										# 10 sec Mindestlänge für Resume
 		seekPos=0
 
 	line = new_list[-1]										# letzte Zeile ergänzen
-	PLog(line)												
+	PLog("line: " + line)												
 	if "###seekPos:" in line:
 		line = line.split("###seekPos:")[0]					# alte Werte löschen
 	# sub_path, seekPos, video_dur -> AddonStartlist
 	line = "%s###seekPos:%s###video_dur:%s###" % (line, seekPos, video_dur)
-	PLog("video_dur: %d, play_time: %d, seekPos: %d, percent: %d, line:  %s " %\
-		(video_dur, play_time, seekPos, percent, line))
+	PLog("video_dur: %d, play_time: %d, seekPos: %d, percent: %d" %\
+		(video_dur, play_time, seekPos, percent))
+	PLog("line_completed: " + line)												
 	new_list[-1] = line
 	
 	try:													# Korrektur früheres Format: jüngster zuletzt
@@ -3914,8 +3925,11 @@ def url_check(url, caller='', dialog=True):
 			return True
 		else:
 			if dialog:
-				msg1= 'Video fehlt! Datei:'
 				msg2 = url
+				if url == "":
+					msg1= 'Video-Url fehlt!'
+				else:
+					msg1= 'Video fehlt! Datei:'
 				MyDialog(msg1, msg2, "")		 			 	 
 			return False
 		
@@ -3935,7 +3949,7 @@ def url_check(url, caller='', dialog=True):
 		return True
 	except Exception as exception:
 		err = str(exception)
-		msg1= '%s: Seite nicht erreichbar - Url:' % caller
+		msg1= '%s: Quelle nicht erreichbar - Url:' % caller
 		msg2 = url
 		msg3 = 'Fehler: %s' % err
 		PLog(msg3)

@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>189</nr>										# Numerierung für Einzelupdate
-VERSION = '4.9.9'
-VDATE = '29.03.2024'
+VERSION = '5.0.0'
+VDATE = '31.03.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1987,14 +1987,15 @@ def Audio_get_sendung(url, title, page=''):
 	
 	if page.startswith('<!DOCTYPE html>'):
 		page = Audio_get_webslice(page, mode="json")				# json ausschneiden
+	elements = stringextract('"numberOfElements":', ',', page)		# für Mehr anzeigen 
+	PLog("elements: %s" % elements)
+		
 	pos = page.find("nodes")
 	PLog(pos)
 	if pos > 0:
 		page = page[pos:]
 		
 	page = page.replace('\\"', '*')
-	elements = stringextract('"numberOfElements":', ',', page)		# für Mehr anzeigen
-	PLog("elements: %s" % elements)
 	items = blockextract('"id":', page, '}]},{')					# bis nächste "id" (nicht trennsicher)
 	PLog(len(items))
 	
@@ -2213,7 +2214,14 @@ def Audio_get_items_single(item, ID=''):
 	if 	mp3_url == '':	
 		web_url = stringextract('"sharingUrl":"', '"', item)		# Weblink
 	if 	mp3_url == '' and web_url == "":							# neu ab 25.03.2023 (Web-json)
-		web_url = base + stringextract('"path":"', '"', item)
+		if '"path":"' in item:
+			web_url = base + stringextract('"path":"', '"', item)
+		else:
+			links = stringextract('"_links":', '},', item)
+			href = stringextract('"href":"', '"', links)			#  ./editorialcollections/56087830{?offset,limit}"
+			href = href.replace("{?offset,limit}", "")				# hier ohne href_add
+			href = href.replace("./", ARD_AUDIO_BASE)
+			web_url = href
 		if web_url == base:											# falls path leer
 			web_url=""	
 
@@ -2323,11 +2331,13 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 			msg2 = msg
 			MyDialog(msg1, msg2, '')	
 			return
-		PLog(len(page))
-		search_url = url											# für Step2
-		
+	PLog(len(page))
+	
+	page = json.loads(page)
+	PLog(str(page)[:100])
+	
+	search_url = url												# für erneuten Aufruf Step2
 	try:
-		page = json.loads(page)
 		objs = page["data"]["search"]
 	except Exception as exception:
 		PLog("search_error: " + str(exception))
@@ -2348,36 +2358,55 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 				
 	# Der zusätzl. Abschnitt "deviceType": "responsive" mit 
 	# 	allen Rubriken wird nicht gelistet
-	cluster = [u"editorialCategories|Rubriken", 
-			u"editorialCollections|Sammlungen", 
-			u"programSets|Sendungen",
-			u"items|Episoden (Einzelbeiträge)"]
+	cluster = [
+			u"programSets|Sendungen (Podcasts)|Sendung",
+			u"editorialCollections|Sammlungen/Themen|Thema", 
+			u"editorialCategories|Rubriken|Rubrik", 
+			u"items|Episoden (alle Einzelbeiträge)|Episode"]
 	
 	tag = "Folgeseiten"
 	for clus in cluster:
-		key, tag = clus.split("|")
-		PLog("%s | %s" % (key, tag))
+		key, tag1, tag2 = clus.split("|")								# tag1, tag2 -> Infotext 1. + 2.Zeile
+		PLog("%s | %s | %s" % (key, tag1, tag2))
 		anz = str(objs[key]["numberOfElements"])
 		
-		if objs[key]["numberOfElements"] > 0:		
-			item =  objs[key]["nodes"][0]							# 1. Beitrag
-			tag = u"Folgeseiten | [B]%s[/B]" % (tag)
-			if key != "items":										# 
-				tag = u"%s\nAnzahl: %s" % (tag, anz)
-			# Anpassung für string-Auswertung:
-			s=str(item); s=s.replace("'", '"'); s=s.replace('": "', '":"'); s=s.replace('", "', '","')
-			s = s.replace('\\"', '*')
+		if objs[key]["numberOfElements"] > 0:
+			if key != "items":											# nur Beiträge aus 1. Suchseite verfügbar,
+				anz_api = anz											# 	"_links" nicht verwendbar (s.u.)
+				anz = str(len(objs[key]["nodes"]))	
+				if anz != anz_api:										# tatsächliche Anzahl in api-Quelle abweichend!
+					PLog("anz_correct: %s statt %s" % (anz, anz_api))		
+			item =  objs[key]["nodes"][0]								# 1. Beitrag
+			tag = u"Folgeseiten | [B]%s | Anzahl: %s[/B]" % (tag1, anz) # 1. tagline
+			tag = u"%s\nTitel + Bild: 1. %s" % (tag, tag2)				# 2. tagline
+	
+			# Anpassung für string-Auswertung -> Audio_get_items_single:
+			s=str(item)
+			s=(s.replace("'", '"').replace('": "', '":"')\
+			.replace('", "', '","').replace('\\"', '*').replace(':""', ':"'))	
 			mp3_url, web_url, attr, img, dur, title, summ, source, sender, pubDate = Audio_get_items_single(s)
 			if mp3_url == "" and web_url == "":
 				PLog("skip_empty_mp3_and_web_url") 
 				continue
+
 			PLog("1Satz_a:")
+			label = title
 			PLog(key); PLog(title); PLog(search_url); PLog(attr);
 			
-			search_url=py2_encode(search_url); title=py2_encode(title); 	# -> 2. Aufruf mit web_url
+			# nur die Links der items funktionieren. Für die übrigen 
+			#	Cluster stehen nur die Beiträge der 1. Suchseite zur
+			#	Verfügung, trotz kompl. Linksätze (first, next,..) - 
+			#	Ursache nicht bekannt.  
+			if key == "items":											# Episoden (Einzelbeiträge)
+				url_first = objs[key]["_links"]["first"]["href"]
+				PLog("url_first: " + url_first)
+				search_url = url_first.replace("./", ARD_AUDIO_BASE)
+				PLog("search_url: " + search_url)
+				
+			search_url=py2_encode(search_url); title=py2_encode(title); 	# -> 2. Aufruf 
 			fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'key': '%s'}" % (quote(search_url), 
 				quote(title), key)
-			addDir(li=li, label=title, action="dirList", dirID="AudioSearch_cluster", \
+			addDir(li=li, label=label, action="dirList", dirID="AudioSearch_cluster", \
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)	
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -2396,50 +2425,84 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 #
 def Audio_get_search_cluster(objs, key):
 	PLog('Audio_get_search_cluster: ' + key)
-
-	li = xbmcgui.ListItem()
-	href_add = "offset=0&limit=12&order=descending"
 	
-	if key=="items" :											# Einzel (Episoden)
-		items =  objs[key]["nodes"]
-		PLog(len(items))
-		s=str(items); s=s.replace(u"'", '"'); s=s.replace(u'": "', '":"'); s=s.replace(u'", "', '","')
-		s = s.replace(u'\\"', '*')
-		s = s.replace(u'""', '"*')
-		Audio_get_sendung(url="", title="Search_%s" % key, page=s)	
-	else:														# Kategorien, Kollektionen, ProgrammSets
-		li = home(li,ID='ARD Audiothek')		# Home-Button
-		items =  objs[key]["nodes"]
-		PLog(len(items))
-		cnt=0
-		for item in items:
-			node_id = item["id"]								# -> api-Path				
-			# Anpassung für string-Auswertung:
-			s=str(item); s=s.replace("'", '"'); s=s.replace('": "', '":"'); s=s.replace('", "', '","')
-			s = s.replace('\\"', '*')
-			mp3_url, web_url, attr, img, dur, title, summ, source, sender, pubDate = Audio_get_items_single(s, key)
-			tag = "Folgeseiten"
-			if "programSets" in key:							# Sendungen der Sender
-				tag = "%s\nSender: %s" % (tag, sender)
-			href = ARD_AUDIO_BASE  + "%s/%s/?offset=0&limit=20" % (key, node_id) 
+	li = xbmcgui.ListItem()
+	li = home(li,ID='ARD Audiothek')		# Home-Button
+
+	items =  objs[key]["nodes"]
+	PLog(len(items))
+	
+	try:									# nexturl?			
+		href = objs[key]["_links"]["next"]["href"]
+		nexturl = href.replace("./", ARD_AUDIO_BASE)
+		total = stringextract("numberOfElements': ", ",", str(objs))
+	except Exception as exception:
+		PLog("nexturl_error: " + str(exception))
+		nexturl=""; total=""
+	PLog('nexturl: %s, total: %s ' % (nexturl, total))	
+	PLog(str(objs)[:80])
+	PLog(len(items))
+	
+	cnt=0
+	for item in items:
+		node_id = item["id"]								# -> api-Path				
+		# Anpassung für string-Auswertung -> Audio_get_items_single:
+		s=str(item)
+		s=(s.replace("'", '"').replace('": "', '":"')\
+		.replace('", "', '","').replace('\\"', '*').replace(':""', ':"'))
+		if "Hohenberg" in s:
+			PLog(s)	
+		mp3_url, web_url, attr, img, dur, title, summ, source, sender, pubDate = Audio_get_items_single(s, key)
+		tag = "Folgeseiten"
+		if "programSets" in key:							# Sendungen der Sender
+			tag = "%s\nSender: %s" % (tag, sender)
+		href = ARD_AUDIO_BASE  + "%s/%s/?offset=0&limit=20" % (key, node_id) 
+		
+		PLog('13Satz_a:');
+		PLog(title); PLog(href); PLog(img);
+		title=py2_encode(title); href=py2_encode(href);	
+		
+		if key=="editorialCollections" or key=="programSets":# Kollektionen, ProgrammSets
+			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
+				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
+		elif  key=="editorialCategories":					# editorialCategories / Kategorien
+			PLog('13Satz_b: ' + href);
+			href = "https://www.ardaudiothek.de/rubrik/%s" % node_id
+			fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'ID': 'Audio_get_search_cluster'}" %\
+				(quote(href), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_rubrik", \
+				fanart=img, thumb=img, fparams=fparams)	
+		else:												# items: Episoden (Einzelbeiträge)
+			PLog('13Satz_c: ' + mp3_url);
+			tag = "Dauer %s" % dur
+			if pubDate:
+				tag = "%s | Datum %s" %  (tag, pubDate)
+			if sender:
+				tag = "%s | Sender %s\n[B]%s[/B]" % (tag, sender, attr)
+			summ_par = summ
 			
-			PLog('13Satz_a:');
-			PLog(title); PLog(href); PLog(img);
-			title=py2_encode(title); href=py2_encode(href);	
+			mp3_url=py2_encode(mp3_url); img=py2_encode(img); summ_par=py2_encode(summ_par);
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+				quote(title), quote(img), quote_plus(summ_par))
+			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ)
+								
+		cnt=cnt+1
 			
-			if key=="editorialCollections" or key=="programSets":# Kollektionen, ProgrammSets
-				fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
-				addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
-					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
-			else:												# editorialCategories / Kategorien
-				PLog('13Satz_b: ' + href);
-				href = "https://www.ardaudiothek.de/rubrik/%s" % node_id
-				fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'ID': 'Audio_get_search_cluster'}" %\
-					(quote(href), quote(title))
-				addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_rubrik", \
-					fanart=img, thumb=img, fparams=fparams)				
-							
-			cnt=cnt+1		
+	if 	key == "items" and nexturl:						# nexturl aus json-Quelle, Audio_get_nexturl entf.
+		img=R(ICON_MEHR)
+		offset = re.search(u'offset=(\d+)', nexturl).group(1)
+		offset = int(offset) +1							# Basis 0
+		title = "Mehr: [B]%s[/B]" %  stringextract("searchText': '", "'", str(objs))
+		tag = u"Mehr (ab Beitrag %d von %s)" % (offset, total)
+		nexturl=py2_encode(nexturl); title=py2_encode(title); 	# -> 2. Aufruf 
+		fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'key': '%s'}" % (quote(nexturl), 
+			quote(title), key)
+		addDir(li=li, label=title, action="dirList", dirID="AudioSearch_cluster", \
+			fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)	
+				
+					
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 			
@@ -2732,13 +2795,15 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			PLog('6Satz:');
 			PLog(title); PLog(typ); PLog(cluster_id); 
 			cluster_id=py2_encode(cluster_id);
-			
-			if typ == "STAGE":											# Button Highlights
+			label=title
+			if typ == "STAGE":											# Button Highlights -> Audio_get_cluster_single
 				cluster_id = "Highlights"
-				title = "[B]%s[/B]" % cluster_id
+				label = "[B]%s[/B]" % cluster_id
+			if typ == "NAVIGATION":										# neu ab 29.03.2024 -> node_load
+				label = "[B]%s[/B]" % typ
 	
 			fparams="&fparams={'cluster_id': '%s'}" % cluster_id				
-			addDir(li=li, label=title, action="dirList", dirID="Audio_get_homescreen",
+			addDir(li=li, label=label, action="dirList", dirID="Audio_get_homescreen",
 				fanart=R(ICON_MAIN_AUDIO), thumb=img, tagline=tag, fparams=fparams)				
 				
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	

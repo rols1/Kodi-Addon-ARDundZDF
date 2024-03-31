@@ -10,6 +10,36 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+31.03.2024 5.0.0
+			ZDF_PageMenu: CacheTime für DictID (30 min), um Aktualisierung bei Favoriten
+			und Merkliste sicherzustellen, ergänzt mit url i.V.m. jsonpath zum Nachladen 
+			von Startseiten (ZDF, ZDFtivi, ZDF-funk) durch ZDF_Rubriken, Anpassung 
+			ZDF_Start (url=path), global HEADERS.
+			ZDF_Rubriken:  CacheTime für DictID (30 min), url i.V.m. jsonpath=Fallback 
+			bei Ausfall Dict (DictID), Param path -> jsonpath umbenannt, global HEADERS.
+			router: Dialoge für fehlende Funktionen und Module (z.B. bei alten Favoriten-
+			/Merklisteneinträgen).
+			ARDStartVideoHLSget (ARDnew): Param href vorbelegt (Absicherung gegen leere
+			Url in StreamArray).
+			GetContent (arte): in Mehr-Beiträgen json-keys für ID=Beitrag_Liste nach arte-
+			Änderung angepasst.
+			Modul Merkliste: für mydict_error (exception) nicht funktionierenden Dialog 
+			ersetzt durch notification.
+			ARDStartRubrik: router-inkompatible Zeichen in Info-Text ersetzt - relevant
+			beim Hinzufügen von Serien zur Merkliste. 
+			PlayVideo (util): if not live-Statement für Video-Startlist eingefügt - für
+			Aufrufe von ARDSportLiga3 relevant.
+			Zuletzt-gesehen-Liste: "gesehen bis .." in Info-Text ergänzt bei Videoabbruch.
+			url_check (util): Berücksichtigung leere Url bei Dialog.
+			Audio_get_homescreen: neuer Buttontitel NAVIGATION für Rubriken nach Highlights
+			(ARD-Änderung).
+			AudioSearch_cluster, Audio_get_search_cluster (Audiothek): Anpassungen an api-
+			Änderungen, Anlehnung der Ausgaben an Webseite, Korrektur falscher Anzahl in
+			api-Quelle (numberOfElements geringer möglich als tatsächliche Menge.
+			Audio_get_items_single: Url-Auswertung für Sammlungen (Themen) ergänzt. 
+			Audio_get_sendung: Auswertung numberOfElements für nexturl korrigiert (Meta-
+			Bereich statt 1. node).
+
 17.03.2024 4.9.9
 			Modul childs: neue Funktion tivi_Verpasst -  Anpassung Main_TIVI, Nutzung
 			ZDF_VerpasstWoche, ZDF_get_content, neues Icon zdftivi-cal.png, Menü 
