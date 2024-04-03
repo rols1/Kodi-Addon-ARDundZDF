@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>189</nr>										# Numerierung für Einzelupdate
+# 	<nr>190</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.0'
-VDATE = '31.03.2024'
+VDATE = '03.04.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2275,8 +2275,13 @@ def AudioSearch(title, query='', path=''):
 	CacheTime = 6000								# 1 Std.
 	title_org = title
 
-	# Web.json.: "https://www.ardaudiothek.de/suche/%s/"  			# ähnlich, abweich. Bezeichner 
-	base = "https://api.ardaudiothek.de/search?query=%s"
+	# Web.json.: "https://www.ardaudiothek.de/suche/%s/"  			# ähnlich, abweich. Bezeichner
+	# bzw. api-Web: https://www.ardaudiothek.de/_next/data/utkFcitMgXTWZyB2T6HPH/suche/%s.json -
+	#	die interne graphql-Umsetzung kann hier bei nachhaltiger url-id utkFcitM.. entfallen.
+	# 	Startet mit {"pageProps":{"initialData": vor {"data", _links fehlen, im Gegensatz sind die
+	#	nodes für Podcasts + Themen wie im Web vorhanden (in der norm. api-Quelle nur bis zu 23).
+	#base = "https://api.ardaudiothek.de/search?query=%s"
+	base = "https://www.ardaudiothek.de/_next/data/utkFcitMgXTWZyB2T6HPH/suche/%s.json"
 	
 	if 	query == '':	
 		query = get_query(channel='ARD Audiothek')
@@ -2338,9 +2343,13 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 	
 	search_url = url												# für erneuten Aufruf Step2
 	try:
-		objs = page["data"]["search"]
+		if "pageProps" in page:										# Web-api?
+			page  = page["pageProps"]["initialData"]
+			searchText  = page["searchText"]
+		objs = page["data"]["search"]								# Ergebnis-Ebenen
 	except Exception as exception:
 		PLog("search_error: " + str(exception))
+	PLog(str(page)[:100])
 	PLog(len(objs))
 
 	#--------------------------------								# 2. Aufruf Sendungen, Sammlungen
@@ -2368,23 +2377,25 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 	for clus in cluster:
 		key, tag1, tag2 = clus.split("|")								# tag1, tag2 -> Infotext 1. + 2.Zeile
 		PLog("%s | %s | %s" % (key, tag1, tag2))
-		anz = str(objs[key]["numberOfElements"])
+		if "numberOfElements" in objs[key]:
+			anz = objs[key]["numberOfElements"]
+		else:
+			anz = objs[key]["totalCount"]
+		PLog("anz: %d" % anz)
 		
-		if objs[key]["numberOfElements"] > 0:
+		if anz > 0:
 			if key != "items":											# nur Beiträge aus 1. Suchseite verfügbar,
 				anz_api = anz											# 	"_links" nicht verwendbar (s.u.)
-				anz = str(len(objs[key]["nodes"]))	
+				anz = len(objs[key]["nodes"])	
 				if anz != anz_api:										# tatsächliche Anzahl in api-Quelle abweichend!
-					PLog("anz_correct: %s statt %s" % (anz, anz_api))		
+					PLog("anz_correct: %d statt %d" % (anz, anz_api))		
 			item =  objs[key]["nodes"][0]								# 1. Beitrag
-			tag = u"Folgeseiten | [B]%s | Anzahl: %s[/B]" % (tag1, anz) # 1. tagline
+			tag = u"Folgeseiten | [B]%s | Anzahl: %d[/B]" % (tag1, anz) # 1. tagline
 			tag = u"%s\nTitel + Bild: 1. %s" % (tag, tag2)				# 2. tagline
 	
 			# Anpassung für string-Auswertung -> Audio_get_items_single:
-			s=str(item)
-			s=(s.replace("'", '"').replace('": "', '":"')\
-			.replace('", "', '","').replace('\\"', '*').replace(':""', ':"'))	
-			mp3_url, web_url, attr, img, dur, title, summ, source, sender, pubDate = Audio_get_items_single(s)
+			s=my_jsondump(item)
+			mp3_url, web_url, attr, img, dur, title, summ, source, sender, pubDate = Audio_get_items_single(s, key)
 			if mp3_url == "" and web_url == "":
 				PLog("skip_empty_mp3_and_web_url") 
 				continue
@@ -2397,11 +2408,17 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 			#	Cluster stehen nur die Beiträge der 1. Suchseite zur
 			#	Verfügung, trotz kompl. Linksätze (first, next,..) - 
 			#	Ursache nicht bekannt.  
+			# Web-api ohne _links
 			if key == "items":											# Episoden (Einzelbeiträge)
-				url_first = objs[key]["_links"]["first"]["href"]
-				PLog("url_first: " + url_first)
-				search_url = url_first.replace("./", ARD_AUDIO_BASE)
-				PLog("search_url: " + search_url)
+				if "_links" in objs[key]:
+					url_first = objs[key]["_links"]["first"]["href"]
+					PLog("url_first: " + url_first)
+					search_url = url_first.replace("./", ARD_AUDIO_BASE)
+					PLog("search_url: " + search_url)
+				else:													# Web-api: build search_url
+					api_url = "search/items?query=%s&offset=0&limit=24"	% quote(searchText) # searchText s.o.
+					search_url = ARD_AUDIO_BASE + api_url
+					
 				
 			search_url=py2_encode(search_url); title=py2_encode(title); 	# -> 2. Aufruf 
 			fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'key': '%s'}" % (quote(search_url), 
@@ -2425,6 +2442,7 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 #
 def Audio_get_search_cluster(objs, key):
 	PLog('Audio_get_search_cluster: ' + key)
+	PLog(str(objs)[:80])
 	
 	li = xbmcgui.ListItem()
 	li = home(li,ID='ARD Audiothek')		# Home-Button
@@ -2447,11 +2465,9 @@ def Audio_get_search_cluster(objs, key):
 	for item in items:
 		node_id = item["id"]								# -> api-Path				
 		# Anpassung für string-Auswertung -> Audio_get_items_single:
-		s=str(item)
-		s=(s.replace("'", '"').replace('": "', '":"')\
-		.replace('", "', '","').replace('\\"', '*').replace(':""', ':"'))
-		if "Hohenberg" in s:
-			PLog(s)	
+		s=my_jsondump(item)
+		if "den ganzen Tag im Bett" in s:
+			PLog(s)
 		mp3_url, web_url, attr, img, dur, title, summ, source, sender, pubDate = Audio_get_items_single(s, key)
 		tag = "Folgeseiten"
 		if "programSets" in key:							# Sendungen der Sender
@@ -2472,7 +2488,7 @@ def Audio_get_search_cluster(objs, key):
 			fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'ID': 'Audio_get_search_cluster'}" %\
 				(quote(href), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_rubrik", \
-				fanart=img, thumb=img, fparams=fparams)	
+				fanart=img, thumb=img, tagline=tag, fparams=fparams)	
 		else:												# items: Episoden (Einzelbeiträge)
 			PLog('13Satz_c: ' + mp3_url);
 			tag = "Dauer %s" % dur
@@ -2490,7 +2506,7 @@ def Audio_get_search_cluster(objs, key):
 								
 		cnt=cnt+1
 			
-	if 	key == "items" and nexturl:						# nexturl aus json-Quelle, Audio_get_nexturl entf.
+	if 	key == "items" and nexturl:						# nexturl aus json-Quelle, Audio_get_nexturl entfällt
 		img=R(ICON_MEHR)
 		offset = re.search(u'offset=(\d+)', nexturl).group(1)
 		offset = int(offset) +1							# Basis 0

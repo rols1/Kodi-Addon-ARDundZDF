@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>90</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.03.2024
+# 	<nr>91</nr>										# Numerierung für Einzelupdate
+#	Stand: 03.04.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1564,6 +1564,22 @@ def valid_title_chars(line):
 	 .replace(u"%5D", ''))
 
 	return line_ret
+#---------------------------------------------------------------- 
+# statt json.dumps: 
+# {'id': 'x', 'title': 'x'} -> {"id":"x", "title":"x"} ohne LF's,
+# 	Hochkommata -> *, sächs. Genitiv 's -> Blank
+# line=Dict
+def my_jsondump(line):
+	PLog("my_jsondump:")
+	try:
+		s = str(line)
+		s=(s.replace("'", '"').replace('", "', '","')\
+		.replace('": "', '":"').replace('"s', 's'))	
+	except Exception as exception:
+		s=""
+		PLog("my_jsondump: " + str(exception))
+
+	return s		
 #---------------------------------------------------------------- 
 # strip-Funktion, die auch Zeilenumbrüche innerhalb des Strings entfernt
 #	\s [ \t\n\r\f\v - s. https://docs.python.org/3/library/re.html
