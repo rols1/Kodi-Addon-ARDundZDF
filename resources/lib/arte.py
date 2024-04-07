@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>42</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.03.2024
+# 	<nr>43</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.04.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -948,6 +948,7 @@ def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 		size = "%sx%s" % (width, height)
 		
 		url = stringextract('"url": "',  '"', rec)
+		url = url.replace("\/", "/")								# 07.04.2024: ..\/\/arteptweb-a.akamaihd.net\/am\/..						
 		if url.find("Trailer") > 0 or url.find("_EXTRAIT_") > 0:	# Trailer-Kennz. (Stand 22.05.2022)
 			trailer = True
 
