@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>71</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.03.2024
+# 	<nr>72</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.04.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1935,12 +1935,20 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 	PLog('elements: ' + str(len(elements)))	
 	PLog("anz_plugin: %d" % page.count("_plugin"))			# todo: Relevanz _plugin=2 prüfen
 		
-	try:
+	try:													# Untertitel + StreamArray
 		sub_path=""
 		VideoObj = json.loads(page)["widgets"][0]
-		if "_subtitleUrl" in VideoObj["mediaCollection"]["embedded"]: # kann fehlen
-			sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleUrl"]
+		if "_subtitleWebVTTUrl" in VideoObj["mediaCollection"]["embedded"]: 			# UT vtt-Format
+			sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleWebVTTUrl"]
+		if sub_path == "":
+			if "_subtitleUrl" in VideoObj["mediaCollection"]["embedded"]: 				# UT xml-Format -> xml2srt
+				sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleUrl"]
+		sub_path=""
+		
+		if sub_path == "":																# UT in Web-api-Quelle suchen
+			sub_path = ARDStartVideoWebUTget(path, headers)
 		PLog("sub_path: " + sub_path)
+
 		mediaArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"]
 		StreamArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"][0]["_mediaStreamArray"]
 		PLog("VideoObj: %d, mediaArray: %d, StreamArray: %d" % (len(VideoObj),len(mediaArray), len(StreamArray)))
@@ -2054,6 +2062,25 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 		get_json_content(li, page, ID=ID, mehrzS=True, mark='')	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#----------------------------
+# ermittelt Untertitel in Web-api-Quelle
+# path wird ergänzt mit &mcV6=true
+def ARDStartVideoWebUTget(path, headers): 
+	PLog("ARDStartVideoWebUTget:")
+	page, msg = get_page(path + "&mcV6=true", header=headers)
+	if page:
+		page = json.loads(page)
+		PLog(str(page)[:80])
+	try:
+		mediaCollection = page["widgets"][0]["mediaCollection"]
+		PLog(str(mediaCollection)[:80])							# 0: xml, 1: vtt
+		sub_path = mediaCollection["embedded"]["subtitles"][0]["sources"][1]["url"]
+	except Exception as exception:
+		PLog("WebUTget_error:" + str(exception))
+		sub_path=""
+		
+	return sub_path
 
 #----------------------------
 # auto-Stream master.m3u8 aus VideoUrls ermitteln, 
