@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>91</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.04.2024
+# 	<nr>92</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.04.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2323,7 +2323,7 @@ def xml2srt(infile):
 		for i, p in enumerate(ps):
 			begin 	= stringextract('begin="', '"', p)		# "10:00:07.400"
 			end 	= stringextract('end="', '"', p)		# "10:00:10.920"			
-			ptext	=  blockextract('tt:span style=', p)
+			ptext	=  blockextract('tt:span style=', p)	# kann fehlen,z.B. in xml:id="sub0"
 			
 			begin	= begin[:8] + ',' + begin[9:11]			# ""10:00:07,40"			
 			end		= end[:8] + ',' + end[9:11]				# "10:00:10,92"
@@ -3789,32 +3789,36 @@ def monitor_resume(player, new_list, video_dur, seekTime):
 	return
 
 #-------------------------------------
-#  ARD-Untertitel konvertieren
-#  ARDUT, ZDF-UT u.a. -> Liste (für li.setSubtitles)
+# ARD-Untertitel konvertieren
+# ARD-UT, ZDF-UT u.a. -> xml2srt ->
+# 	Liste (für li.setSubtitles)
+# 12.04.2024 Berücksichtigung vtt-Format
+#	
 def sub_path_conv(sub_path):
 	PLog("sub_path_conv:")
 	
 	sub_list=[]
-	if 'ardmediathek.de' in sub_path or 'tagesschau.de' in sub_path:	
-		# ARD-Untertitel speichern
-		local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
-		local_path = os.path.abspath(local_path)
-		local_path = local_path.replace(':', '_')# Bsp. ../subtitles/urn:ard:subtitle:..
-		try:
-			urlretrieve(sub_path, local_path)
-		except Exception as exception:
-			PLog(str(exception))
-			local_path = ''
-		if 	local_path:							# util: Konvert. für Kodi leer bei Fehlschlag,
-			sub_path = xml2srt(local_path)		# 	Endung .srt, falls erfolgreich
-
-		sub_list.append(sub_path) 				# subtitleFiles: tuple or list
+	if 'ardmediathek.de' in sub_path or 'tagesschau.de' in sub_path:
+		if sub_path.endswith(".vtt") == False:	# .vtt-Format ohne Konvertierung			
+			# ARD-Untertitel speichern
+			local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
+			local_path = os.path.abspath(local_path)
+			local_path = local_path.replace(':', '_')# Bsp. ../subtitles/urn:ard:subtitle:..
+			try:
+				urlretrieve(sub_path, local_path)
+			except Exception as exception:
+				PLog(str(exception))
+				local_path = ''
+			if 	local_path:							# util: Konvert. für Kodi leer bei Fehlschlag,
+				sub_path = xml2srt(local_path)		# 	Endung .srt, falls erfolgreich
+								
+		sub_list.append(sub_path) 					# subtitleFiles: tuple or list
 		if PYTHON3:
-			sub_list.append(sub_path) 			# Matrix erwartet UT-Paar (kostete Lebenszeit..)
+			sub_list.append(sub_path) 				# Matrix erwartet UT-Paar (kostete Lebenszeit..)
 	else:
-		if '|' in sub_path:						# ZDF 2 Links: .sub, .vtt
+		if '|' in sub_path:							# ZDF 2 Links: .sub, .vtt
 			sub_list = 	sub_path.split('|')											
-		else:									# != ARD, ZDF
+		else:										# != ARD, ZDF
 			sub_list.append(sub_path) 
 			
 	PLog("sub_path_conv: " + str(sub_list))		
