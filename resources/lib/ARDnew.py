@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>72</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.04.2024
+# 	<nr>73</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.04.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1936,17 +1936,15 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 	PLog("anz_plugin: %d" % page.count("_plugin"))			# todo: Relevanz _plugin=2 prüfen
 		
 	try:													# Untertitel + StreamArray
-		sub_path=""
+		sub_path = ARDStartVideoWebUTget(path, headers)										# 1. UT in Web-api-Quelle suchen
 		VideoObj = json.loads(page)["widgets"][0]
-		if "_subtitleWebVTTUrl" in VideoObj["mediaCollection"]["embedded"]: 			# UT vtt-Format
-			sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleWebVTTUrl"]
 		if sub_path == "":
-			if "_subtitleUrl" in VideoObj["mediaCollection"]["embedded"]: 				# UT xml-Format -> xml2srt
-				sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleUrl"]
-		sub_path=""
+			if "_subtitleWebVTTUrl" in VideoObj["mediaCollection"]["embedded"]: 			# 2. UT vtt-Format
+				sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleWebVTTUrl"]
+			if sub_path == "":
+				if "_subtitleUrl" in VideoObj["mediaCollection"]["embedded"]: 				# 3. UT xml-Format -> xml2srt
+					sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleUrl"]
 		
-		if sub_path == "":																# UT in Web-api-Quelle suchen
-			sub_path = ARDStartVideoWebUTget(path, headers)
 		PLog("sub_path: " + sub_path)
 
 		mediaArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"]
@@ -2072,10 +2070,14 @@ def ARDStartVideoWebUTget(path, headers):
 	if page:
 		page = json.loads(page)
 		PLog(str(page)[:80])
+
+	sub_path=""
 	try:
 		mediaCollection = page["widgets"][0]["mediaCollection"]
-		PLog(str(mediaCollection)[:80])							# 0: xml, 1: vtt
-		sub_path = mediaCollection["embedded"]["subtitles"][0]["sources"][1]["url"]
+		subtitles = mediaCollection["embedded"]["subtitles"]
+		PLog(str(subtitles)[:80])									# 0: xml, 1: vtt
+		if subtitles:
+			sub_path = mediaCollection["embedded"]["subtitles"][0]["sources"][1]["url"]
 	except Exception as exception:
 		PLog("WebUTget_error:" + str(exception))
 		sub_path=""
