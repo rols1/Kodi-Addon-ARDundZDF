@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>190</nr>										# Numerierung für Einzelupdate
-VERSION = '5.0.0'
-VDATE = '03.04.2024'
+VERSION = '5.0.1'
+VDATE = '13.04.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1766,8 +1766,6 @@ def AudioSenderPrograms(org=''):
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 	#---------------------------------
-	RSave('/tmp/x_ARD.json', py2_encode(LiveObjekts[0]))	# Debug	
-
 	
 	if org:															# 2. Durchlauf: programSets listen	
 		PLog("stage2: " + org)
@@ -10039,6 +10037,7 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 	if geoblock and geoblock not in Plot:
 		Plot = "%s||%s" % (Plot, geoblock) 
 	
+	title_org=repl_json_chars(title_org)
 	tagline = Plot.replace('||', '\n')
 	Plot = Plot.replace('\n', '||')
 	
@@ -10814,7 +10813,7 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 		if u"Auflösung" in str(Stream_List):
 			Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'sung (\d+)x', x).group(1)))		
 	except Exception as exception:					# bei HLS/"auto", problemlos da vorsortiert durch Sender 
-		PLog("sort_error" + str(exception))
+		PLog("sort_error:  " + str(exception))
 
 	title_org=py2_encode(title_org);  img=py2_encode(img);
 	sub_path=py2_encode(sub_path); 	Plot=py2_encode(Plot); 
@@ -10875,12 +10874,12 @@ def router(paramstring):
 	# paramstring: Dictionary mit
 	# {<parameter>: <value>} Elementen
 	paramstring = unquote_plus(paramstring)
-	PLog(' router_params1: ' + paramstring)
+	# PLog(' router_params1: ' + paramstring)
 	PLog(type(paramstring));
 		
 	if paramstring:	
 		params = dict(parse_qs(paramstring[1:]))
-		PLog(' router_params_dict: ' + str(params))
+		# PLog(' router_params_dict: ' + str(params))
 		try:
 			if 'content_type' in params:
 				if params['content_type'] == 'video':	# Auswahl im Addon-Menü

@@ -1,0 +1,41 @@
+WEBVTT
+
+STYLE
+::cue(.textWhite) {
+ color: white;
+}
+
+STYLE
+::cue(.textBlack) {
+ color: black;
+}
+
+STYLE
+::cue(.textRed) {
+ color: red;
+}
+
+STYLE
+::cue(.textGreen) {
+ color: green;
+}
+
+STYLE
+::cue(.textYellow) {
+ color: yellow;
+}
+
+STYLE
+::cue(.textMagenta) {
+ color: magenta;
+}
+
+STYLE
+::cue(.textBlue) {
+ color: blue;
+}
+
+STYLE
+::cue(.textCyan) {
+ color: cyan;
+}

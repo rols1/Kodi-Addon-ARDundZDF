@@ -10,6 +10,21 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+13.04.2024 5.0.1
+			Suche in Audiothek: Verwendung des Web-api zur Angleichung der Ergebnisse,
+			Anpassung AudioSearch (Param. base), AudioSearch_cluster (pageProps, totalCount,
+			api_url -> search_url), Audio_get_search_cluster (Audio_get_nexturl entfällt),
+			neue Funktion my_jsondump.
+			SendungenAZ (my3Sat): unescape Param. rubrik.
+			get_streams_api_opa (arte): Escapezeichen in Url-HBBTV-Quellen bei api/opa/v3
+			entfernt.
+			ARDStartSingle: Umstellung Untertitel auf vtt-Format (statt xml), bei Fehlen
+			von UT Suche in alternativer Web-api-Quelle (frühzeitig verfügbar, relevant 
+			für Nachrichten), neue Funktion ARDStartVideoWebUTget.
+			sub_path_conv (util): aktuelle ARD-vtt-Datei mit W3-Style-Definitionen ergänzt.
+			build_Streamlists_buttons: repl_json_chars(title_org), um sort_error wegen
+			#-Zeichen in StreamsShow zu vermeiden.						 
+
 31.03.2024 5.0.0
 			ZDF_PageMenu: CacheTime für DictID (30 min), um Aktualisierung bei Favoriten
 			und Merkliste sicherzustellen, ergänzt mit url i.V.m. jsonpath zum Nachladen 

@@ -12,7 +12,7 @@
 # 	
 ################################################################################
 # 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.03.2024
+#	Stand: 04.04.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -327,7 +327,7 @@ def SendungenAZ(name, path):
 		href	= stringextract('href="', '"', tlink)
 		href	= DreiSat_BASE + href
 		descr	= stringextract('clickarea-link" >', '<', rec)
-		tag 	= rubrik
+		tag 	= unescape(rubrik)
 		if sub_rubrik:
 			tag = "%s | %s" % (tag, sub_rubrik)
 		tag = cleanhtml(tag)

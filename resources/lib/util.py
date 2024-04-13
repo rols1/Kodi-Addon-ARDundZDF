@@ -3796,21 +3796,34 @@ def monitor_resume(player, new_list, video_dur, seekTime):
 #	
 def sub_path_conv(sub_path):
 	PLog("sub_path_conv:")
+	sub_path_org=sub_path
 	
 	sub_list=[]
 	if 'ardmediathek.de' in sub_path or 'tagesschau.de' in sub_path:
-		if sub_path.endswith(".vtt") == False:	# .vtt-Format ohne Konvertierung			
-			# ARD-Untertitel speichern
-			local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
-			local_path = os.path.abspath(local_path)
-			local_path = local_path.replace(':', '_')# Bsp. ../subtitles/urn:ard:subtitle:..
-			try:
-				urlretrieve(sub_path, local_path)
-			except Exception as exception:
-				PLog(str(exception))
-				local_path = ''
-			if 	local_path:							# util: Konvert. für Kodi leer bei Fehlschlag,
-				sub_path = xml2srt(local_path)		# 	Endung .srt, falls erfolgreich
+		# ARD-Untertitel speichern
+		local_path = "%s/%s" % (SUBTITLESTORE, sub_path.split('/')[-1])
+		local_path = os.path.abspath(local_path)
+		local_path = local_path.replace(':', '_')# Bsp. ../subtitles/urn:ard:subtitle:..
+		try:
+			urlretrieve(sub_path, local_path)
+		except Exception as exception:
+			PLog(str(exception))
+			local_path = ''
+		if 	local_path:							
+			if sub_path.endswith(".vtt") == False:	# .vtt-Format ohne Konvertierung
+				sub_path = xml2srt(local_path)		# Konvertierung, Endung .srt, falls erfolgreich
+			else:									# .vtt-Datei mit Styles ergänzen
+				try:
+					styles_path = '%s/resources/%s' % (ADDON_PATH, "UT_Styles_ARD")
+					styles = RLoad(styles_path, abs_path=True)
+					if styles == "":				# Ladeproblem?
+						styles = "WEBVTT"
+					vtt = RLoad(local_path, abs_path=True)
+					vtt = vtt.replace("WEBVTT", styles)	# WEBVTT durch Styles-Defs ersetzen					
+					RSave(local_path, py2_encode(vtt), withcodec=False)
+				except Exception as exception:
+					PLog("styles_error: " + str(exception))
+				sub_path = local_path				# ohne Styles bei Exception
 								
 		sub_list.append(sub_path) 					# subtitleFiles: tuple or list
 		if PYTHON3:
@@ -3821,7 +3834,7 @@ def sub_path_conv(sub_path):
 		else:										# != ARD, ZDF
 			sub_list.append(sub_path) 
 			
-	PLog("sub_path_conv: " + str(sub_list))		
+	PLog("sub_path_conv_end: " + str(sub_list))		
 	return sub_list
 	
 #---------------------------------------------------------------- 
