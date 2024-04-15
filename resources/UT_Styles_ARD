@@ -1,4 +1,5 @@
 WEBVTT
+NOTE <nr>1</nr>	# Numerierung für Einzelupdate
 
 STYLE
 ::cue(.textWhite) {
