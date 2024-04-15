@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>190</nr>										# Numerierung für Einzelupdate
+# 	<nr>191</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.1'
-VDATE = '13.04.2024'
+VDATE = '15.04.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1931,7 +1931,7 @@ def Audio_get_webslice(page, mode="web"):
 	PLog('Audio_get_webslice:')
 	
 	if mode == "web":
-		pos1 = page.find('</head><body>')
+		pos1 = page.find('</head><body')
 		pos2 = page.find('{"props"')
 		page = page[pos1:pos2]
 	if mode == "json":							# wie get_ArtePage
@@ -1944,6 +1944,7 @@ def Audio_get_webslice(page, mode="web"):
 			page=''								# ohne json-Bereich: leere Seite
 		page = page[pos1:pos2+len(mark2)]	
 	
+	PLog(page[:80])
 	PLog(len(page))
 	return page
 				
@@ -2273,13 +2274,18 @@ def AudioSearch(title, query='', path=''):
 	CacheTime = 6000								# 1 Std.
 	title_org = title
 
-	# Web.json.: "https://www.ardaudiothek.de/suche/%s/"  			# ähnlich, abweich. Bezeichner
-	# bzw. api-Web: https://www.ardaudiothek.de/_next/data/utkFcitMgXTWZyB2T6HPH/suche/%s.json -
-	#	die interne graphql-Umsetzung kann hier bei nachhaltiger url-id utkFcitM.. entfallen.
-	# 	Startet mit {"pageProps":{"initialData": vor {"data", _links fehlen, im Gegensatz sind die
-	#	nodes für Podcasts + Themen wie im Web vorhanden (in der norm. api-Quelle nur bis zu 23).
-	#base = "https://api.ardaudiothek.de/search?query=%s"
-	base = "https://www.ardaudiothek.de/_next/data/utkFcitMgXTWZyB2T6HPH/suche/%s.json"
+	# https://api.ardaudiothek.de/search?query=%s - Abweichung der Ergebnisse
+	#	vom Web
+	# next-Link: www.ardaudiothek.de//_next/data/utkFcitMgXTWZyB2T6HPH/suche/%s.json 
+	#	unbrauchbar wg. Session-Token
+	# Versuch graphql-Umsetzung: Formatprobleme mit Quotierung, Doku graphql: 
+	#	https://api.ardaudiothek.de/graphql -> DOCS
+	# 14.04.2024 Rückkehr zur Websuche "https://www.ardaudiothek.de/suche/%s/",
+	#	Extraktion der Web-json-Daten, starten mit {"pageProps":{"initialData": 
+	#	vor {"data", _links fehlen, im Gegensatz sind die nodes für Podcasts + 
+	#	Themen wie im Web vorhanden (in der norm. api-Quelle nur bis zu 23).
+	#	
+	base = "https://www.ardaudiothek.de/suche/%s/"
 	
 	if 	query == '':	
 		query = get_query(channel='ARD Audiothek')
@@ -2295,7 +2301,7 @@ def AudioSearch(title, query='', path=''):
 	li = home(li, ID='ARD Audiothek')								# Home-Button
 	
 	if path == '':													# Folgeseiten
-		path = base  % quote(query)
+		path = base % quote(query)
 	path_org=path
 	
 	page, msg = get_page(path=path, do_safe=False)					# nach quote ohne do_safe 	
@@ -2311,7 +2317,8 @@ def AudioSearch(title, query='', path=''):
 		MyDialog(msg1, msg2, '')	
 		return
 		
-	AudioSearch_cluster(li, path, title="Suche: %s" % query, key="", query=query)
+	page =  Audio_get_webslice(page, mode="json")
+	AudioSearch_cluster(li, path, title="Suche: %s" % query, page=page, key="", query=query)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #----------------------------------------------------------------
@@ -2320,6 +2327,7 @@ def AudioSearch(title, query='', path=''):
 # 2. Aufruf: führt api-Call aus und übergibt an Audio_get_search_cluster
 # entfallen: Suchergebnisse -> PodFavoriten
 # 25.03.2023 Umstellung Web -> json nach ARD-Änderungen
+# 15.04.2024 Webaufrufe integriert (editorialCollections) -> Audio_get_webslice
 #
 def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 	PLog('AudioSearch_cluster: ' + key)
@@ -2335,6 +2343,9 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 			MyDialog(msg1, msg2, '')	
 			return
 	PLog(len(page))
+	if page.startswith('<!DOCTYPE html>'):
+		PLog("webpage_found")
+		page = Audio_get_webslice(page, mode="json")				# json ausschneiden
 	
 	page = json.loads(page)
 	PLog(str(page)[:100])
@@ -2342,6 +2353,7 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 	search_url = url												# für erneuten Aufruf Step2
 	try:
 		if "pageProps" in page:										# Web-api?
+			PLog("pageProps_found")
 			page  = page["pageProps"]["initialData"]
 			searchText  = page["searchText"]
 		objs = page["data"]["search"]								# Ergebnis-Ebenen
@@ -2418,11 +2430,13 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 					search_url = ARD_AUDIO_BASE + api_url
 					
 				
-			search_url=py2_encode(search_url); title=py2_encode(title); 	# -> 2. Aufruf 
+			search_url=py2_encode(search_url); title=py2_encode(title); # -> 2. Aufruf 
 			fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'key': '%s'}" % (quote(search_url), 
 				quote(title), key)
 			addDir(li=li, label=label, action="dirList", dirID="AudioSearch_cluster", \
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)	
+				
+				
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
