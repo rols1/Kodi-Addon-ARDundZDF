@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>92</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.04.2024
+# 	<nr>93</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.04.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3088,7 +3088,8 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	
 	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
 		return
-	cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	% (url, duration, dest_file)
+#	cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	% (url, duration, dest_file)
+	cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	
 	PLog("cmd: " + cmd); 
 	
 	PLog(sys.platform)
@@ -3810,7 +3811,7 @@ def sub_path_conv(sub_path):
 			PLog(str(exception))
 			local_path = ''
 		if 	local_path:							
-			if sub_path.endswith(".vtt") == False:	# .vtt-Format ohne Konvertierung
+			if sub_path.endswith(".vtt") == False:	# o. extension: xml-Format?
 				sub_path = xml2srt(local_path)		# Konvertierung, Endung .srt, falls erfolgreich
 			else:									# .vtt-Datei mit Styles ergänzen
 				try:
