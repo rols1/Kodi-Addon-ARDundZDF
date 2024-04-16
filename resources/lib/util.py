@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>94</nr>										# Numerierung für Einzelupdate
+# 	<nr>95</nr>										# Numerierung für Einzelupdate
 #	Stand: 16.04.2024
 
 # Python3-Kompatibilität:
@@ -3038,12 +3038,19 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	PLog(url); PLog(title); 	
 	PLog('duration: %s, laenge: %s' % (duration, laenge))
 	
+	icon = R("icon-record.png")
+	if url == "":									# ..ardundzdf/m3u8/
+		msg1 ='Aufnahme-Problem'
+		msg2 = "Stream-Url fehlt!"
+		# MyDialog(msg1, msg2, '')
+		xbmcgui.Dialog().notification(msg1, msg2,icon,3000)
+		return li	
+
 	import resources.lib.EPG as EPG					# -> now
 	import resources.lib.epgRecord as epgRecord		# setjob in epgRecord.JobMain
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)							# Home-Button
-	icon = R("icon-record.png")
 	
 	
 	if epgJob == '':								# epgRecord: o. Eingabe Dauer
