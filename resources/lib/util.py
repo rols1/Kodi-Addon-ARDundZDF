@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>93</nr>										# Numerierung für Einzelupdate
+# 	<nr>94</nr>										# Numerierung für Einzelupdate
 #	Stand: 16.04.2024
 
 # Python3-Kompatibilität:
@@ -3088,8 +3088,9 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	
 	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
 		return
-#	cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	% (url, duration, dest_file)
-	cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	
+	cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')
+	PLog("url: %s,  duration: %s, dest_file: %s" % (url, duration, dest_file))
+	cmd = cmd % (url, duration, dest_file)
 	PLog("cmd: " + cmd); 
 	
 	PLog(sys.platform)
