@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>95</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.04.2024
+# 	<nr>96</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.04.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3032,20 +3032,15 @@ def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für D
 #	LiveRecording wird neuer Aufnahme-Job erzeugt (via JobMain 'setjob')
 # 30.08.2020 experimentelles m3u8-Verfahren entf. - s. changelog.txt
 # 12.03.2023 popen-Rückmeldung "None args" für LibreElec 11 ergänzt
+# 17.04.2024 Ausfilterung spezieller Sender in TVLiveRecordSender
 #
 def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	PLog('LiveRecord:')
-	PLog(url); PLog(title); 	
-	PLog('duration: %s, laenge: %s' % (duration, laenge))
+	PLog('url: %s, title: %s, duration: %s, laenge: %s' % (url, title, duration, laenge))
 	
 	icon = R("icon-record.png")
-	if url == "":									# ..ardundzdf/m3u8/
-		msg1 ='Aufnahme-Problem'
-		msg2 = "Stream-Url fehlt!"
-		# MyDialog(msg1, msg2, '')
-		xbmcgui.Dialog().notification(msg1, msg2,icon,3000)
-		return li	
-
+	sender=title
+	
 	import resources.lib.EPG as EPG					# -> now
 	import resources.lib.epgRecord as epgRecord		# setjob in epgRecord.JobMain
 
@@ -3083,12 +3078,7 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 		dfname = "%s_%s.mp4" % (mydate, dfname)
 	PLog("dfname: %s" % dfname) 	
 	dest_file = os.path.join(dest_path, dfname)
-	if url.startswith('http') == False:				# Pfad bilden für lokale m3u8-Datei
-		if url.startswith('rtmp') == False:
-			url 	= os.path.join(M3U8STORE, url)	# rtmp-Url's nicht lokal
-			url 	= '"%s"' % url					# Pfad enthält Leerz. - für ffmpeg in "" kleiden						
 	
-	sender = title
 	if ":" in sender:
 		sender = sender.split(":")[0] 
 	url = url_correction(url, sender)				# Url-Korrektur, z.B. für LEIPZIG_FERNSEHEN 
@@ -3109,7 +3099,7 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	try:
 		PIDffmpeg = ''
 		sp = subprocess.Popen(args, shell=False)
-		PLog('sp: ' + str(sp))
+		PLog('sp: ' + str(sp))					# "None args" OK, da Call hier ohne wait
 
 		# Popen: 'None args' bei LibreElec 11
 		if str(sp).find('object at') > 0 or str(sp).find('None args') > 0:  # subprocess.Popen object OK
@@ -3180,9 +3170,10 @@ def check_Setting(ID):
 		# Test: Pfadanteil executable? 
 		#	Bsp.: "/usr/bin/ffmpeg -re -i %s -c copy -t %s %s -nostdin"
 		cmd = SETTINGS.getSetting('pref_LiveRecord_ffmpegCall')	
-		if cmd.strip() == '':
+		if cmd.strip() == '' or cmd.count("%s") < 3:				# mind. 3: url, duration, dest_file
 			msg1 = 'ffmpeg-Parameter fehlen in den Einstellungen!'
-			MyDialog(msg1, '', '')
+			msg2 = 'Siehe Addon-Wicki auf Github'
+			MyDialog(msg1, msg2, '')
 			return False
 			
 		if os.path.exists(cmd.split()[0]) == False:

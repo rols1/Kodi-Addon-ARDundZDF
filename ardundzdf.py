@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>191</nr>										# Numerierung für Einzelupdate
+# 	<nr>192</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.1'
-VDATE = '15.04.2024'
+VDATE = '17.04.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6694,7 +6694,9 @@ def EPG_Sender(title, Merk='false'):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 #-----------------------------
-#	Liste aller TV-Sender wie EPG_Sender, hier mit Aufnahme-Button
+# Liste aller TV-Sender wie EPG_Sender, hier mit Aufnahme-Button
+# 17.04.2024 Ausfilterung spezieller Sender aus livesenderTV.xml
+#
 def TVLiveRecordSender(title):
 	PLog('TVLiveRecordSender:')
 	title = unquote(title)
@@ -6718,6 +6720,10 @@ def TVLiveRecordSender(title):
 		if u'://' not in img:	# Logo lokal? -> wird aus Resources geladen, Unterverz. leider n.m.
 			img = R(img)
 		link 	= rec[3]
+		if title == "":				# Spezialfälle, s. livesenderTV.xml (Bsp.: 3. Bundesliga)
+			continue
+		if link.endswith(".mp3") or link.endswith(".m3u") or "/mp3" in link:
+			continue				# Spezialfälle ARD Audio Event Streams, s. livesenderTV.xml
 		if ID == '':				# ohne EPG_ID
 			title = title + ': [B]ohne EPG[/B]' 
 		if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
