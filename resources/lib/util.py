@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>96</nr>										# Numerierung für Einzelupdate
+# 	<nr>97</nr>										# Numerierung für Einzelupdate
 #	Stand: 17.04.2024
 
 # Python3-Kompatibilität:
@@ -3641,7 +3641,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		# waitForAbort für Player-Warteschleife statt while(1) - hilft gegen Buffern:											
 		monitor = xbmc.Monitor(); i=0; max_secs=5 					# showSubtitles setzen, sobald Player spielt
 		player_detect=False
-		PLog("Subtitles: wait_for_Player(%d sec)" % max_secs)
+		PLog("Subtitles: wait_for_Player(%d sec), sub_path: %s" % (max_secs, sub_path))
 		while 1:
 			xbmc.sleep(1000)
 			i=i+1
@@ -3650,9 +3650,10 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 					if SETTINGS.getSetting('pref_UT_ON') == 'true':
 							PLog("Player_Subtitles: on")
 							xbmc.Player().showSubtitles(True)
-					else:           
-							PLog("Player_Subtitles: off")
-							xbmc.Player().showSubtitles(False)
+					else:  										# Freeze in Windows bei späterem Einschalten 
+							if sub_path:						# Abschalten nur mit sub_path, i.d.R. nicht bei Live
+								PLog("Player_Subtitles: off")
+								xbmc.Player().showSubtitles(False)
 					player_detect=True
 					break
 			if i >= max_secs:
