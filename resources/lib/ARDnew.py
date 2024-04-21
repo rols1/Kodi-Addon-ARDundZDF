@@ -672,7 +672,7 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 	regio_kat = [										# nach Bedarf ergänzen
 		"by|Unter unserem Himmel|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2JyLmRlL2Jyb2FkY2FzdFNlcmllcy9icm9hZGNhc3RTZXJpZXM6L2JyZGUvZmVybnNlaGVuL2JheWVyaXNjaGVzLWZlcm5zZWhlbi9zZW5kdW5nZW4vdW50ZXItdW5zZXJlbS1oaW1tZWw|https://api.ardmediathek.de/image-service/images/urn:ard:image:af246683efe842f0?w=640&ch=fcad9e13605d8eb0"
 		,"by|Blickpunkt Sport|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2JyLmRlL2Jyb2FkY2FzdFNlcmllcy9icm9hZGNhc3RTZXJpZXM6L2JyZGUvZmVybnNlaGVuL2JheWVyaXNjaGVzLWZlcm5zZWhlbi9zZW5kdW5nZW4vYmxpY2twdW5rdC1zcG9ydA|https://api.ardmediathek.de/image-service/images/urn:ard:image:47139d13d3483f29?w=640&ch=9d54ad9bea96ef5b"
-		,"he|Heimat Hessen|https://api.ardmediathek.de/page-gateway/pages/hr/editorial/hr-heimat-hessen|https://api.ardmediathek.de/image-service/images/urn:ard:image:1b827cdb8908c86a?ch=2ffab2573aac4e10&w=640"
+		,"he|Heimat Hessen|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2hyLW9ubGluZS8zODIxMDI4MQ|https://api.ardmediathek.de/image-service/images/urn:ard:image:f049db09043c494c?w=640&ch=c8f27b2223dbd951"
 		,"he|Sport im hr|https://api.ardmediathek.de/page-gateway/pages/hr/editorial/hr-sport-hessen|https://api.ardmediathek.de/image-service/images/urn:ard:image:728fab9db02e4bae?ch=011a995a203e585a&w=640"
 		,"sl|Sport im SR|https://api.ardmediathek.de/page-gateway/widgets/sr/editorials/E7IQVqrZXqK24ieYwG8kO%3A-115180639807314065|https://api.ardmediathek.de/image-service/images/urn:ard:image:1c772b30babcd252?ch=5266a5922c5f86f0&w=640"
 		,"sn|MDR+|https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL21kci5kZS9tZHJwbHVz?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:eab36fa8ffdb27da?w=640&ch=4bc0c7d930d596d9"
@@ -1944,10 +1944,9 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 			if sub_path == "":
 				if "_subtitleUrl" in VideoObj["mediaCollection"]["embedded"]: 				# 3. UT xml-Format -> xml2srt
 					sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleUrl"]
-		
 		PLog("sub_path: " + sub_path)
 
-		mediaArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"]
+		mediaArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"]					# Videostreams
 		StreamArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"][0]["_mediaStreamArray"]
 		PLog("VideoObj: %d, mediaArray: %d, StreamArray: %d" % (len(VideoObj),len(mediaArray), len(StreamArray)))
 	except Exception as exception:
@@ -2732,6 +2731,7 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 #	der 2-fache Durchlauf (Senderliste / Sendungen) entfällt
 # 06.12.2023 alter api-Link filtert nicht mehr nach Sendern, neuer Link
 #	programm-api.ard.de, gecached (ca. 2 MB, enthält alle Sender).
+# 21.04.2024 Programmliste ARD-Alle ermöglicht
 #
 def ARDVerpasstContent(title, startDate, CurSender="", homeID=""):
 	PLog('ARDVerpasstContent:');
@@ -2768,16 +2768,6 @@ def ARDVerpasstContent(title, startDate, CurSender="", homeID=""):
 		return
 	PLog(len(page))				
 	
-	pos = page.find('"id":"%s"' % sender)					# Check Fundstelle, ARD-Alle hier abgefangen
-	if pos < 0:			
-		msg1 = u'keine Beiträge gefunden zu:'
-		msg2 = u'%s | %s'  % (title, sendername)
-		msg3 = u"Bitte einen Sender wählen!"
-		PLog("%s | %s" % (msg1, msg2))
-		MyDialog(msg1, msg2, msg3)
-		return li
-			
-	PLog('findpos: %d' % pos)	
 	# dateformat: 2022-05-23T03:30:00.000Z
 	# Bereichsangabe (Datum, Uhrzeit) zu lang für notification:
 	msg1 = "%s.%s.%s" % (startDate[8:10], startDate[5:7], startDate[0:4])
@@ -2788,151 +2778,153 @@ def ARDVerpasstContent(title, startDate, CurSender="", homeID=""):
 	try:
 		obs = json.loads(page)
 		channels = obs["channels"]
-		PLog(len(channels))
-		for c in channels:
-			PLog("sender: %s, id: %s" % (sender, c["id"]))
-			if sender ==  c["id"]:
-				channel = c
-				break
 	except Exception as exception:
 		channels=[]; channel=[]
-		PLog(str(exception))
+		PLog("channels_error: " + str(exception))
 	PLog("channels: %d" % len(channels))
-	PLog("channel: " + str(channels)[:100])
+	PLog("channels: " + str(channels)[:100])
 	
+	if sender == "ard":
+		sender = sendername									# ARD-Alle
 	PLog("extract_%s" % sender)
-	timeSlots = channel["timeSlots"]
-	PLog(str(timeSlots)[:100])
-	ARDVerpasst_get_json(li, timeSlots, homeID,sender)															
+	ARDVerpasst_get_json(li, channels, homeID, sender)															
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #----------------------------------------------------------------
 # Auswertung timeSlots (Vormittags, Nachmittags, Abends), hier
 #	zusammenhängend.
-def ARDVerpasst_get_json(li, timeSlots, homeID, sender):
-	PLog('ARDVerpasst_get_json:')
-	PLog(len(timeSlots))
+def ARDVerpasst_get_json(li, channels, homeID, sender):
+	PLog('ARDVerpasst_get_json: ' + sender)
+	PLog(len(channels))
 	
 	logo = R("icon-bild-fehlt_wide.png")						# ersetzt fehlendes img im EPG
 	# targetbase (%s=sender, %s=urlId)
 	tbase = "https://api.ardmediathek.de/page-gateway/pages/%s/item/%s?devicetype=pc&embedded=true" 
 	mediatype=""
 
-	for i, slot in enumerate(timeSlots):
-		items = slot
-		PLog("slot: %d, anz: %d" % (i, len(items)))
-		for s in items:						
-			PLog(str(s)[:100])
-							
-			synopsis=""; availableTo=""; href=""; path=""		# path -> Video
-			matRat=""; uhr=""; subline=""; summ="";
-			pubServ=""
-
-			try:
-				title = s["title"]
-				duration = s["duration"]
-				duration = seconds_translate(duration)			# 0:15
-				# pubServ = s["channel"]["name"]				# Problem swrbw
-				
-				if "images" in s:
-					img = s["images"]["aspect16x9"]["src"]
-					img = img.replace('{width}', '720')
-				else:
-					img = logo
-					
-				if 	"channel" in s:								# kann fehlen
-					pubServ = s["channel"]["name"]
-				else:
-					pubServ = sender 
-					
-				if "subline" in s:	
-					subline = s["subline"]
-					pubServ = "%s | %s" % (pubServ, subline)
-				
-				if "target" in s["links"]:						# target -> Video
-					urlId = s["links"]["target"]["urlId"]
-					path = tbase % (sender, urlId) 
-				
-				if "maturityContentRating" in s:
-					matRat= s["maturityContentRating"]
-				
-
-				if duration and pubServ:										
-					duration = u'Dauer %s | [B]%s[/B]' % (duration, pubServ)
-					
-				if 	matRat:
-					if duration == '':
-						duration = "Dauer unbekannt"
-					duration = u"%s | FSK: %s\n" % (duration, matRat)
-				if "availableTo" in s:									# fehlt seit Api-Änderung, s.
-					availableTo = s["availableTo"]						#	pref_load_summary
-				
-				if 	"synopsis" in s:
-					summ =  s["synopsis"]
-					
-				verf = availableTo										# s.o.
-				if verf == None:
-					verf=""
-				verf = time_translate(verf, day_warn=True)
-					
-				pubDate = s["broadcastedOn"]
-				PLog("pubDate: " + pubDate)
-				pubDate = time_translate(pubDate, add_hour=False, day_warn=True)
-				uhr = pubDate[11:16]	
-				pubDate = u"Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n" % pubDate
-				summ = "%s\n%s" % (pubDate, summ)
-
-				if verf:
-					summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (summ, verf)
-				if duration:
-					summ = "%s\n%s" % (duration, summ)
-				PLog("summ: " + summ)	
-					
-				if path == "":
-					summ = "[B]NICHT in der Mediathek![/B]\n%s" % summ		
-					title = "[COLOR grey]%s | %s[/COLOR]" % (uhr, title) 
-				else:
-					title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 			
-				
+	for i, channel in enumerate(channels):
+		sid = channel["id"]
+		if sender != "ARD-Alle":
+			if sid != sender:
+				continue
+			PLog("sender_found: " + sender)
 			
-				if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
-					summ_new = get_summary_pre(path=path, ID='ARDnew', duration=duration)  # Modul util
-					if 	summ_new:										# 
-						summ = summ_new
-				summ = repl_json_chars(summ)
-		
-				if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
-					mediatype='video'
-			except Exception as exception:
-				PLog("Verpasst_json_error: " + str(exception))
-				
-			if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
-				filtered=False
-				for fil in AKT_FILTER: 
-					if up_low(item) in py2_encode(up_low(str(s))):
-						filtered = True
-						break		
-				if filtered:
-					PLog('filtered_8: <%s> in %s ' % (item, title))
-					continue		
-				
-			PLog("Satz:")
-			PLog(title); PLog(href); PLog(path); PLog(img); PLog(summ[:60]); 
-			PLog(duration); PLog(availableTo);
+
+		slots = channel["timeSlots"]
+		PLog("sender: %s, slots: %d, anz: %d" % (sid, i, len(slots)))
+		for ii, slot in enumerate(slots):						# 3; vorm., nachm., abends	
+			for s in slot:										# einz. Sendungen
+				PLog(str(s)[:80])
+							
+				synopsis=""; availableTo=""; href=""; path=""		# path -> Video
+				matRat=""; uhr=""; subline=""; summ="";
+				pubServ=""
+
+				try:
+					title = s["title"]
+					duration = s["duration"]
+					duration = seconds_translate(duration)			# 0:15
+					# pubServ = s["channel"]["name"]				# Problem swrbw
 					
-			summ_par = summ.replace('\n', '||')
-			ID = "ARDVerpasst_get_json"
-			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
-			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s','homeID': '%s'}" %\
-				(quote(path), quote(title), quote(summ_par), ID, homeID)	
-			if path:
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, 
-					thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
-			else:														# function dummy Haupt-PRG
-				fparams="&fparams={'path': '', 'title': '', 'img': ''}"
-				addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, 
-					thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
+					if "images" in s:
+						img = s["images"]["aspect16x9"]["src"]
+						img = img.replace('{width}', '720')
+					else:
+						img = logo
+						
+					if 	"channel" in s:								# kann fehlen
+						pubServ = s["channel"]["name"]
+					else:
+						pubServ = sender 
+						
+					if "subline" in s:	
+						subline = s["subline"]
+						pubServ = "%s | %s" % (pubServ, subline)
+					
+					if "target" in s["links"]:						# target -> Video
+						urlId = s["links"]["target"]["urlId"]
+						path = tbase % (sender, urlId) 
+					
+					if "maturityContentRating" in s:
+						matRat= s["maturityContentRating"]
+					
+
+					if duration and pubServ:										
+						duration = u'Dauer %s | [B]%s[/B]' % (duration, pubServ)
+						
+					if 	matRat:
+						if duration == '':
+							duration = "Dauer unbekannt"
+						duration = u"%s | FSK: %s\n" % (duration, matRat)
+					if "availableTo" in s:									# fehlt seit Api-Änderung, s.
+						availableTo = s["availableTo"]						#	pref_load_summary
+					
+					if 	"synopsis" in s:
+						summ =  s["synopsis"]
+						
+					verf = availableTo										# s.o.
+					if verf == None:
+						verf=""
+					verf = time_translate(verf, day_warn=True)
+						
+					pubDate = s["broadcastedOn"]
+					PLog("pubDate: " + pubDate)
+					pubDate = time_translate(pubDate, add_hour=False, day_warn=True)
+					uhr = pubDate[11:16]	
+					pubDate = u"Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n" % pubDate
+					summ = "%s\n%s" % (pubDate, summ)
+
+					if verf:
+						summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (summ, verf)
+					if duration:
+						summ = "%s\n%s" % (duration, summ)
+					PLog("summ: " + summ)	
+						
+					if path == "":
+						summ = "[B]NICHT in der Mediathek![/B]\n%s" % summ		
+						title = "[COLOR grey]%s | %s[/COLOR]" % (uhr, title) 
+					else:
+						title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 			
+					
+				
+					if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
+						summ_new = get_summary_pre(path=path, ID='ARDnew', duration=duration)  # Modul util
+						if 	summ_new:										# 
+							summ = summ_new
+					summ = repl_json_chars(summ)
+			
+					if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
+						mediatype='video'
+				except Exception as exception:
+					PLog("Verpasst_json_error: " + str(exception))
+					
+				if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
+					filtered=False
+					for fil in AKT_FILTER: 
+						if up_low(item) in py2_encode(up_low(str(s))):
+							filtered = True
+							break		
+					if filtered:
+						PLog('filtered_8: <%s> in %s ' % (item, title))
+						continue		
+					
+				PLog("Satz:")
+				PLog(title); PLog(href); PLog(path); PLog(img); PLog(summ[:60]); 
+				PLog(duration); PLog(availableTo);
+						
+				summ_par = summ.replace('\n', '||')
+				ID = "ARDVerpasst_get_json"
+				href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
+				fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s','homeID': '%s'}" %\
+					(quote(path), quote(title), quote(summ_par), ID, homeID)	
+				if path:
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, 
+						thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
+				else:														# function dummy Haupt-PRG
+					fparams="&fparams={'path': '', 'title': '', 'img': ''}"
+					addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, 
+						thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
 											
 	return
 #----------------------------------------------------------------
