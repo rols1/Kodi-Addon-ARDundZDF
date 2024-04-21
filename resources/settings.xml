@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!-- 	<nr>11</nr>	# Numerierung für Einzelupdate -->
+<!-- 	<nr>12</nr>	# Numerierung für Einzelupdate -->
 <settings> 
     <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
@@ -37,6 +37,7 @@
 	<setting label="Downloads verschieben in dieses Verzeichnis" type="folder" source="" id="pref_VideoDest_path" default=""/>
  	<setting label="Fortschrittsbalken beim Download anzeigen" type="bool" id="pref_use_pgbar" default="false"/>
  	<setting label="verbleibende Downloads anzeigen" type="bool" id="pref_dl_cnt" default="false"/>
+ 	<setting label="Zeige Download-Dialog zu Größe, Zieldatei und Untertitel" type="bool" id="pref_dl_showinfo" default="true"/>
 	<setting type="sep"/>
  	<setting label="Abgleich Videotitel mit Medienbibliothek" type="bool" id="pref_exist_inlib" default="false"/>
  

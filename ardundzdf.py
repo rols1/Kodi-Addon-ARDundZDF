@@ -2116,12 +2116,13 @@ def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 		summ_par = summ
 		
 		PLog('7Satz:');
-		PLog(tag); PLog(summ[:80]);
+		PLog(tag); PLog(summ[:80]); PLog("icecastssl_url: %d" % mp3_url.find(".icecastssl."))
 		title=py2_encode(title); web_url=py2_encode(web_url); mp3_url=py2_encode(mp3_url);
 		img=py2_encode(img); summ_par=py2_encode(summ_par);	
 			
 		if mp3_url:
-			downl_list.append("%s#%s" % (title, mp3_url))
+			if  mp3_url.find(".icecastssl.") < 0:					#  Livestreams von Downloads ausschließen
+				downl_list.append("%s#%s" % (title, mp3_url))
 
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
 				quote(title), quote(img), quote_plus(summ_par))
@@ -5307,7 +5308,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 					subname = os.path.split(sub_path)[1]
 					msg3 = u"%s\nUntertitel werden zusätzlich geladen" % (msg3)					  
 
-			if notice:
+			if notice and SETTINGS.getSetting('pref_dl_showinfo') == 'true':
 				ret=MyDialog(msg1, msg2, msg3, ok=False, yes='OK')
 				if ret  == False:
 					return
