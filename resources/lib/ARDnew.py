@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>73</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.04.2024
+# 	<nr>74</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.04.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1752,7 +1752,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 			title = make_mark(mark, title, "", bold=True)		# -> util
 			
 		if mehrzS:												# Setting pref_more
-			title = u"Mehr: %s" % title	
+			title = u"[B]Mehr[/B]: %s" % title	
 		if mark == "Subrubriken":
 			if title.startswith(u"Übersicht"):					# skip Subrubrik Übersicht (rekursiv, o. Icons) 
 				PLog("skip_Übersicht")
@@ -2045,13 +2045,38 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 		return										# 13.11.2021 notw. für Rückspr. z. Merkliste
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-	PLog('Mehr_Test')
+	PLog('Serien_Test_Mehr_Test')
 	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten). element enthält 
 	#	Sendungen ab dem 2. Element (1. die Videodaten)
 	# 19.10.2020 Funktion get_ardsingle_more entfällt
 	# 15.04.2023 Auswertung Mehr-Beiträge -> json
+	# 23.04.2024 Serienhinweis, falls Beitrag Bestandteil einer Serie ist
+	#	(availableSeasons)
 	if len(elements) > 1 and SETTINGS.getSetting('pref_more') == 'true':
-		gridlist = elements[1:]						# hinter den Videodaten (1. Element)
+		if "show" in VideoObj: 						# Serienhinweis?
+			if "availableSeasons" in VideoObj["show"]:
+				PLog("serie_detect: %s" % str(VideoObj["show"])[:80])
+				sid = VideoObj["show"]["id"]
+				title =  "[B]Serie[/B]: %s" % VideoObj["show"]["title"]
+				img =  VideoObj["show"]["image"]["src"]
+				img = img.replace('{width}', '640')
+				alt =  VideoObj["show"]["image"]["alt"]
+				anz = VideoObj["show"]["availableSeasons"]
+				if anz:								# None, "1", "2",..
+					typ = VideoObj["show"]["coreAssetType"]
+					tag = u"Serie | Staffeln: %s" % len(anz)
+					summ = VideoObj["synopsis"]
+					path = "https://api.ardmediathek.de/page-gateway/pages/daserste/grouping/%s" % sid
+					PLog("serie: %s, path: %s" % (title, path))
+					path=py2_encode(path); title=py2_encode(title); 
+					fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': 'ARDStartSingle'}" %\
+						(quote(path), quote(title))
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik",\
+						fanart=img, thumb=img, tagline=tag, summary=summ, fparams=fparams)
+				else:
+					PLog("serie_anz_fehlt")
+		
+		gridlist = elements[1:]						# Mehr-Beiträge hinter den Videodaten (1. Element)
 		PLog('gridlist_more: ' + str(len(gridlist)))	
 		s = json.loads(page)["widgets"][1]			
 		page  = json.dumps(s)
