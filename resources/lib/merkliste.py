@@ -7,8 +7,8 @@
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 # 	Funktions-Calls via Auswertung sys.argv s. Modulende
 ################################################################################
-# 	<nr>7</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.03.2024
+# 	<nr>8</nr>										# Numerierung für Einzelupdate
+#	Stand: 25.04.2024
 #
 
 from __future__ import absolute_import
@@ -880,11 +880,13 @@ PLog('merk_params_dict: ' + str(params))
 
 if "'fparams_add': 'clear'" in str(params):			# 1. Aufruf InfoAndFilter -> start_script -> router
 	clear_merkliste()
-	ignore_this_network_error()						# network_error statt threading Exception
+	ignore_this_network_error()						# network_error statt threading Exception	
+
 if "'fparams_add': 'do_folder'" in str(params):		# 2. Aufruf InfoAndFilter -> router
 	do_folder()
-	ignore_this_network_error()						# network_error statt threading Exception (
-	
+	PLog("exit_callfromstart_script")
+	exit()
+
 # ------------------------------------------------- # callfrom_context:
 
 icon = R(ICON_DIR_WATCH)
