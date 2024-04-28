@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>97</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.04.2024
+# 	<nr>98</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.04.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3445,7 +3445,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
 	PLog(sub_path); PLog(seekTime); PLog("live: " + live); PLog(playlist)
 	import sqlite3										# Abfrage MyVideos*.db
-	
+
 	Plot=transl_doubleUTF8(Plot)
 	Plot=(Plot.replace('[B]', '').replace('[/B]', ''))	# Kodi-Problem: [/B] wird am Info-Ende platziert
 	url=url.replace('\\u002F', '/')						# json-Pfad noch unbehandelt
@@ -3665,7 +3665,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		PLog("player_detect: %s, live: %s" % (str(player_detect), live))
 		if SETTINGS.getSetting('pref_inputstream') == 'true':
 			if SETTINGS.getSetting('pref_streamtime') == 'true':
-				if live:											# ShowSeekPos nor bei Live-Streams
+				if live:											# ShowSeekPos nur bei Live-Streams
 					if player_detect:
 						xbmc.sleep(2000)
 						PLog("Thread_ShowSeekPos_start:")			# Github-issue #30: Seek-Pos. -> Streamuhrzeit

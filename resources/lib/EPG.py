@@ -113,12 +113,14 @@ def update_single(PluginAbsPath):
 	GIT_BASE = "https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master"
 	icon = R("icon-update-einzeln.png")
 		
-	# Dateiliste SINGLELIST für Einzelupdate:						# 1. Erstellung Liste
+	# SINGLELIST enthält die Module in resources/lib im Addon,		# 1. Erstellung Liste
+	# zusätzliche Dateien:	
 	# nicht verwenden: addon.xml + settings.xml (CAddonSettings-error),
 	#	changelog.txt, slides.xml, ca-bundle.pem, Icons
 	SINGLELIST = ["%s/%s" % (PluginAbsPath, "resources/livesenderTV.xml"),
 				"%s/%s" % (PluginAbsPath, "resources/settings.xml"),
 				"%s/%s" % (PluginAbsPath, "resources/arte_lang.json"),
+				"%s/%s" % (PluginAbsPath, "resources/UT_Styles_ARD"),
 				"%s/%s" % (PluginAbsPath, "ardundzdf.py")
 		]
 	selected=[0,1,2]												# Auswahl-Default: alle, weiter s.u.
@@ -128,7 +130,7 @@ def update_single(PluginAbsPath):
 	files = sorted(files,key=lambda x: x.upper())
 	#PLog(files)			# Debug
 	for f in files:
-		if "__init__.py" in f or ".pem" in f:						# PY2, Zertif.
+		if "__init__.py" in f or ".pem" in f:						# skip PY2, Zertif. 
 			continue
 		SINGLELIST.append(f)
 	#PLog(str(SINGLELIST))		# Debug

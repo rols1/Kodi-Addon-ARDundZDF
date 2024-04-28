@@ -10,6 +10,27 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+28.04.2024 5.0.2
+			AudioSearch: Webaufrufe integriert (editorialCollections), Nutzung von
+			Audio_get_webslice.
+			Audio_get_webslice: Suchmarke für mode="web" angepasst ('<body/>' -> '<body').
+			LiveRecord (util): direkte Settings-Ergänzung (url, duration, dest_file) durch
+			cmd-Ergänzung ersetzt, Ausfilterung spezieller Sender (Audio-Event-Streams,
+			umschaltbare Streamquellen für 3. Bundesliga).
+			Audio_get_sendung_api: Ausschluss icecastssl-Urls von Downloads.
+			check_setting (util): für Parameter pref_LiveRecord_ffmpegCall zusätzl. Anzahl-
+			Check.
+			PlayVideo (util): showSubtitles(False) für Kodi-Player nur noch, falls auch
+			Subtitle vorliegen.
+			ARDStartRegion: Urls für Rubrik Region/Heimat Hessen ersetzt  (Seite + Bild).
+			ARDVerpasstContent, ARDVerpasst_get_json: Programliste für ARD-Alle ermöglicht.
+			Downloads: zusätzl. Setting zum Abschalten des Info-Dialogs zu  Größe, Zieldatei
+			und Untertitel - Anpassung in settings.xml und thread_getfile.
+			ARDStartSingle (ARDnew): Hinweis auf ev. Serie in Mehr-Test integriert. Wiki zu
+			Mehr-Beiträgen aktualisiert.
+			Merkliste (Modul merkliste bei Call vom Haupt-PRG): ignore_this_network_error()
+			mit Fehlermeldung "Merkliste fehlt / ist nicht geladen" ersetzt durch exit(). 
+
 13.04.2024 5.0.1
 			Suche in Audiothek: Verwendung des Web-api zur Angleichung der Ergebnisse,
 			Anpassung AudioSearch (Param. base), AudioSearch_cluster (pageProps, totalCount,

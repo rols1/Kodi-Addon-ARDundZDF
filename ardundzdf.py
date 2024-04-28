@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>192</nr>										# Numerierung für Einzelupdate
-VERSION = '5.0.1'
-VDATE = '17.04.2024'
+VERSION = '5.0.2'
+VDATE = '28.04.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -764,7 +764,8 @@ def InfoAndFilter():
 # Aufruf: InfoAndFilter (-> Module strm, merkliste, playlist)
 # Bei der Merkliste erfolgt der Funktionscall bis auf Weiteres  nicht hier 
 #	sondern am Modulende durch Auswertung von sys.argv (ähnlich beim Context-Call,
-#	aber getrennte return-Behandlung, s. ignore_this_network_error in merkliste)
+#	aber getrennte return-Behandlung, s. ignore_this_network_error bzw. exit()
+# 	in merkliste).
 #	
 # Wg.  Problemen mit der xbmc-Funktion executebuiltin(RunScript()) verwenden
 #	wir importlib wie in router()
@@ -2270,6 +2271,8 @@ def Audio_get_items_single(item, ID=''):
 # 22.02.2022 Anpassung an ARD-Änderung
 # Ausführung: AudioSearch_cluster 
 # 26.03.2023 Umstellung Web.json -> api.json
+# 14.04.2024 Rückkehr zur Websuche, s.u.
+#
 def AudioSearch(title, query='', path=''):
 	PLog('AudioSearch:')
 	CacheTime = 6000								# 1 Std.
