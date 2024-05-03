@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>192</nr>										# Numerierung für Einzelupdate
+# 	<nr>193</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.2'
-VDATE = '28.04.2024'
+VDATE = '03.05.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8139,6 +8139,24 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 				PLog("fparams: " + fparams)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
 					thumb=img, fparams=fparams, summary=descr, tagline=tag)
+				
+			if title == "Das ZDF im Livestream":					# Ausland-Livestreams ergänzt,
+				title = "Livestreams im Ausland"					# 	skipped: Alles auf einen Blick
+				url = "https://zdf-cdn.live.cellular.de/mediathekV2/document/einzel-livestreams-100"
+				img = "https://www.zdf.de/assets/rubrik-livestreams-im-ausland-100~1280x720?cb=1660040584240"
+				fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+				PLog("fparams: " + fparams)	
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+					thumb=img, fparams=fparams, summary=descr, tagline=tag)
+
+		title = "Terra X plus Schule"					# 	skipped: Alles auf einen Blick
+		url = "https://zdf-cdn.live.cellular.de/mediathekV2/document/terra-x-plus-schule-100"
+		img = "https://www.zdf.de/assets/terrax-plusschule-buehnes-100~1140x240?cb=1698932648730"
+		fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+		PLog("fparams: " + fparams)	
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+			thumb=img, fparams=fparams, summary=descr, tagline=tag)
+
 
 	if li_org:
 		return li
@@ -8494,7 +8512,7 @@ def ZDF_Live(url, title): 											# ZDF-Livestreams von ZDFStart
 		except Exception as exception:
 			PLog("clusterLive_error: " + str(exception))
 			msg1 = u'%s:' % title
-			msg2 = u"leider (noch) kein Video verfügbar."
+			msg2 = u"leider (noch) kein Stream verfügbar."
 			MyDialog(msg1, msg2, '')
 			return
 		streamsObject = clusterLive["formitaeten"]
@@ -9081,9 +9099,7 @@ def ZDF_AZ(name, ID=""):						# name = "Sendungen A-Z"
 
 ####################################################################################################
 # Laden der Buchstaben-Seite, Auflistung der Sendereihen in 
-#	ZDF_get_content -> ZDF_Sendungen (Cluster-Abzweig) -> ZDF_Rubriken 
-#		-> ZDF_Sendungen (isvideo=False) / ZDF_BildgalerieSingle
-#		-> ZDF_getVideoSources (isvideo=True)
+#	ZDF_RubrikSingle
 # Buchstaben-Seiten enthalten nur Sendereihen, keine Einzelbeiträge
 # 19.11.2020 Integration funk A-Z (ID=ZDFfunk)
 #
@@ -9147,7 +9163,7 @@ def ZDF_AZList(title, element, ID=""):					# ZDF-Sendereihen zum gewählten Buch
 
 #----------------------------------------------
 # MEHR_Suche ZDF nach query (title)
-# Aufrufer: ZDF_Sendungen
+# Aufrufer: ZDF_RubrikSingle
 def ZDF_search_button(li, query):
 	PLog('ZDF_search_button:')
 
@@ -9169,7 +9185,7 @@ def ZDF_search_button(li, query):
 #----------------------------------------------
 # Ähnlich ARD_FlatListEpisodes (dort entfällt die
 #	Liste aller Serien)
-# Aufruf ZDF_Sendungen (Abzweig), Button flache Serienliste,
+# Aufruf ZDF_RubrikSingle (Abzweig), Button flache Serienliste,
 #	zusätzl. Button für ZDF_getStrmList + strm-Tools
 #	sid=Serien-ID (Url-Ende)
 #	Ablauf: Liste holen via api-Call, Abgleich mit sid,
@@ -9718,36 +9734,6 @@ def ZDF_get_rubrikpath(page, sophId):
 			PLog("path: " + path)
 			return path	
 	return	'' 
-		
-####################################################################################################
-# ZDF Barrierefreie Angebote - Vorauswahl
-# 25.04.2023 Funktionen BarriereArm + BarriereArmSingle
-#	gelöscht - neu in ZDF_Start -> ZDF_RubrikSingle
-####################################################################################################
-
-def International(title):
-	PLog('International:'); 
-	title_org = title
-	CacheTime = 6000								# 1 Std.
-			
-	#path = 'https://www.zdf.de/international/zdfenglish'		# engl. Seite
-	#path = 'https://www.zdf.de/international/zdfarabic'		# arab. Seite
-	path = 'https://www.zdf.de/international'					# Cluster-Auswertung
-	ID="ZDFInternational"
-	
-	page = Dict("load", ID, CacheTime=CacheTime)
-	if page == False or page == '':								# Cache miss od. leer - vom Sender holen
-		page, msg = get_page(path=path)
-		Dict("store", ID, page) 								# Seite -> Cache: aktualisieren	
-	if page == '':
-		msg1 = 'Beitrag kann nicht geladen werden.'
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return					
-	
-	ZDF_Sendungen(path, title, ID, page=page)
-				
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 #-----------------------------------------------------------------------
 # vergleicht Titel + Länge eines Beitrags mit den Listen full_shows_ZDF,
