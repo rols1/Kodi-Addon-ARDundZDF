@@ -1,5 +1,5 @@
 WEBVTT
-NOTE <nr>1</nr>	# Numerierung für Einzelupdate
+NOTE <nr>2</nr>	# Numerierung für Einzelupdate
 
 STYLE
 ::cue(.textWhite) {
@@ -40,3 +40,28 @@ STYLE
 ::cue(.textCyan) {
  color: cyan;
 }
+
+STYLE
+::cue(.S3) {
+ color: cyan;
+}
+
+STYLE
+::cue(.S4) {
+ color: white;
+}
+
+STYLE
+::cue(.S5) {
+ color: yellow;
+}
+
+STYLE
+::cue(.S6) {
+ color: blue;
+}
+
+0
+00:00:00.000 --> 00:00:04.000 align:middle
+<c.textWhite>STYLE-Definitionen durch</c>
+<c.textWhite>Kodi-Addon-ARDundZDF</c>
