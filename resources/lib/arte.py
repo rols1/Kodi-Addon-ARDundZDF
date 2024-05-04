@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>43</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.04.2024
+# 	<nr>44</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -240,12 +240,16 @@ def get_live_data(name):
 		PLog("livedata_failed: " + str(exception))
 		return err_par
 
-	title='Arte'; summ=''; descr=''; vonbis=''
+	title='Arte'; stitle=''; summ=''; descr=''; vonbis=''
 	try: 
 		# href (PRG-Seite) hier n.b.
 		thumb=values["mainImage"]["url"]
 		thumb = thumb.replace('__SIZE__', '400x225')
-		title=values["title"] 
+		title=values["title"]
+		if "subtitle" in values: 
+			stitle=values["subtitle"]
+			if stitle:
+				title = "%s - %s" % (title, stitle) 
 		summ=values["shortDescription"]
 		start=values["availability"]["start"]
 		end=values["availability"]["end"]
