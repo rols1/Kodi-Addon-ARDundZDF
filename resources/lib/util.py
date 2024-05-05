@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>98</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.04.2024
+# 	<nr>99</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3585,7 +3585,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 	
 
 		PLog("url: " + url); PLog("playlist: %s" % playlist)
-		if IsPlayable == 'true' and playlist !='true':				# true - Call via listitem
+		if IsPlayable == 'true' and playlist !='true':			# true - Call via listitem
 			PLog('PlayVideo_Start: listitem')
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
 
@@ -3648,8 +3648,9 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 			if player.isPlaying():
 					PLog("player_isPlaying: %d sec" % i)
 					if SETTINGS.getSetting('pref_UT_ON') == 'true':
-							PLog("Player_Subtitles: on")
-							xbmc.Player().showSubtitles(True)
+							if len(sub_list) > 0:
+								PLog("Player_Subtitles: %s" % sub_list[0])
+								xbmc.Player().setSubtitles(sub_list[0])
 					else:  										# Freeze in Windows bei späterem Einschalten 
 							if sub_path:						# Abschalten nur mit sub_path, i.d.R. nicht bei Live
 								PLog("Player_Subtitles: off")
