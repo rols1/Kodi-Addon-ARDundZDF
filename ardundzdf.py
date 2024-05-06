@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>193</nr>										# Numerierung für Einzelupdate
+# 	<nr>194</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.2'
-VDATE = '03.05.2024'
+VDATE = '06.05.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1624,6 +1624,7 @@ def Audio_get_rubriken_web(li, title, path, ID, page):
 # 	einschl.Event Streams, Ausgliederung AudioSenderPrograms
 # 2. Durchlauf mit sender -> PlayAudio
 # Auswertung Sender-Programme s. AudioSenderPrograms
+# 06.05.2024 Erweiterung Download Senderlinks als einzelne Playlist
 #
 def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): # Sender / Livestreams 
 	PLog('AudioStartLive: ' + sender)
@@ -1651,6 +1652,10 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 	streamList=[]
 	now = datetime.datetime.now()										# für streamList
 	timemark = now.strftime("%d.%m.%Y")
+	
+	# RadioPlaylist mit play_lines, play_line: m3u-Template
+	PlayList = ["#EXTM3U"]											
+	play_line = '#EXTINF:-1 logo="%s" group-title="ARD_Radio", %s\n%s'													
 	
 	if sender == '':
 		for LiveObj in LiveObjekts:
@@ -1682,21 +1687,33 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 			addDir(li=li, label=sender, action="dirList", dirID="AudioStartLive", fanart=img, 
 				thumb=img, tagline=tag, summary=Plot, fparams=fparams)
 			
-			# Format: "Dateiname ** Titel Zeitmarke ** Streamlink" -> DownloadText
+			# Streamlinks: "Dateiname ** Titel Zeitmarke ** Streamlink" -> DownloadText
 			fname = make_filenames(title)
 			fname = py2_encode(fname)
-			# Test erweiterte m3u (für Total Commander überdimensioniert:
-			#extinf = '#EXTM3U\n#EXTINF:-1 tvg-name="%s" group-title="ARDundZDF %s" radio="true" tvg-logo="%s"\n%s'
-			#extinf = extinf % (title, timemark, img, streamUrl)
-			#streamList.append("%s.m3u**#%s" % (fname, extinf))	
-			streamList.append("%s.m3u**# %s | ARDundZDF %s**%s" % (fname,title, timemark, streamUrl))	
-		
+			streamList.append("%s.m3u**# %s | ARDundZDF %s**%s" % (fname,title, timemark, streamUrl))
+			
+			# play_line = '#EXTINF:-1 logo="%s" group-title="ARD_Radio", %s\n%s'													
+			extinf = play_line % (img, title, streamUrl)
+			PlayList.append(extinf)
+
 		streamList = py2_encode(streamList)								#Streamlist-Button
-		Dict("store", "RadioStreamLinks", streamList)				
-		lable = u"[B]Download der Streamlinks (Anzahl: %d)[/B] als m3u-Dateien" % len(streamList)
+		textKey  = "RadioStreamLinks"
+		Dict("store", textKey, streamList)				
+		lable = u"[B]Download 1: Streamlinks (Anzahl: %d)[/B] als m3u-Dateien" % len(streamList)
 		tag = u"Ablage als einzelne m3u-Datei je Streamlink im Downloadverzeichnis"
 		summ = u"die nachfolgenden Audio-Buttons bleiben beim Download unberücksichtigt."
-		fparams="&fparams={'textKey': '%s'}" % "RadioStreamLinks"
+		fparams="&fparams={'textKey': '%s'}" % textKey
+		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
+			thumb=R(ICON_DOWNL), fparams=fparams, tagline=tag, summary=summ)
+
+		streamList = py2_encode(streamList)								#RadioPlaylist-Buttons
+		textKey  = "ARD_RadioPlaylist"
+		Dict("store", textKey, PlayList)				
+		lable = u"[B]Download 2: Streamlinks (Anzahl: %d)[/B] als Playlist" % len(streamList)
+		tag = u"Ablage als <Playlist.m3u> im Downloadverzeichnis.\nDie Verwendung als [B]Kodi-Playlist[/B]"
+		tag = "%s im Verzeichnis ../.kodi/userdata/playlists ist möglich." % tag
+		summ = u"die nachfolgenden Audio-Buttons bleiben beim Download unberücksichtigt."
+		fparams="&fparams={'textKey': '%s'}" % textKey
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
 			thumb=R(ICON_DOWNL), fparams=fparams, tagline=tag, summary=summ)
 		
@@ -6145,6 +6162,8 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 #	textKey -> Dict-Datei 
 # data = Liste oder string, je Zeile wird eine Datei erzeugt,
 #	"**" splittet Zeile in mehrere Zeilen, 1. Zeile = Dateiname
+# 06.05.2024 textKey=ARD_RadioPlaylist -> einzelne Playlist
+# 
 def DownloadText(textKey):
 	PLog('DownloadText: ' + textKey)
 	
@@ -6157,7 +6176,7 @@ def DownloadText(textKey):
 	
 	path = SETTINGS.getSetting('pref_download_path')
 	PLog(path)
-	if path == None or path == '':									# Existenz Verz. prüfen, falls vorbelegt
+	if path == None or path == '':							# Existenz Verz. prüfen, falls vorbelegt
 		msg1 = 'Downloadverzeichnis noch nicht festgelegt'
 		MyDialog(msg1, '', '')
 		return
@@ -6168,32 +6187,42 @@ def DownloadText(textKey):
 			MyDialog(msg1, msg2, '')
 			return
 	
-	msg1 = "[B]%d Streamlinks[/B] in einzelnen m3u-Dateien speichern?"	 % textlen	
+	if "Playlist" in textKey:									
+		fname = "%s.m3u" % textKey
+		msg1 = "[B]%s[/B] mit %d Radiosendern speichern?"	 % (fname, textlen)
+	else:	 
+		msg1 = "[B]%d Streamlinks[/B] in einzelnen m3u-Dateien speichern?"	 % textlen	
 	msg2 = 'Die Ablage erfolgt im Downloadverzeichnis.'
 	ret=MyDialog(msg1, msg2, msg3="", ok=False, yes='OK')
 	if ret  == False:
-		return
-			
+		return			
 
-	msg1 = "DownloadText"
-	msg2 = "%d Dateien gespeichert" % textlen
+	msg1 = textKey
 	icon = R('icon-downl-dir.png')
 		
-	for inline in data:
-		lines=[] ; outlines=[]
-		lines = inline.split("**")
-		f = lines[0]							# Dateiname
-		fname = os.path.join(path, f)	 
-		del lines[0]
-		
-		for line in lines:
-			outlines.append(line)
-		page  = "\n".join(outlines)
-		#PLog(page) 	# Debug
-		msg = RSave(fname, py2_encode(page), withcodec=False)
-		if msg:									# RSave_Exception
-			msg2 = msg
-			break	 
+	if "Playlist" in textKey:								# -> ARD_RadioPlaylist
+		playlist = "\n".join(data)
+		fpath = os.path.join(path, fname)
+		RSave(fpath, playlist, withcodec=True)	
+		msg2 = "%s gespeichert" % fname
+
+	else:													# -> einzelne m3u-Dateien
+		for inline in data:
+			lines=[] ; outlines=[]
+			lines = inline.split("**")
+			f = lines[0]									# Dateiname
+			fname = os.path.join(path, f)	 
+			del lines[0]
+			
+			for line in lines:
+				outlines.append(line)
+			page  = "\n".join(outlines)
+			#PLog(page) 	# Debug
+			msg = RSave(fname, py2_encode(page), withcodec=False)
+			if msg:									# RSave_Exception
+				msg2 = msg
+				break	 
+		msg2 = "%d Dateien gespeichert" % textlen
 
 	xbmcgui.Dialog().notification(msg1,msg2,icon,2000)	
 	return			
