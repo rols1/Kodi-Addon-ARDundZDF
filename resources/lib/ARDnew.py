@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>74</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.04.2024
+# 	<nr>75</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2844,7 +2844,7 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 							
 				synopsis=""; availableTo=""; href=""; path=""		# path -> Video
 				matRat=""; uhr=""; subline=""; summ="";
-				pubServ=""
+				pubServ=""; channel_id="";
 
 				try:
 					title = s["title"]
@@ -2857,8 +2857,10 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						img = img.replace('{width}', '720')
 					else:
 						img = logo
-						
+					
+					
 					if 	"channel" in s:								# kann fehlen
+						channel_id = s["channel"]["id"]				# -> sender bei ARD-Alle
 						pubServ = s["channel"]["name"]
 					else:
 						pubServ = sender 
@@ -2869,8 +2871,10 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 					
 					if "target" in s["links"]:						# target -> Video
 						urlId = s["links"]["target"]["urlId"]
-						path = tbase % (sender, urlId) 
-					
+						path = tbase % (sender, urlId)
+						if sender == "ARD-Alle":					# Sender-Korrektur: Verpasst ARD-Alle
+							path = tbase % (channel_id, urlId) 
+
 					if "maturityContentRating" in s:
 						matRat= s["maturityContentRating"]
 					
