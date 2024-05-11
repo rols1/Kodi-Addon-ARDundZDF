@@ -7,8 +7,8 @@
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 # 	Funktions-Calls via Auswertung sys.argv s. Modulende
 ################################################################################
-# 	<nr>8</nr>										# Numerierung für Einzelupdate
-#	Stand: 25.04.2024
+# 	<nr>9</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.05.2024
 #
 
 from __future__ import absolute_import
@@ -938,6 +938,7 @@ else:																	# Merklisten-Aktionen:
 	Plot = clean_Plot(Plot) 
 	msg1, err_msg, item_cnt = Watch_items(action,name,thumb,Plot,url)	# Einträge add / del / folder / rename
 	msg2 = err_msg
+	PLog("item_cnt: %s, action: %s, MERKACTIVE: %s" % (item_cnt, action, os.path.isfile(MERKACTIVE)))
 	if item_cnt:
 		msg2 = "%s\n%s" % (msg2, u"Einträge: %s" % item_cnt)
 		if action == 'del' or action == 'folder' or action == 'rename':	# Refresh Liste nach Löschen

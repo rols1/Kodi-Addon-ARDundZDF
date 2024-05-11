@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>194</nr>										# Numerierung für Einzelupdate
+# 	<nr>195</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.2'
-VDATE = '06.05.2024'
+VDATE = '11.05.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6258,8 +6258,8 @@ def DownloadText(textKey):
 #	SearchARDundZDFnew)
 #  10.09.2023 Sortierung der Verzeichnisliste mittels addDir-Array
 # 
-def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
-	PLog('ShowFavs: ' + mode)				# 'Favs', 'Merk'
+def ShowFavs(mode, selected=""):					# Favoriten / Merkliste einblenden
+	PLog('ShowFavs: ' + mode)						# 'Favs', 'Merk'
 	if selected:
 		selected = selected.split()
 		selected = [int(x) for a,x in enumerate(selected)]
@@ -6267,20 +6267,20 @@ def ShowFavs(mode, selected=""):			# Favoriten / Merkliste einblenden
 	
 	myfilter=''
 	if mode == 'Merk':
+		with open(MERKACTIVE, 'w'):					# Marker aktivieren (Refresh in merkliste)
+			pass
 		if SETTINGS.getSetting('pref_merkordner') == 'true':
-			with open(MERKACTIVE, 'w'):			# Marker aktivieren (Refresh in merkliste)
-				pass
 			if os.path.isfile(MERKFILTER):	
 				myfilter = RLoad(MERKFILTER,abs_path=True)
-		else:									# Filter entfernen, falls Ordner abgewählt
-			if os.path.isfile(MERKFILTER):		# Altern.: siehe Kontextmenü -> watch_filter
-				os.remove(MERKFILTER)
+			else:									# Filter entfernen, falls Ordner abgewählt
+				if os.path.isfile(MERKFILTER):		# Altern.: siehe Kontextmenü -> watch_filter
+					os.remove(MERKFILTER)
 				
 	PLog('myfilter: ' + myfilter)
 	li = xbmcgui.ListItem()						
-	li = home(li, ID=NAME)								# Home-Button
+	li = home(li, ID=NAME)							# Home-Button
 
-	my_items, my_ordner= ReadFavourites(mode)			# Addon-Favs / Merkliste einlesen
+	my_items, my_ordner= ReadFavourites(mode)		# Addon-Favs / Merkliste einlesen
 	PLog(len(my_items))
 	if len(my_items) == 0:
 		icon = R(ICON_DIR_WATCH)
