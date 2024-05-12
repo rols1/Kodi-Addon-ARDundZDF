@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>99</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.05.2024
+#	Stand: 11.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3638,7 +3638,9 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 				break
 			xbmc.sleep(200)
 
-		# waitForAbort für Player-Warteschleife statt while(1) - hilft gegen Buffern:											
+		# waitForAbort für Player-Warteschleife statt while(1) - hilft gegen Buffern:
+		# UT Livestreams: falls sub_path und sub_list leer, bezieht Kodi die UT aus
+		#	der m3u8-Datei											
 		monitor = xbmc.Monitor(); i=0; max_secs=5 					# showSubtitles setzen, sobald Player spielt
 		player_detect=False
 		PLog("Subtitles: wait_for_Player(%d sec), sub_path: %s" % (max_secs, sub_path))
@@ -3648,7 +3650,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 			if player.isPlaying():
 					PLog("player_isPlaying: %d sec" % i)
 					if SETTINGS.getSetting('pref_UT_ON') == 'true':
-							if len(sub_list) > 0:
+							if len(sub_list) > 0:				# für Livestreams
 								PLog("Player_Subtitles: %s" % sub_list[0])
 								xbmc.Player().setSubtitles(sub_list[0])
 					else:  										# Freeze in Windows bei späterem Einschalten 

@@ -10,6 +10,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+12.05.2024 5.0.3
+			ZDF-Funktion International gelöscht. Api-Aufruf in Main_ZDF->ZDF_RubrikSingle.
+			ZDF-Startseite: Menüs ergänzt: "Livestreams im Ausland", "Terra X plus Schule"
+			(vorher skipped in "Alles auf einen Blick"), Anpassungen in ZDF_PageMenu.
+			get_live_data (arte): Untertitel für Sendungshinweis ergänzt.
+			ARD-Videos-Untertitel: Hinweis auf ARDundZDF-Addon und S3-S6-Styles in Impf- 
+			datei UT_Styles_ARD ergänzt, PlayVideo (util): Player().showSubtitles ersetzt
+			durch Player().showSubtitles(sub_list[0]), da bei Sofortstart Kodi manchmal
+			die UT-Datei des Servers statt der lokalen vtt-Datei verwendet.
+			Audiothek Livestreams: Download Senderlinks als einzelne Playlist ermöglicht.
+			ARDVerpasst_get_json: für Sender ARD-Alle sender in path ersetzt durch
+			channel_id.
+			Rubriken (my3Sat): "&amp;" aus Titel entfernt (unescape).
+			Merkliste: Refresh der Liste unabhängig von pref_merkordner - Anpassung in
+			ShowFavs, zusätzl. Debug-Statements in merkliste.py.
+
 28.04.2024 5.0.2
 			AudioSearch: Webaufrufe integriert (editorialCollections), Nutzung von
 			Audio_get_webslice.
@@ -42,7 +58,8 @@ CHANGE HISTORY
 			ARDStartSingle: Umstellung Untertitel auf vtt-Format (statt xml), bei Fehlen
 			von UT Suche in alternativer Web-api-Quelle (frühzeitig verfügbar, relevant 
 			für Nachrichten), neue Funktion ARDStartVideoWebUTget.
-			sub_path_conv (util): aktuelle ARD-vtt-Datei mit W3-Style-Definitionen ergänzt.
+			sub_path_conv (util): aktuelle ARD-vtt-Datei mit W3-Style-Definitionen ergänzt
+			(Injektion UT_Styles_ARD).
 			build_Streamlists_buttons: repl_json_chars(title_org), um sort_error wegen
 			#-Zeichen in StreamsShow zu vermeiden.						 
 

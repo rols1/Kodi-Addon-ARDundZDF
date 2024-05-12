@@ -833,6 +833,7 @@ def Rubriken(name, path, themen=''):
 		i=0; rubrik=[]; 							
 		for rec in rubriken:								# Rubriken sammeln	
 			title	= stringextract('title="', '"', rec)
+			title = unescape(title)
 			if 'A-Z' in title:
 				continue
 			href	= DreiSat_BASE + stringextract('href="', '"', rec)
