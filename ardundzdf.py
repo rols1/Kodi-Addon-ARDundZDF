@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>195</nr>										# Numerierung für Einzelupdate
+# 	<nr>196</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.3'
-VDATE = '12.05.2024'
+VDATE = '14.05.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1696,7 +1696,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 			extinf = play_line % (img, title, streamUrl)
 			PlayList.append(extinf)
 
-		streamList = py2_encode(streamList)								#Streamlist-Button
+		streamList = py2_encode(streamList)								# Streamlist-Button
 		textKey  = "RadioStreamLinks"
 		Dict("store", textKey, streamList)				
 		lable = u"[B]Download 1: Streamlinks (Anzahl: %d)[/B] als m3u-Dateien" % len(streamList)
@@ -1706,10 +1706,10 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
 			thumb=R(ICON_DOWNL), fparams=fparams, tagline=tag, summary=summ)
 
-		streamList = py2_encode(streamList)								#RadioPlaylist-Buttons
-		textKey  = "ARD_RadioPlaylist"
+		PlayList = py2_encode(PlayList)									# RadioPlaylist-Button
+		textKey  = "RadioPlaylist"
 		Dict("store", textKey, PlayList)				
-		lable = u"[B]Download 2: Streamlinks (Anzahl: %d)[/B] als Playlist" % len(streamList)
+		lable = u"[B]Download 2: Streamlinks (Anzahl: %d)[/B] als Playlist" % len(PlayList)
 		tag = u"Ablage als <Playlist.m3u> im Downloadverzeichnis.\nDie Verwendung als [B]Kodi-Playlist[/B]"
 		tag = "%s im Verzeichnis ../.kodi/userdata/playlists ist möglich." % tag
 		summ = u"die nachfolgenden Audio-Buttons bleiben beim Download unberücksichtigt."
@@ -2139,8 +2139,8 @@ def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 		img=py2_encode(img); summ_par=py2_encode(summ_par);	
 			
 		if mp3_url:
-			if  mp3_url.find(".icecastssl.") < 0:					#  Livestreams von Downloads ausschließen
-				downl_list.append("%s#%s" % (title, mp3_url))
+			if  mp3_url.find(".icecastssl.") < 0:					# Livestreams von Downloads ausschließen
+				downl_list.append("%s#%s" % (title, mp3_url))	
 
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
 				quote(title), quote(img), quote_plus(summ_par))
@@ -2649,10 +2649,12 @@ def Audio_get_cluster_rubrik(li, url, title, ID=''):
 #	listet einz. Cluster oder Stage (ohne section_id)
 #	Json-Ausschnitt der Rubrik-Webseite im Dict(rubrik_id)
 # 17.12.2023 zusätzl. Param url (Absicherung gegen Dict-Löschung)
+# 13.05.2024 Playlist-Erweiterung für Livestreams wie AudioStartLive
 #
 def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 	PLog('Audio_get_cluster_single: ' + title)
 	PLog(rubrik_id); PLog(section_id)
+	title_org = title
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Audiothek')			# Home-Button
@@ -2683,6 +2685,10 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 	nodes = blockextract('"__typename":', cluster)	
 	PLog(len(nodes))
 			
+	# RadioPlaylist mit play_lines, play_line: m3u-Template
+	PlayList = ["#EXTM3U"]											
+	play_line = '#EXTINF:-1 logo="%s" group-title="ARD_Radio", %s\n%s'													
+	
 	downl_list=[]; 	href_add = "offset=0&limit=12&order=descending"	
 	for node in nodes:		
 		imgalt2=''; web_url=''; mp3_url=''
@@ -2738,6 +2744,11 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 					quote(title), quote(img), quote_plus(summ_par))
 				addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr)			
+
+				# play_line = '#EXTINF:-1 logo="%s" group-title="ARD_Radio", %s\n%s'													
+				extinf = play_line % (img, title, mp3_url)
+				PlayList.append(extinf)							# -> RadioPlaylist-Button
+
 			else:	
 				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(web_url), 
 					quote(title), quote(img), quote_plus(summ_par))
@@ -2769,7 +2780,21 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 				fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
 				addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
 					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=descr)						
-			
+
+	if len(PlayList) > 1:										# RadioPlaylist-Button wie AudioStartLive
+		PLog("PlayList_Button: %s" % title_org)
+		PlayList = py2_encode(PlayList)
+		fname = make_filenames(title_org.strip())				# Titel -> Playlist-Titel	
+		textKey  = "RadioPlaylist_%s" % fname
+		Dict("store", textKey, PlayList)
+
+		lable = u"[B]Download: Streamlinks (Anzahl: %d)[/B] als Playlist" % len(PlayList)
+		tag = u"Ablage als <%s.m3u> im Downloadverzeichnis.\nDie Verwendung als [B]Kodi-Playlist[/B]" % textKey
+		tag = "%s im Verzeichnis ../.kodi/userdata/playlists ist möglich." % tag
+		summ = u""
+		fparams="&fparams={'textKey': '%s'}" % textKey
+		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
+			thumb=R(ICON_DOWNL), fparams=fparams, tagline=tag, summary=summ)	
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
@@ -3002,6 +3027,8 @@ def AudioWebMP3(url, title, thumb, Plot, ID='', no_gui=''):
 # Falls pref_use_downloads abgeschaltet, wird direkt an PlayAudio
 #	übergeben.
 # 01.07.2021 ID variabel für Austausch des Home-Buttons
+# 13.05.2024 Erweiterung für Livestreams: Download als
+#	m3u-Datei (wie AudioStartLive)
 #
 def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 	PLog('AudioPlayMP3: ' + title)
@@ -3032,7 +3059,25 @@ def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 		PLog(download_list)
 		title_org=title; tagline_org=''; summary_org=Plot
 		li = test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=-1)  # Downloadbutton
-		
+	else:
+		# Streamlinks: "Dateiname ** Titel Zeitmarke ** Streamlink" -> DownloadText
+		textKey  = "RadioStreamSingle"
+		streamList=[]							# Button m3u-Datei wie AudioStartLive
+		now = datetime.datetime.now()
+		timemark = now.strftime("%d.%m.%Y")
+		fname = make_filenames(title)
+		fname = py2_encode(fname)
+		streamList.append("%s.m3u**# %s | ARDundZDF %s**%s" % (fname, title, timemark, url))
+		streamList = py2_encode(streamList)	
+		Dict("store", textKey, streamList)
+						
+		lable = u"[B]Download[/B]: %s.m3u" % fname
+		tag = u"Die Ablage der m3u-Datei erfolgt im Downloadverzeichnis." 
+		summ = u"Sie kann in eine Playlist eingefügt oder direkt im Player abgespielt werden."
+		fparams="&fparams={'textKey': '%s'}" % textKey
+		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
+			thumb=R(ICON_DOWNL), fparams=fparams, tagline=tag, summary=summ)
+	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ##################################### Ende Audiothek ###############################################
@@ -5726,7 +5771,7 @@ def DownloadTools():
 	PLog(len(dirlist))
 	mpcnt=0; vidsize=0
 	for entry in dirlist:
-		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0:
+		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0 or entry.find('.m3u') > 0:
 			mpcnt = mpcnt + 1	
 			fname = os.path.join(path, entry)					
 			vidsize = vidsize + os.path.getsize(fname) 
@@ -5854,7 +5899,7 @@ def DownloadsList():
 	PLog(len(dirlist))
 	mpcnt=0; vidsize=0
 	for entry in dirlist:
-		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0:
+		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0 or entry.find('.m3u') > 0:
 			mpcnt = mpcnt + 1	
 			fname = os.path.join(path, entry)					
 			vidsize = vidsize + os.path.getsize(fname) 
@@ -5872,7 +5917,7 @@ def DownloadsList():
 	
 	# Downloads listen:
 	for entry in dirlist:							# Download + Beschreibung -> DirectoryObject
-		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0:
+		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0 or entry.find('.m3u') > 0:
 			localpath = entry
 			title=''; tagline=''; summary=''; quality=''; thumb=''; httpurl=''
 			fname =  entry							# Dateiname 
@@ -5917,7 +5962,7 @@ def DownloadsList():
 			tag_par= tagline.replace('\n', '||')	
 			PLog("Satz20:")
 			PLog(httpurl); PLog(summary); PLog(tagline); PLog(quality); # PLog(txt); 			
-			if httpurl.endswith('mp3'):
+			if httpurl.endswith('mp3') or httpurl.endswith('m3u'):
 				oc_title = u'Anhören, Bearbeiten: Podcast | %s' % py2_decode(title)
 				thumb = R(ICON_NOTE)
 			else:
@@ -5992,16 +6037,34 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, tagline=tagline,
 			thumb=thumb, fparams=fparams, mediatype='video')
 		
-	else:										# 'mp3' = Podcast
-		if fulldest_path.endswith('mp3'):		# Dateiname bei fehl. Beschreibung, z.B. Sammeldownloads
-			title = title_org 											# 1. Anhören
-			lable = "Anhören | %s" % (title_org)
-			fulldest_path=py2_encode(fulldest_path); title=py2_encode(title); thumb=py2_encode(thumb); 
-			summary=py2_encode(summary);	
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(fulldest_path), 
-				quote(title), quote(thumb), quote_plus(summary))
-			addDir(li=li, label=lable, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, 
-				fparams=fparams, mediatype='music') 
+	else:																# 'mp3' = Podcast
+		# Dateiname bei fehl. Beschreibung, z.B. Sammeldownloads:
+		if fulldest_path.endswith('mp3') or fulldest_path.endswith('m3u'): 	# 1. Anhören
+			if fulldest_path.endswith('m3u'):							# Link auspacken
+				is_playlist=False
+				data = RLoad(fulldest_path, abs_path=True)
+				if "#EXTM3U" in data:
+					is_playlist=True
+				else:
+					data = data.splitlines()
+					for line in data:
+						if line.startswith("http"):
+							fulldest_path = line
+							break
+			if 	is_playlist == False:
+				title = title_org 							
+				lable = "Anhören | %s" % (title_org)
+				fulldest_path=py2_encode(fulldest_path); title=py2_encode(title); thumb=py2_encode(thumb); 
+				summary=py2_encode(summary);	
+				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(fulldest_path), 
+					quote(title), quote(thumb), quote_plus(summary))
+				addDir(li=li, label=lable, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, 
+					fparams=fparams, mediatype='music') 
+			else:														#  Playlist hier nicht abspielbar
+				msg1 = u'Eine Playlist ist hier nicht abspielbar.'
+				msg2 = u"Bitte die Playlist: 1. im Kodi-Hauptmenü unter Musik/Dateien hinzufügen oder"
+				msg3 = u"2. in den Kodi-Ordner ../userdata/playlists verschieben."
+				MyDialog(msg1, msg2, msg3)				
 	
 	lable = "Löschen: %s" % title_org 									# 2. Löschen
 	tagline = 'Datei: %s..' % path[:28] 
@@ -6162,7 +6225,7 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 #	textKey -> Dict-Datei 
 # data = Liste oder string, je Zeile wird eine Datei erzeugt,
 #	"**" splittet Zeile in mehrere Zeilen, 1. Zeile = Dateiname
-# 06.05.2024 textKey=ARD_RadioPlaylist -> einzelne Playlist
+# 06.05.2024 textKey=RadioPlaylist -> einzelne Playlist
 # 
 def DownloadText(textKey):
 	PLog('DownloadText: ' + textKey)
@@ -6191,7 +6254,9 @@ def DownloadText(textKey):
 		fname = "%s.m3u" % textKey
 		msg1 = "[B]%s[/B] mit %d Radiosendern speichern?"	 % (fname, textlen)
 	else:	 
-		msg1 = "[B]%d Streamlinks[/B] in einzelnen m3u-Dateien speichern?"	 % textlen	
+		msg1 = "[B]%d Streamlinks[/B] in einzelnen m3u-Dateien speichern?"	 % textlen
+		if textlen == 1:
+			msg1 = "[B]Einzel-Streamlink[/B] in m3u-Datei speichern?"	
 	msg2 = 'Die Ablage erfolgt im Downloadverzeichnis.'
 	ret=MyDialog(msg1, msg2, msg3="", ok=False, yes='OK')
 	if ret  == False:
@@ -6200,7 +6265,7 @@ def DownloadText(textKey):
 	msg1 = textKey
 	icon = R('icon-downl-dir.png')
 		
-	if "Playlist" in textKey:								# -> ARD_RadioPlaylist
+	if "Playlist" in textKey:								# -> RadioPlaylist
 		playlist = "\n".join(data)
 		fpath = os.path.join(path, fname)
 		RSave(fpath, playlist, withcodec=True)	
