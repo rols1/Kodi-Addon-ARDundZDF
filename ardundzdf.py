@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>196</nr>										# Numerierung für Einzelupdate
+# 	<nr>197</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.3'
-VDATE = '14.05.2024'
+VDATE = '15.05.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -244,7 +244,7 @@ now = time.time()											# Abgleich Flags
 # 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - s. thread_getepg
 if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden?
 	eci = SETTINGS.getSetting('pref_epg_intervall')
-	eci = re.search(u'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
+	eci = re.search(r'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
 	eci = int(eci)
 	PLog("eci: %d" % eci)
 	if eci == 12:											# 12 Std.
@@ -370,7 +370,7 @@ skindir = xbmc.getSkinDir()
 PLog("skindir: %s" % skindir)
 sel = SETTINGS.getSetting('pref_content_type')				# 31.03.2023 erweitert: pull request #12 from Trekky12
 try:
-	sel = re.search(u'\((.*?)\)', sel).group(1)				# Default: "" -> except 
+	sel = re.search(r'\((.*?)\)', sel).group(1)				# Default: "" -> except 
 except:
 	sel=""
 PLog("content_type: %s" % sel)				
@@ -849,7 +849,7 @@ def AddonStartlist(mode='', query=''):
 	mylist= mylist.strip().splitlines()
 	PLog(len(mylist))
 	try:														# Sortierung unixtime-stamp 1704966112[.0###..]
-		startlist = sorted(mylist, key=lambda x: re.search(u'(\d+).', x).group(1), reverse=True)
+		startlist = sorted(mylist, key=lambda x: re.search(r'(\d+).', x).group(1), reverse=True)
 	except Exception as exception:
 		PLog("sorted_error: " + str(exception))
 		startlist = mylist										# unsortiert
@@ -1187,7 +1187,7 @@ def ZDF_Teletext(path=""):
 		
 	#  ZDF korrigiert nicht selbst 
 	if url_check(path, caller='ZDF_Teletext', dialog=False) == False:   # falsche Seite manuell?
-		aktpg = re.search(u'seiten/(.*?).html', path).group(1)
+		aktpg = re.search(r'seiten/(.*?).html', path).group(1)
 		msg1 = u'Seite %s' % aktpg
 		msg2 = u'nicht verfügbar'
 		icon = thumb		
@@ -1210,11 +1210,11 @@ def ZDF_Teletext(path=""):
 	footer =  page.split('footer_container')[-1]
 	PLog(body[:60]);  PLog(footer[:60])
 
-	prevpg = re.search(u'prevpg="(.*?)"', body).group(1)				# body-Start
+	prevpg = re.search(r'prevpg="(.*?)"', body).group(1)				# body-Start
 	if prevpg == "0":													# 0 -> Startseite
 		prevpg = "100"
-	nextpg = re.search(u'nextpg="(.*?)"', body).group(1)
-	aktpg =  re.search(u'page="(.*?)"', body).group(1)
+	nextpg = re.search(r'nextpg="(.*?)"', body).group(1)
+	aktpg =  re.search(r'page="(.*?)"', body).group(1)
 	PLog("prevpg: %s, nextpg: %s, aktpg: %s, lines: %d" % (prevpg, nextpg, aktpg, len(body.splitlines())))
 
 	if len(body.splitlines()) <= 6:										# body-, footer-, copy- plus 3 Leerzeilen, 
@@ -1327,7 +1327,7 @@ def ZDF_Teletext_Table(li, body, aktpg):
 			part_list = part_list[:i2]
 			txt = "\n".join(part_list[:new_ind])						# String "<a href=" .. </a>"
 			PLog("new_ind: %d, txt: %s" % (new_ind, txt[:60]))
-			href = re.search(u'href="(.*?)"', txt).group(1)
+			href = re.search(r'href="(.*?)"', txt).group(1)
 			pagenr = href.split(".html")[0]
 			if 'left">' in txt:											# News-Text
 				left = stringextract('left">',  '</th>', txt)
@@ -2192,10 +2192,10 @@ def Audio_get_nexturl(li, url_org, title_org, elements, cnt, myfunc):
 	if elements:														# numberOfElements
 		limit=20; offset=0; url_part="";
 		if "offset=" in url:
-			offset = re.search(u'offset=(\d+)', url).group(1)
+			offset = re.search(r'offset=(\d+)', url).group(1)
 			url_part = "offset=%s" % offset
 		if "limit=" in url_org:
-			re.search(u'limit=(\d+)', url).group(1)
+			re.search(r'limit=(\d+)', url).group(1)
 		new_offset = int(offset) + cnt 
 		if url_part:													# aktualisiere offset
 			new_url_part = "offset=%s" % str(new_offset)
@@ -2541,7 +2541,7 @@ def Audio_get_search_cluster(objs, key):
 			
 	if 	key == "items" and nexturl:						# nexturl aus json-Quelle, Audio_get_nexturl entfällt
 		img=R(ICON_MEHR)
-		offset = re.search(u'offset=(\d+)', nexturl).group(1)
+		offset = re.search(r'offset=(\d+)', nexturl).group(1)
 		offset = int(offset) +1							# Basis 0
 		title = "Mehr: [B]%s[/B]" %  stringextract("searchText': '", "'", str(objs))
 		tag = u"Mehr (ab Beitrag %d von %s)" % (offset, total)
@@ -3763,7 +3763,7 @@ def ARDSportLiga3(title, img, sender="", source=""):
 				live=False; past=False
 				monat = col1.split(",")[1]; monat = monat.split(".")[1]	# Samstag, 04. November, 14:00 Uhr
 				my_month = month[monat.strip()]							# Juli -> 7
-				my_day = re.search(u'(\d+)', date.split(",")[1]).group(1)
+				my_day = re.search(r'(\d+)', date.split(",")[1]).group(1)
 				my_time = col2.split(" ")[0]							# 14:00 Uhr
 				my_date = "%s-%s-%sT%s:00Z" % (my_year, my_month, my_day, my_time)
 
@@ -4067,7 +4067,7 @@ def ARDSportTabellen(title, logo, path, year=""):
 	if page == '':
 		return
 	try:	
-		summ = re.search(u'<title>(.*?)</title>', page).group(1)
+		summ = re.search(r'<title>(.*?)</title>', page).group(1)
 	except:
 		summ=""
 	summ = "[B]%s[/B]\n\nSpalten-Info: Rang [Punkte | Tore (Tor-Diff.) | Spiele] Mannschaft" % summ
@@ -4085,16 +4085,16 @@ def ARDSportTabellen(title, logo, path, year=""):
 			td_blk = blockextract("<td ", tr)			# Spalten
 			PLog("columns: %d" % len(td_blk))
 			PLog("column_1: " + td_blk[0])
-			path		= re.search(u'href="(.*?)"><img', tr).group(1)	# Pfad -> Team
+			path		= re.search(r'href="(.*?)"><img', tr).group(1)	# Pfad -> Team
 			path		= base + path
-			td_img		= re.search(u'src="(.*?)"', tr).group(1)	# Icon-Url
-			td_team		= re.search(u'title="(.*?)"', tr).group(1)	# Mannschaft
-			td_rank 	= re.search(u'rank">(.*?)<', tr).group(1)	# Rang
-			td_pts 		= re.search(u'points">(.*?)<', tr).group(1)	# Punkte
+			td_img		= re.search(r'src="(.*?)"', tr).group(1)	# Icon-Url
+			td_team		= re.search(r'title="(.*?)"', tr).group(1)	# Mannschaft
+			td_rank 	= re.search(r'rank">(.*?)<', tr).group(1)	# Rang
+			td_pts 		= re.search(r'points">(.*?)<', tr).group(1)	# Punkte
 			
-			td_goals 		= re.search(u'goaldiff">(.*?)<', tr).group(1)	# Tore
-			td_diff 		= re.search(u'difference">(.*?)<', tr).group(1)	# Tor-Differenz
-			td_match 		= re.search(u'played">(.*?)<', tr).group(1)	# Spiele
+			td_goals 		= re.search(r'goaldiff">(.*?)<', tr).group(1)	# Tore
+			td_diff 		= re.search(r'difference">(.*?)<', tr).group(1)	# Tor-Differenz
+			td_match 		= re.search(r'played">(.*?)<', tr).group(1)	# Spiele
 			
 			points = "[%s | %s (%s) | %s]" % (td_pts, td_goals, td_diff, td_match)
 			title = u"[B]%4s[/B] %24s %4s[B]%s[/B]" % (td_rank, points, " ", td_team)
@@ -4150,14 +4150,14 @@ def ARDSportTabellenArchiv(title, path, logo):
 	tab_list = blockextract("<option value", page)
 	PLog(tab_list[0])							# ../tabelle/">1963/1964</option>
 	try:
-		sort_list = sorted(tab_list,key=lambda x: int(re.search(u'/">(\d+)/', x).group(1)), reverse=True)	
+		sort_list = sorted(tab_list,key=lambda x: int(re.search(r'/">(\d+)/', x).group(1)), reverse=True)	
 	except Exception as exception:
 		PLog("tab_list_error: " + str(exception))
 		sort_list = tab_list
 	
 	for tab in sort_list:
 		PLog(tab)
-		href =  base + re.search(u'value="(.*?)"', tab).group(1)
+		href =  base + re.search(r'value="(.*?)"', tab).group(1)
 		year = href.split("/")[-3]					# ../se2588/1966-1967/tabelle/
 		title = "%s: [B]%s[/B]" % (title_org, year)
 		PLog("href: " + href)
@@ -4191,18 +4191,18 @@ def ARDSportTabellenTeam(title, path, logo):
 		for item in role_blk:
 			tr_blk = blockextract("<tr ", item)
 			PLog("lines: %d" % len(tr_blk))
-			role = re.search(u'role">(.*?)<', item).group(1)		# z.B. Torwart
+			role = re.search(r'role">(.*?)<', item).group(1)		# z.B. Torwart
 			for tr in tr_blk:
 				#PLog(tr)
 				td_blk = blockextract("<td ", tr)			# Spalten
 				PLog("columns: %d" % len(td_blk))
 				PLog("column_1: " + td_blk[0])
-				# path		= re.search(u'href="(.*?)"><img', tr).group(1)		# Pfad -> Profil Person - nicht genutzt
-				td_img		= re.search(u'src="(.*?)" alt', tr).group(1)		# Bild-Url
-				td_name		= re.search(u'title="(.*?)"', tr).group(1)			# Name
-				td_nr 		= re.search(u'shirtnumber-">(.*?)<', tr).group(1)	# Spieler-Nr.
-				td_nation 	= re.search(u'country-name-">(.*?)<', tr).group(1)	# Nationalität
-				td_birth 	= re.search(u'birthday">(.*?)<', tr).group(1)		# Geburtstag
+				# path		= re.search(r'href="(.*?)"><img', tr).group(1)		# Pfad -> Profil Person - nicht genutzt
+				td_img		= re.search(r'src="(.*?)" alt', tr).group(1)		# Bild-Url
+				td_name		= re.search(r'title="(.*?)"', tr).group(1)			# Name
+				td_nr 		= re.search(r'shirtnumber-">(.*?)<', tr).group(1)	# Spieler-Nr.
+				td_nation 	= re.search(r'country-name-">(.*?)<', tr).group(1)	# Nationalität
+				td_birth 	= re.search(r'birthday">(.*?)<', tr).group(1)		# Geburtstag
 				
 				title = u"[B]%2s[/B] [B]%s[/B] (geb. %s)" % (td_nr, td_name, td_birth)
 				tag = u"[B]%s[/B] | Herkunft: %s | Rolle: [B]%s[/B]" % (td_name, td_nation, role)
@@ -8930,7 +8930,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	PLog("nextUrl: " + nextUrl)
 	if nextPage and nextUrl:
 		query = query_org.replace('+', ' ')
-		pagenr = re.search(u'&page=(\d+)', nextUrl).group(1)
+		pagenr = re.search(r'&page=(\d+)', nextUrl).group(1)
 		PLog(pagenr); 
 		title = "Mehr Ergebnisse im ZDF zeigen zu: >%s<"  % query
 		tagline = u"nächste Seite [B]%s[/B]" % pagenr
@@ -9478,7 +9478,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 			
 			if '_' in url:
 				try:									# wie build_Streamlists
-					bitrate = re.search(u'_(\d+)k_', url).group(1)
+					bitrate = re.search(r'_(\d+)k_', url).group(1)
 					bitrate = "%skbit" % bitrate
 				except:
 					bitrate = "unbekannt"
@@ -9799,7 +9799,7 @@ def ZDF_get_teaserbox(page):
 	if teaser_label == '' and teaser_typ == '':							# z.B. >3 Teile< bei Doku-Titel
 		teaser_label = stringextract('class="teaser-label"', '</div>', page)
 		try: 
-			teaser_typ = re.search(u'>(\d+) Teile', teaser_label).group(0)
+			teaser_typ = re.search(r'>(\d+) Teile', teaser_label).group(0)
 		except:
 			teaser_typ=''
 	teaser_label = mystrip(teaser_label) 
@@ -9860,7 +9860,7 @@ def full_shows(title, title_samml, summary, duration,  fname):
 		duration=py2_decode(duration)
 		if " min" in duration:							# Bsp. "Videolänge 1 min", "33 min · Comedy"
 			try:
-				duration = re.search(u'(\d+) min', duration).group(1)
+				duration = re.search(r'(\d+) min', duration).group(1)
 			except:
 				duration=''
 			
@@ -9981,7 +9981,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,page,scms_id='',I
 							
 							if '_' in url:
 								try:								# Fehlschlag bei arte-Links
-									bitrate = re.search(u'_(\d+)k_', url).group(1)
+									bitrate = re.search(r'_(\d+)k_', url).group(1)
 									bitrate = "%skbit" % bitrate
 								except:
 									bitrate = "?"
@@ -10329,7 +10329,7 @@ def form_HBBTV_Streams(stream_list, title):
 		else:
 			stream_title = u'MP4, Qualität: [B]%s | %s[/B]' % (quality, add)
 			try:
-				bitrate = re.search(u'_(\d+)k_', url).group(1)	# bitrate überschreiben	
+				bitrate = re.search(r'_(\d+)k_', url).group(1)	# bitrate überschreiben	
 				bitrate = bitrate + "kbit"			# k ergänzen 
 			except Exception as exception:			# ts möglich: http://cdn.hbbtvlive.de/zdf/106-de.ts
 				PLog(str(exception))
@@ -10915,7 +10915,7 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 
 	try:
 		if u"Auflösung" in str(Stream_List):
-			Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'sung (\d+)x', x).group(1)))		
+			Stream_List = sorted(Stream_List,key=lambda x: int(re.search(r'sung (\d+)x', x).group(1)))		
 	except Exception as exception:					# bei HLS/"auto", problemlos da vorsortiert durch Sender 
 		PLog("sort_error:  " + str(exception))
 
