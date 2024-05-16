@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>75</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.05.2024
+# 	<nr>76</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1700,14 +1700,17 @@ def ARD_Teletext_Wrap(new_lines, myline, max_length, txtRight):
 def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""): 
 	PLog('get_json_content: ' + ID); PLog(mark)
 	ID_org=ID; PLog(type(page)); 
+	PLog(str(page)[:80])
 
 	CurSender = ARD_CurSender()										# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)												#-> href
 	mediatype=''; pagetitle=''
 	
-	PLog(page[:80])
-	page_obs = json.loads(page)
+	if "dict" not in str(type(page)):
+		page_obs = json.loads(page)
+	else:
+		page_obs = page
 
 	try:
 		if "teasers" in page_obs:
@@ -1894,6 +1897,8 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 # 21.01.2021 Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
 # 25.01.2021 no-cache-Header für Verpasst- und A-Z-Beiträge
 # 14.02.2023 HBBTV-Quellen (http://tv.ardmediathek.de/dyn/get?id=video%3A..)
+# 14.05.2024 Nutzung api-Web-Quellen für alle Streams (bisher nur vtt-Datei) -
+#	ARDStartVideoWebUTget entfernt,
 #
 def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''): 
 	PLog('ARDStartSingle: %s' % ID);
@@ -1903,8 +1908,9 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 	# Header für Verpasst-Beiträge (ARDVerpasstContent -> get_json_content)
 	if ID == 'EPG' or ID == 'A-Z':											
 		headers = "{'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma':'no-cache',\
-			'Expires': '0'}"		
-
+			'Expires': '0'}"
+		
+	path = path + "&mcV6=true"								# api-Web-Quelllen
 	page, msg = get_page(path, header=headers)
 	if page == '':	
 		msg1 = "Fehler in ARDStartSingle: %s"	% title
@@ -1914,41 +1920,70 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 	PLog(len(page))
 	page= page.replace('\\u002F', '/')						# 23.11.2019: Ersetzung für Python3 geändert
 	page= page.replace('+++\\n', '+++ ')					# Zeilentrenner ARD Neu
-	
 
-	elements = blockextract('"availableTo":', page)			# möglich: Mehrfachbeiträge? z.B. + Hörfassung
+	elements = page.count('"availableTo":')					# möglich: Mehrfachbeiträge, Bsp. Hörfassung, Teaser
+	PLog('elements: %d' % elements)	
+
 	IsPlayable = xbmc.getInfoLabel('ListItem.Property(IsPlayable)') # 'true' / 'false'
 	PLog("IsPlayable: %s" % IsPlayable)	
-	if len(elements) > 1:
-		if '_quality"' not in page:							# Keine Quellen -> Abbruch
-			msg1 = u"[B]%s[/B] enthält keine Videoquellen"	% title
+	if elements > 0:
+		if page.find('"durationSeconds"') == 0:				# ohne Länge keine Quellen -> Abbruch
+			msg1 = u"[B]%s[/B] enthält keine Videoquellen"	% cleanmark(title)
 			msg2 = u"Mögliche Ursache: Altersbeschränkung"
 			msg3 = u"Eine Suche in MediathekViewWeb könnte helfen."
 			MyDialog(msg1, msg2, msg3)	
 			return											# hebt IsPlayable auf (Player-Error: skipping ..)			
 			
-	if len(elements) == 0:									# möglich: keine Video (dto. Web)
+	if elements == 0:										# möglich: kein Video (dto. Web)
 		msg1 = u'keine Beiträge zu %s gefunden'  % title
 		PLog(msg1)
 		MyDialog(msg1, '', '')
 		xbmcplugin.endOfDirectory(HANDLE)	
-	PLog('elements: ' + str(len(elements)))	
 	PLog("anz_plugin: %d" % page.count("_plugin"))			# todo: Relevanz _plugin=2 prüfen
+	
+	page = json.loads(page)
+	PLog(str(page)[:80])								
+	try:													# img, geoblock + Untertitel
+		PLog("get_img")
+		image =  page["widgets"][0]["image"]
+		img = image["src"]
+		img_alt = image["alt"]								# n.v.
+		img = img.replace('{width}', '640')
+		geoblock = page["widgets"][0]["geoblocked"]			# false, true
+		if geoblock:										# Geoblock-Anhang für title, summary
+			geoblock = ' | Geoblock: JA'
+			title = title + geoblock
+		else:
+			geoblock = ' | Geoblock: nein'
+		PLog("geoblock: %s, img: %s" % (geoblock, img))	
 		
-	try:													# Untertitel + StreamArray
-		sub_path = ARDStartVideoWebUTget(path, headers)										# 1. UT in Web-api-Quelle suchen
-		VideoObj = json.loads(page)["widgets"][0]
-		if sub_path == "":
-			if "_subtitleWebVTTUrl" in VideoObj["mediaCollection"]["embedded"]: 			# 2. UT vtt-Format
-				sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleWebVTTUrl"]
-			if sub_path == "":
-				if "_subtitleUrl" in VideoObj["mediaCollection"]["embedded"]: 				# 3. UT xml-Format -> xml2srt
-					sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleUrl"]
-		PLog("sub_path: " + sub_path)
-
-		mediaArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"]					# Videostreams
-		StreamArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"][0]["_mediaStreamArray"]
-		PLog("VideoObj: %d, mediaArray: %d, StreamArray: %d" % (len(VideoObj),len(mediaArray), len(StreamArray)))
+		PLog("get_subtitles")
+		mediaCollection = page["widgets"][0]["mediaCollection"]
+		subtitles = mediaCollection["embedded"]["subtitles"]
+		PLog(str(subtitles)[:80])								
+		if subtitles:										# leer od. >= 1, 0: normal
+			sources = subtitles[0]["sources"]				# normal
+			if len(sources) > 1:				
+				sub_path = sources[1]["url"]				# 1: vtt
+			else:
+				sub_path = sources[0]["url"]				# 0: xml
+		else:
+			sub_path=""	
+	except Exception as exception:
+		PLog(str(exception))
+		sub_path=""
+	PLog("sub_path: " + sub_path)	
+			
+	try:													# StreamArray
+		PLog("get_StreamArrays")
+		slen = len(mediaCollection["embedded"]["streams"])
+		PLog("StreamArrays: %d" % slen)
+		StreamArray_0=[]; StreamArray_1=[]					
+		StreamArray_0 = mediaCollection["embedded"]["streams"][0]		# "kind": "main", "kindName": "Normal",
+		if slen > 1:
+			StreamArray_1 = mediaCollection["embedded"]["streams"][1]	# "kind": "sign-language", "kindName": "DGS", 						
+		PLog(str(StreamArray_0)[:80])								
+		PLog(str(StreamArray_1)[:80])								
 	except Exception as exception:
 		PLog(str(exception))
 		msg1 = u'keine Videoquellen gefunden'
@@ -1966,54 +2001,19 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 			else:
 				li = home(li, ID='ARD Neu')						# Home-Button
 			
-	img = VideoObj["image"]["src"]
-	img = img.replace('{width}', '640')
-	geoblock = VideoObj["geoblocked"]						# false, true
-	if geoblock:											# Geoblock-Anhang für title, summary
-		geoblock = ' | Geoblock: JA'
-		title = title + geoblock
-	else:
-		geoblock = ' | Geoblock: nein'
-	PLog("geoblock: " + geoblock)	
-					
-	# Livestream-Abzweig, Bsp. tagesschau24:	
-	# 	Kennzeichnung Livestream: 'class="day">Live</p>' in ARDStartRubrik.
-	#	für Menü TV-Livestreams s. get_ARDstreamlinks
-	# todo: Umstellung -> json
-	if ID	== 'Livestream':								# Livestreams -> SenderLiveResolution		
-		VideoUrls = blockextract('_quality', page)			# 2 master.m3u8-Url (1 x UT)
-		PLog(len(VideoUrls))
-		href_ut=''
-		for video in VideoUrls:
-			stream = stringextract('stream":"', '"', video)	
-			PLog(stream)
-			if stream.endswith(".ts"):						# 07.01.2024 Link o. Zertifikat
-				PLog("skip_ts_stream")
-				continue
-			href = stream
-			if '_ut_' in href or '_sub' in href:			# UT-Stream filtern, bisher nur ARD, HR
-				href_ut = href
-
-		if SETTINGS.getSetting('pref_UT_ON') == 'true':	
-			if href_ut:
-				href = href_ut
-		
-		if href.startswith('//'):
-			href = 'https:' + href
-		PLog('Livestream_Abzweig: ' + href)
-		return ardundzdf.SenderLiveResolution(path=href, title=title, thumb=img, descr=summary)
-		
+	# Livestream-Abzweig, Bsp. tagesschau24:					# entf. mit Umstellung auf api-Web	
+	#	json-Struktur wie Videos	
 	# -----------------------------------------			# Extrakt Videoquellen
 	# 17.02.2023 Umstellung string -> json
 	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
 	#	generisch: "Label |  Auflösung | Bandbreite | Titel#Url"
 	#	fehlende Bandbreiten + Auflösungen werden ergänzt
 	call = "ARDStartSingle"
-	HLS_List = ARDStartVideoHLSget(title, StreamArray, call)	# Extrakt HLS
+	HLS_List = ARDStartVideoHLSget(title, StreamArray_0, call, StreamArray_1)	# Extrakt HLS
 	PLog("HLS_List: " + str(HLS_List)[:80])
-	HBBTV_List = ARDStartVideoHBBTVget(title, path)				# HBBTV (MP4), eigene Quellen
+	HBBTV_List = ARDStartVideoHBBTVget(title, path)								# HBBTV (MP4), eigene Quellen
 	PLog("HBBTV_List: " + str(HBBTV_List)[:80])
-	MP4_List = ARDStartVideoMP4get(title, StreamArray, call)	# MP4
+	MP4_List = ARDStartVideoMP4get(title, StreamArray_0, call, StreamArray_1)	# MP4
 	Dict("store", 'ARDNEU_HLS_List', HLS_List) 
 	Dict("store", 'ARDNEU_HBBTV_List', HBBTV_List) 
 	Dict("store", 'ARDNEU_MP4_List', MP4_List) 
@@ -2045,15 +2045,14 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 		return										# 13.11.2021 notw. für Rückspr. z. Merkliste
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-	PLog('Serien_Test_Mehr_Test')
-	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten). element enthält 
-	#	Sendungen ab dem 2. Element (1. die Videodaten)
-	# 19.10.2020 Funktion get_ardsingle_more entfällt
-	# 15.04.2023 Auswertung Mehr-Beiträge -> json
+	PLog('Serien_Mehr_Test')
+	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten). 
 	# 23.04.2024 Serienhinweis, falls Beitrag Bestandteil einer Serie ist
 	#	(availableSeasons)
-	if len(elements) > 1 and SETTINGS.getSetting('pref_more') == 'true':
+	if SETTINGS.getSetting('pref_more') == 'true':
+		VideoObj = page["widgets"][0]				# 
 		if "show" in VideoObj: 						# Serienhinweis?
+			PLog("show_detect")
 			if "availableSeasons" in VideoObj["show"]:
 				PLog("serie_detect: %s" % str(VideoObj["show"])[:80])
 				sid = VideoObj["show"]["id"]
@@ -2075,71 +2074,64 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 						fanart=img, thumb=img, tagline=tag, summary=summ, fparams=fparams)
 				else:
 					PLog("serie_anz_fehlt")
-		
-		gridlist = elements[1:]						# Mehr-Beiträge hinter den Videodaten (1. Element)
-		PLog('gridlist_more: ' + str(len(gridlist)))	
-		s = json.loads(page)["widgets"][1]			
-		page  = json.dumps(s)
-		PLog(page[:100])
-		get_json_content(li, page, ID=ID, mehrzS=True, mark='')	
+	
+		if len(page["widgets"]) > 1:
+			VideoObj = page["widgets"][1]					# Mehr-Beiträge hinter den Daten zum gewählten Video
+			if "teasers" in VideoObj:						# Teasers-extrakt in get_json_content
+				PLog('Teasers: ' + str(len(VideoObj["teasers"])))
+				get_json_content(li, VideoObj, ID=ID, mehrzS=True, mark='')	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-#----------------------------
-# ermittelt Untertitel in Web-api-Quelle
-# path wird ergänzt mit &mcV6=true
-def ARDStartVideoWebUTget(path, headers): 
-	PLog("ARDStartVideoWebUTget:")
-	page, msg = get_page(path + "&mcV6=true", header=headers)
-	if page:
-		page = json.loads(page)
-		PLog(str(page)[:80])
-
-	sub_path=""
-	try:
-		mediaCollection = page["widgets"][0]["mediaCollection"]
-		subtitles = mediaCollection["embedded"]["subtitles"]
-		PLog(str(subtitles)[:80])									# 0: xml, 1: vtt
-		if subtitles:
-			sub_path = mediaCollection["embedded"]["subtitles"][0]["sources"][1]["url"]
-	except Exception as exception:
-		PLog("WebUTget_error:" + str(exception))
-		sub_path=""
-		
-	return sub_path
 
 #----------------------------
 # auto-Stream master.m3u8 aus VideoUrls ermitteln, 
 #	via Parseplaylist in Einzelauflösungen zerlegen
 # Aufrufer ARDStartSingle (Länge VideoUrls > 0) und
 # 	ARD_get_strmStream
+# StreamArray_0 (StreamArray): mediaCollection["embedded"]["streams"][0]
+#	StreamArray_1: DGSStreams (werden angehängt)
 #
-def ARDStartVideoHLSget(title, StreamArray, call=""): 
+def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""): 
 	PLog('ARDStartVideoHLSget: ' + call); 
 	PLog(str(StreamArray)[:100])
 	
 	HLS_List=[]; Stream_List=[]; href=""
 	title = py2_decode(title)
 	
-	for video in  StreamArray:				
-		#PLog(str(video)[:100])
-		if video["_quality"] == "auto":	# master.m3u8
-			href =  video["_stream"]	# Video-Url
-			if href.startswith('http') == False:
-				href = 'https:' + href
-			quality = u'automatisch'
-			HLS_List.append(u'HLS automatische Anpassung ** auto ** auto ** %s#%s' % (title,href))
-			break
-			
-	li=''; img=''; geoblock=''; descr='';					# für Stream_List n.b.
-	if href:
-		Stream_List = ardundzdf.Parseplaylist(li, href, img, geoblock, descr, stitle=title, buttons=False)
-		if type(Stream_List) == list:						# Fehler Parseplaylist = string
-			HLS_List = HLS_List + Stream_List
-		else:
-			HLS_List=[]
-	PLog("Streams: %d" % len(HLS_List))
+	Arrays=[]
+	Arrays.append(StreamArray)
+	if StreamArray_1:										# StreamArrays verbinden
+		Arrays.append(StreamArray_1)
+	PLog("Arrays: %d" % len(Arrays))
 	
+	for array in Arrays:
+		kind  = array["kindName"]
+		for stream in  array["media"]:				
+			#PLog(str(stream)[:100])
+			if stream["mimeType"] == "application/vnd.apple.mpegurl":	# 1x:  master.m3u8
+				href =  stream["url"]	# Video-Url
+				if href.startswith('http') == False:
+					href = 'https:' + href
+
+				qual = stream["forcedLabel"]
+				aspect = stream["aspectRatio"]
+				audio_kind = stream["audios"][0]["kind"]
+				audio_lang = stream["audios"][0]["languageCode"]
+				details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
+
+				quality = u'automatisch'
+				HLS_List.append(u'HLS [B]%s[/B] ** auto ** auto ** %s#%s' % (details, title,href))
+				break
+			
+		li=''; img=''; geoblock=''; descr='';					# für Stream_List n.b.
+		if href:												# Einzelauflösungen aus master.m3u8
+			Stream_List = ardundzdf.Parseplaylist(li, href, img, geoblock, descr, stitle=title, buttons=False)
+			if type(Stream_List) == list:						# Fehler Parseplaylist = string
+				HLS_List = HLS_List + Stream_List
+			else:
+				HLS_List=[]
+	PLog("Streams: %d" % len(HLS_List))
+	PLog(HLS_List)
 	return HLS_List
 
 #----------------------------
@@ -2184,20 +2176,16 @@ def ARDStartVideoHBBTVget(title, path):
 		href = stream["url"]
 		if "_internationalerton_" in href:		# vermutl. identisch mit "_sendeton_"-Url
 			continue
-		try:						
-			bitrate = re.search(u'-(\d+)kbit', href).group(1)
-			bitrate = "%skbit" % bitrate
-		except:
-			bitrate = "?"
 		
-		PLog("hbbtv_bitrate: %s, res: %s" % (bitrate, res)) 
-		if "3840x" in res:
-			quality = "UHD_MP4"
+		PLog("hbbtv_res: %s" % res) 
 		title_url = u"%s#%s" % (title, href)
-		item = u"MP4 Qualität: [B]%10s[/B] ** Auflösung %s ** Bitrate %s ** %s" % (quality, res, bitrate, title_url)
+		item = u"MP4: [B]%s[/B] ** Auflösung %s ** %s" % (quality, res, title_url)
+		if "3840x" in res:
+			item = item.replace("MP4", "UHD_MP4")
 		item = py2_decode(item)
 		HBBTV_List.append(item)
 
+	PLog(HBBTV_List)
 	return HBBTV_List
 
 #----------------------------
@@ -2205,54 +2193,51 @@ def ARDStartVideoHBBTVget(title, path):
 # altes Format: "Qualität: niedrige | Titel#https://pdvideosdaserste.."
 # neues Format:	"MP4 Qualität: Full HD ** Auflösung ** Bandbreite ** Titel#Url"
 # Format ähnlich ARDStartVideoHBBTVget (Label abweichend)
-def ARDStartVideoMP4get(title, StreamArray, call=""):	
+# StreamArray_0 (StreamArray): mediaCollection["embedded"]["streams"][0]
+#	StreamArray_1: DGSStreams (werden angehängt)
+def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):	
 	PLog('ARDStartVideoMP4get:'); 
 			
 	href=''; quality=''
 	title = py2_decode(title)
-	qlist = [u"0|niedrige|480x270", u"1|mittlere|640x360", u"2|hohe|960x540", 
-			u"3|sehr hohe|1280x720", u"4|Full HD|1920x1080",
-	]
 	download_list = []	
 	# 2-teilige Liste für Download: 'title # url'
-
-	for stream in StreamArray:
-		PLog(str(stream)[:80])
-		qual = str(stream["_quality"])
-		if qual == "auto":						# in HLS-List
-			continue
-			
-		quality =  "?"
-		for q in qlist:
-			q_val,  q_text, q_res = q.split("|")
-			if qual in q_val:
-				quality = q_text
-				break
-		if "_width" in stream and "_height" in stream: # können in TagesschauXL fehlen
-			w = stream["_width"] 
-			h = stream["_height"]
-			res = "%sx%s" % (str(w),str(h))
-		else:
-			PLog("res_missing")
-			res = q_res
-		href = stream["_stream"]
-		if "_internationalerton_" in href:		# vermutl. identisch mit "_sendeton_"-Url
-			continue
-		try:						
-			bitrate = re.search(u'-(\d+)kbit', href).group(1)
-			bitrate = "%skbit" % bitrate
-		except:
-			bitrate = "?"
-		
-		PLog("mp4_bitrate: %s, res: %s" % (bitrate, res)) 
-		if "3840x" in res:
-			quality = "UHD_MP4"
-		title_url = u"%s#%s" % (title, href)
-		item = u"MP4 Qualität: [B]%10s[/B] ** Auflösung %s ** Bitrate %s ** %s" % (quality, res, bitrate, title_url)
-		item = py2_decode(item)
-		download_list.append(item)
 	
-	#PLog(download_list)
+	Arrays=[]
+	Arrays.append(StreamArray)
+	if StreamArray_1:										# StreamArrays verbinden
+		Arrays.append(StreamArray_1)
+	PLog("Arrays: %d" % len(Arrays))
+
+	for array in Arrays:
+		kind  = array["kindName"]
+		for stream in array["media"]:
+			PLog(str(stream)[:80])
+			if stream["mimeType"] == "video/mp4":					# HLS ausschließen
+				if "maxHResolutionPx" in stream and "maxVResolutionPx" in stream: 
+					w = stream["maxHResolutionPx"] 
+					h = stream["maxVResolutionPx"]
+					res = "%sx%s" % (str(w),str(h))
+				else:
+					PLog("res_missing")
+					res = "0x0"
+				PLog("mp4_res: %s" % res) 
+				href = stream["url"]
+				
+				qual = stream["forcedLabel"]
+				aspect = stream["aspectRatio"]
+				audio_kind = stream["audios"][0]["kind"]
+				audio_lang = stream["audios"][0]["languageCode"]
+				details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
+				
+				title_url = u"%s#%s" % (title, href)
+				item = u"MP4: [B]%s[/B] ** Auflösung %s ** %s" % (details, res, title_url)
+				if "3840x" in res:
+					item = item.replace("MP4", "UHD_MP4")
+				item = py2_decode(item)
+				download_list.append(item)
+	
+	PLog(download_list)
 	return download_list			
 			
 ####################################################################################################

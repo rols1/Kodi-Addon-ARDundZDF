@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>197</nr>										# Numerierung für Einzelupdate
+# 	<nr>198</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.3'
-VDATE = '15.05.2024'
+VDATE = '16.05.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -10928,16 +10928,21 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 	for item in Stream_List:
 		item = py2_encode(item)
 		PLog("item: " + item[:80])
-		label, bitrate, res, title_href = item.split('**')
-		bitrate = bitrate.replace('Bitrate 0', 'Bitrate ?')			# Anpassung für funk ohne AzureStructure
-		res = res.replace('0x0', '?')								# dto.
+		bitrate=""
+		if item.count("**") == 3:										# mit bitrate
+			label, bitrate, res, title_href = item.split('**')
+			bitrate = bitrate.replace('Bitrate 0', 'Bitrate ?')			# Anpassung für funk ohne AzureStructure
+			res = res.replace('0x0', '?')								# dto.
+		else:															# ohne bitrate
+			label, res, title_href = item.split('**')
 		PLog(title_href)
 		title, href = title_href.split('#')
 		
 		PLog(title); PLog(tagline_org[:80]); PLog(sub_path)
 		tagline = tagline_org
-	
-		label = "%d. %s | %s| %s" % (cnt, label, bitrate, res)
+		label = "%d. %s | %s" % (cnt, label, res)
+		if bitrate:														# HLS: numeriert, mit bitrate
+			label = "%s | %s | %s" % (label, bitrate, res)
 		cnt = cnt+1
 		href=py2_encode(href); title=py2_encode(title);
 		
