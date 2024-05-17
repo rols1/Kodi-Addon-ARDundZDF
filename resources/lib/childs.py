@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>27</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.03.2024
+# 	<nr>28</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -935,7 +935,7 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 	if next_path:
 		next_page=0
 		try:
-			next_page =  re.search(u'page=(\d+)', next_path).group(1)
+			next_page =  re.search(r'page=(\d+)', next_path).group(1)
 			next_page = int(next_page) +1
 		except Exception as exception:
 			PLog(str(exception))
@@ -1876,15 +1876,6 @@ def Kika_VideoMP4get(title, assets):
 		frameHeight = stringextract('frameHeight":', ',', s)
 		href = stringextract('"url":"', '"', s)
 		href = href.replace("http:", "https:")							# Redakt.-Fehler? (bisher nur bei mp4-Quellen)
-		bitrate =  stringextract('<bitrateVideo>', '</', s)
-		if bitrate == '':
-			if '_' in href:
-				try:
-					bitrate = re.search(u'_(\d+)k_', href).group(1)
-					bitrate = "%skbit" % bitrate
-				except Exception as exception:
-					PLog(str(exception))
-					bitrate = '?'
 		profil =  stringextract('"profileName":"', '"', s)	
 		res = frameWidth + 'x' + frameHeight
 				
@@ -1907,9 +1898,9 @@ def Kika_VideoMP4get(title, assets):
 		if "Web XL" in profil or width <= 1280:
 			quality = u'Full HD'
 			
-		PLog("res: %s, bitrate: %s" % (res, bitrate)); 
+		PLog("res: %s" % res); 
 		title_url = u"%s#%s" % (title, href)
-		item = u"MP4 Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
+		item = u"MP4 Qualität: %s ** Auflösung %s ** %s" % (quality, res, title_url)
 		download_list.append(item)
 
 	return download_list
@@ -1926,14 +1917,6 @@ def Kika_VideoMP4getXML(title, assets):
 		frameWidth = stringextract('<frameWidth>', '</frameWidth>', s)	
 		frameHeight = stringextract('<frameHeight>', '</frameHeight>', s)
 		href = stringextract('<progressiveDownloadUrl>', '</', s)
-		bitrate =  stringextract('<bitrateVideo>', '</', s)
-		if bitrate == '':
-			if '_' in href:
-				try:
-					bitrate = re.search(u'_(\d+)k_', href).group(1)
-				except Exception as exception:
-					PLog(str(exception))
-					bitrate = '0'
 		profil =  stringextract('<profileName>', '</', s)	
 		res = frameWidth + 'x' + frameHeight
 				
@@ -1950,9 +1933,9 @@ def Kika_VideoMP4getXML(title, assets):
 		if "MP4 Web XL" in profil or "1280" in frameWidth:
 			quality = u'Full HD'
 			
-		PLog("res: %s, bitrate: %s, href: %s" % (res, bitrate, href)); 
+		PLog("res: %s, href: %s" % (res, href)); 
 		title_url = u"%s#%s" % (title, href)
-		item = u"MP4 Qualität: %s ** Bitrate %s ** Auflösung %s ** %s" % (quality, bitrate, res, title_url)
+		item = u"MP4 Qualität: %s ** Auflösung %s ** %s" % (quality, res, title_url)
 		download_list.append(item)
 
 	return download_list	

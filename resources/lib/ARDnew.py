@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>76</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.05.2024
+# 	<nr>77</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1053,7 +1053,7 @@ def ARD_FlatListRec(item, vers):
 	title_org=title
 	
 	if 'Normal' in vers:								# Version berücksichtigen?
-		if u'Hörfassung' in title or u'(OV)' in title or u'Original' in title:
+		if u'Hörfassung' in title or u'(OV)' in title or u'Original' in title or u'Trailer:' in title:
 			PLog("skip_title: " + title)	
 			return '', url, img, tag, summ, season, weburl, ID
 	else:
@@ -1073,14 +1073,14 @@ def ARD_FlatListRec(item, vers):
 		se = title
 		if ":" in se:
 			se = se.split(":")[-1]						# manchmal zusätzl. im Titel: ..(6):.. 
-		se = re.search(u'\((.*?)\)', se).group(1)		# Bsp. (S03/E12)
-		season = re.search(u'S(\d+)', se).group(1)
-		episode = re.search(u'E(\d+)', se).group(1)
+		se = re.search(r'\((.*?)\)', se).group(1)		# Bsp. (S03/E12)
+		season = re.search(r'S(\d+)', se).group(1)
+		episode = re.search(r'E(\d+)', se).group(1)
 	except Exception as exception:
 		PLog(str(exception))
 	if season == '' and episode == '':					# Alternative: ohne Staffel, nur Folgen
 		try: 
-			episode = re.search(u'\((\d+)\)', title).group(1)									
+			episode = re.search(r'\((\d+)\)', title).group(1)									
 			season = "0"
 		except Exception as exception:
 			PLog(str(exception))	
@@ -1168,7 +1168,7 @@ def ARD_getStrmList(path, title, ID="ARD"):
 	pos = page.find("synopsis")							# Serien-Titel (vorgegeben)
 	list_title =  stringextract('"title":"', '"', page[pos:])			
 	list_title = transl_json(list_title)
-	PLog("list_title:" + list_title)
+	PLog("list_title: " + list_title)
 	
 	#---------------------								# wie ZDF_getStrmList
 	strm_type = strm.get_strm_genre()					# Genre-Auswahl
@@ -1219,7 +1219,7 @@ def ARD_getStrmList(path, title, ID="ARD"):
 		list_exist=True
 
 	#---------------------
-	cnt=0; 
+	cnt=0; skip_cnt=0
 	items = blockextract('availableTo":', page)					# Videos
 	for item in items:
 		if "Folge " in item == False:
@@ -1307,10 +1307,12 @@ def ARD_getStrmList(path, title, ID="ARD"):
 #	(dort Abgleich Settings pref_direct_format +
 #	pref_direct_quality, Ablage STRM_URL)
 # Plot: tag + summ von Aufrufer zusammengelegt
+# 17.05.2024 Angleichung Web-api in ARDStartSingle
+#
 def ARD_get_strmStream(url, title, img, Plot):
 	PLog('ARD_get_strmStream:'); 
 	
-	page, msg = get_page(url)
+	page, msg = get_page(url + "&mcV6=true")				# wie ARDStartSingle
 	if page == '':	
 		msg1 = "Fehler in ARD_get_strmStream: %s"	% title
 		PLog("%s | %s" % (msg1, msg))	
@@ -1320,32 +1322,37 @@ def ARD_get_strmStream(url, title, img, Plot):
 	page= page.replace('+++\\n', '+++ ')					# Zeilentrenner ARD Neu
 			
 	# -----------------------------------------				# Extrakt Videoquellen
-	PLog("anz_plugin: %d" % page.count("_plugin"))			# todo: Relevanz _plugin=2 prüfen
+	PLog(page[:80])								
+	elements = page.count('"availableTo":')					# möglich: Mehrfachbeiträge, Bsp. Hörfassung, Teaser
+	PLog('elements: %d' % elements)	
+	page = json.loads(page)
+	mediaCollection = page["widgets"][0]["mediaCollection"]
 
-	try:
-		sub_path=""
-		VideoObj = json.loads(page)["widgets"][0]
-		if "_subtitleUrl" in VideoObj["mediaCollection"]["embedded"]: # kann fehlen
-			sub_path = VideoObj["mediaCollection"]["embedded"]["_subtitleUrl"]
-		PLog("sub_path: " + sub_path)
-		mediaArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"]
-		StreamArray = VideoObj["mediaCollection"]["embedded"]["_mediaArray"][0]["_mediaStreamArray"]
-		PLog("VideoObj: %d, mediaArray: %d, StreamArray: %d" % (len(VideoObj),len(mediaArray), len(StreamArray)))
+	try:													# StreamArray
+		PLog("get_StreamArrays")
+		slen = len(mediaCollection["embedded"]["streams"])
+		PLog("StreamArrays: %d" % slen)
+		StreamArray_0=[]; StreamArray_1=[]					
+		StreamArray_0 = mediaCollection["embedded"]["streams"][0]		# "kind": "main", "kindName": "Normal",
+		if slen > 1:
+			StreamArray_1 = mediaCollection["embedded"]["streams"][1]	# "kind": "sign-language", "kindName": "DGS", 						
+		PLog(str(StreamArray_0)[:80])								
+		PLog(str(StreamArray_1)[:80])								
 	except Exception as exception:
 		PLog(str(exception))
 		msg1 = u'keine Videoquellen gefunden'
 		PLog(msg1)
-		# MyDialog(msg1, '', '')							# strm o. Dialog (Task)
-		return
+		# MyDialog(msg1, '', '')										# hier ohne Dialog
+		return	
 	
-	# Formate siehe StreamsShow								# HLS_List + MP4_List anlegen
+	# Formate siehe StreamsShow								# HLS_List + MP4_List anlegen, ohne HBBTV
 	#	generisch: "Label |  Auflösung | Bandbreite | Titel#Url"
 	#	fehlende Bandbreiten + Auflösungen werden ergänzt
 	call = "ARD_get_strmStream"
 	HBBTV_List=''											# nur ZDF
-	HLS_List = ARDStartVideoHLSget(title, StreamArray, call)	# Extrakt HLS
+	HLS_List = ARDStartVideoHLSget(title, StreamArray_0, call, StreamArray_1)	# Extrakt HLS
 	PLog("HLS_List: " + str(HLS_List)[:80])
-	MP4_List = ARDStartVideoMP4get(title, StreamArray, call)	# Extrakt MP4
+	MP4_List = ARDStartVideoMP4get(title, StreamArray_0, call, StreamArray_1)	# MP4
 	PLog("MP4_List: " + str(MP4_List)[:80])
 
 	# Abgleich Settings, Ablage STRM_URL
@@ -1368,7 +1375,7 @@ def ARD_Teletext(path=""):
 	base = "http://vtx.ard.de/data/ard/%s.json"
 	if path == "":
 		path = base % "100"
-	aktpg = re.search(u'data/ard/(.*?).json', path).group(1)
+	aktpg = re.search(r'data/ard/(.*?).json', path).group(1)
 	PLog("aktpg: %s" % aktpg)
 	
 	img = R(ICON_MAIN_ARD)
@@ -1902,7 +1909,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 #
 def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''): 
 	PLog('ARDStartSingle: %s' % ID);
-	title_org = title
+	title_org=title;
 
 	headers=''
 	# Header für Verpasst-Beiträge (ARDVerpasstContent -> get_json_content)
@@ -2024,6 +2031,12 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 		PLog(msg1)
 		MyDialog(msg1, '', '')	
 		return li	
+	#----------------------------------------------- 							# Livestream-Abzweig, Bsp. tagesschau24:
+	if "LIVESTREAM" in page["coreAssetType"]:
+		href = HLS_List[0].split("**")[-1]										# Das Erste#https://...master.m3u8
+		href = href.split("#")[-1]
+		PLog('Livestream_Abzweig: ' + href)
+		return PlayVideo(href, title, img, summary, sub_path=sub_path, live="true")		
 	
 	#----------------------------------------------- 
 	# Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
@@ -2138,6 +2151,7 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 # HBBTV-Quellen laden 
 # json-Quelle:	tv.ardmediathek.de/..
 # Aufrufer ARDStartSingle
+# 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 #
 def ARDStartVideoHBBTVget(title, path): 
 	PLog('ARDStartVideoHBBTVget:'); 
@@ -2169,6 +2183,8 @@ def ARDStartVideoHBBTVget(title, path):
 	
 	for stream in streams["media"]:
 		PLog(str(stream)[:80])
+		if "dash" in stream["mimeType"]:		# 16.05.2024 ../tagesschau_1.mpd läuft nicht
+			continue
 		quality = stream["forcedLabel"]
 		w = stream["maxHResolutionPx"] 
 		h = stream["maxVResolutionPx"]
@@ -2195,6 +2211,7 @@ def ARDStartVideoHBBTVget(title, path):
 # Format ähnlich ARDStartVideoHBBTVget (Label abweichend)
 # StreamArray_0 (StreamArray): mediaCollection["embedded"]["streams"][0]
 #	StreamArray_1: DGSStreams (werden angehängt)
+# 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):	
 	PLog('ARDStartVideoMP4get:'); 
 			

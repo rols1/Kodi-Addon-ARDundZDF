@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.04.2024
+# 	<nr>17</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -767,7 +767,7 @@ def Rubriken(name, path, themen=''):
 					dur 	= stringextract('duration": "', '",', videoinfos)
 				else:	
 					try:										
-						dur = re.search(u'>(.*?) min</span>', rec).group(1)		# 1 h 56 min
+						dur = re.search(r'>(.*?) min</span>', rec).group(1)		# 1 h 56 min
 						dur = dur + " min"
 					except Exception as exception:
 						PLog(str(exception))
@@ -974,7 +974,7 @@ def Rubrik_Single(name, path, thema='', ID=''):
 			descr	= stringextract('paragraph-large ">', '<', rec)
  		 
 		try:
-			dur = re.search(u'>(.*?) min</span>', rec).group(1)		# 1 h 56 min
+			dur = re.search(r'>(.*?) min</span>', rec).group(1)		# 1 h 56 min
 			dur = dur + " min"
 		except:
 			dur=''
@@ -1104,7 +1104,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 			if img_src == '':
 				img_src = R('Dir-folder.png')
 			try:
-				dur = re.search(u'>(.*?) min</span>', page).group(1)		# 1 h 56 min
+				dur = re.search(r'>(.*?) min</span>', page).group(1)		# 1 h 56 min
 				dur = dur + " min"
 			except:
 				dur=''
@@ -1176,7 +1176,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 		tagline = unescape(tagline)
 			
 		try:
-			dur = re.search(u'>(.*?) min</span>', page).group(1)		# 1 h 56 min
+			dur = re.search(r'>(.*?) min</span>', page).group(1)		# 1 h 56 min
 			dur = dur + " min"
 		except:
 			dur=''
@@ -1266,7 +1266,7 @@ def get_title(rec):
 	if '-headline' in rec:							# Titel in Blockanfang
 		title = stringextract('-headline', 'class=', rec) 
 		try:
-			title = re.search(u'">(.*?)</h', rec).group(1)
+			title = re.search(r'">(.*?)</h', rec).group(1)
 		except:
 			title=''			
 	

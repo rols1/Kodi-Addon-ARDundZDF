@@ -22,8 +22,8 @@
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-# 	<nr>3</nr>								# Numerierung für Einzelupdate
-#	Stand: 27.02.2024
+# 	<nr>4</nr>								# Numerierung für Einzelupdate
+#	Stand: 17.05.2024
 #
 
 from __future__ import absolute_import
@@ -211,7 +211,7 @@ def get_duration(page):
 	millisecs = stringextract('"approxDuration', ',', page)
 	millisecs = millisecs.replace('\\', '')
 	try:
-		duration = re.search(u'Ms":"(\d+)"', millisecs).group(1)
+		duration = re.search(r'Ms":"(\d+)"', millisecs).group(1)
 		duration = seconds_translate(int(int(duration) / 1000))
 	except Exception as exception:	
 		PLog(str(exception))
@@ -389,20 +389,20 @@ def MVWSingleVideo(title,Plot,home_id,url_sub='',url_low='',url_med='',url_hd=''
 	track_add = "MediathekView"
 	if url_low:
 		title_url = u"%s#%s" % (title, url_low)
-		item = u"MP4, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
-			(track_add, "LOW", "unbekant", "480x270", title_url)
+		item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
+			(track_add, "LOW", "480x270", title_url)
 		MP4_List.append(item)
 		PLog("item: " + item)
 	if url_med:
 		title_url = u"%s#%s" % (title, url_med)
-		item = u"MP4, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
-			(track_add, "MED", "unbekant", "640x360", title_url)
+		item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
+			(track_add, "MED", "640x360", title_url)
 		MP4_List.append(item)
 		PLog("item: " + item)
 	if url_hd:
 		title_url = u"%s#%s" % (title, url_hd)
-		item = u"MP4, %s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
-			(track_add, "HD", "unbekant", "1920x1080", title_url)
+		item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
+			(track_add, "HD", "1920x1080", title_url)
 		MP4_List.append(item)
 		PLog("item: " + item)
 	

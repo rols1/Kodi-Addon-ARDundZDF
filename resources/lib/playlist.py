@@ -4,8 +4,8 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-# 	<nr>7</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.01.2024
+# 	<nr>8</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.05.2024
 #
 
 from __future__ import absolute_import
@@ -450,7 +450,7 @@ def build_textlist(PLAYLIST, cut_title=0):
 			continue
 		#PLog(item)		# Debug
 		if u"###neu ab " in item:								# Seek-Sekunden -> Std.
-			seekTime = re.search(u'###neu ab (\d+) sec', item).group(1)
+			seekTime = re.search(r'###neu ab (\d+) sec', item).group(1)
 			PLog(seekTime)
 			if int(seekTime) > 3600:							# erst ab 1 Std.
 				seekTime = seconds_translate(seekTime)
@@ -513,7 +513,7 @@ def PlayMonitor(startpos):
 	player		= xbmc.Player()			
 		
 	del_val = SETTINGS.getSetting('pref_delete_viewed')	# default 75%
-	del_val = re.search(u'(\d+)', del_val).group(1)
+	del_val = re.search(r'(\d+)', del_val).group(1)
 	del_val = int(del_val)
 	PLog("del_val: %d" % del_val)
 	
@@ -532,7 +532,7 @@ def PlayMonitor(startpos):
 
 		timestamp, title, add_url, thumb, Plot, status = item.split('###')
 		if "neu ab" in status:
-			seekTime = re.search(u'neu ab (\d+) sec', status).group(1)		# Seek-Pos. aus Playlist übernehmen
+			seekTime = re.search(r'neu ab (\d+) sec', status).group(1)		# Seek-Pos. aus Playlist übernehmen
 		PLog("Nr.: %s | %s | ab %s sec" % (play_cnt+1, title[:80], seekTime))
 		msg2 = "Titel %d von %d" % (play_cnt+1, len(PLAYLIST))
 		xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,2000)

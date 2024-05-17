@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>17</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.11.2023
+# 	<nr>18</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.05.2024
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -43,7 +43,7 @@ PLog(msg)
 
 # EPGCacheTime wie Haupt-PRG:
 eci = SETTINGS.getSetting('pref_epg_intervall')
-eci = re.search(u'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
+eci = re.search(r'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
 eci = int(eci)
 PLog("eci: %d" % eci)
 if eci == 12:											# 12 Std.

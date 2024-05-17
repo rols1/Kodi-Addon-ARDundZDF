@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>99</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.05.2024
+# 	<nr>100</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -67,7 +67,7 @@ PYTHON3 = sys.version_info.major == 3
 
 NAME			= 'ARD und ZDF'
 KODI_VERSION 	= xbmc.getInfoLabel('System.BuildVersion')
-KODI_MAJOR 		= int(re.search(u'(\d+)', KODI_VERSION).group(1))	
+KODI_MAJOR 		= int(re.search(r'(\d+)', KODI_VERSION).group(1))	
 
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -2145,7 +2145,7 @@ def time_translate(timecode, add_hour=True, day_warn=False, add_hour_only=""):
 				if dif.startswith("-") == False:			# -1 day, 23:48:12.503288 (Startzeit überschritten)
 					try:
 						if "day" in dif:	
-							day = re.search(u'(\d+) day', dif).group(1)
+							day = re.search(r'(\d+) day', dif).group(1)
 							PLog("day: %s" % str(day))
 							if  int(day) <= 7:					# erst ab 1 Woche warnen
 								ret_ts = "%s | NOCH %s TAG(E)!" % (ret_ts, day)
@@ -3333,7 +3333,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 		# höchste Auflös. nach unten, x-Param.: Auflösung
 		try:
 			if u"Auflösung" in str(Stream_List):
-				Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'sung (\d+)x', x).group(1)))	
+				Stream_List = sorted(Stream_List,key=lambda x: int(re.search(r'sung (\d+)x', x).group(1)))	
 		except Exception as exception:					# bei HLS/"auto", problemlos da vorsortiert durch Sender
 			PLog("sort_error: " + str(exception))
 			myqual = "auto"								# verwende Default_Url - kein Abgleich mit width
@@ -3357,7 +3357,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 				
 			PLog("item: " + item)
 			try:
-				width = re.search(u'sung (\d+)x', item).group(1)
+				width = re.search(r'sung (\d+)x', item).group(1)
 			except Exception as exception:
 				PLog("search_error: " + str(exception))
 				#continue
@@ -3782,7 +3782,7 @@ def monitor_resume(player, new_list, video_dur, seekTime):
 	new_list[-1] = line
 	
 	try:													# Korrektur früheres Format: jüngster zuletzt
-		sorted(new_list, key=lambda x: re.search(u'(\d+).', x).group(1))
+		sorted(new_list, key=lambda x: re.search(r'(\d+).', x).group(1))
 	except Exception as exception:
 		PLog("sorted_error: " + str(exception))
 	
