@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>198</nr>										# Numerierung für Einzelupdate
+# 	<nr>199</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.3'
-VDATE = '16.05.2024'
+VDATE = '17.05.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5167,7 +5167,7 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 	
 #---------------------------
 # Aufruf test_downloads (Setting pref_show_qualities=false)
-# ermittelt Stream mit höchster Auflösung / höchster Bitrate
+# ermittelt Stream mit höchster Auflösung
 #
 def get_bestdownload(download_list):
 	PLog('get_bestdownload:')
@@ -9400,6 +9400,7 @@ def ZDF_FlatListEpisodes(sid):
 #	ZDF_Rubriken, ZDF_RubrikSingle, ZDF_Verpasst.
 # Mitnutzung get_form_streams sowie build_Streamlists_buttons
 # gui=False: ohne Gui, z.B. für ZDF_getStrmList
+# 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	PLog("ZDF_getApiStreams: " + scms_id)
@@ -9464,7 +9465,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 		if url.find('master.m3u8') > 0:					# HLS-Stream 
 			HLS_List.append('HLS, %s ** AUTO ** %s ** %s#%s' % (track_add, quality,title,url))
 		else:
-			res='0x0'; bitrate='0'; w=''; h=''			# Default					
+			res='0x0'; w=''; h=''						# Default					
 			if 'hd":true' in form:	
 				w = "1920"; h = "1080"					# Probeentnahme													
 			if 'veryhigh' in quality:
@@ -9476,16 +9477,10 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 			if 'low' in quality:
 				w = "480"; h = "270"					# Probeentnahme							
 			
-			if '_' in url:
-				try:									# wie build_Streamlists
-					bitrate = re.search(r'_(\d+)k_', url).group(1)
-					bitrate = "%skbit" % bitrate
-				except:
-					bitrate = "unbekannt"
 			res = "%sx%s" % (w,h)
 			title_url = u"%s#%s" % (title, url)
-			item = u"MP4, %s | %s ** Auflösung %s ** Bitrate %s ** %s" %\
-				(track_add, quality, res, bitrate, title_url)
+			item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
+				(track_add, quality, res, title_url)
 			PLog("item: " + item)
 			PLog("server: " + server)					# nur hier, kein Platz im Titel
 			MP4_List.append(item)
@@ -9902,6 +9897,7 @@ def full_shows(title, title_samml, summary, duration,  fname):
 # ab V4.7.0 nur noch von SingleBeitrag (my3Sat) genutzt, ZDF s. 
 #	ZDF_getApiStreams. page: json-Quelle (api.3sat.de), neu
 #	kodiert ohne funk-Beiträge 
+# 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 #
 def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,page,scms_id='',ID="ZDF",weburl=''):
 	PLog('build_Streamlists:'); PLog(ID)
@@ -9967,7 +9963,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,page,scms_id='',I
 									stitle=title,buttons=False, track_add=track_add)
 								HLS_List = HLS_List + Stream_List
 						else:
-							res='0x0'; bitrate='0'; w='0'; h='0'											
+							res='0x0'; w='0'; h='0'											
 							if 'HD' in quality:							# up_low(quality s.o.
 								w = "1920"; h = "1080"					# Probeentnahme													
 							if 'VERYHIGH' in quality:
@@ -9979,21 +9975,14 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,page,scms_id='',I
 							if 'LOW' in quality:
 								w = "480"; h = "270"					# Probeentnahme							
 							
-							if '_' in url:
-								try:								# Fehlschlag bei arte-Links
-									bitrate = re.search(r'_(\d+)k_', url).group(1)
-									bitrate = "%skbit" % bitrate
-								except:
-									bitrate = "?"
 							res = "%sx%s" % (w,h)
-							
 							PLog(res)
 							title_url = u"%s#%s" % (title, url)
 							mp4 = "%s" % "MP4"
 							if ".webm" in url:
 								mp4 = "%s" % "WEBM"
-							item = u" %s, %s | %s ** Auflösung %s ** Bitrate %s ** %s" %\
-								(mp4, track_add, quality, res, bitrate, title_url)
+							item = u" %s, %s | %s ** Auflösung %s ** %s" %\
+								(mp4, track_add, quality, res, title_url)
 							MP4_List.append(item)
 							
 	except Exception as exception:
@@ -10272,6 +10261,7 @@ def ZDFSourcesHBBTV(title, scms_id):
 # Formatierung der Streamlinks ("Qual.|Link")
 # 17.05.2023 Anpassungen an Änderungen in ZDFSourcesHBBTV,
 #	neue Reihenfolge im Streamtitel:  Auflösung | Bitrate 
+# 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 #
 def form_HBBTV_Streams(stream_list, title):
 	PLog('form_HBBTV_Streams:')
@@ -10288,39 +10278,31 @@ def form_HBBTV_Streams(stream_list, title):
 		if q == 'q0':
 			quality = u'GERINGE'
 			w = "640"; h = "360"					# Probeentnahme	
-			bitrate = u"1812067"
 			if u'm3u8' in url:
 				bitrate = u"16 MB/Min."
 		if q == 'q1':
 			quality = u'HOHE'
 			w = "960"; h = "540"					# Probeentnahme	
-			bitrate = u"1812067"
 			if u'm3u8' in url:
 				bitrate = u"16 MB/Min."
 		if q == 'q2':
 			quality = u'SEHR HOHE'
 			w = "1024"; h = "576"					# Probeentnahme							
-			bitrate = u"3621101"
 			if u'm3u8' in url:
 				bitrate = u"19 MB/Min."
 		if q == 'q3':
 			quality = u'HD'
 			w = "1280"; h = "720"					# Probeentnahme					
-			bitrate = u"6501324"
 			if u'm3u8' in url:
 				bitrate = u"23 MB/Min."
 		if q == 'q4':
 			quality = u'Full-HD'
 			w = "1920"; h = "1080"					# Probeentnahme,					
-			bitrate = u"?"
 			if u'm3u8' in url:
 				bitrate = u"?"			
 		if q == 'q5':
 			quality = u'UHD'
 			w = "3840"; h = "2160"					# Probeentnahme						
-			bitrate = u"?"
-			if u'm3u8' in url:
-				bitrate = u"42 MB/Min"				# geschätzt				
 		
 		res = "%sx%s" % (w,h)
 		
@@ -10328,16 +10310,10 @@ def form_HBBTV_Streams(stream_list, title):
 			stream_title = u'HLS, Qualität: [B]%s | %s[/B]' % (quality, add) # label: Normal, DGS, .
 		else:
 			stream_title = u'MP4, Qualität: [B]%s | %s[/B]' % (quality, add)
-			try:
-				bitrate = re.search(r'_(\d+)k_', url).group(1)	# bitrate überschreiben	
-				bitrate = bitrate + "kbit"			# k ergänzen 
-			except Exception as exception:			# ts möglich: http://cdn.hbbtvlive.de/zdf/106-de.ts
-				PLog(str(exception))
-				PLog(url)	
 
 		title_url = u"%s#%s" % (title, url)
-		item = u"%s ** Auflösung %s ** Bitrate %s ** %s" %\
-			(stream_title, res, bitrate, title_url)
+		item = u"%s ** Auflösung %s ** %s" %\
+			(stream_title, res, title_url)
 		PLog("item: " + item)
 		HBBTV_List.append(item)	
 		

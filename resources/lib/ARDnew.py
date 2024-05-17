@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>77</nr>										# Numerierung für Einzelupdate
+# 	<nr>78</nr>										# Numerierung für Einzelupdate
 #	Stand: 17.05.2024
 
 # Python3-Kompatibilität:
@@ -1910,6 +1910,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''): 
 	PLog('ARDStartSingle: %s' % ID);
 	title_org=title;
+	icon = R("ard-mediathek.png")
 
 	headers=''
 	# Header für Verpasst-Beiträge (ARDVerpasstContent -> get_json_content)
@@ -1979,7 +1980,21 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 	except Exception as exception:
 		PLog(str(exception))
 		sub_path=""
-	PLog("sub_path: " + sub_path)	
+	PLog("sub_path: " + sub_path)
+	
+	try:
+		PLog("get_features")								# DGS, AD, ..
+		features = page["widgets"][0]["binaryFeatures"]
+		PLog(features)
+		if features:
+			msg1 = u"weitere Formate" 
+			msg2 = " | ".join(features)
+			xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)			
+			
+	except Exception as exception:
+		PLog(str(exception))
+		PLog("no_features_found")
+		features=""
 			
 	try:													# StreamArray
 		PLog("get_StreamArrays")
