@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>199</nr>										# Numerierung für Einzelupdate
+# 	<nr>200</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.3'
-VDATE = '17.05.2024'
+VDATE = '18.05.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1711,7 +1711,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 		Dict("store", textKey, PlayList)				
 		lable = u"[B]Download 2: Streamlinks (Anzahl: %d)[/B] als Playlist" % len(PlayList)
 		tag = u"Ablage als <Playlist.m3u> im Downloadverzeichnis.\nDie Verwendung als [B]Kodi-Playlist[/B]"
-		tag = "%s im Verzeichnis ../.kodi/userdata/playlists ist möglich." % tag
+		tag = u"%s im Verzeichnis ../.kodi/userdata/playlists ist möglich." % tag
 		summ = u"die nachfolgenden Audio-Buttons bleiben beim Download unberücksichtigt."
 		fparams="&fparams={'textKey': '%s'}" % textKey
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
