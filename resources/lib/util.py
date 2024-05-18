@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>100</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.05.2024
+# 	<nr>101</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3247,6 +3247,7 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 # Aufrufer: build_Streamlists_buttons (Sofortstart), get_streamurl
 # 20.05.2023 Verschmelzung MP4_List + HBBTV_List, Abgleich nach Auflösung
 #	(Abgleich nach Bitrate entfällt)
+# 18.05.2024 
 #
 def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, playlist='', HBBTV_List='', ID=''):	
 	PLog('PlayVideo_Direct:')
@@ -3315,8 +3316,6 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 		if myqual.find('auto') >= 0:
 			mode = 'Sofortstart: HLS/auto'
 			Default_Url = Stream_List[0].split('#')[-1]		# master.m3u8 Pos. 1
-			if len(Stream_List) > 1:						# arte-Links o. master möglich
-				del Stream_List[0]							# Pos. 1 entf. (ohne Auflösung)	
 			PLog("Default_Url1: %s" % Default_Url)
 		else:
 			mode = 'HLS/Einzelstream'

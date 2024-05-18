@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>78</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.05.2024
+# 	<nr>79</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2132,8 +2132,10 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 		Arrays.append(StreamArray_1)
 	PLog("Arrays: %d" % len(Arrays))
 	
+	skip_list=[]
 	for array in Arrays:
 		kind  = array["kindName"]
+		PLog("kind: " + kind)
 		for stream in  array["media"]:				
 			#PLog(str(stream)[:100])
 			if stream["mimeType"] == "application/vnd.apple.mpegurl":	# 1x:  master.m3u8
@@ -2146,18 +2148,16 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 				audio_kind = stream["audios"][0]["kind"]
 				audio_lang = stream["audios"][0]["languageCode"]
 				details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
+				if details in skip_list:								# Doppel ausfiltern
+					continue
+				skip_list.append(details)
 
 				quality = u'automatisch'
 				HLS_List.append(u'HLS [B]%s[/B] ** auto ** auto ** %s#%s' % (details, title,href))
-				break
 			
-		li=''; img=''; geoblock=''; descr='';					# für Stream_List n.b.
-		if href:												# Einzelauflösungen aus master.m3u8
-			Stream_List = ardundzdf.Parseplaylist(li, href, img, geoblock, descr, stitle=title, buttons=False)
-			if type(Stream_List) == list:						# Fehler Parseplaylist = string
-				HLS_List = HLS_List + Stream_List
-			else:
-				HLS_List=[]
+	if "audio-description/deu" in HLS_List[0]:				# Pos-Wechsel mit standard/deu 
+		HLS_List[0], HLS_List[1] = HLS_List[1], HLS_List[0]
+	
 	PLog("Streams: %d" % len(HLS_List))
 	PLog(HLS_List)
 	return HLS_List
