@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>79</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.05.2024
+# 	<nr>80</nr>										# Numerierung für Einzelupdate
+#	Stand: 19.05.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1707,6 +1707,7 @@ def ARD_Teletext_Wrap(new_lines, myline, max_length, txtRight):
 def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""): 
 	PLog('get_json_content: ' + ID); PLog(mark)
 	ID_org=ID; PLog(type(page)); 
+	py2_decode(page)
 	PLog(str(page)[:80])
 
 	CurSender = ARD_CurSender()										# init s. Modulkopf
@@ -2155,7 +2156,8 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 				quality = u'automatisch'
 				HLS_List.append(u'HLS [B]%s[/B] ** auto ** auto ** %s#%s' % (details, title,href))
 			
-	if "audio-description/deu" in HLS_List[0]:				# Pos-Wechsel mit standard/deu 
+	if "audio-description/deu" in HLS_List[0]:				# Pos-Wechsel mit standard/deu
+		PLog("swap_new_0: " + HLS_List[0])					# Debug: standard/deu?
 		HLS_List[0], HLS_List[1] = HLS_List[1], HLS_List[0]
 	
 	PLog("Streams: %d" % len(HLS_List))
