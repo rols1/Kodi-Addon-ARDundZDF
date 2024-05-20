@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>18</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.05.2024
+# 	<nr>19</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.05.2024
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -72,9 +72,9 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	PLog('thread_getepg:')
 	
 	open(EPGACTIVE, 'w').close()						# Aktiv-Signal setzen (DICT "EPGActive")
-	xbmc.sleep(1000 * 10)								# verzög. Start	
 	icon = R('tv-EPG-all.png')
 	xbmcgui.Dialog().notification("EPG-Download", "gestartet",icon,3000)
+	xbmc.sleep(1000 * 10)								# verzög. Start (klemmt vor Notification) 	
 	
 	
 	sort_playlist = get_sort_playlist(PLAYLIST)	
