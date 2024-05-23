@@ -187,6 +187,10 @@ TV Livesender Vorauswahl:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV_Livesender_Vorauswahl.png)
 
+TV Livesender mit EPG (Kontextmenü: Tages-EPG):
+===================  
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/TV_Livesender_EPG.png)
+
 Merkliste (mit Filter):
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Settings/Merkliste_Kontext_filtered.png)
@@ -198,10 +202,6 @@ Audiothek:
 Audiothek Livestreams:
 ===================  
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Radio_Livesender.png)
-
-Podcast-Favoriten:
-===================  
-![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/ARDundZDF/Podcast-Favoriten.png)
 
 Aufnahmemöglichkeiten (ffmpeg erforderlich):
 ===================  
