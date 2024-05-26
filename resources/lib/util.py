@@ -137,7 +137,6 @@ STRM_URL		= os.path.join(ADDON_DATA, "strmurl")			# Ablage strm-Url (PlayVideo_D
 PLAYLIST_ALIVE 	= os.path.join(ADDON_DATA, "playlist_alive")	# Lebendsignal für PlayMonitor (leer)
 
 PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
-ICON_MAIN_POD	= 'radio-podcasts.png'
 ICON_MAIN_AUDIO	= 'ard-audiothek.png'
 ICON_MAIN_ZDFMOBILE	= 'zdf-mobile.png'
 ICON_PHOENIX	= 'phoenix.png'			
@@ -4108,8 +4107,8 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	if linkid:											# Sendungsnavigation: ARD-EPG für Zeitstrahl laden
 		buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 		event_end = int(event_end)
-		header = u"Sendungen: zurück-, Maus-Taste r.)"
-		txt = "Anzahl Sendungen: %d" % len(buf_events)
+		txt = u"Liste: #-Taste, Maus-Taste rechts"
+		header = "Anzahl Sendungen: %d" % len(buf_events)
 		dur=10000
 		if len(buf_events) == 0:
 			header = u"Sendungen"
@@ -4245,7 +4244,7 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 # 14.1.2023 ohne Timer (Aufruf sekündlich durch ShowSeekPos) 
 #
 class KeyListener(xbmcgui.WindowXMLDialog):
-	PLog("KeyListener: started")
+	PLog("KeyListener: loaded")
 	ACTION_MOUSE_LEFT_CLICK = 100
 	ACTION_MOUSE_RIGHT_CLICK = 101
 
@@ -4268,10 +4267,10 @@ class KeyListener(xbmcgui.WindowXMLDialog):
 	def onAction(self, action):
 		actionId = action.getId() 
 		if actionId == self.ACTION_MOUSE_RIGHT_CLICK:
-			self.key = "61467"				# hier für rechte Maustaste 
+			self.key = "61467"							# hier für rechte Maustaste 
 		else:		
 			code = action.getButtonCode()
-			#PLog("code: " + str(code))					# Debug
+			PLog("code: " + str(code))					# Debug
 			self.key = None if code == 0 else str(code)
 			
 		self.close()

@@ -10,6 +10,42 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+26.05.2024 5.0.4
+			AudioStartLive: Fix Variable für RadioPlaylist-Button PlayList statt
+			streamList.
+			Audio_get_cluster_single: Playlist-Erweiterung für Livestreams wie Sender-
+			links in AudioStartLive.
+			AudioPlayMP3: Erweiterung für Livestreams - Download als m3u-Datei (wie 
+			AudioStartLive).
+			Download- und Aufnahme-Tools: Integration von m3u-Dateien - Anpassung in
+			DownloadsList und VideoTools.
+			Haupt-PRG + Module: Fix "SyntaxWarning: invalid escape sequence" - Verwendung
+			raw-String statt unicode in allen re.search-Statements, Bsp.: (u'\((.*?)\) ->
+			(r'\((.*?)\).
+			ARDStartSingle: Umstellung auf api-Web-Quellen für alle Streams - Abzweig
+			Livestreams angepasst (direkt -> PlayVideo), weitere Anpassungen in s.u.
+			Funktion ARDStartVideoWebUTget entfernt (subtitle-Extrakt in ARDStartSingle).
+			XLGetVideoLists (TagesschauXL): entfernt - seit 01.05.2023 nicht genutzt.
+			ARDStartVideoMP4get, ARDStartVideoHBBTVget: Auswertung Bitraten entfernt
+			(nicht mehr genutzt) - Anpassung StreamsShow (Haupt-PRG).
+			ARDStartVideoHBBTVget: dash-Streams ausgenommen (./tagesschau_1.mpd läuft
+			nicht).
+			ARDStartVideoHLSget: Einzelauflösungen via Parseplaylist vorerst deaktiviert
+			(unübersichtl. Liste), Anpassung PlayVideo_Direct (Beibehaltung des 1. Links
+			als Default-URL.
+			ARD_get_strmStream: Nutzung Web-api-Quellen - Angleichung an ARDStartSingle.
+			HBBTV- und MP4-Listen: Bitraten-Auswertung entfernt - Anpassung in Haupt-
+			PRG und den Modulen.
+			Codec-Fixes (relevant für PYTHON2): py2_decode(tag) in AudioStartLive 
+			(Audiothek), py2_decode(page) in get_json_content (ARDnew).
+			thread_getepg (EPG Nachladen im Hintergrund): Nutzung concurrent.futures für 
+			Python ab V3.2 - wegen möglicher Klemmer vorerst deaktivert.
+			leer-Rückgabe in EPG - Kodi-Problem: ohne Wert verwendet addDir vorige EPG_ID
+			im Kontext-Menü. Anpassung SenderLiveListe (Ersatz leeren EPG_ID-Wert durch 
+			"dummy").
+			Haupt-PRG, Verz. ../resources/images: obsolete Icons pod-favoriten, pod-meist,
+			pod-feature, pod-neu, pod-refugee, pod-rubriken, pod-tatort entfernt (obsolet).
+			
 12.05.2024 5.0.3
 			ZDF-Funktion International gelöscht. Api-Aufruf in Main_ZDF->ZDF_RubrikSingle.
 			ZDF-Startseite: Menüs ergänzt: "Livestreams im Ausland", "Terra X plus Schule"

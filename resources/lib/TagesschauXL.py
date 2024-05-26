@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>14</nr>								# Numerierung für Einzelupdate
-#	Stand: 13.03.2024
+#	Stand: 16.05.2024
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -775,30 +775,6 @@ def get_content_json(item):
 	return typ,av_typ,title,tag,summ,img,stream		
 
 # ----------------------------------------------------------------------
-# Bau HBBTV_List (leer), HLS_List, MP4_List via Modul ARDnew
-# page -> json 
-# 01.05.2023 z.Z. nicht genutzt - häufige Beiträge mit nur 1 Stream
-def XLGetVideoLists(li, title, StreamArray):					
-	PLog('XLGetVideoLists:')
-	PLog('import_ARDnew:');								# ARDStartVideoHLSget, ARDStartVideoMP4get
-	import resources.lib.ARDnew as ARDnew
-	
-	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
-	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
-	#	fehlende Bandbreiten + Auflösungen werden ergänzt
-	HBBTV_List=''										# nur ZDF
-	HLS_List = ARDnew.ARDStartVideoHLSget(title, StreamArray)	# Extrakt HLS
-	PLog("HLS_List: " + str(HLS_List)[:80])
-	MP4_List = ARDnew.ARDStartVideoMP4get(title, StreamArray)	# Extrakt MP4
-	Dict("store", 'TXL_HLS_List', HLS_List) 
-	Dict("store", 'TXL_MP4_List', MP4_List) 
-	PLog("download_list: " + str(MP4_List)[:80])
-	PLog(str(MP4_List))		
-
-	return HLS_List,MP4_List,HBBTV_List
-
-# ----------------------------------------------------------------------
-
 
 
 

@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>200</nr>										# Numerierung für Einzelupdate
-VERSION = '5.0.3'
-VDATE = '18.05.2024'
+VERSION = '5.0.4'
+VDATE = '26.05.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -110,16 +110,7 @@ ICON_ZDF_RUBRIKEN 		= 'zdf-rubriken.png'
 ICON_ZDF_BARRIEREARM 	= 'zdf-barrierearm.png'
 ICON_ZDF_BILDERSERIEN 	= 'zdf-bilderserien.png'
 
-ICON_MAIN_POD			= 'radio-podcasts.png'
-ICON_POD_AZ				= 'pod-az.png'
-ICON_POD_FEATURE 		= 'pod-feature.png'
-ICON_POD_TATORT 		= 'pod-tatort.png'
-ICON_POD_RUBRIK	 		= 'pod-rubriken.png'
-ICON_POD_NEU			= 'pod-neu.png'
-ICON_POD_MEIST			= 'pod-meist.png'
-ICON_POD_REFUGEE 		= 'pod-refugee.png'
-ICON_POD_FAVORITEN		= 'pod-favoriten.png'
-
+ICON_MAIN_POD			= 'radio-podcasts.png'			# childs: Tonschnipsel
 ICON_MAIN_AUDIO			= 'ard-audiothek.png'
 ICON_AUDIO_LIVE			= 'ard-audio-live.png'
 ICON_AUDIO_AZ			= 'ard-audio-az.png'
@@ -7344,31 +7335,34 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			
 		epg_date=''; epg_title=''; epg_text=''; summary=''; tagline='' 
 		EPG_ID = stringextract('<EPG_ID>', '</EPG_ID>', element)	# -> EPG.EPG und Kontextmenü
-		PLog(EPG_ID)
-		# PLog(SETTINGS.getSetting('pref_use_epg')) 	# Voreinstellung: EPG nutzen? - nur mit Schema nutzbar
-		PLog('setting: ' + str(SETTINGS.getSetting('pref_use_epg')))
-		if SETTINGS.getSetting('pref_use_epg') == 'true' and EPG_ID:	# hier nur aktuelle Sendung
-			# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis:
-			try:
-				rec = EPG.EPG(ID=EPG_ID, mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
-				sname=''; stime=''; summ=''; vonbis=''		# Fehler, ev. Sender EPG_ID nicht bekannt
-				if rec:								
-					sname=py2_encode(rec[3]); stime=py2_encode(rec[4]); 
-					summ=py2_encode(rec[5]); vonbis=py2_encode(rec[6])	
-			except:
-				sname=''; stime=''; summ=''; vonbis=''	
-									
-			if sname:
-				title=py2_encode(title); 
-				title = "%s: %s"  % (title, sname)
-			if summ:
-				summary = py2_encode(summ)
-			else:
-				summary = ''
-			if vonbis:
-				tagline = u'Sendung: %s Uhr' % vonbis
-			else:
-				tagline = ''
+		if EPG_ID.strip() == "":
+			EPG_ID="dummy"								# Kodi-Problem: ohne Wert verwendet addDir vorige EPG_ID
+			PLog("set_dummmy_EPG_ID: " + title)
+		PLog('setting: ' + str(SETTINGS.getSetting('pref_use_epg')))# EPG nutzen? 
+		if SETTINGS.getSetting('pref_use_epg') == 'true':	# hier nur aktuelle Sendung
+			if EPG_ID and EPG_ID != "dummy":
+				# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis:
+				try:
+					rec = EPG.EPG(ID=EPG_ID, mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
+					sname=''; stime=''; summ=''; vonbis=''		# Fehler, ev. Sender EPG_ID nicht bekannt
+					if rec:								
+						sname=py2_encode(rec[3]); stime=py2_encode(rec[4]); 
+						summ=py2_encode(rec[5]); vonbis=py2_encode(rec[6])	
+				except:
+					sname=''; stime=''; summ=''; vonbis=''	
+										
+				if sname:
+					title=py2_encode(title); 
+					title = "%s: %s"  % (title, sname)
+				if summ:
+					summary = py2_encode(summ)
+				else:
+					summary = ''
+				if vonbis:
+					tagline = u'[B]Sendung: %s Uhr[/B]' % vonbis
+				else:
+					tagline = ''
+				tagline = "%s\n[B]Tages-EPG[/B] via Kontext-Menü aufrufen." % tagline
 
 		title = unescape(title)	
 		title = title.replace('JETZT:', '')					# 'JETZT:' hier überflüssig
@@ -7389,14 +7383,15 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		geo = stringextract('<geoblock>', '</geoblock>', element)
 		PLog('geo: ' + geo)
 		if geo:
-			tagline = 'Livestream nur in Deutschland zu empfangen!'
+			tagline = '%s\nLivestream nur in Deutschland zu empfangen!' % tagline
 			
 		PLog("Satz8:")
 		PLog(title); PLog(link); PLog(img); PLog(summary); PLog(tagline[0:80]);
 	
 		descr = summary.replace('\n', '||')
 		if tagline:
-			descr = "%s %s" % (tagline, descr)				# -> Plot (PlayVideo) 
+			descr = "%s %s" % (tagline, descr)				# -> Plot (PlayVideo)
+			descr = descr.replace("\n", "||") 
 		title=py2_encode(title); link=py2_encode(link);
 		img=py2_encode(img); descr=py2_encode(descr);	
 		fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s', 'descr': '%s'}" % (quote(link), 

@@ -33,7 +33,7 @@ elif PYTHON3:
 # für Python 2.* muss der  Aufruf Kontextmenü unterdrückt
 #	werden, sonst öffnet das Modul bei jedem Menüwechsel
 #	 ein leeres textviewer-Fenster
-if "'context'" in str(sys.argv):									# Aufruf Kontextmenü
+if "'context'" in str(sys.argv):						# Aufruf Kontextmenü
 	from util import *
 	msg = "callfrom_context"
 else:
@@ -67,6 +67,7 @@ EPG_BASE 	= "http://www.tvtoday.de"
 #	Dateilock nicht erf.
 # 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - entf. ab
 #	09.10.2021 siehe update_single
+# 21.05.2024 Nutzung concurrent.futures. Aufruf als Thread (ohne: Klemmer)
 #
 def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	PLog('thread_getepg:')
@@ -74,25 +75,34 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	open(EPGACTIVE, 'w').close()						# Aktiv-Signal setzen (DICT "EPGActive")
 	icon = R('tv-EPG-all.png')
 	xbmcgui.Dialog().notification("EPG-Download", "gestartet",icon,3000)
-	xbmc.sleep(1000 * 10)								# verzög. Start (klemmt vor Notification) 	
-	
+	xbmc.sleep(1000)									# Klemmer bei sleep vor Notification	
 	
 	sort_playlist = get_sort_playlist(PLAYLIST)	
-	PLog(len(sort_playlist))
-	
+	PLog("Sender: %d" % len(sort_playlist))
+	ID_list=[]
 	for i in range(len(sort_playlist)):
 		rec = sort_playlist[i]
-		title = rec[0]			# Debug
-		ID = rec[1]
-		
-		if ID:
+		ID = rec[1]	
+		if ID:											# Sender mit tvtoday-ID
+			ID_list.append(ID)
 			fname = os.path.join(DICTSTORE, "EPG_%s" % ID)
 			if os.path.exists(fname):					# n.v. oder soeben entfernt?
 				os.remove(fname)						# entf. -> erneuern								
-			rec = EPG(ID=ID, load_only=True)			# Seite laden + speichern
-			xbmc.sleep(250)								# Systemlast verringern
-		
-	xbmcgui.Dialog().notification("EPG-Download", "fertig: %d Sender" % (i+1),icon,3000)
+
+	PLog("ID_list: " + str(ID_list))
+	# ID_list = ['3SAT', 'SWR']	# Debug
+	# 23.05.2024 Testbetrieb concurrent.futures, wg. möglicher Klemmer bei
+	#	Menüwechseln deaktiviert
+	#if sys.version_info.major >= 3 and sys.version_info.minor >= 2:	
+	#	import concurrent.futures						# concurrent.futures ab PY 3.2 
+	#	with concurrent.futures.ThreadPoolExecutor() as executor:
+	#		futures = {executor.submit(EPG, ID, load_only=True): ID for ID  in ID_list}
+	#		PLog("futures: %d" % len(futures))
+	#else:
+	for ID in ID_list:
+		EPG(ID=ID, load_only=True)					# Seite laden + speichern	
+
+	xbmcgui.Dialog().notification("EPG-Download", "fertig: %d Sender" % len(sort_playlist),icon,3000)
 	
 	return
 
@@ -310,10 +320,13 @@ def update_single(PluginAbsPath):
 #	
 def EPG(ID, mode=None, day_offset=None, load_only=False):
 	PLog('EPG_ID: ' + ID)
-	PLog(mode)
+	PLog(mode); PLog(day_offset); PLog(load_only);
+
 	url="http://www.tvtoday.de/programm/standard/sender/%s.html" % ID
 	Dict_ID = "EPG_%s" % ID
 	PLog(url)
+	if ID == "dummy":
+		return []
 	
 	page = Dict("load", Dict_ID, CacheTime=EPGCacheTime)
 	PLog(type(page))
@@ -556,11 +569,10 @@ if "'context'" in str(sys.argv):									# Aufruf Kontextmenü
 	for rec in EPG_rec:
 		sname=rec[3]
 		if 'JETZT' in sname:
-			PLog(str(rec))
+			PLog("context_now: " + str(rec))
 			break
 		cnt=cnt+1
 	EPG_rec = EPG_rec[cnt:]
-	PLog(str(EPG_rec[cnt:]))
 
 	lines=[]
 	for rec in EPG_rec:
@@ -574,10 +586,13 @@ if "'context'" in str(sys.argv):									# Aufruf Kontextmenü
 		except Exception as exception:
 			PLog("EPG_rec_error: " + str(exception))	
 
+	#PLog(lines)		# Debug
 	if len(lines) == 0:
-		title = "%s | keine EPG-Daten gefunden"	% title
-	lines =  "\n".join(lines)
-	xbmcgui.Dialog().textviewer(title , lines ,usemono=True)
+		icon = R('tv-EPG-all.png')
+		xbmcgui.Dialog().notification(title, "keine EPG-Daten vorhanden",icon,3000)	
+	else:
+		lines =  "\n".join(lines)
+		xbmcgui.Dialog().textviewer(title , lines ,usemono=True)
 		
 		
 		
