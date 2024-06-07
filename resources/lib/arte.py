@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>44</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.05.2024
+# 	<nr>45</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.06.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -858,6 +858,7 @@ def get_streams_api_v2(page, title, summ):
 		if url.find("Trailer") > 0:
 			trailer = True
 		mediaType = stringextract('"protocol":"',  '"', rec)
+		bitrate = ""
 		
 		mainQuality = stringextract('"mainQuality":',  '}', rec)
 		quality = stringextract('"code":"',  '"', mainQuality)		# Bsp.: "XQ"
@@ -930,7 +931,6 @@ def get_streams_api_v2(page, title, summ):
 # Streamdetails via api-opa-Call 
 # Arte verwendet bei HBBTV MP4-Formate wie ZDF (HLS_List bleibt leer)
 # audioLabel: Abgleich setting pref_arte_streams in get_bestdownload
-# 16.05.2024 Auswertung Bitraten entfernt
 #
 def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 	PLog("get_streams_api_opa: " + mode)
@@ -944,6 +944,7 @@ def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 		versions = stringextract('"versions":',  '"creationDate', rec)
 		
 		mediaType = stringextract('"mediaType": "',  '"', rec)
+		bitrate = stringextract('"bitrate":',  ',', rec)
 		quality = stringextract('"quality": "',  '"', rec)
 		width = stringextract('"width": ',  ',', rec)
 		height = stringextract('"height": ',  ',', rec)	
@@ -978,8 +979,8 @@ def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
 		if ".mp4" in url:										# MP4
 			title_url = u"%s#%s" % (title, url)
 			mp4 = "MP4 [B]%s[/B]" % (lang)
-			item = u"%s | %s ** Auflösung %s ** %s" %\
-				(mp4, quality, size, title_url)
+			item = u"%s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
+				(mp4, quality, bitrate, size, title_url)
 			MP4_List.append(item)
 
 	return trailer,MP4_List
@@ -1344,9 +1345,9 @@ def get_next_url(page):
 		next_url = next_url.replace("api-internal.arte.tv/api", "www.arte.tv/api/rproxy")
 		# 01.02.2024 api-internal-Call nicht mehr verwendet:
 		next_url = next_url.replace("/api/emac/", "www.arte.tv/api/rproxy/emac/")
-		if next_url.startswith("https://") == False:
+		if next_url.startswith("http") == False:
 			next_url = "https://" + next_url 
- 	
+	
 
 	PLog("next_url: %s, page_akt: %s, page_anz: %s, anz: %s, next_page: %s" % (next_url, page_akt, page_anz, anz, next_page))
 	return next_url,page_akt,page_anz,anz,next_page
