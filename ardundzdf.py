@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>201</nr>										# Numerierung für Einzelupdate
-VERSION = '5.0.4'
-VDATE = '29.05.2024'
+# 	<nr>196</nr>										# Numerierung für Einzelupdate
+VERSION = '5.0.3'
+VDATE = '13.06.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -110,7 +110,16 @@ ICON_ZDF_RUBRIKEN 		= 'zdf-rubriken.png'
 ICON_ZDF_BARRIEREARM 	= 'zdf-barrierearm.png'
 ICON_ZDF_BILDERSERIEN 	= 'zdf-bilderserien.png'
 
-ICON_MAIN_POD			= 'radio-podcasts.png'			# childs: Tonschnipsel
+ICON_MAIN_POD			= 'radio-podcasts.png'
+ICON_POD_AZ				= 'pod-az.png'
+ICON_POD_FEATURE 		= 'pod-feature.png'
+ICON_POD_TATORT 		= 'pod-tatort.png'
+ICON_POD_RUBRIK	 		= 'pod-rubriken.png'
+ICON_POD_NEU			= 'pod-neu.png'
+ICON_POD_MEIST			= 'pod-meist.png'
+ICON_POD_REFUGEE 		= 'pod-refugee.png'
+ICON_POD_FAVORITEN		= 'pod-favoriten.png'
+
 ICON_MAIN_AUDIO			= 'ard-audiothek.png'
 ICON_AUDIO_LIVE			= 'ard-audio-live.png'
 ICON_AUDIO_AZ			= 'ard-audio-az.png'
@@ -235,7 +244,7 @@ now = time.time()											# Abgleich Flags
 # 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - s. thread_getepg
 if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden?
 	eci = SETTINGS.getSetting('pref_epg_intervall')
-	eci = re.search(r'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
+	eci = re.search(u'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
 	eci = int(eci)
 	PLog("eci: %d" % eci)
 	if eci == 12:											# 12 Std.
@@ -361,7 +370,7 @@ skindir = xbmc.getSkinDir()
 PLog("skindir: %s" % skindir)
 sel = SETTINGS.getSetting('pref_content_type')				# 31.03.2023 erweitert: pull request #12 from Trekky12
 try:
-	sel = re.search(r'\((.*?)\)', sel).group(1)				# Default: "" -> except 
+	sel = re.search(u'\((.*?)\)', sel).group(1)				# Default: "" -> except 
 except:
 	sel=""
 PLog("content_type: %s" % sel)				
@@ -840,7 +849,7 @@ def AddonStartlist(mode='', query=''):
 	mylist= mylist.strip().splitlines()
 	PLog(len(mylist))
 	try:														# Sortierung unixtime-stamp 1704966112[.0###..]
-		startlist = sorted(mylist, key=lambda x: re.search(r'(\d+).', x).group(1), reverse=True)
+		startlist = sorted(mylist, key=lambda x: re.search(u'(\d+).', x).group(1), reverse=True)
 	except Exception as exception:
 		PLog("sorted_error: " + str(exception))
 		startlist = mylist										# unsortiert
@@ -1178,7 +1187,7 @@ def ZDF_Teletext(path=""):
 		
 	#  ZDF korrigiert nicht selbst 
 	if url_check(path, caller='ZDF_Teletext', dialog=False) == False:   # falsche Seite manuell?
-		aktpg = re.search(r'seiten/(.*?).html', path).group(1)
+		aktpg = re.search(u'seiten/(.*?).html', path).group(1)
 		msg1 = u'Seite %s' % aktpg
 		msg2 = u'nicht verfügbar'
 		icon = thumb		
@@ -1201,11 +1210,11 @@ def ZDF_Teletext(path=""):
 	footer =  page.split('footer_container')[-1]
 	PLog(body[:60]);  PLog(footer[:60])
 
-	prevpg = re.search(r'prevpg="(.*?)"', body).group(1)				# body-Start
+	prevpg = re.search(u'prevpg="(.*?)"', body).group(1)				# body-Start
 	if prevpg == "0":													# 0 -> Startseite
 		prevpg = "100"
-	nextpg = re.search(r'nextpg="(.*?)"', body).group(1)
-	aktpg =  re.search(r'page="(.*?)"', body).group(1)
+	nextpg = re.search(u'nextpg="(.*?)"', body).group(1)
+	aktpg =  re.search(u'page="(.*?)"', body).group(1)
 	PLog("prevpg: %s, nextpg: %s, aktpg: %s, lines: %d" % (prevpg, nextpg, aktpg, len(body.splitlines())))
 
 	if len(body.splitlines()) <= 6:										# body-, footer-, copy- plus 3 Leerzeilen, 
@@ -1318,7 +1327,7 @@ def ZDF_Teletext_Table(li, body, aktpg):
 			part_list = part_list[:i2]
 			txt = "\n".join(part_list[:new_ind])						# String "<a href=" .. </a>"
 			PLog("new_ind: %d, txt: %s" % (new_ind, txt[:60]))
-			href = re.search(r'href="(.*?)"', txt).group(1)
+			href = re.search(u'href="(.*?)"', txt).group(1)
 			pagenr = href.split(".html")[0]
 			if 'left">' in txt:											# News-Text
 				left = stringextract('left">',  '</th>', txt)
@@ -1687,7 +1696,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 			extinf = play_line % (img, title, streamUrl)
 			PlayList.append(extinf)
 
-		streamList = py2_encode(streamList)								# Streamlist-Button
+		streamList = py2_encode(streamList)								#Streamlist-Button
 		textKey  = "RadioStreamLinks"
 		Dict("store", textKey, streamList)				
 		lable = u"[B]Download 1: Streamlinks (Anzahl: %d)[/B] als m3u-Dateien" % len(streamList)
@@ -1697,12 +1706,12 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
 			thumb=R(ICON_DOWNL), fparams=fparams, tagline=tag, summary=summ)
 
-		PlayList = py2_encode(PlayList)									# RadioPlaylist-Button
-		textKey  = "RadioPlaylist"
+		streamList = py2_encode(streamList)								#RadioPlaylist-Buttons
+		textKey  = "ARD_RadioPlaylist"
 		Dict("store", textKey, PlayList)				
-		lable = u"[B]Download 2: Streamlinks (Anzahl: %d)[/B] als Playlist" % len(PlayList)
+		lable = u"[B]Download 2: Streamlinks (Anzahl: %d)[/B] als Playlist" % len(streamList)
 		tag = u"Ablage als <Playlist.m3u> im Downloadverzeichnis.\nDie Verwendung als [B]Kodi-Playlist[/B]"
-		tag = u"%s im Verzeichnis ../.kodi/userdata/playlists ist möglich." % tag
+		tag = "%s im Verzeichnis ../.kodi/userdata/playlists ist möglich." % tag
 		summ = u"die nachfolgenden Audio-Buttons bleiben beim Download unberücksichtigt."
 		fparams="&fparams={'textKey': '%s'}" % textKey
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
@@ -2130,8 +2139,8 @@ def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 		img=py2_encode(img); summ_par=py2_encode(summ_par);	
 			
 		if mp3_url:
-			if  mp3_url.find(".icecastssl.") < 0:					# Livestreams von Downloads ausschließen
-				downl_list.append("%s#%s" % (title, mp3_url))	
+			if  mp3_url.find(".icecastssl.") < 0:					#  Livestreams von Downloads ausschließen
+				downl_list.append("%s#%s" % (title, mp3_url))
 
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
 				quote(title), quote(img), quote_plus(summ_par))
@@ -2183,10 +2192,10 @@ def Audio_get_nexturl(li, url_org, title_org, elements, cnt, myfunc):
 	if elements:														# numberOfElements
 		limit=20; offset=0; url_part="";
 		if "offset=" in url:
-			offset = re.search(r'offset=(\d+)', url).group(1)
+			offset = re.search(u'offset=(\d+)', url).group(1)
 			url_part = "offset=%s" % offset
 		if "limit=" in url_org:
-			re.search(r'limit=(\d+)', url).group(1)
+			re.search(u'limit=(\d+)', url).group(1)
 		new_offset = int(offset) + cnt 
 		if url_part:													# aktualisiere offset
 			new_url_part = "offset=%s" % str(new_offset)
@@ -2532,7 +2541,7 @@ def Audio_get_search_cluster(objs, key):
 			
 	if 	key == "items" and nexturl:						# nexturl aus json-Quelle, Audio_get_nexturl entfällt
 		img=R(ICON_MEHR)
-		offset = re.search(r'offset=(\d+)', nexturl).group(1)
+		offset = re.search(u'offset=(\d+)', nexturl).group(1)
 		offset = int(offset) +1							# Basis 0
 		title = "Mehr: [B]%s[/B]" %  stringextract("searchText': '", "'", str(objs))
 		tag = u"Mehr (ab Beitrag %d von %s)" % (offset, total)
@@ -2640,12 +2649,10 @@ def Audio_get_cluster_rubrik(li, url, title, ID=''):
 #	listet einz. Cluster oder Stage (ohne section_id)
 #	Json-Ausschnitt der Rubrik-Webseite im Dict(rubrik_id)
 # 17.12.2023 zusätzl. Param url (Absicherung gegen Dict-Löschung)
-# 13.05.2024 Playlist-Erweiterung für Livestreams wie AudioStartLive
 #
 def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 	PLog('Audio_get_cluster_single: ' + title)
 	PLog(rubrik_id); PLog(section_id)
-	title_org = title
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Audiothek')			# Home-Button
@@ -2676,10 +2683,6 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 	nodes = blockextract('"__typename":', cluster)	
 	PLog(len(nodes))
 			
-	# RadioPlaylist mit play_lines, play_line: m3u-Template
-	PlayList = ["#EXTM3U"]											
-	play_line = '#EXTINF:-1 logo="%s" group-title="ARD_Radio", %s\n%s'													
-	
 	downl_list=[]; 	href_add = "offset=0&limit=12&order=descending"	
 	for node in nodes:		
 		imgalt2=''; web_url=''; mp3_url=''
@@ -2735,11 +2738,6 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 					quote(title), quote(img), quote_plus(summ_par))
 				addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr)			
-
-				# play_line = '#EXTINF:-1 logo="%s" group-title="ARD_Radio", %s\n%s'													
-				extinf = play_line % (img, title, mp3_url)
-				PlayList.append(extinf)							# -> RadioPlaylist-Button
-
 			else:	
 				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(web_url), 
 					quote(title), quote(img), quote_plus(summ_par))
@@ -2771,21 +2769,7 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 				fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
 				addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
 					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=descr)						
-
-	if len(PlayList) > 1:										# RadioPlaylist-Button wie AudioStartLive
-		PLog("PlayList_Button: %s" % title_org)
-		PlayList = py2_encode(PlayList)
-		fname = make_filenames(title_org.strip())				# Titel -> Playlist-Titel	
-		textKey  = "RadioPlaylist_%s" % fname
-		Dict("store", textKey, PlayList)
-
-		lable = u"[B]Download: Streamlinks (Anzahl: %d)[/B] als Playlist" % len(PlayList)
-		tag = u"Ablage als <%s.m3u> im Downloadverzeichnis.\nDie Verwendung als [B]Kodi-Playlist[/B]" % textKey
-		tag = "%s im Verzeichnis ../.kodi/userdata/playlists ist möglich." % tag
-		summ = u""
-		fparams="&fparams={'textKey': '%s'}" % textKey
-		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
-			thumb=R(ICON_DOWNL), fparams=fparams, tagline=tag, summary=summ)	
+			
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
@@ -3018,8 +3002,6 @@ def AudioWebMP3(url, title, thumb, Plot, ID='', no_gui=''):
 # Falls pref_use_downloads abgeschaltet, wird direkt an PlayAudio
 #	übergeben.
 # 01.07.2021 ID variabel für Austausch des Home-Buttons
-# 13.05.2024 Erweiterung für Livestreams: Download als
-#	m3u-Datei (wie AudioStartLive)
 #
 def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 	PLog('AudioPlayMP3: ' + title)
@@ -3050,25 +3032,7 @@ def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 		PLog(download_list)
 		title_org=title; tagline_org=''; summary_org=Plot
 		li = test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=-1)  # Downloadbutton
-	else:
-		# Streamlinks: "Dateiname ** Titel Zeitmarke ** Streamlink" -> DownloadText
-		textKey  = "RadioStreamSingle"
-		streamList=[]							# Button m3u-Datei wie AudioStartLive
-		now = datetime.datetime.now()
-		timemark = now.strftime("%d.%m.%Y")
-		fname = make_filenames(title)
-		fname = py2_encode(fname)
-		streamList.append("%s.m3u**# %s | ARDundZDF %s**%s" % (fname, title, timemark, url))
-		streamList = py2_encode(streamList)	
-		Dict("store", textKey, streamList)
-						
-		lable = u"[B]Download[/B]: %s.m3u" % fname
-		tag = u"Die Ablage der m3u-Datei erfolgt im Downloadverzeichnis." 
-		summ = u"Sie kann in eine Playlist eingefügt oder direkt im Player abgespielt werden."
-		fparams="&fparams={'textKey': '%s'}" % textKey
-		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
-			thumb=R(ICON_DOWNL), fparams=fparams, tagline=tag, summary=summ)
-	
+		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ##################################### Ende Audiothek ###############################################
@@ -3717,13 +3681,15 @@ def ARDSportLiga3(title, img, sender="", source=""):
 		page = stringextract("tbody>", "</tbody>", page)# 1. Tabelle (1.: Mobilversion)
 		PLog(page[:80])
 		rows = blockextract("<tr", page, "</tr>")
+		PLog("rows: %d" % len(rows))
 		col0_pre=""; col1_pre=""; col2_pre=""
 		now = EPG.get_unixtime(onlynow=True)							# unix-sec passend zu TotalTime, LastSeek
 		now = int(now)
 		now_dt = datetime.datetime.fromtimestamp(now)
 		my_year = now_dt.strftime("%Y")
 		date_format = "%Y-%m-%dT%H:%M:%SZ"
-		sixmonth = 2629743 * 6											# unix-sec 6 Monate (Abgleich past/future)
+		sixmonth = 2629743 * 6	
+		cnt=0										# unix-sec 6 Monate (Abgleich past/future)
 		for row in rows:
 			row = str(blockextract("<td", row, "</td>"))
 			PLog(row)
@@ -3748,13 +3714,14 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			tag = "%s%s" % (tag,  date)
 			summ = "Spieltag: %s | Livestream bei %s" % (nr, sender)
 			if sender == "":											# Leerzeilen
+				PLog("skip_missing_sender")
 				continue
 				
 			try:
 				live=False; past=False
 				monat = col1.split(",")[1]; monat = monat.split(".")[1]	# Samstag, 04. November, 14:00 Uhr
 				my_month = month[monat.strip()]							# Juli -> 7
-				my_day = re.search(r'(\d+)', date.split(",")[1]).group(1)
+				my_day = re.search(u'(\d+)', date.split(",")[1]).group(1)
 				my_time = col2.split(" ")[0]							# 14:00 Uhr
 				my_date = "%s-%s-%sT%s:00Z" % (my_year, my_month, my_day, my_time)
 
@@ -3808,6 +3775,13 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			fparams="&fparams={'title': '%s', 'img': '%s', 'sender': '%s'}" % (quote(title), quote(img), sender)
 			addDir(li=li, label=title, action="dirList", dirID="ARDSportLiga3", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ)
+			cnt=cnt+1
+			
+		if cnt == 0:
+			msg1 = "ARDSportLiga3:"
+			msg2 = "keine Live-Spiele gefunden" 
+			xbmcgui.Dialog().notification(msg1,msg2,img,3000,sound=True)
+			return
 
 		stream_source = Dict("load", "ARD_streamsource")	# Streamquellen einstellen
 		if stream_source == False or stream_source == "":
@@ -4058,7 +4032,7 @@ def ARDSportTabellen(title, logo, path, year=""):
 	if page == '':
 		return
 	try:	
-		summ = re.search(r'<title>(.*?)</title>', page).group(1)
+		summ = re.search(u'<title>(.*?)</title>', page).group(1)
 	except:
 		summ=""
 	summ = "[B]%s[/B]\n\nSpalten-Info: Rang [Punkte | Tore (Tor-Diff.) | Spiele] Mannschaft" % summ
@@ -4076,16 +4050,16 @@ def ARDSportTabellen(title, logo, path, year=""):
 			td_blk = blockextract("<td ", tr)			# Spalten
 			PLog("columns: %d" % len(td_blk))
 			PLog("column_1: " + td_blk[0])
-			path		= re.search(r'href="(.*?)"><img', tr).group(1)	# Pfad -> Team
+			path		= re.search(u'href="(.*?)"><img', tr).group(1)	# Pfad -> Team
 			path		= base + path
-			td_img		= re.search(r'src="(.*?)"', tr).group(1)	# Icon-Url
-			td_team		= re.search(r'title="(.*?)"', tr).group(1)	# Mannschaft
-			td_rank 	= re.search(r'rank">(.*?)<', tr).group(1)	# Rang
-			td_pts 		= re.search(r'points">(.*?)<', tr).group(1)	# Punkte
+			td_img		= re.search(u'src="(.*?)"', tr).group(1)	# Icon-Url
+			td_team		= re.search(u'title="(.*?)"', tr).group(1)	# Mannschaft
+			td_rank 	= re.search(u'rank">(.*?)<', tr).group(1)	# Rang
+			td_pts 		= re.search(u'points">(.*?)<', tr).group(1)	# Punkte
 			
-			td_goals 		= re.search(r'goaldiff">(.*?)<', tr).group(1)	# Tore
-			td_diff 		= re.search(r'difference">(.*?)<', tr).group(1)	# Tor-Differenz
-			td_match 		= re.search(r'played">(.*?)<', tr).group(1)	# Spiele
+			td_goals 		= re.search(u'goaldiff">(.*?)<', tr).group(1)	# Tore
+			td_diff 		= re.search(u'difference">(.*?)<', tr).group(1)	# Tor-Differenz
+			td_match 		= re.search(u'played">(.*?)<', tr).group(1)	# Spiele
 			
 			points = "[%s | %s (%s) | %s]" % (td_pts, td_goals, td_diff, td_match)
 			title = u"[B]%4s[/B] %24s %4s[B]%s[/B]" % (td_rank, points, " ", td_team)
@@ -4141,14 +4115,14 @@ def ARDSportTabellenArchiv(title, path, logo):
 	tab_list = blockextract("<option value", page)
 	PLog(tab_list[0])							# ../tabelle/">1963/1964</option>
 	try:
-		sort_list = sorted(tab_list,key=lambda x: int(re.search(r'/">(\d+)/', x).group(1)), reverse=True)	
+		sort_list = sorted(tab_list,key=lambda x: int(re.search(u'/">(\d+)/', x).group(1)), reverse=True)	
 	except Exception as exception:
 		PLog("tab_list_error: " + str(exception))
 		sort_list = tab_list
 	
 	for tab in sort_list:
 		PLog(tab)
-		href =  base + re.search(r'value="(.*?)"', tab).group(1)
+		href =  base + re.search(u'value="(.*?)"', tab).group(1)
 		year = href.split("/")[-3]					# ../se2588/1966-1967/tabelle/
 		title = "%s: [B]%s[/B]" % (title_org, year)
 		PLog("href: " + href)
@@ -4182,18 +4156,18 @@ def ARDSportTabellenTeam(title, path, logo):
 		for item in role_blk:
 			tr_blk = blockextract("<tr ", item)
 			PLog("lines: %d" % len(tr_blk))
-			role = re.search(r'role">(.*?)<', item).group(1)		# z.B. Torwart
+			role = re.search(u'role">(.*?)<', item).group(1)		# z.B. Torwart
 			for tr in tr_blk:
 				#PLog(tr)
 				td_blk = blockextract("<td ", tr)			# Spalten
 				PLog("columns: %d" % len(td_blk))
 				PLog("column_1: " + td_blk[0])
-				# path		= re.search(r'href="(.*?)"><img', tr).group(1)		# Pfad -> Profil Person - nicht genutzt
-				td_img		= re.search(r'src="(.*?)" alt', tr).group(1)		# Bild-Url
-				td_name		= re.search(r'title="(.*?)"', tr).group(1)			# Name
-				td_nr 		= re.search(r'shirtnumber-">(.*?)<', tr).group(1)	# Spieler-Nr.
-				td_nation 	= re.search(r'country-name-">(.*?)<', tr).group(1)	# Nationalität
-				td_birth 	= re.search(r'birthday">(.*?)<', tr).group(1)		# Geburtstag
+				# path		= re.search(u'href="(.*?)"><img', tr).group(1)		# Pfad -> Profil Person - nicht genutzt
+				td_img		= re.search(u'src="(.*?)" alt', tr).group(1)		# Bild-Url
+				td_name		= re.search(u'title="(.*?)"', tr).group(1)			# Name
+				td_nr 		= re.search(u'shirtnumber-">(.*?)<', tr).group(1)	# Spieler-Nr.
+				td_nation 	= re.search(u'country-name-">(.*?)<', tr).group(1)	# Nationalität
+				td_birth 	= re.search(u'birthday">(.*?)<', tr).group(1)		# Geburtstag
 				
 				title = u"[B]%2s[/B] [B]%s[/B] (geb. %s)" % (td_nr, td_name, td_birth)
 				tag = u"[B]%s[/B] | Herkunft: %s | Rolle: [B]%s[/B]" % (td_name, td_nation, role)
@@ -4664,7 +4638,7 @@ def ARDSportMediaPlayer(li, item_data):
 				stream_url = stringextract('url":"', '"', url)
 				break
 	
-	title = stringextract('],"title":"', ',"', item_data)		# 29.05.2024 nach Bildtitel
+	title = stringextract('page_title":"', ',"', item_data)		# kann " enthalten
 	title=decode_url(title); title=repl_json_chars(title); 
 	
 	duration = stringextract('durationSeconds":"', '"', item_data)
@@ -5158,7 +5132,7 @@ def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high
 	
 #---------------------------
 # Aufruf test_downloads (Setting pref_show_qualities=false)
-# ermittelt Stream mit höchster Auflösung
+# ermittelt Stream mit höchster Auflösung / höchster Bitrate
 #
 def get_bestdownload(download_list):
 	PLog('get_bestdownload:')
@@ -5762,7 +5736,7 @@ def DownloadTools():
 	PLog(len(dirlist))
 	mpcnt=0; vidsize=0
 	for entry in dirlist:
-		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0 or entry.find('.m3u') > 0:
+		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0:
 			mpcnt = mpcnt + 1	
 			fname = os.path.join(path, entry)					
 			vidsize = vidsize + os.path.getsize(fname) 
@@ -5890,7 +5864,7 @@ def DownloadsList():
 	PLog(len(dirlist))
 	mpcnt=0; vidsize=0
 	for entry in dirlist:
-		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0 or entry.find('.m3u') > 0:
+		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0:
 			mpcnt = mpcnt + 1	
 			fname = os.path.join(path, entry)					
 			vidsize = vidsize + os.path.getsize(fname) 
@@ -5908,7 +5882,7 @@ def DownloadsList():
 	
 	# Downloads listen:
 	for entry in dirlist:							# Download + Beschreibung -> DirectoryObject
-		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0 or entry.find('.m3u') > 0:
+		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0:
 			localpath = entry
 			title=''; tagline=''; summary=''; quality=''; thumb=''; httpurl=''
 			fname =  entry							# Dateiname 
@@ -5953,7 +5927,7 @@ def DownloadsList():
 			tag_par= tagline.replace('\n', '||')	
 			PLog("Satz20:")
 			PLog(httpurl); PLog(summary); PLog(tagline); PLog(quality); # PLog(txt); 			
-			if httpurl.endswith('mp3') or httpurl.endswith('m3u'):
+			if httpurl.endswith('mp3'):
 				oc_title = u'Anhören, Bearbeiten: Podcast | %s' % py2_decode(title)
 				thumb = R(ICON_NOTE)
 			else:
@@ -6028,34 +6002,16 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, tagline=tagline,
 			thumb=thumb, fparams=fparams, mediatype='video')
 		
-	else:																# 'mp3' = Podcast
-		# Dateiname bei fehl. Beschreibung, z.B. Sammeldownloads:
-		if fulldest_path.endswith('mp3') or fulldest_path.endswith('m3u'): 	# 1. Anhören
-			if fulldest_path.endswith('m3u'):							# Link auspacken
-				is_playlist=False
-				data = RLoad(fulldest_path, abs_path=True)
-				if "#EXTM3U" in data:
-					is_playlist=True
-				else:
-					data = data.splitlines()
-					for line in data:
-						if line.startswith("http"):
-							fulldest_path = line
-							break
-			if 	is_playlist == False:
-				title = title_org 							
-				lable = "Anhören | %s" % (title_org)
-				fulldest_path=py2_encode(fulldest_path); title=py2_encode(title); thumb=py2_encode(thumb); 
-				summary=py2_encode(summary);	
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(fulldest_path), 
-					quote(title), quote(thumb), quote_plus(summary))
-				addDir(li=li, label=lable, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, 
-					fparams=fparams, mediatype='music') 
-			else:														#  Playlist hier nicht abspielbar
-				msg1 = u'Eine Playlist ist hier nicht abspielbar.'
-				msg2 = u"Bitte die Playlist: 1. im Kodi-Hauptmenü unter Musik/Dateien hinzufügen oder"
-				msg3 = u"2. in den Kodi-Ordner ../userdata/playlists verschieben."
-				MyDialog(msg1, msg2, msg3)				
+	else:										# 'mp3' = Podcast
+		if fulldest_path.endswith('mp3'):		# Dateiname bei fehl. Beschreibung, z.B. Sammeldownloads
+			title = title_org 											# 1. Anhören
+			lable = "Anhören | %s" % (title_org)
+			fulldest_path=py2_encode(fulldest_path); title=py2_encode(title); thumb=py2_encode(thumb); 
+			summary=py2_encode(summary);	
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(fulldest_path), 
+				quote(title), quote(thumb), quote_plus(summary))
+			addDir(li=li, label=lable, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, 
+				fparams=fparams, mediatype='music') 
 	
 	lable = "Löschen: %s" % title_org 									# 2. Löschen
 	tagline = 'Datei: %s..' % path[:28] 
@@ -6216,7 +6172,7 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 #	textKey -> Dict-Datei 
 # data = Liste oder string, je Zeile wird eine Datei erzeugt,
 #	"**" splittet Zeile in mehrere Zeilen, 1. Zeile = Dateiname
-# 06.05.2024 textKey=RadioPlaylist -> einzelne Playlist
+# 06.05.2024 textKey=ARD_RadioPlaylist -> einzelne Playlist
 # 
 def DownloadText(textKey):
 	PLog('DownloadText: ' + textKey)
@@ -6245,9 +6201,7 @@ def DownloadText(textKey):
 		fname = "%s.m3u" % textKey
 		msg1 = "[B]%s[/B] mit %d Radiosendern speichern?"	 % (fname, textlen)
 	else:	 
-		msg1 = "[B]%d Streamlinks[/B] in einzelnen m3u-Dateien speichern?"	 % textlen
-		if textlen == 1:
-			msg1 = "[B]Einzel-Streamlink[/B] in m3u-Datei speichern?"	
+		msg1 = "[B]%d Streamlinks[/B] in einzelnen m3u-Dateien speichern?"	 % textlen	
 	msg2 = 'Die Ablage erfolgt im Downloadverzeichnis.'
 	ret=MyDialog(msg1, msg2, msg3="", ok=False, yes='OK')
 	if ret  == False:
@@ -6256,7 +6210,7 @@ def DownloadText(textKey):
 	msg1 = textKey
 	icon = R('icon-downl-dir.png')
 		
-	if "Playlist" in textKey:								# -> RadioPlaylist
+	if "Playlist" in textKey:								# -> ARD_RadioPlaylist
 		playlist = "\n".join(data)
 		fpath = os.path.join(path, fname)
 		RSave(fpath, playlist, withcodec=True)	
@@ -7335,34 +7289,31 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 			
 		epg_date=''; epg_title=''; epg_text=''; summary=''; tagline='' 
 		EPG_ID = stringextract('<EPG_ID>', '</EPG_ID>', element)	# -> EPG.EPG und Kontextmenü
-		if EPG_ID.strip() == "":
-			EPG_ID="dummy"								# Kodi-Problem: ohne Wert verwendet addDir vorige EPG_ID
-			PLog("set_dummmy_EPG_ID: " + title)
-		PLog('setting: ' + str(SETTINGS.getSetting('pref_use_epg')))# EPG nutzen? 
-		if SETTINGS.getSetting('pref_use_epg') == 'true':	# hier nur aktuelle Sendung
-			if EPG_ID and EPG_ID != "dummy":
-				# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis:
-				try:
-					rec = EPG.EPG(ID=EPG_ID, mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
-					sname=''; stime=''; summ=''; vonbis=''		# Fehler, ev. Sender EPG_ID nicht bekannt
-					if rec:								
-						sname=py2_encode(rec[3]); stime=py2_encode(rec[4]); 
-						summ=py2_encode(rec[5]); vonbis=py2_encode(rec[6])	
-				except:
-					sname=''; stime=''; summ=''; vonbis=''	
-										
-				if sname:
-					title=py2_encode(title); 
-					title = "%s: %s"  % (title, sname)
-				if summ:
-					summary = py2_encode(summ)
-				else:
-					summary = ''
-				if vonbis:
-					tagline = u'[B]Sendung: %s Uhr[/B]' % vonbis
-				else:
-					tagline = ''
-				tagline = "%s\n[B]Tages-EPG[/B] via Kontext-Menü aufrufen." % tagline
+		PLog(EPG_ID)
+		# PLog(SETTINGS.getSetting('pref_use_epg')) 	# Voreinstellung: EPG nutzen? - nur mit Schema nutzbar
+		PLog('setting: ' + str(SETTINGS.getSetting('pref_use_epg')))
+		if SETTINGS.getSetting('pref_use_epg') == 'true' and EPG_ID:	# hier nur aktuelle Sendung
+			# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime, 5=summ, 6=vonbis:
+			try:
+				rec = EPG.EPG(ID=EPG_ID, mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
+				sname=''; stime=''; summ=''; vonbis=''		# Fehler, ev. Sender EPG_ID nicht bekannt
+				if rec:								
+					sname=py2_encode(rec[3]); stime=py2_encode(rec[4]); 
+					summ=py2_encode(rec[5]); vonbis=py2_encode(rec[6])	
+			except:
+				sname=''; stime=''; summ=''; vonbis=''	
+									
+			if sname:
+				title=py2_encode(title); 
+				title = "%s: %s"  % (title, sname)
+			if summ:
+				summary = py2_encode(summ)
+			else:
+				summary = ''
+			if vonbis:
+				tagline = u'Sendung: %s Uhr' % vonbis
+			else:
+				tagline = ''
 
 		title = unescape(title)	
 		title = title.replace('JETZT:', '')					# 'JETZT:' hier überflüssig
@@ -7383,15 +7334,14 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		geo = stringextract('<geoblock>', '</geoblock>', element)
 		PLog('geo: ' + geo)
 		if geo:
-			tagline = '%s\nLivestream nur in Deutschland zu empfangen!' % tagline
+			tagline = 'Livestream nur in Deutschland zu empfangen!'
 			
 		PLog("Satz8:")
 		PLog(title); PLog(link); PLog(img); PLog(summary); PLog(tagline[0:80]);
 	
 		descr = summary.replace('\n', '||')
 		if tagline:
-			descr = "%s %s" % (tagline, descr)				# -> Plot (PlayVideo)
-			descr = descr.replace("\n", "||") 
+			descr = "%s %s" % (tagline, descr)				# -> Plot (PlayVideo) 
 		title=py2_encode(title); link=py2_encode(link);
 		img=py2_encode(img); descr=py2_encode(descr);	
 		fparams="&fparams={'path': '%s', 'thumb': '%s', 'title': '%s', 'descr': '%s'}" % (quote(link), 
@@ -8925,7 +8875,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	PLog("nextUrl: " + nextUrl)
 	if nextPage and nextUrl:
 		query = query_org.replace('+', ' ')
-		pagenr = re.search(r'&page=(\d+)', nextUrl).group(1)
+		pagenr = re.search(u'&page=(\d+)', nextUrl).group(1)
 		PLog(pagenr); 
 		title = "Mehr Ergebnisse im ZDF zeigen zu: >%s<"  % query
 		tagline = u"nächste Seite [B]%s[/B]" % pagenr
@@ -9395,7 +9345,6 @@ def ZDF_FlatListEpisodes(sid):
 #	ZDF_Rubriken, ZDF_RubrikSingle, ZDF_Verpasst.
 # Mitnutzung get_form_streams sowie build_Streamlists_buttons
 # gui=False: ohne Gui, z.B. für ZDF_getStrmList
-# 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	PLog("ZDF_getApiStreams: " + scms_id)
@@ -9460,7 +9409,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 		if url.find('master.m3u8') > 0:					# HLS-Stream 
 			HLS_List.append('HLS, %s ** AUTO ** %s ** %s#%s' % (track_add, quality,title,url))
 		else:
-			res='0x0'; w=''; h=''						# Default					
+			res='0x0'; bitrate='0'; w=''; h=''			# Default					
 			if 'hd":true' in form:	
 				w = "1920"; h = "1080"					# Probeentnahme													
 			if 'veryhigh' in quality:
@@ -9472,10 +9421,16 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 			if 'low' in quality:
 				w = "480"; h = "270"					# Probeentnahme							
 			
+			if '_' in url:
+				try:									# wie build_Streamlists
+					bitrate = re.search(u'_(\d+)k_', url).group(1)
+					bitrate = "%skbit" % bitrate
+				except:
+					bitrate = "unbekannt"
 			res = "%sx%s" % (w,h)
 			title_url = u"%s#%s" % (title, url)
-			item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
-				(track_add, quality, res, title_url)
+			item = u"MP4, %s | %s ** Auflösung %s ** Bitrate %s ** %s" %\
+				(track_add, quality, res, bitrate, title_url)
 			PLog("item: " + item)
 			PLog("server: " + server)					# nur hier, kein Platz im Titel
 			MP4_List.append(item)
@@ -9789,7 +9744,7 @@ def ZDF_get_teaserbox(page):
 	if teaser_label == '' and teaser_typ == '':							# z.B. >3 Teile< bei Doku-Titel
 		teaser_label = stringextract('class="teaser-label"', '</div>', page)
 		try: 
-			teaser_typ = re.search(r'>(\d+) Teile', teaser_label).group(0)
+			teaser_typ = re.search(u'>(\d+) Teile', teaser_label).group(0)
 		except:
 			teaser_typ=''
 	teaser_label = mystrip(teaser_label) 
@@ -9850,7 +9805,7 @@ def full_shows(title, title_samml, summary, duration,  fname):
 		duration=py2_decode(duration)
 		if " min" in duration:							# Bsp. "Videolänge 1 min", "33 min · Comedy"
 			try:
-				duration = re.search(r'(\d+) min', duration).group(1)
+				duration = re.search(u'(\d+) min', duration).group(1)
 			except:
 				duration=''
 			
@@ -9892,7 +9847,6 @@ def full_shows(title, title_samml, summary, duration,  fname):
 # ab V4.7.0 nur noch von SingleBeitrag (my3Sat) genutzt, ZDF s. 
 #	ZDF_getApiStreams. page: json-Quelle (api.3sat.de), neu
 #	kodiert ohne funk-Beiträge 
-# 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 #
 def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,page,scms_id='',ID="ZDF",weburl=''):
 	PLog('build_Streamlists:'); PLog(ID)
@@ -9958,7 +9912,7 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,page,scms_id='',I
 									stitle=title,buttons=False, track_add=track_add)
 								HLS_List = HLS_List + Stream_List
 						else:
-							res='0x0'; w='0'; h='0'											
+							res='0x0'; bitrate='0'; w='0'; h='0'											
 							if 'HD' in quality:							# up_low(quality s.o.
 								w = "1920"; h = "1080"					# Probeentnahme													
 							if 'VERYHIGH' in quality:
@@ -9970,14 +9924,21 @@ def build_Streamlists(li,title,thumb,geoblock,tagline,sub_path,page,scms_id='',I
 							if 'LOW' in quality:
 								w = "480"; h = "270"					# Probeentnahme							
 							
+							if '_' in url:
+								try:								# Fehlschlag bei arte-Links
+									bitrate = re.search(u'_(\d+)k_', url).group(1)
+									bitrate = "%skbit" % bitrate
+								except:
+									bitrate = "?"
 							res = "%sx%s" % (w,h)
+							
 							PLog(res)
 							title_url = u"%s#%s" % (title, url)
 							mp4 = "%s" % "MP4"
 							if ".webm" in url:
 								mp4 = "%s" % "WEBM"
-							item = u" %s, %s | %s ** Auflösung %s ** %s" %\
-								(mp4, track_add, quality, res, title_url)
+							item = u" %s, %s | %s ** Auflösung %s ** Bitrate %s ** %s" %\
+								(mp4, track_add, quality, res, bitrate, title_url)
 							MP4_List.append(item)
 							
 	except Exception as exception:
@@ -10256,7 +10217,6 @@ def ZDFSourcesHBBTV(title, scms_id):
 # Formatierung der Streamlinks ("Qual.|Link")
 # 17.05.2023 Anpassungen an Änderungen in ZDFSourcesHBBTV,
 #	neue Reihenfolge im Streamtitel:  Auflösung | Bitrate 
-# 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 #
 def form_HBBTV_Streams(stream_list, title):
 	PLog('form_HBBTV_Streams:')
@@ -10273,31 +10233,39 @@ def form_HBBTV_Streams(stream_list, title):
 		if q == 'q0':
 			quality = u'GERINGE'
 			w = "640"; h = "360"					# Probeentnahme	
+			bitrate = u"1812067"
 			if u'm3u8' in url:
 				bitrate = u"16 MB/Min."
 		if q == 'q1':
 			quality = u'HOHE'
 			w = "960"; h = "540"					# Probeentnahme	
+			bitrate = u"1812067"
 			if u'm3u8' in url:
 				bitrate = u"16 MB/Min."
 		if q == 'q2':
 			quality = u'SEHR HOHE'
 			w = "1024"; h = "576"					# Probeentnahme							
+			bitrate = u"3621101"
 			if u'm3u8' in url:
 				bitrate = u"19 MB/Min."
 		if q == 'q3':
 			quality = u'HD'
 			w = "1280"; h = "720"					# Probeentnahme					
+			bitrate = u"6501324"
 			if u'm3u8' in url:
 				bitrate = u"23 MB/Min."
 		if q == 'q4':
 			quality = u'Full-HD'
 			w = "1920"; h = "1080"					# Probeentnahme,					
+			bitrate = u"?"
 			if u'm3u8' in url:
 				bitrate = u"?"			
 		if q == 'q5':
 			quality = u'UHD'
 			w = "3840"; h = "2160"					# Probeentnahme						
+			bitrate = u"?"
+			if u'm3u8' in url:
+				bitrate = u"42 MB/Min"				# geschätzt				
 		
 		res = "%sx%s" % (w,h)
 		
@@ -10305,10 +10273,16 @@ def form_HBBTV_Streams(stream_list, title):
 			stream_title = u'HLS, Qualität: [B]%s | %s[/B]' % (quality, add) # label: Normal, DGS, .
 		else:
 			stream_title = u'MP4, Qualität: [B]%s | %s[/B]' % (quality, add)
+			try:
+				bitrate = re.search(u'_(\d+)k_', url).group(1)	# bitrate überschreiben	
+				bitrate = bitrate + "kbit"			# k ergänzen 
+			except Exception as exception:			# ts möglich: http://cdn.hbbtvlive.de/zdf/106-de.ts
+				PLog(str(exception))
+				PLog(url)	
 
 		title_url = u"%s#%s" % (title, url)
-		item = u"%s ** Auflösung %s ** %s" %\
-			(stream_title, res, title_url)
+		item = u"%s ** Auflösung %s ** Bitrate %s ** %s" %\
+			(stream_title, res, bitrate, title_url)
 		PLog("item: " + item)
 		HBBTV_List.append(item)	
 		
@@ -10886,7 +10860,7 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 
 	try:
 		if u"Auflösung" in str(Stream_List):
-			Stream_List = sorted(Stream_List,key=lambda x: int(re.search(r'sung (\d+)x', x).group(1)))		
+			Stream_List = sorted(Stream_List,key=lambda x: int(re.search(u'sung (\d+)x', x).group(1)))		
 	except Exception as exception:					# bei HLS/"auto", problemlos da vorsortiert durch Sender 
 		PLog("sort_error:  " + str(exception))
 
@@ -10899,21 +10873,16 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 	for item in Stream_List:
 		item = py2_encode(item)
 		PLog("item: " + item[:80])
-		bitrate=""
-		if item.count("**") == 3:										# mit bitrate
-			label, bitrate, res, title_href = item.split('**')
-			bitrate = bitrate.replace('Bitrate 0', 'Bitrate ?')			# Anpassung für funk ohne AzureStructure
-			res = res.replace('0x0', '?')								# dto.
-		else:															# ohne bitrate
-			label, res, title_href = item.split('**')
+		label, bitrate, res, title_href = item.split('**')
+		bitrate = bitrate.replace('Bitrate 0', 'Bitrate ?')			# Anpassung für funk ohne AzureStructure
+		res = res.replace('0x0', '?')								# dto.
 		PLog(title_href)
 		title, href = title_href.split('#')
 		
 		PLog(title); PLog(tagline_org[:80]); PLog(sub_path)
 		tagline = tagline_org
-		label = "%d. %s | %s" % (cnt, label, res)
-		if bitrate:														# HLS: numeriert, mit bitrate
-			label = "%s | %s | %s" % (label, bitrate, res)
+	
+		label = "%d. %s | %s| %s" % (cnt, label, bitrate, res)
 		cnt = cnt+1
 		href=py2_encode(href); title=py2_encode(title);
 		
