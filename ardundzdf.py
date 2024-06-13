@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>200</nr>										# Numerierung für Einzelupdate
+# 	<nr>202</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.4'
-VDATE = '26.05.2024'
+VDATE = '13.06.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -473,10 +473,11 @@ def Main():
 	label = 'TV-Livestreams'
 	if SETTINGS.getSetting('pref_epgRecord') == 'true':		
 		label = u'TV-Livestreams | Sendungen aufnehmen'; 
-	tagline = u'Livestreams von ARD, ZDF und einigen Privaten. Zusätzlich Event Streams von ARD und ZDF.'																																	
+	tagline = u'Livestreams von ARD, ZDF und einigen Privaten. Zusätzlich Event Streams von ARD und ZDF.'
+	summ = u"Die Haltezeit im Cache für die Livestreamquellen kann zwischen 0 bis 60 Tage eingestellt werden."																																	
 	fparams="&fparams={'title': 'TV-Livestreams'}"
 	addDir(li=li, label=label, action="dirList", dirID="SenderLiveListePre", 
-		fanart=R(FANART), thumb=R(ICON_MAIN_TVLIVE), tagline=tagline, fparams=fparams)
+		fanart=R(FANART), thumb=R(ICON_MAIN_TVLIVE), tagline=tagline, summary=summ, fparams=fparams)
 	
 	# 29.09.2019 Umstellung Livestreams auf ARD Audiothek
 	#	erneut ab 02.11.2020 nach Wegfall web.ard.de/radio/radionet
@@ -3717,13 +3718,15 @@ def ARDSportLiga3(title, img, sender="", source=""):
 		page = stringextract("tbody>", "</tbody>", page)# 1. Tabelle (1.: Mobilversion)
 		PLog(page[:80])
 		rows = blockextract("<tr", page, "</tr>")
+		PLog("rows: %d" % len(rows))
 		col0_pre=""; col1_pre=""; col2_pre=""
 		now = EPG.get_unixtime(onlynow=True)							# unix-sec passend zu TotalTime, LastSeek
 		now = int(now)
 		now_dt = datetime.datetime.fromtimestamp(now)
 		my_year = now_dt.strftime("%Y")
 		date_format = "%Y-%m-%dT%H:%M:%SZ"
-		sixmonth = 2629743 * 6											# unix-sec 6 Monate (Abgleich past/future)
+		sixmonth = 2629743 * 6	
+		cnt=0										# unix-sec 6 Monate (Abgleich past/future)
 		for row in rows:
 			row = str(blockextract("<td", row, "</td>"))
 			PLog(row)
@@ -3748,13 +3751,14 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			tag = "%s%s" % (tag,  date)
 			summ = "Spieltag: %s | Livestream bei %s" % (nr, sender)
 			if sender == "":											# Leerzeilen
+				PLog("skip_missing_sender")
 				continue
 				
 			try:
 				live=False; past=False
 				monat = col1.split(",")[1]; monat = monat.split(".")[1]	# Samstag, 04. November, 14:00 Uhr
 				my_month = month[monat.strip()]							# Juli -> 7
-				my_day = re.search(r'(\d+)', date.split(",")[1]).group(1)
+				my_day = re.search(u'(\d+)', date.split(",")[1]).group(1)
 				my_time = col2.split(" ")[0]							# 14:00 Uhr
 				my_date = "%s-%s-%sT%s:00Z" % (my_year, my_month, my_day, my_time)
 
@@ -3808,6 +3812,13 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			fparams="&fparams={'title': '%s', 'img': '%s', 'sender': '%s'}" % (quote(title), quote(img), sender)
 			addDir(li=li, label=title, action="dirList", dirID="ARDSportLiga3", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ)
+			cnt=cnt+1
+			
+		if cnt == 0:
+			msg1 = "ARDSportLiga3:"
+			msg2 = "keine Live-Spiele gefunden" 
+			xbmcgui.Dialog().notification(msg1,msg2,img,3000,sound=True)
+			return
 
 		stream_source = Dict("load", "ARD_streamsource")	# Streamquellen einstellen
 		if stream_source == False or stream_source == "":
@@ -4664,7 +4675,7 @@ def ARDSportMediaPlayer(li, item_data):
 				stream_url = stringextract('url":"', '"', url)
 				break
 	
-	title = stringextract('page_title":"', ',"', item_data)		# kann " enthalten
+	title = stringextract('],"title":"', ',"', item_data)		# 29.05.2024 nach Bildtitel
 	title=decode_url(title); title=repl_json_chars(title); 
 	
 	duration = stringextract('durationSeconds":"', '"', item_data)
@@ -4729,7 +4740,7 @@ def ARDSportMediaPlayer(li, item_data):
 	PLog("Satz31:")
 	PLog(player); PLog(live); PLog(title); PLog(mp3_url); PLog(stream_url); PLog(avail);
 		
-	return player, live, title, mp3_url, stream_url, img, tag, summ, Plot 
+	return player, live, title, mp3_url, stream_url, img, tag, summ, Plot  
 
 #---------------------------------------------------------------------------------------------------
 # Für Seiten mit nur einheitlichen Blöcken

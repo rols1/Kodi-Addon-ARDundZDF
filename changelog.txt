@@ -10,6 +10,15 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+??.06.2024 5.0.5	
+			ARDSportMediaPlayer (ARD Sportschau WDR:  Anpassung an veränderter Position
+			des Beitrags-Titels.
+			get_next_url (arte): Berücksichtigung von http-Links bei Vervollständigung.
+			ARDSportLiga3: Notification bei Tabelle ohne Spiele (Sommerpause).
+			settings.xml: Umbenennung in Kategorie Addon-Cache (Löschfrist -> Haltezeit).
+			TV-Livestreams Hauptmenü: Hinweis auf einstellbare Haltezeit im Cache.
+
+
 26.05.2024 5.0.4
 			AudioStartLive: Fix Variable für RadioPlaylist-Button PlayList statt
 			streamList.

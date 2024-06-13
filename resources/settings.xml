@@ -57,7 +57,7 @@
  	<setting label="EPG im Hintergrund laden (Intervall siehe Addon-Cache)" type="bool" id="pref_epgpreload" default="false"/>
 </category> 
 
- <category label="Addon-Cache: Löschfristen (Tage)">
+ <category label="Addon-Cache: Haltezeit (Tage)">
 	<setting label="Dict (div. Variablen)" type="select" values="1|10|30|100" default="30" id="pref_DICT_store_days"/>
 	<setting label="Untertitel" type="select" values="1|10|30|100" default="30" id="pref_UT_store_days"/>
 	<setting label="Bildersammlungen (Slide Shows)" type="select" values="1|10|30|100" default="30" id="pref_SLIDES_store_days"/>
