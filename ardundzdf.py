@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>203</nr>										# Numerierung für Einzelupdate
+# 	<nr>204</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.4'
 VDATE = '14.06.2024'
 
@@ -1928,13 +1928,14 @@ def ARDAudioEventStreams(li=''):
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
 		thumb=thumb, tagline=tag, summary=summ, fparams=fparams)
 		
-	title = u"[B]Audio-Livestreams der Sportschau[/B]"					# ARDSportLive filtert Videos heraus
+	title = u"[B]Audio-Livestreams auf sportschau.de[/B]"				# ARDSportLive filtert Videos heraus
 	tag = u"kommende Events: Ankündigungen mit Direktlinks"
+	summ = u"Quelle: www.sportschau.de/streams"
 	img = R("tv-ard-sportschau.png")
 	title=py2_encode(title)
 	fparams="&fparams={'title': '%s', 'skip_video': 'True'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
+		fparams=fparams, tagline=tag, summary=summ)	
 
 
 	if endof:
@@ -3462,6 +3463,16 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	
 	#---------------------------------------------------------	Großevents Start
+	title = u"Event: [B]UEFA EURO 2024[/B]"							# Großevent	
+	tag = u"Alle Infos zur UEFA EURO 2024 | sportschau.de"
+	cacheID = "UEFA_EURO"
+	img = "https://images.sportschau.de/image/8f60e4b7-dd53-4cee-bbc2-5ace93112d8b/AAABiz2LtlE/AAABjwnlFvA/16x9-1280/em-pokal-122.jpg"
+	path = "https://www.sportschau.de/fussball/uefa-euro-2024"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
 
 	#---------------------------------------------------------	Großevents Ende
 
@@ -3535,6 +3546,17 @@ def ARDSportWDRArchiv():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
+	title = u"Event: [B]UEFA EURO 2024[/B]"							# Großevent	
+	tag = u"Alle Infos zur UEFA EURO 2024 | sportschau.de"
+	cacheID = "UEFA_EURO"
+	img = "https://images.sportschau.de/image/8f60e4b7-dd53-4cee-bbc2-5ace93112d8b/AAABiz2LtlE/AAABjwnlFvA/16x9-1280/em-pokal-122.jpg"
+	path = "https://www.sportschau.de/fussball/uefa-euro-2024"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
+
 	title = u"Event: [B]Basketball-WM 2023[/B]"							# Großevent	
 	tag = u"Aktuelle News zur Basketball-WM 2023 | sportschau.de"
 	cacheID = "BasketballWM"
