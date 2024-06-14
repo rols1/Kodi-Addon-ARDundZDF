@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>202</nr>										# Numerierung für Einzelupdate
+# 	<nr>203</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.4'
-VDATE = '13.06.2024'
+VDATE = '14.06.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1927,6 +1927,16 @@ def ARDAudioEventStreams(li=''):
 		(quote(title), quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
 		thumb=thumb, tagline=tag, summary=summ, fparams=fparams)
+		
+	title = u"[B]Audio-Livestreams der Sportschau[/B]"					# ARDSportLive filtert Videos heraus
+	tag = u"kommende Events: Ankündigungen mit Direktlinks"
+	img = R("tv-ard-sportschau.png")
+	title=py2_encode(title)
+	fparams="&fparams={'title': '%s', 'skip_video': 'True'}" % quote(title)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+
 	if endof:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	else:	
@@ -4408,8 +4418,10 @@ def ARDSportCluster(title, path, img, cacheID, cluster=''):
 #---------------------------------------------------------------------------------------------------
 # Livestreams der Sportschau
 # Aufruf: ARDSportWDR
+# 14.06.2024 Ausfilterung Videos für "Audiolivestreams der Sportschau"
+#	in ARDAudioEventStreams
 #
-def ARDSportLive(title): 
+def ARDSportLive(title, skip_video=""): 
 	PLog('ARDSportLive:')
 
 	path = "https://www.sportschau.de/streams"
@@ -4430,7 +4442,7 @@ def ARDSportLive(title):
 			PLog("player_typ: " + player)
 			
 			title=py2_encode(title); Plot=py2_encode(Plot)
-			if player == "video":
+			if player == "video" and not skip_video:
 				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
 					quote(title), quote(img), quote_plus(Plot))
 				addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
