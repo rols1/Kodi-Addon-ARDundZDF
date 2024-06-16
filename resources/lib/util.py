@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>101</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.05.2024
+# 	<nr>102</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.06.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2652,6 +2652,8 @@ def refresh_streamlinks():
 #	loop, Ausgabe der Liste in  "Überregional")
 # Mehrkanal-Streamlinks seit Aug. 2020 - die enth. Audiolinks in 
 #	Kodi nicht getrennt verwertbar. 
+# 29.10.2023 force=True: InfoAndFilter -> refresh_streamlinks
+#
 #-----------------------------------------------
 def get_ZDFstreamlinks(skip_log=False, force=False):
 	PLog('get_ZDFstreamlinks:')
@@ -2740,8 +2742,10 @@ def get_ZDFstreamlinks(skip_log=False, force=False):
 #	in get_IPTVstreamlinks  ermittelt (via Tag IPTVSource in 
 #	livesenderTV.xml.
 # 01.12.2021 erweitert um Liste für Untertitel-Links
-# 17.02.2021 Auswertung publicationService/name statt
+# 17.02.2022 Auswertung publicationService/name statt
 #	longTitle
+# 29.10.2023 force=True: InfoAndFilter -> refresh_streamlinks
+#
 def get_ARDstreamlinks(skip_log=False, force=False):
 	PLog('get_ARDstreamlinks:')
 	PLog(skip_log); PLog(force)
@@ -2811,6 +2815,8 @@ def get_ARDstreamlinks(skip_log=False, force=False):
 #	 TVLiveRecordSender), SenderLiveListe, get_playlist_img
 # holt Details von githubs iptv-Listen, falls
 #	livesenderTV.xml den Tag IPTVSource enthält
+# 29.10.2023 force=True: InfoAndFilter -> refresh_streamlinks
+#
 #
 def get_IPTVstreamlinks(skip_log=False, force=False):
 	PLog('get_IPTVstreamlinks:')
@@ -4286,6 +4292,9 @@ class KeyListener(xbmcgui.WindowXMLDialog):
 #----------------------------------------------------------------
 # Aufrufer ShowSeekPos: zum Streamstart und jeweils zum Sendungsende
 #	der letzten Sendung (vorher keine neuen Daten verfügbar). 
+# 16.06.2024 +02:00 in datetime-Format für Sommerzeit statt 00Z,
+#	s.u. date_format_adapted
+#	
 def get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime):
 	PLog("get_ARD_LiveEPG: " + title_sender)
 	
@@ -4295,6 +4304,12 @@ def get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime):
 		epg = json.loads(page)
 		epg_events = epg["events"]
 		sD = epg_events[-1]["endDate"]			# Sendungsende letzter Event: Nachladetrigger
+		PLog("sD: " + sD)
+		if sD[-6] == "+":						# Sommerzeit enthalten 2024-06-16T12:45:00+02:00 
+			PLog("date_format: " + date_format)	# Anpassung für %Y-%m-%dT%H:%M:%SZ
+			date_format = "%Y-%m-%dT%H:%M:%S%z"
+			PLog("date_format_adapted: " + date_format)		
+			
 		sD_time = datetime.datetime.fromtimestamp(time.mktime(time.strptime(sD, date_format)))
 		event_end = time.mktime(sD_time.timetuple())
 	else:
@@ -4313,10 +4328,15 @@ def get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime):
 			sD = event["startDate"]
 		sD_time = datetime.datetime.fromtimestamp(time.mktime(time.strptime(sD, date_format)))
 		event_start = time.mktime(sD_time.timetuple())
-		add_hour = time_translate(sD, add_hour=True, day_warn=False, add_hour_only=True)
-		if add_hour != sD:							# timecode bei exception
-			add_hour = add_hour * 3600
-			event_start = event_start + add_hour 	# + 2 Std. bei Sommerzeit							
+		
+		if sD[-6] =="+":						# Sommerzeit bereits enthalten, s.o. 
+			add_hour = 0
+		else:
+			add_hour = time_translate(sD, add_hour=True, day_warn=False, add_hour_only=True)
+			if add_hour != sD:							# timecode bei exception
+				add_hour = add_hour * 3600				# 2*3600
+				event_start = event_start + add_hour 	# + 2 Std. bei Sommerzeit
+							
 		PLog("event_start: %s, %d, added: %d" % (str(sD), event_start, add_hour))
 		BufStart = now - TotalTime					# akt. Pufferstart (unix-sec)
 		PLog("BufStart: %d, now: %d, TotalTime: %d" % (BufStart, now, TotalTime))
