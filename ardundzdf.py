@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>204</nr>										# Numerierung für Einzelupdate
+# 	<nr>205</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.4'
-VDATE = '14.06.2024'
+VDATE = '17.06.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -203,7 +203,7 @@ USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
 # Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
-if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+if 	check_AddonXml('"xbmc.python" version="3.'):				# ADDON_DATA-Verzeichnis anpasen
 	PLog('python_3.x.x')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 PLog("ADDON_DATA: " + ADDON_DATA)
@@ -237,7 +237,7 @@ if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden
 	eci = SETTINGS.getSetting('pref_epg_intervall')
 	eci = re.search(r'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
 	eci = int(eci)
-	PLog("eci: %d" % eci)
+	PLog("epg_check: eci %d" % eci)	
 	if eci == 12:											# 12 Std.
 		EPGCacheTime = 43200
 	else:
@@ -249,15 +249,32 @@ if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden
 		is_activ=True
 		mtime = os.stat(EPGACTIVE).st_mtime
 		diff = int(now) - mtime
-		PLog(diff); PLog(EPGCacheTime)
+		PLog("epg_active: %d diff, %d EPGCacheTime" % (diff, EPGCacheTime))			
 		if diff > EPGCacheTime:								# Flag entf. wenn älter als Option	
 			os.remove(EPGACTIVE)
 			is_activ=False
 	if is_activ == False:									# EPG-Daten veraltet, neu holen
 		from threading import Thread
 		bg_thread = Thread(target=EPG.thread_getepg, args=(EPGACTIVE, DICTSTORE, PLAYLIST))
-		bg_thread.start()
-													
+		bg_thread.start()				
+
+tci = int(SETTINGS.getSetting('pref_tv_store_days'))		# TV-Livestream-Quellen aktualisieren
+if tci >= 5:												# Thread nicht bei 0 od. 1 aktivieren
+	ID = "ard_streamlinks"									# stellvertretend auch für zdf + iptv
+	dictfile = os.path.join(DICTSTORE, ID)
+	mtime = os.path.getmtime(dictfile)
+	now	= int(time.time())	
+	CacheLimit = tci * 86400
+	cache_diff = CacheLimit - int(now - mtime)				# Sec-Abstand zum nächsten Ablaufdatum
+	
+	PLog("streamcache_check: tci %d" % tci)	
+	PLog("cache_diff: %d sec, %d days" % (cache_diff, int(cache_diff/86400)))
+	
+	if cache_diff <= 43200:									# Refresh bereits 12 Std. vor Ablauf möglich
+		PLog("CacheLimit_reached: %d" % int(now-CacheLimit))			
+		bg_thread = Thread(target=EPG.thread_getstreamlinks, args=())
+		bg_thread.start()				
+								
 if SETTINGS.getSetting('pref_dl_cnt') == 'true':			# laufende Downloads anzeigen
 	if os.path.exists(DL_CHECK) == False:					# Lock beachten (Datei dl_check_alive)						
 		PLog("Haupt_PRG: get_active_dls")
@@ -11116,7 +11133,7 @@ if __name__ == '__main__':
 		#del get_ZDFstreamlinks, get_ARDstreamlinks, get_IPTVstreamlinks
 	except Exception as e: 
 		msg = str(e)
-		PLog('network_error: ' + msg)
+		PLog('network_error_main: ' + msg)
 
 
 

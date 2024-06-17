@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>19</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.05.2024
+# 	<nr>20</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.06.2024
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -518,6 +518,16 @@ def get_data_web(page, Dict_ID):
 	PLog(len(EPG_rec)); PLog('get_data_web_End')
 	return EPG_rec
 	
+########################################################################
+# 16.06.2024 Aufruf Haupt-PRG, aktualisiert die TV-Livestream-Quellen
+#	für Cache im Hintergrund -> util.refresh_streamlinks
+def thread_getstreamlinks():
+	PLog("thread_getstreamlinks:")
+	
+	xbmc.sleep(2000)	
+	refresh_streamlinks()
+	return
+
 ####################################################################################################
 #									Hilfsfunktionen
 ####################################################################################################
