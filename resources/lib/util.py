@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>102</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.06.2024
+# 	<nr>103</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.06.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2657,7 +2657,7 @@ def refresh_streamlinks():
 #-----------------------------------------------
 def get_ZDFstreamlinks(skip_log=False, force=False):
 	PLog('get_ZDFstreamlinks:')
-	PLog(skip_log); PLog(force)
+	PLog("skip_log: " + str(skip_log)); PLog("force: " + str(force))
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
 	PLog("days: %d" % days)
 	CacheTime = days*86400						# Default 1 Tag
@@ -2748,7 +2748,7 @@ def get_ZDFstreamlinks(skip_log=False, force=False):
 #
 def get_ARDstreamlinks(skip_log=False, force=False):
 	PLog('get_ARDstreamlinks:')
-	PLog(skip_log); PLog(force)
+	PLog("skip_log: " + str(skip_log)); PLog("force: " + str(force))
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
 	PLog("days: %d" % days)
 	CacheTime = days*86400							# Default 1 Tag
@@ -2820,7 +2820,7 @@ def get_ARDstreamlinks(skip_log=False, force=False):
 #
 def get_IPTVstreamlinks(skip_log=False, force=False):
 	PLog('get_IPTVstreamlinks:')
-	PLog(skip_log); PLog(force)
+	PLog("skip_log: " + str(skip_log)); PLog("force: " + str(force))
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
 	PLog("days: %d" % days)
 	CacheTime = days*86400							# Default 1 Tag
@@ -3961,6 +3961,7 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 # 21.01.2023 dialog optional für add_UHD_Streams (ohne Dialog)
 def url_check(url, caller='', dialog=True):
 	PLog('url_check:')
+
 	if url.startswith('http') == False:		# lokale Datei
 		if  os.path.exists(url):
 			return True
@@ -3986,10 +3987,23 @@ def url_check(url, caller='', dialog=True):
 	req = Request(url, headers=header)
 	try:
 		r = urlopen(req, timeout=UrlopenTimeout)
-		PLog('Status: ' + str(r.getcode()))
+		PLog('Status1: ' + str(r.getcode()))
 		return True
 	except Exception as exception:
 		err = str(exception)
+		PLog("Fehler: " + err)
+		if "CERTIFICATE_VERIFY_FAILED" in str(exception):
+			import ssl						# 22.06.2024 ssl-error Windows10, s. Forum
+			PLog("try_ssl_default_context")
+			try:
+				gcontext = ssl.create_default_context()
+				gcontext.check_hostname = False
+				r = urlopen(req, context=gcontext, timeout=UrlopenTimeout)
+				PLog('Status2: ' + str(r.getcode()))
+				return True
+			except Exception as exception:
+				err = str(exception)
+		
 		msg1= '%s: Quelle nicht erreichbar - Url:' % caller
 		msg2 = url
 		msg3 = 'Fehler: %s' % err
