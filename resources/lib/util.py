@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>103</nr>										# Numerierung für Einzelupdate
+# 	<nr>104</nr>										# Numerierung für Einzelupdate
 #	Stand: 22.06.2024
 
 # Python3-Kompatibilität:
@@ -4003,6 +4003,8 @@ def url_check(url, caller='', dialog=True):
 				return True
 			except Exception as exception:
 				err = str(exception)
+				PLog("return_true_on_error: " + err)
+				return True
 		
 		msg1= '%s: Quelle nicht erreichbar - Url:' % caller
 		msg2 = url
