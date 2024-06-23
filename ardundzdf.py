@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>205</nr>										# Numerierung für Einzelupdate
+# 	<nr>206</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.5'
 VDATE = '23.06.2024'
 
@@ -262,18 +262,19 @@ tci = int(SETTINGS.getSetting('pref_tv_store_days'))		# TV-Livestream-Quellen ak
 if tci >= 5:												# Thread nicht bei 0 od. 1 aktivieren
 	ID = "ard_streamlinks"									# stellvertretend auch für zdf + iptv
 	dictfile = os.path.join(DICTSTORE, ID)
-	mtime = os.path.getmtime(dictfile)
-	now	= int(time.time())	
-	CacheLimit = tci * 86400
-	cache_diff = CacheLimit - int(now - mtime)				# Sec-Abstand zum nächsten Ablaufdatum
-	
-	PLog("streamcache_check: tci %d" % tci)	
-	PLog("cache_diff: %d sec, %d days" % (cache_diff, int(cache_diff/86400)))
-	
-	if cache_diff <= 43200:									# Refresh bereits 12 Std. vor Ablauf möglich
-		PLog("CacheLimit_reached: %d" % int(now-CacheLimit))			
-		bg_thread = Thread(target=EPG.thread_getstreamlinks, args=())
-		bg_thread.start()				
+	if os.path.exists(dictfile):
+		mtime = os.path.getmtime(dictfile)
+		now	= int(time.time())	
+		CacheLimit = tci * 86400
+		cache_diff = CacheLimit - int(now - mtime)				# Sec-Abstand zum nächsten Ablaufdatum
+		
+		PLog("streamcache_check: tci %d" % tci)	
+		PLog("cache_diff: %d sec, %d days" % (cache_diff, int(cache_diff/86400)))
+		
+		if cache_diff <= 43200:									# Refresh bereits 12 Std. vor Ablauf möglich
+			PLog("CacheLimit_reached: %d" % int(now-CacheLimit))			
+			bg_thread = Thread(target=EPG.thread_getstreamlinks, args=())
+			bg_thread.start()				
 								
 if SETTINGS.getSetting('pref_dl_cnt') == 'true':			# laufende Downloads anzeigen
 	if os.path.exists(DL_CHECK) == False:					# Lock beachten (Datei dl_check_alive)						
