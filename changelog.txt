@@ -10,6 +10,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+23.06.2024 5.0.5	
+			ARDSportMediaPlayer (ARD Sportschau WDR:  Anpassung an veränderter Position
+			des Beitrags-Titels.
+			get_next_url (arte): Berücksichtigung von http-Links bei Vervollständigung.
+			ARDSportLiga3: Notification bei Tabelle ohne Spiele (Sommerpause).
+			settings.xml: Umbenennung in Kategorie Addon-Cache (Löschfrist -> Haltezeit).
+			TV-Livestreams Hauptmenü: Hinweis auf einstellbare Haltezeit im Cache.
+			ARDAudioEventStreams: zusätzl. Button Audio-Livestreams der Sportschau (wie
+			Menü ARDSportWDR). Anpassung ARDSportLive (Ausfilterung Videobeiträge).
+			ARDSportWDR: Event-Button UEFA EURO 2024 ergänzt.
+			get_ARD_LiveEPG (util): Anpassung für neues Uhrzeitformat (Sommerzeit schon
+			enthalten) - relevant für Setting Stream-Uhrzeit, Debug-Log: ValueError("time 
+			data %r does not match format %r". 
+			Cache TV-Livestream-Quellen: Thread-Lösung für die Aktualisierung - Check +
+			Auslösung im Haupt-PRG, zusätz. Funktion EPG.thread_getstreamlinks.
+			url_check (util): zweite Check-Stufe mit ssl.create_default_context verwendet
+			(s. kodinerds-Forum 17.06.2024 ff).
+			SenderLiveListe: utf-Behandlung für tagline.
+
 
 26.05.2024 5.0.4
 			AudioStartLive: Fix Variable für RadioPlaylist-Button PlayList statt

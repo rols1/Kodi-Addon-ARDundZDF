@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>205</nr>										# Numerierung für Einzelupdate
-VERSION = '5.0.4'
-VDATE = '17.06.2024'
+VERSION = '5.0.5'
+VDATE = '23.06.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7424,7 +7424,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 					tagline = u'[B]Sendung: %s Uhr[/B]' % vonbis
 				else:
 					tagline = ''
-				tagline = "%s\n[B]Tages-EPG[/B] via Kontext-Menü aufrufen." % tagline
+				tagline = u"%s\n[B]Tages-EPG[/B] via Kontext-Menü aufrufen." % tagline
 
 		title = unescape(title)	
 		title = title.replace('JETZT:', '')					# 'JETZT:' hier überflüssig
