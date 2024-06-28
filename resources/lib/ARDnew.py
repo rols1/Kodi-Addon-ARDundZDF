@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>80</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.05.2024
+# 	<nr>81</nr>										# Numerierung für Einzelupdate
+#	Stand: 28.06.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1707,8 +1707,7 @@ def ARD_Teletext_Wrap(new_lines, myline, max_length, txtRight):
 def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""): 
 	PLog('get_json_content: ' + ID); PLog(mark)
 	ID_org=ID; PLog(type(page)); 
-	py2_decode(page)
-	PLog(str(page)[:80])
+	PLog(page[:80])
 
 	CurSender = ARD_CurSender()										# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
