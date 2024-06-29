@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>206</nr>										# Numerierung für Einzelupdate
+# 	<nr>207</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.5'
-VDATE = '23.06.2024'
+VDATE = '29.06.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3492,6 +3492,17 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)
 
+	title = u"Event: [B]Tour de France 2024[/B]"					# Großevent	
+	tag = u"Tour de France 2024, Livestreams, Videos, Nachrichten, Rennberichte, Etappen, Ergebnisse und Wertungen"
+	cacheID = "Sport_TourdeFrance_2024"
+	img = "https://images.sportschau.de/image/b0709b8b-c4de-4632-af95-5594f03eeea3/AAABkAOw8zc/AAABjwnlFvA/16x9-1280/nizza-256.jpg"
+	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	#---------------------------------------------------------	Großevents Ende
 
 	title = u"Event-Archiv"									# Buttons für ältere Events	
@@ -3619,10 +3630,10 @@ def ARDSportWDRArchiv():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
-	title = u"Event: [B]Tour de France 2023[/B]"						# Großevent	
-	tag = u"Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen der Tour de France."
-	cacheID = "Sport_TourdeFrance"
-	img = "https://images.sportschau.de/image/4caa92cb-1518-4489-8bec-3b0764c14aa8/AAABgYwplxs/AAABg8tME_8/16x9-1280/tour-de-france-bild-102.jpg"
+	title = u"Event: [B]Tour de France 2024[/B]"					# Großevent	
+	tag = u"Tour de France 2024, Livestreams, Videos, Nachrichten, Rennberichte, Etappen, Ergebnisse und Wertungen"
+	cacheID = "Sport_TourdeFrance_2024"
+	img = "https://images.sportschau.de/image/b0709b8b-c4de-4632-af95-5594f03eeea3/AAABkAOw8zc/AAABjwnlFvA/16x9-1280/nizza-256.jpg"
 	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
@@ -4409,6 +4420,8 @@ def ARDSportCluster(title, path, img, cacheID, cluster=''):
 				cnt=cnt+1
 		#------------------
 		for item in items:
+			if "v-instance tabnav" in item:						# Webseite-Menü
+				continue
 			tag=''
 			title = stringextract('__headline">', '</', item)
 			title_org = title
@@ -4424,6 +4437,9 @@ def ARDSportCluster(title, path, img, cacheID, cluster=''):
 			tag = "[B]%s[/B]" % topline
 			tag = "%s\nFolgeseiten" % tag
 			tag = unescape(tag); 
+
+			PLog("Satz_stage1:")
+			PLog(title); PLog(tag); PLog(cluster);
 			
 			title=py2_encode(title); path=py2_encode(path); 
 			img=py2_encode(img); cluster=py2_encode(cluster);
@@ -4500,13 +4516,15 @@ def ARDSportLive(title, skip_video=""):
 # holt Playerdaten bei data-v="..
 def ARDSportgetPlayer(item):
 	PLog("ARDSportgetPlayer:")
-	data = stringextract('data-v="', '"', item)
-	# if ';mediadescription&' not in data and ';Specials&' not in data:	
-	if 'json/headerapp/' in data or '"imageVariants' in data:	# ohne Inhalt, Bildauswert. getrennt
-		data=""
+
+	pos1=item.find('{'); pos2=item.rfind('}')
+	PLog(pos1); PLog(pos2)
+	data = item[pos1:pos2+1]
+	
 	if data:
 		data = unescape(data)
 		data = (data.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
+
 	PLog(data[:80])
 	return data	
 	
@@ -4543,7 +4561,7 @@ def ARDSportMedia(li, title, page):
 	PLog('ARDSportMedia: ' + title)
 	base = "https://www.sportschau.de"
 
-	teaser_xs=[]; teaser_slider=""
+	teaser_xs=[]; teaser_slider=[]; teaser_data=[]
 	if "Livestreams" in title:
 		teaser = blockextract('class="teaser__media"', page)
 	elif "Audiostreams" in title:	
@@ -4552,12 +4570,16 @@ def ARDSportMedia(li, title, page):
 		if 'class="v-instance teaser-slider' in page:
 			teaser_slider = stringextract('class="v-instance teaser-slider', '</div>', page)
 		teaser = blockextract('class="teaser__media"', page)
-		teaser = teaser + blockextract('class="teaser__link"', page,)			
-		teaser_xs = blockextract('class="teaser-xs__link"', page)
+		teaser = teaser + blockextract('class="teaser__link"', page, '</div>')			
+		teaser_xs = blockextract('class="teaser-xs__link"', page, '</div>')
+		if 'class="v-instance' in page:
+			teaser_data = teaser + blockextract('class="v-instance', page, '</div>')
 		
+	PLog(len(teaser_slider))
 	PLog(len(teaser))
 	PLog(len(teaser_xs))
-	items = teaser + teaser_xs
+	PLog(len(teaser_data))
+	items = teaser + teaser_xs + teaser_data
 	if len(items) == 0 and not teaser_slider:
 		icon = R("ard-sportschau.png")
 		msg1 = u"%s:" % title
@@ -4567,10 +4589,22 @@ def ARDSportMedia(li, title, page):
 				
 	mediatype=''			
 		
-	#-------------------------------------------------------------------# 1. rolling Highlights zuerst
-	if 	teaser_slider: 													# hier ohne mediaplayer-Kennz.
-		slider_data = ARDSportgetPlayer(page)
-		slider_items  = blockextract('"teaserUrl"', slider_data)
+	#-------------------------------------------------------------------# rolling Highlights allein
+	if 	teaser_slider: 			
+		PLog("get_teaser_slider")
+		slider_data = ARDSportgetPlayer(teaser_slider)
+		PLog(slider_data[:80])
+	
+		try:
+			slider = json.loads(slider_data)
+			sliderItems = slider["sliderItems"]
+			PLog(len(sliderItems))
+		except Exception as exception:
+			PLog("sliderItems_error:" + str(exception))
+			slider_items=[]	
+		
+		slider_items  = blockextract('"teaserUrl"', str(slider_data))
+		cnt=0; 
 		for item_data in slider_items:
 			player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item_data)
 			title=repl_json_chars(title)
@@ -4584,7 +4618,10 @@ def ARDSportMedia(li, title, page):
 				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
 					quote(title), quote(img), quote_plus(Plot))
 				addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-					tagline=tag, summary=summ, mediatype='mediatype')	
+					tagline=tag, summary=summ, mediatype='mediatype')
+				cnt=cnt+1
+		if cnt:		
+			return
 	
 	#-------------------------------------------------------------------	
 	# json.loads scheiterte in cont (char 360) - vermutl. vergessenes Komma:
@@ -4592,7 +4629,7 @@ def ARDSportMedia(li, title, page):
 	for item in items:		
 		player=''; live=False; title='';  mp3_url=''; stream_url=''; 
 		img=''; tag=''; summ=''; Plot=''; player="text"
-		PLog(item[:60])
+		PLog("item: " + item[:60])
 		
 		topline = stringextract('__topline">', '</', item)
 		title = stringextract('__headline">', '</', item)	# html-Bereich
@@ -4630,11 +4667,9 @@ def ARDSportMedia(li, title, page):
 		
 		if item.find('class="mediaplayer') >= 0:
 			if player != "pics":
-				data  = stringextract('class="mediaplayer', '"MediaPlayer', item) # von slider abgrenzen
-				if data:
-					item_data  = ARDSportgetPlayer(item)	# json-Inhalt zum Player
-					player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item_data)
-					title=repl_json_chars(title)
+				item_data  = ARDSportgetPlayer(item)	# json-Inhalt zum Player
+				player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item_data)
+				title=repl_json_chars(title)
 
 		if len(summ_html) > len(summ):						# Alternative
 			summ = summ_html
@@ -4712,6 +4747,7 @@ def ARDSportMedia(li, title, page):
 #
 def ARDSportMediaPlayer(li, item_data): 
 	PLog('ARDSportMediaPlayer:')
+	
 	player=''; live=False; title='';  mp3_url=''; stream_url=''; 
 	img=''; verf=''; tag=''; summ=''; Plot=''; 
 
@@ -4728,7 +4764,8 @@ def ARDSportMediaPlayer(li, item_data):
 				break
 	
 	title = stringextract('],"title":"', ',"', item_data)		# 29.05.2024 nach Bildtitel
-	title=decode_url(title); title=repl_json_chars(title); 
+	title=decode_url(title); title=repl_json_chars(title);
+	title=title.replace('}', '') 
 	
 	duration = stringextract('durationSeconds":"', '"', item_data)
 	if duration == '':
