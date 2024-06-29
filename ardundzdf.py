@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>207</nr>										# Numerierung für Einzelupdate
+# 	<nr>208</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.5'
 VDATE = '29.06.2024'
 
@@ -4525,7 +4525,7 @@ def ARDSportgetPlayer(item):
 		data = unescape(data)
 		data = (data.replace('\\"','*').replace('<strong>','[B]').replace('</strong>','[/B]'))
 
-	PLog(data[:80])
+	PLog(py2_decode(data)[:80])
 	return data	
 	
 #----------------------------------------------------------------
@@ -4593,7 +4593,7 @@ def ARDSportMedia(li, title, page):
 	if 	teaser_slider: 			
 		PLog("get_teaser_slider")
 		slider_data = ARDSportgetPlayer(teaser_slider)
-		PLog(slider_data[:80])
+		PLog(py2_decode(slider_data)[:80])
 	
 		try:
 			slider = json.loads(slider_data)
@@ -4603,7 +4603,7 @@ def ARDSportMedia(li, title, page):
 			PLog("sliderItems_error:" + str(exception))
 			slider_items=[]	
 		
-		slider_items  = blockextract('"teaserUrl"', str(slider_data))
+		slider_items  = blockextract('"teaserUrl"', py2_decode(slider_data))
 		cnt=0; 
 		for item_data in slider_items:
 			player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item_data)
