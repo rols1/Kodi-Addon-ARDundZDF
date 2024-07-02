@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>14</nr>								# Numerierung für Einzelupdate
-#	Stand: 16.05.2024
+# 	<nr>15</nr>								# Numerierung für Einzelupdate
+#	Stand: 02.07.2024
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -85,8 +85,9 @@ ICON_DIR_FOLDER	= "Dir-folder.png"
 ICON_MAIN_TVLIVE= 'tv-livestreams.png'
 ICON_MEHR 		= "icon-mehr.png"
 ICON_SEARCH 	= 'ard-suche.png'
-ICON_DELETE 			= "icon-delete.png"
+ICON_DELETE 	= "icon-delete.png"
 
+ICON_EINFACH	= "tagesschau_einfach.png"
 # Github-Icons zum Nachladen aus Platzgründen
 GIT_CAL			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-calendar.png?raw=true"
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
@@ -168,6 +169,7 @@ def Main_XL():
 	# ---------------------------------						# -> ARDnew -> get_json_content
 	T_List = 	[u"tagesschau|%s|%s" % (ICON_LAST, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXU"),
 				u"tagesschau Gebärdensprache|%s|%s" % (ICON_20GEST, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXUgbWl0IEdlYsOkcmRlbnNwcmFjaGU"),
+				u"tagesschau in Einfacher Sprache|%s|%s" %  (R(ICON_EINFACH), "Y3JpZDovL3RhZ2Vzc2NoYXUyNC90YWdlc3NjaGF1LWluLWVpbmZhY2hlci1zcHJhY2hl"),
 				u"tagesschau24|%s|%s" % (ICON_24, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXUyNA"),
 				u"tagesschau in 100 SEKUNDEN|%s|%s" % (ICON_100sec, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RzMTAwcw"),
 				u"tagesthemen|%s|%s" % (ICON_TTHEMEN, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2VzdGhlbWVu"),
@@ -177,7 +179,7 @@ def Main_XL():
 		title, thumb, pid = t.split("|")
 		PLog(title); PLog(thumb); PLog(pid)
 		title = "[B]%s[/B]" % title
-		tag = u"neu ab 20.01.2024 (mit allen von der ARD angebotenen Stream-Qualitäten)"
+		tag = u"mit allen von der ARD angebotenen Stream-Qualitäten"
 		fparams="&fparams={'title': '%s', 'pid': '%s'}"  % (quote(title), pid)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Tagesschau", 
 		fanart=ICON_MAINXL, thumb=thumb, tagline=tag, fparams=fparams, mediatype="")
