@@ -5,7 +5,7 @@
   <nr>49</nr>
   <thumbnail></thumbnail>
   <credits>Grafiken @Arauco (Plex-Forum)</credits>
-  <date>19.02.2024 rols</date>
+  <date>07.07.2024 rols</date>
   <ARDsource></ARDsource>
   <ZDFsource>https://www.zdf.de/live-tv</ZDFsource>
   <info>Senderübersicht TVToday: https://www.tvtoday.de/programm/standard/sender/ Button:Alle Sender</info>
@@ -143,12 +143,12 @@
 	<item>
 		<title>Deutsche Welle (EN)</title>
 		<hrefsender>Deutsche Welle (EN)</hrefsender>
-		<tvg-name>Deutsche Welle (EN)</tvg-name>
-		<link>IPTVSource|/jnk22/kodinerds-iptv/blob/master/iptv/kodi/kodi.m3u</link>
-		<thumbnail>tvg-logo</thumbnail>
+		<tvg-name></tvg-name>
+		<link>https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/stream02/streamPlaylist.m3u8</link>
+		<thumbnail>tv-deutsche-welle.png</thumbnail>
 		<imgsource></imgsource>
 		<EPG_ID>DWTV</EPG_ID>
-		<date>21.01.2024</date>
+		<date>07.07.2024</date>
 	</item>
 </items>
 </channel>

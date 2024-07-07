@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>208</nr>										# Numerierung für Einzelupdate
-VERSION = '5.0.5'
-VDATE = '29.06.2024'
+VERSION = '5.0.6'
+VDATE = '07.07.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -10820,7 +10820,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	PLog('playlist: ' + playlist[:100])
 	PLog('live: ' + str(live))
 	skip_list = ["/rbb_brandenburg/",							# keine Mehrkanalstreams: Einzelauflösungen mögl.
-				"/srfsgeo/", "/swrbwd/", "/dwstream"
+				"/srfsgeo/", "/swrbwd/", "/dwstream",
+				"/arteliveext.akamaized", 
+				"/tagesschau.akamaized"
 				]
 	PLog('#EXT-X-MEDIA' in playlist)
 	# live=True: skip 1 Button, Altern.: Merkmal "_sendung_" in url_m3u8
@@ -10830,6 +10832,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 			if item in url_m3u8:
 				skip=True										# i.d.R. ARD-Streams (nicht alle)
 				break
+	
 		PLog('skip: ' + str(skip))
 		if skip == False and live:								# Mehrkanalstreams: nur 1 Button
 			stitle = "HLS-Stream"

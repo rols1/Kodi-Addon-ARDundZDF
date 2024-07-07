@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>15</nr>								# Numerierung für Einzelupdate
-#	Stand: 02.07.2024
+#	Stand: 06.07.2024
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -88,6 +88,8 @@ ICON_SEARCH 	= 'ard-suche.png'
 ICON_DELETE 	= "icon-delete.png"
 
 ICON_EINFACH	= "tagesschau_einfach.png"
+ICON_REGIONAL	= "tagesschau_regional.png"
+
 # Github-Icons zum Nachladen aus Platzgründen
 GIT_CAL			= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/icon-calendar.png?raw=true"
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
@@ -173,6 +175,7 @@ def Main_XL():
 				u"tagesschau24|%s|%s" % (ICON_24, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2Vzc2NoYXUyNA"),
 				u"tagesschau in 100 SEKUNDEN|%s|%s" % (ICON_100sec, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RzMTAwcw"),
 				u"tagesthemen|%s|%s" % (ICON_TTHEMEN, "Y3JpZDovL2Rhc2Vyc3RlLmRlL3RhZ2VzdGhlbWVu"),
+				u"Regionale Nachrichten|%s|%s" % (R(ICON_REGIONAL), "3mJgQ9gapwqrKZrrF9hTWo:-3801511732729640100"),
 				u"Bericht aus Berlin|%s|%s" % (ICON_BAB, "Y3JpZDovL2Rhc2Vyc3RlLmRlL2JlcmljaHQgYXVzIGJlcmxpbg"),
 				]
 	for t in T_List:
@@ -180,7 +183,7 @@ def Main_XL():
 		PLog(title); PLog(thumb); PLog(pid)
 		title = "[B]%s[/B]" % title
 		tag = u"mit allen von der ARD angebotenen Stream-Qualitäten"
-		fparams="&fparams={'title': '%s', 'pid': '%s'}"  % (quote(title), pid)
+		fparams="&fparams={'title': '%s', 'pid': '%s'}"  % (quote(title), quote(pid))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Tagesschau", 
 		fanart=ICON_MAINXL, thumb=thumb, tagline=tag, fparams=fparams, mediatype="")
 		
@@ -225,7 +228,9 @@ def XL_Tagesschau(title, pid):
 	PLog("XL_Tagesschau:")
 	PLog(title); PLog(pid); 
 	base="https://api.ardmediathek.de/page-gateway/pages/tagesschau24/grouping/"
-	path = "%s%s?embedded=true" % (base, pid)
+	if "Regionale Nachrichten" in title:		# abweichender Call
+		base = "https://api.ardmediathek.de/page-gateway/widgets/ard/editorials/"	# alt.: tagesschau24 statt ard
+	path = "%s%s?embedded=true" % (base, unquote(pid))	# unquote: %3A -> :
 	
 	page, msg = get_page(path)		
 	if page == '':	
@@ -701,7 +706,10 @@ def get_VideoAudio(title, path):								# Faktenfinder
 		
 	cnt = 0; url_list=[]
 	for item in content:
-		cnt = cnt +1													# Satz-Zähler						
+		PLog(item)
+		if 'data-v="{}"' in item:									# leer möglich (hauptnavigation)
+			continue
+		cnt = cnt +1												# Satz-Zähler						
 		typ,av_typ,title,tag,summ,img,stream = get_content_json(item)
 				
 		title=py2_encode(title); stream=py2_encode(stream); 
@@ -728,7 +736,7 @@ def get_VideoAudio(title, path):								# Faktenfinder
 # ----------------------------------------------------------------------
 # 
 def get_content_json(item):	
-	PLog('get_content_json:')		
+	PLog('get_content_json:')
 			
 	minWidth=700					# .., 768x, 944x
 

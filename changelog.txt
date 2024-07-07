@@ -10,6 +10,20 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+07.07.2024 5.0.6
+			Haupt-PRG: Prüfung Existenz Cache-Datei ard_streamlinks ergänzt (führte
+			bei Fehlen zum Startabbruch des Addons).
+			get_json_content (ARDnew): Verzicht auf Dekodierung von Param. page (str
+			und py2_decode) - führte bei PY2 zu utf-Errors.
+			ARDSportWDR: Event-Button Tour de France 2024 hinzugefügt, Anpassungen an
+			WDR-Änderungen in ARDSportgetPlayer und ARDSportMedia.
+			TagesschauXL: Hauptmenü erweitert mit "tagesschau in Einfacher Sprache",
+			"Regionale Nachrichten", neues Icon tagesschau_einfach, tagesschau_regional.
+			get_VideoAudio (TagesschauXL): leeren Player-Inhalt abgefangen (leer für
+			Navigationsmenü im Web).
+			TV-Livestreams: Deutsche Welle (EN) umgestellt (iptv -> livesenderTV.xml,
+			iptv-Quelle funktioniert nicht mehr).
+				
 23.06.2024 5.0.5	
 			ARDSportMediaPlayer (ARD Sportschau WDR:  Anpassung an veränderter Position
 			des Beitrags-Titels.
@@ -28,7 +42,6 @@ CHANGE HISTORY
 			url_check (util): zweite Check-Stufe mit ssl.create_default_context verwendet
 			(s. kodinerds-Forum 17.06.2024 ff).
 			SenderLiveListe: utf-Behandlung für tagline.
-
 
 26.05.2024 5.0.4
 			AudioStartLive: Fix Variable für RadioPlaylist-Button PlayList statt
