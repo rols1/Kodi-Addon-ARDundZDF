@@ -183,6 +183,7 @@ def Main_XL():
 		PLog(title); PLog(thumb); PLog(pid)
 		title = "[B]%s[/B]" % title
 		tag = u"mit allen von der ARD angebotenen Stream-Qualitäten"
+		title=py2_encode(title); pid=py2_encode(pid);
 		fparams="&fparams={'title': '%s', 'pid': '%s'}"  % (quote(title), quote(pid))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_Tagesschau", 
 		fanart=ICON_MAINXL, thumb=thumb, tagline=tag, fparams=fparams, mediatype="")
