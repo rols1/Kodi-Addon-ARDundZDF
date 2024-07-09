@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>20</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.06.2024
+# 	<nr>21</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.07.2024
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -157,19 +157,20 @@ def update_single(PluginAbsPath):
 			
 	RepoList=[]	
 	items = blockextract('href="/rols1/Kodi-Addon-ARDundZDF/blob/master/', page)
-	PLog("RepoFiles: %d" % len(items))
+	PLog("RepoFiles_doppelt: %d" % len(items))
 	for item in items:
 		f = stringextract('href="', '"', item)
 		f = f.split("blob/master/")[-1]						# Bsp.: resources/lib/ARDnew.py
 		if f.endswith("init__.py") or f.endswith(".pem"):	# skip PY2- + Repo-Leichen
 			continue
-		RepoList.append(f)
+		if f not in RepoList:								# Doppel aus items-block vermeiden
+			RepoList.append(f)
 	PLog("ModuleRepo: " + str(RepoList))					# Liste github-Module
 	
 	add_list=[]												# Abgleich Repo/lokal
 	for item in RepoList:
 		found=False
-		#PLog("item: " + item)
+		PLog("item: " + item)
 		for f in SINGLELIST:								# skip lokale Files, Haupt-PRG, Leichen	
 			if f.endswith(item):
 				if f.endswith("ardundzdf.py") == False and f.endswith("init__.py") == False:
