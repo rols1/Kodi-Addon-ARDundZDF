@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>104</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.06.2024
+# 	<nr>105</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.07.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1106,6 +1106,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 # 09.11.2022 Option requests-call (get_page3) hinzugefügt (wirkt nur, falls einkompiliert od.
 #	lokal vorhanden - s.o.), exception-Rückgabe bei GetOnlyRedirect angepasst (Reuse path bei
 #	get_page3. Bei Bedarf nachrüsten in url_check + Modulen funk, updater, zdfmobile, EPG.
+# 09.07.2024 header hinzugefügt bei page2 (ssl-Error bei Windows10 und ARD-Links möglich)
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True, decode=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("do_safe: " + str(do_safe)); 
@@ -1217,6 +1218,9 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				
 	
 	if page == '':
+		# wie url_check (o. header ssl-Error bei Windows10 möglich)
+		header="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+			'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}"
 		import ssl
 		try:
 			PLog("get_page2:")											# 2. Versuch mit SSLContext
