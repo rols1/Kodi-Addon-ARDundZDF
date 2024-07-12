@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>208</nr>										# Numerierung für Einzelupdate
+# 	<nr>209</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.6'
-VDATE = '07.07.2024'
+VDATE = '12.07.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3819,7 +3819,7 @@ def ARDSportLiga3(title, img, sender="", source=""):
 				live=False; past=False
 				monat = col1.split(",")[1]; monat = monat.split(".")[1]	# Samstag, 04. November, 14:00 Uhr
 				my_month = month[monat.strip()]							# Juli -> 7
-				my_day = re.search(u'(\d+)', date.split(",")[1]).group(1)
+				my_day = re.search(r'(\d+)', date.split(",")[1]).group(1)
 				my_time = col2.split(" ")[0]							# 14:00 Uhr
 				my_date = "%s-%s-%sT%s:00Z" % (my_year, my_month, my_day, my_time)
 
@@ -6848,8 +6848,9 @@ def EPG_Sender(title, Merk='false'):
 	li = home(li, ID=NAME)				# Home-Button
 	
 	sort_playlist = get_sort_playlist()	# Senderliste + Cache
-	# PLog(sort_playlist)
+	#PLog(sort_playlist)
 	
+	# summ nur bei ID:
 	summ = u"für die Merkliste (Kontextmenü) sind die Einträge dieser Liste wegen des EPG besser geeignet"
 	summ = u"%s als die Menüs Überregional, Regional und Privat" % summ
 	
@@ -6860,6 +6861,8 @@ def EPG_Sender(title, Merk='false'):
 			img = R(img)
 		link = rec[3]
 		ID = rec[1]
+		if link == "":			# spez. Sender in livesenderTV.xml z.B. liga3
+			continue
 		
 		PLog("Satz13:")
 		PLog('title: %s, ID: %s' % (title, ID))
@@ -6870,7 +6873,7 @@ def EPG_Sender(title, Merk='false'):
 			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '', 'Merk': '%s'}" %\
 				(quote(link), quote(title), quote(img), Merk)
 			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
-				thumb=img, fparams=fparams, tagline='weiter zum Livestream', summary=summ)
+				thumb=img, fparams=fparams, tagline='weiter zum Livestream')
 		else:
 			add = ''
 			if SETTINGS.getSetting('pref_epgRecord') == 'true':
@@ -7198,6 +7201,9 @@ def EPG_ShowAll(title, offset=0, Merk='false'):
 
 		title_playlist = rec[0]
 		m3u8link = rec[3]
+		if m3u8link == "":					# spez. Sender in livesenderTV.xml z.B. liga3
+			continue
+
 		img_playlist = rec[2]	
 		if u'://' not in img_playlist:		# Logo lokal? -> wird aus Resources geladen, Unterverz. leider n.m.
 			img_playlist = R(img_playlist)
