@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>209</nr>										# Numerierung für Einzelupdate
+# 	<nr>210</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.6'
-VDATE = '12.07.2024'
+VDATE = '19.07.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3481,16 +3481,21 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	
 	#---------------------------------------------------------	Großevents Start
-	title = u"Event: [B]UEFA EURO 2024[/B]"							# Großevent	
-	tag = u"Alle Infos zur UEFA EURO 2024 | sportschau.de"
-	cacheID = "UEFA_EURO"
-	img = "https://images.sportschau.de/image/8f60e4b7-dd53-4cee-bbc2-5ace93112d8b/AAABiz2LtlE/AAABjwnlFvA/16x9-1280/em-pokal-122.jpg"
-	path = "https://www.sportschau.de/fussball/uefa-euro-2024"
+#	Nach OLYMPIA-Start Funktionsziel wieder auf ARDSportCluster setzen - bisher
+#		fehlt der Seite die Cluster-Struktur 
+	title = u"Event: [B]OLYMPIA 2024[/B]"							# Großevent	
+	tag = u"Alles zu den Olympischen Spielen 2024 Paris - News, Ergebnisse, Livestreams"
+	cacheID = "Sport_OLYMPIA_2024"
+	img = "https://images.sportschau.de/image/8256571a-83dd-474d-9f81-982a02eea327/AAABi9KI1Ww/AAABjwnlFvA/16x9-1280/logo-olympia-paris-2024-100.jpg"
+	path = "https://www.sportschau.de/olympia/index.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
+#	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+#		(quote(title), quote(path), quote(img), cacheID)
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 
 	title = u"Event: [B]Tour de France 2024[/B]"					# Großevent	
 	tag = u"Tour de France 2024, Livestreams, Videos, Nachrichten, Rennberichte, Etappen, Ergebnisse und Wertungen"
@@ -3502,6 +3507,18 @@ def ARDSportWDR():
 		(quote(title), quote(path), quote(img), cacheID)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
+
+
+	title = u"Event: [B]UEFA EURO 2024[/B]"							# Großevent	
+	tag = u"Alle Infos zur UEFA EURO 2024 | sportschau.de"
+	cacheID = "UEFA_EURO"
+	img = "https://images.sportschau.de/image/8f60e4b7-dd53-4cee-bbc2-5ace93112d8b/AAABiz2LtlE/AAABjwnlFvA/16x9-1280/em-pokal-122.jpg"
+	path = "https://www.sportschau.de/fussball/uefa-euro-2024"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
 
 	#---------------------------------------------------------	Großevents Ende
 
@@ -4557,9 +4574,20 @@ def ARDSportAudioStreams(title, path, img, cacheID):
 #	Streamquellen im mediaplayer hinterlegt
 # Slider-Auswertung extern für gesamte Seite (hier page=cluster möglich) 
 #
-def ARDSportMedia(li, title, page): 
+def ARDSportMedia(li, title, page, path=""): 
 	PLog('ARDSportMedia: ' + title)
 	base = "https://www.sportschau.de"
+	
+	if path:												# Bsp. sportschau.de/olympia
+		page = ARDSportLoadPage(title, path, "ARDSportMedia")
+		if page == '':
+			return
+	eof=False
+	if li == "":
+		li = xbmcgui.ListItem()
+		li = home(li, ID='ARD')						# Home-Button
+		eof=True
+		
 
 	teaser_xs=[]; teaser_slider=[]; teaser_data=[]
 	if "Livestreams" in title:
@@ -4620,7 +4648,7 @@ def ARDSportMedia(li, title, page):
 				addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
 					tagline=tag, summary=summ, mediatype='mediatype')
 				cnt=cnt+1
-		if cnt:		
+		if cnt and eof==False:		
 			return
 	
 	#-------------------------------------------------------------------	
@@ -4739,6 +4767,8 @@ def ARDSportMedia(li, title, page):
 			
 		cnt = cnt + 1
 	
+	if eof:
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	return cnt
 
 #----------------------------------------------------------------
