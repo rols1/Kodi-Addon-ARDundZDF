@@ -10,6 +10,24 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.07.2024 5.0.7
+			EPG_Sender, EPG_ShowAll: spez. Sender ohne Link in livesenderTV.xml aus den
+			Sender-Listen entfernt, z.B. liga3.
+			get_page (util): http-Header bei Stufe page2 hinzugefügt - ssl-Error bei 
+			Windows10 und ARD-Links möglich (wie in url_check V5.0.5)
+			update_single (EPG): Doppelzählung Module im Githubrepo unterbunden.
+			ARDSportLiga3: raw-String statt unicode in re.search (my_day = re.search..),
+			übersehen in Anpassungen für V.5.0.4.
+			ARDSportWDR: Event-Button OLYMPIA 2024 ergänzt (Funktionsziel zunächst 
+			ARDSportMedia statt ARDSportCluster wg. fehlender Cluster), Anpassung in
+			ARDSportMedia.
+			get_foruminfo (tools): Anpassung an geänderten Text im Startpost.
+			SearchARDundZDFnew: Anpassung für Einzelsuchen (ARD oder ZDF) zur Vermeidung
+			Addon-Crashes bei Videoabbruch i.V.m. Sofortstart.
+			ZDF_getApiStreams: zdf-cdn-api bei vielen Url's nicht mehr akzeptiert, 
+			Alternative profile_url mit api.zdf.de hinzugefügt einschl. neuer Funktion 
+			get_form_streams_oldapi.			
+
 07.07.2024 5.0.6
 			Haupt-PRG: Prüfung Existenz Cache-Datei ard_streamlinks ergänzt (führte
 			bei Fehlen zum Startabbruch des Addons).
@@ -23,6 +41,8 @@ CHANGE HISTORY
 			Navigationsmenü im Web).
 			TV-Livestreams: Deutsche Welle (EN) umgestellt (iptv -> livesenderTV.xml,
 			iptv-Quelle funktioniert nicht mehr).
+			get_json_content (ARDnew): Logausgabe für page als string (slice-Error bei
+			Kodi Omega).
 				
 23.06.2024 5.0.5	
 			ARDSportMediaPlayer (ARD Sportschau WDR:  Anpassung an veränderter Position

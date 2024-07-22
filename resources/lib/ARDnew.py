@@ -155,9 +155,10 @@ def Main_NEW(name=''):
 	title = 'Suche in ARD-Mediathek'
 	tag = def_tag + " (Suchbereich)"
 	title=py2_encode(title);
-	fparams="&fparams={'title': '%s', 'sender': '' }" % quote(title) 	# sender -> ARDSearchnew
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", fanart=R(ICON_MAIN_ARD), 
-		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)
+	fparams="&fparams={'title': '%s', 'homeID': 'ARD'}" % quote(title) 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
+		fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag, 
+		summary=summ, fparams=fparams)
 	
 	title = 'Startseite'	
 	tag = def_tag
@@ -1882,9 +1883,8 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 				(quote(href), quote(title), quote(summ_par), ID, homeID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
 				fparams=fparams, summary=summ, mediatype=mediatype)	
-																										
-	return li	
-	
+		
+	return
 
 #---------------------------------------------------------------------------------------------------
 # Ermittlung der Videoquellen für eine Sendung - hier Aufteilung Formate Streaming + MP4
@@ -2439,9 +2439,12 @@ def SendungenAZ_ARDnew(title, button, href, CurSender="", homeID=''):
 # 22.08.2019 myhash und erste pageNumber geändert durch ARD (0, vorher 1) - dto. in ARDSearchnew
 # 27.06.2020 api-Codeanteile entfernt - s. SearchARDnew
 # 01.03.2023 ARD-Suchpfad wie SearchARDundZDFnew (page.ardmediathek -> api.ardmediathek)
+# 21.07.2024 Nutzung für Suchen nur in ARD od. ZDF (Vermeidung Absturzproblem nach Abbruch) 
 #
-def SearchARDundZDFnew(title, query='', pagenr=''):
+def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 	PLog('SearchARDundZDFnew:');
+	PLog(title); PLog(home)
+	title_org=title
 	query_file 	= os.path.join(ADDON_DATA, "search_ardundzdf")
 	
 	if query == '':														# Liste letzte Sucheingaben
@@ -2477,115 +2480,120 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 	store_recents = False												# Sucheingabe nicht speichern
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)												# Home-Button
+	if homeID == "":
+		li = home(li, ID=NAME)											# Home-Button
+	else:
+		li = home(li, ID=homeID)										# ARD od. ZDF
 	
 	#------------------------------------------------------------------	# 1. Suche ARD
-	sendername, sender, kanal, img, az_sender = ARDSender[0].split(':') # in allen Sendern
-	sender = 'ard'
-	pageNumber = 0
-	
-	query_lable = query_ard.replace('+', ' ')
-	path = 'https://api.ardmediathek.de/search-system/mediathek/%s/search/vods?query=%s&pageNumber=%s&pageSize=24' % (sender, query_ard, pageNumber)
-	icon = R(ICON_SEARCH)
-	xbmcgui.Dialog().notification("ARD-Suche",query_lable,icon,1000, sound=False)
-	page, msg = get_page(path)					
+	if 'Suche in ARD-Mediathek' in title or "ARD und ZDF" in title_org:	
+		sendername, sender, kanal, img, az_sender = ARDSender[0].split(':') # in allen Sendern
+		sender = 'ard'
+		pageNumber = 0
 		
-	vodTotal =  stringextract('"totalElements":', '}', page)	# Beiträge?
-	gridlist = blockextract( '"mediumTitle":', page) 			# Sicherung
-	vodTotal=py2_encode(vodTotal); query_lable=py2_encode(query_lable);
-	PLog(query_ard)
-	if len(gridlist) == 0 or vodTotal == '0':
-		label = "[B]ARD[/B] | nichts gefunden zu: %s | neue Suche" % query_lable
-		title="Suche in ARD und ZDF"
-		title=py2_encode(title); 
-		fparams="&fparams={'title': '%s'}" % quote(title)
-		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
-			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
-	else:	
-		store_recents = True											# Sucheingabe speichern
-		PLog(type(vodTotal)); 	PLog(type(query_lable)); 			
-		title = "[B]ARD[/B]: %s Video(s)  | %s" % (vodTotal, query_lable)
-		query_ard=py2_encode(query_ard); title=py2_encode(title); 
-		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '0'}" %\
-			(quote(query_ard), quote(title), sender)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
-			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
-		
-	#------------------------------------------------------------------	# 2. Suche ZDF
-	ZDF_Search_PATH	 = 'https://zdf-cdn.live.cellular.de/mediathekV2/search?profile=cellular-5&q=%s&page=%s'
-	if pagenr == '':		# erster Aufruf muss '' sein
-		pagenr = 1
-	path_zdf = ZDF_Search_PATH % (quote(query_zdf), pagenr) 	
-	path_zdf = transl_umlaute(path_zdf)
-	
-	query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
-	query_lable = unquote(query_lable)
-	icon = R(ICON_ZDF_SEARCH)
-	xbmcgui.Dialog().notification("ZDF-Suche",query_lable,icon,1000, sound=False)
-	page, msg = get_page(path_zdf)										# json.load erst hier				
-	
-	try:
-		jsonObject = json.loads(page)
-		searchResult = str(jsonObject["totalResultsCount"])
-		nextUrl = str(jsonObject["nextPageUrl"])
-		nextPage = str(jsonObject["nextPage"])
-	except:
-		searchResult=""; nextUrl=""; nextPage=""
-	PLog("searchResult: "  + searchResult);
-	PLog("nextPage: "  + nextPage);
-
-	query_lable=py2_encode(query_lable); searchResult=py2_encode(searchResult);
-	if searchResult == '0':												# Sprung hierher
-		label = "[B]ZDF[/B] | nichts gefunden zu: %s | neue Suche" % query_lable
-		title="Suche in ARD und ZDF"
-		title=py2_encode(title);
-		fparams="&fparams={'title': '%s'}" % quote(title)
-		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
-			fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
-	else:	
-		store_recents = True											# Sucheingabe speichern
-		title = "[B]ZDF[/B]: %s Video(s)  | %s" % (searchResult, query_lable)
-		query_zdf=py2_encode(query_zdf); title=py2_encode(title);
-		fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (quote(query_zdf), 
-			quote(title), pagenr)
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R('suche_ardundzdf.png'), 
-			thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
-					
-	#------------------------------------------------------------------	# 3. Suche Merkliste
-	PLog("search_merk: " + query_ard)
-	my_items, my_ordner = ReadFavourites('Merk')
-	if len(my_items) > 0:
-		q_org = query_ard.replace('+', ' ')
-		q=py2_decode(up_low(q_org))
-		selected=""; cnt=0; found=0
-		for item in my_items:
-			name = stringextract('merk name="', '"', item)
-			ordner = stringextract('ordner="', '"', item)
-			Plot = stringextract('Plot="', '"', item)
-			name=py2_decode(name); Plot=py2_decode(Plot)				# Abgleich Name + Plot
-			ordner=py2_decode(ordner)
-			if q in up_low(name) or q in up_low(Plot) or q in up_low(ordner):
-				selected = 	"%s %s" % (selected,  str(cnt))				# Indices
-				found=found+1	
-			cnt=cnt+1
-		PLog(selected)
+		query_lable = query_ard.replace('+', ' ')
+		path = 'https://api.ardmediathek.de/search-system/mediathek/%s/search/vods?query=%s&pageNumber=%s&pageSize=24' % (sender, query_ard, pageNumber)
+		icon = R(ICON_SEARCH)
+		xbmcgui.Dialog().notification("ARD-Suche",query_lable,icon,1000, sound=False)
+		page, msg = get_page(path)					
 			
-		if len(selected) == 0:											# Sprung hierher
-			label = "[B]Merkliste[/B] | nichts gefunden zu: %s | neue Suche" % q_org
-			title="Suche in ARD und ZDF"
-			title=py2_encode(title);
-			fparams="&fparams={'title': '%s'}" % quote(title)
+		vodTotal =  stringextract('"totalElements":', '}', page)	# Beiträge?
+		gridlist = blockextract( '"mediumTitle":', page) 			# Sicherung
+		vodTotal=py2_encode(vodTotal); query_lable=py2_encode(query_lable);
+		PLog(query_ard)
+		if len(gridlist) == 0 or vodTotal == '0':
+			label = "[B]ARD[/B] | nichts gefunden zu: %s | neue Suche" % query_lable
+			title=py2_encode(title); 
+			fparams="&fparams={'title': '%s'}" % quote(title_org)
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
-				fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)		
-		else:
-			title = u"[B]Merkliste[/B]: %s Einträge  | %s" % (found, q_org)
-			if len(selected) == 1:
-				title = u"[B]Merkliste[/B]: %s Eintrag  | %s" % (found, q_org)
-			q=py2_encode(q); title=py2_encode(title);
-			fparams="&fparams={'mode': 'Merk', 'selected': '%s'}" % selected.strip()
-			addDir(li=li, label=title, action="dirList", dirID="ShowFavs", fanart=R('suche_ardundzdf.png'), 
-				thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)		
+				fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
+		else:	
+			store_recents = True											# Sucheingabe speichern
+			PLog(type(vodTotal)); 	PLog(type(query_lable)); 			
+			title = "[B]ARD[/B]: %s Video(s)  | %s" % (vodTotal, query_lable)
+			query_ard=py2_encode(query_ard); title=py2_encode(title); 
+			fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '0'}" %\
+				(quote(query_ard), quote(title), sender)
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
+				fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
 	
+	#------------------------------------------------------------------	# 2. Suche ZDF
+	if 'Suche in ZDF-Mediathek' in title or "ARD und ZDF" in title_org:	
+		ZDF_Search_PATH	 = 'https://zdf-cdn.live.cellular.de/mediathekV2/search?profile=cellular-5&q=%s&page=%s'
+		if pagenr == '':		# erster Aufruf muss '' sein
+			pagenr = 1
+		path_zdf = ZDF_Search_PATH % (quote(query_zdf), pagenr) 	
+		path_zdf = transl_umlaute(path_zdf)
+		
+		query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
+		query_lable = unquote(query_lable)
+		icon = R(ICON_ZDF_SEARCH)
+		xbmcgui.Dialog().notification("ZDF-Suche",query_lable,icon,1000, sound=False)
+		header = "{'Origin': 'https://www.zdf.de'}"
+		page, msg = get_page(path_zdf, header=header)							
+		
+		try:
+			jsonObject = json.loads(page)
+			searchResult = str(jsonObject["totalResultsCount"])
+			nextUrl = str(jsonObject["nextPageUrl"])
+			nextPage = str(jsonObject["nextPage"])
+		except:
+			searchResult=0; nextUrl=""; nextPage=""
+		searchResult = str(searchResult)
+		PLog("searchResult: "  + searchResult);
+		PLog("nextPage: "  + nextPage);
+
+		query_lable=py2_encode(query_lable); searchResult=py2_encode(searchResult);
+		if searchResult == '0':												# Sprung hierher
+			label = "[B]ZDF[/B] | nichts gefunden zu: %s | neue Suche" % query_lable
+			title=py2_encode(title);
+			fparams="&fparams={'title': '%s'}" % quote(title_org)
+			addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
+				fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
+		else:	
+			store_recents = True											# Sucheingabe speichern
+			title = "[B]ZDF[/B]: %s Video(s)  | %s" % (searchResult, query_lable)
+			query_zdf=py2_encode(query_zdf); title=py2_encode(title);
+			fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (quote(query_zdf), 
+				quote(title), pagenr)
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R('suche_ardundzdf.png'), 
+				thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
+						
+	#------------------------------------------------------------------	# 3. Suche Merkliste
+	if "ARD und ZDF" in title_org:	
+		PLog("search_merk: " + query_ard)
+		my_items, my_ordner = ReadFavourites('Merk')
+		if len(my_items) > 0:
+			q_org = query_ard.replace('+', ' ')
+			q=py2_decode(up_low(q_org))
+			selected=""; cnt=0; found=0
+			for item in my_items:
+				name = stringextract('merk name="', '"', item)
+				ordner = stringextract('ordner="', '"', item)
+				Plot = stringextract('Plot="', '"', item)
+				name=py2_decode(name); Plot=py2_decode(Plot)				# Abgleich Name + Plot
+				ordner=py2_decode(ordner)
+				if q in up_low(name) or q in up_low(Plot) or q in up_low(ordner):
+					selected = 	"%s %s" % (selected,  str(cnt))				# Indices
+					found=found+1	
+				cnt=cnt+1
+			PLog(selected)
+				
+			if len(selected) == 0:											# Sprung hierher
+				label = "[B]Merkliste[/B] | nichts gefunden zu: %s | neue Suche" % q_org
+				title="Suche in ARD und ZDF"
+				title=py2_encode(title);
+				fparams="&fparams={'title': '%s'}" % quote(title)
+				addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
+					fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)		
+			else:
+				title = u"[B]Merkliste[/B]: %s Einträge  | %s" % (found, q_org)
+				if len(selected) == 1:
+					title = u"[B]Merkliste[/B]: %s Eintrag  | %s" % (found, q_org)
+				q=py2_encode(q); title=py2_encode(title);
+				fparams="&fparams={'mode': 'Merk', 'selected': '%s'}" % selected.strip()
+				addDir(li=li, label=title, action="dirList", dirID="ShowFavs", fanart=R('suche_ardundzdf.png'), 
+					thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)	
 	
 	#-----------------------------------
 	# Länge begrenzt auf 24, Änderung angleichen -> tool.SearchWordWork
@@ -2619,7 +2627,7 @@ def SearchARDundZDFnew(title, query='', pagenr=''):
 # 26.09.2021 Suche nach Sendungen möglich aber verworfen, da zusätzl. Suche erforderlich
 #	 (Suchstring: ../ard/search/grouping?searchString=..) 
 # 14.03.2022 nach Sofortstart-Abbruch springt Kodi erneut nach get_keyboard_input - Addon-
-#	Absturz bei Abbruch der Eingabe. Abhilfe: return ersetzt durch Aufruf Main_NEW.
+#	Absturz bei Abbruch der Eingabe. Abhilfe: return ersetzt durch Aufruf Main_NEW. 
 # 22.03.2023 api-Suche umgestellt page-gateway/widgets  -> search-system/mediathek, um
 #	Videos von Sendereihen zu erfassen (Bsp. "2 für 300")
 # 13.06.2023 Mitnutzung durch phoenix (sender, query, homeID)
@@ -2662,7 +2670,7 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 		msg1 = "Fehler in ARDSearchnew, Suche: %s"	% query
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
-		return li
+		return
 	
 	gridlist = blockextract( '"availableTo"', page) 		# Beiträge?
 	if len(gridlist) == 0:				
@@ -2673,8 +2681,7 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 	PLog('gridlist: ' + str(len(gridlist)))	
 	
 	ID='Search' 	# mark für farbige Markierung
-	li = get_json_content(li, page, ID, mark=unquote(query))																	
-	
+	get_json_content(li, page, ID, mark=unquote(query))	
 															# Mehr-Button:
 	title = "Mehr zu >%s<" % unquote(query)		
 	li = xbmcgui.ListItem()									# Kontext-Doppel verhindern
@@ -2694,7 +2701,7 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 			(quote(query), quote(title), quote(sender), str(offset), homeID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", fanart=R(ICON_MEHR), 
 			thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)																	
-				
+		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #---------------------------------------------------------------- 

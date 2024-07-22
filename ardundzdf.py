@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>210</nr>										# Numerierung für Einzelupdate
-VERSION = '5.0.6'
-VDATE = '19.07.2024'
+VERSION = '5.0.7'
+VDATE = '22.07.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1085,10 +1085,10 @@ def Main_ZDF(name=''):
 			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 		
 	title="Suche in ZDF-Mediathek"
-	fparams="&fparams={'query': '', 'title': '%s'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_SEARCH), 
-		thumb=R(ICON_ZDF_SEARCH), fparams=fparams)
-
+	fparams="&fparams={'title': '%s', 'homeID': 'ZDF'}" % quote(title)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
+		fanart=R(ICON_ZDF_SEARCH), thumb=R(ICON_ZDF_SEARCH), fparams=fparams)
+		
 	title = 'Startseite' 
 	fparams="&fparams={'ID': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R(ICON_MAIN_ZDF), thumb=R(ICON_MAIN_ZDF), 
@@ -8181,7 +8181,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 	li_org=li 
 
 	if not jsonObject and DictID:
-		jsonObject = Dict("load", DictID, CacheTime=ZDF_CacheTime_AZ)	# 30 min
+		jsonObject = Dict("load", DictID, CacheTime=ZDF_CacheTime_AZ)	# 30 min		
 	if not jsonObject:								# aus Url wiederherstellen (z.B. für Merkliste)
 		if url:										# url ohne key (Seiten ZDF_Start)
 			PLog("get_from_url:")
@@ -9532,16 +9532,44 @@ def ZDF_FlatListEpisodes(sid):
 # Mitnutzung get_form_streams sowie build_Streamlists_buttons
 # gui=False: ohne Gui, z.B. für ZDF_getStrmList
 # 16.05.2024 Auswertung Bitraten entfernt (unsicher)
+# 21.07.2024 zdf-cdn-api bei vielen Url's nicht mehr akzeptiert,
+#	Alternative profile_url mit api.zdf.de hinzugefügt.
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	PLog("ZDF_getApiStreams: " + scms_id)
-	
+
+	cdn_api=True
 	page, msg = get_page(path)
 	if page == '':	
 		msg1 = "Fehler in ZDF_getStreamSources:"
 		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return
+		if "Error 503" in msg:								# cdn-api nicht akzeptiert? -> api.zdf.de
+			try:
+				profile_url="https://api.zdf.de/content/documents/%s.json?profile=player" % scms_id
+				PLog("profile_url: " + profile_url)
+				# Aktualisierung apiToken via window.zdfsite www.zdf.de (apiToken:) 
+				apiToken = "5bb200097db507149612d7d983131d06c79706d5"	# 21.07.2024
+				header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken
+				page, msg = get_page(path=profile_url, header=header, JsonPage=True)
+				pos = page.rfind('mainVideoContent')					# 'mainVideoContent' am Ende suchen
+				page_part = page[pos:]
+				PLog("page_part: " + page_part[:40])
+				ptmd_player = 'ngplayer_2_4'							# ab 22.12.2020
+				videodat_url = stringextract('ptmd-template":"', '"', page_part)
+				videodat_url = videodat_url.replace('{playerId}', ptmd_player) 	# ptmd_player injiziert 
+				videodat_url = 'https://api.zdf.de' + videodat_url	
+				videodat_url = videodat_url.replace('\\/','/')	
+				PLog('videodat_url: ' + videodat_url)	
+				page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
+				page=page.replace('" :', '":'); page=page.replace('": "', '":"')  # Formatanpassung für get_form_streams
+				PLog("videodat_page: " + page[:80])					
+				cdn_api=False
+			except Exception as exception:
+				PLog("profile_url_error: " + str(exception))
+				page=""
+		if page == "":	
+			MyDialog(msg1, msg2, '')
+			return
 	page = page.replace('\\/','/')
 
 	li = xbmcgui.ListItem()
@@ -9560,16 +9588,23 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 		
 	# Format formitaeten von Webversion abweichend, build_Streamlists
 	#	nicht verwendbar
+	PLog("cdn_api: " + str(cdn_api))
 	formitaeten, duration, geoblock, sub_path = get_form_streams(page)
 	forms=[]
 	if len(formitaeten) > 0:								# Videoquellen fehlen?
-		forms = stringextract('formitaeten":', ']', formitaeten[0])
-		forms = blockextract('"type":', forms)
+		PLog("formitaeten_0: " + str(formitaeten[0])[:100])
+		if cdn_api:
+			formsblock = stringextract('formitaeten":', ']', formitaeten[0])
+			forms = blockextract('"type":', formsblock)
+		else:
+			forms = blockextract('"type":', str(formitaeten))
+			
 	PLog("forms: %d" % len(forms))
 	
 	Plot  = "%s||||%s" % (tag, summ)
 	line=''; skip_list=[]
 	for form in forms:
+		#PLog("form: " + form)
 		track_add=''; class_add=''; lang_add=''				# class-und Sprach-Zusätze
 		typ = stringextract('"type":"', '"', form)
 		class_add = stringextract('"class":"',  '"', form)	
@@ -9582,15 +9617,18 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 			track_add = "%23s" % track_add 				# formatiert
 					
 		url = stringextract('"url":"',  '"', form)		# Stream-URL
-		PLog("url: " + url)
+		if url == "":
+			url = stringextract('"uri":"',  '"', form)	# api.zdf.de
+		PLog("url: " + url); PLog("typ: " + typ);
 		server = stringextract('//',  '/', url)			# 2 Server pro Bitrate möglich
-		if typ not in only_list or url in skip_list:
+		if typ not in only_list or url in skip_list or url == "":
 			continue
 		
 		skip_list.append(url)
 			
 		quality = stringextract('"quality":"',  '"', form)
 		mimeType = stringextract('mimeType":"', '"', form)
+		PLog("quality: " + quality); PLog("mimeType: " + mimeType);
 		
 		# bei HLS entfällt Parseplaylist - verschiedene HLS-Streams verfügbar 
 		if url.find('master.m3u8') > 0:					# HLS-Stream 
@@ -9612,7 +9650,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 			title_url = u"%s#%s" % (title, url)
 			item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
 				(track_add, quality, res, title_url)
-			PLog("item: " + item)
+			PLog("title_url: " + title_url); PLog("item: " + item)
 			PLog("server: " + server)					# nur hier, kein Platz im Titel
 			MP4_List.append(item)
 			
@@ -10493,7 +10531,6 @@ def get_form_streams(page):
 		duration = max(1, duration)						# 1 zeigen bei Werten < 1
 		duration = str(duration) + " min"	
 	PLog('duration: ' + duration)
-	PLog('page_formitaeten: ' + page[:100])		
 	formitaeten = blockextract('formitaeten', page)		# Video-URL's ermitteln
 	PLog('formitaeten: ' + str(len(formitaeten)))
 	# PLog(formitaeten[0])								# bei Bedarf
@@ -10508,8 +10545,7 @@ def get_form_streams(page):
 			geoblock = ' | Geoblock DE!'
 		if geoblock == 'dach':			# Info-Anhang für summary 
 			geoblock = ' | Geoblock DACH!'
-			
-			
+		
 	return formitaeten, duration, geoblock, sub_path
 	
 #-------------------------
@@ -11196,6 +11232,7 @@ def router(paramstring):
 		Main()
 
 #---------------------------------------------------------------- 
+
 PLog('Addon_URL: ' + PLUGIN_URL)		# sys.argv[0], plugin://plugin.video.ardundzdf/
 PLog('ADDON_ID: ' + ADDON_ID); PLog(SETTINGS); PLog(ADDON_NAME);PLog(SETTINGS_LOC);
 PLog(ADDON_PATH);PLog(ADDON_VERSION);
