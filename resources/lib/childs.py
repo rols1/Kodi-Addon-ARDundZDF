@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>28</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.05.2024
+# 	<nr>29</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.07.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -248,7 +248,9 @@ def Main_KIKA(title=''):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
-# ----------------------------------------------------------------------			
+# ----------------------------------------------------------------------
+# 23.07.2024 tivi_Verpasst abgeschaltet wg. Ausfall cdn-api
+#			
 def Main_TIVI(title=''):
 	PLog('Main_TIVI:')
 	
@@ -271,10 +273,10 @@ def Main_TIVI(title=''):
 	addDir(li=li, label=title , action="dirList", dirID="ardundzdf.ZDF_Start", fanart=GIT_ZDFTIVI, 
 		thumb=GIT_TIVIHOME, tagline=title, fparams=fparams)
 		
-	title = 'tivi_Verpasst' 	# ZDF_VerpasstWoche -> tivi_Verpasst
-	fparams="&fparams={'name': 'ZDF-tivi_Verpasst', 'title': '%s', 'homeID': 'Kinderprogramme'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_VerpasstWoche", fanart=GIT_ZDFTIVI, 
-		thumb=GIT_TIVICAL, tagline=title, fparams=fparams)				
+#	title = 'tivi_Verpasst' 	# ZDF_VerpasstWoche -> tivi_Verpasst
+#	fparams="&fparams={'name': 'ZDF-tivi_Verpasst', 'title': '%s', 'homeID': 'Kinderprogramme'}" % title
+#	addDir(li=li, label=title, action="dirList", dirID="ZDF_VerpasstWoche", fanart=GIT_ZDFTIVI, 
+#		thumb=GIT_TIVICAL, tagline=title, fparams=fparams)				
 
 	title='tivi_Sendungen A-Z | 0-9'
 	fparams="&fparams={}" 
