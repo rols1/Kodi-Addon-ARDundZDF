@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>211</nr>										# Numerierung für Einzelupdate
+# 	<nr>212</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.7'
 VDATE = '24.07.2024'
 
@@ -8977,11 +8977,11 @@ def ZDF_get_broadcasts(obj, maxWidth="", validchars=True):
 		PLog("scms_id_missing")
 	
 	ptmd = stringextract('streams/ptmd-template', '},', str(obj))
+	ptmd = ptmd.replace('{playerId}', ptmd_player) 
 	PLog(ptmd)
-	stream = stringextract(": '", "'", ptmd)
-	stream = stream.replace('{playerId}', ptmd_player) 
+	stream = stringextract("/tmd", "'", ptmd)
 	if stream:
-		stream = 'https://api.zdf.de' + stream
+		stream = 'https://api.zdf.de/tmd' + stream
 	else:
 		if stream ==  "":
 			PLog("stream_missing")
@@ -9407,14 +9407,14 @@ def ZDF_Verpasst(title, zdfDate, sfilter='ZDF'):
 		tag = repl_json_chars(tag)
 
 		stream=py2_encode(stream); title=py2_encode(title); tag=py2_encode(tag);
-		descr=py2_encode(descr);
+		descr=py2_encode(descr); img=py2_encode(img); scms_id=py2_encode(scms_id);
 		if stream:
 			fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 				(stream, title, img, tag, descr, scms_id)	
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
 		else:
-			label = u"[COLOR grey]%s[/COLOR]" % title
+			label = u"[COLOR grey]%s[/COLOR]" % py2_decode(title)
 			fparams="&fparams={'title': '%s'}" %  u"Beitrag nicht verfügbar"
 			addDir(li=li, label=label, action="dirList", dirID="dummy", fanart=img, thumb=img, fparams=fparams, 
 				tagline=tag, summary=descr)				
