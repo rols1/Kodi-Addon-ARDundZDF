@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>212</nr>										# Numerierung für Einzelupdate
-VERSION = '5.0.7'
-VDATE = '24.07.2024'
+VERSION = '5.0.8'
+VDATE = '25.07.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1114,7 +1114,7 @@ def Main_ZDF(name=''):
 
 	# -------------------
 	# 05.03.2024 Rubriken, Sportstudio, Barrierearm, ZDFinternational -> ZDF_RubrikSingle
-	base = "https://zdf-cdn.live.cellular.de/mediathekV2/"
+	base = "https://zdf-prod-futura.zdf.de/mediathekV2/"
 
 	title = 'Rubriken' 
 	url = base + "categories-overview"
@@ -3484,19 +3484,15 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	
 	#---------------------------------------------------------	Großevents Start
-#	Nach OLYMPIA-Start Funktionsziel wieder auf ARDSportCluster setzen - bisher
-#		fehlt der Seite die Cluster-Struktur 
 	title = u"Event: [B]OLYMPIA 2024[/B]"							# Großevent	
 	tag = u"Alles zu den Olympischen Spielen 2024 Paris - News, Ergebnisse, Livestreams"
 	cacheID = "Sport_OLYMPIA_2024"
 	img = "https://images.sportschau.de/image/8256571a-83dd-474d-9f81-982a02eea327/AAABi9KI1Ww/AAABjwnlFvA/16x9-1280/logo-olympia-paris-2024-100.jpg"
 	path = "https://www.sportschau.de/olympia/index.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-#	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-#		(quote(title), quote(path), quote(img), cacheID)
-	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
-		(quote(title), quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
+		(quote(title), quote(path), quote(img), cacheID)
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 
@@ -8130,7 +8126,7 @@ def BilderDasErsteSingle(title, path):
 def ZDF_Start(ID, homeID=""): 
 	PLog('ZDF_Start: ' + ID);
 	 
-	base = "https://zdf-cdn.live.cellular.de/mediathekV2/"					
+	base = "https://zdf-prod-futura.zdf.de/mediathekV2/"					
 	if ID=='Startseite':
 		path = base + "start-page"
 	elif ID=="tivi_Startseite":
@@ -8372,7 +8368,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 				
 			if title == "Das ZDF im Livestream":					# Ausland-Livestreams ergänzt,
 				title = "Livestreams im Ausland"					# 	skipped: Alles auf einen Blick
-				url = "https://zdf-cdn.live.cellular.de/mediathekV2/document/einzel-livestreams-100"
+				url = "https://zdf-prod-futura.zdf.de/mediathekV2/document/einzel-livestreams-100"
 				img = "https://www.zdf.de/assets/rubrik-livestreams-im-ausland-100~1280x720?cb=1660040584240"
 				fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 				PLog("fparams: " + fparams)	
@@ -8380,7 +8376,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 					thumb=img, fparams=fparams, summary=descr, tagline=tag)
 
 		title = "Terra X plus Schule"					# 	skipped: Alles auf einen Blick
-		url = "https://zdf-cdn.live.cellular.de/mediathekV2/document/terra-x-plus-schule-100"
+		url = "https://zdf-prod-futura.zdf.de/mediathekV2/document/terra-x-plus-schule-100"
 		img = "https://www.zdf.de/assets/terrax-plusschule-buehnes-100~1140x240?cb=1698932648730"
 		fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 		PLog("fparams: " + fparams)	
@@ -8957,135 +8953,6 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 	return typ,title,tag,summ,img,url,stream,scms_id
 
 #---------------------------------------------------------------------------------------------------
-# 
-def ZDF_get_broadcasts(obj, maxWidth="", validchars=True):
-	PLog('ZDF_get_broadcasts:')
-	PLog(str(obj)[:80])
-	PLog(validchars)
-	
-	if not maxWidth:				# Teaserbild, Altern. 1280 für Video
-		maxWidth=1024
-	multi=True; verf=""; url=""; stream=""; scms_id=""; now_live=""
-	headline=""; avail=""
-	season=""; episode=""			# episodeNumber, seasonNumber
-	ptmd_player = 'ngplayer_2_4'							# ab 22.12.2020
-	
-	pageteaser = obj["http://zdf.de/rels/content/video-page-teaser"]
-	if "externalId" in pageteaser:
-		scms_id = pageteaser["externalId"]					# -> ZDF_getApiStreams
-	else:
-		PLog("scms_id_missing")
-	
-	ptmd = stringextract('streams/ptmd-template', '},', str(obj))
-	ptmd = ptmd.replace('{playerId}', ptmd_player) 
-	PLog(ptmd)
-	stream = stringextract("/tmd", "'", ptmd)
-	if stream:
-		stream = 'https://api.zdf.de/tmd' + stream
-	else:
-		if stream ==  "":
-			PLog("stream_missing")
-	PLog("stream: " + stream)
-				
-	title=obj["title"]
-	descr=''	
-	if("textShort" in obj):
-		descr = obj["textShort"]
-	if not descr:
-		descr = obj["text"]						
-	descr = cleanhtml(descr)								# <br>, <b> möglich
-			
-	typ=''
-	typ = obj["live"]
-	if typ == True:
-		typ='livevideo'
-	livestream = obj["livestream"]
-	if livestream == True:
-		typ='Livestream'				
-		
-	img=""; width=""
-	images = obj["http://zdf.de/rels/image"]["layouts"]
-	for res in images:				# ['384x216': 'https://epg-image..', ..}
-		width = res.split("x")[0]
-		#PLog(width); PLog(maxWidth)
-		if int(width) <= maxWidth:
-			img = images[res]
-			break
-	PLog("img: %s | res %s | maxWidth %s" % (img, res, maxWidth))
-	
-	dur=''
-	multi = False
-	sec=""; fsk="none"; geo="none"; 
-	if "duration" in obj:
-		sec = obj["duration"]
-	if sec:
-		dur = time.strftime('%H:%M Std.', time.gmtime(sec))	
-
-	airtimeBegin = obj["airtimeBegin"]						# "2024-07-24T23:15:00+02:00"
-	vonUhr = airtimeBegin[-14:-9]
-	airtimeEnd = obj["airtimeEnd"]
-	bisUhr = airtimeEnd[-14:-9]
-	vonbisUhr = "von %s Uhr bis %s Uhr" % (vonUhr, bisUhr)
-	
-	visibleFrom = obj["visibleFrom"]						# "2024-07-02T00:10:00+02:00"
-	DateFrom = "[B]ab: %s[/B]" % time_translate(visibleFrom)	
-	visibleTo = obj["visibleTo"]							# "2025-07-23T00:10:00+02:00"
-	DateTo = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % time_translate(visibleTo, day_warn=True)	
-	
-	fsk=""; geo=""
-	fsk = obj["fsk"]
-	if fsk == "none":
-		fsk = "ohne"
-	if "geoLocation" in obj:	
-		geo = obj["geoLocation"]
-	if geo == "none":
-		geo = "ohne"
-	
-	# im Voraus holen kann hier entfallen - api.zdf / api.zdf enthalten umfangreiche Texte
-	''' 
-	if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
-		if "http://zdf.de/rels/sharing-url" in obj:			# Web-Referenz
-			path=obj["http://zdf.de/rels/sharing-url"]
-			descr_new = get_summary_pre(path, ID='ZDF',skip_verf=True,skip_pubDate=True)  # Modul util
-			if 	len(descr_new) > len(descr):
-				PLog("descr_new: " + descr_new[:60] )
-				descr = descr_new
-	'''				
-	if validchars:												# unterdrückt bei Arabic
-		summ = valid_title_chars(descr)
-	else:
-		summ = repl_json_chars(descr)							# router-komp.
-
-	# resume:
-	title = "[COLOR blue]%s[/COLOR] | %s" % (vonUhr, title)
-	tag = "Dauer: %s | %s | FSK: %s | GEO: %s" % (dur, vonbisUhr, fsk, geo)
-	if avail:												# kann fehlen
-		tag = "%s | %s" % (tag, avail)
-	if DateFrom:	
-		tag = "%s | %s" % (tag, DateFrom)
-	if DateTo:	
-		tag = "%s | %s" % (tag, DateTo)
-	if typ == "livevideo":									# z.B. Events
-		try:
-			screentxt = obj["infoline"]["screenReaderTexts"]
-			PLog("screentxt: " + str(screentxt))
-			t1 = screentxt[0]["text"]						# Bsp. Livestream verfügbar
-			t2 = screentxt[0]["title"]						# Bsp. Mo., 12:45 - 15:35 Uhr
-			tag = "[B]%s | %s[/B]" % (t1,  t2)
-			title = "[B]LIVE: [/B] %s" % title
-			if now_live:
-				title = "[B]JETZT[/B] %s" % title
-		except Exception as exception:
-			PLog("screentxt_error: " + str(exception))
-			tag=""
-	if headline:
-		tag = "%s | [B]%s[/B]" % (tag, headline)
-	
-	PLog('Get_content typ: %s | title: %s | tag: %s | descr: %s |img:  %s | url: %s | stream: %s | scms_id: %s' %\
-		(typ,title,tag,summ,img,url,stream, scms_id) )		
-	return typ,title,tag,summ,img,url,stream,scms_id
-
-#---------------------------------------------------------------------------------------------------
 # Navigations-Menü, z.B. Sportstudio
 # Aufruf ZDF_RubrikSingle
 def ZDF_get_navi(DictID, title, homeID=""):
@@ -9145,9 +9012,8 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	query=py2_decode(query)			# decode, falls erf. (1. Aufruf)
 
 	PLog(query); PLog(pagenr); PLog(s_type)
-
 	ID='Search'
-	ZDF_Search_PATH	 = "https://zdf-cdn.live.cellular.de/mediathekV2/search?profile=cellular-5&q=%s&page=%s"
+	ZDF_Search_PATH	 = "https://zdf-prod-futura.zdf.de/mediathekV2/search?profile=cellular-5&q=%s&page=%s"
 	if s_type == 'Bilderserien':	# im api zdf-cdn nicht verfügbar (bilder-der-woche-100)
 		ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&synth=true&sender=Gesamtes+Angebot&from=&to=&attrs=&abGroup=gruppe-a&page=%s'
 		ID=s_type
@@ -9210,8 +9076,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 ###################################################################################################
 # Liste der Wochentage ZDF
 # ARD s. ARDnew.SendungenAZ (früherer Classic-Code entfernt)
-# 23.07.2024 Ausfall zdf-cdn-api, Verwendung api.zdf.de
-#
+# 
 def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediathek
 	PLog('ZDF_VerpasstWoche:')
 	PLog(name); 
@@ -9220,10 +9085,9 @@ def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediath
 	fname = os.path.join(DICTSTORE, 'CurSenderZDF')				# init CurSenderZDF (aktueller Sender)
 	if os.path.exists(fname):									# kann fehlen (Aufruf Merkliste)
 		sfilter = Dict('load', 'CurSenderZDF')
-		sfilter =  up_low(sfilter, mode='low') 		
 		
-	if sfilter == '' or sfilter == False or 'Alle' in sfilter:	# 'Alle ZDF-Sender' nur bei zdf-cdn-api
-		sfilter = 'zdf'											# Default Alle ZDF-Sender (nur VERPASST)
+	if sfilter == '' or sfilter == False:						# 'Alle ZDF-Sender' nur bei zdf-cdn-api
+		sfilter = 'ZDF'											# Default Alle ZDF-Sender (nur VERPASST)
 	
 	li = xbmcgui.ListItem()
 	if homeID:
@@ -9248,21 +9112,20 @@ def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediath
 		#title = ("%10s ..... %10s"% (iWeekday, iDate))	 # Formatierung in Plex ohne Wirkung		
 		title =	"%s | %s" % (iDate, iWeekday)
 		
-		'''
 		func = "ZDF_Verpasst"					# Call intern
 		fanart=R(ICON_ZDF_VERP); thumb=R(ICON_ZDF_VERP)
 		if homeID == "Kinderprogramme":
 			func = "resources.lib.childs.tivi_Verpasst"	# Call extern
 			fanart=GIT_ZDFTIVI; thumb=GIT_TIVICAL
 			sfilter='Alle ZDF-Sender'
-		'''
+
 		PLog("Satz1: ")
 		PLog(title); PLog(zdfDate)
 		fanart=R(ICON_ZDF_VERP); thumb=R(ICON_ZDF_VERP)
 		title=py2_encode(title); zdfDate=py2_encode(zdfDate);
 		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" %\
 			(quote(title), quote(zdfDate), sfilter)
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=fanart, 
+		addDir(li=li, label=title, action="dirList", dirID=func, fanart=fanart, 
 			thumb=thumb, fparams=fparams)
 	
 	if homeID == "":									# Folgebuttons nicht für ext. Nutzung
@@ -9274,7 +9137,7 @@ def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediath
 
 														# Button für Stationsfilter
 		label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [B]%s[/B]" % sfilter
-		tag = "Auswahl: zdf, zdfneo oder zdfinfo" 
+		tag = "Auswahl: Alle ZDF-Sender, ZDF, ZDFneo oder ZDFinfo" 
 		fparams="&fparams={'name': '%s', 'title': 'ZDF-Mediathek', 'sfilter': '%s'}" % (quote(name), sfilter)
 		addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Filter", fanart=R(ICON_ZDF_VERP), 
 			thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)	
@@ -9290,8 +9153,7 @@ def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediath
 def ZDF_Verpasst_Filter(name, title, sfilter):
 	PLog('ZDF_Verpasst_Filter:'); PLog(sfilter); 
 	
-#	stations = ['Alle ZDF-Sender', 'ZDF', 'ZDFneo', 'ZDFinfo']
-	stations = ['zdf', 'zdfneo', 'zdfinfo']
+	stations = ['Alle ZDF-Sender', 'ZDF', 'ZDFneo', 'ZDFinfo']
 	if sfilter not in stations:		# Fallback für Version < 4.7.0
 		i=0
 	else:
@@ -9302,7 +9164,7 @@ def ZDF_Verpasst_Filter(name, title, sfilter):
 	if d == -1:						# Fallback Alle
 		d = 0
 	sfilter = stations[d]
-	PLog("Auswahl: %d. %s" % (d, sfilter))
+	PLog("Auswahl: %d | %s" % (d, sfilter))
 	Dict('store', "CurSenderZDF", sfilter)
 	
 	return ZDF_VerpasstWoche(name, title)
@@ -9342,14 +9204,13 @@ def ZDF_Verpasst_Datum(title, zdfDate, sfilter):
 # 1. Buttons Morgens. Mittags, Abends, Nachts
 # 2. Cluster-Ermittl. via DictID, Teaser-Auswertung 
 # 04.03.2024 ZDFtivi integriert
-# 23.07.2024 Ausfall zdf-cdn-api, Verwendung api.zdf.de
 # 
-def ZDF_Verpasst(title, zdfDate, sfilter='ZDF'):
+def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
 	PLog('ZDF_Verpasst:'); PLog(title); PLog(zdfDate); PLog(sfilter);
+	PLog("DictID: " + DictID);
 	title_org = title
-	CacheTime = 6000													# 1 Std.
 
-	mediatype=''														# Kennz. Videos im Listing
+	mediatype=''													# Kennz. Videos im Listing
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	PLog('mediatype: ' + mediatype); 
@@ -9357,70 +9218,86 @@ def ZDF_Verpasst(title, zdfDate, sfilter='ZDF'):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')						# Home-Button
 
-	# https://zdf-cdn.live.cellular.de/mediathekV2/broadcast-missed/2024-07-18		# cdn-api
-	path = "https://zdf-cdn.live.cellular.de/mediathekV2/broadcast-missed/" + zdfDate
-	api_path = "https://api.zdf.de/cmdm/epg/broadcasts?from=%s&to=%s&limit=500&profile=teaser&tvServices=%s"
-	date_from 	= zdfDate + "T00%3A00%3A00%2B02%3A00" 
-	date_to	 	= zdfDate + "T23%3A59%3A59%2B02%3A00" 
+	# -----------------------------------------						# 2. Durchlauf
 	
-	path = api_path % (date_from, date_to, sfilter) 
-	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % zdfToken
+	if DictID:	
+		jsonObject = Dict("load", DictID)
+		teaserObject = jsonObject["teaser"]
+		PLog(len(teaserObject))
+		PLog(str(teaserObject)[:80])
+		for entry in teaserObject:
+			try:
+				typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
+				airtime = entry["airtime"]
+				t = airtime[-5:]
+				title = "[COLOR blue]%s[/COLOR] | %s" % (t, title)	# Sendezeit | Titel
+				channel = entry["channel"]
+				if sfilter.startswith("Alle") == False:
+					PLog("Mark0"); PLog(sfilter); PLog(channel)
+					if up_low(sfilter) != up_low(channel):							# filtern
+						continue
+				tag = "%s | Sender: [B]%s[/B]" % (tag,channel) 
+				if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
+					filtered=False
+					for item in AKT_FILTER: 
+						if up_low(item) in py2_encode(up_low(str(entry))):
+							filtered = True
+							break		
+					if filtered:
+						PLog('filtered_4: <%s> in %s ' % (item, title))
+						continue								
+					
+				PLog("Satz4:")
+				PLog(tag); PLog(title); PLog(stream);
+				title = repl_json_chars(title)
+				descr = repl_json_chars(descr)
+				tag = repl_json_chars(tag)
+				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
+					(stream, title, img, tag, descr, scms_id)	
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
+			except Exception as exception:
+				PLog("verpasst_error: " + str(exception))
+									
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
 	
-	DictID = "ZDF_Verpasst_%s_%s" % (sfilter,zdfDate)					# Cache
-	page = Dict("load", DictID, CacheTime=CacheTime)
-	if page == False or page == '':	
-		page, msg = get_page(path, header=header, do_safe=False)
-		if page == '':
-			msg1 = "Abruf fehlgeschlagen | %s" % title
-			MyDialog(msg1, msg, '')
-			return
-		else:
-			Dict("store", DictID, page)
+	# -----------------------------------------							# 1. Durchlauf
 	
-	try:
-		jsonObject = json.loads(page)
-		clusterObject = jsonObject["http://zdf.de/rels/cmdm/broadcasts"]
-	except Exception as exception:
-		PLog("clusterObject_error: " + str(exception))
+	path = "https://zdf-prod-futura.zdf.de/mediathekV2/broadcast-missed/" + zdfDate
+	page, msg = get_page(path)
+	if page == '':
 		msg1 = "Abruf fehlgeschlagen | %s" % title
-		MyDialog(msg1, '', '')
-		return	
-	
+		MyDialog(msg1, msg, '')
+		return li 
+
+	jsonObject = json.loads(page)
+	clusterObject = jsonObject["broadcastCluster"]
 	PLog(str(clusterObject)[:80])
 	PLog("Cluster: %d " % len(clusterObject))
 
-	msg1 = title											# Notification Datum + Sender
+	msg1 = title								# Notification Datum + Sender
 	if "manuell" in title:
 		msg1 = "%s.%s.%s" % (zdfDate[8:10], zdfDate[5:7], zdfDate[0:4])
 	msg2 = sfilter
 	icon = R(ICON_ZDF_VERP)
 	xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)
-
-	for item in clusterObject:
-		typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_broadcasts(item)
-		if stream == "" and scms_id == "":					# Wetter, heute Xpress
-			continue	
-		PLog("Satz4:")
-		PLog(tag); PLog(title); PLog(stream); PLog(scms_id)
-		title = repl_json_chars(title)
-		descr = repl_json_chars(descr)
-		tag = repl_json_chars(tag)
-
-		stream=py2_encode(stream); title=py2_encode(title); tag=py2_encode(tag);
-		descr=py2_encode(descr); img=py2_encode(img); scms_id=py2_encode(scms_id);
-		if stream:
-			fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
-				(stream, title, img, tag, descr, scms_id)	
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
-		else:
-			label = u"[COLOR grey]%s[/COLOR]" % py2_decode(title)
-			fparams="&fparams={'title': '%s'}" %  u"Beitrag nicht verfügbar"
-			addDir(li=li, label=label, action="dirList", dirID="dummy", fanart=img, thumb=img, fparams=fparams, 
-				tagline=tag, summary=descr)				
+	cnt=0
 			
-
-								
+	for jsonObject in clusterObject:
+		title = jsonObject["name"]
+		img = ZDF_get_img(jsonObject["teaser"][0])
+		tag = "Folgeseiten"
+		DictID = "ZDF_Verpasst_%d" % cnt	 				# DictID: cluster-nr
+		Dict('store', DictID, jsonObject)					# -> ZDF_Verpasst
+	
+		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s', 'DictID': '%s'}" %\
+			(title_org, zdfDate, sfilter, DictID)
+		PLog("fparams: " + fparams)	
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=img, 
+		thumb=img, fparams=fparams, tagline=tag)
+		cnt=cnt+1
+		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ####################################################################################################
@@ -9459,11 +9336,11 @@ def ZDF_AZList(title, element, ID=""):					# ZDF-Sendereihen zum gewählten Buch
 	title_org = title
 	
 	DictID = "ZDF_sendungen-100"
-	path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/sendungen-100"
+	path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/sendungen-100"
 	msg1 = "Cache ZDF A-Z:"
 	if "funk" in ID:
 		DictID = "funk-alle-sendungen-von-a-z-100"
-		path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/%s" % DictID
+		path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s" % DictID
 		if element == "0 - 9":							# für funk o. Blanks
 			element="0-9"
 		msg1 = "Cache funk A-Z:"
@@ -9552,7 +9429,7 @@ def ZDF_FlatListEpisodes(sid):
 	li = home(li, ID='ZDF')										# Home-Button			
 	
 	#															# headers wg. häufiger timeouts
-	path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/%s" % sid 
+	path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s" % sid 
 	page, msg = get_page(path=path, header=HEADERS)
 	if page == "":	
 		msg1 = "Abbruch  in ZDF_FlatListEpisodes:"
@@ -9659,6 +9536,8 @@ def ZDF_FlatListEpisodes(sid):
 # 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 # 21.07.2024 zdf-cdn-api bei vielen Url's nicht mehr akzeptiert,
 #	Alternative profile_url mit api.zdf.de + scms_id hinzugefügt.
+# 25.07.2024 Austausch zdf-cdn.live.cellular.de -> zdf-prod-futura.zdf.de
+#	Alternative profile_url ev. entbehrlich, aber vorerst belassen.
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	PLog("ZDF_getApiStreams: " + scms_id)

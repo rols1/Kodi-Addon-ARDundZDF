@@ -11,7 +11,7 @@
 #
 ################################################################################
 # 	<nr>82</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.10.2024
+#	Stand: 25.07.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2519,18 +2519,20 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 	
 	#------------------------------------------------------------------	# 2. Suche ZDF
 	if 'Suche in ZDF-Mediathek' in title or "ARD und ZDF" in title_org:	
-		ZDF_Search_PATH	 = 'https://zdf-cdn.live.cellular.de/mediathekV2/search?profile=cellular-5&q=%s&page=%s'
+		ZDF_Search_PATH	 = 'https://zdf-prod-futura.zdf.de/mediathekV2/search?profile=cellular-5&q=%s&page=%s'
 		if pagenr == '':		# erster Aufruf muss '' sein
 			pagenr = 1
+			
 		path_zdf = ZDF_Search_PATH % (quote(query_zdf), pagenr) 	
 		path_zdf = transl_umlaute(path_zdf)
 		
 		query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
-		query_lable = unquote(query_lable)
+		query = query.replace(' ', '+')	
+		
 		icon = R(ICON_ZDF_SEARCH)
 		xbmcgui.Dialog().notification("ZDF-Suche",query_lable,icon,1000, sound=False)
 		header = "{'Origin': 'https://www.zdf.de'}"
-		page, msg = get_page(path_zdf, header=header)							
+		page, msg = get_page(path_zdf, header=header, do_safe=False)							
 		
 		try:
 			jsonObject = json.loads(page)

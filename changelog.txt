@@ -10,6 +10,14 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+25.07.2024 5.0.8
+			ZDF-Bereich: Umstellung auf neue api-Adresse zdf-cdn.live.cellular.de ->
+			zdf-prod-futura.zdf.de, Backportierung ZDF_VerpasstWoche und ZDF_Verpasst
+			nach vorheriger Umstellung auf api.zdf.de, Anpassungen in SearchARDundZDFnew,
+			ZDFtivi, ZDF_Verpasst_Filter.
+			ARDSportWDR: Funktionsziel von ARDSportMedia auf ARDSportCluster geändert
+			(s. V5.0.7).
+			
 22.07.2024 5.0.7
 			EPG_Sender, EPG_ShowAll: spez. Sender ohne Link in livesenderTV.xml aus den
 			Sender-Listen entfernt, z.B. liga3.

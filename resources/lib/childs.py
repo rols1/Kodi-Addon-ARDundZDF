@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>29</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.07.2024
+#	Stand: 25.07.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -273,10 +273,10 @@ def Main_TIVI(title=''):
 	addDir(li=li, label=title , action="dirList", dirID="ardundzdf.ZDF_Start", fanart=GIT_ZDFTIVI, 
 		thumb=GIT_TIVIHOME, tagline=title, fparams=fparams)
 		
-#	title = 'tivi_Verpasst' 	# ZDF_VerpasstWoche -> tivi_Verpasst
-#	fparams="&fparams={'name': 'ZDF-tivi_Verpasst', 'title': '%s', 'homeID': 'Kinderprogramme'}" % title
-#	addDir(li=li, label=title, action="dirList", dirID="ZDF_VerpasstWoche", fanart=GIT_ZDFTIVI, 
-#		thumb=GIT_TIVICAL, tagline=title, fparams=fparams)				
+	title = 'tivi_Verpasst' 	# ZDF_VerpasstWoche -> tivi_Verpasst
+	fparams="&fparams={'name': 'ZDF-tivi_Verpasst', 'title': '%s', 'homeID': 'Kinderprogramme'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_VerpasstWoche", fanart=GIT_ZDFTIVI, 
+		thumb=GIT_TIVICAL, tagline=title, fparams=fparams)				
 
 	title='tivi_Sendungen A-Z | 0-9'
 	fparams="&fparams={}" 
@@ -286,7 +286,7 @@ def Main_TIVI(title=''):
 	title='tivi_ZDFchen'
 	tag = "Für Kinder bis 6 Jahre"
 	thumb = "https://www.zdf.de/assets/zdfchen-buehne-m-song-100~936x520?cb=1658852787035"
-	url = "https://zdf-cdn.live.cellular.de/mediathekV2/document/zdfchen-100"
+	url = "https://zdf-prod-futura.zdf.de/mediathekV2/document/zdfchen-100"
 	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=GIT_ZDFTIVI, 
 		thumb=thumb, fparams=fparams)
@@ -2091,7 +2091,7 @@ def Tivi_Search(query=None, title='Search', pagenr=''):
 def tivi_Verpasst(title, zdfDate, sfilter=""):
 	PLog('tivi_Verpasst:'); PLog(title); PLog(zdfDate);
 	
-	path = "https://zdf-cdn.live.cellular.de/mediathekV2/broadcast-missed/" + zdfDate
+	path = "https://zdf-prod-futura.zdf.de/mediathekV2/broadcast-missed/" + zdfDate
 	page = Dict("load", "ZDFtivi_%s" % zdfDate, CacheTime=KikaCacheTime)# 1 Std.
 	if page == False:
 		page, msg = get_page(path)
@@ -2183,7 +2183,7 @@ def Tivi_AZ_Sendungen(name, element=None):
 	if not jsonObject:
 		icon = GIT_AZ
 		xbmcgui.Dialog().notification("Cache tivi A-Z:","Haltedauer 60 Min",icon,3000)
-		path = "https://zdf-cdn.live.cellular.de/mediathekV2/document/kindersendungen-a-z-100"
+		path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/kindersendungen-a-z-100"
 		page, msg = get_page(path)
 		if not page:												# nicht vorhanden?
 			msg1 = 'Tivi_AZ_Sendungen: Beiträge können leider nicht geladen werden.' 
