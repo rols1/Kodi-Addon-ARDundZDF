@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>82</nr>										# Numerierung für Einzelupdate
-#	Stand: 25.07.2024
+# 	<nr>83</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.07.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -136,6 +136,7 @@ def Main_NEW(name=''):
 	CURSENDER = ARD_CurSender()
 	sendername, sender, kanal, img, az_sender = CURSENDER.split(':')	# sender -> Menüs
 	sender_summ = 'Sender: [B]%s[/B] (unabhängig von der Senderwahl)' % "ARD-Alle"
+	summ=""
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
