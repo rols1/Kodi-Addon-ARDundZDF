@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>83</nr>										# Numerierung für Einzelupdate
+# 	<nr>84</nr>										# Numerierung für Einzelupdate
 #	Stand: 26.07.2024
 
 # Python3-Kompatibilität:
@@ -159,7 +159,7 @@ def Main_NEW(name=''):
 	fparams="&fparams={'title': '%s', 'homeID': 'ARD'}" % quote(title) 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 		fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag, 
-		summary=summ, fparams=fparams)
+		fparams=fparams)
 	
 	title = 'Startseite'	
 	tag = def_tag
