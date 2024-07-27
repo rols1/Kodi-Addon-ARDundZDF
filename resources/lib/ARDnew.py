@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>85</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.07.2024
+# 	<nr>86</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.07.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -767,6 +767,13 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		else:
 			li = home(li, ID='ARD Neu')					# Home-Button
 
+	if "sportschau.de" in path:							# nach Olympia 2024 wieder entfernen (html-Seiten)
+		msg1 = "ARDStartRubrik: diese Seite ist hier nicht auswertbar:"
+		msg2 = path
+		PLog("%s %s" % (msg1, msg2))
+		MyDialog(msg1, msg2, "")	
+		return li
+		
 	path=path.replace("%3A", ":")
 	page, msg = get_page(path=path, GetOnlyRedirect=True, header=ARDheaders, do_safe=True)
 	path = page
