@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>86</nr>										# Numerierung für Einzelupdate
-#	Stand: 27.07.2024
+# 	<nr>87</nr>										# Numerierung für Einzelupdate
+#	Stand: 01.08.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -896,6 +896,8 @@ def get_pagination(page):
 #
 def ARDPagination(title, path, pageNumber, pageSize, ID, mark, homeID=""): 
 	PLog('ARDPagination: ' + ID)
+	PLog(path)
+	path =  unquote(path)									# quotierter Doppelpunkt möglich
 	PLog(path)
 	
 	title_org 	= title 
@@ -1917,6 +1919,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 #
 def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''): 
 	PLog('ARDStartSingle: %s' % ID);
+	PLog(path)
 	title_org=title;
 	icon = R("ard-mediathek.png")
 
@@ -1925,7 +1928,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 	if ID == 'EPG' or ID == 'A-Z':											
 		headers = "{'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma':'no-cache',\
 			'Expires': '0'}"
-		
+
 	path = path + "&mcV6=true"								# api-Web-Quelllen
 	page, msg = get_page(path, header=headers)
 	if page == '':	
