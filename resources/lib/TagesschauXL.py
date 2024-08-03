@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>15</nr>								# Numerierung für Einzelupdate
-#	Stand: 06.07.2024
+# 	<nr>16</nr>								# Numerierung für Einzelupdate
+#	Stand: 03.08.2024
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -688,7 +688,7 @@ def get_VideoAudio(title, path):								# Faktenfinder
 	
 	page, msg = get_page(path=path, GetOnlyRedirect=True)	
 	path = page								
-	page, msg = get_page(path)	
+	page, msg = get_page(path)
 	if page == '':	
 		msg1 = u"Fehler in get_VideoAudio"
 		msg2 = msg
@@ -702,16 +702,17 @@ def get_VideoAudio(title, path):								# Faktenfinder
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	
-	content =  blockextract('class="v-instance" data-v="', page, '</div>')
+	content =  blockextract('data-v=', page, '</div>')
 	PLog(len(content))
 		
 	cnt = 0; url_list=[]
 	for item in content:
-		PLog(item)
-		if 'data-v="{}"' in item:									# leer möglich (hauptnavigation)
-			continue
+		PLog(item[:80])
+
 		cnt = cnt +1												# Satz-Zähler						
 		typ,av_typ,title,tag,summ,img,stream = get_content_json(item)
+		if typ == False:											# jsonloads_error
+			continue
 				
 		title=py2_encode(title); stream=py2_encode(stream); 
 		summ=py2_encode(summ); img=py2_encode(img); 
@@ -735,7 +736,9 @@ def get_VideoAudio(title, path):								# Faktenfinder
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 
 # ----------------------------------------------------------------------
-# 
+# Aufruf: get_VideoAudio
+# Auswertung Blöcke 'data-v=' - können Navi-Elemente o.a. enthalten.
+#	Berücksichtigt werden nur Blöcke mit Playerdaten "playerType"
 def get_content_json(item):	
 	PLog('get_content_json:')
 			
@@ -745,12 +748,19 @@ def get_content_json(item):
 	conf = conf.replace('\\"', '"')
 	conf = conf.replace('&quot;', '"')
 	conf = unquote(conf)
-	obj = json.loads(conf)
+	try:
+		obj = json.loads(conf)
+	except Exception as exception:
+		PLog("jsonloads_error: " + str(exception))
+		return False,"","","","","",""						# 7 Params
+
 	PLog(str(obj)[:60]); 
-	
 	verf=""; url=""; stream=""; 
 	tag=""; img=""
 
+	if "playerType" not  in obj:							# falsches Format
+		return False,"","","","","",""		
+		
 	typ = obj["playerType"]
 	try:
 		items = obj["pc"]["generic"]["imageTemplateConfig"]["size"]
