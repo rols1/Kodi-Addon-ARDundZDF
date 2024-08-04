@@ -10,6 +10,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+04.08.2024	ZDF_Search: Anpassung ZDF_Search_PATH an geänderte ZDF-Parameter.
+			Main_NEW (ARDnew): Verzicht auf fehlende Variable summ für Suche-Button
+			(verhinderte Öffnen des ARD-Menüs).
+			get_json_content (ARDnew): Codec-Error gefixt mit py2_encode(page) bei
+			Funktionsstart.
+			ARDStartRubrik (ARDnew): Ausschluß nicht auswertbarer Olympia-Seiten auf 
+			sportschau.de.
+			ARDPagination (ARDnew): quotierte Doppelpunkte in api-Url behandelt (http
+			400-Error). Anlass: Error HTTP 400 bei Mehr-Seiten in phoenix.
+			url_check (util): Rückgabe der (Redirect-)Url im Erfolgsfall, sonst False
+			wie bisher. Anpassungen in PlayVideo, PlayAudio.
+			get_page (util): Archivierung veraltete Kopfdoku, Berücksichtigung http-Error
+			307 für Redirects,
+			Addon-Wicki: Hinweis auf Proxy-Nutzung ergänzt und Verlinkung  mit Beitrag
+			@forrester # 3.735 vom 03.08.2024 
+			https://www.kodinerds.net/thread/64244-release-kodi-addon-ardundzdf/?postID=760618#post760618 
+			get_VideoAudio, get_content_json (TagesschauXL): Anpassung an geänderte 
+			eingebettete Playerdaten für Investigativ, Faktenfinder, Podcasts und Audios.
+
 25.07.2024 5.0.8
 			ZDF-Bereich: Umstellung auf neue api-Adresse zdf-cdn.live.cellular.de ->
 			zdf-prod-futura.zdf.de, Backportierung ZDF_VerpasstWoche und ZDF_Verpasst
@@ -17,7 +36,7 @@ CHANGE HISTORY
 			ZDFtivi, ZDF_Verpasst_Filter.
 			ARDSportWDR: Funktionsziel von ARDSportMedia auf ARDSportCluster geändert
 			(s. V5.0.7).
-			
+						
 22.07.2024 5.0.7
 			EPG_Sender, EPG_ShowAll: spez. Sender ohne Link in livesenderTV.xml aus den
 			Sender-Listen entfernt, z.B. liga3.

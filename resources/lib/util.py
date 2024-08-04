@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>105</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.07.2024
+#	Stand: 03.08.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -42,7 +42,6 @@ elif PYTHON3:
 		pass
 
 	
-# import requests		# kein Python-built-in-Modul, urllib2 verwenden
 import time, datetime
 from time import sleep  # PlayVideo
 
@@ -1082,31 +1081,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	return	
 
 #---------------------------------------------------------------- 
-# holt kontrolliert raw-Content, cTimeout für cacheTime
-# 02.09.2018	erweitert um 2. Alternative mit urllib2.Request +  ssl.SSLContext
-#	s.a. loadPage in Modul zdfmobile.
-# 11.10.2018 HTTP.Request (Plex) ersetzt durch urllib2.Request
-# 	03.11.2018 requests-call vorangestellt wg. Kodi-Problem: 
-#	bei urllib2.Requests manchmal errno(0) (https) - Verwend. installierter Zertifikate erfolglos
-# 07.11.2018 erweitert um Header-Anfrage GetOnlyRedirect zur Auswertung von Redirects (http error 302).
-# Format header dict im String: "{'key': 'value'}" - Bsp. Search(), get_formitaeten()
-# 23.12.2018 requests-call vorübergehend auskommentiert, da kein Python-built-in-Modul (bemerkt beim 
-#	Test in Windows7
-# 13.01.2019 erweitert für compressed-content (get_page2)
-# 25.01.2019 Rückgabe Redirect-Url (get_page2) in msg
-# 21.06.2020 urlencoding mit Param. safe für franz. Zeichen, Berücksicht. m3u8-Links,
-#	transl_umlaute(path) entfällt damit
-# 14.08.2020 do_safe-Param. triggert path-Quotierung, muss hier für Audiothek-Rubriken
-#	entfallen. Siehe auch Classic/SinglePage (do_safe von Umlaut abhängig machen - bei
-#	Bedarf hierher verlagern)
-# 02.09.2020 Rückgabe page='' bei PDF-Seiten
-# 02.11.2020 URLError -> Exception, s. changelog.txt
-# 06.08.2021 Behandl. HTTP Error 308: Permanent Redirect hinzugefügt
-# 21.03.2021 Option Download PDF-Dateien hinzugefügt
-# 09.11.2022 Option requests-call (get_page3) hinzugefügt (wirkt nur, falls einkompiliert od.
-#	lokal vorhanden - s.o.), exception-Rückgabe bei GetOnlyRedirect angepasst (Reuse path bei
-#	get_page3. Bei Bedarf nachrüsten in url_check + Modulen funk, updater, zdfmobile, EPG.
-# 09.07.2024 header hinzugefügt bei page2 (ssl-Error bei Windows10 und ARD-Links möglich)
+# 01.08.2024 Kopfdoku seit 2018 entfernt - sieheArchiv
+# 	
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True, decode=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("do_safe: " + str(do_safe)); 
@@ -1128,34 +1104,17 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	PLog("safe_path: " + path)
 
 	msg = ''; page = ''	
+	new_url=path														# dummy
 	UrlopenTimeout = 10
 
 
 	if page == '':
 		try:															# 1. Versuch ohne SSLContext 
 			PLog("get_page1:")
-			if GetOnlyRedirect:											# nur Redirect anfordern
-				# Alt. hier : new_url = r.geturl()
-				# bei Bedarf HttpLib2 mit follow_all_redirects=True verwenden
+			if GetOnlyRedirect:											# nur Redirect anfordern - hier nur dummy
 				PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
-				try:
-					r = urlopen(path)
-				except Exception as e:
-					PLog(str(e))
-					if "308:" in str(e) or "301:" in str(e):			# Permanent-Redirect-Url
-						new_url = e.hdrs.get("Location")
-						parsed = urlparse(path)
-						if new_url.startswith("http") == False:			# Serveradr. vorh.?
-							new_url = 'https://%s%s' % (parsed.netloc, new_url)
-						PLog("HTTP308_301_new_url: " + new_url)
-						return new_url, ''
-					else:
-						return '', str(e)
-					
-				page = r.geturl()
-				info = r.info()
-				PLog("redirect: %s, info: %s" % (page, str(info)[:100]))		# neue Url
-				return page, msg					
+				page, msg = getRedirect(path, header)
+				return page, msg
 
 			if header:
 				req = Request(path, headers=header)	
@@ -1176,8 +1135,9 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				f = gzip.GzipFile(fileobj=buf)
 				page = f.read()
 				PLog(len(page))
-			r.close()
-			if page.startswith(b'%PDF-'):								# Bsp. Rezepte (Die Küchenschlacht)
+			r.close()			
+			
+			if "%PDF-" in str(page):
 				msg1 = "PDF-Format nicht darstellbar"
 				msg2 = 'Inhalt verworfen'
 				msg = "%s,\n%s" % (msg1, msg2)
@@ -1205,29 +1165,28 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 						return '', msg
 				else:
 					return '', msg
-			PLog(page[:100])
+			PLog(page[:100])		
 			msg = new_url
 			
 		except Exception as exception:									# s.o.
 			msg = str(exception)
-			PLog(msg)
+			PLog("page1_error: " + msg)
 			if msg.find("HTTP Error") >= 0:								# ab 26.06.2023
 				PLog("return_HTTP Error: " + msg)
 				page=""
 				return page, msg
-				
-	
+
 	if page == '':
 		# wie url_check (o. header ssl-Error bei Windows10 möglich)
-		header="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
-			'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}"
+		header={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+			'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}
 		import ssl
 		try:
 			PLog("get_page2:")											# 2. Versuch mit SSLContext
 			if header:
 				req = Request(path, headers=header)	
 			else:
-				req = Request(path)														
+				req = Request(path)	
 			# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)				# insecure
 			gcontext = ssl.create_default_context()
 			gcontext.check_hostname = False
@@ -1241,13 +1200,14 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			PLog(page[:100])
 		except Exception as exception:									# s.o.
 			msg = str(exception)
+			PLog("page2_error: " + msg)
 			PLog(msg)						
 
 	req_fail=False
 	if page == '':
 		try:
 			PLog("get_page3:")											# 3. Versuch mit requests
-			import requests												# kann fehlen - s.o 
+			import requests												# kann fehlen 
 			if header:
 				r = requests.get(path, headers=header, timeout=UrlopenTimeout)	
 			else:
@@ -1258,32 +1218,27 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			PLog(page[:100])
 		except Exception as exception:
 			PLog(str(exception))
+			msg = str(exception)
+			PLog("page3_error: " + msg)
 			req_fail=True
 			page=""	
 
-			
-	if page == '':
-		error_txt = u'Quelle nicht erreichbar oder nicht mehr vorhanden.'
-		if req_fail:
-			error_txt = "%s\nget_page1 - get_page3 fehlgeschlagen." % error_txt
-		msg = error_txt + ' | %s' % msg
-		PLog(msg)
-		return page, msg
-		
 	if page:
-		if decode:
+		if decode:														# Decodierung - Default
+			PLog("decode_page: %s" % str(type(page)))
 			try:
 				if PYTHON2:			
 					page = py2_decode(page)								# erzeugt bei PY3 Bytestrings (ARD)
 				else:
 					page = page.decode('utf-8')
+				PLog(page[:100])
 			except Exception as exception:
 				msg = str(exception)
-				PLog(msg)
+				PLog("decode_error: " + msg)
 
 	return page, msg
 # ----------------------------------------------------------------------
-def getHeaders(response):
+def getHeaders(response):						# z.Z.  nicht genutzt
 	PLog('getHeaders:')
 	item_headers = ''
 	
@@ -1310,6 +1265,30 @@ def getHeaders(response):
 			headers = parse_headers(str(response.info()))
 		
 	return headers
+# ----------------------------------------------------------------------
+def getRedirect(path, header=""):		
+	PLog('getRedirect: '+ path)
+	msg=""
+
+	try:
+		r = urlopen(path)
+	except Exception as e:
+		PLog(str(e))
+		if "308:" in str(e) or "307:" in str(e) or "301:" in str(e):	# Permanent-Redirect-Url
+			new_url = e.hdrs.get("Location")
+			parsed = urlparse(path)
+			if new_url.startswith("http") == False:			# Serveradr. vorh.?
+				new_url = 'https://%s%s' % (parsed.netloc, new_url)
+			PLog("HTTP308_301_new_url: " + new_url)
+			return new_url, ''
+		else:
+			return '', str(e)
+		
+	page = r.geturl()
+	info = r.info()
+	PLog("redirect: %s, info: %s" % (page, str(info)[:100]))# neue Url
+	return page, msg	
+	
 # ----------------------------------------------------------------------
 # iteriert durch das Objekt	und liefert Restobjekt ab path
 # bei leerem Pfad wird jsonObject unverändert zurückgegeben
@@ -3502,7 +3481,9 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 	# kodi_version = re.search('(\d+)', KODI_VERSION).group(0) 		# Major-Version reicht hier - entfällt
 	
 	play_time=0; video_dur=0										# hier dummies (rel. -> PlayMonitor) 		
-	if url_check(url, caller='PlayVideo'):							# Url-Check
+	url = url_check(url, caller='PlayVideo')						# Url-Check: False oder Redirect-Url
+	if url:
+		
 		# Zuletzt-gesehen-Liste (STARTLIST) verwenden, Live-Streams
 		# werden später ausgeschlossen (s. prepare_resume), Aktualiserung
 		# der Liste in monitor_resume:
@@ -3877,8 +3858,10 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 		if url.startswith('smb://') == False:	# keine Share
 			url = os.path.abspath(url)
 	else:										# 14.01.2022 Bsp. HTTP Error 404 NDR Schlager
-		if url_check(url, caller='PlayAudio') == False:
+		url = url_check(url, caller='PlayAudio')# False oder Redirect-Url
+		if url == False:
 			return
+		
 	
 	# 1. Url einer Playlist auspacken, Bsp.: MDR-Sachsen Fußball-Livestream
 	#	bei Bedarf ausbauen (s. get_m3u Tunein2017)
@@ -3978,41 +3961,25 @@ def url_check(url, caller='', dialog=True):
 					msg1= 'Video fehlt! Datei:'
 				MyDialog(msg1, msg2, "")		 			 	 
 			return False
-		
-	UrlopenTimeout = 6
+	#-----------------------------------------
+	# hier bei Bedarf ein SessionTimeout verwenden, Bsp.
+	#	blog.apify.com/python-requests-timeout/
+	UrlopenTimeout = 2
 	# Tests:
-	# url='http://104.250.149.122:8012'	# Debug: HTTP Error 401: Unauthorized
-	# url='http://feeds.soundcloud.com/x'	# HTTP Error 400: Bad Request
-	header="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
-		'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}"
-	header = header.replace("'", "\"")		# json.loads-kompatible string-Rahmen
-	header = json.loads(header)
-	
-	req = Request(url, headers=header)
-	try:
-		r = urlopen(req, timeout=UrlopenTimeout)
-		PLog('Status1: ' + str(r.getcode()))
-		return True
-	except Exception as exception:
-		err = str(exception)
-		PLog("Fehler: " + err)
-		if "CERTIFICATE_VERIFY_FAILED" in str(exception):
-			import ssl						# 22.06.2024 ssl-error Windows10, s. Forum
-			PLog("try_ssl_default_context")
-			try:
-				gcontext = ssl.create_default_context()
-				gcontext.check_hostname = False
-				r = urlopen(req, context=gcontext, timeout=UrlopenTimeout)
-				PLog('Status2: ' + str(r.getcode()))
-				return True
-			except Exception as exception:
-				err = str(exception)
-				PLog("return_true_on_error: " + err)
-				return True
-		
+	# url='http://104.250.149.122:8012'			# Debug: urlopen error Connection refused
+	# url='http://feeds.soundcloud.com/x'		# HTTP Error 405: Method Not Allowed
+
+	header={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+		'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}
+
+	page, msg = getRedirect(url, header)			
+	if page:
+		return page							# ermittelte Url	
+	else:
+		PLog("url_check_error: " + msg)
 		msg1= '%s: Quelle nicht erreichbar - Url:' % caller
 		msg2 = url
-		msg3 = 'Fehler: %s' % err
+		msg3 = 'Fehler: %s' % msg
 		PLog(msg3)
 		if dialog:
 			MyDialog(msg1, msg2, msg3)		 			 	 

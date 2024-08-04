@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>212</nr>										# Numerierung für Einzelupdate
-VERSION = '5.0.8'
-VDATE = '25.07.2024'
+VERSION = '5.0.9'
+VDATE = '04.08.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1145,8 +1145,8 @@ def Main_ZDF(name=''):
 		thumb=R('ZDFinternational.png'), tagline=tag, summary=summ, fparams=fparams)
 	# -------------------
 
-	fparams="&fparams={'s_type': 'Bilderserien', 'title': 'Bilderserien', 'query': 'Bilderserie'}"
-	addDir(li=li, label="Bilderserien", action="dirList", dirID="ZDF_Search", fanart=R(ICON_ZDF_BILDERSERIEN), 
+	fparams="&fparams={}"
+	addDir(li=li, label="Bilderserien", action="dirList", dirID="ZDF_Bildgalerien", fanart=R(ICON_ZDF_BILDERSERIEN), 
 		thumb=R(ICON_ZDF_BILDERSERIEN), fparams=fparams)
 
 	fparams="&fparams={}"												# ab V 4.8.1
@@ -9014,20 +9014,13 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	PLog(query); PLog(pagenr); PLog(s_type)
 	ID='Search'
 	ZDF_Search_PATH	 = "https://zdf-prod-futura.zdf.de/mediathekV2/search?profile=cellular-5&q=%s&page=%s"
-	if s_type == 'Bilderserien':	# im api zdf-cdn nicht verfügbar (bilder-der-woche-100)
-		ZDF_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&synth=true&sender=Gesamtes+Angebot&from=&to=&attrs=&abGroup=gruppe-a&page=%s'
-		ID=s_type
 	
 	if pagenr == '':		# erster Aufruf muss '' sein
 		pagenr = 1
 	path = ZDF_Search_PATH % (quote(py2_encode(query)), str(pagenr)) 
 	PLog(path)
 	
-	page, msg = get_page(path=path, do_safe=False)	# +-Zeichen für Blank nicht quoten
-	if s_type == 'Bilderserien':	# 'ganze Sendungen' aus Suchpfad entfernt:
-		ZDF_Bildgalerien(page)
-		return
-	
+	page, msg = get_page(path=path, do_safe=False)	# +-Zeichen für Blank nicht quoten	
 	try:
 		jsonObject = json.loads(page)
 		searchResult = str(jsonObject["totalResultsCount"])
@@ -10555,13 +10548,20 @@ def get_form_streams(page):
 	return formitaeten, duration, geoblock, sub_path
 	
 #-------------------------
-# Aufrufer: ZDF_Search (weitere Seiten via page_cnt)
 #	Einzelseite -> ZDF_BildgalerieSingle
-def ZDF_Bildgalerien(page):	
-	PLog('ZDF_Bildgalerien:'); 
+def ZDF_Bildgalerien(pagenr=""):	
+	PLog('ZDF_Bildgalerien: ' + str(pagenr)); 
+
+	if pagenr == '':		# erster Aufruf muss '' sein
+		pagenr = 1
+	
+	pic_path = "https://www.zdf.de/suche?q=%s&synth=true&usePartnerContent=true&syntheticProfile=large&sender=Gesamtes+Angebot&from=&to=&attrs=&abName=ab-2024-07-29&abGroup=gruppe-e&page=%s"
+	pic_path = pic_path % ("Bilderserie", str(pagenr)) 
+	PLog(pic_path)
+	page, msg = get_page(path=pic_path, do_safe=False)	
 	
 	if page == '':
-		msg1 = 'Seite kann nicht geladen werden: [B]%s[/B]' % title
+		msg1 = 'Keine (weiteren) Bilderserien gefunden' 
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return
@@ -10592,6 +10592,9 @@ def ZDF_Bildgalerien(page):
 			path = 	stringextract('plusbar-url="', '"', rec)
 		if path.startswith("http") == False:
 			path = "https://www.zdf.de" + path
+		if path == "https://www.zdf.de":					# ohne Link zur Bilderserie
+			continue
+
 		title = stringextract('title="', '"', href)			# falls leer -> descr, s.u.
 			
 		descr = stringextract('description">', '<', rec)
@@ -10616,7 +10619,7 @@ def ZDF_Bildgalerien(page):
 						
 		title = unescape(title); summ = unescape(descr)
 		title=repl_json_chars(title); summ=repl_json_chars(summ)	
-		PLog('neuer Satz')
+		PLog('neuer_Satz')
 		PLog(thumb);PLog(path);PLog(title);PLog(summ);PLog(tag);
 		
 		path=py2_encode(path); title=py2_encode(title);
@@ -10625,7 +10628,16 @@ def ZDF_Bildgalerien(page):
 			fparams=fparams, summary=summ,  tagline=tag)
 		page_cnt = page_cnt + 1
 	
-	PLog("Serien: %d" + str(page_cnt))
+	PLog("Serien: %s" % str(page_cnt))
+	
+	#--------------------------------------------------------			# nächste Seite
+	if page_cnt >= 20:
+		img = R(ICON_ZDF_BILDERSERIEN)
+		pagenr =  int(pagenr)+1
+		tag = "zu Seite %d" % pagenr
+		fparams="&fparams={'pagenr': '%s'}" % str(pagenr)
+		addDir(li=li, label="Mehr: Bilderserien", action="dirList", dirID="ZDF_Bildgalerien", \
+			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 

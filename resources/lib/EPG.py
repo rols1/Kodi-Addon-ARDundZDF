@@ -111,6 +111,7 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 # Hinw.: NICHT für neu ins Repo eingefügte Module (lokale Datei fehlt für
 #	den Abgleich).
 # Ablösung der vorherigen Funktion update_tvxml
+# Aufruf: InfoAndFilter
 #
 # Details Commits (json):
 # 	https://api.github.com/repos/rols1/Kodi-Addon-ARDundZDF/commits?&page=1&per_page=1 
