@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>212</nr>										# Numerierung für Einzelupdate
+# 	<nr>213</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.9'
-VDATE = '04.08.2024'
+VDATE = '05.08.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3490,9 +3490,9 @@ def ARDSportWDR():
 	img = "https://images.sportschau.de/image/8256571a-83dd-474d-9f81-982a02eea327/AAABi9KI1Ww/AAABjwnlFvA/16x9-1280/logo-olympia-paris-2024-100.jpg"
 	path = "https://www.sportschau.de/olympia/index.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 
@@ -3502,9 +3502,9 @@ def ARDSportWDR():
 	img = "https://images.sportschau.de/image/b0709b8b-c4de-4632-af95-5594f03eeea3/AAABkAOw8zc/AAABjwnlFvA/16x9-1280/nizza-256.jpg"
 	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 
@@ -3514,10 +3514,10 @@ def ARDSportWDR():
 	img = "https://images.sportschau.de/image/8f60e4b7-dd53-4cee-bbc2-5ace93112d8b/AAABiz2LtlE/AAABjwnlFvA/16x9-1280/em-pokal-122.jpg"
 	path = "https://www.sportschau.de/fussball/uefa-euro-2024"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
 
 	#---------------------------------------------------------	Großevents Ende
 
@@ -3597,10 +3597,10 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/8f60e4b7-dd53-4cee-bbc2-5ace93112d8b/AAABiz2LtlE/AAABjwnlFvA/16x9-1280/em-pokal-122.jpg"
 	path = "https://www.sportschau.de/fussball/uefa-euro-2024"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]Basketball-WM 2023[/B]"							# Großevent	
 	tag = u"Aktuelle News zur Basketball-WM 2023 | sportschau.de"
@@ -3608,10 +3608,10 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/b39a8ecf-aeb3-4781-a3fe-1038a5a5a36a/AAABifMqafU/AAABibBxqrQ/16x9-1280/ndr-dennis-schroeder-haelt-den-ball-und-lacht-100.jpg"
 	path = "https://www.sportschau.de/basketball/wm-maenner"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]Radsport: Deutschland Tour 2023[/B]"			# Großevent	
 	tag = u"Livestreams, Rennberichte, Analysen, Videos, Ergebnisse zur Deutschland Tour."
@@ -3619,10 +3619,10 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/c5f18e62-94e0-471f-96fc-1ca5b9d462a1/AAABiU-tGd0/AAABibBx2rU/20x9-1280/deutschland-tour-erste-etappe-108.webp"
 	path = "https://www.sportschau.de/radsport/deutschland-tour/"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]Hockey-EM 2023 der Männer und Frauen[/B]"		# Großevent	
 	tag = u"Aktuelle News zur Hockey-EM 2023 in Mönchengladbach | sportschau.de."
@@ -3630,10 +3630,10 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/30211f21-15dc-44a1-a8f4-64971d609de9/AAABhOMvB3Y/AAABibBxqrQ/16x9-1280/wdr-kampf-um-den-ball-100.jpg"
 	path = "https://www.sportschau.de/hockey/feldhockey-em-index-100.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]FIFA Frauen WM 2023[/B]"						# Großevent	
 	tag = u"32 Mannschaften spielen im Juli und August in Australien und Neuseeland um den Fußball-WM-Titel der Frauen."
@@ -3641,9 +3641,9 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/b64c79b7-767b-4a7f-acda-841a07ef03d4/AAABiUo9W2s/AAABg8tME_8/16x9-1280/ffwm-pokal-laenderflaggen-100.jpg"
 	path = "https://www.sportschau.de/fussball/fifa-frauen-wm"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]Tour de France 2024[/B]"					# Großevent	
@@ -3652,9 +3652,9 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/b0709b8b-c4de-4632-af95-5594f03eeea3/AAABkAOw8zc/AAABjwnlFvA/16x9-1280/nizza-256.jpg"
 	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]Handball-WM 2023 in Polen und Schweden[/B]"		# Großevent	
@@ -3663,9 +3663,9 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/9741356a-13b2-40ed-93d0-bb70c90ebbd1/AAABhSXiawI/AAABg8tME_8/16x9-1280/handball-wm-bild-100.jpg"
 	path = "https://www.sportschau.de/handball/wm"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]Die Finals 2023[/B]"							# Großevent	
@@ -3674,9 +3674,9 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/825edf08-5ec7-4c15-9aab-2f6cca8a1d8d/AAABgWF00Tc/AAABgPp7Db4/16x9-1280/titelbild-100.jpg"
 	path = "https://www.sportschau.de/die-finals"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]TOUR DE FRANCE FEMMES 2023[/B]"					# Großevent	
@@ -3685,9 +3685,9 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/39c37172-4556-4739-a361-76f7fa50eb9a/AAABghr-8j8/AAABgPp7Db4/16x9-1280/giro-donne-feld-100.jpg"
 	path = "https://www.sportschau.de/radsport/tour-de-femmes-100.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]NORDISCHE SKI-WM 2023[/B]"						# Großevent	
@@ -3696,9 +3696,9 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/237354e3-b9b2-46bf-993a-8ecc48947e7f/AAABhol6U80/AAABg8tMRzY/20x9-1280/constantin-schmid-150.webp"
 	path = "https://www.sportschau.de/wintersport/nordische-ski-wm"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]Leichtathletik-WM 2022 in Eugene[/B]"			# Großevent	
@@ -3707,9 +3707,9 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/13d0db07-7943-415b-951f-2bfc4be7c8e9/AAABgRYL9Ys/AAABgPp7WOA/20x9-1280/leichtathlet-ryan-crouser-100.webp"
 	path = "https://www.sportschau.de/leichtathletik/wm"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]European Championships 2022[/B]"				# Großevent	
@@ -3718,9 +3718,9 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/014165c6-378c-4007-84f8-cc1d6fc3df77/AAABgmeih7M/AAABgPp7Db4/16x9-1280/symbolbild-european-championships-100.jpg"
 	path = "https://www.sportschau.de/european-championships"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]FUSSBALL: EM FRAUEN 2022[/B]"					# Großevent	
@@ -3729,9 +3729,9 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/46aa5ce0-ec8d-4d74-8f68-b93052194f5a/AAABgWEbjDs/AAABgPp7Db4/16x9-1280/uefa-frauen-em-2022-logo-100.jpg"
 	path = "https://www.sportschau.de/fussball/frauen-em"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 	title = u"Event: [B]Fußball WM 2022 in Katar[/B]"					# Großevent	
@@ -3740,9 +3740,9 @@ def ARDSportWDRArchiv():
 	img = "https://images.sportschau.de/image/1e5f994d-d7c8-4c5b-a98b-23a8c5b3a71c/AAABhFJhnRw/AAABg8tME_8/16x9-1280/wm-katar-logo-news-100.jpg"
 	path = "https://www.sportschau.de/fussball/fifa-wm-2022"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
@@ -4573,11 +4573,11 @@ def ARDSportAudioStreams(title, path, img, cacheID):
 # Aufrufer ARDSportAudioStreams, ARDSportLive, ARDSportCluster
 # Externe Links im html-Code (z.B. NDR, Pferdesport) sind nicht mit 
 #	Streamquellen im mediaplayer hinterlegt
-# Slider-Auswertung extern für gesamte Seite (hier page=cluster möglich) 
 #
 def ARDSportMedia(li, title, page, path=""): 
 	PLog('ARDSportMedia: ' + title)
 	base = "https://www.sportschau.de"
+	import resources.lib.TagesschauXL as TagesschauXL	
 	
 	if path:												# Bsp. sportschau.de/olympia
 		page = ARDSportLoadPage(title, path, "ARDSportMedia")
@@ -4589,183 +4589,46 @@ def ARDSportMedia(li, title, page, path=""):
 		li = home(li, ID='ARD')						# Home-Button
 		eof=True
 		
+	content =  blockextract('data-v=', page, '</div>')	
+	PLog("content: %d" % len(content))
 
-	teaser_xs=[]; teaser_slider=[]; teaser_data=[]
-	if "Livestreams" in title:
-		teaser = blockextract('class="teaser__media"', page)
-	elif "Audiostreams" in title:	
-		teaser = blockextract('class="mediaplayer', page)
-	else:
-		if 'class="v-instance teaser-slider' in page:
-			teaser_slider = stringextract('class="v-instance teaser-slider', '</div>', page)
-		teaser = blockextract('class="teaser__media"', page)
-		teaser = teaser + blockextract('class="teaser__link"', page, '</div>')			
-		teaser_xs = blockextract('class="teaser-xs__link"', page, '</div>')
-		if 'class="v-instance' in page:
-			teaser_data = teaser + blockextract('class="v-instance', page, '</div>')
-		
-	PLog(len(teaser_slider))
-	PLog(len(teaser))
-	PLog(len(teaser_xs))
-	PLog(len(teaser_data))
-	items = teaser + teaser_xs + teaser_data
-	if len(items) == 0 and not teaser_slider:
+	if len(content) == 0:
 		icon = R("ard-sportschau.png")
 		msg1 = u"%s:" % title
 		msg2 = u'keine Videos/Audios/Bilder gefunden'
 		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=True)
 		return 0 
 				
-	mediatype=''			
+	mediatype=''									# Kennz. Video für Sofortstart
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
 		
-	#-------------------------------------------------------------------# rolling Highlights allein
-	if 	teaser_slider: 			
-		PLog("get_teaser_slider")
-		slider_data = ARDSportgetPlayer(teaser_slider)
-		PLog(py2_decode(slider_data)[:80])
-	
-		try:
-			slider = json.loads(slider_data)
-			sliderItems = slider["sliderItems"]
-			PLog(len(sliderItems))
-		except Exception as exception:
-			PLog("sliderItems_error:" + str(exception))
-			slider_items=[]	
-		
-		slider_items  = blockextract('"teaserUrl"', py2_decode(slider_data))
-		cnt=0; 
-		for item_data in slider_items:
-			player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item_data)
-			title=repl_json_chars(title)
-			PLog("Satz12_1:")
-			PLog(player); PLog(live); PLog(title); PLog(mp3_url); PLog(stream_url);   
-			PLog(img); PLog(summ[:80]);
-			title=py2_encode(title); mp3_url=py2_encode(mp3_url); img=py2_encode(img);
-			tag=py2_encode(tag); Plot=py2_encode(Plot);
-			
-			if player == "video":
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
-					quote(title), quote(img), quote_plus(Plot))
-				addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-					tagline=tag, summary=summ, mediatype='mediatype')
-				cnt=cnt+1
-		if cnt and eof==False:		
-			return
-	
-	#-------------------------------------------------------------------	
-	# json.loads scheiterte in cont (char 360) - vermutl. vergessenes Komma:
-	cnt=0; skip_list=["dummy"]
-	for item in items:		
-		player=''; live=False; title='';  mp3_url=''; stream_url=''; 
-		img=''; tag=''; summ=''; Plot=''; player="text"
-		PLog("item: " + item[:60])
-		
-		topline = stringextract('__topline">', '</', item)
-		title = stringextract('__headline">', '</', item)	# html-Bereich
-		summ = stringextract('__shorttext">', '</', item)	# html-Bereich, fehlt im json-Bereich
-		summ=cleanhtml(summ)
-		title=title.replace('"', ''); title=mystrip(title)
-		title=cleanhtml(title)
-		title=repl_json_chars(title); summ=repl_json_chars(summ);
-		title=title.strip(); summ=summ.strip() 
-		
-		if topline:
-			summ = "[B]%s[/B]\n%s" % (topline, summ)	
-		title_html=title									# Altern. für ARDSportMediaPlayer		
-		summ_html=summ										# dto.	
+	cnt = 0; url_list=[]
+	for item in content:
+		PLog(item[:80])
 
-		#---------------------------------------------------
-		if item.find('_topline">Bilderstrecke<') >= 0:		# Ausleitung Bildgalerie
-			if item.startswith('class="teaser__link'):
-				player = "pics"
-				url = stringextract('href="', '"', item)
-				skip_list.append(url)
-				if url.startswith("http") == False:
-					url = base + url
-			
-				tag = "[B]Bilderstrecke[/B]" 
-				img = stringextract('src="', '"', item)
-				PLog("Satz12_pic:")
-				PLog(title); PLog(url); PLog(img); PLog(summ[:80]);
-				fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" % (quote(title), 
-					quote(url), quote(img))
-				addDir(li=li, label=title, action="dirList", dirID="ARDSportBilder", fanart=img, thumb=img, 
-					fparams=fparams, tagline=tag, summary=summ)
-				continue	
-		#---------------------------------------------------
-		
-		if item.find('class="mediaplayer') >= 0:
-			if player != "pics":
-				item_data  = ARDSportgetPlayer(item)	# json-Inhalt zum Player
-				player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, item_data)
-				title=repl_json_chars(title)
-
-		if len(summ_html) > len(summ):						# Alternative
-			summ = summ_html
-		if len(title_html) > len(title_html):				# Alternative
-			title = title_html
-		
-		if title in skip_list:								# Doppel in Blöcken möglich
-			PLog("skip: " + title)
+		typ,av_typ,title,tag,summ,img,stream = TagesschauXL.get_content_json(item)
+		if typ == False:											# jsonloads_error
 			continue
-		skip_list.append(title)
-		
-		if os.path.splitext(img)[-1] == "":					# fehlende Extension möglich
-			img = img + ".png"
 				
-		PLog("Satz12_2:")
-		PLog(player); PLog(live); PLog(title); PLog(mp3_url); PLog(stream_url);   
-		PLog(img); PLog(summ[:80]);
-		title=py2_encode(title); mp3_url=py2_encode(mp3_url); img=py2_encode(img);
-		tag=py2_encode(tag); Plot=py2_encode(Plot);
-		
-		if player == "audio":
-			if live:														# netcast Livestream
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
-					quote(title), quote(img), quote_plus(Plot))
-				addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
-					tagline=tag, mediatype='music')	
-			else:															# Konserve
-				ID="ARD"													# ID Home-Button
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
-					quote(title), quote(img), quote_plus(Plot), ID)
-				addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
-					fparams=fparams, tagline=tag, summary=summ)
-		if player == "video":
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
-				quote(title), quote(img), quote_plus(Plot))
-			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-				tagline=tag, summary=summ, mediatype='mediatype')	
-		
-		if player == "text":												# Textbeiträge, Verbleib in Liste
-			if item.find('__headline"') < 0:								# Kombi-Satz aus 2 Blöcken mögl.
-				continue
-				
-			img = stringextract('src="', '"', item)
-			label = stringextract("<strong>", "</strong>", item)
-			label = unescape(label)
-			if "Audio" in label or "Podcast" in label or "Video" in label:	# ähnlich ARDSportSlider
-				url = stringextract('href="', '"', item)
-				if url.startswith("http") == False:
-					url = base + url
-				PLog("Satz12_xslink: %s, %s" % (title,url))
-				title=py2_encode(title); url=py2_encode(url);
-				img=py2_encode(img); Plot=py2_encode(Plot);
-				tag = "weiter zum [B]%s[/B]-Beitrag" % label
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
-					quote(title), quote(img), quote_plus(Plot))
-				addDir(li=li, label=title, action="dirList", dirID="ARDSportSliderSingle", fanart=img, thumb=img, fparams=fparams, 
-					tagline=tag, summary=summ)			
-			else:
-				if img == "":													# kann fehlen
-					img = R(ICON_DIR_FOLDER) 								
-				tag = "[B]ohne Videos, Audios, Bilder[/B]\nMehr auf sportschau.de.."
-				title = "[COLOR grey]%s[/COLOR]" % title
-				PLog("Satz12_text: %s" % title)
-				fparams="&fparams={}" 
-				addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, thumb=img, fparams=fparams, 
-					tagline=tag, summary=Plot)				
+		title=py2_encode(title); stream=py2_encode(stream); 
+		summ=py2_encode(summ); img=py2_encode(img); 
 			
+		if typ == "audio":											# Audio
+			ID='TagesschauXL'
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" %\
+				(quote(stream), quote(title), quote(img), quote_plus(summ), ID)
+			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+		
+		live=""
+		if SETTINGS.getSetting('pref_startlist') == 'true':			# Blockade verhindern, s. Kopf
+			live="true"		
+		if typ == "video":											# Video	
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': '%s'}" %\
+				(quote(stream), quote(title), quote(img), quote_plus(summ), live)
+			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)			
 		cnt = cnt + 1
 	
 	if eof:
