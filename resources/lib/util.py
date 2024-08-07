@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>105</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.08.2024
+# 	<nr>106</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.08.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1082,7 +1082,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 
 #---------------------------------------------------------------- 
 # 01.08.2024 Kopfdoku seit 2018 entfernt - sieheArchiv
-# 	
+# 05.08.2024 Auswertung PDF-Format entfernt - nicht mehr gesehen	
 #
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True, decode=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("do_safe: " + str(do_safe)); 
@@ -1103,78 +1103,42 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		path = quote(path, safe="#@:?,&=/")	# s.o.
 	PLog("safe_path: " + path)
 
-	msg = ''; page = ''	
-	new_url=path														# dummy
+	msg=''; page=''; compressed=''	
+	new_url=path													# dummy
 	UrlopenTimeout = 10
 
 
-	if page == '':
-		try:															# 1. Versuch ohne SSLContext 
-			PLog("get_page1:")
-			if GetOnlyRedirect:											# nur Redirect anfordern - hier nur dummy
-				PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
-				page, msg = getRedirect(path, header)
-				return page, msg
+	try:															# 1. Versuch ohne SSLContext 
+		PLog("get_page1:")
+		if GetOnlyRedirect:											# nur Redirect anfordern - hier nur dummy
+			PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
+			page, msg = getRedirect(path, header)
+			return page, msg
 
-			if header:
-				req = Request(path, headers=header)	
-			else:
-				req = Request(path)
-			
-			r = urlopen(req, timeout=UrlopenTimeout)					# float-Werte möglich
-			new_url = r.geturl()										# follow redirects
-			PLog("new_url: " + new_url)									# -> msg s.u.
-			# PLog("headers: " + str(r.headers))
-			
-			compressed = r.info().get('Content-Encoding') == 'gzip'
-			PLog("compressed: " + str(compressed))
-			page = r.read()
-			PLog(len(page))
-			if compressed:
-				buf = BytesIO(page)
-				f = gzip.GzipFile(fileobj=buf)
-				page = f.read()
-				PLog(len(page))
-			r.close()			
-			
-			if "%PDF-" in str(page):
-				msg1 = "PDF-Format nicht darstellbar"
-				msg2 = 'Inhalt verworfen'
-				msg = "%s,\n%s" % (msg1, msg2)
-				dl_path = SETTINGS.getSetting('pref_download_path')
-				if os.path.isdir(dl_path):
-					fname = make_filenames(new_url.split('/')[-1])
-					if '7Eoriginalcb' in fname:							# ZDF: ..rezepte-vom-21-maerz-2022-100~original?cb=..
-						fname = fname.split('7Eoriginalcb')[0]
-					PLog("Mark0")
-					PLog(fname);PLog(new_url);	
-					heading = "PDF-Datei herunterladen?"
-					msg1 = u"PDF-Dateien sind hier nicht darstellbar"
-					msg2 = u"Soll die Datei [B]>%s<[/B] heruntergeladen werden?" % fname
-					msg3 = "Ablage: Downloadverzeichnis"
-					ret2 = MyDialog(msg1=msg1, msg2=msg2, msg3=msg3, ok=False, cancel='Abbruch', yes='JA', heading=heading)
-					if ret2 == 1:
-						fpath = os.path.join(dl_path, fname)
-						PLog(fpath);
-						urlretrieve(new_url, fpath)
-						if os.path.exists(fpath):
-							return '', "Stattdessen: [B]PDF-Datei erfolgreich heruntergeladen[/B]"
-						else:
-							return '', "[B]Download der PDF-Datei gescheitert[/B]"
-					else:
-						return '', msg
-				else:
-					return '', msg
-			PLog(page[:100])		
-			msg = new_url
-			
-		except Exception as exception:									# s.o.
-			msg = str(exception)
-			PLog("page1_error: " + msg)
-			if msg.find("HTTP Error") >= 0:								# ab 26.06.2023
-				PLog("return_HTTP Error: " + msg)
-				page=""
-				return page, msg
+		if header:
+			req = Request(path, headers=header)	
+		else:
+			req = Request(path)
+		
+		r = urlopen(req, timeout=UrlopenTimeout)					# float-Werte möglich
+		new_url = r.geturl()										# follow redirects
+		PLog("new_url: " + new_url)									# -> msg s.u.
+		# PLog("headers: " + str(r.headers))
+		
+		compressed = r.info().get('Content-Encoding') == 'gzip'
+		PLog("compressed: " + str(compressed))
+		page = r.read()
+		r.close()			
+		PLog(len(page))
+		msg = new_url		
+	except Exception as exception:									# s.o.
+		msg = str(exception)
+		PLog("page1_error: " + msg)
+		if msg.find("HTTP Error") >= 0:								# ab 26.06.2023
+			PLog("return_HTTP Error: " + msg)
+			page=""
+			#return page, msg
+
 
 	if page == '':
 		# wie url_check (o. header ssl-Error bei Windows10 möglich)
@@ -1187,23 +1151,21 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 				req = Request(path, headers=header)	
 			else:
 				req = Request(path)	
-			# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)				# insecure
 			gcontext = ssl.create_default_context()
 			gcontext.check_hostname = False
-			# gcontext.verify_mode = ssl.CERT_REQUIRED
 			r = urlopen(req, context=gcontext, timeout=UrlopenTimeout)
-			# r = urllib2.urlopen(req)
-			# PLog("headers: " + str(r.headers))
+			
+			compressed = r.info().get('Content-Encoding') == 'gzip'
+			PLog("compressed: " + str(compressed))
 			page = r.read()
 			r.close()
 			PLog(len(page))
-			PLog(page[:100])
 		except Exception as exception:									# s.o.
 			msg = str(exception)
 			PLog("page2_error: " + msg)
 			PLog(msg)						
 
-	req_fail=False
+
 	if page == '':
 		try:
 			PLog("get_page3:")											# 3. Versuch mit requests
@@ -1215,27 +1177,35 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			PLog(r.status_code)
 			page = r.content
 			PLog(len(page))
-			PLog(page[:100])
+			compressed=False
 		except Exception as exception:
 			PLog(str(exception))
 			msg = str(exception)
 			PLog("page3_error: " + msg)
-			req_fail=True
 			page=""	
 
-	if page:
+	# PLog(page[:100]) - 06.08.2024 Ausgabe kann hier in Leia an "string with null bytes" 
+	#	scheitern, falls get_page2 durchlaufen wird.
+	if page:															
+		PLog(type(page))
 		if decode:														# Decodierung - Default
 			PLog("decode_page: %s" % str(type(page)))
 			try:
+				if compressed:
+					buf = BytesIO(page)
+					f = gzip.GzipFile(fileobj=buf)
+					page = f.read()
+					PLog(len(page))
 				if PYTHON2:			
 					page = py2_decode(page)								# erzeugt bei PY3 Bytestrings (ARD)
 				else:
 					page = page.decode('utf-8')
-				PLog(page[:100])
 			except Exception as exception:
 				msg = str(exception)
 				PLog("decode_error: " + msg)
 
+	PLog(page[:100])
+	PLog("get_page_exit")
 	return page, msg
 # ----------------------------------------------------------------------
 def getHeaders(response):						# z.Z.  nicht genutzt
