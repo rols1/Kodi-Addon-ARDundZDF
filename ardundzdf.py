@@ -51,14 +51,14 @@ import resources.lib.updater as updater
 from resources.lib.util import *
 import resources.lib.EPG as EPG
 import resources.lib.epgRecord as epgRecord
-
+	
 																		
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>213</nr>										# Numerierung für Einzelupdate
+# 	<nr>214</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.9'
-VDATE = '05.08.2024'
+VDATE = '11.08.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3508,17 +3508,6 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 
 
-	title = u"Event: [B]UEFA EURO 2024[/B]"							# Großevent	
-	tag = u"Alle Infos zur UEFA EURO 2024 | sportschau.de"
-	cacheID = "UEFA_EURO"
-	img = "https://images.sportschau.de/image/8f60e4b7-dd53-4cee-bbc2-5ace93112d8b/AAABiz2LtlE/AAABjwnlFvA/16x9-1280/em-pokal-122.jpg"
-	path = "https://www.sportschau.de/fussball/uefa-euro-2024"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
-		(quote(title), quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
-
 	#---------------------------------------------------------	Großevents Ende
 
 	title = u"Event-Archiv"									# Buttons für ältere Events	
@@ -3591,6 +3580,28 @@ def ARDSportWDRArchiv():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
+	title = u"Event: [B]OLYMPIA 2024[/B]"							# Großevent	
+	tag = u"Alles zu den Olympischen Spielen 2024 Paris - News, Ergebnisse, Livestreams"
+	cacheID = "Sport_OLYMPIA_2024"
+	img = "https://images.sportschau.de/image/8256571a-83dd-474d-9f81-982a02eea327/AAABi9KI1Ww/AAABjwnlFvA/16x9-1280/logo-olympia-paris-2024-100.jpg"
+	path = "https://www.sportschau.de/olympia/index.html"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+	title = u"Event: [B]Tour de France 2024[/B]"					# Großevent	
+	tag = u"Tour de France 2024, Livestreams, Videos, Nachrichten, Rennberichte, Etappen, Ergebnisse und Wertungen"
+	cacheID = "Sport_TourdeFrance_2024"
+	img = "https://images.sportschau.de/image/b0709b8b-c4de-4632-af95-5594f03eeea3/AAABkAOw8zc/AAABjwnlFvA/16x9-1280/nizza-256.jpg"
+	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Event: [B]UEFA EURO 2024[/B]"							# Großevent	
 	tag = u"Alle Infos zur UEFA EURO 2024 | sportschau.de"
 	cacheID = "UEFA_EURO"
@@ -3717,17 +3728,6 @@ def ARDSportWDRArchiv():
 	cacheID = "ECS"
 	img = "https://images.sportschau.de/image/014165c6-378c-4007-84f8-cc1d6fc3df77/AAABgmeih7M/AAABgPp7Db4/16x9-1280/symbolbild-european-championships-100.jpg"
 	path = "https://www.sportschau.de/european-championships"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
-		(quote(title), quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
-
-	title = u"Event: [B]FUSSBALL: EM FRAUEN 2022[/B]"					# Großevent	
-	tag = u"16 Mannschaften spielen im Juli in England um den Titel bei der Fußball-EM. News, Livestreams, Spielplan und Ergebnisse zur UEFA-Frauen-EM."
-	cacheID = "Sport_WMFrauen"
-	img = "https://images.sportschau.de/image/46aa5ce0-ec8d-4d74-8f68-b93052194f5a/AAABgWEbjDs/AAABgPp7Db4/16x9-1280/uefa-frauen-em-2022-logo-100.jpg"
-	path = "https://www.sportschau.de/fussball/frauen-em"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
 		(quote(title), quote(path))
@@ -4570,12 +4570,13 @@ def ARDSportAudioStreams(title, path, img, cacheID):
 
 #---------------------------------------------------------------------------------------------------
 # Auswertung mediaplayer-Klassen (quoted:data-v=..)
-# Aufrufer ARDSportAudioStreams, ARDSportLive, ARDSportCluster
-# Externe Links im html-Code (z.B. NDR, Pferdesport) sind nicht mit 
-#	Streamquellen im mediaplayer hinterlegt
+# Aufrufer ARDSportWDR, ARDSportAudioStreams, 
+#	ARDSportCluster
+# 05.08.2024 Nutzung TagesschauXL.get_content_json
 #
 def ARDSportMedia(li, title, page, path=""): 
 	PLog('ARDSportMedia: ' + title)
+	title_org=title
 	base = "https://www.sportschau.de"
 	import resources.lib.TagesschauXL as TagesschauXL	
 	
@@ -4630,6 +4631,14 @@ def ARDSportMedia(li, title, page, path=""):
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)			
 		cnt = cnt + 1
+		
+	if cnt == 0: 
+		msg1 = u'weder Videos noch Audios:'
+		msg2 = title_org
+		icon = ICON_MAINXL		
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
+		PLog("%s: %s" % (msg1, msg2))
+		return
 	
 	if eof:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -6698,7 +6707,7 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 	if SETTINGS.getSetting('pref_LiveRecord_input') == 'true':
 		laenge = "wird manuell eingegeben"
 
-	title = 'EPG Alle JETZT | Recording TV-Live'; 
+	title = 'EPG Alle JETZT | Recording TV-Live'; 						# EPG-Button Alle 
 	summary =u'elektronischer Programmführer\n\nAufnehmen via Kontexmenü, Dauer: %s (siehe Settings)' % laenge
 	tagline = 'zeigt die laufende Sendung für jeden Sender | Quelle: tvtoday.de'
 	title=py2_encode(title);
@@ -6706,7 +6715,7 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 	addDir(li=li, label=title, action="dirList", dirID="EPG_ShowAll", fanart=R('tv-EPG-all.png'), 
 		thumb=R('tv-EPG-all.png'), fparams=fparams, summary=summary, tagline=tagline)
 							
-	title = 'EPG Sender einzeln'; 										# EPG-Button Einzeln anhängen
+	title = 'EPG Sender einzeln'; 										# EPG-Button Einzeln 
 	if SETTINGS.getSetting('pref_epgRecord') == 'true':		
 		title = 'EPG Sender einzeln | Sendungen mit EPG aufnehmen'; 
 	tagline = u'zeigt für den ausgewählten Sender ein 12-Tage-EPG | Quelle: tvtoday.de'
@@ -6714,12 +6723,20 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 	fparams="&fparams={'title': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="EPG_Sender", fanart=R(ICON_MAIN_TVLIVE), 
 		thumb=R('tv-EPG-single.png'), fparams=fparams, summary=summary, tagline=tagline)	
-		
+
+	title = 'Suche im EPG'; 											# EPG-Button Suche 
+	tagline = 'Suche im 12-Tage-EPG | Quelle: tvtoday.de'
+	summary='Aktualisierungsintervall (Setting): [B]%s[/B]' % SETTINGS.getSetting('pref_epg_intervall')
+	title=py2_encode(title);
+	fparams="&fparams={'title': '%s'}" % title
+	addDir(li=li, label=title, action="dirList", dirID="EPG_Search", fanart=R('tv-EPG-suche.png'), 
+		thumb=R('tv-EPG-suche.png'), fparams=fparams, summary=summary, tagline=tagline)
+
 	PLog(str(SETTINGS.getSetting('pref_LiveRecord'))) 
 	if SETTINGS.getSetting('pref_LiveRecord') == 'true':		
 		title = 'Recording TV-Live'										# TVLiveRecord-Button anhängen
-		summary = u'Sender wählen und direkt aufnehmen.\nDauer: %s (siehe Settings)' % laenge
 		tagline = 'Downloadpfad: %s' 	 % SETTINGS.getSetting('pref_download_path') 				
+		summary = u'Sender wählen und direkt aufnehmen.\nDauer: %s (siehe Settings)' % laenge
 		fparams="&fparams={'title': '%s'}" % title
 		addDir(li=li, label=title, action="dirList", dirID="TVLiveRecordSender", fanart=R(ICON_MAIN_TVLIVE), 
 			thumb=R('icon-record.png'), fparams=fparams, summary=summary, tagline=tagline)
@@ -6779,6 +6796,198 @@ def EPG_Sender(title, Merk='false'):
 				fparams=fparams, tagline='weiter zum EPG' + add, summary=summ)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+#-----------------------------------------------------------------------------------------------------
+# Aufrufer SenderLiveListePre
+# Setting "EPG im Hintergrund laden" wird geprüft
+# Wegen des Kodi-Problems (Vermeidung Absturzproblem nach Abbruch, s.
+#	SearchARDundZDFnew) wird Ergebnisliste erst in EPG_Search2 gebaut.
+# EPG_Search2 übernimmt EPG_Search_Array (Sätze ab akt. Tag)  und 
+#	sortiert nach starttime. Den gefundenen Sätzen wird hier die 
+#	Sender-ID angehängt (sonst keine Zuordnung in EPG_Search2 möglich).
+#
+def EPG_Search(title, query=""):
+	PLog('EPG_Search:')
+	from resources.lib.ARDnew import ARDHandleRecents
+	
+	img = R("tv-EPG-suche.png")
+	title_org=title
+
+	if SETTINGS.getSetting('pref_epgpreload') == 'false':
+		xbmcgui.Dialog().notification(title_org, "EPG laden ist ausgeschaltet",img,3000)
+		return
+			
+	query = ARDHandleRecents(title, mode="load", query="")
+	if  query == None or query.strip() == '':
+		return
+	query = query.split('|')[0]											# Suchwortliste: doppelt für ARD|ZDF
+	if len(query) <3:
+		msg1 = u"Suchworte müssen  mindestens 3 Buchstaben  enthalten."
+		MyDialog(msg1, '', '')	
+		return
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
+	
+	sort_playlist = get_sort_playlist()									# Senderliste wie EPG.thread_getepg
+	plen = len(sort_playlist)
+	PLog("SearchSender: %d" % plen)
+	
+	now,today,today_5Uhr,nextday,nextday_5Uhr = EPG.get_unixtime()		# lokale Unix-Zeitstempel holen + Offsets
+	
+	EPG_SearchHits=[]													# nimmt Treffer ab akt. Tag auf
+	tag_negativ =u'neue EPG-Suche starten'								# ohne Treffer
+	tag_positiv =u'gefundene Beiträge zeigen'							# mit Treffer
+	cnt=0; up_query=up_low(query);
+	for i in range(len(sort_playlist)):
+		rec = sort_playlist[i]
+		sender=rec[0]; ID=rec[1]; sender_img=rec[2]; link = rec[3]		# Senderdaten 
+
+		fname = os.path.join(DICTSTORE, "EPG_%s" % ID)
+		if os.path.exists(fname):										# Dict-Datei (tvtoday-ID) vorhanden?
+			EPG_dict = Dict("load", fname)								# Array-Format s. EPG.EPG, 12-Tage-EPG je Sender
+			
+			if EPG_dict == False or len(EPG_dict) == 0 or '<!DOCTYPE html>' in EPG_dict:	# Array-Format korrekt?
+				continue
+			if up_query not in up_low(str(EPG_dict)):					# Suchbegriff irgendwo im 12-Tage-Array?
+				continue
+			for r in EPG_dict:											# Fundstellen, Button in EPG_Search2
+				starttime=r[0]
+				if starttime < today:									# älter als heute -> verwerfern
+					continue
+				if up_query in up_low(r[3]) or up_query in up_low(r[5]):# Fund? 3=sname, 5=summ
+					r.append(ID)										# Sender-ID anhängen für Zuordnung EPG_Search2
+					if r in EPG_SearchHits:								# Doppel üblich bei Regionalsendern
+						PLog("skip_double: %s | %s" % (ID, starttime))
+						continue
+					EPG_SearchHits.append(r)							# Treffer-Satz speichern
+					PLog("query_found: %s | %s" % (query, r[3]))
+					PLog(str(r))						 						
+					cnt=cnt+1
+	
+	#-----------------------------------
+	PLog("cnt: %d" % cnt)
+	store_recents=False
+	if cnt == 0:
+		img = R('tv-EPG-suche.png')
+		label = "[B]EPG-Suche[/B] | nichts gefunden zu: [B]%s[/B] | neue Suche" % query
+		fparams="&fparams={'title': '%s', 'query': ''}" % quote(title)
+		addDir(li=li, label=label, action="dirList", dirID="EPG_Search", 
+			fanart=img, thumb=img, tagline=tag_negativ, fparams=fparams)
+	else:	
+		store_recents = True
+		Dict("store", "EPG_SearchHits", EPG_SearchHits)					# -> EPG_Search2		
+	
+	#-----------------------------------
+	if store_recents:										
+		ARDHandleRecents(title, mode="store", query=query)				# query -> Suchwortliste
+		
+		title = "[B]EPG-Suche[/B]: %s Video(s)  | %s" % (cnt, query)	# Button -> EPG_Search2
+		fparams="&fparams={'title': '%s', 'query': '%s'}" % (quote_plus(title), quote_plus(query))
+		addDir(li=li, label=title, action="dirList", dirID="EPG_Search2", fanart=img, 
+			thumb=img, fparams=fparams, tagline=tag_positiv)
+												
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#-----------------------------
+# Aufruf EPG_Search
+# Suchergebnis im Dict (EPG_SearchHits) 
+# Schema: Senderliste sortieren (playlist), EPG_SearchHits laden + 
+#		nach starttime sortieren, Je Satz Abgleich mit Titel (sname)
+#		 und Beschreibung (summ), Play-Button bei Treffer.
+# img-Format von tvtoday auffällig im Log: Could not find suitable 
+#	input format: x-directory/normal
+#
+def EPG_Search2(title, query=""):
+	PLog('EPG_Search2: ' + query)
+	
+	from resources.lib.ARDnew import ARDHandleRecents
+	icon = R("tv-EPG-suche.png")
+	title_org=title
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID=NAME)				# Home-Button
+	
+	EPG_SearchHits = Dict("load", "EPG_SearchHits")
+	if EPG_SearchHits == False or EPG_SearchHits == '':					# Ladeproblem?	
+		EPG_SearchHits=[]
+	PLog("EPG_SearchHits: %d" % len(EPG_SearchHits))
+	EPG_SearchHits = sorted(EPG_SearchHits)								# nach starttime r[0] sortieren 
+	
+	sort_playlist = get_sort_playlist()									# Senderliste wie EPG.thread_getepg
+	plen = len(sort_playlist)
+	PLog("SearchSender2: %d" % plen)
+
+
+	cnt=0; up_query=up_low(query); store_recents=False
+	img_base = "https://images.tvtoday.de/"
+	for i in range(len(EPG_SearchHits)):
+		r = EPG_SearchHits[i]
+		ID = r[-1]; sender=""; sender_img=""; link=""					# Sender-ID
+				
+		if up_query in up_low(r[3]) or up_query in up_low(r[5]):		# Fund? 3=sname, 5=summ
+			PLog("query_found2: %s | %s" % (query, r[3]))
+			PLog(str(r))
+			
+			for rec in sort_playlist:									# Sender-Datensatz suchen
+				if ID == rec[1]:
+					sender=rec[0]; ID=rec[1]; sender_img=rec[2]; link = rec[3]	# Senderdaten
+					sender_img = R(sender_img)
+					PLog("Sender: %s, ID: %s" % (sender, ID))
+					break
+			if sender == "":											# sollte nicht vorkommen
+				PLog("SenderID_missing: %s" % ID)
+				continue
+			
+			starttime=r[0]; img=r[2]; sname=r[3]; 
+			summ=r[5]; vonbis=r[6];today_human=r[7]
+			s_start = datetime.datetime.fromtimestamp(int(starttime))	# Unixtime -> human wie EPG.EPG
+			day_human =  s_start.strftime("%d.%m.%Y")
+			PLog("day_human: " + day_human)
+
+			wday =  s_start.strftime("%A")					
+			wday = transl_wtag(wday)									# engl. -> deutsch
+			img = img.replace(".webp", ".jpg")
+			if img.startswith("/"):										# /bundles/frontend/images/..
+				img = img_base + img
+			if img == "":												# kann fehlen
+				img = sender_img
+			PLog("wday: %s, img: %s" % (wday, img))
+			 
+			
+			today_human = "%s, %s" % (day_human, up_low(wday[:2]))		# Datum + Wochentag -> tagline, Titel						
+			tag = "[COLOR blue]%s[/COLOR] | [B]%s[/B] | zur Livesendung klicken" % (today_human, vonbis)
+			summ = "%s | %s" % (sender, summ)
+			Plot = summ.replace("\n", "||")
+			title = "[COLOR blue]%s[/COLOR] | %s" % (day_human, sname)	# Datum + Wochentag | Titel
+			
+			PLog("Satz7:")
+			PLog(today_human);PLog(title);PLog(vonbis);PLog(summ[:40]);
+
+			title=py2_encode(title); summ=py2_encode(summ); sender_img=py2_encode(sender_img)						
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': ''}" %\
+				(quote_plus(link), quote_plus(title), quote_plus(sender_img), quote_plus(Plot)) 
+			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=sender_img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ, mediatype='video')												
+			
+			cnt=cnt+1	
+
+	#-----------------------------------
+	PLog("cnt: %d" % cnt)
+	# Suchergebnis 0 möglich, falls Call von EPG_Search2 mit großer Zeitdiff. - unwahrscheinlich
+	if cnt == 0:														
+		xbmcgui.Dialog().notification(title_org, "leider nichts gefunden",icon,3000)
+		return
+	else:	
+		store_recents = True		
+	
+	#-----------------------------------
+	if 	store_recents:													# Sucheingabe speichern
+		ARDHandleRecents(title_org, mode="store", query=query)
+
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
 #-----------------------------
 # Liste aller TV-Sender wie EPG_Sender, hier mit Aufnahme-Button
 # 17.04.2024 Ausfilterung spezieller Sender aus livesenderTV.xml
@@ -8848,16 +9057,8 @@ def ZDF_get_navi(DictID, title, homeID=""):
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
-####################################################################################################
+###################################################################################################
 # ZDF-Suche:
-# 	Voreinstellungen: alle ZDF-Sender, ganze Sendungen, sortiert nach Datum
-#	Anzahl Suchergebnisse: 25 - nicht beeinflussbar
-#	Format Datum (bisher nicht verwendet)
-#		..&from=2012-12-01T00:00:00.000Z&to=2019-01-19T00:00:00.000Z&..
-#	ZDF_Search_PATH steht bei Rekursion nicht als glob. Variable zur Verfügung
-# 	02.06.2021 Umstellung auf alle Beiträge (statt ganzen Sendungen)
-# 	25.04.2023 Umstellung auf zdf-cdn, Pfad für MEHR_Suche (s_type) 
-#		identisch (Aufruf ZDF_search_button <- ZDF_RubrikSingle)
 # 
 def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	PLog("ZDF_Search:")
@@ -8928,8 +9129,8 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 			thumb=R(ICON_MEHR), tagline=tagline, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
 ###################################################################################################
+
 # Liste der Wochentage ZDF
 # ARD s. ARDnew.SendungenAZ (früherer Classic-Code entfernt)
 # 
