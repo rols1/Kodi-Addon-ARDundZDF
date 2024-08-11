@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>21</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.07.2024
+# 	<nr>22</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.08.2024
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -338,7 +338,7 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		EPG_dict = get_data_web(page, Dict_ID)							# Web -> 2-dim-Array EPG_rec -> Dict					 
 	else:																# EPG_rec = type list 
 		EPG_dict = page	
-	PLog(len(str(page)))
+	# PLog(len(str(page)))												# codec-Error python2.*
 
 	# today.de verwendet Unix-Format, Bsp. 1488830442
 	now,today,today_5Uhr,nextday,nextday_5Uhr = get_unixtime(day_offset)# lokale Unix-Zeitstempel holen + Offsets
@@ -358,7 +358,7 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime,  
 		#			5=summ, 6=vonbis, 7=today_human, 8=endtime:  
 		starttime=r[0]; href=r[1]; img=r[2]; sname=r[3];				# href=r[1] nicht verwendet
-		stime=r[4]; summ=r[5]; vonbis=r[6];today_human=r[7]; 			# today_human=r[8] noch leer
+		stime=r[4]; summ=r[5]; vonbis=r[6];today_human=r[7]; 			# today_human=r[7] noch leer
 		endtime=r[8];
 		
 		s_start = 	datetime.datetime.fromtimestamp(int(starttime))		# Zeit-Konvertierung UTC-Startzeit

@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>214</nr>										# Numerierung für Einzelupdate
+# 	<nr>215</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.9'
 VDATE = '11.08.2024'
 
@@ -6860,9 +6860,8 @@ def EPG_Search(title, query=""):
 					if r in EPG_SearchHits:								# Doppel üblich bei Regionalsendern
 						PLog("skip_double: %s | %s" % (ID, starttime))
 						continue
-					EPG_SearchHits.append(r)							# Treffer-Satz speichern
+					EPG_SearchHits.append(r)							# Treffer-Sender-EPG speichern
 					PLog("query_found: %s | %s" % (query, r[3]))
-					PLog(str(r))						 						
 					cnt=cnt+1
 	
 	#-----------------------------------
@@ -6956,8 +6955,9 @@ def EPG_Search2(title, query=""):
 			PLog("wday: %s, img: %s" % (wday, img))
 			 
 			
-			today_human = "%s, %s" % (day_human, up_low(wday[:2]))		# Datum + Wochentag -> tagline, Titel						
+			today_human = u"%s, %s" % (day_human, up_low(wday[:2]))		# Datum + Wochentag -> tagline, Titel						
 			tag = "[COLOR blue]%s[/COLOR] | [B]%s[/B] | zur Livesendung klicken" % (today_human, vonbis)
+			sender = py2_decode(sender)
 			summ = "%s | %s" % (sender, summ)
 			Plot = summ.replace("\n", "||")
 			title = "[COLOR blue]%s[/COLOR] | %s" % (day_human, sname)	# Datum + Wochentag | Titel
@@ -6965,7 +6965,8 @@ def EPG_Search2(title, query=""):
 			PLog("Satz7:")
 			PLog(today_human);PLog(title);PLog(vonbis);PLog(summ[:40]);
 
-			title=py2_encode(title); summ=py2_encode(summ); sender_img=py2_encode(sender_img)						
+			title=py2_encode(title); summ=py2_encode(summ); sender_img=py2_encode(sender_img)
+			Plot=py2_encode(Plot); 						
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': ''}" %\
 				(quote_plus(link), quote_plus(title), quote_plus(sender_img), quote_plus(Plot)) 
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=sender_img, thumb=img, 
