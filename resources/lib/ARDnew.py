@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>87</nr>										# Numerierung für Einzelupdate
-#	Stand: 01.08.2024
+# 	<nr>88</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.08.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2454,32 +2454,19 @@ def SendungenAZ_ARDnew(title, button, href, CurSender="", homeID=''):
 #
 def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 	PLog('SearchARDundZDFnew:');
-	PLog(title); PLog(home)
+	PLog(title); PLog(homeID)
 	title_org=title
 	query_file 	= os.path.join(ADDON_DATA, "search_ardundzdf")
 	
 	if query == '':														# Liste letzte Sucheingaben
-		query_recent= RLoad(query_file, abs_path=True)
-		if query_recent.strip():
-			search_list = ['neue Suche']
-			query_recent= query_recent.strip().splitlines()
-			query_recent=sorted(query_recent, key=str.lower)
-			search_list = search_list + query_recent
-			ret = xbmcgui.Dialog().select('Sucheingabe', search_list, preselect=0)
-			if ret == -1:
-				PLog("Liste Sucheingabe abgebrochen")
-				return ardundzdf.Main()
-			elif ret == 0:
-				query = ''
-			else:
-				query = search_list[ret]
-				query = "%s|%s" % (query,query)							# doppeln			
-	
-	if query == '':
-		query = ardundzdf.get_query(channel='ARDundZDF') 
-	if  query == None or query.strip() == '':
-		# return li														# getting plugin Error
-		return ardundzdf.Main()
+		query = ARDHandleRecents(title, mode="load", query=query)
+	if  query == None or query.strip() == '':							# plugin Error vermeiden
+		if "ARD und ZDF" in title:										
+			return ardundzdf.Main()
+		if 'Suche in ARD-Mediathek' in title:
+			return Main_NEW()	
+		if 'Suche in ZDF-Mediathek' in title:
+			return ardundzdf.Main_ZDF()	
 		
 	query=py2_encode(query)		# decode, falls erf. (1. Aufruf)
 	PLog(query)
@@ -2497,7 +2484,7 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 		li = home(li, ID=homeID)										# ARD od. ZDF
 	
 	#------------------------------------------------------------------	# 1. Suche ARD
-	if 'Suche in ARD-Mediathek' in title or "ARD und ZDF" in title_org:	
+	if 'Suche in ARD-Mediathek' in title or "ARD und ZDF" in title:	
 		sendername, sender, kanal, img, az_sender = ARDSender[0].split(':') # in allen Sendern
 		sender = 'ard'
 		pageNumber = 0
@@ -2609,21 +2596,58 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 					thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)	
 	
 	#-----------------------------------
-	# Länge begrenzt auf 24, Änderung angleichen -> tool.SearchWordWork
 	if 	store_recents:													# Sucheingabe speichern
+		ARDHandleRecents(title_org, mode="store", query=query_ard)
+			
+	xbmcplugin.endOfDirectory(HANDLE)
+	
+#----------------------------------------------------------------
+# Suchworte laden + speichern
+# Länge begrenzt auf 24, Änderung angleichen -> tool.SearchWordWork
+#
+def ARDHandleRecents(title, mode="load", query=""):
+	PLog('ARDHandleRecents: %s, %s' % (mode, title));	
+	PLog(query)
+	query_file 	= os.path.join(ADDON_DATA, "search_ardundzdf")
+
+	query_recent = RLoad(query_file, abs_path=True)
+	if mode == "load":													# laden
+		if query_recent.strip():
+			search_list = ['neue Suche']
+			query_recent= query_recent.strip().splitlines()
+			query_recent=sorted(query_recent, key=str.lower)
+			search_list = search_list + query_recent
+			ret = xbmcgui.Dialog().select('Sucheingabe', search_list, preselect=0)
+			if ret == -1:
+				PLog("abort_search_list")
+				return None
+			elif ret == 0:
+				query = ''
+			else:
+				query = search_list[ret]
+				query = "%s|%s" % (query,query)							# doppeln
+						
+		if query == '':
+			query = ardundzdf.get_query(channel='ARDundZDF')			# Kodi-Suchdialog 
+		if  query == None or query.strip() == '':
+			return None
+
+		PLog("query: " + str(query))
+		return query
+
+	else:																# speichern	
 		query_recent= RLoad(query_file, abs_path=True)
 		query_recent= query_recent.strip().splitlines()
 		if len(query_recent) >= 24:										# 1. Eintrag löschen (ältester)
 			del query_recent[0]
-		query_ard=py2_encode(query_ard)
-		if query_ard not in query_recent:								# query_ard + query_zdf ident.
-			query_recent.append(query_ard)
+		query=py2_encode(query)
+		if query not in query_recent:									# query_ard + query_zdf ident.
+			query_recent.append(query)
 			query_recent = "\n".join(query_recent)
 			query_recent = py2_encode(query_recent)
-			RSave(query_file, query_recent)								# withcodec: code-error
-			
-	xbmcplugin.endOfDirectory(HANDLE)
+			RSave(query_file, query_recent)								# withcodec: code-error		
 	
+		return
 #---------------------------------------------------------------- 
 # Suche in Mediathek
 # Statt des api-Calls funktioniert auch https://www.ardmediathek.de/ard/search/%s
