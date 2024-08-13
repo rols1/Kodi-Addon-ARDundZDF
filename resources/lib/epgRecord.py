@@ -7,8 +7,8 @@
 #
 ####################################################################################################
 #	01.07.2020 Start
-# 	<nr>1</nr>								# Numerierung für Einzelupdate
-#	Stand: 28.01.2023
+# 	<nr>2</nr>								# Numerierung für Einzelupdate
+#	Stand: 13.08.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -434,6 +434,8 @@ def JobMain(action, start_end='', title='', descr='',  sender='', url='', setSet
 ##################################################################
 #---------------------------------------------------------------- 
 # 31.12.2023 Bereinigung KillFile-Ruinen entfernt (obsolet)
+# 13.08.2024 Button "abgelaufene Jobs löschen"  ergänzt, Liste der 
+#	zu löschenden in JobID_list -> JobRemoveExp.
 # 
 def JobListe():														# Liste, Job-Status, Jobs löschen
 	PLog("JobListe:")
@@ -446,7 +448,7 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 		if len(jobs) == 0:
 			xbmcgui.Dialog().notification("Jobliste:", "keine Aufnahme-Jobs vorhanden",MSG_ICON,3000)	
 	else:
-			xbmcgui.Dialog().notification("Jobliste:", "nicht gefunden",MSG_ICON,3000)
+		xbmcgui.Dialog().notification("Jobliste:", "nicht gefunden",MSG_ICON,3000)
 		
 	now = EPG.get_unixtime(onlynow=True)
 	now = int(now)
@@ -459,7 +461,7 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 	anz_jobs = len(jobs)
 	jobs.sort()
 		
-	
+	exp_cnt=0; JobID_list=[]
 	for cnt in range(len(jobs)):
 			myjob = jobs[cnt]
 			PLog(myjob[:80])			
@@ -512,6 +514,8 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 					status_real = "[B] Jobstatus: Aufnahme wurde gestartet [/B]" + status_add
 				else:
 					status_real = "[B] Jobstatus: Aufnahme wurde nicht gestartet [/B] - Ursache nicht bekannt"
+				JobID_list.append(JobID)						# 	
+				exp_cnt=exp_cnt+1
 			else:												# noch aktiv
 				img = MSG_ICON									# grau
 				job_active = True
@@ -531,6 +535,15 @@ def JobListe():														# Liste, Job-Status, Jobs löschen
 				(sender, job_title, start_end, job_active, pid, JobID)
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.epgRecord.JobRemove", fanart=R(ICON_DOWNL_DIR), 
 				thumb=img, fparams=fparams, tagline=tag, summary=summ)
+	
+	if exp_cnt > 0:		
+		label = u'abgelaufene Jobs [B](%d)[/B] ohne Rückfrage löschen.' % exp_cnt
+		tag = u"nicht beendete und künftige Jobs bleiben erhalten."
+		Dict("store", "JobID_list", JobID_list)
+		fparams="&fparams={'Dict_ID':'%s'}" % "JobID_list"
+		addDir(li=li, label=label, action="dirList", dirID="resources.lib.epgRecord.JobRemoveExp", fanart=R("icon-delete.png"), 
+			thumb=R("icon-delete.png"), fparams=fparams, tagline=tag)
+				
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
@@ -603,6 +616,36 @@ def JobRemove(sender, job_title, start_end, job_active, pid, JobID):
 	save_Joblist(jobs, newjob_list, "Jobliste:", u"Job gelöscht")	
 	return
 	
+#----------------------------------------------------------------
+# Aufrufer: JobListe
+# Ablauf: löscht aus der Jobliste die Jobs, die mit den via Dict_ID
+#	übergebenen JobID's übereinstimmen 
+#
+def JobRemoveExp(Dict_ID):
+	PLog("JobRemoveExp: " + Dict_ID)
+	JobID_list = Dict("load", Dict_ID)
+	PLog("JobID_list: " + str(JobID_list))
+	
+	jobs = ReadJobs()
+	jobs.sort()
+	PLog("jobs: %d" % len(jobs))
+	
+	newjob_list=[]; del_cnt=0
+	for job in jobs:
+		JobID = stringextract('<JobID>', '</JobID>', job)
+		PLog("JobID: " + JobID)
+		if JobID in JobID_list:
+			del_cnt=del_cnt+1
+		else:
+			newjob_list.append(job)
+		
+	PLog("newjob_list: %d" % len(newjob_list))
+	save_Joblist(jobs, newjob_list, "Jobliste:", "")					# ohne notification
+	icon = MSG_ICON
+	xbmcgui.Dialog().notification("Jobliste:",u"%d Job(s) gelöscht." % del_cnt,icon,3000)
+	
+	return			
+
 #----------------------------------------------------------------
 # wie JobRemove - nur stoppen, ohne Änderung der Jobliste
 # Aufruf: Kontextmenü Jobliste
