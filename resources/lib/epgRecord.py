@@ -7,8 +7,8 @@
 #
 ####################################################################################################
 #	01.07.2020 Start
-# 	<nr>2</nr>								# Numerierung für Einzelupdate
-#	Stand: 13.08.2024
+# 	<nr>3</nr>								# Numerierung für Einzelupdate
+#	Stand: 16.08.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -634,13 +634,14 @@ def JobRemoveExp(Dict_ID):
 	for job in jobs:
 		JobID = stringextract('<JobID>', '</JobID>', job)
 		PLog("JobID: " + JobID)
-		if JobID in JobID_list:
+		if JobID in JobID_list:											# Satz verwerfen
 			del_cnt=del_cnt+1
 		else:
+			job = JOB_TEMPL % job										# <job>%s</job>
 			newjob_list.append(job)
-		
+
 	PLog("newjob_list: %d" % len(newjob_list))
-	save_Joblist(jobs, newjob_list, "Jobliste:", "")					# ohne notification
+	save_Joblist(jobs, newjob_list, "Jobliste:", "")					# -> JOBLIST_TEMPL, ohne notification dort
 	icon = MSG_ICON
 	xbmcgui.Dialog().notification("Jobliste:",u"%d Job(s) gelöscht." % del_cnt,icon,3000)
 	

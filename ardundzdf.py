@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>215</nr>										# Numerierung für Einzelupdate
+# 	<nr>216</nr>										# Numerierung für Einzelupdate
 VERSION = '5.0.9'
-VDATE = '11.08.2024'
+VDATE = '16.08.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6030,7 +6030,6 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 			quote_plus(summary), quote_plus(sub_path))
 		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, tagline=tagline,
 			thumb=thumb, fparams=fparams, mediatype='video')
-		
 	else:																# 'mp3' = Podcast
 		# Dateiname bei fehl. Beschreibung, z.B. Sammeldownloads:
 		if fulldest_path.endswith('mp3') or fulldest_path.endswith('m3u'): 	# 1. Anhören
@@ -6717,7 +6716,7 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 							
 	title = 'EPG Sender einzeln'; 										# EPG-Button Einzeln 
 	if SETTINGS.getSetting('pref_epgRecord') == 'true':		
-		title = 'EPG Sender einzeln | Sendungen mit EPG aufnehmen'; 
+		title = u"%s | [B]Sendungen via Kontexmenü aufnehmen[/B]" % title
 	tagline = u'zeigt für den ausgewählten Sender ein 12-Tage-EPG | Quelle: tvtoday.de'
 	summary='je Seite: 24 Stunden (zwischen 05.00 und 05.00 Uhr des Folgetages)'
 	fparams="&fparams={'title': '%s'}" % title
@@ -6725,6 +6724,8 @@ def SenderLiveListePre(title, offset=0):	# Vorauswahl: Überregional, Regional, 
 		thumb=R('tv-EPG-single.png'), fparams=fparams, summary=summary, tagline=tagline)	
 
 	title = 'Suche im EPG'; 											# EPG-Button Suche 
+	if SETTINGS.getSetting('pref_epgRecord') == 'true':
+		title = u"%s | [B]Sendungen via Kontexmenü aufnehmen[/B]" % title
 	tagline = 'Suche im 12-Tage-EPG | Quelle: tvtoday.de'
 	summary='Aktualisierungsintervall (Setting): [B]%s[/B]' % SETTINGS.getSetting('pref_epg_intervall')
 	title=py2_encode(title);
@@ -6881,6 +6882,8 @@ def EPG_Search(title, query=""):
 	if store_recents:										
 		ARDHandleRecents(title, mode="store", query=query)				# query -> Suchwortliste
 		
+		if SETTINGS.getSetting('pref_epgRecord') == 'true':	
+			tag_positiv = u"%s und via Kontextmenü aufnehmen" % tag_positiv
 		title = "[B]EPG-Suche[/B]: %s Video(s)  | %s" % (cnt, query)	# Button -> EPG_Search2
 		fparams="&fparams={'title': '%s', 'query': '%s'}" % (quote_plus(title), quote_plus(query))
 		addDir(li=li, label=title, action="dirList", dirID="EPG_Search2", fanart=img, 
@@ -6895,6 +6898,8 @@ def EPG_Search(title, query=""):
 # Schema: Senderliste sortieren (playlist), EPG_SearchHits laden + 
 #		nach starttime sortieren, Je Satz Abgleich mit Titel (sname)
 #		 und Beschreibung (summ), Play-Button bei Treffer.
+#		Aufbau Liste ähnlich EPG_ShowSingle.
+#		Setting 'pref_epgRecord' triggert Kontexmenü "Sendung aufnehmen" 
 # img-Format von tvtoday auffällig im Log: Could not find suitable 
 #	input format: x-directory/normal
 #
@@ -6918,6 +6923,7 @@ def EPG_Search2(title, query=""):
 	plen = len(sort_playlist)
 	PLog("SearchSender2: %d" % plen)
 
+	now,today,today_5Uhr,nextday,nextday_5Uhr = EPG.get_unixtime()		# lokale Unix-Zeitstempel holen + Offsets
 
 	cnt=0; up_query=up_low(query); store_recents=False
 	img_base = "https://images.tvtoday.de/"
@@ -6939,12 +6945,13 @@ def EPG_Search2(title, query=""):
 				PLog("SenderID_missing: %s" % ID)
 				continue
 			
-			starttime=r[0]; img=r[2]; sname=r[3]; 
-			summ=r[5]; vonbis=r[6];today_human=r[7]
+			starttime=r[0]; img=r[2]; sname=r[3]; summ=r[5];			# EPG-Datensatz
+			vonbis=r[6]; today_human=r[7]; endtime=r[8]
+			
 			s_start = datetime.datetime.fromtimestamp(int(starttime))	# Unixtime -> human wie EPG.EPG
 			day_human =  s_start.strftime("%d.%m.%Y")
 			PLog("day_human: " + day_human)
-
+			
 			wday =  s_start.strftime("%A")					
 			wday = transl_wtag(wday)									# engl. -> deutsch
 			img = img.replace(".webp", ".jpg")
@@ -6956,23 +6963,31 @@ def EPG_Search2(title, query=""):
 			 
 			
 			today_human = u"%s, %s" % (day_human, up_low(wday[:2]))		# Datum + Wochentag -> tagline, Titel						
-			tag = "[COLOR blue]%s[/COLOR] | [B]%s[/B] | zur Livesendung klicken" % (today_human, vonbis)
+			tag = u"[COLOR blue]%s[/COLOR] | [B]%s[/B] | zur Livesendung klicken." % (today_human, vonbis)
+			start_end=""
+			if SETTINGS.getSetting('pref_epgRecord') == 'true':	
+				tag = u"%s\n[B]Zur Aufnahme:[/B] Kontextmenü" % tag
+				start_end = "%s|%s" % (starttime, endtime)				# Kontexmenü "Sendung aufnehmen" 
+
 			sender = py2_decode(sender)
 			summ = "%s | %s" % (sender, summ)
 			Plot = summ.replace("\n", "||")
-			title = "[COLOR blue]%s[/COLOR] | %s" % (day_human, sname)	# Datum + Wochentag | Titel
+			if starttime < now:
+				title = "[COLOR grey]%s | %s[/COLOR]" % (day_human, sname)	# grau - Vergangenheit
+			else:
+				title = "[COLOR blue]%s[/COLOR] | %s" % (day_human, sname)	# Datum + Wochentag | Titel
 			
 			PLog("Satz7:")
 			PLog(today_human);PLog(title);PLog(vonbis);PLog(summ[:40]);
-
-			title=py2_encode(title); summ=py2_encode(summ); sender_img=py2_encode(sender_img)
-			Plot=py2_encode(Plot); 						
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': ''}" %\
-				(quote_plus(link), quote_plus(title), quote_plus(sender_img), quote_plus(Plot)) 
-			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=sender_img, thumb=img, 
-				fparams=fparams, tagline=tag, summary=summ, mediatype='video')												
 			
-			cnt=cnt+1	
+			title=py2_encode(title); link=py2_encode(link); img=py2_encode(img)
+			Plot=py2_encode(Plot); 						
+			fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','descr': '%s','Sender': '%s'}" %\
+				(quote(link), quote(title), quote(img), quote(Plot), sender)
+			addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=R('tv-EPG-single.png'), 
+				thumb=img, fparams=fparams, summary=summ, tagline=tag, start_end=start_end)
+			
+			cnt=cnt+1				
 
 	#-----------------------------------
 	PLog("cnt: %d" % cnt)
@@ -6982,6 +6997,12 @@ def EPG_Search2(title, query=""):
 		return
 	else:	
 		store_recents = True		
+																		# Wechsel-Button zu den DownloadTools:	
+		if SETTINGS.getSetting('pref_epgRecord') == 'true':	
+			tagline = 'Downloads und Aufnahmen: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
+			fparams="&fparams={}"
+			addDir(li=li, label='Download- und Aufnahme-Tools', action="dirList", dirID="DownloadTools", 
+				fanart=R(FANART), thumb=R(ICON_DOWNL_DIR), tagline=tagline, fparams=fparams)	
 	
 	#-----------------------------------
 	if 	store_recents:													# Sucheingabe speichern
@@ -7824,7 +7845,7 @@ def WDRstream(path, title, img, summ):
 #
 def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', start_end='', homeID=''):
 	PLog('SenderLiveResolution:')
-	PLog(title); PLog(path); PLog(descr); PLog(Sender);
+	PLog(title); PLog(path); PLog(thumb); PLog(descr); PLog(Sender);
 	path_org = path
 
 	# Radiosender in livesenderTV.xml ermöglichen (ARD Audio Event Streams)
