@@ -10,7 +10,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-04.08.2024	ZDF_Search: Anpassung ZDF_Search_PATH an geänderte ZDF-Parameter.
+18.08.2024	5.1.0
+			Auswertung ARD Sportschau.de (WDR): neues Funktionsziel ARDSportMedia für 
+			Großevents in ARDSportWDR (ohne Cluster), Startseite: neue Funktion
+			ARDSportStart s.u., obsolete Funktion ARDSportCluster entfernt.
+			ARDSportMedia: neu - Extrakt sämtlicher Playerdaten (data-v=), Auswertung
+			in TagesschauXL.get_content_json, doppelte Stream-Url unterdrückt.
+			get_page (util): compressed-Behandlung für Stufe 2 (page2) - relevant für 
+			json-Daten. Decoding für Stufe1 und 2 an das Funktionsende verlegt. Rücknahme 
+			return bei http-Error aus V4.7.8 (nicht mehr benötigt für VideoEvent-Streams).
+			PlayVideo (util): import sqlite3 entfernt - obsolet
+			EPG-Suche (Haupt-PRG): Such-Button im Menü TV-Livestreams, neue Funktion
+			EPG_Search, einschl. Aufnahmeoption (Kontextmenü), Wiki aktualisiert.
+			EPG (Modul EPG): Ausgabe str(page) auskommentiert (codec-Error python2.*).
+			Modul epgRecord: Löschoption für abgelaufene Jobs ergänzt (Button in JobListe,
+			neue Funktion JobRemoveExp).
+			url_check: Rückgabe bei lokaler Video-Url korrigiert (Url statt True). 					
+
+04.08.2024	5.0.9
+			ZDF_Search: Anpassung ZDF_Search_PATH an geänderte ZDF-Parameter.
 			Main_NEW (ARDnew): Verzicht auf fehlende Variable summ für Suche-Button
 			(verhinderte Öffnen des ARD-Menüs).
 			get_json_content (ARDnew): Codec-Error gefixt mit py2_encode(page) bei
@@ -25,7 +43,6 @@ CHANGE HISTORY
 			307 für Redirects,
 			Addon-Wicki: Hinweis auf Proxy-Nutzung ergänzt und Verlinkung  mit Beitrag
 			@forrester # 3.735 vom 03.08.2024 
-			https://www.kodinerds.net/thread/64244-release-kodi-addon-ardundzdf/?postID=760618#post760618 
 			get_VideoAudio, get_content_json (TagesschauXL): Anpassung an geänderte 
 			eingebettete Playerdaten für Investigativ, Faktenfinder, Podcasts und Audios.
 

@@ -507,7 +507,7 @@ def XL_Search(query='', pagenr=''):
 	PLog("cnt_video: %d, cnt_audio: %d" % (cnt_video, cnt_audio))
 			
 	if cnt_video == 0 and cnt_audio == 0: 
-		msg1 = u'keine videos und Audios gefunden'
+		msg1 = u'keine Videos und Audios gefunden'
 		msg2 = query
 		icon = ICON_MAINXL		
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
@@ -759,6 +759,7 @@ def get_content_json(item):
 	tag=""; img=""
 
 	if "playerType" not  in obj:							# falsches Format
+		PLog("missing_playerType")
 		return False,"","","","","",""		
 		
 	typ = obj["playerType"]

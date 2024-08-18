@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>216</nr>										# Numerierung für Einzelupdate
-VERSION = '5.0.9'
-VDATE = '16.08.2024'
+VERSION = '5.1.0'
+VDATE = '18.08.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3469,10 +3469,8 @@ def ARDSportWDR():
 	cacheID = "Sport_Startseite"
 	img = logo
 	path = "https://www.sportschau.de"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s'}" %\
-		(quote(title), quote(path), quote(img), cacheID)
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportStart", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
 	title = u"Livestreams der Sportschau"
@@ -3484,23 +3482,12 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	
 	#---------------------------------------------------------	Großevents Start
-	title = u"Event: [B]OLYMPIA 2024[/B]"							# Großevent	
-	tag = u"Alles zu den Olympischen Spielen 2024 Paris - News, Ergebnisse, Livestreams"
-	cacheID = "Sport_OLYMPIA_2024"
-	img = "https://images.sportschau.de/image/8256571a-83dd-474d-9f81-982a02eea327/AAABi9KI1Ww/AAABjwnlFvA/16x9-1280/logo-olympia-paris-2024-100.jpg"
-	path = "https://www.sportschau.de/olympia/index.html"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
-		(quote(title), quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
 
-
-	title = u"Event: [B]Tour de France 2024[/B]"					# Großevent	
-	tag = u"Tour de France 2024, Livestreams, Videos, Nachrichten, Rennberichte, Etappen, Ergebnisse und Wertungen"
-	cacheID = "Sport_TourdeFrance_2024"
-	img = "https://images.sportschau.de/image/b0709b8b-c4de-4632-af95-5594f03eeea3/AAABkAOw8zc/AAABjwnlFvA/16x9-1280/nizza-256.jpg"
-	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
+	title = u"Event: [B]Tour de France Femmes 2024[/B]"					# Großevent	
+	tag = u"Tour de France Femmes 2024, Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen"
+	cacheID = "Sport_TourdeFemmes_2024"
+	img = "https://images.sportschau.de/image/5e488d45-7e8c-4ec6-9d90-b10cb3a43233/AAABiaIsZUA/AAABkUqnCZ0/16x9-1280/tdff-peloton-etappe-7-100.jpg"
+	path = "https://www.sportschau.de/radsport/tourdefrance-femmes"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
 		(quote(title), quote(path))
@@ -4391,103 +4378,42 @@ def ARDSportLoadPage(title, path, func, cacheID=""):
 		MyDialog(msg1, msg2, msg3)
 	
 	return page	
-
-##---------------------------------------------------------------------------------------------------
-# Großevent der Sportschau
-# 1. Aufruf: ARDSportWDR
-# 2. Aufruf: ARDSportCluster mit cluster (class="trenner") 
-# 24.06.2022 Rückfall-Adresse www.sportschau.de - bei Großevents
-#	verlegt der WDR die Ankündigunsseite auf die Startseite
-#
-def ARDSportCluster(title, path, img, cacheID, cluster=''): 
-	PLog('ARDSportCluster: ' + cluster)
 	
-	new_url, msg = get_page(path=path, GetOnlyRedirect=True)
-	if new_url == '':
-		path = "https://www.sportschau.de/"
+#---------------------------------------------------------------------------------------------------
+def ARDSportStart(): 
+	PLog('ARDSportStart:')
 	
-	page = ARDSportLoadPage(title, path, "ARDSportCluster")
+	base = "https://www.sportschau.de/"	
+	page = ARDSportLoadPage("Startseite", base, "ARDSportStart")
 	if page == '':
 		return
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ARD Neu')								# Home-Button
-	
-	trenner = 'class="trenner__text">'
-	items = blockextract(trenner, page)
+	li = home(li, ID='ARD Neu')										# Home-Button
+
+	# 1. Hamburger-Menü rechte Seite bis 1. Teiler (Live & Ergebnisse):
+	burger = stringextract('class="burger-navi-nav', 'class="burger-panel-divider', page)
+	items = blockextract("<li>", burger, "</li>")
 	PLog(len(items))
-	#-----------------------------------------------			# 1. Durchlauf
-	if cluster == '':
-		PLog("stage1")
-		#------------------
-		teaser = blockextract('class="teaser-slider', page)		# vor Cluster: Slider gesamte Seite auswerten	
-		PLog(len(teaser))
-		if len(teaser) > 0:
-			cnt=1
-			for item in teaser:
-				Dict_ID = "ARDSportSlider_%d" % cnt
-				Dict("store", Dict_ID, item)
-				title = "[B]Sliderbox %d[/B]" % cnt
-				tag = u"Folgeseiten"
-				title=py2_encode(title); path=py2_encode(path); 
-				img=py2_encode(img); 
-				fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'Dict_ID': '%s'}" %\
-					(quote(title), quote(path), quote(img), Dict_ID)
-				addDir(li=li, label=title, action="dirList", dirID="ARDSportHub", fanart=img, thumb=img, 
-					fparams=fparams, tagline=tag)	
-				cnt=cnt+1
-		#------------------
-		for item in items:
-			if "v-instance tabnav" in item:						# Webseite-Menü
-				continue
-			tag=''
-			title = stringextract('__headline">', '</', item)
-			title_org = title
-			topline = stringextract('__topline">', '</', item)
-			topline = topline.strip()
-
-			PLog("title: " + title)								# wie stage2
-			if "<h2>Specials" in title:							# redakt. Inhalte
-				continue
-			title = cleanhtml(title); title = title.strip()
-			title = unescape(title); title = repl_json_chars(title)
-			
-			tag = "[B]%s[/B]" % topline
-			tag = "%s\nFolgeseiten" % tag
-			tag = unescape(tag); 
-
-			PLog("Satz_stage1:")
-			PLog(title); PLog(tag); PLog(cluster);
-			
-			title=py2_encode(title); path=py2_encode(path); 
-			img=py2_encode(img); cluster=py2_encode(cluster);
-			fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'cacheID': '%s', 'cluster': '%s'}" %\
-				(quote(title), quote(path), quote(img), cacheID, quote(title))
-			addDir(li=li, label=title, action="dirList", dirID="ARDSportCluster", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag)
-			
-	#-----------------------------------------------			# 2. Durchlauf
-	else:
-		PLog("stage2")
-		headline = ">%s<" % cluster
-		PLog("headline: " + headline)
-		for item in items:
-			found=False
-			title = stringextract('__headline">', '</', item)
-			title = cleanhtml(title); title = title.strip()
-			title = unescape(title); title = repl_json_chars(title)
-			
-			if title in headline:
-				PLog("found_cluster: " + headline)
-				found=True
-				page = item										# Cluster -> page
-				break
-		if found:
-			cnt = ARDSportMedia(li, title, page)
-			if cnt == 0:										# Verbleib in Liste
-				return		
+	for item in items:
+		path = base + stringextract('href="', '"', item)			# Folgeseiten ohne http				
+		img = R(ICON_DIR_FOLDER)									# Burger-img grauslich
+		title = stringextract('title="', '"', item)
+		title = title.replace(" aufrufen", "")
 		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+		PLog("Satz9:")
+		PLog(title); PLog(path); PLog(img);
+		tag = "Folgeseiten"
+		title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+		fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+			(quote(title), quote(path))
+		addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tag)
+	
+	# 2. Videos + Audios der Startseite	ausgeben
+	ARDSportMedia(li, title, page)
+			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #---------------------------------------------------------------------------------------------------
 # Livestreams der Sportschau
@@ -4570,8 +4496,7 @@ def ARDSportAudioStreams(title, path, img, cacheID):
 
 #---------------------------------------------------------------------------------------------------
 # Auswertung mediaplayer-Klassen (quoted:data-v=..)
-# Aufrufer ARDSportWDR, ARDSportAudioStreams, 
-#	ARDSportCluster
+# Aufrufer ARDSportWDR, ARDSportAudioStreams
 # 05.08.2024 Nutzung TagesschauXL.get_content_json
 #
 def ARDSportMedia(li, title, page, path=""): 
@@ -4611,6 +4536,9 @@ def ARDSportMedia(li, title, page, path=""):
 		typ,av_typ,title,tag,summ,img,stream = TagesschauXL.get_content_json(item)
 		if typ == False:											# jsonloads_error
 			continue
+		if stream in url_list:										# Doppel möglich (Tour de France Femmes)
+			continue
+		url_list.append(stream)
 				
 		title=py2_encode(title); stream=py2_encode(stream); 
 		summ=py2_encode(summ); img=py2_encode(img); 

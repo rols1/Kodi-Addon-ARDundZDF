@@ -3916,12 +3916,14 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 # Aufruf: PlayVideo
 # 04.03.2022 Header für ZDF-Url erforderl. (Error "502 Bad Gateway")
 # 21.01.2023 dialog optional für add_UHD_Streams (ohne Dialog)
+# Rückage url oder False
 def url_check(url, caller='', dialog=True):
 	PLog('url_check:')
 
 	if url.startswith('http') == False:		# lokale Datei
 		if  os.path.exists(url):
-			return True
+			PLog("local_file")
+			return url
 		else:
 			if dialog:
 				msg2 = url
