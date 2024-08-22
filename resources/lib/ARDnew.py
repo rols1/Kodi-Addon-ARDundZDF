@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>88</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.08.2024
+# 	<nr>89</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.08.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -395,7 +395,11 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 				break
 		if 	skip_title:
 			PLog("skip_list: %s" % title)
-			continue	
+			continue
+		ctaLabel = stringextract('"ctaLabel":"', '"', cont)# skip Anmelde-Links
+		if ctaLabel:
+			PLog("skip_ctaLabel: %s" % ctaLabel)
+			continue
 
 		path 	= stringextract('"href":"', '"', cont)
 		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
