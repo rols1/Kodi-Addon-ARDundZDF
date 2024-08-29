@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>106</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.08.2024
+# 	<nr>107</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.08.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1097,6 +1097,8 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	# path = transl_umlaute(path)				# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
 	# path = unquote(path)						# scheitert bei quotierten Umlauten, Ersatz replace				
 	path = path.replace('https%3A//','https://')# z.B. https%3A//classic.ardmediathek.de
+	path = path.replace('zdf-cdn.live.cellular.de','zdf-prod-futura.zdf.de')	# neu api-Adresse ZDF
+	
 	
 	path = py2_encode(path)
 	if do_safe:									# never quoted: Letters, digits, and the characters '_.-' 
