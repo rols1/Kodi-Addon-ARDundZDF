@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>216</nr>										# Numerierung für Einzelupdate
+# 	<nr>217</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.0'
-VDATE = '18.08.2024'
+VDATE = '17.09.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1780,6 +1780,7 @@ def AudioSenderPrograms(org=''):
 			if live_cnt == '0':											# ARD, funk
 				title = stringextract('"organizationName":"', '"', LiveObj)
 				synop = stringextract('"synopsis":"', '"', LiveObj)
+				synop = synop.replace("\\n", "")
 				if synop:
 					title = "%s: %s" % (title, synop[:70])
 				
@@ -2768,10 +2769,11 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 					quote(title), quote(img), quote_plus(summ_par))
 				addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr)			
-
-				# play_line = '#EXTINF:-1 logo="%s" group-title="ARD_Radio", %s\n%s'													
-				extinf = play_line % (img, title, mp3_url)
-				PlayList.append(extinf)							# -> RadioPlaylist-Button
+				
+				if mp3_url.endswith(".mp3") == False:				# mp3-Beiträge vom Typ items von PlayList ausschließen 
+					# play_line = '#EXTINF:-1 logo="%s" group-title="ARD_Radio", %s\n%s'													
+					extinf = play_line % (img, title, mp3_url)
+					PlayList.append(extinf)							# -> RadioPlaylist-Button
 
 			else:	
 				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(web_url), 
@@ -3482,8 +3484,8 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	
 	#---------------------------------------------------------	Großevents Start
-
-	title = u"Event: [B]Tour de France Femmes 2024[/B]"					# Großevent	
+	'''
+	title = u"Event: [B]Tour de France Femmes 2024[/B]"					# Großevent	Template
 	tag = u"Tour de France Femmes 2024, Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen"
 	cacheID = "Sport_TourdeFemmes_2024"
 	img = "https://images.sportschau.de/image/5e488d45-7e8c-4ec6-9d90-b10cb3a43233/AAABiaIsZUA/AAABkUqnCZ0/16x9-1280/tdff-peloton-etappe-7-100.jpg"
@@ -3493,7 +3495,7 @@ def ARDSportWDR():
 		(quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
-
+	'''
 
 	#---------------------------------------------------------	Großevents Ende
 
@@ -3567,6 +3569,17 @@ def ARDSportWDRArchiv():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
+	title = u"Event: [B]Tour de France Femmes 2024[/B]"					# Großevent	
+	tag = u"Tour de France Femmes 2024, Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen"
+	cacheID = "Sport_TourdeFemmes_2024"
+	img = "https://images.sportschau.de/image/5e488d45-7e8c-4ec6-9d90-b10cb3a43233/AAABiaIsZUA/AAABkUqnCZ0/16x9-1280/tdff-peloton-etappe-7-100.jpg"
+	path = "https://www.sportschau.de/radsport/tourdefrance-femmes"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
+
 	title = u"Event: [B]OLYMPIA 2024[/B]"							# Großevent	
 	tag = u"Alles zu den Olympischen Spielen 2024 Paris - News, Ergebnisse, Livestreams"
 	cacheID = "Sport_OLYMPIA_2024"
@@ -4400,7 +4413,8 @@ def ARDSportStart():
 		img = R(ICON_DIR_FOLDER)									# Burger-img grauslich
 		title = stringextract('title="', '"', item)
 		title = title.replace(" aufrufen", "")
-		
+		title = "[B]%s[/B]" % title									# Bsp. Menüpunkt Paralympics
+
 		PLog("Satz9:")
 		PLog(title); PLog(path); PLog(img);
 		tag = "Folgeseiten"
@@ -4820,7 +4834,8 @@ def ARDSportSliderSingle(url, title, thumb, Plot, firstblock=False):
 				topline = stringextract('__topline">', '</', item)
 				title = stringextract('__headline">', '</', item)
 				if title == '':
-					continue	
+					continue
+					
 				summ = stringextract('__shorttext">', '</', item)	
 				title=repl_json_chars(title); summ=repl_json_chars(summ);
 				title=cleanhtml(title)
