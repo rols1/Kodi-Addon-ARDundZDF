@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>107</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.08.2024
+#	Stand: 17.09.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1081,9 +1081,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	return	
 
 #---------------------------------------------------------------- 
-# 01.08.2024 Kopfdoku seit 2018 entfernt - sieheArchiv
+# 01.08.2024 Kopfdoku seit 2018 entfernt - siehe Archiv
 # 05.08.2024 Auswertung PDF-Format entfernt - nicht mehr gesehen	
-#
+# 
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True, decode=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("do_safe: " + str(do_safe)); 
 
@@ -1097,7 +1097,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	# path = transl_umlaute(path)				# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
 	# path = unquote(path)						# scheitert bei quotierten Umlauten, Ersatz replace				
 	path = path.replace('https%3A//','https://')# z.B. https%3A//classic.ardmediathek.de
-	path = path.replace('zdf-cdn.live.cellular.de','zdf-prod-futura.zdf.de')	# neu api-Adresse ZDF
+	path = path.replace('zdf-cdn.live.cellular.de','zdf-prod-futura.zdf.de')	# neue api-Adresse ZDF
 	
 	
 	path = py2_encode(path)
@@ -1523,15 +1523,17 @@ def valid_title_chars(line):
 # {'id': 'x', 'title': 'x'} -> {"id":"x", "title":"x"} ohne LF's,
 # 	Hochkommata -> *, sächs. Genitiv 's -> Blank
 # line=Dict
+# 18.09.2024 replacing umgestellt auf json.dumps (utf8-codiert für PY2)
 def my_jsondump(line):
 	PLog("my_jsondump:")
 	try:
-		s = str(line)
-		s=(s.replace("'", '"').replace('", "', '","')\
-		.replace('": "', '":"').replace('"s', 's'))	
+		if PYTHON2:					
+			s=json.dumps(line, indent=None, separators=(",",":"), ensure_ascii=False).encode('utf8')
+		else:
+			s=json.dumps(line, indent=None, separators=(",",":"), ensure_ascii=False)
 	except Exception as exception:
 		s=""
-		PLog("my_jsondump: " + str(exception))
+		PLog("my_jsondump_error: " + str(exception))
 
 	return s		
 #---------------------------------------------------------------- 

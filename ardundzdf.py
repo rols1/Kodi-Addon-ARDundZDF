@@ -2245,6 +2245,7 @@ def Audio_get_items_single(item, ID=''):
 	PLog('Audio_get_items_single:')
 	PLog(ID)
 	base = "https://www.ardaudiothek.de"
+	item = py2_encode(item); base = py2_encode(base)				# PY2
 	
 	item = item.replace('\\"', '*')
 	mp3_url=''; web_url=''; attr=''; img=''; dur=''; title=''; 
@@ -2270,7 +2271,7 @@ def Audio_get_items_single(item, ID=''):
 
 	attr = stringextract('"attribution":"', '"', item)				# Sender, CR usw.
 	if attr:
-		attr = "Bild: %s" % repl_json_chars(attr)					# ' möglich
+		attr = "Bild: %s" % repl_json_chars(py2_decode(attr))					# ' möglich
 
 	img = stringextract('"image":', ',', item)
 	img = stringextract('"url":"', '"', img)
@@ -2287,10 +2288,10 @@ def Audio_get_items_single(item, ID=''):
 	if "clipTitle" in item:											# Abschnitt "tracking"
 		title = stringextract('"clipTitle":"', '"', item)
 	else:
-		title = stringextract('"title":"', '",', item)				# '",' gegen Hochkommas im Titel
-	title = repl_json_chars(title)
+		title = stringextract('"title":"', '"', item)
+	title = repl_json_chars(py2_decode(title))						# PY2
 	summ = stringextract('"synopsis":"', '"', item)
-	summ = repl_json_chars(summ)
+	summ = repl_json_chars(py2_decode(summ))						# PY2
 	source = stringextract('"source":"', '"', item)
 	sender = stringextract('zationName":"', '"', item)
 
@@ -2449,7 +2450,7 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 			tag = u"Folgeseiten | [B]%s | Anzahl: %d[/B]" % (tag1, anz) # 1. tagline
 			tag = u"%s\nTitel + Bild: 1. %s" % (tag, tag2)				# 2. tagline
 	
-			# Anpassung für string-Auswertung -> Audio_get_items_single:
+			# Anpassung für string-Auswertung, einschl. utf-8-Kodierung für Python <= 2.7 -> Audio_get_items_single:
 			s=my_jsondump(item)
 			mp3_url, web_url, attr, img, dur, title, summ, source, sender, pubDate = Audio_get_items_single(s, key)
 			if mp3_url == "" and web_url == "":
@@ -2472,7 +2473,7 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 					search_url = url_first.replace("./", ARD_AUDIO_BASE)
 					PLog("search_url: " + search_url)
 				else:													# Web-api: build search_url
-					api_url = "search/items?query=%s&offset=0&limit=24"	% quote(searchText) # searchText s.o.
+					api_url = "search/items?query=%s&offset=0&limit=24"	% quote(py2_encode(searchText)) # searchText s.o.
 					search_url = ARD_AUDIO_BASE + api_url
 					
 				
@@ -2522,10 +2523,8 @@ def Audio_get_search_cluster(objs, key):
 	cnt=0
 	for item in items:
 		node_id = item["id"]								# -> api-Path				
-		# Anpassung für string-Auswertung -> Audio_get_items_single:
+		# Anpassung für string-Auswertung, einschl. utf-8-Kodierung für Python <= 2.7 -> Audio_get_items_single:
 		s=my_jsondump(item)
-		if "den ganzen Tag im Bett" in s:
-			PLog(s)
 		mp3_url, web_url, attr, img, dur, title, summ, source, sender, pubDate = Audio_get_items_single(s, key)
 		tag = "Folgeseiten"
 		if "programSets" in key:							# Sendungen der Sender
@@ -2748,8 +2747,10 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 		org = stringextract('"organizationName":"','"', node)	
 		anz = stringextract('"totalCount":','}', node)			# Anzahl bei Mehrfach-Beiträgen
 		
+		PLog(descr)
+		descr 	= descr.replace('\\n', '')
 		descr	= unescape(descr); descr = repl_json_chars(descr)
-		summ_par= descr.replace('\n', '||')
+		summ_par= descr
 		title = repl_json_chars(title)
 		
 		PLog('4Satz:');
