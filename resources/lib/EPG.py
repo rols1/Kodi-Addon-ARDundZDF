@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>22</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.08.2024
+# 	<nr>23</nr>										# Numerierung für Einzelupdate
+#	Stand: 19.09.2024
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -303,7 +303,10 @@ def update_single(PluginAbsPath):
 	# xbmc.executebuiltin('Dialog.Close(all,true)')					# verhindert nicht Nachlaufen 
 	result_list = "\n".join(result_list)							# Ergebnisliste
 	title = u"Einzelupdate - Abgleich von %d Dateien | Ergebnis:" % len(ret_list)
-	xbmcgui.Dialog().textviewer(title, result_list,usemono=True)
+	if PYTHON3:
+		xbmcgui.Dialog().textviewer(title, result_list,usemono=True)
+	else:
+		xbmcgui.Dialog().textviewer(title, result_list)
 	
 	return
 
