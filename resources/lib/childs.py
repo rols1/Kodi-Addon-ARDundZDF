@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>29</nr>										# Numerierung für Einzelupdate
-#	Stand: 25.07.2024
+# 	<nr>30</nr>										# Numerierung für Einzelupdate
+#	Stand: 19.09.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -225,7 +225,7 @@ def Main_KIKA(title=''):
 		fanart=KIKA_START, thumb=img, tagline=tag, fparams=fparams)
 		
 	title=u'Kinderhörspiele der ARD-Audiothek'
-	query = u"Kinderhoerspiele"
+	query = u"Kinderhörspiele"
 	tag = u"Kinderhörspiele aus verschiedenen Radio-Sendungen." 
 	summ = u"Wir verlassen KIKA und wechseln zu den Kinderhörspielen in der ARD-Audiothek."
 	title=py2_encode(title); query=py2_encode(query) 
