@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>218</nr>										# Numerierung für Einzelupdate
-VERSION = '5.1.0'
-VDATE = '19.09.2024'
+VERSION = '5.1.1'
+VDATE = '22.09.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3617,7 +3617,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Basketball-WM 2023[/B]"							# Großevent	
 	tag = u"Aktuelle News zur Basketball-WM 2023 | sportschau.de"
 	cacheID = "BasketballWM"
-	img = "https://images.sportschau.de/image/b39a8ecf-aeb3-4781-a3fe-1038a5a5a36a/AAABifMqafU/AAABibBxqrQ/16x9-1280/ndr-dennis-schroeder-haelt-den-ball-und-lacht-100.jpg"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
 	path = "https://www.sportschau.de/basketball/wm-maenner"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3639,7 +3639,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Hockey-EM 2023 der Männer und Frauen[/B]"		# Großevent	
 	tag = u"Aktuelle News zur Hockey-EM 2023 in Mönchengladbach | sportschau.de."
 	cacheID = "HockeyEM"
-	img = "https://images.sportschau.de/image/30211f21-15dc-44a1-a8f4-64971d609de9/AAABhOMvB3Y/AAABibBxqrQ/16x9-1280/wdr-kampf-um-den-ball-100.jpg"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
 	path = "https://www.sportschau.de/hockey/feldhockey-em-index-100.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3683,7 +3683,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Die Finals 2023[/B]"							# Großevent	
 	tag = u"14 Sportarten, 190 deutsche Meistertitel - vom 23. bis 26. Juni finden in Berlin die Finals statt."
 	cacheID = "Finals"
-	img = "https://images.sportschau.de/image/825edf08-5ec7-4c15-9aab-2f6cca8a1d8d/AAABgWF00Tc/AAABgPp7Db4/16x9-1280/titelbild-100.jpg"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
 	path = "https://www.sportschau.de/die-finals"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3694,7 +3694,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]TOUR DE FRANCE FEMMES 2023[/B]"					# Großevent	
 	tag = u"Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen der Tour de France Femmes 2022."
 	cacheID = "Sport_FRANCEFEMMES"
-	img = "https://images.sportschau.de/image/39c37172-4556-4739-a361-76f7fa50eb9a/AAABghr-8j8/AAABgPp7Db4/16x9-1280/giro-donne-feld-100.jpg"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
 	path = "https://www.sportschau.de/radsport/tour-de-femmes-100.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3716,7 +3716,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Leichtathletik-WM 2022 in Eugene[/B]"			# Großevent	
 	tag = u"Erstmals findet eine Leichtathletik-WM in den USA statt. News, TV-Zeiten, Livestreams, Ergebnisse zur Weltmeisterschaft in Oregon."
 	cacheID = "Sport_WMEugene"
-	img = "https://images.sportschau.de/image/13d0db07-7943-415b-951f-2bfc4be7c8e9/AAABgRYL9Ys/AAABgPp7WOA/20x9-1280/leichtathlet-ryan-crouser-100.webp"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
 	path = "https://www.sportschau.de/leichtathletik/wm"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3727,7 +3727,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]European Championships 2022[/B]"				# Großevent	
 	tag = u"Neun Europameisterschaften unter einem Dach - vom 11. bis zum 21. August finden die European Championships in München statt."
 	cacheID = "ECS"
-	img = "https://images.sportschau.de/image/014165c6-378c-4007-84f8-cc1d6fc3df77/AAABgmeih7M/AAABgPp7Db4/16x9-1280/symbolbild-european-championships-100.jpg"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
 	path = "https://www.sportschau.de/european-championships"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -4414,6 +4414,7 @@ def ARDSportStart():
 		img = R(ICON_DIR_FOLDER)									# Burger-img grauslich
 		title = stringextract('title="', '"', item)
 		title = title.replace(" aufrufen", "")
+		title = unescape(title)
 		title = "[B]%s[/B]" % title									# Bsp. Menüpunkt Paralympics
 
 		PLog("Satz9:")

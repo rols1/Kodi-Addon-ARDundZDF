@@ -10,6 +10,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.09.2024	5.1.1
+			ARDStart (ARDnew): Unterdrückung json-Key ctaLabel (Links zur Anmeldung im
+			Webbrowser).
+			ARD sportschau.de (WDR): Aktualisierung Großevents, Menütitel fett auf der
+			Startseite (ARDSportStart) einschl. unescape(title).
+			get_page (util): autom. Anpassung für alte ZDF-api-Adressen (relevant für
+			Merkliste).
+			AudioSenderPrograms (Audiothek): Linefeed in Key "synopsis" entfernt (stage1).
+			Audio_get_cluster_single (Audiothek): Ausschluss der mp3-Beiträge vom Typ items
+			von RadioPlaylist.m3u, Linefeed in tag entfernt.
+			Audio_get_items_single (Audiothek): div. Anpassungen für PY2 (py2_encode).
+			Main_KIKA (childs): query auf "Kinderhörspiele" (ö statt oe) geändert, um auch 
+			die umfangreichen Episoden zu erfassen.
+			my_jsondump (util): replacing umgestellt auf json.dumps (utf8-codiert für PY2).
+			Settings-Defaults geändert: ARD- und ZDF-TV-Livestream-Quellen -> 20 Tage (vorher
+			10), Dateinamen aus dem Titel erzeugen -> true (vorher false).
+
 18.08.2024	5.1.0
 			Auswertung ARD Sportschau.de (WDR): neues Funktionsziel ARDSportMedia für 
 			Großevents in ARDSportWDR (ohne Cluster), Startseite: neue Funktion

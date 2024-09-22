@@ -139,7 +139,7 @@ INSTALLATION:
 
 SUPPORT:
 =================== 
-Um die Community des <b>[kodinerds-Forums](https://www.kodinerds.net/)</b> zu nutzen, bitte vorrangig den <b>[Support-Thread des Addons](https://www.kodinerds.net/thread/64244-release-kodi-addon-ardundzdf/)</b> verwenden.<br>
+Um die Community des <b>[kodinerds-Forums](https://www.kodinerds.net/)</b> zu beteiligen, bitte vorrangig den <b>[Support-Thread des Addons](https://www.kodinerds.net/thread/64244-release-kodi-addon-ardundzdf/)</b> verwenden.<br>
 Der <b>[Startpost](https://www.kodinerds.net/thread/64244-release-kodi-addon-ardundzdf/?pageNo=1#post502022)</b> enthält Hinweise zum nächsten Update und zu geänderten Dateien des Addons, die als Einzelupdate mit dem Addon-Tool <b>Infos+Tools -> Einzelupdate..</b> bereits vor dem regulären Update installiert werden können.
 
 
