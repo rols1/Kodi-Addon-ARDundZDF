@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>108</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.09.2024
+# 	<nr>109</nr>										# Numerierung für Einzelupdate
+#	Stand: 28.09.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1487,7 +1487,7 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 def repl_json_chars(line):	
 	line_ret = line
 	#PLog(type(line_ret))
-	for r in	((u'"', u''), (u'\\', u''), (u'\'', u''), (u'%5C', u'') 
+	for r in	((u'"', u''), (u'\\', u''), (u'\'', u''), (u'%5C', u'')
 		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
 		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love'), (u'%C3%A9', u'é')		# u'u003e' 	-> u'®'
@@ -1515,7 +1515,7 @@ def valid_title_chars(line):
 	# Hochkommata, dto urlkodiert - nicht erfasst in valid_chars: 
 	line_ret = (line_ret.replace(u'"', '').replace(u"'", '')\
 	.replace(u"%27", '').replace(u"%22", '').replace(u"%5B", '')\
-	 .replace(u"%5D", ''))
+	 .replace(u"%5D", '').replace(u"&", '+'))
 
 	return line_ret
 #---------------------------------------------------------------- 
