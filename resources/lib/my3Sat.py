@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>17</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.05.2024
+# 	<nr>18</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.09.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -332,9 +332,10 @@ def SendungenAZ(name, path):
 			tag = "%s | %s" % (tag, sub_rubrik)
 		tag = cleanhtml(tag)
 
+		title=unescape(title)
 		title = repl_json_chars(title); descr = repl_json_chars(descr); 
 		descr_par =	descr.replace('\n', '||')	
-		
+
 		PLog('Satz1:')
 		PLog(img_src); PLog(rubrik); PLog(title);  PLog(href); PLog(descr);
 			
@@ -1311,7 +1312,7 @@ def get_lazyload(li, page, ref_path):
 		if path == '':
 			path	= "%s/%s.html" % (DreiSat_BASE, sophId)		# Zielpfad bauen
 			
-		tag = tag.strip()
+		tag = tag.strip(); tag=unescape(tag)
 		descr=py2_decode(descr); tag=py2_decode(tag) 
 		if tag:
 			descr = "%s\n\n%s"   % (tag, descr)
