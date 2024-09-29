@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>46</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.06.2024
+# 	<nr>47</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.09.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -727,6 +727,8 @@ def Beitrag_Liste(url, title):
 #	 lokale Doku 00_Arte_HBBTV_Links
 # 24.11.2023 Check api_opa und api_V2: wie bisher nur HLS-UHD-Quellen in
 #	api_V2
+# 29.09.2024 Ausfall api/opa/v3/, neu: www.arte.tv/hbbtvv2/.. (s. path2),
+#	ohne früheren Link zu den getrennten HBBTV-Quellen 
 #
 def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	PLog("SingleVideo: " + pid)
@@ -739,10 +741,10 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	lang = arte_lang.split("|")[1].strip()			 				# wirkt nur auf Label, nicht auf Streamauswahl
 	if trailer:														# eindeutige Trailer? s.o.
 		path1 = 'https://api.arte.tv/api/player/v2/trailer/%s/%s' % (lang,pid)	 
-		path2 = "https://api.arte.tv/api/opa/v3/programs/%s/%s"  % (lang,pid)	 
 		
 	path1 = 'https://api.arte.tv/api/player/v2/config/%s/%s' % (lang,pid)	# nur  HLS-Quellen, ev. Teaser (20.04.2022)
-	path2 = "https://api.arte.tv/api/opa/v3/programs/%s/%s"  % (lang,pid)	# Nutzung HBBTV- + MP4-Quellen
+	# neu ab 29.09.2024 nur MP4-Quellen
+	path2 = "https://www.arte.tv/hbbtvv2/services/web/index.php/OPA/v3/streams/%s/SHOW/%s"  % (pid, lang)	
 	header = "{'Authorization': 'Bearer Nzc1Yjc1ZjJkYjk1NWFhN2I2MWEwMmRlMzAzNjI5NmU3NWU3ODg4ODJjOWMxNTMxYzEzZGRjYjg2ZGE4MmIwOA',\
 		'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',\
 		'Accept': 'application/json'}"
@@ -763,33 +765,22 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 		summ=transl_json(summ); summ=repl_json_chars(summ)			# -> HLS_List, HBBTV_List, MP4_List
 	PLog("summ: " + summ)
 	
-	hls_add=""; mp4_add=""											# Titelzusatz für Trailer
+	hls_add=""; mp4_add=""											# HLS_List + Titelzusatz für Trailer
 	trailer_hls, HLS_List = get_streams_api_v2(page,title_org,summ)
 	PLog("trailer_hls: " + str(trailer_hls))
 	if trailer_hls:													# Trailer eher in MP4_List wahrsch.
 		hls_add = ", HLS-Streams: [B]Trailer[/B]"
 	
-	#-------------------------------------------------------------	# HBBTV- + MP4-Quellen
-	page, msg = get_page(path2, do_safe=False, header=header)		# api_opa_Call_1
-	#RSave('/tmp/x_artestreams_opa1.json', py2_encode(page))	# Debug	
-	if page == '':						
-		PLog("error_api_opa_Call_1")
-	# Abschnitt offlineAvailability enthält Links zu div. Quellen,
-	#	z.Z. nur stream_hbbtv genutzt (ent. MP4-Quellen):
-	streams = stringextract('"videoStreams":',  ']', page)		
-	stream_hbbtv = stringextract('hbbtv":',  '}', streams)
-	stream_hbbtv = stringextract('href": "',  '"', stream_hbbtv)
-	stream_hbbtv = stream_hbbtv.replace("\/", "/")					# 04.01.2023: \/\/api.arte.tv\/api\/						
-	#stream_web = stringextract('web":',  '}', streams)				# nicht genutzt - s. api_v2_Call
-	#stream_web = stringextract('href": "',  '"', stream_web)
-	#PLog("stream_web: " + stream_web); 
-	PLog("stream_hbbtv: " + stream_hbbtv)
+	#-------------------------------------------------------------	# HBBTV-MP4-Quellen
+	page, msg = get_page(path2, do_safe=False)						# Bearer entbehrlich 
+	#RSave('/tmp/x_artestreams_hbbtvv2.json', py2_encode(page))	# Debug	
+	try:
+		page = json.loads(page)
+		formitaeten = page["videoStreams"]
+	except Exception as exception:
+		PLog("json_error_path2: " + str(exception))	
 
-	page, msg = get_page(path=stream_hbbtv, do_safe=False, header=header)	# api_opa_Call_2
-	if page == '':						
-		PLog("error_api_opa_Call_1")
-	#RSave('/tmp/x_artestreams_opa2.json', py2_encode(page))	# Debug	
-	trailer_mp4, MP4_List = get_streams_api_opa(page, title_org, summ)
+	trailer_mp4, MP4_List = get_streams_hbbtvv2(formitaeten, title_org, summ)
 	if trailer_mp4:
 		mp4_add = ", MP4-Streams: [B]Trailer[/B]"
 
@@ -928,42 +919,37 @@ def get_streams_api_v2(page, title, summ):
 	return trailer,HLS_List
 
 # ----------------------------------------------------------------------
-# Streamdetails via api-opa-Call 
-# Arte verwendet bei HBBTV MP4-Formate wie ZDF (HLS_List bleibt leer)
+# 29.09.2024 Streamdetails via hbbtvv2-Link, formitaeten=json 
+# Arte verwendet bei HBBTV MP4-Formate wie ZDF, HLS_List s. get_streams_api_v2
 # audioLabel: Abgleich setting pref_arte_streams in get_bestdownload
-#
-def get_streams_api_opa(page, title,summ, mode="hls_mp4"):
-	PLog("get_streams_api_opa: " + mode)
+# 
+def get_streams_hbbtvv2(formitaeten, title, summ):
+	PLog("get_streams_hbbtvv2:")
 	title_org = title
-
-	formitaeten = blockextract('"videoStreamId"', page) 
 	PLog(len(formitaeten))
 	
 	MP4_List=[]; trailer=False
 	for rec in formitaeten:	
-		versions = stringextract('"versions":',  '"creationDate', rec)
-		
-		mediaType = stringextract('"mediaType": "',  '"', rec)
-		bitrate = stringextract('"bitrate":',  ',', rec)
-		quality = stringextract('"quality": "',  '"', rec)
-		width = stringextract('"width": ',  ',', rec)
-		height = stringextract('"height": ',  ',', rec)	
+		quality = rec["quality"]
+		width = rec["width"]
+		height = rec["height"]
 		if height == "": height = "?"
 		size = "%sx%s" % (width, height)
-		
-		url = stringextract('"url": "',  '"', rec)
-		url = url.replace("\/", "/")								# 07.04.2024: ..\/\/arteptweb-a.akamaihd.net\/am\/..						
+
+		url = rec["url"]
 		if url.find("Trailer") > 0 or url.find("_EXTRAIT_") > 0:	# Trailer-Kennz. (Stand 22.05.2022)
 			trailer = True
+		try:
+			bitrate = re.search(r'_MP4-(\d+)_', url).group(1)
+		except Exception as exception:					
+			PLog("bitrate_error:  " + str(exception))
+			bitrate = width											# dummy-Marker
 
-		lang = stringextract('"audioLabel": "',  '"', versions)	# z.B. Deutsch (Original)
-		lang = transl_json(lang)
-		if lang =="":
-			lang = stringextract('"audioLabel": "',  '"', versions)
-		shortLabel = stringextract('"audioShortLabel": "',  '"', versions) # Bsp..: "UT" oder "FR"
+		lang = rec["audioLabel"]
+		shortLabel = rec["audioShortLabel"]
 		
 		PLog('Satz5:')
-		PLog(url); PLog(size); PLog(lang);
+		PLog(url); PLog(size); PLog(bitrate); PLog(lang);
 		
 		#	für Sofortstart nur Deutsch auswählen (HLS + MP4)
 		if SETTINGS.getSetting('pref_video_direct') == 'true':	
