@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>47</nr>										# Numerierung für Einzelupdate
+# 	<nr>48</nr>										# Numerierung für Einzelupdate
 #	Stand: 29.09.2024
 
 # Python3-Kompatibilität:
@@ -229,7 +229,7 @@ def get_live_data(name):
 	page = get_ArtePage('get_live_data', "Arte Live", path) # EPG Arte
 	if page == "":			
 		return err_par
-	#RSave('/tmp/x_Arte_Live.json', py2_encode(str(page)))	# Debug	
+	#RSave('/tmp2/x_Arte_Live.json', py2_encode(str(page)))	# Debug	
 	
 	try:
 		PLog(len(page))
@@ -728,7 +728,8 @@ def Beitrag_Liste(url, title):
 # 24.11.2023 Check api_opa und api_V2: wie bisher nur HLS-UHD-Quellen in
 #	api_V2
 # 29.09.2024 Ausfall api/opa/v3/, neu: www.arte.tv/hbbtvv2/.. (s. path2),
-#	ohne früheren Link zu den getrennten HBBTV-Quellen 
+#	ohne früheren Link zu den getrennten HBBTV-Quellen, s.a. fix arte 
+#	crawler #1010 zu mediathekview/MServer
 #
 def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	PLog("SingleVideo: " + pid)
@@ -758,7 +759,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	PLog(len(page))
 	page = page.replace('\\/', '/')
 	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
-	#RSave('/tmp/x_artestreams_v2.json', py2_encode(page))	# Debug	
+	#RSave('/tmp2/x_artestreams_v2.json', py2_encode(page))	# Debug	
 
 	if summ == '':	# ev. nicht besetzt in Beitrag_Liste. Fehlt in stream_* Dateien
 		summ = stringextract('description":"',  '"', page)
@@ -773,7 +774,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	
 	#-------------------------------------------------------------	# HBBTV-MP4-Quellen
 	page, msg = get_page(path2, do_safe=False)						# Bearer entbehrlich 
-	#RSave('/tmp/x_artestreams_hbbtvv2.json', py2_encode(page))	# Debug	
+	#RSave('/tmp2/x_artestreams_hbbtvv2.json', py2_encode(page))	# Debug	
 	try:
 		page = json.loads(page)
 		formitaeten = page["videoStreams"]
@@ -1298,7 +1299,7 @@ def get_ArtePage(caller, title, path, header=''):
 			page = "{" + page[pos1:pos2]
 			page = json.loads(page)			
 
-	#RSave('/tmp/x.json', py2_encode(page))	# Debug	
+	#RSave('/tmp2/x.json', py2_encode(page))	# Debug	
 	PLog(len(page))
 	# page = str(page)  # n. erf.
 	PLog("page_start: %s" % str(page)[0:60])
