@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>218</nr>										# Numerierung für Einzelupdate
+# 	<nr>219</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.1'
-VDATE = '22.09.2024'
+VDATE = '04.10.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -4560,7 +4560,7 @@ def ARDSportMedia(li, title, page, path=""):
 		summ=py2_encode(summ); img=py2_encode(img); 
 			
 		if typ == "audio":											# Audio
-			ID='TagesschauXL'
+			ID='ARD'
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" %\
 				(quote(stream), quote(title), quote(img), quote_plus(summ), ID)
 			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
@@ -8950,6 +8950,7 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 		if "externalId" in obj:
 			scms_id = obj["externalId"]
 			
+		# 01.10.2024 Keine api-Quelle mit umfangr. Inhaltstext wie Web gefunden:
 		if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
 			if "sharingUrl" in obj:								# Web-Referenz
 				path=obj["sharingUrl"]
@@ -10940,8 +10941,8 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	 
 	PLog('playlist: ' + playlist[:100])
 	PLog('live: ' + str(live))
-	skip_list = ["/rbb_brandenburg/",							# keine Mehrkanalstreams: Einzelauflösungen mögl.
-				"/srfsgeo/", "/swrbwd/", "/dwstream",
+	skip_list = ["/srfsgeo/", "/swrbwd/", "/dwstream",			# keine Mehrkanalstreams: Einzelauflösungen mögl.
+				"/srfsgeo/", "/dwstream",
 				"/arteliveext.akamaized", 
 				"/tagesschau.akamaized"
 				]
@@ -11125,19 +11126,21 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 		PLog("item: " + item[:80])
 		bitrate=""
 		if item.count("**") == 3:										# mit bitrate
-			label, bitrate, res, title_href = item.split('**')
+			label_item, bitrate, res, title_href = item.split('**')
 			bitrate = bitrate.replace('Bitrate 0', 'Bitrate ?')			# Anpassung für funk ohne AzureStructure
 			res = res.replace('0x0', '?')								# dto.
 		else:															# ohne bitrate
-			label, res, title_href = item.split('**')
-		PLog(title_href)
+			label_item, res, title_href = item.split('**')
+		PLog("title_href: " + title_href)
 		title, href = title_href.split('#')
 		
-		PLog(title); PLog(tagline_org[:80]); PLog(sub_path)
+		PLog(title); PLog(label_item); PLog(tagline_org[:80]); PLog(sub_path)
 		tagline = tagline_org
-		label = "%d. %s | %s" % (cnt, label, res)
+		
+		label = "%d. %s | %s" % (cnt, label_item, res)
 		if bitrate:														# HLS: numeriert, mit bitrate
-			label = "%s | %s | %s" % (label, bitrate, res)
+			label = "%s | %s | %s" % (label_item, bitrate, res)
+
 		cnt = cnt+1
 		href=py2_encode(href); title=py2_encode(title);
 		
