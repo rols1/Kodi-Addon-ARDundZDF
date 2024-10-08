@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>110</nr>										# Numerierung für Einzelupdate
+# 	<nr>111</nr>										# Numerierung für Einzelupdate
 #	Stand: 08.10.2024
 
 # Python3-Kompatibilität:
@@ -2439,12 +2439,13 @@ def ReadJobs():
 #	in TEXTSTORE gespeichert wird die ges. html-Seite (vorher nur Text summ)
 # 14.06.2021 Sendedatum pubDate für ZDF Sport unterdrückt (oft falsch bei Livestreams)
 # 26.08.2021 Erweiterung für einzelnes Auswertungsmerkmal (pattern) 
-# 11.05.2023 postcontent hinzugefügt
-# 08.10.2024 Änderung Cache-Format - nur noch Inhalt summary (Start mit "V5.1.2_summ:")
+# 11.05.2023 postcontent (ZDF, 3sat) hinzugefügt
+# 08.10.2024 Änderung Cache-Format - nur noch Inhalt summary (Start mit "V5.1.2_summ:"),
+#	Param page entfernt (obsolet)
 #
-def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pattern='',duration=''):	
+def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',duration=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
-	PLog(skip_verf); PLog(skip_pubDate); PLog(duration); PLog(len(page))
+	PLog(skip_verf); PLog(skip_pubDate); PLog(duration); 
 	duration_org=duration
 	
 	fname = path.split('/')[-1]
@@ -2455,27 +2456,25 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 	fpath = os.path.join(TEXTSTORE, fname)
 	PLog('fpath: ' + fpath)
 	
-	summ=''; pubDate=''
-	if page:							# Seite in Param page übergeben, Laden entfällt
-		PLog(u"lade_aus_Übergabe: %s" % page[:80])
-		save_new = False
-	else:		
-		if os.path.exists(fpath):		# Text lokal laden + zurückgeben
-			page=''
-			PLog('lade_aus_Cache:') 
-			page =  RLoad(fpath, abs_path=True)
-			if page.startswith("V5.1.2_summ:"):		# neues Cache-Format?
-				page = page.replace("V5.1.2_summ:", "")
-				return page				# summary
-			else:
-				save_new = True
-
-		if page == '':
-			PLog('lade_extern:') 
-			page, msg = get_page(path)	# extern laden, HTTP Error 404 möglich
+	page=""; summ=''; pubDate=''
+	save_new = False
+	if os.path.exists(fpath):		# Text lokal laden + zurückgeben
+		page=''
+		PLog('lade_aus_Cache:') 
+		page =  RLoad(fpath, abs_path=True)
+		if page.startswith("V5.1.2_summ:"):		# neues Cache-Format?
+			page = page.replace("V5.1.2_summ:", "")
+			PLog('ret_page: ' + page[:80])
+			return page				# summary
+		else:
 			save_new = True
-		if page == '':
-			return ''					# ohne pubdate (Aufrufer: summ.replace) 				
+
+	if page == '':
+		PLog('lade_extern:') 
+		page, msg = get_page(path)	# extern laden, HTTP Error 404 möglich
+		save_new = True
+	if page == '':
+		return ''					# ohne pubdate (Aufrufer: summ.replace) 				
 			
 	# Decodierung plus bei Classic u-Kennz. vor Umlaut-strings (s.u.)
 	page = py2_decode(page)
