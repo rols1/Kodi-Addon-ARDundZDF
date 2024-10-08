@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>109</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.09.2024
+# 	<nr>110</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.10.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2415,7 +2415,7 @@ def ReadJobs():
 # holt summary (Inhaltstext) für eine Sendung, abhängig von SETTINGS('pref_load_summary')
 #	- Inhaltstext zu Video im Voraus laden. 
 #	SETTINGS durch Aufrufer geprüft
-#	ID: ARD, ZDF - Podcasts entspr. ARD
+#	ID: ARD, ZDF 
 # Es wird nur die Webseite ausgewertet, nicht die json-Inhalte der Ladekette.
 # Cache: 
 #		html-Seite wird in TEXTSTORE gespeichert, Dateiname aus path generiert.
@@ -2440,28 +2440,36 @@ def ReadJobs():
 # 14.06.2021 Sendedatum pubDate für ZDF Sport unterdrückt (oft falsch bei Livestreams)
 # 26.08.2021 Erweiterung für einzelnes Auswertungsmerkmal (pattern) 
 # 11.05.2023 postcontent hinzugefügt
+# 08.10.2024 Änderung Cache-Format - nur noch Inhalt summary (Start mit "V5.1.2_summ:")
 #
 def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pattern='',duration=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
-	PLog(skip_verf); PLog(skip_pubDate); PLog(len(page))
+	PLog(skip_verf); PLog(skip_pubDate); PLog(duration); PLog(len(page))
+	duration_org=duration
 	
 	fname = path.split('/')[-1]
-	fname.replace('.html', '')				# .html bei ZDF-Links abschneiden
+	fname = fname.replace('.html', '')				# .html bei ZDF-Links entfernen
+	fname = fname.replace('?devicetype=pc', '')		# ARD-api-Zusatz
+	fname = fname.replace('&embedded=true', '')		# ARD-api-Zusatz	
 		
 	fpath = os.path.join(TEXTSTORE, fname)
 	PLog('fpath: ' + fpath)
 	
 	summ=''; pubDate=''
-	if page:							# Seite bereits übergeben
+	if page:							# Seite in Param page übergeben, Laden entfällt
 		PLog(u"lade_aus_Übergabe: %s" % page[:80])
 		save_new = False
 	else:		
 		if os.path.exists(fpath):		# Text lokal laden + zurückgeben
 			page=''
-			PLog('lade_lokal:') 
+			PLog('lade_aus_Cache:') 
 			page =  RLoad(fpath, abs_path=True)
+			if page.startswith("V5.1.2_summ:"):		# neues Cache-Format?
+				page = page.replace("V5.1.2_summ:", "")
+				return page				# summary
+			else:
+				save_new = True
 
-		save_new = False
 		if page == '':
 			PLog('lade_extern:') 
 			page, msg = get_page(path)	# extern laden, HTTP Error 404 möglich
@@ -2533,15 +2541,18 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 		page = page.replace('\\"', '*')							# Quotierung vor " entfernen, Bsp. \"query\"
 		page = page.replace('\\r\\n\\r\\n', " | ")				# CR+LF doppelt
 		pubServ = stringextract('"name":"', '"', page)			# publicationService (Sender)
-		maturitytRating = stringextract('maturityContentRating":"', '"', page) # "FSK16"
-		maturitytRating = maturitytRating.replace('NONE', 'Ohne')
+		if "FSK:" not in duration_org:							# bereits in Param?
+			maturitytRating = stringextract('maturityContentRating":"', '"', page) # "FSK16"
+			maturitytRating = maturitytRating.replace('NONE', 'Ohne')
+		else:
+			maturitytRating=""
 		if duration == '':										# schon übergeben?
 			duration = stringextract('"duration":', ',', page)	# Sekunden
 			if duration == '0':									# auch bei Einzelbeitrag möglich
 				duration=''
 			duration = seconds_translate(duration)
-		if duration and pubServ:										
-			duration = u'Dauer %s | [B]%s[/B]' % (duration, pubServ)
+			if duration and pubServ:										
+				duration = u'Dauer %s | [B]%s[/B]' % (duration, pubServ)
 		if 	maturitytRating:
 			if duration == '':
 				duration = "Dauer unbekannt"
@@ -2571,11 +2582,11 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,page='',pat
 		if duration and summ:
 			summ = "%s\n%s" % (duration, summ)
 			
-	page = py2_encode(page)
-	summ = summ.replace(' |  | ', '')								# Korrek. Leer
+	summ = summ.replace(' |  | ', '')							# Korrek. Leer
 	PLog('summ: ' + summ[:80]); PLog(save_new)
 	if summ and save_new:
-		msg = RSave(fpath, page)
+		cont = "V5.1.2_summ:" + summ							# Erkennungsmerkmal neues Cache-Format
+		msg = RSave(fpath, cont)
 	# PLog(msg)
 	return summ
 	
