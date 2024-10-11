@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>23</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.09.2024
+# 	<nr>24</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.10.2024
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -33,7 +33,7 @@ elif PYTHON3:
 # für Python 2.* muss der  Aufruf Kontextmenü unterdrückt
 #	werden, sonst öffnet das Modul bei jedem Menüwechsel
 #	 ein leeres textviewer-Fenster
-if "'context'" in str(sys.argv):						# Aufruf Kontextmenü
+if "'context'" in str(sys.argv) or "ShowSumm" in str(sys.argv):		# Aufruf Kontextmenü
 	from util import *
 	msg = "callfrom_context"
 else:
@@ -572,9 +572,12 @@ def get_unixtime(day_offset=None, onlynow=False):
 #----------------------------------------------------------------  
 #################################################################  
 		
-if "'context'" in str(sys.argv):									# Aufruf Kontextmenü
-	params = str(sys.argv)
-	PLog("context_params: " + params)
+params = unquote(str(sys.argv))
+PLog("context_params: " + params)
+
+
+if "'context'" in str(sys.argv):									# Kontextmenü: EPG im textviewer
+	PLog("EPG_context:")
 	title =  stringextract("title': '", "'", params)
 	ID =  stringextract("ID': '", "'", params)
 	PLog("title: %s, ID: %s" % (title, ID))
@@ -608,7 +611,50 @@ if "'context'" in str(sys.argv):									# Aufruf Kontextmenü
 	else:
 		lines =  "\n".join(lines)
 		xbmcgui.Dialog().textviewer(title , lines ,usemono=True)
-		
+
+#-----------------------------------------------------------------------		
+if "ShowSumm" in str(sys.argv):											# Kontextmenü: Video-Inhaltstext im textviewer
+	PLog("EPG_ShowSumm:")
+	icon = R('icon-info.png')
+	title =  stringextract("title': '", "'", params)
+	path =  stringextract("path': '", "'", params)
+	ID =  stringextract("ID': '", "'", params)
+	PLog("title: %s, path: %s, ID: %s" % (title, path, ID))
+	
+	if ID == "ARD":
+		page, msg = get_page(path)
+		if page == "":
+			msg1 = "Fehler beim Abruf der Videodaten:" 
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			exit
+
+	page_obs = json.loads(page)
+	PLog(str(page)[:80])
+	
+	s=""												# Objekte 1. Ebene
+	if "teasers" in page_obs:
+		s =page_obs["teasers"]
+		PLog("teasers: " + str(s)[:80])
+	if "widgets" in page_obs:
+		s =page_obs["widgets"]
+		PLog("widgets: " + str(s)[:80])
+
+	summ1=""; summ2=""
+	try:
+		summ1 = s[0]["synopsis"]						# Beschr. Einzelbeitrag oder Folge
+		summ2 = s[1]["teasers"][0]["show"]["synopsis"]	# Beschr. Staffel/Reihe (in allen teasers identisch)
+	except Exception as exception:
+		PLog("summ_error:" + str(exception))
+
+	
+	PLog("summ1: " + summ1); PLog("summ2: " + summ2)
+	
+	summ = "%s\n\n%s" % (summ1, summ2)
+	if summ == "":
+		xbmcgui.Dialog().notification("suche Inhaltstext", "Abfrage leider ohne Ergebnis",icon,3000)	
+	else:
+		xbmcgui.Dialog().textviewer(title , summ ,usemono=True)
 		
 		
 		

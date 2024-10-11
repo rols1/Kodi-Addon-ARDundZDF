@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>89</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.08.2024
+# 	<nr>90</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.10.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1724,10 +1724,11 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 	ID_org=ID; PLog(type(page)); 
 	PLog(str(py2_encode(page))[:80])
 
-	CurSender = ARD_CurSender()										# init s. Modulkopf
+	CurSender = ARD_CurSender()									# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)												#-> href
 	mediatype=''; pagetitle=''
+	li2 = xbmcgui.ListItem()									# eigene Kontextmenüs in addDir							
 	
 	if "dict" not in str(type(page)):
 		page_obs = json.loads(page)
@@ -1802,7 +1803,8 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 				if duration == '':
 					duration = "Dauer unbekannt"
 				duration = u"%s | FSK: %s\n" % (duration, matRat)
-				
+			
+			# synopsis, shortSynopsis, longSynopsis häufig identisch
 			if "show" in s:		
 				if s["show"]:									# null?
 					summ = s["show"]["synopsis"]				# Zusammenfassung
@@ -1851,7 +1853,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 			summ = "Folgeseiten"
 			href=py2_encode(href); title=py2_encode(title); 
 			fparams="&fparams={'path': '%s', 'title': '%s', 'homeID': '%s'}" % (quote(href), quote(title), homeID)
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", \
+			addDir(li=li2, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", \
 				fanart=img, thumb=img, fparams=fparams, summary=summ, mediatype='')	
 		else:
 			PLog("eval_settings:")	
@@ -1866,6 +1868,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 						dur = seconds_translate(s["duration"])	# 27.06.2023
 						title = ardundzdf.full_shows(title, title_samml, summ, dur, "full_shows_ARD")	
 
+			# 01.10.2024 s.o. synopsis, aber anders als beim ZDF Inhaltstext beim den Quellen (api):
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
 				summ_new = get_summary_pre(path=href, ID='ARDnew', duration=duration)  # Modul util
 				if 	summ_new:
@@ -2072,7 +2075,6 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 	# Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
 	# 
 	PLog('Lists_ready:');
-	# summ = get_summary_pre(path, ID='ARDnew', page=page)	# entfällt mit summary aus get_json_content 
 	Plot = "Titel: %s\n\n%s" % (title_org, summary)				# -> build_Streamlists_buttons
 	PLog('Plot:' + Plot)
 	thumb = img; ID = 'ARDNEU';

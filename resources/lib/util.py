@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>111</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.10.2024
+# 	<nr>112</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.10.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -703,6 +703,11 @@ def up_low(line, mode='up'):
 #		cmenu triggert Kontextmenü, weitere Param. dessen Eigenschaften (Bsp. start_end für 
 #			K-Menü "Sendung aufnehmen" <- EPG_ShowSingle).
 #
+#		Kodi-Problem: werden für eine Liste verschiedene Kontext-Einträge angelegt, verwendet
+#			Kodi alle definierten Einträge. Unpassende Kontext-Einträge lassen sich nur durch
+#			zusätl. Listenelemente erreichen, z.B. 1 Element für Folgebeiträge und 1 Element
+#			für Einzelvideos, z.B. li2=xbmcgui.ListItem() in get_json_content (ARDnew).
+#
 #	Sortierung: i.d.R. unsortiert (Reihenfolge wie Web), erford. für A-Z-Seiten (api/podcasts)
 #		Hinw.: bei Sortierung auf Homebutton verzichten 
 #
@@ -791,12 +796,36 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_do_folder=''; fparams_rename=''; 
 		fparams_playlist_add=''; fparams_playlist_rm='';fparams_playlist_play=''
 		fparams_strm=''; fparams_exist_inlib=''; fparams_EPG='';
+		fparams_ShowSumm=""
 		
 		if EPG_ID:														# EPG für Sender zeigen
 			EPG_ID = py2_encode(EPG_ID)
 			fp = {'title': label, 'ID': EPG_ID, 'mode': 'context'}
 			fparams_EPG = "&fparams={0}".format(fp)
-			PLog("fparams_EPG: " + fparams_EPG[:80])	
+			PLog("fparams_EPG: " + fparams_EPG[:80])
+				
+		if mediatype == "video":										# Inhaltstext für Video zeigen
+			items = ["api.ardmediathek|ARD", "zdf-prod-futura|ZDF"]		# unterstützte Sender
+			org_id=""
+			for item in items:
+				org, org_id  = item.split("|")
+				if org in fparams:
+					break
+			if org_id and EPG_ID == "":									# nicht bei Livestreams
+				try:
+					s = fparams.split("&fparams=")[1]
+					json_string = s.replace("'", "\"")
+					f = json.loads(json_string)
+					path = f["path"]
+					title = f["title"]
+				except Exception as exception:
+					PLog("fparams_error: " +  str(exception))
+					path=""
+				
+				if path:												# sinnlos ohne path
+					fp = {'title': title, 'path': path, 'ID': org_id, 'mode': 'ShowSumm'}
+					fparams_ShowSumm = "&fparams={0}".format(fp)
+					PLog("fparams_ShowSumm: " + fparams_ShowSumm[:80])											
 
 		if SETTINGS.getSetting('pref_exist_inlib') == 'true':			# Abgleich Medienbibliothek
 			if mediatype == "video":
@@ -811,7 +840,6 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				fparams_strm = "&fparams={0}".format(fp)
 				PLog("fparams_strm: " + fparams_strm[:100])
 				fparams_strm = quote_plus(fparams_strm)
-
 
 		if SETTINGS.getSetting('pref_video_direct') == 'true':			# ständig: Umschalter Sofortstart 
 			menu_entry = "Sofortstart AUS / Downl. EIN"
@@ -1035,10 +1063,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			commands.append((menu_entry_sort, 'RunScript(%s, %s, ?action=dirList&dirID=switch_Setting%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_sorting)))
-		
-		
+			
 		# Playlist	
-		if fparams_playlist_play or fparams_playlist_rm or fparams_playlist_add or fparams_playlist_add:	
+		if fparams_playlist_play or fparams_playlist_rm or fparams_playlist_add:	
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			dirID = "resources.lib.playlist.items_add_rm"
 			commands.append(('PLAYLIST direkt starten', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
@@ -1051,29 +1078,34 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			commands.append(('PLAYLIST-Tools', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 					% (MY_SCRIPT, HANDLE, dirID, fparams_playlist_add)))
 		
-		if SETTINGS.getSetting('pref_strm') == 'true' and fparams_strm:		# strm-Datei für Video erzeugen
-			if mediatype == "video":			
+		if fparams_strm:																# strm-Datei für Video erzeugen
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
+			PLog("MY_SCRIPT_strm:" + MY_SCRIPT)		
+			dirID = "resources.lib.strm.do_create"
+			commands.append(('STRM-Datei erzeugen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
+					% (MY_SCRIPT, HANDLE, dirID, fparams_strm)))		
+			
+		if fparams_exist_inlib:															# Abgleich mit Medienbibliothek
 				MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
-				PLog("MY_SCRIPT:" + MY_SCRIPT)		
-				dirID = "resources.lib.strm.do_create"
-				commands.append(('STRM-Datei erzeugen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
-						% (MY_SCRIPT, HANDLE, dirID, fparams_strm)))		
-				
-		if SETTINGS.getSetting('pref_exist_inlib') == 'true' and fparams_exist_inlib:	# Abgleich mit Medienbibliothek
-			if mediatype == "video":			
-				MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
-				PLog("MY_SCRIPT:" + MY_SCRIPT)		
+				PLog("MY_SCRIPT_inlib:" + MY_SCRIPT)		
 				dirID = "resources.lib.strm.exist_in_library"
 				commands.append(('Abgleich mit Medienbibliothek', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 						% (MY_SCRIPT, HANDLE, dirID, fparams_exist_inlib)))		
 
-		if fparams_EPG:															# EPG für Sender anzeigen
+		if fparams_EPG:																	# EPG für Sender anzeigen
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/EPG.py' % (ADDON_ID))
-			PLog("MY_SCRIPT:" + MY_SCRIPT)		
+			PLog("MY_SCRIPT_EPG:" + MY_SCRIPT)		
 			dirID = "resources.lib.EPG.EPG"
 			commands.append(('EPG zeigen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 					% (MY_SCRIPT, HANDLE, dirID, fparams_EPG)))
 
+		if fparams_ShowSumm:															# Inhaltstext für Video zeigen
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/EPG.py' % (ADDON_ID))
+			PLog("MY_SCRIPT_ShowSumm:" + MY_SCRIPT)		
+			dirID = "resources.lib.EPG.EPG"
+			commands.append((u'Inhaltstext für Video zeigen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
+					% (MY_SCRIPT, HANDLE, dirID, fparams_ShowSumm)))
+		
 		li.addContextMenuItems(commands)				
 	
 	xbmcplugin.addDirectoryItem(handle=HANDLE,url=add_url,listitem=li,isFolder=isFolder)
