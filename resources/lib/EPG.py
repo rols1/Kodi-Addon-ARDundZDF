@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>24</nr>										# Numerierung für Einzelupdate
+# 	<nr>25</nr>										# Numerierung für Einzelupdate
 #	Stand: 11.10.2024
 #	
  
@@ -621,15 +621,17 @@ if "ShowSumm" in str(sys.argv):											# Kontextmenü: Video-Inhaltstext im t
 	ID =  stringextract("ID': '", "'", params)
 	PLog("title: %s, path: %s, ID: %s" % (title, path, ID))
 	
+	page=""
 	if ID == "ARD":
 		page, msg = get_page(path)
-		if page == "":
-			msg1 = "Fehler beim Abruf der Videodaten:" 
-			msg2 = msg
-			MyDialog(msg1, msg2, '')	
-			exit
+	if page == "":
+		msg1 = "Fehler beim Abruf der Videodaten:" 
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		exit()
 
-	page_obs = json.loads(page)
+	if page:
+		page_obs = json.loads(page)
 	PLog(str(page)[:80])
 	
 	s=""												# Objekte 1. Ebene
@@ -646,8 +648,6 @@ if "ShowSumm" in str(sys.argv):											# Kontextmenü: Video-Inhaltstext im t
 		summ2 = s[1]["teasers"][0]["show"]["synopsis"]	# Beschr. Staffel/Reihe (in allen teasers identisch)
 	except Exception as exception:
 		PLog("summ_error:" + str(exception))
-
-	
 	PLog("summ1: " + summ1); PLog("summ2: " + summ2)
 	
 	summ = "%s\n\n%s" % (summ1, summ2)
