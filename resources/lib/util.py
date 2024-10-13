@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>112</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.10.2024
+#	Stand: 13.10.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -805,7 +805,8 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			PLog("fparams_EPG: " + fparams_EPG[:80])
 				
 		if mediatype == "video":										# Inhaltstext für Video zeigen
-			items = ["api.ardmediathek|ARD", "zdf-prod-futura|ZDF"]		# unterstützte Sender
+			items = ["api.ardmediathek|ARD", "zdf-prod-futura|ZDF",		# unterstützte Sender
+					"www.3sat.de|3sat"]
 			org_id=""
 			for item in items:
 				org, org_id  = item.split("|")
@@ -818,6 +819,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					f = json.loads(json_string)
 					path = f["path"]
 					title = f["title"]
+					path=py2_encode(path); title=py2_encode(title)		# PY2
 				except Exception as exception:
 					PLog("fparams_error: " +  str(exception))
 					path=""
@@ -2613,6 +2615,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		if duration and summ:
 			summ = "%s\n%s" % (duration, summ)
 			
+	#-----------------	
 	summ = summ.replace(' |  | ', '')							# Korrek. Leer
 	PLog('summ: ' + summ[:80]); PLog(save_new)
 	if summ and save_new:

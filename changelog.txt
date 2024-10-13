@@ -10,6 +10,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+13.10.2024	5.1.2
+			my3Sat: unescape(tag) in get_lazyload, unescape(tag) in SendungenAZ
+			valid_title_chars (util): Zeichen & durch Zeichen + ersetzt.
+			SingleVideo (arte): Ausfall api/opa/v3-Link, Ersatz durch hbbtvv2-Link in
+			(path2), Umbenennung Funktion get_streams_api_opa -> get_streams_hbbtvv2
+			neue Auswertung der MP4-Quellen). 
+			ARDSportMedia: ID-Austausch TagesschauXL -> ARD für Aufruf AudioPlayMP3.
+			Parseplaylist: RBB Brandenburg aus der Liste für Einzelauflösungen entfernt
+			(jetzt Mehrkanalstream).
+			get_summary_pre (util): Reduzierung der Cachedatei auf Inhaltstext, Kennung
+			"V5.1.2_summ:" vorangestellt zur Unterscheidung altes/neues Format, Param 
+			page entfernt (obsolet).
+			addDir (util): Kontexmenü "Inhaltstext für Video zeigen" (fparams_ShowSumm),
+			Zielmodul EPG.py ("ShowSumm" in sys.argv), PY2-Anpassung.
+			zusätzliches xbmcgui.ListItem (li2) für eigene Kontextmenüs in addDir:
+			get_json_content (ARDnew), 	ZDF_PageMenu, ZDF_Rubriken, ZDF_RubrikSingle,
+			ZDF_Verpasst, ZDF_FlatListEpisodes, tivi_Verpasst (childs), Start (3sat),
+			Sendereihe_Sendungen (3sat), ARDVerpasst_get_json.
+			EPG-Modul: Auswertung Kontextmenü-Inhaltstext ShowSumm" in str(sys.argv) für
+			ARD, ZDF, 3sat, KiKA, Anpassung PY2.
+
+
 22.09.2024	5.1.1
 			ARDStart (ARDnew): Unterdrückung json-Key ctaLabel (Links zur Anmeldung im
 			Webbrowser).

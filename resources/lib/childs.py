@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>30</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.09.2024
+# 	<nr>31</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.10.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2110,6 +2110,7 @@ def tivi_Verpasst(title, zdfDate, sfilter=""):
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
+	li2 = xbmcgui.ListItem()											# mediatype='video': eigene Kontextmenüs in addDir							
 	
 	jsonObject = json.loads(page)
 	clusterObject = jsonObject["broadcastCluster"]						# Morgens, Mittags, Abends, Nachts
@@ -2139,7 +2140,7 @@ def tivi_Verpasst(title, zdfDate, sfilter=""):
 				tag = repl_json_chars(tag)
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(stream, title, img, tag, descr, scms_id)	
-				addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+				addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
 			except Exception as exception:
 				PLog("verpasst_error: " + str(exception))

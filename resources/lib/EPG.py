@@ -11,7 +11,7 @@
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>25</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.10.2024
+#	Stand: 13.10.2024
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -619,44 +619,110 @@ if "ShowSumm" in str(sys.argv):											# Kontextmenü: Video-Inhaltstext im t
 	title =  stringextract("title': '", "'", params)
 	path =  stringextract("path': '", "'", params)
 	ID =  stringextract("ID': '", "'", params)
-	PLog("title: %s, path: %s, ID: %s" % (title, path, ID))
+	if path.find("www.3sat.de") > 0:						# ID="ZDF" möglich in addDir
+		ID = "3sat"	
 	
-	page=""
-	if ID == "ARD":
-		page, msg = get_page(path)
+	PLog("title: %s, path: %s, ID: %s" % (title, path, ID))
+
+	msg1 = "Fehler beim Abruf der Videodaten:" 
+	page, msg2 = get_page(path)
 	if page == "":
-		msg1 = "Fehler beim Abruf der Videodaten:" 
-		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		exit()
 
-	if page:
-		page_obs = json.loads(page)
+	page = py2_encode(page)									# PY2
 	PLog(str(page)[:80])
-	
-	s=""												# Objekte 1. Ebene
-	if "teasers" in page_obs:
-		s =page_obs["teasers"]
-		PLog("teasers: " + str(s)[:80])
-	if "widgets" in page_obs:
-		s =page_obs["widgets"]
-		PLog("widgets: " + str(s)[:80])
-
 	summ1=""; summ2=""
-	try:
-		summ1 = s[0]["synopsis"]						# Beschr. Einzelbeitrag oder Folge
-		summ2 = s[1]["teasers"][0]["show"]["synopsis"]	# Beschr. Staffel/Reihe (in allen teasers identisch)
-	except Exception as exception:
-		PLog("summ_error:" + str(exception))
-	PLog("summ1: " + summ1); PLog("summ2: " + summ2)
+	#---------------------									# ARD
+	if ID == "ARD":
+		PLog("extract_ARD")
+		try:
+			page_obs = json.loads(page)
+			if "teasers" in page_obs:
+				s =page_obs["teasers"]						# Objekte 1. Ebene
+				PLog("teasers: " + str(s)[:80])
+			if "widgets" in page_obs:
+				s =page_obs["widgets"]
+				PLog("widgets: " + str(s)[:80])
+
+			summ1 = s[0]["synopsis"]						# Beschr. Einzelbeitrag oder Folge
+			summ2 = s[1]["teasers"][0]["show"]["synopsis"]	# Beschr. Staffel/Reihe (in allen teasers identisch)
+		except Exception as exception:
+			PLog("summ_error:" + str(exception))
+			
+		PLog("summ1: " + summ1); PLog("summ2: " + summ2)
+		summ = "%s\n\n%s" % (summ1, summ2)
 	
-	summ = "%s\n\n%s" % (summ1, summ2)
-	if summ == "":
-		xbmcgui.Dialog().notification("suche Inhaltstext", "Abfrage leider ohne Ergebnis",icon,3000)	
+	#---------------------									# ZDF
+	if ID == "ZDF":
+		PLog("extract_ZDF")
+		PLog("path: " + path)
+		summ=""
+		try:
+			page_obs = json.loads(page)
+			path = page_obs["document"]["sharingUrl"]	# Beschr. erst in Webseite	
+			PLog("sharingUrl: " + path)
+		except Exception as exception:
+			PLog("summ_error:" + str(exception))
+			path=""
+				
+		if path:
+			summ = get_summary_pre(path,ID,skip_verf=True,skip_pubDate=True,duration='dummy')
+			ind = summ.find("|")
+			if ind > 0 and ind <= 9:						# Kennung mit Dauer: V5.1.2_summ:44 min | ..
+				summ = summ[ind+2:]
+			summ = summ.replace("|", "\n\n")
+	
+	#---------------------									# 3sat
+	if ID == "3sat":
+		PLog("extract_3sat")
+		summ=""
+		summ1 = stringextract("", "", page)
+		summ1 = stringextract('paragraph-large ">', "</", page)
+		text_cells =  blockextract('class="cell large-8 large-offset-2">', page, "</div>")
+		summ2=""
+		for cells in text_cells:
+			summ2  = summ2 + stringextract("<p>", "</p>", cells) + "\n\n"
+
+		summ = "%s%s" % (summ1, summ2)
+		summ = cleanhtml(summ)
+		summ = unescape(summ)
+		
+		if "kika.de/_next-api" in path:						# KiKA: kika.de/_next-api/proxy/v1/videos/..
+			PLog("extract_KiKA")
+
+			btext=""; ttext=""; atext=""					# BrandText, TeaserText, altText
+			brand = stringextract('"brandInfo":{', '}', page)
+			PLog("brand: " + brand)
+			if brand:
+				btext = stringextract('descriptionTitle":"', '"', brand)
+				btext = btext + stringextract('description":"', '"', brand)
+				PLog("btext: " + btext)
+			atext = stringextract('alt":"', '"', page)
+			ttext = stringextract('teaserText":"', '"', page)
+				
+			summ2 = stringextract('description":"', '"', page)
+			PLog("summ2: " + summ2)
+			summ = summ2
+			if ttext:
+				summ = "%s\n\n%s" % (ttext, summ)
+			if atext:
+				summ = "%s\n\n%s" % (atext, summ)
+			if btext:
+				summ = "%s\n\n%s" % (btext, summ)
+
+	#---------------------									# Ausgabe
+
+	PLog("summ: " + summ)
+	if summ.strip() == "":
+		xbmcgui.Dialog().notification("suche Inhaltstext:", "leider ohne Ergebnis",icon,3000)	
 	else:
-		xbmcgui.Dialog().textviewer(title , summ ,usemono=True)
+		if PYTHON3:
+			xbmcgui.Dialog().textviewer(title, summ, usemono=True)
+		else:
+			xbmcgui.Dialog().textviewer(title, summ)
 		
-		
+#-----------------------------------------------------------------------		
 		
 		
 		

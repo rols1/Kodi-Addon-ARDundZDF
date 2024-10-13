@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>219</nr>										# Numerierung für Einzelupdate
-VERSION = '5.1.1'
-VDATE = '04.10.2024'
+VERSION = '5.1.2'
+VDATE = '13.10.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8266,6 +8266,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 		li = home(li, ID=homeID)
 	else:
 		li = home(li, ID="ZDF")				# Home-Button
+	li2 = xbmcgui.ListItem()										# mediatype='video': eigene Kontextmenüs in addDir							
 		
 	mediatype=''													# Kennz. Videos im Listing
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
@@ -8318,12 +8319,12 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(stream, title, img, tag, descr, scms_id)
 				PLog("fparams: " + fparams)	
-				addDir(li=li, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+				addDir(li=li2, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
 			elif typ=="livevideo":
 				fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 				PLog("fparams: " + fparams)	
-				addDir(li=li, label=title, action="dirList", dirID="ZDF_Live", fanart=img, 
+				addDir(li=li2, label=title, action="dirList", dirID="ZDF_Live", fanart=img, 
 					thumb=img, fparams=fparams, summary=descr, tagline=tag, mediatype=mediatype)   
 			elif typ=="externalUrl":						# Links zu anderen Sendern
 				if "KiKANiNCHEN" in title:
@@ -8460,6 +8461,7 @@ def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):
 		li = home(li, ID=homeID)
 	else:
 		li = home(li, ID='ZDF')						# Home-Button
+	li2 = xbmcgui.ListItem()						# mediatype='video': eigene Kontextmenüs in addDir							
 		
 	mediatype=''
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
@@ -8493,12 +8495,12 @@ def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):
 				tag = "%s | %s" % (tag, sender)
 			fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 				(stream, title, img, tag, descr, scms_id)	
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+			addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)	
 		elif typ == "livevideo":
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 			PLog("fparams: " + fparams)	
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_Live", fanart=img, 
+			addDir(li=li2, label=title, action="dirList", dirID="ZDF_Live", fanart=img, 
 				thumb=img, fparams=fparams, summary=descr, tagline=tag, mediatype=mediatype)
 		elif typ == "externalUrl": 
 			PLog("externalUrl_not_used")
@@ -8578,6 +8580,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 		li = home(li, ID=homeID)
 	else:	
 		li = home(li, ID='ZDF')				# Home-Button
+	li2 = xbmcgui.ListItem()									# mediatype='video': eigene Kontextmenüs in addDir							
 	
 	mediatype=''												# Kennz. Videos im Listing
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
@@ -8729,7 +8732,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 					tag = "%s | %s" % (tag, sender)
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(stream, title, img, tag, descr, scms_id)	
-				addDir(li=li, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+				addDir(li=li2, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
 			else:
 				fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" % (url, title, homeID)
@@ -9242,6 +9245,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')						# Home-Button
+	li2 = xbmcgui.ListItem()										# mediatype='video': eigene Kontextmenüs in addDir							
 
 	# -----------------------------------------						# 2. Durchlauf
 	
@@ -9279,7 +9283,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
 				tag = repl_json_chars(tag)
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(stream, title, img, tag, descr, scms_id)	
-				addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+				addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
 			except Exception as exception:
 				PLog("verpasst_error: " + str(exception))
@@ -9452,6 +9456,7 @@ def ZDF_FlatListEpisodes(sid):
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')										# Home-Button			
+	li2 = xbmcgui.ListItem()									# mediatype='video': eigene Kontextmenüs in addDir							
 	
 	#															# headers wg. häufiger timeouts
 	path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s" % sid 
@@ -9546,7 +9551,7 @@ def ZDF_FlatListEpisodes(sid):
 			tag_par=py2_encode(tag_par);summ_par=py2_encode(summ_par);
 			fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'tag': '%s', 'summ': '%s', 'scms_id': '%s'}" %\
 				(quote(url), quote(title), quote(img), quote(tag_par), quote(summ_par), scms_id)
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+			addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)

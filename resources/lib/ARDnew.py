@@ -11,7 +11,7 @@
 #
 ################################################################################
 # 	<nr>90</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.10.2024
+#	Stand: 12.10.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1728,7 +1728,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
 	PLog(sender)												#-> href
 	mediatype=''; pagetitle=''
-	li2 = xbmcgui.ListItem()									# eigene Kontextmenüs in addDir							
+	li2 = xbmcgui.ListItem()									# mediatype='video': eigene Kontextmenüs in addDir							
 	
 	if "dict" not in str(type(page)):
 		page_obs = json.loads(page)
@@ -1885,6 +1885,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 					continue								
 					
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
+				li=li2												# eigene Kontextmenüs
 				mediatype='video'
 			
 			if typ == "live"  or typ == "event" :					# Livestream in Stage od. ARD Sport
@@ -2895,6 +2896,8 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 	# targetbase (%s=sender, %s=urlId)
 	tbase = "https://api.ardmediathek.de/page-gateway/pages/%s/item/%s?devicetype=pc&embedded=true" 
 	mediatype=""
+	li2 = xbmcgui.ListItem()									# mediatype='video': eigene Kontextmenüs in addDir							
+	
 
 	for i, channel in enumerate(channels):
 		sid = channel["id"]
@@ -3016,7 +3019,7 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 				fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s','homeID': '%s'}" %\
 					(quote(path), quote(title), quote(summ_par), ID, homeID)	
 				if path:
-					addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, 
+					addDir(li=li2, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, 
 						thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
 				else:														# function dummy Haupt-PRG
 					fparams="&fparams={'path': '', 'title': '', 'img': ''}"

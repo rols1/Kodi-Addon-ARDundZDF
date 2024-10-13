@@ -11,8 +11,8 @@
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 ################################################################################
-# 	<nr>18</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.09.2024
+# 	<nr>19</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.10.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -503,6 +503,7 @@ def Start(name, path, rubrik=''):
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='3Sat')				# Home-Button
+	li2 = xbmcgui.ListItem()				# mediatype='video': eigene Kontextmenüs in addDir							
 	
 	page = Dict("load", '3satStart', CacheTime=my3satCacheTime)	
 	if page == False:								# nicht vorhanden oder zu alt
@@ -567,7 +568,7 @@ def Start(name, path, rubrik=''):
 			else:
 				fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
 					(quote(title), quote(href), quote(img_src), quote(descr_par), dauer)
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", 
+				addDir(li=li2, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", 
 					fanart=R('3sat.png'), thumb=img_src, tagline=tag, summary=descr, mediatype=mediatype,
 					fparams=fparams)
 				
@@ -1029,7 +1030,8 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 		ret = True
 	else:
 		li = xbmcgui.ListItem()
-		li = home(li, ID='3Sat')										# Home-Button
+		li = home(li, ID='3Sat')				# Home-Button
+	li2 = xbmcgui.ListItem()					# mediatype='video': eigene Kontextmenüs in addDir							
 	
 	if page == '':								# Seitenausschnitt vom Aufrufer?
 		page, msg = get_page(path=path, do_safe=False)	
@@ -1089,7 +1091,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 			descr_par=py2_encode(descr_par); duration=py2_encode(duration);						
 			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
 				(quote(title), quote(href), quote(img_src), quote(descr_par), quote(duration))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
+			addDir(li=li2, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 				thumb=img_src, summary=summ, fparams=fparams, mediatype=mediatype)
 			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
@@ -1208,7 +1210,7 @@ def Sendereihe_Sendungen(li, path, title, img='', page='', skip_lazyload='', ski
 		descr_par=py2_encode(descr_par); dur=py2_encode(dur); 
 		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
 			(quote(title), quote(href), quote(img_src), quote(descr_par), quote(dur))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
+		addDir(li=li2, label=title, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams, mediatype=mediatype)
 
 	if 'is-medium lazyload' in page:							# Test auf Loader-Beiträge, escaped
