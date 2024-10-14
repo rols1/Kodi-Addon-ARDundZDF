@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>219</nr>										# Numerierung für Einzelupdate
+# 	<nr>220</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.2'
-VDATE = '13.10.2024'
+VDATE = '14.10.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6757,7 +6757,7 @@ def EPG_Search(title, query=""):
 	from resources.lib.ARDnew import ARDHandleRecents
 	
 	img = R("tv-EPG-suche.png")
-	title_org=title
+	title_org=title;
 
 	if SETTINGS.getSetting('pref_epgpreload') == 'false':
 		xbmcgui.Dialog().notification(title_org, "EPG laden ist ausgeschaltet",img,3000)
@@ -6771,6 +6771,7 @@ def EPG_Search(title, query=""):
 		msg1 = u"Suchworte müssen  mindestens 3 Buchstaben  enthalten."
 		MyDialog(msg1, '', '')	
 		return
+	PLog("query: %s" % query)
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
@@ -6785,6 +6786,9 @@ def EPG_Search(title, query=""):
 	tag_negativ =u'neue EPG-Suche starten'								# ohne Treffer
 	tag_positiv =u'gefundene Beiträge zeigen'							# mit Treffer
 	cnt=0; up_query=up_low(query);
+	up_query = up_query.replace("+", " ")								# Markus+Lanz -> Markus Lanz
+	PLog("up_query: %s" % up_query)
+	
 	for i in range(len(sort_playlist)):
 		rec = sort_playlist[i]
 		sender=rec[0]; ID=rec[1]; sender_img=rec[2]; link = rec[3]		# Senderdaten 
@@ -6815,7 +6819,7 @@ def EPG_Search(title, query=""):
 	store_recents=False
 	if cnt == 0:
 		img = R('tv-EPG-suche.png')
-		label = "[B]EPG-Suche[/B] | nichts gefunden zu: [B]%s[/B] | neue Suche" % query
+		label = "[B]EPG-Suche[/B] | nichts gefunden zu: [B]%s[/B] | neue Suche" % query.replace("+", " ")
 		fparams="&fparams={'title': '%s', 'query': ''}" % quote(title)
 		addDir(li=li, label=label, action="dirList", dirID="EPG_Search", 
 			fanart=img, thumb=img, tagline=tag_negativ, fparams=fparams)
@@ -6871,6 +6875,8 @@ def EPG_Search2(title, query=""):
 	now,today,today_5Uhr,nextday,nextday_5Uhr = EPG.get_unixtime()		# lokale Unix-Zeitstempel holen + Offsets
 
 	cnt=0; up_query=up_low(query); store_recents=False
+	up_query = up_query.replace("+", " ")								# wie in EPG_Search
+	
 	img_base = "https://images.tvtoday.de/"
 	for i in range(len(EPG_SearchHits)):
 		r = EPG_SearchHits[i]
@@ -6915,7 +6921,7 @@ def EPG_Search2(title, query=""):
 				start_end = "%s|%s" % (starttime, endtime)				# Kontexmenü "Sendung aufnehmen" 
 
 			sender = py2_decode(sender)
-			summ = "%s | %s" % (sender, summ)
+			summ = "[B]%s[/B] | %s" % (sender, summ)
 			Plot = summ.replace("\n", "||")
 			if starttime < now:
 				title = "[COLOR grey]%s | %s[/COLOR]" % (day_human, sname)	# grau - Vergangenheit
