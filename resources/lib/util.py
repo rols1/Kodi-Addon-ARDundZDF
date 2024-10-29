@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>112</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.10.2024
+# 	<nr>113</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.10.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1847,7 +1847,7 @@ def make_filenames(title, max_length=255):
 	title = title.replace(u':', ' ')
 	title = title.replace(u'/', ' ')					# mögl. Serienkennung 1/8, 2/8, ..
 	
-	fname = transl_umlaute(title)						# Umlaute	
+	fname = transl_umlaute(title)						# Umlaute
 	
 	valid_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
 	fname = ''.join(c for c in fname if c in valid_chars)
@@ -1928,6 +1928,7 @@ def transl_json(line):	# json-Umlaute übersetzen
 		, (u'\\u201e', u'*')		# Arte: doublequote tief
 		, (u'\\u201c', u'*')		# Arte: doublequote hoch
 		, (u'\\u2013', u'-')		# Arte: -
+		, (u'\\u2014', u'-')		# Arte: -
 		, (u'\\u2019', u'*')		# Arte: '
 		, (u'\\u00f8', u'ø')		# ø Kleinbuchstabe o mit Strich,
 		, (u'\\u00e5', u'å')		# å Kleinbuchstabe a mit Ring,

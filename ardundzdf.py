@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>220</nr>										# Numerierung für Einzelupdate
+# 	<nr>221</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.2'
-VDATE = '14.10.2024'
+VDATE = '29.10.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -511,7 +511,7 @@ def Main():
 		
 		
 	if SETTINGS.getSetting('pref_use_podcast') ==  'true':		# Podcasts / Audiothek
-			tagline	= 'ARD Audiothek | Die besten Podcasts der ARD und des Deutschlandradios'
+			tagline	= 'ARD Audiothek | Die besten Podcasts der ARD und weitere Podcasts'
 			fparams="&fparams={'title': 'ARD Audiothek'}"
 			label = 'ARD Audiothek'
 			addDir(li=li, label=label, action="dirList", dirID="AudioStart", fanart=R(FANART), 
@@ -1542,6 +1542,13 @@ def AudioStart(title):
 	fparams="&fparams={'org': '%s'}" %  title
 	addDir(li=li, label=title, action="dirList", dirID="AudioSenderPrograms", fanart=R(ICON_MAIN_AUDIO), 
 		thumb=R('funk.png'), tagline=tagline, fparams=fparams)
+		
+	# Button für podcast.de anhängen 							# podcast.de
+	title = 'podcast.de'										#  Watchdog: 
+	tagline = "Podcasts der Plattform www.podcast.de"
+	fparams="&fparams={}"
+	addDir(li=li, label=title, action="dirList", dirID="AudioPodcastDe", fanart=R('podcast-de.png'), 
+		thumb=R('podcast-de.png'), tagline=tagline, fparams=fparams)		
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -1641,7 +1648,7 @@ def Audio_get_rubriken_web(li, title, path, ID, page):
 #
 def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): # Sender / Livestreams 
 	PLog('AudioStartLive: ' + sender)
-	CacheTime = 6000													# 1 Std.
+	CacheTime = 3600													# 1 Std.
 
 	li = xbmcgui.ListItem()
 	if myhome:
@@ -1992,6 +1999,332 @@ def Audio_get_webslice(page, mode="web"):
 	return page
 				
 #----------------------------------------------------------------
+# 28.10.2024 Podcasts podcast.de
+# 
+#
+def AudioPodcastDe(title="", Dict_ID=''):
+	PLog('AudioPodcastDe: ' + Dict_ID)
+	path = "https://www.podcast.de/"
+	CacheTime = 3600
+	
+	page = Dict("load", "AudioPodcastDe", CacheTime=CacheTime)		# editorialCategories laden
+	if page == False or page == '':									# Cache miss od. leer - vom Sender holen
+		page, msg = get_page(path=path)
+		Dict("store", "AudioPodcastDe", page)						
+	if page == '':	
+		msg1 = "Fehler in AudioPodcastDe:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
+		return
+		
+	PLog(len(page))
+		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Audiothek')
+
+	json_blocks = stringextract("Scripts -->", "</script>", page)
+	PLog("json_blocks: " + json_blocks[:80])
+	rubrics = [u"editors_choice|Tipps der Redaktion", u"dashboard_charts|Podcast-Charts",
+				u"latest_shows|Neue Episoden", u"latest_channels|Neue Podcasts" 
+			]
+	editors_choice 	= stringextract("editors_choice = [", "]", json_blocks)
+	dashboard_charts= stringextract("dashboard_charts = [", "]", json_blocks)
+	latest_shows 	= stringextract("latest_shows = [", "]", json_blocks)
+	latest_channels = stringextract("latest_channels = [", "]", json_blocks)
+	
+	#----------------------------------------------------------------	# 1. json-Blöcke aus Webseite laden  
+	if Dict_ID == '':
+		PLog("Step1")
+		title="Suche auf podcast.de"
+		fparams="&fparams={}"
+		addDir(li=li, label=title, action="dirList", dirID="AudioPodcastDeSearch", 
+			fanart=R('podcast-de.png'), thumb=R('ard-suche.png'), fparams=fparams)	
+		
+		for rubric in rubrics:
+			Dict_ID, label = rubric.split("|")
+			mark1="%s = [" % Dict_ID
+			mark2="]"
+			pos1 = json_blocks.find(mark1)
+			if mark1 in json_blocks:
+				block = stringextract(mark1, mark2, json_blocks[pos1:])
+				block = block.strip()
+				Dict("store", Dict_ID, block)				
+				anz = block.count('"url":')
+				tag = "Podcasts: [B]%d[/B]" % anz
+				PLog("Dict_ID: %s, anz: %d, %s" % (Dict_ID, anz, block[:80]))
+				
+				fparams="&fparams={'title': '%s', 'Dict_ID': '%s'}" % (title, Dict_ID)
+				addDir(li=li, label=label, action="dirList", dirID="AudioPodcastDe", fanart=R('podcast-de.png'), 
+					thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)
+
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	else:		
+	#----------------------------------------------------------------	# 2. mp3's
+		PLog("Step2")
+		block = Dict("load", Dict_ID)
+		block = transl_json(block)									#  json-Umlaute
+		block = (block.replace(u"&quot;", '').replace(u"\\", ''))
+		
+		items = blockextract('"name":', block)
+		for item in items:
+			title = stringextract('"name": "', '",', item)
+			title=title.replace("#", "*")							# z.B.: #544 Für wen..
+			artist = stringextract('"artist": "', '",', item)		# Podcast-Reihe
+			Plot = artist
+			url = stringextract('"url": "', '",', item)
+			url = decode_url(url)									# AudioPlayMP3 -> entf. Url-Suffix ?source=feed
+			
+			anz = stringextract('"subscribers": "', '",', item)
+			img = stringextract('"cover_art_url": "', '"', item)
+		  
+			PLog("Step2_title: %s, artist: %s, url: %s, anz: %s, img: %s," % (title, Plot, url, anz, img))		  
+			title=py2_encode(title); url=py2_encode(url);
+			img=py2_encode(img); Plot=py2_encode(Plot);	
+			
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'artist': '%s'}" %\
+				(quote(url), quote(title), quote(img), quote(Plot), quote(artist))
+			addDir(li=li, label=title, action="dirList", dirID="AudioPodcastDeSingle", fanart=img, thumb=img, 
+				fparams=fparams, tagline=Plot)			
+	  
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#----------------------------------------------------------------
+# Suche auf podcast.de
+# Step 1: Suche, Step 2: mit dest_url zur neuesten Episode
+# query: Nutzung durch AudioPodcastDeSingle für Suche nach Podcast-Reihe
+#
+def AudioPodcastDeSearch(dest_url="", query=""):
+	PLog('AudioPodcastDeSearch: ')
+
+	if dest_url == "":												# Step 1: Suche
+		PLog("Step1")
+		base = "https://www.podcast.de/suche?query=%s"
+		if query == "":
+			query = get_query(channel='ARD Audiothek')
+			if  query == None or query.strip() == '':
+				return ""
+		query = py2_encode(query)								# encode für quote
+		path = base % quote(query)
+		
+		page, msg = get_page(path=path, do_safe=False)			# nach quote ohne do_safe 	
+		if page == '' or page.find("<title>Server Error</title>") > 0 or page.find("<h5>") < 0:	
+			PLog("msg: " + msg)
+			msg1 = "AudioPodcastDeSearch:"
+			msg2 = "Suche leider fehlgeschlagen."
+			MyDialog(msg1, msg2, '')	
+			return
+			
+		li = xbmcgui.ListItem()
+		li = home(li, ID='ARD Audiothek')						# Home-Button
+
+		items = blockextract("<h5>", page)
+		for item in items:
+			img = stringextract('img src="', '"', item)
+			alt = stringextract('alt="', '"', item)
+			alt = unescape(alt)									# alt="LANZ &amp; PRECHT"
+			Plot = stringextract('text-muted small">', '<br>', item)
+			Plot = cleanhtml(Plot); Plot = mystrip(Plot)
+			
+			href = stringextract('Neueste Episode:', '</span>', item)
+			title = cleanhtml(href); title = mystrip(title); title = unescape(title)
+			title = "%s: [B]%s[/B]" % (alt, title)
+			dest_url = stringextract('href="', '"', href)		# podcast.de/episode/644335688/ausgabe-..
+			if dest_url == "":									# Abschnitte Service, Dienst, ..
+				continue
+
+			PLog("dest_url: %s, img: %s, title: %s, Plot: %s" % (dest_url, img, title, Plot[:80]))
+			title=py2_encode(title); dest_url=py2_encode(dest_url);
+			img=py2_encode(img); Plot=py2_encode(Plot);	
+			
+			fparams="&fparams={'dest_url': '%s'}" % quote(dest_url) 
+			addDir(li=li, label=title, action="dirList", dirID="AudioPodcastDeSearch", fanart=img, thumb=img, 
+				fparams=fparams, tagline=Plot)					
+
+	else:
+	#----------------------------------------------------------------	# Step 2: -> neueste Episode -> Archiv
+		PLog("Step2")
+		page, msg = get_page(path=dest_url)	
+		if page == '' or page.find(">Server Error</") > 0 or page.find(">Nichts gefunden.</") > 0:		
+			msg1 = "AudioPodcastDeSearch: Seite nicht gefunden."
+			MyDialog(msg1, msg, '')	
+			return
+
+			
+		li = xbmcgui.ListItem()
+		li = home(li, ID='ARD Audiothek')						# Home-Button
+			
+		script = stringextract('application/ld+json">', '</script>', page)
+		script = script.replace("\n"," ")								# sonst JSONDecodeError
+		try:
+			items = json.loads(script)
+			PLog(str(items)[:80])
+			title = items["name"]
+			title = title.replace("#", "*")
+			Plot = items["description"]
+			Plot = Plot.replace("\n", "")
+			img = items["thumbnailUrl"]
+			mp3_url = items["associatedMedia"]["contentUrl"]
+			ser_url = items["partOfSeries"]["url"]						# Serien-Url
+			serie = ser_url.split("/")[-1]								# z.B. lanz-precht
+			archiv_url = ser_url.replace(serie, "archiv?page=1")
+			PLog("archiv_url: " + archiv_url)
+		except Exception as exception:
+			msg = "items_error: " + str(exception)
+			PLog(msg)
+			msg1 = "Fehler in AudioPodcastDeSearch:"
+			MyDialog(msg1, msg, '')	
+			return
+																		# 1. Button Neueste Episode
+		PLog("Step2_title: %s, artist: %s, url: %s, img: %s," % (title, Plot, mp3_url, img))		  
+		title=py2_encode(title); mp3_url=py2_encode(mp3_url);
+		img=py2_encode(img); Plot=py2_encode(Plot);	
+		
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+			quote(title), quote(img), quote_plus(Plot))
+		addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+			fparams=fparams, tagline=Plot)			
+		
+		AudioPodcastDeArchiv(archiv_url, li)							# Buttons Archiv-Beiträge
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#----------------------------------------------------------------
+# Buttons Archiv-Podcasts für AudioPodcastDeSearch
+#
+def AudioPodcastDeArchiv(url, li=""):	
+	PLog('AudioPodcastDeArchiv: ' + url)
+	url_org=url
+	
+	page, msg = get_page(path=url)	
+	if page == '':	
+		msg1 = "Fehler in AudioPodcastDeArchiv:"
+		MyDialog(msg1, msg, '')	
+		return
+
+	if li == "":												# Mehr-Seiten
+		li = xbmcgui.ListItem()	
+		li = home(li, ID='ARD Audiothek')						# Home-Button
+	
+	folgen = page.split('episode-list">')[-1]
+	folgen = folgen.split('<div class="row">')[0]
+	pages  = page.split('pagination">')[-1]
+	
+	items = blockextract('position-relative">', folgen)
+	del items[0]											# Neueste Episode löschen
+	for item in items:
+		href = stringextract('href="', '"', item)			# Web-Ziel
+		img = stringextract('img src="', '"', item)	
+		title = stringextract('<h3>', '</h3>', item)
+		title=title.strip(); title=unescape(title)
+		title=repl_json_chars(title)
+		
+		Plot = stringextract('text-muted">', '</small>', item)
+		Plot = Plot.strip()
+		
+		PLog("archiv_title: %s, mp3_url: %s, img: %s, Plot: %s" % (title, href, img, Plot))		  
+		title=py2_encode(title); href=py2_encode(href);
+		img=py2_encode(img); Plot=py2_encode(Plot);	
+		
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+			(quote(href), quote(title), quote(img), quote_plus(Plot), )
+		addDir(li=li, label=title, action="dirList", dirID="AudioPodcastDeSingle", fanart=img, thumb=img, 
+			fparams=fparams, tagline=Plot)			
+
+	if pages:												# Pagination
+		p = url_org.split("/")[-1]		# ?page=1
+		nr = re.search(r'page=(\d+)', p).group(1)
+		new_nr = int(nr)+1
+		next_page = "archiv?page=%d" % new_nr
+		nexturl = url_org.replace(p, next_page)
+		PLog("url_org: %s, nexturl: %s" % (url_org, nexturl))
+		title = "Weiter zu Seite %d" % new_nr
+		PLog(pages.find(nexturl))
+		if pages.find(nexturl) > 0:
+			nexturl=py2_encode(nexturl)
+			fparams="&fparams={'url': '%s'}" % quote(nexturl)
+			addDir(li=li, label=title, action="dirList", dirID="AudioPodcastDeArchiv", \
+				fanart=img, thumb=img, fparams=fparams)			
+
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#----------------------------------------------------------------
+# Aufrufer: 1. AudioPodcastDeArchiv -> Webseite mit Einzelbeitrag
+#			2. AudioPodcastDe -> einz. mp3-Url plus Podcast-Reihe (artist)
+#
+def AudioPodcastDeSingle(url, title, thumb, Plot, artist=""):	
+	PLog('AudioPodcastDeSingle: ' + url)
+	PLog(artist)
+
+	if artist:														# einz. mp3-Url plus Podcast-Reihe
+		li = xbmcgui.ListItem()
+		li = home(li, ID='ARD Audiothek')	# Home-Button
+		
+		tag = "Weiter zum Podcast."									# Button -> Podcast
+		summ = "Podcast-Reihe: %s" % Plot
+		mp3_url = url; img = thumb
+		title=py2_encode(title); mp3_url=py2_encode(mp3_url);
+		img=py2_encode(img); Plot=py2_encode(Plot);	
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+			quote(title), quote(img), quote(Plot))
+		addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tag, summary=summ)
+		
+		title = "Zur Podcast-Reihe [B]%s[/B]" % artist				# Button -> Podcast-Reihe
+		tag = "%s und und verwandten Themen" % title
+		fparams="&fparams={'query': '%s'}" % artist
+		addDir(li=li, label=title, action="dirList", dirID="AudioPodcastDeSearch", 
+			fanart=R('podcast-de.png'), thumb=R('ard-suche.png'), tagline=tag, fparams=fparams)
+	
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
+				
+	# -----------------------------									# Webseite mit Einzelbeitrag 
+	page, msg = get_page(path=url)	
+	if page == '' or page.find(">Server Error</") > 0 or page.find(">Nichts gefunden.</") > 0:		
+		msg1 = "AudioPodcastDeSingle: Seite nicht gefunden."
+		MyDialog(msg1, msg, '')	
+		return
+		
+	script = stringextract('application/ld+json">', '</script>', page)
+	script = script.replace("\n"," ")								# JSONDecodeError
+	try:
+		items = json.loads(script)
+		title = items["name"]
+		Plot = items["description"]
+		Plot = Plot.replace("\n", "")
+		img = items["thumbnailUrl"]
+		mp3_url = items["associatedMedia"]["contentUrl"]
+		ser_url = items["partOfSeries"]["url"]						# Serien-Url
+		serie = ser_url.split("/")[-1]								# z.B. lanz-precht
+		archiv_url = ser_url.replace(serie, "archiv?page=1")
+		PLog("archiv_url: " + archiv_url)
+	except Exception as exception:
+		msg = "items_error: " + str(exception)
+		PLog(msg)
+		msg1 = "Fehler in AudioPodcastDeSearch:"
+		MyDialog(msg1, msg, '')	
+		return
+	
+	li = xbmcgui.ListItem()
+	if SETTINGS.getSetting('pref_video_direct') == 'true':  	# Sofortstart
+		PLog('Sofortstart: AudioPodcastDeSingle')
+		AudioPlayMP3(mp3_url, title, thumb, Plot)
+		return
+	else:
+		tag = "[B]Weiter zum Beitrag und Download.[/B]"
+		li = home(li, ID='ARD Audiothek')				# Home-Button
+		title=py2_encode(title); mp3_url=py2_encode(mp3_url);
+		img=py2_encode(img); Plot=py2_encode(Plot);	
+	
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
+			quote(title), quote(img), quote(Plot))
+		addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tag, summary=Plot)
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)			
+
+#----------------------------------------------------------------
 # extrahiert Einzelbeiträge einer Sendung
 # Aufrufer: AudioSenderPrograms + Audio_get_sendung_api (Fallback
 #	bei page mit fehlenden durations), Audio_get_cluster_single,
@@ -2318,7 +2651,7 @@ def Audio_get_items_single(item, ID=''):
 #
 def AudioSearch(title, query='', path=''):
 	PLog('AudioSearch:')
-	CacheTime = 6000								# 1 Std.
+	CacheTime = 3600							# 1 Std.
 	title_org = title
 
 	# https://api.ardaudiothek.de/search?query=%s - Abweichung der Ergebnisse
@@ -2594,7 +2927,7 @@ def Audio_get_cluster_rubrik(li, url, title, ID=''):
 	PLog('Audio_get_cluster_rubrik: ' + ID)
 	PLog(title); PLog(url)
 	title_org = title
-	CacheTime = 6000												# 1 Std.
+	CacheTime = 3600												# 1 Std.
 	
 	if li  == '':
 		li = xbmcgui.ListItem()
@@ -2835,7 +3168,7 @@ def Audio_get_cluster_single(title, rubrik_id, section_id, page='', url=""):
 # 
 def Audio_get_homescreen(page='', cluster_id=''):
 	PLog('Audio_get_homescreen:')
-	CacheTime = 6000												# 1 Std.
+	CacheTime = 3600												# 1 Std.
 	
 	path = "https://www.ardaudiothek.de/"
 	ID = "AudioHomescreen"
@@ -3056,9 +3389,19 @@ def AudioWebMP3(url, title, thumb, Plot, ID='', no_gui=''):
 # 01.07.2021 ID variabel für Austausch des Home-Buttons
 # 13.05.2024 Erweiterung für Livestreams: Download als
 #	m3u-Datei (wie AudioStartLive)
+# 28.10.2024 Url-Behandlung für Audios von podcast.de (AudioPodcastDe,
+#	AudioPodcastDeSearch)
 #
 def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 	PLog('AudioPlayMP3: ' + title)
+	
+	if ".mp3?" in url or ".m4a?" in url:					# AudioPodcastDe, AudioPodcastDeSearch
+		if ".mp3?" in url:									# ..644e320a4561.mp3?source=feed
+			pos=url.find(".mp3?")
+			url = url[:pos+4]
+		if ".m4a?" in url:
+			pos=url.find(".m4a?")
+			url = url[:pos+4]
 	
 	if SETTINGS.getSetting('pref_use_downloads') == 'false':
 		PLog('starte PlayAudio direkt')
@@ -5197,8 +5540,9 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 			return		
 	
 	suffix=''
-	if url.endswith('.mp3'):
-		suffix = '.mp3'		
+	if url.endswith('.mp3') or url.endswith('.m4a'):	# 25.10.2024 Podcasts .m4a 
+#		suffix = '.mp3'		
+		suffix = url[-4:]		
 		dtyp = 'Podcast '
 	else:												# .mp4 oder .webm	
 		dtyp = 'Video '
@@ -5218,7 +5562,7 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 	title = dtyp + 'curl/wget-Download: ' + title
 	textfile = dfname + '.txt'
 	
-	dfname = dfname + suffix							# suffix: '.mp4', '.webm', oder '.mp3'
+	dfname = dfname + suffix							# suffix: '.mp4', '.webm', oder '.mp3', 'm4a'
 	
 	pathtextfile = os.path.join(dest_path, textfile)	# kompl. Speicherpfad für Textfile
 	PLog(pathtextfile)
@@ -5853,70 +6197,72 @@ def DownloadsList():
 		
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
+	ext_list = ['.mp4', '.webm', '.mp3', '.m4a', '.m3u']
 	
 	# Downloads listen:
 	for entry in dirlist:							# Download + Beschreibung -> DirectoryObject
-		if entry.find('.mp4') > 0 or entry.find('.webm') > 0 or entry.find('.mp3') > 0 or entry.find('.m3u') > 0:
-			localpath = entry
-			title=''; tagline=''; summary=''; quality=''; thumb=''; httpurl=''
-			fname =  entry							# Dateiname 
-			basename = os.path.splitext(fname)[0]	# ohne Extension
-			ext =     os.path.splitext(fname)[1]	# Extension
-			fdate = os.stat(entry).st_mtime
-			fdate = datetime.datetime.fromtimestamp(int(fdate))
-			fdate = "Ablage: %s" % fdate.strftime("%d.%m.%Y, %H:%M Uhr")
-			PLog(fname); PLog(basename); PLog(ext); PLog(fdate)
-			txtfile = basename + '.txt'
-			txtpath = os.path.join(path, txtfile)   # kompl. Pfad
-			PLog('entry: ' + entry); PLog('txtpath: ' + txtpath)
-			if os.path.exists(txtpath):
-				txt = RLoad(txtpath, abs_path=True)	# Beschreibung laden - fehlt bei Sammeldownload
-			else:
-				txt = None
-				title = entry						# Titel = Dateiname, falls Beschreibung fehlt
-			if txt != None:			
-				title = stringextract("Titel: '", "'", txt)
-				tagline = stringextract("ung1: '", "'", txt)
-				summary = stringextract("ung2: '", "'", txt)
-				quality = stringextract("taet: '", "'", txt)
-				thumb = stringextract("Bildquelle: '", "'", txt)
-				httpurl = stringextract("Adresse: '", "'", txt)
-				
-				if tagline and quality:
-					tagline = "%s | %s" % (tagline, quality)
+		for ext in ext_list:
+			if entry.find(ext) > 0:
+				localpath = entry
+				title=''; tagline=''; summary=''; quality=''; thumb=''; httpurl=''
+				fname =  entry							# Dateiname 
+				basename = os.path.splitext(fname)[0]	# ohne Extension
+				ext =     os.path.splitext(fname)[1]	# Extension
+				fdate = os.stat(entry).st_mtime
+				fdate = datetime.datetime.fromtimestamp(int(fdate))
+				fdate = "Ablage: %s" % fdate.strftime("%d.%m.%Y, %H:%M Uhr")
+				PLog(fname); PLog(basename); PLog(ext); PLog(fdate)
+				txtfile = basename + '.txt'
+				txtpath = os.path.join(path, txtfile)   # kompl. Pfad
+				PLog('entry: ' + entry); PLog('txtpath: ' + txtpath)
+				if os.path.exists(txtpath):
+					txt = RLoad(txtpath, abs_path=True)	# Beschreibung laden - fehlt bei Sammeldownload
+				else:
+					txt = None
+					title = entry						# Titel = Dateiname, falls Beschreibung fehlt
+				if txt != None:			
+					title = stringextract("Titel: '", "'", txt)
+					tagline = stringextract("ung1: '", "'", txt)
+					summary = stringextract("ung2: '", "'", txt)
+					quality = stringextract("taet: '", "'", txt)
+					thumb = stringextract("Bildquelle: '", "'", txt)
+					httpurl = stringextract("Adresse: '", "'", txt)
 					
-				# Falsche Formate korrigieren:
-				summary=py2_decode(summary); tagline=py2_decode(tagline);
-				summary=repl_json_chars(summary); tagline=repl_json_chars(tagline); 
-				summary=summary.replace('\n', ' | '); tagline=tagline.replace('\n', ' | ')
-				summary=summary.replace('|  |', ' | '); tagline=tagline.replace('|  |', ' | ')
+					if tagline and quality:
+						tagline = "%s | %s" % (tagline, quality)
+						
+					# Falsche Formate korrigieren:
+					summary=py2_decode(summary); tagline=py2_decode(tagline);
+					summary=repl_json_chars(summary); tagline=repl_json_chars(tagline); 
+					summary=summary.replace('\n', ' | '); tagline=tagline.replace('\n', ' | ')
+					summary=summary.replace('|  |', ' | '); tagline=tagline.replace('|  |', ' | ')
 
-			else:										# ohne Beschreibung
-				# pass									# Plex brauchte hier die Web-Url	aus der Beschreibung
-				title = fname
-				httpurl = fname							# Berücksichtigung in VideoTools - nicht abspielbar
-				summary = 'ohne Beschreibung'
-			tagline = "[COLOR blue]%s[/COLOR]\n%s" % (fdate, tagline)
-				
-			tag_par= tagline.replace('\n', '||')	
-			PLog("Satz20:")
-			PLog(httpurl); PLog(summary); PLog(tagline); PLog(quality); # PLog(txt); 			
-			if httpurl.endswith('mp3') or httpurl.endswith('m3u'):
-				oc_title = u'Anhören, Bearbeiten: Podcast | %s' % py2_decode(title)
-				thumb = R(ICON_NOTE)
-			else:
-				oc_title=u'Ansehen, Bearbeiten: %s' % py2_decode(title)
-				if thumb == '':							# nicht in Beschreibung
-					thumb = R(ICON_DIR_VIDEO)
+				else:										# ohne Beschreibung
+					# pass									# Plex brauchte hier die Web-Url	aus der Beschreibung
+					title = fname
+					httpurl = fname							# Berücksichtigung in VideoTools - nicht abspielbar
+					summary = 'ohne Beschreibung'
+				tagline = "[COLOR blue]%s[/COLOR]\n%s" % (fdate, tagline)
+					
+				tag_par= tagline.replace('\n', '||')	
+				PLog("Satz20:")
+				PLog(httpurl); PLog(summary); PLog(tagline); PLog(quality); # PLog(txt); 			
+				if httpurl.endswith('mp3') or httpurl.endswith('m3u'):
+					oc_title = u'Anhören, Bearbeiten: Podcast | %s' % py2_decode(title)
+					thumb = R(ICON_NOTE)
+				else:
+					oc_title=u'Ansehen, Bearbeiten: %s' % py2_decode(title)
+					if thumb == '':							# nicht in Beschreibung
+						thumb = R(ICON_DIR_VIDEO)
 
-			httpurl=py2_encode(httpurl); localpath=py2_encode(localpath); dlpath=py2_encode(dlpath); 
-			title=py2_encode(title); summary=py2_encode(summary); thumb=py2_encode(thumb); 
-			tag_par=py2_encode(tag_par); txtpath=py2_encode(txtpath);
-			fparams="&fparams={'httpurl': '%s', 'path': '%s', 'dlpath': '%s', 'txtpath': '%s', 'title': '%s','summary': '%s', \
-				'thumb': '%s', 'tagline': '%s'}" % (quote(httpurl), quote(localpath), quote(dlpath), 
-				quote(txtpath), quote(title), quote(summary), quote(thumb), quote(tag_par))
-			addDir(li=li, label=oc_title, action="dirList", dirID="VideoTools", fanart=thumb, 
-				thumb=thumb, fparams=fparams, summary=summary, tagline=tagline)
+				httpurl=py2_encode(httpurl); localpath=py2_encode(localpath); dlpath=py2_encode(dlpath); 
+				title=py2_encode(title); summary=py2_encode(summary); thumb=py2_encode(thumb); 
+				tag_par=py2_encode(tag_par); txtpath=py2_encode(txtpath);
+				fparams="&fparams={'httpurl': '%s', 'path': '%s', 'dlpath': '%s', 'txtpath': '%s', 'title': '%s',\
+					'summary': '%s', 'thumb': '%s', 'tagline': '%s'}" % (quote(httpurl), quote(localpath), quote(dlpath), 
+					quote(txtpath), quote(title), quote(summary), quote(thumb), quote(tag_par))
+				addDir(li=li, label=oc_title, action="dirList", dirID="VideoTools", fanart=thumb, 
+					thumb=thumb, fparams=fparams, summary=summary, tagline=tagline)
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 
@@ -5975,9 +6321,10 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 			quote_plus(summary), quote_plus(sub_path))
 		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, tagline=tagline,
 			thumb=thumb, fparams=fparams, mediatype='video')
-	else:																# 'mp3' = Podcast
-		# Dateiname bei fehl. Beschreibung, z.B. Sammeldownloads:
-		if fulldest_path.endswith('mp3') or fulldest_path.endswith('m3u'): 	# 1. Anhören
+	else:																# 'mp3', 'm4a' = Podcast
+		# Dateiname bei fehl. Beschreibung, z.B. Sammeldownloads: 		# 1. Anhören
+		is_playlist=False
+		if fulldest_path.endswith('mp3') or fulldest_path.endswith('m3u') or fulldest_path.endswith('m4a'):
 			if fulldest_path.endswith('m3u'):							# Link auspacken
 				is_playlist=False
 				data = RLoad(fulldest_path, abs_path=True)
