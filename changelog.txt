@@ -10,12 +10,26 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+03.11.2024	5.1.3
+			EPG_Search, EPG_Search2: Leerzeichenbehandlung ("+" -> " ") für Suche in 
+			EPG.
+			Podcast-Erweiterung podcast.de: neue Funktionen AudioPodcastDe*, 
+			Anpassungen in Main, AudioStart, AudioPlayMP3, DownloadExtern, DownloadsList,
+			VideoTools (suffix .m4a für Podcasts ergänzt), transl_umlaute (u2014),
+			transl_json ().
+			home (util), Main, Main_ZDFfunk: Menübuttons für FUNK gelöscht (obsolet).
+			Audiothek: sportschau-Url angepasst (HTTP Error 308 für PY2 nicht zu
+			korrigieren), neues ARD-Schema ../urn:ard:page:../. Dict-ID-Anpassung an
+			Schema (Audio_get_cluster_rubrik).
+			getRedirect (util): für PYTHON3 bei Redirect-Errors Umstellung auf httplib2,
+			unveränderte Url-Rückgabe bei PYTHON2.
+
 13.10.2024	5.1.2
 			my3Sat: unescape(tag) in get_lazyload, unescape(tag) in SendungenAZ
 			valid_title_chars (util): Zeichen & durch Zeichen + ersetzt.
 			SingleVideo (arte): Ausfall api/opa/v3-Link, Ersatz durch hbbtvv2-Link in
 			(path2), Umbenennung Funktion get_streams_api_opa -> get_streams_hbbtvv2
-			neue Auswertung der MP4-Quellen). 
+			(neue Auswertung der MP4-Quellen). 
 			ARDSportMedia: ID-Austausch TagesschauXL -> ARD für Aufruf AudioPlayMP3.
 			Parseplaylist: RBB Brandenburg aus der Liste für Einzelauflösungen entfernt
 			(jetzt Mehrkanalstream).

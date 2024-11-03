@@ -70,7 +70,8 @@ Funktionen:
 - Sport
 - Sender (Sendungen einzelner Radiosender)
 - funk: Das Content-Netzwerk von ARD und ZDF
-- Podcast-Favoriten (manuell erweiterbar)
+- Podcasts der Platform www.podcast.de
+
 
 #### TV-Live-Streams mit Aufnahmefunktion: 
 - ARD- und ZDF-Sender überregional (13) und regional (13 plus WDR Lokalzeitsender), einige ausgewählte Privatsender

@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>113</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.10.2024
+#	Stand: 01.11.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -313,14 +313,7 @@ def home(li, ID, ltitle=""):
 		fparams="&fparams={'name': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Main_3Sat", fanart=img, 
 			thumb=img, summary=summ, fparams=fparams)
-	'''							# deaktiviert
-	if ID == 'FUNK':
-		img = R('funk.png')
-		name = Home + "FUNK"
-		fparams="&fparams={}"
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.funk.Main_funk", fanart=img, 
-			thumb=img, fparams=fparams)
-	'''		
+
 	if ID == 'Kinderprogramme':
 		img = R('childs.png')
 		name = Home + ID
@@ -1272,27 +1265,54 @@ def getHeaders(response):						# z.Z.  nicht genutzt
 		
 	return headers
 # ----------------------------------------------------------------------
+# 02.11.2024 für PYTHON2 bei Redirect-Errors unveränderte Rückgabe (neuer
+#	Versuch in get_page (get_page3) mit requests (falls vorh.)
+#   Für PYTHON3 bei Redirect-Errors Umstellung auf httplib2.
+#	Debug 308_Error: www.ardaudiothek.de/rubrik/42914694 (ohne /-Ende)
+#	
 def getRedirect(path, header=""):		
 	PLog('getRedirect: '+ path)
 	msg=""
+	parsed = urlparse(path)
 
 	try:
-		r = urlopen(path)
-	except Exception as e:
-		PLog(str(e))
-		if "308:" in str(e) or "307:" in str(e) or "301:" in str(e):	# Permanent-Redirect-Url
-			new_url = e.hdrs.get("Location")
-			parsed = urlparse(path)
-			if new_url.startswith("http") == False:			# Serveradr. vorh.?
-				new_url = 'https://%s%s' % (parsed.netloc, new_url)
-			PLog("HTTP308_301_new_url: " + new_url)
-			return new_url, ''
+		if header:
+			req = Request(path, headers=header)	
 		else:
-			return '', str(e)
-		
-	page = r.geturl()
-	info = r.info()
-	PLog("redirect: %s, info: %s" % (page, str(info)[:100]))# neue Url
+			req = Request(path)
+		r = urlopen(req)
+		new_url = r.geturl()
+		if new_url.startswith("http") == False:						# z.B. /rubrik/sportschau/..
+			new_url = 'https://%s%s' % (parsed.netloc, new_url) 	# Serveradr. ergänzen
+		PLog("new_url: " + new_url)
+		return new_url, msg
+	except Exception as e:
+		PLog("redirect_error: "  + str(e))
+		try:
+			if "308:" in str(e) or "307:" in str(e) or "301:" in str(e):	# Permanent-Redirect-Url
+				if PYTHON2:											# -> get_page (s.o.)
+					return path, msg
+				else:
+					# https://httplib2.readthedocs.io/en/latest/libhttplib2.html
+					import httplib2
+					h = httplib2.Http()								# class httplib2.Http, Cache nicht erford.
+					h.follow_all_redirects = True
+					r = h.request(path, "GET")[0]
+					new_url = r['content-location']
+					PLog("httplib2_url: " + new_url)
+					parsed = urlparse(path)
+					if new_url.startswith("http") == False:			# s.o.
+						new_url = 'https://%s%s' % (parsed.netloc, new_url)
+						PLog("HTTP308_301_new_url: " + new_url)
+					if path.find(new_url) == 0:		# Debug
+						PLog("same_new_url_path: " + new_url) 
+					return new_url, msg
+
+		except Exception as e:
+			PLog("r_error: "  + str(e))
+			PLog(str(e))
+			page=path, msg=str(e)									# Fallback
+
 	return page, msg	
 	
 # ----------------------------------------------------------------------
@@ -1930,11 +1950,13 @@ def transl_json(line):	# json-Umlaute übersetzen
 		, (u'\\u2013', u'-')		# Arte: -
 		, (u'\\u2014', u'-')		# Arte: -
 		, (u'\\u2019', u'*')		# Arte: '
+		, (u'\\u2019', u'*')
 		, (u'\\u00f8', u'ø')		# ø Kleinbuchstabe o mit Strich,
 		, (u'\\u00e5', u'å')		# å Kleinbuchstabe a mit Ring,
 		, (u'\\u00c5', u'Å')		# Å Groß A mit Ring
 		, (u'\\u00ab', u'«')		# Anführungszeichen links «
-		, (u'\\u00bb', u'«')		# Anführungszeichen rechs »
+		, (u'\\u0160', u'Š')		# AudioPodcastDe: Šuma Covjek
+		, (u'\\u0161', u'š')		# AudioPodcastDe: Ringišpil
 		, (u'\\u2026', u'...')		# ...
 		, (u'\\u26bd', u'<Ball-emoji>')	# Ball-emoji
 		, (u'\\ufe0f', u'')			#  Nonspacing Mark
@@ -3870,7 +3892,7 @@ def sub_path_conv(sub_path):
 #				Neue Kodivers. ansch. nicht betroffen, Kodi 18.2. OK
 #			
 def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
-	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
+	PLog('PlayAudio:'); PLog(url); PLog(title); PLog(FavCall); 
 	title = cleanmark(title)					# Tags erscheinen im Titel des Player-Windows
 	Plot=Plot.replace('||', '\n')				# || Code für LF (\n scheitert in router)
 	
