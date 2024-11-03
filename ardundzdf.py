@@ -56,7 +56,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>221</nr>										# Numerierung für Einzelupdate
+# 	<nr>222</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.3'
 VDATE = '03.11.2024'
 
@@ -3355,7 +3355,7 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			if '/sammlung/' in web_url:									# "Sammlungen"		
 				href = ARD_AUDIO_BASE  + "editorialcollections/%s/%s" % (node_id, href_add)  
 			if '/rubrik/' in web_url:									# "Rubriken"		
-				href = "https://www.ardaudiothek.de/rubrik/%s" % node_id
+				href = "https://www.ardaudiothek.de/rubrik/%s/" % node_id
 				vert="web"  
 			if '/episode/' in web_url:									# "Episoden (einzelne Beiträge)"										
 				href = ARD_AUDIO_BASE  + "items/%s%s" % (node_id, href_add) 
