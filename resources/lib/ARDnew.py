@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>90</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.10.2024
+# 	<nr>91</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.11.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -64,15 +64,18 @@ ICON_DIR_FOLDER			= "Dir-folder.png"
 ICON_DIR_STRM			= "Dir-strm.png"
 ICON_SPEAKER 			= "icon-speaker.png"
 ICON_MEHR 				= "icon-mehr.png"
+ICON_INFO 				= "icon-info.png"
 
 ARDSender = ['ARD-Alle:ard::ard-mediathek.png:ARD-Alle', 'Das Erste:daserste:208:tv-das-erste.png:Das Erste', 
 	'BR:br:2224:tv-br.png:BR Fernsehen', 'HR:hr:5884:tv-hr.png:HR Fernsehen', 'MDR:mdr:1386804:tv-mdr-sachsen.png:MDR Fernsehen', 
 	'NDR:ndr:5898:tv-ndr-niedersachsen.png:NDR Fernsehen', 'Radio Bremen:radiobremen::tv-bremen.png:Radio Bremen TV', 
 	'RBB:rbb:5874:tv-rbb-brandenburg.png:rbb Fernsehen', 'SR:sr:5870:tv-sr.png:SR Fernsehen', 
 	'SWR:swr:5310:tv-swr.png:SWR Fernsehen', 'WDR:wdr:5902:tv-wdr.png:WDR Fernsehen',
-	'ONE:one:673348:tv-one.png:ONE', 'ARD-alpha:alpha:5868:tv-alpha.png:ARD-alpha', 
-	'tagesschau24:tagesschau24::tv-tagesschau24.png:tagesschau24', 'phoenix:phoenix::tv-phoenix.png:phoenix', 
-	'KiKA::::KiKA']
+	'ONE:one:673348:tv-one.png:ONE', 'arte:arte::arte_Mediathek.png:arte', 
+	'funk:funk::ard-funk.png:funk', 'KiKA:KiKA::ard-kika.png:KiKA', '3sat:3sat::3sat.png:3sat', 
+	'ARD-alpha:alpha:5868:tv-alpha.png:ARD-alpha', 'tagesschau24:tagesschau24::tv-tagesschau24.png:tagesschau24', 
+	'phoenix:phoenix::tv-phoenix.png:phoenix', 
+	]
 
 ARDheaders="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
 	'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
@@ -135,6 +138,7 @@ def Main_NEW(name=''):
 			
 	CURSENDER = ARD_CurSender()
 	sendername, sender, kanal, img, az_sender = CURSENDER.split(':')	# sender -> Menüs
+	PLog("sendername %s, sender %s, kanal %s, img %s, az_sender %s" % (sendername, sender, kanal, img, az_sender))
 	sender_summ = 'Sender: [B]%s[/B] (unabhängig von der Senderwahl)' % "ARD-Alle"
 	summ=""
 	
@@ -161,7 +165,7 @@ def Main_NEW(name=''):
 		fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag, 
 		fparams=fparams)
 	
-	title = 'Startseite'	
+	title = 'Startseite [B]%s[/B]' % az_sender
 	tag = def_tag
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s', 'sender': '%s'}" % (quote(title), sender)
@@ -208,7 +212,7 @@ def Main_NEW(name=''):
 		(quote(path), quote(title), "Main_NEW", 'ARD Neu')
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRegion",
 		fanart=R(ICON_MAIN_ARD), thumb=R("ard-unsereRegion.png"), tagline=tag, summary=summ, fparams=fparams)
-
+	
 	# 25.12.2021 als eigenständiges Menü (zusätzl. zum Startmenü) - wie Web:
 	#	href wie get_ARDstreamlinks
 	title = 'Livestreams'
@@ -224,11 +228,13 @@ def Main_NEW(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag, summary=summ)																							
 
-	title = 'Sendung verpasst'
-	tag = def_tag + u"\nHinweis: keine Anzeige für ARD-Alle."
-	fparams="&fparams={'title': 'Sendung verpasst'}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasst", 
-		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_VERP), tagline=tag, fparams=fparams)
+	s = ["KiKA", "funk"]		# ohne Verpasst (wie Web), s.a. Button Senderwahl
+	if sendername not in s:			
+		title = 'Sendung verpasst'
+		tag = def_tag + u"\nHinweis: keine Anzeige für ARD-Alle."
+		fparams="&fparams={'title': 'Sendung verpasst'}"
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDVerpasst", 
+			fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_VERP), tagline=tag, fparams=fparams)
 	
 	title = 'Sendungen A-Z'
 	tag = def_tag
@@ -279,13 +285,16 @@ def Main_NEW(name=''):
 	
 	title 	= u'Wählen Sie Ihren Sender | aktuell: [B]%s[/B]' % sendername	# Senderwahl
 	tag = "die Senderwahl ist wirksam in [B]%s[/B], [B]%s[/B] und [B]%s[/B]" % ("ARD Mediathek", "A-Z", "Sendung verpasst")
+	s = ["KiKA", "funk"]		# ohne Verpasst (wie Web)
+	if sendername in s:			
+		tag = "die Senderwahl ist wirksam in [B]%s[/B] und [B]%s[/B] (nicht in Verpasst)" % ("ARD Mediathek", "A-Z")
 	title=py2_encode(title);
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.Senderwahl", fanart=R(ICON_MAIN_ARD), 
 		thumb=R('tv-regional.png'), tagline=tag, fparams=fparams) 
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		 		
+
 #---------------------------------------------------------------- 
 # Startseite der Mediathek - passend zum ausgewählten Sender -
 # 27.10.2019 Laden aus Cache nur noch bei Senderausfall - vorheriges Laden mit ARDStartCacheTime
@@ -307,9 +316,10 @@ def Main_NEW(name=''):
 # Links des api-Calls für ard=ARD-Alle funktionieren nicht mehr (HTTP ERROR 404). Beim neuen
 #	api-Call erfordert das Merkmal personalized eine Authentifizierung bei den Folgecalls.
 #	Merkmal hier entfernt (entfällt so autom. bei den Folgecalls).
+# 07.11.2024 Mitnutzung Startseite durch arte, funk, KiKA, 3sat nach Aufnahme in Senderwahl.
 #
 def ARDStart(title, sender, widgetID='', path='', homeID=''): 
-	PLog('ARDStart: ' + title); PLog(sender)
+	PLog('ARDStart: ' + title); PLog(sender); PLog(homeID)
 
 	CurSender = ARD_CurSender()
 	if homeID:												# CurSender in sender (Bsp. phoenix-Calls)
@@ -1741,12 +1751,13 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 		if "widgets" in page_obs:
 			obs =page_obs["widgets"][0]["teasers"]
 	except Exception as exception:
-		PLog("teasers_not_found: " + str(exception))
+		PLog("teasers_not_found: " + str(exception))			# notification s.u.
 		obs=[]	
 	PLog("obs: %d" % len(obs))
 	
 	# typ-Info Einzelbeträge: ["live", "event", "broadcastMainClip",
-	#				"ondemand", "poster"]	
+	#				"ondemand", "poster"]
+	cnt=0	
 	for s in obs:
 		PLog("Mark10")
 		PLog(str(s)[:60])
@@ -1855,6 +1866,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 			fparams="&fparams={'path': '%s', 'title': '%s', 'homeID': '%s'}" % (quote(href), quote(title), homeID)
 			addDir(li=li2, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", \
 				fanart=img, thumb=img, fparams=fparams, summary=summ, mediatype='')	
+			cnt=cnt+1
 		else:
 			PLog("eval_settings:")	
 			if pagetitle == '':									# pagetitle -> title_samml
@@ -1901,6 +1913,13 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 				(quote(href), quote(title), quote(summ_par), ID, homeID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
 				fparams=fparams, summary=summ, mediatype=mediatype)	
+			cnt=cnt+1
+	
+	if cnt == 0:
+		msg1 = 	"Nichts gefunden:"							# notification, hier ohne Sender
+		msg2 = "weder Folgeseiten noch Videos."	
+		icon = R(ICON_INFO)
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)			
 		
 	return
 
@@ -2298,6 +2317,7 @@ def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):
 # 25.01.2021 Laden + Caching der Link-Übersicht, Laden der Zielseite in 
 #	SendungenAZ_ARDnew
 # 13.06.2023 Mitnutzung durch phoenix (CurSender, homeID)
+# 06.11.2024 Mitnutzung durch funk (CurSender)
 # 		
 def SendungenAZ(title, CurSender="", homeID=''):		
 	PLog('SendungenAZ: ' + title)
@@ -3061,6 +3081,7 @@ def convHour(zeit):
 # 11.10.2023 eigene Funktion (ARD_CurSender_set) zum Setzen. Die frühere 
 #	Rückgabe des Senders an caller wird durch das Return-Menü von Kodi
 #	überschrieben
+# 07.11.2024 Neuaufnahme (ARDSender) wie Web: arte, funk, KiKA, 3sat.
 #
 def Senderwahl(title, caller=''):	
 	PLog('Senderwahl:'); PLog(caller)
@@ -3071,10 +3092,12 @@ def Senderwahl(title, caller=''):
 	li = home(li, ID='ARD Neu')							# Home-Button
 	
 	for entry in ARDSender:								# ARDSender s. Modulkopf
-		if 'KiKA' in entry:								# bisher nicht in Base- und AZ-URL enthalten
-			continue
+		#if 'KiKA' in entry:							# 05.11.2024 fehlt nur noch in Verpasst-Daten der ARD
+		#	continue
 		sendername, sender, kanal, img, az_sender = entry.split(':')
 		PLog(entry)
+		img = R(img)
+		
 		tagline = 'Mediathek des Senders [B] %s [/B]' % sendername
 		PLog('sendername: %s, sender: %s, kanal: %s, img: %s, az_sender: %s'	% (sendername, sender, kanal, img, az_sender))
 		title = sendername
@@ -3082,7 +3105,7 @@ def Senderwahl(title, caller=''):
 			title = "[B]%s[/B]" % sendername
 		fparams="&fparams={'entry': '%s', 'caller': '%s'}" % (entry, caller) 
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_CurSender_set", 
-			fanart=R(img), thumb=R(img), tagline=tagline, fparams=fparams)
+			fanart=img, thumb=img, tagline=tagline, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	

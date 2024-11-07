@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>113</nr>										# Numerierung für Einzelupdate
-#	Stand: 01.11.2024
+# 	<nr>114</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.11.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1537,7 +1537,7 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 #	Hochkommata (Problem bei Dictbildung)
 #	doppelte utf-8-Enkodierung führt an manchen Stellen zu Sonderzeichen
 #  	14.04.2019 entfernt: (':', ' ')
-# 
+# 	07.11.2024 entfernt html-utf8-Icons (Symbole Popcorn, TV usw)
 def repl_json_chars(line):	
 	line_ret = line
 	#PLog(type(line_ret))
@@ -1545,6 +1545,7 @@ def repl_json_chars(line):
 		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
 		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love'), (u'%C3%A9', u'é')		# u'u003e' 	-> u'®'
+		, (u'uD83C', u''), (u'uDF7F', u''), (u'uD63D', u''), (u'uDF7A', u'')					# 🍿,  📺
 		):
 		line_ret = line_ret.replace(*r)
 	
@@ -2100,10 +2101,10 @@ def time_translate(timecode, add_hour=True, day_warn=False, add_hour_only=""):
 	# summer_time aus www.ptb.de, konvertiert zum date_format (s.u.):
 	#	Aktualisierung jeweils 29.01.
 	summer_time = [	
-					"2021-03-28T01:00:00Z|2021-10-31T01:00:00Z",
 					"2022-03-27T01:00:00Z|2022-10-30T01:00:00Z",
 					"2023-03-26T01:00:00Z|2023-10-29T01:00:00Z",
 					"2024-03-31T01:00:00Z|2024-10-27T01:00:00Z",
+					"2025-03-30T01:00:00Z|2025-10-26T01:00:00Z",
 				]
 
 	if timecode.strip() == '' or len(timecode) < 19 or timecode[10] != 'T':
