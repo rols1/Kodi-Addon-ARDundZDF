@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>25</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.10.2024
+# 	<nr>26</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.11.2024
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -117,6 +117,8 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 # 	https://api.github.com/repos/rols1/Kodi-Addon-ARDundZDF/commits?&page=1&per_page=1 
 # Details Einzeldatei (json, letzter Commit: committer["date"]):
 #	https://api.github.com/repos/rols1/Kodi-Addon-ARDundZDF/commits?path=ARDnew.py&page=1&per_page=1 
+# 11.11.2024 Anpassung für Windows an wechselnde Slashes in Dateipfaden in SINGLELIST,
+#	Bsp.: ..\\addons\\plugin.video.ardundzdf/resources/livesenderTV.xml
 #
 def update_single(PluginAbsPath):
 	PLog('update_single:')
@@ -144,7 +146,7 @@ def update_single(PluginAbsPath):
 		if "__init__.py" in f or ".pem" in f:						# skip PY2, Zertif. 
 			continue
 		SINGLELIST.append(f)
-	#PLog(str(SINGLELIST))		# Debug
+	PLog("SINGLELIST: " + str(SINGLELIST))		# Debug
 	
 	#-------------													# 2. Ergänzung ev. neue Module im Repo
 	path = "https://github.com/rols1/Kodi-Addon-ARDundZDF/tree/master/resources/lib" # html-Seite, ca. 140 KByte
@@ -166,25 +168,29 @@ def update_single(PluginAbsPath):
 			continue
 		if f not in RepoList:								# Doppel aus items-block vermeiden
 			RepoList.append(f)
-	PLog("ModuleRepo: " + str(RepoList))					# Liste github-Module
+	PLog("ModulesRepo: " + str(RepoList))					# Liste github-Module
 	
-	add_list=[]												# Abgleich Repo/lokal
+	add_list=[]; dialog_list=[]								# Abgleich Repo/lokal
 	for item in RepoList:
 		found=False
-		PLog("item: " + item)
+		item_f = item.split("/")[-1]						# Dateiname  im Repo
+		PLog("item: %s, item_f: %s" % (item,item_f))
 		for f in SINGLELIST:								# skip lokale Files, Haupt-PRG, Leichen	
-			if f.endswith(item):
-				if f.endswith("ardundzdf.py") == False and f.endswith("init__.py") == False:
-					#PLog("f: " + f)
+			if f.endswith(item_f):
+				if f.endswith("init__.py") == False:
+					PLog("found: " + f)
 					found=True
 				break
-		if found == False:						# add github-Modul
+		if found == False:									# add github-Modul
 			add_list.append(item)
+			f = item.split("/")[-1]							# im Repo nur "/"-Slashes 
+			dialog_list.append(f)
 	
 	PLog("add_list_modules: " + str(add_list))	
+	PLog("dialog_list: " + str(dialog_list))	
 	if len(add_list) > 0:
 		msg1 = 'NEU und automatisch mit installiert:'
-		msg2 = "\n".join(add_list)
+		msg2 = "\n".join(dialog_list)
 		MyDialog(msg1, msg2, '')
 		
 	#-------------													# 3. Dialoge Auswahl + Start
@@ -199,9 +205,14 @@ def update_single(PluginAbsPath):
 	
 	textlist=[]; ret_list=[]; cnt=0
 	for local_file in SINGLELIST:
-		local_file = local_file.split(PluginAbsPath)[-1]		
-		textlist.append(local_file[1:])								# ohne führ. /	(wie Ergebnisliste)
-		ret_list.append(cnt)										# default: alle ausgewählt
+		local_file = local_file.split(PluginAbsPath)[-1]			# cut bis einschl. plugin.video.ardundzdf
+		if "\\" in local_file:
+			local_file = local_file.split("\\")[-1]					# Windows
+		else:
+			local_file = local_file.split("/")[-1]					# 
+		PLog(local_file)		
+		textlist.append(local_file)									# nur Dateinamen
+		ret_list.append(cnt)										# Listen-Index, default: alle ausgewählt
 		cnt=cnt+1
 	
 	if single:
@@ -264,16 +275,20 @@ def update_single(PluginAbsPath):
 				except Exception as exception:	
 					PLog("exept_update_single: %s" % str(exception))
 
-				fname = fname[1:]									# fname ohne führ. /	
+				if "\\" in fname:									# Dateiname -> result_list
+					fname = fname.split("\\")[-1]					# Windows 
+				else:
+					fname = fname.split("/")[-1]					# Unixe
+ 
 				msg2 = "noch aktuell"
 				if updated:											# Notification bei Update
 					fname = "[B]%s[/B]" % fname								
 					msg2 = "aktualisiert"
 					xbmcgui.Dialog().notification(fname,msg2,icon,1000)
 				else:
-					# time < 1000 offensichtlich ignoriert:			# Notification ohne Update
+					# time < 1000 offensichtlich ignoriert:			# Notification ohne Update, kein Sound
 					x=xbmcgui.Dialog().notification("Einzelupdate",fname,icon,1000, False)
-					 
+					 	
 				result_list.append("%14s: %s" % (msg2, fname)) 
 				xbmc.sleep(1000)									# ohne Pause nachlaufende notifications
 			else:
@@ -294,7 +309,8 @@ def update_single(PluginAbsPath):
 				page = py2_encode(page)
 				RSave(local_file, page)
 				PLog("NEU: %s" % local_file)
-				result_list.append("%14s: %s" % ("Modul NEU", item))
+				f = item.split("/")[-1]								# im Repo nur "/"-Slashes 
+				result_list.append("%14s: %s" % ("Modul NEU", f))
 			except Exception as exception:	
 				PLog("exept_update_NEU: %s" % str(exception))
 			
