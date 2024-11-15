@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>222</nr>										# Numerierung für Einzelupdate
+# 	<nr>223</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.3'
-VDATE = '03.11.2024'
+VDATE = '15.11.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1155,7 +1155,7 @@ def Main_ZDFfunk(title):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	
-	title = 'funk_Startseite' 
+	title = 'funk-Startseite' 
 	fparams="&fparams={'ID': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R('zdf-funk.png'), thumb=R('zdf-funk.png'), 
 		fparams=fparams)
@@ -2095,21 +2095,26 @@ def AudioPodcastDe(title="", Dict_ID=''):
 # Suche auf podcast.de
 # Step 1: Suche, Step 2: mit dest_url zur neuesten Episode
 # query: Nutzung durch AudioPodcastDeSingle für Suche nach Podcast-Reihe
+# 15.11.2024 next_url: nächste Web-Seite Suchergebnisse
 #
-def AudioPodcastDeSearch(dest_url="", query=""):
+def AudioPodcastDeSearch(dest_url="", query="", next_url=""):
 	PLog('AudioPodcastDeSearch: ')
+	PLog(dest_url); PLog(query); PLog(next_url); 
 
 	if dest_url == "":												# Step 1: Suche
 		PLog("Step1")
 		base = "https://www.podcast.de/suche?query=%s"
-		if query == "":
-			query = get_query(channel='ARD Audiothek')
-			if  query == None or query.strip() == '':
-				return ""
-		query = py2_encode(query)								# encode für quote
-		path = base % quote(query)
+		if next_url:												# nächste Web-Seite Suchergebnisse
+			path = next_url
+		else:
+			if query == "":
+				query = get_query(channel='ARD Audiothek')
+				if  query == None or query.strip() == '':
+					return ""
+				query = py2_encode(query)							# encode für quote
+				path = base % quote(query)
 		
-		page, msg = get_page(path=path, do_safe=False)			# nach quote ohne do_safe 	
+		page, msg = get_page(path, do_safe=False)					# nach quote ohne do_safe 	
 		if page == '' or page.find("<title>Server Error</title>") > 0 or page.find("<h5>") < 0:	
 			PLog("msg: " + msg)
 			msg1 = "AudioPodcastDeSearch:"
@@ -2132,7 +2137,8 @@ def AudioPodcastDeSearch(dest_url="", query=""):
 			alt = stringextract('alt="', '"', item)
 			alt = unescape(alt)									# alt="LANZ &amp; PRECHT"
 			Plot = stringextract('text-muted small">', '<br>', item)
-			Plot = cleanhtml(Plot); Plot = mystrip(Plot)
+			Plot = unescape(Plot); Plot = cleanhtml(Plot); 
+			Plot = mystrip(Plot)
 			
 			href = stringextract('Neueste Episode:', '</span>', item)
 			title = cleanhtml(href); title = mystrip(title); 
@@ -2148,7 +2154,24 @@ def AudioPodcastDeSearch(dest_url="", query=""):
 			
 			fparams="&fparams={'dest_url': '%s'}" % quote(dest_url) 
 			addDir(li=li, label=title, action="dirList", dirID="AudioPodcastDeSearch", fanart=img, thumb=img, 
-				fparams=fparams, tagline=Plot)					
+				fparams=fparams, tagline=Plot)
+		
+		pages  = blockextract('<li class="page-item">', page, "</li>")	# Pagination? (ungleich AudioPodcastDeArchiv)	
+		for p in pages:
+			if "pagination.next" in p:									# keine Liste, nur nächste Seite
+				next_url = stringextract('href="', '"', p)
+				next_url = decode_url(next_url)
+				nr = re.search(r'page=(\d+)', next_url).group(1)
+				query = re.search(r'query=(.*?)&page', next_url).group(1)
+				PLog("next_url: %s, query: %s" % (next_url, query))
+				title = "Weiter zu Seite %s" % nr
+				tag = "Mehr zur Suche nach: [B]%s[/B]" % query
+				
+				next_url=py2_encode(next_url)
+				fparams="&fparams={'next_url': '%s'}" % quote(next_url)
+				addDir(li=li, label=title, action="dirList", dirID="AudioPodcastDeSearch", \
+					fanart=R('podcast-de.png'), thumb=R(ICON_MEHR), tagline=tag, fparams=fparams)			
+				break
 
 	else:
 	#----------------------------------------------------------------	# Step 2: -> neueste Episode -> Archiv
@@ -2266,7 +2289,7 @@ def AudioPodcastDeArchiv(url, li=""):
 			nexturl=py2_encode(nexturl)
 			fparams="&fparams={'url': '%s'}" % quote(nexturl)
 			addDir(li=li, label=title, action="dirList", dirID="AudioPodcastDeArchiv", \
-				fanart=img, thumb=img, fparams=fparams)			
+				fanart=R('podcast-de.png'), thumb=R(ICON_MEHR), fparams=fparams)			
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -8566,7 +8589,7 @@ def ZDF_Start(ID, homeID=""):
 		path = base + "start-page"
 	elif ID=="tivi_Startseite":
 		path = base + "document/zdftivi-fuer-kinder-100"
-	elif ID=="funk_Startseite":
+	elif ID=="funk-Startseite":
 		path = base + "document/funk-126"	
 		
 	DictID =  "ZDF_%s" % ID
@@ -8674,7 +8697,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 		PLog('ZDF_PageMenu_stage_teaser')
 		stage=False
 		
-		if DictID == "ZDF_Startseite" or "tivi_" in DictID or "funk_" in DictID:
+		if DictID == "ZDF_Startseite" or "tivi_" in DictID or "funk-" in DictID:
 			if "stage" in jsonObject:								# <- ZDF-Start, tivi-Start
 				entryObject = jsonObject["stage"]
 				PLog("stage_len: %d" % len(entryObject))
@@ -8769,7 +8792,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 			# skip: personalisierten Inhalte, Addon-Menüs:
 			skip_list = ['Alles auf einen Blick', u'Das könnte Dich', 'Direkt zu',
 						'Mein Programm', 'Deine', 'KiKA live sehen', 'Weiterschauen',
-						'Mehr zu funk'
+						'Mehr zu funk', 'Trending'
 						 ]
 			skip=False						
 			if title == '':
