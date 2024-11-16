@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>223</nr>										# Numerierung für Einzelupdate
+# 	<nr>224</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.3'
-VDATE = '15.11.2024'
+VDATE = '16.11.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3882,7 +3882,7 @@ def ARDSportWDR():
 	cacheID = "Sport_Startseite"
 	img = logo
 	path = "https://www.sportschau.de"
-	fparams="&fparams={}" 
+	fparams="&fparams={'logo': '%s'}" % quote(img)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportStart", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
@@ -4804,40 +4804,66 @@ def ARDSportLoadPage(title, path, func, cacheID=""):
 	return page	
 	
 #---------------------------------------------------------------------------------------------------
-def ARDSportStart(): 
+# 16.11.2024 Anpassung an Änderungen des WDR, Aufteilung der Startseite 
+#	in Navigation und Liste der Videos/Audios.
+#
+def ARDSportStart(logo, burger=""): 
 	PLog('ARDSportStart:')
 	
-	base = "https://www.sportschau.de/"	
+	base = "https://www.sportschau.de"	
 	page = ARDSportLoadPage("Startseite", base, "ARDSportStart")
 	if page == '':
 		return
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')										# Home-Button
+	img = R(ICON_DIR_FOLDER)										# Burger-img's grauslich
 
-	# 1. Hamburger-Menü rechte Seite bis 1. Teiler (Live & Ergebnisse):
-	burger = stringextract('class="burger-navi-nav', 'class="burger-panel-divider', page)
-	items = blockextract("<li>", burger, "</li>")
-	PLog(len(items))
-	for item in items:
-		path = base + stringextract('href="', '"', item)			# Folgeseiten ohne http				
-		img = R(ICON_DIR_FOLDER)									# Burger-img grauslich
-		title = stringextract('title="', '"', item)
-		title = title.replace(" aufrufen", "")
-		title = unescape(title)
-		title = "[B]%s[/B]" % title									# Bsp. Menüpunkt Paralympics
-
-		PLog("Satz9:")
-		PLog(title); PLog(path); PLog(img);
-		tag = "Folgeseiten"
-		title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-		fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
-			(quote(title), quote(path))
-		addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+	#---------------------------------------------------------------# Step 1: Button Hamburger-Menü, Videos+Audios
+	# rechte Seite bis Subnavigationen 2. Ebene					
+	if burger == "":
+		title="Navigation"
+		tag = u"Zum Hamburger-Menü der Startseite (1. Ebene)"
+		fparams="&fparams={'logo': '%s', 'burger': 'true'}" % quote(logo)
+		addDir(li=li, label=title, action="dirList", dirID="ARDSportStart", fanart=logo, thumb=img, 
 			fparams=fparams, tagline=tag)
-	
-	# 2. Videos + Audios der Startseite	ausgeben
-	ARDSportMedia(li, title, page)
+
+		ARDSportMedia(li, title, page)								# Videos + Audios der Startseite
+	else:
+	#---------------------------------------------------------------# Step 2: Hamburger-Menü aufklappen
+		burger = stringextract('class="burger-navi-nav', 'burger-navi-nav__sublevel', page)
+		items = blockextract("<a href=", burger, "</span>")
+		skip_list = [u"Live & Ergebnisse", "Tor des Monats", "Livestreams",
+					"Einstellungen"]
+		
+		PLog(len(items))
+		for item in items:
+			if "_submenulink" in item:									# Links zu Submenüs ausblenden
+				continue
+
+			path = base + stringextract('href="', '"', item)			# Folgeseiten hier ohne http				
+			title = stringextract('title="', '"', item)
+			title = title.replace(" aufrufen", "")
+			title = unescape(title)
+			title = "[B]%s[/B]" % title									# Bsp. Menüpunkt Paralympics
+
+			skip=False
+			for s in skip_list:
+				if title.find(s) > 0:
+					PLog("skip_title: " + title)
+					skip=True
+					break
+			if skip:
+				continue
+
+			PLog("Satz9:")
+			PLog(title); PLog(path); PLog(img);
+			tag = "Folgeseiten"
+			title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+			fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+				(quote(title), quote(path))
+			addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag)	
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
