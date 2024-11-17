@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>48</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.09.2024
+# 	<nr>49</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.11.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1322,7 +1322,12 @@ def get_next_url(page):
 
 	page_akt =stringextract('"page": ', ',', p)
 	page_anz =stringextract('"pages": ', ',', p)
-	anz =stringextract('"totalCount": ', ',', p)
+	try:
+		anz = re.search(r'totalCount": (\d+)', p).group(1)
+	except Exception as exception:
+		anz=""
+		PLog("anz_error: " + str(exception))
+	
 	
 	next_url = stringextract('"next": "', '"', p)
 	next_page = stringextract('page=', '&', next_url)
