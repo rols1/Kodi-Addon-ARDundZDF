@@ -1,6 +1,6 @@
 {
     "strings": {
-		"numeration": "<nr>2</nr>",
+        "numeration": "<nr>3</nr>",
         "msgstr": [
             {
                 "de": "Weitere Beiträge",
@@ -146,7 +146,7 @@
                 "pl": "Kultura i pop",
                 "it": "Cultura e pop"
             },
-             {
+            {
                 "de": "ARTE Concert",
                 "fr": "ARTE Concert",
                 "en": "ARTE Concert",
@@ -186,7 +186,7 @@
                 "pl": "Najnowsze filmy",
                 "it": "Ultimi video"
             },
-             {
+            {
                 "de": "Zurück zum Hauptmenü",
                 "fr": "Retour au menu principal",
                 "en": "Back to main menu",
@@ -298,6 +298,14 @@
                 "pl": "",
                 "it": ""
             }
-      ]
+        ]
+    },
+    "katlinks": {
+        "de": "dokumentationen-und-reportagen/|kino/|fernsehfilme-und-serien/|aktuelles-und-gesellschaft/|kultur-und-pop/|arte-concert/|wissenschaft/|entdeckung-der-welt/|geschichte/",
+        "fr": "documentaires-et-reportages/|cinema/|series-et-fictions/|info-et-societe/|culture-et-pop/|arte-concert/|sciences/|voyages-et-decouvertes/|histoire/",
+        "en": "politics-and-society/|cinema/|series/|dummy|culture/|arte-concert/|sciences/|discovery/|history/",
+        "es": "politica-y-sociedad/|cine/|series-y-ficciones/|dummy|cultura-y-pop/|arte-concert/|ciencias/|viajes-y-naturaleza/|istoria/",
+        "pl": "polityka-i-spoleczenstwo/|kino/|seriale-i-filmy-fabularne/|dummy|kultura/|arte-concert/|nauka/|odkrycia/|historia/",
+        "it": "politica-e-societa/|cinema/|serie-e-fiction/|dummy|cultura/|arte-concert/|scienze/|viaggi-e-scoperte/|storia/"
     }
 }

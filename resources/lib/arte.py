@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>49</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.11.2024
+# 	<nr>50</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.11.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -175,7 +175,7 @@ def set_lang(title, new_set=""):
 	#----------------------								# 1. Aufruf -> Auswahl
 	arte_lang = Dict('load', "arte_lang")
 	if arte_lang == False or arte_lang == "":
-		arte_lang = arte_lang = LANG[1]
+		arte_lang = LANG[1]
 		
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
@@ -998,6 +998,7 @@ def get_streams_hbbtvv2(formitaeten, title, summ):
 # 15.01.2023 Auswertung wg. mehrmaliger Arte-Änderungen des eingebetteten json-
 #	Codes auf json (statt strings) umgestellt, api-Path für Neueste Videos
 # 14.03.2023 Unterstützung aller Arte-Sprachen 
+# 21.11.2024 Kat_ID's nicht mehr genutzt, dafür katlinks aus arte_lang.json
 # 
 def Kategorien():
 	PLog("Kategorien:")
@@ -1006,65 +1007,62 @@ def Kategorien():
 	l = L(u'Zurück zum Hauptmenü')
 	ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)			# Home-Button
-	
+
 	# Format: Titel-deutsch | Icon | Kat_ID | verfügbar für Sprache
 	l1=L("Dokus und Reportagen"); l2=L("Kino"); l3=L("Fernsehfilme und Serien");
 	l4=L("Aktuelles und Gesellschaft"); l5=L("Kultur und Pop"); l6=L("ARTE Concert");
 	l7=L("Wissenschaft"); l8=L("Entdeckung der Welt"); l9=L("Geschichte");
-	cat_list = [u"%s|arte_dokus.png|DOR|All" % l1, 
-				u"%s|arte_kino.png|CIN|All" % l2,
-				u"%s|arte_filme.png|SER|All" % l3, 
-				u"%s|arte_act.png|ACT|All" % l4,
-				u"%s|arte_kultur.png|CPO|All" % l5, 
-				u"%s|arte_conc.png|arte_concert|All" % l6,
-				u"%s|arte_science.png|SCI|All" % l7, 
-				u"%s|arte_entdeck.png|/de/videos/entdeckung-der-welt/|de" % l8, 
-				u"%s|arte_his.png|HIS|All" % l9
+	cat_list = [u"%s|arte_dokus.png|DOR" % l1, 
+				u"%s|arte_kino.png|CIN" % l2,
+				u"%s|arte_filme.png|SER" % l3, 
+				u"%s|arte_act.png|ACT" % l4,
+				u"%s|arte_kultur.png|CPO" % l5, 
+				u"%s|arte_conc.png|arte_concert" % l6,
+				u"%s|arte_science.png|SCI" % l7, 
+				u"%s|arte_entdeck.png|DIS" % l8, 		
+				u"%s|arte_his.png|HIS" % l9
 				]
 	
 	arte_lang = Dict('load', "arte_lang")
 	lang = arte_lang.split("|")[1].strip()			# fr, de, ..	
-	summ  = "[B]%s[/B]" % arte_lang 	
+	summ  = "[B]%s[/B]" % arte_lang 
+	
+	# Kategorienpfade laden
+	fname = os.path.join("%s/resources/arte_lang.json") % ADDON_PATH
+	if os.path.exists(fname) == False:
+		PLog("fehlt: %s, default: de" % fname)	
+		katlinks = "dokumentationen-und-reportagen/|kino/|fernsehfilme-und-serien/|aktuelles-und-gesellschaft/|kultur-und-pop/|arte-concert/|wissenschaft/entdeckung-der-welt/|geschichte/"
+	else:
+		items = RLoad(fname, abs_path=True)
+		obj = json.loads(items)
+		katlinks = obj["katlinks"][lang]
+		PLog("katlinks: " + str(katlinks))
+		katlinks = katlinks.split("|")
+	PLog("katlinks: " + str(katlinks))
+	PLog(len(katlinks))
 	
 	path = "https://www.arte.tv/%s/" % lang
-	page = get_ArtePage('Kategorien', "", path)		# Startseite laden für Kat.-Abgleich
-	page = str(page)								# Stringabgleich
-	if page == "":
-		return
-	PLog("page: " + page[:200])	
-	
 	path=py2_encode(path)
 	fparams="&fparams={'katurl': '%s'}" % quote(path)		# Button Startseite
 	l = L("Startseite")
 	addDir(li=li, label=u"%s [B]www.arte.tv/%s[/B]" % (l, lang), action="dirList", dirID="resources.lib.arte.ArteCluster", 
 		fanart=R(ICON_ARTE), thumb=R(ICON_ARTE_START), summary=summ, fparams=fparams)
 
-	pre = "https://www.arte.tv"
-	for item in cat_list:									# Kategorien listen
-		title, img, Kat_ID, for_lang = item.split("|")
-		pat = u"page': '%s" % Kat_ID
-		if Kat_ID.count("/") > 1:							# Pfad? Bsp. /videos/entdeckung-der-welt/
-			pat = u"url': '%s" % Kat_ID
-		if PYTHON2:
-			pat = u"page': '%s" % Kat_ID
-			if Kat_ID.count("/") > 1:		
-				pat = u"url': '%s" % Kat_ID
-		PLog(pat)		
-		pos = page.find(pat)
-		PLog("title: %s, for_lang: %s, pat: %s, pos: %d" % (title, for_lang, pat, pos))
-		if pos < 0:											# Kat_ID vorh.?
+	pre = path + "videos/"
+	for i, item in enumerate(cat_list):						# Kategorien listen
+		katurl=""
+		title, img, Kat_ID = item.split("|")
+
+		if katlinks[i] == "dummy":								# aktuelles-und-gesellschaft=dummy für en,es,
+			PLog("empty_katlinks: %d" %i)
 			continue
-		if "ALL" in for_lang == False:						# für akt. Sprache verfügbar?	
-			if lang in for_lang == False:
-				continue
-				
-		url = stringextract("url': '", "'", page[pos:]) 
-		katurl = pre + url
+		katurl = pre + katlinks[i]
+					
 		l = L("Kategorie")
 		tag = u"%s: [B]%s[/B]" % (l, title)
 	
 		PLog('Satz4:')
-		PLog(title); PLog(katurl);
+		PLog(title); PLog(arte_lang); PLog(katurl);
 		title=py2_encode(title); katurl=py2_encode(katurl)		# ohne title, katurl laden
 		fparams="&fparams={'title': '', 'katurl': '%s'}" % quote(katurl)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
@@ -1104,8 +1102,9 @@ def ArteCluster(pid='', title='', katurl=''):
 
 	page = get_ArtePage('ArteCluster', title, path=katurl)
 	if katurl == "https://www.arte.tv/%s/" % lang:		
-		uhd_url = "https://www.arte.tv/%s/videos/RC-022710/programme-in-uhd-qualitaet/" % lang # Watchdog_Plex-2
+		uhd_url = "https://www.arte.tv/%s/videos/RC-022710/programme-in-uhd-qualitaet/" % lang # Watchdog_Plex-2 (de)
 		ping_uhd = url_check(uhd_url, dialog=False)
+		PLog("url_uhd_check: " + str(ping_uhd))
 	
 	try:											# s.a. GetContent
 		page = page["pageProps"]["props"]["page"]["value"]
@@ -1299,7 +1298,7 @@ def get_ArtePage(caller, title, path, header=''):
 			page = "{" + page[pos1:pos2]
 			page = json.loads(page)			
 
-	#RSave('/tmp2/x.json', py2_encode(page))	# Debug	
+	#RSave('/tmp2/x_arteStart_pl.json', py2_encode(str(page)))	# Debug	
 	PLog(len(page))
 	# page = str(page)  # n. erf.
 	PLog("page_start: %s" % str(page)[0:60])
