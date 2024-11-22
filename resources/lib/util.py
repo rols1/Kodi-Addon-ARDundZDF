@@ -1272,7 +1272,7 @@ def getHeaders(response):						# z.Z.  nicht genutzt
 #	
 def getRedirect(path, header=""):		
 	PLog('getRedirect: '+ path)
-	msg=""
+	page=""; msg=""
 	parsed = urlparse(path)
 
 	try:
@@ -1448,7 +1448,7 @@ def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex
 			with open(path,'r') as f:
 				page = f.read()		
 		else:
-			with open(path,'r', encoding="utf8") as f:
+			with open(path,'r', encoding="utf-8") as f:
 				page = f.read()		
 	except Exception as exception:
 		PLog(str(exception))
@@ -1458,7 +1458,7 @@ def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex
 # Gegenstück zu RLoad - speichert Inhalt page in Datei fname im  
 #	Dateisystem. PluginAbsPath muss in fname enthalten sein,
 #	falls im Pluginverz. gespeichert werden soll 
-#  Migration Python3: immer utf8 - Alt.: xbmcvfs.File mit
+#  Migration Python3: immer utf-8 - Alt.: xbmcvfs.File mit
 #		Bytearray (s. merkliste.py)
 #  05.07.2020 erweitert für Lock-Nutzung (für Monitor in epgRecord).
 #
@@ -1490,7 +1490,7 @@ def RSave(fname, page, withcodec=False):
 				with open(path,'w') as f:
 					f.write(page)		
 		else:
-			with open(path,'w', encoding="utf8") as f:
+			with open(path,'w', encoding="utf-8") as f:
 				f.write(page)
 		
 	except Exception as exception:
@@ -1537,7 +1537,7 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 #	Hochkommata (Problem bei Dictbildung)
 #	doppelte utf-8-Enkodierung führt an manchen Stellen zu Sonderzeichen
 #  	14.04.2019 entfernt: (':', ' ')
-# 	07.11.2024 entfernt html-utf8-Icons (Symbole Popcorn, TV usw)
+# 	07.11.2024 entfernt html-utf-8-Icons (Symbole Popcorn, TV usw)
 def repl_json_chars(line):	
 	line_ret = line
 	#PLog(type(line_ret))
@@ -1578,12 +1578,12 @@ def valid_title_chars(line):
 # {'id': 'x', 'title': 'x'} -> {"id":"x", "title":"x"} ohne LF's,
 # 	Hochkommata -> *, sächs. Genitiv 's -> Blank
 # line=Dict
-# 18.09.2024 replacing umgestellt auf json.dumps (utf8-codiert für PY2)
+# 18.09.2024 replacing umgestellt auf json.dumps (utf-8-codiert für PY2)
 def my_jsondump(line):
 	PLog("my_jsondump:")
 	try:
 		if PYTHON2:					
-			s=json.dumps(line, indent=None, separators=(",",":"), ensure_ascii=False).encode('utf8')
+			s=json.dumps(line, indent=None, separators=(",",":"), ensure_ascii=False).encode('utf-8')
 		else:
 			s=json.dumps(line, indent=None, separators=(",",":"), ensure_ascii=False)
 	except Exception as exception:

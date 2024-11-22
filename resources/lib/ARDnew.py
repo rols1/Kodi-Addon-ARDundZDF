@@ -2714,7 +2714,7 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 			Main_NEW(NAME)
 			
 	query = query.strip()
-	#query = query.replace(' ', '+')				# für Merkliste - 01.03.2023 nicht mehr relevant 	
+	query = query.replace(' ', '+')					# für Merkliste - 01.03.2023 nicht mehr relevant 	
 	query_org = query	
 	query=py2_decode(query)							# decode, falls erf. (1. Aufruf)
 	
