@@ -12,7 +12,7 @@
 #	29.11.2024 Umstellung Web-scraping -> api hbbtv.zdf.de
 # 	
 ################################################################################
-# 	<nr>20</nr>										# Numerierung für Einzelupdate
+# 	<nr>21</nr>										# Numerierung für Einzelupdate
 #	Stand: 01.12.2024
 
 # Python3-Kompatibilität:
@@ -677,6 +677,7 @@ def CoverElems(li, cover, top=""):
 			if img == "":
 				img= R('Dir-folder.png')
 			tag = "Folgeseiten\n%s" % tag
+			title=py2_encode(title); sid=py2_encode(sid);
 			fparams="&fparams={'name': '%s', 'path': '', 'sid': '%s'}" % (quote(title), quote(sid))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.PageMenu_3sat", 
 				fanart=fanart, thumb=img, tagline=tag, summary=descr, fparams=fparams)
@@ -755,7 +756,7 @@ def CoverSingle(title, path, allcover=""):
 			if linktyp == "":								# exception
 				continue
 
-			PLog('Satz6:')
+			PLog('Satz5:')
 			PLog(linktyp); PLog(title); PLog(img); PLog(sid);
 			if sid in skip_list:							# Doppel zu wide-cover verhindern
 				continue
@@ -774,7 +775,8 @@ def CoverSingle(title, path, allcover=""):
 			elif linktyp == "page":
 				if img == "":
 					img= R('Dir-folder.png')
-				tag = "Folgeseiten\n%s" % tag
+				tag = "Folgeseiten\n%s" % tag	
+				title=py2_encode(title); sid=py2_encode(sid);
 				fparams="&fparams={'name': '%s', 'path': '', 'sid': '%s'}" % (quote(title), quote(sid))
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.PageMenu_3sat", 
 					fanart=fanart, thumb=img, tagline=tag, summary=descr, fparams=fparams)
