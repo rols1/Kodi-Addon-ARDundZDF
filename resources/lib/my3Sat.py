@@ -9,11 +9,11 @@
 #
 #	04.11.2019 Migration Python3  Python3 Modul future
 #	18.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-#	29.11.2024 Umstellung Web-scraping -> api hbbtv.zdf.de
+#	Nov./Dez. 2024 Umstellung Web-scraping -> api hbbtv.zdf.de
 # 	
 ################################################################################
-# 	<nr>21</nr>										# Numerierung für Einzelupdate
-#	Stand: 01.12.2024
+# 	<nr>22</nr>										# Numerierung für Einzelupdate
+#	Stand: 03.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -63,8 +63,8 @@ ICON_SPEAKER 		= "icon-speaker.png"
 ICON_MEHR 			= "icon-mehr.png"
 
 DreiSat_BASE 		= 'https://www.3sat.de'
-DreiSat_AZ 			= "https://www.3sat.de/sendungen-a-z"
-DreiSat_Verpasst	= "https://www.3sat.de/programm?airtimeDate=%s"   	# Format %s: 2019-05-22 (Y-m-d) 
+DreiSat_AZ 			= "https://www.3sat.de/sendungen-a-z"				# HBBTV -> HTML via sid			
+DreiSat_Verpasst	= "http://hbbtv.zdf.de/3satm/dyn/get.php?id=special:time" 
 DreiSat_Suche		= "https://hbbtv.zdf.de/3satm/dyn/search.php?t=%s&search=%s"
 DreiSat_HBBTV 		= "http://hbbtv.zdf.de/3satm/dyn/get.php?id="
 DreiSat_HBBTV_HTML  = "https://www.3sat.de/%s.html"						# HBBTV -> HTML via sid
@@ -81,7 +81,7 @@ HANDLE			= int(sys.argv[1])
 FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 
-ARDStartCacheTime = 300						# 5 Min.	
+my3satCacheTime =  600											# 10 Min.: 10*60	
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
@@ -249,6 +249,8 @@ def Search(offset="1", query=''):
 		if linktyp == "video":
 			path = DreiSat_HBBTV_HTML % sid
 			tag = "Dauer [B]%s[/B]\n%s" % (dauer, tag)
+			if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Hinw. Inhaltstext bei Sofortstart 
+				tag = u"%s\n\n%s" % (tag, "[B]Inhaltstext[/B] zum Video via Kontextmenü aufrufen.")							 		
 			title=py2_encode(title); path=py2_encode(path);	img=py2_encode(img);
 			dauer=py2_encode(dauer);
 			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s'}" %\
@@ -278,12 +280,15 @@ def Search(offset="1", query=''):
 		
 #------------ 
 # A-Z Liste der Buchstaben (mit Markierung 'ohne Beiträge')
-def SendungenAZlist(name, path):				# 
+# Hier noch Web statt api - Seite nur ca. 115 KByte, für die
+#	Buchstabenliste einschl. nicht verfügbarer.
+#
+def SendungenAZlist(name, path):
 	PLog('SendungenAZlist: ' + name)
-	DreiSat_AZ 		= "https://www.3sat.de/sendungen-a-z"			# geht hier nach epg verloren	
+	DreiSat_AZ 		= "https://www.3sat.de/sendungen-a-z"		# geht hier nach epg verloren	
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')										# Home-Button
+	li = home(li, ID='3Sat')									# Home-Button
 
 	page, msg = get_page(path)
 	if page == '':			
@@ -300,7 +305,7 @@ def SendungenAZlist(name, path):				#
 	
 	for rec in content:
 		title	= stringextract('title="', '"', rec)
-		href	= stringextract('href="', '"', rec)
+		href	= stringextract('href="', '"', rec)				# ../sendungen-a-z?group=b
 		href	= DreiSat_BASE + href
 		PLog(title)
 		if 'link is-disabled' in rec:							# Button inaktiv
@@ -332,7 +337,7 @@ def SendungenAZ(name, path):
 	PLog('SendungenAZ: ' + name)
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')										# Home-Button		
+	li = home(li, ID='3Sat')							# Home-Button		
 	
 	page, msg = get_page(path)	
 	if page == '':			
@@ -378,68 +383,82 @@ def SendungenAZ(name, path):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 	
 #------------
-def Verpasst(title):	# je 1 Tag - passend zum Webdesign
+# 12.2024 Umstellung auf HBBTV-Api
+# DreiSat_Verpasst liefert 2 Wochen, je 1 Woche vor und nach akt. Datum
+#
+def Verpasst(title):	
 	PLog('Verpasst:')
 	
+	path = DreiSat_Verpasst										# 14 Tage
+	page = Dict("load", '3satPRG', CacheTime=my3satCacheTime)	# 10min	
+	if page == False:											# nicht vorhanden oder zu alt
+		page, msg = get_page(path)
+		if page == '':						
+			msg1 = 'Fehler in Verpasst:' 
+			msg2 = msg
+			msg2 = u"Seite weder im Cache noch bei 3sat abrufbar"
+			MyDialog(msg1, msg2, '')
+			return
+		else:
+			Dict("store", '3satPRG', page) 	# Cache aktualisieren				
+	PLog(len(page))
+	
+	try:
+		elems = json.loads(page)["elems"]
+		prg_elems = elems[0]["data"]							# PRG-Beiträge
+		wlist = elems[0]["days"]		
+		tkey_now = elems[0]["nowKey"]							# tkey_now, tkey_first, tkey_last z.Z.
+		tkey_first = prg_elems[0]["tkey"]						#	nicht verwendet
+		tkey_last = prg_elems[-1]["tkey"]
+		PLog("prg_elems: " + str(prg_elems)[:60])
+		PLog("tkey_first: %s, tkey_last: %s, wlist: %d" % (tkey_first, tkey_last, len(wlist)))	
+	except Exception as exception:
+		PLog("elems_error " + str(exception))
+		MyDialog("Verpasst: Problem mit Datenformat", str(exception), "")
+		return
+				
 	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')										# Home-Button
+	li = home(li, ID='3Sat')									# Home-Button
 		
-	wlist = list(range(0,30))					# Abstand 1 Tage
-	now = datetime.datetime.now()
-	for nr in wlist:
-		rdate = now - datetime.timedelta(days = nr)
-		iDate = rdate.strftime("%d.%m.%Y")		# Formate s. man strftime (3)
-		SendDate = rdate.strftime("%Y-%m-%d")	# 3Sat-Format 2019-05-22 (Y-m-d)  	
-		iWeekday =  rdate.strftime("%A")
-		punkte = '.'
-		if nr == 0:
-			iWeekday = 'Heute'	
-		if nr == 1:
-			iWeekday = 'Gestern'	
-		iWeekday = transl_wtag(iWeekday)
-		iPath = DreiSat_Verpasst % SendDate
-
-		# PLog(iPath); PLog(iDate); PLog(iWeekday);
-		title =	"%s | %s" % (iDate, iWeekday)
-		title =	iDate + ' | ' + iWeekday
+	for day in wlist:
+		title = day["longname"]
+		if "Heute" in title:
+			title = "[B]%s[/B]" % title
+		dayID = day["id"]
 		
 		PLog('Satz2:')	
-		PLog(SendDate); PLog(title); 
+		PLog(title); PLog(dayID); 
 		title=py2_encode(title); 
-		fparams="&fparams={'SendDate': '%s', 'title': '%s'}" % (SendDate, quote(title))
+		fparams="&fparams={'title': '%s', 'dayID': '%s'}" % (quote(title), dayID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SendungenDatum", 
 			fanart=R('3sat.png'), thumb=R(ICON_DIR_FOLDER), fparams=fparams)
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
 #------------
-
-# Liste Sendungen gewählter Tag
-# 04.08.2020 Webänderung Sendung (label)
-# 06.02.2022 dto
-# 29.11.2024 Umstellung auf hbbtv-api bisher nicht möglich 
-#	(Doku x_3sat_PRG.json)
+# 12.2024 Umstellung auf HBBTV-Api
 #
-def SendungenDatum(SendDate, title):	
-	PLog('SendungenDatum: ' + SendDate)
+def SendungenDatum(title, dayID):	
+	PLog('SendungenDatum: %s, %s' % (title, dayID))
 	
-	title_org = title
+	try:
+		if "Heute" in title:								# akt. Tag immer aktualisieren (für lfd. Sendung)
+			page, msg = get_page(path=DreiSat_Verpasst)
+		else:	
+			page = Dict("load", '3satPRG')					# Cache: Verpasst
+		elems = json.loads(page)["elems"]
+		prg_elems = elems[0]["data"]						# PRG-Beiträge
+		PLog("prg_elems: " + str(prg_elems)[:60])
+	except Exception as exception:
+		PLog("elems_error " + str(exception))
+		MyDialog("SendungenDatum: Problem mit Datenformat", str(exception), "")
+		return
+	
+	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')										# Home-Button
+	li = home(li, ID='3Sat')								# Home-Button
 		
-	path =  DreiSat_Verpasst % SendDate
-	page, msg = get_page(path=path)	
-	
-	content = blockextract('<picture class="">', page)
-	PLog(len(content))
-			
-	if len(content) == 0:			
-		msg1 = u'leider kein Treffer im ausgewählten Zeitraum'
-		PLog(msg1)
-		MyDialog(msg1, '', '')
-		return li	
-		
-	msg1 = "%s.%s.%s" % (SendDate[8:10], SendDate[5:7], SendDate[0:4])
+	msg1 = title
 	msg2 = "3sat"
 	icon = R('zdf-sendung-verpasst.png')
 	xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)
@@ -448,48 +467,63 @@ def SendungenDatum(SendDate, title):
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # Kennz. Video für Sofortstart 
 		mediatype='video'
 
-	for rec in content:
-		img_src =  stringextract('data-srcset="', ' ', rec)	
-		href	= stringextract('href="', '"', rec)
-		if href == '' or '#skiplinks' in href:
-			continue
-		href	= DreiSat_BASE + href
-		sendung	= stringextract('-headline', 'class', rec)
-		sendung = stringextract('>', '<', sendung)
-		descr	= stringextract('teaser-epg-text">', '</p>', rec)		# mehrere Zeilen
-		PLog(descr)
-		descr	= cleanhtml(descr); 
-		zeit	= stringextract('class="time">', '</', rec)
-		dauer	= stringextract('class="label">', '</', rec)
-		# enddate leer bei Verpasst, anders als üblich (s. get_teaserElement)
-		#enddate	= stringextract('-end-date="', '"', rec)	
-		#enddate = time_translate(enddate, add_hour=0, day_warn=True)
-		#if dauer and enddate:
-		#	dauer = "%s | [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, enddate)			 
-		
-		sendung = u"[COLOR blue]%s[/COLOR] | %s" % (zeit, sendung)
-		tagline = title_org +  ' | ' + zeit
-		if dauer:
-			tagline = tagline + ' | ' + dauer
-
-		if SETTINGS.getSetting('pref_load_summary') == 'true':			# Inhaltstext im Voraus laden?
-			pass														# o. Mehrwert zu descr												
-
-		title = repl_json_chars(title);
-		sendung = repl_json_chars(sendung)
-		descr	= unescape(descr);  
-		descr = repl_json_chars(descr); 
-		descr_par =	descr.replace('\n', '||')	
-
+	for item in prg_elems:
+		dur=""; perc=""; descr="";							# descr im api für Programm nicht verfügbar
+		foot=""; end=""; vid=""; summ=""; vid=""
+		try:
+			tkey = item["tkey"]
+			# PLog("%s | %s" % (dayID, tkey))
+			if tkey.startswith(dayID) == False:
+				continue
+				
+			prgID = item["id"]		
+			head = item["head"]								# "Dokumentation | Natur"
+			title = item["title"]
+			img = item["img"]
+			tim = item["tim"]								# "09:45"
+			if "foot" in item:								#"03.12.2024", fehlt in lauf. Sendung
+				foot = item["foot"]	
+			
+			if "vid" in item:								# fehlen dann auch im Web (Senderechte?)
+				vid = item["vid"]							# "ein-winter-im-schwarzwald-102"
+				href = DreiSat_HBBTV_HTML % vid
+			else:
+				href=""
+				PLog("missing_vid: " + title)
+			
+			if "dur" in item:
+				dur = item["dur"]							# "89 min"		
+			if "perc" in item:
+				perc = item["perc"]							# 12 (int, noch 12 % verfügbar)
+				end = item["end"]							# 09:45"
+				
+			tag = head
+			if foot:
+				tag = "%s\n%s" %  (tag, foot)
+			if dur:	
+				tag = "Dauer [B]%s[/B]\n%s" % (dur, tag)
+			if perc:										# laufende Sendung
+				tag = "%s\nbis %s | noch %d Prozent"	% (tag, end, perc)
+				title = "[B]%s[/B]" % title
+			
+			sendung = "[COLOR blue]%s[/COLOR] | %s" % (tim, title)	# Sendezeit | Titel
+			if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Hinw. Inhaltstext bei Sofortstart 
+				summ = u"[B]Inhaltstext[/B] zum Video via Kontextmenü aufrufen."							 		
+			
+		except Exception as exception:
+			prgID=""
+			PLog("prg_elems_error: " + str(exception))
+			
 		PLog('Satz3:')
-		PLog(img_src);  PLog(href); PLog(sendung); PLog(tagline); PLog(descr); PLog(dauer);
-			 
-		sendung=py2_encode(sendung); href=py2_encode(href);  img_src=py2_encode(img_src);
-		descr_par=py2_encode(descr_par); dauer=py2_encode(dauer)
-		fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
-			(quote(sendung), quote(href), quote(img_src), quote(descr_par), quote(dauer))
-		addDir(li=li, label=sendung, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
-			thumb=img_src, summary=descr, tagline=tagline, fparams=fparams, mediatype=mediatype)
+		PLog(sendung); PLog(href); PLog(tag);
+				 
+		if prgID and href:									# skip exception, skip missing vid->href
+			sendung=py2_encode(sendung); href=py2_encode(href); 
+			img_src=py2_encode(img); 
+			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
+				(quote(sendung), quote(href), quote(img), descr, dur)
+			addDir(li=li, label=sendung, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
+				thumb=img_src, tagline=tag, summary=summ, fparams=fparams, mediatype=mediatype)
 			 					 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
@@ -512,12 +546,11 @@ def transl_month(shortmonth):	# Monatsbez. (3-stellig) -> Zahl
 #
 def Start(name, path, rubrik=''):
 	PLog('3satStart:')
-	my3satCacheTime =  600					# 10 Min.: 10*60
 	PLog("rubrik: " + rubrik)
 	name_org=name; path_org=path
 	
-	page = Dict("load", '3satStart', CacheTime=my3satCacheTime)	
-	if page == False:						# nicht vorhanden oder zu alt
+	page = Dict("load", '3satStart', CacheTime=my3satCacheTime)	# 10 min
+	if page == False:											# nicht vorhanden oder zu alt
 		page, msg = get_page(path)
 		if page == '':						
 			msg1 = 'Fehler in Start:' 
@@ -526,12 +559,12 @@ def Start(name, path, rubrik=''):
 			MyDialog(msg1, msg2, '')
 			return
 		else:
-			Dict("store", '3satStart', page) # Seite -> Cache: aktualisieren				
+			Dict("store", '3satStart', page) 					# Seite -> Cache: aktualisieren				
 	PLog(len(page))
 	
 	try:
 		elems = json.loads(page)["elems"]
-		stage_elems = elems[1]["elems"]								# Stage-Beiträge
+		stage_elems = elems[1]["elems"]							# Stage-Beiträge
 		PLog("stage_elems: " + str(stage_elems)[:100])	
 		PLog(len(stage_elems))
 	except Exception as exception:
@@ -540,14 +573,14 @@ def Start(name, path, rubrik=''):
 		return
 				
 	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')										# Home-Button
+	li = home(li, ID='3Sat')									# Home-Button
 	
 	mediatype=''; fanart=R('3sat.png'); cnt=0
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	
-	CoverElems(li, stage_elems, top="true")							# Ausgabe Stage
-	PageMenu_3sat(name_org, path_org, page=page, li=li)				# restl. Beiträge			
+	CoverElems(li, stage_elems, top="true")						# Ausgabe Stage
+	PageMenu_3sat(name_org, path_org, page=page, li=li)			# restl. Beiträge			
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -557,7 +590,7 @@ def Start(name, path, rubrik=''):
 #	Ladekette ab SingleBeitrag via HTML-Seite (DreiSat_HBBTV_HTML + sid)
 # Aufrufer: Main_3Sat (Themen, Rubriken), Start (hier mit page,
 #	stage-Listing dort.
-# Auswertung json-Datei type=page. Doppel in stage- und wide-Beiträgen
+# Quelle: json-Datei type=page. Doppel in stage- und wide-Beiträgen
 #	werden akzeptiert (wie im Web)
 #
 def PageMenu_3sat(name, path, sid='', page="", li=""):
@@ -629,9 +662,9 @@ def PageMenu_3sat(name, path, sid='', page="", li=""):
 					top=""
 					if "wide" in variant or "three" in variant:
 						top='true'
-					CoverElems(li2, wide_elems, top)			# Ausgabe Wide-Beiträge
+					CoverElems(li2, wide_elems, top)		# Ausgabe Wide-Beiträge
 
-		elif typ == "list":										# Ausgabe Liste Rubriken
+		elif typ == "list":									# Ausgabe Liste Rubriken
 			items = elems[0]["elems"]
 			CoverElems(li2, items)	 
 			
@@ -666,6 +699,8 @@ def CoverElems(li, cover, top=""):
 		if linktyp == "video":
 			path = DreiSat_HBBTV_HTML % sid
 			tag = "Dauer [B]%s[/B]\n%s" % (dauer, tag)
+			if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Hinw. Inhaltstext bei Sofortstart 
+				tag = u"%s\n\n%s" % (tag, "[B]Inhaltstext[/B] zum Video via Kontextmenü aufrufen.")							 		
 			title=py2_encode(title); path=py2_encode(path);	img=py2_encode(img);
 			dauer=py2_encode(dauer);
 			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s'}" %\
@@ -753,18 +788,20 @@ def CoverSingle(title, path, allcover=""):
 	for cover in covers:		
 		for item in cover:
 			linktyp,title,dauer,tag,descr,img,sid = my3sat_content(item)
-			if linktyp == "":								# exception
+			if linktyp == "":									# exception
 				continue
 
 			PLog('Satz5:')
 			PLog(linktyp); PLog(title); PLog(img); PLog(sid);
-			if sid in skip_list:							# Doppel zu wide-cover verhindern
+			if sid in skip_list:								# Doppel zu wide-cover verhindern
 				continue
 			skip_list.append(sid)
 			
 			if linktyp == "video":
 				path = DreiSat_HBBTV_HTML % sid
 				tag = "Dauer [B]%s[/B]\n%s" % (dauer, tag)
+				if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Hinw. Inhaltstext bei Sofortstart 
+					tag = u"%s\n\n%s" % (tag, "[B]Inhaltstext[/B] zum Video via Kontextmenü aufrufen.")							 		
 				title=py2_encode(title); path=py2_encode(path);	img=py2_encode(img);
 				dauer=py2_encode(dauer);
 				fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s'}" %\
@@ -875,10 +912,7 @@ def sid_to_title(sid):
 	return title 
 
 #------------
-
-# SingleBeitrag für Verpasst + A-Z
-#	hier auch m3u8-Videos verfügbar. 
-#
+# Einzelvideo - Auswertung der Streams
 # 16.05.2017: Design neu, Videoquellen nicht mehr auf der Webseite vorhanden - (Ladekette ähnlich ZDF-Mediathek)
 # 22.05.2019: Design neu, Ladekette noch ähnlich ZDF-Mediathek, andere Parameter, Links + zusätzl. apiToken
 # 21.01.2021 Nutzung build_Streamlists + build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
@@ -897,9 +931,9 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 	thumb	= img_src; title_org = title
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')							# Home-Button
+	li = home(li, ID='3Sat')										# Home-Button
 			
-	page, msg = get_page(path=path)						# 1. Basisdaten von Webpage holen
+	page, msg = get_page(path=path)									# 1. Basisdaten von Webpage holen
 	if page == '':			
 		msg1 = "SingleBeitrag1: Abruf fehlgeschlagen"
 		msg2 = msg
@@ -920,7 +954,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 	content = stringextract('data-module="zdfplayer"', 'teaser-image=', page)  			
 	appId	= stringextract('zdfplayer-id="', '"', content)
 	apiToken= stringextract('apiToken": "', '"', content)
-	profile_url= stringextract('content": "', '"', content)		# profile_url
+	profile_url= stringextract('content": "', '"', content)			# profile_url
 	PLog(appId); PLog(profile_url); PLog("apiToken: " + apiToken); 
 	
 	if 	apiToken == '' or profile_url == '':
@@ -954,7 +988,7 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 	player = "ngplayer_2_4"
 	pos = page.find('"programmeItem"')
 	page = page[max(0, pos):]
-	streams = stringextract('streams":', '}}', page)	# in "mainVideoContent":..
+	streams = stringextract('streams":', '}}', page)				# in "mainVideoContent":..
 	videodat_url= stringextract('ptmd-template":"', '"', streams)
 	videodat_url = "https://api.3sat.de" + videodat_url
 	videodat_url = videodat_url.replace('{playerId}', player)
@@ -966,10 +1000,10 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 		PLog(msg1); PLog(msg)
 		msg2 = msg
 	
-	if page == '':											# Alternative mediathek statt 3sat in Url
+	if page == '':													# Alternative mediathek statt 3sat in Url
 		videodat_url = 'https://api.3sat.de/tmd/2/ngplayer_2_3/vod/ptmd/mediathek/' + video_ID
 		page,msg = get_page(path=videodat_url, header=headers)
-		page = str(page)									# <type 'tuple'> möglich
+		page = str(page)											# <type 'tuple'> möglich
 		PLog(page[:100])
 
 	PLog(type(page)); 
@@ -983,16 +1017,16 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 	
 
 	if page:
-		formitaeten = blockextract('formitaeten', page)		# 4. einzelne Video-URL's ermitteln 
+		formitaeten = blockextract('formitaeten', page)				# 4. einzelne Video-URL's ermitteln 
 		geoblock =  stringextract('geoLocation',  '}', page) 
 		geoblock =  stringextract('"value":"',  '"', geoblock).strip()
 		PLog('geoblock: ' + geoblock);
-		if 	geoblock == 'none':								# i.d.R. "none", sonst "de" - wie bei ARD verwenden
+		if 	geoblock == 'none':										# i.d.R. "none", sonst "de" - wie bei ARD verwenden
 			geoblock = ' | ohne Geoblock'
 		else:
-			if geoblock == 'de':			# Info-Anhang für summary 
+			if geoblock == 'de':									# Info-Anhang für summary 
 				geoblock = ' | Geoblock DE!'
-			if geoblock == 'dach':			# Info-Anhang für summary 
+			if geoblock == 'dach':									# Info-Anhang für summary 
 				geoblock = ' | Geoblock DACH!'
 			
 	download_list = []
@@ -1019,14 +1053,14 @@ def Live(name, epg=''):
 	title2 = name
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')						# Home-Button
+	li = home(li, ID='3Sat')										# Home-Button
 	
 	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
 	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 	for line in zdf_streamlinks:
 		webtitle, href, thumb, tagline = line.split('|')
 		# Bsp.: "ZDFneo " in "ZDFneo Livestream":
-		if up_low('3sat') in up_low(webtitle): 	# Sender mit Blank!
+		if up_low('3sat') in up_low(webtitle): 						# Sender mit Blank!
 			m3u8link = href
 			break
 	if m3u8link == '':
@@ -1058,19 +1092,18 @@ def Live(name, epg=''):
 #
 def get_epg():									
 	PLog('get_epg:')
-	my3satCacheTime =  600							# 10 Min.: 10*60	
 	
 	# Indices EPG_rec: 0=starttime, 1=href, 2=img, 3=sname, 4=stime,  
 	#			5=summ, 6=vonbis, 7=today_human, 8=endtime:  
-	rec = EPG.EPG(ID="3SAT", mode='OnlyNow')	# Daten holen - nur aktuelle Sendung
-	sname=''; stime=''; summ=''; vonbis=''		# Fehler, ev. Sender EPG_ID nicht bekannt
+	rec = EPG.EPG(ID="3SAT", mode='OnlyNow')						# Daten holen - nur aktuelle Sendung
+	sname=''; stime=''; summ=''; vonbis=''							# Fehler, ev. Sender EPG_ID nicht bekannt
 	title=''; tag=''
 
 	if rec:								
 		sname=py2_encode(rec[3]); stime=py2_encode(rec[4]); 
 		summ=py2_encode(rec[5]); vonbis=py2_encode(rec[6])
 	else:
-		return "", "", ""						# title, tag, summ	
+		return "", "", ""											# title, tag, summ	
 
 	if sname:									# Sendungstitel
 		title = str(sname).replace('JETZT:', 'LIVE')
