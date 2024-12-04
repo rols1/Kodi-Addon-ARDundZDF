@@ -12,8 +12,8 @@
 #	Nov./Dez. 2024 Umstellung Web-scraping -> api hbbtv.zdf.de
 # 	
 ################################################################################
-# 	<nr>22</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.12.2024
+# 	<nr>23</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -181,7 +181,7 @@ def Main_3Sat(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.PageMenu_3sat", 
 		fanart=R('3sat.png'), thumb=R('zdf-rubriken.png'), summary=summ, fparams=fparams)
 
-	title = 'Bildgalerien 3sat'	
+	title = 'Bilderserien 3sat'	
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.Bilder3sat",
 		fanart=R('3sat.png'), thumb=R('zdf-bilderserien.png'), fparams=fparams)
@@ -250,7 +250,7 @@ def Search(offset="1", query=''):
 			path = DreiSat_HBBTV_HTML % sid
 			tag = "Dauer [B]%s[/B]\n%s" % (dauer, tag)
 			if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Hinw. Inhaltstext bei Sofortstart 
-				tag = u"%s\n\n%s" % (tag, "[B]Inhaltstext[/B] zum Video via Kontextmenü aufrufen.")							 		
+				tag = u"%s\n\n%s" % (tag, u"[B]Inhaltstext[/B] zum Video via Kontextmenü aufrufen.")							 		
 			title=py2_encode(title); path=py2_encode(path);	img=py2_encode(img);
 			dauer=py2_encode(dauer);
 			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s'}" %\
@@ -700,7 +700,7 @@ def CoverElems(li, cover, top=""):
 			path = DreiSat_HBBTV_HTML % sid
 			tag = "Dauer [B]%s[/B]\n%s" % (dauer, tag)
 			if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Hinw. Inhaltstext bei Sofortstart 
-				tag = u"%s\n\n%s" % (tag, "[B]Inhaltstext[/B] zum Video via Kontextmenü aufrufen.")							 		
+				tag = u"%s\n\n%s" % (tag, u"[B]Inhaltstext[/B] zum Video via Kontextmenü aufrufen.")							 		
 			title=py2_encode(title); path=py2_encode(path);	img=py2_encode(img);
 			dauer=py2_encode(dauer);
 			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s'}" %\
@@ -801,7 +801,7 @@ def CoverSingle(title, path, allcover=""):
 				path = DreiSat_HBBTV_HTML % sid
 				tag = "Dauer [B]%s[/B]\n%s" % (dauer, tag)
 				if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Hinw. Inhaltstext bei Sofortstart 
-					tag = u"%s\n\n%s" % (tag, "[B]Inhaltstext[/B] zum Video via Kontextmenü aufrufen.")							 		
+					tag = u"%s\n\n%s" % (tag, u"[B]Inhaltstext[/B] zum Video via Kontextmenü aufrufen.")							 		
 				title=py2_encode(title); path=py2_encode(path);	img=py2_encode(img);
 				dauer=py2_encode(dauer);
 				fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '', 'dauer': '%s'}" %\
@@ -1116,6 +1116,8 @@ def get_epg():
 #	Übersichtsseiten - 3sat zeigt 12 Beiträge pro Seite
 #		path für weitere Seiten: class="load-more-container"
 # 04.08.2020 Webänderungen Titel, Subtitel
+# 12/2024 search.php von hbbtv-api liefert keine Bilder - weiter
+#	mit Webscraping.
 #
 def Bilder3sat(path=''):
 	PLog('Bilder3sat:')
