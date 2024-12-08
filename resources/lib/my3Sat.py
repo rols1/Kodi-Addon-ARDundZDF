@@ -13,7 +13,7 @@
 # 	
 ################################################################################
 # 	<nr>23</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.12.2024
+#	Stand: 07.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -280,8 +280,9 @@ def Search(offset="1", query=''):
 		
 #------------ 
 # A-Z Liste der Buchstaben (mit Markierung 'ohne Beiträge')
-# Hier noch Web statt api - Seite nur ca. 115 KByte, für die
-#	Buchstabenliste einschl. nicht verfügbarer.
+# Hier noch Web statt api - Seite nur ca. 115 KByte. Nur die 
+#	Buchstabenliste der Webseite enthält gesperrte Buchstaben 
+#	(Addon: icon-error.png) - api enthält Buchstabengruppen.
 #
 def SendungenAZlist(name, path):
 	PLog('SendungenAZlist: ' + name)
@@ -331,22 +332,23 @@ def SendungenAZlist(name, path):
 # 16.02.2021 dto (Titel)
 # neu: Umsetzung html-Links -> api hbbtv.zdf.de, api-
 #	Auswertung der Sendereihen. Damit entfallen api-Calls mit
-#	id=special:atoz:8387 u.ä.
+#	id=special:atoz:8387 u.ä. 
 #
 def SendungenAZ(name, path): 
 	PLog('SendungenAZ: ' + name)
 
-	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')							# Home-Button		
-	
+	path = DreiSat_AZ
 	page, msg = get_page(path)	
 	if page == '':			
 		msg1 = "Fehler in SendungenAZ"
 		msg2 = msg
 		PLog(msg1)
 		MyDialog(msg1, msg2, '')
-		return li	
+		return
 		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='3Sat')							# Home-Button		
+
 	content = blockextract('<picture class="">', page)
 	PLog(len(content))
 	
@@ -698,6 +700,7 @@ def CoverElems(li, cover, top=""):
 
 		if linktyp == "video":
 			path = DreiSat_HBBTV_HTML % sid
+			PLog("path: " + path)
 			tag = "Dauer [B]%s[/B]\n%s" % (dauer, tag)
 			if SETTINGS.getSetting('pref_video_direct') == 'true': 	# Hinw. Inhaltstext bei Sofortstart 
 				tag = u"%s\n\n%s" % (tag, u"[B]Inhaltstext[/B] zum Video via Kontextmenü aufrufen.")							 		
@@ -982,14 +985,17 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 		MyDialog(msg1, msg2, msg3)
 		return li	
 	
-	page = (page.replace('\\', '').replace('": "', '":"'))
-	PLog(page[:100])
+	try:															# mainVideoContent mehrfach in page möglich
+		objs = json.loads(page)["mainVideoContent"]
+		PLog("mainVideoContent: " + str(objs)[:100])
+		streams = objs["http://zdf.de/rels/target"]["streams"]["default"]
+		PLog("streams: " + str(streams)[:100])
+		videodat_url = streams["http://zdf.de/rels/streams/ptmd-template"]
+			
+	except Exception as exception:
+		PLog("objs_error " + str(exception))
 
 	player = "ngplayer_2_4"
-	pos = page.find('"programmeItem"')
-	page = page[max(0, pos):]
-	streams = stringextract('streams":', '}}', page)				# in "mainVideoContent":..
-	videodat_url= stringextract('ptmd-template":"', '"', streams)
 	videodat_url = "https://api.3sat.de" + videodat_url
 	videodat_url = videodat_url.replace('{playerId}', player)
 	PLog("videodat_url: " + videodat_url)

@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>224</nr>										# Numerierung für Einzelupdate
-VERSION = '5.1.4'
-VDATE = '22.11.2024'
+VERSION = '5.1.5'
+VDATE = '08.12.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2300,6 +2300,7 @@ def AudioPodcastDeArchiv(url, li=""):
 def AudioPodcastDeSingle(url, title, thumb, Plot, artist=""):	
 	PLog('AudioPodcastDeSingle: ' + url)
 	PLog("artist: " + artist)
+	PLog("title: " + title)
 
 	if artist:														# einz. mp3-Url plus Podcast-Reihe
 		li = xbmcgui.ListItem()
@@ -2342,8 +2343,10 @@ def AudioPodcastDeSingle(url, title, thumb, Plot, artist=""):
 	try:
 		items = json.loads(script)
 		title = items["name"]
+		title = repl_json_chars(title)
 		Plot = items["description"]
 		Plot = Plot.replace("\n", "")
+		Plot = repl_json_chars(Plot)
 		img = items["thumbnailUrl"]
 		img=img.replace("/33/", "/600/"); img=img.replace("/55/", "/600/")
 		img=img.replace("/66/", "/600/"); img=img.replace("/100/", "/600/"); 
@@ -11391,8 +11394,8 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	 
 	PLog('playlist: ' + playlist[:100])
 	PLog('live: ' + str(live))
-	skip_list = ["/srfsgeo/", "/swrbwd/", "/dwstream",			# keine Mehrkanalstreams: Einzelauflösungen mögl.
-				"/srfsgeo/", "/dwstream",
+	skip_list = ["/srfsgeo/",									# keine Mehrkanalstreams: Einzelauflösungen mögl.,
+				"/dwstream",									#	letzter Test: 04.12.2024
 				"/arteliveext.akamaized", 
 				"/tagesschau.akamaized"
 				]

@@ -10,6 +10,14 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+08.12.2024	5.1.5
+			AudioPodcastDeSingle (Audiothek): Hochkommata entfernt repl_json_chars(Plot).
+			Modul my3Sat: Umstellung HBBTV-Api - neue Funktionen Search, PageMenu,
+			CoverSingle, CoverElems, sid_to_title, my3sat_content. Hybridfunktion
+			SendungenAZ. Umstellung Auswertung profile_url in SingleBeitrag auf json-
+			keys (vorherige Stringsuche nach "mainVideoContent" unsicher).
+			get_summary_pre (util): Anpassung für my3Sat (im Voraus laden).			
+
 22.11.2024	5.1.4
 			time_translate (util): Aktualisierung Sommerzeit-Tabelle (Austausch 2021
 			-> 2025).
