@@ -12,8 +12,8 @@
 #	Nov./Dez. 2024 Umstellung Web-scraping -> api hbbtv.zdf.de
 # 	
 ################################################################################
-# 	<nr>23</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.12.2024
+# 	<nr>24</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -133,6 +133,7 @@ def Main_3Sat(name=''):
 		thumb=R('zdf-suche.png'), tagline=tag, fparams=fparams)
 			
 	title, tag, summ = get_epg()
+	title = repl_json_chars(title)
 	if title:
 		tagline = tag
 		summary = summ
