@@ -12,8 +12,8 @@
 #	Nov./Dez. 2024 Umstellung Web-scraping -> api hbbtv.zdf.de
 # 	
 ################################################################################
-# 	<nr>24</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.12.2024
+# 	<nr>26</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -928,9 +928,11 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 	path_org = path
 	
 	Plot	 = title
-	Plot_par = summ										# -> PlayVideo
-	if Plot_par == '':			
-		Plot_par = title
+	if SETTINGS.getSetting('pref_video_direct') == 'false':	# Inhaltstext für Downloads holen,
+		if summ == "":										#	falls leer
+			summ = get_summary_pre(path, ID="3sat",skip_verf=True,skip_pubDate=True)  # Modul util
+		
+	Plot_par = summ													# -> PlayVideo
 	tag_org = dauer
 	thumb	= img_src; title_org = title
 
@@ -1040,8 +1042,10 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 	if endDate:
 		dauer = u"%s | %s [B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % (dauer, pubDate, endDate)
 	tagline = dauer + " " + geoblock
-	Plot_par = tagline + "||||" + Plot_par	
 	
+	Plot_par = tagline + "||||" + Plot_par							# z.Z. nicht verwendet
+	PLog("tagline: %s, Plot_par: %s" % (tagline,Plot_par))	
+	tagline=Plot_par
 	#----------------------------------------------- 
 	# Nutzung build_Streamlists + build_Streamlists_buttons (Haupt-PRG),
 	#	einschl. Sofortstart
