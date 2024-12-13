@@ -56,9 +56,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>224</nr>										# Numerierung für Einzelupdate
+# 	<nr>225</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.5'
-VDATE = '08.12.2024'
+VDATE = '13.12.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -339,7 +339,7 @@ FILTER_SET 	= os.path.join(ADDON_DATA, "filter_set")
 AKT_FILTER	= ''
 if os.path.exists(FILTER_SET):	
 	AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
-AKT_FILTER	= AKT_FILTER.splitlines()						# gesetzte Filter initialiseren 
+AKT_FILTER	= AKT_FILTER.splitlines()						# gesetzte Filter initialiseren
 STARTLIST	= os.path.join(ADDON_DATA, "startlist") 		# Videoliste ("Zuletzt gesehen")
 
 try:	# 28.11.2019 exceptions.IOError möglich, Bsp. iOS ARM (Thumb) 32-bit
@@ -431,6 +431,7 @@ def Main():
 	title="Suche in ARD und ZDF"
 	tagline = 'gesucht wird in [B]ARD  Mediathek, ZDF Mediathek[/B] und [B]Merkliste[/B].'
 	summ = u"Tools für die Suchwortliste: Menü [B]Suchwörter bearbeiten[/B] (siehe Infos + Tools)."
+	summ = u"%s\n\nHier lassen sich auch [B]Video-Url's[/B] mit Android-Aps (Yatse, Kore, ..) zum Abspielen übergeben." % summ
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 		fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tagline, 
@@ -1191,7 +1192,7 @@ def ZDF_Teletext(path=""):
 		aktpg = re.search(r'seiten/(.*?).html', path).group(1)
 		msg1 = u'Seite %s' % aktpg
 		msg2 = u'nicht verfügbar'
-		icon = thumb		
+		img = thumb		
 		xbmcgui.Dialog().notification(msg1,msg2,img,3000)
 		PLog("coreccted: %s -> %s" % (aktpg, "100"))
 		path = "https://teletext.zdf.de/teletext/zdf/seiten/100.html"
@@ -8737,7 +8738,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 		if  "results" in jsonObject:								# ZDF_Search
 			entryObject = jsonObject["results"]
 			PLog("results: %d" % len(entryObject))
-			
+		
+		fcnt=0														# gefiltert-Zähler	
 		for entry in entryObject:
 			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry,mark=mark,validchars=validchars)
 			label=""
@@ -8749,15 +8751,17 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 			PLog(stage); PLog(typ); PLog(title);
 			title = repl_json_chars(title)
 			tag = repl_json_chars(tag)
-			if typ=="video":								# Videos
+			if typ=="video":										# Videos
 				if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
 					filtered=False
-					for item in AKT_FILTER: 
-						if up_low(item) in py2_encode(up_low(str(entry))):
-							filtered = True
-							break		
+					for item in AKT_FILTER:
+						if item.strip(): 
+							if up_low(item) in py2_encode(up_low(str(entry))):
+								filtered = True
+								break		
 					if filtered:
 						PLog('filtered_1: <%s> in %s ' % (item, title))
+						fcnt = fcnt+1
 						continue								
 				if "channel" in entry:								# Zusatz Sender
 					sender = entry["channel"]
@@ -8871,7 +8875,10 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
 			thumb=img, fparams=fparams, summary=descr, tagline=tag)
 
-
+	if fcnt > 0:													# Info gefiltert-Zähler
+		icon = R("icon-filter.png")
+		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)		
+		
 	if li_org:
 		return li
 	else:
@@ -8915,7 +8922,7 @@ def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 		
-	i=0
+	i=0; fcnt=0
 	PLog("walk_entries: %d" % len(jsonObject))					
 	for entry in jsonObject:
 		jsonpath = jsonpath_org + '|%d' % i
@@ -8932,11 +8939,13 @@ def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):
 			if SETTINGS.getSetting('pref_usefilter') == 'true':			# Ausschluss-Filter
 				filtered=False
 				for item in AKT_FILTER: 
-					if up_low(item) in py2_encode(up_low(str(entry))):
-						filtered = True
-						break		
+					if item.strip(): 
+						if up_low(item) in py2_encode(up_low(str(entry))):
+							filtered = True
+							break		
 				if filtered:
 					PLog('filtered_2: <%s> in %s ' % (item, title))
+					fcnt = fcnt+1
 					continue								
 			if "channel" in entry:										# Zusatz Sender
 				sender = entry["channel"]
@@ -8961,7 +8970,11 @@ def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):
 				thumb=img, fparams=fparams, summary=descr, tagline=tag)
 													
 		i=i+1
-		# break		# Test Einzelsatz		
+		# break		# Test Einzelsatz
+		if fcnt > 0:													# Info gefiltert-Zähler
+			icon = R("icon-filter.png")
+			xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)		
+			
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -9156,6 +9169,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 				xbmcgui.Dialog().notification(msg1,msg2,noicon,2000,sound=True)
 				return						
 				
+		fcnt=0													# gefiltert-Zähler	
 		for entry in teaserObject:
 			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
 			title = repl_json_chars(title)
@@ -9169,11 +9183,13 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 				if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
 					filtered=False
 					for item in AKT_FILTER: 
-						if up_low(item) in py2_encode(up_low(str(entry))):
-							filtered = True
-							break		
+						if item.strip(): 
+							if up_low(item) in py2_encode(up_low(str(entry))):
+								filtered = True
+								break		
 					if filtered:
 						PLog('filtered_3: <%s> in %s ' % (item, title))
+						fcnt = fcnt+1
 						continue								
 				if "channel" in entry:							# Zusatz Sender
 					sender = entry["channel"]
@@ -9187,6 +9203,10 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 				addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
 					thumb=img, fparams=fparams, summary=descr, tagline=tag)
 					
+		if fcnt > 0:													# Info gefiltert-Zähler
+			icon = R("icon-filter.png")
+			xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)
+		
 	ZDF_search_button(li, query=title_org)	
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -9702,6 +9722,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
 		teaserObject = jsonObject["teaser"]
 		PLog(len(teaserObject))
 		PLog(str(teaserObject)[:80])
+		fcnt=0														# gefiltert-Zähler	
 		for entry in teaserObject:
 			try:
 				typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
@@ -9717,11 +9738,13 @@ def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
 				if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
 					filtered=False
 					for item in AKT_FILTER: 
-						if up_low(item) in py2_encode(up_low(str(entry))):
-							filtered = True
-							break		
+						if item.strip(): 
+							if up_low(item) in py2_encode(up_low(str(entry))):
+								filtered = True
+								break		
 					if filtered:
 						PLog('filtered_4: <%s> in %s ' % (item, title))
+						fcnt = fcnt+1
 						continue								
 					
 				PLog("Satz4:")
@@ -9735,6 +9758,10 @@ def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
 					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
 			except Exception as exception:
 				PLog("verpasst_error: " + str(exception))
+	
+		if fcnt > 0:													# Info gefiltert-Zähler
+			icon = R("icon-filter.png")
+			xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)		
 									
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		return
@@ -9961,6 +9988,7 @@ def ZDF_FlatListEpisodes(sid):
 	PLog("season_title: %s" % season_title)
 	PLog("staffel_list: %d" % len(staffel_list))
 
+	fcnt=0														# gefiltert-Zähler	
 	for staffel in 	staffel_list:
 		if 	staffel["name"] == "":								# Teaser u.ä.
 			continue							
@@ -9984,11 +10012,13 @@ def ZDF_FlatListEpisodes(sid):
 			if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
 				filtered=False
 				for item in AKT_FILTER:
-					if up_low(item) in py2_encode(up_low(str(folge))):
-						filtered = True
-						break		
+					if item.strip(): 
+						if up_low(item) in py2_encode(up_low(str(folge))):
+							filtered = True
+							break		
 				if filtered:
 					PLog('filtered_5: <%s> in %s ' % (item, title))
+					fcnt = fcnt+1
 					continue								
 				
 			summ_par= summ.replace('\n', '||')
@@ -10001,6 +10031,10 @@ def ZDF_FlatListEpisodes(sid):
 				(quote(url), quote(title), quote(img), quote(tag_par), quote(summ_par), scms_id)
 			addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+				
+	if fcnt > 0:													# Info gefiltert-Zähler
+		icon = R("icon-filter.png")
+		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)			
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -11620,7 +11654,7 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 			    
 ####################################################################################################
-#						Hilfsfunktionen - für Kodiversion augelagert in Modul util.py
+#						Router
 ####################################################################################################
 # Bsp. paramstring (ab /?action):
 #	url: plugin://plugin.video.ardundzdf/?action=dirList&dirID=Main_ARD&
@@ -11635,11 +11669,11 @@ def router(paramstring):
 	# {<parameter>: <value>} Elementen
 	paramstring = unquote_plus(paramstring)
 	# PLog(' router_params1: ' + paramstring)
-	PLog(type(paramstring));
 		
+	PLog(type(paramstring));
 	if paramstring:	
 		params = dict(parse_qs(paramstring[1:]))
-		# PLog(' router_params_dict: ' + str(params))
+		PLog(' router_params_dict: ' + str(params))
 		try:
 			if 'content_type' in params:
 				if params['content_type'] == 'video':	# Auswahl im Addon-Menü
@@ -11749,7 +11783,6 @@ if __name__ == '__main__':
 	try:
 		router(sys.argv[2])
 		# Memory-Bereinig. unwirksam gegen Raspi-Klemmer (s. SenderLiveListe)
-		#del get_ZDFstreamlinks, get_ARDstreamlinks, get_IPTVstreamlinks
 	except Exception as e: 
 		msg = str(e)
 		PLog('network_error_main: ' + msg)
