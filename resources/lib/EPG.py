@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>26</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.11.2024
+# 	<nr>28</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.12.2024
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -693,7 +693,6 @@ if "ShowSumm" in str(sys.argv):											# Kontextmenü: Video-Inhaltstext im t
 	if ID == "3sat":
 		PLog("extract_3sat")
 		summ=""
-		summ1 = stringextract("", "", page)
 		summ1 = stringextract('paragraph-large ">', "</", page)
 		text_cells =  blockextract('class="cell large-8 large-offset-2">', page, "</div>")
 		summ2=""

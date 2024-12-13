@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>115</nr>										# Numerierung für Einzelupdate
-#	Stand: 01.12.2024
+# 	<nr>116</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1100,7 +1100,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			dirID = "resources.lib.EPG.EPG"
 			commands.append((u'Inhaltstext für Video zeigen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 					% (MY_SCRIPT, HANDLE, dirID, fparams_ShowSumm)))
-		
+
 		li.addContextMenuItems(commands)				
 	
 	xbmcplugin.addDirectoryItem(handle=HANDLE,url=add_url,listitem=li,isFolder=isFolder)
@@ -2522,8 +2522,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		page =  RLoad(fpath, abs_path=True)
 		if page.startswith("V5.1.2_summ:"):		# neues Cache-Format?
 			page = page.replace("V5.1.2_summ:", "")
-			PLog('ret_page: ' + page[:80])
-			return page				# summary
+			PLog('ret_page: ' + page[:80])		# summary
 		else:
 			save_new = True
 
@@ -2594,50 +2593,68 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 					
 	#-----------------	
 	
-	if 	ID == '3sat':
-		summ = stringextract('name="description" content="', '"', page)
-		summ = mystrip(summ)
-		teaserinfo=""
-		if teaserinfo:
-			summ = "%s | %s" % (teaserinfo, summ)
+	if 	ID == '3sat':											# wie EPG (extract_3sat)
+		summ1 = stringextract('paragraph-large ">', "</", page)
+		text_cells =  blockextract('class="cell large-8 large-offset-2">', page, "</div>")
+		summ2=""
+		for cells in text_cells:
+			summ2  = summ2 + stringextract("<p>", "</p>", cells) + "\n\n"
+
+		summ = "%s%s" % (summ1, summ2)
+		summ = cleanhtml(summ)
 		summ = unescape(summ)
+		
 	
 	#-----------------	
 				
-	if 	ID == 'ARDnew':
-		page = page.replace('\\"', '*')							# Quotierung vor " entfernen, Bsp. \"query\"
-		page = page.replace('\\r\\n\\r\\n', " | ")				# CR+LF doppelt
-		pubServ = stringextract('"name":"', '"', page)			# publicationService (Sender)
-		if "FSK:" not in duration_org:							# bereits in Param?
-			maturitytRating = stringextract('maturityContentRating":"', '"', page) # "FSK16"
-			maturitytRating = maturitytRating.replace('NONE', 'Ohne')
-		else:
-			maturitytRating=""
-		if duration == '':										# schon übergeben?
-			duration = stringextract('"duration":', ',', page)	# Sekunden
-			if duration == '0':									# auch bei Einzelbeitrag möglich
-				duration=''
-			duration = seconds_translate(duration)
-			if duration and pubServ:										
-				duration = u'Dauer %s | [B]%s[/B]' % (duration, pubServ)
+	if 	ID == 'ARDnew':											# ähnlich EPG (extract_ARD)
+		try:
+			page_obs = json.loads(page)
+			if "teasers" in page_obs:
+				s =page_obs["teasers"]							# Objekte 1. Ebene
+				PLog("teasers: " + str(s)[:80])
+			if "widgets" in page_obs:
+				s =page_obs["widgets"]
+				PLog("widgets: " + str(s)[:80])
+
+			summ1 = s[0]["synopsis"]							# Beschr. Einzelbeitrag oder Folge
+			summ2 = s[1]["teasers"][0]["show"]["synopsis"]		# Beschr. Staffel/Reihe (in allen teasers identisch)
+
+			if "FSK:" not in duration_org:						# bereits in Param?
+				maturitytRating = s[0]["maturityContentRating"] # "FSK16"
+				maturitytRating = maturitytRating.replace('NONE', 'Ohne')
+			else:
+				maturitytRating=""
+			pubServ = s[0]["publicationService"]["name"]		# publicationService (Sender)
+			
+			if duration == '':										# schon übergeben?
+				duration = stringextract('"duration":', ',', page)	# Sekunden
+				if duration == '0':									# auch bei Einzelbeitrag möglich
+					duration=''
+				duration = seconds_translate(duration)
+				
+			verf = s[0]["availableTo"]							# "2025-08-11T21:59:00Z"
+			pubDate = s[0]["broadcastedOn"]						# "2024-08-12T21:49:00Z"
+		except Exception as exception:
+			PLog("summ_error:" + str(exception))
+			summ1=""; summ2=""
+			
+		summ = "%s\n\n%s" % (summ1, summ2)
+		summ = repl_json_chars(summ)
+		summ  = valid_title_chars(summ)							# s. changelog V4.7.4
+
+		if duration and pubServ:										
+			duration = u'Dauer %s | [B]%s[/B]' % (duration, pubServ)
 		if 	maturitytRating:
 			if duration == '':
 				duration = "Dauer unbekannt"
-			duration = u"%s | FSK: %s\n" % (duration, maturitytRating)	
-		
-		summ = stringextract('synopsis":"', '","', page)	
-		summ = summ.replace('\\n\\n', " | ")					# LF doppelt, CR+LF s.o.
-		summ = summ.replace('\\n', ". ")						# LF einzeln
-		summ = repl_json_chars(summ)
-		summ  = valid_title_chars(summ)							# s. changelog V4.7.4
+			duration = u"%s | FSK: %s\n" % (duration, maturitytRating)		
 			
 		if skip_verf == False:
-				verf = stringextract('availableTo":"', '","', page)
-				if verf:
-					verf = time_translate(verf)
-					summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
+			if verf:
+				verf = time_translate(verf)
+				summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
 		if skip_pubDate == False:		
-			pubDate = stringextract('"broadcastedOn":"', '"', page)
 			if pubDate:
 				pubDate = time_translate(pubDate)
 				pubDate = u" | Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate	
@@ -3038,6 +3055,8 @@ def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für D
 	tagline=py2_encode(tagline); quality=py2_encode(quality);
 	thumb=py2_encode(thumb); url=py2_encode(url);
 	
+	PLog("summary: %s, tagline: %s" % (summary[:80], tagline[:80]))
+	
 	summary=summary.replace('||', '\n'); tagline=tagline.replace('||', '\n');
 	PLog(type(title)); PLog(type(summary)); PLog(type(tagline));
 	detailtxt = ''
@@ -3049,8 +3068,8 @@ def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für D
 	
 	detailtxt = detailtxt + "%15s" % 'Qualitaet: ' + "'" + quality + "'"  + '\r\n' 
 	detailtxt = detailtxt + "%15s" % 'Bildquelle: ' + "'" + thumb + "'"  + '\r\n' 
-	detailtxt = detailtxt + "%15s" % 'Adresse: ' + "'" + url + "'"  + '\r\n' 
-	
+	detailtxt = detailtxt + "%15s" % 'Adresse: ' + "'" + url + "'"  + '\r\n'
+		
 	return detailtxt
 		
 #---------------------------------------------------------------------------------------------------
@@ -4034,7 +4053,7 @@ def url_check(url, caller='', dialog=True):
 		PLog("url_check_error: " + msg)
 		msg1= '%s: Quelle nicht erreichbar - Url:' % caller
 		msg2 = url
-		msg3 = 'Fehler: %s' % msg
+		msg3 = msg
 		PLog(msg3)
 		if dialog:
 			MyDialog(msg1, msg2, msg3)		 			 	 
@@ -4389,8 +4408,49 @@ def get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime):
 			buf_events.append(line)		
 		
 	return buf_events, event_end
-#----------------------------------------------------------------
 
+#----------------------------------------------------------------
+# ermittelt Streamquellen aus Video-Weblinks
+# Aufrufer: SearchARDundZDFnew, 
+#
+def get_streams_from_link(link):
+	PLog("get_streams_from_link: " + link)
+	
+	path=""; img=R("Dir-video.png")
+	msg1="Suche Videoquelle"; msg2=""
+	
+	#	-----------------------------------							# ARD
+	if "ardmediathek.de/video/" in link or "ardmediathek.de/live/" in link:
+		for item in link.split("/"):
+			if item.startswith("Y3JpZDov"):							# Base64 "crid:/"
+				path=item
+				break
+				
+		if path and "/video/" in link:
+			path = "https://api.ardmediathek.de/page-gateway/pages/ard/item/%s?embedded=true&mcV6=true" % path
+		if "/live/" in link:										# ..ardmediathek.de/live/Y3JpZDovL2..
+			try:
+				crid = "%s========" % path							# padding-Error vermeiden
+				crid = crid.encode(encoding="utf-8")
+				crid_url = base64.b64decode(crid)					# crid://daserste.de/live/clip/abca0..
+				sender = re.search(r'crid://(.*?).de', str(crid_url)).group(1)
+				path = "https://api.ardmediathek.de/page-gateway/pages/%s/item/%s?devicetype=pc&embedded=true" % (sender, path)
+			except Exception as exception:
+				PLog("base64_error: " + str(exception))
+				path=""
+
+	# -----------------------------------
+	if path:													# URL-Check
+		if url_check(path, caller='get_streams_from_link', dialog=True) == False:
+			path=""
+
+	if path == "":
+		msg2="leider nichts gefunden"
+	xbmcgui.Dialog().notification(msg1,msg2,img,3000)
+	return path
+	
+
+#----------------------------------------------------------------
 
 
 

@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>91</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.11.2024
+# 	<nr>92</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1029,6 +1029,7 @@ def ARD_FlatListEpisodes(path, title):
 	
 	items = blockextract('availableTo":', page)					# Videos
 	PLog("items_list: %d" % len(items))
+	fcnt=0														# gefiltert-Zähler	
 	for item in items:
 		if "Folge " in item == False:
 			continue
@@ -1039,11 +1040,13 @@ def ARD_FlatListEpisodes(path, title):
 		if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
 			filtered=False
 			for fil in AKT_FILTER: 
-				if up_low(fil) in py2_encode(up_low(str(item))):
-					filtered = True
-					break		
+				if fil.strip(): 
+					if up_low(fil) in py2_encode(up_low(str(item))):
+						filtered = True
+						break		
 			if filtered:
-				PLog('filtered_6: <%s> in %s ' % (item, title))
+				PLog('filtered_6: <%s> in %s ' % (fil, title))
+				fcnt = fcnt+1
 				continue		
 		
 		url=py2_encode(url); title=py2_encode(title); summ_par=py2_encode(summ_par);
@@ -1051,6 +1054,10 @@ def ARD_FlatListEpisodes(path, title):
 			(quote(url), quote(title), quote(summ_par), ID)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
 			fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+		
+	if fcnt > 0:													# Info gefiltert-Zähler
+		icon = R("icon-filter.png")
+		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)				
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
@@ -1758,6 +1765,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 	# typ-Info Einzelbeträge: ["live", "event", "broadcastMainClip",
 	#				"ondemand", "poster"]
 	cnt=0	
+	fcnt=0														# gefiltert-Zähler	
 	for s in obs:
 		PLog("Mark10")
 		PLog(str(s)[:60])
@@ -1889,11 +1897,13 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 			if SETTINGS.getSetting('pref_usefilter') == 'true':		# Ausschluss-Filter
 				filtered=False
 				for item in AKT_FILTER: 
-					if up_low(item) in py2_encode(up_low(str(s))):
-						filtered = True
-						break		
+					if item.strip(): 
+						if up_low(item) in py2_encode(up_low(str(s))):
+							filtered = True
+							break		
 				if filtered:
 					PLog('filtered_7: <%s> in %s ' % (item, title))
+					fcnt = fcnt+1
 					continue								
 					
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
@@ -1919,7 +1929,11 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 		msg1 = 	"Nichts gefunden:"							# notification, hier ohne Sender
 		msg2 = "weder Folgeseiten noch Videos."	
 		icon = R(ICON_INFO)
-		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)			
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)
+		
+	if fcnt > 0:													# Info gefiltert-Zähler
+		icon = R("icon-filter.png")
+		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)							
 		
 	return
 
@@ -1946,9 +1960,13 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 #
 def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''): 
 	PLog('ARDStartSingle: %s' % ID);
-	PLog(path)
+	PLog(path); PLog(summary[:80]);
 	title_org=title;
 	icon = R("ard-mediathek.png")
+	
+	descr = get_summary_pre(path, ID="ARDnew",skip_verf=True,skip_pubDate=True)  # Modul util
+	if len(descr) > (len(summary)):								# Param summary einschl. tagline
+	 summary = "%s\n" % descr
 
 	headers=''
 	# Header für Verpasst-Beiträge (ARDVerpasstContent -> get_json_content)
@@ -2485,16 +2503,27 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 	title_org=title
 	query_file 	= os.path.join(ADDON_DATA, "search_ardundzdf")
 	
+	# Test Medienlinks Video + Live:
+	#query="https://www.ardmediathek.de/video/Y3JpZDovL3dkci5kZS9CZWl0cmFnLXNvcGhvcmEtMDY5Y2M5N2MtZmViZC00YjFjLTk2NzItYTc0Yzk3ODM0N2E3"
+	#query="https://www.ardmediathek.de/live/Y3JpZDovL2JyLmRlL0xpdmVzdHJlYW0tQlItU8O8ZA"
+
 	if query == '':														# Liste letzte Sucheingaben
 		query = ARDHandleRecents(title, mode="load", query=query)
+	if query.startswith("http://") or query.startswith("https://"):		# Medienlink einschl. http://hbbtv..
+		PLog("medialink: " + query)
+		path = get_streams_from_link(query)								# Auswertung
+		if path:
+			ARDStartSingle(path, title="", summary="")
+		query=""														# hier Ende für Medienlinks
+		
 	if  query == None or query.strip() == '':							# plugin Error vermeiden
 		if "ARD und ZDF" in title:										
 			return ardundzdf.Main()
 		if 'Suche in ARD-Mediathek' in title:
 			return Main_NEW()	
 		if 'Suche in ZDF-Mediathek' in title:
-			return ardundzdf.Main_ZDF()	
-		
+			return ardundzdf.Main_ZDF()
+			
 	query=py2_encode(query)		# decode, falls erf. (1. Aufruf)
 	PLog(query)
 	query_ard = query.split('|')[0]
@@ -2712,6 +2741,11 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 			PLog(query)
 			# return								# Absturz nach Sofortstart-Abbruch					
 			Main_NEW(NAME)
+
+	# sollte nicht vorkommen  (kein Menüaufruf):
+	if query.startswith("http://") or query.startswith("https://"):		# Medienlink -> SearchARDundZDFnew
+		MyDialog("[B]Video-Url's[/B] bitte nur im Menü", ">[B]Suche in ARD und ZDF[/B]<", 'eingeben.')	
+		Main_NEW(NAME)
 			
 	query = query.strip()
 	query = query.replace(' ', '+')					# für Merkliste - 01.03.2023 nicht mehr relevant 	
@@ -2919,6 +2953,7 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 	li2 = xbmcgui.ListItem()									# mediatype='video': eigene Kontextmenüs in addDir							
 	
 
+	fcnt=0														# gefiltert-Zähler	
 	for i, channel in enumerate(channels):
 		sid = channel["id"]
 		if sender != "ARD-Alle":
@@ -3022,11 +3057,13 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 				if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
 					filtered=False
 					for fil in AKT_FILTER: 
-						if up_low(item) in py2_encode(up_low(str(s))):
-							filtered = True
-							break		
+						if fil.strip(): 
+							if up_low(fil) in py2_encode(up_low(str(s))):
+								filtered = True
+								break		
 					if filtered:
-						PLog('filtered_8: <%s> in %s ' % (item, title))
+						PLog('filtered_8: <%s> in %s ' % (fil, title))
+						fcnt = fcnt+1
 						continue		
 					
 				PLog("Satz:")
@@ -3045,6 +3082,10 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 					fparams="&fparams={'path': '', 'title': '', 'img': ''}"
 					addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, 
 						thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
+
+	if fcnt > 0:													# Info gefiltert-Zähler
+		icon = R("icon-filter.png")
+		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)		
 											
 	return
 #----------------------------------------------------------------
