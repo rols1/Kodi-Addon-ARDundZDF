@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>116</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.12.2024
+# 	<nr>117</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -4411,11 +4411,14 @@ def get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime):
 
 #----------------------------------------------------------------
 # ermittelt Streamquellen aus Video-Weblinks
-# Aufrufer: SearchARDundZDFnew, 
+# Aufrufer: SearchARDundZDFnew 
 #
 def get_streams_from_link(link):
 	PLog("get_streams_from_link: " + link)
 	
+	if "|" in link:
+		PLog("separator_in_link")
+		link = link.split("|")[0]
 	path=""; img=R("Dir-video.png")
 	msg1="Suche Videoquelle"; msg2=""
 	
