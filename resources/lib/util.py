@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>117</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.12.2024
+#	Stand: 19.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -774,7 +774,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	PLog("fparams: " + unquote(fparams)[:200] + "..")
 	if thumb == None:
 		thumb = ''
-		
+
 	add_url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+quote(fparams)
 	PLog("addDir_url: " + unquote(add_url)[:200])		
 	
@@ -2516,22 +2516,24 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	
 	page=""; summ=''; pubDate=''
 	save_new = False
-	if os.path.exists(fpath):		# Text lokal laden + zurückgeben
+	if os.path.exists(fpath):					# Text lokal laden + zurückgeben
 		page=''
 		PLog('lade_aus_Cache:') 
 		page =  RLoad(fpath, abs_path=True)
 		if page.startswith("V5.1.2_summ:"):		# neues Cache-Format?
 			page = page.replace("V5.1.2_summ:", "")
 			PLog('ret_page: ' + page[:80])		# summary
+			return page
 		else:
 			save_new = True
 
 	if page == '':
 		PLog('lade_extern:') 
-		page, msg = get_page(path)	# extern laden, HTTP Error 404 möglich
+		page, msg = get_page(path)				# extern laden, HTTP Error 404 möglich
 		save_new = True
-	if page == '':
-		return ''					# ohne pubdate (Aufrufer: summ.replace) 				
+	if page == '' or "Error in handler" in page:# ARD: {"error":"Error in handler ..
+		PLog('load_error')
+		return ''								# ohne pubdate (Aufrufer: summ.replace) 				
 			
 	# Decodierung plus bei Classic u-Kennz. vor Umlaut-strings (s.u.)
 	page = py2_decode(page)
@@ -2608,6 +2610,8 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	#-----------------	
 				
 	if 	ID == 'ARDnew':											# ähnlich EPG (extract_ARD)
+		maturitytRating=""
+
 		try:
 			page_obs = json.loads(page)
 			if "teasers" in page_obs:
@@ -2621,14 +2625,16 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 			summ2 = s[1]["teasers"][0]["show"]["synopsis"]		# Beschr. Staffel/Reihe (in allen teasers identisch)
 
 			if "FSK:" not in duration_org:						# bereits in Param?
-				maturitytRating = s[0]["maturityContentRating"] # "FSK16"
-				maturitytRating = maturitytRating.replace('NONE', 'Ohne')
-			else:
-				maturitytRating=""
+				if "maturityContentRating" in s[0]:
+					maturitytRating = s[0]["maturityContentRating"] # "FSK16"
+					maturitytRating = maturitytRating.replace('NONE', 'Ohne')
+				if maturitytRating == "" and "geoblocked" in s[0]:
+					maturitytRating = s[0]["geoblocked"]
+			PLog("maturitytRating:" + maturitytRating)		
+					
 			pubServ = s[0]["publicationService"]["name"]		# publicationService (Sender)
-			
 			if duration == '':										# schon übergeben?
-				duration = stringextract('"duration":', ',', page)	# Sekunden
+				duration = stringextract('"durationSeconds":', ',', page)	# Sekunden
 				if duration == '0':									# auch bei Einzelbeitrag möglich
 					duration=''
 				duration = seconds_translate(duration)
@@ -4020,7 +4026,7 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 # 21.01.2023 dialog optional für add_UHD_Streams (ohne Dialog)
 # Rückage url oder False
 def url_check(url, caller='', dialog=True):
-	PLog('url_check:')
+	PLog('url_check: ' + url)
 
 	if url.startswith('http') == False:		# lokale Datei
 		if  os.path.exists(url):
@@ -4030,9 +4036,9 @@ def url_check(url, caller='', dialog=True):
 			if dialog:
 				msg2 = url
 				if url == "":
-					msg1= 'Video-Url fehlt!'
+					msg1= 'Url-Check: Video-Url fehlt!'
 				else:
-					msg1= 'Video fehlt! Datei:'
+					msg1= 'Url-Check: Video fehlt! Datei:'
 				MyDialog(msg1, msg2, "")		 			 	 
 			return False
 	#-----------------------------------------
@@ -4410,49 +4416,163 @@ def get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime):
 	return buf_events, event_end
 
 #----------------------------------------------------------------
-# ermittelt Streamquellen aus Video-Weblinks
-# Aufrufer: SearchARDundZDFnew 
+# ermittelt Streamquelle aus Video-Weblink + startet Stream
+# Aufrufer: SearchARDundZDFnew (ARDnew) und router (Haupt-PRG)
 #
-def get_streams_from_link(link):
-	PLog("get_streams_from_link: " + link)
+def get_streams_from_link(medialink):
+	PLog("get_streams_from_link: " + medialink)
 	
-	if "|" in link:
+	if SETTINGS.getSetting('pref_video_direct') == 'false': 		# für Einzelaufl. erforderlich 
+		li = xbmcgui.ListItem()
+		li = home(li, ID=NAME)										# Home-Button
+
+	if "|" in medialink:											# Yatse sendet Link doppelt: Link|Link; 
 		PLog("separator_in_link")
-		link = link.split("|")[0]
-	path=""; img=R("Dir-video.png")
-	msg1="Suche Videoquelle"; msg2=""
+		medialink = medialink.split("|")[0]
+
+	msg1="Suche Videoquelle"; msg2="und weitere Informationen..."
+	path=""; img=R("Dir-video.png"); ID=""
 	
-	#	-----------------------------------							# ARD
-	if "ardmediathek.de/video/" in link or "ardmediathek.de/live/" in link:
-		for item in link.split("/"):
-			if item.startswith("Y3JpZDov"):							# Base64 "crid:/"
-				path=item
-				break
+	xbmcgui.Dialog().notification(msg1,msg2,img,2000)
+	#	-----------------------------------							# ARD-Quellen
+	if "ardmediathek.de/video/" in medialink or "ardmediathek.de/live/" in medialink:
+		from  resources.lib.ARDnew import ARDStartSingle
+		ID="ARD"
+		PLog("get_streams_from_link_%s" % ID)
+		api_base = "https://api.ardmediathek.de/page-gateway/pages/%s/item/%s?embedded=true&mcV6=true" 
+		sender = "ard"
+		if medialink.endswith("/"):
+			medialink = medialink[:-1]
+		
+		if "Y3JpZDov" in medialink:													
+			for item in medialink.split("/"):						# Base64 "crid:/"
+				if item.startswith("Y3JpZDov"):							
+					path=item
+					break
+		else:														# ARD-Links ohne crid-Url
+			sender = medialink.split("/")[-2]						# ..dokuserie/hr/ZDU0YTU0..
+			path = medialink.split("/")[-1]
+
 				
-		if path and "/video/" in link:
-			path = "https://api.ardmediathek.de/page-gateway/pages/ard/item/%s?embedded=true&mcV6=true" % path
-		if "/live/" in link:										# ..ardmediathek.de/live/Y3JpZDovL2..
-			try:
+		if path and "/video/" in medialink:							# Default: Video
+			path = api_base % (sender, path)
+		if "/live/" in medialink:									# ..ardmediathek.de/live/Y3JpZDovL2.. ohne
+			try:													#	Sender in medialink
 				crid = "%s========" % path							# padding-Error vermeiden
 				crid = crid.encode(encoding="utf-8")
 				crid_url = base64.b64decode(crid)					# crid://daserste.de/live/clip/abca0..
 				sender = re.search(r'crid://(.*?).de', str(crid_url)).group(1)
 				path = "https://api.ardmediathek.de/page-gateway/pages/%s/item/%s?devicetype=pc&embedded=true" % (sender, path)
+				path = path.replace("/deutschewelle/", "/ard/")		# crid-Url sowie /dw/ funktionieren nicht
 			except Exception as exception:
 				PLog("base64_error: " + str(exception))
-				path=""
+				path=""; ID=""
+		PLog("ARD_path: " + path)
+
+	#	-----------------------------------							# ZDF-Quellen
+	if "/www.zdf.de/" in medialink:
+		from  ardundzdf import ZDF_get_content, ZDF_getApiStreams
+		ID="ZDF"
+		PLog("get_streams_from_link_%s" % ID)		
+		try:
+			title = medialink.split("/")[-1]						# ../filme/herzkino/nelly-und-das-weihnachtswunder-102.html
+			sid = title.split(".html")[0]
+			path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s" % sid
+			page, msg = get_page(path=path, do_safe=False)
+			# externalId für HBBTV benötigt (fsk16-Daten dort frei)
+			obj = json.loads(page)["document"]
+			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(obj)				
+			descr_new = get_summary_pre(medialink, ID='ZDF',skip_verf=True,skip_pubDate=True)
+			if len(descr_new) > len(descr):							# Inhaltstexte von Webseite
+				descr = descr_new
+		except Exception as exception:
+			PLog("ZDF_error: " + str(exception))			
+			path=""; ID=""
+
+	#	-----------------------------------							# 3sat-Quellen
+	if "/www.3sat.de/" in medialink:
+		from  resources.lib.my3Sat import SingleBeitrag, my3sat_content, DreiSat_HBBTV, DreiSat_HBBTV_HTML
+		ID="3sat"
+		PLog("get_streams_from_link_%s" % ID)		
+		try:
+			title = medialink.split("/")[-1]						# ../filme/herzkino/nelly-und-das-weihnachtswunder-102.html
+			sid = title.split(".html")[0]
+			PLog("sid: " + sid)
+			hbbtv_path = DreiSat_HBBTV + sid
+			page, msg = get_page(path=hbbtv_path)
+			if page:												# my3sat_content nicht nutzbar, json-Format abweichend
+				obj = json.loads(page)			
+				sid = obj["externalId"]
+				title = obj["title"]
+				dauer = obj["duration"]
+				dauer = seconds_translate(dauer)
+				tag =  obj["head"]
+				
+				title = unescape(title)
+				title = repl_json_chars(title)
+				
+				descr =  obj["text"]
+				img =  obj["img"]
+				path = DreiSat_HBBTV_HTML % sid	
+				descr_new = get_summary_pre(medialink, ID='3sat',skip_verf=True,skip_pubDate=True)
+				PLog("sid: %s, title: %s, dauer: %s, tag: %s, descr: %s, descr_new: %s" % (sid,title,dauer,tag,descr,descr_new[:80])) 
+					
+				if len(descr_new) > len(descr):						# Inhalt von Webseite
+					descr = descr_new
+		except Exception as exception:
+			PLog("3sat_error: " + str(exception))			
+			path=""; ID=""
+		
+	#	-----------------------------------							# arte-Quellen
+	if "/www.arte.tv/" in medialink:
+		from  resources.lib.arte import SingleVideo, get_live_data, L
+		ID="arte"
+		PLog("get_streams_from_link_%s" % ID)
+		if medialink.endswith("/live/"):							# Default: www.arte.tv/de/live/
+			path = medialink										# -> get_live_data
+		else:
+			try:
+				pid = re.search(r'videos/(.*?)/', medialink).group(1)
+				img=""; title=""; tag=""; summ=""; dur=""; geo="";
+				path=medialink										# hier nur dummy
+			except Exception as exception:
+				PLog("arte_error: " + str(exception))			
+				path=""; ID=""
 
 	# -----------------------------------
-	if path:													# URL-Check
+
+	PLog("path_%s" % ID)
+	if path and ID:													# Zielfunktionen	
 		if url_check(path, caller='get_streams_from_link', dialog=True) == False:
-			path=""
+			path=""													# URL-Check fehlgeschlagen
+		else:	
+			if ID =="ARD":
+				ARDStartSingle(path, title="", summary="")
+			if ID == "ZDF":
+				# ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True)
+				HLS_List, MP4_List, HBBTV_List=ZDF_getApiStreams(path, title, img, tag, descr, scms_id=scms_id,gui=False)
+				PLog("HLS_List_ZDF: %d, MP4_List_ZDF: %d, HBBTV_List_ZDF: %d" % (len(HLS_List), len(MP4_List), len(HBBTV_List)))
+				if not len(HLS_List) and not len(MP4_List) and not len(HBBTV_List):			
+					path=""
+			if ID =="3sat":
+				SingleBeitrag(title, path, img, descr, dauer, homeID=NAME)
+			if ID =="arte":
+				if "/live/" in medialink:									# Default: www.arte.tv/de/live/
+					tag=u'[B]%s[/B]' % L("Arte Livestream")
+					title, tag, summ, img, href = get_live_data('ARTE')
+					title = repl_json_chars(title)					
+					PlayVideo(url=href, title=title, thumb=img, Plot=summ, live="true")
+				else: 														# Video, auch Live-Video
+					SingleVideo(img, title, pid, tag, summ, dur, geo, trailer='')
 
-	if path == "":
+	# -----------------------------------							# Beenden
+
+	if path == "":													# kompl. Fehlschlag
 		msg2="leider nichts gefunden"
-	xbmcgui.Dialog().notification(msg1,msg2,img,3000)
-	return path
+		xbmcgui.Dialog().notification(msg1,msg2,img,3000)
+	PLog("get_streams_from_link_exit")
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
-
 #----------------------------------------------------------------
 
 

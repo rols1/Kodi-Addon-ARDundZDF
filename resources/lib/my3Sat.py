@@ -13,7 +13,7 @@
 # 	
 ################################################################################
 # 	<nr>26</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.12.2024
+#	Stand: 13.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -198,6 +198,10 @@ def Search(offset="1", query=''):
 	PLog('Search:'); 
 	if 	query == '':	
 		query = get_query(channel='ZDF')
+
+	if query.startswith("http://") or query.startswith("https://"):		# Medienlink -> SearchARDundZDFnew
+		MyDialog("[B]Video-Url's[/B] bitte nur im Menü", ">[B]Suche in ARD und ZDF[/B]<", 'eingeben.')	
+		query=""
 		
 	query = py2_decode(query)
 	name = 'Suchergebnis zu: ' + unquote(query)
@@ -838,7 +842,7 @@ def my3sat_content(item, img_qual="hi", mark=""):
 
 	try:
 		descr=""; dauer=""; headtxt=""; titletxt="";
-		vidlentxt=""; isgroup=""; 
+		vidlentxt=""; isgroup=""; foottxt=""
 		if "headtxt" in item:
 			headtxt = item["headtxt"]
 		if "titletxt" in item:
@@ -847,11 +851,12 @@ def my3sat_content(item, img_qual="hi", mark=""):
 			titletxt = item["title"]
 		if "vidlentxt" in item:				# "87 min"
 			dauer = item["vidlentxt"]
-			
+		PLog("mark0")	
 		if "isgroup" in item:
 			isgroup = item["isgroup"]
-			
-		foottxt = item["foottxt"]			# "36 Beiträge"
+		if  "foottxt" in item:	
+			foottxt = item["foottxt"]		# "36 Beiträge"
+		PLog("mark1")	
 		
 		if "text" in item:
 			descr = item["text"] 
@@ -861,6 +866,7 @@ def my3sat_content(item, img_qual="hi", mark=""):
 		sid = link["id"]					# "tatort-von-affen-und-menschen-104"
 		linktyp = link["type"]
 		ctyp = link["ctype"]		
+		PLog("mark2")	
 		
 		# HBBTV-api-Quelle i.d.R. kleine Inhaltstexte, für 3sat ohne Verfügbar und pubDate:
 		if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
@@ -872,7 +878,7 @@ def my3sat_content(item, img_qual="hi", mark=""):
 			
 		tag = headtxt						# kann fehlen
 		if foottxt:
-			tag = "%s\n%s" %  (tag, foottxt)		
+			tag = "%s\n%s" %  (tag, str(foottxt))		
 		
 		sidtitle = sid_to_title(sid)		# ergänzender Titel aus Sendungs-ID für tag
 		title = titletxt				
@@ -922,22 +928,21 @@ def sid_to_title(sid):
 # 21.01.2021 Nutzung build_Streamlists + build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
 # 11.2024 Mitnutzung der Ladekette durch neue api-hbbtv-Funktionen
 #
-def SingleBeitrag(title, path, img_src, summ, dauer):
+def SingleBeitrag(title, path, img_src, summ, dauer, homeID="3Sat"):
 	PLog('SingleBeitrag: ' + title)
 	PLog(dauer);PLog(summ);PLog(path)
 	path_org = path
 	
-	Plot	 = title
-	if SETTINGS.getSetting('pref_video_direct') == 'false':	# Inhaltstext für Downloads holen,
-		if summ == "":										#	falls leer
-			summ = get_summary_pre(path, ID="3sat",skip_verf=True,skip_pubDate=True)  # Modul util
+	Plot = title
+	if summ == "":													# Inhaltstext für Downloads holen
+		summ = get_summary_pre(path, ID="3sat",skip_verf=True,skip_pubDate=True)  # Modul util
 		
 	Plot_par = summ													# -> PlayVideo
 	tag_org = dauer
 	thumb	= img_src; title_org = title
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')										# Home-Button
+	li = home(li, ID=homeID)										# Home-Button
 			
 	page, msg = get_page(path=path)									# 1. Basisdaten von Webpage holen
 	if page == '':			
@@ -954,7 +959,6 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 	if pubDate:
 		pubDate = "Sendedatum: %s | " % pubDate
 	PLog(pubDate)
-	
 
 	content = stringextract('window.zdfsite', 'tracking', page)  			
 	content = stringextract('data-module="zdfplayer"', 'teaser-image=', page)  			
@@ -979,7 +983,8 @@ def SingleBeitrag(title, path, img_src, summ, dauer):
 	#	Nutzung get_page (Modul util)
 	headers = "{'Api-Auth': 'Bearer %s','Referer': 'https://www.3sat.de/'}" % apiToken 
 	page,msg = get_page(path=profile_url, header=headers)
-	
+	RSave('/tmp2/x_3sat2.json', py2_encode(page))
+
 	if page == '':			
 		msg1 = "SingleBeitrag2: Abruf fehlgeschlagen"
 		msg2 = msg

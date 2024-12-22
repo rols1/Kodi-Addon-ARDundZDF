@@ -10,6 +10,33 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.12.2024	5.1.6
+			Main_3Sat (Modul my3Sat): unerlaubte Zeichen aus Live-Titel entfernt,
+			repl_json_chars(title).
+
+			Abspielen geteilter Medienlinks: Request github-issue#40  (Links eingefügt
+			durch Yatse, Kore o.ä.). Umsetzung von 2 Schnittstellen (SearchARDundZDFnew
+			und router) und der Verteilerfunktion get_streams_from_link. Auswertung
+			kodiert für ARD, ZDF, 3sat, arte (ARDnew- > ARDStartSingle, ZDF ->
+			ZDF_getApiStreams, 3sat -> SingleBeitrag, arte -> SingleVideo, PlayVideo).
+			SingleVideo (arte): ergänzende Param für Call von get_streams_from_link.
+			get_summary_pre (util): Anpassung an Ermittlung Inhaltstexte via Kontext-
+			Menü (ShowSumm -> EPG.py), einschl. Abfangen fehlendes maturitytRating.
+			
+			SingleBeitrag (Modul my3Sat): Inhaltstext aus Webquelle ergänzt, falls 
+			Param summ noch leer.
+			Search (Modul my3Sat): Abfangen von Medienlinks (nur in SearchARDundZDFnew
+			erlaubt).
+			ARDStartSingle (ARDnew): Inhaltstext aus Api-Quelle ergänzt, falls umfang-
+			reicher als vorher in der Liste ermittelt.
+			
+			Ausschluss-Filter (Haupt-PRG): Zähler und Notification ergänzt in  
+			ZDF_PageMenu, ZDF_RubrikSingle, ZDF_FlatListEpisodes.
+			Ausschluss-Filter (ARDnew): Zähler und Notification ergänzt in
+			get_json_content, ARDVerpasst_get_json, ARD_FlatListEpisodes.
+			ZDF_getApiStreams: Austausch mit Inhaltstext der Webseite falls größer als
+			Inhaltstext in der json-Liste.
+
 08.12.2024	5.1.5
 			AudioPodcastDeSingle (Audiothek): Hochkommata entfernt repl_json_chars(Plot).
 			Modul my3Sat: Umstellung HBBTV-Api - neue Funktionen Search, PageMenu,

@@ -786,7 +786,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		msg2 = path
 		PLog("%s %s" % (msg1, msg2))
 		MyDialog(msg1, msg2, "")	
-		return li
+		return
 		
 	path=path.replace("%3A", ":")
 	page, msg = get_page(path=path, GetOnlyRedirect=True, header=ARDheaders, do_safe=True)
@@ -796,7 +796,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		msg1 = "Fehler in ARDStartRubrik: %s"	% title
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
-		return li
+		return
 	PLog(len(page))
 	page = page.replace('\\"', '*')						# quotierte Marks entf.
 
@@ -927,7 +927,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark, homeID=""):
 		msg1 = "Fehler in ARDPagination: %s"	% title
 		msg2=msg
 		MyDialog(msg1, msg2, '')	
-		return li
+		return
 	PLog(len(page))	
 	page = page.replace('\\"', '*')							# quotierte Marks entf.
 	
@@ -1964,7 +1964,8 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 	title_org=title;
 	icon = R("ard-mediathek.png")
 	
-	descr = get_summary_pre(path, ID="ARDnew",skip_verf=True,skip_pubDate=True)  # Modul util
+	# summary + title leer bei Call von get_streams_from_link:
+	descr = get_summary_pre(path, ID="ARDnew",skip_verf=False,skip_pubDate=False)  # Modul util
 	if len(descr) > (len(summary)):								# Param summary einschl. tagline
 	 summary = "%s\n" % descr
 
@@ -2011,7 +2012,10 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 		PLog("get_img")
 		image =  page["widgets"][0]["image"]
 		img = image["src"]
-		img_alt = image["alt"]								# n.v.
+		img_alt = image["alt"]								# n.verw.
+		img_title = image["title"]							# Ersatz für fehlenden Titel bei get_streams_from_link
+		if title_org == "":
+			title_org = img_title
 		img = img.replace('{width}', '640')
 		geoblock = page["widgets"][0]["geoblocked"]			# false, true
 		if geoblock:										# Geoblock-Anhang für title, summary
@@ -2019,7 +2023,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 			title = title + geoblock
 		else:
 			geoblock = ' | Geoblock: nein'
-		PLog("geoblock: %s, img: %s" % (geoblock, img))	
+		PLog("geoblock: %s, img: %s, img_title: %s" % (geoblock, img, img_title))	
 		
 		PLog("get_subtitles")
 		mediaCollection = page["widgets"][0]["mediaCollection"]
@@ -2034,7 +2038,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 		else:
 			sub_path=""	
 	except Exception as exception:
-		PLog(str(exception))
+		PLog("meta_data_error: " + str(exception))
 		sub_path=""
 	PLog("sub_path: " + sub_path)
 	
@@ -2101,7 +2105,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 		msg1 = "keine Streamingquelle gefunden: %s"	% title
 		PLog(msg1)
 		MyDialog(msg1, '', '')	
-		return li	
+		return	
 	#----------------------------------------------- 							# Livestream-Abzweig, Bsp. tagesschau24:
 	if "LIVESTREAM" in page["coreAssetType"]:
 		href = HLS_List[0].split("**")[-1]										# Das Erste#https://...master.m3u8
@@ -2366,7 +2370,7 @@ def SendungenAZ(title, CurSender="", homeID=''):
 			msg1 = u"Fehler in SendungenAZ:"
 			msg2 = msg
 			MyDialog(msg1, msg2, '')	
-			return li
+			return
 		else:	
 			Dict("store", 'ARDnew_AZ_%s' %sender, page) 	# Seite -> Cache: aktualisieren	
 	
@@ -2377,7 +2381,7 @@ def SendungenAZ(title, CurSender="", homeID=''):
 	if len(gridlist) == 0:				
 		msg1 = u'Keine Beiträge gefunden zu %s' % button	
 		MyDialog(msg1, '', '')					
-		return li	
+		return	
 							
 	for grid in gridlist:
 		button = stringextract('title":"', '"', grid)
@@ -2456,7 +2460,7 @@ def SendungenAZ_ARDnew(title, button, href, CurSender="", homeID=''):
 		msg1 = u"Fehler in SendungenAZ_ARDnew: %s"	% title
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
-		return li
+		return
 	PLog(len(page))
 	page = page.replace('\\"', '*')						# quotierte Marks entf., Bsp. \"query\"
 			
@@ -2495,25 +2499,20 @@ def SendungenAZ_ARDnew(title, button, href, CurSender="", homeID=''):
 # 22.08.2019 myhash und erste pageNumber geändert durch ARD (0, vorher 1) - dto. in ARDSearchnew
 # 27.06.2020 api-Codeanteile entfernt - s. SearchARDnew
 # 01.03.2023 ARD-Suchpfad wie SearchARDundZDFnew (page.ardmediathek -> api.ardmediathek)
-# 21.07.2024 Nutzung für Suchen nur in ARD od. ZDF (Vermeidung Absturzproblem nach Abbruch) 
+# 21.07.2024 Nutzung für Suchen nur in ARD od. ZDF (Vermeidung Absturzproblem nach Abbruch)
+# 20.12.2024 Nutzung für Medienlinks (eingefügt durch Yatse, Kore o.ä.)
 #
 def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 	PLog('SearchARDundZDFnew:');
 	PLog(title); PLog(homeID)
 	title_org=title
 	query_file 	= os.path.join(ADDON_DATA, "search_ardundzdf")
-	
-	# Test Medienlinks Video + Live:
-	#query="https://www.ardmediathek.de/video/Y3JpZDovL3dkci5kZS9CZWl0cmFnLXNvcGhvcmEtMDY5Y2M5N2MtZmViZC00YjFjLTk2NzItYTc0Yzk3ODM0N2E3"
-	#query="https://www.ardmediathek.de/live/Y3JpZDovL2JyLmRlL0xpdmVzdHJlYW0tQlItU8O8ZA"
 
 	if query == '':														# Liste letzte Sucheingaben
 		query = ARDHandleRecents(title, mode="load", query=query)
 	if query.startswith("http://") or query.startswith("https://"):		# Medienlink einschl. http://hbbtv..
 		PLog("medialink: " + query)
-		path = get_streams_from_link(query)								# Auswertung
-		if path:
-			ARDStartSingle(path, title="", summary="")
+		get_streams_from_link(medialink=query)							# Auswertung + Starten
 		query=""														# hier Ende für Medienlinks
 		
 	if  query == None or query.strip() == '':							# plugin Error vermeiden

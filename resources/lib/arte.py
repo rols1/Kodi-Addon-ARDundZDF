@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>50</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.11.2024
+#	Stand: 16.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -295,7 +295,7 @@ def EPG_Today():
 	if page == '':
 		msg1 = L(u"Programmabruf fehlgeschlagen") 
 		MyDialog(msg1, "", '')
-		return li
+		return
 		
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
@@ -370,7 +370,7 @@ def Arte_Search(query='', next_url=''):
 		msg1 = L(u'Fehler in Suche') + ": %s" % query
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
-		return li
+		return
 	PLog(len(page))
 				
 		
@@ -391,7 +391,7 @@ def Arte_Search(query='', next_url=''):
 		msg1 = L(u"leider keine Treffer zu")
 		msg2 = query
 		MyDialog(msg1, msg2, '')	
-		return li
+		return
 		
 	#														# Mehr-Beiträge? ArteMehr nicht geeignet
 	next_url,page_akt,page_anz,anz,next_page = get_next_url(str(page))
@@ -730,10 +730,13 @@ def Beitrag_Liste(url, title):
 # 29.09.2024 Ausfall api/opa/v3/, neu: www.arte.tv/hbbtvv2/.. (s. path2),
 #	ohne früheren Link zu den getrennten HBBTV-Quellen, s.a. fix arte 
 #	crawler #1010 zu mediathekview/MServer
+# 16.12.2024 Für Call von get_streams_from_link fehlende Parameter aus
+#	api_v2-Daten ergänzt
 #
 def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
-	PLog("SingleVideo: " + pid)
+	PLog("SingleVideo: " + pid) 
 	title_org = title
+
 	if pid.endswith("_de"):			# Bsp. ../de/109228-000-A_de
 		pid = pid[:-3]
 	PLog(pid)
@@ -755,16 +758,43 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 		msg1 = L(u'Fehler in SingleVideo') + ": %s" % title
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
-		return li
+		return
 	PLog(len(page))
 	page = page.replace('\\/', '/')
 	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
-	#RSave('/tmp2/x_artestreams_v2.json', py2_encode(page))	# Debug	
+	#RSave('/tmp2/x_artestreams_v2.json', py2_encode(page))	# Debug		
 
-	if summ == '':	# ev. nicht besetzt in Beitrag_Liste. Fehlt in stream_* Dateien
-		summ = stringextract('description":"',  '"', page)
-		summ=transl_json(summ); summ=repl_json_chars(summ)			# -> HLS_List, HBBTV_List, MP4_List
-	PLog("summ: " + summ)
+	try: 															# fehlende Daten für get_streams_from_link
+		objs = json.loads(page)["data"]["attributes"]
+		obj = objs["metadata"]
+		title_new = obj["title"]
+		summ_new = obj["description"]
+		dur_new = obj["duration"]["seconds"]
+		if dur_new == None:
+			dur_new = ""					
+		PLog('dur_new: ' + str(dur_new))
+		if dur_new:
+			dur_new = seconds_translate(dur_new)
+		img_new = obj["images"][0]["url"]
+			
+		obj = objs["restriction"]
+		geo_new  = obj["geoblocking"]["code"]
+
+		tag_new = "Dauer: %s\nGeoblock-Info: %s" % (dur_new, geo_new)	# hier ohne Verfügbar von/bis
+		PLog("title_new: %s, dur_new: %s, tag_new: %s, summ_new: %s, img_new: %s" % (title_new,dur_new,tag_new,summ_new[:80],img_new)) 
+	except Exception as exception:
+		title_new="";dur_new="";tag_new="";summ_new="";img_new=""
+		PLog("page_error " + str(exception))		
+
+	if summ == '':													# ev. nicht besetzt in Beitrag_Liste. Fehlt in stream_* Dateien
+		summ = summ_new
+	if title == '':													# get_streams_from_link (leere Param außer pid)
+		title = title_new
+		title_org = title_new
+		dur = dur_new; geo = geo_new; tag = tag_new; img = img_new
+
+	summ=transl_json(summ); summ=repl_json_chars(summ)			# -> HLS_List, HBBTV_List, MP4_List
+	
 	
 	hls_add=""; mp4_add=""											# HLS_List + Titelzusatz für Trailer
 	trailer_hls, HLS_List = get_streams_api_v2(page,title_org,summ)
@@ -797,7 +827,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 		if SETTINGS.getSetting('pref_video_direct') == 'true':	
 			msg3 = L(u"Mehr Streamauswahl ohne Sofortstart!")
 		MyDialog(msg1, msg2, msg3)
-		return li
+		return
 	
 	if SETTINGS.getSetting('pref_video_direct') == 'true':			# Sofortstart hier (s.o.) + raus
 		PLog('Sofortstart: SingleVideo')

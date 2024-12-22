@@ -57,8 +57,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>226</nr>										# Numerierung für Einzelupdate
-VERSION = '5.1.5'
-VDATE = '13.12.2024'
+VERSION = '5.1.6'
+VDATE = '22.12.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -9498,7 +9498,8 @@ def ZDF_get_navi(DictID, title, homeID=""):
 	
 ###################################################################################################
 # ZDF-Suche:
-# 
+# 	Aufruf durch SearchARDundZDFnew und ZDF_Search (pagenr)
+#
 def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	PLog("ZDF_Search:")
 	if 	query == '':	
@@ -10053,6 +10054,7 @@ def ZDF_FlatListEpisodes(sid):
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	PLog("ZDF_getApiStreams: " + scms_id)
+	PLog(path)
 
 	cdn_api=True
 	header=""
@@ -10097,6 +10099,12 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	availInfo = stringextract('"availabilityInfo":"',  '"', page) # FSK-Info? -> s.u. Dialog
 	availInfo = transl_json(availInfo)
 	channel = stringextract('"channel":"',  '"', page)
+	sharingUrl = stringextract('"sharingUrl":"',  '"', page)
+	if sharingUrl:
+		summ_new = get_summary_pre(sharingUrl, ID='ZDF',skip_verf=True,skip_pubDate=True)
+		if len(summ_new) > len(summ):						# Inhaltstexte von Webseite
+			summ = summ_new
+		
 	
 	HLS_List=[]; MP4_List=[]; HBBTV_List=[];				# MP4_List = download_list
 	# erlaubte Formate wie build_Streamlists:
@@ -10119,7 +10127,6 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 			
 	PLog("forms: %d" % len(forms))
 	
-#	Plot  = "%s||||%s" % (tag, summ)
 	line=''; skip_list=[]
 	for form in forms:
 		#PLog("form: " + form)
@@ -10212,7 +10219,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	if gui:											# ohne Gui
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	else:
-		return
+		return HLS_List, MP4_List, HBBTV_List		# für get_streams_from_link
 
 #----------------------------------------------
 # erzeugt / aktualsiert strm-Dateien für die komplette Liste 
@@ -11663,18 +11670,28 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 # 17.11.2019 mit Modul six + parse_qs erscheinen die Werte als Liste,
 #	Bsp: {'action': ['dirList']}, vorher als String: {'action': 'dirList'}.
 #	fparams wird hier in unicode erwartet, s. py2_decode(fparams) in addDir
+# 20.12.2024 Nutzung für Medienlinks (eingefügt durch Yatse, Kore o.ä.)
+#	-> get_streams_from_link
 #---------------------------------------------------------------- 
 def router(paramstring):
 	# paramstring: Dictionary mit
 	# {<parameter>: <value>} Elementen
 	paramstring = unquote_plus(paramstring)
-	# PLog(' router_params1: ' + paramstring)
+	#PLog(' router_params1: ' + paramstring)
 		
 	PLog(type(paramstring));
 	if paramstring:	
 		params = dict(parse_qs(paramstring[1:]))
 		PLog(' router_params_dict: ' + str(params))
 		try:
+			if 'medialink' in params:					# Videolink - externe Übergabe, interne 
+				if len(params) == 1:					#	Übergabe s. SearchARDundZDFnew
+					medialink = params["medialink"][0]
+					get_streams_from_link(medialink)
+					PLog("router_exit")
+#					Main()
+					return
+
 			if 'content_type' in params:
 				if params['content_type'] == 'video':	# Auswahl im Addon-Menü
 					Main()
@@ -11682,7 +11699,8 @@ def router(paramstring):
 			PLog('router dirID: ' + params['dirID'][0])
 			PLog('router fparams: ' + params['fparams'][0])
 		except Exception as exception:
-			PLog(str(exception))
+			PLog("router_error: " + str(exception))
+			Main()										# Default
 
 		if params['action'][0] == 'dirList':			# Aufruf Directory-Listing
 			newfunc = params['dirID'][0]
@@ -11765,7 +11783,7 @@ def router(paramstring):
 			else:
 				func()
 		else:
-			PLog('router action-params: ?')
+			PLog('missing_router_action-params')
 	else:
 		# Plugin-Aufruf ohne Parameter
 		Main()
@@ -11784,8 +11802,7 @@ if __name__ == '__main__':
 		router(sys.argv[2])
 		# Memory-Bereinig. unwirksam gegen Raspi-Klemmer (s. SenderLiveListe)
 	except Exception as e: 
-		msg = str(e)
-		PLog('network_error_main: ' + msg)
+		PLog('network_error_main: ' + str(e))
 
 
 
