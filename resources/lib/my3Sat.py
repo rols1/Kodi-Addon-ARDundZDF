@@ -12,8 +12,8 @@
 #	Nov./Dez. 2024 Umstellung Web-scraping -> api hbbtv.zdf.de
 # 	
 ################################################################################
-# 	<nr>26</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.12.2024
+# 	<nr>27</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -313,7 +313,7 @@ def SendungenAZlist(name, path):
 		title	= stringextract('title="', '"', rec)
 		href	= stringextract('href="', '"', rec)				# ../sendungen-a-z?group=b
 		href	= DreiSat_BASE + href
-		PLog(title)
+		PLog("Satz7: %s, %s" % (title, href))
 		if 'link is-disabled' in rec:							# Button inaktiv
 			thumb = R('icon-error.png')
 			letter = stringextract('true">', '<', rec)
@@ -342,7 +342,6 @@ def SendungenAZlist(name, path):
 def SendungenAZ(name, path): 
 	PLog('SendungenAZ: ' + name)
 
-	path = DreiSat_AZ
 	page, msg = get_page(path)	
 	if page == '':			
 		msg1 = "Fehler in SendungenAZ"
@@ -350,12 +349,12 @@ def SendungenAZ(name, path):
 		PLog(msg1)
 		MyDialog(msg1, msg2, '')
 		return
-		
-	li = xbmcgui.ListItem()
-	li = home(li, ID='3Sat')							# Home-Button		
 
 	content = blockextract('<picture class="">', page)
 	PLog(len(content))
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='3Sat')							# Home-Button		
 	
 	for rec in content:
 		sid=  stringextract('Linkziel:', '"', rec)
@@ -792,7 +791,7 @@ def CoverSingle(title, path, allcover=""):
 					break										# nur 1 cover -> Liste
 					
 	PLog("covers: %d" % len(covers))
-	skip_list=[]
+	skip_list=[]; anz=0
 	for cover in covers:		
 		for item in cover:
 			linktyp,title,dauer,tag,descr,img,sid = my3sat_content(item)
@@ -804,6 +803,7 @@ def CoverSingle(title, path, allcover=""):
 			if sid in skip_list:								# Doppel zu wide-cover verhindern
 				continue
 			skip_list.append(sid)
+			anz=anz+1
 			
 			if linktyp == "video":
 				path = DreiSat_HBBTV_HTML % sid
@@ -829,6 +829,11 @@ def CoverSingle(title, path, allcover=""):
 			else:
 				PLog("skip_linktyp: " + linktyp)
 		
+	if anz == 0:
+		icon = R('zdf-sendungen-az.png')
+		xbmcgui.Dialog().notification("leider keine Videos","",icon,3000, sound=True)
+		return
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #------------
