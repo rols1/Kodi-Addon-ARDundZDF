@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>9</nr>								# Numerierung für Einzelupdate
-#	Stand: 19.07.2024
+# 	<nr>10</nr>								# Numerierung für Einzelupdate
+#	Stand: 29.12.2024
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -35,6 +35,7 @@ elif PYTHON3:
 		pass
 
 # Standard:
+import time, datetime
 
 # Addonmodule:
 from resources.lib.util import *
@@ -53,7 +54,7 @@ AKT_FILTER	= ''
 if os.path.exists(FILTER_SET):	
 	AKT_FILTER	= RLoad(FILTER_SET, abs_path=True)
 AKT_FILTER	= AKT_FILTER.splitlines()					# gesetzte Filter initialiseren 
-
+THUMBNAIL_CHECK = os.path.join(ADDON_DATA, "thumbnail_check")
 
 ################################################################################
 
@@ -401,75 +402,115 @@ def FilterToolsWork(action):
 # Kodis Thumbnails-Ordner bereinigen
 # Hinw.: ClearUp (util) nicht geeignet (ohne Check einz. Dateien
 #	in Unterverz.)
-# 
-def ClearUpThumbnails():
-	PLog('ClearUpThumbnails:') 
+# 12/2024 autom. Bereinigung ergänzt (Tread-Start Haupt-PRG, 
+#	Zeitstempel THUMBNAIL_CHECK). Setting pref_thumbnail_days ist
+#	gleichzeitig Intervall und Löschalter (kleines Intervall=große
+#	Löschmenge)
+#
+def ClearUpThumbnails(nogui=""):
+	PLog('ClearUpThumbnails: ' + nogui) 
+	thumb=R("icon-clear.png")
+	notimsg1 = "Thumbnails-Bereinigung"
 	
-	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)				# Home-Button
-
+	now = time.time()											# Unix-Format 1735387316.4195263
+	stamp = str(now).split('.')[0]								# Zeitstempel (int)
+	PLog("stamp: " + stamp)
+	
 	THUMBNAILS = os.path.join(USERDATA, "Thumbnails") 
 	directory = THUMBNAILS
-	#directory = "/tmp/Thumbnails/"		# Debug
-	
 	akt_size_raw = get_dir_size(directory, raw=True)
 	akt_size = humanbytes(akt_size_raw)	
-	dialog = xbmcgui.Dialog()
 
-	#-----------------------									# 1. Auswahl Lösch-Alter
-	title = u"Bitte das Lösch-Alter in Tagen auswählen (Dateien älter als x Tage):"
-	day_list = ["1","5","10","30","100"]
-	sel = dialog.select(title, day_list)	
-	if sel < 0:
-		return
+	if nogui == "":												# Start aus Menü
+		li = xbmcgui.ListItem()
+		li = home(li, ID=NAME)				# Home-Button
+		dialog = xbmcgui.Dialog()
 
-	sel = day_list[sel]
-	PLog("Auswahl: " + sel)
+		#-------------------------------						# 1. Auswahl Lösch-Alter
+		title = u"Bitte das Lösch-Alter in Tagen auswählen (Dateien älter als x Tage):"
+		day_list = ["1","5","10","30","100"]
+		sel = dialog.select(title, day_list)	
+		if sel < 0:
+			return
+		sel = day_list[sel]
+		
+		title = u"Thumbnails-Bereinigung starten?"
+		msg1 = u"Aktuelle Größe: [B]%s[/B] | löschen älter als: [B]%s[/B] Tag(e)" % (akt_size, sel)
+		msg2 = u"Thumbnails-Bereinigung jetzt starten?"
+		msg3 = u"Rückgängig nicht möglich!"
+		ret = MyDialog(msg1, msg2, msg3, ok=False, cancel='Abbruch', yes='JA', heading=title)
+		PLog(ret)
+		if ret != 1:
+			return	
+		PLog("days_selected: " + sel)
+
+	else:														# Start aus Haupt-PRG (Thread)
+		sel = SETTINGS.getSetting('pref_thumbnail_days')		# Intervall + Lösch-Alter aus Setting
+		if os.path.exists(THUMBNAIL_CHECK) == False:			# Zeitstempel noch nicht gesetzt,
+			RSave(THUMBNAIL_CHECK, stamp)						# 	setzen und Ende
+			return
+		else:
+			PLog("set_days: " + sel)
+			last_check = RLoad(THUMBNAIL_CHECK, abs_path=True)
+			last_check = last_check.strip()
+			maxtime = int(last_check) + int(sel)*86400
+			PLog("last_check: %s, maxtime: %d, now: %d" % (last_check, maxtime, now))
+			diff = 	maxtime - now
+			if now >= maxtime:									# Diff last_check / Tage-Auswahl erreicht?
+				PLog("reach_day_limit: diff %d" % diff)			# -> Bereinigung
+			else:
+				remain = seconds_translate(diff)				# Tage-Auswahl noch nicht erreicht -> Ende
+				PLog("reach_day_limit_in: %s (diff %d sec)" % (remain, diff))
+				return		
 	
-	#-----------------------									# 2. Bereinigung / Abbruch
-	title = u"Thumbnails-Bereinigung starten?"
-	msg1 = u"Aktuelle Größe: [B]%s[/B] | Lösch-Alter: [B]%s[/B] Tage" % (akt_size, sel)
-	msg2 = u"Thumbnails-Bereinigung jetzt starten?"
-	msg3 = u"Rückgängig nicht möglich!"
-	ret = MyDialog(msg1, msg2, msg3, ok=False, cancel='Abbruch', yes='JA', heading=title)
-	PLog(ret)
-	if ret != 1:
-		return
+	#-------------------------------							# 2. Bereinigung
 	
+	PLog("days_selected: " + sel)
 	maxdays = int(sel)
 	PLog("ClearUp_Start: %s | days: %d" % (directory, maxdays))
 	max_secs = maxdays*86400 									# 1 Tag=86400 sec
-	now = time.time()
-	cnt=0; del_cnt=0; 
-	for dirpath, dirnames, filenames in os.walk(directory):
-		for f in filenames:
-			fp = os.path.join(dirpath, f)						# Filepath
-			#  PLog(fp)				# Debug
-			# skip symbolic link
-			if not os.path.islink(fp):
-				cnt = cnt+1
-				if os.stat(fp).st_mtime < (now - max_secs):
-					os.remove(fp)
-					del_cnt = del_cnt+1
+	cnt=0; del_cnt=0; ok=True 
+	try:
+		for dirpath, dirnames, filenames in os.walk(directory):
+			for f in filenames:
+				fp = os.path.join(dirpath, f)					# Filepath
+				#  PLog(fp)				# Debug
+				# skip symbolic link:
+				if not os.path.islink(fp):
+					cnt = cnt+1
+					if os.stat(fp).st_mtime < (now - max_secs):
+						os.remove(fp)
+						del_cnt = del_cnt+1
+	except Exception as exception:
+		ok=False
+		msg2 = str(exception)	
+		PLog("clearup_error " + msg2)		
 	
-	#-----------------------									# 3. Abschluss-Info
-	if ret == False:
-		msg1 = u"Bereinigung fehlgeschlagen"
-		msg2 = u"Fehler siehe Addon-Log (Plugin-Logging einschalten)"
-		msg3 = ""
-		MyDialog(msg1, msg2, '')
-		return
+	#-------------------------------							# 3. Abschluss-Info
 	
+	RSave(THUMBNAIL_CHECK, stamp)								# Zeitstempel aktualisieren
 	new_size_raw = get_dir_size(directory, raw=True)
 	new_size = humanbytes(new_size_raw)	
 	win = akt_size_raw - new_size_raw
-	PLog(del_cnt); PLog(win)
-	msg1 = u"Fertig | Entfernte Thumbnails: [B]%s[/B]" % del_cnt
-	msg2 = u"Größe vorher / nachher: %s / %s." % (akt_size, new_size)
-	msg3 = "Speicherplatz unverändert."
-	if win > 0:
-		msg3 = "Speicherplatz freigegeben: [B]%s[/B]." % humanbytes(win)	
-	MyDialog(msg1, msg2, msg3)
+	PLog("del_cnt: %d, win: %d" % (del_cnt, win))
+	if ok:
+		msg1 = u"Fertig | Entfernte Thumbnails: [B]%s[/B]" % del_cnt
+		msg2 = u"Größe vorher / nachher: %s / %s." % (akt_size, new_size)
+		msg3 = "Speicherplatz unverändert."
+		notimsg2 = u"vor/nach: %s/%s" % (akt_size, new_size)
+
+		if win > 0:
+			msg3 = "Speicherplatz freigegeben: [B]%s[/B]." % humanbytes(win)
+			notimsg2 = "frei: [B]%s[/B]" % humanbytes(win)
+	else:
+		msg1 = "Problem in Bereinigung! Fehler:"
+		msg3=""
+		notimsg1 = "Bereinigungsproblem:"; notimsg2 = msg2
+		
+	if nogui == "":											# Start aus Menü
+		MyDialog(msg1, msg2, msg3)
+	else:													# Start aus Haupt-PRG
+		xbmcgui.Dialog().notification(notimsg1,notimsg2,thumb,5000)	
 			
 	return														# Verbleib in Tools-Liste
 	
@@ -481,7 +522,8 @@ def ClearUpThumbnails():
 #
 def get_foruminfo():
 	PLog('get_foruminfo:') 
-	
+	# return "",""		# Debug
+
 	dt=''
 	path = "https://www.kodinerds.net/index.php?thread/64244-release-kodi-addon-ardundzdf/"
 	page, msg = get_page(path=path)

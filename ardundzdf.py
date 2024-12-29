@@ -44,21 +44,23 @@ from datetime import timedelta
 import json				# json -> Textstrings
 import string
 import importlib		# dyn. Laden zur Laufzeit, s. router
+from threading import Thread
 
 
 # ständige Addonmodule - Rest dyn. in router
 import resources.lib.updater as updater	
 from resources.lib.util import *
 import resources.lib.EPG as EPG
+import resources.lib.tools as tools
 import resources.lib.epgRecord as epgRecord
 	
 																		
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>226</nr>										# Numerierung für Einzelupdate
+# 	<nr>227</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.6'
-VDATE = '22.12.2024'
+VDATE = '29.12.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -258,13 +260,12 @@ if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden
 			os.remove(EPGACTIVE)
 			is_activ=False
 	if is_activ == False:									# EPG-Daten veraltet, neu holen
-		from threading import Thread
 		bg_thread = Thread(target=EPG.thread_getepg, args=(EPGACTIVE, DICTSTORE, PLAYLIST))
 		bg_thread.start()				
 
 tci = int(SETTINGS.getSetting('pref_tv_store_days'))		# TV-Livestream-Quellen aktualisieren
 if tci >= 5:												# Thread nicht bei 0 od. 1 aktivieren
-	ID = "ard_streamlinks"									# stellvertretend auch für zdf + iptv
+	ID = "ard_streamlinks"									# ard stellvertretend für zdf + iptv
 	dictfile = os.path.join(DICTSTORE, ID)
 	if os.path.exists(dictfile):
 		mtime = os.path.getmtime(dictfile)
@@ -278,12 +279,18 @@ if tci >= 5:												# Thread nicht bei 0 od. 1 aktivieren
 		if cache_diff <= 43200:									# Refresh bereits 12 Std. vor Ablauf möglich
 			PLog("CacheLimit_reached: %d" % int(now-CacheLimit))			
 			bg_thread = Thread(target=EPG.thread_getstreamlinks, args=())
-			bg_thread.start()				
+			bg_thread.start()
+			
+tci = int(SETTINGS.getSetting('pref_thumbnail_days'))		# Kodi-Thumbnails-Ordner bereinigen
+if tci > 0:													# Thread nicht bei 0 aktivieren
+	PLog("clear_thumbnailcache: tci %d" % tci)
+	nogui="1"	
+	bg_thread = Thread(target=tools.ClearUpThumbnails, args=(nogui))
+	bg_thread.start()				
 								
 if SETTINGS.getSetting('pref_dl_cnt') == 'true':			# laufende Downloads anzeigen
 	if os.path.exists(DL_CHECK) == False:					# Lock beachten (Datei dl_check_alive)						
 		PLog("Haupt_PRG: get_active_dls")
-		from threading import Thread
 		bg_thread = Thread(target=epgRecord.get_active_dls, args=())
 		bg_thread.start()
 	else:													# Check Dateileiche
@@ -321,7 +328,6 @@ if os.path.exists(STRM_SYNCLIST):							# strm-Liste für Synchronisierung
 		open(STRM_CHECK, 'w').close()						# Lock strm_check_alive anlegen
 		PLog("Haupt_PRG: start_strm_sync")
 		import resources.lib.strm as strm
-		from threading import Thread
 		bg_thread = Thread(target=strm.strm_sync, args=())
 		bg_thread.start()	
 else:
@@ -577,7 +583,7 @@ def Main():
 		summ = "%s\n-%s" % (summ, "strm-Tools")
 	if SETTINGS.getSetting('pref_playlist') == 'true':
 		summ = "%s\n-%s\n-%s" % (summ, "PLAYLIST-Tools", "Settings inputstream.adaptive")
-	summ = "%s\n-%s" % (summ, "Kodis Thumbnails-Ordner bereinigen")
+	summ = "%s\n-%s" % (summ, "Kodi-Thumbnails-Ordner bereinigen")
 	summ = "%s\n\n%s" % (summ, u"[B]Einzelupdate[/B] (für einzelne Dateien des Addons)")
 	fparams="&fparams={}" 
 	addDir(li=li, label='Infos + Tools', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
@@ -725,8 +731,8 @@ def InfoAndFilter():
 			
 	dz = get_dir_size(THUMBNAILS)							# Thumbnails-Ordner bereinigen
 	dz = "[B](%s)[/B]" % dz
-	title = u"Kodis Thumbnails-Ordner bereinigen %s" % dz	
-	tag = u'[B]Kodis Thumbnails-Ordner bereinigen[/B]'
+	title = u"Kodi-Thumbnails-Ordner bereinigen %s" % dz	
+	tag = u'[B]Kodi-Thumbnails-Ordner bereinigen[/B]'
 	summ = u"Das Bereinigen schafft Platz, indem es ältere Bilder entfernt (Auswahl: Dateien älter als 1-100 Tage)."
 	summ = u"%s\nDadurch kann sich die Anzeige älterer Beiträge anfangs verzögern." % summ
 	summ = u"%s\n\nDer aktuelle Füllstand %s kann auch im Menü Addon-Infos eingesehen werden." % (summ, dz)
@@ -3658,7 +3664,6 @@ def ARDSportBilder(title, path, img):
 				image += 1
 			
 	if background and len(path_url_list) > 0:				# Übergabe Url-Liste an Thread
-		from threading import Thread	# thread_getfile
 		textfile=''; pathtextfile=''; storetxt=''; url=img_src; 
 		fulldestpath=local_path; notice=True; destdir="Slide-Show-Cache"
 		now = datetime.datetime.now()
@@ -5674,7 +5679,6 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 									# Untertiteldatei hinzufügen:
 	PLog(dtyp); PLog(SETTINGS.getSetting('pref_load_subtitles'))
 	
-	from threading import Thread	# thread_getfile
 	path_url_list=''; timemark=''; notice=True
 	background_thread = Thread(target=thread_getfile, args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark,notice,sub_path,dtyp))
 	background_thread.start()		
@@ -8575,7 +8579,6 @@ def BilderDasErsteSingle(title, path):
 			
 	if background and len(path_url_list) > 0:				# Thread-Call mit Url- und Textliste
 		PLog("background: " + str(background))
-		from threading import Thread						# thread_getpic
 		folder = fname 
 		background_thread = Thread(target=thread_getpic,
 			args=(path_url_list, text_list, folder))
@@ -11338,7 +11341,6 @@ def ZDF_BildgalerieSingle(path, title, li=''):
 			
 	if background and len(path_url_list) > 0:				# Thread-Call mit Url- und Textliste
 		PLog("background: " + str(background))
-		from threading import Thread						# thread_getpic
 		folder = fname 
 		background_thread = Thread(target=thread_getpic,
 			args=(path_url_list, text_list, folder))
