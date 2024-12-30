@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>227</nr>										# Numerierung für Einzelupdate
+# 	<nr>228</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.6'
-VDATE = '29.12.2024'
+VDATE = '30.12.2024'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -733,6 +733,9 @@ def InfoAndFilter():
 	dz = "[B](%s)[/B]" % dz
 	title = u"Kodi-Thumbnails-Ordner bereinigen %s" % dz	
 	tag = u'[B]Kodi-Thumbnails-Ordner bereinigen[/B]'
+	tci = int(SETTINGS.getSetting('pref_thumbnail_days'))	# autom. Bereinigung aktiviert?
+	if tci > 0:
+		tag = "%s\nautom. Bereinigung aktiviert (Intervall: %d Tage)" % (tag, tci)
 	summ = u"Das Bereinigen schafft Platz, indem es ältere Bilder entfernt (Auswahl: Dateien älter als 1-100 Tage)."
 	summ = u"%s\nDadurch kann sich die Anzeige älterer Beiträge anfangs verzögern." % summ
 	summ = u"%s\n\nDer aktuelle Füllstand %s kann auch im Menü Addon-Infos eingesehen werden." % (summ, dz)
