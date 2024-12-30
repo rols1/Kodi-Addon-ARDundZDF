@@ -2039,24 +2039,25 @@ def CalculateDuration(timecode):
 # Rückgabe:  		1d, 0h, 0m, 0s	(days=True)
 #		oder:		0h:0d:0s			
 def seconds_translate(seconds, days=False):
-	#PLog('seconds_translate:')
-	#PLog(seconds)
-	seconds_str = str(seconds)
+	PLog('seconds_translate: %s' % str(seconds))
 
-    	if "." in str(seconds_str):                 # Ausschluss Basis 1000                                                                                                                                   
-        	seconds = seconds_str.split(".")[0]
-    	if seconds == '' or seconds == 0  or seconds == 'null':
-        	return ''
-    	if seconds < 60:
+	try:
+		seconds = int(seconds)
+	except Exception as exception:
+		PLog("seconds_error: " + str(exception))
+		return ""	
+	
+	if seconds < 60:
 		return "%s sec" % seconds
+
 	# VM optimisation                                                                                                                                                                                     
-    	sec_in_day = 24 * 3600
-    	day = seconds // sec_in_day
-    	time = seconds % sec_in_day
-    	hour = time // 3600
-    	time %= 3600
-    	minutes = time // 60
-    	seconds = time % 60
+	sec_in_day = 24 * 3600
+	day = seconds // sec_in_day
+	time = seconds % sec_in_day
+	hour = time // 3600
+	time %= 3600
+	minutes = time // 60
+	seconds = time % 60
 
 	if days:
 		#PLog("%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds))
