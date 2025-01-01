@@ -12,8 +12,8 @@
 #	Nov./Dez. 2024 Umstellung Web-scraping -> api hbbtv.zdf.de
 # 	
 ################################################################################
-# 	<nr>27</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.12.2024
+# 	<nr>28</nr>										# Numerierung für Einzelupdate
+#	Stand: 01.01.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -485,6 +485,7 @@ def SendungenDatum(title, dayID):
 			prgID = item["id"]		
 			head = item["head"]								# "Dokumentation | Natur"
 			title = item["title"]
+			title = unescape(title); title = repl_json_chars(title)
 			img = item["img"]
 			tim = item["tim"]								# "09:45"
 			if "foot" in item:								#"03.12.2024", fehlt in lauf. Sendung
