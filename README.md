@@ -103,7 +103,7 @@ Funktionen:
 - [Settings inputstream.adaptive-Addon öffnen (Bandbreite, Auflösung und weitere Einstellungen)](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#11-settings-inputstreamadaptive-addon)
 - [Einzelupdate für einzelne Dateien und Module im Addon - siehe auch Updates](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#12-einzelupdate-einzelne-dateien-und-module)
 
-#### Favoriten, Merkliste, strm-Dateien
+#### [Favoriten, Merkliste, strm-Dateien](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/06.-Settings-Favoriten---Merkliste)
 - Kodi-Favoriten lassen sich einblenden und im Addon aufrufen
 - interne Merkliste mit Ordnerverwaltung und Filterfunktion - optional: netzwerkweit mit lokaler Synchronisation
 - strm-Dateien für einzelne Videos und Serien (einschl. Serienüberwachung für die meisten ARD- und ZDF-Serien)
