@@ -105,8 +105,8 @@ Funktionen:
 
 #### [Favoriten, Merkliste, strm-Dateien](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/06.-Settings-Favoriten---Merkliste)
 - Kodi-Favoriten lassen sich einblenden und im Addon aufrufen
-- interne Merkliste mit Ordnerverwaltung und Filterfunktion - optional: netzwerkweit mit lokaler Synchronisation
-- strm-Dateien für einzelne Videos und Serien (einschl. Serienüberwachung für die meisten ARD- und ZDF-Serien)
+- [interne Merkliste mit Ordnerverwaltung und Filterfunktion](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/06.-Settings-Favoriten---Merkliste#2-ardundzdf-merkliste-verwenden-getrennt-von-favoriten) - optional: netzwerkweit mit lokaler Synchronisation
+- [strm-Dateien für einzelne Videos und Serien](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/09.-strm-Modul) (einschl. Serienüberwachung für die meisten ARD- und ZDF-Serien)
 
 #### Updates
 - entweder mit dem integrierten <b>Updatemodul (autom. Anpassung an Kodi-Version)</b> oder via <b>kodinerds-Repo</b>
@@ -120,10 +120,10 @@ Funktionen:
 - TagesschauXL (https://www.tagesschau.de/ und https://www.ardmediathek.de/tagesschau24)
 - phoenix (https://www.phoenix.de/ und https://www.ardmediathek.de/phoenix)
 - Arte-Kategorien
-- "Zuletzt gesehen"-Funktion (im Tools-Menü)
-- Video-Playlist einschl. Archiv-Funktion (im Tools-Menü)
-- strm-Modul, einschließlich Serien-Überwachung
-- Suche im Datenbestand von MediathekView (s. Credits)
+- [Zuletzt gesehen-Funktion](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#3-zuletzt-gesehen) (im Tools-Menü)
+- [Video-Playlist](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/10.-PLAYLIST-Modul) einschl. Archiv-Funktion (im Tools-Menü)
+- [strm-Modul](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/09.-strm-Modul), einschließlich Serien-Überwachung
+- [Suche im Datenbestand von MediathekView](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/01.-Settings---Allgemein#10-mediathekviewweb-suche-verwenden) (s. Credits)
 
 
 INSTALLATION:
