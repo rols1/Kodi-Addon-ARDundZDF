@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>92</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.12.2024
+# 	<nr>93</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.01.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2675,7 +2675,7 @@ def ARDHandleRecents(title, mode="load", query=""):
 			ret = xbmcgui.Dialog().select('Sucheingabe', search_list, preselect=0)
 			if ret == -1:
 				PLog("abort_search_list")
-				return None
+				return ""
 			elif ret == 0:
 				query = ''
 			else:
