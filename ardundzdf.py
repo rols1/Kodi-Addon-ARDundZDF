@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>228</nr>										# Numerierung für Einzelupdate
+# 	<nr>229</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.6'
-VDATE = '30.12.2024'
+VDATE = '07.01.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2123,6 +2123,8 @@ def AudioPodcastDeSearch(dest_url="", query="", next_url=""):
 					return ""
 				query = py2_encode(query)							# encode für quote
 				path = base % quote(query)
+			else:
+				path = base % quote(query)
 		
 		page, msg = get_page(path, do_safe=False)					# nach quote ohne do_safe 	
 		if page == '' or page.find("<title>Server Error</title>") > 0 or page.find("<h5>") < 0:	
@@ -2325,6 +2327,8 @@ def AudioPodcastDeSingle(url, title, thumb, Plot, artist=""):
 		tag = "%s %s" % (tag, vsize)
 		summ = Plot
 		mp3_url = url; img = thumb
+		PLog("Satz10:"); PLog(title); PLog(mp3_url); PLog(img); PLog(Plot);
+		
 		title=py2_encode(title); mp3_url=py2_encode(mp3_url);
 		img=py2_encode(img); Plot=py2_encode(Plot);	
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
@@ -2334,7 +2338,8 @@ def AudioPodcastDeSingle(url, title, thumb, Plot, artist=""):
 		
 		title = "Zur Podcast-Reihe [B]%s[/B]" % artist				# Button -> Podcast-Reihe
 		tag = "%s und verwandten Themen" % title
-		fparams="&fparams={'query': '%s'}" % artist
+		itle=py2_encode(title);
+		fparams="&fparams={'query': '%s'}" % quote(artist)
 		addDir(li=li, label=title, action="dirList", dirID="AudioPodcastDeSearch", 
 			fanart=R('podcast-de.png'), thumb=R('ard-suche.png'), tagline=tag, fparams=fparams)
 	
@@ -2442,14 +2447,14 @@ def Audio_get_sendung(url, title, page=''):
 		page = page[pos:]
 		
 	page = page.replace('\\"', '*')
-	items = blockextract('"id":', page, '}]},{')					# bis nächste "id" (nicht trennsicher)
+	items = blockextract('"id":', page, '"id":')
 	PLog(len(items))
 	
 	PLog("Mark0")
 	cnt=0; dl_cnt=0; downl_list=[]; skip_list=[]
 	for item in items:		
 		mp3_url=''; web_url=''
-		if item.find("publishDate") < 0 and  item.find("publicationStart") < 0:
+		if item.find("publishDate") < 0 and  item.find("publicationStart") < 0:	# kein Beitrag
 			continue
 		mp3_url, web_url, attr, img, dur, title, summ, source, sender, pubDate = Audio_get_items_single(item)		
 		if title in skip_list:										# mögl. bei programsets mit Einzelbeiträgen
@@ -2632,7 +2637,7 @@ def Audio_get_nexturl(li, url_org, title_org, elements, cnt, myfunc):
 		PLog("url: " + url)	
 		PLog("elements: %s, offset: %s, new_offset: %d, limit: %d" % (elements, offset, new_offset, limit))
 
-		if new_offset < int(elements):
+		if new_offset+1 < int(elements):
 			tag = u"Mehr (ab Beitrag %d von %s)" % (new_offset+1, elements)
 			PLog(tag);
 			title_org=py2_encode(title_org); url=py2_encode(url);
@@ -4510,15 +4515,15 @@ def ARDSportMonatstorSingle(title, path, img):
 	
 	base = "https://www.sportschau.de"
 	if path.endswith("/abstimmung"):
-		li = home(li, ID='ARD')						# Home-Button
+		li = home(li, ID='ARD')								# Home-Button
 		cnt = ARDSportMedia(li, title, page)
 	if path.endswith("/archiv"):	
-		items = blockextract('data-v="', page)		# Sliderboxen je Jahrzehnt	
+		items = blockextract('data-v="', page)				# Sliderboxen je Jahrzehnt	
 		PLog("archiv_or_statistikspieler")
 		PLog(len(items))
 		for item in items:
-			ARDSportSlider(li, item, skip_list=[], img='')		# -> json-extract
-	if path.endswith("/statistikspieler-sp-102.html"):
+			ARDSportSlider(li, item, skip_list=[], img='')	# -> json-extract
+	if path.endswith("/statistikspieler-sp-102.html"):		# die besten Torschützen
 		items = blockextract('class="teaser-xs__link"', page)			
 		PLog(len(items))
 		for item in items:
@@ -4923,7 +4928,7 @@ def ARDSportLive(title, skip_video=""):
 #----------------------------------------------------------------
 # holt Playerdaten bei data-v="..
 def ARDSportgetPlayer(item):
-	PLog("ARDSportgetPlayer:")
+	PLog("ARDSportgetPlayer:" + item[:60])
 
 	pos1=item.find('{'); pos2=item.rfind('}')
 	PLog(pos1); PLog(pos2)
@@ -5042,6 +5047,7 @@ def ARDSportMedia(li, title, page, path=""):
 #
 def ARDSportMediaPlayer(li, item_data): 
 	PLog('ARDSportMediaPlayer:')
+	PLog(item_data[:80])
 	
 	player=''; live=False; title='';  mp3_url=''; stream_url=''; 
 	img=''; verf=''; tag=''; summ=''; Plot=''; 
@@ -5267,9 +5273,9 @@ def ARDSportSliderSingle(url, title, thumb, Plot, firstblock=False):
 	mediatype=""
 	items=[]
 	if "/tor-des-monats/" in url:				# mehrere Beiträge "Tore des Monats"
-		items = blockextract('class="mediaplayer', page, '"MediaPlayer"')
+		items = blockextract(' data-v="', page, '"MediaPlayer"')
 		PLog("mediaplayer_items: %d" % len(items))
-		if len(items) == 0:						# Beiträge erst auf Folgeseiten
+		if len(items) == 0 or items[0].find('"MediaPlayer"') == -1:	 # Beiträge erst auf Folgeseiten
 			items = blockextract('<div class="teaser__media">', page)
 			PLog("teaserlink_items: %d" % len(items))
 			base = "https://www.sportschau.de"
@@ -5313,8 +5319,8 @@ def ARDSportSliderSingle(url, title, thumb, Plot, firstblock=False):
 					PLog(msg2)
 					return
 				PLog("firstblock: " + str(items[:1])[:60] )
-			if 'class="v-instance" data-v="' in page:
-				items = blockextract('class="v-instance" data-v="', page, '"MediaPlayer"')	# erster json-Bereich
+			if 'data-v="' in page:
+				items = blockextract('data-v="', page, '"MediaPlayer"')		# erster json-Bereich
 				PLog(len(items))
 				item = items[0]
 				data  = ARDSportgetPlayer(item)			# json-Inhalt
@@ -5332,7 +5338,7 @@ def ARDSportSliderSingle(url, title, thumb, Plot, firstblock=False):
 			return										# erford. für Abschluss		
 			
 	else:	
-		item = stringextract('class="v-instance" data-v="', '"MediaPlayer"', page)	# erster json-Bereich
+		item = stringextract('data-v="', '"MediaPlayer"', page)	# erster json-Bereich
 		items.append(item) 
 		
 	if len(items) == 0:									# z.B. Verweis auf https://www.zdf.de/live-tv
@@ -8727,6 +8733,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	PLog('mediatype: ' + mediatype); 
+	fcnt=0															# gefiltert-Zähler	
 	
 	PLog("stage" in jsonObject); PLog("teaser" in jsonObject); PLog("results" in jsonObject);		
 	if "stage" in jsonObject or "teaser" in jsonObject or "results" in jsonObject:
@@ -8745,7 +8752,6 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 			entryObject = jsonObject["results"]
 			PLog("results: %d" % len(entryObject))
 		
-		fcnt=0														# gefiltert-Zähler	
 		for entry in entryObject:
 			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry,mark=mark,validchars=validchars)
 			label=""
@@ -11694,7 +11700,7 @@ def router(paramstring):
 					medialink = params["medialink"][0]
 					get_streams_from_link(medialink)
 					PLog("router_exit")
-#					Main()
+					# Main()
 					return
 
 			if 'content_type' in params:
