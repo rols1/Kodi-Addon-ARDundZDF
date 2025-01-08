@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>117</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.12.2024
+# 	<nr>118</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.01.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -61,9 +61,6 @@ import string, textwrap
 import shlex			# Parameter-Expansion für subprocess.Popen (os != windows)
 	
 # Globals
-PYTHON2 = sys.version_info.major == 2	# Stammhalter Pythonversion 
-PYTHON3 = sys.version_info.major == 3
-
 NAME			= 'ARD und ZDF'
 KODI_VERSION 	= xbmc.getInfoLabel('System.BuildVersion')
 KODI_MAJOR 		= int(re.search(r'(\d+)', KODI_VERSION).group(1))	
@@ -73,9 +70,9 @@ ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path')	# Basis-Pfad Addon
+ADDON_PATH    	= SETTINGS.getAddonInfo('path')		# Basis-Pfad Addon
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
-PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
+PLUGIN_URL 		= sys.argv[0]						# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
 
 DEBUG			= SETTINGS.getSetting('pref_info_debug')
@@ -88,7 +85,7 @@ ICON_WARNING 			= "icon-warning.png"
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
 
-ARDStartCacheTime = 300						# 5 Min.
+ARDStartCacheTime = 300								# 5 Min.
 
 #---------------------------------------------------------------- 
 # prüft addon.xml auf mark - Rückgabe True, False
@@ -430,17 +427,7 @@ def  make_newDataDir(store_Dirs, filterfile, filter_pat):
 		return True
 	else:
 		return str(exception)
-		
-#---------------------------
-# sichert Verz. für check_DataStores für Daten-Migration 
-#	Leia->Matrix. Wegen Problemen auf verschied. Systemen
-# nicht mehr genutzt . s. changelog V1.5.6
-# 
-def getDirZipped(path, zipf):
-	PLog('getDirZipped:')	
-	for root, dirs, files in os.walk(path):
-		for file in files:
-			zipf.write(os.path.join(root, file)) 
+
 #----------------------------------------------------------------  
 # Die Funktion Dict speichert + lädt Python-Objekte mittels Pickle.
 #	Um uns das Handling mit keys zu ersparen, erzeugt die Funktion
@@ -596,6 +583,7 @@ def check_file(fpath):
 #---------------------------------------------------------------- 
 # leere Verz. rekursiv löschen, z.B. SLIDESTORE
 # Aufrufer: Bildershow-Funktionen
+# Pathlib-Modul (schneller) für PY2 nicht verfügbar
 def DelEmptyDirs(directory):
 	PLog('DelEmptyDirs:')
 	cnt_dirs=0
@@ -1416,25 +1404,22 @@ def get_sqlite_Cursor(kodi_db):
 # Falls abs_path nicht gesetzt, wird der Pluginpfad zurückgegeben, sonst der absolute Pfad
 # für lokale Icons üblicherweise PluginAbsPath.
 def R(fname, abs_path=False):	
-	PLog('R(fname): %s' % fname); # PLog(abs_path)
-	# PLog("ADDON_PATH: " + ADDON_PATH)
-	if abs_path:
-		try:
-			# fname = '%s/resources/%s' % (PluginAbsPath, fname)
-			path = os.path.join(ADDON_PATH,fname)
-			return path
-		except Exception as exception:
-			PLog(str(exception))
-	else:
-		if fname.endswith('png'):	# Icons im Unterordner images
-			fname = '%s/resources/images/%s' % (ADDON_PATH, fname)
-			fname = os.path.abspath(fname)
-			# PLog("fname: " + fname)
-			return os.path.join(fname)
+	PLog('R_fname: %s' % fname); # PLog(abs_path)
+	#PLog("ADDON_PATH: " + ADDON_PATH)
+	try:
+		if abs_path:
+			path = os.path.join(ADDON_PATH, fname)
 		else:
-			fname = "%s/resources/%s" % (ADDON_PATH, fname)
-			fname = os.path.abspath(fname)
-			return fname 
+			if fname.endswith('png'):					# Icons im Unterordner images
+				path = os.path.join(ADDON_PATH, 'resources', 'images', fname)
+			else:
+				path = os.path.join(ADDON_PATH, 'resources', fname)
+			path = os.path.abspath(path)
+		return path
+	except Exception as exception:
+		PLog('path_construct_error: %s' % str(exception))
+		return ""
+
 #----------------------------------------------------------------  
 # ersetzt Resource.Load von Plex 
 # abs_path s.o.	R()	
@@ -1579,6 +1564,7 @@ def valid_title_chars(line):
 # 	Hochkommata -> *, sächs. Genitiv 's -> Blank
 # line=Dict
 # 18.09.2024 replacing umgestellt auf json.dumps (utf-8-codiert für PY2)
+#	Nutzung nur noch durch AudioSearch_cluster, Audio_get_search_cluster
 def my_jsondump(line):
 	PLog("my_jsondump:")
 	try:
@@ -1619,60 +1605,76 @@ def DirectoryNavigator(settingKey, mytype, heading, shares='files', useThumbs=Fa
 	return d_ret
 	
 #----------------------------------------------------------------  
-def stringextract(mFirstChar, mSecondChar, mString):  	# extrahiert Zeichenkette zwischen 1. + 2. Zeichenkette
-	pos1 = mString.find(mFirstChar)						# return '' bei Fehlschlag
-	ind = len(mFirstChar)
-	#pos2 = mString.find(mSecondChar, pos1 + ind+1)		
-	pos2 = mString.find(mSecondChar, pos1 + ind)		# ind+1 beginnt bei Leerstring um 1 Pos. zu weit
-	rString = ''
-
-	if pos1 >= 0 and pos2 >= 0:
-		rString = mString[pos1+ind:pos2]	# extrahieren 
+# extrahiert Zeichenkette zwischen 1. + 2. Zeichenkette,
+# 	return '' bei Fehlschlag
+def stringextract(mFirstChar, mSecondChar, mString):
+	PLog("stringextract:")
+	pos1 = mString.find(mFirstChar)
+	if pos1 == -1:
+		return ''
+	pos2 = mString.find(mSecondChar, pos1 + len(mFirstChar))
+	if pos2 == -1:
+		return ''
+	rString = mString[pos1 + len(mFirstChar):pos2]			# extrahieren 
+	return rString
 		
 	#PLog(mString); PLog(mFirstChar); PLog(mSecondChar); 	# bei Bedarf
 	#PLog(pos1); PLog(ind); PLog(pos2);  PLog(rString); 
 	return rString
 #---------------------------------------------------------------- 
 # extrahiert Blöcke aus mString: Startmarke=blockmark, Endmarke=blockendmark 
+#	blockmark bleibt Bestandteil der Rückgabe - im Unterschied zu split()
+#	Block wird durch blockendmark begrenzt, falls belegt, sonst reicht 
+#		 letzter Block bis Ende mString (undefinierte Länge). 
+#	Rückgabe in Liste.
 def blockextract(blockmark, mString, blockendmark=''):  	
-	#	blockmark bleibt Bestandteil der Rückgabe - im Unterschied zu split()
-	#	Block wird durch blockendmark begrenzt, falls belegt, sonst reicht 
-	#		 letzter Block bis Ende mString (undefinierte Länge). 
-	#	Rückgabe in Liste.
-	#	Verwendung, wenn xpath nicht funktioniert 
+	PLog("blockextract: "+ blockmark); PLog(blockendmark)
+
 	rlist = []				
-	if 	blockmark == '' or 	mString == '':
-		PLog('blockextract: blockmark or mString leer')
+	if 	not blockmark or not mString:							# missing Params?
+		PLog('blockextract: blockmark_or_mString_empty')
 		return rlist
-	
-	pos = mString.find(blockmark)
-	if 	mString.find(blockmark) == -1:
+
+	pos = mString.find(blockmark)								# blockmark in haystack?
+	if 	pos == -1:
 		PLog('blockextract: blockmark <%s> nicht in mString enthalten' % blockmark)
 		# PLog(pos); PLog(blockmark);PLog(len(mString));PLog(len(blockmark));
 		return rlist
-		
-	pos2 = 1
-	while pos2 > 0:
-		pos1 = mString.find(blockmark)						
-		ind = len(blockmark)
-		pos2 = mString.find(blockmark, pos1 + ind)		
+
+	while True:
+		pos2=-1; block=""							
+		pos1 = mString.find(blockmark)
+		if pos1 == -1:
+			PLog('blockmark_not_found in next mString')
+			break
+		#PLog("mString: %s, pos1: %d" % (mString[:80], pos1))
 		
 		if blockendmark:
-			# PLog(blockendmark)
-			pos3 = mString.find(blockendmark, pos1 + ind)
-			# PLog("pos3: %d" % pos3)
-			if pos3 > 0:
-				ind_end = len(blockendmark)
-				block = mString[pos1:pos3+ind_end]	# extrahieren einschl.  blockmark + blockendmark
+			pos3 = mString.find(blockendmark, pos1 + len(blockmark))
+			if pos3 == -1:
+				block = mString[pos1:]  						# Block from blockmark to end of mString
 			else:
-				block = mString[pos1:]				# Block von blockmark bis Ende mString
-			# PLog(block)			
+				block = mString[pos1:pos3 + len(blockendmark)]  # Block Including blockendmark
+			#PLog("block: %s, pos3: %d" % (block[:80], pos3))
 		else:
-			block = mString[pos1:pos2]			# extrahieren einschl.  blockmark
-			# PLog(block)		
-		mString = mString[pos2:]	# Rest von mString, Block entfernt
-		rlist.append(block)
-	return rlist  
+			pos2 = mString.find(blockmark, pos1 + len(blockmark))
+			if pos2 == -1:
+				block = mString[pos1:] 						 	# block from blockmark to end of mString
+				mString = ''
+			else:
+				block = mString[pos1:pos2]  					# Until the next blockmark
+
+		if block:
+			rlist.append(block)
+
+		if blockendmark and pos3 != -1:							# next haystack
+			mString = mString[pos3 + len(blockendmark):]
+		elif pos2 != -1:
+			mString = mString[pos2:]
+		else:
+			break
+
+	return rlist
 #----------------------------------------------------------------  
 def teilstring(zeile, startmarker, endmarker):  		
 	# rfind: endmarker=letzte Fundstelle, return '' bei Fehlschlag
@@ -2194,34 +2196,14 @@ def time_to_minutes(time_str):
 		minutes = int(h) * 3600 + int(m)
 	PLog(minutes)
 	return str(minutes)
+
 #---------------------------------------------------------------- 
-# Format timecode 	Fri, 06 Jul 2018 06:58:00 GMT (ARD Audiothek , xml-Ausgaben)
-# Rückgabe:			06.07.2018, 06:58 Uhr   (Sekunden entfallen)
-# funktioniert nicht in Kodi, auch nicht der Workaround in
-#	https://forum.kodi.tv/showthread.php?tid=112916 bzw.
-#	https://www.kodinerds.net/index.php/Thread/50284-Python-Problem-mit-strptime
-def transl_pubDate(pubDate):
-	PLog('transl_pubDate:')	
-	pubDate_org = pubDate		
-	if pubDate == '':
-		return ''
-		
-	if ',' in pubDate:
-		pubDate = pubDate.split(',')[1]		# W-Tag abschneiden
-	pubDate = pubDate.replace('GMT', '')	# GMT entf.
-	pubDate = pubDate.strip()
-	PLog(pubDate)
-	try:
-		datetime_object = datetime.strptime(pubDate, '%d %b %Y %H:%M:%S')		
-		PLog(datetime_object)
-		new_date = datetime_object.strftime("%d.%m.%Y %H:%M")
-		PLog(new_date)
-	except Exception as exception:			# attribute of type 'NoneType' is not callable
-		PLog(str(exception))
-		new_date = pubDate_org				# unverändert zurück
-	return new_date	
+# 03.01.2025 transl_pubDate entfernt - übersetzte für alte Audiothek
+#	Zeitformat "Fri, 06 Jul 2018 06:58:00 GMT" -> 06.07.2018, 06:58 Uhr
+# def transl_pubDate(pubDate):
 #---------------------------------------------------------------- 	
-# Holt User-Eingabe für Suche ab
+
+# Kodi-Eingabeformular
 #	s.a. get_query (für Search , ZDF_Search)
 def get_keyboard_input(line='', head=''):
 	PLog("get_keyboard_input: " + line)
@@ -2238,7 +2220,7 @@ def get_keyboard_input(line='', head=''):
 # Format datestamp: "2017-02-26 21:45:00", 2018-05-24T16:50:00 19-stel.
 #	05.06.2020 hinzugefügt: 2018-05-24T16:50:00Z (Z wird hier entfernt)
 #	beim Menü Sendungen auch  2018-01-20 00:30 16 stel.
-# time_state checkt auf akt. Status, Zukunft und jetzt werden rot gekennzeichnet
+# time_state checkt auf akt. Status. Zukunft und jetzt werden rot gekennzeichnet
 def getOnline(datestamp, onlycheck=False):
 	PLog("getOnline: " + datestamp)
 	PLog(len(datestamp))
@@ -2273,14 +2255,13 @@ def getOnline(datestamp, onlycheck=False):
 # Prüft datestamp auf Vergangenheit, Gegenwart, Zukunft
 #	Format datestamp: "2020-01-26 11:15:00" 19 stel., in
 #	getOnline auf 16 Stellen reduz. (o. Sek.)
+# 03.01.2025 Ermittlung Param start optimiert
 def time_state(checkstamp):
 	PLog("time_state: " + checkstamp)		
 	date_format = "%Y-%m-%d %H:%M"
 
-	start = datetime.datetime.fromtimestamp(time.mktime(time.strptime(checkstamp, date_format)))
-	# PLog(start)
+	start = datetime.datetime.strptime(checkstamp, date_format)
 	now = datetime.datetime.now()
-	# PLog(now)
 	if start < now:
 		check_state = '' 	# 'Vergangenheit'
 	elif start > now:
@@ -2291,18 +2272,20 @@ def time_state(checkstamp):
 	return check_state
 # ----------------------------------------------------------------------
 # Wochentage engl./deutsch wg. Problemen mit locale-Setting 
-#	für VerpasstWoche, EPG	
-def transl_wtag(tag):	
-	wt_engl = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-	wt_deutsch = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
-	
-	wt_ret = tag
-	for i in range (len(wt_engl)):
-		el = wt_engl[i]
-		if el == tag:
-			wt_ret = wt_deutsch[i]
-			break
-	return wt_ret
+#	für VerpasstWoche, EPG
+# 03.01.2025 optimiert (Dict statt Liste, Rückgabe Original
+#	falls tag nicht vorhanden)
+def transl_wtag(tag):		
+	wtag_dict = {
+		"Monday": "Montag",
+		"Tuesday": "Dienstag",
+		"Wednesday": "Mittwoch",
+		"Thursday": "Donnerstag",
+		"Friday": "Freitag",
+		"Saturday": "Samstag",
+		"Sunday": "Sonntag"
+	}	
+	return wtag_dict.get(tag, tag)	# Rückgabe Original falls tag fehlt
 # ----------------------------------------------------------------------
 # simpler XML-SRT-Konverter für ARD-Untertitel
 #	pathname = os.path.abspath. 
@@ -2720,6 +2703,8 @@ def get_ZDFstreamlinks(skip_log=False, force=False):
 	PLog('get_ZDFstreamlinks:')
 	PLog("skip_log: " + str(skip_log)); PLog("force: " + str(force))
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
+	if days == 0:
+		days = 1000000							# 1 Million (unbegrenzt)
 	PLog("days: %d" % days)
 	CacheTime = days*86400						# Default 1 Tag
 	#days=0	# Debug
@@ -2811,6 +2796,8 @@ def get_ARDstreamlinks(skip_log=False, force=False):
 	PLog('get_ARDstreamlinks:')
 	PLog("skip_log: " + str(skip_log)); PLog("force: " + str(force))
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
+	if days == 0:
+		days = 1000000							# 1 Million (unbegrenzt)
 	PLog("days: %d" % days)
 	CacheTime = days*86400							# Default 1 Tag
 	#days=0	# Debug
@@ -2883,6 +2870,8 @@ def get_IPTVstreamlinks(skip_log=False, force=False):
 	PLog('get_IPTVstreamlinks:')
 	PLog("skip_log: " + str(skip_log)); PLog("force: " + str(force))
 	days = int(SETTINGS.getSetting('pref_tv_store_days'))
+	if days == 0:
+		days = 1000000							# 1 Million (unbegrenzt)
 	PLog("days: %d" % days)
 	CacheTime = days*86400							# Default 1 Tag
 	#days=0	# Debug
