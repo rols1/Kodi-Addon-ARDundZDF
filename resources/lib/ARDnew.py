@@ -1740,6 +1740,9 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 	PLog('get_json_content: ' + ID); PLog(mark)
 	ID_org=ID; PLog(type(page)); 
 	PLog(str(py2_encode(page))[:80])
+	
+	if mark:													# Bsp. night+of+the+proms
+		mark = mark.replace("+", " ")	
 
 	CurSender = ARD_CurSender()									# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')

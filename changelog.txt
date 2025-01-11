@@ -10,6 +10,41 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+11.01.2025	5.1.7
+			SendungenAZ (Modul my3Sat): fehlerhafte Zuweisung path=DreiSat_AZ entfernt.
+			CoverSingle (Modul my3Sat): Notification bei fehlenden Beiträgen ergänzt.
+			Cache TV-Livestream-Quellen: Bedeutung Setting=0 auf "keine Aktualisierung
+			geändert" (bisher "sofortiger Refresh") - Aktualisierung get_ZDFstreamlinks,
+			get_ARDstreamlinks und get_IPTVstreamlinks. Zusätzlich default von 20 auf 60
+			in settings.xml geändert, Github-Wiki aktualisiert.
+			Bereinigung Thumbnails-Ordner: Check + Thread-Call in Haupt-PRG ergänzt,
+			Anpassung ClearUpThumbnails (util) für thread-Nutzung.
+			SendungenDatum (Modul my3Sat): unescape und repl_json_chars für title.
+			Github-Repo: Aktualisierung .github/workflows/codeql-analysis.yml (Wechsel
+			codeql-action-v1 -> codeql-action-v2), Avatar durch Foto ersetzt.
+			ARDHandleRecents (ARDnew): return "" statt None, um  'NoneType'-Error nach
+			Abbruch Suchformular zu vermeiden (network_error_main).
+			get_json_content (ARDnew): Plus-Zeichen aus Suchwort entfernt für korrekte
+			Markierung.
+			ZDF_PageMenu: gefiltert-Zähler fcnt vorbelegt (network_error_main bei
+			funk-Startseite).			
+			AudioPodcastDeSearch: Vorbelegung path bei fehlender dest_url mit query
+			ergänzt.
+			AudioPodcastDeSingle: Quotierung für Param title ergänzt.
+			Audio_get_nexturl: Ausgabe-Stop für Mehr-Button bei new_offset+1 < elements.			
+			ARDSportSliderSingle: Anpassung an Änderung der Webseite (leere Ergebnisse
+			für "DIE BESTEN TORSCHÜTZEN".			
+			Modul util: doppelte Konstanten PYTHON2 und PYTHON3, Funktionen
+			transl_pubDate, getDirZipped entfernt  (obsolet).
+			transl_wtag (Modul util): optimiert durch Austausch Liste -> Dict.
+			Modul util - Optimierungen: time_state (Ermittlung Param start),
+			transl_wtag (Austausch Liste -> Dict), stringextract + blockextract, 
+			seconds_translate (Pull Request #41), repl_char (entfernt, obsolet),
+			my_rfind (entfernt, obsolet), dialog_fsk (entfernt, obsolet), 
+			teilstring (Umstellung find/rfind -> index/rindex), make_mark (lesbarer).
+			get_IPTVstreamlinks (Modul util): neue Zeilenendekennung (\n) hinter Stream-
+			Url entfernt.
+
 22.12.2024	5.1.6
 			Main_3Sat (Modul my3Sat): unerlaubte Zeichen aus Live-Titel entfernt,
 			repl_json_chars(title).
@@ -22,14 +57,12 @@ CHANGE HISTORY
 			SingleVideo (arte): ergänzende Param für Call von get_streams_from_link.
 			get_summary_pre (util): Anpassung an Ermittlung Inhaltstexte via Kontext-
 			Menü (ShowSumm -> EPG.py), einschl. Abfangen fehlendes maturitytRating.
-			
 			SingleBeitrag (Modul my3Sat): Inhaltstext aus Webquelle ergänzt, falls 
 			Param summ noch leer.
 			Search (Modul my3Sat): Abfangen von Medienlinks (nur in SearchARDundZDFnew
 			erlaubt).
 			ARDStartSingle (ARDnew): Inhaltstext aus Api-Quelle ergänzt, falls umfang-
 			reicher als vorher in der Liste ermittelt.
-			
 			Ausschluss-Filter (Haupt-PRG): Zähler und Notification ergänzt in  
 			ZDF_PageMenu, ZDF_RubrikSingle, ZDF_FlatListEpisodes.
 			Ausschluss-Filter (ARDnew): Zähler und Notification ergänzt in

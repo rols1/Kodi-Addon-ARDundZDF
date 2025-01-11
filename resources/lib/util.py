@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>118</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.01.2025
+#	Stand: 11.01.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1499,24 +1499,15 @@ def GetAttribute(text, attribute, delimiter1 = '=', delimiter2 = ','):
 		return text[y:z].strip()
 	else:
 		return ''
-#----------------------------------------------------------------  
-def repl_dop(liste):	# Doppler entfernen, im Python-Script OK, Problem in Plex - s. PageControl
+#---------------------------------------------------------------- 
+# Aufr.: Parseplaylist
+# Doppler entfernen
+def repl_dop(liste):	
 	mylist=liste
 	myset=set(mylist)
 	mylist=list(myset)
 	mylist.sort()
 	return mylist
-#----------------------------------------------------------------  
-def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn replace nicht funktioniert
-	line_ret = line				# return line bei Fehlschlag
-	pos = line_ret.find(cut_char)
-	while pos >= 0:
-		line_l = line_ret[0:pos]
-		line_r = line_ret[pos+len(cut_char):]
-		line_ret = line_l + line_r
-		pos = line_ret.find(cut_char)
-		#PLog(cut_char); PLog(pos); PLog(line_l); PLog(line_r); PLog(line_ret)	# bei Bedarf	
-	return line_ret
 #----------------------------------------------------------------
 # für json.loads (z.B.. in router) json-Zeichen in line entfernen, insbesondere
 #	Hochkommata (Problem bei Dictbildung)
@@ -1676,40 +1667,17 @@ def blockextract(blockmark, mString, blockendmark=''):
 
 	return rlist
 #----------------------------------------------------------------  
-def teilstring(zeile, startmarker, endmarker):  		
-	# rfind: endmarker=letzte Fundstelle, return '' bei Fehlschlag
-	# die übergebenen Marker bleiben Bestandteile der Rückgabe (werden nicht abgeschnitten)
-	pos2 = zeile.find(endmarker, 0)
-	pos1 = zeile.rfind(startmarker, 0, pos2)
-	if pos1 & pos2:
-		teils = zeile[pos1:pos2+len(endmarker)]	# 
-	else:
-		teils = ''
-	#PLog(pos1) PLog(pos2) 
-	return teils 
+# startmarker, endmarker: erste und letzte Fundstelle
+# die übergebenen Marker bleiben Bestandteile der Rückgabe (werden nicht abgeschnitten)
+# 08.01.2025 Umstellung find/rfind -> index/rindex
+def teilstring(zeile, startmarker, endmarker):  	
+    try:
+        pos2 = zeile.index(endmarker)
+        pos1 = zeile.rindex(startmarker, 0, pos2)
+        return zeile[pos1:pos2 + len(endmarker)]
+    except ValueError:
+        return ''	
 # ----------------------------------------------------------------------
-def my_rfind(left_pattern, start_pattern, line):  # sucht ab start_pattern rückwärts + erweitert 
-#	start_pattern nach links bis left_pattern.
-#	Rückgabe: Position von left_pattern und String ab left_pattern bis einschl. start_pattern	
-#	Mit Python's rfind-Funktion nicht möglich
-
-	# PLog(left_pattern); PLog(start_pattern); 
-	if left_pattern == '' or start_pattern == '' or line.find(start_pattern) == -1:
-		return -1, ''
-	startpos = line.find(start_pattern)
-	# Log(startpos); Log(line[startpos-10:startpos+len(start_pattern)]); 
-	i = 1; pos = startpos
-	while pos >= 0:
-		newline = line[pos-i:startpos+len(start_pattern)]	# newline um 1 Zeichen nach links erweitern
-		# Log(newline)
-		if newline.find(left_pattern) >= 0:
-			leftpos = pos						# Position left_pattern in line
-			leftstring = newline
-			# Log(leftpos);Log(newline)
-			return leftpos, leftstring
-		i = i+1				
-	return -1, ''								# Fehler, wenn Anfang line erreicht
-#----------------------------------------------------------------
 # prüft Vorkommen von String insert in Liste my_items
 # Rückgabe False/True
 #  	
@@ -1723,42 +1691,32 @@ def exist_in_list(insert, my_items):
 	except Exception as exception:
 		PLog(str(exception))
 		
-	return False		
+	return False
 #---------------------------------------------------------------- 
-# Dialog mit FSK-Hinweis in page 	
-def dialog_fsk(page):
-	PLog('dialog_fsk:')
-	fsk = stringextract('Einige Folgen sind FSK 16 und', ')</', page)
-	if fsk:
-		msg1 = "FSK-Hinweis:"
-		msg2 = 'Einige Folgen sind FSK 16 und %s'	% (fsk)
-		MyDialog(msg1, msg2, '')
-	
-	return
-#----------------------------------------------------------------  	
-# make_mark: farbige Markierung plus fett (optional	
+# Aufr.: Ausgeben von Suchergebnissen	
+# make_mark: farbige Markierung plus fett (optional)
 # Groß-/Kleinschreibung egal
 # bei Fehlschlag mString unverändert zurück
-#
-# title=' Aussteiger: *Identitäre* wollen Bürgerkrieg gegen'
 def make_mark(mark, mString, color='red', bold=''):	
 	PLog("make_mark:")	
 	mark=py2_decode(mark); mString=py2_decode(mString)
-	mS = up_low(mString); ma = up_low(mark)
-	if ma in mS or mark == mString:
-		pos1 = mS.find(ma)
-		pos2 = pos1 + len(ma)		
-		ms = mString[pos1:pos2]		# Mittelstück mark unverändert
-		s1 = mString[:pos1]; s2 = mString[pos2:];
-		if bold and color == '':
-			rString= u"%s[B]%s[/B]%s" % (s1, ms, s2)
-		elif color and bold:
-			rString= u"%s[COLOR %s][B]%s[/B][/COLOR]%s"	% (s1, color, ms, s2)
-		else:
-			rString= u"%s[COLOR %s]%s[/COLOR]%s"	% (s1, color, ms, s2)
-		return rString
+	mS = up_low(mString); ma = up_low(mark)	# beide -> lower
+	pos1 = mS.find(ma)
+	if pos1 == -1:
+		return mString			# Markierung fehlt, mString unverändert zurück
+
+	pos1 = mS.find(ma)
+	pos2 = pos1 + len(ma)		
+	ms = mString[pos1:pos2]		# Mittelstück mark unverändert
+	pre = mString[:pos1]; post = mString[pos2:]
+
+	if bold and color == '':
+		rString= u"%s[B]%s[/B]%s" % (pre, ms, post)
+	elif color and bold:
+		rString= u"%s[COLOR %s][B]%s[/B][/COLOR]%s"	% (pre, color, ms, post)
 	else:
-		return mString		# Markierung fehlt, mString unverändert zurück
+		rString= u"%s[COLOR %s]%s[/COLOR]%s"	% (pre, color, ms, post)
+	return rString
 #----------------------------------------------------------------  
 def cleanmark(line): # entfernt Farb-/Fett-Markierungen
 	# PLog(type(line))
@@ -2039,7 +1997,8 @@ def CalculateDuration(timecode):
 #---------------------------------------------------------------- 
 # Format seconds	86400	(String, Int, Float)
 # Rückgabe:  		1d, 0h, 0m, 0s	(days=True)
-#		oder:		0h:0d:0s			
+#		oder:		0h:0d:0s
+# 30.12.2024: github.com/rols1/Kodi-Addon-ARDundZDF/pull/41			
 def seconds_translate(seconds, days=False):
 	PLog('seconds_translate: %s' % str(seconds))
 
@@ -2220,7 +2179,7 @@ def get_keyboard_input(line='', head=''):
 # Format datestamp: "2017-02-26 21:45:00", 2018-05-24T16:50:00 19-stel.
 #	05.06.2020 hinzugefügt: 2018-05-24T16:50:00Z (Z wird hier entfernt)
 #	beim Menü Sendungen auch  2018-01-20 00:30 16 stel.
-# time_state checkt auf akt. Status. Zukunft und jetzt werden rot gekennzeichnet
+# time_state checkt auf akt. Status. Zukunft (rot gekennzeichnet)
 def getOnline(datestamp, onlycheck=False):
 	PLog("getOnline: " + datestamp)
 	PLog(len(datestamp))
@@ -2232,7 +2191,7 @@ def getOnline(datestamp, onlycheck=False):
 	
 		
 	online=''; check_state=''
-	if len(datestamp) == 19 or len(datestamp) == 16:
+	if len(datestamp) == 19 or len(datestamp) == 16:	# Formatierung
 		senddate = datestamp[:10]
 		year,month,day = senddate.split('-')
 		sendtime = datestamp[11:]
@@ -2253,7 +2212,8 @@ def getOnline(datestamp, onlycheck=False):
 	
 # ----------------------------------------------------------------------
 # Prüft datestamp auf Vergangenheit, Gegenwart, Zukunft
-#	Format datestamp: "2020-01-26 11:15:00" 19 stel., in
+# Aufrufer: getOnline
+# Format datestamp: "2020-01-26 11:15:00" 19 stel., in
 #	getOnline auf 16 Stellen reduz. (o. Sek.)
 # 03.01.2025 Ermittlung Param start optimiert
 def time_state(checkstamp):
@@ -2923,7 +2883,7 @@ def get_IPTVstreamlinks(skip_log=False, force=False):
 						links = blockextract('http', item)				# Links Logo + Stream, http: mögl.
 						if len(links) >= 1:
 							thumb = stringextract('tvg-logo="', '"', item)
-							streamurl = links[1]
+							streamurl = links[1].strip()
 							title = tvg_name						
 						
 							PLog("Satz2:")
