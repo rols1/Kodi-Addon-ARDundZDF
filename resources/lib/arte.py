@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>50</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.12.2024
+# 	<nr>51</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.01.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -565,6 +565,7 @@ def GetContent(li, page, ID, ignore_pid=""):
 		PLog(mehrfach); PLog(typ); PLog(pid); PLog(title); 
 		PLog(url); PLog(img); PLog(tag[:80]); PLog(summ[:80]); 
 		PLog(geo);
+		pid_org=pid
 		title=py2_encode(title); url=py2_encode(url);
 		pid=py2_encode(pid); tag_par=py2_encode(tag_par);
 		img=py2_encode(img); summ=py2_encode(summ);
@@ -577,9 +578,12 @@ def GetContent(li, page, ID, ignore_pid=""):
 			cnt=cnt+1					
 		else:
 			if dur == '' and pid == '':
+				PLog("dur_and_pid_empty")
 				continue
 			if url.count("/") > 2:							# Bsp. /de/ (kein video)
 				pid = url.split("/")[3]						# /de/videos/100814-000-A/.., id nicht verwendbar
+			if url.endswith("/live/"):						# läuft gerade
+				pid=pid_org			
 			PLog("pid: " + pid)
 				
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
@@ -793,7 +797,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 		title_org = title_new
 		dur = dur_new; geo = geo_new; tag = tag_new; img = img_new
 
-	summ=transl_json(summ); summ=repl_json_chars(summ)			# -> HLS_List, HBBTV_List, MP4_List
+	summ=transl_json(summ); summ=repl_json_chars(summ)				# -> HLS_List, HBBTV_List, MP4_List
 	
 	
 	hls_add=""; mp4_add=""											# HLS_List + Titelzusatz für Trailer
@@ -809,11 +813,13 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 		page = json.loads(page)
 		formitaeten = page["videoStreams"]
 	except Exception as exception:
+		formitaeten=""; MP4_List=[]
 		PLog("json_error_path2: " + str(exception))	
 
-	trailer_mp4, MP4_List = get_streams_hbbtvv2(formitaeten, title_org, summ)
-	if trailer_mp4:
-		mp4_add = ", MP4-Streams: [B]Trailer[/B]"
+	if formitaeten:
+		trailer_mp4, MP4_List = get_streams_hbbtvv2(formitaeten, title_org, summ)
+		if trailer_mp4:
+			mp4_add = ", MP4-Streams: [B]Trailer[/B]"
 
 	HBBTV_List=[]
 	PLog("HLS_List: " + str(len(HLS_List)))
