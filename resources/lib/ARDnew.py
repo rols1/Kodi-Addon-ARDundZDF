@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>93</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.01.2025
+# 	<nr>94</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.01.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2582,7 +2582,7 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 		path_zdf = ZDF_Search_PATH % (quote(query_zdf), pagenr) 	
 		path_zdf = transl_umlaute(path_zdf)
 		
-		query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) 	# quotiertes ersetzen 
+		query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
 		query = query.replace(' ', '+')	
 		
 		icon = R(ICON_ZDF_SEARCH)
@@ -2602,14 +2602,14 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 		PLog("nextPage: "  + nextPage);
 
 		query_lable=py2_encode(query_lable); searchResult=py2_encode(searchResult);
-		if searchResult == '0':												# Sprung hierher
+		if searchResult == '0':											# Sprung hierher
 			label = "[B]ZDF[/B] | nichts gefunden zu: %s | neue Suche" % query_lable
 			title=py2_encode(title);
 			fparams="&fparams={'title': '%s'}" % quote(title_org)
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.SearchARDundZDFnew", 
 				fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
 		else:	
-			store_recents = True											# Sucheingabe speichern
+			store_recents = True										# Sucheingabe speichern
 			title = "[B]ZDF[/B]: %s Video(s)  | %s" % (searchResult, query_lable)
 			query_zdf=py2_encode(query_zdf); title=py2_encode(title);
 			fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (quote(query_zdf), 
@@ -2620,7 +2620,12 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 	#------------------------------------------------------------------	# 3. Suche Merkliste
 	if "ARD und ZDF" in title_org:	
 		PLog("search_merk: " + query_ard)
-		my_items, my_ordner = ReadFavourites('Merk')
+		try:															# Absicherung OSError
+			my_items, my_ordner = ReadFavourites('Merk')
+		except Exception as exception:
+			my_items=[]
+			PLog("ReadFavourites_error: " + str(exception))
+			
 		if len(my_items) > 0:
 			q_org = query_ard.replace('+', ' ')
 			q=py2_decode(up_low(q_org))
@@ -2629,15 +2634,15 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 				name = stringextract('merk name="', '"', item)
 				ordner = stringextract('ordner="', '"', item)
 				Plot = stringextract('Plot="', '"', item)
-				name=py2_decode(name); Plot=py2_decode(Plot)				# Abgleich Name + Plot
+				name=py2_decode(name); Plot=py2_decode(Plot)			# Abgleich Name + Plot
 				ordner=py2_decode(ordner)
 				if q in up_low(name) or q in up_low(Plot) or q in up_low(ordner):
-					selected = 	"%s %s" % (selected,  str(cnt))				# Indices
+					selected = 	"%s %s" % (selected,  str(cnt))			# Indices
 					found=found+1	
 				cnt=cnt+1
 			PLog(selected)
 				
-			if len(selected) == 0:											# Sprung hierher
+			if len(selected) == 0:										# Sprung hierher
 				label = "[B]Merkliste[/B] | nichts gefunden zu: %s | neue Suche" % q_org
 				title="Suche in ARD und ZDF"
 				title=py2_encode(title);
