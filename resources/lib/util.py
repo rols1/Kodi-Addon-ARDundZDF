@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>118</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.01.2025
+#	Stand: 15.01.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1599,7 +1599,7 @@ def DirectoryNavigator(settingKey, mytype, heading, shares='files', useThumbs=Fa
 # extrahiert Zeichenkette zwischen 1. + 2. Zeichenkette,
 # 	return '' bei Fehlschlag
 def stringextract(mFirstChar, mSecondChar, mString):
-	PLog("stringextract:")
+	#PLog("stringextract:")
 	pos1 = mString.find(mFirstChar)
 	if pos1 == -1:
 		return ''
@@ -1619,7 +1619,7 @@ def stringextract(mFirstChar, mSecondChar, mString):
 #		 letzter Block bis Ende mString (undefinierte Länge). 
 #	Rückgabe in Liste.
 def blockextract(blockmark, mString, blockendmark=''):  	
-	PLog("blockextract: "+ blockmark); PLog(blockendmark)
+	PLog("blockextract: " + blockmark); PLog(blockendmark)
 
 	rlist = []				
 	if 	not blockmark or not mString:							# missing Params?
@@ -1737,35 +1737,41 @@ def cleanhtml(line): # ersetzt alle HTML-Tags zwischen < und >  mit 1 Leerzeiche
 # Migration PY2/PY3: py2_decode aus kodi-six
 # Einzelersetzung deutsche Umlaute unter python2
 #	Bsp. python2:  unquote('%C3%BC') -> '\xc3\x9f' statt 'ü'
-def decode_url(line):	
+# Umstellung Einzel-Replace -> Dict-Loop 
+def decode_url(line):
 	line = py2_decode(line)
 	unquote_plus(line)
-	line = line.replace(u'&amp;', u'&')
-	line = line.replace(u'&quot;', u'"')
 
-	line = line.replace(u'%C3%BC', u'ü')
-	line = line.replace(u'%C3%B6', u'ö')
-	line = line.replace(u'%C3%A4', u'ä')
-	line = line.replace(u'%C3%9F', u'ß')
-	line = line.replace(u'%C3%9C', u'Ü')
-	line = line.replace(u'%C3%96', u'Ö')
-	line = line.replace(u'%C3%84', u'Ã')
-	line = line.replace(u'%C4%87', u'Ä')
-	
-	line = line.replace(u'%20', u' ')
-	line = line.replace(u'%22', u'"')
-	line = line.replace(u'%2F', u'/')
-	line = line.replace(u'%2C', u',')
-	line = line.replace(u'%3A', u':')
-	line = line.replace(u'%3F', u'?')
-	
-	line = line.replace(u'%28', u'(')		
-	line = line.replace(u'%29', u')')	
-	line = line.replace(u'%7C', u'|')
-	
-	line = line.replace(u'%E2%80%93', u'–')		# 27.07.2022
-	
-	
+	repl = {
+		'&amp;': '&',
+		'&quot;': '"',
+
+		'%C3%BC': 'ü',
+		'%C3%B6': 'ö',
+		'%C3%A4': 'ä',
+		'%C3%9F': 'ß',
+		'%C3%9C': 'Ü',
+		'%C3%96': 'Ö',
+		'%C3%84': 'Ä',
+		'%C4%87': 'Ä',
+
+		'%20': ' ',
+		'%22': '"',
+		'%2F': '/',
+		'%2C': ',',
+		'%3A': ':',
+		'%3F': '?',
+
+		'%28': '(',
+		'%29': ')',
+		'%7C': '|',
+
+		'%E2%80%93': '–'	# 27.07.2022
+	}
+
+	for old, new in repl.items():
+		line = line.replace(old, new)
+
 	return line
 #----------------------------------------------------------------  	
 # Migration PY2/PY3: py2_decode aus kodi-six
@@ -2068,6 +2074,7 @@ def time_translate(timecode, add_hour=True, day_warn=False, add_hour_only=""):
 					"2023-03-26T01:00:00Z|2023-10-29T01:00:00Z",
 					"2024-03-31T01:00:00Z|2024-10-27T01:00:00Z",
 					"2025-03-30T01:00:00Z|2025-10-26T01:00:00Z",
+					"2026-03-29T01:00:00Z|2026-10-25T01:00:00Z",
 				]
 
 	if timecode.strip() == '' or len(timecode) < 19 or timecode[10] != 'T':

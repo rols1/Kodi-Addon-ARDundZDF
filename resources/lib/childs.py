@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>31</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.10.2024
+#	Stand: 04.02.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -225,13 +225,16 @@ def Main_KIKA(title=''):
 		fanart=KIKA_START, thumb=img, tagline=tag, fparams=fparams)
 		
 	title=u'Kinderhörspiele der ARD-Audiothek'
-	query = u"Kinderhörspiele"
-	tag = u"Kinderhörspiele aus verschiedenen Radio-Sendungen." 
-	summ = u"Wir verlassen KIKA und wechseln zu den Kinderhörspielen in der ARD-Audiothek."
-	title=py2_encode(title); query=py2_encode(query) 
-	fparams="&fparams={'title': '%s', 'query': '%s'}" % (quote(title), quote(query))
-	addDir(li=li, label=title , action="dirList", dirID="AudioSearch",
-		fanart=KIKA_START, thumb=GIT_RADIO, tagline=tag, summary=summ, fparams=fparams)
+	img="https://www.daserste.de/rubrik-kinder-100~_type-at_ratio-1x1_width-640_c72e0f.jpg"
+	tag = u"Hörspiele, Geschichten und Wissen für Kinder" 
+	summ = u"Wir verlassen KIKA und wechseln zu Kinderhörspielen in der ARD-Audiothek."
+	url = "https://www.ardaudiothek.de/rubrik/42914714"; ID="Main_KIKA"
+	url=py2_encode(url); title=py2_encode(title); # -> 2. Aufruf 
+	fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'ID': '%s'}" % (quote(url), 
+		quote(title), ID)
+	addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_rubrik", \
+		fanart=KIKA_START, thumb=img, fparams=fparams, tagline=tag, summary=summ)	
+	
 			
 	title='KiKANiNCHEN'	
 	fparams="&fparams={}" 

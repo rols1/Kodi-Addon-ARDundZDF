@@ -10,6 +10,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+05.02.2025	5.1.8
+			SingleVideo (Modul arte): Error-Handling für HBBTV-MP4-Quellen (leere Params
+			bei json_error_path2).
+			GetContent (Modul arte): Video-Pid für Livestreams im EPG ergänzt (TV-Programm
+			heute).
+			get_next_url (Modul arte): Link korrigiert api-internal.infra-priv.arte.tv
+			(neu in Pagination-Abschnitt der Videoquellen).
+			Addon-Icons: in tv-privat.png Austausch Logo ntv gegen münchen.tv (Sender ntv
+			hier schon lange nicht mehr verfügbar).
+			SearchARDundZDFnew (Modul ARDnew): try-except-Block für ReadFavourites (Laden
+			der Merkliste) - Absicherung OSError.
+			Main_KIKA: Aufruf "Kinderhörspiele der ARD-Audiothek" geändert (von AudioSearch
+			zu Audio_get_cluster_rubrik mit Rubrik-Url).
+			time_translate (Modul util): Dict summer_time für 2026 ergänzt.
+			decode_url (Modul util): optimiert (Einzel-Replace -> Dict-Loop).			
+			Audio_get_sendung: Umstellung Auswertung String -> json.loads -> my_jsondump,
+			Berücksichtigung json-keys editorialCollection und programSet.
+			AudioSenderPrograms: Umstellung Auswertung String -> json in stage1 und stage2,
+			CacheTime von 5 min auf 1 Std. erhöht (wie AudioStartLive).
+			AudioStartLive: Umstellung Auswertung String -> json, regionale Sender ergänzt
+			(z.B. Franken, Mainfranken für Bayern1).
+
 11.01.2025	5.1.7
 			SendungenAZ (Modul my3Sat): fehlerhafte Zuweisung path=DreiSat_AZ entfernt.
 			CoverSingle (Modul my3Sat): Notification bei fehlenden Beiträgen ergänzt.
