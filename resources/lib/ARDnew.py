@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>94</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.01.2025
+# 	<nr>95</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.02.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2504,6 +2504,7 @@ def SendungenAZ_ARDnew(title, button, href, CurSender="", homeID=''):
 # 01.03.2023 ARD-Suchpfad wie SearchARDundZDFnew (page.ardmediathek -> api.ardmediathek)
 # 21.07.2024 Nutzung für Suchen nur in ARD od. ZDF (Vermeidung Absturzproblem nach Abbruch)
 # 20.12.2024 Nutzung für Medienlinks (eingefügt durch Yatse, Kore o.ä.)
+# 10.02.2025 Such-Url durch ARD geändert: Zusatz platform=MEDIA_THEK
 #
 def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 	PLog('SearchARDundZDFnew:');
@@ -2548,7 +2549,7 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 		pageNumber = 0
 		
 		query_lable = query_ard.replace('+', ' ')
-		path = 'https://api.ardmediathek.de/search-system/mediathek/%s/search/vods?query=%s&pageNumber=%s&pageSize=24' % (sender, query_ard, pageNumber)
+		path= "https://api.ardmediathek.de/search-system/search/shows/%s?query=%s&pageSize=48&pageNumber=%s&platform=MEDIA_THEK"  % (sender, query, pageNumber)
 		icon = R(ICON_SEARCH)
 		xbmcgui.Dialog().notification("ARD-Suche",query_lable,icon,1000, sound=False)
 		page, msg = get_page(path)					
@@ -2566,7 +2567,7 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 		else:	
 			store_recents = True											# Sucheingabe speichern
 			PLog(type(vodTotal)); 	PLog(type(query_lable)); 			
-			title = "[B]ARD[/B]: %s Video(s)  | %s" % (vodTotal, query_lable)
+			title = "[B]ARD[/B]: %s Sendung(en)  | %s" % (vodTotal, query_lable)
 			query_ard=py2_encode(query_ard); title=py2_encode(title); 
 			fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '0'}" %\
 				(quote(query_ard), quote(title), sender)
@@ -2731,6 +2732,7 @@ def ARDHandleRecents(title, mode="load", query=""):
 # 22.03.2023 api-Suche umgestellt page-gateway/widgets  -> search-system/mediathek, um
 #	Videos von Sendereihen zu erfassen (Bsp. "2 für 300")
 # 13.06.2023 Mitnutzung durch phoenix (sender, query, homeID)
+# 10.02.2025 Such-Url durch ARD geändert: Zusatz platform=MEDIA_THEK
 #
 def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 	PLog('ARDSearchnew:');	
@@ -2767,7 +2769,7 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 	
 	# ----------------------------------------------------- # Suchstring umgestellt, s.o.
 	PLog(query)
-	path = 'https://api.ardmediathek.de/search-system/mediathek/%s/search/vods?query=%s&pageNumber=%s&pageSize=24' % (sender, query, offset)
+	path= "https://api.ardmediathek.de/search-system/search/shows/%s?query=%s&pageSize=48&pageNumber=%s&platform=MEDIA_THEK"  % (sender, query, offset)
 
 	page, msg = get_page(path)					
 	PLog(len(page))
@@ -2777,8 +2779,9 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 		MyDialog(msg1, msg2, '')	
 		return
 	
-	gridlist = blockextract( '"availableTo"', page) 		# Beiträge?
-	if len(gridlist) == 0:				
+	vodTotal =  stringextract('"totalElements":', '}', page)	# Beiträge?
+	gridlist = blockextract( '"mediumTitle":', page) 			# Sicherung
+	if len(gridlist) == 0 or vodTotal == '0':		
 		msg1 = u'keine Beiträge gefunden zu: %s'  % query
 		PLog(msg1)
 		MyDialog(msg1, '', '')
