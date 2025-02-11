@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>95</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.02.2025
+# 	<nr>96</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.02.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2549,7 +2549,8 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 		pageNumber = 0
 		
 		query_lable = query_ard.replace('+', ' ')
-		path= "https://api.ardmediathek.de/search-system/search/shows/%s?query=%s&pageSize=48&pageNumber=%s&platform=MEDIA_THEK"  % (sender, query, pageNumber)
+		path= "https://api.ardmediathek.de/search-system/search/shows/%s?query=%s&pageSize=48&pageNumber=%s&platform=MEDIA_THEK"  % (sender, query_ard, pageNumber)
+
 		icon = R(ICON_SEARCH)
 		xbmcgui.Dialog().notification("ARD-Suche",query_lable,icon,1000, sound=False)
 		page, msg = get_page(path)					
@@ -2611,7 +2612,7 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 				fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
 		else:	
 			store_recents = True										# Sucheingabe speichern
-			title = "[B]ZDF[/B]: %s Video(s)  | %s" % (searchResult, query_lable)
+			title = "[B]ZDF[/B]: %s Sendung(en)  | %s" % (searchResult, query_lable)
 			query_zdf=py2_encode(query_zdf); title=py2_encode(title);
 			fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (quote(query_zdf), 
 				quote(title), pagenr)
