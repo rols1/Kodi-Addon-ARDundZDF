@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>52</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.01.2025
+# 	<nr>53</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.02.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1303,9 +1303,11 @@ def get_ArtePage(caller, title, path, header=''):
 		PLog("path_fehlt")
 		return page
 
-	page, msg = get_page(path, GetOnlyRedirect=True)# Permanent-Redirect-Url abfangen
-	url = page								
-	page, msg = get_page(url, header=header)
+	# Arte-Concert stürzt mit mehrfachem HTTP Error 308 in getRedirect ab
+	# page, msg = get_page(path, GetOnlyRedirect=True)# Permanent-Redirect-Url abfangen
+	# url = page								
+	# page, msg = get_page(url)
+	page, msg = get_page(path, header=header)
 	if page == '':						
 		msg1 = u"%s: " % caller + L("nicht verfügbar") + ":"
 		msg2 = title
@@ -1370,11 +1372,13 @@ def get_next_url(page):
 	if next_url:
 		PLog("next_url_found: " + next_url)
 		# api-internal-Call endet mit HTTP Error 401: Unauthorized
-		next_url = next_url.replace("api-internal.arte.tv/api", "www.arte.tv/api/rproxy")
+		# next_url = next_url.replace("api-internal.arte.tv/api", "www.arte.tv/api/rproxy")
 		# 17.01.2025 neuer Serverlink: api-internal.infra-priv.arte.tv funktioniert nicht
-		next_url = next_url.replace("api-internal.infra-priv.arte.tv/api", "www.arte.tv/api/rproxy")
-		# 01.02.2024 api-internal-Call nicht mehr verwendet:
+		# next_url = next_url.replace("api-internal.infra-priv.arte.tv/api", "www.arte.tv/api/rproxy")
+		# 01.02.2025 api-internal-Call nicht mehr verwendet:
 		next_url = next_url.replace("/api/emac/", "www.arte.tv/api/rproxy/emac/")
+		# 12.02.2025 api-cdn.arte.tv am Url-Start beobachtet
+		next_url = next_url.replace("api-cdn.arte.tv", "")
 		if next_url.startswith("http") == False:
 			next_url = "https://" + next_url 
 		PLog("next_url_correct: " + next_url)
