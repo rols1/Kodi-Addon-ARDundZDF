@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>229</nr>										# Numerierung für Einzelupdate
+# 	<nr>230</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.8'
-VDATE = '05.02.2025'
+VDATE = '15.02.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6081,6 +6081,7 @@ def thread_getpic(path_url_list,text_list,folder=''):
 				
 				mytxt = text_list[i]
 				mytxt = wrap(mytxt,mytxt_col)			# Zeilenumbruch
+				mytxt = cleanmark(mytxt)				# Farb-/Fett-Markierungen entfernen
 				PLog(mytxt)
 				
 				try:	
@@ -6111,7 +6112,7 @@ def thread_getpic(path_url_list,text_list,folder=''):
 					# PLog("Größe Bildtext: " + str(txtsz))
 					
 					#  w,h = draw.textsize(mytxt, font=font)	# textsize() nicht mehr verfügbar
-					x=1; y=1									# Start links oben
+					x=20; y=1									# Start links oben mit linken Rand
 					# outlined Text - für helle Flächen erforderlich, aus stackoverflow.com/
 					# /questions/41556771/is-there-a-way-to-outline-text-with-a-dark-line-in-pil 
 					# try-Block für Draw 
@@ -11112,7 +11113,9 @@ def get_form_streams(page):
 	return formitaeten, duration, geoblock, sub_path
 	
 #-------------------------
+#	ZDF-Websuche nach "Bilderserie" (api dafür bisher unbekannt),
 #	Einzelseite -> ZDF_BildgalerieSingle
+#	
 def ZDF_Bildgalerien(pagenr=""):	
 	PLog('ZDF_Bildgalerien: ' + str(pagenr)); 
 
@@ -11220,11 +11223,12 @@ def ZDF_Bildgalerien(pagenr=""):
 # 23.09.2021 Umstellung Bildname aus Quelle statt "Bild_01" (eindeutiger beim
 #	Nachladen).
 # 19.05.2022 Param. li: Vermeid. Home-Doppel (Aufruf ZDF_get_content)
+# 15.02.2025 neues Datenformat berücksichtigt auf
+#	www.zdf.de/nachrichten/panorama/prominente (mode="caption")
 #
 def ZDF_BildgalerieSingle(path, title, li=''):	
 	PLog('ZDF_BildgalerieSingle:'); PLog(path); PLog(title)
 	title_org = title
-	
 	
 	page, msg = get_page(path=path)	
 	if page == '':
@@ -11233,10 +11237,8 @@ def ZDF_BildgalerieSingle(path, title, li=''):
 		MyDialog(msg1, msg2, '')
 		return
 	
-	if li == '':
-		li = xbmcgui.ListItem()
-		li = home(li, ID="ZDF")						# Home-Button
-	
+	#--------------------------------------------------------------- # Suche nach Bilderserie
+
 	# gallery-slider-box: echte Bildgalerien, andere spielen kaum eine Rolle
 	#	bei Fehlen auf Weiterleitung prüfen (z.B. in lazyload-container):
 	if page.find(u'class="content-box gallery-slider-box') < 0:
@@ -11254,13 +11256,22 @@ def ZDF_BildgalerieSingle(path, title, li=''):
 		
 	content =  stringextract(u'class="content-box gallery-slider-box', u'title="Bilderserie schließen"', page)
 	content = blockextract('class="img-container', content)	
-	PLog("content: " + str(len(content)))
+	mode="content"													# Default
 	
+	if len(content) == 0:
+		pos = page.find('\\"slides\\"')
+		if pos  >= 0:
+			PLog("slides_found")
+			content = blockextract('\\"title\\"', page[pos:])		# neues ZDF-Format Promi-News in Bildern
+			PLog("caption_content: %d" % len(content))
+			mode="caption"
+	PLog("content: %d" % len(content))
+
 	if len(content) == 0:										
 		msg1 = 'ZDF_BildgalerieSingle: keine Bilder gefunden.'
 		msg2 = title
 		MyDialog(msg1, msg2, '')
-		return li
+		return
 	
 	fname = make_filenames(title)			# Ordnername: Titel 
 	fpath = os.path.join(SLIDESTORE, fname)
@@ -11273,116 +11284,70 @@ def ZDF_BildgalerieSingle(path, title, li=''):
 			msg2 = "%s/%s" % (SLIDESTORE, fname)
 			PLog(msg1); PLog(msg2)
 			MyDialog(msg1, msg2, '')
-			return li	
+			return	
 
-	image=0; background=False; path_url_list=[]; text_list=[]
-	for rec in content:				
-		category = stringextract('teaser-cat-category">', '</span>', rec)
-		category = mystrip(category)
-		PLog(category)
-		brand = stringextract('brand-ellipsis">', '</span>', rec)
-		brand = mystrip(brand)	
-		PLog(brand)
-
-		img_links =  stringextract('data-srcset="', '"', rec)	# mehrere Links, aufsteig. Bildgrößen
-		img_links = blockextract('http', img_links)
-		w_old=0
-		for img_link in img_links:
-			img_link = img_link.split(' ')[0]					# Link bis 1. Blank: ..?cb=1462007560755 384w 216h
-			w=''
-			w_h = stringextract('~', '?cb', img_link)			# Bsp.: ..-2014-100~384x216?cb=1462007562325
-			PLog(img_link); PLog(w_h)
-			if "x" in w_h:
-				w  = w_h.split('x')[0]							# Bsp.: 384
-				if int(w) > w_old and int(w) <= 1280:			# Begrenz.: 1280 (gesehen: 3840)
-					w_old = int(w)
-					
-		img_src  = img_link
-		PLog("img_src: %s, w: %d" % (img_link, w_old))			
-					
-		href = stringextract('a href', '</a>', rec)
-		path  = stringextract('="', '"', href)
-		if path == '':										# Sicherung
-			path = 	stringextract('plusbar-url="', '"', rec)
-		if path.startswith("http") == False:
-			path = "https://www.zdf.de" + path
-		title = stringextract('title="', '"', href)			# falls leer -> descr, s.u.
+	#--------------------------------------------------------------- # Bilder einsammeln
+	
+	pic_list = ZDF_BilderCollect(content, title_org, mode=mode)
+	if len(pic_list) == 0:
+		msg1 = 'ZDF_BildgalerieSingle: keine Bilder gefunden.'
+		msg2 = title
+		MyDialog(msg1, msg2, '')
+		return		
 			
-		descr = stringextract('description">', '<', rec)
-		if descr == '':
-			descr = stringextract('teaser-text">', '<', rec) # mehrere Varianten möglich
-		if descr == '':
-			descr = stringextract('class="teaser-text" >', '<', rec)
-		descr = mystrip(descr.strip())
-		PLog('descr:' + descr)		# UnicodeDecodeError möglich
-		
-		if title == '':
-			title =  descr
-		lable = title				# Titel in Textdatei	
+	#--------------------------------------------------------------- # Ausgabe Liste
+	
+	if li == '':
+		li = xbmcgui.ListItem()
+		li = home(li, ID="ZDF")						# Home-Button
 				
+	path_url_list=[]; text_list=[]; 
+	img_cnt=0; background=False 
+	for pic in pic_list:
+		img_src, title, tag, summ = pic.split("||")		
+		#  Kodi braucht Endung für SildeShow; akzeptiert auch Endungen, die 
+		#	nicht zum Imageformat passen
+		# pic_name 	= 'Bild_%04d.jpg' % (img_cnt+1)		# Bildname
+		pic_name 	= img_src.split('/')[-1]			# Bildname aus Quelle
+		if '?' in pic_name:								# Bsp.: ~2400x1350?cb=1631630217812
+			pic_name = pic_name.split('?')[0]
+		local_path 	= "%s/%s.jpg" % (fpath, pic_name)
+		PLog("local_path: " + local_path)
+		# title = "Bild %03d: %s" % (img_cnt+1, pic_name)	# Numerierung
+		title = "Bild %03d: %s" % (img_cnt+1, title)	# Numerierung
+		PLog("Bildtitel: " + title)
 		
-		tag = stringextract('"teaser-info">', '</dd>', rec)		# Quelle
-		tag = cleanhtml(tag); tag = mystrip(tag)
-		airtime = stringextract('class="air-time" ', '</time>', rec)
-		airtime = stringextract('">', '</time>', airtime)
-		if airtime:
-			tag = "%s | %s" % (tag, airtime)
-		if category:
-			tag = "%s | %s" % (tag, category)
-		if brand:
-			tag = "%s | %s" % (tag, brand)
-		
-				
-		if img_src == '':									# Sicherung			
-			PLog('Problem in Bildgalerie: Bild nicht gefunden')
-		else:		
-			if tag:
-				tag = "%s | %s" % (tag, title_org)
-			
-			#  Kodi braucht Endung für SildeShow; akzeptiert auch Endungen, die 
-			#	nicht zum Imageformat passen
-			# pic_name 	= 'Bild_%04d.jpg' % (image+1)		# Bildname
-			pic_name 	= img_src.split('/')[-1]			# Bildname aus Quelle
-			if '?' in pic_name:								# Bsp.: ~2400x1350?cb=1631630217812
-				pic_name = pic_name.split('?')[0]
-			local_path 	= "%s/%s.jpg" % (fpath, pic_name)
-			PLog("local_path: " + local_path)
-			title = "Bild %03d: %s" % (image+1, pic_name)	# Numerierung
-			PLog("Bildtitel: " + title)
-			summ = unescape(descr)			
-			
-			thumb = ''
-			local_path 	= os.path.abspath(local_path)
-			thumb = local_path
-			if os.path.isfile(local_path) == False:			# schon vorhanden?
-				# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Bild-Url, 
-				#								 Zieldatei_kompletter_Pfad|Bild-Url, ..
-				path_url_list.append('%s|%s' % (local_path, img_src))
+		thumb = ''
+		local_path 	= os.path.abspath(local_path)
+		thumb = local_path
+		if os.path.isfile(local_path) == False:			# schon vorhanden?
+			# path_url_list (int. Download): Zieldatei_kompletter_Pfad|Bild-Url, 
+			#								 Zieldatei_kompletter_Pfad|Bild-Url, ..
+			path_url_list.append('%s|%s' % (local_path, img_src))
 
-				if SETTINGS.getSetting('pref_watermarks') == 'true':
-					txt = "%s\n%s\n%s\n%s\n" % (fname,title,tag,summ)
-					text_list.append(txt)	
-				background	= True											
-									
+			if SETTINGS.getSetting('pref_watermarks') == 'true':
+				txt = "%s\n%s\n%s\n%s\n" % (fname,title,tag,summ)
+				text_list.append(txt)	
+			background	= True											
+								
+		if thumb:											# Button Einzelbild
+			PLog("thumb: " + thumb)	
 			title=repl_json_chars(title); summ=repl_json_chars(summ)
-			PLog('neu:');PLog(title);PLog(img_src);PLog(thumb);PLog(summ[0:40]);
-			if thumb:	
-				local_path=py2_encode(local_path);
-				fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
-				addDir(li=li, label=title, action="dirList", dirID="ZDF_SlideShow", 
-					fanart=thumb, thumb=thumb, fparams=fparams, summary=summ, tagline=tag)
-
-			image += 1
+			local_path=py2_encode(local_path);
+			fparams="&fparams={'path': '%s', 'single': 'True'}" % quote(local_path)
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_SlideShow", 
+				fanart=thumb, thumb=thumb, fparams=fparams, summary=summ, tagline=tag)
+		img_cnt += 1
 			
 	if background and len(path_url_list) > 0:				# Thread-Call mit Url- und Textliste
-		PLog("background: " + str(background))
+		PLog("background: " + str(background))				#	für Watermarks
 		folder = fname 
 		background_thread = Thread(target=thread_getpic,
 			args=(path_url_list, text_list, folder))
 		background_thread.start()
 
-	PLog("image: " + str(image))
-	if image > 0:	
+	PLog("image_anz: %d" % len(pic_list))
+	if len(pic_list) > 0:	
 		fpath=py2_encode(fpath);	
 		fparams="&fparams={'path': '%s'}" % quote(fpath) 	# fpath: SLIDESTORE/fname
 		addDir(li=li, label="SlideShow", action="dirList", dirID="ZDF_SlideShow", 
@@ -11393,8 +11358,7 @@ def ZDF_BildgalerieSingle(path, title, li=''):
 		summ= u'Bei Problemen: Bilder löschen, Wasserzeichen ausschalten,  Bilder neu einlesen'
 		fparams="&fparams={'dlpath': '%s', 'single': 'False'}" % quote(fpath)
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadsDelete", fanart=R(ICON_DELETE), 
-			thumb=R(ICON_DELETE), fparams=fparams, summary=summ, tagline=tag)
-		
+			thumb=R(ICON_DELETE), fparams=fparams, summary=summ, tagline=tag)	
 				
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)  # ohne Cache, um Neuladen zu verhindern
 
@@ -11415,7 +11379,125 @@ def ZDF_SlideShow(path, single=None):
 	else:
 		return xbmc.executebuiltin('SlideShow(%s, %s)' % (local_path, 'notrandom'))
 
-	 
+#-----------------------
+# Bilder einsammeln für ZDF_BildgalerieSingle
+# content: Liste der Bilderblöcke
+# 
+def ZDF_BilderCollect(content, title_org, mode):
+	PLog('ZDF_BilderCollect: ' + mode)
+
+	pic_list=[]
+	cnt=0 
+	PLog("mode: %s" % mode)
+	if mode == "content":											# Standard-Galerie
+		for rec in content:				
+			category = stringextract('teaser-cat-category">', '</span>', rec)
+			category = mystrip(category)
+			PLog(category)
+			brand = stringextract('brand-ellipsis">', '</span>', rec)
+			brand = mystrip(brand)	
+			PLog(brand)
+
+			img_links =  stringextract('data-srcset="', '"', rec)	# mehrere Links, aufsteig. Bildgrößen
+			img_links = blockextract('http', img_links)
+			w_old=0
+			for img_link in img_links:
+				img_link = img_link.split(' ')[0]					# Link bis 1. Blank: ..?cb=1462007560755 384w 216h
+				w=''
+				w_h = stringextract('~', '?cb', img_link)			# Bsp.: ..-2014-100~384x216?cb=1462007562325
+				PLog(img_link); PLog(w_h)
+				if "x" in w_h:
+					w  = w_h.split('x')[0]							# Bsp.: 384
+					if int(w) > w_old and int(w) <= 1280:			# Begrenz.: 1280 (gesehen: 3840)
+						w_old = int(w)
+						
+			img_src  = img_link
+			PLog("img_src: %s, w: %d" % (img_link, w_old))
+			if img_src == "":
+				continue	
+						
+			href = stringextract('a href', '</a>', rec)
+			path  = stringextract('="', '"', href)
+			if path == '':											# Sicherung
+				path = 	stringextract('plusbar-url="', '"', rec)
+			if path.startswith("http") == False:
+				path = "https://www.zdf.de" + path
+			title = stringextract('title="', '"', href)				# falls leer -> descr, s.u.
+				
+			tag = stringextract('"teaser-info">', '</dd>', rec)		# Quelle
+			tag = cleanhtml(tag); tag = mystrip(tag)
+			airtime = stringextract('class="air-time" ', '</time>', rec)
+			airtime = stringextract('">', '</time>', airtime)
+			if airtime:
+				tag = "%s | %s" % (tag, airtime)
+			if category:
+				tag = "%s | %s" % (tag, category)
+			if brand:
+				tag = "%s | %s" % (tag, brand)		
+			if tag:
+				tag = "%s | %s" % (tag, title_org)
+				
+			descr = stringextract('description">', '<', rec)
+			if descr == '':
+				descr = stringextract('teaser-text">', '<', rec) 	# mehrere Varianten möglich
+			if descr == '':
+				descr = stringextract('class="teaser-text" >', '<', rec)
+			summ = mystrip(descr.strip())
+			summ = unescape(summ)
+			PLog('summ: ' + summ)
+			
+			if title == '':
+				title = summ
+			cnt=cnt+1	
+			PLog('neu: %d' % cnt);PLog(title);PLog(img_src);PLog(summ[0:40]);
+			p = "%s||%s||%s||%s" % (img_src, title, tag, summ)
+			pic_list.append(p)
+			
+	if mode == "caption":											# neues ZDF-Format Promi-News in Bildern
+		for item in content:
+			item = (item.replace('\\', "").	replace	('\\\\', "*"))
+			PLog(item[:80])	
+			title = stringextract('"title":"', '"', item)
+			alt = stringextract('"altText":"', '"', item)	
+			alt = stringextract('"altText":"', '"', item)	
+			cr = stringextract('"source":"', '"', item)	
+			caption = stringextract('"source":"', '"copyrightNotice', item)
+			summ = unescape(caption)
+			
+			tag = "%s | Quelle: %s" % (alt, cr)	
+			if tag:
+				tag = "%s\nBilderserie: [B]%s[/B]" % (tag, title_org)
+			
+			try:
+				img_src=""
+				hrefs = item.split('layouts')[-1]					# layouts :{ 1140x120 : https://www.zd
+				href_list = blockextract("https", hrefs)
+				# if cnt == 0:
+				#	PLog(href_list)			# Debug
+				# img_src = href_list[-1]							# Kennz. "original", große CPU-Last, teilw. 2850w
+				for img_src in href_list:
+					if "1280xauto" in img_src:  					# -> 1280x720, ev. Setting einführen				
+						break								
+				if '"' in img_src:
+					img_src = img_src.split('"')[0]
+				if ' ' in img_src:									# cb=1570622747821 1280w
+					img_src = img_src.split(' ')[0]
+							
+			except Exception as exception:
+				img_src=""
+				PLog("hrefs_error: " + str(exception))
+			
+			if img_src == "" or ".html" in img_src or "/assets/" not in img_src:	# kein Bild
+				continue
+				
+			PLog('neu: %d' % cnt);PLog(title);PLog(img_src);PLog(summ[0:40]);
+			if img_src:
+				p = "%s||%s||%s||%s" % (img_src, title, tag, summ)
+				pic_list.append(p)
+				cnt=cnt+1
+		
+	return  pic_list
+
 ####################################################################################################
 def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', buttons=True, track_add='', live=''):	
 #	# master.m3u8 bzw. index.m3u8 auswerten, Url muss komplett sein. 
