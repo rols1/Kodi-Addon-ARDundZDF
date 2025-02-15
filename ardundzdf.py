@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>230</nr>										# Numerierung für Einzelupdate
+# 	<nr>231</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.8'
 VDATE = '15.02.2025'
 
@@ -11455,13 +11455,14 @@ def ZDF_BilderCollect(content, title_org, mode):
 			
 	if mode == "caption":											# neues ZDF-Format Promi-News in Bildern
 		for item in content:
-			item = (item.replace('\\', "").	replace	('\\\\', "*"))
+			item = (item.replace('\\"', '"').	replace	('\\\\"', '*'))
 			PLog(item[:80])	
+			if "Shirin" in item:
+				PLog("Text: " + item)
 			title = stringextract('"title":"', '"', item)
 			alt = stringextract('"altText":"', '"', item)	
-			alt = stringextract('"altText":"', '"', item)	
-			cr = stringextract('"source":"', '"', item)	
-			caption = stringextract('"source":"', '"copyrightNotice', item)
+			cr = stringextract('"source":"', '"', item)
+			caption= stringextract('"caption":"', '"', item)	
 			summ = unescape(caption)
 			
 			tag = "%s | Quelle: %s" % (alt, cr)	
