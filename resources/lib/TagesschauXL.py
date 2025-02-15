@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>16</nr>								# Numerierung für Einzelupdate
-#	Stand: 03.08.2024
+# 	<nr>17</nr>								# Numerierung für Einzelupdate
+#	Stand: 15.02.2025
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -362,12 +362,12 @@ def XL_BilderClusterSingle(title, path):
 			title  = unescape(title)
 			tag = "Folgeseiten\n\nBild: %s" % img_alt
 			summ = "[B]%s[/B]" % topline
-			img_url = stringextract('js-image" src="', '"', item)
+			img_url = stringextract('src="', '"', item)
 			link = stringextract('teaser-xs__link" href="', '"', item)
 			path = BASE_URL + link
 			
 			PLog("Satz1_2:")
-			PLog(headline); PLog(topline); PLog(path); PLog(tag); PLog(summ); 
+			PLog(headline); PLog(img_url); PLog(topline); PLog(path); PLog(tag); PLog(summ); 
 			title=py2_encode(title); path=py2_encode(path);
 			fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(headline), quote(path))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.TagesschauXL.XL_BilderClusterSingle", 
