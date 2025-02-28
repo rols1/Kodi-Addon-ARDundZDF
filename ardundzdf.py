@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>231</nr>										# Numerierung für Einzelupdate
+# 	<nr>232</nr>										# Numerierung für Einzelupdate
 VERSION = '5.1.8'
-VDATE = '15.02.2025'
+VDATE = '28.02.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -2726,6 +2726,7 @@ def Audio_get_items_single(item, ID=''):
 		title = stringextract('"title":"', '"', item)
 	title = repl_json_chars(py2_decode(title))						# PY2
 	summ = stringextract('"synopsis":"', '"', item)
+	summ = unescape(py2_decode(summ))
 	summ = repl_json_chars(py2_decode(summ))						# PY2
 	source = stringextract('"source":"', '"', item)
 	sender = stringextract('zationName":"', '"', item)
@@ -3590,7 +3591,7 @@ def ARDSportAudioXML(channel, img=''):
 	SenderLiveListe(title=channel, listname=channel, fanart=img, onlySender='')
 	return
 #--------------------------------------------------------------------------------------------------
-# Bilder für ARD Sportschau, z.B. Moderatoren
+# Bilder für ARD Sportschau, z.B. einzelne Moderatoren
 # Einzelnes Listitem in Video-Addon nicht möglich - s.u.
 # Slideshow: ZDF_SlideShow
 # 17.06.2022 angepasst an Webänderungen
@@ -4762,6 +4763,8 @@ def ARDSportHub(title, path, img, Dict_ID=''):
 	li = home(li, ID='ARD')						# Home-Button
 	
 	if "Moderation" in title:
+		# Liste der Moderatoren -> ARDSportBilder (Slideshow zum
+		#	einzelnen Moderator)
 		page = ARDSportLoadPage(title, path, "ARDSportHub")
 		if page == '':
 			return
@@ -8474,7 +8477,7 @@ def BilderDasErste(path=''):
 			fparams="&fparams={'path': '%s'}" % (quote(href))
 			addDir(li=li, label=title, action="dirList", dirID="BilderDasErste", fanart=R(ICON_MAIN_ARD),
 				thumb=R('ard-bilderserien.png'), fparams=fparams)
-		
+			
 	else:	# -----------------------					# 10er-Seitenübersicht laden		
 		page, msg = get_page(path)	
 		if page == '':
@@ -8506,7 +8509,8 @@ def BilderDasErste(path=''):
 			href=py2_encode(href); title=py2_encode(title);	
 			fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(title), quote(href))
 			addDir(li=li, label=title, action="dirList", dirID="BilderDasErsteSingle", fanart=R(ICON_MAIN_ARD),
-				thumb=R('ard-bilderserien.png'), tagline=tag, summary=summ, fparams=fparams)
+				thumb=R('ard-bilderserien.png'), tagline=tag, summary=summ, fparams=fparams)		
+			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #--------------------------------------------------------------------------------------------------	
@@ -11457,8 +11461,6 @@ def ZDF_BilderCollect(content, title_org, mode):
 		for item in content:
 			item = (item.replace('\\"', '"').	replace	('\\\\"', '*'))
 			PLog(item[:80])	
-			if "Shirin" in item:
-				PLog("Text: " + item)
 			title = stringextract('"title":"', '"', item)
 			alt = stringextract('"altText":"', '"', item)	
 			cr = stringextract('"source":"', '"', item)
