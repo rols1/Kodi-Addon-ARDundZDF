@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>31</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.02.2025
+# 	<nr>32</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -778,6 +778,11 @@ def Kika_Subchannel(path, title, thumb, Plot, li=''):
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return
+		
+	# ------------------------
+	if "/subchannels/ausmalbilder" in path:								# Ausmalbilder trennen
+		Kika_Malbilder(title, page)
+		return		
 
 	# ------------------------
 	if path.endswith("html"):											# von Kikaninchen_Videos, s.o.
@@ -833,8 +838,123 @@ def Kika_Subchannel(path, title, thumb, Plot, li=''):
 		fanimg=thumb
 	
 	Kika_Rubriken(page, title_org, fanimg, ID='Subchannel',li=li)		# Seitensteuerung Kika_Rubriken
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)				
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+# -------------------------------
+# Aufruf Kika_Subchannel ("/subchannels/ausmalbilder" in path)
+# Step 1: Liste der Serien, Step 2: 1 Ausmalserie (single_serie_url)
+#
+def Kika_Malbilder(title, page, single_serie_url=""):
+	PLog('Kika_Malbilder: ' + title)
+	PLog("single_serie_url: %s" % single_serie_url)
+
+	if single_serie_url:
+		page, msg = get_page(single_serie_url)
+		PLog(msg)
+
+	try:
+		page = json.loads(page)	
+		PLog(str(page)[:80])
+		if "plusContent" in page:		# Step 1
+			content = page["plusContent"]
+		else:							# Step 2
+			content = page["content"]
+		PLog("content: %d" % len(content))
+	except Exception as exception:
+		PLog("Malbilder_error: " + str(exception))
+		msg1 = "leider keine Malbilder:"
+		msg2 = title
+		icon = KIKA_START
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)	
+		return
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')				# Home-Button
+			
+	if single_serie_url == "":											# Step 1: Serien Ausmalbilder
+		PLog("Step1")		
+
+		for cont in content:
+			teasers = cont["teasers"]
+			for item in teasers:
+				single_serie_url = item["api"]["url"]
+				single_serie_url = single_serie_url + "/teasers?page=0&platform=kikade"	# Zusatz empirisch
+				title = item["title"]		
+				tag = item["teaserImage"]["title"]
+				img = item["teaserImage"]["urlScheme"]
+				img = BASE_KIKA + img.replace("**imageVariant**", "original")
+				img = img.replace("**width**", "1920")		
+				summ = item["teaserText"]
 				
+				PLog("Satz4:")
+				PLog(title); PLog(single_serie_url); PLog(img); PLog(tag); PLog(summ); 
+		
+				title=py2_encode(title); single_serie_url=py2_encode(single_serie_url); 
+				fparams="&fparams={'title': '%s', 'page': '', 'single_serie_url': '%s'}" %\
+					(quote(title), quote(single_serie_url))
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Malbilder", 
+					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
+
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	#-------------------------------------------------------------------
+	if single_serie_url:												# Step 2: einzelne Serie Ausmalserie
+		PLog("Step2")
+		for item in content:
+			downl_url = item["api"]["url"]
+			title = item["title"]		
+			tag = item["teaserImage"]["title"]
+			img = item["teaserImage"]["urlScheme"]
+			img = BASE_KIKA + img.replace("**imageVariant**", "original")
+			img = img.replace("**width**", "1920")		
+			summ = item["teaserText"]
+			t = "[B]Klick speichert das Bild im Downloadverzeichnis[/B]"
+			summ = "%s\n\n%s" % (summ, t)
+			Plot = "%s\n\n%s" % (tag, summ)
+			Plot = Plot.replace("\n", "||")
+			
+			PLog("Satz8:")
+			PLog(title); PLog(downl_url); PLog(img); PLog(tag); PLog(summ); 
+	
+			title=py2_encode(title); downl_url=py2_encode(downl_url); 
+			Plot=py2_encode(Plot)
+			fparams="&fparams={'title': '%s', 'downl_url': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+				(quote(title), quote(downl_url), quote(img),  quote(Plot))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_downl_PDF", 
+				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
+			
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+				
+# -------------------------------
+# Aufruf: Kika_Malbilder
+#
+def Kika_downl_PDF(title, downl_url, thumb, Plot):
+	PLog('Kika_downl_PDF: ' + title)
+	PLog(downl_url)
+	
+	if check_Setting('pref_download_path') == False:	
+		return
+
+	source_path = downl_url.replace("proxy/v1/downloads", "download")
+	dl_path = SETTINGS.getSetting('pref_download_path')
+	fname = make_filenames(title)
+	dest_path = os.path.join(dl_path, fname)
+	
+	PLog("source_path: " + source_path)
+	PLog("dest_path: " + dest_path)
+	msg1 = "Ausmalbild"
+	msg2 = "erfolgreich gespeichert"
+			
+	try:
+		urlretrieve(source_path, dest_path)
+	except Exception as exception:
+		PLog(str(exception))
+		msg2 = "Speichern fehlgeschlagen"
+		
+	icon = KIKA_START
+	xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)	
+	
+	return			# GetDirectory-Error, aber Verbleib in Bilderliste
+
 # ----------------------------------------------------------------------
 # 07.12.2022 Neu nach Webänderungen - Folgeseiten ermitteln in  
 #	 (path=api_url -> json), docType: broadcastSeries
@@ -970,8 +1090,6 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 		return
 	else:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		
-
 
 # ----------------------------------------------------------------------
 # 04.07.2021 Aus WDR5 KiRaKa wird MausLive - Infoseite:
