@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>32</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.03.2025
+# 	<nr>33</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -569,7 +569,8 @@ def Kika_Start(show_cluster='', path=''):
 		title = stringextract('"title":"', '"', item)
 		title=repl_json_chars(title)
 		PLog("title: " + title)
-		if "Jetzt live" in title or title == "":						# skip Live + Game
+		# skip Live + Game
+		if "Jetzt live" in title or title == "" or "Jede Menge Spielspaß" in title:
 			continue
 			
 		title=py2_encode(title)
@@ -770,6 +771,7 @@ def Kika_get_singleItem(s):
 #	erneut -> Kika_Subchannel
 def Kika_Subchannel(path, title, thumb, Plot, li=''):
 	PLog('Kika_Subchannel: ' + title)
+	PLog(thumb)
 	title_org=title	
 	
 	page, msg = get_page(path)
@@ -779,8 +781,8 @@ def Kika_Subchannel(path, title, thumb, Plot, li=''):
 		MyDialog(msg1, msg2, '')
 		return
 		
-	# ------------------------
-	if "/subchannels/ausmalbilder" in path:								# Ausmalbilder trennen
+	# ------------------------											# Ausmal-/Bastelbilder trennen
+	if "/subchannels/ausmalbilder"  in path or "selbermachen/basteln/" in thumb:
 		Kika_Malbilder(title, page)
 		return		
 
@@ -809,7 +811,8 @@ def Kika_Subchannel(path, title, thumb, Plot, li=''):
 		
 	featuredVideo = stringextract('"featuredVideo"',  '"videosPageUrl"', page)
 	fanimg=""
-	if featuredVideo:													# Empfehlung od. 1. Folge | kann fehlen 
+	if featuredVideo:													# Empfehlung od. 1. Folge | kann fehlen
+		PLog("get_featuredVideo:")
 		teaserImage = stringextract('"teaserImage"',  '"structure"', page)
 		if teaserImage:
 			fanimg, img_alt = Kika_get_img(teaserImage)
@@ -857,34 +860,51 @@ def Kika_Malbilder(title, page, single_serie_url=""):
 		PLog(str(page)[:80])
 		if "plusContent" in page:		# Step 1
 			content = page["plusContent"]
-		else:							# Step 2
-			content = page["content"]
+		else:
+			if 	"content" in page:		# Step 2 Malen (mehrere Bilder möglich)
+				content = page["content"]
+			else:						# Step 2 Basteln (nur 1 x)
+				content=[]
+				content.append(page["featuredDownload"])
 		PLog("content: %d" % len(content))
+		PLog(str(content)[:80])
 	except Exception as exception:
 		PLog("Malbilder_error: " + str(exception))
-		msg1 = "leider keine Malbilder:"
-		msg2 = title
+		msg1 = title
+		if len(msg1) > 26:
+			msg1 = "%s.." % title[:24]
+		msg2 = "leider nichts gefunden!"
 		icon = KIKA_START
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)	
 		return
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')				# Home-Button
+	li = home(li, ID='Kinderprogramme')		# Home-Button
 			
 	if single_serie_url == "":											# Step 1: Serien Ausmalbilder
 		PLog("Step1")		
-
 		for cont in content:
-			teasers = cont["teasers"]
+			if "teasers" in cont:			# Malen (mehrere Bilder möglich)
+				teasers = cont["teasers"]
+			else:							# Basteln (nur 1 x)
+				teasers=[]
+				teasers.append(cont)
+			
 			for item in teasers:
-				single_serie_url = item["api"]["url"]
-				single_serie_url = single_serie_url + "/teasers?page=0&platform=kikade"	# Zusatz empirisch
-				title = item["title"]		
-				tag = item["teaserImage"]["title"]
 				img = item["teaserImage"]["urlScheme"]
 				img = BASE_KIKA + img.replace("**imageVariant**", "original")
 				img = img.replace("**width**", "1920")		
-				summ = item["teaserText"]
+				single_serie_url = item["api"]["url"]
+				if "/basteln/" in img or "/spiele/" in img:				# Url für Bastelbögen ohne Zusatz
+					pass
+				else:
+					single_serie_url = single_serie_url + "/teasers?page=0&platform=kikade"	# Zusatz empirisch
+				title = item["title"]
+				title = repl_json_chars(title)		
+				tag = item["teaserImage"]["title"]
+				summ = item["teaserText"]								# null möglich
+				if not summ:
+					summ = "" 
 				
 				PLog("Satz4:")
 				PLog(title); PLog(single_serie_url); PLog(img); PLog(tag); PLog(summ); 
@@ -896,12 +916,13 @@ def Kika_Malbilder(title, page, single_serie_url=""):
 					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
 
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	else:
 	#-------------------------------------------------------------------
-	if single_serie_url:												# Step 2: einzelne Serie Ausmalserie
-		PLog("Step2")
-		for item in content:
+		PLog("Step2")													# Step 2: einzelne Serie Ausmalserie od.
+		for item in content:											# 	einz. Bastelbogen
 			downl_url = item["api"]["url"]
 			title = item["title"]		
+			title = repl_json_chars(title)		
 			tag = item["teaserImage"]["title"]
 			img = item["teaserImage"]["urlScheme"]
 			img = BASE_KIKA + img.replace("**imageVariant**", "original")
@@ -909,9 +930,11 @@ def Kika_Malbilder(title, page, single_serie_url=""):
 			summ = item["teaserText"]
 			t = "[B]Klick speichert das Bild im Downloadverzeichnis[/B]"
 			summ = "%s\n\n%s" % (summ, t)
+			summ = repl_json_chars(summ)	
 			Plot = "%s\n\n%s" % (tag, summ)
 			Plot = Plot.replace("\n", "||")
-			
+			Plot = Plot.replace("\r", "")								# ^M Carriage Return möglich bei Bastelbögen
+	
 			PLog("Satz8:")
 			PLog(title); PLog(downl_url); PLog(img); PLog(tag); PLog(summ); 
 	
@@ -922,7 +945,7 @@ def Kika_Malbilder(title, page, single_serie_url=""):
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_downl_PDF", 
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
 			
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 				
 # -------------------------------
 # Aufruf: Kika_Malbilder
@@ -934,14 +957,16 @@ def Kika_downl_PDF(title, downl_url, thumb, Plot):
 	if check_Setting('pref_download_path') == False:	
 		return
 
-	source_path = downl_url.replace("proxy/v1/downloads", "download")
+	source_path = downl_url.replace("proxy/v1/downloads", "download")	# empirisch
 	dl_path = SETTINGS.getSetting('pref_download_path')
 	fname = make_filenames(title)
 	dest_path = os.path.join(dl_path, fname)
 	
 	PLog("source_path: " + source_path)
 	PLog("dest_path: " + dest_path)
-	msg1 = "Ausmalbild"
+	msg1 = title
+	if len(msg1) > 26:
+		msg1 = "%s.." % title[:24]
 	msg2 = "erfolgreich gespeichert"
 			
 	try:
@@ -1018,6 +1043,9 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 		#	ergänzen: 
 		mehrf,typ,path,stitle,thumb,Plot = Kika_get_singleItem(s)		# -> Kika_get_singleItem
 		tag = Plot.replace('||', '\n')
+		
+		if "Alle Ausmalbilder" in stitle:								# 2x, beide "Ausmalbilder" enthalten,
+			continue													#	zusätzl. Bilder -> Das könnte dir auch gefallen
 		if path in skip_list:											# Doppler vermeiden
 			continue
 		skip_list.append(path)	
@@ -1042,7 +1070,8 @@ def Kika_Rubriken(page, title, thumb, ID='', li='', path=''):
 			func = "Kika_SingleBeitrag"									# einz. Video
 			if SETTINGS.getSetting('pref_video_direct') == 'true': 		# Kennz. Video für Sofortstart 
 				mediatype='video'
-		PLog("func:" + func)	
+		PLog("func:" + func)
+		PLog("Satz12:")	
 		if func:		
 			stitle=py2_encode(stitle); path=py2_encode(path); 
 			thumb=py2_encode(thumb); Plot=py2_encode(Plot)
