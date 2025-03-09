@@ -78,7 +78,7 @@ Funktionen:
 - für die Aufnahmefunktion (mit oder ohne EPG) ist eine [ffmpeg-Installation](https://ffmpeg.org/download.html) erforderlich 
 
 #### Radio-Live-Streams der ARD:
-- alle Radiosender von Bayern, HR, mdr, NDR, Radio Bremen, RBB, SR, SWR, WDR, Deutschlandfunk. Insgesamt 10 Stationen, 65 Sender
+- alle Radiosender von Bayern, HR, mdr, NDR, Radio Bremen, RBB, SR, SWR, WDR, Deutschlandfunk. Insgesamt 10 Stationen, 65 Sender plus regionale Sender (z.B. hr1-Rhein-Main, -Südhessen, -Osthessen, -Nordhessen, -Mittelhessen) 
  
 #### Videobehandlung (Setting: Sofortstart AUS):
 - Livestreams: Auflistung der verfügbaren Angebote an Bandbreiten + Auflösungen (falls verfügbar: Audio ohne Video)

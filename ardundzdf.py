@@ -59,8 +59,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>232</nr>										# Numerierung für Einzelupdate
-VERSION = '5.1.8'
-VDATE = '28.02.2025'
+VERSION = '5.1.9'
+VDATE = '09.03.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de

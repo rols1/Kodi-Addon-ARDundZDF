@@ -1517,7 +1517,7 @@ def repl_dop(liste):
 def repl_json_chars(line):	
 	line_ret = line
 	#PLog(type(line_ret))
-	for r in	((u'"', u''), (u'\\', u''), (u'\'', u''), (u'%5C', u'')
+	for r in	((u'"', u''), (u"'", ''), (u'\\', u''), (u'\'', u''), (u'%5C', u'')
 		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
 		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love'), (u'%C3%A9', u'é')		# u'u003e' 	-> u'®'
@@ -1876,7 +1876,7 @@ def wrap_old(text, width):		# 15.02.2020 abgelöst durch wrap s.u.
                    word),
                   text.split(' ')
                  )
-#  wrap-Funktion ohne reduce:                
+#  wrap-Funktion ohne reduce:
 def wrap(text, width):
 	text = text.strip()
 	lines = text.splitlines()

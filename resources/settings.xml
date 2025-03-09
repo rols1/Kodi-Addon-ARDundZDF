@@ -64,7 +64,7 @@
 	<setting label="Inhaltstexte (im Voraus geladen)" type="select" values="5|10|30|100" default="30" id="pref_TEXTE_store_days"/>
 	<setting label="ARD- und ZDF-TV-Livestream-Quellen" type="select" values="0|1|5|10|20|60|100" default="60" id="pref_tv_store_days"/>
 	<setting label="EPG: Intervall für die Aktualisierung" type="select" values="12 Std.|1 Tag|5 Tage|10 Tage" default="12 Std." id="pref_epg_intervall"/>
-	<setting label="Kodi-Thumbnails-Ordner bereinigen" type="select" values="0|1|5|10|30|100" default="0" id="pref_thumbnail_days"/>
+	<setting label="Kodi-Thumbnails-Ordner bereinigen (0=AUS)" type="select" values="0|1|5|10|30|100" default="0" id="pref_thumbnail_days"/>
 </category> 
 
  <category label="Favoriten / Merkliste / strm-Dateien">

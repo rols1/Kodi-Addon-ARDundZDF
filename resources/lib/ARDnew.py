@@ -3077,7 +3077,7 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						fcnt = fcnt+1
 						continue		
 					
-				PLog("Satz:")
+				PLog("Satz2:")
 				PLog(title); PLog(href); PLog(path); PLog(img); PLog(summ[:60]); 
 				PLog(duration); PLog(availableTo);
 						

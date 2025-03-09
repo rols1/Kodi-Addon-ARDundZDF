@@ -10,6 +10,23 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+09.03.2025	5.1.9
+			ARDSearchnew, SearchARDundZDFnew (ARDnew): Such-Url durch ARD geändert: 
+			Zusatz platform=MEDIA_THEK.
+			get_next_url (Modul arte): zusätzl. Serverangabe "api-cdn.arte.tv" nach 
+			Ersetzung durch "www.arte.tv" entfernt (next_url betroffen).
+			get_ArtePage (Modul arte): Verzicht auf GetOnlyRedirect vor Seitenabruf
+			(Absturz nach mehrfachem HTTP Error 308 bei ../arte-concert).
+			ZDF-Bilderserien: Auswertung neues Datenformat bei zdfheute - neue
+			Funktion ZDF_BilderCollect.
+			thread_getpic: linken Rand (20 Pixel) für Wasserzeichen in Bilderserien
+			hinzugefügt.
+			XL_BilderClusterSingle (Modul TagesschauXL): Anpassung an genderte Bild-
+			quelle.
+			Audio_get_items_single: HTML-Escapezeichen in Infotext entfernt (unescape).
+			Modul childs: Download KiKA-Mal-/Bastel-Bilder (PDF-Format) ergänzt - neue 
+			Funktion Kika_Malbilder + Kika_downl_PDF.
+
 05.02.2025	5.1.8
 			SingleVideo (Modul arte): Error-Handling für HBBTV-MP4-Quellen (leere Params
 			bei json_error_path2).
