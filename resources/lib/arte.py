@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>53</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.02.2025
+# 	<nr>54</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -216,7 +216,7 @@ def get_live_data(name):
 	
 	arte_lang = Dict('load', "arte_lang")
 	lang = arte_lang.split("|")[1].strip()			# fr, de, ..	
-	path = "https://www.arte.tv/%s/live/" % lang
+	path = "https://arte.tv/%s/live/" % lang
 	path, msg = get_page(path, GetOnlyRedirect=True)# Permanent-Redirect bei www.arte.tv/fr/live/
 	tag_add=""
 	if url_check(path, dialog=False) == False:		# nicht für alle Sprachen verfügbar
@@ -289,7 +289,7 @@ def EPG_Today():
 		msg1 = u"fehlt: " + arte_lang
 		msg2 = u"lade: " + u"Deutsch | de"			# Fallback Deutsch
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
-		path = "https://www.arte.tv/api/rproxy/emac/v3/%s/web/pages/TV_GUIDE/?day=%s" % ("de", today)
+		path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/TV_GUIDE/?day=%s" % ("de", today)
 	
 	page = get_ArtePage('EPG_Today', "EPG_Today", path)	
 	if page == '':
@@ -1077,7 +1077,7 @@ def Kategorien():
 	PLog("katlinks: " + str(katlinks))
 	PLog(len(katlinks))
 	
-	path = "https://www.arte.tv/%s/" % lang
+	path = "https://www.arte.tv/%s/" % lang		
 	path=py2_encode(path)
 	fparams="&fparams={'katurl': '%s'}" % quote(path)		# Button Startseite
 	l = L("Startseite")
@@ -1136,7 +1136,10 @@ def ArteCluster(pid='', title='', katurl=''):
 	PLog(katurl); 
 	katurl_org=katurl
 
+	if "/arte-concert" in katurl:					# Redirect-Error für ../de/videos/arte-concert/
+		katurl = katurl.replace("/videos", "")
 	page = get_ArtePage('ArteCluster', title, path=katurl)
+
 	if katurl == "https://www.arte.tv/%s/" % lang:		
 		uhd_url = "https://www.arte.tv/%s/videos/RC-022710/programme-in-uhd-qualitaet/" % lang # Watchdog_Plex-2 (de)
 		ping_uhd = url_check(uhd_url, dialog=False)

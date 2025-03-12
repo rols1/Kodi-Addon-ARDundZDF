@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>118</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.01.2025
+# 	<nr>119</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1127,7 +1127,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 
 	try:															# 1. Versuch ohne SSLContext 
 		PLog("get_page1:")
-		if GetOnlyRedirect:											# nur Redirect anfordern - hier nur dummy
+		if GetOnlyRedirect:											# nur Redirect anfordern
 			PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
 			page, msg = getRedirect(path, header)
 			return page, msg
@@ -1257,6 +1257,7 @@ def getHeaders(response):						# z.Z.  nicht genutzt
 #	Versuch in get_page (get_page3) mit requests (falls vorh.)
 #   Für PYTHON3 bei Redirect-Errors Umstellung auf httplib2.
 #	Debug 308_Error: www.ardaudiothek.de/rubrik/42914694 (ohne /-Ende)
+# 12.03.2025 für arte.EPG_Today: Check auf Error 309-399
 #	
 def getRedirect(path, header=""):		
 	PLog('getRedirect: '+ path)
@@ -1276,7 +1277,12 @@ def getRedirect(path, header=""):
 		return new_url, msg
 	except Exception as e:
 		PLog("redirect_error: "  + str(e))
+		
 		try:
+			err = re.search(r'HTTP Error (\d+):', str(e)).group(1)
+			err = int(err)
+			if err >= 309 and err <= 399:							#  Die Statuscodes 309 bis 399 nicht zugewiesen
+				return path, msg
 			if "308:" in str(e) or "307:" in str(e) or "301:" in str(e):	# Permanent-Redirect-Url
 				if PYTHON2:											# -> get_page (s.o.)
 					return path, msg
