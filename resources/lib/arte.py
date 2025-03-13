@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>54</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.03.2025
+# 	<nr>55</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -227,7 +227,7 @@ def get_live_data(name):
 	# Format err_par: title, tag, summ, img, href = get_live_data
 	err_par = [u"[B]LIVE[/B]", "", "", thumb, href]	# Stream ohne Daten
 	page = get_ArtePage('get_live_data', "Arte Live", path) # EPG Arte
-	if page == "":			
+	if page == "":
 		return err_par
 	#RSave('/tmp2/x_Arte_Live.json', py2_encode(str(page)))	# Debug	
 	
@@ -1326,18 +1326,23 @@ def get_ArtePage(caller, title, path, header=''):
 			MyDialog(msg1, msg2, '')
 			return ''
 	else:
-		if page.startswith('{"tag":"Ok"'):			# json-Daten pur
-			page = json.loads(page)
-		else:										# json-Daten extrahieren RFC 7159
-			mark1 = '"pageProps'; mark2 = ',"page":"/'	# angepasst  12.02.2023	
-			pos1 = page.find(mark1)
-			pos2 = page.find(mark2)
-			PLog(pos1); PLog(pos2)
-			if pos1 < 0 or pos2 < 0:
-				PLog("json_data_failed")
-				page=''									# ohne json-Bereich: leere Seite
-			page = "{" + page[pos1:pos2]
-			page = json.loads(page)			
+		try:
+			if page.startswith('{"tag":"Ok"'):			# json-Daten pur
+				page = json.loads(page)
+			else:										# json-Daten extrahieren RFC 7159
+				mark1 = '"pageProps'; mark2 = ',"page":"/'	# angepasst  12.02.2023	
+				pos1 = page.find(mark1)
+				pos2 = page.find(mark2)
+				PLog(pos1); PLog(pos2)
+				if pos1 < 0 or pos2 < 0:
+					PLog("json_data_failed")
+					page=''								# ohne json-Bereich: leere Seite
+				else:
+					page = "{" + page[pos1:pos2]
+					page = json.loads(page)			
+		except Exception as exception:
+			page=""
+			PLog("page_json_error: " + str(exception))
 
 	#RSave('/tmp2/x_arteStart_pl.json', py2_encode(str(page)))	# Debug	
 	PLog(len(page))
