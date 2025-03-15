@@ -10,6 +10,19 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+15.03.2025 	5.2.0
+			ArteCluster: Url-Korrektur für Arte Concert (Redirect-Error für 
+			../de/videos/arte-concert/)
+			get_live_data (Modul arte): Nutzung EPG_Today, Anpassungen in 
+			get_live_data, EPG_Today (mode="onlyPage"), GetContent (OnlyNow=True, 
+			found_stickers). 
+			get_ArtePage: json-error abgefangen (relevant für www.arte.tv/de/live),
+			leeres bytes-like object abgefangen.
+			getRedirect (Modul util): Abfangen HTTP-Error 309-399 (nicht zugewiesen), 
+			relevant für arte.EPG_Today ("Error 309: Unknown").
+			url_check (Modul util): Header für Aufruf getRedirect auf user-agent (curl)
+			beschränkt, relevant für arte.EPG_Today (s.o.).	
+
 09.03.2025	5.1.9
 			ARDSearchnew, SearchARDundZDFnew (ARDnew): Such-Url durch ARD geändert: 
 			Zusatz platform=MEDIA_THEK.
@@ -21,7 +34,7 @@ CHANGE HISTORY
 			Funktion ZDF_BilderCollect.
 			thread_getpic: linken Rand (20 Pixel) für Wasserzeichen in Bilderserien
 			hinzugefügt.
-			XL_BilderClusterSingle (Modul TagesschauXL): Anpassung an genderte Bild-
+			XL_BilderClusterSingle (Modul TagesschauXL): Anpassung an geänderte Bild-
 			quelle.
 			Audio_get_items_single: HTML-Escapezeichen in Infotext entfernt (unescape).
 			Modul childs: Download KiKA-Mal-/Bastel-Bilder (PDF-Format) ergänzt - neue 

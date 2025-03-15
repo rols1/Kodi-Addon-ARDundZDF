@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>119</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.03.2025
+#	Stand: 14.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1213,6 +1213,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 					f = gzip.GzipFile(fileobj=buf)
 					page = f.read()
 					PLog(len(page))
+
 				if PYTHON2:			
 					page = py2_decode(page)								# erzeugt bei PY3 Bytestrings (ARD)
 				else:
@@ -1261,6 +1262,7 @@ def getHeaders(response):						# z.Z.  nicht genutzt
 #	
 def getRedirect(path, header=""):		
 	PLog('getRedirect: '+ path)
+	PLog("header: " + str(header))
 	page=""; msg=""
 	parsed = urlparse(path)
 
@@ -3989,6 +3991,8 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 # 04.03.2022 Header für ZDF-Url erforderl. (Error "502 Bad Gateway")
 # 21.01.2023 dialog optional für add_UHD_Streams (ohne Dialog)
 # Rückage url oder False
+# 14.03.2025 Header auf user-agent (curl) beschränkt 
+#
 def url_check(url, caller='', dialog=True):
 	PLog('url_check: ' + url)
 
@@ -4012,9 +4016,7 @@ def url_check(url, caller='', dialog=True):
 	# Tests:
 	# url='http://104.250.149.122:8012'			# Debug: urlopen error Connection refused
 	# url='http://feeds.soundcloud.com/x'		# HTTP Error 405: Method Not Allowed
-
-	header={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
-		'Connection': 'keep-alive', 'Accept-Encoding': 'gzip, deflate, br', 'Cache-Control': 'max-age=0'}
+	header = {'user-agent': 'curl/7.81.0'}
 
 	page, msg = getRedirect(url, header)			
 	if page:

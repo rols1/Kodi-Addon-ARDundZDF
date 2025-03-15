@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>55</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.03.2025
+#	Stand: 15.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -123,7 +123,7 @@ def Main_arte(title='', summ='', descr='',href=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.EPG_Today", fanart=R(ICON_ARTE), 
 		thumb=R(ICON_TV), tagline=tag, fparams=fparams)
 
-	tag=u'[B]%s[/B]' % L("Arte Livestream")
+	tag=u'[B]%s[/B]' % L("Arte Livestream")				# Livestream-Daten
 	title, tag, summ, img, href = get_live_data('ARTE')
 	title = repl_json_chars(title)
 	
@@ -146,8 +146,8 @@ def Main_arte(title='', summ='', descr='',href=''):
 		
 	# ------------------------------------------------------
 	
-	title 	= u'Sprache / Language'				# Auswahl Sprache
-	tag = "[B]%s[/B]" % arte_lang				# aktuell
+	title 	= u'Sprache / Language'						# Auswahl Sprache
+	tag = "[B]%s[/B]" % arte_lang						# aktuell
 	title=py2_encode(title); 
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.set_lang", fanart=R(ICON_ARTE), 
@@ -196,11 +196,13 @@ def set_lang(title, new_set=""):
 # ----------------------------------------------------------------------
 # Nutzung EPG-Modul, Daten von tvtoday		
 # 14.03.2023 Umstellung auf Daten von https://www.arte.tv/%s/live
+# 14.03.2025 Umstellung auf Daten aus EPG_Today (json-Daten in
+#	vorheriger Variante können fehlen), in arte für de und fr
 #
 def get_live_data(name):
 	PLog('get_live_data:')
 
-	#------------------								# Livestream aus Cache holen
+	#------------------											# Livestream aus Cache holen
 	ard_streamlinks = get_ARDstreamlinks(skip_log=True)
 	# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
 	for line in ard_streamlinks:
@@ -209,73 +211,56 @@ def get_live_data(name):
 		if up_low('Arte') in up_low(webtitle): 
 			href = href
 			break		
-	thumb = R('arte_live.png')						# Cache-thumb ist landscape
+	thumb = R('arte_live.png')									# Cache-thumb ist landscape
 	if href == '':
 		PLog('%s: Streamlink fehlt' % 'Arte ')
 	#------------------
-	
+
 	arte_lang = Dict('load', "arte_lang")
-	lang = arte_lang.split("|")[1].strip()			# fr, de, ..	
-	path = "https://arte.tv/%s/live/" % lang
-	path, msg = get_page(path, GetOnlyRedirect=True)# Permanent-Redirect bei www.arte.tv/fr/live/
-	tag_add=""
-	if url_check(path, dialog=False) == False:		# nicht für alle Sprachen verfügbar
-		tag_add = L(u"LIVE nicht verfügbar für")
-		tag_add = u"%s: [B]%s[/B]" % (tag_add, arte_lang)
-		path = "https://www.arte.tv/de/live/"		# Fallback
-	
-	# Format err_par: title, tag, summ, img, href = get_live_data
-	err_par = [u"[B]LIVE[/B]", "", "", thumb, href]	# Stream ohne Daten
-	page = get_ArtePage('get_live_data', "Arte Live", path) # EPG Arte
-	if page == "":
-		return err_par
-	#RSave('/tmp2/x_Arte_Live.json', py2_encode(str(page)))	# Debug	
-	
-	try:
-		PLog(len(page))
-		values = page["pageProps"]["props"]["page"]["value"]["zones"][0]["content"]["data"][0]
-		PLog(len(values))
-		PLog(str(values)[:100])
-	except Exception as exception:
-		PLog("livedata_failed: " + str(exception))
-		return err_par
+	lang = arte_lang.split("|")[1].strip()						# fr, de, ..
 
-	title='Arte'; stitle=''; summ=''; descr=''; vonbis=''
-	try: 
-		# href (PRG-Seite) hier n.b.
-		thumb=values["mainImage"]["url"]
-		thumb = thumb.replace('__SIZE__', '400x225')
-		title=values["title"]
-		if "subtitle" in values: 
-			stitle=values["subtitle"]
-			if stitle:
-				title = "%s - %s" % (title, stitle) 
-		summ=values["shortDescription"]
-		start=values["availability"]["start"]
-		end=values["availability"]["end"]
-		start = time_translate(start)
-		end = time_translate(end)
-		start=start.split(" ")[-1]; end=end.split(" ")[-1];		# nur Uhrzeit
-	except Exception as exception:
-		PLog("epgdata_failed: " + str(exception))
-		
-	summ = unescape(summ); 
-	title = "[B]LIVE: %s[/B]" % title
-	PLog("title: " + title); 
-	l = L("LAUFENDE SENDUNG") 
-	tag = u"[B]%s: %s - %s [/B]" % (l, start, end)
-	if tag_add:													# nicht verfügbar
-		tag = u"%s\n%s" % (tag, tag_add)
-		
-	PLog(title); PLog(thumb); PLog(title); 
+	err_par = [u"[B]LIVE[/B]", "", "", thumb, href]				# Stream ohne Daten
+	page = EPG_Today(mode="onlyPage")							# nur Seite für Heute holen, kein Check ob Sprache verfügbar
+	player = "https://api.arte.tv/api/player/v2/config/%s/LIVE" % lang	# aus ../pages/TV_GUIDE/?day=..
+	if page:
+		li=""
+		title, tag, summ, thumb, url = GetContent(li, page, ID="EPG_Today", OnlyNow=True)
+		title = u"[B]LIVE[/B] | %s" % title
+		tag = u"%s\n%s" % (title, tag)
 
-	return title, tag, summ, thumb, href
+		page = get_page(path=player)							# Playerdaten mit Stream-Url
+		page = py2_encode(page)
+		try:
+			streams = stringextract('"streams":', '"stat"', str(page))
+			PLog("streams: " + streams[:80])
+			streams = streams.replace('\\\\/','/')				# https:\\/\\/artesimulcast.akamaized.net/..
+			PLog("streams: " + streams[:80])
+			urls = blockextract('url":', streams)				# Live-Streams nur für fr, de vorhanden
+			PLog(len(urls))
+			if "fr" in lang:
+				stream_url = stringextract('url":"', '"', urls[0])
+			else:												# [1] Direct Allemand"
+				stream_url = stringextract('url":"', '"', urls[1])
+			
+			href = stream_url			
+		except Exception as exception:
+			PLog("player_error: " + str(exception))							
+			PLog("stream_url=href")								# Fallback: href aus ard_streamlinks
+		
+		PLog("lang: %s, href: %s" % (lang, href))
+		title=py2_decode(title); summ=py2_decode(summ);			# PY2
+		return title, tag, summ, thumb, href		
+	else:
+		PLog("empty_epg")
+		return err_par
 
 # ----------------------------------------------------------------------
-# TV-Programm Heute von arte.tv/de/guide/		
+# TV-Programm Heute von arte.tv/de/guide/
+# 14.03.2025 mode="onlyPage" -> nur Seite für get_live_data	
 #
-def EPG_Today():
+def EPG_Today(mode=""):
 	PLog('EPG_Today:')
+	PLog("mode: " + mode)
 
 	arte_lang = Dict('load', "arte_lang")
 	lang = arte_lang.split("|")[1].strip()			# fr, de, ..	
@@ -289,6 +274,7 @@ def EPG_Today():
 		msg1 = u"fehlt: " + arte_lang
 		msg2 = u"lade: " + u"Deutsch | de"			# Fallback Deutsch
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
+		PLog(msg1); PLog(msg2)
 		path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/TV_GUIDE/?day=%s" % ("de", today)
 	
 	page = get_ArtePage('EPG_Today', "EPG_Today", path)	
@@ -297,9 +283,13 @@ def EPG_Today():
 		MyDialog(msg1, "", '')
 		return
 		
+	if mode == "onlyPage":							# nur Inhalt, keine Liste
+		PLog("return_page")
+		return page
+		
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = u" %s %s" % (l, "arte")						# Startblank s. home
+	ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button	
 	
 	li, cnt = GetContent(li, page, ID="EPG_Today")
@@ -415,10 +405,11 @@ def Arte_Search(query='', next_url=''):
 #	liegen in der Zukunft, bieten aber kleinen Teaser 
 # Seiten mit collection_subcollection: Auswertung ab dort (Serien)
 # 15.01.2023 umgestellt: page=json
+# 14.03.2025 OnlyNow triggert EPG-Rückgabe -> get_live_data
 #
-def GetContent(li, page, ID, ignore_pid=""):
+def GetContent(li, page, ID, ignore_pid="", OnlyNow=""):
 	PLog("GetContent: " + ID)
-	PLog(ignore_pid);
+	PLog(ignore_pid); PLog(OnlyNow)
 	
 	PLog(str(page)[:80])		
 	if ID == "SEARCH":									# web-api-Call
@@ -572,10 +563,11 @@ def GetContent(li, page, ID, ignore_pid=""):
 		summ_par=py2_encode(summ_par);
 		
 		if mehrfach:
-			fparams="&fparams={'katurl': '%s'}" % quote(url)
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
-				thumb=img, tagline=tag, summary=summ, fparams=fparams)													
-			cnt=cnt+1					
+			if not OnlyNow:
+				fparams="&fparams={'katurl': '%s'}" % quote(url)
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
+					thumb=img, tagline=tag, summary=summ, fparams=fparams)													
+				cnt=cnt+1					
 		else:
 			if dur == '' and pid == '':
 				PLog("dur_and_pid_empty")
@@ -594,21 +586,31 @@ def GetContent(li, page, ID, ignore_pid=""):
 				lvon = L("von"); lbis = L("bis")
 				ldauer = L("Dauer")
 				start = start[-5:]; end = end[-5:];
-				label = "[COLOR blue]%s[/COLOR] | %s" % (start, title)	# Sendezeit | Titel
-				tag = "[B]%s %s %s %s Uhr | %s: %s [/B]" % (lvon, start, lbis, end, ldauer, dur)
+				title = py2_decode(title)
+				label = u"[COLOR blue]%s[/COLOR] | %s" % (start, title)	# Sendezeit | Titel
+				tag = u"[B]%s %s %s %s Uhr | %s: %s [/B]" % (lvon, start, lbis, end, ldauer, dur)
 				if "stickers" in item:
+					PLog("found_stickers")
+					live=True
 					try:			 
 						if item["stickers"][0]["code"] == "LIVE":
 							label = "[B]%s[/B]" % label
-					except:
-						pass
+							if OnlyNow:						# nur Live-EGP, keine Liste
+								PLog("return_liveEPG")
+								return label, tag, summ, img, url
+					except Exception as exception:
+						PLog("stickers_error: " + str(exception))
+						live=False
+												
 
-			pid=py2_encode(pid); 	
-			fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s'}" %\
-				(quote(img), quote(title), quote(pid), quote(tag_par), quote(summ_par), dur, geo)
-			addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.SingleVideo", 
-				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ,  mediatype=mediatype)		
-			cnt=cnt+1
+			if not OnlyNow:							
+				pid=py2_encode(pid); 
+				title=py2_encode(title);	
+				fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s'}" %\
+					(quote(img), quote(title), quote(pid), quote(tag_par), quote(summ_par), dur, geo)
+				addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.SingleVideo", 
+					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ,  mediatype=mediatype)		
+				cnt=cnt+1
 
 	return li, cnt
 	
@@ -1317,9 +1319,9 @@ def get_ArtePage(caller, title, path, header=''):
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return ''
-			
-	PLog("extract:"); PLog(type(page))
-	if 'id="no-content">' in page:					# no-content-Hinweis nur im html-Teil
+
+	PLog("extract:"); PLog(type(page))					# bytes-like object möglich (leere Seite)
+	if 'id="no-content">' in page:						# no-content-Hinweis nur im html-Teil
 		msg2 = stringextract('id="no-content">', '</', page)
 		if msg2:
 			msg1 = 'Arte meldet:'
