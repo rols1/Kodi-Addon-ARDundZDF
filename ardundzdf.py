@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>233</nr>										# Numerierung für Einzelupdate
+# 	<nr>234</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.0'
-VDATE = '18.03.2025'
+VDATE = '21.03.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -9363,6 +9363,8 @@ def ZDF_get_img(obj, landscape=False):
 
 #---------------------------------------------------------------------------------------------------
 # mark: Titelmarkierung, z.B. für ZDF_Search
+# 20.03.2025 Korrektur sharingUrl nach ZDF-Relaunch (wie EPG-Modul,
+#	und ZDF_getApiStreams)
 # 
 def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 	PLog('ZDF_get_content:')
@@ -9463,8 +9465,16 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 		# 01.10.2024 Keine api-Quelle mit umfangr. Inhaltstext wie Web gefunden:
 		if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
 			if "sharingUrl" in obj:								# Web-Referenz
-				path=obj["sharingUrl"]
+				path_org=obj["sharingUrl"]
+				p = path_org.split("/")							#  Korrektur s.o.
+				if p[-1] == "/":
+					del p[-1]
+				del p[-1]										# letztes Element entfernen
+				path = "/".join(p)
+				PLog("sharingUrl: %s, corrected: %s" % (path_org, path))
+				
 				descr_new = get_summary_pre(path, ID='ZDF',skip_verf=True,skip_pubDate=True)  # Modul util
+				PLog("descr_new: %d, descr: %d" % (len(descr_new), len(descr)))
 				if 	len(descr_new) > len(descr):
 					PLog("descr_new: " + descr_new[:60] )
 					descr = descr_new
@@ -10090,6 +10100,8 @@ def ZDF_FlatListEpisodes(sid):
 #	Alternative profile_url mit api.zdf.de + scms_id hinzugefügt.
 # 25.07.2024 Austausch zdf-cdn.live.cellular.de -> zdf-prod-futura.zdf.de
 #	Alternative profile_url ev. entbehrlich, aber vorerst belassen.
+# 20.03.2025 Korrektur sharingUrl nach ZDF-Relaunch (wie EPG-Modul,
+#	ZDF_get_content)	
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	PLog("ZDF_getApiStreams: " + scms_id)
@@ -10140,7 +10152,16 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	channel = stringextract('"channel":"',  '"', page)
 	sharingUrl = stringextract('"sharingUrl":"',  '"', page)
 	if sharingUrl:
+		path_org = sharingUrl
+		p = path_org.split("/")
+		if p[-1] == "/":
+			del p[-1]
+		del p[-1]									# letztes Element entfernen
+		sharingUrl = "/".join(p)
+		PLog("sharingUrl: %s, corrected: %s" % (path_org, sharingUrl))
+		
 		summ_new = get_summary_pre(sharingUrl, ID='ZDF',skip_verf=True,skip_pubDate=True)
+		PLog("summ_new: %d, summ: %d" % (len(summ_new), len(summ)))
 		if len(summ_new) > len(summ):						# Inhaltstexte von Webseite
 			summ = summ_new
 		

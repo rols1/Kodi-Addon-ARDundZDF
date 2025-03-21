@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>119</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.03.2025
+# 	<nr>120</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -41,7 +41,7 @@ elif PYTHON3:
 	except:
 		pass
 
-	
+import httplib2			# https://httplib2.readthedocs.io/en/latest/libhttplib2.html	
 import time, datetime
 from time import sleep  # PlayVideo
 
@@ -1138,7 +1138,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			req = Request(path)
 		
 		r = urlopen(req, timeout=UrlopenTimeout)					# float-Werte möglich
-		new_url = r.geturl()										# follow redirects
+#		new_url = r.geturl()										# follow redirects
 		PLog("new_url: " + new_url)									# -> msg s.u.
 		# PLog("headers: " + str(r.headers))
 		
@@ -1279,35 +1279,40 @@ def getRedirect(path, header=""):
 		return new_url, msg
 	except Exception as e:
 		PLog("redirect_error: "  + str(e))
+		err=str(e)
 		
-		try:
-			err = re.search(r'HTTP Error (\d+):', str(e)).group(1)
-			err = int(err)
-			if err >= 309 and err <= 399:							#  Die Statuscodes 309 bis 399 nicht zugewiesen
+		
+	try:
+		PLog("analyze_http_error:")
+		err = re.search(r'HTTP Error (\d+):', err).group(1)
+		err = int(err)
+		if err >= 309 and err <= 399:							#  Die Statuscodes 309 bis 399 nicht zugewiesen
+			PLog("ignore_309_to_399")
+			return path, msg
+		PLog(str(err))
+		if "308" in str(err) or "307" in str(err) or "301" in str(err):	# Permanent-Redirect-Url
+			if PYTHON2:											# -> get_page (s.o.)
+				PLog("PY2_give_up")
 				return path, msg
-			if "308:" in str(e) or "307:" in str(e) or "301:" in str(e):	# Permanent-Redirect-Url
-				if PYTHON2:											# -> get_page (s.o.)
-					return path, msg
-				else:
-					# https://httplib2.readthedocs.io/en/latest/libhttplib2.html
-					import httplib2
-					h = httplib2.Http()								# class httplib2.Http, Cache nicht erford.
-					h.follow_all_redirects = True
-					r = h.request(path, "GET")[0]
-					new_url = r['content-location']
-					PLog("httplib2_url: " + new_url)
-					parsed = urlparse(path)
-					if new_url.startswith("http") == False:			# s.o.
-						new_url = 'https://%s%s' % (parsed.netloc, new_url)
-						PLog("HTTP308_301_new_url: " + new_url)
-					if path.find(new_url) == 0:		# Debug
-						PLog("same_new_url_path: " + new_url) 
-					return new_url, msg
-
-		except Exception as e:
-			PLog("r_error: "  + str(e))
-			PLog(str(e))
-			page=path, msg=str(e)									# Fallback
+			else:
+				# import httplib2								# s. Modulkopf, hier häufige Kodi-Abstürze
+				h = httplib2.Http()								# class httplib2.Http, Cache nicht erford.
+				h.follow_all_redirects = True
+				r = h.request(path, "GET")[0]
+				new_url = r['content-location']
+				PLog("httplib2_url: " + new_url)
+				PLog(type(new_url)); PLog(new_url)
+				PLog(parsed.netloc)
+				if new_url.startswith("http") == False:			# s.o.
+					new_url = 'https://%s%s' % (parsed.netloc, new_url)
+					PLog("HTTP308_301_new_url: " + new_url)
+				if path in new_url:		# Debug
+					PLog("same_new_url_path: " + new_url) 
+				return new_url, msg
+	except Exception as e:
+		PLog("r_error: "  + str(e))
+		PLog(str(e))
+		page=path, msg=str(e)									# Fallback übergebener path
 
 	return page, msg	
 	
@@ -2444,6 +2449,7 @@ def ReadJobs():
 #					ARDPagination -> get_page_content
 #					ARDStartRubrik (Swiper) 
 #					ARDVerpasstContent
+#					Kontextmenü seit V5.1.6 via EPG-Modul (Anzeige textviewer)
 #			
 # Aufruf erfolgt, wenn für eine Sendung kein summary (teasertext, descr, ..) gefunden wird.
 #
@@ -2460,11 +2466,15 @@ def ReadJobs():
 # 11.05.2023 postcontent (ZDF, 3sat) hinzugefügt
 # 08.10.2024 Änderung Cache-Format - nur noch Inhalt summary (Start mit "V5.1.2_summ:"),
 #	Param page entfernt (obsolet)
+# 19.03.2025 getRedirect (nach ZDF-Relaunch für geänderte Weblinks notwendig)
 #
 def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',duration=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
 	PLog(skip_verf); PLog(skip_pubDate); PLog(duration); 
 	duration_org=duration
+
+	
+	path, msg = getRedirect(path)					# ZDF, s.o.
 	
 	fname = path.split('/')[-1]
 	fname = fname.replace('.html', '')				# .html bei ZDF-Links entfernen
@@ -2476,6 +2486,8 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	
 	page=""; summ=''; pubDate=''
 	save_new = False
+	
+	#'''										# Debug: Cache ausschalten
 	if os.path.exists(fpath):					# Text lokal laden + zurückgeben
 		page=''
 		PLog('lade_aus_Cache:') 
@@ -2486,6 +2498,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 			return page
 		else:
 			save_new = True
+	#'''
 
 	if page == '':
 		PLog('lade_extern:') 
@@ -2511,47 +2524,36 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	#-----------------	
 	
 	if 	ID == 'ZDF':
-		teaserinfo = stringextract('teaser-info">', '<', page)
-		summ = stringextract('class="item-description" >', '</p>', page)
-		summ = mystrip(summ)
-		if teaserinfo:
-			summ = "%s | %s" % (teaserinfo, summ)
-		summ = unescape(summ)
-																			# 11.05.2023 neu 
-		postcontent = stringextract('b-post-content">', '"b-post-footer"', page)
-		if postcontent:
-			addpost=[]
-			items = blockextract("<p>", postcontent, "</p>")
-			for item in items:
-				s = stringextract("<p>", "</p>", item)
-				s=unescape(s); s=cleanhtml(s); s=transl_json(s)
-				if s:
-					addpost.append(s)
-			if len(addpost) > 0:
-				summ = summ + " | " + " | ".join(addpost)
-				summ = mystrip(summ)
-		summ  = valid_title_chars(summ)										# s. changelog V4.7.4
+		# 18.03.2025 vorerst unberücksichtig: skip_verf, skip_pubDate
+		# transl_json, valid_title_chars
+		page = page.replace('\\"', '"')
+		page = page.replace('\\"', '*').replace('\\*', '*')
 
-		if skip_verf == False:
-			if u'erfügbar bis' in page:										# enth. Uhrzeit									
-				verf = stringextract(u'erfügbar bis ', '<', page)			# Blank bis <
-			if verf == '':
-				verf = stringextract('plusbar-end-date="', '"', page)
-				verf = time_translate(verf, add_hour=0)
-			if verf:														# Verfügbar voranstellen
-				summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s\n" % (verf, summ)
+		summ0 = stringextract('"infoText":"', '"', page)				# Web: unter dem Titel
+		PLog("summ0: " + summ0)
+
+		mark = 'longInfoText":{"items'; len_mark = len(mark)			# Web: Box Details	
+		pos = page.find(mark)
+		PLog(page[pos:pos+200])		
+		summ1 = stringextract(mark, 'style"', page[pos:])
+		summ1 = stringextract('text":"', '"', summ1)
+		PLog("summ1: " + summ1)
+	
+		summ3 = stringextract('PageViewHistory"]', '"])</script>', page)# 
+		PLog(summ3[:80])
+		if len(summ3) <= 10 or "[" in summ3:							# Bsp. Zukunftspreis 2012: \n40:Ta4c,
+			summ3=""													# od. jung-radikal-organisiert
+		else:
+			summ3 = stringextract('PageViewHistory"]', 'next_f.push([1,"9', page)	# summ3 ausdehnen
+			summ3 = summ3[10:]					# skip \n40:T6c3 o.ä. java-Marke	
+		PLog("summ3: " + summ3)		
 		
-		if skip_pubDate == False:		
-			pubDate = stringextract('publicationDate" content="', '"', page)# Bsp. 2020-06-15T22:51:28.328+02:00
-			if pubDate == '':
-				pubDate = stringextract('<time datetime="', '"', page)		# Alternative wie oben
-			if pubDate:
-				pubDate = time_translate(pubDate)
-				pubDate = " | Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate	
-				if u'erfügbar bis' in summ:	
-					summ = summ.replace('\n\n', pubDate)					# zwischen Verfügbar + summ  einsetzen
-				else:
-					summ = "%s%s" % (pubDate[3:], summ)
+		summ = "%s\n\n%s\n\n%s" % (summ0, summ1, summ3)
+		summ = summ.replace('\\u003c',"").replace('\\u003e',"")			# <br>
+		summ = summ.replace('br/br/',"\n\n")	
+		summ = summ.replace('"])</script><script>self.__next_f.push([1,"', " ")	# java-Verkettung innerhalb Text
+		summ = summ.replace('"])</script><script>self.__', " ")			# Textende s.o.: ..self.__next_f.push([1,"9
+		PLog("summ_zdf: " + summ)			
 					
 	#-----------------	
 	
@@ -4009,6 +4011,7 @@ def url_check(url, caller='', dialog=True):
 					msg1= 'Url-Check: Video fehlt! Datei:'
 				MyDialog(msg1, msg2, "")		 			 	 
 			return False
+
 	#-----------------------------------------
 	# hier bei Bedarf ein SessionTimeout verwenden, Bsp.
 	#	blog.apify.com/python-requests-timeout/

@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>28</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.12.2024
+# 	<nr>29</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.03.2025
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -671,19 +671,34 @@ if "ShowSumm" in str(sys.argv):											# Kontextmenü: Video-Inhaltstext im t
 	
 	#---------------------									# ZDF
 	if ID == "ZDF":
+		# 20.03.2025 Korrektur sharingUrl nach ZDF-Relaunch (wie ZDF_get_content,
+		#	ZDF_getApiStreams)
 		PLog("extract_ZDF")
 		PLog("path: " + path)
 		summ=""
 		try:
 			page_obs = json.loads(page)
-			path = page_obs["document"]["sharingUrl"]	# Beschr. erst in Webseite	
-			PLog("sharingUrl: " + path)
+			path_org = page_obs["document"]["sharingUrl"]	# Beschr. erst in Webseite
+			path, msg = getRedirect(path_org)
+			if path == "":
+				p = path_org.split("/")							# 
+				if p[-1] == "/":
+					del p[-1]
+				del p[-1]										# letztes Element entfernen
+				path = "/".join(p)
+			PLog("sharingUrl: %s, corrected: %s" % (path_org, path))
+			
+			descr = page_obs["document"]["beschreibung"]
+			PLog("descr_api: %d, %s" % (len(descr), descr[:80]))
 		except Exception as exception:
 			PLog("summ_error:" + str(exception))
 			path=""
 				
 		if path:
 			summ = get_summary_pre(path,ID,skip_verf=True,skip_pubDate=True,duration='dummy')
+			PLog("check_len: descr %d, summ %d" % (len(descr), len(summ)))
+			if len(descr) > len(summ):						# Abgleich
+				summ = descr
 			ind = summ.find("|")
 			if ind > 0 and ind <= 9:						# Kennung mit Dauer: V5.1.2_summ:44 min | ..
 				summ = summ[ind+2:]
