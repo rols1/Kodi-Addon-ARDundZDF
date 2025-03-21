@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>120</nr>										# Numerierung für Einzelupdate
+# 	<nr>121</nr>										# Numerierung für Einzelupdate
 #	Stand: 21.03.2025
 
 # Python3-Kompatibilität:
@@ -41,7 +41,10 @@ elif PYTHON3:
 	except:
 		pass
 
-import httplib2			# https://httplib2.readthedocs.io/en/latest/libhttplib2.html	
+try:
+	import httplib2			# https://httplib2.readthedocs.io/en/latest/libhttplib2.html
+except:
+	httplib2=""	
 import time, datetime
 from time import sleep  # PlayVideo
 
@@ -1295,6 +1298,8 @@ def getRedirect(path, header=""):
 				PLog("PY2_give_up")
 				return path, msg
 			else:
+				if httplib2 == "":								# nicht geladen?
+					return path, msg
 				# import httplib2								# s. Modulkopf, hier häufige Kodi-Abstürze
 				h = httplib2.Http()								# class httplib2.Http, Cache nicht erford.
 				h.follow_all_redirects = True
