@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>96</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.02.2025
+# 	<nr>97</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1102,21 +1102,29 @@ def ARD_FlatListRec(item, vers):
 	#---------------------								# Staffel-/Folge-Erkennung
 	se=''
 	try:												# hinter Folge in Titel kann ":" fehlen
-		se = title
-		if ":" in se:
-			se = se.split(":")[-1]						# manchmal zusätzl. im Titel: ..(6):.. 
-		se = re.search(r'\((.*?)\)', se).group(1)		# Bsp. (S03/E12)
+		se = title			 
+		se_list = re.findall(r'\((.*?)\)', se)			# mehrfach möglich: Einspruch, Schatz! (1) (S01/E01)
+		se = se_list[-1]								# Default letztes Element
+		for s in se_list:
+			if len(s) == 7:								# Bsp. S03/E12
+				se = s
+				break
+		PLog("se_list: %s, se: %s" % (str(se_list), se))
+		
 		season = re.search(r'S(\d+)', se).group(1)
 		episode = re.search(r'E(\d+)', se).group(1)
 	except Exception as exception:
-		PLog(str(exception))
+		season=""; episode=""
+		PLog("season_error1: " + str(exception))	
+		
 	if season == '' and episode == '':					# Alternative: ohne Staffel, nur Folgen
 		try: 
-			episode = re.search(r'\((\d+)\)', title).group(1)									
+			episode = re.search(r'\((\d+)\)', title).group(1) 									
 			season = "0"
 		except Exception as exception:
-			PLog(str(exception))	
-	PLog(season); PLog(episode)
+			season="0"; episode=""
+			PLog("season_error2: " + str(exception))	
+	PLog("season: " + str(season)); PLog("episode: " + str(episode))
 	
 	if episode == '':
 		title=''
