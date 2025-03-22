@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>29</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.03.2025
+# 	<nr>30</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.03.2025
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -633,6 +633,7 @@ if "ShowSumm" in str(sys.argv):											# Kontextmenü: Video-Inhaltstext im t
 	PLog("EPG_ShowSumm:")
 	icon = R('icon-info.png')
 	title =  stringextract("title': '", "'", params)
+	title = title.replace('"', "")
 	path =  stringextract("path': '", "'", params)
 	ID =  stringextract("ID': '", "'", params)
 	if path.find("www.3sat.de") > 0:						# ID="ZDF" möglich in addDir

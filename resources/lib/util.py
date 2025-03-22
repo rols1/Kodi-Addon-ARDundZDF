@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>122</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.03.2025
+# 	<nr>123</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2492,7 +2492,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	page=""; summ=''; pubDate=''
 	save_new = False
 	
-	#'''										# Debug: Cache ausschalten
+	'''										# Debug: Cache ausschalten
 	if os.path.exists(fpath):					# Text lokal laden + zurückgeben
 		page=''
 		PLog('lade_aus_Cache:') 
@@ -2503,7 +2503,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 			return page
 		else:
 			save_new = True
-	#'''
+	'''
 
 	if page == '':
 		PLog('lade_extern:') 
@@ -2536,12 +2536,18 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 
 		head = stringextract('"leadParagraph":"', '"', page)			# Web: unter dem Titel, kann fehlen
 		PLog("head: " + head)
-
-		summ0 = stringextract('"infoText":"', '"', page)				# Web: wie oben, kann fehlen
-		#summ0 = stringextract('>Details<', 'ZDF auf YouTube', page)	# ev. Darsteler formatieren
-		summ0 = stringextract('>Details<', '>Darsteller<', page)	
-		PLog("summ0: " + summ0)
-
+		
+		#summ0 = stringextract('>Details<', 'ZDF auf YouTube', page)	# ev. Darsteller formatieren
+		summ0 = stringextract('>Details<', '>Darsteller<', page)
+		if summ0 == "":
+			summ0 = stringextract('"infoText":"', '"', page)			# kann fehlen	
+		PLog("summ0_1: " + summ0)
+		if 'description":"' in page:
+			descr =  stringextract('"description":"', '"', page)
+			if descr and summ0 and descr in summ0 == False:				# Doppel möglich
+				summ0 = "%s\n%s" % (summ0, descr)
+		PLog("summ0_2: " + summ0)
+			
 		mark = 'longInfoText":{"items'; len_mark = len(mark)			# Web: Box Details	
 		pos = page.find(mark)
 		PLog(page[pos:pos+200])		
@@ -2555,13 +2561,17 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 			summ3=""													# od. jung-radikal-organisiert
 		else:
 			summ3 = stringextract('PageViewHistory"]', 'next_f.push([1,"9', page)	# summ3 ausdehnen
-			summ3 = summ3[10:]					# skip \n40:T6c3 o.ä. java-Marke	
+			summ3 = summ3[10:]											# skip \n40:T6c3 o.ä. java-Marke
+		if summ3 == "":													# 
+			summ3 = stringextract('"EpisodePage"', '</script>', page)	# Lebensmitteltricks
+			summ3 = "\n\n" + summ3[11:]											# skip \n43:T4bf, o.ä. java-Marke		
+			
 		PLog("summ3: " + summ3)		
 		
 		summ = "%s\n\n%s\n\n%s" % (summ0, summ1, summ3)
 		summ=""
 		if head:
-			summ = summ + head 
+			summ = summ + head + "\n"
 		if summ0:
 			summ = summ + summ0 
 		if summ1:
@@ -2578,7 +2588,6 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		s = stringextract('<h2 class="', '"', summ)
 		s = '<h2 class="%s"' % s
 		summ = summ.replace(s, "")
-		
 		summ = cleanhtml(summ)
 
 		PLog("summ_zdf: " + summ)			
