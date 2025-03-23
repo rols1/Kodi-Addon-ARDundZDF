@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>124</nr>										# Numerierung für Einzelupdate
+# 	<nr>125</nr>										# Numerierung für Einzelupdate
 #	Stand: 23.03.2025
 
 # Python3-Kompatibilität:
@@ -2753,13 +2753,14 @@ def get_ZDFstreamlinks(skip_log=False, force=False):
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken
 	PLog("header" + header)
 	
-	zdf_streamlinks=[]
+	zdf_streamlinks=[]; thumb=""
 	for asset in ids:												# Schleife  Web-Sätze		
 		PLog(asset)
 		assetid, title = asset.split("|") 
 		videodat_url = "https://api.zdf.de/tmd/2/ngplayer_2_3/live/ptmd/%s" % assetid
 		page, msg	= get_page(path=videodat_url, header=header)
 		PLog("videodat: " + page[:40])
+		tagline = stringextract('description":"',  '"', page)
 		href = stringextract('"https://',  'master.m3u8', page) 	# 1.: auto
 		PLog("href: " + href)
 		if href:
