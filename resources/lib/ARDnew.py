@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>97</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.03.2025
+# 	<nr>98</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -959,10 +959,14 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark, homeID=""):
 # Ähnlich ZDF_FlatListEpisodes, flache Liste aller Folgen
 #	ohne Zusätze (Teaser usw.)
 # Aufruf ARDStartRubrik ('hasSeasons":true')
+# 23.03.2025 path-Korrekturen für vollständige Liste (Bsp. fehlende Staffel 2
+#	bei Feuer & Flamme)
 #
 def ARD_FlatListEpisodes(path, title):
 	PLog('ARD_FlatListEpisodes:')
 	
+	path = path.replace("?embedded=true", "?pageSize=100")
+	path = path.replace("/pages", "/widgets").replace("/grouping", "/asset")
 	page, msg = get_page(path)	
 	if page == '':	
 		msg1 = u"Fehler in ARD_FlatListEpisodes: %s"	% title
