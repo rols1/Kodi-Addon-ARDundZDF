@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>123</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.03.2025
+# 	<nr>124</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2711,7 +2711,8 @@ def refresh_streamlinks():
 # Mehrkanal-Streamlinks seit Aug. 2020 - die enth. Audiolinks in 
 #	Kodi nicht getrennt verwertbar. 
 # 29.10.2023 force=True: InfoAndFilter -> refresh_streamlinks
-#
+# 23.03.2025 nach ZDF-Relaunch erneuert (nur noch apiToken von
+#	Webseite, ptmd-Url's hartkodiert)
 #-----------------------------------------------
 def get_ZDFstreamlinks(skip_log=False, force=False):
 	PLog('get_ZDFstreamlinks:')
@@ -2738,53 +2739,37 @@ def get_ZDFstreamlinks(skip_log=False, force=False):
 		PLog('get_ZDFstreamlinks: leer')
 		return []
 
-	page = page.replace('content": "', '"content":"')
-	page = page.replace('apiToken": "', '"apiToken":"')
-	content = blockextract('js-livetv-scroller-cell', page)			# Playerdaten einschl. apiToken
-	PLog("len_content: %d" % len(content))
-	apiToken = stringextract('"apiToken":"', '"', page)				# für alle identisch
-	PLog("apiToken: " + apiToken[:80] + "..")
+	Token = stringextract('videoToken', 'expiresAt', page)			# apiToken aus Web
+	PLog("Token: " + Token[:80] + "..")	
+	Token = Token.replace('\\"', '"')
+	apiToken = stringextract('"apiToken":"', '"', Token)
+	PLog("apiToken: " + apiToken)	
+	# assetid's in ptmd-Url's auf Webseite www.zdf.de/live-tv
+	# hier ohne 247onAir-205 phoenix, ptmd/247onAir-206 fehlt, 
+	ids = ["247onAir-201|ZDF", "247onAir-202|ZDFneo", "247onAir-203|ZDFinfo",
+		"247onAir-204|3sat", "247onAir-207|KiKA", "247onAir-208|arte"]
+	
+	#	----------------------------
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken
+	PLog("header" + header)
 	
 	zdf_streamlinks=[]
-	for rec in content:												# Schleife  Web-Sätze		
-		player2_url=''; assetid=''; videodat_url=''; apiToken=''; href=''
-		title = stringextract('visuallyhidden">', '<', rec)
-		title = title.replace('im Livestream', ''); title = title.strip()	# phoenix
-		title = title.replace('Livestream', ''); title = title.strip()		# restl. sender
-		PLog("Sender: " + title);
-		# Bsp.: api.zdf.de/../zdfinfo-live-beitrag-100.json?profile=player2:
-		player2_url = stringextract('"content":"', '"', rec)
-
-		thumb 	= stringextract('data-src="', '"', rec)			# erstes img = größtes
-		geo		= stringextract('geolocation="', '"', rec)
-		if geo:
-			geo = "Geoblock: %s" % geo
-		fsk		= stringextract('-fsk="', '"', rec)
-		if fsk:
-			fsk = "FSK: %s" % fsk
-			fsk = fsk.replace('none', 'ohne')
-		tagline = "%s,  %s" % (geo, fsk)
-
-		PLog("player2_url: " + player2_url)
-		if player2_url:
-			page, msg = get_page(path=player2_url, header=header)
-			# Bsp.: 247onAir-203
-			assetid = stringextract('assetid":"', '"', page)
-			assetid = assetid.strip()
-			
-		PLog(assetid); 
-		if assetid:
-			videodat_url = "https://api.zdf.de/tmd/2/ngplayer_2_3/live/ptmd/%s" % assetid
-			page, msg	= get_page(path=videodat_url, header=header)
-			PLog("videodat: " + page[:40])
-			#PLog(page) 	# Debug
-		
-			href = stringextract('"https://',  'master.m3u8', page) 	# 1.: auto
-			if href:
-				href = 	"https://" + href + "master.m3u8"
-				# Zeile: "title_sender|href|thumb|tagline"
-				zdf_streamlinks.append("%s|%s|%s|%s" % (title, href,thumb,tagline))	
+	for asset in ids:												# Schleife  Web-Sätze		
+		PLog(asset)
+		assetid, title = asset.split("|") 
+		videodat_url = "https://api.zdf.de/tmd/2/ngplayer_2_3/live/ptmd/%s" % assetid
+		page, msg	= get_page(path=videodat_url, header=header)
+		PLog("videodat: " + page[:40])
+		href = stringextract('"https://',  'master.m3u8', page) 	# 1.: auto
+		PLog("href: " + href)
+		if href:
+			href = 	"https://" + href + "master.m3u8"
+			PLog("href: " + href)
+		if href:
+			# Zeile: "title_sender|href|thumb|tagline"
+			line = "%s|%s|%s|%s" % (title, href,thumb,tagline)
+			PLog("line: " + line)
+			zdf_streamlinks.append(line)
 	
 	PLog("zdf_streamlinks: %d" % len(zdf_streamlinks))
 	page = "\n".join(zdf_streamlinks)									# Ablage Cache

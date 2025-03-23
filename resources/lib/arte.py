@@ -1079,7 +1079,7 @@ def Kategorien():
 	PLog("katlinks: " + str(katlinks))
 	PLog(len(katlinks))
 	
-	path = "https://www.arte.tv/%s/" % lang		
+	path = "https://www.arte.tv/%s/" % lang
 	path=py2_encode(path)
 	fparams="&fparams={'katurl': '%s'}" % quote(path)		# Button Startseite
 	l = L("Startseite")
@@ -1102,8 +1102,8 @@ def Kategorien():
 		PLog('Satz4:')
 		PLog(title); PLog(arte_lang); PLog(katurl);
 		title=py2_encode(title); katurl=py2_encode(katurl)		# ohne title, katurl laden
-		fparams="&fparams={'title': '', 'katurl': '%s'}" % quote(katurl)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
+		fparams="&fparams={}")
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteStart", fanart=R(ICON_ARTE), 
 				thumb=R(img), tagline=tag, summary=summ, fparams=fparams)
 
 	title = L("Neueste Videos")									# Button Neueste Videos
@@ -1117,12 +1117,23 @@ def Kategorien():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ---------------------------------------------------------------------
+def ArteStart(path=""):
+	PLog("ArteStart: " + path)
+	if path == "":
+		path = "arte.tv/hbbtv-mw/api/1/skeletons/pages/home?lang=%s" % lang		
+
+		
+		
+		
+		
+# ---------------------------------------------------------------------
 # Webseite arte.tv ohne Kategorien
 # Aufrufer: Kategorien / ArteCluster
 # 2 Durchläufe: 1. Liste Cluster, 2. Cluster-Details
 # Mehr-Seiten:  -> get_ArtePage mit katurl, ohne Dict_ID
 # 14.01.2023 json-Auswertung
 # 12.02.2023 json-keys geändert
+#
 def ArteCluster(pid='', title='', katurl=''):
 	PLog("ArteCluster: " + pid)
 	PLog(title); PLog(katurl); 
@@ -1130,16 +1141,12 @@ def ArteCluster(pid='', title='', katurl=''):
 	pid_org=pid
 	ping_uhd = False
 	
-	if katurl.startswith("http") == False:
-		katurl = "https://www.arte.tv" + katurl
 		
 	arte_lang = Dict('load', "arte_lang")
 	lang = arte_lang.split("|")[1].strip()			# fr, de, ..	
 	PLog(katurl); 
 	katurl_org=katurl
 
-	if "/arte-concert" in katurl:					# Redirect-Error für ../de/videos/arte-concert/
-		katurl = katurl.replace("/videos", "")
 	page = get_ArtePage('ArteCluster', title, path=katurl)
 
 	if katurl == "https://www.arte.tv/%s/" % lang:		
@@ -1302,7 +1309,6 @@ def ArteMehr(page, li=''):
 def get_ArtePage(caller, title, path, header=''):
 	PLog("get_ArtePage: " + path)
 	PLog(caller); PLog(path)
-	page=''
 	
 	if path == '':
 		PLog("path_fehlt")
@@ -1320,35 +1326,22 @@ def get_ArtePage(caller, title, path, header=''):
 		MyDialog(msg1, msg2, '')
 		return ''
 
-	PLog("extract:"); PLog(type(page))					# bytes-like object möglich (leere Seite)
-	if 'id="no-content">' in page:						# no-content-Hinweis nur im html-Teil
-		msg2 = stringextract('id="no-content">', '</', page)
+	PLog("extract:"); 
+	if '"Not found' in str(page)[:44]:						# {"error": "Not found /de/hbbtv/pages/..
+		msg2 = stringextract('error": "', '"}', str(page))
 		if msg2:
 			msg1 = 'Arte meldet:'
 			MyDialog(msg1, msg2, '')
 			return ''
 	else:
 		try:
-			if page.startswith('{"tag":"Ok"'):			# json-Daten pur
-				page = json.loads(page)
-			else:										# json-Daten extrahieren RFC 7159
-				mark1 = '"pageProps'; mark2 = ',"page":"/'	# angepasst  12.02.2023	
-				pos1 = page.find(mark1)
-				pos2 = page.find(mark2)
-				PLog(pos1); PLog(pos2)
-				if pos1 < 0 or pos2 < 0:
-					PLog("json_data_failed")
-					page=''								# ohne json-Bereich: leere Seite
-				else:
-					page = "{" + page[pos1:pos2]
-					page = json.loads(page)			
+			page = json.loads(page)
 		except Exception as exception:
 			page=""
 			PLog("page_json_error: " + str(exception))
 
-	#RSave('/tmp2/x_arteStart_pl.json', py2_encode(str(page)))	# Debug	
+	#RSave('/tmp2/x_artePage.json', py2_encode(str(page)))	# Debug	
 	PLog(len(page))
-	# page = str(page)  # n. erf.
 	PLog("page_start: %s" % str(page)[0:60])
 	PLog("page_end: %s" % str(page)[-60:])
 	return page
