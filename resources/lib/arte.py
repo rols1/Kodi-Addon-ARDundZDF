@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>55</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.03.2025
+# 	<nr>56</nr>										# Numerierung für Einzelupdate
+#	Stand: 25.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -65,6 +65,8 @@ DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 			# hier nur DICTSTORE genutzt
 NAME			= 'ARD und ZDF'
 
 BASE_ARTE		= 'https://www.arte.tv'		# + /de/ nach Bedarf
+HBBTV_BASE		= "https://arte.tv/hbbtv-mw"
+
 PLAYLIST 		= 'livesenderTV.xml'	  	# enth. Link für arte-Live											
 
 # Icons
@@ -88,6 +90,7 @@ if os.path.exists(fname) == False:						# Sprache vorbelegen / laden
 	Dict('store', "arte_lang", arte_lang)
 else:
 	arte_lang = Dict('load', "arte_lang")
+
 # ----------------------------------------------------------------------			
 def Main_arte(title='', summ='', descr='',href=''):
 	PLog('Main_arte:')
@@ -289,8 +292,8 @@ def EPG_Today(mode=""):
 		
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
-	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button	
+	ltitle = u" %s %s" % (l, "arte")				# Startblank s. home
+	li = home(li, ID='arte', ltitle=ltitle)			# Home-Button	
 	
 	li, cnt = GetContent(li, page, ID="EPG_Today")
 	PLog("cnt: " + str(cnt))
@@ -300,7 +303,7 @@ def EPG_Today(mode=""):
 
 ####################################################################################################
 # arte - TV-Livestream mit akt. PRG
-# 23.04.2022 Parseplaylist entfernt (ungeeignet für Mehrkanal-Streams)
+#
 def Arte_Live(href, title, Plot, img):	
 	PLog('Arte_Live:')
 
@@ -328,11 +331,6 @@ def Arte_Live(href, title, Plot, img):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
 # ----------------------------------------------------------------------
-# Webaufruf: BASE_ARTE + '/de/search/?q=%s
-# 	Seite html / json gemischt, Blöcke im html-Bereich ohne img-Url's
-# 	Problem: Folgeseiten via Web nicht erreichbar
-# Api-Call s.u. (div. Varianten, nur 1 ohne Error 401 / 403)
-# 27.07.2021 neuer Api-Call
 # 15.01.2023 umgestellt: api-path (path für Seite 1 war abweichend)
 # 12.09.2023 neue Api-Version (emac/v3 -> emac/v4)
 #
@@ -406,12 +404,16 @@ def Arte_Search(query='', next_url=''):
 # Seiten mit collection_subcollection: Auswertung ab dort (Serien)
 # 15.01.2023 umgestellt: page=json
 # 14.03.2025 OnlyNow triggert EPG-Rückgabe -> get_live_data
+# 23.03.2025 ergänzt für hbbtv
 #
-def GetContent(li, page, ID, ignore_pid="", OnlyNow=""):
+def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 	PLog("GetContent: " + ID)
 	PLog(ignore_pid); PLog(OnlyNow)
 	
-	PLog(str(page)[:80])		
+	PLog(str(page)[:80])
+	img_def = R(ICON_DIR_FOLDER)
+	skip_list=[]
+		
 	if ID == "SEARCH":									# web-api-Call
 		values = page["value"]["zones"][0]["content"]["data"]
 	elif ID == "SEARCH_NEXT":							# Folgeseiten wie MOST_RECENT
@@ -429,67 +431,100 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow=""):
 		values = page["value"]["data"]
 		PLog(len(values))
 		PLog(str(values)[:100])
-	elif ID == "ArteStart_2":							# web-embedded, Kategorie
-		values = page["content"]["data"]
+	elif ID == "HBBTV":								# Neu HBBTV
+		if "cards" in page:
+			values = page["cards"]
+		elif "collections" in page:					# hbbtv
+			values = page["collections"]
+		else:
+			values=[]
+		if "images" in page:						# Default-Image statt ICON_DIR_FOLDER
+			img_def=""
+			if "highlight" in page["images"]:
+				img_def = page["images"]["highlight"]
+			else:
+				img_def = page["images"]["landscape"]
+		
 	else:
-		values = page["pageProps"]["initialPage"]	# web-embedded, ganze Seite
-		try:										# s.a. ArteCluster
-			if "value" in page:						# nach 13.01.2021
+		values = page["pageProps"]["initialPage"]		# web-embedded, ganze Seite
+		try:											# s.a. ArteCluster
+			if "value" in page:							# nach 13.01.2021
 				values = values["value"]["zones"]
-			else:									# vor 13.01.2021
+			else:										# vor 13.01.2021
 				values = values["zones"]
 		except Exception as exception:
 			PLog("json_error: " + str(exception))
 			values=[]
-		
+	
+	PLog("img_def: " + img_def)	
 	PLog(len(values))
 	if len(values) == 0:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		return
 	
 	PLog(str(values)[:100])
-	img_base = "https://api-cdn.arte.tv/img/v2/program/de/%s/200x113?type=TEXT"
 	mediatype=''; cnt=0
 	
 	for item in values:
 		PLog(str(item)[:60])
 		mehrfach=False; katurl=''; summ=''; dur=""; geo=""	
-		start=''; end=''; upcoming=""; teaserText=""
+		start=''; end=''; upcoming=""; teaserText=""; coll=""
 		
 		title = item["title"]							# für Abgleich in Kategorien
 		title = transl_json(title)
-		subtitle = item["subtitle"]	
-		if subtitle:													# arte verbindet mit -
-			title  = "%s - %s" % (title, subtitle)
+			
+		if "subtitle" in item:
+			subtitle = item["subtitle"]	
+			if subtitle:									# arte verbindet mit -
+				title  = "%s - %s" % (title, subtitle)
 		if "Description" in item:
 			summ = item["Description"]					
+		if "description" in item:						# hbbtv
+			summ = item["description"]					
 		if "shortDescription" in item:					# Vorrang, altern.: teaserText
 			summ = item["shortDescription"]
 		if summ == None:
 			summ = ""					
 		pid = item["id"]
+		if ID == "HBBTV":						# hbbtv
+			program_id=""
+			if "program_id" in item:			# null möglich
+				pid = item["program_id"]
+			else:
+				if "program_id" in page:		# übergeordnet, ungeprüft!
+					pid = page["program_id"]			
+
 		PLog("Mark1")
 		PLog(pid); PLog(ignore_pid); 
-		if ID == "ArteStart_2" and pid in ignore_pid:	# RC-024605 in 9aa06c3d-6202-47c3-a5a5-1d70fd37ca0a_RC-024605 
-			if len(values) == 1:
-				PLog("ignore_pid: " + pid)
-				icon = R(ICON_ARTE)
-				msg1 = L(u"Rekursion:")
-				msg2 =  L(u"zurück zur Liste")
-				xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
-				return
 		
-		kind = item["kind"]["code"]						# z.B. TOPIC
-		typ = item["kind"]["code"]						# z.B. Kollektion
-		coll = item["kind"]["isCollection"]				# true/false
+		kind = ""; typ=""
+		if "kind" in item:
+			kind = item["kind"]["code"]					# z.B. TOPIC
+			if "type" in item["kind"]:					# fehlt in EPG
+				typ = item["kind"]["type"]				# z.B. Kollektion
+			coll = item["kind"]["isCollection"]			# true/false
+		else:											# hbbtv
+			typ = item["type"]
+			if "isCollection" in item:
+				coll = item["isCollection"]			
 		if coll:										# nicht verlässlich, s. dur					
 			mehrfach = True	
 		
-		url = item["url"]
-		if "mainImage" in item or "images" in item:
-			img = get_img(item)
-		else:	
-			img = img_base % pid
+		if "url" in item:
+			url = item["url"]
+		if "link" in item:
+			url = "%s%s?lang=%s" % (HBBTV_BASE, item["link"], lang)	# hbbtv	
+			if not item["link"]:						# null für Kats wie DOR
+				if item["deeplink"]:
+					kat = item["deeplink"]
+					kat = kat.split("/")[-1]
+					url = "%s/api/1/skeletons/pages/%s?lang=%s" % (HBBTV_BASE, kat, lang)	
+		
+		img = get_img(item, ID)
+		PLog(img); PLog(img_def)
+		if img == "":
+			img = img_def
+			
 		if "teaserText" in item:										
 			teaserText = item["teaserText"]
 		if "duration" in item:										
@@ -497,13 +532,17 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow=""):
 		if dur == None:
 			dur = ""					
 		PLog('dur: ' + str(dur))
-		if dur:
+		if "int" in str(type(dur)):						# hbbtv: "3 Min.", sonst: 180
 			dur = seconds_translate(dur)
+		if dur == "":
+			mehrfach = True
 		else:
-			mehrfach = True	
-			
-		try:	
-			geo = item["geoblocking"]["code"]			# Bsp. "DE_FR", "ALL"
+			mehrfach = False
+		
+		try:
+			geo = item["geoblocking"]					# hbbtv
+			if "code" in geo:
+				geo = geo["code"]						# Bsp. "DE_FR", "ALL"
 		except:
 			geo=""
 		if geo:
@@ -539,7 +578,7 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow=""):
 				tag = u"%s %s\n\n%s\n%s" % (l, dur, start_end, geo)
 			else:
 				if dur:
-					tag = u"%s %s\n\n%s" % (l, dur, geo)
+					tag = u"%s %s\n%s" % (l, dur, geo)
 				else:
 					tag = u"%s" % (geo)
 					
@@ -564,18 +603,24 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow=""):
 		
 		if mehrfach:
 			if not OnlyNow:
-				fparams="&fparams={'katurl': '%s'}" % quote(url)
-				addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", fanart=R(ICON_ARTE), 
-					thumb=img, tagline=tag, summary=summ, fparams=fparams)													
+				if "hbbtv-mw" in url:						# hbbtv
+					fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(url), quote(title))
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteStart", 
+					fanart=R(ICON_ARTE), thumb=img, tagline=tag, summary=summ, fparams=fparams)
+				else:
+					fparams="&fparams={'katurl': '%s'}" % quote(url)
+					addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster",
+						fanart=R(ICON_ARTE), thumb=img, tagline=tag, summary=summ, fparams=fparams)											
 				cnt=cnt+1					
 		else:
 			if dur == '' and pid == '':
 				PLog("dur_and_pid_empty")
 				continue
-			if url.count("/") > 2:							# Bsp. /de/ (kein video)
-				pid = url.split("/")[3]						# /de/videos/100814-000-A/.., id nicht verwendbar
-			if url.endswith("/live/"):						# läuft gerade
-				pid=pid_org			
+			if "hbbtv-mw" in url == False:						# hbbtv:Player-Url, nicht genutzt, pid->SingleVideo (Streamlisten)
+				if url.count("/") > 2:							# Bsp. /de/ (kein video)
+					pid = url.split("/")[3]						# /de/videos/100814-000-A/.., id nicht verwendbar
+				if url.endswith("/live/"):						# läuft gerade
+					pid=pid_org			
 			PLog("pid: " + pid)
 				
 			if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
@@ -593,15 +638,17 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow=""):
 					PLog("found_stickers")
 					live=True
 					try:			 
-						if item["stickers"][0]["code"] == "LIVE":
-							label = "[B]%s[/B]" % label
-							if OnlyNow:						# nur Live-EGP, keine Liste
-								PLog("return_liveEPG")
-								return label, tag, summ, img, url
+						if item["stickers"]:					# [] möglich
+							if item["stickers"][0]["code"] == "LIVE":
+								label = "[B]%s[/B]" % label
+								if OnlyNow:						# nur Live-EGP, keine Liste
+									PLog("return_liveEPG")
+									return label, tag, summ, img, url
 					except Exception as exception:
+						# PLog(item)
 						PLog("stickers_error: " + str(exception))
-						live=False
-												
+						return "", "", "", "", ""
+																
 
 			if not OnlyNow:							
 				pid=py2_encode(pid); 
@@ -617,13 +664,34 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow=""):
 # -------------------------------
 # holt Bild aus Datensatz
 # 15.01.2023 angepasst für json-Inhalte
+# 25.03.2025  für hbbtv erweitert mit Cache
 #
-def get_img(item):
-	PLog("get_img:")
+def get_img(item, ID=""):
+	PLog("get_img: " + ID)
 	PLog(str(type(item)))
-	#PLog(str(item))	# Debug
-	
+	PLog(str(item)[:80])	
 	img=""
+	
+	if ID == "HBBTV":
+		if "images" in item:
+			if "highlight" in item["images"]:
+				img = item["images"]["highlight"]
+			else:
+				img = item["images"]["landscape"]
+		else:									# todo: Cache ergänzen (s. ARDNeu_Startpage) 
+			'''
+			link = HBBTV_BASE + item["link"]
+			page, msg = get_page(link)
+			if page:
+				try:
+					img = json.loads(page)["cards"][0]["images"]["highlight"]
+				except Exception as exception:
+					PLog("json_error6: " + str(exception))
+					img  = R(ICON_DIR_FOLDER)
+			'''
+		PLog("img: " + img)
+		return img	
+	
 	if type(item) == dict:
 		if "mainImage" in item:
 			img = item["mainImage"]["url"]
@@ -667,15 +735,9 @@ def get_img(item):
 # def get_trailer() entfernt
 	
 # ----------------------------------------------------------------------
-# Folgebeiträge aus GetContent
-#	-> GetContent -> SingleVideo
-# 19.11.2021 ergänzt um weitere Auswertungsmerkmale, Hinw. auf Überschreitung
-#	der Ebenentiefe entfernt, dto. 31.01.2022 (Subtitel, Dauer - Bilder 
-#	können fehlen bzw. transparent.png)
-# 17.02.2022 fehlende Bilder via api-Call ergänzt 
-# 23.04.2022 Auswertung Webseite umgestellt auf enth. json-Anteil
-# 28.04.2022 Auswertung next_url ergänzt (s. get_ArtePage)
-# 15.01.2023 spez. ID für GetContent 
+# 15.01.2023 spez. ID für GetContent
+# 25.03.2025 nach Umstellung auf hbbtv nur noch genutzt für Neueste Videos
+#	(api rproxy/emac/v4)
 #
 def Beitrag_Liste(url, title):
 	PLog("Beitrag_Liste: " + title)
@@ -694,7 +756,7 @@ def Beitrag_Liste(url, title):
 	
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = u" %s %s" % (l, "arte")								# Startblank s. home
+	ltitle = u" %s %s" % (l, "arte")							# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)						# Home-Button
 
 	ID='Beitrag_Liste'
@@ -711,23 +773,8 @@ def Beitrag_Liste(url, title):
 # ----------------------------------------------------------------------
 # holt die Videoquellen -> Sofortstart bzw. Liste der  Auflösungen 
 # tag hier || behandelt (s. GetContent)
-# 14.08.2020 Beschränkung auf deutsche + concert-Streams entfernt
-#	(Videos möglich mit ausschl. franz. Streams), master.m3u8 wird
-#	unverändert ausgewertet.
-# 24.09.2020 Filterung master.m3u8 nach "DE" oder "FR"
-# 02.04.2022 Nutzung build_Streamlists_buttons mit HLS_List, MP4_List,
-#	Vorauswahl Deutsch bei Sofortstart (HLS + MP4)
-# 20.04.2022 api (v1 -> v2) und Format geändert. Nur noch HLS-Quellen
-# 21.04.2022 neuer api-Call (mit Authorization) aus Java-MServer von 
-#	MediathekView
-# 15.05.2022 Nutzung api_v2_Call (nur noch HLS-Quellen) plus api_opa_Call 
-#	(kurze Teaser-Streams statt vollständ. Videos möglich). 
-# HBBTV: im Addon werden die MP4-HBBTV-Quellen aus api_opa_Call verwendet, 
-#	HBBTV_List entfällt hier. 
-#	Der Sofortstart findet hier statt (sonst build_Streamlists_buttons),
-#		um Rekursion (ohne Homebuttons) zu vermeiden (ev. Ursache mit
-#		Modulwechsel).
 # externe Trailer-Erkennung nicht eindeutig, s. GetContent
+#
 # 14.01.2023 Korrektur "_de"-Endung in pid (falls pid=url)
 # 11.03.2023 bei Bedarf alternative HBBTV-Quellen nutzen, siehe
 #	 lokale Doku 00_Arte_HBBTV_Links
@@ -1011,32 +1058,13 @@ def get_streams_hbbtvv2(formitaeten, title, summ):
 	return trailer,MP4_List
 	
 # ----------------------------------------------------------------------
-# BASE_ARTE wird nur zum Auslesen der Kategorien verwendet
-#	 -> GetContent (1. Stufe: Kategorienliste)
-# 
-# Hinw.: die Listen aller Subkats befinden sich sowohl in BASE_ARTE 
-#	als auch in den einz. SubKats - alle ohne Bilder
-# 13.10.2020 Auswertung Adds hinzugefügt (Aktuelle Highlights, 
-#	Kollektionen, Sendungen) durch Laden der akt. SubKat
-# 23.10.2020 Erfassung der Adds erweitert (s.u. Adds-Liste)
-# 31.01.2021 Stufe 2 aufgrund der unsicheren Adds (dynamisch) geändert: 
-#	keine Differenz. mehr für Titel + Pfadinhalte (z.B. Concert), Übergabe
-#	der Katseite (path) für intrins. Inhalte + der verlinkten Webseite
-#	(link_url). KatSub extrahiert den Seiten-Ausschnitt (-> GetContent).
-#	Falls die Beitragszahl < 2 ist, lässt KatSub zusätzl. die verlinkte 
-#	Webseite auswerten. Die Seitensteuerung folgt zum Schluss (nexturl).  
-# 10.05.2021 Webseite geändert: Abschluss Kategorien nun ab
-#	page.find('"pageNumber"', pos1+300). Auswertung der zusätzl. Beiträge
-#	belassen.
-# 26.04.2022 Abschluss Kategorien nach Auswertung "Wissenschaft",
-#	Button Startseite hinzugefügt, Codebereinigung (gelöscht:  Kategorie_Dokus,
-#	get_subkats, KatSub, neu: ArteCluster, ArteMehr, get_cluster, get_next_url)
-# 15.05.2022 Kat-Liste + Kat-Icons nicht mehr auf den Webseiten enthalten, neue
-#	Icons gefertigt + Kat-Liste hier mit Links vorgegeben 
+# Buttons für Startseite, Kategorien und Neueste Videos
+#
 # 15.01.2023 Auswertung wg. mehrmaliger Arte-Änderungen des eingebetteten json-
 #	Codes auf json (statt strings) umgestellt, api-Path für Neueste Videos
 # 14.03.2023 Unterstützung aller Arte-Sprachen 
 # 21.11.2024 Kat_ID's nicht mehr genutzt, dafür katlinks aus arte_lang.json
+# 25.03.2025 Umstellung auf hbbtv, BASE_ARTE entfällt
 # 
 def Kategorien():
 	PLog("Kategorien:")
@@ -1079,30 +1107,30 @@ def Kategorien():
 	PLog("katlinks: " + str(katlinks))
 	PLog(len(katlinks))
 	
-	path = "https://www.arte.tv/%s/" % lang
+	path = "https://www.arte.tv/hbbtv-mw/api/1/skeletons/pages/" 
 	path=py2_encode(path)
-	fparams="&fparams={'katurl': '%s'}" % quote(path)		# Button Startseite
+	
+	fparams="&fparams={}" 										# Button Startseite
 	l = L("Startseite")
-	addDir(li=li, label=u"%s [B]www.arte.tv/%s[/B]" % (l, lang), action="dirList", dirID="resources.lib.arte.ArteCluster", 
+	addDir(li=li, label=u"%s [B]www.arte.tv/%s[/B]" % (l, lang), action="dirList", dirID="resources.lib.arte.ArteStart", 
 		fanart=R(ICON_ARTE), thumb=R(ICON_ARTE_START), summary=summ, fparams=fparams)
 
-	pre = path + "videos/"
-	for i, item in enumerate(cat_list):						# Kategorien listen
+	for i, item in enumerate(cat_list):							# Buttons Kategorien
 		katurl=""
 		title, img, Kat_ID = item.split("|")
 
 		if katlinks[i] == "dummy":								# aktuelles-und-gesellschaft=dummy für en,es,
 			PLog("empty_katlinks: %d" %i)
 			continue
-		katurl = pre + katlinks[i]
+		katurl = "%s%s?lang=%s" % (path, Kat_ID, lang)
 					
 		l = L("Kategorie")
 		tag = u"%s: [B]%s[/B]" % (l, title)
 	
 		PLog('Satz4:')
 		PLog(title); PLog(arte_lang); PLog(katurl);
-		title=py2_encode(title); katurl=py2_encode(katurl)		# ohne title, katurl laden
-		fparams="&fparams={}")
+		title=py2_encode(title); katurl=py2_encode(katurl)
+		fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(katurl), quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteStart", fanart=R(ICON_ARTE), 
 				thumb=R(img), tagline=tag, summary=summ, fparams=fparams)
 
@@ -1117,170 +1145,85 @@ def Kategorien():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ---------------------------------------------------------------------
-def ArteStart(path=""):
-	PLog("ArteStart: " + path)
-	if path == "":
-		path = "arte.tv/hbbtv-mw/api/1/skeletons/pages/home?lang=%s" % lang		
-
-		
-		
-		
-		
-# ---------------------------------------------------------------------
-# Webseite arte.tv ohne Kategorien
-# Aufrufer: Kategorien / ArteCluster
-# 2 Durchläufe: 1. Liste Cluster, 2. Cluster-Details
-# Mehr-Seiten:  -> get_ArtePage mit katurl, ohne Dict_ID
-# 14.01.2023 json-Auswertung
-# 12.02.2023 json-keys geändert
+# 24.03.2025 neu mit hbbtv
+# Startseite arte - Step1 Übersicht, Step2 Folgeseiten (path, title)
+#	Step2 zusätzl. Verteiler Folgebeiträge aus hbbtv-Ergebnissen
 #
-def ArteCluster(pid='', title='', katurl=''):
-	PLog("ArteCluster: " + pid)
-	PLog(title); PLog(katurl); 
-	title_org = title
-	pid_org=pid
-	ping_uhd = False
-	
-		
+def ArteStart(path="", title=""):
+	PLog("ArteStart: " + path)
+
 	arte_lang = Dict('load', "arte_lang")
-	lang = arte_lang.split("|")[1].strip()			# fr, de, ..	
-	PLog(katurl); 
-	katurl_org=katurl
+	lang = arte_lang.split("|")[1].strip()			# fr, de, ..
 
-	page = get_ArtePage('ArteCluster', title, path=katurl)
-
-	if katurl == "https://www.arte.tv/%s/" % lang:		
-		uhd_url = "https://www.arte.tv/%s/videos/RC-022710/programme-in-uhd-qualitaet/" % lang # Watchdog_Plex-2 (de)
-		ping_uhd = url_check(uhd_url, dialog=False)
-		PLog("url_uhd_check: " + str(ping_uhd))
+	step1=True	
+	if path == "":
+		path = "https://arte.tv/hbbtv-mw/api/1/skeletons/pages/home?lang=%s" % lang	
+	else:
+		step1=False
 	
-	try:											# s.a. GetContent
-		page = page["pageProps"]["props"]["page"]["value"]
-		PLog(str(page)[:100])
-		PLog(len(page))
-		values = page["zones"]
-	except Exception as exception:
-		PLog("json_error: " + str(exception))
-		values=[]
-	
-	PLog(len(values))
-	if len(values) == 0:
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	page, msg = get_page(path)
+	if page == '' or page.startswith("Not found"):	
+		msg1 = u"Fehler in ArteStart:"
+		msg2 = msg
+		MyDialog(msg1, msg2, '')	
 		return
-
-	PLog(str(values)[:100])	
-	img_def = R(ICON_DIR_FOLDER)
+	PLog(len(page))
+	
 	li = xbmcgui.ListItem()
-	
-	# contentId: Login-relevante Beiträge, 	ohne Beiträge: 'data":[]'
-	skip_item = [u'"Alle Kategorien', u'"contentId',  u'"Newsletter',
-				u'"ARTE Magazin', u'"Meine Liste', u'Demnächst',
-				 u'Zum selben Thema', u'Collection Articles', u'Collection Partners',
-				 u'Collection Upcomings', u'"collection_content"',
-				 u'data":[]']
-					
-	if pid == '':											# 1. Durchlauf
-		PLog('ArteStart_1:')
-		PLog(str(values)[:100])
-		l = L(u'Zurück zum Hauptmenü')
-		ltitle = u" %s %s" % (l, "arte")						# Startblank s. home
-		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
-		
-		if ping_uhd and lang == "de":						# UHD-Button
-			title = u"UHD-Programme"
-			tag = "Folgeseiten"
-			title=py2_encode(title); uhd_url=py2_encode(uhd_url);
-			pid=""
-			fparams="&fparams={'pid': '%s', 'title': '%s', 'katurl': '%s'}" % (pid, quote(title), quote(uhd_url))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", 
-				fanart=R(ICON_ARTE), thumb=img_def, tagline=tag, fparams=fparams)
-			
-		for item in values:
-			PLog(str(page)[:60])
-			tag=""; anz=""
-			
-			pid = item["id"]
-			title = item["title"]
-			title = transl_json(title)
-			
-			PLog("Mark0")
-			skip=False
-			for s in skip_item:
-				if title.find(s) >= 0: 
-					if title != "Alle Videos":				# trotz data":[] möglich
-						PLog("skip_item: " + s); 
-						skip=True
-			if skip: 
-				PLog("skip_title: " + title)
-				continue
-			
-			try:
-				anz = len(item["content"]["data"])
-				PLog(anz)
-				tag = L(u"Folgebeiträge") + ": %d" % anz			
-				img = item["content"]["data"][0]["mainImage"]["url"]
-				img = img.replace('__SIZE__', '400x225')	# nur 400x225 akzeptiert
-			except Exception as exception:
-				PLog("json_error: " + str(exception))
-				img = img_def
-			if anz == 0:
-				PLog("skip_no_anz: " + title)
-				continue
+	l = L(u'Zurück zum Hauptmenü')
+	ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
+	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
+
+	if step1:
+		# -------------------------------------------------------------- # Step1 Übersicht
+		PLog("ArteStart_Step1:")	
+		try:
+			page = json.loads(page)
+			items = page["collections"]
+			PLog(str(items)[:80])
+		except Exception as exception:
+			items=[]
+			PLog("json_error1: " + str(exception))
+
+		skip_list=["Ihre Woche auf arte.tv", "Meine Liste",	
+				"Meine Videos weiterschauen"]
+		thumb = R(ICON_DIR_FOLDER)
+		fanart = R(ICON_ARTE)
+		try:
+			for item in items:
+				title = item["title"]
+				if title in skip_list:
+					continue
+				link = item["link"]
+				href = "%s%s?lang=de" % (HBBTV_BASE, link)
+				tag=""
 				
-			PLog('Satz2:')
-			PLog(title); PLog(pid); PLog(katurl); PLog(img);
-			title_org = title								# unverändert für Abgleich
-			title = repl_json_chars(title) 
-			label = title
-			summ  = "[B]%s[/B]" % arte_lang 
-			
-			title=py2_encode(title); katurl=py2_encode(katurl);
-			title_org=title
-			fparams="&fparams={'pid': '%s', 'title': '%s', 'katurl': '%s'}" %\
-				(pid, quote(title_org), quote(katurl))
-			addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.ArteCluster", 
-				fanart=R(ICON_ARTE), thumb=img, tagline=tag, summary=summ, fparams=fparams)
-
-	else:													# 2. Durchlauf
-		PLog('ArteStart_2:')
-		PLog(str(page)[:80])
-		name_org=name; title_org=title
-		page = get_cluster(values, title, pid)				# Cluster in json
-		if page  == '':	
-			return		
-		PLog(str(page)[:80])
-		
-		l = L(u'Zurück zum Hauptmenü')
-		ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
-		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
-		# ignore_pid verhindert erneuten Aufruf: 
-		li, cnt = GetContent(li, page, ID="ArteStart_2", ignore_pid=pid_org)
-		PLog("cnt: " + str(cnt))
-		ArteMehr(page, li)							# Mehr-Beiträge?
-
+				PLog('Satz7:')
+				PLog(title); PLog(href)
+				title=py2_encode(title); href=py2_encode(href);
+				fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))							
+				addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteStart", 
+					fanart=fanart, thumb=thumb, tagline=tag, fparams=fparams)
+				
+		except Exception as exception:
+			PLog("json_error2: " + str(exception))
+	else:
+		# -------------------------------------------------------------- # Step2 Folgeseiten
+		PLog("ArteStart_Step2:")	
+		ID = "HBBTV"
+		try:
+			page = json.loads(page)
+		except Exception as exception:
+			page=""
+			PLog("json_error3: " + str(exception))
+		if page:
+			GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=lang)
+						
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			
-# ---------------------------------------------------------------------
-# holt Cluster zu Cluster-ID pid
-def get_cluster(values, title, pid_search):
-	PLog("get_cluster: " + pid_search)
-	page=""
-	
-	for item in values:
-		pid = item["id"]
-		PLog("pid_search: %s, pid: %s" % (pid_search, pid))
-		if pid_search in pid:
-			PLog("found_Cluster: " + pid)
-			page = item
-			break
-	if len(page) == 0:
-		PLog("Cluster_failed: %s, %s" + title, pid_search)
-	
-	return page
 
 # ---------------------------------------------------------------------
 # holt Mehr-Beiträge -> get_next_url (ab "pagination") für
-#	Beitrag_Liste + ArteCluster
+#	Neueste Videos Beitrag_Liste
 # page = string
 def ArteMehr(page, li=''):
 	PLog("ArteMehr:")
@@ -1298,12 +1241,6 @@ def ArteMehr(page, li=''):
 	return
 	
 # ---------------------------------------------------------------------
-# lädt Arte-Seite aus Cache / Web
-# Rückgabe json-Teil der Webseite oder ''
-# Cachezeit für Startseite + Kategorien identisch
-# 26.07.2021 Anpassung an Webänderung (json-Auschnitt)
-# 27.04.2022 Umstellung Dict_ID wg. rekursiver Aufrufe:
-#	 Dict_ID = letzer Pfadanteil
 # 14.01.2023 json.loads - soweit möglich
 #
 def get_ArtePage(caller, title, path, header=''):
@@ -1413,15 +1350,16 @@ def L(string):
 		msgs = obj["strings"]["msgstr"]
 		PLog("strings: %d" % len(msgs))
 		for msg in msgs:
-			PLog("string: %s, msg_de: %s" % (string, msg["de"]))
+			# PLog("string: %s, msg_de: %s" % (string, msg["de"])) # Debug
 			if string in msg["de"]:					# Bsp. es: Folgebeiträge -> 
 				lstring = msg["%s" % lang]			#	Artículos complementarios
 				break
 	except Exception as exception:
 		PLog("L_error: " + str(exception))
 			
-	PLog("lstring_found: %s" % lstring)
 	if lstring:
+		PLog("lstring_found: %s" % lstring)
 		return lstring
 	else:
+		PLog("lstring_not_found: %s" % string)
 		return string						# Rückgabe Basis-String, falls kein Paar gefunden
