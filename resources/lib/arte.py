@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>56</nr>										# Numerierung für Einzelupdate
+# 	<nr>57</nr>										# Numerierung für Einzelupdate
 #	Stand: 25.03.2025
 
 # Python3-Kompatibilität:
@@ -1264,6 +1264,7 @@ def get_ArtePage(caller, title, path, header=''):
 		return ''
 
 	PLog("extract:"); 
+	page = py2_encode(page)
 	if '"Not found' in str(page)[:44]:						# {"error": "Not found /de/hbbtv/pages/..
 		msg2 = stringextract('error": "', '"}', str(page))
 		if msg2:
