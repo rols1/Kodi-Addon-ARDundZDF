@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>58</nr>										# Numerierung für Einzelupdate
+# 	<nr>59</nr>										# Numerierung für Einzelupdate
 #	Stand: 26.03.2025
 
 # Python3-Kompatibilität:
@@ -227,7 +227,12 @@ def get_live_data(name):
 	player = "https://api.arte.tv/api/player/v2/config/%s/LIVE" % lang	# aus ../pages/TV_GUIDE/?day=..
 	if page:
 		li=""
-		title, tag, summ, thumb, url = GetContent(li, page, ID="EPG_Today", OnlyNow=True)
+		try:
+			title, tag, summ, thumb, url = GetContent(li, page, ID="EPG_Today", OnlyNow=True)
+		except Exception as exception:
+			PLog("json_error5: " + str(exception))
+			title=""; tag=""	
+		
 		title = u"[B]LIVE[/B] | %s" % title
 		tag = u"%s\n%s" % (title, tag)
 
