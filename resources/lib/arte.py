@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>57</nr>										# Numerierung für Einzelupdate
-#	Stand: 25.03.2025
+# 	<nr>58</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -679,16 +679,7 @@ def get_img(item, ID=""):
 			else:
 				img = item["images"]["landscape"]
 		else:									# todo: Cache ergänzen (s. ARDNeu_Startpage) 
-			'''
-			link = HBBTV_BASE + item["link"]
-			page, msg = get_page(link)
-			if page:
-				try:
-					img = json.loads(page)["cards"][0]["images"]["highlight"]
-				except Exception as exception:
-					PLog("json_error6: " + str(exception))
-					img  = R(ICON_DIR_FOLDER)
-			'''
+			img=""
 		PLog("img: " + img)
 		return img	
 	
@@ -1220,6 +1211,167 @@ def ArteStart(path="", title=""):
 			GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=lang)
 						
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+# ---------------------------------------------------------------------
+#
+def ArteCluster(pid='', title='', katurl=''):
+	PLog("ArteCluster: " + pid)
+	PLog(title); PLog(katurl); 
+	title_org = title
+	pid_org=pid
+	ping_uhd = False
+	
+	arte_lang = Dict('load', "arte_lang")
+	lang = arte_lang.split("|")[1].strip()			# fr, de, ..
+	
+	if katurl.startswith("http") == False:			# Folgebeiträge aus Suche + Neueste Videos
+		rc = stringextract("/RC-", "/", katurl)
+		katurl = "%s/api/1/skeletons/collections/RC-%s?lang=%s" % (HBBTV_BASE, rc, lang)		
+	PLog(katurl); 
+	katurl_org=katurl
+
+	page = get_ArtePage('ArteCluster', title, path=katurl)
+
+#	if katurl == "https://www.arte.tv/%s/" % lang:		
+#		uhd_url = "https://www.arte.tv/%s/videos/RC-022710/programme-in-uhd-qualitaet/" % lang # Watchdog_Plex-2 (de)
+#		ping_uhd = url_check(uhd_url, dialog=False)
+#		PLog("url_uhd_check: " + str(ping_uhd))
+	
+	coll_img=""										# Collection-Bild bei hbbtv
+	try:											# s.a. GetContent
+		PLog(str(page)[:100])
+		if "pageProps" in page:						# Web-json
+			page = page["pageProps"]["props"]["page"]["value"]
+			values = page["zones"]
+		elif "hbbtv-mw" in katurl:
+			values = page
+		else:
+			values=[]
+		PLog(len(page))
+	except Exception as exception:
+		PLog("json_error: " + str(exception))
+		values=[]
+	
+	PLog("values: %d" % len(values))
+	if len(values) == 0:
+		PLog("values_0")
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
+
+	PLog(str(values)[:100])	
+	img_def = R(ICON_DIR_FOLDER)
+	li = xbmcgui.ListItem()
+						
+	if pid == '':											# 1. Durchlauf
+		PLog('ArteCluster_1:')
+		PLog(str(values)[:100])
+		l = L(u'Zurück zum Hauptmenü')
+		ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
+		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
+		
+		if ping_uhd and lang == "de":						# UHD-Button
+			title = u"UHD-Programme"
+			tag = "Folgeseiten"
+			title=py2_encode(title); uhd_url=py2_encode(uhd_url);
+			pid=""
+			fparams="&fparams={'pid': '%s', 'title': '%s', 'katurl': '%s'}" % (pid, quote(title), quote(uhd_url))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", 
+				fanart=R(ICON_ARTE), thumb=img_def, tagline=tag, fparams=fparams)
+			
+		if "hbbtv-mw" in katurl:							# hbbtv direkt -> GetContent
+			ID = "HBBTV"
+			GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=lang)
+			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+			return
+		
+		for item in values:
+			PLog(str(page)[:60])
+			tag=""; anz=""
+			
+			pid = item["id"]
+			title = item["title"]
+			title = transl_json(title)
+			
+			PLog("Mark0")
+			skip=False
+			for s in skip_item:
+				if title.find(s) >= 0: 
+					if title != "Alle Videos":				# trotz data":[] möglich
+						PLog("skip_item: " + s); 
+						skip=True
+			if skip: 
+				PLog("skip_title: " + title)
+				continue	
+			try:
+				anz = len(item["content"]["data"])
+				descr=""
+				tag = L(u"Folgebeiträge") + ": %d" % anz			
+				img = item["content"]["data"][0]["mainImage"]["url"]
+				img = img.replace('__SIZE__', '400x225')	# nur 400x225 akzeptiert
+			except Exception as exception:
+				PLog("json_error4: " + str(exception))
+				img = img_def
+			if anz == 0:
+				PLog("skip_no_anz: " + title)
+				continue
+				
+			PLog('Satz2:')
+			PLog(title); PLog(pid); PLog(katurl); PLog(img); PLog(anz);
+			title_org = title								# unverändert für Abgleich
+			title = repl_json_chars(title) 
+			label = title
+			summ  = "[B]%s[/B]" % arte_lang 
+			if descr:
+				summ = "%s\n%s" % (summ, descr)
+			
+			title=py2_encode(title); katurl=py2_encode(katurl);
+			title_org=title
+			fparams="&fparams={'pid': '%s', 'title': '%s', 'katurl': '%s'}" %\
+				(pid, quote(title_org), quote(katurl))
+			addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.ArteCluster", 
+				fanart=R(ICON_ARTE), thumb=img, tagline=tag, summary=summ, fparams=fparams)
+
+	else:													# 2. Durchlauf
+		PLog('ArteCluster_2:')
+		PLog(str(page)[:80])
+		name_org=name; title_org=title
+		page = get_cluster(values, title, pid)				# Cluster in json
+		if page  == '':	
+			return		
+		PLog(str(page)[:80])
+		
+		l = L(u'Zurück zum Hauptmenü')
+		ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
+		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
+		
+		ID="ArteStart_2"
+		if "hbbtv-mw" in katurl:							# sollte hier nicht mehr vorkommen
+			ID = "HBBTV"
+		# ignore_pid verhindert erneuten Aufruf: 
+		li, cnt = GetContent(li, page, ID, ignore_pid=pid_org)
+		PLog("cnt: " + str(cnt))
+		ArteMehr(page, li)	
+								# Mehr-Beiträge?
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+# ---------------------------------------------------------------------
+# holt Cluster zu Cluster-ID pid
+def get_cluster(values, title, pid_search):
+	PLog("get_cluster: " + pid_search)
+	page=""
+	
+	for item in values:
+		pid = item["id"]
+		PLog("pid_search: %s, pid: %s" % (pid_search, pid))
+		if pid_search in pid:
+			PLog("found_Cluster: " + pid)
+			page = item
+			break
+	if len(page) == 0:
+		PLog("Cluster_failed: %s, %s" + title, pid_search)
+	
+	return page
 
 # ---------------------------------------------------------------------
 # holt Mehr-Beiträge -> get_next_url (ab "pagination") für
