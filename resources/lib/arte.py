@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>59</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.03.2025
+# 	<nr>60</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -148,7 +148,16 @@ def Main_arte(title='', summ='', descr='',href=''):
 		thumb=R(ICON_ARTE), tagline=tag, summary=summ, fparams=fparams)
 		
 	# ------------------------------------------------------
+	# 27.03.2025 Bisher keine PRG für Gebärdensprache gefunden (Icon arte_Gebaerden.png)
+	title = u"%s" % L(u"Barrierefreie Inhalte")
+	tag = "[B]%s[/B]" % arte_lang						# aktuell
+	lang = arte_lang.split("|")[1].strip()				# fr, de, ..
+	path = "https://www.arte.tv/hbbtv-mw/api/1/skeletons/pages/ACCESSIBLE_PROGRAMS?lang=%s" % lang
+	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))							
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteStart", 	# -> Step2
+		thumb=R("arte_barrierefrei.png"), fanart=R(ICON_ARTE), tagline=tag, fparams=fparams)
 	
+	# ------------------------------------------------------
 	title 	= u'Sprache / Language'						# Auswahl Sprache
 	tag = "[B]%s[/B]" % arte_lang						# aktuell
 	title=py2_encode(title); 
@@ -381,9 +390,10 @@ def Arte_Search(query='', next_url=''):
 		ID='SEARCH_NEXT'
 	li,cnt = GetContent(li, page, ID)
 	if 	cnt == 0:
+		icon = R(ICON_SEARCH)
 		msg1 = L(u"leider keine Treffer zu")
 		msg2 = query
-		MyDialog(msg1, msg2, '')	
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
 		return
 		
 	#														# Mehr-Beiträge? ArteMehr nicht geeignet
@@ -464,24 +474,24 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 	PLog("img_def: " + img_def)	
 	PLog(len(values))
 	if len(values) == 0:
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		return
+		PLog("no_values")
+		return li, 0
 	
 	PLog(str(values)[:100])
 	mediatype=''; cnt=0
 	
 	for item in values:
 		PLog(str(item)[:60])
-		mehrfach=False; katurl=''; summ=''; dur=""; geo=""	
+		mehrfach=False; summ=''; dur=""; geo=""	
 		start=''; end=''; upcoming=""; teaserText=""; coll=""
 		
-		title = item["title"]							# für Abgleich in Kategorien
-		title = transl_json(title)
-			
+		title = item["title"]							# für Abgleich in Kategorien	
 		if "subtitle" in item:
 			subtitle = item["subtitle"]	
 			if subtitle:									# arte verbindet mit -
 				title  = "%s - %s" % (title, subtitle)
+		title = valid_title_chars(title)				# Steuerz. möglich: \t\n
+		
 		if "Description" in item:
 			summ = item["Description"]					
 		if "description" in item:						# hbbtv
@@ -526,9 +536,16 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 					url = "%s/api/1/skeletons/pages/%s?lang=%s" % (HBBTV_BASE, kat, lang)	
 		
 		img = get_img(item, ID)
-		PLog(img); PLog(img_def)
+		if "ACCESSIBLE_PROGRAMS/2" in url:
+			img = R("arte_barrierefrei.png")
+		if "ACCESSIBLE_PROGRAMS/3" in url:
+			img = R("arte_Untertitel.png")
+		if img == "" and ID == "HBBTV":
+			img = get_img_pre(url, title)				# Bild 1. Beitrag Zielseite
 		if img == "":
-			img = img_def
+			img = img_def								# übergeordnetes Bild oder Folder
+		PLog(img); PLog(img_def)
+	
 			
 		if "teaserText" in item:										
 			teaserText = item["teaserText"]
@@ -664,7 +681,67 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ,  mediatype=mediatype)		
 				cnt=cnt+1
 
+	PLog("count: %d" % cnt)
 	return li, cnt
+	
+# -------------------------------
+#  wie ARDnew.img_preload, angepasste json- und img-path-
+#	Behandlung. Eindeutiger Dateiname wird aus Kombi collection-
+#	Name und collection-Nr. erzeugt, z.B. home_24de	
+#	
+def get_img_pre(path, title):
+	PLog("get_img_pre:")
+	PLog("title: %s, path: %s" % (title, path))
+	leer_img=""	
+	
+	oname = os.path.join(SLIDESTORE, "ARTE_Startpage")
+	p = path.replace("?lang=", "")						# entferne lang=, behalte Kennung
+	p = p.split("/")									# details/home/24?lang=de ->
+	PLog(p)
+	fname = "_".join(p[-2:])								# home_24de
+	fname = os.path.join(oname, fname)
+	PLog("oname: %s, fname: %s" % (oname, fname))
+	
+	if os.path.isdir(oname) == False:
+		try:  
+			PLog("mkdir: " + oname)
+			os.mkdir(oname)								# UZ-Verz. ARTE_Startpage erzeugen
+		except OSError as exception:
+			PLog("mkdir_error " + str(exception))
+			return leer_img	
+			
+	if os.path.exists(fname):							# img aus Cache laden
+		PLog('img_cache_load: ' + fname)	
+		return fname
+	#-------------------------------------------------- # Beitrag path von Sender laden	
+		
+	try:
+		page, msg = get_page(path)
+		PLog(str(page)[:80])
+		page = json.loads(page)
+		if "cards" in page:
+			item = page["cards"][0]
+		elif "collections" in page:						# hbbtv
+			item = page["collections"][0]
+		else:
+			item=[]
+	except Exception as exception:
+		PLog("json_error7: " + str(exception))
+		return 	leer_img
+	PLog(str(item)[:80])
+	
+	img = get_img(item, ID="HBBTV")
+	if img == "":
+		return 	leer_img
+
+	PLog('img_cache_leer')
+	PLog("urlretrieve %s to %s" % (img, fname))	
+	msg1 = "Lade Bild"
+	msg2 = title										# 
+	xbmcgui.Dialog().notification(msg1,msg2,R(ICON_ARTE),2000, sound=False)	 
+	urlretrieve(img, fname)							# img -> Cache
+	icon = R(ICON_ARTE)
+	return fname
 	
 # -------------------------------
 # holt Bild aus Datensatz
@@ -686,8 +763,9 @@ def get_img(item, ID=""):
 		else:									# todo: Cache ergänzen (s. ARDNeu_Startpage) 
 			img=""
 		PLog("img: " + img)
-		return img	
-	
+		return img
+		
+	# ----------------------------------------------------------------- Bilder api/rproxy/emac/v4
 	if type(item) == dict:
 		if "mainImage" in item:
 			img = item["mainImage"]["url"]
@@ -1172,7 +1250,18 @@ def ArteStart(path="", title=""):
 
 	if step1:
 		# -------------------------------------------------------------- # Step1 Übersicht
-		PLog("ArteStart_Step1:")	
+		PLog("ArteStart_Step1:")
+		thumb = R(ICON_DIR_FOLDER)
+		fanart = R(ICON_ARTE)
+		tag=""
+		
+		title = L(u"Programme in UHD-Qualität")							# UHD-Button vor Startseite
+		href = "https://www.arte.tv/hbbtv-mw/api/1/skeletons/collections/RC-022710?lang=%s" % lang
+		title=py2_encode(title); href=py2_encode(href);
+		fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))							
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteStart", 
+			fanart=fanart, thumb=thumb, tagline=tag, fparams=fparams)
+			
 		try:
 			page = json.loads(page)
 			items = page["collections"]
@@ -1183,16 +1272,17 @@ def ArteStart(path="", title=""):
 
 		skip_list=["Ihre Woche auf arte.tv", "Meine Liste",	
 				"Meine Videos weiterschauen"]
-		thumb = R(ICON_DIR_FOLDER)
-		fanart = R(ICON_ARTE)
 		try:
-			for item in items:
+			for item in items:											# Liste Startseite
+				PLog(str(item)[:80])
 				title = item["title"]
 				if title in skip_list:
 					continue
 				link = item["link"]
 				href = "%s%s?lang=de" % (HBBTV_BASE, link)
-				tag=""
+				img = get_img_pre(href, title)							# Bild 1. Beitrag Zielseite
+				if img:
+					thumb = img
 				
 				PLog('Satz7:')
 				PLog(title); PLog(href)
@@ -1218,6 +1308,8 @@ def ArteStart(path="", title=""):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ---------------------------------------------------------------------
+# 27.03.2025 Folgebeiträge aus Suche + Neueste Videos werden hier auf 
+#	hbbtv umgesetzt (collections/RC-..)
 #
 def ArteCluster(pid='', title='', katurl=''):
 	PLog("ArteCluster: " + pid)
@@ -1231,16 +1323,12 @@ def ArteCluster(pid='', title='', katurl=''):
 	
 	if katurl.startswith("http") == False:			# Folgebeiträge aus Suche + Neueste Videos
 		rc = stringextract("/RC-", "/", katurl)
+		PLog("set_katurl_RC: %s" % rc)
 		katurl = "%s/api/1/skeletons/collections/RC-%s?lang=%s" % (HBBTV_BASE, rc, lang)		
 	PLog(katurl); 
 	katurl_org=katurl
 
 	page = get_ArtePage('ArteCluster', title, path=katurl)
-
-#	if katurl == "https://www.arte.tv/%s/" % lang:		
-#		uhd_url = "https://www.arte.tv/%s/videos/RC-022710/programme-in-uhd-qualitaet/" % lang # Watchdog_Plex-2 (de)
-#		ping_uhd = url_check(uhd_url, dialog=False)
-#		PLog("url_uhd_check: " + str(ping_uhd))
 	
 	coll_img=""										# Collection-Bild bei hbbtv
 	try:											# s.a. GetContent
@@ -1273,15 +1361,6 @@ def ArteCluster(pid='', title='', katurl=''):
 		l = L(u'Zurück zum Hauptmenü')
 		ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
 		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
-		
-		if ping_uhd and lang == "de":						# UHD-Button
-			title = u"UHD-Programme"
-			tag = "Folgeseiten"
-			title=py2_encode(title); uhd_url=py2_encode(uhd_url);
-			pid=""
-			fparams="&fparams={'pid': '%s', 'title': '%s', 'katurl': '%s'}" % (pid, quote(title), quote(uhd_url))
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteCluster", 
-				fanart=R(ICON_ARTE), thumb=img_def, tagline=tag, fparams=fparams)
 			
 		if "hbbtv-mw" in katurl:							# hbbtv direkt -> GetContent
 			ID = "HBBTV"

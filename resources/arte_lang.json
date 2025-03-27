@@ -1,6 +1,6 @@
 {
     "strings": {
-        "numeration": "<nr>3</nr>",
+        "numeration": "<nr>4</nr>",
         "msgstr": [
             {
                 "de": "Weitere Beiträge",
@@ -290,7 +290,15 @@
                 "pl": "powrót do listy",
                 "it": "torna all'elenco"
             },
-            {
+             {
+                "de": "Barrierefreie Inhalte",
+                "fr": "Programmes accessibles",
+                "en": "Accessible content",
+                "es": "Contenidos accesibles",
+                "pl": "Dostępna zawartość",
+                "it": "Contenuti accessibili"
+            },
+           {
                 "de": "",
                 "fr": "",
                 "en": "",
