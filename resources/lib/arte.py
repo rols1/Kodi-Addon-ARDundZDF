@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>60</nr>										# Numerierung für Einzelupdate
+# 	<nr>61</nr>										# Numerierung für Einzelupdate
 #	Stand: 27.03.2025
 
 # Python3-Kompatibilität:
@@ -242,8 +242,12 @@ def get_live_data(name):
 			PLog("json_error5: " + str(exception))
 			title=""; tag=""	
 		
+		if title == "":											# EPG-Abruf fehlgeschlagen
+			title = "unbekannt"
 		title = u"[B]LIVE[/B] | %s" % title
 		tag = u"%s\n%s" % (title, tag)
+		if thumb == "":
+			thumb = R('arte_live.png')
 
 		page = get_page(path=player)							# Playerdaten mit Stream-Url
 		page = py2_encode(page)
@@ -669,7 +673,7 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 					except Exception as exception:
 						# PLog(item)
 						PLog("stickers_error: " + str(exception))
-						return "", "", "", "", ""
+					return "", "", "", "", ""
 																
 
 			if not OnlyNow:							
