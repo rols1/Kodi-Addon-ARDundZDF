@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>61</nr>										# Numerierung für Einzelupdate
+# 	<nr>62</nr>										# Numerierung für Einzelupdate
 #	Stand: 27.03.2025
 
 # Python3-Kompatibilität:
@@ -127,8 +127,12 @@ def Main_arte(title='', summ='', descr='',href=''):
 		thumb=R(ICON_TV), tagline=tag, fparams=fparams)
 
 	tag=u'[B]%s[/B]' % L("Arte Livestream")				# Livestream-Daten
-	title, tag, summ, img, href = get_live_data('ARTE')
-	title = repl_json_chars(title)
+	try:
+		title, tag, summ, img, href = get_live_data('ARTE')
+		title = repl_json_chars(title)
+	except Exception as exception:
+		PLog("json_error5: " + str(exception))
+		title="LIVE"; tag="LIVE"; summ=""; img=R(ICON_TV)		# Defaults	
 	
 	summ_par = summ.replace('\n', '||')
 	summ_par = repl_json_chars(summ_par)
@@ -239,8 +243,9 @@ def get_live_data(name):
 		try:
 			title, tag, summ, thumb, url = GetContent(li, page, ID="EPG_Today", OnlyNow=True)
 		except Exception as exception:
-			PLog("json_error5: " + str(exception))
-			title=""; tag=""	
+			PLog("json_error6: " + str(exception))
+			PLog("use_ard_streamlinks")
+			title=""; tag=""; summ=""; thumb=""; url=href	
 		
 		if title == "":											# EPG-Abruf fehlgeschlagen
 			title = "unbekannt"
@@ -672,8 +677,7 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 									return label, tag, summ, img, url
 					except Exception as exception:
 						# PLog(item)
-						PLog("stickers_error: " + str(exception))
-					return "", "", "", "", ""
+						PLog("stickers_error: " + str(exception))# ohne Rückgabe try in get_live_data)
 																
 
 			if not OnlyNow:							
