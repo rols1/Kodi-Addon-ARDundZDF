@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>62</nr>										# Numerierung für Einzelupdate
-#	Stand: 27.03.2025
+# 	<nr>63</nr>										# Numerierung für Einzelupdate
+#	Stand: 28.03.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -293,15 +293,16 @@ def EPG_Today(mode=""):
 
 	now = datetime.datetime.now()
 	today = now.strftime("%Y-%m-%d")				# 2023-01-16 
-	path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/TV_GUIDE/?day=%s" % (lang, today)
+	EPG_path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/TV_GUIDE/?day=%s"
+	path = EPG_path % (lang, today)
 	PLog(path)
 	if url_check(path, dialog=False) == False:		# nicht für alle Sprachen verfügbar
 		icon = R('arte_lang.png')
-		msg1 = u"fehlt: " + arte_lang
+		msg1 = u"EPG fehlt: " + arte_lang
 		msg2 = u"lade: " + u"Deutsch | de"			# Fallback Deutsch
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
 		PLog(msg1); PLog(msg2)
-		path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/TV_GUIDE/?day=%s" % ("de", today)
+		path = EPG_path % ("de", today)
 	
 	page = get_ArtePage('EPG_Today', "EPG_Today", path)	
 	if page == '':
@@ -477,7 +478,7 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 			else:										# vor 13.01.2021
 				values = values["zones"]
 		except Exception as exception:
-			PLog("json_error: " + str(exception))
+			PLog("json_error8: " + str(exception))
 			values=[]
 	
 	PLog("img_def: " + img_def)	
@@ -553,7 +554,7 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 			img = get_img_pre(url, title)				# Bild 1. Beitrag Zielseite
 		if img == "":
 			img = img_def								# übergeordnetes Bild oder Folder
-		PLog(img); PLog(img_def)
+		PLog("img: %s, img_def: %s" % (img, img_def))
 	
 			
 		if "teaserText" in item:										
@@ -695,7 +696,8 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 # -------------------------------
 #  wie ARDnew.img_preload, angepasste json- und img-path-
 #	Behandlung. Eindeutiger Dateiname wird aus Kombi collection-
-#	Name und collection-Nr. erzeugt, z.B. home_24de	
+#	Name, collection-Nr. und lang erzeugt, z.B. home_24de (Beiträge
+#	+ Bilder unterscheiden sich für die de,fr,en,es,pl,it).
 #	
 def get_img_pre(path, title):
 	PLog("get_img_pre:")
@@ -744,7 +746,7 @@ def get_img_pre(path, title):
 
 	PLog('img_cache_leer')
 	PLog("urlretrieve %s to %s" % (img, fname))	
-	msg1 = "Lade Bild"
+	msg1 = L("Lade Bild")
 	msg2 = title										# 
 	xbmcgui.Dialog().notification(msg1,msg2,R(ICON_ARTE),2000, sound=False)	 
 	urlretrieve(img, fname)							# img -> Cache
@@ -819,7 +821,7 @@ def get_img(item, ID=""):
 # ----------------------------------------------------------------------
 # 15.01.2023 spez. ID für GetContent
 # 25.03.2025 nach Umstellung auf hbbtv nur noch genutzt für Neueste Videos
-#	(api rproxy/emac/v4)
+#	(api rproxy/emac/v4). Mit Pagination ArteMehr
 #
 def Beitrag_Liste(url, title):
 	PLog("Beitrag_Liste: " + title)
@@ -940,6 +942,7 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	#-------------------------------------------------------------	# HBBTV-MP4-Quellen
 	page, msg = get_page(path2, do_safe=False)						# Bearer entbehrlich 
 	#RSave('/tmp2/x_artestreams_hbbtvv2.json', py2_encode(page))	# Debug	
+	MP4_List=[]
 	try:
 		page = json.loads(page)
 		formitaeten = page["videoStreams"]
@@ -1242,14 +1245,10 @@ def ArteStart(path="", title=""):
 		path = "https://arte.tv/hbbtv-mw/api/1/skeletons/pages/home?lang=%s" % lang	
 	else:
 		step1=False
-	
-	page, msg = get_page(path)
-	if page == '' or page.startswith("Not found"):	
-		msg1 = u"Fehler in ArteStart:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
+
+	page = get_ArtePage('ArteStart', "ArteStart", path)	
+	if page == "":
 		return
-	PLog(len(page))
 	
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
@@ -1271,7 +1270,6 @@ def ArteStart(path="", title=""):
 			fanart=fanart, thumb=thumb, tagline=tag, fparams=fparams)
 			
 		try:
-			page = json.loads(page)
 			items = page["collections"]
 			PLog(str(items)[:80])
 		except Exception as exception:
@@ -1287,7 +1285,7 @@ def ArteStart(path="", title=""):
 				if title in skip_list:
 					continue
 				link = item["link"]
-				href = "%s%s?lang=de" % (HBBTV_BASE, link)
+				href = "%s%s?lang=%s" % (HBBTV_BASE, link, lang)
 				img = get_img_pre(href, title)							# Bild 1. Beitrag Zielseite
 				if img:
 					thumb = img
@@ -1303,21 +1301,18 @@ def ArteStart(path="", title=""):
 			PLog("json_error2: " + str(exception))
 	else:
 		# -------------------------------------------------------------- # Step2 Folgeseiten
+		# leere Seiten möglich, Bsp. Event-Teaser, in Liste ohne Bild
 		PLog("ArteStart_Step2:")	
 		ID = "HBBTV"
-		try:
-			page = json.loads(page)
-		except Exception as exception:
-			page=""
-			PLog("json_error3: " + str(exception))
-		if page:
-			GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=lang)
+		GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=lang)
+			
 						
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ---------------------------------------------------------------------
 # 27.03.2025 Folgebeiträge aus Suche + Neueste Videos werden hier auf 
-#	hbbtv umgesetzt (collections/RC-..)
+#	hbbtv umgesetzt (collections/RC-..), damit entfallen ArteCluster_2
+#	und get_cluster
 #
 def ArteCluster(pid='', title='', katurl=''):
 	PLog("ArteCluster: " + pid)
@@ -1363,107 +1358,66 @@ def ArteCluster(pid='', title='', katurl=''):
 	img_def = R(ICON_DIR_FOLDER)
 	li = xbmcgui.ListItem()
 						
-	if pid == '':											# 1. Durchlauf
-		PLog('ArteCluster_1:')
-		PLog(str(values)[:100])
-		l = L(u'Zurück zum Hauptmenü')
-		ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
-		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
-			
-		if "hbbtv-mw" in katurl:							# hbbtv direkt -> GetContent
-			ID = "HBBTV"
-			GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=lang)
-			xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-			return
+	PLog('ArteCluster_1:')
+	PLog(str(values)[:100])
+	l = L(u'Zurück zum Hauptmenü')
+	ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
+	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 		
-		for item in values:
-			PLog(str(page)[:60])
-			tag=""; anz=""
-			
-			pid = item["id"]
-			title = item["title"]
-			title = transl_json(title)
-			
-			PLog("Mark0")
-			skip=False
-			for s in skip_item:
-				if title.find(s) >= 0: 
-					if title != "Alle Videos":				# trotz data":[] möglich
-						PLog("skip_item: " + s); 
-						skip=True
-			if skip: 
-				PLog("skip_title: " + title)
-				continue	
-			try:
-				anz = len(item["content"]["data"])
-				descr=""
-				tag = L(u"Folgebeiträge") + ": %d" % anz			
-				img = item["content"]["data"][0]["mainImage"]["url"]
-				img = img.replace('__SIZE__', '400x225')	# nur 400x225 akzeptiert
-			except Exception as exception:
-				PLog("json_error4: " + str(exception))
-				img = img_def
-			if anz == 0:
-				PLog("skip_no_anz: " + title)
-				continue
-				
-			PLog('Satz2:')
-			PLog(title); PLog(pid); PLog(katurl); PLog(img); PLog(anz);
-			title_org = title								# unverändert für Abgleich
-			title = repl_json_chars(title) 
-			label = title
-			summ  = "[B]%s[/B]" % arte_lang 
-			if descr:
-				summ = "%s\n%s" % (summ, descr)
-			
-			title=py2_encode(title); katurl=py2_encode(katurl);
-			title_org=title
-			fparams="&fparams={'pid': '%s', 'title': '%s', 'katurl': '%s'}" %\
-				(pid, quote(title_org), quote(katurl))
-			addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.ArteCluster", 
-				fanart=R(ICON_ARTE), thumb=img, tagline=tag, summary=summ, fparams=fparams)
-
-	else:													# 2. Durchlauf
-		PLog('ArteCluster_2:')
-		PLog(str(page)[:80])
-		name_org=name; title_org=title
-		page = get_cluster(values, title, pid)				# Cluster in json
-		if page  == '':	
-			return		
-		PLog(str(page)[:80])
-		
-		l = L(u'Zurück zum Hauptmenü')
-		ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
-		li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
-		
-		ID="ArteStart_2"
-		if "hbbtv-mw" in katurl:							# sollte hier nicht mehr vorkommen
-			ID = "HBBTV"
-		# ignore_pid verhindert erneuten Aufruf: 
-		li, cnt = GetContent(li, page, ID, ignore_pid=pid_org)
-		PLog("cnt: " + str(cnt))
-		ArteMehr(page, li)	
-								# Mehr-Beiträge?
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-# ---------------------------------------------------------------------
-# holt Cluster zu Cluster-ID pid
-def get_cluster(values, title, pid_search):
-	PLog("get_cluster: " + pid_search)
-	page=""
+	if "hbbtv-mw" in katurl:							# hbbtv direkt -> GetContent
+		ID = "HBBTV"
+		GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=lang)
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+		return
 	
 	for item in values:
+		PLog(str(page)[:60])
+		tag=""; anz=""
+		
 		pid = item["id"]
-		PLog("pid_search: %s, pid: %s" % (pid_search, pid))
-		if pid_search in pid:
-			PLog("found_Cluster: " + pid)
-			page = item
-			break
-	if len(page) == 0:
-		PLog("Cluster_failed: %s, %s" + title, pid_search)
-	
-	return page
+		title = item["title"]
+		title = transl_json(title)
+		
+		PLog("Mark0")
+		skip=False
+		for s in skip_item:
+			if title.find(s) >= 0: 
+				if title != "Alle Videos":				# trotz data":[] möglich
+					PLog("skip_item: " + s); 
+					skip=True
+		if skip: 
+			PLog("skip_title: " + title)
+			continue	
+		try:
+			anz = len(item["content"]["data"])
+			descr=""
+			tag = L(u"Folgebeiträge") + ": %d" % anz			
+			img = item["content"]["data"][0]["mainImage"]["url"]
+			img = img.replace('__SIZE__', '400x225')	# nur 400x225 akzeptiert
+		except Exception as exception:
+			PLog("json_error4: " + str(exception))
+			img = img_def
+		if anz == 0:
+			PLog("skip_no_anz: " + title)
+			continue
+			
+		PLog('Satz2:')
+		PLog(title); PLog(pid); PLog(katurl); PLog(img); PLog(anz);
+		title_org = title								# unverändert für Abgleich
+		title = repl_json_chars(title) 
+		label = title
+		summ  = "[B]%s[/B]" % arte_lang 
+		if descr:
+			summ = "%s\n%s" % (summ, descr)
+		
+		title=py2_encode(title); katurl=py2_encode(katurl);
+		title_org=title
+		fparams="&fparams={'pid': '%s', 'title': '%s', 'katurl': '%s'}" %\
+			(pid, quote(title_org), quote(katurl))
+		addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.ArteCluster", 
+			fanart=R(ICON_ARTE), thumb=img, tagline=tag, summary=summ, fparams=fparams)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ---------------------------------------------------------------------
 # holt Mehr-Beiträge -> get_next_url (ab "pagination") für
@@ -1495,10 +1449,6 @@ def get_ArtePage(caller, title, path, header=''):
 		PLog("path_fehlt")
 		return page
 
-	# Arte-Concert stürzt mit mehrfachem HTTP Error 308 in getRedirect ab
-	# page, msg = get_page(path, GetOnlyRedirect=True)# Permanent-Redirect-Url abfangen
-	# url = page								
-	# page, msg = get_page(url)
 	page, msg = get_page(path, header=header)
 	if page == '':						
 		msg1 = u"%s: " % caller + L("nicht verfügbar") + ":"

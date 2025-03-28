@@ -1,6 +1,6 @@
 {
     "strings": {
-        "numeration": "<nr>4</nr>",
+        "numeration": "<nr>5</nr>",
         "msgstr": [
             {
                 "de": "Weitere Beiträge",
@@ -297,6 +297,22 @@
                 "es": "Contenidos accesibles",
                 "pl": "Dostępna zawartość",
                 "it": "Contenuti accessibili"
+            },
+             {
+                "de": "Programme in UHD-Qualität",
+                "fr": "Nos programmes en UHD",
+                "en": "Programs in UHD quality",
+                "es": "Programas en calidad UHD",
+                "pl": "Programy w jakości UHD",
+                "it": "Programmi in qualità UHD"
+            },
+             {
+                "de": "Lade Bild",
+                "fr": "Charger l'image",
+                "en": "Load image",
+                "es": "Cargar imagen",
+                "pl": "Załaduj obraz",
+                "it": "Carica immagine"
             },
            {
                 "de": "",
