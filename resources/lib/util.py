@@ -796,7 +796,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				org, org_id  = item.split("|")
 				if org in fparams:
 					break
-			if org_id and EPG_ID == "":									# nicht bei Livestreams
+			if org_id and EPG_ID == "":									# Inhaltstext nicht bei Livestreams
 				try:
 					s = fparams.split("&fparams=")[1]
 					json_string = s.replace("'", "\"")
@@ -1141,7 +1141,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			req = Request(path)
 		
 		r = urlopen(req, timeout=UrlopenTimeout)					# float-Werte möglich
-#		new_url = r.geturl()										# follow redirects
+		# new_url = r.geturl()										# follow redirects
 		PLog("new_url: " + new_url)									# -> msg s.u.
 		# PLog("headers: " + str(r.headers))
 		
@@ -1282,8 +1282,7 @@ def getRedirect(path, header=""):
 		return new_url, msg
 	except Exception as e:
 		PLog("redirect_error: "  + str(e))
-		err=str(e)
-		
+		err=str(e)		
 		
 	try:
 		PLog("analyze_http_error:")

@@ -90,7 +90,7 @@ Funktionen:
 - Download von Videos in den Modulen arte, 3Sat, TagesschauXL, phoenix, Kinderprogramme
 - Download von Podcasts - bei Podcast-Favoriten zusätzlich Sammeldownloads (angezeigte Liste der Beiträge)
 
-#### [Addon-Tools](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul)
+#### [Addon-Tools](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul) - gekürzte Liste
 - [Änderungsliste: Addon-Infos mit Angaben zum System, Cache, zu Dateipfaden und Modulen](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#1-%C3%A4nderungsliste)
 - ["Zuletzt gesehen"-Liste](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#3-zuletzt-gesehen)
 - [Tools zum Bearbeiten von Ausschluss-Filtern (ARD, ZDF)](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#4-filter-bearbeiten)

@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>17</nr>								# Numerierung für Einzelupdate
-#	Stand: 15.02.2025
+# 	<nr>18</nr>								# Numerierung für Einzelupdate
+#	Stand: 02.04.2025
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -680,10 +680,12 @@ def XL_Live(ID=''):
 
 # ----------------------------------------------------------------------
 # json-Daten im data-v-Block
+# Aufruf: Investigativ, Faktenfinder, Podcasts und Audios,
+#	XL_SearchContent
 # 20.01.2024 live=true verhindert Stream-Blockade der 480p-Webplayer-Streams
 #	bei eingeschalteter Zuletzt-gesehen-Liste
 #
-def get_VideoAudio(title, path):								# Faktenfinder
+def get_VideoAudio(title, path):
 	PLog('get_VideoAudio: ' + path)
 	
 	page, msg = get_page(path=path, GetOnlyRedirect=True)	
@@ -711,16 +713,17 @@ def get_VideoAudio(title, path):								# Faktenfinder
 
 		cnt = cnt +1												# Satz-Zähler						
 		typ,av_typ,title,tag,summ,img,stream = get_content_json(item)
+		summ_par = summ.replace("\n", "||")
 		if typ == False:											# jsonloads_error
 			continue
 				
 		title=py2_encode(title); stream=py2_encode(stream); 
-		summ=py2_encode(summ); img=py2_encode(img); 
+		summ_par=py2_encode(summ_par); img=py2_encode(img); 
 			
 		if typ == "audio":											# Audio
 			ID='TagesschauXL'
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" %\
-				(quote(stream), quote(title), quote(img), quote_plus(summ), ID)
+				(quote(stream), quote(title), quote(img), quote_plus(summ_par), ID)
 			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.AudioPlayMP3", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 		
@@ -729,7 +732,7 @@ def get_VideoAudio(title, path):								# Faktenfinder
 			live="true"		
 		if typ == "video":											# Video	
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': '%s'}" %\
-				(quote(stream), quote(title), quote(img), quote_plus(summ), live)
+				(quote(stream), quote(title), quote(img), quote_plus(summ_par), live)
 			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.PlayVideo", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 	
@@ -744,7 +747,7 @@ def get_content_json(item):
 			
 	minWidth=700					# .., 768x, 944x
 
-	conf = stringextract('data-v="', '"', item)	
+	conf = stringextract('data-v="', '"', item)					# json freilegen
 	conf = conf.replace('\\"', '"')
 	conf = conf.replace('&quot;', '"')
 	conf = unquote(conf)
@@ -752,13 +755,13 @@ def get_content_json(item):
 		obj = json.loads(conf)
 	except Exception as exception:
 		PLog("jsonloads_error: " + str(exception))
-		return False,"","","","","",""						# 7 Params
+		return False,"","","","","",""							# 7 Params
 
 	PLog(str(obj)[:60]); 
 	verf=""; url=""; stream=""; 
 	tag=""; img=""
 
-	if "playerType" not  in obj:							# falsches Format
+	if "playerType" not  in obj:								# falsches Format
 		PLog("missing_playerType")
 		return False,"","","","","",""		
 		
@@ -773,24 +776,27 @@ def get_content_json(item):
 				break
 			if img == "":
 				img=url		# Fallback: letzte url
-		if len(img.split(".")) < 4:						# Endung fehlt
+		if len(img.split(".")) < 4:								# Endung fehlt
 			img = img + ".webp"
+		img_alt = obj["mc"]["meta"]["images"][0]["alt"]
 	except Exception as exception:
 		PLog("get_img_error: " + str(exception))
 		img = R(ICON_DIR_FOLDER)		
 
-	title=obj["mediadescription"]						# leer möglich
-	if title.strip() == "":								# Altern.
+	title=obj["mediadescription"]								# leer möglich
+	if title.strip() == "":										# Altern.
 		title = stringextract('av_content":"', '"', conf)
 	title = repl_json_chars(title)
 	
 	# Streams: zu geringe Auswahl für Listen
-	stream = obj["mc"]["streams"][0]["media"][0]["url"]		# 1. Url, m3u8 od. mp4, 
+	stream = obj["mc"]["streams"][0]["media"][0]["url"]			# 1. Url, m3u8 od. mp4, 
 	
 	tag = "[B]%s[/B]" % up_low(typ)
-	summ = obj["mc"]["meta"]["title"]			
+	summ = obj["mc"]["meta"]["title"]
+	summ = "%s\n[B]Bild[/B]: %s" % (summ, img_alt)
 	summ = repl_json_chars(summ)
 	av_typ = stringextract('av_content_type":"', '"', conf)
+	# dur = stringextract('av_content_duration":', ',', conf)	# entfällt: Dauer der gesamten Beiträge
 	
 	PLog('Get_content typ: %s | av_typ: %s | title: %s | tag: %s | descr: %s |img:  %s | stream: %s' %\
 		(typ,av_typ,title,tag,summ,img,stream) )		

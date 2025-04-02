@@ -10,6 +10,26 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+30.03.2025 	5.2.1
+			Main_ZDF: Menüpunkt und Funktionen ZDF_Bildgalerien, ZDF_BildgalerieSingle, 
+			ZDF_BilderCollect nach Einstellung durch ZDF entfernt. 
+			getRedirect (Modul util): Verlagerung httplib-Import zum Modulkopf (häufige 
+			Kodi-Abstürze bei Import in getRedirect).
+			Anpassungen nach ZDF-Relaunch: get_summary_pre (getRedirect, Auswertung summ
+			erneuert), ZDF_get_content und ZDF_getApiStreams (Korrektur sharingUrl),
+			Modul EPG (Korrektur sharingUrl, Abgleich Textlängen).
+			ZDF_get_teaserbox: entfernt (obsolet).
+			ARD_FlatListRec (ARDnew): mehrfache Klammern bei Staffel-/Folge-Erkennung
+			berücksichtigt.
+			EPG_ShowSumm (Modul EPG): Hochkommta in Titel entfernt.
+			ARD_FlatListEpisodes: Url-Korrekturen (path.replace: embedded, pages, 
+			grouping) für vollständiges Serien-Listing.  
+			get_ZDFstreamlinks (Modul util): nach ZDF-Relaunch erneuert (apiToken aus
+			Webseite, ptmd-Url's hartkodiert).
+			arte-Modul: Umstellung auf HBBTV-api außer "Neueste Videos" und Suche (beide
+			api rproxy/emac/v4), Kopfdokus vor 2023 im Addon entfernt, Funktionen
+			ArteCluster und get_cluster entfernt.		
+
 15.03.2025 	5.2.0
 			ArteCluster: Url-Korrektur für Arte Concert (Redirect-Error für 
 			../de/videos/arte-concert/)

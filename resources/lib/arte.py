@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>63</nr>										# Numerierung für Einzelupdate
+# 	<nr>63</nr>								# Numerierung für Einzelupdate
 #	Stand: 28.03.2025
 
 # Python3-Kompatibilität:
@@ -41,22 +41,22 @@ import resources.lib.EPG as EPG
 from resources.lib.util import *
 
 # Globals
-ArteKatCacheTime	= 3600					# 1 Std.: 60*60
+ArteKatCacheTime	= 3600									# 1 Std.: 60*60
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path')	# Basis-Pfad Addon
+ADDON_PATH    	= SETTINGS.getAddonInfo('path')				# Basis-Pfad Addon
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
-PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
+PLUGIN_URL 		= sys.argv[0]								# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
 
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
 
 # Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
-if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
+if 	check_AddonXml('"xbmc.python" version="3.'):			# ADDON_DATA-Verzeichnis anpasen
 	PLog('arte_python_3.x.x')
 	ADDON_DATA	= os.path.join("%s", "%s", "%s") % (USERDATA, "addon_data", ADDON_ID)
 WATCHFILE		= os.path.join(ADDON_DATA, "merkliste.xml") 
@@ -64,16 +64,16 @@ DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 			# hier nur DICTSTORE genutzt
 
 NAME			= 'ARD und ZDF'
 
-BASE_ARTE		= 'https://www.arte.tv'		# + /de/ nach Bedarf
+BASE_ARTE		= 'https://www.arte.tv'						# + /de/ nach Bedarf
 HBBTV_BASE		= "https://arte.tv/hbbtv-mw"
 
-PLAYLIST 		= 'livesenderTV.xml'	  	# enth. Link für arte-Live											
+PLAYLIST 		= 'livesenderTV.xml'	  					# enth. Link für arte-Live											
 
 # Icons
-ICON 			= 'icon.png'				# ARD + ZDF
-ICON_ARTE		= 'arte_Mediathek.png'		# Bitstream Charter Bold, 60p			
-ICON_ARTE_NEW	= 'icon-arte-new.png'		# Bitstream Charter Bold, 60p			
-ICON_ARTE_START	= 'icon-arte-start.png'		# Bitstream Charter Bold, 60p				
+ICON 			= 'icon.png'								# ARD + ZDF
+ICON_ARTE		= 'arte_Mediathek.png'						# Bitstream Charter Bold, 60p			
+ICON_ARTE_NEW	= 'icon-arte-new.png'						# Bitstream Charter Bold, 60p			
+ICON_ARTE_START	= 'icon-arte-start.png'						# Bitstream Charter Bold, 60p				
 ICON_DIR_FOLDER	= 'Dir-folder.png'
 ICON_MEHR 		= 'icon-mehr.png'
 ICON_SEARCH 	= 'arte-suche.png'				
@@ -85,7 +85,7 @@ LANG  = [u"Français | fr",  u"Deutsch | de", u"English | en",
 		u"Español | es", u"Polski | pl", u"Italiano | it",
 	]
 fname = os.path.join("%s/Dict/arte_lang") % ADDON_DATA
-if os.path.exists(fname) == False:						# Sprache vorbelegen / laden
+if os.path.exists(fname) == False:							# Sprache vorbelegen / laden
 	arte_lang = LANG[1]
 	Dict('store', "arte_lang", arte_lang)
 else:
@@ -98,8 +98,8 @@ def Main_arte(title='', summ='', descr='',href=''):
 	
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = u" %s %s" % (l, NAME)						# Startblank s. home
-	li = home(li, ID=NAME, ltitle=ltitle)				# Home-Button
+	ltitle = u" %s %s" % (l, NAME)							# Startblank s. home
+	li = home(li, ID=NAME, ltitle=ltitle)					# Home-Button
 	
 
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
@@ -126,13 +126,13 @@ def Main_arte(title='', summ='', descr='',href=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.EPG_Today", fanart=R(ICON_ARTE), 
 		thumb=R(ICON_TV), tagline=tag, fparams=fparams)
 
-	tag=u'[B]%s[/B]' % L("Arte Livestream")				# Livestream-Daten
+	tag=u'[B]%s[/B]' % L("Arte Livestream")					# Livestream-Daten
 	try:
 		title, tag, summ, img, href = get_live_data('ARTE')
 		title = repl_json_chars(title)
 	except Exception as exception:
 		PLog("json_error5: " + str(exception))
-		title="LIVE"; tag="LIVE"; summ=""; img=R(ICON_TV)		# Defaults	
+		title="LIVE"; tag="LIVE"; summ=""; img=R(ICON_TV)	# Defaults	
 	
 	summ_par = summ.replace('\n', '||')
 	summ_par = repl_json_chars(summ_par)
@@ -154,16 +154,16 @@ def Main_arte(title='', summ='', descr='',href=''):
 	# ------------------------------------------------------
 	# 27.03.2025 Bisher keine PRG für Gebärdensprache gefunden (Icon arte_Gebaerden.png)
 	title = u"%s" % L(u"Barrierefreie Inhalte")
-	tag = "[B]%s[/B]" % arte_lang						# aktuell
-	lang = arte_lang.split("|")[1].strip()				# fr, de, ..
+	tag = "[B]%s[/B]" % arte_lang							# aktuell
+	lang = arte_lang.split("|")[1].strip()					# fr, de, ..
 	path = "https://www.arte.tv/hbbtv-mw/api/1/skeletons/pages/ACCESSIBLE_PROGRAMS?lang=%s" % lang
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(path), quote(title))							
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteStart", 	# -> Step2
 		thumb=R("arte_barrierefrei.png"), fanart=R(ICON_ARTE), tagline=tag, fparams=fparams)
 	
 	# ------------------------------------------------------
-	title 	= u'Sprache / Language'						# Auswahl Sprache
-	tag = "[B]%s[/B]" % arte_lang						# aktuell
+	title 	= u'Sprache / Language'							# Auswahl Sprache
+	tag = "[B]%s[/B]" % arte_lang							# aktuell
 	title=py2_encode(title); 
 	fparams="&fparams={'title': '%s'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.set_lang", fanart=R(ICON_ARTE), 
@@ -179,7 +179,7 @@ def Main_arte(title='', summ='', descr='',href=''):
 def set_lang(title, new_set=""):	
 	PLog('set_lang: ' + new_set)
 	
-	if new_set:											# 2. Aufruf -> Auswahl speichern
+	if new_set:												# 2. Aufruf -> Auswahl speichern
 		Dict('store', "arte_lang", new_set)
 		arte_lang = new_set
 		icon = R('arte_lang.png')
@@ -188,7 +188,7 @@ def set_lang(title, new_set=""):
 		
 		return
 		
-	#----------------------								# 1. Aufruf -> Auswahl
+	#----------------------									# 1. Aufruf -> Auswahl
 	arte_lang = Dict('load', "arte_lang")
 	if arte_lang == False or arte_lang == "":
 		arte_lang = LANG[1]
@@ -196,9 +196,9 @@ def set_lang(title, new_set=""):
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
 	ltitle = u" %s %s" % (l, "arte")						# Startblank s. home
-	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
+	li = home(li, ID='arte', ltitle=ltitle)					# Home-Button
 	
-	tag = u"[B]%s[/B]" % arte_lang						# aktuell
+	tag = u"[B]%s[/B]" % arte_lang							# aktuell
 	for item in LANG:
 		title = u"%s --> [B]%s[/B]" % (arte_lang, item)
 		PLog('Satz6: ' + title)
@@ -333,7 +333,7 @@ def Arte_Live(href, title, Plot, img):
 
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = u" %s %s" % (l, "arte")						# Startblank s. home
+	ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 
 	if SETTINGS.getSetting('pref_video_direct') == 'true': # or Merk == 'true'	# Sofortstart
@@ -370,9 +370,9 @@ def Arte_Search(query='', next_url=''):
 	query=py2_encode(query);
 						
 	arte_lang = Dict('load', "arte_lang")
-	lang = arte_lang.split("|")[1].strip()			# fr, de, ..	
-	path = next_url									# Pagination-Link (api-internal ersetzt)
-	if path == "":									# Seite 1 
+	lang = arte_lang.split("|")[1].strip()				# fr, de, ..	
+	path = next_url										# Pagination-Link (api-internal ersetzt)
+	if path == "":										# Seite 1 
 		path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/SEARCH?query=%s&mainZonePage=1&page=1&limit=20" %\
 		(quote(lang), quote(query))		
 	aktpage = stringextract('page=', '&', path)
@@ -392,11 +392,11 @@ def Arte_Search(query='', next_url=''):
 	li = home(li, ID='arte', ltitle=ltitle)				# Home-Button
 
 	PLog(len(page))
-	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
+	page = page.replace('\\"', '*')						# Bsp. "\"Brisant\""
 
 	page = json.loads(page)
 	ID='SEARCH'
-	if next_url:							# Folgeseiten: Struktur wie MOST_RECENT
+	if next_url:										# Folgeseiten: Struktur wie MOST_RECENT
 		ID='SEARCH_NEXT'
 	li,cnt = GetContent(li, page, ID)
 	if 	cnt == 0:
@@ -406,11 +406,11 @@ def Arte_Search(query='', next_url=''):
 		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
 		return
 		
-	#														# Mehr-Beiträge? ArteMehr nicht geeignet
+	#													# Mehr-Beiträge? ArteMehr nicht geeignet
 	next_url,page_akt,page_anz,anz,next_page = get_next_url(str(page))
 	if next_url:
 		next_url = next_url.replace("api-internal.arte.tv/api", "www.arte.tv/api/rproxy")
-		li = xbmcgui.ListItem()								# Kontext-Doppel verhindern
+		li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
 		img = R(ICON_MEHR)
 		title = L(u"Weitere Beiträge")
 		l = L(u"weiter zu Seite")
@@ -456,14 +456,14 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 		values = page["value"]["data"]
 		PLog(len(values))
 		PLog(str(values)[:100])
-	elif ID == "HBBTV":								# Neu HBBTV
+	elif ID == "HBBTV":									# Neu HBBTV
 		if "cards" in page:
 			values = page["cards"]
-		elif "collections" in page:					# hbbtv
+		elif "collections" in page:						# hbbtv
 			values = page["collections"]
 		else:
 			values=[]
-		if "images" in page:						# Default-Image statt ICON_DIR_FOLDER
+		if "images" in page:							# Default-Image statt ICON_DIR_FOLDER
 			img_def=""
 			if "highlight" in page["images"]:
 				img_def = page["images"]["highlight"]
@@ -498,7 +498,7 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 		title = item["title"]							# für Abgleich in Kategorien	
 		if "subtitle" in item:
 			subtitle = item["subtitle"]	
-			if subtitle:									# arte verbindet mit -
+			if subtitle:								# arte verbindet mit -
 				title  = "%s - %s" % (title, subtitle)
 		title = valid_title_chars(title)				# Steuerz. möglich: \t\n
 		
@@ -511,12 +511,12 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 		if summ == None:
 			summ = ""					
 		pid = item["id"]
-		if ID == "HBBTV":						# hbbtv
+		if ID == "HBBTV":								# hbbtv
 			program_id=""
-			if "program_id" in item:			# null möglich
+			if "program_id" in item:					# null möglich
 				pid = item["program_id"]
 			else:
-				if "program_id" in page:		# übergeordnet, ungeprüft!
+				if "program_id" in page:				# übergeordnet, ungeprüft!
 					pid = page["program_id"]			
 
 		PLog("Mark1")
@@ -648,10 +648,10 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 			if dur == '' and pid == '':
 				PLog("dur_and_pid_empty")
 				continue
-			if "hbbtv-mw" in url == False:						# hbbtv:Player-Url, nicht genutzt, pid->SingleVideo (Streamlisten)
-				if url.count("/") > 2:							# Bsp. /de/ (kein video)
-					pid = url.split("/")[3]						# /de/videos/100814-000-A/.., id nicht verwendbar
-				if url.endswith("/live/"):						# läuft gerade
+			if "hbbtv-mw" in url == False:					# hbbtv:Player-Url, nicht genutzt, pid->SingleVideo (Streamlisten)
+				if url.count("/") > 2:						# Bsp. /de/ (kein video)
+					pid = url.split("/")[3]					# /de/videos/100814-000-A/.., id nicht verwendbar
+				if url.endswith("/live/"):					# läuft gerade
 					pid=pid_org			
 			PLog("pid: " + pid)
 				
@@ -670,10 +670,10 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 					PLog("found_stickers")
 					live=True
 					try:			 
-						if item["stickers"]:					# [] möglich
+						if item["stickers"]:				# [] möglich
 							if item["stickers"][0]["code"] == "LIVE":
 								label = "[B]%s[/B]" % label
-								if OnlyNow:						# nur Live-EGP, keine Liste
+								if OnlyNow:					# nur Live-EGP, keine Liste
 									PLog("return_liveEPG")
 									return label, tag, summ, img, url
 					except Exception as exception:
@@ -708,7 +708,7 @@ def get_img_pre(path, title):
 	p = path.replace("?lang=", "")						# entferne lang=, behalte Kennung
 	p = p.split("/")									# details/home/24?lang=de ->
 	PLog(p)
-	fname = "_".join(p[-2:])								# home_24de
+	fname = "_".join(p[-2:])							# home_24de
 	fname = os.path.join(oname, fname)
 	PLog("oname: %s, fname: %s" % (oname, fname))
 	
@@ -747,9 +747,9 @@ def get_img_pre(path, title):
 	PLog('img_cache_leer')
 	PLog("urlretrieve %s to %s" % (img, fname))	
 	msg1 = L("Lade Bild")
-	msg2 = title										# 
+	msg2 = title
 	xbmcgui.Dialog().notification(msg1,msg2,R(ICON_ARTE),2000, sound=False)	 
-	urlretrieve(img, fname)							# img -> Cache
+	urlretrieve(img, fname)								# img -> Cache
 	icon = R(ICON_ARTE)
 	return fname
 	
@@ -770,12 +770,12 @@ def get_img(item, ID=""):
 				img = item["images"]["highlight"]
 			else:
 				img = item["images"]["landscape"]
-		else:									# todo: Cache ergänzen (s. ARDNeu_Startpage) 
+		else:		 
 			img=""
 		PLog("img: " + img)
 		return img
 		
-	# ----------------------------------------------------------------- Bilder api/rproxy/emac/v4
+	# -------------------------------------------------	# Bilder api/rproxy/emac/v4
 	if type(item) == dict:
 		if "mainImage" in item:
 			img = item["mainImage"]["url"]
@@ -786,7 +786,7 @@ def get_img(item, ID=""):
 			imgs = str(imgs)
 			imgs = blockextract("'url'", imgs)
 			for img in imgs:
-				if "400x225" in img:				# 200,400,720,940,1920 
+				if "400x225" in img:					# 200,400,720,940,1920 
 					img = stringextract("url': '", "'", img)
 					break	
 		return img
@@ -806,7 +806,7 @@ def get_img(item, ID=""):
 		image = stringextract('mainImage":', '}', item)
 		#PLog(image)
 		img = stringextract('url":"', '"', image)
-		img = img.replace('__SIZE__', '400x225')			# nur 400x225 akzeptiert
+		img = img.replace('__SIZE__', '400x225')		# nur 400x225 akzeptiert
 		
 			
 	if img == '':
@@ -982,19 +982,19 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = u" %s %s" % (l, "arte")				# Startblank s. home
-	li = home(li, ID='arte', ltitle=ltitle)		# Home-Button
+	ltitle = u" %s %s" % (l, "arte")								# Startblank s. home
+	li = home(li, ID='arte', ltitle=ltitle)							# Home-Button
 	
-	if hls_add:									# Trailer-Zusatz	
+	if hls_add:														# Trailer-Zusatz	
 		title = "%s %s" % (title, hls_add)
 	if mp4_add:	
 		title = "%s %s" % (title, mp4_add)
-	tagline = "Titel: %s\n\n%s\n\n%s" % (title, tag, summ)	# s.a. ARD (Classic + Neu)
+	tagline = "Titel: %s\n\n%s\n\n%s" % (title, tag, summ)			# s.a. ARD (Classic + Neu)
 	tagline=repl_json_chars(tagline); tagline=tagline.replace( '||', '\n')
 	Plot=tagline; 
 	Plot=Plot.replace('\n', '||')
 	sub_path=''
-	HOME_ID = ID								# Default ZDF), 3sat
+	HOME_ID = ID													# Default ZDF), 3sat
 	PLog('Lists_ready: ID=%s, HOME_ID=%s' % (ID, HOME_ID));
 		
 	ardundzdf.build_Streamlists_buttons(li,title_org,img,geo,Plot,sub_path,\
@@ -1011,7 +1011,7 @@ def get_streams_api_v2(page, title, summ):
 	PLog("get_streams_api_v2:")
 	title_org = title
 	
-	formitaeten = blockextract('"url":"https', page) # Bsp. "id":"HTTPS_MQ_1", "id":"HLS_XQ_1"
+	formitaeten = blockextract('"url":"https', page) 				# Bsp. "id":"HTTPS_MQ_1", "id":"HLS_XQ_1"
 	PLog(len(formitaeten))
 	
 	HLS_List=[]; trailer=False; uhd_m3u8=""
@@ -1052,7 +1052,7 @@ def get_streams_api_v2(page, title, summ):
 		if 'master.m3u8' in url:				# HLS master.m3u8 
 			HLS_List.append(u'HLS, [B]%s[/B] ** Auflösung %s ** AUTO ** %s#%s' % (lang, size, title, url))
 		else:
-			if ".m3u8" in url:									# HLS
+			if ".m3u8" in url:										# HLS
 				HLS_List.append(u'HLS, [B]%s[/B] ** Auflösung %s ** %s ** %s#%s' % (lang, size, quality, title, url))
 	
 	PLog("uhd_check:")			
@@ -1066,26 +1066,26 @@ def get_streams_api_v2(page, title, summ):
 			PLog(res)
 			if "3840x" in item:
 				PLog(item)
-				uhd = item.splitlines()[-2]			# Bsp.: videos/106654-000-G_v2160.m3u8
+				uhd = item.splitlines()[-2]							# Bsp.: videos/106654-000-G_v2160.m3u8
 				PLog("uhd: " + uhd)
 				break
 		
 		if uhd:
 			try:
-				# s = uhd_m3u8.split("/")[:-2]		# Basis: Url
+				# s = uhd_m3u8.split("/")[:-2]						# Basis: Url
 				base = uhd_m3u8.split("/")[:-1]
 				base = "/".join(base)
-				uhd_stream = "%s/%s" % (base, uhd)		# plus uhd-Anhängsel
+				uhd_stream = "%s/%s" % (base, uhd)					# plus uhd-Anhängsel
 			except Exception as exception:
 				PLog(str(exception))
 				uhd_stream=""				
 			PLog("uhd_stream: " + uhd_stream)
-			if uhd_stream:							# HLS-Liste ergänzen
+			if uhd_stream:											# HLS-Liste ergänzen
 				if url_check(uhd_stream, caller='get_streams_api_v2', dialog=False):	# Url-Check
 					lang, title = uhd_details.split("##")
 					line = u'[B]UHD_HLS[/B], [B]%s[/B] ** Auflösung %s ** %s ** %s#%s' % (lang, "3840x2160", "XQ", title, uhd_stream)
 				
-			HLS_List.insert(0, line)				# -> 1. Position wie ZDF-HLS-UHD 
+			HLS_List.insert(0, line)								# -> 1. Position wie ZDF-HLS-UHD 
 		
 	return trailer,HLS_List
 
@@ -1156,7 +1156,7 @@ def Kategorien():
 
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
-	ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
+	ltitle = u" %s %s" % (l, "arte")				# Startblank s. home
 	li = home(li, ID='arte', ltitle=ltitle)			# Home-Button
 
 	# Format: Titel-deutsch | Icon | Kat_ID | verfügbar für Sprache
@@ -1238,7 +1238,7 @@ def ArteStart(path="", title=""):
 	PLog("ArteStart: " + path)
 
 	arte_lang = Dict('load', "arte_lang")
-	lang = arte_lang.split("|")[1].strip()			# fr, de, ..
+	lang = arte_lang.split("|")[1].strip()				# fr, de, ..
 
 	step1=True	
 	if path == "":
@@ -1333,10 +1333,10 @@ def ArteCluster(pid='', title='', katurl=''):
 
 	page = get_ArtePage('ArteCluster', title, path=katurl)
 	
-	coll_img=""										# Collection-Bild bei hbbtv
-	try:											# s.a. GetContent
-		PLog(str(page)[:100])
-		if "pageProps" in page:						# Web-json
+	coll_img=""											# Collection-Bild bei hbbtv
+	try:												# s.a. GetContent
+		PLog(str(page)[:100])	
+		if "pageProps" in page:							# Web-json
 			page = page["pageProps"]["props"]["page"]["value"]
 			values = page["zones"]
 		elif "hbbtv-mw" in katurl:
@@ -1557,4 +1557,4 @@ def L(string):
 		return lstring
 	else:
 		PLog("lstring_not_found: %s" % string)
-		return string						# Rückgabe Basis-String, falls kein Paar gefunden
+		return string								# Rückgabe Basis-String, falls kein Paar gefunden

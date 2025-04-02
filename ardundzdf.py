@@ -59,8 +59,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>234</nr>										# Numerierung für Einzelupdate
-VERSION = '5.2.0'
-VDATE = '21.03.2025'
+VERSION = '5.2.1'
+VDATE = '30.03.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -377,6 +377,8 @@ days = int(SETTINGS.getSetting('pref_SLIDES_store_days'))
 ClearUp(SLIDESTORE, days*86400)		# SLIDEESTORE bereinigen
 ARDNeu_Startpage = os.path.join(SLIDESTORE, "ARDNeu_Startpage")
 ClearUp(ARDNeu_Startpage, days*86400)# Thumbscache ARDneu bereinigen
+ARTE_Startpage = os.path.join(SLIDESTORE, "ARTE_Startpage")
+ClearUp(ARTE_Startpage, days*86400)	# Thumbscache ARTE bereinigen
 ClearUp(PODIMGSTORE, days*86400)	# PodcastImg-Cache bereinigen
 
 
@@ -1142,7 +1144,7 @@ def Main_ZDF(name=''):
 	title = "ZDFinternational"
 	url = base + "document/international-108"
 	tag = "This channel provides selected videos in English, Spanish or Arabic or with respective subtitles."
-	summ = 'Kodi Leia and older: for Arabic, please set the font of your Skin to "Arial based".'
+	summ = 'For Arabic, please set the font of your Skin to [B]Arial based[/B].'
 	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 	addDir(li=li, label="ZDFinternational", action="dirList", dirID="ZDF_RubrikSingle", fanart=R('ZDFinternational.png'), 
 		thumb=R('ZDFinternational.png'), tagline=tag, summary=summ, fparams=fparams)
@@ -10500,83 +10502,10 @@ def ZDF_FlatListRec(item):
 # wertet die (teilw. unterschiedlichen) Parameter von
 #	class="bottom-teaser-box"> aus.
 # Aufrufer: ZDF_Rubriken, get_teaserElement (loader-
-#	Beiträge), 
-#
-def ZDF_get_teaserbox(page):
-	PLog('ZDF_get_teaserbox:')
-	teaser_label='';teaser_typ='';teaser_nr='';teaser_brand='';teaser_count='';multi=False
-	
-	if 'class="bottom-teaser-box">' in page:
-		if 'class="teaser-cat-category">' in page:
-			if 'cat-category-ellipsis">' in page:
-				# teaser_brand =  stringextract('cat-category-ellipsis">', '</', page)	   
-				teaser_brand =  stringextract('cat-category-ellipsis">', '<a href=', page)	 
-			else:		
-				teaser_typ = stringextract('class="teaser-cat-category">', '</', page)   # teaser_brand s.u.
-			
-		else:
-			teaser_label = stringextract('class="teaser-label"', '</div>', page) 
-			teaser_typ =  stringextract('<strong>', '</strong>', teaser_label)
-				
-		PLog('teaser_typ: ' + teaser_typ)
-		teaser_label = cleanhtml(teaser_label.strip())					# wird ev. -> title	
-		teaser_label = unescape(teaser_label);
-		teaser_typ = mystrip(teaser_typ.strip())
-		
-		if u"teaser-episode-number" in page:
-			teaser_nr = stringextract('teaser-episode-number">', '</', page)
-		if teaser_typ == u'Beiträge':		# Mehrfachergebnisse ohne Datum + Uhrzeit
-			multi = True
-			
-		# teaser_brand bei Staffeln (vor Titel s.u.)
-		if teaser_brand == '':
-			# teaser_brand = stringextract('cat-brand-ellipsis">', '</', page)  
-			teaser_brand =  stringextract('cat-brand-ellipsis">', '<a href=', page)	 # Bsp. Wilsberg, St. 07 -
-		
-		teaser_brand = cleanhtml(teaser_brand);
-		teaser_brand = mystrip(teaser_brand)
-		teaser_brand = (teaser_brand.replace(" - ", "").replace(" , ", ", "))
-	
-	if teaser_nr == '' and teaser_count == '':							# mögl. Serienkennz. bei loader-Beiträgen,
-		ts = stringextract('502_play icon ">', '</div>', page)			# Bsp. der STA
-		ts=mystrip(ts); ts=cleanhtml(ts)
-		if teaser_typ == '':
-			teaser_typ=ts
-			
-	# Bsp. teaser_label class="teaser-label">4 Teile</div> oder 
-	#	class="teaser-label"><div class="ellipsis">3 Teile</div></div>
-	if teaser_label == '' and teaser_typ == '':							# z.B. >3 Teile< bei Doku-Titel
-		teaser_label = stringextract('class="teaser-label"', '</div>', page)
-		try: 
-			teaser_typ = re.search(r'>(\d+) Teile', teaser_label).group(0)
-		except:
-			teaser_typ=''
-	teaser_label = mystrip(teaser_label) 
-	teaser_label = teaser_label.replace('<div class="ellipsis">', ' ')
-	teaser_label = (teaser_label.replace('<strong>', '').replace('</strong>', ''))
-	PLog(teaser_label); PLog(teaser_typ);
-
-	PLog('teaser_label: %s,teaser_typ: %s, teaser_nr: %s, teaser_brand: %s, teaser_count: %s, multi: %s' %\
-		(teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count, multi))
-		
-	return teaser_label,teaser_typ,teaser_nr,teaser_brand,teaser_count,multi
-	
-#-------------------------
-# ermittelt html-Pfad in json-Listen für ZDF_Rubriken
-#	 z.Z. nicht benötigt s.o. (ZDF_BASE+NodePath+sophId)
-def ZDF_get_rubrikpath(page, sophId):
-	PLog('ZDF_get_rubrikpath: ' + sophId)
-	path=''
-	if sophId == '':	# Sicherung
-		return path
-	content =  blockextract('"@type":"ListItem"', page) # Beiträge des Clusters
-	PLog(len(content))
-	for rec in content:
-		path =  stringextract('"url":"', '"', rec)
-		if sophId in path:
-			PLog("path: " + path)
-			return path	
-	return	'' 
+#	Beiträge)
+# def ZDF_get_teaserbox(page):
+# def ZDF_get_rubrikpath(page, sophId):
+# 21.03.2025 gelöscht (obsolet)
 	
 #-----------------------------------------------------------------------
 # vergleicht Titel + Länge eines Beitrags mit den Listen full_shows_ZDF,
