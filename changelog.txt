@@ -10,6 +10,15 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+12.04.2025 	5.2.2
+			get_VideoAudio (TagesschauXL): Bildbeschreibung ergänzt, Video-/Audio-
+			Dauer nicht json-Daten enthalten.
+			VideoTools: Plot für Aufruf PlayAudio ergänzt (tagline + summary kombiniert).
+			get_Source_Funcs_ID (Modul strm): Austausch ZDF_getVideoSources (obsolet)
+			gegen ZDF_getApiStreams.
+			ZDF-Kategorien: Umsetzung neues ZDF-Menü nach Relaunch - neue Funktionen
+			ZDF_Kat, ZDF_KatSub, ZDF_get_naviKat, ZDF_getKat_content.			
+
 30.03.2025 	5.2.1
 			Main_ZDF: Menüpunkt und Funktionen ZDF_Bildgalerien, ZDF_BildgalerieSingle, 
 			ZDF_BilderCollect nach Einstellung durch ZDF entfernt. 

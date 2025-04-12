@@ -4,7 +4,7 @@
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
 # 	<nr>14</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.01.2024
+#	Stand: 11.04.2025
 #
 
 from __future__ import absolute_import
@@ -652,7 +652,7 @@ def get_Source_Funcs_ID(add_url):
 	Source_Funcs = [u"ARDnew.ARDStartSingle|ARDNEU",					# Funktionen + ID's
 					u"my3Sat.SingleBeitrag|3sat", u'.XLGetSourcesPlayer|TXL',
 					u"dirID=PlayVideo|PlayVideo",u"dirID=SenderLiveResolution|ARD",
-					u"arte.SingleVideo|arte", u"ZDF_getVideoSources|ZDF"
+					u"arte.SingleVideo|arte", u"ZDF_getApiStreams|ZDF"
 					]
 	ID=''																# derzeit nicht ermittelbar
 	for item in Source_Funcs:

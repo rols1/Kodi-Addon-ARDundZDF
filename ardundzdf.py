@@ -59,8 +59,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>234</nr>										# Numerierung für Einzelupdate
-VERSION = '5.2.1'
-VDATE = '30.03.2025'
+VERSION = '5.2.2'
+VDATE = '12.04.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1118,9 +1118,17 @@ def Main_ZDF(name=''):
 		thumb=R(ICON_ZDF_AZ), fparams=fparams)
 
 	# -------------------
+	# 03.04.2024 Kategorien-> ZDF_Kategorien
+	title = 'Kategorien ([B]neu[/B])'
+	tag = "Neu nach ZDF-Relaunch am 17.03.2025"
+	summ = "Filme, Serien, Sportevents, Dokumentationen und vieles mehr:" 
+	summ = "%s Entdecke den riesigen Inhalte-Kosmos im Streaming-Netzwerk von ZDF, ARD & Co" % summ
+	fparams="&fparams={'title': '%s'}" % title	
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat", fanart=R("zdf-kategorien.png"), 
+		thumb=R("zdf-kategorien.png"), tagline=tag, summary=summ, fparams=fparams)
+
 	# 05.03.2024 Rubriken, Sportstudio, Barrierearm, ZDFinternational -> ZDF_RubrikSingle
 	base = "https://zdf-prod-futura.zdf.de/mediathekV2/"
-
 	title = 'Rubriken' 
 	url = base + "categories-overview"
 	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
@@ -6412,6 +6420,7 @@ def DownloadsList():
 #	
 def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 	PLog('VideoTools: ' + path)
+	PLog(tagline[:80]); PLog(summary[:80]);  
 
 	title_org = py2_encode(title)
 	
@@ -6440,6 +6449,8 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 			
 	fulldest_path=py2_encode(fulldest_path); 
 	PLog("fulldest_path: " + fulldest_path)
+	Plot = "%s||||%s" % (tagline, summary)
+	Plot=py2_encode(Plot)
 	tagline = u'Größe: %s' % humanbytes(fsize)
 	if fulldest_path.endswith('mp4') or fulldest_path.endswith('webm'): # 1. Ansehen
 		title = title_org 
@@ -6452,10 +6463,10 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 		PLog("sub_path: " + sub_path)
 		lable = "Ansehen | %s" % (title_org)
 		fulldest_path=py2_encode(fulldest_path); title=py2_encode(title); thumb=py2_encode(thumb);	
-		summary=py2_encode(summary); sub_path=py2_encode(sub_path);
+		sub_path=py2_encode(sub_path);
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
 			(quote_plus(fulldest_path), quote_plus(title), quote_plus(thumb), 
-			quote_plus(summary), quote_plus(sub_path))
+			quote_plus(Plot), quote_plus(sub_path))
 		addDir(li=li, label=lable, action="dirList", dirID="PlayVideo", fanart=thumb, tagline=tagline,
 			thumb=thumb, fparams=fparams, mediatype='video')
 	else:																# 'mp3', 'm4a' = Podcast
@@ -6479,7 +6490,7 @@ def VideoTools(httpurl,path,dlpath,txtpath,title,summary,thumb,tagline):
 				fulldest_path=py2_encode(fulldest_path); title=py2_encode(title); thumb=py2_encode(thumb); 
 				summary=py2_encode(summary);	
 				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(fulldest_path), 
-					quote(title), quote(thumb), quote_plus(summary))
+					quote(title), quote(thumb), quote_plus(Plot))
 				addDir(li=li, label=lable, action="dirList", dirID="PlayAudio", fanart=thumb, thumb=thumb, 
 					fparams=fparams, mediatype='music') 
 			else:														#  Playlist hier nicht abspielbar
@@ -8690,6 +8701,306 @@ def ZDF_Start(ID, homeID=""):
 	#	Rubriken, Sportstudio, Barrierearm, ZDFinternational
 	return
 	
+#---------------------------------------------------------------------------------------------------
+# Übersicht Kategorien
+#
+def ZDF_Kat(title):								
+	PLog('ZDF_Kat:')
+
+	DictID="ZDF_KATWEB"; path="https://www.zdf.de/kategorien"
+	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_AZ)	# 30 min		
+	if not page:								# Webseite neu laden 
+		page, msg = get_page(path)
+		if page:
+			Dict('store', DictID, page)
+	if not page:
+		return
+	
+	pos1=page.find('controls="navigation-main')				# ab Seitenmenü 
+	pos2=page.find("Nutzungsbedingungen")					# bis Fuß
+	page=page[pos1:pos2]
+	PLog(page[:80])
+	# Block <picture class nicht eindeutig, noopener bis auf Nachrichten OK, 
+	#	s. kats.insert und items-Liste:
+	kats = blockextract('rel="noopener noreferrer', page, "</h2")		# Icons einschl. Weblink + Titel
+	kats.insert(6, "<h2Nachrichten</h2")					# im Web abweichenden Block ergänzen
+	PLog("kats: %d" % len(kats))							# 05.03.2024: 52
+	PLog(str(kats)[:80])
+
+	homeID="ZDF"
+	li = xbmcgui.ListItem()
+	li = home(li, homeID)									# Home-Button
+	
+	base = "https://www.zdf.de"
+	rubrik_base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
+	img_base = "https://www.zdf.de/assets/"
+	rubrik_list = ["A - Z", "Barrierefreie Inhalte",		# Umleitung
+				"Sport", "Nachrichten"]
+	for i, item in enumerate(kats):
+		title = stringextract("<h2", "</h2", item)			# t1mx31h9">Wirtschaft
+		title = title.split(">")[-1]
+		#if "Reportagen" in title:	# Debug
+		#	PLog(item)
+		imgs = blockextract("https://", item, "w,")			# Bilder
+		PLog("imgs: %d" % len(imgs))
+		if len(imgs) < 10:
+			if "Nachrichten" not in title:
+				continue
+		for img in imgs:
+			# PLog(img)		# Debug
+			if "1280w" in img:
+				img = img.split(" 1280w")[0]
+				break
+		katid = stringextract('href="', '">', item)			# ID der Kategorie
+		kat_url = "https://www.zdf.de" + katid
+				
+		PLog('Satz11:');
+		PLog("%2d. %s" % (i,title)); PLog(kat_url)
+		kat_url=py2_encode(kat_url); title=py2_encode(title);
+		
+		if title in rubrik_list:							# Seiten ohne Genre-Id, Graphql-Call
+			if 'A - Z' in title:							#	nicht möglich
+				items = ["%s|sendungen-100|%s" % (title, img)]
+			if 'Barrierefreie' in title:
+				items = ["%s|barrierefrei-im-zdf-100|%s" % (title, img)]
+			if 'Sport' in title:
+				items = ["%s|sport-106|%s" % (title, img)]
+			if 'Nachrichten' in title:						# Nachrichtenformate
+				items = ["[B]heute[/B] JOURNAL|heute-journal-104|zdfheute-keyvisual-100-original-102~1280x720?cb=1700556129765",
+					"[B]heute[/B] 19 Uhr|heute-19-uhr-102|sendungsteaser-heute-ol-100~1280x720?cb=1694936967005",
+					"[B]heute[/B] live|zdfheute-live-102|https://www.zdf.de/assets/zdfheute-live-104~1280x720?cb=1741955542733",
+					"[B]heute[/B] JOURNAL UP:DATE|heute-journal-update-104|sendungsteaser-heute-journal-update-ol-100~1280x720?cb=1741949399509",
+					"[B]heute[/B] in DEUTSCHLAND|heute-in-deutschland-1-100|sendungsteaser-heute-in-deutschland-ml-102~1280x720?cb=1741862640964",
+					"[B]heute[/B] in EUROPA|heute-in-europa-1-100|sendungsteaser-heute-in-europa-ol-100~1280x720?cb=1741865150474"
+					]
+
+			for item in items:
+				label, rubrik_url, img = item.split("|")
+				rubrik_url = rubrik_base + rubrik_url
+				if img.startswith("http") == False:			# Nachrichtenformate
+					img = img_base + img
+				fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" %\
+					(quote(rubrik_url), label, homeID)
+				addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+					thumb=img, fparams=fparams)
+		else:
+			fparams="&fparams={'title': '%s', 'path': '%s'}" %\
+				(title, quote(kat_url))
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
+				thumb=img, fparams=fparams)
+			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#-----------------------------------------------
+# Aufruf: ZDF_Kat - Subkategorien einschl. Subnavigation
+#	1. Genre-ID, Api-Token und appId Webseite ermitteln
+#	2. Graphql-Call mit Genre-ID, Api-Token und appId
+# Steuerung Submenüs via Button -> ZDF_get_naviKat (ähnlich
+#	ZDF-Sportstudio (Datenformat zu sehr abweichend)
+# Zielfunktion ZDF_RubrikSingle via futura-Url
+#
+def ZDF_KatSub(title, path, tabid=""):								
+	PLog('ZDF_KatSub: %s, %s, %s' % (title, path, tabid))
+	
+	page, msg = get_page(path)
+	page=py2_decode(str(page))
+	
+	try:														# Parameter für Graphql-Call
+		collection = stringextract("MetaCollectionTwitterImage", "persistFilters", page)
+		PLog("collection: " + collection)
+		collection = collection.replace('\\', '')				# metaCollectionId = genre_id
+		genre_id = stringextract('metaCollectionId":"', '"', collection)	# metaCollectionId\":\"genre-10296
+
+		token = stringextract("apiToken", "fetchOptions", page)	# apitoken, appId
+		token = token.replace('\\', '')
+		PLog(token)	
+		apitoken = stringextract('apiToken":"', '"', token)		# apiToken\":\"ahBaeMee..
+		appId = stringextract('appId":"', '"', token)			# appId\":\"ffw-mt-web-b1cc..
+	except Exception as exception:
+		genre_id=""
+		PLog("genre_error: " + str(exception))
+	PLog("genre_id: %s, apitoken: %s, appId: %s" % (str(genre_id), apitoken, appId))
+
+	icon = R(ICON_DIR_FOLDER)
+	if not genre_id:
+		msg1 = u'%s:' % title
+		msg2 = "Genre-ID nicht gefunden"
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
+		return
+		
+	# Graphql-Call, zdf-app-id bei Bedarf aus Web ermitteln,
+	#	Pagination auf 48 gesetzt (statt 24)
+	header = "{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/',\
+		'zdf-app-id': 'ffw-mt-web-1305801c'}" % apitoken
+	href='https://api.zdf.de/graphql?operationName=getMetaCollectionContent&variables=%7B%22collectionId%22%3A%22****%22%2C%22input%22%3A%7B%22appId%22%3A%22ffw-mt-web-1305801c%22%2C%22filters%22%3A%7B%22contentOwner%22%3A%5B%5D%2C%22fsk%22%3A%5B%5D%2C%22language%22%3A%5B%5D%7D%2C%22pagination%22%3A%7B%22first%22%3A48%2C%22after%22%3Anull%7D%2C%22user%22%3A%7B%22abGroup%22%3A%22gruppe-b%22%2C%22userSegment%22%3A%22segment_0%22%7D%2C%22tabId%22%3A####%7D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22c85ca9c636258a65961a81124abd0dbef06ab97eaca9345cbdfde23b54117242%22%7D%7D'
+
+	href = href.replace("****", "%s" % genre_id)				# Parameter ersetzen
+	href = href.replace("ffw-mt-web-1305801c", "%s" % appId)
+	if not tabid:
+		href = href.replace("####", 'null')
+	else:
+		href = href.replace("####", '"%s"' % tabid)
+	page, msg = get_page(path=href,  header=header, do_safe=False) 	# Graphql-Call
+	
+	try:
+		jsonObject = json.loads(page)
+		PLog(str(jsonObject)[:80])	
+		objs = jsonObject["data"]["metaCollectionContent"]["smartCollections"]
+		navi_obj = jsonObject["data"]["metaCollectionContent"]["tabs"]
+	except Exception as exception:
+		objs=[]; navi_obj=[]
+		PLog("KatSubjson_error: " + str(exception))
+	PLog(len(objs))	
+	PLog(str(objs)[:80])
+	
+	li = xbmcgui.ListItem()
+	li2 = xbmcgui.ListItem()							# Video-Listitems
+	li = home(li, ID='ZDF')								# Home-Button
+	
+	PLog("add_navi_menu_Kat:")							# Subnavigation 
+	PLog(str(navi_obj)[:80])
+	DictID = "ZDF_naviKat"
+	Dict("store", DictID, navi_obj)
+	label = "Subnavigation %s" % title
+	fparams="&fparams={'path': '%s', 'DictID': '%s', 'title': '%s', 'homeID': '%s'}" %\
+		(quote(path), DictID, title, "")	# homeID nicht genutzt
+	addDir(li=li, label=label, action="dirList", dirID="ZDF_get_naviKat", fanart=icon, 
+		thumb=icon, fparams=fparams, tagline=u"Navigations-Menü")
+
+	base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
+	homeID="ZDF"
+	for obj in objs:
+		typ,title,tag,descr,img,url,stream,coll_id = ZDF_getKat_content(obj)
+		url = base % coll_id
+
+		title=py2_encode(title); url=py2_encode(url);
+		if "-movie-" in coll_id:						# Muster für Einzelbeitrag, -movie-
+			url = url.replace("-movie-", "-")			#	scheitert in ZDF_RubrikSingle
+			tag="[B]Einzelbeitrag[/B]\n%s" % tag
+			tag_par = tag.replace("\n", "||")
+			scms_id=""
+			descr=repl_json_chars(descr); tag=repl_json_chars(tag)
+			
+			descr=py2_encode(descr); tag_par=py2_encode(tag_par);
+			fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
+				(url, title, img, tag_par, descr, scms_id)	
+			addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=descr, mediatype="video")			
+		else:
+			fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" %\
+				(quote(url), quote(title), homeID)
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+				thumb=img, fparams=fparams, summary=descr, tagline=tag)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+#-----------------------------------------------
+# Navigations-Menü für ZDF_KatSub (abweichend zu ZDF_get_navi)
+# 
+def ZDF_get_naviKat(path, DictID, title, homeID=""):
+	PLog('ZDF_get_naviKat: %s | %s | %s' % (path, DictID, title))
+	if "#" in path:							
+		path = path.split("#")[0]				# tabid im Pfad entfernen
+	
+	li = xbmcgui.ListItem()
+	if homeID:
+		li = home(li, ID=homeID)
+	else:	
+		li = home(li, ID='ZDF')					# Home-Button
+		
+	objs = Dict("load", DictID)
+	PLog(len(objs))
+	PLog(str(objs)[:80])
+		
+	# Zusatz "#t=all" für Alle Inhalte entbehrlich:
+	url = path; name = "Alle Inhalte"			# Button "Alle Inhalte" (fehlt in json-Daten)
+	label = "%s | [B]%s[/B]" % (title, name)
+	tag = "%s in %s anzeigen" % (name, title)			
+	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(url), quote(title))
+	addDir(li=li, label=label, action="dirList", dirID="ZDF_KatSub", fanart=R(ICON_DIR_FOLDER), 
+		thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)
+	
+	for obj in objs:
+		tabid = obj["id"]
+		name = obj["label"]
+		url = "%s#t=%s" % (path, tabid)
+		label = "%s | [B]%s[/B]" % (title, name)
+		tag = "%s in %s anzeigen" % (name, title)			
+		
+		PLog('Satz11_navi:');
+		PLog(title); PLog(tabid); PLog(url)
+	
+		title=py2_encode(title); url=py2_encode(url) 
+		fparams="&fparams={'path': '%s', 'title': '%s', 'tabid': '%s'}" %\
+			(quote(url), quote(title), tabid)
+		addDir(li=li, label=label, action="dirList", dirID="ZDF_KatSub", fanart=R(ICON_DIR_FOLDER), 
+			thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)
+		PLog(unquote(fparams))
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#-----------------------------------------------
+# Aufruf: ZDF_KatSub, json-Auswertung smartCollections,
+#	ZDF_get_content zu sehr abweichend
+#
+def ZDF_getKat_content(obj):
+	PLog('ZDF_getKat_content:')
+	PLog(str(obj)[:60])
+	
+	imf_def = R("icon-bild-fehlt_wide.png")	# default-Icon
+	typ=""; img=""; tag_options=[]
+	
+	canon_id = obj["canonical"]				# -> futura
+	title = obj["title"]
+	options = obj["streamingOptions"]
+	tag=""; url=""; stream=""				# url, stream n.b.?
+	tag_options=[]								
+	tags = ["ad", "dgs", "fsk", "ks",		# "ad": false, "ut": true, ..
+					"ov", "uhd", "ut"]	
+
+	for to in tags:							# Streaming-Optionen
+		PLog(to)
+		val=options[to]
+		PLog("%s | %s" % (to, val))
+		if val == False or val == None or val == "none":
+			val = "--"
+		if val == True:
+			val = "ja"
+		if "FSK 16" in val:
+			val = "[B]%s[/B]" % val
+		tag_options.append("%s: %s" % (up_low(to), val))
+	if len(tag_options) > 0:
+		tag_options = " | ".join(tag_options)
+		tag_options = "[B]Optionen:[/B]\n%s" %tag_options
+	
+	teaser = obj["teaser"]
+	descr = teaser["description"]
+	image = teaser["imageWithoutLogo"]
+	img_alt = "[B]Bild: [/B]%s" % image["altText"]
+	layouts = image["layouts"]
+	if "dim768Xauto" in layouts:				# häufig None möglich
+		img = layouts["dim768Xauto"]
+	if img == "" and "dim1280Xauto" in layouts:
+		img = layouts["dim1280Xauto"]
+	if img == "" and "original" in layouts:
+		img = layouts["original"]
+	if img == "" or img == None:				# weitere Suche
+		PLog("missing_pict")
+		for i, l in enumerate(layouts):			# ersten dim-Treffer verwenden
+			PLog("i: %d, l: %s, url: %s" % (i,l, layouts[l]))
+			if layouts[l]:
+				img = layouts[l]
+				break
+		if img == "" or img == None:			# Fallback "Bild fehlt"
+			img = img_def
+	
+	tag = "%s\n%s" % (tag_options, img_alt)
+	summ = descr	
+
+	PLog('ZDF_getKat_content typ: %s | title: %s | tag: %s | descr: %s |img:  %s | url: %s | stream: %s | canon_id: %s' %\
+		(typ,title,tag,summ,img,url,stream, canon_id) )		
+	return typ,title,tag,summ,img,url,stream,canon_id
+
 #---------------------------------------------------------------------------------------------------
 # Aufruf ZDF_Start mit jsonObject direkt,
 #		ZDF_RubrikSingle mit DictID (-> gespeichertes jsonObject)
