@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>234</nr>										# Numerierung für Einzelupdate
+# 	<nr>235</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.2'
 VDATE = '12.04.2025'
 
@@ -8803,7 +8803,6 @@ def ZDF_KatSub(title, path, tabid=""):
 	PLog('ZDF_KatSub: %s, %s, %s' % (title, path, tabid))
 	
 	page, msg = get_page(path)
-	page=py2_decode(str(page))
 	
 	try:														# Parameter für Graphql-Call
 		collection = stringextract("MetaCollectionTwitterImage", "persistFilters", page)
@@ -8872,6 +8871,8 @@ def ZDF_KatSub(title, path, tabid=""):
 	for obj in objs:
 		typ,title,tag,descr,img,url,stream,coll_id = ZDF_getKat_content(obj)
 		url = base % coll_id
+		title=repl_json_chars(title)
+		descr=repl_json_chars(descr); tag=repl_json_chars(tag)
 
 		title=py2_encode(title); url=py2_encode(url);
 		if "-movie-" in coll_id:						# Muster für Einzelbeitrag, -movie-
@@ -8879,7 +8880,6 @@ def ZDF_KatSub(title, path, tabid=""):
 			tag="[B]Einzelbeitrag[/B]\n%s" % tag
 			tag_par = tag.replace("\n", "||")
 			scms_id=""
-			descr=repl_json_chars(descr); tag=repl_json_chars(tag)
 			
 			descr=py2_encode(descr); tag_par=py2_encode(tag_par);
 			fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
