@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>14</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.04.2025
+# 	<nr>15</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.04.2025
 #
 
 from __future__ import absolute_import
@@ -359,6 +359,8 @@ def unpack(add_url):
 # ----------------------------------------------------------------------
 # Aufruf Kontextmenü, abhängig von SETTINGS.getSetting('pref_strm')
 # 	Param. siehe addDir, mediatype == "video"
+# Ermittlung Streamquellen -> get_streamurl (Plugin-Call)
+#
 def do_create(label, add_url):
 	PLog("do_create: " + label)
 	PLog(SETTINGS.getSetting('pref_strm_uz'))
@@ -407,7 +409,7 @@ def do_create(label, add_url):
 		msg2 = title
 		xbmcgui.Dialog().notification(msg1,msg2,icon,1000,sound=False)
 					
-		url = get_streamurl(add_url)								# Streamurl ermitteln
+		url = get_streamurl(add_url, title)							# Streamurl ermitteln via Plugin-Call
 		if url == '':												# Url fehlt/falsch: Abbruch	
 			msg1 = u"die erforderliche Stream-Url fehlt für"
 			msg2 = title									
@@ -587,10 +589,11 @@ def xbmcvfs_store(strmpath, url, thumb, fname, title, Plot, weburl, strm_type, g
 # ----------------------------------------------------------------------
 # Ermittlung Streamquelle (falls noch nicht gefunden, s. url_found).
 # plugin-Script add_url ausführen -> HLS_List, MP4_List bauen,
-# HLS_List, MP4_List durch PlayVideo_Direct auwerten lassen, Flag +
-# 	Param-Austausch via Dict
-#
-def get_streamurl(add_url):
+# HLS_List, MP4_List durch PlayVideo_Direct auswerten lassen, vor 
+# PlayVideo-Call mit Flag FLAG_OnlyUrl abbrechen, Param-Austausch 
+# via Dict
+# 
+def get_streamurl(add_url, title):						# add_url = fparams
 	PLog("get_streamurl:")
 	streamurl=''; ID=''
 	PLog(add_url[:100])
@@ -605,18 +608,31 @@ def get_streamurl(add_url):
 	
 	# Ermittlung Streamquelle + Start PlayVideo bis 'PlayVideo_Start: listitem'.
 	# Bei Bedarf den Flag FLAG_OnlyUrl hierher verlegen und in PlayVideo beachten.
-	# Hinw.: True für blocking call zur Erzeugung der HLS_List + MP4_List durch 
-	#	MY_SCRIPT
+	# Hinw.: beim Sofortstart wird PlayVideo_Direct bereits bei Ermittlung der
+	#	Streamquellen ausgeführt - dort Abbruch durch FLAG_OnlyUrl.
+	#	Thread-Problem: in PlayVideo_Direct können die Listen nach MY_SCRIPT noch
+	#	leer sein und werden erst durch streamurl=PlayVideo_Direct gefüllt.
+	hls_list = os.path.join(DICTSTORE, "%s_HLS_List" % ID)
+	mp4_list = os.path.join(DICTSTORE, "%s_MP4_List" % ID)	
+	
+	PLog("remove_old_lists: %s | %s" % (hls_list, mp4_list))
+	try:
+		os.remove(hls_list)
+		os.remove(mp4_list)
+	except Exception as exception:
+		PLog("remove_error" + str(exception))
+		
+	PLog("set_FLAG_OnlyUrl")
+	PLog("runScript_for_streamsources:")				# Ermittlung der Streamquellen
+	open(FLAG_OnlyUrl, 'w').close()						# Abbruch PlayVideo_Direct (Sofortstart)
 	MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % ADDON_ID) 
 	xbmc.executebuiltin('RunScript(%s, %s, %s)'  % (MY_SCRIPT, HANDLE, MY_SCRIPT_fparams), True)
 	
-	hls_list = os.path.join(DICTSTORE, "%s_HLS_List" % ID)
-	mp4_list = os.path.join(DICTSTORE, "%s_MP4_List" % ID)
 	max_cnt=0
 	while(1):											# file_event: für die schwachbrüstigen Clients
 		sleep(1)
 		max_cnt = max_cnt + 1
-		PLog("waiting: %d" % max_cnt)
+		PLog("waiting_for_lists: %d" % max_cnt)
 		if os.path.exists(mp4_list) or os.path.exists(hls_list) or max_cnt > 3:
 			break
 			
@@ -626,18 +642,36 @@ def get_streamurl(add_url):
 	MP4_List =  Dict("load", "%s_MP4_List" % ID)
 	PLog("strm_MP4_List: " + str(MP4_List))
 	
-	# todo: Dateiflag urlonly setzen/löschen - Übergabe via script unsicher
-	#	ev. auch Rückgabe via Datei
-	
-														# Url entspr. Settings holen:
 	title_org=''; img=''; Plot='';						# hier nicht benötigt 
-	
 	# s. Beachte im Log: es überschneiden sich MY_SCRIPT und PlayVideo_Direct: 
-	open(FLAG_OnlyUrl, 'w').close()						# Flag PlayVideo_Direct	-> strm-Modul		
-	streamurl = PlayVideo_Direct(HLS_List, MP4_List, title_org, img, Plot)
-	PLog("streamurl: " + streamurl)	
-	return streamurl
+	PLog("remove_STRM_URL")
+	try:
+		os.remove(STRM_URL)
+	except:
+		pass	
+	open(FLAG_OnlyUrl, 'w').close()						# Flag PlayVideo_Direct	-> strm-Modul
 	
+	max_cnt=0; streamurl=""
+	while(1):											# file_event: für schwachbrüstige Clients
+		if title not in str(HLS_List):					# falsche Listen?
+			PLog("wrong_list_new_load | title: %s" % title)
+			HLS_List =  Dict("load", "%s_HLS_List" % ID)
+			MP4_List =  Dict("load", "%s_MP4_List" % ID)
+		
+		PLog("set_FLAG_OnlyUrl")
+		open(FLAG_OnlyUrl, 'w').close()						# Flag PlayVideo_Direct	aktualisieren
+		streamurl = PlayVideo_Direct(HLS_List, MP4_List, title_org, img, Plot)
+		xbmc.sleep(1000)
+		max_cnt = max_cnt + 1
+		PLog("waiting_for_streamurl: %d" % max_cnt)
+		if streamurl:
+			PLog("streamurl: " + streamurl)
+			return streamurl
+		if max_cnt > 3:
+			break
+	
+	return streamurl
+
 # ----------------------------------------------------------------------
 # Test auf unterstützte Zielfunktion 
 #
@@ -654,14 +688,14 @@ def get_Source_Funcs_ID(add_url):
 					u"dirID=PlayVideo|PlayVideo",u"dirID=SenderLiveResolution|ARD",
 					u"arte.SingleVideo|arte", u"ZDF_getApiStreams|ZDF"
 					]
-	ID=''																# derzeit nicht ermittelbar
+	ID=''																# Default: unbekannt
 	for item in Source_Funcs:
 		dest_func, sid = item.split("|")
-		PLog(dest_func); PLog(sid)
+		PLog("%s | %s" % (dest_func, sid))
 		if 	dest_func in add_url:
 			ID = sid
 			break
-	PLog("ID: " + ID)	
+	PLog("Source_Funcs_ID: " + ID)	
 	return ID	
 	
 # ----------------------------------------------------------------------

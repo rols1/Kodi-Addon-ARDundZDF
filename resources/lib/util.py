@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>125</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.03.2025
+# 	<nr>126</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.04.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1261,7 +1261,7 @@ def getHeaders(response):						# z.Z.  nicht genutzt
 #	Versuch in get_page (get_page3) mit requests (falls vorh.)
 #   Für PYTHON3 bei Redirect-Errors Umstellung auf httplib2.
 #	Debug 308_Error: www.ardaudiothek.de/rubrik/42914694 (ohne /-Ende)
-# 12.03.2025 für arte.EPG_Today: Check auf Error 309-399
+# 12.03.2025 für arte.EPG_Today (url_check): Check auf Error 309-399
 #	
 def getRedirect(path, header=""):		
 	PLog('getRedirect: '+ path)
@@ -2478,7 +2478,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	duration_org=duration
 
 	
-	path, msg = getRedirect(path)					# ZDF, s.o.
+	path = url_check(path, caller="get_summary_pre", dialog=False)		# ZDF, s.o.
 	
 	fname = path.split('/')[-1]
 	fname = fname.replace('.html', '')				# .html bei ZDF-Links entfernen
@@ -3308,8 +3308,11 @@ def switch_Setting(ID, msg1,msg2,icon,delay):
 def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, playlist='', HBBTV_List='', ID=''):	
 	PLog('PlayVideo_Direct:')
 	PLog(title); PLog(ID)
+	if not HLS_List:								# Irrläufer strm-Modul? nur Log
+		PLog("HLS_List_missing")		
+			
 	PLog(len(HLS_List)); PLog(len(MP4_List)); PLog(len(HBBTV_List));
-	#PLog(str(HLS_List)); PLog(str(MP4_List)); PLog(str(HBBTV_List)); # Debug
+	# PLog(str(HLS_List)); PLog(str(MP4_List)); PLog(str(HBBTV_List)); # Debug
 	myform = SETTINGS.getSetting('pref_direct_format')
 	myqual = SETTINGS.getSetting('pref_direct_quality')
 	PLog("myform: %s, myqual: %s" % (myform, myqual))
@@ -3441,15 +3444,14 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 	#	kann sich zeitlich weiter vorn befinden (s. FLAG_OnlyUrl).
 	PLog('Direct: %s | %s' % (mode, url))
 	PLog(FLAG_OnlyUrl)								# Flagdatei
-	if os.path.isfile(FLAG_OnlyUrl):				# Rückgabe Url -> strm-Modul, kein Start
-		PLog("FLAG_OnlyUrl")
-		os.remove(FLAG_OnlyUrl)						# zusätzl. Leichenbehandl. im Haupt-PRG
+	if os.path.exists(FLAG_OnlyUrl):				# Rückgabe Url -> strm-Modul, kein Start
+		PLog("FLAG_OnlyUrl")						# Leichenbehandl. im Haupt-PRG
 		RSave(STRM_URL, url)						# indirekte Rückgabe 	-> 
 		return url									# direkte Rückgabe 		-> strm-Modul
 		exit(0)
 	else:											# default
 		PlayVideo(url, title, thumb, Plot, sub_path)
-	return ''
+	return ''										# streamurl -> strm.get_streamurl
 
 #---------------------------------------------------------------------------------------------------
 # PlayVideo: 
@@ -3499,6 +3501,12 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, Merk="", live=""):	
 	PLog('PlayVideo:'); PLog(url); PLog(title);	 PLog(Plot[:100]); 
 	PLog(sub_path); PLog(seekTime); PLog("live: " + live); PLog(playlist)
+	
+	PLog("FLAG_OnlyUrl_detect: " + str(os.path.exists(FLAG_OnlyUrl)))
+	if os.path.exists(FLAG_OnlyUrl):					# Thread-Irrläufer strm-Modul, Abbruch
+		return
+		exit(0)
+
 	import sqlite3										# Abfrage MyVideos*.db
 
 	Plot=transl_doubleUTF8(Plot)
@@ -4018,7 +4026,7 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 # 14.03.2025 Header auf user-agent (curl) beschränkt 
 #
 def url_check(url, caller='', dialog=True):
-	PLog('url_check: ' + url)
+	PLog('url_check: %s | %s' % (url, caller))
 
 	if url.startswith('http') == False:		# lokale Datei
 		if  os.path.exists(url):
