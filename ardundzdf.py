@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>235</nr>										# Numerierung für Einzelupdate
+# 	<nr>236</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.2'
-VDATE = '12.04.2025'
+VDATE = '15.04.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8754,7 +8754,7 @@ def ZDF_Kat(title):
 		katid = stringextract('href="', '">', item)			# ID der Kategorie
 		kat_url = "https://www.zdf.de" + katid
 				
-		PLog('Satz11:');
+		PLog('Satz11_1:');
 		PLog("%2d. %s" % (i,title)); PLog(kat_url)
 		kat_url=py2_encode(kat_url); title=py2_encode(title);
 		
@@ -8840,7 +8840,7 @@ def ZDF_KatSub(title, path, tabid=""):
 	else:
 		href = href.replace("####", '"%s"' % tabid)
 	page, msg = get_page(path=href,  header=header, do_safe=False) 	# Graphql-Call
-	
+
 	try:
 		jsonObject = json.loads(page)
 		PLog(str(jsonObject)[:80])	
@@ -8855,6 +8855,12 @@ def ZDF_KatSub(title, path, tabid=""):
 	li = xbmcgui.ListItem()
 	li2 = xbmcgui.ListItem()							# Video-Listitems
 	li = home(li, ID='ZDF')								# Home-Button
+
+	mediatype=''										# Kennz. Videos im Listing
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'
+	PLog('mediatype: ' + mediatype); 
+	
 	
 	PLog("add_navi_menu_Kat:")							# Subnavigation 
 	PLog(str(navi_obj)[:80])
@@ -8871,22 +8877,22 @@ def ZDF_KatSub(title, path, tabid=""):
 	for obj in objs:
 		typ,title,tag,descr,img,url,stream,coll_id = ZDF_getKat_content(obj)
 		url = base % coll_id
+		PLog("Satz11_2: %s" % url)
 		title=repl_json_chars(title)
 		descr=repl_json_chars(descr); tag=repl_json_chars(tag)
 
 		title=py2_encode(title); url=py2_encode(url);
-		if "-movie-" in coll_id:						# Muster für Einzelbeitrag, -movie-
-			url = url.replace("-movie-", "-")			#	scheitert in ZDF_RubrikSingle
-			tag="[B]Einzelbeitrag[/B]\n%s" % tag
-			tag_par = tag.replace("\n", "||")
+		if "MOVIE" in typ:								# Einzelbeitrag, angepasste coll_id
+			tag_par = tag.replace("\n", "||")			# 	s. ZDF_getKat_content
 			scms_id=""
-			
+		
 			descr=py2_encode(descr); tag_par=py2_encode(tag_par);
 			fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 				(url, title, img, tag_par, descr, scms_id)	
 			addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag, summary=descr, mediatype="video")			
+				fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)			
 		else:
+			tag="[B]Folgebeiträge[/B]\n%s" % tag
 			fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" %\
 				(quote(url), quote(title), homeID)
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
@@ -8948,53 +8954,81 @@ def ZDF_getKat_content(obj):
 	PLog(str(obj)[:60])
 	
 	imf_def = R("icon-bild-fehlt_wide.png")	# default-Icon
-	typ=""; img=""; tag_options=[]
+	typ=""; img=""; img_alt=""; tag_options=[]
+	tag=""; movietag=""; url=""; stream=""	# url, stream n.b.?
+	title=""; descr=""; pubDate=""; avail=""; owner=""
 	
-	canon_id = obj["canonical"]				# -> futura
-	title = obj["title"]
-	options = obj["streamingOptions"]
-	tag=""; url=""; stream=""				# url, stream n.b.?
-	tag_options=[]								
-	tags = ["ad", "dgs", "fsk", "ks",		# "ad": false, "ut": true, ..
-					"ov", "uhd", "ut"]	
+	try:
+		typ = obj["collectionType"]				# MOVIE, SEASON_SERIES	
+		canon_id = obj["canonical"]				# -> futura-Pfad Folgebeiträge
+		owner = obj["contentOwner"]["title"]
+		if "video" in obj:						# Einzelbeitrag?
+			video = obj["video"]
+			canon_id = video["canonical"]		# 	-> futura-Pfad Einzelbeitrag
+			vod = video["availability"]["vod"]
+			if vod["visibleFrom"]:				# "None" möglich
+				pubDate = vod["visibleFrom"]	# 2025-04-08T22:10:00..
+				pubDate = time_translate(pubDate)
+			if vod["visibleTo"]:
+				avail = vod["visibleTo"]
+				avail = time_translate(avail)
+			dur = video["currentMedia"]["nodes"][0]["duration"]
+			dur = seconds_translate(dur)
+			if avail and pubDate:
+				movietag = u"Dauer: %s | [B]Verfügbar bis[/B] [COLOR darkgoldenrod]%s[/COLOR] | ab: [B]%s[/B] | %s" %\
+					(dur, avail, pubDate, owner)
+			else:
+				movietag = u"Dauer: %s | %s" % (dur, owner)
+		
+		title = obj["title"]
+		options = obj["streamingOptions"]
+		tags = ["ad", "dgs", "fsk", "ks",		# "ad": false, "ut": true, ..
+						"ov", "uhd", "ut"]	
 
-	for to in tags:							# Streaming-Optionen
-		PLog(to)
-		val=options[to]
-		PLog("%s | %s" % (to, val))
-		if val == False or val == None or val == "none":
-			val = "--"
-		if val == True:
-			val = "ja"
-		if "FSK 16" in val:
-			val = "[B]%s[/B]" % val
-		tag_options.append("%s: %s" % (up_low(to), val))
-	if len(tag_options) > 0:
-		tag_options = " | ".join(tag_options)
-		tag_options = "[B]Optionen:[/B]\n%s" %tag_options
+		for to in tags:							# Streaming-Optionen
+			PLog(to)
+			val=options[to]
+			PLog("%s | %s" % (to, val))
+			if val == False or val == None or val == "none":
+				val = "--"
+			if val == True:
+				val = "ja"
+			if "FSK 16" in val:
+				val = "[B]%s[/B]" % val
+			tag_options.append("%s: %s" % (up_low(to), val))
+		if len(tag_options) > 0:
+			tag_options = " | ".join(tag_options)
+			tag_options = "[B]Optionen:[/B]\n%s" % tag_options
+			
+		
+		teaser = obj["teaser"]
+		descr = teaser["description"]
+		image = teaser["imageWithoutLogo"]
+		img_alt = "[B]Bild: [/B]%s" % image["altText"]
+		if img_alt == "None":
+			img_alt=""
+		layouts = image["layouts"]
+		if "dim768Xauto" in layouts:				# häufig None möglich
+			img = layouts["dim768Xauto"]
+		if img == "" and "dim1280Xauto" in layouts:
+			img = layouts["dim1280Xauto"]
+		if img == "" and "original" in layouts:
+			img = layouts["original"]
+		if img == "" or img == None:				# weitere Suche
+			PLog("missing_pict")
+			for i, l in enumerate(layouts):			# ersten dim-Treffer verwenden
+				PLog("i: %d, l: %s, url: %s" % (i,l, layouts[l]))
+				if layouts[l]:
+					img = layouts[l]
+					break
+			if img == "" or img == None:			# Fallback "Bild fehlt"
+				img = img_def
+	except Exception as exception:
+		PLog("getKat_error: " + str(exception))
 	
-	teaser = obj["teaser"]
-	descr = teaser["description"]
-	image = teaser["imageWithoutLogo"]
-	img_alt = "[B]Bild: [/B]%s" % image["altText"]
-	layouts = image["layouts"]
-	if "dim768Xauto" in layouts:				# häufig None möglich
-		img = layouts["dim768Xauto"]
-	if img == "" and "dim1280Xauto" in layouts:
-		img = layouts["dim1280Xauto"]
-	if img == "" and "original" in layouts:
-		img = layouts["original"]
-	if img == "" or img == None:				# weitere Suche
-		PLog("missing_pict")
-		for i, l in enumerate(layouts):			# ersten dim-Treffer verwenden
-			PLog("i: %d, l: %s, url: %s" % (i,l, layouts[l]))
-			if layouts[l]:
-				img = layouts[l]
-				break
-		if img == "" or img == None:			# Fallback "Bild fehlt"
-			img = img_def
-	
-	tag = "%s\n%s" % (tag_options, img_alt)
+	tag = "%s\n%s" % (img_alt, tag_options)
+	if movietag:							# Einzelbeitrag
+		tag = "%s\n%s" % (movietag, tag)
 	summ = descr	
 
 	PLog('ZDF_getKat_content typ: %s | title: %s | tag: %s | descr: %s |img:  %s | url: %s | stream: %s | canon_id: %s' %\
@@ -10464,13 +10498,16 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	availInfo = transl_json(availInfo)
 	channel = stringextract('"channel":"',  '"', page)
 	sharingUrl = stringextract('"sharingUrl":"',  '"', page)
+
 	if sharingUrl:
 		path_org = sharingUrl
+		'''											# funktioniert nicht für Kategorien-Urls
 		p = path_org.split("/")
 		if p[-1] == "/":
 			del p[-1]
 		del p[-1]									# letztes Element entfernen
 		sharingUrl = "/".join(p)
+		'''
 		PLog("sharingUrl: %s, corrected: %s" % (path_org, sharingUrl))
 		
 		summ_new = get_summary_pre(sharingUrl, ID='ZDF',skip_verf=True,skip_pubDate=True)
