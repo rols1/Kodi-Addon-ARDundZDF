@@ -5805,7 +5805,16 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				if ret  == False:
 					return
 			if pathtextfile:
-				RSave(pathtextfile, storetxt, withcodec=True)	# Text speichern
+				RSave(pathtextfile, storetxt, withcodec=True)			# Text speichern
+				if SETTINGS.getSetting('pref_create_nfo') == "true":	# nfo-Datei erzeugen
+					if url.endswith('.mp4') or '.mp4' in url or url.endswith('.webm'):
+						msg = MakeJpegNfo(pathtextfile, storetxt)			# Modul util
+						nfo_msg1 = u"nfo-Datei zum Video:"
+						nfo_msg2 = u"Erzeugung fehlgeschlagen!"
+						if msg == True:
+							nfo_msg2 = "erfolgreich erzeugt."
+						PLog("%s | %s" % (nfo_msg1, nfo_msg2))
+						#xbmcgui.Dialog().notification(nfo_msg1,nfo_msg2,icon,2000,sound=False)				
 				
 			# Fortschrittsbalken nur mit ermittelter Länge möglich:
 			if clen and SETTINGS.getSetting('pref_use_pgbar') == 'true':	# mit Fortschrittsbalken 
@@ -6365,23 +6374,8 @@ def DownloadsList():
 				else:
 					txt = None
 					title = entry						# Titel = Dateiname, falls Beschreibung fehlt
-				if txt != None:			
-					title = stringextract("Titel: '", "'", txt)
-					tagline = stringextract("ung1: '", "'", txt)
-					summary = stringextract("ung2: '", "'", txt)
-					quality = stringextract("taet: '", "'", txt)
-					thumb = stringextract("Bildquelle: '", "'", txt)
-					httpurl = stringextract("Adresse: '", "'", txt)
-					
-					if tagline and quality:
-						tagline = "%s | %s" % (tagline, quality)
-						
-					# Falsche Formate korrigieren:
-					summary=py2_decode(summary); tagline=py2_decode(tagline);
-					summary=repl_json_chars(summary); tagline=repl_json_chars(tagline); 
-					summary=summary.replace('\n', ' | '); tagline=tagline.replace('\n', ' | ')
-					summary=summary.replace('|  |', ' | '); tagline=tagline.replace('|  |', ' | ')
-
+				if txt != None:	
+					title,tagline,summary,quality,thumb,httpurl = GetDetailText(pathtextfile, txt=txt)
 				else:										# ohne Beschreibung
 					# pass									# Plex brauchte hier die Web-Url	aus der Beschreibung
 					title = fname
@@ -8882,6 +8876,7 @@ def ZDF_KatSub(title, path, tabid=""):
 		descr=repl_json_chars(descr); tag=repl_json_chars(tag)
 
 		title=py2_encode(title); url=py2_encode(url);
+		img=py2_encode(img)
 		if "MOVIE" in typ:								# Einzelbeitrag, angepasste coll_id
 			tag_par = tag.replace("\n", "||")			# 	s. ZDF_getKat_content
 			scms_id=""

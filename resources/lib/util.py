@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>126</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.04.2025
+# 	<nr>127</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.04.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -84,6 +84,13 @@ FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 ICON_TOOLS 				= "icon-tools.png"
 ICON_WARNING 			= "icon-warning.png"
+
+# nfo-Template - wie strm-Modul, hier für Downloads:
+NFO1 = '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>\n'		
+NFO2 = '<movie>\n<title>%s</title>\n<uniqueid type="tmdb" default="true"></uniqueid>\n'
+NFO3 = '<thumb spoof="" cache="" aspect="poster">%s</thumb>\n'
+NFO4 = '<plot>%s</plot>\n<weburl>%s</weburl>\n</movie>'					# Tag weburl (inoff.) für Abgleich
+NFO = NFO1+NFO2+NFO3+NFO4												#	 vorh. / nicht mehr vorh.
 
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
@@ -3045,6 +3052,8 @@ def get_playlist_img(hrefsender):
 	return playlist_img, link, EPG_ID
 
 ####################################################################################################
+# Erzeugung Textdatei für Download-Video / -Podcast
+#	Extraktion in DownloadsList, MakeJpegNfo
 def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für Download-Video / -Podcast
 	PLog('MakeDetailText:')
 	title=py2_encode(title); summary=py2_encode(summary);
@@ -3067,7 +3076,65 @@ def MakeDetailText(title, summary,tagline,quality,thumb,url):	# Textdatei für D
 	detailtxt = detailtxt + "%15s" % 'Adresse: ' + "'" + url + "'"  + '\r\n'
 		
 	return detailtxt
+#-----------------------------------------------
+# Umkehrung von MakeDetailText - Erzeugung Params title, tagline usw.
+# Aufruf: DownloadsList, MakeJpegNfo (<- thread_getfile)
+#	txt: bereits geladener Text
+def GetDetailText(pathtextfile, txt=""):
+	PLog('GetDetailText: ' + pathtextfile)
+	PLog("txt: %s" % txt[:80])
+	
+	if not txt:
+		txt = RLoad(txtpath, abs_path=True)		# Text laden - fehlt bei Sammeldownload
+	else:
+		title = stringextract("Titel: '", "'", txt)
+		tagline = stringextract("ung1: '", "'", txt)
+		summary = stringextract("ung2: '", "'", txt)
+		quality = stringextract("taet: '", "'", txt)
+		thumb = stringextract("Bildquelle: '", "'", txt)
+		httpurl = stringextract("Adresse: '", "'", txt)
 		
+		if tagline and quality:
+			tagline = "%s | %s" % (tagline, quality)
+			
+		# Falsche Formate korrigieren:
+		summary=py2_decode(summary); tagline=py2_decode(tagline);
+		summary=repl_json_chars(summary); tagline=repl_json_chars(tagline); 
+		summary=summary.replace('\n', ' | '); tagline=tagline.replace('\n', ' | ')
+		summary=summary.replace('|  |', ' | '); tagline=tagline.replace('|  |', ' | ')
+	
+	return title,tagline,summary,quality,thumb,httpurl
+	
+#-----------------------------------------------
+# Ergänzende jpeg- und nfo-Datei für Download-Video
+# Aufruf thread_getfile, Code teilw. aus xbmcvfs_store
+#
+def MakeJpegNfo(pathtextfile, storetxt):
+	PLog('MakeJpegNfo: ' + pathtextfile)
+	PLog(storetxt)
+
+	title,tagline,summary,quality,thumb,httpurl = GetDetailText(pathtextfile, txt=storetxt)
+	dlpath=pathtextfile.split(".")[0]
+
+	if thumb:
+		fname = "%s.jpeg" % dlpath
+		PLog("local_thumb: " + fname)
+		urlretrieve(thumb, fname)
+
+	fname = "%s.nfo" % dlpath
+	strm_type = "movie"					# ev. Setting für Genre-Typen ergänzen
+	Plot = "%s\n%s\n%s\n%s" % (title.strip(),tagline,summary,quality)
+	nfo = NFO.replace("<movie>", "<%s>" % strm_type); 	# Anpassung Template
+	nfo = nfo.replace("</movie>", "</%s>" % strm_type)
+	nfo = nfo % (title, thumb, Plot, httpurl)
+	nfo = py2_encode(nfo)
+	msg = RSave(fname, nfo)	
+	if msg:
+		PLog("nfo_save_error")
+		return False
+	else:
+		return True
+	
 #---------------------------------------------------------------------------------------------------
 # 30.08.2018 Start Recording TV-Live
 #	Kopfdoku + Code zu Plex-Problemen entfernt (bei Bedarf s. Github) -

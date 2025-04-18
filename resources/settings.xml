@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!-- 	<nr>15</nr>	# Numerierung für Einzelupdate -->
+<!-- 	<nr>16</nr>	# Numerierung für Einzelupdate -->
 <settings> 
     <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
@@ -40,6 +40,7 @@
  	<setting label="Zeige Download-Dialog zu Größe, Zieldatei und Untertitel" type="bool" id="pref_dl_showinfo" default="true"/>
 	<setting type="sep"/>
  	<setting label="Abgleich Videotitel mit Medienbibliothek" type="bool" id="pref_exist_inlib" default="false"/>
+ 	<setting label="nfo- und jpeg-Datei für Kodi-Bibliothek erzeugen" type="bool" id="pref_create_nfo" default="false"/>
  
 </category>
  
