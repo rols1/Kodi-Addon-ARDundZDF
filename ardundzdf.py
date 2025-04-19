@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>238</nr>										# Numerierung für Einzelupdate
+# 	<nr>239</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.2'
 VDATE = '19.04.2025'
 
@@ -8869,6 +8869,8 @@ def ZDF_KatSub(title, path, tabid=""):
 	homeID="ZDF"
 	for obj in objs:
 		typ,title,tag,descr,img,url,stream,coll_id = ZDF_getKat_content(obj)
+		if not title:									# getKat_error in ZDF_getKat_content
+			continue
 		url = base % coll_id
 		PLog("Satz11_2: %s" % url)
 		title=repl_json_chars(title)
@@ -8957,23 +8959,28 @@ def ZDF_getKat_content(obj):
 		canon_id = obj["canonical"]				# -> futura-Pfad Folgebeiträge
 		owner = obj["contentOwner"]["title"]
 		if "video" in obj:						# Einzelbeitrag?
-			video = obj["video"]
-			canon_id = video["canonical"]		# 	-> futura-Pfad Einzelbeitrag
-			vod = video["availability"]["vod"]
-			if vod["visibleFrom"]:				# "None" möglich
-				pubDate = vod["visibleFrom"]	# 2025-04-08T22:10:00..
-				pubDate = time_translate(pubDate)
-			if vod["visibleTo"]:
-				avail = vod["visibleTo"]
-				avail = time_translate(avail)
-			dur = video["currentMedia"]["nodes"][0]["duration"]
-			dur = seconds_translate(dur)
-			if avail and pubDate:
-				movietag = u"Dauer: %s | [B]Verfügbar bis[/B] [COLOR darkgoldenrod]%s[/COLOR] | ab: [B]%s[/B] | %s" %\
-					(dur, avail, pubDate, owner)
+			if obj["video"]:					# null möglich
+				video = obj["video"]
+				canon_id = video["canonical"]		# 	-> futura-Pfad Einzelbeitrag
+				vod = video["availability"]["vod"]
+				if vod["visibleFrom"]:				# "None" möglich
+					pubDate = vod["visibleFrom"]	# 2025-04-08T22:10:00..
+					pubDate = time_translate(pubDate)
+				if vod["visibleTo"]:
+					avail = vod["visibleTo"]
+					avail = time_translate(avail)
+				dur = video["currentMedia"]["nodes"][0]["duration"]
+				dur = seconds_translate(dur)
+				if avail and pubDate:
+					movietag = u"Dauer: %s | [B]Verfügbar bis[/B] [COLOR darkgoldenrod]%s[/COLOR] | ab: [B]%s[/B] | %s" %\
+						(dur, avail, pubDate, owner)
+				else:
+					movietag = u"Dauer: %s | %s" % (dur, owner)
 			else:
-				movietag = u"Dauer: %s | %s" % (dur, owner)
-		
+				msg = "canon_id_missing_video_null"
+				raise Exception(msg)			# getKat_error
+				
+
 		title = obj["title"]
 		options = obj["streamingOptions"]
 		tags = ["ad", "dgs", "fsk", "ks",		# "ad": false, "ut": true, ..
@@ -8994,7 +9001,6 @@ def ZDF_getKat_content(obj):
 			tag_options = " | ".join(tag_options)
 			tag_options = "[B]Optionen:[/B]\n%s" % tag_options
 			
-		
 		teaser = obj["teaser"]
 		descr = teaser["description"]
 		image = teaser["imageWithoutLogo"]
@@ -9018,6 +9024,7 @@ def ZDF_getKat_content(obj):
 			if img == "" or img == None:			# Fallback "Bild fehlt"
 				img = img_def
 	except Exception as exception:
+		title=""									# -> continue
 		PLog("getKat_error: " + str(exception))
 	
 	tag = "%s\n%s" % (img_alt, tag_options)
