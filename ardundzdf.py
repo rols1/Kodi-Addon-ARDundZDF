@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>237</nr>										# Numerierung für Einzelupdate
+# 	<nr>238</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.2'
 VDATE = '19.04.2025'
 
@@ -6230,10 +6230,9 @@ def DownloadTools():
 
 	PLog(SETTINGS.getSetting('pref_VideoDest_path'))
 	movie_path = SETTINGS.getSetting('pref_VideoDest_path')
-	if SETTINGS.getSetting('pref_VideoDest_path') == '':# Vorgabe Medienverzeichnis (Movieverz), falls leer	
-		pass
-		# movie_path = xbmc.translatePath('library://video/')
-		# PLog(movie_path)
+	if movie_path == "":								# PY2: Vorgabe Medienverzeichnis (Movieverz), falls leer	
+		movie_path = xbmc.translatePath('special://userdata')
+		PLog("movie_path: " + movie_path)
 				
 	#if os.path.isdir(movie_path)	== False:			# Sicherung gegen Fehleinträge - in Kodi nicht benötigt
 	#	movie_path = ''									# wird ROOT_DIRECTORY in DirectoryNavigator
@@ -6242,8 +6241,8 @@ def DownloadTools():
 	tagline = 'Zum Beispiel das Medienverzeichnis.'
 	summ = u'Hier kann auch ein Netzwerkverzeichnis, z.B. eine SMB-Share, ausgewählt werden.'
 	# summary =    # s.o.
-	fparams="&fparams={'settingKey': 'pref_VideoDest_path', 'mytype': '0', 'heading': '%s', 'shares': '%s', 'path': '%s'}" %\
-		(title, '', movie_path)
+	fparams="&fparams={'settingKey': 'pref_VideoDest_path', 'mytype': '0', 'heading': '%s', 'shares': 'videos', 'path': '%s'}" %\
+		(title, movie_path)
 	addDir(li=li, label=title, action="dirList", dirID="DirectoryNavigator", fanart=R(ICON_DOWNL_DIR), 
 		thumb=R(ICON_DIR_MOVE), fparams=fparams, tagline=tagline, summary=summ)
 		

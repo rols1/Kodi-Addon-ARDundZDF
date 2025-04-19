@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>127</nr>										# Numerierung für Einzelupdate
+# 	<nr>128</nr>										# Numerierung für Einzelupdate
 #	Stand: 18.04.2025
 
 # Python3-Kompatibilität:
@@ -1609,7 +1609,7 @@ def mystrip(line):
 def DirectoryNavigator(settingKey, mytype, heading, shares='files', useThumbs=False, \
 	treatAsFolder=False, path=''):
 	PLog('DirectoryNavigator:')
-	PLog(settingKey); PLog(mytype); PLog(heading); PLog(path);
+	PLog(settingKey); PLog(mytype); PLog(heading); PLog(shares); PLog(path);
 	
 	dialog = xbmcgui.Dialog()
 	d_ret = dialog.browseSingle(int(mytype), heading, shares, '', False, False, path)	
