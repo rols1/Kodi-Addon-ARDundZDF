@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>236</nr>										# Numerierung für Einzelupdate
+# 	<nr>237</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.2'
-VDATE = '15.04.2025'
+VDATE = '19.04.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -6375,7 +6375,7 @@ def DownloadsList():
 					txt = None
 					title = entry						# Titel = Dateiname, falls Beschreibung fehlt
 				if txt != None:	
-					title,tagline,summary,quality,thumb,httpurl = GetDetailText(pathtextfile, txt=txt)
+					title,tagline,summary,quality,thumb,httpurl = GetDetailText(txtpath, txt=txt)
 				else:										# ohne Beschreibung
 					# pass									# Plex brauchte hier die Web-Url	aus der Beschreibung
 					title = fname
@@ -6603,13 +6603,13 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 			MyDialog(msg1, msg2, msg3)
 			return li
 				 			 	 
-		else:								# Einzeldatei verschieben
+		else:												# Einzeldatei verschieben
 			videosrc = os.path.join(dlpath, dfname)	
-			globFiles = "%s*" % videosrc.split('.')[0] # Maske o. Endung: Video-, Text-, Sub-Datei
+			globFiles = "%s*" % videosrc.split('.')[0]		# Maske o. Endung: Video-, Text-, Sub-Datei
 			files = glob.glob(globFiles) 
 			PLog(files)
 					
-			if '//' not in destpath:
+			if '//' not in destpath:						# verschieben Lokal
 				for src_file in files:
 					srcname = os.path.split(src_file)[1]
 					dest_file = os.path.join(destpath, srcname)
@@ -6617,7 +6617,7 @@ def DownloadsMove(dfname, textname, dlpath, destpath, single):
 					if os.path.isfile(src_file) == True:	# Quelldatei testen						
 						shutil.copy(src_file, dest_file)		
 						os.remove(src_file)					# Quelldatei löschen
-			else:											# Share
+			else:											# verschieben zu Netzwerk-Share
 				for src_file in files:
 					srcname = os.path.split(src_file)[1]
 					dest_file = destpath + srcname
