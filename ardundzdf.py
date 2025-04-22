@@ -2881,13 +2881,16 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 		else:
 			anz = objs[key]["totalCount"]
 		PLog("anz: %d" % anz)
+		PLog(str(objs[key])[:80])
 		
 		if anz > 0:
 			if key != "items":											# nur Beiträge aus 1. Suchseite verfügbar,
 				anz_api = anz											# 	"_links" nicht verwendbar (s.u.)
 				anz = len(objs[key]["nodes"])	
 				if anz != anz_api:										# tatsächliche Anzahl in api-Quelle abweichend!
-					PLog("anz_correct: %d statt %d" % (anz, anz_api))		
+					PLog("anz_correct: %d statt %d" % (anz, anz_api))
+					if anz  == 0:										# kein Beitrag
+						continue		
 			item =  objs[key]["nodes"][0]								# 1. Beitrag
 			tag = u"Folgeseiten | [B]%s | Anzahl: %d[/B]" % (tag1, anz) # 1. tagline
 			tag = u"%s\nTitel + Bild: 1. %s" % (tag, tag2)				# 2. tagline
