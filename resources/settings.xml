@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!-- 	<nr>16</nr>	# Numerierung für Einzelupdate -->
+<!-- 	<nr>17</nr>	# Numerierung für Einzelupdate -->
 <settings> 
     <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
@@ -16,7 +16,7 @@
    	<setting label="Inhaltstext zu Video im Voraus laden - kann sehr lange dauern!" type="bool" id="pref_load_summary" default="false"/>
 	<setting type="sep"/>
 	<setting label="TV-Live / Videos: Sofortstart statt Auflösungen und Download" type="bool" id="pref_video_direct" default="true"/>
- 	<setting label="Untertitel: falls vorhanden, im Player einschalten" type="bool" id="pref_UT_ON" default="false"/>
+ 	<setting label="Untertitel: falls vorhanden, im Player einschalten" type="bool" id="pref_UT_ON" default="true"/>
 	<setting label="Gebärdensprache: Quelle verwenden falls vorhanden" type="bool" id="pref_DGS_ON" default="false"/>
   </category>Startlist
 
