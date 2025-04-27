@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>128</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.04.2025
+# 	<nr>130</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.04.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2485,7 +2485,9 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	duration_org=duration
 
 	
-	path = url_check(path, caller="get_summary_pre", dialog=False)		# ZDF, s.o.
+	newpath = url_check(path, caller="get_summary_pre", dialog=False)		# ZDF, s.o.
+	if newpath:										# False od. redirect-path
+		path=newpath
 	
 	fname = path.split('/')[-1]
 	fname = fname.replace('.html', '')				# .html bei ZDF-Links entfernen
@@ -2981,6 +2983,11 @@ def get_streamurl_ut(streamurl):
 def get_playlist_img(hrefsender):
 	PLog('get_playlist_img: ' + hrefsender); 
 	playlist_img=''; link=''; EPG_ID=''; img_streamlink=''
+	
+	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
+	ard_streamlinks = get_ARDstreamlinks(skip_log=True)
+	iptv_streamlinks = get_IPTVstreamlinks()	
+	
 	playlist = RLoad(PLAYLIST)		
 	playlist = blockextract('<item>', playlist)
 	for p in playlist:
@@ -2997,7 +3004,6 @@ def get_playlist_img(hrefsender):
 				link =  stringextract('link>', '</link', p)
 				
 				if "ZDFsource" in link:								# Anpassung für ZDF-Sender
-					zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
 					link=''	
 					# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
 					for line in zdf_streamlinks:
@@ -3012,7 +3018,6 @@ def get_playlist_img(hrefsender):
 						PLog('%s: ZDF-Streamlink fehlt' % title_sender)	
 						
 				if "ARDclassicSource" in link:						# Anpassung für ARD-Clasic-Sender
-					ard_streamlinks = get_ARDstreamlinks(skip_log=True)
 					link=''	
 					# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
 					for line in ard_streamlinks:
@@ -3026,7 +3031,6 @@ def get_playlist_img(hrefsender):
 						PLog('%s: ARD-Streamlink fehlt' % title_sender)	
 								
 				if "IPTVSource" in link:							# Anpassung für IPTV-Sender
-					iptv_streamlinks = get_IPTVstreamlinks()
 					link=''	
 					# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
 					for line in iptv_streamlinks:
@@ -4126,7 +4130,8 @@ def url_check(url, caller='', dialog=True):
 		msg1= '%s: Quelle nicht erreichbar - Url:' % caller
 		msg2 = url
 		msg3 = msg
-		PLog(msg3)
+		PLog("%s | %s | %s" % (msg1, msg2, msg3))
+		
 		if dialog:
 			MyDialog(msg1, msg2, msg3)		 			 	 
 		return False
