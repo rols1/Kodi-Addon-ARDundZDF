@@ -67,7 +67,7 @@ PLog('Script strm.py geladen')
 STRM_TYPES		= ["Film|movie", "TV-Show|tvshow", "Episode|episodedetails",  
 					"Musik-Video|musicvideo" 
 				] 
-NFO1 = '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>\n'		# nfo-Template, 
+NFO1 = '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>\n'		# nfo-Template, Doppel in util
 NFO2 = '<movie>\n<title>%s</title>\n<uniqueid type="tmdb" default="true"></uniqueid>\n'
 NFO3 = '<thumb spoof="" cache="" aspect="poster">%s</thumb>\n'
 NFO4 = '<plot>%s</plot>\n<weburl>%s</weburl>\n</movie>'					# Tag weburl (inoff.) für Abgleich

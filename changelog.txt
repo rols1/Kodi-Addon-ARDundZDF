@@ -10,14 +10,45 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+27.04.2025 	5.2.3
+			get_streamurl (Modul strm): Absicherung gegen veraltete HLS-/MP4-Listen
+			(Titel-Abggleich), FLAG_OnlyUrl zusätzlich vor RunScript eingefügt.
+			PlayVideo (Modul util): Abbruchbedingung FLAG_OnlyUrl_detect eingefügt für
+			Thread-Irrläufer aus strm-Modul.
+			ZDF-Kategorien: Verwendung von video["canonical"] statt "canonical" bei
+			Einzelbeiträgen (typ "MOVIE"). Das vorherige Löschen von "-movie-" in 
+			"canonical" führt bei ARD-Beiträgen zu ungültiger Url. Anpassungen in
+			ZDF_getKat_content und ZDF_KatSub. 
+			ZDF_KatSub: Anpassung für PY2 - py2_encode(img).
+			Video-Downloads: zusätzliche nfo- und jpeg-Datei im Downloadverzeichnis 
+			(Nutzung durch Kodi-Bibliothek) - neue Funktion MakeJpegNfo (util),
+			Anpassungen in DownloadsList (GetDetailText), thread_getfile (MakeJpegNfo),
+			settings.xml ("nfo- und jpeg-Datei .. erzeugen"), DownloadTools (für PY2
+			leeeres Setting('pref_VideoDest_path') mit userdata belegt + shares mit
+			"video" vorbelegt, DirectoryNavigator (Modul util, PLog shares).
+			ZDF_KatSub, ZDF_getKat_content: Abfangen von null in obj["video"] -> 
+			getKat_error -> continue.
+			AudioSearch_cluster: leere nodes überspringen (index-out-of-range-error).
+			Audiothek: Menü, Funktionen und Icon für podcast.de entfernt (Auswertung 
+			nach Umstellung der Webseite auf Java-Funktionen zu aufwändig).
+			get_summary_pre (util): False-Rückgabe durch url_check berücksichtigt (falls
+			die Web-Url für Inhaltstexte nicht existierte, startete das Video nicht).
+			get_playlist_img (util): get_{}streamlinks vor die Playlist-Schleife verlagert
+			(Performance).
+			TV-Livestreams Regional: Senderbez. in livesenderTV.xml angepasst (hr-fernsehen 
+			-> HR).			
+
 12.04.2025 	5.2.2
 			get_VideoAudio (TagesschauXL): Bildbeschreibung ergänzt, Video-/Audio-
-			Dauer nicht json-Daten enthalten.
+			Dauer nicht in json-Daten enthalten.
 			VideoTools: Plot für Aufruf PlayAudio ergänzt (tagline + summary kombiniert).
 			get_Source_Funcs_ID (Modul strm): Austausch ZDF_getVideoSources (obsolet)
 			gegen ZDF_getApiStreams.
 			ZDF-Kategorien: Umsetzung neues ZDF-Menü nach Relaunch - neue Funktionen
-			ZDF_Kat, ZDF_KatSub, ZDF_get_naviKat, ZDF_getKat_content.			
+			ZDF_Kat, ZDF_KatSub, ZDF_get_naviKat, ZDF_getKat_content.
+			thread_getfile: nfo-Datei für Video-Downloads ergänzt - neue Funktion
+			 MakeJpegNfo (util), Anpassung in thread_getfile, nfo-Template-Kopie aus
+			 strm-Modul.
 
 30.03.2025 	5.2.1
 			Main_ZDF: Menüpunkt und Funktionen ZDF_Bildgalerien, ZDF_BildgalerieSingle, 
