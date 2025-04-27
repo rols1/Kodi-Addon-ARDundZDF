@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>241</nr>										# Numerierung für Einzelupdate
+# 	<nr>242</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.3'
 VDATE = '27.04.2025'
 
@@ -1546,6 +1546,8 @@ def AudioStart(title):
 	fparams="&fparams={'org': '%s'}" %  title
 	addDir(li=li, label=title, action="dirList", dirID="AudioSenderPrograms", fanart=R(ICON_MAIN_AUDIO), 
 		thumb=R('funk.png'), tagline=tagline, fparams=fparams)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #----------------------------------------------------------------
 # 31.07.2021 Revision nach Renovierung der Audiothek durch die ARD
