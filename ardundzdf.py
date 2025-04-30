@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>242</nr>										# Numerierung für Einzelupdate
+# 	<nr>243</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.3'
-VDATE = '27.04.2025'
+VDATE = '30.04.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8318,16 +8318,16 @@ def ZDF_Kat(title):
 	img_base = "https://www.zdf.de/assets/"
 	rubrik_list = ["A - Z", "Barrierefreie Inhalte",		# Umleitung
 				"Sport", "Nachrichten"]
+	
 	for i, item in enumerate(kats):
 		title = stringextract("<h2", "</h2", item)			# t1mx31h9">Wirtschaft
 		title = title.split(">")[-1]
-		#if "Reportagen" in title:	# Debug
+		#if "Nachrichten" in title:	# Debug
 		#	PLog(item)
 		imgs = blockextract("https://", item, "w,")			# Bilder
 		PLog("imgs: %d" % len(imgs))
-		if len(imgs) < 10:
-			if "Nachrichten" not in title:
-				continue
+		if len(imgs) < 10:									# keine Kategorie
+			continue
 		for img in imgs:
 			# PLog(img)		# Debug
 			if "1280w" in img:
@@ -8335,42 +8335,76 @@ def ZDF_Kat(title):
 				break
 		katid = stringextract('href="', '">', item)			# ID der Kategorie
 		kat_url = "https://www.zdf.de" + katid
-				
 		PLog('Satz11_1:');
 		PLog("%2d. %s" % (i,title)); PLog(kat_url)
 		kat_url=py2_encode(kat_url); title=py2_encode(title);
 		
 		if title in rubrik_list:							# Seiten ohne Genre-Id, Graphql-Call
 			if 'A - Z' in title:							#	nicht möglich
-				items = ["%s|sendungen-100|%s" % (title, img)]
+				item = "%s|sendungen-100|%s" % (title, img)
 			if 'Barrierefreie' in title:
-				items = ["%s|barrierefrei-im-zdf-100|%s" % (title, img)]
+				item = "%s|barrierefrei-im-zdf-100|%s" % (title, img)
 			if 'Sport' in title:
-				items = ["%s|sport-106|%s" % (title, img)]
+				item = "%s|sport-106|%s" % (title, img)
 			if 'Nachrichten' in title:						# Nachrichtenformate
-				items = ["[B]heute[/B] JOURNAL|heute-journal-104|zdfheute-keyvisual-100-original-102~1280x720?cb=1700556129765",
-					"[B]heute[/B] 19 Uhr|heute-19-uhr-102|sendungsteaser-heute-ol-100~1280x720?cb=1694936967005",
-					"[B]heute[/B] live|zdfheute-live-102|https://www.zdf.de/assets/zdfheute-live-104~1280x720?cb=1741955542733",
-					"[B]heute[/B] JOURNAL UP:DATE|heute-journal-update-104|sendungsteaser-heute-journal-update-ol-100~1280x720?cb=1741949399509",
-					"[B]heute[/B] in DEUTSCHLAND|heute-in-deutschland-1-100|sendungsteaser-heute-in-deutschland-ml-102~1280x720?cb=1741862640964",
-					"[B]heute[/B] in EUROPA|heute-in-europa-1-100|sendungsteaser-heute-in-europa-ol-100~1280x720?cb=1741865150474"
-					]
+				item = "%s|ZDF_KatNachrichten|%s" % (title, img)
 
-			for item in items:
-				label, rubrik_url, img = item.split("|")
-				rubrik_url = rubrik_base + rubrik_url
-				if img.startswith("http") == False:			# Nachrichtenformate
-					img = img_base + img
-				fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" %\
-					(quote(rubrik_url), label, homeID)
-				addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
-					thumb=img, fparams=fparams)
+			label, rubrik_url, img = item.split("|")
+			rubrik_url = rubrik_base + rubrik_url
+			if img.startswith("http") == False:			# Nachrichtenformate
+				img = img_base + img
+
+			func="ZDF_RubrikSingle"		
+			if "ZDF_KatNachrichten" in rubrik_url:
+				func="ZDF_KatNachrichten"
+			fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" %\
+				(quote(rubrik_url), label, homeID)
+			addDir(li=li, label=label, action="dirList", dirID=func, fanart=img, 
+				thumb=img, fparams=fparams)
 		else:
 			fparams="&fparams={'title': '%s', 'path': '%s'}" %\
 				(title, quote(kat_url))
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
 				thumb=img, fparams=fparams)
 			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#-----------------------------------------------
+# Aufruf ZDF_Kat, eigene Buttons für Nachrichtenformate
+#	(wegen der Menge aus ZDF_Kat verlagert). Params=dummies
+def ZDF_KatNachrichten(url, title, homeID):								
+	PLog('ZDF_KatNachrichten:')
+
+	homeID="ZDF"
+	li = xbmcgui.ListItem()
+	li = home(li, homeID)									# Home-Button
+
+	rubrik_base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
+	img_base = "https://www.zdf.de/assets/"
+	
+	items = ["[B]heute[/B] JOURNAL|heute-journal-104|zdfheute-keyvisual-100-original-102~1280x720?cb=1700556129765",
+		"[B]heute[/B] 19 Uhr|heute-19-uhr-102|sendungsteaser-heute-ol-100~1280x720?cb=1694936967005",
+		"[B]heute[/B] live|zdfheute-live-102|zdfheute-live-104~1280x720?cb=1741955542733",
+		"[B]heute[/B] JOURNAL UP:DATE|heute-journal-update-104|sendungsteaser-heute-journal-update-ol-100~1280x720?cb=1741949399509",
+		"[B]heute[/B] in DEUTSCHLAND|heute-in-deutschland-1-100|sendungsteaser-heute-in-deutschland-ml-102~1280x720?cb=1741862640964",
+		"[B]heute[/B] in EUROPA|heute-in-europa-1-100|sendungsteaser-heute-in-europa-ol-100~1280x720?cb=1741865150474",
+		"[B]moma[/B] morgenmagazin|zdf-morgenmagazin-104|zdf-morgenmagazin-sb-buehnem-100~1280x720?cb=1742288650050",
+		"[B]mima[/B] mittagsmagazin|zdf-mittagsmagazin-104|sb-header-mima-100~1280x720?cb=1741867231369",
+		"[B]phoenix der tag[/B]|phoenix-collection-phoenix-149-456|landscape-phoenix-phoenix-der-tag-100~1280x720?cb=1740644861039",
+		"[B]länderspiegel[/B]|laenderspiegel-104|laenderspiegel-buehnem-100~1280x720?cb=1741264651126",
+		"[B]hallo deutschland[/B]|hallo-deutschland-104|hallo-deutschland-buehnem-100~1280x720?cb=1741168104870",
+		]
+	
+	for item in items:
+		label, rubrik_url, img = item.split("|")
+		rubrik_url = rubrik_base + rubrik_url
+		img = img_base + img
+
+		fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" %\
+			(quote(rubrik_url), label, homeID)
+		addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+			thumb=img, fparams=fparams)
+	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------

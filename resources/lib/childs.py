@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>33</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.03.2025
+# 	<nr>34</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.04.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1698,9 +1698,17 @@ def KikaninchenFilme():
 
 		
 		href = special["avCustomUrl"]
-		dur = special["duration"]
+		duration = special["duration"]							# 79:48
+		try:
+			m,s = duration.split(":")
+			sec = (int(m)*60) + int(s)
+			dur = seconds_translate(sec)						# 1:19:48
+		except Exception as exception:
+			PLog("dur_error: " + str(exception))
+			dur = duration										# ohne Wandlung
+
 		
-		dauer = "Dauer: " + dur
+		dauer = "Dauer: %s Std." % dur
 		tag = "%s\n%s" % (dauer, bild)
 		summ = "[B]%s[/B]\n%s" % (tline, descr)
 		summ = unescape(summ)
