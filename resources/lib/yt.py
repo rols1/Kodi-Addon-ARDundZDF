@@ -22,8 +22,8 @@
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-# 	<nr>4</nr>								# Numerierung für Einzelupdate
-#	Stand: 17.05.2024
+# 	<nr>5</nr>								# Numerierung für Einzelupdate
+#	Stand: 05.05.2025
 #
 
 from __future__ import absolute_import
@@ -402,7 +402,7 @@ def MVWSingleVideo(title,Plot,home_id,url_sub='',url_low='',url_med='',url_hd=''
 	if url_hd:
 		title_url = u"%s#%s" % (title, url_hd)
 		item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
-			(track_add, "HD", "1920x1080", title_url)
+			(track_add, "HD", "1280x720", title_url)
 		MP4_List.append(item)
 		PLog("item: " + item)
 	
