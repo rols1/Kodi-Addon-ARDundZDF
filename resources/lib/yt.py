@@ -22,8 +22,8 @@
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-# 	<nr>5</nr>								# Numerierung für Einzelupdate
-#	Stand: 05.05.2025
+# 	<nr>6</nr>								# Numerierung für Einzelupdate
+#	Stand: 08.05.2025
 #
 
 from __future__ import absolute_import
@@ -271,7 +271,7 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 	
 	page = page.replace('\\"', '"')			# dumps-doublequotes
 	page = page.replace('\\"', '*')			# doublequotes			
-	#RSave('/tmp/x.json', py2_encode(page)) # Debug
+	#RSave('/tmp2/x_MVW.json', py2_encode(page)) # Debug
 	
 	items = blockextract('"channel"', page)
 	queryInfo = stringextract('"queryInfo"', '"err"', page)	
@@ -381,28 +381,36 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 # Aufruf: MVWSearch
 # Fertigung der Videolisten - bisher nur MP4-Formate gefunden
 # 	-> build_Streamlists_buttons (mit opt. Sofortstart)
+# url_med: Stammhalter für url_video in den Quellen (alle Werte)
+# einz. url-keys können leer sein
 def MVWSingleVideo(title,Plot,home_id,url_sub='',url_low='',url_med='',url_hd=''):
 	PLog('MVWSingleVideo:')
 	PLog(url_sub) 
-	
+
 	HLS_List=[]; MP4_List=[]; HBBTV_List=[];
 	track_add = "MediathekView"
 	if url_low:
-		title_url = u"%s#%s" % (title, url_low)
+		title_url = u"%s#%s" % (title, url_low)			# low ohne Detailprüfung
 		item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
 			(track_add, "LOW", "480x270", title_url)
 		MP4_List.append(item)
 		PLog("item: " + item)
-	if url_med:
+	if url_med:											# key url_video, alle Werte möglich
+		res, mark = mvw_get_res(url_med)
+		if res == "":									# Fallback SD
+			res="720x406"; mark="SD"
 		title_url = u"%s#%s" % (title, url_med)
 		item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
-			(track_add, "MED", "640x360", title_url)
+			(track_add, mark, res, title_url)
 		MP4_List.append(item)
 		PLog("item: " + item)
 	if url_hd:
+		res, mark = mvw_get_res(url_hd)
+		if res == "":									# Fallback HD
+			res="1280x720"; mark="HD"
 		title_url = u"%s#%s" % (title, url_hd)
 		item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
-			(track_add, "HD", "1280x720", title_url)
+			(track_add, mark, res, title_url)
 		MP4_List.append(item)
 		PLog("item: " + item)
 	
@@ -410,7 +418,7 @@ def MVWSingleVideo(title,Plot,home_id,url_sub='',url_low='',url_med='',url_hd=''
 	PLog("MP4_List: " + str(len(MP4_List)))
 	Dict("store", '%s_HLS_List' % ID, HLS_List) 
 	Dict("store", '%s_MP4_List' % ID, MP4_List) 
-	Dict("store", '%s_HLS_List' % ID, HLS_List) 
+	Dict("store", '%s_HBBTV_List' % ID, HBBTV_List) 
 	
 	li = xbmcgui.ListItem(); thumb = R("suche_mv.png")
 	geoblock=''; sub_path=url_sub; HOME_ID=home_id
@@ -418,6 +426,63 @@ def MVWSingleVideo(title,Plot,home_id,url_sub='',url_low='',url_med='',url_hd=''
 		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+# ----------------------------------------------------------------------
+# Aufruf MVWSingleVideo mit url_med.
+# Auflösung aus den Url-Markierungen ermitteln. MVW-api ohne width*height.
+#	Unterschiedliche Markierungen bei den Sendern. json-keys in MVW-
+#	Quellen (url_video, url_video_low, url_video_hd) nicht immer aufsteigend.
+# Werte empirisch (ffprobe, int.Doku: H264+Bitrate_Tabelle, Basis 25 fps)
+#	
+def mvw_get_res(url):
+	PLog('mvw_get_res: ' + url) 
+	br=0
+
+	if ".l." in url or ".ml." in url	or "xx.l." in url:	# ard Folge: .l. .ml. .xxl.
+		marks=[".l.|960x540|SD", ".ml.|640x360|SD", ".xxl.|1920x1080|HD"]
+		for item in marks:
+			urlmark, res, videomark	= item.split("|")
+			if urlmark in url:
+				return res, videomark
+
+	if "_MP4-" in url:
+		try:												# 1. Bitrate aus arte-Url				
+			br = re.search(r'_MP4-(\d+)_', url).group(1)	#  ..08943449_MP4-2200_AMM..
+			br = int(br); PLog("br: %d" % br)
+		except Exception as exception:					
+			PLog("br_error_arte:  " + str(exception))
+			br=0			
+	
+	if "0k_p" in url:										# zdf ..trag_log_3360k_p36v17.mp4
+		try:												# 1. Bitrate aus arte-Url				
+			br = re.search(r'_(\d+)k_p', url).group(1)
+			br = int(br); PLog("br: %d" % br)
+		except Exception as exception:					
+			PLog("br_error_zdf:  " + str(exception))
+			br=0
+				
+	if url.endswith("kbit.mp4"):							# DasErste ..-50p-3200kbit.mp4
+		try:												# 1. Bitrate aus arte-Url				
+			br = re.search(r'-(\d+)kbit', url).group(1)
+			br = int(br); PLog("br: %d" % br)
+		except Exception as exception:					
+			PLog("br_error_DasErste:  " + str(exception))
+			br=0	
+			
+	#---------------------------------------------------	# Zuordnung br -> res
+	res=""; videomark=""									# Fallback-Marke Aufrufer
+	br_res_tab = ["800|640x480|SD", "1500|720x406|SD", 		# Zuordnung Bitrate | Auflösung | Videomarke
+					"3400|1280x720|HD", "6700|1920x1080|Full HD"]
+	if br > 0:
+		PLog("check_tab_for: %d" % br)
+		for item in br_res_tab:
+			tab_br, res, mark = item.split("|")
+			if br < int(tab_br):
+				PLog("found: br %d | %s" % (br, item))
+				return res, mark
+	else:
+		PLog("get_res_failed")
+		return res, videomark
 
 # ----------------------------------------------------------------------
 # get_page in util wegen Post-Daten nicht geeignet
