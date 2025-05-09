@@ -22,8 +22,8 @@
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-# 	<nr>6</nr>								# Numerierung für Einzelupdate
-#	Stand: 08.05.2025
+# 	<nr>7</nr>								# Numerierung für Einzelupdate
+#	Stand: 09.05.2025
 #
 
 from __future__ import absolute_import
@@ -221,7 +221,7 @@ def get_duration(page):
 	
 ##################### MediathekViewWeb-Funktionen ######################
 # Aufruf aus den div. Hauptmenüs (Setting pref_use_mvw)
-# 	
+# Web: mediathekviewweb.de
 # func-Bsp. (Fallback bei Absturz nach Sofortstart-Abbruch): 
 #	resources.lib.ARDnew.Main_NEW
 #
@@ -438,6 +438,7 @@ def mvw_get_res(url):
 	PLog('mvw_get_res: ' + url) 
 	br=0
 
+	# weitere ARD-Folgen: _C _E _X, _L _N _P (nicht berücksichtigt)
 	if ".l." in url or ".ml." in url	or "xx.l." in url:	# ard Folge: .l. .ml. .xxl.
 		marks=[".l.|960x540|SD", ".ml.|640x360|SD", ".xxl.|1920x1080|HD"]
 		for item in marks:
@@ -471,7 +472,7 @@ def mvw_get_res(url):
 			
 	#---------------------------------------------------	# Zuordnung br -> res
 	res=""; videomark=""									# Fallback-Marke Aufrufer
-	br_res_tab = ["800|640x480|SD", "1500|720x406|SD", 		# Zuordnung Bitrate | Auflösung | Videomarke
+	br_res_tab = ["800|640x480|SD", "1600|720x406|SD", 		# Zuordnung Bitrate | Auflösung | Videomarke
 					"3400|1280x720|HD", "6700|1920x1080|Full HD"]
 	if br > 0:
 		PLog("check_tab_for: %d" % br)
