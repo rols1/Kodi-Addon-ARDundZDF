@@ -10,6 +10,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+14.05.2025 	5.2.4
+			AudioStart: versehentlich gelöschtes xbmcplugin.endOfDirectory wieder
+			hergestellt.
+			KikaninchenFilme (childs): bessere Form für Videodauer (79:48 -> 1:19:48).
+			ZDF-Kategorien: Ersetzung Nachrichtenbuttons mit 1 Folgeseiten-Button,
+			zusätzl. Funktion ZDF_KatNachrichten für die Folgeseiten mit zusätzl.
+			Nachrichtenformaten (moma, mima, länderspiegel, ..)
+			MVWSingleVideo (yt, MediathekViewWeb-Suche): Auswertung der Auflösungen
+			für unterschiedliche Url-Markierungen erweitert (Näherungswerte).
+			ZDF_getApiStreams: path-Prüfung auf "ngplayer" (obsolet) ersetzt durch 
+			"api.zdf.de".
+			ZDFSourcesHBBTV: fehlenden json-key "streams" abgefangen (für Nutzung
+			durch ZDF_Graphql_get_json bei Mehrfach-Beiträgen erforderlich).
+			
+			
+
 27.04.2025 	5.2.3
 			get_streamurl (Modul strm): Absicherung gegen veraltete HLS-/MP4-Listen
 			(Titel-Abggleich), FLAG_OnlyUrl zusätzlich vor RunScript eingefügt.

@@ -2591,7 +2591,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		summ = summ.replace('"])</script><script>self.__next_f.push([1,"', " ")	# java-Verkettung innerhalb Text
 		summ = summ.replace('"])</script><script>self.__', " ")			# Textende s.o.: ..self.__next_f.push([1,"9
 		summ = summ.replace('/button>',"")
-		summ = unescape(summ)
+		summ = unescape(summ); summ = summ.replace('"', '')
 		
 		s = stringextract('<h2 class="', '"', summ)
 		s = '<h2 class="%s"' % s

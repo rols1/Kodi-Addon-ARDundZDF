@@ -150,6 +150,8 @@ def Main_NEW(name=''):
 		title = 'Suche auf MediathekViewWeb.de'
 		tag = "Extrem schnelle Suche im Datenbestand von MediathekView."
 		summ = 'Sender: [B]alle Sender des ARD[/B]' 
+		summ = "%s\n\nBilder sind in den Ergebnislisten nicht enthalten." % summ
+		summ = u"%s Auflösungen sind Näherungswerte." % summ
 		title=py2_encode(title); sender="ARD"
 		func = "resources.lib.ARDnew.Main_NEW"
 		fparams="&fparams={'title': '%s','sender': '%s' ,'myfunc': '%s'}" % \
