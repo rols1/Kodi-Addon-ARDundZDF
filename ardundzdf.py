@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>243</nr>										# Numerierung für Einzelupdate
+# 	<nr>244</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.4'
-VDATE = '14.05.2025'
+VDATE = '16.05.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8418,57 +8418,70 @@ def ZDF_KatNachrichten(url, title, homeID):
 #	ZDF-Sportstudio (Datenformat zu sehr abweichend)
 # Zielfunktion ZDF_RubrikSingle via futura-Url
 #
-def ZDF_KatSub(title, path, tabid=""):								
+def ZDF_KatSub(title, path, tabid="", Graphql=""):								
 	PLog('ZDF_KatSub: %s, %s, %s' % (title, path, tabid))
-	
-	page, msg = get_page(path)
-	
-	try:														# Parameter für Graphql-Call
-		collection = stringextract("MetaCollectionTwitterImage", "persistFilters", page)
-		PLog("collection: " + collection)
-		collection = collection.replace('\\', '')				# metaCollectionId = genre_id
-		genre_id = stringextract('metaCollectionId":"', '"', collection)	# metaCollectionId\":\"genre-10296
-		token = stringextract("apiToken", "fetchOptions", page)	# apitoken, appId
-		token = token.replace('\\', '')
-		PLog(token)	
-		apitoken = stringextract('apiToken":"', '"', token)		# apiToken\":\"ahBaeMee..
-		appId = stringextract('appId":"', '"', token)			# appId\":\"ffw-mt-web-b1cc..
 		
-		
-	except Exception as exception:
-		genre_id=""
-		PLog("genre_error: " + str(exception))
-	PLog("genre_id: %s, apitoken: %s, appId: %s" % (str(genre_id), apitoken, appId))
-
+	PLog(unquote(Graphql))
 	icon = R(ICON_DIR_FOLDER)
-	if not genre_id:
-		msg1 = u'%s:' % title
-		msg2 = "Genre-ID nicht gefunden"
-		PLog("%s %s" % (msg1, msg2))
-		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
-		return
-		
-	# Graphql-Call, zdf-app-id bei Bedarf aus Web ermitteln,
-	#	Pagination auf 48 gesetzt (statt 24)
-	header = "{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/',\
-		'zdf-app-id': 'ffw-mt-web-1305801c'}" % apitoken
-	href='https://api.zdf.de/graphql?operationName=getMetaCollectionContent&variables=%7B%22collectionId%22%3A%22****%22%2C%22input%22%3A%7B%22appId%22%3A%22ffw-mt-web-1305801c%22%2C%22filters%22%3A%7B%22contentOwner%22%3A%5B%5D%2C%22fsk%22%3A%5B%5D%2C%22language%22%3A%5B%5D%7D%2C%22pagination%22%3A%7B%22first%22%3A48%2C%22after%22%3Anull%7D%2C%22user%22%3A%7B%22abGroup%22%3A%22gruppe-b%22%2C%22userSegment%22%3A%22segment_0%22%7D%2C%22tabId%22%3A####%7D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22c85ca9c636258a65961a81124abd0dbef06ab97eaca9345cbdfde23b54117242%22%7D%7D'
+	path_navi=tabid
+	
+	if not Graphql:													# erst Webseite laden
+		Dict("store", "ZDF_KatSubPath", path)						# store Webadresse für Graphql-Calls
+		page, msg = get_page(path)
+		try:														# Params für ersten Graphql-Call suchen
+			collection = stringextract("MetaCollectionTwitterImage", "persistFilters", page)
+			PLog("collection: " + collection)
+			collection = collection.replace('\\', '')				# metaCollectionId = genre_id
+			genre_id = stringextract('metaCollectionId":"', '"', collection)	# metaCollectionId\":\"genre-10296
+			token = stringextract("apiToken", "fetchOptions", page)	# apitoken, appId
+			token = token.replace('\\', '')
+			PLog(token)	
+			apitoken = stringextract('apiToken":"', '"', token)		# apiToken\":\"ahBaeMee..
+			appId = stringextract('appId":"', '"', token)			# appId\":\"ffw-mt-web-b1cc..			
+		except Exception as exception:
+			genre_id=""
+			PLog("genre_error: " + str(exception))
+		PLog("genre_id: %s, apitoken: %s, appId: %s" % (str(genre_id), apitoken, appId))
 
-	href = href.replace("****", "%s" % genre_id)				# Parameter ersetzen
-	href = href.replace("ffw-mt-web-1305801c", "%s" % appId)
-	if not tabid:
-		href = href.replace("####", 'null')
-	else:
-		href = href.replace("####", '"%s"' % tabid)
-	page, msg = get_page(path=href,  header=header, do_safe=False) 	# Graphql-Call
+		icon = R(ICON_DIR_FOLDER)
+		if not genre_id:
+			msg1 = u'%s:' % title
+			msg2 = "Genre-ID nicht gefunden"
+			PLog("%s %s" % (msg1, msg2))
+			xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
+			return
+			
+		# Graphql-Call, zdf-app-id bei Bedarf aus Web ermitteln,
+		#	Pagination auf 48 gesetzt (statt 24)  - 15.05.2025 wieder zurück auf 24
+		header = "{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/',\
+			'zdf-app-id': 'ffw-mt-web-1305801c'}" % apitoken
+		Dict("store", "GraphqlHeader", header)
+		href='https://api.zdf.de/graphql?operationName=getMetaCollectionContent&variables=%7B%22collectionId%22%3A%22****%22%2C%22input%22%3A%7B%22appId%22%3A%22ffw-mt-web-1305801c%22%2C%22filters%22%3A%7B%22contentOwner%22%3A%5B%5D%2C%22fsk%22%3A%5B%5D%2C%22language%22%3A%5B%5D%7D%2C%22pagination%22%3A%7B%22first%22%3A24%2C%22after%22%3Anull%7D%2C%22user%22%3A%7B%22abGroup%22%3A%22gruppe-b%22%2C%22userSegment%22%3A%22segment_0%22%7D%2C%22tabId%22%3A####%7D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22c85ca9c636258a65961a81124abd0dbef06ab97eaca9345cbdfde23b54117242%22%7D%7D'
 
-	try:
+		href = href.replace("****", "%s" % genre_id)				# Parameter ersetzen
+		href = href.replace("ffw-mt-web-1305801c", "%s" % appId)
+		if not tabid:
+			href = href.replace("####", 'null')
+		else:
+			href = href.replace("####", '"%s"' % tabid)
+		PLog(unquote(href))
+		page, msg = get_page(path=href,  header=header, do_safe=False) 	# erster Graphql-Call
+
+	#--------------------------------------------------------------
+	else:															# Folge-Graphql-Calls: Mehr Inhalte laden
+		if Graphql:
+			path = Dict("load", "ZDF_KatSubPath")					# restore Webadresse
+			href=Graphql
+			header = Dict("load", "GraphqlHeader")
+			page, msg = get_page(path=href,  header=header, do_safe=False) 	
+
+	try:															# json-Daten Graphql-Call
 		jsonObject = json.loads(page)
 		PLog(str(jsonObject)[:80])
 		pageInfo = 	jsonObject["data"]["metaCollectionContent"]["pageInfo"]
-		hasNextPage = pageInfo["hasNextPage"]
-		endCursor = pageInfo["endCursor"]
-		
+		hasNextPage = pageInfo["hasNextPage"]			# true, false
+		endCursor = pageInfo["endCursor"]				# <- id letzter Satz base64, Bsp. ZnVuay1j .. MTIyMDEt
+														#	für funk-collection_funk_12201-
 		objs = jsonObject["data"]["metaCollectionContent"]["smartCollections"]
 		navi_obj = jsonObject["data"]["metaCollectionContent"]["tabs"]
 	except Exception as exception:
@@ -8480,33 +8493,66 @@ def ZDF_KatSub(title, path, tabid=""):
 	
 	li = xbmcgui.ListItem()
 	li2 = xbmcgui.ListItem()							# Video-Listitems
-	li = home(li, ID='ZDF')								# Home-Button
-
-	mediatype=''										# Kennz. Videos im Listing
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
-	PLog('mediatype: ' + mediatype); 
-	
+	li = home(li, ID='ZDF')								# Home-Button	
 	
 	PLog("add_navi_menu_Kat:")							# Subnavigation 
 	PLog(str(navi_obj)[:80])
 	DictID = "ZDF_naviKat"
 	Dict("store", DictID, navi_obj)
+	this_navi="Alle Inhalte"; tag=""					# path_navi/tabid leer für  "Alle Inhalte"
+	if path_navi:										# tabid <- Navigation
+		PLog("search_navi_obj:")
+		for item in navi_obj:
+			PLog("%s | %s" % (path_navi, item["id"]) )
+			if path_navi in item["id"]:					# "id": "pub-form-10003"
+				this_navi = item["label"]				# "label": "Dokus"
+				break
+
+	tag = u"Navigations-Menü, aktuell: [B]%s[/B]" %	this_navi
 	label = "Subnavigation %s" % title
-	fparams="&fparams={'path': '%s', 'DictID': '%s', 'title': '%s', 'homeID': '%s'}" %\
-		(quote(path), DictID, title, "")	# homeID nicht genutzt
+	fparams="&fparams={'path': '%s', 'DictID': '%s', 'title': '%s', 'homeID': '%s', 'this_navi': '%s'}" %\
+		(quote(path), DictID, title, "", this_navi)		# homeID nicht genutzt
 	addDir(li=li, label=label, action="dirList", dirID="ZDF_get_naviKat", fanart=icon, 
-		thumb=icon, fparams=fparams, tagline=u"Navigations-Menü")
+		thumb=icon, fparams=fparams, tagline=tag)
 
-	ZDF_Graphql_get_json(objs)							# wie ZDF_Graphql (ZDF_WebMoreSingle)
+	ZDF_Graphql_get_json(objs)							# Liste Beiträge,  wie ZDF_Graphql (ZDF_WebMoreSingle)
+	
+	if hasNextPage:
+		base = "https://api.zdf.de/graphql?operationName=getMetaCollectionContent&variables="
+		qvars = href.split(base)[-1]					# Variablen Graphql-Call
+		obj = unquote(qvars)
 
+		after = stringextract('after":', '}', obj)		# null (1. Call) oder "NjdhOTgyN .. Q0MDU0"
+		PLog("obj: %s | after: %s" % (obj, after))
+		obj = obj.replace(after, '"%s"' % endCursor, 1)
+
+		if tabid:										# Wechsel Navigations-Menü" -> Wechsel tabid
+			tabid_old = stringextract('tabId":', '}', obj)
+			PLog("tabid_old: %s | tabid: %s" % (tabid_old, tabid))	
+			obj = obj.replace(tabid_old, tabid)
+		
+		PLog("obj_new: " + obj)
+		Graphql = base + quote(obj)
+		Graphql = Graphql.replace('%26extensions%3D', '&extensions=')  # Fix quote-Problem
+		PLog("Graphql: " + Graphql)
+	
+		label = "[B]Mehr Inhalte laden[/B]"
+		tag = u"Mehr Inhalte zu [B]%s[/B]" % title
+		img=R(ICON_MEHR)
+		Graphql=py2_encode(Graphql); title=py2_encode(title); 	# -> 2. Aufruf 
+		fparams="&fparams={'title': '%s','path': '', 'tabid': '%s', 'Graphql': '%s'}" % (quote(title), 
+			quote(tabid), quote(Graphql))
+		addDir(li=li, label=label, action="dirList", dirID="ZDF_KatSub", \
+			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
+				
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 #-----------------------------------------------
 # Navigations-Menü für ZDF_KatSub (abweichend zu ZDF_get_navi)
 # 
-def ZDF_get_naviKat(path, DictID, title, homeID=""):
+def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 	PLog('ZDF_get_naviKat: %s | %s | %s' % (path, DictID, title))
+	path_org=path
 	if "#" in path:							
 		path = path.split("#")[0]				# tabid im Pfad entfernen
 	
@@ -8519,11 +8565,17 @@ def ZDF_get_naviKat(path, DictID, title, homeID=""):
 	objs = Dict("load", DictID)
 	PLog(len(objs))
 	PLog(str(objs)[:80])
+	
 		
 	# Zusatz "#t=all" für Alle Inhalte entbehrlich:
-	url = path; name = "Alle Inhalte"			# Button "Alle Inhalte" (fehlt in json-Daten)
+	url = "%s#t=all" % path_org					# Button "Alle Inhalte" (fehlt in json-Daten)
+	name = "Alle Inhalte"	
+	if not this_navi:							# 1. Aufruf
+		this_navi=name
+	title=py2_encode(title); url=py2_encode(url) 
+	
 	label = "%s | [B]%s[/B]" % (title, name)
-	tag = "%s in %s anzeigen" % (name, title)			
+	tag = "%s in %s anzeigen\naktuell: [B]%s[/B]" % (name, title, this_navi)			
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(url), quote(title))
 	addDir(li=li, label=label, action="dirList", dirID="ZDF_KatSub", fanart=R(ICON_DIR_FOLDER), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)
@@ -8531,9 +8583,9 @@ def ZDF_get_naviKat(path, DictID, title, homeID=""):
 	for obj in objs:
 		tabid = obj["id"]
 		name = obj["label"]
-		url = "%s#t=%s" % (path, tabid)
+		url = "%s#t=%s" % (path_org, tabid)
 		label = "%s | [B]%s[/B]" % (title, name)
-		tag = "%s in %s anzeigen" % (name, title)			
+		tag = "%s in %s anzeigen\naktuell: [B]%s[/B]" % (name, title, this_navi)			
 		
 		PLog('Satz11_navi:');
 		PLog(title); PLog(tabid); PLog(url)
@@ -9171,6 +9223,7 @@ def ZDF_Graphql(title, page, path):
 
 	href = href.replace("ffw-mt-web-ba73351f", "%s" % appId)	# Parameter ersetzen
 	href = href.replace("tivi_vcms_video_1556290-movie", "%s" % collId)
+	PLog(unquote(href))
 	page, msg = get_page(path=href,  header=header, do_safe=False) 	# Graphql-Call
 
 	try:
@@ -10275,9 +10328,11 @@ def ZDF_AZList(title, element, ID=""):					# ZDF-Sendereihen zum gewählten Buch
 # MEHR_Suche ZDF nach query (title)
 # Aufrufer: ZDF_RubrikSingle
 def ZDF_search_button(li, query):
-	PLog('ZDF_search_button:')
+	PLog('ZDF_search_button: ' + query)
 
-	query = (query.replace('|', '').replace('>', '')) # Trenner + Staffelkennz. entfernen
+	query = (query.replace('|', '').replace('>', '')) 	# Trenner + Staffelkennz. entfernen
+	query = query.replace("[B]Mehr[/B]: ", "")			# Titelvorspann zu Empfehl. entfernen
+	query = query.replace("*", "")						# Ersetzung entfernen
 	query_org = query
 
 	query = query.replace(u"Das ZDF ist für den verlinkten Inhalt nicht verantwortlich!", '')
