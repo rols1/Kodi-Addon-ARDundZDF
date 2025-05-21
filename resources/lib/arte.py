@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>63</nr>								# Numerierung für Einzelupdate
-#	Stand: 28.03.2025
+# 	<nr>64</nr>								# Numerierung für Einzelupdate
+#	Stand: 21.05.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1062,6 +1062,7 @@ def get_streams_api_v2(page, title, summ):
 		PLog(len(ext_list))
 		uhd=""
 		for item in ext_list:
+			uhd=""
 			res = stringextract('RESOLUTION=',  ',', item)
 			PLog(res)
 			if "3840x" in item:
@@ -1075,7 +1076,10 @@ def get_streams_api_v2(page, title, summ):
 				# s = uhd_m3u8.split("/")[:-2]						# Basis: Url
 				base = uhd_m3u8.split("/")[:-1]
 				base = "/".join(base)
-				uhd_stream = "%s/%s" % (base, uhd)					# plus uhd-Anhängsel
+				if uhd.startswith("http"):							# kompl. Url in RESOLUTION?
+					uhd_stream = uhd
+				else:
+					uhd_stream = "%s/%s" % (base, uhd)				# plus uhd-Anhängsel
 			except Exception as exception:
 				PLog(str(exception))
 				uhd_stream=""				
