@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>244</nr>										# Numerierung für Einzelupdate
+# 	<nr>245</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.4'
-VDATE = '16.05.2025'
+VDATE = '21.05.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -4636,13 +4636,15 @@ def ARDSportMedia(li, title, page, path=""):
 			continue
 		url_list.append(stream)
 				
+		Plot = summ.replace("\n", "||")
+		PLog("Satz6:")		
 		title=py2_encode(title); stream=py2_encode(stream); 
-		summ=py2_encode(summ); img=py2_encode(img); 
+		Plot=py2_encode(Plot); img=py2_encode(img); 
 			
 		if typ == "audio":											# Audio
 			ID='ARD'
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" %\
-				(quote(stream), quote(title), quote(img), quote_plus(summ), ID)
+				(quote(stream), quote(title), quote(img), quote_plus(Plot), ID)
 			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 		
@@ -4651,7 +4653,7 @@ def ARDSportMedia(li, title, page, path=""):
 			live="true"		
 		if typ == "video":											# Video	
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': '%s'}" %\
-				(quote(stream), quote(title), quote(img), quote_plus(summ), live)
+				(quote(stream), quote(title), quote(img), quote_plus(Plot), live)
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)			
 		cnt = cnt + 1
@@ -9051,7 +9053,8 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 			title = stringextract('<h3', '</h3', item)			# <h3 class= .. class= .. >Papst Leo .. </div></h3>
 			title = cleanhtml(title)
 			title = title.split('">')[-1]						# ..t1mx31h9">Papst Leo 
-			title=unescape(title); title=title.replace('"', '*')				
+			title=unescape(title); title=title.replace('"', '*')
+			title=title.replace("'", '')			
 			if title in skip_list:								# z.B. zdf.de/kinder (eigenes Menü)
 				continue
 		
@@ -9081,11 +9084,14 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 				
 #-----------------------------------------------------------------------
-# Aufruf: ZDF_WebMore - einzelne Sendung via Web, dahinter empf. Beiträge
-#	via ZDF_Graphql listen - ähnlich ZDF_KatSub (ohne ZDF_get_naviKat, 
-#	Params für Graphql-Call hier abweichend).
-# Für ein ev. enthaltenes Video werden Buttons in ZDF_WebMoreVideo
-#	 mit Berücksichtigung Sofortstart EIN/AUS erstellt.
+# Aufruf: ZDF_WebMore - einzelne Sendung via Web, Zielalternativen:
+#	1. Stream-Quellen zu Video plus Empfehlungen (Mehr:.., Graphql-Call 
+#		abweichend zu ZDF_KatSub)
+#	2. ohne Stream-Quellen: futura-Api -> ZDF_WebMoreSingle (Serien)
+#	3. ohne ptmdTemplate-Marke: -> ZDF_KatSub (Kategorie, Subkategorie)
+#
+# Zu 1: ZDF_WebMoreVideo erstellt Buttons/Streamlisten mit Berücksichtigung 
+#	Sofortstart EIN/AUS.
 #
 def ZDF_WebMoreSingle(title, path):								
 	PLog('ZDF_WebMoreSingle: ' + path)
@@ -9098,8 +9104,6 @@ def ZDF_WebMoreSingle(title, path):
 		MyDialog(msg1, msg2, '')
 		return
 	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')					# Home-Button
 	
 	hls_url = stringextract('contentUrl":"', '"', page)		# im <head>-Bereich
 	PLog("hls_url: " + hls_url)
@@ -9114,19 +9118,34 @@ def ZDF_WebMoreSingle(title, path):
 			break
 	PLog("img: " + img)
 
-	pos =  page.rfind("ptmdTemplate")
-	if pos > 0 and hls_url:										# Button + Streamlisten für einz. Video 
-		data = page[pos:]
-		data = data.replace('\\', '')
-		PLog("data: " + data[:200])
-		ZDF_WebMoreVideo(title, data, path, hls_url, img)
-	
-	ZDF_Graphql(title, page, path)								# Recommendations (Einzel + Folgebeiträge) 	
+	pos =  page.rfind("ptmdTemplate")							# mehrere mögl., z.B. Serien, hier nicht relevant
+	PLog("ptmdTemplate_pos: %d" % pos)
+	if pos > 0:
+		if hls_url:												# Button + Streamlisten für einz. Video 
+			li = xbmcgui.ListItem()
+			li = home(li, ID='ZDF')								# Home-Button
+			data = page[pos:]
+			data = data.replace('\\', '')
+			PLog("data: " + data[:200])
+			ZDF_WebMoreVideo(title, data, path, hls_url, img)
+			ZDF_Graphql(title, page, path)						# Recommendations (Einzel + Folgebeiträge)
+ 	
+		else:													# Fallback1: futura-api
+			base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
+			url = base % path.split("/")[-1]					# Bsp. inspector-barnaby-104
+			PLog("try_futura: " + url)
+			if url_check(url, caller='ZDF_WebMoreSingle', dialog=True):
+				ZDF_RubrikSingle(url, title, "ZDF")				# hier ohne Recommendations-Call
+
+	else:														# Fallback2: KatSub, falls Web ohne ptmdTemplate
+		PLog("try_KatSub: " + path)	
+		ZDF_KatSub(title, path, tabid="", Graphql="")
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
+
+# todo: Romancen - so weit kommts noch	
 #-----------------------------------------------------------------------
-# Aufruf ZDF_WebMoreSingle - Button für enthaltenes Video
+# Aufruf ZDF_WebMoreSingle - Button für enthaltenes Video, Streamlisten
 #
 # Stream-Problem: über das futura-api hier nur hbbtv-Streams verfügbar, dafür
 #	enthält die Webseite  1 HSL-Stream. 
