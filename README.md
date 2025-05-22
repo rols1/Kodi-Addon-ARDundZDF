@@ -19,7 +19,7 @@ Die Radio-Podcasts der Classic-Version wurden durch die neue Audiothek abgelöst
 Im Forum: https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/  
 direkt: rols1@gmx.de 
 
-#### statt Handbuch: [Einstellungen des Addons - Wicki](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki)
+#### statt Handbuch: [Einstellungen des Addons - Wiki](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki)
   
 Funktionen: 
 ===================
