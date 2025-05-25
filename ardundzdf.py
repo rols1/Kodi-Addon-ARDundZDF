@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>245</nr>										# Numerierung für Einzelupdate
+# 	<nr>246</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.4'
-VDATE = '21.05.2025'
+VDATE = '25.05.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3500,9 +3500,9 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 	if mp_url:	
 		if mp_url.endswith('.mp3'):
 			mediatype = 'audio'
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': ''}" %\
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
 			(quote_plus(mp_url), quote_plus(title_mp), quote_plus(img), quote_plus(summ))
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+		addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
 			mediatype=mediatype, tagline=title_mp, summary=summ) 	
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -4514,11 +4514,15 @@ def ARDSportStart(logo, burger=""):
 #---------------------------------------------------------------------------------------------------
 # Livestreams der Sportschau
 # Aufruf: ARDSportWDR
-# 14.06.2024 Ausfilterung Videos für "Audiolivestreams der Sportschau"
-#	in ARDAudioEventStreams
+# 14.06.2024 skip_video=True für "Audiolivestreams der Sportschau"
+#	in ARDAudioEventStreams 
+# 25.05.2025 Auswertung Playerdaten -> TagesschauXL.get_content_json
+#	 (wie ARDSportMedia).
 #
 def ARDSportLive(title, skip_video=""): 
 	PLog('ARDSportLive:')
+	PLog('skip_video: ' + skip_video)
+	
 
 	path = "https://www.sportschau.de/streams"
 	page = ARDSportLoadPage(title, path, "ARDSportLive")
@@ -4528,27 +4532,28 @@ def ARDSportLive(title, skip_video=""):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD Neu')								# Home-Button
 		
-	items = blockextract('<picture class=', page)
-	PLog(len(items))
-	for item in items:
-		data  = ARDSportgetPlayer(item)
-		if data:
-			player,live,title,mp3_url,stream_url,img,tag,summ,Plot = ARDSportMediaPlayer(li, data)
-			title=repl_json_chars(title)
-			PLog("player_typ: " + player)
-			
-			title=py2_encode(title); Plot=py2_encode(Plot)
-			if player == "video" and not skip_video:
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream_url), 
-					quote(title), quote(img), quote_plus(Plot))
-				addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-					tagline=tag, summary=summ, mediatype='video')	
-			if player == "audio":
-				if live:
-					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
-						quote(title), quote(img), quote_plus(Plot))
-					addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
-						tagline=tag, mediatype='music')	
+	import resources.lib.TagesschauXL as TagesschauXL	
+	content =  blockextract('data-v=', page, '</div>')	
+	PLog(len(content))
+	for item in content:
+		typ,av_typ,title,tag,summ,img,stream = TagesschauXL.get_content_json(item)
+		title=repl_json_chars(title)
+		PLog("typ: " + str(typ))
+		
+		Plot = "%s\n\n%s" % (tag, summ)
+		Plot_par = Plot.replace("\n", "||")
+		title=py2_encode(title); Plot_par=py2_encode(Plot_par)
+		stream=py2_encode(stream)
+		if typ == "video" and not skip_video:
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream), 
+				quote(title), quote(img), quote_plus(Plot_par))
+			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
+				tagline=Plot, mediatype='video')	
+		if typ == "audio":
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream), 
+				quote(title), quote(img), quote_plus(Plot_par))
+			addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
+				tagline=Plot, mediatype='music')	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -4646,12 +4651,13 @@ def ARDSportMedia(li, title, page, path=""):
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" %\
 				(quote(stream), quote(title), quote(img), quote_plus(Plot), ID)
 			addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+				fparams=fparams, tagline=tag, summary=summ)
 		
 		live=""
 		if SETTINGS.getSetting('pref_startlist') == 'true':			# Blockade verhindern, s. Kopf
 			live="true"		
 		if typ == "video":											# Video	
+			tag = "%s (%s)" % (tag, u"Download nicht möglich")
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': '%s'}" %\
 				(quote(stream), quote(title), quote(img), quote_plus(Plot), live)
 			addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
@@ -8047,6 +8053,8 @@ def N24LastServer(url_m3u8):
 	return url_m3u8		# keine playlist gefunden, weiter mit Original-url
 	
 ###################################################################################################
+# 21.05.2025 Zielseiten können fehlen (dto. im Web), Bsp.: Bilderseiten von
+#	checkeins.de
 def BilderDasErste(path=''):
 	PLog("BilderDasErste:")
 	PLog(path)
