@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>130</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.04.2025
+#	Stand: 11.06.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -716,6 +716,7 @@ def up_low(line, mode='up'):
 # 	18.04.2022 Erweiterung Kontextmenüs "Abgleich Videotitel mit Medienbibliothek" 
 #	05.02.2023 Erweiterung Kontextmenüs EPG (Menü TV-Livestreams)
 #	10.11.2023 ShowFavs verhindert "Hinzufügen" im Kontextmenü
+#	10.06.2025 Erweiterung Kontextmenüs RadioEPG (Radio-Livestreams, Audiothek-Livestreams)
 #
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='',\
 		cmenu=True, merkname='', start_end='', EPG_ID='', ShowFavs=''):
@@ -787,13 +788,22 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_do_folder=''; fparams_rename=''; 
 		fparams_playlist_add=''; fparams_playlist_rm='';fparams_playlist_play=''
 		fparams_strm=''; fparams_exist_inlib=''; fparams_EPG='';
-		fparams_ShowSumm=""
+		fparams_ShowSumm=""; fparams_RadioEPG="";
 		
 		if EPG_ID:														# EPG für Sender zeigen
 			EPG_ID = py2_encode(EPG_ID)
 			fp = {'title': label, 'ID': EPG_ID, 'mode': 'context'}
 			fparams_EPG = "&fparams={0}".format(fp)
 			PLog("fparams_EPG: " + fparams_EPG[:80])
+		
+		if dirID == "AudioStartLive":									# Radio-EPG für Sender zeigen
+			dirPars = unquote(fparams)
+			pub_id = stringextract("pub_id': '", "'", dirPars)
+			sender = stringextract("sender': '", "'", dirPars)
+			fp = {'pub_id': pub_id, 'sender': sender, 'mode': 'context'}
+			fparams_RadioEPG = "&fparams={0}".format(fp)
+			PLog("fparams_RadioEPG: " + fparams_RadioEPG)
+			
 				
 		if mediatype == "video":										# Inhaltstext für Video zeigen
 			items = ["api.ardmediathek|ARD", "zdf-prod-futura|ZDF",		# unterstützte Sender
@@ -1091,6 +1101,13 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			dirID = "resources.lib.EPG.EPG"
 			commands.append(('EPG zeigen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 					% (MY_SCRIPT, HANDLE, dirID, fparams_EPG)))
+					
+		if fparams_RadioEPG:															# Radio-EPG für Sender anzeigen
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/EPG.py' % (ADDON_ID))
+			PLog("MY_SCRIPT_EPG:" + MY_SCRIPT)		
+			dirID = "resources.lib.EPG.EPG"
+			commands.append(('Radio-EPG zeigen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
+					% (MY_SCRIPT, HANDLE, dirID, fparams_RadioEPG)))
 
 		if fparams_ShowSumm:															# Inhaltstext für Video zeigen
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/EPG.py' % (ADDON_ID))

@@ -11,7 +11,7 @@
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>30</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.03.2025
+#	Stand: 11.06.2025
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -587,39 +587,89 @@ def get_unixtime(day_offset=None, onlynow=False):
 	return now,today,today_5Uhr,nextday,nextday_5Uhr
 #----------------------------------------------------------------  
 #################################################################  
+# 11.06.2025 Erweiterung Radio-EPG (Kontextmenü, Button für gesamtes
+#	Radio-EPG in AudioStartLive
 		
 params = unquote(str(sys.argv))
 PLog("context_params: " + params)
 
 
-if "'context'" in str(sys.argv):									# Kontextmenü: EPG im textviewer
+if "'context'" in str(sys.argv):										# Kontextmenü: EPG im textviewer
 	PLog("EPG_context:")
-	title =  stringextract("title': '", "'", params)
-	ID =  stringextract("ID': '", "'", params)
-	PLog("title: %s, ID: %s" % (title, ID))
-	EPG_rec = EPG(ID, day_offset=0)
+	
+	if "pub_id" in params:												# Radio-EPG einzelner Sender
+		PLog("get_Radio-EPG")
+	
+		base = "https://programm-api.ard.de/radio/api/publisher?publisher="
+		lines=[]
+		pub_id = stringextract("pub_id': '", "'", params)				# urn:ard:publisher:c4a9cee041835529
+		sender = stringextract("sender': '", "'", params)				# Sender-Titel -> textviewer
+		PLog("sender: %s, pub_id: %s" % (sender, pub_id))
+		path = base + pub_id
+		page, msg = get_page(path)
+		PLog(page[:80])
+		if page:
+			try:
+				objs = json.loads(page)								
+				for obj in objs:
+					stitle=""; artist=""
+					start = obj["start"]; end = obj["end"]
+					start = start[11:11+5]; end = end[11:11+5]
+					title = obj["title"] 
+					if "subTitle" in obj:
+						stitle = obj["subTitle"];
+					line = "%s - %s | %s" % (start, end, title)
+					if stitle:
+						line = "%s | %s" % (line, stitle)
+					if line not in lines:								# mehrfach mit verschied. livestreamId's
+						lines.append(line)
+						
+					if "clip" in obj:									# Beitrag mit Details ergänzen
+						clip = obj["clip"]
+						start = clip["start"]; end = clip["end"]
+						start = start[11:11+5]; end = end[11:11+5]
+						if "artist" in clip:
+							artist = clip["artist"]
+						title = clip["title"]
+						typ = clip["type"]
+						line = "%s - %s | %s | %s" % (start, end, typ, title)
+						if artist:
+							line = "%s | %s" % (line, artist)
+						lines.append(line)						
+					
+			except Exception as exception:
+				lines=[]; sender="Radio-EPG"
+				PLog(obj)
+				PLog("pub_id_error: " + str(exception))			
+		title = sender
+	else:																# TV-EPG einzelner Sender
+		title =  stringextract("title': '", "'", params)
+		ID =  stringextract("ID': '", "'", params)
+		PLog("title: %s, ID: %s" % (title, ID))
+		EPG_rec = EPG(ID, day_offset=0)
 
-	cnt=0
-	for rec in EPG_rec:
-		sname=rec[3]
-		if 'JETZT' in sname:
-			PLog("context_now: " + str(rec))
-			break
-		cnt=cnt+1
-	EPG_rec = EPG_rec[cnt:]
+		cnt=0
+		for rec in EPG_rec:
+			sname=rec[3]
+			if 'JETZT' in sname:
+				PLog("context_now: " + str(rec))
+				break
+			cnt=cnt+1
+		EPG_rec = EPG_rec[cnt:]
 
-	lines=[]
-	for rec in EPG_rec:
-		try:
-			sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6];	# alle Indices s. EPG
-			if sname.count("|") > 1:
-				sname = sname.split("|")[2]							# So | JETZT: 15:55 | Weltcup-Skispringen
-			sname = sname.replace("[/B]", "")
-			sname = "%s | %s" % (vonbis,sname)
-			lines.append("[B]%s[/B]\n%s\n" % (sname, summ))
-		except Exception as exception:
-			PLog("EPG_rec_error: " + str(exception))	
+		lines=[]
+		for rec in EPG_rec:
+			try:
+				sname=rec[3]; stime=rec[4]; summ=rec[5]; vonbis=rec[6];	# alle Indices s. EPG
+				if sname.count("|") > 1:
+					sname = sname.split("|")[2]							# So | JETZT: 15:55 | Weltcup-Skispringen
+				sname = sname.replace("[/B]", "")
+				sname = "%s | %s" % (vonbis,sname)
+				lines.append("[B]%s[/B]\n%s\n" % (sname, summ))
+			except Exception as exception:
+				PLog("EPG_rec_error: " + str(exception))	
 
+	# ------------------------------------								# Ausgabe
 	#PLog(lines)		# Debug
 	if len(lines) == 0:
 		icon = R('tv-EPG-all.png')

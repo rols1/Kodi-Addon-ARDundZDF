@@ -60,7 +60,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>246</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.4'
-VDATE = '25.05.2025'
+VDATE = '11.06.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1156,6 +1156,7 @@ def Main_ZDF(name=''):
 	url = base + "document/international-108"
 	tag = "This channel provides selected videos in English, Spanish or Arabic or with respective subtitles."
 	summ = 'For Arabic, please set the font of your Skin to [B]Arial based[/B].'
+	summ = "%s\n\nThis menu will be removed with the next update (too few videos)." % summ
 	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 	addDir(li=li, label="ZDFinternational", action="dirList", dirID="ZDF_RubrikSingle", fanart=R('ZDFinternational.png'), 
 		thumb=R('ZDFinternational.png'), tagline=tag, summary=summ, fparams=fparams)
@@ -1649,8 +1650,10 @@ def Audio_get_rubriken_web(li, title, path, ID, page):
 # 2. Durchlauf mit sender -> PlayAudio
 # Auswertung Sender-Programme s. AudioSenderPrograms
 # 06.05.2024 Erweiterung Download Senderlinks als einzelne Playlist
+# 10.06.2025 Erweiterung Radio-EPG (Button: Alle, Kontext-Menü: einzeln ->
+#	Modul EPG)
 #
-def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): # Sender / Livestreams 
+def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot='', pub_id="" ): # Sender / Livestreams 
 	PLog('AudioStartLive: ' + sender)
 	CacheTime = 3600													# 1 Std.
 
@@ -1680,7 +1683,9 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 		PLog("SenderPrograms_error: " + str(exception))
 	PLog("LiveObjects: %d" % len(LiveObjects))
 
-	streamList=[]
+	streamList=[]														# streamUrl's
+	PubIdList=[]														# -> Ermittlung EPG-Daten
+	epg_img=R('tv-EPG-all.png')
 	now = datetime.datetime.now()										# für streamList
 	timemark = now.strftime("%d.%m.%Y")
 	
@@ -1688,7 +1693,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 	PlayList = ["#EXTM3U"]											
 	play_line = '#EXTINF:-1 logo="%s" group-title="ARD_Radio", %s\n%s'													
 	
-	if sender == '':
+	if sender == '':													# 1. Durchlauf: Senderliste
 		for LiveObj in LiveObjects:			
 			services = LiveObj["publicationServices"]["nodes"]
 			PLog(str(services)[:80])
@@ -1706,21 +1711,22 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 					img = node["image"]["url1X1"]
 					img = img.replace('{width}', '640')
 					for stream in streams:
-						PLog(str(stream)[:80])
-						streamUrl = stream["stream"]["streamUrl"]
-						sender = stream["stream"]["sender"]	
-						sender = sender.replace(" URL", "")				# bei den HR-Sendern angehängt
+						streamUrl, sender, pub_id = Audio_get_stream(stream)
+						PubIdList.append("%s|%s|%s" % (sender, img, pub_id))	# pub_id: urn:ard:publ..
 			
 						add = "zum Livestream"
-						tag = "Weiter %s von: [B]%s[/B]" % (add, sender)		
+						tag = u"Weiter %s von: [B]%s[/B]" % (add, sender)
+						tag = u"%s\n[B]Radio-EPG[/B] via Kontext-Menü aufrufen." % tag		
 																		
 						PLog('3Satz:');
-						PLog(sender); PLog(streamUrl); PLog(img); PLog(Plot);
+						PLog(sender); PLog(streamUrl); PLog(img); PLog(Plot); PLog(pub_id);
 						title=py2_encode(title); sender=py2_encode(sender);
 						streamUrl=py2_encode(streamUrl); img=py2_encode(img)
 						Plot=py2_encode(Plot)
-						fparams="&fparams={'title': '%s', 'sender': '%s', 'streamUrl': '%s', 'myhome': '%s', 'img': '%s', 'Plot': '%s'}" %\
-							(quote(title), quote(sender), quote(streamUrl), myhome, quote(img), quote(Plot))	
+						fparams="&fparams={'title': '%s', 'sender': '%s', 'streamUrl': '%s', 'myhome': '%s',\
+						 'img': '%s', 'Plot': '%s', 'pub_id': '%s'}" %\
+							(quote(title), quote(sender), quote(streamUrl), myhome, quote(img),\
+							quote(Plot), quote(pub_id))	
 						addDir(li=li, label=sender, action="dirList", dirID="AudioStartLive", fanart=img, 
 							thumb=img, tagline=tag, summary=Plot, fparams=fparams)
 						
@@ -1733,7 +1739,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 						extinf = play_line % (img, title, streamUrl)
 						PlayList.append(extinf)
 
-		streamList = py2_encode(streamList)								# Streamlist-Button
+		streamList = py2_encode(streamList)								# Streamlist-Button, wie Audio_get_cluster_single
 		textKey  = "RadioStreamLinks"
 		Dict("store", textKey, streamList)				
 		lable = u"[B]Download 1: Streamlinks (Anzahl: %d)[/B] als m3u-Dateien" % len(streamList)
@@ -1743,7 +1749,7 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
 			thumb=R(ICON_DOWNL), fparams=fparams, tagline=tag, summary=summ)
 
-		PlayList = py2_encode(PlayList)									# RadioPlaylist-Button
+		PlayList = py2_encode(PlayList)									# RadioPlaylist-Button 
 		textKey  = "RadioPlaylist"
 		Dict("store", textKey, PlayList)				
 		lable = u"[B]Download 2: Streamlinks (Anzahl: %d)[/B] als Playlist" % len(PlayList)
@@ -1753,6 +1759,18 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 		fparams="&fparams={'textKey': '%s'}" % textKey
 		addDir(li=li, label=lable, action="dirList", dirID="DownloadText", fanart=R(ICON_DOWNL), 
 			thumb=R(ICON_DOWNL), fparams=fparams, tagline=tag, summary=summ)
+			
+		PubIdList = py2_encode(PubIdList)									# EPG-Button 
+		textKey  = "PubIdList"
+		Dict("store", textKey, PubIdList)				
+		lable = u"[B]Radio-EPG - was läuft zur Zeit wo?[/B]"
+		tag = u"listet aktuelle Sendungen mit Uhrzeit (Cache-Zeit 5 min)."
+		tag = u"%s\nFür aktuelle Musik-Clips bitte die Kontext-Menüs aufrufen." % tag
+		summ = u"Klick in die EPG-Liste startet den ausgewählten Sender."
+		fparams="&fparams={'textKey': '%s', 'epg_img': '%s'}" % (textKey, epg_img)
+		addDir(li=li, label=lable, action="dirList", dirID="AudioSenderEPG", fanart=epg_img, 
+			thumb=epg_img, fparams=fparams, tagline=tag, summary=summ)
+			
 		
 		ARDAudioEventStreams(li)										# externe Zusätze listen
 
@@ -1764,6 +1782,108 @@ def AudioStartLive(title, sender='', streamUrl='', myhome='', img='', Plot=''): 
 			PlayAudio(streamUrl, title, img, Plot)  # direkt	
 	return
 			
+#----------------------------------------------------------------
+# holt Streamdetails aus json-key stream, img + Plot bereits
+#	durch Aufrufer ermittelt
+# Aufruf AudioStartLive
+#
+def Audio_get_stream(stream):
+	PLog("Audio_get_stream:")
+	try:
+		PLog(str(stream)[:80])
+		streamUrl = stream["stream"]["streamUrl"]
+		sender = stream["stream"]["sender"]	
+		sender = sender.replace(" URL", "")								# HR-Sendern angehängt
+		sender = sender.replace(" Livestream", "")
+		sender = sender.replace(" Audio", "")
+		sender = sender.replace(" Das Radio", "")
+		pub_id =  stream["tracking"]["teaser"]["teaser_publisher_id"]	# -> PubIdList
+	except Exception as exception:
+		PLog("get_stream_error: " + str(exception))
+		streamUrl=""; sender=""; pub_id="";
+	return streamUrl, sender, pub_id
+
+#----------------------------------------------------------------
+# 09.06.2025 listet Sender-EPG für AudioStartLive
+# Hinweis: nur Sendungen, keine Clips (würden zusätzl. Zeilen erfordern),
+#	Clips-Auswertung via Kontext-Menü
+#
+def AudioSenderEPG(textKey, epg_img):
+	PLog('AudioSenderEPG: ' + textKey)
+	PubIdList = Dict("load", textKey)							# "PubIdList"
+	PLog(len(PubIdList))
+	base = "https://programm-api.ard.de/radio/api/publisher?publisher="
+	
+	# Format epg: "sender | img | pub_id"
+	epg = Dict("load", "RadioEPG", CacheTime=300)				# Cache: 5 min)
+	PLog(str(epg)[:80])				
+	if not epg:													# Liste nicht im Dict? erneuern
+		epg=[]; i=0	
+		msg1 = "Radio-EPG:"; msg2 = "aktualisiere %d Sender" % len(PubIdList)
+		xbmcgui.Dialog().notification(msg1,msg2,epg_img,3000)
+															
+		for item in PubIdList:									# EPG für alle Sender holen				
+			sender, img, sid = item.split("|")					# sid: "urn:ard:publ.."
+			path = base + sid
+			page, msg = get_page(path)
+			if page == "":
+				msg1 = "Radio-EPG Problem:"						# Abbruch beim 1. Problem (knapp 200 Abrufe)
+				msg2 = u"Datentransfer gestört"	
+				PLog("%s: %s" % (msg1, msg2))
+				xbmcgui.Dialog().notification(msg1,msg2,epg_img,3000)
+				return	
+			
+			start = stringextract('start":"', '"', page)		# 2025-06-09T06:00:00+0200
+			if start == "":										# ohne EPG: ARD, tagesschau24 -
+				start="?????"; title="ohne Titel";				# 	Index beibehalten
+				stitle="ohne EPG"
+			else:
+				start = start[11:11+5]							# nur Sendungen, keine Clips
+				title = stringextract('title":"', '"', page)	
+				stitle = stringextract('subTitle":"', '"', page)	
+			if stitle:
+				title  = "%s | %s" % (title[:20], stitle[:20])
+			else:
+				title  = "%s" % (title[:40])
+			sender = sender[:20]
+			line = "%s | %s - %s" % (start, sender, title)
+			epg.append(line)
+			i=i+1			# Debug
+		Dict("store", "RadioEPG", epg)							# EPG speichern
+		
+	PLog("Radio-EPG: %d" % len(epg))
+	PLog(type(epg))
+	dialog = xbmcgui.Dialog()									# EPG-Liste zeigen
+	ret = dialog.select("Radio-EPG: was läuft zur Zeit wo? Cache-Zeit 5 min", epg)
+	PLog("ret: %d"  % ret)
+	if ret > -1:
+		PubId = PubIdList[ret]					
+		PLog("choosen: %s, PubId: %s" % (epg[ret], PubId))
+		if "?????" in PubId:
+			return
+		sender, img, PubId = PubId.split("|")					# HR1|urn:ard:publisher:..5529
+
+		page = Dict("load", "AudioSender")						# Sendersuche in Dict AudioSender
+		page = str(page)
+		PLog(page[:100])
+
+		pos = page.find(PubId)									# teaser_publisher_id im key "tracking"
+		if pos < 0:
+			msg1 = "Radio-EPG"
+			msg2 = "%s nicht gefunden" % sender
+			xbmcgui.Dialog().notification(msg1, msg2, epg_img, 3000)	
+			return
+		page =  page[:pos]
+		pos2 = page.rfind('stream"')							# key "stream" vor "tracking"
+		if pos2 > 0:
+			page = page[:pos]
+			streamUrl = stringextract('streamUrl":"', '"', page[pos2:])
+			
+			PLog("sender: %s | streamUrl: %s" % (sender,  streamUrl))
+			PlayAudio(streamUrl, sender, img, Plot="")  # direkt
+
+	return
+
 #----------------------------------------------------------------
 # 21.02.2022 Anpassung an renovierte Audiothek
 # 14.07.2022 
@@ -8256,7 +8376,8 @@ def BilderDasErsteSingle(title, path):
 #									ZDF-Funktionen
 ###################################################################################################
 # Startseite der ZDF-Mediathek 
-# Neu: April 2023	
+# Neu: April 2023
+# 27.05.2025 identische Beiträge in stage und stageCluster, Ursache n.b.
 #
 def ZDF_Start(ID, homeID=""): 
 	PLog('ZDF_Start: ' + ID);
@@ -8270,14 +8391,14 @@ def ZDF_Start(ID, homeID=""):
 		path = base + "document/funk-126"	
 		
 	DictID =  "ZDF_%s" % ID
-	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)	# 5 min				
+	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)	# 5 min					
 	if not page:												# nicht vorhanden oder zu alt						
 		icon = R(ICON_MAIN_ZDF)
 		if ID.startswith("tivi"):
 			icon = GIT_TIVIHOME
 		xbmcgui.Dialog().notification("Cache %s:" % ID,"Haltedauer 5 Min",icon,3000,sound=False)
 
-		page, msg = get_page(path)								# vom Sender holen		
+		page, msg = get_page(path)								# vom Sender holen			
 		if page == "":
 			msg1 = 'Fehler in ZDF_Start:'
 			msg2 = msg
@@ -8464,7 +8585,8 @@ def ZDF_KatSub(title, path, tabid="", Graphql=""):
 		# Graphql-Call, zdf-app-id bei Bedarf aus Web ermitteln,
 		#	Pagination auf 48 gesetzt (statt 24)  - 15.05.2025 wieder zurück auf 24
 		header = "{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/',\
-			'zdf-app-id': 'ffw-mt-web-1305801c'}" % apitoken
+			'zdf-app-id': 'ffw-mt-web-1305801c', 'accept': '*/*', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site'}" \
+			% apitoken
 		Dict("store", "GraphqlHeader", header)
 		href='https://api.zdf.de/graphql?operationName=getMetaCollectionContent&variables=%7B%22collectionId%22%3A%22****%22%2C%22input%22%3A%7B%22appId%22%3A%22ffw-mt-web-1305801c%22%2C%22filters%22%3A%7B%22contentOwner%22%3A%5B%5D%2C%22fsk%22%3A%5B%5D%2C%22language%22%3A%5B%5D%7D%2C%22pagination%22%3A%7B%22first%22%3A24%2C%22after%22%3Anull%7D%2C%22user%22%3A%7B%22abGroup%22%3A%22gruppe-b%22%2C%22userSegment%22%3A%22segment_0%22%7D%2C%22tabId%22%3A####%7D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22c85ca9c636258a65961a81124abd0dbef06ab97eaca9345cbdfde23b54117242%22%7D%7D'
 
@@ -9245,7 +9367,8 @@ def ZDF_Graphql(title, page, path):
 	# Graphql-Call, zdf-app-id bei Bedarf aus Web ermitteln,
 	#	Pagination auf 48 gesetzt (statt 24)
 	header = "{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/',\
-		'zdf-app-id': 'ffw-mt-web-1305801c'}" % apitoken
+		'zdf-app-id': 'ffw-mt-web-1305801c', 'accept': '*/*', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site' }" \
+		% apitoken
 	href='https://api.zdf.de/graphql?operationName=Recommendation&variables=%7B%22collectionId%22%3A%22tivi_vcms_video_1556290-movie%22%2C%22input%22%3A%7B%22appId%22%3A%22ffw-mt-web-ba73351f%22%2C%22filters%22%3A%7B%7D%2C%22pagination%22%3A%7B%22first%22%3A48%7D%2C%22user%22%3A%7B%22abGroup%22%3A%22gruppe-b%22%2C%22userSegment%22%3A%22segment_0%22%7D%7D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%2290660db2dae2d1f74bc4cda6c2fd4316c543f0314bd0bcd1947d01450372ee6f%22%7D%7DoperationName=Recommendation&variables=%7B%22collectionId%22%3A%22tivi_vcms_video_1556290-movie%22%2C%22input%22%3A%7B%22appId%22%3A%22ffw-mt-web-ba73351f%22%2C%22filters%22%3A%7B%7D%2C%22pagination%22%3A%7B%22first%22%3A24%7D%2C%22user%22%3A%7B%22abGroup%22%3A%22gruppe-b%22%2C%22userSegment%22%3A%22segment_0%22%7D%7D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%2290660db2dae2d1f74bc4cda6c2fd4316c543f0314bd0bcd1947d01450372ee6f%22%7D%7D'
 
 	href = href.replace("ffw-mt-web-ba73351f", "%s" % appId)	# Parameter ersetzen
