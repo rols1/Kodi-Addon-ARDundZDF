@@ -10,7 +10,7 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>31</nr>										# Numerierung für Einzelupdate
+# 	<nr>32</nr>										# Numerierung für Einzelupdate
 #	Stand: 11.06.2025
 #	
  
@@ -635,7 +635,8 @@ if "'context'" in str(sys.argv):										# Kontextmenü: EPG im textviewer
 						line = "%s - %s | %s | %s" % (start, end, typ, title)
 						if artist:
 							line = "%s | %s" % (line, artist)
-						lines.append(line)						
+						if line not in lines:							# mehrfach wie oben
+							lines.append(line)						
 					
 			except Exception as exception:
 				lines=[]; sender="Radio-EPG"
