@@ -10,7 +10,10 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-15.05.2025 	5.2.5
+
+??.06.2025 	5.2.6
+
+15.06.2025 	5.2.5
 			ZDF_KatSub: Mehr-Seiten (Pagination) für ZDF-Kategorien ergänzt, Seiten-
 			zahl an Web angeglichen (24).
 			ZDF_WebMoreSingle: Zielsteuerung an Web angeglichen (3 Alternativen), 
