@@ -4,7 +4,7 @@
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
 # 	<nr>18</nr>								# Numerierung für Einzelupdate
-#	Stand: 02.04.2025
+#	Stand: 11.06.2025
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -739,7 +739,7 @@ def get_VideoAudio(title, path):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 
 # ----------------------------------------------------------------------
-# Aufruf: get_VideoAudio
+# Aufruf: get_VideoAudio, ARDSportMedia, ARDSportLive
 # Auswertung Blöcke 'data-v=' - können Navi-Elemente o.a. enthalten.
 #	Berücksichtigt werden nur Blöcke mit Playerdaten "playerType"
 def get_content_json(item):	
@@ -787,6 +787,8 @@ def get_content_json(item):
 	if title.strip() == "":										# Altern.
 		title = stringextract('av_content":"', '"', conf)
 	title = repl_json_chars(title)
+	if title.startswith("Audiostream - "):						# Kennz. Typ Audio in tag
+		title = title.replace("Audiostream - ", "")
 	
 	# Streams: zu geringe Auswahl für Listen
 	stream = obj["mc"]["streams"][0]["media"][0]["url"]			# 1. Url, m3u8 od. mp4, 

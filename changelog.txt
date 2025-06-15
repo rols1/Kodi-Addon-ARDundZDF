@@ -10,6 +10,31 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+15.05.2025 	5.2.5
+			ZDF_KatSub: Mehr-Seiten (Pagination) für ZDF-Kategorien ergänzt, Seiten-
+			zahl an Web angeglichen (24).
+			ZDF_WebMoreSingle: Zielsteuerung an Web angeglichen (3 Alternativen), 
+			Details s. Kopfdoku.
+			ZDF_WebMoreVideo: Button für enthaltenes Video, Streamlisten, Details 
+			s. Kopfdoku.
+			Main_ZDF: Hinweis auf Wegfall des Menüs ZDFinternational ergänzt.
+			ZDF_search_button: Suchbegriff bereinigen (Titelvorspann, Ersetzungen).
+			ARDSportMedia: Linefeeds aus Plot entfernt (router-inkompatibel bei Call
+			AudioPlayMP3 und PlayVideo).
+			get_streams_api_v2 (arte): kompl. Url im RESOLUTION-Abschnitt der m3u8-
+			Datei berücksichtigt (sonst falsch zusammengesetzte Url möglich).
+			ARDSportMedia (sportschau.de): Param mediatype für Audiobeiträge entfernt
+			(Sofortstart schlug fehl), Info "Download nicht möglich" für Videobeiträgen
+			ergänzt.
+			ARDSportVideo: falsche Zielfunktion PlayVideo nach PlayAudio korrigiert.
+			ARDSportLive: Extrakt Playerdaten (data-v=), Auswertung umgestellt von Web
+			auf TagesschauXL.get_content_json (wie ARDSportMedia).
+			Audiothek: Radio-EPG ergänzt (Gesamt-Button, Einzel-Kontextmenü) - neue
+			Funktion AudioSenderEPG, Audio_get_stream, Anpassungen in addDir (util),
+			AudioStartLive und Modul EPG.
+			get_content_json (TagesschauXL): Kennzeichnung "Audiostream" in Titel ent-
+			fernt (in Info-Text bereits enthalten).
+
 14.05.2025 	5.2.4
 			AudioStart: versehentlich gelöschtes xbmcplugin.endOfDirectory wieder
 			hergestellt.
@@ -23,8 +48,10 @@ CHANGE HISTORY
 			"api.zdf.de".
 			ZDFSourcesHBBTV: fehlenden json-key "streams" abgefangen (für Nutzung
 			durch ZDF_Graphql_get_json bei Mehrfach-Beiträgen erforderlich).
-			
-			
+			ZDF-Anpassungen: zusätzl. Button "ergänzende Rubriken der Webseite" in
+			ZDF_PageMenu für die Startseite, neue Funktionen  ZDF_WebMore, 
+			ZDF_WebMoreSingle, ZDF_WebMoreVideo, ZDF_Graphql, ZDF_Graphql_get_json
+			(Nutzung ZDF_getKat_content), Änderungen in ZDF_KatSub		
 
 27.04.2025 	5.2.3
 			get_streamurl (Modul strm): Absicherung gegen veraltete HLS-/MP4-Listen

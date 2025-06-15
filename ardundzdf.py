@@ -59,8 +59,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>247</nr>										# Numerierung für Einzelupdate
-VERSION = '5.2.4'
-VDATE = '11.06.2025'
+VERSION = '5.2.5'
+VDATE = '15.06.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1852,7 +1852,6 @@ def AudioSenderEPG(textKey, epg_img):
 		Dict("store", "RadioEPG", epg)							# EPG speichern
 		
 	PLog("Radio-EPG: %d" % len(epg))
-	PLog(type(epg))
 	dialog = xbmcgui.Dialog()									# EPG-Liste zeigen
 	ret = dialog.select("Radio-EPG: was läuft zur Zeit wo? Cache-Zeit 5 min", epg)
 	PLog("ret: %d"  % ret)
