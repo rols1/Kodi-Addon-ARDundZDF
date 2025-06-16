@@ -60,7 +60,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>247</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.5'
-VDATE = '15.06.2025'
+VDATE = '16.06.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1130,7 +1130,7 @@ def Main_ZDF(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat", fanart=R("zdf-kategorien.png"), 
 		thumb=R("zdf-kategorien.png"), tagline=tag, summary=summ, fparams=fparams)
 
-	# 05.03.2024 Rubriken, Sportstudio, Barrierearm, ZDFinternational -> ZDF_RubrikSingle
+	# 05.03.2024 Rubriken, Sportstudio, Barrierearm -> ZDF_RubrikSingle
 	base = "https://zdf-prod-futura.zdf.de/mediathekV2/"
 	title = 'Rubriken' 
 	url = base + "categories-overview"
@@ -1152,14 +1152,7 @@ def Main_ZDF(name=''):
 	addDir(li=li, label="Barrierearm", action="dirList", dirID="ZDF_RubrikSingle", fanart=R(ICON_ZDF_BARRIEREARM), 
 		thumb=R(ICON_ZDF_BARRIEREARM), fparams=fparams)
 
-	title = "ZDFinternational"
-	url = base + "document/international-108"
-	tag = "This channel provides selected videos in English, Spanish or Arabic or with respective subtitles."
-	summ = 'For Arabic, please set the font of your Skin to [B]Arial based[/B].'
-	summ = "%s\n\nThis menu will be removed with the next update (too few videos)." % summ
-	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
-	addDir(li=li, label="ZDFinternational", action="dirList", dirID="ZDF_RubrikSingle", fanart=R('ZDFinternational.png'), 
-		thumb=R('ZDFinternational.png'), tagline=tag, summary=summ, fparams=fparams)
+	title = "ZDFinternational"											# Menü entfernt in V5.2.6 (zu wenig Videos)
 	# -------------------
 
 	fparams="&fparams={}"												# ab V 4.8.1
@@ -8418,6 +8411,8 @@ def ZDF_Start(ID, homeID=""):
 	
 #---------------------------------------------------------------------------------------------------
 # Übersicht Kategorien
+# 16.06.2025 nach ZDF-Web-Änderung 2 Zusatzbuttons ("Weitere .. streamen",
+#	"Noch mehr .. entdecken") -> ZDF_Kat_Plus
 #
 def ZDF_Kat(title):								
 	PLog('ZDF_Kat:')
@@ -8432,14 +8427,14 @@ def ZDF_Kat(title):
 		return
 	
 	pos1=page.find('controls="navigation-main')				# ab Seitenmenü 
-	pos2=page.find("Nutzungsbedingungen")					# bis Fuß
+	pos2=page.find("Weitere öffentlich-rechtliche")			# bis Videos Partnersender (neuer Button)
 	page=page[pos1:pos2]
 	PLog(page[:80])
 	# Block <picture class nicht eindeutig, noopener bis auf Nachrichten OK, 
 	#	s. kats.insert und items-Liste:
 	kats = blockextract('rel="noopener noreferrer', page, "</h2")		# Icons einschl. Weblink + Titel
 	kats.insert(6, "<h2Nachrichten</h2")					# im Web abweichenden Block ergänzen
-	PLog("kats: %d" % len(kats))							# 05.03.2024: 52
+	PLog("kats: %d" % len(kats))							# 16.06.2024: 13 (Rest s. ZDF_Kat_Plus)
 	PLog(str(kats)[:80])
 
 	homeID="ZDF"
@@ -8484,7 +8479,7 @@ def ZDF_Kat(title):
 
 			label, rubrik_url, img = item.split("|")
 			rubrik_url = rubrik_base + rubrik_url
-			if img.startswith("http") == False:			# Nachrichtenformate
+			if img.startswith("http") == False:				# Nachrichtenformate
 				img = img_base + img
 
 			func="ZDF_RubrikSingle"		
@@ -8499,7 +8494,77 @@ def ZDF_Kat(title):
 				(title, quote(kat_url))
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
 				thumb=img, fparams=fparams)
+					
+	thumb = R(ICON_DIR_FOLDER)
+	title = u"Weitere öffentlich-rechtliche Videos streamen"	# Zusatzbutton 1
+	tag = u"Videos von [B]ZDFinfo, ZDFneo, ZDFtivi, KiKA, 3sat, phoenix, ARTE, funk[/B]"
+	title = py2_encode(title)
+	fparams="&fparams={'title': '%s', 'DictID': '%s'}" %\
+		(quote(title), "ZDF_KATWEB")
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat_Plus", fanart=R("zdf-kategorien.png"), 
+		thumb=thumb, tagline=tag, fparams=fparams)
+	
+	title = u"Noch mehr zum Streamen entdecken"					# Zusatzbutton 2
+	tag = u"Von [B]Abenteuer[/B] bis [B]Wissen[/B]"
+	title = py2_encode(title)
+	fparams="&fparams={'title': '%s', 'DictID': '%s'}" %\
+		(quote(title), "ZDF_KATWEB")
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat_Plus", fanart=R("zdf-kategorien.png"), 
+		thumb=thumb, tagline=tag, fparams=fparams)
 			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#-----------------------------------------------
+# Aufruf ZDF_Kat Zusatzbuttons 1,2
+#
+def ZDF_Kat_Plus(title, DictID):								
+	PLog('ZDF_Kat_Plus: ' + title)
+
+	li = xbmcgui.ListItem()
+	li = home(li, "ZDF")									# Home-Button
+	
+	startpos=title
+	if title.startswith("Weitere"):							# Button 1
+		endpos="Noch mehr zum "
+	else:													# Button 2 endet vor footer
+		endpos="ZDF auf YouTube"						
+		
+	page = Dict("load", DictID)								# hier ohne CacheTime
+	pos1=page.find(startpos)
+	pos2=page.find(endpos)
+	page=page[pos1:pos2]
+	PLog("pos1: %d, pos2: %d" % (pos1, pos2))
+	PLog(page[:80])
+	
+	kats = blockextract('rel="noopener noreferrer', page, "</h3")	# ähnlich ZDF_Kat: </h3 statt </h2
+	PLog("KatsPlus: %d" % len(kats))						# 16.06.2024: Button1:	, Button2: 
+	PLog("KatsPlus:" + str(kats)[:80])
+	
+	for item in kats:
+		title = stringextract("<h3", "</h3", item)			# t1mx31h9">ARTE</h3>
+		title = title.split(">")[-1]
+		#if "Nachrichten" in title:	# Debug
+		#	PLog(item)
+		imgs = blockextract("https://", item, "w,")			# Bilder
+		PLog("imgs: %d" % len(imgs))
+		if len(imgs) < 10:									# keine Kategorie
+			continue
+		for img in imgs:
+			# PLog(img)		# Debug
+			if "1280w" in img:
+				img = img.split(" 1280w")[0]
+				break
+		katid = stringextract('href="', '">', item)			# ID der Kategorie
+		kat_url = "https://www.zdf.de" + katid
+		PLog('Satz11_3:');
+		PLog(title); PLog(kat_url)
+		kat_url=py2_encode(kat_url); title=py2_encode(title);
+		
+		fparams="&fparams={'title': '%s', 'path': '%s'}" %\
+			(title, quote(kat_url))
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
+			thumb=img, fparams=fparams)
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------
