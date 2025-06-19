@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>248</nr>										# Numerierung für Einzelupdate
+# 	<nr>249</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.5'
-VDATE = '16.06.2025'
+VDATE = '19.06.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -9125,7 +9125,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 			fparams="&fparams={'ZDF_ApiCluster': 'ZDF_ApiCluster'}" 
 			PLog("fparams: " + fparams)	
 			addDir(li=li, label=label, action="dirList", dirID="ZDF_WebMore", fanart=img, 
-				thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)
+				thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)			
 
 	if fcnt > 0:													# Info gefiltert-Zähler
 		icon = R("icon-filter.png")
@@ -9135,7 +9135,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 		return li
 	else:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		
+
 #-----------------------------------------------------------------------
 # Aufruf: ZDF_PageMenu (DictID == "ZDF_Startseite"), ergänzt aus Web
 #	Cluster, die im Api fehlen (Abgleich Liste Dict ZDF_ApiCluster)
@@ -9262,6 +9262,8 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 					if "1280w" in img:
 						img = img.split(" 1280w")[0]
 						break
+				if " " in img:									# 1280w nicht vorhanden
+					img = img.split(" ")[0]
 			except Exception as exception:
 				PLog("img_error: " + str(exception))
 				img = R(ICON_DIR_FOLDER)
@@ -9299,10 +9301,10 @@ def ZDF_WebMoreSingle(title, path):
 		return
 	
 	
-	hls_url = stringextract('contentUrl":"', '"', page)		# im <head>-Bereich
+	hls_url = stringextract('contentUrl":"', '"', page)			# im <head>-Bereich
 	PLog("hls_url: " + hls_url)
 	imgset = stringextract('imageSrcSet', '<meta name', page)
-	imgs = blockextract("https://", imgset, "w,")			# Bilder
+	imgs = blockextract("https://", imgset, "w,")				# Bilder
 	PLog("imgs: %d" % len(imgs))
 	img=R(ICON_DIR_FOLDER)
 	for img in imgs:
@@ -9310,6 +9312,8 @@ def ZDF_WebMoreSingle(title, path):
 		if "1280w" in img:
 			img = img.split(" 1280w")[0]
 			break
+		if " " in img:											# 1280w nicht vorhanden
+			img = img.split(" ")[0]
 	PLog("img: " + img)
 
 	pos =  page.rfind("ptmdTemplate")							# mehrere mögl., z.B. Serien, hier nicht relevant
