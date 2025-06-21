@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>249</nr>										# Numerierung für Einzelupdate
+# 	<nr>250</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.5'
-VDATE = '19.06.2025'
+VDATE = '21.06.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3727,7 +3727,8 @@ def ARDSportWDR():
 #---------------------------------------------------------------------------------------------------
 # Event-Archiv
 #	Buttons für ältere Events
-# 
+#	Für Events älter als 1 Jahr als Bild logo-sportschau-100.jpg verwenden
+ 
 def ARDSportWDRArchiv(): 
 	PLog("ARDSportWDRArchiv:")
 	
@@ -3792,7 +3793,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Radsport: Deutschland Tour 2023[/B]"			# Großevent	
 	tag = u"Livestreams, Rennberichte, Analysen, Videos, Ergebnisse zur Deutschland Tour."
 	cacheID = "DTOUR"
-	img = "https://images.sportschau.de/image/c5f18e62-94e0-471f-96fc-1ca5b9d462a1/AAABiU-tGd0/AAABibBx2rU/20x9-1280/deutschland-tour-erste-etappe-108.webp"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
 	path = "https://www.sportschau.de/radsport/deutschland-tour/"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3814,7 +3815,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]FIFA Frauen WM 2023[/B]"						# Großevent	
 	tag = u"32 Mannschaften spielen im Juli und August in Australien und Neuseeland um den Fußball-WM-Titel der Frauen."
 	cacheID = "Sport_WMFrauen"
-	img = "https://images.sportschau.de/image/b64c79b7-767b-4a7f-acda-841a07ef03d4/AAABiUo9W2s/AAABg8tME_8/16x9-1280/ffwm-pokal-laenderflaggen-100.jpg"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
 	path = "https://www.sportschau.de/fussball/fifa-frauen-wm"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3836,7 +3837,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Handball-WM 2023 in Polen und Schweden[/B]"		# Großevent	
 	tag = u"Nachrichten, Berichte, Interviews und Ergebnisse zur Handball-WM 2023 in Polen und Schweden mit dem DHB-Team."
 	cacheID = "Sport_WMHandball"
-	img = "https://images.sportschau.de/image/9741356a-13b2-40ed-93d0-bb70c90ebbd1/AAABhSXiawI/AAABg8tME_8/16x9-1280/handball-wm-bild-100.jpg"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
 	path = "https://www.sportschau.de/handball/wm"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3869,7 +3870,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]NORDISCHE SKI-WM 2023[/B]"						# Großevent	
 	tag = u"Alles zur Nordischen Ski-WM in Planica."
 	cacheID = "Sport_SkiWM"
-	img = "https://images.sportschau.de/image/237354e3-b9b2-46bf-993a-8ecc48947e7f/AAABhol6U80/AAABg8tMRzY/20x9-1280/constantin-schmid-150.webp"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
 	path = "https://www.sportschau.de/wintersport/nordische-ski-wm"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3902,7 +3903,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Fußball WM 2022 in Katar[/B]"					# Großevent	
 	tag = u"Hier finden Sie alle Nachrichten, Berichte, Interviews und Ergebnisse zur FIFA WM 2022 in Katar."
 	cacheID = "Sport_WMKatar"
-	img = "https://images.sportschau.de/image/1e5f994d-d7c8-4c5b-a98b-23a8c5b3a71c/AAABhFJhnRw/AAABg8tME_8/16x9-1280/wm-katar-logo-news-100.jpg"
+	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
 	path = "https://www.sportschau.de/fussball/fifa-wm-2022"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -4710,7 +4711,8 @@ def ARDSportAudioStreams(title, path, img, cacheID):
 #---------------------------------------------------------------------------------------------------
 # Auswertung mediaplayer-Klassen (quoted:data-v=..)
 # Aufrufer ARDSportWDR, ARDSportAudioStreams
-# 05.08.2024 Nutzung TagesschauXL.get_content_json
+# 05.08.2024 Nutzung TagesschauXL.get_content_json (21.06.2025 Anpassung
+#	an geänderte Bilddaten).
 #
 def ARDSportMedia(li, title, page, path=""): 
 	PLog('ARDSportMedia: ' + title)
@@ -4752,7 +4754,7 @@ def ARDSportMedia(li, title, page, path=""):
 		if stream in url_list:										# Doppel möglich (Tour de France Femmes)
 			continue
 		url_list.append(stream)
-				
+			
 		Plot = summ.replace("\n", "||")
 		PLog("Satz6:")		
 		title=py2_encode(title); stream=py2_encode(stream); 

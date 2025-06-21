@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>18</nr>								# Numerierung für Einzelupdate
-#	Stand: 11.06.2025
+# 	<nr>19</nr>								# Numerierung für Einzelupdate
+#	Stand: 21.06.2025
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -744,8 +744,6 @@ def get_VideoAudio(title, path):
 #	Berücksichtigt werden nur Blöcke mit Playerdaten "playerType"
 def get_content_json(item):	
 	PLog('get_content_json:')
-			
-	minWidth=700					# .., 768x, 944x
 
 	conf = stringextract('data-v="', '"', item)					# json freilegen
 	conf = conf.replace('\\"', '"')
@@ -766,21 +764,18 @@ def get_content_json(item):
 		return False,"","","","","",""		
 		
 	typ = obj["playerType"]
-	try:
-		items = obj["pc"]["generic"]["imageTemplateConfig"]["size"]
-		for item in items:
-			width = item["minWidth"]; url = item["value"]	
-			PLog(width);PLog(url)
-			if int(width) >= minWidth:
-				img=url
-				break
-			if img == "":
-				img=url		# Fallback: letzte url
-		if len(img.split(".")) < 4:								# Endung fehlt
-			img = img + ".webp"
+	try:														# 21.06.2025 Bilddaten geändert
+		value = obj["pc"]["generic"]["imageTemplateConfig"]["size"][-1]["value"]	# 2. Größe: "16x9-big"
+		step = obj["pc"]["generic"]["imageTemplateConfig"]["width"]["stepSize"]	# z.B. 320, min + max nicht verwendet
+		mystep = 2*step											# z.B. 640
+		img = obj["mc"]["meta"]["images"][0]["url"]				# 2 vorh.
 		img_alt = obj["mc"]["meta"]["images"][0]["alt"]
+		img = img.replace('{size}', value)
+		img = img.replace('{width}', str(mystep))
+		PLog("img: %s, value: %s, step: %d, mystep: %d" % (img, value, step, mystep))
 	except Exception as exception:
 		PLog("get_img_error: " + str(exception))
+		img_alt=""
 		img = R(ICON_DIR_FOLDER)		
 
 	title=obj["mediadescription"]								# leer möglich
@@ -798,7 +793,7 @@ def get_content_json(item):
 	summ = "%s\n[B]Bild[/B]: %s" % (summ, img_alt)
 	summ = repl_json_chars(summ)
 	av_typ = stringextract('av_content_type":"', '"', conf)
-	# dur = stringextract('av_content_duration":', ',', conf)	# entfällt: Dauer der gesamten Beiträge
+	# dur = stringextract('av_content_duration":', ',', conf)	# enthält die Dauer der gesamten Beiträge!
 	
 	PLog('Get_content typ: %s | av_typ: %s | title: %s | tag: %s | descr: %s |img:  %s | stream: %s' %\
 		(typ,av_typ,title,tag,summ,img,stream) )		

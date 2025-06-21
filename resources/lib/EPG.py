@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>32</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.06.2025
+# 	<nr>33</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.06.2025
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -677,6 +677,8 @@ if "'context'" in str(sys.argv):										# Kontextmenü: EPG im textviewer
 		xbmcgui.Dialog().notification(title, "keine EPG-Daten vorhanden",icon,3000)	
 	else:
 		lines =  "\n".join(lines)
+		PLog("title: " + title)
+		title = title.replace('", "', ',')
 		xbmcgui.Dialog().textviewer(title , lines ,usemono=True)
 
 #-----------------------------------------------------------------------		
