@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>250</nr>										# Numerierung für Einzelupdate
+# 	<nr>251</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.5'
-VDATE = '21.06.2025'
+VDATE = '26.06.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8385,7 +8385,7 @@ def ZDF_Start(ID, homeID=""):
 		path = base + "document/funk-126"	
 		
 	DictID =  "ZDF_%s" % ID
-	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)	# 5 min					
+	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)	# 5 min				
 	if not page:												# nicht vorhanden oder zu alt						
 		icon = R(ICON_MAIN_ZDF)
 		if ID.startswith("tivi"):
@@ -8903,7 +8903,8 @@ def ZDF_getKat_content(obj):
 # 21.03.2024 CacheTime für DictID (30 min), um Aktualisierung bei Favoriten
 #	 und Merkliste sicherzustellen, ergänzt mit url ohne key zum Nachladen 
 #	von Startseiten (s. ZDF_Start)
-# 
+# 25.06.2025 jeweils 1. Web-Stage-Beitrag (ab STATIC_CONTENT_CAROUSEL) 
+#	fehlt im futura-Api
 #	
 def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", url=""):								
 	PLog('ZDF_PageMenu:')
@@ -9978,6 +9979,7 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 	multi=True; verf=""; url=""; stream=""; scms_id=""; now_live=""
 	headline=""; avail=""
 	season=""; episode=""			# episodeNumber, seasonNumber
+	dummy_img=R("icon-bild-fehlt_wide.png")
 	
 	if "url" in obj:
 		url=obj["url"]
@@ -10016,10 +10018,12 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 				
 		
 	img="";
-	if("teaserBild" in obj):
+	if("teaserBild" in obj):									# kann fehlen
 		for width,imageObject in list(obj["teaserBild"].items()):
 			if int(width) <= maxWidth:
 				img=imageObject["url"];
+	else:
+		img=dummy_img
 	
 	dur=''
 	if("length" in obj) or typ == "video" or typ == "livevideo": # ein. Video / Livestream
