@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>131</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.06.2025
+# 	<nr>132</nr>										# Numerierung für Einzelupdate
+#	Stand: 28.06.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1574,10 +1574,12 @@ def repl_json_chars(line):
 # valid_chars: Umlaute plus routerkompatible Zeichen, auch einige der in unescape
 #	übersetzte Zeichen (hier ab &)
 # S. docs.python.org/3/library/string.html
+# 28.06.2025 Sonderbehandlung no-break-Space (vor join erforderlich)
 #
 def valid_title_chars(line):
 	#PLog("valid_title_chars:")
 
+	line = line.replace(u"\u00A0", ' ')		# no-break-Space 
 	printable = string.printable
 	#  cut ab &: &\'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r\x0b\x0c
 	printable = printable.split('&')[0]
@@ -1587,8 +1589,8 @@ def valid_title_chars(line):
 	# Hochkommata, dto urlkodiert - nicht erfasst in valid_chars: 
 	line_ret = (line_ret.replace(u'"', '').replace(u"'", '')\
 	.replace(u"%27", '').replace(u"%22", '').replace(u"%5B", '')\
-	 .replace(u"%5D", '').replace(u"&", '+'))
-
+	.replace(u"%5D", '').replace(u"&", '+'))
+	 
 	return line_ret
 #---------------------------------------------------------------- 
 # statt json.dumps: 
@@ -2604,11 +2606,13 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		if summ3:
 			summ = summ + summ3
 		summ = summ.replace('\\u003c',"").replace('\\u003e',"")			# <br>
+		summ = summ.replace('\\r',"").replace('\\n',"")			# CR, LF
 		summ = summ.replace('<br/><br/>',"\n\n").replace('br/'," \n")	
 		summ = summ.replace('"])</script><script>self.__next_f.push([1,"', " ")	# java-Verkettung innerhalb Text
 		summ = summ.replace('"])</script><script>self.__', " ")			# Textende s.o.: ..self.__next_f.push([1,"9
 		summ = summ.replace('/button>',"")
-		summ = unescape(summ); summ = summ.replace('"', '')
+		summ = unescape(summ); 
+		summ = (summ.replace('"', '').replace('\\', ''))
 		
 		s = stringextract('<h2 class="', '"', summ)
 		s = '<h2 class="%s"' % s

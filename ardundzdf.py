@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>251</nr>										# Numerierung für Einzelupdate
+# 	<nr>252</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.5'
-VDATE = '26.06.2025'
+VDATE = '28.06.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3661,6 +3661,17 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 	'''
+
+	title = u"Event: [B]Tour de France 2025[/B]"					# Großevent	
+	tag = u"Tour de France ab 5. Juli: News, Videos, Rennberichte und Ergebnisse"
+	cacheID = "Sport_TourdeFrance_2025"
+	img = "https://images.sportschau.de/image/e04ecbb2-57e6-4dbb-af51-c0fbd4d724b2/AAABlvd6uVA/AAABkZLpihI/20x9-1280/bikeaid-106.webp"
+	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
 
 	#---------------------------------------------------------	Großevents Ende
 
