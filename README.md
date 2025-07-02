@@ -31,7 +31,7 @@ Funktionen:
 - Startseite (wie Webseite)
 - ARD Mediathek RETRO
 - ARD Mediathek Entdecken
-- Livestreams
+- ARD Livestreams
 - Sendung Verpasst
 - Sendungen A-Z
 - ARD Sport
@@ -39,6 +39,7 @@ Funktionen:
 - Barrierearm
 - Bildgalerien Das Erste
 - Senderwahl
+- Teletext
 
 #### ZDF Mediathek: 
 - Suche nach Sendungen
@@ -46,11 +47,12 @@ Funktionen:
 - ZDF-funk (https://www.zdf.de/funk)
 - Sendung Verpasst (Sendungen der letzten 7 Tage)
 - Sendungen A-Z
+- *Kategorien* neu seit ZDF-Relaunch am 17.03.2025
 - Rubriken
 - ZDF-sportstudio
 - Barrierearm (Hörfassungen, Untertitel, Gebärdensprache)
-- ZDFinternational
-- Bilderserien
+- ~~Bilderserien~~ seit ZDF-Relaunch am 17.03.2025 entfallen
+- Teletext
 
 #### 3Sat Mediathek:
 - Suche nach Sendungen
