@@ -47,7 +47,7 @@ Funktionen:
 - ZDF-funk (https://www.zdf.de/funk)
 - Sendung Verpasst (Sendungen der letzten 7 Tage)
 - Sendungen A-Z
-- *Kategorien* neu seit ZDF-Relaunch am 17.03.2025
+- <b>Kategorien neu</b> seit ZDF-Relaunch am 17.03.2025
 - Rubriken
 - ZDF-sportstudio
 - Barrierearm (Hörfassungen, Untertitel, Gebärdensprache)
