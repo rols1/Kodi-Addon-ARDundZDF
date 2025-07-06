@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>254</nr>										# Numerierung für Einzelupdate
+# 	<nr>255</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.5'
-VDATE = '01.07.2025'
+VDATE = '06.07.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8394,7 +8394,7 @@ def ZDF_Kat(title):
 	PLog(page[:80])
 	# Block <picture class nicht eindeutig, noopener bis auf Nachrichten OK, 
 	#	s. kats.insert und items-Liste:
-	kats = blockextract('rel="noopener noreferrer', page, "</h2")		# Icons einschl. Weblink + Titel
+	kats = blockextract('data-testid="teaser-tile', page, "</h2")		# Icons einschl. Weblink + Titel
 	kats.insert(6, "<h2Nachrichten</h2")					# im Web abweichenden Block ergänzen
 	PLog("kats: %d" % len(kats))							# 16.06.2024: 13 (Rest s. ZDF_Kat_Plus)
 	PLog(str(kats)[:80])
@@ -8406,7 +8406,7 @@ def ZDF_Kat(title):
 	base = "https://www.zdf.de"
 	rubrik_base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
 	img_base = "https://www.zdf.de/assets/"
-	rubrik_list = ["A - Z", "Barrierefreie Inhalte",		# Umleitung
+	rubrik_list = ["A-Z", "Barrierefreie Inhalte",		# Umleitung
 				"Sport", "Nachrichten"]
 	
 	for i, item in enumerate(kats):
@@ -8430,7 +8430,7 @@ def ZDF_Kat(title):
 		kat_url=py2_encode(kat_url); title=py2_encode(title);
 		
 		if title in rubrik_list:							# Seiten ohne Genre-Id, Graphql-Call
-			if 'A - Z' in title:							#	nicht möglich
+			if 'A-Z' in title:								#	nicht möglich
 				item = "%s|sendungen-100|%s" % (title, img)
 			if 'Barrierefreie' in title:
 				item = "%s|barrierefrei-im-zdf-100|%s" % (title, img)
@@ -8498,7 +8498,7 @@ def ZDF_Kat_Plus(title, DictID):
 	PLog("pos1: %d, pos2: %d" % (pos1, pos2))
 	PLog(page[:80])
 	
-	kats = blockextract('rel="noopener noreferrer', page, "</h3")	# ähnlich ZDF_Kat: </h3 statt </h2
+	kats = blockextract('data-testid="teaser-tile', page, "</h3")	# ähnlich ZDF_Kat: </h3 statt </h2
 	PLog("KatsPlus: %d" % len(kats))						# 16.06.2024: Button1:	, Button2: 
 	PLog("KatsPlus:" + str(kats)[:80])
 	
