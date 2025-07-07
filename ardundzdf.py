@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>255</nr>										# Numerierung für Einzelupdate
+# 	<nr>256</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.6'
 VDATE = '07.07.2025'
 
@@ -8389,7 +8389,7 @@ def ZDF_Kat(title):
 		return
 	
 	pos1=page.find('controls="navigation-main')				# ab Seitenmenü 
-	pos2=page.find("Weitere öffentlich-rechtliche")			# bis Videos Partnersender (neuer Button)
+	pos2=page.find(u"Weitere öffentlich-rechtliche")		# bis Videos Partnersender (neuer Button)
 	page=page[pos1:pos2]
 	PLog(page[:80])
 	# Block <picture class nicht eindeutig, noopener bis auf Nachrichten OK, 
