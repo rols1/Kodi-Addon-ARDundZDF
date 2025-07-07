@@ -11,7 +11,27 @@ CHANGE HISTORY
 --------------
 
 
-??.06.2025 	5.2.6
+07.07.2025 	5.2.6
+			Main_ZDF: Menü ZDFinternational entfernt (zu wenig Videos).
+			ZDF-Kategorien: nach ZDF-Änderung (3-Teilung) Anpassung in ZDF_Kat (2
+			Zusatzbuttons), neue Funktion ZDF_Kat_Plus.
+			Ergänzende Rubriken der Webseite: Fallback-img bei fehlenden 1280w-img's
+			ergänzt - ZDF_WebMore und ZDF_WebMoreSingle angepasst.
+			Modul EPG (Radio-EPG): im Titel '", "' ersetzt mit "," für NDR 90,3.
+			get_content_json (TagesschauXL): geänderte img-Format angepasst (ohne
+			Bilder in ARDSportLive, ARDSportMedia und TagesschauXL.get_VideoAudio).
+			get_summary_pre (util): CR, LF aus ZDF-summ-Text entfernt.
+			ZDF_get_content: fehlende Bilder im futura-Api ersetzt durch dummy
+			(icon-bild-fehlt.png), bei Serien Headline im Titel ergänzt (nicht im 
+			Menü "komplette Liste").
+			valid_title_chars (util): Sonderbehandlung no-break-Space (vor join 
+			erforderlich) - relevant für arte-Beiträge.
+			ARDSportWDR: Events "Tour de France 2025", "UEFA Frauen-EM 2025" auf 
+			der Startseite ergänzt.
+			ARDSportWDRArchiv: veraltete Beiträge entfernt.
+			ZDF_Kat, ZDF_Kat_Plus: nach Webänderung Austausch Blockmarker "noopener 
+			noreferrer" gegen 'data-testid="teaser-tile', Austausch 'A - Z' ->
+			'A-Z' in der Liste der Rubriken ohne Genre-ID.
 
 15.06.2025 	5.2.5
 			ZDF_KatSub: Mehr-Seiten (Pagination) für ZDF-Kategorien ergänzt, Seiten-

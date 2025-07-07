@@ -616,12 +616,11 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 					
 		title = transl_json(title); title = unescape(title);
 		title = repl_json_chars(title); 					# franz. Akzent mögl.
+		
 		summ = repl_json_chars(summ)						# -"-
 		summ  = valid_title_chars(summ)						# s. changelog V4.7.4
-		
 		tag_par = tag.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 		summ_par = summ.replace('\n', '||')					# || Code für LF (\n scheitert in router)
-		
 		
 		PLog('Satz1:')
 		PLog(mehrfach); PLog(typ); PLog(pid); PLog(title); 
