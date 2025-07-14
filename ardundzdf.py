@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>256</nr>										# Numerierung für Einzelupdate
+# 	<nr>257</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.6'
-VDATE = '07.07.2025'
+VDATE = '14.07.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -185,7 +185,6 @@ ZDF_CacheTime_Start = 300			# 5 Min.
 ZDF_CacheTime_AZ 	= 1800			# 30 Min.
 # Aktualisierung via window.zdfsite www.zdf.de
 zdfToken = "5bb200097db507149612d7d983131d06c79706d5"	# 21.07.2024
-
 
 REPO_NAME		 	= 'Kodi-Addon-ARDundZDF'
 GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
@@ -8991,7 +8990,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 					addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Menu", 
 						fanart=KIKA_START, thumb=GIT_KANINCHEN, tagline='für Kinder 3-6 Jahre', fparams=fparams)
 				if "Zahlen zur" in title:							# Wahlbeiträge, Statistiken
-					PLog("skip_externalUrl: " + title)
+					PLog("skip_externalUrl: " + title)					
 				
 			else:
 				fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" % (url, title, homeID)
@@ -9367,6 +9366,40 @@ def ZDF_WebMoreVideo(title, data, path, hls_url, img):
 	return														# weiter mit Recommendations
 
 #-----------------------------------------------------------------------
+# Aufruf ZDF_RubrikSingle - holt einz. Video via Graphql-Call
+#	relevant für ZDF-extene ARD-Beiträge (key externalId)
+#
+def ZDF_Graphql_Video(title, scms_id, sharingUrl):							# scms_id z.Z. nicht genutzt							
+	PLog('ZDF_Graphql_Video: %s | %s' % (title, sharingUrl))
+	ard_api_path = "https://api.ardmediathek.de/page-gateway/pages/ard/item/%s?devicetype=pc&embedded=true"
+	token = "ahBaeMeekaiy5ohsai4bee4ki6Oopoi5quailieb"		# bei Bedarf aus Web ermitteln (sharingUrl)
+	graphqlheader="{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/', \
+			'zdf-app-id': 'ffw-mt-web-1305801c', 'accept': '*/*', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site' }"
+	header = graphqlheader % token
+	href="https://api.zdf.de/graphql?operationName=GetVideoMetaByCanonical&variables=%7B%22canonical%22%3A%22page-video-ard-sayonara-loreley--wiedersehen-in-ruedesheim-100%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%224b52236b2cf362542bab7a4e4cfa99830a22ee5ad1e77080d3cc12b2092f0e02%22%7D%7D"
+	
+	canon = sharingUrl.split("/")[-1]
+	canon = canon.replace("-movie", "")
+	canon="page-video-ard-" + canon
+	href = href.replace("####", canon)
+	page, msg = get_page(path=href,  header=header, do_safe=False) 			# Graphql-Call
+	
+	if page:
+		weburl = stringextract('webCanonicalUrl":"', '"', page)				# www.ardmediathek.de/video/Y3JpZDovL2Rhc2V..
+		api_id = weburl.split("/")[-1]
+		path = ard_api_path % api_id	
+		from  resources.lib.ARDnew import ARDStartSingle
+		ARDStartSingle(path, title, summary="", ID='', mehrzS='', homeID='')# switch 
+	else:
+		icon= R(ICON_DIR_VIDEO)
+		msg1 = u'%s:' % title
+		msg2 = "ARD-Video nicht gefunden"
+		PLog("%s %s" % (msg1, msg2))
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
+		
+	return
+
+#-----------------------------------------------------------------------
 # Aufruf ZDF_WebMoreSingle - listet empfohlene Beiträge
 #
 def ZDF_Graphql(title, page, path):								
@@ -9589,6 +9622,7 @@ def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):
 # 01.10.2023 Auswertung recommendation-Inhalte (ohne Cache, DictID leer), dabei 
 #	Verzicht auf {bookmarks}-Urls ("Das könnte Dich interessieren", kodinerds Post 3.134)
 # 02.12.2023 Auswertung Navigationsmenü (ZDF-Sportstudio, ZDFtivi)
+# 14.07.2025 externe ARD-Inhalte ohne key "cluster" mit sharingUrl -> ZDF_Graphql_Video
 #
 def ZDF_RubrikSingle(url, title, homeID=""):								
 	PLog('ZDF_RubrikSingle: ' + title)
@@ -9625,15 +9659,26 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 	if clusterObject == '':					# index error
 		msg1 = 'Rubrik [B]%s[/B] kann nicht geladen werden.' % title
 		msg2 = msg
+		PLog(msg1)
 		MyDialog(msg1, msg2, '')
 		return
 	PLog(str(clusterObject)[:80])
 	PLog("Cluster: %d " % len(clusterObject))
 	
-	if len(clusterObject) == 0:									# z.B. Wahltool, ohne Videos
-		msg1 = u"%s" % title
-		msg2 = u'keine Videos gefunden'
-		xbmcgui.Dialog().notification(msg1,msg2,noicon,2000,sound=True)
+	if len(clusterObject) == 0:									# z.B. Wahltool, ohne Videos bzw.
+		if "document" in jsonObject:							# externe Inhalte? i.d.R. ARD
+			PLog("document" in jsonObject)
+			if "document" in jsonObject:
+				if "externalId" in jsonObject["document"]:
+					scms_id = jsonObject["document"]["externalId"]
+					sharingUrl = jsonObject["document"]["sharingUrl"]
+					PLog("GraphqlWithExternalId: " + scms_id)
+					ZDF_Graphql_Video(title, scms_id, sharingUrl)# scms_id z.Z. nicht genutzt
+					return
+		else:
+			msg1 = u"%s" % title
+			msg2 = u'keine Videos gefunden'
+			xbmcgui.Dialog().notification(msg1,msg2,noicon,2000,sound=True)
 		return
 	
 	#--------------------------------
