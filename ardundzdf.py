@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>257</nr>										# Numerierung für Einzelupdate
+# 	<nr>258</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.6'
 VDATE = '14.07.2025'
 
@@ -8863,7 +8863,7 @@ def ZDF_getKat_content(obj):
 #	 und Merkliste sicherzustellen, ergänzt mit url ohne key zum Nachladen 
 #	von Startseiten (s. ZDF_Start)
 # 25.06.2025 jeweils 1. Web-Stage-Beitrag (ab STATIC_CONTENT_CAROUSEL) 
-#	fehlt im futura-Api
+#	fehlt im futura-Api. 14.07.2025 nicht mehr festgestellt (ev. Live?)
 #	
 def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", url=""):								
 	PLog('ZDF_PageMenu:')
@@ -9204,7 +9204,7 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 			MyDialog(msg1, msg2, '')
 			return
 		
-		items = blockextract('noopener noreferrer', item)		# Einzelbeiträge
+		items = blockextract('data-testid="teaser-tile', item)	# Einzelbeiträge
 		for item in items:
 			title = stringextract('<h3', '</h3', item)			# <h3 class= .. class= .. >Papst Leo .. </div></h3>
 			title = cleanhtml(title)
