@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>258</nr>										# Numerierung für Einzelupdate
+# 	<nr>259</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.6'
-VDATE = '14.07.2025'
+VDATE = '17.07.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -10003,8 +10003,12 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 	if ("seasonNumber" in obj and "episodeNumber" in obj):
 		season = obj["seasonNumber"]
 		episode = obj["episodeNumber"]
-		teaser_nr = "Staffel %s | Folge %s | " % (season, episode)
-		title_pre = "S%02dE%02d" % (int(season), int(episode))
+		try:						# seasonNumber kann Text enthalten
+			teaser_nr = "Staffel %s | Folge %s | " % (season, episode)
+			title_pre = "S%02dE%02d" % (int(season), int(episode))
+		except:
+			teaser_nr = "%s |  %s | " % (season, episode)
+			title_pre = "%sE%s" % (season, episode)
 		if headline:				# nicht im Menü "komplette Liste"
 			title = "%s |%s | %s" % (headline, title_pre, title)
 		else:
