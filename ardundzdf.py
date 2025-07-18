@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>260</nr>										# Numerierung für Einzelupdate
+# 	<nr>261</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.6'
 VDATE = '18.07.2025'
 
@@ -10229,7 +10229,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 		query = query_org.replace('+', ' ')
 		pagenr = re.search(r'&page=(\d+)', nextUrl).group(1)
 		PLog(pagenr); 
-		title = "Mehr Ergebnisse im ZDF zeigen zu: >%s<"  % query
+		title = "[B]Mehr[/B] Ergebnisse im ZDF zeigen zu: >[B]%s[/B]<"  % query
 		tagline = u"nächste Seite [B]%s[/B]" % pagenr
 		query_org=py2_encode(query_org); 
 		fparams="&fparams={'query': '%s', 's_type': '%s', 'pagenr': '%s'}" %\
