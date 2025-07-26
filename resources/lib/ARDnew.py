@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>98</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.03.2025
+# 	<nr>99</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.07.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2085,9 +2085,10 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 		PLog(str(StreamArray_1)[:80])								
 	except Exception as exception:
 		PLog(str(exception))
-		msg1 = u'keine Videoquellen gefunden'
-		PLog(msg1)
-		MyDialog(msg1, '', '')
+		msg1 = u'Video noch nicht oder nicht mehr verfügbar:'
+		msg2 = u'keine Videoquellen gefunden.'
+		PLog("%s %s" % (msg1, msg2))
+		MyDialog(msg1, msg2, '')
 		return	
 	
 	li = xbmcgui.ListItem()
