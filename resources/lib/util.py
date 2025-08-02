@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>132</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.06.2025
+# 	<nr>133</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.08.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1324,8 +1324,11 @@ def getRedirect(path, header=""):
 				if httplib2 == "":								# nicht geladen?
 					return path, msg
 				# import httplib2								# s. Modulkopf, hier häufige Kodi-Abstürze
-				h = httplib2.Http()								# class httplib2.Http, Cache nicht erford.
-				h.follow_all_redirects = True
+#				h = httplib2.Http()								# class httplib2.Http, Cache nicht erford.
+				h = httplib2.Http(cache=M3U8STORE)				# Cache: Addon-M3U8STORE
+
+#				h.follow_all_redirects = True					# Default: False
+				h.follow_redirects = True						# dummy - Default: True
 				r = h.request(path, "GET")[0]
 				new_url = r['content-location']
 				PLog("httplib2_url: " + new_url)
