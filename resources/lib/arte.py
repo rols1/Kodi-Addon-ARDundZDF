@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>64</nr>								# Numerierung für Einzelupdate
-#	Stand: 21.05.2025
+# 	<nr>65</nr>								# Numerierung für Einzelupdate
+#	Stand: 04.08.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -747,9 +747,12 @@ def get_img_pre(path, title):
 	PLog("urlretrieve %s to %s" % (img, fname))	
 	msg1 = L("Lade Bild")
 	msg2 = title
-	xbmcgui.Dialog().notification(msg1,msg2,R(ICON_ARTE),2000, sound=False)	 
-	urlretrieve(img, fname)								# img -> Cache
-	icon = R(ICON_ARTE)
+	xbmcgui.Dialog().notification(msg1,msg2,R(ICON_ARTE),2000, sound=False)	
+	try: 
+		urlretrieve(img, fname)								# img -> Cache
+	except Exception as exception:
+		PLog("urlretrieve_error: " + str(exception))
+		return 	leer_img
 	return fname
 	
 # -------------------------------
