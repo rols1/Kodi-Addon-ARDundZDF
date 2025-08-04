@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>133</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.08.2025
+# 	<nr>134</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.08.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -28,12 +28,14 @@ PYTHON2 = sys.version_info.major == 2
 PYTHON3 = sys.version_info.major == 3
 if PYTHON2:					
 	from urllib import quote, unquote, quote_plus, unquote_plus, urlencode, urlretrieve 
-	from urllib2 import Request, urlopen, URLError 
+	from urllib2 import Request, urlopen, URLError, HTTPRedirectHandler
+
 	from urlparse import urljoin, urlparse, urlunparse , urlsplit, parse_qs
 	LOG_MSG = xbmc.LOGNOTICE 				# s. PLog
 elif PYTHON3:				
 	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs  
-	from urllib.request import Request, urlopen, urlretrieve
+	from urllib.request import Request, urlopen, urlretrieve, HTTPRedirectHandler
+
 	from urllib.error import URLError
 	LOG_MSG = xbmc.LOGINFO 					# s. PLog
 	try:									
@@ -41,10 +43,11 @@ elif PYTHON3:
 	except:
 		pass
 
-try:
-	import httplib2			# https://httplib2.readthedocs.io/en/latest/libhttplib2.html
-except:
-	httplib2=""	
+#try:
+#	import httplib2			# https://httplib2.readthedocs.io/en/latest/libhttplib2.html
+#except:
+#	httplib2=""
+import requests			# ab Aug. 2025 nach Problemen mit Rredirects			
 import time, datetime
 from time import sleep  # PlayVideo
 
@@ -1280,13 +1283,16 @@ def getHeaders(response):						# z.Z.  nicht genutzt
 			headers = parse_headers(str(response.info()))
 		
 	return headers
+
 # ----------------------------------------------------------------------
 # 02.11.2024 für PYTHON2 bei Redirect-Errors unveränderte Rückgabe (neuer
 #	Versuch in get_page (get_page3) mit requests (falls vorh.)
 #   Für PYTHON3 bei Redirect-Errors Umstellung auf httplib2.
+#	HTTPRedirectHandler funktioniert bei den ZDF-Urls nicht.
 #	Debug 308_Error: www.ardaudiothek.de/rubrik/42914694 (ohne /-Ende)
 # 12.03.2025 für arte.EPG_Today (url_check): Check auf Error 309-399
-#	
+# 04.08.2025 Umstellung für Redirects httplib2 -> requests (addon.xml)
+#
 def getRedirect(path, header=""):		
 	PLog('getRedirect: '+ path)
 	PLog("header: " + str(header))
@@ -1295,58 +1301,23 @@ def getRedirect(path, header=""):
 
 	try:
 		if header:
-			req = Request(path, headers=header)	
+			r = requests.get(path, headers=header)	
 		else:
-			req = Request(path)
-		r = urlopen(req)
-		new_url = r.geturl()
+			r = requests.get(path)
+		PLog(r.status_code)
+		new_url = r.url
 		if new_url.startswith("http") == False:						# z.B. /rubrik/sportschau/..
 			new_url = 'https://%s%s' % (parsed.netloc, new_url) 	# Serveradr. ergänzen
-		PLog("new_url: " + new_url)
+		if path in new_url:
+			PLog("no_redirect") 
+		else:
+			PLog("redirected_to: " + new_url)
 		return new_url, msg
 	except Exception as e:
 		PLog("redirect_error: "  + str(e))
 		err=str(e)		
-		
-	try:
-		PLog("analyze_http_error:")
-		err = re.search(r'HTTP Error (\d+):', err).group(1)
-		err = int(err)
-		if err >= 309 and err <= 399:							#  Die Statuscodes 309 bis 399 nicht zugewiesen
-			PLog("ignore_309_to_399")
-			return path, msg
-		PLog(str(err))
-		if "308" in str(err) or "307" in str(err) or "301" in str(err):	# Permanent-Redirect-Url
-			if PYTHON2:											# -> get_page (s.o.)
-				PLog("PY2_give_up")
-				return path, msg
-			else:
-				if httplib2 == "":								# nicht geladen?
-					return path, msg
-				# import httplib2								# s. Modulkopf, hier häufige Kodi-Abstürze
-#				h = httplib2.Http()								# class httplib2.Http, Cache nicht erford.
-				h = httplib2.Http(cache=M3U8STORE)				# Cache: Addon-M3U8STORE
+		return path, msg											# Fallback übergebener path
 
-#				h.follow_all_redirects = True					# Default: False
-				h.follow_redirects = True						# dummy - Default: True
-				r = h.request(path, "GET")[0]
-				new_url = r['content-location']
-				PLog("httplib2_url: " + new_url)
-				PLog(type(new_url)); PLog(new_url)
-				PLog(parsed.netloc)
-				if new_url.startswith("http") == False:			# s.o.
-					new_url = 'https://%s%s' % (parsed.netloc, new_url)
-					PLog("HTTP308_301_new_url: " + new_url)
-				if path in new_url:		# Debug
-					PLog("same_new_url_path: " + new_url) 
-				return new_url, msg
-	except Exception as e:
-		PLog("r_error: "  + str(e))
-		PLog(str(e))
-		page=path, msg=str(e)									# Fallback übergebener path
-
-	return page, msg	
-	
 # ----------------------------------------------------------------------
 # iteriert durch das Objekt	und liefert Restobjekt ab path
 # bei leerem Pfad wird jsonObject unverändert zurückgegeben
@@ -2599,7 +2570,6 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		PLog("summ3: " + summ3)		
 		
 		summ = "%s\n\n%s\n\n%s" % (summ0, summ1, summ3)
-		summ=""
 		if head:
 			summ = summ + head + "\n"
 		if summ0:
@@ -2615,7 +2585,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		summ = summ.replace('"])</script><script>self.__', " ")			# Textende s.o.: ..self.__next_f.push([1,"9
 		summ = summ.replace('/button>',"")
 		summ = unescape(summ); 
-		summ = (summ.replace('"', '').replace('\\', ''))
+		summ = (summ.replace('"', '').replace('\\', '').replace('/span>', ''))
 		
 		s = stringextract('<h2 class="', '"', summ)
 		s = '<h2 class="%s"' % s
