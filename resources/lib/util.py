@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>134</nr>										# Numerierung für Einzelupdate
+# 	<nr>135</nr>										# Numerierung für Einzelupdate
 #	Stand: 04.08.2025
 
 # Python3-Kompatibilität:
@@ -43,11 +43,7 @@ elif PYTHON3:
 	except:
 		pass
 
-#try:
-#	import httplib2			# https://httplib2.readthedocs.io/en/latest/libhttplib2.html
-#except:
-#	httplib2=""
-import requests			# ab Aug. 2025 nach Problemen mit Rredirects			
+import requests			# ab Aug. 2025 addon.xml, nach Problemen mit Redirects			
 import time, datetime
 from time import sleep  # PlayVideo
 
