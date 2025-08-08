@@ -9,8 +9,8 @@
 #	30.12.2019 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
 ################################################################################
-# 	<nr>13</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.09.2023
+# 	<nr>14</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.08.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -160,6 +160,7 @@ def Main_phoenix():
 # ----------------------------------------------------------------------
 # die json-Seite enthält ca. 4 Tage EPG - 1. Beitrag=aktuell
 # 15.08.2020 Verwendung ZDFstreamlinks (util) für href (master.m3u8)
+# 08.08.2025 Wechsel zu ARDstreamlinks
 #
 def get_live_data():
 	PLog('get_live_data:')
@@ -199,10 +200,10 @@ def get_live_data():
 		descr=cleanhtml(descr); descr=transl_json(descr)
 		descr=unescape(descr); descr=descr.replace("\\r\\n", "\n")
 		
-	zdf_streamlinks = get_ZDFstreamlinks(skip_log=True)
-	# Zeile zdf_streamlinks: "webtitle|href|thumb|tagline"
+	ard_streamlinks = get_ARDstreamlinks(skip_log=True)
+	# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
 	href=''
-	for line in zdf_streamlinks:
+	for line in ard_streamlinks:
 		webtitle, href, thumb, tagline = line.split('|')
 		if up_low('phoenix') in up_low(webtitle): 
 			href = href
