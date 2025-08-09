@@ -42,10 +42,14 @@ elif PYTHON3:
 		xbmc.translatePath = xbmcvfs.translatePath
 	except:
 		pass
-
-import requests			# ab Aug. 2025 addon.xml, nach Problemen mit Redirects			
+try:
+	import requests							# ab Aug. 2025 via addon.xml, Redirect-Probleme mit httplib2
+	requests_modul="true"
+except Exception as exception:				# möglich: "future feature annotations is not defined"
+	requests_modul = ""						# s. getRedirect
+				
 import time, datetime
-from time import sleep  # PlayVideo
+from time import sleep  	# PlayVideo
 
 from threading import Thread	
 from threading import Timer	# KeyListener
@@ -1128,6 +1132,12 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=False, do_safe=True, decode=True):
 	PLog('get_page:'); PLog("path: " + path); PLog("do_safe: " + str(do_safe)); 
 
+	msg=''; page=''; 
+	if path.startswith("http") == False:		# Irrläufer-Url
+		msg = "url_without_http"
+		PLog(msg)
+		return "", msg
+		
 	if header:									# dict auspacken
 		header = unquote(header);  
 		header = header.replace("'", "\"")		# json.loads-kompatible string-Rahmen
@@ -1146,7 +1156,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		path = quote(path, safe="#@:?,&=/")	# s.o.
 	PLog("safe_path: " + path)
 
-	msg=''; page=''; compressed=''	
+	compressed=''	
 	new_url=path													# dummy
 	UrlopenTimeout = 10
 
@@ -1287,25 +1297,36 @@ def getHeaders(response):						# z.Z.  nicht genutzt
 #	HTTPRedirectHandler funktioniert bei den ZDF-Urls nicht.
 #	Debug 308_Error: www.ardaudiothek.de/rubrik/42914694 (ohne /-Ende)
 # 12.03.2025 für arte.EPG_Today (url_check): Check auf Error 309-399
-# 04.08.2025 Umstellung für Redirects httplib2 -> requests (addon.xml)
+# 04.08.2025 Umstellung für Redirects httplib2 -> requests (addon.xml),
+# Param stream erforderlich für mp4-Urls, Fallback=path falls requests 
+#	fehlt oder fehlschlägt.
 #
-def getRedirect(path, header=""):		
+def getRedirect(path, header="", stream=False):		
 	PLog('getRedirect: '+ path)
 	PLog("header: " + str(header))
+	PLog("stream: " + str(stream))
+	
 	page=""; msg=""
 	parsed = urlparse(path)
 
+	if not requests_modul:
+		PLog("requests_modul_missing | no_getRedirect")
+		return path, msg											# Fallback
+		
 	try:
+		addon_id='script.module.requests'; cmd="openSettings"
+		inp_vers = xbmcaddon.Addon(addon_id).getAddonInfo('version')
+		PLog("Version_requests-Modul: " + inp_vers)
 		if header:
-			r = requests.get(path, headers=header)	
+			r = requests.get(path, headers=header, stream=stream)	
 		else:
-			r = requests.get(path)
-		PLog(r.status_code)
+			r = requests.get(path, stream=stream)
+		PLog("Status_r: " + str(r.status_code))
 		new_url = r.url
 		if new_url.startswith("http") == False:						# z.B. /rubrik/sportschau/..
 			new_url = 'https://%s%s' % (parsed.netloc, new_url) 	# Serveradr. ergänzen
 		if path in new_url:
-			PLog("no_redirect") 
+			PLog("not_redirected") 
 		else:
 			PLog("redirected_to: " + new_url)
 		return new_url, msg
@@ -3995,7 +4016,7 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 		if url.startswith('smb://') == False:	# keine Share
 			url = os.path.abspath(url)
 	else:										# 14.01.2022 Bsp. HTTP Error 404 NDR Schlager
-		url = url_check(url, caller='PlayAudio')# False oder Redirect-Url
+		url = url_check(url, caller='PlayAudio')
 		if url == False:
 			return
 		
@@ -4084,7 +4105,8 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 # 04.03.2022 Header für ZDF-Url erforderl. (Error "502 Bad Gateway")
 # 21.01.2023 dialog optional für add_UHD_Streams (ohne Dialog)
 # Rückage url oder False
-# 14.03.2025 Header auf user-agent (curl) beschränkt 
+# 14.03.2025 Header auf user-agent (curl) beschränkt
+# 06.08.2025 Param stream ergänzt für requests in getRedirect 
 #
 def url_check(url, caller='', dialog=True):
 	PLog('url_check: %s | %s' % (url, caller))
@@ -4103,6 +4125,13 @@ def url_check(url, caller='', dialog=True):
 				MyDialog(msg1, msg2, "")		 			 	 
 			return False
 
+	# 05.08,2025 stream=True für mp4-Dateien sonst Klemmer
+	#	in requests
+	stream=False
+	if ".mp4" in url or ".mp3" in url:
+		PLog("urlcheck_stream")
+		stream=True
+
 	#-----------------------------------------
 	# hier bei Bedarf ein SessionTimeout verwenden, Bsp.
 	#	blog.apify.com/python-requests-timeout/
@@ -4112,7 +4141,7 @@ def url_check(url, caller='', dialog=True):
 	# url='http://feeds.soundcloud.com/x'		# HTTP Error 405: Method Not Allowed
 	header = {'user-agent': 'curl/7.81.0'}
 
-	page, msg = getRedirect(url, header)			
+	page, msg = getRedirect(url, header, stream)			
 	if page:
 		return page							# ermittelte Url	
 	else:

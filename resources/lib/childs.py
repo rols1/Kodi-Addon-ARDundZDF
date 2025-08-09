@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>34</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.04.2025
+#	Stand: 08.08.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1148,7 +1148,9 @@ def MausLive():
 		msg2=msg
 		MyDialog(msg1, msg2, '')	
 		return
-	PLog(len(page2))	
+	PLog(len(page2))
+	page2 = page2.replace('" : "', '":"')				# Formatänderung Sender
+	PLog("page2: "  + page2)
 	
 	mp3_url = stringextract('audioURL":"', '"', page2)	# .m3u8
 	if mp3_url.startswith("http") == False:

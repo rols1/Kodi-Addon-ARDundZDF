@@ -10,7 +10,35 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-
+09.07.2025 	5.2.7
+			ZDF_Kat: utf-8-Behandlung für pos2-Marker (verhindert Ausfall ZDF-
+			Kategorien bei PY2).
+			ZDF_RubrikSingle: Erweiterung für einzelne externe Beiträge (ARD) ohne 
+			direkten Quellenbezug (key cluster leer) - Nutzung Graphql-Call mittels 
+			sharingUrl (Web), neue Funktion ZDF_Graphql_Video.
+			ZDF_WebMore: nach Webänderung Austausch Blockmarker "noopener noreferrer"  
+			gegen 'data-testid="teaser-tile' (wie schon ZDF_Kat, ZDF_Kat_Plus).
+			ZDF_get_content: nicht numerische seasonNumber abgefangen (try/except).
+			ZDF_Search: Fett-/Color-Markierungen aus Titeln der Mehr-Suche entfernt.
+			ARDStartSingle: Info "keine Videoquellen gefunden" erweitert mit "Video 
+			noch nicht oder nicht mehr verfügbar:", z.B. bei FSK16-Inhalten.
+			ZDF_getApiStreams: router-inkompatible Zeichen aus Infotext (html, Escape-
+			Zeichen) entfernt (repl_json_chars, unescape).
+			Redirects-Behandlung: Verwendung python-requests statt httplib2 - Anpassung
+			addon.xml (import addon="script.module.requests"), Modulkopf util (import 
+			requests in try/except-Block wegen mögl. exception: "future feature 
+			annotations is not defined" bei python 3.0 - 3.6), Funktion getRedirect 
+			(httplib2-Code -> requests-Code, damit Verzicht auf einzelne HTTP-Error-
+			Behandlung).
+			url_check: Param stream für mp4- und mp3-Url's auf True gesetzt, sonst 
+			Klemmer durch requests in getRedirect).
+			get_img_pre (Modul arte): HTTP-Error 404 für urlretrieve abgefangen.
+			get_page: fehlerhafte Url abfangen (Url ohne http).
+			MausLive (Modul childs): Auswertung an geändertes json-Format angepasst.
+			
+Zusammenfassung Änderungen redirects
+			
+			
 07.07.2025 	5.2.6
 			Main_ZDF: Menü ZDFinternational entfernt (zu wenig Videos).
 			ZDF-Kategorien: nach ZDF-Änderung (3-Teilung) Anpassung in ZDF_Kat (2
@@ -175,7 +203,7 @@ CHANGE HISTORY
 			(neu in Pagination-Abschnitt der Videoquellen).
 			Addon-Icons: in tv-privat.png Austausch Logo ntv gegen münchen.tv (Sender ntv
 			hier schon lange nicht mehr verfügbar).
-			SearchARDundZDFnew (Modul ARDnew): try-except-Block für ReadFavourites (Laden
+			SearchARDundZDFnew (Modul ARDnew): try/except-Block für ReadFavourites (Laden
 			der Merkliste) - Absicherung OSError.
 			Main_KIKA: Aufruf "Kinderhörspiele der ARD-Audiothek" geändert (von AudioSearch
 			zu Audio_get_cluster_rubrik mit Rubrik-Url).
