@@ -10,7 +10,7 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
-09.07.2025 	5.2.7
+09.08.2025 	5.2.7
 			ZDF_Kat: utf-8-Behandlung für pos2-Marker (verhindert Ausfall ZDF-
 			Kategorien bei PY2).
 			ZDF_RubrikSingle: Erweiterung für einzelne externe Beiträge (ARD) ohne 
@@ -35,8 +35,6 @@ CHANGE HISTORY
 			get_img_pre (Modul arte): HTTP-Error 404 für urlretrieve abgefangen.
 			get_page: fehlerhafte Url abfangen (Url ohne http).
 			MausLive (Modul childs): Auswertung an geändertes json-Format angepasst.
-			
-Zusammenfassung Änderungen redirects
 			
 			
 07.07.2025 	5.2.6
