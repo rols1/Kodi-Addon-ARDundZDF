@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>263</nr>										# Numerierung für Einzelupdate
+# 	<nr>264</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.7'
-VDATE = '15.08.2025'
+VDATE = '18.08.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8672,7 +8672,7 @@ def ZDF_KatSub(title, path, tabid="", Graphql=""):
 	addDir(li=li, label=label, action="dirList", dirID="ZDF_get_naviKat", fanart=icon, 
 		thumb=icon, fparams=fparams, tagline=tag)
 
-	ZDF_Graphql_get_json(objs)							# Liste Beiträge,  wie ZDF_Graphql (ZDF_WebMoreSingle)
+	ZDF_Graphql_get_json(objs)							# Liste Beiträge,  wie ZDF_Recommendation (ZDF_WebMoreSingle)
 	
 	if hasNextPage:
 		base = "https://api.zdf.de/graphql?operationName=getMetaCollectionContent&variables="
@@ -9330,7 +9330,7 @@ def ZDF_WebMoreSingle(title, path):
 			data = data.replace('\\', '')
 			PLog("data: " + data[:200])
 			ZDF_WebMoreVideo(title, data, path, hls_url, img)
-			ZDF_Graphql(title, page, path)						# Recommendations (Einzel + Folgebeiträge)
+			ZDF_Recommendation(title, page, path)				# Recommendations (Einzel + Folgebeiträge)
  	
 		else:													# Fallback1: futura-api
 			base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
@@ -9408,18 +9408,21 @@ def ZDF_WebMoreVideo(title, data, path, hls_url, img):
 	return														# weiter mit Recommendations
 
 #-----------------------------------------------------------------------
-# Aufruf ZDF_RubrikSingle - holt einz. Video via Graphql-Call
-#	relevant für ZDF-extene ARD-Beiträge (key externalId)
+# Aufruf ZDF_RubrikSingle - holt einz. externes Video via Graphql-Call
+#	relevant für ZDF-extene ARD-Videos (key externalId), Params der
+#	Webseite (sharingUrl) vorerst nicht nötig.
 #
-def ZDF_Graphql_Video(title, scms_id, sharingUrl):							# scms_id z.Z. nicht genutzt							
+def ZDF_Graphql_Video(title, scms_id, sharingUrl):									
 	PLog('ZDF_Graphql_Video: %s | %s' % (title, sharingUrl))
+		
 	ard_api_path = "https://api.ardmediathek.de/page-gateway/pages/ard/item/%s?devicetype=pc&embedded=true"
+	
 	token = "ahBaeMeekaiy5ohsai4bee4ki6Oopoi5quailieb"		# bei Bedarf aus Web ermitteln (sharingUrl)
 	graphqlheader="{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/', \
 			'zdf-app-id': 'ffw-mt-web-1305801c', 'accept': '*/*', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site' }"
 	header = graphqlheader % token
-	href="https://api.zdf.de/graphql?operationName=GetVideoMetaByCanonical&variables=%7B%22canonical%22%3A%22page-video-ard-sayonara-loreley--wiedersehen-in-ruedesheim-100%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%224b52236b2cf362542bab7a4e4cfa99830a22ee5ad1e77080d3cc12b2092f0e02%22%7D%7D"
-	
+	href="https://api.zdf.de/graphql?operationName=GetVideoMetaByCanonical&variables=%7B%22canonical%22%3A%22####%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%224b52236b2cf362542bab7a4e4cfa99830a22ee5ad1e77080d3cc12b2092f0e02%22%7D%7D"
+
 	canon = sharingUrl.split("/")[-1]
 	canon = canon.replace("-movie", "")
 	canon="page-video-ard-" + canon
@@ -9444,8 +9447,8 @@ def ZDF_Graphql_Video(title, scms_id, sharingUrl):							# scms_id z.Z. nicht ge
 #-----------------------------------------------------------------------
 # Aufruf ZDF_WebMoreSingle - listet empfohlene Beiträge
 #
-def ZDF_Graphql(title, page, path):								
-	PLog('ZDF_Graphql: ' + title)
+def ZDF_Recommendation(title, page, path):								
+	PLog('ZDF_Recommendation: ' + title)
 
 	pos = page.find("zdf.de/configurations")					# 2x: zdf.de/configurations
 	PLog("pos: %d" % pos)
@@ -9503,7 +9506,7 @@ def ZDF_Graphql(title, page, path):
 	return	
 
 #-----------------------------------------------------------------------
-# Aufruf ZDF_Graphql und ZDF_KatSub
+# Aufruf ZDF_Recommendation und ZDF_KatSub
 # Auswertung json-Objekte via ZDF_getKat_content
 # Ziel für Einzelbeitrag -> ZDF_getApiStreams,
 # Ziel für Folgebeiträge -> ZDF_RubrikSingle
@@ -9664,8 +9667,10 @@ def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):
 # 01.10.2023 Auswertung recommendation-Inhalte (ohne Cache, DictID leer), dabei 
 #	Verzicht auf {bookmarks}-Urls ("Das könnte Dich interessieren", kodinerds Post 3.134)
 # 02.12.2023 Auswertung Navigationsmenü (ZDF-Sportstudio, ZDFtivi)
-# 14.07.2025 externe ARD-Inhalte ohne key "cluster" mit sharingUrl -> ZDF_Graphql_Video
+# 14.07.2025 externe ARD-Inhalte (leerer Cluster) mit sharingUrl -> ZDF_Graphql_Video
 # 15.08.2025 Seriencheck: Austausch docObject["id"] -> docObject["brandId"], "id" unsicher
+# 18.08.2025 Verzweigung bei leerem Cluster:  ARD-Inhalte -> ZDF_Graphql_Video, restl.
+#	Beiträge Verarbeitung als Serie -> ZDF_Episodes_Graphql (Step1, Step2).
 #
 def ZDF_RubrikSingle(url, title, homeID=""):								
 	PLog('ZDF_RubrikSingle: ' + title)
@@ -9699,7 +9704,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 		navi=True		
 		
 	clusterObject, msg = GetJsonByPath("cluster", jsonObject)
-	if clusterObject == '':					# index error
+	if clusterObject == '':					# index error, bei 0 (leer) weiter
 		msg1 = 'Rubrik [B]%s[/B] kann nicht geladen werden.' % title
 		msg2 = msg
 		PLog(msg1)
@@ -9716,8 +9721,17 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 					scms_id = jsonObject["document"]["externalId"]
 					sharingUrl = jsonObject["document"]["sharingUrl"]
 					PLog("GraphqlWithExternalId: " + scms_id)
-					ZDF_Graphql_Video(title, scms_id, sharingUrl)# scms_id z.Z. nicht genutzt
+	
+					if "ard_video_ard" in scms_id:				# ext. Einzelvideo
+						ZDF_Graphql_Video(title, scms_id, sharingUrl)
+					else:										# ZDF-Serie via Graphql
+						staffel_list=[]; 						# dummie
+						sid = url.split("/")[-1]
+						jsonID = "ZDF_Graphql_sid_%s" % sid
+						ZDF_Episodes_Graphql(sid, staffel_list, surl=sharingUrl)	# Step1: Graphql-Call mit sid
+						ZDF_Episodes_Graphql(sid, staffel_list, jsonID=jsonID)		# Step2: Liste via jsonID
 					return
+
 		else:
 			msg1 = u"%s" % title
 			msg2 = u'keine Videos gefunden'
@@ -9758,7 +9772,7 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 	if docObject:
 		if "structureNodePath" in docObject:
 			if "/zdf/serien/" in docObject["structureNodePath"]:
-#				sid = docObject["id"]							# z.B. trigger-point-102
+				# sid = docObject["id"]							# nicht sicher:
 				sid = docObject["brandId"]						# z.B. die-bergretter-104, statt "id"=die-bergretter-132
 				PLog("Serie: " + sid)
 				label = "komplette Liste: %s" % title
@@ -10768,15 +10782,17 @@ def ZDF_FlatListEpisodes(sid):
 
 #----------------------------------------------
 # Aufruf Step 1: ZDF_FlatListEpisodes nach Menü "komplette Liste ..",
-# 	return True falls Graphql-Call im Web neuere Liste findet
+# 	return True falls Graphql-Call im Web neuere Liste findet oder
+# 	ZDF_RubrikSingle bei leeren Cluster (Aufruf mit Sharing-Url surl)
 # Aufruf Step 2: ZDF_FlatListEpisodes -> Anzeige neue Liste
 #
-def ZDF_Episodes_Graphql(sid, staffel_list, jsonID=""):
+def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 	PLog("ZDF_Episodes_Graphql: %s | %d | %s" % (sid,  len(staffel_list), jsonID))
 	
 	if not jsonID:											# Step 1  Web- + Graphql-Call
 		season_nr=0; folgen_anz=0
-		surl = "https://www.zdf.de/serien/" + sid			# Sharing-Url
+		if not surl:
+			surl = "https://www.zdf.de/serien/" + sid		# Sharing-Url
 		page, msg = get_page(surl)
 		if page == '':	
 			return False
@@ -10785,6 +10801,7 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID=""):
 		item = item.replace('\\"', '"')
 		PLog(item)
 		idIn = stringextract(':"', '"', item)				# initialSeasonId
+		PLog("item: %s | idIn: %s" % (item, idIn))
 		canon = sid											# ID für smartCollectionByCanonical
 		zdf_app_id = "ffw-mt-web-2c770629"
 		token = "aa3noh4ohz9eeboo8shiesheec9ciequ9Quah7el"	# bei Bedarf aus Web ermitteln
@@ -10859,7 +10876,8 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID=""):
 				title=repl_json_chars(title)
 				descr=repl_json_chars(descr); tag=repl_json_chars(tag)
 				tag_par = tag.replace("\n", "||")
-				scms_id=""
+				vid_id=folge["id"]						#  wie ZDF_WebMoreVideo
+				scms_id = "SCMS_" + vid_id
 				
 				img=py2_encode(img)						# PY2
 				descr=py2_encode(descr); tag_par=py2_encode(tag_par); 
@@ -10903,7 +10921,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	if page == '':	
 		msg1 = "Fehler in ZDF_getStreamSources:"
 		msg2 = msg
-		if "Error 503" in msg:								# cdn-api nicht akzeptiert? -> api.zdf.de
+		if "Error 503" in msg or not path:								# cdn-api nicht akzeptiert? -> api.zdf.de
 			try:
 				profile_url="https://api.zdf.de/content/documents/%s.json?profile=player" % scms_id
 				PLog("profile_url: " + profile_url)
