@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>19</nr>								# Numerierung für Einzelupdate
-#	Stand: 21.06.2025
+# 	<nr>20</nr>								# Numerierung für Einzelupdate
+#	Stand: 19.08.2025
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -613,9 +613,6 @@ def get_img(item):
 	return img
 	
 # ----------------------------------------------------------------------
-
-# todo: intern. Livesteream separieren 
-
 def XL_Live(ID=''):	
 	PLog('XL_Live:')
 	title = 'TagesschauXL Live'
@@ -764,15 +761,17 @@ def get_content_json(item):
 		return False,"","","","","",""		
 		
 	typ = obj["playerType"]
-	try:														# 21.06.2025 Bilddaten geändert
-		value = obj["pc"]["generic"]["imageTemplateConfig"]["size"][-1]["value"]	# 2. Größe: "16x9-big"
-		step = obj["pc"]["generic"]["imageTemplateConfig"]["width"]["stepSize"]	# z.B. 320, min + max nicht verwendet
-		mystep = 2*step											# z.B. 640
-		img = obj["mc"]["meta"]["images"][0]["url"]				# 2 vorh.
-		img_alt = obj["mc"]["meta"]["images"][0]["alt"]
-		img = img.replace('{size}', value)
-		img = img.replace('{width}', str(mystep))
-		PLog("img: %s, value: %s, step: %d, mystep: %d" % (img, value, step, mystep))
+	try:														# 19.08.2025 Bilddaten geändert
+		img_obj = obj["posterImage"]
+		img_alt =  img_obj["altText"]
+		if "urlL" in img_obj:
+			img = img_obj["urlL"]	
+		if not img and img_obj["urlM"]:
+			img = img_obj["urlM"]
+		if not img and img_obj["urlS"]:
+			img = img_obj["urlS"]
+		
+		PLog("img: %s, img_alt: %s" % (img, img_alt))
 	except Exception as exception:
 		PLog("get_img_error: " + str(exception))
 		img_alt=""
@@ -794,7 +793,7 @@ def get_content_json(item):
 	summ = repl_json_chars(summ)
 	av_typ = stringextract('av_content_type":"', '"', conf)
 	# dur = stringextract('av_content_duration":', ',', conf)	# enthält die Dauer der gesamten Beiträge!
-	
+		
 	PLog('Get_content typ: %s | av_typ: %s | title: %s | tag: %s | descr: %s |img:  %s | stream: %s' %\
 		(typ,av_typ,title,tag,summ,img,stream) )		
 	return typ,av_typ,title,tag,summ,img,stream		
