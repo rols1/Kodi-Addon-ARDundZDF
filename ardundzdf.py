@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>264</nr>										# Numerierung für Einzelupdate
+# 	<nr>265</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.7'
-VDATE = '18.08.2025'
+VDATE = '22.08.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -176,15 +176,17 @@ ARD_Live 		= '/tv/live'
 
 # ARD Audiothek
 ARD_AUDIO_BASE = 'https://api.ardaudiothek.de/'
-HEADERS="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', \
+HEADERS="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',\
 	'Referer': '%s', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
 
-# Relaunch der Mediathek beim ZDF ab 28.10.2016: xml-Service abgeschaltet
-ZDF_BASE				= 'https://www.zdf.de'
+# Relaunch der ZDF-Mediathek 20.03.2025 (Kategorien, Graphql)
+ZDF_BASE			= 'https://www.zdf.de'
 ZDF_CacheTime_Start = 300			# 5 Min.
 ZDF_CacheTime_AZ 	= 1800			# 30 Min.
-# Aktualisierung via window.zdfsite www.zdf.de
-zdfToken = "5bb200097db507149612d7d983131d06c79706d5"	# 21.07.2024
+zdfToken 			= "aa3noh4ohz9eeboo8shiesheec9ciequ9Quah7el"	# 22.08.2025
+ZDF_GraphqlBase		= "https://api.zdf.de/graphql?operationName=%s&variables="	# % OperationName
+HEADERS_GRAPHQL 	= "{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/',\
+	'zdf-app-id': '%s', 'accept': '*/*', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site'}" 
 
 REPO_NAME		 	= 'Kodi-Addon-ARDundZDF'
 GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
@@ -1452,7 +1454,7 @@ def ZDF_Teletext_Table(li, body, aktpg):
 		
 		txt =  "\n".join(lines)
 		txt = txt.strip()											# LF's vor + hinter txt entf.
-		xbmcgui.Dialog().textviewer(title, txt,usemono=True)		# todo: Verzicht auf Bottom-Buttons	
+		xbmcgui.Dialog().textviewer(title, txt,usemono=True)
 			
 		if img_data:												# Wetterkarten
 			import base64
@@ -3661,22 +3663,11 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	'''
 
-	title = u"Event: [B]Tour de France 2025[/B]"					# Großevent	(nur 1 Jahr archivieren!)
-	tag = u"Tour de France ab 5. Juli: News, Videos, Rennberichte und Ergebnisse"
-	cacheID = "Sport_TourdeFrance_2025"
-	img = "https://images.sportschau.de/image/e04ecbb2-57e6-4dbb-af51-c0fbd4d724b2/AAABlvd6uVA/AAABkZLpihI/20x9-1280/bikeaid-106.webp"
-	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
-		(quote(title), quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
-
-	title = u"Event: [B]UEFA Frauen-EM 2025[/B]"						# Großevent	
-	tag = u"Die UEFA Frauen-EM 2025 findet vom 2. bis zum 27. Juli in der Schweiz statt. Die wichtigsten Informationen zum Turnier finden Sie auf Sportschau.de."
-	cacheID = "Sport_UEFAFrauen"
-	img = "https://images.sportschau.de/image/0d254f10-2fdd-4814-8fc0-cb8caaf4416f/AAABk846Fjw/AAABkZLlo-k/16x9-big/frauen-em-128.jpg?width=1280"
-	path = "https://www.sportschau.de/fussball/frauen-em"
+	title = u"Event: [B]DFB-Pokal 2025[/B]"
+	tag = u"DFB-Pokal 2025,  News zu Ergebnissen, Auslosungen und Spielen"
+	cacheID = "DFB_Pokal_2025"
+	img = "https://images.sportschau.de/image/8039954d-42c9-4630-9308-be21458fa18b/AAABlcSOzQM/AAABmKJZ-0g/16x9-big/dfbpokal-sp-100.jpg?width=1280"
+	path = "https://www.sportschau.de/fussball/dfbpokal"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
 		(quote(title), quote(path))
@@ -3756,6 +3747,28 @@ def ARDSportWDRArchiv():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
 	
+	title = u"Event: [B]Tour de France 2025[/B]"					# Großevent	(nur 1 Jahr archivieren!)
+	tag = u"Tour de France ab 5. Juli: News, Videos, Rennberichte und Ergebnisse"
+	cacheID = "Sport_TourdeFrance_2025"
+	img = "https://images.sportschau.de/image/e04ecbb2-57e6-4dbb-af51-c0fbd4d724b2/AAABlvd6uVA/AAABkZLpihI/20x9-1280/bikeaid-106.webp"
+	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
+	title = u"Event: [B]UEFA Frauen-EM 2025[/B]"						# Großevent	
+	tag = u"Die UEFA Frauen-EM 2025 findet vom 2. bis zum 27. Juli in der Schweiz statt. Die wichtigsten Informationen zum Turnier finden Sie auf Sportschau.de."
+	cacheID = "Sport_UEFAFrauen"
+	img = "https://images.sportschau.de/image/0d254f10-2fdd-4814-8fc0-cb8caaf4416f/AAABk846Fjw/AAABkZLlo-k/16x9-big/frauen-em-128.jpg?width=1280"
+	path = "https://www.sportschau.de/fussball/frauen-em"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Event: [B]Tour de France Femmes 2024[/B]"					# Großevent	
 	tag = u"Tour de France Femmes 2024, Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen"
 	cacheID = "Sport_TourdeFemmes_2024"
@@ -8407,7 +8420,7 @@ def ZDF_Kat(title):
 	img_base = "https://www.zdf.de/assets/"
 	rubrik_list = ["A-Z", "Barrierefreie Inhalte",		# Umleitung
 				"Sport", "Nachrichten"]
-	
+
 	for i, item in enumerate(kats):
 		title = stringextract("<h2", "</h2", item)			# t1mx31h9">Wirtschaft
 		title = title.split(">")[-1]
@@ -8448,6 +8461,8 @@ def ZDF_Kat(title):
 				func="ZDF_KatNachrichten"
 			fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" %\
 				(quote(rubrik_url), label, homeID)
+			if 'Barrierefreie' in title:
+				func="ZDF_Barrierearm"
 			addDir(li=li, label=label, action="dirList", dirID=func, fanart=img, 
 				thumb=img, fparams=fparams)
 		else:
@@ -8529,6 +8544,38 @@ def ZDF_Kat_Plus(title, DictID):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------
+# neu ab 22.08.2025
+# Aufruf ZDF_Kat, eigene Buttons für Barrierearm
+#	(Inhalte futura-api nicht mehr ausreichend)
+def ZDF_Barrierearm(url, title, homeID):								
+	PLog('ZDF_Barrierearm:')
+
+	li = xbmcgui.ListItem()
+
+	ZDF_RubrikSingle(url, title, ret=True)							# futura-api-Liste (unvollständig)
+	sub_kat_list = [u"Audiodeskription|audiodeskription-104~768x432?cb=1679056190709|audiodeskription",
+					u"Untertiteln|untertitel-102~768x432?cb=1679056243926|untertitel",
+					u"Gebärdensprache|gebardensprache-100~768x432?cb=1679056280756|deutsche-gebaerdensprache"
+					]
+	for items in sub_kat_list:
+		item = items.split("|")
+		PLog(item)
+		title = u"Videos mit %s" % item[0]
+		img = "https://www.zdf.de/assets/%s" % item[1]
+		path = "https://www.zdf.de/%s" % item[2]
+		tag = "Folgeseiten"
+	
+		title = py2_encode(title); path = py2_encode(path)
+		PLog("Satz17:"); 
+		PLog(title); PLog(path)
+		fparams="&fparams={'title': '%s', 'path': '%s'}" %\
+			(quote(title), quote(path))
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
+			thumb=img, tagline=tag, fparams=fparams)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+#-----------------------------------------------
 # Aufruf ZDF_Kat, eigene Buttons für Nachrichtenformate
 #	(wegen der Menge aus ZDF_Kat verlagert). Params=dummies
 def ZDF_KatNachrichten(url, title, homeID):								
@@ -8567,72 +8614,98 @@ def ZDF_KatNachrichten(url, title, homeID):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------
+# Params Webseite holen - hier für ZDF_KatSub, collmark: von
+#	metaCollectionId (ZDF_KatSub) abweichende Markierung
+# Caching bisher nicht nötig (ca. 200-300KByte seti Relaunch)
+#
+def ZDF_Graphql_WebDetails(path, collmark):								
+	PLog('ZDF_Graphql_WebDetails: %s, reco: %s' % (path, collmark))
+	genre_id=""; coll_id=""; apitoken=""; appId=""; 
+	zdfappId=""; 
+	mark="#t="													# genre-Markierung
+	if mark in path:
+		genre_id = path.split(mark)[-1]
+	
+	page, msg = get_page(path)
+	if not page:
+		return genre_id, coll_id, apitoken, appId
+
+	page = page.replace('\\', '')
+	
+	try:														# Params für ersten Graphql-Call suchen
+		mark = '%s":"' % collmark
+		coll_id = stringextract(mark, '"', page)				# c81de0fe-..cbaf379853, genre-10296
+		apitoken = stringextract('apiToken":"', '"', page)		# apiToken\":\"ahBaeMee..
+		appId = stringextract('appId":"', '"', page)			# appId\":\"ffw-mt-web-b1cc.. -> Header
+		zdfappId = appId.replace("ffw-mt","zdf")				# -> Params Graphql
+
+	except Exception as exception:
+		genre_id=""; apitoken=""; appId=""; zdfappId=""; tabid=""
+		PLog("Graphql_WebDetails_error: " + str(exception))
+
+	PLog("genre_id: %s, coll_id: %s, apitoken: %s, appId: %s, zdfappId: %s" % \
+		(genre_id, coll_id, apitoken, appId, zdfappId))
+	return genre_id, coll_id, apitoken, appId, zdfappId
+
+#-----------------------------------------------
 # Aufruf: ZDF_Kat - Subkategorien einschl. Subnavigation
 #	1. Genre-ID, Api-Token und appId Webseite ermitteln
 #	2. Graphql-Call mit Genre-ID, Api-Token und appId
 # Steuerung Submenüs via Button -> ZDF_get_naviKat (ähnlich
 #	ZDF-Sportstudio (Datenformat zu sehr abweichend)
 # Zielfunktion ZDF_RubrikSingle via futura-Url
+# 21.08.2025 Aufbau Params Graphql unquoted für leichteren
+#	Abgleich, Web-Auswertung in ZDF_Graphql_WebDetails,
+#	Pagination wieder an Web angeglichen (48->24)
 #
 def ZDF_KatSub(title, path, tabid="", Graphql=""):								
-	PLog('ZDF_KatSub: %s, %s, %s' % (title, path, tabid))
+	PLog("ZDF_KatSub:") 
+	PLog("title: %s, path: %s, tabid: %s" % (title, path, tabid))
+	base = ZDF_GraphqlBase % "getMetaCollectionContent"
+	# sha256Hash: 2. Variante "c85ca9c63.. 54117242"  Beiträge identisch, weniger key, s. lokale Doku
+	ext	= '{"persistedQuery":{"version":1,"sha256Hash":"124c9c2f9d4fa982b07a5cfa12a608c614847be14ac61291cc1bbfbd3a237f3d"}}'
 		
-	PLog(unquote(Graphql))
-	icon = R(ICON_DIR_FOLDER)
-	path_navi=tabid
+	PLog("Graphql: " + unquote(Graphql))
+	path_org=path;
+	if tabid:
+		path_navi='"%s"' % tabid
+	else:
+		path_navi="null"
+	icon = R(ICON_DIR_FOLDER); 
+	first=24						# pagination: statt 24 (Web)
 	
-	if not Graphql:													# erst Webseite laden
-		Dict("store", "ZDF_KatSubPath", path)						# store Webadresse für Graphql-Calls
-		page, msg = get_page(path)
-		try:														# Params für ersten Graphql-Call suchen
-			collection = stringextract("MetaCollectionTwitterImage", "persistFilters", page)
-			PLog("collection: " + collection)
-			collection = collection.replace('\\', '')				# metaCollectionId = genre_id
-			genre_id = stringextract('metaCollectionId":"', '"', collection)	# metaCollectionId\":\"genre-10296
-			token = stringextract("apiToken", "fetchOptions", page)	# apitoken, appId
-			token = token.replace('\\', '')
-			PLog(token)	
-			apitoken = stringextract('apiToken":"', '"', token)		# apiToken\":\"ahBaeMee..
-			appId = stringextract('appId":"', '"', token)			# appId\":\"ffw-mt-web-b1cc..			
-		except Exception as exception:
-			genre_id=""
-			PLog("genre_error: " + str(exception))
-		PLog("genre_id: %s, apitoken: %s, appId: %s" % (str(genre_id), apitoken, appId))
-
-		icon = R(ICON_DIR_FOLDER)
-		if not genre_id:
-			msg1 = u'%s:' % title
-			msg2 = "Genre-ID nicht gefunden"
-			PLog("%s %s" % (msg1, msg2))
-			xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
-			return
-			
+	collmark="metaCollectionId"		# Default für Sub's (barrierefrei: collectionId)
+	genre_id,coll_id,apitoken,appId,zdfappId = ZDF_Graphql_WebDetails(path, collmark)
+	icon = R(ICON_DIR_FOLDER)
+	if not coll_id:
+		msg1 = u'%s:' % title
+		msg2 = "Collection-ID nicht gefunden"
+		PLog("%s %s" % (msg1, msg2))
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
+		return
+	
+	if not Graphql:								
+		Dict("store", "ZDF_KatSubPath", path)						# store Webadresse für Folge-Graphql-Calls			
 		# Graphql-Call, zdf-app-id bei Bedarf aus Web ermitteln,
 		#	Pagination auf 48 gesetzt (statt 24)  - 15.05.2025 wieder zurück auf 24
-		header = "{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/',\
-			'zdf-app-id': 'ffw-mt-web-1305801c', 'accept': '*/*', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site'}" \
-			% apitoken
+		header = HEADERS_GRAPHQL % (apitoken, appId)
 		Dict("store", "GraphqlHeader", header)
-		href='https://api.zdf.de/graphql?operationName=getMetaCollectionContent&variables=%7B%22collectionId%22%3A%22****%22%2C%22input%22%3A%7B%22appId%22%3A%22ffw-mt-web-1305801c%22%2C%22filters%22%3A%7B%22contentOwner%22%3A%5B%5D%2C%22fsk%22%3A%5B%5D%2C%22language%22%3A%5B%5D%7D%2C%22pagination%22%3A%7B%22first%22%3A24%2C%22after%22%3Anull%7D%2C%22user%22%3A%7B%22abGroup%22%3A%22gruppe-b%22%2C%22userSegment%22%3A%22segment_0%22%7D%2C%22tabId%22%3A####%7D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22c85ca9c636258a65961a81124abd0dbef06ab97eaca9345cbdfde23b54117242%22%7D%7D'
-
-		href = href.replace("****", "%s" % genre_id)				# Parameter ersetzen
-		href = href.replace("ffw-mt-web-1305801c", "%s" % appId)
-		if not tabid:
-			href = href.replace("####", 'null')
-		else:
-			href = href.replace("####", '"%s"' % tabid)
-		PLog(unquote(href))
+		myvars = '{"collectionId":"%s","input":{"appId":"%s","filters":{"contentOwner":[],"fsk":[],"language":[]},"pagination":{"first":%s,"after":null},"user":{"abGroup":"gruppe-b","userSegment":"segment_0"},"tabId":%s}}'
+		myvars = myvars  % (coll_id, zdfappId, first, path_navi)
+		href = base + quote(myvars) + "&extensions=" + quote(ext)
+		PLog("Graphql_unquoted1: " + unquote(href))
 		page, msg = get_page(path=href,  header=header, do_safe=False) 	# erster Graphql-Call
 
 	#--------------------------------------------------------------
-	else:															# Folge-Graphql-Calls: Mehr Inhalte laden
+	else:															# Graphql-Folge-Calls: "Mehr Inhalte laden"
 		if Graphql:
-			path = Dict("load", "ZDF_KatSubPath")					# restore Webadresse
 			href=Graphql
 			header = Dict("load", "GraphqlHeader")
 			page, msg = get_page(path=href,  header=header, do_safe=False) 	
 
-	try:															# json-Daten Graphql-Call
+	#--------------------------------------------------------------
+
+	try:												# json-Daten Graphql-Call
 		jsonObject = json.loads(page)
 		PLog(str(jsonObject)[:80])
 		pageInfo = 	jsonObject["data"]["metaCollectionContent"]["pageInfo"]
@@ -8655,8 +8728,8 @@ def ZDF_KatSub(title, path, tabid="", Graphql=""):
 	PLog("add_navi_menu_Kat:")							# Subnavigation 
 	PLog(str(navi_obj)[:80])
 	DictID = "ZDF_naviKat"
-	Dict("store", DictID, navi_obj)
-	this_navi="Alle Inhalte"; tag=""					# path_navi/tabid leer für  "Alle Inhalte"
+	Dict("store", DictID, navi_obj)						# Liste  genre-ID's (Tabs) -> ZDF_get_naviKat
+	this_navi="Alle Inhalte"; tag=""					# path_navi/tabid leer für  "Alle Inhalte laden"
 	if path_navi:										# tabid <- Navigation
 		PLog("search_navi_obj:")
 		for item in navi_obj:
@@ -8674,31 +8747,24 @@ def ZDF_KatSub(title, path, tabid="", Graphql=""):
 
 	ZDF_Graphql_get_json(objs)							# Liste Beiträge,  wie ZDF_Recommendation (ZDF_WebMoreSingle)
 	
-	if hasNextPage:
-		base = "https://api.zdf.de/graphql?operationName=getMetaCollectionContent&variables="
-		qvars = href.split(base)[-1]					# Variablen Graphql-Call
-		obj = unquote(qvars)
+	#--------------------------------------------------------------
 
-		after = stringextract('after":', '}', obj)		# null (1. Call) oder "NjdhOTgyN .. Q0MDU0"
-		PLog("obj: %s | after: %s" % (obj, after))
-		obj = obj.replace(after, '"%s"' % endCursor, 1)
+	if hasNextPage:										# Button mit Graphql-Call für "Mehr Inhalte" 
+		header = Dict("load", "GraphqlHeader")
+		myvars = '{"collectionId":"%s","input":{"appId":"%s","filters":{"contentOwner":[],"fsk":[],"language":[]},"pagination":{"first":%s,"after":"%s"},"user":{"abGroup":"gruppe-b","userSegment":"segment_0"},"tabId":%s}}'
 
-		if tabid:										# Wechsel Navigations-Menü" -> Wechsel tabid
-			tabid_old = stringextract('tabId":', '}', obj)
-			PLog("tabid_old: %s | tabid: %s" % (tabid_old, tabid))	
-			obj = obj.replace(tabid_old, tabid)
+		myvars = myvars  % (coll_id, zdfappId, first, endCursor, path_navi)
+		href = base + quote(myvars) + "&extensions=" + quote(ext)	# sh256Hash-Variante "124..f3d" s. interne Doku
 		
-		PLog("obj_new: " + obj)
-		Graphql = base + quote(obj)
-		Graphql = Graphql.replace('%26extensions%3D', '&extensions=')  # Fix quote-Problem
-		PLog("Graphql: " + Graphql)
-	
 		label = "[B]Mehr Inhalte laden[/B]"
-		tag = u"Mehr Inhalte zu [B]%s[/B]" % title
+		tag = u"Mehr Inhalte zu [B]%s | %s[/B]" % (title, this_navi)
+		PLog("Graphql_unquoted2: " + unquote(href))
+		PLog(tag); PLog(path_org);PLog(path_org);
+	
 		img=R(ICON_MEHR)
-		Graphql=py2_encode(Graphql); title=py2_encode(title); 	# -> 2. Aufruf 
-		fparams="&fparams={'title': '%s','path': '', 'tabid': '%s', 'Graphql': '%s'}" % (quote(title), 
-			quote(tabid), quote(Graphql))
+		href=py2_encode(href); title=py2_encode(title); 	# -> 2. Aufruf 
+		fparams="&fparams={'title': '%s','path': '%s', 'tabid': '%s', 'Graphql': '%s'}" % (quote(title), 
+			quote(path_org), quote(tabid), quote(href))
 		addDir(li=li, label=label, action="dirList", dirID="ZDF_KatSub", \
 			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
 				
@@ -8709,9 +8775,9 @@ def ZDF_KatSub(title, path, tabid="", Graphql=""):
 # 
 def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 	PLog('ZDF_get_naviKat: %s | %s | %s' % (path, DictID, title))
-	path_org=path
 	if "#" in path:							
 		path = path.split("#")[0]				# tabid im Pfad entfernen
+	path_org=path
 	
 	li = xbmcgui.ListItem()
 	if homeID:
@@ -8719,12 +8785,10 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 	else:	
 		li = home(li, ID='ZDF')					# Home-Button
 		
-	objs = Dict("load", DictID)
+	objs = Dict("load", DictID)					# <- ZDF_KatSub
 	PLog(len(objs))
-	PLog(str(objs)[:80])
-	
-		
-	# Zusatz "#t=all" für Alle Inhalte entbehrlich:
+	PLog(str(objs)[:80])		
+												# Zusatz "#t=all" nicht zwingend
 	url = "%s#t=all" % path_org					# Button "Alle Inhalte" (fehlt in json-Daten)
 	name = "Alle Inhalte"	
 	if not this_navi:							# 1. Aufruf
@@ -9345,7 +9409,6 @@ def ZDF_WebMoreSingle(title, path):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-# todo: Romancen - so weit kommts noch	
 #-----------------------------------------------------------------------
 # Aufruf ZDF_WebMoreSingle - Button für enthaltenes Video, Streamlisten
 #
@@ -9445,46 +9508,34 @@ def ZDF_Graphql_Video(title, scms_id, sharingUrl):
 	return
 
 #-----------------------------------------------------------------------
-# Aufruf ZDF_WebMoreSingle - listet empfohlene Beiträge
+# Aufruf ZDF_WebMoreSingle - listet empfohlene Beiträge (für ergänzende
+#	Rubrigen der Startseite)
 #
 def ZDF_Recommendation(title, page, path):								
 	PLog('ZDF_Recommendation: ' + title)
-
-	pos = page.find("zdf.de/configurations")					# 2x: zdf.de/configurations
-	PLog("pos: %d" % pos)
-	
-	try:														# Parameter für Graphql-Call, ähnl. ZDF_KatSub
-		page = page[pos:]										# aber abweichend + ohne Subnavigation
-		PLog("collection: " + page[:80])		
-		page = page.replace('\\', '')							# smartCollectionID -> collection_id:
-		collId = stringextract('smartCollectionID":"', '"', page)	# tivi_vcms_video_1556290-movie
-		apitoken = stringextract('apiToken":"', '"', page)		# verschiedene apitoken in videoToken + appToken
-		appId = stringextract('appId":"', '"', page)			# appId\":\"ffw-mt-web-b1cc..
-	except Exception as exception:
-		collId=""
-		PLog("collId_error: " + str(exception))
-	PLog("collId: %s, apitoken: %s, appId: %s" % (collId, apitoken, appId))
-	
+		
+	genre_id,coll_id,apitoken,appId,zdfappId = ZDF_Graphql_WebDetails(path, collmark="smartCollectionID")	
 	icon = R(ICON_DIR_FOLDER)
-	if not collId:
+	if not coll_id:
 		msg1 = u'%s:' % title
-		msg2 = "CollectionID nicht gefunden"
+		msg2 = "Collection-ID nicht gefunden"
 		PLog("%s %s" % (msg1, msg2))
 		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
 		return
 
-	# Graphql-Call, zdf-app-id bei Bedarf aus Web ermitteln,
-	#	Pagination auf 48 gesetzt (statt 24)
-	header = "{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/',\
-		'zdf-app-id': 'ffw-mt-web-1305801c', 'accept': '*/*', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site' }" \
-		% apitoken
-	href='https://api.zdf.de/graphql?operationName=Recommendation&variables=%7B%22collectionId%22%3A%22tivi_vcms_video_1556290-movie%22%2C%22input%22%3A%7B%22appId%22%3A%22ffw-mt-web-ba73351f%22%2C%22filters%22%3A%7B%7D%2C%22pagination%22%3A%7B%22first%22%3A48%7D%2C%22user%22%3A%7B%22abGroup%22%3A%22gruppe-b%22%2C%22userSegment%22%3A%22segment_0%22%7D%7D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%2290660db2dae2d1f74bc4cda6c2fd4316c543f0314bd0bcd1947d01450372ee6f%22%7D%7DoperationName=Recommendation&variables=%7B%22collectionId%22%3A%22tivi_vcms_video_1556290-movie%22%2C%22input%22%3A%7B%22appId%22%3A%22ffw-mt-web-ba73351f%22%2C%22filters%22%3A%7B%7D%2C%22pagination%22%3A%7B%22first%22%3A24%7D%2C%22user%22%3A%7B%22abGroup%22%3A%22gruppe-b%22%2C%22userSegment%22%3A%22segment_0%22%7D%7D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%2290660db2dae2d1f74bc4cda6c2fd4316c543f0314bd0bcd1947d01450372ee6f%22%7D%7D'
+	base = ZDF_GraphqlBase % "Recommendation"
+	# sha256Hash abweichend von ZDF_KatSub
+	ext	= '{"persistedQuery":{"version":1,"sha256Hash":"6704812e40f3faeaf1d7feaf76fcd1e616819943677b0470e3de852382079b61"}}'
+	header = HEADERS_GRAPHQL % (apitoken, appId)
+	first=24						# pagination: statt 24 (Web)
 
-	href = href.replace("ffw-mt-web-ba73351f", "%s" % appId)	# Parameter ersetzen
-	href = href.replace("tivi_vcms_video_1556290-movie", "%s" % collId)
-	PLog(unquote(href))
+	# Graphql-Cal
+	myvars = '{"collectionId":"%s","input":{"appId":"%s","filters":{},"pagination":{"first":%s},"user":{"abGroup":"gruppe-b","userSegment":"segment_0"}}}'
+	myvars = myvars  % (coll_id, zdfappId, first)
+	href = base + quote(myvars) + "&extensions=" + quote(ext)
+	PLog("Graphql_unquoted3: " + unquote(href))
 	page, msg = get_page(path=href,  header=header, do_safe=False) 	# Graphql-Call
-
+	
 	try:
 		jsonObject = json.loads(page)
 		PLog(str(jsonObject)[:80])	
@@ -9671,8 +9722,9 @@ def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):
 # 15.08.2025 Seriencheck: Austausch docObject["id"] -> docObject["brandId"], "id" unsicher
 # 18.08.2025 Verzweigung bei leerem Cluster:  ARD-Inhalte -> ZDF_Graphql_Video, restl.
 #	Beiträge Verarbeitung als Serie -> ZDF_Episodes_Graphql (Step1, Step2).
+# 22.08.2025 ret für Return statt endOfDirectory hinzugefügt (für ZDF_Barrierearm)
 #
-def ZDF_RubrikSingle(url, title, homeID=""):								
+def ZDF_RubrikSingle(url, title, homeID="", ret=""):								
 	PLog('ZDF_RubrikSingle: ' + title)
 	PLog("url: " + url)
 	title_org = title
@@ -9912,9 +9964,11 @@ def ZDF_RubrikSingle(url, title, homeID=""):
 			icon = R("icon-filter.png")
 			xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)
 		
-	ZDF_search_button(li, query=title_org)	
-			
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	if not ret:													# Return ohne Suchbutton
+		ZDF_search_button(li, query=title_org)	
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	else:
+		return
 
 #---------------------------------------------------------------------------------------------------
 # Aufruf: ZDF_Rubriken
