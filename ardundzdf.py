@@ -59,8 +59,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>265</nr>										# Numerierung für Einzelupdate
-VERSION = '5.2.7'
-VDATE = '22.08.2025'
+VERSION = '5.2.8'
+VDATE = '24.08.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8553,6 +8553,7 @@ def ZDF_Barrierearm(url, title, homeID):
 	li = xbmcgui.ListItem()
 
 	ZDF_RubrikSingle(url, title, ret=True)							# futura-api-Liste (unvollständig)
+
 	sub_kat_list = [u"Audiodeskription|audiodeskription-104~768x432?cb=1679056190709|audiodeskription",
 					u"Untertiteln|untertitel-102~768x432?cb=1679056243926|untertitel",
 					u"Gebärdensprache|gebardensprache-100~768x432?cb=1679056280756|deutsche-gebaerdensprache"
@@ -10967,11 +10968,12 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	PLog("path: %s, scms_id: %s" % (path, scms_id))
 
 	cdn_api=True
-	header=""
-	if "api.zdf.de" in path:								# früher "ngplayer"
-		header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % zdfToken
+	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % zdfToken
+	if "api.zdf.de" in path:											# früher "ngplayer"
 		cdn_api=False
-	page, msg = get_page(path, header=header)
+		page, msg = get_page(path)
+	else:
+		page, msg = get_page(path, header=header)
 	if page == '':	
 		msg1 = "Fehler in ZDF_getStreamSources:"
 		msg2 = msg
@@ -10979,7 +10981,6 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 			try:
 				profile_url="https://api.zdf.de/content/documents/%s.json?profile=player" % scms_id
 				PLog("profile_url: " + profile_url)
-				header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % zdfToken
 				page, msg = get_page(path=profile_url, header=header, JsonPage=True)
 				pos = page.rfind('mainVideoContent')					# 'mainVideoContent' am Ende suchen
 				page_part = page[pos:]
@@ -11000,7 +11001,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 			MyDialog(msg1, msg2, '')
 			return
 	page = page.replace('\\/','/')
-	page=page.replace('" :', '":'); page=page.replace('": "', '":"')  # Formatanpassung für get_form_streams
+	page=page.replace('" :', '":'); page=page.replace('": "', '":"')  # Formatanpassung für get_form_streams	
 
 	li = xbmcgui.ListItem()
 	if gui:
@@ -11103,8 +11104,26 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 				(track_add, quality, res, title_url)
 			PLog("title_url: " + title_url); PLog("item: " + item)
 			PLog("server: " + server)					# nur hier, kein Platz im Titel			
-			MP4_List.append(item)
-			
+			MP4_List.append(item)		
+	
+	PLog("DGS_Check:"); dgs_url=""						# DGS-Check mit zusätzlichen 
+	if '"label":"DGS"' in page:							# 	Android-DGS-Streams
+		url = stringextract('"streamApiUrlDgsAndroid":"',  '"', page)
+		PLog("streamApiUrlAndroid: " + url)				# ..hsh_dgs/1?caption_source=250131_sendung_spezial_hsh%2F3
+		if url:											# DGS-Daten nachladen
+			dgs_page, msg = get_page(url, header=header, do_safe=False)
+			if dgs_page:								# -> 1. Stream (Webm, HD)
+				dgs_page = dgs_page.split("priorityList")[-1]
+				dgs_page=(dgs_page.replace('" :', '":').replace('": "', '":"'))							
+				dgs_url = stringextract('"uri":"',  '"', dgs_page)
+				qual  = stringextract('"quality":"',  '"', dgs_page)
+				qual = "[B]%s[/B]" % qual
+	PLog("DGS_Url: %s" % dgs_url)			
+	if dgs_url:
+		# Format HLS, DGS ** DGS ** fhd ** title#dgs_url
+		item = 'HLS,[B]%22s[/B] ** [B]%s[/B] ** %s ** %s#%s' % ("DGS", "DGS", qual,title,dgs_url)
+		HLS_List.append(item)							# autom. Auswahl in	PlayVideo_Direct verhindern
+	PLog("HLS_List_end: %s" % HLS_List[-1])
 			
 	ID="ZDF"; HOME_ID = ID
 	title_org = title

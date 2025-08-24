@@ -1142,7 +1142,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 		header = unquote(header);  
 		header = header.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 		header = json.loads(header)
-		PLog("header: " + str(header)[:100]);
+		PLog("header: " + str(header))
 		
 	path_org=path
 	# path = transl_umlaute(path)				# Umlaute z.B. in Podcast "Bäckerei Fleischmann"
@@ -4125,12 +4125,15 @@ def url_check(url, caller='', dialog=True):
 				MyDialog(msg1, msg2, "")		 			 	 
 			return False
 
-	# 05.08,2025 stream=True für mp4-Dateien sonst Klemmer
+	# 05.08,2025 stream=True für mp4-Dateien u.ä. sonst Klemmer
 	#	in requests
 	stream=False
-	if ".mp4" in url or ".mp3" in url:
-		PLog("urlcheck_stream")
-		stream=True
+	format_list = [".mp4", ".webm", ".vp9", ".mp3"]
+	for form in format_list:
+		if form in url:
+			stream=True
+			PLog("urlcheck_stream")
+			break
 
 	#-----------------------------------------
 	# hier bei Bedarf ein SessionTimeout verwenden, Bsp.

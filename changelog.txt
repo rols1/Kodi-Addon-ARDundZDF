@@ -10,6 +10,31 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+24.08.2025 	5.2.8
+			ZDF_RubrikSingle: Austausch Serien-ID docObject["id"] gegen docObject
+			["brandId"]. "id" nicht sicher (Bsp. "Die Bergretter).
+			ZDF_RubrikSingle: Entscheidung bei leerem Cluster und externalId in 
+			futura-api - bei  "ard_video_ard" -> ZDF_Graphql_Video, sonst ->
+			ZDF_Episodes_Graphql (Step1, Step2).
+			ZDF-Serien: zusätzlicher Graphql-Check und Zusatzbutton "Neueste Serie 
+			anzeigen", falls neue Serie zusätzlich zum futura-api gefunden wird,
+			neue Funktionen ZDF_Episodes_Graphql und ZDF_getKat_json, Anpassungen
+			in ZDF_getKat_content, ZDF_FlatListEpisodes.
+			get_content_json (TagesschauXL): Anpassung an geänderte Bilddaten.
+			ARDSportWDR: Aktualisierung Event-Archiv, neuer Event-Button für DFB-
+			Pokal 2025, Aktualisierung der Bilddaten autom. durch get_content_json.
+			ZDF-Kategorien: Graphql-Calls + Auswertung Web-Params verbessert (un-
+			quoted statt quoted/replace).
+			ZDF-Barrierefrei erneuert: Videos der 3 Gruppen Audiodeskription, 
+			Untertitel, Gebärdensprache fehlten im futura-api. Neue Funktion 
+			ZDF_Barrierearm, Auswertung der 3 Gruppen als Subkategorien (Graphql-
+			Calls).
+			ZDF_getApiStreams: erweitert für DGS-Streams über streamApiUrlDgsAndroid,
+			Einfügen eines vorhandenen DGS-Streams in die HLS-Liste (HBBTV-Liste
+			enthält nur bei einigen DGS-Sendungen DGS-Streams).
+			url_check: Streamformate für DGS-Streams erweitert (aktuell: ".mp4",
+			".webm", ".vp9", ".mp3").
+
 09.08.2025 	5.2.7
 			ZDF_Kat: utf-8-Behandlung für pos2-Marker (verhindert Ausfall ZDF-
 			Kategorien bei PY2).
@@ -30,10 +55,10 @@ CHANGE HISTORY
 			annotations is not defined" bei python 3.0 - 3.6), Funktion getRedirect 
 			(httplib2-Code -> requests-Code, damit Verzicht auf einzelne HTTP-Error-
 			Behandlung).
-			url_check: Param stream für mp4- und mp3-Url's auf True gesetzt, sonst 
+			url_check (util):: Param stream für mp4- und mp3-Url's auf True gesetzt, sonst 
 			Klemmer durch requests in getRedirect).
 			get_img_pre (Modul arte): HTTP-Error 404 für urlretrieve abgefangen.
-			get_page: fehlerhafte Url abfangen (Url ohne http).
+			get_page (util):: fehlerhafte Url abfangen (Url ohne http).
 			MausLive (Modul childs): Auswertung an geändertes json-Format angepasst.
 			
 			
@@ -139,8 +164,9 @@ CHANGE HISTORY
 			ZDF-Kategorien: Umsetzung neues ZDF-Menü nach Relaunch - neue Funktionen
 			ZDF_Kat, ZDF_KatSub, ZDF_get_naviKat, ZDF_getKat_content.
 			thread_getfile: nfo-Datei für Video-Downloads ergänzt - neue Funktion
-			 MakeJpegNfo (util), Anpassung in thread_getfile, nfo-Template-Kopie aus
-			 strm-Modul.
+			MakeJpegNfo (util), Anpassung in thread_getfile, nfo-Template-Kopie aus
+			strm-Modul.
+			 
 
 30.03.2025 	5.2.1
 			Main_ZDF: Menüpunkt und Funktionen ZDF_Bildgalerien, ZDF_BildgalerieSingle, 
