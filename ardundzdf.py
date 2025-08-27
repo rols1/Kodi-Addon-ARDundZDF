@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>267</nr>										# Numerierung für Einzelupdate
+# 	<nr>268</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.8'
 VDATE = '27.08.2025'
 
@@ -7851,7 +7851,13 @@ def list_WDRstreamlinks(url):
 	tag = u"zur aktuellen Sendung des WDR"
 	img = "https://www1.wdr.de/lokalzeit/fernsehen/tv-ubersicht-bild-100~_v-TeaserAufmacher.jpg"
 	for item in items:
-		path = stringextract('live"><a href="', '"', item)		
+		href_list = blockextract("href", item, "</a>")
+		href=""
+		for h in href_list:
+			if ">Livestream" in h: 
+				path = stringextract('href="', '"', h)
+				break
+		
 		title = stringextract('programme-uuid="', '"', item)
 		title = title.replace("_", " ")
 		title = title.replace("WDR", "")
