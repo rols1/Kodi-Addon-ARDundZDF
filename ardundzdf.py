@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>266</nr>										# Numerierung für Einzelupdate
+# 	<nr>267</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.8'
 VDATE = '27.08.2025'
 
@@ -9541,7 +9541,9 @@ def ZDF_Graphql_Video(title, scms_id, sharingUrl):
 		mediatype='video'
 	PLog('mediatype: ' + mediatype); 
 	
-	title = repl_json_chars(title)
+	
+	title = repl_json_chars(title); descr = repl_json_chars(descr)
+	title = py2_encode(title); descr = py2_encode(descr);
 	fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 		(path, title, img, tag, descr, sid)
 	PLog("fparams: " + fparams)	
