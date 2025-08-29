@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>269</nr>										# Numerierung für Einzelupdate
+# 	<nr>270</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.8'
 VDATE = '29.08.2025'
 
@@ -9074,8 +9074,9 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 		if  "results" in jsonObject:								# ZDF_Search
 			entryObject = jsonObject["results"]
 			PLog("results: %d" % len(entryObject))
-		if "Alle Folgen" == jsonObject["name"]:
-			markFolge=True
+		if "name" in jsonObject:
+			if "Alle Folgen" == jsonObject["name"]:
+				markFolge=True
 		
 		for entry in entryObject:
 			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry,mark=mark,validchars=validchars)
