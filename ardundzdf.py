@@ -58,7 +58,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>270</nr>										# Numerierung für Einzelupdate
+# 	<nr>271</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.8'
 VDATE = '29.08.2025'
 
@@ -9785,11 +9785,12 @@ def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):
 # 01.10.2023 Auswertung recommendation-Inhalte (ohne Cache, DictID leer), dabei 
 #	Verzicht auf {bookmarks}-Urls ("Das könnte Dich interessieren", kodinerds Post 3.134)
 # 02.12.2023 Auswertung Navigationsmenü (ZDF-Sportstudio, ZDFtivi)
-# 14.07.2025 externe ARD-Inhalte (leerer Cluster) mit sharingUrl -> ZDF_Graphql_Video
 # 15.08.2025 Seriencheck: Austausch docObject["id"] -> docObject["brandId"], "id" unsicher
 # 18.08.2025 Verzweigung bei leerem Cluster:  ARD-Inhalte -> ZDF_Graphql_Video, restl.
 #	Beiträge Verarbeitung als Serie -> ZDF_Episodes_Graphql (Step1, Step2).
 # 22.08.2025 ret für Return statt endOfDirectory hinzugefügt (für ZDF_Barrierearm)
+# 24.08.2025 Steuerung ext. Inhalte bei leerem Cluster (Inhalte fehlen im futura-api):
+#	Einzelvideos -> ZDF_Graphql_Video, Rest -> ZDF_Episodes_Graphql (Step1, Step2).
 #
 def ZDF_RubrikSingle(url, title, homeID="", ret=""):								
 	PLog('ZDF_RubrikSingle: ' + title)
@@ -9843,7 +9844,7 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 					if "ard_video_ard" in scms_id:				# ext. Einzelvideo
 						ZDF_Graphql_Video(title, scms_id, sharingUrl)
 					else:										# ZDF-Serie via Graphql
-						staffel_list=[]; 						# dummie
+						staffel_list=[]; 						# dummie für Abgleich in ZDF_Episodes_Graphql
 						sid = url.split("/")[-1]
 						jsonID = "ZDF_Graphql_sid_%s" % sid
 						ZDF_Episodes_Graphql(sid, staffel_list, surl=sharingUrl)	# Step1: Graphql-Call mit sid
@@ -10900,6 +10901,7 @@ def ZDF_FlatListEpisodes(sid):
 #	Ablage neuere Liste via Dict.
 # Aufruf Step 2: ZDF_FlatListEpisodes (jsonID) -> Anzeige neue Liste
 #	(jsonID -> Dict)
+#  staffel_list: falls leer entfällt Abgleich 
 #
 def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 	PLog("ZDF_Episodes_Graphql: %s | %d | %s" % (sid,  len(staffel_list), jsonID))
@@ -10912,19 +10914,22 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 		pageInfo = stringextract('target_type\\":\\"SmartCollection', '</script>', page)
 		pageInfo = pageInfo.replace('\\', '')
 		PLog(pageInfo[:80])
-		seasons = blockextract('"Season\",\"id"', pageInfo)	# absteigend
+		seasons = blockextract('"Season\",\"id"', pageInfo)	# absteigend sortiert
 
 		try:
-			PLog(str(seasons[0])[:100])
-			season_nr = re.search(r'Staffel (\d+)', seasons[0]).group(1)# Nr. im erst Block
+			PLog(str(seasons[0])[:100])									# 1. Block (absteigend)
+			title = stringextract('"title":"', '"', seasons[0])
+			if "Staffel" in title:
+				season_nr = re.search(r'Staffel (\d+)', title).group(1)
+			else:
+				season_nr = re.search(r'(\d+)', title).group(1)
 			idIn = stringextract('"id":"', '"', seasons[0])				# myvars -> filterBy":{"idIn"
 			title = stringextract('"title":"', '"', seasons[0])
-		except Exception as exception:
-			PLog("season_nr_error:  " + str(exception))
+		except Exception as exception:									# hier kein Abbruch, Fortsetzung in
+			PLog("season_nr_error:  " + str(exception))					# ZDF_RubrikSingle bei GraphqlWithExternalId
 			season_nr=0
 		PLog("seasons_web: %d | season_nr_web: %s" % (len(seasons), season_nr))
-		if season_nr == 0:
-			return False
+
 		
 		futura_uptodate=False; snr_list=[]
 		for staffel in 	staffel_list:						# Staffel-Abgleich futura-api / Web-json
@@ -10973,6 +10978,7 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 			return True
 		else:
 			return False
+
 	#--------------------------------------------------			# Step 2 Ausgabe Liste
 	else: 
 		PLog("Step2")
