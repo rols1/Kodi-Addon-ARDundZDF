@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>268</nr>										# Numerierung für Einzelupdate
+# 	<nr>269</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.8'
-VDATE = '27.08.2025'
+VDATE = '29.08.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1149,11 +1149,11 @@ def Main_ZDF(name=''):
 	title = "Barrierearm"
 	url = base + "document/barrierefrei-im-zdf-100"
 	tag = u"Alles an einem Ort: das gesamte Angebot an Videos mit Untertiteln, Gebärdensprache und Audiodeskription sowie hilfreiche Informationen zum Thema gebündelt."
-	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
-	addDir(li=li, label="Barrierearm", action="dirList", dirID="ZDF_RubrikSingle", fanart=R(ICON_ZDF_BARRIEREARM), 
+	fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': ''}" % (url, title)
+	addDir(li=li, label="Barrierearm", action="dirList", dirID="ZDF_Barrierearm", fanart=R(ICON_ZDF_BARRIEREARM), 
 		thumb=R(ICON_ZDF_BARRIEREARM), fparams=fparams)
 
-	title = "ZDFinternational"											# Menü entfernt in V5.2.6 (zu wenig Videos)
+	# title = "ZDFinternational"										# Menü entfernt in V5.2.6 (zu wenig Videos)
 	# -------------------
 
 	fparams="&fparams={}"												# ab V 4.8.1
@@ -8621,38 +8621,49 @@ def ZDF_KatNachrichten(url, title, homeID):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------
-# Params Webseite holen - hier für ZDF_KatSub, collmark: von
-#	metaCollectionId (ZDF_KatSub) abweichende Markierung
+# Params Webseite für  Graphql-Call holen - collmark: von
+#	metaCollectionId (ZDF_KatSub) abweichende Markierung, coll_id ist
+#	wahlweise genre-id, collection-id, initialSeasonId (idIn)
 # Caching bisher nicht nötig (ca. 200-300KByte seti Relaunch)
 #
-def ZDF_Graphql_WebDetails(path, collmark):								
-	PLog('ZDF_Graphql_WebDetails: %s, reco: %s' % (path, collmark))
+def ZDF_Graphql_WebDetails(path, mode=""):								
+	PLog('ZDF_Graphql_WebDetails: %s, mode: %s' % (path, mode))
 	genre_id=""; coll_id=""; apitoken=""; appId=""; 
 	zdfappId=""; canon="";
-	mark="#t="													# genre-Markierung
-	if mark in path:
-		genre_id = path.split(mark)[-1]
+	pmark="#t="													# genre-Markierung
+	if pmark in path:
+		genre_id = path.split(pmark)[-1]
 	
 	page, msg = get_page(path)
 	if not page:
 		return genre_id,coll_id,apitoken,appId,zdfappId,canon
 
 	page = page.replace('\\', '')
-	
+	collmark = "metaCollectionId"								# Default für Sub's 
+
 	try:														# Params für ersten Graphql-Call suchen
-		mark = '%s":"' % collmark
-		coll_id = stringextract(mark, '"', page)				# c81de0fe-..cbaf379853, genre-10296
 		apitoken = stringextract('apiToken":"', '"', page)		# apiToken\":\"ahBaeMee..
 		appId = stringextract('appId":"', '"', page)			# appId\":\"ffw-mt-web-b1cc.. -> Header
 		zdfappId = appId.replace("ffw-mt","zdf")				# -> Params Graphql
-		video = stringextract('"VideoAvailability"', 'VideoStructuralMetadata', page)
-		PLog("videoavail: " + video[:60])
-		canon = stringextract('canonical":"', '"', video)		# canon\":\"page-video-ard-.. -> myvars 
+
+		if "seasonByCanonical" in mode:
+			canon = path.split("/")[-1]							# Serie "the-tourist-110"
+			coll_id = stringextract('"initialSeasonId":"', '"', page) # -> filterBy":{"idIn"
+			
+		else:
+			mark = '%s":"' % collmark
+			coll_id = stringextract(mark, '"', page)			# c81de0fe-..cbaf379853, genre-10296					
+			video = stringextract('"VideoAvailability"', 'VideoStructuralMetadata', page)
+			PLog("videoavail: " + video[:60])
+			canon = stringextract('canonical":"', '"', video)	# canon\":\"page-video-ard-.. -> myvars 
 
 	except Exception as exception:
 		genre_id=""; apitoken=""; appId=""; zdfappId=""; canon=""
 		PLog("Graphql_WebDetails_error: " + str(exception))
-
+		
+	if apitoken:												# Ablage Header-Params -> Bsp. ZDF_Episodes_Graphql
+		params = "%s|%s|%s" % (apitoken,appId,zdfappId)
+		Dict("store", "ZDF_Header_Params", params)		
 	PLog("genre_id: %s, coll_id: %s, apitoken: %s, appId: %s, zdfappId: %s, canon: %s" % \
 		(genre_id, coll_id, apitoken, appId, zdfappId, canon))
 	return genre_id, coll_id, apitoken, appId, zdfappId, canon 
@@ -8684,8 +8695,7 @@ def ZDF_KatSub(title, path, tabid="", Graphql=""):
 	icon = R(ICON_DIR_FOLDER); 
 	first=24						# pagination: statt 24 (Web)
 	
-	collmark="metaCollectionId"		# Default für Sub's (barrierefrei: collectionId)
-	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, collmark)
+	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, mode="metaCollectionId")
 	icon = R(ICON_DIR_FOLDER)
 	if not coll_id:
 		msg1 = u'%s:' % title
@@ -9046,12 +9056,12 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	PLog('mediatype: ' + mediatype); 
-	fcnt=0															# gefiltert-Zähler	
+	fcnt=0; cnt=1															# gefiltert-Zähler, Satz-Zähler	
 	
 	PLog("stage" in jsonObject); PLog("teaser" in jsonObject); PLog("results" in jsonObject);		
 	if "stage" in jsonObject or "teaser" in jsonObject or "results" in jsonObject:
 		PLog('ZDF_PageMenu_stage_teaser')
-		stage=False
+		stage=False; markFolge=False
 		
 		if DictID == "ZDF_Startseite" or "tivi_" in DictID or "funk-" in DictID:
 			if "stage" in jsonObject:								# <- ZDF-Start, tivi-Start
@@ -9064,6 +9074,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 		if  "results" in jsonObject:								# ZDF_Search
 			entryObject = jsonObject["results"]
 			PLog("results: %d" % len(entryObject))
+		if "Alle Folgen" == jsonObject["name"]:
+			markFolge=True
 		
 		for entry in entryObject:
 			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry,mark=mark,validchars=validchars)
@@ -9087,7 +9099,10 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 					if filtered:
 						PLog('filtered_1: <%s> in %s ' % (item, title))
 						fcnt = fcnt+1
-						continue								
+						continue
+				if markFolge:										# Markierung Folge bei "Alle Folgen"
+					if " |S" not in title:							# schon im Titel? Bsp.: ..point |S02E12 |..
+						tag = "%s | [B]%d[/B]" % (tag, cnt)								
 				if "channel" in entry:								# Zusatz Sender
 					sender = entry["channel"]
 					tag = "%s | %s" % (tag, sender)
@@ -9119,7 +9134,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 				PLog("fparams: " + fparams)	
 				addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
 					thumb=img, fparams=fparams, summary=descr, tagline=tag)
-							
+			cnt=cnt+1				
 						
 	if("cluster" in jsonObject):		# Bsp- A-Z Leitseite -> SingleRubrik
 		PLog('ZDF_PageMenu_cluster')
@@ -9510,7 +9525,7 @@ def ZDF_Graphql_Video(title, scms_id, sharingUrl):
 	futura_path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
 
 	collmark="metaCollectionId"		# Default für Sub's (barrierefrei: collectionId)
-	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(sharingUrl, collmark)
+	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(sharingUrl, mode="metaCollectionId")
 	header = HEADERS_GRAPHQL % (apitoken, appId)
 	base = ZDF_GraphqlBase % "GetVideoMetaByCanonical"
 	ext	= '{"persistedQuery":{"version":1,"sha256Hash":"4b52236b2cf362542bab7a4e4cfa99830a22ee5ad1e77080d3cc12b2092f0e02"}}'
@@ -9912,25 +9927,15 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 			descr = ""
 		
 			try:
+				if len(jsonObject["teaser"]) == 0:
+					PLog("skip_null_teaser")
+					continue
 				img = ZDF_get_img(jsonObject["teaser"][0])		# fehlt/leer bei recommendation-Inhalten
 				DictID = "ZDF_%s_%d" % (urlid, cnt)				# DictID: url-Ende + cluster-nr
 				Dict('store', DictID, jsonObject)				# für ZDF_PageMenu	
 			except Exception as exception:
 				PLog("teaser_error: " + str(exception))				
-				img = R(ICON_DIR_FOLDER)
-				if "reference" in jsonObject:
-					ref_url = jsonObject["reference"]["url"]
-					if '{bookmarks}' in ref_url:				# skip personenbezogene Inhalte, s.o.
-						PLog("skip_bookmarks_url:" + title)
-						continue
-					DictID=""
-					ref_url = ref_url.replace("%2F", "/")
-					urlkey = ref_url.replace('{&appId,abGroup}', '&appId=exozet-zdf-pd-0.99.2145&abGroup=gruppe-a')
-					descr = u"[B]Vorschläge der Redaktion[/B]"
-					PLog("new_urlkey: " + urlkey)
-				else:											# o. teaser, o. reference-Url, Bsp. Weiterschauen
-					PLog("reference_missing: " + title)
-					continue										
+				continue										
 			
 			PLog("Satz6_1:")
 			urlkey=py2_encode(urlkey)
@@ -10823,7 +10828,7 @@ def ZDF_FlatListEpisodes(sid):
 	PLog("staffel_list: %d" % len(staffel_list))
 
 	
-	ret = ZDF_Episodes_Graphql(sid, staffel_list)				# Graphql-Check neue Serie
+	ret = ZDF_Episodes_Graphql(sid, staffel_list)				# Abgleich via Graphql-Check: neue Serie?
 	if ret:
 		title = "[B]Neueste Serie anzeigen[/B]"
 		tag = "im Web wurde eine neue Serie gefunden."
@@ -10885,10 +10890,15 @@ def ZDF_FlatListEpisodes(sid):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------
+# Ableich / Listing Episodenliste futura-api vs. Graphql-api
+# Debug: 1. Graphql DevTools Kategorien-> Serien -> Folge.
+#		 2. futura-api: A-Z -> Serie -> kompl. Liste 
 # Aufruf Step 1: ZDF_FlatListEpisodes nach Menü "komplette Liste ..",
-# 	return True falls Graphql-Call im Web neuere Liste findet oder
-# 	ZDF_RubrikSingle bei leeren Cluster (Aufruf mit Sharing-Url surl)
-# Aufruf Step 2: ZDF_FlatListEpisodes -> Anzeige neue Liste
+# 	return True falls Graphql-Call im Web neuere Liste findet (auch
+# 	bei leerem Cluster in ZDF_RubrikSingle, Aufruf mit Sharing-Url surl),
+#	Ablage neuere Liste via Dict.
+# Aufruf Step 2: ZDF_FlatListEpisodes (jsonID) -> Anzeige neue Liste
+#	(jsonID -> Dict)
 #
 def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 	PLog("ZDF_Episodes_Graphql: %s | %d | %s" % (sid,  len(staffel_list), jsonID))
@@ -10896,71 +10906,79 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 	if not jsonID:											# Step 1  Web- + Graphql-Call
 		season_nr=0; folgen_anz=0
 		if not surl:
-			surl = "https://www.zdf.de/serien/" + sid		# Sharing-Url
-		page, msg = get_page(surl)
-		if page == '':	
-			return False
-		
-		item = stringextract("initialSeasonId", "children", page)
-		item = item.replace('\\"', '"')
-		PLog(item)
-		idIn = stringextract(':"', '"', item)				# initialSeasonId
-		PLog("item: %s | idIn: %s" % (item, idIn))
-		canon = sid											# ID für smartCollectionByCanonical
-		zdf_app_id = "ffw-mt-web-2c770629"
-		token = "aa3noh4ohz9eeboo8shiesheec9ciequ9Quah7el"	# bei Bedarf aus Web ermitteln
-		GRAPHQL_HEADER = "{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/',\
-			'zdf-app-id': '%s', 'accept': '*/*', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site'}"	% (token, zdf_app_id) 		
-		href = "https://api.zdf.de/graphql?operationName=seasonByCanonical&variables=%7B%22seasonIndex%22%3A0%2C%22episodesPageSize%22%3A24%2C%22canonical%22%3A%22####%22%2C%22filterBy%22%3A%7B%22idIn%22%3A%5B%22****%22%5D%7D%2C%22sortBy%22%3A%5B%7B%22field%22%3A%22EPISODE_NUMBER%22%2C%22direction%22%3A%22DESC%22%7D%5D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%2201f2190e7dab1da40f63b585c0b68a59ecdd7f5effb8890b958e20b48bee20cb%22%7D%7D"
-		href = href.replace("####", canon)
-		href = href.replace("****", idIn)
-		page, msg = get_page(href, header=GRAPHQL_HEADER, do_safe=False)
+			surl = "https://www.zdf.de/serien/" + sid		# Sharing-Url -> Params Web
+		page, msg = get_page(path=surl)
+		pageInfo = stringextract('target_type\\":\\"SmartCollection', '</script>', page)
+		pageInfo = pageInfo.replace('\\', '')
+		PLog(pageInfo[:80])
+		seasons = blockextract('"Season\",\"id"', pageInfo)	# absteigend
 
 		try:
-			jsonObject = json.loads(page)
-			PLog(str(jsonObject)[:80])	
-			objs = jsonObject["data"]["smartCollectionByCanonical"]["seasons"]["nodes"]	# initial Season (aktuellste)
-			PLog(str(objs)[:80])
-			season_title = objs[0]["title"]
-			season_nr = objs[0]["number"]
-			folgen_anz = objs[0]["countEpisodes"]
-			season_nr = int(season_nr); folgen_anz = int(folgen_anz)
-			PLog("season_graphql: %d | %s | Season: %d | Folgen: %d" % (len(objs),season_title,season_nr,folgen_anz))
+			PLog(str(seasons[0])[:100])
+			season_nr = re.search(r'Staffel (\d+)', seasons[0]).group(1)# Nr. im erst Block
+			idIn = stringextract('"id":"', '"', seasons[0])				# myvars -> filterBy":{"idIn"
+			title = stringextract('"title":"', '"', seasons[0])
 		except Exception as exception:
-			PLog("Graphql_json_error1: " + str(exception))
+			PLog("season_nr_error:  " + str(exception))
+			season_nr=0
+		PLog("seasons_web: %d | season_nr_web: %s" % (len(seasons), season_nr))
+		if season_nr == 0:
 			return False
 		
-		loop_stop=False; snr_list=[]
-		for staffel in 	staffel_list:					# aktuell_Check futura-api: Abgleich season_nr
-			if loop_stop:
+		futura_uptodate=False; snr_list=[]
+		for staffel in 	staffel_list:						# Staffel-Abgleich futura-api / Web-json
+			if futura_uptodate:
 				break
 			folgen = staffel["teaser"]
 			PLog(str(folgen)[:80])
-			for folge in folgen:
-				if "seasonNumber" in folge:
+			for folge in folgen:	
+				if "seasonNumber" in folge:	
 					snr = folge["seasonNumber"]	
 					PLog("snr: " + snr)
+					if snr in snr_list:						# stop Folgen
+						break
 					snr_list.append(snr)
-					if int(snr) >= season_nr:			# Staffel-Abgleich futura-api / Graphql-json
+					if int(snr) >= int(season_nr):	
 						PLog("snr>=season_nr: %d | %d" % (int(snr), int(season_nr)))
-						loop_stop=True	
+						futura_uptodate=True	
 						break
 		
-		PLog("aktuell_Check: %s | seasons_api: %s, season_graphql: %d" % (str(loop_stop), str(snr_list), season_nr))
-		if not loop_stop:								# größere season_nr in graphql_Call
-			PLog("seasons_api: %s, season_graphql: %d" % (str(snr_list), season_nr))
+		PLog("seasons_Check: %s | seasons_futura: %s, season_web: %d" % (str(futura_uptodate), str(snr_list), int(season_nr)))
+		# futura_uptodate=False	# Debug
+		if not futura_uptodate:									# größere season_nr im Web -> holen via Graphql
+			PLog("build_Graphql_for: %s | %s" % (title, idIn))
+			params = Dict("load", "ZDF_Header_Params")			# Aktualisierung: ZDF_Graphql_WebDetails
+			if not params:										# Dict  fehlt noch
+				genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(surl, mode="seasonByCanonical")
+			else:
+				apitoken,appId,zdfappId = params.split("|")
+			header = HEADERS_GRAPHQL % (apitoken, appId)
+			first = 24; canon = sid; coll_id = idIn		
+			base = ZDF_GraphqlBase % "seasonByCanonical"
+			ext	= '{"persistedQuery":{"version":1,"sha256Hash":"01f2190e7dab1da40f63b585c0b68a59ecdd7f5effb8890b958e20b48bee20cb"}}'
+			myvars = '{"seasonIndex":0,"episodesPageSize":%s,"canonical":"%s","filterBy":{"idIn":["%s"]},"sortBy":{"field":"EPISODE_NUMBER","direction":"ASC"}}'		
+			myvars = myvars  % (first, canon, coll_id)
+			href = base + quote(myvars) + "&extensions=" + quote(ext)
+			PLog("Graphql_unquoted5: " + unquote(href))
+			page, msg = get_page(path=href,  header=header, do_safe=False)	# Check erst bei Graphql_json_error1	
+			try:
+				jsonObject = json.loads(page)
+				PLog(str(jsonObject)[:80])	
+			except Exception as exception:
+				PLog("Graphql_Episodes_error1: " + str(exception))
+			
 			ID = "ZDF_Graphql_sid_%s" % sid
 			Dict("store", ID, jsonObject)
 			return True
 		else:
 			return False
-	#--------------------------------------------------	# Step 2 Ausgabe Liste
+	#--------------------------------------------------			# Step 2 Ausgabe Liste
 	else: 
 		PLog("Step2")
 		jsonObject = Dict("load", jsonID)
 		li = xbmcgui.ListItem()
-		li = home(li, ID='ZDF')							# Home-Button
-		mediatype=''									# Kennz. Videos im Listing
+		li = home(li, ID='ZDF')									# Home-Button
+		mediatype=''											# Kennz. Videos im Listing
 		if SETTINGS.getSetting('pref_video_direct') == 'true':
 			mediatype='video'
 			base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
@@ -10975,25 +10993,23 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 				typ,title,tag,descr,img,url,stream,coll_id = ZDF_getKat_content(folge)
 				season, episode = ZDF_getKat_json(folge, mode="season")
 				title_pre = "S%02dE%02d" % (int(season), int(episode))
-				title = "%s | %s" % (title_pre, title)	# Serienkennung wie ZDF_FlatListRec
+				title = "%s | %s" % (title_pre, title)			# Serienkennung wie ZDF_FlatListRec
 
 				title=repl_json_chars(title)
 				descr=repl_json_chars(descr); tag=repl_json_chars(tag)
 				tag_par = tag.replace("\n", "||")
-				vid_id=folge["id"]						#  wie ZDF_WebMoreVideo
+				vid_id=folge["id"]								#  wie ZDF_WebMoreVideo
 				scms_id = "SCMS_" + vid_id
 				
-				img=py2_encode(img)						# PY2
-				descr=py2_encode(descr); tag_par=py2_encode(tag_par); 
-				title=py2_encode(title);
-
+				img=py2_encode(img); tag_par=py2_encode(tag_par); 
+				descr=py2_encode(descr); title=py2_encode(title);
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(url, title, img, tag_par, descr, scms_id)	
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)			
 
 		except Exception as exception:
-			PLog("Graphql_json_error2: " + str(exception))
+			PLog("Graphql_Episodes_error2: " + str(exception))
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 	
@@ -11307,7 +11323,7 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 			except:
 				brandId=""
 			if season_id != brandId:
-				PLog("skip_no_brandId: " + str(folge)[:60])
+				PLog("skip_wrong_brandId: " + str(folge)[:60])
 				continue
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge) # Datensatz
 			if season == '':
