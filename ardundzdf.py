@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>271</nr>										# Numerierung für Einzelupdate
+# 	<nr>272</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.8'
-VDATE = '29.08.2025'
+VDATE = '01.09.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -400,7 +400,7 @@ except:
 PLog("content_type: %s" % sel)				
 xbmcplugin.setContent(HANDLE, sel)
 
-ARDSender = 'ARD-Alle:ard::ard-mediathek.png:ARD-Alle'		# Rest in ARD_NEW, CurSenderZDF s. ZDF_VerpasstWoche
+ARDSender = 'ARD-Alle:ard::ard-mediathek.png:ARD-Alle'		# Rest in ARD_NEW, CurEPGSenderZDF s. ZDF_VerpasstWoche
 CurSender = ARDSender										# Default ARD-Alle
 fname = os.path.join(DICTSTORE, 'CurSender')				# init CurSender (aktueller Sender)
 if os.path.exists(fname):									# kann fehlen (Aufruf Merkliste)
@@ -8641,7 +8641,7 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 	page = page.replace('\\', '')
 	collmark = "metaCollectionId"								# Default für Sub's 
 
-	try:														# Params für ersten Graphql-Call suchen
+	try:														# Header-Params für Graphql-Call
 		apitoken = stringextract('apiToken":"', '"', page)		# apiToken\":\"ahBaeMee..
 		appId = stringextract('appId":"', '"', page)			# appId\":\"ffw-mt-web-b1cc.. -> Header
 		zdfappId = appId.replace("ffw-mt","zdf")				# -> Params Graphql
@@ -8649,7 +8649,8 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 		if "seasonByCanonical" in mode:
 			canon = path.split("/")[-1]							# Serie "the-tourist-110"
 			coll_id = stringextract('"initialSeasonId":"', '"', page) # -> filterBy":{"idIn"
-			
+		elif "getEpg" in mode:
+			pass												# Header-Params reichen	
 		else:
 			mark = '%s":"' % collmark
 			coll_id = stringextract(mark, '"', page)			# c81de0fe-..cbaf379853, genre-10296					
@@ -8883,7 +8884,8 @@ def ZDF_getKat_json(obj, mode="img"):
 	owner="";
 	if "contentOwner" in obj:
 		owner = obj["contentOwner"]["title"]		# -> ttd, movie
-	teaser = obj["teaser"]
+	if "teaser" in obj:
+		teaser = obj["teaser"]
 
 	if mode == "season":							# <- ZDF_Episodes_Graphql
 		staffel=0; folge=0
@@ -8932,7 +8934,10 @@ def ZDF_getKat_json(obj, mode="img"):
 		img_def = R("icon-bild-fehlt_wide.png")		# default-Icon
 		img_alt=""
 		try:
-			image = teaser["imageWithoutLogo"]
+			if "teaser" in obj:
+				image = teaser["imageWithoutLogo"]
+			else:
+				image = obj["image"]
 			img_alt = "[B]Bild: [/B]%s" % image["altText"]
 			if img_alt == "None":
 				img_alt=""
@@ -8944,7 +8949,7 @@ def ZDF_getKat_json(obj, mode="img"):
 			if img == "" and "original" in layouts:
 				img = layouts["original"]
 			if img == "" or img == None:				# weitere Suche
-				PLog("missing_pict")
+				PLog("missing_def_dims")
 				for i, l in enumerate(layouts):			# ersten dim-Treffer verwenden
 					PLog("i: %d, l: %s, url: %s" % (i,l, layouts[l]))
 					if layouts[l]:
@@ -10411,18 +10416,19 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 
 # Liste der Wochentage ZDF
 # ARD s. ARDnew.SendungenAZ (früherer Classic-Code entfernt)
+# 30.08.2025 Datumformate umgestellt für Graphql in ZDF_Verpasst
 # 
 def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediathek
 	PLog('ZDF_VerpasstWoche:')
 	PLog(name); 
 	 
 	sfilter=''
-	fname = os.path.join(DICTSTORE, 'CurSenderZDF')				# init CurSenderZDF (aktueller Sender)
+	fname = os.path.join(DICTSTORE, 'CurEPGSenderZDF')				# init CurEPGSenderZDF (aktueller Sender)
 	if os.path.exists(fname):									# kann fehlen (Aufruf Merkliste)
-		sfilter = Dict('load', 'CurSenderZDF')
+		sfilter = Dict('load', 'CurEPGSenderZDF')
 		
 	if sfilter == '' or sfilter == False:						# 'Alle ZDF-Sender' nur bei zdf-cdn-api
-		sfilter = 'ZDF'											# Default Alle ZDF-Sender (nur VERPASST)
+		sfilter = 'ZDF'											# Default ZDF
 	
 	li = xbmcgui.ListItem()
 	if homeID:
@@ -10430,21 +10436,26 @@ def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediath
 	else:
 		li = home(li, ID='ZDF')					# Home-Button
 		
-	wlist = list(range(0,7))
+	wlist = list(range(-1,7))
 	now = datetime.datetime.now()
 
 	for nr in wlist:
 		rdate = now - datetime.timedelta(days = nr)
+		rdate2 = now - datetime.timedelta(days = nr-1)
+		startDate = rdate.strftime("%Y-%m-%dT03:00:00Z")
+		endDate = rdate2.strftime("%Y-%m-%dT02:59:59Z")
+		zdfDate = "%s||%s" % (startDate, endDate)
+		
 		iDate = rdate.strftime("%d.%m.%Y")		# Formate s. man strftime (3)
-		zdfDate = rdate.strftime("%Y-%m-%d")		
 		iWeekday =  rdate.strftime("%A")
+		if nr == -1:
+			iWeekday = 'Morgen'	
 		if nr == 0:
-			iWeekday = 'Heute'	
+			iWeekday = '[B]Heute[/B]'	
 		if nr == 1:
 			iWeekday = 'Gestern'	
 		iWeekday = transl_wtag(iWeekday)
 		PLog(iDate); PLog(iWeekday);
-		#title = ("%10s ..... %10s"% (iWeekday, iDate))	 # Formatierung in Plex ohne Wirkung		
 		title =	"%s | %s" % (iDate, iWeekday)
 		
 		func = "ZDF_Verpasst"					# Call intern
@@ -10452,7 +10463,7 @@ def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediath
 		if homeID == "Kinderprogramme":
 			func = "resources.lib.childs.tivi_Verpasst"	# Call extern
 			fanart=GIT_ZDFTIVI; thumb=GIT_TIVICAL
-			sfilter='Alle ZDF-Sender'
+			sfilter='ZDF'
 
 		PLog("Satz1: ")
 		PLog(title); PLog(zdfDate)
@@ -10484,23 +10495,25 @@ def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediath
 #-------------------------
 # Auswahl der ZDF-Sender für ZDF_VerpasstWoche
 # bei Abbruch bleibt sfilter unverändert
-								
+# 30.08.2025 erweitert für Partnersender (wie ZDF-Web-Menü Live&TV)
+#								
 def ZDF_Verpasst_Filter(name, title, sfilter):
 	PLog('ZDF_Verpasst_Filter:'); PLog(sfilter); 
-	
-	stations = ['Alle ZDF-Sender', 'ZDF', 'ZDFneo', 'ZDFinfo']
-	if sfilter not in stations:		# Fallback für Version < 4.7.0
-		i=0
+
+	stations = ['Alle ZDF- und Partner-Sender', 'ZDF, ZDFneo, ZDFinfo', 'ZDF', 
+				'ZDFneo', 'ZDFinfo', '3sat', 'PHOENIX', 'arte', 'KIKA']
+	if sfilter not in stations:		# Fallback ZDF 
+		i=2
 	else:
 		i = stations.index(sfilter)
 
 	dialog = xbmcgui.Dialog()
-	d = dialog.select('ZDF-Sendestation wählen', stations, preselect=i)
-	if d == -1:						# Fallback Alle
-		d = 0
-	sfilter = stations[d]
-	PLog("Auswahl: %d | %s" % (d, sfilter))
-	Dict('store', "CurSenderZDF", sfilter)
+	ret = dialog.select('ZDF-Sendestation wählen', stations, preselect=i)
+	PLog("ret: " + str(ret))
+	if ret != -1:						# Fallback ZDF
+		sfilter = stations[ret]
+	PLog("Auswahl: %d | %s" % (ret, sfilter))
+	Dict('store', "CurEPGSenderZDF", sfilter)
 	
 	return ZDF_VerpasstWoche(name, title)
 
@@ -10539,11 +10552,15 @@ def ZDF_Verpasst_Datum(title, zdfDate, sfilter):
 # 1. Buttons Morgens. Mittags, Abends, Nachts
 # 2. Cluster-Ermittl. via DictID, Teaser-Auswertung 
 # 04.03.2024 ZDFtivi integriert
+# 30.08.2025 umgestellt auf Graphql (ähnlich ZDF-Web Live&TV), Sender-
+#	statt Tageszeiten-Buttons (bei nur 1 Sender direkte Ausgabe).
 # 
-def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
-	PLog('ZDF_Verpasst:'); PLog(title); PLog(zdfDate); PLog(sfilter);
-	PLog("DictID: " + DictID);
+def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
+	PLog('ZDF_Verpasst:'); PLog(title); PLog(zdfDate);
+	PLog(sfilter); PLog("EPGsender: " + str(EPGsender));
 	title_org = title
+
+	# -----------------------------------------------------------------	# 2. Durchlauf Listing
 
 	mediatype=''													# Kennz. Videos im Listing
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
@@ -10551,96 +10568,193 @@ def ZDF_Verpasst(title, zdfDate, sfilter='Alle ZDF-Sender', DictID=""):
 	PLog('mediatype: ' + mediatype); 
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')						# Home-Button
-	li2 = xbmcgui.ListItem()										# mediatype='video': eigene Kontextmenüs in addDir							
-
-	# -----------------------------------------						# 2. Durchlauf
-	
-	if DictID:	
-		jsonObject = Dict("load", DictID)
-		teaserObject = jsonObject["teaser"]
-		PLog(len(teaserObject))
-		PLog(str(teaserObject)[:80])
-		fcnt=0														# gefiltert-Zähler	
-		for entry in teaserObject:
-			try:
-				typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
-				airtime = entry["airtime"]
-				t = airtime[-5:]
-				title = "[COLOR blue]%s[/COLOR] | %s" % (t, title)	# Sendezeit | Titel
-				channel = entry["channel"]
-				if sfilter.startswith("Alle") == False:
-					PLog("Mark0"); PLog(sfilter); PLog(channel)
-					if up_low(sfilter) != up_low(channel):							# filtern
-						continue
-				tag = "%s | Sender: [B]%s[/B]" % (tag,channel) 
-				if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
-					filtered=False
-					for item in AKT_FILTER: 
-						if item.strip(): 
-							if up_low(item) in py2_encode(up_low(str(entry))):
-								filtered = True
-								break		
-					if filtered:
-						PLog('filtered_4: <%s> in %s ' % (item, title))
-						fcnt = fcnt+1
-						continue								
-					
-				PLog("Satz4:")
-				PLog(tag); PLog(title); PLog(stream);
-				title = repl_json_chars(title)
-				descr = repl_json_chars(descr)
-				tag = repl_json_chars(tag)
-				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
-					(stream, title, img, tag, descr, scms_id)	
-				addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
-					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
-			except Exception as exception:
-				PLog("verpasst_error: " + str(exception))
-	
-		if fcnt > 0:													# Info gefiltert-Zähler
-			icon = R("icon-filter.png")
-			xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)		
-									
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		return
-	
-	# -----------------------------------------							# 1. Durchlauf
-	
-	path = "https://zdf-prod-futura.zdf.de/mediathekV2/broadcast-missed/" + zdfDate
-	page, msg = get_page(path)
-	if page == '':
-		msg1 = "Abruf fehlgeschlagen | %s" % title
-		MyDialog(msg1, msg, '')
-		return li 
-
-	jsonObject = json.loads(page)
-	clusterObject = jsonObject["broadcastCluster"]
-	PLog(str(clusterObject)[:80])
-	PLog("Cluster: %d " % len(clusterObject))
-
-	msg1 = title								# Notification Datum + Sender
-	if "manuell" in title:
-		msg1 = "%s.%s.%s" % (zdfDate[8:10], zdfDate[5:7], zdfDate[0:4])
-	msg2 = sfilter
-	icon = R(ICON_ZDF_VERP)
-	xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)
-	cnt=0
+	li2 = xbmcgui.ListItem()										# mediatype='video': eigene Kontextmenüs in addDir	
+							
+	if EPGsender:
+		epg = Dict('load', "ZDF_Verpasst_EPG")	
+		img_def=R("Dir-video.png")									# replace icon-bild-fehlt_wide
+		cnt=0; fcnt=0												# gefiltert-Zähler			
+		for entry in epg:
+			stitle = entry["broadcaster"]["title"]
+			now=""
+			if "now" in  entry["broadcaster"]:
+				now = entry["broadcaster"]["now"]["airtimeBegin"]	# JETZT-Abgleich mit airtimeBegin in Liste
+			if stitle != EPGsender:
+				PLog("skip_stitle: %s" % stitle)
+				continue
 			
-	for jsonObject in clusterObject:
-		title = jsonObject["name"]
-		img = ZDF_get_img(jsonObject["teaser"][0])
-		tag = "Folgeseiten"
-		DictID = "ZDF_Verpasst_%d" % cnt	 				# DictID: cluster-nr
-		Dict('store', DictID, jsonObject)					# -> ZDF_Verpasst
-	
-		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s', 'DictID': '%s'}" %\
-			(title_org, zdfDate, sfilter, DictID)
-		PLog("fparams: " + fparams)	
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=img, 
-		thumb=img, fparams=fparams, tagline=tag)
-		cnt=cnt+1
+			broadcasts = entry["broadcasts"]
+			PLog("title: %s: %d, now: %s" % (stitle, len(broadcasts), now))
+			for entry in broadcasts:
+				img_alt=""								# Defaults, img's nur bei Inhalten der Mediathek
+				scms_id=""; live=""
+				try:												# ZDF_getKat_content  abweichend
+					video = entry["video"]
+					if video:
+						ext_id = entry["video"]["tracking"]["piano"]["click"]["page_external_id"]
+						scms_id = "SCMS_" + ext_id
+						typ = entry["video"]["currentMediaType"]	# mehrfach möglich, z.B. für heute-Sendung
+						movie_canon_id = video["canonical"]			# bei JETZT (LIVE) benötigt			
+						
+					if "image" in entry:
+						if entry["image"]:							# null bei ext. Inhalten (3sat, arte,..)
+							img, img_alt = ZDF_getKat_json(entry, mode="img")
+						else:
+#							img = img.replace("icon-bild-fehlt_wide", "Dir-video")
+							img = img_def
+					title = entry["title"]
+					descr = entry["text"]
+					
+					channel = entry["tvService"]
+					pubDate = entry["airtimeBegin"]
+					PLog("pubDate: " + pubDate)
+					sdatum = time_translate(pubDate, add_hour=False, day_warn=True)
+					uhr = pubDate[11:16]	
+					sdatum = u"Sendedatum: [COLOR blue]%s[/COLOR]" % sdatum
+					endDate = entry["airtimeEnd"]
+					dur = time_calc_diff(endDate, pubDate)
+					
+					tag = "Dauer %s | %s | %s" % (dur, channel, sdatum)	
+					if video: 
+						title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title)	# Sendezeit | Titel
+						if "LIVE" in typ:
+							title = "%s (LIVE)" % title					# mehrfach möglich
+						PLog("now: %s, pubDate %s" % (now, pubDate))
+						if pubDate == now:
+							title = "[B]JETZT: %s[/B]" % title
+					else:
+						title = "[COLOR grey]%s | %s[/COLOR]" % (uhr, title)
+						tag = "%s\n%s" % ("[B]NICHT in der Mediathek![/B]", tag)
+					
+					if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
+						filtered=False
+						for item in AKT_FILTER: 
+							if item.strip(): 
+								if up_low(item) in py2_encode(up_low(str(entry))):
+									filtered = True
+									break		
+						if filtered:
+							PLog('filtered_4: <%s> in %s ' % (item, title))
+							fcnt = fcnt+1
+							continue								
+						
+					PLog("Satz4:")
+					PLog(title); PLog("video: " + str(video)[:10]); PLog(scms_id);  
+					PLog("img: " + img);  PLog(tag); PLog(descr[:60]);
+					title = repl_json_chars(title)
+					descr = cleanhtml(descr); descr = repl_json_chars(descr)
+					descr_par = descr.replace('\n', '||')
+					tag = repl_json_chars(tag)
+					# futura-api (am schnellsten) auch für LIVE OK, für ZDF_Graphql_Video sharingUrl erforderlich
+					if video:												
+						stream = "https://zdf-prod-futura.zdf.de/mediathekV2/document/" + movie_canon_id
+						fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
+							(stream, title, img, tag, descr_par, scms_id)	
+						addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+							fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
+					
+					else:
+						fparams="&fparams={'path': '', 'title': 'NICHT in der Mediathek!', 'img': ''}"
+						addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, 
+							thumb=img, fparams=fparams, tagline=tag, summary=descr)
+										
+				except Exception as exception:
+					PLog("verpasst_error: " + str(exception))
 		
+			if fcnt > 0:													# Info gefiltert-Zähler
+				icon = R("icon-filter.png")
+				xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)	
+			
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		
+	else:	
+	# -----------------------------------------------------------------	# 1. Durchlauf EPG holen
+	
+		sharingUrl = "https://www.zdf.de/live-tv"						# EPG horizontal pro Sender verschiebbar
+		startDate, endDate = zdfDate.split("||")
+		genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(sharingUrl, mode="getEpg")
+
+		header = HEADERS_GRAPHQL % (apitoken, appId)
+		base = ZDF_GraphqlBase % "getEpg"
+		ext	= '{"persistedQuery":{"version":1,"sha256Hash":"a1d44d118dfa53b4af409dfd5776291afb4f2e9ecf9c2ab826d9c3dcce07fd38"}}'
+		myvars = '{"filter":{"broadcasterIds":[%s],"from":"%s","to":"%s"}}'
+		
+		dict_sender = str(Dict('load', "CurEPGSenderZDF"))				# -> myvars
+		PLog(dict_sender)
+		if "False" in dict_sender:										# Dict-Problem
+			myfilter = '"ZDF"'
+		elif 'Alle ZDF-' in dict_sender:								# Alle plus Partner
+			myfilter = '"ZDF","ZDFinfo","ZDFneo","3sat","KIKA","PHOENIX","arte"'
+		elif 'ZDF, ZDFneo, ZDFinfo, ZDF' in dict_sender:
+			myfilter = '"ZDF","ZDFinfo","ZDFneo"'						# Alle ohne Partner
+		else:
+			myfilter = '"%s"' % dict_sender								# Einzelwahl
+		myfilter = myfilter.replace('KIKA', 'KI.KA')					# einz. Abweichung "id" / "title"
+
+		mysender = myfilter.replace('"', '')
+		mysender = myfilter.split()										# Abgleich broadcaster
+		
+		myvars = myvars % (myfilter, startDate, endDate )
+		href = base + quote(myvars) + "&extensions=" + quote(ext)
+		PLog("Graphql_unquoted6: " + unquote(href))		
+		page, msg = get_page(path=href,  header=header, do_safe=False)	# Check im try-Block
+			
+		try:
+			msg3=""
+			jsonObject = json.loads(page)
+			epg = jsonObject["data"]["epg"]
+			PLog(len(epg))								# 1-7
+			PLog(str(epg)[:80])	
+		except Exception as exception:
+			epg=[]
+			msg3 = str(exception)
+			PLog("Graphql_Verpasst_error: " + msg3)
+
+		if len(epg) == 0:
+			msg1 = "Abruf fehlgeschlagen | %s." % title
+			msg2 = "Keine Sendungen gefunden."
+			MyDialog(msg1, msg2, msg3)
+			return li 
+		else:
+			msg1 = title								# Notification Datum + Sender
+			if "manuell" in title:
+				msg1 = "%s.%s.%s" % (zdfDate[8:10], zdfDate[5:7], zdfDate[0:4])
+			msg2 = sfilter
+			icon = R(ICON_ZDF_VERP)
+			xbmcgui.Dialog().notification(msg1,msg2,icon,5000, sound=False)
+		
+		DictID = "ZDF_Verpasst_EPG"
+		Dict('store', DictID, epg)
+		if len(epg) == 1:								# nur 1 Sender -> Listing direkt
+			sender = epg[0]["broadcaster"]["title"]
+			ZDF_Verpasst(title_org, zdfDate, myfilter, sender)
+		else:
+			li = home(li, ID='ZDF')						# Home-Button 
+			logos = ['ZDF|tv-zdf.png', 'ZDFneo|tv-zdf-neo.png', 'ZDFinfo|tv-zdf-info.png', '3sat|3sat.png',
+				'PHOENIX|phoenix.png', 'ARTE|arte_Mediathek.png', 'KiKA|tv-kika.png']
+			stamp = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")	
+				
+			cnt=0; 
+			for item in epg:
+				sender = item["broadcaster"]["title"]	# "KIKA" abweichend von "id": "KI.KA"
+				PLog("sender: " + sender)
+				img=R(ICON_DIR_FOLDER)
+				for logo in logos:
+					if sender in logo:
+						img = logo.split("|")[-1]
+						img = R(img)
+						break
+
+				title = "%s | [B]%s[/B]" % (cleanmark(title_org), sender)
+				tag = "EPG: %s\ngeladen: %s Uhr" % (title_org, stamp)
+			
+				fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s', 'EPGsender': '%s'}" %\
+					(title, zdfDate, sfilter, sender)
+				PLog("fparams: " + fparams)	
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_Verpasst", fanart=img, 
+				thumb=img, fparams=fparams, tagline=tag)
+				cnt=cnt+1
+									
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ####################################################################################################
@@ -10996,7 +11110,6 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 			PLog("season_title: %s" % season_header["title"])
 			folgen = season_header["episodes"]["nodes"]
 			for folge in folgen:
-
 				typ,title,tag,descr,img,url,stream,coll_id = ZDF_getKat_content(folge)
 				season, episode = ZDF_getKat_json(folge, mode="season")
 				title_pre = "S%02dE%02d" % (int(season), int(episode))
