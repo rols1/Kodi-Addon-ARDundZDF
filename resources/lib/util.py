@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>135</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.08.2025
+# 	<nr>136</nr>										# Numerierung für Einzelupdate
+#	Stand: 01.09.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -826,8 +826,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					path=py2_encode(path); title=py2_encode(title)		# PY2
 				except Exception as exception:
 					PLog("fparams_error: " +  str(exception))
-					path=""
-				
+					path=""			
 				if path:												# sinnlos ohne path
 					fp = {'title': title, 'path': path, 'ID': org_id, 'mode': 'ShowSumm'}
 					fparams_ShowSumm = "&fparams={0}".format(fp)
@@ -2196,6 +2195,24 @@ def time_to_minutes(time_str):
 		minutes = int(h) * 3600 + int(m)
 	PLog(minutes)
 	return str(minutes)
+
+#---------------------------------------------------------------- 
+# Gibt Differenz zwischen 2 timestrings zurück
+# Format passend für ZDF-EPG
+def time_calc_diff(tstr1, tstr2):
+	PLog('time_to_minutes:')
+	
+	# ZDF-String ab "+" kappen: 2025-09-02T05:30:00+02:00
+	tstr1=tstr1[:19]; tstr2=tstr2[:19];
+	PLog('tstr1: %s | tstr2: %s' % (tstr1, tstr2))
+	date_format = "%Y-%m-%dT%H:%M:%S"
+	
+	# s. time_translate (Sommerzeit) 
+	start= datetime.datetime.fromtimestamp(time.mktime(time.strptime(tstr1, date_format)))
+	end= datetime.datetime.fromtimestamp(time.mktime(time.strptime(tstr2, date_format)))
+	
+	secs = int((start- end).total_seconds())
+	return seconds_translate(secs)
 
 #---------------------------------------------------------------- 
 # 03.01.2025 transl_pubDate entfernt - übersetzte für alte Audiothek
