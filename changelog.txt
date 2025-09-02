@@ -10,6 +10,27 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+02.09.2025	5.2.9
+			ZDF_getApiStreams: Ausgabe HLS_List_end verschoben (if dgs_url:), sonst
+			network error bei leerer HLS_List möglich.
+			ZDF_Graphql_Video: Graphql-Code überarbeitet, Nutzung ZDF_Graphql_WebDetails
+			für Params Webseite, ZDF_getKat_json für Params ZDF_getApiStreams.
+			list_WDRstreamlinks: Anpassung an Webänderungen für WDR Lokalzeit Live-
+			streams.
+			ZDF_RubrikSingle: Cluster ohne Teaser aus der Liste entfernt, reference-Url
+			(Bsp. Weiterschauen) funktioniert nicht mehr.
+			Main_ZDF: für Menü Barrierearm Ziel auf ZDF_Barrierearm geändert (Angleichung
+			an Aufruf aus Kategeorien).
+			ZDF_Episodes_Graphql: Anpassung an unterschiedliche  Webparameter für Staf-
+			feln.
+			ZDF_Verpasst: erneuert für Graphql (ähnlich ZDF-Web Live&TV), Anpassungen in
+			ZDF_VerpasstWoche (Datumformate, Auswahl "Morgen"), ZDF_Verpasst_Filter
+			(Stationsliste, Default-Station).
+			ARDVerpasst: um Auswahl für "Morgen" ergänzt.
+			update_single (Modul EPG): nach Änderung des Webformat bei Github Verzicht
+			auf Download neuer Module, RepoList entfällt, nur noch direkter Abgleich
+			Datei lokal / Datei Repo.
+
 24.08.2025 	5.2.8
 			ZDF_RubrikSingle: Austausch Serien-ID docObject["id"] gegen docObject
 			["brandId"]. "id" nicht sicher (Bsp. "Die Bergretter).

@@ -59,7 +59,7 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>273/nr>										# Numerierung für Einzelupdate
-VERSION = '5.2.8'
+VERSION = '5.2.9'
 VDATE = '02.09.2025'
 
 
@@ -10590,10 +10590,10 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 				items = line.split('|')
 				if up_low(stitle) == up_low(items[0]): 
 					link = items[1]									# Livestream EPGsender
-					PLog('%s: Streamlink found: %s' % (stitle, link))
+					PLog('%s: Streamlink_found: %s' % (stitle, link))
 					break
 			if link == '':
-				PLog('%s: Streamlink fehlt' % stitle)
+				PLog('%s: Streamlink_fehlt' % stitle)
 			
 			# ------------------------------------					# Liste Sendungen
 			broadcasts = entry["broadcasts"]
@@ -10624,7 +10624,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 					uhr = pubDate[11:16]	
 					sdatum = u"Sendedatum: [COLOR blue]%s[/COLOR]" % sdatum
 					endDate = entry["airtimeEnd"]
-					dur = time_calc_diff(endDate, pubDate)
+					dur, now_check = time_calc_diff(endDate, pubDate)
 					
 					tag = "Dauer %s | %s | %s" % (dur, channel, sdatum)	
 					if video: 
@@ -10637,10 +10637,10 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 						tag = "%s\n%s" % ("[B]NICHT in der Mediathek![/B]", tag)
 					
 					liveswitch=False									# möglich: keine Videodaten für akt. Sendung
-					if pubDate == now:
+					if now_check:										# verlässlicher als pubDate=now (die Liste altert)
 						title = "[B]JETZT | %s [/B]" % title
-						if not video:									# aktuell, aber ohne Videodaten -> Livestream
-							tag = "Direkt zum Livestream!\n%s" % tag
+						if not video:									# aktuell, aber ohne Videodaten -> Livestream,
+							tag = "Direkt zum Livestream!\n%s" % tag	#	sonst movie_canon_id -> ZDF_getApiStreams
 							PLog("now_without_video: %s | liveswitch: %s" % (title, str(pubDate)))
 							liveswitch=True						
 					
@@ -10734,7 +10734,6 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 		href = base + quote(myvars) + "&extensions=" + quote(ext)
 		PLog("Graphql_unquoted6: " + unquote(href))		
 		page, msg = get_page(path=href,  header=header, do_safe=False)	# Check im try-Block
-			
 			
 		try:
 			msg3=""

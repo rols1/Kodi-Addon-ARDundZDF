@@ -2852,7 +2852,7 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 	else:
 		li = home(li, ID='ARD Neu')				# Home-Button
 
-	wlist = list(range(0,7))
+	wlist = list(range(-1,7))
 	now = datetime.datetime.now()
 
 	for nr in wlist:
@@ -2866,10 +2866,12 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 		iWeekday = rdate.strftime("%A")
 		iWeekday = transl_wtag(iWeekday)
 		iWeekday = iWeekday[:2].upper()
+		if nr == -1:
+			iWeekday = 'Morgen'	
 		if nr == 0:
-			iWeekday = 'HEUTE'	
+			iWeekday = '[B]Heute[/B]'	
 		if nr == 1:
-			iWeekday = 'GESTERN'	
+			iWeekday = 'Gestern'	
 		title =	"%s %s" % (iWeekday, myDate)	# DI 09.04.
 		tagline = "Sender: [B]%s[/B]" % sendername
 		tagline = u"%s\nHinweis: keine Anzeige für ARD-Alle." % tagline	
@@ -3053,7 +3055,7 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 					PLog("pubDate: " + pubDate)
 					pubDate = time_translate(pubDate, add_hour=False, day_warn=True)
 					uhr = pubDate[11:16]	
-					pubDate = u"Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n" % pubDate
+					pubDate = u"Sendedatum: [COLOR blue]%s[/COLOR]\n" % pubDate
 					summ = "%s\n%s" % (pubDate, summ)
 
 					if verf:

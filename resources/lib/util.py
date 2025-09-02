@@ -2199,8 +2199,10 @@ def time_to_minutes(time_str):
 #---------------------------------------------------------------- 
 # Gibt Differenz zwischen 2 timestrings zurück
 # Format passend für ZDF-EPG
+# now_check=True wenn now zwischen tstr1 und tstr2
+#
 def time_calc_diff(tstr1, tstr2):
-	PLog('time_to_minutes:')
+	PLog('time_calc_diff:')
 	
 	# ZDF-String ab "+" kappen: 2025-09-02T05:30:00+02:00
 	tstr1=tstr1[:19]; tstr2=tstr2[:19];
@@ -2208,11 +2210,17 @@ def time_calc_diff(tstr1, tstr2):
 	date_format = "%Y-%m-%dT%H:%M:%S"
 	
 	# s. time_translate (Sommerzeit) 
-	start= datetime.datetime.fromtimestamp(time.mktime(time.strptime(tstr1, date_format)))
-	end= datetime.datetime.fromtimestamp(time.mktime(time.strptime(tstr2, date_format)))
+	start = datetime.datetime.fromtimestamp(time.mktime(time.strptime(tstr1, date_format)))
+	end = datetime.datetime.fromtimestamp(time.mktime(time.strptime(tstr2, date_format)))
+	now = datetime.datetime.now()
+	
+	now_check=False
+	if now < start and now > end:			# start / end hier vertauscht
+		now_check=True
+		PLog("now_check_true: now: %s, start: %s, end: %s" % (str(now)[:19], end, start))
 	
 	secs = int((start- end).total_seconds())
-	return seconds_translate(secs)
+	return seconds_translate(secs), now_check
 
 #---------------------------------------------------------------- 
 # 03.01.2025 transl_pubDate entfernt - übersetzte für alte Audiothek
