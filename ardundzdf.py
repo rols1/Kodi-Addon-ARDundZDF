@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>272</nr>										# Numerierung für Einzelupdate
+# 	<nr>273/nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.8'
-VDATE = '01.09.2025'
+VDATE = '02.09.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -10561,12 +10561,13 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 	title_org = title
 
 	# -----------------------------------------------------------------	# 2. Durchlauf Listing
-
+	PLog("ZDF_Verpasst_Step2:")
 	mediatype=''													# Kennz. Videos im Listing
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	PLog('mediatype: ' + mediatype); 
-
+	
+	streamlinks  = get_ZDFstreamlinks()	 + get_ARDstreamlinks()		# 
 	li = xbmcgui.ListItem()
 	li2 = xbmcgui.ListItem()										# mediatype='video': eigene Kontextmenüs in addDir	
 							
@@ -10574,15 +10575,27 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 		epg = Dict('load', "ZDF_Verpasst_EPG")	
 		img_def=R("Dir-video.png")									# replace icon-bild-fehlt_wide
 		cnt=0; fcnt=0												# gefiltert-Zähler			
-		for entry in epg:
+		for entry in epg:											# Clustersuche
 			stitle = entry["broadcaster"]["title"]
+			PLog("EPGsender: %s | stitle: %s" % (EPGsender, stitle))
+			if up_low(stitle) != up_low(EPGsender):		
+				PLog("skip_stitle: %s" % stitle)
+				continue
 			now=""
 			if "now" in  entry["broadcaster"]:
 				now = entry["broadcaster"]["now"]["airtimeBegin"]	# JETZT-Abgleich mit airtimeBegin in Liste
-			if stitle != EPGsender:
-				PLog("skip_stitle: %s" % stitle)
-				continue
+			link=""
+			for line in streamlinks:								# s. SenderLiveListe
+				PLog("streamline: " + line[:40])
+				items = line.split('|')
+				if up_low(stitle) == up_low(items[0]): 
+					link = items[1]									# Livestream EPGsender
+					PLog('%s: Streamlink found: %s' % (stitle, link))
+					break
+			if link == '':
+				PLog('%s: Streamlink fehlt' % stitle)
 			
+			# ------------------------------------					# Liste Sendungen
 			broadcasts = entry["broadcasts"]
 			PLog("title: %s: %d, now: %s" % (stitle, len(broadcasts), now))
 			for entry in broadcasts:
@@ -10600,7 +10613,6 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 						if entry["image"]:							# null bei ext. Inhalten (3sat, arte,..)
 							img, img_alt = ZDF_getKat_json(entry, mode="img")
 						else:
-#							img = img.replace("icon-bild-fehlt_wide", "Dir-video")
 							img = img_def
 					title = entry["title"]
 					descr = entry["text"]
@@ -10620,11 +10632,17 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 						if "LIVE" in typ:
 							title = "%s (LIVE)" % title					# mehrfach möglich
 						PLog("now: %s, pubDate %s" % (now, pubDate))
-						if pubDate == now:
-							title = "[B]JETZT: %s[/B]" % title
 					else:
 						title = "[COLOR grey]%s | %s[/COLOR]" % (uhr, title)
 						tag = "%s\n%s" % ("[B]NICHT in der Mediathek![/B]", tag)
+					
+					liveswitch=False									# möglich: keine Videodaten für akt. Sendung
+					if pubDate == now:
+						title = "[B]JETZT | %s [/B]" % title
+						if not video:									# aktuell, aber ohne Videodaten -> Livestream
+							tag = "Direkt zum Livestream!\n%s" % tag
+							PLog("now_without_video: %s | liveswitch: %s" % (title, str(pubDate)))
+							liveswitch=True						
 					
 					if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
 						filtered=False
@@ -10641,19 +10659,36 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 					PLog("Satz4:")
 					PLog(title); PLog("video: " + str(video)[:10]); PLog(scms_id);  
 					PLog("img: " + img);  PLog(tag); PLog(descr[:60]);
+					PLog("liveswitch: " + str(liveswitch))
 					title = repl_json_chars(title)
 					descr = cleanhtml(descr); descr = repl_json_chars(descr)
 					descr_par = descr.replace('\n', '||')
 					tag = repl_json_chars(tag)
+					tag_par = tag.replace('\n', '||')
+					
+					title=py2_encode(title); img=py2_encode(img); 
+					tag=py2_encode(tag); descr_par=py2_encode(descr_par);
 					# futura-api (am schnellsten) auch für LIVE OK, für ZDF_Graphql_Video sharingUrl erforderlich
 					if video:												
 						stream = "https://zdf-prod-futura.zdf.de/mediathekV2/document/" + movie_canon_id
+						stream=py2_encode(stream); 
 						fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
-							(stream, title, img, tag, descr_par, scms_id)	
+							(quote(stream), quote(title), quote(img), quote(tag_par), quote(descr_par), scms_id)	
 						addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 							fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
+							
+					elif liveswitch:									# video=null + JETZT -> Livestream
+						Plot = "%s\n\n%s" % (tag, descr)
+						Plot = cleanhtml(Plot)
+						Plot = repl_json_chars(Plot)
+						Plot = Plot.replace("\n", "||")
+						link=py2_encode(link); Plot=py2_encode(Plot)
+						fparams="&fparams={'url': '%s','title': '%s','thumb': '%s','Plot': '%s','sub_path': '','live': 'true'}" %\
+							(quote(link), quote(title), quote(img), quote(Plot))	
+						addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
+							fparams=fparams, tagline=tag, summary=descr, mediatype='video')						
 					
-					else:
+					else:												# Dummy
 						fparams="&fparams={'path': '', 'title': 'NICHT in der Mediathek!', 'img': ''}"
 						addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, 
 							thumb=img, fparams=fparams, tagline=tag, summary=descr)
@@ -10669,6 +10704,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 		
 	else:	
 	# -----------------------------------------------------------------	# 1. Durchlauf EPG holen
+		PLog("ZDF_Verpasst_Step1:")
 	
 		sharingUrl = "https://www.zdf.de/live-tv"						# EPG horizontal pro Sender verschiebbar
 		startDate, endDate = zdfDate.split("||")
@@ -10698,6 +10734,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 		href = base + quote(myvars) + "&extensions=" + quote(ext)
 		PLog("Graphql_unquoted6: " + unquote(href))		
 		page, msg = get_page(path=href,  header=header, do_safe=False)	# Check im try-Block
+			
 			
 		try:
 			msg3=""
