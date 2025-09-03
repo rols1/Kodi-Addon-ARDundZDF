@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>99</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.07.2025
+# 	<nr>100</nr>										# Numerierung für Einzelupdate
+#	Stand: 03.09.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
