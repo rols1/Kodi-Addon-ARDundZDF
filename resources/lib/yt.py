@@ -22,8 +22,8 @@
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-# 	<nr>7</nr>								# Numerierung für Einzelupdate
-#	Stand: 09.05.2025
+# 	<nr>8</nr>								# Numerierung für Einzelupdate
+#	Stand: 04.09.2025
 #
 
 from __future__ import absolute_import
@@ -321,9 +321,10 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 		PLog(timestamp); PLog(sended);
 		tstamp = datetime.datetime.fromtimestamp(int(timestamp))
 		tstamp = tstamp.strftime("%d. %b. %Y %R")
-		sended = datetime.datetime.fromtimestamp(int(sended))
-		sended = sended.strftime("%d. %b. %Y %R")
-		tstamp = py2_decode(tstamp); sended = py2_decode(sended)
+		if sended:
+			sended = datetime.datetime.fromtimestamp(int(sended))
+			sended = sended.strftime("%d. %b. %Y %R")
+			tstamp = py2_decode(tstamp); sended = py2_decode(sended)
 		
 		dauer="?"
 		if duration != '""':										# z.B. Livestream 
