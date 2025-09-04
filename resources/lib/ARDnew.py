@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>100</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.09.2025
+# 	<nr>101</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.09.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2858,21 +2858,23 @@ def ARDVerpasst(title, CurSender="", homeID=""):
 	for nr in wlist:
 		rdate = now - datetime.timedelta(days = nr)
 		startDate = rdate.strftime("%Y-%m-%d")
-		myDate  = rdate.strftime("%d.%m.")		# Formate s. man strftime (3)
+		myDate  = rdate.strftime("%d.%m.%Y")		# Formate s. man strftime (3)
 		
 		rdate2 = now - datetime.timedelta(days = nr-1)
 		endDate = rdate2.strftime("%Y-%m-%dT03:29:59.000Z")
 
 		iWeekday = rdate.strftime("%A")
 		iWeekday = transl_wtag(iWeekday)
-		iWeekday = iWeekday[:2].upper()
+		
+		
 		if nr == -1:
 			iWeekday = 'Morgen'	
 		if nr == 0:
 			iWeekday = '[B]Heute[/B]'	
 		if nr == 1:
 			iWeekday = 'Gestern'	
-		title =	"%s %s" % (iWeekday, myDate)	# DI 09.04.
+		title =	"%s | %s" % (myDate, iWeekday)		# 29.08.2025 | Freitag, wie ZDF		
+		
 		tagline = "Sender: [B]%s[/B]" % sendername
 		tagline = u"%s\nHinweis: keine Anzeige für ARD-Alle." % tagline	
 		
