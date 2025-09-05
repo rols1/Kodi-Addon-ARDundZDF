@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>101</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.09.2025
+# 	<nr>102</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.09.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2982,12 +2982,12 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 	mediatype=""
 	li2 = xbmcgui.ListItem()									# mediatype='video': eigene Kontextmenüs in addDir							
 	
-
 	fcnt=0														# gefiltert-Zähler	
 	for i, channel in enumerate(channels):
 		sid = channel["id"]
 		if sender != "ARD-Alle":
-			if sid != sender:
+			if up_low(sid) != up_low(sender):
+				PLog("skip: " + sid)
 				continue
 			PLog("sender_found: " + sender)
 			
@@ -3053,24 +3053,30 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						verf=""
 					verf = time_translate(verf, day_warn=True)
 						
-					pubDate = s["broadcastedOn"]
+					pubDate = s["broadcastedOn"]							# 2025-09-05T05:30:00+02:00
+					endDate = s["broadcastEnd"]
 					PLog("pubDate: " + pubDate)
 					pubDate = time_translate(pubDate, add_hour=False, day_warn=True)
 					uhr = pubDate[11:16]	
 					pubDate = u"Sendedatum: [COLOR blue]%s[/COLOR]\n" % pubDate
 					summ = "%s\n%s" % (pubDate, summ)
+					
 
 					if verf:
 						summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (summ, verf)
 					if duration:
 						summ = "%s\n%s" % (duration, summ)
 					PLog("summ: " + summ)	
-						
+																			# nur now_check (s, duration):
+					dur_dummy, now_check = time_calc_diff(endDate, s["broadcastedOn"])		
 					if path == "":
 						summ = "[B]NICHT in der Mediathek![/B]\n%s" % summ		
 						title = "[COLOR grey]%s | %s[/COLOR]" % (uhr, title) 
 					else:
-						title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 			
+						title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title)
+					PLog(title)
+					if now_check: 
+						title = "[B]JETZT | %s [/B]" % title
 					
 				
 					if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
@@ -3108,10 +3114,29 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 				if path:
 					addDir(li=li2, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, 
 						thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
-				else:														# function dummy Haupt-PRG
-					fparams="&fparams={'path': '', 'title': '', 'img': ''}"
-					addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, 
-						thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
+				else:
+					if  now_check:											# ohne path -> Livestream (wie liveswitch ZDF)
+						streamlinks  = get_ARDstreamlinks()	
+						PLog("search_livestream: %s" % sid)
+						for line in streamlinks:								# s. SenderLiveListe
+							PLog("streamline: " + line[:40])
+							items = line.split('|')
+							if up_low(sid) in up_low(items[0]): 
+								link = items[1]									# Livestream EPGsender
+								PLog('%s: Streamlink_found: %s' % (sid, link))
+								break
+						 
+						Plot = summ_par
+						link=py2_encode(link); Plot=py2_encode(Plot)
+						fparams="&fparams={'url': '%s','title': '%s','thumb': '%s','Plot': '%s','sub_path': '','live': 'true'}" %\
+							(quote(link), quote(title), quote(img), quote(Plot))	
+						addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, 
+							fparams=fparams, summary=summ, mediatype=mediatype)						
+					 												
+					else:
+						fparams="&fparams={'path': '', 'title': '', 'img': ''}"
+						addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, 
+							thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
 
 	if fcnt > 0:													# Info gefiltert-Zähler
 		icon = R("icon-filter.png")
