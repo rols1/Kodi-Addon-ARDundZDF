@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>65</nr>								# Numerierung für Einzelupdate
-#	Stand: 04.08.2025
+# 	<nr>66</nr>								# Numerierung für Einzelupdate
+#	Stand: 06.09.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1268,13 +1268,15 @@ def ArteStart(path="", title=""):
 		fanart = R(ICON_ARTE)
 		tag=""
 		
+		'''																# keine Sendungen mehr, ab 06.09.2025 deaktiviert
 		title = L(u"Programme in UHD-Qualität")							# UHD-Button vor Startseite
 		href = "https://www.arte.tv/hbbtv-mw/api/1/skeletons/collections/RC-022710?lang=%s" % lang
 		title=py2_encode(title); href=py2_encode(href);
 		fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))							
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteStart", 
 			fanart=fanart, thumb=thumb, tagline=tag, fparams=fparams)
-			
+		'''
+	
 		try:
 			items = page["collections"]
 			PLog(str(items)[:80])
