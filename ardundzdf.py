@@ -58,9 +58,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>273/nr>										# Numerierung für Einzelupdate
+# 	<nr>274/nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.9'
-VDATE = '02.09.2025'
+VDATE = '06.09.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5567,7 +5567,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 			
 				
 	except Exception as exception:
-		PLog("thread_getfile:" + str(exception))
+		PLog("thread_getfile_error:" + str(exception))
 		if os.path.exists(DL_CHECK):							# Abbruchsignal -> 	epgRecord.get_active_dls
 			os.remove(DL_CHECK)						
 		msg1 = 'Download fehlgeschlagen'

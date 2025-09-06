@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>136</nr>										# Numerierung für Einzelupdate
-#	Stand: 01.09.2025
+# 	<nr>137</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.09.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1731,7 +1731,8 @@ def exist_in_list(insert, my_items):
 # Groß-/Kleinschreibung egal
 # bei Fehlschlag mString unverändert zurück
 def make_mark(mark, mString, color='red', bold=''):	
-	PLog("make_mark:")	
+	PLog("make_mark:")
+
 	mark=py2_decode(mark); mString=py2_decode(mString)
 	mS = up_low(mString); ma = up_low(mark)	# beide -> lower
 	pos1 = mS.find(ma)
@@ -2211,7 +2212,7 @@ def time_calc_diff(tstr1, tstr2):
 	
 	# s. time_translate (Sommerzeit) 
 	start = datetime.datetime.fromtimestamp(time.mktime(time.strptime(tstr1, date_format)))
-	end = datetime.datetime.fromtimestamp(time.mktime(time.strptime(tstr2, date_format)))
+	end = datetime.datetime.fromtimestamp(time.mktime(time.strptime(tstr2, date_format)))	
 	now = datetime.datetime.now()
 	
 	now_check=False
@@ -3157,9 +3158,12 @@ def MakeJpegNfo(pathtextfile, storetxt):
 	dlpath=pathtextfile.split(".")[0]
 
 	if thumb:
-		fname = "%s.jpeg" % dlpath
+		if thumb.startswith("http"):
+			fname = "%s.jpeg" % dlpath
+			urlretrieve(thumb, fname)
+		else:							# Lokales Bild, z.B. icon-bild-fehlt_wide.png
+			fname=""
 		PLog("local_thumb: " + fname)
-		urlretrieve(thumb, fname)
 
 	fname = "%s.nfo" % dlpath
 	strm_type = "movie"					# ev. Setting für Genre-Typen ergänzen
