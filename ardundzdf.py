@@ -25,14 +25,6 @@ elif PYTHON3:
 	except:
 		pass
 
-# Kodi-API-Änderungen:
-#	18.08.2021 xbmc.translatePath -> xbmc.translatePath (nur PYTHON3)
-#		https://github.com/xbmc/xbmc/pull/18345
-#		https://forum.kodi.tv/showthread.php?tid=344263&pid=2975581#pid2975581
-#	13.09.2020 	LOG_MSG = xbmc.LOGNOTICE (nur PYTHON2) 	Modul util
-#				LOG_MSG = xbmc.LOGINFO (nur PYTHON3) 	Modul util
-#		https://forum.kodi.tv/showthread.php?tid=344263&pid=2943703#pid2943703
-
 
 # Python
 import base64 			# url-Kodierung für Kontextmenüs
@@ -58,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>274/nr>										# Numerierung für Einzelupdate
+# 	<nr>275/nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.9'
-VDATE = '06.09.2025'
+VDATE = '09.09.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1074,9 +1066,6 @@ def ShowText(path, title, page=''):
 	return
 	
 #----------------------------------------------------------------
-#  03.06.2021 Main_ARD (Classic) entfernt
-# def Main_ARD(name, sender=''):		 		
-#---------------------------------------------------------------- 
 def Main_ZDF(name=''):
 	PLog('Main_ZDF:'); PLog(name)
 	li = xbmcgui.ListItem()
@@ -2731,7 +2720,6 @@ def Audio_get_search_cluster(objs, key):
 				
 					
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-
 			
 #----------------------------------------------------------------
 # Aufrufer: Audio_get_rubriken_web (Liste Rubriken),
@@ -3276,19 +3264,8 @@ def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 ##################################### Ende Audiothek ###############################################
 # ---------------------------------------- Start ARD Sportschau.de ---------------------------------
 # 12.06.2022 nach erneutem Umbau der Seite www.sportschau.de abgeschaltet - s. Post 2606 zu
-#	Update 4.4.0
-#def ARDSport(title):
-#def ARDSportEvents():
-#def ARDSportPanel(title, path, img, tab_path='', paneltabs=''):
-#def ARDSportPanelTabs(title, path, img, tab_path=''):
-#def ARDSportHoerfunk(title, path, img):
-#def ARDSportTablePre(base, img, clap_title=''):
-#def ARDSportTable(path, title, table_path=''):
-#def ARDSportAudioStreamsSingle(title, path, img, tag, summ, ID):
-#def ARDSportPodcast(path, title):
-#def ARDSportEventLive(path, page, title, oss_url='', url='', thumb='', Plot=''):		
-#def ARDSportSliderSingleTab(title, path, img, page=''):
-					
+#	Update 4.4.0. Nachfolge: ARDSportWDR ff.
+#					
 #--------------------------------------------------------------------------------------------------
 # Liste der ARD Audio Event Streams in livesenderTV.xml
 #	-> SenderLiveListe -> SenderLiveResolution (Aufruf
@@ -5158,15 +5135,7 @@ def SearchUpdate(title):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 	
 ####################################################################################################
-#							beta.ardmediathek.de / www.ardmediathek.de
-#
-#					zusätzliche Funktionen für die Betaphase ab Sept. 2018
-#					ab Jan 2019 wg. Scrollfunktion haupts. Nutzung der Classic-Version
-#					ab April 2019 hier allein Classic-Version - Neu-Version als Modul
-#					ab Juni 2021 nach Wegfall Classic hier entfernt: ARDStart, ARDStartRubrik,
-#						SendungenAZ, SearchARDundZDF, Search (ARD Classic + Podcast Classic), -
-#						gesamt s. changelog.txt.
-#						
+# ARD-Funktionen: Ablösung der Classic-Version durch Modul ARDnew.py					
 ####################################################################################################
 
 #----------------------------------------------------------------  
@@ -5202,24 +5171,16 @@ def get_query(channel='ARD'):
 		return	query
 	if channel=='ARD Audiothek' or channel=='phoenix':	# nur strip, quoting durch Aufrufer
 		return 	query.strip()
-			
-#---------------------------------------------------------------- 
-#  Search_refugee - erforderlich für Refugee Radio (WDR) - nur
-#		Podcasts Classics - 03.06.2021  entfernt
-#---------------------------------------------------------------- 
 
 ####################################################################################################
-# 03.06.2021 entfernt (Classic-Version eingestellt): PODMore							
-####################################################################################################
-####################################################################################################
-# 14.11.2023 entfernt (obsolet durch Merkliste): PodFavoritenListe							
-####################################################################################################
-####################################################################################################
+# 03.06.2021 entfernt (Classic-Version eingestellt): PODMore, Search_refugee - war 
+#		erforderlich für Refugee Radio (WDR)						
 # 03.06.2021 Classic-Funktionen entfernt: BarriereArmARD, PageControl, SinglePage,
 #	SingleSendung
+# 14.11.2023 entfernt (obsolet durch Merkliste): PodFavoritenListe							
 ####################################################################################################
 
-#-----------------------
+#----------------------------------------------------------------  
 # test_downloads: prüft ob curl/wget-Downloads freigeschaltet sind + erstellt den Downloadbutton
 # high (int): Index für einzelne + höchste Video-Qualität in download_list
 # 04.01.2021 Anpassung Trennz. Stream_List (Bsp. Parseplaylist, StreamsShow)
@@ -9057,6 +9018,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 		li = home(li, ID="ZDF")				# Home-Button
 	li2 = xbmcgui.ListItem()										# mediatype='video': eigene Kontextmenüs in addDir							
 		
+	folder = R(ICON_DIR_FOLDER)
 	mediatype=''													# Kennz. Videos im Listing
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
@@ -9229,8 +9191,17 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 			tag = u"hiermit werden Rubriken von der Webseite ergänzt."
 			fparams="&fparams={'ZDF_ApiCluster': 'ZDF_ApiCluster'}" 
 			PLog("fparams: " + fparams)	
-			addDir(li=li, label=label, action="dirList", dirID="ZDF_WebMore", fanart=img, 
-				thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)			
+			addDir(li=li, label=label, action="dirList", dirID="ZDF_WebMore", fanart=folder, 
+				thumb=folder, fparams=fparams, tagline=tag)
+				
+			title = u"Videos in UHD-Qualität"
+			tag = u"Serien, Filme, Dokumentationen, Reportagen und mehr in Ultra-HD-Qualität."
+			path = "https://www.zdf.de/ultra-high-definition"
+			title = py2_encode(title)
+			fparams="&fparams={'title': '%s', 'path': '%s'}" %\
+				(quote(title), quote(path))
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=folder, 
+				thumb=folder, tagline=tag, fparams=fparams)					
 
 	if fcnt > 0:													# Info gefiltert-Zähler
 		icon = R("icon-filter.png")
