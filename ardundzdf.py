@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>275/nr>										# Numerierung für Einzelupdate
+# 	<nr>276/nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.9'
-VDATE = '09.09.2025'
+VDATE = '14.09.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -153,9 +153,6 @@ GIT_ZDFTIVI		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KI
 GIT_TIVICAL		= "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/zdftivi-cal.png?raw=true"
 
 
-# 01.12.2018 	Änderung der BASE_URL von www.ardmediathek.de zu classic.ardmediathek.de
-# 06.12.2018 	Änderung der BETA_BASE_URL von  beta.ardmediathek.de zu www.ardmediathek.de
-# 03.06.2021	Classic-Version im Web entfallen, Code bereinigt
 ARD_BASE_URL	= 'https://www.ardmediathek.de'								# vorher beta.ardmediathek.de
 ARD_VERPASST 	= '/tv/sendungVerpasst?tag='								# ergänzt mit 0, 1, 2 usw.
 # ARD_AZ 			= 'https://www.ardmediathek.de/ard/shows'				# ARDneu, komplett (#, A-Z)
@@ -163,8 +160,6 @@ ARD_AZ 			= '/tv/sendungen-a-z?buchstabe='							# ARD-Classic ergänzt mit 0-9,
 ARD_Suche 		= '/tv/suche?searchText=%s&words=and&source=tv&sort=date'	# Vorgabe UND-Verknüpfung
 ARD_Live 		= '/tv/live'
 
-
-# ARD-Podcasts - 03.06.2021 alle Links der Classic-https://api.ardaudiothek.de/Version entfernt
 
 # ARD Audiothek
 ARD_AUDIO_BASE = 'https://api.ardaudiothek.de/'
@@ -231,7 +226,7 @@ now = time.time()											# Abgleich Flags
 # die tvtoday-Seiten decken 12 Tage ab, trotzdem EPG-Lauf alle 12 Stunden
 #	 	(dto. Cachezeit für einz. EPG-Seite in EPG.EPG).
 #		26.11.2023 Intervall optional statt 12 Std. - s.a. EPG-Modul
-# 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - s. thread_getepg
+#
 if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden?
 	eci = SETTINGS.getSetting('pref_epg_intervall')
 	eci = re.search(r'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
@@ -3239,7 +3234,7 @@ def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 		download_list.append("%s#%s" % (title, url))
 		PLog(download_list)
 		title_org=title; tagline_org=''; summary_org=Plot
-		li = test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=-1)  # Downloadbutton
+		li = test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=-1,)  # Downloadbutton
 	else:
 		# Streamlinks: "Dateiname ** Titel Zeitmarke ** Streamlink" -> DownloadText
 		textKey  = "RadioStreamSingle"
@@ -3639,6 +3634,18 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 	'''
+
+	title = u"Event: [B]Leichtathletik-WM 2025 in Tokio[/B]"
+	tag = u"Die 20. Leichtathletik-Weltmeisterschaften finden vom 13. bis 21. September 2025 in Japan statt.\nNews, TV-Zeiten, Livestreams, Ergebnisse zur WM in Tokio."
+	cacheID = "WM_2025_Tokio"
+	img = "https://images.tagesschau.de/image/85c2846b-3203-4a0b-895e-b48919964fb4/AAABlgnmSK8/AAABmKJZ-0g/16x9-big/tokio-stadion-105.jpg?width=1280"
+	path = "https://www.sportschau.de/leichtathletik/wm"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 
 	title = u"Event: [B]DFB-Pokal 2025[/B]"
 	tag = u"DFB-Pokal 2025,  News zu Ergebnissen, Auslosungen und Spielen"
@@ -5181,11 +5188,10 @@ def get_query(channel='ARD'):
 ####################################################################################################
 
 #----------------------------------------------------------------  
-# test_downloads: prüft ob curl/wget-Downloads freigeschaltet sind + erstellt den Downloadbutton
-# high (int): Index für einzelne + höchste Video-Qualität in download_list
+# erstellt die Downloadbuttons für download_list
 # 04.01.2021 Anpassung Trennz. Stream_List (Bsp. Parseplaylist, StreamsShow)
 # 23.04.2021 Durchreichen von sub_path (Untertitel), leer für mp3-files
-def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high, sub_path=''):  
+def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high,sub_path=''):  
 	PLog('test_downloads:')
 	PLog('summary_org: ' + summary_org)
 	PLog('title_org: ' + title_org)
@@ -5297,16 +5303,7 @@ def get_bestdownload(download_list):
 	
 ####################################################################################################
 # Verwendung von curl/wget mittels Phytons subprocess-Funktionen
-# 30.08.2018:
-# Zum Problemen "autom. Wiedereintritt" - auch bei PHT siehe Doku in LiveRecord.
-# 20.12.2018 Problem "autom. Wiedereintritt" in Kodi nicht relevant.
-# 20.01.2020 der Thread zum internen Download wird hier ebenfalls aufgerufen 
-# 27.02.2020 Code für curl/wget-Download entfernt
-# 30.06.2020 Angleichung Dateiname (Datum) an epgRecord (Bindestriche entf.)
-# 23.03.2021 erweitert um Download der Untertitel (sub_path), leer für mp3-files 
-# 02.04.2021 Var PIDcurl entfernt (für Kodi obsolet)
-# 25.09.2021 Fix Security-Issue Incomplete URL substring sanitization (CodeQL-
-#				Check)
+# 09.09.2025 veraltete Kopfdoku entfernt - s. Archiv
 #
 def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):  
 	PLog('DownloadExtern: ' + title)
@@ -6376,25 +6373,7 @@ def DownloadText(textKey):
 #	Favoriten: Kodi's Favoriten-Menü, im Addon_Listing
 #	Merkliste: zusätzl. Kontextmenmü (s. addDir Modul util) -> Script merkliste.py
 #	
-# Probleme: Kodi's Fav-Funktion übernimmt nicht summary, tagline, mediatype aus addDir-Call
-#			Keine Begleitinfos, falls  summary, tagline od. Plot im addDir-Call fehlen.
-#			gelöst mit Base64-kodierter Plugin-Url: 
-#				Sonderzeichen nach doppelter utf-8-Kodierung
-#			07.01.2020 Base64 in addDir wieder entfernt - hier Verbleib zum Dekodieren
-#				alter Einträge
-# 			Sofortstart/Resumefunktion: funktioniert nicht immer - Bsp. KIKA-Videos.
-#				Die Kennzeichnung mit mediatype='video' erfolgt nach Abgleich mit
-#				CallFunctions.
-#				Kodi verwaltet die Resumedaten getrennt (Merkliste/Originalplatz). 
-#
-# Ordnerverwaltung + Filter s. Wicki
-#	Filter-Deadlock-Sicherungen: 
-#		1. ShowFavs bei leerer Liste	2. Kontextmenü -> watch_filter
-#		3. Settings (Ordner abschalten)
-# 14.11.2021 Home-Button + Sortierung getrennt von globalen Settings
-# 16.11.2022 Berücksichtigung ausgewählter Sätze in selected (zunächst für
-#	SearchARDundZDFnew)
-#  10.09.2023 Sortierung der Verzeichnisliste mittels addDir-Array
+# 09.09.2025 veraltete Kopfdoku entfernt - s. Archiv
 # 
 def ShowFavs(mode, selected=""):					# Favoriten / Merkliste einblenden
 	PLog('ShowFavs: ' + mode)						# 'Favs', 'Merk'
@@ -7153,20 +7132,7 @@ def TVLiveRecordSender(title):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------
-# 30.08.2018 Start Recording TV-Live
-# Doku z. PHT-Problemen s. ältere Versionen
-#
-# 29.04.0219 Erweiterung manuelle Eingabe der Aufnahmedauer
-# Check auf ffmpeg-Settings bereits in TVLiveRecordSender, Check auf LiveRecord-Setting
-# 	bereits in SenderLiveListePre
-# 04.07.2020 angepasst für epgRecord (Eingabe Dauer entf., Dateiname mit Datumformat 
-#		geändert, Notification statt Dialog. epgJob enthält Aufnahmestart (Unixformat)
-# 		LiveRecord verlagert nach util (import aus  ardundzdf klappt nicht in epgRecord,
-#		dto. MakeDetailText).
-#		
-# 29.06.0219 Erweiterung "Sendung aufnehmen", Call K-Menü <- EPG_ShowSingle
-# Check auf Setting pref_epgRecord in EPG_ShowSingle
-# 30.08.2020 Wegfall m3u8-Verfahren: Mehrkanal-Check entf. (dto. in LiveRecord)
+# 09.09.2025 veraltete Kopfdoku entfernt - s. Archiv
 #
 def ProgramRecord(url, sender, title, descr, start_end):
 	PLog('ProgramRecord:')
@@ -7910,30 +7876,12 @@ def WDRstream(path, title, img, summ):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-#-----------------------------------------------------------------------------------------------------
-#	17.02.2018 Video-Sofort-Format wieder entfernt (V3.1.6 - V3.5.0)
-#		Forum:  https://forums.plex.tv/discussion/comment/1606010/#Comment_1606010
-#		Funktionen: remoteVideo, Parseplaylist, SenderLiveListe, TestOpenPort
-#	14.12.2018 für Kodi wieder eingeführt (Kodi erlaubt direkten Playerstart).
-#-----------------------------------------------------------------------------------------------------
-
 ###################################################################################################
 # Auswahl der Auflösungstufen des Livesenders - Aufruf: SenderLiveListe + ARDStartRubrik
 #	Herkunft Links: livesenderTV.xml (dto. bei Aufruf durch ARDStartRubrik).
 #	descr: tagline | summary
 #	Startsender ('' oder true): Aufrufer ARDStartRubrik, ARDStartSingle (ARD-Neu)
-# 16.05.2019 Fallback hinzugefügt: Link zum Classic-Sender auf Webseite
-#	mögl. Alternative: Senderlinks aus ARD-Neu (s. Watchdog_TV-Live.py).	
-# 25.06.2020 Fallback-Code (Stream auf classic.ardmediathek.de/tv/live ermitteln)
-#	wieder entfernt - nur für ARD-Sender + selten gebraucht.
-# 26.06.2020 Aktualisierung der EPG-Daten (abhängig von EPG-Setting, außer bei 
-#	EPG_ShowSingle) - relevant für Aufrufe aus Merkliste.
-#	Sender: Sendername bei Aufrufen durch EPG_ShowSingle (title mit EPG-Daten
-#			belegt)
-#	start_end: EPG-Start-/Endzeit Unix-Format für Kontextmenü (EPG_ShowSingle <-)
-# 04.04.2021 Anpassung für Radiosender (z.B. MDR Fußball-Radio Livestream)
-# 08.06.2021 Anpassung für Radiosender (Endung /mp3, Code an Funktionsstart)
-# 17.08.2023 Anpassung für mp4-Livestreams von //sportschau-dd (Sofortstart AUS)
+# 09.09.2025 veraltete Kopfdoku entfernt - s. Archiv
 #
 def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', start_end='', homeID=''):
 	PLog('SenderLiveResolution:')
@@ -10491,8 +10439,6 @@ def ZDF_Verpasst_Filter(name, title, sfilter):
 #-------------------------
 # Aufruf ZDF_VerpasstWoche (Button "Datum eingeben")
 # xbmcgui.INPUT_DATE gibt akt. Datum vor
-# 11.01.2020: Ausgabe noch für 1.1.2016, nicht mehr für 1.1.2015
-# sfilter wieder zurück an ZDF_VerpasstWoche
 #
 def ZDF_Verpasst_Datum(title, zdfDate, sfilter):
 	PLog('ZDF_Verpasst_Datum:')
@@ -12159,32 +12105,12 @@ def ZDF_SlideShow(path, single=None):
 ####################################################################################################
 def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', buttons=True, track_add='', live=''):	
 #	# master.m3u8 bzw. index.m3u8 auswerten, Url muss komplett sein. 
-#  	1. Besonderheit: in manchen *.m3u8-Dateien sind die Pfade nicht vollständig,
-#	sondern nur als Ergänzung zum Pfadrumpf (ohne Namen + Extension) angegeben, Bsp. (Arte):
-#	delive/delive_925.m3u8, url_m3u8 = http://delive.artestras.cshls.lldns.net/artestras/contrib/delive.m3u8
-#	Ein Zusammensetzen verbietet sich aber, da auch in der ts-Datei (z.B. delive_64.m3u8) nur relative 
-#	Pfade angegeben werden. Beim Redirect des Videoplays zeigt dann der Pfad auf das Plugin und Plex
-#	versucht die ts-Stücke in Dauerschleife zu laden.
-#	Wir prüfen daher besser auf Pfadbeginne mit http:// und verwerfen Nichtpassendes - auch wenn dabei ein
-#	Sender komplett ausfällt.
-#	Lösung ab April 2016:  Sonderbehandlung Arte in Arteplaylists.						
-#	ARTE ab 10.03.2017:	 die m3u8-Links	enthalten nun komplette Pfade. Allerdings ist SSL-Handshake erforderlich zum
-#		Laden der master.m3u8 erforderlich (s.u.). Zusätzlich werden in	CreateVideoStreamObject die https-Links durch 
-#		http ersetzt (die Streaming-Links funktionieren auch mit http).	
-#		SSL-Handshake für ARTE ist außerhalb von Plex nicht notwendig!
-#  	2. Besonderheit: fast identische URL's zu einer Auflösung (...av-p.m3u8, ...av-b.m3u8) Unterschied n.b.
-#  	3. Besonderheit: für manche Sendungen nur 1 Qual.-Stufe verfügbar (Bsp. Abendschau RBB)
-#  	4. Besonderheit: manche Playlists enthalten zusätzlich abgeschaltete Links, gekennzeichnet mit #. Fehler Webplayer:
-#		 crossdomain access denied. Keine Probleme mit OpenPHT und VLC - betr. nur Plex.
-#  	10.08.2017 Filter für Video-Sofort-Format - wieder entfernt 17.02.2018
-#	23.02.2020 getrennte Video- und Audiostreams bei den ZDF-Sendern (ZDF, ZDFneo, ZDFinfo - nicht bei 3sat +phoenix)
-#		 - hier nur Auflistung der Audiostreams 
-#	19.12.2020 Sendungs-Titel ergänzt (optional: stitle)
 #	03.03.2020 Erweiterung buttons: falls False keine Buttons sondern Rückgabe als Liste
 #		Stream_List (Format s.u.)
 #	23.04.2022 Mehrkanalstreams mit Kennung GROUP-ID entfernen (in Kodi nicht verwertbar) - nicht mehr relevant
 #		mit Sender-Liste für Einzelauflösungen
 #	29.10.2022 Bereinigung Sender-Liste mit mögl. Einzelauflösungen (entfernt: HR, NDR, WDR)
+#	09.09.2025 veraltete Kopfdoku entfernt - s. Archiv
 #
 	PLog ('Parseplaylist: ' + url_m3u8)
 	Stream_List=[]
