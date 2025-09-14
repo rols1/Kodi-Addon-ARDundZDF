@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>276/nr>										# Numerierung für Einzelupdate
+# 	<nr>277/nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.9'
 VDATE = '14.09.2025'
 
@@ -9362,7 +9362,7 @@ def ZDF_WebMoreSingle(title, path):
 			data = data.replace('\\', '')
 			PLog("data: " + data[:200])
 			ZDF_WebMoreVideo(title, data, path, hls_url, img)
-			ZDF_Recommendation(title, page, path)				# Recommendations (Einzel + Folgebeiträge)
+			ZDF_Recommendation(title, page, path,nogui=True)	# Recommendations (Einzel + Folgebeiträge)
  	
 		else:													# Fallback1: futura-api
 			base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
@@ -9500,14 +9500,15 @@ def ZDF_Graphql_Video(title, scms_id, sharingUrl):
 
 #-----------------------------------------------------------------------
 # Aufruf ZDF_WebMoreSingle - listet empfohlene Beiträge (für ergänzende
-#	Rubrigen der Startseite)
+#	Rubrigen der Startseite), nogui triggert notification, falls 
+#	ZDF_Graphql_WebDetails fehlschlägt
 #
-def ZDF_Recommendation(title, page, path):								
+def ZDF_Recommendation(title, page, path, nogui=""):								
 	PLog('ZDF_Recommendation: ' + title)
 		
-	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, collmark="smartCollectionID")	
+	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, mode="")	
 	icon = R(ICON_DIR_FOLDER)
-	if not coll_id:
+	if not coll_id and not nogui:
 		msg1 = u'%s:' % title
 		msg2 = "Collection-ID nicht gefunden"
 		PLog("%s %s" % (msg1, msg2))
