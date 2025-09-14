@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>277/nr>										# Numerierung für Einzelupdate
+# 	<nr>278/nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.9'
 VDATE = '14.09.2025'
 
@@ -9282,7 +9282,8 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 			for h in href_list:									# /video/serien/queen .. /am-abgrund-128
 				if not "/_next" in h:							# skip "/_next/static..
 					href = stringextract('href="', '"', h)
-					href = "https://www.zdf.de" + href
+					if href.startswith("http") == False:
+						href = "https://www.zdf.de" + href
 					break
 			
 			imgs = blockextract("https://", item, "w,")			# Bilder, wie ZDF_Kat
