@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>279/nr>										# Numerierung für Einzelupdate
+# 	<nr>279</nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.9'
 VDATE = '14.09.2025'
 
