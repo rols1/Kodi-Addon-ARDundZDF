@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>278/nr>										# Numerierung für Einzelupdate
+# 	<nr>279/nr>										# Numerierung für Einzelupdate
 VERSION = '5.2.9'
 VDATE = '14.09.2025'
 
@@ -9167,6 +9167,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 # 2. Lauf: Liste der zum Cluster-Titel ctitle passenden Beiträge
 #	(Einzel + Serien, hier nicht unterscheidbar). 
 # Nutzung ZDF_KatSub nicht möglich (Graphql-Call stark abweichend)
+# Todo: bei Bedarf Erkennung von Einzelbeiträgen ("Min.</") ->
+#	ZDF_WebMoreVideo
 #
 def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):								
 	PLog('ZDF_WebMore: ' + ctitle)
@@ -9545,7 +9547,7 @@ def ZDF_Recommendation(title, page, path, nogui=""):
 		msg1 = u'%s:' % title
 		msg2 = u"keine weiteren Beiträge gefunden"
 		PLog("%s %s" % (msg1, msg2))
-		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)		
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=False)		
 
 	return	
 
