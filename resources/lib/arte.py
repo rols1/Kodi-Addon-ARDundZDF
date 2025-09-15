@@ -36,7 +36,7 @@ elif PYTHON3:
 		pass
 
 
-import ardundzdf					# -> get_query,test_downloads, get_ZDFstreamlinks, build_Streamlists_buttons
+import ardundzdf					# -> get_query,get_ZDFstreamlinks, build_Streamlists_buttons
 import resources.lib.EPG as EPG
 from resources.lib.util import *
 

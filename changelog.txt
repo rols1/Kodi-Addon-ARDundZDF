@@ -10,6 +10,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+15.09.2025	5.3.0
+			MVWSearch: keine Anzeige der Ergebnisse, falls der Key filmlisteTimestamp
+			leer bleibt.
+			Verpasst (my3Sat): Datumformat an ZDF_Verpasst angepasst.
+			ARDVerpasst (ARDnew): Datumformat + JETZT-Markierung/Live-Streamstart an 
+			ZDF_Verpasst angepasst.
+			ARDVerpasst_get_json: Sender KIKA mit upper-Funktion erfasst ("id": "kika").
+			MakeJpegNfo (util): urlretrieve lokaler Bilder beim Download verhindert 
+			(error in thread_getfile_error), sonst Error bei Setting "nfo- und jpeg-Datei
+			erzeugen".
+			ArteStart (Modul arte): Button "Programme in UHD-Qualität" wegen fehlender
+			UHD-Angebote deaktiviert.
+			ZDF_PageMenu: Button "Videos in UHD-Qualität" hinzugefügt (-> ZDF_KatSub).
+			Haupt-PRRG kleine Aufräumaktion: veraltete Kopfdokus mit Hinweis auf Archiv 
+			entfernt (z. Bsp. Parseplaylist).
+			ZDF_Recommendation: Param nogui ergänzt, Anpassung ZDF_WebMoreSingle (für
+			Folgebeiträge mit nur 1 Beitrag), Sound in Notification deaktiviert (stört
+			bei Einzelbeiträgen).			
+			test_downloads: nicht mehr genutzten Param high entfernt, dto. aus Calls.			
+			ARDSportWDR: neuer Event-Button für Leichtathletik-WM 2025 in Tokio.
+			get_foruminfo (Modul tools): Sonderzeichen enfernt (unescape).
+
 02.09.2025	5.2.9
 			ZDF_getApiStreams: Ausgabe HLS_List_end verschoben (if dgs_url:), sonst
 			network error bei leerer HLS_List möglich.

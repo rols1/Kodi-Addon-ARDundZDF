@@ -8,7 +8,7 @@
  
 ################################################################################
 # 	<nr>10</nr>								# Numerierung für Einzelupdate
-#	Stand: 29.12.2024
+#	Stand: 14.09.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -543,6 +543,7 @@ def get_foruminfo():
 		last_item = items[-1]
 		last_item = cleanhtml(last_item)
 		last_item = transl_json(last_item)
+		last_item = unescape(last_item)
 		last_item = last_item.replace('\\\"','*')				# z.B. Meldung \"Streamlink\" bei..
 	PLog("last_item: " + last_item)
 	

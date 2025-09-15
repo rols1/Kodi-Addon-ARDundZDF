@@ -217,7 +217,7 @@ def update_single(PluginAbsPath):
 					# Bsp.: ../github.com/rols1/Kodi-Addon-ARDundZDF/blob/master/resources/livesenderTV.xml?raw=true
 					remote_file = "%s%s?%s" % (GIT_BASE, fname, "raw=true")
 					remote_file = remote_file.replace('\\', '/')
-					PLog('lade %s' % remote_file) 					
+					PLog('lade %s' % remote_file)
 					
 					r = urlopen(remote_file)						# Updatedatei auf Github 
 					page = r.read()

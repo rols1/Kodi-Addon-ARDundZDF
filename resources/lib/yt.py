@@ -171,7 +171,7 @@ def yt_get(url, vid, title, tag, summ, thumb):
 		title_org = "%s\n\n[B]Hinweis:[/B] Download seit 02/2023 nur noch  für Audio (mp4a.40.2) möglich." % title_org
 		#title_org = title_org.replace("\n", "||")		# replace in test_downloads
 		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
-		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=0)  
+		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb)  
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 

@@ -44,7 +44,7 @@ import string
 
 # import ardundzdf reicht nicht für thread_getpic
 from ardundzdf import *					# transl_wtag, get_query, thread_getpic, 
-										# ZDF_SlideShow, Parseplaylist, test_downloads
+										# ZDF_SlideShow, Parseplaylist
 from resources.lib.ARDnew import get_json_content	# ARD_bab										
 from resources.lib.util import *
 

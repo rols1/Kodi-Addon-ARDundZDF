@@ -44,7 +44,7 @@ import datetime, time
 import re				# u.a. Reguläre Ausdrücke
 import string
 
-import ardundzdf					# -> get_query,test_downloads,get_zdf_search 
+import ardundzdf					# -> get_query,get_zdf_search 
 from resources.lib.ARDnew import *	# ab Juni 2023 (s.o.)
 from resources.lib.util import *
 import resources.lib.yt	as yt		# Rahmen für pytube, mögl. Dev.-Problem s. dort

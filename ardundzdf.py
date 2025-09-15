@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>279</nr>										# Numerierung für Einzelupdate
-VERSION = '5.2.9'
-VDATE = '14.09.2025'
+VERSION = '5.3.0'
+VDATE = '15.09.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3234,7 +3234,7 @@ def AudioPlayMP3(url, title, thumb, Plot, ID=''):
 		download_list.append("%s#%s" % (title, url))
 		PLog(download_list)
 		title_org=title; tagline_org=''; summary_org=Plot
-		li = test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high=-1,)  # Downloadbutton
+		li = test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb)  # Downloadbutton
 	else:
 		# Streamlinks: "Dateiname ** Titel Zeitmarke ** Streamlink" -> DownloadText
 		textKey  = "RadioStreamSingle"
@@ -5191,7 +5191,7 @@ def get_query(channel='ARD'):
 # erstellt die Downloadbuttons für download_list
 # 04.01.2021 Anpassung Trennz. Stream_List (Bsp. Parseplaylist, StreamsShow)
 # 23.04.2021 Durchreichen von sub_path (Untertitel), leer für mp3-files
-def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,high,sub_path=''):  
+def test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb,sub_path=''):  
 	PLog('test_downloads:')
 	PLog('summary_org: ' + summary_org)
 	PLog('title_org: ' + title_org)
@@ -9167,8 +9167,6 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 # 2. Lauf: Liste der zum Cluster-Titel ctitle passenden Beiträge
 #	(Einzel + Serien, hier nicht unterscheidbar). 
 # Nutzung ZDF_KatSub nicht möglich (Graphql-Call stark abweichend)
-# Todo: bei Bedarf Erkennung von Einzelbeiträgen ("Min.</") ->
-#	ZDF_WebMoreVideo
 #
 def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):								
 	PLog('ZDF_WebMore: ' + ctitle)
@@ -9287,6 +9285,8 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 					if href.startswith("http") == False:
 						href = "https://www.zdf.de" + href
 					break
+			if "//www.zdf.de" not in href:						# z.B. sportschau.de - nicht verwertbar
+				href=""
 			
 			imgs = blockextract("https://", item, "w,")			# Bilder, wie ZDF_Kat
 			try:	
@@ -9301,16 +9301,22 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 				PLog("img_error: " + str(exception))
 				img = R(ICON_DIR_FOLDER)				
 				
-			tag = u"Folgebeiträge"
+			tag = u"Folgebeiträge"; multi=True
 			if not href:										# z.B. DFB-Pokal
-				tag = u"Noch nicht verfügbar"
+				tag = u"(Noch) nicht verfügbar"
 				if ">Bald Live<" in item:
 					tag = u"%s | [B]>Bald Live<[/B]" % tag
+
+			if "Min.</spa" in item:								# Einzelbeitrag (z.B. 235 Min.)
+				multi=False
+				tag = "Dauer: " + stringextract('lqmboax">', "</span>", item)
 				
 			PLog("Satz10_2:")
-			PLog(title); PLog(href); PLog(img);
+			PLog("multi: " + str(multi)); PLog(title); PLog(href); PLog(img);
 
 			title=py2_encode(title); href=py2_encode(href);
+			
+			
 			fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(title), quote(href))
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_WebMoreSingle", fanart=img, 
 				thumb=img, fparams=fparams, tagline=tag)		
@@ -12363,7 +12369,7 @@ def StreamsShow(title, Plot, img, geoblock, ID, sub_path='', HOME_ID="ZDF"):
 		# ohne check Error mögl. (LibreElec 10.0) - setLabel=None in addDir
 		if check_Setting('pref_use_downloads'):						
 			summ=''
-			li = test_downloads(li,Stream_List,title,summ,tagline,img,high=-1, sub_path=sub_path) # Downloadbutton(s)
+			li = test_downloads(li,Stream_List,title,summ,tagline,img,sub_path=sub_path) # Downloadbutton(s)
 			
 			# Wechsel-Button zu den DownloadTools:	
 			tagline = 'Downloads und Aufnahmen: Verschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
