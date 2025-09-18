@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>20</nr>								# Numerierung für Einzelupdate
-#	Stand: 19.08.2025
+# 	<nr>21</nr>								# Numerierung für Einzelupdate
+#	Stand: 18.09.2025
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -754,12 +754,12 @@ def get_content_json(item):
 
 	PLog(str(obj)[:60]); 
 	verf=""; url=""; stream=""; 
-	tag=""; img=""
+	tag=""; img=""; sdatum=""
 
 	if "playerType" not  in obj:								# falsches Format
 		PLog("missing_playerType")
 		return False,"","","","","",""		
-		
+				
 	typ = obj["playerType"]
 	try:														# 19.08.2025 Bilddaten geändert
 		img_obj = obj["posterImage"]
@@ -783,11 +783,29 @@ def get_content_json(item):
 	title = repl_json_chars(title)
 	if title.startswith("Audiostream - "):						# Kennz. Typ Audio in tag
 		title = title.replace("Audiostream - ", "")
+		
+	pubDate = stringextract("broadcastedOnDateTime': '", "',", str(obj))
+	PLog("pubDate: " + pubDate)
+	if pubDate:
+		sdatum = time_translate(pubDate, add_hour=False, day_warn=True)
+		uhr = pubDate[11:16]	
+		sdatum = u"Sendedatum: [COLOR blue]%s[/COLOR]" % sdatum
 	
+	dur = stringextract("length': '", "',", str(obj))
+	PLog("dur: " + dur); 
+	dur = seconds_translate(dur)
+	
+		
 	# Streams: zu geringe Auswahl für Listen
 	stream = obj["mc"]["streams"][0]["media"][0]["url"]			# 1. Url, m3u8 od. mp4, 
 	
 	tag = "[B]%s[/B]" % up_low(typ)
+	if sdatum:
+		tag = "%s\n%s" % (tag, sdatum)
+	if dur:
+		tag = "%s\nDauer: %s\n" % (tag, dur)
+		
+	
 	summ = obj["mc"]["meta"]["title"]
 	summ = "%s\n[B]Bild[/B]: %s" % (summ, img_alt)
 	summ = repl_json_chars(summ)
