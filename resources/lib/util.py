@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>138</nr>										# Numerierung für Einzelupdate
+# 	<nr>139</nr>										# Numerierung für Einzelupdate
 #	Stand: 22.09.2025
 
 # Python3-Kompatibilität:
@@ -2586,12 +2586,17 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		#summ0 = stringextract('>Details<', 'ZDF auf YouTube', page)	# ev. Darsteller formatieren
 		summ0 = stringextract('>Details<', '>Darsteller<', page)
 		if summ0 == "":
-			summ0 = stringextract('"infoText":"', '"', page)			# kann fehlen	
+			summ0 = stringextract('"infoText":"', '"', page)			# kann fehlen
 		PLog("summ0_1: " + summ0)
+
 		if 'description":"' in page:
 			descr =  stringextract('"description":"', '"', page)
 			if descr and summ0 and descr in summ0 == False:				# Doppel möglich
 				summ0 = "%s\n%s" % (summ0, descr)
+				
+		pos = summ0.rfind("<h2 class")									# i.d.R. am Ende bei Serien:
+		if pos > 0:														#	<h2 class="h1fxlzxk tyrgmig"
+			summ0  = summ0[:pos]	
 		PLog("summ0_2: " + summ0)
 			
 		mark = 'longInfoText":{"items'; len_mark = len(mark)			# Web: Box Details	
@@ -2623,6 +2628,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 			summ = summ + summ1 
 		if summ3:
 			summ = summ + summ3
+
 		summ = summ.replace('\\u003c',"").replace('\\u003e',"")			# <br>
 		summ = summ.replace('\\r',"").replace('\\n',"")			# CR, LF
 		summ = summ.replace('<br/><br/>',"\n\n").replace('br/'," \n")	
@@ -2631,10 +2637,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		summ = summ.replace('/button>',"")
 		summ = unescape(summ); 
 		summ = (summ.replace('"', '').replace('\\', '').replace('/span>', ''))
-		
-		s = stringextract('<h2 class="', '"', summ)
-		s = '<h2 class="%s"' % s
-		summ = summ.replace(s, "")
+
 		summ = cleanhtml(summ)
 
 		PLog("summ_zdf: " + summ)			
