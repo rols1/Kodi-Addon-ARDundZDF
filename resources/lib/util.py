@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>137</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.09.2025
+# 	<nr>138</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.09.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1545,6 +1545,7 @@ def repl_dop(liste):
 #	doppelte utf-8-Enkodierung führt an manchen Stellen zu Sonderzeichen
 #  	14.04.2019 entfernt: (':', ' ')
 # 	07.11.2024 entfernt html-utf-8-Icons (Symbole Popcorn, TV usw)
+# 	22.09.2025 Steuerzeichen \t aufgenommen 
 def repl_json_chars(line):	
 	line_ret = line
 	#PLog(type(line_ret))
@@ -1553,6 +1554,7 @@ def repl_json_chars(line):
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
 		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love'), (u'%C3%A9', u'é')		# u'u003e' 	-> u'®'
 		, (u'uD83C', u''), (u'uDF7F', u''), (u'uD63D', u''), (u'uDF7A', u'')					# 🍿,  📺
+		, (u'\t', u' ')
 		):
 		line_ret = line_ret.replace(*r)
 	
