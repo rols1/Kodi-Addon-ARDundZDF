@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>102</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.09.2025
+# 	<nr>103</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.09.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -346,7 +346,7 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 	else:
 		page = Dict("load",DictID,CacheTime=ARDStartCacheTime)	# Cache: 5 min
 		if not page:											# nicht vorhanden oder zu alt -> vom					
-			page, msg = get_page(path, header=ARDheaders)			# 	Sender holen		
+			page, msg = get_page(path, header=ARDheaders)		# 	Sender holen		
 			if page:
 				icon = R(ICON_MAIN_ARD)
 				xbmcgui.Dialog().notification("Cache %s:" % DictID,"Haltedauer 5 Min",icon,3000,sound=False)
@@ -1805,14 +1805,16 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 			img_alt = 	imgsrc["alt"]
 		except:
 			img = R(ICON_DIR_FOLDER)							# Bsp.: Subrubriken
-		
+
+
 		title = s["longTitle"]
 		title = repl_json_chars(title)
 		if mark:												# Markierung Suchbegriff 						
 			PLog(title); PLog(mark)
 			title = title.strip() 
 			title = make_mark(mark, title, "", bold=True)		# -> util
-			
+
+
 		if mehrzS:												# Setting pref_more
 			title = u"[B]Mehr[/B]: %s" % title	
 		if mark == "Subrubriken":
@@ -2487,24 +2489,36 @@ def SendungenAZ_ARDnew(title, button, href, CurSender="", homeID=''):
 			
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
 	#	pagination mit Basispfad immer vorhanden, Mehr-Button abhängig von Anz. der Beiträge
-	if 	'"pagination":'	in page:						# Scroll-Beiträge
-		PLog('pagination_Rubrik:')
-		title = "Mehr zu >%s<" % title_org				# Mehr-Button	 
+	# 26.09.2025 next_path in json nicht mehr vorhanden. Vorerst blättern ohne Berechnung 
+	PLog('pagination_Rubrik:')	
+	try:
+		pagenr = re.search(r'pageNumber=(\d+)', href).group(1)
+		nr = int(pagenr) + 1
+		oldpage = "pageNumber=%d" % int(pagenr)
+		newpage = "pageNumber=%d" % nr 
+		next_path = href.replace(oldpage, newpage)
+		
+		pageSize 	= stringextract('pageSize":', ',"', page)
+		totalElements 	= stringextract('totalElements":', '},', page)
+		
+	except Exception as exception:
+		next_path=""; pageSize=""; totalElements=""
+		PLog("pagenr_error: " + str(exception))
+	PLog("next_path: %s | pageSize: %s, totalElements: %s" % (next_path, pageSize, totalElements))
+	if int(totalElements) <= int(pageSize):				# Bsp.: pageSize":100,"totalElements":5
+		next_path=""
+	
+	if next_path:
+		label = "Mehr zu >%s<" % title_org				# Mehr-Button	 
 		li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
-		pages, pN, pageSize, totalElements, next_path = get_pagination(page)	# Basis 0
-		mark=''		
-		if next_path:	
-			summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (pages, totalElements)
-			pN = int(pN)+1								# nächste pageNumber, Basis 0
-			tag = "weiter zu Seite %s" % str(pN)
-			PLog(summ); PLog(next_path)
-			
-			title_org=py2_encode(title_org); next_path=py2_encode(next_path); mark=py2_encode(mark);
-			fparams="&fparams={'title': '%s', 'path': '%s', 'pageNumber': '%s', 'pageSize': '%s', 'ID': '%s', \
-				'mark': '%s','homeID': '%s'}" %\
-					(quote(title_org), quote(next_path), str(pN), pageSize, ID, quote(mark), homeID)
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDPagination", 
-				fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), summary=summ, tagline=tag, fparams=fparams)														
+		tag = u"weiterblättern"
+		PLog(next_path)
+		
+		title_org=py2_encode(title_org); next_path=py2_encode(next_path);	
+		fparams="&fparams={'title': '%s', 'button': '%s', 'href': '%s', 'homeID': '%s'}" %\
+			(title_org, button, quote(next_path), homeID)
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ_ARDnew",\
+			fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), tagline=tag, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE)	
 #----------------------------------------------------------------
