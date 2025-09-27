@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>279</nr>										# Numerierung für Einzelupdate
+# 	<nr>280</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.0'
-VDATE = '15.09.2025'
+VDATE = '27.09.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3036,7 +3036,6 @@ def Audio_get_homescreen(page='', cluster_id=''):
 				img = img.replace('16x9', '1x1')						# 16x9 kann fehlen (ähnlich Suche)
 			else:
 				img = R(ICON_DIR_FOLDER)
-				
 						
 			PLog('6Satz:');
 			PLog(title); PLog(typ); PLog(cluster_id); 
@@ -9313,7 +9312,6 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 				
 			PLog("Satz10_2:")
 			PLog("multi: " + str(multi)); PLog(title); PLog(href); PLog(img);
-
 			title=py2_encode(title); href=py2_encode(href);
 			
 			
@@ -10988,10 +10986,9 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 		if not surl:
 			surl = "https://www.zdf.de/serien/" + sid		# Sharing-Url -> Params Web
 		page, msg = get_page(path=surl)
-		pageInfo = stringextract('target_type\\":\\"SmartCollection', '</script>', page)
-		pageInfo = pageInfo.replace('\\', '')
-		PLog(pageInfo[:80])
-		seasons = blockextract('"Season\",\"id"', pageInfo)	# absteigend sortiert
+		page = page.replace('\\', '')
+		PLog(page[:80])
+		seasons = blockextract('"Season\",\"id"', page)		# absteigend sortiert
 
 		try:
 			PLog(str(seasons[0])[:100])									# 1. Block (absteigend)
@@ -11008,26 +11005,29 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 		PLog("seasons_web: %d | season_nr_web: %s" % (len(seasons), season_nr))
 
 		
-		futura_uptodate=False; snr_list=[]
-		for staffel in 	staffel_list:						# Staffel-Abgleich futura-api / Web-json
-			if futura_uptodate:
-				break
-			folgen = staffel["teaser"]
-			PLog(str(folgen)[:80])
-			for folge in folgen:	
-				if "seasonNumber" in folge:	
-					snr = folge["seasonNumber"]	
-					PLog("snr: " + snr)
-					if snr in snr_list:						# stop Folgen
-						break
-					snr_list.append(snr)
-					if int(snr) >= int(season_nr):	
-						PLog("snr>=season_nr: %d | %d" % (int(snr), int(season_nr)))
-						futura_uptodate=True	
-						break
+		futura_uptodate=True; snr_list=[]
+		if int(season_nr) > 0:
+			futura_uptodate=False
+			for staffel in 	staffel_list:						# Staffel-Abgleich futura-api / Web-json
+				if futura_uptodate:
+					break
+				folgen = staffel["teaser"]
+				PLog(str(folgen)[:80])
+				for folge in folgen:	
+					if "seasonNumber" in folge:	
+						snr = folge["seasonNumber"]	
+						PLog("snr: " + snr)
+						if snr in snr_list:						# stop Folgen
+							break
+						snr_list.append(snr)
+						if int(snr) >= int(season_nr):	
+							PLog("snr>=season_nr: %d | %d" % (int(snr), int(season_nr)))
+							futura_uptodate=True	
+							break
 		
-		PLog("seasons_Check: %s | seasons_futura: %s, season_web: %d" % (str(futura_uptodate), str(snr_list), int(season_nr)))
-		# futura_uptodate=False	# Debug
+		PLog("seasons_Check: %s | seasons_futura: %s, season_web: %d | futura_uptodate: %s" %\
+			(str(futura_uptodate), str(snr_list), int(season_nr), str(futura_uptodate)))
+		#futura_uptodate=False	# Debug
 		if not futura_uptodate:									# größere season_nr im Web -> holen via Graphql
 			PLog("build_Graphql_for: %s | %s" % (title, idIn))
 			params = Dict("load", "ZDF_Header_Params")			# Aktualisierung: ZDF_Graphql_WebDetails
