@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>105</nr>										# Numerierung für Einzelupdate
+# 	<nr>106</nr>										# Numerierung für Einzelupdate
 #	Stand: 29.09.2025
 
 # Python3-Kompatibilität:
@@ -341,7 +341,7 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		path = base
 	DictID = "ARDStart_%s" % sendername
 	page=""
-	if title != "Startseite":								# Cache nur für Startseite, nicht Retro u.a.
+	if "Startseite" not in title:								# Cache nur für Startseite, nicht Retro u.a.
 		page, msg = get_page(path, header=ARDheaders)	
 	else:
 		page = Dict("load",DictID,CacheTime=ARDStartCacheTime)	# Cache: 5 min
@@ -351,47 +351,55 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 				icon = R(ICON_MAIN_ARD)
 				xbmcgui.Dialog().notification("Cache %s:" % DictID,"Haltedauer 5 Min",icon,3000,sound=False)
 				Dict('store', DictID, page)						# json-Datei -> Dict, 1 - 2,5 MByte mit Teasern,
-																#	je nach Sender
-	if page == "":
+															#	je nach Sender			
+	PLog(len(page))
+	
+	page = page.replace('\\"', '*')							# quotierte Marks entf.
+	try:
+		jsonObject = json.loads(page)
+		container = jsonObject["widgets"]
+		PLog(len(container))								# 1-7
+		PLog(str(container)[:80])	
+	except Exception as exception:
+		container=[]
+		msg = str(exception)
+		PLog("ARDStart_json_error: " + msg)
+
+	if len(container) == 0:
 		msg1 = 'Fehler in ARDStart:'
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
-		return
-			
-	PLog(len(page))
-	page = page.replace('\\"', '*')							# quotierte Marks entf.
-	
+		return		
+
 	li = xbmcgui.ListItem()
 	if not homeID:
 		li = home(li, ID='ARD Neu')							# Home-Button
 	else:
 		li = home(li, ID=homeID)
+		
 
-	container = blockextract ('compilationType":', page)  	# widgets-Container json (Swiper + Rest)
-	PLog(len(container))
 	title_list=[]											# für Doppel-Erkennung
-	skip_list = [u"Empfehlungen für Sie", u"Weiterschauen",	# personalierte Inhalte
-			u"Meine Merkliste", u"Ist Ihre App bereit",
-			u"Login-Promo"]
+	skip_list = []											# personalierte Inhalte
 
 	cnt=0
 	for cont in container:
-		tag=""; summ=""; skip_title=False
-		descr =  stringextract('"description":"', '"', cont)
-		ID	= stringextract('"id":"', '"', cont)			# id vor pagination
-		pos = cont.find('"pagination"')						# skip ev. spaltenübergreifendes Bild mit 
-		if pos > 0:											# descr (Bsp. Bundestagswahl 2021)
-			cont = cont[pos:]
+		tag=""; summ=""; skip_title=False; descr=""
+		anz="null"
+		typ	= cont["type"]									# stage, gridlist
+		if typ == "stage":
+			get_json_content(li, page, ID=title, mark="TOP_title")
+			continue		
 			
-		title 	= stringextract('"title":"', '"', cont)
-		if title in title_list:								# Doppel? - s.o.
-			break
-		title_list.append(title)
+		if "description" in cont:
+			descr = cont["description"]
+		ID	= cont["id"]	
+			
+		title 	= cont["title"]
 		title = repl_json_chars(title)
-				
-		ID	= stringextract('"id":"', '"', cont)
-		anz= stringextract('"totalElements":', '}', cont)
-		anz= mystrip(anz)
+		
+		p = cont["pagination"]
+		pN = p["pageNumber"]; pS = p["pageSize"]; anz = p["totalElements"];	
+		anz = str(anz)
 		PLog("anz: " + anz)
 		if anz == '1':
 			tag = u"%s Beitrag" % anz
@@ -400,31 +408,21 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 			tag = u"%s Beiträge" % anz
 		if descr:
 			tag = "%s\n\n%s" % (tag, descr)
-			
-		for item in skip_list:								# skip personalierte Inhalte
-			if item in title:
-				skip_title=True
-				break
-		if 	skip_title:
-			PLog("skip_list: %s" % title)
-			continue
-		ctaLabel = stringextract('"ctaLabel":"', '"', cont)# skip Anmelde-Links
-		if ctaLabel:
-			PLog("skip_ctaLabel: %s" % ctaLabel)
-			continue
+	
+		path = 	cont["links"]["self"]["href"]
+		
+# todo ..
 
-		path 	= stringextract('"href":"', '"', cont)
 		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
 		partner=""											# Abgleich Region
 		if "/region/" in path and '{regionId}' in path:		# Bild Region laden, Default Berlin
 			region="be"; rname="Berlin"; partner="rbb"		# Default-Region, Änderung in ARDStartRegion
 			path = path.replace('{regionId}', region)
 
-		if '"images":' in cont:								# Teaser mit Bildern vorhanden
+		if '"images"' in str(cont):								# Teaser mit Bildern vorhanden
 			img = img_load(title, cont)
-		else:												# Teaser fehlt -> im Voraus laden
-			img_path = path.split("pageSize")[0] + "pageSize=1"	# 1. Beitrag reicht
-			img = img_preload(ID, img_path, title, 'ARDStart')
+		else:												
+			img = R(ICON_DIR_FOLDER)
 		
 		if anz == "0" and "/region/" not in path:			# skip 0 Inhalte
 			PLog("skip_anz_0: %s" % title)
@@ -1806,14 +1804,15 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 		except:
 			img = R(ICON_DIR_FOLDER)							# Bsp.: Subrubriken
 
-
 		title = s["longTitle"]
 		title = repl_json_chars(title)
-		if mark:												# Markierung Suchbegriff 						
+		if mark:												# Markierung Suchbegriff im Titel
 			PLog(title); PLog(mark)
 			title = title.strip() 
-			title = make_mark(mark, title, "", bold=True)		# -> util
-
+			if mark == "TOP_title":								# nur TOP vor Stage-Titel 
+				title  = u"[B]TOP: [/B]: %s" % title	
+			else:						
+				title = make_mark(mark, title, "", bold=True)	# -> util
 
 		if mehrzS:												# Setting pref_more
 			title = u"[B]Mehr[/B]: %s" % title	
