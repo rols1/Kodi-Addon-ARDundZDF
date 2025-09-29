@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>103</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.09.2025
+# 	<nr>104</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.09.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2234,9 +2234,11 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 				quality = u'automatisch'
 				HLS_List.append(u'HLS [B]%s[/B] ** auto ** auto ** %s#%s' % (details, title,href))
 			
-	if "audio-description/deu" in HLS_List[0]:				# Pos-Wechsel mit standard/deu
-		PLog("swap_new_0: " + HLS_List[0])					# Debug: standard/deu?
-		HLS_List[0], HLS_List[1] = HLS_List[1], HLS_List[0]
+	# Pos-Wechsel mit standard/deu (manchmal vertauscht):
+	if "audio-description/deu" in HLS_List[1] or "standard/deu" in HLS_List[1]:	
+		if "<OV>" not in HLS_List[1]:							# in Originalversion belassen	
+			PLog("swap_new_0: " + HLS_List[0])					# Debug: standard/deu?
+			HLS_List[0], HLS_List[1] = HLS_List[1], HLS_List[0]
 	
 	PLog("Streams: %d" % len(HLS_List))
 	PLog(HLS_List)
