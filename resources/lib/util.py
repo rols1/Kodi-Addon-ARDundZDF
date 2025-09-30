@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>139</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.09.2025
+# 	<nr>140</nr>										# Numerierung für Einzelupdate
+#	Stand: 30.09.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3488,34 +3488,43 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 	PLog(myqual)
 	PLog(Stream_List)
 	if mode_hls:				
-		if myqual.find('auto') >= 0:
+		if "auto" in myqual:								# Setting: auto
 			mode = 'Sofortstart: HLS/auto'
-			Default_Url = Stream_List[0].split('#')[-1]		# master.m3u8 Pos. 1
-			PLog("Default_Url1: %s" % Default_Url)
-		else:
+			Default_Url = Stream_List[0].split('#')[-1]		# master.m3u8 Pos. 1 in HLS_List
+			PLog("Default_Url1a: %s" % Default_Url)
+		else:												# Setting: Auflösungen
 			mode = 'HLS/Einzelstream'
-			if "** auto **" in Stream_List[0]:				# sonst sort_error für Auflösung 
-				if len(Stream_List) == 1:
-					Default_Url = Stream_List[0].split('#')[-1]	# einzigen Stream bewahren
-				del Stream_List[0]
-	else: 
+			if u"Auflösung" not in str(Stream_List):		# nur auto-Streams, z.B. zwei Sprachversionen
+				Default_Url = Stream_List[0].split('#')[-1]	# nur 1. Stream (standard/deu)
+				PLog("Default_Url1b: %s" % Default_Url)
+				Stream_List=[]								# Rest nicht benötigt
+
+			else:											# HLS mit Auflösungen
+				if "** auto **" in Stream_List[0]:			# auto-Stream löschen, sonst sort_error 
+					if len(Stream_List) == 1:
+						Default_Url = Stream_List[0].split('#')[-1]	# auto-Stream -> Default
+						PLog("Default_Url1c: %s" % Default_Url)
+						del Stream_List[0]					# Rest wird sortiert
+
+	else: 													# Setting MP4, Webm, VP8/Vorbis, VP9/Opus
 		mode = 'MP4'
 	PLog("mode: " + mode)
 	
 	if Default_Url == '':								# besetzt: HLS/auto
 		# Sortierung Stream_List wieder nach Auflösung (verlässlicher) - wie StreamsShow
 		# höchste Auflös. nach unten, x-Param.: Auflösung
-		try:
-			if u"Auflösung" in str(Stream_List):
+		if u"Auflösung" in str(Stream_List):
+			try:
 				Stream_List = sorted(Stream_List,key=lambda x: int(re.search(r'sung (\d+)x', x).group(1)))	
-		except Exception as exception:					# bei HLS/"auto", problemlos da vorsortiert durch Sender
-			PLog("sort_error: " + str(exception))
-			myqual = "auto"								# verwende Default_Url - kein Abgleich mit width
+			except Exception as exception:					# bei HLS/"auto", problemlos da vorsortiert durch Sender
+				PLog("sort_error: " + str(exception))
+				myqual = "auto"								# verwende Default_Url - kein Abgleich mit width
 
-		if len(Stream_List) > 0:						# Default: höchste Url
-			Default_Url = Stream_List[-1].split('#')[-1]	# Fallback: master.m3u8 Pos. 1
-			PLog("Default_Url2: %s" % Default_Url)
+			if len(Stream_List) > 0:						# Default: letzte Url=höchste Auflösung
+				Default_Url = Stream_List[-1].split('#')[-1]	# Fallback: master.m3u8 Pos. 1
+				PLog("Default_Url2: %s" % Default_Url)
 	
+
 	PLog("Default_Url3: %s" % Default_Url)
 	url = Default_Url 
 	PLog(str(Stream_List)[:80])
