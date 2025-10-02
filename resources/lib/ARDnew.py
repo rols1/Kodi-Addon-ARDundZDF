@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>106</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.09.2025
+# 	<nr>107</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.10.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -387,7 +387,7 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		anz="null"
 		typ	= cont["type"]									# stage, gridlist
 		if typ == "stage":
-			get_json_content(li, page, ID=title, mark="TOP_title")
+			get_json_content(li, page, ID=title, mark="TOP_title")	# "TOP: " wie ZDF_Start
 			continue		
 			
 		if "description" in cont:
@@ -412,6 +412,9 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		path = 	cont["links"]["self"]["href"]
 		
 # todo ..
+#	Bilder, Livestreams, weitere Caller?
+		if "Unsere Top-Serien" in title:
+			PLog(str(cont)[:800])
 
 		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
 		partner=""											# Abgleich Region
@@ -419,8 +422,8 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 			region="be"; rname="Berlin"; partner="rbb"		# Default-Region, Änderung in ARDStartRegion
 			path = path.replace('{regionId}', region)
 
-		if '"images"' in str(cont):								# Teaser mit Bildern vorhanden
-			img = img_load(title, cont)
+		if "'images'" in str(cont):								# Teaser mit Bildern vorhanden
+			img = img_load(title, str(cont))
 		else:												
 			img = R(ICON_DIR_FOLDER)
 		
@@ -442,8 +445,6 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		# Ersetzung kann entfallen, wenn personalized bereits im Aufruf-Call fehlt
 		path = path.replace("userId=personalized&", "")	# 17.08.2023 personalized erfordert Authentif.	
 		label = title										# Anpassung phoenix ("Stage Widget händisch")
-		if title.startswith("Stage") or title.startswith("Die besten Videos"):
-			label = "[B]Highlights[/B]"	
 		
 		func = "ARDStartRubrik"
 		PLog(path); PLog(img); PLog(title); PLog(ID); PLog(anz); 
@@ -458,17 +459,19 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 				
 #-----------------------------------------------------------------------
 # 17.08.2023 img-Link für Startseite aus Block item ermitteln
-#
+# 02.10.2025 Anpassung an ARD-Änderungen
 def img_load(title, item, icon=ICON_MAIN_ARD):
 	PLog("img_load: " + title)
+	item = str(item)
 	leer_img = R(ICON_DIR_FOLDER)
 	
-	img = stringextract('src":"', '"', item)			# Pfad zum 1. img
+	img = stringextract("images'", '}', item)
+	img = stringextract("https", "{width", img)			# api.ardmediathek.de/image-service .. &w={width}
 	PLog(img)
 	if img == '':
 		return leer_img									# Fallback 
 	else:
-		img = img.replace('{width}', '720')
+		img = "https" + img + "720"
 		return img	
 
 #-----------------------------------------------------------------------
@@ -801,6 +804,10 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 	page = page.replace('\\"', '*')						# quotierte Marks entf.
 
 #----------------------------------------
+# todo: json.loads -> widgets -> 
+#		1. > 1 widgets -> ARDRubriken
+#		2. 1 widgets -> get_json_content
+
 	mark=''
 	container = blockextract ('compilationType":', page)# Test auf Rubriken
 	PLog(len(container))
@@ -2241,6 +2248,7 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 			if "<OV>" not in HLS_List[1]:							# in Originalversion belassen	
 				PLog("swap_new_0: " + HLS_List[0])					# Debug: standard/deu?
 				HLS_List[0], HLS_List[1] = HLS_List[1], HLS_List[0]
+				PLog(HLS_List)
 	
 	return HLS_List
 
