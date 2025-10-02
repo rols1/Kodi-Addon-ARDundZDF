@@ -10,8 +10,8 @@
 #		Sendezeit: data-start-time="", data-end-time=""
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>34</nr>										# Numerierung für Einzelupdate
-#	Stand: 01.10.2025
+# 	<nr>35</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.10.2025
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -436,16 +436,18 @@ def get_sort_playlist(PLAYLIST):				# sortierte Playliste der TV-Livesender
 	return sort_playlist
 	
 ########################################################################
+# Auswertung der Webseite für EPG() 
+# today.de verwendet Unix-Format, Bsp. 1488830442
+# 01.10.2025 Webseite geändert, auch Zeitformat - todo: Umstellung json prüfen
+#
 def get_data_web(page, Dict_ID):
 	PLog("get_data_web:")	
 	
-	# today.de verwendet Unix-Format, Bsp. 1488830442
-	# 01.10.2025 Webseite geändert, auch Zeitformat - todo: Umstellung json prüfen
 	img_base = "https://img.tvspielfilm.de"
 	now,today,today_5Uhr,nextday,nextday_5Uhr = get_unixtime()# lokale Unix-Zeitstempel, ohne Offset
 	
 	page  = stringextract('broadcastsAsListing', '</script>', page)	
-	PLog(page[:800])
+	PLog(page[:80])
 	liste = blockextract('channelId', page)  
 	PLog(len(liste));	
 	
@@ -454,6 +456,7 @@ def get_data_web(page, Dict_ID):
 	for i in range (len(liste)):		
 		# rec: akt. Tag ab 05 Uhr(Start) bis nächster Tag 05 Uhr (Ende):	
 		rec = []
+		summ1=""
 		starttime = stringextract('startDate":"', '"', liste[i]) # Sendezeit, Bsp. "1488827700" (UTC)
 		if starttime == '':												# Ende (Impressum)
 			break
@@ -463,12 +466,25 @@ def get_data_web(page, Dict_ID):
 		img = img_base + stringextract('path":"', '"', liste[i])
 		
 		sname = stringextract('title":"', '"', liste[i])
-		sname = unescape(sname); sname = sname.replace('\"', '*')
-		summ1 = stringextract('source":"', '"', liste[i])
-		summ2=""
-		# summ2 = stringextract('elementCreative":"', '"', liste[i]) 	# wetter-vor-acht|ard|and|wetterbericht|nachrichten|keine-bewertung|0
-		# summ = "%s\n%s" % (summ1, summ2)
-		summ=summ1
+		sname = unescape(sname); sname = sname.replace('\"', '*')		
+		sub = stringextract('subtitle":"', '"', liste[i])
+		if sub:
+			sname = "%s: %s" % (sname, sub)								# Hubert ohne Staller: Bauernregel
+		
+		#source = stringextract('source":"', '"', liste[i])				# Bildquelle nicht verwendet (ohne Bild
+		#if source:														# 	bei: Kontextmenü, TV-Livestreams)
+		#	summ1 = "Bild: " + source
+		genre = stringextract('genre":"', '"', liste[i])	
+		prodyear = stringextract('productionYear":"', '"', liste[i])
+		descr = stringextract('showTopics":"', '"', liste[i])
+		descr = descr.replace("\\n", " ")
+		country = stringextract('publicationCountryId":"', '"', liste[i])
+		summ2 = "%s, %s, %s" % (genre, country, prodyear)				# wie tvtoday: Nachrichten, D, 2025
+		summ = summ2
+		if summ1:
+			summ = "%s\n%s" % (summ1, summ2)
+		if descr:
+			summ = "%s\n%s" % (summ, descr)
 		summ = unescape(summ)
 		
 		# date-Format: 2025-10-01T05:00:00+02:00
