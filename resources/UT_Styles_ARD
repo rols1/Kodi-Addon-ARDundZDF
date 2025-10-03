@@ -58,7 +58,7 @@ STYLE
 
 STYLE
 ::cue(.S6) {
- color: blue;
+ color: RoyalBlue;
 }
 
 0

@@ -2278,27 +2278,6 @@ def getOnline(datestamp, onlycheck=False):
 		return check_state
 	else:
 		return online
-	
-# ----------------------------------------------------------------------
-# Prüft datestamp auf Vergangenheit, Gegenwart, Zukunft
-# Aufrufer: getOnline
-# Format datestamp: "2020-01-26 11:15:00" 19 stel., in
-#	getOnline auf 16 Stellen reduz. (o. Sek.)
-# 03.01.2025 Ermittlung Param start optimiert
-def time_state(checkstamp):
-	PLog("time_state: " + checkstamp)		
-	date_format = "%Y-%m-%d %H:%M"
-
-	start = datetime.datetime.strptime(checkstamp, date_format)
-	now = datetime.datetime.now()
-	if start < now:
-		check_state = '' 	# 'Vergangenheit'
-	elif start > now:
-		check_state = "[B][COLOR red]%s[/COLOR][/B]" % 'Zukunft'
-	else:
-		check_state = 'jetzt'
-	
-	return check_state
 # ----------------------------------------------------------------------
 # Wochentage engl./deutsch wg. Problemen mit locale-Setting 
 #	für VerpasstWoche, EPG

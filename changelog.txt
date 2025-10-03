@@ -10,6 +10,29 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+03.10.2025	5.3.1
+			get_content_json (TagesschauXL): Auswertung Sendedatum ergänzt, relevant für 
+			ARDSportLive.
+			repl_json_chars (util): Entfernung Steuerzeichen \t hinzugefügt (relevant für
+			ARD-Serien).
+			get_summary_pre (util): weitere html-Markierungen im Info-Text entfernt (im
+			Abschnitt ZDF).
+			SendungenAZ_ARDnew: Pagination angepasst (next_path fehlt in json), Verzicht 
+			auf Call get_pagination.
+			ARDStartVideoHLSget: Austausch Streams an ARD-Änderung angepasst ("audio-
+			description/deu" / "standard/deu").
+			PlayVideo_Direct (util): Berücksichtigung zweier auto-Streams ohne Auflösungen,
+			Verwendung des 1. Streams (i.d.R. standard/deu).
+			ARDStart: Startseite nach ARD-Änderung erneuert, ID "TOP_title" für
+			get_json_content (Markierung Stage-Titel), Anpassung in img_load.
+			get_json_content (ARDnew): bei leeren Inhalten Hinweis auf Produzent.
+			ZDF_Episodes_Graphql: nach ZDF-Änderung Suche noch '"Season\",\"id"'-Blöcken 
+			auf die gesamte Webseite ausgedehnt.
+			ZDF_Kat: A-Z- Ziel verlegt von ZDF_RubrikSingle zu ZDF_AZ (einheitl. Buchsta-
+			benliste).
+			time_state (util): Funktion entfernt (obsolet, Problem datetime.strptime).
+			EPG-Modul: Anpassung an geänderte Webseite von tvtoday (EPG, get_data_web).			
+
 15.09.2025	5.3.0
 			MVWSearch: keine Anzeige der Ergebnisse, falls der Key filmlisteTimestamp
 			leer bleibt.

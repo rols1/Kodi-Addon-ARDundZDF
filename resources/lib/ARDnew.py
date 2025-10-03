@@ -410,12 +410,6 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 			tag = "%s\n\n%s" % (tag, descr)
 	
 		path = 	cont["links"]["self"]["href"]
-		
-# todo ..
-#	Bilder, Livestreams, weitere Caller?
-		if "Unsere Top-Serien" in title:
-			PLog(str(cont)[:800])
-
 		path = path.replace('&embedded=false', '')			# bzw.  '&embedded=true'
 		partner=""											# Abgleich Region
 		if "/region/" in path and '{regionId}' in path:		# Bild Region laden, Default Berlin
@@ -801,16 +795,13 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		MyDialog(msg1, msg2, '')	
 		return
 	PLog(len(page))
-	page = page.replace('\\"', '*')						# quotierte Marks entf.
+#	page = page.replace('\\"', '*')						# quotierte Marks entf.
 
 #----------------------------------------
-# todo: json.loads -> widgets -> 
-#		1. > 1 widgets -> ARDRubriken
-#		2. 1 widgets -> get_json_content
 
 	mark=''
 	container = blockextract ('compilationType":', page)# Test auf Rubriken
-	PLog(len(container))
+	PLog("container: %d" % len(container))
 	if len(container) > 1:
 		PLog("ARDStartRubrik_more_container")
 		ARDRubriken(li, page=page, homeID=homeID)		# direkt
@@ -1775,6 +1766,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 		page_obs = page
 
 	try:
+		obs=[]
 		if "teasers" in page_obs:
 			obs =page_obs["teasers"]
 		if "widgets" in page_obs:
@@ -1792,7 +1784,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 		PLog("Mark10")
 		PLog(str(s)[:60])
 		uhr=''; ID=ID_org; duration='';	summ=''; availableTo='';
-		matRat="Ohne"
+		matRat="Ohne"; pubServ=""
 		typ = s["type"]
 		if "availableTo" in s:
 			availableTo = s["availableTo"]
@@ -1829,6 +1821,11 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 				continue				
 		
 		href = 	s["links"]["target"]["href"]
+		if "publicationService" in s:
+			pubServ = s["publicationService"]["name"]
+		else:
+			if "show" in s:
+				pubServ = s["show"]["publisher"]["name"]
 		if ID != "Livestream" and mehrfach == False:			# Einzelbeiträge außer Live
 			PLog("eval_video:")	
 			if "publicationService" in s:
@@ -1883,9 +1880,9 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 		summ = repl_json_chars(summ)	
 			
 		# ARDVerpasstContent: Zeit im Titel, Langfass. tagline:
-		if 'broadcast' in typ and uhr:							# EPG: broadcastMainClip								
+		if 'broadcast' in typ and uhr:									# EPG: broadcastMainClip								
 			title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title) 			
-			pubServ = s["publicationService"]["name"]							# publicationService (Sender)
+			pubServ = s["publicationService"]["name"]					# publicationService (Sender)
 			if pubServ:
 				summ = "%sSender: %s" % (summ, pubServ)		
 	
@@ -1895,6 +1892,9 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 		
 		if mehrfach:
 			summ = "Folgeseiten"
+			if pubServ:
+				summ = "Folgeseiten | %s" % pubServ
+				
 			href=py2_encode(href); title=py2_encode(title); 
 			fparams="&fparams={'path': '%s', 'title': '%s', 'homeID': '%s'}" % (quote(href), quote(title), homeID)
 			addDir(li=li2, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", \
@@ -1953,6 +1953,13 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 	if cnt == 0:
 		msg1 = 	"Nichts gefunden:"							# notification, hier ohne Sender
 		msg2 = "weder Folgeseiten noch Videos."	
+		PLog(page[:400])
+		prod = stringextract('producerName":"', '"', page)
+		# PLog(prod)										# ARD fehlen hier noch Daten
+		if "ARD" not in prod:
+			msg1 = "Inhalt von %s" % prod
+			msg2 = u"(noch) nicht verfügbar"
+			
 		icon = R(ICON_INFO)
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)
 		

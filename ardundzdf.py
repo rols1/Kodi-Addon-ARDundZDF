@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>280</nr>										# Numerierung für Einzelupdate
-VERSION = '5.3.0'
-VDATE = '27.09.2025'
+VERSION = '5.3.1'
+VDATE = '03.10.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8357,7 +8357,7 @@ def ZDF_Kat(title):
 		
 		if title in rubrik_list:							# Seiten ohne Genre-Id, Graphql-Call
 			if 'A-Z' in title:								#	nicht möglich
-				item = "%s|sendungen-100|%s" % (title, img)
+				item = "%s|sendungen-100|%s" % (title, img)	# s.u.
 			if 'Barrierefreie' in title:
 				item = "%s|barrierefrei-im-zdf-100|%s" % (title, img)
 			if 'Sport' in title:
@@ -8377,8 +8377,15 @@ def ZDF_Kat(title):
 				(quote(rubrik_url), label, homeID)
 			if 'Barrierefreie' in title:
 				func="ZDF_Barrierearm"
-			addDir(li=li, label=label, action="dirList", dirID=func, fanart=img, 
-				thumb=img, fparams=fparams)
+
+			if 'A-Z' in title:								# 03.10.2025 vorerst -> ZDF_AZ
+				fparams="&fparams={'name': '%s'}" % title
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_AZ", fanart=R(ICON_ZDF_AZ), 
+					thumb=img, fparams=fparams)
+			else:
+				addDir(li=li, label=label, action="dirList", dirID=func, fanart=img, 
+					thumb=img, fparams=fparams)
+		
 		else:
 			fparams="&fparams={'title': '%s', 'path': '%s'}" %\
 				(title, quote(kat_url))
@@ -10042,6 +10049,17 @@ def ZDF_get_img(obj, landscape=False):
 		minWidth=1140				# 1140x240
 	img=""
 	try:
+		if("layouts" in obj):							# ZDF_get_contentAZ (api.zdf) 
+			cnt=0
+			for width,imageObject in list(obj["layouts"].items()):	
+				if cnt == 0:
+					img_first = imageObject 			# Backup
+				cnt=cnt+1
+				w = width.split("x")[0]					# 1140x120
+				if int(w) >= minWidth:
+					img=imageObject
+					break
+			
 		if("teaserBild" in obj):
 			cnt=0
 			for width,imageObject in list(obj["teaserBild"].items()):
@@ -10050,6 +10068,7 @@ def ZDF_get_img(obj, landscape=False):
 				cnt=cnt+1
 				if int(width) >= minWidth:
 					img=imageObject["url"]
+					break
 		if not img:
 			if("image" in obj):
 				cnt=0
@@ -10059,6 +10078,7 @@ def ZDF_get_img(obj, landscape=False):
 					cnt=cnt+1
 					if int(width) >= minWidth:
 						img=imageObject["url"];
+						break
 		if not img:										# Backup -> img
 			img = img_first
 		
@@ -10085,8 +10105,11 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 	multi=True; verf=""; url=""; stream=""; scms_id=""; now_live=""
 	headline=""; avail=""
 	season=""; episode=""			# episodeNumber, seasonNumber
+	channel=""
 	dummy_img=R("icon-bild-fehlt_wide.png")
 	
+	if "channel" in obj:
+		channel=obj["channel"]
 	if "url" in obj:
 		url=obj["url"]
 	if "headline" in obj:
@@ -10206,6 +10229,8 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 
 	if multi:
 		tag = "Folgeseiten"
+		if channel:
+			tag = "%s | %s" % (tag, channel)
 	else:
 		tag = "Dauer: %s | FSK: %s | GEO: %s" % (dur, fsk, geo)
 		if avail:												# kann fehlen
@@ -10753,12 +10778,15 @@ def ZDF_AZList(title, element, ID=""):					# ZDF-Sendereihen zum gewählten Buch
 	PLog(title); PLog(ID);
 	title_org = title
 	
+	# token-Aktualisierung (ev. via ZDF_Graphql_WebDetails)
+	apitoken="087ee847a6d725180474cee3dcf62e3547702018"; appId="ffw-mt-web-2c770629"
+	header = HEADERS_GRAPHQL % (apitoken, appId)
 	DictID = "ZDF_sendungen-100"
-	path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/sendungen-100"
+	path = "https://api.zdf.de/content/documents/sendungen-100.json?profile=default"
 	msg1 = "Cache ZDF A-Z:"
 	if "funk" in ID:
 		DictID = "funk-alle-sendungen-von-a-z-100"
-		path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s" % DictID
+		path = "https://api.zdf.de/content/documents/%s.json?profile=default" % DictID
 		if element == "0 - 9":							# für funk o. Blanks
 			element="0-9"
 		msg1 = "Cache funk A-Z:"
@@ -10766,9 +10794,9 @@ def ZDF_AZList(title, element, ID=""):					# ZDF-Sendereihen zum gewählten Buch
 	if not jsonObject:
 		icon = R(ICON_ZDF_AZ)
 		xbmcgui.Dialog().notification(msg1,"Haltedauer 30 Min",icon,3000,sound=False)
-		page, msg = get_page(path)
+		page, msg = get_page(path, header=header)
 		if not page:												# nicht vorhanden?
-			msg1 = 'ZDF_AZList: Beiträge können leider nicht geladen werden.' 
+			msg1 = u'ZDF_AZList: Beiträge können leider nicht geladen werden.' 
 			msg2 = msg
 			MyDialog(msg1, msg2, '')
 			return
@@ -10779,33 +10807,78 @@ def ZDF_AZList(title, element, ID=""):					# ZDF-Sendereihen zum gewählten Buch
 	li = home(li, ID='ZDF')						# Home-Button
 
 	PLog(str(jsonObject)[:80])
-	jsonObject = jsonObject["cluster"]
+	jsonObject = jsonObject["brand"]
 	PLog(len(jsonObject))
 	PLog(str(jsonObject)[:80])
 
 	AZObject=[]	
-	for clusterObject in jsonObject:
-		PLog(str(clusterObject)[:12])
-		if element in clusterObject["name"]:
-			title = clusterObject["name"]
-			PLog("found_title: " + title)
-			AZObject = clusterObject
+	for cluster in jsonObject:
+		# PLog(str(cluster)[:30])
+		if "title" in cluster:					# cluster 2-Zeiler: nur trackingTitle + profile
+			title = cluster["title"]
+		else:
+			continue
+		if element in title:		
+			PLog("found_title: " + element)
+			AZObject = cluster
 			break
 	
 	if AZObject:
 		teaserObject = AZObject["teaser"]
-		for entry in teaserObject:
-			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
+		for entry in teaserObject:		
+			typ,title,tag,descr,img,url,weburl,scms_id = ZDF_get_contentAZ(entry)
 			title = repl_json_chars(title)
 			label = title
 			descr = repl_json_chars(descr)
+			PLog("Satz_AZObject:"); PLog(title); PLog(url);
+			
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 			PLog("fparams: " + fparams)	
 			addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tag)	
+				thumb=img, fparams=fparams, summary=descr, tagline=tag)
+	else:
+		icon = R(ICON_ZDF_AZ)
+		msg1 = "Sendungen mit %s" % element
+		msg2 = "nicht gefunden."
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
+		return
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+#----------------------------------------------
+# Auswertung AZ json aus api.zdf
+def ZDF_get_contentAZ(entry):
+	PLog('ZDF_get_contentAZ: ')
+	futura_base =  "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
+
+	typ=""; source="";
+	
+	title = entry["title"]
+	
+	obj = entry["http://zdf.de/rels/target"]			# Hauptteil
+	PLog(str(obj)[:80])
+	
+	scms_id = obj["externalId"]
+	api_id = obj["id"]
+	url = futura_base % api_id
+	weburl = obj["webCanonical"]
+	descr = obj["teasertext"]
+	
+	image = obj["teaserImageRef"]						# img
+	img = ZDF_get_img(image)							# minWidth=1280
+	
+	if "source" in image:								# Bildquelle
+		source = image["source"]
+	custom = stringextract("customObject", "}", str(obj)) 
+	sender = stringextract("broadcast': '", "'", custom)
+
+	tag = "[B]%s[/B]" % up_low(sender)
+	
+	#PLog("typ: %s, title: %s, tag: %s, descr: %s, img: %s, url: %s, weburl: %s, scms_id: %s" %\
+	#	(typ,title,tag,descr,img,url,weburl,scms_id))
+	return typ,title,tag,descr,img,url,weburl,scms_id
+	
+	
 #----------------------------------------------
 # MEHR_Suche ZDF nach query (title)
 # Aufrufer: ZDF_RubrikSingle

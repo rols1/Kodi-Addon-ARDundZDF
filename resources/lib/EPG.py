@@ -11,7 +11,7 @@
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	<nr>35</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.10.2025
+#	Stand: 03.10.2025
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -438,7 +438,7 @@ def get_sort_playlist(PLAYLIST):				# sortierte Playliste der TV-Livesender
 ########################################################################
 # Auswertung der Webseite für EPG() 
 # today.de verwendet Unix-Format, Bsp. 1488830442
-# 01.10.2025 Webseite geändert, auch Zeitformat - todo: Umstellung json prüfen
+# 01.10.2025 Webseite geändert (json eingebettet), auch Zeitformat
 #
 def get_data_web(page, Dict_ID):
 	PLog("get_data_web:")	
@@ -474,6 +474,7 @@ def get_data_web(page, Dict_ID):
 		#source = stringextract('source":"', '"', liste[i])				# Bildquelle nicht verwendet (ohne Bild
 		#if source:														# 	bei: Kontextmenü, TV-Livestreams)
 		#	summ1 = "Bild: " + source
+
 		genre = stringextract('genre":"', '"', liste[i])	
 		prodyear = stringextract('productionYear":"', '"', liste[i])
 		descr = stringextract('showTopics":"', '"', liste[i])
@@ -657,7 +658,10 @@ if "'context'" in str(sys.argv):										# Kontextmenü: EPG im textviewer
 		lines =  "\n".join(lines)
 		PLog("title: " + title)
 		title = title.replace('", "', ',')
-		xbmcgui.Dialog().textviewer(title , lines ,usemono=True)
+		if PYTHON2:
+			xbmcgui.Dialog().textviewer(title , lines)
+		else:
+			xbmcgui.Dialog().textviewer(title , lines, usemono=True)
 
 #-----------------------------------------------------------------------		
 if "ShowSumm" in str(sys.argv):											# Kontextmenü: Video-Inhaltstext im textviewer
