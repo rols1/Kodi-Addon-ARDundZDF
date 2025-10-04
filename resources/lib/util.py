@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>140</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.09.2025
+# 	<nr>141</nr>										# Numerierung für Einzelupdate
+#	Stand: 03.10.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3290,27 +3290,17 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 		return li	
 		
 #--------------------------------------------------
-# Url-Korrektur für Url vonNimble Streamer , z.B. für LEIPZIG_FERNSEHEN
-#	nur private Sender betroffen.
-# ffmpeg: Input/output error - Header-Test, manuelle Zuordnung des 
-#	ersten Streams, Veränd. ffmpeg-Param. o.Ergebnis.
-# Austausch https -> http OK
+# Globale Textviewer-Funktion
 # 
-def url_correction(url, sender):
-	PLog('url_correction:')
-	if url.startswith('http') == False:				# lokale + rtmp unangetastet
-		return url
+def textviewer(title, page, usemono=True):
+	PLog('textviewer:')
 	
-	# OK BadenTV
-	TV_Liste = ["münchen.tv", "Leipzig Fernsehen",
-				"Rhein-Neckar Fernsehen", "Franken Fernsehen"]
-	new_url = url
-	for tv in TV_Liste:
-		if up_low(sender) in up_low(tv):
-			PLog("Url_Korrektur: %s" % sender)
-			new_url = url.replace('https:', 'http:')
+	if PYTHON3:
+		xbmcgui.Dialog().textviewer(title, page, usemono=usemono)
+	else:
+		xbmcgui.Dialog().textviewer(title, page)
 	
-	return new_url
+	return
 
 #---------------------------------------------------------------------------------------------------
 def check_Setting(ID):
