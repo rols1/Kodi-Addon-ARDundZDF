@@ -125,7 +125,7 @@ def SearchWordWork(action):
 		PLog("do: " + action)
 		title = u"aktuelle Liste der Suchwörter (+ steht für Leerzeichen)"
 		searchwords = "\n".join(searchwords)
-		dialog.textviewer(title, searchwords, usemono=True)
+		textviewer(title, searchwords, usemono=True)
 		
 	if action == 'delete':
 		PLog("do: " + action)
@@ -279,7 +279,7 @@ def FilterToolsWork(action):
 	if action == 'show_set':									# gesetzte Filter zeigen
 		title = u"aktuell gesetzte(r) Filter"
 		akt_filter = "\n".join(akt_filter)
-		dialog.textviewer(title, akt_filter,usemono=True)
+		textviewer(title, akt_filter,usemono=True)
 			
 	if action == 'set':
 		index_list = get_list_indices(akt_filter, filter_list)	# akt. Filter-Indices ermitteln
@@ -381,7 +381,7 @@ def FilterToolsWork(action):
 	if action == 'show_list':									# Filterliste zeigen
 		title = u"Liste verfügbarer Filter"
 		filter_list = "\n".join(filter_list)
-		dialog.textviewer(title, filter_list,usemono=True)
+		textviewer(title, filter_list,usemono=True)
 		
 	if action == 'state_change':								# aus Kontextmenü
 		msg1 = "Ausschluss-Filter:"

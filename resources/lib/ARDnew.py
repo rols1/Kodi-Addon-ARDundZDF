@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>107</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.10.2025
+# 	<nr>108</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.10.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1553,7 +1553,7 @@ def ARD_Teletext_extract(page, aktpg):
 			title = "Seite %s | %s" % (aktpg, refTitle)
 			if add_header:
 				title = "%s\n%s\n" % (title, add_header)	
-			xbmcgui.Dialog().textviewer(title, txt, usemono=True)
+			textviewer(title, txt, usemono=True)
 		return	
 	
 	#---------------------------------------------------
@@ -1624,7 +1624,7 @@ def ARD_Teletext_extract(page, aktpg):
 		title = "Seite %s | %s" % (aktpg, header)
 		if add_header:
 			title = "%s\n%s\n" % (title, add_header)	
-		xbmcgui.Dialog().textviewer(title, txt, usemono=True)
+		textviewer(title, txt, usemono=True)
 	else:
 		msg1 = u'Seite %s' % aktpg
 		msg2 = u'Inhalt nicht darstellbar'
@@ -1997,6 +1997,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 	icon = R("ard-mediathek.png")
 	
 	# summary + title leer bei Call von get_streams_from_link:
+	PLog("get_summary_pre")
 	descr = get_summary_pre(path, ID="ARDnew",skip_verf=False,skip_pubDate=False)  # Modul util
 	if len(descr) > (len(summary)):								# Param summary einschl. tagline
 	 summary = "%s\n" % descr
@@ -2007,6 +2008,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 		headers = "{'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma':'no-cache',\
 			'Expires': '0'}"
 
+	PLog("get_api_Web_Quelllen:")
 	path = path + "&mcV6=true"								# api-Web-Quelllen
 	page, msg = get_page(path, header=headers)
 	if page == '':	
@@ -2210,9 +2212,11 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 # 	ARD_get_strmStream
 # StreamArray_0 (StreamArray): mediaCollection["embedded"]["streams"][0]
 #	StreamArray_1: DGSStreams (werden angehängt)
+# 04.10.2025 Filterung nach Titel, nur 1 Stream pro Variante (Ausnahme:
+#	Normal- und DGS-Stream, falls Kennz. im titel fehlt).
 #
 def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""): 
-	PLog('ARDStartVideoHLSget: ' + call); 
+	PLog('ARDStartVideoHLSget: %s | %s' % (call, title)); 
 	PLog(str(StreamArray)[:100])
 	
 	HLS_List=[]; Stream_List=[]; href=""
@@ -2224,38 +2228,46 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 		Arrays.append(StreamArray_1)
 	PLog("Arrays: %d" % len(Arrays))
 	
-	skip_list=[]
+	# nur jeweils der erste Stream wird verwendet
 	for array in Arrays:
 		kind  = array["kindName"]
 		PLog("kind: " + kind)
+		if "<mit Gebärdensprache>" in title:							# DGS im 2. Stream
+			if "DGS" not in kind:										# skip Normalstreams
+				continue
+	
 		for stream in  array["media"]:				
 			#PLog(str(stream)[:100])
 			if stream["mimeType"] == "application/vnd.apple.mpegurl":	# 1x:  master.m3u8
+				audio_kind = stream["audios"][0]["kind"]
+				audio_lang = stream["audios"][0]["languageCode"]
+				audio = "%s/%s" % (audio_kind, audio_lang)
+				qual = stream["forcedLabel"]
+				aspect = stream["aspectRatio"]
 				href =  stream["url"]	# Video-Url
 				if href.startswith('http') == False:
 					href = 'https:' + href
-
-				qual = stream["forcedLabel"]
-				aspect = stream["aspectRatio"]
-				audio_kind = stream["audios"][0]["kind"]
-				audio_lang = stream["audios"][0]["languageCode"]
 				details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
-				if details in skip_list:								# Doppel ausfiltern
-					continue
-				skip_list.append(details)
+				PLog("details: " + details)
+	
+				# Standard zuerst:
+				if "<OV>" not in title and u"Hörfassung":				# beim 2. Stream auch DGS
+					if u"standard/deu" in audio:
+						break
+				elif u"Hörfassung" in title:
+					if "audio-description" in audio_kind:
+						break
+				elif u"<OV>" in title:
+					if "standard/deu" not in audio:
+						break
+				else:
+					continue											# unbekannnte Varianten					
+		
+		quality = u'automatisch'
+		HLS_List.append(u'HLS [B]%s[/B] ** auto ** auto ** %s#%s' % (details, title, href))		
 
-				quality = u'automatisch'
-				HLS_List.append(u'HLS [B]%s[/B] ** auto ** auto ** %s#%s' % (details, title,href))
-			
 	PLog("Streams: %d" % len(HLS_List))
 	PLog(HLS_List)
-	# Pos-Wechsel mit standard/deu (manchmal vertauscht):
-	if len(HLS_List) > 1:
-		if "audio-description/deu" in HLS_List[1] or "standard/deu" in HLS_List[1]:	
-			if "<OV>" not in HLS_List[1]:							# in Originalversion belassen	
-				PLog("swap_new_0: " + HLS_List[0])					# Debug: standard/deu?
-				HLS_List[0], HLS_List[1] = HLS_List[1], HLS_List[0]
-				PLog(HLS_List)
 	
 	return HLS_List
 
