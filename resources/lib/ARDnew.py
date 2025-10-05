@@ -2251,7 +2251,7 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 				PLog("details: " + details)
 	
 				# Standard zuerst:
-				if "<OV>" not in title and u"Hörfassung":				# beim 2. Stream auch DGS
+				if "<OV>" not in title and u"Hörfassung" not in title:	# beim 2. Stream auch DGS
 					if u"standard/deu" in audio:
 						break
 				elif u"Hörfassung" in title:
