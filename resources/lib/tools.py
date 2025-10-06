@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>10</nr>								# Numerierung für Einzelupdate
-#	Stand: 14.09.2025
+# 	<nr>11</nr>								# Numerierung für Einzelupdate
+#	Stand: 06.10.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
