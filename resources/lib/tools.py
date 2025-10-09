@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>11</nr>								# Numerierung für Einzelupdate
-#	Stand: 06.10.2025
+# 	<nr>12</nr>								# Numerierung für Einzelupdate
+#	Stand: 09.10.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -39,6 +39,7 @@ import time, datetime
 
 # Addonmodule:
 from resources.lib.util import *
+import resources.lib.EPG as EPG
 
 # Globals
 ICON_FILTER		= 'icon-filter.png'
@@ -48,6 +49,11 @@ ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 ADDON_PATH    	= SETTINGS.getAddonInfo('path')
+
+DICTSTORE 		= os.path.join(ADDON_DATA, "Dict") 
+EPGACTIVE = os.path.join(DICTSTORE, 'EPGActive') 		# Marker thread_getepg aktiv
+PLAYLIST 		= 'livesenderTV.xml'					# TV-Sender-Logos 											
+
 
 FILTER_SET 	= os.path.join(ADDON_DATA, "filter_set")
 AKT_FILTER	= ''
@@ -550,7 +556,20 @@ def get_foruminfo():
 	return dt, last_item
 	
 #----------------------------------------------------------------
+# Aufruf InfoAndFilter
+# stößt die Aktualisierung des EPG an 
+#
+def refresh_epg():
+	PLog('refresh_epg:') 
 	
+	EPG.thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST)
+	return
+
+#----------------------------------------------------------------
+
+
+
+
 
 
 

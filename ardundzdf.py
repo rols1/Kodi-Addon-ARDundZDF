@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>281</nr>										# Numerierung für Einzelupdate
+# 	<nr>282</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.1'
-VDATE = '08.10.2025'
+VDATE = '09.10.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -74,12 +74,12 @@ VDATE = '08.10.2025'
 
 ####################################################################################################
 NAME			= 'ARD und ZDF'
-PREFIX 			= '/video/ardundzdf'		#	
+PREFIX 			= '/video/ardundzdf'
 												
-PLAYLIST 		= 'livesenderTV.xml'		# TV-Sender-Logos erstellt von: Arauco (Plex-Forum). 											
-FANART					= 'fanart.png'		# ARD + ZDF - breit
-ART 					= 'art.png'			# ARD + ZDF
-ICON 					= 'icon.png'		# ARD + ZDF
+PLAYLIST 		= 'livesenderTV.xml'				# TV-Sender-Logos											
+FANART					= 'fanart.png'				# ARD + ZDF - breit
+ART 					= 'art.png'					# ARD + ZDF
+ICON 					= 'icon.png'				# ARD + ZDF
 ICON_SEARCH 			= 'ard-suche.png'
 ICON_ZDF_SEARCH 		= 'zdf-suche.png'				
 ICON_FILTER				= 'icon-filter.png'	
@@ -104,7 +104,7 @@ ICON_ZDF_RUBRIKEN 		= 'zdf-rubriken.png'
 ICON_ZDF_BARRIEREARM 	= 'zdf-barrierearm.png'
 ICON_ZDF_BILDERSERIEN 	= 'zdf-bilderserien.png'
 
-ICON_MAIN_POD			= 'radio-podcasts.png'			# childs: Tonschnipsel
+ICON_MAIN_POD			= 'radio-podcasts.png'		# childs: Tonschnipsel
 ICON_MAIN_AUDIO			= 'ard-audiothek.png'
 ICON_AUDIO_LIVE			= 'ard-audio-live.png'
 ICON_AUDIO_AZ			= 'ard-audio-az.png'
@@ -569,6 +569,7 @@ def Main():
 	summ= u"%s\n- Merklisten-Ordner bearbeiten" % summ
 	summ= u'%s\n- Suchwörter bearbeiten' % summ
 	summ= u'%s\n- Refresh TV-Livestream-Quellen' % summ
+	summ= u'%s\n- Refresh EPG' % summ
 	summ = "%s\n-%s" % (summ, "Download- und Aufnahme-Tools")
 	if SETTINGS.getSetting('pref_strm') == 'true':
 		summ = "%s\n-%s" % (summ, "strm-Tools")
@@ -596,7 +597,7 @@ def Main():
 def InfoAndFilter():
 	PLog('InfoAndFilter:'); 
 	li = xbmcgui.ListItem()
-	li = home(li, ID=NAME)									# Home-Button
+	li = home(li, ID=NAME)							# Home-Button
 	
 	try:
 		import resources.lib.tools
@@ -605,7 +606,7 @@ def InfoAndFilter():
 
 	# AddonStartlist()	# Debug
 #---------------------------------------------------			
-															# Button changelog.txt
+																		# Button changelog.txt
 	tag= u'Störungsmeldungen bitte via Kodinerds-Forum, Github-Issue oder rols1@gmx.de'
 	summ = u'für weitere Infos zu bisherigen Änderungen [B](changelog.txt)[/B] klicken'
 	path = os.path.join(ADDON_PATH, "changelog.txt") 
@@ -615,7 +616,7 @@ def InfoAndFilter():
 	addDir(li=li, label=title, action="dirList", dirID="ShowText", fanart=R(FANART), 
 		thumb=R(ICON_TOOLS), fparams=fparams, summary=summ, tagline=tag)		
 							
-	title = u"Addon-Infos"									# Button für Addon-Infos
+	title = u"Addon-Infos"												# Button für Addon-Infos
 	tag = u"[B]Infos zu Version, Cache und Dateipfaden.[/B]" 
 	summ = u"Bei aktiviertem Debug-Log erfolgt die Ausgabe auch dort"
 	summ = u"%s (nützlich zum Kopieren der Pfade)." % summ
@@ -623,7 +624,7 @@ def InfoAndFilter():
 	addDir(li=li, label=title, action="dirList", dirID="AddonInfos", fanart=R(FANART), 
 		thumb=R(ICON_PREFS), tagline=tag, summary=summ, fparams=fparams)	
 			
-	if SETTINGS.getSetting('pref_startlist') == 'true':		# Button für LastSeen-Funktion
+	if SETTINGS.getSetting('pref_startlist') == 'true':					# Button für LastSeen-Funktion
 		maxvideos = SETTINGS.getSetting('pref_max_videos_startlist')
 		title = u"Zuletzt gesehen"	
 		tag = u"[B]Liste der im Addon gestarteten Videos (max. %s Einträge, keine Livestreams).[/B]" % maxvideos
@@ -634,13 +635,13 @@ def InfoAndFilter():
 			thumb=R("icon-list.png"), tagline=tag, summary=summ, fparams=fparams)	
 		
 	if SETTINGS.getSetting('pref_usefilter') == 'true':											
-		title = u"Filter bearbeiten"						# Button für Filter
+		title = u"Filter bearbeiten"									# Button für Filter
 		tag = u"[B]Ausschluss-Filter bearbeiten[/B]\n\nnur für Beiträge von ARD und ZDF" 								
 		fparams="&fparams={}" 
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.FilterTools", 
 			fanart=R(FANART), thumb=R(ICON_FILTER), tagline=tag, fparams=fparams)
 			
-	title = u"Merkliste bereinigen"							# Button für Bereinigung der Merkliste 
+	title = u"Merkliste bereinigen"										# Button für Bereinigung der Merkliste 
 	tag = u"Nicht mehr erreichbare Beiträge listen und nach Abfrage löschen." 
 	tag = u"%s\n\n[B]Ablauf[/B]: enthaltene Url's (Webseiten, Bildverweise) werden angepingt und der Status bewertet." % tag
 	tag = u"%s\nEin [B]HTTP Timeout[/B] schließt eine spätere Erreichbarkeit nicht aus." % tag
@@ -654,29 +655,42 @@ def InfoAndFilter():
 	addDir(li=li, label=title, action="dirList", dirID="start_script",\
 		fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tag, summary=summ, fparams=fparams)	
 				
-	title = u"Merklisten-Ordner bearbeiten"					# Button für Bearbeitung der Merklisten-Ordner 
+	title = u"Merklisten-Ordner bearbeiten"								# Button für Bearbeitung der Merklisten-Ordner 
 	tag = u"Ordner der Merklisten hinzufügen oder entfernen." 
 	tag = u"%s\nBasis-Ordnerliste wiederherstellen (Reset der Ordnerliste)." % tag
-	fparams="&fparams={'fparams_add': 'do_folder'}" 		# Variante ohne start_script, in Merkliste identische
-															# Verarbeitung sys.argv	(Funktionscall erst dort)
+	fparams="&fparams={'fparams_add': 'do_folder'}" 					# Variante ohne start_script, in Merkliste identische
+																		# Verarbeitung sys.argv	(Funktionscall erst dort)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.merkliste.do_folder",\
 		fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tag, fparams=fparams)	
 				
 			
-	title = u"Suchwörter bearbeiten"						# Button für Suchwörter
+	title = u"Suchwörter bearbeiten"									# Button für Suchwörter
 	tag = u"[B]Suchwörter bearbeiten (max. 24)[/B]\n\n"
 	tag = u"(nur für die gemeinsame Suche in ARD-/ZDF Mediathek und der Merkliste.)" 								
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordTools", 
 		fanart=R(FANART), thumb=R('icon_searchwords.png'), tagline=tag, fparams=fparams)	
 			
-	title = u"Refresh: Addon-Cache für TV-Livestream-Quellen" 
-	ays = int(SETTINGS.getSetting('pref_tv_store_days'))
+	title = u"Refresh: Addon-Cache für TV-Livestream-Quellen"			# Button für Refresh TV-Livestreams 
+	days = SETTINGS.getSetting('pref_tv_store_days')
 	tag = u"ARD- und ZDF-TV-Livestream-Quellen aktualisieren.\n"
 	tag = u"%sDas eingestellte Setting ([B]%s Tage[/B]) bleibt unverändert" % (tag, days)
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="refresh_streamlinks",
 		fanart=R(FANART), thumb=R('tv-livestreams_grey.png'), tagline=tag, fparams=fparams)	
+
+	title = u"Refresh: Addon-Cache für EPG" 							# Button für EPG-Refresh
+	days = SETTINGS.getSetting('pref_epg_intervall')
+	epg_set = SETTINGS.getSetting('pref_use_epg')
+	epg_set = "AUS"
+	if  SETTINGS.getSetting('pref_use_epg') == "true":
+		epg_set = "EIN"
+	tag = u"EPG manuell aktualisieren.\n"
+	summ = "Status für das EPG bei den T&V-Livestreams: [B]%s[/B]" % epg_set
+	tag = u"%sDas eingestellte Setting ([B]%s Tage[/B]) bleibt unverändert" % (tag, days)
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.refresh_epg",
+		fanart=R(FANART), thumb=R('icon-epg-tools.png'), tagline=tag, summary=summ, fparams=fparams)	
 			
 	# hier ohne Abhängigkeit vom Setting pref_use_downloads:
 	tagline = u'[B]Downloads und Aufnahmen[/B]\n\nVerschieben, Löschen, Ansehen, Verzeichnisse bearbeiten'
