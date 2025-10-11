@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<!-- 	<nr>17</nr>	# Numerierung für Einzelupdate -->
+<!-- 	<nr>18</nr>	# Numerierung für Einzelupdate -->
 <settings> 
     <category label="Allgemein">
     	<setting label="Debug: Plugin-Logging einschalten" type="bool" id="pref_info_debug" default="false"/>
@@ -12,7 +12,7 @@
       	<setting label="Arte-Mediathek verwenden" type="bool" id="pref_use_arte" default="false"/>
       	<setting label="MediathekViewWeb-Suche verwenden" type="bool" id="pref_use_mvw" default="false"/>
     <setting type="sep"/>
-   	<setting label="TV-Live-Sender: aktuelle Sendung zeigen - dauert länger" type="bool" id="pref_use_epg" default="false"/>
+   	<setting label="TV-Live-Sender: aktuelle Sendung zeigen (EPG)" type="bool" id="pref_use_epg" default="false"/>
    	<setting label="Inhaltstext zu Video im Voraus laden - kann sehr lange dauern!" type="bool" id="pref_load_summary" default="false"/>
 	<setting type="sep"/>
 	<setting label="TV-Live / Videos: Sofortstart statt Auflösungen und Download" type="bool" id="pref_video_direct" default="true"/>
@@ -64,7 +64,7 @@
 	<setting label="Bildersammlungen (Slide Shows)" type="select" values="1|10|30|100" default="30" id="pref_SLIDES_store_days"/>
 	<setting label="Inhaltstexte (im Voraus geladen)" type="select" values="5|10|30|100" default="30" id="pref_TEXTE_store_days"/>
 	<setting label="ARD- und ZDF-TV-Livestream-Quellen" type="select" values="0|1|5|10|20|60|100" default="60" id="pref_tv_store_days"/>
-	<setting label="EPG: Intervall für die Aktualisierung" type="select" values="12 Std.|1 Tag|5 Tage|10 Tage" default="12 Std." id="pref_epg_intervall"/>
+	<setting label="EPG: Intervall für die Aktualisierung" type="select" values="12 Std.|1 Tag|2 Tage|3 Tage" default="12 Std." id="pref_epg_intervall"/>
 	<setting label="Kodi-Thumbnails-Ordner bereinigen (0=AUS)" type="select" values="0|1|5|10|30|100" default="0" id="pref_thumbnail_days"/>
 </category> 
 
