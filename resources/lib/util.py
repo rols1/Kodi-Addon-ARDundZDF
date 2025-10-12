@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>141</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.10.2025
+# 	<nr>142</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.10.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2665,7 +2665,8 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 				duration = stringextract('"durationSeconds":', ',', page)	# Sekunden
 				if duration == '0':									# auch bei Einzelbeitrag möglich
 					duration=''
-				duration = seconds_translate(duration)
+				if duration:
+					duration = seconds_translate(duration)
 				
 			verf = s[0]["availableTo"]							# "2025-08-11T21:59:00Z"
 			pubDate = s[0]["broadcastedOn"]						# "2024-08-12T21:49:00Z"
@@ -3813,9 +3814,9 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 								PLog("Player_Subtitles: %s" % sub_list[0])
 								xbmc.Player().setSubtitles(sub_list[0])
 					else:  										# Freeze in Windows bei späterem Einschalten 
-							if sub_path:						# Abschalten nur mit sub_path, i.d.R. nicht bei Live
-								PLog("Player_Subtitles: off")
-								xbmc.Player().showSubtitles(False)
+						pass									# ab 12.10.2025 Verzicht auf showSubtitles(False)
+						#PLog("Player_Subtitles: off")
+						#xbmc.Player().showSubtitles(False)
 					player_detect=True
 					break
 			if i >= max_secs:
