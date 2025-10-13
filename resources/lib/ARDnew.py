@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>109</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.10.2025
+# 	<nr>110</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.10.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2232,7 +2232,7 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 	for array in Arrays:
 		kind  = array["kindName"]
 		PLog("kind: " + kind)
-		if "<mit Gebärdensprache>" in title:							# DGS im 2. Stream
+		if u"<mit Gebärdensprache>" in title:							# DGS im 2. Stream
 			if "DGS" not in kind:										# skip Normalstreams
 				continue
 	
