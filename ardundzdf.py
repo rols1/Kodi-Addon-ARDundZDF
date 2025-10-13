@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>282</nr>										# Numerierung für Einzelupdate
-VERSION = '5.3.1'
-VDATE = '09.10.2025'
+VERSION = '5.3.2'
+VDATE = '13.10.2025'
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -229,13 +229,14 @@ now = time.time()											# Abgleich Flags
 #
 if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden?
 	eci = SETTINGS.getSetting('pref_epg_intervall')
-	eci = re.search(r'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
+	eci = re.search(r'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|2 Tage|3 Tage"
 	eci = int(eci)
 	PLog("epg_check: eci %d" % eci)	
 	if eci == 12:											# 12 Std.
 		EPGCacheTime = 43200
 	else:
-		EPGCacheTime = eci * 86400 							# 1-10 Tage
+		eci = min(eci,3)									# alte Settingwerte auf 3 begrenzen
+		EPGCacheTime = eci * 86400 							# 1-3 Tage
 		
 	EPGACTIVE = os.path.join(DICTSTORE, 'EPGActive') 		# Marker thread_getepg aktiv
 	is_activ=False
@@ -250,6 +251,7 @@ if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden
 	if is_activ == False:									# EPG-Daten veraltet, neu holen
 		bg_thread = Thread(target=EPG.thread_getepg, args=(EPGACTIVE, DICTSTORE, PLAYLIST))
 		bg_thread.start()				
+			
 
 tci = int(SETTINGS.getSetting('pref_tv_store_days'))		# TV-Livestream-Quellen aktualisieren
 if tci >= 5:												# Thread nicht bei 0 od. 1 aktivieren
@@ -7330,7 +7332,7 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 			thumb=img, fparams=fparams, summary=summ, tagline=tagline, start_end=start_end)
 			
 	# Mehr Seiten anzeigen:
-	max = 12
+	max = 3
 	pagenr = int(pagenr) + 1
 	if pagenr < max: 
 		summ = u'nächster Tag (%d von %d)' % (pagenr+1, max) 
@@ -12664,7 +12666,6 @@ if __name__ == '__main__':
 		# Memory-Bereinig. unwirksam gegen Raspi-Klemmer (s. SenderLiveListe)
 	except Exception as e: 
 		PLog('network_error_main: ' + str(e))
-
 
 
 

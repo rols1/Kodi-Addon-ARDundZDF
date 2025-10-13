@@ -10,6 +10,31 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+13.10.2025	5.3.2
+			url_correction (util): entfernt (war früher für priv. TV-Sender nötig, z.
+			B. münchen.tv, Leipzig Fernsehen).
+			textviewer (util): neue zentrale Funktion für xbmcgui.Dialog().textviewer
+			mit Berücksichtigung PYTHON2 (ohne usemono).
+			ARDStartVideoHLSget: Auswahl Streamvarianten geändert (nur 1 Stream pro  
+			Variante, Filterung nach OV, Hörfassung oder DGS in Titel).
+			ZDF: Aufruf A-Z-Seiten umgelegt auf Kategorien (Graphql) - Anpassungen in
+			ZDF_Kat (Switch -> ZDF_AZ), ZDF_Graphql_WebDetails (Rückgabe der TabIndices
+			in coll_id, mode=CatalogTabsConnection), ZDF_getKat_content (Infotext),
+			ZDF_AZ (erneuert), ZDF_get_contentAZ entfernt, Nutzung ZDF_getKat_content,
+			Auswertung via Graphql (Ziel-Funktionen noch futura-api, Ausnahme: 
+			metaType=PLATFORM_BRAND), Cache entfällt (Datenabfrage nur pro Buchstabe).
+			settings.xml: Text pref_use_epg geändert ("dauert länger" -> "(EPG)").
+			ZDF_RubrikSingle: fehlerhaft AZ-Beiträge -> leerer json-Satz in ZDF_AZList 
+			-> ZDF_KatSub.
+			Haupt-PRG: textviewer-Aufrufe angepasst für zentrale Funktion in util.
+			Haupt-PRG, Modul tools: neuer Button für EPG-Refresh, neue Funktion
+			refresh_epg, neues Icon icon-epg-tools.png.
+			EPG-Modul: nur noch 3 Tage EPG (tvtoday liefert nur noch 1 Tag pro Zugriff),
+			Setting Aktualisierungs-Intervall auf 3 Tage begrenzt, Auswertung auf json
+			umgestellt, Infotext erweitert, get_api_data (vorher get_data_web) erneuert.
+			PlayVideo (util): UT-Abschaltung (showSubtitles(False)) auch ohne Vorliegen
+			einer UT-Datei (soll auch bei eingebetteten UT-Streams wirken).
+
 03.10.2025	5.3.1
 			get_content_json (TagesschauXL): Auswertung Sendedatum ergänzt, relevant für 
 			ARDSportLive.

@@ -3815,8 +3815,9 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 								xbmc.Player().setSubtitles(sub_list[0])
 					else:  										# Freeze in Windows bei späterem Einschalten 
 						pass									# ab 12.10.2025 Verzicht auf showSubtitles(False)
-						#PLog("Player_Subtitles: off")
-						#xbmc.Player().showSubtitles(False)
+						#if sub_path:
+							#PLog("Player_Subtitles: off")
+							#xbmc.Player().showSubtitles(False)
 					player_detect=True
 					break
 			if i >= max_secs:
