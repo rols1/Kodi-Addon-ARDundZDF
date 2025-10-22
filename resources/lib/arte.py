@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>66</nr>								# Numerierung für Einzelupdate
-#	Stand: 06.09.2025
+# 	<nr>67</nr>								# Numerierung für Einzelupdate
+#	Stand: 22.10.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -444,7 +444,10 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 	elif ID == "SEARCH_NEXT":							# Folgeseiten wie MOST_RECENT
 		values = page["value"]["data"]
 	elif ID == "EPG_Today":								# web-api-Call
-		values = page["value"]["zones"][1]["content"]["data"]	# 0=TVGuide Highlights, 1=Listing
+		if len(page["value"]["zones"]) == 1:
+			values = page["value"]["zones"][0]["content"]["data"]	# 22.10.2025 nur noch 0=Listing 
+		else:
+			values = page["value"]["zones"][1]["content"]["data"]	# 0=TVGuide Highlights, 1=Listing
 	elif ID == "Beitrag_Liste":	
 		if 	"pageProps" in page:						# 24.03.2024: vermutl. entfallen nach arte-Änderung
 			values = page["pageProps"]["initialPage"]["value"]["zones"][0]["content"]["data"]
