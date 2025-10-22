@@ -22,8 +22,8 @@
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-# 	<nr>8</nr>								# Numerierung für Einzelupdate
-#	Stand: 04.09.2025
+# 	<nr>9</nr>								# Numerierung für Einzelupdate
+#	Stand: 22.10.2025
 #
 
 from __future__ import absolute_import
@@ -296,7 +296,8 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 	img = R("suche_mv.png"); cnt=0
 	page = py2_decode(page)
 	page = transl_json(page)
-	totalResults = stringextract('"totalResults":', '}', page)
+	Results = stringextract('"totalResults":', '}', page)	# 100,"totalRelation":"eq","totalEntries":68411
+	totalResults = Results.split(",")[0]	
 	PLog(totalResults)
 	totalResults = int(totalResults)
 	for item in items:
