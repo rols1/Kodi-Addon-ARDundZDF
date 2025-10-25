@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>67</nr>								# Numerierung für Einzelupdate
-#	Stand: 22.10.2025
+# 	<nr>68</nr>								# Numerierung für Einzelupdate
+#	Stand: 25.10.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -439,56 +439,57 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 	img_def = R(ICON_DIR_FOLDER)
 	skip_list=[]
 		
-	if ID == "SEARCH":									# web-api-Call
-		values = page["value"]["zones"][0]["content"]["data"]
-	elif ID == "SEARCH_NEXT":							# Folgeseiten wie MOST_RECENT
-		values = page["value"]["data"]
-	elif ID == "EPG_Today":								# web-api-Call
-		if len(page["value"]["zones"]) == 1:
-			values = page["value"]["zones"][0]["content"]["data"]	# 22.10.2025 nur noch 0=Listing 
-		else:
-			values = page["value"]["zones"][1]["content"]["data"]	# 0=TVGuide Highlights, 1=Listing
-	elif ID == "Beitrag_Liste":	
-		if 	"pageProps" in page:						# 24.03.2024: vermutl. entfallen nach arte-Änderung
-			values = page["pageProps"]["initialPage"]["value"]["zones"][0]["content"]["data"]
-		else:
+	try:
+		if ID == "SEARCH":									# web-api-Call
+			values = page["value"]["zones"][0]["content"]["data"]
+		elif ID == "SEARCH_NEXT":							# Folgeseiten wie MOST_RECENT
 			values = page["value"]["data"]
-		PLog(len(values))
-		PLog(str(values)[:100])
-	elif ID == "MOST_RECENT":			
-		values = page["value"]["data"]
-		PLog(len(values))
-		PLog(str(values)[:100])
-	elif ID == "HBBTV":									# Neu HBBTV
-		if "cards" in page:
-			values = page["cards"]
-		elif "collections" in page:						# hbbtv
-			values = page["collections"]
-		else:
-			values=[]
-		if "images" in page:							# Default-Image statt ICON_DIR_FOLDER
-			img_def=""
-			if "highlight" in page["images"]:
-				img_def = page["images"]["highlight"]
+		elif ID == "EPG_Today":								# web-api-Call
+			if len(page["value"]["zones"]) == 1:
+				values = page["value"]["zones"][0]["content"]["data"]	# 22.10.2025 nur noch 0=Listing 
 			else:
-				img_def = page["images"]["landscape"]
-		
-	else:
-		values = page["pageProps"]["initialPage"]		# web-embedded, ganze Seite
-		try:											# s.a. ArteCluster
-			if "value" in page:							# nach 13.01.2021
+				values = page["value"]["zones"][1]["content"]["data"]	# 0=TVGuide Highlights, 1=Listing
+		elif ID == "Beitrag_Liste":	
+			if 	"pageProps" in page:						# 24.03.2024: vermutl. entfallen nach arte-Änderung
+				values = page["pageProps"]["initialPage"]["value"]["zones"][0]["content"]["data"]
+			else:
+				values = page["value"]["data"]
+			PLog(len(values))
+			PLog(str(values)[:100])
+		elif ID == "MOST_RECENT":			
+			values = page["value"]["data"]
+			PLog(len(values))
+			PLog(str(values)[:100])
+		elif ID == "HBBTV":									# Neu HBBTV
+			if "cards" in page:
+				values = page["cards"]
+			elif "collections" in page:						# hbbtv
+				values = page["collections"]
+			else:
+				values=[]
+			if "images" in page:							# Default-Image statt ICON_DIR_FOLDER
+				img_def=""
+				if "highlight" in page["images"]:
+					img_def = page["images"]["highlight"]
+				else:
+					img_def = page["images"]["landscape"]
+			
+		else:
+			values = page["pageProps"]["initialPage"]		# web-embedded, ganze Seite
+			if "value" in page:								# nach 13.01.2021
 				values = values["value"]["zones"]
-			else:										# vor 13.01.2021
+			else:											# vor 13.01.2021
 				values = values["zones"]
-		except Exception as exception:
-			PLog("json_error8: " + str(exception))
-			values=[]
+	except Exception as exception:
+		msg = str(exception)
+		PLog("GetContent_error: " + msg)
+		values=[]		
 	
 	PLog("img_def: " + img_def)	
 	PLog(len(values))
 	if len(values) == 0:
-		PLog("no_values")
-		return li, 0
+		PLog(msg)
+		return li, 0									# Info durch Aufrufer
 	
 	PLog(str(values)[:100])
 	mediatype=''; cnt=0
@@ -1179,7 +1180,7 @@ def Kategorien():
 				u"%s|arte_kultur.png|CPO" % l5, 
 				u"%s|arte_conc.png|arte_concert" % l6,
 				u"%s|arte_science.png|SCI" % l7, 
-				u"%s|arte_entdeck.png|DIS" % l8, 		
+				u"%s|arte_entdeck.png|DEC" % l8, 		
 				u"%s|arte_his.png|HIS" % l9
 				]
 	
@@ -1315,9 +1316,8 @@ def ArteStart(path="", title=""):
 		# leere Seiten möglich, Bsp. Event-Teaser, in Liste ohne Bild
 		PLog("ArteStart_Step2:")	
 		ID = "HBBTV"
-		GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=lang)
-			
-						
+		GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=lang)			
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ---------------------------------------------------------------------
