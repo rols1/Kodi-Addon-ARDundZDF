@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>142</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.10.2025
+# 	<nr>143</nr>										# Numerierung für Einzelupdate
+#	Stand: 25.10.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1221,7 +1221,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	if page == '':
 		try:
 			PLog("get_page3:")											# 3. Versuch mit requests
-			import requests												# kann fehlen 
+			import requests												# ab Aug. 2025 via addon.xml 
 			if header:
 				r = requests.get(path, headers=header, timeout=UrlopenTimeout)	
 			else:
@@ -3233,7 +3233,7 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	
 	if ":" in sender:
 		sender = sender.split(":")[0] 
-	url = url_correction(url, sender)				# Url-Korrektur, z.B. für LEIPZIG_FERNSEHEN 
+#	url = url_correction(url, sender)				# Url-Korrektur, z.B. für LEIPZIG_FERNSEHEN 
 	
 	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
 		return
