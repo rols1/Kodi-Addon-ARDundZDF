@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>283</nr>										# Numerierung für Einzelupdate
+# 	<nr>284</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.2'
-VDATE = '28.10.2025' 
+VDATE = '30.10.2025' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8407,7 +8407,7 @@ def ZDF_Kat(title):
 					thumb=img, fparams=fparams)
 		
 		else:
-			fparams="&fparams={'title': '%s', 'path': '%s', 'typ': 'ZDF_KatSub'}" %\
+			fparams="&fparams={'title': '%s', 'path': '%s', 'typ': 'ZDF_Kat'}" %\
 				(title, quote(kat_url))
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
 				thumb=img, fparams=fparams)
@@ -8647,8 +8647,7 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 # Steuerung Submenüs via Button -> ZDF_get_naviKat (ähnlich
 #	ZDF-Sportstudio (Datenformat zu sehr abweichend)
 # Zielfunktion ZDF_RubrikSingle via futura-Url
-# 21.08.2025 Aufbau Params Graphql unquoted für leichteren
-#	Abgleich, Web-Auswertung in ZDF_Graphql_WebDetails,
+# 21.08.2025 Aufbau Params Graphql unquoted (Debug)
 #	Pagination wieder an Web angeglichen (48->24)
 #
 def ZDF_KatSub(title, path, tabid="", Graphql="", typ=""):								
@@ -8692,8 +8691,8 @@ def ZDF_KatSub(title, path, tabid="", Graphql="", typ=""):
 		if Graphql:
 			href=Graphql
 			header = Dict("load", "GraphqlHeader")
-			page, msg = get_page(path=href,  header=header, do_safe=False) 	
-
+			page, msg = get_page(path=href,  header=header, do_safe=False)
+ 	
 	#--------------------------------------------------------------
 
 	try:												# json-Daten Graphql-Call
@@ -8717,7 +8716,6 @@ def ZDF_KatSub(title, path, tabid="", Graphql="", typ=""):
 	li = home(li, ID='ZDF')								# Home-Button	
 	
 	PLog("add_navi_menu_Kat:")							# Subnavigation 
-	PLog(str(navi_obj)[:80])
 	DictID = "ZDF_naviKat"
 	Dict("store", DictID, navi_obj)						# Liste  genre-ID's (Tabs) -> ZDF_get_naviKat
 	this_navi="Alle Inhalte"; tag=""					# path_navi/tabid leer für  "Alle Inhalte laden"
@@ -8725,7 +8723,7 @@ def ZDF_KatSub(title, path, tabid="", Graphql="", typ=""):
 		PLog("search_navi_obj:")
 		for item in navi_obj:
 			PLog("%s | %s" % (path_navi, item["id"]) )
-			if path_navi in item["id"]:					# "id": "pub-form-10003"
+			if item["id"] in path_navi:					# "id": "pub-form-10003"
 				this_navi = item["label"]				# "label": "Dokus"
 				break
 
@@ -8833,28 +8831,28 @@ def ZDF_KatSeriePre(title, path, img):
 		fparams="&fparams={'sid': '%s'}"	% canon					
 		addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
 			thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
-			
-		typ = "seasonByCanonical"
-		seasons = stringextract("props:data", "</script>", page)
-		PLog(seasons[:80])
-		seasons = blockextract('Season","id', seasons)
-		PLog("seasons: %d" % len(seasons))
+		
+	typ = "seasonByCanonical"
+	seasons = stringextract("props:data", "</script>", page)
+	PLog(seasons[:80])
+	seasons = blockextract('Season","id', seasons)
+	PLog("seasons: %d" % len(seasons))
 
-		path=py2_encode(path);		
-		for item in seasons:
-			sid = stringextract('id":"', '"', item)			# Season-ID -> idIn (myvars)
-			snr = stringextract('number":', ',', item)		# Season-Nr.
-			title = stringextract('title":"', '"', item)
-			title = "%s | [B]%s[/B]" % (t_org, title)
-			anz = stringextract('countEpisodes":', ',', item)
-			tag = "Staffel %s | Folgen: %s" % (snr, anz)
-			
-			PLog("path: %s, typ: %s, snr: %s" % (path,  typ, sid))
-			title=py2_encode(title)
-			fparams="&fparams={'title': '%s', 'path': '%s', 'typ': '%s', 'sid': '%s'}" %\
-				(quote(title), quote(path), typ, sid)
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSerie", fanart=img, 
-				thumb=img, tagline=tag, fparams=fparams)
+	path=py2_encode(path);		
+	for item in seasons:
+		sid = stringextract('id":"', '"', item)			# Season-ID -> idIn (myvars)
+		snr = stringextract('number":', ',', item)		# Season-Nr.
+		title = stringextract('title":"', '"', item)
+		title = "%s | [B]%s[/B]" % (t_org, title)
+		anz = stringextract('countEpisodes":', ',', item)
+		tag = "Staffel %s | Folgen: %s" % (snr, anz)
+		
+		PLog("path: %s, typ: %s, snr: %s" % (path,  typ, sid))
+		title=py2_encode(title)
+		fparams="&fparams={'title': '%s', 'path': '%s', 'typ': '%s', 'sid': '%s'}" %\
+			(quote(title), quote(path), typ, sid)
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSerie", fanart=img, 
+			thumb=img, tagline=tag, fparams=fparams)
 				
 	title = "Empfehlungen"									# Button Empfehlungen
 	tag = u"ähnliche Sendungen"
@@ -9638,13 +9636,12 @@ def ZDF_Graphql_Video(title, scms_id, sharingUrl):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 
 #-----------------------------------------------------------------------
-# Aufruf ZDF_WebMoreSingle - listet empfohlene Beiträge (für ergänzende
-#	Rubrigen der Startseite)
+# Aufruf ZDF_WebMoreSingle, ZDF_KatSeriePre
+# listet empfohlene Beiträge passend zur Webseite path
 #
 def ZDF_Recommendation(title, path, sethome="true"):								
 	PLog('ZDF_Recommendation: ' + title)
 		
-#	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, mode="")	
 	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, mode="smartCollectionID")	
 	icon = R(ICON_DIR_FOLDER)
 	if not coll_id and not nogui:
@@ -9663,7 +9660,7 @@ def ZDF_Recommendation(title, path, sethome="true"):
 	# sha256Hash abweichend von ZDF_KatSub
 	ext	= '{"persistedQuery":{"version":1,"sha256Hash":"6704812e40f3faeaf1d7feaf76fcd1e616819943677b0470e3de852382079b61"}}'
 	header = HEADERS_GRAPHQL % (apitoken, appId)
-	first=24						# pagination: statt 24 (Web)
+	first=24											# pagination: statt 24 (Web)
 
 	# Graphql-Cal
 	myvars = '{"collectionId":"%s","input":{"appId":"%s","filters":{},"pagination":{"first":%s},"user":{"abGroup":"gruppe-b","userSegment":"segment_0"}}}'
@@ -9683,7 +9680,7 @@ def ZDF_Recommendation(title, path, sethome="true"):
 	PLog(str(objs)[:80])
 			
 	if len(objs) > 0:
-		ZDF_Graphql_get_json(objs, mehr="true")
+		ZDF_Graphql_get_json(objs, mehr="true")			# Ausgabe	
 	else:
 		msg1 = u'%s:' % title
 		msg2 = u"keine weiteren Beiträge gefunden"
@@ -9705,7 +9702,6 @@ def ZDF_Recommendation(title, path, sethome="true"):
 def ZDF_Graphql_get_json(json_objs, mehr=""):								
 	PLog('ZDF_Graphql_get_json:')
 
-	PLog("mark0")
 	li = xbmcgui.ListItem()
 	li2 = xbmcgui.ListItem()							# Video-Listitems
 
@@ -9748,10 +9744,12 @@ def ZDF_Graphql_get_json(json_objs, mehr=""):
 			addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)			
 		else:
+			
 			fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" %\
 				(quote(url), quote(title), homeID)
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tag)
+				thumb=img, fparams=fparams, summary=descr, tagline=tag)			
+			
 	return
 
 #-----------------------------------------------
