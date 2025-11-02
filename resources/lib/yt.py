@@ -292,14 +292,19 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 		mediatype='video'
 	
 	PLog("Mark0")
-	mark = query
-	img = R("suche_mv.png"); cnt=0
-	page = py2_decode(page)
-	page = transl_json(page)
-	Results = stringextract('"totalResults":', '}', page)	# 100,"totalRelation":"eq","totalEntries":68411
-	totalResults = Results.split(",")[0]	
-	PLog(totalResults)
-	totalResults = int(totalResults)
+	try:
+		mark = query
+		img = R("suche_mv.png"); cnt=0
+		page = py2_decode(page)
+		page = transl_json(page)
+		Results = stringextract('"totalResults":', '}', page)	# 100,"totalRelation":"eq","totalEntries":68411
+		totalResults = Results.split(",")[0]	
+		PLog(totalResults)
+		totalResults = int(totalResults)
+	except Exception as exception:
+		totalResults=1										# trotzdem Fortsetzung, ohne Mehr-Button, s.u.
+		PLog("MVWSearch_error: " + str(exception))
+	
 	for item in items:
 		channel 	= stringextract('"channel":"', '"', item)
 		topic 		= stringextract('"topic":"', '"', item)

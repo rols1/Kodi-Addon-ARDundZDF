@@ -98,7 +98,8 @@ NFO = NFO1+NFO2+NFO3+NFO4												#	 vorh. / nicht mehr vorh.
 # Github-Icons zum Nachladen aus Platzgründen
 ICON_MAINXL 	= 'https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/TagesschauXL/tagesschau.png?raw=true'
 
-ARDStartCacheTime = 300								# 5 Min.
+ARDStartCacheTime 	= 300							# 5 Min.
+ZDF_CacheTime_Start = 300							# 5 Min.
 
 #---------------------------------------------------------------- 
 # prüft addon.xml auf mark - Rückgabe True, False
@@ -2106,7 +2107,6 @@ def time_translate(timecode, add_hour=True, day_warn=False, add_hour_only=""):
 	# summer_time aus www.ptb.de, konvertiert zum date_format (s.u.):
 	#	Aktualisierung jeweils 29.01.
 	summer_time = [	
-					"2022-03-27T01:00:00Z|2022-10-30T01:00:00Z",
 					"2023-03-26T01:00:00Z|2023-10-29T01:00:00Z",
 					"2024-03-31T01:00:00Z|2024-10-27T01:00:00Z",
 					"2025-03-30T01:00:00Z|2025-10-26T01:00:00Z",
@@ -2501,7 +2501,6 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	PLog(skip_verf); PLog(skip_pubDate); PLog(duration); 
 	duration_org=duration
 
-	
 	newpath = url_check(path, caller="get_summary_pre", dialog=False)		# ZDF, s.o.
 	if newpath:										# False od. redirect-path
 		path=newpath
@@ -2516,21 +2515,8 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	
 	page=""; summ=''; pubDate=''
 	save_new = False
-	
-	'''										# Debug: Cache ausschalten
-	if os.path.exists(fpath):					# Text lokal laden + zurückgeben
-		page=''
-		PLog('lade_aus_Cache:') 
-		page =  RLoad(fpath, abs_path=True)
-		if page.startswith("V5.1.2_summ:"):		# neues Cache-Format?
-			page = page.replace("V5.1.2_summ:", "")
-			PLog('ret_page: ' + page[:80])		# summary
-			return page
-		else:
-			save_new = True
-	'''
 
-	if page == '':
+	if not page:
 		PLog('lade_extern:') 
 		page, msg = get_page(path)				# extern laden, HTTP Error 404 möglich
 		save_new = True
@@ -2594,7 +2580,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 			summ3 = summ3[10:]											# skip \n40:T6c3 o.ä. java-Marke
 		if summ3 == "":													# 
 			summ3 = stringextract('"EpisodePage"', '</script>', page)	# Lebensmitteltricks
-			summ3 = "\n\n" + summ3[11:]											# skip \n43:T4bf, o.ä. java-Marke		
+			summ3 = " | " + summ3[11:]											# skip \n43:T4bf, o.ä. java-Marke		
 			
 		PLog("summ3: " + summ3)		
 		
@@ -2609,7 +2595,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 			summ = summ + summ3
 
 		summ = summ.replace('\\u003c',"").replace('\\u003e',"")			# <br>
-		summ = summ.replace('\\r',"").replace('\\n',"")			# CR, LF
+		summ = summ.replace('/strong',"").replace('strong',"")			# 
 		summ = summ.replace('<br/><br/>',"\n\n").replace('br/'," \n")	
 		summ = summ.replace('"])</script><script>self.__next_f.push([1,"', " ")	# java-Verkettung innerhalb Text
 		summ = summ.replace('"])</script><script>self.__', " ")			# Textende s.o.: ..self.__next_f.push([1,"9
@@ -2618,7 +2604,6 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		summ = (summ.replace('"', '').replace('\\', '').replace('/span>', ''))
 
 		summ = cleanhtml(summ)
-
 		PLog("summ_zdf: " + summ)			
 					
 	#-----------------	
@@ -3185,6 +3170,8 @@ def MakeJpegNfo(pathtextfile, storetxt):
 # 30.08.2020 experimentelles m3u8-Verfahren entf. - s. changelog.txt
 # 12.03.2023 popen-Rückmeldung "None args" für LibreElec 11 ergänzt
 # 17.04.2024 Ausfilterung spezieller Sender in TVLiveRecordSender
+# 13.10.2025 url_correction für Nimble-Streamer (z.B. LEIPZIG
+#	FERNSEHEN) entfernt (obsolet).
 #
 def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	PLog('LiveRecord:')
@@ -3233,7 +3220,6 @@ def LiveRecord(url, title, duration, laenge, epgJob='', JobID=''):
 	
 	if ":" in sender:
 		sender = sender.split(":")[0] 
-#	url = url_correction(url, sender)				# Url-Korrektur, z.B. für LEIPZIG_FERNSEHEN 
 	
 	if check_Setting('pref_LiveRecord_ffmpegCall') == False:	
 		return

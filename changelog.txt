@@ -10,6 +10,30 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+02.11.2025	5.3.3
+			MVWSearch (Modul yt): Auswertung totalResults an geändertes Format im Web
+			angepasst.
+			GetContent (Modul arte): EPG-Daten in ["zones"][0] gefunden statt wie vorher
+			in ["zones"][1].
+			Kategorien (Modul arte): Anpassung an arte-Umstellung "Entdeckung der Welt"
+			(DIS -> DEC). 
+			phoenix_Search (Modul phoenix): sender auf ard gestellt, da phoenix ohne 
+			Ergebnisse.
+			get_live_data (Modul phoenix): Anpassung an geänderte EPG-Daten.
+			ZDF_KatSerie (Beta-Zielfunktion für ZDF_AZList): Ziel-Url zdf.de angepasst
+			mit "/serien/" + canon_id, ZDF_getKat_content und ZDF_getKat_json erweitert
+			für EPISODE (mode="movie").
+			ZDF_Graphql_WebDetails: Url-Check ergänzt (z.B. für zdf.de/serien/frontal ->
+			zdf.de/magazine/frontal.
+			ZDF_WebMoreSingle: Anpassung nicht funktionierender doc_id's im futura-api
+			(bisher filme-104 in doc_id_list).
+			LiveRecord (util): vergessenen Call url_correction entfernt (issue #44).
+			get_summary_pre (util): Für "ZDF" "u003cstrong" und "u003c/strong" entfernt,
+			in summ3 2xLF durch "|" ersetzt.
+			time_translate (util): Sommerzeit-Daten für 2022 entfernt.
+			ZDF_KatSub: Fix Anzeige der aktuellen Kategorieim Infotext des Buttons
+			Subnavigation).
+
 13.10.2025	5.3.2
 			url_correction (util): entfernt (war früher für priv. TV-Sender nötig, z.
 			B. münchen.tv, Leipzig Fernsehen).

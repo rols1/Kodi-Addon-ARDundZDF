@@ -10,7 +10,7 @@
 #	
 ################################################################################
 # 	<nr>14</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.08.2025
+#	Stand: 02.11.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -117,16 +117,12 @@ def Main_phoenix():
 	# ------------------------------------------------------
 			
 	tag='[B]Phoenix Livestream[/B]'
-	title,subtitle,vorspann,descr,href,sender,icon = get_live_data()
+	title,subtitle,tag,descr,href,sender,icon = get_live_data()
 	title = '[B]LIVE: %s[/B]' % title
 	
-	if sender:
-		tag = "%s | Herkunft: %s" % (tag, sender)
 	summ = descr
 	if subtitle:
-		summ = '%s\n%s' % (subtitle, summ)
-	if vorspann:
-		summ = '%s\n%s' % (vorspann, summ)
+		summ = '%s | %s' % (subtitle, summ)
 	thumb = icon
 	if icon == '':	
 		thumb = ICON_TVLIVE
@@ -161,10 +157,12 @@ def Main_phoenix():
 # die json-Seite enthält ca. 4 Tage EPG - 1. Beitrag=aktuell
 # 15.08.2020 Verwendung ZDFstreamlinks (util) für href (master.m3u8)
 # 08.08.2025 Wechsel zu ARDstreamlinks
+# 02.11.2025 EPG-Daten neu
 #
 def get_live_data():
 	PLog('get_live_data:')
-	path = "https://www.phoenix.de/response/template/livestream_json"
+	epg_base = "https://programm-api.ard.de/nownext/api/channel?channel=%s"
+	path = epg_base % "Y3JpZDovL3dkci5kZS9CZWl0cmFnLTE3YTg4ZDdmLWI5NTAtNDcyNy05M2E0LWE3NzI3YjkxNjVkZQ"
 	page, msg = get_page(path=path)	
 	if page == '':	
 		msg1 = "get_live_data:"
@@ -173,32 +171,39 @@ def get_live_data():
 		PLog("%s | %s" % (msg1, msg2))	
 	PLog(len(page))			
 	
-	title='';subtitle='';vorspann='';descr='';href='';sender='';
-	thumb=''; icon=''
-	if page:
-		# Kurzf. möglich: {"title":"tagesschau","subtitel":"mit Geb\u00e4rdensprache",
-		#	"typ":"","vorspann":""}
-		if '":"' in page:					# möglich: '":"', '": "'
-			page = page.replace('":"', '": "')
-		page = page.replace('\\"', '*')	
-		page = 	transl_json(page)					
-		PLog(page[:80])
-		title 	= stringextract('"titel": "', '"', page)		# titel!
-		subtitle= stringextract('"subtitel": "', '"', page)
-		vorspann= stringextract('"vorspann": "', '"', page)
-		descr	= stringextract('"text": "', '"', page)			# html als Text
-		sender	= stringextract('sender": "', '"', page)
-		icon	= stringextract('bild_l": "', '"', page)		# bild_s winzig
-		if icon == '':
-			icon = stringextract('bild_m": "', '"', page)
-		PLog("icon: " + icon)
-		if icon != '' and icon.startswith('http') == False:
-			icon = BASE_PHOENIX + icon
+	objs = json.loads(page)
+	events = objs["events"]
+	thisevent=""
+	for event in events:
+		if "now" in event["runningState"]:
+			data = event
+			break
+	
+	sender=""									# fehlt in data	
+	try:	
+		title = data["title"]["short"]	
+		subtitle = data["title"]["subTitle"]
+		descr = data["synopsis"]
+		icon = data["image"]["contentUrl"]
+		icon = icon.replace('{width}', "640")
+		icon_author = data["image"]["producer"]
+		
+		startDate = data["currentStartDate"]	
+		endDate = data["endDate"]
+		end = time_translate(endDate)
+		start = time_translate(startDate)
 
 		title=transl_json(title); subtitle=transl_json(subtitle); 
-		vorspann=transl_json(vorspann); 
-		descr=cleanhtml(descr); descr=transl_json(descr)
-		descr=unescape(descr); descr=descr.replace("\\r\\n", "\n")
+		descr=unescape(descr)
+		
+		title = "LIVE %s | %s" % (start[-5:], title)
+		tag = "Bild: %s" % icon_author
+		tag = "%s\nSendung: %s - %s Uhr" % (tag, start[-5:], end[-5:])
+		
+	except Exception as exception:
+		PLog("live_data_error: " + str(exception))
+		title="";subtitle="";tag="";descr=""
+		sender="";icon=""
 		
 	ard_streamlinks = get_ARDstreamlinks(skip_log=True)
 	# Zeile ard_streamlinks: "webtitle|href|thumb|tagline"
@@ -210,15 +215,17 @@ def get_live_data():
 			break
 	
 	PLog("Satz6:")
-	PLog(title); PLog(subtitle); PLog(vorspann); PLog(descr); PLog(href);
+	PLog(title); PLog(subtitle); PLog(descr); PLog(href);
 	PLog(sender); PLog(icon);					
-	return title,subtitle,vorspann,descr,href,sender,icon
+	return title,subtitle,tag,descr,href,sender,icon
 # ----------------------------------------------------------------------
 # path via chrome-tools ermittelt. Ergebnisse im json-Format
 # 25.05.2021 Suchlink an phoenix-Änderung angepasst
 # 28.06.2021 erneut angepasst
 # 09.11.2021 wegen key-Problem ("0", "1"..) Wechsel json -> string-Auwertung,
 #	s. GetContent + ThemenListe
+# 22.10.2025 sender=ard (phoenix ohne Ergebnisse)
+#
 def phoenix_Search(query='', nexturl=''):
 	PLog("phoenix_Search:")
 	if 	query == '':	
@@ -228,8 +235,8 @@ def phoenix_Search(query='', nexturl=''):
 		#return ""
 		Main_phoenix()					# Absturz nach Sofortstart-Abbruch
 		
-	title="Suche auf phoenix"
-	ARDSearchnew(title, sender="phoenix", offset=0, query=query, homeID="phoenix")
+	title="Suche auf phoenix"			# s.o.
+	ARDSearchnew(title, sender="ard", offset=0, query=query, homeID="phoenix")
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	

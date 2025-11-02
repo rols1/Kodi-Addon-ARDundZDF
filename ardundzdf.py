@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>284</nr>										# Numerierung für Einzelupdate
-VERSION = '5.3.2'
-VDATE = '30.10.2025' 
+VERSION = '5.3.3'
+VDATE = '02.11.2025' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8478,8 +8478,8 @@ def ZDF_Kat_Plus(title, DictID):
 		PLog(title); PLog(kat_url)
 		kat_url=py2_encode(kat_url); title=py2_encode(title);
 		
-		fparams="&fparams={'title': '%s', 'path': '%s', 'typ': 'ZDF_KatSub'}" %\
-			(title, quote(kat_url),)
+		fparams="&fparams={'title': '%s', 'path': '%s'}" %\
+			(title, quote(kat_url))							# ohne typ (Default)
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
 			thumb=img, fparams=fparams)
 
@@ -8560,12 +8560,12 @@ def ZDF_KatNachrichten(url, title, homeID):
 # Params Webseite für  Graphql-Call holen - collmark: von
 #	metaCollectionId (ZDF_KatSub) abweichende Markierung, coll_id ist
 #	wahlweise genre-id, collection-id, initialSeasonId (idIn)
-# Caching bisher nicht nötig (ca. 200-300KByte seti Relaunch)
+# Caching für ZDF_KatSeriePre (Trailer-Suche).
 #
 def ZDF_Graphql_WebDetails(path, mode=""):								
 	PLog('ZDF_Graphql_WebDetails: %s, mode: %s' % (path, mode))
 	genre_id=""; coll_id=""; apitoken=""; appId=""; 
-	zdfappId=""; canon="";
+	zdfappId=""; canon=""; newpath=""
 	
 	canonID = path.split("/")[-1]									# Webcache
 	if "#" in canonID:
@@ -8576,7 +8576,6 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 		genre_id = path.split(pmark)[-1]
 	
 	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)		# 5 min, escape-clean
-	page=""
 	if not page:
 		newpath = url_check(path, caller="ZDF_Graphql_WebDetails", dialog=False)
 		page, msg = get_page(newpath)
@@ -8589,7 +8588,7 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 	collmark = "metaCollectionId"									# Default für Sub's 	
 	
 	if "getpage" in mode:											# ZDF_KatSeriePre
-		return page, DictID
+		return page, DictID, newpath
 
 	if page:
 		try:														# Header-Params für Graphql-Call
@@ -8748,7 +8747,7 @@ def ZDF_KatSub(title, path, tabid="", Graphql="", typ=""):
 		label = "[B]Mehr Inhalte laden[/B]"
 		tag = u"Mehr Inhalte zu [B]%s | %s[/B]" % (title, this_navi)
 		PLog("Graphql_unquoted2: " + unquote(href))
-		PLog(tag); PLog(path_org);PLog(path_org);
+		PLog(tag); PLog(path_org);
 	
 		img=R(ICON_MEHR)
 		href=py2_encode(href); title=py2_encode(title); 	# -> 2. Aufruf 
@@ -8812,19 +8811,22 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 #-----------------------------------------------
 # Graphql-Serien Pre: Vorauswahl Staffeln, Empfehlungen, 
 #	Extras, Details
-# Aufruf: ZDF_AZList, snr=Season-Nr.
+# Verzicht auf Graphql (operationName=seasonByCanonical), Dict-Auswertung
+#	schneller. Bei Switch auf Graphql Params durch Aufrufer übergeben.
+# Aufruf: ZDF_AZList, ZDF_Graphql_get_json
 # 
 def ZDF_KatSeriePre(title, path, img):
 	PLog('ZDF_KatSeriePre: %s | %s' % (title, path))
 	t_org=title
 
-	page, DictID = ZDF_Graphql_WebDetails(path, mode="getpage")
+	# newpath: redirected
+	page, DictID, newpath = ZDF_Graphql_WebDetails(path, mode="getpage")
 	PLog("DictID: %s | %s" % (DictID, page[:80]))
 
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')									# Home-Button
 
-	if "/serien/" in path:									# zdf.de/serien/the-rookie-100
+	if "/serien/" in newpath:								# zdf.de/serien/the-rookie-100
 		canon = path.split("/")[-1]							# Button komplette Liste
 		label = "komplette Liste: %s" % title
 		tag = u"Liste aller verfügbaren Folgen | strm-Tools"
@@ -8845,7 +8847,7 @@ def ZDF_KatSeriePre(title, path, img):
 		title = stringextract('title":"', '"', item)
 		title = "%s | [B]%s[/B]" % (t_org, title)
 		anz = stringextract('countEpisodes":', ',', item)
-		tag = "Staffel %s | Folgen: %s" % (snr, anz)
+		tag = "Staffel %s | [B]Folgen: %s[/B]" % (snr, anz)
 		
 		PLog("path: %s, typ: %s, snr: %s" % (path,  typ, sid))
 		title=py2_encode(title)
@@ -8855,13 +8857,12 @@ def ZDF_KatSeriePre(title, path, img):
 			thumb=img, tagline=tag, fparams=fparams)
 				
 	title = "Empfehlungen"									# Button Empfehlungen
-	tag = u"ähnliche Sendungen"
+	tag = u"Mehr zur Sendung, ähnliche Sendungen"
 	fparams="&fparams={'title': '%s', 'path': '%s'}" %\
 		(quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Recommendation", fanart=img, 
 		thumb=img, tagline=tag, fparams=fparams)
 	
-	page = Dict("load", DictID)								# Button Extras (Trailer kann fehlen)
 	page = stringextract('"extras":', "</script>", page)
 	PLog(page[:80])
 	videos = blockextract('Video","id"', page) 				# wie ZDF_KatSerieExtras
@@ -8887,13 +8888,12 @@ def ZDF_KatSerieExtras(title, DictID, mode=""):
 	page = stringextract('"extras":', "</script>", page)
 	PLog(page[:180])
 	
-	if "summary" in mode:									# Inhaltstext
+	if "Darsteller" in mode:									# Inhaltstext
 		pass
 		
-	
 	videos = blockextract('Video","id"', page) 				# Web: Video\",\"id
 	PLog("videos: %d" % len(videos))
-	PLog(str(videos[0])[:80])
+	PLog(videos[0][:80])
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')									# Home-Button	
@@ -8906,19 +8906,20 @@ def ZDF_KatSerieExtras(title, DictID, mode=""):
 	base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
 	
 	for item in videos:
-		PLog(str(item)[:200])
-		scms_id = stringextract('id":"', '"', item)
-		if scms_id in skiplist:								# skip Vorschau-Video
-			continue
-		skiplist.append(scms_id)
+		PLog(item[:80])
+		scms_id = stringextract('id":"', '"', item)		
 		descr = stringextract('title":"', '"', item)		# hier in title
 		teaser = stringextract('teaser":', 'imageWithoutLogo', item)
 		title = stringextract('title":"', ',', teaser)		# title\":\"\\\"Stadtbild\\\" 
+		if title in skiplist:								# skip Zwilling (wie Vorschau-Video, aber
+			continue										#	andere scms_id +  canon_id)
+		skiplist.append(title)		
+		
 		title = title.replace('"', '')
 		title = repl_json_chars(title)
 		dur = stringextract('duration":', ',', item)
 		dur = seconds_translate(dur)
-		
+
 		canon_id = stringextract('canonical":"', '"', item)
 		url = base % canon_id
 		img = stringextract('dim1280Xauto":"', '"', item)
@@ -8938,66 +8939,89 @@ def ZDF_KatSerieExtras(title, DictID, mode=""):
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 			fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)			
 
-
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # -----------------------------------------------
 # Graphql-Serien
-# Aufruf: ZDF_KatSerie 
+# Aufruf: ZDF_KatSeriePre 
+# 2. Durchlauf mit Graphql für Sätze > max_anz
 # 
-def ZDF_KatSerie(title, path, typ, sid=""):
+def ZDF_KatSerie(title, path, typ, sid, Graphql=""):
 	PLog('ZDF_KatSerie: %s | %s | %s | %s' % (title, path, typ, sid))	
-	title_org=title
-	OpName = "seasonByCanonical"					# Serie (typ: SEASON_SERIES, ENDLESS_SERIES)
-	base = ZDF_GraphqlBase % OpName
+	max_anz=50													# countEpisodes (max. 100 erlaubt), Web 24
+	title_org=title; path_org=path
+	OpName = "seasonByCanonical"								# Serie (typ: SEASON_SERIES, ENDLESS_SERIES)
+	Grbase = ZDF_GraphqlBase % OpName
 	mode = "seasonByCanonical"
-	seasonIndex=0
+	seasonIndex=0; sorting="DESC"
 	# direction: DESC / ASC | Web: ASC
-	myvars = '{"seasonIndex":0,"episodesPageSize":24,"canonical":"%s","filterBy":{"idIn":["%s"]},"sortBy":[{"field":"EPISODE_NUMBER","direction":"ASC"}]}'
+	myvars = '{"seasonIndex":0,"episodesPageSize":%d,"canonical":"%s","filterBy":{"idIn":["%s"]},"sortBy":[{"field":"EPISODE_NUMBER","direction":"%s"}]}'
 	ext	= '{"persistedQuery":{"version":1,"sha256Hash":"01f2190e7dab1da40f63b585c0b68a59ecdd7f5effb8890b958e20b48bee20cb"}}'
-	data_key = '"smartCollectionByCanonical"'
-	first=24										# pagination wie Web
 	
 	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, mode=mode) 	# Web -> Dict
-	if sid:
-		coll_id = sid
-	header = HEADERS_GRAPHQL % (apitoken, appId)
-	myvars = myvars  % (canon, coll_id)				# coll_id: initialSeasonId bzw. sid
-	href = base + quote(myvars) + "&extensions=" + quote(ext)
-	PLog("Graphql_unquoted1: " + unquote(href))
-	page, msg = get_page(path=href,  header=header, do_safe=False) 	# erster Graphql-Call
+	coll_id = sid
+	coll_id_org = sid											# -> Mehr-Inhalte
+		
+	if not Graphql:	
+		header = HEADERS_GRAPHQL % (apitoken, appId)
+		Dict("store", "GraphqlHeader", header)
+		myvars = myvars  % (max_anz, canon, coll_id, sorting)	# coll_id: initialSeasonId bzw. sid
+		href = Grbase + quote(myvars) + "&extensions=" + quote(ext)
+		PLog("Graphql_unquoted7_1: " + unquote(href))
+		page, msg = get_page(path=href,  header=header, do_safe=False) 	# erster Graphql-Call
+	#--------------------------------------------------------------
+	else:														# Graphql-Folge-Calls: "Mehr Inhalte laden"
+		if Graphql:
+			href=Graphql
+			PLog("Graphql_unquoted7_3: " + unquote(href))
+			header = Dict("load", "GraphqlHeader")
+			header = HEADERS_GRAPHQL % (apitoken, appId)
+			page, msg = get_page(path=href,  header=header, do_safe=False)
+ 	
+	#--------------------------------------------------------------
 
-	try:												# json-Daten Graphql-Call
+	try:														# json-Daten Graphql-Call
 		jsonObject = json.loads(page)
 		season_id = jsonObject["data"]["smartCollectionByCanonical"]["id"]	# -> ZDF_FlatListEpisodes
-		collect = jsonObject["data"]["smartCollectionByCanonical"]["seasons"]["nodes"]
+		seasons = jsonObject["data"]["smartCollectionByCanonical"]["seasons"]
+		collect = seasons["nodes"]
+		countEpisodes = collect[0]["countEpisodes"]
+		pageInfo = 	collect[0]["episodes"]["pageInfo"]
+		hasNextPage = pageInfo["hasNextPage"]					# true, false
+		endCursor = pageInfo["endCursor"]						# <- id letzter Satz base64, Bsp. ZnVuay1j .. MTIyMDEt
 	except Exception as exception:
 		collect=[]; 
 		PLog("KatSeriejson_error: " + str(exception))
+		msg1 = u'Datenproblem in ZDF_KatSerie: %s' % str(exception)
+		MyDialog(msg1, '', '')
+		return			
+		
 	PLog(len(collect))	
 	PLog(str(collect)[:80])
+	PLog("hasNextPage: %s, endCursor: %s" % (hasNextPage, endCursor))
 
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')									# Home-Button	
-	li2 = xbmcgui.ListItem()								# Video-Listitems
+	li = home(li, ID='ZDF')										# Home-Button	
+	li2 = xbmcgui.ListItem()									# Video-Listitems
 
 	snodes=[]	
 	base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
-	mediatype=''										# Kennz. Videos im Listing
+	mediatype=''												# Kennz. Videos im Listing
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 
-	header = collect[0]										# nur 1 Staffel via sid
+	header = collect[0]											# nur 1 Staffel via sid
 	PLog(str(header)[:80])
 	snr = header["number"]
 	episodes = header["episodes"]["nodes"]
 	cnt=0
 	
-	for item in episodes:									# s. ZDF_Graphql_get_json
+	for item in episodes:										# s. ZDF_Graphql_get_json
 		cnt=cnt+1										
 		typ,title,tag,descr,img,url,stream,coll_id = ZDF_getKat_content(item)
+		enr = item["episodeInfo"]["episodeNumber"]
 		url = base % coll_id
-		title = "S%02dE%02d | %s" % (snr, cnt, title)
+		title = "S%02dE%02d | %s" % (snr, enr, title)
 		
 		PLog("Satz18: %s" % url)
 		title=repl_json_chars(title)
@@ -9006,7 +9030,7 @@ def ZDF_KatSerie(title, path, typ, sid=""):
 
 		title=py2_encode(title); url=py2_encode(url);
 		img=py2_encode(img)
-		tag_par = tag.replace("\n", "||")			# 	s. ZDF_getKat_content
+		tag_par = tag.replace("\n", "||")						# 	s. ZDF_getKat_content
 		scms_id=""
 	
 		descr=py2_encode(descr); tag_par=py2_encode(tag_par);
@@ -9015,6 +9039,34 @@ def ZDF_KatSerie(title, path, typ, sid=""):
 		addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 			fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)			
 			
+	#--------------------------------------------------------------
+
+	if hasNextPage:													# Button mit Graphql-Call für "Mehr Inhalte" 
+		PLog("hasNextPage")
+		header = Dict("load", "GraphqlHeader")
+		# hier sortBy":{"field ohne [ 
+		myvars = '{"seasonIndex":0,"episodesPageSize":%d,"canonical":"%s","filterBy":{"idIn":["%s"]},"sortBy":{"field":"EPISODE_NUMBER","direction":"%s"},"episodesAfter":"%s"}'
+		myvars = myvars  % (max_anz, canon, coll_id_org, sorting, endCursor)
+		# Web-Alternative apollo/client:
+		#ext = '{"clientLibrary":{"name":"@apollo/client","version":"4.0.7"},"persistedQuery":{"version":1,"sha256Hash":"38d1a04404706d4380c30ddc70290a373b3524dbfcbbe8cf56d05817fdc5ff99"}}'		
+		ext	= '{"persistedQuery":{"version":1,"sha256Hash":"01f2190e7dab1da40f63b585c0b68a59ecdd7f5effb8890b958e20b48bee20cb"}}'
+		href = Grbase + quote(myvars) + "&extensions=" + quote(ext)	# sh256Hash-Variante "124..f3d" s. interne Doku
+		
+		title = title_org
+		tag = u"Mehr Inhalte zu %s | Gesamt: %d" % (title_org, countEpisodes)
+		PLog("ZDF_KatSerieMore:")
+		PLog("Graphql_unquoted7_2: " + unquote(href))
+		PLog(tag); PLog(path_org);
+	
+		img=R(ICON_MEHR)
+		href=py2_encode(href); title_org=py2_encode(title_org); 	# -> 2. Aufruf 
+		path=py2_encode(path);
+		fparams="&fparams={'title': '%s', 'path': '%s', 'typ': '%s', 'sid': '%s', 'Graphql': '%s'}" %\
+			(quote(title), quote(path), typ, sid, quote(href))
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSerie", fanart=img, 
+			thumb=img, tagline=tag, fparams=fparams)
+
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 #---------------------------------------------------------------------------------------------------
@@ -9501,6 +9553,7 @@ def ZDF_WebMoreSingle(title, path):
 			for item in doc_id_list:
 				old_id, new_id = item.split("|")
 				if old_id in doc_id:
+					PLog("doc_id_corrected: %s -> %s" % (old_id, new_id))
 					doc_id = new_id
 					break
 			url = base % doc_id
@@ -9744,12 +9797,22 @@ def ZDF_Graphql_get_json(json_objs, mehr=""):
 			addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)			
 		else:
-			
+			'''		futura-Variante ab V5.3.3 entfernen:
+			base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
+			url = base % coll_id
 			fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" %\
-				(quote(url), quote(title), homeID)
+				(quote(url), quote(title), "ZDF")
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tag)			
+				thumb=img, fparams=fparams, summary=descr, tagline=tag)
+			'''	
 			
+			url= "https://www.zdf.de/" + coll_id	# https://www.zdf.de/die-kuechenschlacht-106
+			# typ: DEFAULT_NO_SECTIONS oder DEFAULT_WITH_SECTIONS egal
+			fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
+				(title, quote(url), quote(img)) 
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSeriePre", fanart=img, 
+				thumb=img, tagline=tag, summary=descr, fparams=fparams)		
+
 	return
 
 #-----------------------------------------------
@@ -9776,13 +9839,13 @@ def ZDF_getKat_content(obj, movie=True):
 	if movie_canon_id:								# movie
 		canon_id = movie_canon_id
 	if not movie_canon_id:
-		tag = "[B]%s[/B] | Folgebeiträge" % owner
+		tag = u"[B]%s[/B] | Folgebeiträge" % owner
 	else:
-		tag = "[B]%s[/B]" % owner
+		tag = u"[B]%s[/B]" % owner
 	if tag_options:
-		tag = "%s\n%s\n%s" % (tag, img_alt, tag_options)
+		tag = u"%s\n%s\n%s" % (tag, img_alt, tag_options)
 	if movietag:									# Einzelmovie
-		tag = "%s\n%s" % (movietag, tag)
+		tag = u"%s\n%s" % (movietag, tag)
 	summ = descr	
 
 	PLog('ZDF_getKat_content typ: %s | title: %s | tag: %s | descr: %s |img:  %s | url: %s | stream: %s | canon_id: %s' %\
@@ -9795,17 +9858,17 @@ def ZDF_getKat_content(obj, movie=True):
 #
 def ZDF_getKat_json(obj, mode="img"):
 	PLog('ZDF_getKat_json: ' + mode)
-	
+
 	owner="";
-	if "contentOwner" in obj:
-		owner = obj["contentOwner"]["title"]		# -> ttd, movie
-	if not owner:
-		if "contentOwners" in obj:
-			try:
+	try:
+		if "contentOwner" in obj:
+			owner = obj["contentOwner"]["title"]	# -> ttd, movie, contentOwner: None möglich
+		if not owner:
+			if "contentOwners" in obj:
 				owner = obj["contentOwners"]["nodes"][0]["title"]
-			except Exception as exception:
-				PLog("contentOwners_error: " + str(exception))
-				owner=""	
+	except Exception as exception:
+		PLog("contentOwners_error: " + str(exception))
+		owner=""		
 			
 	if "teaser" in obj:
 		teaser = obj["teaser"]
@@ -9860,7 +9923,9 @@ def ZDF_getKat_json(obj, mode="img"):
 			movietag = u"Dauer: %s | [B]Verfügbar bis[/B] [COLOR darkgoldenrod]%s[/COLOR] | ab: [B]%s[/B] | %s" %\
 				(dur, avail, pubDate, owner)
 		else:
-			movietag = u"Dauer: %s | %s" % (dur, owner)
+			movietag = u"Dauer: %s" % dur
+			if owner:						# s.o. contentOwner
+				movietag = u"Dauer: %s | %s" % (dur, owner)
 
 		if not video:
 			msg = "canon_id_missing_video_null"
@@ -9874,7 +9939,7 @@ def ZDF_getKat_json(obj, mode="img"):
 				image = obj["teaser"]["imageWithoutLogo"]
 			else:
 				image = obj["image"]
-			img_alt = "[B]Bild: [/B]%s" % image["altText"]
+			img_alt = u"[B]Bild: [/B]%s" % image["altText"]
 			if img_alt == "None":
 				img_alt=""
 			layouts = image["layouts"]
