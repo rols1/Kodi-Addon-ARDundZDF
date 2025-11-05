@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>285</nr>										# Numerierung für Einzelupdate
+# 	<nr>286</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.3'
 VDATE = '05.11.2025' 
 
@@ -10946,7 +10946,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 					title = entry["title"]
 					PLog("title: %s | img_alt: %s" %(title,img_alt))# "altText": "„SOKO Wismar 	 Tödliche Gedanken“: ..
 					mark = "%s: " % title					
-					etitle = stringextract('[/B]', ':', img_alt)	# Title Serie + Episode
+					etitle = stringextract('[/B]', ':“', img_alt)	# Title Serie + Episode
 					etitle = (etitle.replace(u'„', '').replace(u'“', ''))  # 
 					if etitle.strip():										# leer-Bsp.: img_alt: [B]Bild: [/B]ZDF Logo
 						title = etitle	
