@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>284</nr>										# Numerierung für Einzelupdate
+# 	<nr>285</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.3'
-VDATE = '02.11.2025' 
+VDATE = '05.11.2025' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -10936,14 +10936,23 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 						typ = entry["video"]["currentMediaType"]	# mehrfach möglich, z.B. für heute-Sendung
 						movie_canon_id = video["canonical"]			# bei JETZT (LIVE) benötigt			
 						
+					etitle=""
 					if "image" in entry:
 						if entry["image"]:							# null bei ext. Inhalten (3sat, arte,..)
-							img, img_alt = ZDF_getKat_json(entry, mode="img")
-						else:
+							img, img_alt = ZDF_getKat_json(entry, mode="img")	
+					else:
 							img = img_def
+
 					title = entry["title"]
-					descr = entry["text"]
+					PLog("title: %s | img_alt: %s" %(title,img_alt))# "altText": "„SOKO Wismar 	 Tödliche Gedanken“: ..
+					mark = "%s: " % title					
+					etitle = stringextract('[/B]', ':', img_alt)	# Title Serie + Episode
+					etitle = (etitle.replace(u'„', '').replace(u'“', ''))  # 
+					if etitle.strip():										# leer-Bsp.: img_alt: [B]Bild: [/B]ZDF Logo
+						title = etitle	
+					PLog("newtitle: " + title)
 					
+					descr = entry["text"]
 					channel = entry["tvService"]
 					pubDate = entry["airtimeBegin"]
 					PLog("pubDate: " + pubDate)
