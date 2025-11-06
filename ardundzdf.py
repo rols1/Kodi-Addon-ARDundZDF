@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>288</nr>										# Numerierung für Einzelupdate
+# 	<nr>289</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.3'
 VDATE = '05.11.2025' 
 
@@ -10927,7 +10927,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 			broadcasts = entry["broadcasts"]
 			PLog("title: %s: %d, now: %s" % (stitle, len(broadcasts), now))
 			for entry in broadcasts:
-				img_alt=""								# Defaults, img's nur bei Inhalten der Mediathek
+				img_alt=""; img=""									# Defaults, img's nur bei Inhalten der Mediathek
 				scms_id=""; live=""
 				try:												# ZDF_getKat_content  abweichend
 					video = entry["video"]
@@ -10941,7 +10941,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 					if "image" in entry:
 						if entry["image"]:							# null bei ext. Inhalten (3sat, arte,..)
 							img, img_alt = ZDF_getKat_json(entry, mode="img")	
-					else:
+					if not img:										# fehlt bei Partnersendern
 							img = img_def
 
 					title = entry["title"]
