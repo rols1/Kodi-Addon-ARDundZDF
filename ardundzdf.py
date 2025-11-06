@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>287</nr>										# Numerierung für Einzelupdate
+# 	<nr>288</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.3'
 VDATE = '05.11.2025' 
 
@@ -10881,6 +10881,7 @@ def ZDF_Verpasst_Datum(title, zdfDate, sfilter):
 # 04.03.2024 ZDFtivi integriert
 # 30.08.2025 umgestellt auf Graphql (ähnlich ZDF-Web Live&TV), Sender-
 #	statt Tageszeiten-Buttons (bei nur 1 Sender direkte Ausgabe).
+# Extraktion Titel einschl. Episodentitel aus Bildtext (img_alt) 
 # 
 def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 	PLog('ZDF_Verpasst:'); PLog(title); PLog(zdfDate);
@@ -10944,12 +10945,15 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 							img = img_def
 
 					title = entry["title"]
-					PLog("title: %s | img_alt: %s" %(title,img_alt))# "altText": "„SOKO Wismar 	 Tödliche Gedanken“: ..
-					mark = "%s: " % title					
-#					etitle = stringextract('[/B]', ':“', img_alt)	# Title Serie + Episode
-					etitle = stringextract('[/B]', ':', img_alt)	# Title Serie + Episode
-					etitle = (etitle.replace(u'„', '').replace(u'“', ''))  # 
-					if etitle.strip():										# leer-Bsp.: img_alt: [B]Bild: [/B]ZDF Logo
+					PLog("title: %s | img_alt: %s" %(title,img_alt))
+					# Extraktion Titel einschl. Episodentitel. Unterschiedl. Hochkommata!
+					img_alt = img_alt.replace(u'“:', '":')			# "altText": "„SOKO Wismar 	 Tödliche Gedanken“: ..
+					PLog("img_alt2: %s" % img_alt)
+									
+					etitle = stringextract('[/B]', '":', img_alt)	# Title Serie + Episode
+					etitle = (etitle.replace(u'„', '').replace(u'“', '')) 
+					PLog("etitle: %s | img_alt2: %s" %(etitle,img_alt))	
+					if etitle.strip():								# leer-Bsp.: img_alt: [B]Bild: [/B]ZDF Logo
 						title = etitle	
 					title = repl_json_chars(title)
 					PLog("newtitle: " + title)
