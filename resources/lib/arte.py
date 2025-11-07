@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>68</nr>								# Numerierung für Einzelupdate
-#	Stand: 25.10.2025
+# 	<nr>69</nr>								# Numerierung für Einzelupdate
+#	Stand: 07.11.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -437,7 +437,7 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 	
 	PLog(str(page)[:80])
 	img_def = R(ICON_DIR_FOLDER)
-	skip_list=[]
+	skip_list=[]; msg=""
 		
 	try:
 		if ID == "SEARCH":									# web-api-Call
@@ -905,7 +905,6 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	PLog(len(page))
 	page = page.replace('\\/', '/')
 	page = page.replace('\\"', '*')			# Bsp. "\"Brisant\""
-	#RSave('/tmp2/x_artestreams_v2.json', py2_encode(page))	# Debug		
 
 	try: 															# fehlende Daten für get_streams_from_link
 		objs = json.loads(page)["data"]["attributes"]
@@ -947,7 +946,6 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	
 	#-------------------------------------------------------------	# HBBTV-MP4-Quellen
 	page, msg = get_page(path2, do_safe=False)						# Bearer entbehrlich 
-	#RSave('/tmp2/x_artestreams_hbbtvv2.json', py2_encode(page))	# Debug	
 	MP4_List=[]
 	try:
 		page = json.loads(page)
@@ -1243,6 +1241,7 @@ def Kategorien():
 # 24.03.2025 neu mit hbbtv
 # Startseite arte - Step1 Übersicht, Step2 Folgeseiten (path, title)
 #	Step2 zusätzl. Verteiler Folgebeiträge aus hbbtv-Ergebnissen
+# 07.11.2025 Mehr-Button ergänzt nach arte-Begrenzung auf 10 Beiträge 
 #
 def ArteStart(path="", title=""):
 	PLog("ArteStart: " + path)
@@ -1251,7 +1250,7 @@ def ArteStart(path="", title=""):
 	lang = arte_lang.split("|")[1].strip()				# fr, de, ..
 
 	step1=True	
-	if path == "":
+	if path == "":										# Inhaltsübersicht
 		path = "https://arte.tv/hbbtv-mw/api/1/skeletons/pages/home?lang=%s" % lang	
 	else:
 		step1=False
@@ -1316,7 +1315,24 @@ def ArteStart(path="", title=""):
 		# leere Seiten möglich, Bsp. Event-Teaser, in Liste ohne Bild
 		PLog("ArteStart_Step2:")	
 		ID = "HBBTV"
-		GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=lang)			
+		GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=lang)
+		
+		# für get_next_url fehlt eine Paginierung im Output, z.B. Anzahl Seiten
+		next_page=""
+		if "next_page" in page:
+			next_page = page["next_page"]
+		if next_page:
+			next_url = "https://www.arte.tv/hbbtv-mw/" + next_page
+			PLog("next_url: " + next_url)					
+			title = L(u"Weitere Beiträge")
+			img = R(ICON_MEHR)
+
+			next_url=py2_encode(next_url); title=py2_encode(title);
+			fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(next_url), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteStart", fanart=img, 
+				thumb=img , fparams=fparams)
+			
+				
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -1483,7 +1499,6 @@ def get_ArtePage(caller, title, path, header=''):
 			page=""
 			PLog("page_json_error: " + str(exception))
 
-	#RSave('/tmp2/x_artePage.json', py2_encode(str(page)))	# Debug	
 	PLog(len(page))
 	PLog("page_start: %s" % str(page)[0:60])
 	PLog("page_end: %s" % str(page)[-60:])
