@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>289</nr>										# Numerierung für Einzelupdate
+# 	<nr>290</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.3'
 VDATE = '05.11.2025' 
 
@@ -8735,6 +8735,7 @@ def ZDF_KatSub(title, path, tabid="", Graphql="", typ=""):
 
 	ZDF_Graphql_get_json(objs)							# Liste Beiträge,  wie ZDF_Recommendation (ZDF_WebMoreSingle)
 	
+	
 	#--------------------------------------------------------------
 
 	if hasNextPage:										# Button mit Graphql-Call für "Mehr Inhalte" 
@@ -8843,9 +8844,12 @@ def ZDF_KatSeriePre(title, path, img):
 	path=py2_encode(path);		
 	for item in seasons:
 		sid = stringextract('id":"', '"', item)			# Season-ID -> idIn (myvars)
+		status = stringextract('newContentStatus":"', '"', item)	# "NEW_SEASON" od. null
 		snr = stringextract('number":', ',', item)		# Season-Nr.
 		title = stringextract('title":"', '"', item)
 		title = "%s | [B]%s[/B]" % (t_org, title)
+		if "NEW" in status:
+			title = "%s [B](NEU)[/B]" % title
 		anz = stringextract('countEpisodes":', ',', item)
 		tag = "Staffel %s | [B]Folgen: %s[/B]" % (snr, anz)
 		
@@ -9988,6 +9992,23 @@ def ZDF_getKat_json(obj, mode="img"):
 			tag_options = "[B]Optionen:[/B]\n%s" % tag_options
 		else:
 			tag_options=""	
+			
+		now = EPG.get_unixtime(onlynow=True)
+		now = int(now)
+		date_format = "%Y-%m-%dT%H:%M"
+		editdate = obj["editorialDate"]			# "2025-10-14T17:48:16.312000+00:00"
+		editdate = editdate[:16]				# "2025-10-14T17:48"
+		PLog("editdate: " + editdate)
+
+		edit_time = datetime.datetime.fromtimestamp(time.mktime(time.strptime(editdate, date_format)))
+		edit_secs = time.mktime(edit_time.timetuple())
+		edit_secs = int(edit_secs)
+		PLog(now); PLog(edit_secs); 
+		PLog("now: %d | edit_secs: %d | diff: %s" % (now, edit_secs, now-edit_secs))
+		if now-edit_secs < 86400*2:				# jünger als 2 Tage?
+			if tag_options:
+				tag_options = "[B]NEUER INHALT[/B]\n%s" % tag_options
+		
 		return tag_options
 
 ###################################################################################################
