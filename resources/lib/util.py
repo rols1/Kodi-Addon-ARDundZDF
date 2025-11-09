@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>143</nr>										# Numerierung für Einzelupdate
-#	Stand: 25.10.2025
+# 	<nr>144</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.11.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -65,7 +65,7 @@ import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
 import string, textwrap
 
 import shlex			# Parameter-Expansion für subprocess.Popen (os != windows)
-	
+
 # Globals
 NAME			= 'ARD und ZDF'
 KODI_VERSION 	= xbmc.getInfoLabel('System.BuildVersion')
@@ -179,7 +179,7 @@ def PLog(msg, dummy=''):
 	xbmc.log("%s --> %s" % ('ARDundZDF', msg), LOG_MSG)
 	if dummy:		# Debug (s.o.)
 		xbmc.log("%s --> %s" % ('PLog_dummy', dummy), LOG_MSG)
-		
+	
 #---------------------------------------------------------------- 
 # 08.04.2020 Konvertierung 3-zeiliger Dialoge in message (Multiline)
 #  	Anlass: 23-03-2020 Removal of deprecated features (PR) - siehe:
@@ -792,7 +792,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_do_folder=''; fparams_rename=''; 
 		fparams_playlist_add=''; fparams_playlist_rm='';fparams_playlist_play=''
 		fparams_strm=''; fparams_exist_inlib=''; fparams_EPG='';
-		fparams_ShowSumm=""; fparams_RadioEPG="";
+		fparams_ShowSumm=""; fparams_RadioEPG="";fparams_ShowSeason="";
 		
 		if EPG_ID:														# EPG für Sender zeigen
 			EPG_ID = py2_encode(EPG_ID)
@@ -809,9 +809,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			PLog("fparams_RadioEPG: " + fparams_RadioEPG)
 			
 				
-		if mediatype == "video":										# Inhaltstext für Video zeigen
+		if mediatype == "video":										# Inhaltstext für Video / Serie zeigen
 			items = ["api.ardmediathek|ARD", "zdf-prod-futura|ZDF",		# unterstützte Sender
-					"www.3sat.de|3sat"]
+					"www.3sat.de|3sat", "www.zdf.de|ZDF"]
 			org_id=""
 			for item in items:
 				org, org_id  = item.split("|")
@@ -819,19 +819,29 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					break
 			if org_id and EPG_ID == "":									# Inhaltstext nicht bei Livestreams
 				try:
+					img=""
 					s = fparams.split("&fparams=")[1]
 					json_string = s.replace("'", "\"")
 					f = json.loads(json_string)
 					path = f["path"]
 					title = f["title"]
+					if "img" in f:
+						img = f["img"]
+					if "thumb" in f:
+						img = f["thumb"]
 					path=py2_encode(path); title=py2_encode(title)		# PY2
+					img=py2_encode(img)
 				except Exception as exception:
 					PLog("fparams_error: " +  str(exception))
 					path=""			
 				if path:												# sinnlos ohne path
 					fp = {'title': title, 'path': path, 'ID': org_id, 'mode': 'ShowSumm'}
-					fparams_ShowSumm = "&fparams={0}".format(fp)
-					PLog("fparams_ShowSumm: " + fparams_ShowSumm[:80])											
+					fparams_ShowSumm = "&fparams={0}".format(fp)		# -> Inhaltstext
+					PLog("fparams_ShowSumm: " + fparams_ShowSumm[:80])	
+					fp = {'title': title, 'path': path, 'img': img, 'mode': 'ShowSeason'}
+					fparams_ShowSeason = "&fparams={0}".format(fp)		# -> Serie zeigen
+					PLog("fparams_ShowSeason: " + fparams_ShowSeason[:80])	
+															
 
 		if SETTINGS.getSetting('pref_exist_inlib') == 'true':			# Abgleich Medienbibliothek
 			if mediatype == "video":
@@ -1118,6 +1128,17 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			dirID = "resources.lib.EPG.EPG"
 			commands.append((u'Inhaltstext für Video zeigen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 					% (MY_SCRIPT, HANDLE, dirID, fparams_ShowSumm)))
+
+		if fparams_ShowSeason:															# Serie für Video zeigen
+			# Aufruf Haupt-PRG, da dessen Funktionen im Script nicht importierbar sind ->
+			#	resources.lib.tools.Context -> Zielfunktion via RunAddon
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
+			PLog("MY_SCRIPT_ShowSeason:" + MY_SCRIPT)
+			PLog(fparams_ShowSeason)
+			mtitle = u"Serie zum Video zeigen"		
+			fparams_ShowSeason=quote(fparams_ShowSeason)								# quoting für router erf.
+			commands.append((mtitle, 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.tools.Context%s)' \
+				% (MY_SCRIPT, HANDLE, fparams_ShowSeason)))
 
 		li.addContextMenuItems(commands)				
 	
@@ -4170,8 +4191,8 @@ def open_addon(addon_id, cmd):
 #----------------------------------------------------------------
 # Zeigt bei Livestreams die Abspielposition von inputstream.adaptive 
 #	als Zeitangabe
-# Aufruf: PlayAudio (direkt, indirekt)
-# Player vor Aufruf bereits aktiviert (s. PlayAudio->Player_Subtitles:)
+# Aufruf: PlayVideo (direkt, indirekt)
+# Player vor Aufruf bereits aktiviert (s. PlayVideo->Player_Subtitles:)
 # notification-Aufruf zu ungenau für float-Werte.
 # ZDF-Werte beim Start: 
 #		Pufferanzeige: Wert1 / Wert2 ->
@@ -4667,6 +4688,7 @@ def get_streams_from_link(medialink):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 #----------------------------------------------------------------
+
 
 
 
