@@ -7,7 +7,7 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>13</nr>								# Numerierung für Einzelupdate
+# 	<nr>14</nr>								# Numerierung für Einzelupdate
 #	Stand: 09.11.2025
 
 # Python3-Kompatibilität:
@@ -588,8 +588,9 @@ def Context(title, path, img, mode):
 			surl = jsonObject["document"]["sharingUrl"]
 			pos = surl.rfind("/")
 			path = surl[:pos]
+			new_url, msg = get_page(path, GetOnlyRedirect=True)				
 			
-			page, msg = get_page(path=path)				# nur für img
+			page, msg = get_page(path=new_url)			# nur für img
 			imgset = stringextract("imageSrcSet=", '/>', page)
 			imgset = blockextract("https", imgset)
 			img = R(ICON_DIR_FOLDER)
