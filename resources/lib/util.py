@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>144</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.11.2025
+# 	<nr>145</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.11.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2538,7 +2538,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	save_new = False
 
 	if not page:
-		PLog('lade_extern:') 
+		PLog('lade_extern:')
 		page, msg = get_page(path)				# extern laden, HTTP Error 404 möglich
 		save_new = True
 	if page == '' or "Error in handler" in page:# ARD: {"error":"Error in handler ..
@@ -2563,68 +2563,60 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	if 	ID == 'ZDF':
 		# 18.03.2025 vorerst unberücksichtig: skip_verf, skip_pubDate
 		# transl_json, valid_title_chars
-		page = page.replace('\\"', '"')
-		page = page.replace('\\"', '*').replace('\\*', '*')
-
-		head = stringextract('"leadParagraph":"', '"', page)			# Web: unter dem Titel, kann fehlen
-		PLog("head: " + head)
+		# Graphql nicht verwendbar (FSK16: 22:00-6:00h kein Output)
 		
-		#summ0 = stringextract('>Details<', 'ZDF auf YouTube', page)	# ev. Darsteller formatieren
-		summ0 = stringextract('>Details<', '>Darsteller<', page)
-		if summ0 == "":
-			summ0 = stringextract('"infoText":"', '"', page)			# kann fehlen
-		PLog("summ0_1: " + summ0)
-
-		if 'description":"' in page:
-			descr =  stringextract('"description":"', '"', page)
-			if descr and summ0 and descr in summ0 == False:				# Doppel möglich
-				summ0 = "%s\n%s" % (summ0, descr)
-				
-		pos = summ0.rfind("<h2 class")									# i.d.R. am Ende bei Serien:
-		if pos > 0:														#	<h2 class="h1fxlzxk tyrgmig"
-			summ0  = summ0[:pos]	
-		PLog("summ0_2: " + summ0)
-			
-		mark = 'longInfoText":{"items'; len_mark = len(mark)			# Web: Box Details	
-		pos = page.find(mark)
-		PLog(page[pos:pos+200])		
-		summ1 = stringextract(mark, 'style"', page[pos:])
-		summ1 = stringextract('text":"', '"', summ1)
-		PLog("summ1: " + summ1)
+		html = stringextract('class="p4fzw5k tyrgmig m1iv7h85', 'Darsteller', page)
+		extras=[]
+		bl = blockextract('class="p4fzw5k tyrgmig m1iv7h85', html, '</p')	# Web oben, Bsp. Herr der Ringe
+		for item in bl:
+			if "Darsteller<" in item:								# Team am häufigsten im json-Teil, s.u.
+				break
+			line = stringextract('m1iv7h85">', '</p', item)
+			if line:
+				extras.append(line)
+		extras = "\n\n".join(extras)
+		extras = extras.replace('<br/><br/>',"\n\n")
+		PLog("extras: " + extras)			
 	
-		summ3 = stringextract('PageViewHistory"]', '"])</script>', page)# 
-		PLog(summ3[:80])
-		if len(summ3) <= 10 or "[" in summ3:							# Bsp. Zukunftspreis 2012: \n40:Ta4c,
-			summ3=""													# od. jung-radikal-organisiert
-		else:
-			summ3 = stringextract('PageViewHistory"]', 'next_f.push([1,"9', page)	# summ3 ausdehnen
-			summ3 = summ3[10:]											# skip \n40:T6c3 o.ä. java-Marke
-		if summ3 == "":													# 
-			summ3 = stringextract('"EpisodePage"', '</script>', page)	# Lebensmitteltricks
-			summ3 = " | " + summ3[11:]											# skip \n43:T4bf, o.ä. java-Marke		
-			
-		PLog("summ3: " + summ3)		
 		
-		summ = "%s\n\n%s\n\n%s" % (summ0, summ1, summ3)
-		if head:
-			summ = summ + head + "\n"
-		if summ0:
-			summ = summ + summ0 
-		if summ1:
-			summ = summ + summ1 
-		if summ3:
-			summ = summ + summ3
+		pos = page.find('remoteConfigUrl')							# wie ZDF_Graphql_WebDetails
+		page = page[pos:]			
+		page = page.replace('\\"', '"')			
+				
+		descr = stringextract('"description","content":"', '"', page)
+		longinfo = stringextract('"longInfoText"', '"Darsteller', page)
+		longinfo = stringextract('"text":"', '"', longinfo)		
+		
+		summ = descr
+		if longinfo:
+			summ =  "%s\n%s" % (summ, longinfo)
+		if extras:
+			summ =  "%s\n%s" % (summ, extras)
+		
+		PLog("summ: " + summ)		
+		
+		if "loadRecommendations" in page:
+			team = stringextract('Darsteller"', 'loadRecommendations', page)	# Darsteller + Stab
+		else:
+			team = stringextract('Darsteller"', 'VideoAvailability', page)	# Darsteller + Stab
+		artists = stringextract('"text":"', '"', team)
+		stab = team.split('"Stab"')[-1]
+		PLog("stab: " + stab)
+		stab = stringextract('text":"', '"', stab)
+		
+		if artists:	
+			summ = "%s\n\n[B]Darsteller:[/B] %s" % (summ, artists)
+		if stab:	
+			summ = "%s\n\n[B]Stab:[/B] %s" % (summ, stab)	
+				
+		PLog("summ_raw: " + summ)
+		summ = summ.replace('\\u003cul',"")
+		summ = summ.replace('\\u003e',"")
+		summ = summ.replace('\\u003cli',"\n")
+		summ = summ.replace('\\u003c',"")
+		summ = (summ.replace('/li'," ").replace('/ul',"").replace('ulli',""))
+		summ = summ.replace('&quot;','"')
 
-		summ = summ.replace('\\u003c',"").replace('\\u003e',"")			# <br>
-		summ = summ.replace('/strong',"").replace('strong',"")			# 
-		summ = summ.replace('<br/><br/>',"\n\n").replace('br/'," \n")	
-		summ = summ.replace('"])</script><script>self.__next_f.push([1,"', " ")	# java-Verkettung innerhalb Text
-		summ = summ.replace('"])</script><script>self.__', " ")			# Textende s.o.: ..self.__next_f.push([1,"9
-		summ = summ.replace('/button>',"")
-		summ = unescape(summ); 
-		summ = (summ.replace('"', '').replace('\\', '').replace('/span>', ''))
-
-		summ = cleanhtml(summ)
 		PLog("summ_zdf: " + summ)			
 					
 	#-----------------	
