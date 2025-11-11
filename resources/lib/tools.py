@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>14</nr>								# Numerierung für Einzelupdate
-#	Stand: 09.11.2025
+# 	<nr>15</nr>								# Numerierung für Einzelupdate
+#	Stand: 11.11.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -579,13 +579,13 @@ def Context(title, path, img, mode):
 	PLog(title);  PLog(path); PLog(img); PLog(mode);
 	
 	if "ShowSeason" in mode:
-		page, msg = get_page(path=path, header=HEADERS)
+		page, msg = get_page(path=path, header=HEADERS)	# futura
 		try:
 			jsonObject = json.loads(page)
 			PLog(str(jsonObject)[:80])
 			# Bsp.: www.zdf.de/video/serien/the-rookie-100/the-hammer-100 ->
-			#	www.zdf.de/video/serien/the-rookie-100
-			surl = jsonObject["document"]["sharingUrl"]
+			#		www.zdf.de/video/serien/the-rookie-100:
+			surl = jsonObject["document"]["sharingUrl"]	# Web-Url
 			pos = surl.rfind("/")
 			path = surl[:pos]
 			new_url, msg = get_page(path, GetOnlyRedirect=True)				
@@ -605,7 +605,7 @@ def Context(title, path, img, mode):
 			PLog("ShowSeason_error: " + msg)
 		
 		PLog("params_Context: "); PLog(path); PLog(img);
-		if path:
+		if path and "-movie-" not in path:
 			dirID = "ZDF_KatSeriePre"
 			fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
 				(quote(title), quote(path), quote(img))
@@ -616,7 +616,7 @@ def Context(title, path, img, mode):
 		else:
 			icon = R(ICON_INFO)
 			msg1 = "Suche Serie zum Video:"
-			msg2 = 'leider nichts gefunden.'				
+			msg2 = 'keine Serie gefunden.'				
 			PLog(msg2)
 			xbmcgui.Dialog().notification(msg1,msg2,icon,3000)			
 	
