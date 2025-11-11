@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>290</nr>										# Numerierung für Einzelupdate
+# 	<nr>291</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.3'
-VDATE = '05.11.2025' 
+VDATE = '11.11.2025' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -11676,6 +11676,9 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True):
 	availInfo = transl_json(availInfo)
 	channel = stringextract('"channel":"',  '"', page)
 	sharingUrl = stringextract('"sharingUrl":"',  '"', page)
+	if not scms_id:
+		scms_id = stringextract('"externalId":"',  '"', page)
+	PLog("scms_id: " + scms_id)
 
 	if sharingUrl:
 		path_org = sharingUrl
