@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>15</nr>								# Numerierung für Einzelupdate
-#	Stand: 11.11.2025
+# 	<nr>16</nr>								# Numerierung für Einzelupdate
+#	Stand: 12.11.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -573,13 +573,18 @@ def refresh_epg():
 #----------------------------------------------------------------
 # Kontextmenü 
 # Aufruf addDir -> RunScript
+# bei Bedarf Sender-spez. Funktionen auslagern, hier verteilen
 # 
 def Context(title, path, img, mode):
 	PLog('Context:'); 
 	PLog(title);  PLog(path); PLog(img); PLog(mode);
 	
-	if "ShowSeason" in mode:
-		page, msg = get_page(path=path, header=HEADERS)	# futura
+	if "ShowSeason" not in mode:							# bisher..
+		PLog("not_supported: " + mode) 
+		return
+	
+	if "zdf-prod-futura" in path or "www.zdf.de" in path:
+		page, msg = get_page(path=path, header=HEADERS)		# futura ZDF
 		try:
 			jsonObject = json.loads(page)
 			PLog(str(jsonObject)[:80])
@@ -590,19 +595,19 @@ def Context(title, path, img, mode):
 			path = surl[:pos]
 			new_url, msg = get_page(path, GetOnlyRedirect=True)				
 			
-			page, msg = get_page(path=new_url)			# nur für img
+			page, msg = get_page(path=new_url)				# nur für img
 			imgset = stringextract("imageSrcSet=", '/>', page)
 			imgset = blockextract("https", imgset)
 			img = R(ICON_DIR_FOLDER)
 			for item in imgset:
 				PLog(item)
 				if "1280w" in item:
-					img = item.split(" ")[0]			# ..1280x720?cb=1743085107028 1280w
+					img = item.split(" ")[0]				# ..1280x720?cb=1743085107028 1280w
 					break
 		except Exception as exception:
 			path=""
 			msg = str(exception)
-			PLog("ShowSeason_error: " + msg)
+			PLog("ShowSeason_error_ZDF: " + msg)
 		
 		PLog("params_Context: "); PLog(path); PLog(img);
 		if path and "-movie-" not in path:
@@ -613,12 +618,44 @@ def Context(title, path, img, mode):
 			PLog("action_Context: " + action)
 			action=quote(action)
 			xbmc.executebuiltin('RunAddon(%s, %s)'  % (ADDON_ID, action))
-		else:
-			icon = R(ICON_INFO)
-			msg1 = "Suche Serie zum Video:"
-			msg2 = 'keine Serie gefunden.'				
-			PLog(msg2)
-			xbmcgui.Dialog().notification(msg1,msg2,icon,3000)			
+			exit()
+	
+	if "api.ardmediathek" in path:							# ARD
+		# % (sender, urlId)
+		base = "https://api.ardmediathek.de/page-gateway/pages/%s/grouping/%s?embedded=true"
+		page, msg = get_page(path=path)
+		
+		# typ:  SEASON_SERIES, SINGLE, INFINITE_SERIES (z.B. Nachrichten, nicht verw.):
+		typ = stringextract('coreAssetType":"', '"', page)	
+		pub =  stringextract('publicationService":', 'logo"', page)
+		sender = stringextract('name":"', '"', pub)
+		show = stringextract('show":', 'image"', page)
+		show_id = stringextract('id":"', '"', show)
+		title = stringextract('title":"', '"', show)
+		
+		sender = sender.replace("Das Erste", "ard")
+		surl = base % (sender, show_id)
+
+		#  new_url, msg = get_page(path=surl, GetOnlyRedirect=True) # nicht nötig
+		new_url = surl
+		PLog("coreAssetType: %s, sender: %s, show_id: %s, new_url: %s" % (typ, sender, show_id, new_url))
+		
+		if new_url and "SEASON" in typ:
+			dirID = "resources.lib.ARDnew.ARDStartRubrik"
+			fparams="&fparams={'title': '%s', 'path': '%s'}" %\
+				(quote(title), quote(new_url))
+			action="action=dirList&dirID=%s&fparams=%s"	% (dirID, fparams)
+			PLog("action_Context: " + action)
+			action=quote(action)
+			xbmc.executebuiltin('RunAddon(%s, %s)'  % (ADDON_ID, action))
+			exit()		
+		
+	# -----------------------------------					# Fehlschlag
+	icon = R(ICON_INFO)
+	msg1 = "Suche Serie zum Video:"
+	msg2 = 'keine Serie gefunden.'				
+	PLog(msg2)
+	xbmcgui.Dialog().notification(msg1,msg2,icon,3000)				
 	
 #----------------------------------------------------------------
 
