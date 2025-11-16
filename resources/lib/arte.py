@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>70</nr>								# Numerierung für Einzelupdate
-#	Stand: 13.11.2025
+# 	<nr>71</nr>								# Numerierung für Einzelupdate
+#	Stand: 16.11.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -322,7 +322,7 @@ def EPG_Today(ID="", OnlyNow=""):
 	lvon = L("von"); lbis = L("bis")
 	ldauer = L("Dauer")
 	
-		
+	mediatype=""	
 	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
 		mediatype='video'
 	ret_list=[]	
@@ -384,8 +384,9 @@ def EPG_Today(ID="", OnlyNow=""):
 			ret_list = [title, tag, summ, img]				# -> get_live_data
 
 		if not OnlyNow:										# ganzes EPG					
-			prgid=py2_encode(prgid); 
-			title=py2_encode(title);	
+			prgid=py2_encode(prgid); img=py2_encode(img);
+			tag_par=py2_encode(tag_par); title=py2_encode(title);
+			summ_par=py2_encode(summ_par);				
 			fparams="&fparams={'img':'%s','title':'%s','pid':'%s','tag':'%s','summ':'%s','dur':'%s','geo':'%s'}" %\
 				(quote(img), quote(title), quote(prgid), quote(tag_par), quote(summ_par), dur, geo)
 			addDir(li=li, label=label, action="dirList", dirID="resources.lib.arte.SingleVideo", 
