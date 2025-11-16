@@ -35,8 +35,8 @@ elif PYTHON3:
 # für Python 2.* muss der  Aufruf Kontextmenü unterdrückt
 #	werden, sonst öffnet das Modul bei jedem Menüwechsel
 #	 ein leeres textviewer-Fenster
-if "'context'" in str(sys.argv) or "ShowSumm" in str(sys.argv):		# Aufruf Kontextmenü
-	from util import *
+if "'context'" in str(sys.argv) or "ShowSumm" in str(sys.argv):
+	from util import *									# Aufruf Kontextmenü
 	msg = "callfrom_context"
 else:
 	from resources.lib.util import *
@@ -829,4 +829,15 @@ if "ShowSumm" in str(sys.argv):											# Kontextmenü: Video-Inhaltstext im t
 		
 		
 		
-		
+
+
+
+
+
+
+
+
+
+
+
+

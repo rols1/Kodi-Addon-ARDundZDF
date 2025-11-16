@@ -113,7 +113,7 @@
   	<setting label="Modul Video-Playlist: gesehene Beiträge löschen ab" type="select" id="pref_delete_viewed" default="75%"
 		values="25%|50%|75%|100%"/>
 	<setting label="Zuletzt-gesehen-Liste: max. Anzahl" type="select" values="50|100|200|500" default="100" id="pref_max_videos_startlist"/>
-     <setting label="Modul ARD Neu: Mehr-Beiträge zeigen (thematisch ähnliche)" type="bool" id="pref_more" default="true"/>
+     <setting label="ARD / ZDF: Serie via Kontextmenü zeigen" type="bool" id="pref_show_season" default="true"/>
     <setting type="sep"/>
    	<setting label="Bildersammlungen: Bildinfos als Wasserzeichen" type="bool" id="pref_watermarks" default="false"/>
    	<setting label="Bildersammlungen: Fontgröße Wasserzeichen" type="select" id="pref_fontsize" default="auto"

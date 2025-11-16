@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>291</nr>										# Numerierung für Einzelupdate
-VERSION = '5.3.3'
-VDATE = '11.11.2025' 
+VERSION = '5.3.4'
+VDATE = '16.11.2025' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -9753,7 +9753,7 @@ def ZDF_Recommendation(title, path, sethome="true"):
 # Aufruf ZDF_Recommendation und ZDF_KatSub
 # Auswertung json-Objekte via ZDF_getKat_content
 # Ziel für Einzelbeitrag -> ZDF_getApiStreams,
-# Ziel für Folgebeiträge -> ZDF_RubrikSingle
+# Ziel für Folgebeiträge -> ZDF_KatSeriePre
 # mehr=true: Mehr-Kennzeichnung vor Titel (Empfehl., nicht in ZDF_KatSub)
 # 
 def ZDF_Graphql_get_json(json_objs, mehr=""):								
@@ -9801,14 +9801,7 @@ def ZDF_Graphql_get_json(json_objs, mehr=""):
 			addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)			
 		else:
-			'''		futura-Variante ab V5.3.3 entfernen:
-			base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
-			url = base % coll_id
-			fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" %\
-				(quote(url), quote(title), "ZDF")
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tag)
-			'''	
+			# futura-Variante ab V5.3.3 entfernt (-> ZDF_RubrikSingle)
 			
 			url= "https://www.zdf.de/" + coll_id	# https://www.zdf.de/die-kuechenschlacht-106
 			# typ: DEFAULT_NO_SECTIONS oder DEFAULT_WITH_SECTIONS egal

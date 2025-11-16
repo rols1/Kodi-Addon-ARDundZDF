@@ -812,18 +812,21 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		if mediatype == "video":										# Inhaltstext für Video / Serie zeigen
 			items = ["api.ardmediathek|ARD", "zdf-prod-futura|ZDF",		# unterstützte Sender
 					"www.3sat.de|3sat", "www.zdf.de|ZDF"]
-			org_id=""
+			found=False
 			for item in items:
-				org, org_id  = item.split("|")
-				if org in fparams:
+				surl, org_id  = item.split("|")
+				if surl in fparams:
+					found=True
 					break
-			if org_id and EPG_ID == "":									# Inhaltstext nicht bei Livestreams
+			PLog("found: %s, surl: %s, org_id: %s" % (str(found),surl, org_id))
+			
+			if found and EPG_ID == "":									# Inhaltstext nicht bei Livestreams
 				try:
 					img=""
 					s = fparams.split("&fparams=")[1]
 					json_string = s.replace("'", "\"")
 					f = json.loads(json_string)
-					path = f["path"]
+					path = f["path"]									# bei Bedarf "url" ergänzen
 					title = f["title"]
 					if "img" in f:
 						img = f["img"]
@@ -835,12 +838,13 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					PLog("fparams_error: " +  str(exception))
 					path=""			
 				if path:												# sinnlos ohne path
-					fp = {'title': title, 'path': path, 'ID': org_id, 'mode': 'ShowSumm'}
-					fparams_ShowSumm = "&fparams={0}".format(fp)		# -> Inhaltstext
-					PLog("fparams_ShowSumm: " + fparams_ShowSumm[:80])	
-					fp = {'title': title, 'path': path, 'img': img, 'mode': 'ShowSeason'}
-					fparams_ShowSeason = "&fparams={0}".format(fp)		# -> Serie zeigen
-					PLog("fparams_ShowSeason: " + fparams_ShowSeason[:80])	
+					if SETTINGS.getSetting('pref_show_season') == 'true':	# default
+						fp = {'title': title, 'path': path, 'ID': org_id, 'mode': 'ShowSumm'}
+						fparams_ShowSumm = "&fparams={0}".format(fp)		# -> Inhaltstext
+						PLog("fparams_ShowSumm: " + fparams_ShowSumm[:80])	
+						fp = {'title': title, 'path': path, 'img': img, 'mode': 'ShowSeason'}
+						fparams_ShowSeason = "&fparams={0}".format(fp)		# -> Serie zeigen
+						PLog("fparams_ShowSeason: " + fparams_ShowSeason[:80])	
 															
 
 		if SETTINGS.getSetting('pref_exist_inlib') == 'true':			# Abgleich Medienbibliothek
@@ -2223,6 +2227,7 @@ def time_to_minutes(time_str):
 #---------------------------------------------------------------- 
 # Gibt Differenz zwischen 2 timestrings zurück
 # Format passend für ZDF-EPG
+# tstr1=enddate, tstr2=startdate
 # now_check=True wenn now zwischen tstr1 und tstr2
 #
 def time_calc_diff(tstr1, tstr2):

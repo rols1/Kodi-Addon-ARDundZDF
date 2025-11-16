@@ -10,6 +10,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.11.2025	5.3.4
+			ZDF_Verpasst: Extraktion Titel einschl. Episodentitel aus Bildtext (img_alt,
+			Problem: verschiedene Hochkommata), Fix fehlendes Bild bei Partnersendern.
+			ArteStart (Modul arte): Mehr-Button ergänzt nach arte-Begrenzung auf 10 
+			Beiträge.
+			Arte-EPG: überarbeitet - ausgelagert von GetContent, Code bereinigt, JETZT-
+			Kennzeichnung, Rückgabe akt. Sendung (OnlyNow) umgestellt von sticker-
+			Auswertung auf Zeitabgleich (time_translate, time_calc_diff), Anpassung
+			get_live_data, pageProps-Values (alte Web-json-Inhalte) entfernt.
+			ZDF_KatSeriePre: Kennzeichung neuer Staffeln via Schlüssel newContentStatus
+			im Web mit fett: ("NEU").
+			ZDF_getKat_json: Kennzeichung Infotext in Liste einer Kategorie  mit fett: 
+			"NEUER INHALT" via Schlüssel "editorialDate", falls jünger als 2 Tage.
+			addDir (Modul util): Kontext-Menü für Seriensuche zum Video ergänzt mit
+			fparams_ShowSeason, neue Funktion Context in Modul tools (direkter Call von
+			ZDF_KatSeriePre via RunAddon) - Github-issue #45.
+			Serie via Kontextmenü zeigen (ARD, ZDF): Änderung setting.xml Kategorie
+			"Modul-Einstellungen" (pref_more -> pref_show_season).
+			ARDStartSingle: Code Serien_Mehr_Test nach Wegfall pref_more und Einführung
+			Kontextmenü für Seriensuche entfernt.
+			
+
 02.11.2025	5.3.3
 			MVWSearch (Modul yt): Auswertung totalResults an geändertes Format im Web
 			angepasst.
@@ -1434,6 +1456,9 @@ CHANGE HISTORY
 			Modul ARDnew: HBBTV-Quellen ergänzt, Umstellung MP4- + HLS-Quellen -> json, 
 			Anpassungen ARDStartSingle, ARDStartVideoHLSget, ARDStartVideoHBBTVget,
 			einschl. UHD-Erkennung.
+			get_summary_pre (util): ZDF-Bereich erneuert, Doppel entfernt, Darsteller
+			und Stab erfasst, Zusatztext aus html-Bereich erfasst (Bsp.: Herr der Ringe).
+			
 			
 
 12.02.2023 4.6.1

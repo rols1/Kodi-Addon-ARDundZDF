@@ -2167,42 +2167,8 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 		return										# 13.11.2021 notw. für Rückspr. z. Merkliste
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
-	PLog('Serien_Mehr_Test')
-	# zusätzl. Videos zur Sendung (z.B. Clips zu einz. Nachrichten). 
-	# 23.04.2024 Serienhinweis, falls Beitrag Bestandteil einer Serie ist
-	#	(availableSeasons)
-	if SETTINGS.getSetting('pref_more') == 'true':
-		VideoObj = page["widgets"][0]				# 
-		if "show" in VideoObj: 						# Serienhinweis?
-			PLog("show_detect")
-			if "availableSeasons" in VideoObj["show"]:
-				PLog("serie_detect: %s" % str(VideoObj["show"])[:80])
-				sid = VideoObj["show"]["id"]
-				title =  "[B]Serie[/B]: %s" % VideoObj["show"]["title"]
-				img =  VideoObj["show"]["image"]["src"]
-				img = img.replace('{width}', '640')
-				alt =  VideoObj["show"]["image"]["alt"]
-				anz = VideoObj["show"]["availableSeasons"]
-				if anz:								# None, "1", "2",..
-					typ = VideoObj["show"]["coreAssetType"]
-					tag = u"Serie | Staffeln: %s" % len(anz)
-					summ = VideoObj["synopsis"]
-					path = "https://api.ardmediathek.de/page-gateway/pages/daserste/grouping/%s" % sid
-					PLog("serie: %s, path: %s" % (title, path))
-					path=py2_encode(path); title=py2_encode(title); 
-					fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': 'ARDStartSingle'}" %\
-						(quote(path), quote(title))
-					addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik",\
-						fanart=img, thumb=img, tagline=tag, summary=summ, fparams=fparams)
-				else:
-					PLog("serie_anz_fehlt")
-	
-		if len(page["widgets"]) > 1:
-			VideoObj = page["widgets"][1]					# Mehr-Beiträge hinter den Daten zum gewählten Video
-			if "teasers" in VideoObj:						# Teasers-extrakt in get_json_content
-				PLog('Teasers: ' + str(len(VideoObj["teasers"])))
-				get_json_content(li, VideoObj, ID=ID, mehrzS=True, mark='')	
-	
+	PLog('Serien_Mehr_Test_entfallen')				# Wegfall in 5.3.4 zugunsten Kontextmenü mit pref_show_season
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------
