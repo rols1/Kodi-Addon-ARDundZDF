@@ -4,8 +4,8 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-# 	<nr>8</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.05.2024
+# 	<nr>9</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.11.2025
 #
 
 from __future__ import absolute_import
@@ -54,6 +54,7 @@ STARTLIST		= os.path.join(ADDON_DATA, "startlist") 		# Videoliste mit Datum ("Zu
 PLAYLIST_ALIVE 	= os.path.join(ADDON_DATA, "playlist_alive")	# Lebendsignal für PlayMonitor (leer)
 COUNT_STOP 	= os.path.join(ADDON_DATA, "count_stop")			# Stopsignal für Countdown-Thread (leer)
 MENU_STOP		= os.path.join(ADDON_DATA, "menu_stop") 		# Stopsignal für Tools-Menü (Haupt-PRG)
+FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")			# Flag PlayVideo_Direct -> strm-Modul
 
 
 ICON 			= 'icon.png'			# ARD + ZDF
@@ -532,7 +533,7 @@ def PlayMonitor(startpos):
 
 		timestamp, title, add_url, thumb, Plot, status = item.split('###')
 		if "neu ab" in status:
-			seekTime = re.search(r'neu ab (\d+) sec', status).group(1)		# Seek-Pos. aus Playlist übernehmen
+			seekTime = re.search(r'neu ab (\d+) sec', status).group(1)	# Seek-Pos. aus Playlist übernehmen
 		PLog("Nr.: %s | %s | ab %s sec" % (play_cnt+1, title[:80], seekTime))
 		msg2 = "Titel %d von %d" % (play_cnt+1, len(PLAYLIST))
 		xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,2000)
@@ -542,9 +543,12 @@ def PlayMonitor(startpos):
 		#	(kein Problem mit inputstream.adaptiv-Addon)
 		# Exception-Behandl. für nicht verfügb. Videos:
 		timestamp, title, add_url, thumb, Plot, status = item.split('###')
-		streamurl = get_streamurl(add_url)								# Streamurl ermitteln (strm-Modul)
+		streamurl = get_streamurl(add_url, title)						# Streamurl ermitteln (strm-Modul)
 		PLog("streamurl: " + streamurl)
 		try:															#  playlist="true" = skip Startliste:
+			if os.path.exists(FLAG_OnlyUrl):							# Lockdatei für Synchronisierung strm-Liste?	
+				os.remove(FLAG_OnlyUrl)									# entfernen, sonst Abbruch in PlayVideo
+				PLog("PlayMonitor_onlyurl_removed")														
 			play_time,video_dur = PlayVideo(streamurl, title, thumb, Plot, playlist="true", seekTime=seekTime)
 		except Exception as exception:
 			PLog(str(exception))

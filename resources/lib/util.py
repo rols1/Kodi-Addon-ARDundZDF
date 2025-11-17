@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>145</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.11.2025
+# 	<nr>146</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.11.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3603,7 +3603,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 	
 	PLog("FLAG_OnlyUrl_detect: " + str(os.path.exists(FLAG_OnlyUrl)))
 	if os.path.exists(FLAG_OnlyUrl):					# Thread-Irrläufer strm-Modul, Abbruch
-		return
+		return 0,0										# play_time,video_dur
 		exit(0)
 
 	import sqlite3										# Abfrage MyVideos*.db
