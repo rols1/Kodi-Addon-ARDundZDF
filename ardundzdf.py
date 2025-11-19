@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>292</nr>										# Numerierung für Einzelupdate
+# 	<nr>293</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.4'
 VDATE = '16.11.2025' 
 
@@ -9379,7 +9379,7 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 		skip_titles = ["Livestreams", "Nachrichten und Politik"]	# ZDFheute Nachrichten vorhanden
 		for item in web_cluster:
 			PLog(item[:100])
-			wtitle = stringextract('aria-label="', '"', item		# Web-Titel
+			wtitle = stringextract('aria-label="', '"', item)		# Web-Titel
 			if wtitle in skip_titles:
 				continue
 
