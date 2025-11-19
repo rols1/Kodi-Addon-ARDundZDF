@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>291</nr>										# Numerierung für Einzelupdate
+# 	<nr>292</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.4'
 VDATE = '16.11.2025' 
 
@@ -8576,9 +8576,11 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 		genre_id = path.split(pmark)[-1]
 	
 	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)		# 5 min, escape-clean
+	img = R(ICON_DIR_FOLDER)										# Default -> ZDF_KatSeriePre
 	if not page:
 		newpath = url_check(path, caller="ZDF_Graphql_WebDetails", dialog=False)
 		page, msg = get_page(newpath)
+		img = ZDF_get_img(page, mode="web")
 		#mark = '"%s' %	canonID										passt nicht für A-Z
 		#pos = page.find(mark)										# addon-relevante Inhalte
 		pos = page.find('remoteConfigUrl')							# (2x), addon-relevante Inhalte ab 1
@@ -8588,7 +8590,7 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 	collmark = "metaCollectionId"									# Default für Sub's 	
 	
 	if "getpage" in mode:											# ZDF_KatSeriePre
-		return page, DictID, newpath
+		return page, DictID, newpath, img
 
 	if page:
 		try:														# Header-Params für Graphql-Call
@@ -8821,9 +8823,9 @@ def ZDF_KatSeriePre(title, path, img):
 	t_org=title
 
 	# newpath: redirected
-	page, DictID, newpath = ZDF_Graphql_WebDetails(path, mode="getpage")
+	page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")
 	PLog("DictID: %s | %s" % (DictID, page[:80]))
-
+	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')									# Home-Button
 
@@ -9377,14 +9379,14 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 		skip_titles = ["Livestreams", "Nachrichten und Politik"]	# ZDFheute Nachrichten vorhanden
 		for item in web_cluster:
 			PLog(item[:100])
-			wtitle = stringextract('aria-label="', '"', item)
+			wtitle = stringextract('aria-label="', '"', item		# Web-Titel
 			if wtitle in skip_titles:
 				continue
 
 			missed = True
 			for atitle in ApiCluster:
 				#PLog("atitle: %s | wtitle: %s" % (atitle, wtitle))
-				if wtitle in atitle:								# auch im Api?
+				if wtitle in atitle:								# Web-Titel=Api-Zitel?
 					missed = False
 					break
 			if missed:
@@ -9490,7 +9492,6 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 			PLog("Satz10_2:")
 			PLog("multi: " + str(multi)); PLog(title); PLog(href); PLog(img);
 			title=py2_encode(title); href=py2_encode(href);
-			
 			
 			fparams="&fparams={'title': '%s', 'path': '%s'}" % (quote(title), quote(href))
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_WebMoreSingle", fanart=img, 
@@ -10124,8 +10125,9 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 	if url.endswith("sendungen-100"):							# AZ Gesamt ca. 12 MByte -> Dict, Akt. ZDF_AZList
 		page = Dict("load", "ZDF_sendungen-100", CacheTime=ZDF_CacheTime_AZ)
 		AZ=True
-	if not page:	
-		page, msg = get_page(path=url)
+	if not page:
+		page, msg = get_page(path=url, GetOnlyRedirect=True)	
+		page, msg = get_page(path=page)
 		if not page:											# nicht vorhanden?
 			msg1 = 'ZDF_RubrikSingle: [B]%s[/B] kann nicht geladen werden.' % title
 			msg2 = msg
@@ -10166,11 +10168,7 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 					if "ard_video_ard" in scms_id:				# ext. Einzelvideo
 						ZDF_Graphql_Video(title, scms_id, sharingUrl)
 					else:										# ZDF-Serie via Graphql
-						staffel_list=[]; 						# dummie für Abgleich in ZDF_Episodes_Graphql
-						sid = url.split("/")[-1]
-						jsonID = "ZDF_Graphql_sid_%s" % sid
-						ZDF_Episodes_Graphql(sid, staffel_list, surl=sharingUrl)	# Step1: Graphql-Call mit sid
-						ZDF_Episodes_Graphql(sid, staffel_list, jsonID=jsonID)		# Step2: Liste via jsonID
+						ZDF_KatSeriePre(title, path=sharingUrl, img="")						
 					return
 
 		else:
@@ -10430,50 +10428,67 @@ def ZDF_Live(url, title): 											# ZDF-Livestreams von ZDFStart
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 #-------------------------
-def ZDF_get_img(obj, landscape=False):
-	PLog('ZDF_get_img:')
+# mode=web: Webseite in page
+#
+def ZDF_get_img(obj, landscape=False, mode=""):
+	PLog('ZDF_get_img: ' + mode)
 	PLog(str(obj)[:60])	
 	
 	minWidth=1280					# 1280x720
 	if landscape:
 		minWidth=1140				# 1140x240
 	img=""
-	try:
-		if("layouts" in obj):							# ZDF_get_contentAZ (api.zdf, futura-api) 
-			cnt=0
-			for width,imageObject in list(obj["layouts"].items()):	
-				if cnt == 0:
-					img_first = imageObject 			# Backup
-				cnt=cnt+1
-				w = width.split("x")[0]					# 1140x120
-				if int(w) >= minWidth:
-					img=imageObject
-					break
-			
-		if("teaserBild" in obj):
-			cnt=0
-			for width,imageObject in list(obj["teaserBild"].items()):
-				if cnt == 0:
-					img_first = imageObject["url"]		# Backup
-				cnt=cnt+1
-				if int(width) >= minWidth:
-					img=imageObject["url"]
-					break
-		if not img:
-			if("image" in obj):
+	
+	if mode == "web":										# imageSrcSet aus Webseite verwenden
+		imgset = stringextract('imageSrcSet', 'media=', obj)
+		imgs = blockextract("https://", imgset, "w,")		# Bilder
+		PLog("imgs: %d" % len(imgs))
+		for img in imgs:
+			#PLog(img)		# Debug
+			if "1280w" in img:
+				img = img.split(" 1280w")[0]
+				break
+			if " " in img:									# 1280w nicht vorhanden
+				img = img.split(" ")[0]
+		PLog("img: " + img)	
+		
+	else:
+		try:
+			if("layouts" in obj):							# ZDF_get_contentAZ (api.zdf, futura-api) 
 				cnt=0
-				for width,imageObject in list(obj["image"].items()):
+				for width,imageObject in list(obj["layouts"].items()):	
 					if cnt == 0:
-						img_first = imageObject["url"]	# Backup
+						img_first = imageObject 			# Backup
+					cnt=cnt+1
+					w = width.split("x")[0]					# 1140x120
+					if int(w) >= minWidth:
+						img=imageObject
+						break
+				
+			if("teaserBild" in obj):
+				cnt=0
+				for width,imageObject in list(obj["teaserBild"].items()):
+					if cnt == 0:
+						img_first = imageObject["url"]		# Backup
 					cnt=cnt+1
 					if int(width) >= minWidth:
-						img=imageObject["url"];
+						img=imageObject["url"]
 						break
-		if not img:										# Backup -> img
-			img = img_first
-		
-	except Exception as exception:
-		PLog("get_img_error: " + str(exception))
+			if not img:
+				if("image" in obj):
+					cnt=0
+					for width,imageObject in list(obj["image"].items()):
+						if cnt == 0:
+							img_first = imageObject["url"]	# Backup
+						cnt=cnt+1
+						if int(width) >= minWidth:
+							img=imageObject["url"];
+							break
+			if not img:										# Backup -> img
+				img = img_first
+			
+		except Exception as exception:
+			PLog("get_img_error: " + str(exception))
 
 	if not img:
 		img = R(ICON_DIR_FOLDER)
