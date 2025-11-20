@@ -12,8 +12,8 @@
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	ab Okt. 2025 Webseite geändert, TV-Daten im json-Format nur für 1 Tag
 #
-# 	<nr>36</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.10.2025
+# 	<nr>37</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.11.2025
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -311,6 +311,8 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		s_start=r[0]; href=r[1]; img=r[2]; sname=r[3];					# href=r[1] nicht verwendet
 		stime=r[4]; summ=r[5]; vonbis=r[6];today_human=r[7]; 			# today_human=r[7] noch leer
 		s_end=r[8];
+		
+		summ = summ.replace("None", "?")
 		
 		starttime = time.mktime(s_start.timetuple())					# -> unix
 		starttime = int(starttime)
