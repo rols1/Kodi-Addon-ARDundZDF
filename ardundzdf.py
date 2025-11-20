@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>293</nr>										# Numerierung für Einzelupdate
+# 	<nr>294</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.4'
 VDATE = '16.11.2025' 
 
@@ -2046,32 +2046,30 @@ def ARDAudioEventStreams(li=''):
 	# Startseite für Audiostreams: https://www.sportschau.de/fussball/how-to-audio-netcast-100.html				
 	title = u"[B]Audio:[/B] Alle Audiostreams der Fußball-Bundesliga"	# Button Audiostreams sportschau.de
 	href = 'https://www.sportschau.de/fussball/bundesliga/audiostreams-bundesliga-uebersicht-100.html'
-	img = R("tv-ard-sportschau.png")
-	thumb =	"https://images.sportschau.de/image/14367dff-c9b4-4237-8421-6a9c0e01d61e/AAABiYhYFh4/AAABibBxqrQ/16x9-1280/buli-audio-netcast-teaser-100.jpg"						
+	img = R("radio-wdr.png")
 	tag = u'Fußball-Bundesliga live hören.\nQuelle: ARD sportschau.de (WDR)' 
 	summ = u"Quelle: sportschau.de (WDR)"
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s', 'cacheID': 'ARDSport_Audios_BL1'}" %\
 		(quote(title), quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
-		thumb=thumb, tagline=tag, summary=summ, fparams=fparams)
+		thumb=img, tagline=tag, summary=summ, fparams=fparams)
 
 	title = u"[B]Audio:[/B] Alle Audiostreams der 2. Fußball-Bundesliga"# Button Audiostreams sportschau.de
 	href = 'https://www.sportschau.de/fussball/bundesliga2/audiostreams-zweite-bundesliga-uebersicht-100.html'
-	img = R("tv-ard-sportschau.png")
-	thumb =	"https://images.sportschau.de/image/14367dff-c9b4-4237-8421-6a9c0e01d61e/AAABiYhYFh4/AAABibBxqrQ/16x9-1280/buli-audio-netcast-teaser-100.jpg"						
+	img = R("radio-wdr.png")
 	tag = u'2. Bundesliga live hören.\nQuelle: ARD sportschau.de (WDR)' 
 	summ = u"Quelle: sportschau.de (WDR)"
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
 	fparams="&fparams={'title': '%s', 'path': '%s',  'img': '%s', 'cacheID': 'ARDSport_Audios_BL2'}" %\
 		(quote(title), quote(href), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportNetcastAudios", fanart=img, 
-		thumb=thumb, tagline=tag, summary=summ, fparams=fparams)
+		thumb=img, tagline=tag, summary=summ, fparams=fparams)
 	
 	title = u"[B]Audio:[/B] Live hören: Alle Spiele im DFB Pokal"		# Button Audiostreams sportschau.de
 	href = 'https://www.sportschau.de/fussball/dfbpokal/audiostreams-dfb-pokal-uebersicht-100.html'
-	img = R("tv-ard-sportschau.png")
-	thumb =	"https://images.sportschau.de/image/5b48b637-8cc1-4228-8504-861eeb0358af/AAABiqiJb4U/AAABibBxqrQ/16x9-1280/dfb-pokal-audio-netcast-teaser-100.jpg"						
+	img = R("ard-sportschau.png")
+	thumb =	"https://images.sportschau.de/image/b48953b3-32b2-4228-a09e-1ea69e9fac5e/AAABmllcMrs/AAABmgWmO88/16x7/dfb-pokal-652.webp?width=1280"						
 	tag = u'DFB-Pokal live aus den Stadien: Bei der Sportschau hören Sie jedes Einzelspiel in voller Länge.' 
 	summ = u"Quelle: sportschau.de (WDR)"
 	title=py2_encode(title); href=py2_encode(href);	img=py2_encode(img);
@@ -2082,7 +2080,7 @@ def ARDAudioEventStreams(li=''):
 	
 	title = u"[B]Audio:[/B] Alle Audiostreams aus der Champions League"# Button Audiostreams sportschau.de
 	href = 'https://www.sportschau.de/fussball/championsleague/audiostreams-champions-league-uebersicht-100.html'
-	img = R("tv-ard-sportschau.png")
+	img = R("ard-sportschau.png")
 	thumb =	"https://images.sportschau.de/image/c99df197-9b30-4af0-9a84-3cc3e1ec991a/AAABiqiMH6k/AAABibBxqrQ/16x9-1280/cl-audio-netcast-teaser-100.jpg"						
 	tag = u'Champions League live hören.\nQuelle: ARD sportschau.de (WDR)' 
 	summ = u"Quelle: sportschau.de (WDR)"
@@ -2095,7 +2093,7 @@ def ARDAudioEventStreams(li=''):
 	title = u"[B]Audio-Livestreams auf sportschau.de[/B]"				# ARDSportLive filtert Videos heraus
 	tag = u"kommende Events: Ankündigungen mit Direktlinks"
 	summ = u"Quelle: www.sportschau.de/streams"
-	img = R("tv-ard-sportschau.png")
+	img = R("ard-sportschau.png")
 	title=py2_encode(title)
 	fparams="&fparams={'title': '%s', 'skip_video': 'True'}" % quote(title)
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportLive", fanart=img, thumb=img, 
