@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>294</nr>										# Numerierung für Einzelupdate
+# 	<nr>295</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.4'
 VDATE = '16.11.2025' 
 
@@ -8838,7 +8838,7 @@ def ZDF_KatSeriePre(title, path, img):
 	typ = "seasonByCanonical"
 	seasons = stringextract("props:data", "</script>", page)
 	PLog(seasons[:80])
-	seasons = blockextract('Season","id', seasons)
+	seasons = blockextract('Season","id', seasons, '"nodes"')
 	PLog("seasons: %d" % len(seasons))
 
 	path=py2_encode(path);		
@@ -9020,7 +9020,7 @@ def ZDF_KatSerie(title, path, typ, sid, Graphql=""):
 	episodes = header["episodes"]["nodes"]
 	cnt=0
 	
-	for item in episodes:										# s. ZDF_Graphql_get_json
+	for item in episodes:										# s. ZDF_Graphql_get_json			
 		cnt=cnt+1										
 		typ,title,tag,descr,img,url,stream,coll_id = ZDF_getKat_content(item)
 		enr = item["episodeInfo"]["episodeNumber"]
@@ -9893,23 +9893,23 @@ def ZDF_getKat_json(obj, mode="img"):
 	if mode == "movie":
 		movie_canon_id=""; avail=""; dur="";
 		pubDate=""; video=""
-		if "video" in obj:						# null möglich
+		if "video" in obj:							# null möglich
 			video = obj["video"]
-			movie_canon_id = video["canonical"]	# 	-> futura-Pfad Einzelbeitrag
+			movie_canon_id = video["canonical"]		# 	-> futura-Pfad Einzelbeitrag
 			vod = video["availability"]["vod"]
 			
 		if "currentMedia" in obj:
-			movie_canon_id = obj["canonical"]	# 	-> futura-Pfad Einzelbeitrag
+			movie_canon_id = obj["canonical"]		# 	-> futura-Pfad Einzelbeitrag
 			video = obj["currentMedia"]
 			vod = obj["availability"]["vod"]
 			
 		if video:
 			PLog("video: " + str(video)[:80])
-			#dur = video["nodes"][0]["duration"] # [] möglich
+			#dur = video["nodes"][0]["duration"] 	# [] möglich
 			dur = stringextract("duration': ", ",", str(video))
 			dur = seconds_translate(dur)
-		if vod["visibleFrom"]:				# "None" möglich
-			pubDate = vod["visibleFrom"]	# 2025-04-08T22:10:00..
+		if vod["visibleFrom"]:						# "None" möglich, Bsp.: frontal-die Doku
+			pubDate = vod["visibleFrom"]			# 2025-04-08T22:10:00..
 			pubDate = time_translate(pubDate)
 		if vod["visibleTo"]:
 			avail = vod["visibleTo"]
@@ -9920,7 +9920,7 @@ def ZDF_getKat_json(obj, mode="img"):
 				(dur, avail, pubDate, owner)
 		else:
 			movietag = u"Dauer: %s" % dur
-			if owner:						# s.o. contentOwner
+			if owner:							# s.o. contentOwner
 				movietag = u"Dauer: %s | %s" % (dur, owner)
 
 		if not video:
