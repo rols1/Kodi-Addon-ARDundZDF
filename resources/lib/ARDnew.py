@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>110</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.10.2025
+# 	<nr>111</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.11.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -3022,8 +3022,7 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						img = img.replace('{width}', '720')
 					else:
 						img = logo
-					
-					
+						
 					if 	"channel" in s:								# kann fehlen
 						channel_id = s["channel"]["id"]				# -> sender bei ARD-Alle
 						pubServ = s["channel"]["name"]
@@ -3032,7 +3031,7 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						
 					if "subline" in s:	
 						subline = s["subline"]
-						pubServ = "%s | %s" % (pubServ, subline)
+						subline = "%s | %s" % (pubServ, subline)
 					
 					if "target" in s["links"]:						# target -> Video
 						urlId = s["links"]["target"]["urlId"]
@@ -3044,8 +3043,8 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						matRat= s["maturityContentRating"]
 					
 
-					if duration and pubServ:										
-						duration = u'Dauer %s | [B]%s[/B]' % (duration, pubServ)
+					if duration and subline:										
+						duration = u'Dauer %s | [B]%s[/B]' % (duration, subline)
 						
 					if 	matRat:
 						if duration == '':
@@ -3125,12 +3124,14 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
 				else:
 					if  now_check:											# ohne path -> Livestream (wie liveswitch ZDF)
-						streamlinks  = get_ARDstreamlinks()	
-						PLog("search_livestream: %s" % sid)
+						streamlinks  = get_ARDstreamlinks()
+						PLog("sid: %s, pubServ: %s" % (sid, pubServ)); 
+						PLog("search_livestream: %s" % pubServ)
+						link=""
 						for line in streamlinks:								# s. SenderLiveListe
-							PLog("streamline: " + line[:40])
+							PLog("streamline: %s | pubServ: %s" % (line[:40], pubServ))
 							items = line.split('|')
-							if up_low(sid) in up_low(items[0]): 
+							if up_low(pubServ) in up_low(items[0]): 
 								link = items[1]									# Livestream EPGsender
 								PLog('%s: Streamlink_found: %s' % (sid, link))
 								break
