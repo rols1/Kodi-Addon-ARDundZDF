@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>296</nr>										# Numerierung für Einzelupdate
+# 	<nr>297</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.4'
 VDATE = '16.11.2025' 
 
@@ -11272,7 +11272,8 @@ def ZDF_AZList(title, element, ID="", Graphql=""):		# ZDF-Sendereihen zum gewäh
 	
 	base = ZDF_GraphqlBase % "specialPageByCanonical"
 	myvars_base = '{"staticGridClusterPageSize":6,"staticGridClusterOffset":0,"canonical":"sendungen-100","endCursor":%s,"tabIndex":%d,"itemsFilter":{"teaserUsageNotIn":["TIVI_HBBTV_ONLY"]}}'
-	ext	= '{"persistedQuery":{"version":1,"sha256Hash":"cebd1ee94931561b925c717bd1099ce59160ba2693b6957a37c6bb77eb72cae0"}}'
+#	ext	= '{"persistedQuery":{"version":1,"sha256Hash":"cebd1ee94931561b925c717bd1099ce59160ba2693b6957a37c6bb77eb72cae0"}}'
+	ext = '{"clientLibrary":{"name":"@apollo/client","version":"4.0.9"},"persistedQuery":{"version":1,"sha256Hash":"63848395d2f977dbf99ce30172c8d80038a54615574295eee6f8704c5e6fcbee"}}'
 
 	element = element.replace("0 - 9", "0+-+9")			# -> Weburl
 	path = "https://www.zdf.de/sendungen-a-z?group=%s" % element
@@ -13143,7 +13144,6 @@ if __name__ == '__main__':
 		# Memory-Bereinig. unwirksam gegen Raspi-Klemmer (s. SenderLiveListe)
 	except Exception as e: 
 		PLog('network_error_main: ' + str(e))
-
 
 
 
