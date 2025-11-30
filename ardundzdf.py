@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>298</nr>										# Numerierung für Einzelupdate
+# 	<nr>299</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.5'
 VDATE = '30.11.2025' 
 
@@ -8793,8 +8793,8 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 		this_navi=name
 	title=py2_encode(title); url=py2_encode(url) 
 	
-	label = "%s | [B]%s[/B]" % (title, name)
-	tag = "%s in %s anzeigen\naktuell: [B]%s[/B]" % (name, title, this_navi)			
+	label = "%s | [B]%s[/B]" % (py2_decode(title), name)
+	tag = "%s in %s anzeigen\naktuell: [B]%s[/B]" % (name, py2_decode(title), this_navi)			
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(url), quote(title))
 	addDir(li=li, label=label, action="dirList", dirID="ZDF_KatSub", fanart=R(ICON_DIR_FOLDER), 
 		thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)
@@ -8803,8 +8803,8 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 		tabid = obj["id"]
 		name = obj["label"]
 		url = "%s#t=%s" % (path_org, tabid)
-		label = "%s | [B]%s[/B]" % (title, name)
-		tag = "%s in %s anzeigen\naktuell: [B]%s[/B]" % (name, title, this_navi)			
+		label = "%s | [B]%s[/B]" % (py2_decode(title), name)
+		tag = "%s in %s anzeigen\naktuell: [B]%s[/B]" % (name, py2_decode(title), this_navi)			
 		
 		PLog('Satz11_navi:');
 		PLog(title); PLog(tabid); PLog(url)
@@ -9057,7 +9057,7 @@ def ZDF_KatSerie(title, path, typ, sid, Graphql=""):
 	
 		descr=py2_encode(descr); tag_par=py2_encode(tag_par);
 		fparams="&fparams={'path':'%s','title':'%s','thumb':'%s','tag':'%s','summ':'%s','scms_id':'%s','ptmdTemplate':'%s'}" %\
-			(url, title, img, tag_par, descr, scms_id, ptmdTemplate)	
+			(quote(url), quote(title), quote(img), quote(tag_par), quote(descr), scms_id, ptmdTemplate)	
 		addDir(li=li2, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 			fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)			
 			
@@ -10482,7 +10482,8 @@ def ZDF_Live(url, title): 											# ZDF-Livestreams von ZDFStart
 #
 def ZDF_get_img(obj, landscape=False, mode=""):
 	PLog('ZDF_get_img: ' + mode)
-	PLog(str(obj)[:60])	
+	if not PYTHON2:
+		PLog(str(obj)[:60])	
 	
 	minWidth=1280					# 1280x720
 	if landscape:
@@ -11352,7 +11353,9 @@ def ZDF_AZList(title, element, ID="", Graphql=""):		# ZDF-Sendereihen zum gewäh
 				label = "[B]NEU:[/B] %s" % label		
 			
 			PLog("Satz_AZobj:"); 
-			PLog(title); PLog(tag); PLog(descr[:60]);PLog(canon_id);PLog(typ);			
+			PLog(title); PLog(tag); PLog(descr[:60]);PLog(canon_id);PLog(typ);
+			title=py2_encode(title); path=py2_encode(path);
+			img=py2_encode(img);			
 
 			path = "https://www.zdf.de/serien/" + canon_id
 			if "metaType" in obj:
