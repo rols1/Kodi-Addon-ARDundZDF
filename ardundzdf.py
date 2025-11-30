@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>297</nr>										# Numerierung für Einzelupdate
+# 	<nr>298</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.5'
 VDATE = '30.11.2025' 
 
@@ -9119,7 +9119,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 			PLog("get_from_url:")
 			page, msg = get_page(path=url, header=HEADERS)
 			jsonObject = json.loads(page)
-		if urlkey:									# ZDF_RubrikSingle: "%s#cluster#%s" % (url, cnt)
+		if urlkey:									# ZDF_RubrikSingle -> "%s#cluster#%s" % (url, cnt)
 			PLog("get_from_urlkey:")
 			if "/recommendation/" in urlkey:		# recommendation-Inhalte (wie Web "clusterrecommendation"),
 				page, msg = get_page(path=urlkey, header=HEADERS)   # z.B. Empf. der Redaktion
@@ -10377,8 +10377,9 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 				if "channel" in entry:							# Zusatz Sender
 					sender = entry["channel"]
 					tag = "[B]%s[/B] | %s" % (sender, tag)
+					tag_par = tag.replace("\n", "||")
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
-					(stream, title, img, tag, descr, scms_id)	
+					(stream, title, img, tag_par, descr, scms_id)	
 				addDir(li=li2, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
 			else:
