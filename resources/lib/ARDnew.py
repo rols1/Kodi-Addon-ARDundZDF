@@ -3129,7 +3129,8 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						PLog("search_livestream: %s" % pubServ)
 						link=""
 						for line in streamlinks:								# s. SenderLiveListe
-							PLog("streamline: %s | pubServ: %s" % (line[:40], pubServ))
+							if PYTHON3:
+								PLog("streamline: %s | pubServ: %s" % (line[:40], pubServ))
 							items = line.split('|')
 							if up_low(pubServ) in up_low(items[0]): 
 								link = items[1]									# Livestream EPGsender

@@ -10,6 +10,40 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+30.11.2025	5.3.5
+			EPG_Today (Modul arte): Anpassungen für python 2.7 (py2_encode), Leer-
+			Param mediatype ergänzt.
+			PlayMonitor (Modul playlist): für get_streamurl-Call fehlenden Param title 
+			ergänzt, FLAG_OnlyUrl entfernt vor PlayVideo-Call (sonst Irrläufer-Abbruch 
+			in PlayVideo möglich).
+			PlayVideo (util): Param-Rückgabe play_time,video_dur (0,0) bei Irrläufer-
+			Abbruch ergänzt.
+			EPG (Modul EPG): "None" in summary ersetzt durch "?".			
+			ZDF_RubrikSingle: Redirect-Call für Url's aus ZDF_WebMoreSingle (Beispiel:
+			www.zdf.de/kurzfassungen/fifa-weltmeisterschaft-live-livestream-highlights-100.
+			ZDF_get_img: erweitert für img in Webseite, z.B. für ZDF_Graphql_WebDetails
+			(dort angepasst für Rückgabe-> ZDF_KatSeriePre).
+			ZDF_KatSeriePre: Blockbegrenzer "node" für Season-Auswertung ergänzt, um
+			unerwünschten newContentStatus aus Datenmüll zu vermeiden.
+			ZDF_getKat_json: Abgleich "editorialDate" (Graphql-json) für Kennzeichnung
+			"NEUER INHALT" von 2 auf 3 Tage geändert, Anpassung label in 
+			ZDF_KatSerie (fett, NEU angehängt), ZDF_Episodes_Graphql, ZDF_AZList
+			ZDF_AZList: nach ZDF-Änderung Austausch extensions (persistedQuery ->
+			clientLibrary).						
+			ZDF_getKat_json umbenannt -> ZDF_getKat_content_details.
+			ZDF_Graphql_get_json umbenannt -> ZDF_Graphql_get_seasons.
+			ZDF_WebMoreSingle: Nutzung ZDF_Graphql_WebDetails, Nutzung img + tag aus
+			ZDF_WebMore.
+			ZDF_get_content: Abgleich "editorialDate" (futura-json) für Kennzeichnung
+			NEU auf Startseite, Anpassung title und label in ZDF_PageMenu, ZDF_Rubriken,
+			ZDF_RubrikSingle. Anpassung python 2.7 in ZDF_PageMenu.
+			Radio-Livestreams: in ARDAudioEventStreams fehlende Icons in Buttons der 
+			Audiostreams ergänzt.
+			ARDVerpasst_get_json (Modul ARDnew): Param link leer vorbelegt (network_error
+			möglich) und Abgleich Livesender mit pubServ statt sid, Anpassung python 2.7.
+			ARDSportMediaPlayer: vom WDR geänderte Bild-Auswertung angepasst, Anpassung
+			python 2.7.
+
 16.11.2025	5.3.4
 			ZDF_Verpasst: Extraktion Titel einschl. Episodentitel aus Bildtext (img_alt,
 			Problem: verschiedene Hochkommata), Fix fehlendes Bild bei Partnersendern.
@@ -29,8 +63,7 @@ CHANGE HISTORY
 			Serie via Kontextmenü zeigen (ARD, ZDF): Änderung setting.xml Kategorie
 			"Modul-Einstellungen" (pref_more -> pref_show_season).
 			ARDStartSingle: Code Serien_Mehr_Test nach Wegfall pref_more und Einführung
-			Kontextmenü für Seriensuche entfernt.
-			
+			Kontextmenü für Seriensuche entfernt.		
 
 02.11.2025	5.3.3
 			MVWSearch (Modul yt): Auswertung totalResults an geändertes Format im Web

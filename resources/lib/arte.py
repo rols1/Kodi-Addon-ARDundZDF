@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ################################################################################
-#				arte.py - Teil von Kodi-Addon-ARDundZDF
+#		arte.py - Teil von Kodi-Addon-ARDundZDF ab V3.0.7 08.06.2020
 #		Inhalte der ArteMediathek auf https://www.arte.tv/de/
 #
 #	Kompatibilität Python2/Python3: Modul future, Modul kodi-six
@@ -118,8 +118,8 @@ def Main_arte(title='', summ='', descr='',href=''):
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Arte_Search", fanart=R(ICON_ARTE), 
 		thumb=R(ICON_SEARCH), tagline=tag, fparams=fparams)
-	# ------------------------------------------------------
 
+	# ------------------------------------------------------
 	title = u"%s" % L("Arte TV-Programm heute")
 	tag = "[B]%s[/B]" % arte_lang
 	fparams="&fparams={}" 
@@ -142,8 +142,8 @@ def Main_arte(title='', summ='', descr='',href=''):
 		(quote(href), quote(title), quote(summ_par), quote(img))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.Arte_Live", fanart=R(ICON_ARTE),
 		thumb=img, fparams=fparams, tagline=tag, summary=summ)
-
 	# ------------------------------------------------------
+
 	title = u"%s" % L(u"Kategorien")
 	tag = u"%s wwww.arte.tv" % L(u"einschließlich Startseite")
 	summ = u"[B]%s[/B]" % arte_lang

@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>297</nr>										# Numerierung für Einzelupdate
-VERSION = '5.3.4'
-VDATE = '16.11.2025' 
+VERSION = '5.3.5'
+VDATE = '30.11.2025' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -4770,6 +4770,7 @@ def ARDSportMediaPlayer(li, item_data):
 	
 	player=''; live=False; title='';  mp3_url=''; stream_url=''; 
 	img=''; verf=''; tag=''; summ=''; Plot=''; 
+	img_def = R("icon-bild-fehlt_wide.png")
 
 	player = stringextract('playerType":"', '"', item_data)		# audio, video
 	media = stringextract('streams":', '"meta"', item_data)		# für video dash.mpd, m3u8 + ts
@@ -4784,8 +4785,8 @@ def ARDSportMediaPlayer(li, item_data):
 				break
 	
 	title = stringextract('],"title":"', ',"', item_data)		# 29.05.2024 nach Bildtitel
-	title=decode_url(title); title=repl_json_chars(title);
 	title=title.replace('}', '') 
+	title=repl_json_chars(title);
 	
 	duration = stringextract('durationSeconds":"', '"', item_data)
 	if duration == '':
@@ -4799,11 +4800,17 @@ def ARDSportMediaPlayer(li, item_data):
 	PLog("duration: " + duration); 
 	duration = seconds_translate(duration)
 		
-	imgs = blockextract('"minWidth":', item_data, "}")
-	if len(imgs) > 0:
-		img = stringextract('value":"', '"', imgs[-1])			# letztes=größtes
+	imgs = stringextract('"images":', '"kind"', item_data)		# 29.11.2025 nach Änderung WDR
+	PLog("imgs: " + imgs)
+	img = stringextract('"url":"', '"', imgs)
+	if not img:
+		img = img_def
+	else:
+		img = img.replace('{size}', "16x9-big")			
+		img = img.replace('{width}', "640")			
 		if "." not in img.split("/")[-1]:						# Kodi braucht Extension
 			img = img + ".png"
+
 	mode = stringextract('_broadcasting_type":"', '"', item_data)
 	if mode == "live":
 		live=True
@@ -8818,7 +8825,7 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 #	schneller. Bei Switch auf Graphql Params durch Aufrufer übergeben.
 # Aufruf: ZDF_AZList, ZDF_Graphql_get_seasons
 # NEU-Kennung entfällt: editorialDate aus Episodendaten den Serien nicht
-#	zuordbar 
+#	verfügbar (außer initialSeasonId erst bei Folgeaufrufen).
 # 
 def ZDF_KatSeriePre(title, path, img):
 	PLog('ZDF_KatSeriePre: %s | %s | %s' % (title, path, img))
@@ -9034,8 +9041,8 @@ def ZDF_KatSerie(title, path, typ, sid, Graphql=""):
 		url = base % coll_id
 		title = "S%02dE%02d | %s" % (snr, enr, title)
 		label = title
-		if "NEUER INHALT" in tag:
-			label = "%s [B](NEU)[/B]" % title		
+		if "NEUER INHALT" in tag:								# NEU anhängen wg. Serien-Optik,
+			label = "[B]%s (NEU)[/B]" % title					# 	fett wg. Scrollens bei langen Titeln
 		
 		PLog("Satz18: %s" % url)
 		PLog(title); PLog(ptmdTemplate)
@@ -9216,6 +9223,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 				if stream == "":									# Bsp.: ZDFtivi -> KiKA live
 					stream = url
 				tag_par=py2_encode(tag_par);
+				title=py2_encode(title);
 				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
 					(stream, quote(title), img, quote(tag_par), descr, scms_id)
 				PLog("fparams: " + fparams)	
@@ -11272,7 +11280,6 @@ def ZDF_AZList(title, element, ID="", Graphql=""):		# ZDF-Sendereihen zum gewäh
 	
 	base = ZDF_GraphqlBase % "specialPageByCanonical"
 	myvars_base = '{"staticGridClusterPageSize":6,"staticGridClusterOffset":0,"canonical":"sendungen-100","endCursor":%s,"tabIndex":%d,"itemsFilter":{"teaserUsageNotIn":["TIVI_HBBTV_ONLY"]}}'
-#	ext	= '{"persistedQuery":{"version":1,"sha256Hash":"cebd1ee94931561b925c717bd1099ce59160ba2693b6957a37c6bb77eb72cae0"}}'
 	ext = '{"clientLibrary":{"name":"@apollo/client","version":"4.0.9"},"persistedQuery":{"version":1,"sha256Hash":"63848395d2f977dbf99ce30172c8d80038a54615574295eee6f8704c5e6fcbee"}}'
 
 	element = element.replace("0 - 9", "0+-+9")			# -> Weburl

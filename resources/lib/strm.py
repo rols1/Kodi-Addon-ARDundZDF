@@ -1247,6 +1247,7 @@ def exist_in_library(title):
 # ----------------------------------------------------------------------
 # entfernt Markierungen (fett, Color, Zeit, Serienmark.)
 def clear_titel(title):
+	PLog("clear_titel:")
 	title = cleanmark(title)				# Markierungen entf.
 	pos = title.find("|")
 	#PLog("pos: %d" % pos)
@@ -1258,6 +1259,7 @@ def clear_titel(title):
 	pos = title.find(" : ")					# Serienmark. ZDF-Beiträge (Web)
 	if pos:									# Bsp.: Friesland : Krabbenkrieg
 		title = title[pos+3:]
+	title = title.replace("(NEU)", "")		# NEU-Kennzeichnung ZDF-Bereich via editorialDate
 	#PLog(title)
 	return title
 	
