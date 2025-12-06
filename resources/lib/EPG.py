@@ -12,8 +12,8 @@
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	ab Okt. 2025 Webseite geändert, TV-Daten im json-Format nur für 1 Tag
 #
-# 	<nr>37</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.11.2025
+# 	<nr>38</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.12.2025
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -74,7 +74,6 @@ EPG_BASE 	= "http://www.tvtoday.de"
 def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	PLog('thread_getepg:')
 	
-	open(EPGACTIVE, 'w').close()						# Aktiv-Signal setzen (DICT "EPGActive")
 	icon = R('tv-EPG-all.png')
 	xbmcgui.Dialog().notification("EPG-Download", "gestartet",icon,3000)
 	xbmc.sleep(1000)									# Klemmer bei sleep vor Notification	
@@ -93,7 +92,10 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 
 	PLog("ID_list: " + str(ID_list))
 	for ID in ID_list:
-		EPG(ID=ID, load_only=True)						# EPG-Seite laden + speichern	
+		EPG(ID=ID, load_only=True)						# EPG-Seite laden + speichern
+		
+	if len(ID_list) > 0:
+		open(EPGACTIVE, 'w').close()					# Aktiv-Signal setzen (DICT "EPGActive")
 
 	xbmcgui.Dialog().notification("EPG-Download", "fertig: %d Sender" % len(sort_playlist),icon,3000)
 	
@@ -667,7 +669,7 @@ if "'context'" in str(sys.argv):										# Kontextmenü: EPG im textviewer
 		ID =  stringextract("ID': '", "'", params)
 		PLog("title: %s, ID: %s" % (title, ID))
 		EPG_rec = EPG(ID, day_offset=0)
-		PLog("EPG_rec: %s" % str(EPG_rec))
+		PLog("EPG_rec: %s" % str(EPG_rec)[:100])
 
 		cnt=0
 		for rec in EPG_rec:
