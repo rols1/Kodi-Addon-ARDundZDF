@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>299</nr>										# Numerierung für Einzelupdate
+# 	<nr>300</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.5'
 VDATE = '30.11.2025' 
 
@@ -9367,6 +9367,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 # 2. Lauf: Liste der zum Cluster-Titel ctitle passenden Beiträge
 #	(Einzel + Serien, hier nicht unterscheidbar). 
 # Nutzung ZDF_KatSub nicht möglich (Graphql-Call stark abweichend)
+# 13.12.2025 HBBTV-Funktionen nicht zum Abgleich geeignet (Cluster
+#	zwar vorhanden, json-Daten zu sehr abweichend für Graphql-Anbindung).
 #
 def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):								
 	PLog('ZDF_WebMore: ' + ctitle)
@@ -9477,6 +9479,8 @@ def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):
 			if title in skip_list:								# z.B. zdf.de/kinder (eigenes Menü)
 				continue
 		
+			ariacontrols = stringextract('aria-controls="', '"', item)	# link ->  json-Bereich
+			
 			href_list = blockextract('href="', item, "><")
 			href=""												# kann bei Live noch fehlen
 			for h in href_list:									# /video/serien/queen .. /am-abgrund-128
@@ -11776,7 +11780,10 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 		cdn_api=False
 
 	if page == "":														
-		MyDialog(msg1, msg2, '')
+		icon = R(ICON_INFO)
+		msg1 = "Stream-Problem"	
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)													
+#		MyDialog(msg1, msg2, '')
 		return
 	page = page.replace('\\/','/')
 	page=page.replace('" :', '":'); page=page.replace('": "', '":"')  # Formatanpassung für get_form_streams	

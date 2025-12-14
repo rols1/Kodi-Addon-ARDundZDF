@@ -4,8 +4,8 @@
 #			 			Verwaltung der PLAYLIST
 #	Kontextmenü s. addDir (Modul util)
 ################################################################################
-# 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.11.2025
+# 	<nr>10</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.12.2025
 #
 
 from __future__ import absolute_import
@@ -543,15 +543,22 @@ def PlayMonitor(startpos):
 		#	(kein Problem mit inputstream.adaptiv-Addon)
 		# Exception-Behandl. für nicht verfügb. Videos:
 		timestamp, title, add_url, thumb, Plot, status = item.split('###')
-		streamurl = get_streamurl(add_url, title)						# Streamurl ermitteln (strm-Modul)
-		PLog("streamurl: " + streamurl)
+		try:
+			streamurl = get_streamurl(add_url, title)						# Streamurl ermitteln (strm-Modul)
+			PLog("streamurl: " + str(streamurl))
+		except Exception as exception:
+			PLog("PlayMonitor_error1: " + str(exception))
+			msg2 = " Streamquelle fehlt!"
+			xbmcgui.Dialog().notification("PLAYLIST: ",msg2,ICON_PLAYLIST,2000)
+			continue
+
 		try:															#  playlist="true" = skip Startliste:
 			if os.path.exists(FLAG_OnlyUrl):							# Lockdatei für Synchronisierung strm-Liste?	
 				os.remove(FLAG_OnlyUrl)									# entfernen, sonst Abbruch in PlayVideo
 				PLog("PlayMonitor_onlyurl_removed")														
 			play_time,video_dur = PlayVideo(streamurl, title, thumb, Plot, playlist="true", seekTime=seekTime)
 		except Exception as exception:
-			PLog(str(exception))
+			PLog("PlayMonitor_error2: " + str(exception))
 			continue
 		percent=0; 														# noch nichts abgespielt
 		
