@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>71</nr>								# Numerierung für Einzelupdate
-#	Stand: 16.11.2025
+# 	<nr>72</nr>								# Numerierung für Einzelupdate
+#	Stand: 16.12.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -230,6 +230,8 @@ def get_live_data(name):
 	thumb = R('arte_live.png')								# Cache-thumb ist landscape
 	if href == '':
 		PLog('%s: Streamlink fehlt' % 'Arte ')
+	else:
+		PLog('arte_href: ' + href)
 	#------------------
 
 	arte_lang = Dict('load', "arte_lang")
@@ -343,8 +345,10 @@ def EPG_Today(ID="", OnlyNow=""):
 		
 		summ = item["shortDescription"]
 		if not summ:
-			summ = item["teaserText"]		
-			
+			summ = item["teaserText"]
+		if not summ:									# None möglich
+			summ=""
+		
 		prgid = item["programId"]						# 065804-000-A		
 		img = get_img(item, ID)
 
@@ -362,7 +366,7 @@ def EPG_Today(ID="", OnlyNow=""):
 			geo = "Geo: %s" % str(geo)	
 		else:
 			"Geo: ALL"
-
+			
 		blue_start = start_time[-9:-4]; blue_end = end_time[-9:-4];
 		title = py2_decode(title)
 		label = u"[COLOR blue]%s[/COLOR] | %s" % (blue_start, title)	# Sendezeit | Titel
