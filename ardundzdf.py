@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>300</nr>										# Numerierung für Einzelupdate
+# 	<nr>301</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.6'
 VDATE = '21.12.2025' 
 
@@ -9543,142 +9543,6 @@ def ZDF_StartWebCluster(ctitle=""):
 					thumb=img, tagline=folge_tag, summary=descr, fparams=fparams)					
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-				
-#-----------------------------------------------------------------------
-# Aufruf: ZDF_WebMore - einzelne Sendung via Web, Zielalternativen:
-#	1. Mit HLS-Quelle: ZDF_WebMoreVideo plus Empfehlungen (Mehr:.., 
-#		Graphql-Call abweichend zu ZDF_KatSub)
-#	2. ohne Stream-Quellen: futura-Api -> ZDF_RubrikSingle
-#		mit Anpassung nicht funktionierender doc_id's (s.u.)
-#	3. ohne ptmdTemplate-Marke: -> ZDF_KatSub (Kategorie, Subkategorie)
-#
-# Zu 1: ZDF_WebMoreVideo erstellt Buttons/Streamlisten mit Berücksichtigung 
-#	Sofortstart EIN/AUS.
-#
-def ZDF_WebMoreSingle(title, path, img, tag):								
-	PLog('ZDF_WebMoreSingle:')
-	PLog(path); PLog(img)
-	path_org=path
-	base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
-
-	page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")
-	PLog("newpath: " + newpath)
-	PLog(page[:80])
-	if page == "":
-		msg1 = 'Fehler in ZDF_WebMoreSingle:'
-		msg2 = msg
-		if not path:											# z.B.  Live DFB-Pokal aus ZDF_WebMore
-			msg2 = "Beitrag fehlt (noch)"
-		MyDialog(msg1, msg2, '')
-		return
-
-	pagetype = stringextract('page_type":"', '"', page)	
-	PLog("pagetype: " + pagetype)								# Video, TextPage, DefaultNoSectionsSmartCollection,
-																# 	
-	anz = page.count("ptmdTemplate")
-	PLog("ptmdTemplate_anz: %d" % anz)
-	# Web: typename\":\"Video\
-	videos = blockextract('typename":"Video"', page, '"target_isnewscontent"')
-	PLog("videos: %d" % len(videos))
-	
-	hls_url = stringextract('contentUrl":"', '"', page)			# im <head>-Bereich
-	PLog("hls_url: " + hls_url)
-
-	pos =  page.rfind("ptmdTemplate")							# mehrere mögl., z.B. Serien, hier nicht relevant
-	PLog("ptmdTemplate_pos: %d" % pos)
-	if pos > 0:
-		if hls_url:												# Einzelvideo -> Button + Streamlisten
-			li = xbmcgui.ListItem()
-			li = home(li, ID='ZDF')								# Home-Button
-			data = page[pos:]
-			data = data.replace('\\', '')
-			PLog("data: " + data[:200])
-			ZDF_WebMoreVideo(title, data, path, hls_url, img)
-			ZDF_Recommendation(title, path)						# Recommendations (Einzel + Folgebeiträge)
-  	
-		else:													# Fallback1: futura-api
-			base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
-			doc_id_list=["spielfilm-highlights-104|filme-104"	# Anpassung nicht funktionierender doc_id's
-				]
-			doc_id = path.split("/")[-1]
-			for item in doc_id_list:
-				old_id, new_id = item.split("|")
-				if old_id in doc_id:
-					PLog("doc_id_corrected: %s -> %s" % (old_id, new_id))
-					doc_id = new_id
-					break
-			url = base % doc_id
-			PLog("try_futura: " + url)
-			# 26.11.2025 Cluster-Error www.zdf.de/gewalt-gegen-frauen--100 | nicht lösbar
-			if url_check(url, caller='ZDF_WebMoreSingle', dialog=True): 
-				ZDF_RubrikSingle(url, title, "ZDF")				# hier ohne Recommendations-Call
-
-	else:														# Fallback2: KatSub, falls Web ohne ptmdTemplate
-		PLog("try_KatSub: " + path)	
-		ZDF_KatSub(title, path, tabid="", Graphql="")
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-#-----------------------------------------------------------------------
-# Aufruf ZDF_WebMoreSingle - Button für enthaltenes HLS-Video, Streamlisten
-#
-# Stream-Problem: über das futura-api hier nur hbbtv-Streams verfügbar, dafür
-#	enthält die Webseite  1 HSL-Stream. 
-# Lösung: der HSL-Stream wird nachträglich in die HLS-Liste gesetzt, HBBTV_List
-#	wird zu MP4_List für Downloads -> build_Streamlists_buttons.
-#
-def ZDF_WebMoreVideo(title, data, path, hls_url, img):								
-	PLog('ZDF_WebMoreVideo: ' + title)
-
-	vid_id = stringextract('id":"', '"', data)				# tivi_vcms_video_1556290-movie -> scms_id
-	dur = stringextract('duration":', ',', data)			# Sekunden, Bsp.: 5011
-	dur = seconds_translate(dur)
-	avail = stringextract('visibleTo":"', '"', data)		# 2025-05-31T21:59:00.000000+00:00
-	avail = time_translate(avail)
-	owner = stringextract('_advertiser":"', '"', data)
-	tag =  u"Dauer: %s | [B]Verfügbar bis[/B] [COLOR darkgoldenrod]%s[/COLOR] | %s" %\
-		(dur, avail, owner)		
-	summ = stringextract('description":"', '"', data)
-	Plot  = "%s||||%s" % (tag, summ)
-		
-	p = path.split("/")[-1]									# ../filme/sprengstoff-movie-100 -> href
-	scms_id = "SCMS_" + vid_id
-	PLog("vid_id: %s, scms_id: %s" % (vid_id, scms_id))
-
-	if SETTINGS.getSetting('pref_video_direct') == 'false':	# sonst Rekursion (Videostart schon in ZDF_getApiStreams)
-		href = "https://zdf-prod-futura.zdf.de/mediathekV2/document/" + p
-																# Streamlisten
-		HLS_List, MP4_List, HBBTV_List = ZDF_getApiStreams(href, title, img, tag, summ, scms_id, gui=False) 
-																# fehlende HLS_List ergänzen
-		if len(HLS_List) == 0:									# möglich: nur  HBBTV_List
-			PLog("edit_empty_HLS_List")
-			HLS_List = ['HLS, automatische Anpassung ** AUTO ** AUTO ** %s#%s' % (title,hls_url)]
-			MP4_List = HBBTV_List								# HBBTV_List -> MP4_List mit Downloads
-			HBBTV_List=[]										# schon von  ZDF_getApiStreams gelistet
-			Dict("store", '%s_HLS_List' % "ZDF", HLS_List)		# leere HLS_List überschreiben
-			Dict("store", '%s_MP4_List' % "ZDF", MP4_List)
-			
-			PLog("new_lists")
-			PLog(HLS_List); PLog(HBBTV_List);PLog(MP4_List);
-			li = xbmcgui.ListItem()
-			geoblock=""; sub_path=""; thumb=img
-			build_Streamlists_buttons(li,title,thumb,geoblock,Plot,sub_path,\
-				HLS_List,MP4_List,HBBTV_List,"ZDF","ZDF")			 # -> StreamsShow
-		else:
-			PLog("normal_Streamlists")
-			
-	else:														# Sofortstart-Button
-		li = xbmcgui.ListItem()
-		Plot="%s||||%s" % (tag, summ)		
-		href=hls_url; sub_path=""								# UT in HLS-Stream
-		href=py2_encode(href); title=py2_encode(title);
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sub_path': '%s'}" %\
-			(quote_plus(href), quote_plus(title), quote_plus(img), 
-			quote_plus(Plot), sub_path)
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=img, thumb=img, fparams=fparams, 
-			tagline=tag, summary=summ, mediatype='video')
-
-	return														# ZDF_WebMoreSingle -> Recommendations
 
 #-----------------------------------------------------------------------
 # Aufruf ZDF_RubrikSingle - holt externes ARD-Video via Graphql-Call
@@ -10181,6 +10045,7 @@ def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):
 # 22.08.2025 ret für Return statt endOfDirectory hinzugefügt (für ZDF_Barrierearm)
 # 24.08.2025 Steuerung ext. Inhalte bei leerem Cluster (Inhalte fehlen im futura-api):
 #	Einzelvideos -> ZDF_Graphql_Video, Rest -> ZDF_Episodes_Graphql (Step1, Step2).
+# 21.12.2025 ZDF_Graphql_Video (GraphqlWithExternalId) umgestellt auf ZDF_getApiStreams.
 #
 def ZDF_RubrikSingle(url, title, homeID="", ret=""):								
 	PLog('ZDF_RubrikSingle: ' + title)
@@ -10233,7 +10098,16 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 					sharingUrl = jsonObject["document"]["sharingUrl"]
 					PLog("GraphqlWithExternalId: " + scms_id)	# SCMS_page-video-ard_video_ard_dXJ..
 					if "ard_video_ard" in scms_id:				# ext. Einzelvideo
-						ZDF_Graphql_Video(title, scms_id, sharingUrl)
+						tag=""
+						try:
+							summ = jsonObject["shortText"]["text"]
+							summ = repl_json_chars(summ)
+							img = jsonObject["document"]["image"]["1200"]["url"]
+						except Exception as exception:
+							PLog("GraphqlWithExternalId_error: " + str(exception))
+							img="";summ=""					 
+						# ZDF_Graphql_Video(title, scms_id, sharingUrl)	# 21.12.2025 z.Z. außer Funktion
+						ZDF_getApiStreams(sharingUrl,title,img,tag,summ)
 					else:										# ZDF-Serie via Graphql
 						ZDF_KatSeriePre(title, path=sharingUrl, img="")						
 					return
@@ -11721,7 +11595,7 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 				title=repl_json_chars(title)
 				descr=repl_json_chars(descr); tag=repl_json_chars(tag)
 				tag_par = tag.replace("\n", "||")
-				vid_id=folge["id"]								# wie ZDF_WebMoreVideo
+				vid_id=folge["id"]
 				scms_id = "SCMS_" + vid_id						# ptmdTemplate bei Bedarf nachrüsten
 				
 				img=py2_encode(img); tag_par=py2_encode(tag_par); 
@@ -11744,7 +11618,7 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
 	PLog("ZDF_Graphql_Livestream:")
 	PLog("%s, ptmdTemplate: %s" % (title, ptmdTemplate))
-	if not ptmdTemplate:
+	if not ptmdTemplate:										# Fallback Web
 		path = "https://www.zdf.de/%s" % canon
 		page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")
 		ptmdTemplate = stringextract('ptmdTemplate":"', '"', page)
@@ -11807,7 +11681,8 @@ def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
 #	oder bei Fehlen Graphql-Call GetVideoMetaByCanonical	
 # 14.12.2025 Notification statt Dialog bei fehlendem Stream, um Playlist
 #	nicht zu blockieren
-# 19.12.2025 Vorrang für ptmdTemplate, scms_id nur noch für HBBTV verwendet.
+# 19.12.2025 Vorrang für ptmdTemplate, scms_id nur noch für HBBTV verwendet,
+#	bei futura-path Ermittlung ptmdTemplate via switch zur Webadresse.
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmdTemplate=""):
 	PLog("ZDF_getApiStreams:")
@@ -11820,6 +11695,9 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 		page, msg = get_page(path, header=header)
 	else:
 		if not ptmdTemplate:
+			PLog("get_ptmdTemplate_from_Web")
+			if "prod-futura" in path:									# switch futura-api -> Web
+				path = ZDF_BASE + "/" + path.split("/")[-1]
 			page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")
 			ptmdTemplate = stringextract('"ptmdTemplate":"', '"', page)
 			PLog("ptmdTemplate: " + ptmdTemplate)
@@ -11827,7 +11705,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 
 	if not page or '"status":404' in page:								# requests-json-Return (page3)
 		PLog(page)	
-		PLog("try_ptmdTemplate:")											# cdn-api nicht akzeptiert? -> ptmd-template
+		PLog("try_ptmdTemplate:")										# cdn-api nicht akzeptiert? -> ptmd-template
 		msg1 = "Fehler in ZDF_getApiStreams:"
 		msg=""
 		ptmd_player = 'ngplayer_2_4'									# ab 22.12.2020
