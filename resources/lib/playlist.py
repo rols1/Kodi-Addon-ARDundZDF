@@ -541,7 +541,7 @@ def PlayMonitor(startpos):
 		
 		# seek-Problem bei HLS-Streams o. EXT-X-ENDLIST tag- s. github.com/xbmc/xbmc/issues/18415
 		#	(kein Problem mit inputstream.adaptiv-Addon)
-		# Exception-Behandl. für nicht verfügb. Videos:
+		# 14.12.22025 Exception-Behandl. für nicht verfügb. Videos:
 		timestamp, title, add_url, thumb, Plot, status = item.split('###')
 		try:
 			streamurl = get_streamurl(add_url, title)						# Streamurl ermitteln (strm-Modul)

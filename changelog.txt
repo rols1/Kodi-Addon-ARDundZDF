@@ -10,6 +10,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+21.12.2025	5.3.6
+			ZDF_PageMenu: Button "ergänzende Rubriken der Webseite" entfernt, Cluster-
+			Liste der Startseite via neuer Funktion ZDF_StartWebCluster einschl. für
+			Live-Streams ZDF_Graphql_Livestream.
+			ZDF_RubrikSingle: Linefeed in Param tag entfernt (error in router).
+			python2.7-Anpassungen: ZDF_get_img, ZDF_get_naviKat, ZDF_KatSerie,
+			ZDF_AZList, ZDF_StartWebCluster.
+			ZDF_KatSeriePre: Unterdrückung doppelter Staffel-Listen via skip_list.
+			thread_getepg: Stempel EPGACTIVE anhängig von erfolgreichem EPG-Lauf.
+			ZDF_Kat: neue Kat "Sendung verpasst" in skip_list (eigenes Menü). 
+			PlayMonitor: try-/except-Block für get_streamurl mit Notification
+			(für fehlende Videos).
+			ZDF_getApiStreams: Notification statt Dialog bei fehlendem Stream, um 
+			Playlist nicht zu blockieren.
+			EPG_Today (Modul arte): None-Ergebnis für shortDescription abgefangen.
+
 30.11.2025	5.3.5
 			EPG_Today (Modul arte): Anpassungen für python 2.7 (py2_encode), Leer-
 			Param mediatype ergänzt.
@@ -20,7 +36,7 @@ CHANGE HISTORY
 			Abbruch ergänzt.
 			EPG (Modul EPG): "None" in summary ersetzt durch "?".			
 			ZDF_RubrikSingle: Redirect-Call für Url's aus ZDF_WebMoreSingle (Beispiel:
-			www.zdf.de/kurzfassungen/fifa-weltmeisterschaft-live-livestream-highlights-100.
+			www.zdf.de/kurzfassungen/fifa-weltmeisterschaft-live-livestream-highlights-100).
 			ZDF_get_img: erweitert für img in Webseite, z.B. für ZDF_Graphql_WebDetails
 			(dort angepasst für Rückgabe-> ZDF_KatSeriePre).
 			ZDF_KatSeriePre: Blockbegrenzer "node" für Season-Auswertung ergänzt, um

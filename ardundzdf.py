@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>300</nr>										# Numerierung für Einzelupdate
-VERSION = '5.3.5'
-VDATE = '30.11.2025' 
+VERSION = '5.3.6'
+VDATE = '21.12.2025' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8354,8 +8354,9 @@ def ZDF_Kat(title):
 	base = "https://www.zdf.de"
 	rubrik_base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
 	img_base = "https://www.zdf.de/assets/"
-	rubrik_list = ["A-Z", "Barrierefreie Inhalte",					# Umleitung
+	rubrik_list = ["A-Z", "Barrierefreie Inhalte",			# Umleitung
 				"Sport", "Nachrichten"]
+	skip_list = ["Sendung verpasst"]						# ev. -> rubrik_list (addDir erford.)
 
 	for i, item in enumerate(kats):
 		title = stringextract("<h2", "</h2", item)			# t1mx31h9">Wirtschaft
@@ -8376,6 +8377,9 @@ def ZDF_Kat(title):
 		PLog('Satz11_1:');
 		PLog("%2d. %s" % (i,title)); PLog(kat_url)
 		kat_url=py2_encode(kat_url); title=py2_encode(title);
+	
+		if title.strip() in skip_list:	
+			continue	
 		
 		if title in rubrik_list:							# Seiten ohne Genre-Id, Graphql-Call
 			if 'A-Z' in title:								#	nicht möglich
@@ -8584,14 +8588,17 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 	img = R(ICON_DIR_FOLDER)										# Default -> ZDF_KatSeriePre
 	if not page:
 		newpath = url_check(path, caller="ZDF_Graphql_WebDetails", dialog=False)
-		page, msg = get_page(newpath)
-		img = ZDF_get_img(page, mode="web")
-		#mark = '"%s' %	canonID										passt nicht für A-Z
-		#pos = page.find(mark)										# addon-relevante Inhalte
-		pos = page.find('remoteConfigUrl')							# (2x), addon-relevante Inhalte ab 1
-		page = page[pos:]			
-		page = page.replace('\\"', '"')	
-		Dict("store", DictID, page)
+		if newpath:													# False?
+			page, msg = get_page(newpath)
+			img = ZDF_get_img(page, mode="web")
+			#mark = '"%s' %	canonID										passt nicht für A-Z
+			#pos = page.find(mark)										# addon-relevante Inhalte
+			pos = page.find('remoteConfigUrl')							# (2x), addon-relevante Inhalte ab 1
+			page = page[pos:]			
+			page = page.replace('\\"', '"')	
+			Dict("store", DictID, page)
+		else:
+			page=""; DictID=""; newpath=""; img=""
 	collmark = "metaCollectionId"									# Default für Sub's 	
 	
 	if "getpage" in mode:											# ZDF_KatSeriePre
@@ -8621,7 +8628,7 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 				
 				video = stringextract('"VideoAvailability"', 'VideoStructuralMetadata', page)
 				PLog("videoavail: " + video[:60])
-				canon = stringextract('canonical":"', '"', video)	# canon\":\"page-video-ard-.. -> myvars 
+				canon = stringextract('canonical":"', '"', video)	# canon\":\"page-video-ard-.. -> myvars
 				
 		except Exception as exception:
 			genre_id=""; apitoken=""; appId=""; zdfappId=""; canon=""
@@ -8854,9 +8861,12 @@ def ZDF_KatSeriePre(title, path, img):
 	seasons = blockextract('Season","id', seasons, '"nodes"')
 	PLog("seasons: %d" % len(seasons))
 
-	path=py2_encode(path);		
+	path=py2_encode(path);	skip_list=[]	
 	for item in seasons:
 		sid = stringextract('id":"', '"', item)			# Season-ID -> idIn (myvars)
+		if sid in skip_list:							# 14.12.2025 kompl. Liste im Web doppelt
+			continue 
+		skip_list.append(sid)
 		status = stringextract('newContentStatus":"', '"', item)	# "NEW_SEASON" od. null
 		snr = stringextract('number":', ',', item)		# Season-Nr.
 		title = stringextract('title":"', '"', item)
@@ -9254,7 +9264,10 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 						
 	if("cluster" in jsonObject):		# Bsp- A-Z Leitseite -> SingleRubrik
 		PLog('ZDF_PageMenu_cluster')
-		ZDF_ApiCluster=[]
+		if DictID == "ZDF_Startseite":	# nach TOP's von futura weiter mit Web-Clustern
+			ZDF_StartWebCluster()
+			jsonObject["cluster"] = []	# skip futura-Cluster		
+			
 		for counter, clusterObject in enumerate(jsonObject["cluster"]):	# Bsp. "name":"Neu in der Mediathek"
 			title=""; url=""
 			try:													# detect PromoTeaser (Web: ganze Breite)
@@ -9298,7 +9311,6 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 				
 			jsonpath = "cluster|%d|teaser" % counter
 			title = repl_json_chars(title)
-			ZDF_ApiCluster.append(title)							# -> ZDF_WebMore
 			descr = repl_json_chars(descr)
 			PLog("Satz1_2:")
 			PLog(DictID); PLog(title); PLog(jsonpath); PLog(typ);
@@ -9333,15 +9345,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
 			thumb=img, fparams=fparams, summary=descr, tagline=tag)
 
-		if DictID == "ZDF_Startseite":								# Button Web-Ergänzung
-			Dict("store", 'ZDF_ApiCluster', ZDF_ApiCluster)
-			label = u"ergänzende Rubriken der Webseite"
-			tag = u"hiermit werden Rubriken von der Webseite ergänzt."
-			fparams="&fparams={'ZDF_ApiCluster': 'ZDF_ApiCluster'}" 
-			PLog("fparams: " + fparams)	
-			addDir(li=li, label=label, action="dirList", dirID="ZDF_WebMore", fanart=folder, 
-				thumb=folder, fparams=fparams, tagline=tag)
-				
+		if DictID == "ZDF_Startseite":								# Button Web-Ergänzung				
 			title = u"Videos in UHD-Qualität"
 			tag = u"Serien, Filme, Dokumentationen, Reportagen und mehr in Ultra-HD-Qualität."
 			path = "https://www.zdf.de/ultra-high-definition"
@@ -9363,170 +9367,181 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 #-----------------------------------------------------------------------
 # Aufruf: ZDF_PageMenu (DictID == "ZDF_Startseite"), ergänzt aus Web
 #	Cluster, die im Api fehlen (Abgleich Liste Dict ZDF_ApiCluster)
-# 1. Lauf: Abgleich
+# 1. Lauf: Liste der Web-Cluster nach TOP's aus futura
 # 2. Lauf: Liste der zum Cluster-Titel ctitle passenden Beiträge
-#	(Einzel + Serien, hier nicht unterscheidbar). 
-# Nutzung ZDF_KatSub nicht möglich (Graphql-Call stark abweichend)
-# 13.12.2025 HBBTV-Funktionen nicht zum Abgleich geeignet (Cluster
+#	(Einzel + Serien, Unterscheidung nach collectionType). 
+# 13.12.2025 Test: HBBTV-Funktionen nicht zum Abgleich geeignet (Cluster
 #	zwar vorhanden, json-Daten zu sehr abweichend für Graphql-Anbindung).
 #
-def ZDF_WebMore(ZDF_ApiCluster, ctitle=""):								
-	PLog('ZDF_WebMore: ' + ctitle)
-
-	ApiCluster =  Dict("load", ZDF_ApiCluster)					# ApiCluster-Titel
-	PLog("ApiCluster: %s" % str(ApiCluster))
-	page = Dict("load", "ZDF_WebStart", CacheTime=ZDF_CacheTime_Start)
-	if not page:
-		page, msg = get_page(path="https://www.zdf.de/")	# Web laden
-		if page:
-			Dict('store', "ZDF_WebStart", page)
+def ZDF_StartWebCluster(ctitle=""):								
+	PLog('ZDF_StartWebCluster:')
+		
+	page, DictID, newpath, img = ZDF_Graphql_WebDetails(ZDF_BASE, mode="getpage")
+	PLog("DictID: %s" % DictID)
 	if not page:
 		msg1 = 'www.zdf.de kann nicht geladen werden.' 
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
-		return
-		
-	pos1=page.find('<h2 class="ceswx4k rwjw3r5')			# hinter Stage-Beiträgen
-	pos2=page.find('<h2 class="ceswx4k rwjw3r5">Kategorien</h2>') 	# 04.05.2025 Begrenzer "ceswx4k rwjw3r5"
-	page=page[pos1:pos2]
-	PLog(page[:80])
-	web_cluster = blockextract('<h2 class=', page)			# Icons einschl. Weblink + Titel
-	PLog("web_cluster: %d" % len(web_cluster))				# 03.05.2024: 18
-		
-	li = xbmcgui.ListItem()
-	li = home(li, "ZDF")									# Home-Button
+		return		
 	
+	web_cluster = blockextract('__typename":"StaticHorizontalCluster', page)
+	PLog("web_cluster: %d" % len(web_cluster))				# 03.05.2024: 18
+	li = xbmcgui.ListItem()									# Home von ZDF_PageMenu
+	li2 = xbmcgui.ListItem()								# -> Videos	
+
 	#------------------------------------------------------ 		# 1. Lauf: Abgleich Cluster-Titel Api / Web
 	if not ctitle:
 		PLog("run1:")
-		mtitles=[]													# missíng titles
-		skip_titles = ["Livestreams", "Nachrichten und Politik"]	# ZDFheute Nachrichten vorhanden
+		skip_titles = ["Kategorien"]								# Listenende: skip Kategorien (eigenes MenÜ)
 		for item in web_cluster:
 			PLog(item[:100])
-			wtitle = stringextract('aria-label="', '"', item)		# Web-Titel
-			if wtitle in skip_titles:
-				continue
-
-			missed = True
-			for atitle in ApiCluster:
-				#PLog("atitle: %s | wtitle: %s" % (atitle, wtitle))
-				if wtitle in atitle:								# Web-Titel=Api-Zitel?
-					missed = False
-					break
-			if missed:
-				imgs = blockextract("https://", item, "w,")			# Bilder, wie ZDF_Kat
-				try:	
-					for img in imgs:
-						# PLog(img)		# Debug
-						if "1280w" in img:
-							img = img.split(" 1280w")[0]
-							break
-				except Exception as exception:
-					PLog("img_error: " + str(exception))
-					img = R(ICON_DIR_FOLDER)
-				
-				# Format mtitle: Titel ## img
-				# Bsp.: Deutscher Film 8## ../assets/rubriken-serien-100~1280x720..
-				mtitles.append("%s##%s" % (wtitle, img))	
-		
-		PLog("missing_titles_anz: %d" % len(mtitles))
-		PLog("missing_titles: %s" % str(mtitles))
-		if len(mtitles) == 0:
-			msg1 = u'Leider keine Ergänzungen gefunden.' 
-			MyDialog(msg1, '', '')
-			return
-		
-		for item in mtitles:
-			title, img = item.split("##")
+			title = stringextract('"title":"', '"', item)
+			if title in skip_titles:
+				continue				
+			anz = stringextract('"totalCount":', ',', item)
+			img = ZDF_get_img(item, landscape=False, mode="webjson")# vorab nur dim=original
+			
 			PLog("Satz10_1:")
 			PLog(title); PLog(img);
-
 			title=py2_encode(title)
-			tag="Folgebeiträge"
-			fparams="&fparams={'ZDF_ApiCluster': 'ZDF_ApiCluster', 'ctitle': '%s'}" %\
-				(title)												# -> 2- Lauf
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_WebMore", fanart=img, 
-				thumb=img, fparams=fparams, tagline=tag)
+			tag=u"Folgeseiten | %s" % anz
+		
+			fparams="&fparams={'ctitle': '%s'}" % (title)
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_StartWebCluster", fanart=img, 
+				thumb=img, fparams=fparams, tagline=tag)		
+
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 	#------------------------------------------------------ 		# 2. Lauf: Abgleich
 	else:
 		PLog("run2: " + ctitle)
 		skip_list = [u"ZDFtivi für Kinder"]
-		homeID="ZDF"
 
+		found=False
 		for item in web_cluster:
-			PLog(item[:100])
-			found=False
-			wtitle = stringextract('aria-label="', '"', item)
+			PLog(item[:60])
+			wtitle = stringextract('"title":"', '"', item)
 			if ctitle in wtitle:
 				found=True
 				PLog("found: %s" % item[:100])
+				cluster = item
 				break
 		if not found:
-			msg1 = u'Leider keine Ergänzungen gefunden zu' 
+			msg1 = u'Leider Cluster nicht gefunden zu' 
 			msg2 = "[B]%s[/B]" % ctitle
 			MyDialog(msg1, msg2, '')
 			return
 		
-		items = blockextract('data-testid="teaser-tile', item)	# Einzelbeiträge, html-/css-Daten
-		for item in items:
-			title = stringextract('<h3', '</h3', item)			# <h3 class= .. class= .. >Papst Leo .. </div></h3>
-			title = cleanhtml(title)
-			title = title.split('">')[-1]						# ..t1mx31h9">Papst Leo 
-			title=unescape(title); title=title.replace('"', '*')
-			title=title.replace("'", '')			
-			if title in skip_list:								# z.B. zdf.de/kinder (eigenes Menü)
-				continue
+		li = home(li, ID='ZDF')	
+		mediatype=''													# Kennz. Videos im Listing
+		if SETTINGS.getSetting('pref_video_direct') == 'true':
+			mediatype='video'
 		
-			ariacontrols = stringextract('aria-controls="', '"', item)	# link ->  json-Bereich
-			
-			href_list = blockextract('href="', item, "><")
-			href=""												# kann bei Live noch fehlen
-			for h in href_list:									# /video/serien/queen .. /am-abgrund-128
-				if not "/_next" in h:							# skip "/_next/static..
-					href = stringextract('href="', '"', h)
-					if href.startswith("http") == False:
-						href = "https://www.zdf.de" + href
-					break
-			if "//www.zdf.de" not in href:						# z.B. sportschau.de - nicht verwertbar
-				href=""
-			
-			imgs = blockextract("https://", item, "w,")			# Bilder, wie ZDF_Kat
-			try:	
-				for img in imgs:
-					# PLog(img)		# Debug
-					if "1280w" in img:
-						img = img.split(" 1280w")[0]
-						break
-				if " " in img:									# 1280w nicht vorhanden
-					img = img.split(" ")[0]
-			except Exception as exception:
-				PLog("img_error: " + str(exception))
-				img = R(ICON_DIR_FOLDER)				
-				
-			tag = u"Folgebeiträge"; multi=True
-			if not href:										# z.B. DFB-Pokal
-				tag = u"(Noch) nicht verfügbar"
-				if ">Bald Live<" in item:
-					tag = u"%s | [B]>Bald Live<[/B]" % tag
+		futura_base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
+		cluster = cluster.replace('\\\\"', '*')
+		items = blockextract('"__typename"', cluster, 'recoModel')
+		PLog("items: %d" % len(items))
+		skip=[ctitle]												# skip Cluster-Titel am Ende
+		for item in items:
+			title = stringextract('"title":"', '"', item)				
+			if not title or title in skip:
+					continue
+			title = repl_json_chars(title)						# hier (noch) keine NEU-Kennzeichnung			
+			colltyp = stringextract('"collectionType":"', '"', item)
+			if not colltyp:										# ohne colltyp, z.B. Livestream-Ankündigungen
+				if '"LiveMedia"' not in item:						# Livestreams
+					continue
 
-			if "Min.</spa" in item:								# Einzelbeitrag (z.B. 235 Min.)
-				multi=False
-				tag = "Dauer: " + stringextract('lqmboax">', "</span>", item)
-				
-			PLog("Satz10_2:")
-			PLog("multi: " + str(multi)); PLog(title); PLog(href); PLog(img);
-			title=py2_encode(title); href=py2_encode(href);
-			img=py2_encode(img); tag=py2_encode(tag); 
+			canon = stringextract('"canonical":"', '"', item)
+			sid = stringextract('"id":"', '"', item)
+			ext_id = stringextract('"page_external_id":"', '"', item)
+			scms_id = "SCMS_" + sid									# faed6f85-f34a-4a74-a765-275aaae5fd6e-movie
+			scms_id = scms_id.replace("-movie", "")					
+			img = ZDF_get_img(item, landscape=False, mode="webjson")
 			
-			# Call ZDF_WebMoreSingle oder ZDF_Graphql_Video mit den html-/css-Daten
-			#	nicht möglich, Auswertung Webseite href + Verteilung in ZDF_WebMoreSingle:
-			fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s', 'tag': '%s'}" %\
-				(quote(title), quote(href), quote(img), quote(tag))
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_WebMoreSingle", fanart=img, 
-				thumb=img, fparams=fparams, tagline=tag)					
-	
+			dur = stringextract('duration":', ',', item)			# Sekunden, Bsp.: 5011
+			if dur:
+				dur = seconds_translate(dur)
+			avail = stringextract('visibleTo":"', '"', item)		# 2025-05-31T21:59:00.000000+00:00
+			if not avail:
+				avail = stringextract('endDate":"', '"', item)
+			if avail:
+				avail = time_translate(avail)
+			owner = stringextract('_advertiser":"', '"', item)
+			descr = stringextract('description":"', '"', item)
+			descr = descr.replace("\\\\r\\\\n", "")					# \\r\\n möglich
+			descr = repl_json_chars(descr)
+			summ_par  = descr
+		
+			stream = "https://www.zdf.de/" + canon
+			sharing_url = "https://www.zdf.de/" + canon
+			ptmdTemplate = stringextract('ptmdTemplate":"', '"', item)
+
+			movie_tag = "Film"
+			if owner:
+				movie_tag = "%s | %s" % (movie_tag, owner)
+			if dur and "_trailer" not in ptmdTemplate:				# Trailer ohne sec, s. "MOVIE" 
+				movie_tag = "%s | Dauer: %s" % (movie_tag, dur)
+			if avail:
+				movie_tag = u"%s | [B]Verfügbar bis[/B] [COLOR darkgoldenrod]%s[/COLOR]" % (movie_tag, avail)
+		
+			folge_tag = u"Folgebeiträge"
+			if owner:									
+				folge_tag = u"[B]Folgebeiträge[/B] | %s" % owner								
+
+			PLog("Satz_run2: " + title) 
+			PLog(colltyp); PLog(canon); PLog(scms_id); PLog(descr);  
+			PLog(ptmdTemplate); PLog(dur); PLog(avail); PLog(stream);
+
+			title=py2_encode(title); img=py2_encode(img); 
+			movie_tag=py2_encode(movie_tag); 
+			summ_par=py2_encode(summ_par);
+			stream=py2_encode(stream);
+			
+			live=False											# # 8 Sender immer mit ptmdTemplate, Live-Sendungen 
+			if "/live/" in ptmdTemplate or canon.startswith("livestream-live"):	# nur vereinzelt, canon als Fallback
+				live=True
+			if live:
+				title = "[B]LIVE:[/B] %s" % title
+				stream=""
+				fparams="&fparams={'title': '%s','thumb': '%s','tag': '%s','summ': '%s','ptmdTemplate': '%s','canon': '%s'}" %\
+					(quote(title), quote(img), quote(movie_tag), quote(summ_par), ptmdTemplate, canon)
+				addDir(li=li2, label=title, action="dirList", dirID="ZDF_Graphql_Livestream", fanart=img, thumb=img,
+					fparams=fparams, tagline="LIVE", summary=descr, mediatype=mediatype)						
+				continue
+				
+			
+			if "MOVIE" in colltyp:
+				if ptmdTemplate:								# ptmdTemplate reicht für Graphql, sonst
+					stream=""									# 	zdf.de + canon
+				PLog("trailer_check: %s | %s" % (dur, ptmdTemplate))
+				if "_trailer" in ptmdTemplate:					# Movie statt Trailer
+					ptmdTemplate=ptmdTemplate.replace("_trailer", "")
+				
+				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s','ptmdTemplate': '%s'}" %\
+					(quote(stream), quote(title), quote(img), quote(movie_tag), quote(summ_par), scms_id, ptmdTemplate)	
+				addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img,
+					fparams=fparams, tagline=movie_tag, summary=descr, mediatype=mediatype)						
+
+			elif "_SECTIONS" in colltyp:						# DEFAULT_NO_SECTIONS, DEFAULT_WITH_SECTIONS, s. Satz_AZobj	
+				if ptmdTemplate and  "_trailer" not in ptmdTemplate:	# 	Videos zeigen, z.B. Sport-Clips
+					stream=""									# ptmdTemplate reicht für Graphql
+					fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s','ptmdTemplate': '%s'}" %\
+						(quote(stream), quote(title), quote(img), quote(movie_tag), quote(summ_par), scms_id, ptmdTemplate)	
+					addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+						fparams=fparams, tagline=movie_tag, summary=descr, mediatype=mediatype)				
+				else:						
+					fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
+						(title, quote(sharing_url), quote(img)) 
+					addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSeriePre", fanart=img, 
+						thumb=img, tagline=folge_tag, summary=descr, fparams=fparams)										
+				
+			else:	# MINI_SERIES, ENDLESS_SERIES, SEASON_SERIES
+				fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
+					(title, quote(sharing_url), quote(img)) 
+				addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSeriePre", fanart=img, 
+					thumb=img, tagline=folge_tag, summary=descr, fparams=fparams)					
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 				
 #-----------------------------------------------------------------------
@@ -9707,6 +9722,8 @@ def ZDF_Graphql_Video(title, scms_id, sharingUrl):
 			
 		except Exception as exception:
 			PLog("ZDF_Graphql_Video_error: " + str(exception))
+			tag="";descr="";path="";img="";descr="";sid=""
+			return
 	
 	li = xbmcgui.ListItem()
 	li = home(li, "ZDF")											# Home-Button
@@ -10505,7 +10522,21 @@ def ZDF_get_img(obj, landscape=False, mode=""):
 				break
 			if " " in img:									# 1280w nicht vorhanden
 				img = img.split(" ")[0]
-		PLog("img: " + img)	
+		PLog("img: " + img)
+	
+	elif mode == "webjson":									# wg. Performance nur original
+		'''										
+		dims = blockextract(',"dim', obj)					# Set aus json-Bereich der Webseite
+		PLog("dims: %d" % len(dims))
+		img=""
+		for dim in dims:
+			if "Xauto" in dim:
+				img = "https" + stringextract('https', '"', dim)
+				break
+		if len(img) < 6:
+		'''									# ohne https?
+		img = stringextract('original":"', '"', obj)
+															
 		
 	else:
 		try:
@@ -11706,6 +11737,59 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 	
 #----------------------------------------------
+# Start der ZDF-Livestreams via ptmdTemplate
+# verwendet wird der 1. Stream aus qualities
+# Aufruf: ZDF_StartWebCluster (run2)
+#
+def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
+	PLog("ZDF_Graphql_Livestream:")
+	PLog("%s, ptmdTemplate: %s" % (title, ptmdTemplate))
+	if not ptmdTemplate:
+		path = "https://www.zdf.de/%s" % canon
+		page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")
+		ptmdTemplate = stringextract('ptmdTemplate":"', '"', page)
+		if not ptmdTemplate:
+			fanart = thumb
+			msg1 = "ZDF_Graphql_Livestream:"
+			msg2 = u"Stream leider nicht (mehr) verfügbar"
+			xbmcgui.Dialog().notification(msg1,msg2,fanart,3000)
+			return	
+	
+	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % zdfToken
+	ptmd_player = 'ngplayer_2_4'								# ab 22.12.2020
+	ptmd = ptmdTemplate.replace('{playerId}', ptmd_player) 		# ptmd_player injiziert
+	videodat_url = 'https://api.zdf.de' + ptmd
+	PLog('videodat_url: ' + videodat_url)	
+	page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
+	msg2=msg
+	PLog("videodat_page: " + page[:80])
+	if not page:
+		icon = R(ICON_INFO)
+		msg1 = "ZDF_Graphql_Livestream:"	
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)											
+		return
+	
+	tracks = stringextract('"tracks"', '}', page)				# qualities 1. Stream (auto)
+	PLog("tracks: " + tracks)
+	m3u8_url = stringextract('"uri" : "', '"', tracks)
+	Plot = "%s||||%s" % (tag, summ)
+	PLog("m3u8_url: " + m3u8_url)
+
+	if SETTINGS.getSetting('pref_video_direct') == 'true':		# Sofortstart
+		PLog("Sofortstart_ZDF_Live")
+		PlayVideo(url=m3u8_url, title=title, thumb=thumb, Plot=title, live="true")
+		return
+
+	li = xbmcgui.ListItem()
+	title=py2_encode(title); Plot=py2_encode(Plot); thumb=py2_encode(thumb); 
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'live': 'true'}" %\
+		(quote_plus(m3u8_url), quote_plus(title), quote_plus(thumb), quote_plus(Plot)) 
+	addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, thumb=thumb, 
+		fparams=fparams, tagline=title, summary=summ, mediatype='video') 
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
+#----------------------------------------------
 # Ermittlung Streamquellen für api-call, ähnlich build_Streamlists 
 #	aber abweichendes Quellformat
 # Aufrufer: ZDF_FlatListEpisodes, ab V4.7.0 auch ZDF_PageMenu,
@@ -11721,24 +11805,31 @@ def ZDF_Episodes_Graphql(sid, staffel_list, jsonID="", surl=""):
 #	ZDF_get_content)
 # 24.11.2025 bei Client_error Verwendung von ptmdTemplate (ZDF_KatSerie)
 #	oder bei Fehlen Graphql-Call GetVideoMetaByCanonical	
+# 14.12.2025 Notification statt Dialog bei fehlendem Stream, um Playlist
+#	nicht zu blockieren
+# 19.12.2025 Vorrang für ptmdTemplate, scms_id nur noch für HBBTV verwendet.
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmdTemplate=""):
 	PLog("ZDF_getApiStreams:")
-	PLog("path: %s, scms_id: %s, ptmdTemplate: %s" % (path, scms_id,ptmdTemplate))
+	PLog("%s, path: %s, ptmdTemplate: %s" % (title, path, ptmdTemplate))
 	
 	cdn_api=True														# -> formsblock s.u.
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % zdfToken
 	if "api.zdf.de" in path:											# früher "ngplayer"
 		cdn_api=False
-		page, msg = get_page(path)
-	else:
 		page, msg = get_page(path, header=header)
+	else:
+		if not ptmdTemplate:
+			page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")
+			ptmdTemplate = stringextract('"ptmdTemplate":"', '"', page)
+			PLog("ptmdTemplate: " + ptmdTemplate)
+		page=""; msg=""														# mit ptmdTemplate obsolet
 
 	if not page or '"status":404' in page:								# requests-json-Return (page3)
 		PLog(page)	
-		PLog("Client error:")											# cdn-api nicht akzeptiert? -> ptmd-template
+		PLog("try_ptmdTemplate:")											# cdn-api nicht akzeptiert? -> ptmd-template
 		msg1 = "Fehler in ZDF_getApiStreams:"
-		msg2 = msg
+		msg=""
 		ptmd_player = 'ngplayer_2_4'									# ab 22.12.2020
 		if not ptmdTemplate:											# Graphql-Call GetVideoMetaByCanonical
 			params = Dict("load", "ZDF_Header-Params")					# ZDF_Graphql_WebDetails
@@ -11766,25 +11857,28 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 				msg2 = str(exception)
 				PLog("videodat_url_error: " + msg2)
 				videodat_url="" 
-		else:
+		else:				
 			videodat_url = ptmdTemplate									# /tmd/2/{playerId}/vod/ptmd/mediathek/..
 				
 		videodat_url = videodat_url.replace('{playerId}', ptmd_player) 	# ptmd_player injiziert 
 		if videodat_url:
 			videodat_url = 'https://api.zdf.de' + videodat_url	
 			videodat_url = videodat_url.replace('\\/','/')	
-		PLog('videodat_url: ' + videodat_url)	
-		page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
-		msg2=msg
-		PLog("videodat_page: " + page[:80])					
+			PLog('videodat_url: ' + videodat_url)	
+			page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
+			msg2=msg
+			PLog("videodat_page: " + page[:80])
+		else:
+			page=""
+			msg2="Videodaten fehlen!"				
 		cdn_api=False
 
-	if page == "":														
+	if page == "":
 		icon = R(ICON_INFO)
-		msg1 = "Stream-Problem"	
-		xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)													
-#		MyDialog(msg1, msg2, '')
+		msg1 = "ZDF_getApiStreams:"	
+		xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)	# Playlist-Blockade vermeiden, s.o.												
 		return
+
 	page = page.replace('\\/','/')
 	page=page.replace('" :', '":'); page=page.replace('": "', '":"')  # Formatanpassung für get_form_streams	
 
