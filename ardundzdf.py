@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>301</nr>										# Numerierung für Einzelupdate
+# 	<nr>302</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.6'
-VDATE = '21.12.2025' 
+VDATE = '22.12.2025' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -9062,12 +9062,13 @@ def ZDF_KatSerie(title, path, typ, sid, Graphql=""):
 
 		title=py2_encode(title); url=py2_encode(url);
 		img=py2_encode(img)
-		tag_par = tag.replace("\n", "||")						# 	s. ZDF_getKat_content
+		tag_par = tag.replace("\n", "||")						# mehrz. in ZDF_getKat_content
+		descr_par = descr.replace("\n", "||")
 		scms_id=""
 	
-		descr=py2_encode(descr); tag_par=py2_encode(tag_par);
+		descr_par=py2_encode(descr_par); tag_par=py2_encode(tag_par);
 		fparams="&fparams={'path':'%s','title':'%s','thumb':'%s','tag':'%s','summ':'%s','scms_id':'%s','ptmdTemplate':'%s'}" %\
-			(quote(url), quote(title), quote(img), quote(tag_par), quote(descr), scms_id, ptmdTemplate)	
+			(quote(url), quote(title), quote(img), quote(tag_par), quote(descr_par), scms_id, ptmdTemplate)	
 		addDir(li=li2, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 			fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)			
 			
