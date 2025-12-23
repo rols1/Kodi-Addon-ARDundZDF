@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>302</nr>										# Numerierung für Einzelupdate
+# 	<nr>303</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.6'
 VDATE = '22.12.2025' 
 
@@ -8870,6 +8870,7 @@ def ZDF_KatSeriePre(title, path, img):
 		status = stringextract('newContentStatus":"', '"', item)	# "NEW_SEASON" od. null
 		snr = stringextract('number":', ',', item)		# Season-Nr.
 		title = stringextract('title":"', '"', item)
+		title = repl_json_chars(title)
 		title = "%s | [B]%s[/B]" % (t_org, title)
 		if "NEW" in status:
 			title = "%s [B](NEU)[/B]" % title
@@ -9398,7 +9399,8 @@ def ZDF_StartWebCluster(ctitle=""):
 			PLog(item[:100])
 			title = stringextract('"title":"', '"', item)
 			if title in skip_titles:
-				continue				
+				continue
+			title = repl_json_chars(title)				
 			anz = stringextract('"totalCount":', ',', item)
 			img = ZDF_get_img(item, landscape=False, mode="webjson")# vorab nur dim=original
 			
@@ -9422,6 +9424,7 @@ def ZDF_StartWebCluster(ctitle=""):
 		for item in web_cluster:
 			PLog(item[:60])
 			wtitle = stringextract('"title":"', '"', item)
+			wtitle = repl_json_chars(wtitle)
 			if ctitle in wtitle:
 				found=True
 				PLog("found: %s" % item[:100])
