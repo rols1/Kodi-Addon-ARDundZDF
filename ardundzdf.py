@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>303</nr>										# Numerierung für Einzelupdate
+# 	<nr>304</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.6'
-VDATE = '22.12.2025' 
+VDATE = '25.12.2025' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8884,6 +8884,21 @@ def ZDF_KatSeriePre(title, path, img):
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSerie", fanart=img, 
 			thumb=img, tagline=tag, fparams=fparams)
 				
+	if len(seasons) == 0 and "ptmdTemplate" in page:		# keine Serie, aber enth. Video
+		mediatype=''													# Kennz. Videos im Listing
+		if SETTINGS.getSetting('pref_video_direct') == 'true':
+			mediatype='video'
+		ptmdTemplate = stringextract('"ptmdTemplate":"', '"', page)
+		tag="zum Video"; descr=""
+		title=t_org; img=img_org; 
+		PLog("ptmdTemplate_video: "); PLog(title); PLog(ptmdTemplate); 
+		img=py2_encode(img); title=py2_encode(title);
+		fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','ptmdTemplate': '%s'}" %\
+			(quote(newpath), quote(title), quote(img), tag, descr, ptmdTemplate)	
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
+			fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)			
+		
+	
 	title = "Empfehlungen"									# Button Empfehlungen
 	tag = u"Mehr zur Sendung, ähnliche Sendungen"
 	fparams="&fparams={'title': '%s', 'path': '%s'}" %\
@@ -9339,24 +9354,6 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
 					thumb=img, fparams=fparams, summary=descr, tagline=tag)
 
-		title = "Terra X plus Schule"					# 	skipped: Alles auf einen Blick
-		url = "https://zdf-prod-futura.zdf.de/mediathekV2/document/terra-x-plus-schule-100"
-		img = "https://www.zdf.de/assets/terrax-plusschule-buehnes-100~1140x240?cb=1698932648730"
-		fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
-		PLog("fparams: " + fparams)	
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
-			thumb=img, fparams=fparams, summary=descr, tagline=tag)
-
-		if DictID == "ZDF_Startseite":								# Button Web-Ergänzung				
-			title = u"Videos in UHD-Qualität"
-			tag = u"Serien, Filme, Dokumentationen, Reportagen und mehr in Ultra-HD-Qualität."
-			path = "https://www.zdf.de/ultra-high-definition"
-			title = py2_encode(title)
-			fparams="&fparams={'title': '%s', 'path': '%s'}" %\
-				(quote(title), quote(path))
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=folder, 
-				thumb=folder, tagline=tag, fparams=fparams)					
-
 	if fcnt > 0:													# Info gefiltert-Zähler
 		icon = R("icon-filter.png")
 		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)		
@@ -9412,6 +9409,25 @@ def ZDF_StartWebCluster(ctitle=""):
 			fparams="&fparams={'ctitle': '%s'}" % (title)
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_StartWebCluster", fanart=img, 
 				thumb=img, fparams=fparams, tagline=tag)		
+
+		title = "Terra X plus Schule"					# 	skipped: Alles auf einen Blick
+		url = "https://zdf-prod-futura.zdf.de/mediathekV2/document/terra-x-plus-schule-100"
+		img = "https://www.zdf.de/assets/terrax-plusschule-buehnes-100~1140x240?cb=1698932648730"
+		fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+		tag = "Interaktiv lernen: hol dir dein Wissen! Spannende Lernvideos und Dokus."
+		PLog("fparams: " + fparams)	
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+			thumb=img, fparams=fparams, tagline=tag)
+
+		title = u"Videos in UHD-Qualität"
+		tag = u"Serien, Filme, Dokumentationen, Reportagen und mehr in Ultra-HD-Qualität."
+		path = "https://www.zdf.de/ultra-high-definition"
+		folder = R(ICON_DIR_FOLDER)
+		title = py2_encode(title)
+		fparams="&fparams={'title': '%s', 'path': '%s'}" %\
+			(quote(title), quote(path))
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=folder, 
+			thumb=folder, tagline=tag, fparams=fparams)					
 
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
@@ -9554,18 +9570,25 @@ def ZDF_StartWebCluster(ctitle=""):
 #	nutzbar). Mit "av_content_id" -> ZDF_getApiStreams.
 # 2 Varianten im futura-api für 1 Video möglich: mit/ohne externalId 
 #	(Bsp."Liebe hat Vorfahrt")
+# 23.12.2025 unzuverlässig - vorerst nicht mehr genutzt, Langversion
+#	apollo dagegen OK (ZDF_getApiStreams).
 #
-def ZDF_Graphql_Video(title, scms_id, sharingUrl):									
-	PLog('ZDF_Graphql_Video: %s | %s | %s' % (title, scms_id, sharingUrl))	
+def ZDF_Graphql_Video(title, sharingUrl):									
+	PLog('ZDF_Graphql_Video: %s | %s' % (title, sharingUrl))	
 	futura_path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
 
 	collmark="metaCollectionId"		# Default für Sub's (barrierefrei: collectionId)
-	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(sharingUrl, mode="metaCollectionId")
-	header = HEADERS_GRAPHQL % (apitoken, appId)
+	#genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(sharingUrl, mode="metaCollectionId")
+	page, DictID, newpath, img = ZDF_Graphql_WebDetails(sharingUrl, mode="getpage")
+	canon = sharingUrl.split("/")[-1]	
+	header = Dict("load", "GraphqlHeader")
+	#header = HEADERS_GRAPHQL % (apitoken, appId)
 	base = ZDF_GraphqlBase % "GetVideoMetaByCanonical"
-	ext	= '{"persistedQuery":{"version":1,"sha256Hash":"4b52236b2cf362542bab7a4e4cfa99830a22ee5ad1e77080d3cc12b2092f0e02"}}'
+	# hier Langversion apollo, Kurzversion 1 für videodat_url (ZDF_getApiStreams)
+	ext	= '{"clientLibrary":{"name":"@apollo/client","version":"4.0.10"},"persistedQuery":{"version":1,"sha256Hash":"bd9e64297cc4f4a386b0c4e9a2e0b874445607fe32612a2d47f92ab5a2c981d0"}}'
+	
 	myvars = '{"canonical":"%s"}' %  canon
-	href = base + quote(myvars) + "&extensions=" + quote(ext)
+	href = base + quote(myvars) + "&extensions=" + quote_plus(ext)
 	PLog("Graphql_unquoted4: " + unquote(href))		
 	page, msg = get_page(path=href,  header=header, do_safe=False) 	# Graphql-Call
 
@@ -10104,14 +10127,21 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 					if "ard_video_ard" in scms_id:				# ext. Einzelvideo
 						tag=""
 						try:
+							typ = jsonObject["document"]["type"]
 							summ = jsonObject["shortText"]["text"]
 							summ = repl_json_chars(summ)
 							img = jsonObject["document"]["image"]["1200"]["url"]
 						except Exception as exception:
 							PLog("GraphqlWithExternalId_error: " + str(exception))
-							img="";summ=""					 
-						# ZDF_Graphql_Video(title, scms_id, sharingUrl)	# 21.12.2025 z.Z. außer Funktion
-						ZDF_getApiStreams(sharingUrl,title,img,tag,summ)
+							img="";summ=""; typ=""	
+							PLog(str(jsonObject["document"]))
+						PLog("mark0")					 
+						if "video" not in typ:					# "brand" o.ä.			
+							canon = sharingUrl.split("/")[-1]
+							url = "https://www.zdf.de/%s" % canon
+							ZDF_KatSeriePre(title, url, img)	# kein Video -> Serien, Empfehlungen
+						else:				
+							ZDF_getApiStreams(sharingUrl,title,img,tag,summ)	# Videoquellen
 					else:										# ZDF-Serie via Graphql
 						ZDF_KatSeriePre(title, path=sharingUrl, img="")						
 					return
@@ -11418,19 +11448,7 @@ def ZDF_FlatListEpisodes(sid):
 	season_id 	= jsonObject["document"]["id"]
 	staffel_list = jsonObject["cluster"]
 	PLog("season_title: %s" % season_title)
-	PLog("staffel_list: %d" % len(staffel_list))
-
-	
-	ret = ZDF_Episodes_Graphql(sid, staffel_list)				# Abgleich via Graphql-Check: neue Serie?
-	if ret:
-		title = "[B]Neueste Serie anzeigen[/B]"
-		tag = "im Web wurde eine neue Serie gefunden."
-		tag = "\n%s Diese steht leider noch nicht für die strm-Tools zur Verfügung" % tag
-		title=py2_encode(title); jsonID = "ZDF_Graphql_sid_%s" % sid
-		fparams="&fparams={'sid': '%s', 'staffel_list': '', 'jsonID': '%s'}" % (sid, jsonID)
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_Episodes_Graphql", fanart=R(ICON_DIR_FOLDER), 
-			thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)
-		
+	PLog("staffel_list: %d" % len(staffel_list))		
 
 	fcnt=0														# gefiltert-Zähler	
 	for staffel in 	staffel_list:
@@ -11698,18 +11716,26 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 		cdn_api=False
 		page, msg = get_page(path, header=header)
 	else:
-		if not ptmdTemplate:
-			PLog("get_ptmdTemplate_from_Web")
+		if not ptmdTemplate:			
+			PLog("get_ptmdTemplate_from_Web")				
 			if "prod-futura" in path:									# switch futura-api -> Web
-				path = ZDF_BASE + "/" + path.split("/")[-1]
-			page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")
-			ptmdTemplate = stringextract('"ptmdTemplate":"', '"', page)
+				page, msg = get_page(path)
+				if '"streamApiUrlAndroid"' in page:						# selten: formitaeten enthalten, inkompatibel,
+					androidurl = stringextract('streamApiUrlAndroid":"', '"', page)	# aber als ptmdTemplate nutzbar
+					androidurl=androidurl.replace('\\/','/')
+					# Bsp.: https://api.zdf.de/tmd/2/android_native_5/vod/ptmd/mediathek/250527_republica_tag_zwei/1			
+					PLog("streamApiUrlAndroid: " + androidurl)							
+					ptmdTemplate=androidurl
+				else:	
+					path = ZDF_BASE + "/" + path.split("/")[-1]
+					page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")
+					ptmdTemplate = stringextract('"ptmdTemplate":"', '"', page)
 			PLog("ptmdTemplate: " + ptmdTemplate)
-		page=""; msg=""														# mit ptmdTemplate obsolet
+		page=""; msg=""													# mit ptmdTemplate obsolet
 
-	if not page or '"status":404' in page:								# requests-json-Return (page3)
+	if not page or '"status":404' in page:								# ptmdTemplate -> videodat_url via Graphql
 		PLog(page)	
-		PLog("try_ptmdTemplate:")										# cdn-api nicht akzeptiert? -> ptmd-template
+		PLog("videodat_url_from_ptmdTemplate:")	
 		msg1 = "Fehler in ZDF_getApiStreams:"
 		msg=""
 		ptmd_player = 'ngplayer_2_4'									# ab 22.12.2020
@@ -11724,6 +11750,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 			
 			header = HEADERS_GRAPHQL % (apitoken, appId)
 			base = ZDF_GraphqlBase % "GetVideoMetaByCanonical"
+			# hier Kurzversion 1, Langversion apollo für Metadaten (ZDF_Graphql_Video)
 			ext	= '{"persistedQuery":{"version":1,"sha256Hash":"4b52236b2cf362542bab7a4e4cfa99830a22ee5ad1e77080d3cc12b2092f0e02"}}'
 			canon = path.split("/")[-1]
 			myvars = '{"canonical":"%s"}' %  canon
@@ -11739,12 +11766,13 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 				msg2 = str(exception)
 				PLog("videodat_url_error: " + msg2)
 				videodat_url="" 
-		else:				
+		else:															# bereits vorhnaden			
 			videodat_url = ptmdTemplate									# /tmd/2/{playerId}/vod/ptmd/mediathek/..
 				
 		videodat_url = videodat_url.replace('{playerId}', ptmd_player) 	# ptmd_player injiziert 
 		if videodat_url:
-			videodat_url = 'https://api.zdf.de' + videodat_url	
+			if videodat_url.startswith("http") == False:				# androidurl bereits vollständig
+				videodat_url = 'https://api.zdf.de' + videodat_url	
 			videodat_url = videodat_url.replace('\\/','/')	
 			PLog('videodat_url: ' + videodat_url)	
 			page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
