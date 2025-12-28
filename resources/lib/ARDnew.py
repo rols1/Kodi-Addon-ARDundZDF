@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>111</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.11.2025
+# 	<nr>112</nr>										# Numerierung für Einzelupdate
+#	Stand: 28.12.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -959,6 +959,7 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark, homeID=""):
 # Aufruf ARDStartRubrik ('hasSeasons":true')
 # 23.03.2025 path-Korrekturen für vollständige Liste (Bsp. fehlende Staffel 2
 #	bei Feuer & Flamme)
+# 28.12.2025 Sortierung für komplette Liste ergänzt (Button ARDStartRubrik).
 #
 def ARD_FlatListEpisodes(path, title):
 	PLog('ARD_FlatListEpisodes:')
@@ -1027,11 +1028,12 @@ def ARD_FlatListEpisodes(path, title):
 		addDir(li=li, label=title, action="dirList", dirID="start_script",\
 			fanart=R(FANART), thumb=R("icon-strmtools.png"), tagline=tag, fparams=fparams)	
 
-	#---------------------
-	
+	#---------------------	
 	items = blockextract('availableTo":', page)					# Videos
 	PLog("items_list: %d" % len(items))
 	fcnt=0														# gefiltert-Zähler	
+	Dir_Arr=[[] for _ in range(len(items))]						# addDir-Array Für Sortierung (wie ShowFavs)
+	item_cnt=0; cnt=-1
 	for item in items:
 		if "Folge " in item == False:
 			continue
@@ -1051,13 +1053,38 @@ def ARD_FlatListEpisodes(path, title):
 				fcnt = fcnt+1
 				continue		
 		
-		url=py2_encode(url); title=py2_encode(title); summ_par=py2_encode(summ_par);
-		fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s'}" %\
-			(quote(url), quote(title), quote(summ_par), ID)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
-			fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+		# Sätze -> Array für Sortierung
+		Dir_Arr[item_cnt].append(title); Dir_Arr[item_cnt].append(url); Dir_Arr[item_cnt].append(img);
+		Dir_Arr[item_cnt].append(tag); Dir_Arr[item_cnt].append(summ); Dir_Arr[item_cnt].append(season);
+		Dir_Arr[item_cnt].append(weburl); Dir_Arr[item_cnt].append(ID); 
+		item_cnt = item_cnt + 1
 		
-	if fcnt > 0:													# Info gefiltert-Zähler
+	PLog("Dir_Arr: %d" % len(Dir_Arr))	
+	#---------------------
+
+	try:														# fängt leere Liste ab (Filter ohne Element)
+		Dir_Arr = list(filter(lambda a: a != [], Dir_Arr))		# Leere Sätze entfernen
+		PLog("Dir_Arr_clean: %d" % len(Dir_Arr))
+		Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower())	# Sortierung title (Element 0), absteigend
+		PLog(Dir_Arr[-1])											# erster Satz vor Sortierung
+		
+		for rec in Dir_Arr:
+			title=rec[0]; url=rec[1]; img=rec[2]; tag=rec[3]; summ=rec[4];
+			season=rec[5]; weburl=rec[6]; ID=rec[7];
+			
+			PLog('Satz3_2:');
+			PLog(title); PLog(url); PLog(img); PLog(tag); PLog(summ[:80]);
+			PLog(season); PLog(weburl); PLog(ID);
+
+			url=py2_encode(url); title=py2_encode(title); summ_par=py2_encode(summ_par);
+			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s'}" %\
+				(quote(url), quote(title), quote(summ_par), ID)
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+	except Exception as exception:
+		PLog("Dir_Arr_error: " + str(exception))
+		
+	if fcnt > 0:												# Info gefiltert-Zähler
 		icon = R("icon-filter.png")
 		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)				
 
@@ -1176,7 +1203,7 @@ def ARD_FlatListRec(item, vers):
 	
 	title = unescape(title)
 	summ = repl_json_chars(descr)
-	PLog('Satz3:');
+	PLog('Satz3_1:');
 	PLog(title); PLog(url); PLog(img); PLog(tag); PLog(summ[:80]);
 	PLog(season); PLog(weburl);
 
