@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>304</nr>										# Numerierung für Einzelupdate
+# 	<nr>305</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.6'
-VDATE = '25.12.2025' 
+VDATE = '28.12.2025' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -173,7 +173,8 @@ ZDF_CacheTime_AZ 	= 1800			# 30 Min.
 zdfToken 			= "aa3noh4ohz9eeboo8shiesheec9ciequ9Quah7el"	# 22.08.2025
 ZDF_GraphqlBase		= "https://api.zdf.de/graphql?operationName=%s&variables="	# % OperationName
 HEADERS_GRAPHQL 	= "{'api-auth': 'Bearer %s', 'content-type': 'application/json', 'referer': 'https://www.zdf.de/',\
-	'zdf-app-id': '%s', 'accept': '*/*', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site'}" 
+	'zdf-app-id': '%s', 'accept': '*/*', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site'}"
+PTMD_PLAYER			= "ngplayer_2_4"	
 
 REPO_NAME		 	= 'Kodi-Addon-ARDundZDF'
 GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
@@ -6637,7 +6638,7 @@ def ShowFavs(mode, selected=""):					# Favoriten / Merkliste einblenden
 		fparams = fparams.replace('\n', '||')					# json-komp. für func_pars in router()
 		fparams = unquote_plus(fparams)
 		fparams ="&fparams={%s}" % quote_plus(fparams)			# router-kompatibel			
-		PLog('fparams3: ' + fparams)
+		PLog('fparams3: ' + unquote_plus(fparams))
 		fanart = R(ICON_DIR_WATCH)
 		if mode == 'Favs':
 			fanart = R(ICON_DIR_FAVORITS)
@@ -9063,6 +9064,7 @@ def ZDF_KatSerie(title, path, typ, sid, Graphql=""):
 	for item in episodes:										# s. ZDF_Graphql_get_seasons			
 		cnt=cnt+1										
 		typ,title,tag,descr,img,url,stream,coll_id,ptmdTemplate = ZDF_getKat_content(item)
+		
 		enr = item["episodeInfo"]["episodeNumber"]
 		url = base % coll_id
 		title = "S%02dE%02d | %s" % (snr, enr, title)
@@ -9496,6 +9498,7 @@ def ZDF_StartWebCluster(ctitle=""):
 			stream = "https://www.zdf.de/" + canon
 			sharing_url = "https://www.zdf.de/" + canon
 			ptmdTemplate = stringextract('ptmdTemplate":"', '"', item)
+			ptmdTemplate=ptmdTemplate.replace('{playerId}', PTMD_PLAYER)
 
 			movie_tag = "Film"
 			if owner:
@@ -9777,6 +9780,8 @@ def ZDF_getKat_content(obj, movie=True):
 		if "video" in obj or "EPISODE" in typ:		# Einzelmovie / Episode?
 			if movie:								# False <- ZDF_AZList
 				movie_canon_id, movietag, ptmdTemplate = ZDF_getKat_content_details(obj, mode="movie")
+				ptmdTemplate=ptmdTemplate.replace('{playerId}', PTMD_PLAYER)
+
 	except Exception as exception:
 		title=""									# -> continue
 		PLog("getKat_error: " + str(exception))
@@ -11724,13 +11729,13 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 					androidurl = stringextract('streamApiUrlAndroid":"', '"', page)	# aber als ptmdTemplate nutzbar
 					androidurl=androidurl.replace('\\/','/')
 					# Bsp.: https://api.zdf.de/tmd/2/android_native_5/vod/ptmd/mediathek/250527_republica_tag_zwei/1			
-					PLog("streamApiUrlAndroid: " + androidurl)							
+					PLog("ptmdTemplate_android: " + androidurl)							
 					ptmdTemplate=androidurl
-				else:	
+				else:
 					path = ZDF_BASE + "/" + path.split("/")[-1]
 					page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")
 					ptmdTemplate = stringextract('"ptmdTemplate":"', '"', page)
-			PLog("ptmdTemplate: " + ptmdTemplate)
+					PLog("ptmdTemplate_web: " + ptmdTemplate)
 		page=""; msg=""													# mit ptmdTemplate obsolet
 
 	if not page or '"status":404' in page:								# ptmdTemplate -> videodat_url via Graphql
