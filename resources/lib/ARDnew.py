@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>112</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.12.2025
+# 	<nr>113</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.12.2025
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -810,7 +810,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		if 'hasSeasons":true' in page and '"heroImage":' in page:
 			PLog('Button_FlatListARD')					# Button für flache Liste
 			label = u"komplette Liste: %s" % title
-			tag = u"Liste aller verfügbaren Folgen"
+			tag = u"Liste aller verfügbaren Folgen (nutzbare Serien-Folgen-Muster vorausgesetzt!)"
 			if SETTINGS.getSetting('pref_usefilter') == 'false':
 				add = u"Voreinstellung: Normalversion.\nFür Hörfassung und weitere Versionen "
 				add = u'%sbitte das Setting <Beiträge filtern / Ausschluss-Filter> einschalten' % add
@@ -1082,8 +1082,14 @@ def ARD_FlatListEpisodes(path, title):
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 	except Exception as exception:
+		Dir_Arr=[]
 		PLog("Dir_Arr_error: " + str(exception))
 		
+	if len(Dir_Arr) == 0:
+		icon = R("icon-info.png")
+		xbmcgui.Dialog().notification("komplette Liste:","Staffel-Folgen-Muster fehlen leider.",icon,3000)				
+		return
+	
 	if fcnt > 0:												# Info gefiltert-Zähler
 		icon = R("icon-filter.png")
 		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)				
