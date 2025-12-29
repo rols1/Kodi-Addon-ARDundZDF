@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>114</nr>										# Numerierung für Einzelupdate
+# 	<nr>115</nr>										# Numerierung für Einzelupdate
 #	Stand: 29.12.2025
 
 # Python3-Kompatibilität:
@@ -1033,7 +1033,7 @@ def ARD_FlatListEpisodes(path, title):
 	PLog("items_list: %d" % len(items))
 	fcnt=0														# gefiltert-Zähler	
 	Dir_Arr=[[] for _ in range(len(items))]						# addDir-Array Für Sortierung (wie ShowFavs)
-	item_cnt=0; cnt=-1
+	cnt=0; cnt=-1
 	for item in items:
 		if "Folge " in item == False:
 			continue
@@ -1054,20 +1054,20 @@ def ARD_FlatListEpisodes(path, title):
 				continue		
 		
 		# Sätze -> Array für Sortierung
-		Dir_Arr[item_cnt].append(title); Dir_Arr[item_cnt].append(url); Dir_Arr[item_cnt].append(img);
-		Dir_Arr[item_cnt].append(tag); Dir_Arr[item_cnt].append(summ); Dir_Arr[item_cnt].append(season);
-		Dir_Arr[item_cnt].append(weburl); Dir_Arr[item_cnt].append(ID); 
-		item_cnt = item_cnt + 1
+		PLog("add: " + title)
+		Dir_Arr[cnt].append(title); Dir_Arr[cnt].append(url); Dir_Arr[cnt].append(img);
+		Dir_Arr[cnt].append(tag); Dir_Arr[cnt].append(summ); Dir_Arr[cnt].append(season);
+		Dir_Arr[cnt].append(weburl); Dir_Arr[cnt].append(ID); 
+		cnt = cnt + 1
 		
-	PLog("Dir_Arr: %d" % len(Dir_Arr))	
+	PLog("Dir_Arr: %d" % len(Dir_Arr))
+	
 	#---------------------
 
 	try:														# fängt leere Liste ab (Filter ohne Element)
+		Dir_Arr = sorted(Dir_Arr,key=lambda x: x, reverse=True)	# absteigend
 		Dir_Arr = list(filter(lambda a: a != [], Dir_Arr))		# Leere Sätze entfernen
-		PLog("Dir_Arr_clean: %d" % len(Dir_Arr))
-		Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0].lower())	# Sortierung title (Element 0), absteigend
-		PLog(Dir_Arr[-1])											# erster Satz vor Sortierung
-		
+		PLog("Dir_Arr_clean: %d" % len(Dir_Arr))		
 		for rec in Dir_Arr:
 			title=rec[0]; url=rec[1]; img=rec[2]; tag=rec[3]; summ=rec[4];
 			season=rec[5]; weburl=rec[6]; ID=rec[7];
