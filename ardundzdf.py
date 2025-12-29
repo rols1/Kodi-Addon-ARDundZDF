@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>305</nr>										# Numerierung für Einzelupdate
+# 	<nr>306</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.6'
-VDATE = '28.12.2025' 
+VDATE = '29.12.2025' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8587,8 +8587,8 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 	
 	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)		# 5 min, escape-clean
 	img = R(ICON_DIR_FOLDER)										# Default -> ZDF_KatSeriePre
+	newpath = url_check(path, caller="ZDF_Graphql_WebDetails", dialog=False) # Rückg. auch mit Dict
 	if not page:
-		newpath = url_check(path, caller="ZDF_Graphql_WebDetails", dialog=False)
 		if newpath:													# False?
 			page, msg = get_page(newpath)
 			img = ZDF_get_img(page, mode="web")
@@ -8846,16 +8846,22 @@ def ZDF_KatSeriePre(title, path, img):
 	PLog("DictID: %s | %s" % (DictID, page[:80]))
 	
 	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')									# Home-Button
-
+	li = home(li, ID='ZDF')									# Home-Button		
+			
 	if "/serien/" in newpath:								# zdf.de/serien/the-rookie-100
 		canon = path.split("/")[-1]							# Button komplette Liste
 		label = "komplette Liste: %s" % title
-		tag = u"Liste aller verfügbaren Folgen | strm-Tools"
+		tag = u"Liste aller verfügbaren Folgen (falls auswertbare Muster vorhanden) | [B]strm-Tools[/B]"
 		fparams="&fparams={'sid': '%s'}"	% canon					
 		addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
 			thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
-		
+	else:
+		if "/serien/" in path:								# vor Redirect noch Serie? i.d.R. externe Serien
+			if "page-ard-collection" in path:				# Bsp.: Nachtstreife (ARD-SWR)
+				PLog("ARD_Serie | komplette Liste nicht möglich")
+				icon = R("icon-info.png")
+				xbmcgui.Dialog().notification("komplette Liste:", u"für diese ARD-Serie nicht möglich.",icon,3000)	
+
 	typ = "seasonByCanonical"
 	seasons = stringextract("props:data", "</script>", page)
 	PLog(seasons[:80])
@@ -9138,7 +9144,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 	PLog('ZDF_PageMenu:')
 	PLog('DictID: ' + DictID)
 	PLog(mark); PLog(homeID);  
-	url_org = url; PLog("url_org: " + url_org)
+	PLog("url: " + url)
+	url_org = url; 
 	li_org=li 
 
 	if not jsonObject and DictID:
@@ -9512,7 +9519,7 @@ def ZDF_StartWebCluster(ctitle=""):
 			if owner:									
 				folge_tag = u"[B]Folgebeiträge[/B] | %s" % owner								
 
-			PLog("Satz_run2: " + title) 
+			PLog("run2_Satz: " + title) 
 			PLog(colltyp); PLog(canon); PLog(scms_id); PLog(descr);  
 			PLog(ptmdTemplate); PLog(dur); PLog(avail); PLog(stream);
 
@@ -10195,7 +10202,7 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 				sid = docObject["brandId"]						# z.B. die-bergretter-104, statt "id"=die-bergretter-132
 				PLog("Serie: " + sid)
 				label = "komplette Liste: %s" % title
-				tag = u"Liste aller verfügbaren Folgen | strm-Tools"
+				tag = u"Liste aller verfügbaren Folgen (falls auswertbare Muster vorhanden) | [B]strm-Tools[/B]"
 				fparams="&fparams={'sid': '%s'}"	% (sid)						
 				addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
 					thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
@@ -10261,19 +10268,20 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 			obj = clusterObject[0]
 			PLog(str(obj)[:80])
 			# 2-facher Aufruf bei ARD-Inhalten: hier  -> ZDF_PageMenu -> hier
-			#	ev. auslagern
+			#	ev. auslagern. Mini-Cluster ohne Bild, ohne Teaser
 			if "reference" in obj:								# Test auf recommendation-Verweis, Bsp.
 				if "url" in obj["reference"]:					# 	https://www.zdf.de/hr/ard-crime-time
 					ref_url = obj["reference"]["url"]			# ähnlich ref_url bei mehreren Clustern (s.o.)
 					ref_url = ref_url.replace("%2F", "/")
-					PLog(ref_url)
+					PLog("reference_in_obj: " + ref_url)
+					#PLog(str(obj))		# Debug
 					ref_url = ref_url.replace('{appId}', 'exozet-zdf-pd-0.99.2145')
 					urlkey = ref_url.replace('{abGroup}', 'abGroup=gruppe-a')
 					PLog("new_urlkey: " + urlkey)
 					img = R(ICON_DIR_FOLDER); tag=""; descr=""	
 					fparams="&fparams={'DictID': '', 'homeID': '%s', 'urlkey': '%s'}" %\
 						(homeID, quote(urlkey))					# o. DictID wie recommendation-Inhalte oben
-					PLog("fparams: " + fparams)	
+					PLog("fparams: " + unquote(fparams))	
 					addDir(li=li, label=title, action="dirList", dirID="ZDF_PageMenu", fanart=img, 
 					thumb=img, fparams=fparams, summary=descr, tagline=tag)
 				
@@ -11455,12 +11463,13 @@ def ZDF_FlatListEpisodes(sid):
 	PLog("season_title: %s" % season_title)
 	PLog("staffel_list: %d" % len(staffel_list))		
 
-	fcnt=0														# gefiltert-Zähler	
+	cnt=0; fcnt=0												# Satz-Zähler, gefiltert-Zähler
 	for staffel in 	staffel_list:
 		if 	staffel["name"] == "":								# Teaser u.ä.
 			continue							
 		folgen = staffel["teaser"]								# Folgen-Blöcke	
 		PLog("Folgen: %d" % len(folgen))
+
 		for folge in folgen:
 			# Abgleich headline/season_title entfällt wg. möglicher Abweichungen
 			#	Bsp.: FETT UND FETT/FETT & FETT, daher Abgleich mit brandId
@@ -11498,10 +11507,17 @@ def ZDF_FlatListEpisodes(sid):
 				(quote(url), quote(title), quote(img), quote(tag_par), quote(summ_par), scms_id)
 			addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+			cnt=cnt+1
 				
+	if cnt == 0:
+		icon = R("icon-info.png")
+		xbmcgui.Dialog().notification("komplette Liste:","Staffel-Folgen-Muster fehlen leider.",icon,3000)				
+		return
+
 	if fcnt > 0:													# Info gefiltert-Zähler
 		icon = R("icon-filter.png")
-		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)			
+		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)
+			
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 

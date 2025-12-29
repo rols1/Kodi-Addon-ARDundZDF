@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>113</nr>										# Numerierung für Einzelupdate
+# 	<nr>114</nr>										# Numerierung für Einzelupdate
 #	Stand: 29.12.2025
 
 # Python3-Kompatibilität:
@@ -810,7 +810,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		if 'hasSeasons":true' in page and '"heroImage":' in page:
 			PLog('Button_FlatListARD')					# Button für flache Liste
 			label = u"komplette Liste: %s" % title
-			tag = u"Liste aller verfügbaren Folgen (nutzbare Serien-Folgen-Muster vorausgesetzt!)"
+			tag = u"Liste aller verfügbaren Folgen (falls auswertbare Muster vorhanden) | [B]strm-Tools[/B]"
 			if SETTINGS.getSetting('pref_usefilter') == 'false':
 				add = u"Voreinstellung: Normalversion.\nFür Hörfassung und weitere Versionen "
 				add = u'%sbitte das Setting <Beiträge filtern / Ausschluss-Filter> einschalten' % add
