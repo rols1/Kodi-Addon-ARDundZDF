@@ -4033,10 +4033,10 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 	if url.startswith('http') == False:			# lokale Datei
 		if url.startswith('smb://') == False:	# keine Share
 			url = os.path.abspath(url)
-	else:										# 14.01.2022 Bsp. HTTP Error 404 NDR Schlager
-		url = url_check(url, caller='PlayAudio')
-		if url == False:
-			return
+	#else:										# 31.12.2025 abgeschaltet, Klemmer im request-Modul trotz
+		#url = url_check(url, caller='PlayAudio') # Stream-Kennzeichnung möglich
+		#if url == False:
+		#	return
 		
 	
 	# 1. Url einer Playlist auspacken, Bsp.: MDR-Sachsen Fußball-Livestream
@@ -4144,9 +4144,9 @@ def url_check(url, caller='', dialog=True):
 			return False
 
 	# 05.08,2025 stream=True für mp4-Dateien u.ä. sonst Klemmer
-	#	in requests
+	#	in requests. 31.12.2025 in PlayAudio abgeschaltet
 	stream=False
-	format_list = [".mp4", ".webm", ".vp9", ".mp3"]
+	format_list = [".mp4", ".webm", ".vp9", ".mp3", "/mp3/", ".aac", ".rndfnk."]
 	for form in format_list:
 		if form in url:
 			stream=True

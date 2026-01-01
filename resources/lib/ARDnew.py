@@ -1029,10 +1029,10 @@ def ARD_FlatListEpisodes(path, title):
 			fanart=R(FANART), thumb=R("icon-strmtools.png"), tagline=tag, fparams=fparams)	
 
 	#---------------------	
-	items = blockextract('availableTo":', page)					# Videos
+	items = blockextract('availableTo":', page)					# alle Videos
 	PLog("items_list: %d" % len(items))
 	fcnt=0														# gefiltert-Zähler	
-	Dir_Arr=[[] for _ in range(len(items))]						# addDir-Array Für Sortierung (wie ShowFavs)
+	Dir_Arr=[[] for _ in range(len(items))]						# Sortier-addDir-Array (s. ShowFavs, ARD_FlatListEpisodes)
 	cnt=0; cnt=-1
 	for item in items:
 		if "Folge " in item == False:
@@ -1065,8 +1065,8 @@ def ARD_FlatListEpisodes(path, title):
 	#---------------------
 
 	try:														# fängt leere Liste ab (Filter ohne Element)
-		Dir_Arr = sorted(Dir_Arr,key=lambda x: x, reverse=True)	# absteigend
 		Dir_Arr = list(filter(lambda a: a != [], Dir_Arr))		# Leere Sätze entfernen
+		Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0], reverse=True)	# absteigend
 		PLog("Dir_Arr_clean: %d" % len(Dir_Arr))		
 		for rec in Dir_Arr:
 			title=rec[0]; url=rec[1]; img=rec[2]; tag=rec[3]; summ=rec[4];

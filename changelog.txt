@@ -10,6 +10,37 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+01.01.2026	5.3.7
+			ZDF_WebMoreSingle, ZDF_WebMoreVideo entfernt: mit ZDF_StartWebCluster und
+			Folge-Calls obsolet).
+			ZDF_StartWebCluster: Buttons "Terra X plus Schule" und "Videos in UHD-
+			Qualität" von ZDF_PageMenu hierher verlagert.
+			ZDF_RubrikSingle: Verteilung externer Videos (Marke GraphqlWithExternalId,
+			z.B. von ARD) differenziert nach json-key "type". "video" > ZDF_getApiStreams,
+			Rest nach ZDF_KatSeriePre (Serie oder Empfehlungen).
+			ZDF_getApiStreams: Fallback für futura-api-Call ohne ptmdTemplate - Switch zu
+			ptmdTemplate-Suche im Web. Sonderfall: streamApiUrlAndroid als ptmdTemplate,
+			Sicherung enthaltene formitaeten für ev. Fehlschlage Graphql-Call in
+			videodat_page.
+			ZDF_KatSerie: LF in descr durch "|" ersetzt (router-kompatibel).
+			ZDF_KatSeriePre, ZDF_StartWebCluster: router-inkompatible Zeichen in title
+			ersetzt. 
+			ZDF_KatSeriePre: beim Fehlen der Serie Button für ev. einzelnes enthaltenes
+			Video ergänzt (ptmdTemplate).
+			ZDF_FlatListEpisodes: Button "Neueste Serie anzeigen" mit Code für Abgleich
+			mit neuer Serie entfernt (obsolet mit neuer Streaming-Plattform). Ergänzt:
+			notification, falls Staffel-Folgen-Muster fehlen (wie ARD_FlatListEpisodes),
+			Sortierung ergänzt analog ShowFavs und ARD_FlatListEpisodes.
+			ZDF_getKat_content: Ersetzung '{playerId}' durch akt. ZDF-Player, da die 
+			Klammern in der Merkliste (ShowFavs) als Begrenzer interpretiert werden.
+			ZDF_Graphql_WebDetails: url_check vorverlagert, um neue Url auch beim Nach-
+			laden (Dict "load") zu nutzen.
+			ARD_FlatListEpisodes (Modul ARDnew): Sortierung analog ShowFavs und
+			ZDF_FlatListEpisodes (Haupt-PRG) ergänzt, hier nach Titel, absteigend).
+			Zusätzlich Notification, falls Staffel-Folgen-Muster fehlen (wie 
+			ZDF_FlatListEpisodes.
+			PlayAudio (util): url_check abgeschaltet wg. Problemen mit requests-Modul.
+
 21.12.2025	5.3.6
 			ZDF_PageMenu: Button "ergänzende Rubriken der Webseite" entfernt, Cluster-
 			Liste der Startseite via neuer Funktion ZDF_StartWebCluster einschl. für

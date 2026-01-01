@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>306</nr>										# Numerierung für Einzelupdate
-VERSION = '5.3.6'
-VDATE = '29.12.2025' 
+VERSION = '5.3.7'
+VDATE = '01.01.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -9406,7 +9406,8 @@ def ZDF_StartWebCluster(ctitle=""):
 			title = stringextract('"title":"', '"', item)
 			if title in skip_titles:
 				continue
-			title = repl_json_chars(title)				
+			title = transl_json(title)	
+			title = repl_json_chars(title)					
 			anz = stringextract('"totalCount":', ',', item)
 			img = ZDF_get_img(item, landscape=False, mode="webjson")# vorab nur dim=original
 			
@@ -9415,7 +9416,7 @@ def ZDF_StartWebCluster(ctitle=""):
 			title=py2_encode(title)
 			tag=u"Folgeseiten | %s" % anz
 		
-			fparams="&fparams={'ctitle': '%s'}" % (title)
+			fparams="&fparams={'ctitle': '%s'}" % title
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_StartWebCluster", fanart=img, 
 				thumb=img, fparams=fparams, tagline=tag)		
 
@@ -9449,7 +9450,8 @@ def ZDF_StartWebCluster(ctitle=""):
 		for item in web_cluster:
 			PLog(item[:60])
 			wtitle = stringextract('"title":"', '"', item)
-			wtitle = repl_json_chars(wtitle)
+			wtitle = transl_json(wtitle)	
+			wtitle = repl_json_chars(wtitle)					
 			if ctitle in wtitle:
 				found=True
 				PLog("found: %s" % item[:100])
@@ -9475,7 +9477,8 @@ def ZDF_StartWebCluster(ctitle=""):
 			title = stringextract('"title":"', '"', item)				
 			if not title or title in skip:
 					continue
-			title = repl_json_chars(title)						# hier (noch) keine NEU-Kennzeichnung			
+			title = repl_json_chars(title)						# hier (noch) keine NEU-Kennzeichnung
+			title = transl_json(title)			
 			colltyp = stringextract('"collectionType":"', '"', item)
 			if not colltyp:										# ohne colltyp, z.B. Livestream-Ankündigungen
 				if '"LiveMedia"' not in item:						# Livestreams
@@ -9487,6 +9490,7 @@ def ZDF_StartWebCluster(ctitle=""):
 			scms_id = "SCMS_" + sid									# faed6f85-f34a-4a74-a765-275aaae5fd6e-movie
 			scms_id = scms_id.replace("-movie", "")					
 			img = ZDF_get_img(item, landscape=False, mode="webjson")
+			tvService = stringextract('"tvService":"', '"', item)				
 			
 			dur = stringextract('duration":', ',', item)			# Sekunden, Bsp.: 5011
 			if dur:
@@ -9496,7 +9500,8 @@ def ZDF_StartWebCluster(ctitle=""):
 				avail = stringextract('endDate":"', '"', item)
 			if avail:
 				avail = time_translate(avail)
-			owner = stringextract('_advertiser":"', '"', item)
+			#owner = stringextract('_advertiser":"', '"', item)
+			owner = stringextract('Senderlogo ', '"', item)			# "Senderlogo ZDF"
 			descr = stringextract('description":"', '"', item)
 			descr = descr.replace("\\\\r\\\\n", "")					# \\r\\n möglich
 			descr = repl_json_chars(descr)
@@ -9528,7 +9533,7 @@ def ZDF_StartWebCluster(ctitle=""):
 			summ_par=py2_encode(summ_par);
 			stream=py2_encode(stream);
 			
-			live=False											# # 8 Sender immer mit ptmdTemplate, Live-Sendungen 
+			live=False											# 8 Sender immer mit ptmdTemplate, Live-Sendungen 
 			if "/live/" in ptmdTemplate or canon.startswith("livestream-live"):	# nur vereinzelt, canon als Fallback
 				live=True
 			if live:
@@ -9540,7 +9545,7 @@ def ZDF_StartWebCluster(ctitle=""):
 					fparams=fparams, tagline="LIVE", summary=descr, mediatype=mediatype)						
 				continue
 				
-			
+			#-----------------------
 			if "MOVIE" in colltyp:
 				if ptmdTemplate:								# ptmdTemplate reicht für Graphql, sonst
 					stream=""									# 	zdf.de + canon
@@ -11463,16 +11468,24 @@ def ZDF_FlatListEpisodes(sid):
 	PLog("season_title: %s" % season_title)
 	PLog("staffel_list: %d" % len(staffel_list))		
 
-	cnt=0; fcnt=0												# Satz-Zähler, gefiltert-Zähler
+	max_cnt=0; cnt=0; fcnt=0									# Satz-Zähler, gefiltert-Zähler
+	for staffel in 	staffel_list:
+		max_cnt = max_cnt + len(staffel["teaser"])
+	PLog("Folgen_gesamt: %d" % max_cnt)
+	Dir_Arr=[[] for _ in range(max_cnt)]						# Sortier-addDir-Array (s. ShowFavs, ARD_FlatListEpisodes)
+
 	for staffel in 	staffel_list:
 		if 	staffel["name"] == "":								# Teaser u.ä.
 			continue							
 		folgen = staffel["teaser"]								# Folgen-Blöcke	
-		PLog("Folgen: %d" % len(folgen))
+		PLog("%s | Folgen: %d" % (staffel["name"], len(folgen)))
 
 		for folge in folgen:
+			# Vom ZDF nicht mehr in allen Serien absteigend sortiert, dto.
+			#	in ARD_FlatListEpisodes.
 			# Abgleich headline/season_title entfällt wg. möglicher Abweichungen
 			#	Bsp.: FETT UND FETT/FETT & FETT, daher Abgleich mit brandId
+        
 			scms_id = folge["id"]
 			try:
 				brandId = folge["brandId"]
@@ -11495,10 +11508,34 @@ def ZDF_FlatListEpisodes(sid):
 				if filtered:
 					PLog('filtered_5: <%s> in %s ' % (item, title))
 					fcnt = fcnt+1
-					continue								
-				
+					continue												
+			
 			summ_par= summ.replace('\n', '||')
 			tag_par= tag.replace('\n', '||')
+			# Sätze -> Array für Sortierung
+			PLog("add: %s | cnt: %d" % (title, cnt))
+			
+			Dir_Arr[cnt].append(url); Dir_Arr[cnt].append(title); Dir_Arr[cnt].append(img);
+			Dir_Arr[cnt].append(tag); Dir_Arr[cnt].append(summ); Dir_Arr[cnt].append(season);
+			Dir_Arr[cnt].append(weburl); 
+			cnt = cnt + 1
+			
+		#---------------------
+		
+	PLog("Dir_Arr: %d" % len(Dir_Arr))	
+	try:														# fängt leere Liste ab (Filter ohne Element)
+		Dir_Arr = list(filter(lambda a: a != [], Dir_Arr))		# Leere Sätze entfernen
+		Dir_Arr = sorted(Dir_Arr,key=lambda x: x[1], reverse=True)	# absteigend
+		PLog("Dir_Arr_clean: %d" % len(Dir_Arr))
+		PLog(Dir_Arr[0])		
+		PLog(Dir_Arr[-1])		
+		for rec in Dir_Arr:										# auspacken
+			url=rec[0]; title=rec[1]; img=rec[2]; tag=rec[3]; summ=rec[4];
+			season=rec[5]; weburl=rec[6]; 
+			
+			summ_par= summ.replace('\n', '||')
+			tag_par= tag.replace('\n', '||')
+			
 			PLog("Satz29:")
 			PLog(url);PLog(img);PLog(title);PLog(tag);PLog(summ[:80]); 
 			url=py2_encode(url); title=py2_encode(title); img=py2_encode(img); 
@@ -11507,7 +11544,10 @@ def ZDF_FlatListEpisodes(sid):
 				(quote(url), quote(title), quote(img), quote(tag_par), quote(summ_par), scms_id)
 			addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
-			cnt=cnt+1
+
+	except Exception as exception:
+		Dir_Arr=[]
+		PLog("Dir_Arr_error: " + str(exception))
 				
 	if cnt == 0:
 		icon = R("icon-info.png")
@@ -11668,7 +11708,7 @@ def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
 		if not ptmdTemplate:
 			fanart = thumb
 			msg1 = "ZDF_Graphql_Livestream:"
-			msg2 = u"Stream leider nicht (mehr) verfügbar"
+			msg2 = u"nicht verfügbar. Sendezeit prüfen."
 			xbmcgui.Dialog().notification(msg1,msg2,fanart,3000)
 			return	
 	
@@ -11726,12 +11766,15 @@ def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
 #	nicht zu blockieren
 # 19.12.2025 Vorrang für ptmdTemplate, scms_id nur noch für HBBTV verwendet,
 #	bei futura-path Ermittlung ptmdTemplate via switch zur Webadresse.
+# 31.12.2025 Nutzung ev. Videodaten in futura-Seite als Fallback für 
+#	Fehlschlag des Graphql-Calls.
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmdTemplate=""):
 	PLog("ZDF_getApiStreams:")
 	PLog("%s, path: %s, ptmdTemplate: %s" % (title, path, ptmdTemplate))
 	
 	cdn_api=True														# -> formsblock s.u.
+	videodat_page=""
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % zdfToken
 	if "api.zdf.de" in path:											# früher "ngplayer"
 		cdn_api=False
@@ -11739,19 +11782,23 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 	else:
 		if not ptmdTemplate:			
 			PLog("get_ptmdTemplate_from_Web")				
-			if "prod-futura" in path:									# switch futura-api -> Web
+			if "prod-futura" in path:									# check streamApiUrlAndroid
 				page, msg = get_page(path)
 				if '"streamApiUrlAndroid"' in page:						# selten: formitaeten enthalten, inkompatibel,
+					page=page.replace('\\/','/')						# Bsp.: Das ZDF auf der re:publica25
 					androidurl = stringextract('streamApiUrlAndroid":"', '"', page)	# aber als ptmdTemplate nutzbar
-					androidurl=androidurl.replace('\\/','/')
 					# Bsp.: https://api.zdf.de/tmd/2/android_native_5/vod/ptmd/mediathek/250527_republica_tag_zwei/1			
 					PLog("ptmdTemplate_android: " + androidurl)							
 					ptmdTemplate=androidurl
+					if "formitaeten" in page:							# übernehmen, falls Graphql-Call fehlschlägt
+						videodat_page=page
 				else:
-					path = ZDF_BASE + "/" + path.split("/")[-1]
-					page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")
-					ptmdTemplate = stringextract('"ptmdTemplate":"', '"', page)
-					PLog("ptmdTemplate_web: " + ptmdTemplate)
+					path = ZDF_BASE + "/" + path.split("/")[-1]			# switch futura-api -> Web
+			
+			page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")	# übergebene und geswitchte Urls
+			ptmdTemplate = stringextract('"ptmdTemplate":"', '"', page)
+			ptmdTemplate = unquote(ptmdTemplate)						# Bsp.: ..251215_toll_sjr_fro%2F2
+			PLog("ptmdTemplate_web: " + ptmdTemplate)
 		page=""; msg=""													# mit ptmdTemplate obsolet
 
 	if not page or '"status":404' in page:								# ptmdTemplate -> videodat_url via Graphql
@@ -11787,7 +11834,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 				msg2 = str(exception)
 				PLog("videodat_url_error: " + msg2)
 				videodat_url="" 
-		else:															# bereits vorhnaden			
+		else:															# bereits vorhanden			
 			videodat_url = ptmdTemplate									# /tmd/2/{playerId}/vod/ptmd/mediathek/..
 				
 		videodat_url = videodat_url.replace('{playerId}', ptmd_player) 	# ptmd_player injiziert 
@@ -11800,8 +11847,11 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 			msg2=msg
 			PLog("videodat_page: " + page[:80])
 		else:
-			page=""
-			msg2="Videodaten fehlen!"				
+			if not videodat_page:										# Videodaten bereits in futura-Seite? (selten)
+				page=""
+				msg2="Videodaten fehlen!"
+			else:
+				page = videodat_page			
 		cdn_api=False
 
 	if page == "":
