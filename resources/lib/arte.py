@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>72</nr>								# Numerierung für Einzelupdate
-#	Stand: 16.12.2025
+# 	<nr>73</nr>								# Numerierung für Einzelupdate
+#	Stand: 02.01.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -185,6 +185,7 @@ def set_lang(title, new_set=""):
 		icon = R('arte_lang.png')
 		msg1 = u"[B]%s[/B]" % arte_lang
 		xbmcgui.Dialog().notification(msg1,"",icon,2000,sound=False)
+		Main_arte()
 		
 		return
 		
@@ -236,7 +237,7 @@ def get_live_data(name):
 
 	arte_lang = Dict('load', "arte_lang")
 	lang = arte_lang.split("|")[1].strip()					# fr, de, ..
-
+	
 	err_par = [u"[B]LIVE[/B]", "", "", thumb, href]			# Stream ohne Daten
 	# nur Seite für Heute holen, kein Check ob Sprache verfügbar:
 	ret_list = EPG_Today(ID="EPG_Today", OnlyNow=True)		# EPG-Abruf 
@@ -292,7 +293,8 @@ def EPG_Today(ID="", OnlyNow=""):
 	EPG_path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/TV_GUIDE/?day=%s"
 	path = EPG_path % (lang, today)
 	PLog(path)
-	if url_check(path, dialog=False) == False:		# nicht für alle Sprachen verfügbar
+	new_url, msg = get_page(path, GetOnlyRedirect=True)	
+	if not new_url:									# nicht für alle Sprachen verfügbar
 		icon = R('arte_lang.png')
 		msg1 = u"EPG fehlt: " + arte_lang
 		msg2 = u"lade: " + u"Deutsch | de"			# Fallback Deutsch

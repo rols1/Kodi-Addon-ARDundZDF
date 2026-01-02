@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>146</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.11.2025
+# 	<nr>147</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1185,13 +1185,12 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 	new_url=path													# dummy
 	UrlopenTimeout = 10
 
-
 	try:															# 1. Versuch ohne SSLContext 
 		PLog("get_page1:")
 		if GetOnlyRedirect:											# nur Redirect anfordern
 			PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
-			page, msg = getRedirect(path, header)
-			return page, msg
+			page, msg = getRedirect(path, header)					# ab 02.01.2026 Leer-Url falls Status != 200
+			return page, msg										# OK: "https://..html",	"HTTP-Status: 200"									
 
 		if header:
 			req = Request(path, headers=header)	
@@ -1325,18 +1324,21 @@ def getHeaders(response):						# z.Z.  nicht genutzt
 # 04.08.2025 Umstellung für Redirects httplib2 -> requests (addon.xml),
 # Param stream erforderlich für mp4-Urls, Fallback=path falls requests 
 #	fehlt oder fehlschlägt.
+# 02.01.2026 Rückgabe mit requests_modul immer mit HTTP-Status-Code,
+#	bei Status-Code != 200 immer mit leerer Url.
 #
 def getRedirect(path, header="", stream=False):		
 	PLog('getRedirect: '+ path)
 	PLog("header: " + str(header))
 	PLog("stream: " + str(stream))
 	
-	page=""; msg=""
+	page=""; msg="HTTP-Status: "; rstatus=200
 	parsed = urlparse(path)
 
 	if not requests_modul:
 		PLog("requests_modul_missing | no_getRedirect")
-		return path, msg											# Fallback
+		msg=""
+		return path, msg											# Fallback: ohne Redirect
 		
 	try:
 		addon_id='script.module.requests'; cmd="openSettings"
@@ -1346,7 +1348,9 @@ def getRedirect(path, header="", stream=False):
 			r = requests.get(path, headers=header, stream=stream)	
 		else:
 			r = requests.get(path, stream=stream)
-		PLog("Status_r: " + str(r.status_code))
+		rstatus = str(r.status_code)
+		PLog("Status_r: " + rstatus)	
+		msg = msg + rstatus											# "HTTP-Status: 200"
 		new_url = r.url
 		if new_url.startswith("http") == False:						# z.B. /rubrik/sportschau/..
 			new_url = 'https://%s%s' % (parsed.netloc, new_url) 	# Serveradr. ergänzen
@@ -1354,11 +1358,17 @@ def getRedirect(path, header="", stream=False):
 			PLog("not_redirected") 
 		else:
 			PLog("redirected_to: " + new_url)
-		return new_url, msg
+		
+		if rstatus == "200":										# Rückgabe Url (mit/ohne Redirect)
+			return new_url, msg
+		else:
+			new_url=""												# Rückgabe Leer-Url
+			return new_url, msg										# Bsp.: "", "HTTP-Status: 404"
 	except Exception as e:
 		PLog("redirect_error: "  + str(e))
-		err=str(e)		
-		return path, msg											# Fallback übergebener path
+		err=str(e);	
+		path=""; msg="%s | %s" % (msg, err)
+		return path, msg									# Rückgabe Leer-Url
 
 # ----------------------------------------------------------------------
 # iteriert durch das Objekt	und liefert Restobjekt ab path
@@ -2520,7 +2530,8 @@ def ReadJobs():
 # 11.05.2023 postcontent (ZDF, 3sat) hinzugefügt
 # 08.10.2024 Änderung Cache-Format - nur noch Inhalt summary (Start mit "V5.1.2_summ:"),
 #	Param page entfernt (obsolet)
-# 19.03.2025 getRedirect (nach ZDF-Relaunch für geänderte Weblinks notwendig)
+# 19.03.2025 getRedirect via url_check (nach ZDF-Relaunch für geänderte Weblinks 
+#	notwendig)
 #
 def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',duration=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
@@ -4119,10 +4130,10 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 		xbmc.Player().play(url, li, False)						# ohne Slideshow 					
 
 #---------------------------------------------------------------- 
-# Aufruf: PlayVideo
+# Aufruf: PlayVideo u.a.
+# Rückgabe False oder Redirect-Url
 # 04.03.2022 Header für ZDF-Url erforderl. (Error "502 Bad Gateway")
 # 21.01.2023 dialog optional für add_UHD_Streams (ohne Dialog)
-# Rückage url oder False
 # 14.03.2025 Header auf user-agent (curl) beschränkt
 # 06.08.2025 Param stream ergänzt für requests in getRedirect 
 #
@@ -4162,7 +4173,7 @@ def url_check(url, caller='', dialog=True):
 	# url='http://feeds.soundcloud.com/x'		# HTTP Error 405: Method Not Allowed
 	header = {'user-agent': 'curl/7.81.0'}
 
-	page, msg = getRedirect(url, header, stream)			
+	page, msg, rstatus = getRedirect(url, header, stream)			
 	if page:
 		return page							# ermittelte Url	
 	else:
