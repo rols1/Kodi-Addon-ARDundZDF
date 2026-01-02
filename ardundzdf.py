@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>306</nr>										# Numerierung für Einzelupdate
+# 	<nr>307</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.7'
-VDATE = '01.01.2026' 
+VDATE = '02.01.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8587,7 +8587,8 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 	
 	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)		# 5 min, escape-clean
 	img = R(ICON_DIR_FOLDER)										# Default -> ZDF_KatSeriePre
-	newpath = url_check(path, caller="ZDF_Graphql_WebDetails", dialog=False) # Rückg. auch mit Dict
+#	newpath = url_check(path, caller="ZDF_Graphql_WebDetails", dialog=False) # Rückg. auch mit Dict
+	newpath, msg = getRedirect(path)								# Rückg. auch mit Dict
 	if not page:
 		if newpath:													# False?
 			page, msg = get_page(newpath)
@@ -10102,8 +10103,9 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 		page = Dict("load", "ZDF_sendungen-100", CacheTime=ZDF_CacheTime_AZ)
 		AZ=True
 	if not page:
-		page, msg = get_page(path=url, GetOnlyRedirect=True)	
-		page, msg = get_page(path=page)
+		page, msg = get_page(path=url, GetOnlyRedirect=True)
+		if page:
+			page, msg = get_page(path=page)
 		if not page:											# nicht vorhanden?
 			msg1 = 'ZDF_RubrikSingle: [B]%s[/B] kann nicht geladen werden.' % title
 			msg2 = msg
