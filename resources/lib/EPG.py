@@ -12,8 +12,8 @@
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	ab Okt. 2025 Webseite geändert, TV-Daten im json-Format nur für 1 Tag
 #
-# 	<nr>38</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.12.2025
+# 	<nr>39</nr>										# Numerierung für Einzelupdate
+#	Stand: 03.01.2026
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -697,7 +697,10 @@ if "'context'" in str(sys.argv):										# Kontextmenü: EPG im textviewer
 	#PLog(lines)		# Debug
 	if len(lines) == 0:
 		icon = R('tv-EPG-all.png')
-		title = ID
+		if "pub_id" in params:											# Radio-EPG
+			title = sender
+		else:
+			title = ID
 		xbmcgui.Dialog().notification(title, "keine EPG-Daten vorhanden",icon,3000)	
 	else:
 		lines =  "\n".join(lines)
