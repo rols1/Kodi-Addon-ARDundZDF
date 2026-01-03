@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>307</nr>										# Numerierung für Einzelupdate
+# 	<nr>308</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.7'
-VDATE = '02.01.2026' 
+VDATE = '03.01.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1203,7 +1203,8 @@ def ZDF_Teletext(path=""):
 		]
 		
 	#  ZDF korrigiert nicht selbst 
-	if url_check(path, caller='ZDF_Teletext', dialog=False) == False:   # falsche Seite manuell?
+	newpath, msg = getRedirect(path) 									# falsche Seite manuell eigegeben?
+	if not newpath:
 		aktpg = re.search(r'seiten/(.*?).html', path).group(1)
 		msg1 = u'Seite %s' % aktpg
 		msg2 = u'nicht verfügbar'
@@ -3898,8 +3899,8 @@ def ARDSportWDRArchiv():
 # 08.02.2024 Berücksichtigung von 1-3 Sendern statt 1-2
 #
 def ARDSportLiga3(title, img, sender="", source=""): 
-	PLog("ARDSportLiga3: " + sender)
-	PLog(source)
+	PLog("ARDSportLiga3:")
+	PLog("sender: %s, source: %s" % (sender, source))
 	title_org=title
 	
 	# -----------------------------------------							# mit source -> Umschalter	
@@ -4035,6 +4036,7 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			return
 
 		stream_source = Dict("load", "ARD_streamsource")	# Streamquellen einstellen
+		PLog("stream_source: " + stream_source)
 		if stream_source == False or stream_source == "":
 			stream_source = "Live"							# Default: Livestream
 		title = u"Wechsel der [B]Streamquellen[/B] | aktuell: [B]%s-Streams[/B]" % stream_source
@@ -4106,7 +4108,7 @@ def ARDSportLiga3(title, img, sender="", source=""):
 		return
 	
 #---------------------------------------------------------------------------------------------------
-# 21.10.2023 Url-Check hinzugefügt
+# 21.10.2023 Url-Check hinzugefügt, 03.01.2026 durch getRedirect ersetzt
 #
 def ARDSportgetEventlist(senderlist): 
 	PLog("ARDSportgetEventlist:")
@@ -4143,7 +4145,8 @@ def ARDSportgetEventlist(senderlist):
 				msg2 = "Sender: %s" % sender
 				xbmcgui.Dialog().notification(msg1,msg2,img,2000,sound=False)
 
-				if url_check(url, caller='ARDSportgetEventlist', dialog=False):
+				newpath, msg = getRedirect(url)
+				if newpath:
 					title_list.append(title + " | Check: OK")
 				else:
 					title_list.append(title + " | Check: Error")
@@ -8587,7 +8590,6 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 	
 	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)		# 5 min, escape-clean
 	img = R(ICON_DIR_FOLDER)										# Default -> ZDF_KatSeriePre
-#	newpath = url_check(path, caller="ZDF_Graphql_WebDetails", dialog=False) # Rückg. auch mit Dict
 	newpath, msg = getRedirect(path)								# Rückg. auch mit Dict
 	if not page:
 		if newpath:													# False?
@@ -12838,6 +12840,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 #		mit Sender-Liste für Einzelauflösungen
 #	29.10.2022 Bereinigung Sender-Liste mit mögl. Einzelauflösungen (entfernt: HR, NDR, WDR)
 #	09.09.2025 veraltete Kopfdoku entfernt - s. Archiv
+#	02.01.2026 Austausch url_check -> getRedirect
 #
 	PLog ('Parseplaylist: ' + url_m3u8)
 	Stream_List=[]
@@ -12848,8 +12851,9 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	playlist = ''
 	# seit ZDF-Relaunch 28.10.2016 dort nur noch https
 	if url_m3u8.startswith('http') == True :							# URL oder lokale Datei?
-		url_check(url_m3u8, caller='Parseplaylist', dialog=False)		# o. Dialog (wg. Nutzung strm-Thread)				
-		playlist, msg = get_page(path=url_m3u8)				
+		newpath, msg = getRedirect(url_m3u8)
+		if newpath:				
+			playlist, msg = get_page(path=newpath)				
 		if playlist == '':
 			icon = R(ICON_WARNING)
 			msg1 = "Streamquelle kann nicht geladen werden."
