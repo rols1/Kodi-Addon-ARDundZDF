@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>310</nr>										# Numerierung für Einzelupdate
+# 	<nr>311</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.7'
 VDATE = '04.01.2026' 
 
@@ -9477,7 +9477,7 @@ def ZDF_StartWebCluster(ctitle=""):
 		PLog("items: %d" % len(items))
 		skip=[ctitle]												# skip Cluster-Titel am Ende
 		for item in items:
-			title = stringextract('"title":"', '"', item)				
+			title = stringextract('"title":"', '"', item)
 			if not title or title in skip:
 					continue
 			title = repl_json_chars(title)						# hier (noch) keine NEU-Kennzeichnung
@@ -9514,6 +9514,7 @@ def ZDF_StartWebCluster(ctitle=""):
 			sharing_url = "https://www.zdf.de/" + canon
 			ptmdTemplate = stringextract('ptmdTemplate":"', '"', item)
 			ptmdTemplate=ptmdTemplate.replace('{playerId}', PTMD_PLAYER)
+			ptmdTemplate=ptmdTemplate.replace("_dgs", "")			# 1. Treffer i.d.R. DGS
 
 			movie_tag = "Film"
 			if owner:
@@ -9529,7 +9530,8 @@ def ZDF_StartWebCluster(ctitle=""):
 
 			PLog("run2_Satz: " + title) 
 			PLog(colltyp); PLog(canon); PLog(scms_id); PLog(descr);  
-			PLog(ptmdTemplate); PLog(dur); PLog(avail); PLog(stream);
+			PLog(dur); PLog(avail); PLog(stream);
+			PLog("ptmdTemplate: " + ptmdTemplate);
 
 			title=py2_encode(title); img=py2_encode(img); 
 			movie_tag=py2_encode(movie_tag); 
