@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>148</nr>										# Numerierung für Einzelupdate
-#	Stand: 02.02.2026
+# 	<nr>149</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1362,6 +1362,7 @@ def getRedirect(path, header="", stream=False):
 		if rstatus == "200":										# Rückgabe Url (mit/ohne Redirect)
 			return new_url, msg
 		else:
+			PLog("empty_new_url_returned")
 			new_url=""												# Rückgabe Leer-Url
 			return new_url, msg										# Bsp.: "", "HTTP-Status: 404"
 	except Exception as e:
@@ -2531,14 +2532,14 @@ def ReadJobs():
 # 08.10.2024 Änderung Cache-Format - nur noch Inhalt summary (Start mit "V5.1.2_summ:"),
 #	Param page entfernt (obsolet)
 # 19.03.2025 getRedirect via url_check (nach ZDF-Relaunch für geänderte Weblinks 
-#	notwendig)
+#	notwendig), 04.01.2026 umgestellt auf getRedirect via get_page.
 #
 def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',duration=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
 	PLog(skip_verf); PLog(skip_pubDate); PLog(duration); 
 	duration_org=duration
 
-	newpath = url_check(path, caller="get_summary_pre", dialog=False)		# ZDF, s.o.
+	newpath, msg = get_page(path, GetOnlyRedirect=True)
 	if newpath:										# False od. redirect-path
 		path=newpath
 	
