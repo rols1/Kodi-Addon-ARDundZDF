@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>308</nr>										# Numerierung für Einzelupdate
+# 	<nr>309</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.7'
-VDATE = '03.01.2026' 
+VDATE = '04.01.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7990,7 +7990,7 @@ def SenderLiveResolution(path, title, thumb, descr, Merk='false', Sender='', sta
 		PLog("title: " + title)
 		descr = "%s\n\n%s" % (title, descr)
 		PLog("descr: " + descr)
-		li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr, live=True) # mit url_check
+		li = Parseplaylist(li, url_m3u8, thumb, geoblock='', descr=descr, live=True) # mit getRedirect
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 							
 	elif url_m3u8.find('.m3u8') >= 0: 
@@ -11785,8 +11785,9 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 		page, msg = get_page(path, header=header)
 	else:
 		if not ptmdTemplate:			
-			PLog("get_ptmdTemplate_from_Web")				
+			PLog("get_ptmdTemplate")				
 			if "prod-futura" in path:									# check streamApiUrlAndroid
+				PLog("get_ptmdTemplate_from_futura")
 				page, msg = get_page(path)
 				if '"streamApiUrlAndroid"' in page:						# selten: formitaeten enthalten, inkompatibel,
 					page=page.replace('\\/','/')						# Bsp.: Das ZDF auf der re:publica25
@@ -11795,14 +11796,17 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 					PLog("ptmdTemplate_android: " + androidurl)							
 					ptmdTemplate=androidurl
 					if "formitaeten" in page:							# übernehmen, falls Graphql-Call fehlschlägt
+						PLog("found_formitaeten")
 						videodat_page=page
 				else:
 					path = ZDF_BASE + "/" + path.split("/")[-1]			# switch futura-api -> Web
-			
-			page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")	# übergebene und geswitchte Urls
-			ptmdTemplate = stringextract('"ptmdTemplate":"', '"', page)
-			ptmdTemplate = unquote(ptmdTemplate)						# Bsp.: ..251215_toll_sjr_fro%2F2
-			PLog("ptmdTemplate_web: " + ptmdTemplate)
+					
+			if not ptmdTemplate:										# schon gefunden?
+				PLog("get_ptmdTemplate_from_Web")
+				page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")	# übergebene und geswitchte Urls
+				ptmdTemplate = stringextract('"ptmdTemplate":"', '"', page)
+				ptmdTemplate = unquote(ptmdTemplate)						# Bsp.: ..251215_toll_sjr_fro%2F2
+				PLog("ptmdTemplate_web: " + ptmdTemplate)
 		page=""; msg=""													# mit ptmdTemplate obsolet
 
 	if not page or '"status":404' in page:								# ptmdTemplate -> videodat_url via Graphql
