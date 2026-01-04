@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>309</nr>										# Numerierung für Einzelupdate
+# 	<nr>310</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.7'
 VDATE = '04.01.2026' 
 
@@ -11776,6 +11776,7 @@ def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmdTemplate=""):
 	PLog("ZDF_getApiStreams:")
 	PLog("%s, path: %s, ptmdTemplate: %s" % (title, path, ptmdTemplate))
+	path_org=path
 	
 	cdn_api=True														# -> formsblock s.u.
 	videodat_page=""
@@ -11858,6 +11859,8 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 			if not videodat_page:										# Videodaten bereits in futura-Seite? (selten)
 				page=""
 				msg2="Videodaten fehlen!"
+				if "livestream-" in path_org or "-live-" in path_org:
+					msg2="%s Sendezeit prüfen!" % msg2
 			else:
 				page = videodat_page			
 		cdn_api=False
