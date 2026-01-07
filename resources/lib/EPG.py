@@ -12,8 +12,8 @@
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	ab Okt. 2025 Webseite geändert, TV-Daten im json-Format nur für 1 Tag
 #
-# 	<nr>39</nr>										# Numerierung für Einzelupdate
-#	Stand: 03.01.2026
+# 	<nr>40</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.01.2026
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -69,11 +69,11 @@ EPG_BASE 	= "http://www.tvtoday.de"
 #	Dateilock nicht erf.
 # 26.10.2020 Update der Datei livesenderTV.xml hinzugefügt - entf. ab
 #	09.10.2021 siehe update_single
-# 21.05.2024 Nutzung concurrent.futures. Aufruf als Thread (ohne: Klemmer)
 #
 def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	PLog('thread_getepg:')
 	
+	open(EPGACTIVE, 'w').close()					# Aktiv-Signal setzen (DICT "EPGActive")
 	icon = R('tv-EPG-all.png')
 	xbmcgui.Dialog().notification("EPG-Download", "gestartet",icon,3000)
 	xbmc.sleep(1000)									# Klemmer bei sleep vor Notification	
@@ -94,8 +94,8 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	for ID in ID_list:
 		EPG(ID=ID, load_only=True)						# EPG-Seite laden + speichern
 		
-	if len(ID_list) > 0:
-		open(EPGACTIVE, 'w').close()					# Aktiv-Signal setzen (DICT "EPGActive")
+	if len(ID_list) == 0:
+		os.remove(EPGACTIVE)							# Fehlschlag? Aktiv-Signal entfernen
 
 	xbmcgui.Dialog().notification("EPG-Download", "fertig: %d Sender" % len(sort_playlist),icon,3000)
 	
