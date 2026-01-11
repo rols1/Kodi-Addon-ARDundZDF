@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>149</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.02.2026
+# 	<nr>150</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.01.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -43,10 +43,10 @@ elif PYTHON3:
 	except:
 		pass
 try:
-	import requests							# ab Aug. 2025 via addon.xml, Redirect-Probleme mit httplib2
+	import requests							# ab Aug. 2025 via addon.xml nach Redirect-Problemen mit httplib2
 	requests_modul="true"
-except Exception as exception:				# möglich: "future feature annotations is not defined"
-	requests_modul = ""						# s. getRedirect
+except Exception as exception:				# möglich: "future feature annotations is not defined",
+	requests_modul = ""						# anscheinend abhängig von python-Version 3.5 / 3.6 
 				
 import time, datetime
 from time import sleep  	# PlayVideo
@@ -1990,6 +1990,8 @@ def transl_json(line):	# json-Umlaute übersetzen
 		, (u'\\u2013', u'-')		# Arte: -
 		, (u'\\u2014', u'-')		# Arte: -
 		, (u'\\u2019', u'*')		# Arte: '
+		, (u'\\u00c9', u'E')		# Arte: Épidémies
+		, (u'\\u00ea', u'e')		# Arte: Enquêtes
 		, (u'\\u2019', u'*')
 		, (u'\\u00f8', u'ø')		# ø Kleinbuchstabe o mit Strich,
 		, (u'\\u00e5', u'å')		# å Kleinbuchstabe a mit Ring,
@@ -4666,9 +4668,11 @@ def get_streams_from_link(medialink):
 
 	PLog("path_%s" % ID)
 	if path and ID:													# Zielfunktionen	
-		if url_check(path, caller='get_streams_from_link', dialog=True) == False:
-			path=""													# URL-Check fehlgeschlagen
-		else:	
+		new_url, msg = getRedirect(path)
+		if not new_url:
+			path=""	
+		else:
+			path = new_url
 			if ID =="ARD":
 				ARDStartSingle(path, title="", summary="")
 			if ID == "ZDF":

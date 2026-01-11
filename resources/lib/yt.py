@@ -16,14 +16,15 @@
 #
 #	April 2023: phoenix-Youtube-Videos nicht mehr zugänglich, phoenix-
 #		Modul umgestellt auf ARD-new-Funktionen. Youtube-Funktionen
-#		yt_get und get_stream_details vorerst nicht mehr genutzt.
+#		yt_get und get_stream_details vorerst nicht mehr genutzt,
+#		11.01.2026 beide Funktionen entfernt.
 #
 ################################################################################
 #
 #	17.03.2020 Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #	
-# 	<nr>9</nr>								# Numerierung für Einzelupdate
-#	Stand: 22.10.2025
+# 	<nr>10</nr>								# Numerierung für Einzelupdate
+#	Stand: 11.01.2026
 #
 
 from __future__ import absolute_import
@@ -64,160 +65,20 @@ ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
 PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
 NAME			= 'ARD und ZDF'
-MVW_DATA 		= '{"queries":[{"fields":["title","topic"],"query":"%s"},{"fields":["channel"],"query":"%s"}],"sortBy":"timestamp","sortOrder":"desc","future":false,"offset":%d,"size":%d}'
-MVW_DATA_ALL 	= '{"queries":[{"fields":["title","topic"],"query":"%s"}],"sortBy":"timestamp","sortOrder":"desc","future":false,"offset":%d,"size":%d}'
+
+# 11.01.2026 ergänzt: description (zusätzlich zu title, topic), future=true (vorher false), s. 
+#	https://github.com/rols1/Kodi-Addon-ARDundZDF/issues/49
+MVW_DATA_ALL 	= '{"queries":[{"fields":["title","topic","description"],"query":"%s"}],"sortBy":"timestamp","sortOrder":"desc","future":true,"offset":%d,"size":%d}'
+MVW_DATA = '{"queries":[{"fields":["channel"],"query":"%s"},{"fields":["channel","topic","title","description"],"query":"%s"}],"sortBy":"timestamp","sortOrder":"desc","future":true,"offset":%d,"size":%d}'
 
 #----------------------------------------------------------------
 # 19.12.2020 ytplayer.config nicht mehr vor itag's positioniert - Block-
 #	bildung direkt mit itag (s.u.)
-def yt_get(url, vid, title, tag, summ, thumb):
-	PLog('yt_embed_url: ' + url)
-	watch_url = 'https://www.youtube.com/watch?v=' + vid	
-	PLog('yt_watch_url: ' + watch_url)
-	PLog(tag); PLog(summ);PLog(thumb);
-	title_org=title; tag_org=tag; summ_org=summ
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='phoenix')				# Home-Button
-
-	page, msg = get_page(path=watch_url)	
-	if page == '':
-		msg1 = 'Seite kann nicht geladen werden.'
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return li 
-
-	#pos1 = page.find('ytplayer.config')	# entf. - s.o.
-	
-	# String-Behandl. (Verzicht auf json-Funktionen)
-	page = page.replace('\\"', '"')
-	page = page.replace('\\u0026', '&')
-	page = page.replace('\\', '')
-	
-	duration=''
-	if 'approxDurationMs' in page:			# Extrakt aus Webseite 
-		duration = get_duration(page)			
-	PLog("duration: %s" % duration)
-	
-	# Video-Konfigs mit loudnessDb begrenzen (n.verw.):
-	Videos = blockextract('"itag":', page, '"loudnessDb":') 
-	PLog(len(Videos))
-	if len(Videos) == 0:
-		msg1 = u"Youtube-Video nicht verfügbar."
-		msg2 = 'Muster "itag" nicht gefunden'
-		msg3 = "Video-ID: watch?v=%s" %	vid	
-		MyDialog(msg1, msg2, msg3)
-		# return li							# Absturz möglich
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			
-	if SETTINGS.getSetting('pref_video_direct') == 'true': 
-		PLog('Sofortstart: yt_get')
-		# itag 22 i.d.R.: 1280x720, mime: video/mp4, codecs: avc1.64001F, mp4a.40.2
-		for stream in Videos:
-			yt_url, res,fps,bitrate,mime,codecs,itag = get_stream_details(stream)	 
-			if '22' in itag:
-				break
-		if summ == '':
-			summ = tag
-
-		summ="%s\n\n%s" % (summ, 'Youtube-Video: Format %s | fps: %s | bit: %s | %s | %s' %\
-			(res, fps, bitrate, mime, codecs))	
-		PlayVideo(url=yt_url, title=title, thumb=thumb, Plot=summ, sub_path="")
-		return
-		
-	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
-	i=1
-	for v in Videos:
-		itag 		= stringextract('itag="', '"', v)	
-		yt_url,res,fps,bitrate,mime,codecs,itag = get_stream_details(v)
-		
-		# mime: video/mp4, codecs: avc1.64001F, mp4a.40.2 
-		if 'mp4' not in mime or 'mp4' not in codecs:			
-			continue
-		PLog('itag: ' + itag); 
-		PLog('yt_url: ' + yt_url[:100])
-		PLog(res); PLog(fps); PLog(bitrate); PLog(mime); PLog(codecs);
-
-		if res == '' and fps == '':
-			summ='%s. Youtube-Video (nur Audio): %s'	% (str(i), codecs)
-		else:
-			summ='%s. Format: %s | fps: %s | bit: %s | %s | %s'	% (str(i), res, fps, bitrate, mime, codecs)
-		
-		download_list.append(summ + '#' + yt_url)	# Download-Liste füllen	(Qual.#Url)
-			
-		if duration:
-			tag = u"Dauer %s | %s" % (duration, tag_org)
-		
-		summ_par = "%s||||%s||||%s" % (tag, summ, title_org) 
-		title = "%s. %s" % (str(i),title_org)
-		PLog("Satz:")	
-		PLog(title); PLog(tag); PLog(summ)	
-			
-		yt_url=py2_encode(yt_url); title=py2_encode(title); thumb=py2_encode(thumb)
-		summ_par=py2_encode(summ_par)
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % \
-			(quote(yt_url), quote(title), quote_plus(thumb), quote_plus(summ_par))	
-		addDir(li=li, label=title, action="dirList", dirID="PlayVideo", fanart=thumb, 
-			thumb=thumb, fparams=fparams, tagline=tag, summary=summ, mediatype='video')			
-			
-		i=i+1
-
-	if 	download_list:	# Downloadbutton(s), high=0: 1. Video = höchste Qualität
-		PLog(len(download_list))	
-		# Qualitäts-Index high: hier Basis Bitrate (s.o.)
-		title_org = title_org
-		summary_org = ''
-		tagline_org = repl_json_chars(tag)
-		title_org = "%s\n\n[B]Hinweis:[/B] Download seit 02/2023 nur noch  für Audio (mp4a.40.2) möglich." % title_org
-		#title_org = title_org.replace("\n", "||")		# replace in test_downloads
-		# PLog(summary_org);PLog(tagline_org);PLog(thumb);
-		li = ardundzdf.test_downloads(li,download_list,title_org,summary_org,tagline_org,thumb)  
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
+# 11.01.2026 yt_get, get_stream_details und get_duration entfernt
+# def yt_get(url, vid, title, tag, summ, thumb):
+# def get_stream_details(stream):
+# get_duration(page):	
 # ----------------------------------------------------------------------
-#  str(stream) durch Aufrufer
-def get_stream_details(stream):	
-	PLog('get_stream_details:') 
-	# PLog(stream)
-	
-	yt_url		= stringextract('url":"', '"', stream)
-	res	= ''
-	
-	width		= stringextract('width":', ',', stream)
-	height		= stringextract('height":', ',', stream)
-	if width and height:
-		res	= "%sx%s" % (width, height)
-	
-	fps 		= stringextract('fps":', ',', stream)				
-	bitrate		= stringextract('bitrate":', ',', stream)				
-	mime 		= stringextract('mimeType":"', ';', stream)
-	codecs 		= stringextract('codecs="', '"', stream)				
-	itag 		= stringextract('itag":', ',', stream)	
-	
-	PLog("yt_url: %s,res: %s,fps: %s,bitrate: %s,mime: %s,codecs: %s,itag: %s" %\
-		(yt_url,res,fps,bitrate,mime,codecs,itag))
-	return 	yt_url,res,fps,bitrate,mime,codecs,itag
-# ----------------------------------------------------------------------
-# yt_init.length() klappt nicht, daher	
-# 	Extrakt aus Webseite (id="player-api" ..)
-#	# Bsp. : \"approxDurationMs\":\"4000055\"
-# Auf die Sekunden verzichten wir hier.
-# 25.05.2020 Anpassung class YouTube (self.millisecs),
-#	get_duration entfällt vorerst
-def get_duration(page):
-	PLog('get_duration:') 
-
-	millisecs = stringextract('"approxDuration', ',', page)
-	millisecs = millisecs.replace('\\', '')
-	try:
-		duration = re.search(r'Ms":"(\d+)"', millisecs).group(1)
-		duration = seconds_translate(int(int(duration) / 1000))
-	except Exception as exception:	
-		PLog(str(exception))
-		duration = ''			
-	
-	return duration
 	
 ##################### MediathekViewWeb-Funktionen ######################
 # Aufruf aus den div. Hauptmenüs (Setting pref_use_mvw)
@@ -252,10 +113,11 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 	lsize = 20								# Anzahl pro Liste
 	offset=int(offset)
 	 
+	PLog("Mark0")
 	if "ARD|ZDF" in sender:					# Suche in ARD und ZDF
 		data = MVW_DATA_ALL  % (query, offset, lsize)
 	else:									# Suche in einz. Sender / Channel
-		data = MVW_DATA % (query, sender, offset, lsize)
+		data = MVW_DATA % (sender, query, offset, lsize)
 	PLog("data: " + data)
 	
 	page, msg = get_mvw_page(data)
@@ -335,10 +197,12 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 		dauer="?"
 		if duration != '""':										# z.B. Livestream 
 			dauer = seconds_translate(duration)
-			
-		title = transl_json(title)
-		title = repl_json_chars(title)
+						
 		descr = transl_json(descr); 
+		summ = repl_json_chars(descr)
+		title = transl_json(title)
+		descr = transl_json(descr); 
+		title = repl_json_chars(title)
 		summ = repl_json_chars(descr)
 		
 		ut = u"nein"
@@ -350,7 +214,7 @@ def MVWSearch(title, sender, offset=0, query='', home_id='', myfunc=''):
 		Plot = "%s||||%s" % (tag, summ)
 		
 		PLog("Satz2:")
-		PLog(title); PLog(url_med); PLog(Plot[:80]); PLog(url_sub)
+		PLog(title); PLog(url_med); PLog(Plot[:80]); PLog(url_sub)		
 		
 		title=py2_encode(title); Plot=py2_encode(Plot);
 		url_sub=py2_encode(url_sub); url_low=py2_encode(url_low); 
@@ -509,12 +373,12 @@ def get_mvw_page(data):
 		r = urlopen(req)
 		PLog(r.info())
 		page = r.read()		
+		page = page.decode('utf-8')
 	except Exception as e:
 		page=''
 		msg=str(e)
 		PLog(msg)
 	
-	page = page.decode('utf-8')
 	PLog(len(page))
 	PLog(page[:100])
 	return page,msg
