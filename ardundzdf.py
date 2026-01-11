@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>311</nr>										# Numerierung für Einzelupdate
+# 	<nr>312</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.7'
 VDATE = '04.01.2026' 
 
@@ -224,11 +224,8 @@ PLog('check: ' + str(check))
 
 
 now = time.time()											# Abgleich Flags
-# die tvtoday-Seiten decken 12 Tage ab, trotzdem EPG-Lauf alle 12 Stunden
-#	 	(dto. Cachezeit für einz. EPG-Seite in EPG.EPG).
-#		26.11.2023 Intervall optional statt 12 Std. - s.a. EPG-Modul
 # 	tvtoday-Seiten decken nur noch 1 Tag ab (Web, api), Begrenzung auf 3
-#	wg. Ladedauer
+#	wg. Ladedauer, abzüglich Puffer für die 12-Std. des Tages-EPG
 #
 if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden?
 	eci = SETTINGS.getSetting('pref_epg_intervall')
@@ -236,10 +233,10 @@ if SETTINGS.getSetting('pref_epgpreload') == 'true':		# EPG im Hintergrund laden
 	eci = int(eci)
 	PLog("epg_check: eci %d" % eci)	
 	if eci == 12:											# 12 Std.
-		EPGCacheTime = 43200
+		EPGCacheTime = 3600									# rechtz.  Nachladen nach 1 Std.
 	else:
-		eci = min(eci,3)									# alte Settingwerte auf 3 begrenzen
-		EPGCacheTime = eci * 86400 							# 1-3 Tage
+		eci = min(eci,2)									# alte Settingwerte auf  begrenzen
+		EPGCacheTime = (eci * 86400) - 43200 				# - 12 Std. für rechtz.  Nachladen
 		
 	EPGACTIVE = os.path.join(DICTSTORE, 'EPGActive') 		# Marker thread_getepg aktiv
 	is_activ=False
@@ -4145,7 +4142,7 @@ def ARDSportgetEventlist(senderlist):
 				msg2 = "Sender: %s" % sender
 				xbmcgui.Dialog().notification(msg1,msg2,img,2000,sound=False)
 
-				newpath, msg = getRedirect(url)
+				newpath, msg = getRedirect(url, stream=True)
 				if newpath:
 					title_list.append(title + " | Check: OK")
 				else:
@@ -5435,7 +5432,8 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
 				PLog(item)
 				path, url = item.split('|')	
-				new_url, msg = get_page(path=url, GetOnlyRedirect=True) # für Audiothek erforderlich
+				new_url = path								# wg. Problem mit Streamerkennung ausgesetzt                                        
+				#new_url, msg = get_page(path=url, GetOnlyRedirect=True) # für Audiothek erforderlich
 				if new_url == '':							# 30.03.2022 weiter ohne Exception
 					msg1 = "Fehler"
 					msg2 = "Quelle nicht gefunden: %s" % url.split("/")[-1]
@@ -8899,7 +8897,13 @@ def ZDF_KatSeriePre(title, path, img):
 		if SETTINGS.getSetting('pref_video_direct') == 'true':
 			mediatype='video'
 		ptmdTemplate = stringextract('"ptmdTemplate":"', '"', page)
-		tag="zum Video"; descr=""
+		dauer = stringextract('"av_content_duration":', ',', page)
+		dauer = dauer.replace("000", "")					# av_content_duration":5311000,
+		dauer = seconds_translate(dauer)
+		
+		
+		tag="Dauer: %s | zum Video" % dauer 
+		descr=""
 		title=t_org; img=img_org; 
 		PLog("ptmdTemplate_video: "); PLog(title); PLog(ptmdTemplate); 
 		img=py2_encode(img); title=py2_encode(title);
@@ -9477,6 +9481,9 @@ def ZDF_StartWebCluster(ctitle=""):
 		PLog("items: %d" % len(items))
 		skip=[ctitle]												# skip Cluster-Titel am Ende
 		for item in items:
+			PLog(item[:80])
+			if "StaticContentPromo" in item:						# Beitrag über die gesamte Breite
+				continue			
 			title = stringextract('"title":"', '"', item)
 			if not title or title in skip:
 					continue
@@ -11772,6 +11779,7 @@ def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
 #	nicht zu blockieren
 # 19.12.2025 Vorrang für ptmdTemplate, scms_id nur noch für HBBTV verwendet,
 #	bei futura-path Ermittlung ptmdTemplate via switch zur Webadresse.
+#	Nachteil: Videoquelle spärlich, i.d.R. nur 2 Auflösungen, kein DGS.
 # 31.12.2025 Nutzung ev. Videodaten in futura-Seite als Fallback für 
 #	Fehlschlag des Graphql-Calls.
 #
@@ -11780,8 +11788,16 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 	PLog("%s, path: %s, ptmdTemplate: %s" % (title, path, ptmdTemplate))
 	path_org=path
 	
+	sharingUrl=""														# s.a. streamApiUrlAndroid
+	if "www.zdf.de" in path:
+		sharingUrl = path
+	if 	"prod-futura" in path:
+		sharingUrl = ZDF_BASE + "/" + path.split("/")[-1]
+	PLog("sharingUrl: " + sharingUrl)		
+	
+	
 	cdn_api=True														# -> formsblock s.u.
-	videodat_page=""
+	videodat_page="";
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % zdfToken
 	if "api.zdf.de" in path:											# früher "ngplayer"
 		cdn_api=False
@@ -11794,16 +11810,17 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 				page, msg = get_page(path)
 				if '"streamApiUrlAndroid"' in page:						# selten: formitaeten enthalten, inkompatibel,
 					page=page.replace('\\/','/')						# Bsp.: Das ZDF auf der re:publica25
+					sharingUrl = stringextract('sharingUrl":"', '"', page)	# 
 					androidurl = stringextract('streamApiUrlAndroid":"', '"', page)	# aber als ptmdTemplate nutzbar
 					# Bsp.: https://api.zdf.de/tmd/2/android_native_5/vod/ptmd/mediathek/250527_republica_tag_zwei/1			
-					PLog("ptmdTemplate_android: " + androidurl)							
+					PLog("ptmdTemplate_android: " + androidurl)	
 					ptmdTemplate=androidurl
 					if "formitaeten" in page:							# übernehmen, falls Graphql-Call fehlschlägt
 						PLog("found_formitaeten")
 						videodat_page=page
 				else:
 					path = ZDF_BASE + "/" + path.split("/")[-1]			# switch futura-api -> Web
-					
+			
 			if not ptmdTemplate:										# schon gefunden?
 				PLog("get_ptmdTemplate_from_Web")
 				page, DictID, newpath, img = ZDF_Graphql_WebDetails(path, mode="getpage")	# übergebene und geswitchte Urls
@@ -11814,11 +11831,12 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 
 	if not page or '"status":404' in page:								# ptmdTemplate -> videodat_url via Graphql
 		PLog(page)	
-		PLog("videodat_url_from_ptmdTemplate:")	
+		PLog("get_videodat_url:")	
 		msg1 = "Fehler in ZDF_getApiStreams:"
 		msg=""
 		ptmd_player = 'ngplayer_2_4'									# ab 22.12.2020
 		if not ptmdTemplate:											# Graphql-Call GetVideoMetaByCanonical
+			PLog("via_Graphql:")	
 			params = Dict("load", "ZDF_Header-Params")					# ZDF_Graphql_WebDetails
 			PLog("params: " + str(params))
 			if params:													# aktualisieren
@@ -11845,9 +11863,10 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 				msg2 = str(exception)
 				PLog("videodat_url_error: " + msg2)
 				videodat_url="" 
-		else:															# bereits vorhanden			
+		else:															# bereits vorhanden	
+			PLog("via_ptmdTemplate")
 			videodat_url = ptmdTemplate									# /tmd/2/{playerId}/vod/ptmd/mediathek/..
-				
+						
 		videodat_url = videodat_url.replace('{playerId}', ptmd_player) 	# ptmd_player injiziert 
 		if videodat_url:
 			if videodat_url.startswith("http") == False:				# androidurl bereits vollständig
@@ -11856,7 +11875,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 			PLog('videodat_url: ' + videodat_url)	
 			page, msg	= get_page(path=videodat_url, header=header, JsonPage=True)
 			msg2=msg
-			PLog("videodat_page: " + page[:80])
+			PLog("videodat_page: " + page[:80])			
 		else:
 			if not videodat_page:										# Videodaten bereits in futura-Seite? (selten)
 				page=""
@@ -11880,25 +11899,17 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 	if gui:
 		li = home(li, ID='ZDF')								# Home-Button	
 	
+	# folgende Metadaten sind nicht mehr im Grapql-Output enthalten:
 	availInfo = stringextract('"availabilityInfo":"',  '"', page) # FSK-Info? -> s.u. Dialog
 	availInfo = transl_json(availInfo)
 	channel = stringextract('"channel":"',  '"', page)
-	sharingUrl = stringextract('"sharingUrl":"',  '"', page)
+	if not sharingUrl:
+		sharingUrl = stringextract('"sharingUrl":"',  '"', page)
 	if not scms_id:											# scms_id -> HBBTV_List
 		scms_id = stringextract('"externalId":"',  '"', page)
 	PLog("scms_id: " + scms_id)	
 
-	if sharingUrl:
-		path_org = sharingUrl
-		'''											# funktioniert nicht für Kategorien-Urls
-		p = path_org.split("/")
-		if p[-1] == "/":
-			del p[-1]
-		del p[-1]									# letztes Element entfernen
-		sharingUrl = "/".join(p)
-		'''
-		PLog("sharingUrl: %s, corrected: %s" % (path_org, sharingUrl))
-		
+	if sharingUrl:		
 		summ_new = get_summary_pre(sharingUrl, ID='ZDF',skip_verf=True,skip_pubDate=True)
 		PLog("mark1")
 		PLog("summ_new: %d, summ: %d" % (len(summ_new), len(summ)))
@@ -12860,7 +12871,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	playlist = ''
 	# seit ZDF-Relaunch 28.10.2016 dort nur noch https
 	if url_m3u8.startswith('http') == True :							# URL oder lokale Datei?
-		newpath, msg = getRedirect(url_m3u8)
+		newpath, msg = getRedirect(url_m3u8, stream=True)
 		if newpath:				
 			playlist, msg = get_page(path=newpath)				
 		if playlist == '':
