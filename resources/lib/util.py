@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>150</nr>										# Numerierung für Einzelupdate
+# 	<nr>151</nr>										# Numerierung für Einzelupdate
 #	Stand: 11.01.2026
 
 # Python3-Kompatibilität:
@@ -3670,7 +3670,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 	# kodi_version = re.search('(\d+)', KODI_VERSION).group(0) 		# Major-Version reicht hier - entfällt
 	
 	play_time=0; video_dur=0										# hier dummies (rel. -> PlayMonitor) 		
-	newpath, msg = getRedirect(url)									# Url-Check
+	newpath, msg = getRedirect(url, stream=True)					# Url-Check
 	if newpath:
 		
 		# Zuletzt-gesehen-Liste (STARTLIST) verwenden, Live-Streams
