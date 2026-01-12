@@ -795,7 +795,6 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		MyDialog(msg1, msg2, '')	
 		return
 	PLog(len(page))
-#	page = page.replace('\\"', '*')						# quotierte Marks entf.
 
 #----------------------------------------
 

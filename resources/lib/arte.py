@@ -1140,6 +1140,7 @@ def get_streams_api_v2(page, title, summ):
 				uhd = item.splitlines()[-2]							# Bsp.: videos/106654-000-G_v2160.m3u8
 				PLog("uhd: " + uhd)
 				break
+		PLog("uhd_check_result: " + uhd)							# Leer?										
 		
 		if uhd:
 			try:
@@ -1158,7 +1159,7 @@ def get_streams_api_v2(page, title, summ):
 				newpath, msg = getRedirect(uhd_stream)				# Url-Check
 				if newpath:
 					lang, title = uhd_details.split("##")
-					line = u'[B]UHD_HLS[/B], [B]%s[/B] ** Auflösung %s ** %s ** %s#%s' % (lang, "3840x2160", "XQ", title, newpath)
+					line = u'[B]UHD_HLS[/B], [B]%s[/B] ** Auflösung %s ** %s ** %s#%s' % (lang, "3840x2160", "XQ", title, uhd_stream)
 				
 			HLS_List.insert(0, line)								# -> 1. Position wie ZDF-HLS-UHD 
 		

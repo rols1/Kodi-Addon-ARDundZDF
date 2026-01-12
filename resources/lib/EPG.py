@@ -304,7 +304,7 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 
 	date_format = "%Y-%m-%dT%H:%M:%S"
 	# Ausgabe: akt. Tag ab 05 Uhr(Start) bis nächster Tag 05 Uhr (Ende)
-	EPG_rec=[]															# -> gefilterte Aufbereitung (Zeit, JETZT-Mark.)
+	EPG_rec=[]	
 	for i in range (len(EPG_dict)):		# ältere + jüngere Sendungen in Liste - daher Schleife + Zeitabgleich	
 		rec = []
 		r = EPG_dict[i]
@@ -330,12 +330,12 @@ def EPG(ID, mode=None, day_offset=None, load_only=False):
 		# Auslese - nur akt. Tag 05 Uhr (einschl. Offset in Tagen ) + Folgetag 05 Uhr:
 		if starttime < today_5Uhr:										# ältere verwerfen
 			#PLog("too_old")
-			#diff = today_5Uhr -starttime
+			diff = today_5Uhr -starttime
 			#PLog("s_start: %s | today_5Uhr-starttime: %d-%d, diff: %d" % (s_start, today_5Uhr, starttime, diff))
 			continue
 		if starttime > nextday_5Uhr:									# jüngere verwerfen
 			#PLog("too_young")
-			#diff = starttime-nextday_5Uhr
+			diff = starttime-nextday_5Uhr
 			#PLog("s_start: %s | starttime-nextday_5Uhr: %d-%d, diff: %d" % (s_start, starttime, nextday_5Uhr, diff))
 			continue	
 				
@@ -669,7 +669,7 @@ if "'context'" in str(sys.argv):										# Kontextmenü: EPG im textviewer
 		ID =  stringextract("ID': '", "'", params)
 		PLog("title: %s, ID: %s" % (title, ID))
 		EPG_rec = EPG(ID, day_offset=0)
-		PLog("EPG_rec: %s" % str(EPG_rec)[:100])
+		# PLog("EPG_rec: %s" % str(EPG_rec)[:100])
 
 		cnt=0
 		for rec in EPG_rec:

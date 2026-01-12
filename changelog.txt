@@ -10,6 +10,31 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+12.01.2026	5.3.8
+			getRedirect (util): in Rückgabe HTTP-Status-Code ergänzt, bei Code != 200 
+			immer mit leerer Url, Formatliste für Streams ergänzt.
+			thread_getfile: url_check (getRedirect) wg. Problem mit Streamerkennung 
+			ausgesetzt (bei Single- und Sammeldownloads).  
+			ZDF_Graphql_WebDetails: url_check durch getRedirect ersetzt.
+			Ersetzung url_check durch getRedirect: ZDF_Graphql_WebDetails, ZDF_Teletext,
+			get_streams_api_v2 und EPG_Today (beide arte), ARDSportgetEventlist,
+			Parseplaylist, get_summary_pre, get_streams_from_link.
+			set_lang (Modul arte): Call Main_arte nach Änderung der Sprache.
+			Kontextmenü Radio-EPG (EPG-Modul): leeres Ergebnis abgefangen (Exception,
+			da Param ID fehlt).
+			ZDF_getApiStreams: Trennung get_ptmdTemplate from_futura/from_Web (um 
+			futura-Ergebnis zu erhalten), Notification für fehlende Livestreams 
+			angepasst.
+			ZDF_StartWebCluster: DGS-Kennung aus ptmdTemplate entfernt (erstes
+			ptmdTemplate immer mit "_dgs").
+			thread_getepg (Modul EPG): Aktiv-Signal EPGACTIVE vorverlegt, um Doppelstart
+			zu vermeiden. Puffer (- 12 Std) ergänzt für rechtz. Nachladen (- 1 Std. bei 
+			12-Std.Setting).
+			MediathekViewWeb-Suche (Modul yt): ergänzt: description (zusätzlich zu title,
+			topic), future=true (vorher false), s. issue #49. Aus yt-Modul entfernt:
+			yt_get, get_stream_details und get_duration.
+			transl_json: Anpassungen für franz. Aktzents.
+
 01.01.2026	5.3.7
 			ZDF_WebMoreSingle, ZDF_WebMoreVideo entfernt: mit ZDF_StartWebCluster und
 			Folge-Calls obsolet).

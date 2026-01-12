@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>312</nr>										# Numerierung für Einzelupdate
-VERSION = '5.3.7'
-VDATE = '04.01.2026' 
+VERSION = '5.3.8'
+VDATE = '12.01.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -5432,8 +5432,8 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
 				PLog(item)
 				path, url = item.split('|')	
-				new_url = path								# wg. Problem mit Streamerkennung ausgesetzt                                        
-				#new_url, msg = get_page(path=url, GetOnlyRedirect=True) # für Audiothek erforderlich
+				# new_url, msg = getRedirect(url)			 # für Audiothek erforderlich, s.u.
+				new_url = url								# wg. Problem mit Streamerkennung ausgesetzt                                        
 				if new_url == '':							# 30.03.2022 weiter ohne Exception
 					msg1 = "Fehler"
 					msg2 = "Quelle nicht gefunden: %s" % url.split("/")[-1]
@@ -5508,7 +5508,8 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 				else:
 					with open(DL_CNT,'w') as f:
 						f.write("1|%s" % str(clen))					
-				new_url, msg = get_page(path=url, GetOnlyRedirect=True) # für Audiothek erforderlich
+				# new_url, msg = getRedirect(url)				# für Audiothek erforderlich
+				new_url=url										# s.o. Sammeldownloads
 				if new_url == '':
 					raise Exception("Quelle nicht gefunden")
 				urlretrieve(new_url, fulldestpath)				

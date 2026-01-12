@@ -12,7 +12,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
 # 	<nr>151</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.01.2026
+#	Stand: 12.01.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1187,7 +1187,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 
 	try:															# 1. Versuch ohne SSLContext 
 		PLog("get_page1:")
-		if GetOnlyRedirect:											# nur Redirect anfordern
+		if GetOnlyRedirect:											# nur Redirect anfordern, nicht bei Streams verwenden!
 			PLog('GetOnlyRedirect: ' + str(GetOnlyRedirect))
 			page, msg = getRedirect(path, header)					# ab 02.01.2026 Leer-Url falls Status != 200
 			return page, msg										# OK: "https://..html",	"HTTP-Status: 200"									
@@ -1340,6 +1340,15 @@ def getRedirect(path, header="", stream=False):
 		msg=""
 		return path, msg											# Fallback: ohne Redirect
 		
+	if not stream:													# falls noch nicht genutzt (get_page)
+		format_list = [".mp4", ".webm", ".vp9", ".m3u8",			# .aac kann klemmen
+						".mp3",	"/mp3/", ".rndfnk."]
+		for form in format_list:
+			if form in path:
+				stream=True
+				PLog("stream_set: %s | %s" % (form, path))
+				break		
+ 	
 	try:
 		addon_id='script.module.requests'; cmd="openSettings"
 		inp_vers = xbmcaddon.Addon(addon_id).getAddonInfo('version')
@@ -4138,7 +4147,9 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 # 04.03.2022 Header für ZDF-Url erforderl. (Error "502 Bad Gateway")
 # 21.01.2023 dialog optional für add_UHD_Streams (ohne Dialog)
 # 14.03.2025 Header auf user-agent (curl) beschränkt
-# 06.08.2025 Param stream ergänzt für requests in getRedirect 
+# 06.08.2025 Param stream ergänzt für requests in getRedirect
+# 11.01.2026 vorerst nicht mehr genutzt zugunsten von getRedirect
+#	(z.B. PlayVideo mit stream=True)
 #
 def url_check(url, caller='', dialog=True):
 	PLog('url_check: %s | %s' % (url, caller))
