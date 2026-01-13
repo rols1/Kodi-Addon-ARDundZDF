@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>115</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.12.2025
+# 	<nr>116</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.01.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -274,11 +274,6 @@ def Main_NEW(name=''):
 	fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", 
 		fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)																							
-
-	title = 'Bildgalerien Das Erste'	
-	fparams="&fparams={}" 
-	addDir(li=li, label=title, action="dirList", dirID="BilderDasErste", fanart=R(ICON_MAIN_ARD),
-		thumb=R('ard-bilderserien.png'), fparams=fparams)
 
 	fparams="&fparams={}"												# ab V 4.8.1
 	tag = u"Quelle: ARD Text HbbTV | Federführung: RBB"
