@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>116</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.01.2026
+# 	<nr>117</nr>										# Numerierung für Einzelupdate
+#	Stand: 19.01.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1201,7 +1201,7 @@ def ARD_FlatListRec(item, vers):
 	tag = u"Staffel: %s | Folge: %s\nDauer: %s | FSK: %s | %s | Hersteller: %s | %s" %\
 		(season, episode, dauer, fsk, end, producer, Type)
 	
-	title = unescape(title)
+	title = unescape(title); title = repl_json_chars(title);
 	summ = repl_json_chars(descr)
 	PLog('Satz3_1:');
 	PLog(title); PLog(url); PLog(img); PLog(tag); PLog(summ[:80]);
