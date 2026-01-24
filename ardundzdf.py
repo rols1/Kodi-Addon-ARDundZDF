@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>312</nr>										# Numerierung für Einzelupdate
+# 	<nr>313</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.8'
 VDATE = '12.01.2026' 
 
@@ -11786,8 +11786,11 @@ def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmdTemplate=""):
 	PLog("ZDF_getApiStreams:")
-	PLog("%s, path: %s, ptmdTemplate: %s" % (title, path, ptmdTemplate))
-	path_org=path
+	PLog("%s, path: %s, scms_id: %s, ptmdTemplate: %s" % (title, path, scms_id, ptmdTemplate))
+
+	path_org=path; futura_path=""
+	if "prod-futura" in path:
+		scms_id = path.split("/")[-1]							# -> scms_id für HBBTV-Quellen
 	
 	sharingUrl=""														# s.a. streamApiUrlAndroid
 	if "www.zdf.de" in path:
@@ -11900,15 +11903,15 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 	if gui:
 		li = home(li, ID='ZDF')								# Home-Button	
 	
-	# folgende Metadaten sind nicht mehr im Grapql-Output enthalten:
+	# folgende Metadaten sind nicht mehr im Graphql-Output enthalten:
 	availInfo = stringextract('"availabilityInfo":"',  '"', page) # FSK-Info? -> s.u. Dialog
 	availInfo = transl_json(availInfo)
 	channel = stringextract('"channel":"',  '"', page)
 	if not sharingUrl:
 		sharingUrl = stringextract('"sharingUrl":"',  '"', page)
-	if not scms_id:											# scms_id -> HBBTV_List
+	if not scms_id:											# scms_id -> HBBTV_List, falls nicht im futura-json
 		scms_id = stringextract('"externalId":"',  '"', page)
-	PLog("scms_id: " + scms_id)	
+	PLog("scms_id: " + scms_id)								# bei futura_path bereits ermittelt, s.o.	
 
 	if sharingUrl:		
 		summ_new = get_summary_pre(sharingUrl, ID='ZDF',skip_verf=True,skip_pubDate=True)
@@ -12023,7 +12026,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 	if scms_id:
 		HBBTV_List = ZDFSourcesHBBTV(title, scms_id)	# bisher nur MP4-Quellen				
 		HBBTV_List, UHD_DL_list = add_UHD_Streams(HBBTV_List) # UHD-Streams -> Download_Liste
-		Dict("store", '%s_HBBTV_List' % ID, HBBTV_List) 
+	Dict("store", '%s_HBBTV_List' % ID, HBBTV_List) 
 	PLog("HBBTV_List: " + str(len(HBBTV_List)))
 	PLog("UHD_DL_list: " + str(len(UHD_DL_list)))
 		
