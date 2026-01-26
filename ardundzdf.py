@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>314</nr>										# Numerierung für Einzelupdate
+# 	<nr>315</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.8'
 VDATE = '12.01.2026' 
 
@@ -11797,8 +11797,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 		sharingUrl = path
 	if 	"prod-futura" in path:
 		sharingUrl = ZDF_BASE + "/" + path.split("/")[-1]
-	PLog("sharingUrl: " + sharingUrl)		
-	
+	PLog("sharingUrl: " + sharingUrl)			
 	
 	cdn_api=True														# -> formsblock s.u.
 	videodat_page="";
@@ -11870,7 +11869,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 		else:															# bereits vorhanden	
 			PLog("via_ptmdTemplate")
 			videodat_url = ptmdTemplate									# /tmd/2/{playerId}/vod/ptmd/mediathek/..
-						
+					
 		videodat_url = videodat_url.replace('{playerId}', ptmd_player) 	# ptmd_player injiziert 
 		if videodat_url:
 			if videodat_url.startswith("http") == False:				# androidurl bereits vollständig
@@ -11971,6 +11970,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 			
 		quality = stringextract('"quality":"',  '"', form)
 		mimeType = stringextract('mimeType":"', '"', form)
+		
 		PLog("quality: " + quality); PLog("mimeType: " + mimeType);
 		
 		# bei HLS entfällt Parseplaylist - verschiedene HLS-Streams verfügbar 
@@ -11978,7 +11978,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 			HLS_List.append('HLS, %s ** AUTO ** %s ** %s#%s' % (track_add, quality,title,url))
 		else:
 			res='0x0'; w=''; h=''						# Default					
-			if 'hd":true' in form:	
+			if 'hd":true' in form or 'quality":"hd' in form:	
 				w = "1920"; h = "1080"					# Probeentnahme													
 			if 'veryhigh' in quality:
 				w = "1280"; h = "720"					# Probeentnahme							
@@ -11994,7 +11994,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 			item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
 				(track_add, quality, res, title_url)
 			PLog("title_url: " + title_url); PLog("item: " + item)
-			PLog("server: " + server)					# nur hier, kein Platz im Titel			
+			PLog("server: " + server)					# nur hier, kein Platz im Titel	
 			MP4_List.append(item)		
 	
 	PLog("DGS_Check:"); dgs_url=""						# DGS-Check mit zusätzlichen 
@@ -12033,6 +12033,10 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 	Dict("store", '%s_HLS_List' % ID, HLS_List) 
 	if len(UHD_DL_list) > 0:							# UHD_Liste in Downloads voranstellen
 		MP4_List = UHD_DL_list + MP4_List
+
+	if len(HBBTV_List) > len(MP4_List):					# kleinere MP4_List durch HBBTV_List ersetzen
+		PLog("HBBTV_List_greater_then_MP4_List")
+		MP4_List = HBBTV_List
 	Dict("store", '%s_MP4_List' % ID, MP4_List) 
 		
 	if not len(HLS_List) and not len(MP4_List) and not len(HBBTV_List):			
