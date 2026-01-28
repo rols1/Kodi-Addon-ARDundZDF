@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>117</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.01.2026
+# 	<nr>118</nr>										# Numerierung für Einzelupdate
+#	Stand: 28.01.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2330,7 +2330,7 @@ def ARDStartVideoHBBTVget(title, path):
 #	StreamArray_1: DGSStreams (werden angehängt)
 # 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):	
-	PLog('ARDStartVideoMP4get:'); 
+	PLog('ARDStartVideoMP4get: ' + title); 
 			
 	href=''; quality=''
 	title = py2_decode(title)
@@ -2361,7 +2361,7 @@ def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):
 				qual = stream["forcedLabel"]
 				aspect = stream["aspectRatio"]
 				audio_kind = stream["audios"][0]["kind"]
-				audio_lang = stream["audios"][0]["languageCode"]
+				audio_lang = stream["audios"][0]["languageCode"]	# standard/fra, standard/deu
 				details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
 				
 				title_url = u"%s#%s" % (title, href)
@@ -2371,7 +2371,15 @@ def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):
 				item = py2_decode(item)
 				download_list.append(item)
 	
-	PLog(download_list)
+	#PLog("MP4_download_list: " + str(download_list))
+	
+	if "<OV>" not in title and u"Hörfassung" not in title:			# standard/deu an 1. Position,
+		if "standard/deu" not in download_list[0]:
+			PLog("do_reverse_for_deu")
+			download_list.reverse()
+	else:
+		pass														# keine Änderung bei anderen Szenarien
+
 	return download_list			
 			
 ####################################################################################################
