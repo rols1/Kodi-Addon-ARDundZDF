@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>34</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.08.2025
+# 	<nr>35</nr>										# Numerierung für Einzelupdate
+#	Stand: 29.01.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -276,11 +276,9 @@ def Main_TIVI(title=''):
 	addDir(li=li, label=title , action="dirList", dirID="ardundzdf.ZDF_Start", fanart=GIT_ZDFTIVI, 
 		thumb=GIT_TIVIHOME, tagline=title, fparams=fparams)
 		
-	title = 'tivi_Verpasst' 	# ZDF_VerpasstWoche -> tivi_Verpasst
-	fparams="&fparams={'name': 'ZDF-tivi_Verpasst', 'title': '%s', 'homeID': 'Kinderprogramme'}" % title
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_VerpasstWoche", fanart=GIT_ZDFTIVI, 
-		thumb=GIT_TIVICAL, tagline=title, fparams=fparams)				
-
+	# 29.01.2026 Menü tivi_Verpasst entfernt - beim ZDF nicht mehr verfügbar
+	#title = 'tivi_Verpasst' 	# ZDF_VerpasstWoche -> tivi_Verpasst
+	
 	title='tivi_Sendungen A-Z | 0-9'
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_AZ", fanart=GIT_ZDFTIVI, 
@@ -414,11 +412,12 @@ def Kika_Live():
 				
 	title = unescape(title); title = repl_json_chars(title)
 	summ = unescape(summ); summ = repl_json_chars(summ)
+	summ_par= summ.replace('\n', '||')
 	PLog("title: " + title); PLog(summ)
 	title=py2_encode(title); m3u8link=py2_encode(m3u8link);
-	img=py2_encode(img); summ=py2_encode(summ);			
+	img=py2_encode(img); summ_par=py2_encode(summ_par);			
 	fparams="&fparams={'path': '%s', 'title': '%s', 'thumb': '%s', 'descr': '%s', 'Merk': '%s'}" %\
-		(quote(m3u8link), quote(title), quote(img), quote_plus(summ), Merk)
+		(quote(m3u8link), quote(title), quote(img), quote_plus(summ_par), Merk)
 	addDir(li=li, label=title, action="dirList", dirID="ardundzdf.SenderLiveResolution", fanart=R('tv-EPG-all.png'), 
 		thumb=img, fparams=fparams, summary=summ, tagline=tagline)
 
@@ -2241,71 +2240,9 @@ def Tivi_Search(query=None, title='Search', pagenr=''):
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)	# Absturz Addon bei Sofortstart - s.o.
 
-# ----------------------------------------------------------------------			
-# Aufrufer: ZDF_VerpasstWoche (teilw. adaptiert)
-# Nutzung ZDF_get_content
-# Kennung ZDFtivi in key infoline, nicht in channel wie z.B. ZDFinfo -
-#	Auswertung in ZDF_Verpasst zu aufwändig
-# Wegen der geringen Anzahl hier ohne Unterteilung in Tageszeiten
-#
-def tivi_Verpasst(title, zdfDate, sfilter=""):
-	PLog('tivi_Verpasst:'); PLog(title); PLog(zdfDate);
-	
-	path = "https://zdf-prod-futura.zdf.de/mediathekV2/broadcast-missed/" + zdfDate
-	page = Dict("load", "ZDFtivi_%s" % zdfDate, CacheTime=KikaCacheTime)# 1 Std.
-	if page == False:
-		page, msg = get_page(path)
-		if page:
-			Dict("store", "ZDFtivi_%s" % zdfDate, page)	
-
-	if page == '':
-		msg1 = "Fehler in tivi_Verpasst | %s" % title
-		MyDialog(msg1, msg, '')
-		return
-	
-	mediatype=''														# Kennz. Videos im Listing
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
-	PLog('mediatype: ' + mediatype); 
-
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-	li2 = xbmcgui.ListItem()											# mediatype='video': eigene Kontextmenüs in addDir							
-	
-	jsonObject = json.loads(page)
-	clusterObject = jsonObject["broadcastCluster"]						# Morgens, Mittags, Abends, Nachts
-	PLog(str(clusterObject)[:80])
-	for cluster in clusterObject:
-		teaser = cluster["teaser"]
-		PLog(len(teaser))
-		PLog(str(teaser)[:80])
-		for entry in teaser:
-			try:
-				infoline = str(entry["infoline"])
-				if not "ZDFtivi" in infoline:							# hier nur ZDFtivi-Inhalte
-					continue
-
-				PLog("infoline: " + infoline[:60])
-				typ,title,tag,descr,img,url,stream,scms_id = ardundzdf.ZDF_get_content(entry)
-				airtime = entry["airtime"]
-				t = airtime[-5:]
-				title = "[COLOR blue]%s[/COLOR] | %s" % (t, title)			# Sendezeit | Titel
-				channel = entry["channel"]
-				tag = "%s | Sender: [B]%s[/B]" % (tag, "ZDFtivi") 
-					
-				PLog("Satz3:")
-				PLog(tag); PLog(title); PLog(stream);
-				title = repl_json_chars(title)
-				descr = repl_json_chars(descr)
-				tag = repl_json_chars(tag)
-				fparams="&fparams={'path': '%s','title': '%s','thumb': '%s','tag': '%s','summ': '%s','scms_id': '%s'}" %\
-					(stream, title, img, tag, descr, scms_id)	
-				addDir(li=li2, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
-					fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
-			except Exception as exception:
-				PLog("verpasst_error: " + str(exception))
-							
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+# ----------------------------------------------------------------------
+# 29.01.2026 tivi_Verpasst entfernt - beim ZDF nicht mehr verfügbar
+# def tivi_Verpasst(title, zdfDate, sfilter=""):
 
 # ----------------------------------------------------------------------
 # Auflistung 0-9 (1 Eintrag), A-Z (einzeln) 			
