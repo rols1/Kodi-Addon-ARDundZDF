@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>152</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.01.2026
+# 	<nr>153</nr>										# Numerierung für Einzelupdate
+#	Stand: 30.01.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -3460,8 +3460,10 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 		PLog(HBBTV_List)
 		if 'auto' in myqual:						# Sicherung gegen falsches MP4-Setting:
 			myqual = '960x544'						# 	Default, falls 'auto' gesetzt
-		if ID != "Arte" and len(HBBTV_List) > 0:
-			Stream_List = Stream_List + HBBTV_List	# in HBBTV_List immer MP4 (Arte-HBBTV -> HLS)
+		if ID != "Arte" and len(HBBTV_List) > 0:	# Fallback MP4 -> HBBTV, nicht bei Arte
+			if len(Stream_List) == 0:
+				PLog("replace_MP4_with_HBBTV")
+				Stream_List = HBBTV_List			# in HBBTV_List immer MP4 (Arte-HBBTV -> HLS)		
 		
 		if len(Stream_List) == 0:
 			msg1 = u"MP4-Quellen fehlen"
@@ -3484,7 +3486,7 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 	Default_Url=''
 	PLog("mode_hls: " + str(mode_hls))
 	PLog(myqual)
-	PLog(Stream_List)
+	PLog("Stream_List:"); PLog(Stream_List)
 	if mode_hls:				
 		if "auto" in myqual:								# Setting: auto
 			mode = 'Sofortstart: HLS/auto'
@@ -3521,12 +3523,11 @@ def PlayVideo_Direct(HLS_List, MP4_List, title, thumb, Plot, sub_path=None, play
 			if len(Stream_List) > 0:						# Default: letzte Url=höchste Auflösung
 				Default_Url = Stream_List[-1].split('#')[-1]	# Fallback: master.m3u8 Pos. 1
 				PLog("Default_Url2: %s" % Default_Url)
-	
+
 
 	PLog("Default_Url3: %s" % Default_Url)
 	url = Default_Url 
 	PLog(str(Stream_List)[:80])
-	
 		
 	if 'auto' not in myqual:							# Abgleich width mit Setting
 		mywidth = myqual.split('x')[0]

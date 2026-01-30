@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>118</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.01.2026
+# 	<nr>119</nr>										# Numerierung für Einzelupdate
+#	Stand: 30.01.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2019,7 +2019,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 #
 def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''): 
 	PLog('ARDStartSingle: %s' % ID);
-	PLog(path); PLog(summary[:80]);
+	PLog(path); PLog(title); PLog(summary[:80]);
 	title_org=title;
 	icon = R("ard-mediathek.png")
 	
@@ -2271,7 +2271,7 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 # 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 #
 def ARDStartVideoHBBTVget(title, path): 
-	PLog('ARDStartVideoHBBTVget:'); 
+	PLog('ARDStartVideoHBBTVget: ' + title); 
 	PLog(path)
 
 	base = "http://tv.ardmediathek.de/dyn/get?id=video%3A"
@@ -2298,27 +2298,40 @@ def ARDStartVideoHBBTVget(title, path):
 		PLog(str(exception))
 		return HBBTV_List
 	
+	kind  = streams["kindName"]					# Normal
 	for stream in streams["media"]:
 		PLog(str(stream)[:80])
 		if "dash" in stream["mimeType"]:		# 16.05.2024 ../tagesschau_1.mpd läuft nicht
 			continue
-		quality = stream["forcedLabel"]
+		qual = stream["forcedLabel"]
+		aspect = stream["aspectRatio"]
 		w = stream["maxHResolutionPx"] 
 		h = stream["maxVResolutionPx"]
 		res = "%sx%s" % (str(w),str(h))	
 		href = stream["url"]
 		if "_internationalerton_" in href:		# vermutl. identisch mit "_sendeton_"-Url
 			continue
+			
+		audio_kind = stream["audios"][0]["kind"]			# standard
+		audio_lang = stream["audios"][0]["languageCode"]	# fra, deu
+		if "<OV>" not in title and u"Hörfassung" not in title:
+			if "deu" not in audio_lang:						# s. ARDStartVideoHLSget, ARDStartVideoMP4get
+				continue
+		else:
+			if "<OV>" in title and  "deu" in audio_lang:	# deu ausfiltern
+				continue	
+			
+		details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
 		
 		PLog("hbbtv_res: %s" % res) 
 		title_url = u"%s#%s" % (title, href)
-		item = u"MP4: [B]%s[/B] ** Auflösung %s ** %s" % (quality, res, title_url)
+		item = u"MP4: [B]%s[/B] ** Auflösung %s ** %s" % (details, res, title_url)
 		if "3840x" in res:
 			item = item.replace("MP4", "UHD_MP4")
 		item = py2_decode(item)
 		HBBTV_List.append(item)
 
-	PLog(HBBTV_List)
+	PLog("HBBTV_List: "); PLog(HBBTV_List)
 	return HBBTV_List
 
 #----------------------------
@@ -2360,8 +2373,15 @@ def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):
 				
 				qual = stream["forcedLabel"]
 				aspect = stream["aspectRatio"]
-				audio_kind = stream["audios"][0]["kind"]
-				audio_lang = stream["audios"][0]["languageCode"]	# standard/fra, standard/deu
+				audio_kind = stream["audios"][0]["kind"]			# standard
+				audio_lang = stream["audios"][0]["languageCode"]	# fra, deu
+				if "<OV>" not in title and u"Hörfassung" not in title:
+					if "deu" not in audio_lang:						# s. ARDStartVideoHLSget, ARDStartVideoHBBTVget
+						continue
+				else:
+					if "<OV>" in title and  "deu" in audio_lang:	# deu ausfiltern
+						continue	
+				
 				details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
 				
 				title_url = u"%s#%s" % (title, href)
@@ -2371,15 +2391,7 @@ def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):
 				item = py2_decode(item)
 				download_list.append(item)
 	
-	#PLog("MP4_download_list: " + str(download_list))
-	
-	if "<OV>" not in title and u"Hörfassung" not in title:			# standard/deu an 1. Position,
-		if "standard/deu" not in download_list[0]:
-			PLog("do_reverse_for_deu")
-			download_list.reverse()
-	else:
-		pass														# keine Änderung bei anderen Szenarien
-
+	PLog("MP4_download_list:"); PLog(download_list)
 	return download_list			
 			
 ####################################################################################################
