@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>315</nr>										# Numerierung für Einzelupdate
+# 	<nr>316</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.8'
 VDATE = '12.01.2026' 
 
@@ -3648,22 +3648,10 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	'''
 
-	title = u"Event: [B]Leichtathletik-WM 2025 in Tokio[/B]"
-	tag = u"Die 20. Leichtathletik-Weltmeisterschaften finden vom 13. bis 21. September 2025 in Japan statt.\nNews, TV-Zeiten, Livestreams, Ergebnisse zur WM in Tokio."
-	cacheID = "WM_2025_Tokio"
-	img = "https://images.tagesschau.de/image/85c2846b-3203-4a0b-895e-b48919964fb4/AAABlgnmSK8/AAABmKJZ-0g/16x9-big/tokio-stadion-105.jpg?width=1280"
-	path = "https://www.sportschau.de/leichtathletik/wm"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
-		(quote(title), quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
-
-
-	title = u"Event: [B]DFB-Pokal 2025[/B]"
+	title = u"Event: [B]DFB-Pokal 2025 / 2026[/B]"
 	tag = u"DFB-Pokal 2025,  News zu Ergebnissen, Auslosungen und Spielen"
 	cacheID = "DFB_Pokal_2025"
-	img = "https://images.sportschau.de/image/8039954d-42c9-4630-9308-be21458fa18b/AAABlcSOzQM/AAABmKJZ-0g/16x9-big/dfbpokal-sp-100.jpg?width=1280"
+	img = "https://images.sprtschau.de/image/8039954d-42c9-4630-9308-be21458fa18b/AAABlcSOzQM/AAABmKJZ-0g/16x9-big/dfbpokal-sp-100.jpg?width=1280"
 	path = "https://www.sportschau.de/fussball/dfbpokal"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3743,11 +3731,27 @@ def ARDSportWDRArchiv():
 	
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ARD')						# Home-Button
+
+	base = "https://images.sportschau.de"		# fanarts und thumbs -> Sportschau-Logo
+	logo = base + "/image/3fbb1eaf-fb0a-4f1b-a5a9-44a643839cd5/AAABgTjL3GM/AAABgPp7Db4/16x9-1280/sportschau-logo-sendung-100.jpg"
 	
+# ---------------------------------------------------------------------- 2025
+
+	title = u"Event: [B]Leichtathletik-WM 2025 in Tokio[/B]"
+	tag = u"Die 20. Leichtathletik-Weltmeisterschaften finden vom 13. bis 21. September 2025 in Japan statt.\nNews, TV-Zeiten, Livestreams, Ergebnisse zur WM in Tokio."
+	cacheID = "WM_2025_Tokio"
+	img = logo
+	path = "https://www.sportschau.de/leichtathletik/wm"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
+
 	title = u"Event: [B]Tour de France 2025[/B]"					# Großevent	(nur 1 Jahr archivieren!)
 	tag = u"Tour de France ab 5. Juli: News, Videos, Rennberichte und Ergebnisse"
 	cacheID = "Sport_TourdeFrance_2025"
-	img = "https://images.sportschau.de/image/e04ecbb2-57e6-4dbb-af51-c0fbd4d724b2/AAABlvd6uVA/AAABkZLpihI/20x9-1280/bikeaid-106.webp"
+	img = logo
 	path = "https://www.sportschau.de/radsport/tourdefrance/index.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3758,7 +3762,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]UEFA Frauen-EM 2025[/B]"						# Großevent	
 	tag = u"Die UEFA Frauen-EM 2025 findet vom 2. bis zum 27. Juli in der Schweiz statt. Die wichtigsten Informationen zum Turnier finden Sie auf Sportschau.de."
 	cacheID = "Sport_UEFAFrauen"
-	img = "https://images.sportschau.de/image/0d254f10-2fdd-4814-8fc0-cb8caaf4416f/AAABk846Fjw/AAABkZLlo-k/16x9-big/frauen-em-128.jpg?width=1280"
+	img = logo
 	path = "https://www.sportschau.de/fussball/frauen-em"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3766,10 +3770,12 @@ def ARDSportWDRArchiv():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 
+# ---------------------------------------------------------------------- 2024
+
 	title = u"Event: [B]Tour de France Femmes 2024[/B]"					# Großevent	
 	tag = u"Tour de France Femmes 2024, Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen"
 	cacheID = "Sport_TourdeFemmes_2024"
-	img = "https://images.sportschau.de/image/5e488d45-7e8c-4ec6-9d90-b10cb3a43233/AAABiaIsZUA/AAABkUqnCZ0/16x9-1280/tdff-peloton-etappe-7-100.jpg"
+	img = logo
 	path = "https://www.sportschau.de/radsport/tourdefrance-femmes"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3780,7 +3786,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]OLYMPIA 2024[/B]"							# Großevent	
 	tag = u"Alles zu den Olympischen Spielen 2024 Paris - News, Ergebnisse, Livestreams"
 	cacheID = "Sport_OLYMPIA_2024"
-	img = "https://images.sportschau.de/image/8256571a-83dd-474d-9f81-982a02eea327/AAABi9KI1Ww/AAABjwnlFvA/16x9-1280/logo-olympia-paris-2024-100.jpg"
+	img = logo
 	path = "https://www.sportschau.de/olympia/index.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3791,7 +3797,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]UEFA EURO 2024[/B]"							# Großevent	
 	tag = u"Alle Infos zur UEFA EURO 2024 | sportschau.de"
 	cacheID = "UEFA_EURO"
-	img = "https://images.sportschau.de/image/8f60e4b7-dd53-4cee-bbc2-5ace93112d8b/AAABiz2LtlE/AAABjwnlFvA/16x9-1280/em-pokal-122.jpg"
+	img = logo
 	path = "https://www.sportschau.de/fussball/uefa-euro-2024"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3802,7 +3808,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]TOUR DE FRANCE FEMMES 2024[/B]"					# Großevent	
 	tag = u"Rennberichte, Analysen, Bilder, Ergebnisse und Wertungen zu allen Etappen der Tour de France Femmes 2024."
 	cacheID = "Sport_FRANCEFEMMES"
-	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
+	img = logo
 	path = "https://www.sportschau.de/radsport/alles-zur-tour-de-france-femmes-2024,tour-de-femmes-100.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3826,7 +3832,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Radsport: Deutschland Tour 2023[/B]"			# Großevent	
 	tag = u"Livestreams, Rennberichte, Analysen, Videos, Ergebnisse zur Deutschland Tour."
 	cacheID = "DTOUR"
-	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
+	img = logo
 	path = "https://www.sportschau.de/radsport/deutschland-tour/"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3837,7 +3843,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Hockey-EM 2023 der Männer und Frauen[/B]"		# Großevent	
 	tag = u"Aktuelle News zur Hockey-EM 2023 in Mönchengladbach | sportschau.de."
 	cacheID = "HockeyEM"
-	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
+	img = logo
 	path = "https://www.sportschau.de/hockey/feldhockey-em-index-100.html"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3848,7 +3854,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]FIFA Frauen WM 2023[/B]"						# Großevent	
 	tag = u"32 Mannschaften spielen im Juli und August in Australien und Neuseeland um den Fußball-WM-Titel der Frauen."
 	cacheID = "Sport_WMFrauen"
-	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
+	img = logo
 	path = "https://www.sportschau.de/fussball/fifa-frauen-wm"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3859,7 +3865,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Handball-WM 2023 in Polen und Schweden[/B]"		# Großevent	
 	tag = u"Nachrichten, Berichte, Interviews und Ergebnisse zur Handball-WM 2023 in Polen und Schweden mit dem DHB-Team."
 	cacheID = "Sport_WMHandball"
-	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
+	img = logo
 	path = "https://www.sportschau.de/handball/wm"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -3872,7 +3878,7 @@ def ARDSportWDRArchiv():
 	title = u"Event: [B]Fußball WM 2022 in Katar[/B]"					# Großevent	
 	tag = u"Hier finden Sie alle Nachrichten, Berichte, Interviews und Ergebnisse zur FIFA WM 2022 in Katar."
 	cacheID = "Sport_WMKatar"
-	img = "https://images.sportschau.de/image/80041de3-f096-423f-9884-a227122f0ddf/AAABgUiU4GI/AAABkZLhkrw/16x9-1280/logo-sportschau-100.jpg"
+	img = logo
 	path = "https://www.sportschau.de/fussball/fifa-wm-2022"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
@@ -11787,10 +11793,13 @@ def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmdTemplate=""):
 	PLog("ZDF_getApiStreams:")
 	PLog("%s, path: %s, scms_id: %s, ptmdTemplate: %s" % (title, path, scms_id, ptmdTemplate))
+	
+	pref_DGS_ON = SETTINGS.getSetting('pref_DGS_ON')
+	PLog("pref_DGS_ON: %s" % str(pref_DGS_ON))							# Anpassung ptmdTemplate s.u.				
 
 	path_org=path; futura_path=""
 	if "prod-futura" in path:
-		scms_id = path.split("/")[-1]							# -> scms_id für HBBTV-Quellen
+		scms_id = path.split("/")[-1]									# -> scms_id für HBBTV-Quellen
 	
 	sharingUrl=""														# s.a. streamApiUrlAndroid
 	if "www.zdf.de" in path:
@@ -11831,6 +11840,12 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 				ptmdTemplate = unquote(ptmdTemplate)						# Bsp.: ..251215_toll_sjr_fro%2F2
 				PLog("ptmdTemplate_web: " + ptmdTemplate)
 		page=""; msg=""													# mit ptmdTemplate obsolet
+
+	if pref_DGS_ON == "false": 
+		if "_dgs" in ptmdTemplate:
+			PLog("ptmdTemplate_remove_dgs")
+			ptmdTemplate =  ptmdTemplate.replace("_dgs", "")
+			PLog("ptmdTemplate_remove_dgs: " + ptmdTemplate)
 
 	if not page or '"status":404' in page:								# ptmdTemplate -> videodat_url via Graphql
 		PLog(page)	
@@ -11896,7 +11911,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 		return
 
 	page = page.replace('\\/','/')
-	page=page.replace('" :', '":'); page=page.replace('": "', '":"')  # Formatanpassung für get_form_streams	
+	page=page.replace('" :', '":'); page=page.replace('": "', '":"')  # Formatanpassung für get_form_streams
 
 	li = xbmcgui.ListItem()
 	if gui:
@@ -11942,7 +11957,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 		else:
 			forms = blockextract('"type":', str(formitaeten))
 
-	PLog("forms: %d" % len(forms))
+	PLog("forms: %d" % len(forms))	
 	
 	line=''; skip_list=[]
 	for form in forms:
@@ -11964,14 +11979,25 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 		PLog("url: " + url); PLog("typ: " + typ);
 		server = stringextract('//',  '/', url)			# 2 Server pro Bitrate möglich
 		if typ not in only_list or url in skip_list or url == "":
+			PLog("skipped: typ: %s, url: %s" % (typ, url))
 			continue
 		
+		if pref_DGS_ON == "false":
+			if "_dgs" in url:							# ..mond_tex_dgs/1/260125_dk_rueckkehr_mond_tex_dgs,_508k_p9,_80..
+				continue
+		else:
+			if "_dgs" not in url:
+				continue
+			else:
+				track_add = "%s DGS" % track_add
+
+			
 		skip_list.append(url)
 			
 		quality = stringextract('"quality":"',  '"', form)
 		mimeType = stringextract('mimeType":"', '"', form)
 		
-		PLog("quality: " + quality); PLog("mimeType: " + mimeType);
+		PLog("quality: %s, mimeType: %s" % (quality, mimeType))
 		
 		# bei HLS entfällt Parseplaylist - verschiedene HLS-Streams verfügbar 
 		if url.find('master.m3u8') > 0:					# HLS-Stream 
@@ -11993,11 +12019,11 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 			title_url = u"%s#%s" % (title, url)
 			item = u"MP4, %s | %s ** Auflösung %s ** %s" %\
 				(track_add, quality, res, title_url)
-			PLog("title_url: " + title_url); PLog("item: " + item)
-			PLog("server: " + server)					# nur hier, kein Platz im Titel	
+			PLog("server: " + server)					# nur hier, kein Platz im Titel
+			PLog("item: " + item)	
 			MP4_List.append(item)		
 	
-	PLog("DGS_Check:"); dgs_url=""						# DGS-Check mit zusätzlichen 
+	PLog("DGS_Check: %s" % str(pref_DGS_ON)); dgs_url=""# DGS-Check mit zusätzlichen 
 	if '"label":"DGS"' in page:							# 	Android-DGS-Streams
 		url = stringextract('"streamApiUrlDgsAndroid":"',  '"', page)
 		PLog("streamApiUrlAndroid: " + url)				# ..hsh_dgs/1?caption_source=250131_sendung_spezial_hsh%2F3
@@ -12668,6 +12694,9 @@ def ZDFSourcesHBBTV(title, scms_id):
 	HBBTV_List=[]
 	url = "https://hbbtv.zdf.de/zdfm3/dyn/get.php?id=%s" % scms_id
 		
+	pref_DGS_ON = SETTINGS.getSetting('pref_DGS_ON')
+	PLog("pref_DGS_ON: %s" % str(pref_DGS_ON))
+					
 	# Call funktioniert auch ohne Header:
 	header = "{'Host': 'hbbtv.zdf.de', 'content-type': 'application/vnd.hbbtv.xhtml+xml'}"
 	page, msg = get_page(path=url, header=header)	
@@ -12698,10 +12727,14 @@ def ZDFSourcesHBBTV(title, scms_id):
 						if q in streamObject:
 							add = "%s_%s_%s_%s" % (form[:4], "main", "deu", q)
 							url = streamObject[q]["url"]
-							if "_dgs_" in url:				# DGS nicht bei Sofortstart
-								if SETTINGS.getSetting('pref_video_direct') == 'true':
+							if pref_DGS_ON == "true":
+								if "_dgs" not in url:
 									continue
-								add = "%s_%s_%s_%s_%s" % (form[:4], "main", "deu", "DGS", q)
+								else:
+									add = "%s_%s_%s_%s_%s" % (form[:4], "main", "deu", "DGS", q)
+							else:
+								if "_dgs" in url:
+									continue		
 							line = "%s##%s##%s" % (title, add, url)
 							stream_list.append(line)
 	except Exception as exception:
