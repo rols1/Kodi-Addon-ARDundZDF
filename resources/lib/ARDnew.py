@@ -2235,7 +2235,6 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 			Array = StreamArray_1
 	PLog("Array_HLS: " + str(Array)[:80])
 
-	PLog("mark2")
 	kind  = Array["kindName"]
 	for stream in  Array["media"]:				
 		PLog(str(stream)[:100])
@@ -2255,25 +2254,25 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 
 			# Standard zuerst:				
 			if "<OV>" not in title and u"Hörfassung" not in title:	# beim 2. Stream auch DGS
-				if u"standard/deu" in audio:
+				if u"standard/deu" not in audio:
 					skip=True
+					
 			if u"Hörfassung" in title:
-				if "audio-description" in audio_kind:
+				if "audio-description" not in audio_kind:
 					skip=True
+					
 			if u"<OV>" in title:
-				if "standard/deu" not in audio:
-					skip=True
+				if "standard/deu" in audio:
+					skip=True			
 
 			if DGS_use:												# DGS-Stream verwenden?
 				if "DGS" in details:	
 					skip=False
-			else:
-				if "Normal" in details:	
-					skip=False			
 		
 			if not skip:
 				quality = u'automatisch'
-				HLS_List.append(u'HLS [B]%s[/B] ** auto ** auto ** %s#%s' % (details, title, href))		
+				HLS_List.append(u'HLS [B]%s[/B] ** auto ** auto ** %s#%s' % (details, title, href))
+				break												# nur 1 HLS-Stream verwenden
 
 	PLog("Streams: %d" % len(HLS_List))
 	PLog(HLS_List)
