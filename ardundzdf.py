@@ -51,7 +51,7 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>316</nr>										# Numerierung für Einzelupdate
-VERSION = '5.3.8'
+VERSION = '5.3.9'
 VDATE = '12.01.2026' 
 
 
@@ -11794,9 +11794,6 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 	PLog("ZDF_getApiStreams:")
 	PLog("%s, path: %s, scms_id: %s, ptmdTemplate: %s" % (title, path, scms_id, ptmdTemplate))
 	
-	pref_DGS_ON = SETTINGS.getSetting('pref_DGS_ON')
-	PLog("pref_DGS_ON: %s" % str(pref_DGS_ON))							# Anpassung ptmdTemplate s.u.				
-
 	path_org=path; futura_path=""
 	if "prod-futura" in path:
 		scms_id = path.split("/")[-1]									# -> scms_id für HBBTV-Quellen
@@ -11841,11 +11838,11 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 				PLog("ptmdTemplate_web: " + ptmdTemplate)
 		page=""; msg=""													# mit ptmdTemplate obsolet
 
+	pref_DGS_ON = SETTINGS.getSetting('pref_DGS_ON')
 	if pref_DGS_ON == "false": 
-		if "_dgs" in ptmdTemplate:
-			PLog("ptmdTemplate_remove_dgs")
+		if "_dgs" in ptmdTemplate:										# AUS -> DGS-ptmdTemplate korrigieren
+			PLog("ptmdTemplate_remove_dgs: " + ptmdTemplate)			# Check Quellen s.u.
 			ptmdTemplate =  ptmdTemplate.replace("_dgs", "")
-			PLog("ptmdTemplate_remove_dgs: " + ptmdTemplate)
 
 	if not page or '"status":404' in page:								# ptmdTemplate -> videodat_url via Graphql
 		PLog(page)	
@@ -11862,7 +11859,8 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 			else:
 				apitoken="aa3noh4ohz9eeboo8shiesheec9ciequ9Quah7el"; appId="zdf-web-c3da36e5"
 			PLog("apitoken: %s, appId: %s" % (apitoken, appId))
-			
+			# todo: DGS_avail anwenden
+
 			header = HEADERS_GRAPHQL % (apitoken, appId)
 			base = ZDF_GraphqlBase % "GetVideoMetaByCanonical"
 			# hier Kurzversion 1, Langversion apollo für Metadaten (ZDF_Graphql_Video)
@@ -11912,6 +11910,12 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 
 	page = page.replace('\\/','/')
 	page=page.replace('" :', '":'); page=page.replace('": "', '":"')  # Formatanpassung für get_form_streams
+	
+	if "_dgs" in page and pref_DGS_ON == "true":			# DGS vorhanden und gewählt
+		DGS_use = True
+	else:	
+		DGS_use = False
+	PLog("pref_DGS_ON: %s, DGS_use: %s" % (str(pref_DGS_ON), str(DGS_use)))								
 
 	li = xbmcgui.ListItem()
 	if gui:
@@ -11981,16 +11985,13 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 		if typ not in only_list or url in skip_list or url == "":
 			PLog("skipped: typ: %s, url: %s" % (typ, url))
 			continue
-		
-		if pref_DGS_ON == "false":
+			
+		if DGS_use:										# wie ZDFSourcesHBBTV:
 			if "_dgs" in url:							# ..mond_tex_dgs/1/260125_dk_rueckkehr_mond_tex_dgs,_508k_p9,_80..
-				continue
-		else:
-			if "_dgs" not in url:
-				continue
-			else:
 				track_add = "%s DGS" % track_add
-
+			else:
+				PLog("dgs_skipped: " + url)
+				continue
 			
 		skip_list.append(url)
 			
@@ -12023,8 +12024,8 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 			PLog("item: " + item)	
 			MP4_List.append(item)		
 	
-	PLog("DGS_Check: %s" % str(pref_DGS_ON)); dgs_url=""# DGS-Check mit zusätzlichen 
-	if '"label":"DGS"' in page:							# 	Android-DGS-Streams
+	PLog("Check_Android_DGS_Streams:"); dgs_url=""		# DGS-Check für zusätzlichen
+	if '"label":"DGS"' in page and pref_DGS_ON:			# 	Android-DGS-Streams
 		url = stringextract('"streamApiUrlDgsAndroid":"',  '"', page)
 		PLog("streamApiUrlAndroid: " + url)				# ..hsh_dgs/1?caption_source=250131_sendung_spezial_hsh%2F3
 		if url:											# DGS-Daten nachladen
@@ -12035,7 +12036,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 				dgs_url = stringextract('"uri":"',  '"', dgs_page)
 				qual  = stringextract('"quality":"',  '"', dgs_page)
 				qual = "[B]%s[/B]" % qual
-	PLog("DGS_Url: %s" % dgs_url)			
+	PLog("Android_DGS_Url: %s" % dgs_url)			
 	if dgs_url:
 		# Format HLS, DGS ** DGS ** fhd ** title#dgs_url
 		item = 'HLS,[B]%22s[/B] ** [B]%s[/B] ** %s ** %s#%s' % ("DGS", "DGS", qual,title,dgs_url)
@@ -12693,9 +12694,6 @@ def ZDFSourcesHBBTV(title, scms_id):
 	PLog("scms_id: " + scms_id) 
 	HBBTV_List=[]
 	url = "https://hbbtv.zdf.de/zdfm3/dyn/get.php?id=%s" % scms_id
-		
-	pref_DGS_ON = SETTINGS.getSetting('pref_DGS_ON')
-	PLog("pref_DGS_ON: %s" % str(pref_DGS_ON))
 					
 	# Call funktioniert auch ohne Header:
 	header = "{'Host': 'hbbtv.zdf.de', 'content-type': 'application/vnd.hbbtv.xhtml+xml'}"
@@ -12706,8 +12704,16 @@ def ZDFSourcesHBBTV(title, scms_id):
 		MyDialog(msg1, msg2, '')
 		return HBBTV_List
 	
+	pref_DGS_ON = SETTINGS.getSetting('pref_DGS_ON')
+	if "_dgs" in page and pref_DGS_ON == "true":					# DGS vorhanden und gewählt
+		DGS_use = True
+	else:	
+		DGS_use = False
+	PLog("pref_DGS_ON: %s, DGS_use: %s" % (str(pref_DGS_ON), str(DGS_use)))							
+
 	jsonObject = json.loads(page)
-	PLog('page_hbbtv: ' + str(jsonObject)[:100])		
+	PLog('page_hbbtv: ' + str(jsonObject)[:100])
+	
 	
 	form_list=["h265_aac_mp4_http_na_na", "h264_aac_mp4_http_na_na"]
 	q_list=["q5", "q4", "q3", "q2", "q1"]
@@ -12715,7 +12721,7 @@ def ZDFSourcesHBBTV(title, scms_id):
 	# Audiodescription bei Bedarf nachrüsten (streamObject["ad"])
 	
 	try:
-		label = jsonObject["streams"][0]["label"]			# i.d.R. "Normal", z.Z. nicht genutzt
+		label = jsonObject["streams"][0]["label"]					# i.d.R. "Normal", z.Z. nicht genutzt
 		streams = jsonObject["streams"]
 		for stream in streams:
 			for form in form_list:
@@ -12727,14 +12733,14 @@ def ZDFSourcesHBBTV(title, scms_id):
 						if q in streamObject:
 							add = "%s_%s_%s_%s" % (form[:4], "main", "deu", q)
 							url = streamObject[q]["url"]
-							if pref_DGS_ON == "true":
-								if "_dgs" not in url:
-									continue
-								else:
-									add = "%s_%s_%s_%s_%s" % (form[:4], "main", "deu", "DGS", q)
-							else:
+
+							if DGS_use:								# wie ZDF_getApiStreams
 								if "_dgs" in url:
-									continue		
+									add = "%s_%s_%s_%s_%s" % (form[:4], "main", "deu", "DGS", q)
+								else:
+									PLog("dgs_skipped: " + url)
+									continue
+			
 							line = "%s##%s##%s" % (title, add, url)
 							stream_list.append(line)
 	except Exception as exception:

@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>73</nr>								# Numerierung für Einzelupdate
-#	Stand: 02.01.2026
+#	Stand: 27.01.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -511,6 +511,8 @@ def Arte_Search(query='', next_url=''):
 # 14.03.2025 OnlyNow triggert EPG-Rückgabe -> get_live_data
 # 23.03.2025 ergänzt für hbbtv
 # 13.11.2025 pageProps-Values (alte Web-json-Inhalte) entfernt
+# 27.01.2026 Leer-Verweis möglich, Bsp.: /api/1/details/HIS/3,
+#	Geschichte nach Themen
 #
 def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 	PLog("GetContent: " + ID)
@@ -607,7 +609,7 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 		
 		if "url" in item:
 			url = item["url"]
-		if "link" in item:
+		if "link" in item:								# Leer-Verweis möglich Bsp.: s.o.
 			url = "%s%s?lang=%s" % (HBBTV_BASE, item["link"], lang)	# hbbtv	
 			if not item["link"]:						# null für Kats wie DOR
 				if item["deeplink"]:

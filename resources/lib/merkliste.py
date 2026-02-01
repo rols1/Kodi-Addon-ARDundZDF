@@ -566,8 +566,8 @@ def do_folder():
 
 	dialog = xbmcgui.Dialog()
 	head = 'Merklisten-Ordner bearbeiten'
-	slist = [	u'INFO: aktuelle Liste der Merklisten-Ordner',
-				u'INFO: Regeln für neue Merklisten-Ordner',
+	slist = [	u'INFO: [B]aktuelle Liste[/B] der Merklisten-Ordner',
+				u'INFO: [B]Regeln[/B] für neue Merklisten-Ordner',
 				u'Ordner entfernen (nur möglich, wenn nicht verknüpft)',
 				u'Neuen Ordner hinzufügen (bitte die Regeln beachten - s.o.)',
 				u'[COLOR red]RESET:[/COLOR] Basis-Ordnerliste wiederherstellen'] 

@@ -11,7 +11,7 @@
 #
 ################################################################################
 # 	<nr>119</nr>										# Numerierung für Einzelupdate
-#	Stand: 30.01.2026
+#	Stand: 01.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2147,11 +2147,17 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 			
 	# Livestream-Abzweig, Bsp. tagesschau24:					# entf. mit Umstellung auf api-Web	
 	#	json-Struktur wie Videos	
-	# -----------------------------------------			# Extrakt Videoquellen
+	# -----------------------------------------					# Extrakt Videoquellen
 	# 17.02.2023 Umstellung string -> json
-	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
+	# Formate siehe StreamsShow									# HLS_List + MP4_List anlegen
 	#	generisch: "Label |  Auflösung | Bandbreite | Titel#Url"
 	#	fehlende Bandbreiten + Auflösungen werden ergänzt
+	
+	#if SETTINGS.getSetting('pref_DGS_ON') == "true":			# kann verwirren, falls DGS-Streams fehlen
+	#	icon = R("icon-info.png")
+	#	msg1 = u"Gebärdensprache"; msg2 = "ist eingeschaltet"
+	#	xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)
+
 	call = "ARDStartSingle"
 	HLS_List = ARDStartVideoHLSget(title, StreamArray_0, call, StreamArray_1)	# Extrakt HLS
 	PLog("HLS_List: " + str(HLS_List)[:80])
@@ -2206,7 +2212,8 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 # StreamArray_0 (StreamArray): mediaCollection["embedded"]["streams"][0]
 #	StreamArray_1: DGSStreams (werden angehängt)
 # 04.10.2025 Filterung nach Titel, nur 1 Stream pro Variante (Ausnahme:
-#	Normal- und DGS-Stream, falls Kennz. im titel fehlt).
+#	Normal- und DGS-Stream, falls Kennz. im Titel fehlt  - wir 
+#	verwenden nur noch 1 Array
 #
 def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""): 
 	PLog('ARDStartVideoHLSget: %s | %s' % (call, title)); 
@@ -2215,49 +2222,58 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 	HLS_List=[]; Stream_List=[]; href=""
 	title = py2_decode(title)
 	
-	Arrays=[]
-	Arrays.append(StreamArray)
-	if StreamArray_1:										# StreamArrays verbinden
-		Arrays.append(StreamArray_1)
-	PLog("Arrays: %d" % len(Arrays))
-	
-	# nur jeweils der erste Stream wird verwendet
-	for array in Arrays:
-		kind  = array["kindName"]
-		PLog("kind: " + kind)
-		if u"<mit Gebärdensprache>" in title:							# DGS im 2. Stream
-			if "DGS" not in kind:										# skip Normalstreams
-				continue
-	
-		for stream in  array["media"]:				
-			#PLog(str(stream)[:100])
-			if stream["mimeType"] == "application/vnd.apple.mpegurl":	# 1x:  master.m3u8
-				audio_kind = stream["audios"][0]["kind"]
-				audio_lang = stream["audios"][0]["languageCode"]
-				audio = "%s/%s" % (audio_kind, audio_lang)
-				qual = stream["forcedLabel"]
-				aspect = stream["aspectRatio"]
-				href =  stream["url"]	# Video-Url
-				if href.startswith('http') == False:
-					href = 'https:' + href
-				details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
-				PLog("details: " + details)
-	
-				# Standard zuerst:
-				if "<OV>" not in title and u"Hörfassung" not in title:	# beim 2. Stream auch DGS
-					if u"standard/deu" in audio:
-						break
-				elif u"Hörfassung" in title:
-					if "audio-description" in audio_kind:
-						break
-				elif u"<OV>" in title:
-					if "standard/deu" not in audio:
-						break
-				else:
-					continue											# unbekannnte Varianten					
+	pref_DGS_ON = SETTINGS.getSetting('pref_DGS_ON')
+	if pref_DGS_ON == "true":
+		DGS_use = True
+	else:	
+		DGS_use = False
+	PLog("pref_DGS_ON: %s, DGS_use: %s" % (str(pref_DGS_ON), str(DGS_use)))	
+	Array = StreamArray												# Default: Normal-Array
+
+	if len(StreamArray_1) > 0:
+		if DGS_use and "DGS" in StreamArray_1["kindName"]:
+			Array = StreamArray_1
+	PLog("Array_HLS: " + str(Array)[:80])
+
+	PLog("mark2")
+	kind  = Array["kindName"]
+	for stream in  Array["media"]:				
+		PLog(str(stream)[:100])
+		skip=False
+		if stream["mimeType"] == "application/vnd.apple.mpegurl":	# 1x:  master.m3u8
+			audio_kind = stream["audios"][0]["kind"]
+			audio_lang = stream["audios"][0]["languageCode"]
+			audio = "%s/%s" % (audio_kind, audio_lang)
+			qual = stream["forcedLabel"]
+			aspect = stream["aspectRatio"]
+			href =  stream["url"]	# Video-Url
+			if href.startswith('http') == False:
+				href = 'https:' + href
+			details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
+			PLog("details: " + details)
+			PLog("href: " + href)							
+
+			# Standard zuerst:				
+			if "<OV>" not in title and u"Hörfassung" not in title:	# beim 2. Stream auch DGS
+				if u"standard/deu" in audio:
+					skip=True
+			if u"Hörfassung" in title:
+				if "audio-description" in audio_kind:
+					skip=True
+			if u"<OV>" in title:
+				if "standard/deu" not in audio:
+					skip=True
+
+			if DGS_use:												# DGS-Stream verwenden?
+				if "DGS" in details:	
+					skip=False
+			else:
+				if "Normal" in details:	
+					skip=False			
 		
-		quality = u'automatisch'
-		HLS_List.append(u'HLS [B]%s[/B] ** auto ** auto ** %s#%s' % (details, title, href))		
+			if not skip:
+				quality = u'automatisch'
+				HLS_List.append(u'HLS [B]%s[/B] ** auto ** auto ** %s#%s' % (details, title, href))		
 
 	PLog("Streams: %d" % len(HLS_List))
 	PLog(HLS_List)
@@ -2269,6 +2285,8 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 # json-Quelle:	tv.ardmediathek.de/..
 # Aufrufer ARDStartSingle
 # 16.05.2024 Auswertung Bitraten entfernt (unsicher)
+# 01.02.2026 DGS-Auswertung ergänzt (auch in Videos ohne Gebärdensprache
+#	im Titel)
 #
 def ARDStartVideoHBBTVget(title, path): 
 	PLog('ARDStartVideoHBBTVget: ' + title); 
@@ -2289,16 +2307,32 @@ def ARDStartVideoHBBTVget(title, path):
 		return HBBTV_List
 
 	try:
-		page = json.loads(page)
-		
-		streams = page["video"]["streams"][0]
-		PLog("streams0: %d" % len(streams))
-		PLog(str(streams)[:80])
+		page = json.loads(page)		
+		Arrays = page["video"]["streams"]
+		array0 = Arrays[0]												# 1. Array Fallback (i.d.R. Normal)
+		PLog("Arrays: %d" % len(Arrays))
+		PLog(str(Arrays)[:80])
 	except Exception as exception:
 		PLog(str(exception))
 		return HBBTV_List
 	
+	pref_DGS_ON = SETTINGS.getSetting('pref_DGS_ON')
+	if pref_DGS_ON == "true":
+		DGS_use = True
+	else:	
+		DGS_use = False
+	PLog("pref_DGS_ON: %s, DGS_use: %s" % (str(pref_DGS_ON), str(DGS_use)))	
+
+	streams=array0
+	if len(Arrays) > 1:													# Fallback
+		if DGS_use:
+			if "DGS" in Arrays[1]["kindName"]:
+				streams=Arrays[1]				
+				PLog("DGS_Array_found")
+
+	PLog(str(streams)[:180])
 	kind  = streams["kindName"]					# Normal
+	PLog("use_Array_%s" % kind)
 	for stream in streams["media"]:
 		PLog(str(stream)[:80])
 		if "dash" in stream["mimeType"]:		# 16.05.2024 ../tagesschau_1.mpd läuft nicht
@@ -2342,6 +2376,9 @@ def ARDStartVideoHBBTVget(title, path):
 # StreamArray_0 (StreamArray): mediaCollection["embedded"]["streams"][0]
 #	StreamArray_1: DGSStreams (werden angehängt)
 # 16.05.2024 Auswertung Bitraten entfernt (unsicher)
+# 01.02.2026 DGS-Auswertung ergänzt (auch in Videos ohne Gebärdensprache
+#	im Titel) - wir verwenden nur noch 1 Array
+#
 def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):	
 	PLog('ARDStartVideoMP4get: ' + title); 
 			
@@ -2350,46 +2387,54 @@ def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):
 	download_list = []	
 	# 2-teilige Liste für Download: 'title # url'
 	
-	Arrays=[]
-	Arrays.append(StreamArray)
-	if StreamArray_1:										# StreamArrays verbinden
-		Arrays.append(StreamArray_1)
-	PLog("Arrays: %d" % len(Arrays))
+	pref_DGS_ON = SETTINGS.getSetting('pref_DGS_ON')
+	if pref_DGS_ON == "true":
+		DGS_use = True
+	else:	
+		DGS_use = False
+	PLog("pref_DGS_ON: %s, DGS_use: %s" % (str(pref_DGS_ON), str(DGS_use)))	
+	
+	Array=StreamArray											# Fallback Normal
+	if len(StreamArray_1) > 0:
+		if DGS_use and "DGS" in StreamArray_1["kindName"]:
+			Array = StreamArray_1
+		else:
+			Array = StreamArray
+	PLog("Array_MP4: " + str(Array)[:80])
 
-	for array in Arrays:
-		kind  = array["kindName"]
-		for stream in array["media"]:
-			PLog(str(stream)[:80])
-			if stream["mimeType"] == "video/mp4":					# HLS ausschließen
-				if "maxHResolutionPx" in stream and "maxVResolutionPx" in stream: 
-					w = stream["maxHResolutionPx"] 
-					h = stream["maxVResolutionPx"]
-					res = "%sx%s" % (str(w),str(h))
-				else:
-					PLog("res_missing")
-					res = "0x0"
-				PLog("mp4_res: %s" % res) 
-				href = stream["url"]
-				
-				qual = stream["forcedLabel"]
-				aspect = stream["aspectRatio"]
-				audio_kind = stream["audios"][0]["kind"]			# standard
-				audio_lang = stream["audios"][0]["languageCode"]	# fra, deu
-				if "<OV>" not in title and u"Hörfassung" not in title:
-					if "deu" not in audio_lang:						# s. ARDStartVideoHLSget, ARDStartVideoHBBTVget
-						continue
-				else:
-					if "<OV>" in title and  "deu" in audio_lang:	# deu ausfiltern
-						continue	
-				
-				details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
-				
-				title_url = u"%s#%s" % (title, href)
-				item = u"MP4: [B]%s[/B] ** Auflösung %s ** %s" % (details, res, title_url)
-				if "3840x" in res:
-					item = item.replace("MP4", "UHD_MP4")
-				item = py2_decode(item)
-				download_list.append(item)
+	kind  = Array["kindName"]
+	for stream in Array["media"]:
+		PLog(str(stream)[:80])
+		if stream["mimeType"] == "video/mp4":					# HLS ausschließen
+			if "maxHResolutionPx" in stream and "maxVResolutionPx" in stream: 
+				w = stream["maxHResolutionPx"] 
+				h = stream["maxVResolutionPx"]
+				res = "%sx%s" % (str(w),str(h))
+			else:
+				PLog("res_missing")
+				res = "0x0"
+			PLog("mp4_res: %s" % res) 
+			href = stream["url"]
+			
+			qual = stream["forcedLabel"]
+			aspect = stream["aspectRatio"]
+			audio_kind = stream["audios"][0]["kind"]			# standard
+			audio_lang = stream["audios"][0]["languageCode"]	# fra, deu
+			if "<OV>" not in title and u"Hörfassung" not in title:
+				if "deu" not in audio_lang:						# s. ARDStartVideoHLSget, ARDStartVideoHBBTVget
+					continue
+			else:
+				if "<OV>" in title and  "deu" in audio_lang:	# deu ausfiltern
+					continue	
+			
+			details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
+			
+			title_url = u"%s#%s" % (title, href)
+			item = u"MP4: [B]%s[/B] ** Auflösung %s ** %s" % (details, res, title_url)
+			if "3840x" in res:
+				item = item.replace("MP4", "UHD_MP4")
+			item = py2_decode(item)
+			download_list.append(item)
 	
 	PLog("MP4_download_list:"); PLog(download_list)
 	return download_list			

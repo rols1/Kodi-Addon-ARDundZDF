@@ -10,6 +10,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+01.02.2026	5.3.9
+			Main_NEW(ARDnew): Menü "Bildgalerien Das Erste" entfernt (keine Daten mehr).
+			ARD_FlatListRec: unerlaubte Zeichen aus Titel entfernt (repl_json_chars).
+			Kika_Live (Modul childs): LF's aus Info-Text bei Sendeschluss entfernt.
+			time_translate (util): Tabelle summer_time mit Daten für 2027 ergänzt. 
+			ZDF_getApiStreams: bei prod-futura-Url scms_id immer aus der Url ermittelt,
+			Muster-Ergänzung bei HD-Auswertung: 'quality":"hd' (zu 'hd":true'), Ersatz
+			kleinerer MP4_List durch größere HBBTV_List.
+			ZDF_getApiStreams, ZDFSourcesHBBTV: Filterung Videoquellen gemäß DGS-Setting
+			und Verfügbarkeit (pref_DGS_ON, DGS_use) in HLS- HBBTV- und MP4-Liste.
+			ARDStartVideoHLSget, ARDStartVideoHBBTVget, ARDStartVideoMP4get: Filterung
+			Videoquellen gemäß DGS-Setting und Verfügbarkeit (pref_DGS_ON, DGS_use) in
+			HLS- HBBTV- und MP4-Liste (ähnlich ZDF).
+			GetContent (Modul arte): Leer-Verweis beim api hbbtv-mw in Kat Geschichte 
+			festgestellt (Geschichte nach Themen: /api/1/details/HIS/3) - ohne Fix.
+			ARDStartVideoMP4get, ARDStartVideoHBBTVget (Modul ARDnew): Ausfilterung
+			unpassender Streams (<OV>, Hörfassung) bei standard/deu.			
+			PlayVideo_Direct (util): Ersatz leere Stream_List durch HBBTV_List (die
+			frühere Verkettung beider Listen kann zur falschen Auswahl bei mehrsprachigen
+			Streams führen).
+			ARDSportWDRArchiv: alle fanarts und thumbs auf Logo der Sportschau gesetzt.				
+
 12.01.2026	5.3.8
 			getRedirect (util): in Rückgabe HTTP-Status-Code ergänzt, bei Code != 200 
 			immer mit leerer Url, Formatliste für Streams ergänzt.
@@ -33,7 +55,7 @@ CHANGE HISTORY
 			MediathekViewWeb-Suche (Modul yt): ergänzt: description (zusätzlich zu title,
 			topic), future=true (vorher false), s. issue #49. Aus yt-Modul entfernt:
 			yt_get, get_stream_details und get_duration.
-			transl_json: Anpassungen für franz. Aktzents.
+			transl_json: Anpassungen für franz. Akzents.
 
 01.01.2026	5.3.7
 			ZDF_WebMoreSingle, ZDF_WebMoreVideo entfernt: mit ZDF_StartWebCluster und

@@ -110,7 +110,7 @@ def Main_phoenix():
 			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 
 	title="Suche auf phoenix"
-	tag = "Suche Themen, Sendungen und Videos in phoenix"
+	tag = "Suche Themen, Sendungen und Videos in phoenix und anderen ARD-Sendern."
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.phoenix.phoenix_Search", fanart=R(ICON_PHOENIX), 
 		thumb=ICON_SEARCH, fparams=fparams, tagline=tag)
