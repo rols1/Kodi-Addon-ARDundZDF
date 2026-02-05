@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>119</nr>										# Numerierung für Einzelupdate
-#	Stand: 01.02.2026
+# 	<nr>120</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -176,7 +176,8 @@ def Main_NEW(name=''):
 
 	# Retro-Version ab 12.11.2020, V3.5.4
 	# 16.06.2021 auch erreichbar via ARD-Startseite/Premium_Teaser_Themenwelten	
-	# 07.04.2023 Web-Call -> api-Call	
+	# 07.04.2023 Web-Call -> api-Call
+	# 04.02.2026 z.Z. nur 1 Bild, restl. Beiträge ohne teaser	
 	path = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/retro?embedded=false" 
 	title = "ARD Mediathek RETRO"
 	erbe = u"[COLOR darkgoldenrod]%s[/COLOR]" % "UNESCO Welttag des Audiovisuellen Erbes"
@@ -678,11 +679,11 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 	# 	"Schleswig-Holstein=sh, Thüringen=th
 	PLog("regio_check: %s" % partner)					# spez. Inhalte voranstellen
 	regio_kat = [										# nach Bedarf ergänzen
-		"by|Unter unserem Himmel|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2JyLmRlL2Jyb2FkY2FzdFNlcmllcy9icm9hZGNhc3RTZXJpZXM6L2JyZGUvZmVybnNlaGVuL2JheWVyaXNjaGVzLWZlcm5zZWhlbi9zZW5kdW5nZW4vdW50ZXItdW5zZXJlbS1oaW1tZWw|https://api.ardmediathek.de/image-service/images/urn:ard:image:af246683efe842f0?w=640&ch=fcad9e13605d8eb0"
-		,"by|Blickpunkt Sport|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2JyLmRlL2Jyb2FkY2FzdFNlcmllcy9icm9hZGNhc3RTZXJpZXM6L2JyZGUvZmVybnNlaGVuL2JheWVyaXNjaGVzLWZlcm5zZWhlbi9zZW5kdW5nZW4vYmxpY2twdW5rdC1zcG9ydA|https://api.ardmediathek.de/image-service/images/urn:ard:image:47139d13d3483f29?w=640&ch=9d54ad9bea96ef5b"
-		,"he|Heimat Hessen|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2hyLW9ubGluZS8zODIxMDI4MQ|https://api.ardmediathek.de/image-service/images/urn:ard:image:f049db09043c494c?w=640&ch=c8f27b2223dbd951"
-		,"he|Sport im hr|https://api.ardmediathek.de/page-gateway/pages/hr/editorial/hr-sport-hessen|https://api.ardmediathek.de/image-service/images/urn:ard:image:728fab9db02e4bae?ch=011a995a203e585a&w=640"
-		,"sl|Sport im SR|https://api.ardmediathek.de/page-gateway/widgets/sr/editorials/E7IQVqrZXqK24ieYwG8kO%3A-115180639807314065|https://api.ardmediathek.de/image-service/images/urn:ard:image:1c772b30babcd252?ch=5266a5922c5f86f0&w=640"
+		"by|Unter unserem Himmel|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2JyLmRlL2Jyb2FkY2FzdFNlcmllcy9icm9hZGNhc3RTZXJpZXM6L2JyZGUvZmVybnNlaGVuL2JheWVyaXNjaGVzLWZlcm5zZWhlbi9zZW5kdW5nZW4vdW50ZXItdW5zZXJlbS1oaW1tZWw?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:af246683efe842f0?w=640&ch=fcad9e13605d8eb0"
+		,"by|Blickpunkt Sport|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2JyLmRlL2Jyb2FkY2FzdFNlcmllcy9icm9hZGNhc3RTZXJpZXM6L2JyZGUvZmVybnNlaGVuL2JheWVyaXNjaGVzLWZlcm5zZWhlbi9zZW5kdW5nZW4vYmxpY2twdW5rdC1zcG9ydA?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:47139d13d3483f29?w=640&ch=9d54ad9bea96ef5b"
+		,"he|Heimat Hessen|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2hyLW9ubGluZS8zODIxMDI4MQ?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:f049db09043c494c?w=640&ch=c8f27b2223dbd951"
+		,"he|Sport im hr|https://api.ardmediathek.de/page-gateway/pages/hr/editorial/hr-sport-hessen?pageNumber=0&pageSize=100|https://api.ardmediathek.de/image-service/images/urn:ard:image:728fab9db02e4bae?ch=011a995a203e585a&w=640"
+		,"sl|Sport im SR|https://api.ardmediathek.de/page-gateway/widgets/sr/editorials/E7IQVqrZXqK24ieYwG8kO%3A-115180639807314065?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:1c772b30babcd252?ch=5266a5922c5f86f0&w=640"
 		,"sn|MDR+|https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL21kci5kZS9tZHJwbHVz?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:eab36fa8ffdb27da?w=640&ch=4bc0c7d930d596d9"
 		,"sn|Sport im Osten|https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL21kci5kZS9zZW5kZXJlaWhlbi82ODlhYzU5My1mOWFkLTQ3MTAtOTczMS1lMTNiZTEwODZkMGM?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:4b8aeaada557019e?w=1600&ch=50fb95aed76b8244&imwidth=1600"
 		,"nw|Sportclub Story|https://api.ardmediathek.de/page-gateway/compilations/ard/2odyJaRzcJftj4uaJcwNYQ?pageNumber=0&pageSize=12&embedded=true|https://api.ardmediathek.de/image-service/images/urn:ard:image:0480dc9eb73502e2?w=640&ch=cd45598f741bf56c"
@@ -721,7 +722,7 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 		if next_path:	
 			summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (pages, totalElements)
 			pN = int(pN)+1								# nächste pageNumber, Basis 0
-			tag = "weiter zu Seite %s" % str(pN)
+			tag = u"weiter zu Seite %d" % pN			# hier Basis 0
 			PLog(summ); PLog(next_path)
 
 			title_org=py2_encode(title_org); next_path=py2_encode(next_path); mark=py2_encode(mark);
@@ -827,12 +828,11 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		PLog('pagination_Rubrik:')
 		title = "Mehr zu >%s<" % title_org				# Mehr-Button	 
 		li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
-		pages, pN, pageSize, totalElements, next_path = get_pagination(page)	# Basis 0		
+		pages, pN, pageSize, totalElements, next_path = get_pagination(page)	# Basis 0
 		
 		if next_path:	
 			summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (pages, totalElements)
-			pN = int(pN)+1								# nächste pageNumber, Basis 0
-			tag = "weiter zu Seite %s" % str(pN)
+			tag = u"weiter zu Seite %d" % pN			# abwechselnd Basis 0, 1
 			PLog(summ); PLog(next_path)
 			
 			title_org=py2_encode(title_org); next_path=py2_encode(next_path); mark=py2_encode(mark);
@@ -846,6 +846,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 
 #---------------------------------------------------------------------------------------------------
 # ermittelt aus page die Parameter für pagination oder AutoCompilationWidget (Scroll-Seiten Rubriken)
+# Wegen div. Seitenformate für json.loads ungeeignet.
 # Rückgabe: Pfad mit inkrementierter pageNumber oder  leerer Pfad', falls Beiträge für weitere
 #	Seiten fehlen. 
 # Nicht für ARDSearchnew - eigene Scrollverwaltung (Parameterbez., Pfad bleibt api-Call)
@@ -853,7 +854,8 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 # Bsp. AutoCompilationWidget:	Startseite/Filme nach Rubriken/Alle Filme
 # Bsp. Pfade (Auszug): 	/page-gateway/widgets/ard/compilation/, /page-gateway/widgets/ard/asset/,
 #						/page-gateway/widgets/ard/editorials/
-# pageNumber, pageSize, totalElements: Basis 0
+# pageNumber, pageSize, totalElements: leider abwechselnd Basis 0,1 (leere Seite bei Basis 0 akzeptabel,
+#	wir warten auf ein ARD-Lösung ähnlich hasNextPage, endCursor beim ZDF-Graphql-Call)
 #
 def get_pagination(page):
 	PLog("get_pagination:")
@@ -862,9 +864,13 @@ def get_pagination(page):
 	pageNumber 	= stringextract('pageNumber":', ',"', pagination)
 	pageSize 	= stringextract('pageSize":', ',"', pagination)
 	totalElements 	= stringextract('totalElements":', '},', pagination)
-	href 		= stringextract('href":"', '"', pagination)	# akt. Pfad mit widgetID
-	if '?' in href:
-		href		= href.split('?')[0]					# trennt pageNumber + pageSize ab
+	links		= page.rfind("links")							# skip links in Einzelbeiträgen
+	href 		= stringextract('href":"', '"', page[links:])	# akt. Pfad mit widgetID
+	PLog("links: %s, href: %s" % (page[links:links+80], href))
+	
+	if "pageNumber=" not in href:
+		PLog("href_without_pagenr")
+		return "", "", "", "", ""
 		
 	if 'AutoCompilationWidget' in page:
 		PLog('AutoCompilationWidget')
@@ -879,18 +885,23 @@ def get_pagination(page):
 	if pageSize == '' or totalElements == '' or totalElements == 'null':	# Sicherung 
 		return "", "", "", "", ""
 	
-	next_path=''; pN=''
+	pN_akt = re.search(r'pageNumber=(\d+)', href).group(1)
+	pN_new = int(pN_akt) + 1
+	akt_pagenr = "pageNumber=%d" % int(pN_akt)
+	next_pagenr = "pageNumber=%d" % pN_new
+	PLog(akt_pagenr); PLog(next_pagenr);
+	
 	pages = float(totalElements) / float(pageSize)
 	pages = int(math.ceil(pages))					# aufrunden für Seitenrest
+	if pN_new <= pages:								# Fehler bei Basis 0
+		next_path = href.replace(akt_pagenr, next_pagenr)
+	else:
+		next_path=""		
+		
+	PLog("pN_new: %d, pageSize: %s, totalElements: %s, pages: %d | next_path: %s" %\
+		(pN_new, pageSize, totalElements, pages, next_path))
 	
-	
-	pN = int(pageNumber) + 1			# nächste pageNumber 
-	if pN < int(pages):
-		next_path = "%s?pageNumber=%d&pageSize=%s" % (href, pN, pageSize)
-	PLog(pN);PLog(pageSize);PLog(totalElements);PLog(pages);
-	PLog(next_path)
-	
-	return pages, pN, pageSize, totalElements, next_path
+	return pages, pN_new, pageSize, totalElements, next_path
 #---------------------------------------------------------------------------------------------------
 # 1. Aufrufer: ARDStartRubrik mit pageNumber='1' - Seite 0 bereits ausgewertet
 #	dann rekursiv (Mehr-Button) mit den ermittelten Werten pageNumber + pageSize
@@ -922,20 +933,19 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark, homeID=""):
 		return
 	PLog(len(page))	
 	page = page.replace('\\"', '*')							# quotierte Marks entf.
-	
-	
+
 	li = get_json_content(li, page, ID, mark)
 	
-	if 	'"pagination":'	in page:				# z.B. Scroll-Beiträge zu Rubriken
-		title = "Mehr zu >%s<" % title_org		# Mehr-Button	 # ohne Pfad
-		li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
-		pages, pN, pageSize, totalElements, next_path  = get_pagination(page)
-		
+	if 	'"pagination":'	in page:							# z.B. Scroll-Beiträge zu Rubriken
+		title = "Mehr zu >%s<" % title_org					# Mehr-Button	 # ohne Pfad
+		li = xbmcgui.ListItem()								# Kontext-Doppel verhindern
+
+		pages, pN, pageSize, totalElements, next_path  = get_pagination(page)	
 		# Mehr-Button, falls noch nicht alle Sätze ausgegeben		
 		if next_path:
 			summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (pages, totalElements) 
-			pN = int(pN)+1								# nächste pageNumber, Basis 0
-			tag = "weiter zu Seite %s" % pN	
+			pN = int(pN)									# nächste pageNumber
+			tag = "weiter zu Seite %d" % pN					# abwechselnd Basis 0, 1
 			
 			PLog(summ); PLog(next_path)
 			title_org=py2_encode(title_org); next_path=py2_encode(next_path); mark=py2_encode(mark);
@@ -2161,7 +2171,7 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 	call = "ARDStartSingle"
 	HLS_List = ARDStartVideoHLSget(title, StreamArray_0, call, StreamArray_1)	# Extrakt HLS
 	PLog("HLS_List: " + str(HLS_List)[:80])
-	HBBTV_List = ARDStartVideoHBBTVget(title, path)								# HBBTV (MP4), eigene Quellen
+	HBBTV_List = ARDStartVideoHBBTVget(title, path)								# HBBTV (MP4), FSK16-Sperre wie HLS/MP4
 	PLog("HBBTV_List: " + str(HBBTV_List)[:80])
 	MP4_List = ARDStartVideoMP4get(title, StreamArray_0, call, StreamArray_1)	# MP4
 	Dict("store", 'ARDNEU_HLS_List', HLS_List) 
@@ -2214,6 +2224,8 @@ def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''):
 # 04.10.2025 Filterung nach Titel, nur 1 Stream pro Variante (Ausnahme:
 #	Normal- und DGS-Stream, falls Kennz. im Titel fehlt  - wir 
 #	verwenden nur noch 1 Array
+# 01.02.2026 Berücksichtigung DGS-Setting pref_DGS_ON (Anpassung 
+#	ptmdTemplate, Streamauswahl)
 #
 def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""): 
 	PLog('ARDStartVideoHLSget: %s | %s' % (call, title)); 

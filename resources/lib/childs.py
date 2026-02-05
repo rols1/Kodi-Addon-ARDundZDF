@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>35</nr>										# Numerierung für Einzelupdate
-#	Stand: 29.01.2026
+# 	<nr>36</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -313,10 +313,18 @@ def Kikaninchen_Menu():
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KikaninchenLieder", fanart=GIT_KANINCHEN, 
 		thumb=GIT_KRAMLIEDER, tagline='für Kinder 3-6 Jahre', fparams=fparams)
-	title='Kikaninchen Tonschnipsel'
-	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tonschnipsel", fanart=GIT_KANINCHEN, 
-		thumb=GIT_KRAMSCHNIPP, tagline='für Kinder 3-6 Jahre', fparams=fparams)
+	
+	title='Kikaninchen Schnipselwelt'
+	ID='Kikaninchen_Schnipselwelt'
+	ardpath="https://api.ardmediathek.de/page-gateway/widgets/ard/asset/%s?pageNumber=1&pageSize=24"
+	path=ardpath % "Y3JpZDovL2tpa2EuZGUvc2VuZGVyZWloZW4vaW5maW5pdGVfc2VyaWVzL2NvbnRlbnQtNzU5"
+	thumb="https://www.kika.de/kikaninchen-schnipselwelt/bilder/kikaninchen-schnipselwelt-150-resimage_v-tsquare11_w-1024.jpg?version=11459"
+	tag="In der Schnipselwelt erleben Kikaninchen, Anni und Christian jeden Tag ein neues Abenteuer" 
+	path=py2_encode(path);
+	fparams="&fparams={'path': '%s', 'title': '%s', 'widgetID': '', 'ID': '%s', 'homeID': 'Kinderprogramme'}" %\
+		(quote(path), quote(title), ID)
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik",
+		fanart=GIT_KANINCHEN, thumb=thumb, tagline=tag, fparams=fparams)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -1857,7 +1865,7 @@ def KikaninchenLieder():
 	path = 'https://www.kikaninchen.de/kikaninchen/lieder/liederkikaninchen100.json'	
 	page, msg = get_page(path)	
 	if page == '':	
-		msg1 = "Fehler in Kikaninchen_Videos:"
+		msg1 = "Fehler in KikaninchenLieder:"
 		msg2 = msg
 		MyDialog(msg1, msg2, '')	
 		return li
@@ -1900,52 +1908,18 @@ def KikaninchenLieder():
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------			
-# Tonschnipsel aus verschiedenen Seiten
-def Tonschnipsel():	
-	PLog('Tonschnipsel:')
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-
-	mp3_links =  [
-		'kikaninchen = http://www.kikaninchen.de/kikaninchen/teaseraudio320-play.mp3',
-		'Gitarre = http://www.kikaninchen.de/static_kkn/global/clickons/sounds/Gitarre_1.mp3',
-		'Trompetenaffe =  http://www.kikaninchen.de/static_kkn/global/clickons/sounds/Trompetenaffe.mp3',
-		'Frosch winkt = http://www.kikaninchen.de/static_kkn/global/clickons/sounds/Froschwinkt2_01.mp3?1493048916578',
-		# 'Malfrosch =  http://www.kikaninchen.de/static_kkn/global/clickons/sounds/malfrosch1.mp3?1493048916578',
-		'Grunz =  http://www.kikaninchen.de/static_kkn/global/clickons/sounds/grunz.mp3?1492871718285',
-		'Huhu = http://www.kikaninchen.de/static_kkn/global/clickons/sounds/huhu.mp3?1493022362691',
-		'Schnippel = http://www.kikaninchen.de/static_kkn/global/clickons/sounds/schnippel.mp3?1493022362691',
-		'Klacker = http://www.kikaninchen.de/static_kkn/global/clickons/sounds/dices.mp3?1492868784119', 
-			#Kurzlieder von http://www.kikaninchen.de/kikaninchen/lieder/liederkikaninchen100.json:
-		'Lieder	= http://www.kikaninchen.de/kikaninchen/lieder/teaseraudio288-play.mp3',
-		'La, la, la = http://www.kikaninchen.de/kikaninchen/lieder/hilfeaudio104-play.mp3',
-		'Haha, toll - so viele lustige Lieder = http://www.kikaninchen.de/kikaninchen/lieder/hilfeaudio106-play.mp3',
-		'Höre dir Lieder an und singe mit! = http://www.kikaninchen.de/kikaninchen/lieder/hilfeaudio102-play.mp3',
-		'Ja, lass uns singen und dazu tanzen! = http://www.kikaninchen.de/kikaninchen/lieder/hilfeaudio100-play.mp3',		
-		]
-	PLog(len(mp3_links))
-	
-	for link in mp3_links:
-		title = link.split('=')[0].strip()
-		url = link.split('=')[1].strip()
-
-		PLog(url);PLog(title);
-		thumb=R('radio-podcasts.png')
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': ''}" % (quote(url), 
-			quote(title), quote(thumb))
-		addDir(li=li, label=title, action="dirList", dirID="PlayAudio", 
-			fanart=thumb, thumb=thumb, fparams=fparams, summary=title, mediatype='music')
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+# 02.02.2026 frühere Tonschnipsel nicht mehr in der Mediathek verfügbar
+#	Austausch gegen Schnipselwelt, Aufruf in Kikaninchen_Menu
 
 # ######################################################################
 # einzelnes Video
 # 07.12.2022 Neu nach Webänderungen (vormals xml-Seite)			
-# path enthält die api-Seite mit Details (json). Hier direkt
+# path enthält die api-Seite mit Details (json). Hier direSkt
 #	weiter mit der assets-Url zu den Videoquellen (einfaches Anhängen
 #	von /assets klappt nicht bei typ=relatedVideo
 # Aufrufer: Kika_Subchannel, Kika_Rubriken
 # 16.08.2023 Kikaninchen_Videos lädt Quellen bereits vor (page)
+# Formate nicht passend für Schnipselwelt
 #
 def Kika_SingleBeitrag(path, title, thumb, Plot, page=""):
 	PLog('Kika_SingleBeitrag: ' + path)
