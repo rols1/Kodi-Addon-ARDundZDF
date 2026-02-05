@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>316</nr>										# Numerierung für Einzelupdate
+# 	<nr>317</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.9'
 VDATE = '12.01.2026' 
 
@@ -3651,13 +3651,25 @@ def ARDSportWDR():
 	title = u"Event: [B]DFB-Pokal 2025 / 2026[/B]"
 	tag = u"DFB-Pokal 2025,  News zu Ergebnissen, Auslosungen und Spielen"
 	cacheID = "DFB_Pokal_2025"
-	img = "https://images.sprtschau.de/image/8039954d-42c9-4630-9308-be21458fa18b/AAABlcSOzQM/AAABmKJZ-0g/16x9-big/dfbpokal-sp-100.jpg?width=1280"
+	img = "https://images.sportschau.de/image/8039954d-42c9-4630-9308-be21458fa18b/AAABlcSOzQM/AAABmyZE0EA/16x9-big/dfbpokal-sp-100.jpg?width=1280"
 	path = "https://www.sportschau.de/fussball/dfbpokal"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
 		(quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
+		fparams=fparams, tagline=tag)
+		
+			
+	title = u"Event: [B]Olympische Winterspiele Mailand Cortina 2026[/B]"
+	tag = u"Olympia 2026: Aktuelle News und Hintergründe"
+	cacheID = "Olympia 2026"
+	img = "https://images.sportschau.de/image/ca3e972b-06d1-4d30-b080-b8dadff44c28/AAABm7exCYU/AAABmyZE0EA/16x9-big/olympia-mailand-cortina-keyvisual-100.jpg?width=1280"
+	path = "https://www.sportschau.de/olympia"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
 
 	#---------------------------------------------------------	Großevents Ende
 
@@ -11789,6 +11801,8 @@ def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
 #	Nachteil: Videoquelle spärlich, i.d.R. nur 2 Auflösungen, kein DGS.
 # 31.12.2025 Nutzung ev. Videodaten in futura-Seite als Fallback für 
 #	Fehlschlag des Graphql-Calls.
+# 01.02.2026 Berücksichtigung DGS-Setting pref_DGS_ON (Anpassung 
+#	ptmdTemplate, Streamauswahl)
 #
 def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmdTemplate=""):
 	PLog("ZDF_getApiStreams:")
