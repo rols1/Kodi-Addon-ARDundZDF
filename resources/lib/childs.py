@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>36</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.02.2026
+# 	<nr>37</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -686,17 +686,20 @@ def Kika_get_props(page):
 #	
 def Kika_get_img(item):
 	PLog('Kika_get_img:')
-	
+		
 	#img_types = blockextract("imageType", item)					# bei Bedarf weitere Typen/Größen suchen
 	#for img_type in img_types:
 	
-	img = stringextract('urlScheme":"', '"', item)
-	#img = img.replace("**imageVariant**", "miniKika")				# miniKika häufig nicht vorh.
+	img = stringextract('scheme":"', '"', item)						# neu ab 6.2.26
+	PLog(img)
+	
 	img = img.replace("**imageVariant**", "original")				# Varianten s. "variants":[
 	img = img.replace("**width**", "1920")							# s.o.
+	img = img.replace("**format**", "jpg")							# neu ab 6.2.26
 	if img.startswith('http') == False:
 		img = BASE_KIKA + img
-	img_alt = stringextract('alt":"', '"', item)		
+	img_alt = stringextract('alt":"', '"', item)	
+	PLog(img)
 	
 	return img, img_alt
 				
