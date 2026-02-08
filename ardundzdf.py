@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>317</nr>										# Numerierung für Einzelupdate
+# 	<nr>318</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.9'
 VDATE = '12.01.2026' 
 
@@ -6937,6 +6937,7 @@ def EPG_Search(title, query=""):
 	PLog("SearchSender: %d" % plen)
 	
 	now,today,today_5Uhr,nextday,nextday_5Uhr = EPG.get_unixtime()		# lokale Unix-Zeitstempel holen + Offsets
+	today = int(today)
 	
 	EPG_SearchHits=[]													# nimmt Treffer ab akt. Tag auf
 	tag_negativ =u'neue EPG-Suche starten'								# ohne Treffer
@@ -6959,6 +6960,9 @@ def EPG_Search(title, query=""):
 				continue
 			for r in EPG_dict:											# Fundstellen, Button in EPG_Search2
 				starttime=r[0]
+				starttime = time.mktime(starttime.timetuple())			# -> unix
+				starttime = int(starttime)
+				PLog(starttime); PLog(today);  PLog(r[3]);  PLog(r[5])
 				if starttime < today:									# älter als heute -> verwerfern
 					continue
 				if up_query in up_low(r[3]) or up_query in up_low(r[5]):# Fund? 3=sname, 5=summ
@@ -7029,6 +7033,7 @@ def EPG_Search2(title, query=""):
 	PLog("SearchSender2: %d" % plen)
 
 	now,today,today_5Uhr,nextday,nextday_5Uhr = EPG.get_unixtime()		# lokale Unix-Zeitstempel holen + Offsets
+	now = int(now)
 
 	cnt=0; up_query=up_low(query); store_recents=False
 	up_query = up_query.replace("+", " ")								# wie in EPG_Search
@@ -7055,8 +7060,14 @@ def EPG_Search2(title, query=""):
 			starttime=r[0]; img=r[2]; sname=r[3]; summ=r[5];			# EPG-Datensatz
 			vonbis=r[6]; today_human=r[7]; endtime=r[8]
 			
-			s_start = datetime.datetime.fromtimestamp(int(starttime))	# Unixtime -> human wie EPG.EPG
-			day_human =  s_start.strftime("%d.%m.%Y")
+			starttime = time.mktime(starttime.timetuple())				# -> unix
+			starttime = int(starttime)
+			endtime = time.mktime(endtime.timetuple())
+			endtime = int(endtime)
+			
+			s_start = r[0]												# datetime-Objekt 
+			s_end = r[8]												# dto.
+			day_human = s_start.strftime("%d.%m.%Y, %H:%M:%S")			# -> human
 			PLog("day_human: " + day_human)
 			
 			wday =  s_start.strftime("%A")					
@@ -7074,18 +7085,21 @@ def EPG_Search2(title, query=""):
 			start_end=""
 			if SETTINGS.getSetting('pref_epgRecord') == 'true':	
 				tag = u"%s\n[B]Zur Aufnahme:[/B] Kontextmenü" % tag
-				start_end = "%s|%s" % (starttime, endtime)				# Kontexmenü "Sendung aufnehmen" 
+				st = s_start.strftime("%d.%m.%Y, %H:%M:%S")	
+				se = s_end.strftime("%d.%m.%Y, %H:%M:%S")	
+				start_end = "%s|%s" % (st, se)							# Kontexmenü "Sendung aufnehmen" 
 
 			sender = py2_decode(sender)
 			summ = "[B]%s[/B] | %s" % (sender, summ)
 			Plot = summ.replace("\n", "||")
+			PLog(starttime); PLog(now)
 			if starttime < now:
 				title = "[COLOR grey]%s | %s[/COLOR]" % (day_human, sname)	# grau - Vergangenheit
 			else:
 				title = "[COLOR blue]%s[/COLOR] | %s" % (day_human, sname)	# Datum + Wochentag | Titel
 			
 			PLog("Satz7:")
-			PLog(today_human);PLog(title);PLog(vonbis);PLog(summ[:40]);
+			PLog(today_human);PLog(title);PLog(vonbis);PLog(summ);
 			
 			title=py2_encode(title); link=py2_encode(link); img=py2_encode(img)
 			Plot=py2_encode(Plot); 						

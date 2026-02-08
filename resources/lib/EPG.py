@@ -12,8 +12,8 @@
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	ab Okt. 2025 Webseite geändert, TV-Daten im json-Format nur für 1 Tag
 #
-# 	<nr>40</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.01.2026
+# 	<nr>41</nr>										# Numerierung für Einzelupdate
+#	Stand: 08.02.2026
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -524,6 +524,7 @@ def get_api_data(Dict_ID):
 					summ = "%s\n%s" % (summ, summ2)
 				summ = "%s\n%s" % (summ, summ3)
 				summ = unescape(summ)
+				summ = summ.replace('\"', '')
 				
 				# date-Format: 2025-10-01T05:00:00+02:00
 				date_format = "%Y-%m-%dT%H:%M:%S"
