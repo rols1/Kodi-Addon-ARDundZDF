@@ -7,8 +7,8 @@
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 # 	Funktions-Calls via Auswertung sys.argv s. Modulende
 ################################################################################
-# 	<nr>9</nr>										# Numerierung für Einzelupdate
-#	Stand: 11.05.2024
+# 	<nr>10</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.02.2026
 #
 
 from __future__ import absolute_import
@@ -732,13 +732,15 @@ def clear_merkliste():
 		return
 		
 	tsecs = 3												# Timeout urlopen 	
-	templ = "%03d | %15s | %36s"							# "Index | Fehler | Name "
-	name_len = 30
+	templ = "%03d | %s | %s"								# "Index | Fehler | Name ", ljust s.u.
+	name_len = 30; info_len = 15
 
+	# dirID_list: Funktionen ohne Web- oder API-Url (durchwinken)
 	dirID_list = ["ZDF_Search", "SearchARDundZDFnew", "AudioSearch", "AudioSearch_cluster",
 				"arte_Search", "Kika_Search", "Tivi_Search", "Search", "phoenix_Search",
 				"XL_Search", "MVWSearch", "ARDSearchnew", "BilderDasErste",
-				"resources.lib.my3Sat.Bilder3sat", "PodFavoritenListe"
+				"Bilder3sat", "PodFavoritenListe", "update_single", "DownloadTools",
+				"DownloadsList", "Verpasst", "refresh_epg", "start_script"
 			]
 	
 	my_list=[]; selected=[]; cnt=-1; note_cnt=0
@@ -761,83 +763,76 @@ def clear_merkliste():
 		line=""
 		name = stringextract('merk name="', '"', item)
 		name = py2_decode(name)								# Leia
-		dirID = stringextract('dirID=', '&amp', item)
-		if dirID in dirID_list:								# Suchen durchwinken
-			line = templ % (cnt+1, u"OK - verfügbar", name[:name_len])
-			my_list.append(line)
-			PLog("dirID_hit: " + line)
+		dirID = stringextract('dirID=', '&amp', item)		# Abgleich dirID_list
+		if "." in dirID:
+			dirID = dirID.split(".")[-1]					# Modul-Bsp.: resources.lib.strm.strm_tools
+		ok=False
+		for entry in dirID_list:							# Suchen u.ä. Funktionen durchwinken
+			if 	dirID in entry:	
+				t1=cnt+1; t2=u"OK - verfügbar"[:info_len];	t3=name[:name_len]				
+				line = templ % (t1, t2.ljust(info_len), t3.ljust(name_len))	# linksbündig,  templ="%03d | %s | %s"
+				my_list.append(line)
+				PLog("dirID_hit: " + line)
+				ok=True
+				break
+		if ok:
 			continue
 			
+		tab1=cnt+1; tab2=""; tab3=name[:name_len]			# -> templ -> Dialog-Tabelle
+		
 		fparams = stringextract('fparams={', '}',item)
 		fparams = unquote_plus(fparams)						# Parameter sind zusätzl. quotiert
 		if fparams == "":									# ev. alter Base64-kodierter Eintrag
-			line = templ % (cnt+1, "Daten fehlen ", name[:name_len])
+			tab2="Daten fehlen"[:info_len]
+			line = templ % (tab1, tab2, tab3)				# wie oben
 			my_list.append(line)
 			selected.append(cnt)
-			PLog(line)
+			PLog("data_missing_line: " + line)
 			continue
 		path= stringextract("path': '", "'", fparams)		# 1. Altern. Web-Url
 		if path == '':
 			path= stringextract("url': '", "'", fparams)	# 2. Altern. Web-Url
 		if path == '':
-			path= stringextract("img': '", "'", fparams)	# 3. Altern.: Bild
+			path= stringextract("urlkey': '", "'", fparams)	# 3. Altern. Web-Url (Bsp. ZDF_PageMenu)
+			if "#" in path:
+				path = path.split("#")[0]					# ..document/zdfheute-live-102#cluster#1
 		if path == '':
-			path= stringextract("img':'", "'", fparams)		# 4. Altern.: Bild (o.Blank, Arte)
+			path= stringextract("img': '", "'", fparams)	# 4. Altern.: Bild
 		if path == '':
-			path= stringextract("thumb': '", "'", fparams)	# 5. Altern.: Bild phoenix
+			path= stringextract("img':'", "'", fparams)		# 5. Altern.: Bild (o.Blank, Arte)
 		if path == '':
-			path= stringextract("thumb=", "&amp", fparams)	# 6. Altern.: Bild außerhalb fparams (Layout Button)
+			path= stringextract("thumb': '", "'", fparams)	# 6. Altern.: Bild phoenix
+		if path == '':
+			path= stringextract("thumb=", "&amp", fparams)	# 7. Altern.: Bild außerhalb fparams (Layout Button)
 		if path == "":
-			line = templ % (cnt+1, "Web-Url fehlt ", name[:name_len])
+			tab2="Web-Url fehlt"[:info_len]
+			line = templ % (tab1, tab2, tab3)
 			my_list.append(line)
 			selected.append(cnt)
-			PLog(line)
+			PLog("url_missing_line: " + line)
 			continue
 
 		if "//www.ardaudiothek" in path:					# Pfadergänzung "/" gegen Error HTTP308_301
 			if path.endswith("/") == False:
 				path = path + "/"
 			
-		try:												# Link-Test - nicht via get_page (Performance)
-			err=""
-			PLog("getpath: " + path)
-			r = urlopen(path, timeout=tsecs)
-			url = r.geturl()
-			PLog("url_OK: " + url)
-		except Exception as e:
-			PLog(str(e))
-			err = str(e)
-			try:
-				if "308:" in str(e) or "301:" in str(e):	# Permanent-Redirect-Url
-					new_url = e.hdrs.get("Location")
-					parsed = urlparse(path)
-					if new_url.startswith("http") == False:	# Serveradr. vorh.?
-						new_url = 'https://%s%s/' % (parsed.netloc, new_url)
-					PLog("HTTP308_301_new_url: " + new_url)
-					r.close()
-					r = urlopen(new_url, timeout=tsecs)		# Link-Test mit new_url
-			except Exception as e:
-				PLog(str(e))
-				err = str(e)
-			
-			err_msg = "Url unbekannt"						# Default-Error
-			if "operation timed out" in err:				# Hinw. auf Bedeutung Timeout im Button-Info
-				err_msg = "HTTP Timeout"
-			line = templ % (cnt+1, err_msg, name[:name_len])
+		newpath, msg = getRedirect(path)					# Url-Check 
+		if not newpath:										# nicht erreichbar
+			tab2="Url unbekannt"[:info_len]					# Default-Error
+			line = templ % (tab1, tab2, tab3)
 			my_list.append(line)
 			selected.append(cnt)
 			PLog(line)
-			continue			
+			continue
 			
-		line = templ % (cnt+1, u"OK - verfügbar", name[:name_len])
-		PLog(line)
-		my_list.append(line)
-	
+		tab2=u"OK - verfügbar"[:info_len]
+		line = templ % (tab1, tab2, tab3)
+		PLog("OK_line: " + line)
+		my_list.append(line)			
 			
 	title = u"Ausgewählte Einträge löschen? Auswahl bei Bedarf ändern"
 	ret_ind = xbmcgui.Dialog().multiselect(title, my_list, preselect=selected, useDetails=False)
-	PLog("Mark0")
-	PLog(str(ret_ind))										# 0,3,9,.. 
+	PLog("ret_ind: " + str(ret_ind))										# 0,3,9,.. 
 		
 	heading = u'Bereinigung Merkliste'
 	if ret_ind:
