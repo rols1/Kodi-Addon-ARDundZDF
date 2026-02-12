@@ -7,7 +7,7 @@
 #	Listing der Einträge weiter in ShowFavs (Haupt-PRG)
 # 	Funktions-Calls via Auswertung sys.argv s. Modulende
 ################################################################################
-# 	<nr>10</nr>										# Numerierung für Einzelupdate
+# 	<nr>11</nr>										# Numerierung für Einzelupdate
 #	Stand: 12.02.2026
 #
 
@@ -242,8 +242,11 @@ def Watch_items(action, name, thumb='', Plot='', url=''):
 				new_name = get_new_name(iname, add='')					# <- neue Bez. oder iname
 				if new_name != iname:
 					insert = 'name="%s"' % new_name
-					if exist_in_list(insert, my_items) == False:		 
-						item = item.replace('name="%s"' % py2_encode(iname), 'name="%s"' % py2_encode(new_name))
+					if exist_in_list(insert, my_items) == False:
+						item = 	cleanmark(item)	 						# replace schlägt mit Markierungen fehl
+						PLog("iname: %s | new_name: %s" % (iname, new_name))
+						PLog("item: " + item)
+						item = item.replace('name="%s"' % py2_encode(iname), 'name="%s"' % py2_encode(new_name))						
 						renamed = True
 					else:
 						msg1 = ">%s< existiert bereits - Abbruch" % new_name 				
@@ -331,6 +334,7 @@ def get_new_name(iname, add=''):
 	if add:
 		line = iname + add
 	new_name = get_keyboard_input(line=line, head=u'Merklisten-Eintrag umbenennen')
+	PLog("new_name: " + new_name)
 	if new_name.strip() != '':
 		return new_name
 	else:
