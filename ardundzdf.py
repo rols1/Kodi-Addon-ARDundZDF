@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>318</nr>										# Numerierung für Einzelupdate
+# 	<nr>319</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.9'
 VDATE = '12.01.2026' 
 
@@ -644,7 +644,7 @@ def InfoAndFilter():
 			
 	title = u"Merkliste bereinigen"										# Button für Bereinigung der Merkliste 
 	tag = u"Nicht mehr erreichbare Beiträge listen und nach Abfrage löschen." 
-	tag = u"%s\n\n[B]Ablauf[/B]: enthaltene Url's (Webseiten, Bildverweise) werden angepingt und der Status bewertet." % tag
+	tag = u"%s\n\n[B]Ablauf[/B]: enthaltene Urls (Webseiten, Bildverweise) werden angepingt und der Status bewertet." % tag
 	tag = u"%s\nEin [B]HTTP Timeout[/B] schließt eine spätere Erreichbarkeit nicht aus." % tag
 	tag = u"%s\nSucheinträge werden durchgewinkt." % tag
 	summ = u"Die Dauer ist von vielen Faktoren abhängig und nicht kalkulierbar (Testläufe mit 90 Einträgen: ca. 30 sec)"	
@@ -955,10 +955,13 @@ def AddonStartlist(mode='', query=''):
 # in sqlite_check_Resume.py (lokale Doku)
 #
 def check_Resume(url, title, thumb, Plot, sub_path, seek, dur):	
-	PLog('check_Resume: ' + str(seek))
+	PLog('check_Resume: %s, %s' % (seek, dur))
 	if seek == "":
 		seek = "0"
-	if float(str(seek)) >= 40:						   		# Min. 40  Sek. wie  AddonStartlist
+	
+	seek = int(float(seek)); dur = int(float(dur))			# int-Werte hier ausreichend
+	PLog("seek: %d, dur: %d" % (seek, dur))
+	if seek >= 40:						   					# Min. 40  Sek. wie  AddonStartlist
 		resume = seconds_translate(seek); 
 		total = seconds_translate(dur)
 		PLog("resume: %s, total: %s" % (resume,total))
