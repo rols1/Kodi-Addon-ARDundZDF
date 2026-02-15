@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>120</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.02.2026
+# 	<nr>121</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1080,9 +1080,9 @@ def ARD_FlatListEpisodes(path, title):
 			PLog(title); PLog(url); PLog(img); PLog(tag); PLog(summ[:80]);
 			PLog(season); PLog(weburl); PLog(ID);
 
-			url=py2_encode(url); title=py2_encode(title); summ_par=py2_encode(summ_par);
-			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s'}" %\
-				(quote(url), quote(title), quote(summ_par), ID)
+			url=py2_encode(url); title=py2_encode(title); 
+			fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s'}" %\
+				(quote(url), quote(title), ID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 	except Exception as exception:
@@ -1979,10 +1979,9 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 				ID=ID_org
 			PLog("Satz_cont3: typ: %s, ID: %s" % (typ, ID))
 			
-			summ_par = summ.replace('\n', '||')
-			href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
-			fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s','homeID': '%s'}" %\
-				(quote(href), quote(title), quote(summ_par), ID, homeID)
+			href=py2_encode(href); title=py2_encode(title);
+			fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s','homeID': '%s'}" %\
+				(quote(href), quote(title), ID, homeID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
 				fparams=fparams, summary=summ, mediatype=mediatype)	
 			cnt=cnt+1
@@ -2026,18 +2025,19 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 # 14.02.2023 HBBTV-Quellen (http://tv.ardmediathek.de/dyn/get?id=video%3A..)
 # 14.05.2024 Nutzung api-Web-Quellen für alle Streams (bisher nur vtt-Datei) -
 #	ARDStartVideoWebUTget entfernt,
+# 15.02.2026 Param summary entfernt (Resume-Probleme bei Änderungen im Inhaltstext),
+#	hier kombiniert aus get_summary_pre (descr) und api-Inhalt (tag-Elemente)
 #
-def ARDStartSingle(path, title, summary, ID='', mehrzS='', homeID=''): 
+def ARDStartSingle(path, title, ID='', mehrzS='', homeID=''): 
 	PLog('ARDStartSingle: %s' % ID);
-	PLog(path); PLog(title); PLog(summary[:80]);
+	PLog(path); PLog(title); 
 	title_org=title;
 	icon = R("ard-mediathek.png")
 	
 	# summary + title leer bei Call von get_streams_from_link:
 	PLog("get_summary_pre")
 	descr = get_summary_pre(path, ID="ARDnew",skip_verf=False,skip_pubDate=False)  # Modul util
-	if len(descr) > (len(summary)):								# Param summary einschl. tagline
-	 summary = "%s\n" % descr
+	summary = descr
 
 	headers=''
 	# Header für Verpasst-Beiträge (ARDVerpasstContent -> get_json_content)
@@ -3219,9 +3219,9 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						
 				summ_par = summ.replace('\n', '||')
 				ID = "ARDVerpasst_get_json"
-				href=py2_encode(href); title=py2_encode(title); summ_par=py2_encode(summ_par);
-				fparams="&fparams={'path': '%s', 'title': '%s', 'summary': '%s', 'ID': '%s','homeID': '%s'}" %\
-					(quote(path), quote(title), quote(summ_par), ID, homeID)	
+				href=py2_encode(href); title=py2_encode(title);
+				fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s','homeID': '%s'}" %\
+					(quote(path), quote(title), ID, homeID)	
 				if path:
 					addDir(li=li2, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, 
 						thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)

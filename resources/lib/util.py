@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>155</nr>										# Numerierung für Einzelupdate
+# 	<nr>156</nr>										# Numerierung für Einzelupdate
 #	Stand: 15.02.2026
 
 # Python3-Kompatibilität:
@@ -2547,6 +2547,7 @@ def ReadJobs():
 #	Param page entfernt (obsolet)
 # 19.03.2025 getRedirect via url_check (nach ZDF-Relaunch für geänderte Weblinks 
 #	notwendig), 04.01.2026 umgestellt auf getRedirect via get_page.
+# 15.02.2026 für ID ARDnew _duration ergänzt
 #
 def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',duration=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
@@ -2679,7 +2680,9 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 				PLog("widgets: " + str(s)[:80])
 
 			summ1 = s[0]["synopsis"]							# Beschr. Einzelbeitrag oder Folge
-			summ2 = s[1]["teasers"][0]["show"]["synopsis"]		# Beschr. Staffel/Reihe (in allen teasers identisch)
+			summ2=""
+			if len(s) > 1:
+				summ2 = s[1]["teasers"][0]["show"]["synopsis"]	# Beschr. Staffel/Reihe (in allen teasers identisch)
 
 			if "FSK:" not in duration_org:						# bereits in Param?
 				if "maturityContentRating" in s[0]:
@@ -2692,6 +2695,8 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 			pubServ = s[0]["publicationService"]["name"]		# publicationService (Sender)
 			if duration == '':										# schon übergeben?
 				duration = stringextract('"durationSeconds":', ',', page)	# Sekunden
+				if duration == '':
+					duration = stringextract('"_duration":', ',', page)
 				if duration == '0':									# auch bei Einzelbeitrag möglich
 					duration=''
 				if duration:
