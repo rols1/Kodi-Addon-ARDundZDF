@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>319</nr>										# Numerierung für Einzelupdate
+# 	<nr>320</nr>										# Numerierung für Einzelupdate
 VERSION = '5.3.9'
 VDATE = '12.01.2026' 
 
@@ -847,6 +847,8 @@ def start_script(myfunc, fparams_add, is_dict=True):
 #	STARTLIST. Überschneidungen mit Kodi-Resume möglich.
 # mediatype="video" erforderlich - ohne sind Total-Blockaden in 
 #	monitor_resume möglich.
+# seekPos: ab 60 sec (gesetzt hier) bis 75% Spielzeit (gesetzt in
+#	monitor_resume)
 #
 def AddonStartlist(mode='', query=''):
 	PLog('AddonStartlist:');
@@ -894,9 +896,12 @@ def AddonStartlist(mode='', query=''):
 			
 	cnt=0; 
 	for item in startlist:
-		#PLog(item)
-		Plot=''; sub_path=''; seekPos=""; video_dur=""; resume=""
+		Plot=''; sub_path=''; seekPos=""; video_dur=""; resume=""; my_date=""
 		ts, title, url, thumb, Plot = item.split('###')[0:5]	# altes Format ohne sub_path, seekPos
+		
+		pos = Plot.find("||||Dauer")							# vorheriges "gestartet: .." abtrennen
+		if pos >= 0:
+			Plot = Plot[pos+4:]
 		if "sub_path" in item:
 			sub_path = stringextract("###sub_path:", "###", item)
 		if "seekPos" in item:									# ..###seekPos:75.197###
@@ -911,10 +916,12 @@ def AddonStartlist(mode='', query=''):
 		my_date = dt.strftime("%d.%m.%Y %H:%M:%S")
 		my_date = "[COLOR darkgoldenrod]%s[/COLOR]" % my_date
 		if seekPos:
-			if seekPos >= 40:						   			# Min. 40  Sek. (mögl. bei Trailern)
+			if seekPos >= 61:						   			# Min. 61  Sek. (mögl. bei Trailern)
 				resume = seconds_translate(seekPos)
-			if resume:
-				my_date = "%s | gesehen bis: %s" % (my_date, resume)
+				if resume.count(":") == 2:						# cut secs 00:01:43 -> 00:01
+					resume = resume[:5]				
+		if resume:
+			my_date = "%s | gesehen bis: %s" % (my_date, resume)
 			
 		Plot_par = "gestartet: %s\n\n%s" % (my_date, Plot)
 		Plot_par=py2_encode(Plot_par); 		

@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>154</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.02.2026
+# 	<nr>155</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1378,7 +1378,7 @@ def getRedirect(path, header="", stream=False):
 		PLog("redirect_error: "  + str(e))
 		err=str(e);	
 		path=""; msg="%s | %s" % (msg, err)
-		return path, msg									# Rückgabe Leer-Url
+		return path, msg											# Rückgabe Leer-Url
 
 # ----------------------------------------------------------------------
 # iteriert durch das Objekt	und liefert Restobjekt ab path
@@ -1768,10 +1768,12 @@ def exist_in_list(insert, my_items):
 	try:
 		for item in my_items:
 			if insert in py2_encode(item):
+				PLog("exist_is_true")
 				return True
 	except Exception as exception:
 		PLog(str(exception))
-		
+	
+	PLog("exist_is_false")	
 	return False
 #---------------------------------------------------------------- 
 # Aufr.: Ausgeben von Suchergebnissen	
@@ -3818,12 +3820,14 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 				seekTime = float(str(seekTime))						# OK für PY2 + PY3
 				video_dur = player.getTotalTime()
 				PLog("check_seekTime %s, video_dur %s" % (str(seekTime), str(video_dur)))
-				if 	seekTime > video_dur:							# Sicherung
-					seekTime = 0	
+				if video_dur > 0:									# Dauer bekannt?	
+					if 	seekTime > video_dur:						# Sicherung
+						seekTime = 0	
 				if seekTime > 0:
 					PLog("set_seekTime %s" % str(seekTime))	
 					player.seekTime(seekTime) 						# Startpos aus PlayMonitor (HLS o. Wirkung)
 				play_time = player.getTime()						# Resume-Check verschoben -> monitor_resume
+				PLog("play_time: " + str(play_time))
 				xbmc.sleep(500)										# für Raspi erforderl., sonst 0 möglich
 				video_dur = player.getTotalTime()
 				now = time.time()
@@ -3886,7 +3890,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 						PLog("playlist: " + playlist)
 						video_dur = player.getTotalTime()
 						bg_thread = Thread(target=monitor_resume, args=(player, new_list, video_dur, seekTime))
-						bg_thread.start()
+						bg_thread.start()			# Modul util
 						return						# ohne return startet Kodi monitor_resume, ohne zutreffende
 													#	if-condition
 	PLog("leave_PlayVideo")	
@@ -3909,30 +3913,36 @@ def monitor_resume(player, new_list, video_dur, seekTime):
 		return
 
 	monitor = xbmc.Monitor()
-	if seekTime > 0 and seekTime < video_dur:				# seekTime größer als Vidoelänge möglich
+	if seekTime > video_dur:								# Sicherung: seekTime > Vidoelänge möglich
+		seekTime = 1
+	if seekTime > 0:									
 		cnt=0
 		while 1:
-			play_time = player.getTime()						# Resume-Check
+			play_time = player.getTime()					# Resume-Check, gesetzt in PlayVideo (set_seekTime)
 			PLog("play_time %d, video_dur %d, seekTime: %d" % (play_time, video_dur, seekTime))
+			if play_time < seekTime:						# erneut setzen
+				PLog("set_seek_try: %s" % str(cnt+1))
+				player.seekTime(seekTime)
 			xbmc.sleep(1000)
 			cnt=cnt+1
-			if (cnt > 2) or (play_time > seekTime):
+			if (cnt > 4) or (play_time > seekTime):
 				break
 	
 		if play_time < seekTime:
 			icon = R("Dir-video.png")
 			msg1 = "Resume-Check:"
 			msg2 = "Vorspulen leider gescheitert"
+			PLog("%s %s | play_time: %s seekTime: %s" % (msg1, msg2, str(play_time), str(seekTime)))
 			xbmcgui.Dialog().notification(msg1, msg2, icon, 3000, sound=False)
 		else:
-			PLog("Resume-Check: OK")
+			PLog("Resume_Check: OK")
 	#---------------------------------------
 	
 	p_list=[]; play_time_last=0
-	while 1:
+	while 1:												# Monitoring play_time bis Player-Stop
 		try:
 			play_time = player.getTime()
-			PLog(play_time)									# -> ab hier Zwangs-Ende bei Playerende möglich (s.o.)
+			PLog("play_time* " + str(play_time))			# -> ab hier Zwangs-Ende bei Playerende möglich (s.o.)
 		except Exception as exception:
 			PLog("player_exception: " + str(exception))
 			break
@@ -3962,6 +3972,7 @@ def monitor_resume(player, new_list, video_dur, seekTime):
 	else:
 		PLog("play_time_and_seekPos_0")
 		
+	PLog("Last_seekPos: " + str(seekPos))
 	if seekPos < 10:										# 10 sec Mindestlänge für Resume
 		seekPos=0
 
