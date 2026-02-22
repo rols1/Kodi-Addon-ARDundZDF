@@ -30,7 +30,6 @@ CHANGE HISTORY
 			sys.argv[2].
 			Watch_items (Modul merkliste): Markierungen (fett, Farbe) in Eintrag entfernt
 			vor Umbenennung, um Fehlschlage bei replace zu vermeiden.
-
 			check_Resume: Konvertierung der Fließkommawerte (seek, pos) zu integer-Werten
 			angepasst.
 			AddonStartlist: Doppeleinträge für gestartet verhindert. 
@@ -44,15 +43,11 @@ CHANGE HISTORY
 			addDir (Modul util): fanart und thumb aus add_url entfernt (schon in li.setArt
 			gesetzt), Auswertung fparams-Variablen für Video-K-Menüs erweitert (add_url-
 			Verwendung verringern)
-			
 			Audio_get_homescreen: nach ARD-Änderung neue Funktion Audio_Navigation für
 			Button NAVIGATION im Menü Entdecken, skip Newsletter-Seite und LIVE-Ttitel
 			(event not found).
 			Audio_get_sendung_api: Blockbildung mit publicationId statt duration (mehr
 			Daten, Titel ohne Tracking-Infos).
-			
-			
-
 
 01.02.2026	5.3.9
 			Main_NEW(ARDnew): Menü "Bildgalerien Das Erste" entfernt (keine Daten mehr).
