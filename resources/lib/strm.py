@@ -409,7 +409,7 @@ def do_create(label, add_url):
 		msg2 = title
 		xbmcgui.Dialog().notification(msg1,msg2,icon,1000,sound=False)
 					
-		url = get_streamurl(add_url, title)							# Streamurl ermitteln via Plugin-Call
+		url = get_streamurl(add_url, title)							# Stream-Listen via Plugin-Call, url aus PlayVideo_Direct
 		if url == '':												# Url fehlt/falsch: Abbruch	
 			msg1 = u"die erforderliche Stream-Url fehlt für"
 			msg2 = title									

@@ -771,14 +771,15 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
 		xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_LABEL)		# od. SORT_METHOD_TITLE
 		# xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_DATE)		# falls für "verfügbar bis" möglich
-	PLog('PLUGIN_URL: ' + PLUGIN_URL)	# plugin://plugin.video.ardundzdf/
+	PLog('PLUGIN_URL: ' + PLUGIN_URL)										# plugin://plugin.video.ardundzdf/
 	PLog('HANDLE: %s' % HANDLE)
 	
 	PLog("fparams: " + unquote(fparams)[:200] + "..")
 	if thumb == None:
 		thumb = ''
 
-	add_url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+quote(fparams)
+	# 18.02.2026 fanart + thumb entfernt (s. li.setArt)
+	add_url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+quote(fparams)	# fanart + thumb s. li.setArt
 	PLog("addDir_url: " + unquote(add_url)[:200])		
 	
 	
@@ -820,23 +821,27 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					break
 			PLog("found: %s, surl: %s, org_id: %s" % (str(found),surl, org_id))
 			
+			try:														# fparams-Variablen für Video-K-Menü
+				path=""; thumb=""; img="";
+				s = fparams.split("&fparams=")[1]
+				json_string = s.replace("'", "\"")
+				f = json.loads(json_string)
+				title = f["title"]
+				if "path" in f:
+					path = f["path"]
+				if "url" in f:
+					path = f["url"]										# path=url
+				if "thumb" in f:
+					thumb = f["thumb"]
+				if "img" in f:
+					img = f["img"]
+				path=py2_encode(path); title=py2_encode(title)
+				img=py2_encode(img);
+			except Exception as exception:
+				PLog("fparams_error: " +  str(exception))		
+			
+			
 			if found and EPG_ID == "":									# Inhaltstext nicht bei Livestreams
-				try:
-					img=""
-					s = fparams.split("&fparams=")[1]
-					json_string = s.replace("'", "\"")
-					f = json.loads(json_string)
-					path = f["path"]									# bei Bedarf "url" ergänzen
-					title = f["title"]
-					if "img" in f:
-						img = f["img"]
-					if "thumb" in f:
-						img = f["thumb"]
-					path=py2_encode(path); title=py2_encode(title)		# PY2
-					img=py2_encode(img)
-				except Exception as exception:
-					PLog("fparams_error: " +  str(exception))
-					path=""			
 				if path:												# sinnlos ohne path
 					if SETTINGS.getSetting('pref_show_season') == 'true':	# default
 						fp = {'title': title, 'path': path, 'ID': org_id, 'mode': 'ShowSumm'}
@@ -846,16 +851,13 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 						fparams_ShowSeason = "&fparams={0}".format(fp)		# -> Serie zeigen
 						PLog("fparams_ShowSeason: " + fparams_ShowSeason[:80])	
 															
-
-		if SETTINGS.getSetting('pref_exist_inlib') == 'true':			# Abgleich Medienbibliothek
-			if mediatype == "video":
+			if SETTINGS.getSetting('pref_exist_inlib') == 'true':		# Abgleich Medienbibliothek
 				fp = {'title': label}									# Videotitel							
 				fparams_exist_inlib = "&fparams={0}".format(fp)
 				PLog("fparams_existinlib: " + fparams_exist_inlib[:80])
 				fparams_exist_inlib = quote_plus(fparams_exist_inlib)
-				
-		if SETTINGS.getSetting('pref_strm') == 'true':					# strm-Datei für Video erzeugen
-			if mediatype == "video":
+					
+			if SETTINGS.getSetting('pref_strm') == 'true':				# strm-Datei für Video erzeugen
 				fp = {'label': label, 'add_url': quote_plus(add_url)}	# extract -> strm-Modul							
 				fparams_strm = "&fparams={0}".format(fp)
 				PLog("fparams_strm: " + fparams_strm[:100])
@@ -1027,7 +1029,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					fparams_playlist_tools = quote_plus(fparams_playlist_tools) 	# Playlist-Tools
 			
 		fp = {'action': 'add', 'name': quote_plus(label),'thumb': quote_plus(thumb),\
-			'Plot': quote_plus(Plot),'url': quote_plus(add_url)}	
+			'Plot': quote_plus(Plot),'url': quote_plus(add_url)}	# Merkliste add/del -> alle Listitems 
 		fparams_add = "&fparams={0}".format(fp)
 		PLog("fparams_add: " + fparams_add[:100])
 		fparams_add = quote_plus(fparams_add)						# -> Watch_items
@@ -1042,24 +1044,24 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		if SETTINGS.getSetting('pref_watchlist') == 'true':			# Merkliste verwenden 
 			# Script: This behaviour will be removed - siehe https://forum.kodi.tv/showthread.php?tid=283014
 			# kodi.wiki/view/List_of_built-in_functions: RunScript(script[,args]*) using sys.argv
-			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/resources/lib/merkliste.py' % (ADDON_ID))
-			if ShowFavs =="":										# Hinzufügen nicht in Merkliste
-				commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
+			if ShowFavs =="":										# Hinzufügen
+				commands.append(('Zur Merkliste hinzufügen', 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.merkliste.do_context%s)' \
 						% (MY_SCRIPT, HANDLE, fparams_add)))
-			commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+			commands.append(('Aus Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.merkliste.do_context%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_del)))
 		
 			if fparams_folder or fparams_rename:					# Aufrufer ShowFavs s.o.
 				PLog('set_folder_context: ' + merkname)
-				commands.append(('Merklisten-Eintrag umbenennen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				commands.append(('Merklisten-Eintrag umbenennen', 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.merkliste.do_context%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_rename)))
-				commands.append(('Merklisten-Eintrag zuordnen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				commands.append(('Merklisten-Eintrag zuordnen', 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.merkliste.do_context%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_folder)))
-				commands.append(('Merkliste filtern', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				commands.append(('Merkliste filtern', 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.merkliste.do_context%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_filter)))
-				commands.append(('Filter der  Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				commands.append(('Filter der  Merkliste entfernen', 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.merkliste.do_context%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_delete)))
-				commands.append(('Merklisten-Ordner bearbeiten', 'RunScript(%s, %s, ?action=dirList&dirID=Watch%s)' \
+				commands.append(('Merklisten-Ordner bearbeiten', 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.merkliste.do_context%s)' \
 					% (MY_SCRIPT, HANDLE, fparams_do_folder)))
 				
 		if fparams_change or fparams_record or fparams_recordLive:	# Ausschluss-Filter EIN/AUS, ProgramRecord

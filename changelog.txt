@@ -10,6 +10,50 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+22.02.2026	5.4.0
+			Kikaninchen_Menu  (Modul childs): Austausch Men + Funktion Tonschnipsel
+			gegen Schnipselwelt, Nutzung ARDStartRubrik, einschl. get_pagination.
+			get_pagination (Modul ARDnew): Suche akt. Pfad ab json-Ende (Verwechslung
+			mit Pfad zu Einzelbeitrag möglich), Änderung pageNumber direkt im Pfad.
+			Kika_get_img: Anpassung an ARD-Änderungen (urlScheme -> scheme, **format**).
+			ARDSportWDR: Event Olympia 2026 hinzugefügt.
+			PlayVideo_Direct (util): Fallback-Url für PY2 (utf-Problem in Sortierung).
+			EPG_Search, EPG_Search2: Anpassungen an geänderte Zeitformate bei tv.today
+			(wie EPG-Modul).
+			get_api_data (Modul EPG): inkompatible Zeichen aus Inhaltstext entfernt.
+			clear_merkliste (Modul merkliste): Lösch-Ausnahmen erweitert für Modul-
+			Funktionen, ulrkey (ZDF_PageMenu), einige Tool-Funktionen. Ausgabetabelle
+			linksbündig.
+			Merkliste / Kontextmenü: Parameterübergabe via router (Haupt-PRG) und neuer
+			Funktion do_context in Modul merkliste. Anpassungen in addDir, Löschen des
+			Flags MERKACTIVE verhindert bei aktiver Merkliste (merkliste.do_context in 
+			sys.argv[2].
+			Watch_items (Modul merkliste): Markierungen (fett, Farbe) in Eintrag entfernt
+			vor Umbenennung, um Fehlschlage bei replace zu vermeiden.
+
+			check_Resume: Konvertierung der Fließkommawerte (seek, pos) zu integer-Werten
+			angepasst.
+			AddonStartlist: Doppeleinträge für gestartet verhindert. 
+			PlayVideo (Modul util): seekTime (Startliste) auch bei unbekannter Videodauer 
+			setzen.
+			monitor_resume (Modul util): seekTime auf 0 gesetzt, falls größer als Dauer
+			des Videos, erneutes player.seekTime falls Fehlschlag in PlayVideo.
+			ARDStartSingle (Modul ARDnew): wegen Resume-Problemen bei Änderungen im 
+			Inhaltstext Param summary entfernt. Anpassungen in get_summary_pre (util),
+			ARD_FlatListEpisodes, get_json_content, ARDVerpasst_get_json.
+			addDir (Modul util): fanart und thumb aus add_url entfernt (schon in li.setArt
+			gesetzt), Auswertung fparams-Variablen für Video-K-Menüs erweitert (add_url-
+			Verwendung verringern)
+			
+			Audio_get_homescreen: nach ARD-Änderung neue Funktion Audio_Navigation für
+			Button NAVIGATION im Menü Entdecken, skip Newsletter-Seite und LIVE-Ttitel
+			(event not found).
+			Audio_get_sendung_api: Blockbildung mit publicationId statt duration (mehr
+			Daten, Titel ohne Tracking-Infos).
+			
+			
+
+
 01.02.2026	5.3.9
 			Main_NEW(ARDnew): Menü "Bildgalerien Das Erste" entfernt (keine Daten mehr).
 			ARD_FlatListRec: unerlaubte Zeichen aus Titel entfernt (repl_json_chars).

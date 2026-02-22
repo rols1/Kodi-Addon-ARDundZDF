@@ -35,14 +35,7 @@ elif PYTHON3:
 	except:
 		pass
 
-try:											
-	from util import *						# Aufruf Kontextmenü
-	err="callfrom_context"
-except Exception as exception:
-	err=str(exception) 
-	err= "%s | callfromstart_script" % err
-	from resources.lib.util import *		# Aufruf start_script (Haupt-PRG)
-PLog(err)
+from resources.lib.util import *
 
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
@@ -65,7 +58,7 @@ MERKFILTER 		= os.path.join(DICTSTORE, 'Merkfilter')
 
 ICON 			= 'icon.png'		# ARD + ZDF
 ICON_DIR_WATCH	= "Dir-watch.png"
-PLog('Script merkliste.py geladen')
+PLog('Modul_merkliste_loaded')
 
 # Basis-Ordner-Liste (wird in Merkliste eingefügt, falls noch ohne Ordnerliste,
 #	einschl. ORDNER_INFO - Quelle ZDF-Rubriken +Audio+Talk):
@@ -744,7 +737,8 @@ def clear_merkliste():
 				"arte_Search", "Kika_Search", "Tivi_Search", "Search", "phoenix_Search",
 				"XL_Search", "MVWSearch", "ARDSearchnew", "BilderDasErste",
 				"Bilder3sat", "PodFavoritenListe", "update_single", "DownloadTools",
-				"DownloadsList", "Verpasst", "refresh_epg", "start_script"
+				"DownloadsList", "Verpasst", "refresh_epg", "lib.merkliste.",
+				".strm.strm_tools", "AddonStartlist"
 			]
 	
 	my_list=[]; selected=[]; cnt=-1; note_cnt=0
@@ -759,8 +753,6 @@ def clear_merkliste():
 			msg2 = "Check ab Nr. %d" % cnt
 			xbmcgui.Dialog().notification(msg1,msg2,icon,5000,sound=False)
 			note_cnt=0
-		#if cnt > 10:				# Debug
-		#	break
 		item = unquote_plus(item)		
 		PLog(item[:60])										# Bsp.: <merk name="HR-FERNSEHEN ..
 		
@@ -768,11 +760,9 @@ def clear_merkliste():
 		name = stringextract('merk name="', '"', item)
 		name = py2_decode(name)								# Leia
 		dirID = stringextract('dirID=', '&amp', item)		# Abgleich dirID_list
-		if "." in dirID:
-			dirID = dirID.split(".")[-1]					# Modul-Bsp.: resources.lib.strm.strm_tools
 		ok=False
-		for entry in dirID_list:							# Suchen u.ä. Funktionen durchwinken
-			if 	dirID in entry:	
+		for entry in dirID_list:							# Suchen, Merkliste u.ä. Funktionen durchwinken
+			if 	entry in dirID:	
 				t1=cnt+1; t2=u"OK - verfügbar"[:info_len];	t3=name[:name_len]				
 				line = templ % (t1, t2.ljust(info_len), t3.ljust(name_len))	# linksbündig,  templ="%03d | %s | %s"
 				my_list.append(line)
@@ -781,7 +771,7 @@ def clear_merkliste():
 				break
 		if ok:
 			continue
-			
+
 		tab1=cnt+1; tab2=""; tab3=name[:name_len]			# -> templ -> Dialog-Tabelle
 		
 		fparams = stringextract('fparams={', '}',item)
@@ -791,8 +781,13 @@ def clear_merkliste():
 			line = templ % (tab1, tab2, tab3)				# wie oben
 			my_list.append(line)
 			selected.append(cnt)
-			PLog("data_missing_line: " + line)
+			PLog("data_missing_line: %s, dirID: %s" % (line, dirID))
+			PLog(fparams)
 			continue
+
+		if "':'" in fparams:								# abweichendes Format
+			fparams = fparams.replace("':'", "': '")
+		PLog("fparams: " + fparams[:40])
 		path= stringextract("path': '", "'", fparams)		# 1. Altern. Web-Url
 		if path == '':
 			path= stringextract("url': '", "'", fparams)	# 2. Altern. Web-Url
@@ -802,8 +797,6 @@ def clear_merkliste():
 				path = path.split("#")[0]					# ..document/zdfheute-live-102#cluster#1
 		if path == '':
 			path= stringextract("img': '", "'", fparams)	# 4. Altern.: Bild
-		if path == '':
-			path= stringextract("img':'", "'", fparams)		# 5. Altern.: Bild (o.Blank, Arte)
 		if path == '':
 			path= stringextract("thumb': '", "'", fparams)	# 6. Altern.: Bild phoenix
 		if path == '':
@@ -862,89 +855,38 @@ def clear_merkliste():
 	return # -> network_error s.u.
 
 ######################################################################## 
-# Direkter Funktionscall aus Kontext-Menü bisher nicht möglich, daher			
-# sys.argv-Verarbeitung wie in router (Haupt-PRG)
-# Beim Menü Favoriten (add) endet json.loads in exception
-# Aufrufe aus Haupt-PRG ohne fparams: clear_merkliste,
-# 	do_folder - return via network_error.
-
-PLog(str(sys.argv))
-PLog(sys.argv[2])
-paramstring = unquote_plus(sys.argv[2])
-PLog('params: ' + paramstring)
-params = dict(parse_qs(paramstring[1:]))
-PLog('merk_params_dict: ' + str(params))
-
-# ------------------------------------------------- # callfromstart_script (2 Varianten möglich):
-
-if "'fparams_add': 'clear'" in str(params):			# 1. Aufruf InfoAndFilter -> start_script -> router
-	clear_merkliste()
-	ignore_this_network_error()						# network_error statt threading Exception	
-
-if "'fparams_add': 'do_folder'" in str(params):		# 2. Aufruf InfoAndFilter -> router
-	do_folder()
-	PLog("exit_callfromstart_script")
-	exit()
-
 # ------------------------------------------------- # callfrom_context:
+# url: add_url (kompl. Plugin-Url einschl. fparams)
+#
+def do_context(action,name,thumb="",Plot="",url=""):
+	PLog("do_context: %s | %s" % (action, name))
+	icon = R(ICON_DIR_WATCH)	
 
-icon = R(ICON_DIR_WATCH)
-PLog('action: ' + params['action'][0]) 				# context: immer action="dirList"
-PLog('dirID: ' + params['dirID'][0])				# context: immer dirID="Watch"
-# PLog('fparams: ' + params['fparams'][0])
-
-func_pars = params['fparams'][0]					# fparams s. addDir
-PLog("func_pars: " + func_pars)
-name = stringextract("'name': ", ',', func_pars)	# für exceptions s.u.
-name = name.replace("'", "")
-
-try:
-	func_pars = func_pars.replace("'", "\"")		# json.loads-kompatible string-Rahmen
-	func_pars = func_pars.replace('\\', '\\\\')		# json.loads-kompatible Windows-Pfade
-	mydict = json.loads(func_pars)
-	PLog("merk_mydict: " + str(mydict))
-except Exception as exception:						# Bsp. Hinzufügen von Favoriten
-	err_msg = str(exception)
-	PLog("mydict_error: " + err_msg)
-	msg1 = u"Eintrag nicht verwendbar!"
-	msg2 = u"Fehler: %s.." % err_msg[:40]
-	heading='Fehler Merkliste'
-	# 26.03.2024 Dialog ersetzt durch notification 
-	icon = R(ICON_DIR_WATCH)
-	xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
-	exit()
-	
-# ----------------------------------------------------------------------
-action = mydict['action']	# action + name immmer vorh., Rest fehlt bei action=del
-name = mydict['name']
-thumb=''; Plot=''; url=''
-if 'thumb' in mydict:		# thumb, Plot, url fehlen bei action del (s. addDir)
-	thumb = mydict['thumb']
-if 'Plot' in mydict:
-	Plot = mydict['Plot']
-if 'url' in mydict:
-	url = mydict['url']
-PLog(action); PLog(name); PLog(thumb); PLog(Plot); PLog(url); 
-
-if 'filter' in action:													# Filter-Aktionen:
-	if action == 'filter':												# Aufrufer ShowFavs (Settings: Ordner)
-		watch_filter()													# Filter setzen
-	if action == 'filter_delete':
-		watch_filter(delete=True)										# Filter (MERKFILTER) löschen
-	if action == 'filter_folder':										# Merklisten-Ordner bearbeiten (add/remove)
+	if 'do_folder' in action:
 		do_folder()
-else:																	# Merklisten-Aktionen:	
-	Plot = clean_Plot(Plot) 
-	msg1, err_msg, item_cnt = Watch_items(action,name,thumb,Plot,url)	# Einträge add / del / folder / rename
-	msg2 = err_msg
-	PLog("item_cnt: %s, action: %s, MERKACTIVE: %s" % (item_cnt, action, os.path.isfile(MERKACTIVE)))
-	if item_cnt:
-		msg2 = "%s\n%s" % (msg2, u"Einträge: %s" % item_cnt)
-		if action == 'del' or action == 'folder' or action == 'rename':	# Refresh Liste nach Löschen
+		exit()
+	#-------------------------
+		
+	if 'filter' in action:										# Filter-Aktionen:
+		if action == 'filter':									# Aufrufer ShowFavs (Settings: Ordner)
+			watch_filter()										# Filter setzen
+		if action == 'filter_delete':
+			watch_filter(delete=True)							# Filter (MERKFILTER) löschen
+		if action == 'filter_folder':							# Merklisten-Ordner bearbeiten (add/remove)
+			do_folder()
+	#-------------------------
+																# Einträge add / del / folder / rename
+	if action=='add' or action=='del' or action=='folder' or action=='rename':															
+		Plot = clean_Plot(Plot) 
+		msg1, err_msg, item_cnt = Watch_items(action,name,thumb,Plot,url)
+		msg2 = err_msg
+		PLog("item_cnt: %s, action: %s, MERKACTIVE: %s" % (item_cnt, action, os.path.isfile(MERKACTIVE)))
+		if item_cnt:
+			msg2 = "%s\n%s" % (msg2, u"Einträge: %s" % item_cnt)
 			# MERKACTIVE ersetzt hier Ermitteln von Window + Control
 			# bei Verzicht würde jede Liste refresht (stört bei großen Listen)
 			if os.path.isfile(MERKACTIVE) == True:						# Merkliste aktiv?
-				xbmc.executebuiltin('Container.Refresh')
+				xbmc.executebuiltin('Container.Refresh')			# Refresh Liste nach Löschen
 
-	xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
-	# exit()		# thread.lock-Error in Kodi-Matrix
+		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
+		# exit()		# thread.lock-Error in Kodi-Matrix

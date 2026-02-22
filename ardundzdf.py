@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>320</nr>										# Numerierung für Einzelupdate
-VERSION = '5.3.9'
-VDATE = '12.01.2026' 
+VERSION = '5.4.0'
+VDATE = '22.01.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -327,7 +327,8 @@ else:
 
 MERKACTIVE 	= os.path.join(DICTSTORE, 'MerkActive') 		# Marker aktive Merkliste
 if os.path.exists(MERKACTIVE):
-	os.remove(MERKACTIVE)
+	if "lib.merkliste.do_context" not in sys.argv[2]:		# Call aus K-Menü Merkliste
+		os.remove(MERKACTIVE)
 MERKFILTER 	= os.path.join(DICTSTORE, 'Merkfilter') 
 # Ort FILTER_SET wie filterfile (check_DataStores):
 FILTER_SET 	= os.path.join(ADDON_DATA, "filter_set")
@@ -652,15 +653,14 @@ def InfoAndFilter():
 	summ = u"%s (insbesondere bei externer Merkliste)." % summ					
 	myfunc="resources.lib.merkliste.clear_merkliste"
 
-	fparams="&fparams={'myfunc': '%s', 'fparams_add': 'clear'}"  % quote(myfunc)		
-	addDir(li=li, label=title, action="dirList", dirID="start_script",\
+	fparams="&fparams={}"		
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.merkliste.clear_merkliste",\
 		fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tag, summary=summ, fparams=fparams)	
 				
 	title = u"Merklisten-Ordner bearbeiten"								# Button für Bearbeitung der Merklisten-Ordner 
 	tag = u"Ordner der Merklisten hinzufügen oder entfernen." 
 	tag = u"%s\nBasis-Ordnerliste wiederherstellen (Reset der Ordnerliste)." % tag
-	fparams="&fparams={'fparams_add': 'do_folder'}" 					# Variante ohne start_script, in Merkliste identische
-																		# Verarbeitung sys.argv	(Funktionscall erst dort)
+	fparams="&fparams={}"																
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.merkliste.do_folder",\
 		fanart=R(FANART), thumb=R(ICON_DIR_WATCH), tagline=tag, fparams=fparams)	
 				
@@ -825,6 +825,7 @@ def start_script(myfunc, fparams_add, is_dict=True):
 		PLog(fparams_add)
 		
 	if fparams_add != '""':									# leer, ohne Parameter?	
+		PLog(fparams_add)
 		mydict = json.loads(fparams_add)
 		PLog("mydict: " + str(mydict));
 		func(**mydict)
@@ -1593,8 +1594,8 @@ def AudioStartHome(title, ID, page='', path=''):	# Auswertung Homepage
 		Audio_get_homescreen(page)					# direkt o. li
 	if ID == u'Rubriken':							# Rubrik Sport direkt s.o.
 		ID = "AudioStartHome"
-		Audio_get_rubriken_web(li, title, path, ID, page)
-
+		Audio_get_rubriken_web(li, title, path, ID, page) # 21.02.2026 Hamb.-Menü Rubriken im Web  entfallen, 
+															# s. Button NAVIGATION im Menü Entdecken
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------------------------
@@ -2300,7 +2301,7 @@ def Audio_get_sendung_api(url, title, page='', home_id='', ID=''):
 	page = page.replace('\\"', '*')	
 	elements = stringextract('"numberOfElements":', ',', page)		# für Mehr anzeigen
 	PLog("elements: %s" % elements)
-	items = blockextract('"duration"', page)
+	items = blockextract('"publicationId"', page)
 	PLog(len(items))
 	
 	PLog("Mark1")
@@ -2404,7 +2405,7 @@ def Audio_get_items_single(item, ID=''):
 	base = "https://www.ardaudiothek.de"
 	item = py2_encode(item); base = py2_encode(base)				# PY2
 	item = item.replace('\\"', '*')
-
+		
 	mp3_url=''; web_url=''; attr=''; img=''; dur=''; title=''; 
 	summ=''; source=''; sender=''; pubDate='';
 	
@@ -2438,7 +2439,6 @@ def Audio_get_items_single(item, ID=''):
 	img = img.replace(u'\\u0026', '&')								# 13.03.2022: escape-Zeichen mögl.
 	if img == "":
 		img = R(ICON_DIR_FOLDER)
-	
 
 	dur = stringextract('"duration":', ',', item)					# in Sek.
 	dur = dur.replace("}", '')										# 3592} statt 3592,
@@ -2447,6 +2447,7 @@ def Audio_get_items_single(item, ID=''):
 		title = stringextract('"clipTitle":"', '"', item)
 	else:
 		title = stringextract('"title":"', '"', item)
+		
 	title = repl_json_chars(py2_decode(title))						# PY2
 	summ = stringextract('"synopsis":"', '"', item)
 	summ = unescape(py2_decode(summ))
@@ -2628,6 +2629,7 @@ def AudioSearch_cluster(li, url, title, page='', key='', query=''):
 			#	Verfügung, trotz kompl. Linksätze (first, next,..) - 
 			#	Ursache nicht bekannt.  
 			# Web-api ohne _links
+			# api_url: &order=ascending/descending o. Wirkung
 			if key == "items":											# Episoden (Einzelbeiträge)
 				if "_links" in objs[key]:
 					url_first = objs[key]["_links"]["first"]["href"]
@@ -3022,7 +3024,7 @@ def Audio_get_homescreen(page='', cluster_id=''):
 	PLog(len(page))
 	
 	skip_title = [u'für dich', u'Weiterhören', u'Meine Sender',
-				u"Login-Banner", u"Bundesliga"]
+				u"Login-Banner", u"Bundesliga", "Newsletter Promo"]
 	li = xbmcgui.ListItem()
 
 	#----------------------------------------							# Step 1
@@ -3051,6 +3053,8 @@ def Audio_get_homescreen(page='', cluster_id=''):
 					break
 			if skip:
 				continue
+			if title.startswith("LIVE:"):								# fehlen im Web, graphql: event not found
+				continue				
 				
 			nodes = item["nodes"]
 			PLog(len(nodes))
@@ -3068,8 +3072,10 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			if typ == "STAGE":											# Button Highlights -> Audio_get_cluster_single
 				cluster_id = "Highlights"
 				label = "[B]%s[/B]" % cluster_id
-			if typ == "NAVIGATION":										# neu ab 29.03.2024 -> node_load
+			if typ == "NAVIGATION":										# neu ab 21.02.2026 -> Audio_Navigation
+				cluster_id = "NAVIGATION"
 				label = "[B]%s[/B]" % typ
+				
 	
 			fparams="&fparams={'cluster_id': '%s'}" % cluster_id				
 			addDir(li=li, label=label, action="dirList", dirID="Audio_get_homescreen",
@@ -3088,6 +3094,10 @@ def Audio_get_homescreen(page='', cluster_id=''):
 			title = cluster_id				
 			Audio_get_cluster_single(title, rubrik_id=ID, section_id='STAGE') # lädt Dict "AudioHomescreen"
 			return	
+			
+		elif cluster_id == "NAVIGATION":								# NAVIGATION neu ab 21.02.2026
+			Audio_Navigation(page)				
+			return
 		
 		li = home(li, 'ARD Audiothek')		# Home-Button
 		
@@ -3104,7 +3114,7 @@ def Audio_get_homescreen(page='', cluster_id=''):
 		PLog("items: %d" % len(items))
 		href_add = "?offset=0&limit=20&order=descending"
 
-		for item in items:	
+		for item in items:
 			summ=""; dur=""; pubService=""; org=""; 
 
 			node_id = item["id"]										# ID der Sendung / des Beitrags / ..	
@@ -3174,6 +3184,33 @@ def Audio_get_homescreen(page='', cluster_id=''):
 				addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_rubrik", \
 					fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)							
 
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+#----------------------------------------------------------------
+# Navigation: Comedy bis Wirtschaft
+#
+def Audio_Navigation(page):
+	PLog('Audio_Navigation:')
+	base = "https://www.ardaudiothek.de"
+	
+	li = xbmcgui.ListItem()
+	li = home(li, 'ARD Audiothek')		# Home-Button
+	page = stringextract('"NAVIGATION"', 'FilterCompilationSection', page)
+	items = blockextract("EditorialCategory", page)
+	PLog("Category: %d  | %s" % (len(items), items[0]))
+	for item in items:
+		title = stringextract('"title":"', '"', item)
+		path = base + stringextract('"path":"', '"', item)
+		img = stringextract('"url":"', '"', item)
+		img = img.replace('{width}', '320')
+		img = img.replace('16x9', '1x1')
+		tag = stringextract('"description":"', '"', item)
+	
+		title=py2_encode(title); path=py2_encode(path)
+		fparams="&fparams={'li': '', 'url': '%s', 'title': '%s'}" % (quote(path), quote(title))
+		addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_rubrik", \
+			fanart=img, thumb=img, fparams=fparams, tagline=tag)							
+		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 #----------------------------------------------------------------
@@ -6481,7 +6518,7 @@ def ShowFavs(mode, selected=""):					# Favoriten / Merkliste einblenden
 		mf = myfilter
 		if mf == '':
 			mf = "kein Filter gesetzt"
-		tagline = u"Anzahl Merklisteneinträge: %s" % str(len(my_items)) 	# Info-Button
+		tagline = u"Anzahl Merklisteneinträge: %s" % str(len(my_items)) # Info-Button
 		s1		= u"Einträge entfernen: via Kontextmenü hier oder am am Ursprungsort im Addon."
 		s2		= u"Merkliste filtern: via Kontextmenü hier.\nAktueller Filter: [COLOR blue]%s[/COLOR]" % mf
 		s3		= u"Ordner im Titel der Einträge lassen sich in den Settings ein-/ausschalten"
@@ -6495,7 +6532,7 @@ def ShowFavs(mode, selected=""):					# Favoriten / Merkliste einblenden
 
 	# Info-Button ausblenden falls Setting true
 	if SETTINGS.getSetting('pref_FavsInfoMenueButton') == 'false':		
-		fparams="&fparams={'mode': '%s'}"	% mode						# Info-Menü
+		fparams="&fparams={'mode': '%s'}"	% mode						# Info-Menü -> Liste wiederholen
 		addDir(li=li, label=label, action="dirList", dirID="ShowFavs",
 			fanart=R(ICON_DIR_FAVORITS), thumb=R(ICON_INFO), fparams=fparams,
 			summary=summary, tagline=tagline, cmenu=False) 	# ohne Kontextmenü)	
