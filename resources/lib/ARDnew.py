@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>121</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.02.2026
+# 	<nr>122</nr>										# Numerierung für Einzelupdate
+#	Stand: 25.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2045,8 +2045,14 @@ def ARDStartSingle(path, title, ID='', mehrzS='', homeID=''):
 		headers = "{'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma':'no-cache',\
 			'Expires': '0'}"
 
-	PLog("get_api_Web_Quelllen:")
-	path = path + "&mcV6=true"								# api-Web-Quelllen
+	PLog("get_api_Web_Quelllen:")							# 25.02.2025 zusätzl. Anpass. für programm-api
+	path_org=path
+	if "&mcV6=true"	 not in path:
+		path = path + "&mcV6=true"							# api-Web-Quelllen
+	newpath, msg = getRedirect(path)						
+	if not newpath:											# Error 500 bei api-Web-Zusatz möglich
+		path=path_org
+	
 	page, msg = get_page(path, header=headers)
 	if page == '':	
 		msg1 = "Fehler in ARDStartSingle: %s"	% title
@@ -2098,7 +2104,9 @@ def ARDStartSingle(path, title, ID='', mehrzS='', homeID=''):
 		
 		PLog("get_subtitles")
 		mediaCollection = page["widgets"][0]["mediaCollection"]
-		subtitles = mediaCollection["embedded"]["subtitles"]
+		subtitles=""
+		if "subtitles" in mediaCollection["embedded"]:
+			subtitles = mediaCollection["embedded"]["subtitles"]
 		PLog(str(subtitles)[:80])								
 		if subtitles:										# leer od. >= 1, 0: normal
 			sources = subtitles[0]["sources"]				# normal
@@ -3084,15 +3092,18 @@ def ARDVerpasstContent(title, startDate, CurSender="", homeID=""):
 #----------------------------------------------------------------
 # Auswertung timeSlots (Vormittags, Nachmittags, Abends), hier
 #	zusammenhängend.
+# 25.02.2026 Api-Änderung (programm-api.ard.de) - tbase angepasst
+#	(Url mit ?devicetype=pc&embedded=true funktioniert nicht mehr,
+#	channel jetzt ständig ard statt einz.Sender)  
+#
 def ARDVerpasst_get_json(li, channels, homeID, sender):
 	PLog('ARDVerpasst_get_json: ' + sender)
 	PLog(len(channels))
 	
 	logo = R("icon-bild-fehlt_wide.png")						# ersetzt fehlendes img im EPG
-	# targetbase (%s=sender, %s=urlId)
-	tbase = "https://api.ardmediathek.de/page-gateway/pages/%s/item/%s?devicetype=pc&embedded=true" 
 	mediatype=""
 	li2 = xbmcgui.ListItem()									# mediatype='video': eigene Kontextmenüs in addDir							
+	tbase = "https://api.ardmediathek.de/page-gateway/pages/ard/item/%s?embedded=false&mcV6=true" 
 	
 	fcnt=0														# gefiltert-Zähler	
 	for i, channel in enumerate(channels):
@@ -3112,7 +3123,7 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 							
 				synopsis=""; availableTo=""; href=""; path=""		# path -> Video
 				matRat=""; uhr=""; subline=""; summ="";
-				pubServ=""; channel_id="";
+				pubServ=""; channel_id=""; now_check=""
 
 				try:
 					title = s["title"]
@@ -3135,16 +3146,13 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 					if "subline" in s:	
 						subline = s["subline"]
 						subline = "%s | %s" % (pubServ, subline)
-					
-					if "target" in s["links"]:						# target -> Video
-						urlId = s["links"]["target"]["urlId"]
-						path = tbase % (sender, urlId)
-						if sender == "ARD-Alle":					# Sender-Korrektur: Verpasst ARD-Alle
-							path = tbase % (channel_id, urlId) 
 
+					if "target" in s["links"]:						# target -> Video
+						urlId = s["links"]["target"]["urlId"]		# neu ab 25.02.2026 s.o.
+						path = tbase % urlId				
+											
 					if "maturityContentRating" in s:
-						matRat= s["maturityContentRating"]
-					
+						matRat= s["maturityContentRating"]				
 
 					if duration and subline:										
 						duration = u'Dauer %s | [B]%s[/B]' % (duration, subline)
@@ -3153,32 +3161,31 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						if duration == '':
 							duration = "Dauer unbekannt"
 						duration = u"%s | FSK: %s\n" % (duration, matRat)
-					if "availableTo" in s:									# fehlt seit Api-Änderung, s.
-						availableTo = s["availableTo"]						#	pref_load_summary
+					if "availableTo" in s:							# fehlt seit Api-Änderung, s.
+						availableTo = s["availableTo"]				#	pref_load_summary
 					
 					if 	"synopsis" in s:
 						summ =  s["synopsis"]
 						
-					verf = availableTo										# s.o.
+					verf = availableTo								# s.o.
 					if verf == None:
 						verf=""
 					verf = time_translate(verf, day_warn=True)
 						
-					pubDate = s["broadcastedOn"]							# 2025-09-05T05:30:00+02:00
+					pubDate = s["broadcastedOn"]					# 2025-09-05T05:30:00+02:00
 					endDate = s["broadcastEnd"]
 					PLog("pubDate: " + pubDate)
 					pubDate = time_translate(pubDate, add_hour=False, day_warn=True)
 					uhr = pubDate[11:16]	
 					pubDate = u"Sendedatum: [COLOR blue]%s[/COLOR]\n" % pubDate
 					summ = "%s\n%s" % (pubDate, summ)
-					
-
+	
 					if verf:
 						summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (summ, verf)
 					if duration:
 						summ = "%s\n%s" % (duration, summ)
 					PLog("summ: " + summ)	
-																			# nur now_check (s, duration):
+																	# nur now_check (s, duration):
 					dur_dummy, now_check = time_calc_diff(endDate, s["broadcastedOn"])		
 					if path == "":
 						summ = "[B]NICHT in der Mediathek![/B]\n%s" % summ		
@@ -3187,8 +3194,7 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						title = "[COLOR blue]%s[/COLOR] | %s" % (uhr, title)
 					PLog(title)
 					if now_check: 
-						title = "[B]JETZT | %s [/B]" % title
-					
+						title = "[B]JETZT | %s [/B]" % title					
 				
 					if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
 						summ_new = get_summary_pre(path=path, ID='ARDnew', duration=duration)  # Modul util
@@ -3201,7 +3207,7 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 				except Exception as exception:
 					PLog("Verpasst_json_error: " + str(exception))
 					
-				if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
+				if SETTINGS.getSetting('pref_usefilter') == 'true':			# Filter
 					filtered=False
 					for fil in AKT_FILTER: 
 						if fil.strip(): 
@@ -3214,15 +3220,14 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						continue		
 					
 				PLog("Satz2:")
-				PLog(title); PLog(href); PLog(path); PLog(img); PLog(summ[:60]); 
+				PLog(title); PLog(path); PLog(img); PLog(summ[:60]); 
 				PLog(duration); PLog(availableTo);
 						
 				summ_par = summ.replace('\n', '||')
-				ID = "ARDVerpasst_get_json"
-				href=py2_encode(href); title=py2_encode(title);
-				fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s','homeID': '%s'}" %\
-					(quote(path), quote(title), ID, homeID)	
+				path=py2_encode(path); title=py2_encode(title);
 				if path:
+					fparams="&fparams={'path': '%s', 'title': '%s'}" %\
+					(quote(path), quote(title))	
 					addDir(li=li2, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, 
 						thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
 				else:
@@ -3231,12 +3236,12 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						PLog("sid: %s, pubServ: %s" % (sid, pubServ)); 
 						PLog("search_livestream: %s" % pubServ)
 						link=""
-						for line in streamlinks:								# s. SenderLiveListe
+						for line in streamlinks:							# s. SenderLiveListe
 							if PYTHON3:
 								PLog("streamline: %s | pubServ: %s" % (line[:40], pubServ))
 							items = line.split('|')
 							if up_low(pubServ) in up_low(items[0]): 
-								link = items[1]									# Livestream EPGsender
+								link = items[1]								# Livestream EPGsender
 								PLog('%s: Streamlink_found: %s' % (sid, link))
 								break
 						 
@@ -3252,11 +3257,12 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						addDir(li=li, label=title, action="dirList", dirID="dummy", fanart=img, 
 							thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
 
-	if fcnt > 0:													# Info gefiltert-Zähler
+	if fcnt > 0:															# Info gefiltert-Zähler
 		icon = R("icon-filter.png")
 		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)		
 											
 	return
+	
 #----------------------------------------------------------------
 # convHour z.Z. nicht genutzt
 #	string zeit, int offset - Bsp. 15:00, 2
