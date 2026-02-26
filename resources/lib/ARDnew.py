@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>122</nr>										# Numerierung für Einzelupdate
-#	Stand: 25.02.2026
+# 	<nr>123</nr>										# Numerierung für Einzelupdate
+#	Stand: 26.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1857,7 +1857,11 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 				PLog("skip_Übersicht")
 				continue				
 		
-		href = 	s["links"]["target"]["href"]
+		href = 	s["links"]["target"]["href"]					# 26.02.2026 ARD-Änderung, wie ARDVerpasst_get_json
+		if "?devicetype=" in href:								# ?devicetype=pc&embedded=true -> Error 500
+			href = href.split("?devicetype=")[0]
+		href = href + "?mcV6=true"
+
 		if "publicationService" in s:
 			pubServ = s["publicationService"]["name"]
 		else:
@@ -2047,7 +2051,7 @@ def ARDStartSingle(path, title, ID='', mehrzS='', homeID=''):
 
 	PLog("get_api_Web_Quelllen:")							# 25.02.2025 zusätzl. Anpass. für programm-api
 	path_org=path
-	if "&mcV6=true"	 not in path:
+	if "mcV6=true" not in path:								# get_json_content: ?mcV6 (ohne embedded + devicetyp)
 		path = path + "&mcV6=true"							# api-Web-Quelllen
 	newpath, msg = getRedirect(path)						
 	if not newpath:											# Error 500 bei api-Web-Zusatz möglich
@@ -3094,7 +3098,7 @@ def ARDVerpasstContent(title, startDate, CurSender="", homeID=""):
 #	zusammenhängend.
 # 25.02.2026 Api-Änderung (programm-api.ard.de) - tbase angepasst
 #	(Url mit ?devicetype=pc&embedded=true funktioniert nicht mehr,
-#	channel jetzt ständig ard statt einz.Sender)  
+#	channel jetzt ständig ard statt einz.Sender) - s.a.  get_json_content 
 #
 def ARDVerpasst_get_json(li, channels, homeID, sender):
 	PLog('ARDVerpasst_get_json: ' + sender)
