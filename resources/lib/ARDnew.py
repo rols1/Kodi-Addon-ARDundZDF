@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>123</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.02.2026
+# 	<nr>124</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1782,6 +1782,9 @@ def ARD_Teletext_Wrap(new_lines, myline, max_length, txtRight):
 #---------------------------------------------------------------------------------------------------
 # 14.04.2023 get_page_content -> get_json_content
 # 06.12.2023 Auswertung EPG in ARDVerpasst_get_json
+# 27.02.2026 ARD-Api-Änderung, Anpassung ähnlich ARDVerpasst_get_json, aber
+#	ohne tbase (nur für Videos geeignet) - hier href aus links|target|href 
+#	plus Abspaltung "?devicetype=" plus Anhängen von "&mcV6=true"
 #
 def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""): 
 	PLog('get_json_content: ' + ID); PLog(mark)
@@ -1856,11 +1859,14 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 			if title.startswith(u"Übersicht"):					# skip Subrubrik Übersicht (rekursiv, o. Icons) 
 				PLog("skip_Übersicht")
 				continue				
-		
-		href = 	s["links"]["target"]["href"]					# 26.02.2026 ARD-Änderung, wie ARDVerpasst_get_json
-		if "?devicetype=" in href:								# ?devicetype=pc&embedded=true -> Error 500
+
+		href = 	s["links"]["target"]["href"]					# 27.02.2026 ARD-Änderung, tbase mit urlId wie
+		if "?devicetype=" in href:								# ARDVerpasst_get_json nicht verwendbar
 			href = href.split("?devicetype=")[0]
-		href = href + "?mcV6=true"
+		if "?" in href:											# ?embedded=.. bereits enthalten
+			href = href + "&mcV6=true"
+		else:
+			href = href + "?mcV6=true"
 
 		if "publicationService" in s:
 			pubServ = s["publicationService"]["name"]
@@ -1904,6 +1910,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 				if verf:
 					summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (verf, summ)
 				if "broadcastedOn" in s:
+					fsk = s["maturityContentRating"]
 					pubDate = s["broadcastedOn"]
 					pubDate = time_translate(pubDate)
 					pubDate = u" | Sendedatum: [COLOR blue]%s Uhr[/COLOR]\n\n" % pubDate	
@@ -2313,16 +2320,16 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 #
 def ARDStartVideoHBBTVget(title, path): 
 	PLog('ARDStartVideoHBBTVget: ' + title); 
-	PLog(path)
+	PLog("use_from: " + path)
 
 	base = "http://tv.ardmediathek.de/dyn/get?id=video%3A"
 	HBBTV_List=[];
 	title = py2_decode(title)
 	
-	if "?devicetype=" in path:					# ID ermitteln
-		path = path.split("?devicetype=")[0]
+	if "?" in path:											# ab 27.02.2026 ohne Zusätze ("&client=ard") 
+		path = path.split("?")[0]
 	ID = path.split("/")[-1]
-	path = base + ID + "&client=ard"
+	path = base + ID
 		
 	page, msg = get_page(path, do_safe=False)					
 	if page == '':	
@@ -2332,7 +2339,7 @@ def ARDStartVideoHBBTVget(title, path):
 	try:
 		page = json.loads(page)		
 		Arrays = page["video"]["streams"]
-		array0 = Arrays[0]												# 1. Array Fallback (i.d.R. Normal)
+		array0 = Arrays[0]									# 1. Array Fallback (i.d.R. Normal)
 		PLog("Arrays: %d" % len(Arrays))
 		PLog(str(Arrays)[:80])
 	except Exception as exception:
@@ -2347,18 +2354,18 @@ def ARDStartVideoHBBTVget(title, path):
 	PLog("pref_DGS_ON: %s, DGS_use: %s" % (str(pref_DGS_ON), str(DGS_use)))	
 
 	streams=array0
-	if len(Arrays) > 1:													# Fallback
+	if len(Arrays) > 1:										# Fallback
 		if DGS_use:
 			if "DGS" in Arrays[1]["kindName"]:
 				streams=Arrays[1]				
 				PLog("DGS_Array_found")
 
 	PLog(str(streams)[:180])
-	kind  = streams["kindName"]					# Normal
+	kind  = streams["kindName"]								# Normal
 	PLog("use_Array_%s" % kind)
 	for stream in streams["media"]:
 		PLog(str(stream)[:80])
-		if "dash" in stream["mimeType"]:		# 16.05.2024 ../tagesschau_1.mpd läuft nicht
+		if "dash" in stream["mimeType"]:					# 16.05.2024 ../tagesschau_1.mpd läuft nicht
 			continue
 		qual = stream["forcedLabel"]
 		aspect = stream["aspectRatio"]
@@ -2366,7 +2373,7 @@ def ARDStartVideoHBBTVget(title, path):
 		h = stream["maxVResolutionPx"]
 		res = "%sx%s" % (str(w),str(h))	
 		href = stream["url"]
-		if "_internationalerton_" in href:		# vermutl. identisch mit "_sendeton_"-Url
+		if "_internationalerton_" in href:					# vermutl. identisch mit "_sendeton_"-Url
 			continue
 			
 		audio_kind = stream["audios"][0]["kind"]			# standard
@@ -3188,7 +3195,6 @@ def ARDVerpasst_get_json(li, channels, homeID, sender):
 						summ = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]\n\n%s" % (summ, verf)
 					if duration:
 						summ = "%s\n%s" % (duration, summ)
-					PLog("summ: " + summ)	
 																	# nur now_check (s, duration):
 					dur_dummy, now_check = time_calc_diff(endDate, s["broadcastedOn"])		
 					if path == "":
