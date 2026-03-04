@@ -84,7 +84,7 @@ Funktionen:
  
 #### Videobehandlung (Setting: Sofortstart AUS):
 - Livestreams: Auflistung der verfügbaren Angebote an Bandbreiten + Auflösungen (falls verfügbar: Audio ohne Video)
-- Videoclips: Auflistung der verfügbaren Angebote an Qualitätstufen sowie zusätzlich verfügbarer Videoformate (Bsp. UHD) 
+- Videos: Auflistung der verfügbaren Angebote an Qualitätstufen sowie zusätzlich verfügbarer Videoformate (Bsp. UHD) 
 
 #### [Downloadoption (ab Version 2.6.8 ohne cURL/wget)](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/03.-Settings-Download)
 - Download von Videos im ARD-Bereich
@@ -112,7 +112,7 @@ Funktionen:
 
 #### Updates
 - entweder mit dem integrierten <b>Updatemodul (autom. Anpassung an Kodi-Version)</b> oder via <b>kodinerds-Repo</b>
-- Updates einzelner Bestandteile des  Addons (Einzelupdate) zwischen den regulären  Updates - Näheres siehe [Startpost im kodinerds-Forum](https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=502022#post502022) 
+- <b>Einzelupdates</b>: Updates einzelner Bestandteile des  Addons zwischen den regulären  Updates - Näheres siehe [Startpost im kodinerds-Forum](https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=502022#post502022) 
 
 #### weitere Module (optional)
 - 3Sat
