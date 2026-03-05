@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>124</nr>										# Numerierung für Einzelupdate
-#	Stand: 27.02.2026
+# 	<nr>125</nr>										# Numerierung für Einzelupdate
+#	Stand: 05.03.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1784,7 +1784,8 @@ def ARD_Teletext_Wrap(new_lines, myline, max_length, txtRight):
 # 06.12.2023 Auswertung EPG in ARDVerpasst_get_json
 # 27.02.2026 ARD-Api-Änderung, Anpassung ähnlich ARDVerpasst_get_json, aber
 #	ohne tbase (nur für Videos geeignet) - hier href aus links|target|href 
-#	plus Abspaltung "?devicetype=" plus Anhängen von "&mcV6=true"
+#	mit indiv. Senderkennung plus Abspaltung "?devicetype=" plus Anhängen 
+#	von "&mcV6=true".
 #
 def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""): 
 	PLog('get_json_content: ' + ID); PLog(mark)
@@ -1860,9 +1861,9 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 				PLog("skip_Übersicht")
 				continue				
 
-		href = 	s["links"]["target"]["href"]					# 27.02.2026 ARD-Änderung, tbase mit urlId wie
-		if "?devicetype=" in href:								# ARDVerpasst_get_json nicht verwendbar
-			href = href.split("?devicetype=")[0]
+		href = 	s["links"]["target"]["href"]					# 27.02.2026 hier href statt urlId, s.o.
+		if "?devicetype=" in href:								
+			href = href.split("?devicetype=")[0]		
 		if "?" in href:											# ?embedded=.. bereits enthalten
 			href = href + "&mcV6=true"
 		else:
@@ -2193,6 +2194,9 @@ def ARDStartSingle(path, title, ID='', mehrzS='', homeID=''):
 	HBBTV_List = ARDStartVideoHBBTVget(title, path)								# HBBTV (MP4), FSK16-Sperre wie HLS/MP4
 	PLog("HBBTV_List: " + str(HBBTV_List)[:80])
 	MP4_List = ARDStartVideoMP4get(title, StreamArray_0, call, StreamArray_1)	# MP4
+	if len(MP4_List) == 0 and len(HBBTV_List) > 0:
+		MP4_List = HBBTV_List
+	
 	Dict("store", 'ARDNEU_HLS_List', HLS_List) 
 	Dict("store", 'ARDNEU_HBBTV_List', HBBTV_List) 
 	Dict("store", 'ARDNEU_MP4_List', MP4_List) 
