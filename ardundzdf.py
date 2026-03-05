@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>320</nr>										# Numerierung für Einzelupdate
+# 	<nr>321</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.0'
 VDATE = '22.01.2026' 
 
@@ -1211,7 +1211,7 @@ def ZDF_Teletext(path=""):
 		]
 		
 	#  ZDF korrigiert nicht selbst 
-	newpath, msg = getRedirect(path) 									# falsche Seite manuell eigegeben?
+	newpath, msg = getRedirect(path) 									# falsche Seite manuell eingegeben?
 	if not newpath:
 		aktpg = re.search(r'seiten/(.*?).html', path).group(1)
 		msg1 = u'Seite %s' % aktpg
@@ -9115,7 +9115,7 @@ def ZDF_KatSerie(title, path, typ, sid, Graphql=""):
 			header = Dict("load", "GraphqlHeader")
 			header = HEADERS_GRAPHQL % (apitoken, appId)
 			page, msg = get_page(path=href,  header=header, do_safe=False)
- 	
+
 	#--------------------------------------------------------------
 
 	try:														# json-Daten Graphql-Call
@@ -12030,12 +12030,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 	forms=[]
 	if len(formitaeten) > 0:								# Videoquellen fehlen?
 		PLog("formitaeten_0: " + str(formitaeten[0])[:100])
-		if cdn_api:
-			formsblock = stringextract('formitaeten":', ']', formitaeten[0])
-			forms = blockextract('"type":', formsblock)
-		else:
-			forms = blockextract('"type":', str(formitaeten))
-
+		forms = blockextract('formitaeten', str(formitaeten))
 	PLog("forms: %d" % len(forms))	
 	
 	line=''; skip_list=[]
