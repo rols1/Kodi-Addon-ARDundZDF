@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>125</nr>										# Numerierung für Einzelupdate
-#	Stand: 05.03.2026
+# 	<nr>126</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.03.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1206,6 +1206,13 @@ def ARD_FlatListRec(item, vers):
 	
 	target =  stringextract('"target":', '}', item)	# Ziel-Url mit Streamquellen
 	url =  stringextract('"href":"', '"', target)	
+	if "?devicetype=" in url:								# 06.03.2026 Anpassung wie 	get_json_content						
+		url = url.split("?devicetype=")[0]		
+	if "?" in url:											# ?embedded=.. bereits enthalten
+		url = url + "&mcV6=true"
+	else:
+		url = url + "?mcV6=true"
+
 	ID =  stringextract('"id":"', '"', target)
 	
 	tag = u"Staffel: %s | Folge: %s\nDauer: %s | FSK: %s | %s | Hersteller: %s | %s" %\
