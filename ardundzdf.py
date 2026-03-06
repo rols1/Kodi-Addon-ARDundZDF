@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>321</nr>										# Numerierung für Einzelupdate
+# 	<nr>322</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.0'
 VDATE = '22.01.2026' 
 
@@ -3695,23 +3695,11 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	'''
 
-	title = u"Event: [B]DFB-Pokal 2025 / 2026[/B]"
-	tag = u"DFB-Pokal 2025,  News zu Ergebnissen, Auslosungen und Spielen"
-	cacheID = "DFB_Pokal_2025"
-	img = "https://images.sportschau.de/image/8039954d-42c9-4630-9308-be21458fa18b/AAABlcSOzQM/AAABmyZE0EA/16x9-big/dfbpokal-sp-100.jpg?width=1280"
-	path = "https://www.sportschau.de/fussball/dfbpokal"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
-		(quote(title), quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
-		
-			
-	title = u"Event: [B]Olympische Winterspiele Mailand Cortina 2026[/B]"
-	tag = u"Olympia 2026: Aktuelle News und Hintergründe"
-	cacheID = "Olympia 2026"
-	img = "https://images.sportschau.de/image/ca3e972b-06d1-4d30-b080-b8dadff44c28/AAABm7exCYU/AAABmyZE0EA/16x9-big/olympia-mailand-cortina-keyvisual-100.jpg?width=1280"
-	path = "https://www.sportschau.de/olympia"
+	title = u"Event: [B]Paralympics 2026 in Mailand/Cortina[/B]"
+	tag = u"Paralympics 2026 in Mailand/Cortina: News, Livestreams und Aktuelles"
+	cacheID = "Paralympics_2026"
+	img = "https://images.sportschau.de/image/8faa1dc9-5baf-461e-af92-92c73cd3af6a/AAABnHZl3dE/AAABmyZE0EA/16x9-big/paralympics-main-picture-100.jpg?width=1280"
+	path = "https://www.sportschau.de/paralympics"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
 		(quote(title), quote(path))
@@ -3794,6 +3782,32 @@ def ARDSportWDRArchiv():
 	base = "https://images.sportschau.de"		# fanarts und thumbs -> Sportschau-Logo
 	logo = base + "/image/3fbb1eaf-fb0a-4f1b-a5a9-44a643839cd5/AAABgTjL3GM/AAABgPp7Db4/16x9-1280/sportschau-logo-sendung-100.jpg"
 	
+# ---------------------------------------------------------------------- 2025
+
+	title = u"Event: [B]DFB-Pokal 2025 / 2026[/B]"
+	tag = u"DFB-Pokal 2025,  News zu Ergebnissen, Auslosungen und Spielen"
+	cacheID = "DFB_Pokal_2025"
+	img = logo
+	path = "https://www.sportschau.de/fussball/dfbpokal"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
+		
+			
+	title = u"Event: [B]Olympische Winterspiele Mailand Cortina 2026[/B]"
+	tag = u"Olympia 2026: Aktuelle News und Hintergründe"
+	cacheID = "Olympia 2026"
+	img = logo
+	path = "https://www.sportschau.de/olympia"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
+
+
 # ---------------------------------------------------------------------- 2025
 
 	title = u"Event: [B]Leichtathletik-WM 2025 in Tokio[/B]"
@@ -11880,11 +11894,9 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 		sharingUrl = ZDF_BASE + "/" + path.split("/")[-1]
 	PLog("sharingUrl: " + sharingUrl)			
 	
-	cdn_api=True														# -> formsblock s.u.
 	videodat_page="";
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % zdfToken
 	if "api.zdf.de" in path:											# früher "ngplayer"
-		cdn_api=False
 		page, msg = get_page(path, header=header)
 	else:
 		if not ptmdTemplate:			
@@ -11974,8 +11986,7 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 				if "livestream-" in path_org or "-live-" in path_org:
 					msg2="%s Sendezeit prüfen!" % msg2
 			else:
-				page = videodat_page			
-		cdn_api=False
+				page = videodat_page
 
 	if page == "":
 		icon = R(ICON_INFO)
@@ -12023,9 +12034,14 @@ def ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True, ptmd
 				"vp9_opus_webm_http_na_na", "vp8_vorbis_webm_http_na_na"
 				]	
 	
-	# Format formitaeten von Webversion abweichend, build_Streamlists
-	#	nicht verwendbar
-	PLog("cdn_api: " + str(cdn_api))
+	# Format formitaeten bei ARD-Videos abweichend, build_Streamlists
+	#	nicht verwendbar. 
+	# 05.03.2026 docversion: 1 (ARD), 2 | 
+	#	playerId: ngplayer_2_3 (ARD), ngplayer_2_4, android_native_5
+	docversion = stringextract('"documentVersion":', ',', page)
+	playerId = stringextract('"playerId":"', '"', page)
+	PLog("docversion: %s, playerId: %s" % (docversion, playerId))
+
 	formitaeten, duration, geoblock, sub_path = get_form_streams(page)
 	forms=[]
 	if len(formitaeten) > 0:								# Videoquellen fehlen?
