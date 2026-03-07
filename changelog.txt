@@ -10,6 +10,22 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+07.03.2026	5.4.1
+			ARDVerpasst_get_json (ARDnew): Api-Änderung (programm-api.ard.de) -
+			Anpassung tbase (?devicetype=pc&embedded=true -> ?embedded=false&mcV6=true).
+			get_json_content (ARDnew): nach Api-Änderung (api.ardmediathek.de) Link-
+			Anpassung ähnlich ARDVerpasst_get_json (links|target|href statt urlId)
+			ARDStartVideoHBBTVget (ARDnew): Anpassung an ARD-Änderung (Link-Zusätze 
+			entfernt).
+			ARDStartSingle (ARDnew): Ersatz einer leeren  MP4_List (SWR-Videos) durch 
+			HBBTV_List.
+			ARD_FlatListRec: Url-Anpassung wie get_json_content.
+			ARDSportWDR: Aktualisierung Event-Buttons (neu: Paralympics) 
+			ZDF_getApiStreams: abweichendes Formate bei ARD-Video-Quellen ("formitaeten")
+			berücksichtigt, Variable cdn_api entfernt (obsolet).
+			update_single (EPG.py): Austausch GIT_BASE wg. HTTP Error 429: Too Many 
+			Requests.			
+
 22.02.2026	5.4.0
 			Kikaninchen_Menu  (Modul childs): Austausch Men + Funktion Tonschnipsel
 			gegen Schnipselwelt, Nutzung ARDStartRubrik, einschl. get_pagination.

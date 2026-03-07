@@ -3748,7 +3748,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 		# playlist: Start aus Modul Playlist (s.o.)
 		player = xbmc.Player()
 		try:
-			from platform import release						# für Verhind. Rekursion 
+			from platform import release						# für Hinweis Rekursion 
 			OS_RELEASE = release()
 		except:
 			OS_RELEASE =''
