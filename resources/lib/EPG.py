@@ -12,8 +12,8 @@
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	ab Okt. 2025 Webseite geändert, TV-Daten im json-Format nur für 1 Tag
 #
-# 	<nr>41</nr>										# Numerierung für Einzelupdate
-#	Stand: 08.02.2026
+# 	<nr>42</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.03.2026
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -116,11 +116,13 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 #	Bsp.: ..\\addons\\plugin.video.ardundzdf/resources/livesenderTV.xml
 # 02.09.2025 Github-Änderung Webformat - Verzicht auf Download neuer Module, RepoList
 #	entfällt, nur noch direkter Abgleich Datei lokal / Datei Repo.
+# 07.03.2026 GIT_BASE "https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master" führt unter
+#	Windows zu HTTP Error 429: Too Many Requests. Neue GIT_BASE s.u.
 #
 def update_single(PluginAbsPath):
 	PLog('update_single:')
 	import glob	
-	GIT_BASE = "https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master"
+	GIT_BASE = "https://raw.githubusercontent.com/rols1/Kodi-Addon-ARDundZDF/refs/heads/master/"
 	icon = R("icon-update-einzeln.png")
 		
 	# SINGLELIST enthält die Module in resources/lib im Addon,		# 1. Erstellung Liste lokal
@@ -209,8 +211,8 @@ def update_single(PluginAbsPath):
 			if nr_local:		
 				try:
 					fname = local_file.split(PluginAbsPath)[-1]		# Bsp.: /resources/lib/ARDnew.py
-					# Bsp.: ../github.com/rols1/Kodi-Addon-ARDundZDF/blob/master/resources/livesenderTV.xml?raw=true
-					remote_file = "%s%s?%s" % (GIT_BASE, fname, "raw=true")
+					# Bsp.: ..raw.githubusercontent.com/rols1/Kodi-Addon-ARDundZDF/refs/heads/master/resources/lib/ARDnew.py
+					remote_file = "%s%s" % (GIT_BASE, fname)
 					remote_file = remote_file.replace('\\', '/')
 					PLog('lade %s' % remote_file)
 					
