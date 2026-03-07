@@ -12,7 +12,7 @@
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	ab Okt. 2025 Webseite geändert, TV-Daten im json-Format nur für 1 Tag
 #
-# 	<nr>42</nr>										# Numerierung für Einzelupdate
+# 	<nr>43</nr>										# Numerierung für Einzelupdate
 #	Stand: 07.03.2026
 #	
  
@@ -118,6 +118,7 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 #	entfällt, nur noch direkter Abgleich Datei lokal / Datei Repo.
 # 07.03.2026 GIT_BASE "https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master" führt unter
 #	Windows zu HTTP Error 429: Too Many Requests. Neue GIT_BASE s.u.
+#	Neu: Error-Liste, angehängt im Textviewer 
 #
 def update_single(PluginAbsPath):
 	PLog('update_single:')
@@ -196,8 +197,8 @@ def update_single(PluginAbsPath):
 
 	#-------------													# 4. Abgleich / Update
 	
-	result_list=[]; 												# Ergebnisliste für textviewer
-	cnt=-1		
+	result_list=[]; err_list=[]										# Ergebnis- plus Errorliste für textviewer
+	cnt=-1; err_cnt=0	
 	for local_file in SINGLELIST:
 		cnt=cnt+1
 		PLog("cnt=%d, %s" % (cnt, str(cnt in ret_list)) )
@@ -235,6 +236,11 @@ def update_single(PluginAbsPath):
 						PLog("noch aktuell: %s" % fname)
 				except Exception as exception:	
 					PLog("exept_update_single: %s" % str(exception))
+					err_cnt = err_cnt+1
+					f = remote_file.split("/")[-1]
+					err_txt = "[B]Fehler: %s[/B] | %s" % (f, str(exception))	# Fehler: EPG.py | HTTP Error 404
+					err_list.append(err_txt)
+					#continue
 
 				if "\\" in fname:									# Dateiname -> result_list
 					fname = fname.split("\\")[-1]					# Windows 
@@ -259,6 +265,11 @@ def update_single(PluginAbsPath):
 
 	# xbmc.executebuiltin('Dialog.Close(all,true)')					# verhindert nicht Nachlaufen 
 	result_list = "\n".join(result_list)							# Ergebnisliste
+	if len(err_list) > 0:											# ev. Errorliste anhängen
+		icon = R("icon-info.png")
+		xbmcgui.Dialog().notification("Einzelupdate:", u"endet mit %d Fehler(n)!" % err_cnt,icon,3000)	
+		result_list = result_list + "\n"
+		result_list = "\n".join(err_list)
 	title = u"Einzelupdate - Abgleich von %d Dateien | Ergebnis:" % len(ret_list)
 	textviewer(title, result_list,usemono=True)						# util
 	
