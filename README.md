@@ -7,10 +7,9 @@ Mit Inhalten der Mediatheken von ARD und ZDF, 3Sat, funk, phoenix, KIKA und ZDFt
 einschließlich Live-TV mit Aufnahmefunktion (ffmpeg erforderlich), Live-Radio, Podcasts.<br>
 
 Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
+<b>(Kodi Matrix)</b> oder [kodinerds-Repo](https://repo.kodinerds.net) <b>(Kodi-Krypton, -Leia, -Matrix und -Nexus)</b> - siehe INSTALLATION.<br>
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-ARDundZDF/Kodi-Addon-ARDundZDF.zip
  "Downloads")
-<b>(Kodi Matrix)</b> oder [kodinerds-Repo](https://repo.kodinerds.net) <b>(Kodi-Krypton, -Leia, -Matrix und -Nexus)</b> - siehe INSTALLATION.
-
 Plex hat die Unterstützung für Plugins in seinen Client-Softwarepaketen eingestellt. Die Repos für die Plex-Versionen [Plex-Plugin-ARDMediathek2016](https://github.com/rols1/Plex-Plugin-ARDMediathek2016) und [ARDundZDF](https://github.com/rols1/ARDundZDF) habe ich im März 2022 gelöscht (dto. FlickrExplorer, TuneIn2017, Shoutcast2017).<br>
 
 <b>Classic-Version der ARD Mediathek</b>: seit Juni 2021 sind die Classic-Links nicht mehr erreichbar. Der Code im Addon wurde entfernt; im Addon ist das Menü <b>ARD Mediathek Neu</b> voreingestellt (Details siehe Funktionen).<br>
