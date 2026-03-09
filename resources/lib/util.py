@@ -4710,7 +4710,7 @@ def get_streams_from_link(medialink):
 		else:
 			path = new_url
 			if ID =="ARD":
-				ARDStartSingle(path, title="", summary="")
+				ARDStartSingle(path, title="")						# seit V5.4.0 ohne summary
 			if ID == "ZDF":
 				# ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True)
 				HLS_List, MP4_List, HBBTV_List=ZDF_getApiStreams(path, title, img, tag, descr, scms_id=scms_id,gui=False)
