@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>126</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.03.2026
+# 	<nr>127</nr>										# Numerierung für Einzelupdate
+#	Stand: 10.03.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2294,18 +2294,14 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 			PLog("details: " + details)
 			PLog("href: " + href)							
 
-			# Standard zuerst:				
-			if "<OV>" not in title and u"Hörfassung" not in title:	# beim 2. Stream auch DGS
-				if u"standard/deu" not in audio:
+			# Standard zuerst:										# beim 2. Stream auch DGS	
+			if "<OV>" in title or u"<Originalversion>"  in title:
+				if u"standard/deu" in audio:
 					skip=True
 					
 			if u"Hörfassung" in title:
 				if "audio-description" not in audio_kind:
 					skip=True
-					
-			if u"<OV>" in title:
-				if "standard/deu" in audio:
-					skip=True			
 
 			if DGS_use:												# DGS-Stream verwenden?
 				if "DGS" in details:	
@@ -2389,15 +2385,16 @@ def ARDStartVideoHBBTVget(title, path):
 			
 		audio_kind = stream["audios"][0]["kind"]			# standard
 		audio_lang = stream["audios"][0]["languageCode"]	# fra, deu
-		if "<OV>" not in title and u"Hörfassung" not in title:
+		details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
+		PLog("details: " + details)
+
+		if "<OV>" not in title and u"<Originalversion>" not in title and u"Hörfassung" not in title:
 			if "deu" not in audio_lang:						# s. ARDStartVideoHLSget, ARDStartVideoMP4get
 				continue
 		else:
 			if "<OV>" in title and  "deu" in audio_lang:	# deu ausfiltern
-				continue	
-			
-		details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
-		
+				continue
+
 		PLog("hbbtv_res: %s" % res) 
 		title_url = u"%s#%s" % (title, href)
 		item = u"MP4: [B]%s[/B] ** Auflösung %s ** %s" % (details, res, title_url)
@@ -2461,14 +2458,18 @@ def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):
 			aspect = stream["aspectRatio"]
 			audio_kind = stream["audios"][0]["kind"]			# standard
 			audio_lang = stream["audios"][0]["languageCode"]	# fra, deu
-			if "<OV>" not in title and u"Hörfassung" not in title:
+			details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
+			PLog("details: " + details)
+	
+			if "<OV>" in title or "<Originalversion>" in title or u"Hörfassung" in title:
 				if "deu" not in audio_lang:						# s. ARDStartVideoHLSget, ARDStartVideoHBBTVget
 					continue
-			else:
-				if "<OV>" in title and  "deu" in audio_lang:	# deu ausfiltern
-					continue	
-			
-			details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
+			if u"Hörfassung" in title:
+				if "deu" not in audio_lang:	
+					continue
+			if DGS_use:											# DGS-Stream verwenden?
+				if "DGS" not in kind:	
+					continue		
 			
 			title_url = u"%s#%s" % (title, href)
 			item = u"MP4: [B]%s[/B] ** Auflösung %s ** %s" % (details, res, title_url)
