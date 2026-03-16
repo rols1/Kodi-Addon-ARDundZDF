@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>127</nr>										# Numerierung für Einzelupdate
-#	Stand: 10.03.2026
+# 	<nr>128</nr>										# Numerierung für Einzelupdate
+#	Stand: 16.03.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2661,7 +2661,8 @@ def SendungenAZ_ARDnew(title, button, href, CurSender="", homeID=''):
 # 27.06.2020 api-Codeanteile entfernt - s. SearchARDnew
 # 01.03.2023 ARD-Suchpfad wie SearchARDundZDFnew (page.ardmediathek -> api.ardmediathek)
 # 21.07.2024 Nutzung für Suchen nur in ARD od. ZDF (Vermeidung Absturzproblem nach Abbruch)
-# 20.12.2024 Nutzung für Medienlinks (eingefügt durch Yatse, Kore o.ä.)
+# 20.12.2024 Nutzung für Medienlinks (eingefügt durch Yatse, Kore o.ä.) - kodinerds-Forum Post 3.808
+#	 https://www.kodinerds.net/thread/64244-release-kodi-addon-ardundzdf/?postID=771633#post771633
 # 10.02.2025 Such-Url durch ARD geändert: Zusatz platform=MEDIA_THEK
 #
 def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
@@ -2672,6 +2673,7 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 
 	if query == '':														# Liste letzte Sucheingaben
 		query = ARDHandleRecents(title, mode="load", query=query)
+
 	if query.startswith("http://") or query.startswith("https://"):		# Medienlink einschl. http://hbbtv..
 		PLog("medialink: " + query)
 		get_streams_from_link(medialink=query)							# Auswertung + Starten

@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>157</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.03.2026
+# 	<nr>158</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.03.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -795,6 +795,19 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_strm=''; fparams_exist_inlib=''; fparams_EPG='';
 		fparams_ShowSumm=""; fparams_RadioEPG="";fparams_ShowSeason="";
 		
+		K = unquote(fparams)											# Param. extrahieren 
+		K = K.replace("': '", "':'")
+		# PLog(k)		# Debug
+		K_Sender = stringextract("sender':'", "'", K) 					# Bsp. 'ARTE'
+		K_url = stringextract("url':'", "'", K) 						# Stream-Url
+		if not K_url:
+			K_url = stringextract("path':'", "'", K)
+		K_dirID = dirID
+			
+		K_title=label; K_fanart=fanart; K_thumb=thumb;				
+		K_summary=summary; K_tagline=tagline;	 	
+		
+	
 		if EPG_ID:														# EPG für Sender zeigen
 			EPG_ID = py2_encode(EPG_ID)
 			fp = {'title': label, 'ID': EPG_ID, 'mode': 'context'}
@@ -858,9 +871,11 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				fparams_exist_inlib = quote_plus(fparams_exist_inlib)
 					
 			if SETTINGS.getSetting('pref_strm') == 'true':				# strm-Datei für Video erzeugen
-				fp = {'label': label, 'add_url': quote_plus(add_url)}	# extract -> strm-Modul							
+				# extract -> strm-Modul -> Plugin-Call für get_streamurl(add_url, title)
+				fp = {'label': label, 'add_url': quote_plus(add_url),\
+				'tagline': quote_plus(tagline), 'summary': quote_plus(summary)}											
 				fparams_strm = "&fparams={0}".format(fp)
-				PLog("fparams_strm: " + fparams_strm[:100])
+				PLog("fparams_strm: " + fparams_strm[:100])	
 				fparams_strm = quote_plus(fparams_strm)
 
 		if SETTINGS.getSetting('pref_video_direct') == 'true':			# ständig: Umschalter Sofortstart 
@@ -1254,9 +1269,12 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 			else:
 				r = requests.get(path, timeout=UrlopenTimeout)
 			PLog(r.status_code)
+			if r.status_code != 200:
+				raise Exception(str(page))								# Bsp. Authentication parameters missing
+			compressed=False
 			page = r.content
 			PLog(len(page))
-			compressed=False
+			PLog(str(page)[:100])
 		except Exception as exception:
 			PLog(str(exception))
 			msg = str(exception)
@@ -1265,7 +1283,7 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 
 	# PLog(page[:100]) - 06.08.2024 Ausgabe kann hier in Leia an "string with null bytes" 
 	#	scheitern, falls get_page2 durchlaufen wird.
-	if page:															
+	if page:														
 		PLog(type(page))
 		if decode:														# Decodierung - Default
 			PLog("decode_page: %s" % str(type(page)))
@@ -1277,14 +1295,15 @@ def get_page(path, header='', cTimeout=None, JsonPage=False, GetOnlyRedirect=Fal
 					PLog(len(page))
 
 				if PYTHON2:			
-					page = py2_decode(page)								# erzeugt bei PY3 Bytestrings (ARD)
+					#page = py2_decode(page)							# erzeugt bei PY3 Bytestrings (ARD)
+					pass
 				else:
-					page = page.decode('utf-8')
+					page = page.decode('utf-8')	
 			except Exception as exception:
 				msg = str(exception)
 				PLog("decode_error: " + msg)
 
-	PLog(page[:100])
+	PLog(str(page)[:100])
 	PLog("get_page_exit")
 	return page, msg
 # ----------------------------------------------------------------------
@@ -2560,10 +2579,10 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	if newpath:										# False od. redirect-path
 		path=newpath
 	
-	fname = path.split('/')[-1]
+	fname = path.split('/')[-1]						# Pfadende -> Dateiname
 	fname = fname.replace('.html', '')				# .html bei ZDF-Links entfernen
-	fname = fname.replace('?devicetype=pc', '')		# ARD-api-Zusatz
-	fname = fname.replace('&embedded=true', '')		# ARD-api-Zusatz	
+	fname = fname.replace('?devicetype=pc', '')		# ARD-api-Zusätze entfernen
+	fname = fname.replace('&embedded=true', '')		
 		
 	fpath = os.path.join(TEXTSTORE, fname)
 	PLog('fpath: ' + fpath)
@@ -2599,6 +2618,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		# transl_json, valid_title_chars
 		# Graphql nicht verwendbar (FSK16: 22:00-6:00h kein Output)
 		
+		descr_html = stringextract('"description" content="', '"', page)	# Web oben ARD-Video Sayonara Loreley		
 		html = stringextract('class="p4fzw5k tyrgmig m1iv7h85', 'Darsteller', page)
 		extras=[]
 		bl = blockextract('class="p4fzw5k tyrgmig m1iv7h85', html, '</p')	# Web oben, Bsp. Herr der Ringe
@@ -2610,17 +2630,18 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 				extras.append(line)
 		extras = "\n\n".join(extras)
 		extras = extras.replace('<br/><br/>',"\n\n")
-		PLog("extras: " + extras)			
-	
+		PLog("extras: " + extras)	
 		
 		pos = page.find('remoteConfigUrl')							# wie ZDF_Graphql_WebDetails
 		page = page[pos:]			
 		page = page.replace('\\"', '"')			
 				
 		descr = stringextract('"description","content":"', '"', page)
+		if len(descr) < len(descr_html):
+			descr = descr_html
 		longinfo = stringextract('"longInfoText"', '"Darsteller', page)
 		longinfo = stringextract('"text":"', '"', longinfo)		
-		
+
 		summ = descr
 		if longinfo:
 			summ =  "%s\n%s" % (summ, longinfo)
@@ -3788,7 +3809,7 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 	
 
 		PLog("url: " + url); PLog("playlist: %s" % playlist)
-		if IsPlayable == 'true' and playlist !='true':			# true - Call via listitem
+		if IsPlayable == 'true' and playlist !='true':			# true - Call via listitem in addDir
 			PLog('PlayVideo_Start: listitem')
 			xbmcplugin.setResolvedUrl(HANDLE, True, li)			# indirekt
 
@@ -4712,8 +4733,8 @@ def get_streams_from_link(medialink):
 			if ID =="ARD":
 				ARDStartSingle(path, title="")						# seit V5.4.0 ohne summary
 			if ID == "ZDF":
-				# ZDF_getApiStreams(path, title, thumb, tag,  summ, scms_id="", gui=True)
-				HLS_List, MP4_List, HBBTV_List=ZDF_getApiStreams(path, title, img, tag, descr, scms_id=scms_id,gui=False)
+				# ZDF_getApiStreams(path, title)					# seit 5.4.2 ebenfalls reduzierte Params
+				HLS_List, MP4_List, HBBTV_List=ZDF_getApiStreams(path, title)
 				PLog("HLS_List_ZDF: %d, MP4_List_ZDF: %d, HBBTV_List_ZDF: %d" % (len(HLS_List), len(MP4_List), len(HBBTV_List)))
 				if not len(HLS_List) and not len(MP4_List) and not len(HBBTV_List):			
 					path=""

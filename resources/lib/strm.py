@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>15</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.04.2025
+# 	<nr>16</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.03.2026
 #
 
 from __future__ import absolute_import
@@ -78,7 +78,6 @@ NFO = NFO1+NFO2+NFO3+NFO4												#	 vorh. / nicht mehr vorh.
 # todo Tools : Lock entfernen (Monitor-Reset), synclist teilw. od. ganz löschen,
 #			sync_hour  festlegen
 #			Option: Monitor neu starten (nach Änd. sync_hour obligatorisch)
-#			Log für Sync-Läufe
 #			Bereinigen (nicht mehr verfügb. löschen)
 # 
 def strm_tools():
@@ -361,8 +360,8 @@ def unpack(add_url):
 # 	Param. siehe addDir, mediatype == "video"
 # Ermittlung Streamquellen -> get_streamurl (Plugin-Call)
 #
-def do_create(label, add_url):
-	PLog("do_create: " + label)
+def do_create(label, add_url, tagline, summary):
+	PLog("do_create: %s | %s | %s" % (label, tagline[:80], summary[:80]))
 	PLog(SETTINGS.getSetting('pref_strm_uz'))
 	PLog(SETTINGS.getSetting('pref_strm_path'))
 	icon = R(ICON_DIR_STRM)
@@ -385,8 +384,9 @@ def do_create(label, add_url):
 	url	= stringextract("url': '", "'", fparams) 
 	if url == '':
 		url	= stringextract("path': '", "'", fparams)				# Livestream  SenderLiveResolution
-	thumb	= stringextract("thumb': '", "'", fparams) 
-	Plot	= get_Plot(fparams)
+	thumb	= stringextract("thumb': '", "'", fparams)
+	 
+	Plot = "%s\n\n%s" % (tagline, summary)
 		
 	if title == '' or "| auto" in title or u"| Auflösung" in title:	# Anwahl Streaming-/MP4-Formate
 		if Plot.startswith("Title: "):
@@ -499,30 +499,6 @@ def get_strm_genre():
 	
 	return strm_type
 
-# ----------------------------------------------------------------------
-def get_Plot(fparams):
-	PLog("get_Plot:")
-	Plot=''
-	fparams = transl_doubleUTF8(fparams)
-	PLog(fparams)	# Debug
-
-	Plot	= stringextract("Plot': '", "'", fparams)
-	if Plot == '':										# Plot + Altern.
-		 Plot = stringextract("summary': '", "'", fparams)
-	if Plot == '':
-		 Plot = stringextract("summ': '", "'", fparams)
-	if "'tag'" in fparams:
-		tag = stringextract("tag': '", "'", fparams)
-		Plot = "%s\n\n%s" % (tag, Plot)
-
-	 
-	if "'dauer'" in fparams:
-		dauer = stringextract("dauer': '", "'", fparams)
-		Plot = "%s\n\n%s" % (dauer, Plot)
-
-	Plot = Plot.replace("||", "\n")						# Rückübersetzung			
-
-	return Plot
 # ----------------------------------------------------------------------
 #
 # strm-, nfo-, jpeg-Dateien anlegen
@@ -836,7 +812,7 @@ def do_sync(list_title, strmpath, list_path, strm_type):
 				PLog('strm_Bündel_neu:')
 				
 			open(FLAG_OnlyUrl, 'w').close()							# Flag PlayVideo_Direct: kein Videostart
-			ZDF_getApiStreams(url, title, img, tag,  summ, gui=False) # Streamlisten bauen, Ablage Url
+			ZDF_getApiStreams(url, title) 							# Streamlisten bauen, Ablage Url
 			url = RLoad(STRM_URL, abs_path=True)					# abgelegt von PlayVideo_Direct
 			PLog("strm_Url: " + str(url))
 			
@@ -1267,7 +1243,6 @@ def clear_titel(title):
 
 
 	
-
 
 
 
