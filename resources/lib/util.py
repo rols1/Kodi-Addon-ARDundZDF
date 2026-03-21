@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>158</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.03.2026
+# 	<nr>159</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.03.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -837,8 +837,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			try:														# fparams-Variablen für Video-K-Menü
 				path=""; thumb=""; img="";
 				s = fparams.split("&fparams=")[1]
-				json_string = s.replace("'", "\"")
-				f = json.loads(json_string)
+				s = unquote_plus(s)										# entfernt +' (durch urllib2.unquote erzeugt)
+				s = s.replace("'", "\"")
+				f = json.loads(s)
 				title = f["title"]
 				if "path" in f:
 					path = f["path"]
