@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>129</nr>										# Numerierung für Einzelupdate
+# 	<nr>130</nr>										# Numerierung für Einzelupdate
 #	Stand: 21.03.2026
 
 # Python3-Kompatibilität:
@@ -1001,22 +1001,39 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARD_FlatListEpisodes", 
 			fanart=ICON, thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)		
 		
-		cnt=1	
+		Dir_Arr=[[] for _ in range(len(seasons))]						# Sortier-addDir-Array
+		cnt=0	
 		for s in seasons:
 			teasers = s["teasers"]
-			title = "%s | [B]Staffel %d[/B]" % (title_org, cnt)
+			title = "%s | [B]Staffel %02d[/B]" % (title_org, cnt+1)
 			tag = "[B]Folgen: %d[/B]" % len(teasers) 
 			img = hero_img
+			Dir_Arr[cnt].append(title); Dir_Arr[cnt].append(tag); 
+			Dir_Arr[cnt].append(img); Dir_Arr[cnt].append(cnt+1)
+			cnt=cnt+1
+		PLog("Dir_Arr: %d" % len(Dir_Arr))
+		PLog("seasons: %d" % len(seasons))
+		#---------------------
 			
-			
-			path=py2_encode(path); title=py2_encode(title); img=py2_encode(img); 
-			fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'snr': '%s'}" %\
-				(quote(path), quote(title), quote(img), str(cnt-1))		# snr Basis 0
-			PLog(fparams)
-			addDir(li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_KatSeriePre", \
-				fanart=img, thumb=img, fparams=fparams, tagline=tag)
-			cnt = cnt+1
+		try:
+			Dir_Arr = sorted(Dir_Arr,key=lambda x: x[0], reverse=True)	# absteigend
+			PLog("Dir_Arr_clean: %d" % len(Dir_Arr))		
+			for rec in Dir_Arr:
+				title=rec[0]; tag=rec[1]; img=rec[2]; cnt=rec[3]
+				
+				PLog('Satz_sort:');
+				PLog(title); PLog(img); PLog(tag)
+				path=py2_encode(path); title=py2_encode(title); img=py2_encode(img); 
+				fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'snr': '%s'}" %\
+					(quote(path), quote(title), quote(img), str(cnt-1))		# snr Basis 0
+				PLog(fparams)
+				addDir(li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_KatSeriePre", \
+					fanart=img, thumb=img, fparams=fparams, tagline=tag)
+				cnt = cnt+1
 
+		except Exception as exception:
+			Dir_Arr=[]
+			PLog("Dir_Arr_error: " + str(exception))		
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		return
 		
@@ -1030,7 +1047,7 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 		page = seasons[int(snr)]
 		PLog(str(py2_encode(page))[:80])
 
-		get_json_content(li, page, ID)
+		get_json_content(li, page, ID)									# S01E10-Kennz. im Titel dort
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
