@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>128</nr>										# Numerierung für Einzelupdate
-#	Stand: 16.03.2026
+# 	<nr>129</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.03.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -801,25 +801,15 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		PLog("ARDStartRubrik_more_container")
 		ARDRubriken(li, page=page, homeID=homeID)		# direkt
 	else:												# detect Staffeln/Folgen
-		# cnt = page.count(u'"Folge ')					# falsch positiv für "alt":"Folge 9"
 		if 'hasSeasons":true' in page and '"heroImage":' in page:
-			PLog('Button_FlatListARD')					# Button für flache Liste
-			label = u"komplette Liste: %s" % title
-			tag = u"Liste aller verfügbaren Folgen (falls auswertbare Muster vorhanden) | [B]strm-Tools[/B]"
-			if SETTINGS.getSetting('pref_usefilter') == 'false':
-				add = u"Voreinstellung: Normalversion.\nFür Hörfassung und weitere Versionen "
-				add = u'%sbitte das Setting <Beiträge filtern / Ausschluss-Filter> einschalten' % add
-				tag = u"%s\n\n%s" % (tag, add)
-			title=py2_encode(title); path=py2_encode(path)			
-			fparams="&fparams={'path': '%s', 'title': '%s'}"	% (quote(path), quote(title))						
-			addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARD_FlatListEpisodes", 
-				fanart=ICON, thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
-		
-		if ID != "Livestream":	
+			ARD_KatSeriePre(path, title, img)			# 20.03.2026 Staffelübersicht, Button "komplette Liste: .."
+			return
+		elif ID != "Livestream":	
 			ID = "ARDStartRubrik"	
-		if "Subrubriken" in title_org:				# skip Subrubrik Übersicht
+		elif "Subrubriken" in title_org:				# skip Subrubrik Übersicht
 			mark="Subrubriken"
-		li = get_json_content(li, page, ID, mark, homeID=homeID)																
+
+		get_json_content(li, page, ID, mark, homeID=homeID)																
 #----------------------------------------
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
@@ -958,27 +948,121 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark, homeID=""):
 	xbmcplugin.endOfDirectory(HANDLE)
 	
 #---------------------------------------------------------------------------------------------------
+# Aufruf: ARDStartRubrik ('hasSeasons":true')
+# Vorauswahl Staffeln ähnlich ZDF_KatSeriePre, hier ohne Trailer, ohne
+#	Empfehlungen (fehlen in json-Daten)
+#
+def ARD_KatSeriePre(path, title, img, snr=""):
+	PLog('ARD_KatSeriePre: %s | %s | %s | %s' % (title, path, img, snr))
+	title_org=title
+
+	path = path.split("?")[0]
+	DictID = path.split("/")[-1]									# ..L2JyLmRlL2Jyb2FkY2FzdFN..
+	page = Dict("load", DictID, CacheTime=ARDStartCacheTime)		# 5 min	
+	#path = path + "?embedded=true&seasoned=false&single=false"		# nur akt. Staffel
+	path = path + "?embedded=true&seasoned=true&single=false"
+	if not page:													# nicht vorhanden oder zu alt -					
+		page, msg = get_page(path)
+		icon = R(ICON_MAIN_ARD)
+		xbmcgui.Dialog().notification("Cache %s:" % title,"Haltedauer 5 Min",icon,3000,sound=False)
+		Dict('store', DictID, page)						# json-Datei -> Dict, 1 - 3 MByte mit Teasern			
+
+	try:
+		obj = json.loads(page)
+		seasons = obj["widgets"]
+		teasers=""
+		hero_img = obj["heroImage"]["src"]
+		PLog("hero_img: " + hero_img)
+		hero_img = hero_img.replace('{width}', '840')				# wie ZDF_get_content	
+		if snr:
+			snr = int(snr) 
+			teasers = seasons[snr]["teasers"]				
+		PLog("seasons: %d, snr: %s, teasers: %d, img: %s" % (len(seasons), snr, len(teasers), hero_img))
+	except Exception as exception:
+		PLog("teasers_error: " + str(exception))
+		msg1 = u"Fehler in ARD_KatSeriePre: %s"	% title
+		msg2 = str(exception)
+		MyDialog(msg1, msg2, '')	
+		return
+		
+	li = xbmcgui.ListItem()
+	# -----------------------------------------------------------------	# Step 1: Staffelliste
+	if not teasers:											
+		PLog("Step1_seasons:")											# Home-Button ARDStartRubrik		
+
+		label = u"komplette Liste: %s" % title							# Button "komplette Liste: .."
+		tag = u"Liste aller verfügbaren Folgen (falls auswertbare Muster vorhanden) | [B]strm-Tools[/B]"
+		if SETTINGS.getSetting('pref_usefilter') == 'false':
+			add = u"Voreinstellung: Normalversion.\nFür Hörfassung und weitere Versionen "
+			add = u'%sbitte das Setting <Beiträge filtern / Ausschluss-Filter> einschalten' % add
+			tag = u"%s\n\n%s" % (tag, add)
+		title=py2_encode(title); path=py2_encode(path)			
+		fparams="&fparams={'path': '%s', 'title': '%s'}"	% (quote(path), quote(title))						
+		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARD_FlatListEpisodes", 
+			fanart=ICON, thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)		
+		
+		cnt=1	
+		for s in seasons:
+			teasers = s["teasers"]
+			title = "%s | [B]Staffel %d[/B]" % (title_org, cnt)
+			tag = "[B]Folgen: %d[/B]" % len(teasers) 
+			img = hero_img
+			
+			
+			path=py2_encode(path); title=py2_encode(title); img=py2_encode(img); 
+			fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s', 'snr': '%s'}" %\
+				(quote(path), quote(title), quote(img), str(cnt-1))		# snr Basis 0
+			PLog(fparams)
+			addDir(li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARD_KatSeriePre", \
+				fanart=img, thumb=img, fparams=fparams, tagline=tag)
+			cnt = cnt+1
+
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+		return
+		
+	else:		
+	# -----------------------------------------------------------------	# Step 2: Teaserliste in season
+		PLog("Step2_season: %d" % int(snr))
+
+		li = home(li, ID='ARD Neu')										# Home-Button
+		
+		ID = "ARD_KatSeriePre"; mark=""
+		page = seasons[int(snr)]
+		PLog(str(py2_encode(page))[:80])
+
+		get_json_content(li, page, ID)
+			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+	
+#---------------------------------------------------------------------------------------------------
 # Ähnlich ZDF_FlatListEpisodes, flache Liste aller Folgen
 #	ohne Zusätze (Teaser usw.)
 # Aufruf ARDStartRubrik ('hasSeasons":true')
 # 23.03.2025 path-Korrekturen für vollständige Liste (Bsp. fehlende Staffel 2
 #	bei Feuer & Flamme)
 # 28.12.2025 Sortierung für komplette Liste ergänzt (Button ARDStartRubrik).
+# 21.03.2026 Nutzung Dict und geänderten path (wie ARD_KatSeriePre)
 #
 def ARD_FlatListEpisodes(path, title):
 	PLog('ARD_FlatListEpisodes:')
 	
-	path = path.replace("?embedded=true", "?pageSize=100")
-	path = path.replace("/pages", "/widgets").replace("/grouping", "/asset")
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = u"Fehler in ARD_FlatListEpisodes: %s"	% title
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return
-	PLog(len(page))
-	page = page.replace('\\"', '*')						# quotierte Marks entf.
+	#path = path.replace("?embedded=true", "?pageSize=100")			# entfällt, s.o.
+	#path = path.replace("/pages", "/widgets").replace("/grouping", "/asset")
 
+	path = path.split("?")[0]
+	DictID = path.split("/")[-1]									# ..L2JyLmRlL2Jyb2FkY2FzdFN..
+	page = Dict("load", DictID, CacheTime=ARDStartCacheTime)		# 5 min	
+	path = path + "?embedded=true&seasoned=true&single=false"
+	if not page:													# nicht vorhanden oder zu alt -					
+		page, msg = get_page(path)	
+		if page == '':	
+			msg1 = u"Fehler in ARD_FlatListEpisodes: %s"	% title
+			msg2 = msg
+			MyDialog(msg1, msg2, '')	
+			return
+
+	page = page.replace('\\"', '*')							# quotierte Marks entf.
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)									# Home-Button -> HauptmenüARDStartSingle:
 
@@ -1037,13 +1121,16 @@ def ARD_FlatListEpisodes(path, title):
 	PLog("items_list: %d" % len(items))
 	fcnt=0														# gefiltert-Zähler	
 	Dir_Arr=[[] for _ in range(len(items))]						# Sortier-addDir-Array (s. ShowFavs, ARD_FlatListEpisodes)
-	cnt=0; cnt=-1
+	cnt=0; cnt=-1; skip_list=[]
 	for item in items:
 		if "Folge " in item == False:
 			continue
 		title, url, img, tag, summ, season, weburl, ID = ARD_FlatListRec(item, vers) # Datensatz
 		if title == '':											# skipped
 			continue
+		if title in skip_list:									# mit neuem path erforderlich, s.o.
+			continue
+		skip_list.append(title)
 		summ_par = summ.replace('\n', '||')
 		if SETTINGS.getSetting('pref_usefilter') == 'true':		# Filter
 			filtered=False
@@ -1786,6 +1873,7 @@ def ARD_Teletext_Wrap(new_lines, myline, max_length, txtRight):
 # 14.04.2023 get_page_content -> get_json_content 
 # gelöscht: def get_page_content(li, page, ID, mark='', mehrzS=''): 
 #		
+
 #---------------------------------------------------------------------------------------------------
 # 14.04.2023 get_page_content -> get_json_content
 # 06.12.2023 Auswertung EPG in ARDVerpasst_get_json
@@ -1852,7 +1940,16 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID=""):
 			img = R(ICON_DIR_FOLDER)							# Bsp.: Subrubriken
 
 		title = s["longTitle"]
+		if "coreAssetType" in s:
+			if "EPISODE" in s["coreAssetType"]:					# Staffel-/Episodenkennz.
+				if title.endswith(")"):							# ..Kreuzfahrtschiff (S13/E44)
+					snr = title[-8:-5]							# S13
+					enr = title[-4:-1]							# E44
+					PLog("snr: %s, enr: %s" % (snr,enr))
+					title = title[:len(title) - 9]
+					title = "%s%s | %s" % (snr, enr, title)
 		title = repl_json_chars(title)
+		
 		if mark:												# Markierung Suchbegriff im Titel
 			PLog(title); PLog(mark)
 			title = title.strip() 
