@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>323</nr>										# Numerierung für Einzelupdate
+# 	<nr>324</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.1'
 VDATE = '07.03.2026' 
 
@@ -6559,7 +6559,7 @@ def ShowFavs(mode, selected=""):					# Favoriten / Merkliste einblenden
 			if cnt not in selected:	
 				continue
 		
-		#fav = unquote_plus(fav)						# urllib2.unquote erzeugt + aus Blanks!		
+		#fav = unquote_plus(fav)						# urllib2.unquote erzeugt + aus Blanks!	s. Video-K-Menü in addDir
 		fav = unquote(fav)								# kleineres Übel (unquote_plus entfernt + im Eintrag)
 		fav_org = fav		
 		
@@ -8940,7 +8940,7 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 # Graphql-Serien Pre: Vorauswahl Staffeln, Empfehlungen, 
 #	Extras, Details
 # Verzicht auf Graphql (operationName=seasonByCanonical), Dict-Auswertung
-#	schneller. Bei Switch auf Graphql Params durch Aufrufer übergeben.
+#	schneller. Aber: Sortierung nicht immer absteigend (Bsp. The Rookie)
 # Aufruf: ZDF_AZList, ZDF_Graphql_get_seasons
 # NEU-Kennung entfällt: editorialDate aus Episodendaten den Serien nicht
 #	verfügbar (außer initialSeasonId erst bei Folgeaufrufen).
@@ -8982,6 +8982,8 @@ def ZDF_KatSeriePre(title, path, img):
 	seasons = stringextract("props:data", "</script>", page)
 	PLog(seasons[:80])
 	seasons = blockextract('Season","id', seasons, '"nodes"')
+	if "Staffel 1" in seasons[0]:						# aufsteigend? dann via slicing
+		seasons = seasons[::-1]							# 	gedreht	
 	PLog("seasons: %d" % len(seasons))
 
 	path=py2_encode(path);	skip_list=[]	
