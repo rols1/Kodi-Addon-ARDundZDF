@@ -10,7 +10,7 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>132</nr>										# Numerierung für Einzelupdate
+# 	<nr>133</nr>										# Numerierung für Einzelupdate
 #	Stand: 24.03.2026
 
 # Python3-Kompatibilität:
@@ -706,13 +706,12 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 	PLog("do_region:")
 	ID = "ARDStartRubrik"
 	mark=''	
-	li = get_json_content(li, page, ID, mark)			# Auswertung Rubriken + Live-/Eventstreams
+	cnt = get_json_content(li, page, ID, mark)			# Auswertung Rubriken + Live-/Eventstreams
 	icon = R(ICON_DIR_FOLDER)
 	img = icon
 	msg1 = "Region"
 	msg2 = rname										# Dateiname bei ARD neu nichtssagend
 	xbmcgui.Dialog().notification(msg1,msg2,icon,2000, sound=False)	 
-	
 																	
 	if 	'"pagination":'	in page:						# Scroll-Beiträge
 		PLog('pagination_Rubrik:')
@@ -720,7 +719,7 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 		li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
 		pages, pN, pageSize, totalElements, next_path = get_pagination(page)	# Basis 0		
 		
-		if next_path:	
+		if next_path and int(totalElements) > int(cnt)+1:						
 			summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (pages, totalElements)
 			pN = int(pN)+1								# nächste pageNumber, Basis 0
 			tag = u"weiter zu Seite %d" % pN			# hier Basis 0
@@ -795,7 +794,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 
 #----------------------------------------
 
-	mark=''
+	mark=''; cnt=0
 	container = blockextract ('compilationType":', page)# Test auf Rubriken
 	PLog("container: %d" % len(container))
 	if len(container) > 1:
@@ -810,7 +809,7 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		elif "Subrubriken" in title_org:				# skip Subrubrik Übersicht
 			mark="Subrubriken"
 
-		get_json_content(li, page, ID, mark, homeID=homeID)																
+		cnt = get_json_content(li, page, ID, mark, homeID=homeID)																
 #----------------------------------------
 	
 	# 24.08.2019 Erweiterung auf pagination, bisher nur AutoCompilationWidget
@@ -820,8 +819,8 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		title = "Mehr zu >%s<" % title_org				# Mehr-Button	 
 		li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
 		pages, pN, pageSize, totalElements, next_path = get_pagination(page)	# Basis 0
-		
-		if next_path:	
+		PLog("cnt: " + str(cnt))
+		if next_path and int(totalElements) > int(cnt)+1:	
 			summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (pages, totalElements)
 			tag = u"weiter zu Seite %d" % pN			# abwechselnd Basis 0, 1
 			PLog(summ); PLog(next_path)
@@ -925,15 +924,15 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark, homeID=""):
 	PLog(len(page))	
 	page = page.replace('\\"', '*')							# quotierte Marks entf.
 
-	li = get_json_content(li, page, ID, mark)
+	cnt = get_json_content(li, page, ID, mark)
 	
 	if 	'"pagination":'	in page:							# z.B. Scroll-Beiträge zu Rubriken
 		title = "Mehr zu >%s<" % title_org					# Mehr-Button	 # ohne Pfad
 		li = xbmcgui.ListItem()								# Kontext-Doppel verhindern
 
 		pages, pN, pageSize, totalElements, next_path  = get_pagination(page)	
-		# Mehr-Button, falls noch nicht alle Sätze ausgegeben		
-		if next_path:
+		# Mehr-Button, falls noch nicht alle Sätze ausgegeben
+		if next_path and int(totalElements) > int(cnt)+1:
 			summ = u"insgesamt: %s Seite(n) , %s Beiträge" % (pages, totalElements) 
 			pN = int(pN)									# nächste pageNumber
 			tag = "weiter zu Seite %d" % pN					# abwechselnd Basis 0, 1
@@ -2065,7 +2064,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID="", desc=False):
 		icon = R("icon-filter.png")
 		xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)							
 		
-	return
+	return cnt
 
 #-----------------------------------------------------------------------
 # Aufruf get_json_content, ARD_KatSeriePre
@@ -2078,7 +2077,10 @@ def get_json_content_details(obj, ID=""):
 	uhr=''; duration=''; summ=''; availableTo='';
 	matRat="Ohne"; pubServ=""; pagetitle=""
 	typ=""; title="";
-	pattern = r'S(\d{2})/E(\d{2})'								# Muster: (S01/E04)
+	patt1 = r'S(\d{2})/E(\d{2,3})'								# Muster: (S01/E04), (S08/108)
+	patt2 = r' Folge (\d{2,3}):'								# Muster: | Folge 105: 
+	
+	
 
 	try:
 		if "availableTo" in obj:
@@ -2105,8 +2107,8 @@ def get_json_content_details(obj, ID=""):
 				title = obj["title"]	
 		
 		if "coreAssetType" in obj:
-			if "EPISODE" in obj["coreAssetType"]:				# Staffel-/Episodenkennz.
-				match = re.search(pattern, title)
+			if "EPISODE" in obj["coreAssetType"]:				# Staffel-/Episodenkennz. Titelende
+				match = re.search(patt1, title)
 				if match:
 					season = match.group(1) 					# nicht verwendet
 					episode = match.group(2) 					# dto
@@ -2114,6 +2116,10 @@ def get_json_content_details(obj, ID=""):
 					title = title.replace("(%s)" % se_full, "")
 					se_full = se_full.replace("/", "")			# S01/E01 -> S01E01
 					title = "%s | %s" % (se_full, title)
+				match = re.search(patt2, title)					# z.B. "Folge 105" im Titel
+				if match:
+					f_full = match.group(0)
+					title = title.replace(f_full, "")
 
 		title = repl_json_chars(title)
 
@@ -3129,15 +3135,16 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 	
 	vodTotal =  stringextract('"totalElements":', '}', page)	# Beiträge?
 	gridlist = blockextract( '"mediumTitle":', page) 			# Sicherung
-	if len(gridlist) == 0 or vodTotal == '0':		
-		msg1 = u'keine Beiträge gefunden zu: %s'  % query
-		PLog(msg1)
-		MyDialog(msg1, '', '')
-		xbmcplugin.endOfDirectory(HANDLE)		
+	if len(gridlist) == 0 or vodTotal == '0':
+		msg1 = "Leider nichts gefunden"		
+		msg2 = u'zu: %s'  % query
+		icon = R(ICON_INFO)
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=False)
+		return
 	PLog('gridlist: ' + str(len(gridlist)))	
 	
 	ID='Search' 	# mark für farbige Markierung
-	get_json_content(li, page, ID, mark=unquote(query))	
+	cnt = get_json_content(li, page, ID, mark=unquote(query))
 															# Mehr-Button:
 	title = "Mehr zu >%s<" % unquote(query)		
 	li = xbmcgui.ListItem()									# Kontext-Doppel verhindern
