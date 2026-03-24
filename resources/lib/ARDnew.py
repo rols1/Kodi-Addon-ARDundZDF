@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>131</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.03.2026
+# 	<nr>132</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.03.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -976,6 +976,7 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 		hero_img = obj["heroImage"]["src"]
 		PLog("hero_img: " + hero_img)
 		hero_img = hero_img.replace('{width}', '840')				# wie ZDF_get_content
+		page_id = obj["trackingPiano"]["page_id"]					# -> Empfehlungen
 		if 	obj["trailer"]:											# Trailer zur Serie, auch EXTRA_TRAILER
 			trailer = obj["trailer"]
 		if snr:
@@ -984,7 +985,7 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 		PLog("seasons: %d, snr: %s, teasers: %d, img: %s, trailer: %d" %\
 			(len(seasons), snr, len(teasers), hero_img, len(trailer)))
 	except Exception as exception:
-		PLog("teasers_error: " + str(exception))
+		PLog("KatSeriePre_error: " + str(exception))
 		msg1 = u"Fehler in ARD_KatSeriePre: %s"	% title
 		msg2 = str(exception)
 		MyDialog(msg1, msg2, '')	
@@ -1051,8 +1052,21 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 			fparams="&fparams={'path': '%s', 'title': '%s'}" %\
 				(quote(href), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", 
-				fanart=img, thumb=img, fparams=fparams, summary=summ, mediatype="mediatype")				
-			
+				fanart=img, thumb=img, fparams=fparams, summary=summ, mediatype="mediatype")
+				
+		#---------------------
+		label = "Empfehlungen"											# Button Empfehlungen
+		tag = u"Mehr zur Sendung, ähnliche Sendungen"
+		# der asset-Call zeigt häufig nur die erste Staffel, daher gehen wir über die Suche.
+		#path = "https://api.ardmediathek.de/page-gateway/widgets/ard/asset/%s?pageSize=100" % page_id
+		sender = "ard"
+		title = repl_json_chars(title); 
+	
+		title=py2_encode(title_org); 
+		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '0'}" %\
+			(quote(title), quote(label), sender)
+		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
+			fanart=hero_img, thumb=hero_img, tagline=tag, fparams=fparams)
 			
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		return
@@ -1070,8 +1084,7 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 		get_json_content(li, page, ID, desc=True)						# S01E10-Kennz. im Titel dort
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-	
+
 #---------------------------------------------------------------------------------------------------
 # Ähnlich ZDF_FlatListEpisodes, flache Liste aller Folgen
 #	ohne Zusätze (Teaser usw.)
