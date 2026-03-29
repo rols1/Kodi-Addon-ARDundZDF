@@ -10,6 +10,41 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+29.03.2026	5.4.2
+			update_single (EPG.py): Error-Liste bei Fehlern, angehängt an Ergebnisliste
+			plus Notification.
+			ZDF_KatSeriePre: Abbruch bei getRedirect-Error (newpath leer).
+			ZDF_KatSerieExtras: Param ptmdTemplate ergänzt, skip heroVideo ohne Titel.
+			ZDF_Graphql_WebDetails: getRedirect vor canonID verlegt.
+			README.md: Github-Downloads-Badge an neues Format angepasst.
+			get_streams_from_link (util.py): Param summary in Call ARDStartSingle
+			entfernt (fehlt dort seit V5.4.0).
+			ARDStartVideoHLSget, ARDStartVideoMP4get, ARDStartVideoHBBTVget (ARDnew):
+			für Originalversion die Kennung <Originalversion> im Titel berücksichtigt
+			(bisher nur <OV>).
+			ZDF_getApiStreams: Param summ entfernt (wie ARDStartSingle), zusätzl. tag,
+			thumb und scms_id entfernt. Graphql-Call und ZDF_getKat_content_details
+			für Metadaten genutzt (neue Funktion ZDF_Graphql), Nutzung get_summary_pre
+			wie bisher für Größenabgleich Inhalt (descr).
+			do_sync (Modul strm): ZDF_getApiStreams-Call an reduzierte Params angepasst.
+			get_streams_from_link (util.py): ZDF_getApiStreams-Call an reduzierte Params 
+			angepasst.
+			get_page (util.py): Auswertung Status-Code in letzter Stufe (get_page3) -
+			raise Exception falls Status-Code ungleich 200, py2_decode(page) für PY2
+			abgeschaltet (decode-Error bei neuen ZDF-Webseiten).
+			ARD_KatSeriePre: neue Funktion, Staffel-Liste ähnlich ZDF_KatSeriePre,
+			Anpassung ARD_FlatListEpisodes, Button für Empfehlungen (via Suche),
+			Titel-Anpassung in get_json_content (Pre-Marke S01E01) + "Folge xx" ent-
+			fernt.
+			ARDSearchnew: Dialog durch Notification bei Fehlschlag ersetzt.
+			ARD-Seitensteuerung: Mehr-Button abhängig gemacht von Rückgabe cnt aus
+			get_json_content - Anpassung in ARDStartRegion, ARDStartRubrik und
+			ARDPagination.
+			addDir (util.py): fparams_error korrigiert (durch urllib2.unquote erzeugtes
+			Pluszeichen entfernt)
+			ARD-Audiothek: nach ARD-Änderungen (ardsounds.de) komplett überarbeitet,
+			ARDAudioEventStreams angepasst.			
+
 07.03.2026	5.4.1
 			ARDVerpasst_get_json (ARDnew): Api-Änderung (programm-api.ard.de) -
 			Anpassung tbase (?devicetype=pc&embedded=true -> ?embedded=false&mcV6=true).
