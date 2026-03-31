@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>159</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.03.2026
+# 	<nr>160</nr>										# Numerierung für Einzelupdate
+#	Stand: 31.03.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -311,9 +311,9 @@ def home(li, ID, ltitle=""):
 	
 	# 	03.06.2021 ARD-Podcasts (Classic) entfernt		
 			
-	if ID == 'ARD Audiothek':
+	if ID == 'ARD Sounds':
 		img = R(ICON_MAIN_AUDIO)
-		name = Home + "ARD Audiothek"
+		name = Home + "ARD Sounds"
 		fparams="&fparams={'title': '%s'}" % quote(name)
 		addDir(li=li, label=title, action="dirList", dirID="AudioStart", fanart=img, 
 			thumb=img, tagline=tag, summary=summ, fparams=fparams)
@@ -2315,6 +2315,7 @@ def get_keyboard_input(line='', head=''):
 	if kb.isConfirmed() == False:
 		return ""
 	inp = kb.getText() # User Eingabe
+	PLog("get_keyboard_input: " + inp)
 	return inp	
 #----------------------------------------------------------------  
 # getOnline: 1. Ausstrahlung
