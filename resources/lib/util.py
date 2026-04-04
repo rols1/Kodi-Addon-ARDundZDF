@@ -1622,7 +1622,7 @@ def repl_json_chars(line):
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
 		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love'), (u'%C3%A9', u'é')		# u'u003e' 	-> u'®'
 		, (u'uD83C', u''), (u'uDF7F', u''), (u'uD63D', u''), (u'uDF7A', u'')					# 🍿,  📺
-		, (u'\t', u' ')
+		, (u'\t', u' '), (u'©', u'cr')
 		):
 		line_ret = line_ret.replace(*r)
 	

@@ -10,6 +10,14 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+04.04.2026	5.4.3
+			Bereinigung ARD Sounds: fehlende Anpassungen (auch PY2) ergänzt, Kopfdokus
+			aktualisiert, Funktionsketten zusammengefasst, obsolete Funktionen 
+			entfernt: Audio_get_sendung_api entfernt, dto. AudioSearch_cluster_single,
+			Audio_get_cluster_rubrik.
+			get_query: channel angepasst 'ARD Audiothek' -> 'ARD Sounds'.
+			repl_json_chars (util): Ersetzung © -> cr (ARD Sounds relevant).			
+
 29.03.2026	5.4.2
 			update_single (EPG.py): Error-Liste bei Fehlern, angehängt an Ergebnisliste
 			plus Notification.
