@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>327</nr>										# Numerierung für Einzelupdate
+# 	<nr>328</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.3'
 VDATE = '04.04.2026' 
 
@@ -1946,11 +1946,18 @@ def Audio_get_sendung(url, title, page=''):
 		title=py2_encode(title); mp3_url=py2_encode(mp3_url);
 		img=py2_encode(img); summ_par=py2_encode(summ_par);	
 		
-		downl_list.append("%s#%s" % (title, mp3_url))
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': ''}" % (quote(mp3_url), 
-			quote(title), quote(img), quote_plus(summ_par))
-		addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
-			fparams=fparams, tagline=tag, summary=summ)	
+		if "/sendung/" in mp3_url:										# noch Sendung?
+			PLog("sendung_in_mp3_url")
+			tag =  "[B]Sendung | Folgeseiten[/B]"
+			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(mp3_url), quote(title))
+			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
+				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
+		else:	
+			downl_list.append("%s#%s" % (title, mp3_url))
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': ''}" % (quote(mp3_url), 
+				quote(title), quote(img), quote_plus(summ_par))
+			addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ)	
 		cnt=cnt+1
 
 	PLog("cnt: %d" % cnt)
@@ -2004,7 +2011,7 @@ def Audio_get_nexturl(url, elements, cnt):
 			url = url.replace(url_part, new_url_part)
 		PLog("elements: %s, offset: %s, new_offset: %d, limit: %d" % (elements, offset, new_offset, limit))
 	
-		if (new_offset) +1 < elements:
+		if (new_offset) +1 <= elements:
 			PLog("nexturl: " + url)	
 			return url, new_offset
 		else:
