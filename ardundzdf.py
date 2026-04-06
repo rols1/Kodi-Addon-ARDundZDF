@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>325</nr>										# Numerierung für Einzelupdate
+# 	<nr>326</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.3'
 VDATE = '04.04.2026' 
 
@@ -2793,7 +2793,7 @@ def AudioSearch_cluster(title, page, offset, anz):
 def AudioWebMP3(url, title, thumb, Plot, ID='', no_gui=''):
 	PLog('AudioWebMP3: %s | %s' % (title, url))
 	
-	if not url.endswith(".mp3"):
+	if url.endswith(".html"):									# .mp3, .MP3, früher auch .html
 		page, msg = get_page(path=url, GetOnlyRedirect=True)	
 		page, msg = get_page(path=page)			
 		try:
