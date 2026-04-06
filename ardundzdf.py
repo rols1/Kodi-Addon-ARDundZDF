@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>326</nr>										# Numerierung für Einzelupdate
+# 	<nr>327</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.3'
 VDATE = '04.04.2026' 
 
@@ -1932,7 +1932,10 @@ def Audio_get_sendung(url, title, page=''):
 		s=my_jsondump(obj)
 		mp3_url, web_url, attr, img, img_alt, dur, title, summ, source, sender, pubDate = Audio_get_items_single(s)	
 		if img.endswith("folder.png"):
-			img = wimg		
+			img = wimg	
+		if not mp3_url:
+			PLog("web_url_for_mp3_url: " + web_url)
+			mp3_url = web_url	
 		
 		tag = "[B]Audiobeitrag[/B] | %s\nDatum: [B]%s[/B]\nBild: %s" % (dur, pubDate[:13], img_alt)
 		summ_par = "%s\n\n%s" % (tag, summ)
@@ -2584,13 +2587,20 @@ def Audio_get_items_single(item, ID=''):
 	
 	mp3_url = stringextract('"downloadUrl":"', '"', item)			# api-Seiten ev. ohne mp3_url
 	if 	mp3_url == '':
-		audios = stringextract('"audios":', '}', item)				# Altern.
+		audios = stringextract('"audios":', '}', item)				# Altern. 1
 		mp3_url = stringextract('"url":"', '"', audios)
-	if 	mp3_url == '':	
+	if 	mp3_url == '':
+		mp3_url = stringextract('"assetDownloadURL":"', '"', item)	# Altern. 2 (ab06.04.2026)
+
+	if 	mp3_url == '':
 		web_url = stringextract('"sharingUrl":"', '"', item)		# Weblink
-	if 	mp3_url == '' and web_url == "":							# neu ab 25.03.2023 (Web-json)
+
+	if 	not mp3_url and not web_url:								# neu ab 25.03.2023 (Web-json)
 		if '"path":"' in item:
 			web_url = ARD_AUDIO_BASE + stringextract('"path":"', '"', item)
+		elif '"target"' in item:
+			target = stringextract('"target":', '}', item)
+			web_url = ARD_AUDIO_BASE + stringextract('"url":"', '"', target)
 		else:
 			links = stringextract('"_links":', '},', item)
 			href = stringextract('"href":"', '"', links)			#  ./editorialcollections/56087830{?offset,limit}"
@@ -2793,17 +2803,18 @@ def AudioSearch_cluster(title, page, offset, anz):
 def AudioWebMP3(url, title, thumb, Plot, ID='', no_gui=''):
 	PLog('AudioWebMP3: %s | %s' % (title, url))
 	
-	if url.endswith(".html"):									# .mp3, .MP3, früher auch .html
-		page, msg = get_page(path=url, GetOnlyRedirect=True)	
-		page, msg = get_page(path=page)			
-		try:
-			page = Audio_get_webslice(page, mode="json")
-			page = json.loads(page)
-			audios = page["pageProps"]["initialData"]["data"]["item"]["audios"]
-			url = audios[0]["url"]
-		except Exception as exception:
-			page=""; url=""
-			PLog("AudioWebMP3_error: " + str(exception))
+	page, msg = get_page(path=url, GetOnlyRedirect=True)
+	if not ".mp3" in url and ".MP3" not in url:			# schon mp3?
+		page, msg = get_page(path=url)					# sonst Webseite laden		
+		if "<!DOCTYPE html>" in page:					# Url o. .html: ../episode/urn:ard:episode:fb7602../
+			try:
+				page = Audio_get_webslice(page, mode="json")
+				page = json.loads(page)
+				audios = page["pageProps"]["initialData"]["data"]["item"]["audios"]
+				url = audios[0]["url"]
+			except Exception as exception:
+				page=""; url=""
+				PLog("AudioWebMP3_error: " + str(exception))
 	
 	PLog("downloadUrl: " + url)	 
 	if url == '' and no_gui == '':	
