@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>74</nr>								# Numerierung für Einzelupdate
-#	Stand: 06.04.2026
+# 	<nr>75</nr>								# Numerierung für Einzelupdate
+#	Stand: 07.04.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1105,7 +1105,7 @@ def get_streams_api_v2(page, title, summ):
 		lang = stringextract('"label":"',  '"', versions)			# z.B. Deutsch (Original)
 		lang = transl_json(lang)
 		
-		if quality == "XQ" and lang == "Deutsch":					# Link für UHD-Extrakt 					
+		if quality == "XQ" and lang == "Deutsch":					# Link für UHD-Abgleic 					
 			uhd_m3u8 = url
 			uhd_details = "%s##%s" % (lang, title)
 		
@@ -1128,49 +1128,26 @@ def get_streams_api_v2(page, title, summ):
 				HLS_List.append(u'HLS, [B]%s[/B] ** Auflösung %s ** %s ** %s#%s' % (lang, size, quality, title, url))
 		# 06.04.2026 Zerlegung in Einzelkanäle funktioniert nicht mehr. Daher ersetzen wir die HLS-Liste durch
 		#	den mehrkanligen UHD-Stream:
-		if uhd_m3u8:
-			HLS_List=[]; size="3840x2176"; quality="XQ"
-			HLS_List.append(u'[B]UHD_HLS[/B] Multi  ** Auflösung %s ** %s ** %s#%s' % (size, quality, title, uhd_m3u8))
 	
-	'''
 	PLog("uhd_check:")			
 	if uhd_m3u8:
 		page, msg = get_page(uhd_m3u8)
 		ext_list = blockextract("STREAM-INF", page)					# datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.2
 		PLog(len(ext_list))
-		uhd=""
+		uhd=False
 		for item in ext_list:
-			uhd=""
 			res = stringextract('RESOLUTION=',  ',', item)
 			PLog(res)
-			if "3840x" in item:
+			if "3840x" in item:										# UHD-Auflösung?
 				PLog(item)
-				uhd = item.splitlines()[-2]							# Bsp.: videos/106654-000-G_v2160.m3u8
-				PLog("uhd: " + uhd)
+				uhd = True
 				break
-		PLog("uhd_check_result: " + uhd)							# Leer?										
+		PLog("uhd_check_result: " + str(uhd))														
+	if uhd:
+		HLS_List=[]; size="3840x2176"; quality="XQ"
+		HLS_List.append(u'[B]UHD_HLS[/B] Multi  ** Auflösung %s ** %s ** %s#%s' % (size, quality, title, uhd_m3u8))
 		
-		if uhd:
-			try:
-				# s = uhd_m3u8.split("/")[:-2]						# Basis: Url
-				base = uhd_m3u8.split("/")[:-1]
-				base = "/".join(base)
-				if uhd.startswith("http"):							# kompl. Url in RESOLUTION?
-					uhd_stream = uhd
-				else:
-					uhd_stream = "%s/%s" % (base, uhd)				# plus uhd-Anhängsel
-			except Exception as exception:
-				PLog(str(exception))
-				uhd_stream=""				
-			PLog("uhd_stream: " + uhd_stream)
-			if uhd_stream:											# HLS-Liste ergänzen
-				newpath, msg = getRedirect(uhd_stream)				# Url-Check
-				if newpath:
-					lang, title = uhd_details.split("##")
-					line = u'[B]UHD_HLS[/B], [B]%s[/B] ** Auflösung %s ** %s ** %s#%s' % (lang, "3840x2160", "XQ", title, uhd_stream)
-				
-			HLS_List.insert(0, line)								# -> 1. Position wie ZDF-HLS-UHD 
-	'''	
+
 	return trailer,HLS_List
 
 # ----------------------------------------------------------------------
