@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>16</nr>								# Numerierung für Einzelupdate
-#	Stand: 12.11.2025
+# 	<nr>17</nr>								# Numerierung für Einzelupdate
+#	Stand: 07.04.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -538,6 +538,8 @@ def get_foruminfo():
 	dt=''
 	path = "https://www.kodinerds.net/index.php?thread/64244-release-kodi-addon-ardundzdf/"
 	page, msg = get_page(path=path)
+	if PYTHON2:
+		page = py2_decode(page)
 	
 	dt = stringextract(u"Update (Stand ", u")", page)		# Stand: Datum, Uhrzeit
 	if dt == "":
