@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>328</nr>										# Numerierung für Einzelupdate
+# 	<nr>329</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.3'
 VDATE = '04.04.2026' 
 
@@ -1853,8 +1853,9 @@ def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 	
 #----------------------------------------------------------------
 # extrahiert Einzelbeiträge einer Sendung
-# Aufrufer: AudioSenderPrograms, Audio_get_cluster, AudioSearch_cluster
-# 	i.d.R. mit api-url (Redirect zu web-url möglich)
+# Aufrufer: AudioSenderPrograms, Audio_get_cluster, AudioSearch_cluster,
+#	Audio_get_sendung (Step2, "/sendung/" in mp3_url)
+# Redirect api-url zu web-url möglich.
 # neu ab 26.03.2026
 #
 def Audio_get_sendung(url, title, page=''):	
@@ -1948,7 +1949,8 @@ def Audio_get_sendung(url, title, page=''):
 		
 		if "/sendung/" in mp3_url:										# noch Sendung?
 			PLog("sendung_in_mp3_url")
-			tag =  "[B]Sendung | Folgeseiten[/B]"
+			tag = "[B]Sendung - Folgeseiten [/B] | %s | %s | %s" % (title, stitle, org)
+			#tag =  "[B]Sendung | Folgeseiten[/B]"
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(mp3_url), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
@@ -8297,7 +8299,8 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 				ptmdTemplate = items[0]
 			else:
 				ptmdTemplate = items[1]
-		ptmdTemplate = stringextract('"ptmdTemplate":"', '"', ptmdTemplate)				
+		ptmdTemplate = stringextract('"ptmdTemplate":"', '"', ptmdTemplate)
+		PLog("ptmdTemplate_Web: " + ptmdTemplate)				
 		
 		return page, DictID, newpath, img, ptmdTemplate				# Web / Dict
 	
@@ -8565,9 +8568,7 @@ def ZDF_KatSeriePre(title, path, img):
 				xbmcgui.Dialog().notification("komplette Liste:", u"für diese ARD-Serie nicht möglich.",icon,3000)	
 
 	typ = "seasonByCanonical"
-	seasons = stringextract("props:data", "</script>", page)
-	PLog(seasons[:80])
-	seasons = blockextract('Season","id', seasons, '"nodes"')
+	seasons = blockextract('Season","id', page, '"nodes"')	# 08.04.2026 vorheriger String props:data/script entfallen
 	if "Staffel 1" in seasons[0]:						# aufsteigend? dann via slicing
 		seasons = seasons[::-1]							# 	gedreht	
 	PLog("seasons: %d" % len(seasons))
