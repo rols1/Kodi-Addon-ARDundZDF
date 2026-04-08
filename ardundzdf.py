@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>329</nr>										# Numerierung für Einzelupdate
+# 	<nr>330</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.3'
 VDATE = '04.04.2026' 
 
@@ -1949,8 +1949,7 @@ def Audio_get_sendung(url, title, page=''):
 		
 		if "/sendung/" in mp3_url:										# noch Sendung?
 			PLog("sendung_in_mp3_url")
-			tag = "[B]Sendung - Folgeseiten [/B] | %s | %s | %s" % (title, stitle, org)
-			#tag =  "[B]Sendung | Folgeseiten[/B]"
+			tag =  "[B]Sendung | Folgeseiten[/B]"
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(mp3_url), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
