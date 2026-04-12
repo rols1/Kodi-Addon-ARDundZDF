@@ -1364,7 +1364,7 @@ def getRedirect(path, header="", stream=False):
 		
 	if not stream:													# falls noch nicht genutzt (get_page)
 		format_list = [".mp4", ".webm", ".vp9", ".m3u8",			# .aac kann klemmen
-						".mp3",	"/mp3/", ".rndfnk."]
+						".mp3",	".MP3", "/mp3/", ".rndfnk."]
 		for form in format_list:
 			if form in path:
 				stream=True
@@ -4263,71 +4263,11 @@ def open_addon(addon_id, cmd):
 #	als Zeitangabe
 # Aufruf: PlayVideo (direkt, indirekt)
 # Player vor Aufruf bereits aktiviert (s. PlayVideo->Player_Subtitles:)
-# notification-Aufruf zu ungenau für float-Werte.
-# ZDF-Werte beim Start: 
-#		Pufferanzeige: Wert1 / Wert2 ->
-#			1. 02:59:44 - 02:59:48
-#			2. 03:00:00
-#		TotalTime: 	10800 = 180 min = 3 Std. (akt. Maximum der Sender)
-#		LastSeek: 	10786 = 179 min
-
-# Der Abstand zwischen TotalTime und LastSeek (player.getTime) variiert
-#	bei den Livestreams der Sender und schwankt im Verlauf zwischen 0 und 
-#	10 (laut Tests).
+# 12.04.2026 frühere issues s.  00_ShowSeekPos_issues
 #
-# Warteschleife für Player auf Raspi & Co entfällt hier: bereits erledigt
-#	 vor Aufruf ShowSeekPos in PlayVideo (s. showSubtitles).
-#	
-# Issues:
-# 	Unterscheidung Live-/Videostream nicht via Url-Eigenschaften möglich - 
-#		LastSeek bei Videos häufig 0, aber s. Sportschaustream
-#	Background-Thread für Raspi und für einzelne Streams (LastSeek=0, s.u.)  
-#		zwingend erforderlich (ohne Thread endloses Buffern)
-#	Sportschaustream ../ardevent2.akamaized.net/hls/live/681512/ardevent2_geo/..
-#		Start mit 2-4 absinkend auf Minuswerte
-#	ZDF Event 9 (Olympia): Issue hier irrelevant - inputstream scheiter mit
-#		"Segment download failed .. with error 404", Stream kommt hier nicht
-#		an.
-#	ZDF Event-Stream 01 und 02:  inputstream bricht nach Errors (Download failed 
-#		with error 404) ab - startet hier mit LastSeek 0 und wird daher für 
-#		die Stream-Uhrzeit verworfen. Um den Stream sichtbar zu machen, muss 
-#		aber ein Wechsel in die Ansichtsoptionen erfolgen (Estuary, WideList).     
-#	Livetreams von wdrlokalzeit.akamaized.net starten mit 1 od. 2 statt TotalTime 
-#		und buffern endlos in der isPlaying-Schleife. Bei erzwungendem Seek auf
-#		TotalTime blockiert inputstream mit Ladekreis, spielt aber den Stream.
-#		Bei einer neueren inputstream-Verson (LibreElec, 20.3.9.1) starten
-#		diese Streams korrekt am Pufferende, puffern dann aber in der 
-#		waitForAbort-Schleife endlos. Dabei geben sie korrekte play_time- und
-#		TotalTime-Werte zurück und verhindern so die Buffering-Erkennung.
-#		Gibt man vor der Schleife einige Sek. Sync-Zeit, fallen sie auf 
-#		TotalTime 1 od. 2 zurück - praktisch wird ein korrekter Start angetäuscht. 
-#		Solche Streams hier beim Aufruf ausschließen (PlayVideo: live="").
-#	Allgemeine Problemlage: inputstream hat mit einigen Streams Syncprobleme
-#		(Video- und/oder Sound-Streams). Dies kann zu endlosem Bufern führen, 
-#		wenn das Addon nach Playerstart Funktionen des Players abfragt (getTime,
-#		getTotalTime). Dabei spielen Zeitverzögerungen (time.sleep, xbmx.sleep,
-#		waitForAbort) offensichtlich keine Rolle.
-#		Lösung: 2 Sync-Checks, einmal auf getTime<3 nach 3 Sek., sowie Test auf
-# 			extrem Werte (<0 oder > TotalTime).
-#	Infos zu inputstream.adaptive: https://github.com/xbmc/inputstream.adaptive/
-#		(s. issues und wiki/Settings), Kodi-Forum zu [VideoPlayer InputStream]: 
-#		https://forum.kodi.tv/forumdisplay.php?fid=312.
-# 	Bisher keine Tests mit den unterschiedlichen Settings für inputstream -
-#		getestet wurde mit den Defaultsettings.
-#	Bisher keine ffmpeg-Analyse für Eignung/Nichteignung von Streams
-#	monitor.waitForAbort() blockiert - für die while-Schleife sind mind. 1 sec
-#		Timeout und "not" erforderlich. Siehe auch Monitoring für Startlist in
-#		PlayVideo (keine blokierfreie Schleife für Videoplay gefunden).
-# 15.01.2024 isPlaying-Abfrage für Player entfernt
-
 def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	PLog('ShowSeekPos: ' + url)		
 	import resources.lib.EPG as EPG
-
-	# control-Test:
-	#marks="0.00,6.66,6.66,13.2,19.8,19.8,27.4"			# @PvD  14.10.023
-	#xbmcgui.Window(10000).setProperty("ardundzdf",marks)# control -> DialogSeekbar.xml
-	#PLog(xbmcgui.Window(10000).getProperty("ardundzdf"))# OK
 	
 	icon=""												# -> Kodi's i-Symbol
 	now = EPG.get_unixtime(onlynow=True)				# unix-sec passend zu TotalTime, LastSeek
@@ -4364,7 +4304,7 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	if linkid:											# Sendungsnavigation: ARD-EPG für Zeitstrahl laden
 		buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 		event_end = int(event_end)
-		txt = u"Liste: #-Taste, Maus-Taste rechts"
+		txt = u"zur Liste: Tastencode %s" % SETTINGS.getSetting('pref_keynumber')
 		header = "Anzahl Sendungen: %d" % len(buf_events)
 		dur=10000
 		if len(buf_events) == 0:
@@ -4381,6 +4321,7 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	LastBufTime = StartTime											# detect sync errors direkt
 	p_list=[]														# dto. im 3-sec-Rahmen 
 	while not monitor.waitForAbort(1):
+		xbmc.sleep(100)
 		show_time=False; syncfail=False
 		try:
 			play_time = player.getTime()							# akt. Pos im Puffer (0=Pufferstart)
@@ -4452,7 +4393,8 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 				
 			key = KeyListener.record_key()							# pressed_key: string
 			PLog("key: " + str(key))								# ev. pausieren mit Blank?
-			if key == "61475" or key == "61467" or key == "61448":	# Taste #, r. Maustaste, Taste Back
+			pref_key = SETTINGS.getSetting('pref_keynumber')		# ab 5.4.4 aus Setting, Default Entf=61575
+			if key == "61575" or key == pref_key:					# 
 				line=""												# Liste Events im Zeitpuffer	
 				if len(buf_events) == 0:							# keine Events (mehr)
 					xbmcgui.Dialog().notification("Zeitpuffer", "ohne weitere Sendung", icon,3000, sound=True)
@@ -4493,53 +4435,54 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 				
 	return
 #----------------------------------------------------------------
-# KeyListener (ähnlich slides.py) für ShowSeekPos
-#	Problem: alle Dialogvarianten blinken im Takt des Timeouts - 
-#		self.getControl(401).setVisible(False) bleibt ohne Effekt
-# 	Daher Verwendung von Pointer.xml  (Mauszeiger) - belegt eine kleine
-#	Fläche i.d. linken oberen Ecke (statt DialogNotification.xml)	
-# 14.1.2023 ohne Timer (Aufruf sekündlich durch ShowSeekPos) 
+# KeyListener (ähnlich slides.py) für ShowSeekPos zum Auslesen
+#	von Tastendrücken. Keine Mausklicks (hier verzichtbar).
+# Init + Auswertung:  ShowSeekPos (KeyListener.record_key).
 #
-class KeyListener(xbmcgui.WindowXMLDialog):
-	PLog("KeyListener: loaded")
-	ACTION_MOUSE_LEFT_CLICK = 100
-	ACTION_MOUSE_RIGHT_CLICK = 101
+#	Problem: viele Dialogvarianten blinken im Takt des Timeouts - 
+#		self.getControl(401).setVisible(False) bleibt ohne Effekt
+# 	Pointer.xml  (Mauszeiger), DialogNotification belegen nur kleine
+#	sichtbare Flächen, aber stören ebenfalls.
+# 11.04.2026 Test-Lösung Variables.xml: kein sichtbar blinkendes 
+#	Element, keys werden ausgelesen.
+# 
 
+class KeyListener(xbmcgui.WindowXMLDialog):
+	TIMEOUT = 1
+	HEADING = 401
+	
 	def __new__(cls):
 		try: 
-			return super(KeyListener, cls).__new__(cls, "Pointer.xml", "")	# Mauszeiger
+			version = xbmc.getInfoLabel('system.buildversion')
+			if version[0:2] >= "17":
+				return super(KeyListener, cls).__new__(cls, "Variables.xml", "")
+			else:
+				return super(KeyListener, cls).__new__(cls, "DialogKaiToast.xml", "")
 		except:
-			PLog("NOTICE: KeyListener not found!")
+			PLog("NOTICE = KeyListener_aborted")
 
 	def __init__(self):
-		self.key     = 0
-
-	def onInit(self):
-		try:
-			self.getControl(1).setVisible(False)	 	# o. Wirkung (1=Pointer)
-			self.getControl(1).setPosition(-100, -100)  # o. Wirkung
-		except:
-			PLog("NOTICE: Control_set_error!")
-
+		self.key = None
+				
 	def onAction(self, action):
 		actionId = action.getId() 
-		if actionId == self.ACTION_MOUSE_RIGHT_CLICK:
-			self.key = "61467"							# hier für rechte Maustaste 
-		else:		
-			code = action.getButtonCode()
-			PLog("code: " + str(code))					# Debug
-			self.key = None if code == 0 else str(code)
-			
+		code = action.getButtonCode()
+		self.key = None if code == 0 else str(code)
 		self.close()
 
 	@staticmethod
 	def record_key():
-		dialog  = KeyListener()
+		dialog = KeyListener()
+		timeout = Timer(KeyListener.TIMEOUT, dialog.close)
+		timeout.start()
 		dialog.doModal()
-		key = dialog.key
+		timeout.cancel()
+		key = dialog.key		
+		#klick = dialog.klick	# hier nicht verfügbar
+		#PLog(klick)
 		del dialog
-		return key
- 
+		return key  
+
 #----------------------------------------------------------------
 # Aufrufer ShowSeekPos: zum Streamstart und jeweils zum Sendungsende
 #	der letzten Sendung (vorher keine neuen Daten verfügbar). 

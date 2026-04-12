@@ -102,8 +102,9 @@
 	<setting label="gesamtes Addon: Videoqualität bei Sofortstart" type="select" id="pref_direct_quality" default="auto (nur HLS)"
   		values="auto (nur HLS)|320x180|640x360|720x400|960x540|1280x720|1920x1080|3840x2160" />
    	<setting label="gesamtes Addon: inputstream.adaptive nutzen, falls verfügbar" type="bool" id="pref_inputstream" default="true"/>
-    <setting label="inputstream.adaptive: Stream-Uhrzeit einblenden" type="bool" id="pref_streamtime" default="false"/>
- <setting type="sep"/>
+    <setting label="inputstream.adaptive: Stream-Uhrzeit und Sendungsnavigation" type="bool" id="pref_streamtime" default="false"/>
+ 	<setting label="Sendungsnavigation ARD: Liste mit Entf-Taste oder Key-Code"  type="number" id="pref_keynumber" default="61575"/>
+<setting type="sep"/>
   	<setting label="gesamtes Addon: Verzicht auf Homebuttons" type="bool" id="pref_nohome" default="false"/>
   	<setting label="gesamtes Addon: Sortierung ermöglichen" type="bool" id="pref_sort_label" default="false"/>
     <setting label="gesamtes Addon: Zuletzt-gesehen-Liste verwenden" type="bool" id="pref_startlist" default="false"/>

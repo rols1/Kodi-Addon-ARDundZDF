@@ -10,6 +10,27 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+12.04.2026	5.4.4
+			AudioWebMP3 (ARD Sounds): ".MP3" in Url berücksichtigt, Abgenzung zu HTML-
+			Dateien an geänderte ARD-Syntax angepasst (Url ohne .html-Endung).
+			Audio_get_items_single: Ermittlung der Web-Url an zusätzliche ARD-Variante 
+			angepasst.
+			Audio_get_nexturl: Korrektur Vergleich Offset mit Elementenzahl (>= statt >).
+			Audio_get_sendung: erneuter Aufruf bei "/sendung/" in mp3_url (Folgeseiten
+			statt Audiobeitrag).
+			get_streams_api_v2 (arte): bei Vorliegen einer UHD-Stream-Url wird auf die 
+			frühere Zerlegung verzichtet und HLS_List nur mit diesem Stream gefüllt
+			(nach Abgleich mit der Auflösung 3840x im nachgeladenen Manifest.
+			get_foruminfo (tools): PYTHON2-Anpassung (py2_decode(page)).
+			ZDF_KatSeriePre: Auswertung der season-ID's nach ZDF-Änderung angepasst
+			(ohne props:data/script-Segment, direkte Blockbildung mit 'Season","id').
+			ShowSeekPos (util): Abfrage KeyListener auf Key-Code 61575 (Entf-Taste)
+			und selbst gewählten Tastencode geändert - Wiki aktualisiert (08. Settings
+			Module, Zif. 3.1 und 3.2).
+			settings.xml: Settings für Stream-Uhrzeit und Sendungsnavigation angepasst.
+			KeyListener (util): Austausch Pointer.xml -> Variables.xml (ohne sichtbar
+			blinkendes Element), Verzicht auf Maus-Events.			
+
 04.04.2026	5.4.3
 			Bereinigung ARD Sounds: fehlende Anpassungen (auch PY2) ergänzt, Kopfdokus
 			aktualisiert, Funktionsketten zusammengefasst, obsolete Funktionen 

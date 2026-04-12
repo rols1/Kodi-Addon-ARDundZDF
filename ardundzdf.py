@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>330</nr>										# Numerierung für Einzelupdate
-VERSION = '5.4.3'
-VDATE = '04.04.2026' 
+VERSION = '5.4.4'
+VDATE = '12.04.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8288,6 +8288,7 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 	if "getpage" in mode:											# ZDF_KatSeriePre, ZDF_getApiStreams
 		img = ZDF_get_img(page, mode="web")
 		# ptmdTemplate: Ersetzung _dgs funktioniert nicht immer, daher Auswahl erforderlich
+		#	nur für Call von ZDF_getApiStreams relevant
 		ptmdTemplate=""
 		items = blockextract('"ptmdTemplate":"', page, 'vodMediaType')
 		PLog(len(items))
@@ -8299,7 +8300,7 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 			else:
 				ptmdTemplate = items[1]
 		ptmdTemplate = stringextract('"ptmdTemplate":"', '"', ptmdTemplate)
-		PLog("ptmdTemplate_Web: " + ptmdTemplate)				
+		PLog("ptmdTemplate_WebDetails: " + ptmdTemplate)				
 		
 		return page, DictID, newpath, img, ptmdTemplate				# Web / Dict
 	
