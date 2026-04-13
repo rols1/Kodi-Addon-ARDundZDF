@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>133</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.03.2026
+# 	<nr>134</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.04.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2010,7 +2010,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID="", desc=False):
 
 			# 01.10.2024 s.o. synopsis, aber anders als beim ZDF Inhaltstext beim den Quellen (api):
 			if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen
-				summ_new = get_summary_pre(path=href, ID='ARDnew', duration=duration)  # Modul util
+				summ_new = get_summary_pre(path=href, ID='ARDnew', duration="")  # Modul util
 				if 	summ_new:
 					summ = summ_new
 					
