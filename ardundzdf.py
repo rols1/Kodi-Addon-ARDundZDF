@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>330</nr>										# Numerierung für Einzelupdate
+# 	<nr>331</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.4'
 VDATE = '12.04.2026' 
 
@@ -8023,6 +8023,8 @@ def ZDF_Kat(title):
 	pos2=page.find(u"Weitere öffentlich-rechtliche")		# bis Videos Partnersender (neuer Button)
 	page=page[pos1:pos2]
 	PLog(page[:80])
+	
+	
 	# Block <picture class nicht eindeutig, noopener bis auf Nachrichten OK, 
 	#	s. kats.insert und items-Liste:
 	kats = blockextract('data-testid="teaser-tile', page, "</h2")		# Icons einschl. Weblink + Titel
@@ -8048,13 +8050,13 @@ def ZDF_Kat(title):
 		#	PLog(item)
 		imgs = blockextract("https://", item, "w,")			# Bilder
 		PLog("imgs: %d" % len(imgs))
-		if len(imgs) < 10:									# keine Kategorie
-			continue
 		for img in imgs:
-			# PLog(img)		# Debug
-			if "1280w" in img:
-				img = img.split(" 1280w")[0]
+			#PLog(img)		# Debug
+			if "1280w" in img or "768w" in img:				# s.a. ZDF_Kat_Plus
+				img = img.split(" ")[0]						# ..68x432?cb=1766148659465 768w
 				break
+		if not img:
+			R(ICON_DIR_FOLDER)
 		katid = stringextract('href="', '">', item)			# ID der Kategorie
 		kat_url = "https://www.zdf.de" + katid
 		PLog('Satz11_1:');
@@ -8156,13 +8158,13 @@ def ZDF_Kat_Plus(title, DictID):
 		#	PLog(item)
 		imgs = blockextract("https://", item, "w,")			# Bilder
 		PLog("imgs: %d" % len(imgs))
-		if len(imgs) < 10:									# keine Kategorie
-			continue
 		for img in imgs:
 			# PLog(img)		# Debug
-			if "1280w" in img:
-				img = img.split(" 1280w")[0]
+			if "1280w" in img or "768w" in img:				# s.a. ZDF_Kat
+				img = img.split(" ")[0]						# ..68x432?cb=1766148659465 768w
 				break
+		if not img:
+			R(ICON_DIR_FOLDER)
 		katid = stringextract('href="', '">', item)			# ID der Kategorie
 		kat_url = "https://www.zdf.de" + katid
 
