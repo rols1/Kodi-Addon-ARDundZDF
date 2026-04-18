@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>331</nr>										# Numerierung für Einzelupdate
+# 	<nr>332</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.4'
 VDATE = '12.04.2026' 
 
@@ -1135,13 +1135,12 @@ def Main_ZDF(name=''):
 
 	# -------------------
 	# 03.04.2024 Kategorien-> ZDF_Kategorien
-	title = 'Kategorien ([B]neu[/B])'
-	tag = "Neu nach ZDF-Relaunch am 17.03.2025"
+	title = 'Kategorien'
 	summ = "Filme, Serien, Sportevents, Dokumentationen und vieles mehr:" 
 	summ = "%s Entdecke den riesigen Inhalte-Kosmos im Streaming-Netzwerk von ZDF, ARD & Co" % summ
 	fparams="&fparams={'title': '%s'}" % title	
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat", fanart=R("zdf-kategorien.png"), 
-		thumb=R("zdf-kategorien.png"), tagline=tag, summary=summ, fparams=fparams)
+		thumb=R("zdf-kategorien.png"), summary=summ, fparams=fparams)
 
 	# 05.03.2024 Rubriken, Sportstudio, Barrierearm -> ZDF_RubrikSingle
 	base = "https://zdf-prod-futura.zdf.de/mediathekV2/"
