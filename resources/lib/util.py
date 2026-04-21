@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>161</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.04.2026
+# 	<nr>162</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.04.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1618,7 +1618,7 @@ def repl_json_chars(line):
 	line_ret = line
 	#PLog(type(line_ret))
 	for r in	((u'"', u''), (u"'", ''), (u'\\', u''), (u'\'', u''), (u'%5C', u'')
-		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
+		, (u'&', u'und'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
 		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love'), (u'%C3%A9', u'é')		# u'u003e' 	-> u'®'
 		, (u'uD83C', u''), (u'uDF7F', u''), (u'uD63D', u''), (u'uDF7A', u'')					# 🍿,  📺
@@ -2911,33 +2911,37 @@ def get_ARDstreamlinks(skip_log=False, force=False):
 		PLog('get_ARDstreamlinks: leer')
 		return []
 
-	content = blockextract('"broadcastedOn":', page)
+	try:
+		obs = json.loads(page)
+		content = obs["teasers"]		
+	except Exception as exception:
+		content=[]
+		PLog("ard_streamlinks_error1: " + str(exception))
 	PLog("Senderliste: %d" % len(content))	
 	
 	ard_streamlinks=[]
-	for rec in content:												# Schleife  Web-Sätze		
-		title=''; href=''; streamurl=''; thumb=''
-		title = stringextract('name":"', '"', rec)					# publicationService":{"name -> livesenderTV.xml 
-		href_list = blockextract('href":"', rec, '"type"')
-		for h in href_list:
-			if '?devicetype=pc' in h:								# Stream-Quellen
-				href = stringextract('href":"', '"', h)
-				break
-		thumb = stringextract('src":"', '"', rec)
-		thumb = thumb.replace('{width}', '720')					
+	try:
+		for item in content:
+			title=''; href=''; streamurl=''; thumb=''; linkid=""
+			thumb = item["images"]["aspect16x9"]["src"]
+			thumb = thumb.replace('{width}', '720')	
+			pub = item["publicationService"]
+			title = pub["name"]
+			href = item["links"]["target"]["href"]
+			
+			page, msg = get_page(path=href)							# einzelner Livestream
+			single_obs = json.loads(page)
+			embed = single_obs["widgets"][0]["mediaCollection"]["embedded"]
+			streamurl = embed["streams"][0]["media"][0]["url"]
 
-		if href:
-			PLog("lade_livelink: " + title)
-			linkid = stringextract("item/", "?", href)				# für programm-api.ard (ShowSeekPos)
-
-			page, msg = get_page(path=href)							# s.a. Livestream ARDStartSingle
-			streamurl = stringextract('_stream":"', '"', page)		# ab Okt. 2022 keine UT-Links mehr gesehen	
-			streamurl = streamurl.replace("index.m3u8", "master.m3u8")	# Fix ab 03.12.2022 (verhindert Startverzög. > 10sec)  
+			linkid = embed["pluginData"]["jumpmarks@all"]["url"]
 					
-		PLog("Satz1:")
-		PLog(title); PLog(href); PLog(streamurl); PLog(linkid);
-		# Zeile: "title_sender|streamurl|thumb|linkid"
-		ard_streamlinks.append("%s|%s|%s|%s" % (title, streamurl,thumb,linkid))	
+			PLog("Satz1:")
+			PLog(title); PLog(href); PLog(streamurl); PLog(linkid);
+			# Zeile: "title_sender|streamurl|thumb|linkid"
+			ard_streamlinks.append("%s|%s|%s|%s" % (title, streamurl,thumb,linkid))	
+	except Exception as exception:
+		PLog("ard_streamlinks_error1: " + str(exception))
 	
 	PLog("ard_streamlinks: %d" % len(ard_streamlinks))
 	page = "\n".join(ard_streamlinks)									# Ablage Cache
