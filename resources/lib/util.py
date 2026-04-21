@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>163</nr>										# Numerierung für Einzelupdate
+# 	<nr>164</nr>										# Numerierung für Einzelupdate
 #	Stand: 21.04.2026
 
 # Python3-Kompatibilität:
@@ -4308,7 +4308,7 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 	if epg_url:											# Sendungsnavigation: ARD-EPG für Zeitstrahl laden
 		buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 		event_end = int(event_end)
-		txt = u"zur Liste: Tastencode %s" % SETTINGS.getSetting('pref_keynumber')
+		txt = u"Liste: Taste Entf oder Code %s" % SETTINGS.getSetting('pref_keynumber')
 		header = "Anzahl Sendungen: %d" % len(buf_events)
 		dur=10000
 		if len(buf_events) == 0:
