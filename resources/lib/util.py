@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>162</nr>										# Numerierung für Einzelupdate
+# 	<nr>163</nr>										# Numerierung für Einzelupdate
 #	Stand: 21.04.2026
 
 # Python3-Kompatibilität:
@@ -2934,14 +2934,14 @@ def get_ARDstreamlinks(skip_log=False, force=False):
 			embed = single_obs["widgets"][0]["mediaCollection"]["embedded"]
 			streamurl = embed["streams"][0]["media"][0]["url"]
 
-			linkid = embed["pluginData"]["jumpmarks@all"]["url"]
-					
+			linkid = embed["pluginData"]["jumpmarks@all"]["url"]	# ShowSeekPos -> epg_url
+
 			PLog("Satz1:")
 			PLog(title); PLog(href); PLog(streamurl); PLog(linkid);
 			# Zeile: "title_sender|streamurl|thumb|linkid"
 			ard_streamlinks.append("%s|%s|%s|%s" % (title, streamurl,thumb,linkid))	
 	except Exception as exception:
-		PLog("ard_streamlinks_error1: " + str(exception))
+		PLog("ard_streamlinks_error2: " + str(exception))
 	
 	PLog("ard_streamlinks: %d" % len(ard_streamlinks))
 	page = "\n".join(ard_streamlinks)									# Ablage Cache
@@ -4264,7 +4264,8 @@ def open_addon(addon_id, cmd):
 	
 #----------------------------------------------------------------
 # Zeigt bei Livestreams die Abspielposition von inputstream.adaptive 
-#	als Zeitangabe
+#	als Zeitangabe, listet im Zeitpuffer enthaltene Sendungen einschl.
+#	Auswahl.
 # Aufruf: PlayVideo (direkt, indirekt)
 # Player vor Aufruf bereits aktiviert (s. PlayVideo->Player_Subtitles:)
 # 12.04.2026 frühere issues s.  00_ShowSeekPos_issues
@@ -4289,23 +4290,22 @@ def ShowSeekPos(player, url):							# "Streamuhrzeit"
 		return
 	
 	# ----------------------------------				# ARD-Stream? -> EPG-Events laden
-	
-	linkid=""; buf_events=""; KeyListener_run=False
+	epg_url=""; buf_events=""; KeyListener_run=False
 	pos=url.rfind("/"); url=url[:pos]					# Endung index.m3u8 statt master.m3u8 möglich
 	ard_streamlinks = Dict("load", "ard_streamlinks")
 	# Format ard_streamlinks s. get_ARDstreamlinks,
+	# linkid dort: kompl. programm-Url, hier z.Z. neu kombiniert
 	# Ard-Sender s. Debuglog (ardline:)
 	# hier bei Bedarf noch die ARD-Sender aus IPTV-Quellen ergänzen
 	for link in ard_streamlinks.split("\n"):			# Abgleich ARD-Url, Zuordnung linkid
 		PLog(link)
 		if url in link:
-			linkid = link.split("|")[-1]
 			title_sender = link.split("|")[0]
-			PLog("linkid_found: " + linkid)
-			epg_url  = "https://programm-api.ard.de/nownext/api/channel?channel=%s&pastHours=5&futureEvents=1" % linkid
+			epg_url = link.split("|")[3]				# 21.04.2026 in get_ARDstreamlinks
+			PLog("epg_url_found: " + epg_url)
 			break
 			
-	if linkid:											# Sendungsnavigation: ARD-EPG für Zeitstrahl laden
+	if epg_url:											# Sendungsnavigation: ARD-EPG für Zeitstrahl laden
 		buf_events, event_end = get_ARD_LiveEPG(epg_url, title_sender, date_format, now, TotalTime)
 		event_end = int(event_end)
 		txt = u"zur Liste: Tastencode %s" % SETTINGS.getSetting('pref_keynumber')
