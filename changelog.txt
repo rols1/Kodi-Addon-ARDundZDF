@@ -29,7 +29,10 @@ CHANGE HISTORY
 			Module, Zif. 3.1 und 3.2).
 			settings.xml: Settings für Stream-Uhrzeit und Sendungsnavigation angepasst.
 			KeyListener (util): Austausch Pointer.xml -> Variables.xml (ohne sichtbar
-			blinkendes Element), Verzicht auf Maus-Events.			
+			blinkendes Element), Verzicht auf Maus-Events.	
+			list_WDRstreamlinks: Anpassung an geänderte Webseite des WDR.
+			PlayVideo (util): Ausnahme für wdr-live von monitor_resume (Hänger bei
+			seeking Kodi-Player).	
 
 04.04.2026	5.4.3
 			Bereinigung ARD Sounds: fehlende Anpassungen (auch PY2) ergänzt, Kopfdokus

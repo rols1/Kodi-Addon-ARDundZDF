@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>332</nr>										# Numerierung für Einzelupdate
+# 	<nr>333</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.4'
 VDATE = '12.04.2026' 
 
@@ -7472,27 +7472,22 @@ def list_WDRstreamlinks(url):
 		return li
 	PLog(len(page))
 	
-	stations = stringextract('broadcastingStations">', '</script>', page)
-	items = blockextract('class="headline', stations)
-	PLog(len(items))	
+	items = blockextract('withMediaTarget">', page)		# neu 22.04.2026
+	PLog("withMediaTarget: %d" % len(items))	
 
 	li = xbmcgui.ListItem()
 	
 	tag = u"zur aktuellen Sendung des WDR"
-	img = "https://www1.wdr.de/lokalzeit/fernsehen/tv-ubersicht-bild-100~_v-TeaserAufmacher.jpg"
 	for item in items:
-		href_list = blockextract("href", item, "</a>")
-		href=""
-		for h in href_list:
-			if ">Livestream" in h: 
-				path = stringextract('href="', '"', h)
-				break
-		
-		title = stringextract('programme-uuid="', '"', item)
-		title = title.replace("_", " ")
-		title = title.replace("WDR", "")
-		summ = u"[B]Sendezeit 19.30 - 20.00 Uhr[/B]" 
-		
+		PLog(item)
+		href = stringextract('<a href="', '"', item)					# einschl. title
+		title = stringextract('title="', '"', item)						# headline wie title
+		path = wdr_base + href
+		img_src = stringextract('srcset="', '"', item)					# erstes von 7
+		img = wdr_base + img_src
+	
+		tag = title
+		summ = u"[B]Sendezeit 19.30 - 20.00 Uhr[/B]" 	
 		PLog("Satz28:")
 		
 		PLog(path);PLog(img); PLog(title); PLog(summ); 
