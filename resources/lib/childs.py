@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>37</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.02.2026
+# 	<nr>38</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.02.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -226,13 +226,14 @@ def Main_KIKA(title=''):
 		
 	title=u'Kinderhörspiele der ARD-Audiothek'
 	img="https://www.daserste.de/rubrik-kinder-100~_type-at_ratio-1x1_width-640_c72e0f.jpg"
-	tag = u"Hörspiele, Geschichten und Wissen für Kinder" 
+	tag = u"Hörspiele und Geschichtenür Kinder" 
 	summ = u"Wir verlassen KIKA und wechseln zu Kinderhörspielen in der ARD-Audiothek."
-	url = "https://www.ardaudiothek.de/rubrik/42914714"; ID="Main_KIKA"
+	url = "https://www.ardsounds.de/sammlung/kinder-grosse-geschichten-102/"; ID="Main_KIKA"
+
+	
 	url=py2_encode(url); title=py2_encode(title); # -> 2. Aufruf 
-	fparams="&fparams={'li': '','url': '%s', 'title': '%s', 'ID': '%s'}" % (quote(url), 
-		quote(title), ID)
-	addDir(li=li, label=title, action="dirList", dirID="Audio_get_cluster_rubrik", \
+	fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(url), quote(title))
+	addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
 		fanart=KIKA_START, thumb=img, fparams=fparams, tagline=tag, summary=summ)	
 	
 			
