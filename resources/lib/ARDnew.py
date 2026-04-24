@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>134</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.04.2026
+# 	<nr>135</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.04.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -190,7 +190,9 @@ def Main_NEW(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", fanart=R(ICON_MAIN_ARD), 
 		thumb=R('ard-mediathek-retro.png'), tagline=tag, fparams=fparams)
 
-	# 07.04.2023 Web-Call -> api-Call	
+	# 07.04.2023 Web-Call -> api-Call
+	# 24.04.2026 bei der ARD nicht mehr existent, HTTP ERROR 404
+	'''	
 	path = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/entdecken?embedded=false" 
 	title = "ARD Mediathek Entdecken"
 	tag = 'Inhalte der ARD-Seite [B]%s[/B]' % "ENTDECKEN"
@@ -199,6 +201,7 @@ def Main_NEW(name=''):
 	fparams="&fparams={'title': '%s', 'sender': '%s', 'path': '%s'}" % (quote(title), sender, quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", 
 		fanart=R(ICON_MAIN_ARD), thumb=R('ard-entdecken.png'), tagline=tag, summary=summ, fparams=fparams)
+	'''
 
 	# 23.12.2023 "Unsere Region" als eigenständiges Menü. Bei der ARD nur in Startseite für ARD-Alle
 	# 	errreichbar (skipped in ARDStart).
