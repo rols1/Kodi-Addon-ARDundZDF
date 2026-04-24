@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>333</nr>										# Numerierung für Einzelupdate
+# 	<nr>334</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.4'
 VDATE = '12.04.2026' 
 
@@ -9214,7 +9214,6 @@ def ZDF_StartWebCluster(ctitle=""):
 
 			canon = stringextract('"canonical":"', '"', item)
 			sid = stringextract('"id":"', '"', item)
-			ext_id = stringextract('"page_external_id":"', '"', item)
 			scms_id = "SCMS_" + sid									# faed6f85-f34a-4a74-a765-275aaae5fd6e-movie
 			scms_id = scms_id.replace("-movie", "")					
 			img = ZDF_get_img(item, landscape=False, mode="webjson")
@@ -10747,10 +10746,8 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 				try:												# ZDF_getKat_content  abweichend
 					video = entry["video"]
 					if video:
-						ext_id = entry["video"]["tracking"]["piano"]["click"]["page_external_id"]
-						scms_id = "SCMS_" + ext_id					# ptmdTemplate fehlt hier
 						typ = entry["video"]["currentMediaType"]	# mehrfach möglich, z.B. für heute-Sendung
-						movie_canon_id = video["canonical"]			# bei JETZT (LIVE) benötigt			
+						movie_canon_id = video["canonical"]			# Sendungs-ID		
 						
 					etitle=""
 					if "image" in entry:
