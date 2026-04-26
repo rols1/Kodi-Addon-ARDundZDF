@@ -10,6 +10,27 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+26.04.2026	5.4.5
+			get_json_content (ARDnew): fehlende Defintion duration ergänzt für Aufruf
+			get_summary_pre bei Setting “Inhaltstexte im Voraus laden".
+			ZDF_Kat: Anpassung an geänderte Bildformate (1280w entfallen), Fallback 
+			ICON_DIR_FOLDER ergänzt.
+			ZDF_Kat_Plus: Anpassung wie ZDF_Kat.
+			Main_ZDF: Zusatz neu entfernt, dto. Hinweis auf Relaunch im Info-Text.
+			get_ARDstreamlinks: Anpassung nach ARD-Änderung der json-Struktur, linkid
+			als komplette epg_url für ShowSeekPos eingefügt. 		
+			list_WDRstreamlinks: Anpassung an geänderte Webseite des WDR.
+			PlayVideo (util): Ausnahme für wdr-live von monitor_resume (Hänger bei
+			seeking Kodi-Player).
+			ZDF_Verpasst, ZDF_StartWebCluster: Abfrage Key page_external_id entfernt 
+			(nicht mehr vorhanden, Key canonical ausreichend).			
+			Main_KIKA: Kinderhörspiele der ARD-Audiothek an neue ARD Audiothek angepasst,
+			dto. Watchdog_ZDF_Childs.
+			Main_NEW (ARDnew): Menü "ARD Mediathek Entdecken" entfernt (HTTP ERROR 404),
+			Menü "Rubriken" neu angelegt (Doppel aus Startmenü).
+			ARDStartVideoHLSget (ARDnew): Ausschluss audio="standard/deu" falls der Titel
+			"<Audiodeskription>" enthält.
+
 12.04.2026	5.4.4
 			AudioWebMP3 (ARD Sounds): ".MP3" in Url berücksichtigt, Abgenzung zu HTML-
 			Dateien an geänderte ARD-Syntax angepasst (Url ohne .html-Endung).

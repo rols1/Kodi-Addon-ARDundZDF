@@ -11,7 +11,7 @@
 #
 ################################################################################
 # 	<nr>135</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.04.2026
+#	Stand: 26.04.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -190,8 +190,8 @@ def Main_NEW(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStart", fanart=R(ICON_MAIN_ARD), 
 		thumb=R('ard-mediathek-retro.png'), tagline=tag, fparams=fparams)
 
-	# 07.04.2023 Web-Call -> api-Call
 	# 24.04.2026 bei der ARD nicht mehr existent, HTTP ERROR 404
+	#	Ersatz: Menü Rubriken, s.u. - Doppel aus Startmenü
 	'''	
 	path = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/entdecken?embedded=false" 
 	title = "ARD Mediathek Entdecken"
@@ -248,6 +248,17 @@ def Main_NEW(name=''):
 	fparams="&fparams={'title': 'Sendungen A-Z'}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.SendungenAZ", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_AZ), tagline=tag, fparams=fparams)
+
+	# neu ab 25.04.2026 als Entdecken-Ersatz
+	path = "https://api.ardmediathek.de/page-gateway/widgets/ard/editorials/1FdQ5oz2JK6o2qmyqMsqiI%3A-9185387182779659877?pageNumber=0&pageSize=100&embedded=true" 
+	title = "Rubriken"
+	tag = ""
+	summ = sender_summ	
+	ID = "Main_NEW"
+	title=py2_encode(title); path=py2_encode(path);
+	fparams="&fparams={ 'path': '%s', 'title': '%s'}" % (quote(path), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", 
+		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_RUBRIKEN), tagline=tag, summary=summ, fparams=fparams)
 						
 	# 07.04.2023 Web-Call -> api-Call, 14.04.2023 ARDStart -> ARDRubriken	
 	path = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/sport?embedded=false" 
@@ -1970,12 +1981,16 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID="", desc=False):
 	# typ-Info Einzelbeträge: ["live", "event", "broadcastMainClip",
 	#				"ondemand", "poster"]
 	cnt=0	
-	fcnt=0														# gefiltert-Zähler	
+	fcnt=0														# gefiltert-Zähler
+	skip_href=[]												# Doppler-Filter
 	for s in obs:
 		PLog("Mark10")
 		mehrfach,typ,title,pagetitle,summ,img,href = get_json_content_details(s, ID)
 		if "skip" in typ:										# z.B. Titel: Übersicht
 			continue
+		if href in skip_href:									# Doppler-Bsp.: JD Vance – Der Mann nach Trump
+			continue
+		skip_href.append(href)			
 
 		if mark:												# Markierung Suchbegriff im Titel
 			PLog(title); PLog(mark)
@@ -2493,7 +2508,7 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 			PLog("href: " + href)							
 
 			# Standard zuerst:										# beim 2. Stream auch DGS	
-			if "<OV>" in title or u"<Originalversion>"  in title:
+			if "<OV>" in title or u"<Originalversion>"  in title or u"<Audiodeskription>"  in title:
 				if u"standard/deu" in audio:
 					skip=True
 					
