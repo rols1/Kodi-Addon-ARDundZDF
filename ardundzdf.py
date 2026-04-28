@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>334</nr>										# Numerierung für Einzelupdate
+# 	<nr>335</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.5'
-VDATE = '26.04.2026' 
+VDATE = '28.04.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1122,6 +1122,14 @@ def Main_ZDF(name=''):
 	fparams="&fparams={'title': '%s'}" % (quote(title))
 	addDir(li=li, label=title, action="dirList", dirID="Main_ZDFfunk", fanart=R(ICON_MAIN_ZDF), thumb=R('zdf-funk.png'), 
 		fparams=fparams)
+
+	'''
+	title = 'Livestreams'
+	thumb = "https://www.zdf.de/assets/2400-zdf-100~original?cb=1619595262367"
+	fparams="&fparams={'ctitle': '%s'}" % title 
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_StartWebCluster", fanart=R(ICON_MAIN_ZDF), 
+		thumb=R("zdf-livestreams.png"), fparams=fparams)	
+	'''
 
 	title = 'Sendung verpasst' 
 	fparams="&fparams={'name': 'ZDF-Mediathek', 'title': '%s'}" % title 
@@ -7722,34 +7730,6 @@ def PlayButtonM3u8(li, url_m3u8, thumb, title, descr, tagline='', sub_path='', s
 		mediatype='video', tagline=tagline, summary=descr) 
 
 	return li
-#-----------------------------
-# Spezialbehandlung für N24 - Test auf Verfügbarkeit der Lastserver (1-4): wir prüfen
-# 	die Lastservers durch, bis einer Daten liefert
-def N24LastServer(url_m3u8):	
-	PLog('N24LastServer: ' + url_m3u8)
-	url = url_m3u8
-	
-	pos = url.find('index_')	# Bsp. index_1_av-p.m3u8
-	nr_org = url[pos+6:pos+7]
-	PLog(nr_org) 
-	for nr in [1,2,3,4]:
-		# PLog(nr)
-		url_list = list(url)
-		url_list[pos+6:pos+7] = str(nr)
-		url_new = "".join(url_list)
-		# PLog(url_new)
-		try:
-			req = Request(url_new)
-			r = urlopen(req)
-			playlist = r.read()			
-		except:
-			playlist = ''
-			
-		PLog(playlist[:20])
-		if 	playlist:	# playlist gefunden - diese url verwenden
-			return url_new	
-	
-	return url_m3u8		# keine playlist gefunden, weiter mit Original-url
 	
 ###################################################################################################
 # 21.05.2025 Zielseiten können fehlen (dto. im Web), Bsp.: Bilderseiten von
@@ -12636,6 +12616,8 @@ def ZDF_SlideShow(path, single=None):
 ####################################################################################################
 def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', buttons=True, track_add='', live=''):	
 #	# master.m3u8 bzw. index.m3u8 auswerten, Url muss komplett sein. 
+# 	# Aufruf: XL_Live, Kikaninchen_VideoSingle, Kika_SingleBeitrag, 
+#		Kikaninchen_VideoSingle, SenderLiveResolution
 #	03.03.2020 Erweiterung buttons: falls False keine Buttons sondern Rückgabe als Liste
 #		Stream_List (Format s.u.)
 #	23.04.2022 Mehrkanalstreams mit Kennung GROUP-ID entfernen (in Kodi nicht verwertbar) - nicht mehr relevant
@@ -12643,6 +12625,8 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 #	29.10.2022 Bereinigung Sender-Liste mit mögl. Einzelauflösungen (entfernt: HR, NDR, WDR)
 #	09.09.2025 veraltete Kopfdoku entfernt - s. Archiv
 #	02.01.2026 Austausch url_check -> getRedirect
+#	todo: sobald überwiegend HLS-Mehrkanalstreams angeboten werden, Parseplaylist entfernen und 
+#		beim Aufrufer die HLS-Liste nur mit master.m3u8 füllen.
 #
 	PLog ('Parseplaylist: ' + url_m3u8)
 	Stream_List=[]
@@ -13043,8 +13027,11 @@ if __name__ == '__main__':
 	try:
 		router(sys.argv[2])
 		# Memory-Bereinig. unwirksam gegen Raspi-Klemmer (s. SenderLiveListe)
-	except Exception as e: 
-		PLog('network_error_main: ' + str(e))
+	except Exception as e:
+		msg = str(e)
+		icon = R(ICON_WARNING)
+		PLog('network_error_main: ' + msg)
+		xbmcgui.Dialog().notification("Router-Error:", msg,icon,3000,sound=True)
 
 
 
