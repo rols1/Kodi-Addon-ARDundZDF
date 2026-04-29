@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>75</nr>								# Numerierung für Einzelupdate
-#	Stand: 07.04.2026
+# 	<nr>76</nr>								# Numerierung für Einzelupdate
+#	Stand: 29.04.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1127,14 +1127,14 @@ def get_streams_api_v2(page, title, summ):
 			if ".m3u8" in url:										# HLS
 				HLS_List.append(u'HLS, [B]%s[/B] ** Auflösung %s ** %s ** %s#%s' % (lang, size, quality, title, url))
 		# 06.04.2026 Zerlegung in Einzelkanäle funktioniert nicht mehr. Daher ersetzen wir die HLS-Liste durch
-		#	den mehrkanligen UHD-Stream:
+		#	den mehrkanaligen UHD-Stream:
 	
-	PLog("uhd_check:")			
+	PLog("uhd_check:")
+	uhd=False		
 	if uhd_m3u8:
 		page, msg = get_page(uhd_m3u8)
 		ext_list = blockextract("STREAM-INF", page)					# datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.2
 		PLog(len(ext_list))
-		uhd=False
 		for item in ext_list:
 			res = stringextract('RESOLUTION=',  ',', item)
 			PLog(res)
