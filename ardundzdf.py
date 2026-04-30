@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>335</nr>										# Numerierung für Einzelupdate
+# 	<nr>336</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.5'
-VDATE = '28.04.2026' 
+VDATE = '30.04.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3706,9 +3706,9 @@ def ARDSportLiga3(title, img, sender="", source=""):
 			return
 
 		stream_source = Dict("load", "ARD_streamsource")	# Streamquellen einstellen
-		PLog("stream_source: " + stream_source)
-		if stream_source == False or stream_source == "":
+		if not stream_source:
 			stream_source = "Live"							# Default: Livestream
+		PLog("stream_source: " + stream_source)
 		title = u"Wechsel der [B]Streamquellen[/B] | aktuell: [B]%s-Streams[/B]" % stream_source
 		tag = "Der Umschalter wechselt zwischen den [B]Livestreams der regionalen Sender[/B] und den"
 		tag = "%s [B]ARD-Event-Streams in livesenderTV.xml[/B]." % tag
