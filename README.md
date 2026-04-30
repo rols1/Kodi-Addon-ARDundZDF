@@ -30,28 +30,27 @@ Funktionen:
 - Suche nach Sendungen
 - Startseite (wie Webseite)
 - ARD Mediathek RETRO
-- ARD Mediathek Entdecken
+- Unsere Region
 - ARD Livestreams
 - Sendung Verpasst
 - Sendungen A-Z
+- Rubriken
 - ARD Sport
 - ARD sportschau.de (WDR)
 - Barrierearm
-- Bildgalerien Das Erste
-- Senderwahl
 - Teletext
+- Senderwahl
 
 #### ZDF Mediathek: 
-- Suche nach Sendungen
+- Suche in ZDF-Mediathek
 - Startseite (wie Webseite)
-- ZDF-funk (https://www.zdf.de/funk)
-- Sendung Verpasst (Sendungen der letzten 7 Tage)
+- (ZDF-funk)[https://www.zdf.de/funk]
+- Sendung Verpasst
 - Sendungen A-Z
 - <b>Kategorien neu</b> seit ZDF-Relaunch am 17.03.2025
 - Rubriken
 - ZDF-sportstudio
 - Barrierearm (Hörfassungen, Untertitel, Gebärdensprache)
-- ~~Bilderserien~~ seit ZDF-Relaunch am 17.03.2025 entfallen
 - Teletext
 
 #### 3Sat Mediathek:
@@ -64,15 +63,14 @@ Funktionen:
 - Rubriken
 - Bildgalerien 3sat
 
-#### ARD-Audiothek:
+#### ARD Sounds (ehemalige ARD-Audiothek):
 - Suche
 - Livestreams, einschl. ARD Audio Event Streams, Audio- und Netcastaudio-Streams der sportschau.de
 - Entdecken (wie Webseite)
 - Rubriken
-- Sport
+- Sportschau
 - Sender (Sendungen einzelner Radiosender)
 - funk: Das Content-Netzwerk von ARD und ZDF
-- Podcasts der Platform www.podcast.de
 
 
 #### TV-Live-Streams mit Aufnahmefunktion: 
@@ -80,13 +78,13 @@ Funktionen:
 - für die Aufnahmefunktion (mit oder ohne EPG) ist eine [ffmpeg-Installation](https://ffmpeg.org/download.html) erforderlich 
 
 #### Radio-Live-Streams der ARD:
-- alle Radiosender von Bayern, HR, mdr, NDR, Radio Bremen, RBB, SR, SWR, WDR, Deutschlandfunk. Insgesamt 10 Stationen, 65 Sender plus regionale Sender (z.B. hr1-Rhein-Main, -Südhessen, -Osthessen, -Nordhessen, -Mittelhessen) 
+- alle Radiosender von Bayern, HR, mdr, NDR, Radio Bremen, RBB, SR, SWR, WDR, Deutschlandfunk. Insgesamt 10 Stationen, 65 Sender plus regionale Sender (z.B. hr1-Rhein-Main, -Südhessen, -Osthessen, -Nordhessen, -Mittelhessen). Aktuelles Radio-Programm via Kontextmenü.
  
 #### Videobehandlung (Setting: Sofortstart AUS):
 - Livestreams: Auflistung der verfügbaren Angebote an Bandbreiten + Auflösungen (falls verfügbar: Audio ohne Video)
 - Videos: Auflistung der verfügbaren Angebote an Qualitätstufen sowie zusätzlich verfügbarer Videoformate (Bsp. UHD) 
 
-#### [Downloadoption (ab Version 2.6.8 ohne cURL/wget)](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/03.-Settings-Download)
+#### [Downloadoption](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/03.-Settings-Download)
 - Download von Videos im ARD-Bereich
 - Download von Videos im ZDF-Bereich
 - Download von Videos in den Modulen arte, 3Sat, TagesschauXL, phoenix, Kinderprogramme
@@ -116,7 +114,6 @@ Funktionen:
 
 #### weitere Module (optional)
 - 3Sat
-- ~~funk~~ - entfernt ab Mai 2023 (Videos sind in ZDF-funk, Podcasts in der ARD-Audiothek verfügbar)
 - Kinderprogramme (KIKA, ZDFtivi, MausLive u.a.)
 - TagesschauXL (https://www.tagesschau.de/ und https://www.ardmediathek.de/tagesschau24)
 - phoenix (https://www.phoenix.de/ und https://www.ardmediathek.de/phoenix)
@@ -141,8 +138,8 @@ INSTALLATION:
 
 SUPPORT:
 =================== 
-Um die Community des <b>[kodinerds-Forums](https://www.kodinerds.net/)</b> zu beteiligen, bitte vorrangig den <b>[Support-Thread des Addons](https://www.kodinerds.net/thread/64244-release-kodi-addon-ardundzdf/)</b> verwenden.<br>
-Der <b>[Startpost](https://www.kodinerds.net/thread/64244-release-kodi-addon-ardundzdf/?pageNo=1#post502022)</b> enthält Hinweise zum nächsten Update und zu geänderten Dateien des Addons, die als Einzelupdate mit dem Addon-Tool <b>Infos+Tools -> Einzelupdate..</b> bereits vor dem regulären Update installiert werden können.
+Um die Community des <b>[kodinerds-Forums](https://www.kodinerds.net/)</b> an Problemlösungen zu beteiligen, bitte vorrangig den <b>[Support-Thread des Addons](https://www.kodinerds.net/thread/64244-release-kodi-addon-ardundzdf/)</b> verwenden.<br>
+Der <b>[Startpost](https://www.kodinerds.net/thread/64244-release-kodi-addon-ardundzdf/?pageNo=1#post502022)</b> enthält Hinweise zum nächsten Update und zu geänderten Dateien des Addons. Letztere können als Einzelupdate mit dem Addon-Tool <b>Infos+Tools -> Einzelupdate..</b> bereits vor dem nächsten regulären Update installiert werden.
 
 
 Credits:
