@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>135</nr>										# Numerierung für Einzelupdate
-#	Stand: 26.04.2026
+# 	<nr>136</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.04.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2229,7 +2229,7 @@ def get_json_content_details(obj, ID=""):
 				summ = "Folgeseiten | %s" % pubServ	
 		
 		PLog('get_json_content_details mehrfach: %s | typ: %s | title: %s |\
-			 pagetitle: %s | summ: %s | img:  %s |\href: %s' %\
+			 pagetitle: %s | summ: %s | img:  %s | href: %s' %\
 			(str(mehrfach),typ,title,pagetitle,summ,img,href))
 	except Exception as exception:
 		PLog("details_error: " + str(exception))
@@ -2469,6 +2469,7 @@ def ARDStartSingle(path, title, ID='', mehrzS='', homeID=''):
 #	verwenden nur noch 1 Array
 # 01.02.2026 Berücksichtigung DGS-Setting pref_DGS_ON (Anpassung 
 #	ptmdTemplate, Streamauswahl)
+# 27.04.2026 Bugfix für unbeabsichtigte Audiodeskription
 #
 def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""): 
 	PLog('ARDStartVideoHLSget: %s | %s' % (call, title)); 
@@ -2508,12 +2509,16 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 			PLog("href: " + href)							
 
 			# Standard zuerst:										# beim 2. Stream auch DGS	
-			if "<OV>" in title or u"<Originalversion>"  in title or u"<Audiodeskription>"  in title:
-				if u"standard/deu" in audio:
+			if "<OV>" in title or u"<Originalversion>"  in title:
+				if u"standard/deu" in audio or u"audio-description" in audio_kind:
 					skip=True
 					
-			if u"Hörfassung" in title:
+			elif u"Hörfassung" in title or u"<Audiodeskription>" in title:
 				if "audio-description" not in audio_kind:
+					skip=True
+
+			else:													#standard/deutsch als "normal"-version
+				if u"standard/deu" not in audio:
 					skip=True
 
 			if DGS_use:												# DGS-Stream verwenden?
@@ -2522,6 +2527,7 @@ def ARDStartVideoHLSget(title, StreamArray, call="", StreamArray_1=""):
 		
 			if not skip:
 				quality = u'automatisch'
+				PLog("Adding to HLS_List: " + details + title)
 				HLS_List.append(u'HLS [B]%s[/B] ** auto ** auto ** %s#%s' % (details, title, href))
 				break												# nur 1 HLS-Stream verwenden
 
@@ -2629,6 +2635,7 @@ def ARDStartVideoHBBTVget(title, path):
 # 16.05.2024 Auswertung Bitraten entfernt (unsicher)
 # 01.02.2026 DGS-Auswertung ergänzt (auch in Videos ohne Gebärdensprache
 #	im Titel) - wir verwenden nur noch 1 Array
+# 29.04.2026 Bugfix für unbeabsichtigte Audiodeskription
 #
 def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):	
 	PLog('ARDStartVideoMP4get: ' + title); 
@@ -2671,18 +2678,22 @@ def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):
 			aspect = stream["aspectRatio"]
 			audio_kind = stream["audios"][0]["kind"]			# standard
 			audio_lang = stream["audios"][0]["languageCode"]	# fra, deu
+			audio = "%s/%s" % (audio_kind, audio_lang)
 			details = "%s, %s, %s, audio: %s/%s" % (kind, qual, aspect, audio_kind, audio_lang)
 			PLog("details: " + details)
 	
-			if "<OV>" in title or "<Originalversion>" in title or u"Hörfassung" in title:
-				if "deu" not in audio_lang:						# s. ARDStartVideoHLSget, ARDStartVideoHBBTVget
+			# Standard zuerst:										# beim 2. Stream auch DGS	
+			if "<OV>" in title or u"<Originalversion>"  in title:
+				if u"standard/deu" in audio or u"audio-description" in audio_kind:
+					continue	
+					
+			elif u"Hörfassung" in title or u"<Audiodeskription>" in title:
+				if "audio-description" not in audio_kind:
 					continue
-			if u"Hörfassung" in title:
-				if "deu" not in audio_lang:	
+
+			else:													#standard/deutsch als "normal"-version
+				if u"standard/deu" not in audio:
 					continue
-			if DGS_use:											# DGS-Stream verwenden?
-				if "DGS" not in kind:	
-					continue		
 			
 			title_url = u"%s#%s" % (title, href)
 			item = u"MP4: [B]%s[/B] ** Auflösung %s ** %s" % (details, res, title_url)
