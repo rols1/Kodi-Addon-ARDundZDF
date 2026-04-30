@@ -2229,7 +2229,7 @@ def get_json_content_details(obj, ID=""):
 				summ = "Folgeseiten | %s" % pubServ	
 		
 		PLog('get_json_content_details mehrfach: %s | typ: %s | title: %s |\
-			 pagetitle: %s | summ: %s | img:  %s |\\href: %s' %\
+			 pagetitle: %s | summ: %s | img:  %s | href: %s' %\
 			(str(mehrfach),typ,title,pagetitle,summ,img,href))
 	except Exception as exception:
 		PLog("details_error: " + str(exception))
