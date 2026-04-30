@@ -4,7 +4,7 @@ Kodi-Addon-ARDundZDF
 Addon für Kodi / XBMC (Kodi-Version von Plex-Plugin ARDundZDF).<br>
 Ab Version 2.2.5 für Kodi-Krypton, -Leia, -Matrix und -Nexus  geeignet (Python2- / Python3-kompatibel).<br>
 Mit Inhalten der Mediatheken von ARD und ZDF, 3Sat, funk, phoenix, KIKA und ZDFtivi, tageschau.de, Arte-Kategorien,
-einschließlich Live-TV mit Aufnahmefunktion (ffmpeg erforderlich), Live-Radio, Podcasts.<br>
+einschließlich Live-TV mit Aufnahmefunktion (ffmpeg erforderlich), Live-Radio, ARD Sounds.<br>
 
 Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/latest
 <b>(Kodi Matrix)</b> oder [kodinerds-Repo](https://repo.kodinerds.net) <b>(Kodi-Krypton, -Leia, -Matrix und -Nexus)</b> - siehe INSTALLATION.<br>
