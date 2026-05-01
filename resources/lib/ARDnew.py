@@ -1616,8 +1616,9 @@ def ARD_Teletext(path=""):
 	
 	img = R(ICON_MAIN_ARD)
 	thumb = R("teletext_ard.png")
-	Seiten = ["Startseite|100", "Nachrichten|101", "Sport|200",
-			"Programm|300", "Kultur|400", "Wetter|171", "Inhalt A-Z|790",
+	Seiten = ["Startseite|100", "Nachrichten|101", "Wetter|171",
+			"Sport|200", "Programm|300", "Kultur|400",  
+			u"Börse|700", "Inhalt A-Z|790",
 		]
 
 	page, msg = get_page(path=path)	
@@ -2165,7 +2166,7 @@ def get_json_content_details(obj, ID=""):
 				matRat = obj["maturityContentRating"]
 				if not matRat:
 					matRat = "Ohne"
-					#matRat = matRat.replace('NONE', 'Ohne')
+				matRat = matRat.replace('NONE', '--')			# wie ZDF
 			if "duration" in obj:
 				duration = obj["duration"]						# sec-Wert
 				duration = seconds_translate(duration)			# 0:15

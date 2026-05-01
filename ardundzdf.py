@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>336</nr>										# Numerierung für Einzelupdate
+# 	<nr>337</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.5'
 VDATE = '30.04.2026' 
 
@@ -1216,7 +1216,7 @@ def ZDF_Teletext(path=""):
 		
 	Seiten = ["Startseite|100", "Rubriken|101", "Inhalt A-Z (bis ca. 108)|102", 
 		"Nachrichten|112", "Politbarometer|165", "Wetter|170", "Sport|200",
-		"Programm|300", "Flughafen|575", "Börse|600", 
+		"Programm|300", "Gewinnzahlen|555", 
 		]
 		
 	#  ZDF korrigiert nicht selbst 
@@ -4287,6 +4287,7 @@ def ARDSportLive(title, skip_video=""):
 		return
 
 	li = xbmcgui.ListItem()
+	li2= xbmcgui.ListItem()									# -> music, Trennung von video in addDir
 	li = home(li, ID='ARD Neu')								# Home-Button
 		
 	import resources.lib.TagesschauXL as TagesschauXL	
@@ -4309,7 +4310,7 @@ def ARDSportLive(title, skip_video=""):
 		if typ == "audio":
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream), 
 				quote(title), quote(img), quote_plus(Plot_par))
-			addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
+			addDir(li=li2, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
 				tagline=Plot, mediatype='music')	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
