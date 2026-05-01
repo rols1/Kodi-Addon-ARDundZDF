@@ -44,7 +44,7 @@ Funktionen:
 #### ZDF Mediathek: 
 - Suche in ZDF-Mediathek
 - Startseite (wie Webseite)
-- (ZDF-funk)[https://www.zdf.de/funk]
+- [ZDF-funk](https://www.zdf.de/funk)
 - Sendung Verpasst
 - Sendungen A-Z
 - <b>Kategorien neu</b> seit ZDF-Relaunch am 17.03.2025
