@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>165</nr>										# Numerierung für Einzelupdate
-#	Stand: 23.04.2026
+# 	<nr>166</nr>										# Numerierung für Einzelupdate
+#	Stand: 06.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -795,34 +795,47 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_strm=''; fparams_exist_inlib=''; fparams_EPG='';
 		fparams_ShowSumm=""; fparams_RadioEPG="";fparams_ShowSeason="";
 		
-		K = unquote(fparams)											# Param. extrahieren 
-		K = K.replace("': '", "':'")
-		# PLog(k)		# Debug
-		K_Sender = stringextract("sender':'", "'", K) 					# Bsp. 'ARTE'
-		K_url = stringextract("url':'", "'", K) 						# Stream-Url
-		if not K_url:
-			K_url = stringextract("path':'", "'", K)
+		K_title=""; K_sender=""; K_url=""; K_path=""; 
+		K_pub_id="";  K_thumb=""; K_img=""; 	
 		K_dirID = dirID
+		try:														# fparams-Variablen auspacken
+			s = fparams.split("&fparams=")[1]
+			s = unquote_plus(s)										# entfernt +' (durch urllib2.unquote erzeugt)
+			s = s.replace("'", "\"")
+			fp_json = json.loads(s)
 			
-		K_title=label; K_fanart=fanart; K_thumb=thumb;				
-		K_summary=summary; K_tagline=tagline;	 	
-		
-	
+			if "title" in fp_json:				
+				K_title = fp_json["title"]
+			if not K_title:
+				K_title = label
+			if "sender" in fp_json:				
+				K_sender = fp_json["sender"]
+			if "url" in fp_json:									
+				K_url = fp_json["url"]
+			if "path" in fp_json:									
+				K_path = fp_json["path"]
+			if not K_url and K_path:
+				K_url = K_path
+			if "pub_id" in fp_json:									
+				K_pub_id = fp_json["pub_id"]
+			
+		except Exception as exception:
+			fp_json=""
+			PLog("fp_json_error: " +  str(exception))
+				
+	# --------------
 		if EPG_ID:														# EPG für Sender zeigen
 			EPG_ID = py2_encode(EPG_ID)
 			fp = {'title': label, 'ID': EPG_ID, 'mode': 'context'}
 			fparams_EPG = "&fparams={0}".format(fp)
 			PLog("fparams_EPG: " + fparams_EPG[:80])
 		
-		if dirID == "AudioStartLive":									# Radio-EPG für Sender zeigen
-			dirPars = unquote(fparams)
-			pub_id = stringextract("pub_id': '", "'", dirPars)
-			sender = stringextract("sender': '", "'", dirPars)
-			fp = {'pub_id': pub_id, 'sender': sender, 'mode': 'context'}
+		if dirID == "AudioStartLive":									# Radio-EPG für Sender zeigen			
+			fp = {'pub_id': K_pub_id, 'sender': K_sender, 'mode': 'context'}
 			fparams_RadioEPG = "&fparams={0}".format(fp)
 			PLog("fparams_RadioEPG: " + fparams_RadioEPG)
-			
-				
+		
+		# 																# Video-K-Menü
 		if mediatype == "video":										# Inhaltstext für Video / Serie zeigen
 			items = ["api.ardmediathek|ARD", "zdf-prod-futura|ZDF",		# unterstützte Sender
 					"www.3sat.de|3sat", "www.zdf.de|ZDF"]
@@ -832,36 +845,16 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				if surl in fparams:
 					found=True
 					break
-			PLog("found: %s, surl: %s, org_id: %s" % (str(found),surl, org_id))
-			
-			try:														# fparams-Variablen für Video-K-Menü
-				path=""; thumb=""; img="";
-				s = fparams.split("&fparams=")[1]
-				s = unquote_plus(s)										# entfernt +' (durch urllib2.unquote erzeugt)
-				s = s.replace("'", "\"")
-				f = json.loads(s)
-				title = f["title"]
-				if "path" in f:
-					path = f["path"]
-				if "url" in f:
-					path = f["url"]										# path=url
-				if "thumb" in f:
-					thumb = f["thumb"]
-				if "img" in f:
-					img = f["img"]
-				path=py2_encode(path); title=py2_encode(title)
-				img=py2_encode(img);
-			except Exception as exception:
-				PLog("fparams_error: " +  str(exception))		
-			
+			PLog("found: %s, surl: %s, org_id: %s" % (str(found),surl, org_id))				
 			
 			if found and EPG_ID == "":									# Inhaltstext nicht bei Livestreams
+				path = K_path
 				if path:												# sinnlos ohne path
 					if SETTINGS.getSetting('pref_show_season') == 'true':	# default
-						fp = {'title': title, 'path': path, 'ID': org_id, 'mode': 'ShowSumm'}
+						fp = {'title': K_title, 'path': K_path, 'ID': org_id, 'mode': 'ShowSumm'}
 						fparams_ShowSumm = "&fparams={0}".format(fp)		# -> Inhaltstext
 						PLog("fparams_ShowSumm: " + fparams_ShowSumm[:80])	
-						fp = {'title': title, 'path': path, 'img': img, 'mode': 'ShowSeason'}
+						fp = {'title': K_title, 'path': K_path, 'img': K_img, 'mode': 'ShowSeason'}
 						fparams_ShowSeason = "&fparams={0}".format(fp)		# -> Serie zeigen
 						PLog("fparams_ShowSeason: " + fparams_ShowSeason[:80])	
 															
@@ -874,7 +867,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			if SETTINGS.getSetting('pref_strm') == 'true':				# strm-Datei für Video erzeugen
 				# extract -> strm-Modul -> Plugin-Call für get_streamurl(add_url, title)
 				fp = {'label': label, 'add_url': quote_plus(add_url),\
-				'tagline': quote_plus(tagline), 'summary': quote_plus(summary)}											
+				'tagline': tagline, 'summary': summary}											
+				fparams_strm = "&fparams={0}".format(fp)
+
 				fparams_strm = "&fparams={0}".format(fp)
 				PLog("fparams_strm: " + fparams_strm[:100])	
 				fparams_strm = quote_plus(fparams_strm)
@@ -954,23 +949,21 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		#	title + descr sind hier die Codier.-Behandl. zu wiederholen:
 		if start_end:												# Unix-Time-Format od. "Recording.."
 			PLog("start_end: " + start_end)
-			f = unquote(fparams)									# Param. extrahieren 
-			f = f.replace("': '", "':'")
-			# PLog(f)		# Debug
-			Sender = stringextract("Sender':'", "'", f) 			# Bsp. 'ARTE'
-			url = stringextract("path':'", "'", f) 					# Stream-Url
+			# PLog(str(fp_json))		# Debug
+			Sender = K_sender										# Sender <-  fparams
+			url = K_url												# Stream-Url  <- fparams
 			# title mit Markierung übernehmen
-			title = stringextract("title':'", "'", f) 				# Bsp. 'Mi | 01:45 | Dick und nun?'
+			title = K_title 										# Bsp. 'Mi | 01:45 | Dick und nun?'
 			title = py2_decode(title)
 			title = repl_json_chars(title)
-			PLog("title: " + title)
+			PLog("title: " + K_title)
 			descr = "%s\n\n%s" % (tagline, summary)
 			descr = descr.replace('\n','||')
 			descr = py2_decode(descr)
 			descr = repl_json_chars(descr)
 			
 			if "Recording TV-Live" in start_end:					# K-Menü in EPG_ShowAll -> LiveRecord
-				Sender = cleanmark(title)
+				Sender = cleanmark(Sender)
 				Sender = Sender.split("|")[0]						# "Sender | EPG"
 				duration = SETTINGS.getSetting('pref_LiveRecord_duration')
 				duration, laenge = duration.split('=')
@@ -1019,8 +1012,6 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				
 				if do_playlist: 
 					PLog("start_end: " + start_end)
-					f = unquote(fparams)											# Param. extrahieren (s. PlayVideo)
-					f = f.replace("': '", "':'")									# json-Blanks
 					title = label
 					Plot = Plot.replace('\n', '||')									# Plot hier : tagline+summary
 					
@@ -1505,6 +1496,7 @@ def get_sqlite_Cursor(kodi_db):
 def R(fname, abs_path=False):	
 	PLog('R_fname: %s' % fname); # PLog(abs_path)
 	#PLog("ADDON_PATH: " + ADDON_PATH)
+	path=""
 	try:
 		if abs_path:
 			path = os.path.join(ADDON_PATH, fname)
@@ -3723,7 +3715,12 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 	
 	play_time=0; video_dur=0										# hier dummies (rel. -> PlayMonitor) 		
 	newpath, msg = getRedirect(url, stream=True)					# Url-Check
-	if newpath:
+	if not newpath:
+		msg1 = "Video nicht gefunden."
+		msg2 = "Video-Url existiert nicht (mehr)."
+		icon = R(ICON_WARNING)
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)		
+	else:
 		
 		# Zuletzt-gesehen-Liste (STARTLIST) verwenden, Live-Streams
 		# werden später ausgeschlossen (s. prepare_resume), Aktualiserung
@@ -3848,15 +3845,19 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 					if "-tegra-" in OS_RELEASE == False:			# ev. prüfen: "-tegra-" in OS_RELEASE +
 						exit(0)										#	nicht bei Shield + FT1-Stick.				
 
-		while 1:													# seekTime setzen
+		while 1:													# seekTime aus check_Resume (Startlist) setzen
 			if player.isPlaying():
 				xbmc.sleep(500)										# für Raspi erforderl.
+				if seekTime == "":									# leer möglich
+					seekTime=0
 				seekTime = float(str(seekTime))						# OK für PY2 + PY3
 				video_dur = player.getTotalTime()
 				PLog("check_seekTime %s, video_dur %s" % (str(seekTime), str(video_dur)))
-				if video_dur > 0:									# Dauer bekannt?	
-					if 	seekTime > video_dur:						# Sicherung
-						seekTime = 0	
+				if int(video_dur) == 0:								# Dauer bekannt?
+					seekTime = 0
+				else:
+					if 	int(seekTime) >= int(video_dur):			# Sicherung: Anfang statt Ende setzen
+						seekTime = 0
 				if seekTime > 0:
 					PLog("set_seekTime %s" % str(seekTime))	
 					player.seekTime(seekTime) 						# Startpos aus PlayMonitor (HLS o. Wirkung)
@@ -3926,11 +3927,14 @@ def PlayVideo(url, title, thumb, Plot, sub_path=None, playlist='', seekTime=0, M
 						xbmc.sleep(2000)
 						PLog("call_monitor_resume")
 						PLog("playlist: " + playlist)
-						video_dur = player.getTotalTime()
-						bg_thread = Thread(target=monitor_resume, args=(player, new_list, video_dur, seekTime))
-						bg_thread.start()			# Modul util
-						return						# ohne return startet Kodi monitor_resume, ohne zutreffende
-													#	if-condition
+						try:						# player_exception abfangen (Startliste, selten)
+							video_dur = player.getTotalTime()
+							bg_thread = Thread(target=monitor_resume, args=(player, new_list, video_dur, seekTime))
+							bg_thread.start()			# Modul util
+							return						# ohne return startet Kodi monitor_resume, ohne zutreffende
+						except Exception as exception:	#	if-condition
+							PLog("call_monitor_resume_error: " + str(exception))
+						
 	PLog("leave_PlayVideo")	
 	return play_time, video_dur						# -> PlayMonitor
 	xbmcplugin.endOfDirectory(HANDLE)
@@ -4118,7 +4122,7 @@ def PlayAudio(url, title, thumb, Plot, header=None, FavCall=''):
 		#	return
 		
 	
-	# 1. Url einer Playlist auspacken, Bsp.: MDR-Sachsen Fußball-Livestream
+	# 1. Url einer m3u-Playlist auspacken, Bsp.: MDR-Sachsen Fußball-Livestream
 	#	bei Bedarf ausbauen (s. get_m3u Tunein2017)
 	if url.startswith('http') and url.endswith('.m3u'):  # Bsp.: avw.mdr.de/streams/284281-0_mp3_high.m3u
 		page, msg = get_page(path=url)	

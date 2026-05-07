@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>337</nr>										# Numerierung für Einzelupdate
+# 	<nr>338</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.5'
 VDATE = '30.04.2026' 
 
@@ -1122,14 +1122,6 @@ def Main_ZDF(name=''):
 	fparams="&fparams={'title': '%s'}" % (quote(title))
 	addDir(li=li, label=title, action="dirList", dirID="Main_ZDFfunk", fanart=R(ICON_MAIN_ZDF), thumb=R('zdf-funk.png'), 
 		fparams=fparams)
-
-	'''
-	title = 'Livestreams'
-	thumb = "https://www.zdf.de/assets/2400-zdf-100~original?cb=1619595262367"
-	fparams="&fparams={'ctitle': '%s'}" % title 
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_StartWebCluster", fanart=R(ICON_MAIN_ZDF), 
-		thumb=R("zdf-livestreams.png"), fparams=fparams)	
-	'''
 
 	title = 'Sendung verpasst' 
 	fparams="&fparams={'name': 'ZDF-Mediathek', 'title': '%s'}" % title 
@@ -8271,11 +8263,13 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 		PLog(len(items))
 		if len(items) == 1:											# bisher: 0, 1 oder 2
 			 ptmdTemplate = items[0]
-		if len(items) == 2:											# erstes: DGS-ptmdTemplate
+		elif len(items) == 2:											# erstes: DGS-ptmdTemplate
 			if SETTINGS.getSetting('pref_DGS_ON') == "true":
 				ptmdTemplate = items[0]
 			else:
 				ptmdTemplate = items[1]
+		else:														# z.B. 4 x, Bsp. Film Olivia
+			 ptmdTemplate = items[0]
 		ptmdTemplate = stringextract('"ptmdTemplate":"', '"', ptmdTemplate)
 		PLog("ptmdTemplate_WebDetails: " + ptmdTemplate)				
 		
@@ -9067,15 +9061,16 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 
 #-----------------------------------------------------------------------
 # Aufruf: ZDF_PageMenu (DictID == "ZDF_Startseite"), ergänzt aus Web
-#	Cluster, die im Api fehlen (Abgleich Liste Dict ZDF_ApiCluster)
-# 1. Lauf: Liste der Web-Cluster nach TOP's aus futura
+#	Cluster, nach den TOP's aus futura-api. Weder futura noch hbbtv
+#	liefern deckungsgleiche Inhalte zum Web. Bisher keine Graphql-Call
+#	für die Startseite bekannt.
+# 1. Lauf: Liste der Web-Cluster
 # 2. Lauf: Liste der zum Cluster-Titel ctitle passenden Beiträge
 #	(Einzel + Serien, Unterscheidung nach collectionType). 
-# 13.12.2025 Test: HBBTV-Funktionen nicht zum Abgleich geeignet (Cluster
-#	zwar vorhanden, json-Daten zu sehr abweichend für Graphql-Anbindung).
+# 07.05.2026 Rubrik "Derzeit beliebt" -> ZDF_StartWebBeliebt
 #
 def ZDF_StartWebCluster(ctitle=""):								
-	PLog('ZDF_StartWebCluster:')
+	PLog('ZDF_StartWebCluster: ctitle: %s' % ctitle)
 		
 	page, DictID, newpath, img, ptmdTemplate = ZDF_Graphql_WebDetails(ZDF_BASE, mode="getpage")
 	PLog("DictID: %s" % DictID)
@@ -9084,15 +9079,24 @@ def ZDF_StartWebCluster(ctitle=""):
 		msg2 = msg
 		MyDialog(msg1, msg2, '')
 		return		
-	
-	web_cluster = blockextract('__typename":"StaticHorizontalCluster', page)
+
+	web_cluster = blockextract('__typename":"StaticHorizontalCluster', page)		
 	PLog("web_cluster: %d" % len(web_cluster))				# 03.05.2024: 18
 	li = xbmcgui.ListItem()									# Home von ZDF_PageMenu
 	li2 = xbmcgui.ListItem()								# -> Videos	
 
 	#------------------------------------------------------ 		# 1. Lauf: Abgleich Cluster-Titel Api / Web
+
 	if not ctitle:
 		PLog("run1:")
+		title = "Derzeit beliebt"									# Web,nicht in den Apis enthalten -> Graphql-Call
+		fparams="&fparams={'title': '%s'}" % title
+		img = R("tv-zdf.png")	
+	#	img = R("zdf-derzeit-beliebt.png")
+		tag = "Folgeseiten | 24"									# 24: Graphql-Param first
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_StartWebBeliebt", fanart=img, 
+			thumb=img, fparams=fparams, tagline=tag)		
+
 		skip_titles = ["Kategorien"]								# Listenende: skip Kategorien (eigenes MenÜ)
 		for item in web_cluster:
 			PLog(item[:100])
@@ -9136,7 +9140,7 @@ def ZDF_StartWebCluster(ctitle=""):
 
 	#------------------------------------------------------ 		# 2. Lauf: Abgleich
 	else:
-		PLog("run2: " + ctitle)
+		PLog("run2: " + ctitle)										# z.B. Packende Krimis
 		found=False
 		for item in web_cluster:
 			PLog(item[:60])
@@ -9153,6 +9157,8 @@ def ZDF_StartWebCluster(ctitle=""):
 			msg2 = "[B]%s[/B]" % ctitle
 			MyDialog(msg1, msg2, '')
 			return
+
+	#------------------------------
 		
 		li = home(li, ID='ZDF')	
 		mediatype=''													# Kennz. Videos im Listing
@@ -9161,12 +9167,13 @@ def ZDF_StartWebCluster(ctitle=""):
 		
 		futura_base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
 		cluster = cluster.replace('\\\\"', '*')
-		items = blockextract('"__typename"', cluster, 'recoModel')
+		items = blockextract('"__typename"', cluster, '"recoModel"')
 		PLog("items: %d" % len(items))
-		skip_ctitle=[ctitle]												# skip Cluster-Titel am Ende
+		skip_ctitle=[ctitle]											# skip Cluster-Titel am Ende
 		skip_list = [u"ZDFtivi für Kinder",
-			"verlinkt <MT25>"										# ZDFheute extern verlinkt <MT25> aus
-			]														#	Nachrichten und Politik
+			"verlinkt <MT25>"											# ZDFheute extern verlinkt <MT25> aus
+			]															#	Nachrichten und Politik
+
 		for item in items:
 			if PYTHON2:
 				item = py2_decode(item)
@@ -9199,7 +9206,7 @@ def ZDF_StartWebCluster(ctitle=""):
 			scms_id = scms_id.replace("-movie", "")					
 			img = ZDF_get_img(item, landscape=False, mode="webjson")
 			tvService = stringextract('"tvService":"', '"', item)				
-			
+
 			dur = stringextract('duration":', ',', item)			# Sekunden, Bsp.: 5011
 			if dur:
 				dur = seconds_translate(dur)
@@ -9208,7 +9215,9 @@ def ZDF_StartWebCluster(ctitle=""):
 				avail = stringextract('endDate":"', '"', item)
 			if avail:
 				avail = time_translate(avail)
-			#owner = stringextract('_advertiser":"', '"', item)
+			pubDate = stringextract('visibleFrom":"', '"', item)
+			pubDate = time_translate(pubDate)
+				
 			owner = stringextract('Senderlogo ', '"', item)			# "Senderlogo ZDF"
 			descr = stringextract('description":"', '"', item)
 			descr = descr.replace("\\\\r\\\\n", "")					# \\r\\n möglich
@@ -9222,12 +9231,15 @@ def ZDF_StartWebCluster(ctitle=""):
 			ptmdTemplate=ptmdTemplate.replace("_dgs", "")			# 1. Treffer i.d.R. DGS
 
 			movie_tag = "Film"
+			fsk = stringextract('"FSK', '"', item)					# "FSK 12"
+			
 			if owner:
 				movie_tag = "%s | %s" % (movie_tag, owner)
 			if dur and "_trailer" not in ptmdTemplate:				# Trailer ohne sec, s. "MOVIE" 
-				movie_tag = "%s | Dauer: %s" % (movie_tag, dur)
+				movie_tag = "%s | FSK %s | Dauer: %s" % (movie_tag, fsk, dur)
 			if avail:
-				movie_tag = u"%s | [B]Verfügbar bis[/B] [COLOR darkgoldenrod]%s[/COLOR]" % (movie_tag, avail)
+				movie_tag = u"%s | [B]Verfügbar bis[/B] [COLOR darkgoldenrod]%s[/COLOR] | ab %s" %\
+					(movie_tag, avail, pubDate)
 		
 			folge_tag = u"Folgebeiträge"
 			if owner:									
@@ -9287,6 +9299,42 @@ def ZDF_StartWebCluster(ctitle=""):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
+# Umsetzung Rubrik "Derzeit beliebt" mit spez. Graphql-Call
+# Aufruf: ZDF_StartWebCluster, Nutzung ZDF_Graphql und
+#	ZDF_Graphql_get_seasons
+#
+def ZDF_StartWebBeliebt(title):
+	PLog('ZDF_StartWebBeliebt: %s' % title)
+	
+	OpName = "GetClusterList"
+	sha256Hash = "ad69192ddc2fdd9a33048137e944fb471011cab80eabd4e9f9a64f255246be97"
+	coll_id="b82972dd-2688-49d0-84a3-70d7083611b7"
+	zdfappId = "zdf-web-5be2cdce"							# "appId" mehrmals im Web
+	first = 24
+	myvars = '{"collectionId":"%s","configuration":"dkdi","input":{"appId":"%s","filters":{},"pagination":{"first":%d},"user":{"abGroup":"gruppe-a","userSegment":"segment_0"}}}'
+	variables = myvars % (coll_id, zdfappId, first)
+	
+	raw = ZDF_Graphql(OpName, sha256Hash, variables)
+	if not raw:
+		img = R("tv-zdf.png")
+		msg2 = "keine Daten gefunden."
+		xbmcgui.Dialog().notification(title,msg2,img,3000)		
+		return
+		
+	li = xbmcgui.ListItem()
+	li = home(li, "ZDF")											# Home-Button
+
+	data = json.loads(raw)
+	PLog("data: " + str(data)[:100])
+	clusters, msg = GetJsonByPath('data|clusterlist|clusters', data)
+	PLog("clusters: " + str(clusters)[:100])		
+	items = clusters[0]["items"]
+	PLog("items: %d" % len(items))
+
+	ZDF_Graphql_get_seasons(items)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 #-----------------------------------------------------------------------
 # Aufruf ZDF_RubrikSingle - holt externes ARD-Video via Graphql-Call
 #	(key externalId, hier scms_id - nicht direkt für ard_api_path
@@ -9301,7 +9349,6 @@ def ZDF_Graphql_Video(title, sharingUrl):
 	futura_path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
 
 	collmark="metaCollectionId"		# Default für Sub's (barrierefrei: collectionId)
-	#genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(sharingUrl, mode="metaCollectionId")
 	page, DictID, newpath, img, ptmdTemplate = ZDF_Graphql_WebDetails(sharingUrl, mode="getpage")
 	canon = sharingUrl.split("/")[-1]	
 	header = Dict("load", "GraphqlHeader")
@@ -11477,18 +11524,19 @@ def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
 #----------------------------------------------
 def ZDF_Graphql(OpName, sha256Hash, variables):
 	PLog("ZDF_Graphql: " + OpName)
+
 	ZDF_GraphqlBase = "https://api.zdf.de/graphql"
 	zdfappId = "ffw-mt-web-2c770629"
 	
-	extensions = {
-		"clientLibrary": {"name": "@apollo/client", "version": "4.0.11"},
-		"persistedQuery": {"version": 1, "sha256Hash": sha256Hash},
-	}
+	extensions = '{"clientLibrary":{"name":"@apollo/client","version":"4.0.11"},"persistedQuery":{"version":1,"sha256Hash":"%s"}}'
+	extensions = extensions % sha256Hash
+		
 	params = urlencode({
 		"operationName": OpName,
-		"variables": json.dumps(variables, separators=(",", ":")),
-		"extensions": json.dumps(extensions, separators=(",", ":")),
+		"variables": variables,
+		"extensions": extensions
 	})
+	
 	url = ZDF_GraphqlBase + "?" + params
 	PLog("Graphql_url: " + unquote(url))
 	headers = {
@@ -11501,13 +11549,19 @@ def ZDF_Graphql(OpName, sha256Hash, variables):
 	req = Request(url, headers=headers, method="GET")
 	with urlopen(req, timeout=20) as resp:
 		raw = resp.read().decode("utf-8")
+	PLog("data_raw: %d | %s" % (len(raw), raw[:100]))
+	return raw
 
-	data = json.loads(raw)
-	PLog("data_json: " + str(data)[:100])
-	if data.get("errors"):
-		raise RuntimeError(data["errors"][0].get("message", "Unbekannter GraphQL-Fehler"))
+	try:
+		data = json.loads(raw)
+		PLog("data_json: %s" % str(data)[:100])
+		if data.get("errors"):
+			raise RuntimeError(data["errors"][0].get("message", "Unbekannter GraphQL-Fehler"))
+	except Exception as exception:
+		PLog("Graphql_json_error: " + str(exception))
+		data={}	
 
-	return data.get("data", {})
+	return data
 #----------------------------------------------
 # Ermittlung Streamquellen für api-call, ähnlich build_Streamlists 
 #	aber abweichendes Quellformat
