@@ -12,8 +12,8 @@
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	ab Okt. 2025 Webseite geändert, TV-Daten im json-Format nur für 1 Tag
 #
-# 	<nr>43</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.03.2026
+# 	<nr>44</nr>										# Numerierung für Einzelupdate
+#	Stand: 07.05.2026
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -735,8 +735,9 @@ if "ShowSumm" in str(sys.argv):											# Kontextmenü: Video-Inhaltstext im t
 	
 	PLog("title: %s, path: %s, ID: %s" % (title, path, ID))
 
-	msg1 = "Fehler beim Abruf der Videodaten:" 
-	page, msg2 = get_page(path)
+	msg1 = "Fehler beim Abruf der Videodaten:"
+	newpath, msg = getRedirect(path)
+	page, msg2 = get_page(newpath)
 	if page == "":
 		MyDialog(msg1, msg2, '')	
 		exit()
@@ -768,28 +769,32 @@ if "ShowSumm" in str(sys.argv):											# Kontextmenü: Video-Inhaltstext im t
 	if ID == "ZDF":
 		# 20.03.2025 Korrektur sharingUrl nach ZDF-Relaunch (wie ZDF_get_content,
 		#	ZDF_getApiStreams)
+		# 07.05.2026 Berücksichtigung Web-Url in params (getRedirect, ohne
+		#	Api-Auswertung). 
 		PLog("extract_ZDF")
-		PLog("path: " + path)
-		summ=""
-		try:
-			page_obs = json.loads(page)
-			path_org = page_obs["document"]["sharingUrl"]	# Beschr. erst in Webseite
-			path, msg = getRedirect(path_org)
-			if path == "":
-				p = path_org.split("/")							# 
-				if p[-1] == "/":
-					del p[-1]
-				del p[-1]										# letztes Element entfernen
-				path = "/".join(p)
-			PLog("sharingUrl: %s, corrected: %s" % (path_org, path))
-			
-			descr = page_obs["document"]["beschreibung"]
-			PLog("descr_api: %d, %s" % (len(descr), descr[:80]))
-		except Exception as exception:
-			PLog("summ_error:" + str(exception))
-			path=""
+		path = newpath
+		PLog("path: " + path)								
+		summ=""; descr=""
+		if "<!DOCTYPE html>" not in page:					# Web oder Api?			
+			try:											# Web-Url aus Api ermitteln
+				page_obs = json.loads(page)
+				path_org = page_obs["document"]["sharingUrl"]	# Beschr. erst in Webseite
+				path, msg = getRedirect(path_org)
+				if path == "":
+					p = path_org.split("/")							# 
+					if p[-1] == "/":
+						del p[-1]
+					del p[-1]										# letztes Element entfernen
+					path = "/".join(p)
+				PLog("sharingUrl: %s, corrected: %s" % (path_org, path))
 				
-		if path:
+				descr = page_obs["document"]["beschreibung"]
+				PLog("descr_api: %d, %s" % (len(descr), descr[:80]))
+			except Exception as exception:
+				PLog("summ_error:" + str(exception))
+				path=""				
+
+		if path:											# Beschreibung aus Webseite laden
 			summ = get_summary_pre(path,ID,skip_verf=True,skip_pubDate=True,duration='dummy')
 			PLog("check_len: descr %d, summ %d" % (len(descr), len(summ)))
 			if len(descr) > len(summ):						# Abgleich
