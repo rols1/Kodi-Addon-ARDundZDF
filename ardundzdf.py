@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>338</nr>										# Numerierung für Einzelupdate
+# 	<nr>339</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.5'
 VDATE = '30.04.2026' 
 
@@ -2673,6 +2673,7 @@ def Audio_get_items_single(item, ID=''):
 #----------------------------------------------------------------
 # 26.03.2026 Nutzung des neuen Graphql-Call: liste paarweise Episoden /
 #	zugehörige Sendungen. Seitensteuerung über offset und totalCount.
+#	08.05.2026 s. AudioSearch_cluster
 #
 def AudioSearch(title, query='', offset=""):
 	PLog('AudioSearch:')
@@ -2693,59 +2694,48 @@ def AudioSearch(title, query='', offset=""):
 	query = query.strip()
 	query_org = query	
 
-	base ="https://api.ardaudiothek.de/graphql?query=query%20SearchQuery(%24query%3AString%2C%24offset%3AInt%2C%24limit%3AInt%2C%24type%3ASearchType%20%3D%20All)%7Bsearch(query%3A%24query%2Coffset%3A%24offset%2Climit%3A%24limit%2Ctype%3A%24type)%7Btracking%20items%7Btracking%20totalCount%20nodes%7Bid%20coreId%20assetId%20title%20tracking%20path%20publishDate%20duration%20itemType%20image%7Burl%20url1X1%20description%20attribution%7Daudios%7Burl%20mimeType%20downloadUrl%20allowDownload%7DprogramSet%7Bid%20coreId%20title%20path%20publicationService%7Bid%20coreId%20title%20path%20organizationName%7D%7D%7D%7D%7D%7D"
-	myvars = '{"query":"%s","offset":%d,"limit":12}' % (query, int(offset))
-	Graphql = base + "&variables=" + quote(myvars)
-	PLog("Graphql_Search: " + unquote(Graphql))	
-	
-	page, msg = get_page(path=Graphql, do_safe=False)				# nach quote ohne do_safe
-	 
-	anz = stringextract('"totalCount":', ',', page)
-	PLog("Graphql_anz: " + anz)
-	if page == '':
-		msg1 = "Fehler in AudioSearch:"	
-		msg2 = msg
-	if str(anz) == 0:
+	path = "%s/suche/%s/" % (ARD_AUDIO_BASE, query)
+	page, msg = get_page(path, do_safe=False)						# nach quote ohne do_safe
+	page = Audio_get_webslice(page, mode="json")
+	if not page:
+		icon = R(ICON_MAIN_AUDIO)
 		msg1 = "leider keine Treffer zu:"
-		msg2 = query
-	if page == '' or str(anz) == 0:
-		icon = R(ICON_MAIN_AUDIO)		
+		msg2 = query_org	
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
-	title = "Suche: %s" % query
-	AudioSearch_cluster(title, page, offset, anz)
+ 
+	AudioSearch_cluster(title, page, query_org, mark=query_org)
 	return
 
 #----------------------------------------------------------------
 # Aufruf: AudioSearch  
-# paarige Ausgabe: Episode - Sendung)
-# 03.04.2026 neu
+# 08.05.2026 neu (Web-json, Graphql-json zu sehr abweichend), Sendungen
+#	lassen wir vorerst weg. Im Web-json fehlen einige Beiträge (vermutl.
+#	Empf. des früheren Graphql-Calls).
 #
-def AudioSearch_cluster(title, page, offset, anz):
-	PLog('AudioSearch_cluster: %s, offset: %s' % (title, str(offset)))
+def AudioSearch_cluster(title, page, query, mark=""):
+	PLog('AudioSearch_cluster: %s, query: %s' % (title, query))
 	PLog(page[:100])
 	title_org=title
 
 	try:
-		page = json.loads(page)
-		data  = page["data"]
-		searchText  = data["search"]["tracking"]["searchText"]
-		total = data["search"]["items"]["totalCount"]
-		nodes = data["search"]["items"]["nodes"]
+		page = json.loads(page)		
+		items = page["pageProps"]["initialData"]["data"]["search"]["items"]
+		PLog(str(items)[:100])
+		totalCount = items["totalCount"]
+		nodes = items["nodes"]
 	except Exception as exception:
 		nodes=[]
 		PLog("search_error: " + str(exception))
-	PLog(str(page)[:100])
-	PLog("nodes: %d" % len(nodes))
+
+	PLog("nodes: %d, totalCount: %d" % (len(nodes), totalCount))
 	
 	if len(nodes) == 0:
-		PLog("wrong_totalCount: %d, nodes: %d" % (total, len(nodes)))
 		msg1 = "leider keine Treffer zu:"
-		msg2 = searchText		
+		msg2 = query		
 		icon = R(ICON_MAIN_AUDIO)		
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
 		return
 
-	
 	li = xbmcgui.ListItem()
 	li = home(li,ID='ARD Sounds')								# Home-Button
 				
@@ -2758,7 +2748,9 @@ def AudioSearch_cluster(title, page, offset, anz):
 		PLog(title); PLog(attr);
 		if mp3_url:
 			stitle = stringextract('av_show":"', '"', s)				# Sendungstitel
-			title = "Audio: [B]%s[/B]" % title							# Titel Episode
+			#title = "Audio: [B]%s[/B]" % title							# Titel Episode
+			if mark:
+				title = make_mark(mark, title, "", bold=True)			# -> util
 			title=py2_encode(title); stitle=py2_encode(stitle);
 			summ=py2_encode(summ); img_alt=py2_encode(img_alt);
 			
@@ -2774,6 +2766,7 @@ def AudioSearch_cluster(title, page, offset, anz):
 			addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ)	
 		
+		'''
 		if 	'"programSet"' in s:										# 2. Sendungen	
 			prgset = stringextract('programSet"', '}', s)
 			coreId = stringextract('coreId":"', '"', prgset)
@@ -2790,15 +2783,7 @@ def AudioSearch_cluster(title, page, offset, anz):
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
-		
-	if 	(int(offset) + 12) < int(anz):									# totalCount erreicht?	
-		tag = u"Mehr Suchergebnisse zu: %s\nab %d von %d" % (searchText, int(offset), int(anz))
-		offset = int(offset) + 12
-		title_org=py2_encode(title_org); searchText=py2_encode(searchText);
-		fparams="&fparams={'title': '%s', 'query': '%s', 'offset': '%s'}" %\
-			(quote(title_org), quote(searchText), str(offset))
-		addDir(li=li, label=title_org, action="dirList", dirID="AudioSearch", fanart=R(ICON_MEHR), 
-			thumb=R(ICON_MEHR), fparams=fparams, tagline=tag)		
+		'''
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -9171,8 +9156,9 @@ def ZDF_StartWebCluster(ctitle=""):
 		PLog("items: %d" % len(items))
 		skip_ctitle=[ctitle]											# skip Cluster-Titel am Ende
 		skip_list = [u"ZDFtivi für Kinder",
-			"verlinkt <MT25>"											# ZDFheute extern verlinkt <MT25> aus
-			]															#	Nachrichten und Politik
+			"verlinkt <MT25>",											# ZDFheute extern verlinkt <MT25> aus
+			"Logo mittig,"												#	Nachrichten und Politik						
+			]			
 
 		for item in items:
 			if PYTHON2:
@@ -9299,6 +9285,7 @@ def ZDF_StartWebCluster(ctitle=""):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
+#-----------------------------------------------------------------------
 # Umsetzung Rubrik "Derzeit beliebt" mit spez. Graphql-Call
 # Aufruf: ZDF_StartWebCluster, Nutzung ZDF_Graphql und
 #	ZDF_Graphql_get_seasons
