@@ -394,7 +394,8 @@ def do_create(label, add_url, tagline, summary):
 		else:
 			title = label
 	if thumb == '':
-		thumb = thumb_org	
+		thumb = thumb_org
+	Plot = Plot.replace("\n\n", " | ")
 	PLog("title: %s\n thumb: %s\n url: %s\n Plot:%s" % (title, thumb, url, Plot))
 	
 	formats = [".m3u8", ".mp4", ".mp3", ".webm"]					# Url-Test

@@ -60,6 +60,7 @@ FLAG_OnlyUrl	= os.path.join(ADDON_DATA, "onlyurl")			# Flag PlayVideo_Direct -> 
 ICON 			= 'icon.png'			# ARD + ZDF
 ICON_PLAYLIST	= R("icon-playlist.png")
 
+# PLAY_TEMPL nicht xml-komform (&-Zeichen in Plugin-Call, z.B. dirList&dirID):
 PLAY_TEMPL 		= u"<play>%s###%s###%s###%s###%s###%s</play>\n"	#  % (timestamp, title, add_url, thumb, Plot, status)
 
 maxvideos = 100													# z.Z. noch fester Wert, nicht genutzt

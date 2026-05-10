@@ -747,14 +747,15 @@ def doLock(lockfile, remove=False):
 # falls now leer, wird die akt. Zeit ermittelt (lokal)
 #
 def date_human(myformat, now=''):
-	PLog("date_human:")
+	PLog("date_human: " + myformat)
 
 	if now == '':
 		now = EPG.get_unixtime(onlynow=True)
 	
 	s = datetime.datetime.fromtimestamp(float(now))
-	date_human = s.strftime(myformat)	
-	return date_human
+	dh = s.strftime(myformat)
+	PLog("dh: " + dh)	
+	return dh
 	
 ##################################################################
 #---------------------------------------------------------------- 

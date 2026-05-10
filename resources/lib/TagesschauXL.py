@@ -792,8 +792,9 @@ def get_content_json(item):
 		sdatum = u"Sendedatum: [COLOR blue]%s[/COLOR]" % sdatum
 	
 	dur = stringextract("length': '", "',", str(obj))
-	PLog("dur: " + dur); 
-	dur = seconds_translate(dur)
+	PLog("dur: " + dur);
+	if dur:
+		dur = seconds_translate(dur)
 	
 		
 	# Streams: zu geringe Auswahl für Listen

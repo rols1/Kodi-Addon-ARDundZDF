@@ -345,7 +345,7 @@
 	<item>
 		<name>Regional: Livestreams 3. Bundesliga</name>
 		<thumbnail>tv-liga3.png</thumbnail>
-		<tag>Live-Spiele der 3. Bundesliga im Free-TV | Bild: MDR.de</tag>
+		<tag>Live-Spiele der 3. Bundesliga im Free-TV | Quelle: liga3-online.de | Bildquelle: MDR.de</tag>
 		<summ>Streamquellen (umschaltbar): ARD Livestreams oder ARD Event Streams</summ>	
 		<info>Auswertung: SenderLiveListe -> ARDSportLiga3</info>
 		<date>20.10.2023</date>

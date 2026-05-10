@@ -10,6 +10,37 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+10.05.2026	5.4.6
+			Main_ZDF: neuer Button Livestreams im ZDF-Hauptmenü.
+			N24LastServer: Funktion entfernt (obsolet).
+			Haupt-PRG: Notification für Router-Error ergänzt.
+			ZDF_Teletext, ARD_Teletext: Seitenübersichten aktualisiert.
+			get_streams_api_v2 (arte): fehlende Vorbelegung Param uhd ergänzt.
+			ARDStartVideoHLSget,ARDStartVideoMP4get (ARDnew): merged Pull-Request
+			#59 Bugfix Audiodeskription.
+			ARDSportLiga3: Ausgabe stream_source korrigiert (Error bool + string).
+			get_content_json (TagesschauXL): Call seconds_translate korrigiert.
+			get_json_content_details (ARDnew): für FSK "NONE" ersetzt durch "--".
+			ARDSportLive: zweite Listeitem für "music" (Trennung von "video" in 
+			addDir).
+			addDir (util): Entpacken der fparams-Variablen für Kontext-Menüs 
+			vereinheitlicht.
+			PlayVideo (util): leere seekTime vpr float mit 0 vorbelegt.
+			Quoting für tagline und summary in fparams_strm entfernt.
+			do_create (strm): in Plot "\n\n" durch  " | " ersetzt.
+			date_human (epgRecord): Logausgaben ergänzt.
+			livesenderTV.xml: Infotext für "Livestreams 3. Bundesliga" mit Webquelle
+			ergänzt.			
+			ZDF_StartWebCluster: aus Web ergänzt: duration, FSK, pubDate.
+			ZDF_StartWebCluster: Web-Rubrik "Derzeit beliebt" ergänzt, Umsetzung mit
+			ZDF_StartWebCluster: Anpassungen für Webänderungen bei Livestreams.
+			Graphql-Call GetClusterList (neue Funktion ZDF_StartWebBeliebt, Ńutzung 
+			ZDF_Graphql_get_seasons)
+			EPG_ShowSumm (EPG): getRedirect und Anpassung für ZDF-Web-Urls ergänzt
+			(relevant für Videos aus ZDF_StartWebCluster). 
+			AudioSearch_cluster (ARD Sounds): Seitensteuerung für Episoden (items) via
+			Graphql-Call ergänzt, Auswertung Rubriken + Sammlungen ergänzt.
+
 26.04.2026	5.4.5
 			get_json_content (ARDnew): fehlende Defintion duration ergänzt für Aufruf
 			get_summary_pre bei Setting “Inhaltstexte im Voraus laden".
@@ -28,7 +59,7 @@ CHANGE HISTORY
 			dto. Watchdog_ZDF_Childs.
 			Main_NEW (ARDnew): Menü "ARD Mediathek Entdecken" entfernt (HTTP ERROR 404),
 			Menü "Rubriken" neu angelegt (Doppel aus Startmenü).
-			ARDStartVideoHLSget (ARDnew): Ausschluss audio="standard/deu" falls der Titel
+			ARDStartVideoHLSget (ARDnew): Ausschluss audio="standard/deu", falls der Titel
 			"<Audiodeskription>" enthält.
 
 12.04.2026	5.4.4

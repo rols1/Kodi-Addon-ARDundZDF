@@ -47,7 +47,7 @@ import datetime, time
 
 # Addonmodule + Funktionsziele (util_imports.py)
 # import ardundzdf reicht nicht für thread_getpic
-from ardundzdf import *					# -> get_query, Parseplaylist, 
+from ardundzdf import *					# -> get_query, build_Streamlists + build_Streamlists_buttons
 										# thread_getpic, ZDF_SlideShow, get_ZDFstreamlinks
 from resources.lib.util import *
 
