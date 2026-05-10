@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>339</nr>										# Numerierung für Einzelupdate
+# 	<nr>340</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.6'
 VDATE = '10.05.2026' 
 
@@ -1129,12 +1129,12 @@ def Main_ZDF(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_StartWebCluster", fanart=R(ICON_MAIN_ZDF), 
 		thumb=R(ICON_MAIN_ZDF), tagline=tag, fparams=fparams)	
 
-	title = 'Sendungen A-Z' 
 	title = 'Sendung verpasst' 
 	fparams="&fparams={'name': 'ZDF-Mediathek', 'title': '%s'}" % title 
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_VerpasstWoche", fanart=R(ICON_ZDF_VERP), 
 		thumb=R(ICON_ZDF_VERP), fparams=fparams)	
 
+	title = 'Sendungen A-Z' 
 	fparams="&fparams={'name': '%s'}" % title
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_AZ", fanart=R(ICON_ZDF_AZ), 
 		thumb=R(ICON_ZDF_AZ), fparams=fparams)
