@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>340</nr>										# Numerierung für Einzelupdate
+# 	<nr>341</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.6'
 VDATE = '10.05.2026' 
 
@@ -1759,7 +1759,7 @@ def Audio_get_rubriken_web(title, path="", rubrik_title=""):
 #----------------------------------------------------------------
 # Aufrufer Audio_get_homescreen (Step 2) 
 #	listet einz. Cluster + verteilt:
-#	Item -> AudioWebMP3
+#	Item, Livestream -> AudioWebMP3
 #	Sendung, Sammlung ->  Audio_get_sendung mit
 #		api- oder web-url
 # neu ab 26.03.2026
@@ -1810,10 +1810,12 @@ def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 		
 		summ_par = "%s\n\n%s" % (tag, summ)
 		summ_par = summ_par.replace("\n","||")
+		title = repl_json_chars(title)
 		title=py2_encode(title); url=py2_encode(url);
 		img=py2_encode(img); summ_par=py2_encode(summ_par);	
 
-		if typ=="Item" or typ=="EventLivestream":					# Einzelbeitrag
+	#--------------------------------								# Einzelbeitrag
+		if typ=="Item" or typ=="EventLivestream":					
 			PLog("to_AudioWebMP3")
 			tag = "[B]Audiobeitrag[/B] | %s\nBild: %s" % (dur, img_alt)
 			if typ=="EventLivestream":		
@@ -1826,8 +1828,8 @@ def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 					fparams=fparams, tagline=tag, summary=summ)			
 						
 	#--------------------------------								# Cluster mit Folgeseiten
-		# typ sendung -> api-url-programsets,	typ sammlung -> web-url 
-		if typ=="Sendung":							
+		#------------------
+		if typ=="Sendung":											# 	typ sendung -> api-url-programsets,					
 			tag = "Folgeseiten"
 			if img_alt:
 				tag = "%s\nBild: %s" % (tag, img_alt)
@@ -1839,8 +1841,8 @@ def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
-
-		if typ=="Sammlung":
+		#------------------
+		if typ=="Sammlung":											# typ sammlung -> web-url 
 			tag = "Folgeseiten"
 			if img_alt:
 				tag = "%s\nBild: %s" % (tag, img_alt)
@@ -1849,6 +1851,7 @@ def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
 		
+		#------------------
 		if typ == "Link" and len(teasers) == 1:						# Link zur Veranstaltung, nicht verwertbar
 			msg1 = u'Link nicht unterstützt'
 			msg2 = title_org
@@ -2027,9 +2030,11 @@ def Audio_get_nexturl(url, elements, cnt):
 			return "", ""
 
 #----------------------------------------------------------------
-# Aufrufer: Audio_get_cluster
-# extrakt Cluster-Details, für Items vorrangig Audio_get_items_single
-#	verwenden
+# Aufrufer: Audio_get_cluster (<- Audio_get_homescreen)
+# extrakt Cluster-Details für Sätze mit json-keys "widgets" + 
+#	"type" bzw. "teaser_content_type".
+#	Für Items vorrangig Audio_get_items_single verwenden 
+#		json-key "nodes", kein "type".
 # neu: 26.03.2026
 # 
 def Audio_get_cluster_items(item):
@@ -2048,8 +2053,7 @@ def Audio_get_cluster_items(item):
 		
 		title = item["title"]	
 		url = ARD_AUDIO_BASE + item["target"]["url"]
-		img, img_alt = Audio_get_img(item)
-		
+		img, img_alt = Audio_get_img(item)		
 
 		if "duration" in item:
 			dur = item["duration"]
@@ -2462,7 +2466,7 @@ def AudioSenderPrograms(org=''):
 # neu ab 26.08.2023
 # Button ARD Audio Event Streams -> ARDSportAudioXML -> SenderLiveListe
 #	(Audio-channels in livesenderTV.xml
-# Button Sport in der Audiothek -> Audio_get_rubriken_web
+# Button Sport in der ARD Sounds -> Audio_get_rubriken_web
 #	(Audiothek, Rubrik LIVE: 1. und 2. Bundesliga)
 # restl. Buttons -> ARDSportNetcastAudios (Audio-Livestreams auf
 #	sportschau.de, WDR -> ARDSportMediaPlayer extrahiert die eingebetteten
@@ -2485,7 +2489,7 @@ def ARDAudioEventStreams(li=''):
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportAudioXML", fanart=img, 
 		thumb=img, tagline=tag, summary=summ, fparams=fparams)
 		
-	label = "[B]Audio:[/B] Sport in der Audiothek"					# Querverweis Audiothek Rubrik Sport
+	label = "[B]Audio:[/B] Sport in ARD Sounds"							# Querverweis Audiothek Rubrik Sport
 	li = xbmcgui.ListItem()
 	tag = u"LIVE: 1. und 2. Bundesliga, einschl. Bundesliga-Konferenz, Aktuell informiert und weitere Themen"
 	summ = u"Quelle: Rubrik Sportschau in ARD Sounds"
@@ -3418,7 +3422,7 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	
 	title = u"ARD Audio Event Streams"							# Audio Event Streams im Haupt-PRG	
-	tag = u"Event- und Netcast-Streams, Sport in der Audiothek, Audiostreams auf sportschau.de"
+	tag = u"Event- und Netcast-Streams, Sport in ARD Sounds, Audiostreams auf sportschau.de"
 	img = R("radio-livestreams.png")
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="ARDAudioEventStreams", fanart=img, thumb=img, 
@@ -4536,19 +4540,17 @@ def ARDSportMediaPlayer(li, item_data):
 		except:
 			duration=""
 	PLog("duration: " + duration); 
-	duration = seconds_translate(duration)
-		
-	imgs = stringextract('"images":', '"kind"', item_data)		# 29.11.2025 nach Änderung WDR
-	PLog("imgs: " + imgs)
-	img = stringextract('"url":"', '"', imgs)
-	if not img:
+	duration = seconds_translate(duration)		
+																# 11.05.2026 nach Änderung WDR
+	imgs = blockextract("https://images", item_data, '{width}')	# .. gegen-hamburger-sv-100.jpg?width={width}
+	PLog("imgs: %d" % len(imgs))
+	if not imgs:
 		img = img_def
 	else:
-		img = img.replace('{size}', "16x9-big")			
-		img = img.replace('{width}', "640")			
-		if "." not in img.split("/")[-1]:						# Kodi braucht Extension
-			img = img + ".png"
-
+		img = imgs[0]											# 1. img
+		PLog("img1: " + img)
+		img = img.replace('{size}', "AAABnSSvrFg/16x9-big")		# AAABnSSvrFg im Web vorh., nicht in Playerdaten!
+		img = img.replace('{width}', "640")						# Beispielbild in Watchdo_2 aufgenommen	
 	mode = stringextract('_broadcasting_type":"', '"', item_data)
 	if mode == "live":
 		live=True
@@ -4599,15 +4601,13 @@ def ARDSportMediaPlayer(li, item_data):
 #---------------------------------------------------------------------------------------------------
 # Für Seiten mit nur einheitlichen Blöcken
 # Aufrufer: ARDAudioEventStreams (Audiostreams, Netcast-Audiostreams) 
-# 
+# 	mit path sportschau.de/fussball/bundesliga/alle-audiostreams...
+#
 def ARDSportNetcastAudios(title, path, img, cacheID):
 	PLog('ARDSportNetcastAudios:')
 	
 	page = ARDSportLoadPage(title, path, "ARDSportNetcastAudios", cacheID)
-	if page == '':
-		return
-	
-	items = blockextract('<picture class=', page)							# Kombi?: ARDSportLive (Videos + Audios)
+	items = blockextract('<picture class=', page)						# Kombi?: ARDSportLive (Videos + Audios)
 	PLog(len(items))
 	if  len(items) == 0:
 		icon = img
@@ -4631,14 +4631,14 @@ def ARDSportNetcastAudios(title, path, img, cacheID):
 			title=py2_encode(title); mp3_url=py2_encode(mp3_url); img=py2_encode(img);
 			tag=py2_encode(tag); Plot=py2_encode(Plot);
 			
-			if player == "audio":												# bei Bedarf für Video ergänzen
-				if live:														# netcast Livestream
+			if player == "audio":										# bei Bedarf für Video ergänzen
+				if live:												# netcast Livestream
 					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(mp3_url), 
 						quote(title), quote(img), quote_plus(Plot))
 					addDir(li=li, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
 						tagline=tag, mediatype='music')	
-				else:															# Konserve
-					ID="ARD"													# ID Home-Button
+				else:													# Konserve
+					ID="ARD"											# ID Home-Button
 					fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(mp3_url), 
 						quote(title), quote(img), quote_plus(Plot), ID)
 					addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
