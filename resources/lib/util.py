@@ -11,7 +11,7 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>167</nr>										# Numerierung für Einzelupdate
+# 	<nr>168</nr>										# Numerierung für Einzelupdate
 #	Stand: 12.05.2026
 
 # Python3-Kompatibilität:
@@ -2267,7 +2267,8 @@ def time_to_minutes(time_str):
 # Gibt Differenz zwischen 2 timestrings zurück
 # Format passend für ZDF-EPG
 # tstr1=enddate, tstr2=startdate
-# now_check=True wenn now zwischen tstr1 und tstr2
+# now_check=True wenn now zwischen tstr1 und tstr2, nicht
+#	für arte geeignet - s. time_calc_now
 #
 def time_calc_diff(tstr1, tstr2):
 	PLog('time_calc_diff:')
@@ -2289,6 +2290,30 @@ def time_calc_diff(tstr1, tstr2):
 	
 	secs = int((start- end).total_seconds())
 	return seconds_translate(secs), now_check
+	
+#---------------------------------------------------------------- 
+# arte-Version von time_calc_diff u.a. EPG-Daten, die nur
+#	Startzeit und Dauer liefern. 
+# tstr1: Startzeit, duration: Dauer in sec
+#
+def time_calc_now(tstr1, duration):
+	PLog('time_calc_now:' )
+	tstr1=tstr1[:19]
+	PLog('tstr1: %s | tstr2: %s' % (tstr1, duration))
+	
+	date_format = "%Y-%m-%dT%H:%M:%S"
+	start = datetime.datetime.fromtimestamp(time.mktime(time.strptime(tstr1, date_format)))
+	end = start + datetime.timedelta(seconds=int(duration))
+	end_time = end.strftime("%Y-%m-%d %H:%M:%S")
+	end_time = end_time[:19]
+	now = datetime.datetime.now()
+
+	now_check=False
+	if now < end and now > start:
+		now_check=True
+		PLog("now_check_true: now: %s, start: %s, end: %s, end_time: %s" % (str(now)[:19], start, end, end_time))
+	
+	return end_time, now_check
 
 #---------------------------------------------------------------- 
 # 03.01.2025 transl_pubDate entfernt - übersetzte für alte Audiothek

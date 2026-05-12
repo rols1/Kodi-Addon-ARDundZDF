@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>76</nr>								# Numerierung für Einzelupdate
-#	Stand: 29.04.2026
+# 	<nr>77</nr>								# Numerierung für Einzelupdate
+#	Stand: 12.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -280,7 +280,9 @@ def get_live_data(name):
 
 # ----------------------------------------------------------------------
 # TV-Programm Heute von arte.tv/de/guide/
-# 14.03.2025 OnlyNow=True -> nur Seite für get_live_data	
+# 14.03.2025 OnlyNow=True -> nur Seite für get_live_data
+# 12-05.2026 "availability"]["start" und "availability"]["start"
+#	stehen nicht mehr für Start/Ende einer Sendung
 #
 def EPG_Today(ID="", OnlyNow=""):
 	PLog('EPG_Today: ID: %s, OnlyNow: %s' % (ID, OnlyNow))
@@ -354,13 +356,8 @@ def EPG_Today(ID="", OnlyNow=""):
 		prgid = item["programId"]						# 065804-000-A		
 		img = get_img(item, ID)
 
-		start_time = item["availability"]["start"]		# "2025-11-12T04:56:38Z"
-		end_time = item["availability"]["end"]
-		start = time_translate(start_time, add_hour_only=True)
-		end = time_translate(end_time, add_hour_only=True)		
-		
-		dur = item["duration"]
-		dur = seconds_translate(dur)
+		duration = item["duration"]
+		dur = seconds_translate(duration)
 		geo = item["geoblocking"]
 		if geo is None:
 			geo = "ALL"
@@ -369,7 +366,12 @@ def EPG_Today(ID="", OnlyNow=""):
 		else:
 			"Geo: ALL"
 			
-		blue_start = start_time[-9:-4]; blue_end = end_time[-9:-4];
+		start_time = item["availability"]["upcomingDate"]		# "2025-11-12T04:56:38Z"
+		start = time_translate(start_time, add_hour_only=False)
+		end = "%d sec" % duration
+		end_time, now_check = time_calc_now(start_time, duration)
+		
+		blue_start = start_time[-9:-4]; blue_end = end_time[-9:-3];
 		title = py2_decode(title)
 		label = u"[COLOR blue]%s[/COLOR] | %s" % (blue_start, title)	# Sendezeit | Titel
 		tag = u"[B]%s %s %s %s Uhr | %s: %s | %s[/B]" % (lvon, blue_start, lbis, blue_end, ldauer, dur, geo)
@@ -379,7 +381,6 @@ def EPG_Today(ID="", OnlyNow=""):
 		tag_par = tag.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 		summ_par = summ.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 
-		diff, now_check = time_calc_diff(end_time, start_time)
 		if now_check:
 			# Farb-/Fettmarkierung bleiben im Kontextmenü erhalten (addDir):
 			title = "[B]JETZT: %s[/B]" % title						# JETZT: fett 
