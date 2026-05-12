@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>17</nr>								# Numerierung für Einzelupdate
-#	Stand: 07.04.2026
+# 	<nr>18</nr>								# Numerierung für Einzelupdate
+#	Stand: 12.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -580,6 +580,7 @@ def refresh_epg():
 def Context(title, path, img, mode):
 	PLog('Context:'); 
 	PLog(title);  PLog(path); PLog(img); PLog(mode);
+	title_org=title
 	
 	if "ShowSeason" not in mode:							# bisher..
 		PLog("not_supported: " + mode) 
@@ -623,31 +624,34 @@ def Context(title, path, img, mode):
 			exit()
 	
 	if "api.ardmediathek" in path:							# ARD
-		# % (sender, urlId)
-		base = "https://api.ardmediathek.de/page-gateway/pages/%s/grouping/%s?embedded=true"
-		page, msg = get_page(path=path)
+		path=path + "&seasoned=true"						# 12.05.2026 früheres Format funktioniert nicht mehr
+		new_url, msg = getRedirect(path)
+		page=""
+		if new_url:
+			page, msg = get_page(path=new_url)	
 		
 		# typ:  SEASON_SERIES, SINGLE, INFINITE_SERIES (z.B. Nachrichten, nicht verw.):
 		typ = stringextract('coreAssetType":"', '"', page)	
 		pub =  stringextract('publicationService":', 'logo"', page)
 		sender = stringextract('name":"', '"', pub)
-		show = stringextract('show":', 'image"', page)
+		show = stringextract('"show":', 'availableSeasons"', page)
+		PLog("show: " + show)
 		show_id = stringextract('id":"', '"', show)
 		title = stringextract('title":"', '"', show)
-		
-		sender = sender.replace("Das Erste", "ard")
-		surl = base % (sender, show_id)
-
-		#  new_url, msg = get_page(path=surl, GetOnlyRedirect=True) # nicht nötig
-		new_url = surl
-		PLog("coreAssetType: %s, sender: %s, show_id: %s, new_url: %s" % (typ, sender, show_id, new_url))
+		img = stringextract('src":"', '"', show)
+		img = img.replace('{width}', "640")
+		if not title:
+			title=title_org
+	
+		PLog("coreAssetType: %s, title: %s, sender: %s, show_id: %s, img: %s, new_url: %s" %\
+			(typ, title, sender, show_id, img, new_url))				
 		
 		if new_url and "SEASON" in typ:
-			dirID = "resources.lib.ARDnew.ARDStartRubrik"
-			fparams="&fparams={'title': '%s', 'path': '%s'}" %\
-				(quote(title), quote(new_url))
+			dirID = "resources.lib.ARDnew.ARDStartRubrik"	# -> ARD_KatSeriePre
+			fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s'}" %\
+				(quote(new_url), quote(title), quote(img))
 			action="action=dirList&dirID=%s&fparams=%s"	% (dirID, fparams)
-			PLog("action_Context: " + action)
+			PLog("action_Context: " + unquote(action))
 			action=quote(action)
 			xbmc.executebuiltin('RunAddon(%s, %s)'  % (ADDON_ID, action))
 			exit()		

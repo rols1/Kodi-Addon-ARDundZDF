@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>137</nr>										# Numerierung für Einzelupdate
-#	Stand: 01.05.2026
+# 	<nr>138</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -769,11 +769,12 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 # 18.04.2023 Cache für Startseite entfällt (obsolet - api-Call)
 #		
 def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""): 
-	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path)
+	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path); PLog(img)
 	# Titel-Anpassung für phoenix ("Stage Widget händisch"):
 	if title.startswith("Stage") or title.startswith("Die besten Videos"):
 		title = "[B]Highlights[/B]"
 	title_org = title
+	img_org = img
 	
 	CurSender = ARD_CurSender()								# init s. Modulkopf
 	sendername, sender, kanal, img, az_sender = CurSender.split(':')
@@ -815,8 +816,9 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		PLog("ARDStartRubrik_more_container")
 		ARDRubriken(li, page=page, homeID=homeID)		# direkt
 	else:												# detect Staffeln/Folgen
-		if 'hasSeasons":true' in page and '"heroImage":' in page:
-			ARD_KatSeriePre(path, title, img)			# 20.03.2026 Staffelübersicht, Button "komplette Liste: .."
+		if 'hasSeasons":true' in page:					# kann fehlen: '"heroImage":'
+			PLog("hasSeasons_detect")
+			ARD_KatSeriePre(path, title, img_org)		# 20.03.2026 Staffelübersicht, Button "komplette Liste: .."
 			return
 		elif ID != "Livestream":	
 			ID = "ARDStartRubrik"	
@@ -985,13 +987,19 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 	try:
 		obj = json.loads(page)
 		seasons = obj["widgets"]									# i.d.R. Staffeln, oder Varianten einer Staffel	
-		teasers=""; trailer=""		
-		hero_img = obj["heroImage"]["src"]
-		PLog("hero_img: " + hero_img)
-		hero_img = hero_img.replace('{width}', '840')				# wie ZDF_get_content
+		teasers=""; trailer=""
+		if "heroImage" in obj:										# 12.05.2026 kann fehlen, Serie Totenfrau 
+			hero_img = obj["heroImage"]["src"]
+			PLog("hero_img: " + hero_img)
+			hero_img = hero_img.replace('{width}', '840')			# wie ZDF_get_content
+		else:
+			hero_img = img
+	
 		page_id = obj["trackingPiano"]["page_id"]					# -> Empfehlungen
-		if 	obj["trailer"]:											# Trailer zur Serie, auch EXTRA_TRAILER
+		if 	"trailer" in obj:											# Trailer zur Serie, auch EXTRA_TRAILER
 			trailer = obj["trailer"]
+		if 	"Trailer" in obj:											# 12.05.2026 Serie Totenfrau
+			trailer = obj["Trailer"]
 		if snr:
 			snr = int(snr) 
 			teasers = seasons[snr]["teasers"]				

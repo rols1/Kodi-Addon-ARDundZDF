@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>166</nr>										# Numerierung für Einzelupdate
-#	Stand: 06.05.2026
+# 	<nr>167</nr>										# Numerierung für Einzelupdate
+#	Stand: 12.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -854,9 +854,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 						fp = {'title': K_title, 'path': K_path, 'ID': org_id, 'mode': 'ShowSumm'}
 						fparams_ShowSumm = "&fparams={0}".format(fp)		# -> Inhaltstext
 						PLog("fparams_ShowSumm: " + fparams_ShowSumm[:80])	
-						fp = {'title': K_title, 'path': K_path, 'img': K_img, 'mode': 'ShowSeason'}
+						fp = {'path': K_path, 'title': K_title, 'img': K_img, 'mode': 'ShowSeason'}
 						fparams_ShowSeason = "&fparams={0}".format(fp)		# -> Serie zeigen
-						PLog("fparams_ShowSeason: " + fparams_ShowSeason[:80])	
+						PLog("fparams_ShowSeason: " + fparams_ShowSeason)	
 															
 			if SETTINGS.getSetting('pref_exist_inlib') == 'true':		# Abgleich Medienbibliothek
 				fp = {'title': label}									# Videotitel							
