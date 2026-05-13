@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>341</nr>										# Numerierung für Einzelupdate
+# 	<nr>342</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.6'
 VDATE = '10.05.2026' 
 
@@ -778,7 +778,7 @@ def InfoAndFilter():
 	tag = u"%s\n\nEinzelupdates ermöglichen kurzfristige Fixes und neue Funktionen zwischen den regulären Updates." % tag
 	summ = u"Anstehende Einzelupdates werden im Forum kodinerds im Startpost des Addons angezeigt"
 	summ = u"%s - %s" % (summ, item)								# Forum-Info
-	fparams="&fparams={'PluginAbsPath': '%s'}" % PluginAbsPath
+	fparams="&fparams={}" 											# 13.05.2026 lib-Pfad erst am Ziel ermitteln
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.EPG.update_single",\
 		fanart=R(FANART), thumb=R("icon-update-einzeln.png"), tagline=tag, summary=summ, fparams=fparams)	
 

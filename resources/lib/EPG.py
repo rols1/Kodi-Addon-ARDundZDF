@@ -12,8 +12,8 @@
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	ab Okt. 2025 Webseite geändert, TV-Daten im json-Format nur für 1 Tag
 #
-# 	<nr>44</nr>										# Numerierung für Einzelupdate
-#	Stand: 07.05.2026
+# 	<nr>45</nr>										# Numerierung für Einzelupdate
+#	Stand: 13.05.2026
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -118,9 +118,11 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 #	entfällt, nur noch direkter Abgleich Datei lokal / Datei Repo.
 # 07.03.2026 GIT_BASE "https://github.com/rols1/Kodi-Addon-ARDundZDF/blob/master" führt unter
 #	Windows zu HTTP Error 429: Too Many Requests. Neue GIT_BASE s.u.
-#	Neu: Error-Liste, angehängt im Textviewer 
+#	Neu: Error-Liste, angehängt im Textviewer
+# 13.05.2026 Call ohne PluginAbsPath, sondern resources/lib erst hier ermitteln, um Nutzung aus 
+#	Merkliste mit ext. Pfad auf verschiedenen Systemen zu ermöglichen-
 #
-def update_single(PluginAbsPath):
+def update_single(PluginAbsPath=""): 								# PluginAbsPath verbleibt bis V5.4.8
 	PLog('update_single:')
 	import glob	
 	GIT_BASE = "https://raw.githubusercontent.com/rols1/Kodi-Addon-ARDundZDF/refs/heads/master/"
@@ -130,18 +132,18 @@ def update_single(PluginAbsPath):
 	# zusätzliche Dateien:	
 	# nicht verwenden: addon.xml + settings.xml (CAddonSettings-error),
 	#	changelog.txt, slides.xml, ca-bundle.pem, Icons
-	SINGLELIST = ["%s/%s" % (PluginAbsPath, "resources/livesenderTV.xml"),
-				"%s/%s" % (PluginAbsPath, "resources/settings.xml"),
-				"%s/%s" % (PluginAbsPath, "resources/arte_lang.json"),
-				"%s/%s" % (PluginAbsPath, "resources/UT_Styles_ARD"),
-				"%s/%s" % (PluginAbsPath, "ardundzdf.py")
+	SINGLELIST = ["%s/%s" % (ADDON_PATH, "resources/livesenderTV.xml"),
+				"%s/%s" % (ADDON_PATH, "resources/settings.xml"),
+				"%s/%s" % (ADDON_PATH, "resources/arte_lang.json"),
+				"%s/%s" % (ADDON_PATH, "resources/UT_Styles_ARD"),
+				"%s/%s" % (ADDON_PATH, "ardundzdf.py")
 		]
 	selected=[0,1,2]												# Auswahl-Default: alle, weiter s.u.
 
-	globFiles = "%s/%s/*py" % (PluginAbsPath, "resources/lib")
+	globFiles = "%s/%s/*py" % (ADDON_PATH, "resources/lib")
 	files = glob.glob(globFiles) 									# Module -> SINGLELIST 
 	files = sorted(files,key=lambda x: x.upper())
-	#PLog(files)			# Debug
+	PLog("lib_files: " + str(files))
 	for f in files:
 		if "__init__.py" in f or ".pem" in f:						# skip PY2, Zertif. 
 			continue
@@ -151,7 +153,7 @@ def update_single(PluginAbsPath):
 	
 	RepoList=[]	
 	for item in SINGLELIST:
-		f = item.replace(PluginAbsPath, "https://github.com/rols1/Kodi-Addon-ARDundZDF/tree/master/")
+		f = item.replace(ADDON_PATH, "https://github.com/rols1/Kodi-Addon-ARDundZDF/tree/master/")
 		RepoList.append(f)
 	PLog("RepoList: %d" % len(RepoList))
 
@@ -167,7 +169,7 @@ def update_single(PluginAbsPath):
 	
 	textlist=[]; ret_list=[]; cnt=0
 	for local_file in SINGLELIST:
-		local_file = local_file.split(PluginAbsPath)[-1]			# cut bis einschl. plugin.video.ardundzdf
+		local_file = local_file.split(ADDON_PATH)[-1]				# cut bis einschl. plugin.video.ardundzdf
 		if "\\" in local_file:
 			local_file = local_file.split("\\")[-1]					# Windows
 		else:
@@ -211,7 +213,7 @@ def update_single(PluginAbsPath):
 			updated	= False
 			if nr_local:		
 				try:
-					fname = local_file.split(PluginAbsPath)[-1]		# Bsp.: /resources/lib/ARDnew.py
+					fname = local_file.split(ADDON_PATH)[-1]		# Bsp.: /resources/lib/ARDnew.py
 					# Bsp.: ..raw.githubusercontent.com/rols1/Kodi-Addon-ARDundZDF/refs/heads/master/resources/lib/ARDnew.py
 					remote_file = "%s%s" % (GIT_BASE, fname)
 					remote_file = remote_file.replace('\\', '/')
