@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>18</nr>								# Numerierung für Einzelupdate
-#	Stand: 12.05.2026
+# 	<nr>19</nr>								# Numerierung für Einzelupdate
+#	Stand: 14.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -624,11 +624,13 @@ def Context(title, path, img, mode):
 			exit()
 	
 	if "api.ardmediathek" in path:							# ARD
-		path=path + "&seasoned=true"						# 12.05.2026 früheres Format funktioniert nicht mehr
-		new_url, msg = getRedirect(path)
+		path=path + "&seasoned=true"						# 12.05.2026 früheres Format funktioniert nicht mehr,
+		new_url, msg = getRedirect(path)					# 	seasoned=true für Serien erforderlich
 		page=""
 		if new_url:
-			page, msg = get_page(path=new_url)	
+			page, msg = get_page(path=new_url)
+		base64_id =  stringextract('/item/', '?', new_url)	# wird ersetzt durch show_id
+		PLog("base64_id: " + base64_id)
 		
 		# typ:  SEASON_SERIES, SINGLE, INFINITE_SERIES (z.B. Nachrichten, nicht verw.):
 		typ = stringextract('coreAssetType":"', '"', page)	
@@ -636,18 +638,19 @@ def Context(title, path, img, mode):
 		sender = stringextract('name":"', '"', pub)
 		show = stringextract('"show":', 'availableSeasons"', page)
 		PLog("show: " + show)
-		show_id = stringextract('id":"', '"', show)
-		title = stringextract('title":"', '"', show)
+		show_id = stringextract('id":"', '"', show)			# Bsp.: Y3JpZDovL2Rhc2Vyc3RlLmRlL3RvdGVuZnJhdQ für
+		title = stringextract('title":"', '"', show)		#	crid://daserste.de/totenfrau
 		img = stringextract('src":"', '"', show)
 		img = img.replace('{width}', "640")
 		if not title:
 			title=title_org
+		new_url = new_url.replace(base64_id, show_id)
 	
 		PLog("coreAssetType: %s, title: %s, sender: %s, show_id: %s, img: %s, new_url: %s" %\
 			(typ, title, sender, show_id, img, new_url))				
 		
 		if new_url and "SEASON" in typ:
-			dirID = "resources.lib.ARDnew.ARDStartRubrik"	# -> ARD_KatSeriePre
+			dirID = "resources.lib.ARDnew.ARD_KatSeriePre"	# -> ARD_KatSeriePre
 			fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s'}" %\
 				(quote(new_url), quote(title), quote(img))
 			action="action=dirList&dirID=%s&fparams=%s"	% (dirID, fparams)
