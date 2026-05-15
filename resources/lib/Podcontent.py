@@ -4,8 +4,8 @@
 #
 #	04.11.2019 Migration Python3
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	<nr>4</nr>								# Numerierung für Einzelupdate
-#	Stand: 14.11.2023
+# 	<nr>5</nr>								# Numerierung für Einzelupdate
+#	Stand: 15.05.2026
 
 
 # Python3-Kompatibilität:
@@ -160,7 +160,7 @@ def DownloadMultiple(key):									# Sammeldownloads
 		if "www.ardaudiothek.de" in url:					# mp3-Quelle ermitteln bei Webquellen
 			url = ardundzdf.AudioWebMP3(url, title="", thumb="", Plot="", ID="", no_gui="true")			
 			
-		if 	SETTINGS.getSetting('pref_generate_filenames'):	# Dateiname aus Titel generieren
+		if 	SETTINGS.getSetting('pref_generate_filenames') == "true":	# Dateiname aus Titel generieren
 			dfname = make_filenames(py2_encode(title)) + '.mp3'
 			PLog(dfname)
 		else:												# Bsp.: Download_2016-12-18_09-15-00.mp3
@@ -174,6 +174,17 @@ def DownloadMultiple(key):									# Sammeldownloads
 		path_url_list.append('%s|%s' % (fullpath, url))		
 	
 	#---------------------------							# 3. Schritt: Download	
+	DownloadStart(path_url_list)	
+	# return li						# Kodi-Problem: wartet bis Ende Thread			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	return							# hier trotz endOfDirectory erforderlich
+
+#---------------------------------------------------------------- 
+# Aufruf: DownloadMultiple (Sammeldownloads), tools.Context (Einzel-MP3)
+#
+def DownloadStart(path_url_list):
+	PLog('DownloadStart:'); 
+	
 	PLog(sys.platform)
 	from threading import Thread							# Dialog +  Abbruchmögl. in thread_getfile
 	textfile='';pathtextfile='';storetxt='';url='';fulldestpath=''
@@ -181,12 +192,9 @@ def DownloadMultiple(key):									# Sammeldownloads
 	timemark = now.strftime("%d.%m.%Y, %H:%M:%S Uhr")
 	background_thread = Thread(target=ardundzdf.thread_getfile,
 		args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark))
-	background_thread.start()
-		
-	# return li						# Kodi-Problem: wartet bis Ende Thread			
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	return							# hier trotz endOfDirectory erforderlich
-
+	background_thread.start()	
+	return	
+	
 #---------------------------------------------------------------- 
 # detektiert / konvertiert Serienkennzeichungen in der Downloadliste
 # Aufruf: DownloadMultiple

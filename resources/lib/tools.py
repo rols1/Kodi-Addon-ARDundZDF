@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>19</nr>								# Numerierung für Einzelupdate
-#	Stand: 14.05.2026
+# 	<nr>20</nr>								# Numerierung für Einzelupdate
+#	Stand: 15.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -40,6 +40,7 @@ import time, datetime
 # Addonmodule:
 from resources.lib.util import *
 import resources.lib.EPG as EPG
+import resources.lib.Podcontent as Podcontent
 
 # Globals
 ICON_FILTER		= 'icon-filter.png'
@@ -579,15 +580,47 @@ def refresh_epg():
 # 
 def Context(title, path, img, mode):
 	PLog('Context:'); 
-	PLog(title);  PLog(path); PLog(img); PLog(mode);
+	PLog("title: %s, path: %s, img: %s, mode: %s" % (title, path, img, mode))
 	title_org=title
 	
-	if "ShowSeason" not in mode:							# bisher..
+	#-------------------------
+	mode_list = ["ShowSumm", "ShowSeason", "GetMP3"]		# bisher erlaubt..
+	OK=False
+	for item in mode_list:
+		if mode in item:
+			OK = True
+			break		
+	if not OK:
 		PLog("not_supported: " + mode) 
 		return
-	
+		
+	#-------------------------
+	if "GetMP3" in mode:									# MP3-Download
+		msg1 = "MP3-Download:"
+		msg2 = 'fehlgeschlagen.'
+
+		dest_path = SETTINGS.getSetting('pref_download_path')
+		if 	SETTINGS.getSetting('pref_generate_filenames') == "true":	# Dateiname aus Titel generieren
+			dfname = make_filenames(py2_encode(title)) + '.mp3'
+			PLog(dfname)
+		else:												# Bsp.: Download_2016-12-18_09-15-00.mp3
+			now = datetime.datetime.now()
+			mydate = now.strftime("%Y-%m-%d_%H-%M-%S")	
+			dfname = 'Download_' + mydate + '.mp3'
+		# Format: Zieldatei_kompletter_Pfad|Podcast
+		path_url_list=[]
+		fullpath = os.path.join(dest_path, dfname)
+		fullpath = os.path.abspath(fullpath)		# os-spezischer Pfad
+		path_url_list.append('%s|%s' % (fullpath, path))	
+		PLog("path_url_list:" + str(path_url_list))	
+		
+		Podcontent.DownloadStart(path_url_list)		
+		exit()	
+	#-------------------------
 	if "zdf-prod-futura" in path or "www.zdf.de" in path:
 		page, msg = get_page(path=path, header=HEADERS)		# futura ZDF
+		msg1 = "Suche Inhalt zum Video:"
+		msg2 = 'kein Inhalt gefunden.'
 		try:
 			jsonObject = json.loads(page)
 			PLog(str(jsonObject)[:80])
@@ -623,6 +656,7 @@ def Context(title, path, img, mode):
 			xbmc.executebuiltin('RunAddon(%s, %s)'  % (ADDON_ID, action))
 			exit()
 	
+	#-------------------------
 	if "api.ardmediathek" in path:							# ARD
 		path=path + "&seasoned=true"						# 12.05.2026 früheres Format funktioniert nicht mehr,
 		new_url, msg = getRedirect(path)					# 	seasoned=true für Serien erforderlich
@@ -632,6 +666,9 @@ def Context(title, path, img, mode):
 		base64_id =  stringextract('/item/', '?', new_url)	# wird ersetzt durch show_id
 		PLog("base64_id: " + base64_id)
 		
+		msg1 = "Suche Serie zum Video:"
+		msg2 = 'keine Serie gefunden.'
+					
 		# typ:  SEASON_SERIES, SINGLE, INFINITE_SERIES (z.B. Nachrichten, nicht verw.):
 		typ = stringextract('coreAssetType":"', '"', page)	
 		pub =  stringextract('publicationService":', 'logo"', page)
@@ -661,8 +698,6 @@ def Context(title, path, img, mode):
 		
 	# -----------------------------------					# Fehlschlag
 	icon = R(ICON_INFO)
-	msg1 = "Suche Serie zum Video:"
-	msg2 = 'keine Serie gefunden.'				
 	PLog(msg2)
 	xbmcgui.Dialog().notification(msg1,msg2,icon,3000)				
 	

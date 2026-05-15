@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>168</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.05.2026
+# 	<nr>169</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -727,13 +727,14 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	PLog('addDir:');
 	label_org=label				# s. 'Job löschen' in K-Menüs
 	label=py2_encode(label)
-	PLog('addDir_label: {0}, action: {1}, dirID: {2}'.format(label[:100], action, dirID))
+	PLog('addDir_label: %s, action: %s, dirID: %s' % (label[:100], action, dirID))
 	PLog(mediatype);
 	action=py2_encode(action); dirID=py2_encode(dirID); 
 	summary=py2_encode(summary); tagline=py2_encode(tagline); 
 	fparams=py2_encode(fparams); fanart=py2_encode(fanart); thumb=py2_encode(thumb);
 	merkname=py2_encode(merkname); start_end=py2_encode(start_end);
-	PLog('addDir_summary: {0}, tagline: {1}, mediatype: {2}, cmenu: {3}'.format(summary[:80], tagline[:80], mediatype, cmenu))
+	PLog('addDir_summary: %s, tagline: %s, mediatype: %s, cmenu: %s' %\
+		(summary[:80], tagline[:80], mediatype, cmenu))
 
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
 	# PLog('summary, tagline: {0}, {1}'.format(summary, tagline))
@@ -794,6 +795,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 		fparams_playlist_add=''; fparams_playlist_rm='';fparams_playlist_play=''
 		fparams_strm=''; fparams_exist_inlib=''; fparams_EPG='';
 		fparams_ShowSumm=""; fparams_RadioEPG="";fparams_ShowSeason="";
+		fparams_GetMP3="";
 		
 		K_title=""; K_sender=""; K_url=""; K_path=""; 
 		K_pub_id="";  K_thumb=""; K_img=""; 	
@@ -835,7 +837,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			fparams_RadioEPG = "&fparams={0}".format(fp)
 			PLog("fparams_RadioEPG: " + fparams_RadioEPG)
 		
-		# 																# Video-K-Menü
+		# --------------												# Video-K-Menü
 		if mediatype == "video":										# Inhaltstext für Video / Serie zeigen
 			items = ["api.ardmediathek|ARD", "zdf-prod-futura|ZDF",		# unterstützte Sender
 					"www.3sat.de|3sat", "www.zdf.de|ZDF"]
@@ -873,6 +875,14 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				fparams_strm = "&fparams={0}".format(fp)
 				PLog("fparams_strm: " + fparams_strm[:100])	
 				fparams_strm = quote_plus(fparams_strm)
+
+		# --------------												# Download MP3
+		if mediatype == "music":
+			if ".mp3" in K_url:
+				fp = {'path': K_url, 'title': K_title, 'img': K_img, 'mode': 'GetMP3'}
+				fparams_GetMP3 = "&fparams={0}".format(fp)	
+			PLog("fparams_GetMP3: " + fparams_GetMP3[:100])			
+		# --------------
 
 		if SETTINGS.getSetting('pref_video_direct') == 'true':			# ständig: Umschalter Sofortstart 
 			menu_entry = "Sofortstart AUS / Downl. EIN"
@@ -1152,6 +1162,15 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			fparams_ShowSeason=quote(fparams_ShowSeason)								# quoting für router erf.
 			commands.append((mtitle, 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.tools.Context%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_ShowSeason)))
+				
+		if fparams_GetMP3:																# Download MP3
+			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
+			PLog("MY_SCRIPT_GetMP3:" + MY_SCRIPT)
+			PLog(fparams_GetMP3)
+			mtitle = u"Download MP3"		
+			fparams_GetMP3=quote(fparams_GetMP3)
+			commands.append((mtitle, 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.tools.Context%s)' \
+				% (MY_SCRIPT, HANDLE, fparams_GetMP3)))				
 
 		li.addContextMenuItems(commands)				
 	
