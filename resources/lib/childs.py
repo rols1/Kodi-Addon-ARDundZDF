@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>38</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.02.2026
+# 	<nr>39</nr>										# Numerierung für Einzelupdate
+#	Stand: 15.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -161,14 +161,16 @@ def Main_childs():
 		tagline=tag, fparams=fparams)
 
 	# 07.09.2023 Geschichten für Kinder von 3 bis 6 nicht mehr vorh.
-	title = u"Hörspaß für Kinder | ARD-Audiothek"						# neu ab 17.06.2023
-	cluster_id = "entdecken-100:-601210988128917166"
-	tag = u">Es war einmal ... Märchen\n>Hörspiele für Kinder ab 6\n>"
-	tag = u"%s>Wer, wie, was - und warum?\n>Maus-Zoom\n>Familienkonzerte: Geschichten mit Musik" % tag
-	summ = u"Mehr Hör-Geschichten für große und kleine Kinder findest du in der Audiothek in der Rubrik >Für Kinder<."
-	fparams="&fparams={'cluster_id': '%s'}" % cluster_id
-	addDir(li=li, label=title, action="dirList", dirID="Audio_get_homescreen", 
-		fanart=R(ICON_CHILDS), thumb=R("ard-audiothek.png"), tagline=tag, summary=summ, fparams=fparams)
+	title = u"Hörspaß für Kinder | ARD-Audiothek"						# neu ab 15.05.2026
+	path = "https://www.ardsounds.de/rubrik/fuer-kinder-100/"
+	tag = u"Geschichten, Hörspiele und Wissen für Kinder: Entdecke die Kinder-"
+	tag = u"%sPodcasts – spannend, lustig und lehrreich. Mit Checker Tobi, dem" % tag
+	tag = "%s Ohrenbär und der Maus." % tag
+	title = py2_encode(title); path = py2_encode(path)
+	fparams="&fparams={'title': '%s', 'path': '%s', 'rubrik_title': '%s'}" %\
+		(quote(title), quote(path), quote(title))
+	addDir(li=li, label=title, action="dirList", dirID="Audio_get_rubriken_web", 
+		fanart=R(ICON_CHILDS), thumb=R("ard-audiothek.png"), tagline=tag, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		
