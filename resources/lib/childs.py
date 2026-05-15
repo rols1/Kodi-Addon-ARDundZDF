@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>39</nr>										# Numerierung für Einzelupdate
+# 	<nr>40</nr>										# Numerierung für Einzelupdate
 #	Stand: 15.05.2026
 
 # Python3-Kompatibilität:
@@ -228,7 +228,7 @@ def Main_KIKA(title=''):
 		
 	title=u'Kinderhörspiele der ARD-Audiothek'
 	img="https://www.daserste.de/rubrik-kinder-100~_type-at_ratio-1x1_width-640_c72e0f.jpg"
-	tag = u"Hörspiele und Geschichtenür Kinder" 
+	tag = u"Hörspiele und Geschichten für Kinder" 
 	summ = u"Wir verlassen KIKA und wechseln zu Kinderhörspielen in der ARD-Audiothek."
 	url = "https://www.ardsounds.de/sammlung/kinder-grosse-geschichten-102/"; ID="Main_KIKA"
 
@@ -1315,193 +1315,9 @@ def Maus_MediaObjects(title, url):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
 	
 # ----------------------------------------------------------------------
-# 04.07.2021 Aus WDR5 KiRaKa wird MausLive - s. Funktion MausLive.
-#	Hörspiele + Nachrichten noch vorhanden 'KiRaKa - Sendungen 
-#	zum Nachhören'	inzwischen entfallen
-#		
-def Kiraka():
-	PLog('Kiraka:')
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-	
-	thumb 	= GIT_KIR_SHOWS
-	title = u'KiRaKa - Hörspiele'
-	tagline = u'Alle KiRaKa - Kinderhörspiele'
-	title=py2_encode(title); 
-	fparams="&fparams={'title': '%s'}" % (quote(title))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kiraka_pods", fanart=GIT_RADIO, 
-		thumb=thumb, fparams=fparams, tagline=tagline)
-	
-	thumb 	= GIT_KIR_KLICK
-	title = u'KiRaKa-Klicker - Nachrichten für Kinder'
-	tagline = u'aktuelle und speziell für Kinder aufbereitete Nachrichten von der Kiraka-Redaktion'
-	title=py2_encode(title); 
-	fparams="&fparams={'title': '%s'}" % (quote(title))
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kiraka_klick", fanart=GIT_RADIO, 
-		thumb=thumb, fparams=fparams, tagline=tagline)
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
-# ----------------------------------------------------------------------			
-def Kiraka_shows(title):
-	PLog('Kiraka_shows:')
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-	
-	path = "https://kinder.wdr.de/radio/kiraka/kiraka-on-demand-100.html"
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Kiraka_shows"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
-	PLog(len(page))	
-	
-	items = blockextract('"AudioObject",', page)	
-	for s in items:
-		img = stringextract('url" : "', '"', s)
-		stitle = stringextract('headline" : "', '"', s)
-		webid = stringextract('"@id" : "', '"', s) # url" : "https://www1.wdr.de/mediathek/..
-		
-		dur = stringextract('duration" : "', '"', s)		# Bsp. PT55M38S
-		dur = dur[2:5]										# min ausschneiden
-		dur = dur.replace('M', ' min')
-		
-		stitle = py2_encode(stitle); dur = py2_encode(dur)
-		tag = "%s | %s | %s" % (title, stitle, dur)
-		Plot = tag
-		
-		PLog('Satz5:')
-		PLog(img); PLog(stitle); PLog(webid); PLog(Plot);
-		stitle=py2_encode(stitle); webid=py2_encode(webid);
-		thumb=py2_encode(img); Plot=py2_encode(Plot); 
-			
-		fparams="&fparams={'webid': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(webid), 
-			quote(stitle), quote(thumb), quote_plus(Plot))
-		addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kiraka_get_mp3", \
-			fanart=GIT_KIR, thumb=thumb, fparams=fparams, tagline=tag, mediatype='music')
-			
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-
-# ----------------------------------------------------------------------
-# Kinderhörspiele
-# die ermittelte webid wird in Kiraka_get_mp3 zur Web-Url. Auf der
-#	Webseite wird dann die mp3-Quelle ermittelt.
-# 20.02.2022 WDR-Seite kinderhoerspiel-podcast-102 nicht mehr vorh. -
-#	Umstellung auf Inhalte der Audiothek
-#			
-def Kiraka_pods(title):
-	PLog('Kiraka_pods:')
-	
-	title = u'KiRaKa - Hörspiele'
-	ARD_AUDIO_BASE = 'https://api.ardaudiothek.de/'
-	web_url = "https://www.ardaudiothek.de/kinderhoerspiel-im-wdr/36244846"
-	node_id = "36244846"
-	url = "https://api.ardaudiothek.de/programsets/36244846/?offset=0&limit=20"
-	
-	ardundzdf.Audio_get_sendung_api(url, title, home_id='Kinderprogramme')
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-
-# ----------------------------------------------------------------------
-# mp3-Quelle ermitteln + direkt zu PlayAudio
-# Aufrufer Kiraka_pods, Kiraka_klick (2. Durchlauf)
-def Kiraka_get_mp3(webid, title, thumb, Plot):
-	PLog('Kiraka_get_mp3: ' + webid)
-
-	if webid.startswith('http') == False:					# kompl. Url bei Klicker-Nachrichten, nicht bei Pods
-		base = "https://kinder.wdr.de/radio/kiraka/hoeren/hoerspiele/"
-		path = base + webid + ".html"
-	else:
-		path = webid
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Kiraka_klick"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return
-	PLog(len(page))	
-
-	mp3url=''
-	if '"mediaObj":' in page:								# mit + ohne Download-Button
-		PLog("Lade mediaObj:")
-		dl_js = stringextract('"mediaObj":', 'title="Audio starten"', page)
-		dl_js = stringextract('url":"', '"', dl_js)		# java -> json-Seite mit mp3
-		page, msg = get_page(dl_js)
-		mp3url = stringextract('audioURL":"', '"', page)			
-	else:
-		msg1 = u"Kiraka_get_mp3: MediaObjekt nicht gefunden für"
-		msg2 = ">%s<" % title
-		MyDialog(msg1, msg2, '')	
-		return
-
-	if mp3url.startswith('//'):
-		mp3url = "https:" + mp3url
-	else:
-		if mp3url:
-			mp3url = base + mp3url
-		else:
-			stitle = stitle + " | keine mp3-Quelle gefunden!"
-	
-	PLog('Satz7:')
-	PLog(title); PLog(mp3url); PLog(Plot);
-	PlayAudio(mp3url, title, thumb, Plot)
-	return
-# ----------------------------------------------------------------------
-# Nachrichten für Kinder
-# 2 Durchgänge:
-#	1. Übersicht der Beiträge
-#	2. Weburl: Zielseite mit mp3url
-#			
-def Kiraka_klick(title, weburl=''):
-	PLog('Kiraka_klick:')
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button
-	
-	base = "https://kinder.wdr.de"
-	if weburl == '':							# 1. Durchlauf: Übersicht
-		path = base + "/radio/kiraka/nachrichten/klicker/index.html"
-	else:
-		path = weburl
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in Kiraka_klick"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
-	PLog(len(page))	
-	
-	if weburl == '':							# 1. Durchlauf: Übersicht
-		items = blockextract('class="teaser">', page)	
-		for s in items:
-			if '"Javascript-Fehler"' in s or 'class="media mediaA audio' not in s:
-				continue
-			weburl = base + stringextract('href="', '"', s)	# abweichend von Kiraka_pods
-			img = stringextract('srcset="', '"', s)
-			if img.startswith('//'):
-				img = "https:" + img
-			else:
-				img = base + img
-			stitle = stringextract('title="', '"', s)		# href-title
-			stitle = unescape(stitle)
-			descr = stringextract('teasertext">', '&nbsp', s)
-			descr = mystrip(descr)										
-			
-			tag = "%s\n\n%s" % (stitle, descr)
-			Plot = tag.replace('\n', '||')
-			
-			PLog('Satz6:')		
-			PLog(img); PLog(stitle); PLog(weburl); PLog(Plot);
-			stitle=py2_encode(stitle); weburl=py2_encode(weburl);
-			thumb=py2_encode(img); Plot=py2_encode(Plot); 
-			fparams="&fparams={'webid': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(weburl), 
-				quote(stitle), quote(thumb), quote_plus(Plot))
-			addDir(li=li, label=stitle, action="dirList", dirID="resources.lib.childs.Kiraka_get_mp3", \
-				fanart=GIT_KIR_KLICK, thumb=thumb, fparams=fparams, tagline=tag, mediatype='music')
-				
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
-
+# 15.05.2026 Kiraka, Kiraka_pods, Kiraka_klick, Kiraka_shows, Kiraka_get_mp3 
+#	entfernt - Inhalte in anderen Menüs mit Anbindung an ARD Sounds enthalten. 
+#
 # ----------------------------------------------------------------------
 # Kikaninchen: alle Videos von A-Z
 #	A-Z-Liste der Sendereihen (Web: Videos)
