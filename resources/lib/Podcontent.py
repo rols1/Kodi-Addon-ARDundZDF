@@ -39,9 +39,11 @@ import json, re
 import datetime, time
 
 # Addonmodule + Funktionsziele 
-import ardundzdf					# -> thread_getfile, AudioWebMP3 
 from resources.lib.util import *
- 
+# Import-Error Kodi 21 möglich bei Import aus anderem Modul nach Call aus tools.Context:
+import ardundzdf					
+PLog("load_Podcontent")
+
 
 ADDON_ID      	= 'plugin.video.ardundzdf'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -49,8 +51,14 @@ ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
 ADDON_PATH    	= SETTINGS.getAddonInfo('path')	# Basis-Pfad Addon
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
-PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
+PLUGIN_URL 		= sys.argv[0]					# plugin://plugin.video.ardundzdf/
 HANDLE			= int(sys.argv[1])
+
+#PLog('ADDON_PATH: ' + ADDON_PATH)
+#sys.path.insert(0, ADDON_PATH)
+#from ardundzdf import thread_getfile, AudioWebMP3
+
+
 
 DEBUG			= SETTINGS.getSetting('pref_info_debug')
 
@@ -58,6 +66,7 @@ FANART = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/fanart.jpg')
 ICON = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/icon.png')
 USERDATA		= xbmc.translatePath("special://userdata")
 ADDON_DATA		= os.path.join("%sardundzdf_data") % USERDATA
+
 
 # Anpassung Kodi 20 Nexus: "3.0.0" -> "3."
 if 	check_AddonXml('"xbmc.python" version="3.'):						# ADDON_DATA-Verzeichnis anpasen
@@ -157,8 +166,10 @@ def DownloadMultiple(key):									# Sammeldownloads
 		title, url = rec.split('#')
 		title = unescape(title)								# schon in PodFavoriten, hier erneut nötig 
 		
-		if "www.ardaudiothek.de" in url:					# mp3-Quelle ermitteln bei Webquellen
-			url = ardundzdf.AudioWebMP3(url, title="", thumb="", Plot="", ID="", no_gui="true")			
+		if "www.ardaudiothek.de" in url:					# mp3 aus Webquellen, bei ARD Sounds nicht mehr relevant
+			#url = ardundzdf.AudioWebMP3(url, title="", thumb="", Plot="", ID="", no_gui="true")
+			PLog("skip_not_supported_Weburl")
+			continue
 			
 		if 	SETTINGS.getSetting('pref_generate_filenames') == "true":	# Dateiname aus Titel generieren
 			dfname = make_filenames(py2_encode(title)) + '.mp3'

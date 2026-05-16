@@ -165,7 +165,7 @@ def Main_childs():
 	path = "https://www.ardsounds.de/rubrik/fuer-kinder-100/"
 	tag = u"Geschichten, Hörspiele und Wissen für Kinder: Entdecke die Kinder-"
 	tag = u"%sPodcasts – spannend, lustig und lehrreich. Mit Checker Tobi, dem" % tag
-	tag = "%s Ohrenbär und der Maus." % tag
+	tag = u"%s Ohrenbär und der Maus." % tag
 	title = py2_encode(title); path = py2_encode(path)
 	fparams="&fparams={'title': '%s', 'path': '%s', 'rubrik_title': '%s'}" %\
 		(quote(title), quote(path), quote(title))

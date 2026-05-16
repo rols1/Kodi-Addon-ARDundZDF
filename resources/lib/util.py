@@ -871,8 +871,6 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				fp = {'label': label, 'add_url': quote_plus(add_url),\
 				'tagline': tagline, 'summary': summary}											
 				fparams_strm = "&fparams={0}".format(fp)
-
-				fparams_strm = "&fparams={0}".format(fp)
 				PLog("fparams_strm: " + fparams_strm[:100])	
 				fparams_strm = quote_plus(fparams_strm)
 

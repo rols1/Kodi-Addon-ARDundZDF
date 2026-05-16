@@ -10,6 +10,29 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.05.2026	5.4.7
+			Audio_get_cluster: router-kompatible Behandlung für Titel (repl_json_chars).
+			ARDSportMediaPlayer: fehlenden Image-Url-Bestandteil (AAABnSSvrFg) in Player-
+			Daten ergänzt, Bildauswahl geändert.
+			ARDSportNetcastAudios: Notification ergänzt bei fehlenden Daten für Buttons
+			"..Alle Spiele im DFB Pokal" und "..Audiostreams aus der Champions League".
+			ARDStartRubrik: Serienerkennung an fehlendes heroImage angepasst.
+			Context (tools): Anpassung an ARD-Änderungen (path "&seasoned=true" direkt
+			geladen, Ersatz base64_id durch show_id).
+			addDir (util): Param-Reihenfolge in fparams_ShowSeason an Context angepasst.
+			EPG_Today (arte): Startzeit und JETZT-Marke an arte-Änderung angepasst (json-
+			key jetzt "upcomingDate"). Neue Funktion time_calc_now in util.
+			Einzelupdates: Pfad zu resources/lib erst in update_single ermitteln, für die 
+			Nutzung aus externer Merkliste auf verschiedenen Systemen (Linux, Android,
+			Windows). Anpassung Button Einzelupdate, Funktion EPG.update_single.
+			Kontextmenü ARD Sounds: MP3-Downloads ermöglicht. Änderungen in util.addDir 
+			(fparams_GetMP3), tools.Context (Generierung Params), Podcontent (neue 
+			Funktion DownloadStart).
+			Main_childs: Anpassung Button "Hörspaß für Kinder" an akt. ARD Sounds.
+			Modul childs: obsolete Funktionen entfernt (Kiraka, Kiraka_pods, 
+			Kiraka_klick, Kiraka_shows, Kiraka_get_mp3) - Inhalte in anderen Menüs 
+			mit Anbindung an ARD Sounds enthalten.
+
 10.05.2026	5.4.6
 			Main_ZDF: neuer Button Livestreams im ZDF-Hauptmenü.
 			N24LastServer: Funktion entfernt (obsolet).
@@ -33,6 +56,7 @@ CHANGE HISTORY
 			ergänzt.			
 			ZDF_StartWebCluster: aus Web ergänzt: duration, FSK, pubDate.
 			ZDF_StartWebCluster: Web-Rubrik "Derzeit beliebt" ergänzt, Umsetzung mit
+			spez. Graphql-Call.
 			ZDF_StartWebCluster: Anpassungen für Webänderungen bei Livestreams.
 			Graphql-Call GetClusterList (neue Funktion ZDF_StartWebBeliebt, Ńutzung 
 			ZDF_Graphql_get_seasons)

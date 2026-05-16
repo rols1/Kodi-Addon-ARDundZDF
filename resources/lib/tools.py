@@ -40,7 +40,6 @@ import time, datetime
 # Addonmodule:
 from resources.lib.util import *
 import resources.lib.EPG as EPG
-import resources.lib.Podcontent as Podcontent
 
 # Globals
 ICON_FILTER		= 'icon-filter.png'
@@ -595,6 +594,9 @@ def Context(title, path, img, mode):
 		return
 		
 	#-------------------------
+	# Aufruf thread_getfile hier, da Nutzung Podcontent.DownloadStart nach Call aus Kontext-Menü
+	#	nicht möglich (dort Import-Error Kodi 21 für import ardundzdf).
+	#
 	if "GetMP3" in mode:									# MP3-Download
 		msg1 = "MP3-Download:"
 		msg2 = 'fehlgeschlagen.'
@@ -610,11 +612,21 @@ def Context(title, path, img, mode):
 		# Format: Zieldatei_kompletter_Pfad|Podcast
 		path_url_list=[]
 		fullpath = os.path.join(dest_path, dfname)
-		fullpath = os.path.abspath(fullpath)		# os-spezischer Pfad
+		fullpath = os.path.abspath(fullpath)				# os-spezischer Pfad
 		path_url_list.append('%s|%s' % (fullpath, path))	
-		PLog("path_url_list:" + str(path_url_list))	
+		PLog("path_url_list:" + str(path_url_list))
 		
-		Podcontent.DownloadStart(path_url_list)		
+
+		from threading import Thread						# Dialog +  Abbruchmögl. in thread_getfile
+		from ardundzdf import thread_getfile
+		textfile='';pathtextfile='';storetxt='';url='';fulldestpath=''
+		now = datetime.datetime.now()
+		timemark = now.strftime("%d.%m.%Y, %H:%M:%S Uhr")
+		background_thread = Thread(target=thread_getfile,
+			args=(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list,timemark))
+		background_thread.start()	
+	
+		# DownloadStart(path_url_list)								
 		exit()	
 	#-------------------------
 	if "zdf-prod-futura" in path or "www.zdf.de" in path:

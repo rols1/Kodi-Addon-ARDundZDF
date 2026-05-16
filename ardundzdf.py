@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>342</nr>										# Numerierung für Einzelupdate
-VERSION = '5.4.6'
-VDATE = '10.05.2026' 
+VERSION = '5.4.7'
+VDATE = '16.05.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1963,12 +1963,12 @@ def Audio_get_sendung(url, title, page=''):
 			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(mp3_url), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
-		else:	
+		else:															# Abspielen
 			downl_list.append("%s#%s" % (title, mp3_url))
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': ''}" % (quote(mp3_url), 
 				quote(title), quote(img), quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag, summary=summ)	
+				fparams=fparams, tagline=tag, summary=summ, mediatype="music")	
 		cnt=cnt+1
 
 	PLog("cnt: %d" % cnt)
@@ -5135,10 +5135,8 @@ def DownloadExtern(url, title, dest_path, key_detailtxt, sub_path=''):
 #---------------------------
 # interne Download-Routine für MP4, MP3 u.a. mittels urlretrieve 
 #	Download-Routine für Bilder: thread_getpic
-#	bei Bedarf ssl.SSLContext verwenden - s.
-#		https://docs.python.org/2/library/urllib.html
 # vorh. Dateien werden überschrieben (wie früher mit curl/wget).
-# Aufrufer: DownloadExtern, DownloadMultiple (mit 
+# Aufrufer: DownloadExtern, Podcontent.DownloadStart (mit 
 #	path_url_list + timemark)
 # 	notice triggert die Dialog-Ausgabe.
 # Alternativen für urlretrieve (legacy): wget-Modul oder 
@@ -5164,7 +5162,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 			cnt=0
 			for item in path_url_list:
 				cnt=cnt+1
-				msg1 = "Sammeldownloads"
+				msg1 = u"Download aktuell:"
 				msg2 = "Podcast: %d von %d" % (cnt, len(path_url_list))
 				xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
 				PLog(item)
@@ -5181,7 +5179,7 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 					urlretrieve(new_url, path)
 				#xbmc.sleep(1000*2)							# Debug
 			
-			msg1 = u'%d Downloads erledigt' % cnt 
+			msg1 = u'%d Download(s) erledigt' % cnt 
 			msg2 = u'gestartet: %s' % timemark				# Zeitstempel 
 			if notice:
 				xbmcgui.Dialog().notification(msg1,msg2,icon,4000)	# Fertig-Info
