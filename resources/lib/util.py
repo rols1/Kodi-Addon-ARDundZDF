@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>169</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.05.2026
+# 	<nr>170</nr>										# Numerierung für Einzelupdate
+#	Stand: 18.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -262,6 +262,11 @@ def home(li, ID, ltitle=""):
 		return li
 	if ID == 'ARD Neu':									# 15.06.2022 Zusatz Neu entfernt
 		ID = 'ARD'
+		
+	support_info=""
+	PLog("KODI_MAJOR: %d" %  KODI_MAJOR)
+	if KODI_MAJOR <= 18:
+		support_info = u"[B]ACHTUNG! Dieser Addon-Support für Kodi Leia und Krypton läuft in 2026 aus![/B]"
 			
 	# Position 1 bei aufst. Sortierung:					# ZERO WIDTH SPACE u"\u200B" wirkt nicht mit Color
 	Home = " Home: "									#	getestet: 2000 - 202F (invisible-characters-ascii)
@@ -274,12 +279,14 @@ def home(li, ID, ltitle=""):
 		tag = tag.replace('AUS','[COLOR blue]EIN[/COLOR]')										
 		page = RLoad(FILTER_SET, abs_path=True)			# akt. Filter laden, [Errno 2] möglich
 		tag = "%s \nFilter [B]aktuell[/B]:\n%s" % (tag, page)
-		
+
 	summ = "Status [B]Sofortstart[/B]: AUS\nStatus [B]Downloads[/B]: EIN"
 	if SETTINGS.getSetting('pref_video_direct') == 'true':	
 		summ = "Status [B]Sofortstart[/B]: EIN\nStatus [B]Downloads[/B]: AUS"	
 
 	if ID == NAME:		# 'ARD und ZDF'
+		if support_info:
+			tag = u"%s\n\n%s" % (support_info, tag)
 		name = Home + NAME
 		fparams="&fparams={}"
 		img = R('icon.png') 
