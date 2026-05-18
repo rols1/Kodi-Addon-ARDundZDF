@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>138</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.05.2026
+# 	<nr>139</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2005,7 +2005,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID="", desc=False):
 			PLog(title); PLog(mark)
 			title = title.strip() 
 			if mark == "TOP_title":								# nur TOP vor Stage-Titel 
-				title  = u"[B]TOP: [/B]: %s" % title	
+				title  = u"[B]TOP: [/B] %s" % title	
 			else:						
 				title = make_mark(mark, title, "", bold=True)	# -> util
 

@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>21</nr>								# Numerierung für Einzelupdate
-#	Stand: 18.09.2025
+# 	<nr>22</nr>								# Numerierung für Einzelupdate
+#	Stand: 17.05.2026
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -722,7 +722,7 @@ def get_VideoAudio(title, path):
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" %\
 				(quote(stream), quote(title), quote(img), quote_plus(summ_par), ID)
 			addDir(li=li, label=title, action="dirList", dirID="ardundzdf.AudioPlayMP3", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
+				fparams=fparams, tagline=tag, summary=summ, mediatype="music")
 		
 		live=""
 		if SETTINGS.getSetting('pref_startlist') == 'true':			# Blockade verhindern, s. Kopf
