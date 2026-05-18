@@ -127,7 +127,7 @@ Funktionen:
 INSTALLATION:
 ===================  
 ### Hinweis für ältere Kodi-Versionen (Leia, Krypton): für die Erstinstallation muss die [Krypton-Version](https://repo.kodinerds.net/index.php?action=list&scope=all&version=krypton/) auf kodinerds.net verwendet werden. Dies gilt auch für ein Downgrade einer Kodi-Matrix-Version zu Leia, Krypton.<br>
-Achtung: der Support für Leia und Krypton läuft in 2026 aus!
+### Achtung: der Support für Leia und Krypton läuft in 2026 aus!
 
 
 - <b>Nexus-Version:</b> Download der aktuellen zip-Datei ARDundZDF im [kodinerds-Repo, im Tab Kodi-Version Kodi 20 (Nexus) auswählen](https://repo.kodinerds.net/index.php?action=list&scope=all&version=nexus/) 
