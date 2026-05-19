@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>139</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.05.2026
+# 	<nr>140</nr>										# Numerierung für Einzelupdate
+#	Stand: 19.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -969,8 +969,10 @@ def ARDPagination(title, path, pageNumber, pageSize, ID, mark, homeID=""):
 # Step 2: Liste der Episoden einer Staffel (Index snr)
 #
 def ARD_KatSeriePre(path, title, img, snr=""):
-	PLog('ARD_KatSeriePre: %s | %s | %s | %s' % (title, path, img, snr))
+	PLog('ARD_KatSeriePre: %s | %s | %s | snr: %s' % (title, path, img, snr))
 	title_org = cleanmark(title)
+	if not img:
+		img = R(ICON_DIR_FOLDER)									# Fallback-img
 
 	path = path.split("?")[0]
 	DictID = path.split("/")[-1]									# ..L2JyLmRlL2Jyb2FkY2FzdFN..
@@ -986,8 +988,19 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 
 	try:
 		obj = json.loads(page)
-		seasons = obj["widgets"]									# i.d.R. Staffeln, oder Varianten einer Staffel	
-		teasers=""; trailer=""
+		PLog("obj: " + str(obj)[:100])
+		if "widgets" in obj:
+			seasons = obj["widgets"]								# Normal: Staffeln, oder Varianten einer Staffel
+			PLog("seasons: %d" % len(seasons))
+			if len(seasons) == 1:									# abweichend: HR3-Serie Mittendrin (alle Folgen)
+				PLog("only_1_widget")	
+				seasons = seasons[0]["teasers"]
+		else:
+			PLog("teasers_instead_widgets")							# abweichend: HR3-Serie Mittendrin (neue Folgen)
+			seasons = obj["teasers"]
+		PLog("seasons_result: %d" % len(seasons))
+			
+		teasers=[]; trailer=[]
 		if "heroImage" in obj:										# 12.05.2026 kann fehlen, Serie Totenfrau 
 			hero_img = obj["heroImage"]["src"]
 			PLog("hero_img: " + hero_img)
@@ -995,14 +1008,18 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 		else:
 			hero_img = img
 	
-		page_id = obj["trackingPiano"]["page_id"]					# -> Empfehlungen
-		if 	"trailer" in obj:											# Trailer zur Serie, auch EXTRA_TRAILER
+		#page_id = obj["trackingPiano"]["page_id"]					# -> Empfehlungen, s.u., nicht  mehr verwendet
+		trailer=[]; teasers=[];										# können fehlen
+		if 	"trailer" in obj:										# Trailer zur Serie, auch EXTRA_TRAILER
 			trailer = obj["trailer"]
-		if 	"Trailer" in obj:											# 12.05.2026 Serie Totenfrau
+		if 	"Trailer" in obj:										# 12.05.2026 Serie Totenfrau
 			trailer = obj["Trailer"]
+		if not trailer:
+			trailer=[]
 		if snr:
 			snr = int(snr) 
-			teasers = seasons[snr]["teasers"]				
+			teasers = seasons[snr]["teasers"]
+						
 		PLog("seasons: %d, snr: %s, teasers: %d, img: %s, trailer: %d" %\
 			(len(seasons), snr, len(teasers), hero_img, len(trailer)))
 	except Exception as exception:
@@ -1081,9 +1098,11 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 		# der asset-Call zeigt häufig nur die erste Staffel, daher gehen wir über die Suche.
 		#path = "https://api.ardmediathek.de/page-gateway/widgets/ard/asset/%s?pageSize=100" % page_id
 		sender = "ard"
-		title = repl_json_chars(title); 
-	
+
 		title=py2_encode(title_org); 
+		if " | " in title:												# Flughafen Frankfurt  | Alle Folgen
+			title = title.split(" | ")[0]
+	
 		fparams="&fparams={'query': '%s', 'title': '%s', 'sender': '%s','offset': '0'}" %\
 			(quote(title), quote(label), sender)
 		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.ARDSearchnew", 
