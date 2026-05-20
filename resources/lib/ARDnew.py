@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>140</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.05.2026
+# 	<nr>141</nr>										# Numerierung für Einzelupdate
+#	Stand: 20.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -816,10 +816,11 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		PLog("ARDStartRubrik_more_container")
 		ARDRubriken(li, page=page, homeID=homeID)		# direkt
 	else:												# detect Staffeln/Folgen
-		if 'hasSeasons":true' in page:					# kann fehlen: '"heroImage":'
+		if '"heroImage"' in page:						# 'hasSeasons":true' ungeeignet, Nicht-Serien möglich
 			PLog("hasSeasons_detect")
 			ARD_KatSeriePre(path, title, img_org)		# 20.03.2026 Staffelübersicht, Button "komplette Liste: .."
 			return
+
 		elif ID != "Livestream":	
 			ID = "ARDStartRubrik"	
 		elif "Subrubriken" in title_org:				# skip Subrubrik Übersicht
@@ -989,6 +990,7 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 	try:
 		obj = json.loads(page)
 		PLog("obj: " + str(obj)[:100])
+		trailer=[]; teasers=[];										# können fehlen
 		if "widgets" in obj:
 			seasons = obj["widgets"]								# Normal: Staffeln, oder Varianten einer Staffel
 			PLog("seasons: %d" % len(seasons))
@@ -998,6 +1000,7 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 		else:
 			PLog("teasers_instead_widgets")							# abweichend: HR3-Serie Mittendrin (neue Folgen)
 			seasons = obj["teasers"]
+			teasers = seasons
 		PLog("seasons_result: %d" % len(seasons))
 			
 		teasers=[]; trailer=[]
@@ -1009,7 +1012,6 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 			hero_img = img
 	
 		#page_id = obj["trackingPiano"]["page_id"]					# -> Empfehlungen, s.u., nicht  mehr verwendet
-		trailer=[]; teasers=[];										# können fehlen
 		if 	"trailer" in obj:										# Trailer zur Serie, auch EXTRA_TRAILER
 			trailer = obj["trailer"]
 		if 	"Trailer" in obj:										# 12.05.2026 Serie Totenfrau
