@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>342</nr>										# Numerierung für Einzelupdate
+# 	<nr>343</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.7'
-VDATE = '16.05.2026' 
+VDATE = '23.05.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -772,7 +772,8 @@ def InfoAndFilter():
 	
 	dt, lt = resources.lib.tools.get_foruminfo()					# Datum, letzter Eintrag
 	# dt=""; lt="" # Debug
-	item = "zuletzt: [B]%s[/B] | %s" % (dt, lt)		
+	item = "zuletzt: [B]%s[/B] | %s" % (dt, lt)
+	item = repl_json_chars(item)
 	title = u"Einzelupdate (einzelne Dateien und Module), %s" % dt	# Update von Einzeldateien
 	tag = u'[B]Update einzelner Dateien aus dem Github-Repo des Addons'
 	tag = u"%s\n\nEinzelupdates ermöglichen kurzfristige Fixes und neue Funktionen zwischen den regulären Updates." % tag
@@ -1094,6 +1095,7 @@ def Main_ZDF(name=''):
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	
+	futura_base = "https://zdf-prod-futura.zdf.de/mediathekV2/"
 	
 	if SETTINGS.getSetting('pref_use_mvw') == 'true':
 		title = 'Suche auf MediathekViewWeb.de'
@@ -1148,23 +1150,24 @@ def Main_ZDF(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat", fanart=R("zdf-kategorien.png"), 
 		thumb=R("zdf-kategorien.png"), summary=summ, fparams=fparams)
 
-	# 05.03.2024 Rubriken, Sportstudio, Barrierearm -> ZDF_RubrikSingle
-	base = "https://zdf-prod-futura.zdf.de/mediathekV2/"
+	# 21.05.2026 Rubriken entfernt, durch Kategorien obsolet
+	'''
 	title = 'Rubriken' 
-	url = base + "categories-overview"
+	url = futura_base + "categories-overview"
 	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=R(ICON_ZDF_RUBRIKEN), 
 		thumb=R(ICON_ZDF_RUBRIKEN), fparams=fparams)
+	'''
 
 	title = "ZDF-Sportstudio"
-	url = base + "document/sport-106"
+	url = futura_base + "document/sport-106"
 	tag = u"Aktuelle News, Livestreams, Liveticker, Ergebnisse, Hintergründe und Sportdokus. Sportstudio verpasst? Aktuelle Sendungen einfach online schauen!"
 	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=R("zdf-sport.png"), 
 		thumb=R("zdf-sport.png"), tagline=tag, fparams=fparams)
 		
 	title = "Barrierearm"
-	url = base + "document/barrierefrei-im-zdf-100"
+	url = futura_base + "document/barrierefrei-im-zdf-100"
 	tag = u"Alles an einem Ort: das gesamte Angebot an Videos mit Untertiteln, Gebärdensprache und Audiodeskription sowie hilfreiche Informationen zum Thema gebündelt."
 	fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': ''}" % (url, title)
 	addDir(li=li, label="Barrierearm", action="dirList", dirID="ZDF_Barrierearm", fanart=R(ICON_ZDF_BARRIEREARM), 
@@ -4342,6 +4345,7 @@ def ARDSportStart(logo, burger=""):
 #	in ARDAudioEventStreams 
 # 25.05.2025 Auswertung Playerdaten -> TagesschauXL.get_content_json
 #	 (wie ARDSportMedia).
+# 17.05.2026 MP3-Audios ohne "music"-Kennz., wie ARDSportMedia
 #
 def ARDSportLive(title, skip_video=""): 
 	PLog('ARDSportLive:')
@@ -4378,7 +4382,7 @@ def ARDSportLive(title, skip_video=""):
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(stream), 
 				quote(title), quote(img), quote_plus(Plot_par))
 			addDir(li=li2, label=title, action="dirList", dirID="PlayAudio", fanart=img, thumb=img, fparams=fparams, 
-				tagline=Plot, mediatype='music')	
+				tagline=Plot)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -4425,6 +4429,8 @@ def ARDSportAudioStreams(title, path, img, cacheID):
 # Aufrufer ARDSportWDR, ARDSportAudioStreams
 # 05.08.2024 Nutzung TagesschauXL.get_content_json (21.06.2025 Anpassung
 #	an geänderte Bilddaten).
+# 17.05.2026 MP3-Audios ohne "music"-Kennz. für Downloads (hier häufig
+#	Livestreams.
 #
 def ARDSportMedia(li, title, page, path=""): 
 	PLog('ARDSportMedia: ' + title)
@@ -11064,20 +11070,90 @@ def ZDF_AZ(name, ID=""):						# name = "Sendungen A-Z"
 	if not ID:
 		ID="ZDF"
 	li = xbmcgui.ListItem()
-	li = home(li, ID)						# Home-Button
+	li = home(li, "ZDF")						# Home-Button
 	
 	azlist = list(string.ascii_uppercase)
 	azlist.append('0 - 9')
 
 	# Buttons A to Z
+	func = "ZDF_AZList"
+	if "ZDFfunk" in ID:
+		func = "ZDF_AZList_funk"
 	for element in azlist:
-		title='Sendungen mit ' + element		
+		title='Sendungen mit ' + element	
 		fparams="&fparams={'title': '%s', 'element': '%s', 'ID': '%s'}" % \
 			(title, element, ID)
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_AZList", fanart=R(ICON_ZDF_AZ), 
+		addDir(li=li, label=title, action="dirList", dirID=func, fanart=R(ICON_ZDF_AZ), 
 			thumb=R(ICON_ZDF_AZ), fparams=fparams)
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+####################################################################################################
+# Nutzung ZDF_AZList seit Graphql-Umstellung nicht mehr möglich,
+#	für func vorerst weiter Nutzung des futura-api
+#
+def ZDF_AZList_funk(title, element, ID=""):
+	PLog('ZDF_AZList_funk: ' + element)
+	
+	icon = R(ICON_ZDF_AZ)
+	title_org = title
+	
+	DictID = "funk-alle-sendungen-von-a-z-100"
+	path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s" % DictID
+	if element == "0 - 9":							# für funk o. Blanks
+		element="0-9"
+	msg1 = "Cache funk A-Z:"
+	jsonObject = Dict("load", DictID, CacheTime=ZDF_CacheTime_AZ)
+
+	if not jsonObject:
+		page, msg = get_page(path)
+		if not page:								# nicht vorhanden?
+			msg1 = 'ZDF_AZList_funk: Beiträge können leider nicht geladen werden.' 
+			msg2 = msg
+			MyDialog(msg1, msg2, '')
+			return
+		xbmcgui.Dialog().notification(msg1,"Haltedauer 30 Min",icon,3000,sound=False)
+		jsonObject = json.loads(page)
+		Dict("store", DictID, jsonObject)
+		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ZDF')							# Home-Button
+
+	PLog(str(jsonObject)[:80])
+	jsonObject = jsonObject["cluster"]
+	PLog(len(jsonObject))
+	PLog(str(jsonObject)[:80])
+
+	AZObject=[]	
+	for clusterObject in jsonObject:
+		PLog(str(clusterObject)[:12])
+		if element in clusterObject["name"]:		# 23.05.2026: Z neg.
+			title = clusterObject["name"]
+			PLog("found_title: " + title)
+			AZObject = clusterObject
+			break
+	
+	if AZObject:
+		teaserObject = AZObject["teaser"]
+		for entry in teaserObject:
+			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
+			title = repl_json_chars(title)
+			label = title
+			descr = repl_json_chars(descr)
+			fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
+			PLog("fparams: " + fparams)	
+			addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
+				thumb=img, fparams=fparams, summary=descr, tagline=tag)	
+	else:											# keine Sendung gefunden							
+		msg1 = "%s:" % title
+		msg2 = "leider nichts gefunden"
+		xbmcgui.Dialog().notification(msg1, msg2,icon,3000,sound=False)
+		PLog("%s %s" % (title, msg2))
+		return
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+
 
 ####################################################################################################
 # Laden der einzelnen Buchstaben-Seite, Auflistung der Sendereihen in 
@@ -11088,51 +11164,46 @@ def ZDF_AZ(name, ID=""):						# name = "Sendungen A-Z"
 # 05.10.2025 Umstellung Graphql (tabIndex + Params Graphql aus Web, Mehr Inhalte),
 #	Zielfunktion noch ZDF_RubrikSingle (futura-api)
 # 23.10.2025 OK mit Zielen ZDF_KatSub + ZDF_KatSerie
+# 23.05.2026 Nutzung ZDF_Graphq, Folgeaufrufe via endCursor
 #
-def ZDF_AZList(title, element, ID="", Graphql=""):		# ZDF-Sendereihen zum gewählten Buchstaben
+def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum gewählten Buchstaben
 	PLog('ZDF_AZList: ' + element)
-	PLog(title); PLog(ID);
+	PLog(title); PLog(ID); PLog(endCursor);
 	title_org = title
 	fanart = R(ICON_ZDF_AZ)
 	
-	base = ZDF_GraphqlBase % "specialPageByCanonical"
+	OpName = "specialPageByCanonical"
+	base = ZDF_GraphqlBase % "specialPageByCanonical"					# -> Folgeaufrufe "Mehr Inhalte"
 	myvars_base = '{"staticGridClusterPageSize":6,"staticGridClusterOffset":0,"canonical":"sendungen-100","endCursor":%s,"tabIndex":%d,"itemsFilter":{"teaserUsageNotIn":["TIVI_HBBTV_ONLY"]}}'
-	ext = '{"clientLibrary":{"name":"@apollo/client","version":"4.0.9"},"persistedQuery":{"version":1,"sha256Hash":"63848395d2f977dbf99ce30172c8d80038a54615574295eee6f8704c5e6fcbee"}}'
+	sha256Hash = "63848395d2f977dbf99ce30172c8d80038a54615574295eee6f8704c5e6fcbee"
 
-	element = element.replace("0 - 9", "0+-+9")			# -> Weburl
-	path = "https://www.zdf.de/sendungen-a-z?group=%s" % element
+	element = element.replace("0 - 9", "0+-+9")							# -> Weburl
+	path = "https://www.zdf.de/sendungen-a-z?group=%s" % element		# Tab-Katalog aus Web holen
 	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, mode="CatalogTabsConnection")
 
 	tabs = blockextract('title":"', coll_id)
 	PLog("tabs: %d" % len(tabs))
-	element = element.replace("0+-+9", "0 - 9")					# -> tabIndex
-	for item in tabs:									# Suche tabIndex
+	element = element.replace("0+-+9", "0 - 9")							# -> tabIndex
+	for item in tabs:													# Suche tabIndex
 		PLog("element: %s, tab: %s" % (element, item))
 		if '"%s"' % element in item:
 			tabIndex = stringextract('index":', ',', item)
 			PLog("found_tab: %s | tabIndex: %s" % (item, tabIndex))
 			break		
 	
-	if not Graphql:								
+	if not endCursor:								
 		PLog("ZDF_AZList_First:")
-		# token-Aktualisierung (ev. via ZDF_Graphql_WebDetails)
-		apitoken="087ee847a6d725180474cee3dcf62e3547702018"; appId="ffw-mt-web-2c770629"
-		header = HEADERS_GRAPHQL % (apitoken, appId)
-		Dict("store", "GraphqlHeader", header)
-		
-		myvars = myvars_base  % ("null", int(tabIndex))					# null: endcursr
-		href = base + quote(myvars) + "&extensions=" + quote(ext)
-		PLog("Graphql_ZDF_AZList1: " + unquote(href))
-		page, msg = get_page(path=href,  header=header, do_safe=False) 	# Graphql-Call	
+		variables = myvars_base  % ("null", int(tabIndex))				# null: endcursor
+		PLog("Graphql_ZDF_AZList1: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))
 
 	#--------------------------------------------------------------
 	else:																# Graphql-Folge-Calls: "Mehr Inhalte laden"
 		PLog("ZDF_AZList_More:")
-		if Graphql:
-			href=Graphql
-			header = Dict("load", "GraphqlHeader")
-			page, msg = get_page(path=href,  header=header, do_safe=False) 	
-
+		if endCursor:
+			endCursor = '"%s"' % endCursor
+			variables = myvars_base  % (endCursor, int(tabIndex))		# null: endcursor
+		
+	page = ZDF_Graphql(OpName, sha256Hash, variables)
 	#--------------------------------------------------------------
 
 	try:												# json-Daten
@@ -11191,8 +11262,7 @@ def ZDF_AZList(title, element, ID="", Graphql=""):		# ZDF-Sendereihen zum gewäh
 				fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
 					(quote(title), quote(path), quote(img))
 				addDir(li=li, label=label, action="dirList", dirID="ZDF_KatSeriePre", fanart=fanart, 
-					thumb=img, tagline=tag,  summary=descr, fparams=fparams)
-				
+					thumb=img, tagline=tag,  summary=descr, fparams=fparams)				
 				
 	else:
 		fanart = R(ICON_ZDF_AZ)
@@ -11203,22 +11273,16 @@ def ZDF_AZList(title, element, ID="", Graphql=""):		# ZDF-Sendereihen zum gewäh
 	
 	#--------------------------------------------------------------
 
-	if hasNextPage:														# Button mit Graphql-Call für "Mehr Inhalte" 
-		header = Dict("load", "GraphqlHeader")
-		PLog(myvars_base)
-		endCursor = '"%s"' % endCursor
-		myvars = myvars_base  % (endCursor, int(tabIndex))
-		href = base + quote(myvars) + "&extensions=" + quote(ext)		# sh256Hash-Variante "124..f3d" s. interne Doku
-		
+	if hasNextPage:														# Button mit Graphql-Call für "Mehr Inhalte" 		
 		label = "[B]Mehr Inhalte laden[/B]"
 		tag = u"Mehr Inhalte zu [B]%s[/B] | gesamt %d" % (title_org, totalCount)
-		PLog("Graphql_ZDF_AZList2: " + unquote(href))
-		PLog(tag); PLog(path);
+		PLog("ZDF_AZList2_endCursor: " + endCursor)
+		PLog(tag)
 	
 		img=R(ICON_MEHR)
-		href=py2_encode(href); title=py2_encode(title); 				# -> folgende Aufrufe
-		fparams="&fparams={'title': '%s','element': '%s', 'ID': '%s', 'Graphql': '%s'}" % (quote(title), 
-			element, ID, quote(href))
+		title=py2_encode(title); 				# -> folgende Aufrufe
+		fparams="&fparams={'title': '%s','element': '%s', 'ID': '%s', 'endCursor': '%s'}" % (quote(title), 
+			element, ID, endCursor)
 		addDir(li=li, label=label, action="dirList", dirID="ZDF_AZList", \
 			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
 	
