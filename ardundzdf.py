@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>343</nr>										# Numerierung für Einzelupdate
+# 	<nr>344</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.7'
 VDATE = '23.05.2026' 
 
@@ -8407,21 +8407,21 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 #	2. Graphql-Call 
 # Steuerung Submenüs via Button -> ZDF_get_naviKat (ähnlich
 #	ZDF-Sportstudio (Datenformat zu sehr abweichend)
-# Zielfunktion ZDF_RubrikSingle via futura-Url
 # 21.08.2025 Aufbau Params Graphql unquoted (Debug)
 #	Pagination wieder an Web angeglichen (48->24)
+# 24.05.2026 Nutzung ZDF_Graphql, Folgeaufrufe via endCursor
 #
-def ZDF_KatSub(title, path, tabid="", Graphql="", typ=""):								
+def ZDF_KatSub(title, path, tabid="", endCursor="", typ=""):								
 	PLog("ZDF_KatSub:") 
 	PLog("title: %s, path: %s, tabid: %s, typ: %s" % (title, path, tabid, typ))
+	PLog(endCursor)
 	
 	OpName="getMetaCollectionContent"				# Defaults Graphql-Call
 	mode = "metaCollectionId"
-	myvars = '{"collectionId":"%s","input":{"appId":"%s","filters":{"contentOwner":[],"fsk":[],"language":[]},"pagination":{"first":%s,"after":null},"user":{"abGroup":"gruppe-b","userSegment":"segment_0"},"tabId":%s}}'
-	ext	= '{"persistedQuery":{"version":1,"sha256Hash":"124c9c2f9d4fa982b07a5cfa12a608c614847be14ac61291cc1bbfbd3a237f3d"}}'
+	myvars_base = '{"collectionId":"%s","input":{"appId":"%s","filters":{"contentOwner":[],"fsk":[],"language":[]},"pagination":{"first":%s,"after":%s},"user":{"abGroup":"gruppe-b","userSegment":"segment_0"},"tabId":%s}}'
+	sha256Hash = "124c9c2f9d4fa982b07a5cfa12a608c614847be14ac61291cc1bbfbd3a237f3d"
 	data_key = '"metaCollectionContent"'			
 	first=24						# pagination: wie Web
-	base = ZDF_GraphqlBase % OpName
 
 	path_org=path;
 	if tabid:
@@ -8435,25 +8435,18 @@ def ZDF_KatSub(title, path, tabid="", Graphql="", typ=""):
 	if not coll_id:			
 		return
 	
-	if not Graphql:								
-		Dict("store", "ZDF_KatSubPath", path)						# store Webadresse für Folge-Graphql-Calls			
-		# Graphql-Call, zdf-app-id bei Bedarf aus Web ermitteln,
-		# 15.05.2025 Pagination wieder zurück auf 24 wie Web
-		header = HEADERS_GRAPHQL % (apitoken, appId)
-		Dict("store", "GraphqlHeader", header)
-
-		myvars = myvars  % (coll_id, zdfappId, first, path_navi)
-		href = base + quote(myvars) + "&extensions=" + quote(ext)
-		PLog("Graphql_unquoted1: " + unquote(href))
-		page, msg = get_page(path=href,  header=header, do_safe=False) 	# erster Graphql-Call
+	if not endCursor:								
+		variables = myvars_base  % (coll_id, zdfappId, first, "null", path_navi)	# null: endCursor
+		PLog("Graphql_ZDF_KatSub1: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))
 
 	#--------------------------------------------------------------
 	else:															# Graphql-Folge-Calls: "Mehr Inhalte laden"
-		if Graphql:
-			href=Graphql
-			header = Dict("load", "GraphqlHeader")
-			page, msg = get_page(path=href,  header=header, do_safe=False)
- 	
+		if endCursor:
+			endCursor = '"%s"' % endCursor
+			variables = myvars_base  % (coll_id, zdfappId, first, endCursor, path_navi)	
+			PLog("Graphql_ZDF_KatSub2: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))
+	
+	page = ZDF_Graphql(OpName, sha256Hash, variables)
 	#--------------------------------------------------------------
 
 	try:												# json-Daten Graphql-Call
@@ -8496,26 +8489,19 @@ def ZDF_KatSub(title, path, tabid="", Graphql="", typ=""):
 		thumb=icon, fparams=fparams, tagline=tag)
 
 	ZDF_Graphql_get_seasons(objs)							# Liste Sendungen,  wie ZDF_Recommendation (ZDF_WebMoreSingle)
-	
-	
+
 	#--------------------------------------------------------------
 
-	if hasNextPage:										# Button mit Graphql-Call für "Mehr Inhalte" 
-		header = Dict("load", "GraphqlHeader")
-		myvars = '{"collectionId":"%s","input":{"appId":"%s","filters":{"contentOwner":[],"fsk":[],"language":[]},"pagination":{"first":%s,"after":"%s"},"user":{"abGroup":"gruppe-b","userSegment":"segment_0"},"tabId":%s}}'
-
-		myvars = myvars  % (coll_id, zdfappId, first, endCursor, path_navi)
-		href = base + quote(myvars) + "&extensions=" + quote(ext)	# sh256Hash-Variante "124..f3d" s. interne Doku
-		
+	if hasNextPage:										# Button mit Graphql-Call für "Mehr Inhalte" 		
 		label = "[B]Mehr Inhalte laden[/B]"
 		tag = u"Mehr Inhalte zu [B]%s | %s[/B]" % (title, this_navi)
-		PLog("Graphql_unquoted2: " + unquote(href))
+		PLog("ZDF_KatSub_endCursor: " + endCursor)
 		PLog(tag); PLog(path_org);
 	
 		img=R(ICON_MEHR)
-		href=py2_encode(href); title=py2_encode(title); 	# -> 2. Aufruf 
-		fparams="&fparams={'title': '%s','path': '%s', 'tabid': '%s', 'Graphql': '%s'}" % (quote(title), 
-			quote(path_org), quote(tabid), quote(href))
+		title=py2_encode(title); 						# -> folgende Aufrufe
+		fparams="&fparams={'title': '%s','path': '%s', 'tabid': '%s', 'endCursor': '%s'}" % (quote(title), 
+			quote(path_org), quote(tabid), endCursor)
 		addDir(li=li, label=label, action="dirList", dirID="ZDF_KatSub", \
 			fanart=img, thumb=img, fparams=fparams, tagline=tag)	
 				
@@ -8759,39 +8745,34 @@ def ZDF_KatSerieExtras(title, DictID, mode=""):
 # Aufruf: ZDF_KatSeriePre 
 # 2. Durchlauf mit Graphql für Sätze > max_anz
 # 
-def ZDF_KatSerie(title, path, typ, sid, Graphql=""):
+def ZDF_KatSerie(title, path, typ, sid, endCursor=""):
 	PLog('ZDF_KatSerie: %s | %s | %s | %s' % (title, path, typ, sid))	
+	PLog(endCursor)
 	max_anz=50													# countEpisodes (max. 100 erlaubt), Web 24
 	title_org=title; path_org=path
+
 	OpName = "seasonByCanonical"								# Serie (typ: SEASON_SERIES, ENDLESS_SERIES)
-	Grbase = ZDF_GraphqlBase % OpName
 	mode = "seasonByCanonical"
 	seasonIndex=0; sorting="DESC"
 	# direction: DESC / ASC | Web: ASC
-	myvars = '{"seasonIndex":0,"episodesPageSize":%d,"canonical":"%s","filterBy":{"idIn":["%s"]},"sortBy":[{"field":"EPISODE_NUMBER","direction":"%s"}]}'
-	ext	= '{"persistedQuery":{"version":1,"sha256Hash":"01f2190e7dab1da40f63b585c0b68a59ecdd7f5effb8890b958e20b48bee20cb"}}'
+	myvars_base = '{"seasonIndex":0,"episodesPageSize":%d,"canonical":"%s","filterBy":{"idIn":["%s"]},"sortBy":{"field":"EPISODE_NUMBER","direction":"%s"},"episodesAfter":%s}'
+	sha256Hash = "81237cafa2f0176d351b21bff20cdcb5e5755092a0bd42d7271018c5440a4493"
 	
 	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, mode=mode) 	# Web -> Dict
 	coll_id = sid
 	coll_id_org = sid											# -> Mehr-Inhalte
 
-	if not Graphql:	
-		header = HEADERS_GRAPHQL % (apitoken, appId)
-		Dict("store", "GraphqlHeader", header)
-		myvars = myvars  % (max_anz, canon, coll_id, sorting)	# coll_id: initialSeasonId bzw. sid
-		href = Grbase + quote(myvars) + "&extensions=" + quote(ext)
-		PLog("Graphql_unquoted7_1: " + unquote(href))
-		page, msg = get_page(path=href,  header=header, do_safe=False) 	# erster Graphql-Call
+	if not endCursor:											# coll_id: initialSeasonId bzw. sid,  null:
+		variables = myvars_base  % (max_anz, canon, coll_id, sorting, "null")	# endCursor
+		PLog("Graphql_ZDF_KatSerie1: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))
 
 	#--------------------------------------------------------------
 	else:														# Graphql-Folge-Calls: "Mehr Inhalte laden"
-		if Graphql:
-			href=Graphql
-			PLog("Graphql_unquoted7_3: " + unquote(href))
-			header = Dict("load", "GraphqlHeader")
-			header = HEADERS_GRAPHQL % (apitoken, appId)
-			page, msg = get_page(path=href,  header=header, do_safe=False)
+		endCursor = '"%s"' % endCursor
+		variables = myvars_base  % (coll_id, zdfappId, first, endCursor, path_navi)	
+		PLog("Graphql_ZDF_KatSerie2: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))			
 
+	page = ZDF_Graphql(OpName, sha256Hash, variables)
 	#--------------------------------------------------------------
 
 	try:														# json-Daten Graphql-Call
@@ -8862,27 +8843,18 @@ def ZDF_KatSerie(title, path, typ, sid, Graphql=""):
 	#--------------------------------------------------------------
 
 	if hasNextPage:													# Button mit Graphql-Call für "Mehr Inhalte" 
-		PLog("hasNextPage")
-		header = Dict("load", "GraphqlHeader")
-		# hier sortBy":{"field ohne [ 
-		myvars = '{"seasonIndex":0,"episodesPageSize":%d,"canonical":"%s","filterBy":{"idIn":["%s"]},"sortBy":{"field":"EPISODE_NUMBER","direction":"%s"},"episodesAfter":"%s"}'
-		myvars = myvars  % (max_anz, canon, coll_id_org, sorting, endCursor)
-		# Web-Alternative apollo/client:
-		#ext = '{"clientLibrary":{"name":"@apollo/client","version":"4.0.7"},"persistedQuery":{"version":1,"sha256Hash":"38d1a04404706d4380c30ddc70290a373b3524dbfcbbe8cf56d05817fdc5ff99"}}'		
-		ext	= '{"persistedQuery":{"version":1,"sha256Hash":"01f2190e7dab1da40f63b585c0b68a59ecdd7f5effb8890b958e20b48bee20cb"}}'
-		href = Grbase + quote(myvars) + "&extensions=" + quote(ext)	# sh256Hash-Variante "124..f3d" s. interne Doku
-		
+		# Debug: ZDF heute, z.B. 2021 mit 143 Sendungen (hier max_anz=50)	
 		title = title_org
 		tag = u"Mehr Inhalte zu %s | Gesamt: %d" % (title_org, countEpisodes)
 		PLog("ZDF_KatSerieMore:")
-		PLog("Graphql_unquoted7_2: " + unquote(href))
+		PLog("ZDF_KatSerie_endCursor: " + endCursor)
 		PLog(tag); PLog(path_org);
 	
 		img=R(ICON_MEHR)
-		href=py2_encode(href); title_org=py2_encode(title_org); 	# -> 2. Aufruf 
+		title_org=py2_encode(title_org); 	# -> 2. Aufruf 
 		path=py2_encode(path);
-		fparams="&fparams={'title': '%s', 'path': '%s', 'typ': '%s', 'sid': '%s', 'Graphql': '%s'}" %\
-			(quote(title), quote(path), typ, sid, quote(href))
+		fparams="&fparams={'title': '%s', 'path': '%s', 'typ': '%s', 'sid': '%s', 'endCursor': '%s'}" %\
+			(quote(title), quote(path), typ, sid, endCursor)
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSerie", fanart=img, 
 			thumb=img, tagline=tag, fparams=fparams)
 
@@ -9418,74 +9390,10 @@ def ZDF_StartWebBeliebt(title):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #-----------------------------------------------------------------------
-# Aufruf ZDF_RubrikSingle - holt externes ARD-Video via Graphql-Call
-#	(key externalId, hier scms_id - nicht direkt für ard_api_path
-#	nutzbar). Mit "av_content_id" -> ZDF_getApiStreams.
-# 2 Varianten im futura-api für 1 Video möglich: mit/ohne externalId 
-#	(Bsp."Liebe hat Vorfahrt")
-# 23.12.2025 unzuverlässig - vorerst nicht mehr genutzt, Langversion
-#	apollo dagegen OK (ZDF_getApiStreams).
-#
-def ZDF_Graphql_Video(title, sharingUrl):									
-	PLog('ZDF_Graphql_Video: %s | %s' % (title, sharingUrl))	
-	futura_path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
-
-	collmark="metaCollectionId"		# Default für Sub's (barrierefrei: collectionId)
-	page, DictID, newpath, img, ptmdTemplate = ZDF_Graphql_WebDetails(sharingUrl, mode="getpage")
-	canon = sharingUrl.split("/")[-1]	
-	header = Dict("load", "GraphqlHeader")
-	#header = HEADERS_GRAPHQL % (apitoken, appId)
-	base = ZDF_GraphqlBase % "GetVideoMetaByCanonical"
-	# hier Langversion apollo, Kurzversion 1 für videodat_url (ZDF_getApiStreams)
-	ext	= '{"clientLibrary":{"name":"@apollo/client","version":"4.0.10"},"persistedQuery":{"version":1,"sha256Hash":"bd9e64297cc4f4a386b0c4e9a2e0b874445607fe32612a2d47f92ab5a2c981d0"}}'
-	
-	myvars = '{"canonical":"%s"}' %  canon
-	href = base + quote(myvars) + "&extensions=" + quote_plus(ext)
-	PLog("Graphql_unquoted4: " + unquote(href))		
-	page, msg = get_page(path=href,  header=header, do_safe=False) 	# Graphql-Call
-
-	if not page:
-		icon= R(ICON_DIR_VIDEO)
-		msg1 = u'%s:' % title
-		msg2 = "Video nicht gefunden"
-		PLog("%s %s" % (msg1, msg2))
-		xbmcgui.Dialog().notification(msg1,msg2,icon,2000,sound=False)
-	else:
-		try:
-			jsonObject = json.loads(page)
-			obj = jsonObject["data"]["videoByCanonical"]
-			PLog("obj: " + str(obj)[:80])
-			video = obj["tracking"]["piano"]["video"]
-			sid =  video["av_content_id"]
-			path = futura_path % sid
-			img=""; tag=""; descr=""
-			
-			title, teaser, descr, canon_id, owner, typ = ZDF_getKat_content_details(obj, mode="ttd")
-			img, img_alt = ZDF_getKat_content_details(obj, mode="img")			# fehlt bei ARD-Videos
-			
-		except Exception as exception:
-			PLog("ZDF_Graphql_Video_error: " + str(exception))
-			tag="";descr="";path="";img="";descr="";sid=""
-			return
-	
-	li = xbmcgui.ListItem()
-	li = home(li, "ZDF")											# Home-Button
-	mediatype=''													# Kennz. Videos im Listing
-	if SETTINGS.getSetting('pref_video_direct') == 'true':
-		mediatype='video'
-	PLog('mediatype: ' + mediatype); 
-	
-	title = repl_json_chars(title); 
-	path = py2_encode(path);
-	fparams="&fparams={'path': '%s','title': '%s'}" % (quote(path), quote(title))
-	PLog("fparams: " + unquote(fparams))
-	addDir(li=li2, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)
-
-		
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
-
+# ZDF_Graphql_Video entfernt, seit Dez. 2025 nicht mehr genutzt
+# def ZDF_Graphql_Video(title, sharingUrl):										
 #-----------------------------------------------------------------------
+
 # Aufruf ZDF_WebMoreSingle, ZDF_KatSeriePre
 # listet empfohlene Beiträge passend zur Webseite path
 #
@@ -10655,7 +10563,7 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 		query = query_org.replace('+', ' ')
 		pagenr = re.search(r'&page=(\d+)', nextUrl).group(1)
 		PLog(pagenr); 
-		title = "[B]Mehr[/B] Ergebnisse im ZDF zeigen zu: >[B]%s[/B]<"  % query
+		title = "[B]Mehr[/B] Ergebnisse im ZDF zeigen zu: >[B]%s[/B]<"  % cleanmark(query)
 		tagline = u"nächste Seite [B]%s[/B]" % pagenr
 		query_org=py2_encode(query_org); 
 		fparams="&fparams={'query': '%s', 's_type': '%s', 'pagenr': '%s'}" %\
@@ -11164,7 +11072,7 @@ def ZDF_AZList_funk(title, element, ID=""):
 # 05.10.2025 Umstellung Graphql (tabIndex + Params Graphql aus Web, Mehr Inhalte),
 #	Zielfunktion noch ZDF_RubrikSingle (futura-api)
 # 23.10.2025 OK mit Zielen ZDF_KatSub + ZDF_KatSerie
-# 23.05.2026 Nutzung ZDF_Graphq, Folgeaufrufe via endCursor
+# 23.05.2026 Nutzung ZDF_Graphql, Folgeaufrufe via endCursor
 #
 def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum gewählten Buchstaben
 	PLog('ZDF_AZList: ' + element)
@@ -11173,7 +11081,6 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 	fanart = R(ICON_ZDF_AZ)
 	
 	OpName = "specialPageByCanonical"
-	base = ZDF_GraphqlBase % "specialPageByCanonical"					# -> Folgeaufrufe "Mehr Inhalte"
 	myvars_base = '{"staticGridClusterPageSize":6,"staticGridClusterOffset":0,"canonical":"sendungen-100","endCursor":%s,"tabIndex":%d,"itemsFilter":{"teaserUsageNotIn":["TIVI_HBBTV_ONLY"]}}'
 	sha256Hash = "63848395d2f977dbf99ce30172c8d80038a54615574295eee6f8704c5e6fcbee"
 
@@ -11201,7 +11108,8 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 		PLog("ZDF_AZList_More:")
 		if endCursor:
 			endCursor = '"%s"' % endCursor
-			variables = myvars_base  % (endCursor, int(tabIndex))		# null: endcursor
+			variables = myvars_base  % (endCursor, int(tabIndex))
+			PLog("Graphql_ZDF_AZList2: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))
 		
 	page = ZDF_Graphql(OpName, sha256Hash, variables)
 	#--------------------------------------------------------------
@@ -11276,7 +11184,7 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 	if hasNextPage:														# Button mit Graphql-Call für "Mehr Inhalte" 		
 		label = "[B]Mehr Inhalte laden[/B]"
 		tag = u"Mehr Inhalte zu [B]%s[/B] | gesamt %d" % (title_org, totalCount)
-		PLog("ZDF_AZList2_endCursor: " + endCursor)
+		PLog("ZDF_AZList_endCursor: " + endCursor)
 		PLog(tag)
 	
 		img=R(ICON_MEHR)
@@ -12166,7 +12074,7 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 	return
 
 #----------------------------------------------
-# holt Details für item (futura-api, für Grapql-json ungeeignet).
+# holt Details für item (futura-api, für Graphql-json ungeeignet).
 # Aufrufer: ZDF_FlatListEpisodes, ZDF_getStrmList
 def ZDF_FlatListRec(item):
 	PLog('ZDF_FlatListRec:')

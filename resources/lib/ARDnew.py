@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>141</nr>										# Numerierung für Einzelupdate
-#	Stand: 20.05.2026
+# 	<nr>142</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -767,9 +767,17 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 # Aufrufe: Rubriken aus ARDStart, Sendereihen aus A-Z-Seiten, Mehrfachbeiträge aus ARDSearchnew
 # 28.05.2020 getrennte Swiper-Auswertung entfällt nach Änderung der ARD-Seiten
 # 18.04.2023 Cache für Startseite entfällt (obsolet - api-Call)
+# 24.05.2026 Serienerkennung erweitert, Notification für ARD Plus
 #		
 def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""): 
 	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path); PLog(img)
+	
+	if "Weiter zu ARD Plus" in title:
+		icon = R("ard-mediathek.png")
+		msg1 = "ARD Plus:"; msg2 = u"im Addon nicht unterstützt"
+		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
+		return
+	
 	# Titel-Anpassung für phoenix ("Stage Widget händisch"):
 	if title.startswith("Stage") or title.startswith("Die besten Videos"):
 		title = "[B]Highlights[/B]"
@@ -817,9 +825,11 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 		ARDRubriken(li, page=page, homeID=homeID)		# direkt
 	else:												# detect Staffeln/Folgen
 		if '"heroImage"' in page:						# 'hasSeasons":true' ungeeignet, Nicht-Serien möglich
-			PLog("hasSeasons_detect")
-			ARD_KatSeriePre(path, title, img_org)		# 20.03.2026 Staffelübersicht, Button "komplette Liste: .."
-			return
+			PLog("heroImage_detect")
+			if '"coreAssetType":"SEASON_SERIES"' in page:
+				PLog("hasSeasons_detect")
+				ARD_KatSeriePre(path, title, img_org)		# 20.03.2026 Staffelübersicht, Button "komplette Liste: .."
+				return
 
 		elif ID != "Livestream":	
 			ID = "ARDStartRubrik"	
@@ -1003,7 +1013,6 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 			teasers = seasons
 		PLog("seasons_result: %d" % len(seasons))
 			
-		teasers=[]; trailer=[]
 		if "heroImage" in obj:										# 12.05.2026 kann fehlen, Serie Totenfrau 
 			hero_img = obj["heroImage"]["src"]
 			PLog("hero_img: " + hero_img)
@@ -1053,13 +1062,14 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 			for s in seasons[::-1]:										# via Slicing gedreht, s.a. get_json_content
 				PLog("cnt: " + str(cnt))
 				cnt=cnt-1
-				skip=False; seasonNumber=""
-				wtitle = s["title"]				# Widget-Titel
-				teasers = s["teasers"]
+				skip=False; seasonNumber=""; wtitle=""
+				if "title" in s:
+					wtitle = s["title"]				# Widget-/-Serien-Titel
 				if "seasonNumber" in s:
 					seasonNumber = seasons[cnt]["seasonNumber"]
 				if not seasonNumber:									# enthält alle Alternativen, abgedeckt durch
 					continue											#	komplette Liste
+				teasers = s["teasers"]
 				title = "%s | [B]%s[/B]" % (title_org, wtitle)
 				tag = "[B]Folgen: %d[/B]" % len(teasers) 
 				img = hero_img
@@ -2126,9 +2136,7 @@ def get_json_content_details(obj, ID=""):
 	matRat="Ohne"; pubServ=""; pagetitle=""
 	typ=""; title="";
 	patt1 = r'S(\d{2})/E(\d{2,3})'								# Muster: (S01/E04), (S08/108)
-	patt2 = r' Folge (\d{2,3}):'								# Muster: | Folge 105: 
-	
-	
+	patt2 = r' Folge (\d{2,3}):'								# Muster: | Folge 105: 	
 
 	try:
 		if "availableTo" in obj:

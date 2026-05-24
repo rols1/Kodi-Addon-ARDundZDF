@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>170</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.05.2026
+# 	<nr>171</nr>										# Numerierung für Einzelupdate
+#	Stand: 24.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1157,13 +1157,13 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 			commands.append((u'Inhaltstext für Video zeigen', 'RunScript(%s, %s, ?action=dirList&dirID=%s%s)' \
 					% (MY_SCRIPT, HANDLE, dirID, fparams_ShowSumm)))
 
-		if fparams_ShowSeason:															# Serie für Video zeigen
+		if fparams_ShowSeason:															# Serie für Video suchen
 			# Aufruf Haupt-PRG, da dessen Funktionen im Script nicht importierbar sind ->
 			#	resources.lib.tools.Context -> Zielfunktion via RunAddon
 			MY_SCRIPT=xbmc.translatePath('special://home/addons/%s/ardundzdf.py' % (ADDON_ID))
 			PLog("MY_SCRIPT_ShowSeason:" + MY_SCRIPT)
 			PLog(fparams_ShowSeason)
-			mtitle = u"Serie zum Video zeigen"		
+			mtitle = u"Serie zum Video suchen"		
 			fparams_ShowSeason=quote(fparams_ShowSeason)								# quoting für router erf.
 			commands.append((mtitle, 'RunScript(%s, %s, ?action=dirList&dirID=resources.lib.tools.Context%s)' \
 				% (MY_SCRIPT, HANDLE, fparams_ShowSeason)))
@@ -4001,6 +4001,8 @@ def monitor_resume(player, new_list, video_dur, seekTime):
 
 	if os.path.exists(PLAYLIST_ALIVE):						# Beendet Kodis Fehl-Call (s. call_monitor_resume)
 		PLog("detect_running_playlist")
+		return
+	if int(video_dur) < 120:								# skip kurze Trailer - zeigen das Laderad 
 		return
 		
 	monitor = xbmc.Monitor()
