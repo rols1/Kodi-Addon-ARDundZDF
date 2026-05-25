@@ -10,6 +10,32 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+25.05.2026	5.4.8
+			get_VideoAudio (TagesschauXL): mediatype=music ergänzt für MP3-Downloads
+			via Kontext-Menü.
+			get_json_content (ARDnew): überzähligen Doppelpunkt nach TOP entfernt.
+			home (util): Hinweis auf Auslaufen des Supports in 2026 für Leia, Krypton.
+			ARD_KatSeriePre: für Empfehlungs-Suche Fallback-img ergänzt und Titel-Müll
+			(z.B. " | Alle Folgen") gelöscht. Anpassung für abweichende widgets-/teasers-
+			Liste für HR3-Serie.
+			ARDStartRubrik: Serienerkennung neben heroImage zusätzlich abhängig gemacht
+			von '"coreAssetType":"SEASON_SERIES"'.
+			ARDStartRubrik: Notification für im Addon geblockten "ARD Plus"-Link.
+			ARDRubriken: Kennzeichnung "ard_plus_banner" in typ für ARDStartRubrik.
+			InfoAndFilter: in Button Einzelupdate router-inkompatible Zeichen aus Info-
+			Text entfernt.
+			Main_ZDF: Rubriken entfernt, durch Kategorien obsolet.
+			ZDF_Graphql: apollo-Version aktualisiert von  4.0.11 auf 4.1.6.
+			ZDF_AZList: Nutzung zentrale Graphql-Funktion ZDF_Graphql, Code gestrafft,
+			Folgeaufrufe via Param endCursor. Für Funk neue Funktion ZDF_AZList_funk.
+			ZDF_KatSub, ZDF_KatSerie: Nutzung zentrale Graphql-Funktion ZDF_Graphql wie 
+			ZDF_AZList.
+			ZDF_Graphql_Video: entfernt, seit Dez. 2025 nicht mehr genutzt.
+			ZDF_Graphql_WebDetails: Anzahl 1 für ptmdTemplate berücksichtigt.
+			addDir (util): "Serie zum Video zeigen" -> "Serie zum Video suchen".
+			monitor_resume (util): Ausschluss Videolänge < 120 sec (relevant für 
+			Zuletzt-gesehen-Liste. Kurze Trailer mit Laderad, Stop nicht möglich.
+
 16.05.2026	5.4.7
 			Audio_get_cluster: router-kompatible Behandlung für Titel (repl_json_chars).
 			ARDSportMediaPlayer: fehlenden Image-Url-Bestandteil (AAABnSSvrFg) in Player-

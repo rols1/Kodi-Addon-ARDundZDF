@@ -310,18 +310,7 @@ def Main_NEW(name=''):
 
 #---------------------------------------------------------------- 
 # Startseite der Mediathek - passend zum ausgewählten Sender -
-# 27.10.2019 Laden aus Cache nur noch bei Senderausfall - vorheriges Laden mit ARDStartCacheTime
-#	als 1. Stufe störte beim Debugging
-#
-# 27.05.2020 ARD hat das Seitenlayout geändert:
-#	der Scrollmechanismus entfällt. Aufrufer ohne aktiv. Java-Script erhalten eine kompl. Startseite.
-#	Für die Auswertung geeignet ist nur der untere Teil. Er enthält ab window.__FETCHED_CONTEXT__
-#	die json-Inhalte.
-#	Wir extrahieren in ARDStart die Container, jeweils mit den Bildern des 1. Beitrags.
-#	Weiterverarbeitung in ARDStartRubrik (path -> json-Seite)
-#	Frühere Kopf-Doku entfernt - siehe commits zu V<=3.0.3
-#	Problem Stringauswertung: die ersten 4 Container folgen doppelt (bei jedem Sender) - Abhilfe: 
-#		Abgleich mit Titelliste. Wg. Performance Verzicht auf json-/key-Auswertung.
+# Kopfdoku älter als 2021 s. git-repo
 # 30.09.2021 Sonderbehdl. spaltenübergreifender Titel mit Breitbild (Auswert. descr, skip Bild)
 # 29.06.2022 Abzweig ARDStartRegion für neuen Cluster "Unsere Region" 
 # 07.04.2023 Wechsel Web-Call (ardmediathek.de) -> api-Call (api.ardmediathek.de) - embedded
@@ -574,6 +563,8 @@ def ARDRubriken(li, path="", page="", homeID=""):
 				continue
 		if title == "Rubriken":								# rekursiv zur Startseite
 			continue
+		if "ard_plus_banner" in typ:
+			title = "Weiter zu ARD Plus"					# Notification in ARDStartRubrik
 		title  = repl_json_chars(title)
 		ID = s["id"]
 
@@ -757,15 +748,8 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #---------------------------------------------------------------------------------------------------
-# Auflistung einer Rubrik aus ARDStart - geladen wird das json-Segment für die Rubrik, z.B.
-#		page.ardmediathek.de/page-gateway/widgets/ard/editorials/5zY7iWtNzGagawo0A86Y6U?pageNumber=0&pageSize=12
-#		path enthält entweder den Link zur html-Seite www.ardmediathek.de (ID=Swiper) oder den Link
-#		zur json-Seite der gewählten Rubrik (früherer Abgleich html-Titel / json-Titel entfällt).
-#		Die json-Seite kann Verweise zu weiteren Rubriken enthalten, z.B. bei Staffeln / Serien - Trigger hier
-#			 mehrfach=True
-#
 # Aufrufe: Rubriken aus ARDStart, Sendereihen aus A-Z-Seiten, Mehrfachbeiträge aus ARDSearchnew
-# 28.05.2020 getrennte Swiper-Auswertung entfällt nach Änderung der ARD-Seiten
+# Kopfdoku älter als 2023 s. git-repo
 # 18.04.2023 Cache für Startseite entfällt (obsolet - api-Call)
 # 24.05.2026 Serienerkennung erweitert, Notification für ARD Plus
 #		
@@ -2276,20 +2260,8 @@ def get_json_content_details(obj, ID=""):
 	return mehrfach,typ,title,pagetitle,summ,img,href
 	
 #---------------------------------------------------------------------------------------------------
-# Ermittlung der Videoquellen für eine Sendung - hier Aufteilung Formate Streaming + MP4
-# Bei Livestreams (m3u8-Links) verzweigen wir direkt zu SenderLiveResolution.
-# Videodaten unterteilt in _plugin":0 und _plugin":1,
-# Falls path auf eine Rubrik-Seite zeigt, wird zu ARDStartRubrik zurück verzweigt 
-#	(sofern keine Streams vorhanden)
-# 02.05.2019 erweitert: zusätzl. Videos zur Sendung angehängt - s.u.
-# 28.05.2020 Stream-Bezeichner durch ARD geändert
-# 19.10.2020 Mehr-Auswertung an ARD-Änderungen angepasst: get_ardsingle_more entfällt,
-#	Auswertung durch get_page_content nach entfernung des 1. elements und 
-#	page="\n".join(gridlist). mehrzS verhindert Rekursion.	
-# 13.11.2020 Anpassung an ARDRetro: Switch Home-Button via ID=ARDRetroStart (dto. in
-#	ARDStartVideoStreams + ARDStartVideoMP4, Änderung mehrzS (ID -> Flag, Rekurs.-Stop)
-# 05.01.2021 Anpassung für Sofortstart-Format: HLS_List + MP4_List -> PlayVideo_Direct
-#	(Streamwahl -> PlayVideo)
+# Ermittlung der Videoquellen für eine Sendung
+# Kopfdoku älter als 2021 s. git-repo
 # 21.01.2021 Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
 # 25.01.2021 no-cache-Header für Verpasst- und A-Z-Beiträge
 # 14.02.2023 HBBTV-Quellen (http://tv.ardmediathek.de/dyn/get?id=video%3A..)

@@ -530,6 +530,7 @@ def Kika_Start(show_cluster='', path=''):
 			for item in items:
 				cnt=cnt+1												# Folge-Index zum verketten
 				title = stringextract('"title":"', '"', item)
+				title=py2_decode(title);
 				title=repl_json_chars(title)
 				PLog("title: %s, show_cluster: %s" % (title, show_cluster))
 				summ = "Folgeseiten"
@@ -577,13 +578,14 @@ def Kika_Start(show_cluster='', path=''):
 	PLog("items1: %d" % len(items))
 	for item in items:
 		title = stringextract('"title":"', '"', item)
+		title=py2_decode(title);
 		title=repl_json_chars(title)
 		PLog("title: " + title)
 		# skip Live + Game
-		if "Jetzt live" in title or title == "" or "Jede Menge Spielspaß" in title:
+		if "Jetzt live" in title or title == "" or u"Jede Menge Spielspaß" in title:
 			continue
 			
-		title=py2_encode(title)
+		title=py2_encode(title);
 		img, img_alt = Kika_get_img(item)								# 1. Bild
 		tag = "Folgeseiten"
 		fparams="&fparams={'show_cluster': '%s', 'path': '%s'}" % (quote(title), quote(path_org))

@@ -281,7 +281,7 @@ def get_live_data(name):
 # ----------------------------------------------------------------------
 # TV-Programm Heute von arte.tv/de/guide/
 # 14.03.2025 OnlyNow=True -> nur Seite für get_live_data
-# 12-05.2026 "availability"]["start" und "availability"]["start"
+# 12-05.2026 "availability"]["start" und "availability"]["end]"
 #	stehen nicht mehr für Start/Ende einer Sendung
 #
 def EPG_Today(ID="", OnlyNow=""):
