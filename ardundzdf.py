@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>344</nr>										# Numerierung für Einzelupdate
+# 	<nr>345</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.7'
 VDATE = '23.05.2026' 
 
@@ -8336,15 +8336,16 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 		ptmdTemplate=""
 		items = blockextract('"ptmdTemplate":"', page, 'vodMediaType')
 		PLog(len(items))
-		if len(items) == 1:											# bisher: 0, 1 oder 2
-			 ptmdTemplate = items[0]
-		elif len(items) == 2:											# erstes: DGS-ptmdTemplate
-			if SETTINGS.getSetting('pref_DGS_ON') == "true":
-				ptmdTemplate = items[0]
-			else:
-				ptmdTemplate = items[1]
-		else:														# z.B. 4 x, Bsp. Film Olivia
-			 ptmdTemplate = items[0]
+		if len(items) > 0:
+			if len(items) == 1:											# bisher: 0, 1 oder 2
+				 ptmdTemplate = items[0]
+			elif len(items) == 2:											# erstes: DGS-ptmdTemplate
+				if SETTINGS.getSetting('pref_DGS_ON') == "true":
+					ptmdTemplate = items[0]
+				else:
+					ptmdTemplate = items[1]
+			else:														# z.B. 4 x, Bsp. Film Olivia
+				 ptmdTemplate = items[0]
 		ptmdTemplate = stringextract('"ptmdTemplate":"', '"', ptmdTemplate)
 		PLog("ptmdTemplate_WebDetails: " + ptmdTemplate)				
 		
@@ -8620,8 +8621,8 @@ def ZDF_KatSeriePre(title, path, img):
 			title = "%s [B](NEU)[/B]" % title
 		anz = stringextract('countEpisodes":', ',', item)
 		tag = "Staffel %s | [B]Folgen: %s[/B]" % (snr, anz)
-		
-		PLog("path: %s, typ: %s, snr: %s" % (path,  typ, sid))
+
+		PLog("path: %s, typ: %s, snr: %s" % (path,  typ, snr))
 		title=py2_encode(title)
 		fparams="&fparams={'title': '%s', 'path': '%s', 'typ': '%s', 'sid': '%s'}" %\
 			(quote(title), quote(path), typ, sid)
@@ -8638,8 +8639,7 @@ def ZDF_KatSeriePre(title, path, img):
 			dauer = stringextract('"duration":', ',', page)
 		dauer = dauer.replace("000", "")					# av_content_duration":5311000,
 		dauer = seconds_translate(dauer)
-		
-		
+
 		tag="Dauer: %s | zum Video" % dauer 
 		descr=""; title=t_org;
 		if not img:											# Web-img leer?
@@ -8755,27 +8755,35 @@ def ZDF_KatSerie(title, path, typ, sid, endCursor=""):
 	mode = "seasonByCanonical"
 	seasonIndex=0; sorting="DESC"
 	# direction: DESC / ASC | Web: ASC
-	myvars_base = '{"seasonIndex":0,"episodesPageSize":%d,"canonical":"%s","filterBy":{"idIn":["%s"]},"sortBy":{"field":"EPISODE_NUMBER","direction":"%s"},"episodesAfter":%s}'
+	# myvars_base = '{"seasonIndex":0,"episodesPageSize":%d,"canonical":"%s","filterBy":{"idIn":["%s"]},"sortBy":{"field":"EPISODE_NUMBER","direction":"%s"},"episodesAfter":%s}'
+	# 25.05.2026 neu:
+	myvars_base = '{"seasonIndex":0,"episodesPageSize":%d,"canonical":"%s","seasonFilterBy":{"availableStreamTypesIn":["VOD"],"idIn":["%s"]},"episodesSortBy":{"field":"EPISODE_NUMBER","direction":"%s"},"episodesFilterBy":{"availableStreamTypeIn":["VOD"]}}'
 	sha256Hash = "81237cafa2f0176d351b21bff20cdcb5e5755092a0bd42d7271018c5440a4493"
 	
 	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, mode=mode) 	# Web -> Dict
-	coll_id = sid
+	coll_id = sid												# <- ZDF_KatSeriePre
 	coll_id_org = sid											# -> Mehr-Inhalte
 
 	if not endCursor:											# coll_id: initialSeasonId bzw. sid,  null:
-		variables = myvars_base  % (max_anz, canon, coll_id, sorting, "null")	# endCursor
+		#variables = myvars_base  % (max_anz, canon, coll_id, sorting, "null")	# endCursor
+		variables = myvars_base  % (max_anz, canon, coll_id, sorting)	# endCursor
 		PLog("Graphql_ZDF_KatSerie1: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))
-
+		
 	#--------------------------------------------------------------
 	else:														# Graphql-Folge-Calls: "Mehr Inhalte laden"
-		endCursor = '"%s"' % endCursor
-		variables = myvars_base  % (coll_id, zdfappId, first, endCursor, path_navi)	
-		PLog("Graphql_ZDF_KatSerie2: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))			
+		#endCursor = '"%s"' % endCursor
+		#variables = myvars_base  % (coll_id, zdfappId, first, endCursor, path_navi)	
+		#PLog("Graphql_ZDF_KatSerie2: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))
+		icon = R("icon-info.png")
+		xbmcgui.Dialog().notification("Mehr als %d" % max_anz, u"für Serien nicht möglich.",icon,3000)	
+		return			
 
 	page = ZDF_Graphql(OpName, sha256Hash, variables)
 	#--------------------------------------------------------------
 
 	try:														# json-Daten Graphql-Call
+		if '"code":"NOT_FOUND"' in page: 
+			raise Exception("NOT_FOUND")
 		jsonObject = json.loads(page)
 		season_id = jsonObject["data"]["smartCollectionByCanonical"]["id"]	# -> ZDF_FlatListEpisodes
 		seasons = jsonObject["data"]["smartCollectionByCanonical"]["seasons"]
@@ -8786,7 +8794,7 @@ def ZDF_KatSerie(title, path, typ, sid, endCursor=""):
 		endCursor = pageInfo["endCursor"]						# <- id letzter Satz base64, Bsp. ZnVuay1j .. MTIyMDEt
 	except Exception as exception:
 		collect=[]; 
-		PLog("KatSeriejson_error: " + str(exception))
+		PLog("KatSerie.json_error: " + str(exception))
 		msg1 = u'Datenproblem in ZDF_KatSerie: %s' % str(exception)
 		MyDialog(msg1, '', '')
 		return			
@@ -8843,7 +8851,7 @@ def ZDF_KatSerie(title, path, typ, sid, endCursor=""):
 	#--------------------------------------------------------------
 
 	if hasNextPage:													# Button mit Graphql-Call für "Mehr Inhalte" 
-		# Debug: ZDF heute, z.B. 2021 mit 143 Sendungen (hier max_anz=50)	
+		# Debug: ZDF heute journal, z.B. 2025 mit 217 Sendungen (hier max_anz=50)	
 		title = title_org
 		tag = u"Mehr Inhalte zu %s | Gesamt: %d" % (title_org, countEpisodes)
 		PLog("ZDF_KatSerieMore:")
@@ -11576,7 +11584,8 @@ def ZDF_Graphql(OpName, sha256Hash, variables):
 	ZDF_GraphqlBase = "https://api.zdf.de/graphql"
 	zdfappId = "ffw-mt-web-2c770629"
 	
-	extensions = '{"clientLibrary":{"name":"@apollo/client","version":"4.0.11"},"persistedQuery":{"version":1,"sha256Hash":"%s"}}'
+#	extensions = '{"clientLibrary":{"name":"@apollo/client","version":"4.0.11"},"persistedQuery":{"version":1,"sha256Hash":"%s"}}'
+	extensions = '{"clientLibrary":{"name":"@apollo/client","version":"4.1.6"},"persistedQuery":{"version":1,"sha256Hash":"%s"}}'
 	extensions = extensions % sha256Hash
 		
 	params = urlencode({
