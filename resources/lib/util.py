@@ -61,7 +61,7 @@ import gzip, zipfile
 import base64 			# url-Kodierung für Kontextmenüs
 import json				# json -> Textstrings
 import pickle			# persistente Variablen/Objekte
-import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
+import re				# u.a. Reguläre Ausdrücke
 import string, textwrap
 
 import shlex			# Parameter-Expansion für subprocess.Popen (os != windows)
@@ -862,7 +862,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 					if SETTINGS.getSetting('pref_show_season') == 'true':	# default
 						fp = {'title': K_title, 'path': K_path, 'ID': org_id, 'mode': 'ShowSumm'}
 						fparams_ShowSumm = "&fparams={0}".format(fp)		# -> Inhaltstext
-						PLog("fparams_ShowSumm: " + fparams_ShowSumm[:80])	
+						PLog("fparams_ShowSumm: " + fparams_ShowSumm)	
 						fp = {'path': K_path, 'title': K_title, 'img': K_img, 'mode': 'ShowSeason'}
 						fparams_ShowSeason = "&fparams={0}".format(fp)		# -> Serie zeigen
 						PLog("fparams_ShowSeason: " + fparams_ShowSeason)	
@@ -2079,13 +2079,15 @@ def humanbytes(B):
 #---------------------------------------------------------------- 
 # 3 verschiedene Formate (s.u.) - Rückgabe in milliseconds
 #	  Eingaben aus xbmcgui.INPUT_TIME (Recording): Format '00:00:05'
+# bei Bedarf: Format PT1H28M50S s. Codestuecke/time_translate.py
+#
 def CalculateDuration(timecode):				
 	PLog("CalculateDuration:")
 	timecode = up_low(timecode)	# Min -> min
 	milliseconds = 0
 	hours        = 0
 	minutes      = 0
-	seconds      = 0
+	seconds      = 0	
 
 	if timecode.find('P0Y0M0D') >= 0:			# 1. Format: 'P0Y0M0DT5H50M0.000S', T=hours, H=min, M=sec
 		d = re.search('T([0-9]{1,2})H([0-9]{1,2})M([0-9]{1,2}).([0-9]{1,3})S', timecode)
@@ -2612,6 +2614,8 @@ def ReadJobs():
 # 19.03.2025 getRedirect via url_check (nach ZDF-Relaunch für geänderte Weblinks 
 #	notwendig), 04.01.2026 umgestellt auf getRedirect via get_page.
 # 15.02.2026 für ID ARDnew _duration ergänzt
+# 30.05.2026 ZDF: skip_verf + skip_pubDate nicht mehr relevant - ohne Daten im Web,
+#	zu Graphql s.u.
 #
 def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',duration=''):	
 	PLog('get_summary_pre: ' + ID); PLog(path)
@@ -2659,7 +2663,9 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 	if 	ID == 'ZDF':
 		# 18.03.2025 vorerst unberücksichtig: skip_verf, skip_pubDate
 		# transl_json, valid_title_chars
-		# Graphql nicht verwendbar (FSK16: 22:00-6:00h kein Output)
+		# Graphql-GetVideoMetaByCanonical nicht verwendbar (Metadaten
+		#	 fehlen (FSK, GEO, Verfügbar bis / ab), FSK16: 22:00-6:00h 
+		#	kein Output.
 		
 		descr_html = stringextract('"description" content="', '"', page)	# Web oben ARD-Video Sayonara Loreley		
 		html = stringextract('class="p4fzw5k tyrgmig m1iv7h85', 'Darsteller', page)

@@ -10,6 +10,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+01.06.2026	5.4.9
+			ZDF_Graphql_WebDetails: getpage-Absatz versetzt, um die Ablage der Header-
+			Params im Dict bei jeden Webabruf zu ermöglichen.
+			ZDF_Episodes_Graphql: entfernt, nicht mehr benötigt. Sie diente dem Abgleich
+			der Episodenlisten futura-api vs. Graphql-api.
+			ZDF_Recommendation: Nutzung zentrale Graphql-Funktion ZDF_Graphql, Tests mit
+			Änderungen in abGroup und userSegment erfolglos für andere Cluster.
+			ZDF_Verpasst_Datum: Nutzung zentrale Graphql-Funktion ZDF_Graphql.
+			ZDF-Startseite: neu, Nutzung HBBTV-Api, neue Funktion ZDF_getHBBTV_content,
+			Wegfall ZDF_StartWebCluster, Anpassung ZDF_PageMenu (-> ZDF_Start2 statt
+			ZDF_StartWebCluster), Button "Terra X plus Schule" -> "ZDF goes Schule".
+			Main_ZDFfunk, Main_TIVI: für Startseite Direktaufruf ZDF_PageMenu (früher 
+			ZDF_Start).
+			ZDF_KatSeriePre: description + visibleTo ergänzt falls Video statt Serie.
+			ZDF_getApiStreams: Endung index.m3u8 für HLS-Streams ergänzt (zu master.m3u8).
+			Context (tools): Berücksichtigung www.zdf.de aus ZDF_getHBBTV_content zusätzl 
+			zu futura-api für Suche nach Serie.
+			Parseplaylist: NameOld entfernt (ersetzt durch BandwithOld).
+
 25.05.2026	5.4.8
 			get_VideoAudio (TagesschauXL): mediatype=music ergänzt für MP3-Downloads
 			via Kontext-Menü.
@@ -80,7 +99,7 @@ CHANGE HISTORY
 			date_human (epgRecord): Logausgaben ergänzt.
 			livesenderTV.xml: Infotext für "Livestreams 3. Bundesliga" mit Webquelle
 			ergänzt.			
-			ZDF_StartWebCluster: aus Web ergänzt: duration, FSK, pubDate.
+			g: aus Web ergänzt: duration, FSK, pubDate.
 			ZDF_StartWebCluster: Web-Rubrik "Derzeit beliebt" ergänzt, Umsetzung mit
 			spez. Graphql-Call.
 			ZDF_StartWebCluster: Anpassungen für Webänderungen bei Livestreams.

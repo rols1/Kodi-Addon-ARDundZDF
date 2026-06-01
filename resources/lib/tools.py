@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>20</nr>								# Numerierung für Einzelupdate
-#	Stand: 15.05.2026
+# 	<nr>21</nr>								# Numerierung für Einzelupdate
+#	Stand: 30.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -630,32 +630,35 @@ def Context(title, path, img, mode):
 		exit()	
 	#-------------------------
 	if "zdf-prod-futura" in path or "www.zdf.de" in path:
-		page, msg = get_page(path=path, header=HEADERS)		# futura ZDF
-		msg1 = "Suche Inhalt zum Video:"
-		msg2 = 'kein Inhalt gefunden.'
-		try:
-			jsonObject = json.loads(page)
-			PLog(str(jsonObject)[:80])
-			# Bsp.: www.zdf.de/video/serien/the-rookie-100/the-hammer-100 ->
-			#		www.zdf.de/video/serien/the-rookie-100:
-			surl = jsonObject["document"]["sharingUrl"]	# Web-Url
-			pos = surl.rfind("/")
-			path = surl[:pos]
-			new_url, msg = get_page(path, GetOnlyRedirect=True)				
-			
-			page, msg = get_page(path=new_url)				# nur für img
-			imgset = stringextract("imageSrcSet=", '/>', page)
-			imgset = blockextract("https", imgset)
+		if "www.zdf.de" in path:								# Web-Url schon vorhanden
 			img = R(ICON_DIR_FOLDER)
-			for item in imgset:
-				PLog(item)
-				if "1280w" in item:
-					img = item.split(" ")[0]				# ..1280x720?cb=1743085107028 1280w
-					break
-		except Exception as exception:
-			path=""
-			msg = str(exception)
-			PLog("ShowSeason_error_ZDF: " + msg)
+		else:		
+			page, msg = get_page(path=path, header=HEADERS)		# futura ZDF. Web-Url ermitteln
+			msg1 = "Suche Inhalt zum Video:"
+			msg2 = 'kein Inhalt gefunden.'
+			try:
+				jsonObject = json.loads(page)
+				PLog(str(jsonObject)[:80])
+				# Bsp.: www.zdf.de/video/serien/the-rookie-100/the-hammer-100 ->
+				#		www.zdf.de/video/serien/the-rookie-100:
+				surl = jsonObject["document"]["sharingUrl"]	# Web-Url
+				pos = surl.rfind("/")
+				path = surl[:pos]
+				new_url, msg = get_page(path, GetOnlyRedirect=True)				
+				
+				page, msg = get_page(path=new_url)				# nur für img
+				imgset = stringextract("imageSrcSet=", '/>', page)
+				imgset = blockextract("https", imgset)
+				img = R(ICON_DIR_FOLDER)
+				for item in imgset:
+					PLog(item)
+					if "1280w" in item:
+						img = item.split(" ")[0]				# ..1280x720?cb=1743085107028 1280w
+						break
+			except Exception as exception:
+				path=""
+				msg = str(exception)
+				PLog("ShowSeason_error_ZDF: " + msg)
 		
 		PLog("params_Context: "); PLog(path); PLog(img);
 		if path and "-movie-" not in path:

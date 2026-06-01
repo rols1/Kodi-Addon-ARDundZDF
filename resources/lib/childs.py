@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>40</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.05.2026
+# 	<nr>41</nr>										# Numerierung für Einzelupdat1
+#	Stand: 30.05.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -273,12 +273,13 @@ def Main_TIVI(title=''):
 			(quote(title), "ZDF-tivi", quote(func))
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=GIT_ZDFTIVI, 
 			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
-			
+
 	title='tivi_Startseite'
-	fparams="&fparams={'ID': '%s'}" % (title)
+	coll_id = "06b4a744-3a6a-4a49-9eaf-4c6a4b59d0dc"
+	fparams="&fparams={'coll_id': '%s', 'homeID': '%s'}" % (coll_id,'Kinderprogramme')
 	addDir(li=li, label=title , action="dirList", dirID="ardundzdf.ZDF_Start", fanart=GIT_ZDFTIVI, 
-		thumb=GIT_TIVIHOME, tagline=title, fparams=fparams)
-		
+		thumb=GIT_TIVIHOME, tagline=title, fparams=fparams)	
+						
 	# 29.01.2026 Menü tivi_Verpasst entfernt - beim ZDF nicht mehr verfügbar
 	#title = 'tivi_Verpasst' 	# ZDF_VerpasstWoche -> tivi_Verpasst
 	
