@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>346</nr>										# Numerierung für Einzelupdate
+# 	<nr>347</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.9'
 VDATE = '01.06.2026' 
 
@@ -9670,6 +9670,7 @@ def ZDF_getHBBTV_content(items, homeID):
 			img = item["img"]	
 			headtxt = item["headtxt"]							# Serientitel, leer möglich (Ausn.: Livestream)
 			title = item["titletxt"]	
+			title = unescape(title)								# &amp;
 			label=title
 			headlabel = item["headlabel"]						# <span class=\"label\">Neue Folge</span>
 			headlabel = cleanhtml(headlabel)
@@ -9679,6 +9680,7 @@ def ZDF_getHBBTV_content(items, homeID):
 			foottxt = cleanhtml(foottxt)						# UT, AD, 6 in html-tags oder Wertung, Bsp. ereignisreich
 			infotext = "%s · %s" % (infotext, foottxt)			# 
 			summ = item["text"]
+			summ = cleanhtml(summ)
 			tag = infotext
 			
 			if headtxt:
@@ -9709,6 +9711,7 @@ def ZDF_getHBBTV_content(items, homeID):
 			label = "[B]TOP:[/B] %s" % label
 		if "stageitem" not in typ:								# Kein Stage-Item?
 			label = label.replace("TOP+", "").replace("TOP:", "")
+		PLog("label10: " + label)
 
 		title = repl_json_chars(title); title = unescape(title)
 		label = repl_json_chars(label); label = unescape(label)
@@ -9721,7 +9724,19 @@ def ZDF_getHBBTV_content(items, homeID):
 		title=py2_encode(title);
 		img=py2_encode(img);
 		
-		if "Video" in typname:
+		if SETTINGS.getSetting('pref_load_summary') == 'true':	# summary (Inhaltstext) im Voraus holen	
+			if "Video" in typname or "MovieSmartCollection" in typname: 
+				descr_new = get_summary_pre(url, ID='ZDF',skip_verf=False,skip_pubDate=False)  # Modul util
+				PLog("descr_new: %d, descr: %d" % (len(descr_new), len(summ)))
+				if u"Verfügbar bis" in descr_new:
+					line1, _, descr_new = descr_new.partition('\n')
+					tag = "%s\n%s" % (line1.strip(), tag)
+				if 	len(descr_new) > len(summ):
+					PLog("descr_new: " + descr_new[:60] )
+					summ = descr_new
+		
+		
+		if "Video" in typname:									# einz. Video
 			tag = "Video\n%s" % (tag)
 			if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
 				filtered=False
@@ -9740,15 +9755,19 @@ def ZDF_getHBBTV_content(items, homeID):
 			addDir(li=li2, label=label, action="dirList", dirID="ZDF_getApiStreams", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype=mediatype)
 
-		elif "CuratedCollection" in typname:
+		elif "CuratedCollection" in typname:						# gleicht strukturell der Startseite
 			tag = "Folgeseiten\n%s" % (tag)
 			fparams="&fparams={'coll_id': '%s','homeID': '%s'}" % (link_id, homeID)
 			PLog("fparams: " + unquote(fparams))
 			addDir(li=li, label=label, action="dirList", dirID="ZDF_Start", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype="")
 				
-		else:
-			tag = "Folgeseiten\n%s" % (tag)
+		else:	# MovieSmartCollection, MiniSeriesSmartCollection, DefaultWithSectionsSmartCollection +
+				#	DefaultNoSectionsSmartCollection (anscheinend gleich)
+			if "MovieSmartCollection" in typname:					# Video folgt mit Empfehlungen
+				tag = "Video mit Empfehlungen\n%s" % (tag)
+			else:
+				tag = "Folgeseiten\n%s" % (tag)
 			fparams="&fparams={'path': '%s','title': '%s','img': '%s'}" %\
 				(quote(url), quote(title), quote(img))
 			PLog("fparams: " + unquote(fparams))

@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>171</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.05.2026
+# 	<nr>172</nr>										# Numerierung für Einzelupdate
+#	Stand: 02.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2720,6 +2720,16 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		summ = summ.replace('\\u003c',"")
 		summ = (summ.replace('/li'," ").replace('/ul',"").replace('ulli',""))
 		summ = summ.replace('&quot;','"')
+	
+		# Ermittlung "Verfügbar bis" ähnlich ZDF_KatSeriePre
+		if not skip_verf:										# skip_pubDate unberücksichtigt
+			pos = page.find("ptmdTemplate")						# dahinter 	duration, geo, 	visibleTo,..				
+			visibleTo = stringextract('visibleTo":"', '"', page[pos:])
+			end = time_translate(visibleTo, day_warn=True)
+			end = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % end
+			if end:
+				summ = "%s\n%s" % (end, summ)					# "Verfügbar bis" -> 1. Zeile
+			
 
 		PLog("summ_zdf: " + summ)			
 					
