@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>345</nr>										# Numerierung für Einzelupdate
+# 	<nr>346</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.9'
 VDATE = '01.06.2026' 
 
@@ -10480,6 +10480,7 @@ def ZDF_get_content(obj, maxWidth="", mark="", validchars=True):
 		tag = "%s | [B]%s[/B]" % (tag, headline)		
 	if neu:														# label-Kennz. in ZDF_PageMenu
 		tag = "%s | [B]%s[/B]\n[B]NEUER INHALT[/B]" % (tag, headline)
+	tag = repl_json_chars(tag)
 	
 	PLog('Get_content typ: %s | title: %s | tag: %s | descr: %s |img:  %s | url: %s | stream: %s | scms_id: %s' %\
 		(typ,title,tag,summ,img,url,stream,  scms_id) )		
@@ -11710,8 +11711,8 @@ def ZDF_getApiStreams(path, title, gui=True):
 		
 		PLog("quality: %s, mimeType: %s" % (quality, mimeType))
 		
-		# bei HLS entfällt Parseplaylist - verschiedene HLS-Streams verfügbar 
-		if url.endswith('.m3u8'):						# HLS-Stream, master.m3u8, index.m3u8
+		# bei HLS entfällt Parseplaylist - Mehrkanalstreams (Auflösungen, Audioformate)
+		if 'master.m3u8' in url or 'index.m3u8' in url:	# möglich: ..csmil/master.m3u8?audiotrack=0..
 			HLS_List.append('HLS, %s ** AUTO ** %s ** %s#%s' % (track_add, quality,title,url))
 		else:
 			res='0x0'; w=''; h=''						# Default					
