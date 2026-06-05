@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>142</nr>										# Numerierung für Einzelupdate
-#	Stand: 24.05.2026
+# 	<nr>143</nr>										# Numerierung für Einzelupdate
+#	Stand: 04.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2969,11 +2969,10 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 	
 	#------------------------------------------------------------------	# 2. Suche ZDF
 	if 'Suche in ZDF-Mediathek' in title or "ARD und ZDF" in title_org:	
-		ZDF_Search_PATH	 = 'https://zdf-prod-futura.zdf.de/mediathekV2/search?profile=cellular-5&q=%s&page=%s'
-		if pagenr == '':		# erster Aufruf muss '' sein
-			pagenr = 1
-			
-		path_zdf = ZDF_Search_PATH % (quote(query_zdf), pagenr) 	
+		ZDF_Search_PATH	 = "https://hbbtv.zdf.de/legacy-al/search?t=%s&abGroup=gruppe-c&abName=ab-%s"
+		now = datetime.datetime.now()
+		zdfDate =  now.strftime("%Y-%m-%d")
+		path_zdf	= ZDF_Search_PATH % (quote(py2_encode(query_zdf)), zdfDate)
 		path_zdf = transl_umlaute(path_zdf)
 		
 		query_lable = (query_zdf.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
@@ -2986,17 +2985,14 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 		
 		try:
 			jsonObject = json.loads(page)
-			searchResult = str(jsonObject["totalResultsCount"])
-			nextUrl = str(jsonObject["nextPageUrl"])
-			nextPage = str(jsonObject["nextPage"])
+			items_all = jsonObject["result"]
+			searchResult = len(items_all)
 		except:
-			searchResult=0; nextUrl=""; nextPage=""
-		searchResult = str(searchResult)
-		PLog("searchResult: "  + searchResult);
-		PLog("nextPage: "  + nextPage);
+			searchResult=0
+		PLog("searchResult: %d"  % searchResult);
 
-		query_lable=py2_encode(query_lable); searchResult=py2_encode(searchResult);
-		if searchResult == '0':											# Sprung hierher
+		query_lable=py2_encode(query_lable); 
+		if searchResult == 0:											# Sprung hierher
 			label = "[B]ZDF[/B] | nichts gefunden zu: %s | neue Suche" % query_lable
 			title=py2_encode(title);
 			fparams="&fparams={'title': '%s'}" % quote(title_org)
@@ -3004,10 +3000,9 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 				fanart=R('suche_ardundzdf.png'), thumb=R('suche_ardundzdf.png'), tagline=tag_negativ, fparams=fparams)
 		else:	
 			store_recents = True										# Sucheingabe speichern
-			title = "[B]ZDF[/B]: %s Sendung(en)  | %s" % (searchResult, query_lable)
+			title = "[B]ZDF[/B]: %d Sendung(en)  | %s" % (searchResult, query_lable)
 			query_zdf=py2_encode(query_zdf); title=py2_encode(title);
-			fparams="&fparams={'query': '%s', 'title': '%s', 'pagenr': '%s'}" % (quote(query_zdf), 
-				quote(title), pagenr)
+			fparams="&fparams={'query': '%s', 'title': '%s'}" % (quote(query_zdf), quote(title))  # ohne offset 
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R('suche_ardundzdf.png'), 
 				thumb=R('suche_ardundzdf.png'), tagline=tag_positiv, fparams=fparams)
 						

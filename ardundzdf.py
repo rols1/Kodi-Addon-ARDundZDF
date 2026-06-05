@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>347</nr>										# Numerierung für Einzelupdate
+# 	<nr>348</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.9'
 VDATE = '01.06.2026' 
 
@@ -1187,16 +1187,21 @@ def Main_ZDF(name=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #----------------------------------------------------------------
+# HBBTV-Call für funk-Startseite nicht für ZDF_Start geeignet (meta-collection,
+#	elems-Format abweichend), 
+# 04.06.2026 Startseite -> ZDF_KatSub, funk-A-Z -> ZDF_AZ (beide -> Graphql)
+#
 def Main_ZDFfunk(title):
 	PLog('Main_ZDFfunk:')
 	li = xbmcgui.ListItem()
 	li = home(li, ID=NAME)				# Home-Button
 	
-	title = 'funk-Startseite' 
-	url = "https://zdf-prod-futura.zdf.de/mediathekV2/document/funk-126"
-	fparams="&fparams={'DictID': '', 'jsonObject': '', 'url': '%s'}" % url
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_PageMenu", fanart=R('zdf-funk.png'), thumb=R('zdf-funk.png'), 
-		fparams=fparams)		
+	title = 'funk-Startseite' 	
+	path="https://www.zdf.de/funk"
+	fparams="&fparams={'title': '%s', 'path': '%s'}" % (title, quote(path))
+	addDir(li=li, label=title , action="dirList", dirID="ZDF_KatSub", fanart=R('zdf-funk.png'), 
+		thumb=R('zdf-funk.png'), tagline=title, fparams=fparams)	
+
 
 	fparams="&fparams={'name': 'ZDF-funk-A-Z', 'ID': 'ZDFfunk'}"
 	addDir(li=li, label="ZDF-funk-A-Z", action="dirList", dirID="ZDF_AZ", fanart=R('zdf-funk-AZ.png'), 
@@ -8015,7 +8020,7 @@ def BilderDasErsteSingle(title, path):
 #
 def ZDF_Start(coll_id, homeID=""): 
 	PLog('ZDF_Start: %s, %s' % (coll_id, homeID))
-		 
+		
 	path = ZDF_HBBTVBase + coll_id		
 	DictID =  "ZDF_Start_%s" % coll_id
 	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_Start)	# 5 min				
@@ -8055,7 +8060,7 @@ def ZDF_Start(coll_id, homeID=""):
 	PLog('Stage_elems')										# 1. Stage, ausgepackte Einzelbeiträge
 	DictID =  "ZDF_stage_%s" % coll_id
 	Dict("store", DictID, stage_list)							# bisher nicht verwendet
-	ZDF_getHBBTV_content(stage_list, homeID)
+	ZDF_getHBBTV_content(stage_list)
 	
 	if "8c3f3656-ceff-48ed-a199-9e23c5a3d135" in coll_id:		# nur ZDF-Startseite
 		title = "Derzeit beliebt"								# Web,nicht in den Apis enthalten -> Graphql-Call
@@ -8140,10 +8145,10 @@ def ZDF_Start2(title, index, DictID, homeID):
 	PLog("cluster: " + str(cluster)[:80])
 	PLog("cluster_elems: " + str(cluster_elems)[:80])
 	
-	li = xbmcgui.ListItem(); li2 = xbmcgui.ListItem()
+	li = xbmcgui.ListItem(); 
 	home(li, ID=homeID)						# Home-Button
 
-	ZDF_getHBBTV_content(cluster_elems, homeID)
+	ZDF_getHBBTV_content(cluster_elems)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
@@ -8446,7 +8451,7 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 			elif "CatalogTabsConnection"  in mode:					# Buchstaben A-Z + Tab-Indices
 				pos = page.find("CatalogTabsConnection")			
 				PLog("CatalogTabsConnection: %d" % pos)
-				coll_id = stringextract("CatalogTabsConnection", "Von A-Z:", page)
+				coll_id = stringextract("CatalogTabsConnection", "CatalogSeo", page)
 			else:						
 				mark = '%s":"' % mode								# beliebige ID-Marke aus mode
 				PLog("search_mark: " + mark)
@@ -9642,26 +9647,28 @@ def ZDF_getKat_content_details(obj, mode="img"):
 
 #---------------------------------------------------------------------------------------------------
 # json-Details für Einzelelemente aus collection_id-Call, items: json-Liste
-# Aufuf: ZDF_Start
+# Aufuf: ZDF_Start, ZDF_Search mit mark
 # Sender nicht exakt bestimmbar für tag (Tests internalId, structureNodePath)
 # 
-def ZDF_getHBBTV_content(items, homeID):
+def ZDF_getHBBTV_content(items, max_cnt=0, mark=""):
 	PLog('ZDF_getHBBTV_content:')
 	PLog(str(items)[:60])
 
-	li = xbmcgui.ListItem(); li2 = xbmcgui.ListItem()		# Home-Button Aufr.			
-	mediatype=''											# Kennz. Video für Sofortstart
+	li = xbmcgui.ListItem(); li2 = xbmcgui.ListItem()			# Home-Button Aufr.			
+	mediatype=''												# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	
-	fcnt=0
+	cnt=0; fcnt=0												# fcnt: Filterzähler
 	for item in items:
 		typ="";title="";tag="";summ="";img="";
-		url="";stream=""; canon_id=""; sender=""
-		
-		# Typen: # Video, MiniSeriesSmartCollection, EndlessSeriesSmartCollection,
-		#	MovieSmartCollection
+		url="";stream=""; canon_id=""; sender=""		
 		try:
+			cnt=cnt+1
+			if max_cnt > 0:										# Pagination (ZDF_Search)
+				if cnt >= max_cnt:
+					break
+
 			typ = item["type"]	
 			typname = item["__typename"]
 			if "MetaCollection" in typname:						# übergeordnete Kategorie, z.B. Serien
@@ -9671,6 +9678,9 @@ def ZDF_getHBBTV_content(items, homeID):
 			headtxt = item["headtxt"]							# Serientitel, leer möglich (Ausn.: Livestream)
 			title = item["titletxt"]	
 			title = unescape(title)								# &amp;
+			if mark:
+				title = make_mark(mark, title, "", bold=True)	# Titel-Markierung für ZDF_Search
+			
 			label=title
 			headlabel = item["headlabel"]						# <span class=\"label\">Neue Folge</span>
 			headlabel = cleanhtml(headlabel)
@@ -9682,7 +9692,7 @@ def ZDF_getHBBTV_content(items, homeID):
 			summ = item["text"]
 			summ = cleanhtml(summ)
 			tag = infotext
-			
+
 			if headtxt:
 				tag = "%s\n[B]%s[/B]" % (tag, headtxt)			# Serientitel fett
 			if headlabel:										# "" möglich
@@ -9763,7 +9773,7 @@ def ZDF_getHBBTV_content(items, homeID):
 				fparams=fparams, tagline=tag, summary=summ, mediatype="")
 				
 		else:	# MovieSmartCollection, MiniSeriesSmartCollection, DefaultWithSectionsSmartCollection +
-				#	DefaultNoSectionsSmartCollection (anscheinend gleich)
+				#	DefaultNoSectionsSmartCollection (anscheinend gleich), SeasonSeriesSmartCollection
 			if "MovieSmartCollection" in typname:					# Video folgt mit Empfehlungen
 				tag = "Video mit Empfehlungen\n%s" % (tag)
 			else:
@@ -9773,7 +9783,6 @@ def ZDF_getHBBTV_content(items, homeID):
 			PLog("fparams: " + unquote(fparams))
 			addDir(li=li, label=label, action="dirList", dirID="ZDF_KatSeriePre", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype="")
-				
 		
 
 	if fcnt > 0:													# Info gefiltert-Zähler
@@ -10153,8 +10162,7 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 			icon = R("icon-filter.png")
 			xbmcgui.Dialog().notification("Ausschluss-Filter:","ausgefilterte Videos: %d" % fcnt,icon,3000)
 		
-	if not ret:													# Return ohne Suchbutton
-		ZDF_search_button(li, query=title_org)	
+	if not ret:
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	else:
 		return
@@ -10541,12 +10549,16 @@ def ZDF_get_navi(DictID, title, homeID=""):
 ###################################################################################################
 # ZDF-Suche:
 # 	Aufruf durch SearchARDundZDFnew und ZDF_Search (pagenr)
+#	HBBTV-Call vorhanden (ohne Pagination), bei Umstellung 
+#		SearchARDundZDFnew anpassen.
 #
-def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
+def ZDF_Search(query=None, title='Search', s_type=None, offset='0'):
 	PLog("ZDF_Search:")
-	if 	query == '':	
+	max_cnt=50; offset=int(offset)
+	
+	if 	not query:	
 		query = get_query(channel='ZDF')
-	PLog(query)
+	PLog("query: %s, offset: %d" % (str(query), offset))
 	if  query == None or query.strip() == '':
 		#return ""
 		Main_ZDF(name='')			# Absturz nach Sofortstart-Abbruch
@@ -10558,33 +10570,24 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 	query=py2_decode(query)			# decode, falls erf. (1. Aufruf)
 	query=cleanmark(query)			# Fett-/Color-Markierungen entfernen (Mehr-Suche)
 
-	PLog(query); PLog(pagenr); PLog(s_type)
 	ID='Search'
-	ZDF_Search_PATH	 = "https://zdf-prod-futura.zdf.de/mediathekV2/search?profile=cellular-5&q=%s&page=%s"
-	
-	if pagenr == '':		# erster Aufruf muss '' sein
-		pagenr = 1
-	path = ZDF_Search_PATH % (quote(py2_encode(query)), str(pagenr)) 
-	PLog(path)
+	ZDF_Search_PATH	 = "https://hbbtv.zdf.de/legacy-al/search?t=%s&abGroup=gruppe-c&abName=ab-%s"
+	now = datetime.datetime.now()
+	zdfDate =  now.strftime("%Y-%m-%d")
+	path = ZDF_Search_PATH % (quote(py2_encode(query)), zdfDate)
 	
 	page, msg = get_page(path=path, do_safe=False)	# +-Zeichen für Blank nicht quoten	
 	try:
 		jsonObject = json.loads(page)
-		searchResult = str(jsonObject["totalResultsCount"])
-		nextUrl = str(jsonObject["nextPageUrl"])
-		nextPage = str(jsonObject["nextPage"])
+		items_all = jsonObject["result"]
+		searchResult = len(items_all)
+		items = items_all[offset:]							
 	except:
-		searchResult=""; nextUrl=""; nextPage=""
-	PLog("searchResult: "  + searchResult);
-	PLog("nextPage: "  + nextPage);
-	
-	NAME = 'ZDF Mediathek'
-	name = 'Suchergebnisse zu: %s (Gesamt: %s), Seite %s'  % (quote(py2_encode(query)), searchResult, pagenr)
+		searchResult=0
+	PLog("items_all: %d, items: %d"  % (len(items_all), len(items)))
 
 	li = xbmcgui.ListItem()
 
-	# Der Loader in ZDF-Suche liefert weitere hrefs, auch wenn weitere Ergebnisse fehlen
-	# 22.01.2020 Webänderung 'class="artdirect " >' -> 'class="artdirect"'
 	if not searchResult:
 		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen
 		msg2 = msg 
@@ -10593,23 +10596,23 @@ def ZDF_Search(query=None, title='Search', s_type=None, pagenr=''):
 		return li	
 				
 	query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen
-		
-	DictID="ZDF_Search"											# hier dummy
-	li=ZDF_PageMenu(DictID, jsonObject=jsonObject, mark=query, li=li)
 	
-	li = xbmcgui.ListItem()							# Kontext-Doppel verhindern
-	PLog("nextUrl: " + nextUrl)
-	if nextPage and nextUrl:
+	li = xbmcgui.ListItem()
+	home(li, ID="ZDF")						# Home-Button
+	ZDF_getHBBTV_content(items, max_cnt, mark=query)
+	
+	if (offset + max_cnt) < searchResult:  # max. Anzahl noch nicht erreicht?
+		next_offset = offset + max_cnt
+		PLog("next_offset: %d, max_cnt: %d, searchResult: %d" % (next_offset, max_cnt, searchResult))
 		query = query_org.replace('+', ' ')
-		pagenr = re.search(r'&page=(\d+)', nextUrl).group(1)
-		PLog(pagenr); 
+		li = xbmcgui.ListItem()							# Kontext-Doppel verhindern	
 		title = "[B]Mehr[/B] Ergebnisse im ZDF zeigen zu: >[B]%s[/B]<"  % cleanmark(query)
-		tagline = u"nächste Seite [B]%s[/B]" % pagenr
+		tag = u"Ergebnisse ab [B]%d von %d[/B]" % (next_offset+1, searchResult)
 		query_org=py2_encode(query_org); 
-		fparams="&fparams={'query': '%s', 's_type': '%s', 'pagenr': '%s'}" %\
-			(quote(query_org), s_type, pagenr)
+		fparams="&fparams={'query': '%s', 's_type': '%s', 'offset': '%s'}" %\
+			(quote(query_org), s_type, str(next_offset))
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_Search", fanart=R(ICON_MEHR), 
-			thumb=R(ICON_MEHR), tagline=tagline, fparams=fparams)
+			thumb=R(ICON_MEHR), tagline=tag, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 ###################################################################################################
@@ -11010,6 +11013,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 #	einschl. Cache-Nutzung (AZ > 12 MByte)
 #	ID=ZDFfunk <- Main_ZDFfunk
 # 05.10.2025 Umstellung Graphql
+# 04.06.2026 Einbindung ZDFfunk in ZDF_AZList
 #
 def ZDF_AZ(name, ID=""):						# name = "Sendungen A-Z"
 	PLog('ZDF_AZ: ' + name);
@@ -11020,17 +11024,17 @@ def ZDF_AZ(name, ID=""):						# name = "Sendungen A-Z"
 	li = home(li, "ZDF")						# Home-Button
 	
 	azlist = list(string.ascii_uppercase)
-	azlist.append('0 - 9')
+	if "ZDFfunk" in ID:
+		azlist.append('0-9')
+	else:
+		azlist.append('0 - 9')
 
 	# Buttons A to Z
-	func = "ZDF_AZList"
-	if "ZDFfunk" in ID:
-		func = "ZDF_AZList_funk"
 	for element in azlist:
 		title='Sendungen mit ' + element	
 		fparams="&fparams={'title': '%s', 'element': '%s', 'ID': '%s'}" % \
 			(title, element, ID)
-		addDir(li=li, label=title, action="dirList", dirID=func, fanart=R(ICON_ZDF_AZ), 
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_AZList", fanart=R(ICON_ZDF_AZ), 
 			thumb=R(ICON_ZDF_AZ), fparams=fparams)
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
@@ -11038,71 +11042,12 @@ def ZDF_AZ(name, ID=""):						# name = "Sendungen A-Z"
 ####################################################################################################
 # Nutzung ZDF_AZList seit Graphql-Umstellung nicht mehr möglich,
 #	für func vorerst weiter Nutzung des futura-api
+#	Web: https://www.zdf.de/funk/funk-alle-sendungen-von-a-z-100.html
+# 04.06.2026 entfernt nach Einbindung ZDFfunk in ZDF_AZList, s.u.
+# def ZDF_AZList_funk(title, element, ID=""):
 #
-def ZDF_AZList_funk(title, element, ID=""):
-	PLog('ZDF_AZList_funk: ' + element)
-	
-	icon = R(ICON_ZDF_AZ)
-	title_org = title
-	
-	DictID = "funk-alle-sendungen-von-a-z-100"
-	path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s" % DictID
-	if element == "0 - 9":							# für funk o. Blanks
-		element="0-9"
-	msg1 = "Cache funk A-Z:"
-	jsonObject = Dict("load", DictID, CacheTime=ZDF_CacheTime_AZ)
-
-	if not jsonObject:
-		page, msg = get_page(path)
-		if not page:								# nicht vorhanden?
-			msg1 = 'ZDF_AZList_funk: Beiträge können leider nicht geladen werden.' 
-			msg2 = msg
-			MyDialog(msg1, msg2, '')
-			return
-		xbmcgui.Dialog().notification(msg1,"Haltedauer 30 Min",icon,3000,sound=False)
-		jsonObject = json.loads(page)
-		Dict("store", DictID, jsonObject)
-		
-	li = xbmcgui.ListItem()
-	li = home(li, ID='ZDF')							# Home-Button
-
-	PLog(str(jsonObject)[:80])
-	jsonObject = jsonObject["cluster"]
-	PLog(len(jsonObject))
-	PLog(str(jsonObject)[:80])
-
-	AZObject=[]	
-	for clusterObject in jsonObject:
-		PLog(str(clusterObject)[:12])
-		if element in clusterObject["name"]:		# 23.05.2026: Z neg.
-			title = clusterObject["name"]
-			PLog("found_title: " + title)
-			AZObject = clusterObject
-			break
-	
-	if AZObject:
-		teaserObject = AZObject["teaser"]
-		for entry in teaserObject:
-			typ,title,tag,descr,img,url,stream,scms_id = ZDF_get_content(entry)
-			title = repl_json_chars(title)
-			label = title
-			descr = repl_json_chars(descr)
-			fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
-			PLog("fparams: " + fparams)	
-			addDir(li=li, label=label, action="dirList", dirID="ZDF_RubrikSingle", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tag)	
-	else:											# keine Sendung gefunden							
-		msg1 = "%s:" % title
-		msg2 = "leider nichts gefunden"
-		xbmcgui.Dialog().notification(msg1, msg2,icon,3000,sound=False)
-		PLog("%s %s" % (title, msg2))
-		return
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-
-
-
 ####################################################################################################
+
 # Laden der einzelnen Buchstaben-Seite, Auflistung der Sendereihen in 
 #	ZDF_RubrikSingle
 # Buchstaben-Seiten enthalten nur Sendereihen, keine Einzelbeiträge
@@ -11125,6 +11070,10 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 
 	element = element.replace("0 - 9", "0+-+9")							# -> Weburl
 	path = "https://www.zdf.de/sendungen-a-z?group=%s" % element		# Tab-Katalog aus Web holen
+	if "ZDFfunk" in ID:
+		path = "https://www.zdf.de/funk-alle-sendungen-von-a-z-100?group=?group=%s" % element
+		myvars_base=myvars_base.replace("sendungen-100", "funk-alle-sendungen-von-a-z-100")
+
 	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, mode="CatalogTabsConnection")
 
 	tabs = blockextract('title":"', coll_id)
@@ -11238,26 +11187,9 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 #----------------------------------------------
 # MEHR_Suche ZDF nach query (title)
 # Aufrufer: ZDF_RubrikSingle
-def ZDF_search_button(li, query):
-	PLog('ZDF_search_button: ' + query)
-
-	query = (query.replace('|', '').replace('>', '')) 	# Trenner + Staffelkennz. entfernen
-	query = query.replace("[B]Mehr[/B]: ", "")			# Titelvorspann zu Empfehl. entfernen
-	query = query.replace("*", "")						# Ersetzung entfernen
-	query_org = query
-
-	query = query.replace(u"Das ZDF ist für den verlinkten Inhalt nicht verantwortlich!", '')
-	label = u"Alle Beiträge im ZDF zu >%s< suchen"  % query_org
-	query = query.replace(' ', '+')	
-	tagline = u"zusätzliche Suche starten"
-	summ 	= u"mehr Ergebnisse im ZDF suchen zu >%s<" % query_org
-	s_type	= 'MEHR_Suche'						# Suche alle Beiträge (auch Minutenbeiträge)
-	query=py2_encode(query); 
-	fparams="&fparams={'query': '%s', 's_type': '%s'}" % (quote(query), s_type)
-	addDir(li=li, label=label, action="dirList", dirID="ZDF_Search", fanart=R(ICON_MEHR), 
-		thumb=R(ICON_MEHR), fparams=fparams, tagline=tagline, summary=summ)
-	return
-  
+# def ZDF_search_button(li, query):
+# 04.06.2026 entfernt, obsolet durch Kategorien mit Empfehlungen
+ 
 #----------------------------------------------
 # Ähnlich ARD_FlatListEpisodes
 # Liste aller Serien/Episoden zu sid via futura-api-
@@ -12672,8 +12604,8 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 	PLog('playlist: ' + playlist[:100])
 	PLog('live: ' + str(live))
 	skip_list = ["/srfsgeo/",									# keine Mehrkanalstreams: Einzelauflösungen mögl.,
-				"/dwstream",									#	letzter Test: 04.12.2024
-				"/arteliveext.akamaized", 
+				"/dwstream",									#	letzter Test: 04.06.2026
+				"/arteliveext.akamaized", 						# arte: jeweils 2. Alternative OK
 				"/tagesschau.akamaized"
 				]
 	PLog('#EXT-X-MEDIA' in playlist)
@@ -12686,6 +12618,7 @@ def Parseplaylist(li, url_m3u8, thumb, geoblock, descr, sub_path='', stitle='', 
 				break
 	
 		PLog('skip: ' + str(skip))
+		# skip=True	# Debug
 		if skip == False and live:								# Mehrkanalstreams: nur 1 Button
 			stitle = "HLS-Stream"
 			PLog("jump_PlayButtonM3u8")
