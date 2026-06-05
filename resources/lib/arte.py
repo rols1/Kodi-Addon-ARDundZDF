@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>77</nr>								# Numerierung für Einzelupdate
-#	Stand: 12.05.2026
+# 	<nr>78</nr>								# Numerierung für Einzelupdate
+#	Stand: 05.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -283,18 +283,19 @@ def get_live_data(name):
 # 14.03.2025 OnlyNow=True -> nur Seite für get_live_data
 # 12-05.2026 "availability"]["start" und "availability"]["end]"
 #	stehen nicht mehr für Start/Ende einer Sendung
+# 05.06.2026 Api-Änderung
 #
 def EPG_Today(ID="", OnlyNow=""):
 	PLog('EPG_Today: ID: %s, OnlyNow: %s' % (ID, OnlyNow))
 
 	arte_lang = Dict('load', "arte_lang")
-	lang = arte_lang.split("|")[1].strip()			# fr, de, ..	
+	lang = arte_lang.split("|")[1].strip()			# fr, de, ..
 
 	now = datetime.datetime.now()
 	today = now.strftime("%Y-%m-%d")				# 2023-01-16 
-	EPG_path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/TV_GUIDE/?day=%s"
+	EPG_path = "https://api.arte.tv/api/emac/v4/%s/web/pages/TV_GUIDE/?day=%s"
 	path = EPG_path % (lang, today)
-	PLog(path)
+	PLog("Arte_EPG_path: " + path)
 	new_url, msg = get_page(path, GetOnlyRedirect=True)	
 	if not new_url:									# nicht für alle Sprachen verfügbar
 		icon = R('arte_lang.png')
@@ -307,7 +308,7 @@ def EPG_Today(ID="", OnlyNow=""):
 	ID='EPG_Today'
 	page = get_ArtePage(ID, "EPG_Today", path)	
 	try:
-		values = page["value"]["zones"][0]["content"]["data"]	# 22.10.2025 nur noch 0=Listing 		
+		values = page["zones"][0]["content"]["data"]		
 	except Exception as exception:
 		msg = str(exception)
 		PLog("EPG_Today_error: " + msg)
