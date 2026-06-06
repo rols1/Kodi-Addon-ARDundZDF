@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>348</nr>										# Numerierung für Einzelupdate
+# 	<nr>349</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.9'
 VDATE = '01.06.2026' 
 
@@ -3367,6 +3367,17 @@ def ARDSportWDR():
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
 	'''
+
+	title = u"Event: [B]FIFA WM 2026[/B]"					# FIFA WM 2026
+	tag = u"Hier finden Sie alle Nachrichten, Berichte, Interviews, Livestreams und Ergebnisse zur FIFA Fußball-WM 2026."
+	cacheID = "FIFA_WM_2026"
+	img = "https://images.sportschau.de/image/7b1a8f22-e01d-47aa-ac47-2f3057aa229c/AAABliBkvg0/AAABnSSvrFg/16x9-big/wm-250.jpg?width=1280"
+	path = "https://www.sportschau.de/fussball/fifa-wm-2026"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)	
 
 	#---------------------------------------------------------	Großevents Ende
 
@@ -8237,12 +8248,11 @@ def ZDF_Kat(title):
 			if 'Barrierefreie' in title:
 				func="ZDF_Barrierearm"
 
-			# 06.10.2025 -> ZDF_AZ -> ZDF_AZList (Graphql), ohne Switch ->
-			#	futura-api in ZDF_RubrikSingle (z.Z. dort ebenfalls Switch -> ZDF_AZ
-			if 'A-Z' in title:
+			if 'A-Z' in title:								# 06.10.2025 -> ZDF_AZ -> ZDF_AZList (Graphql)
 				fparams="&fparams={'name': '%s'}" % title
 				addDir(li=li, label=title, action="dirList", dirID="ZDF_AZ", fanart=R(ICON_ZDF_AZ), 
 					thumb=img, fparams=fparams)
+
 			else:
 				rubrik_url=py2_encode(rubrik_url);
 				fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" %\
@@ -9239,16 +9249,8 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------------------------------
-# Aufruf: ZDF_PageMenu (DictID == "ZDF_Startseite"), ergänzt aus Web
-#	Cluster, nach den TOP's aus futura-api. Weder futura noch hbbtv
-#	liefern deckungsgleiche Inhalte zum Web. Bisher keine Graphql-Call
-#	für die Startseite bekannt.
-# 1. Lauf: Liste der Web-Cluster
-# 2. Lauf: Liste der zum Cluster-Titel ctitle passenden Beiträge
-#	(Einzel + Serien, Unterscheidung nach collectionType). 
-# 07.05.2026 Rubrik "Derzeit beliebt" -> ZDF_StartWebBeliebt,
-#	Anpassungen für Livestreams an Webänderung.
-# 29.05.2026 gelöscht, abgelöst durch ZDF_Start2
+# 29.05.2026 gelöscht, abgelöst durch ZDF_Start2, ergänzte aus Web
+# 	Cluster der Startseite, die futura-api unvollständig lieferte.
 # def ZDF_StartWebCluster(ctitle=""):								
 
 #-----------------------------------------------------------------------
