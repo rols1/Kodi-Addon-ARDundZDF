@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>349</nr>										# Numerierung für Einzelupdate
+# 	<nr>350</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.9'
 VDATE = '01.06.2026' 
 
@@ -5180,12 +5180,13 @@ def thread_getfile(textfile,pathtextfile,storetxt,url,fulldestpath,path_url_list
 	icon = R('icon-downl-dir.png')
 	try:
 		if path_url_list:									# Sammeldownloads (Podcast)
-			msg1 = 'Starte Download im Hintergrund'		
-			msg2 = 'Anzahl der Dateien: %s' % len(path_url_list)
-			msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_download_path')
-			ret=MyDialog(msg1, msg2, msg3, ok=False, yes='OK')
-			if ret  == False:
-				return
+			if len(path_url_list) > 1:						# bei 1 Datei nicht nachfragen
+				msg1 = 'Starte Download im Hintergrund'		
+				msg2 = 'Anzahl der Dateien: %s' % len(path_url_list)
+				msg3 = 'Ablage: ' + SETTINGS.getSetting('pref_download_path')
+				ret=MyDialog(msg1, msg2, msg3, ok=False, yes='OK')
+				if ret  == False:
+					return
 
 			cnt=0
 			for item in path_url_list:
