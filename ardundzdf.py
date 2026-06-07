@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>350</nr>										# Numerierung für Einzelupdate
+# 	<nr>351</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.9'
 VDATE = '01.06.2026' 
 
@@ -8342,8 +8342,10 @@ def ZDF_Kat_Plus(title, DictID):
 
 #-----------------------------------------------
 # neu ab 22.08.2025
-# Aufruf ZDF_Kat, eigene Buttons für Barrierearm
-#	(Inhalte futura-api nicht mehr ausreichend)
+# Aufruf ZDF_Kat (eigener Button für Barrierearm)
+#	bei Bedarf Umstellung auf HBBTV, curated-collection?id=
+#	4c78d2b1-e4aa-4258-929f-1f547e1b7e8e -> ZDF_getHBBTV_content
+#
 def ZDF_Barrierearm(url, title, homeID):								
 	PLog('ZDF_Barrierearm:')
 
@@ -8783,15 +8785,15 @@ def ZDF_KatSeriePre(title, path, img):
 		thumb=img, tagline=tag, fparams=fparams)
 	
 	page = stringextract('"extras":', "</script>", page)
-	PLog(page[:80])
+	PLog("extras: " + page[:80])
 	videos = blockextract('Video","id"', page) 				# wie ZDF_KatSerieExtras
 	PLog("videos: %d" % len(videos))
 	PLog(str(videos)[:80])
 	if len(videos) > 0:
 		title = "Extras"		
 		tag = "Trailer, Vorschau"
-		fparams="&fparams={'title': '%s', 'DictID': '%s'}" %\
-			(quote(title), DictID)
+		fparams="&fparams={'title': '%s', 'DictID': '%s', 'img': '%s'}" %\
+			(quote(title), DictID, quote(img))
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSerieExtras", fanart=img, 
 			thumb=img, tagline=tag, fparams=fparams)
 			
@@ -8802,8 +8804,9 @@ def ZDF_KatSeriePre(title, path, img):
 # Aufruf: ZDF_KatSerie, 
 # Daten: json aus Web (unformatierbar), visibleTo/visibleFrom: null
 #
-def ZDF_KatSerieExtras(title, DictID, mode=""):
+def ZDF_KatSerieExtras(title, DictID, img, mode=""):
 	PLog("ZDF_KatSerieExtras: " + title)
+	img_org=img
 	page = Dict("load", DictID)
 	page = stringextract('"extras":', "</script>", page)
 	PLog(page[:180])
@@ -8825,13 +8828,18 @@ def ZDF_KatSerieExtras(title, DictID, mode=""):
 		mediatype='video'
 	base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/%s"
 	
+	# fehlt im Web: zusätzl. cleanTrailer Bsp.: ..push-staffel-2-clean-100
 	for item in videos:
-		PLog(item[:80])
+		PLog(item[:200])
 		scms_id = stringextract('id":"', '"', item)		
 		descr = stringextract('title":"', '"', item)		# hier in title
-		teaser = stringextract('teaser":', 'imageWithoutLogo', item)
-		title = stringextract('title":"', ',', teaser)		# title\":\"\\\"Stadtbild\\\" 
-		if not title:										# heroTrailers ohne Titel
+		if 'imageWithoutLogo' in item:
+			teaser = stringextract('teaser":', 'imageWithoutLogo', item)
+			title = stringextract('title":"', ',', teaser)		# 
+		else:
+			title = stringextract('title":"', '"', item)					
+		if not title:
+			PLog("skip_no_title")
 			continue
 		if title in skiplist:								# skip Zwilling (wie Vorschau-Video, aber
 			continue										#	andere scms_id +  canon_id)
@@ -8849,7 +8857,7 @@ def ZDF_KatSerieExtras(title, DictID, mode=""):
 		if not img:
 			img = stringextract('dim768Xauto":"', '"', item)	
 		if not img:
-			img = R(ICON_DIR_FOLDER)
+			img = img_org
 			
 		tag="Dauer: %s"	% dur
 		tag_par=tag
@@ -11457,30 +11465,12 @@ def ZDF_Graphql(OpName, sha256Hash, variables):
 		PLog("Graphql_json_error: " + str(exception))
 		data={}	
 
-	return data
+	return data	
+
 #----------------------------------------------
-# Ermittlung Streamquellen für api-call, ähnlich build_Streamlists 
-#	aber abweichendes Quellformat
-# Aufrufer: ZDF_FlatListEpisodes, ab V4.7.0 auch ZDF_PageMenu,
-#	ZDF_Rubriken, ZDF_RubrikSingle, ZDF_Verpasst.
-# Mitnutzung get_form_streams sowie build_Streamlists_buttons
-# gui=False: ohne Gui, z.B. für ZDF_getStrmList
-# 16.05.2024 Auswertung Bitraten entfernt (unsicher)
-# 21.07.2024 zdf-cdn-api bei vielen Url's nicht mehr akzeptiert,
-#	Alternative profile_url mit api.zdf.de + scms_id hinzugefügt.
-# 25.07.2024 Austausch zdf-cdn.live.cellular.de -> zdf-prod-futura.zdf.de
-#	Alternative profile_url ev. entbehrlich, aber vorerst belassen.
-# 20.03.2025 Korrektur sharingUrl nach ZDF-Relaunch (wie EPG-Modul,
-#	ZDF_get_content)
-# 24.11.2025 bei Client_error Verwendung von ptmdTemplate (ZDF_KatSerie)
-#	oder bei Fehlen Graphql-Call GetVideoMetaByCanonical	
-# 14.12.2025 Notification statt Dialog bei fehlendem Stream, um Playlist
-#	nicht zu blockieren
-# 19.12.2025 Vorrang für ptmdTemplate, scms_id nur noch für HBBTV verwendet,
-#	bei futura-path Ermittlung ptmdTemplate via switch zur Webadresse.
-#	Nachteil: Videoquelle spärlich, i.d.R. nur 2 Auflösungen, kein DGS.
-# 31.12.2025 Nutzung ev. Videodaten in futura-Seite als Fallback für 
-#	Fehlschlag des Graphql-Calls.
+# Ermittlung Streamquellen, path: futura oder Web
+# ältere Kopfdoku s. Archiv
+# Aufrufer: Funktionen mit Video-Calls.
 # 01.02.2026 Berücksichtigung DGS-Setting pref_DGS_ON (Anpassung 
 #	ptmdTemplate, Streamauswahl)
 # 15.02.2026 Param thumb, tag, summ, scms_id, ptmdTemplate entfernt (
