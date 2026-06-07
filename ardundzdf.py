@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>351</nr>										# Numerierung für Einzelupdate
+# 	<nr>352</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.9'
 VDATE = '01.06.2026' 
 
@@ -1152,15 +1152,6 @@ def Main_ZDF(name=''):
 	fparams="&fparams={'title': '%s'}" % title	
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat", fanart=R("zdf-kategorien.png"), 
 		thumb=R("zdf-kategorien.png"), summary=summ, fparams=fparams)
-
-	# 21.05.2026 Rubriken entfernt, durch Kategorien obsolet
-	'''
-	title = 'Rubriken' 
-	url = futura_base + "categories-overview"
-	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=R(ICON_ZDF_RUBRIKEN), 
-		thumb=R(ICON_ZDF_RUBRIKEN), fparams=fparams)
-	'''
 
 	title = "ZDF-Sportstudio"
 	url = futura_base + "document/sport-106"
@@ -8606,7 +8597,7 @@ def ZDF_KatSub(title, path, tabid="", endCursor="", typ=""):
 	addDir(li=li, label=label, action="dirList", dirID="ZDF_get_naviKat", fanart=icon, 
 		thumb=icon, fparams=fparams, tagline=tag)
 
-	ZDF_Graphql_get_seasons(objs)							# Liste Sendungen,  wie ZDF_Recommendation (ZDF_WebMoreSingle)
+	ZDF_Graphql_get_seasons(objs)						# Liste Sendungen
 
 	#--------------------------------------------------------------
 
@@ -9024,7 +9015,8 @@ def ZDF_KatSerie(title, path, typ, sid, endCursor=""):
 #	von Startseiten (s. ZDF_Start)
 # 25.06.2025 jeweils 1. Web-Stage-Beitrag (ab STATIC_CONTENT_CAROUSEL) 
 #	fehlt im futura-Api. 14.07.2025 nicht mehr festgestellt (ev. Livestream?)
-#	
+#
+
 def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", url=""):								
 	PLog('ZDF_PageMenu:')
 	PLog('DictID: ' + DictID)
@@ -9264,8 +9256,7 @@ def ZDF_PageMenu(DictID,  jsonObject="", urlkey="", mark="", li="", homeID="", u
 
 #-----------------------------------------------------------------------
 # Umsetzung Rubrik "Derzeit beliebt" mit spez. Graphql-Call
-# Aufruf: ZDF_StartWebCluster, Nutzung ZDF_Graphql und
-#	ZDF_Graphql_get_seasons
+# Aufruf: ZDF_Start
 #
 def ZDF_StartWebBeliebt(title):
 	PLog('ZDF_StartWebBeliebt: %s' % title)
@@ -9670,10 +9661,11 @@ def ZDF_getHBBTV_content(items, max_cnt=0, mark=""):
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 	
-	cnt=0; fcnt=0												# fcnt: Filterzähler
+	cnt=0; fcnt=0; homeID="ZDF"									# fcnt: Filterzähler
 	for item in items:
 		typ="";title="";tag="";summ="";img="";
-		url="";stream=""; canon_id=""; sender=""		
+		url="";stream=""; canon_id=""; sender=""
+				
 		try:
 			cnt=cnt+1
 			if max_cnt > 0:										# Pagination (ZDF_Search)
@@ -9685,7 +9677,12 @@ def ZDF_getHBBTV_content(items, max_cnt=0, mark=""):
 			if "MetaCollection" in typname:						# übergeordnete Kategorie, z.B. Serien
 				continue
 			
-			img = item["img"]	
+			img = item["img"]									# null möglich
+			if not img:
+				if "logo" in item:
+					img = item["logo"]
+				else:
+					img = R(ICON_DIR_FOLDER)	
 			headtxt = item["headtxt"]							# Serientitel, leer möglich (Ausn.: Livestream)
 			title = item["titletxt"]	
 			title = unescape(title)								# &amp;
@@ -9785,12 +9782,16 @@ def ZDF_getHBBTV_content(items, max_cnt=0, mark=""):
 				
 		else:	# MovieSmartCollection, MiniSeriesSmartCollection, DefaultWithSectionsSmartCollection +
 				#	DefaultNoSectionsSmartCollection (anscheinend gleich), SeasonSeriesSmartCollection
+			PLog("mark0")
 			if "MovieSmartCollection" in typname:					# Video folgt mit Empfehlungen
-				tag = "Video mit Empfehlungen\n%s" % (tag)
+				tag = "Video mit Empfehlungen\n%s" % tag
 			else:
-				tag = "Folgeseiten\n%s" % (tag)
+				tag = "Folgeseiten\n%s" % tag
+			PLog("mark1")
+			PLog(type(url)); PLog(type(title)); PLog(type(img));
 			fparams="&fparams={'path': '%s','title': '%s','img': '%s'}" %\
 				(quote(url), quote(title), quote(img))
+			PLog("mark2")
 			PLog("fparams: " + unquote(fparams))
 			addDir(li=li, label=label, action="dirList", dirID="ZDF_KatSeriePre", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype="")
@@ -9809,6 +9810,7 @@ def ZDF_getHBBTV_content(items, max_cnt=0, mark=""):
 # 02.10.2023 für ARD-Inhalte des ZDF stream=url (abweichendes json-Format)
 # 18.03.2024 url i.V.m. jsonpath=Fallback bei Ausfall Dict (DictID)
 #
+
 def ZDF_Rubriken(jsonpath, title, DictID, homeID="", url=""):								
 	PLog('ZDF_Rubriken: ' + DictID)
 	PLog("jsonpath: " + jsonpath)
@@ -9925,9 +9927,6 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 	noicon = R(ICON_MAIN_ZDF)									# notific.
 
 	page=""; AZ=False
-	if url.endswith("sendungen-100"):							# AZ Gesamt ca. 12 MByte -> Dict, Akt. ZDF_AZList
-		page = Dict("load", "ZDF_sendungen-100", CacheTime=ZDF_CacheTime_AZ)
-		AZ=True
 	if not page:
 		page, msg = get_page(path=url, GetOnlyRedirect=True)
 		if page:
@@ -9937,9 +9936,6 @@ def ZDF_RubrikSingle(url, title, homeID="", ret=""):
 			msg2 = msg
 			MyDialog(msg1, msg2, '')
 			return
-		if AZ:
-			page = json.loads(page)
-			Dict("store", "ZDF_sendungen-100", page)
 
 	if "dict" in str(type(page)):								# AZ: json
 		jsonObject = page
@@ -11019,11 +11015,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 ####################################################################################################
-# ZDF-eigener Zugang via ZDF_Rubriken
-# hier: Buchstaben-Icons vorgeschaltet ->  ZDF_AZList
-#	einschl. Cache-Nutzung (AZ > 12 MByte)
-#	ID=ZDFfunk <- Main_ZDFfunk
-# 05.10.2025 Umstellung Graphql
+# 05.10.2025 Umstellung Graphql, früher futura-api via ZDF_Rubriken
 # 04.06.2026 Einbindung ZDFfunk in ZDF_AZList
 #
 def ZDF_AZ(name, ID=""):						# name = "Sendungen A-Z"
@@ -11111,6 +11103,7 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 			PLog("Graphql_ZDF_AZList2: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))
 		
 	page = ZDF_Graphql(OpName, sha256Hash, variables)
+
 	#--------------------------------------------------------------
 
 	try:												# json-Daten
@@ -11957,15 +11950,6 @@ def ZDF_FlatListRec(item):
 	summ = repl_json_chars(descr)
 
 	return title, url, img, tag, summ, season, weburl
-
-#-------------------------
-# wertet die (teilw. unterschiedlichen) Parameter von
-#	class="bottom-teaser-box"> aus.
-# Aufrufer: ZDF_Rubriken, get_teaserElement (loader-
-#	Beiträge)
-# def ZDF_get_teaserbox(page):
-# def ZDF_get_rubrikpath(page, sophId):
-# 21.03.2025 gelöscht (obsolet)
 	
 #-----------------------------------------------------------------------
 # vergleicht Titel + Länge eines Beitrags mit den Listen full_shows_ZDF,
@@ -12541,8 +12525,9 @@ def get_form_streams(page):
 # PhotoObject fehlt in kodi - wir speichern die Bilder in SLIDESTORE und
 #	übergeben an xbmc.executebuiltin('SlideShow..
 # ClearUp in SLIDESTORE s. Modulkopf
-# Aufrufer: , ARDSportBilder, XL_Bildgalerie, BilderDasErsteSingle
-#	 (ZDF_BildgalerieSingle 03/2025 entfallen)
+# Aufrufer: , ARDSportBilder, XL_Bildgalerie, BilderDasErsteSingle,
+#	Bilder3satSingle, ARD_Teletext_extract, ZDF_Teletext_Table.
+#	ZDF_BildgalerieSingle 03/2025 entfallen.
 # Um die Wasserzeichen (unten links) zu sehen, sind in Kodi's Player
 #	die Schwenkeffekte abzuschalten.  
 def ZDF_SlideShow(path, single=None):
