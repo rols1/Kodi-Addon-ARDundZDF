@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>41</nr>										# Numerierung für Einzelupdat1
-#	Stand: 30.05.2026
+# 	<nr>42</nr>										# Numerierung für Einzelupdat1
+#	Stand: 08.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -279,7 +279,8 @@ def Main_TIVI(title=''):
 	fparams="&fparams={'coll_id': '%s', 'homeID': '%s'}" % (coll_id,'Kinderprogramme')
 	addDir(li=li, label=title , action="dirList", dirID="ardundzdf.ZDF_Start", fanart=GIT_ZDFTIVI, 
 		thumb=GIT_TIVIHOME, tagline=title, fparams=fparams)	
-						
+					
+	# 07.06.2026 Tivi_Search entfernt (wie ZDF-Web und HBBTV).						
 	# 29.01.2026 Menü tivi_Verpasst entfernt - beim ZDF nicht mehr verfügbar
 	#title = 'tivi_Verpasst' 	# ZDF_VerpasstWoche -> tivi_Verpasst
 	
@@ -289,12 +290,12 @@ def Main_TIVI(title=''):
 		thumb=GIT_AZ, tagline=title, fparams=fparams)
 
 	title='tivi_ZDFchen'
-	tag = "Für Kinder bis 6 Jahre"
-	thumb = "https://www.zdf.de/assets/zdfchen-buehne-m-song-100~936x520?cb=1658852787035"
-	url = "https://zdf-prod-futura.zdf.de/mediathekV2/document/zdfchen-100"
-	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=GIT_ZDFTIVI, 
-		thumb=thumb, fparams=fparams)
+	tag = u"Für Kinder bis 6 Jahre"
+	thumb = "https://www.zdf.de/assets/zdfchen-buehne-m-song-100~936x520?cb=1658852787035"		
+	coll_id = "4a232aa9-93ee-4eb8-8028-acc0580e709f"
+	fparams="&fparams={'coll_id': '%s', 'homeID': '%s'}" % (coll_id,'Kinderprogramme')
+	addDir(li=li, label=title , action="dirList", dirID="ardundzdf.ZDF_Start", fanart=GIT_ZDFTIVI, 
+		thumb=thumb, tagline=title, fparams=fparams)	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
@@ -1982,63 +1983,11 @@ def gen_alpha(xml_path='', thumb=''):
 
 # ----------------------------------------------------------------------			
 #								tivi
-# ----------------------------------------------------------------------			
-def Tivi_Search(query=None, title='Search', pagenr=''):
-	PLog("Tivi_Search:")
-	if 	query == '':	
-		query = ardundzdf.get_query(channel='ZDF')
-	PLog(query)
-	if  query == None or query.strip() == '':
-		# return ""
-		return Main_TIVI("tivi") # sonst Wiedereintritt Tivi_Search bei Sofortstart, dann Absturz Addon
-	query_org = query	
-	query=py2_decode(query)		# decode, falls erf. (1. Aufruf)
-
-	PLog('Tivi_Search:'); PLog(query); PLog(pagenr); 
-
-	ID='Search'
-	Tivi_Search_PATH	 = 'https://www.zdf.de/suche?q=%s&from=&to=&sender=ZDFtivi&attrs=&contentTypes=episode&sortBy=date&page=%s'
-	if pagenr == '':		# erster Aufruf muss '' sein
-		pagenr = 1
-
-	path = Tivi_Search_PATH % (query, pagenr) 
-	PLog(path)	
-	page, msg = get_page(path=path)	
-	searchResult = stringextract('data-loadmore-result-count="', '"', page)	# Anzahl Ergebnisse
-	PLog("searchResult: " + searchResult)
-	
-	li = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')										# Home-Button
-
-	# Der Loader in ZDF-Suche liefert weitere hrefs, auch wenn weitere Ergebnisse fehlen -
-	#	dto ZDFtivi
-	if searchResult == '0' or 'class="artdirect"' not in page:
-		query = (query.replace('%252B', ' ').replace('+', ' ')) # quotiertes ersetzen 
-		msg1 = 'Keine Ergebnisse (mehr) zu: %s' % query  
-		MyDialog(msg1, '', '')
-		return li	
-				
-	
-	# anders als bei den übrigen ZDF-'Mehr'-Optionen gibt der Sender Suchergebnisse bereits
-	#	seitenweise aus, hier umgesetzt mit pagenr - offset entfällt	
-	li, page_cnt = ardundzdf.ZDF_get_content(li=li, page=page, ref_path=path, ID=ID)
-	PLog('li, page_cnt: %s, %s' % (li, page_cnt))
-	
-	if page_cnt == 'next':							# mehr Seiten (Loader erreicht)
-		li = xbmcgui.ListItem()						# Kontext-Doppel verhindern
-		pagenr = int(pagenr) + 1
-		query = query_org.replace('+', ' ')
-		path = Tivi_Search_PATH % (query, pagenr)	# Debug
-		PLog(pagenr); PLog(path)
-		title = "Mehr Ergebnisse in ZDFtivi suchen zu: >%s<"  % query
-		query_org=py2_encode(query_org); 
-		fparams="&fparams={'query': '%s', 'pagenr': '%s'}" %\
-			(quote(query_org), pagenr)
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_Search", fanart=R(ICON_MEHR), 
-			thumb=R(ICON_MEHR), fparams=fparams)
-	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)	# Absturz Addon bei Sofortstart - s.o.
-
+# ----------------------------------------------------------------------
+# 07.06.2026 Tivi_Search entfernt (wie ZDF-Web und HBBTV). Bei Bedarf
+#	umsetzen via Graphql (Test OK)			
+# def Tivi_Search(query=None, title='Search', pagenr=''):
+#
 # ----------------------------------------------------------------------
 # 29.01.2026 tivi_Verpasst entfernt - beim ZDF nicht mehr verfügbar
 # def tivi_Verpasst(title, zdfDate, sfilter=""):
@@ -2062,7 +2011,7 @@ def Tivi_AZ():
 		
 		PLog(button); PLog(img_src)
 		button=py2_encode(button); title=py2_encode(title);		
-		fparams="&fparams={'name': '%s', 'element': '%s'}" % (quote(title), button)
+		fparams="&fparams={'name': '%s', 'img': '%s', 'element': '%s'}" % (quote(title), quote(img_src), button)
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_AZ_Sendungen", fanart=R(ICON_DIR_FOLDER), 
 			thumb=img_src, fparams=fparams, tagline=title)
  
@@ -2071,59 +2020,19 @@ def Tivi_AZ():
 # ----------------------------------------------------------------------			
 # Alle Sendungen, char steuert Auswahl 0-9, A-Z
 # 12.12.2019 Nutzung ZDF_get_content statt get_tivi_details
-# 26.04.2023 Umstellung www.zdf.de -> zdf-cdn
+# 26.04.2023 Umstellung www.zdf.de -> zdf-cdn -> futura
+# 08.06.2026 Umstellung auf Graphql -> ardundzdf.ZDF_AZList
 #
-def Tivi_AZ_Sendungen(name, element=None):	
+def Tivi_AZ_Sendungen(name, img, element=None):	
 	PLog('Tivi_AZ_Sendungen:'); PLog(element)
-		
-	jsonObject = Dict("load", "ZDF_tiviAZ", CacheTime=KikaCacheTime)	# 1 Std., ca. 3 MByte
-	if not jsonObject:
-		icon = GIT_AZ
-		xbmcgui.Dialog().notification("Cache tivi A-Z:","Haltedauer 60 Min",icon,3000)
-		path = "https://zdf-prod-futura.zdf.de/mediathekV2/document/kindersendungen-a-z-100"
-		page, msg = get_page(path)
-		if not page:												# nicht vorhanden?
-			msg1 = 'Tivi_AZ_Sendungen: Beiträge können leider nicht geladen werden.' 
-			msg2 = msg
-			MyDialog(msg1, msg2, '')
-			return
-		jsonObject = json.loads(page)
-		Dict("store", "ZDF_tiviAZ", jsonObject)		
-		
-	li = xbmcgui.ListItem()
-	homeID = 'Kinderprogramme'
-	li = home(li, ID=homeID)			# Home-Button
-		
-	jsonObject = jsonObject["cluster"]
-	PLog(len(jsonObject))
-	PLog(str(jsonObject)[:80])
-	AZObject=[]	
-	for clusterObject in jsonObject:
-		PLog(str(clusterObject)[:12])
-		if element in clusterObject["name"]:
-			title = clusterObject["name"]
-			PLog("found_title: " + title)
-			AZObject = clusterObject
-			break
+	if "0-9" in element:
+		element = "0 - 9"
 	
-	if AZObject:
-		teaserObject = AZObject["teaser"]
-		for entry in teaserObject:
-			typ,title,tag,descr,img,url,stream,scms_id = ardundzdf.ZDF_get_content(entry)
-			title = repl_json_chars(title)
-			label = title
-			descr = repl_json_chars(descr)
-			fparams="&fparams={'url': '%s', 'title': '%s', 'homeID': '%s'}" % (url, title, homeID)
-			PLog("fparams: " + fparams)	
-			addDir(li=li, label=label, action="dirList", dirID="ardundzdf.ZDF_RubrikSingle", fanart=img, 
-				thumb=img, fparams=fparams, summary=descr, tagline=tag)	
-	else:
-		msg1 = name
-		msg2 = "leider nichts gefunden"
-		icon = GIT_AZ
-		xbmcgui.Dialog().notification(msg1,msg2,icon,3000, sound=True)
-		return					
-
+	title=name; ID="Kinderprogramme"
+	li = xbmcgui.ListItem()
+	home(li, ID)								# Home-Button		
+	ardundzdf.ZDF_AZList(title, element, ID)
+	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------			
