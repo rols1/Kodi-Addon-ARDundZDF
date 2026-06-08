@@ -7,7 +7,7 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>42</nr>										# Numerierung für Einzelupdat1
+# 	<nr>43</nr>										# Numerierung für Einzelupdat1
 #	Stand: 08.06.2026
 
 # Python3-Kompatibilität:
@@ -42,7 +42,7 @@ import datetime, time
 import re				# u.a. Reguläre Ausdrücke
 import string
 
-import ardundzdf					# -> SenderLiveResolution, transl_wtag, get_query, Audio_get_sendung..
+import ardundzdf					# -> SenderLiveResolution, transl_wtag, get_query, Audio_get_sendung, ..
 from resources.lib.util import *
 
 
@@ -2029,11 +2029,10 @@ def Tivi_AZ_Sendungen(name, img, element=None):
 		element = "0 - 9"
 	
 	title=name; ID="Kinderprogramme"
-	li = xbmcgui.ListItem()
-	home(li, ID)								# Home-Button		
+	li = xbmcgui.ListItem()				# Home-Button in ZDF_AZList
 	ardundzdf.ZDF_AZList(title, element, ID)
 	
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	return
 
 # ----------------------------------------------------------------------			
 
