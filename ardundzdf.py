@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>352</nr>										# Numerierung für Einzelupdate
+# 	<nr>353</nr>										# Numerierung für Einzelupdate
 VERSION = '5.4.9'
 VDATE = '01.06.2026' 
 
@@ -1153,12 +1153,13 @@ def Main_ZDF(name=''):
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat", fanart=R("zdf-kategorien.png"), 
 		thumb=R("zdf-kategorien.png"), summary=summ, fparams=fparams)
 
-	title = "ZDF-Sportstudio"
-	url = futura_base + "document/sport-106"
+	title = "ZDF-Sportstudio"											# 09.06.2026 HBBTV
 	tag = u"Aktuelle News, Livestreams, Liveticker, Ergebnisse, Hintergründe und Sportdokus. Sportstudio verpasst? Aktuelle Sendungen einfach online schauen!"
-	fparams="&fparams={'url': '%s', 'title': '%s'}" % (url, title)
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_RubrikSingle", fanart=R("zdf-sport.png"), 
+	coll_id = "0a462235-9ded-4f27-81f1-5077ba671e11"
+	fparams="&fparams={'coll_id': '%s', 'homeID': '%s'}" % (coll_id, "ZDF")
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R("zdf-sport.png"), 
 		thumb=R("zdf-sport.png"), tagline=tag, fparams=fparams)
+		
 		
 	title = "Barrierearm"
 	url = futura_base + "document/barrierefrei-im-zdf-100"
@@ -8084,14 +8085,15 @@ def ZDF_Start(coll_id, homeID=""):
 		PLog("item: " + str(item)[:80])
 		title=""; summ=""
 		title = item["title"]
-		if not title:										# None z.B. bei variant_wide
+		if not title:										# None bei variant_wide od. fehlt
 			title=""
-		if "Kategorien" in title:
+		if "Kategorien" in title:							# Addon-Ende Startseite
 			break
 		anz = len(item["elems"])
 		elem = item["elems"][0]								# 1. Beitrag
 		PLog(str(elem)[:80])
 		img = elem["img"]
+		elem0_title = elem["link"]["title"]					# Fallback Titel, z.B. Links zu Livestreams, s.u.
 		tag = u"Folgebeiträge\nBild: 1. Beitrag"
 		
 		if "wide" in item["variant"]:						# variant_wide-Beitrag
@@ -8099,6 +8101,9 @@ def ZDF_Start(coll_id, homeID=""):
 			tag = elem["infoline"]["text"]
 			summ = elem["text"]
 			PLog("variant_wide")
+		if not title:										# Fallback
+			title = elem0_title
+		
 		label = title
 		title = repl_json_chars(title)
 
@@ -9686,6 +9691,7 @@ def ZDF_getHBBTV_content(items, max_cnt=0, mark=""):
 			headtxt = item["headtxt"]							# Serientitel, leer möglich (Ausn.: Livestream)
 			title = item["titletxt"]	
 			title = unescape(title)								# &amp;
+			
 			if mark:
 				title = make_mark(mark, title, "", bold=True)	# Titel-Markierung für ZDF_Search
 			
@@ -9782,16 +9788,13 @@ def ZDF_getHBBTV_content(items, max_cnt=0, mark=""):
 				
 		else:	# MovieSmartCollection, MiniSeriesSmartCollection, DefaultWithSectionsSmartCollection +
 				#	DefaultNoSectionsSmartCollection (anscheinend gleich), SeasonSeriesSmartCollection
-			PLog("mark0")
 			if "MovieSmartCollection" in typname:					# Video folgt mit Empfehlungen
 				tag = "Video mit Empfehlungen\n%s" % tag
 			else:
 				tag = "Folgeseiten\n%s" % tag
-			PLog("mark1")
 			PLog(type(url)); PLog(type(title)); PLog(type(img));
 			fparams="&fparams={'path': '%s','title': '%s','img': '%s'}" %\
 				(quote(url), quote(title), quote(img))
-			PLog("mark2")
 			PLog("fparams: " + unquote(fparams))
 			addDir(li=li, label=label, action="dirList", dirID="ZDF_KatSeriePre", fanart=img, thumb=img, 
 				fparams=fparams, tagline=tag, summary=summ, mediatype="")
@@ -11076,6 +11079,10 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 	if "ZDFfunk" in ID:
 		path = "https://www.zdf.de/funk-alle-sendungen-von-a-z-100?group=?group=%s" % element
 		myvars_base=myvars_base.replace("sendungen-100", "funk-alle-sendungen-von-a-z-100")
+	if "Kinderprogramme" in ID:													# childs -> Tivi_AZ_Sendungen
+		path = "https://www.zdf.de/kinder/sendungen-a-z?group=%s"  % element
+		myvars_base=myvars_base.replace("sendungen-100", "kindersendungen-a-z-100")
+		
 
 	genre_id,coll_id,apitoken,appId,zdfappId,canon = ZDF_Graphql_WebDetails(path, mode="CatalogTabsConnection")
 
