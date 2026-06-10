@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>78</nr>								# Numerierung für Einzelupdate
-#	Stand: 05.06.2026
+# 	<nr>79</nr>								# Numerierung für Einzelupdate
+#	Stand: 10.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -439,6 +439,7 @@ def Arte_Live(href, title, Plot, img):
 # ----------------------------------------------------------------------
 # 15.01.2023 umgestellt: api-path (path für Seite 1 war abweichend)
 # 12.09.2023 neue Api-Version (emac/v3 -> emac/v4)
+# 10.06.2026 neue Api-Version (www.arte.tv/api -> api.arte.tv/api)
 #
 def Arte_Search(query='', next_url=''):
 	PLog("Arte_Search:")
@@ -455,8 +456,9 @@ def Arte_Search(query='', next_url=''):
 	lang = arte_lang.split("|")[1].strip()				# fr, de, ..	
 	path = next_url										# Pagination-Link (api-internal ersetzt)
 	if path == "":										# Seite 1 
-		path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/pages/SEARCH?query=%s&mainZonePage=1&page=1&limit=20" %\
+		path = "https://api.arte.tv/api/emac/v4/%s/web/pages/SEARCH?query=%s&mainZonePage=1&page=1&limit=20" %\
 		(quote(lang), quote(query))		
+
 	aktpage = stringextract('page=', '&', path)
 
 	page, msg = get_page(path=path, do_safe=False)		# ohne quote in get_page (api-Call)
@@ -526,15 +528,15 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 		
 	try:
 		if ID == "SEARCH":									# web-api-Call
-			values = page["value"]["zones"][0]["content"]["data"]
+			values = page["zones"][0]["content"]["data"]
 		elif ID == "SEARCH_NEXT":							# Folgeseiten wie MOST_RECENT
 			values = page["value"]["data"]
 		elif ID == "Beitrag_Liste":	
-			values = page["value"]["data"]
+			values = page["data"]
 			PLog(len(values))
 			PLog(str(values)[:100])
 		elif ID == "MOST_RECENT":			
-			values = page["value"]["data"]
+			values = page["data"]
 			PLog(len(values))
 			PLog(str(values)[:100])
 		elif ID == "HBBTV":									# Neu HBBTV
@@ -904,7 +906,8 @@ def Beitrag_Liste(url, title):
 	PLog(url); 
 	if url.startswith("/de/"):
 		url = "https://www.arte.tv" + url
-	PLog(url) 
+	url = url.replace("www.arte.tv/api/rproxy", "api.arte.tv/api")
+	PLog("new_url: " + url) 
 	
 	page = get_ArtePage('Beitrag_Liste', title, path=url)	
 	if page == '':	
@@ -1283,7 +1286,7 @@ def Kategorien():
 				thumb=R(img), tagline=tag, summary=summ, fparams=fparams)
 
 	title = L("Neueste Videos")									# Button Neueste Videos
-	path = "https://www.arte.tv/api/rproxy/emac/v4/%s/web/zones/daeadc71-4306-411a-8590-1c1f484ef5aa/content?abv=A&page=1&pageId=MOST_RECENT&zoneIndexInPage=0" % lang
+	path = "https://api.arte.tv/api/emac/v4/%s/web/zones/daeadc71-4306-411a-8590-1c1f484ef5aa/content?abv=A&page=1&pageId=MOST_RECENT&zoneIndexInPage=0" % lang
 	title=py2_encode(title); path=py2_encode(path); 
 	fparams="&fparams={'title': '%s', 'url': '%s'}" %\
 		(quote(title), quote(path))
@@ -1588,8 +1591,9 @@ def get_next_url(page):
 		# next_url = next_url.replace("api-internal.arte.tv/api", "www.arte.tv/api/rproxy")
 		# 17.01.2025 neuer Serverlink: api-internal.infra-priv.arte.tv funktioniert nicht
 		# next_url = next_url.replace("api-internal.infra-priv.arte.tv/api", "www.arte.tv/api/rproxy")
-		# 01.02.2025 api-internal-Call nicht mehr verwendet:
-		next_url = next_url.replace("/api/emac/", "www.arte.tv/api/rproxy/emac/")
+		# 01.02.2025 api-internal-Call nicht mehr verwendet, 10.06.2026 nach Wegfall 
+		#	www.arte.tv/api entfällt replacing
+		# next_url = next_url.replace("/api/emac/", "www.arte.tv/api/rproxy/emac/")
 		# 12.02.2025 api-cdn.arte.tv am Url-Start beobachtet
 		next_url = next_url.replace("api-cdn.arte.tv", "")
 		if next_url.startswith("http") == False:
