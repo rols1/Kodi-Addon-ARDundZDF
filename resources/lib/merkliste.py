@@ -737,8 +737,8 @@ def clear_merkliste():
 				"arte_Search", "Kika_Search", "Tivi_Search", "Search", "phoenix_Search",
 				"XL_Search", "MVWSearch", "ARDSearchnew", "BilderDasErste",
 				"Bilder3sat", "PodFavoritenListe", "update_single", "DownloadTools",
-				"DownloadsList", "Verpasst", "refresh_epg", "lib.merkliste.",
-				".strm.strm_tools", "AddonStartlist"
+				"DownloadsList", "Verpasst", "refresh_epg", "refresh_streamlinks",
+				"lib.merkliste.", ".strm.strm_tools", "AddonStartlist"
 			]
 	
 	my_list=[]; selected=[]; cnt=-1; note_cnt=0

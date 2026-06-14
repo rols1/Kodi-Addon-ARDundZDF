@@ -530,7 +530,7 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 		if ID == "SEARCH":									# web-api-Call
 			values = page["zones"][0]["content"]["data"]
 		elif ID == "SEARCH_NEXT":							# Folgeseiten wie MOST_RECENT
-			values = page["value"]["data"]
+			values = page["data"]
 		elif ID == "Beitrag_Liste":	
 			values = page["data"]
 			PLog(len(values))

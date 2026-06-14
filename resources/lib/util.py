@@ -2133,6 +2133,7 @@ def CalculateDuration(timecode):
 # 30.12.2024: github.com/rols1/Kodi-Addon-ARDundZDF/pull/41			
 def seconds_translate(seconds, days=False):
 	PLog('seconds_translate: %s' % str(seconds))
+	seconds_org=seconds
 
 	try:
 		seconds = int(seconds)
@@ -2157,7 +2158,11 @@ def seconds_translate(seconds, days=False):
 		return "%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds)
 	else:
 		#PLog("%d:%02d" % (hour, minutes))
-		return  "%02d:%02d:%02d" % (hour, minutes, seconds)		
+		if int(seconds_org) < 60:			#  weniger als  1 Minute?
+			return "%d Sek." % int(seconds_org)
+		else:
+			return "%02d:%02d:%02d Std." % (hour, minutes, seconds)
+
 #----------------------------------------------------------------  	
 # Formate timecode 	ISO8601 date y-m-dTh:m:sZ 
 # Varianten:	ARDNew			2018-11-28T23:00:00Z
@@ -2588,7 +2593,7 @@ def ReadJobs():
 # Cache: 
 #		html-Seite wird in TEXTSTORE gespeichert, Dateiname aus path generiert.
 #
-# Aufrufer: ZDF: 	ZDF_get_content (für alle ZDF-Rubriken)
+# Aufrufer: ZDF: 	ZDF_get_content, ZDF_getApiStreams, ZDF_getHBBTV_content
 #			ARD: 	ARDStart	-> ARDStartRubrik 
 #					SendungenAZ, ARDSearchnew, 	ARDStartRubrik,
 #					ARDPagination -> get_page_content
@@ -2720,6 +2725,7 @@ def get_summary_pre(path,ID='ZDF',skip_verf=False,skip_pubDate=False,pattern='',
 		summ = summ.replace('\\u003c',"")
 		summ = (summ.replace('/li'," ").replace('/ul',"").replace('ulli',""))
 		summ = summ.replace('&quot;','"')
+		summ = summ.replace('&#x27;','')						# ' in Girl's
 	
 		# Ermittlung "Verfügbar bis" ähnlich ZDF_KatSeriePre
 		if not skip_verf:										# skip_pubDate unberücksichtigt
@@ -2859,6 +2865,8 @@ def refresh_streamlinks():
 # 29.10.2023 force=True: InfoAndFilter -> refresh_streamlinks
 # 23.03.2025 nach ZDF-Relaunch erneuert (nur noch apiToken von
 #	Webseite, ptmd-Url's hartkodiert)
+# 12.06.2026 arte aktualsiert (index.m3u8), phoenix ergänzt,
+#	lokale Icons ergänzt (nicht auf zdf.de/live-tv).
 #-----------------------------------------------
 def get_ZDFstreamlinks(skip_log=False, force=False):
 	PLog('get_ZDFstreamlinks:')
@@ -2892,26 +2900,26 @@ def get_ZDFstreamlinks(skip_log=False, force=False):
 	PLog("apiToken: " + apiToken)	
 	# assetid's in ptmd-Url's auf Webseite www.zdf.de/live-tv
 	# hier ohne 247onAir-205 phoenix, ptmd/247onAir-206 fehlt, 
-	ids = ["247onAir-201|ZDF", "247onAir-202|ZDFneo", "247onAir-203|ZDFinfo",
-		"247onAir-204|3sat", "247onAir-207|KiKA", "247onAir-208|arte"]
+	ids = ["247onAir-201|ZDF|tv-zdf.png", "247onAir-202|ZDFneo|tv-zdf-neo.png", 
+		"247onAir-203|ZDFinfo|tv-zdf-info.png",
+		"247onAir-204|3sat|tv-3sat.png", "247onAir-205|phoenix|tv-phoenix.png",
+		"247onAir-208|arte|tv-arte.png", "247onAir-207|KiKA|tv-kika.png"]
 	
 	#	----------------------------
 	header = "{'Api-Auth': 'Bearer %s','Host': 'api.zdf.de'}" % apiToken
-	PLog("header" + header)
+	PLog("header: " + header)
 	
-	zdf_streamlinks=[]; thumb=""
+	zdf_streamlinks=[]; 
 	for asset in ids:												# Schleife  Web-Sätze		
-		PLog(asset)
-		assetid, title = asset.split("|") 
+		PLog("asset: " + asset)
+		assetid, title, thumb = asset.split("|") 
 		videodat_url = "https://api.zdf.de/tmd/2/ngplayer_2_3/live/ptmd/%s" % assetid
-		page, msg	= get_page(path=videodat_url, header=header)
+		page, msg = get_page(path=videodat_url, header=header)
 		PLog("videodat: " + page[:40])
-		tagline = stringextract('description":"',  '"', page)
-		href = stringextract('"https://',  'master.m3u8', page) 	# 1.: auto
-		PLog("href: " + href)
-		if href:
-			href = 	"https://" + href + "master.m3u8"
-			PLog("href: " + href)
+		tagline = stringextract('description" : "',  '"', page)
+		href = stringextract('uri" : "',  '"', page)				# 1.: auto (master.m3u8, arte: index.m3u8)
+		thumb = R(thumb)
+		PLog("href: %s, thumb: %s" % (href,thumb))
 		if href:
 			# Zeile: "title_sender|href|thumb|tagline"
 			line = "%s|%s|%s|%s" % (title, href,thumb,tagline)
@@ -2919,10 +2927,10 @@ def get_ZDFstreamlinks(skip_log=False, force=False):
 			zdf_streamlinks.append(line)
 	
 	PLog("zdf_streamlinks: %d" % len(zdf_streamlinks))
-	page = "\n".join(zdf_streamlinks)									# Ablage Cache
+	page = "\n".join(zdf_streamlinks)								# Ablage Cache
 	#skip_log=False				# Debug
 	if skip_log == False:
-		PLog(page)														# für IPTV-Interessenten
+		PLog(page)													# für IPTV-Interessenten
 	Dict("store", 'zdf_streamlinks', page)
 	return zdf_streamlinks	
 #-----------------------------------------------

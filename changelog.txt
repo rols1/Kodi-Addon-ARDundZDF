@@ -10,6 +10,52 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+14.06.2026	5.5.0			
+			ZDF_get_content: router-inkompatible Zeichen aus tag entfernt.
+			ZDF_getApiStreams: HLS-Stream detektiert für ".m3u8"-Kennung innerhalb der
+			Url (statt am Url-Ende).
+			ZDF_getHBBTV_content: Setting pref_load_summary für Videos ("Videos" und 
+			"MovieSmartCollection") berücksichtigt für Inhaltstext und "Verfügbar bis",
+			Zielfunktion ZDF_KatSub für "MetaCollection" ergänzt.
+			get_summary_pre (util): Auswertung "Verfügbar bis" ergänzt.
+			ZDF_Search: Switch von futura-Api zu HBBTV, Nutzung ZDF_getHBBTV_content,
+			Anpassung ZDF-Code in SearchARDundZDFnew.
+			ZDF_search_button: entfernt, obsolet durch Kategorien mit Empfehlungen,
+			Anpassung ZDF_RubrikSingle.
+			Main_ZDFfunk: für Startseite Switch von futura-Api zu Graphql (ZDF_KatSub).
+			ZDF_AZ, ZDF_AZList, ZDF_Graphql_WebDetails: Anpassungen für ZDFfunk zur 
+			Graphql-Nutzung.
+			ZDF_AZList_funk: entfernt, nicht mehr benötigt durch Graphql-Nutzung.
+			ZDF_KatSerieExtras: Trailer-Auswertung erweitert (ohne eigenes Image).
+			ZDF_getHBBTV_content: homeID (ZDF) für ZDF_Start-Call ergänzt (Router-
+			Error), Fallback-Image ergänzt.
+			ZDF_RubrikSingle: Code für ZDF-A-Z entfernt (umgestellt auf Graphql).
+			Main_ZDF: Menü ZDF-Sportstudio umgestellt auf HBBTV.
+			ZDF_Kat: Umleitungen HBBTV (ZDF-Sportstudio, Barrierefreie Inhalte,
+			Nachrichten), Umleitung ZDF_AZ -> ZDF_AZList (Graphql).
+			ZDF_getLivestreams: neu für Menü Livestreams in Main_ZDF, Nutzung
+			Cache get_ZDFstreamlinks (angepasst für lokale Icons, phoenix, arte).
+			ZDF_Barrierearm: umgestellt auf HBBTV wie Barrierefreie in ZDF_Kat.
+			Tivi_Search (Modul childs): Tivi_Search entfernt (wie ZDF-Web und HBBTV).
+			Tivi_AZ_Sendungen (Modul childs): Umstellung auf Graphql, Anpassung 
+			ZDF_AZList.
+			tivi_ZDFchen (Modul childs): Umstellung auf HBBTV -> ZDF_Start.
+			ZDF_KatNachrichten: gelöscht (obsolet).
+			ZDF_get_navi: gelöscht (obsolet).
+			ZDF_PageMenu: gelöscht (obsolet).
+			ZDF_Rubriken: gelöscht (obsolet).
+			ZDF_Live: gelöscht (obsolet).
+			strm_sync (strm): "cdn" als Kennung für futura-api-Url aktualisiert durch
+			"prod-futura".
+			
+			arte-Modul: Api-Änderung im EPG-Link und Datenformat(www.arte.tv/api -> 
+			api.arte.tv/api, json-key value entfallen), Anpassungen in EPG_Today, 
+			Arte_Search, Beitrag_Liste, GetContent, 
+			seconds_translate (util): Kennzeichnung Rückgabe "Std." bzw. "Sek.".
+			thread_getfile: Bestätigungsdialog beim MP3-Download abgeschaltet bei nur
+			1 Datei.
+			Context (tools): Url-Anpassung für ARD-Serienerkennung (item -> grouping).			
+
 01.06.2026	5.4.9
 			ZDF_Graphql_WebDetails: getpage-Absatz versetzt, um die Ablage der Header-
 			Params im Dict bei jeden Webabruf zu ermöglichen.
@@ -25,7 +71,7 @@ CHANGE HISTORY
 			ZDF_Start).
 			ZDF_KatSeriePre: description + visibleTo ergänzt falls Video statt Serie.
 			ZDF_getApiStreams: Endung index.m3u8 für HLS-Streams ergänzt (zu master.m3u8).
-			Context (tools): Berücksichtigung www.zdf.de aus ZDF_getHBBTV_content zusätzl 
+			Context (tools): Berücksichtigung www.zdf.de aus ZDF_getHBBTV_content zusätzl. 
 			zu futura-api für Suche nach Serie.
 			Parseplaylist: NameOld entfernt (ersetzt durch BandwithOld).
 

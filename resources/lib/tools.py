@@ -8,7 +8,7 @@
  
 ################################################################################
 # 	<nr>21</nr>								# Numerierung für Einzelupdate
-#	Stand: 30.05.2026
+#	Stand: 13.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -696,20 +696,22 @@ def Context(title, path, img, mode):
 		img = img.replace('{width}', "640")
 		if not title:
 			title=title_org
-		new_url = new_url.replace(base64_id, show_id)
+		new_url = new_url.replace(base64_id, show_id).replace("item", "grouping")
 	
 		PLog("coreAssetType: %s, title: %s, sender: %s, show_id: %s, img: %s, new_url: %s" %\
 			(typ, title, sender, show_id, img, new_url))				
 		
 		if new_url and "SEASON" in typ:
-			dirID = "resources.lib.ARDnew.ARD_KatSeriePre"	# -> ARD_KatSeriePre
-			fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s'}" %\
-				(quote(new_url), quote(title), quote(img))
-			action="action=dirList&dirID=%s&fparams=%s"	% (dirID, fparams)
-			PLog("action_Context: " + unquote(action))
-			action=quote(action)
-			xbmc.executebuiltin('RunAddon(%s, %s)'  % (ADDON_ID, action))
-			exit()		
+			new_url, msg = getRedirect(new_url)				# Check
+			if new_url:
+				dirID = "resources.lib.ARDnew.ARD_KatSeriePre"	# -> ARD_KatSeriePre
+				fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s'}" %\
+					(quote(new_url), quote(title), quote(img))
+				action="action=dirList&dirID=%s&fparams=%s"	% (dirID, fparams)
+				PLog("action_Context: " + unquote(action))
+				action=quote(action)
+				xbmc.executebuiltin('RunAddon(%s, %s)'  % (ADDON_ID, action))
+				exit()		
 		
 	# -----------------------------------					# Fehlschlag
 	icon = R(ICON_INFO)

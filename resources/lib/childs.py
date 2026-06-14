@@ -274,7 +274,7 @@ def Main_TIVI(title=''):
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.yt.MVWSearch", fanart=GIT_ZDFTIVI, 
 			thumb=R("suche_mv.png"), tagline=tag, summary=summ, fparams=fparams)
 
-	title='tivi_Startseite'
+	title='tivi_Startseite'												# HBBTV
 	coll_id = "06b4a744-3a6a-4a49-9eaf-4c6a4b59d0dc"
 	fparams="&fparams={'coll_id': '%s', 'homeID': '%s'}" % (coll_id,'Kinderprogramme')
 	addDir(li=li, label=title , action="dirList", dirID="ardundzdf.ZDF_Start", fanart=GIT_ZDFTIVI, 
@@ -284,12 +284,12 @@ def Main_TIVI(title=''):
 	# 29.01.2026 Menü tivi_Verpasst entfernt - beim ZDF nicht mehr verfügbar
 	#title = 'tivi_Verpasst' 	# ZDF_VerpasstWoche -> tivi_Verpasst
 	
-	title='tivi_Sendungen A-Z | 0-9'
+	title='tivi_Sendungen A-Z | 0-9'									# Graphql
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Tivi_AZ", fanart=GIT_ZDFTIVI, 
 		thumb=GIT_AZ, tagline=title, fparams=fparams)
 
-	title='tivi_ZDFchen'
+	title='tivi_ZDFchen'												# HBBTV
 	tag = u"Für Kinder bis 6 Jahre"
 	thumb = "https://www.zdf.de/assets/zdfchen-buehne-m-song-100~936x520?cb=1658852787035"		
 	coll_id = "4a232aa9-93ee-4eb8-8028-acc0580e709f"

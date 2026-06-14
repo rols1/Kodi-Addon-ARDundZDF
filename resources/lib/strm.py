@@ -4,7 +4,7 @@
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
 # 	<nr>16</nr>										# Numerierung für Einzelupdate
-#	Stand: 15.03.2026
+#	Stand: 03.06.2026
 #
 
 from __future__ import absolute_import
@@ -1099,7 +1099,7 @@ def strm_sync():
 					PLog("sync_item: " + item)
 					# Format: Listen-Titel ## lokale strm-Ablage ##  ext.Url ## strm_type
 					list_title, strmpath, list_path, strm_type= item.split("##")
-					if "//zdf-cdn" in list_path or "mediathekV2" in list_path:		# ZDF-Sync
+					if "prod-futura" in list_path or "mediathekV2" in list_path:		# ZDF-Sync
 						do_sync(list_title, strmpath, list_path, strm_type)
 					else:
 						do_sync_ARD(list_title, strmpath, list_path, strm_type)		# ARD-Sync

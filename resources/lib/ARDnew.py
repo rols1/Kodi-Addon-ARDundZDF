@@ -11,7 +11,7 @@
 #
 ################################################################################
 # 	<nr>143</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.06.2026
+#	Stand: 12.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -978,8 +978,12 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 	if not page:													# nicht vorhanden oder zu alt -					
 		page, msg = get_page(path)
 		icon = R(ICON_MAIN_ARD)
-		xbmcgui.Dialog().notification("Cache %s:" % title,"Haltedauer 5 Min",icon,3000,sound=False)
-		Dict('store', DictID, page)						# json-Datei -> Dict, 1 bis 3 MByte mit Teasern	(Verr. nach Meer)	
+		if page:
+			xbmcgui.Dialog().notification("Cache %s:" % title,"Haltedauer 5 Min",icon,3000,sound=False)
+			Dict('store', DictID, page)						# json-Datei -> Dict, 1 bis 3 MByte mit Teasern	(Verr. nach Meer)	
+		else:
+			xbmcgui.Dialog().notification("ARD_KatSeriePre:","keine Daten gefunden.",icon,3000)
+			return
 
 	try:
 		obj = json.loads(page)
