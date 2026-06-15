@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>21</nr>								# Numerierung für Einzelupdate
-#	Stand: 13.06.2026
+# 	<nr>22</nr>								# Numerierung für Einzelupdate
+#	Stand: 14.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -642,11 +642,18 @@ def Context(title, path, img, mode):
 				# Bsp.: www.zdf.de/video/serien/the-rookie-100/the-hammer-100 ->
 				#		www.zdf.de/video/serien/the-rookie-100:
 				surl = jsonObject["document"]["sharingUrl"]	# Web-Url
-				pos = surl.rfind("/")
-				path = surl[:pos]
-				new_url, msg = get_page(path, GetOnlyRedirect=True)				
+				PLog("sharingUrl: " + surl)
+				new_url, msg = get_page(surl, GetOnlyRedirect=True)				
+				if "/video" in new_url:							# Video-Url-Korrektur (z.B. Trailer):
+					pos = new_url.rfind("/")					# Pfad-Anteil für Video entf.
+					new_url = new_url[:pos]
+					new_url = new_url.replace("/video", "")		# /video" im Pfad entf.
+					PLog("video_clean_Url: " + new_url)
+					path, msg = get_page(new_url, GetOnlyRedirect=True)
+				else:
+					path = new_url								# Redirect hat selbst korrigiert
 				
-				page, msg = get_page(path=new_url)				# nur für img
+				page, msg = get_page(path)						# img holen
 				imgset = stringextract("imageSrcSet=", '/>', page)
 				imgset = blockextract("https", imgset)
 				img = R(ICON_DIR_FOLDER)
@@ -661,7 +668,7 @@ def Context(title, path, img, mode):
 				PLog("ShowSeason_error_ZDF: " + msg)
 		
 		PLog("params_Context: "); PLog(path); PLog(img);
-		if path and "-movie-" not in path:
+		if "www.zdf.de" in path and "-movie-" not in path:		# ungültig z.B. www.zdfheute.de
 			dirID = "ZDF_KatSeriePre"
 			fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
 				(quote(title), quote(path), quote(img))

@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>143</nr>										# Numerierung für Einzelupdate
-#	Stand: 12.06.2026
+# 	<nr>144</nr>										# Numerierung für Einzelupdate
+#	Stand: 14.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1090,7 +1090,7 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 			fparams="&fparams={'path': '%s', 'title': '%s'}" %\
 				(quote(href), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", 
-				fanart=img, thumb=img, fparams=fparams, summary=summ, mediatype="mediatype")
+				fanart=img, thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
 				
 		#---------------------
 		label = "Empfehlungen"											# Button Empfehlungen
