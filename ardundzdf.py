@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>353</nr>										# Numerierung für Einzelupdate
+# 	<nr>354</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.0'
 VDATE = '14.06.2026' 
 
@@ -1660,8 +1660,8 @@ def Audio_get_homescreen(title, page='', cluster_id='', path="", cluster_path=""
 			if skip:
 				PLog("skip_title: " + title)
 				continue
-			if title.startswith("LIVE:"):								# fehlen im Web, graphql: event not found
-				continue
+#			if title.startswith("LIVE:"):								# fehlen im Web, graphql: event not found
+#				continue
 				
 			if 	len(items) == 1:										# statt DEFAULT_WIDGET_SEO_TITLE
 				title = item["teasers"][0]["title"]		
@@ -1818,18 +1818,23 @@ def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 		title=py2_encode(title); url=py2_encode(url);
 		img=py2_encode(img); summ_par=py2_encode(summ_par);	
 
-	#--------------------------------								# Einzelbeitrag
-		if typ=="Item" or typ=="EventLivestream":					
+	#--------------------------------								# Einzelbeitrag				
+		if typ=="Item" and url:										# einz. Audio
 			PLog("to_AudioWebMP3")
 			tag = "[B]Audiobeitrag[/B] | %s\nBild: %s" % (dur, img_alt)
-			if typ=="EventLivestream":		
-				tag = "[B]EventLivestream[/B] | %s" % tag
-	
-			if url:
-				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
-					quote(title), quote(img), quote_plus(summ_par))
-				addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
-					fparams=fparams, tagline=tag, summary=summ)			
+			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
+				quote(title), quote(img), quote_plus(summ_par))
+			addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ)		
+		#------------------
+		if "EventLive" in typ:										# Livestream
+			PLog("to_AudioGraphql")
+			tag = "[B]Livestream[/B] | %s\nBild: %s" % (dur, img_alt)
+			assetId = url.split("/")[-1]							# urn:ard:event-livestream:c1c3b96d4021e966
+			fparams="&fparams={'assetId': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(assetId), 
+				quote(title), quote(img), quote_plus(summ_par))
+			addDir(li=li, label=title, action="dirList", dirID="AudioGraphql", fanart=img, thumb=img, 
+				fparams=fparams, tagline=tag, summary=summ)					
 						
 	#--------------------------------								# Cluster mit Folgeseiten
 		#------------------
@@ -1864,7 +1869,60 @@ def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 			return
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+#----------------------------------------------------------------
+def AudioGraphql(assetId, title, thumb, Plot=''):
+	PLog('AudioGraphql: %s | %s' % (assetId, title))
+
+	# assetId="urn:ard:event-livestream:c1c3b96d4021e966"	# Debug: Gone
+
+	# base: ###XXX### = Stammhalter für assetId
+	base = 'https://api.ardaudiothek.de/graphql?query=query%20MediaCollectionEventlivestreamsQuery(%24id%3AID\u0021)%7BeventLivestream(id%3A%24id)%7BmediaCollection(v%3AV6A)%7D%7D&variables=%7B%22id%22%3A%22###XXX###%22%7D'
+	headers = {
+		'sec-ch-ua-platform': 'Linux',
+		'X-ARD-User-Agent': 'AS Web/4.2.5',
+		'Referer': 'https://www.ardsounds.de/',
+		'User-Agent':' Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36',
+		'sec-ch-ua': '"Google Chrome";v="149", "Chromium";v="149", "Not)A;Brand";v="24"',
+		'Content-type': 'application/json',
+		'sec-ch-ua-mobile': '?0',
+	}
 	
+	url = base.replace("###XXX###", assetId)
+	PLog("Graphql_url: " + unquote(url))
+	req = Request(url, headers=headers, method="GET")
+	with urlopen(req, timeout=20) as resp:
+		raw = resp.read().decode("utf-8")
+	PLog("data_raw: %d | %s" % (len(raw), raw[:100]))
+
+	icon = R(ICON_MAIN_AUDIO)		
+	try:
+		data = json.loads(raw)
+		PLog("data_json: %s" % str(data)[:100])
+		if data.get("errors"):
+			msg1 = title
+			msg2 = u'Livestream existiert nicht (mehr).'
+			xbmcgui.Dialog().notification(msg1,msg2,icon,3000)
+			PLog("%s: %s" % (msg1, msg2))
+			return
+	except Exception as exception:
+		PLog("AudioGraphql_json_error: " + str(exception))
+
+	audios = blockextract("audios':", str(data))
+	PLog(audios)
+	url=""
+	if len(audios) > 0:	
+		url = stringextract("url': '", "'", audios[0])		# 0: MP3, 1: AAC-LC
+		if url.startswith("//"):							# master.m3u8 möglich
+			url = "https:" + url
+	PLog("audios: %d, url: %s" % (len(audios), url))
+	if url:
+		PlayAudio(url, title, thumb, Plot)  					# direkt
+	else:
+		xbmcgui.Dialog().notification(title,"MP3-Url nicht gefunden.",icon,3000)
+			
+	return
+
 #----------------------------------------------------------------
 # extrahiert Einzelbeiträge einer Sendung
 # Aufrufer: AudioSenderPrograms, Audio_get_cluster, AudioSearch_cluster,
@@ -2044,6 +2102,8 @@ def Audio_get_nexturl(url, elements, cnt):
 def Audio_get_cluster_items(item):
 	PLog("Audio_get_cluster_items:")
 	PLog(str(item)[:80])
+	if "Türkei gegen Paraguay" in str(item):
+		PLog(item)
 		
 	typ=""; url=''; attr=''; img='';  img_alt=''; title=''; 
 	tag=""; summ=''; source=''; sender=''; pubDate='';
@@ -2055,8 +2115,11 @@ def Audio_get_cluster_items(item):
 		tracking = item["tracking"]
 		typ = tracking["piano"]["teaser_content_type"]
 		
-		title = item["title"]	
-		url = ARD_AUDIO_BASE + item["target"]["url"]
+		title = item["title"]
+		if "url" in item["target"]:
+			url = ARD_AUDIO_BASE + item["target"]["url"]
+		else:
+			url = ARD_AUDIO_BASE + "/" + item["assetId"]		# Livestream mit assetId -> Graphql
 		img, img_alt = Audio_get_img(item)		
 
 		if "duration" in item:
@@ -2064,6 +2127,16 @@ def Audio_get_cluster_items(item):
 			dur = seconds_translate(dur)
 		if "description" in item:
 			summ = item["description"]
+		if "firstPublicationDate" in item:
+			pubDate = item["firstPublicationDate"]				# 2026-06-20T03:45:00Z
+			pubDate = pubDate[:16]
+			pubDate = "[B]%s/%s/%s, %s:%s Uhr[/B]" % (pubDate[8:10], pubDate[5:7], pubDate[0:4],\
+				pubDate[11:13], pubDate[14:16])
+			if summ:
+				summ = "%s | %s" % (pubDate,  summ)
+			else:
+				summ = pubDate
+			
 		if "publisherTitle" in item:
 			sender = item["publisherTitle"]
 		if "rubricTitle" in item:
@@ -10762,7 +10835,8 @@ def ZDF_Graphql_Livestream(title, thumb, tag,  summ, ptmdTemplate, canon):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 	
 #----------------------------------------------
-# Aufruf: 
+# Aufruf: ZDF_KatSub, ZDF_KatSerie, ZDF_StartWebBeliebt, 
+#	ZDF_Recommendation, ZDF_Verpasst, ZDF_AZList
 # zdfToken bei Bedarf aktualisieren durch params aus Dict("ZDF_Header_Params")
 #
 def ZDF_Graphql(OpName, sha256Hash, variables):
@@ -10792,17 +10866,6 @@ def ZDF_Graphql(OpName, sha256Hash, variables):
 		raw = resp.read().decode("utf-8")
 	PLog("data_raw: %d | %s" % (len(raw), raw[:100]))
 	return raw
-
-	try:
-		data = json.loads(raw)
-		PLog("data_json: %s" % str(data)[:100])
-		if data.get("errors"):
-			raise RuntimeError(data["errors"][0].get("message", "Unbekannter GraphQL-Fehler"))
-	except Exception as exception:
-		PLog("Graphql_json_error: " + str(exception))
-		data={}	
-
-	return data	
 
 #----------------------------------------------
 # Aufruf: Main_ZDF
