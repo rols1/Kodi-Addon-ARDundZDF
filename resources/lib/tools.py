@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>22</nr>								# Numerierung für Einzelupdate
-#	Stand: 14.06.2026
+# 	<nr>23</nr>								# Numerierung für Einzelupdate
+#	Stand: 16.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -576,14 +576,15 @@ def refresh_epg():
 # Kontextmenü 
 # Aufruf addDir -> RunScript
 # bei Bedarf Sender-spez. Funktionen auslagern, hier verteilen
+# ShowSeason z.Z. nur für ARD (api) und ZDF (futura-api, Web)
 # 
 def Context(title, path, img, mode):
 	PLog('Context:'); 
 	PLog("title: %s, path: %s, img: %s, mode: %s" % (title, path, img, mode))
-	title_org=title
+	title_org=title		
 	
 	#-------------------------
-	mode_list = ["ShowSumm", "ShowSeason", "GetMP3"]		# bisher erlaubt..
+	mode_list = ["ShowSeason", "GetMP3"]					# bisher erlaubt, ShowSumm s. EPG
 	OK=False
 	for item in mode_list:
 		if mode in item:
@@ -592,15 +593,19 @@ def Context(title, path, img, mode):
 	if not OK:
 		PLog("not_supported: " + mode) 
 		return
-		
+
+	if "ShowSeason" in mode:
+		msg1 = "Suche Serie zum Video:"
+		msg2 = 'keine Serie gefunden.'
+	if "GetMP3" in mode:
+		msg1 = "MP3-Download:"
+		msg2 = 'fehlgeschlagen.'
+
 	#-------------------------
 	# Aufruf thread_getfile hier, da Nutzung Podcontent.DownloadStart nach Call aus Kontext-Menü
 	#	nicht möglich (dort Import-Error Kodi 21 für import ardundzdf).
 	#
 	if "GetMP3" in mode:									# MP3-Download
-		msg1 = "MP3-Download:"
-		msg2 = 'fehlgeschlagen.'
-
 		dest_path = SETTINGS.getSetting('pref_download_path')
 		if 	SETTINGS.getSetting('pref_generate_filenames') == "true":	# Dateiname aus Titel generieren
 			dfname = make_filenames(py2_encode(title)) + '.mp3'
@@ -634,8 +639,6 @@ def Context(title, path, img, mode):
 			img = R(ICON_DIR_FOLDER)
 		else:		
 			page, msg = get_page(path=path, header=HEADERS)		# futura ZDF. Web-Url ermitteln
-			msg1 = "Suche Inhalt zum Video:"
-			msg2 = 'kein Inhalt gefunden.'
 			try:
 				jsonObject = json.loads(page)
 				PLog(str(jsonObject)[:80])
@@ -687,9 +690,6 @@ def Context(title, path, img, mode):
 			page, msg = get_page(path=new_url)
 		base64_id =  stringextract('/item/', '?', new_url)	# wird ersetzt durch show_id
 		PLog("base64_id: " + base64_id)
-		
-		msg1 = "Suche Serie zum Video:"
-		msg2 = 'keine Serie gefunden.'
 					
 		# typ:  SEASON_SERIES, SINGLE, INFINITE_SERIES (z.B. Nachrichten, nicht verw.):
 		typ = stringextract('coreAssetType":"', '"', page)	
