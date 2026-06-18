@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>354</nr>										# Numerierung für Einzelupdate
+# 	<nr>355</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.0'
 VDATE = '14.06.2026' 
 
@@ -1602,7 +1602,7 @@ def AudioStartHome(title, ID, page='', path=''):	# Auswertung Homepage
 # 28.03.2026 neu
 #
 def Audio_get_homescreen(title, page='', cluster_id='', path="", cluster_path=""):
-	PLog('Audio_get_homescreen: ' + title)
+	PLog('Audio_get_homescreen: %s | cluster_id: %s' % (title,cluster_id ))
 	CacheTime = 3600												# 1 Std.
 	
 	title_org=title; path_org=cluster_path
@@ -1660,8 +1660,6 @@ def Audio_get_homescreen(title, page='', cluster_id='', path="", cluster_path=""
 			if skip:
 				PLog("skip_title: " + title)
 				continue
-#			if title.startswith("LIVE:"):								# fehlen im Web, graphql: event not found
-#				continue
 				
 			if 	len(items) == 1:										# statt DEFAULT_WIDGET_SEO_TITLE
 				title = item["teasers"][0]["title"]		
@@ -1763,7 +1761,8 @@ def Audio_get_rubriken_web(title, path="", rubrik_title=""):
 #----------------------------------------------------------------
 # Aufrufer Audio_get_homescreen (Step 2) 
 #	listet einz. Cluster + verteilt:
-#	Item, Livestream -> AudioWebMP3
+#	Item		-> AudioWebMP3
+#	Livestream 	-> AudioGraphql
 #	Sendung, Sammlung ->  Audio_get_sendung mit
 #		api- oder web-url
 # neu ab 26.03.2026
@@ -1822,6 +1821,9 @@ def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 		if typ=="Item" and url:										# einz. Audio
 			PLog("to_AudioWebMP3")
 			tag = "[B]Audiobeitrag[/B] | %s\nBild: %s" % (dur, img_alt)
+			summ_par = "%s\n\n%s" % (tag, summ)						# Plot aktualsiert
+			summ_par = summ_par.replace("\n","||")
+			summ_par=py2_encode(summ_par)
 			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
 				quote(title), quote(img), quote_plus(summ_par))
 			addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
@@ -2959,36 +2961,52 @@ def AudioSearch_cluster(title, cluster, query, offset=""):
 # Aufruf Audio_get_sendung 
 # 26.03.2026 angepasst an ARD-Änderungen. 
 #
-def AudioWebMP3(url, title, thumb, Plot, ID='', no_gui=''):
+def AudioWebMP3(url, title, thumb, Plot, ID=''):
 	PLog('AudioWebMP3: %s | %s' % (title, url))
+	PLog(Plot)
 	
 	page, msg = get_page(path=url, GetOnlyRedirect=True)
-	if not ".mp3" in url and ".MP3" not in url:			# schon mp3?
-		page, msg = get_page(path=url)					# sonst Webseite laden		
-		if "<!DOCTYPE html>" in page:					# Url o. .html: ../episode/urn:ard:episode:fb7602../
-			try:
-				page = Audio_get_webslice(page, mode="json")
-				page = json.loads(page)
-				audios = page["pageProps"]["initialData"]["data"]["item"]["audios"]
-				url = audios[0]["url"]
-			except Exception as exception:
-				page=""; url=""
-				PLog("AudioWebMP3_error: " + str(exception))
+	if ".mp3" in url or ".MP3" in url:				# schon mp3? -> direkt AudioPlayMP3
+		AudioPlayMP3(url, title, thumb, Plot, ID='')
+		return
+	
+	#----------------------------------------------	#  sonst Webseite laden + Button
+
+	page, msg = get_page(path=url)					# Url z.B. ../episode/urn:ard:episode:fb7602../
+	if "<!DOCTYPE html>" in page:
+		try:
+			page = Audio_get_webslice(page, mode="json")
+			page = json.loads(page)
+			audios = page["pageProps"]["initialData"]["data"]["item"]["audios"]
+			url = audios[0]["url"]
+		except Exception as exception:
+			page=""; url=""
+			PLog("AudioWebMP3_error: " + str(exception))
 	
 	PLog("downloadUrl: " + url)	 
-	if url == '' and no_gui == '':	
+	if not ".mp3" in url and ".MP3" not in url:	
 		msg1 = "AudioWebMP3:"
 		msg2 = "leider keine Audioquelle gefunden zu:"
 		msg3 = "[B]%s[/B]" % title
-		MyDialog(msg1, msg2, msg3)	
-	else:
-		if no_gui:
-			PLog("url: " + url)
-			return url
-		else:
-			AudioPlayMP3(url, title, thumb, Plot, ID='')
+		MyDialog(msg1, msg2, msg3)
+		return
+
+	li = xbmcgui.ListItem()
+	li = home(li, ID='ARD Sounds')					# Home-Button
+			
+	tag=""; img=thumb
+	if "||" in Plot:
+		summ = Plot.replace("||", "\n")				# hier tag, summ
 		
-	return
+	title=py2_encode(title); url=py2_encode(url); img=py2_encode(img);
+	tag=py2_encode(tag); Plot=py2_encode(Plot);
+
+	fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'ID': '%s'}" % (quote(url), 
+		quote(title), quote(img), quote_plus(Plot), ID)
+	addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
+		fparams=fparams, summary=summ, mediatype="music")
+					
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
 #----------------------------------------------------------------
 # Ausgabe Audiobeitrag
