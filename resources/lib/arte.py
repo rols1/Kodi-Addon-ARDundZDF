@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>79</nr>								# Numerierung für Einzelupdate
-#	Stand: 10.06.2026
+# 	<nr>80</nr>								# Numerierung für Einzelupdate
+#	Stand: 19.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -281,7 +281,7 @@ def get_live_data(name):
 # ----------------------------------------------------------------------
 # TV-Programm Heute von arte.tv/de/guide/
 # 14.03.2025 OnlyNow=True -> nur Seite für get_live_data
-# 12-05.2026 "availability"]["start" und "availability"]["end]"
+# 12.05.2026 "availability"]["start" und "availability"]["end]"
 #	stehen nicht mehr für Start/Ende einer Sendung
 # 05.06.2026 Api-Änderung
 #
@@ -326,7 +326,6 @@ def EPG_Today(ID="", OnlyNow=""):
 	ltitle = u" %s %s" % (l, "arte")					# Startblank s. home
 	if not OnlyNow:										
 		li = home(li, ID='arte', ltitle=ltitle)			# Home-Button nur Gesamt-EPG
-	lvon = L("von"); lbis = L("bis")
 	ldauer = L("Dauer")
 	
 	mediatype=""	
@@ -367,27 +366,27 @@ def EPG_Today(ID="", OnlyNow=""):
 		else:
 			"Geo: ALL"
 			
-		start_time = item["availability"]["upcomingDate"]		# "2025-11-12T04:56:38Z"
-		start = time_translate(start_time, add_hour_only=False)
+		start_time = item["availability"]["upcomingDate"]		# 2026-06-19T03:00:00Z
+		start = time_translate(start_time, add_hour_only=False) # Format: "%d.%m.%Y %H:%M"
 		end = "%d sec" % duration
-		end_time, now_check = time_calc_now(start_time, duration)
-		
-		blue_start = start_time[-9:-4]; blue_end = end_time[-9:-3];
+		PLog("start: %s, end: %s" % (start, end))
+		blue_start = start[-5:]								# 19.06.2026 ohne blue_end
 		title = py2_decode(title)
 		label = u"[COLOR blue]%s[/COLOR] | %s" % (blue_start, title)	# Sendezeit | Titel
-		tag = u"[B]%s %s %s %s Uhr | %s: %s | %s[/B]" % (lvon, blue_start, lbis, blue_end, ldauer, dur, geo)
+		tag = u"[B]%s Uhr | %s: %s | %s[/B]" % (blue_start, ldauer, dur, geo)
 		
 		summ = repl_json_chars(summ)						# -"-
 		summ  = valid_title_chars(summ)						# s. changelog V4.7.4
 		tag_par = tag.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 		summ_par = summ.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 
+		end_time, now_check = time_calc_now(start, duration)
 		if now_check:
 			# Farb-/Fettmarkierung bleiben im Kontextmenü erhalten (addDir):
 			title = "[B]JETZT: %s[/B]" % title						# JETZT: fett 
-			label = u"[COLOR blue]%s[/COLOR] | %s" % (start_time[-9:-4], title)	# Sendezeit | Titel
+			label = u"[COLOR blue]%s[/COLOR] | %s" % (start[-5:], title)	# Sendezeit | Titel
 			PLog("JETZT: %s, %s" % (title, img))
-			PLog(start_time); PLog(end_time)			
+			PLog(start_time);			
 			PLog(start); PLog(end)			
 			ret_list = [title, tag, summ, img]				# -> get_live_data
 
@@ -658,10 +657,11 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 		else:
 			"Geoblock-Info: ALL"
 		
-		try:
+		try:											# 19.06.2026 anscheinend nicht mehr vorhanden
 			start = item["availability"]["start"]
 			end = item["availability"]["end"]
-		except:
+		except Exception as exception:
+			PLog("GetContent_error: " + str(exception))
 			start=""; end=""; start_end=""
 		PLog(str(start)); PLog(str(end))
 		if start and end:
