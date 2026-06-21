@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>82</nr>								# Numerierung für Einzelupdate
+# 	<nr>83</nr>								# Numerierung für Einzelupdate
 #	Stand: 20.06.2026
 
 # Python3-Kompatibilität:
@@ -241,6 +241,7 @@ def get_live_data(name):
 	err_par = [u"[B]LIVE[/B]", "", "", thumb, href]			# Stream ohne Daten
 	# nur Seite für Heute holen, kein Check ob Sprache verfügbar:
 	ret_list = EPG_Today(ID="EPG_Today", OnlyNow=True)		# EPG-Abruf 
+	PLog("ret_list: " + str(ret_list))	
 
 	if len(ret_list) == 0:									# Fehlschlag
 		title = u"[B]Unbekannt[/B]"
@@ -332,7 +333,7 @@ def EPG_Today(ID="", OnlyNow=""):
 	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
 		mediatype='video'
 
-	ret_list=[]	
+	ret_list=[]
 	next_cnt=0											# Index nächster Satz
 	for item in values:
 		PLog(str(item)[:60])
