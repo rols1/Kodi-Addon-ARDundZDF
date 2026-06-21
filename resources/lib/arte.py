@@ -7,7 +7,7 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>81</nr>								# Numerierung für Einzelupdate
+# 	<nr>82</nr>								# Numerierung für Einzelupdate
 #	Stand: 20.06.2026
 
 # Python3-Kompatibilität:
@@ -406,7 +406,7 @@ def EPG_Today(ID="", OnlyNow=""):
 			title = "[B]JETZT: %s[/B]" % title						# JETZT: fett 
 			label = u"[COLOR blue]%s[/COLOR] | %s" % (start_time[-8:-3], title)	# Sendezeit | Titel
 			PLog("JETZT: %s, %s" % (title, img))
-			PLog("JETZT_start_time: %s, JETZT_end_time: %s, dauer: %d" % (start_time, end_time, duration))
+			PLog("JETZT_start_time: %s, JETZT_end_time: %s, dauer: %s" % (start_time, end_time, dur))
 			ret_list = [title, tag, summ, img]				# -> get_live_data
 
 		if not OnlyNow:										# ganzes EPG					
