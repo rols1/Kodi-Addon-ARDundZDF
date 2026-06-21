@@ -7,8 +7,8 @@
 #	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
-# 	<nr>80</nr>								# Numerierung für Einzelupdate
-#	Stand: 19.06.2026
+# 	<nr>81</nr>								# Numerierung für Einzelupdate
+#	Stand: 20.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -331,14 +331,12 @@ def EPG_Today(ID="", OnlyNow=""):
 	mediatype=""	
 	if SETTINGS.getSetting('pref_video_direct') == 'true':	# Sofortstart?
 		mediatype='video'
+
 	ret_list=[]	
-	dt = datetime.datetime.now()						# für OnlyNow
-	now = time.mktime(dt.timetuple())					# Unix-Format 1489094334.0
-	now = str(now).split('.')[0]						# .0 kappen
-	date_format = "%Y-%m-%dT%H:%M:%SZ"
-	
+	next_cnt=0											# Index nächster Satz
 	for item in values:
 		PLog(str(item)[:60])
+		next_cnt = next_cnt+1
 		
 		title = item["title"]							# für Abgleich in Kategorien	
 		if "subtitle" in item:
@@ -356,8 +354,11 @@ def EPG_Today(ID="", OnlyNow=""):
 		prgid = item["programId"]						# 065804-000-A		
 		img = get_img(item, ID)
 
-		duration = item["duration"]
-		dur = seconds_translate(duration)
+		duration = item["duration"]						# null möglich (z.B. Konzerte)
+		if duration:
+			dur = seconds_translate(duration)
+		else:
+			dur = "?"
 		geo = item["geoblocking"]
 		if geo is None:
 			geo = "ALL"
@@ -365,12 +366,31 @@ def EPG_Today(ID="", OnlyNow=""):
 			geo = "Geo: %s" % str(geo)	
 		else:
 			"Geo: ALL"
-			
-		start_time = item["availability"]["upcomingDate"]		# 2026-06-19T03:00:00Z
-		start = time_translate(start_time, add_hour_only=False) # Format: "%d.%m.%Y %H:%M"
-		end = "%d sec" % duration
-		PLog("start: %s, end: %s" % (start, end))
-		blue_start = start[-5:]								# 19.06.2026 ohne blue_end
+
+		try:
+			ret_format="%Y-%m-%dT%H:%M:%S"
+			start_time = item["availability"]["upcomingDate"]		# 2026-06-19T03:00:00Z
+			start_time = time_translate(start_time, add_hour_only=False, ret_format=ret_format)
+			PLog("next_cnt: %d, values: %d" % (next_cnt, len(values)))
+			if next_cnt < len(values):							# end_time = start_time nächster Satz
+				end_time = values[next_cnt]["availability"]["upcomingDate"]
+				PLog("next_end_time:" + end_time)
+				end_time = time_translate(end_time, add_hour_only=False, ret_format=ret_format) 
+			else:
+				PLog("no_end_time")									# letzter Satz ohne Folgedatum
+				secs = duration										# Folgedatum = start_time + Dauer
+				if not secs:										# Dauer 0? -> Folgedatum = start_time
+					secs=0
+				end_time = time_calc(start_time, secs)
+										
+		except Exception as exception:
+			PLog("EPG_Today_error: " + str(exception))
+			PLog(item)
+			continue
+				
+		PLog("start_time: %s, end_time: %s" % (start_time, end_time))
+		blue_start = start_time[-8:-3]							# 19.06.2026 ohne blue_end
+
 		title = py2_decode(title)
 		label = u"[COLOR blue]%s[/COLOR] | %s" % (blue_start, title)	# Sendezeit | Titel
 		tag = u"[B]%s Uhr | %s: %s | %s[/B]" % (blue_start, ldauer, dur, geo)
@@ -380,14 +400,13 @@ def EPG_Today(ID="", OnlyNow=""):
 		tag_par = tag.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 		summ_par = summ.replace('\n', '||')					# || Code für LF (\n scheitert in router)
 
-		end_time, now_check = time_calc_now(start, duration)
+		timediff, now_check = time_calc_diff(end_time, start_time) # timediff hier dummy
 		if now_check:
 			# Farb-/Fettmarkierung bleiben im Kontextmenü erhalten (addDir):
 			title = "[B]JETZT: %s[/B]" % title						# JETZT: fett 
-			label = u"[COLOR blue]%s[/COLOR] | %s" % (start[-5:], title)	# Sendezeit | Titel
+			label = u"[COLOR blue]%s[/COLOR] | %s" % (start_time[-8:-3], title)	# Sendezeit | Titel
 			PLog("JETZT: %s, %s" % (title, img))
-			PLog(start_time);			
-			PLog(start); PLog(end)			
+			PLog("JETZT_start_time: %s, JETZT_end_time: %s, dauer: %d" % (start_time, end_time, duration))
 			ret_list = [title, tag, summ, img]				# -> get_live_data
 
 		if not OnlyNow:										# ganzes EPG					
@@ -657,8 +676,8 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 		else:
 			"Geoblock-Info: ALL"
 		
-		try:											# 19.06.2026 anscheinend nicht mehr vorhanden
-			start = item["availability"]["start"]
+		try:											# 19.06.2026 hier nicht mehr vorhanden,
+			start = item["availability"]["start"]		# 	 im EPG dagegen schon
 			end = item["availability"]["end"]
 		except Exception as exception:
 			PLog("GetContent_error: " + str(exception))

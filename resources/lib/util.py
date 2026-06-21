@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>173</nr>										# Numerierung für Einzelupdate
-#	Stand: 19.06.2026
+# 	<nr>174</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -2194,10 +2194,12 @@ def seconds_translate(seconds, days=False):
 #	Korr.-Faktor hour_info entfällt. add_hour jetzt Flag für Abgleich mit Tab. summer_time (False
 #	bei "Verfügbar bis..")
 # 11.10.2023 Mitnutzung durch ShowSeekPos (add_hour_only=True)
-# geplant (Jahreswechsel): Berücksichtigung lokal eingestellte Zeitzone
+# Bereinigung geplant (Jahreswechsel, Supportende python 2.*): Berücksichtigung lokal 
+#	eingestellte Zeitzone 
+# 21.06.2026 ret_format ergänzt (erwünschtes Datumformat)
 #
-def time_translate(timecode, add_hour=True, day_warn=False, add_hour_only=""):
-	PLog("time_translate: " + timecode)
+def time_translate(timecode, add_hour=True, day_warn=False, add_hour_only="", ret_format=""):
+	PLog("time_translate: %s, ret_format:%s" % (timecode, ret_format))
 	
 	# summer_time aus www.ptb.de, konvertiert zum date_format (s.u.):
 	#	Aktualisierung jeweils 29.01.
@@ -2249,7 +2251,9 @@ def time_translate(timecode, add_hour=True, day_warn=False, add_hour_only=""):
 			# ts = datetime.strptime(timecode, date_format)  # None beim 2. Durchlauf (s.o. 26.08.2019)      
 			ts = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
 			new_ts = ts + datetime.timedelta(hours=add_hour) # add-Faktor addieren
-			ret_ts = new_ts.strftime("%d.%m.%Y %H:%M")		
+			if not ret_format:
+				ret_format = "%d.%m.%Y %H:%M"				# Standardausgabe für Inhaltstexte
+			ret_ts = new_ts.strftime(ret_format)		
 			PLog("Return_Time: " + ret_ts)
 
 			if day_warn:									# Info, Bsp.: NOCH 5 TAGE
@@ -2324,31 +2328,31 @@ def time_calc_diff(tstr1, tstr2):
 	return seconds_translate(secs), now_check
 	
 #---------------------------------------------------------------- 
-# arte-Version von time_calc_diff u.a. EPG-Daten, die nur
-#	Startzeit und Dauer liefern. 
+# gibt Startzeit addiert mit Dauer zurück
 # tstr1: Startzeit, duration: Dauer in sec
-# Anpassung date_format für arte nach Api-Änderung
+# 2 mögl. Rückgabeformate
+# 21.06.2026 früherer now_check für arte entfällt
 #
-def time_calc_now(tstr1, duration):
-	PLog('time_calc_now:' )
+def time_calc(tstr1, duration):
+	PLog('time_calc:' )
 	tstr1=tstr1[:19]
-	PLog('tstr1: %s | tstr2: %s' % (tstr1, duration))	
+	PLog('tstr1: %s | duration: %s' % (tstr1, str(duration)))	
 	date_format = "%Y-%m-%dT%H:%M:%S"
-	if len(tstr1) == 16 and "T" not in tstr1:	# Rückgabe-Format time_translate
-		date_format = "%d.%m.%Y %H:%M"			# 19.06.2026 05:00		
+	if len(tstr1) == 16 and "T" not in tstr1:	# Stadard-Rückgabe-Format aus time_translate:
+		date_format = "%d.%m.%Y %H:%M"			# 	19.06.2026 05:00		
 	
 	start = datetime.datetime.fromtimestamp(time.mktime(time.strptime(tstr1, date_format)))
 	end = start + datetime.timedelta(seconds=int(duration))
-	end_time = end.strftime("%Y-%m-%d %H:%M:%S")
+	end_time = end.strftime(date_format)
 	end_time = end_time[:19]
 	now = datetime.datetime.now()
 
 	now_check=False
 	if now < end and now > start:
 		now_check=True
-		PLog("now_check_arte: now: %s, start: %s, end: %s, end_time: %s" % (str(now)[:19], start, end, end_time))
+		PLog("time_calc_end_time: %s" % end_time)
 	
-	return end_time, now_check
+	return end_time
 
 #---------------------------------------------------------------- 
 # 03.01.2025 transl_pubDate entfernt - übersetzte für alte Audiothek
