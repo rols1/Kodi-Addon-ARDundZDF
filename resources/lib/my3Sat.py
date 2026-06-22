@@ -12,8 +12,8 @@
 #	Nov./Dez. 2024 Umstellung Web-scraping -> api hbbtv.zdf.de
 # 	
 ################################################################################
-# 	<nr>29</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.09.2025
+# 	<nr>30</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -445,6 +445,7 @@ def Verpasst(title):
 			
 #------------
 # 12.2024 Umstellung auf HBBTV-Api
+#	bei Bedarf Umstellung auf Graphql
 #
 def SendungenDatum(title, dayID):	
 	PLog('SendungenDatum: %s, %s' % (title, dayID))
@@ -464,6 +465,7 @@ def SendungenDatum(title, dayID):
 	
 	
 	li = xbmcgui.ListItem()
+	li2 = xbmcgui.ListItem()								# Dummies
 	li = home(li, ID='3Sat')								# Home-Button
 		
 	msg1 = title
@@ -506,12 +508,12 @@ def SendungenDatum(title, dayID):
 				perc = item["perc"]							# 12 (int, noch 12 % verfügbar)
 				end = item["end"]							# 09:45"
 				
-			tag = head
+			tag = unescape(head)
 			if foot:
 				tag = "%s\n%s" %  (tag, foot)
 			if dur:	
 				tag = "Dauer [B]%s[/B]\n%s" % (dur, tag)
-			if perc:										# laufende Sendung
+			if perc:										# laufende Sendung, 22.06.2026 fehlt 
 				tag = "%s\nbis %s | noch %d Prozent"	% (tag, end, perc)
 				title = "[B]%s[/B]" % title
 			
@@ -526,13 +528,21 @@ def SendungenDatum(title, dayID):
 		PLog('Satz3:')
 		PLog(sendung); PLog(href); PLog(tag);
 				 
+		sendung=py2_encode(sendung); href=py2_encode(href); 
+		img_src=py2_encode(img); 
 		if prgID and href:									# skip exception, skip missing vid->href
-			sendung=py2_encode(sendung); href=py2_encode(href); 
-			img_src=py2_encode(img); 
 			fparams="&fparams={'title': '%s', 'path': '%s', 'img_src': '%s', 'summ': '%s', 'dauer': '%s'}" %\
 				(quote(sendung), quote(href), quote(img), descr, dur)
 			addDir(li=li, label=sendung, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 				thumb=img_src, tagline=tag, summary=summ, fparams=fparams, mediatype=mediatype)
+		else:
+			dummy_title = u"Sendung im Internet nicht verfügbar"
+			label = "[COLOR grey]%s[/COLOR]" % title
+			tag = u"[B]%s[/B]\n%s" % (dummy_title, tag)
+			fparams="&fparams={'title': '%s'}" % quote(dummy_title)
+			addDir(li=li2, label=label, action="dirList", dirID="dummy", fanart=R('3sat.png'), 
+				thumb=img_src, tagline=tag, summary=summ, fparams=fparams, mediatype="")
+			
 			 					 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
