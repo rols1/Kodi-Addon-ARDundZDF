@@ -8,7 +8,7 @@
 ################################################################################
 #	
 # 	<nr>44</nr>										# Numerierung für Einzelupdat1
-#	Stand: 26.06.2026
+#	Stand: 28.06.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -136,27 +136,34 @@ def Main_childs():
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", 
 		fanart=R(ICON_CHILDS), thumb=img, tagline=tag, fparams=fparams)
 
+	title = u"ZDFtivi für Kinder"
 	fparams="&fparams={'title': '%s'}" % "tivi"
-	addDir(li=li, label= "ZDFtivi für Kinder", action="dirList", dirID="resources.lib.childs.Main_TIVI", 
+	addDir(li=li, label= title, action="dirList", dirID="resources.lib.childs.Main_TIVI", 
 		fanart=R(ICON_CHILDS), thumb=GIT_ZDFTIVI, fparams=fparams)
-		
+
+	# Entwicklung KiKA + KiKANiNCHEN: de.wikipedia.org/wiki/KiKA
+	title='KiKA_Sendungen A-Z | 0-9'
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KiKA_AZ",
+		fanart=R(ICON_CHILDS), thumb=KIKA_START, tagline=title, fparams=fparams)
+
 	title='KiKA Live gucken'
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Live", 
 		fanart=R(ICON_CHILDS), thumb=GIT_KIKALIVE, tagline='KIKA TV-Live', fparams=fparams)
 	
-	title=u'Maus Live hören'										# TV-Live nur SO (DAS ERSTE, KiKA)
-	tag = u"%s\n\nDer Kinderradiokanal des WDR  (Nachfolgeseite für [B]KiRaKa[/B])" % title
-	img = GIT_MAUSLIVE
-	fparams="&fparams={}" 
-	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.MausLive",
-		fanart=R(ICON_CHILDS), thumb=img, tagline=tag, fparams=fparams)
-
 	title='KiKANiNCHEN'
 	tag = u"für Kleinkinder (3-6 Jahre) und Grundschulkinder (6-12 Jahre)"
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_Menu", 
 		fanart=R(ICON_CHILDS), thumb=GIT_KANINCHEN, tagline=tag, fparams=fparams)
+
+	title=u'Maus hören'										# TV-Live nur SO (DAS ERSTE, KiKA)
+	tag = u"%s\n\nDer Kinderradiokanal des WDR  (Nachfolgeseite für [B]KiRaKa[/B])" % title
+	img = GIT_MAUSLIVE
+	fparams="&fparams={}" 
+	addDir(li=li, label=title , action="dirList", dirID="resources.lib.childs.MausLive",
+		fanart=R(ICON_CHILDS), thumb=img, tagline=tag, fparams=fparams)
 
 	title = u"Hörspaß für Kinder | ARD sounds"						# neu ab 15.05.2026
 	path = "https://www.ardsounds.de/rubrik/fuer-kinder-100/"
@@ -165,8 +172,8 @@ def Main_childs():
 	tag = u"%sPodcasts – spannend, lustig und lehrreich. Mit Checker Tobi, dem" % tag
 	tag = u"%s Ohrenbär und der Maus." % tag
 	title = py2_encode(title); path = py2_encode(path)
-	fparams="&fparams={'title': '%s', 'path': '%s', 'rubrik_title': '%s'}" %\
-		(quote(title), quote(path), quote(title))
+	fparams="&fparams={'title': '%s', 'path': '%s', 'rubrik_title': '%s','homeID': '%s'}" %\
+		(quote(title), quote(path), quote(title), "Kinderprogramme")
 	addDir(li=li, label=title, action="dirList", dirID="Audio_get_rubriken_web", 
 		fanart=R(ICON_CHILDS), thumb=img, tagline=tag, fparams=fparams)
 
@@ -236,7 +243,6 @@ def Kikaninchen_Menu():
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_HBBTV_Cluster", 
 		fanart=GIT_KANINCHEN, thumb=img, tagline=tag, fparams=fparams)
 
-
 	# Serien für Kleinkinder Cluster 21
 	img = "https://api.ardmediathek.de/image-service/images/urn:ard:image:e06f802f9d91f5bb?ch=098fed94dde53a80&w=640"
 	title = u'Serien für Kleinkinder'
@@ -244,7 +250,6 @@ def Kikaninchen_Menu():
 	fparams="&fparams={ 'title': '%s'}" % (title)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_HBBTV_Cluster", 
 		fanart=GIT_KANINCHEN, thumb=img, tagline=tag, fparams=fparams)
-
 
 	title='Kikaninchen Singen und Tanzen'
 	img = "https://api.ardmediathek.de/image-service/images/urn:ard:image:7ccf56d919c2961e?w=640&ch=932484bd5a8ad1c4"
@@ -326,13 +331,14 @@ def ARD_getHBBTV_content(wtitle, elems):
 	base_rubrik= "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/%s?embedded=true&mcV6=true"	
 	base_serie = "https://api.ardmediathek.de/page-gateway/pages/ard/grouping/%s?embedded=true&seasoned=true"
 
+	homeID="Kinderprogramme"	
 	li = xbmcgui.ListItem(); li2 = xbmcgui.ListItem()
-	li = home(li, ID='Kinderprogramme')			# Home-Button			
+	li = home(li, ID=homeID)		# Home-Button			
 	mediatype=''												# Kennz. Video für Sofortstart
 	if SETTINGS.getSetting('pref_video_direct') == 'true':
 		mediatype='video'
 
-	cnt=0; fcnt=0; homeID="Kinderprogramme"						# fcnt: Filterzähler
+	cnt=0; fcnt=0;												# fcnt: Filterzähler
 	for item in elems:
 		typ="";title="";tag="";summ="";img="";
 		try:
@@ -392,6 +398,95 @@ def ARD_getHBBTV_content(wtitle, elems):
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDRubriken", 
 					fanart=img, thumb=img, tagline=tag, fparams=fparams)				
 			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+# ----------------------------------------------------------------------			
+# 27.06.2026 neu
+# Step 1: Button-Link-Liste, Step2: Beiträge pro Button
+# ARD-Api-Link in Links|target|href -> ARDStartRubrik (Serienerkenung)
+# 
+def KiKA_AZ(button="", href=""):
+	PLog('KiKA_AZ: %s' % href)
+	
+	icon = KIKA_START
+	DictID = "KiKA_AZ"
+	page = Dict("load", DictID, CacheTime=KikaCacheTime)	# Linkliste stündlich erneuern
+	if not page:
+		path = "https://api.ardmediathek.de/page-gateway/pages/kika/editorial/experiment-a-z?embedded=false"
+		page, msg = get_page(path)	
+		if page:
+			Dict("store", DictID, page)
+
+	try:
+		objs = json.loads(page)
+		widgets = objs["widgets"]				# Buchstaben-widgets nur, falls Beiträge vorhanden
+		PLog("widgets: %d" % len(widgets))			
+	except Exception as exception:
+		PLog("KiKA_AZ_error1: " + str(exception))
+		xbmcgui.Dialog().notification("KiKA_AZ Fehler:", "leider nichts gefunden",icon,3000,sound=True)
+		return
+		
+	homeID="Kinderprogramme"
+	li = xbmcgui.ListItem()
+	li = home(li, ID=homeID)			# Home-Button
+	#--------------------------------------------------------------		# Step 1 Buchstaben + Linkliste
+	if not href:
+		for item in widgets:
+			links = item["links"]["self"]
+			href = links["href"] 
+			button = links["title"] 
+			if button == "#":
+				button = "0-9"					# Anpas. img-Name
+			img = "https://github.com/rols1/PluginPictures/blob/master/ARDundZDF/KIKA_tivi/Buchstabe_%s.png?raw=true" % button
+			title = "Sendungen mit " + button
+
+			PLog("Satz2:"); PLog(title); PLog(img); PLog(href)
+			href=py2_encode(href); 		
+			fparams="&fparams={'button': '%s', 'href': '%s'}" % (button, quote(href))
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KiKA_AZ", fanart=R(ICON_DIR_FOLDER), 
+				thumb=img, fparams=fparams, tagline=title)
+
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			
+	else:		
+	#--------------------------------------------------------------		# Step 2 Beiträge
+		base_rubrik= "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/%s?embedded=true&mcV6=true"	
+		href = href.replace("embedded=false", "embedded=true")
+		page, msg = get_page(href)
+		try:
+			objs = json.loads(page)
+			teasers = objs["teasers"]				# Buchstaben-widgets nur, falls Beiträge vorhanden
+			PLog("teasers: %d" % len(widgets))			
+		except Exception as exception:
+			PLog("KiKA_AZ_error2: " + str(exception))
+			xbmcgui.Dialog().notification("KiKA_AZ Fehler: ", "Buchstabe %s" % button,icon,3000,sound=True)
+			return
+		
+		ID = "KiKA_AZ"
+		for item in teasers:
+			typ = item["coreAssetType"]
+			sid = item["id"]
+			title = item["longTitle"]
+			title = repl_json_chars(title)
+			
+			links = item["links"]
+			path = links["target"]["href"]
+			
+			
+			img_cont= item["images"]["aspect16x9"]
+			img 	= img_cont["src"]
+			img 	= img.replace('{width}', '640')
+			img_alt	= img_cont["alt"]
+			img_alt = decode_url(img_alt)
+			
+			tag = "Folgeseiten\nBild: %s" % img_alt
+			path=py2_encode(path); title=py2_encode(title); 	
+
+			fparams="&fparams={'path': '%s', 'title': '%s', 'ID': '%s', 'homeID': '%s'}" %\
+				(quote(path), quote(title), ID, homeID)
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", 
+				fanart=img, thumb=img, tagline=tag, fparams=fparams)
+
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------			

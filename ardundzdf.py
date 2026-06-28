@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>355</nr>										# Numerierung für Einzelupdate
-VERSION = '5.5.0'
-VDATE = '14.06.2026' 
+VERSION = '5.5.1'
+VDATE = '28.06.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1700,7 +1700,7 @@ def Audio_get_homescreen(title, page='', cluster_id='', path="", cluster_path=""
 #----------------------------------------------------------------
 # Aufruf: AudioStartHome, ARDAudioEventStreams
 #
-def Audio_get_rubriken_web(title, path="", rubrik_title=""):
+def Audio_get_rubriken_web(title, path="", rubrik_title="", homeID=""):
 	PLog('Audio_get_rubriken_web: ')
 	
 	if not rubrik_title:											# ohne rubrik_title
@@ -1724,7 +1724,10 @@ def Audio_get_rubriken_web(title, path="", rubrik_title=""):
 	PLog("widgets: %d, rband: %d" % (len(widgets), len(rband)))	
 		
 	li = xbmcgui.ListItem()
-	li = home(li,ID='ARD Sounds')								# Home-Button		
+	if homeID:
+		li = home(li,ID=homeID)
+	else:
+		li = home(li,ID='ARD Sounds')								# Home-Button		
 	
 	#---------------------------------------------------------------# Step 1 Liste der Rubriken
 	if not rubrik_title:
@@ -7146,7 +7149,7 @@ def get_sort_playlist():						# Senderliste für EPG + Recording
 	
 #-----------------------------------------------------------------------------------------------------
 # Aufrufer EPG_Sender (falls EPG verfügbar)
-# 	EPG-Daten holen in Modul EPG  (1 Woche), Listing hier jew. 1 Tag, 
+# 	EPG-Daten holen in Modul EPG  (2026: 3 Tage), Listing hier jew. 1 Tag, 
 #	JETZT-Markierung für laufende Sendung
 # Klick zum Livestream -> SenderLiveResolution 
 # 29.06.2020 Erweiterung Kontextmenü "Sendung aufnehmen" (s. addDir), 
@@ -9263,6 +9266,9 @@ def ZDF_getKat_content_details(obj, mode="img"):
 		if not owner:
 			if "contentOwners" in obj:
 				owner = obj["contentOwners"]["nodes"][0]["title"]
+				PLog("owner2: " + str(owner) )
+		if not owner:
+			owner=""
 	except Exception as exception:
 		PLog("contentOwners_error: " + str(exception))
 		owner=""		
@@ -10101,10 +10107,7 @@ def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediath
 		
 		func = "ZDF_Verpasst"					# Call intern
 		fanart=R(ICON_ZDF_VERP); thumb=R(ICON_ZDF_VERP)
-		if homeID == "Kinderprogramme":
-			func = "resources.lib.childs.tivi_Verpasst"	# Call extern
-			fanart=GIT_ZDFTIVI; thumb=GIT_TIVICAL
-			sfilter='ZDF'
+		#if homeID == "Kinderprogramme":		# 29.01.2026 Call tivi_Verpasst weggefallen
 
 		PLog("Satz1: ")
 		PLog(title); PLog(zdfDate)
@@ -10115,14 +10118,7 @@ def ZDF_VerpasstWoche(name, title, homeID=""):									# Wochenliste ZDF Mediath
 		addDir(li=li, label=title, action="dirList", dirID=func, fanart=fanart, 
 			thumb=thumb, fparams=fparams)
 	
-	if homeID == "":									# Folgebuttons nicht für ext. Nutzung
-		label = "Datum eingeben"						# Button für Datumeingabe anhängen
-		tag = u"teilweise sind bis zu 4 Jahre alte Beiträge abrufbar"
-		fparams="&fparams={'title': '%s', 'zdfDate': '%s', 'sfilter': '%s'}" % (quote(title), quote(zdfDate), sfilter)
-		addDir(li=li, label=label, action="dirList", dirID="ZDF_Verpasst_Datum", fanart=R(ICON_ZDF_VERP), 
-			thumb=GIT_CAL, fparams=fparams, tagline=tag)
-
-														# Button für Stationsfilter
+	if homeID == "":									# Folgebuttons nicht für ext. Nutzung														# Button für Stationsfilter
 		label = u"Wählen Sie Ihren ZDF-Sender - aktuell: [B]%s[/B]" % sfilter
 		tag = "Auswahl: Alle ZDF-Sender, ZDF, ZDFneo oder ZDFinfo" 
 		fparams="&fparams={'name': '%s', 'title': 'ZDF-Mediathek', 'sfilter': '%s'}" % (quote(name), sfilter)
@@ -10159,32 +10155,9 @@ def ZDF_Verpasst_Filter(name, title, sfilter):
 	return ZDF_VerpasstWoche(name, title)
 
 #-------------------------
-# Aufruf ZDF_VerpasstWoche (Button "Datum eingeben")
-# xbmcgui.INPUT_DATE gibt akt. Datum vor
-#
-def ZDF_Verpasst_Datum(title, zdfDate, sfilter):
-	PLog('ZDF_Verpasst_Datum:')
-	
-	dialog = xbmcgui.Dialog()
-	inp = dialog.input("Eingabeformat: Tag/Monat/Jahr (4-stellig)", type=xbmcgui.INPUT_DATE)
-	PLog(inp)
-	if inp == '':
-		return						# Listitem-Error, aber Verbleib im Listing
-	d,m,y = inp.split('/')
-	d=d.strip(); m=m.strip(); y=y.strip();
-	if len(d) == 1: d="0%s" % d	
-	if len(m) == 1: m="0%s" % m	
-	if len(y) != 4:
-		msg1 = 'Jahr bitte 4-stellig eingeben'
-		MyDialog(msg1, '', '')
-		return
-	
-	zdfDate = "%s-%s-%s" % (y,m,d)	# "%Y-%m-%d"
-	PLog(zdfDate)
-	
-	# zurück zu ZDF_VerpasstWoche:
-	ZDF_Verpasst(title='Datum manuell eingegeben', zdfDate=zdfDate, sfilter=sfilter)
-	return
+# 23.06.2026 entfernt -manuelle Eingabe paste nicht zu
+#	Graphql-Nutzung mit Start-/End-Datum.
+#def ZDF_Verpasst_Datum(title, zdfDate, sfilter):
 	
 #-------------------------
 # Aufruf: ZDF_VerpasstWoche, 2 Durchläufe
@@ -10538,6 +10511,11 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 			PLog("Graphql_ZDF_AZList2: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))
 		
 	page = ZDF_Graphql(OpName, sha256Hash, variables)
+	if '"errors":' in page:								# wie objs=[] s.u.
+		msg1 = "Sendungen mit %s" % element
+		msg2 = "nicht gefunden."
+		xbmcgui.Dialog().notification(msg1,msg2,fanart,3000)
+		return
 
 	#--------------------------------------------------------------
 

@@ -11,6 +11,7 @@
 #
 #	20.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #	ab Okt. 2025 Webseite geändert, TV-Daten im json-Format nur für 1 Tag
+#	altes URL-Schema nicht mehr nutzbar, Nutzung von https://www.tvtoday.de/api/broadcasts?..
 #
 # 	<nr>45</nr>										# Numerierung für Einzelupdate
 #	Stand: 13.05.2026

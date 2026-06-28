@@ -10,6 +10,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+28.06.2026	5.5.1		
+			ARD_KatSeriePre (ARDnew): Fix mediatype (kein String) bei Trailern.
+			Context (tools): Url-Korrektur bei ZDF-Serien-Videos (Bsp. Trailer).
+			AudioGraphql: Funktion neu für Livestreams (MP3, master.m3u8), pubDate
+			in Audio_get_cluster_items ergänzt.
+			AudioWebMP3: direkter Playerstart für vorliegende MP3-Url, indirekter Start
+			für Beiträge mit Web-Url (hier fehlte der Download via Kontext-Menü).
+			ZDF_Graphql: überflüssigen try-/except-Block entfernt.
+			EPG_Today (arte): Ausgabeformat Datum/Uhrzeit an Api-Änderung angepasst,
+			now_check mit Startdatum nächster Satz (Dauer unzureichend), Sicherung
+			gegen duration=null.
+			time_translate (util): Rückgabeformat variabel für arte (Param ret_format).
+			time_calc_now (util): jetzt time_calc_now, gibt nur noch die mit duration
+			addierte Startzeit zurück, früherer now_check für arte ->  time_calc_diff.
+			SendungenDatum (my3Sat): unescape tag (&), im Internet nicht verfügbare 
+			Sendungen mit dummy-Funktion gelistet.
+			ZDF_VerpasstWoche: Call tivi_Verpasst entfernt (weggefallen am 29.01.2026)
+			ZDF_Verpasst_Datum: Funktion entfernt - manuelle Eingabe paste nicht zu
+			Graphql-Nutzung mit Start-/End-Datum.
+			Modul childs: KiKA-KiKANINCHEN-Bereiche nach Abschaltung kika-Api erneuert,
+			Nutzung ARD-HBBTV und ARD-Api, Watchdog_ZDF_Childs.py aktualisiert.
+
 14.06.2026	5.5.0			
 			ZDF_get_content: router-inkompatible Zeichen aus tag entfernt.
 			ZDF_getApiStreams: HLS-Stream detektiert für ".m3u8"-Kennung innerhalb der

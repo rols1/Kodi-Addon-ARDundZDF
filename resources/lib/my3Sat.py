@@ -536,7 +536,7 @@ def SendungenDatum(title, dayID):
 			addDir(li=li, label=sendung, action="dirList", dirID="resources.lib.my3Sat.SingleBeitrag", fanart=R('3sat.png'), 
 				thumb=img_src, tagline=tag, summary=summ, fparams=fparams, mediatype=mediatype)
 		else:
-			dummy_title = u"Sendung im Internet nicht verfügbar"
+			dummy_title = u"NICHT in der Mediathek!"		# Dummy-Button wie ZDF_Verpasst
 			label = "[COLOR grey]%s[/COLOR]" % title
 			tag = u"[B]%s[/B]\n%s" % (dummy_title, tag)
 			fparams="&fparams={'title': '%s'}" % quote(dummy_title)

@@ -256,7 +256,7 @@ def Main_NEW(name=''):
 	summ = sender_summ	
 	ID = "Main_NEW"
 	title=py2_encode(title); path=py2_encode(path);
-	fparams="&fparams={ 'path': '%s', 'title': '%s'}" % (quote(path), quote(path))
+	fparams="&fparams={ 'path': '%s', 'title': '%s'}" % (quote(path), quote(title))
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", 
 		fanart=R(ICON_MAIN_ARD), thumb=R(ICON_ARD_RUBRIKEN), tagline=tag, summary=summ, fparams=fparams)
 						
@@ -1002,9 +1002,11 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 		PLog("seasons_result: %d" % len(seasons))
 			
 		if "heroImage" in obj:										# 12.05.2026 kann fehlen, Serie Totenfrau 
-			hero_img = obj["heroImage"]["src"]
-			PLog("hero_img: " + hero_img)
-			hero_img = hero_img.replace('{width}', '840')			# wie ZDF_get_content
+			hero_img = img
+			if obj["heroImage"]:									# null möglich bei ext. Videos (z.B. ARTE)
+				hero_img = obj["heroImage"]["src"]
+				PLog("hero_img: " + hero_img)
+				hero_img = hero_img.replace('{width}', '840')		# wie ZDF_get_content
 		else:
 			hero_img = img
 	
