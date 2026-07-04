@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>356</nr>										# Numerierung für Einzelupdate
+# 	<nr>357</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.1'
-VDATE = '28.06.2026' 
+VDATE = '04.07.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3482,7 +3482,19 @@ def ARDSportWDR():
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
 		(quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag)
+		
+	title = u"Event: [B]Tour de France 2026[/B]"			# Tour de France 2026
+	tag = u"Tour de France ab 4. Juli 2026: News, Videos, Rennberichte und Ergebnisse."
+	cacheID = "Sport_TourdeFrance_2026"
+	img = "https://images.sportschau.de/image/f5c242eb-cd67-42f8-a327-02be047bee55/AAABl17rJTQ/AAABnSSvrFg/16x9-big/tour-de-france-618.jpg?width=1280"
+	path = "https://www.sportschau.de/radsport/tourdefrance"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag)	
+		
 
 	#---------------------------------------------------------	Großevents Ende
 
