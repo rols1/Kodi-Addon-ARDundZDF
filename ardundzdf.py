@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>355</nr>										# Numerierung für Einzelupdate
+# 	<nr>356</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.1'
 VDATE = '28.06.2026' 
 
@@ -1688,7 +1688,7 @@ def Audio_get_homescreen(title, page='', cluster_id='', path="", cluster_path=""
 
 	else:	
 	#----------------------------------------							# Step 2
-		PLog("Audio_step2")
+		PLog("Audio_step2:")
 		PLog("cluster_id: " + cluster_id)								# ID für Nachladebeiträge (Web: "nodes":[])
 		PLog("title_org: %s, path_org: %s" % (title_org, path_org))
 			
@@ -2974,16 +2974,26 @@ def AudioWebMP3(url, title, thumb, Plot, ID=''):
 		return
 	
 	#----------------------------------------------	#  sonst Webseite laden + Button
-
+	
+	sendung=False; ptitle=""
 	page, msg = get_page(path=url)					# Url z.B. ../episode/urn:ard:episode:fb7602../
 	if "<!DOCTYPE html>" in page:
 		try:
 			page = Audio_get_webslice(page, mode="json")
 			page = json.loads(page)
-			audios = page["pageProps"]["initialData"]["data"]["item"]["audios"]
+			item = page["pageProps"]["initialData"]["data"]["item"]
+			audios = item["audios"]
 			url = audios[0]["url"]
+			if "programSet" in item:				# Sendung mit ausgeben, falls vorhanden,
+				PLog("programSet_detect:")			# Bsp. Doping im Fußball -> Geheimsache Doping – der Podcast
+				programSet = item["programSet"]
+				path = programSet["path"]
+				pid = path.split("/")[-2]			# "../urn:ard:show:ccd5ed68c3a26c7d/"
+				href = ARD_AUDIO_BASE_API + "/programsets/%s/%s" % (pid, ARD_AUDIO_HREF_ADD)
+				ptitle = programSet["title"]	
+				sendung=True		
 		except Exception as exception:
-			page=""; url=""
+			page=""; url=""; sendung=False; ptitle=""
 			PLog("AudioWebMP3_error: " + str(exception))
 	
 	PLog("downloadUrl: " + url)	 
@@ -3008,6 +3018,15 @@ def AudioWebMP3(url, title, thumb, Plot, ID=''):
 		quote(title), quote(img), quote_plus(Plot), ID)
 	addDir(li=li, label=title, action="dirList", dirID="AudioPlayMP3", fanart=img, thumb=img, 
 		fparams=fparams, summary=summ, mediatype="music")
+		
+	if sendung:										# Button für Sendung
+		ptitle =  "[B]Sendung:[/B] %s" % ptitle
+		summ = "[B]Sendung | Folgeseiten[/B]"		
+		href=py2_encode(href);	ptitle=py2_encode(ptitle);
+		fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(ptitle))
+		addDir(li=li, label=ptitle, action="dirList", dirID="Audio_get_sendung", \
+			fanart=img, thumb=img, fparams=fparams, summary=summ)
+		
 					
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
