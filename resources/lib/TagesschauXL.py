@@ -3,8 +3,8 @@
 #				TagesschauXL.py - Teil von Kodi-Addon-ARDundZDF
 #				  Modul für für die Inhalte von tagesschau.de
 ################################################################################
-# 	<nr>22</nr>								# Numerierung für Einzelupdate
-#	Stand: 17.05.2026
+# 	<nr>23</nr>								# Numerierung für Einzelupdate
+#	Stand: 04.06.2026
 #
 #	Anpassung Python3: Modul future
 #	Anpassung Python3: Modul kodi_six + manuelle Anpassungen
@@ -613,8 +613,10 @@ def get_img(item):
 	return img
 	
 # ----------------------------------------------------------------------
+# 04.07.2026 nach Änderung der Webseite players-Block angepasst.
+#
 def XL_Live(ID=''):	
-	PLog('XL_Live:')
+	PLog('XL_Live: %s' % ID)
 	title = 'TagesschauXL Live'
 	li = xbmcgui.ListItem()
 	li = home(li, ID='TagesschauXL')									# Home-Button
@@ -630,23 +632,15 @@ def XL_Live(ID=''):
 		PLog(msg3)
 		url_m3u8=''
 	else:
-		players = blockextract('class="v-instance" data-v="', page)
+		players = blockextract('class="v-instance preloadingskeleton--mediaplayer--1x1', page)
 		PLog("players: %d" % len(players))
 		player = players[0]								# Default: nation. Stream
 		if ID == "international":						
 			player = players[1]
 		PLog(str(player[:80]))	
 
-	conf = stringextract('data-v="', '"', player)		# json-Daten mit Streamlink
-	conf = conf.replace('\\"', '"')
-	conf = conf.replace('&quot;', '"')
-	conf = unquote(conf)
-	PLog(conf[:80])
-	PLog(conf)
-	
-	
-	streams = stringextract('streams":[', ']', conf)
-	url_m3u8 = stringextract('url":"', '"', streams)
+	typ,av_typ,title,tag,summ,img,stream = get_content_json(player)
+	url_m3u8 = stream	
 
 	if url_m3u8 == '':
 		ard_streamlinks = get_ARDstreamlinks()	# util
@@ -676,7 +670,7 @@ def XL_Live(ID=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 # ----------------------------------------------------------------------
-# json-Daten im data-v-Block
+# json-Daten im data-v-Block, bei Bedarf anpassen (s. XL_Live)
 # Aufruf: Investigativ, Faktenfinder, Podcasts und Audios,
 #	XL_SearchContent
 # 20.01.2024 live=true verhindert Stream-Blockade der 480p-Webplayer-Streams
