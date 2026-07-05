@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>44</nr>										# Numerierung für Einzelupdat1
-#	Stand: 28.06.2026
+# 	<nr>45</nr>										# Numerierung für Einzelupdat1
+#	Stand: 05.07.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -141,7 +141,7 @@ def Main_childs():
 	addDir(li=li, label= title, action="dirList", dirID="resources.lib.childs.Main_TIVI", 
 		fanart=R(ICON_CHILDS), thumb=GIT_ZDFTIVI, fparams=fparams)
 
-	# Entwicklung KiKA + KiKANiNCHEN: de.wikipedia.org/wiki/KiKA
+	# Historie KiKA + KiKANiNCHEN: de.wikipedia.org/wiki/KiKA
 	title='KiKA_Sendungen A-Z | 0-9'
 	fparams="&fparams={}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KiKA_AZ",
@@ -226,7 +226,7 @@ def Main_TIVI(title=''):
 
 # ----------------------------------------------------------------------
 # 26.06.2026 neu: Serien via ARD-HBBTV, Kikaninchen Schnipselwelt herausgehoben
-#	aus Serien für Kleinkinder, KikaninchenLieder weiter aus liederkikaninchen100.json
+#	aus Serien für Kleinkinder, KikaninchenLieder weiterhin aus liederkikaninchen100.json
 #	(umfangreicher als Lieder der Schnipselwelt 46 / 13)
 #
 def Kikaninchen_Menu():
@@ -461,10 +461,10 @@ def KiKA_AZ(button="", href=""):
 			PLog("KiKA_AZ_error2: " + str(exception))
 			xbmcgui.Dialog().notification("KiKA_AZ Fehler: ", "Buchstabe %s" % button,icon,3000,sound=True)
 			return
-		
+
 		ID = "KiKA_AZ"
 		for item in teasers:
-			typ = item["coreAssetType"]
+			# typ = item["coreAssetType"]			# kann fehlen, nicht benötigt
 			sid = item["id"]
 			title = item["longTitle"]
 			title = repl_json_chars(title)
