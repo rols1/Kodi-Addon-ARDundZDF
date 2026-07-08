@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>45</nr>										# Numerierung für Einzelupdat1
-#	Stand: 05.07.2026
+# 	<nr>46</nr>										# Numerierung für Einzelupdat1
+#	Stand: 08.07.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -141,16 +141,9 @@ def Main_childs():
 	addDir(li=li, label= title, action="dirList", dirID="resources.lib.childs.Main_TIVI", 
 		fanart=R(ICON_CHILDS), thumb=GIT_ZDFTIVI, fparams=fparams)
 
-	# Historie KiKA + KiKANiNCHEN: de.wikipedia.org/wiki/KiKA
-	title='KiKA_Sendungen A-Z | 0-9'
-	fparams="&fparams={}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KiKA_AZ",
-		fanart=R(ICON_CHILDS), thumb=KIKA_START, tagline=title, fparams=fparams)
-
-	title='KiKA Live gucken'
-	fparams="&fparams={}"
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Live", 
-		fanart=R(ICON_CHILDS), thumb=GIT_KIKALIVE, tagline='KIKA TV-Live', fparams=fparams)
+	fparams="&fparams={'title': '%s'}" % "KiKA"
+	addDir(li=li, label= "KiKA", action="dirList", dirID="resources.lib.childs.Main_KIKA", fanart=R(ICON_CHILDS), 
+		thumb=KIKA_START, fparams=fparams)
 	
 	title='KiKANiNCHEN'
 	tag = u"für Kleinkinder (3-6 Jahre) und Grundschulkinder (6-12 Jahre)"
@@ -225,6 +218,39 @@ def Main_TIVI(title=''):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------
+def Main_KIKA(title=''):
+	PLog('Main_KIKA:')
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+	
+	# Historie KiKA + KiKANiNCHEN: de.wikipedia.org/wiki/KiKA
+	title='KiKA_Sendungen A-Z | 0-9'
+	fparams="&fparams={}" 
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KiKA_AZ",
+		fanart=R(ICON_CHILDS), thumb=KIKA_START, tagline=title, fparams=fparams)
+
+	title='KiKA Live gucken'
+	fparams="&fparams={}"
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_Live", 
+		fanart=KIKA_START, thumb=GIT_KIKALIVE, tagline='KIKA TV-Live', fparams=fparams)
+
+	title=u'Alle KiKA-Videos mit Hörfassung'
+	thumb = "https://www.kika.de/audiodeskription/ad-110-resimage_v-ident_w-192.jpg?version=50114"
+	fparams="&fparams={'title': '%s', 'platform': '%s', 'thumb': '%s'}" % (title, "kikade", quote(thumb))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KiKA_Barrierearm", 
+		fanart=KIKA_START, thumb=thumb, tagline=title, fparams=fparams)
+
+	title=u'Alle KiKA-Videos mit Gebärdensprache'
+	thumb = "https://www.kika.de/gebaerdensprache/dgs-110-resimage_v-ident_w-192.jpg?version=59782"
+	fparams="&fparams={'title': '%s', 'platform': '%s', 'thumb': '%s'}" % (title, "kikade", quote(thumb))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KiKA_Barrierearm", 
+		fanart=KIKA_START, thumb=thumb, tagline=title, fparams=fparams)
+	
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+# ----------------------------------------------------------------------
 # 26.06.2026 neu: Serien via ARD-HBBTV, Kikaninchen Schnipselwelt herausgehoben
 #	aus Serien für Kleinkinder, KikaninchenLieder weiterhin aus liederkikaninchen100.json
 #	(umfangreicher als Lieder der Schnipselwelt 46 / 13)
@@ -258,7 +284,7 @@ def Kikaninchen_Menu():
 		fanart=GIT_KANINCHEN, thumb=img, tagline='für Kinder 3-6 Jahre', fparams=fparams)
 	
 	title='Kikaninchen Schnipselwelt'		
-	ardpath="https://api.ardmediathek.de/page-gateway/widgets/ard/asset/%s?pageNumber=1&pageSize=24"
+#	ardpath="https://api.ardmediathek.de/page-gateway/widgets/ard/asset/%s?pageNumber=1&pageSize=24"
 	path = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/kikaninchen-schnipselwelt?embedded=true&mcV6=true"
 	thumb="https://www.kika.de/kikaninchen-schnipselwelt/bilder/kikaninchen-schnipselwelt-150-resimage_v-tsquare11_w-1024.jpg?version=11459"
 	img = "https://api.ardmediathek.de/image-service/images/urn:ard:image:a713f99e2ad4acda?w=640&ch=a8d7977d31e9a0df"
@@ -267,10 +293,278 @@ def Kikaninchen_Menu():
 	fparams="&fparams={'li': '', 'path': '%s', 'homeID': '%s'}" % (quote(path), homeID)
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDRubriken",
 		fanart=GIT_KANINCHEN, thumb=img, tagline=tag, fparams=fparams)
+		
+	title=u'Alle Kikaninchen-Videos mit Hörfassung'
+	thumb = "https://www.kika.de/audiodeskription/ad-110-resimage_v-ident_w-192.jpg?version=50114"
+	fparams="&fparams={'title': '%s', 'platform': '%s', 'thumb': '%s'}" % (title, "kikaninchen", quote(thumb))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KiKA_Barrierearm", 
+		fanart=GIT_KANINCHEN, thumb=thumb, tagline=title, fparams=fparams)
+
+	title=u'Alle Kikaninchen-Videos mit Gebärdensprache'
+	thumb = "https://www.kika.de/gebaerdensprache/dgs-110-resimage_v-ident_w-192.jpg?version=59782"
+	fparams="&fparams={'title': '%s', 'platform': '%s', 'thumb': '%s'}" % (title, "kikaninchen", quote(thumb))
+	addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.KiKA_Barrierearm", 
+		fanart=GIT_KANINCHEN, thumb=thumb, tagline=title, fparams=fparams)	
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 # ----------------------------------------------------------------------			
+# 07.07.2026 Neu 
+# Aufruf Main_KIKA, Kikaninchen_Menu
+#
+def KiKA_Barrierearm(title, platform, thumb, cindex=""): 
+	PLog('KiKA_Barrierearm: %s | %s | cindex: %s' % (title, platform, cindex))
+	title_org=title
+	
+	if u"Hörfassung" in title:
+		path = "https://www.kika.de/ackley/v1/channels/videos-mit-hoerfassung-102?platform=%s" % platform
+		dict_add = "hoer"
+	else:
+		path = "https://www.kika.de/ackley/v1/channels/videos-mit-gebaerdensprache-102?platform=%s" % platform
+		dict_add = "DGS"
+		
+	icon = KIKA_START
+	DictID = "KiKA_Barrierearm_%s_%s" % (platform, dict_add)
+	page = Dict("load", DictID, CacheTime=KikaCacheTime)	# Cache stündlich erneuern
+	if not page:
+		page, msg = get_page(path)	
+		if page:
+			Dict("store", DictID, page)
+
+	try:
+		objs = json.loads(page)
+		cluster = objs["plusContent"]
+		PLog("cluster: %d" % len(cluster))			
+	except Exception as exception:
+		PLog("KiKA_Barrierearm_error: " + str(exception))
+		xbmcgui.Dialog().notification("KiKA_Barrierearm:", "leider nichts gefunden",icon,3000,sound=True)
+		return
+		
+	#--------------------------------------------------------# Step 1 Cluster-Liste
+	if not cindex:
+		li = xbmcgui.ListItem()
+		li = home(li, ID="Kinderprogramme")			# Home-Button
+		
+		cnt=0; 
+		skip_list=[u"Für alle Kinder und Eltern", u"Deine Sendungen mit Hörfassung"]
+		for item in cluster:
+			PLog(str(item)[:80])
+			ctitle = item["title"]
+			if not ctitle:											# leer möglich
+				ctitle = item["teasers"][0]["title"]				# -> Titel vom 1. Teaser
+				
+			if ctitle in skip_list:
+				PLog("in_skip_list: " + ctitle)
+				continue	
+			# channelLink = item["channelLink"]						# Link oder null ,  z.Z. nicht genutzt
+			img, img_alt = Kika_get_img(item["teasers"][0])			# img vom 1. Teaser
+			img_alt = repl_json_chars(img_alt)
+			tag = "Bild vom 1. Video: %s" % img_alt
+
+			PLog('Satz4:'); 
+			PLog(ctitle); PLog(tag); PLog(img)
+			title_org=py2_encode(title_org); ctitle=py2_encode(ctitle);
+			thumb=py2_encode(thumb);
+			
+			fparams="&fparams={'title': '%s', 'platform': '%s', 'thumb': '%s', 'cindex': '%s'}" %\
+				(quote(title_org), platform, quote(thumb), cnt)
+			addDir(li=li, label=ctitle, action="dirList", dirID="resources.lib.childs.KiKA_Barrierearm",
+				fanart=thumb, thumb=img, tagline=tag, fparams=fparams)
+			cnt=cnt+1
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	else:
+	#--------------------------------------------------------# Step 2 Inhalt Cluster cindex
+		PLog("Step2: %s" % cindex)
+		my_cluster=cluster[int(cindex)]
+		title = my_cluster["title"]
+		teasers = my_cluster["teasers"]
+		PLog("%s, cindex: %d, teasers: %d" % (title, int(cindex), len(teasers)))
+		KiKA_get_ackley_json(title, teasers, thumb, platform)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+	
+# ----------------------------------------------------------------------			
+# 07.06.2026 Neu, Aufruf KiKA_Barrierearm 
+# Auswertung json-Daten ackley-Api (bisher nur Videos)
+#
+def KiKA_get_ackley_json(title, items, thumb, platform): 
+	PLog('KiKA_get_ackley_json: %s' % title)
+	PLog(str(items)[:80])
+	
+	li = xbmcgui.ListItem()
+	li = home(li, ID="Kinderprogramme")			# Home-Button
+	
+	base_kika = "https://www.kika.de"; v="searchImage"; w="1920"
+	base_assets = "https://www.kika.de/_next-api/proxy/v1/videos/%s/assets?platform=%s" 
+	videoDetails=""
+
+	for item in items:
+		PLog(str(item)[:80])
+		sid = item["id"]
+		path = base_assets % (sid, platform)
+		title = item["title"]
+		title = repl_json_chars(title)
+		# channelLink = item["channelLink"]						# Link oder null ,  z.Z. nicht genutzt
+		img, img_alt = Kika_get_img(item)
+		tag = "Bild: %s" % img_alt
+		summ = item["teaserText"]
+		
+		# duration in videoDetails oder relatedVideoDetails (bei beiden
+		#	None oder null möglich)
+		dur = stringextract("duration': '", "'", str(item))		
+		if dur:
+			tag = "[B]Dauer: %s Std.[/B]\n%s" % (dur, tag)
+		else:
+			PLog("skip_no_video: " + title)
+			continue
+					
+		Plot = "%s\n\n%s" % (tag, summ)
+		Plot = Plot.replace("\n", "||")
+		Plot = repl_json_chars(Plot)
+		
+		PLog('Satz5:'); 
+		PLog(title); PLog(path); PLog(img); PLog(Plot);
+		title=py2_encode(title);path=py2_encode(path);
+		img=py2_encode(img); Plot=py2_encode(Plot);
+		
+		fparams="&fparams={'title': '%s', 'path': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+			(quote(title), quote(path), quote(img), quote(Plot))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag",
+			fanart=thumb, thumb=img, tagline=tag, summary=summ, fparams=fparams)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)			
+	
+# ----------------------------------
+# Aufruf: KiKA_Barrierearm, KiKA_get_ackley_json
+# img + img_alt aus ackley-Api
+#
+def Kika_get_img(item):
+	PLog('Kika_get_img:')
+	img_def = R('icon-bild-fehlt.png') 
+	base_kika = "https://www.kika.de"; v="searchImage"; w="1920"
+
+	try:
+		img = item["teaserImage"]["urlScheme"]
+		img_alt = item["teaserImage"]["alt"]			
+		img = base_kika + img
+		img = img.replace("**imageVariant**", v)
+		img = img.replace("**width**", w)
+	except Exception as exception:
+		PLog("Kika_get_img_error: %s" % str(exception))
+		img=img_def; img_alt=""
+	
+	return img, img_alt
+
+# ######################################################################
+# 07.07.2026 einzelnes KiKA-Video aus ackley-Api -> kika.de/_next-api
+#
+def Kika_SingleBeitrag(title, path, thumb, Plot):
+	PLog('Kika_SingleBeitrag: %s | %s' % (title, path))
+	title_org=title
+	icon = KIKA_START
+		
+	page, msg = get_page(path)		
+	if page == '':								# bei Spielen können Videos fehlen
+		xbmcgui.Dialog().notification("%s:" % title, "Video leider nicht gefunden",icon,3000,sound=True)
+		return
+		
+	li = xbmcgui.ListItem()
+	li = home(li, ID='Kinderprogramme')			# Home-Button
+
+	Plot_par = Plot
+	summ = Plot.replace("||", "\n")
+
+	# Formate siehe StreamsShow							# HLS_List + MP4_List anlegen
+	#	generisch: "Label |  Bandbreite | Auflösung | Titel#Url"
+	#	fehlende Bandbreiten + Auflösungen werden ergänzt
+	url_m3u8 = stringextract('"auto","url":"', '"', page) 
+	sub_path = stringextract('"webvttUrl":"', '"', page)	# Altern.: subtitle-Url tt:style 
+
+	PLog("Mark0")
+	PLog(url_m3u8); PLog(sub_path)
+	
+	HBBTV_List=''										# nur ZDF
+	HLS_List=[]; Stream_List=[];
+	
+	href=url_m3u8;  geoblock=''; descr='';	
+	geoblock=''; descr=summ;				
+	img = thumb
+
+	quality = u'automatisch'
+	HLS_List.append('HLS automatische Anpassung ** auto ** auto ** %s#%s' % (title,url_m3u8))
+	# wir verzichten auf die einz. Auflösungen in Parseplaylist:
+	# Stream_List = ardundzdf.Parseplaylist(li, href, img, geoblock, descr, stitle=title, buttons=False)
+	PLog("HLS_List: " + str(HLS_List))
+	
+	assets = blockextract('"profileName"', page)
+	MP4_List = Kika_VideoMP4get(title, assets)
+	PLog("download_list: " + str(MP4_List)[:80])
+	Dict("store", 'KIKA_HLS_List', HLS_List) 
+	Dict("store", 'KIKA_MP4_List', MP4_List) 
+	
+	if not len(HLS_List) and not len(MP4_List):
+		msg1 = "keine Streamingquelle gefunden: %s"	% title
+		PLog(msg1)
+		MyDialog(msg1, '', '')	
+		return li
+	
+	#----------------------------------------------- 
+	# Nutzung build_Streamlists_buttons (Haupt-PRG), einschl. Sofortstart
+	# 
+	PLog('Lists_ready:');
+	Plot = "Titel: %s\n\n%s" % (title_org, summ)				# -> build_Streamlists_buttons
+	PLog('Plot:' + Plot)
+	thumb = img; ID = 'KIKA'; HOME_ID = "Kinderprogramme"
+	played_direct = ardundzdf.build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
+		HLS_List,MP4_List,HBBTV_List,ID,HOME_ID)	
+	
+	if played_direct:
+		return
+	else:
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+# ----------------------------------------------------------------------
+def Kika_VideoMP4get(title, assets):	
+	PLog('Kika_VideoMP4get:')
+	
+	href=''; quality=''
+	download_list = []		# 2-teilige Liste für Download: 'Titel # url'
+	for s in assets:
+		PLog(s[:100])		
+		frameWidth = stringextract('frameWidth":', ',', s)	
+		frameHeight = stringextract('frameHeight":', ',', s)
+		href = stringextract('"url":"', '"', s)
+		href = href.replace("http:", "https:")							# Redakt.-Fehler? (bisher nur bei mp4-Quellen)
+		profil =  stringextract('"profileName":"', '"', s)	
+		res = frameWidth + 'x' + frameHeight
+				
+		# Bsp. Profil: Video 2018 | MP4 720p25 | Web XL| 16:9 | 1280x72
+		# einige Profile enthalten nur die Auflösung, Bsp. 640x360
+		#if 	"MP4 Web S" in profil or "320" in frameWidth:			# skip niedrige 320x180
+		#	continue
+		try:
+			width = int(frameWidth)
+		except Exception as exception:									# letzter Block
+			PLog(str(exception))
+			continue
+				
+		if "MP4 Web M Mobil" in profil or width <= 640:
+			quality = u'mittlere'
+		if "MP4 Web L mobil" in profil or width <= 960:
+			quality = u'hohe'
+		if "MP4 Web L |" in profil or width <= 1024:
+			quality = u'sehr hohe'
+		if "Web XL" in profil or width <= 1280:
+			quality = u'Full HD'
+			
+		PLog("res: %s" % res); 
+		title_url = u"%s#%s" % (title, href)
+		item = u"MP4 Qualität: %s ** Auflösung %s ** %s" % (quality, res, title_url)
+		download_list.append(item)
+
+	return download_list
+		
+# ----------------------------------------------------------------------
 # 24.06.2026 Neu 
 # Aufruf Kikaninchen_Menu (Serien für Grundschulkinder / Kleinkinder)
 #
@@ -729,29 +1023,15 @@ def Maus_MediaObjects(title, url):
 #	entfernt - Inhalte in anderen Menüs mit Anbindung an ARD Sounds enthalten. 
 #
 # ----------------------------------------------------------------------
-# 26.06.2026 nach KiKA-Bereinigung nur noch genutzt von KikaninchenLieder
-#
-def Kikaninchen_VideoSingle(path, title, assets_url=''):	
+# 08.07.2026 Kikaninchen_VideoSingle und Kika_VideoMP4getXML entfernt -
+#	künftig Kikaninchen-Nutzung von Kika_SingleBeitrag
+
+def Kikaninchen_VideoSinglexxxx(path, title):	
 	PLog('Kikaninchen_VideoSingle: ' + path)
 	PLog(title)
 	title_org=title
 
-	#-------------------------------------------------		# 1. Assets-Url ermittlen -> xml-Datei
-	if assets_url == "":
-		if "_zc-" in path:									# Format vor 01.06.2023
-			try:
-				path = path.split("_zc-")[0]					# Bsp.: ../video52242_zc-b799b903_zs-8eedf79c.html
-				assets_url = path + "-avCustom.xml"				# Bsp.: ../videos/video52242-avCustom.xml		
-			except Exception as exception:
-				PLog(str(exception))
-				assets_url=""
-		else:
-			assets_url = path.replace(".html", "-avCustom.xml")		# ab 01.06.2023
-
-	#-------------------------------------------------		# 2. Videodetails aus xml-Datei holen
-	page=""
-	if assets_url:
-		page, msg = get_page(path=assets_url)
+	page, msg = get_page(path)
 	if page == '':	
 		msg1 = "Leider finde ich den Weg zum Video nicht."
 		msg2 = "Fehler in Kikaninchen_VideoSingle."
@@ -774,8 +1054,8 @@ def Kikaninchen_VideoSingle(path, title, assets_url=''):
 		variant = stringextract("<small>", "</small>", img_src)
 	img = img.replace("**aspectRatio**", variant)
 	img = img.replace("**width**", "1024")
-	
-	tag = "Dauer: %s | %s" % (dur, top)
+
+	tag = "[B]Dauer: %s[/B] | %s" % (dur, top)
 	summ = "%s\n%s" % (summ1, summ2)
 	Plot = "%s\n\n%s" % (tag, summ)
 	assets = blockextract('<asset>', page)
@@ -851,13 +1131,17 @@ def KikaninchenLieder():
 	li = xbmcgui.ListItem()
 	li = home(li, ID='Kinderprogramme')			# Home-Button
 	
+	base_assets = "https://www.kika.de/_next-api/proxy/v1/videos/%s/assets?platform=kikaninchen" 
+	icon = GIT_KANINCHEN
 	path = 'https://www.kikaninchen.de/kikaninchen/lieder/liederkikaninchen100.json'	
-	page, msg = get_page(path)	
-	if page == '':	
-		msg1 = "Fehler in KikaninchenLieder:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')	
-		return li
+	DictID =  "KikaninchenLieder" 
+	page = Dict("load", DictID, CacheTime=KikaCacheTime)	# 1 Std.
+	if not page:			
+		page, msg = get_page(path)
+		if page == '':	
+			xbmcgui.Dialog().notification("KikaninchenLieder:", "leider nichts gefunden",icon,3000,sound=True)
+			return
+		Dict("store", DictID, page)
 			
 	records = page.split('documentCanvasId')
 	PLog(len(records))						
@@ -868,12 +1152,16 @@ def KikaninchenLieder():
 	for rec in records:
 		href = stringextract('avCustomUrl":"', '"', rec)
 		if href == '':
-			continue					
+			continue
+		canon =  stringextract('musik/', '-avCustom', href)	# Bsp.: froschkanon-106
+		path = base_assets % canon
+								
 		img_src = stringextract('urlScheme":"', '**imageVariant**', rec)
 		PLog(img_src)
 		if img_src.startswith('http') == False:
 			img_src = 'http://www.kikaninchen.de' + img_src
-		img_src = img_src + 'ident.jpg'						# ident = 800x800
+		img = img_src + 'ident.jpg'							# ident = 800x800
+		dur = stringextract('duration":"', '"', rec)
 		title = stringextract('title":"', '"', rec)
 		altText =  stringextract('altText":"', '"', rec)
 		titleText =  stringextract('titleText":"', '"', rec)
@@ -889,12 +1177,19 @@ def KikaninchenLieder():
 			summ = altText
 		if summ == '':
 			summ = titleText
-										
-		PLog(href); PLog(title); PLog(img_src); PLog(summ)
-		href=py2_encode(href); title=py2_encode(title)
-		fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))
-		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kikaninchen_VideoSingle", fanart=img_src, 
-			thumb=img_src, fparams=fparams, tagline=summ, mediatype=mediatype)
+		summ = "[B]Dauer: %s Min.[/B]\n%s" % (dur, summ)
+		Plot = summ.replace("\n", "||")
+		Plot = repl_json_chars(Plot)
+
+		PLog("Satz6:")						
+		PLog(title); PLog(path); PLog(img); PLog(Plot);
+		title=py2_encode(title);path=py2_encode(path);
+		img=py2_encode(img); Plot=py2_encode(Plot);
+		
+		fparams="&fparams={'title': '%s', 'path': '%s', 'thumb': '%s', 'Plot': '%s'}" %\
+			(quote(title), quote(path), quote(img), quote(Plot))
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.childs.Kika_SingleBeitrag",
+			fanart=GIT_KANINCHEN, thumb=img, summary=summ, fparams=fparams)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
