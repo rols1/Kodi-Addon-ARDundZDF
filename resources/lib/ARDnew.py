@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>144</nr>										# Numerierung für Einzelupdate
-#	Stand: 14.06.2026
+# 	<nr>145</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.07.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -1093,6 +1093,24 @@ def ARD_KatSeriePre(path, title, img, snr=""):
 				(quote(href), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", 
 				fanart=img, thumb=img, fparams=fparams, summary=summ, mediatype=mediatype)
+				
+		if not seasons and not trailer:									# Season-Datei ohne ARD- dafür ZDF-Inhalt
+			PLog("try_extern_reference")
+			try:
+				if "homepage" in obj["links"]:
+					href = obj["links"]["homepage"]["href"]
+					PLog("ZDF-Homepage_detect")
+					tag = "zur ZDF-Seite wechseln"
+					title=title_org
+					
+					img=py2_encode(hero_img)
+					href=py2_encode(href); title=py2_encode(title);
+					fparams="&fparams={'title': '%s', 'path': '%s', 'img': '%s'}" %\
+						(quote(title), quote(href), quote(img))
+					addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSeriePre", fanart=img, 
+						thumb=img, tagline=tag, fparams=fparams)
+			except Exception as exception:
+				PLog("Step1_extern_reference_error: " + str(exception))
 				
 		#---------------------
 		label = "Empfehlungen"											# Button Empfehlungen
