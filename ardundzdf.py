@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>357</nr>										# Numerierung für Einzelupdate
+# 	<nr>358</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.1'
-VDATE = '04.07.2026' 
+VDATE = '16.07.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -492,7 +492,7 @@ def Main():
 	if SETTINGS.getSetting('pref_epgRecord') == 'true':		
 		label = u'TV-Livestreams | Sendungen aufnehmen'; 
 	tagline = u'Livestreams von ARD, ZDF und einigen Privaten. Zusätzlich Event Streams von ARD und ZDF.'
-	summ = u"Die Haltezeit im Cache für die Livestreamquellen kann zwischen 0 bis 60 Tage eingestellt werden."																																	
+	summ = u"Die Haltezeit im Cache für die Livestreamquellen kann zwischen 0 bis 100 Tage eingestellt werden."																																	
 	fparams="&fparams={'title': 'TV-Livestreams'}"
 	addDir(li=li, label=label, action="dirList", dirID="SenderLiveListePre", 
 		fanart=R(FANART), thumb=R(ICON_MAIN_TVLIVE), tagline=tagline, summary=summ, fparams=fparams)
@@ -3474,7 +3474,8 @@ def ARDSportWDR():
 	'''
 
 	title = u"Event: [B]FIFA WM 2026[/B]"					# FIFA WM 2026
-	tag = u"Hier finden Sie alle Nachrichten, Berichte, Interviews, Livestreams und Ergebnisse zur FIFA Fußball-WM 2026."
+	tag = u"[B]11.Juni - 26. Juli 2026[/B] in Kanada, Mexiko und USA"
+	summ = u"Hier finden Sie alle Nachrichten, Berichte, Interviews, Livestreams und Ergebnisse zur FIFA Fußball-WM 2026."
 	cacheID = "FIFA_WM_2026"
 	img = "https://images.sportschau.de/image/7b1a8f22-e01d-47aa-ac47-2f3057aa229c/AAABliBkvg0/AAABnSSvrFg/16x9-big/wm-250.jpg?width=1280"
 	path = "https://www.sportschau.de/fussball/fifa-wm-2026"
@@ -3482,10 +3483,11 @@ def ARDSportWDR():
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
 		(quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)
+		fparams=fparams, tagline=tag, summary=summ)
 		
 	title = u"Event: [B]Tour de France 2026[/B]"			# Tour de France 2026
-	tag = u"Tour de France ab 4. Juli 2026: News, Videos, Rennberichte und Ergebnisse."
+	tag = u"[B]04. - 26. Juli 2026[/B]"
+	summ = u"Tour de France ab 4. Juli 2026: News, Videos, Rennberichte und Ergebnisse."
 	cacheID = "Sport_TourdeFrance_2026"
 	img = "https://images.sportschau.de/image/f5c242eb-cd67-42f8-a327-02be047bee55/AAABl17rJTQ/AAABnSSvrFg/16x9-big/tour-de-france-618.jpg?width=1280"
 	path = "https://www.sportschau.de/radsport/tourdefrance"
@@ -3493,8 +3495,19 @@ def ARDSportWDR():
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
 		(quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag)	
+		fparams=fparams, tagline=tag, summary=summ)	
 		
+	title = u"Event: [B]Die Finals 2026[/B]"			# Die Finals 2026
+	tag = u"[B]23. - 26. Juli 2026 in Hannover[/B]"
+	summ = u"Bei den Finals in Hannover werden in 24 Sportarten deutsche Meistertitel vergeben. Die Sportschau berichtet an allen vier Wettkampftagen mit einem umfassenden Liveprogramm."
+	cacheID = "Sport_Finals_2026"
+	img = "https://images.sportschau.de/image/6ffe6a3b-f1c5-4ab0-8de5-daa210aeb1b7/AAABnwhGInc/AAABnSSvrFg/16x9-big/key-visual-124.jpg?width=1280"
+	path = "https://www.sportschau.de/die-finals"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag, summary=summ)	
 
 	#---------------------------------------------------------	Großevents Ende
 
@@ -8186,7 +8199,7 @@ def ZDF_Start(coll_id, homeID=""):
 	li = xbmcgui.ListItem()
 	home(li, ID=homeID)						# Home-Button: ZDF, Kinderprogramme
 
-	PLog('Stage_elems')										# 1. Stage, ausgepackte Einzelbeiträge
+	PLog('Step1_Stage_elems')									# 1. Stage, ausgepackte Einzelbeiträge
 	DictID =  "ZDF_stage_%s" % coll_id
 	Dict("store", DictID, stage_list)							# bisher nicht verwendet
 	ZDF_getHBBTV_content(stage_list)
@@ -8201,7 +8214,7 @@ def ZDF_Start(coll_id, homeID=""):
 				
 	#------------------------------------------------------	
 		
-	PLog('Cluster_elems')									# 2. Folgecluster mit Folgebeiträgen
+	PLog('Step2_Cluster_elems')								# 2. Folgecluster mit Folgebeiträgen
 	DictID =  "ZDF_Cluster_%s" % DictID						# auch für tivi u.a.
 	Dict("store", DictID, cluster_list)						# -> ZDF_Start2	
 
@@ -8227,7 +8240,7 @@ def ZDF_Start(coll_id, homeID=""):
 			summ = elem["text"]
 			PLog("variant_wide")
 		if not title:										# Fallback
-			title = elem0_title
+			title = "1. Beitrag: %s" % elem0_title
 		
 		label = title
 		title = repl_json_chars(title)
