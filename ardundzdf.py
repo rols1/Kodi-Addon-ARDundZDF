@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>358</nr>										# Numerierung für Einzelupdate
+# 	<nr>359</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.1'
-VDATE = '16.07.2026' 
+VDATE = '17.07.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1544,12 +1544,16 @@ def AudioStart(title):
 
 	img = R(ICON_MAIN_AUDIO)
 	title_list = [u'Entdecken|ard-entdecken.png', u'Rubriken|ard-rubriken.png',
-			u'Sportschau|ard-sport.png']								
+			u'Sportschau|ard-sport.png', u'ARD Retro|ard-mediathek-retro.png']								
 	for item in title_list:
 		title, img = item.split('|')
 		tag=''
 		if title == u"Entdecken":
 			tag = "die Startseite  von ARD Sounds"
+		if "Retro" in title:
+			tag = u"Mit Archivschätzen auf Zeitreise. Taucht mit uns ein in die Welt der 50er und 60er Jahre und"
+			tag = u"%s begebt euch auf Schatzsuche nach Audios in unseren Archiven. Viel Spaß beim Entdecken!" % tag
+			
 		fparams="&fparams={'title': '%s', 'ID': '%s'}" % (title, title)	
 		addDir(li=li, label=title, action="dirList", dirID="AudioStartHome", fanart=R(ICON_MAIN_AUDIO), 
 			thumb=R(img), tagline=tag, fparams=fparams)
@@ -1578,13 +1582,14 @@ def AudioStartHome(title, ID, page='', path=''):	# Auswertung Homepage
 	li = xbmcgui.ListItem()
 	
 	ID = py2_decode(ID)
-	if ID == 'Entdecken' or ID == 'Sportschau':		# Stage Web, Cluster Sportschau
-		if ID == 'Entdecken':
+	# Stage Web, Cluster Sportschau + Retro
+	if 'Entdecken' in ID or 'Sportschau' in ID or "Retro in ID":		
+		if 'Entdecken' in ID:
 			path = ARD_AUDIO_BASE
-			cluster_id=""
-		else:
+		if 'Sportschau' in ID:
 			path = ARD_AUDIO_BASE + "/rubrik/sport-298/"
-			cluster_id = "urn:ard:playout-teaser:1e5e13c8e988607c"
+		if 'Retro' in ID:
+			path = ARD_AUDIO_BASE + "/rubrik/ard-retro-110/"
 		Audio_get_rubriken_web(title=ID, path=path, rubrik_title=ID)
 		
 		return

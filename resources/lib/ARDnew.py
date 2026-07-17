@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>145</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.07.2026
+# 	<nr>146</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.07.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -322,6 +322,7 @@ def Main_NEW(name=''):
 #
 def ARDStart(title, sender, widgetID='', path='', homeID=''): 
 	PLog('ARDStart: ' + title); PLog(sender); PLog(homeID)
+	path_org=path
 
 	CurSender = ARD_CurSender()
 	if homeID:												# CurSender in sender (Bsp. phoenix-Calls)
@@ -416,7 +417,7 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 			region="be"; rname="Berlin"; partner="rbb"		# Default-Region, Änderung in ARDStartRegion
 			path = path.replace('{regionId}', region)
 
-		if "'images'" in str(cont):								# Teaser mit Bildern vorhanden
+		if "'images'" in str(cont):							# Teaser mit Bildern vorhanden
 			img = img_load(title, str(cont))
 		else:												
 			img = R(ICON_DIR_FOLDER)
@@ -448,6 +449,20 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		addDir(li=li, label=label, action="dirList", dirID="resources.lib.ARDnew.%s" % func, fanart=img, 
 			thumb=img, tagline=tag, summary=summ, fparams=fparams)
 		cnt=cnt+1	
+
+	if "ard/editorial/retro" in path_org:					# Retro-Menü ARD Sonds ergänzen
+		title = "ARD Retro"
+		label = "ARD Retro bei ARD Sounds"
+		href = "https://www.ardsounds.de/rubrik/ard-retro-110/"
+		img = "https://api.ardmediathek.de/image-service/images/urn:ard:image:8f175a2bfe4ae12a?ch=712d20733a3ef381&w=640"
+		thumb = R("ard-mediathek-retro.png")
+		
+		title=py2_encode(title); href=py2_encode(href);	
+		fparams="&fparams={'title':'%s', 'path':'%s', 'rubrik_title':'%s'}" %\
+			(quote(title), quote(href), quote(title))
+		addDir(li=li, label=label, action="dirList", dirID="Audio_get_rubriken_web", \
+			fanart=thumb, thumb=img, fparams=fparams)
+	
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 				
@@ -756,7 +771,7 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""): 
 	PLog('ARDStartRubrik: %s' % ID); PLog(title); PLog(path); PLog(img)
 	
-	if "Weiter zu ARD Plus" in title:
+	if "Weiter zu ARD Plus" in title:					# Skip kostenpflichtigen Streaming-Dienst
 		icon = R("ard-mediathek.png")
 		msg1 = "ARD Plus:"; msg2 = u"im Addon nicht unterstützt"
 		xbmcgui.Dialog().notification(msg1,msg2,icon,3000,sound=True)
@@ -780,21 +795,17 @@ def ARDStartRubrik(path, title, widgetID='', ID='', img='', homeID=""):
 			li = home(li, ID=NAME)						# Home-Button -> Hauptmenü
 		else:
 			li = home(li, ID='ARD Neu')					# Home-Button
-
-	if "sportschau.de" in path:							# nach Olympia 2024 wieder entfernen (html-Seiten)
-		msg1 = "ARDStartRubrik: diese Seite ist hier nicht auswertbar:"
-		msg2 = path
-		PLog("%s %s" % (msg1, msg2))
-		MyDialog(msg1, msg2, "")	
-		return
 		
 	path=path.replace("%3A", ":")
 	page, msg = get_page(path=path, GetOnlyRedirect=True, header=ARDheaders, do_safe=True)
 	path = page
 	page, msg = get_page(path=path, header=ARDheaders, do_safe=True)	
-	if page == '':	
-		msg1 = "Fehler in ARDStartRubrik: %s"	% title
+	if page == '' or page.startswith("<!"):	
+		msg1 = "%s\nFehler in ARDStartRubrik:"	% title
 		msg2 = msg
+		if page.startswith("<!"):				# <!doctype html> ?
+			msg2 = "HTML-Seite hier nicht erlaubt."
+		PLog("%s%s" % (msg1, msg2))
 		MyDialog(msg1, msg2, '')	
 		return
 	PLog(len(page))
@@ -2034,6 +2045,10 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID="", desc=False):
 	for s in obs:
 		PLog("Mark10")
 		mehrfach,typ,title,pagetitle,summ,img,href = get_json_content_details(s, ID)
+		cnt=cnt+1
+		if "//www." in href:									# externe Web-Retro-Verweise, Bsp. ardsounds
+			PLog("skip: typ %s | href: %s" % (typ, href))
+			continue
 		if "skip" in typ:										# z.B. Titel: Übersicht
 			continue
 		if href in skip_href:									# Doppler-Bsp.: JD Vance – Der Mann nach Trump
@@ -2060,7 +2075,6 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID="", desc=False):
 			fparams="&fparams={'path': '%s', 'title': '%s', 'homeID': '%s'}" % (quote(href), quote(title), homeID)
 			addDir(li=li2, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", \
 				fanart=img, thumb=img, fparams=fparams, summary=summ, mediatype='')	
-			cnt=cnt+1
 		else:
 			PLog("eval_settings:")	
 			if pagetitle == '':									# pagetitle -> title_samml
@@ -2108,7 +2122,6 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID="", desc=False):
 				(quote(href), quote(title), ID, homeID)
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartSingle", fanart=img, thumb=img, 
 				fparams=fparams, summary=summ, mediatype=mediatype)	
-			cnt=cnt+1
 	
 	PLog("cnt: %d" % cnt)
 	if cnt == 0:
