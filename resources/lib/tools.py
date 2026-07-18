@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>23</nr>								# Numerierung für Einzelupdate
-#	Stand: 16.06.2026
+# 	<nr>24</nr>								# Numerierung für Einzelupdate
+#	Stand: 18.07.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -166,7 +166,7 @@ def SearchWordWork(action):
 		
 		if len(searchwords) >= MAX_LEN:
 			msg1 = "Suchwortliste"
-			msg2 = u'maximale Länge bereits erreicht: [B]%d[/B] ' % max_len
+			msg2 = u'maximale Länge bereits erreicht: [B]%d[/B] ' % MAX_LEN
 			MyDialog(msg1, msg2, '')
 			return
 					
