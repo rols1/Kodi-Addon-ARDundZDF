@@ -85,21 +85,27 @@ def SearchWordTools():
 	icon = R("icon_searchwords.png")
 	if len(searchwords) == 0:	
 		msg1 = "Problem Suchwortliste"
-		msg2 = 'Liste fehlt oder ist noch leer'				
+		msg2 = 'Liste fehlt oder ist leer'				
 		PLog(msg2)
 		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
 												
 	summ = u"Suchwörter für die Suche in ARD Mediathek und ZDF Mediathek"	
-
-	title = u"alle Suchwörter [B]zeigen[/B] (%d)" % len(searchwords)
-	fparams="&fparams={'action': 'show_list'}" 
-	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordWork", fanart=R(FANART), 
-		thumb=R('icon_searchwords.png'), summary=summ, fparams=fparams)				
 		
 	if 	len(searchwords) > 0:		
+		title = u"alle Suchwörter [B]zeigen[/B] (%d)" % len(searchwords)
+		fparams="&fparams={'action': 'show_list'}" 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordWork", fanart=R(FANART), 
+
+		thumb=R('icon_searchwords.png'), summary=summ, fparams=fparams)				
 		title = u"Suchwort [B]löschen[/B]"
 		tag = u"ein Suchwort aus der Liste [B]löschen[/B]" 
 		fparams="&fparams={'action': 'delete'}" 
+		addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordWork", fanart=R(FANART), 
+			thumb=R('icon_searchwords.png'), tagline=tag, summary=summ, fparams=fparams)
+		
+		title = u"[B]alle Suchwörter löschen[/B]"
+		tag = u"[B]gesamte Liste der Suchwörter löschen[/B]" 
+		fparams="&fparams={'action': 'delete_all'}" 
 		addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordWork", fanart=R(FANART), 
 			thumb=R('icon_searchwords.png'), tagline=tag, summary=summ, fparams=fparams)		
 		
@@ -126,7 +132,7 @@ def SearchWordWork(action):
 	PLog(len(searchwords))
 
 	if searchwords == '':
-		msg1 = "Problem Suchwortliste"
+		msg1 = "Suchwortliste:"
 		msg2 = 'Liste fehlt oder ist noch leer'				
 		dialog.notification(msg1,msg2,icon,5000)
 		PLog(msg2); 
@@ -160,6 +166,23 @@ def SearchWordWork(action):
 					msg2 = err_msg
 				dialog.notification(msg1,msg2,icon,3000)
 				PLog(msg2)
+
+	if action == 'delete_all':
+		PLog("do: " + action)
+		title = u"alle Suchwörter löschen"
+		msg1 = u"[B]gesamte Liste wirklich löschen?[/B]"
+		del_ret = MyDialog(msg1=msg1, msg2='', msg3='', ok=False, cancel='Abbruch', yes='JA', heading=title)
+		PLog(del_ret)
+		if del_ret:
+			msg1 = title
+			msg2 = u"Liste wurde gelöscht."
+			searchwords = ""
+			err_msg =  RSave(searchwordfile, searchwords)	# speichern
+			if err_msg:										# RSave-Problem?
+				msg1 = u"Fehler beim Speichern der Suchwortliste"
+				PLog(msg1)	
+				msg2 = err_msg
+			PLog(msg2)										# Notification entfällt, Dialog für leere Liste folgt
 
 	if action == 'add':
 		PLog("do: " + action)

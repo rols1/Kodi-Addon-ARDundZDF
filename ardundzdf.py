@@ -9661,7 +9661,7 @@ def ZDF_getHBBTV_content(items, max_cnt=0, mark=""):
 # Aufruf ZDF_Start (ZDF goes Schule)
 # 12.06.2026 neu für verbliebene futura-Cluster  
 #
-def ZDF_RubrikSingle(url, title, cindex=""):								
+def ZDF_RubrikSingle(url, title, cindex="", homeID=""):								
 	PLog('ZDF_RubrikSingle: %s, %s, %s' % (title, url, cindex))
 	icon = R(ICON_MAIN_ZDF)
 	

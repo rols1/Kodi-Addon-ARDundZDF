@@ -8,7 +8,7 @@
 #
 ################################################################################
 # 	<nr>83</nr>								# Numerierung für Einzelupdate
-#	Stand: 20.06.2026
+#	Stand: 18.07.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -573,7 +573,7 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 					img_def = page["images"]["landscape"]			
 	except Exception as exception:
 		msg = str(exception)
-		PLog("GetContent_error: " + msg)
+		PLog("GetContent_error1: " + msg)
 		values=[]		
 	
 	PLog("img_def: " + img_def)	
@@ -678,10 +678,10 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 			"Geoblock-Info: ALL"
 		
 		try:											# 19.06.2026 hier nicht mehr vorhanden,
-			start = item["availability"]["start"]		# 	 im EPG dagegen schon
+			start = item["availability"]["start"]		# 	 oder null - im EPG dagegen schon
 			end = item["availability"]["end"]
 		except Exception as exception:
-			PLog("GetContent_error: " + str(exception))
+			PLog("GetContent_error2: " + str(exception))
 			start=""; end=""; start_end=""
 		PLog(str(start)); PLog(str(end))
 		if start and end:
@@ -1427,9 +1427,9 @@ def ArteCluster(pid='', title='', katurl=''):
 	ping_uhd = False
 	
 	arte_lang = Dict('load', "arte_lang")
-	lang = arte_lang.split("|")[1].strip()			# fr, de, ..
+	lang = arte_lang.split("|")[1].strip()				# fr, de, ..
 	
-	if katurl.startswith("http") == False:			# Folgebeiträge aus Suche + Neueste Videos
+	if katurl.startswith("http") and "/RC-" in katurl:	# Folgebeiträge aus Suche + Neueste Videos
 		rc = stringextract("/RC-", "/", katurl)
 		PLog("set_katurl_RC: %s" % rc)
 		katurl = "%s/api/1/skeletons/collections/RC-%s?lang=%s" % (HBBTV_BASE, rc, lang)		

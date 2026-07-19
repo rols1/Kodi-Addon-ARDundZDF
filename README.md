@@ -13,7 +13,7 @@ Download aktuelle Version: https://github.com/rols1/Kodi-Addon-ARDundZDF/release
 Plex hat die Unterstützung für Plugins in seinen Client-Softwarepaketen eingestellt. Die Repos für die Plex-Versionen [Plex-Plugin-ARDMediathek2016](https://github.com/rols1/Plex-Plugin-ARDMediathek2016) und [ARDundZDF](https://github.com/rols1/ARDundZDF) habe ich im März 2022 gelöscht (dto. FlickrExplorer, TuneIn2017, Shoutcast2017).<br>
 
 <b>Classic-Version der ARD Mediathek</b>: seit Juni 2021 sind die Classic-Links nicht mehr erreichbar. Der Code im Addon wurde entfernt; im Addon ist das Menü <b>ARD Mediathek Neu</b> voreingestellt (Details siehe Funktionen).<br>
-Die Radio-Podcasts der Classic-Version wurden durch die neue Audiothek abgelöst.<br>
+Die Radio-Podcasts der Classic-Version wurden durch die neue Audiothek, jetzt ARD Sounds, abgelöst.<br>
 
 #### Rückmeldungen willkommen:
 Im Forum: https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/  
@@ -93,12 +93,12 @@ Funktionen:
 #### [Addon-Tools](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul) - gekürzte Liste
 - [Änderungsliste: Addon-Infos mit Angaben zum System, Cache, zu Dateipfaden und Modulen](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#1-%C3%A4nderungsliste)
 - ["Zuletzt gesehen"-Liste](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#3-zuletzt-gesehen)
-- [Tools zum Bearbeiten von Ausschluss-Filtern (ARD, ZDF)](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#4-filter-bearbeiten)
+- [Tool zum Bearbeiten von Ausschluss-Filtern (ARD, ZDF)](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#4-filter-bearbeiten)
 - [Bereinigung der Merkliste](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#5-merkliste-bereinigen)
-- [Tools zum Bearbeiten von Suchwörtern (ARD, ZDF)](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#6-suchw%C3%B6rter-bearbeiten)
-- [Tools zum Bearbeiten des Download-Verzeichnisses (Verzeichnisse festlegen, Verschieben, Löschen)](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#7-download--und-aufnahme-tools)
-- [Tools zum Bearbeiten von strm-Listen für Serien (ARD, ZDF), einschl. autom. Überwachung im Hintergrund](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#8-strm-tools)
-- [Tools zum Bearbeiten der addon-internen Playlist](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#9-playlist-tools)
+- [Tool zum Bearbeiten von Suchwörtern (ARD, ZDF)](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#6-suchw%C3%B6rter-bearbeiten)
+- [Tool zum Bearbeiten des Download-Verzeichnisses (Verzeichnisse festlegen, Verschieben, Löschen)](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#7-download--und-aufnahme-tools)
+- [Tool zum Bearbeiten von strm-Listen für Serien (ARD, ZDF), einschl. autom. Überwachung im Hintergrund](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#8-strm-tools)
+- [Tool zum Bearbeiten der addon-internen Playlist](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#9-playlist-tools)
 - [Kodis Thumbnails-Ordner bereinigen](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#10-kodis-thumbnails-ordner-bereinigen)
 - [Settings inputstream.adaptive-Addon öffnen (Bandbreite, Auflösung und weitere Einstellungen)](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#11-settings-inputstreamadaptive-addon)
 - [Einzelupdate für einzelne Dateien und Module im Addon - siehe auch Updates](https://github.com/rols1/Kodi-Addon-ARDundZDF/wiki/11.-Tools-Modul#12-einzelupdate-einzelne-dateien-und-module)

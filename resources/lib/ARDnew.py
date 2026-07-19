@@ -11,7 +11,7 @@
 #
 ################################################################################
 # 	<nr>146</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.07.2026
+#	Stand: 18.07.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2793,12 +2793,13 @@ def SendungenAZ(title, CurSender="", homeID=''):
 			Dict("store", 'ARDnew_AZ_%s' %sender, page) 	# Seite -> Cache: aktualisieren	
 	
 	# Buchstabenblock: "title":"#","href":"https://api...
-	pat = '"urlId":'									# Link-Blöcke (title":" 2x enth.)
+	pat = '"self":'										# href, id, title
 	gridlist = blockextract(pat, page)	
 	PLog('pat: %s, gridlist: %d' % (pat, len(gridlist)))			
 	if len(gridlist) == 0:				
-		msg1 = u'Keine Beiträge gefunden zu %s' % button	
-		MyDialog(msg1, '', '')					
+		msg1 = u"Fehler in SendungenAZ:"
+		msg2 = u'Keine Buchstabenliste gefunden' 	
+		MyDialog(msg1, msg2, '')					
 		return	
 							
 	for grid in gridlist:

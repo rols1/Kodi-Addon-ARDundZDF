@@ -235,7 +235,7 @@ def strm_tools():
 					item = synclist[ret5]
 					PLog("strm_run_sync: " + item)
 					list_title, strmpath, list_path, strm_type= item.split("##")
-					if "//zdf-cdn" in list_path or "mediathekV2" in list_path:		# ZDF-Sync
+					if "prod-futura" in list_path or "mediathekV2" in list_path:		# ZDF-Sync
 						do_sync(list_title, strmpath, list_path, strm_type)
 					else:
 						do_sync_ARD(list_title, strmpath, list_path, strm_type)		# ARD-Sync
@@ -1048,7 +1048,9 @@ def show_strm_element(strmpath):
 # Setting sync_hour: STRM_TOOLS_SET (strmtoolset)
 # Aufruf beim Start Haupt-PRG (nach EPG + DL_CHECK), Lockdatei 
 #	STRM_CHECK (strm_check_alive) - kann nach Kodi-Ende stehenbleiben,
-#	Leichen-Behandl. durch Haupt-PRG.	
+#	Leichen-Behandl. durch Haupt-PRG.
+# Falls futura-Api nicht mehr funktioniert, Umstellung auf Graphql
+#	(s. ZDF_KatSerie ff.)
 #
 def strm_sync():
 	PLog('strm_sync:')

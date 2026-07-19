@@ -10,6 +10,39 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+19.07.2026	5.5.2
+			KiKA_AZ (childs): Verzicht auf nicht benötigten key coreAssetType (Error
+			bei Buchstaben w,u,t,s,o,f,e,d,c).
+			Modul childs: Videos mit Hörfassung und Gebärdensprache ergänzt für
+			KiKA und Kikaninchen, Menüanpassungen, neue Funktionen KiKA_Barrierearm,
+			KiKA_get_ackley_json, Kika_SingleBeitrag, Kika_VideoMP4get. 
+			KikaninchenLieder (childs): Cache (1 Std.) ergänzt, obsolete Funktionen
+			Kikaninchen_VideoSingle und Kika_VideoMP4getXML entfernt, dafür Nutzung
+			Kika_SingleBeitrag.
+
+			ARD_KatSeriePre: Abzweig zu ZDF_KatSeriePre ergänzt, falls Serien-Link zu
+			ARD-Serie/-Trailer fehlt, einschl. try-except-Block.
+			ARD SendungenAZ: Blockmuster "urlId" gegen "self" getauscht (ARD-Änderung).
+			get_json_content (ARDnew): externe Web-Retro-Verweise ausgefiltert, z.B.
+			www.ardsounds.de/rubrik/ard-retro-110, Satzzähler vor skippings verlagert.
+			AudioStart, AudioStartHome (ARD Sounds): Rubrik "ARD Retro" im Menü ergänzt
+			(wie Sportschau).
+			ARDStart: Retro-Liste mit Button für Retro-Rubrik in ARD Sounds ergänzt.
+			ARDSportWDR: Event-Menü "Tour de France 2026" ergänzt, Aktualisierung
+			Event-Buttons (neu: Die Finals 2026).
+
+			ZDF_Start: in Cluster-Listen die Kennzeichnung "1. Beitrag:" im Titel 
+			ergänzt, falls Cluster-Titel selbst fehlt.
+			ZDF_RubrikSingle: Param homeID="" ergänzt (für alte  Merklisteneinträge).
+			ArteCluster (arte): Umsetzung auf HBBTV-Links für Weblinks ermöglicht (für
+			Folgebeiträge bei Suchergebnissen erforderlich). 
+			SearchWordWork (tools): Schreibweise max_len korrigiert (richtig: MAX_LEN),
+			Option "alle Suchwörter löschen" hinzugefügt.
+			AudioWebMP3: zusätzl. Button für Sendung, falls für den Audiobeitrag ein
+			Podcast (programSet) gefunden wird.
+			XL_Live (TagesschauXL): Anpassung an geänderte Webseite (mediaplayer-
+			Kennung geändert), Nutzung von get_content_json.
+	
 28.06.2026	5.5.1		
 			ARD_KatSeriePre (ARDnew): Fix mediatype (kein String) bei Trailern.
 			Context (tools): Url-Korrektur bei ZDF-Serien-Videos (Bsp. Trailer).
@@ -26,7 +59,7 @@ CHANGE HISTORY
 			addierte Startzeit zurück, früherer now_check für arte ->  time_calc_diff.
 			SendungenDatum (my3Sat): unescape tag (&), im Internet nicht verfügbare 
 			Sendungen mit dummy-Funktion gelistet.
-			ZDF_VerpasstWoche: Call tivi_Verpasst entfernt (weggefallen am 29.01.2026)
+			ZDF_VerpasstWoche: Call tivi_Verpasst entfernt (weggefallen am 29.01.2026).
 			ZDF_Verpasst_Datum: Funktion entfernt - manuelle Eingabe paste nicht zu
 			Graphql-Nutzung mit Start-/End-Datum.
 			Modul childs: KiKA-KiKANINCHEN-Bereiche nach Abschaltung kika-Api erneuert,
@@ -69,7 +102,6 @@ CHANGE HISTORY
 			ZDF_Live: gelöscht (obsolet).
 			strm_sync (strm): "cdn" als Kennung für futura-api-Url aktualisiert durch
 			"prod-futura".
-			
 			arte-Modul: Api-Änderung im EPG-Link und Datenformat(www.arte.tv/api -> 
 			api.arte.tv/api, json-key value entfallen), Anpassungen in EPG_Today, 
 			Arte_Search, Beitrag_Liste, GetContent, 

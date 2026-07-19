@@ -829,6 +829,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 				K_pub_id = fp_json["pub_id"]
 			
 		except Exception as exception:
+			PLog(s)
 			fp_json=""
 			PLog("fp_json_error: " +  str(exception))
 				
