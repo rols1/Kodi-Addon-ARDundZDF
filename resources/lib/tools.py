@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>24</nr>								# Numerierung für Einzelupdate
-#	Stand: 18.07.2026
+# 	<nr>25</nr>								# Numerierung für Einzelupdate
+#	Stand: 20.07.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -84,10 +84,9 @@ def SearchWordTools():
 
 	icon = R("icon_searchwords.png")
 	if len(searchwords) == 0:	
-		msg1 = "Problem Suchwortliste"
 		msg2 = 'Liste fehlt oder ist leer'				
 		PLog(msg2)
-		xbmcgui.Dialog().notification(msg1,msg2,icon,5000)
+		# xbmcgui.Dialog().notification(msg1,msg2,icon,5000)		# 20.07.2026 abgeschaltet, Anzeige bei Hinzufügen
 												
 	summ = u"Suchwörter für die Suche in ARD Mediathek und ZDF Mediathek"	
 		
@@ -110,7 +109,7 @@ def SearchWordTools():
 			thumb=R('icon_searchwords.png'), tagline=tag, summary=summ, fparams=fparams)		
 		
 	title = u"Suchwort [B]hinzufügen[/B]"
-	tag = u"ein Suchwort der Liste [B]hinzufügen[/B] (max. %d)" % MAX_LEN 
+	tag = u"ein Suchwort der Liste [B]hinzufügen[/B] | max. %d, aktuell: [B]%d[/B]" % (MAX_LEN, len(searchwords)) 
 	fparams="&fparams={'action': 'add'}" 
 	addDir(li=li, label=title, action="dirList", dirID="resources.lib.tools.SearchWordWork", fanart=R(FANART), 
 		thumb=R('icon_searchwords.png'), tagline=tag, summary=summ, fparams=fparams)		
