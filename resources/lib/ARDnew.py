@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>146</nr>										# Numerierung für Einzelupdate
-#	Stand: 18.07.2026
+# 	<nr>147</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.07.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2941,21 +2941,17 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 	title_org=title
 	query_file 	= os.path.join(ADDON_DATA, "search_ardundzdf")
 
-	if query == '':														# Liste letzte Sucheingaben
-		query = ARDHandleRecents(title, mode="load", query=query)
+	if not query:														# Liste letzte Sucheingaben
+		query = ARDHandleRecents(title, mode="load", query=query)		# None bei Abbruch
 
-	if query.startswith("http://") or query.startswith("https://"):		# Medienlink einschl. http://hbbtv..
-		PLog("medialink: " + query)
-		get_streams_from_link(medialink=query)							# Auswertung + Starten
-		query=""														# hier Ende für Medienlinks
-		
-	if  query == None or query.strip() == '':							# plugin Error vermeiden
-		if "ARD und ZDF" in title:										
-			return ardundzdf.Main()
-		if 'Suche in ARD-Mediathek' in title:
-			return Main_NEW()	
-		if 'Suche in ZDF-Mediathek' in title:
-			return ardundzdf.Main_ZDF()
+	if not query:														# 		
+		if  query == None or query.strip() == '':						# plugin Error vermeiden
+			if "ARD und ZDF" in title:										
+				return ardundzdf.Main()
+			if 'Suche in ARD-Mediathek' in title:
+				return Main_NEW()	
+			if 'Suche in ZDF-Mediathek' in title:
+				return ardundzdf.Main_ZDF()
 			
 	query=py2_encode(query)		# decode, falls erf. (1. Aufruf)
 	PLog(query)
