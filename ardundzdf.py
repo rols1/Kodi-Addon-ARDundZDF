@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>359</nr>										# Numerierung für Einzelupdate
+# 	<nr>360</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.2'
-VDATE = '19.07.2026' 
+VDATE = '26.07.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1583,7 +1583,7 @@ def AudioStartHome(title, ID, page='', path=''):	# Auswertung Homepage
 	
 	ID = py2_decode(ID)
 	# Stage Web, Cluster Sportschau + Retro
-	if 'Entdecken' in ID or 'Sportschau' in ID or "Retro in ID":		
+	if 'Entdecken' in ID or 'Sportschau' in ID or "Retro" in ID:		
 		if 'Entdecken' in ID:
 			path = ARD_AUDIO_BASE
 		if 'Sportschau' in ID:
