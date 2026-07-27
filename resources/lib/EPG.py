@@ -13,8 +13,8 @@
 #	ab Okt. 2025 Webseite geändert, TV-Daten im json-Format nur für 1 Tag
 #	altes URL-Schema nicht mehr nutzbar, Nutzung von https://www.tvtoday.de/api/broadcasts?..
 #
-# 	<nr>45</nr>										# Numerierung für Einzelupdate
-#	Stand: 13.05.2026
+# 	<nr>46</nr>										# Numerierung für Einzelupdate
+#	Stand: 27.07.2026
 #	
  
 from kodi_six import xbmc, xbmcgui, xbmcaddon
@@ -58,6 +58,9 @@ ADDON_ID 	= 'plugin.video.ardundzdf'
 SETTINGS 	= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_PATH	= SETTINGS.getAddonInfo('path')
 EPG_BASE 	= "http://www.tvtoday.de"
+HEADERS="{'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',\
+	'Referer': '%s', 'Accept-Encoding': 'gzip, deflate, br', 'Accept': 'application/json, text/plain, */*'}"
+
 
 ########################################################################
 # thread_getepg: EPG im Hintergrund laden - Aufruf Haupt-PRG (
@@ -471,7 +474,7 @@ def get_api_data(Dict_ID):
 			rdate = now + datetime.timedelta(days = nr)
 			rday = rdate.strftime("%Y-%m-%d")
 			url = api_base % (sid, rday)
-			page, msg = get_page(url)
+			page, msg = get_page(url, header=HEADERS)
 			if page:													# json-mapping via ** klappt nicht
 				data_list.append(page)
 				data_len = data_len + len(page)							# -> Gesamtlänge
