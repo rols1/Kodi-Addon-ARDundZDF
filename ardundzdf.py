@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>360</nr>										# Numerierung für Einzelupdate
+# 	<nr>361</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.2'
-VDATE = '26.07.2026' 
+VDATE = '29.07.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3478,41 +3478,18 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	'''
 
-	title = u"Event: [B]FIFA WM 2026[/B]"					# FIFA WM 2026
-	tag = u"[B]11.Juni - 26. Juli 2026[/B] in Kanada, Mexiko und USA"
-	summ = u"Hier finden Sie alle Nachrichten, Berichte, Interviews, Livestreams und Ergebnisse zur FIFA Fußball-WM 2026."
-	cacheID = "FIFA_WM_2026"
-	img = "https://images.sportschau.de/image/7b1a8f22-e01d-47aa-ac47-2f3057aa229c/AAABliBkvg0/AAABnSSvrFg/16x9-big/wm-250.jpg?width=1280"
-	path = "https://www.sportschau.de/fussball/fifa-wm-2026"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
-		(quote(title), quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag, summary=summ)
-		
-	title = u"Event: [B]Tour de France 2026[/B]"			# Tour de France 2026
-	tag = u"[B]04. - 26. Juli 2026[/B]"
-	summ = u"Tour de France ab 4. Juli 2026: News, Videos, Rennberichte und Ergebnisse."
-	cacheID = "Sport_TourdeFrance_2026"
-	img = "https://images.sportschau.de/image/f5c242eb-cd67-42f8-a327-02be047bee55/AAABl17rJTQ/AAABnSSvrFg/16x9-big/tour-de-france-618.jpg?width=1280"
-	path = "https://www.sportschau.de/radsport/tourdefrance"
+	title = u"Event: [B]Tour de France Femmes 2026[/B]"			# Tour de France Femmes 2026
+	tag = u"[B]01. - 09. August 2026[/B]"
+	summ = u"Tour de France ab 1. August 2026: News, Videos, Rennberichte und Ergebnisse."
+	cacheID = "Sport_TourdeFemmes_2026"
+	img = "https://images.sportschau.de/image/5e488d45-7e8c-4ec6-9d90-b10cb3a43233/AAABmFYacUk/AAABnSSvrFg/16x9-big/tdff-peloton-etappe-7-100.jpg?width=1280"
+	path = "https://www.sportschau.de/radsport/tourdefrance-femmes"
 	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
 	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
 		(quote(title), quote(path))
 	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
 		fparams=fparams, tagline=tag, summary=summ)	
 		
-	title = u"Event: [B]Die Finals 2026[/B]"			# Die Finals 2026
-	tag = u"[B]23. - 26. Juli 2026 in Hannover[/B]"
-	summ = u"Bei den Finals in Hannover werden in 24 Sportarten deutsche Meistertitel vergeben. Die Sportschau berichtet an allen vier Wettkampftagen mit einem umfassenden Liveprogramm."
-	cacheID = "Sport_Finals_2026"
-	img = "https://images.sportschau.de/image/6ffe6a3b-f1c5-4ab0-8de5-daa210aeb1b7/AAABnwhGInc/AAABnSSvrFg/16x9-big/key-visual-124.jpg?width=1280"
-	path = "https://www.sportschau.de/die-finals"
-	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
-	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
-		(quote(title), quote(path))
-	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
-		fparams=fparams, tagline=tag, summary=summ)	
 
 	#---------------------------------------------------------	Großevents Ende
 
@@ -3591,6 +3568,42 @@ def ARDSportWDRArchiv():
 	logo = base + "/image/3fbb1eaf-fb0a-4f1b-a5a9-44a643839cd5/AAABgTjL3GM/AAABgPp7Db4/16x9-1280/sportschau-logo-sendung-100.jpg"
 	
 # ---------------------------------------------------------------------- 2026
+
+	title = u"Event: [B]FIFA WM 2026[/B]"					# FIFA WM 2026
+	tag = u"[B]11.Juni - 26. Juli 2026[/B] in Kanada, Mexiko und USA"
+	summ = u"Hier finden Sie alle Nachrichten, Berichte, Interviews, Livestreams und Ergebnisse zur FIFA Fußball-WM 2026."
+	cacheID = "FIFA_WM_2026"
+	img = logo
+	path = "https://www.sportschau.de/fussball/fifa-wm-2026"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag, summary=summ)
+		
+	title = u"Event: [B]Tour de France 2026[/B]"			# Tour de France 2026
+	tag = u"[B]04. - 26. Juli 2026[/B]"
+	summ = u"Tour de France ab 4. Juli 2026: News, Videos, Rennberichte und Ergebnisse."
+	cacheID = "Sport_TourdeFrance_2026"
+	img = logo
+	path = "https://www.sportschau.de/radsport/tourdefrance"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag, summary=summ)	
+		
+	title = u"Event: [B]Die Finals 2026[/B]"			# Die Finals 2026
+	tag = u"[B]23. - 26. Juli 2026 in Hannover[/B]"
+	summ = u"Bei den Finals in Hannover werden in 24 Sportarten deutsche Meistertitel vergeben. Die Sportschau berichtet an allen vier Wettkampftagen mit einem umfassenden Liveprogramm."
+	cacheID = "Sport_Finals_2026"
+	img = logo
+	path = "https://www.sportschau.de/die-finals"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag, summary=summ)
 
 	title = u"Event: [B]Paralympics 2026 in Mailand/Cortina[/B]"
 	tag = u"Paralympics 2026 in Mailand/Cortina: News, Livestreams und Aktuelles"
