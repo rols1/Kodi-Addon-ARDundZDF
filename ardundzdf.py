@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>361</nr>										# Numerierung für Einzelupdate
+# 	<nr>362</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.2'
-VDATE = '29.07.2026' 
+VDATE = '05.08.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -7597,7 +7597,7 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 					tagline = ''
 				tagline = u"%s\n[B]Tages-EPG[/B] via Kontext-Menü aufrufen." % tagline
 
-		title = unescape(title)	
+		title = repl_json_chars(title)	
 		title = title.replace('JETZT:', '')					# 'JETZT:' hier überflüssig
 		if link == '':										# fehlenden Link im Titel kennz.
 			title = "%s | Streamlink fehlt!" %  title	
@@ -7632,13 +7632,6 @@ def SenderLiveListe(title, listname, fanart, offset=0, onlySender=''):
 		addDir(li=li, label=title, action="dirList", dirID="SenderLiveResolution", fanart=fanart, thumb=img, 
 			fparams=fparams, summary=summary, tagline=tagline, mediatype=mediatype, EPG_ID=EPG_ID)		
 	
-	#  if onlySender== '':		# obsolet seit V4.4.2 
-	# RP3b+: Abstürze möglich beim Öffen der Regional-Liste, Log: clean up-Problem mit Verweis auf classes:
-	#	N9XBMCAddon9xbmcaddon5AddonE,N9XBMCAddon9xbmcaddon5AddonE.  Ähnlich issue
-	#	https://github.com/asciidisco/plugin.video.netflix/issues/576 aber Fix hier nicht anwendbar.
-	# s.a. https://forum.kodi.tv/showthread.php?tid=359608
-	# Delay nach Laden der Streamlinks ohne Wirkung (s.o. OS_DETECT)
-	# Memory-Bereinig. nach router-Ende unwirksam s. Script-Ende)
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 		
 #-----------------------------------------------
