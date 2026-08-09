@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>362</nr>										# Numerierung für Einzelupdate
+# 	<nr>363</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.2'
-VDATE = '05.08.2026' 
+VDATE = '09.08.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -3478,6 +3478,18 @@ def ARDSportWDR():
 		fparams=fparams, tagline=tag)	
 	'''
 
+	title = u"Event: [B]Leichtathletik-EM 2026[/B]"			# Leichtathletik-EM 2026
+	tag = u"[B]10. - 16. August 2026[/B]"
+	summ = u"Leichtathletik-EM 2026 in Birmingham: News, Livestreams, Ergebnisse."
+	cacheID = "Leichtathletik_EM_2026"
+	img = "https://images.sportschau.de/image/0aedbdbe-27d9-4684-ad38-3f900bbd0fa7/AAABnitnzZA/AAABnSSvrFg/16x9-big/alexanderstadium-100.jpg?width=1280"
+	path = "https://www.sportschau.de/leichtathletik/em"
+	title=py2_encode(title); path=py2_encode(path); img=py2_encode(img);
+	fparams="&fparams={'li': '', 'title': '%s', 'page': '', 'path': '%s'}" %\
+		(quote(title), quote(path))
+	addDir(li=li, label=title, action="dirList", dirID="ARDSportMedia", fanart=img, thumb=img, 
+		fparams=fparams, tagline=tag, summary=summ)	
+		
 	title = u"Event: [B]Tour de France Femmes 2026[/B]"			# Tour de France Femmes 2026
 	tag = u"[B]01. - 09. August 2026[/B]"
 	summ = u"Tour de France ab 1. August 2026: News, Videos, Rennberichte und Ergebnisse."
