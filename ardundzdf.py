@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>363</nr>										# Numerierung für Einzelupdate
+# 	<nr>364</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.2'
-VDATE = '09.08.2026' 
+VDATE = '13.08.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8940,8 +8940,10 @@ def ZDF_KatSerieExtras(title, DictID, img, mode=""):
 		
 		title = title.replace('"', '')
 		title = repl_json_chars(title)
-		dur = stringextract('duration":', ',', item)
+		dur = stringextract('duration":', ',', item)		# null möglich (Link zu 1. Video)
 		dur = seconds_translate(dur)
+		if not dur:
+			continue
 
 		ptmdTemplate = stringextract('ptmdTemplate":"', '"', item)
 		canon_id = stringextract('canonical":"', '"', item)
@@ -8955,7 +8957,7 @@ def ZDF_KatSerieExtras(title, DictID, img, mode=""):
 		tag="Dauer: %s"	% dur
 		tag_par=tag
 		
-		PLog("Satz: "); PLog(title); PLog(url); PLog(img);
+		PLog("Satz: "); PLog(title); PLog(url); PLog(tag); PLog(img);
 		title=py2_encode(title); url=py2_encode(url)
 		fparams="&fparams={'path': '%s','title': '%s'}" % (quote(url), quote(title))
 		PLog("fparams: " + unquote(fparams))
@@ -11040,7 +11042,6 @@ def ZDF_getApiStreams(path, title, gui=True):
 		xbmcgui.Dialog().notification(msg1,msg2,R(ICON_INFO),3000, sound=True)	# Playlist-Blockade vermeiden, s.o.												
 		return	
 
-	scms_id = canon														# -> HBBTV, s.o.
 	PLog("thumb: " + thumb)										
 	if "icon-bild-fehlt" in thumb:
 		thumb = R(ICON_DIR_VIDEO)
@@ -11201,8 +11202,8 @@ def ZDF_getApiStreams(path, title, gui=True):
 	
 	UHD_DL_list=[]
 	if scms_id:
-		HBBTV_List = ZDFSourcesHBBTV(title, scms_id)	# bisher nur MP4-Quellen				
-		HBBTV_List, UHD_DL_list = add_UHD_Streams(HBBTV_List) # UHD-Streams -> Download_Liste
+		HBBTV_List = ZDFSourcesHBBTV(title, scms_id, canon)		# bisher nur MP4-Quellen				
+		HBBTV_List, UHD_DL_list = add_UHD_Streams(HBBTV_List) 	# UHD-Streams -> Download_Liste
 	Dict("store", '%s_HBBTV_List' % ID, HBBTV_List) 
 	PLog("HBBTV_List: " + str(len(HBBTV_List)))
 	PLog("UHD_DL_list: " + str(len(UHD_DL_list)))
@@ -11217,7 +11218,7 @@ def ZDF_getApiStreams(path, title, gui=True):
 	Dict("store", '%s_MP4_List' % ID, MP4_List) 
 		
 	if not len(HLS_List) and not len(MP4_List) and not len(HBBTV_List):			
-		if gui:										# ohne Gui
+		if gui:											# ohne Gui
 			msg = 'keine Streamquellen gefunden - Abbruch' 
 			PLog(msg); 
 			msg1 = u"keine Streamquellen gefunden: >%s<"	% title
@@ -11830,21 +11831,38 @@ def build_Streamlists_buttons(li,title_org,thumb,geoblock,Plot,sub_path,\
 #	Sortierung in PlayVideo_Direct).
 # 11.05.2025 key "streams" in try-Block verlagert, da hbbtv-Calls
 #	i.V.m. ZDF_Graphql_get_seasons auf mehrere Videos verweisen können.
+# 13.08.2026 hbbtv-api geändert: ../zdfm3/dyn/get.php?id=%s ->
+#	../legacy-al/video?id=%s. Anpassung an 3 SCMS-Varianten.
 #
-def ZDFSourcesHBBTV(title, scms_id):
+def ZDFSourcesHBBTV(title, scms_id,canon):
 	PLog('ZDFSourcesHBBTV:'); 
-	PLog("scms_id: " + scms_id) 
+	PLog("scms_id: %s, canon: %s" % (scms_id, canon))
+	HBBTV_base = "https://hbbtv.zdf.de/legacy-al/video?id=%s"
 	HBBTV_List=[]
-	url = "https://hbbtv.zdf.de/zdfm3/dyn/get.php?id=%s" % scms_id
-					
+	video_id = scms_id
+	if video_id.startswith("SCMS_"):								# SCMS_0b3aa523.., SCMS_page-video-ard..,
+		 video_id = video_id[5:]									# auch SCMS_transfer_SCMS_39182e4b.. (3sat)
+	url = HBBTV_base % video_id
+	new_url, msg = getRedirect(url)
+	if not new_url:													# Fallback (vermutl. selten)
+		PLog("try_hbbtv_with_canon")
+		new_url = HBBTV_base % canon
+		new_url, msg = getRedirect(new_url)
+	
+	if not new_url:						
+		msg1 = u"HBBTV-Quellen:"
+		msg2 = u"nicht vorhanden / verfügbar"
+		PLog("%s %s | %s" % (msg1, msg2, title))		
+		xbmcgui.Dialog().notification(msg1,msg2,R(ICON_INFO),2000, sound=False)													
+		return HBBTV_List	
+	
 	# Call funktioniert auch ohne Header:
 	header = "{'Host': 'hbbtv.zdf.de', 'content-type': 'application/vnd.hbbtv.xhtml+xml'}"
-	page, msg = get_page(path=url, header=header)	
+	page, msg = get_page(path=new_url, header=header)	
 	if page == '':						
-		msg1 = u'HBBTV-Quellen nicht vorhanden / verfügbar'
-		msg2 = u'Video: %s' % title
-		MyDialog(msg1, msg2, '')
-		return HBBTV_List
+		msg1 = u"HBBTV-Quellen: Abruf fehlgeschlagen"
+		PLog("%s | %s" % (msg1, title))		
+		return HBBTV_List											# Notification kann hier entfallen
 	
 	pref_DGS_ON = SETTINGS.getSetting('pref_DGS_ON')
 	if "_dgs" in page and pref_DGS_ON == "true":					# DGS vorhanden und gewählt
