@@ -435,7 +435,11 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 		# Menü "Unsere Region" verlagert zu Main_NEW (-> ARDStartRegion).
 		#	Hier skipped für ARD-Alle:
 		if "Unsere Region" in title:
-				continue
+				continue				
+				
+		if "ard/editorial/retro" in path_org:					# Rubriken ausfiltern (keine Retro-Inhalte)
+			if "Rubriken" in title:
+				continue				
 
 		# Ersetzung kann entfallen, wenn personalized bereits im Aufruf-Call fehlt
 		path = path.replace("userId=personalized&", "")	# 17.08.2023 personalized erfordert Authentif.	
@@ -2047,6 +2051,8 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID="", desc=False):
 		mehrfach,typ,title,pagetitle,summ,img,href = get_json_content_details(s, ID)
 		cnt=cnt+1
 		if "//www." in href:									# externe Web-Retro-Verweise, Bsp. ardsounds
+			# if "www.zdf.de/livestreams/" in href:				# Verlinkung futura-api nur teilw. erfoglreich:
+			# www.zdf.de/livestreams/leichtathletik-live-livestream-ergebnisse-zeitplan-100#t=livestreams?mcV6=true
 			PLog("skip: typ %s | href: %s" % (typ, href))
 			continue
 		if "skip" in typ:										# z.B. Titel: Übersicht
@@ -2070,7 +2076,7 @@ def get_json_content(li, page, ID, mark='', mehrzS='', homeID="", desc=False):
 				PLog("skip_Übersicht")
 				typ="skip"				
 
-		if 	mehrfach:	
+		if 	mehrfach:
 			href=py2_encode(href); title=py2_encode(title); 
 			fparams="&fparams={'path': '%s', 'title': '%s', 'homeID': '%s'}" % (quote(href), quote(title), homeID)
 			addDir(li=li2, label=title, action="dirList", dirID="resources.lib.ARDnew.ARDStartRubrik", \

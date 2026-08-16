@@ -10,6 +10,28 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+16.08.2026	5.5.3
+			SearchWordTools (tools): Notification bei leerer Liste durch Anzeige der
+			Anzahl im Hinzufügen-Button ausgetauscht.
+			SearchARDundZDFnew (ARDnew): None-Rückgabe von ARDHandleRecents abgefangen
+			(Error in __main__).
+			ARDStart (ARDnew): für das Retro-Menü den Cluster Rubriken ausgefiltert
+			(keine Retro-Inhalte).
+			AudioStartHome (ARD Sounds): Korrektur ("Retro in ID" -> "Retro" in ID).
+			get_api_data (Modul EPG): Addon-Standard-Header für tvtoday-Seiten (ohne
+			HTTP Error 403).
+			ARDSportWDR, ARDSportWDRArchiv: Aktualisierung Events (2 x).
+			SenderLiveListe: Hochkommata aus Titel entfernt (Error in router-Funktion).
+			TV-Livestreams Privat: livesenderTV.xml aktualisiert (Baden TV IP-TV nicht
+			mehr aktuell, Rhein-Neckar-Fernsehen wg. Insolvenz entfernt, für die übrigen
+			Sender Github-jnk22-kodi_tv_local-Url aktualisiert).
+			Github-README: downloads-Badge entfernt (funktioniert nicht).
+			ZDFSourcesHBBTV: Anpassung geänderten HBBTV-Api-Link und 3  SCMS-Varianten,
+			canon als Fallback für Video-ID verwendet (ZDF_getApiStreams angepasst), 
+			bei fehlenden Quellen Dialog gegen Notification ausgetauscht. 
+			ZDF_KatSerieExtras: Videos ohne Dauer ausgefiltert (Verweis auf 1. Video).
+			Main_TIVI (childs): Bild tivi_ZDFchen aktualisiert.
+
 19.07.2026	5.5.2
 			KiKA_AZ (childs): Verzicht auf nicht benötigten key coreAssetType (Error
 			bei Buchstaben w,u,t,s,o,f,e,d,c).
@@ -38,7 +60,7 @@ CHANGE HISTORY
 			Folgebeiträge bei Suchergebnissen erforderlich). 
 			SearchWordWork (tools): Schreibweise max_len korrigiert (richtig: MAX_LEN),
 			Option "alle Suchwörter löschen" hinzugefügt.
-			AudioWebMP3: zusätzl. Button für Sendung, falls für den Audiobeitrag ein
+			AudioWebMP3 (ARD Sounds): zusätzl. Button für Sendung, falls für den Audiobeitrag ein
 			Podcast (programSet) gefunden wird.
 			XL_Live (TagesschauXL): Anpassung an geänderte Webseite (mediaplayer-
 			Kennung geändert), Nutzung von get_content_json.

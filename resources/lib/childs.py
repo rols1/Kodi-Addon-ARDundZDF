@@ -209,7 +209,7 @@ def Main_TIVI(title=''):
 
 	title='tivi_ZDFchen'												# HBBTV
 	tag = u"Für Kinder bis 6 Jahre"
-	thumb = "https://www.zdf.de/assets/zdfchen-buehne-m-song-100~936x520?cb=1658852787035"		
+	thumb = "https://www.zdf.de/assets/zdfchen-sendungsteaser-1920x1080px-100~640x720?cb=1747655872970"		
 	coll_id = "4a232aa9-93ee-4eb8-8028-acc0580e709f"
 	fparams="&fparams={'coll_id': '%s', 'homeID': '%s'}" % (coll_id,'Kinderprogramme')
 	addDir(li=li, label=title , action="dirList", dirID="ardundzdf.ZDF_Start", fanart=GIT_ZDFTIVI, 

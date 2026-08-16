@@ -1376,8 +1376,6 @@ def ArteStart(path="", title=""):
 				link = item["link"]
 				href = "%s%s?lang=%s" % (HBBTV_BASE, link, lang)
 				img = get_img_pre(href, title)							# Bild 1. Beitrag Zielseite
-				if img:
-					thumb = img
 				
 				PLog('Satz7:')
 				PLog(title); PLog(href)
