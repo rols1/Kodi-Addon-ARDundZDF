@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>147</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.07.2026
+# 	<nr>148</nr>										# Numerierung für Einzelupdate
+#	Stand: 17.08.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2246,7 +2246,7 @@ def get_json_content_details(obj, ID=""):
 				if obj["show"]:									# null?
 					summ = obj["show"]["synopsis"]				# Zusammenfassung
 					pagetitle = obj["show"]["title"]			# -> full_shows
-			if not summ and obj["synopsis"]:
+			if not summ and "synopsis" in obj:
 				summ  = obj["synopsis"]
 			PLog(summ[:60])	
 			if summ == None:
