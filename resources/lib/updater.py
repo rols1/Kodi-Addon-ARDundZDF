@@ -12,8 +12,8 @@
 #	13.04.2020 Aktualisierung adjust_AddonXml
 # 	28.01.2023 Aktualisierung adjust_line für Kodi 20 Nexus
 ################################################################################
-# 	<nr>3</nr>								# Numerierung für Einzelupdate
-#	Stand: 17.05.2024
+# 	<nr>4</nr>								# Numerierung für Einzelupdate
+#	Stand: 20.08.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -38,6 +38,12 @@ elif PYTHON3:
 		xbmc.translatePath = xbmcvfs.translatePath
 	except:
 		pass
+
+try:
+	import requests							# ab Aug. 2025 via addon.xml nach Redirect-Problemen mit httplib2
+	requests_modul="true"
+except Exception as exception:				# möglich: "future feature annotations is not defined",
+	requests_modul = ""						# anscheinend abhängig von python-Version 3.5 / 3.6 
 
 # Standard:
 import shutil						# Dir's löschen
@@ -71,11 +77,18 @@ def get_latest_version():
 		release_feed_url = ('https://github.com/{0}/releases.atom'.format(GITHUB_REPOSITORY))
 		PLog(release_feed_url)
 			
-		r = urlopen(release_feed_url)
-		page = r.read()					
+		if not requests_modul:
+			PLog("requests_modul_missing")
+			r = urlopen(release_feed_url)
+			page = r.read()					
+		else:
+			PLog("use_requests_modul")
+			r = requests.get(release_feed_url)
+			page = r.content
+
 		page=page.decode('utf-8')				
 		PLog(len(page))
-		# PLog(page[:800])
+		PLog(page[:100])
 
 		link	= stringextract('<link rel', '"/>', page)			# ../releases/tag/0.2.9"/
 		tags 	= link.split('/')
@@ -124,10 +137,17 @@ def update(url, ver):
 		msg2 = 'Update erfolgreich - weiter zum aktuellen Addon'  	# Kodi: kein Neustart notw.
 		try:
 			dest_path 	= xbmc.translatePath("special://home/addons/")
-			r 			= urlopen(url)
-			PLog('Mark1')
-			zip_data	= zipfile.ZipFile(io.BytesIO(r.read()))
-			PLog('Mark2')
+			if not requests_modul:
+				r 			= urlopen(url)
+				PLog('Mark1_1')
+				zip_data	= zipfile.ZipFile(io.BytesIO(r.read()))
+				PLog('Mark2_1')
+			else:
+				PLog("use_requests_modul")
+				r = requests.get(url, allow_redirects=True)
+				PLog('Mark2_1')
+				zip_data	= zipfile.ZipFile(io.BytesIO(r.content))				
+				PLog('Mark2_2')
 			
 			# save_restore('save')									# Cache sichern - entfällt, s.o.
 			
@@ -144,7 +164,7 @@ def update(url, ver):
 		except Exception as exception:
 			msg1 = 'Update fehlgeschlagen'
 			msg2 = 'Error: ' + str(exception)
-												
+			PLog("%s | %s" % (msg1, msg2))									
 		MyDialog(msg1, msg2, '')
 	else:
 		msg1 = 'Update fehlgeschlagen'
