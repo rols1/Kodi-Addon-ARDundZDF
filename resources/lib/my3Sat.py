@@ -12,8 +12,8 @@
 #	Nov./Dez. 2024 Umstellung Web-scraping -> api hbbtv.zdf.de
 # 	
 ################################################################################
-# 	<nr>30</nr>										# Numerierung für Einzelupdate
-#	Stand: 22.06.2026
+# 	<nr>31</nr>										# Numerierung für Einzelupdate
+#	Stand: 21.08.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -309,12 +309,15 @@ def SendungenAZlist(name, path):
 	PLog(len(content))
 	fanart=R('3sat.png')
 	
+	cnt=0
 	for rec in content:
 		title	= stringextract('title="', '"', rec)
 		href	= stringextract('href="', '"', rec)				# ../sendungen-a-z?group=b
 		href	= DreiSat_BASE + href
 		PLog("Satz7: %s, %s" % (title, href))
 		if 'link is-disabled' in rec:							# Button inaktiv
+			if cnt == 0:										# skip Webfehler (vor Buchstabenliste)
+				continue
 			thumb = R('icon-error.png')
 			letter = stringextract('true">', '<', rec)
 			title = "[COLOR grey]Sendungen mit %s[/COLOR]" % letter
@@ -327,7 +330,7 @@ def SendungenAZlist(name, path):
 			fparams="&fparams={'name': '%s', 'path': '%s'}"	% (quote(title), quote(href))
 			addDir(li=li, label=title, action="dirList", dirID="resources.lib.my3Sat.SendungenAZ", 
 				fanart=fanart, thumb=thumb, fparams=fparams)			
-			
+		cnt=cnt+1	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #------------ 
