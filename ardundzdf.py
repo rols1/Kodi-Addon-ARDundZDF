@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>364</nr>										# Numerierung für Einzelupdate
+# 	<nr>365</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.3'
-VDATE = '16.08.2026' 
+VDATE = '23.08.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1809,8 +1809,8 @@ def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 	wtitle = widget["seo"]["title"]
 	wtype = widget["widgetType"]
 	teasers = widget["teasers"]
-	PLog("wtitle: %s, wtype: %s, nodes: %d" % (wtitle, wtype, len(teasers)))		
-	
+	PLog("wtitle: %s, wtype: %s, nodes: %d" % (wtitle, wtype, len(teasers)))
+
 	for obj in teasers:	
 		typ, url, img_alt, img, title, tag, summ, dur, node_id = Audio_get_cluster_items(obj)
 
@@ -1826,16 +1826,17 @@ def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 		img=py2_encode(img); summ_par=py2_encode(summ_par);	
 
 	#--------------------------------								# Einzelbeitrag				
-		if typ=="Item" and url:										# einz. Audio
-			PLog("to_AudioWebMP3")
-			tag = "[B]Audiobeitrag[/B] | %s\nBild: %s" % (dur, img_alt)
-			summ_par = "%s\n\n%s" % (tag, summ)						# Plot aktualsiert
-			summ_par = summ_par.replace("\n","||")
-			summ_par=py2_encode(summ_par)
-			fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
-				quote(title), quote(img), quote_plus(summ_par))
-			addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
-				fparams=fparams, tagline=tag, summary=summ)		
+		if typ=="Item" or "NewsTeaser" in typ:						# einz. Audio, NewsTeaser -> Heute Wichtig
+			if url:	
+				PLog("to_AudioWebMP3")
+				tag = "[B]Audiobeitrag[/B] | %s\nBild: %s" % (dur, img_alt)
+				summ_par = "%s\n\n%s" % (tag, summ)						# Plot aktualisiert
+				summ_par = summ_par.replace("\n","||")
+				summ_par=py2_encode(summ_par)
+				fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s'}" % (quote(url), 
+					quote(title), quote(img), quote_plus(summ_par))
+				addDir(li=li, label=title, action="dirList", dirID="AudioWebMP3", fanart=img, thumb=img, 
+					fparams=fparams, tagline=tag, summary=summ)		
 		#------------------
 		if "EventLive" in typ:										# Livestream
 			PLog("to_AudioGraphql")
@@ -2171,7 +2172,7 @@ def Audio_get_cluster_items(item):
 def Audio_get_img(item):
 	PLog("Audio_get_img:")
 	
-	node=[]; img_alt=""
+	node=[]; img_alt=""; img=""
 	if "image" in item:								# direkt
 		node = item
 	elif "teasers" in item:							# img für Cluster 
@@ -2180,11 +2181,23 @@ def Audio_get_img(item):
 			node = item["node"][0]
 	if node:
 		if "image" in node:
-			img_alt = node["image"]["alt"]
-			img = node["image"]["templateURL"]
-			img = img.replace('{width}', '640')
-		else:
-			img = R(ICON_DIR_FOLDER)
+			image = node["image"]
+	
+			if "templateURL" in image:	
+				img = image["templateURL"]
+			else:
+				if "url" in image:
+					img = image["url"]
+			
+			if "alt" in image:
+				img_alt = image["alt"]
+			if "description" in image:
+				img_alt = image["description"]				
+	
+	if img:		
+		img = img.replace('{width}', '640')
+	else:
+		img = R(ICON_DIR_FOLDER)
 		
 	return img, img_alt
 
@@ -2720,20 +2733,12 @@ def Audio_get_items_single(item, ID=''):
 	if attr:
 		attr = "Bild: %s" % repl_json_chars(py2_decode(attr))		# ' möglich
 
-	image = item[item.find('"image":'):]
-	#PLog("image: " + image)
-	img_alt = stringextract('"description":"', '"', image)
-	if not img_alt:
-		img_alt = stringextract('"alt":"', '"', image)
-	img = stringextract('"url":"', '"', image)
-	if not img:
-		img = stringextract('"url1X1":"', '"', image)
-	if not img:
-		img = stringextract('"templateURL":"', '"', image)
-	img = img.replace('{width}', '640')
-	img = img.replace(u'\\u0026', '&')								# 13.03.2022: escape-Zeichen mögl.
-	if img == "":
-		img = R(ICON_DIR_FOLDER)
+	try:
+		img_item=json.loads(item)									# Aufrufer: my_jsondump 
+		img, img_alt = Audio_get_img(img_item)
+	except Exception as exception:
+		img = R(ICON_DIR_FOLDER); img_alt=""						# ersetzt durch Aufrufer mit wimg
+		PLog("Audio_get_items_single_img_error: " + str(exception))
 
 	dur = stringextract('"duration":', ',', item)					# in Sek.
 	dur = dur.replace("}", '')										# 3592} statt 3592,
@@ -3438,6 +3443,7 @@ def ARDSportVideo(path, title, img, summ, Merk='false', page=''):
 #---------------------------------------------------------------------------------------------------
 # Neues  Menü sportschau.de (WDR)
 # Ersatz für weggefallene Funktionen. Siehe Start ARD Sportschau.de
+# Event-Kalender: de.wikipedia.org/wiki/Portal:Sport/Sportkalender_2026
 # 
 def ARDSportWDR(): 
 	PLog('ARDSportWDR:')
