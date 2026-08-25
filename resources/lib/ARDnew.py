@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>148</nr>										# Numerierung für Einzelupdate
-#	Stand: 17.08.2026
+# 	<nr>149</nr>										# Numerierung für Einzelupdate
+#	Stand: 25.08.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -40,7 +40,7 @@ elif PYTHON3:
 
 # Python
 import string, re
-import  json		
+import json
 import datetime, time
 import math							# für math.ceil (aufrunden)
 
@@ -473,18 +473,20 @@ def ARDStart(title, sender, widgetID='', path='', homeID=''):
 #-----------------------------------------------------------------------
 # 17.08.2023 img-Link für Startseite aus Block item ermitteln
 # 02.10.2025 Anpassung an ARD-Änderungen
+# 25.08.2026 Url-Zusatz hinter {width} möglich, s.u.
 def img_load(title, item, icon=ICON_MAIN_ARD):
 	PLog("img_load: " + title)
+
 	item = str(item)
 	leer_img = R(ICON_DIR_FOLDER)
-	
-	img = stringextract("images'", '}', item)
-	img = stringextract("https", "{width", img)			# api.ardmediathek.de/image-service .. &w={width}
+	image = stringextract("images'", '},', item)
+
+	img = stringextract("src': '", "'", image)			# api.ardmediathek.de/image-service .. &w={width}&ch=705d3fcf..
 	PLog(img)
 	if img == '':
 		return leer_img									# Fallback 
 	else:
-		img = "https" + img + "720"
+		img = img.replace('{width}', '720')
 		return img	
 
 #-----------------------------------------------------------------------
