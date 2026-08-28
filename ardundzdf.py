@@ -30,10 +30,10 @@ elif PYTHON3:
 import base64 			# url-Kodierung für Kontextmenüs
 import sys				# Plattformerkennung
 import shutil			# Dateioperationen
-import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
+import re				# u.a. Reguläre Ausdrücke
 import datetime, time
 from datetime import timedelta
-import json				# json -> Textstrings
+import json				# json-Objekte
 import string
 import importlib		# dyn. Laden zur Laufzeit, s. router
 from threading import Thread
@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>365</nr>										# Numerierung für Einzelupdate
+# 	<nr>366</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.3'
-VDATE = '23.08.2026' 
+VDATE = '28.08.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -328,6 +328,12 @@ else:
 			PLog("Haupt_PRG: clear_strm_check_alive")	
 			os.remove(STRM_CHECK)							# Liste fehlt: Lock strm_check_alive entfernen
 		
+try:														# Check inputstream-Addon
+	addon_id='inputstream.adaptive'; 
+	INP_VERS = xbmcaddon.Addon(addon_id).getAddonInfo('version')
+except:
+	INP_VERS=""
+PLog("INP_VERS: " + INP_VERS)			
 
 MERKACTIVE 	= os.path.join(DICTSTORE, 'MerkActive') 		# Marker aktive Merkliste
 if os.path.exists(MERKACTIVE):
@@ -580,8 +586,10 @@ def Main():
 	if SETTINGS.getSetting('pref_strm') == 'true':
 		summ = "%s\n-%s" % (summ, "strm-Tools")
 	if SETTINGS.getSetting('pref_playlist') == 'true':
-		summ = "%s\n-%s\n-%s" % (summ, "PLAYLIST-Tools", "Settings inputstream.adaptive")
+		summ = "%s\n-%s" % (summ, "PLAYLIST-Tools")
 	summ = "%s\n-%s" % (summ, "Kodi-Thumbnails-Ordner bereinigen")
+	if INP_VERS:
+		summ = "%s\n-%s" % (summ, "Settings inputstream.adaptive")
 	summ = "%s\n\n%s" % (summ, u"[B]Einzelupdate[/B] (für einzelne Dateien des Addons)")
 	fparams="&fparams={}" 
 	addDir(li=li, label='Infos + Tools', action="dirList", dirID="InfoAndFilter", fanart=R(FANART), thumb=R(ICON_INFO), 
@@ -754,16 +762,11 @@ def InfoAndFilter():
 		fanart=R(FANART), thumb=R("icon-clear.png"), tagline=tag, summary=summ, fparams=fparams)	
 
 	
-	addon_id='inputstream.adaptive'; cmd="openSettings"		# Settings inputstream-Addon öffnen
-	try:													# Check inputstream-Addon
-		inp_vers = xbmcaddon.Addon(addon_id).getAddonInfo('version')
-	except:
-		inp_vers=""
-	PLog("inp_vers: " + inp_vers)			
-	if inp_vers and SETTINGS.getSetting('pref_inputstream') == 'true':
-		title = u"Settings inputstream.adaptive-Addon (v%s) öffnen" % inp_vers
+	cmd="openSettings"										# Settings inputstream-Addon öffnen
+	if INP_VERS:											# unabhängig vom Setting pref_inputstream
+		title = u"Settings inputstream.adaptive-Addon (v%s) öffnen" % INP_VERS
 		akt="EIN"
-		if SETTINGS.getSetting('pref_UT_ON') == "false":
+		if SETTINGS.getSetting('pref_inputstream') == "false":
 			akt="AUS"
 		tag = u"Bandbreite, Auflösung und weitere Einstellungen."
 		tag = u"%s\nDie Nutzung ist [B]%s-[/B]geschaltet (siehe Modul-Einstellungen von ARDundZDF)" % (tag, akt)
@@ -8560,9 +8563,9 @@ def ZDF_Graphql_WebDetails(path, mode=""):
 			elif "getEpg" in mode:
 				coll_id="dummy"										# Header-Params reichen	für ZDF_Verpasst 
 			elif "CatalogTabsConnection"  in mode:					# Buchstaben A-Z + Tab-Indices
-				pos = page.find("CatalogTabsConnection")			
-				PLog("CatalogTabsConnection: %d" % pos)
-				coll_id = stringextract("CatalogTabsConnection", "CatalogSeo", page)
+				pos = page.find('tabs":{"nodes"')					# 28.08.2026 ZDF-Änderung
+				PLog("CatalogTabs_pos: %d" % pos)
+				coll_id = stringextract('tabs":{"nodes"', "CatalogTabsConnection", page)
 			else:						
 				mark = '%s":"' % mode								# beliebige ID-Marke aus mode
 				PLog("search_mark: " + mark)
@@ -10564,6 +10567,7 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 
 	tabs = blockextract('title":"', coll_id)
 	PLog("tabs: %d" % len(tabs))
+	tabIndex=0															# Fallback A
 	element = element.replace("0+-+9", "0 - 9")							# -> tabIndex
 	for item in tabs:													# Suche tabIndex
 		PLog("element: %s, tab: %s" % (element, item))
