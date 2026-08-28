@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>149</nr>										# Numerierung für Einzelupdate
-#	Stand: 25.08.2026
+# 	<nr>150</nr>										# Numerierung für Einzelupdate
+#	Stand: 28.08.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2942,6 +2942,7 @@ def SendungenAZ_ARDnew(title, button, href, CurSender="", homeID=''):
 # 20.12.2024 Nutzung für Medienlinks (eingefügt durch Yatse, Kore o.ä.) - kodinerds-Forum Post 3.808
 #	 https://www.kodinerds.net/thread/64244-release-kodi-addon-ardundzdf/?postID=771633#post771633
 # 10.02.2025 Such-Url durch ARD geändert: Zusatz platform=MEDIA_THEK
+# 28.08.2025 Such-Url erneut geändert: /vods/ statt /shows/
 #
 def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 	PLog('SearchARDundZDFnew:');
@@ -2983,7 +2984,8 @@ def SearchARDundZDFnew(title, query='', pagenr='', homeID=""):
 		pageNumber = 0
 		
 		query_lable = query_ard.replace('+', ' ')
-		path= "https://api.ardmediathek.de/search-system/search/shows/%s?query=%s&pageSize=48&pageNumber=%s&platform=MEDIA_THEK"  % (sender, query_ard, pageNumber)
+		# wie ARDSearchnew
+		path = "https://api.ardmediathek.de/search-system/search/vods/%s?query=%s&pageNumber=%s&pageSize=48&platform=MEDIA_THEK&sortingCriteria=SCORE_DESC" % (sender, query_ard, pageNumber)
 
 		icon = R(ICON_SEARCH)
 		xbmcgui.Dialog().notification("ARD-Suche",query_lable,icon,1000, sound=False)
@@ -3199,7 +3201,8 @@ def ARDSearchnew(title, sender, offset=0, query='', homeID=""):
 	
 	# ----------------------------------------------------- # Suchstring umgestellt, s.o.
 	PLog(query)
-	path= "https://api.ardmediathek.de/search-system/search/shows/%s?query=%s&pageSize=48&pageNumber=%s&platform=MEDIA_THEK"  % (sender, query, offset)
+	# wie SearchARDundZDFnew
+	path = "https://api.ardmediathek.de/search-system/search/vods/%s?query=%s&pageNumber=%s&pageSize=48&platform=MEDIA_THEK&sortingCriteria=SCORE_DESC" % (sender, query, offset)
 
 	page, msg = get_page(path)					
 	PLog(len(page))
