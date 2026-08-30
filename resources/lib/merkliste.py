@@ -18,9 +18,9 @@ from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
 from kodi_six.utils import py2_encode, py2_decode
 
 import base64 			# url-Kodierung für Kontextmenüs
-import os, sys, subprocess 
-import re				
-import json	
+import os, sys, subprocess
+import re
+import json
 import datetime, time
 	
 PYTHON2 = sys.version_info.major == 2

@@ -18,6 +18,7 @@
 #		Modul umgestellt auf ARD-new-Funktionen. Youtube-Funktionen
 #		yt_get und get_stream_details vorerst nicht mehr genutzt,
 #		11.01.2026 beide Funktionen entfernt.
+#		Verbleibende Nutzung: MediathekViewWeb-Suche
 #
 ################################################################################
 #

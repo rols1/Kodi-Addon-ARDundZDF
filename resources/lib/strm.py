@@ -12,12 +12,12 @@ from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
 # o. Auswirkung auf die unicode-Strings in PYTHON3:
 from kodi_six.utils import py2_encode, py2_decode
 
-import os, sys 
+import os, sys
 import glob, shutil
-import re				
-import json	
-import time	
-import datetime		
+import re
+import json
+import time
+import datetime
 	
 PYTHON2 = sys.version_info.major == 2
 PYTHON3 = sys.version_info.major == 3

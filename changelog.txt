@@ -10,6 +10,25 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+30.08.2026	5.5.4
+			get_json_content_details (ARDnew): json-Error für Key synopsis abgefangen
+			(verhinderte Livestream-Listing im ARD-Startmenü -> tagesschau.
+			Modul updater: Verwendung des Requests-Moduls (falls geladen) in den
+			Funktionen get_latest_version und update, in update mit allow_redirects.
+			SendungenAZlist (my3Sat): funktionslosen Button vor Buchstabe A unter-
+			drückt (Webfehler).
+			Audio_get_cluster (ARD Sounds): neuen Teaser-Typ NewsTeaser berücksichtigt.
+			Audio_get_items_single (ARD Sounds): Nutzung Audio_get_img mit modifiziertem
+			item (json.loads), Anpassung image-Varianten in Audio_get_img.
+			InfoAndFilter: Button inputstream.adaptive-Addon-Settings öffnen unabhängig
+			vom Setting pref_inputstream. Check inputstream.adaptive an PRG-Anfang 
+			verlagert.
+			Main: Setting inputstream.adaptive im Info-Text zu Infos+Tools ergänzt.
+			img_load (ARDnew): Images mit Url-Zusatz hinter {width} berücksichtigt.
+			ZDF_Graphql_WebDetails: Anpassung an ZDF-Änderung der Tab-Liste A-Z.
+			SearchARDundZDFnew, ARDSearchnew: Anpassung an geänderte Such-Url /vods/
+			statt /shows/.
+
 16.08.2026	5.5.3
 			SearchWordTools (tools): Notification bei leerer Liste durch Anzeige der
 			Anzahl im Hinzufügen-Button ausgetauscht.

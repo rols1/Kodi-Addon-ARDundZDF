@@ -4,7 +4,6 @@
 #		Inhalte der ArteMediathek auf https://www.arte.tv/de/
 #
 #	Kompatibilität Python2/Python3: Modul future, Modul kodi-six
-#	Auswertung via Strings statt json (Performance)
 #
 ################################################################################
 # 	<nr>83</nr>								# Numerierung für Einzelupdate

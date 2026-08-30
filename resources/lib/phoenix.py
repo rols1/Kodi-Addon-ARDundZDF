@@ -37,7 +37,7 @@ elif PYTHON3:
 	except:
 		pass
 
-import json		
+import json
 import os, sys
 import ssl
 import datetime, time

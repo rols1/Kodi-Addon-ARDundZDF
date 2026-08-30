@@ -42,7 +42,7 @@ elif PYTHON3:
 
 # Python
 import string, re
-import  json, ssl		
+import json, ssl		
 import datetime, time
 
 # Addonmodule + Funktionsziele (util_imports.py)

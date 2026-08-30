@@ -59,7 +59,7 @@ import glob, shutil
 from io import BytesIO	# Python2+3 -> get_page (compressed Content), Ersatz für StringIO
 import gzip, zipfile
 import base64 			# url-Kodierung für Kontextmenüs
-import json				# json -> Textstrings
+import json				# json-Objekte
 import pickle			# persistente Variablen/Objekte
 import re				# u.a. Reguläre Ausdrücke
 import string, textwrap

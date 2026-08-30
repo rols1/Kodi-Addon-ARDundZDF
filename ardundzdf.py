@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>366</nr>										# Numerierung für Einzelupdate
-VERSION = '5.5.3'
-VDATE = '28.08.2026' 
+VERSION = '5.5.4'
+VDATE = '30.08.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8301,14 +8301,15 @@ def ZDF_Start(coll_id, homeID=""):
 
 	if "8c3f3656-ceff-48ed-a199-9e23c5a3d135" in coll_id:		# nur ZDF-Startseite
 		title = u"Videos in UHD-Qualität"
-		tag = u"Serien, Filme, Dokumentationen, Reportagen und mehr in Ultra-HD-Qualität."
+		tag = u"Serien, Filme, Dokumentationen, Reportagen und mehr in Ultra-HD-Qualität (UHD)."
+		summ = u"Für UHD-Downloads ist Sofortstart AUS erforderlich."
 		path = "https://www.zdf.de/ultra-high-definition"
 		folder = R(ICON_DIR_FOLDER)
 		title = py2_encode(title)
 		fparams="&fparams={'title': '%s', 'path': '%s'}" %\
 			(quote(title), quote(path))
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=folder, 
-			thumb=folder, tagline=tag, fparams=fparams)			
+			thumb=folder, tagline=tag, summary=summ, fparams=fparams)			
 		
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 	
