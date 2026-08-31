@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>366</nr>										# Numerierung für Einzelupdate
+# 	<nr>367</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.4'
-VDATE = '30.08.2026' 
+VDATE = '31.08.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8787,6 +8787,8 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 # Aufruf: ZDF_AZList, ZDF_Graphql_get_seasons
 # NEU-Kennung entfällt: editorialDate aus Episodendaten den Serien nicht
 #	verfügbar (außer initialSeasonId erst bei Folgeaufrufen).
+# 31.08.2026 "/serien/" in path kann nach Redirection entfallen - neues
+#	Serien-Merkmal: initialSeasonId in Webseite.
 # 
 def ZDF_KatSeriePre(title, path, img):
 	PLog('ZDF_KatSeriePre: %s | %s | %s' % (title, path, img))
@@ -8807,7 +8809,13 @@ def ZDF_KatSeriePre(title, path, img):
 	li = xbmcgui.ListItem()
 	li = home(li, ID='ZDF')									# Home-Button		
 			
-	if "/serien/" in newpath:								# zdf.de/serien/the-rookie-100
+	pos = page.find("vodSeasons")
+	vodSeasons = page[pos:]
+	PLog("vodSeasons: " + vodSeasons[:80])
+	SeasonId = stringextract('"initialSeasonId":"', '"', vodSeasons)
+	PLog("SeasonId: " + SeasonId)
+	
+	if SeasonId:								
 		canon = path.split("/")[-1]							# Button komplette Liste
 		label = "komplette Liste: %s" % title
 		tag = u"Liste aller verfügbaren Folgen (falls auswertbare Muster vorhanden) | [B]strm-Tools[/B]"
@@ -8815,14 +8823,14 @@ def ZDF_KatSeriePre(title, path, img):
 		addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
 			thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
 	else:
-		if "/serien/" in path:								# vor Redirect noch Serie? i.d.R. externe Serien
-			if "page-ard-collection" in path:				# Bsp.: Nachtstreife (ARD-SWR)
-				PLog("ARD_Serie | komplette Liste nicht möglich")
-				icon = R("icon-info.png")
-				xbmcgui.Dialog().notification("komplette Liste:", u"für diese ARD-Serie nicht möglich.",icon,3000)	
+		if "page-ard-collection" in path:				#  externe Serien, Bsp.: Nachtstreife (ARD-SWR)
+			PLog("ARD_Serie | komplette Liste nicht möglich")
+			icon = R("icon-info.png")
+			xbmcgui.Dialog().notification("komplette Liste:", u"für diese ARD-Serie nicht möglich.",icon,3000)	
 
 	typ = "seasonByCanonical"
-	seasons = blockextract('Season","id', page, '"nodes"')	# 08.04.2026 vorheriger String props:data/script entfallen
+	# 31.08.2026 seasons: vorheriger String 'Season","id' entfallen
+	seasons = blockextract('"id"', vodSeasons, 'episodeWithHighestNumberInSeason')
 	if seasons:
 		if "Staffel 1" in seasons[0]:						# aufsteigend? dann via slicing
 			seasons = seasons[::-1]							# 	gedreht	
@@ -8830,9 +8838,14 @@ def ZDF_KatSeriePre(title, path, img):
 
 	path=py2_encode(path);	skip_list=[]	
 	for item in seasons:
+		PLog(item[:80])
 		sid = stringextract('id":"', '"', item)				# Season-ID -> idIn (myvars)
 		if sid in skip_list:								# 14.12.2025 kompl. Liste im Web doppelt
 			continue 
+		if '"streamingOptions' in item:						# Schluss, streamingOptions folgt
+			PLog("break_on_streamingOptions")
+			break 
+			
 		skip_list.append(sid)
 		status = stringextract('newContentStatus":"', '"', item)	# "NEW_SEASON" od. null
 		snr = stringextract('number":', ',', item)			# Season-Nr.
@@ -8984,7 +8997,7 @@ def ZDF_KatSerieExtras(title, DictID, img, mode=""):
 #	abweichend vom 1. Call ZDF_AZList).
 # 
 def ZDF_KatSerie(title, path, typ, sid, endCursor=""):
-	PLog('ZDF_KatSerie: %s | %s | %s | %s' % (title, path, typ, sid))	
+	PLog('ZDF_KatSerie: %s | %s | %s | %s' % (title, path, typ, sid))
 	PLog(endCursor)
 	max_anz=50													# countEpisodes (max. 100 erlaubt), Web 24
 	title_org=title; path_org=path
@@ -9028,7 +9041,7 @@ def ZDF_KatSerie(title, path, typ, sid, endCursor=""):
 		endCursor = pageInfo["endCursor"]						# <- id letzter Satz base64, Bsp. ZnVuay1j .. MTIyMDEt
 	except Exception as exception:
 		collect=[]; 
-		PLog("KatSerie.json_error: " + str(exception))
+		PLog("KatSerie_json_error: " + str(exception))
 		msg1 = u'Datenproblem in ZDF_KatSerie: %s' % str(exception)
 		MyDialog(msg1, '', '')
 		return			
@@ -9567,21 +9580,21 @@ def ZDF_getHBBTV_content(items, max_cnt=0, mark=""):
 			foottxt = cleanhtml(foottxt)						# UT, AD, 6 in html-tags oder Wertung, Bsp. ereignisreich
 
 			if infotext and foottxt:							# leer in MetaCollection
-				infotext = "%s · %s" % (infotext, foottxt)
+				infotext = u"%s · %s" % (infotext, foottxt)
 			summ = item["text"]
 			summ = cleanhtml(summ)
 			tag = infotext
 
 			if headtxt:
-				tag = "%s\n[B]%s[/B]" % (tag, headtxt)			# Serientitel fett
+				tag = u"%s\n[B]%s[/B]" % (tag, headtxt)			# Serientitel fett
 			if headlabel:										# "" möglich
-				tag = "[B]%s[/B] | %s" % (headlabel, tag)
+				tag = u"[B]%s[/B] | %s" % (headlabel, tag)
 			
 			link = item["link"]									# null: url, live
 			canon_id = link["internalId"]						# gutes-maedchen-boeses-blut-100
 			ctype = link["ctype"]								# brand, live, EPISODE
 			link_id = link["id"]								# collection_id -> Graphql, hbbtv
-			url = "%s/%s" % (ZDF_BASE, canon_id)
+			url = u"%s/%s" % (ZDF_BASE, canon_id)
 		except Exception as exception:
 			PLog("getHBBTV_content_error: " + str(exception))
 			msg1 = "Fehler in ZDF_getHBBTV_content:"
@@ -10765,10 +10778,11 @@ def ZDF_FlatListEpisodes(sid):
 		max_cnt = max_cnt + len(staffel["teaser"])
 	PLog("Folgen_gesamt: %d" % max_cnt)
 	Dir_Arr=[[] for _ in range(max_cnt)]						# Sortier-addDir-Array (s. ShowFavs, ARD_FlatListEpisodes)
+	skip_list=[]
 
 	for staffel in 	staffel_list:
-		if 	staffel["name"] == "":								# Teaser u.ä.
-			continue							
+		#if 	staffel["name"] == "":							# 31.08.2026 leer möglich, Bsp. "Achtung, Essen!"
+		#	continue									
 		folgen = staffel["teaser"]								# Folgen-Blöcke	
 		PLog("%s | Folgen: %d" % (staffel["name"], len(folgen)))
 
@@ -10790,6 +10804,10 @@ def ZDF_FlatListEpisodes(sid):
 			if season == '':
 				PLog("skip_no_season: " + str(folge)[:60])
 				continue
+			if title in skip_list:
+				PLog("skip_title: " + str(folge)[:60])
+				continue
+			skip_list.append(title)
 			if SETTINGS.getSetting('pref_usefilter') == 'true':	# Ausschluss-Filter
 				filtered=False
 				for item in AKT_FILTER:
