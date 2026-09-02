@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>368</nr>										# Numerierung für Einzelupdate
+# 	<nr>369</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.4'
 VDATE = '02.09.2026' 
 
@@ -8822,7 +8822,7 @@ def ZDF_KatSeriePre(title, path, img):
 		canon = path.split("/")[-1]							# Button komplette Liste
 		if ZDF_checkSerie(canon):							# futura-api -> seasonNumber?
 			label = "komplette Liste: %s" % title
-			tag = u"Liste aller verfügbaren Folgen (falls auswertbare Muster vorhanden) | [B]strm-Tools[/B]"
+			tag = u"Liste aller verfügbaren Folgen | [B]strm-Tools[/B]"
 			fparams="&fparams={'sid': '%s'}"	% canon					
 			addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
 				thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)			
