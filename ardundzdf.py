@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>367</nr>										# Numerierung für Einzelupdate
+# 	<nr>368</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.4'
-VDATE = '31.08.2026' 
+VDATE = '02.09.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8780,15 +8780,18 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 	
 #-----------------------------------------------
 # Graphql-Serien Pre: Vorauswahl Staffeln, Empfehlungen, 
-#	Extras, Details. Button "komplette Liste:" nur bei /serien/ 
-#	in path (Auswertung via futura-api in ZDF_FlatListEpisodes).
+#	Extras, Details. 
+# Aufruf: ZDF_AZList, ZDF_Graphql_get_seasons für Serien und
+#	Sendereihen (Collections)
+# Button "komplette Liste:" Auswertung via futura-api in 
+#	ZDF_FlatListEpisodes).
 # Verzicht auf Graphql (operationName=seasonByCanonical), Dict-Auswertung
 #	schneller. Aber: Sortierung nicht immer absteigend (Bsp. The Rookie)
-# Aufruf: ZDF_AZList, ZDF_Graphql_get_seasons
 # NEU-Kennung entfällt: editorialDate aus Episodendaten den Serien nicht
 #	verfügbar (außer initialSeasonId erst bei Folgeaufrufen).
-# 31.08.2026 "/serien/" in path kann nach Redirection entfallen - neues
-#	Serien-Merkmal: initialSeasonId in Webseite.
+# 31.08.2026 "/serien/" in path entfällt bei Shows nach Redirection, Serien-
+# 	Merkmal nun initialSeasonId ab vodSeasons, Blockmerkmal nun 'id":"' statt
+#	'Season","id'. Ergänzung fehlende "Staffel" im Titel mit Jahr (number).
 # 
 def ZDF_KatSeriePre(title, path, img):
 	PLog('ZDF_KatSeriePre: %s | %s | %s' % (title, path, img))
@@ -8815,43 +8818,51 @@ def ZDF_KatSeriePre(title, path, img):
 	SeasonId = stringextract('"initialSeasonId":"', '"', vodSeasons)
 	PLog("SeasonId: " + SeasonId)
 	
-	if SeasonId:								
+	if SeasonId :					# "/serien/" in Redirection nur noch bei echten Serien								
 		canon = path.split("/")[-1]							# Button komplette Liste
-		label = "komplette Liste: %s" % title
-		tag = u"Liste aller verfügbaren Folgen (falls auswertbare Muster vorhanden) | [B]strm-Tools[/B]"
-		fparams="&fparams={'sid': '%s'}"	% canon					
-		addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
-			thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)
-	else:
-		if "page-ard-collection" in path:				#  externe Serien, Bsp.: Nachtstreife (ARD-SWR)
-			PLog("ARD_Serie | komplette Liste nicht möglich")
-			icon = R("icon-info.png")
-			xbmcgui.Dialog().notification("komplette Liste:", u"für diese ARD-Serie nicht möglich.",icon,3000)	
+		if ZDF_checkSerie(canon):							# futura-api -> seasonNumber?
+			label = "komplette Liste: %s" % title
+			tag = u"Liste aller verfügbaren Folgen (falls auswertbare Muster vorhanden) | [B]strm-Tools[/B]"
+			fparams="&fparams={'sid': '%s'}"	% canon					
+			addDir(li=li, label=label, action="dirList", dirID="ZDF_FlatListEpisodes", fanart=R(ICON_DIR_FOLDER), 
+				thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)			
 
 	typ = "seasonByCanonical"
 	# 31.08.2026 seasons: vorheriger String 'Season","id' entfallen
-	seasons = blockextract('"id"', vodSeasons, 'episodeWithHighestNumberInSeason')
+	seasons = blockextract('"id":', vodSeasons, 'episodeWithHighestNumberInSeason')
 	if seasons:
+		if "episodeWithHighestNumberInSeason" not in seasons[-1]:	# kein regul. Element
+			seasons.pop(-1)
 		if "Staffel 1" in seasons[0]:						# aufsteigend? dann via slicing
+			PLog(seasons[0])
 			seasons = seasons[::-1]							# 	gedreht	
-	PLog("seasons: %d" % len(seasons))
+			PLog(seasons[0])
+	PLog("block_seasons: %d" % len(seasons))
 
-	path=py2_encode(path);	skip_list=[]	
+	path=py2_encode(path); skip_list=[];
 	for item in seasons:
 		PLog(item[:80])
-		sid = stringextract('id":"', '"', item)				# Season-ID -> idIn (myvars)
-		if sid in skip_list:								# 14.12.2025 kompl. Liste im Web doppelt
-			continue 
-		if '"streamingOptions' in item:						# Schluss, streamingOptions folgt
-			PLog("break_on_streamingOptions")
-			break 
-			
-		skip_list.append(sid)
-		status = stringextract('newContentStatus":"', '"', item)	# "NEW_SEASON" od. null
-		snr = stringextract('number":', ',', item)			# Season-Nr.
+
 		title = stringextract('title":"', '"', item)
+		snr = stringextract('number":', ',', item)			# Season-Nr.
+		if "Staffel " not in title:
+			PLog("Staffel_missing: " + title)
+			if snr.isnumeric():								# "none" möglich
+				title = "Staffel " + snr
+			else:
+				PLog("number_missing: " + title)
+				continue
+					
 		title = repl_json_chars(title)
 		title = "%s | [B]%s[/B]" % (t_org, title)
+		
+		if title in skip_list:								# 14.12.2025 kompl. Liste im Web doppelt
+			PLog("skip_title: " + title)
+			continue 
+		skip_list.append(title)
+
+		sid = stringextract('id":"', '"', item)				# Season-ID -> idIn (myvars)			
+		status = stringextract('newContentStatus":"', '"', item)	# "NEW_SEASON" od. null
 		if "NEW" in status:
 			title = "%s [B](NEU)[/B]" % title
 		anz = stringextract('countEpisodes":', ',', item)
@@ -8915,6 +8926,20 @@ def ZDF_KatSeriePre(title, path, img):
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
+# -----------------------------------------------
+# Check auf Vorhandensein von seasonNumber in futura-api
+def ZDF_checkSerie(canon):
+	PLog("ZDF_checkSerie: " + canon)
+	base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
+	path = base + canon
+	page, msg = get_page(path=path)
+	if "seasonNumber" in page:
+		PLog("seasonNumber_exist")
+		return True
+	else:
+		PLog("seasonNumber_missing")
+		return False
+
 # -----------------------------------------------
 # Graphql-Serien Extras (i.d.R. Trailer)
 # Aufruf: ZDF_KatSerie, 
@@ -10801,9 +10826,10 @@ def ZDF_FlatListEpisodes(sid):
 				PLog("skip_no_brandId: " + str(folge)[:60])
 				continue
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
-			if season == '':
+			if season == '':									# 
 				PLog("skip_no_season: " + str(folge)[:60])
 				continue
+				
 			if title in skip_list:
 				PLog("skip_title: " + str(folge)[:60])
 				continue
@@ -10958,7 +10984,7 @@ def ZDF_Graphql(OpName, sha256Hash, variables):
 	req = Request(url, headers=headers, method="GET")
 	with urlopen(req, timeout=20) as resp:
 		raw = resp.read().decode("utf-8")
-	PLog("data_raw: %d | %s" % (len(raw), raw[:100]))
+	PLog("data_raw: %d | %s" % (len(raw), raw[:200]))	# 200 reicht für: "seasons":{"nodes":[]
 	return raw
 
 #----------------------------------------------
@@ -11463,8 +11489,11 @@ def ZDF_FlatListRec(item):
 	fsk =  item["fsk"]
 	if fsk == "none":
 		fsk = "ohne"
-	end =  item["timetolive"]								# Altern.: offlineAvailability
-	end = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % end
+	if "timetolive" in item:								# 04.07.2028 16:38
+		end =  item["timetolive"]							# Altern.: offlineAvailability, nicht genutzt
+		end = u"[B]Verfügbar bis [COLOR darkgoldenrod]%s[/COLOR][/B]" % end
+	else:
+		end = ""
 	geo =  item["geoLocation"]
 	if geo == "none":
 		geo = "ohne"
