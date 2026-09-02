@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>369</nr>										# Numerierung für Einzelupdate
+# 	<nr>370</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.4'
 VDATE = '02.09.2026' 
 
@@ -8789,9 +8789,10 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 #	schneller. Aber: Sortierung nicht immer absteigend (Bsp. The Rookie)
 # NEU-Kennung entfällt: editorialDate aus Episodendaten den Serien nicht
 #	verfügbar (außer initialSeasonId erst bei Folgeaufrufen).
-# 31.08.2026 "/serien/" in path entfällt bei Shows nach Redirection, Serien-
-# 	Merkmal nun initialSeasonId ab vodSeasons, Blockmerkmal nun 'id":"' statt
-#	'Season","id'. Ergänzung fehlende "Staffel" im Titel mit Jahr (number).
+# 31.08.2026 "/serien/" in path kann nach Redirection entfallen (unsicher),
+# 	Serien-Merkmal nun initialSeasonId ab vodSeasons, Blockmerkmal nun 'id":"' statt
+#	'Season","id'. Ergänzung fehlende "Staffel" im Titel mit Jahr (number), Button
+#	"komplette Liste" nur noch mit initialSeasonId und ZDF_checkSerie.
 # 
 def ZDF_KatSeriePre(title, path, img):
 	PLog('ZDF_KatSeriePre: %s | %s | %s' % (title, path, img))
@@ -8928,6 +8929,8 @@ def ZDF_KatSeriePre(title, path, img):
 			
 # -----------------------------------------------
 # Check auf Vorhandensein von seasonNumber in futura-api
+# Aufruf: ZDF_KatSeriePre
+#
 def ZDF_checkSerie(canon):
 	PLog("ZDF_checkSerie: " + canon)
 	base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
@@ -10822,9 +10825,10 @@ def ZDF_FlatListEpisodes(sid):
 				brandId = folge["brandId"]
 			except:
 				brandId=""
-			if season_id != brandId:
-				PLog("skip_no_brandId: " + str(folge)[:60])
-				continue
+			if season_id != brandId:							# brandId kann fehlen, Bsp. "Bares für Rares"
+				if season_id not in folge["sharingUrl"]:		# Bsp. zdf.de/video/shows/bares-fuer-rares-104/...
+					PLog("skip_no_brandId, season_id: %s | %s" % (season_id, str(folge)[:60]))
+					continue
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
 			if season == '':									# 
 				PLog("skip_no_season: " + str(folge)[:60])
