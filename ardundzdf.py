@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>370</nr>										# Numerierung für Einzelupdate
+# 	<nr>371</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.4'
 VDATE = '02.09.2026' 
 
@@ -9765,9 +9765,11 @@ def ZDF_RubrikSingle(url, title, cindex="", homeID=""):
 			teaser = item["teaser"]
 			img = ZDF_get_img(teaser[0])
 			if not title:									# "Alle" mit brandTitle verbinden
-				 moreLabel = item["moreLabel"]
-				 if "Alle" in moreLabel:
-					 title = "%s: %s" % (moreLabel, teaser[0]["brandTitle"])
+				moreLabel = item["moreLabel"]
+				if "Alle" in moreLabel:
+					title = moreLabel
+					if "brandTitle" in teaser[0]:
+						title = "%s: %s" % (moreLabel, teaser[0]["brandTitle"])
 								
 			tag = "Folgeseiten\nBild: 1. Beitrag"
 			
