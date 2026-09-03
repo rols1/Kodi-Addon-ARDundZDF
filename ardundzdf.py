@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>371</nr>										# Numerierung für Einzelupdate
+# 	<nr>372</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.4'
-VDATE = '02.09.2026' 
+VDATE = '03.09.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -178,6 +178,7 @@ HEADERS_GRAPHQL 	= "{'api-auth': 'Bearer %s', 'content-type': 'application/json'
 	'zdf-app-id': '%s', 'accept': '*/*', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site'}"
 PTMD_PLAYER			= "ngplayer_2_4"
 ZDF_HBBTVBase		= "https://hbbtv.zdf.de/legacy-al/curated-collection?id="
+Futura_Base			= "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
 	
 
 REPO_NAME		 	= 'Kodi-Addon-ARDundZDF'
@@ -8785,15 +8786,15 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 #	Sendereihen (Collections)
 # Button "komplette Liste:" Auswertung via futura-api in 
 #	ZDF_FlatListEpisodes).
-# Verzicht auf Graphql (operationName=seasonByCanonical), Dict-Auswertung
-#	schneller. Aber: Sortierung nicht immer absteigend (Bsp. The Rookie)
-# NEU-Kennung entfällt: editorialDate aus Episodendaten den Serien nicht
-#	verfügbar (außer initialSeasonId erst bei Folgeaufrufen).
-# 31.08.2026 "/serien/" in path kann nach Redirection entfallen (unsicher),
+# Staffellisten bisher nicht via Graphql-, futura-, hbbtv-api 
+#	realisierbar. Daher Web-Auswertung. Sortierung nicht immer
+#	absteigend (Bsp. The Rookie)
+# 31.08.2026 "/serien/" in path kann nach Redirection fehlen (unsicher),
 # 	Serien-Merkmal nun initialSeasonId ab vodSeasons, Blockmerkmal nun 'id":"' statt
 #	'Season","id'. Ergänzung fehlende "Staffel" im Titel mit Jahr (number), Button
 #	"komplette Liste" nur noch mit initialSeasonId und ZDF_checkSerie.
-# 
+# Todo s. ../ZDF/00_Funktionsketten - 
+#	
 def ZDF_KatSeriePre(title, path, img):
 	PLog('ZDF_KatSeriePre: %s | %s | %s' % (title, path, img))
 	t_org=title; img_org=img
@@ -8913,10 +8914,9 @@ def ZDF_KatSeriePre(title, path, img):
 		thumb=img, tagline=tag, fparams=fparams)
 	
 	page = stringextract('"extras":', "</script>", page)
-	PLog("extras: " + page[:80])
-	videos = blockextract('Video","id"', page) 				# wie ZDF_KatSerieExtras
-	PLog("videos: %d" % len(videos))
-	PLog(str(videos)[:80])
+	PLog("extras1: %d | %s " % (len(page), page[:80]))
+	videos = blockextract('canonical":"trailer-', page) 				# wie ZDF_KatSerieExtras
+	PLog("videos: %d | %s" % (len(videos), str(videos)[:80]))
 	if len(videos) > 0:
 		title = "Extras"		
 		tag = "Trailer, Vorschau"
@@ -8953,13 +8953,13 @@ def ZDF_KatSerieExtras(title, DictID, img, mode=""):
 	img_org=img
 	page = Dict("load", DictID)
 	page = stringextract('"extras":', "</script>", page)
-	PLog(page[:180])
+	PLog("extras2: %d | %s " % (len(page), page[:80]))
 	
 	if "Darsteller" in mode:								# Inhaltstext
 		pass
 		
-	videos = blockextract('Video","id"', page) 				# Web: Video\",\"id
-	PLog("videos: %d" % len(videos))
+	videos = blockextract('canonical":"trailer-', page) 	# wie ZDF_KatSeriePre
+	PLog("videos: %d | %s" % (len(videos), str(videos)[:80]))
 	PLog(videos[0][:80])
 	
 	li = xbmcgui.ListItem()
@@ -8974,8 +8974,7 @@ def ZDF_KatSerieExtras(title, DictID, img, mode=""):
 	
 	# fehlt im Web: zusätzl. cleanTrailer Bsp.: ..push-staffel-2-clean-100
 	for item in videos:
-		PLog(item[:200])
-		scms_id = stringextract('id":"', '"', item)		
+		PLog(item[:80])
 		descr = stringextract('title":"', '"', item)		# hier in title
 		if 'imageWithoutLogo' in item:
 			teaser = stringextract('teaser":', 'imageWithoutLogo', item)
@@ -8996,7 +8995,7 @@ def ZDF_KatSerieExtras(title, DictID, img, mode=""):
 		if not dur:
 			continue
 
-		ptmdTemplate = stringextract('ptmdTemplate":"', '"', item)
+		ptmdTemplate = stringextract('ptmdTemplate":"', '"', item)	# hier nicht genutzt
 		canon_id = stringextract('canonical":"', '"', item)
 		url = base % canon_id
 		img = stringextract('dim1280Xauto":"', '"', item)
