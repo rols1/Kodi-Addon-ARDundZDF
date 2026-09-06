@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>372</nr>										# Numerierung für Einzelupdate
+# 	<nr>373</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.4'
-VDATE = '03.09.2026' 
+VDATE = '06.09.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1983,6 +1983,7 @@ def Audio_get_sendung(url, title, page=''):
 				wimg = wimage["url"]
 				wimg = wimg.replace('{width}', "640")
 				wimg_alt = wimage["attribution"]					# Autor
+				wanz = page["numberOfElements"]
 			else:													# Sammlung
 				data = page["pageProps"]["initialData"]
 				wtitle = data["title"]
@@ -1993,7 +1994,7 @@ def Audio_get_sendung(url, title, page=''):
 				wimg_alt = wimage["alt"]			
 				wimg = wimage["templateURL"]
 				wimg = wimg.replace('{width}', "640")
-			wanz = len(nodes)
+				wanz = len(nodes)
 		else:														# api_url mit Pagination
 			PLog("programSet_page")									# Web-json
 			data = page["data"]["programSet"]
@@ -2036,8 +2037,13 @@ def Audio_get_sendung(url, title, page=''):
 		
 		if "/sendung/" in mp3_url:										# noch Sendung?
 			PLog("sendung_in_mp3_url")
+			
+			pid = mp3_url.split("/")[-2]								# "../urn:ard:show:ccd5ed68c3a26c7d/"
+			href = ARD_AUDIO_BASE_API + "/programsets/%s/%s" % (pid, ARD_AUDIO_HREF_ADD)
+			href=py2_encode(href);			
+			
 			tag =  "[B]Sendung | Folgeseiten[/B]"
-			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(mp3_url), quote(title))
+			fparams="&fparams={'url': '%s', 'title': '%s'}" % (quote(href), quote(title))
 			addDir(li=li, label=title, action="dirList", dirID="Audio_get_sendung", \
 				fanart=img, thumb=img, fparams=fparams, tagline=tag, summary=summ)
 		else:															# Abspielen
@@ -8784,11 +8790,14 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 #	Extras, Details. 
 # Aufruf: ZDF_AZList, ZDF_Graphql_get_seasons für Serien und
 #	Sendereihen (Collections)
-# Button "komplette Liste:" Auswertung via futura-api in 
-#	ZDF_FlatListEpisodes).
+# Buttons:	komplette Liste -> ZDF_FlatListEpisodesAuswertung (futura-api), 
+#			Staffeln 		-> ZDF_KatSerie (Graphql),
+# 			Empfehlungen 	-> ZDF_Recommendation (Graphql),
+#			Extras			-> ZDF_KatSerieExtras (futura-api)
+#
 # Staffellisten bisher nicht via Graphql-, futura-, hbbtv-api 
 #	realisierbar. Daher Web-Auswertung. Sortierung nicht immer
-#	absteigend (Bsp. The Rookie)
+#	absteigend (Bsp. The Rookie), dann hier gedreht.
 # 31.08.2026 "/serien/" in path kann nach Redirection fehlen (unsicher),
 # 	Serien-Merkmal nun initialSeasonId ab vodSeasons, Blockmerkmal nun 'id":"' statt
 #	'Season","id'. Ergänzung fehlende "Staffel" im Titel mit Jahr (number), Button
@@ -8835,9 +8844,9 @@ def ZDF_KatSeriePre(title, path, img):
 	if seasons:
 		if "episodeWithHighestNumberInSeason" not in seasons[-1]:	# kein regul. Element
 			seasons.pop(-1)
-		if "Staffel 1" in seasons[0]:						# aufsteigend? dann via slicing
+		if '"Staffel 1"' in seasons[0]:						# aufsteigend? 
 			PLog(seasons[0])
-			seasons = seasons[::-1]							# 	gedreht	
+			seasons = seasons[::-1]							# 	dann via slicing gedreht	
 			PLog(seasons[0])
 	PLog("block_seasons: %d" % len(seasons))
 
