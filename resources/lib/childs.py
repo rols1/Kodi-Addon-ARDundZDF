@@ -7,8 +7,8 @@
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 ################################################################################
 #	
-# 	<nr>46</nr>										# Numerierung für Einzelupdat1
-#	Stand: 08.07.2026
+# 	<nr>47</nr>										# Numerierung für Einzelupdat1
+#	Stand: 06.09.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -637,8 +637,11 @@ def ARD_getHBBTV_content(wtitle, elems):
 		typ="";title="";tag="";summ="";img="";
 		try:
 			cnt=cnt+1
-			ttyp = item["ttyp"]									# 
-			title = item["cpixTitle"]
+			ttyp = item["ttyp"]									#
+			if "cpixTitle" in item:
+				title = item["cpixTitle"]
+			else:
+				title = item["title"]
 			title  = repl_json_chars(title)
 			
 			img = item["imgHi"]									# w=640
