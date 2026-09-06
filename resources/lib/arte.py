@@ -6,8 +6,8 @@
 #	Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #
 ################################################################################
-# 	<nr>83</nr>								# Numerierung für Einzelupdate
-#	Stand: 18.07.2026
+# 	<nr>84</nr>								# Numerierung für Einzelupdate
+#	Stand: 06.09.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -352,7 +352,7 @@ def EPG_Today(ID="", OnlyNow=""):
 			summ=""
 		
 		prgid = item["programId"]						# 065804-000-A		
-		img = get_img(item, ID)
+		img = get_img_arte(item, ID)
 
 		duration = item["duration"]						# null möglich (z.B. Konzerte)
 		if duration:
@@ -639,13 +639,13 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 					kat = kat.split("/")[-1]
 					url = "%s/api/1/skeletons/pages/%s?lang=%s" % (HBBTV_BASE, kat, lang)	
 		
-		img = get_img(item, ID)
+		img = get_img_arte(item, ID)
 		if "ACCESSIBLE_PROGRAMS/2" in url:
 			img = R("arte_barrierefrei.png")
 		if "ACCESSIBLE_PROGRAMS/3" in url:
 			img = R("arte_Untertitel.png")
 		if img == "" and ID == "HBBTV":
-			img = get_img_pre(url, title)				# Bild 1. Beitrag Zielseite
+			img = get_img_arte_pre(url, title)				# Bild 1. Beitrag Zielseite
 		if img == "":
 			img = img_def								# übergeordnetes Bild oder Folder
 		PLog("img: %s, img_def: %s" % (img, img_def))
@@ -677,8 +677,10 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 			"Geoblock-Info: ALL"
 		
 		try:											# 19.06.2026 hier nicht mehr vorhanden,
-			start = item["availability"]["start"]		# 	 oder null - im EPG dagegen schon
-			end = item["availability"]["end"]
+			start=""; end=""; start_end=""				# 	 oder null - im EPG dagegen schon
+			if "availability" in item:		
+				start = item["availability"]["start"]	
+				end = item["availability"]["end"]
 		except Exception as exception:
 			PLog("GetContent_error2: " + str(exception))
 			start=""; end=""; start_end=""
@@ -793,11 +795,11 @@ def GetContent(li, page, ID, ignore_pid="", OnlyNow="", lang=""):
 #	Name, collection-Nr. und lang erzeugt, z.B. home_24de (Beiträge
 #	+ Bilder unterscheiden sich für die de,fr,en,es,pl,it).
 #	
-def get_img_pre(path, title):
-	PLog("get_img_pre:")
+def get_img_arte_pre(path, title):
+	PLog("get_img_arte_pre:")
 	PLog("title: %s, path: %s" % (title, path))
-	leer_img=""	
-	
+	img_def = R(ICON_DIR_FOLDER)
+
 	oname = os.path.join(SLIDESTORE, "ARTE_Startpage")
 	p = path.replace("?lang=", "")						# entferne lang=, behalte Kennung
 	p = p.split("/")									# details/home/24?lang=de ->
@@ -817,8 +819,7 @@ def get_img_pre(path, title):
 	if os.path.exists(fname):							# img aus Cache laden
 		PLog('img_cache_load: ' + fname)	
 		return fname
-	#-------------------------------------------------- # Beitrag path von Sender laden	
-		
+	#-------------------------------------------------- # Beitrag path von Sender laden			
 	try:
 		page, msg = get_page(path)
 		PLog(str(page)[:80])
@@ -831,35 +832,34 @@ def get_img_pre(path, title):
 			item=[]
 	except Exception as exception:
 		PLog("json_error7: " + str(exception))
-		return 	leer_img
+		return 	img_def
 	PLog(str(item)[:80])
 	
-	img = get_img(item, ID="HBBTV")
-	if img == "":
-		return 	leer_img
-
+	img = get_img_arte(item, ID="HBBTV")
+	if  img in img_def:									# Folder-Icon
+		return 	img
+		
 	PLog('img_cache_leer')
 	PLog("urlretrieve %s to %s" % (img, fname))	
 	msg1 = L("Lade Bild")
 	msg2 = title
 	xbmcgui.Dialog().notification(msg1,msg2,R(ICON_ARTE),2000, sound=False)	
 	try: 
-		urlretrieve(img, fname)								# img -> Cache
+		urlretrieve(img, fname)							# img -> Cache
 	except Exception as exception:
 		PLog("urlretrieve_error: " + str(exception))
-		return 	leer_img
-	return fname
+		return 	img_def
+	return fname		
 	
 # -------------------------------
 # holt Bild aus Datensatz
 # 15.01.2023 angepasst für json-Inhalte
-# 25.03.2025  für hbbtv erweitert mit Cache
 #
-def get_img(item, ID=""):
-	PLog("get_img: " + ID)
+def get_img_arte(item, ID=""):
+	PLog("get_img_arte: " + ID)
 	PLog(str(type(item)))
 	PLog(str(item)[:80])	
-	img=""
+	img_def = R(ICON_DIR_FOLDER)
 	
 	if ID == "HBBTV":
 		if "images" in item:
@@ -868,12 +868,13 @@ def get_img(item, ID=""):
 			else:
 				img = item["images"]["landscape"]
 		else:		 
-			img=""
+			img = img_def
 		PLog("img: " + img)
 		return img
 		
 	# -------------------------------------------------	# Bilder api/rproxy/emac/v4
-	if type(item) == dict:
+
+	if type(item) == dict:								# EPG_Today
 		if "mainImage" in item:
 			img = item["mainImage"]["url"]
 			img = img.replace('__SIZE__', '400x225')
@@ -888,6 +889,7 @@ def get_img(item, ID=""):
 					break	
 		return img
 	
+	img=""	
 	if "resolutions" in item:
 		images = stringextract('resolutions":[', '}],', item)
 		# PLog(images)
@@ -903,15 +905,14 @@ def get_img(item, ID=""):
 		image = stringextract('mainImage":', '}', item)
 		#PLog(image)
 		img = stringextract('url":"', '"', image)
-		img = img.replace('__SIZE__', '400x225')		# nur 400x225 akzeptiert
-		
+		img = img.replace('__SIZE__', '400x225')		# nur 400x225 akzeptiert	
 			
 	if img == '':
-		img = R(ICON_DIR_FOLDER)
+		img = img_def
 	
 	return img
 	
-# -------------------------------
+# ----------------------------------------------------------------------
 # 15.01.2023
 # def get_trailer() entfernt
 	
@@ -1344,7 +1345,6 @@ def ArteStart(path="", title=""):
 	if step1:
 		# -------------------------------------------------------------- # Step1 Übersicht
 		PLog("ArteStart_Step1:")
-		thumb = R(ICON_DIR_FOLDER)
 		fanart = R(ICON_ARTE)
 		tag=""
 		
@@ -1374,14 +1374,14 @@ def ArteStart(path="", title=""):
 					continue
 				link = item["link"]
 				href = "%s%s?lang=%s" % (HBBTV_BASE, link, lang)
-				img = get_img_pre(href, title)							# Bild 1. Beitrag Zielseite
+				img = get_img_arte_pre(href, title)							# Bild 1. Beitrag Zielseite
 				
 				PLog('Satz7:')
 				PLog(title); PLog(href)
 				title=py2_encode(title); href=py2_encode(href);
 				fparams="&fparams={'path': '%s', 'title': '%s'}" % (quote(href), quote(title))							
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.arte.ArteStart", 
-					fanart=fanart, thumb=thumb, tagline=tag, fparams=fparams)
+					fanart=fanart, thumb=img, tagline=tag, fparams=fparams)
 				
 		except Exception as exception:
 			PLog("json_error2: " + str(exception))
