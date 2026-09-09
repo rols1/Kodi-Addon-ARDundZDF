@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>150</nr>										# Numerierung für Einzelupdate
-#	Stand: 28.08.2026
+# 	<nr>151</nr>										# Numerierung für Einzelupdate
+#	Stand: 09.09.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -709,7 +709,7 @@ def ARDStartRegion(path, title, widgetID='', ID='', homeID=""):
 		"by|Unter unserem Himmel|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2JyLmRlL2Jyb2FkY2FzdFNlcmllcy9icm9hZGNhc3RTZXJpZXM6L2JyZGUvZmVybnNlaGVuL2JheWVyaXNjaGVzLWZlcm5zZWhlbi9zZW5kdW5nZW4vdW50ZXItdW5zZXJlbS1oaW1tZWw?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:af246683efe842f0?w=640&ch=fcad9e13605d8eb0"
 		,"by|Blickpunkt Sport|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2JyLmRlL2Jyb2FkY2FzdFNlcmllcy9icm9hZGNhc3RTZXJpZXM6L2JyZGUvZmVybnNlaGVuL2JheWVyaXNjaGVzLWZlcm5zZWhlbi9zZW5kdW5nZW4vYmxpY2twdW5rdC1zcG9ydA?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:47139d13d3483f29?w=640&ch=9d54ad9bea96ef5b"
 		,"he|Heimat Hessen|https://api.ardmediathek.de/page-gateway/pages/ard/grouping/Y3JpZDovL2hyLW9ubGluZS8zODIxMDI4MQ?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:f049db09043c494c?w=640&ch=c8f27b2223dbd951"
-		,"he|Sport im hr|https://api.ardmediathek.de/page-gateway/pages/hr/editorial/hr-sport-hessen?pageNumber=0&pageSize=100|https://api.ardmediathek.de/image-service/images/urn:ard:image:728fab9db02e4bae?ch=011a995a203e585a&w=640"
+		,"he|Sport im hr|https://api.ardmediathek.de/page-gateway/widgets/hr/editorials/4jTtWjZZKSPhGqNVQSQEId%3A-2791590631017594359?pageNumber=0&pageSize=20&embedded=true|https://api.ardmediathek.de/image-service/images/urn:ard:image:728fab9db02e4bae?ch=011a995a203e585a&w=640"
 		,"sl|Sport im SR|https://api.ardmediathek.de/page-gateway/widgets/sr/editorials/E7IQVqrZXqK24ieYwG8kO%3A-115180639807314065?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:1c772b30babcd252?ch=5266a5922c5f86f0&w=640"
 		,"sn|MDR+|https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL21kci5kZS9tZHJwbHVz?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:eab36fa8ffdb27da?w=640&ch=4bc0c7d930d596d9"
 		,"sn|Sport im Osten|https://api.ardmediathek.de/page-gateway/widgets/ard/asset/Y3JpZDovL21kci5kZS9zZW5kZXJlaWhlbi82ODlhYzU5My1mOWFkLTQ3MTAtOTczMS1lMTNiZTEwODZkMGM?pageNumber=0&pageSize=48|https://api.ardmediathek.de/image-service/images/urn:ard:image:4b8aeaada557019e?w=1600&ch=50fb95aed76b8244&imwidth=1600"
