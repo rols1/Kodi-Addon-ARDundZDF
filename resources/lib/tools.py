@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>25</nr>								# Numerierung für Einzelupdate
-#	Stand: 20.07.2026
+# 	<nr>26</nr>								# Numerierung für Einzelupdate
+#	Stand: 15.09.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -705,8 +705,7 @@ def Context(title, path, img, mode):
 	
 	#-------------------------
 	if "api.ardmediathek" in path:							# ARD
-		path=path + "&seasoned=true"						# 12.05.2026 früheres Format funktioniert nicht mehr,
-		new_url, msg = getRedirect(path)					# 	seasoned=true für Serien erforderlich
+		new_url, msg = getRedirect(path)					# 15.09.2026 ohne seasoned=true 
 		page=""
 		if new_url:
 			page, msg = get_page(path=new_url)
@@ -715,25 +714,27 @@ def Context(title, path, img, mode):
 					
 		# typ:  SEASON_SERIES, SINGLE, INFINITE_SERIES (z.B. Nachrichten, nicht verw.):
 		typ = stringextract('coreAssetType":"', '"', page)	
-		pub =  stringextract('publicationService":', 'logo"', page)
-		sender = stringextract('name":"', '"', pub)
-		show = stringextract('"show":', 'availableSeasons"', page)
-		PLog("show: " + show)
-		show_id = stringextract('id":"', '"', show)			# Bsp.: Y3JpZDovL2Rhc2Vyc3RlLmRlL3RvdGVuZnJhdQ für
-		title = stringextract('title":"', '"', show)		#	crid://daserste.de/totenfrau
-		img = stringextract('src":"', '"', show)
-		img = img.replace('{width}', "640")
+		title = stringextract('seriesTitle":"', '"', page)		#	
 		if not title:
 			title=title_org
+		pub =  stringextract('publicationService":', 'logo"', page)
+		sender = stringextract('name":"', '"', pub)
+		
+		show = stringextract('"coreAssetType":', 'image"', page)
+		PLog("show: " + show)
+		show_id = stringextract('id":"', '"', show)			# Bsp.: Y3JpZDovL2Rhc2Vyc3RlLmRlL3RvdGVuZnJhdQ für 
+															#	Babylon Berlin
+		img = stringextract('src":"', '"', show)
+		img = img.replace('{width}', "640")
 		new_url = new_url.replace(base64_id, show_id).replace("item", "grouping")
 	
 		PLog("coreAssetType: %s, title: %s, sender: %s, show_id: %s, img: %s, new_url: %s" %\
 			(typ, title, sender, show_id, img, new_url))				
 		
-		if new_url and "SEASON" in typ:
+		if new_url and "SEASON" in typ:						# nur SEASON_SERIES, nicht INFINITE_SERIES
 			new_url, msg = getRedirect(new_url)				# Check
 			if new_url:
-				dirID = "resources.lib.ARDnew.ARD_KatSeriePre"	# -> ARD_KatSeriePre
+				dirID = "resources.lib.ARDnew.ARDStartRubrik"	# -> ARDStartRubrik:
 				fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s'}" %\
 					(quote(new_url), quote(title), quote(img))
 				action="action=dirList&dirID=%s&fparams=%s"	% (dirID, fparams)
