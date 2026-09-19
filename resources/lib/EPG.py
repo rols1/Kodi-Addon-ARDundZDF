@@ -45,14 +45,15 @@ else:
 PLog(msg)
 
 # EPGCacheTime wie Haupt-PRG:
+max_days = 3
 eci = SETTINGS.getSetting('pref_epg_intervall')
-eci = re.search(r'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|5 Tage|10 Tage"
+eci = re.search(r'(\d+) ', eci).group(1)  				# "12 Std.|1 Tag|2 Tage|3 Tage"
 eci = int(eci)
 PLog("eci: %d" % eci)
 if eci == 12:											# 12 Std.
 	EPGCacheTime = 43200
 else:
-	EPGCacheTime = eci * 86400 							# 1-10 Tage
+	EPGCacheTime = eci * 86400 							# 1-3 Tage
 
 ADDON_ID 	= 'plugin.video.ardundzdf'
 SETTINGS 	= xbmcaddon.Addon(id=ADDON_ID)
@@ -79,7 +80,8 @@ def thread_getepg(EPGACTIVE, DICTSTORE, PLAYLIST):
 	
 	open(EPGACTIVE, 'w').close()					# Aktiv-Signal setzen (DICT "EPGActive")
 	icon = R('tv-EPG-all.png')
-	xbmcgui.Dialog().notification("EPG-Download", "gestartet",icon,3000)
+	msg1 = "EPG-Download"; msg2 = "gestartet (%d Tage)" % max_days
+	xbmcgui.Dialog().notification(msg1, msg2,icon,3000)
 	xbmc.sleep(1000)									# Klemmer bei sleep vor Notification	
 	
 	sort_playlist = get_sort_playlist(PLAYLIST)	
@@ -456,6 +458,8 @@ def get_sort_playlist(PLAYLIST):				# sortierte Playliste der TV-Livesender
 # 01.10.2025 Webseite geändert (json eingebettet), auch Zeitformat
 # 11.10.2025 nur noch 3 Tage EPG (tvtoday liefert nur noch 1 Tag pro
 #	Zugriff)
+# 12.09.2026 wieder 8 Tage verfügbar, aber Verzicht auf Umstellung
+#
 def get_api_data(Dict_ID):
 	PLog("get_api_data:")	
 	
@@ -463,8 +467,7 @@ def get_api_data(Dict_ID):
 	img_base = "https://img.tvspielfilm.de"
 	api_base = "https://www.tvtoday.de/api/broadcasts?channelId[]=%s&dates[]=%s&timeFrame=day&limit=9999&offset=0&orderBy=channel&sortDirection=asc"
 	now,today,today_5Uhr,nextday,nextday_5Uhr = get_unixtime()		# lokale Unix-Zeitstempel, ohne Offset
-	# wlist = list(range(0,8))										# ca. 35 sec. bei 100  Mbit
-	wlist = list(range(0,3))										# ca. 13 sec
+	wlist = list(range(0,max_days))									# ca. 13 sec
 	now = datetime.datetime.now()
 	data_list=[]
 

@@ -10,6 +10,30 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+19.09.2026	5.5.5
+			ZDF_getHBBTV_content: div. Strings für <= python2.7 angepasst.
+			ZDF_KatSeriePre: "/serien/" nicht mehr in path nach Redirection, Serien-
+			Merkmal 'Season","id' entfallen - Anpassung an ZDF-Änderungen.
+			ZDF_FlatListEpisodes: Staffeln ohne Namen (staffel["name"]) berücksichtigt,
+			Bsp. "Achtung, Essen!".
+			ZDF_KatSeriePre: Check auf Serienmerkmale vor Button "komplette Liste",
+			neue Funktion ZDF_checkSerie. Anpassung an ZDF-Änderungen bei Serien- und
+			Teaser-Markierungen.
+			ZDF_FlatListEpisodes: Abgleich season_id auch mit sharingUrl erlaubt (statt
+			bisher nur mit brandId).
+			ZDF_FlatListRec: Sicherung gegen fehlenden Key timetolive.
+			ZDF_RubrikSingle: Sicherung gegen fehlenden Key brandTitle (Didaktische
+			Materialien in ZDF goes Schule).
+			ARD_getHBBTV_content (childs): Fallback-Key "title" ergänzt zu "cpixTitle".
+			ARDStartRegion: Url für Button "Sport im hr" aktualisiert.
+			ArteStart: thumb=thumb in addDir fehlerhaft, durch img aus get_img_arte_pre
+			ersetzt.
+			Audio_get_sendung (ARD Sounds): Umsetzung Web-Path -> Api-Path für Offsets.
+			Audio_get_cluster (ARD Sounds): Fallback Widget-Titel für veränderliche 
+			section_id's ergänzt (relevant für Merkliste, Bsp. "Heute Wichtig").
+			Context (tools): Anpass. nach ARD-Änderungen(seasoned=true entfernt, Ziel-
+			Funktion ARDStartRubrik statt ARD_KatSeriePre.
+
 30.08.2026	5.5.4
 			get_json_content_details (ARDnew): json-Error für Key synopsis abgefangen
 			(verhinderte Livestream-Listing im ARD-Startmenü -> tagesschau.

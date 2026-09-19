@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>373</nr>										# Numerierung für Einzelupdate
-VERSION = '5.5.4'
-VDATE = '06.09.2026' 
+VERSION = '5.5.5'
+VDATE = '19.09.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -1778,6 +1778,8 @@ def Audio_get_rubriken_web(title, path="", rubrik_title="", homeID=""):
 #	Sendung, Sammlung ->  Audio_get_sendung mit
 #		api- oder web-url
 # neu ab 26.03.2026
+# 15.09.2026 Fallback Widget-Titel für veränderliche section_id's
+#	(relevant für Merkliste, Bsp. "Heute Wichtig")
 #
 def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 	PLog('Audio_get_cluster: ' + title)
@@ -1801,15 +1803,27 @@ def Audio_get_cluster(title, rubrik_id, section_id, page='', url=""):
 	page = json.loads(page)
 	widgets = page["pageProps"]["initialData"]["widgets"]
 	PLog("widgets: %d" % len(widgets))
-	widget=[]
+	widget=[]; widget_title=[] 
 	for w in widgets:
 		sid = w["id"]
+		wtitle =  w["seo"]["title"]
 		if sid in section_id:
-			PLog("found_widget")
+			PLog("found_widget_sid")
 			widget=w
 			break
+		if title in wtitle:											# Fallback: Titel statt ID
+			PLog("found_widget_title")
+			widget_title=w
 	PLog(str(widget)[:80])
 		
+	if len(widget) == 0:											# Fehlschlag
+		if len(widget_title) == 0:
+			icon = R("icon-info.png")
+			xbmcgui.Dialog().notification("WidgetID fehlt zu:","%s" % title,icon,3000)				
+			return
+		else:
+			widget = widget_title									# Fallback-Widget verwenden			
+			
 	wtitle = widget["seo"]["title"]
 	wtype = widget["widgetType"]
 	teasers = widget["teasers"]
@@ -7295,10 +7309,10 @@ def EPG_ShowSingle(ID, name, stream_url, pagenr=0):
 			thumb=img, fparams=fparams, summary=summ, tagline=tagline, start_end=start_end)
 			
 	# Mehr Seiten anzeigen:
-	max = 3
+	max_days = 3						# wie Modul EPG
 	pagenr = int(pagenr) + 1
-	if pagenr < max: 
-		summ = u'nächster Tag (%d von %d)' % (pagenr+1, max) 
+	if pagenr < max_days: 
+		summ = u'nächster Tag (%d von %d)' % (pagenr+1, max_days) 
 		name=py2_encode(name); stream_url=py2_encode(stream_url);
 		fparams="&fparams={'ID': '%s', 'name': '%s', 'stream_url': '%s', 'pagenr': %s}" % (ID, quote(name),
 			quote(stream_url), pagenr)
