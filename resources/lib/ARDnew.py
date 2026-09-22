@@ -10,8 +10,8 @@
 #	21.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 #
 ################################################################################
-# 	<nr>151</nr>										# Numerierung für Einzelupdate
-#	Stand: 09.09.2026
+# 	<nr>152</nr>										# Numerierung für Einzelupdate
+#	Stand: 22.09.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -2728,6 +2728,8 @@ def ARDStartVideoMP4get(title, StreamArray, call="", StreamArray_1=""):
 				res = "0x0"
 			PLog("mp4_res: %s" % res) 
 			href = stream["url"]
+			if href.startswith("//"):							# selten (WDR-Streams)
+				href = "https:" + href
 			
 			qual = stream["forcedLabel"]
 			aspect = stream["aspectRatio"]

@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>26</nr>								# Numerierung für Einzelupdate
-#	Stand: 15.09.2026
+# 	<nr>27</nr>								# Numerierung für Einzelupdate
+#	Stand: 22.09.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -732,7 +732,7 @@ def Context(title, path, img, mode):
 			(typ, title, sender, show_id, img, new_url))				
 		
 		if new_url and "SEASON" in typ:						# nur SEASON_SERIES, nicht INFINITE_SERIES
-			new_url, msg = getRedirect(new_url)				# Check
+			new_url, msg = get_page(new_url, GetOnlyRedirect=True, header=HEADERS)	
 			if new_url:
 				dirID = "resources.lib.ARDnew.ARDStartRubrik"	# -> ARDStartRubrik:
 				fparams="&fparams={'path': '%s', 'title': '%s', 'img': '%s'}" %\
