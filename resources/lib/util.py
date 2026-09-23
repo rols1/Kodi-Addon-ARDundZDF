@@ -11,8 +11,8 @@
 #	02.11.2019 Migration Python3 Modul future
 #	17.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
 # 	
-# 	<nr>174</nr>										# Numerierung für Einzelupdate
-#	Stand: 21.06.2026
+# 	<nr>175</nr>										# Numerierung für Einzelupdate
+#	Stand: 23.09.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -1934,8 +1934,9 @@ def transl_doubleUTF8(line):	# rückgängig: doppelt kodiertes UTF-8
 	line = py2_decode(line)
 	for r in ((u'Ã¤', u"ä"), (u'Ã„', u"Ä"), (u'Ã¶', u"ö")		# Umlaute + ß
 		, (u'Ã–', u"Ö"), (u'Ã¼', u"ü"), (u'Ãœ', u'Ü')
-		, (u'Ã', u'ß')
-		, (u'\xc3\xa2', u'*')):	# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
+		, (u'Ã', u'ß'), (u'â', u'')
+		, (u'„', u'"'), (u'“', u'"')	# Tief- und Hochkomma
+		, (u'\xc3\xa2', u'*')):			# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
 
 		line = line.replace(*r)
 	return line	

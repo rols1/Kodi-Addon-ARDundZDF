@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>373</nr>										# Numerierung für Einzelupdate
+# 	<nr>374</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.5'
-VDATE = '19.09.2026' 
+VDATE = '23.09.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -9508,6 +9508,9 @@ def ZDF_getKat_content_details(obj, mode="img"):
 					raise Exception(str(image)[:80])			
 
 			img_alt = u"[B]Bild: [/B]%s" % image["altText"]
+			PLog("img_alt_raw: " + img_alt)
+			img_alt = transl_doubleUTF8(img_alt)
+			
 			if img_alt == "None":
 				img_alt=""
 			layouts = image["layouts"]
@@ -10368,19 +10371,17 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 					etitle=""
 					if "image" in entry:
 						if entry["image"]:							# null bei ext. Inhalten (3sat, arte,..)
+							#  img_alt: doppelt kodiertes UTF-8 s. transl_doubleUTF8
 							img, img_alt = ZDF_getKat_content_details(entry, mode="img")	
 					if not img:										# fehlt bei Partnersendern
 							img = img_def
 
 					title = entry["title"]
-					PLog("title: %s | img_alt: %s" %(title,img_alt))
-					# Extraktion Titel einschl. Episodentitel. Unterschiedl. Hochkommata!
-					img_alt = img_alt.replace(u'“:', '":')			# "altText": "„SOKO Wismar 	 Tödliche Gedanken“: ..
-					PLog("img_alt2: %s" % img_alt)
-									
+					PLog("title: %s | img_alt: %s" % (title,img_alt))
+
+					# Extraktion Titel einschl. Episodentitel.								
 					etitle = stringextract('[/B]', '":', img_alt)	# Title Serie + Episode
-					etitle = (etitle.replace(u'„', '').replace(u'“', '')) 
-					PLog("etitle: %s | img_alt2: %s" %(etitle,img_alt))	
+					PLog("etitle: %s | img_alt2: %s" % (etitle,img_alt))	
 					if etitle.strip():								# leer-Bsp.: img_alt: [B]Bild: [/B]ZDF Logo
 						title = etitle	
 					title = repl_json_chars(title)
