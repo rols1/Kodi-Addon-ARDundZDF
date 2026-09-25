@@ -7,8 +7,8 @@
 #		Filterliste, Suchwortliste
  
 ################################################################################
-# 	<nr>27</nr>								# Numerierung für Einzelupdate
-#	Stand: 22.09.2026
+# 	<nr>28</nr>								# Numerierung für Einzelupdate
+#	Stand: 25.09.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -678,7 +678,8 @@ def Context(title, path, img, mode):
 				else:
 					path = new_url								# Redirect hat selbst korrigiert
 				
-				page, msg = get_page(path)						# img holen
+				page, msg = get_page(path)						# img + Titel holen
+				title = stringextract("<title>", "</title>", page)
 				imgset = stringextract("imageSrcSet=", '/>', page)
 				imgset = blockextract("https", imgset)
 				img = R(ICON_DIR_FOLDER)
