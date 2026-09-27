@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>374</nr>										# Numerierung für Einzelupdate
+# 	<nr>375</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.5'
-VDATE = '23.09.2026' 
+VDATE = '27.09.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8381,8 +8381,7 @@ def ZDF_Kat(title):
 	
 	# Block <picture class nicht eindeutig, noopener bis auf Nachrichten OK, 
 	#	s. kats.insert und items-Liste:
-	kats = blockextract('data-testid="teaser-tile', page, "</h2")		# Icons einschl. Weblink + Titel
-	kats.insert(6, "<h2Nachrichten</h2")					# im Web abweichenden Block ergänzen
+	kats = blockextract('data-testid="category-tile', page, "</h2")		# Icons einschl. Weblink + Titel
 	PLog("kats: %d" % len(kats))							# 16.06.2024: 13 (Rest s. ZDF_Kat_Plus)
 	PLog(str(kats)[:80])
 
@@ -8396,17 +8395,10 @@ def ZDF_Kat(title):
 	skip_list = ["Sendung verpasst"]						# ev. -> rubrik_list (addDir erford.)
 
 	for i, item in enumerate(kats):
-		title = stringextract("<h2", "</h2", item)			# t1mx31h9">Wirtschaft
-		title = title.split(">")[-1]
-		#if "Nachrichten" in title:	# Debug
+		title = stringextract('class="t6shsf">', "</span>", item) # letzte ZDF-Änderung 27.09.2026 
+		#if "Serien" in title:	# Debug
 		#	PLog(item)
-		imgs = blockextract("https://", item, "w,")			# Bilder
-		PLog("imgs: %d" % len(imgs))
-		for img in imgs:
-			#PLog(img)		# Debug
-			if "1280w" in img or "768w" in img:				# s.a. ZDF_Kat_Plus
-				img = img.split(" ")[0]						# ..68x432?cb=1766148659465 768w
-				break
+		img = stringextract('src="', '"', item) 
 		if not img:
 			R(ICON_DIR_FOLDER)
 		katid = stringextract('href="', '">', item)			# ID der Kategorie
@@ -8461,13 +8453,13 @@ def ZDF_Kat(title):
 	title = py2_encode(title)
 	fparams="&fparams={'title': '%s', 'DictID': '%s'}" %\
 		(quote(title), "ZDF_KATWEB")
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat_Plus", fanart=R("zdf-kategorien.png"), 
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat_Plus2", fanart=R("zdf-kategorien.png"), 
 		thumb=thumb, tagline=tag, fparams=fparams)
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------
-# Aufruf ZDF_Kat Zusatzbuttons 1,2
+# Aufruf ZDF_Kat Zusatzbutton 1 "Weitere öffentlich-rechtliche Videos..."
 #
 def ZDF_Kat_Plus(title, DictID):								
 	PLog('ZDF_Kat_Plus: ' + title)
@@ -8476,10 +8468,7 @@ def ZDF_Kat_Plus(title, DictID):
 	li = home(li, "ZDF")									# Home-Button
 	
 	startpos=title
-	if title.startswith("Weitere"):							# Button 1
-		endpos="Noch mehr zum "
-	else:													# Button 2 endet vor footer
-		endpos="ZDF auf YouTube"						
+	endpos="Noch mehr zum Streamen entdecken"				# Button 2
 		
 	page = Dict("load", DictID)								# hier ohne CacheTime
 	pos1=page.find(startpos)
@@ -8487,23 +8476,22 @@ def ZDF_Kat_Plus(title, DictID):
 	page=page[pos1:pos2]
 	PLog("pos1: %d, pos2: %d" % (pos1, pos2))
 	PLog(page[:80])
-	
-	kats = blockextract('data-testid="teaser-tile', page, "</h3")	# ähnlich ZDF_Kat: </h3 statt </h2
+
+	kats = blockextract('data-testid="teaser-tile', page, "</h3>")	# ähnlich ZDF_Kat: </h3 statt </h2
 	PLog("KatsPlus: %d" % len(kats))						# 16.06.2024: Button1:	, Button2: 
 	PLog("KatsPlus:" + str(kats)[:80])
 	
 	for item in kats:
-		title = stringextract("<h3", "</h3", item)			# t1mx31h9">ARTE</h3>
-		title = title.split(">")[-1]
-		#if "Nachrichten" in title:	# Debug
+		#if "/zdfinfo" in item:	# Debug
 		#	PLog(item)
-		imgs = blockextract("https://", item, "w,")			# Bilder
+		title = stringextract('<h3', "</h3>", item) # ZDF-Änderung 27.09.2026, abweichend zu ZDF_Kat
+		title = title.split(">")[-1]				# r7qx9f4">ZDFinfo
+		img=""
+		imgs = blockextract("src=", item)			# Bilder, abweichend zu ZDF_Kat, ZDF_Kat_Plus2
 		PLog("imgs: %d" % len(imgs))
-		for img in imgs:
-			# PLog(img)		# Debug
-			if "1280w" in img or "768w" in img:				# s.a. ZDF_Kat
-				img = img.split(" ")[0]						# ..68x432?cb=1766148659465 768w
-				break
+		if len(imgs) > 0:
+			img = stringextract('src="', '"', imgs[-1]) 
+		
 		if not img:
 			R(ICON_DIR_FOLDER)
 		katid = stringextract('href="', '">', item)			# ID der Kategorie
@@ -8520,6 +8508,48 @@ def ZDF_Kat_Plus(title, DictID):
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
+#-----------------------------------------------
+# Aufruf ZDF_Kat Zusatzbutton 2 "Noch mehr zum Streamen entdecken"
+#
+def ZDF_Kat_Plus2(title, DictID):								
+	PLog('ZDF_Kat_Plus2: ' + title)
+
+	li = xbmcgui.ListItem()
+	li = home(li, "ZDF")									# Home-Button
+	
+	startpos=title
+	endpos="ZDF auf YouTube"								# Button 2 endet vor footer					
+		
+	page = Dict("load", DictID)								# hier ohne CacheTime
+	pos1=page.find(startpos)
+	pos2=page.find(endpos)
+	page=page[pos1:pos2]
+	PLog("pos1: %d, pos2: %d" % (pos1, pos2))
+	PLog(page[:80])
+
+	kats = blockextract('data-testid="category-tile', page, "</h3")		# ähnlich ZDF_Kat: </h3 statt </h2
+	PLog("KatsPlus2: %d" % len(kats))						# 16.06.2024: Button1:	, Button2: 
+	PLog("KatsPlus2:" + str(kats)[:80])
+	
+	for item in kats:
+		title = stringextract('class="t6shsf">', "</span>", item) # ZDF-Änderung 27.09.2026 wie ZDF_Kat
+		img = stringextract('src="', '"', item) 			# wie ZDF_Kat
+		if not img:
+			R(ICON_DIR_FOLDER)
+		katid = stringextract('href="', '">', item)			# ID der Kategorie
+		kat_url = "https://www.zdf.de" + katid
+
+		PLog('Satz11_4:');
+		PLog(title); PLog(kat_url)
+		kat_url=py2_encode(kat_url); title=py2_encode(title);
+		
+		fparams="&fparams={'title': '%s', 'path': '%s'}" %\
+			(title, quote(kat_url))							# ohne typ (Default)
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
+			thumb=img, fparams=fparams)
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
 #-----------------------------------------------
 # Aufruf Main_ZDF (Button Barrierearm)
 # neu ab 11.06.2026 HBBTV wie Kategorien (Barrierefreie Inhalte), 
@@ -8960,6 +8990,7 @@ def ZDF_checkSerie(canon):
 	path = base + canon
 	page, msg = get_page(path=path)
 	if "seasonNumber" in page:
+#	if '"episode"' in page:				# seasonNumber kann in futura-api fehlen
 		PLog("seasonNumber_exist")
 		return True
 	else:
@@ -9509,7 +9540,7 @@ def ZDF_getKat_content_details(obj, mode="img"):
 
 			img_alt = u"[B]Bild: [/B]%s" % image["altText"]
 			PLog("img_alt_raw: " + img_alt)
-			img_alt = transl_doubleUTF8(img_alt)
+			img_alt = repl_json_chars(img_alt)			# Bildtext EPG: doppelt kodierte UTF-8-Zeichen
 			
 			if img_alt == "None":
 				img_alt=""
@@ -10371,7 +10402,7 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 					etitle=""
 					if "image" in entry:
 						if entry["image"]:							# null bei ext. Inhalten (3sat, arte,..)
-							#  img_alt: doppelt kodiertes UTF-8 s. transl_doubleUTF8
+							#  img_alt: doppelt kodiertes UTF-8 -> repl_json_chars
 							img, img_alt = ZDF_getKat_content_details(entry, mode="img")	
 					if not img:										# fehlt bei Partnersendern
 							img = img_def
@@ -10503,8 +10534,8 @@ def ZDF_Verpasst(title, zdfDate, sfilter="", EPGsender=""):
 		
 		variables = myvars_base % (myfilter, startDate, endDate )
 		PLog("Graphql_ZDF_Verpasst: OpName %s, sha256Hash %s, variables %s" % (OpName, sha256Hash, variables))
-		page = ZDF_Graphql(OpName, sha256Hash, variables)
-
+		page = ZDF_Graphql(OpName, sha256Hash, variables)				# die Daten enthalten doppelt kodiertes UTF-8
+																		#	im Bildtext s.o. ZDF_getKat_content_details
 		try:
 			msg3=""
 			jsonObject = json.loads(page)
@@ -10762,6 +10793,8 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 # sid=Serien-ID (Url-Ende)
 # 01.05.2023 Serie direkt holen mit sid statt früher über
 #	die komplette Serien-Liste serien-100
+# 27.09.2026 Graphql-api noch ungeignet (SeasonId für gesamte Serie
+#	fehlt, nur initialSeasonId für akt. Serie vorhanden)
 #
 def ZDF_FlatListEpisodes(sid):
 	PLog('ZDF_FlatListEpisodes: ' + sid)
