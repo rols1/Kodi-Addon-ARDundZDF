@@ -8373,7 +8373,7 @@ def ZDF_Kat(title):
 	if not page:
 		return
 	
-	pos1=page.find('controls="navigation-main')				# ab Seitenmenü 
+	pos1=page.find('aria-label="Hauptmenü"')				# ab Seitenmenü 
 	pos2=page.find(u"Weitere öffentlich-rechtliche")		# bis Videos Partnersender (neuer Button)
 	page=page[pos1:pos2]
 	PLog(page[:80])
