@@ -52,7 +52,7 @@ import resources.lib.epgRecord as epgRecord
 # VERSION -> addon.xml aktualisieren
 # 	<nr>376</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.5'
-VDATE = '02.10.2026' 
+VDATE = '04.10.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8843,10 +8843,10 @@ def ZDF_get_naviKat(path, DictID, title, homeID="", this_navi=""):
 #	realisierbar. Daher Web-Auswertung. Sortierung nicht immer
 #	absteigend (Bsp. The Rookie), dann hier gedreht.
 # 31.08.2026 "/serien/" in path kann nach Redirection fehlen (unsicher),
-# 	Serien-Merkmal nun initialSeasonId ab vodSeasons, Blockmerkmal nun 'id":"' statt
-#	'Season","id'. Ergänzung fehlende "Staffel" im Titel mit Jahr (number), Button
-#	"komplette Liste" nur noch mit initialSeasonId und ZDF_checkSerie.
-# Todo s. ../ZDF/00_Funktionsketten - 
+# 	Serien-Merkmal nun initialSeasonId ab vodSeasons, Blockmerkmal 'id":"'.
+#	Ergänzung fehlende "Staffel" im Titel mit Jahr (number), Button
+#	"komplette Liste" nur noch mit initialSeasonId für Graphql- und 
+#		ZDF_checkSerie für futura-Auswertung.
 #	
 def ZDF_KatSeriePre(title, path, img):
 	PLog('ZDF_KatSeriePre: %s | %s | %s' % (title, path, img))
@@ -8883,7 +8883,7 @@ def ZDF_KatSeriePre(title, path, img):
 				thumb=R(ICON_DIR_FOLDER), tagline=tag, fparams=fparams)			
 
 	typ = "seasonByCanonical"
-	# 31.08.2026 seasons: vorheriger String 'Season","id' entfallen
+	# 29.09.2026 seasons: Liste ab vodSeasons
 	seasons = blockextract('"id":', vodSeasons, 'episodeWithHighestNumberInSeason')
 	if seasons:
 		if "episodeWithHighestNumberInSeason" not in seasons[-1]:	# kein regul. Element
@@ -8916,7 +8916,7 @@ def ZDF_KatSeriePre(title, path, img):
 			continue 
 		skip_list.append(title)
 
-		sid = stringextract('id":"', '"', item)				# Season-ID -> idIn (myvars)			
+		sid = stringextract('id":"', '"', item)				# Season-ID -> idIn (myvars) für Graphql		
 		status = stringextract('newContentStatus":"', '"', item)	# "NEW_SEASON" od. null
 		if "NEW" in status:
 			title = "%s [B](NEU)[/B]" % title
@@ -8979,23 +8979,32 @@ def ZDF_KatSeriePre(title, path, img):
 			thumb=img, tagline=tag, fparams=fparams)
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			
+
 # -----------------------------------------------
-# Check auf Vorhandensein von seasonNumber in futura-api
 # Aufruf: ZDF_KatSeriePre
+# Check auf Vorhandensein von seasonNumber in futura-api
+# Notwendig, da z.Z. noch Graphql-Call für kompl. Staffelliste
+# fehlt. Problem futura: Jahres-Sammlungen können in futura-Clustern
+#	fehlen, Bsp. Mittagsmagazin enthält nur akt. Jahr.
+#	Check auf seasonNumber und episodeNumber nicht ausreichend
+#	(Abweichungen im Bestand trotzdem möglich), daher ab
+#	03.10.2026 zusätzl. Check auf "-staffel-" oder '"name":"Staffel'.
 #
-def ZDF_checkSerie(canon):
+def ZDF_checkSerie(canon, page=""):
 	PLog("ZDF_checkSerie: " + canon)
-	base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
-	path = base + canon
-	page, msg = get_page(path=path)
+	if not page:					# vorgeladen? (getStrmList)
+		base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
+		path = base + canon
+		page, msg = get_page(path)
+
 	if "seasonNumber" in page:
-#	if '"episode"' in page:				# seasonNumber kann in futura-api fehlen
-		PLog("seasonNumber_exist")
-		return True
-	else:
-		PLog("seasonNumber_missing")
-		return False
+		# "-staffel-" in img, text in screenReaderTexts:
+		if "-staffel-" in page or '"name":"Staffel' in page or '"text":"Staffel' in page:
+			PLog("Season_Marker_exists")
+			return True
+			
+	PLog("Season_Marker_missing")
+	return False
 
 # -----------------------------------------------
 # Graphql-Serien Extras (i.d.R. Trailer)
@@ -10790,11 +10799,12 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 # Aufruf ZDF_KatSeriePre und ZDF_RubrikSingle (Button 
 #	"komplette Liste").
 # Zusätzl. Button für ZDF_getStrmList + strm-Tools
-# sid=Serien-ID (Url-Ende)
+# sid=Serien-ID (canon)
 # 01.05.2023 Serie direkt holen mit sid statt früher über
 #	die komplette Serien-Liste serien-100
-# 27.09.2026 Graphql-api noch ungeignet (SeasonId für gesamte Serie
-#	fehlt, nur initialSeasonId für akt. Serie vorhanden)
+# 27.09.2026 Graphql-api noch ungeignet (Call für gesamte Serie
+#	fehlt, nur Call mit initialSeasonId für einzelne akt. Serie 
+#	vorhanden)
 #
 def ZDF_FlatListEpisodes(sid):
 	PLog('ZDF_FlatListEpisodes: ' + sid)
@@ -10887,8 +10897,9 @@ def ZDF_FlatListEpisodes(sid):
 				if season_id not in folge["sharingUrl"]:		# Bsp. zdf.de/video/shows/bares-fuer-rares-104/...
 					PLog("skip_no_brandId, season_id: %s | %s" % (season_id, str(folge)[:60]))
 					continue
+			# Datensatz holen, wie ZDF_getStrmList:
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
-			if season == '':									# 
+			if season == '':							
 				PLog("skip_no_season: " + str(folge)[:60])
 				continue
 				
@@ -11364,6 +11375,7 @@ def ZDF_getApiStreams(path, title, gui=True):
 #	ermitteln -> 
 # Nutzung strm-Modul: get_strm_path, xbmcvfs_store
 # Cache-Verzicht, um neue Folgen nicht zu verpassen.
+# 30.09.2026 Seriencheck wie ZDF_KatSeriePre.
 #
 def ZDF_getStrmList(path, title, ID="ZDF"):
 	PLog("ZDF_getStrmList:")
@@ -11372,20 +11384,15 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 	icon = R(ICON_DIR_STRM)
 	FLAG_OnlyUrl = os.path.join(ADDON_DATA, "onlyurl")
 	import resources.lib.strm as strm
-	
-	page, msg = get_page(path=path)
-	if page == '':
-		msg1 = "Fehler in ZDF_getStrmList:"
-		msg2 = msg
-		MyDialog(msg1, msg2, '')
-		return
 		
-	if page.find('"seasonNumber"') < 0:
-		msg1 = "[B]seasonNumber[/B] fehlt in den Beiträgen."
+	page, msg = get_page(path=path)
+	canon = path.split("/")[-1]	
+	if not ZDF_checkSerie(canon, page):						# wie ZDF_KatSeriePre
+		msg1 = "[B]Serien-Merkmale[/B] nicht gefunden."
 		msg2 = "strm-Liste für diese Serie kann nicht erstellt werden."
 		MyDialog(msg1, msg2, '')
 		return
-		
+
 	jsonObject = json.loads(page)
 	PLog(str(jsonObject)[:80])
 				
@@ -11451,7 +11458,8 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 			if season_id != brandId:
 				PLog("skip_wrong_brandId: " + str(folge)[:60])
 				continue
-			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge) # Datensatz
+			# Datensatz holen, wie ZDF_FlatListEpisodes:
+			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
 			if season == '':
 				PLog("skip_no_season: " + str(folge)[:60])
 				continue
@@ -11527,6 +11535,9 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 #----------------------------------------------
 # holt Details für item (futura-api, für Graphql-json ungeeignet).
 # Aufrufer: ZDF_FlatListEpisodes, ZDF_getStrmList
+# Kennzeichnung S00E00 für mögliches Special ohne Numerierung in
+#	futura
+#
 def ZDF_FlatListRec(item):
 	PLog('ZDF_FlatListRec:')
 	PLog(str(item)[:80])
@@ -11536,10 +11547,16 @@ def ZDF_FlatListRec(item):
 	
 	if "seasonNumber" in item:
 		season =  item["seasonNumber"]						# string
-	if season == '':										# Satz verwerfen	
-		return title, url, img, tag, summ, season, weburl
+		episode =  item["episodeNumber"]					# string
 		
-	episode =  item["episodeNumber"]						# string
+	else:													# Sätze ohne Staffel- / Episoden-Nr. (Mini-Serien)
+		ctype =  item["contentType"]	
+		if "episode" not in ctype:							# Satz verwerfen	
+			return title, url, img, tag, summ, season, weburl
+			PLog("missing_episode_typ")
+		else:
+			season = "0"; episode = "0"						# mögl. Special ohne Numerierung
+	
 	PLog(season); PLog(episode)
 	title_pre = "S%02dE%02d" % (int(season), int(episode))	# 31.01.2022 S13_F10 -> S13E10
 	
