@@ -8373,15 +8373,11 @@ def ZDF_Kat(title):
 	if not page:
 		return
 	
-	pos1=page.find('aria-label="Hauptmenü"')				# ab Seitenmenü 
-	pos2=page.find(u"Weitere öffentlich-rechtliche")		# bis Videos Partnersender (neuer Button)
-	page=page[pos1:pos2]
 	PLog(page[:80])
-	
 	
 	# Block <picture class nicht eindeutig, noopener bis auf Nachrichten OK, 
 	#	s. kats.insert und items-Liste:
-	kats = blockextract('data-testid="category-tile', page, "</h2")		# Icons einschl. Weblink + Titel
+	kats = get_kat_info(page)
 	PLog("kats: %d" % len(kats))							# 16.06.2024: 13 (Rest s. ZDF_Kat_Plus)
 	PLog(str(kats)[:80])
 
@@ -8395,13 +8391,13 @@ def ZDF_Kat(title):
 	skip_list = ["Sendung verpasst"]						# ev. -> rubrik_list (addDir erford.)
 
 	for i, item in enumerate(kats):
-		title = stringextract('class="t6shsf">', "</span>", item) # letzte ZDF-Änderung 27.09.2026 
+		title = item['title']
 		#if "Serien" in title:	# Debug
 		#	PLog(item)
-		img = stringextract('src="', '"', item) 
+		img = item['img']
 		if not img:
 			R(ICON_DIR_FOLDER)
-		katid = stringextract('href="', '">', item)			# ID der Kategorie
+		katid = item['href']
 		kat_url = "https://www.zdf.de" + katid
 		PLog('Satz11_1:');
 		PLog("%2d. %s" % (i,title)); PLog(kat_url)
@@ -8467,34 +8463,26 @@ def ZDF_Kat_Plus(title, DictID):
 	li = xbmcgui.ListItem()
 	li = home(li, "ZDF")									# Home-Button
 	
-	startpos=title
-	endpos="Noch mehr zum Streamen entdecken"				# Button 2
-		
 	page = Dict("load", DictID)								# hier ohne CacheTime
-	pos1=page.find(startpos)
-	pos2=page.find(endpos)
-	page=page[pos1:pos2]
-	PLog("pos1: %d, pos2: %d" % (pos1, pos2))
 	PLog(page[:80])
 
-	kats = blockextract('data-testid="teaser-tile', page, "</h3>")	# ähnlich ZDF_Kat: </h3 statt </h2
+	kats = get_kat_info(page=page, kat_ref1='ZDFinfo', kat_ref2='ZDFneo')
 	PLog("KatsPlus: %d" % len(kats))						# 16.06.2024: Button1:	, Button2: 
 	PLog("KatsPlus:" + str(kats)[:80])
 	
 	for item in kats:
 		#if "/zdfinfo" in item:	# Debug
 		#	PLog(item)
-		title = stringextract('<h3', "</h3>", item) # ZDF-Änderung 27.09.2026, abweichend zu ZDF_Kat
-		title = title.split(">")[-1]				# r7qx9f4">ZDFinfo
-		img=""
-		imgs = blockextract("src=", item)			# Bilder, abweichend zu ZDF_Kat, ZDF_Kat_Plus2
-		PLog("imgs: %d" % len(imgs))
-		if len(imgs) > 0:
-			img = stringextract('src="', '"', imgs[-1]) 
+		title = item['title']
+		img = item['img']
+		# imgs = blockextract("src=", item)			# Bilder, abweichend zu ZDF_Kat, ZDF_Kat_Plus2
+		# PLog("imgs: %d" % len(imgs))
+		# if len(imgs) > 0:
+			# img = stringextract('src="', '"', imgs[-1]) 
 		
 		if not img:
 			R(ICON_DIR_FOLDER)
-		katid = stringextract('href="', '">', item)			# ID der Kategorie
+		katid = item['href']
 		kat_url = "https://www.zdf.de" + katid
 
 		PLog('Satz11_3:');
@@ -8517,26 +8505,19 @@ def ZDF_Kat_Plus2(title, DictID):
 	li = xbmcgui.ListItem()
 	li = home(li, "ZDF")									# Home-Button
 	
-	startpos=title
-	endpos="ZDF auf YouTube"								# Button 2 endet vor footer					
-		
 	page = Dict("load", DictID)								# hier ohne CacheTime
-	pos1=page.find(startpos)
-	pos2=page.find(endpos)
-	page=page[pos1:pos2]
-	PLog("pos1: %d, pos2: %d" % (pos1, pos2))
 	PLog(page[:80])
 
-	kats = blockextract('data-testid="category-tile', page, "</h3")		# ähnlich ZDF_Kat: </h3 statt </h2
+	kats = get_kat_info(page=page, kat_ref1='Action', kat_ref2="Abenteuer")
 	PLog("KatsPlus2: %d" % len(kats))						# 16.06.2024: Button1:	, Button2: 
 	PLog("KatsPlus2:" + str(kats)[:80])
 	
 	for item in kats:
-		title = stringextract('class="t6shsf">', "</span>", item) # ZDF-Änderung 27.09.2026 wie ZDF_Kat
-		img = stringextract('src="', '"', item) 			# wie ZDF_Kat
+		title = item['title']
+		img = item['img']
 		if not img:
 			R(ICON_DIR_FOLDER)
-		katid = stringextract('href="', '">', item)			# ID der Kategorie
+		katid = item['href']
 		kat_url = "https://www.zdf.de" + katid
 
 		PLog('Satz11_4:');
