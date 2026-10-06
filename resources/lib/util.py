@@ -24,6 +24,15 @@ from kodi_six.utils import py2_encode, py2_decode
 
 # Standard:
 import os, sys, subprocess
+
+lib_path = os.path.join(os.path.dirname(__file__), "resources", "lib")
+
+if lib_path not in sys.path:
+    sys.path.insert(0, lib_path)
+
+from bs4 import BeautifulSoup, SoupStrainer
+# from resources.lib.bs4 import BeautifulSoup, SoupStrainer
+
 PYTHON2 = sys.version_info.major == 2
 PYTHON3 = sys.version_info.major == 3
 if PYTHON2:					
@@ -4804,20 +4813,59 @@ def get_streams_from_link(medialink):
 
 
 
+def get_kat_info(page, kat_ref1="Dokus", kat_ref2="Serien"):
+    """Find all categories in common html section based on two known categories.
 
+    Using the BeautifulSoup libary the funktion looks for the strings
+    of kat_ref1 and kat_ref2. From those elements the first common ancester is identified.
+    From that common block all categories are read into a list of dicts{title, href, img},
+    holding the title, the link reference, and the image reference.
 
+    :param page: The ZDF HTML Kategorien page https://zdf.de/kategorien
+    :param kat_ref1: category 1 title
+    :param kat_ref2: category 2 title
+    :returns return_data: which is a list of dicts{title, href, img}
+    """
 
+    main = SoupStrainer("main")
+    soup = BeautifulSoup(markup=page, parse_only=main, features="html.parser")
 
+    kat1 = soup.find_all(string=kat_ref1)
+    kat2 = soup.find_all(string=kat_ref2)
+    k1 = kat1[0]
+    k2 = kat2[0]
 
+    k1_parents = k1.find_parents()
+    k2_parents = k2.find_parents()
 
+    found = False
+    common_p = k1
+    # Search for common parent
+    for dn, dp in enumerate(k1_parents[:5]):
+        for sn, sp in enumerate(k2_parents[:5]):
+            print(dp is sp)
+            print(f"######## dn={dn}  --  sn={sn} ########")
+            if dp is sp:
+                found = True
+                common_p = sp
+                break
+        if found:
+            break
+    print(common_p.prettify())
 
+    # Gather details about each kategory
+    return_data = []
+    links = common_p.find_all("a")
+    # print(links)
+    for link in links:
+        data = {
+            "title": link.get_text(strip=True),
+            "href": link["href"],
+            "img": link.picture.img["src"],
+        }
+        return_data.append(data)
 
-
-
-
-
-
-
+    return return_data
 
 
 
