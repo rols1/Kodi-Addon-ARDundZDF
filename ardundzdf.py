@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>377</nr>										# Numerierung für Einzelupdate
+# 	<nr>378</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.5'
-VDATE = '04.10.2026' 
+VDATE = '11.10.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8373,7 +8373,7 @@ def ZDF_Kat(title):
 	if not page:
 		return
 	
-	pos1=page.find('aria-label="Hauptmenü"')				# ab Seitenmenü 
+	pos1=page.find(u'aria-label="Hauptmenü"')				# ab Seitenmenü 
 	pos2=page.find(u"Weitere öffentlich-rechtliche")		# bis Videos Partnersender (neuer Button)
 	page=page[pos1:pos2]
 	PLog(page[:80])
@@ -8998,7 +8998,6 @@ def ZDF_checkSerie(canon, page=""):
 		page, msg = get_page(path)
 
 	if "seasonNumber" in page:
-		# "-staffel-" in img, text in screenReaderTexts:
 		if "-staffel-" in page or '"name":"Staffel' in page or '"text":"Staffel' in page:
 			PLog("Season_Marker_exists")
 			return True
@@ -10804,7 +10803,9 @@ def ZDF_AZList(title, element, ID="", endCursor=""):					# ZDF-Sendereihen zum g
 #	die komplette Serien-Liste serien-100
 # 27.09.2026 Graphql-api noch ungeignet (Call für gesamte Serie
 #	fehlt, nur Call mit initialSeasonId für einzelne akt. Serie 
-#	vorhanden)
+#	vorhanden). Leider liefert futura die Serien in einigen Fällen
+#	mit abweichenden od. fehlenden Numerierungen (Bsp. ZDFinfo -
+#	die Einzeldokus).
 #
 def ZDF_FlatListEpisodes(sid):
 	PLog('ZDF_FlatListEpisodes: ' + sid)
@@ -10866,8 +10867,7 @@ def ZDF_FlatListEpisodes(sid):
 	season_title = jsonObject["document"]["titel"]
 	season_id 	= jsonObject["document"]["id"]
 	staffel_list = jsonObject["cluster"]
-	PLog("season_title: %s" % season_title)
-	PLog("staffel_list: %d" % len(staffel_list))		
+	PLog("season_title: %s, season_id: %s, staffel_list: %d"  % (season_title, season_id, len(staffel_list)))		
 
 	max_cnt=0; cnt=0; fcnt=0									# Satz-Zähler, gefiltert-Zähler
 	for staffel in 	staffel_list:
@@ -10877,27 +10877,24 @@ def ZDF_FlatListEpisodes(sid):
 	skip_list=[]
 
 	for staffel in 	staffel_list:
-		#if 	staffel["name"] == "":							# 31.08.2026 leer möglich, Bsp. "Achtung, Essen!"
-		#	continue									
 		folgen = staffel["teaser"]								# Folgen-Blöcke	
 		PLog("%s | Folgen: %d" % (staffel["name"], len(folgen)))
 
 		for folge in folgen:
 			# Vom ZDF nicht mehr in allen Serien absteigend sortiert, dto.
 			#	in ARD_FlatListEpisodes.
-			# Abgleich headline/season_title entfällt wg. möglicher Abweichungen
-			#	Bsp.: FETT UND FETT/FETT & FETT, daher Abgleich mit brandId
+			# Abgleich headline/season_title/brandId entfällt wg. möglicher Abweichungen
+			#	Bsp.: FETT UND FETT/FETT & FETT, daher Abgleich mit sharingUrl
         
-			scms_id = folge["id"]
 			try:
-				brandId = folge["brandId"]
+				sharingUrl = folge["sharingUrl"]				# kann fehlen
 			except:
-				brandId=""
-			if season_id != brandId:							# brandId kann fehlen, Bsp. "Bares für Rares"
-				if season_id not in folge["sharingUrl"]:		# Bsp. zdf.de/video/shows/bares-fuer-rares-104/...
-					PLog("skip_no_brandId, season_id: %s | %s" % (season_id, str(folge)[:60]))
-					continue
-			# Datensatz holen, wie ZDF_getStrmList:
+				sharingUrl=""	
+
+			if season_id not in sharingUrl:						# Bsp. zdf.de/video/shows/bares-fuer-rares-104/...	
+				PLog("skip_season_id_not_in_sharingUrl: %s | %s" % (season_id, sharingUrl))
+				continue
+			# Datensatz holen, wie ZDF_getStrmList, do_sync (strm):
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
 			if season == '':							
 				PLog("skip_no_season: " + str(folge)[:60])
@@ -11450,15 +11447,15 @@ def ZDF_getStrmList(path, title, ID="ZDF"):
 		folgen = staffel["teaser"]								# Folgen-Blöcke	
 		PLog("Folgen: %d" % len(folgen))
 		for folge in folgen:
-			scms_id = folge["id"]								# wie ZDF_FlatListEpisodes
 			try:
-				brandId = folge["brandId"]
+				sharingUrl = folge["sharingUrl"]				# kann fehlen
 			except:
-				brandId=""
-			if season_id != brandId:
-				PLog("skip_wrong_brandId: " + str(folge)[:60])
-				continue
-			# Datensatz holen, wie ZDF_FlatListEpisodes:
+				sharingUrl=""
+				
+			if season_id not in sharingUrl:						# Bsp. zdf.de/video/shows/bares-fuer-rares-104/...	
+				PLog("skip_season_id_not_in_sharingUrl: %s | %s" % (season_id, sharingUrl))
+				continue	
+			# Datensatz holen, wie ZDF_FlatListEpisodes, do_sync (strm):
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
 			if season == '':
 				PLog("skip_no_season: " + str(folge)[:60])
@@ -11555,7 +11552,14 @@ def ZDF_FlatListRec(item):
 			return title, url, img, tag, summ, season, weburl
 			PLog("missing_episode_typ")
 		else:
-			season = "0"; episode = "0"						# mögl. Special ohne Numerierung
+			season=0; episode=0								# mögl. Special ohne Numerierung Bsp. ..-winterspecial-100
+			if 'screenReaderTexts' in str(item):			# Staffel- / Episoden-Nr manchmal in screenReaderTexts
+				screentxt = stringextract('screenReaderTexts', '}', str(item) )
+				PLog("screenReaderTexts: " + screentxt)
+				match = re.search(r'Staffel (\d+), Folge (\d+)', str(item))
+				if match:									# Bsp. "text": "Staffel 01, Folge 01"
+					season = match.group(1)
+					episode = match.group(2)
 	
 	PLog(season); PLog(episode)
 	title_pre = "S%02dE%02d" % (int(season), int(episode))	# 31.01.2022 S13_F10 -> S13E10

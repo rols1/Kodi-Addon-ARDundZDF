@@ -3,8 +3,8 @@
 #				strm.py - Teil von Kodi-Addon-ARDundZDF
 #			 Erzeugung von strm-Dateien für Kodi's Medienverwaltung
 ################################################################################
-# 	<nr>18</nr>										# Numerierung für Einzelupdate
-#	Stand: 04.10.2026
+# 	<nr>19</nr>										# Numerierung für Einzelupdate
+#	Stand: 11.10.2026
 #
 
 from __future__ import absolute_import
@@ -785,14 +785,14 @@ def do_sync(list_title, strmpath, list_path, strm_type):
 			continue							
 		folgen = staffel["teaser"]									# Folgen-Blöcke	
 		PLog("sync_Folgen: %d" % len(folgen))
-		for folge in folgen:
-			scms_id = folge["id"]
+		for folge in folgen:  
 			try:
-				brandId = folge["brandId"]
+				sharingUrl = folge["sharingUrl"]					# kann fehlen
 			except:
-				brandId=""
-			if season_id != brandId:
-				PLog("skip_no_brandId: " + str(folge)[:60])
+				sharingUrl=""	
+
+			if season_id not in sharingUrl:						# Bsp. zdf.de/video/shows/bares-fuer-rares-104/...	
+				PLog("skip_season_id_not_in_sharingUrl: %s | %s" % (season_id, sharingUrl))
 				continue
 			# Datensatz holen, wie ZDF_FlatListEpisodes, ZDF_getStrmList:
 			title, url, img, tag, summ, season, weburl = ZDF_FlatListRec(folge)
