@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>378</nr>										# Numerierung für Einzelupdate
+# 	<nr>379</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.5'
-VDATE = '11.10.2026' 
+VDATE = '17.10.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8360,83 +8360,77 @@ def ZDF_Start2(title, index, DictID, homeID):
 # Übersicht Kategorien
 # 16.06.2025 nach ZDF-Web-Änderung 2 Zusatzbuttons ("Weitere .. streamen",
 #	"Noch mehr .. entdecken") -> ZDF_Kat_Plus
+# 11.10.2026 HBBTV zeigt sie nur teilweise (Kats: bis Dokus, Weitere: alle, 
+#	Noch mehr: bis Comedy)
+# 17.10.2026 Menü-Extraktion json-Code statt HTML-Bereich
 #
 def ZDF_Kat(title):								
 	PLog('ZDF_Kat:')
 
-	DictID="ZDF_KATWEB"; path="https://www.zdf.de/kategorien"
-	page = Dict("load", DictID, CacheTime=ZDF_CacheTime_AZ)	# 30 min		
-	if not page:								# Webseite neu laden 
-		page, msg = get_page(path)
-		if page:
-			Dict('store', DictID, page)
+	path="https://www.zdf.de/kategorien"
+	page, DictID, newpath, img, ptmdTemplate = ZDF_Graphql_WebDetails(path, mode="getpage")
 	if not page:
 		return
-	
-	pos1=page.find(u'aria-label="Hauptmenü"')				# ab Seitenmenü 
-	pos2=page.find(u"Weitere öffentlich-rechtliche")		# bis Videos Partnersender (neuer Button)
-	page=page[pos1:pos2]
+	# Menü zw. 2 Marken, Endteil ausreichend trennscharf
+	# curated_collection#f0cd878c-c8ac- .. -905b-5beb86d60153
+	mark = '5beb86d60153'
+	pos1=page.find(mark)
+	pos2=page[pos1+len(mark):].find(mark)
+	page = page[pos1:pos1+pos2]
 	PLog(page[:80])
 	
-	
-	# Block <picture class nicht eindeutig, noopener bis auf Nachrichten OK, 
-	#	s. kats.insert und items-Liste:
-	kats = blockextract('data-testid="category-tile', page, "</h2")		# Icons einschl. Weblink + Titel
+	kats = blockextract('"canonical"', page)
 	PLog("kats: %d" % len(kats))							# 16.06.2024: 13 (Rest s. ZDF_Kat_Plus)
 	PLog(str(kats)[:80])
-
+	PLog(str(kats[-1])[:80])		
+	
 	homeID="ZDF"
 	li = xbmcgui.ListItem()
 	li = home(li, homeID)									# Home-Button
 	
+	fanart=R("zdf-kategorien.png")
 	base = "https://www.zdf.de"
-	rubrik_base = "https://zdf-prod-futura.zdf.de/mediathekV2/document/"
 	img_base = "https://www.zdf.de/assets/"
-	skip_list = ["Sendung verpasst"]						# ev. -> rubrik_list (addDir erford.)
+	skip_list = ["livetv-100"]								# Abgleich mit canonical					
 
 	for i, item in enumerate(kats):
-		title = stringextract('class="t6shsf">', "</span>", item) # letzte ZDF-Änderung 27.09.2026 
+		title, canon, img, kat_url = ZDF_getKatMenu_details(item)
 		#if "Serien" in title:	# Debug
 		#	PLog(item)
-		img = stringextract('src="', '"', item) 
-		if not img:
-			R(ICON_DIR_FOLDER)
-		katid = stringextract('href="', '">', item)			# ID der Kategorie
-		kat_url = "https://www.zdf.de" + katid
 		PLog('Satz11_1:');
-		PLog("%2d. %s" % (i,title)); PLog(kat_url)
+		PLog("%2d. %s" % (i,title)); PLog(canon); PLog(kat_url)
 		kat_url=py2_encode(kat_url); title=py2_encode(title);
 	
-		if title.strip() in skip_list:	
+		if canon in skip_list:	
 			continue	
 
-		if 'A-Z' in title:										# 06.10.2025 -> ZDF_AZ -> ZDF_AZList (Graphql)
+		if 'sendungen-100' in canon:							# 06.10.2025 -> ZDF_AZ -> ZDF_AZList (Graphql)
 			fparams="&fparams={'name': '%s'}" % title
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_AZ", fanart=R(ICON_ZDF_AZ), 
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_AZ", fanart=fanart,
 				thumb=img, fparams=fparams)
 
-		elif 'Sport' in title:									# HBBTV wie Main_ZDF
+		elif 'sportstudio-dokus' in canon:						# HBBTV wie Main_ZDF
 			coll_id = "0a462235-9ded-4f27-81f1-5077ba671e11"
 			fparams="&fparams={'coll_id': '%s', 'homeID': '%s'}" % (coll_id, "ZDF")
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R("zdf-kategorien.png"), 
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=fanart, 
 				thumb=img, fparams=fparams)
 				
-		elif 'Barrierefreie' in title:							# HBBTV wie ZDF_Barrierearm
+		elif 'barrierefreie-inhalte' in canon:					# HBBTV wie ZDF_Barrierearm
 			coll_id = "4c78d2b1-e4aa-4258-929f-1f547e1b7e8e"
 			fparams="&fparams={'coll_id': '%s', 'homeID': '%s'}" % (coll_id, "ZDF")
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R("zdf-kategorien.png"), 
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=fanart, 
 				thumb=img, fparams=fparams)			
 				
-		elif 'Nachrichten' in title:					
+		elif 'nachrichten-politik' in canon:					
 			coll_id = "41db6a05-a183-4c32-b205-e8724858d176"	# HBBTV
 			fparams="&fparams={'coll_id': '%s', 'homeID': '%s'}" % (coll_id, "ZDF")
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=R("zdf-kategorien.png"), 
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_Start", fanart=fanart, 
 				thumb=img, fparams=fparams)			
 		
 		else:
 			fparams="&fparams={'title': '%s', 'path': '%s', 'typ': 'ZDF_Kat'}" %\
 				(title, quote(kat_url))
-			addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
+			addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=fanart, 
 				thumb=img, fparams=fparams)
 					
 	thumb = R(ICON_DIR_FOLDER)
@@ -8445,7 +8439,7 @@ def ZDF_Kat(title):
 	title = py2_encode(title)
 	fparams="&fparams={'title': '%s', 'DictID': '%s'}" %\
 		(quote(title), "ZDF_KATWEB")
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat_Plus", fanart=R("zdf-kategorien.png"), 
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat_Plus", fanart=fanart, 
 		thumb=thumb, tagline=tag, fparams=fparams)
 	
 	title = u"Noch mehr zum Streamen entdecken"					# Zusatzbutton 2
@@ -8453,13 +8447,14 @@ def ZDF_Kat(title):
 	title = py2_encode(title)
 	fparams="&fparams={'title': '%s', 'DictID': '%s'}" %\
 		(quote(title), "ZDF_KATWEB")
-	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat_Plus2", fanart=R("zdf-kategorien.png"), 
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat_Plus", fanart=fanart, 
 		thumb=thumb, tagline=tag, fparams=fparams)
 			
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------
 # Aufruf ZDF_Kat Zusatzbutton 1 "Weitere öffentlich-rechtliche Videos..."
+#	und Zusatzbutton 1 "Noch mehr zum Streamen entdecken"
 #
 def ZDF_Kat_Plus(title, DictID):								
 	PLog('ZDF_Kat_Plus: ' + title)
@@ -8467,89 +8462,57 @@ def ZDF_Kat_Plus(title, DictID):
 	li = xbmcgui.ListItem()
 	li = home(li, "ZDF")									# Home-Button
 	
-	startpos=title
-	endpos="Noch mehr zum Streamen entdecken"				# Button 2
-		
-	page = Dict("load", DictID)								# hier ohne CacheTime
-	pos1=page.find(startpos)
-	pos2=page.find(endpos)
-	page=page[pos1:pos2]
-	PLog("pos1: %d, pos2: %d" % (pos1, pos2))
+	# Menü jeweils zw. 2 Marken, Endteil ausreichend trennscharf 
+	if title.startswith("Weitere"):							# Kats der Sender
+		# curated_collection#f0cd878c-c8ac- .. -ad17-ad18aca6c2cc
+		mark = 'ad17-ad18aca6c2cc'
+	else:
+		# curated_collection#f0cd878c-c8ac- .. -90fd-14daf58ca086
+		mark = '90fd-14daf58ca086'							# große Kat-Liste, alphabetisch 
+	page = page = Dict("load", DictID)
+	page = page.replace('\\"', '"')
+
+	pos1=page.find(mark)
+	pos2=page[pos1+len(mark):].find(mark)
+	page = page[pos1:pos1+pos2]
 	PLog(page[:80])
 
-	kats = blockextract('data-testid="teaser-tile', page, "</h3>")	# ähnlich ZDF_Kat: </h3 statt </h2
-	PLog("KatsPlus: %d" % len(kats))						# 16.06.2024: Button1:	, Button2: 
-	PLog("KatsPlus:" + str(kats)[:80])
+	kats = blockextract('"canonical"', page)
+	PLog("KatsPlus: %d" % len(kats))						# 16.06.2024: 13 (Rest s. ZDF_Kat_Plus)
+	PLog(str(kats)[:80])
+	PLog(str(kats[-1])[:80])		
 	
 	for item in kats:
-		#if "/zdfinfo" in item:	# Debug
-		#	PLog(item)
-		title = stringextract('<h3', "</h3>", item) # ZDF-Änderung 27.09.2026, abweichend zu ZDF_Kat
-		title = title.split(">")[-1]				# r7qx9f4">ZDFinfo
-		img=""
-		imgs = blockextract("src=", item)			# Bilder, abweichend zu ZDF_Kat, ZDF_Kat_Plus2
-		PLog("imgs: %d" % len(imgs))
-		if len(imgs) > 0:
-			img = stringextract('src="', '"', imgs[-1]) 
-		
-		if not img:
-			R(ICON_DIR_FOLDER)
-		katid = stringextract('href="', '">', item)			# ID der Kategorie
-		kat_url = "https://www.zdf.de" + katid
-
-		PLog('Satz11_3:');
-		PLog(title); PLog(kat_url)
+		title, canon, img, kat_url = ZDF_getKatMenu_details(item)
+		PLog('Satz11_2:');
 		kat_url=py2_encode(kat_url); title=py2_encode(title);
 		
 		fparams="&fparams={'title': '%s', 'path': '%s'}" %\
-			(title, quote(kat_url))							# ohne typ (Default)
+			(title, quote(kat_url))
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
 			thumb=img, fparams=fparams)
 
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------
-# Aufruf ZDF_Kat Zusatzbutton 2 "Noch mehr zum Streamen entdecken"
+# Aufruf ZDF_Kat,ZDF_Kat_Plus2
+# holt title, canon, kat_url und img
 #
-def ZDF_Kat_Plus2(title, DictID):								
-	PLog('ZDF_Kat_Plus2: ' + title)
-
-	li = xbmcgui.ListItem()
-	li = home(li, "ZDF")									# Home-Button
+def ZDF_getKatMenu_details(item):								
+	PLog('ZDF_getKatMenu_details:')
 	
-	startpos=title
-	endpos="ZDF auf YouTube"								# Button 2 endet vor footer					
-		
-	page = Dict("load", DictID)								# hier ohne CacheTime
-	pos1=page.find(startpos)
-	pos2=page.find(endpos)
-	page=page[pos1:pos2]
-	PLog("pos1: %d, pos2: %d" % (pos1, pos2))
-	PLog(page[:80])
+	title = stringextract('target_title":"', '"', item) 
+	title = title.replace('\\u0026', '&')				# bei Bedarf transl_json()
+	canon = stringextract('canonical":"', '"', item)
+	#img = stringextract('original":"', '"', item)		# 3840x2160, Senderlogo fehlt in ZDFtivi + KiKA
+	img = stringextract('dim768X432":"', '"', item)		# ohne Senderlogo in img (außer 3sat)
+	#img = stringextract('dim384X216":"', '"', item)	# Logos wie dim768X432
 
-	kats = blockextract('data-testid="category-tile', page, "</h3")		# ähnlich ZDF_Kat: </h3 statt </h2
-	PLog("KatsPlus2: %d" % len(kats))						# 16.06.2024: Button1:	, Button2: 
-	PLog("KatsPlus2:" + str(kats)[:80])
+	if not img:
+		img = R(ICON_DIR_FOLDER)
+	kat_url = stringextract('target_url":"', '"', item)	
 	
-	for item in kats:
-		title = stringextract('class="t6shsf">', "</span>", item) # ZDF-Änderung 27.09.2026 wie ZDF_Kat
-		img = stringextract('src="', '"', item) 			# wie ZDF_Kat
-		if not img:
-			R(ICON_DIR_FOLDER)
-		katid = stringextract('href="', '">', item)			# ID der Kategorie
-		kat_url = "https://www.zdf.de" + katid
-
-		PLog('Satz11_4:');
-		PLog(title); PLog(kat_url)
-		kat_url=py2_encode(kat_url); title=py2_encode(title);
-		
-		fparams="&fparams={'title': '%s', 'path': '%s'}" %\
-			(title, quote(kat_url))							# ohne typ (Default)
-		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
-			thumb=img, fparams=fparams)
-
-	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-	
+	return title, canon, img, kat_url
 #-----------------------------------------------
 # Aufruf Main_ZDF (Button Barrierearm)
 # neu ab 11.06.2026 HBBTV wie Kategorien (Barrierefreie Inhalte), 
