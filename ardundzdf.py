@@ -50,7 +50,7 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>380</nr>										# Numerierung für Einzelupdate
+# 	<nr>381</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.5'
 VDATE = '28.10.2026' 
 
@@ -8536,8 +8536,11 @@ def ZDF_Graphql_Zapping(title, fanart, config="", cluster=""):
 		owner = item["contentOwner"]["title"]
 		img, img_alt= ZDF_get_img(item, mode="zapping")
 		sharingUrl = item["smartCollection"]["sharingUrl"]
+		dur =  stringextract("duration': ", '}',  str(item))
+		PLog("dur: %s" % dur)
+		dur = seconds_translate(dur)
 
-		tag = "%s\n[B]%s[/B]" % (tag_options, owner)
+		tag = "Dauer: %s | %s\n[B]%s[/B]" % (dur, owner, tag_options)
 		PLog("Satz5: %s" % title)
 		PLog(sharingUrl); PLog(img)
 		title=repl_json_chars(title)
