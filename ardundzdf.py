@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>379</nr>										# Numerierung für Einzelupdate
+# 	<nr>380</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.5'
-VDATE = '17.10.2026' 
+VDATE = '28.10.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8363,6 +8363,7 @@ def ZDF_Start2(title, index, DictID, homeID):
 # 11.10.2026 HBBTV zeigt sie nur teilweise (Kats: bis Dokus, Weitere: alle, 
 #	Noch mehr: bis Comedy)
 # 17.10.2026 Menü-Extraktion json-Code statt HTML-Bereich
+# 26.10.2026 Zusatzbuttons ZDF Channels (Zapping)
 #
 def ZDF_Kat(title):								
 	PLog('ZDF_Kat:')
@@ -8371,6 +8372,7 @@ def ZDF_Kat(title):
 	page, DictID, newpath, img, ptmdTemplate = ZDF_Graphql_WebDetails(path, mode="getpage")
 	if not page:
 		return
+
 	# Menü zw. 2 Marken, Endteil ausreichend trennscharf
 	# curated_collection#f0cd878c-c8ac- .. -905b-5beb86d60153
 	mark = '5beb86d60153'
@@ -8433,8 +8435,16 @@ def ZDF_Kat(title):
 			addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=fanart, 
 				thumb=img, fparams=fparams)
 					
+	img = "https://www.zdf.de/assets/zdfchannels-100~1280x720?cb=1785422226379"
+	title = u"ZDF Channels (Zapping)"							# Zusatzbutton 1
+	tag = u"Ob mit spannenden Dokus in fremde Welten eintauchen oder bei Bares für Rares nostalgisch werden – hier findest du einfach, was gerade passt. Einschalten und zurücklehnen."
+	title = py2_encode(title); img = py2_encode(img); 
+	fparams="&fparams={'title': '%s', 'fanart': '%s', 'config': ''}" % (quote(title), quote(img))
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Graphql_Zapping", fanart=fanart, 
+		thumb=img, tagline=tag, fparams=fparams)
+
 	thumb = R(ICON_DIR_FOLDER)
-	title = u"Weitere öffentlich-rechtliche Videos streamen"	# Zusatzbutton 1
+	title = u"Weitere öffentlich-rechtliche Videos streamen"	# Zusatzbutton 2
 	tag = u"Videos von [B]ZDFinfo, ZDFneo, ZDFtivi, KiKA, 3sat, phoenix, ARTE, funk[/B]"
 	title = py2_encode(title)
 	fparams="&fparams={'title': '%s', 'DictID': '%s'}" %\
@@ -8442,7 +8452,7 @@ def ZDF_Kat(title):
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat_Plus", fanart=fanart, 
 		thumb=thumb, tagline=tag, fparams=fparams)
 	
-	title = u"Noch mehr zum Streamen entdecken"					# Zusatzbutton 2
+	title = u"Noch mehr zum Streamen entdecken"					# Zusatzbutton 3
 	tag = u"Von [B]Abenteuer[/B] bis [B]Wissen[/B]"
 	title = py2_encode(title)
 	fparams="&fparams={'title': '%s', 'DictID': '%s'}" %\
@@ -8453,8 +8463,153 @@ def ZDF_Kat(title):
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 
 #-----------------------------------------------
-# Aufruf ZDF_Kat Zusatzbutton 1 "Weitere öffentlich-rechtliche Videos..."
-#	und Zusatzbutton 1 "Noch mehr zum Streamen entdecken"
+# Aufruf ZDF_Kat Zusatzbutton 1 "ZDF Channels (Zapping)"
+# Web: www.zdf.de/play/zapping/channel/random-zapping-channel
+# Graphql-Format stark abweichend (s. query), ohne extensions,
+# 	alt. Curl-Header s.  ../Graphql_scripts/Graphql_Zapping.py.
+# Step1: Videoliste des ersten Clusters für akt. config (01 bei 
+#	erstem Aufruf), anschließend Channel-Buttons akt. config,
+#	dann Mehr-Button für komplette Channel-Sammlung
+# Step 2: Aufruf ZDF_Graphql_Zapping mit config und cluster 
+#
+def ZDF_Graphql_Zapping(title, fanart, config="", cluster=""):								
+	PLog('ZDF_Graphql_Zapping: %s | config: %s, cluster: %s' % (title, config, cluster))
+
+	config_base = "channel-zapping-content-selection-"
+	if not config:
+		config = config_base + "01"
+	else:
+		config = config_base + config
+	zdfappId = "zdf-web-50c9f733"
+	myvars = '"variables":{"configuration":"%s","collectionId":"","input":{"appId":"%s","filters":{},"pagination":{"first":40},"user":{"abGroup":"gruppe-b","userSegment":"segment_v3_0"}}}}'
+	variables = myvars  % (config, zdfappId)
+	query  = '{"operationName":"Clusterlist","query":"\\nquery Clusterlist(\\n$configuration: String\u0021\\n$collectionId: String\u0021\\n$input: RecommendationInput\u0021\\n) {\\nclusterlist(\\nconfiguration: $configuration\\ncollectionId: $collectionId\\ninput: $input\\n) {\\nconfiguration\\nrecoId\\nclusters {\\nclusterId\\nclusterLabel\\nitems {\\n... on Video {\\nid\\ncanonical\\ntitle\\ncontentType,\\nnewContentStatus,\\nrecoModel\\ncurrentMedia {\\nnodes {\\nptmdTemplate\\n... on VodMedia {\\nduration\\n}\\n}\\n}  \\nteaser { \\nimage {\\naltText\\ncaption\\nlist\\n}\\n}\\nsmartCollection {\\ntitle\\ncollectionType\\nsharingUrl\\n}\\ncontentOwner {\\ntitle\\ndetails\\n}\\nstreamingOptions {\\nad\\nut\\ndgs\\nov\\nks\\nfsk\\n}\\n}\\n}\\n}\\n}\\n}",'
+	params = query + variables
+	params = params.encode()							# -> Bytestring
+	url = ZDF_GraphqlBase
+	headers = {
+		"Accept": "application/json",
+		"Content-Type": "application/json",
+		"User-Agent": zdfappId,
+		"api-auth": "Bearer %s" % zdfToken,	
+	}
+	
+	PLog("Graphql_Zapping_headers: " + str(headers))
+	PLog("Graphql_Zapping_params: " + str(params))
+
+	req = Request(url, headers=headers, method="POST", data=params)
+	with urlopen(req, timeout=20) as resp:
+		page = resp.read().decode("utf-8")
+		PLog(len(page))
+	try:												# json-Daten
+		jsonObject = json.loads(page)
+		PLog(str(jsonObject)[:80])
+		clusters =  jsonObject["data"]["clusterlist"]["clusters"]
+		if cluster:										# übergeben <- Channel-Buttons, s.u.
+			cluster0 = clusters[int(cluster)]
+		else:
+			cluster0 = clusters[0]
+		items = cluster0["items"]
+		clusterLabel = cluster0["clusterLabel"]
+	except Exception as exception:
+		clusters=[]; items=[]
+	PLog("clusters: %d, items: %d" % (len(clusters), len(items)))	
+
+	if len(clusters) == 0:	
+		msg1 = "ZDF_Graphql_Zapping:"
+		msg2 = "keine Daten gefunden."
+		xbmcgui.Dialog().notification(msg1,msg2,fanart,3000)
+		return
+
+	li = xbmcgui.ListItem()
+	li = home(li, "ZDF")									# Home-Button
+	mediatype=''											# Kennz. Videos im Listing
+	if SETTINGS.getSetting('pref_video_direct') == 'true':
+		mediatype='video'	
+
+	# ZDF_getKat_content_details hier nur für tag_options verwendbar
+	descr = "Zapping Sammlung | Channel:\n[B]%s | %s[/B]" % (config[-2:], clusterLabel)	
+	descr = "Zapping Sammlung %s | Channel 1:\n[B]%s[/B]" % (config[-2:], clusterLabel)	
+	for item in items:
+		tag_options = ZDF_getKat_content_details(item, mode="tag_options")
+		title = item["title"]
+		owner = item["contentOwner"]["title"]
+		img, img_alt= ZDF_get_img(item, mode="zapping")
+		sharingUrl = item["smartCollection"]["sharingUrl"]
+
+		tag = "%s\n[B]%s[/B]" % (tag_options, owner)
+		PLog("Satz5: %s" % title)
+		PLog(sharingUrl); PLog(img)
+		title=repl_json_chars(title)
+		tag=repl_json_chars(tag)
+		descr=py2_encode(descr); tag=py2_encode(tag)		# PY2
+
+		title=py2_encode(title); url=py2_encode(url);
+		img=py2_encode(img)
+		tag_par = tag.replace("\n", "||")					# mehrz. in ZDF_getKat_content
+		scms_id=""
+	
+		sharingUrl=py2_encode(sharingUrl); title=py2_encode(title);
+		fparams="&fparams={'path': '%s','title': '%s'}" % (quote(sharingUrl), quote(title))
+		PLog("fparams: " + unquote(fparams))
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_getApiStreams", fanart=fanart, thumb=img, 
+			fparams=fparams, tagline=tag, summary=descr, mediatype=mediatype)	# hier nur HLS + Direktstart
+	
+	cnt=0;											
+	for cluster in clusters:								# Channel-Buttons, nur akt. Sammlung 
+		title = u"Channel %d: [B]%s[/B]" % (cnt+1, cluster["clusterLabel"])
+		tag = "zu: Sammlung %s | Channel %d" % (config[-2:], cnt+1)
+		img, img_alt = ZDF_get_img(cluster["items"][0], mode="zapping")	# Bild 1. Beitrag	
+		img=py2_encode(img); 
+		fparams="&fparams={'title': '', 'fanart': '%s','config': '%s', 'cluster': '%s'}" %\
+			(quote(fanart), config[-2:], str(cnt))
+		PLog("fparams: " + unquote(fparams))
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_Graphql_Zapping", fanart=fanart, 
+			thumb=R(ICON_MEHR), fparams=fparams, tagline=tag)				
+		cnt=cnt+1
+		
+	title = "Zur kompletten Channel-Sammlung"							# Button für komplette Sammlung (akt. 1-5)
+	tag = "Zeige alle ZDF Channel"
+	summ = u"Die Sammlungen 01 - 04 enthalten jeweils 4 Channel, die Sammlung 5 enthält 2 Channel"
+	fanart=py2_encode(fanart); 
+	fparams="&fparams={'fanart': '%s', 'config_base': '%s'}" % (quote(fanart), config_base)
+	PLog("fparams: " + unquote(fparams))
+	addDir(li=li, label=title, action="dirList", dirID="ZDF_Graphql_ZappingCollections", fanart=fanart, 
+		thumb=R(ICON_MEHR), fparams=fparams, tagline=tag, summary=summ)				
+
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+	
+#-----------------------------------------------
+# Aufruf ZDF_Graphql_Zapping
+# Buttons zu den Collections (akt. 1-5)
+# ID einer Collection: json-key "configuration", z.B.
+# "channel-zapping-content-selection-01", für
+# ZDF_Graphql_Zapping genügt der 2-stellige Param config.
+#
+def ZDF_Graphql_ZappingCollections(fanart, config_base):								
+	PLog('ZDF_Graphql_ZappingCollections:')
+
+	config_list = ["01", "02", "03", "04", "05"]
+	li = xbmcgui.ListItem()
+	li = home(li, "ZDF")									# Home-Button
+	
+	for item in config_list:
+		config = config_base + item							# channel-zapping-content-selection-01
+		title = "Sammlung %s" % item
+		tag = "Zur Sammlung %s"% item
+
+		fanart=py2_encode(fanart); 
+		fparams="&fparams={'title': '', 'fanart': '%s','config': '%s', 'cluster': ''}" %\
+			(quote(fanart), item)
+		PLog("fparams: " + unquote(fparams))
+		addDir(li=li, label=title, action="dirList", dirID="ZDF_Graphql_Zapping", fanart=fanart, 
+			thumb=R(ICON_DIR_FOLDER), fparams=fparams, tagline=tag)				
+		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#-----------------------------------------------
+# Aufruf ZDF_Kat Zusatzbutton 2 "Weitere öffentlich-rechtliche Videos..."
+#	und Zusatzbutton 3 "Noch mehr zum Streamen entdecken"
 #
 def ZDF_Kat_Plus(title, DictID):								
 	PLog('ZDF_Kat_Plus: ' + title)
@@ -8488,7 +8643,7 @@ def ZDF_Kat_Plus(title, DictID):
 		kat_url=py2_encode(kat_url); title=py2_encode(title);
 		
 		fparams="&fparams={'title': '%s', 'path': '%s'}" %\
-			(title, quote(kat_url))
+			(quote(title), quote(kat_url))
 		addDir(li=li, label=title, action="dirList", dirID="ZDF_KatSub", fanart=R("zdf-kategorien.png"), 
 			thumb=img, fparams=fparams)
 
@@ -8502,7 +8657,7 @@ def ZDF_getKatMenu_details(item):
 	PLog('ZDF_getKatMenu_details:')
 	
 	title = stringextract('target_title":"', '"', item) 
-	title = title.replace('\\u0026', '&')				# bei Bedarf transl_json()
+	title = title.replace('\\u0026', 'und')				# bei Bedarf transl_json()
 	canon = stringextract('canonical":"', '"', item)
 	#img = stringextract('original":"', '"', item)		# 3840x2160, Senderlogo fehlt in ZDFtivi + KiKA
 	img = stringextract('dim768X432":"', '"', item)		# ohne Senderlogo in img (außer 3sat)
@@ -8717,8 +8872,9 @@ def ZDF_KatSub(title, path, tabid="", endCursor="", typ=""):
 
 	tag = u"Navigations-Menü, aktuell: [B]%s[/B]" %	this_navi
 	label = "Subnavigation %s" % title
+	title=py2_encode(title)
 	fparams="&fparams={'path': '%s', 'DictID': '%s', 'title': '%s', 'homeID': '%s', 'this_navi': '%s'}" %\
-		(quote(path), DictID, title, "", this_navi)		# homeID nicht genutzt
+		(quote(path), DictID, quote(title), "", this_navi)		# homeID nicht genutzt
 	addDir(li=li, label=label, action="dirList", dirID="ZDF_get_naviKat", fanart=icon, 
 		thumb=icon, fparams=fparams, tagline=tag)
 
@@ -9446,16 +9602,18 @@ def ZDF_getKat_content_details(obj, mode="img"):
 		
 	if mode == "movie":
 		movie_canon_id=""; avail=""; dur="";
-		pubDate=""; video=""; 
+		pubDate=""; video=""; vod=""
 		if "video" in obj:							# null möglich
 			video = obj["video"]
 			movie_canon_id = video["canonical"]		# 	-> futura-Pfad Einzelbeitrag
-			vod = video["availability"]["vod"]
+			if "availability" in video:				# fehlt bei Zapping (ZDF_Graphql_Zapping)
+				vod = video["availability"]["vod"]
 			
 		if "currentMedia" in obj:
 			movie_canon_id = obj["canonical"]		# 	-> futura-Pfad Einzelbeitrag
 			video = obj["currentMedia"]
-			vod = obj["availability"]["vod"]
+			if "availability" in video:				# fehlt, s.o.
+				vod = obj["availability"]["vod"]
 		
 		try:
 			ptmdTemplate = obj["currentMedia"]["nodes"][0]["ptmdTemplate"]
@@ -9495,7 +9653,7 @@ def ZDF_getKat_content_details(obj, mode="img"):
 	
 	if mode == "img":
 		img_def = R("icon-bild-fehlt_wide.png")		# default-Icon
-		image=""; img_alt=""
+		image=""; img_alt=""; img=""
 		try:
 			if "image" in obj:
 				image = obj["image"]
@@ -9515,7 +9673,10 @@ def ZDF_getKat_content_details(obj, mode="img"):
 			
 			if img_alt == "None":
 				img_alt=""
-			layouts = image["layouts"]
+			if "layouts" in image:
+				layouts = image["layouts"]
+			if "list" in image:
+				layouts = image["list"]
 			if "dim768Xauto" in layouts:				# häufig None möglich
 				img = layouts["dim768Xauto"]
 			if img == "" and "dim1280Xauto" in layouts:
@@ -9858,6 +10019,7 @@ def ZDF_RubrikSingle(url, title, cindex="", homeID=""):
 #-------------------------
 # ermittel Image aus Web oder futura-Datensatz
 # mode=web: Webseite in page (ZDF_Graphql_WebDetails)
+# 26.10.2026 neu: mode=zapping (img + altText)
 #
 def ZDF_get_img(obj, landscape=False, mode=""):
 	PLog('ZDF_get_img: ' + mode)
@@ -9895,6 +10057,22 @@ def ZDF_get_img(obj, landscape=False, mode=""):
 		'''									# ohne https?
 		img = stringextract('original":"', '"', obj)
 															
+	elif mode == "zapping":									# ZDF_Graphql_Zapping
+		try:
+			layouts = obj["teaser"]["image"]["list"]
+			img_alt = obj["teaser"]["image"]["altText"]
+		except Exception as exception:
+			PLog("get_img_error_zapping: " + str(exception))
+			layouts=[]; img_alt=""
+		# Liste: "dim1152x1296": "https://www.zdf.de/assets/..?cb=1790200915294
+		for dim,imageObject in list(layouts.items()):
+			dim = dim.split("dim")[-1]				# dim640x720
+			w = dim.split("x")[0]					# 640
+			if int(w) >= 640 and int(w) <= 960:
+				img=imageObject
+				PLog("found_img: %s | %s" % (dim, img))
+				break
+		return img, img_alt									# hier  img plus altText
 		
 	else:
 		try:
