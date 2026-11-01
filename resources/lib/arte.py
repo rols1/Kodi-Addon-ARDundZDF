@@ -968,6 +968,7 @@ def Beitrag_Liste(url, title):
 #	crawler #1010 zu mediathekview/MServer
 # 16.12.2024 Für Call von get_streams_from_link fehlende Parameter aus
 #	api_v2-Daten ergänzt
+# 29.10.2026 Austausch defektes hbbtvv2-api gegen altes hbbtv-mw-api.
 #
 def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	PLog("SingleVideo: " + pid) 
@@ -984,7 +985,9 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 		
 	path1 = 'https://api.arte.tv/api/player/v2/config/%s/%s' % (lang,pid)	# nur  HLS-Quellen, ev. Teaser (20.04.2022)
 	# neu ab 29.09.2024 nur MP4-Quellen
-	path2 = "https://www.arte.tv/hbbtvv2/services/web/index.php/OPA/v3/streams/%s/SHOW/%s"  % (pid, lang)	
+	# 29.10.2026 hbbtvv2-api in Player-Url aus 2024 funktioniert nicht mehr, altes hbbtv-mw-api tut es wieder:
+	# path2 = "https://www.arte.tv/hbbtvv2/services/web/index.php/OPA/v3/streams/%s/SHOW/%s"  % (pid, lang)
+	path2 = "https://www.arte.tv/hbbtv-mw/api/1/player/%s?lang=%s" % (pid, lang)	
 	header = "{'Authorization': 'Bearer Nzc1Yjc1ZjJkYjk1NWFhN2I2MWEwMmRlMzAzNjI5NmU3NWU3ODg4ODJjOWMxNTMxYzEzZGRjYjg2ZGE4MmIwOA',\
 		'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',\
 		'Accept': 'application/json'}"
@@ -1042,7 +1045,8 @@ def SingleVideo(img, title, pid, tag, summ, dur, geo, trailer=''):
 	MP4_List=[]
 	try:
 		page = json.loads(page)
-		formitaeten = page["videoStreams"]
+		formitaeten = page["item"]["streams"]
+		PLog("formitaeten: %d" % len(formitaeten))
 	except Exception as exception:
 		formitaeten=""; MP4_List=[]
 		PLog("json_error_path2: " + str(exception))	
@@ -1179,31 +1183,34 @@ def get_streams_api_v2(page, title, summ):
 # 29.09.2024 Streamdetails via hbbtvv2-Link, formitaeten=json 
 # Arte verwendet bei HBBTV MP4-Formate wie ZDF, HLS_List s. get_streams_api_v2
 # audioLabel: Abgleich setting pref_arte_streams in get_bestdownload
+# 30.10.2026 Anpassung an hbbtv-mw-api
 # 
 def get_streams_hbbtvv2(formitaeten, title, summ):
 	PLog("get_streams_hbbtvv2:")
 	title_org = title
 	PLog(len(formitaeten))
+	PLog(str(formitaeten)[:80])
 	
 	MP4_List=[]; trailer=False
 	for rec in formitaeten:	
-		quality = rec["quality"]
-		width = rec["width"]
-		height = rec["height"]
-		if height == "": height = "?"
+		quality = rec["mainQuality"]["code"]	# EQ, SQ, ..
+		width = rec["mainQuality"]["label"]		# 406p
+		width = width.split("p")[0]
+		height = "?"							# fehlt
 		size = "%sx%s" % (width, height)
 
 		url = rec["url"]
 		if url.find("Trailer") > 0 or url.find("_EXTRAIT_") > 0:	# Trailer-Kennz. (Stand 22.05.2022)
 			trailer = True
+
 		try:
 			bitrate = re.search(r'_MP4-(\d+)_', url).group(1)
 		except Exception as exception:					
 			PLog("bitrate_error:  " + str(exception))
-			bitrate = width											# dummy-Marker
+			bitrate = width								# dummy-Marker
 
-		lang = rec["audioLabel"]
-		shortLabel = rec["audioShortLabel"]
+		lang = rec["versions"][0]["label"]				# Deutsch, Französisch
+		shortLabel = rec["versions"][0]["shortLabel"]	# DE, FR
 		
 		PLog('Satz5:')
 		PLog(url); PLog(size); PLog(bitrate); PLog(lang);
@@ -1221,7 +1228,7 @@ def get_streams_hbbtvv2(formitaeten, title, summ):
 		# skip Parseplaylist für master.m3u8 (arte liefert Auflösungen als master.m3u8)
 		if ".mp4" in url:										# MP4
 			title_url = u"%s#%s" % (title, url)
-			mp4 = "MP4 [B]%s[/B]" % (lang)
+			mp4 = "MP4 [B]%s[/B]" % (lang)						# Abgleich pref_arte_streams -> get_bestdownload
 			item = u"%s | %s ** Bitrate %s ** Auflösung %s ** %s" %\
 				(mp4, quality, bitrate, size, title_url)
 			MP4_List.append(item)

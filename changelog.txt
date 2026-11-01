@@ -10,6 +10,35 @@ CHANGE HISTORY
 			max_col 97	
 --------------
 
+01.11.2026	5.5.6
+			ARDStartVideoMP4get (ARDnew): fehlendes "https:" bei WDR-Streams ergänzt.
+			Context (tools): getRedirect-Abfrage bei ARD-Serien-Ermittlung mit Header
+			(ohne Header Error 504 Timeout bei WDR-Streams möglich).
+			Context (tools): bei ZDF-Serien Ermittlung des Titels über die Webseite statt
+			Param title (kann "Trailer" o.ä. enthalten).
+			ZDF_Verpasst: doppelt kodierte UTF-8-Zeichen in ZDF_getKat_content_details
+			behandelt -> repl_json_chars (nur im Bildtext, Ursache unbekannt).
+			transl_doubleUTF8 (util): weitere Zeichen ergänzt.
+			seconds_translate (util): Minuten-Konvertierung ergänzt (Angleichung HBBTV),
+			verwendet in ZDF_Graphql_Zapping.
+			ZDF_Kat: Anpassung an geänderte html-Markierungen in www.zdf.de/kategorien,
+			nur noch 1 Icon statt Icon-Set, manueller Nachrichten-Block entfällt,
+			Funktionen ZDF_Kat_Plus und ZDF_Kat_Plus2 aktualisiert.
+			ZDF_checkSerie: umgestellt auf "-staffel-" oder '"name":"Staffel' (bisheriger
+			Check auf seasonNumber und episodeNumber unsicher).
+			ZDF_FlatListRec: mögliches Special ohne Numerierung in futura zugelassen 
+			(Addon-Kennz. S00E00).
+			ZDF_FlatListEpisodes, ZDF_getStrmList, do_sync (strm): Abgleich season_id
+			(statt scms_id) mit sharingUrl, um die aktuelle Serie zu ähnlichen Beiträgen 
+			sicherer abzugrenzen.
+			ZDF_Kat: Menü-Extraktion json-Code statt HTML-Bereich, Anpassung ZDF_Kat_Plus,
+			ZDF_Kat_Plus2 gelöscht, neue Funktion ZDF_getKatMenu_details.
+			ZDF_getKat_content_details: img-Variante image["list"] ergänzt (zu "layouts").
+			ZDF Channel: Nachbildung random-zapping-channel, neu ZDF_Graphql_Zapping,
+			ZDF_get_img erweitert.
+			SingleVideo (arte): Austausch defektes hbbtvv2-api gegen altes hbbtv-mw-api in
+			Player-Url, Anpassung get_streams_hbbtvv2.
+
 19.09.2026	5.5.5
 			ZDF_getHBBTV_content: div. Strings für <= python2.7 angepasst.
 			ZDF_KatSeriePre: "/serien/" nicht mehr in path nach Redirection, Serien-

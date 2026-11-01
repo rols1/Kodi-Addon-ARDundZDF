@@ -1936,6 +1936,7 @@ def transl_doubleUTF8(line):	# rückgängig: doppelt kodiertes UTF-8
 		, (u'Ã–', u"Ö"), (u'Ã¼', u"ü"), (u'Ãœ', u'Ü')
 		, (u'Ã', u'ß'), (u'â', u'')
 		, (u'„', u'"'), (u'“', u'"')	# Tief- und Hochkomma
+#		, (u'Â', u'')					# Grad (s. transl_json, repl_json_chars)
 		, (u'\xc3\xa2', u'*')):			# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
 
 		line = line.replace(*r)
@@ -2132,8 +2133,10 @@ def CalculateDuration(timecode):
 # Format seconds	86400	(String, Int, Float)
 # Rückgabe:  		1d, 0h, 0m, 0s	(days=True)
 #		oder:		0h:0d:0s
-# 30.12.2024: github.com/rols1/Kodi-Addon-ARDundZDF/pull/41			
-def seconds_translate(seconds, days=False):
+# 30.12.2024: github.com/rols1/Kodi-Addon-ARDundZDF/pull/41
+# 29.10.2026  Minuten-Konvertierung ergänzt (wie HBBTV-Kennzeichnung)
+#			
+def seconds_translate(seconds, days=False, minutes=False):
 	PLog('seconds_translate: %s' % str(seconds))
 	seconds_org=seconds
 
@@ -2142,9 +2145,11 @@ def seconds_translate(seconds, days=False):
 	except Exception as exception:
 		PLog("seconds_error: " + str(exception))
 		return ""	
-	
+
 	if seconds < 60:
 		return "%s sec" % seconds
+	elif minutes:
+		return "%d min" % -(-seconds // 60)	# ohne math-Modul (positiver Wert der minus-Rundung)
 
 	# VM optimisation                                                                                                                                                                                     
 	sec_in_day = 24 * 3600

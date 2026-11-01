@@ -51,8 +51,8 @@ import resources.lib.epgRecord as epgRecord
 
 # VERSION -> addon.xml aktualisieren
 # 	<nr>381</nr>										# Numerierung für Einzelupdate
-VERSION = '5.5.5'
-VDATE = '28.10.2026' 
+VERSION = '5.5.6'
+VDATE = '01.11.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8538,7 +8538,7 @@ def ZDF_Graphql_Zapping(title, fanart, config="", cluster=""):
 		sharingUrl = item["smartCollection"]["sharingUrl"]
 		dur =  stringextract("duration': ", '}',  str(item))
 		PLog("dur: %s" % dur)
-		dur = seconds_translate(dur)
+		dur = seconds_translate(dur, minutes=True)			# wie HBBTV-Kennzeichnung
 
 		tag = "Dauer: %s | %s\n[B]%s[/B]" % (dur, owner, tag_options)
 		PLog("Satz5: %s" % title)

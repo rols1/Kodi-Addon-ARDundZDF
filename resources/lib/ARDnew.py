@@ -2185,11 +2185,11 @@ def get_json_content_details(obj, ID=""):
 		except:
 			img = R(ICON_DIR_FOLDER)							# Bsp.: Subrubriken
 
-		if "longTitle" in obj:
+		if "longTitle" in obj:			
 			title = obj["longTitle"]
 		if not title:
 			if "title" in obj:
-				title = obj["title"]	
+				title = obj["title"]							# ohne Korrektur: Punkt als Title (Datteltäter)
 		
 		if "coreAssetType" in obj:
 			if "EPISODE" in obj["coreAssetType"]:				# Staffel-/Episodenkennz. Titelende
