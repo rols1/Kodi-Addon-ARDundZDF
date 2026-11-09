@@ -50,9 +50,9 @@ import resources.lib.epgRecord as epgRecord
 # +++++ ARDundZDF - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 # VERSION -> addon.xml aktualisieren
-# 	<nr>381</nr>										# Numerierung für Einzelupdate
+# 	<nr>382</nr>										# Numerierung für Einzelupdate
 VERSION = '5.5.6'
-VDATE = '01.11.2026' 
+VDATE = '09.11.2026' 
 
 
 # (c) 2019 by Roland Scholz, rols1@gmx.de
@@ -8372,6 +8372,7 @@ def ZDF_Kat(title):
 	page, DictID, newpath, img, ptmdTemplate = ZDF_Graphql_WebDetails(path, mode="getpage")
 	if not page:
 		return
+	PLog("DictID " + DictID)
 
 	# Menü zw. 2 Marken, Endteil ausreichend trennscharf
 	# curated_collection#f0cd878c-c8ac- .. -905b-5beb86d60153
@@ -8448,7 +8449,8 @@ def ZDF_Kat(title):
 	tag = u"Videos von [B]ZDFinfo, ZDFneo, ZDFtivi, KiKA, 3sat, phoenix, ARTE, funk[/B]"
 	title = py2_encode(title)
 	fparams="&fparams={'title': '%s', 'DictID': '%s'}" %\
-		(quote(title), "ZDF_KATWEB")
+		(quote(title), DictID)
+#		(quote(title), "ZDF_KATWEB")
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat_Plus", fanart=fanart, 
 		thumb=thumb, tagline=tag, fparams=fparams)
 	
@@ -8456,7 +8458,8 @@ def ZDF_Kat(title):
 	tag = u"Von [B]Abenteuer[/B] bis [B]Wissen[/B]"
 	title = py2_encode(title)
 	fparams="&fparams={'title': '%s', 'DictID': '%s'}" %\
-		(quote(title), "ZDF_KATWEB")
+		(quote(title), DictID)
+#		(quote(title), "ZDF_KATWEB")
 	addDir(li=li, label=title, action="dirList", dirID="ZDF_Kat_Plus", fanart=fanart, 
 		thumb=thumb, tagline=tag, fparams=fparams)
 			
