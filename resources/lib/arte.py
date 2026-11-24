@@ -6,8 +6,8 @@
 #	Kompatibilität Python2/Python3: Modul future, Modul kodi-six
 #
 ################################################################################
-# 	<nr>84</nr>								# Numerierung für Einzelupdate
-#	Stand: 06.09.2026
+# 	<nr>85</nr>								# Numerierung für Einzelupdate
+#	Stand: 24.11.2026
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
@@ -458,15 +458,18 @@ def Arte_Live(href, title, Plot, img):
 # 15.01.2023 umgestellt: api-path (path für Seite 1 war abweichend)
 # 12.09.2023 neue Api-Version (emac/v3 -> emac/v4)
 # 10.06.2026 neue Api-Version (www.arte.tv/api -> api.arte.tv/api)
+# 24.11.2026 Main_arte() nach leerer query verhindert Addon-Absturz 
+#	bei Umschaltung Sofortstart
 #
 def Arte_Search(query='', next_url=''):
-	PLog("Arte_Search:")
-	PLog(query); PLog(next_url);
+	PLog("Arte_Search: " + query)
+	PLog(next_url);
 	if 	query == '':	
 		query = ardundzdf.get_query(channel='phoenix')	# unbehandelt
 	query = py2_decode(query)
+	PLog("query: " + query);
 	if  query == None or query == '':
-		return ""
+		Main_arte()										# statt return, s.o.
 				
 	query=py2_encode(query);
 						
@@ -480,13 +483,16 @@ def Arte_Search(query='', next_url=''):
 	aktpage = stringextract('page=', '&', path)
 
 	page, msg = get_page(path=path, do_safe=False)		# ohne quote in get_page (api-Call)
-	if page == '':						
-		msg1 = L(u'Fehler in Suche') + ": %s" % query
-		msg2 = msg
+	if page == '' or '"totalCount"' not in page:
+		if page == '':						
+			msg1 = L(u'Fehler in Suche') + ": %s" % query
+			msg2 = msg
+		else:			
+			msg1 = L(u'leider keine Treffer zu') + ": %s" % query
+			msg2=""
 		MyDialog(msg1, msg2, '')
 		return
 	PLog(len(page))
-				
 		
 	li = xbmcgui.ListItem()
 	l = L(u'Zurück zum Hauptmenü')
